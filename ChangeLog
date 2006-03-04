@@ -1,0 +1,219 @@
+
+What's new in version 0.6.1
+
+* Included icon .desktop and desktop entry
+  (thanks to Peter Hyman)
+* Added a check to make sure that a root-user htop closes
+  when its parent non-root terminal is closed.
+  (thanks to Ilya Evseev for the report)
+* BUGFIX: does not crash anymore when $HOME is not set
+  (thanks to Henning Schild for the report)
+
+What's new in version 0.6
+
+* Configuration of columns merged into the Setup screen
+* Integrated strace (press 's')
+  (thanks to Marinho Barcellos for the help)
+* BUGFIX: some fixes, aided by Valgrind
+  (thanks to Wolfram Schlich for the report)
+* BUGFIX: fixed bug when switching meter modes
+  (thanks to Eduardo Righes for the report)
+* Show processes of a single user
+* "SortBy" function now menu-based
+* Improved mouse handling
+* ...and on top of that reduced memory consumption!
+
+What's new in version 0.5.4
+
+* Color schemes
+* -d flag, to configure delay between updates.
+  Note that the delay value is saved in ~/.htoprc.
+* BUGFIX: Update of meters was halting after help screen.
+  (thanks to Matt Moore)
+* BUGFIX: No longer display incorrect information
+  in first frame.
+* BUGFIX: Fix auto-detection of /proc/stat,
+  correcting CPU usage information on multiprocessor
+  systems.
+
+What's new in version 0.5.3
+
+* Read new field "steal" on newer /proc/stat files
+* Auto-detects format of /proc/stat, to cope
+  with patched 2.4 kernels which display 2.6-style
+  information (most notably those on RHEL 3)
+  (thanks to Fernando Dotta for the report)
+* Support $HOME_ETC initiative
+  (see http://www.pld-linux.org/Docs/home-etc)
+  (thanks to Roman Barczynski for the tip)
+* The configure script now tests for /proc, so
+  that it fails early on unsupported platforms
+  instead of during compilation/execution.
+* Made presentation of the function keys in the
+  status bar consistent across views
+  (thanks to David Mathog for the report)
+* Minor changes to make the codebase more friendly
+  to possible future ports
+  (thanks to Jari Aalto and David Mathog for the reports)
+
+What's new in version 0.5.2
+
+* BUGFIX: Correct display of user field
+  (thanks to Marcin Miroslaw for the report)
+* Keyboard support improvements
+  (thanks to Aury Fink Filho for the report)
+
+What's new in version 0.5.1
+
+* BUGFIX: Correctly displays NPTL threads from
+  /proc/<pid>/task subdirectories
+  (thanks to Mike Pot for the report)
+* BUGFIX: Fixes key handling on Signals listbox
+  (thanks to Ondrej Vlach)
+* Renicing no longer displays temporary illegal values
+  (thanks to Ondrej Vlach)
+* 'Hide userland threads' feature for NPTL threads
+
+What's new in version 0.5
+
+* Tree view
+* New column, TIME (user + system time,
+  like in top, 'T' switches to "sort by time")
+* Major reorganization of the underlying code of the
+  setup screen, to manage setup pages
+* New setup page: Display options
+* Hide kernel threads ('K' key)
+* Colorized memory numbers
+* Vastly improved support for monochromatic terminals
+* Shadow processes that do not belong to user ('U' key)
+* Header margin configuration accessible via setup screen
+* Visual feedback on failing incremental search
+* BUGFIX: fixed keyboard input issues on 64-bit machines
+* BUGFIX: hopefully fixed the incorrect values
+  that show on status bars in some systems
+* BUGFIX: doesn't mess with fields list anymore when
+  canceling after changing the number of items
+* Uptime meter no longer says "1 days" ;)
+
+What's new in version 0.4.1
+
+* BUGFIX: compiles on 64-bit architectures again
+  (thanks to Bartosz Fenski for the report)
+* BUGFIX: multi-processor support fixed on kernels 2.6
+  (thanks to Wolfram Schlich for the report)
+
+What's new in version 0.4
+
+* Support for multiple processors!
+* Basic mouse support
+* Modular header based on configurable meters;
+  supports 4 view modes: bar, text, LED, graph
+* Uptime, load average meters
+  (thanks to Marc Calahan)
+* Meters setup screen; should eventually evolve into a
+  general setup screen, with column setup, keybindings, etc.
+* Thread hiding toggleable
+  (press 'T' to hide the nonstandard dotfiles in /proc)
+* BUGFIX: Do not flicker screen on column configuration screen
+* Clock and load average meters
+  (thanks to Marc Calahan)
+* BUGFIX: numeric swap indicator was printing bogus value
+* BUGFIX: internal fixes on ListBox widget
+* Clear the bottom line when exiting
+* Press "F3" during search to walk through the results
+* Improved navigation on column configuration screen
+* BUGFIX: fix segfault on kernels with restricted /proc
+  enabled
+* BUGFIX: a few last-minute bugfixes in the setup UI
+  (thanks to Gaspare Bruno for the reports)
+
+
+What's new in version 0.3.3
+
+* Saves column and sorting configuration in ~/.htoprc
+* Displays "hidden" threads on RedHat 9
+  (Thanks to Leonardo Godinho)
+* BUGFIX: supports process names with spaces
+  (Thanks to Marc Calahan)
+* BUGFIX: ...and parentheses :)
+* BUGFIX: long process names overflowed RichString
+  (Thanks to Marc Calahan)
+
+What's new in version 0.3.2
+
+* Performance and memory usage improvements, aided by gprof
+* BUGFIX: quite a few fixes, aided by Valgrind
+* Header preview on column configuration screen
+  (Thanks to Marc Calahan)
+
+What's new in version 0.3.1
+
+* BUGFIX: crash fixes related to process list handling
+  (thanks to Marc Calahan)
+* Man page
+  (thanks to Bartosz Fenski)
+* Tag processes with the space bar
+* Kill multiple process based on tag
+* BUGFIX: corrected processing order of updates in list
+* Screen refresh function on Ctrl-L
+* Large numbers are shown in MB/GB notation in order to fit screen
+  (thanks to Marc Calahan)
+* Realtime priority is correctly displayed
+  (thanks to Marc Calahan)
+* Preliminary support for configurable columns, with 'C'
+  (thanks to Marc Calahan)
+  -- not all columns display properly yet
+
+What's new in version 0.3
+
+* BUGFIX: no dirt left on screen on horizontal scrolling 
+* Signal selection on "kill" command
+* Color-coding for users, nice and process status
+* "Follow" function
+* Fully selectable sort order
+* Function bar on last line
+* Build system now uses autotools
+
+What's new in version 0.2.1
+
+* Sorting by process or memory usage ('P' and 'M', like top)
+* Quicker default update (1.5 second, not yet configurable)
+* Now the order of the elements in the process list stay
+  'locked' for a while after you move the cursor to ease
+  selecting a process
+* Corrected the installation instructions in README
+  (Thanks to Jeremy Eglen)
+* Should now compile cleanly on Conectiva 9 and similar systems
+  (Thanks to Adriano Frare for the report)
+* Friendlier Makefile
+* Help screen ('h')
+
+What's new in version 0.2
+
+* Memory indicators in header now show used and total, in MB
+* Preliminary support for sorting (CPU% only)
+* Memory percentage field (resident memory / used memory)
+* BUGFIX: identified source of spurious crashes
+* Can search names containing numbers
+  (Thanks to Rafael Jeffman)
+* Correctly calculates memory page size
+  (Thanks to Rafael Jeffman)
+
+What's new in version 0.13
+
+* Handles terminal resize
+* Display all user names (not only those in /etc/passwd)
+  (Thanks to Julio Biason)
+
+What's new in version 0.12
+
+* Support for 2.6 kernels
+* Uses terminal default colors as a background
+
+What's new in version 0.11
+
+* BUGFIX: does not crash when UID is not in /etc/passwd
+
+What's new in version 0.1
+
+* Everything!
