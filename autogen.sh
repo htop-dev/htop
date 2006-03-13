@@ -3,4 +3,6 @@
 aclocal
 autoconf
 autoheader
-automake
+automake --add-missing --copy
+
+
