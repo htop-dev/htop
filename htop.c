@@ -12,6 +12,11 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <stdbool.h>
 
+#ifndef CONFIG_H
+#define CONFIG_H
+#include "config.h"
+#endif
+
 #include "ProcessList.h"
 #include "CRT.h"
 #include "ListBox.h"
@@ -26,7 +31,6 @@ in the source distribution for its full text.
 #include "SignalsListBox.h"
 #include "TraceScreen.h"
 
-#include "config.h"
 #include "debug.h"
 
 //#link m
@@ -212,6 +216,11 @@ int main(int argc, char** argv) {
          if (argc < 2) printHelpFlag();
          setUserOnly(argv[2], &userOnly, &userId);
       }
+   }
+   
+   if (access(PROCDIR, R_OK) != 0) {
+      fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
+      exit(1);
    }
 
    ListBox* lb;

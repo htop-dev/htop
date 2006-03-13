@@ -5,6 +5,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifndef CONFIG_H
+#define CONFIG_H
+#include "config.h"
+#endif
+
 #include "ProcessList.h"
 #include "Process.h"
 #include "TypedVector.h"

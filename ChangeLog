@@ -1,6 +1,9 @@
 
 What's new in version 0.6.1
 
+* Accept --with-proc=<dir> in configure, to specify
+  alternative procfs locations (making htop friendlier
+  to the Linux compatibility layer in FreeBSD)
 * Included icon .desktop and desktop entry
   (thanks to Peter Hyman)
 * Added a check to make sure that a root-user htop closes
