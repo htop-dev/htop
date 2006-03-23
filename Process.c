@@ -1,6 +1,6 @@
 /*
 htop - Process.c
-(C) 2004,2005 Hisham H. Muhammad
+(C) 2004-2006 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -235,6 +235,7 @@ static void Process_printTTY(RichString* str, int tty_nr) {
    char* buffer[11]; 
 }
 
+/* private */
 inline static void Process_writeCommand(Process* this, int attr, RichString* str) {
    if (this->pl->highlightBaseName) {
       char* firstSpace = strchr(this->comm, ' ');

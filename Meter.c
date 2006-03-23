@@ -1,6 +1,6 @@
 /*
 htop - Meter.c
-(C) 2004,2005 Hisham H. Muhammad
+(C) 2004-2006 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -65,6 +65,9 @@ extern char* METER_CLASS;
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
+#ifndef MAX
+#define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
 /* private property */

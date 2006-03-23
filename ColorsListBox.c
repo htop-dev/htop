@@ -28,7 +28,7 @@ typedef struct ColorsListBox_ {
 
 }*/
 
-/* private property */
+/* private */
 static char* ColorSchemes[] = {
    "Default",
    "Monochromatic",

@@ -1,6 +1,6 @@
 /*
 htop - CRT.c
-(C) 2004,2005 Hisham H. Muhammad
+(C) 2004-2006 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -17,6 +17,13 @@ in the source distribution for its full text.
 #include "debug.h"
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
+
+#define COLORSCHEME_DEFAULT 0
+#define COLORSCHEME_MONOCHROME 1
+#define COLORSCHEME_BLACKONWHITE 2
+#define COLORSCHEME_BLACKONWHITE2 3
+#define COLORSCHEME_MIDNIGHT 4
+#define COLORSCHEME_BLACKNIGHT 5
 
 #define Black COLOR_BLACK
 #define Red COLOR_RED
@@ -92,6 +99,8 @@ typedef enum ColorElements_ {
 extern int CRT_delay;
 
 extern int CRT_colors[LAST_COLORELEMENT];
+
+extern int CRT_colorScheme;
 
 }*/
 
