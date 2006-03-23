@@ -1,6 +1,6 @@
 /*
 htop - htop.c
-(C) 2004,2005 Hisham H. Muhammad
+(C) 2004-2006 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -11,11 +11,6 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <ctype.h>
 #include <stdbool.h>
-
-#ifndef CONFIG_H
-#define CONFIG_H
-#include "config.h"
-#endif
 
 #include "ProcessList.h"
 #include "CRT.h"
@@ -31,6 +26,7 @@ in the source distribution for its full text.
 #include "SignalsListBox.h"
 #include "TraceScreen.h"
 
+#include "config.h"
 #include "debug.h"
 
 //#link m
@@ -42,14 +38,14 @@ char htop_barCharacters[] = "|#*@$%&";
 
 void printVersionFlag() {
    clear();
-   printf("htop " VERSION " - (C) 2004,2005 Hisham Muhammad.\n");
+   printf("htop " VERSION " - (C) 2004-2006 Hisham Muhammad.\n");
    printf("Released under the GNU GPL.\n\n");
    exit(0);
 }
 
 void printHelpFlag() {
    clear();
-   printf("htop " VERSION " - (C) 2004,2005 Hisham Muhammad.\n");
+   printf("htop " VERSION " - (C) 2004-2006 Hisham Muhammad.\n");
    printf("Released under the GNU GPL.\n\n");
    printf("-d DELAY     Delay between updates, in tenths of seconds\n\n");
    printf("-u USERNAME  Show only processes of a given user\n\n");
