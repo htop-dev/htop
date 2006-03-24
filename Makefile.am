@@ -27,3 +27,5 @@ ColorsListBox.c ColorsListBox.h TraceScreen.c TraceScreen.h \
 AvailableColumnsListBox.c AvailableColumnsListBox.h ColumnsListBox.c \
 ColumnsListBox.h
 
+debug:
+	$(MAKE) all CFLAGS="-g -DDEBUG"
