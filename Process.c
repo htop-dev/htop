@@ -229,13 +229,6 @@ static void Process_printTime(RichString* str, unsigned long t) {
 }
 
 /* private */
-static void Process_printTTY(RichString* str, int tty_nr) {
-   unsigned char minor = tty_nr;
-   unsigned char major = tty_nr >> 8;
-   char* buffer[11]; 
-}
-
-/* private */
 inline static void Process_writeCommand(Process* this, int attr, RichString* str) {
    if (this->pl->highlightBaseName) {
       char* firstSpace = strchr(this->comm, ' ');
