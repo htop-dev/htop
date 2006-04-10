@@ -141,6 +141,8 @@ void DebugMemory_registerAllocation(void* data, char* file, int line) {
 }
 
 void DebugMemory_registerDeallocation(void* data, char* file, int line) {
+   if (!data)
+      return;
    assert(singleton);
    assert(singleton->first);
    DebugMemoryItem* walk = singleton->first;
