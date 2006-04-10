@@ -8,47 +8,29 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "Meter.h"
 
-#include "ProcessList.h"
-
-#include <curses.h>
 #include <time.h>
 
 #include "debug.h"
 
-/*{
+/* private */
+static int ClockMeter_attributes[] = { CLOCK };
 
-typedef struct ClockMeter_ ClockMeter;
-
-struct ClockMeter_ {
-   Meter super;
-   ProcessList* pl;
-   char clock[10];
+/* private */
+MeterType ClockMeter = {
+   .setValues = ClockMeter_setValues, 
+   .display = NULL,
+   .mode = TEXT_METERMODE,
+   .total = 100.0,
+   .items = 1,
+   .attributes = ClockMeter_attributes,
+   .name = "Clock",
+   .uiName = "Clock",
+   .caption = "Time: ",
 };
 
-}*/
-
-ClockMeter* ClockMeter_new() {
-   ClockMeter* this = malloc(sizeof(ClockMeter));
-   Meter_init((Meter*)this, String_copy("Clock"), String_copy("Time: "), 1);
-   ((Meter*)this)->attributes[0] = CLOCK;
-   ((Meter*)this)->setValues = ClockMeter_setValues;
-   ((Object*)this)->display = ClockMeter_display;
-   ((Meter*)this)->total = 24 * 60;
-   Meter_setMode((Meter*)this, TEXT);
-   return this;
-}
-
-void ClockMeter_setValues(Meter* cast) {
-   ClockMeter* this = (ClockMeter*) cast;
+void ClockMeter_setValues(Meter* this, char* buffer, int size) {
    time_t t = time(NULL);
    struct tm *lt = localtime(&t);
-   cast->values[0] = lt->tm_hour * 60 + lt->tm_min;
-   strftime(this->clock, 9, "%H:%M:%S", lt);
-   snprintf(cast->displayBuffer.c, 9, "%s", this->clock);
-}
-
-void ClockMeter_display(Object* cast, RichString* out) {
-   Meter* super = (Meter*) cast;
-   ClockMeter* this = (ClockMeter*) cast;
-   RichString_write(out, CRT_colors[super->attributes[0]], this->clock);
+   this->values[0] = lt->tm_hour * 60 + lt->tm_min;
+   strftime(buffer, size, "%H:%M:%S", lt);
 }

@@ -105,7 +105,7 @@ typedef struct ProcessList_ {
 }*/
 
 /* private property */
-ProcessField defaultHeaders[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, LAST_PROCESSFIELD, 0 };
+ProcessField defaultHeaders[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 #ifdef DEBUG
 

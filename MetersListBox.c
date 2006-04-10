@@ -59,9 +59,8 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
       case 't':
       {
          Meter* meter = (Meter*) TypedVector_get(this->meters, selected);
-         MeterMode mode = meter->mode + 1;
-         if (mode == LAST_METERMODE)
-            mode = 1; // skip mode 0, "unset"
+         int mode = meter->mode + 1;
+         if (mode == LAST_METERMODE) mode = 1;
          Meter_setMode(meter, mode);
          ListBox_set(super, selected, (Object*) Meter_toListItem(meter));
          result = HANDLED;

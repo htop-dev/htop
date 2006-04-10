@@ -19,45 +19,36 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
-/*{
+/* private property */
+static int SwapMeter_attributes[] = { SWAP };
 
-typedef struct SwapMeter_ SwapMeter;
-
-struct SwapMeter_ {
-   Meter super;
-   ProcessList* pl;
+/* private */
+MeterType SwapMeter = {
+   .setValues = SwapMeter_setValues, 
+   .display = SwapMeter_display,
+   .mode = BAR_METERMODE,
+   .items = 1,
+   .total = 100.0,
+   .attributes = SwapMeter_attributes,
+   .name = "Swap",
+   .uiName = "Swap",
+   .caption = "Swp"
 };
 
-}*/
-
-SwapMeter* SwapMeter_new(ProcessList* pl) {
-   SwapMeter* this = malloc(sizeof(SwapMeter));
-   Meter_init((Meter*)this, String_copy("Swap"), String_copy("Swp"), 1);
-   ((Meter*)this)->attributes[0] = SWAP;
-   ((Meter*)this)->setValues = SwapMeter_setValues;
-   ((Object*)this)->display = SwapMeter_display;
-   this->pl = pl;
-   Meter_setMode((Meter*)this, BAR);
-   return this;
-}
-
-void SwapMeter_setValues(Meter* cast) {
-   SwapMeter* this = (SwapMeter*)cast;
-
-   double totalSwap = (double)this->pl->totalSwap;
+void SwapMeter_setValues(Meter* this, char* buffer, int len) {
    long int usedSwap = this->pl->usedSwap;
-   cast->total = totalSwap;
-   cast->values[0] = usedSwap;
-   snprintf(cast->displayBuffer.c, 14, "%ld/%ldMB", usedSwap / 1024, this->pl->totalSwap / 1024);
+   this->total = this->pl->totalSwap;
+   this->values[0] = usedSwap;
+   snprintf(buffer, len, "%ld/%ldMB", (long int) usedSwap / 1024, (long int) this->total / 1024);
 }
 
 void SwapMeter_display(Object* cast, RichString* out) {
    char buffer[50];
-   Meter* meter = (Meter*)cast;
-   long int swap = (long int) meter->values[0];
+   Meter* this = (Meter*)cast;
+   long int swap = (long int) this->values[0];
    RichString_prune(out);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
-   sprintf(buffer, "%ldM ", (long int) meter->total / 1024);
+   sprintf(buffer, "%ldM ", (long int) this->total / 1024);
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
    sprintf(buffer, "%ldk", swap);
    RichString_append(out, CRT_colors[METER_TEXT], "used:");

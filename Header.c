@@ -6,14 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "Header.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "LoadMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
-#include "ClockMeter.h"
-#include "TasksMeter.h"
+#include "Meter.h"
 
 #include "debug.h"
 #include <assert.h>
@@ -60,31 +53,22 @@ void Header_createMeter(Header* this, char* name, HeaderSide side) {
                        ? this->leftMeters
                        : this->rightMeters;
 
-   if (String_eq(name, "Swap")) {
-      TypedVector_add(meters, SwapMeter_new(this->pl));
-   } else if (String_eq(name, "Memory")) {
-      TypedVector_add(meters, MemoryMeter_new(this->pl));
-   } else if (String_eq(name, "Clock")) {
-      TypedVector_add(meters, ClockMeter_new(this->pl));
-   } else if (String_eq(name, "Load")) {
-      TypedVector_add(meters, LoadMeter_new(this->pl));
-   } else if (String_eq(name, "LoadAverage")) {
-      TypedVector_add(meters, LoadAverageMeter_new(this->pl));
-   } else if (String_eq(name, "Uptime")) {
-      TypedVector_add(meters, UptimeMeter_new(this->pl));
-   } else if (String_eq(name, "Tasks")) {
-      TypedVector_add(meters, TasksMeter_new(this->pl));
-   } else if (String_startsWith(name, "CPUAverage")) {
-      TypedVector_add(meters, CPUMeter_new(this->pl, 0));
-   } else if (String_startsWith(name, "CPU")) {
-      int num;
-      int ok = sscanf(name, "CPU(%d)", &num);
-      if (ok)
-         TypedVector_add(meters, CPUMeter_new(this->pl, num));
+   char* paren = strchr(name, '(');
+   int param = 0;
+   if (paren) {
+      int ok = sscanf(paren, "(%d)", &param);
+      if (!ok) param = 0;
+      *paren = '\0';
+   }
+   for (MeterType** type = Meter_types; *type; type++) {
+      if (String_eq(name, (*type)->name)) {
+         TypedVector_add(meters, Meter_new(this->pl, param, *type));
+         break;
+      }
    }
 }
 
-void Header_setMode(Header* this, int i, MeterMode mode, HeaderSide side) {
+void Header_setMode(Header* this, int i, MeterModeId mode, HeaderSide side) {
    TypedVector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
@@ -93,12 +77,14 @@ void Header_setMode(Header* this, int i, MeterMode mode, HeaderSide side) {
    Meter_setMode(meter, mode);
 }
 
-Meter* Header_getMeter(Header* this, int i, HeaderSide side) {
+Meter* Header_addMeter(Header* this, MeterType* type, int param, HeaderSide side) {
    TypedVector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
 
-   return (Meter*) TypedVector_get(meters, i);
+   Meter* meter = Meter_new(this->pl, param, type);
+   TypedVector_add(meters, meter);
+   return meter;
 }
 
 int Header_size(Header* this, HeaderSide side) {
@@ -113,12 +99,20 @@ char* Header_readMeterName(Header* this, int i, HeaderSide side) {
    TypedVector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
-
    Meter* meter = (Meter*) TypedVector_get(meters, i);
-   return meter->name;
+
+   int nameLen = strlen(meter->type->name);
+   int len = nameLen + 100;
+   char* name = malloc(len);
+   strncpy(name, meter->type->name, nameLen);
+   name[nameLen] = '\0';
+   if (meter->param)
+      snprintf(name + nameLen, len - nameLen, "(%d)", meter->param);
+
+   return name;
 }
 
-MeterMode Header_readMeterMode(Header* this, int i, HeaderSide side) {
+MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side) {
    TypedVector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
@@ -128,14 +122,13 @@ MeterMode Header_readMeterMode(Header* this, int i, HeaderSide side) {
 }
 
 void Header_defaultMeters(Header* this) {
-   for (int i = 1; i <= this->pl->processorCount; i++) {
-      TypedVector_add(this->leftMeters, CPUMeter_new(this->pl, i));
-   }
-   TypedVector_add(this->leftMeters, MemoryMeter_new(this->pl));
-   TypedVector_add(this->leftMeters, SwapMeter_new(this->pl));
-   TypedVector_add(this->rightMeters, TasksMeter_new(this->pl));
-   TypedVector_add(this->rightMeters, LoadAverageMeter_new(this->pl));
-   TypedVector_add(this->rightMeters, UptimeMeter_new(this->pl));
+   for (int i = 1; i <= this->pl->processorCount; i++)
+      TypedVector_add(this->leftMeters, Meter_new(this->pl, i, &CPUMeter));
+   TypedVector_add(this->leftMeters, Meter_new(this->pl, 0, &MemoryMeter));
+   TypedVector_add(this->leftMeters, Meter_new(this->pl, 0, &SwapMeter));
+   TypedVector_add(this->rightMeters, Meter_new(this->pl, 0, &TasksMeter));
+   TypedVector_add(this->rightMeters, Meter_new(this->pl, 0, &LoadAverageMeter));
+   TypedVector_add(this->rightMeters, Meter_new(this->pl, 0, &UptimeMeter));
 }
 
 void Header_draw(Header* this) {

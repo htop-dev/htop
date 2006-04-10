@@ -143,17 +143,17 @@ bool Settings_read(Settings* this, char* fileName) {
          if (this->colorScheme < 0) this->colorScheme = 0;
          if (this->colorScheme > 5) this->colorScheme = 5;
       } else if (String_eq(option[0], "left_meters")) {
-	 Settings_readMeters(this, option[1], LEFT_HEADER);
-	 readMeters = true;
+         Settings_readMeters(this, option[1], LEFT_HEADER);
+         readMeters = true;
       } else if (String_eq(option[0], "right_meters")) {
-	 Settings_readMeters(this, option[1], RIGHT_HEADER);
-	 readMeters = true;
+         Settings_readMeters(this, option[1], RIGHT_HEADER);
+         readMeters = true;
       } else if (String_eq(option[0], "left_meter_modes")) {
-	 Settings_readMeterModes(this, option[1], LEFT_HEADER);
-	 readMeters = true;
+         Settings_readMeterModes(this, option[1], LEFT_HEADER);
+         readMeters = true;
       } else if (String_eq(option[0], "right_meter_modes")) {
-	 Settings_readMeterModes(this, option[1], RIGHT_HEADER);
-	 readMeters = true;
+         Settings_readMeterModes(this, option[1], RIGHT_HEADER);
+         readMeters = true;
       }
       String_freeArray(option);
    }
@@ -196,7 +196,9 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "delay=%d\n", (int) this->delay);
    fprintf(fd, "left_meters=");
    for (int i = 0; i < Header_size(this->header, LEFT_HEADER); i++) {
-      fprintf(fd, "%s ", Header_readMeterName(this->header, i, LEFT_HEADER));
+      char* name = Header_readMeterName(this->header, i, LEFT_HEADER);
+      fprintf(fd, "%s ", name);
+      free(name);
    }
    fprintf(fd, "\n");
    fprintf(fd, "left_meter_modes=");
@@ -204,14 +206,15 @@ bool Settings_write(Settings* this) {
       fprintf(fd, "%d ", Header_readMeterMode(this->header, i, LEFT_HEADER));
    fprintf(fd, "\n");
    fprintf(fd, "right_meters=");
-   for (int i = 0; i < Header_size(this->header, RIGHT_HEADER); i++)
-      fprintf(fd, "%s ", Header_readMeterName(this->header, i, RIGHT_HEADER));
+   for (int i = 0; i < Header_size(this->header, RIGHT_HEADER); i++) {
+      char* name = Header_readMeterName(this->header, i, RIGHT_HEADER);
+      fprintf(fd, "%s ", name);
+      free(name);
+   }
    fprintf(fd, "\n");
    fprintf(fd, "right_meter_modes=");
    for (int i = 0; i < Header_size(this->header, RIGHT_HEADER); i++)
       fprintf(fd, "%d ", Header_readMeterMode(this->header, i, RIGHT_HEADER));
-   fprintf(fd, "\n");
-   
    fclose(fd);
    return true;
 }

@@ -19,61 +19,42 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
-/*{
+/* private property */
+static int MemoryMeter_attributes[] = { MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE };
 
-typedef struct MemoryMeter_ MemoryMeter;
-
-struct MemoryMeter_ {
-   Meter super;
-   ProcessList* pl;
-   char* wideFormat;
-   int wideLimit;
+/* private */
+MeterType MemoryMeter = {
+   .setValues = MemoryMeter_setValues, 
+   .display = MemoryMeter_display,
+   .mode = BAR_METERMODE,
+   .items = 3,
+   .total = 100.0,
+   .attributes = MemoryMeter_attributes,
+   "Memory",
+   "Memory",
+   "Mem"
 };
 
-}*/
-
-MemoryMeter* MemoryMeter_new(ProcessList* pl) {
-   MemoryMeter* this = malloc(sizeof(MemoryMeter));
-   Meter_init((Meter*)this, String_copy("Memory"), String_copy("Mem"), 3);
-   ((Meter*)this)->attributes[0] = MEMORY_USED;
-   ((Meter*)this)->attributes[1] = MEMORY_BUFFERS;
-   ((Meter*)this)->attributes[2] = MEMORY_CACHE;
-   ((Meter*)this)->setValues = MemoryMeter_setValues;
-   ((Object*)this)->display = MemoryMeter_display;
-   this->pl = pl;
-   Meter_setMode((Meter*)this, BAR);
-   this->wideFormat = "%6ldk ";
-   this->wideLimit = 22 + 8 * 4;
-   return this;
-}
-
-void MemoryMeter_setValues(Meter* cast) {
-   MemoryMeter* this = (MemoryMeter*)cast;
-
-   double totalMem = (double)this->pl->totalMem;
+void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
    long int usedMem = this->pl->usedMem;
    long int buffersMem = this->pl->buffersMem;
    long int cachedMem = this->pl->cachedMem;
    usedMem -= buffersMem + cachedMem;
-   cast->total = totalMem;
-   cast->values[0] = usedMem;
-   cast->values[1] = buffersMem;
-   cast->values[2] = cachedMem;
-   snprintf(cast->displayBuffer.c, 14, "%ld/%ldMB", usedMem / 1024, this->pl->totalMem / 1024);
+   this->total = this->pl->totalMem;
+   this->values[0] = usedMem;
+   this->values[1] = buffersMem;
+   this->values[2] = cachedMem;
+   snprintf(buffer, size, "%ld/%ldMB", (long int) usedMem / 1024, (long int) this->total / 1024);
 }
 
 void MemoryMeter_display(Object* cast, RichString* out) {
    char buffer[50];
-   MemoryMeter* this = (MemoryMeter*)cast;
-   Meter* meter = (Meter*)cast;
+   Meter* this = (Meter*)cast;
    int div = 1024; char* format = "%ldM ";
-   if (meter->w > this->wideLimit) {
-      div = 1; format = this->wideFormat;
-   }
-   long int totalMem = meter->total / div;
-   long int usedMem = meter->values[0] / div;
-   long int buffersMem = meter->values[1] / div;
-   long int cachedMem = meter->values[2] / div;
+   long int totalMem = this->total / div;
+   long int usedMem = this->values[0] / div;
+   long int buffersMem = this->values[1] / div;
+   long int cachedMem = this->values[2] / div;
    RichString_prune(out);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
    sprintf(buffer, format, totalMem);

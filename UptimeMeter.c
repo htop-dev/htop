@@ -14,64 +14,45 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
-/*{
+/* private property */
+static int UptimeMeter_attributes[] = { UPTIME };
 
-typedef struct UptimeMeter_ UptimeMeter;
-
-struct UptimeMeter_ {
-   Meter super;
-   ProcessList* pl;
-   int seconds;
-   int minutes;
-   int hours;
-   int days;
+/* private */
+MeterType UptimeMeter = {
+   .setValues = UptimeMeter_setValues, 
+   .display = NULL,
+   .mode = TEXT_METERMODE,
+   .items = 1,
+   .total = 100.0,
+   .attributes = UptimeMeter_attributes,
+   .name = "Uptime",
+   .uiName = "Uptime",
+   .caption = "Uptime: "
 };
 
-}*/
-
-UptimeMeter* UptimeMeter_new() {
-   UptimeMeter* this = malloc(sizeof(UptimeMeter));
-   Meter_init((Meter*)this, String_copy("Uptime"), String_copy("Uptime: "), 1);
-   ((Meter*)this)->attributes[0] = UPTIME;
-   ((Object*)this)->display = UptimeMeter_display;
-   ((Meter*)this)->setValues = UptimeMeter_setValues;
-   Meter_setMode((Meter*)this, TEXT);
-   ((Meter*)this)->total = 100.0;
-   return this;
-}
-
-void UptimeMeter_setValues(Meter* cast) {
-   UptimeMeter* this = (UptimeMeter*)cast;
+void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
    double uptime;
    FILE* fd = fopen(PROCDIR "/uptime", "r");
    fscanf(fd, "%lf", &uptime);
    fclose(fd);
    int totalseconds = (int) ceil(uptime);
-   this->seconds = totalseconds % 60;
-   this->minutes = (totalseconds-this->seconds) % 3600 / 60;
-   this->hours = (totalseconds-this->seconds-(this->minutes*60)) % 86400 / 3600;
-   this->days = (totalseconds-this->seconds-(this->minutes*60)-(this->hours*3600)) / 86400;
-   cast->values[0] = this->days;
-   if (this->days > cast->total) {
-      cast->total = this->days;
+   int seconds = totalseconds % 60;
+   int minutes = (totalseconds-seconds) % 3600 / 60;
+   int hours = (totalseconds-seconds-(minutes*60)) % 86400 / 3600;
+   int days = (totalseconds-seconds-(minutes*60)-(hours*3600)) / 86400;
+   this->values[0] = days;
+   if (days > this->total) {
+      this->total = days;
    }
-   snprintf(cast->displayBuffer.c, 14, "%d", this->days);
-}
-
-void UptimeMeter_display(Object* cast, RichString* out) {
-   UptimeMeter* this = (UptimeMeter*)cast;
-   char buffer[20];
-   RichString_prune(out);
-   if (this->days > 100) {
-      sprintf(buffer, "%d days, ", this->days);
-      RichString_write(out, CRT_colors[LARGE_NUMBER], buffer);
-   } else if (this->days > 1) {
-      sprintf(buffer, "%d days, ", this->days);
-      RichString_write(out, CRT_colors[UPTIME], buffer);
-   } else if (this->days == 1) {
-      sprintf(buffer, "%d day, ", this->days);
-      RichString_write(out, CRT_colors[UPTIME], buffer);
+   char daysbuf[10];
+   if (days > 100) {
+      sprintf(daysbuf, "%d days(!), ", days);
+   } else if (days > 1) {
+      sprintf(daysbuf, "%d days, ", days);
+   } else if (days == 1) {
+      sprintf(daysbuf, "1 day, ");
+   } else {
+      daysbuf[0] = '\0';
    }
-   sprintf(buffer, "%02d:%02d:%02d ", this->hours, this->minutes, this->seconds);
-   RichString_append(out, CRT_colors[UPTIME], buffer);
+   snprintf(buffer, len, "%s%02d:%02d:%02d", daysbuf, hours, minutes, seconds);
 }

@@ -14,33 +14,26 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
-/*{
+/* private property */
+int TasksMeter_attributes[] = { TASKS_RUNNING };
 
-typedef struct TasksMeter_ TasksMeter;
-
-struct TasksMeter_ {
-   Meter super;
-   ProcessList* pl;
+/* private */
+MeterType TasksMeter = {
+   .setValues = TasksMeter_setValues, 
+   .display = TasksMeter_display,
+   .mode = TEXT_METERMODE,
+   .items = 1,
+   .total = 100.0,
+   .attributes = TasksMeter_attributes, 
+   .name = "Tasks",
+   .uiName = "Task counter",
+   .caption = "Tasks: "
 };
 
-}*/
-
-TasksMeter* TasksMeter_new(ProcessList* pl) {
-   TasksMeter* this = malloc(sizeof(TasksMeter));
-   Meter_init((Meter*)this, String_copy("Tasks"), String_copy("Tasks: "), 1);
-   ((Meter*)this)->attributes[0] = TASKS_RUNNING;
-   ((Object*)this)->display = TasksMeter_display;
-   ((Meter*)this)->setValues = TasksMeter_setValues;
-   this->pl = pl;
-   Meter_setMode((Meter*)this, TEXT);
-   return this;
-}
-
-void TasksMeter_setValues(Meter* cast) {
-   TasksMeter* this = (TasksMeter*)cast;
-   cast->total = this->pl->totalTasks;
-   cast->values[0] = this->pl->runningTasks;
-   snprintf(cast->displayBuffer.c, 20, "%d/%d", (int) cast->values[0], (int) cast->total);
+void TasksMeter_setValues(Meter* this, char* buffer, int len) {
+   this->total = this->pl->totalTasks;
+   this->values[0] = this->pl->runningTasks;
+   snprintf(buffer, len, "%d/%d", (int) this->values[0], (int) this->total);
 }
 
 void TasksMeter_display(Object* cast, RichString* out) {
