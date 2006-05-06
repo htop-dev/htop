@@ -32,10 +32,15 @@ Settings* Settings_new(ProcessList* pl, Header* header) {
    this->pl = pl;
    this->header = header;
    char* home;
+   char* homerc;
    home = getenv("HOME_ETC");
    if (!home) home = getenv("HOME");
    if (!home) home = "";
-   this->userSettings = String_cat(home, "/.htoprc");
+   rcfile = getenv("HOMERC");
+   if (!rcfile)
+      this->userSettings = String_cat(home, "/.htoprc");
+   else
+      this->userSettings = String_copy(rcfile);
    this->colorScheme = 0;
    this->changed = false;
    this->delay = DEFAULT_DELAY;
