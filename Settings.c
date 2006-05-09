@@ -32,7 +32,7 @@ Settings* Settings_new(ProcessList* pl, Header* header) {
    this->pl = pl;
    this->header = header;
    char* home;
-   char* homerc;
+   char* rcfile;
    home = getenv("HOME_ETC");
    if (!home) home = getenv("HOME");
    if (!home) home = "";
