@@ -11,6 +11,10 @@ What's new in version 0.6.1
   (thanks to Ilya Evseev for the report)
 * BUGFIX: does not crash anymore when $HOME is not set
   (thanks to Henning Schild for the report)
+* Wait for strace child process to die properly.
+  (thanks to Marcus Fritzsch)
+* Support $HTOPRC
+  (thanks to Luis Limon)
 
 What's new in version 0.6
 
