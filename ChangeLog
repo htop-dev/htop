@@ -1,6 +1,10 @@
 
 What's new in version 0.6.1
 
+* New meter type: "All CPUs", which dynamically adjusts
+  to the number of CPUs present in the machine. Note that
+  because of this, older versions of htop may crash when
+  using an .htoprc file modified my the newer version.
 * Accept --with-proc=<dir> in configure, to specify
   alternative procfs locations (making htop friendlier
   to the Linux compatibility layer in FreeBSD)
