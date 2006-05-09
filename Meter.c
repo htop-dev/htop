@@ -219,7 +219,7 @@ inline static void Meter_displayToStringBuffer(Meter* this, char* buffer) {
 }
 
 void Meter_setMode(Meter* this, int modeIndex) {
-   if (modeIndex == this->mode)
+   if (modeIndex > 0 && modeIndex == this->mode)
       return;
    if (!modeIndex)
       modeIndex = 1;
@@ -227,15 +227,14 @@ void Meter_setMode(Meter* this, int modeIndex) {
    if (this->type->mode == 0) {
       this->draw = this->type->draw;
    } else {
-      if (modeIndex >= 1) {
-         if (this->drawBuffer)
-            free(this->drawBuffer);
-         this->drawBuffer = NULL;
-   
-         MeterMode* mode = Meter_modes[modeIndex];
-         this->draw = mode->draw;
-         this->h = mode->h;
-      }
+      assert(modeIndex >= 1);
+      if (this->drawBuffer)
+         free(this->drawBuffer);
+      this->drawBuffer = NULL;
+
+      MeterMode* mode = Meter_modes[modeIndex];
+      this->draw = mode->draw;
+      this->h = mode->h;
    }
    this->mode = modeIndex;
 }

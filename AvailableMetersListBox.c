@@ -37,7 +37,7 @@ AvailableMetersListBox* AvailableMetersListBox_new(Settings* settings, ListBox* 
    ListBox_setHeader(super, "Available meters");
    for (int i = 1; Meter_types[i]; i++) {
       MeterType* type = Meter_types[i];
-      if (type != &CPUMeter && type != &AllCPUsMeter) {
+      if (type != &CPUMeter) {
          ListBox_add(super, (Object*) ListItem_new(type->uiName, i << 16));
       }
    }
