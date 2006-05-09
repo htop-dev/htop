@@ -41,6 +41,8 @@ void AllCPUsMeter_init(Meter* this);
 
 void AllCPUsMeter_done(Meter* this);
 
+void AllCPUsMeter_setMode(Meter* this, int mode);
+
 void AllCPUsMeter_draw(Meter* this, int x, int y, int w);
 
 #endif

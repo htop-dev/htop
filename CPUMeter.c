@@ -46,6 +46,7 @@ MeterType AllCPUsMeter = {
    .caption = "CPU",
    .draw = AllCPUsMeter_draw,
    .init = AllCPUsMeter_init,
+   .setMode = AllCPUsMeter_setMode,
    .done = AllCPUsMeter_done
 };
 
@@ -110,12 +111,19 @@ void AllCPUsMeter_done(Meter* this) {
       Meter_delete((Object*)meters[i]);
 }
 
+void AllCPUsMeter_setMode(Meter* this, int mode) {
+   this->mode = mode;
+   int processors = this->pl->processorCount;
+   int h = Meter_modes[this->mode]->h;
+   this->h = h * processors;
+}
+
 void AllCPUsMeter_draw(Meter* this, int x, int y, int w) {
    int processors = this->pl->processorCount;
    Meter** meters = (Meter**) this->drawBuffer;
-   this->h = Meter_modes[this->mode]->h * processors;
    for (int i = 0; i < processors; i++) {
       Meter_setMode(meters[i], this->mode);
-      meters[i]->draw(meters[i], x, y+i, w);
+      meters[i]->draw(meters[i], x, y, w);
+      y += meters[i]->h;
    }
 }

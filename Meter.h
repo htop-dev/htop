@@ -38,6 +38,7 @@ typedef struct MeterMode_ MeterMode;
 
 typedef void(*MeterType_Init)(Meter*);
 typedef void(*MeterType_Done)(Meter*);
+typedef void(*MeterType_SetMode)(Meter*, int);
 typedef void(*Meter_SetValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 
@@ -59,6 +60,7 @@ struct MeterType_ {
    char* caption;
    MeterType_Init init;
    MeterType_Done done;
+   MeterType_SetMode setMode;
    Meter_Draw draw;
 };
 
@@ -99,7 +101,7 @@ typedef enum {
    LAST_METERMODE
 } MeterModeId;
 
-extern MeterType* Meter_types[9];
+extern MeterType* Meter_types[];
 extern MeterMode* Meter_modes[];
 
 

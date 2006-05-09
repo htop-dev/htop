@@ -122,8 +122,7 @@ MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side) {
 }
 
 void Header_defaultMeters(Header* this) {
-   for (int i = 1; i <= this->pl->processorCount; i++)
-      TypedVector_add(this->leftMeters, Meter_new(this->pl, i, &CPUMeter));
+   TypedVector_add(this->leftMeters, Meter_new(this->pl, 0, &AllCPUsMeter));
    TypedVector_add(this->leftMeters, Meter_new(this->pl, 0, &MemoryMeter));
    TypedVector_add(this->leftMeters, Meter_new(this->pl, 0, &SwapMeter));
    TypedVector_add(this->rightMeters, Meter_new(this->pl, 0, &TasksMeter));

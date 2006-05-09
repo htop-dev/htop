@@ -36,6 +36,7 @@ typedef struct MeterMode_ MeterMode;
 
 typedef void(*MeterType_Init)(Meter*);
 typedef void(*MeterType_Done)(Meter*);
+typedef void(*MeterType_SetMode)(Meter*, int);
 typedef void(*Meter_SetValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 
@@ -57,6 +58,7 @@ struct MeterType_ {
    char* caption;
    MeterType_Init init;
    MeterType_Done done;
+   MeterType_SetMode setMode;
    Meter_Draw draw;
 };
 
@@ -226,6 +228,8 @@ void Meter_setMode(Meter* this, int modeIndex) {
    assert(modeIndex < LAST_METERMODE);
    if (this->type->mode == 0) {
       this->draw = this->type->draw;
+      if (this->type->setMode)
+         this->type->setMode(this, modeIndex);
    } else {
       assert(modeIndex >= 1);
       if (this->drawBuffer)
@@ -382,7 +386,6 @@ void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       value += this->values[i];
    value /= this->total;
    drawBuffer[METER_BUFFER_LEN - 1] = value;
- mvprintw(0,0,"%f ",value);
    for (int i = METER_BUFFER_LEN - w, k = 0; i < METER_BUFFER_LEN; i++, k++) {
       double value = drawBuffer[i];
       DrawDot( CRT_colors[DEFAULT_COLOR], y, ' ' );
