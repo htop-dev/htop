@@ -11,6 +11,8 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "TraceScreen.h"
 #include "ProcessList.h"
@@ -162,5 +164,6 @@ void TraceScreen_run(TraceScreen* this) {
       ListBox_draw(lb, true);
    }
    kill(child, SIGTERM);
+   waitpid(child, NULL, 0);
    fclose(strace);
 }
