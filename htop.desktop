@@ -8,5 +8,5 @@ Terminal=true
 Exec=htop
 Path=
 Icon=htop
-Categories=ConsoleOnly;System;
+Categories=ConsoleOnly;System;Application;
 GenericName=Process Viewer
