@@ -44,11 +44,12 @@ AC_ARG_WITH(proc, [  --with-proc=DIR      Location of a Linux-compatible proc fi
 
    if test -n "$withval"; then
       AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
+      PROCDIR="$withval"
    fi,
    AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
 
-AC_CHECK_FILE(/proc/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
-AC_CHECK_FILE(/proc/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
+AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
+AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
