@@ -119,6 +119,7 @@ MeterType* Meter_types[] = {
    &CPUMeter,
    &ClockMeter,
    &LoadAverageMeter,
+   &LoadMeter,
    &MemoryMeter,
    &SwapMeter,
    &TasksMeter,
