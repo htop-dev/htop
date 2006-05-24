@@ -1,4 +1,12 @@
 
+What's new in version 0.6.2
+
+* BUGFIX: Fixed crash when using some .htoprc files from 0.6
+  (thanks to Wolfram Schlich and John Thomas for the reports)
+* BUGFIX: Ensure changes to color scheme are saved
+* BUGFIX: Make configure behave correctly with --with-proc
+* Minor addition to .desktop file.
+
 What's new in version 0.6.1
 
 * New meter type: "All CPUs", which dynamically adjusts
