@@ -1,7 +1,7 @@
 
-#include "MetersListBox.h"
+#include "MetersPanel.h"
 
-#include "ListBox.h"
+#include "Panel.h"
 #include "Settings.h"
 #include "ScreenManager.h"
 
@@ -10,45 +10,45 @@
 
 /*{
 
-typedef struct MetersListBox_ {
-   ListBox super;
+typedef struct MetersPanel_ {
+   Panel super;
 
    Settings* settings;
    Vector* meters;
    ScreenManager* scr;
-} MetersListBox;
+} MetersPanel;
 
 }*/
 
-MetersListBox* MetersListBox_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr) {
-   MetersListBox* this = (MetersListBox*) malloc(sizeof(MetersListBox));
-   ListBox* super = (ListBox*) this;
-   ListBox_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = MetersListBox_delete;
+MetersPanel* MetersPanel_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr) {
+   MetersPanel* this = (MetersPanel*) malloc(sizeof(MetersPanel));
+   Panel* super = (Panel*) this;
+   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
+   ((Object*)this)->delete = MetersPanel_delete;
 
    this->settings = settings;
    this->meters = meters;
    this->scr = scr;
-   super->eventHandler = MetersListBox_EventHandler;
-   ListBox_setHeader(super, header);
+   super->eventHandler = MetersPanel_EventHandler;
+   Panel_setHeader(super, header);
    for (int i = 0; i < Vector_size(meters); i++) {
       Meter* meter = (Meter*) Vector_get(meters, i);
-      ListBox_add(super, (Object*) Meter_toListItem(meter));
+      Panel_add(super, (Object*) Meter_toListItem(meter));
    }
    return this;
 }
 
-void MetersListBox_delete(Object* object) {
-   ListBox* super = (ListBox*) object;
-   MetersListBox* this = (MetersListBox*) object;
-   ListBox_done(super);
+void MetersPanel_delete(Object* object) {
+   Panel* super = (Panel*) object;
+   MetersPanel* this = (MetersPanel*) object;
+   Panel_done(super);
    free(this);
 }
 
-HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
-   MetersListBox* this = (MetersListBox*) super;
+HandlerResult MetersPanel_EventHandler(Panel* super, int ch) {
+   MetersPanel* this = (MetersPanel*) super;
    
-   int selected = ListBox_getSelectedIndex(super);
+   int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
 
    switch(ch) {
@@ -62,7 +62,7 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
          int mode = meter->mode + 1;
          if (mode == LAST_METERMODE) mode = 1;
          Meter_setMode(meter, mode);
-         ListBox_set(super, selected, (Object*) Meter_toListItem(meter));
+         Panel_set(super, selected, (Object*) Meter_toListItem(meter));
          result = HANDLED;
          break;
       }
@@ -71,7 +71,7 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
       case '-':
       {
          Vector_moveUp(this->meters, selected);
-         ListBox_moveSelectedUp(super);
+         Panel_moveSelectedUp(super);
          result = HANDLED;
          break;
       }
@@ -80,7 +80,7 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
       case '+':
       {
          Vector_moveDown(this->meters, selected);
-         ListBox_moveSelectedDown(super);
+         Panel_moveSelectedDown(super);
          result = HANDLED;
          break;
       }
@@ -89,7 +89,7 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
       {
          if (selected < Vector_size(this->meters)) {
             Vector_remove(this->meters, selected);
-            ListBox_remove(super, selected);
+            Panel_remove(super, selected);
          }
          result = HANDLED;
          break;

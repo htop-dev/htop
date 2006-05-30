@@ -11,7 +11,7 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 #include "CRT.h"
-#include "ListBox.h"
+#include "Panel.h"
 #include "UsersTable.h"
 #include "SignalItem.h"
 #include "RichString.h"
@@ -19,8 +19,8 @@ in the source distribution for its full text.
 #include "ScreenManager.h"
 #include "FunctionBar.h"
 #include "ListItem.h"
-#include "CategoriesListBox.h"
-#include "SignalsListBox.h"
+#include "CategoriesPanel.h"
+#include "SignalsPanel.h"
 
 #include "config.h"
 #include "debug.h"

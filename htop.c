@@ -14,7 +14,7 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 #include "CRT.h"
-#include "ListBox.h"
+#include "Panel.h"
 #include "UsersTable.h"
 #include "SignalItem.h"
 #include "RichString.h"
@@ -22,8 +22,8 @@ in the source distribution for its full text.
 #include "ScreenManager.h"
 #include "FunctionBar.h"
 #include "ListItem.h"
-#include "CategoriesListBox.h"
-#include "SignalsListBox.h"
+#include "CategoriesPanel.h"
+#include "SignalsPanel.h"
 #include "TraceScreen.h"
 
 #include "config.h"
@@ -126,62 +126,62 @@ void showHelp() {
 
 static void Setup_run(Settings* settings, int headerHeight) {
    ScreenManager* scr = ScreenManager_new(0, headerHeight, 0, -1, HORIZONTAL, true);
-   CategoriesListBox* lbCategories = CategoriesListBox_new(settings, scr);
-   ScreenManager_add(scr, (ListBox*) lbCategories, NULL, 16);
-   CategoriesListBox_makeMetersPage(lbCategories);
-   ListBox* lbFocus;
+   CategoriesPanel* lbCategories = CategoriesPanel_new(settings, scr);
+   ScreenManager_add(scr, (Panel*) lbCategories, NULL, 16);
+   CategoriesPanel_makeMetersPage(lbCategories);
+   Panel* lbFocus;
    int ch;
    ScreenManager_run(scr, &lbFocus, &ch);
    ScreenManager_delete(scr);
 }
 
-static bool changePriority(ListBox* lb, int delta) {
+static bool changePriority(Panel* lb, int delta) {
    bool anyTagged = false;
-   for (int i = 0; i < ListBox_getSize(lb); i++) {
-      Process* p = (Process*) ListBox_get(lb, i);
+   for (int i = 0; i < Panel_getSize(lb); i++) {
+      Process* p = (Process*) Panel_get(lb, i);
       if (p->tag) {
          Process_setPriority(p, p->nice + delta);
          anyTagged = true;
       }
    }
    if (!anyTagged) {
-      Process* p = (Process*) ListBox_getSelected(lb);
+      Process* p = (Process*) Panel_getSelected(lb);
       Process_setPriority(p, p->nice + delta);
    }
    return anyTagged;
 }
 
-static HandlerResult pickWithEnter(ListBox* lb, int ch) {
+static HandlerResult pickWithEnter(Panel* lb, int ch) {
    if (ch == 13)
       return BREAK_LOOP;
    return IGNORED;
 }
 
-static Object* pickFromList(ListBox* lb, ListBox* list, int x, int y, char** keyLabels, FunctionBar* prevBar) {
+static Object* pickFromList(Panel* lb, Panel* list, int x, int y, char** keyLabels, FunctionBar* prevBar) {
    char* fuKeys[2] = {"Enter", "Esc"};
    int fuEvents[2] = {13, 27};
    if (!lb->eventHandler)
-      ListBox_setEventHandler(list, pickWithEnter);
+      Panel_setEventHandler(list, pickWithEnter);
    ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, false);
    ScreenManager_add(scr, list, FunctionBar_new(2, keyLabels, fuKeys, fuEvents), x - 1);
    ScreenManager_add(scr, lb, NULL, -1);
-   ListBox* lbFocus;
+   Panel* lbFocus;
    int ch;
    ScreenManager_run(scr, &lbFocus, &ch);
    ScreenManager_delete(scr);
-   ListBox_move(lb, 0, y);
-   ListBox_resize(lb, COLS, LINES-y-1);
+   Panel_move(lb, 0, y);
+   Panel_resize(lb, COLS, LINES-y-1);
    FunctionBar_draw(prevBar, NULL);
    if (lbFocus == list && ch == 13) {
-      return ListBox_getSelected(list);
+      return Panel_getSelected(list);
    }
    return NULL;
 }
 
 void addUserToList(int key, void* userCast, void* lbCast) {
    char* user = (char*) userCast;
-   ListBox* lb = (ListBox*) lbCast;
-   ListBox_add(lb, (Object*) ListItem_new(user, key));
+   Panel* lb = (Panel*) lbCast;
+   Panel_add(lb, (Object*) ListItem_new(user, key));
 }
 
 void setUserOnly(const char* userName, bool* userOnly, uid_t* userId) {
@@ -219,14 +219,14 @@ int main(int argc, char** argv) {
       exit(1);
    }
 
-   ListBox* lb;
+   Panel* lb;
    int quit = 0;
    int refreshTimeout = 0;
    int resetRefreshTimeout = 5;
    bool doRefresh = true;
    Settings* settings;
    
-   ListBox* lbk = NULL;
+   Panel* lbk = NULL;
 
    char incSearchBuffer[INCSEARCH_MAX];
    int incSearchIndex = 0;
@@ -248,8 +248,8 @@ int main(int argc, char** argv) {
    
    CRT_init(settings->delay, settings->colorScheme);
    
-   lb = ListBox_new(0, headerHeight, COLS, LINES - headerHeight - 2, PROCESS_CLASS, false);
-   ListBox_setRichHeader(lb, ProcessList_printHeader(pl));
+   lb = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, PROCESS_CLASS, false);
+   Panel_setRichHeader(lb, ProcessList_printHeader(pl));
    
    char* searchFunctions[3] = {"Next  ", "Exit  ", " Search: "};
    char* searchKeys[3] = {"F3", "Esc", "  "};
@@ -285,7 +285,7 @@ int main(int argc, char** argv) {
       if (doRefresh) {
          incSearchIndex = 0;
          incSearchBuffer[0] = 0;
-         int currPos = ListBox_getSelectedIndex(lb);
+         int currPos = Panel_getSelectedIndex(lb);
          int currPid = 0;
          int currScrollV = lb->scrollV;
          if (follow)
@@ -296,15 +296,15 @@ int main(int argc, char** argv) {
             ProcessList_sort(pl);
             refreshTimeout = 1;
          }
-         ListBox_prune(lb);
+         Panel_prune(lb);
          int size = ProcessList_size(pl);
          int lbi = 0;
          for (int i = 0; i < size; i++) {
             Process* p = ProcessList_get(pl, i);
             if (!userOnly || (p->st_uid == userId)) {
-               ListBox_set(lb, lbi, (Object*)p);
+               Panel_set(lb, lbi, (Object*)p);
                if ((!follow && lbi == currPos) || (follow && p->pid == currPid)) {
-                  ListBox_setSelected(lb, lbi);
+                  Panel_setSelected(lb, lbi);
                   lb->scrollV = currScrollV;
                }
                lbi++;
@@ -315,7 +315,7 @@ int main(int argc, char** argv) {
       
       Header_draw(header);
 
-      ListBox_draw(lb, true);
+      Panel_draw(lb, true);
       int prev = ch;
       ch = getch();
 
@@ -334,7 +334,7 @@ int main(int argc, char** argv) {
       if (incSearchMode) {
          doRefresh = false;
          if (ch == KEY_F(3)) {
-            int here = ListBox_getSelectedIndex(lb);
+            int here = Panel_getSelectedIndex(lb);
             int size = ProcessList_size(pl);
             int i = here+1;
             while (i != here) {
@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
                   i = 0;
                Process* p = ProcessList_get(pl, i);
                if (String_contains_i(p->comm, incSearchBuffer)) {
-                  ListBox_setSelected(lb, i);
+                  Panel_setSelected(lb, i);
                   break;
                }
                i++;
@@ -367,7 +367,7 @@ int main(int argc, char** argv) {
          for (int i = 0; i < ProcessList_size(pl); i++) {
             Process* p = ProcessList_get(pl, i);
             if (String_contains_i(p->comm, incSearchBuffer)) {
-               ListBox_setSelected(lb, i);
+               Panel_setSelected(lb, i);
                found = true;
                break;
             }
@@ -381,8 +381,8 @@ int main(int argc, char** argv) {
       }
       if (isdigit((char)ch)) {
          int pid = ch-48 + acc;
-         for (int i = 0; i < ProcessList_size(pl) && ((Process*) ListBox_getSelected(lb))->pid != pid; i++)
-            ListBox_setSelected(lb, i);
+         for (int i = 0; i < ProcessList_size(pl) && ((Process*) Panel_getSelected(lb))->pid != pid; i++)
+            Panel_setSelected(lb, i);
          acc = pid * 10;
          if (acc > 100000)
             acc = 0;
@@ -396,7 +396,7 @@ int main(int argc, char** argv) {
          int ok = getmouse(&mevent);
          if (ok == OK) {
             if (mevent.y >= lb->y + 1 && mevent.y < LINES - 1) {
-               ListBox_setSelected(lb, mevent.y - lb->y + lb->scrollV - 1);
+               Panel_setSelected(lb, mevent.y - lb->y + lb->scrollV - 1);
                doRefresh = false;
                refreshTimeout = resetRefreshTimeout;
                follow = true;
@@ -413,7 +413,7 @@ int main(int argc, char** argv) {
 
       switch (ch) {
       case KEY_RESIZE:
-         ListBox_resize(lb, COLS, LINES-headerHeight-1);
+         Panel_resize(lb, COLS, LINES-headerHeight-1);
          if (incSearchMode)
             FunctionBar_draw(searchBar, incSearchBuffer);
          else
@@ -425,7 +425,7 @@ int main(int argc, char** argv) {
          pl->sortKey = PERCENT_MEM;
          pl->treeView = false;
          settings->changed = true;
-         ListBox_setRichHeader(lb, ProcessList_printHeader(pl));
+         Panel_setRichHeader(lb, ProcessList_printHeader(pl));
          break;
       }
       case 'T':
@@ -434,13 +434,13 @@ int main(int argc, char** argv) {
          pl->sortKey = TIME;
          pl->treeView = false;
          settings->changed = true;
-         ListBox_setRichHeader(lb, ProcessList_printHeader(pl));
+         Panel_setRichHeader(lb, ProcessList_printHeader(pl));
          break;
       }
       case 'U':
       {
-         for (int i = 0; i < ListBox_getSize(lb); i++) {
-            Process* p = (Process*) ListBox_get(lb, i);
+         for (int i = 0; i < Panel_getSize(lb); i++) {
+            Process* p = (Process*) Panel_get(lb, i);
             p->tag = false;
          }
          doRefresh = true;
@@ -452,7 +452,7 @@ int main(int argc, char** argv) {
          pl->sortKey = PERCENT_CPU;
          pl->treeView = false;
          settings->changed = true;
-         ListBox_setRichHeader(lb, ProcessList_printHeader(pl));
+         Panel_setRichHeader(lb, ProcessList_printHeader(pl));
          break;
       }
       case KEY_F(1):
@@ -472,14 +472,14 @@ int main(int argc, char** argv) {
       }
       case ' ':
       {
-         Process* p = (Process*) ListBox_getSelected(lb);
+         Process* p = (Process*) Panel_getSelected(lb);
          Process_toggleTag(p);
-         ListBox_onKey(lb, KEY_DOWN);
+         Panel_onKey(lb, KEY_DOWN);
          break;
       }
       case 's':
       {
-         TraceScreen* ts = TraceScreen_new((Process*) ListBox_getSelected(lb));
+         TraceScreen* ts = TraceScreen_new((Process*) Panel_getSelected(lb));
          TraceScreen_run(ts);
          TraceScreen_delete(ts);
          clear();
@@ -494,10 +494,10 @@ int main(int argc, char** argv) {
       {
          Setup_run(settings, headerHeight);
          // TODO: shouldn't need this, colors should be dynamic
-         ListBox_setRichHeader(lb, ProcessList_printHeader(pl));
+         Panel_setRichHeader(lb, ProcessList_printHeader(pl));
          headerHeight = Header_calculateHeight(header);
-         ListBox_move(lb, 0, headerHeight);
-         ListBox_resize(lb, COLS, LINES-headerHeight-1);
+         Panel_move(lb, 0, headerHeight);
+         Panel_resize(lb, COLS, LINES-headerHeight-1);
          FunctionBar_draw(defaultBar, NULL);
          refreshTimeout = 0;
          break;
@@ -509,12 +509,12 @@ int main(int argc, char** argv) {
       }
       case 'u':
       {
-         ListBox* lbu = ListBox_new(0, 0, 0, 0, LISTITEM_CLASS, true);
-         ListBox_setHeader(lbu, "Show processes of:");
+         Panel* lbu = Panel_new(0, 0, 0, 0, LISTITEM_CLASS, true);
+         Panel_setHeader(lbu, "Show processes of:");
          UsersTable_foreach(ut, addUserToList, lbu);
          Vector_sort(lbu->items);
          ListItem* allUsers = ListItem_new("All users", -1);
-         ListBox_insert(lbu, 0, (Object*) allUsers);
+         Panel_insert(lbu, 0, (Object*) allUsers);
          char* fuFunctions[2] = {"Show    ", "Cancel "};
          ListItem* picked = (ListItem*) pickFromList(lb, lbu, 20, headerHeight, fuFunctions, defaultBar);
          if (picked) {
@@ -531,19 +531,19 @@ int main(int argc, char** argv) {
       case 'k':
       {
          if (!lbk) {
-            lbk = (ListBox*) SignalsListBox_new(0, 0, 0, 0);
+            lbk = (Panel*) SignalsPanel_new(0, 0, 0, 0);
          }
-         SignalsListBox_reset((SignalsListBox*) lbk);
+         SignalsPanel_reset((SignalsPanel*) lbk);
          char* fuFunctions[2] = {"Send  ", "Cancel "};
          Signal* signal = (Signal*) pickFromList(lb, lbk, 15, headerHeight, fuFunctions, defaultBar);
          if (signal) {
             if (signal->number != 0) {
-               ListBox_setHeader(lb, "Sending...");
-               ListBox_draw(lb, true);
+               Panel_setHeader(lb, "Sending...");
+               Panel_draw(lb, true);
                refresh();
                bool anyTagged = false;
-               for (int i = 0; i < ListBox_getSize(lb); i++) {
-                  Process* p = (Process*) ListBox_get(lb, i);
+               for (int i = 0; i < Panel_getSize(lb); i++) {
+                  Process* p = (Process*) Panel_get(lb, i);
                   if (p->tag) {
                      Process_sendSignal(p, signal->number);
                      Process_toggleTag(p);
@@ -551,13 +551,13 @@ int main(int argc, char** argv) {
                   }
                }
                if (!anyTagged) {
-                  Process* p = (Process*) ListBox_getSelected(lb);
+                  Process* p = (Process*) Panel_getSelected(lb);
                   Process_sendSignal(p, signal->number);
                }
                napms(500);
             }
          }
-         ListBox_setRichHeader(lb, ProcessList_printHeader(pl));
+         Panel_setRichHeader(lb, ProcessList_printHeader(pl));
          refreshTimeout = 0;
          break;
       }
@@ -572,15 +572,15 @@ int main(int argc, char** argv) {
       case '.':
       case KEY_F(6):
       {
-         ListBox* lbf = ListBox_new(0,0,0,0,LISTITEM_CLASS,true);
-         ListBox_setHeader(lbf, "Sort by");
+         Panel* lbf = Panel_new(0,0,0,0,LISTITEM_CLASS,true);
+         Panel_setHeader(lbf, "Sort by");
          char* fuFunctions[2] = {"Sort  ", "Cancel "};
          ProcessField* fields = pl->fields;
          for (int i = 0; fields[i]; i++) {
             char* name = String_trim(Process_printField(fields[i]));
-            ListBox_add(lbf, (Object*) ListItem_new(name, fields[i]));
+            Panel_add(lbf, (Object*) ListItem_new(name, fields[i]));
             if (fields[i] == pl->sortKey)
-               ListBox_setSelected(lbf, i);
+               Panel_setSelected(lbf, i);
             free(name);
          }
          ListItem* field = (ListItem*) pickFromList(lb, lbf, 15, headerHeight, fuFunctions, defaultBar);
@@ -590,7 +590,7 @@ int main(int argc, char** argv) {
             pl->sortKey = field->key;
          }
          ((Object*)lbf)->delete((Object*)lbf);
-         ListBox_setRichHeader(lb, ProcessList_printHeader(pl));
+         Panel_setRichHeader(lb, ProcessList_printHeader(pl));
          refreshTimeout = 0;
          break;
       }
@@ -641,7 +641,7 @@ int main(int argc, char** argv) {
       default:
          doRefresh = false;
          refreshTimeout = resetRefreshTimeout;
-         ListBox_onKey(lb, ch);
+         Panel_onKey(lb, ch);
          break;
       }
       follow = false;

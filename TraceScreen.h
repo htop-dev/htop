@@ -15,12 +15,12 @@ in the source distribution for its full text.
 #include <fcntl.h>
 
 #include "ProcessList.h"
-#include "ListBox.h"
+#include "Panel.h"
 #include "FunctionBar.h"
 
 typedef struct TraceScreen_ {
    Process* process;
-   ListBox* display;
+   Panel* display;
    FunctionBar* bar;
    bool tracing;
 } TraceScreen;

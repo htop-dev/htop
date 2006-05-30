@@ -1,7 +1,7 @@
 
-#include "DisplayOptionsListBox.h"
+#include "DisplayOptionsPanel.h"
 
-#include "ListBox.h"
+#include "Panel.h"
 #include "CheckItem.h"
 #include "Settings.h"
 #include "ScreenManager.h"
@@ -11,48 +11,48 @@
 
 /*{
 
-typedef struct DisplayOptionsListBox_ {
-   ListBox super;
+typedef struct DisplayOptionsPanel_ {
+   Panel super;
 
    Settings* settings;
    ScreenManager* scr;
-} DisplayOptionsListBox;
+} DisplayOptionsPanel;
 
 }*/
 
-DisplayOptionsListBox* DisplayOptionsListBox_new(Settings* settings, ScreenManager* scr) {
-   DisplayOptionsListBox* this = (DisplayOptionsListBox*) malloc(sizeof(DisplayOptionsListBox));
-   ListBox* super = (ListBox*) this;
-   ListBox_init(super, 1, 1, 1, 1, CHECKITEM_CLASS, true);
-   ((Object*)this)->delete = DisplayOptionsListBox_delete;
+DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* scr) {
+   DisplayOptionsPanel* this = (DisplayOptionsPanel*) malloc(sizeof(DisplayOptionsPanel));
+   Panel* super = (Panel*) this;
+   Panel_init(super, 1, 1, 1, 1, CHECKITEM_CLASS, true);
+   ((Object*)this)->delete = DisplayOptionsPanel_delete;
 
    this->settings = settings;
    this->scr = scr;
-   super->eventHandler = DisplayOptionsListBox_EventHandler;
+   super->eventHandler = DisplayOptionsPanel_EventHandler;
 
-   ListBox_setHeader(super, "Display options");
-   ListBox_add(super, (Object*) CheckItem_new(String_copy("Tree view"), &(settings->pl->treeView)));
-   ListBox_add(super, (Object*) CheckItem_new(String_copy("Shadow other users' processes"), &(settings->pl->shadowOtherUsers)));
-   ListBox_add(super, (Object*) CheckItem_new(String_copy("Hide kernel threads"), &(settings->pl->hideKernelThreads)));
-   ListBox_add(super, (Object*) CheckItem_new(String_copy("Hide userland threads"), &(settings->pl->hideUserlandThreads)));
-   ListBox_add(super, (Object*) CheckItem_new(String_copy("Highlight program \"basename\""), &(settings->pl->highlightBaseName)));
-   ListBox_add(super, (Object*) CheckItem_new(String_copy("Highlight megabytes in memory counters"), &(settings->pl->highlightMegabytes)));
-   ListBox_add(super, (Object*) CheckItem_new(String_copy("Leave a margin around header"), &(settings->header->margin)));
+   Panel_setHeader(super, "Display options");
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Tree view"), &(settings->pl->treeView)));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Shadow other users' processes"), &(settings->pl->shadowOtherUsers)));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Hide kernel threads"), &(settings->pl->hideKernelThreads)));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Hide userland threads"), &(settings->pl->hideUserlandThreads)));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight program \"basename\""), &(settings->pl->highlightBaseName)));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight megabytes in memory counters"), &(settings->pl->highlightMegabytes)));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Leave a margin around header"), &(settings->header->margin)));
    return this;
 }
 
-void DisplayOptionsListBox_delete(Object* object) {
-   ListBox* super = (ListBox*) object;
-   DisplayOptionsListBox* this = (DisplayOptionsListBox*) object;
-   ListBox_done(super);
+void DisplayOptionsPanel_delete(Object* object) {
+   Panel* super = (Panel*) object;
+   DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
+   Panel_done(super);
    free(this);
 }
 
-HandlerResult DisplayOptionsListBox_EventHandler(ListBox* super, int ch) {
-   DisplayOptionsListBox* this = (DisplayOptionsListBox*) super;
+HandlerResult DisplayOptionsPanel_EventHandler(Panel* super, int ch) {
+   DisplayOptionsPanel* this = (DisplayOptionsPanel*) super;
    
    HandlerResult result = IGNORED;
-   CheckItem* selected = (CheckItem*) ListBox_getSelected(super);
+   CheckItem* selected = (CheckItem*) Panel_getSelected(super);
 
    switch(ch) {
    case 0x0a:

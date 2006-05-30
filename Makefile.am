@@ -10,22 +10,22 @@ pixmap_DATA = htop.png
 AM_CFLAGS = -pedantic -Wall -std=c99
 AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\"
 
-htop_SOURCES = AvailableMetersListBox.c CategoriesListBox.c ClockMeter.c \
-CPUMeter.c CRT.c DebugMemory.c DisplayOptionsListBox.c FunctionBar.c \
-Hashtable.c Header.c htop.c ListBox.c ListItem.c LoadAverageMeter.c \
-MemoryMeter.c Meter.c MetersListBox.c Object.c Process.c \
+htop_SOURCES = AvailableMetersPanel.c CategoriesPanel.c ClockMeter.c \
+CPUMeter.c CRT.c DebugMemory.c DisplayOptionsPanel.c FunctionBar.c \
+Hashtable.c Header.c htop.c Panel.c ListItem.c LoadAverageMeter.c \
+MemoryMeter.c Meter.c MetersPanel.c Object.c Process.c \
 ProcessList.c RichString.c ScreenManager.c Settings.c SignalItem.c \
-SignalsListBox.c String.c SwapMeter.c TasksMeter.c Vector.c \
-UptimeMeter.c UsersTable.c AvailableMetersListBox.h CategoriesListBox.h \
+SignalsPanel.c String.c SwapMeter.c TasksMeter.c Vector.c \
+UptimeMeter.c UsersTable.c AvailableMetersPanel.h CategoriesPanel.h \
 ClockMeter.h config.h CPUMeter.h CRT.h debug.h DebugMemory.h \
-DisplayOptionsListBox.h FunctionBar.h Hashtable.h Header.h htop.h ListBox.h \
+DisplayOptionsPanel.h FunctionBar.h Hashtable.h Header.h htop.h Panel.h \
 ListItem.h LoadAverageMeter.h MemoryMeter.h Meter.h \
-MetersListBox.h Object.h Process.h ProcessList.h RichString.h ScreenManager.h \
-Settings.h SignalItem.h SignalsListBox.h String.h SwapMeter.h TasksMeter.h \
+MetersPanel.h Object.h Process.h ProcessList.h RichString.h ScreenManager.h \
+Settings.h SignalItem.h SignalsPanel.h String.h SwapMeter.h TasksMeter.h \
 Vector.h UptimeMeter.h UsersTable.h CheckItem.c CheckItem.h \
-ColorsListBox.c ColorsListBox.h TraceScreen.c TraceScreen.h \
-AvailableColumnsListBox.c AvailableColumnsListBox.h ColumnsListBox.c \
-ColumnsListBox.h
+ColorsPanel.c ColorsPanel.h TraceScreen.c TraceScreen.h \
+AvailableColumnsPanel.c AvailableColumnsPanel.h ColumnsPanel.c \
+ColumnsPanel.h
 
 debug:
 	$(MAKE) all CFLAGS="-g -DDEBUG"

@@ -1,7 +1,7 @@
 
-#include "ColumnsListBox.h"
+#include "ColumnsPanel.h"
 
-#include "ListBox.h"
+#include "Panel.h"
 #include "Settings.h"
 #include "ScreenManager.h"
 
@@ -10,49 +10,49 @@
 
 /*{
 
-typedef struct ColumnsListBox_ {
-   ListBox super;
+typedef struct ColumnsPanel_ {
+   Panel super;
 
    Settings* settings;
    ScreenManager* scr;
-} ColumnsListBox;
+} ColumnsPanel;
 
 }*/
 
-ColumnsListBox* ColumnsListBox_new(Settings* settings, ScreenManager* scr) {
-   ColumnsListBox* this = (ColumnsListBox*) malloc(sizeof(ColumnsListBox));
-   ListBox* super = (ListBox*) this;
-   ListBox_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = ColumnsListBox_delete;
+ColumnsPanel* ColumnsPanel_new(Settings* settings, ScreenManager* scr) {
+   ColumnsPanel* this = (ColumnsPanel*) malloc(sizeof(ColumnsPanel));
+   Panel* super = (Panel*) this;
+   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
+   ((Object*)this)->delete = ColumnsPanel_delete;
 
    this->settings = settings;
    this->scr = scr;
-   super->eventHandler = ColumnsListBox_eventHandler;
-   ListBox_setHeader(super, "Active Columns");
+   super->eventHandler = ColumnsPanel_eventHandler;
+   Panel_setHeader(super, "Active Columns");
 
    ProcessField* fields = this->settings->pl->fields;
    for (; *fields; fields++) {
-      ListBox_add(super, (Object*) ListItem_new(Process_fieldNames[*fields], 0));
+      Panel_add(super, (Object*) ListItem_new(Process_fieldNames[*fields], 0));
    }
    return this;
 }
 
-void ColumnsListBox_delete(Object* object) {
-   ListBox* super = (ListBox*) object;
-   ColumnsListBox* this = (ColumnsListBox*) object;
-   ListBox_done(super);
+void ColumnsPanel_delete(Object* object) {
+   Panel* super = (Panel*) object;
+   ColumnsPanel* this = (ColumnsPanel*) object;
+   Panel_done(super);
    free(this);
 }
 
-void ColumnsListBox_update(ListBox* super) {
-   ColumnsListBox* this = (ColumnsListBox*) super;
-   int size = ListBox_getSize(super);
+void ColumnsPanel_update(Panel* super) {
+   ColumnsPanel* this = (ColumnsPanel*) super;
+   int size = Panel_getSize(super);
    this->settings->changed = true;
    // FIXME: this is crappily inefficient
    free(this->settings->pl->fields);
    this->settings->pl->fields = (ProcessField*) malloc(sizeof(ProcessField) * (size+1));
    for (int i = 0; i < size; i++) {
-      char* text = ((ListItem*) ListBox_get(super, i))->value;
+      char* text = ((ListItem*) Panel_get(super, i))->value;
       for (int j = 1; j <= LAST_PROCESSFIELD; j++) {
          if (String_eq(text, Process_fieldNames[j])) {
             this->settings->pl->fields[i] = j;
@@ -63,11 +63,11 @@ void ColumnsListBox_update(ListBox* super) {
    this->settings->pl->fields[size] = 0;
 }
 
-HandlerResult ColumnsListBox_eventHandler(ListBox* super, int ch) {
+HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    
-   int selected = ListBox_getSelectedIndex(super);
+   int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
-   int size = ListBox_getSize(super);
+   int size = Panel_getSize(super);
 
    switch(ch) {
       case KEY_F(7):
@@ -75,7 +75,7 @@ HandlerResult ColumnsListBox_eventHandler(ListBox* super, int ch) {
       case '-':
       {
          if (selected < size - 1)
-            ListBox_moveSelectedUp(super);
+            Panel_moveSelectedUp(super);
          result = HANDLED;
          break;
       }
@@ -84,7 +84,7 @@ HandlerResult ColumnsListBox_eventHandler(ListBox* super, int ch) {
       case '+':
       {
 	 if (selected < size - 2) 
-            ListBox_moveSelectedDown(super);
+            Panel_moveSelectedDown(super);
          result = HANDLED;
          break;
       }
@@ -92,13 +92,13 @@ HandlerResult ColumnsListBox_eventHandler(ListBox* super, int ch) {
       case KEY_DC:
       {
          if (selected < size - 1) {
-            ListBox_remove(super, selected);
+            Panel_remove(super, selected);
          }
          result = HANDLED;
          break;
       }
    }
    if (result == HANDLED)
-      ColumnsListBox_update(super);
+      ColumnsPanel_update(super);
    return result;
 }

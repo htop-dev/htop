@@ -137,7 +137,7 @@ What's new in version 0.4
 * Clock and load average meters
   (thanks to Marc Calahan)
 * BUGFIX: numeric swap indicator was printing bogus value
-* BUGFIX: internal fixes on ListBox widget
+* BUGFIX: internal fixes on Panel widget
 * Clear the bottom line when exiting
 * Press "F3" during search to walk through the results
 * Improved navigation on column configuration screen
