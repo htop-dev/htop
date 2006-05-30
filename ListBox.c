@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "Object.h"
 #include "ListBox.h"
-#include "TypedVector.h"
+#include "Vector.h"
 #include "CRT.h"
 #include "RichString.h"
 
@@ -36,7 +36,7 @@ struct ListBox_ {
    Object super;
    int x, y, w, h;
    WINDOW* window;
-   TypedVector* items;
+   Vector* items;
    int selected;
    int scrollV, scrollH;
    int oldSelected;
@@ -81,7 +81,7 @@ void ListBox_init(ListBox* this, int x, int y, int w, int h, char* type, bool ow
    this->w = w;
    this->h = h;
    this->eventHandler = NULL;
-   this->items = TypedVector_new(type, owner, DEFAULT_SIZE);
+   this->items = Vector_new(type, owner, DEFAULT_SIZE);
    this->scrollV = 0;
    this->scrollH = 0;
    this->selected = 0;
@@ -93,7 +93,7 @@ void ListBox_init(ListBox* this, int x, int y, int w, int h, char* type, bool ow
 void ListBox_done(ListBox* this) {
    assert (this != NULL);
    RichString_delete(this->header);
-   TypedVector_delete(this->items);
+   Vector_delete(this->items);
 }
 
 inline void ListBox_setRichHeader(ListBox* this, RichString header) {
@@ -135,7 +135,7 @@ void ListBox_resize(ListBox* this, int w, int h) {
 void ListBox_prune(ListBox* this) {
    assert (this != NULL);
 
-   TypedVector_prune(this->items);
+   Vector_prune(this->items);
    this->scrollV = 0;
    this->selected = 0;
    this->oldSelected = 0;
@@ -145,35 +145,35 @@ void ListBox_prune(ListBox* this) {
 void ListBox_add(ListBox* this, Object* o) {
    assert (this != NULL);
 
-   TypedVector_add(this->items, o);
+   Vector_add(this->items, o);
    this->needsRedraw = true;
 }
 
 void ListBox_insert(ListBox* this, int i, Object* o) {
    assert (this != NULL);
 
-   TypedVector_insert(this->items, i, o);
+   Vector_insert(this->items, i, o);
    this->needsRedraw = true;
 }
 
 void ListBox_set(ListBox* this, int i, Object* o) {
    assert (this != NULL);
 
-   TypedVector_set(this->items, i, o);
+   Vector_set(this->items, i, o);
 }
 
 Object* ListBox_get(ListBox* this, int i) {
    assert (this != NULL);
 
-   return TypedVector_get(this->items, i);
+   return Vector_get(this->items, i);
 }
 
 Object* ListBox_remove(ListBox* this, int i) {
    assert (this != NULL);
 
    this->needsRedraw = true;
-   Object* removed = TypedVector_remove(this->items, i);
-   if (this->selected > 0 && this->selected >= TypedVector_size(this->items))
+   Object* removed = Vector_remove(this->items, i);
+   if (this->selected > 0 && this->selected >= Vector_size(this->items))
       this->selected--;
    return removed;
 }
@@ -181,13 +181,13 @@ Object* ListBox_remove(ListBox* this, int i) {
 Object* ListBox_getSelected(ListBox* this) {
    assert (this != NULL);
 
-   return TypedVector_get(this->items, this->selected);
+   return Vector_get(this->items, this->selected);
 }
 
 void ListBox_moveSelectedUp(ListBox* this) {
    assert (this != NULL);
 
-   TypedVector_moveUp(this->items, this->selected);
+   Vector_moveUp(this->items, this->selected);
    if (this->selected > 0)
       this->selected--;
 }
@@ -195,8 +195,8 @@ void ListBox_moveSelectedUp(ListBox* this) {
 void ListBox_moveSelectedDown(ListBox* this) {
    assert (this != NULL);
 
-   TypedVector_moveDown(this->items, this->selected);
-   if (this->selected + 1 < TypedVector_size(this->items))
+   Vector_moveDown(this->items, this->selected);
+   if (this->selected + 1 < Vector_size(this->items))
       this->selected++;
 }
 
@@ -209,13 +209,13 @@ int ListBox_getSelectedIndex(ListBox* this) {
 int ListBox_getSize(ListBox* this) {
    assert (this != NULL);
 
-   return TypedVector_size(this->items);
+   return Vector_size(this->items);
 }
 
 void ListBox_setSelected(ListBox* this, int selected) {
    assert (this != NULL);
 
-   selected = MAX(0, MIN(TypedVector_size(this->items) - 1, selected));
+   selected = MAX(0, MIN(Vector_size(this->items) - 1, selected));
    this->selected = selected;
 }
 
@@ -223,7 +223,7 @@ void ListBox_draw(ListBox* this, bool focus) {
    assert (this != NULL);
 
    int first, last;
-   int itemCount = TypedVector_size(this->items);
+   int itemCount = Vector_size(this->items);
    int scrollH = this->scrollH;
    int y = this->y; int x = this->x;
    first = this->scrollV;
@@ -269,7 +269,7 @@ void ListBox_draw(ListBox* this, bool focus) {
    if (this->needsRedraw) {
 
       for(int i = first, j = 0; j < this->h && i < last; i++, j++) {
-         Object* itemObj = TypedVector_get(this->items, i);
+         Object* itemObj = Vector_get(this->items, i);
          RichString itemRef = RichString_new();
          itemObj->display(itemObj, &itemRef);
          int amt = MIN(itemRef.len - scrollH, this->w);
@@ -291,10 +291,10 @@ void ListBox_draw(ListBox* this, bool focus) {
       this->needsRedraw = false;
 
    } else {
-      Object* oldObj = TypedVector_get(this->items, this->oldSelected);
+      Object* oldObj = Vector_get(this->items, this->oldSelected);
       RichString oldRef = RichString_new();
       oldObj->display(oldObj, &oldRef);
-      Object* newObj = TypedVector_get(this->items, this->selected);
+      Object* newObj = Vector_get(this->items, this->selected);
       RichString newRef = RichString_new();
       newObj->display(newObj, &newRef);
       mvhline(y+ this->oldSelected - this->scrollV, x+0, ' ', this->w);
@@ -315,7 +315,7 @@ void ListBox_onKey(ListBox* this, int key) {
    assert (this != NULL);
    switch (key) {
    case KEY_DOWN:
-      if (this->selected + 1 < TypedVector_size(this->items))
+      if (this->selected + 1 < Vector_size(this->items))
          this->selected++;
       break;
    case KEY_UP:
@@ -339,7 +339,7 @@ void ListBox_onKey(ListBox* this, int key) {
       break;
    case KEY_NPAGE:
       this->selected += this->h;
-      int size = TypedVector_size(this->items);
+      int size = Vector_size(this->items);
       if (this->selected >= size)
          this->selected = size - 1;
       break;
@@ -347,7 +347,7 @@ void ListBox_onKey(ListBox* this, int key) {
       this->selected = 0;
       break;
    case KEY_END:
-      this->selected = TypedVector_size(this->items) - 1;
+      this->selected = Vector_size(this->items) - 1;
       break;
    }
 }

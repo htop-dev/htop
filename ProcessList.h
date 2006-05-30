@@ -15,7 +15,7 @@ in the source distribution for its full text.
 #endif
 
 #include "Process.h"
-#include "TypedVector.h"
+#include "Vector.h"
 #include "UsersTable.h"
 #include "Hashtable.h"
 
@@ -56,8 +56,8 @@ in the source distribution for its full text.
 
 
 typedef struct ProcessList_ {
-   TypedVector* processes;
-   TypedVector* processes2;
+   Vector* processes;
+   Vector* processes2;
    Hashtable* processTable;
    Process* prototype;
    UsersTable* usersTable;

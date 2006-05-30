@@ -10,7 +10,7 @@ in the source distribution for its full text.
 */
 
 #include "Object.h"
-#include "TypedVector.h"
+#include "Vector.h"
 #include "CRT.h"
 #include "RichString.h"
 
@@ -39,7 +39,7 @@ struct ListBox_ {
    Object super;
    int x, y, w, h;
    WINDOW* window;
-   TypedVector* items;
+   Vector* items;
    int selected;
    int scrollV, scrollH;
    int oldSelected;

@@ -11,7 +11,7 @@ in the source distribution for its full text.
 
 #include "ListBox.h"
 #include "Object.h"
-#include "TypedVector.h"
+#include "Vector.h"
 #include "FunctionBar.h"
 
 #include "debug.h"
@@ -31,10 +31,10 @@ typedef struct ScreenManager_ {
    int x2;
    int y2;
    Orientation orientation;
-   TypedVector* items;
+   Vector* items;
    int itemCount;
    FunctionBar* fuBar;
-   TypedVector* fuBars;
+   Vector* fuBars;
    bool owner;
 } ScreenManager;
 

@@ -21,8 +21,8 @@ typedef enum HeaderSide_ {
 } HeaderSide;
 
 typedef struct Header_ {
-   TypedVector* leftMeters;
-   TypedVector* rightMeters;
+   Vector* leftMeters;
+   Vector* rightMeters;
    ProcessList* pl;
    bool margin;
    int height;

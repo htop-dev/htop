@@ -12,7 +12,7 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 #include "Process.h"
-#include "TypedVector.h"
+#include "Vector.h"
 #include "UsersTable.h"
 #include "Hashtable.h"
 
@@ -56,8 +56,8 @@ in the source distribution for its full text.
 /*{
 
 typedef struct ProcessList_ {
-   TypedVector* processes;
-   TypedVector* processes2;
+   Vector* processes;
+   Vector* processes2;
    Hashtable* processTable;
    Process* prototype;
    UsersTable* usersTable;
@@ -168,13 +168,13 @@ static inline int ProcessList_xread(ProcessList* this, vxscanf fn, void* buffer,
 ProcessList* ProcessList_new(UsersTable* usersTable) {
    ProcessList* this;
    this = malloc(sizeof(ProcessList));
-   this->processes = TypedVector_new(PROCESS_CLASS, true, DEFAULT_SIZE);
+   this->processes = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(20, false);
    this->prototype = Process_new(this);
    this->usersTable = usersTable;
    
    /* tree-view auxiliary buffers */
-   this->processes2 = TypedVector_new(PROCESS_CLASS, true, DEFAULT_SIZE);
+   this->processes2 = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE);
    
    #ifdef DEBUG
    this->traceFile = fopen("/tmp/htop-proc-trace", "w");
@@ -206,7 +206,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    }
 
    this->fields = calloc(sizeof(ProcessField), LAST_PROCESSFIELD+1);
-   // TODO: turn 'fields' into a TypedVector,
+   // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    for (int i = 0; defaultHeaders[i]; i++) {
       this->fields[i] = defaultHeaders[i];
@@ -226,8 +226,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
 
 void ProcessList_delete(ProcessList* this) {
    Hashtable_delete(this->processTable);
-   TypedVector_delete(this->processes);
-   TypedVector_delete(this->processes2);
+   Vector_delete(this->processes);
+   Vector_delete(this->processes2);
    Process_delete((Object*)this->prototype);
 
    free(this->totalTime);
@@ -271,11 +271,11 @@ RichString ProcessList_printHeader(ProcessList* this) {
 
 
 void ProcessList_prune(ProcessList* this) {
-   TypedVector_prune(this->processes);
+   Vector_prune(this->processes);
 }
 
 void ProcessList_add(ProcessList* this, Process* p) {
-   TypedVector_add(this->processes, p);
+   Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
 }
 
@@ -283,64 +283,64 @@ void ProcessList_remove(ProcessList* this, Process* p) {
    Hashtable_remove(this->processTable, p->pid);
    ProcessField pf = this->sortKey;
    this->sortKey = PID;
-   int index = TypedVector_indexOf(this->processes, p);
-   TypedVector_remove(this->processes, index);
+   int index = Vector_indexOf(this->processes, p);
+   Vector_remove(this->processes, index);
    this->sortKey = pf;
 }
 
 Process* ProcessList_get(ProcessList* this, int index) {
-   return (Process*) (TypedVector_get(this->processes, index));
+   return (Process*) (Vector_get(this->processes, index));
 }
 
 int ProcessList_size(ProcessList* this) {
-   return (TypedVector_size(this->processes));
+   return (Vector_size(this->processes));
 }
 
 /* private */
 void ProcessList_buildTree(ProcessList* this, int pid, int level, int indent, int direction) {
-   TypedVector* children = TypedVector_new(PROCESS_CLASS, false, DEFAULT_SIZE);
+   Vector* children = Vector_new(PROCESS_CLASS, false, DEFAULT_SIZE);
 
-   for (int i = 0; i < TypedVector_size(this->processes); i++) {
-      Process* process = (Process*) (TypedVector_get(this->processes, i));
+   for (int i = 0; i < Vector_size(this->processes); i++) {
+      Process* process = (Process*) (Vector_get(this->processes, i));
       if (process->ppid == pid) {
-         Process* process = (Process*) (TypedVector_take(this->processes, i));
-         TypedVector_add(children, process);
+         Process* process = (Process*) (Vector_take(this->processes, i));
+         Vector_add(children, process);
          i--;
       }
    }
-   int size = TypedVector_size(children);
+   int size = Vector_size(children);
    for (int i = 0; i < size; i++) {
-      Process* process = (Process*) (TypedVector_get(children, i));
+      Process* process = (Process*) (Vector_get(children, i));
       if (direction == 1)
-         TypedVector_add(this->processes2, process);
+         Vector_add(this->processes2, process);
       else
-         TypedVector_insert(this->processes2, 0, process);
+         Vector_insert(this->processes2, 0, process);
       int nextIndent = indent;
       if (i < size - 1)
          nextIndent = indent | (1 << level);
       ProcessList_buildTree(this, process->pid, level+1, nextIndent, direction);
       process->indent = indent | (1 << level);
    }
-   TypedVector_delete(children);
+   Vector_delete(children);
 }
 
 void ProcessList_sort(ProcessList* this) {
    if (!this->treeView) {
-      TypedVector_sort(this->processes);
+      Vector_sort(this->processes);
    } else {
       int direction = this->direction;
       int sortKey = this->sortKey;
       this->sortKey = PID;
       this->direction = 1;
-      TypedVector_sort(this->processes);
+      Vector_sort(this->processes);
       this->sortKey = sortKey;
       this->direction = direction;
-      Process* init = (Process*) (TypedVector_take(this->processes, 0));
+      Process* init = (Process*) (Vector_take(this->processes, 0));
       assert(init->pid == 1);
       init->indent = 0;
-      TypedVector_add(this->processes2, init);
+      Vector_add(this->processes2, init);
       ProcessList_buildTree(this, init->pid, 0, 0, direction);
-      TypedVector* t = this->processes;
+      Vector* t = this->processes;
       this->processes = this->processes2;
       this->processes2 = t;
    }
@@ -642,8 +642,8 @@ void ProcessList_scan(ProcessList* this) {
    fclose(status);
 
    // mark all process as "dirty"
-   for (int i = 0; i < TypedVector_size(this->processes); i++) {
-      Process* p = (Process*) TypedVector_get(this->processes, i);
+   for (int i = 0; i < Vector_size(this->processes); i++) {
+      Process* p = (Process*) Vector_get(this->processes, i);
       p->updated = false;
    }
    
@@ -655,8 +655,8 @@ void ProcessList_scan(ProcessList* this) {
    ProcessList_processEntries(this, PROCDIR, 0, period);
    signal(11, SIG_DFL);
    
-   for (int i = TypedVector_size(this->processes) - 1; i >= 0; i--) {
-      Process* p = (Process*) TypedVector_get(this->processes, i);
+   for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
+      Process* p = (Process*) Vector_get(this->processes, i);
       if (p->updated == false)
          ProcessList_remove(this, p);
       else

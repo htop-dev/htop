@@ -512,7 +512,7 @@ int main(int argc, char** argv) {
          ListBox* lbu = ListBox_new(0, 0, 0, 0, LISTITEM_CLASS, true);
          ListBox_setHeader(lbu, "Show processes of:");
          UsersTable_foreach(ut, addUserToList, lbu);
-         TypedVector_sort(lbu->items);
+         Vector_sort(lbu->items);
          ListItem* allUsers = ListItem_new("All users", -1);
          ListBox_insert(lbu, 0, (Object*) allUsers);
          char* fuFunctions[2] = {"Show    ", "Cancel "};

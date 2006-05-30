@@ -19,8 +19,8 @@ typedef enum HeaderSide_ {
 } HeaderSide;
 
 typedef struct Header_ {
-   TypedVector* leftMeters;
-   TypedVector* rightMeters;
+   Vector* leftMeters;
+   Vector* rightMeters;
    ProcessList* pl;
    bool margin;
    int height;
@@ -35,21 +35,21 @@ typedef struct Header_ {
 
 Header* Header_new(ProcessList* pl) {
    Header* this = malloc(sizeof(Header));
-   this->leftMeters = TypedVector_new(METER_CLASS, true, DEFAULT_SIZE);
-   this->rightMeters = TypedVector_new(METER_CLASS, true, DEFAULT_SIZE);
+   this->leftMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE);
+   this->rightMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE);
    this->margin = true;
    this->pl = pl;
    return this;
 }
 
 void Header_delete(Header* this) {
-   TypedVector_delete(this->leftMeters);
-   TypedVector_delete(this->rightMeters);
+   Vector_delete(this->leftMeters);
+   Vector_delete(this->rightMeters);
    free(this);
 }
 
 void Header_createMeter(Header* this, char* name, HeaderSide side) {
-   TypedVector* meters = side == LEFT_HEADER
+   Vector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
 
@@ -62,44 +62,44 @@ void Header_createMeter(Header* this, char* name, HeaderSide side) {
    }
    for (MeterType** type = Meter_types; *type; type++) {
       if (String_eq(name, (*type)->name)) {
-         TypedVector_add(meters, Meter_new(this->pl, param, *type));
+         Vector_add(meters, Meter_new(this->pl, param, *type));
          break;
       }
    }
 }
 
 void Header_setMode(Header* this, int i, MeterModeId mode, HeaderSide side) {
-   TypedVector* meters = side == LEFT_HEADER
+   Vector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
 
-   Meter* meter = (Meter*) TypedVector_get(meters, i);
+   Meter* meter = (Meter*) Vector_get(meters, i);
    Meter_setMode(meter, mode);
 }
 
 Meter* Header_addMeter(Header* this, MeterType* type, int param, HeaderSide side) {
-   TypedVector* meters = side == LEFT_HEADER
+   Vector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
 
    Meter* meter = Meter_new(this->pl, param, type);
-   TypedVector_add(meters, meter);
+   Vector_add(meters, meter);
    return meter;
 }
 
 int Header_size(Header* this, HeaderSide side) {
-   TypedVector* meters = side == LEFT_HEADER
+   Vector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
 
-   return TypedVector_size(meters);
+   return Vector_size(meters);
 }
 
 char* Header_readMeterName(Header* this, int i, HeaderSide side) {
-   TypedVector* meters = side == LEFT_HEADER
+   Vector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
-   Meter* meter = (Meter*) TypedVector_get(meters, i);
+   Meter* meter = (Meter*) Vector_get(meters, i);
 
    int nameLen = strlen(meter->type->name);
    int len = nameLen + 100;
@@ -113,21 +113,21 @@ char* Header_readMeterName(Header* this, int i, HeaderSide side) {
 }
 
 MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side) {
-   TypedVector* meters = side == LEFT_HEADER
+   Vector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
 
-   Meter* meter = (Meter*) TypedVector_get(meters, i);
+   Meter* meter = (Meter*) Vector_get(meters, i);
    return meter->mode;
 }
 
 void Header_defaultMeters(Header* this) {
-   TypedVector_add(this->leftMeters, Meter_new(this->pl, 0, &AllCPUsMeter));
-   TypedVector_add(this->leftMeters, Meter_new(this->pl, 0, &MemoryMeter));
-   TypedVector_add(this->leftMeters, Meter_new(this->pl, 0, &SwapMeter));
-   TypedVector_add(this->rightMeters, Meter_new(this->pl, 0, &TasksMeter));
-   TypedVector_add(this->rightMeters, Meter_new(this->pl, 0, &LoadAverageMeter));
-   TypedVector_add(this->rightMeters, Meter_new(this->pl, 0, &UptimeMeter));
+   Vector_add(this->leftMeters, Meter_new(this->pl, 0, &AllCPUsMeter));
+   Vector_add(this->leftMeters, Meter_new(this->pl, 0, &MemoryMeter));
+   Vector_add(this->leftMeters, Meter_new(this->pl, 0, &SwapMeter));
+   Vector_add(this->rightMeters, Meter_new(this->pl, 0, &TasksMeter));
+   Vector_add(this->rightMeters, Meter_new(this->pl, 0, &LoadAverageMeter));
+   Vector_add(this->rightMeters, Meter_new(this->pl, 0, &UptimeMeter));
 }
 
 void Header_draw(Header* this) {
@@ -138,13 +138,13 @@ void Header_draw(Header* this) {
    for (int y = 0; y < height; y++) {
       mvhline(y, 0, ' ', COLS);
    }
-   for (int y = (pad / 2), i = 0; i < TypedVector_size(this->leftMeters); i++) {
-      Meter* meter = (Meter*) TypedVector_get(this->leftMeters, i);
+   for (int y = (pad / 2), i = 0; i < Vector_size(this->leftMeters); i++) {
+      Meter* meter = (Meter*) Vector_get(this->leftMeters, i);
       meter->draw(meter, pad, y, COLS / 2 - (pad * 2 - 1) - 1);
       y += meter->h;
    }
-   for (int y = (pad / 2), i = 0; i < TypedVector_size(this->rightMeters); i++) {
-      Meter* meter = (Meter*) TypedVector_get(this->rightMeters, i);
+   for (int y = (pad / 2), i = 0; i < Vector_size(this->rightMeters); i++) {
+      Meter* meter = (Meter*) Vector_get(this->rightMeters, i);
       meter->draw(meter, COLS / 2 + pad, y, COLS / 2 - (pad * 2 - 1) - 1);
       y += meter->h;
    }
@@ -155,12 +155,12 @@ int Header_calculateHeight(Header* this) {
    int leftHeight = pad;
    int rightHeight = pad;
 
-   for (int i = 0; i < TypedVector_size(this->leftMeters); i++) {
-      Meter* meter = (Meter*) TypedVector_get(this->leftMeters, i);
+   for (int i = 0; i < Vector_size(this->leftMeters); i++) {
+      Meter* meter = (Meter*) Vector_get(this->leftMeters, i);
       leftHeight += meter->h;
    }
-   for (int i = 0; i < TypedVector_size(this->rightMeters); i++) {
-      Meter* meter = (Meter*) TypedVector_get(this->rightMeters, i);
+   for (int i = 0; i < Vector_size(this->rightMeters); i++) {
+      Meter* meter = (Meter*) Vector_get(this->rightMeters, i);
       rightHeight += meter->h;
    }
    this->pad = pad;

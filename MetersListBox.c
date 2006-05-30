@@ -14,13 +14,13 @@ typedef struct MetersListBox_ {
    ListBox super;
 
    Settings* settings;
-   TypedVector* meters;
+   Vector* meters;
    ScreenManager* scr;
 } MetersListBox;
 
 }*/
 
-MetersListBox* MetersListBox_new(Settings* settings, char* header, TypedVector* meters, ScreenManager* scr) {
+MetersListBox* MetersListBox_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr) {
    MetersListBox* this = (MetersListBox*) malloc(sizeof(MetersListBox));
    ListBox* super = (ListBox*) this;
    ListBox_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
@@ -31,8 +31,8 @@ MetersListBox* MetersListBox_new(Settings* settings, char* header, TypedVector* 
    this->scr = scr;
    super->eventHandler = MetersListBox_EventHandler;
    ListBox_setHeader(super, header);
-   for (int i = 0; i < TypedVector_size(meters); i++) {
-      Meter* meter = (Meter*) TypedVector_get(meters, i);
+   for (int i = 0; i < Vector_size(meters); i++) {
+      Meter* meter = (Meter*) Vector_get(meters, i);
       ListBox_add(super, (Object*) Meter_toListItem(meter));
    }
    return this;
@@ -58,7 +58,7 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
       case KEY_F(4):
       case 't':
       {
-         Meter* meter = (Meter*) TypedVector_get(this->meters, selected);
+         Meter* meter = (Meter*) Vector_get(this->meters, selected);
          int mode = meter->mode + 1;
          if (mode == LAST_METERMODE) mode = 1;
          Meter_setMode(meter, mode);
@@ -70,7 +70,7 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
       case '[':
       case '-':
       {
-         TypedVector_moveUp(this->meters, selected);
+         Vector_moveUp(this->meters, selected);
          ListBox_moveSelectedUp(super);
          result = HANDLED;
          break;
@@ -79,7 +79,7 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
       case ']':
       case '+':
       {
-         TypedVector_moveDown(this->meters, selected);
+         Vector_moveDown(this->meters, selected);
          ListBox_moveSelectedDown(super);
          result = HANDLED;
          break;
@@ -87,8 +87,8 @@ HandlerResult MetersListBox_EventHandler(ListBox* super, int ch) {
       case KEY_F(9):
       case KEY_DC:
       {
-         if (selected < TypedVector_size(this->meters)) {
-            TypedVector_remove(this->meters, selected);
+         if (selected < Vector_size(this->meters)) {
+            Vector_remove(this->meters, selected);
             ListBox_remove(super, selected);
          }
          result = HANDLED;

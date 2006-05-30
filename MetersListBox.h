@@ -16,12 +16,12 @@ typedef struct MetersListBox_ {
    ListBox super;
 
    Settings* settings;
-   TypedVector* meters;
+   Vector* meters;
    ScreenManager* scr;
 } MetersListBox;
 
 
-MetersListBox* MetersListBox_new(Settings* settings, char* header, TypedVector* meters, ScreenManager* scr);
+MetersListBox* MetersListBox_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr);
 
 void MetersListBox_delete(Object* object);
 

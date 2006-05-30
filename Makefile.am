@@ -15,14 +15,14 @@ CPUMeter.c CRT.c DebugMemory.c DisplayOptionsListBox.c FunctionBar.c \
 Hashtable.c Header.c htop.c ListBox.c ListItem.c LoadAverageMeter.c \
 MemoryMeter.c Meter.c MetersListBox.c Object.c Process.c \
 ProcessList.c RichString.c ScreenManager.c Settings.c SignalItem.c \
-SignalsListBox.c String.c SwapMeter.c TasksMeter.c TypedVector.c \
+SignalsListBox.c String.c SwapMeter.c TasksMeter.c Vector.c \
 UptimeMeter.c UsersTable.c AvailableMetersListBox.h CategoriesListBox.h \
 ClockMeter.h config.h CPUMeter.h CRT.h debug.h DebugMemory.h \
 DisplayOptionsListBox.h FunctionBar.h Hashtable.h Header.h htop.h ListBox.h \
 ListItem.h LoadAverageMeter.h MemoryMeter.h Meter.h \
 MetersListBox.h Object.h Process.h ProcessList.h RichString.h ScreenManager.h \
 Settings.h SignalItem.h SignalsListBox.h String.h SwapMeter.h TasksMeter.h \
-TypedVector.h UptimeMeter.h UsersTable.h CheckItem.c CheckItem.h \
+Vector.h UptimeMeter.h UsersTable.h CheckItem.c CheckItem.h \
 ColorsListBox.c ColorsListBox.h TraceScreen.c TraceScreen.h \
 AvailableColumnsListBox.c AvailableColumnsListBox.h ColumnsListBox.c \
 ColumnsListBox.h

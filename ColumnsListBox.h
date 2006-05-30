@@ -16,7 +16,7 @@ typedef struct ColumnsListBox_ {
    ListBox super;
 
    Settings* settings;
-   TypedVector* columns;
+   Vector* columns;
    ScreenManager* scr;
 } ColumnsListBox;
 

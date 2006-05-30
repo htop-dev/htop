@@ -88,7 +88,7 @@ HandlerResult ColorsListBox_EventHandler(ListBox* super, int ch) {
       this->settings->changed = true;
       Header* header = this->settings->header;
       CRT_setColors(mark);
-      ListBox* lbMenu = (ListBox*) TypedVector_get(this->scr->items, 0);
+      ListBox* lbMenu = (ListBox*) Vector_get(this->scr->items, 0);
       Header_draw(header);
       RichString_setAttr(&(super->header), CRT_colors[PANEL_HEADER_FOCUS]);
       RichString_setAttr(&(lbMenu->header), CRT_colors[PANEL_HEADER_UNFOCUS]);
