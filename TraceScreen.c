@@ -81,7 +81,7 @@ void TraceScreen_run(TraceScreen* this) {
    }
    fcntl(fdpair[0], F_SETFL, O_NONBLOCK);
    FILE* strace = fdopen(fdpair[0], "r");
-   Panel* lb = this->display;
+   Panel* panel = this->display;
    int fd_strace = fileno(strace);
    TraceScreen_draw(this);
    CRT_disableDelay();
@@ -105,31 +105,31 @@ void TraceScreen_run(TraceScreen* this) {
             if (buffer[i] == '\n') {
                buffer[i] = '\0';
                if (contLine) {
-                  ListItem_append((ListItem*)Panel_get(lb,
-                     Panel_getSize(lb)-1), line);
+                  ListItem_append((ListItem*)Panel_get(panel,
+                     Panel_getSize(panel)-1), line);
                   contLine = false;
                } else {
-                  Panel_add(lb, (Object*) ListItem_new(line, 0));
+                  Panel_add(panel, (Object*) ListItem_new(line, 0));
                }
                line = buffer+i+1;
             }
          }
          if (line < buffer+nread) {
-            Panel_add(lb, (Object*) ListItem_new(line, 0));
+            Panel_add(panel, (Object*) ListItem_new(line, 0));
             buffer[nread] = '\0';
             contLine = true;
          }
          if (follow)
-            Panel_setSelected(lb, Panel_getSize(lb)-1);
-         Panel_draw(lb, true);
+            Panel_setSelected(panel, Panel_getSize(panel)-1);
+         Panel_draw(panel, true);
       }
       int ch = getch();
       if (ch == KEY_MOUSE) {
          MEVENT mevent;
          int ok = getmouse(&mevent);
          if (ok == OK)
-            if (mevent.y >= lb->y && mevent.y < LINES - 1) {
-               Panel_setSelected(lb, mevent.y - lb->y + lb->scrollV);
+            if (mevent.y >= panel->y && mevent.y < LINES - 1) {
+               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV);
                follow = false;
                ch = 0;
             } if (mevent.y == LINES - 1)
@@ -147,21 +147,21 @@ void TraceScreen_run(TraceScreen* this) {
       case KEY_F(4):
          follow = !follow;
          if (follow)
-            Panel_setSelected(lb, Panel_getSize(lb)-1);
+            Panel_setSelected(panel, Panel_getSize(panel)-1);
          break;
       case 'q':
       case 27:
          looping = false;
          break;
       case KEY_RESIZE:
-         Panel_resize(lb, COLS, LINES-2);
+         Panel_resize(panel, COLS, LINES-2);
          TraceScreen_draw(this);
          break;
       default:
          follow = false;
-         Panel_onKey(lb, ch);
+         Panel_onKey(panel, ch);
       }
-      Panel_draw(lb, true);
+      Panel_draw(panel, true);
    }
    kill(child, SIGTERM);
    waitpid(child, NULL, 0);

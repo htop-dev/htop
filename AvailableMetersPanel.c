@@ -15,8 +15,8 @@ typedef struct AvailableMetersPanel_ {
    Panel super;
 
    Settings* settings;
-   Panel* leftBox;
-   Panel* rightBox;
+   Panel* leftPanel;
+   Panel* rightPanel;
    ScreenManager* scr;
 } AvailableMetersPanel;
 
@@ -29,8 +29,8 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMe
    ((Object*)this)->delete = AvailableMetersPanel_delete;
    
    this->settings = settings;
-   this->leftBox = leftMeters;
-   this->rightBox = rightMeters;
+   this->leftPanel = leftMeters;
+   this->rightPanel = rightMeters;
    this->scr = scr;
    super->eventHandler = AvailableMetersPanel_EventHandler;
 
@@ -64,9 +64,9 @@ void AvailableMetersPanel_delete(Object* object) {
 }
 
 /* private */
-inline void AvailableMetersPanel_addHeader(Header* header, Panel* lb, MeterType* type, int param, HeaderSide side) {
+inline void AvailableMetersPanel_addHeader(Header* header, Panel* panel, MeterType* type, int param, HeaderSide side) {
    Meter* meter = (Meter*) Header_addMeter(header, type, param, side);
-   Panel_add(lb, (Object*) Meter_toListItem(meter));
+   Panel_add(panel, (Object*) Meter_toListItem(meter));
 }
 
 HandlerResult AvailableMetersPanel_EventHandler(Panel* super, int ch) {
@@ -83,7 +83,7 @@ HandlerResult AvailableMetersPanel_EventHandler(Panel* super, int ch) {
       case 'l':
       case 'L':
       {
-         AvailableMetersPanel_addHeader(header, this->leftBox, Meter_types[type], param, LEFT_HEADER);
+         AvailableMetersPanel_addHeader(header, this->leftPanel, Meter_types[type], param, LEFT_HEADER);
          result = HANDLED;
          break;
       }
@@ -91,7 +91,7 @@ HandlerResult AvailableMetersPanel_EventHandler(Panel* super, int ch) {
       case 'r':
       case 'R':
       {
-         AvailableMetersPanel_addHeader(header, this->rightBox, Meter_types[type], param, RIGHT_HEADER);
+         AvailableMetersPanel_addHeader(header, this->rightPanel, Meter_types[type], param, RIGHT_HEADER);
          result = HANDLED;
          break;
       }

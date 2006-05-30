@@ -1,4 +1,9 @@
 
+What's new in version 0.6.3
+
+* Internal change: rename TypedVector to Vector and
+  ListBox (and related classes) to Panel.
+
 What's new in version 0.6.2
 
 * BUGFIX: Fixed crash when using some .htoprc files from 0.6

@@ -17,8 +17,8 @@ typedef struct AvailableMetersPanel_ {
    Panel super;
 
    Settings* settings;
-   Panel* leftBox;
-   Panel* rightBox;
+   Panel* leftPanel;
+   Panel* rightPanel;
    ScreenManager* scr;
 } AvailableMetersPanel;
 
