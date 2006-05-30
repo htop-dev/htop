@@ -88,10 +88,10 @@ HandlerResult ColorsPanel_EventHandler(Panel* super, int ch) {
       this->settings->changed = true;
       Header* header = this->settings->header;
       CRT_setColors(mark);
-      Panel* lbMenu = (Panel*) Vector_get(this->scr->items, 0);
+      Panel* menu = (Panel*) Vector_get(this->scr->items, 0);
       Header_draw(header);
       RichString_setAttr(&(super->header), CRT_colors[PANEL_HEADER_FOCUS]);
-      RichString_setAttr(&(lbMenu->header), CRT_colors[PANEL_HEADER_UNFOCUS]);
+      RichString_setAttr(&(menu->header), CRT_colors[PANEL_HEADER_UNFOCUS]);
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
    }
    return result;
