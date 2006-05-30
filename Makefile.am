@@ -29,3 +29,6 @@ ColumnsPanel.h
 
 debug:
 	$(MAKE) all CFLAGS="-g -DDEBUG"
+
+debuglite:
+	$(MAKE) all CFLAGS="-g -DDEBUGLITE"
