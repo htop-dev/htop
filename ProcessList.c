@@ -650,10 +650,7 @@ void ProcessList_scan(ProcessList* this) {
    this->totalTasks = 0;
    this->runningTasks = 0;
    
-   signal(11, ProcessList_dontCrash);
-
    ProcessList_processEntries(this, PROCDIR, 0, period);
-   signal(11, SIG_DFL);
    
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
@@ -663,10 +660,4 @@ void ProcessList_scan(ProcessList* this) {
          p->updated = false;
    }
 
-}
-
-void ProcessList_dontCrash(int signal) {
-   // This ugly hack was added because I suspect some
-   // crashes were caused by contents of /proc vanishing
-   // away while we read them.
 }
