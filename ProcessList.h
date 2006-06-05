@@ -66,26 +66,26 @@ typedef struct ProcessList_ {
    int totalTasks;
    int runningTasks;
 
-   long int* totalTime;
-   long int* userTime;
-   long int* systemTime;
-   long int* idleTime;
-   long int* niceTime;
-   long int* totalPeriod;
-   long int* userPeriod;
-   long int* systemPeriod;
-   long int* idlePeriod;
-   long int* nicePeriod;
+   unsigned long long int* totalTime;
+   unsigned long long int* userTime;
+   unsigned long long int* systemTime;
+   unsigned long long int* idleTime;
+   unsigned long long int* niceTime;
+   unsigned long long int* totalPeriod;
+   unsigned long long int* userPeriod;
+   unsigned long long int* systemPeriod;
+   unsigned long long int* idlePeriod;
+   unsigned long long int* nicePeriod;
 
-   long int totalMem;
-   long int usedMem;
-   long int freeMem;
-   long int sharedMem;
-   long int buffersMem;
-   long int cachedMem;
-   long int totalSwap;
-   long int usedSwap;
-   long int freeSwap;
+   unsigned long long int totalMem;
+   unsigned long long int usedMem;
+   unsigned long long int freeMem;
+   unsigned long long int sharedMem;
+   unsigned long long int buffersMem;
+   unsigned long long int cachedMem;
+   unsigned long long int totalSwap;
+   unsigned long long int usedSwap;
+   unsigned long long int freeSwap;
 
    ProcessField* fields;
    ProcessField sortKey;
@@ -150,7 +150,5 @@ bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname,
 void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, float period);
 
 void ProcessList_scan(ProcessList* this);
-
-void ProcessList_dontCrash(int signal);
 
 #endif

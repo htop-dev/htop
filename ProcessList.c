@@ -66,26 +66,26 @@ typedef struct ProcessList_ {
    int totalTasks;
    int runningTasks;
 
-   long int* totalTime;
-   long int* userTime;
-   long int* systemTime;
-   long int* idleTime;
-   long int* niceTime;
-   long int* totalPeriod;
-   long int* userPeriod;
-   long int* systemPeriod;
-   long int* idlePeriod;
-   long int* nicePeriod;
+   unsigned long long int* totalTime;
+   unsigned long long int* userTime;
+   unsigned long long int* systemTime;
+   unsigned long long int* idleTime;
+   unsigned long long int* niceTime;
+   unsigned long long int* totalPeriod;
+   unsigned long long int* userPeriod;
+   unsigned long long int* systemPeriod;
+   unsigned long long int* idlePeriod;
+   unsigned long long int* nicePeriod;
 
-   long int totalMem;
-   long int usedMem;
-   long int freeMem;
-   long int sharedMem;
-   long int buffersMem;
-   long int cachedMem;
-   long int totalSwap;
-   long int usedSwap;
-   long int freeSwap;
+   unsigned long long int totalMem;
+   unsigned long long int usedMem;
+   unsigned long long int freeMem;
+   unsigned long long int sharedMem;
+   unsigned long long int buffersMem;
+   unsigned long long int cachedMem;
+   unsigned long long int totalSwap;
+   unsigned long long int usedSwap;
+   unsigned long long int freeSwap;
 
    ProcessField* fields;
    ProcessField sortKey;
@@ -130,7 +130,10 @@ static inline int ProcessList_xread(ProcessList* this, vxscanf fn, void* buffer,
    va_start(ap, format);
    while (*format) {
       char ch = *format;
-      char* c; int* d; long int* ld; unsigned long int* lu; char** s;
+      char* c; int* d;
+      long int* ld; unsigned long int* lu;
+      long long int* lld; unsigned long long int* llu;
+      char** s;
       if (ch != '%') {
          fprintf(this->traceFile, "%c", ch);
          format++;
@@ -146,6 +149,12 @@ static inline int ProcessList_xread(ProcessList* this, vxscanf fn, void* buffer,
          switch (*format) {
          case 'd': ld = va_arg(ap, long int*); fprintf(this->traceFile, "%ld", *ld); break;
          case 'u': lu = va_arg(ap, unsigned long int*); fprintf(this->traceFile, "%lu", *lu); break;
+         case 'l':
+            format++;
+            switch (*format) {
+            case 'd': lld = va_arg(ap, long long int*); fprintf(this->traceFile, "%lld", *lld); break;
+            case 'u': llu = va_arg(ap, unsigned long long int*); fprintf(this->traceFile, "%llu", *llu); break;
+            }
          }
       }
       format++;
@@ -190,16 +199,16 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    } while (String_startsWith(buffer, "cpu"));
    fclose(status);
    this->processorCount = procs - 1;
-   this->totalTime = calloc(procs, sizeof(long int));
-   this->userTime = calloc(procs, sizeof(long int));
-   this->systemTime = calloc(procs, sizeof(long int));
-   this->niceTime = calloc(procs, sizeof(long int));
-   this->idleTime = calloc(procs, sizeof(long int));
-   this->totalPeriod = calloc(procs, sizeof(long int));
-   this->userPeriod = calloc(procs, sizeof(long int));
-   this->systemPeriod = calloc(procs, sizeof(long int));
-   this->nicePeriod = calloc(procs, sizeof(long int));
-   this->idlePeriod = calloc(procs, sizeof(long int));
+   this->totalTime = calloc(procs, sizeof(long long int));
+   this->userTime = calloc(procs, sizeof(long long int));
+   this->systemTime = calloc(procs, sizeof(long long int));
+   this->niceTime = calloc(procs, sizeof(long long int));
+   this->idleTime = calloc(procs, sizeof(long long int));
+   this->totalPeriod = calloc(procs, sizeof(long long int));
+   this->userPeriod = calloc(procs, sizeof(long long int));
+   this->systemPeriod = calloc(procs, sizeof(long long int));
+   this->nicePeriod = calloc(procs, sizeof(long long int));
+   this->idlePeriod = calloc(procs, sizeof(long long int));
    for (int i = 0; i < procs; i++) {
       this->totalTime[i] = 1;
       this->totalPeriod[i] = 1;
@@ -560,8 +569,8 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
 }
 
 void ProcessList_scan(ProcessList* this) {
-   long int usertime, nicetime, systemtime, idletime, totaltime;
-   long int swapFree;
+   unsigned long long int usertime, nicetime, systemtime, idletime, totaltime;
+   unsigned long long int swapFree;
 
    FILE* status;
    char buffer[128];
@@ -573,25 +582,25 @@ void ProcessList_scan(ProcessList* this) {
       switch (buffer[0]) {
       case 'M':
          if (String_startsWith(buffer, "MemTotal:"))
-            ProcessList_read(this, buffer, "MemTotal: %ld kB", &this->totalMem);
+            ProcessList_read(this, buffer, "MemTotal: %llu kB", &this->totalMem);
          else if (String_startsWith(buffer, "MemFree:"))
-            ProcessList_read(this, buffer, "MemFree: %ld kB", &this->freeMem);
+            ProcessList_read(this, buffer, "MemFree: %llu kB", &this->freeMem);
          else if (String_startsWith(buffer, "MemShared:"))
-            ProcessList_read(this, buffer, "MemShared: %ld kB", &this->sharedMem);
+            ProcessList_read(this, buffer, "MemShared: %llu kB", &this->sharedMem);
          break;
       case 'B':
          if (String_startsWith(buffer, "Buffers:"))
-            ProcessList_read(this, buffer, "Buffers: %ld kB", &this->buffersMem);
+            ProcessList_read(this, buffer, "Buffers: %llu kB", &this->buffersMem);
          break;
       case 'C':
          if (String_startsWith(buffer, "Cached:"))
-            ProcessList_read(this, buffer, "Cached: %ld kB", &this->cachedMem);
+            ProcessList_read(this, buffer, "Cached: %llu kB", &this->cachedMem);
          break;
       case 'S':
          if (String_startsWith(buffer, "SwapTotal:"))
-            ProcessList_read(this, buffer, "SwapTotal: %ld kB", &this->totalSwap);
+            ProcessList_read(this, buffer, "SwapTotal: %llu kB", &this->totalSwap);
          if (String_startsWith(buffer, "SwapFree:"))
-            ProcessList_read(this, buffer, "SwapFree: %ld kB", &swapFree);
+            ProcessList_read(this, buffer, "SwapFree: %llu kB", &swapFree);
          break;
       }
    }
@@ -606,16 +615,16 @@ void ProcessList_scan(ProcessList* this) {
    for (int i = 0; i <= this->processorCount; i++) {
       char buffer[256];
       int cpuid;
-      long int ioWait, irq, softIrq, steal;
+      unsigned long long int ioWait, irq, softIrq, steal;
       ioWait = irq = softIrq = steal = 0;
       // Dependending on your kernel version,
       // 5, 7 or 8 of these fields will be set.
       // The rest will remain at zero.
       fgets(buffer, 255, status);
       if (i == 0)
-         ProcessList_read(this, buffer, "cpu  %ld %ld %ld %ld %ld %ld %ld %ld", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal);
+         ProcessList_read(this, buffer, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal);
       else {
-         ProcessList_read(this, buffer, "cpu%d %ld %ld %ld %ld %ld %ld %ld %ld", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal);
+         ProcessList_read(this, buffer, "cpu%d %llu %llu %llu %llu %llu %llu %llu %llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal);
          assert(cpuid == i - 1);
       }
       // Fields existing on kernels >= 2.6
