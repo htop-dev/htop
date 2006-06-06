@@ -14,10 +14,10 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
-/* private property */
-static int UptimeMeter_attributes[] = { UPTIME };
+int UptimeMeter_attributes[] = {
+   UPTIME
+};
 
-/* private */
 MeterType UptimeMeter = {
    .setValues = UptimeMeter_setValues, 
    .display = NULL,

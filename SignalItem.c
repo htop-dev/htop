@@ -23,10 +23,8 @@ typedef struct Signal_ {
    int number;
 } Signal;
 
-extern char* SIGNAL_CLASS;
 }*/
 
-/* private property */
 char* SIGNAL_CLASS = "Signal";
 
 Signal* Signal_new(char* name, int number) {

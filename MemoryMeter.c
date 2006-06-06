@@ -19,10 +19,10 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
-/* private property */
-static int MemoryMeter_attributes[] = { MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE };
+int MemoryMeter_attributes[] = {
+   MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE
+};
 
-/* private */
 MeterType MemoryMeter = {
    .setValues = MemoryMeter_setValues, 
    .display = MemoryMeter_display,

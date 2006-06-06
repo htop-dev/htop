@@ -65,8 +65,7 @@ void Settings_delete(Settings* this) {
    free(this);
 }
 
-/* private */
-void Settings_readMeters(Settings* this, char* line, HeaderSide side) {
+static void Settings_readMeters(Settings* this, char* line, HeaderSide side) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ');
    free(trim);
@@ -77,8 +76,7 @@ void Settings_readMeters(Settings* this, char* line, HeaderSide side) {
    String_freeArray(ids);
 }
 
-/* private */
-void Settings_readMeterModes(Settings* this, char* line, HeaderSide side) {
+static void Settings_readMeterModes(Settings* this, char* line, HeaderSide side) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ');
    free(trim);

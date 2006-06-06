@@ -33,9 +33,6 @@ in the source distribution for its full text.
 
 #define INCSEARCH_MAX 40
 
-/* private property */
-char htop_barCharacters[] = "|#*@$%&";
-
 void printVersionFlag() {
    clear();
    printf("htop " VERSION " - (C) 2004-2006 Hisham Muhammad.\n");

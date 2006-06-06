@@ -32,13 +32,10 @@ typedef struct TraceScreen_ {
 
 }*/
 
-/* private property */
 static char* tbFunctions[3] = {"AutoScroll ", "Stop Tracing   ", "Done   "};
 
-/* private property */
 static char* tbKeys[3] = {"F4", "F5", "Esc"};
 
-/* private property */
 static int tbEvents[3] = {KEY_F(4), KEY_F(5), 27};
 
 TraceScreen* TraceScreen_new(Process* process) {

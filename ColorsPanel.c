@@ -28,7 +28,6 @@ typedef struct ColorsPanel_ {
 
 }*/
 
-/* private */
 static char* ColorSchemes[] = {
    "Default",
    "Monochromatic",

@@ -58,8 +58,7 @@ void Vector_delete(Vector* this) {
    free(this);
 }
 
-/* private */
-bool Vector_isConsistent(Vector* this) {
+static inline bool Vector_isConsistent(Vector* this) {
    if (this->owner) {
       for (int i = 0; i < this->items; i++)
          if (this->array[i] && this->array[i]->class != this->vectorType)
@@ -107,8 +106,7 @@ void Vector_sort(Vector* this) {
    */
 }
 
-/* private */
-void Vector_checkArraySize(Vector* this) {
+static void Vector_checkArraySize(Vector* this) {
    assert(Vector_isConsistent(this));
    if (this->items >= this->arraySize) {
       int i;

@@ -104,24 +104,20 @@ typedef struct ProcessList_ {
 } ProcessList;
 }*/
 
-/* private property */
-ProcessField defaultHeaders[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
+static ProcessField defaultHeaders[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 #ifdef DEBUG
 
-/* private property */
 typedef int(*vxscanf)(void*, const char*, va_list);
 
 #define ProcessList_read(this, buffer, format, ...) ProcessList_xread(this, (vxscanf) vsscanf, buffer, format, ## __VA_ARGS__ )
 #define ProcessList_fread(this, file, format, ...)  ProcessList_xread(this, (vxscanf) vfscanf, file, format, ## __VA_ARGS__ )
 
-/* private */
-FILE* ProcessList_fopen(ProcessList* this, const char* path, const char* mode) {
+static FILE* ProcessList_fopen(ProcessList* this, const char* path, const char* mode) {
    fprintf(this->traceFile, "[%s]\n", path);
    return fopen(path, mode);
 }
 
-/* private */
 static inline int ProcessList_xread(ProcessList* this, vxscanf fn, void* buffer, char* format, ...) {
    va_list ap;
    va_start(ap, format);
@@ -305,8 +301,7 @@ int ProcessList_size(ProcessList* this) {
    return (Vector_size(this->processes));
 }
 
-/* private */
-void ProcessList_buildTree(ProcessList* this, int pid, int level, int indent, int direction) {
+static void ProcessList_buildTree(ProcessList* this, int pid, int level, int indent, int direction) {
    Vector* children = Vector_new(PROCESS_CLASS, false, DEFAULT_SIZE);
 
    for (int i = 0; i < Vector_size(this->processes); i++) {
@@ -355,8 +350,7 @@ void ProcessList_sort(ProcessList* this) {
    }
 }
 
-/* private */
-int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, char *command) {
+static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, char *command) {
    static char buf[MAX_READ];
    long int zero;
 

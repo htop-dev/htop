@@ -19,10 +19,10 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
-/* private property */
-static int SwapMeter_attributes[] = { SWAP };
+int SwapMeter_attributes[] = {
+   SWAP
+};
 
-/* private */
 MeterType SwapMeter = {
    .setValues = SwapMeter_setValues, 
    .display = SwapMeter_display,

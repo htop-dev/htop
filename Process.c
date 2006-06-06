@@ -104,17 +104,13 @@ typedef struct Process_ {
    char user[PROCESS_USER_LEN + 1];
 } Process;
 
-extern char* PROCESS_CLASS;
-
-extern char* Process_fieldNames[];
-
 }*/
 
-/* private property */
 char* PROCESS_CLASS = "Process";
 
-/* private property */
-char *Process_fieldNames[] = { "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "*** report bug! ***"};
+char *Process_fieldNames[] = {
+   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "*** report bug! ***"
+};
 
 Process* Process_new(struct ProcessList_ *pl) {
    Process* this = malloc(sizeof(Process));
@@ -177,8 +173,7 @@ void Process_sendSignal(Process* this, int signal) {
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
 
-/* private */
-void Process_printLargeNumber(Process* this, RichString *str, unsigned int number) {
+static void Process_printLargeNumber(Process* this, RichString *str, unsigned int number) {
    char buffer[11];
    int len;
    if(number >= (1000 * ONE_M)) {
@@ -202,10 +197,8 @@ void Process_printLargeNumber(Process* this, RichString *str, unsigned int numbe
    }
 }
 
-/* private property */
-double jiffy = 0.0;
+static double jiffy = 0.0;
 
-/* private */
 static void Process_printTime(RichString* str, unsigned long t) {
    if(jiffy == 0.0) jiffy = sysconf(_SC_CLK_TCK);
    double jiffytime = 1.0 / jiffy;
@@ -228,8 +221,7 @@ static void Process_printTime(RichString* str, unsigned long t) {
    RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
 }
 
-/* private */
-inline static void Process_writeCommand(Process* this, int attr, RichString* str) {
+static inline void Process_writeCommand(Process* this, int attr, RichString* str) {
    if (this->pl->highlightBaseName) {
       char* firstSpace = strchr(this->comm, ' ');
       if (firstSpace) {

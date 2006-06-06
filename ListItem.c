@@ -21,10 +21,8 @@ typedef struct ListItem_ {
    int key;
 } ListItem;
 
-extern char* LISTITEM_CLASS;
 }*/
 
-/* private property */
 char* LISTITEM_CLASS = "ListItem";
 
 ListItem* ListItem_new(char* value, int key) {

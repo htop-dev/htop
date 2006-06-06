@@ -23,8 +23,7 @@ typedef struct RichString_ {
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
 
-/* private property */
-WINDOW* workArea = NULL;
+static WINDOW* workArea = NULL;
 
 RichString RichString_new() {
    RichString this;

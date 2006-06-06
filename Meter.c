@@ -76,18 +76,6 @@ struct Meter_ {
    double total;
 };
 
-extern char* METER_CLASS;
-
-extern MeterType CPUMeter;
-extern MeterType ClockMeter;
-extern MeterType LoadAverageMeter;
-extern MeterType LoadMeter;
-extern MeterType MemoryMeter;
-extern MeterType SwapMeter;
-extern MeterType TasksMeter;
-extern MeterType UptimeMeter;
-extern MeterType AllCPUsMeter;
-
 typedef enum {
    CUSTOM_METERMODE = 0,
    BAR_METERMODE,
@@ -99,10 +87,15 @@ typedef enum {
    LAST_METERMODE
 } MeterModeId;
 
-extern MeterType* Meter_types[];
-extern MeterMode* Meter_modes[];
-
 }*/
+
+#include "CPUMeter.h"
+#include "MemoryMeter.h"
+#include "SwapMeter.h"
+#include "TasksMeter.h"
+#include "LoadAverageMeter.h"
+#include "UptimeMeter.h"
+#include "ClockMeter.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -111,10 +104,8 @@ extern MeterMode* Meter_modes[];
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-/* private property */
 char* METER_CLASS = "Meter";
 
-/* private */
 MeterType* Meter_types[] = {
    &CPUMeter,
    &ClockMeter,
@@ -128,14 +119,12 @@ MeterType* Meter_types[] = {
    NULL
 };
 
-/* private */
 static MeterMode BarMeterMode = {
    .uiName = "Bar",
    .h = 1,
    .draw = BarMeterMode_draw,
 };
 
-/* private */
 static MeterMode TextMeterMode = {
    .uiName = "Text",
    .h = 1,
@@ -143,22 +132,21 @@ static MeterMode TextMeterMode = {
 };
 
 #ifdef USE_FUNKY_MODES
-/* private */
+
 static MeterMode GraphMeterMode = {
    .uiName = "Graph",
    .h = 3,
    .draw = GraphMeterMode_draw,
 };
 
-/* private */
 static MeterMode LEDMeterMode = {
    .uiName = "LED",
    .h = 3,
    .draw = LEDMeterMode_draw,
 };
+
 #endif
 
-/* private */
 MeterMode* Meter_modes[] = {
    NULL,
    &BarMeterMode,
@@ -170,7 +158,6 @@ MeterMode* Meter_modes[] = {
    NULL
 };
 
-/* private property */
 static RichString Meter_stringBuffer;
 
 Meter* Meter_new(ProcessList* pl, int param, MeterType* type) {
@@ -209,8 +196,7 @@ void Meter_setCaption(Meter* this, char* caption) {
    this->caption = strdup(caption);
 }
 
-/* private */
-inline static void Meter_displayToStringBuffer(Meter* this, char* buffer) {
+static inline void Meter_displayToStringBuffer(Meter* this, char* buffer) {
    MeterType* type = this->type;
    Object_Display display = ((Object*)this)->display;
    if (display) {
@@ -281,8 +267,7 @@ void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- BarMeterMode ---------- */
 
-/* private property */
-char BarMeterMode_characters[] = "|#*@$%&";
+static char BarMeterMode_characters[] = "|#*@$%&";
 
 void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    MeterType* type = this->type;
@@ -360,14 +345,16 @@ void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
 #define DrawDot(a,y,c) do { attrset(a); mvaddch(y, x+k, c); } while(0)
 
-/* private */
-static int GraphMeterMode_colors[21] = {GRAPH_1, GRAPH_1, GRAPH_1,
-   GRAPH_2, GRAPH_2, GRAPH_2, GRAPH_3, GRAPH_3, GRAPH_3,
-   GRAPH_4, GRAPH_4, GRAPH_4, GRAPH_5, GRAPH_5, GRAPH_6,
-   GRAPH_7, GRAPH_7, GRAPH_7, GRAPH_8, GRAPH_8, GRAPH_9
+static int GraphMeterMode_colors[21] = {
+   GRAPH_1, GRAPH_1, GRAPH_1,
+   GRAPH_2, GRAPH_2, GRAPH_2,
+   GRAPH_3, GRAPH_3, GRAPH_3,
+   GRAPH_4, GRAPH_4, GRAPH_4,
+   GRAPH_5, GRAPH_5, GRAPH_6,
+   GRAPH_7, GRAPH_7, GRAPH_7,
+   GRAPH_8, GRAPH_8, GRAPH_9
 };
 
-/* private property */
 static char* GraphMeterMode_characters = "^`'-.,_~'`-.,_~'`-.,_";
 
 void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
@@ -405,14 +392,12 @@ void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- LEDMeterMode ---------- */
 
-/* private */
 static char* LEDMeterMode_digits[3][10] = {
    { " __ ","    "," __ "," __ ","    "," __ "," __ "," __ "," __ "," __ "},
    { "|  |","   |"," __|"," __|","|__|","|__ ","|__ ","   |","|__|","|__|"},
    { "|__|","   |","|__ "," __|","   |"," __|","|__|","   |","|__|"," __|"},
 };
 
-/* private */
 static void LEDMeterMode_drawDigit(int x, int y, int n) {
    for (int i = 0; i < 3; i++)
       mvaddstr(y+i, x, LEDMeterMode_digits[i][n]);

@@ -96,24 +96,15 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
-extern int CRT_delay;
-
-extern int CRT_colors[LAST_COLORELEMENT];
-
-extern int CRT_colorScheme;
-
 }*/
 
 // TODO: centralize these in Settings.
 
-/* private property */
-int CRT_delay; 
+int CRT_delay = 0;
 
-/* private property */
-int CRT_colorScheme;
+int CRT_colorScheme = 0;
 
-/* private property */
-int CRT_colors[LAST_COLORELEMENT];
+int CRT_colors[LAST_COLORELEMENT] = { 0 };
 
 // TODO: pass an instance of Settings instead.
 

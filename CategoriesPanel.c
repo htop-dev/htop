@@ -23,23 +23,17 @@ typedef struct CategoriesPanel_ {
 
 }*/
 
-/* private property */
-char* MetersFunctions[10] = {"      ", "      ", "      ", "Type  ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  "};
+static char* MetersFunctions[10] = {"      ", "      ", "      ", "Type  ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  "};
 
-/* private property */
-char* AvailableMetersFunctions[10] = {"      ", "      ", "      ", "      ", "Add L ", "Add R ", "      ", "      ", "      ", "Done  "};
+static char* AvailableMetersFunctions[10] = {"      ", "      ", "      ", "      ", "Add L ", "Add R ", "      ", "      ", "      ", "Done  "};
 
-/* private property */
-char* DisplayOptionsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  "};
+static char* DisplayOptionsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  "};
 
-/* private property */
-char* ColumnsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  "};
+static char* ColumnsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  "};
 
-/* private property */
-char* ColorsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  "};
+static char* ColorsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  "};
 
-/* private property */
-char* AvailableColumnsFunctions[10] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  "};
+static char* AvailableColumnsFunctions[10] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  "};
 
 CategoriesPanel* CategoriesPanel_new(Settings* settings, ScreenManager* scr) {
    CategoriesPanel* this = (CategoriesPanel*) malloc(sizeof(CategoriesPanel));

@@ -28,20 +28,14 @@ typedef struct FunctionBar_ {
    bool staticData;
 } FunctionBar;
 
-extern char* FUNCTIONBAR_CLASS;
-
 }*/
 
-/* private property */
 char* FUNCTIONBAR_CLASS = "FunctionBar";
 
-/* private property */
 static char* FunctionBar_FKeys[10] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"};
 
-/* private property */
 static char* FunctionBar_FLabels[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      "};
 
-/* private property */
 static int FunctionBar_FEvents[10] = {KEY_F(1), KEY_F(2), KEY_F(3), KEY_F(4), KEY_F(5), KEY_F(6), KEY_F(7), KEY_F(8), KEY_F(9), KEY_F(10)};
 
 FunctionBar* FunctionBar_new(int size, char** functions, char** keys, int* events) {

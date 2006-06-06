@@ -18,10 +18,10 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
-/* private property */
-static int CPUMeter_attributes[] = { CPU_NICE, CPU_NORMAL, CPU_KERNEL };
+int CPUMeter_attributes[] = {
+   CPU_NICE, CPU_NORMAL, CPU_KERNEL
+};
 
-/* private */
 MeterType CPUMeter = {
    .setValues = CPUMeter_setValues, 
    .display = CPUMeter_display,
@@ -35,7 +35,6 @@ MeterType CPUMeter = {
    .init = CPUMeter_init
 };
 
-/* private */
 MeterType AllCPUsMeter = {
    .mode = 0,
    .items = 1,

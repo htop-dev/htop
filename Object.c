@@ -29,8 +29,7 @@ struct Object_ {
 };
 }*/
 
-/* private property */
-char* OBJECT_CLASS = "Object";
+static char* OBJECT_CLASS = "Object";
 
 void Object_new() {
    Object* this;

@@ -14,10 +14,10 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
-/* private property */
-int TasksMeter_attributes[] = { TASKS_RUNNING };
+int TasksMeter_attributes[] = {
+   TASKS_RUNNING
+};
 
-/* private */
 MeterType TasksMeter = {
    .setValues = TasksMeter_setValues, 
    .display = TasksMeter_display,

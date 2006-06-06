@@ -19,10 +19,8 @@ typedef struct CheckItem_ {
    bool* value;
 } CheckItem;
 
-extern char* CHECKITEM_CLASS;
 }*/
 
-/* private property */
 char* CHECKITEM_CLASS = "CheckItem";
 
 CheckItem* CheckItem_new(char* text, bool* value) {

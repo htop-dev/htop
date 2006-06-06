@@ -45,8 +45,6 @@ struct Panel_ {
    Panel_EventHandler eventHandler;
 };
 
-extern char* PANEL_CLASS;
-
 }*/
 
 #ifndef MIN
@@ -56,7 +54,6 @@ extern char* PANEL_CLASS;
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-/* private property */
 char* PANEL_CLASS = "Panel";
 
 Panel* Panel_new(int x, int y, int w, int h, char* type, bool owner) {

@@ -12,10 +12,10 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
-/* private */
-static int ClockMeter_attributes[] = { CLOCK };
+int ClockMeter_attributes[] = {
+   CLOCK
+};
 
-/* private */
 MeterType ClockMeter = {
    .setValues = ClockMeter_setValues, 
    .display = NULL,

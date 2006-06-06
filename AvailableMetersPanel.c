@@ -3,6 +3,7 @@
 #include "Settings.h"
 #include "Header.h"
 #include "ScreenManager.h"
+#include "CPUMeter.h"
 
 #include "Panel.h"
 
@@ -63,8 +64,7 @@ void AvailableMetersPanel_delete(Object* object) {
    free(this);
 }
 
-/* private */
-inline void AvailableMetersPanel_addHeader(Header* header, Panel* panel, MeterType* type, int param, HeaderSide side) {
+static inline void AvailableMetersPanel_addHeader(Header* header, Panel* panel, MeterType* type, int param, HeaderSide side) {
    Meter* meter = (Meter*) Header_addMeter(header, type, param, side);
    Panel_add(panel, (Object*) Meter_toListItem(meter));
 }
