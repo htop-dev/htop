@@ -1,14 +1,10 @@
 
 #define _GNU_SOURCE
-
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
-
 #include <assert.h>
-
-#include "DebugMemory.h"
 
 #undef strdup
 #undef malloc
@@ -16,10 +12,14 @@
 #undef calloc
 #undef free
 
+#include "DebugMemory.h"
+
 /*{
+
 typedef struct DebugMemoryItem_ DebugMemoryItem;
 
 struct DebugMemoryItem_ {
+   int magic;
    void* data;
    char* file;
    int line;
@@ -31,12 +31,15 @@ typedef struct DebugMemory_ {
    int allocations;
    int deallocations;
    int size;
+   bool totals;
    FILE* file;
 } DebugMemory;
+
 }*/
 
-/* private property */
-DebugMemory* singleton = NULL;
+#if defined(DEBUG)
+
+static DebugMemory* singleton = NULL;
 
 void DebugMemory_new() {
    if (singleton)
@@ -47,40 +50,60 @@ void DebugMemory_new() {
    singleton->deallocations = 0;
    singleton->size = 0;
    singleton->file = fopen("/tmp/htop-debug-alloc.txt", "w");
+   singleton->totals = true;
+   //singleton->file = NULL;
 }
 
-void* DebugMemory_malloc(int size, char* file, int line) {
+void* DebugMemory_malloc(int size, char* file, int line, char* str) {
    void* data = malloc(size);
    DebugMemory_registerAllocation(data, file, line);
-   fprintf(singleton->file, "%d\t%s:%d\n", size, file, line);
+   if (singleton->file) {
+      if (singleton->totals) fprintf(singleton->file, "%d\t", singleton->size);
+      fprintf(singleton->file, "%d\t%s:%d (%s)\n", size, file, line, str);
+   }
    return data;
 }
 
 void* DebugMemory_calloc(int a, int b, char* file, int line) {
    void* data = calloc(a, b);
    DebugMemory_registerAllocation(data, file, line);
-   fprintf(singleton->file, "%d\t%s:%d\n", a*b, file, line);
+   if (singleton->file) {
+      if (singleton->totals) fprintf(singleton->file, "%d\t", singleton->size);
+      fprintf(singleton->file, "%d\t%s:%d\n", a*b, file, line);
+   }
    return data;
 }
 
-void* DebugMemory_realloc(void* ptr, int size, char* file, int line) {
+void* DebugMemory_realloc(void* ptr, int size, char* file, int line, char* str) {
    if (ptr != NULL)
       DebugMemory_registerDeallocation(ptr, file, line);
    void* data = realloc(ptr, size);
    DebugMemory_registerAllocation(data, file, line);
-   fprintf(singleton->file, "%d\t%s:%d\n", size, file, line);
+   if (singleton->file) {
+      if (singleton->totals) fprintf(singleton->file, "%d\t", singleton->size);
+      fprintf(singleton->file, "%d\t%s:%d (%s)\n", size, file, line, str);
+   }
    return data;
 }
 
 void* DebugMemory_strdup(char* str, char* file, int line) {
+   assert(str);
    char* data = strdup(str);
    DebugMemory_registerAllocation(data, file, line);
-   fprintf(singleton->file, "%d\t%s:%d\n", (int) strlen(str), file, line);
+   if (singleton->file) {
+      if (singleton->totals) fprintf(singleton->file, "%d\t", singleton->size);
+      fprintf(singleton->file, "%d\t%s:%d\n", (int) strlen(str), file, line);
+   }
    return data;
 }
 
 void DebugMemory_free(void* data, char* file, int line) {
+   assert(data);
    DebugMemory_registerDeallocation(data, file, line);
+   if (singleton->file) {
+      if (singleton->totals) fprintf(singleton->file, "%d\t", singleton->size);
+      fprintf(singleton->file, "free\t%s:%d\n", file, line);
+   }
    free(data);
 }
 
@@ -91,6 +114,7 @@ void DebugMemory_assertSize() {
    DebugMemoryItem* walk = singleton->first;
    int i = 0;
    while (walk != NULL) {
+      assert(walk->magic == 11061980);
       i++;
       walk = walk->next;
    }
@@ -104,6 +128,7 @@ int DebugMemory_getBlockCount() {
    DebugMemoryItem* walk = singleton->first;
    int i = 0;
    while (walk != NULL) {
+      assert(walk->magic == 11061980);
       i++;
       walk = walk->next;
    }
@@ -115,6 +140,7 @@ void DebugMemory_registerAllocation(void* data, char* file, int line) {
       DebugMemory_new();
    DebugMemory_assertSize();
    DebugMemoryItem* item = (DebugMemoryItem*) malloc(sizeof(DebugMemoryItem));
+   item->magic = 11061980;
    item->data = data;
    item->file = file;
    item->line = line;
@@ -130,6 +156,7 @@ void DebugMemory_registerAllocation(void* data, char* file, int line) {
             walk->next = item;
             break;
          }
+         assert(walk->magic == 11061980);
          walk = walk->next;
       }
    }
@@ -141,14 +168,13 @@ void DebugMemory_registerAllocation(void* data, char* file, int line) {
 }
 
 void DebugMemory_registerDeallocation(void* data, char* file, int line) {
-   if (!data)
-      return;
    assert(singleton);
    assert(singleton->first);
    DebugMemoryItem* walk = singleton->first;
    DebugMemoryItem* prev = NULL;
    int val = DebugMemory_getBlockCount();
    while (walk != NULL) {
+      assert(walk->magic == 11061980);
       if (walk->data == data) {
          if (prev == NULL) {
             singleton->first = walk->next;
@@ -176,6 +202,7 @@ void DebugMemory_report() {
    DebugMemoryItem* walk = singleton->first;
    int i = 0;
    while (walk != NULL) {
+      assert(walk->magic == 11061980);
       i++;
       fprintf(stderr, "%p %s:%d\n", walk->data, walk->file, walk->line);
       walk = walk->next;
@@ -185,5 +212,12 @@ void DebugMemory_report() {
    fprintf(stderr, "%d deallocations\n", singleton->deallocations);
    fprintf(stderr, "%d size\n", singleton->size);
    fprintf(stderr, "%d non-freed blocks\n", i);
-   fclose(singleton->file);
+   if (singleton->file)
+      fclose(singleton->file);
 }
+
+#elif defined(DEBUGLITE)
+
+//#include "efence.h"
+
+#endif
