@@ -8,6 +8,7 @@ SKIP=3
 SKIPONE=4
 
 state = ANY
+static = 0
 
 file = open(sys.argv[1])
 name = sys.argv[1][:-2]
@@ -34,15 +35,27 @@ for line in file.readlines():
          state = COPY
       elif line == selfheader:
          pass
-      elif string.find(line, "typedef") == 0 or line == "/* private */":
-         state = SKIP
-      elif string.find(line, "/* private property */") == 0:
-         state = SKIPONE
-      elif len(line) > 1 and line[-1] == "{":
-         out.write( line[:-2] + ";" )
-         state = SKIP
-      elif line == "":
-         out.write( "" )
+      elif line.find("htop - ") == 0 and line[-2:] == ".c":
+         out.write(line[:-2] + ".h")
+      elif line.find("static ") != -1:
+         if line[-1] == "{":
+            state = SKIP
+            static = 1
+         else:
+            state = SKIPONE
+      elif len(line) > 1:
+         static = 0
+         equals = line.find(" = ")
+         if line[-3:] == "= {":
+            out.write( "extern " + line[:-4] + ";" )
+            state = SKIP
+         elif equals != -1:
+            out.write("extern " + line[:equals] + ";" )
+         elif line[-1] == "{":
+            out.write( line[:-2] + ";" )
+            state = SKIP
+         else:
+            out.write( line )
       else:
          out.write( line )
    elif state == COPY:
@@ -52,7 +65,11 @@ for line in file.readlines():
          out.write( line )
    elif state == SKIP:
       if len(line) >= 1 and line[0] == "}":
-         state = ANY
+         if static == 1:
+            state = SKIPONE
+         else:
+            state = ANY
+         static = 0
    elif state == SKIPONE:
       state = ANY
 
