@@ -17,7 +17,9 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
+extern int TasksMeter_attributes[];
 
+extern MeterType TasksMeter;
 
 void TasksMeter_setValues(Meter* this, char* buffer, int len);
 

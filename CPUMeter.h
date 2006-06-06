@@ -3,7 +3,7 @@
 #ifndef HEADER_CPUMeter
 #define HEADER_CPUMeter
 /*
-htop - CPUMeter.c
+htop - CPUMeter.h
 (C) 2004-2006 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
@@ -21,8 +21,11 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
+extern int CPUMeter_attributes[];
 
+extern MeterType CPUMeter;
 
+extern MeterType AllCPUsMeter;
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

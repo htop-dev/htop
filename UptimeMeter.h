@@ -17,8 +17,10 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
+extern int UptimeMeter_attributes[];
 
+extern MeterType UptimeMeter;
 
-void UptimeMeter_setValues(Meter* cast, char* buffer, int len);
+void UptimeMeter_setValues(Meter* this, char* buffer, int len);
 
 #endif

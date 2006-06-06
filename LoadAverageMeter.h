@@ -15,10 +15,13 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
+extern int LoadAverageMeter_attributes[];
 
+extern MeterType LoadAverageMeter;
 
+extern int LoadMeter_attributes[];
 
-
+extern MeterType LoadMeter;
 
 void LoadAverageMeter_setValues(Meter* this, char* buffer, int size);
 

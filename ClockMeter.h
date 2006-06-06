@@ -15,6 +15,9 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
+extern int ClockMeter_attributes[];
+
+extern MeterType ClockMeter;
 
 void ClockMeter_setValues(Meter* this, char* buffer, int size);
 

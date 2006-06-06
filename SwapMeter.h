@@ -22,7 +22,9 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
+extern int SwapMeter_attributes[];
 
+extern MeterType SwapMeter;
 
 void SwapMeter_setValues(Meter* this, char* buffer, int len);
 

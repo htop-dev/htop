@@ -3,7 +3,7 @@
 #ifndef HEADER_ProcessList
 #define HEADER_ProcessList
 /*
-htop - ProcessList.c
+htop - ProcessList.h
 (C) 2004,2005 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
@@ -103,14 +103,10 @@ typedef struct ProcessList_ {
 
 } ProcessList;
 
-
 #ifdef DEBUG
-
 
 #define ProcessList_read(this, buffer, format, ...) ProcessList_xread(this, (vxscanf) vsscanf, buffer, format, ## __VA_ARGS__ )
 #define ProcessList_fread(this, file, format, ...)  ProcessList_xread(this, (vxscanf) vfscanf, file, format, ## __VA_ARGS__ )
-
-
 
 #else
 
@@ -141,9 +137,7 @@ Process* ProcessList_get(ProcessList* this, int index);
 
 int ProcessList_size(ProcessList* this);
 
-
 void ProcessList_sort(ProcessList* this);
-
 
 bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname, char* name);
 

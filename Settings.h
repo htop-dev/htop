@@ -3,7 +3,7 @@
 #ifndef HEADER_Settings
 #define HEADER_Settings
 /*
-htop - Settings.c
+htop - Settings.h
 (C) 2004-2006 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
@@ -31,8 +31,6 @@ typedef struct Settings_ {
 Settings* Settings_new(ProcessList* pl, Header* header);
 
 void Settings_delete(Settings* this);
-
-
 
 bool Settings_read(Settings* this, char* fileName);
 

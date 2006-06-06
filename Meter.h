@@ -3,7 +3,7 @@
 #ifndef HEADER_Meter
 #define HEADER_Meter
 /*
-htop - Meter.c
+htop - Meter.h
 (C) 2004-2006 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
@@ -78,18 +78,6 @@ struct Meter_ {
    double total;
 };
 
-extern char* METER_CLASS;
-
-extern MeterType CPUMeter;
-extern MeterType ClockMeter;
-extern MeterType LoadAverageMeter;
-extern MeterType LoadMeter;
-extern MeterType MemoryMeter;
-extern MeterType SwapMeter;
-extern MeterType TasksMeter;
-extern MeterType UptimeMeter;
-extern MeterType AllCPUsMeter;
-
 typedef enum {
    CUSTOM_METERMODE = 0,
    BAR_METERMODE,
@@ -101,9 +89,13 @@ typedef enum {
    LAST_METERMODE
 } MeterModeId;
 
-extern MeterType* Meter_types[];
-extern MeterMode* Meter_modes[];
 
+#include "CPUMeter.h"
+#include "MemoryMeter.h"
+#include "SwapMeter.h"
+#include "TasksMeter.h"
+#include "LoadAverageMeter.h"
+#include "UptimeMeter.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -112,22 +104,21 @@ extern MeterMode* Meter_modes[];
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
+extern char* METER_CLASS;
 
-
-
+extern MeterType* Meter_types[];
 
 #ifdef USE_FUNKY_MODES
 
 #endif
 
-
+extern MeterMode* Meter_modes[];
 
 Meter* Meter_new(ProcessList* pl, int param, MeterType* type);
 
 void Meter_delete(Object* cast);
 
 void Meter_setCaption(Meter* this, char* caption);
-
 
 void Meter_setMode(Meter* this, int modeIndex);
 
@@ -139,7 +130,6 @@ void TextMeterMode_draw(Meter* this, int x, int y, int w);
 
 /* ---------- BarMeterMode ---------- */
 
-
 void BarMeterMode_draw(Meter* this, int x, int y, int w);
 
 #ifdef USE_FUNKY_MODES
@@ -148,13 +138,9 @@ void BarMeterMode_draw(Meter* this, int x, int y, int w);
 
 #define DrawDot(a,y,c) do { attrset(a); mvaddch(y, x+k, c); } while(0)
 
-
-
 void GraphMeterMode_draw(Meter* this, int x, int y, int w);
 
 /* ---------- LEDMeterMode ---------- */
-
-
 
 void LEDMeterMode_draw(Meter* this, int x, int y, int w);
 
