@@ -2,13 +2,15 @@
 htop
 by Hisham Muhammad <loderunner@users.sourceforge.net>
 
-May, 2004 - March, 2006
+May, 2004 - July, 2006
 
 Introduction
 ~~~~~~~~~~~~
 
 This is htop, an interactive process viewer.
-It requires ncurses. Tested with Linux 2.4 and 2.6.
+It requires ncurses. It is tested with Linux 2.6,
+but is also reported to work (and was originally developed)
+with the 2.4 series.
 
 Note that, while, htop is Linux specific -- it is based
 on the Linux /proc filesystem -- it is also reported to work
