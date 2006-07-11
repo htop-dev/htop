@@ -30,7 +30,11 @@ typedef struct FunctionBar_ {
 
 }*/
 
+#ifdef DEBUG
 char* FUNCTIONBAR_CLASS = "FunctionBar";
+#else
+#define FUNCTIONBAR_CLASS NULL
+#endif
 
 static char* FunctionBar_FKeys[10] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"};
 
@@ -40,7 +44,7 @@ static int FunctionBar_FEvents[10] = {KEY_F(1), KEY_F(2), KEY_F(3), KEY_F(4), KE
 
 FunctionBar* FunctionBar_new(int size, char** functions, char** keys, int* events) {
    FunctionBar* this = malloc(sizeof(FunctionBar));
-   ((Object*) this)->class = FUNCTIONBAR_CLASS;
+   Object_setClass(this, FUNCTIONBAR_CLASS);
    ((Object*) this)->delete = FunctionBar_delete;
    this->functions = functions;
    this->size = size;

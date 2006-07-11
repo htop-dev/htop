@@ -27,6 +27,9 @@ ColorsPanel.c ColorsPanel.h TraceScreen.c TraceScreen.h \
 AvailableColumnsPanel.c AvailableColumnsPanel.h ColumnsPanel.c \
 ColumnsPanel.h
 
+profile:
+	$(MAKE) all CFLAGS="-pg -O2"
+
 debug:
 	$(MAKE) all CFLAGS="-g -DDEBUG"
 

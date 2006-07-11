@@ -22,7 +22,11 @@ typedef struct CheckItem_ {
 } CheckItem;
 
 
+#ifdef DEBUG
 extern char* CHECKITEM_CLASS;
+#else
+#define CHECKITEM_CLASS NULL
+#endif
 
 CheckItem* CheckItem_new(char* text, bool* value);
 

@@ -31,7 +31,11 @@ typedef struct FunctionBar_ {
 } FunctionBar;
 
 
+#ifdef DEBUG
 extern char* FUNCTIONBAR_CLASS;
+#else
+#define FUNCTIONBAR_CLASS NULL
+#endif
 
 FunctionBar* FunctionBar_new(int size, char** functions, char** keys, int* events);
 

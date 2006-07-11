@@ -41,7 +41,7 @@ static int tbEvents[3] = {KEY_F(4), KEY_F(5), 27};
 TraceScreen* TraceScreen_new(Process* process) {
    TraceScreen* this = (TraceScreen*) malloc(sizeof(TraceScreen));
    this->process = process;
-   this->display = Panel_new(0, 1, COLS, LINES-2, LISTITEM_CLASS, true);
+   this->display = Panel_new(0, 1, COLS, LINES-2, LISTITEM_CLASS, true, ListItem_compare);
    this->bar = FunctionBar_new(3, tbFunctions, tbKeys, tbEvents);
    this->tracing = true;
    return this;

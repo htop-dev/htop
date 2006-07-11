@@ -24,6 +24,7 @@ typedef void(*Vector_procedure)(void*);
 
 typedef struct Vector_ {
    Object **array;
+   Object_Compare compare;
    int arraySize;
    int growthRate;
    int items;
@@ -33,7 +34,7 @@ typedef struct Vector_ {
 
 }*/
 
-Vector* Vector_new(char* vectorType_, bool owner, int size) {
+Vector* Vector_new(char* vectorType_, bool owner, int size, Object_Compare compare) {
    Vector* this;
 
    if (size == DEFAULT_SIZE)
@@ -45,6 +46,7 @@ Vector* Vector_new(char* vectorType_, bool owner, int size) {
    this->items = 0;
    this->vectorType = vectorType_;
    this->owner = owner;
+   this->compare = compare;
    return this;
 }
 
@@ -58,6 +60,8 @@ void Vector_delete(Vector* this) {
    free(this);
 }
 
+#ifdef DEBUG
+
 static inline bool Vector_isConsistent(Vector* this) {
    if (this->owner) {
       for (int i = 0; i < this->items; i++)
@@ -68,6 +72,8 @@ static inline bool Vector_isConsistent(Vector* this) {
       return true;
    }
 }
+
+#endif
 
 void Vector_prune(Vector* this) {
    assert(Vector_isConsistent(this));
@@ -83,27 +89,18 @@ void Vector_prune(Vector* this) {
 }
 
 void Vector_sort(Vector* this) {
+   assert(this->compare);
    assert(Vector_isConsistent(this));
-   int i, j;
-   for (i = 1; i < this->items; i++) {
+   Object_Compare compare = this->compare;
+   /* Insertion sort works best on mostly-sorted arrays. */
+   for (int i = 1; i < this->items; i++) {
+      int j;
       void* t = this->array[i];
-      for (j = i-1; j >= 0 && this->array[j]->compare(this->array[j], t) < 0; j--)
+      for (j = i-1; j >= 0 && compare(this->array[j], t) > 0; j--)
          this->array[j+1] = this->array[j];
       this->array[j+1] = t;
    }
    assert(Vector_isConsistent(this));
-
-   /*
-   for (int i = 0; i < this->items; i++) {
-      for (int j = i+1; j < this->items; j++) {
-         if (this->array[j]->compare(this->array[j], t) < 0) {
-            void* tmp = this->array[i];
-            this->array[i] = this->array[j];
-            this->array[j] = tmp;
-         }
-      }
-   }
-   */
 }
 
 static void Vector_checkArraySize(Vector* this) {
@@ -230,16 +227,14 @@ void Vector_add(Vector* this, void* data_) {
    assert(Vector_isConsistent(this));
 }
 
-inline int Vector_indexOf(Vector* this, void* search_) {
+inline int Vector_indexOf(Vector* this, void* search_, Object_Compare compare) {
    assert(((Object*)search_)->class == this->vectorType);
+   assert(this->compare);
    Object* search = search_;
    assert(Vector_isConsistent(this));
-
-   int i;
-
-   for (i = 0; i < this->items; i++) {
+   for (int i = 0; i < this->items; i++) {
       Object* o = (Object*)this->array[i];
-      if (o && o->compare(o, search) == 0)
+      if (o && compare(search, o) == 0)
          return i;
    }
    return -1;

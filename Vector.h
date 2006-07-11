@@ -26,6 +26,7 @@ typedef void(*Vector_procedure)(void*);
 
 typedef struct Vector_ {
    Object **array;
+   Object_Compare compare;
    int arraySize;
    int growthRate;
    int items;
@@ -34,9 +35,13 @@ typedef struct Vector_ {
 } Vector;
 
 
-Vector* Vector_new(char* vectorType_, bool owner, int size);
+Vector* Vector_new(char* vectorType_, bool owner, int size, Object_Compare compare);
 
 void Vector_delete(Vector* this);
+
+#ifdef DEBUG
+
+#endif
 
 void Vector_prune(Vector* this);
 
@@ -62,7 +67,7 @@ void Vector_merge(Vector* this, Vector* v2);
 
 void Vector_add(Vector* this, void* data_);
 
-inline int Vector_indexOf(Vector* this, void* search_);
+inline int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
 
 void Vector_foreach(Vector* this, Vector_procedure f);
 

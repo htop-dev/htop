@@ -47,7 +47,7 @@ inline int Hashtable_size(Hashtable* this);
 void Hashtable_put(Hashtable* this, int key, void* value);
 
 void* Hashtable_remove(Hashtable* this, int key);
-
+//#include <stdio.h>
 inline void* Hashtable_get(Hashtable* this, int key);
 
 void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData);

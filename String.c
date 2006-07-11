@@ -14,6 +14,10 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
+/*{
+#define String_startsWith(s, match) (strstr((s), (match)) == (s))
+}*/
+
 inline void String_delete(char* s) {
    free(s);
 }
@@ -100,10 +104,6 @@ inline int String_eq(char* s1, char* s2) {
          return 0;
    }
    return (strcmp(s1, s2) == 0);
-}
-
-inline int String_startsWith(char* s, char* match) {
-   return (strstr(s, match) == s);
 }
 
 char** String_split(char* s, char sep) {

@@ -47,8 +47,8 @@ ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation ori
    this->y2 = y2;
    this->fuBar = NULL;
    this->orientation = orientation;
-   this->items = Vector_new(PANEL_CLASS, owner, DEFAULT_SIZE);
-   this->fuBars = Vector_new(FUNCTIONBAR_CLASS, true, DEFAULT_SIZE);
+   this->items = Vector_new(PANEL_CLASS, owner, DEFAULT_SIZE, NULL);
+   this->fuBars = Vector_new(FUNCTIONBAR_CLASS, true, DEFAULT_SIZE, NULL);
    this->itemCount = 0;
    this->owner = owner;
    return this;
@@ -130,7 +130,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    if (this->fuBar)
       FunctionBar_draw(this->fuBar, NULL);
    
-   int ch;
+   int ch = 0;
    while (!quit) {
       int items = this->itemCount;
       for (int i = 0; i < items; i++) {

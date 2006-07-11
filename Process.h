@@ -64,16 +64,19 @@ typedef struct Process_ {
    int tty_nr;
    int tpgid;
    unsigned long int flags;
+   #ifdef DEBUG
    unsigned long int minflt;
    unsigned long int cminflt;
    unsigned long int majflt;
    unsigned long int cmajflt;
+   #endif
    unsigned long int utime;
    unsigned long int stime;
    long int cutime;
    long int cstime;
    long int priority;
    long int nice;
+   #ifdef DEBUG
    long int itrealvalue;
    unsigned long int starttime;
    unsigned long int vsize;
@@ -91,6 +94,7 @@ typedef struct Process_ {
    unsigned long int wchan;
    unsigned long int nswap;
    unsigned long int cnswap;
+   #endif
    int exit_signal;
    int processor;
    int m_size;
@@ -107,7 +111,11 @@ typedef struct Process_ {
 } Process;
 
 
+#ifdef DEBUG
 extern char* PROCESS_CLASS;
+#else
+#define PROCESS_CLASS NULL
+#endif
 
 extern char *Process_fieldNames[];
 
@@ -131,7 +139,9 @@ void Process_sendSignal(Process* this, int signal);
 
 void Process_writeField(Process* this, RichString* str, ProcessField field);
 
-int Process_compare(const Object* v1, const Object* v2);
+int Process_pidCompare(const void* v1, const void* v2);
+
+int Process_compare(const void* v1, const void* v2);
 
 char* Process_printField(ProcessField field);
 

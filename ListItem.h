@@ -24,7 +24,11 @@ typedef struct ListItem_ {
 } ListItem;
 
 
+#ifdef DEBUG
 extern char* LISTITEM_CLASS;
+#else
+#define LISTITEM_CLASS NULL
+#endif
 
 ListItem* ListItem_new(char* value, int key);
 
@@ -36,7 +40,7 @@ void ListItem_display(Object* cast, RichString* out);
 
 const char* ListItem_getRef(ListItem* this);
 
-int ListItem_compare(const Object* cast1, const Object* cast2);
+int ListItem_compare(const void* cast1, const void* cast2);
 
 
 #endif

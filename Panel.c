@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Vector.h"
 #include "CRT.h"
 #include "RichString.h"
+#include "ListItem.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -54,12 +55,18 @@ struct Panel_ {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
+#ifdef DEBUG
 char* PANEL_CLASS = "Panel";
+#else
+#define PANEL_CLASS NULL
+#endif
 
-Panel* Panel_new(int x, int y, int w, int h, char* type, bool owner) {
+
+Panel* Panel_new(int x, int y, int w, int h, char* type, bool owner, Object_Compare compare) {
    Panel* this;
    this = malloc(sizeof(Panel));
    Panel_init(this, x, y, w, h, type, owner);
+   this->items->compare = compare;
    return this;
 }
 
@@ -71,14 +78,14 @@ void Panel_delete(Object* cast) {
 
 void Panel_init(Panel* this, int x, int y, int w, int h, char* type, bool owner) {
    Object* super = (Object*) this;
-   super->class = PANEL_CLASS;
+   Object_setClass(this, PANEL_CLASS);
    super->delete = Panel_delete;
    this->x = x;
    this->y = y;
    this->w = w;
    this->h = h;
    this->eventHandler = NULL;
-   this->items = Vector_new(type, owner, DEFAULT_SIZE);
+   this->items = Vector_new(type, owner, DEFAULT_SIZE, ListItem_compare);
    this->scrollV = 0;
    this->scrollH = 0;
    this->selected = 0;

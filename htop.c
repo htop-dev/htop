@@ -245,7 +245,7 @@ int main(int argc, char** argv) {
    
    CRT_init(settings->delay, settings->colorScheme);
    
-   panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, PROCESS_CLASS, false);
+   panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, PROCESS_CLASS, false, NULL);
    Panel_setRichHeader(panel, ProcessList_printHeader(pl));
    
    char* searchFunctions[3] = {"Next  ", "Exit  ", " Search: "};
@@ -506,7 +506,7 @@ int main(int argc, char** argv) {
       }
       case 'u':
       {
-         Panel* usersPanel = Panel_new(0, 0, 0, 0, LISTITEM_CLASS, true);
+         Panel* usersPanel = Panel_new(0, 0, 0, 0, LISTITEM_CLASS, true, ListItem_compare);
          Panel_setHeader(usersPanel, "Show processes of:");
          UsersTable_foreach(ut, addUserToList, usersPanel);
          Vector_sort(usersPanel->items);
@@ -569,7 +569,7 @@ int main(int argc, char** argv) {
       case '.':
       case KEY_F(6):
       {
-         Panel* sortPanel = Panel_new(0,0,0,0,LISTITEM_CLASS,true);
+         Panel* sortPanel = Panel_new(0, 0, 0, 0, LISTITEM_CLASS, true, ListItem_compare);
          Panel_setHeader(sortPanel, "Sort by");
          char* fuFunctions[2] = {"Sort  ", "Cancel "};
          ProcessField* fields = pl->fields;

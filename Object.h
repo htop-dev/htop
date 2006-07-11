@@ -17,27 +17,38 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
+
+#ifndef DEBUG
+#define Object_setClass(obj, class)
+#endif
+
 typedef struct Object_ Object;
 
 typedef void(*Object_Display)(Object*, RichString*);
-typedef int(*Object_Compare)(const Object*, const Object*);
+typedef int(*Object_Compare)(const void*, const void*);
 typedef void(*Object_Delete)(Object*);
 
 struct Object_ {
+   #ifdef DEBUG
    char* class;
+   #endif
    Object_Display display;
-   Object_Compare compare;
    Object_Delete delete;
 };
 
-void Object_new();
+#ifdef DEBUG
+extern char* OBJECT_CLASS;
 
-bool Object_instanceOf(Object* this, char* class);
+#else
+#define OBJECT_CLASS NULL
+#endif
 
-void Object_delete(Object* this);
+#ifdef DEBUG
+
+void Object_setClass(void* this, char* class);
 
 void Object_display(Object* this, RichString* out);
 
-int Object_compare(const Object* this, const Object* o);
+#endif
 
 #endif

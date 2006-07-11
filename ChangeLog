@@ -1,8 +1,12 @@
 
 What's new in version 0.6.3
 
+* Performance improvements; uses much less CPU than the
+  previous release with the default setup.
 * Use 64-bit values when storing processor times to
   avoid overflow.
+* Memory consumption improvements, compensating storage
+  of 64-bit values.
 * Internal change: rename TypedVector to Vector and
   ListBox (and related classes) to Panel.
 

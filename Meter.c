@@ -104,7 +104,11 @@ typedef enum {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
+#ifdef DEBUG
 char* METER_CLASS = "Meter";
+#else
+#define METER_CLASS NULL
+#endif
 
 MeterType* Meter_types[] = {
    &CPUMeter,
@@ -162,6 +166,9 @@ static RichString Meter_stringBuffer;
 
 Meter* Meter_new(ProcessList* pl, int param, MeterType* type) {
    Meter* this = calloc(sizeof(Meter), 1);
+   Object_setClass(this, METER_CLASS);
+   ((Object*)this)->delete = Meter_delete;
+   ((Object*)this)->display = type->display;
    this->h = 1;
    this->type = type;
    this->param = param;
@@ -169,9 +176,6 @@ Meter* Meter_new(ProcessList* pl, int param, MeterType* type) {
    this->values = calloc(sizeof(double), type->items);
    this->total = type->total;
    this->caption = strdup(type->caption);
-   ((Object*)this)->delete = Meter_delete;
-   ((Object*)this)->class = METER_CLASS;
-   ((Object*)this)->display = type->display;
    Meter_setMode(this, type->mode);
    if (this->type->init)
       this->type->init(this);

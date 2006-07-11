@@ -23,14 +23,17 @@ typedef struct ListItem_ {
 
 }*/
 
+#ifdef DEBUG
 char* LISTITEM_CLASS = "ListItem";
+#else
+#define LISTITEM_CLASS NULL
+#endif
 
 ListItem* ListItem_new(char* value, int key) {
    ListItem* this = malloc(sizeof(ListItem));
-   ((Object*)this)->class = LISTITEM_CLASS;
+   Object_setClass(this, LISTITEM_CLASS);
    ((Object*)this)->display = ListItem_display;
    ((Object*)this)->delete = ListItem_delete;
-   ((Object*)this)->compare = ListItem_compare;
    this->value = String_copy(value);
    this->key = key;
    return this;
@@ -62,7 +65,7 @@ const char* ListItem_getRef(ListItem* this) {
    return this->value;
 }
 
-int ListItem_compare(const Object* cast1, const Object* cast2) {
+int ListItem_compare(const void* cast1, const void* cast2) {
    ListItem* obj1 = (ListItem*) cast1;
    ListItem* obj2 = (ListItem*) cast2;
    return strcmp(obj1->value, obj2->value);

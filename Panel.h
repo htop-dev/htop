@@ -55,9 +55,14 @@ struct Panel_ {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
+#ifdef DEBUG
 extern char* PANEL_CLASS;
+#else
+#define PANEL_CLASS NULL
+#endif
 
-Panel* Panel_new(int x, int y, int w, int h, char* type, bool owner);
+
+Panel* Panel_new(int x, int y, int w, int h, char* type, bool owner, Object_Compare compare);
 
 void Panel_delete(Object* cast);
 

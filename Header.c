@@ -35,8 +35,8 @@ typedef struct Header_ {
 
 Header* Header_new(ProcessList* pl) {
    Header* this = malloc(sizeof(Header));
-   this->leftMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE);
-   this->rightMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE);
+   this->leftMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE, NULL);
+   this->rightMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE, NULL);
    this->margin = true;
    this->pl = pl;
    return this;

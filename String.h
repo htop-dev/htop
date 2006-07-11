@@ -17,6 +17,8 @@ in the source distribution for its full text.
 
 #include "debug.h"
 
+#define String_startsWith(s, match) (strstr((s), (match)) == (s))
+
 inline void String_delete(char* s);
 
 inline char* String_copy(char* orig);
@@ -38,8 +40,6 @@ void String_printInt(int i);
 void String_printPointer(void* p);
 
 inline int String_eq(char* s1, char* s2);
-
-inline int String_startsWith(char* s, char* match);
 
 char** String_split(char* s, char sep);
 

@@ -26,7 +26,11 @@ typedef struct Signal_ {
 } Signal;
 
 
+#ifdef DEBUG
 extern char* SIGNAL_CLASS;
+#else
+#define SIGNAL_CLASS NULL
+#endif
 
 Signal* Signal_new(char* name, int number);
 

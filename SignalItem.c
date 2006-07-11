@@ -25,11 +25,15 @@ typedef struct Signal_ {
 
 }*/
 
+#ifdef DEBUG
 char* SIGNAL_CLASS = "Signal";
+#else
+#define SIGNAL_CLASS NULL
+#endif
 
 Signal* Signal_new(char* name, int number) {
    Signal* this = malloc(sizeof(Signal));
-   ((Object*)this)->class = SIGNAL_CLASS;
+   Object_setClass(this, SIGNAL_CLASS);
    ((Object*)this)->display = Signal_display;
    ((Object*)this)->delete = Signal_delete;
    this->name = name;

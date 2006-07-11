@@ -55,7 +55,7 @@ Hashtable* Hashtable_new(int size, bool owner) {
 }
 
 int Hashtable_hashAlgorithm(Hashtable* this, int key) {
-   return (key % this->size);
+   return key % this->size;
 }
 
 void Hashtable_delete(Hashtable* this) {
@@ -116,17 +116,20 @@ void* Hashtable_remove(Hashtable* this, int key) {
       } else
          bucketPtr = &((*bucketPtr)->next);
 }
-
+//#include <stdio.h>
 inline void* Hashtable_get(Hashtable* this, int key) {
    int index = this->hashAlgorithm(this, key);
    HashtableItem* bucketPtr = this->buckets[index];
-   while (true)
+   // fprintf(stderr, "%d -> %d\n", key, index);
+   while (true) {
       if (bucketPtr == NULL) {
          return NULL;
       } else if (bucketPtr->key == key) {
          return bucketPtr->value;
       } else
          bucketPtr = bucketPtr->next;
+      // fprintf(stderr, "*\n");
+   }
 }
 
 void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData) {

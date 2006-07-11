@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include "Vector.h"
 #include "UsersTable.h"
 #include "Hashtable.h"
+#include "String.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -50,10 +51,14 @@ in the source distribution for its full text.
 #endif
 
 #ifndef MAX_READ
-#define MAX_READ 8192
+#define MAX_READ 2048
 #endif
 
 
+
+#ifdef DEBUG
+typedef int(*vxscanf)(void*, const char*, va_list);
+#endif
 
 typedef struct ProcessList_ {
    Vector* processes;

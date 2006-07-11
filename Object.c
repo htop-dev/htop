@@ -15,37 +15,37 @@ in the source distribution for its full text.
 #include "debug.h"
 
 /*{
+
+#ifndef DEBUG
+#define Object_setClass(obj, class)
+#endif
+
 typedef struct Object_ Object;
 
 typedef void(*Object_Display)(Object*, RichString*);
-typedef int(*Object_Compare)(const Object*, const Object*);
+typedef int(*Object_Compare)(const void*, const void*);
 typedef void(*Object_Delete)(Object*);
 
 struct Object_ {
+   #ifdef DEBUG
    char* class;
+   #endif
    Object_Display display;
-   Object_Compare compare;
    Object_Delete delete;
 };
 }*/
 
-static char* OBJECT_CLASS = "Object";
+#ifdef DEBUG
+char* OBJECT_CLASS = "Object";
 
-void Object_new() {
-   Object* this;
-   this = malloc(sizeof(Object));
-   this->class = OBJECT_CLASS;
-   this->display = Object_display;
-   this->compare = Object_compare;
-   this->delete = Object_delete;
-}
+#else
+#define OBJECT_CLASS NULL
+#endif
 
-bool Object_instanceOf(Object* this, char* class) {
-   return this->class == class;
-}
+#ifdef DEBUG
 
-void Object_delete(Object* this) {
-   free(this);
+void Object_setClass(void* this, char* class) {
+   ((Object*)this)->class = class;
 }
 
 void Object_display(Object* this, RichString* out) {
@@ -54,6 +54,4 @@ void Object_display(Object* this, RichString* out) {
    RichString_write(out, CRT_colors[DEFAULT_COLOR], objAddress);
 }
 
-int Object_compare(const Object* this, const Object* o) {
-   return (this - o);
-}
+#endif

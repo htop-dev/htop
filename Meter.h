@@ -96,6 +96,7 @@ typedef enum {
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
+#include "ClockMeter.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -104,7 +105,11 @@ typedef enum {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
+#ifdef DEBUG
 extern char* METER_CLASS;
+#else
+#define METER_CLASS NULL
+#endif
 
 extern MeterType* Meter_types[];
 
