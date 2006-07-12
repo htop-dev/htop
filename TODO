@@ -9,7 +9,6 @@ BUGS:
 FEATURES:
 
  * expand/collapse on tree
- * read SYSCONFDIR/htoprc (help, autoconf gurus!)
  * handle saving of .htoprc more elegantly
  * make bars display refresh independent from list refresh
  * auto-calibrate delay 
