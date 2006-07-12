@@ -177,7 +177,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    ProcessList* this;
    this = malloc(sizeof(ProcessList));
    this->processes = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
-   this->processTable = Hashtable_new(20, false);
+   this->processTable = Hashtable_new(70, false);
    this->prototype = Process_new(this);
    this->usersTable = usersTable;
    
@@ -265,7 +265,8 @@ void ProcessList_invertSortOrder(ProcessList* this) {
 }
 
 RichString ProcessList_printHeader(ProcessList* this) {
-   RichString out = RichString_new();
+   RichString out;
+   RichString_init(&out);
    ProcessField* fields = this->fields;
    for (int i = 0; fields[i]; i++) {
       char* field = Process_printField(fields[i]);
@@ -505,30 +506,8 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
             process->pid = pid;
             if (! ProcessList_readStatusFile(this, process, dirname, name))
                goto errorReadingProcess;
-            char* username = UsersTable_getRef(this->usersTable, process->st_uid);
-            if (username) {
-               strncpy(process->user, username, PROCESS_USER_LEN);
-            } else {
-               snprintf(process->user, PROCESS_USER_LEN, "%d", process->st_uid);
-            }
          }
          process->updated = true;
-
-         int lasttimes = (process->utime + process->stime);
-
-         snprintf(statusfilename, MAX_NAME, "%s/%s/stat", dirname, name);
-         
-         status = ProcessList_fopen(this, statusfilename, "r");
-         if (status == NULL) 
-            goto errorReadingProcess;
-
-         int success = ProcessList_readStatFile(this, process, status, command);
-         fclose(status);
-         if(!success)
-            goto errorReadingProcess;
-
-         process->percent_cpu = (process->utime + process->stime - lasttimes) / 
-            period * 100.0;
 
          snprintf(statusfilename, MAX_NAME, "%s/%s/statm", dirname, name);
          status = ProcessList_fopen(this, statusfilename, "r");
@@ -548,7 +527,27 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          if (this->hideKernelThreads && process->m_size == 0)
             goto errorReadingProcess;
 
+         int lasttimes = (process->utime + process->stime);
+
+         snprintf(statusfilename, MAX_NAME, "%s/%s/stat", dirname, name);
+         
+         status = ProcessList_fopen(this, statusfilename, "r");
+         if (status == NULL) 
+            goto errorReadingProcess;
+
+         int success = ProcessList_readStatFile(this, process, status, command);
+         fclose(status);
+         if(!success)
+            goto errorReadingProcess;
+
          if(!existingProcess) {
+            char* username = UsersTable_getRef(this->usersTable, process->st_uid);
+            if (username) {
+               strncpy(process->user, username, PROCESS_USER_LEN);
+            } else {
+               snprintf(process->user, PROCESS_USER_LEN, "%d", process->st_uid);
+            }
+ 
             snprintf(statusfilename, MAX_NAME, "%s/%s/cmdline", dirname, name);
             status = ProcessList_fopen(this, statusfilename, "r");
             if (!status) {
@@ -566,6 +565,9 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
             process->comm = String_copy(command);
             fclose(status);
          }
+
+         process->percent_cpu = (process->utime + process->stime - lasttimes) / 
+            period * 100.0;
 
          process->percent_mem = process->m_resident / 
             (float)(this->usedMem - this->cachedMem - this->buffersMem) * 

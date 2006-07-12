@@ -206,7 +206,7 @@ static inline void Meter_displayToStringBuffer(Meter* this, char* buffer) {
    if (display) {
       display((Object*)this, &Meter_stringBuffer);
    } else {
-      RichString_prune(&Meter_stringBuffer);
+      RichString_initVal(Meter_stringBuffer);
       RichString_append(&Meter_stringBuffer, CRT_colors[type->attributes[0]], buffer);
    }
 }

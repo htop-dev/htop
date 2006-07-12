@@ -16,7 +16,6 @@ in the source distribution for its full text.
 typedef struct Hashtable_ Hashtable;
 
 typedef void(*Hashtable_PairFunction)(int, void*, void*);
-typedef int(*Hashtable_HashAlgorithm)(Hashtable*, int);
 
 typedef struct HashtableItem {
    int key;
@@ -28,7 +27,6 @@ struct Hashtable_ {
    int size;
    HashtableItem** buckets;
    int items;
-   Hashtable_HashAlgorithm hashAlgorithm;
    bool owner;
 };
 }*/
@@ -49,13 +47,8 @@ Hashtable* Hashtable_new(int size, bool owner) {
    this = (Hashtable*) malloc(sizeof(Hashtable));
    this->size = size;
    this->buckets = (HashtableItem**) calloc(sizeof(HashtableItem*), size);
-   this->hashAlgorithm = Hashtable_hashAlgorithm;
    this->owner = owner;
    return this;
-}
-
-int Hashtable_hashAlgorithm(Hashtable* this, int key) {
-   return key % this->size;
 }
 
 void Hashtable_delete(Hashtable* this) {
@@ -78,7 +71,7 @@ inline int Hashtable_size(Hashtable* this) {
 }
 
 void Hashtable_put(Hashtable* this, int key, void* value) {
-   int index = this->hashAlgorithm(this, key);
+   int index = key % this->size;
    HashtableItem** bucketPtr = &(this->buckets[index]);
    while (true)
       if (*bucketPtr == NULL) {
@@ -95,7 +88,7 @@ void Hashtable_put(Hashtable* this, int key, void* value) {
 }
 
 void* Hashtable_remove(Hashtable* this, int key) {
-   int index = this->hashAlgorithm(this, key);
+   int index = key % this->size;
    HashtableItem** bucketPtr = &(this->buckets[index]);
    while (true)
       if (*bucketPtr == NULL) {
@@ -118,7 +111,7 @@ void* Hashtable_remove(Hashtable* this, int key) {
 }
 //#include <stdio.h>
 inline void* Hashtable_get(Hashtable* this, int key) {
-   int index = this->hashAlgorithm(this, key);
+   int index = key % this->size;
    HashtableItem* bucketPtr = this->buckets[index];
    // fprintf(stderr, "%d -> %d\n", key, index);
    while (true) {

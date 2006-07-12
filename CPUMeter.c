@@ -81,7 +81,7 @@ void CPUMeter_setValues(Meter* this, char* buffer, int size) {
 void CPUMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
-   RichString_prune(out);
+   RichString_init(out);
    sprintf(buffer, "%5.1f%% ", this->values[1]);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
    RichString_append(out, CRT_colors[CPU_NORMAL], buffer);

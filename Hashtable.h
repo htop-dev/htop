@@ -18,7 +18,6 @@ in the source distribution for its full text.
 typedef struct Hashtable_ Hashtable;
 
 typedef void(*Hashtable_PairFunction)(int, void*, void*);
-typedef int(*Hashtable_HashAlgorithm)(Hashtable*, int);
 
 typedef struct HashtableItem {
    int key;
@@ -30,15 +29,12 @@ struct Hashtable_ {
    int size;
    HashtableItem** buckets;
    int items;
-   Hashtable_HashAlgorithm hashAlgorithm;
    bool owner;
 };
 
 HashtableItem* HashtableItem_new(int key, void* value);
 
 Hashtable* Hashtable_new(int size, bool owner);
-
-int Hashtable_hashAlgorithm(Hashtable* this, int key);
 
 void Hashtable_delete(Hashtable* this);
 

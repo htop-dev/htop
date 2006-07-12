@@ -150,7 +150,7 @@ void Process_delete(Object* cast) {
 void Process_display(Object* cast, RichString* out) {
    Process* this = (Process*) cast;
    ProcessField* fields = this->pl->fields;
-   RichString_prune(out);
+   RichString_init(out);
    for (int i = 0; fields[i]; i++)
       Process_writeField(this, out, fields[i]);
    if (this->pl->shadowOtherUsers && this->st_uid != getuid())

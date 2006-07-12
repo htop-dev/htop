@@ -14,6 +14,9 @@
 #define RICHSTRING_MAXLEN 300
 
 
+#define RichString_init(this) (this)->len = 0
+#define RichString_initVal(this) (this).len = 0
+
 typedef struct RichString_ {
    int len;
    chtype chstr[RICHSTRING_MAXLEN+1];
@@ -23,12 +26,6 @@ typedef struct RichString_ {
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
-
-RichString RichString_new();
-
-void RichString_delete(RichString this);
-
-void RichString_prune(RichString* this);
 
 void RichString_write(RichString* this, int attrs, char* data);
 

@@ -46,7 +46,7 @@ void SwapMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
    long int swap = (long int) this->values[0];
-   RichString_prune(out);
+   RichString_init(out);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
    sprintf(buffer, "%ldM ", (long int) this->total / 1024);
    RichString_append(out, CRT_colors[METER_VALUE], buffer);

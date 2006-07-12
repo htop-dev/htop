@@ -96,16 +96,12 @@ void Panel_init(Panel* this, int x, int y, int w, int h, char* type, bool owner)
 
 void Panel_done(Panel* this) {
    assert (this != NULL);
-   RichString_delete(this->header);
    Vector_delete(this->items);
 }
 
 inline void Panel_setRichHeader(Panel* this, RichString header) {
    assert (this != NULL);
 
-   if (this->header.len > 0) {
-      RichString_delete(this->header);
-   }
    this->header = header;
    this->needsRedraw = true;
 }
@@ -274,7 +270,8 @@ void Panel_draw(Panel* this, bool focus) {
 
       for(int i = first, j = 0; j < this->h && i < last; i++, j++) {
          Object* itemObj = Vector_get(this->items, i);
-         RichString itemRef = RichString_new();
+         RichString itemRef;
+         RichString_initVal(itemRef);
          itemObj->display(itemObj, &itemRef);
          int amt = MIN(itemRef.len - scrollH, this->w);
          if (i == this->selected) {
@@ -296,10 +293,12 @@ void Panel_draw(Panel* this, bool focus) {
 
    } else {
       Object* oldObj = Vector_get(this->items, this->oldSelected);
-      RichString oldRef = RichString_new();
+      RichString oldRef;
+      RichString_initVal(oldRef);
       oldObj->display(oldObj, &oldRef);
       Object* newObj = Vector_get(this->items, this->selected);
-      RichString newRef = RichString_new();
+      RichString newRef;
+      RichString_initVal(newRef);
       newObj->display(newObj, &newRef);
       mvhline(y+ this->oldSelected - this->scrollV, x+0, ' ', this->w);
       if (scrollH < oldRef.len)
