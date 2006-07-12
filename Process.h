@@ -34,7 +34,6 @@ in the source distribution for its full text.
 #define PAGE_SIZE ( sysconf(_SC_PAGESIZE) / 1024 )
 
 #define PROCESS_COMM_LEN 300
-#define PROCESS_USER_LEN 10
 
 
 typedef enum ProcessField_ {
@@ -107,7 +106,7 @@ typedef struct Process_ {
    uid_t st_uid;
    float percent_cpu;
    float percent_mem;
-   char user[PROCESS_USER_LEN + 1];
+   char* user;
 } Process;
 
 

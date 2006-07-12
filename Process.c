@@ -31,7 +31,6 @@ in the source distribution for its full text.
 #define PAGE_SIZE ( sysconf(_SC_PAGESIZE) / 1024 )
 
 #define PROCESS_COMM_LEN 300
-#define PROCESS_USER_LEN 10
 
 /*{
 
@@ -105,7 +104,7 @@ typedef struct Process_ {
    uid_t st_uid;
    float percent_cpu;
    float percent_mem;
-   char user[PROCESS_USER_LEN + 1];
+   char* user;
 } Process;
 
 }*/
@@ -120,6 +119,8 @@ char *Process_fieldNames[] = {
    "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "*** report bug! ***"
 };
 
+static int Process_getuid = -1;
+
 Process* Process_new(struct ProcessList_ *pl) {
    Process* this = malloc(sizeof(Process));
    Object_setClass(this, PROCESS_CLASS);
@@ -131,6 +132,7 @@ Process* Process_new(struct ProcessList_ *pl) {
    this->utime = 0;
    this->stime = 0;
    this->comm = NULL;
+   if (Process_getuid == -1) Process_getuid = getuid();
    return this;
 }
 
@@ -153,7 +155,7 @@ void Process_display(Object* cast, RichString* out) {
    RichString_init(out);
    for (int i = 0; fields[i]; i++)
       Process_writeField(this, out, fields[i]);
-   if (this->pl->shadowOtherUsers && this->st_uid != getuid())
+   if (this->pl->shadowOtherUsers && this->st_uid != Process_getuid)
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
    if (this->tag == true)
       RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
@@ -315,9 +317,13 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case M_SHARE: Process_printLargeNumber(this, str, this->m_share * PAGE_SIZE); return;
    case ST_UID: snprintf(buffer, n, "%4d ", this->st_uid); break;
    case USER: {
-      if (getuid() != this->st_uid)
+      if (Process_getuid != this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
+      if (this->user) {
       snprintf(buffer, n, "%-8s ", this->user);
+      } else {
+      snprintf(buffer, n, "%-8d ", this->st_uid);
+      }
       if (buffer[8] != '\0') {
          buffer[8] = ' ';
          buffer[9] = '\0';

@@ -541,12 +541,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
             goto errorReadingProcess;
 
          if(!existingProcess) {
-            char* username = UsersTable_getRef(this->usersTable, process->st_uid);
-            if (username) {
-               strncpy(process->user, username, PROCESS_USER_LEN);
-            } else {
-               snprintf(process->user, PROCESS_USER_LEN, "%d", process->st_uid);
-            }
+            process->user = UsersTable_getRef(this->usersTable, process->st_uid);
  
             snprintf(statusfilename, MAX_NAME, "%s/%s/cmdline", dirname, name);
             status = ProcessList_fopen(this, statusfilename, "r");
