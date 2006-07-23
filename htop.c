@@ -543,7 +543,6 @@ int main(int argc, char** argv) {
                   Process* p = (Process*) Panel_get(panel, i);
                   if (p->tag) {
                      Process_sendSignal(p, signal->number);
-                     Process_toggleTag(p);
                      anyTagged = true;
                   }
                }
