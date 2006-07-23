@@ -40,6 +40,7 @@ struct Panel_ {
    Vector* items;
    int selected;
    int scrollV, scrollH;
+   int scrollHAmount;
    int oldSelected;
    bool needsRedraw;
    RichString header;
@@ -92,6 +93,10 @@ void Panel_init(Panel* this, int x, int y, int w, int h, char* type, bool owner)
    this->oldSelected = 0;
    this->needsRedraw = true;
    this->header.len = 0;
+   if (String_eq(CRT_termType, "linux"))
+      this->scrollHAmount = 40;
+   else
+      this->scrollHAmount = 5;
 }
 
 void Panel_done(Panel* this) {
@@ -327,12 +332,12 @@ void Panel_onKey(Panel* this, int key) {
       break;
    case KEY_LEFT:
       if (this->scrollH > 0) {
-         this->scrollH -= 5;
+         this->scrollH -= this->scrollHAmount;
          this->needsRedraw = true;
       }
       break;
    case KEY_RIGHT:
-      this->scrollH += 5;
+      this->scrollH += this->scrollHAmount;
       this->needsRedraw = true;
       break;
    case KEY_PPAGE:

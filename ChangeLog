@@ -11,6 +11,8 @@ What's new in version 0.6.3
   ListBox (and related classes) to Panel.
 * Have configure actually fail when needed libraries or
   headers are not found.
+* Horizontally scroll in larger increments when on the
+  Linux console because of slow update of unaccelerated fb
 
 What's new in version 0.6.2
 

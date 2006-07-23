@@ -107,6 +107,8 @@ extern int CRT_colorScheme;
 
 extern int CRT_colors[LAST_COLORELEMENT];
 
+char* CRT_termType;
+
 // TODO: pass an instance of Settings instead.
 
 void CRT_init(int delay, int colorScheme);

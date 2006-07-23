@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include "Vector.h"
 #include "CRT.h"
 #include "RichString.h"
+#include "ListItem.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -41,6 +42,7 @@ struct Panel_ {
    Vector* items;
    int selected;
    int scrollV, scrollH;
+   int scrollHAmount;
    int oldSelected;
    bool needsRedraw;
    RichString header;
