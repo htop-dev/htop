@@ -46,6 +46,7 @@ void printHelpFlag() {
    printf("Released under the GNU GPL.\n\n");
    printf("-d DELAY     Delay between updates, in tenths of seconds\n\n");
    printf("-u USERNAME  Show only processes of a given user\n\n");
+   printf("--sort-key COLUMN  Sort by this column (use --sort-key help for a column list)\n\n");
    printf("Press F1 inside htop for online help.\n");
    printf("See the man page for full information.\n\n");
    exit(0);
@@ -194,12 +195,25 @@ int main(int argc, char** argv) {
    int delay = -1;
    bool userOnly = false;
    uid_t userId = 0;
+   int sortKey = 0;
 
    if (argc > 0) {
       if (String_eq(argv[1], "--help")) {
          printHelpFlag();
       } else if (String_eq(argv[1], "--version")) {
          printVersionFlag();
+      } else if (String_eq(argv[1], "--sort-key")) {
+         if (argc < 2) printHelpFlag();
+            if (String_eq(argv[2], "help")) {
+            for (int j = 1; j < LAST_PROCESSFIELD; j++)
+               printf ("%s\n", Process_fieldNames[j]);
+            exit(0);
+         }
+         sortKey = ColumnsPanel_fieldNameToIndex(argv[2]);
+         if (sortKey == -1) {
+            fprintf(stderr, "Error: invalid column \"%s\".\n", argv[2]);
+            exit(1);
+         }
       } else if (String_eq(argv[1], "-d")) {
          if (argc < 2) printHelpFlag();
          sscanf(argv[2], "%d", &delay);
@@ -237,6 +251,10 @@ int main(int argc, char** argv) {
    
    Header* header = Header_new(pl);
    settings = Settings_new(pl, header);
+   if (sortKey > 0) {
+      pl->sortKey = sortKey;
+      pl->treeView = false;
+   }
    int headerHeight = Header_calculateHeight(header);
 
    // FIXME: move delay code to settings

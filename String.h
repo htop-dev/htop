@@ -39,7 +39,7 @@ void String_printInt(int i);
 
 void String_printPointer(void* p);
 
-inline int String_eq(char* s1, char* s2);
+inline int String_eq(const char* s1, const char* s2);
 
 char** String_split(char* s, char sep);
 

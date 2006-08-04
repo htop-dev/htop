@@ -24,6 +24,8 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings, ScreenManager* scr);
 
 void ColumnsPanel_delete(Object* object);
 
+int ColumnsPanel_fieldNameToIndex(const char* name);
+
 void ColumnsPanel_update(Panel* super);
 
 HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch);

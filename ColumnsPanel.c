@@ -44,6 +44,15 @@ void ColumnsPanel_delete(Object* object) {
    free(this);
 }
 
+int ColumnsPanel_fieldNameToIndex(const char* name) {
+   for (int j = 1; j <= LAST_PROCESSFIELD; j++) {
+      if (String_eq(name, Process_fieldNames[j])) {
+         return j;
+      }
+   }
+   return 0;
+}
+
 void ColumnsPanel_update(Panel* super) {
    ColumnsPanel* this = (ColumnsPanel*) super;
    int size = Panel_getSize(super);
@@ -53,12 +62,9 @@ void ColumnsPanel_update(Panel* super) {
    this->settings->pl->fields = (ProcessField*) malloc(sizeof(ProcessField) * (size+1));
    for (int i = 0; i < size; i++) {
       char* text = ((ListItem*) Panel_get(super, i))->value;
-      for (int j = 1; j <= LAST_PROCESSFIELD; j++) {
-         if (String_eq(text, Process_fieldNames[j])) {
-            this->settings->pl->fields[i] = j;
-            break;
-         }
-      }
+          int j = ColumnsPanel_fieldNameToIndex(text);
+          if (j > 0)
+             this->settings->pl->fields[i] = j;
    }
    this->settings->pl->fields[size] = 0;
 }
@@ -83,7 +89,7 @@ HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case ']':
       case '+':
       {
-	 if (selected < size - 2) 
+         if (selected < size - 2) 
             Panel_moveSelectedDown(super);
          result = HANDLED;
          break;

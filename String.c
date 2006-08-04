@@ -96,7 +96,7 @@ void String_printPointer(void* p) {
    printf("%p", p);
 }
 
-inline int String_eq(char* s1, char* s2) {
+inline int String_eq(const char* s1, const char* s2) {
    if (s1 == NULL || s2 == NULL) {
       if (s1 == NULL && s2 == NULL)
          return 1;

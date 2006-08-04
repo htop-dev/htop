@@ -1,4 +1,10 @@
 
+What's new in version 0.6.4
+
+* --sort-key flag in the command-line, overriding the
+  saved setting in .htoprc for the session.
+  (thanks to Rodolfo Borges)
+
 What's new in version 0.6.3
 
 * Performance improvements: uses much less CPU than the
