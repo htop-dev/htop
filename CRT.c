@@ -160,6 +160,7 @@ void CRT_done() {
 int CRT_readKey() {
    nocbreak();
    cbreak();
+   nodelay(stdscr, FALSE);
    int ret = getch();
    halfdelay(CRT_delay);
    return ret;

@@ -165,4 +165,5 @@ void TraceScreen_run(TraceScreen* this) {
    kill(child, SIGTERM);
    waitpid(child, NULL, 0);
    fclose(strace);
+   CRT_enableDelay();
 }
