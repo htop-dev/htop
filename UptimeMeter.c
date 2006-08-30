@@ -44,7 +44,7 @@ void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
    if (days > this->total) {
       this->total = days;
    }
-   char daysbuf[10];
+   char daysbuf[15];
    if (days > 100) {
       sprintf(daysbuf, "%d days(!), ", days);
    } else if (days > 1) {
