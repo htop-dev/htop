@@ -54,6 +54,10 @@ in the source distribution for its full text.
 #define MAX_READ 2048
 #endif
 
+#ifndef PER_PROCESSOR_FIELDS
+#define PER_PROCESSOR_FIELDS 20
+#endif
+
 
 
 #ifdef DEBUG
@@ -71,6 +75,7 @@ typedef struct ProcessList_ {
    int totalTasks;
    int runningTasks;
 
+   // Must match number of PER_PROCESSOR_FIELDS constant
    unsigned long long int* totalTime;
    unsigned long long int* userTime;
    unsigned long long int* systemTime;
