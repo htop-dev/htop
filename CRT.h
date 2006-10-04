@@ -95,6 +95,9 @@ typedef enum ColorElements_ {
    CPU_NORMAL,
    CPU_KERNEL,
    HELP_BOLD,
+   CPU_IOWAIT,
+   CPU_IRQ,
+   CPU_SOFTIRQ,
    LAST_COLORELEMENT
 } ColorElements;
 

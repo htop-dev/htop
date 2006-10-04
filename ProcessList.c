@@ -74,13 +74,23 @@ typedef struct ProcessList_ {
    unsigned long long int* totalTime;
    unsigned long long int* userTime;
    unsigned long long int* systemTime;
+   unsigned long long int* systemAllTime;
    unsigned long long int* idleTime;
    unsigned long long int* niceTime;
+   unsigned long long int* ioWaitTime;
+   unsigned long long int* irqTime;
+   unsigned long long int* softIrqTime;
+   unsigned long long int* stealTime;
    unsigned long long int* totalPeriod;
    unsigned long long int* userPeriod;
    unsigned long long int* systemPeriod;
+   unsigned long long int* systemAllPeriod;
    unsigned long long int* idlePeriod;
    unsigned long long int* nicePeriod;
+   unsigned long long int* ioWaitPeriod;
+   unsigned long long int* irqPeriod;
+   unsigned long long int* softIrqPeriod;
+   unsigned long long int* stealPeriod;
 
    unsigned long long int totalMem;
    unsigned long long int usedMem;
@@ -198,16 +208,29 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    } while (String_startsWith(buffer, "cpu"));
    fclose(status);
    this->processorCount = procs - 1;
+   this->totalTime = calloc(procs * FIELDS, sizeof(long long int));
+   this->userTime = 
+
    this->totalTime = calloc(procs, sizeof(long long int));
    this->userTime = calloc(procs, sizeof(long long int));
    this->systemTime = calloc(procs, sizeof(long long int));
+   this->systemAllTime = calloc(procs, sizeof(long long int));
    this->niceTime = calloc(procs, sizeof(long long int));
    this->idleTime = calloc(procs, sizeof(long long int));
+   this->ioWaitTime = calloc(procs, sizeof(long long int));
+   this->irqTime = calloc(procs, sizeof(long long int));
+   this->softIrqTime = calloc(procs, sizeof(long long int));
+   this->stealTime = calloc(procs, sizeof(long long int));
    this->totalPeriod = calloc(procs, sizeof(long long int));
    this->userPeriod = calloc(procs, sizeof(long long int));
    this->systemPeriod = calloc(procs, sizeof(long long int));
+   this->systemAllPeriod = calloc(procs, sizeof(long long int));
    this->nicePeriod = calloc(procs, sizeof(long long int));
    this->idlePeriod = calloc(procs, sizeof(long long int));
+   this->ioWaitPeriod = calloc(procs, sizeof(long long int));
+   this->irqPeriod = calloc(procs, sizeof(long long int));
+   this->softIrqPeriod = calloc(procs, sizeof(long long int));
+   this->stealPeriod = calloc(procs, sizeof(long long int));
    for (int i = 0; i < procs; i++) {
       this->totalTime[i] = 1;
       this->totalPeriod[i] = 1;
@@ -228,6 +251,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    this->treeView = false;
    this->highlightBaseName = false;
    this->highlightMegabytes = false;
+   this->expandSystemTime = false;
 
    return this;
 }
@@ -241,13 +265,23 @@ void ProcessList_delete(ProcessList* this) {
    free(this->totalTime);
    free(this->userTime);
    free(this->systemTime);
+   free(this->systemAllTime);
    free(this->niceTime);
    free(this->idleTime);
+   free(this->ioWaitTime);
+   free(this->irqTime);
+   free(this->softIrqTime);
+   free(this->stealTime);
    free(this->totalPeriod);
    free(this->userPeriod);
    free(this->systemPeriod);
+   free(this->systemAllPeriod);
    free(this->nicePeriod);
    free(this->idlePeriod);
+   free(this->ioWaitPeriod);
+   free(this->irqPeriod);
+   free(this->softIrqPeriod);
+   free(this->stealPeriod);
 
    #ifdef DEBUG
    fclose(this->traceFile);
@@ -596,7 +630,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
 }
 
 void ProcessList_scan(ProcessList* this) {
-   unsigned long long int usertime, nicetime, systemtime, idletime, totaltime;
+   unsigned long long int usertime, nicetime, systemtime, systemalltime, idletime, totaltime;
    unsigned long long int swapFree;
 
    FILE* status;
@@ -656,22 +690,37 @@ void ProcessList_scan(ProcessList* this) {
       }
       // Fields existing on kernels >= 2.6
       // (and RHEL's patched kernel 2.4...)
-      systemtime += ioWait + irq + softIrq + steal;
-      totaltime = usertime + nicetime + systemtime + idletime;
+      systemalltime = systemtime + ioWait + irq + softIrq + steal;
+      totaltime = usertime + nicetime + systemalltime + idletime;
       assert (usertime >= this->userTime[i]);
       assert (nicetime >= this->niceTime[i]);
       assert (systemtime >= this->systemTime[i]);
       assert (idletime >= this->idleTime[i]);
       assert (totaltime >= this->totalTime[i]);
+      assert (systemalltime >= this->systemAllTime[i]);
+      assert (ioWait >= this->ioWaitTime[i]);
+      assert (irqTime >= this->irqTime[i]);
+      assert (softIrqTime >= this->softIrqTime[i]);
+      assert (stealTime >= this->stealTime[i]);
       this->userPeriod[i] = usertime - this->userTime[i];
       this->nicePeriod[i] = nicetime - this->niceTime[i];
       this->systemPeriod[i] = systemtime - this->systemTime[i];
+      this->systemAllPeriod[i] = systemalltime - this->systemAllTime[i];
       this->idlePeriod[i] = idletime - this->idleTime[i];
+      this->ioWaitPeriod[i] = ioWait - this->ioWaitTime[i];
+      this->irqPeriod[i] = irq - this->irqTime[i];
+      this->softIrqPeriod[i] = softIrq - this->softIrqTime[i];
+      this->stealPeriod[i] = steal - this->stealTime[i];
       this->totalPeriod[i] = totaltime - this->totalTime[i];
       this->userTime[i] = usertime;
       this->niceTime[i] = nicetime;
       this->systemTime[i] = systemtime;
+      this->systemAllTime[i] = systemalltime;
       this->idleTime[i] = idletime;
+      this->ioWaitTime[i] = ioWait;
+      this->irqTime[i] = irq;
+      this->softIrqTime[i] = softIrq;
+      this->stealTime[i] = steal;
       this->totalTime[i] = totaltime;
    }
    float period = (float)this->totalPeriod[0] / this->processorCount;

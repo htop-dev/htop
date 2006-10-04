@@ -52,7 +52,7 @@ void printHelpFlag() {
    exit(0);
 }
 
-void showHelp() {
+void showHelp(ProcessList* pl) {
    clear();
    attrset(CRT_colors[HELP_BOLD]);
    mvaddstr(0, 0, "htop " VERSION " - (C) 2004-2006 Hisham Muhammad.");
@@ -62,10 +62,20 @@ void showHelp() {
    mvaddstr(3, 0, "CPU usage bar: ");
    #define addattrstr(a,s) attrset(a);addstr(s)
    addattrstr(CRT_colors[BAR_BORDER], "[");
-   addattrstr(CRT_colors[CPU_NICE], "low-priority"); addstr("/");
-   addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
-   addattrstr(CRT_colors[CPU_KERNEL], "kernel");
-   addattrstr(CRT_colors[BAR_SHADOW], "      used%");
+   if (pl->expandSystemTime) {
+      addattrstr(CRT_colors[CPU_NICE], "low"); addstr("/");
+      addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
+      addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
+      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait"); addstr("/");
+      addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
+      addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq");
+      addattrstr(CRT_colors[BAR_SHADOW], " used%");
+   } else {
+      addattrstr(CRT_colors[CPU_NICE], "low-priority"); addstr("/");
+      addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
+      addattrstr(CRT_colors[CPU_KERNEL], "kernel");
+      addattrstr(CRT_colors[BAR_SHADOW], "             used%");
+   }
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(4, 0, "Memory bar:    ");
@@ -73,16 +83,16 @@ void showHelp() {
    addattrstr(CRT_colors[MEMORY_USED], "used"); addstr("/");
    addattrstr(CRT_colors[MEMORY_BUFFERS], "buffers"); addstr("/");
    addattrstr(CRT_colors[MEMORY_CACHE], "cache");
-   addattrstr(CRT_colors[BAR_SHADOW], "         used/total");
+   addattrstr(CRT_colors[BAR_SHADOW], "                used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(5, 0, "Swap bar:      ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[SWAP], "used");
-   addattrstr(CRT_colors[BAR_SHADOW], "                       used/total");
+   addattrstr(CRT_colors[BAR_SHADOW], "                              used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(6,0, "Type and layout of header meters is configurable in the setup screen.");
+   mvaddstr(6,0, "Type and layout of header meters are configurable in the setup screen.");
 
    mvaddstr( 8, 0, " Arrows: scroll process list             F5 t: tree view");
    mvaddstr( 9, 0, " Digits: incremental PID search             u: show processes of a single user");
@@ -473,7 +483,7 @@ int main(int argc, char** argv) {
       case KEY_F(1):
       case 'h':
       {
-         showHelp();
+         showHelp(pl);
          FunctionBar_draw(defaultBar, NULL);
          refreshTimeout = 0;
          break;

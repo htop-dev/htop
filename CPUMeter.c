@@ -19,14 +19,14 @@ in the source distribution for its full text.
 #include <assert.h>
 
 int CPUMeter_attributes[] = {
-   CPU_NICE, CPU_NORMAL, CPU_KERNEL
+   CPU_NICE, CPU_NORMAL, CPU_KERNEL, CPU_IOWAIT, CPU_IRQ, CPU_SOFTIRQ
 };
 
 MeterType CPUMeter = {
    .setValues = CPUMeter_setValues, 
    .display = CPUMeter_display,
    .mode = BAR_METERMODE,
-   .items = 3,
+   .items = 6,
    .total = 100.0,
    .attributes = CPUMeter_attributes, 
    .name = "CPU",
@@ -71,10 +71,22 @@ void CPUMeter_setValues(Meter* this, char* buffer, int size) {
    ProcessList* pl = this->pl;
    int processor = this->param;
    double total = (double) pl->totalPeriod[processor];
+   double cpu;
    this->values[0] = pl->nicePeriod[processor] / total * 100.0;
    this->values[1] = pl->userPeriod[processor] / total * 100.0;
-   this->values[2] = pl->systemPeriod[processor] / total * 100.0;
-   double cpu = MIN(100.0, MAX(0.0, (this->values[0]+this->values[1]+this->values[2])));
+   if (pl->expandSystemTime) {
+      this->values[2] = pl->systemPeriod[processor] / total * 100.0;
+      this->values[3] = pl->ioWaitPeriod[processor] / total * 100.0;
+      this->values[4] = pl->irqPeriod[processor] / total * 100.0;
+      this->values[5] = pl->softIrqPeriod[processor] / total * 100.0;
+      this->type->items = 6;
+      cpu = MIN(100.0, MAX(0.0, (this->values[0]+this->values[1]+this->values[2]+
+                       this->values[3]+this->values[4]+this->values[5])));
+   } else {
+      this->values[2] = pl->systemAllPeriod[processor] / total * 100.0;
+      this->type->items = 3;
+      cpu = MIN(100.0, MAX(0.0, (this->values[0]+this->values[1]+this->values[2])));
+   }
    snprintf(buffer, size, "%5.1f%%", cpu );
 }
 
@@ -85,12 +97,30 @@ void CPUMeter_display(Object* cast, RichString* out) {
    sprintf(buffer, "%5.1f%% ", this->values[1]);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
    RichString_append(out, CRT_colors[CPU_NORMAL], buffer);
-   sprintf(buffer, "%5.1f%% ", this->values[2]);
-   RichString_append(out, CRT_colors[METER_TEXT], "sys:");
-   RichString_append(out, CRT_colors[CPU_KERNEL], buffer);
-   sprintf(buffer, "%5.1f%% ", this->values[0]);
-   RichString_append(out, CRT_colors[METER_TEXT], "low:");
-   RichString_append(out, CRT_colors[CPU_NICE], buffer);
+   if (this->pl->expandSystemTime) {
+      sprintf(buffer, "%5.1f%% ", this->values[2]);
+      RichString_append(out, CRT_colors[METER_TEXT], "sy:");
+      RichString_append(out, CRT_colors[CPU_KERNEL], buffer);
+      sprintf(buffer, "%5.1f%% ", this->values[0]);
+      RichString_append(out, CRT_colors[METER_TEXT], "ni:");
+      RichString_append(out, CRT_colors[CPU_NICE], buffer);
+      sprintf(buffer, "%5.1f%% ", this->values[3]);
+      RichString_append(out, CRT_colors[METER_TEXT], "wa:");
+      RichString_append(out, CRT_colors[CPU_IOWAIT], buffer);
+      sprintf(buffer, "%5.1f%% ", this->values[4]);
+      RichString_append(out, CRT_colors[METER_TEXT], "hi:");
+      RichString_append(out, CRT_colors[CPU_IRQ], buffer);
+      sprintf(buffer, "%5.1f%% ", this->values[4]);
+      RichString_append(out, CRT_colors[METER_TEXT], "si:");
+      RichString_append(out, CRT_colors[CPU_SOFTIRQ], buffer);
+   } else {
+      sprintf(buffer, "%5.1f%% ", this->values[2]);
+      RichString_append(out, CRT_colors[METER_TEXT], "sys:");
+      RichString_append(out, CRT_colors[CPU_KERNEL], buffer);
+      sprintf(buffer, "%5.1f%% ", this->values[0]);
+      RichString_append(out, CRT_colors[METER_TEXT], "low:");
+      RichString_append(out, CRT_colors[CPU_NICE], buffer);
+   }
 }
 
 void AllCPUsMeter_init(Meter* this) {
