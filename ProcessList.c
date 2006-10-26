@@ -477,7 +477,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
    Process* prototype = this->prototype;
 
    dir = opendir(dirname);
-   assert(dir != NULL);
+   if (!dir) return;
    while ((entry = readdir(dir)) != NULL) {
       char* name = entry->d_name;
       int pid;
