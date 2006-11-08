@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "debug.h"
 
