@@ -32,7 +32,11 @@ profile:
 	$(MAKE) all CFLAGS="-pg -O2"
 
 debug:
-	$(MAKE) all CFLAGS="-g -DDEBUG"
+	$(MAKE) all CFLAGS="-ggdb -DDEBUG"
 
+hardened-debug:
+	$(MAKE) all CFLAGS="-ggdb -DDEBUG" LDFLAGS="-nopie"
+ 
 debuglite:
-	$(MAKE) all CFLAGS="-g -DDEBUGLITE"
+	$(MAKE) all CFLAGS="-ggdb -DDEBUGLITE"
+
