@@ -132,6 +132,7 @@ Process* Process_new(struct ProcessList_ *pl) {
    this->utime = 0;
    this->stime = 0;
    this->comm = NULL;
+   this->indent = 0;
    if (Process_getuid == -1) Process_getuid = getuid();
    return this;
 }
