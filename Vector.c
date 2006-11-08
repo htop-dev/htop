@@ -63,6 +63,7 @@ void Vector_delete(Vector* this) {
 #ifdef DEBUG
 
 static inline bool Vector_isConsistent(Vector* this) {
+   assert(this->items <= this->arraySize);
    if (this->owner) {
       for (int i = 0; i < this->items; i++)
          if (this->array[i] && this->array[i]->class != this->vectorType)
