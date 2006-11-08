@@ -140,6 +140,7 @@ Process* Process_new(struct ProcessList_ *pl) {
 Process* Process_clone(Process* this) {
    Process* clone = malloc(sizeof(Process));
    memcpy(clone, this, sizeof(Process));
+   this->comm = NULL;
    return clone;
 }
 
