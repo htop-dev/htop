@@ -526,7 +526,10 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
             assert(process->pid == pid);
          } else {
             process = prototype;
-            process->comm = NULL;
+            if (process->comm) {
+               free(process->comm);
+               process->comm = NULL;
+            }
             process->pid = pid;
             if (! ProcessList_readStatusFile(this, process, dirname, name))
                goto errorReadingProcess;
@@ -608,9 +611,6 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          errorReadingProcess: {
             if (existingProcess)
                ProcessList_remove(this, process);
-            else {
-               if (process->comm)
-                  free(process->comm);
             }
          }
       }
