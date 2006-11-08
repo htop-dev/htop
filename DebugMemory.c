@@ -49,7 +49,11 @@ void DebugMemory_new() {
    singleton->allocations = 0;
    singleton->deallocations = 0;
    singleton->size = 0;
+   #ifdef DEBUG_ALLOC
    singleton->file = fopen("/tmp/htop-debug-alloc.txt", "w");
+   #else
+   singleton->file = NULL;
+   #endif
    singleton->totals = true;
    //singleton->file = NULL;
 }
