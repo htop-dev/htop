@@ -60,7 +60,7 @@ in the source distribution for its full text.
 
 
 
-#ifdef DEBUG
+#ifdef DEBUG_PROC
 typedef int(*vxscanf)(void*, const char*, va_list);
 #endif
 
@@ -118,13 +118,13 @@ typedef struct ProcessList_ {
    bool highlightBaseName;
    bool highlightMegabytes;
    bool expandSystemTime;
-   #ifdef DEBUG
+   #ifdef DEBUG_PROC
    FILE* traceFile;
    #endif
 
 } ProcessList;
 
-#ifdef DEBUG
+#ifdef DEBUG_PROC
 
 #define ProcessList_read(this, buffer, format, ...) ProcessList_xread(this, (vxscanf) vsscanf, buffer, format, ## __VA_ARGS__ )
 #define ProcessList_fread(this, file, format, ...)  ProcessList_xread(this, (vxscanf) vfscanf, file, format, ## __VA_ARGS__ )

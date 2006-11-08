@@ -60,7 +60,7 @@ in the source distribution for its full text.
 
 /*{
 
-#ifdef DEBUG
+#ifdef DEBUG_PROC
 typedef int(*vxscanf)(void*, const char*, va_list);
 #endif
 
@@ -118,7 +118,7 @@ typedef struct ProcessList_ {
    bool highlightBaseName;
    bool highlightMegabytes;
    bool expandSystemTime;
-   #ifdef DEBUG
+   #ifdef DEBUG_PROC
    FILE* traceFile;
    #endif
 
@@ -127,7 +127,7 @@ typedef struct ProcessList_ {
 
 static ProcessField defaultHeaders[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
-#ifdef DEBUG
+#ifdef DEBUG_PROC
 
 #define ProcessList_read(this, buffer, format, ...) ProcessList_xread(this, (vxscanf) vsscanf, buffer, format, ## __VA_ARGS__ )
 #define ProcessList_fread(this, file, format, ...)  ProcessList_xread(this, (vxscanf) vfscanf, file, format, ## __VA_ARGS__ )
@@ -210,7 +210,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    /* tree-view auxiliary buffers */
    this->processes2 = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
    
-   #ifdef DEBUG
+   #ifdef DEBUG_PROC
    this->traceFile = fopen("/tmp/htop-proc-trace", "w");
    #endif
 
@@ -262,7 +262,7 @@ void ProcessList_delete(ProcessList* this) {
    // other fields are offsets of the same buffer
    free(this->totalTime);
 
-   #ifdef DEBUG
+   #ifdef DEBUG_PROC
    fclose(this->traceFile);
    #endif
 
@@ -297,14 +297,24 @@ void ProcessList_prune(ProcessList* this) {
 }
 
 void ProcessList_add(ProcessList* this, Process* p) {
+   assert(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
+   assert(Hashtable_get(this->processTable, p->pid) == NULL);
    Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
+   assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
+   assert(Hashtable_get(this->processTable, p->pid) != NULL);
 }
 
 void ProcessList_remove(ProcessList* this, Process* p) {
-   Hashtable_remove(this->processTable, p->pid);
+   assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
+   assert(Hashtable_get(this->processTable, p->pid) != NULL);
+   Process* pp = Hashtable_remove(this->processTable, p->pid);
+   assert(pp == p);
    int index = Vector_indexOf(this->processes, p, Process_pidCompare);
+   assert(index != -1);
    Vector_remove(this->processes, index);
+   assert(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
+   assert(Hashtable_get(this->processTable, p->pid) == NULL);
 }
 
 Process* ProcessList_get(ProcessList* this, int index) {
@@ -318,12 +328,11 @@ int ProcessList_size(ProcessList* this) {
 static void ProcessList_buildTree(ProcessList* this, int pid, int level, int indent, int direction) {
    Vector* children = Vector_new(PROCESS_CLASS, false, DEFAULT_SIZE, Process_compare);
 
-   for (int i = 0; i < Vector_size(this->processes); i++) {
+   for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* process = (Process*) (Vector_get(this->processes, i));
       if (process->ppid == pid) {
          Process* process = (Process*) (Vector_take(this->processes, i));
          Vector_add(children, process);
-         i--;
       }
    }
    int size = Vector_size(children);
@@ -371,7 +380,7 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    int size = fread(buf, 1, MAX_READ, f);
    if(!size) return 0;
 
-   proc->pid = atoi(buf);
+   assert(proc->pid == atoi(buf));
    char *location = strchr(buf, ' ');
    if(!location) return 0;
 
@@ -384,7 +393,7 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    command[commsize] = '\0';
    location = end + 2;
    
-   #ifdef DEBUG
+   #ifdef DEBUG_PROC
    int num = ProcessList_read(this, location, 
       "%c %d %d %d %d %d %lu %lu %lu %lu "
       "%lu %lu %lu %ld %ld %ld %ld %ld %ld "
@@ -508,11 +517,13 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          char statusfilename[MAX_NAME+1];
          char command[PROCESS_COMM_LEN + 1];
 
-         Process* process;
+         Process* process = NULL;
 
          Process* existingProcess = (Process*) Hashtable_get(this->processTable, pid);
          if (existingProcess) {
+            assert(Vector_indexOf(this->processes, existingProcess, Process_pidCompare) != -1);
             process = existingProcess;
+            assert(process->pid == pid);
          } else {
             process = prototype;
             process->comm = NULL;
@@ -604,7 +615,6 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          }
       }
    }
-   prototype->comm = NULL;
    closedir(dir);
 }
 
