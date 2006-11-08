@@ -611,7 +611,6 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          errorReadingProcess: {
             if (existingProcess)
                ProcessList_remove(this, process);
-            }
          }
       }
    }
