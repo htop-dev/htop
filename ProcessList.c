@@ -606,12 +606,12 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
 
          // Exception handler.
          errorReadingProcess: {
-            if (existingProcess)
-               ProcessList_remove(this, process);
             if (process->comm) {
                free(process->comm);
                process->comm = NULL;
             }
+            if (existingProcess)
+               ProcessList_remove(this, process);
          }
       }
    }
