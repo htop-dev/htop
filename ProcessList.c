@@ -204,6 +204,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    this = malloc(sizeof(ProcessList));
    this->processes = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
    this->processTable = Hashtable_new(70, false);
+   assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
    this->prototype = Process_new(this);
    this->usersTable = usersTable;
    
@@ -303,6 +304,7 @@ void ProcessList_add(ProcessList* this, Process* p) {
    Hashtable_put(this->processTable, p->pid, p);
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
+   assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
 void ProcessList_remove(ProcessList* this, Process* p) {
@@ -315,6 +317,7 @@ void ProcessList_remove(ProcessList* this, Process* p) {
    assert(index != -1);
    Vector_remove(this->processes, index);
    assert(Hashtable_get(this->processTable, pid) == NULL); (void)pid;
+   assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
 Process* ProcessList_get(ProcessList* this, int index) {
@@ -338,10 +341,12 @@ static void ProcessList_buildTree(ProcessList* this, int pid, int level, int ind
    int size = Vector_size(children);
    for (int i = 0; i < size; i++) {
       Process* process = (Process*) (Vector_get(children, i));
+      int s = this->processes2->items;
       if (direction == 1)
          Vector_add(this->processes2, process);
       else
          Vector_insert(this->processes2, 0, process);
+      assert(this->processes2->items == s+1); (void)s;
       int nextIndent = indent;
       if (i < size - 1)
          nextIndent = indent | (1 << level);
@@ -362,11 +367,19 @@ void ProcessList_sort(ProcessList* this) {
       Vector_sort(this->processes);
       this->sortKey = sortKey;
       this->direction = direction;
+      int vsize = Vector_size(this->processes);
       Process* init = (Process*) (Vector_take(this->processes, 0));
       assert(init->pid == 1);
       init->indent = 0;
       Vector_add(this->processes2, init);
       ProcessList_buildTree(this, init->pid, 0, 0, direction);
+      while (Vector_size(this->processes)) {
+         Process* p = (Process*) (Vector_take(this->processes, 0));
+         p->indent = 0;
+         Vector_add(this->processes2, p);
+      }
+      assert(Vector_size(this->processes2) == vsize); (void)vsize;
+      assert(Vector_size(this->processes) == 0);
       Vector* t = this->processes;
       this->processes = this->processes2;
       this->processes2 = t;
@@ -519,6 +532,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
 
          Process* process = NULL;
 
+         assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
          Process* existingProcess = (Process*) Hashtable_get(this->processTable, pid);
          if (existingProcess) {
             assert(Vector_indexOf(this->processes, existingProcess, Process_pidCompare) != -1);
@@ -612,6 +626,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
             }
             if (existingProcess)
                ProcessList_remove(this, process);
+            assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
          }
       }
    }
