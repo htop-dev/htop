@@ -46,6 +46,19 @@ bool Hashtable_isConsistent(Hashtable* this) {
    return items == this->items;
 }
 
+int Hashtable_count(Hashtable* this) {
+   int items = 0;
+   for (int i = 0; i < this->size; i++) {
+      HashtableItem* bucket = this->buckets[i];
+      while (bucket) {
+         items++;
+         bucket = bucket->next;
+      }
+   }
+   assert(items == this->items);
+   return items;
+}
+
 #endif
 
 HashtableItem* HashtableItem_new(int key, void* value) {

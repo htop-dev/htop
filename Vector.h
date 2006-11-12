@@ -41,6 +41,8 @@ void Vector_delete(Vector* this);
 
 #ifdef DEBUG
 
+int Vector_count(Vector* this);
+
 #endif
 
 void Vector_prune(Vector* this);

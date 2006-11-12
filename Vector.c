@@ -74,6 +74,16 @@ static inline bool Vector_isConsistent(Vector* this) {
    }
 }
 
+int Vector_count(Vector* this) {
+   int items = 0;
+   for (int i = 0; i < this->items; i++) {
+      if (this->array[i])
+         items++;
+   }
+   assert(items == this->items);
+   return items;
+}
+
 #endif
 
 void Vector_prune(Vector* this) {
@@ -223,8 +233,9 @@ void Vector_add(Vector* this, void* data_) {
    assert(data_ && ((Object*)data_)->class == this->vectorType);
    Object* data = data_;
    assert(Vector_isConsistent(this));
-
+   int i = this->items;
    Vector_set(this, this->items, data);
+   assert(this->items == i+1); (void)(i);
    assert(Vector_isConsistent(this));
 }
 
