@@ -1,4 +1,17 @@
 
+What's new in version 0.6.5
+
+* Add hardened-debug flags for debugging with Hardened GCC
+* BUGFIX: Handle error condition when a directory vanishes
+  from /proc
+* BUGFIX: Fix leak of process command line
+* BUGFIX: Collect orphaned items when arranging the tree view.
+  (thanks to Wolfram Schlich for assistance with debugging)
+* Separate proc and memory debugging into separate #defines.
+* BUGFIX: Fix message when configure fails due to
+  missing libraries
+  (thanks to Jon)
+
 What's new in version 0.6.4
 
 * Add an option to split the display of kernel time
