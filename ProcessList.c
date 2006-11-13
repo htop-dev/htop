@@ -612,8 +612,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          }
 
          if (!existingProcess) {
-            process = Process_clone(process);
-            ProcessList_add(this, process);
+            ProcessList_add(this, Process_clone(process));
          }
 
          continue;
