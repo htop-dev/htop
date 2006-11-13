@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([htop],[0.6.4],[loderunner@users.sourceforge.net])
+AC_INIT([htop],[0.6.5-pre-unreleased],[loderunner@users.sourceforge.net])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_HEADER([config.h])
@@ -15,7 +15,7 @@ AC_CHECK_LIB([ncurses], [refresh], [], [missing_libraries="$missing_libraries li
 AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
 
 if test ! -z "$missing_libraries"; then
-  AC_MSG_ERROR([missing libraries:$missing_headers])
+  AC_MSG_ERROR([missing libraries: $missing_libraries])
 fi
 
 # Checks for header files.
@@ -26,7 +26,7 @@ AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/param.h sys/time.h unistd.h cu
 ])
 
 if test ! -z "$missing_headers"; then
-  AC_MSG_ERROR([missing headers:$missing_headers])
+  AC_MSG_ERROR([missing headers: $missing_headers])
 fi
 
 # Checks for typedefs, structures, and compiler characteristics.
