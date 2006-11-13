@@ -126,6 +126,7 @@ Process* Process_new(struct ProcessList_ *pl) {
    Object_setClass(this, PROCESS_CLASS);
    ((Object*)this)->display = Process_display;
    ((Object*)this)->delete = Process_delete;
+   this->pid = 0;
    this->pl = pl;
    this->tag = false;
    this->updated = false;
@@ -141,6 +142,7 @@ Process* Process_clone(Process* this) {
    Process* clone = malloc(sizeof(Process));
    memcpy(clone, this, sizeof(Process));
    this->comm = NULL;
+   this->pid = 0;
    return clone;
 }
 
