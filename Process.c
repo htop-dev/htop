@@ -148,8 +148,8 @@ Process* Process_clone(Process* this) {
 
 void Process_delete(Object* cast) {
    Process* this = (Process*) cast;
-   if (this->comm) free(this->comm);
    assert (this != NULL);
+   if (this->comm) free(this->comm);
    free(this);
 }
 
@@ -186,7 +186,7 @@ void Process_sendSignal(Process* this, int signal) {
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
 
-static void Process_printLargeNumber(Process* this, RichString *str, unsigned int number) {
+static void Process_printLargeNumber(Process* this, RichString *str, unsigned long number) {
    char buffer[11];
    int len;
    if(number >= (1000 * ONE_M)) {
