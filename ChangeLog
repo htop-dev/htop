@@ -11,6 +11,9 @@ What's new in version 0.6.5
 * BUGFIX: Fix message when configure fails due to
   missing libraries
   (thanks to Jon)
+* BUGFIX: Don't truncate value when displaying a very large
+  process
+  (thanks to Bo Liu)
 
 What's new in version 0.6.4
 
