@@ -193,19 +193,19 @@ static void Process_printLargeNumber(Process* this, RichString *str, unsigned lo
       len = snprintf(buffer, 10, "%4.2fG ", (float)number / ONE_M);
       RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
    } else if(number >= (100000)) {
-      len = snprintf(buffer, 10, "%4dM ", number / ONE_K);
+      len = snprintf(buffer, 10, "%4ldM ", number / ONE_K);
       int attr = this->pl->highlightMegabytes
                ? CRT_colors[PROCESS_MEGABYTES]
                : CRT_colors[PROCESS];
       RichString_appendn(str, attr, buffer, len);
    } else if (this->pl->highlightMegabytes && number >= 1000) {
-      len = snprintf(buffer, 10, "%2d", number/1000);
+      len = snprintf(buffer, 10, "%2ld", number/1000);
       RichString_appendn(str, CRT_colors[PROCESS_MEGABYTES], buffer, len);
       number %= 1000;
-      len = snprintf(buffer, 10, "%03d ", number);
+      len = snprintf(buffer, 10, "%03ld ", number);
       RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
    } else {
-      len = snprintf(buffer, 10, "%5d ", number);
+      len = snprintf(buffer, 10, "%5ld ", number);
       RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
    }
 }
