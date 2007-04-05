@@ -19,7 +19,7 @@ typedef struct Hashtable_ Hashtable;
 typedef void(*Hashtable_PairFunction)(int, void*, void*);
 
 typedef struct HashtableItem {
-   int key;
+   unsigned int key;
    void* value;
    struct HashtableItem* next;
 } HashtableItem;
@@ -61,7 +61,7 @@ int Hashtable_count(Hashtable* this) {
 
 #endif
 
-HashtableItem* HashtableItem_new(int key, void* value) {
+HashtableItem* HashtableItem_new(unsigned int key, void* value) {
    HashtableItem* this;
    
    this = (HashtableItem*) malloc(sizeof(HashtableItem));
@@ -104,8 +104,8 @@ inline int Hashtable_size(Hashtable* this) {
    return this->items;
 }
 
-void Hashtable_put(Hashtable* this, int key, void* value) {
-   int index = key % this->size;
+void Hashtable_put(Hashtable* this, unsigned int key, void* value) {
+   unsigned int index = key % this->size;
    HashtableItem** bucketPtr = &(this->buckets[index]);
    while (true)
       if (*bucketPtr == NULL) {
@@ -122,8 +122,8 @@ void Hashtable_put(Hashtable* this, int key, void* value) {
    assert(Hashtable_isConsistent(this));
 }
 
-void* Hashtable_remove(Hashtable* this, int key) {
-   int index = key % this->size;
+void* Hashtable_remove(Hashtable* this, unsigned int key) {
+   unsigned int index = key % this->size;
    
    assert(Hashtable_isConsistent(this));
 
@@ -149,8 +149,8 @@ void* Hashtable_remove(Hashtable* this, int key) {
    return NULL;
 }
 
-inline void* Hashtable_get(Hashtable* this, int key) {
-   int index = key % this->size;
+inline void* Hashtable_get(Hashtable* this, unsigned int key) {
+   unsigned int index = key % this->size;
    HashtableItem* bucketPtr = this->buckets[index];
    while (true) {
       if (bucketPtr == NULL) {

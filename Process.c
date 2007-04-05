@@ -50,16 +50,16 @@ typedef struct Process_ {
    struct ProcessList_ *pl;
    bool updated;
 
-   int pid;
+   unsigned int pid;
    char* comm;
    int indent;
    char state;
    bool tag;
-   int ppid;
-   int pgrp;
-   int session;
-   int tty_nr;
-   int tpgid;
+   unsigned int ppid;
+   unsigned int pgrp;
+   unsigned int session;
+   unsigned int tty_nr;
+   unsigned int tpgid;
    unsigned long int flags;
    #ifdef DEBUG
    unsigned long int minflt;
@@ -261,12 +261,12 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    int n = PROCESS_COMM_LEN;
 
    switch (field) {
-   case PID: snprintf(buffer, n, "%5d ", this->pid); break;
-   case PPID: snprintf(buffer, n, "%5d ", this->ppid); break;
-   case PGRP: snprintf(buffer, n, "%5d ", this->pgrp); break;
-   case SESSION: snprintf(buffer, n, "%5d ", this->session); break;
-   case TTY_NR: snprintf(buffer, n, "%5d ", this->tty_nr); break;
-   case TPGID: snprintf(buffer, n, "%5d ", this->tpgid); break;
+   case PID: snprintf(buffer, n, "%5u ", this->pid); break;
+   case PPID: snprintf(buffer, n, "%5u ", this->ppid); break;
+   case PGRP: snprintf(buffer, n, "%5u ", this->pgrp); break;
+   case SESSION: snprintf(buffer, n, "%5u ", this->session); break;
+   case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
+   case TPGID: snprintf(buffer, n, "%5u ", this->tpgid); break;
    case PROCESSOR: snprintf(buffer, n, "%3d ", this->processor+1); break;
    case COMM: {
       if (!this->pl->treeView || this->indent == 0) {

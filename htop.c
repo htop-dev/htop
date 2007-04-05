@@ -312,7 +312,7 @@ int main(int argc, char** argv) {
          incSearchIndex = 0;
          incSearchBuffer[0] = 0;
          int currPos = Panel_getSelectedIndex(panel);
-         int currPid = 0;
+         unsigned int currPid = 0;
          int currScrollV = panel->scrollV;
          if (follow)
             currPid = ProcessList_get(pl, currPos)->pid;
@@ -406,7 +406,7 @@ int main(int argc, char** argv) {
          continue;
       }
       if (isdigit((char)ch)) {
-         int pid = ch-48 + acc;
+         unsigned int pid = ch-48 + acc;
          for (int i = 0; i < ProcessList_size(pl) && ((Process*) Panel_getSelected(panel))->pid != pid; i++)
             Panel_setSelected(panel, i);
          acc = pid * 10;

@@ -312,7 +312,7 @@ void ProcessList_remove(ProcessList* this, Process* p) {
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
    Process* pp = Hashtable_remove(this->processTable, p->pid);
    assert(pp == p); (void)pp;
-   int pid = p->pid;
+   unsigned int pid = p->pid;
    int index = Vector_indexOf(this->processes, p, Process_pidCompare);
    assert(index != -1);
    Vector_remove(this->processes, index);

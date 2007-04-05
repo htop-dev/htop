@@ -35,7 +35,7 @@ void UsersTable_delete(UsersTable* this) {
    free(this);
 }
 
-char* UsersTable_getRef(UsersTable* this, int uid) {
+char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
    char* name = (char*) (Hashtable_get(this->users, uid));
    if (name == NULL) {
       struct passwd* userData = getpwuid(uid);
