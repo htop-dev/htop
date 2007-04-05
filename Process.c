@@ -316,6 +316,10 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
            : attr;
       break;
    }
+   case M_DRS: Process_printLargeNumber(this, str, this->m_drs * PAGE_SIZE); return;
+   case M_DT: Process_printLargeNumber(this, str, this->m_dt * PAGE_SIZE); return;
+   case M_LRS: Process_printLargeNumber(this, str, this->m_lrs * PAGE_SIZE); return;
+   case M_TRS: Process_printLargeNumber(this, str, this->m_trs * PAGE_SIZE); return;
    case M_SIZE: Process_printLargeNumber(this, str, this->m_size * PAGE_SIZE); return;
    case M_RESIDENT: Process_printLargeNumber(this, str, this->m_resident * PAGE_SIZE); return;
    case M_SHARE: Process_printLargeNumber(this, str, this->m_share * PAGE_SIZE); return;
@@ -391,6 +395,14 @@ int Process_compare(const void* v1, const void* v2) {
       return (p1->state - p2->state);
    case NICE:
       return (p1->nice - p2->nice);
+   case M_DRS:
+      return (p2->m_drs - p1->m_drs);
+   case M_DT:
+      return (p2->m_dt - p1->m_dt);
+   case M_LRS:
+      return (p2->m_lrs - p1->m_lrs);
+   case M_TRS:
+      return (p2->m_trs - p1->m_trs);
    case M_SIZE:
       return (p2->m_size - p1->m_size);
    case M_RESIDENT:
@@ -427,6 +439,10 @@ char* Process_printField(ProcessField field) {
    case STATE: return "S ";
    case PRIORITY: return "PRI ";
    case NICE: return " NI ";
+   case M_DRS: return " DATA ";
+   case M_DT: return " DIRTY ";
+   case M_LRS: return " LIB ";
+   case M_TRS: return " CODE ";
    case M_SIZE: return " VIRT ";
    case M_RESIDENT: return "  RES ";
    case M_SHARE: return "  SHR ";

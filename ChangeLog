@@ -1,3 +1,11 @@
+What's new in version 0.6.6
+
+* Added display of DRS, DT, LRS and TRS
+  (thanks to Matthias Lederhofer)
+* BUGFIX: LRS and DRS memory values were flipped
+  (thanks to Matthias Lederhofer)
+* BUGFIX: Don't crash on very high UIDs
+  (thanks to Egmont Koblinger)
 
 What's new in version 0.6.5
 

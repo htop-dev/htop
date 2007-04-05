@@ -555,7 +555,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          }
          int num = ProcessList_fread(this, status, "%d %d %d %d %d %d %d",
              &process->m_size, &process->m_resident, &process->m_share, 
-             &process->m_trs, &process->m_drs, &process->m_lrs, 
+             &process->m_trs, &process->m_lrs, &process->m_drs, 
              &process->m_dt);
 
          fclose(status);
