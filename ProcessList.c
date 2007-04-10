@@ -602,8 +602,8 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          process->percent_cpu = (process->utime + process->stime - lasttimes) / 
             period * 100.0;
 
-         process->percent_mem = process->m_resident / 
-            (float)(this->usedMem - this->cachedMem - this->buffersMem) * 
+         process->percent_mem = (process->m_resident * PAGE_SIZE) / 
+            (float)(this->totalMem) * 
             100.0;
 
          this->totalTasks++;
