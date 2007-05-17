@@ -1,5 +1,7 @@
 What's new in version 0.6.6
 
+* BUGFIX: Fix use of configurable /proc location
+  (thanks to Florent Thoumie)
 * Added display of DRS, DT, LRS and TRS
   (thanks to Matthias Lederhofer)
 * BUGFIX: LRS and DRS memory values were flipped
