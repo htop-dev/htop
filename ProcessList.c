@@ -408,7 +408,7 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    
    #ifdef DEBUG_PROC
    int num = ProcessList_read(this, location, 
-      "%c %d %d %d %d %d %lu %lu %lu %lu "
+      "%c %u %u %u %u %u %lu %lu %lu %lu "
       "%lu %lu %lu %ld %ld %ld %ld %ld %ld "
       "%lu %lu %ld %lu %lu %lu %lu %lu "
       "%lu %lu %lu %lu %lu %lu %lu %lu "
