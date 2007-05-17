@@ -40,3 +40,5 @@ hardened-debug:
 debuglite:
 	$(MAKE) all CFLAGS="-ggdb -DDEBUGLITE"
 
+.h:.c
+	scripts/MakeHeader $@
