@@ -37,11 +37,11 @@ in the source distribution for its full text.
 #endif
 
 #ifndef PROCSTATFILE
-#define PROCSTATFILE "/proc/stat"
+#define PROCSTATFILE PROCDIR "/stat"
 #endif
 
 #ifndef PROCMEMINFOFILE
-#define PROCMEMINFOFILE "/proc/meminfo"
+#define PROCMEMINFOFILE PROCDIR "/meminfo"
 #endif
 
 #ifndef MAX_NAME
@@ -426,7 +426,7 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    #else
    long int uzero;
    int num = ProcessList_read(this, location, 
-      "%c %d %d %d %d %d %lu %lu %lu %lu "
+      "%c %u %u %u %u %u %lu %lu %lu %lu "
       "%lu %lu %lu %ld %ld %ld %ld %ld %ld "
       "%lu %lu %ld %lu %lu %lu %lu %lu "
       "%lu %lu %lu %lu %lu %lu %lu %lu "

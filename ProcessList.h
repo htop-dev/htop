@@ -39,11 +39,11 @@ in the source distribution for its full text.
 #endif
 
 #ifndef PROCSTATFILE
-#define PROCSTATFILE "/proc/stat"
+#define PROCSTATFILE PROCDIR "/stat"
 #endif
 
 #ifndef PROCMEMINFOFILE
-#define PROCMEMINFOFILE "/proc/meminfo"
+#define PROCMEMINFOFILE PROCDIR "/meminfo"
 #endif
 
 #ifndef MAX_NAME

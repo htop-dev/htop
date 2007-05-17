@@ -31,7 +31,9 @@ in the source distribution for its full text.
 
 // This works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
+#ifndef PAGE_SIZE
 #define PAGE_SIZE ( sysconf(_SC_PAGESIZE) / 1024 )
+#endif
 
 #define PROCESS_COMM_LEN 300
 
@@ -52,16 +54,16 @@ typedef struct Process_ {
    struct ProcessList_ *pl;
    bool updated;
 
-   int pid;
+   unsigned int pid;
    char* comm;
    int indent;
    char state;
    bool tag;
-   int ppid;
-   int pgrp;
-   int session;
-   int tty_nr;
-   int tpgid;
+   unsigned int ppid;
+   unsigned int pgrp;
+   unsigned int session;
+   unsigned int tty_nr;
+   unsigned int tpgid;
    unsigned long int flags;
    #ifdef DEBUG
    unsigned long int minflt;

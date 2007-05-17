@@ -28,7 +28,9 @@ in the source distribution for its full text.
 
 // This works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
+#ifndef PAGE_SIZE
 #define PAGE_SIZE ( sysconf(_SC_PAGESIZE) / 1024 )
+#endif
 
 #define PROCESS_COMM_LEN 300
 
