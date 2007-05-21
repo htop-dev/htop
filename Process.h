@@ -43,7 +43,7 @@ typedef enum ProcessField_ {
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
    STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
-   USER, TIME, LAST_PROCESSFIELD
+   USER, TIME, NLWP, LAST_PROCESSFIELD
 } ProcessField;
 
 struct ProcessList_;
@@ -77,6 +77,7 @@ typedef struct Process_ {
    long int cstime;
    long int priority;
    long int nice;
+   long int nlwp;
    #ifdef DEBUG
    long int itrealvalue;
    unsigned long int starttime;

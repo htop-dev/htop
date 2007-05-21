@@ -41,7 +41,7 @@ typedef enum ProcessField_ {
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
    STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
-   USER, TIME, LAST_PROCESSFIELD
+   USER, TIME, NLWP, LAST_PROCESSFIELD
 } ProcessField;
 
 struct ProcessList_;
@@ -75,6 +75,7 @@ typedef struct Process_ {
    long int cstime;
    long int priority;
    long int nice;
+   long int nlwp;
    #ifdef DEBUG
    long int itrealvalue;
    unsigned long int starttime;
@@ -118,7 +119,7 @@ char* PROCESS_CLASS = "Process";
 #endif
 
 char *Process_fieldNames[] = {
-   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "*** report bug! ***"
+   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "NLWP", "*** report bug! ***"
 };
 
 static int Process_getuid = -1;
@@ -270,6 +271,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
    case TPGID: snprintf(buffer, n, "%5u ", this->tpgid); break;
    case PROCESSOR: snprintf(buffer, n, "%3d ", this->processor+1); break;
+   case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
    case COMM: {
       if (!this->pl->treeView || this->indent == 0) {
          Process_writeCommand(this, attr, str);
@@ -423,6 +425,8 @@ int Process_compare(const void* v1, const void* v2) {
       return ((p2->utime+p2->stime) - (p1->utime+p1->stime));
    case COMM:
       return strcmp(p1->comm, p2->comm);
+   case NLWP:
+      return (p1->nlwp - p2->nlwp);
    default:
       return (p1->pid - p2->pid);
    }
@@ -456,6 +460,7 @@ char* Process_printField(ProcessField field) {
    case PERCENT_CPU: return "CPU% ";
    case PERCENT_MEM: return "MEM% ";
    case PROCESSOR: return "CPU ";
+   case NLWP: return "NLWP ";
    default: return "- ";
    }
 }

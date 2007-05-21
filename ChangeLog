@@ -1,5 +1,7 @@
 What's new in version 0.6.6
 
+* Add support of NLWP field
+  (thanks to Bert Wesarg)
 * BUGFIX: Fix use of configurable /proc location
   (thanks to Florent Thoumie)
 * Fix memory percentage calculation and make it saner
