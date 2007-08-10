@@ -41,7 +41,7 @@ void printVersionFlag();
 
 void printHelpFlag();
 
-void showHelp();
+void showHelp(ProcessList* pl);
 
 void addUserToList(int key, void* userCast, void* panelCast);
 

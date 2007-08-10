@@ -208,32 +208,38 @@ int main(int argc, char** argv) {
    uid_t userId = 0;
    int sortKey = 0;
 
-   if (argc > 0) {
-      if (String_eq(argv[1], "--help")) {
+   int arg = 1;
+   while (arg < argc) {
+      if (String_eq(argv[arg], "--help")) {
          printHelpFlag();
-      } else if (String_eq(argv[1], "--version")) {
+      } else if (String_eq(argv[arg], "--version")) {
          printVersionFlag();
-      } else if (String_eq(argv[1], "--sort-key")) {
-         if (argc < 2) printHelpFlag();
-            if (String_eq(argv[2], "help")) {
+      } else if (String_eq(argv[arg], "--sort-key")) {
+         if (arg == argc - 1) printHelpFlag();
+         arg++;
+         char* field = argv[arg];
+         if (String_eq(field, "help")) {
             for (int j = 1; j < LAST_PROCESSFIELD; j++)
                printf ("%s\n", Process_fieldNames[j]);
             exit(0);
          }
-         sortKey = ColumnsPanel_fieldNameToIndex(argv[2]);
+         sortKey = ColumnsPanel_fieldNameToIndex(field);
          if (sortKey == -1) {
-            fprintf(stderr, "Error: invalid column \"%s\".\n", argv[2]);
+            fprintf(stderr, "Error: invalid column \"%s\".\n", field);
             exit(1);
          }
-      } else if (String_eq(argv[1], "-d")) {
-         if (argc < 2) printHelpFlag();
-         sscanf(argv[2], "%d", &delay);
+      } else if (String_eq(argv[arg], "-d")) {
+         if (arg == argc - 1) printHelpFlag();
+         arg++;
+         sscanf(argv[arg], "%d", &delay);
          if (delay < 1) delay = 1;
          if (delay > 100) delay = 100;
-      } else if (String_eq(argv[1], "-u")) {
-         if (argc < 2) printHelpFlag();
-         setUserOnly(argv[2], &userOnly, &userId);
+      } else if (String_eq(argv[arg], "-u")) {
+         if (arg == argc - 1) printHelpFlag();
+         arg++;
+         setUserOnly(argv[arg], &userOnly, &userId);
       }
+      arg++;
    }
    
    if (access(PROCDIR, R_OK) != 0) {
