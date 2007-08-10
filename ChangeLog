@@ -1,5 +1,9 @@
 What's new in version 0.6.7
 
+* BUGFIX: Don't crash with invalid command-line flags
+  (thanks to Nico Golde for the report)
+* Fix GCC 4.3 compilation issues
+  (thanks to Martin Michlmayr for the report)
 * OpenVZ support, enabled at compile-time with
   the --enable-openvz flag.
   (thanks to Sergey Lychko)
