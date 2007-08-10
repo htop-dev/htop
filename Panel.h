@@ -72,9 +72,9 @@ void Panel_init(Panel* this, int x, int y, int w, int h, char* type, bool owner)
 
 void Panel_done(Panel* this);
 
-inline void Panel_setRichHeader(Panel* this, RichString header);
+extern void Panel_setRichHeader(Panel* this, RichString header);
 
-inline void Panel_setHeader(Panel* this, char* header);
+extern void Panel_setHeader(Panel* this, char* header);
 
 void Panel_setEventHandler(Panel* this, Panel_EventHandler eh);
 

@@ -29,9 +29,9 @@ typedef struct RichString_ {
 
 void RichString_write(RichString* this, int attrs, char* data);
 
-inline void RichString_append(RichString* this, int attrs, char* data);
+extern void RichString_append(RichString* this, int attrs, char* data);
 
-inline void RichString_appendn(RichString* this, int attrs, char* data, int len);
+extern void RichString_appendn(RichString* this, int attrs, char* data, int len);
 
 void RichString_setAttr(RichString *this, int attrs);
 

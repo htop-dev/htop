@@ -61,15 +61,15 @@ void Vector_moveDown(Vector* this, int index);
 
 void Vector_set(Vector* this, int index, void* data_);
 
-inline Object* Vector_get(Vector* this, int index);
+extern Object* Vector_get(Vector* this, int index);
 
-inline int Vector_size(Vector* this);
+extern int Vector_size(Vector* this);
 
 void Vector_merge(Vector* this, Vector* v2);
 
 void Vector_add(Vector* this, void* data_);
 
-inline int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
+extern int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
 
 void Vector_foreach(Vector* this, Vector_procedure f);
 

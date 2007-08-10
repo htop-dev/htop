@@ -43,7 +43,7 @@ ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation ori
 
 void ScreenManager_delete(ScreenManager* this);
 
-inline int ScreenManager_size(ScreenManager* this);
+extern int ScreenManager_size(ScreenManager* this);
 
 void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int size);
 

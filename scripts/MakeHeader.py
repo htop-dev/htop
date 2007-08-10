@@ -54,7 +54,7 @@ for line in file.readlines():
          elif equals != -1:
             out.write("extern " + line[:equals] + ";" )
          elif line[-1] == "{":
-            out.write( line[:-2] + ";" )
+            out.write( line[:-2].replace("inline", "extern") + ";" )
             state = SKIP
          else:
             out.write( line )

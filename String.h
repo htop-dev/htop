@@ -19,9 +19,9 @@ in the source distribution for its full text.
 
 #define String_startsWith(s, match) (strstr((s), (match)) == (s))
 
-inline void String_delete(char* s);
+extern void String_delete(char* s);
 
-inline char* String_copy(char* orig);
+extern char* String_copy(char* orig);
 
 char* String_cat(char* s1, char* s2);
 
@@ -39,7 +39,7 @@ void String_printInt(int i);
 
 void String_printPointer(void* p);
 
-inline int String_eq(const char* s1, const char* s2);
+extern int String_eq(const char* s1, const char* s2);
 
 char** String_split(char* s, char sep);
 

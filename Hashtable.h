@@ -47,13 +47,13 @@ Hashtable* Hashtable_new(int size, bool owner);
 
 void Hashtable_delete(Hashtable* this);
 
-inline int Hashtable_size(Hashtable* this);
+extern int Hashtable_size(Hashtable* this);
 
 void Hashtable_put(Hashtable* this, unsigned int key, void* value);
 
 void* Hashtable_remove(Hashtable* this, unsigned int key);
 
-inline void* Hashtable_get(Hashtable* this, unsigned int key);
+extern void* Hashtable_get(Hashtable* this, unsigned int key);
 
 void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData);
 

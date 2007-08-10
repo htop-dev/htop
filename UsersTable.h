@@ -30,8 +30,8 @@ void UsersTable_delete(UsersTable* this);
 
 char* UsersTable_getRef(UsersTable* this, unsigned int uid);
 
-inline int UsersTable_size(UsersTable* this);
+extern int UsersTable_size(UsersTable* this);
 
-inline void UsersTable_foreach(UsersTable* this, Hashtable_PairFunction f, void* userData);
+extern void UsersTable_foreach(UsersTable* this, Hashtable_PairFunction f, void* userData);
 
 #endif
