@@ -221,6 +221,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "right_meter_modes=");
    for (int i = 0; i < Header_size(this->header, RIGHT_HEADER); i++)
       fprintf(fd, "%d ", Header_readMeterMode(this->header, i, RIGHT_HEADER));
+   fprintf(fd, "\n");
    fclose(fd);
    return true;
 }
