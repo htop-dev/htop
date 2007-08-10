@@ -580,6 +580,28 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
 
          if(!existingProcess) {
             process->user = UsersTable_getRef(this->usersTable, process->st_uid);
+
+            #ifdef HAVE_OPENVZ
+            if (access("/proc/vz", R_OK) != 0) {
+               process->vpid = process->pid;
+               process->veid = 0;
+            } else {
+               snprintf(statusfilename, MAX_NAME, "%s/%s/stat", dirname, name);
+               status = ProcessList_fopen(this, statusfilename, "r");
+               if (status == NULL) 
+                  goto errorReadingProcess;
+               num = ProcessList_fread(this, status, 
+                  "%*u %*s %*c %*u %*u %*u %*u %*u %*u %*u "
+                  "%*u %*u %*u %*u %*u %*u %*u %*u "
+                  "%*u %*u %*u %*u %*u %*u %*u %*u "
+                  "%*u %*u %*u %*u %*u %*u %*u %*u "
+                  "%*u %*u %*u %*u %*u %*u %*u %*u "
+                  "%*u %*u %*u %*u %*u %*u %*u "
+                  "%u %u",
+                  &process->vpid, &process->veid);
+               fclose(status);
+            }
+            #endif
  
             snprintf(statusfilename, MAX_NAME, "%s/%s/cmdline", dirname, name);
             status = ProcessList_fopen(this, statusfilename, "r");

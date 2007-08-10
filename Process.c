@@ -41,7 +41,11 @@ typedef enum ProcessField_ {
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
    STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
-   USER, TIME, NLWP, LAST_PROCESSFIELD
+   USER, TIME, NLWP, 
+   #ifdef HAVE_OPENVZ
+   VEID, VPID,
+   #endif
+   LAST_PROCESSFIELD
 } ProcessField;
 
 struct ProcessList_;
@@ -108,6 +112,10 @@ typedef struct Process_ {
    float percent_cpu;
    float percent_mem;
    char* user;
+   #ifdef HAVE_OPENVZ
+   unsigned int veid;
+   unsigned int vpid;
+   #endif
 } Process;
 
 }*/
@@ -119,7 +127,11 @@ char* PROCESS_CLASS = "Process";
 #endif
 
 char *Process_fieldNames[] = {
-   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "NLWP", "*** report bug! ***"
+   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "NLWP", 
+#ifdef HAVE_OPENVZ
+"VEID", "VPID",
+#endif
+"*** report bug! ***"
 };
 
 static int Process_getuid = -1;
@@ -363,6 +375,10 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       }
       break;
    }
+   #ifdef HAVE_OPENVZ
+   case VEID: snprintf(buffer, n, "%5u ", this->veid); break;
+   case VPID: snprintf(buffer, n, "%5u ", this->vpid); break;
+   #endif
    default:
       snprintf(buffer, n, "- ");
    }
@@ -427,6 +443,12 @@ int Process_compare(const void* v1, const void* v2) {
       return strcmp(p1->comm, p2->comm);
    case NLWP:
       return (p1->nlwp - p2->nlwp);
+   #ifdef HAVE_OPENVZ
+   case VEID:
+      return (p1->veid - p2->veid);
+   case VPID:
+      return (p1->vpid - p2->vpid);
+   #endif
    default:
       return (p1->pid - p2->pid);
    }
@@ -461,6 +483,10 @@ char* Process_printField(ProcessField field) {
    case PERCENT_MEM: return "MEM% ";
    case PROCESSOR: return "CPU ";
    case NLWP: return "NLWP ";
+   #ifdef HAVE_OPENVZ
+   case VEID: return " VEID ";
+   case VPID: return " VPID ";
+   #endif
    default: return "- ";
    }
 }

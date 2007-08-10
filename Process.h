@@ -43,7 +43,11 @@ typedef enum ProcessField_ {
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
    STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
-   USER, TIME, NLWP, LAST_PROCESSFIELD
+   USER, TIME, NLWP, 
+   #ifdef HAVE_OPENVZ
+   VEID, VPID,
+   #endif
+   LAST_PROCESSFIELD
 } ProcessField;
 
 struct ProcessList_;
@@ -110,6 +114,10 @@ typedef struct Process_ {
    float percent_cpu;
    float percent_mem;
    char* user;
+   #ifdef HAVE_OPENVZ
+   unsigned int veid;
+   unsigned int vpid;
+   #endif
 } Process;
 
 

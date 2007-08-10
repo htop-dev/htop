@@ -1,3 +1,9 @@
+What's new in version 0.6.7
+
+* OpenVZ support, enabled at compile-time with
+  the --enable-openvz flag.
+  (thanks to Sergey Lychko)
+
 What's new in version 0.6.6
 
 * Add support of NLWP field
