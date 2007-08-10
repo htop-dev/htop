@@ -5,6 +5,8 @@ BUGS:
    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=375219
  * add swap column for swap usage in MB
    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=365038
+ * Filter out nonprintable characters in command lines
+   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=419140
 
 FEATURES:
 
