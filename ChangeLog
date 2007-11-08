@@ -1,5 +1,11 @@
-What's new in version 0.6.7
 
+What's new in version 0.7
+
+* CPU affinity configuration ('a' key)
+* Improve display of tree view, properly nesting
+  threads of the same app based on TGID.
+* BUGFIX: Correct display of TPGID field
+* Add TGID field
 * BUGFIX: Don't crash with invalid command-line flags
   (thanks to Nico Golde for the report)
 * Fix GCC 4.3 compilation issues

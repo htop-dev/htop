@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdbool.h>
 #include <pwd.h>
+#include <sched.h>
 
 // This works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
@@ -43,7 +44,7 @@ typedef enum ProcessField_ {
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
    STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
-   USER, TIME, NLWP, 
+   USER, TIME, NLWP, TGID,
    #ifdef HAVE_OPENVZ
    VEID, VPID,
    #endif
@@ -67,7 +68,8 @@ typedef struct Process_ {
    unsigned int pgrp;
    unsigned int session;
    unsigned int tty_nr;
-   unsigned int tpgid;
+   unsigned int tgid;
+   int tpgid;
    unsigned long int flags;
    #ifdef DEBUG
    unsigned long int minflt;
@@ -140,6 +142,10 @@ void Process_display(Object* cast, RichString* out);
 void Process_toggleTag(Process* this);
 
 void Process_setPriority(Process* this, int priority);
+
+unsigned long Process_getAffinity(Process* this);
+
+void Process_setAffinity(Process* this, unsigned long mask);
 
 void Process_sendSignal(Process* this, int signal);
 

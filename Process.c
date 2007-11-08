@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdbool.h>
 #include <pwd.h>
+#include <sched.h>
 
 // This works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
@@ -41,7 +42,7 @@ typedef enum ProcessField_ {
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
    STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
-   USER, TIME, NLWP, 
+   USER, TIME, NLWP, TGID
    #ifdef HAVE_OPENVZ
    VEID, VPID,
    #endif
@@ -65,7 +66,8 @@ typedef struct Process_ {
    unsigned int pgrp;
    unsigned int session;
    unsigned int tty_nr;
-   unsigned int tpgid;
+   unsigned int tgid;
+   int tpgid;
    unsigned long int flags;
    #ifdef DEBUG
    unsigned long int minflt;
@@ -127,7 +129,7 @@ char* PROCESS_CLASS = "Process";
 #endif
 
 char *Process_fieldNames[] = {
-   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "NLWP", 
+   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "NLWP", "TGID", 
 #ifdef HAVE_OPENVZ
 "VEID", "VPID",
 #endif
@@ -191,6 +193,16 @@ void Process_setPriority(Process* this, int priority) {
    if (err == 0 && old_prio != getpriority(PRIO_PROCESS, this->pid)) {
       this->nice = priority;
    }
+}
+
+unsigned long Process_getAffinity(Process* this) {
+   unsigned long mask = 0;
+   sched_getaffinity(this->pid, sizeof(unsigned long), (cpu_set_t*) &mask);
+   return mask;
+}
+
+void Process_setAffinity(Process* this, unsigned long mask) {
+   sched_setaffinity(this->pid, sizeof(unsigned long), (cpu_set_t*) &mask);
 }
 
 void Process_sendSignal(Process* this, int signal) {
@@ -281,7 +293,8 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case PGRP: snprintf(buffer, n, "%5u ", this->pgrp); break;
    case SESSION: snprintf(buffer, n, "%5u ", this->session); break;
    case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
-   case TPGID: snprintf(buffer, n, "%5u ", this->tpgid); break;
+   case TGID: snprintf(buffer, n, "%5u ", this->tgid); break;
+   case TPGID: snprintf(buffer, n, "%5d ", this->tpgid); break;
    case PROCESSOR: snprintf(buffer, n, "%3d ", this->processor+1); break;
    case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
    case COMM: {
@@ -462,7 +475,8 @@ char* Process_printField(ProcessField field) {
    case PGRP: return " PGRP ";
    case SESSION: return " SESN ";
    case TTY_NR: return "  TTY ";
-   case TPGID: return " TGID ";
+   case TGID: return " TGID ";
+   case TPGID: return "TPGID ";
    case COMM: return "Command ";
    case STATE: return "S ";
    case PRIORITY: return "PRI ";

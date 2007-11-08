@@ -23,7 +23,6 @@ typedef struct ColorsPanel_ {
 
    Settings* settings;
    ScreenManager* scr;
-   bool check[5];
 } ColorsPanel;
 
 }*/
@@ -50,10 +49,9 @@ ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
 
    Panel_setHeader(super, "Colors");
    for (int i = 0; ColorSchemes[i] != NULL; i++) {
-      Panel_add(super, (Object*) CheckItem_new(String_copy(ColorSchemes[i]), &(this->check[i])));
-      this->check[i] = false;
+      Panel_add(super, (Object*) CheckItem_new(String_copy(ColorSchemes[i]), NULL, false));
    }
-   this->check[settings->colorScheme] = true;
+   CheckItem_set((CheckItem*)Panel_get(super, settings->colorScheme), true);
    return this;
 }
 
@@ -75,10 +73,9 @@ HandlerResult ColorsPanel_EventHandler(Panel* super, int ch) {
    case 0x0d:
    case KEY_ENTER:
    case ' ':
-      for (int i = 0; ColorSchemes[i] != NULL; i++) {
-         this->check[i] = false;
-      }
-      this->check[mark] = true;
+      for (int i = 0; ColorSchemes[i] != NULL; i++)
+         CheckItem_set((CheckItem*)Panel_get(super, i), false);
+      CheckItem_set((CheckItem*)Panel_get(super, mark), true);
       this->settings->colorScheme = mark;
       result = HANDLED;
    }

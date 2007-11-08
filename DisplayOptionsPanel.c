@@ -28,17 +28,17 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
 
    this->settings = settings;
    this->scr = scr;
-   super->eventHandler = DisplayOptionsPanel_EventHandler;
+   super->eventHandler = DisplayOptionsPanel_eventHandler;
 
    Panel_setHeader(super, "Display options");
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Tree view"), &(settings->pl->treeView)));
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Shadow other users' processes"), &(settings->pl->shadowOtherUsers)));
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Hide kernel threads"), &(settings->pl->hideKernelThreads)));
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Hide userland threads"), &(settings->pl->hideUserlandThreads)));
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight program \"basename\""), &(settings->pl->highlightBaseName)));
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight megabytes in memory counters"), &(settings->pl->highlightMegabytes)));
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Leave a margin around header"), &(settings->header->margin)));
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Split System Time into System/IO-Wait/Hard-IRQ/Soft-IRQ"), &(settings->pl->expandSystemTime)));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Tree view"), &(settings->pl->treeView), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Shadow other users' processes"), &(settings->pl->shadowOtherUsers), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Hide kernel threads"), &(settings->pl->hideKernelThreads), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Hide userland threads"), &(settings->pl->hideUserlandThreads), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight program \"basename\""), &(settings->pl->highlightBaseName), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight megabytes in memory counters"), &(settings->pl->highlightMegabytes), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Leave a margin around header"), &(settings->header->margin), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Split System Time into System/IO-Wait/Hard-IRQ/Soft-IRQ"), &(settings->pl->expandSystemTime), false));
    return this;
 }
 
@@ -49,7 +49,7 @@ void DisplayOptionsPanel_delete(Object* object) {
    free(this);
 }
 
-HandlerResult DisplayOptionsPanel_EventHandler(Panel* super, int ch) {
+HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) super;
    
    HandlerResult result = IGNORED;
@@ -60,7 +60,7 @@ HandlerResult DisplayOptionsPanel_EventHandler(Panel* super, int ch) {
    case 0x0d:
    case KEY_ENTER:
    case ' ':
-      *(selected->value) = ! *(selected->value);
+      CheckItem_set(selected, ! (CheckItem_get(selected)) );
       result = HANDLED;
    }
 

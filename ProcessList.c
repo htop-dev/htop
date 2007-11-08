@@ -333,7 +333,7 @@ static void ProcessList_buildTree(ProcessList* this, int pid, int level, int ind
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* process = (Process*) (Vector_get(this->processes, i));
-      if (process->ppid == pid) {
+      if (process->tgid == pid || (process->tgid == process->pid && process->ppid == pid)) {
          Process* process = (Process*) (Vector_take(this->processes, i));
          Vector_add(children, process);
       }
@@ -360,26 +360,34 @@ void ProcessList_sort(ProcessList* this) {
    if (!this->treeView) {
       Vector_sort(this->processes);
    } else {
+      // Save settings
       int direction = this->direction;
       int sortKey = this->sortKey;
+      // Sort by PID
       this->sortKey = PID;
       this->direction = 1;
       Vector_sort(this->processes);
+      // Restore settings
       this->sortKey = sortKey;
       this->direction = direction;
+      // Take PID 1 as root and add to the new listing
       int vsize = Vector_size(this->processes);
       Process* init = (Process*) (Vector_take(this->processes, 0));
       assert(init->pid == 1);
       init->indent = 0;
       Vector_add(this->processes2, init);
+      // Recursively empty list
       ProcessList_buildTree(this, init->pid, 0, 0, direction);
+      // Add leftovers
       while (Vector_size(this->processes)) {
          Process* p = (Process*) (Vector_take(this->processes, 0));
          p->indent = 0;
          Vector_add(this->processes2, p);
+         ProcessList_buildTree(this, p->pid, 0, 0, direction);
       }
       assert(Vector_size(this->processes2) == vsize); (void)vsize;
       assert(Vector_size(this->processes) == 0);
+      // Swap listings around
       Vector* t = this->processes;
       this->processes = this->processes2;
       this->processes2 = t;
@@ -408,7 +416,7 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    
    #ifdef DEBUG_PROC
    int num = ProcessList_read(this, location, 
-      "%c %u %u %u %u %u %lu %lu %lu %lu "
+      "%c %u %u %u %u %d %lu %lu %lu %lu "
       "%lu %lu %lu %ld %ld %ld %ld %ld %ld "
       "%lu %lu %ld %lu %lu %lu %lu %lu "
       "%lu %lu %lu %lu %lu %lu %lu %lu "
@@ -426,7 +434,7 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    #else
    long int uzero;
    int num = ProcessList_read(this, location, 
-      "%c %u %u %u %u %u %lu %lu %lu %lu "
+      "%c %u %u %u %u %d %lu %lu %lu %lu "
       "%lu %lu %lu %ld %ld %ld %ld %ld %ld "
       "%lu %lu %ld %lu %lu %lu %lu %lu "
       "%lu %lu %lu %lu %lu %lu %lu %lu "
@@ -454,10 +462,12 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
 bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname, char* name) {
    char statusfilename[MAX_NAME+1];
    statusfilename[MAX_NAME] = '\0';
-   /*
+
    bool success = false;
    char buffer[256];
    buffer[255] = '\0';
+   
+   // We need to parse the status file just for tgid, which is missing in stat.
    snprintf(statusfilename, MAX_NAME, "%s/%s/status", dirname, name);
    FILE* status = ProcessList_fopen(this, statusfilename, "r");
    if (status) {
@@ -465,12 +475,11 @@ bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname,
          char* ok = fgets(buffer, 255, status);
          if (!ok)
             break;
-         if (String_startsWith(buffer, "Uid:")) {
-            int uid1, uid2, uid3, uid4;
-            // TODO: handle other uid's.
-            int ok = ProcessList_read(this, buffer, "Uid:\t%d\t%d\t%d\t%d", &uid1, &uid2, &uid3, &uid4);
+         if (String_startsWith(buffer, "Tgid:")) {
+            int tgid;
+            int ok = ProcessList_read(this, buffer, "Tgid:\t%d", &tgid);
             if (ok >= 1) {
-               proc->st_uid = uid1;
+               proc->tgid = tgid;
                success = true;
             }
             break;
@@ -478,19 +487,13 @@ bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname,
       }
       fclose(status);
    }
-   if (!success) {
-   */
-      snprintf(statusfilename, MAX_NAME, "%s/%s", dirname, name);
-      struct stat sstat;
-      int statok = stat(statusfilename, &sstat);
-      if (statok == -1)
-         return false;
-      proc->st_uid = sstat.st_uid;
-      return true;
-   /*
-   } else
-      return true;
-   */
+   snprintf(statusfilename, MAX_NAME, "%s/%s", dirname, name);
+   struct stat sstat;
+   int statok = stat(statusfilename, &sstat);
+   if (statok == -1)
+      return false;
+   proc->st_uid = sstat.st_uid;
+   return true;
 }
 
 void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, float period) {
@@ -521,9 +524,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
             char subdirname[MAX_NAME+1];
             snprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
    
-            if (access(subdirname, X_OK) == 0) {
-               ProcessList_processEntries(this, subdirname, pid, period);
-            }
+            ProcessList_processEntries(this, subdirname, pid, period);
          }
 
          FILE* status;

@@ -25,7 +25,6 @@ typedef struct ColorsPanel_ {
 
    Settings* settings;
    ScreenManager* scr;
-   bool check[5];
 } ColorsPanel;
 
 

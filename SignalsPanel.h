@@ -27,6 +27,6 @@ void SignalsPanel_delete(Object* object);
 
 void SignalsPanel_reset(SignalsPanel* this);
 
-HandlerResult SignalsPanel_EventHandler(Panel* super, int ch);
+HandlerResult SignalsPanel_eventHandler(Panel* super, int ch);
 
 #endif

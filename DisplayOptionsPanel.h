@@ -25,7 +25,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
 
 void DisplayOptionsPanel_delete(Object* object);
 
-HandlerResult DisplayOptionsPanel_EventHandler(Panel* super, int ch);
+HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch);
 
 
 #endif

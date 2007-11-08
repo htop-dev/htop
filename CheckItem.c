@@ -16,7 +16,8 @@ in the source distribution for its full text.
 typedef struct CheckItem_ {
    Object super;
    char* text;
-   bool* value;
+   bool value;
+   bool* ref;
 } CheckItem;
 
 }*/
@@ -27,13 +28,14 @@ char* CHECKITEM_CLASS = "CheckItem";
 #define CHECKITEM_CLASS NULL
 #endif
 
-CheckItem* CheckItem_new(char* text, bool* value) {
+CheckItem* CheckItem_new(char* text, bool* ref, bool value) {
    CheckItem* this = malloc(sizeof(CheckItem));
    Object_setClass(this, CHECKITEM_CLASS);
    ((Object*)this)->display = CheckItem_display;
    ((Object*)this)->delete = CheckItem_delete;
    this->text = text;
    this->value = value;
+   this->ref = ref;
    return this;
 }
 
@@ -45,11 +47,25 @@ void CheckItem_delete(Object* cast) {
    free(this);
 }
 
+void CheckItem_set(CheckItem* this, bool value) {
+   if (this->ref) 
+      *(this->ref) = value;
+   else
+      this->value = value;
+}
+
+bool CheckItem_get(CheckItem* this) {
+   if (this->ref) 
+      return *(this->ref);
+   else
+      return this->value;
+}
+
 void CheckItem_display(Object* cast, RichString* out) {
    CheckItem* this = (CheckItem*)cast;
    assert (this != NULL);
    RichString_write(out, CRT_colors[CHECK_BOX], "[");
-   if (*(this->value))
+   if (CheckItem_get(this))
       RichString_append(out, CRT_colors[CHECK_MARK], "x");
    else
       RichString_append(out, CRT_colors[CHECK_MARK], " ");

@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "CategoriesPanel.h"
 #include "SignalsPanel.h"
 #include "TraceScreen.h"
+#include "AffinityPanel.h"
 
 #include "config.h"
 #include "debug.h"
@@ -104,7 +105,10 @@ void showHelp(ProcessList* pl) {
    mvaddstr(15, 0, "   F9 k: kill process/tagged processes      P: sort by CPU%");
    mvaddstr(16, 0, " + [ F7: lower priority (+ nice)            M: sort by MEM%");
    mvaddstr(17, 0, " - ] F8: higher priority (root only)        T: sort by TIME");
-   mvaddstr(18, 0, "                                         F4 I: invert sort order");
+   if (pl->processorCount > 1)
+      mvaddstr(18, 0, "      a: set CPU affinity                F4 I: invert sort order");
+   else
+      mvaddstr(18, 0, "                                         F4 I: invert sort order");
    mvaddstr(19, 0, "   F2 S: setup                           F6 >: select sort column");
    mvaddstr(20, 0, "   F1 h: show this help screen");
    mvaddstr(21, 0, "  F10 q: quit                               s: trace syscalls with strace");
@@ -120,6 +124,8 @@ void showHelp(ProcessList* pl) {
    mvaddstr(16, 0, " + [ F7"); mvaddstr(16,40, "    M");
    mvaddstr(17, 0, " - ] F8"); mvaddstr(17,40, "    T");
                                mvaddstr(18,40, " F4 I");
+   if (pl->processorCount > 1)
+      mvaddstr(18, 0, "      a:");
    mvaddstr(19, 0, "   F2 S"); mvaddstr(19,40, " F6 >");
    mvaddstr(20, 0, "   F1 h");
    mvaddstr(21, 0, "  F10 q"); mvaddstr(21,40, "    s");
@@ -169,7 +175,7 @@ static HandlerResult pickWithEnter(Panel* panel, int ch) {
 static Object* pickFromList(Panel* panel, Panel* list, int x, int y, char** keyLabels, FunctionBar* prevBar) {
    char* fuKeys[2] = {"Enter", "Esc"};
    int fuEvents[2] = {13, 27};
-   if (!panel->eventHandler)
+   if (!list->eventHandler)
       Panel_setEventHandler(list, pickWithEnter);
    ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, false);
    ScreenManager_add(scr, list, FunctionBar_new(2, keyLabels, fuKeys, fuEvents), x - 1);
@@ -588,6 +594,36 @@ int main(int argc, char** argv) {
                napms(500);
             }
          }
+         Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+         refreshTimeout = 0;
+         break;
+      }
+      case 'a':
+      {
+         if (pl->processorCount == 1)
+            break;
+
+         Process* p = (Process*) Panel_getSelected(panel);
+         unsigned long curr = Process_getAffinity(p);
+         
+         Panel* affinityPanel = AffinityPanel_new(pl->processorCount, curr);
+
+         char* fuFunctions[2] = {"Toggle ", "Done  "};
+         pickFromList(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar);
+         unsigned long new = AffinityPanel_getAffinity(affinityPanel);
+         bool anyTagged = false;
+         for (int i = 0; i < Panel_getSize(panel); i++) {
+            Process* p = (Process*) Panel_get(panel, i);
+            if (p->tag) {
+               Process_setAffinity(p, new);
+               anyTagged = true;
+            }
+         }
+         if (!anyTagged) {
+            Process* p = (Process*) Panel_getSelected(panel);
+            Process_setAffinity(p, new);
+         }
+         ((Object*)affinityPanel)->delete((Object*)affinityPanel);
          Panel_setRichHeader(panel, ProcessList_printHeader(pl));
          refreshTimeout = 0;
          break;

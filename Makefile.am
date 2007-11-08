@@ -17,7 +17,7 @@ DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
 LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
 Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
 SignalItem.c SignalsPanel.c String.c SwapMeter.c TasksMeter.c TraceScreen.c \
-UptimeMeter.c UsersTable.c Vector.c AvailableColumnsPanel.c
+UptimeMeter.c UsersTable.c Vector.c AvailableColumnsPanel.c AffinityPanel.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
 CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
@@ -26,7 +26,7 @@ Hashtable.h Header.h htop.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
 Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \
 ScreenManager.h Settings.h SignalItem.h SignalsPanel.h String.h \
 SwapMeter.h TasksMeter.h TraceScreen.h UptimeMeter.h UsersTable.h Vector.h \
-Process.h
+Process.h AffinityPanel.h
 
 SUFFIXES = .h
 

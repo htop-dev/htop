@@ -27,7 +27,7 @@ SignalsPanel* SignalsPanel_new(int x, int y, int w, int h) {
    ((Object*)this)->delete = SignalsPanel_delete;
 
    this->signals = Signal_getSignalTable();
-   super->eventHandler = SignalsPanel_EventHandler;
+   super->eventHandler = SignalsPanel_eventHandler;
    int sigCount = Signal_getSignalCount();
    for(int i = 0; i < sigCount; i++)
       Panel_set(super, i, (Object*) this->signals[i]);
@@ -51,7 +51,7 @@ void SignalsPanel_reset(SignalsPanel* this) {
    this->state = 0;
 }
 
-HandlerResult SignalsPanel_EventHandler(Panel* super, int ch) {
+HandlerResult SignalsPanel_eventHandler(Panel* super, int ch) {
    SignalsPanel* this = (SignalsPanel*) super;
 
    int size = Panel_getSize(super);

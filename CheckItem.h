@@ -18,7 +18,8 @@ in the source distribution for its full text.
 typedef struct CheckItem_ {
    Object super;
    char* text;
-   bool* value;
+   bool value;
+   bool* ref;
 } CheckItem;
 
 
@@ -28,9 +29,13 @@ extern char* CHECKITEM_CLASS;
 #define CHECKITEM_CLASS NULL
 #endif
 
-CheckItem* CheckItem_new(char* text, bool* value);
+CheckItem* CheckItem_new(char* text, bool* ref, bool value);
 
 void CheckItem_delete(Object* cast);
+
+void CheckItem_set(CheckItem* this, bool value);
+
+bool CheckItem_get(CheckItem* this);
 
 void CheckItem_display(Object* cast, RichString* out);
 
