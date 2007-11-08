@@ -14,6 +14,7 @@ in the source distribution for its full text.
 
 #include "String.h"
 
+#include "config.h"
 #include "debug.h"
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
@@ -181,7 +182,7 @@ void CRT_enableDelay() {
 
 void CRT_handleSIGSEGV(int signal) {
    CRT_done();
-   fprintf(stderr, "Aborted. Please report bug at http://htop.sf.net");
+   fprintf(stderr, "htop " VERSION " aborted. Please report bug at http://htop.sf.net\n");
    exit(1);
 }
 

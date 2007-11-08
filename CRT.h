@@ -17,6 +17,7 @@ in the source distribution for its full text.
 
 #include "String.h"
 
+#include "config.h"
 #include "debug.h"
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
