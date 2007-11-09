@@ -63,13 +63,13 @@ void showHelp(ProcessList* pl) {
    mvaddstr(3, 0, "CPU usage bar: ");
    #define addattrstr(a,s) attrset(a);addstr(s)
    addattrstr(CRT_colors[BAR_BORDER], "[");
-   if (pl->expandSystemTime) {
+   if (pl->detailedCPUTime) {
       addattrstr(CRT_colors[CPU_NICE], "low"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
       addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
-      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait"); addstr("/");
       addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
-      addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq");
+      addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq"); addstr("/");
+      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait");
       addattrstr(CRT_colors[BAR_SHADOW], " used%");
    } else {
       addattrstr(CRT_colors[CPU_NICE], "low-priority"); addstr("/");

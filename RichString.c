@@ -26,21 +26,21 @@ typedef struct RichString_ {
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
 
-void RichString_write(RichString* this, int attrs, char* data) {
-   RichString_init(this);
-   RichString_append(this, attrs, data);
-}
-
-inline void RichString_append(RichString* this, int attrs, char* data) {
-   RichString_appendn(this, attrs, data, strlen(data));
-}
-
 inline void RichString_appendn(RichString* this, int attrs, char* data, int len) {
    int last = MIN(RICHSTRING_MAXLEN - 1, len + this->len);
    for (int i = this->len, j = 0; i < last; i++, j++)
       this->chstr[i] = data[j] | attrs;
    this->chstr[last] = 0;
    this->len = last;
+}
+
+inline void RichString_append(RichString* this, int attrs, char* data) {
+   RichString_appendn(this, attrs, data, strlen(data));
+}
+
+void RichString_write(RichString* this, int attrs, char* data) {
+   RichString_init(this);
+   RichString_append(this, attrs, data);
 }
 
 void RichString_setAttr(RichString *this, int attrs) {

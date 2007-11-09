@@ -38,7 +38,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight program \"basename\""), &(settings->pl->highlightBaseName), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight megabytes in memory counters"), &(settings->pl->highlightMegabytes), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Leave a margin around header"), &(settings->header->margin), false));
-   Panel_add(super, (Object*) CheckItem_new(String_copy("Split System Time into System/IO-Wait/Hard-IRQ/Soft-IRQ"), &(settings->pl->expandSystemTime), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ)"), &(settings->pl->detailedCPUTime), false));
    return this;
 }
 

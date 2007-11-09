@@ -53,7 +53,7 @@ in the source distribution for its full text.
 #endif
 
 #ifndef PER_PROCESSOR_FIELDS
-#define PER_PROCESSOR_FIELDS 20
+#define PER_PROCESSOR_FIELDS 22
 #endif
 
 }*/
@@ -80,6 +80,7 @@ typedef struct ProcessList_ {
    unsigned long long int* userTime;
    unsigned long long int* systemTime;
    unsigned long long int* systemAllTime;
+   unsigned long long int* idleAllTime;
    unsigned long long int* idleTime;
    unsigned long long int* niceTime;
    unsigned long long int* ioWaitTime;
@@ -90,6 +91,7 @@ typedef struct ProcessList_ {
    unsigned long long int* userPeriod;
    unsigned long long int* systemPeriod;
    unsigned long long int* systemAllPeriod;
+   unsigned long long int* idleAllPeriod;
    unsigned long long int* idlePeriod;
    unsigned long long int* nicePeriod;
    unsigned long long int* ioWaitPeriod;
@@ -117,7 +119,7 @@ typedef struct ProcessList_ {
    bool treeView;
    bool highlightBaseName;
    bool highlightMegabytes;
-   bool expandSystemTime;
+   bool detailedCPUTime;
    #ifdef DEBUG_PROC
    FILE* traceFile;
    #endif
@@ -248,7 +250,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    this->treeView = false;
    this->highlightBaseName = false;
    this->highlightMegabytes = false;
-   this->expandSystemTime = false;
+   this->detailedCPUTime = false;
 
    return this;
 }
@@ -656,7 +658,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
 }
 
 void ProcessList_scan(ProcessList* this) {
-   unsigned long long int usertime, nicetime, systemtime, systemalltime, idletime, totaltime;
+   unsigned long long int usertime, nicetime, systemtime, systemalltime, idlealltime, idletime, totaltime;
    unsigned long long int swapFree;
 
    FILE* status;
@@ -716,14 +718,16 @@ void ProcessList_scan(ProcessList* this) {
       }
       // Fields existing on kernels >= 2.6
       // (and RHEL's patched kernel 2.4...)
-      systemalltime = systemtime + ioWait + irq + softIrq + steal;
-      totaltime = usertime + nicetime + systemalltime + idletime;
+      idlealltime = idletime + ioWait;
+      systemalltime = systemtime + irq + softIrq + steal;
+      totaltime = usertime + nicetime + systemalltime + idlealltime;
       assert (usertime >= this->userTime[i]);
       assert (nicetime >= this->niceTime[i]);
       assert (systemtime >= this->systemTime[i]);
       assert (idletime >= this->idleTime[i]);
       assert (totaltime >= this->totalTime[i]);
       assert (systemalltime >= this->systemAllTime[i]);
+      assert (idlealltime >= this->idleAllTime[i]);
       assert (ioWait >= this->ioWaitTime[i]);
       assert (irq >= this->irqTime[i]);
       assert (softIrq >= this->softIrqTime[i]);
@@ -732,6 +736,7 @@ void ProcessList_scan(ProcessList* this) {
       this->nicePeriod[i] = nicetime - this->niceTime[i];
       this->systemPeriod[i] = systemtime - this->systemTime[i];
       this->systemAllPeriod[i] = systemalltime - this->systemAllTime[i];
+      this->idleAllPeriod[i] = idlealltime - this->idleAllTime[i];
       this->idlePeriod[i] = idletime - this->idleTime[i];
       this->ioWaitPeriod[i] = ioWait - this->ioWaitTime[i];
       this->irqPeriod[i] = irq - this->irqTime[i];
@@ -742,6 +747,7 @@ void ProcessList_scan(ProcessList* this) {
       this->niceTime[i] = nicetime;
       this->systemTime[i] = systemtime;
       this->systemAllTime[i] = systemalltime;
+      this->idleAllTime[i] = idlealltime;
       this->idleTime[i] = idletime;
       this->ioWaitTime[i] = ioWait;
       this->irqTime[i] = irq;

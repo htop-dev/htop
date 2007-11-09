@@ -27,11 +27,11 @@ typedef struct RichString_ {
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
 
-void RichString_write(RichString* this, int attrs, char* data);
+extern void RichString_appendn(RichString* this, int attrs, char* data, int len);
 
 extern void RichString_append(RichString* this, int attrs, char* data);
 
-extern void RichString_appendn(RichString* this, int attrs, char* data, int len);
+void RichString_write(RichString* this, int attrs, char* data);
 
 void RichString_setAttr(RichString *this, int attrs);
 

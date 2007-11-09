@@ -4,6 +4,10 @@ What's new in version 0.7
 * CPU affinity configuration ('a' key)
 * Improve display of tree view, properly nesting
   threads of the same app based on TGID.
+* IO-wait time now counts as idle time, which is a more
+  accurate description. It is still available in
+  split time, now called detailed CPU time.
+  (thanks to Samuel Thibault for the report)
 * BUGFIX: Correct display of TPGID field
 * Add TGID field
 * BUGFIX: Don't crash with invalid command-line flags
