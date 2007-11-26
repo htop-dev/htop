@@ -96,7 +96,7 @@ bool Settings_read(Settings* this, char* fileName) {
    if (fd == NULL) {
       return false;
    }
-   const int maxLine = 512;
+   const int maxLine = 65535;
    char buffer[maxLine];
    bool readMeters = false;
    while (!feof(fd)) {

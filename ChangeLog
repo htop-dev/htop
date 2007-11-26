@@ -1,4 +1,9 @@
 
+What's new in version 0.7.1
+
+* BUGFIX: avoid crashing when using many meters
+  (thanks to David Cho for the report)
+
 What's new in version 0.7
 
 * CPU affinity configuration ('a' key)

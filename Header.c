@@ -73,6 +73,8 @@ void Header_setMode(Header* this, int i, MeterModeId mode, HeaderSide side) {
                        ? this->leftMeters
                        : this->rightMeters;
 
+   if (i >= Vector_size(meters))
+      return;
    Meter* meter = (Meter*) Vector_get(meters, i);
    Meter_setMode(meter, mode);
 }
