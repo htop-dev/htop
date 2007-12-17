@@ -1,6 +1,6 @@
 /*
 htop - htop.c
-(C) 2004-2006 Hisham H. Muhammad
+(C) 2004-2007 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -36,14 +36,14 @@ in the source distribution for its full text.
 
 void printVersionFlag() {
    clear();
-   printf("htop " VERSION " - (C) 2004-2006 Hisham Muhammad.\n");
+   printf("htop " VERSION " - (C) 2004-2007 Hisham Muhammad.\n");
    printf("Released under the GNU GPL.\n\n");
    exit(0);
 }
 
 void printHelpFlag() {
    clear();
-   printf("htop " VERSION " - (C) 2004-2006 Hisham Muhammad.\n");
+   printf("htop " VERSION " - (C) 2004-2007 Hisham Muhammad.\n");
    printf("Released under the GNU GPL.\n\n");
    printf("-d DELAY     Delay between updates, in tenths of seconds\n\n");
    printf("-u USERNAME  Show only processes of a given user\n\n");
@@ -56,7 +56,7 @@ void printHelpFlag() {
 void showHelp(ProcessList* pl) {
    clear();
    attrset(CRT_colors[HELP_BOLD]);
-   mvaddstr(0, 0, "htop " VERSION " - (C) 2004-2006 Hisham Muhammad.");
+   mvaddstr(0, 0, "htop " VERSION " - (C) 2004-2007 Hisham Muhammad.");
    mvaddstr(1, 0, "Released under the GNU GPL. See 'man' page for more info.");
 
    attrset(CRT_colors[DEFAULT_COLOR]);
@@ -151,18 +151,21 @@ static void Setup_run(Settings* settings, int headerHeight) {
 }
 
 static bool changePriority(Panel* panel, int delta) {
+   bool ok = true;
    bool anyTagged = false;
    for (int i = 0; i < Panel_getSize(panel); i++) {
       Process* p = (Process*) Panel_get(panel, i);
       if (p->tag) {
-         Process_setPriority(p, p->nice + delta);
+         ok = Process_setPriority(p, p->nice + delta) && ok;
          anyTagged = true;
       }
    }
    if (!anyTagged) {
       Process* p = (Process*) Panel_getSelected(panel);
-      Process_setPriority(p, p->nice + delta);
+      ok = Process_setPriority(p, p->nice + delta) && ok;
    }
+   if (!ok)
+      beep();
    return anyTagged;
 }
 
@@ -608,20 +611,25 @@ int main(int argc, char** argv) {
          
          Panel* affinityPanel = AffinityPanel_new(pl->processorCount, curr);
 
-         char* fuFunctions[2] = {"Toggle ", "Done  "};
-         pickFromList(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar);
-         unsigned long new = AffinityPanel_getAffinity(affinityPanel);
-         bool anyTagged = false;
-         for (int i = 0; i < Panel_getSize(panel); i++) {
-            Process* p = (Process*) Panel_get(panel, i);
-            if (p->tag) {
-               Process_setAffinity(p, new);
-               anyTagged = true;
+         char* fuFunctions[2] = {"Set    ", "Cancel "};
+         void* set = pickFromList(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar);
+         if (set) {
+            unsigned long new = AffinityPanel_getAffinity(affinityPanel);
+            bool anyTagged = false;
+            bool ok = true;
+            for (int i = 0; i < Panel_getSize(panel); i++) {
+               Process* p = (Process*) Panel_get(panel, i);
+               if (p->tag) {
+                  ok = Process_setAffinity(p, new) && ok;
+                  anyTagged = true;
+               }
             }
-         }
-         if (!anyTagged) {
-            Process* p = (Process*) Panel_getSelected(panel);
-            Process_setAffinity(p, new);
+            if (!anyTagged) {
+               Process* p = (Process*) Panel_getSelected(panel);
+               ok = Process_setAffinity(p, new) && ok;
+            }
+            if (!ok)
+               beep();
          }
          ((Object*)affinityPanel)->delete((Object*)affinityPanel);
          Panel_setRichHeader(panel, ProcessList_printHeader(pl));

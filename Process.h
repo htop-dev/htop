@@ -141,11 +141,11 @@ void Process_display(Object* cast, RichString* out);
 
 void Process_toggleTag(Process* this);
 
-void Process_setPriority(Process* this, int priority);
+bool Process_setPriority(Process* this, int priority);
 
 unsigned long Process_getAffinity(Process* this);
 
-void Process_setAffinity(Process* this, unsigned long mask);
+bool Process_setAffinity(Process* this, unsigned long mask);
 
 void Process_sendSignal(Process* this, int signal);
 

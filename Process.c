@@ -42,7 +42,7 @@ typedef enum ProcessField_ {
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
    STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
-   USER, TIME, NLWP, TGID
+   USER, TIME, NLWP, TGID,
    #ifdef HAVE_OPENVZ
    VEID, VPID,
    #endif
@@ -187,12 +187,13 @@ void Process_toggleTag(Process* this) {
    this->tag = this->tag == true ? false : true;
 }
 
-void Process_setPriority(Process* this, int priority) {
+bool Process_setPriority(Process* this, int priority) {
    int old_prio = getpriority(PRIO_PROCESS, this->pid);
    int err = setpriority(PRIO_PROCESS, this->pid, priority);
    if (err == 0 && old_prio != getpriority(PRIO_PROCESS, this->pid)) {
       this->nice = priority;
    }
+   return (err == 0);
 }
 
 unsigned long Process_getAffinity(Process* this) {
@@ -201,8 +202,8 @@ unsigned long Process_getAffinity(Process* this) {
    return mask;
 }
 
-void Process_setAffinity(Process* this, unsigned long mask) {
-   sched_setaffinity(this->pid, sizeof(unsigned long), (cpu_set_t*) &mask);
+bool Process_setAffinity(Process* this, unsigned long mask) {
+   return (sched_setaffinity(this->pid, sizeof(unsigned long), (cpu_set_t*) &mask) == 0);
 }
 
 void Process_sendSignal(Process* this, int signal) {
