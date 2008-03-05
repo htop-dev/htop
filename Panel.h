@@ -33,6 +33,8 @@ typedef enum HandlerResult_ {
    BREAK_LOOP
 } HandlerResult;
 
+#define EVENT_SETSELECTED -1
+
 typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
 
 struct Panel_ {

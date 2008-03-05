@@ -31,6 +31,8 @@ typedef enum HandlerResult_ {
    BREAK_LOOP
 } HandlerResult;
 
+#define EVENT_SETSELECTED -1
+
 typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
 
 struct Panel_ {
@@ -222,6 +224,9 @@ void Panel_setSelected(Panel* this, int selected) {
 
    selected = MAX(0, MIN(Vector_size(this->items) - 1, selected));
    this->selected = selected;
+   if (this->eventHandler) {
+      this->eventHandler(this, EVENT_SETSELECTED);
+   }
 }
 
 void Panel_draw(Panel* this, bool focus) {

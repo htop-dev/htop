@@ -64,37 +64,43 @@ HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
 
    HandlerResult result = IGNORED;
 
-   int previous = Panel_getSelectedIndex(super);
-
+   int selected = Panel_getSelectedIndex(super);
    switch (ch) {
+      case EVENT_SETSELECTED:
+         result = HANDLED;
+         break;
       case KEY_UP:
       case KEY_DOWN:
       case KEY_NPAGE:
       case KEY_PPAGE:
       case KEY_HOME:
       case KEY_END: {
+         int previous = selected;
          Panel_onKey(super, ch);
-         int selected = Panel_getSelectedIndex(super);
-         if (previous != selected) {
-            int size = ScreenManager_size(this->scr);
-            for (int i = 1; i < size; i++)
-               ScreenManager_remove(this->scr, 1);
-            switch (selected) {
-               case 0:
-                  CategoriesPanel_makeMetersPage(this);
-                  break;
-               case 1:
-                  CategoriesPanel_makeDisplayOptionsPage(this);
-                  break;
-               case 2:
-                  CategoriesPanel_makeColorsPage(this);
-                  break;
-               case 3:
-                  CategoriesPanel_makeColumnsPage(this);
-                  break;
-            }
-         }
-         result = HANDLED;
+         selected = Panel_getSelectedIndex(super);
+         if (previous != selected)
+            result = HANDLED;
+         break;
+      }
+   }
+
+   if (result == HANDLED) {
+      int size = ScreenManager_size(this->scr);
+      for (int i = 1; i < size; i++)
+         ScreenManager_remove(this->scr, 1);
+      switch (selected) {
+         case 0:
+            CategoriesPanel_makeMetersPage(this);
+            break;
+         case 1:
+            CategoriesPanel_makeDisplayOptionsPage(this);
+            break;
+         case 2:
+            CategoriesPanel_makeColorsPage(this);
+            break;
+         case 3:
+            CategoriesPanel_makeColumnsPage(this);
+            break;
       }
    }
 
