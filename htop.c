@@ -36,14 +36,14 @@ in the source distribution for its full text.
 
 void printVersionFlag() {
    clear();
-   printf("htop " VERSION " - (C) 2004-2007 Hisham Muhammad.\n");
+   printf("htop " VERSION " - (C) 2004-2008 Hisham Muhammad.\n");
    printf("Released under the GNU GPL.\n\n");
    exit(0);
 }
 
 void printHelpFlag() {
    clear();
-   printf("htop " VERSION " - (C) 2004-2007 Hisham Muhammad.\n");
+   printf("htop " VERSION " - (C) 2004-2008 Hisham Muhammad.\n");
    printf("Released under the GNU GPL.\n\n");
    printf("-d DELAY     Delay between updates, in tenths of seconds\n\n");
    printf("-u USERNAME  Show only processes of a given user\n\n");
@@ -56,7 +56,7 @@ void printHelpFlag() {
 void showHelp(ProcessList* pl) {
    clear();
    attrset(CRT_colors[HELP_BOLD]);
-   mvaddstr(0, 0, "htop " VERSION " - (C) 2004-2007 Hisham Muhammad.");
+   mvaddstr(0, 0, "htop " VERSION " - (C) 2004-2008 Hisham Muhammad.");
    mvaddstr(1, 0, "Released under the GNU GPL. See 'man' page for more info.");
 
    attrset(CRT_colors[DEFAULT_COLOR]);
