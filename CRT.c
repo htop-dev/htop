@@ -306,7 +306,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[CPU_NICE] = ColorPair(Cyan,White);
       CRT_colors[CPU_NORMAL] = ColorPair(Green,White);
       CRT_colors[CPU_KERNEL] = ColorPair(Red,White);
-      CRT_colors[CLOCK] = ColorPair(White,White);
+      CRT_colors[CLOCK] = ColorPair(Black,White);
       CRT_colors[CHECK_BOX] = ColorPair(Blue,White);
       CRT_colors[CHECK_MARK] = ColorPair(Black,White);
       CRT_colors[CHECK_TEXT] = ColorPair(Black,White);
