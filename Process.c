@@ -27,6 +27,8 @@ in the source distribution for its full text.
 #include <pwd.h>
 #include <sched.h>
 
+#include <plpa.h>
+
 // This works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
 #ifndef PAGE_SIZE
@@ -198,12 +200,12 @@ bool Process_setPriority(Process* this, int priority) {
 
 unsigned long Process_getAffinity(Process* this) {
    unsigned long mask = 0;
-   sched_getaffinity(this->pid, sizeof(unsigned long), (cpu_set_t*) &mask);
+   plpa_sched_getaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask);
    return mask;
 }
 
 bool Process_setAffinity(Process* this, unsigned long mask) {
-   return (sched_setaffinity(this->pid, sizeof(unsigned long), (cpu_set_t*) &mask) == 0);
+   return (plpa_sched_setaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask) == 0);
 }
 
 void Process_sendSignal(Process* this, int signal) {

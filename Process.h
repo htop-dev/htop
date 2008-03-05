@@ -30,6 +30,8 @@ in the source distribution for its full text.
 #include <pwd.h>
 #include <sched.h>
 
+#include <plpa.h>
+
 // This works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
 #ifndef PAGE_SIZE

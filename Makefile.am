@@ -1,4 +1,6 @@
 
+SUBDIRS = plpa-1.1
+
 bin_PROGRAMS = htop
 dist_man_MANS = htop.1
 EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.py \
@@ -8,7 +10,7 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-AM_CFLAGS = -pedantic -Wall -std=c99
+htop_CFLAGS = -pedantic -Wall -std=c99
 AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\"
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
@@ -32,6 +34,7 @@ SUFFIXES = .h
 
 BUILT_SOURCES = $(myhtopheaders)
 htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h debug.h
+htop_LDADD = $(top_builddir)/plpa-1.1/src/libplpa_included.la
 
 profile:
 	$(MAKE) all CFLAGS="-pg -O2"
