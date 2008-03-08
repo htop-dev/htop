@@ -56,6 +56,10 @@ void printHelpFlag() {
 void showHelp(ProcessList* pl) {
    clear();
    attrset(CRT_colors[HELP_BOLD]);
+
+   for (int i = 0; i < LINES-1; i++)
+      mvhline(i, 0, ' ', COLS);
+
    mvaddstr(0, 0, "htop " VERSION " - (C) 2004-2008 Hisham Muhammad.");
    mvaddstr(1, 0, "Released under the GNU GPL. See 'man' page for more info.");
 
@@ -705,7 +709,8 @@ int main(int argc, char** argv) {
          break;
       case 'H':
          refreshTimeout = 0;
-         pl->hideThreads = !pl->hideThreads;
+         pl->hideUserlandThreads = !pl->hideUserlandThreads;
+         pl->hideThreads = pl->hideUserlandThreads;
          settings->changed = true;
          break;
       case 'K':
