@@ -119,6 +119,7 @@ typedef struct ProcessList_ {
    bool treeView;
    bool highlightBaseName;
    bool highlightMegabytes;
+   bool highlightThreads;
    bool detailedCPUTime;
    #ifdef DEBUG_PROC
    FILE* traceFile;
@@ -164,7 +165,7 @@ void ProcessList_sort(ProcessList* this);
 
 bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname, char* name);
 
-void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, float period);
+bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* parent, float period);
 
 void ProcessList_scan(ProcessList* this);
 

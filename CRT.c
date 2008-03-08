@@ -68,6 +68,8 @@ typedef enum ColorElements_ {
    PROCESS_BASENAME,
    PROCESS_HIGH_PRIORITY,
    PROCESS_LOW_PRIORITY,
+   PROCESS_THREAD,
+   PROCESS_THREAD_BASENAME,
    BAR_BORDER,
    BAR_SHADOW,
    GRAPH_1,
@@ -210,8 +212,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[FUNCTION_KEY] = A_NORMAL;
       CRT_colors[PANEL_HEADER_FOCUS] = A_REVERSE;
       CRT_colors[PANEL_HEADER_UNFOCUS] = A_REVERSE;
-      CRT_colors[PANEL_HIGHLIGHT_FOCUS] = A_REVERSE | A_BOLD;
-      CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = A_REVERSE;
+      CRT_colors[PANEL_HIGHLIGHT_FOCUS] = A_REVERSE;
+      CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD;
       CRT_colors[FAILED_SEARCH] = A_REVERSE | A_BOLD;
       CRT_colors[UPTIME] = A_BOLD;
       CRT_colors[LARGE_NUMBER] = A_BOLD;
@@ -228,6 +230,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PROCESS_R_STATE] = A_BOLD;
       CRT_colors[PROCESS_HIGH_PRIORITY] = A_BOLD;
       CRT_colors[PROCESS_LOW_PRIORITY] = A_DIM;
+      CRT_colors[PROCESS_THREAD] = A_BOLD;
+      CRT_colors[PROCESS_THREAD_BASENAME] = A_REVERSE;
       CRT_colors[BAR_BORDER] = A_BOLD;
       CRT_colors[BAR_SHADOW] = A_DIM;
       CRT_colors[SWAP] = A_BOLD;
@@ -278,11 +282,13 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PROCESS_SHADOW] = A_BOLD | ColorPair(Black,White);
       CRT_colors[PROCESS_TAG] = ColorPair(White,Blue);
       CRT_colors[PROCESS_MEGABYTES] = ColorPair(Blue,White);
-      CRT_colors[PROCESS_BASENAME] = ColorPair(Green,White);
-      CRT_colors[PROCESS_TREE] = ColorPair(Blue,White);
+      CRT_colors[PROCESS_BASENAME] = ColorPair(Blue,White);
+      CRT_colors[PROCESS_TREE] = ColorPair(Green,White);
       CRT_colors[PROCESS_R_STATE] = ColorPair(Green,White);
       CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,White);
       CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,White);
+      CRT_colors[PROCESS_THREAD] = ColorPair(Blue,White);
+      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,White);
       CRT_colors[BAR_BORDER] = ColorPair(Blue,White);
       CRT_colors[BAR_SHADOW] = ColorPair(Black,White);
       CRT_colors[SWAP] = ColorPair(Red,White);
@@ -338,6 +344,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PROCESS_R_STATE] = ColorPair(Green,Black);
       CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black);
       CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,Black);
+      CRT_colors[PROCESS_THREAD] = ColorPair(Blue,Black);
+      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,Black);
       CRT_colors[BAR_BORDER] = ColorPair(Blue,Black);
       CRT_colors[BAR_SHADOW] = ColorPair(Black,Black);
       CRT_colors[SWAP] = ColorPair(Red,Black);
@@ -393,6 +401,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PROCESS_R_STATE] = ColorPair(Green,Blue);
       CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,Blue);
       CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,Blue);
+      CRT_colors[PROCESS_THREAD] = ColorPair(Green,Blue);
+      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Green,Blue);
       CRT_colors[BAR_BORDER] = A_BOLD | ColorPair(Yellow,Blue);
       CRT_colors[BAR_SHADOW] = ColorPair(Cyan,Blue);
       CRT_colors[SWAP] = ColorPair(Red,Blue);
@@ -445,6 +455,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PROCESS_MEGABYTES] = A_BOLD | ColorPair(Green,Black);
       CRT_colors[PROCESS_BASENAME] = A_BOLD | ColorPair(Green,Black);
       CRT_colors[PROCESS_TREE] = ColorPair(Cyan,Black);
+      CRT_colors[PROCESS_THREAD] = ColorPair(Green,Black);
+      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,Black);
       CRT_colors[PROCESS_R_STATE] = ColorPair(Green,Black);
       CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black);
       CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,Black);
@@ -471,7 +483,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[CPU_NICE] = ColorPair(Blue,Black);
       CRT_colors[CPU_NORMAL] = ColorPair(Green,Black);
       CRT_colors[CPU_KERNEL] = ColorPair(Red,Black);
-      CRT_colors[CLOCK] = A_BOLD;
+      CRT_colors[CLOCK] = ColorPair(Green,Black);
       CRT_colors[CHECK_BOX] = ColorPair(Green,Black);
       CRT_colors[CHECK_MARK] = A_BOLD | ColorPair(Green,Black);
       CRT_colors[CHECK_TEXT] = ColorPair(Cyan,Black);
@@ -504,6 +516,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PROCESS_R_STATE] = ColorPair(Green,Black);
       CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black);
       CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,Black);
+      CRT_colors[PROCESS_THREAD] = ColorPair(Green,Black);
+      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Green,Black);
       CRT_colors[BAR_BORDER] = A_BOLD;
       CRT_colors[BAR_SHADOW] = A_BOLD | ColorPair(Black,Black);
       CRT_colors[SWAP] = ColorPair(Red,Black);

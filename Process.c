@@ -264,7 +264,7 @@ static void Process_printTime(RichString* str, unsigned long t) {
    RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
 }
 
-static inline void Process_writeCommand(Process* this, int attr, RichString* str) {
+static inline void Process_writeCommand(Process* this, int attr, int baseattr, RichString* str) {
    if (this->pl->highlightBaseName) {
       char* firstSpace = strchr(this->comm, ' ');
       if (firstSpace) {
@@ -275,10 +275,10 @@ static inline void Process_writeCommand(Process* this, int attr, RichString* str
             slash++;
             RichString_appendn(str, attr, this->comm, slash - this->comm);
          }
-         RichString_appendn(str, CRT_colors[PROCESS_BASENAME], slash, firstSpace - slash);
+         RichString_appendn(str, baseattr, slash, firstSpace - slash);
          RichString_append(str, attr, firstSpace);
       } else {
-         RichString_append(str, CRT_colors[PROCESS_BASENAME], this->comm);
+         RichString_append(str, baseattr, this->comm);
       }
    } else {
       RichString_append(str, attr, this->comm);
@@ -288,6 +288,7 @@ static inline void Process_writeCommand(Process* this, int attr, RichString* str
 void Process_writeField(Process* this, RichString* str, ProcessField field) {
    char buffer[PROCESS_COMM_LEN];
    int attr = CRT_colors[DEFAULT_COLOR];
+   int baseattr = CRT_colors[PROCESS_BASENAME];
    int n = PROCESS_COMM_LEN;
 
    switch (field) {
@@ -301,8 +302,12 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case PROCESSOR: snprintf(buffer, n, "%3d ", this->processor+1); break;
    case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
    case COMM: {
+      if (this->pl->highlightThreads && (this->pid != this->tgid || this->m_size == 0)) {
+         attr = CRT_colors[PROCESS_THREAD];
+         baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
+      }
       if (!this->pl->treeView || this->indent == 0) {
-         Process_writeCommand(this, attr, str);
+         Process_writeCommand(this, attr, baseattr, str);
          return;
       } else {
          char* buf = buffer;
@@ -323,7 +328,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
          else
             snprintf(buf, n, " ,- ");
          RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
-         Process_writeCommand(this, attr, str);
+         Process_writeCommand(this, attr, baseattr, str);
          return;
       }
    }
@@ -376,8 +381,10 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case CSTIME: Process_printTime(str, this->cstime); return;
    case TIME: Process_printTime(str, this->utime + this->stime); return;
    case PERCENT_CPU: {
-      if (this->percent_cpu > 99.9) {
-         snprintf(buffer, n, "100. "); 
+      if (this->percent_cpu > 999.9) {
+         snprintf(buffer, n, "%4d ", (unsigned int)this->percent_cpu); 
+      } else if (this->percent_cpu > 99.9) {
+         snprintf(buffer, n, "%3d. ", (unsigned int)this->percent_cpu); 
       } else {
          snprintf(buffer, n, "%4.1f ", this->percent_cpu);
       }

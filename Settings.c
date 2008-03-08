@@ -55,6 +55,7 @@ Settings* Settings_new(ProcessList* pl, Header* header) {
          Header_defaultMeters(this->header);
          pl->hideKernelThreads = true;
          pl->highlightMegabytes = true;
+         pl->highlightThreads = false;
       }
    }
    return this;
@@ -137,6 +138,8 @@ bool Settings_read(Settings* this, char* fileName) {
          this->pl->highlightBaseName = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_megabytes")) {
          this->pl->highlightMegabytes = atoi(option[1]);
+      } else if (String_eq(option[0], "highlight_threads")) {
+         this->pl->highlightThreads = atoi(option[1]);
       } else if (String_eq(option[0], "header_margin")) {
          this->header->margin = atoi(option[1]);
       } else if (String_eq(option[0], "expand_system_time")) {
@@ -198,6 +201,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "shadow_other_users=%d\n", (int) this->pl->shadowOtherUsers);
    fprintf(fd, "highlight_base_name=%d\n", (int) this->pl->highlightBaseName);
    fprintf(fd, "highlight_megabytes=%d\n", (int) this->pl->highlightMegabytes);
+   fprintf(fd, "highlight_threads=%d\n", (int) this->pl->highlightThreads);
    fprintf(fd, "tree_view=%d\n", (int) this->pl->treeView);
    fprintf(fd, "header_margin=%d\n", (int) this->header->margin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->pl->detailedCPUTime);

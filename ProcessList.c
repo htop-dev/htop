@@ -119,6 +119,7 @@ typedef struct ProcessList_ {
    bool treeView;
    bool highlightBaseName;
    bool highlightMegabytes;
+   bool highlightThreads;
    bool detailedCPUTime;
    #ifdef DEBUG_PROC
    FILE* traceFile;
@@ -498,13 +499,15 @@ bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname,
    return true;
 }
 
-void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, float period) {
+bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* parent, float period) {
    DIR* dir;
    struct dirent* entry;
    Process* prototype = this->prototype;
 
    dir = opendir(dirname);
-   if (!dir) return;
+   if (!dir) return false;
+   int processors = this->processorCount;
+   bool showUserlandThreads = !this->hideUserlandThreads;
    while ((entry = readdir(dir)) != NULL) {
       char* name = entry->d_name;
       int pid;
@@ -521,34 +524,42 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
             isThread = true;
       }
 
-      if (pid > 0 && pid != parent) {
-         if (!this->hideUserlandThreads) {
-            char subdirname[MAX_NAME+1];
-            snprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
-   
-            ProcessList_processEntries(this, subdirname, pid, period);
-         }
+      if (pid > 0) {
 
          FILE* status;
          char statusfilename[MAX_NAME+1];
          char command[PROCESS_COMM_LEN + 1];
 
          Process* process = NULL;
-
-         assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
          Process* existingProcess = (Process*) Hashtable_get(this->processTable, pid);
+
          if (existingProcess) {
             assert(Vector_indexOf(this->processes, existingProcess, Process_pidCompare) != -1);
             process = existingProcess;
             assert(process->pid == pid);
          } else {
-            process = prototype;
-            assert(process->comm == NULL);
-            process->pid = pid;
+            if (parent && parent->pid == pid) {
+               process = parent;
+            } else {
+               process = prototype;
+               assert(process->comm == NULL);
+               process->pid = pid;
+            }
+         }
+
+         if (showUserlandThreads && (!parent || pid != parent->pid)) {
+            char subdirname[MAX_NAME+1];
+            snprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
+   
+            if (ProcessList_processEntries(this, subdirname, process, period))
+               continue;
+         }
+
+         process->updated = true;
+
+         if (!existingProcess)
             if (! ProcessList_readStatusFile(this, process, dirname, name))
                goto errorReadingProcess;
-         }
-         process->updated = true;
 
          snprintf(statusfilename, MAX_NAME, "%s/%s/statm", dirname, name);
          status = ProcessList_fopen(this, statusfilename, "r");
@@ -573,13 +584,14 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          snprintf(statusfilename, MAX_NAME, "%s/%s/stat", dirname, name);
          
          status = ProcessList_fopen(this, statusfilename, "r");
-         if (status == NULL) 
+         if (status == NULL)
             goto errorReadingProcess;
 
          int success = ProcessList_readStatFile(this, process, status, command);
          fclose(status);
-         if(!success)
+         if(!success) {
             goto errorReadingProcess;
+         }
 
          if(!existingProcess) {
             process->user = UsersTable_getRef(this->usersTable, process->st_uid);
@@ -624,8 +636,9 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
             fclose(status);
          }
 
-         process->percent_cpu = (process->utime + process->stime - lasttimes) / 
+         int percent_cpu = (process->utime + process->stime - lasttimes) / 
             period * 100.0;
+         process->percent_cpu = MAX(MIN(percent_cpu, processors*100.0), 0.0);
 
          process->percent_mem = (process->m_resident * PAGE_SIZE) / 
             (float)(this->totalMem) * 
@@ -637,7 +650,8 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
          }
 
          if (!existingProcess) {
-            ProcessList_add(this, Process_clone(process));
+            process = Process_clone(process);
+            ProcessList_add(this, process);
          }
 
          continue;
@@ -655,6 +669,7 @@ void ProcessList_processEntries(ProcessList* this, char* dirname, int parent, fl
       }
    }
    closedir(dir);
+   return true;
 }
 
 void ProcessList_scan(ProcessList* this) {
@@ -665,6 +680,7 @@ void ProcessList_scan(ProcessList* this) {
    char buffer[128];
    status = ProcessList_fopen(this, PROCMEMINFOFILE, "r");
    assert(status != NULL);
+   int processors = this->processorCount;
    while (!feof(status)) {
       fgets(buffer, 128, status);
 
@@ -701,7 +717,7 @@ void ProcessList_scan(ProcessList* this) {
    status = ProcessList_fopen(this, PROCSTATFILE, "r");
 
    assert(status != NULL);
-   for (int i = 0; i <= this->processorCount; i++) {
+   for (int i = 0; i <= processors; i++) {
       char buffer[256];
       int cpuid;
       unsigned long long int ioWait, irq, softIrq, steal;
@@ -755,7 +771,7 @@ void ProcessList_scan(ProcessList* this) {
       this->stealTime[i] = steal;
       this->totalTime[i] = totaltime;
    }
-   float period = (float)this->totalPeriod[0] / this->processorCount;
+   float period = (float)this->totalPeriod[0] / processors;
    fclose(status);
 
    // mark all process as "dirty"
@@ -766,8 +782,8 @@ void ProcessList_scan(ProcessList* this) {
    
    this->totalTasks = 0;
    this->runningTasks = 0;
-   
-   ProcessList_processEntries(this, PROCDIR, 0, period);
+
+   ProcessList_processEntries(this, PROCDIR, NULL, period);
    
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);

@@ -1,6 +1,12 @@
 
 What's new in version 0.7.1
 
+* BUGFIX: Fix display of CPU count for threaded processes.
+  When user threads are hidden, process now shows the
+  sum of processor usage for all processors. When user
+  threads are displayed, each thread shows its own
+  processor usage, including the root thread.
+  (thanks to Bert Wesarg for the report)
 * BUGFIX: avoid crashing when using many meters
   (thanks to David Cho for the report)
 
