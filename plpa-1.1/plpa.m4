@@ -148,24 +148,26 @@ AC_DEFUN([PLPA_SET_SYMBOL_PREFIX],[
 # Internals
 AC_DEFUN([_PLPA_INTERNAL_SETUP],[
 
-    AC_ARG_ENABLE([emulate],
-                    AC_HELP_STRING([--enable-emulate],
+    AC_ARG_ENABLE([plpa_emulate],
+                    AC_HELP_STRING([--enable-plpa-emulate],
                                    [Emulate __NR_sched_setaffinity and __NR_sched_getaffinity, to allow building on non-Linux systems (for testing)]))
-    if test "$enable_emulate" = "yes"; then
+    if test "$enable_plpa_emulate" = "yes"; then
         plpa_emulate=yes
     else
         plpa_emulate=no
     fi
 
-    # Included mode, or standalone?
-    AC_ARG_ENABLE([included-mode],
-                    AC_HELP_STRING([--enable-included-mode],
-                                   [Using --enable-included-mode puts the PLPA into "included" mode.  The default is --disable-included-mode, meaning that the PLPA is in "standalone" mode.]))
-    if test "$enable_included_mode" = "yes"; then
+dnl Hisham Muhammad: don't expose flags to htop's configure
+dnl 
+dnl     # Included mode, or standalone?
+dnl     AC_ARG_ENABLE([included-mode],
+dnl                     AC_HELP_STRING([--enable-included-mode],
+dnl                                    [Using --enable-included-mode puts the PLPA into "included" mode.  The default is --disable-included-mode, meaning that the PLPA is in "standalone" mode.]))
+dnl     if test "$enable_included_mode" = "yes"; then
         plpa_mode=included
-    else
-        plpa_mode=standalone
-    fi
+dnl     else
+dnl         plpa_mode=standalone
+dnl     fi
 
 dnl JMS: No fortran bindings yet
 dnl    # Fortran bindings, or no?
@@ -178,25 +180,30 @@ dnl    else
 dnl        plpa_fortran=no
 dnl    fi
 
-    # Build and install the executables or no?
-    AC_ARG_ENABLE([executables],
-                    AC_HELP_STRING([--disable-executables],
-                                   [Using --disable-executables disables building and installing the PLPA executables]))
-    if test "$enable_executables" = "yes" -o "$enable_executables" = ""; then
-        plpa_executables=yes
-    else
+dnl Hisham Muhammad: don't expose flags to htop's configure
+dnl 
+dnl     # Build and install the executables or no?
+dnl     AC_ARG_ENABLE([executables],
+dnl                     AC_HELP_STRING([--disable-executables],
+dnl                                    [Using --disable-executables disables building and installing the PLPA executables]))
+dnl     if test "$enable_executables" = "yes" -o "$enable_executables" = ""; then
+dnl         plpa_executables=yes
+dnl     else
         plpa_executables=no
-    fi
+dnl     fi
 
-    # Change the symbol prefix?
-    AC_ARG_WITH([plpa-symbol-prefix],
-                AC_HELP_STRING([--with-plpa-symbol-prefix=STRING],
-                               [STRING can be any valid C symbol name.  It will be prefixed to all public PLPA symbols.  Default: "plpa_"]))
-    if test "$with_plpa_symbol_prefix" = ""; then
+dnl Hisham Muhammad: don't expose flags to htop's configure
+dnl 
+dnl     # Change the symbol prefix?
+dnl     AC_ARG_WITH([plpa-symbol-prefix],
+dnl                 AC_HELP_STRING([--with-plpa-symbol-prefix=STRING],
+dnl                                [STRING can be any valid C symbol name.  It will be prefixed to all public PLPA symbols.  Default: "plpa_"]))
+dnl     if test "$with_plpa_symbol_prefix" = ""; then
         plpa_symbol_prefix_value=plpa_
-    else
-        plpa_symbol_prefix_value=$with_plpa_symbol_prefix
-    fi
+dnl     else
+dnl         plpa_symbol_prefix_value=$with_plpa_symbol_prefix
+dnl     fi
+
 ])dnl
 
 #-----------------------------------------------------------------------
