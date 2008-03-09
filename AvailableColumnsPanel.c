@@ -22,34 +22,14 @@ typedef struct AvailableColumnsPanel_ {
 
 }*/
 
-AvailableColumnsPanel* AvailableColumnsPanel_new(Settings* settings, Panel* columns, ScreenManager* scr) {
-   AvailableColumnsPanel* this = (AvailableColumnsPanel*) malloc(sizeof(AvailableColumnsPanel));
-   Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = AvailableColumnsPanel_delete;
-   
-   this->settings = settings;
-   this->scr = scr;
-   super->eventHandler = AvailableColumnsPanel_eventHandler;
-
-   Panel_setHeader(super, "Available Columns");
-
-   for (int i = 1; i < LAST_PROCESSFIELD; i++) {
-      if (i != COMM)
-         Panel_add(super, (Object*) ListItem_new(Process_fieldNames[i], 0));
-   }
-   this->columns = columns;
-   return this;
-}
-
-void AvailableColumnsPanel_delete(Object* object) {
+static void AvailableColumnsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) object;
    Panel_done(super);
    free(this);
 }
 
-HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
+static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) super;
    char* text = ((ListItem*) Panel_getSelected(super))->value;
    HandlerResult result = IGNORED;
@@ -68,4 +48,24 @@ HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
       }
    }
    return result;
+}
+
+AvailableColumnsPanel* AvailableColumnsPanel_new(Settings* settings, Panel* columns, ScreenManager* scr) {
+   AvailableColumnsPanel* this = (AvailableColumnsPanel*) malloc(sizeof(AvailableColumnsPanel));
+   Panel* super = (Panel*) this;
+   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
+   ((Object*)this)->delete = AvailableColumnsPanel_delete;
+   
+   this->settings = settings;
+   this->scr = scr;
+   super->eventHandler = AvailableColumnsPanel_eventHandler;
+
+   Panel_setHeader(super, "Available Columns");
+
+   for (int i = 1; i < LAST_PROCESSFIELD; i++) {
+      if (i != COMM)
+         Panel_add(super, (Object*) ListItem_new(Process_fieldNames[i], 0));
+   }
+   this->columns = columns;
+   return this;
 }

@@ -32,12 +32,6 @@ extern char* SIGNAL_CLASS;
 #define SIGNAL_CLASS NULL
 #endif
 
-Signal* Signal_new(char* name, int number);
-
-void Signal_delete(Object* cast);
-
-void Signal_display(Object* cast, RichString* out);
-
 int Signal_getSignalCount();
 
 Signal** Signal_getSignalTable();

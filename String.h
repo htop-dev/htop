@@ -19,33 +19,17 @@ in the source distribution for its full text.
 
 #define String_startsWith(s, match) (strstr((s), (match)) == (s))
 
-extern void String_delete(char* s);
-
 extern char* String_copy(char* orig);
 
 char* String_cat(char* s1, char* s2);
 
 char* String_trim(char* in);
 
-char* String_copyUpTo(char* orig, char upTo);
-
-char* String_sub(char* orig, int from, int to);
-
-void String_println(char* s);
-
-void String_print(char* s);
-
-void String_printInt(int i);
-
-void String_printPointer(void* p);
-
 extern int String_eq(const char* s1, const char* s2);
 
 char** String_split(char* s, char sep);
 
 void String_freeArray(char** s);
-
-int String_startsWith_i(char* s, char* match);
 
 int String_contains_i(char* s, char* match);
 

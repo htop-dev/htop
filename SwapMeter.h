@@ -26,8 +26,4 @@ extern int SwapMeter_attributes[];
 
 extern MeterType SwapMeter;
 
-void SwapMeter_setValues(Meter* this, char* buffer, int len);
-
-void SwapMeter_display(Object* cast, RichString* out);
-
 #endif

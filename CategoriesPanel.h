@@ -24,18 +24,8 @@ typedef struct CategoriesPanel_ {
 } CategoriesPanel;
 
 
-CategoriesPanel* CategoriesPanel_new(Settings* settings, ScreenManager* scr);
-
-void CategoriesPanel_delete(Object* object);
-
-HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch);
-
 void CategoriesPanel_makeMetersPage(CategoriesPanel* this);
 
-void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this);
-
-void CategoriesPanel_makeColorsPage(CategoriesPanel* this);
-
-void CategoriesPanel_makeColumnsPage(CategoriesPanel* this);
+CategoriesPanel* CategoriesPanel_new(Settings* settings, ScreenManager* scr);
 
 #endif

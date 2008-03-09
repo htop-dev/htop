@@ -218,7 +218,9 @@ inline int Vector_size(Vector* this) {
    return this->items;
 }
 
-void Vector_merge(Vector* this, Vector* v2) {
+/*
+
+static void Vector_merge(Vector* this, Vector* v2) {
    int i;
    assert(Vector_isConsistent(this));
    
@@ -228,6 +230,8 @@ void Vector_merge(Vector* this, Vector* v2) {
    Vector_delete(v2);
    assert(Vector_isConsistent(this));
 }
+
+*/
 
 void Vector_add(Vector* this, void* data_) {
    assert(data_ && ((Object*)data_)->class == this->vectorType);
@@ -252,7 +256,9 @@ inline int Vector_indexOf(Vector* this, void* search_, Object_Compare compare) {
    return -1;
 }
 
-void Vector_foreach(Vector* this, Vector_procedure f) {
+/*
+
+static void Vector_foreach(Vector* this, Vector_procedure f) {
    int i;
    assert(Vector_isConsistent(this));
 
@@ -260,3 +266,5 @@ void Vector_foreach(Vector* this, Vector_procedure f) {
       f(this->array[i]);
    assert(Vector_isConsistent(this));
 }
+
+*/

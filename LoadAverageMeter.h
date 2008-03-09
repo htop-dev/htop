@@ -17,18 +17,10 @@ in the source distribution for its full text.
 
 extern int LoadAverageMeter_attributes[];
 
-extern MeterType LoadAverageMeter;
-
 extern int LoadMeter_attributes[];
 
+extern MeterType LoadAverageMeter;
+
 extern MeterType LoadMeter;
-
-void LoadAverageMeter_setValues(Meter* this, char* buffer, int size);
-
-void LoadAverageMeter_display(Object* cast, RichString* out);
-
-void LoadMeter_setValues(Meter* this, char* buffer, int size);
-
-void LoadMeter_display(Object* cast, RichString* out);
 
 #endif

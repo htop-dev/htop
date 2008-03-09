@@ -23,10 +23,6 @@ in the source distribution for its full text.
 
 extern int CPUMeter_attributes[];
 
-extern MeterType CPUMeter;
-
-extern MeterType AllCPUsMeter;
-
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
@@ -34,18 +30,8 @@ extern MeterType AllCPUsMeter;
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-void CPUMeter_init(Meter* this);
+extern MeterType CPUMeter;
 
-void CPUMeter_setValues(Meter* this, char* buffer, int size);
-
-void CPUMeter_display(Object* cast, RichString* out);
-
-void AllCPUsMeter_init(Meter* this);
-
-void AllCPUsMeter_done(Meter* this);
-
-void AllCPUsMeter_setMode(Meter* this, int mode);
-
-void AllCPUsMeter_draw(Meter* this, int x, int y, int w);
+extern MeterType AllCPUsMeter;
 
 #endif

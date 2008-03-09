@@ -21,6 +21,4 @@ extern int UptimeMeter_attributes[];
 
 extern MeterType UptimeMeter;
 
-void UptimeMeter_setValues(Meter* this, char* buffer, int len);
-
 #endif

@@ -31,7 +31,23 @@ char* SIGNAL_CLASS = "Signal";
 #define SIGNAL_CLASS NULL
 #endif
 
-Signal* Signal_new(char* name, int number) {
+static void Signal_delete(Object* cast) {
+   Signal* this = (Signal*)cast;
+   assert (this != NULL);
+   // names are string constants, so we're not deleting them.
+   free(this);
+}
+
+static void Signal_display(Object* cast, RichString* out) {
+   Signal* this = (Signal*)cast;
+   assert (this != NULL);
+   
+   char buffer[31];
+   snprintf(buffer, 30, "%2d %s", this->number, this->name);
+   RichString_write(out, CRT_colors[DEFAULT_COLOR], buffer);
+}
+
+static Signal* Signal_new(char* name, int number) {
    Signal* this = malloc(sizeof(Signal));
    Object_setClass(this, SIGNAL_CLASS);
    ((Object*)this)->display = Signal_display;
@@ -39,22 +55,6 @@ Signal* Signal_new(char* name, int number) {
    this->name = name;
    this->number = number;
    return this;
-}
-
-void Signal_delete(Object* cast) {
-   Signal* this = (Signal*)cast;
-   assert (this != NULL);
-   // names are string constants, so we're not deleting them.
-   free(this);
-}
-
-void Signal_display(Object* cast, RichString* out) {
-   Signal* this = (Signal*)cast;
-   assert (this != NULL);
-   
-   char buffer[31];
-   snprintf(buffer, 30, "%2d %s", this->number, this->name);
-   RichString_write(out, CRT_colors[DEFAULT_COLOR], buffer);
 }
 
 int Signal_getSignalCount() {

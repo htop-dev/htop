@@ -14,6 +14,4 @@ Panel* AffinityPanel_new(int processorCount, unsigned long mask);
 
 unsigned long AffinityPanel_getAffinity(Panel* this);
 
-HandlerResult AffinityPanel_eventHandler(Panel* this, int ch);
-
 #endif

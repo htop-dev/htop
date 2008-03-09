@@ -47,8 +47,6 @@ extern char* OBJECT_CLASS;
 
 void Object_setClass(void* this, char* class);
 
-void Object_display(Object* this, RichString* out);
-
 #endif
 
 #endif

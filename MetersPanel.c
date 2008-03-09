@@ -20,32 +20,14 @@ typedef struct MetersPanel_ {
 
 }*/
 
-MetersPanel* MetersPanel_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr) {
-   MetersPanel* this = (MetersPanel*) malloc(sizeof(MetersPanel));
-   Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = MetersPanel_delete;
-
-   this->settings = settings;
-   this->meters = meters;
-   this->scr = scr;
-   super->eventHandler = MetersPanel_EventHandler;
-   Panel_setHeader(super, header);
-   for (int i = 0; i < Vector_size(meters); i++) {
-      Meter* meter = (Meter*) Vector_get(meters, i);
-      Panel_add(super, (Object*) Meter_toListItem(meter));
-   }
-   return this;
-}
-
-void MetersPanel_delete(Object* object) {
+static void MetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    MetersPanel* this = (MetersPanel*) object;
    Panel_done(super);
    free(this);
 }
 
-HandlerResult MetersPanel_EventHandler(Panel* super, int ch) {
+static HandlerResult MetersPanel_EventHandler(Panel* super, int ch) {
    MetersPanel* this = (MetersPanel*) super;
    
    int selected = Panel_getSelectedIndex(super);
@@ -102,4 +84,22 @@ HandlerResult MetersPanel_EventHandler(Panel* super, int ch) {
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
    }
    return result;
+}
+
+MetersPanel* MetersPanel_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr) {
+   MetersPanel* this = (MetersPanel*) malloc(sizeof(MetersPanel));
+   Panel* super = (Panel*) this;
+   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
+   ((Object*)this)->delete = MetersPanel_delete;
+
+   this->settings = settings;
+   this->meters = meters;
+   this->scr = scr;
+   super->eventHandler = MetersPanel_EventHandler;
+   Panel_setHeader(super, header);
+   for (int i = 0; i < Vector_size(meters); i++) {
+      Meter* meter = (Meter*) Vector_get(meters, i);
+      Panel_add(super, (Object*) Meter_toListItem(meter));
+   }
+   return this;
 }

@@ -37,8 +37,6 @@ TraceScreen* TraceScreen_new(Process* process);
 
 void TraceScreen_delete(TraceScreen* this);
 
-void TraceScreen_draw(TraceScreen* this);
-
 void TraceScreen_run(TraceScreen* this);
 
 #endif

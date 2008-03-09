@@ -127,10 +127,6 @@ void CRT_disableDelay();
 
 void CRT_enableDelay();
 
-void CRT_handleSIGSEGV(int signal);
-
-void CRT_handleSIGTERM(int signal);
-
 void CRT_setColors(int colorScheme);
 
 #endif

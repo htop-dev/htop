@@ -23,41 +23,7 @@ typedef struct AvailableMetersPanel_ {
 
 }*/
 
-AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr) {
-   AvailableMetersPanel* this = (AvailableMetersPanel*) malloc(sizeof(AvailableMetersPanel));
-   Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = AvailableMetersPanel_delete;
-   
-   this->settings = settings;
-   this->leftPanel = leftMeters;
-   this->rightPanel = rightMeters;
-   this->scr = scr;
-   super->eventHandler = AvailableMetersPanel_EventHandler;
-
-   Panel_setHeader(super, "Available meters");
-   for (int i = 1; Meter_types[i]; i++) {
-      MeterType* type = Meter_types[i];
-      if (type != &CPUMeter) {
-         Panel_add(super, (Object*) ListItem_new(type->uiName, i << 16));
-      }
-   }
-   MeterType* type = &CPUMeter;
-   int processors = settings->pl->processorCount;
-   if (processors > 1) {
-      Panel_add(super, (Object*) ListItem_new("CPU average", 0));
-      for (int i = 1; i <= processors; i++) {
-         char buffer[50];
-         sprintf(buffer, "%s %d", type->uiName, i);
-         Panel_add(super, (Object*) ListItem_new(buffer, i));
-      }
-   } else {
-      Panel_add(super, (Object*) ListItem_new("CPU", 1));
-   }
-   return this;
-}
-
-void AvailableMetersPanel_delete(Object* object) {
+static void AvailableMetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    AvailableMetersPanel* this = (AvailableMetersPanel*) object;
    Panel_done(super);
@@ -69,7 +35,7 @@ static inline void AvailableMetersPanel_addHeader(Header* header, Panel* panel, 
    Panel_add(panel, (Object*) Meter_toListItem(meter));
 }
 
-HandlerResult AvailableMetersPanel_EventHandler(Panel* super, int ch) {
+static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
    Header* header = this->settings->header;
    
@@ -103,4 +69,38 @@ HandlerResult AvailableMetersPanel_EventHandler(Panel* super, int ch) {
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
    }
    return result;
+}
+
+AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr) {
+   AvailableMetersPanel* this = (AvailableMetersPanel*) malloc(sizeof(AvailableMetersPanel));
+   Panel* super = (Panel*) this;
+   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
+   ((Object*)this)->delete = AvailableMetersPanel_delete;
+   
+   this->settings = settings;
+   this->leftPanel = leftMeters;
+   this->rightPanel = rightMeters;
+   this->scr = scr;
+   super->eventHandler = AvailableMetersPanel_eventHandler;
+
+   Panel_setHeader(super, "Available meters");
+   for (int i = 1; Meter_types[i]; i++) {
+      MeterType* type = Meter_types[i];
+      if (type != &CPUMeter) {
+         Panel_add(super, (Object*) ListItem_new(type->uiName, i << 16));
+      }
+   }
+   MeterType* type = &CPUMeter;
+   int processors = settings->pl->processorCount;
+   if (processors > 1) {
+      Panel_add(super, (Object*) ListItem_new("CPU average", 0));
+      for (int i = 1; i <= processors; i++) {
+         char buffer[50];
+         sprintf(buffer, "%s %d", type->uiName, i);
+         Panel_add(super, (Object*) ListItem_new(buffer, i));
+      }
+   } else {
+      Panel_add(super, (Object*) ListItem_new("CPU", 1));
+   }
+   return this;
 }

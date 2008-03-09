@@ -26,8 +26,4 @@ typedef struct AvailableMetersPanel_ {
 
 AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr);
 
-void AvailableMetersPanel_delete(Object* object);
-
-HandlerResult AvailableMetersPanel_EventHandler(Panel* super, int ch);
-
 #endif

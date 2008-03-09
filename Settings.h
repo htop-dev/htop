@@ -28,12 +28,10 @@ typedef struct Settings_ {
 } Settings;
 
 
-Settings* Settings_new(ProcessList* pl, Header* header);
-
 void Settings_delete(Settings* this);
 
-bool Settings_read(Settings* this, char* fileName);
-
 bool Settings_write(Settings* this);
+
+Settings* Settings_new(ProcessList* pl, Header* header);
 
 #endif

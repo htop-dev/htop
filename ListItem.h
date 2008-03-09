@@ -34,10 +34,6 @@ ListItem* ListItem_new(char* value, int key);
 
 void ListItem_append(ListItem* this, char* text);
 
-void ListItem_delete(Object* cast);
-
-void ListItem_display(Object* cast, RichString* out);
-
 const char* ListItem_getRef(ListItem* this);
 
 int ListItem_compare(const void* cast1, const void* cast2);

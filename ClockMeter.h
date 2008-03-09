@@ -19,6 +19,4 @@ extern int ClockMeter_attributes[];
 
 extern MeterType ClockMeter;
 
-void ClockMeter_setValues(Meter* this, char* buffer, int size);
-
 #endif

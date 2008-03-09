@@ -98,12 +98,6 @@ Panel* ScreenManager_remove(ScreenManager* this, int index) {
    return panel;
 }
 
-void ScreenManager_setFunctionBar(ScreenManager* this, FunctionBar* fuBar) {
-   if (this->owner && this->fuBar)
-      FunctionBar_delete((Object*)this->fuBar);
-   this->fuBar = fuBar;
-}
-
 void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
    this->x1 = x1;
    this->y1 = y1;

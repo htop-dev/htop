@@ -29,6 +29,21 @@ char* LISTITEM_CLASS = "ListItem";
 #define LISTITEM_CLASS NULL
 #endif
 
+static void ListItem_delete(Object* cast) {
+   ListItem* this = (ListItem*)cast;
+   free(this->value);
+   free(this);
+}
+
+static void ListItem_display(Object* cast, RichString* out) {
+   ListItem* this = (ListItem*)cast;
+   assert (this != NULL);
+   int len = strlen(this->value)+1;
+   char buffer[len+1];
+   snprintf(buffer, len, "%s", this->value);
+   RichString_write(out, CRT_colors[DEFAULT_COLOR], buffer);
+}
+
 ListItem* ListItem_new(char* value, int key) {
    ListItem* this = malloc(sizeof(ListItem));
    Object_setClass(this, LISTITEM_CLASS);
@@ -44,21 +59,6 @@ void ListItem_append(ListItem* this, char* text) {
    sprintf(buf, "%s%s", this->value, text);
    free(this->value);
    this->value = buf;
-}
-
-void ListItem_delete(Object* cast) {
-   ListItem* this = (ListItem*)cast;
-   free(this->value);
-   free(this);
-}
-
-void ListItem_display(Object* cast, RichString* out) {
-   ListItem* this = (ListItem*)cast;
-   assert (this != NULL);
-   int len = strlen(this->value)+1;
-   char buffer[len+1];
-   snprintf(buffer, len, "%s", this->value);
-   RichString_write(out, CRT_colors[DEFAULT_COLOR], buffer);
 }
 
 const char* ListItem_getRef(ListItem* this) {

@@ -18,19 +18,7 @@ int UptimeMeter_attributes[] = {
    UPTIME
 };
 
-MeterType UptimeMeter = {
-   .setValues = UptimeMeter_setValues, 
-   .display = NULL,
-   .mode = TEXT_METERMODE,
-   .items = 1,
-   .total = 100.0,
-   .attributes = UptimeMeter_attributes,
-   .name = "Uptime",
-   .uiName = "Uptime",
-   .caption = "Uptime: "
-};
-
-void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
+static void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
    double uptime;
    FILE* fd = fopen(PROCDIR "/uptime", "r");
    fscanf(fd, "%lf", &uptime);
@@ -56,3 +44,15 @@ void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
    }
    snprintf(buffer, len, "%s%02d:%02d:%02d", daysbuf, hours, minutes, seconds);
 }
+
+MeterType UptimeMeter = {
+   .setValues = UptimeMeter_setValues, 
+   .display = NULL,
+   .mode = TEXT_METERMODE,
+   .items = 1,
+   .total = 100.0,
+   .attributes = UptimeMeter_attributes,
+   .name = "Uptime",
+   .uiName = "Uptime",
+   .caption = "Uptime: "
+};

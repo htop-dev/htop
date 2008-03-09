@@ -23,10 +23,6 @@ typedef struct SignalsPanel_ {
 
 SignalsPanel* SignalsPanel_new(int x, int y, int w, int h);
 
-void SignalsPanel_delete(Object* object);
-
 void SignalsPanel_reset(SignalsPanel* this);
-
-HandlerResult SignalsPanel_eventHandler(Panel* super, int ch);
 
 #endif

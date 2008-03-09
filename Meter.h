@@ -114,12 +114,6 @@ extern char* METER_CLASS;
 
 extern MeterType* Meter_types[];
 
-#ifdef USE_FUNKY_MODES
-
-#endif
-
-extern MeterMode* Meter_modes[];
-
 Meter* Meter_new(ProcessList* pl, int param, MeterType* type);
 
 void Meter_delete(Object* cast);
@@ -132,11 +126,7 @@ ListItem* Meter_toListItem(Meter* this);
 
 /* ---------- TextMeterMode ---------- */
 
-void TextMeterMode_draw(Meter* this, int x, int y, int w);
-
 /* ---------- BarMeterMode ---------- */
-
-void BarMeterMode_draw(Meter* this, int x, int y, int w);
 
 #ifdef USE_FUNKY_MODES
 
@@ -144,12 +134,14 @@ void BarMeterMode_draw(Meter* this, int x, int y, int w);
 
 #define DrawDot(a,y,c) do { attrset(a); mvaddch(y, x+k, c); } while(0)
 
-void GraphMeterMode_draw(Meter* this, int x, int y, int w);
-
 /* ---------- LEDMeterMode ---------- */
 
-void LEDMeterMode_draw(Meter* this, int x, int y, int w);
+#endif
+
+#ifdef USE_FUNKY_MODES
 
 #endif
+
+extern MeterMode* Meter_modes[];
 
 #endif

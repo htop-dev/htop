@@ -26,8 +26,4 @@ extern int MemoryMeter_attributes[];
 
 extern MeterType MemoryMeter;
 
-void MemoryMeter_setValues(Meter* this, char* buffer, int size);
-
-void MemoryMeter_display(Object* cast, RichString* out);
-
 #endif

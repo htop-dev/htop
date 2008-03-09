@@ -23,9 +23,4 @@ typedef struct DisplayOptionsPanel_ {
 
 DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* scr);
 
-void DisplayOptionsPanel_delete(Object* object);
-
-HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch);
-
-
 #endif

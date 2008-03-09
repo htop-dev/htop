@@ -27,40 +27,6 @@ typedef struct Settings_ {
 
 }*/
 
-Settings* Settings_new(ProcessList* pl, Header* header) {
-   Settings* this = malloc(sizeof(Settings));
-   this->pl = pl;
-   this->header = header;
-   char* home;
-   char* rcfile;
-   home = getenv("HOME_ETC");
-   if (!home) home = getenv("HOME");
-   if (!home) home = "";
-   rcfile = getenv("HOMERC");
-   if (!rcfile)
-      this->userSettings = String_cat(home, "/.htoprc");
-   else
-      this->userSettings = String_copy(rcfile);
-   this->colorScheme = 0;
-   this->changed = false;
-   this->delay = DEFAULT_DELAY;
-   bool ok = Settings_read(this, this->userSettings);
-   if (!ok) {
-      this->changed = true;
-      // TODO: how to get SYSCONFDIR correctly through Autoconf?
-      char* systemSettings = String_cat(SYSCONFDIR, "/htoprc");
-      ok = Settings_read(this, systemSettings);
-      free(systemSettings);
-      if (!ok) {
-         Header_defaultMeters(this->header);
-         pl->hideKernelThreads = true;
-         pl->highlightMegabytes = true;
-         pl->highlightThreads = false;
-      }
-   }
-   return this;
-}
-
 void Settings_delete(Settings* this) {
    free(this->userSettings);
    free(this);
@@ -89,7 +55,7 @@ static void Settings_readMeterModes(Settings* this, char* line, HeaderSide side)
    String_freeArray(ids);
 }
 
-bool Settings_read(Settings* this, char* fileName) {
+static bool Settings_read(Settings* this, char* fileName) {
    // TODO: implement File object and make
    // file I/O object-oriented.
    FILE* fd;
@@ -231,4 +197,38 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "\n");
    fclose(fd);
    return true;
+}
+
+Settings* Settings_new(ProcessList* pl, Header* header) {
+   Settings* this = malloc(sizeof(Settings));
+   this->pl = pl;
+   this->header = header;
+   char* home;
+   char* rcfile;
+   home = getenv("HOME_ETC");
+   if (!home) home = getenv("HOME");
+   if (!home) home = "";
+   rcfile = getenv("HOMERC");
+   if (!rcfile)
+      this->userSettings = String_cat(home, "/.htoprc");
+   else
+      this->userSettings = String_copy(rcfile);
+   this->colorScheme = 0;
+   this->changed = false;
+   this->delay = DEFAULT_DELAY;
+   bool ok = Settings_read(this, this->userSettings);
+   if (!ok) {
+      this->changed = true;
+      // TODO: how to get SYSCONFDIR correctly through Autoconf?
+      char* systemSettings = String_cat(SYSCONFDIR, "/htoprc");
+      ok = Settings_read(this, systemSettings);
+      free(systemSettings);
+      if (!ok) {
+         Header_defaultMeters(this->header);
+         pl->hideKernelThreads = true;
+         pl->highlightMegabytes = true;
+         pl->highlightThreads = false;
+      }
+   }
+   return this;
 }

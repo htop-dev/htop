@@ -49,8 +49,6 @@ void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int
 
 Panel* ScreenManager_remove(ScreenManager* this, int index);
 
-void ScreenManager_setFunctionBar(ScreenManager* this, FunctionBar* fuBar);
-
 void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2);
 
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey);

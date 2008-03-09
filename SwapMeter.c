@@ -23,26 +23,14 @@ int SwapMeter_attributes[] = {
    SWAP
 };
 
-MeterType SwapMeter = {
-   .setValues = SwapMeter_setValues, 
-   .display = SwapMeter_display,
-   .mode = BAR_METERMODE,
-   .items = 1,
-   .total = 100.0,
-   .attributes = SwapMeter_attributes,
-   .name = "Swap",
-   .uiName = "Swap",
-   .caption = "Swp"
-};
-
-void SwapMeter_setValues(Meter* this, char* buffer, int len) {
+static void SwapMeter_setValues(Meter* this, char* buffer, int len) {
    long int usedSwap = this->pl->usedSwap;
    this->total = this->pl->totalSwap;
    this->values[0] = usedSwap;
    snprintf(buffer, len, "%ld/%ldMB", (long int) usedSwap / 1024, (long int) this->total / 1024);
 }
 
-void SwapMeter_display(Object* cast, RichString* out) {
+static void SwapMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
    long int swap = (long int) this->values[0];
@@ -54,3 +42,15 @@ void SwapMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[METER_TEXT], "used:");
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
 }
+
+MeterType SwapMeter = {
+   .setValues = SwapMeter_setValues, 
+   .display = SwapMeter_display,
+   .mode = BAR_METERMODE,
+   .items = 1,
+   .total = 100.0,
+   .attributes = SwapMeter_attributes,
+   .name = "Swap",
+   .uiName = "Swap",
+   .caption = "Swp"
+};

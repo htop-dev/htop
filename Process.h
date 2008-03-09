@@ -150,13 +150,15 @@ extern char* PROCESS_CLASS;
 
 extern char *Process_fieldNames[];
 
-Process* Process_new(struct ProcessList_ *pl);
-
-Process* Process_clone(Process* this);
+#define ONE_K 1024
+#define ONE_M (ONE_K * ONE_K)
+#define ONE_G (ONE_M * ONE_K)
 
 void Process_delete(Object* cast);
 
-void Process_display(Object* cast, RichString* out);
+Process* Process_new(struct ProcessList_ *pl);
+
+Process* Process_clone(Process* this);
 
 void Process_toggleTag(Process* this);
 
@@ -167,12 +169,6 @@ unsigned long Process_getAffinity(Process* this);
 bool Process_setAffinity(Process* this, unsigned long mask);
 
 void Process_sendSignal(Process* this, int signal);
-
-#define ONE_K 1024
-#define ONE_M (ONE_K * ONE_K)
-#define ONE_G (ONE_M * ONE_K)
-
-void Process_writeField(Process* this, RichString* str, ProcessField field);
 
 int Process_pidCompare(const void* v1, const void* v2);
 

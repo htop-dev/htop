@@ -34,7 +34,7 @@ struct Hashtable_ {
 
 #ifdef DEBUG
 
-bool Hashtable_isConsistent(Hashtable* this) {
+static bool Hashtable_isConsistent(Hashtable* this) {
    int items = 0;
    for (int i = 0; i < this->size; i++) {
       HashtableItem* bucket = this->buckets[i];
@@ -61,7 +61,7 @@ int Hashtable_count(Hashtable* this) {
 
 #endif
 
-HashtableItem* HashtableItem_new(unsigned int key, void* value) {
+static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
    HashtableItem* this;
    
    this = (HashtableItem*) malloc(sizeof(HashtableItem));
@@ -97,11 +97,6 @@ void Hashtable_delete(Hashtable* this) {
    }
    free(this->buckets);
    free(this);
-}
-
-inline int Hashtable_size(Hashtable* this) {
-   assert(Hashtable_isConsistent(this));
-   return this->items;
 }
 
 void Hashtable_put(Hashtable* this, unsigned int key, void* value) {

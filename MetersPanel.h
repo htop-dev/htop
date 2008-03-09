@@ -23,8 +23,4 @@ typedef struct MetersPanel_ {
 
 MetersPanel* MetersPanel_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr);
 
-void MetersPanel_delete(Object* object);
-
-HandlerResult MetersPanel_EventHandler(Panel* super, int ch);
-
 #endif

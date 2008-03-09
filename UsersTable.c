@@ -47,10 +47,6 @@ char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
    return name;
 }
 
-inline int UsersTable_size(UsersTable* this) {
-   return (Hashtable_size(this->users));
-}
-
 inline void UsersTable_foreach(UsersTable* this, Hashtable_PairFunction f, void* userData) {
    Hashtable_foreach(this->users, f, userData);
 }

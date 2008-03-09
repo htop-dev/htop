@@ -35,19 +35,13 @@ struct Hashtable_ {
 
 #ifdef DEBUG
 
-bool Hashtable_isConsistent(Hashtable* this);
-
 int Hashtable_count(Hashtable* this);
 
 #endif
 
-HashtableItem* HashtableItem_new(unsigned int key, void* value);
-
 Hashtable* Hashtable_new(int size, bool owner);
 
 void Hashtable_delete(Hashtable* this);
-
-extern int Hashtable_size(Hashtable* this);
 
 void Hashtable_put(Hashtable* this, unsigned int key, void* value);
 

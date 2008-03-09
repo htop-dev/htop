@@ -160,91 +160,6 @@ char *Process_fieldNames[] = {
 
 static int Process_getuid = -1;
 
-Process* Process_new(struct ProcessList_ *pl) {
-   Process* this = calloc(sizeof(Process), 1);
-   Object_setClass(this, PROCESS_CLASS);
-   ((Object*)this)->display = Process_display;
-   ((Object*)this)->delete = Process_delete;
-   this->pid = 0;
-   this->pl = pl;
-   this->tag = false;
-   this->updated = false;
-   this->utime = 0;
-   this->stime = 0;
-   this->comm = NULL;
-   this->indent = 0;
-   if (Process_getuid == -1) Process_getuid = getuid();
-   return this;
-}
-
-Process* Process_clone(Process* this) {
-   Process* clone = malloc(sizeof(Process));
-   #if HAVE_TASKSTATS
-   this->io_rchar = 0;
-   this->io_wchar = 0;
-   this->io_syscr = 0;
-   this->io_syscw = 0;
-   this->io_read_bytes = 0;
-   this->io_rate_read_bps = 0;
-   this->io_rate_read_time = 0;
-   this->io_write_bytes = 0;
-   this->io_rate_write_bps = 0;
-   this->io_rate_write_time = 0;
-   this->io_cancelled_write_bytes = 0;
-   #endif
-   memcpy(clone, this, sizeof(Process));
-   this->comm = NULL;
-   this->pid = 0;
-   return clone;
-}
-
-void Process_delete(Object* cast) {
-   Process* this = (Process*) cast;
-   assert (this != NULL);
-   if (this->comm) free(this->comm);
-   free(this);
-}
-
-void Process_display(Object* cast, RichString* out) {
-   Process* this = (Process*) cast;
-   ProcessField* fields = this->pl->fields;
-   RichString_init(out);
-   for (int i = 0; fields[i]; i++)
-      Process_writeField(this, out, fields[i]);
-   if (this->pl->shadowOtherUsers && this->st_uid != Process_getuid)
-      RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
-   if (this->tag == true)
-      RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
-   assert(out->len > 0);
-}
-
-void Process_toggleTag(Process* this) {
-   this->tag = this->tag == true ? false : true;
-}
-
-bool Process_setPriority(Process* this, int priority) {
-   int old_prio = getpriority(PRIO_PROCESS, this->pid);
-   int err = setpriority(PRIO_PROCESS, this->pid, priority);
-   if (err == 0 && old_prio != getpriority(PRIO_PROCESS, this->pid)) {
-      this->nice = priority;
-   }
-   return (err == 0);
-}
-
-unsigned long Process_getAffinity(Process* this) {
-   unsigned long mask = 0;
-   plpa_sched_getaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask);
-   return mask;
-}
-
-bool Process_setAffinity(Process* this, unsigned long mask) {
-   return (plpa_sched_setaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask) == 0);
-}
-
-void Process_sendSignal(Process* this, int signal) {
-   kill(this->pid, signal);
-}
-
 #define ONE_K 1024
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
@@ -315,7 +230,7 @@ static inline void Process_writeCommand(Process* this, int attr, int baseattr, R
    }
 }
 
-void Process_writeField(Process* this, RichString* str, ProcessField field) {
+static void Process_writeField(Process* this, RichString* str, ProcessField field) {
    char buffer[PROCESS_COMM_LEN];
    int attr = CRT_colors[DEFAULT_COLOR];
    int baseattr = CRT_colors[PROCESS_BASENAME];
@@ -448,6 +363,91 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       snprintf(buffer, n, "- ");
    }
    RichString_append(str, attr, buffer);
+}
+
+static void Process_display(Object* cast, RichString* out) {
+   Process* this = (Process*) cast;
+   ProcessField* fields = this->pl->fields;
+   RichString_init(out);
+   for (int i = 0; fields[i]; i++)
+      Process_writeField(this, out, fields[i]);
+   if (this->pl->shadowOtherUsers && this->st_uid != Process_getuid)
+      RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
+   if (this->tag == true)
+      RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
+   assert(out->len > 0);
+}
+
+void Process_delete(Object* cast) {
+   Process* this = (Process*) cast;
+   assert (this != NULL);
+   if (this->comm) free(this->comm);
+   free(this);
+}
+
+Process* Process_new(struct ProcessList_ *pl) {
+   Process* this = calloc(sizeof(Process), 1);
+   Object_setClass(this, PROCESS_CLASS);
+   ((Object*)this)->display = Process_display;
+   ((Object*)this)->delete = Process_delete;
+   this->pid = 0;
+   this->pl = pl;
+   this->tag = false;
+   this->updated = false;
+   this->utime = 0;
+   this->stime = 0;
+   this->comm = NULL;
+   this->indent = 0;
+   if (Process_getuid == -1) Process_getuid = getuid();
+   return this;
+}
+
+Process* Process_clone(Process* this) {
+   Process* clone = malloc(sizeof(Process));
+   #if HAVE_TASKSTATS
+   this->io_rchar = 0;
+   this->io_wchar = 0;
+   this->io_syscr = 0;
+   this->io_syscw = 0;
+   this->io_read_bytes = 0;
+   this->io_rate_read_bps = 0;
+   this->io_rate_read_time = 0;
+   this->io_write_bytes = 0;
+   this->io_rate_write_bps = 0;
+   this->io_rate_write_time = 0;
+   this->io_cancelled_write_bytes = 0;
+   #endif
+   memcpy(clone, this, sizeof(Process));
+   this->comm = NULL;
+   this->pid = 0;
+   return clone;
+}
+
+void Process_toggleTag(Process* this) {
+   this->tag = this->tag == true ? false : true;
+}
+
+bool Process_setPriority(Process* this, int priority) {
+   int old_prio = getpriority(PRIO_PROCESS, this->pid);
+   int err = setpriority(PRIO_PROCESS, this->pid, priority);
+   if (err == 0 && old_prio != getpriority(PRIO_PROCESS, this->pid)) {
+      this->nice = priority;
+   }
+   return (err == 0);
+}
+
+unsigned long Process_getAffinity(Process* this) {
+   unsigned long mask = 0;
+   plpa_sched_getaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask);
+   return mask;
+}
+
+bool Process_setAffinity(Process* this, unsigned long mask) {
+   return (plpa_sched_setaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask) == 0);
+}
+
+void Process_sendSignal(Process* this, int signal) {
+   kill(this->pid, signal);
 }
 
 int Process_pidCompare(const void* v1, const void* v2) {

@@ -23,19 +23,7 @@ int MemoryMeter_attributes[] = {
    MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE
 };
 
-MeterType MemoryMeter = {
-   .setValues = MemoryMeter_setValues, 
-   .display = MemoryMeter_display,
-   .mode = BAR_METERMODE,
-   .items = 3,
-   .total = 100.0,
-   .attributes = MemoryMeter_attributes,
-   "Memory",
-   "Memory",
-   "Mem"
-};
-
-void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
+static void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
    long int usedMem = this->pl->usedMem;
    long int buffersMem = this->pl->buffersMem;
    long int cachedMem = this->pl->cachedMem;
@@ -47,7 +35,7 @@ void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
    snprintf(buffer, size, "%ld/%ldMB", (long int) usedMem / 1024, (long int) this->total / 1024);
 }
 
-void MemoryMeter_display(Object* cast, RichString* out) {
+static void MemoryMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
    int div = 1024; char* format = "%ldM ";
@@ -69,3 +57,15 @@ void MemoryMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[METER_TEXT], "cache:");
    RichString_append(out, CRT_colors[MEMORY_CACHE], buffer);
 }
+
+MeterType MemoryMeter = {
+   .setValues = MemoryMeter_setValues, 
+   .display = MemoryMeter_display,
+   .mode = BAR_METERMODE,
+   .items = 3,
+   .total = 100.0,
+   .attributes = MemoryMeter_attributes,
+   "Memory",
+   "Memory",
+   "Mem"
+};

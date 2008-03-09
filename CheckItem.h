@@ -31,12 +31,8 @@ extern char* CHECKITEM_CLASS;
 
 CheckItem* CheckItem_new(char* text, bool* ref, bool value);
 
-void CheckItem_delete(Object* cast);
-
 void CheckItem_set(CheckItem* this, bool value);
 
 bool CheckItem_get(CheckItem* this);
-
-void CheckItem_display(Object* cast, RichString* out);
 
 #endif

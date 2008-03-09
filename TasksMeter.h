@@ -21,8 +21,4 @@ extern int TasksMeter_attributes[];
 
 extern MeterType TasksMeter;
 
-void TasksMeter_setValues(Meter* this, char* buffer, int len);
-
-void TasksMeter_display(Object* cast, RichString* out);
-
 #endif

@@ -295,12 +295,7 @@ RichString ProcessList_printHeader(ProcessList* this) {
    return out;
 }
 
-
-void ProcessList_prune(ProcessList* this) {
-   Vector_prune(this->processes);
-}
-
-void ProcessList_add(ProcessList* this, Process* p) {
+static void ProcessList_add(ProcessList* this, Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
    assert(Hashtable_get(this->processTable, p->pid) == NULL);
    Vector_add(this->processes, p);
@@ -310,7 +305,7 @@ void ProcessList_add(ProcessList* this, Process* p) {
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
-void ProcessList_remove(ProcessList* this, Process* p) {
+static void ProcessList_remove(ProcessList* this, Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
    Process* pp = Hashtable_remove(this->processTable, p->pid);
@@ -462,34 +457,10 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    return 1;
 }
 
-bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname, char* name) {
+static bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname, char* name) {
    char statusfilename[MAX_NAME+1];
    statusfilename[MAX_NAME] = '\0';
 
-   bool success = false;
-   char buffer[256];
-   buffer[255] = '\0';
-   
-   // We need to parse the status file just for tgid, which is missing in stat.
-   snprintf(statusfilename, MAX_NAME, "%s/%s/status", dirname, name);
-   FILE* status = ProcessList_fopen(this, statusfilename, "r");
-   if (status) {
-      while (!feof(status)) {
-         char* ok = fgets(buffer, 255, status);
-         if (!ok)
-            break;
-         if (String_startsWith(buffer, "Tgid:")) {
-            int tgid;
-            int ok = ProcessList_read(this, buffer, "Tgid:\t%d", &tgid);
-            if (ok >= 1) {
-               proc->tgid = tgid;
-               success = true;
-            }
-            break;
-         }
-      }
-      fclose(status);
-   }
    snprintf(statusfilename, MAX_NAME, "%s/%s", dirname, name);
    struct stat sstat;
    int statok = stat(statusfilename, &sstat);
@@ -500,20 +471,19 @@ bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname,
 }
 
 #ifdef HAVE_TASKSTATS
-void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirname, char* name) {
+
+static void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirname, char* name) {
    char iofilename[MAX_NAME+1];
    iofilename[MAX_NAME] = '\0';
 
-   char buffer[256];
-   buffer[255] = '\0';
-   
    snprintf(iofilename, MAX_NAME, "%s/%s/io", dirname, name);
    FILE* io = ProcessList_fopen(this, iofilename, "r");
    if (io) {
+      char buffer[256];
+      buffer[255] = '\0';
       struct timeval tv;
       gettimeofday(&tv,NULL);
       unsigned long long now = tv.tv_sec*1000+tv.tv_usec/1000;
-
       unsigned long long last_read = proc->io_read_bytes;
       unsigned long long last_write = proc->io_write_bytes;
       while (!feof(io)) {
@@ -541,9 +511,10 @@ void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirname, cha
       fclose(io);
    }
 }
+
 #endif
 
-bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* parent, float period) {
+static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* parent, float period) {
    DIR* dir;
    struct dirent* entry;
    Process* prototype = this->prototype;
@@ -589,6 +560,9 @@ bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* paren
                assert(process->comm == NULL);
                process->pid = pid;
             }
+         }
+         if (parent) {
+            process->tgid = parent->pid;
          }
 
          #ifdef HAVE_TASKSTATS        

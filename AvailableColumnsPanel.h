@@ -25,8 +25,4 @@ typedef struct AvailableColumnsPanel_ {
 
 AvailableColumnsPanel* AvailableColumnsPanel_new(Settings* settings, Panel* columns, ScreenManager* scr);
 
-void AvailableColumnsPanel_delete(Object* object);
-
-HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch);
-
 #endif

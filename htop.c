@@ -35,14 +35,14 @@ in the source distribution for its full text.
 
 #define INCSEARCH_MAX 40
 
-void printVersionFlag() {
+static void printVersionFlag() {
    clear();
    printf("htop " VERSION " - (C) 2004-2008 Hisham Muhammad.\n");
    printf("Released under the GNU GPL.\n\n");
    exit(0);
 }
 
-void printHelpFlag() {
+static void printHelpFlag() {
    clear();
    printf("htop " VERSION " - (C) 2004-2008 Hisham Muhammad.\n");
    printf("Released under the GNU GPL.\n\n");
@@ -54,7 +54,7 @@ void printHelpFlag() {
    exit(0);
 }
 
-void showHelp(ProcessList* pl) {
+static void showHelp(ProcessList* pl) {
    clear();
    attrset(CRT_colors[HELP_BOLD]);
 
@@ -201,13 +201,13 @@ static Object* pickFromList(Panel* panel, Panel* list, int x, int y, char** keyL
    return NULL;
 }
 
-void addUserToList(int key, void* userCast, void* panelCast) {
+static void addUserToList(int key, void* userCast, void* panelCast) {
    char* user = (char*) userCast;
    Panel* panel = (Panel*) panelCast;
    Panel_add(panel, (Object*) ListItem_new(user, key));
 }
 
-void setUserOnly(const char* userName, bool* userOnly, uid_t* userId) {
+static void setUserOnly(const char* userName, bool* userOnly, uid_t* userId) {
    struct passwd* user = getpwnam(userName);
    if (user) {
       *userOnly = true;

@@ -150,26 +150,15 @@ void ProcessList_invertSortOrder(ProcessList* this);
 
 RichString ProcessList_printHeader(ProcessList* this);
 
-
-void ProcessList_prune(ProcessList* this);
-
-void ProcessList_add(ProcessList* this, Process* p);
-
-void ProcessList_remove(ProcessList* this, Process* p);
-
 Process* ProcessList_get(ProcessList* this, int index);
 
 int ProcessList_size(ProcessList* this);
 
 void ProcessList_sort(ProcessList* this);
 
-bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname, char* name);
-
 #ifdef HAVE_TASKSTATS
-void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirname, char* name);
-#endif
 
-bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* parent, float period);
+#endif
 
 void ProcessList_scan(ProcessList* this);
 

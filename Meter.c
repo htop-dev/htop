@@ -124,45 +124,6 @@ MeterType* Meter_types[] = {
    NULL
 };
 
-static MeterMode BarMeterMode = {
-   .uiName = "Bar",
-   .h = 1,
-   .draw = BarMeterMode_draw,
-};
-
-static MeterMode TextMeterMode = {
-   .uiName = "Text",
-   .h = 1,
-   .draw = TextMeterMode_draw,
-};
-
-#ifdef USE_FUNKY_MODES
-
-static MeterMode GraphMeterMode = {
-   .uiName = "Graph",
-   .h = 3,
-   .draw = GraphMeterMode_draw,
-};
-
-static MeterMode LEDMeterMode = {
-   .uiName = "LED",
-   .h = 3,
-   .draw = LEDMeterMode_draw,
-};
-
-#endif
-
-MeterMode* Meter_modes[] = {
-   NULL,
-   &BarMeterMode,
-   &TextMeterMode,
-#ifdef USE_FUNKY_MODES
-   &GraphMeterMode,
-   &LEDMeterMode,
-#endif
-   NULL
-};
-
 static RichString Meter_stringBuffer;
 
 Meter* Meter_new(ProcessList* pl, int param, MeterType* type) {
@@ -254,7 +215,7 @@ ListItem* Meter_toListItem(Meter* this) {
 
 /* ---------- TextMeterMode ---------- */
 
-void TextMeterMode_draw(Meter* this, int x, int y, int w) {
+static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    MeterType* type = this->type;
    char buffer[METER_BUFFER_LEN];
    type->setValues(this, buffer, METER_BUFFER_LEN - 1);
@@ -274,7 +235,7 @@ void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
 static char BarMeterMode_characters[] = "|#*@$%&";
 
-void BarMeterMode_draw(Meter* this, int x, int y, int w) {
+static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    MeterType* type = this->type;
    char buffer[METER_BUFFER_LEN];
    type->setValues(this, buffer, METER_BUFFER_LEN - 1);
@@ -362,7 +323,7 @@ static int GraphMeterMode_colors[21] = {
 
 static char* GraphMeterMode_characters = "^`'-.,_~'`-.,_~'`-.,_";
 
-void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    if (!this->drawBuffer) this->drawBuffer = calloc(sizeof(double), METER_BUFFER_LEN);
    double* drawBuffer = (double*) this->drawBuffer;
@@ -408,7 +369,7 @@ static void LEDMeterMode_drawDigit(int x, int y, int n) {
       mvaddstr(y+i, x, LEDMeterMode_digits[i][n]);
 }
 
-void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
+static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    MeterType* type = this->type;
    char buffer[METER_BUFFER_LEN];
    type->setValues(this, buffer, METER_BUFFER_LEN - 1);
@@ -432,3 +393,42 @@ void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
 }
 
 #endif
+
+static MeterMode BarMeterMode = {
+   .uiName = "Bar",
+   .h = 1,
+   .draw = BarMeterMode_draw,
+};
+
+static MeterMode TextMeterMode = {
+   .uiName = "Text",
+   .h = 1,
+   .draw = TextMeterMode_draw,
+};
+
+#ifdef USE_FUNKY_MODES
+
+static MeterMode GraphMeterMode = {
+   .uiName = "Graph",
+   .h = 3,
+   .draw = GraphMeterMode_draw,
+};
+
+static MeterMode LEDMeterMode = {
+   .uiName = "LED",
+   .h = 3,
+   .draw = LEDMeterMode_draw,
+};
+
+#endif
+
+MeterMode* Meter_modes[] = {
+   NULL,
+   &BarMeterMode,
+   &TextMeterMode,
+#ifdef USE_FUNKY_MODES
+   &GraphMeterMode,
+   &LEDMeterMode,
+#endif
+   NULL
+};

@@ -30,9 +30,4 @@ typedef struct ColorsPanel_ {
 
 ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr);
 
-void ColorsPanel_delete(Object* object);
-
-HandlerResult ColorsPanel_EventHandler(Panel* super, int ch);
-
-
 #endif

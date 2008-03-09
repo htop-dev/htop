@@ -39,16 +39,6 @@ in the source distribution for its full text.
 
 #define INCSEARCH_MAX 40
 
-void printVersionFlag();
-
-void printHelpFlag();
-
-void showHelp(ProcessList* pl);
-
-void addUserToList(int key, void* userCast, void* panelCast);
-
-void setUserOnly(const char* userName, bool* userOnly, uid_t* userId);
-
 int main(int argc, char** argv);
 
 #endif
