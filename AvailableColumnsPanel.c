@@ -59,10 +59,9 @@ HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_ENTER:
       case KEY_F(5):
       {
-         int at = Panel_getSelectedIndex(this->columns) + 1;
-         if (at == Panel_getSize(this->columns))
-            at--;
+         int at = Panel_getSelectedIndex(this->columns);
          Panel_insert(this->columns, at, (Object*) ListItem_new(text, 0));
+         Panel_setSelected(this->columns, at+1);
          ColumnsPanel_update(this->columns);
          result = HANDLED;
          break;
