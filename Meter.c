@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "String.h"
 #include "ProcessList.h"
+#include "RichString.h"
 
 #include "debug.h"
 #include <assert.h>
@@ -266,7 +267,7 @@ void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    Meter_displayToStringBuffer(this, buffer);
    mvhline(y, x, ' ', CRT_colors[DEFAULT_COLOR]);
    attrset(CRT_colors[RESET_COLOR]);
-   mvaddchstr(y, x, Meter_stringBuffer.chstr);
+   RichString_printVal(Meter_stringBuffer, y, x);
 }
 
 /* ---------- BarMeterMode ---------- */
@@ -418,7 +419,7 @@ void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    mvaddstr(y+2, x, this->caption);
    int xx = x + strlen(this->caption);
    for (int i = 0; i < Meter_stringBuffer.len; i++) {
-      char c = Meter_stringBuffer.chstr[i];
+      char c = RichString_getCharVal(Meter_stringBuffer, i);
       if (c >= '0' && c <= '9') {
          LEDMeterMode_drawDigit(xx, y, c-48);
          xx += 4;

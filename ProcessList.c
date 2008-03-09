@@ -283,7 +283,7 @@ void ProcessList_invertSortOrder(ProcessList* this) {
 
 RichString ProcessList_printHeader(ProcessList* this) {
    RichString out;
-   RichString_init(&out);
+   RichString_initVal(out);
    ProcessField* fields = this->fields;
    for (int i = 0; fields[i]; i++) {
       char* field = Process_printField(fields[i]);

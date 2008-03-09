@@ -16,7 +16,6 @@ AM_ENABLE_STATIC
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
-AC_CHECK_LIB([ncurses], [refresh], [], [missing_libraries="$missing_libraries libncurses"])
 AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
 
 if test ! -z "$missing_libraries"; then
@@ -67,7 +66,14 @@ AC_ARG_WITH(proc, [  --with-proc=DIR      Location of a Linux-compatible proc fi
 
 AC_ARG_ENABLE(openvz, [AC_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
 if test "x$enable_openvz" = xyes; then
-    AC_DEFINE(HAVE_OPENVZ, 1, [Define if openvz support enabled.])
+   AC_DEFINE(HAVE_OPENVZ, 1, [Define if openvz support enabled.])
+fi
+
+AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="no")
+if test "x$enable_unicode" = xyes; then
+   AC_CHECK_LIB([ncursesw], [refresh], [], [missing_libraries="$missing_libraries libncursesw"])
+else
+   AC_CHECK_LIB([ncurses], [refresh], [], [missing_libraries="$missing_libraries libncurses"])
 fi
 
 AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))

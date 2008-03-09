@@ -1,6 +1,9 @@
 
 What's new in version 0.7.1
 
+* Add Unicode support, enabled with the --enable-unicode
+  flag, which requires libncursesw.
+  (thanks to Sergej Pupykin)
 * BUGFIX: Fix display of CPU count for threaded processes.
   When user threads are hidden, process now shows the
   sum of processor usage for all processors. When user

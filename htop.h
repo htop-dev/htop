@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <locale.h>
 
 #include "ProcessList.h"
 #include "CRT.h"

@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "CRT.h"
 #include "String.h"
+#include "RichString.h"
 
 #include "debug.h"
 

@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "String.h"
 #include "Process.h"
+#include "RichString.h"
 
 #include "debug.h"
 
@@ -265,23 +266,20 @@ static void Process_printTime(RichString* str, unsigned long t) {
 }
 
 static inline void Process_writeCommand(Process* this, int attr, int baseattr, RichString* str) {
+   int start = str->len;
+   RichString_append(str, attr, this->comm);
    if (this->pl->highlightBaseName) {
-      char* firstSpace = strchr(this->comm, ' ');
-      if (firstSpace) {
-         char* slash = firstSpace;
-         while (slash > this->comm && *slash != '/')
-            slash--;
-         if (slash > this->comm) {
-            slash++;
-            RichString_appendn(str, attr, this->comm, slash - this->comm);
-         }
-         RichString_appendn(str, baseattr, slash, firstSpace - slash);
-         RichString_append(str, attr, firstSpace);
-      } else {
-         RichString_append(str, baseattr, this->comm);
+      int finish = str->len - 1;
+      int space = RichString_findChar(str, ' ', start);
+      if (space != -1)
+         finish = space - 1;
+      for (;;) {
+         int slash = RichString_findChar(str, '/', start);
+         if (slash == -1 || slash > finish)
+            break;
+         start = slash + 1;
       }
-   } else {
-      RichString_append(str, attr, this->comm);
+      RichString_setAttrn(str, baseattr, start, finish);
    }
 }
 

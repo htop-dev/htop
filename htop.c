@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <locale.h>
 
 #include "ProcessList.h"
 #include "CRT.h"
@@ -220,6 +221,12 @@ int main(int argc, char** argv) {
    bool userOnly = false;
    uid_t userId = 0;
    int sortKey = 0;
+
+   char *lc_ctype = getenv("LC_CTYPE");
+   if(lc_ctype != NULL)
+      setlocale(LC_CTYPE, lc_ctype);
+   else
+      setlocale(LC_CTYPE, getenv("LC_ALL"));
 
    int arg = 1;
    while (arg < argc) {

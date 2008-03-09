@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "String.h"
 #include "ProcessList.h"
+#include "RichString.h"
 
 #include "debug.h"
 #include <assert.h>

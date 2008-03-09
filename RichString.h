@@ -4,12 +4,20 @@
 #define HEADER_RichString
 
 
+#ifndef CONFIG_H
+#define CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <curses.h>
 
 #include "debug.h"
 #include <assert.h>
+#ifdef HAVE_LIBNCURSESW
+#include <wchar.h>
+#endif
 
 #define RICHSTRING_MAXLEN 300
 
@@ -17,9 +25,23 @@
 #define RichString_init(this) (this)->len = 0
 #define RichString_initVal(this) (this).len = 0
 
+#ifdef HAVE_LIBNCURSESW
+#define RichString_printVal(this, y, x) mvadd_wchstr(y, x, this.chstr)
+#define RichString_printoffnVal(this, y, x, off, n) mvadd_wchnstr(y, x, this.chstr + off, n)
+#define RichString_getCharVal(this, i) (this.chstr[i].chars[0] & 255)
+#else
+#define RichString_printVal(this, y, x) mvaddchstr(y, x, this.chstr)
+#define RichString_printoffnVal(this, y, x, off, n) mvaddchnstr(y, x, this.chstr + off, n)
+#define RichString_getCharVal(this, i) (this.chstr[i])
+#endif
+
 typedef struct RichString_ {
    int len;
+#ifdef HAVE_LIBNCURSESW
+   cchar_t chstr[RICHSTRING_MAXLEN+1];
+#else
    chtype chstr[RICHSTRING_MAXLEN+1];
+#endif
 } RichString;
 
 
@@ -27,15 +49,29 @@ typedef struct RichString_ {
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
 
-extern void RichString_appendn(RichString* this, int attrs, char* data, int len);
+#ifdef HAVE_LIBNCURSESW
+
+extern void RichString_appendn(RichString* this, int attrs, char* data_c, int len);
+
+extern void RichString_setAttrn(RichString *this, int attrs, int start, int finish);
+
+int RichString_findChar(RichString *this, char c, int start);
+
+#else
+
+extern void RichString_appendn(RichString* this, int attrs, char* data_c, int len);
+
+void RichString_setAttrn(RichString *this, int attrs, int start, int finish);
+
+int RichString_findChar(RichString *this, char c, int start);
+
+#endif
+
+void RichString_setAttr(RichString *this, int attrs);
 
 extern void RichString_append(RichString* this, int attrs, char* data);
 
 void RichString_write(RichString* this, int attrs, char* data);
-
-void RichString_setAttr(RichString *this, int attrs);
-
-void RichString_applyAttr(RichString *this, int attrs);
 
 RichString RichString_quickString(int attrs, char* data);
 
