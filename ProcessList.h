@@ -165,6 +165,10 @@ void ProcessList_sort(ProcessList* this);
 
 bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname, char* name);
 
+#ifdef HAVE_TASKSTATS
+void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirname, char* name);
+#endif
+
 bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* parent, float period);
 
 void ProcessList_scan(ProcessList* this);

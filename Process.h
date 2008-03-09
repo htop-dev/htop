@@ -51,6 +51,9 @@ typedef enum ProcessField_ {
    #ifdef HAVE_OPENVZ
    VEID, VPID,
    #endif
+   #ifdef HAVE_TASKSTATS
+   RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE,
+   #endif
    LAST_PROCESSFIELD
 } ProcessField;
 
@@ -122,6 +125,19 @@ typedef struct Process_ {
    #ifdef HAVE_OPENVZ
    unsigned int veid;
    unsigned int vpid;
+   #endif
+   #ifdef HAVE_TASKSTATS
+   unsigned long long io_rchar;
+   unsigned long long io_wchar;
+   unsigned long long io_syscr;
+   unsigned long long io_syscw;
+   unsigned long long io_read_bytes;
+   unsigned long long io_write_bytes;
+   unsigned long long io_cancelled_write_bytes;
+   double io_rate_read_bps;
+   unsigned long long io_rate_read_time;
+   double io_rate_write_bps;
+   unsigned long long io_rate_write_time;   
    #endif
 } Process;
 

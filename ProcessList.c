@@ -499,6 +499,50 @@ bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname,
    return true;
 }
 
+#ifdef HAVE_TASKSTATS
+void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirname, char* name) {
+   char iofilename[MAX_NAME+1];
+   iofilename[MAX_NAME] = '\0';
+
+   char buffer[256];
+   buffer[255] = '\0';
+   
+   snprintf(iofilename, MAX_NAME, "%s/%s/io", dirname, name);
+   FILE* io = ProcessList_fopen(this, iofilename, "r");
+   if (io) {
+      struct timeval tv;
+      gettimeofday(&tv,NULL);
+      unsigned long long now = tv.tv_sec*1000+tv.tv_usec/1000;
+
+      unsigned long long last_read = proc->io_read_bytes;
+      unsigned long long last_write = proc->io_write_bytes;
+      while (!feof(io)) {
+         char* ok = fgets(buffer, 255, io);
+         if (!ok)
+            break;
+         if (ProcessList_read(this, buffer, "rchar: %llu", &proc->io_rchar)) continue;
+         if (ProcessList_read(this, buffer, "wchar: %llu", &proc->io_wchar)) continue;
+         if (ProcessList_read(this, buffer, "syscr: %llu", &proc->io_syscr)) continue;
+         if (ProcessList_read(this, buffer, "syscw: %llu", &proc->io_syscw)) continue;
+         if (ProcessList_read(this, buffer, "read_bytes: %llu", &proc->io_read_bytes)) {
+            proc->io_rate_read_bps = 
+               ((double)(proc->io_read_bytes - last_read))/(((double)(now - proc->io_rate_read_time))/1000);
+            proc->io_rate_read_time = now;
+            continue;
+         }
+         if (ProcessList_read(this, buffer, "write_bytes: %llu", &proc->io_write_bytes)) {
+            proc->io_rate_write_bps = 
+               ((double)(proc->io_write_bytes - last_write))/(((double)(now - proc->io_rate_write_time))/1000);
+            proc->io_rate_write_time = now;
+            continue;
+         }
+         ProcessList_read(this, buffer, "cancelled_write_bytes: %llu", &proc->io_cancelled_write_bytes);
+      }
+      fclose(io);
+   }
+}
+#endif
+
 bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* parent, float period) {
    DIR* dir;
    struct dirent* entry;
@@ -546,6 +590,10 @@ bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* paren
                process->pid = pid;
             }
          }
+
+         #ifdef HAVE_TASKSTATS        
+         ProcessList_readIoFile(this, process, dirname, name);
+         #endif
 
          if (showUserlandThreads && (!parent || pid != parent->pid)) {
             char subdirname[MAX_NAME+1];

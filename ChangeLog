@@ -1,6 +1,10 @@
 
 What's new in version 0.7.1
 
+* Add support for Linux per-process IO statistics,
+  enabled with the --enable-taskstats flag, which
+  requires a kernel compiled with taskstats support.
+  (thanks to Tobias Oetiker)
 * Add Unicode support, enabled with the --enable-unicode
   flag, which requires libncursesw.
   (thanks to Sergej Pupykin)

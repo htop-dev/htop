@@ -49,6 +49,9 @@ typedef enum ProcessField_ {
    #ifdef HAVE_OPENVZ
    VEID, VPID,
    #endif
+   #ifdef HAVE_TASKSTATS
+   RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE,
+   #endif
    LAST_PROCESSFIELD
 } ProcessField;
 
@@ -121,6 +124,19 @@ typedef struct Process_ {
    unsigned int veid;
    unsigned int vpid;
    #endif
+   #ifdef HAVE_TASKSTATS
+   unsigned long long io_rchar;
+   unsigned long long io_wchar;
+   unsigned long long io_syscr;
+   unsigned long long io_syscw;
+   unsigned long long io_read_bytes;
+   unsigned long long io_write_bytes;
+   unsigned long long io_cancelled_write_bytes;
+   double io_rate_read_bps;
+   unsigned long long io_rate_read_time;
+   double io_rate_write_bps;
+   unsigned long long io_rate_write_time;   
+   #endif
 } Process;
 
 }*/
@@ -134,7 +150,10 @@ char* PROCESS_CLASS = "Process";
 char *Process_fieldNames[] = {
    "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "NLWP", "TGID", 
 #ifdef HAVE_OPENVZ
-"VEID", "VPID",
+   "VEID", "VPID",
+#endif
+#ifdef HAVE_TASKSTATS
+   "RCHAR", "WCHAR", "SYSCR", "SYSCW", "RBYTES", "WBYTES", "CNCLWB", "IO_READ_RATE", "IO_WRITE_RATE",
 #endif
 "*** report bug! ***"
 };
@@ -142,7 +161,7 @@ char *Process_fieldNames[] = {
 static int Process_getuid = -1;
 
 Process* Process_new(struct ProcessList_ *pl) {
-   Process* this = malloc(sizeof(Process));
+   Process* this = calloc(sizeof(Process), 1);
    Object_setClass(this, PROCESS_CLASS);
    ((Object*)this)->display = Process_display;
    ((Object*)this)->delete = Process_delete;
@@ -160,6 +179,19 @@ Process* Process_new(struct ProcessList_ *pl) {
 
 Process* Process_clone(Process* this) {
    Process* clone = malloc(sizeof(Process));
+   #if HAVE_TASKSTATS
+   this->io_rchar = 0;
+   this->io_wchar = 0;
+   this->io_syscr = 0;
+   this->io_syscw = 0;
+   this->io_read_bytes = 0;
+   this->io_rate_read_bps = 0;
+   this->io_rate_read_time = 0;
+   this->io_write_bytes = 0;
+   this->io_rate_write_bps = 0;
+   this->io_rate_write_time = 0;
+   this->io_cancelled_write_bytes = 0;
+   #endif
    memcpy(clone, this, sizeof(Process));
    this->comm = NULL;
    this->pid = 0;
@@ -400,11 +432,22 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case VEID: snprintf(buffer, n, "%5u ", this->veid); break;
    case VPID: snprintf(buffer, n, "%5u ", this->vpid); break;
    #endif
+   #ifdef HAVE_TASKSTATS
+   case RCHAR:  snprintf(buffer, n, "%10llu ", this->io_rchar); break;
+   case WCHAR:  snprintf(buffer, n, "%10llu ", this->io_wchar); break;   
+   case SYSCR:  snprintf(buffer, n, "%10llu ", this->io_syscr); break;   
+   case SYSCW:  snprintf(buffer, n, "%10llu ", this->io_syscw); break; 
+   case RBYTES: snprintf(buffer, n, "%10llu ", this->io_read_bytes); break; 
+   case WBYTES: snprintf(buffer, n, "%10llu ", this->io_write_bytes); break; 
+   case CNCLWB: snprintf(buffer, n, "%10llu ", this->io_cancelled_write_bytes); break; 
+   case IO_READ_RATE:  Process_printLargeNumber(this, str, this->io_rate_read_bps / 1024); return;
+   case IO_WRITE_RATE: Process_printLargeNumber(this, str, this->io_rate_write_bps / 1024); return;
+   #endif
+
    default:
       snprintf(buffer, n, "- ");
    }
    RichString_append(str, attr, buffer);
-   return;
 }
 
 int Process_pidCompare(const void* v1, const void* v2) {
@@ -423,6 +466,7 @@ int Process_compare(const void* v1, const void* v2) {
       p2 = (Process*)v1;
       p1 = (Process*)v2;
    }
+   long long diff;
    switch (pl->sortKey) {
    case PID:
       return (p1->pid - p2->pid);
@@ -470,10 +514,23 @@ int Process_compare(const void* v1, const void* v2) {
    case VPID:
       return (p1->vpid - p2->vpid);
    #endif
+   #ifdef HAVE_TASKSTATS
+   case RCHAR:  diff = p2->io_rchar - p1->io_rchar; goto test_diff;
+   case WCHAR:  diff = p2->io_wchar - p1->io_wchar; goto test_diff;
+   case SYSCR:  diff = p2->io_syscr - p1->io_syscr; goto test_diff;
+   case SYSCW:  diff = p2->io_syscw - p1->io_syscw; goto test_diff;
+   case RBYTES: diff = p2->io_read_bytes - p1->io_read_bytes; goto test_diff;
+   case WBYTES: diff = p2->io_write_bytes - p1->io_write_bytes; goto test_diff;
+   case CNCLWB: diff = p2->io_cancelled_write_bytes - p1->io_cancelled_write_bytes; goto test_diff;
+   case IO_READ_RATE:  diff = p2->io_rate_read_bps - p1->io_rate_read_bps; goto test_diff;
+   case IO_WRITE_RATE: diff = p2->io_rate_write_bps - p1->io_rate_write_bps; goto test_diff;
+   #endif
+
    default:
       return (p1->pid - p2->pid);
    }
-
+   test_diff:
+   return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
 }
 
 char* Process_printField(ProcessField field) {
@@ -508,6 +565,17 @@ char* Process_printField(ProcessField field) {
    #ifdef HAVE_OPENVZ
    case VEID: return " VEID ";
    case VPID: return " VPID ";
+   #endif
+   #ifdef HAVE_TASKSTATS
+   case RCHAR:  return "   RD_CHAR ";
+   case WCHAR: return  "   WR_CHAR ";  
+   case SYSCR: return  "   RD_SYSC ";  
+   case SYSCW: return  "   WR_SYSC ";  
+   case RBYTES: return "     IO_RD "; 
+   case WBYTES: return "     IO_WR "; 
+   case CNCLWB: return " IO_CANCEL "; 
+   case IO_READ_RATE:  return " IORR "; 
+   case IO_WRITE_RATE: return " IOWR "; 
    #endif
    default: return "- ";
    }
