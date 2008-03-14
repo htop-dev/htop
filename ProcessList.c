@@ -286,7 +286,7 @@ RichString ProcessList_printHeader(ProcessList* this) {
    RichString_initVal(out);
    ProcessField* fields = this->fields;
    for (int i = 0; fields[i]; i++) {
-      char* field = Process_printField(fields[i]);
+      char* field = Process_fieldTitles[fields[i]];
       if (this->sortKey == fields[i])
          RichString_append(&out, CRT_colors[PANEL_HIGHLIGHT_FOCUS], field);
       else
@@ -815,4 +815,18 @@ void ProcessList_scan(ProcessList* this) {
          p->updated = false;
    }
 
+}
+
+ProcessField ProcessList_keyAt(ProcessList* this, int at) {
+   int x = 0;
+   ProcessField* fields = this->fields;
+   ProcessField field;
+   for (int i = 0; (field = fields[i]); i++) {
+      int len = strlen(Process_fieldTitles[field]);
+      if (at >= x && at <= x + len) {
+         return field;
+      }
+      x += len;
+   }
+   return COMM;
 }

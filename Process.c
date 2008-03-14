@@ -50,7 +50,7 @@ typedef enum ProcessField_ {
    VEID, VPID,
    #endif
    #ifdef HAVE_TASKSTATS
-   RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE,
+   RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE, IO_RATE,
    #endif
    LAST_PROCESSFIELD
 } ProcessField;
@@ -148,14 +148,40 @@ char* PROCESS_CLASS = "Process";
 #endif
 
 char *Process_fieldNames[] = {
-   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION", "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT", "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE", "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK", "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN", "NSWAP", "CNSWAP", "EXIT_SIGNAL",  "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE", "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM", "USER", "TIME", "NLWP", "TGID", 
+   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION",
+   "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT",
+   "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE",
+   "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK",
+   "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN",
+   "NSWAP", "CNSWAP", "EXIT_SIGNAL", "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE",
+   "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM",
+   "USER", "TIME", "NLWP", "TGID", 
 #ifdef HAVE_OPENVZ
    "VEID", "VPID",
 #endif
 #ifdef HAVE_TASKSTATS
-   "RCHAR", "WCHAR", "SYSCR", "SYSCW", "RBYTES", "WBYTES", "CNCLWB", "IO_READ_RATE", "IO_WRITE_RATE",
+   "RCHAR", "WCHAR", "SYSCR", "SYSCW", "RBYTES", "WBYTES", "CNCLWB",
+   "IO_READ_RATE", "IO_WRITE_RATE", "IO_RATE",
 #endif
 "*** report bug! ***"
+};
+
+char *Process_fieldTitles[] = {
+   "", "  PID ", "Command ", "S ", " PPID ", " PGRP ", " SESN ",
+   "  TTY ", "TPGID ", "- ", "- ", "- ", "- ", "- ",
+   " UTIME+  ", " STIME+  ",  "- ", "- ", "PRI ", " NI ", "- ",
+   "- ", "- ", "- ", "- ", "- ", "- ", "- ",
+   "- ", "- ", "- ", "- ", "- ", "- ", "- ",
+   "- ", "- ", "- ", "CPU ", " VIRT ", "  RES ", "  SHR ",
+   " CODE ", " DATA ", " LIB ", " DIRTY ", " UID ", "CPU% ", "MEM% ",
+   "USER     ", "  TIME+  ", "NLWP ", " TGID ",
+#ifdef HAVE_OPENVZ
+   " VEID ", " VPID ",
+#endif
+#ifdef HAVE_TASKSTATS
+   "   RD_CHAR ", "   WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", "     IO_RD ", "     IO_WR ", " IO_CANCEL ",
+   " IORR ", " IOWR ", "   IO ",
+#endif
 };
 
 static int Process_getuid = -1;
@@ -228,6 +254,21 @@ static inline void Process_writeCommand(Process* this, int attr, int baseattr, R
       }
       RichString_setAttrn(str, baseattr, start, finish);
    }
+}
+
+static inline void Process_outputRate(Process* this, RichString* str, int attr, char* buffer, int n, double rate) {
+   rate = rate / 1024;
+   if (rate < 0.01)
+      snprintf(buffer, n, "    0 ");
+   else if (rate <= 10)
+      snprintf(buffer, n, "%5.2f ", rate);
+   else if (rate <= 100)
+      snprintf(buffer, n, "%5.1f ", rate);
+   else {
+      Process_printLargeNumber(this, str, rate);
+      return;
+   }
+   RichString_append(str, attr, buffer);
 }
 
 static void Process_writeField(Process* this, RichString* str, ProcessField field) {
@@ -355,8 +396,9 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case RBYTES: snprintf(buffer, n, "%10llu ", this->io_read_bytes); break; 
    case WBYTES: snprintf(buffer, n, "%10llu ", this->io_write_bytes); break; 
    case CNCLWB: snprintf(buffer, n, "%10llu ", this->io_cancelled_write_bytes); break; 
-   case IO_READ_RATE:  Process_printLargeNumber(this, str, this->io_rate_read_bps / 1024); return;
-   case IO_WRITE_RATE: Process_printLargeNumber(this, str, this->io_rate_write_bps / 1024); return;
+   case IO_READ_RATE:  Process_outputRate(this, str, attr, buffer, n, this->io_rate_read_bps); return;
+   case IO_WRITE_RATE: Process_outputRate(this, str, attr, buffer, n, this->io_rate_write_bps); return;
+   case IO_RATE: Process_outputRate(this, str, attr, buffer, n, this->io_rate_read_bps + this->io_rate_write_bps); return;
    #endif
 
    default:
@@ -524,6 +566,7 @@ int Process_compare(const void* v1, const void* v2) {
    case CNCLWB: diff = p2->io_cancelled_write_bytes - p1->io_cancelled_write_bytes; goto test_diff;
    case IO_READ_RATE:  diff = p2->io_rate_read_bps - p1->io_rate_read_bps; goto test_diff;
    case IO_WRITE_RATE: diff = p2->io_rate_write_bps - p1->io_rate_write_bps; goto test_diff;
+   case IO_RATE: diff = (p2->io_rate_read_bps + p2->io_rate_write_bps) - (p1->io_rate_read_bps + p1->io_rate_write_bps); goto test_diff;
    #endif
 
    default:
@@ -531,52 +574,4 @@ int Process_compare(const void* v1, const void* v2) {
    }
    test_diff:
    return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
-}
-
-char* Process_printField(ProcessField field) {
-   switch (field) {
-   case PID: return "  PID ";
-   case PPID: return " PPID ";
-   case PGRP: return " PGRP ";
-   case SESSION: return " SESN ";
-   case TTY_NR: return "  TTY ";
-   case TGID: return " TGID ";
-   case TPGID: return "TPGID ";
-   case COMM: return "Command ";
-   case STATE: return "S ";
-   case PRIORITY: return "PRI ";
-   case NICE: return " NI ";
-   case M_DRS: return " DATA ";
-   case M_DT: return " DIRTY ";
-   case M_LRS: return " LIB ";
-   case M_TRS: return " CODE ";
-   case M_SIZE: return " VIRT ";
-   case M_RESIDENT: return "  RES ";
-   case M_SHARE: return "  SHR ";
-   case ST_UID: return " UID ";
-   case USER: return "USER     ";
-   case UTIME: return " UTIME+  ";
-   case STIME: return " STIME+  ";
-   case TIME: return "  TIME+  ";
-   case PERCENT_CPU: return "CPU% ";
-   case PERCENT_MEM: return "MEM% ";
-   case PROCESSOR: return "CPU ";
-   case NLWP: return "NLWP ";
-   #ifdef HAVE_OPENVZ
-   case VEID: return " VEID ";
-   case VPID: return " VPID ";
-   #endif
-   #ifdef HAVE_TASKSTATS
-   case RCHAR:  return "   RD_CHAR ";
-   case WCHAR: return  "   WR_CHAR ";  
-   case SYSCR: return  "   RD_SYSC ";  
-   case SYSCW: return  "   WR_SYSC ";  
-   case RBYTES: return "     IO_RD "; 
-   case WBYTES: return "     IO_WR "; 
-   case CNCLWB: return " IO_CANCEL "; 
-   case IO_READ_RATE:  return " IORR "; 
-   case IO_WRITE_RATE: return " IOWR "; 
-   #endif
-   default: return "- ";
-   }
 }

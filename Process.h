@@ -52,7 +52,7 @@ typedef enum ProcessField_ {
    VEID, VPID,
    #endif
    #ifdef HAVE_TASKSTATS
-   RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE,
+   RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE, IO_RATE,
    #endif
    LAST_PROCESSFIELD
 } ProcessField;
@@ -150,6 +150,8 @@ extern char* PROCESS_CLASS;
 
 extern char *Process_fieldNames[];
 
+extern char *Process_fieldTitles[];
+
 #define ONE_K 1024
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
@@ -173,7 +175,5 @@ void Process_sendSignal(Process* this, int signal);
 int Process_pidCompare(const void* v1, const void* v2);
 
 int Process_compare(const void* v1, const void* v2);
-
-char* Process_printField(ProcessField field);
 
 #endif

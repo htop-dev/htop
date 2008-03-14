@@ -162,4 +162,6 @@ void ProcessList_sort(ProcessList* this);
 
 void ProcessList_scan(ProcessList* this);
 
+ProcessField ProcessList_keyAt(ProcessList* this, int at);
+
 #endif

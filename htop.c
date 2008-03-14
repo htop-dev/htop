@@ -215,6 +215,14 @@ static void setUserOnly(const char* userName, bool* userOnly, uid_t* userId) {
    }
 }
 
+static inline void setSortKey(ProcessList* pl, ProcessField sortKey, Panel* panel, Settings* settings) {
+   pl->sortKey = sortKey;
+   pl->direction = 1;
+   pl->treeView = false;
+   settings->changed = true;
+   Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+}
+
 int main(int argc, char** argv) {
 
    int delay = -1;
@@ -288,10 +296,6 @@ int main(int argc, char** argv) {
    
    Header* header = Header_new(pl);
    settings = Settings_new(pl, header);
-   if (sortKey > 0) {
-      pl->sortKey = sortKey;
-      pl->treeView = false;
-   }
    int headerHeight = Header_calculateHeight(header);
 
    // FIXME: move delay code to settings
@@ -301,6 +305,11 @@ int main(int argc, char** argv) {
    CRT_init(settings->delay, settings->colorScheme);
    
    panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, PROCESS_CLASS, false, NULL);
+   if (sortKey > 0) {
+      pl->sortKey = sortKey;
+      pl->treeView = false;
+      pl->direction = 1;
+   }
    Panel_setRichHeader(panel, ProcessList_printHeader(pl));
    
    char* searchFunctions[3] = {"Next  ", "Exit  ", " Search: "};
@@ -447,7 +456,18 @@ int main(int argc, char** argv) {
          MEVENT mevent;
          int ok = getmouse(&mevent);
          if (ok == OK) {
-            if (mevent.y >= panel->y + 1 && mevent.y < LINES - 1) {
+            if (mevent.y == panel->y) {
+               int x = panel->scrollH + mevent.x;
+               ProcessField field = ProcessList_keyAt(pl, x);
+               if (field == pl->sortKey) {
+                  ProcessList_invertSortOrder(pl);
+                  pl->treeView = false;
+               } else {
+                  setSortKey(pl, field, panel, settings);
+               }
+               refreshTimeout = 0;
+               continue;
+            } else if (mevent.y >= panel->y + 1 && mevent.y < LINES - 1) {
                Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
                doRefresh = false;
                refreshTimeout = resetRefreshTimeout;
@@ -474,19 +494,13 @@ int main(int argc, char** argv) {
       case 'M':
       {
          refreshTimeout = 0;
-         pl->sortKey = PERCENT_MEM;
-         pl->treeView = false;
-         settings->changed = true;
-         Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+         setSortKey(pl, PERCENT_MEM, panel, settings);
          break;
       }
       case 'T':
       {
          refreshTimeout = 0;
-         pl->sortKey = TIME;
-         pl->treeView = false;
-         settings->changed = true;
-         Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+         setSortKey(pl, TIME, panel, settings);
          break;
       }
       case 'U':
@@ -501,10 +515,7 @@ int main(int argc, char** argv) {
       case 'P':
       {
          refreshTimeout = 0;
-         pl->sortKey = PERCENT_CPU;
-         pl->treeView = false;
-         settings->changed = true;
-         Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+         setSortKey(pl, PERCENT_CPU, panel, settings);
          break;
       }
       case KEY_F(1):
@@ -663,7 +674,7 @@ int main(int argc, char** argv) {
          char* fuFunctions[2] = {"Sort  ", "Cancel "};
          ProcessField* fields = pl->fields;
          for (int i = 0; fields[i]; i++) {
-            char* name = String_trim(Process_printField(fields[i]));
+            char* name = String_trim(Process_fieldTitles[fields[i]]);
             Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
             if (fields[i] == pl->sortKey)
                Panel_setSelected(sortPanel, i);
@@ -671,12 +682,12 @@ int main(int argc, char** argv) {
          }
          ListItem* field = (ListItem*) pickFromList(panel, sortPanel, 15, headerHeight, fuFunctions, defaultBar);
          if (field) {
-            pl->treeView = false;
             settings->changed = true;
-            pl->sortKey = field->key;
+            setSortKey(pl, field->key, panel, settings);
+         } else {
+            Panel_setRichHeader(panel, ProcessList_printHeader(pl));
          }
          ((Object*)sortPanel)->delete((Object*)sortPanel);
-         Panel_setRichHeader(panel, ProcessList_printHeader(pl));
          refreshTimeout = 0;
          break;
       }
