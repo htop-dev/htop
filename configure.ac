@@ -69,7 +69,7 @@ if test "x$enable_openvz" = xyes; then
    AC_DEFINE(HAVE_OPENVZ, 1, [Define if openvz support enabled.])
 fi
 
-AC_ARG_ENABLE(taskstats, [AC_HELP_STRING([--enable-taskstats], [enable per-task IO Stats (taskstats kernel sup required)])], ,enable_taskstats="no")
+AC_ARG_ENABLE(taskstats, [AC_HELP_STRING([--enable-taskstats], [enable per-task IO Stats (taskstats kernel sup required)])], ,enable_taskstats="yes")
 if test "x$enable_taskstats" = xyes; then
     AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
 fi
