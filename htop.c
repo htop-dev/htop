@@ -144,10 +144,12 @@ static void showHelp(ProcessList* pl) {
    clear();
 }
 
+static char* CategoriesFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  "};
+
 static void Setup_run(Settings* settings, int headerHeight) {
    ScreenManager* scr = ScreenManager_new(0, headerHeight, 0, -1, HORIZONTAL, true);
    CategoriesPanel* panelCategories = CategoriesPanel_new(settings, scr);
-   ScreenManager_add(scr, (Panel*) panelCategories, NULL, 16);
+   ScreenManager_add(scr, (Panel*) panelCategories, FunctionBar_new(10, CategoriesFunctions, NULL, NULL), 16);
    CategoriesPanel_makeMetersPage(panelCategories);
    Panel* panelFocus;
    int ch;
