@@ -144,7 +144,6 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
 
       ch = getch();
       
-      bool loop = false;
       if (ch == KEY_MOUSE) {
          MEVENT mevent;
          int ok = getmouse(&mevent);
@@ -159,14 +158,12 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                      focus = i;
                      panelFocus = panel;
                      Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
-                     loop = true;
                      break;
                   }
                }
             }
          }
       }
-      if (loop) continue;
       
       if (panelFocus->eventHandler) {
          HandlerResult result = panelFocus->eventHandler(panelFocus, ch);

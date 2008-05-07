@@ -37,6 +37,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    case 0x0a:
    case 0x0d:
    case KEY_ENTER:
+   case KEY_MOUSE:
    case ' ':
       CheckItem_set(selected, ! (CheckItem_get(selected)) );
       result = HANDLED;

@@ -54,6 +54,7 @@ static HandlerResult ColorsPanel_EventHandler(Panel* super, int ch) {
    case 0x0a:
    case 0x0d:
    case KEY_ENTER:
+   case KEY_MOUSE:
    case ' ':
       for (int i = 0; ColorSchemes[i] != NULL; i++)
          CheckItem_set((CheckItem*)Panel_get(super, i), false);

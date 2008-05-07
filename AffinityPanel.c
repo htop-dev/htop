@@ -11,6 +11,7 @@ static HandlerResult AffinityPanel_eventHandler(Panel* this, int ch) {
    HandlerResult result = IGNORED;
    CheckItem* selected = (CheckItem*) Panel_getSelected(this);
    switch(ch) {
+   case KEY_MOUSE:
    case ' ':
       CheckItem_set(selected, ! (CheckItem_get(selected)) );
       result = HANDLED;
