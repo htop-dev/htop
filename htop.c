@@ -459,7 +459,7 @@ int main(int argc, char** argv) {
          int ok = getmouse(&mevent);
          if (ok == OK) {
             if (mevent.y == panel->y) {
-               int x = panel->scrollH + mevent.x;
+               int x = panel->scrollH + mevent.x + 1;
                ProcessField field = ProcessList_keyAt(pl, x);
                if (field == pl->sortKey) {
                   ProcessList_invertSortOrder(pl);
