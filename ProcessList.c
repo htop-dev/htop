@@ -565,10 +565,6 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
             process->tgid = parent->pid;
          }
 
-         #ifdef HAVE_TASKSTATS        
-         ProcessList_readIoFile(this, process, dirname, name);
-         #endif
-
          if (showUserlandThreads && (!parent || pid != parent->pid)) {
             char subdirname[MAX_NAME+1];
             snprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
@@ -576,6 +572,10 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
             if (ProcessList_processEntries(this, subdirname, process, period))
                continue;
          }
+
+         #ifdef HAVE_TASKSTATS        
+         ProcessList_readIoFile(this, process, dirname, name);
+         #endif
 
          process->updated = true;
 
