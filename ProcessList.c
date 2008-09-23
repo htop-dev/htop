@@ -371,7 +371,9 @@ void ProcessList_sort(ProcessList* this) {
       // Take PID 1 as root and add to the new listing
       int vsize = Vector_size(this->processes);
       Process* init = (Process*) (Vector_take(this->processes, 0));
-      assert(init->pid == 1);
+      // This assertion crashes on hardened kernels.
+      // I wonder how well tree view works on those systems.
+      // assert(init->pid == 1);
       init->indent = 0;
       Vector_add(this->processes2, init);
       // Recursively empty list

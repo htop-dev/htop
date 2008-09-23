@@ -7,6 +7,8 @@ What's new in version 0.8.1
   (thanks to Ian Page Hands)
 * BUGFIX: Fix collection of IO stats in multithreaded processes
   (thanks to Gerhard Heift)
+* Remove assertion that fails on hardened kernels
+  (thanks to Wolfram Schlich for the report)
 
 What's new in version 0.8
 
