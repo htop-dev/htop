@@ -2,7 +2,11 @@
 What's new in version 0.8.1
 
 * Linux-VServer support
- (thanks to Jonathan Sambrook and Benedikt Bohm)
+  (thanks to Jonathan Sambrook and Benedikt Bohm)
+* Battery meter
+  (thanks to Ian Page Hands)
+* BUGFIX: Fix collection of IO stats in multithreaded processes
+  (thanks to Gerhard Heift)
 
 What's new in version 0.8
 

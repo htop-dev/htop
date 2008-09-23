@@ -96,7 +96,9 @@ typedef enum {
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
+#include "BatteryMeter.h"
 #include "ClockMeter.h"
+
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -120,6 +122,7 @@ MeterType* Meter_types[] = {
    &SwapMeter,
    &TasksMeter,
    &UptimeMeter,
+   &BatteryMeter,
    &AllCPUsMeter,
    NULL
 };
@@ -242,8 +245,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    w -= 2;
    attrset(CRT_colors[METER_TEXT]);
-   mvaddstr(y, x, this->caption);
-   int captionLen = strlen(this->caption);
+   int captionLen = 3;
+   mvaddnstr(y, x, this->caption, captionLen);
    x += captionLen;
    w -= captionLen;
    attrset(CRT_colors[BAR_BORDER]);

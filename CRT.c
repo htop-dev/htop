@@ -56,6 +56,7 @@ typedef enum ColorElements_ {
    METER_VALUE,
    LED_COLOR,
    UPTIME,
+   BATTERY,
    TASKS_TOTAL,
    TASKS_RUNNING,
    SWAP,
@@ -216,6 +217,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD;
       CRT_colors[FAILED_SEARCH] = A_REVERSE | A_BOLD;
       CRT_colors[UPTIME] = A_BOLD;
+      CRT_colors[BATTERY] = A_BOLD;
       CRT_colors[LARGE_NUMBER] = A_BOLD;
       CRT_colors[METER_TEXT] = A_NORMAL;
       CRT_colors[METER_VALUE] = A_BOLD;
@@ -273,6 +275,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Blue,White);
       CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
       CRT_colors[UPTIME] = ColorPair(Yellow,White);
+      CRT_colors[BATTERY] = ColorPair(Yellow,White);
       CRT_colors[LARGE_NUMBER] = ColorPair(Red,White);
       CRT_colors[METER_TEXT] = ColorPair(Blue,White);
       CRT_colors[METER_VALUE] = ColorPair(Black,White);
@@ -330,6 +333,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Blue,Black);
       CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
       CRT_colors[UPTIME] = ColorPair(Yellow,Black);
+      CRT_colors[BATTERY] = ColorPair(Yellow,Black);
       CRT_colors[LARGE_NUMBER] = ColorPair(Red,Black);
       CRT_colors[METER_TEXT] = ColorPair(Blue,Black);
       CRT_colors[METER_VALUE] = ColorPair(Black,Black);
@@ -387,6 +391,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD | ColorPair(Yellow,Blue);
       CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
       CRT_colors[UPTIME] = A_BOLD | ColorPair(Yellow,Blue);
+      CRT_colors[BATTERY] = A_BOLD | ColorPair(Yellow,Blue);
       CRT_colors[LARGE_NUMBER] = A_BOLD | ColorPair(Red,Blue);
       CRT_colors[METER_TEXT] = ColorPair(Cyan,Blue);
       CRT_colors[METER_VALUE] = A_BOLD | ColorPair(Cyan,Blue);
@@ -444,6 +449,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Black,White);
       CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
       CRT_colors[UPTIME] = ColorPair(Green,Black);
+      CRT_colors[BATTERY] = ColorPair(Green,Black);
       CRT_colors[LARGE_NUMBER] = A_BOLD | ColorPair(Red,Black);
       CRT_colors[METER_TEXT] = ColorPair(Cyan,Black);
       CRT_colors[METER_VALUE] = ColorPair(Green,Black);
@@ -502,6 +508,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Black,White);
       CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
       CRT_colors[UPTIME] = A_BOLD | ColorPair(Cyan,Black);
+      CRT_colors[BATTERY] = A_BOLD | ColorPair(Cyan,Black);
       CRT_colors[LARGE_NUMBER] = A_BOLD | ColorPair(Red,Black);
       CRT_colors[METER_TEXT] = ColorPair(Cyan,Black);
       CRT_colors[METER_VALUE] = A_BOLD | ColorPair(Cyan,Black);

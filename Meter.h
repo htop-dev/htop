@@ -97,7 +97,9 @@ typedef enum {
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
+#include "BatteryMeter.h"
 #include "ClockMeter.h"
+
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

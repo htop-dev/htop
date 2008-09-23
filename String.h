@@ -33,4 +33,6 @@ void String_freeArray(char** s);
 
 int String_contains_i(char* s, char* match);
 
+char* String_getToken(const char* line, const unsigned short int numMatch);
+
 #endif
