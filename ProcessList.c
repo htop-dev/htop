@@ -639,6 +639,40 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
                fclose(status);
             }
             #endif
+
+            #ifdef HAVE_VSERVER
+            snprintf(statusfilename, MAX_NAME, "%s/%s/status", dirname, name);
+            status = ProcessList_fopen(this, statusfilename, "r");
+            if (status == NULL) 
+               goto errorReadingProcess;
+            else {
+               char buffer[256];
+               process->vxid = 0;
+               while (!feof(status)) {
+                  char* ok = fgets(buffer, 255, status);
+                  if (!ok)
+                     break;
+
+                  if (String_startsWith(buffer, "VxID:")) {
+                     int vxid;
+                     int ok = ProcessList_read(this, buffer, "VxID:\t%d", &vxid);
+                     if (ok >= 1) {
+                        process->vxid = vxid;
+                     }
+                  }
+                  #if defined HAVE_ANCIENT_VSERVER
+                  else if (String_startsWith(buffer, "s_context:")) {
+                     int vxid;
+                     int ok = ProcessList_read(this, buffer, "s_context:\t%d", &vxid);
+                     if (ok >= 1) {
+                        process->vxid = vxid;
+                     }
+                  }
+                  #endif
+               }
+               fclose(status);
+            }
+            #endif
  
             snprintf(statusfilename, MAX_NAME, "%s/%s/cmdline", dirname, name);
             status = ProcessList_fopen(this, statusfilename, "r");

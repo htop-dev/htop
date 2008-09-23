@@ -1,4 +1,9 @@
 
+What's new in version 0.8.1
+
+* Linux-VServer support
+ (thanks to Jonathan Sambrook and Benedikt Bohm)
+
 What's new in version 0.8
 
 * Ability to change sort column with the mouse by

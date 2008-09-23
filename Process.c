@@ -49,6 +49,9 @@ typedef enum ProcessField_ {
    #ifdef HAVE_OPENVZ
    VEID, VPID,
    #endif
+   #ifdef HAVE_VSERVER
+   VXID,
+   #endif
    #ifdef HAVE_TASKSTATS
    RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE, IO_RATE,
    #endif
@@ -124,6 +127,9 @@ typedef struct Process_ {
    unsigned int veid;
    unsigned int vpid;
    #endif
+   #ifdef HAVE_VSERVER
+   unsigned int vxid;
+   #endif
    #ifdef HAVE_TASKSTATS
    unsigned long long io_rchar;
    unsigned long long io_wchar;
@@ -159,6 +165,9 @@ char *Process_fieldNames[] = {
 #ifdef HAVE_OPENVZ
    "VEID", "VPID",
 #endif
+#ifdef HAVE_VSERVER
+   "VXID",
+#endif
 #ifdef HAVE_TASKSTATS
    "RCHAR", "WCHAR", "SYSCR", "SYSCW", "RBYTES", "WBYTES", "CNCLWB",
    "IO_READ_RATE", "IO_WRITE_RATE", "IO_RATE",
@@ -177,6 +186,9 @@ char *Process_fieldTitles[] = {
    "USER     ", "  TIME+  ", "NLWP ", " TGID ",
 #ifdef HAVE_OPENVZ
    " VEID ", " VPID ",
+#endif
+#ifdef HAVE_VSERVER
+   " VXID ",
 #endif
 #ifdef HAVE_TASKSTATS
    "   RD_CHAR ", "   WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", "     IO_RD ", "     IO_WR ", " IO_CANCEL ",
@@ -388,6 +400,9 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case VEID: snprintf(buffer, n, "%5u ", this->veid); break;
    case VPID: snprintf(buffer, n, "%5u ", this->vpid); break;
    #endif
+   #ifdef HAVE_VSERVER
+   case VXID: snprintf(buffer, n, "%5u ", this->vxid); break;
+   #endif
    #ifdef HAVE_TASKSTATS
    case RCHAR:  snprintf(buffer, n, "%10llu ", this->io_rchar); break;
    case WCHAR:  snprintf(buffer, n, "%10llu ", this->io_wchar); break;   
@@ -555,6 +570,10 @@ int Process_compare(const void* v1, const void* v2) {
       return (p1->veid - p2->veid);
    case VPID:
       return (p1->vpid - p2->vpid);
+   #endif
+   #ifdef HAVE_VSERVER
+   case VXID:
+      return (p1->vxid - p2->vxid);
    #endif
    #ifdef HAVE_TASKSTATS
    case RCHAR:  diff = p2->io_rchar - p1->io_rchar; goto test_diff;

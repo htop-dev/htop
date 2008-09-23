@@ -51,6 +51,9 @@ typedef enum ProcessField_ {
    #ifdef HAVE_OPENVZ
    VEID, VPID,
    #endif
+   #ifdef HAVE_VSERVER
+   VXID,
+   #endif
    #ifdef HAVE_TASKSTATS
    RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE, IO_RATE,
    #endif
@@ -125,6 +128,9 @@ typedef struct Process_ {
    #ifdef HAVE_OPENVZ
    unsigned int veid;
    unsigned int vpid;
+   #endif
+   #ifdef HAVE_VSERVER
+   unsigned int vxid;
    #endif
    #ifdef HAVE_TASKSTATS
    unsigned long long io_rchar;
