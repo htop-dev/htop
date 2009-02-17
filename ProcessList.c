@@ -636,7 +636,7 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
                   "%*u %*u %*u %*u %*u %*u %*u %*u "
                   "%*u %*u %*u %*u %*u %*u %*u %*u "
                   "%*u %*u %*u %*u %*u %*u %*u "
-                  "%u %u",
+                  "%*u %*u %u %u",
                   &process->vpid, &process->veid);
                fclose(status);
             }

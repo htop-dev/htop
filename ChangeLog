@@ -1,4 +1,9 @@
 
+What's new in version 0.8.2
+
+* BUGFIX: Fix for VPID on OpenVZ systems
+  (thanks to Wolfgang Frisch)
+
 What's new in version 0.8.1
 
 * Linux-VServer support
