@@ -1,6 +1,7 @@
 
 What's new in version 0.8.2
 
+* Option to display hostname in the meters area
 * BUGFIX: Fix missing tree view when userland threads are hidden
   (thanks to Josh Stone)
 * BUGFIX: Fix for VPID on OpenVZ systems

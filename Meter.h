@@ -99,6 +99,7 @@ typedef enum {
 #include "UptimeMeter.h"
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
+#include "HostnameMeter.h"
 
 
 #ifndef MIN
