@@ -282,6 +282,7 @@ int main(int argc, char** argv) {
    int refreshTimeout = 0;
    int resetRefreshTimeout = 5;
    bool doRefresh = true;
+   bool doRecalculate = false;
    Settings* settings;
    
    Panel* killPanel = NULL;
@@ -353,8 +354,10 @@ int main(int argc, char** argv) {
          int currScrollV = panel->scrollV;
          if (follow)
             currPid = ProcessList_get(pl, currPos)->pid;
-         if (recalculate)
+         if (recalculate || doRecalculate) {
             ProcessList_scan(pl);
+            doRecalculate = false;
+         }
          if (refreshTimeout == 0) {
             ProcessList_sort(pl);
             refreshTimeout = 1;
@@ -728,12 +731,14 @@ int main(int argc, char** argv) {
          settings->changed = true;
          break;
       case 'H':
+         doRecalculate = true;
          refreshTimeout = 0;
          pl->hideUserlandThreads = !pl->hideUserlandThreads;
          pl->hideThreads = pl->hideUserlandThreads;
          settings->changed = true;
          break;
       case 'K':
+         doRecalculate = true;
          refreshTimeout = 0;
          pl->hideKernelThreads = !pl->hideKernelThreads;
          settings->changed = true;
