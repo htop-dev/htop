@@ -563,9 +563,7 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
                process->pid = pid;
             }
          }
-         if (parent) {
-            process->tgid = parent->pid;
-         }
+         process->tgid = parent ? parent->pid : pid;
 
          if (showUserlandThreads && (!parent || pid != parent->pid)) {
             char subdirname[MAX_NAME+1];
