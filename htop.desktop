@@ -1,12 +1,10 @@
 [Desktop Entry]
-Encoding=UTF-8
-Version=0.7
+Version=1.0
 Name=Htop
 Type=Application
 Comment=Show System Processes
 Terminal=true
 Exec=htop
-Path=
 Icon=htop
-Categories=ConsoleOnly;System;Application;
+Categories=ConsoleOnly;System;
 GenericName=Process Viewer
