@@ -99,8 +99,10 @@ static void showHelp(ProcessList* pl) {
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(6,0, "Type and layout of header meters are configurable in the setup screen.");
-   mvaddstr(7, 0, "Status: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
-
+   if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
+      mvaddstr(7, 0, "In monochrome, meters are displayed through different chars, in order: |#*@$%&");
+   }
+   mvaddstr( 8, 0, " Status: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
    mvaddstr( 9, 0, " Arrows: scroll process list             F5 t: tree view");
    mvaddstr(10, 0, " Digits: incremental PID search             u: show processes of a single user");
    mvaddstr(11, 0, "   F3 /: incremental name search            H: hide/show user threads");
