@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curses.h>
+#include <ctype.h>
 
 #include "debug.h"
 #include <assert.h>

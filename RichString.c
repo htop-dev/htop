@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curses.h>
+#include <ctype.h>
 
 #include "debug.h"
 #include <assert.h>
@@ -89,7 +90,8 @@ int RichString_findChar(RichString *this, char c, int start) {
 inline void RichString_appendn(RichString* this, int attrs, char* data_c, int len) {
    int last = MIN(RICHSTRING_MAXLEN - 1, len + this->len);
    for (int i = this->len, j = 0; i < last; i++, j++)
-      this->chstr[i] = data_c[j] | attrs;
+      this->chstr[i] = (isprint(data_c[j]) ? data_c[j] : '?') | attrs;
+
    this->chstr[last] = 0;
    this->len = last;
 }
