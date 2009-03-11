@@ -538,6 +538,10 @@ int Process_compare(const void* v1, const void* v2) {
       return strcmp(p1->user, p2->user);
    case PRIORITY:
       return (p1->priority - p2->priority);
+   case PROCESSOR:
+      return (p1->processor - p2->processor);
+   case SESSION:
+      return (p1->session - p2->session);
    case STATE:
       return (p1->state - p2->state);
    case NICE:
