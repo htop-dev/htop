@@ -6,6 +6,10 @@ What's new in version 0.8.2
   (thanks to Thorsten Schifferdecker)
 * Corrections to the desktop entry file
   (thanks by Samuli Suominen)
+* BUGFIX: Correct page size calculation for FreeBSD systems
+  (thanks to Andrew Paulsen)
+* Allow compilation without PLPA on systems that don't support it
+  (thanks to Timothy Redaelli)
 * BUGFIX: Fix missing tree view when userland threads are hidden
   (thanks to Josh Stone)
 * BUGFIX: Fix for VPID on OpenVZ systems

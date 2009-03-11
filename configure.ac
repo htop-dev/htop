@@ -97,8 +97,9 @@ AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sur
 
 PLPA_INCLUDED(plpa-1.1)
 PLPA_INIT(plpa_happy=yes, plpa_happy=no)
-if test "x$plpa_happy" = xno; then
-   AC_MSG_ERROR([Failed to initialize PLPA.])
+AM_CONDITIONAL([HAVE_PLPA], [test "$plpa_happy" = "yes"])
+if test "$plpa_happy" = "yes"; then
+   AC_DEFINE([HAVE_PLPA], [1], [Have plpa])
 fi
 
 AC_CONFIG_FILES([Makefile])

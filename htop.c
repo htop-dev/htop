@@ -112,9 +112,11 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(15, 0, "   F9 k: kill process/tagged processes      P: sort by CPU%");
    mvaddstr(16, 0, " + [ F7: lower priority (+ nice)            M: sort by MEM%");
    mvaddstr(17, 0, " - ] F8: higher priority (root only)        T: sort by TIME");
+#ifdef HAVE_PLPA
    if (pl->processorCount > 1)
       mvaddstr(18, 0, "      a: set CPU affinity                F4 I: invert sort order");
    else
+#endif
       mvaddstr(18, 0, "                                         F4 I: invert sort order");
    mvaddstr(19, 0, "   F2 S: setup                           F6 >: select sort column");
    mvaddstr(20, 0, "   F1 h: show this help screen");
@@ -131,8 +133,10 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(16, 0, " + [ F7"); mvaddstr(16,40, "    M");
    mvaddstr(17, 0, " - ] F8"); mvaddstr(17,40, "    T");
                                mvaddstr(18,40, " F4 I");
+#if HAVE_PLPA
    if (pl->processorCount > 1)
       mvaddstr(18, 0, "      a:");
+#endif
    mvaddstr(19, 0, "   F2 S"); mvaddstr(19,40, " F6 >");
    mvaddstr(20, 0, "   F1 h");
    mvaddstr(21, 0, "  F10 q"); mvaddstr(21,40, "    s");
@@ -630,6 +634,7 @@ int main(int argc, char** argv) {
          refreshTimeout = 0;
          break;
       }
+#ifdef HAVE_PLPA
       case 'a':
       {
          if (pl->processorCount == 1)
@@ -665,6 +670,7 @@ int main(int argc, char** argv) {
          refreshTimeout = 0;
          break;
       }
+#endif
       case KEY_F(10):
       case 'q':
          quit = 1;

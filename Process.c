@@ -28,13 +28,16 @@ in the source distribution for its full text.
 #include <pwd.h>
 #include <sched.h>
 
+#ifdef HAVE_PLPA
 #include <plpa.h>
+#endif
 
 // This works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
 #ifndef PAGE_SIZE
-#define PAGE_SIZE ( sysconf(_SC_PAGESIZE) / 1024 )
+#define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
 #endif
+#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
 
 #define PROCESS_COMM_LEN 300
 
@@ -351,13 +354,13 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
            : attr;
       break;
    }
-   case M_DRS: Process_printLargeNumber(this, str, this->m_drs * PAGE_SIZE); return;
-   case M_DT: Process_printLargeNumber(this, str, this->m_dt * PAGE_SIZE); return;
-   case M_LRS: Process_printLargeNumber(this, str, this->m_lrs * PAGE_SIZE); return;
-   case M_TRS: Process_printLargeNumber(this, str, this->m_trs * PAGE_SIZE); return;
-   case M_SIZE: Process_printLargeNumber(this, str, this->m_size * PAGE_SIZE); return;
-   case M_RESIDENT: Process_printLargeNumber(this, str, this->m_resident * PAGE_SIZE); return;
-   case M_SHARE: Process_printLargeNumber(this, str, this->m_share * PAGE_SIZE); return;
+   case M_DRS: Process_printLargeNumber(this, str, this->m_drs * PAGE_SIZE_KB); return;
+   case M_DT: Process_printLargeNumber(this, str, this->m_dt * PAGE_SIZE_KB); return;
+   case M_LRS: Process_printLargeNumber(this, str, this->m_lrs * PAGE_SIZE_KB); return;
+   case M_TRS: Process_printLargeNumber(this, str, this->m_trs * PAGE_SIZE_KB); return;
+   case M_SIZE: Process_printLargeNumber(this, str, this->m_size * PAGE_SIZE_KB); return;
+   case M_RESIDENT: Process_printLargeNumber(this, str, this->m_resident * PAGE_SIZE_KB); return;
+   case M_SHARE: Process_printLargeNumber(this, str, this->m_share * PAGE_SIZE_KB); return;
    case ST_UID: snprintf(buffer, n, "%4d ", this->st_uid); break;
    case USER: {
       if (Process_getuid != this->st_uid)
@@ -493,6 +496,7 @@ bool Process_setPriority(Process* this, int priority) {
    return (err == 0);
 }
 
+#ifdef HAVE_PLPA
 unsigned long Process_getAffinity(Process* this) {
    unsigned long mask = 0;
    plpa_sched_getaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask);
@@ -502,6 +506,7 @@ unsigned long Process_getAffinity(Process* this) {
 bool Process_setAffinity(Process* this, unsigned long mask) {
    return (plpa_sched_setaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask) == 0);
 }
+#endif
 
 void Process_sendSignal(Process* this, int signal) {
    kill(this->pid, signal);

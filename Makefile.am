@@ -1,5 +1,7 @@
 
+if HAVE_PLPA
 SUBDIRS = plpa-1.1
+endif
 
 bin_PROGRAMS = htop
 dist_man_MANS = htop.1
@@ -35,7 +37,9 @@ SUFFIXES = .h
 
 BUILT_SOURCES = $(myhtopheaders)
 htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h debug.h
+if HAVE_PLPA
 htop_LDADD = $(top_builddir)/plpa-1.1/src/libplpa_included.la
+endif
 
 profile:
 	$(MAKE) all CFLAGS="-pg -O2"
