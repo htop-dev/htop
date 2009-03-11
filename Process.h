@@ -49,7 +49,7 @@ typedef enum ProcessField_ {
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
    USER, TIME, NLWP, TGID,
    #ifdef HAVE_OPENVZ
-   VEID, VPID,
+   CTID, VPID,
    #endif
    #ifdef HAVE_VSERVER
    VXID,
@@ -126,7 +126,7 @@ typedef struct Process_ {
    float percent_mem;
    char* user;
    #ifdef HAVE_OPENVZ
-   unsigned int veid;
+   unsigned int ctid;
    unsigned int vpid;
    #endif
    #ifdef HAVE_VSERVER

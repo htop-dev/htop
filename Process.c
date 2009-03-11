@@ -47,7 +47,7 @@ typedef enum ProcessField_ {
    PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
    USER, TIME, NLWP, TGID,
    #ifdef HAVE_OPENVZ
-   VEID, VPID,
+   CTID, VPID,
    #endif
    #ifdef HAVE_VSERVER
    VXID,
@@ -124,7 +124,7 @@ typedef struct Process_ {
    float percent_mem;
    char* user;
    #ifdef HAVE_OPENVZ
-   unsigned int veid;
+   unsigned int ctid;
    unsigned int vpid;
    #endif
    #ifdef HAVE_VSERVER
@@ -163,7 +163,7 @@ char *Process_fieldNames[] = {
    "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM",
    "USER", "TIME", "NLWP", "TGID", 
 #ifdef HAVE_OPENVZ
-   "VEID", "VPID",
+   "CTID", "VPID",
 #endif
 #ifdef HAVE_VSERVER
    "VXID",
@@ -185,7 +185,7 @@ char *Process_fieldTitles[] = {
    " CODE ", " DATA ", " LIB ", " DIRTY ", " UID ", "CPU% ", "MEM% ",
    "USER     ", "  TIME+  ", "NLWP ", " TGID ",
 #ifdef HAVE_OPENVZ
-   " VEID ", " VPID ",
+   " CTID ", " VPID ",
 #endif
 #ifdef HAVE_VSERVER
    " VXID ",
@@ -397,7 +397,7 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
       break;
    }
    #ifdef HAVE_OPENVZ
-   case VEID: snprintf(buffer, n, "%5u ", this->veid); break;
+   case CTID: snprintf(buffer, n, "%5u ", this->ctid); break;
    case VPID: snprintf(buffer, n, "%5u ", this->vpid); break;
    #endif
    #ifdef HAVE_VSERVER
@@ -566,8 +566,8 @@ int Process_compare(const void* v1, const void* v2) {
    case NLWP:
       return (p1->nlwp - p2->nlwp);
    #ifdef HAVE_OPENVZ
-   case VEID:
-      return (p1->veid - p2->veid);
+   case CTID:
+      return (p1->ctid - p2->ctid);
    case VPID:
       return (p1->vpid - p2->vpid);
    #endif

@@ -621,7 +621,7 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
             #ifdef HAVE_OPENVZ
             if (access("/proc/vz", R_OK) != 0) {
                process->vpid = process->pid;
-               process->veid = 0;
+               process->ctid = 0;
             } else {
                snprintf(statusfilename, MAX_NAME, "%s/%s/stat", dirname, name);
                status = ProcessList_fopen(this, statusfilename, "r");
@@ -635,7 +635,7 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
                   "%*u %*u %*u %*u %*u %*u %*u %*u "
                   "%*u %*u %*u %*u %*u %*u %*u "
                   "%*u %*u %u %u",
-                  &process->vpid, &process->veid);
+                  &process->vpid, &process->ctid);
                fclose(status);
             }
             #endif
