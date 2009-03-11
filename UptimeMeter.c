@@ -25,9 +25,9 @@ static void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
    fclose(fd);
    int totalseconds = (int) ceil(uptime);
    int seconds = totalseconds % 60;
-   int minutes = (totalseconds-seconds) % 3600 / 60;
-   int hours = (totalseconds-seconds-(minutes*60)) % 86400 / 3600;
-   int days = (totalseconds-seconds-(minutes*60)-(hours*3600)) / 86400;
+   int minutes = (totalseconds/60) % 60;
+   int hours = (totalseconds/3600) % 24;
+   int days = (totalseconds/86400);
    this->values[0] = days;
    if (days > this->total) {
       this->total = days;
