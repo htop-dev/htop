@@ -353,8 +353,6 @@ int main(int argc, char** argv) {
       if (recalculate)
          oldTime = newTime;
       if (doRefresh) {
-         incSearchIndex = 0;
-         incSearchBuffer[0] = 0;
          int currPos = Panel_getSelectedIndex(panel);
          unsigned int currPid = 0;
          int currScrollV = panel->scrollV;
@@ -429,8 +427,6 @@ int main(int argc, char** argv) {
             incSearchBuffer[incSearchIndex] = 0;
          } else {
             incSearchMode = false;
-            incSearchIndex = 0;
-            incSearchBuffer[0] = 0;
             FunctionBar_draw(defaultBar, NULL);
             continue;
          }
@@ -729,8 +725,10 @@ int main(int argc, char** argv) {
       }
       case KEY_F(3):
       case '/':
-         FunctionBar_draw(searchBar, incSearchBuffer);
+         incSearchIndex = 0;
+         incSearchBuffer[0] = 0;
          incSearchMode = true;
+         FunctionBar_draw(searchBar, incSearchBuffer);
          break;
       case 't':
       case KEY_F(5):
