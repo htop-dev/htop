@@ -139,7 +139,7 @@ static void showHelp(ProcessList* pl) {
       mvaddstr(18, 0, "      a:");
 #endif
    mvaddstr(19, 0, "   F2 S"); mvaddstr(19,40, " F6 >");
-   mvaddstr(20, 0, "   F1 h");
+   mvaddstr(20, 0, "   F1 h"); mvaddstr(20,40, "    l");
    mvaddstr(21, 0, "  F10 q"); mvaddstr(21,40, "    s");
    attrset(CRT_colors[DEFAULT_COLOR]);
 
