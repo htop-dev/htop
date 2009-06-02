@@ -23,7 +23,7 @@ typedef struct SignalsPanel_ {
 static HandlerResult SignalsPanel_eventHandler(Panel* super, int ch) {
    SignalsPanel* this = (SignalsPanel*) super;
 
-   int size = Panel_getSize(super);
+   int size = Panel_size(super);
    
    if (ch <= 255 && isdigit(ch)) {
       int signal = ch-48 + this->state;

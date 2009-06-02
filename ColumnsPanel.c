@@ -30,7 +30,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    
    int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
-   int size = Panel_getSize(super);
+   int size = Panel_size(super);
 
    switch(ch) {
       case KEY_F(7):
@@ -95,7 +95,7 @@ int ColumnsPanel_fieldNameToIndex(const char* name) {
 
 void ColumnsPanel_update(Panel* super) {
    ColumnsPanel* this = (ColumnsPanel*) super;
-   int size = Panel_getSize(super);
+   int size = Panel_size(super);
    this->settings->changed = true;
    // FIXME: this is crappily inefficient
    free(this->settings->pl->fields);

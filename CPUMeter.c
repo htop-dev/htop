@@ -43,6 +43,10 @@ static void CPUMeter_init(Meter* this) {
 static void CPUMeter_setValues(Meter* this, char* buffer, int size) {
    ProcessList* pl = this->pl;
    int processor = this->param;
+   if (processor > this->pl->processorCount) {
+      snprintf(buffer, size, "absent");
+      return;
+   }
    double total = (double) pl->totalPeriod[processor];
    double cpu;
    this->values[0] = pl->nicePeriod[processor] / total * 100.0;
@@ -67,6 +71,10 @@ static void CPUMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
    RichString_init(out);
+   if (this->param > this->pl->processorCount) {
+      RichString_append(out, CRT_colors[METER_TEXT], "absent");
+      return;
+   }
    sprintf(buffer, "%5.1f%% ", this->values[1]);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
    RichString_append(out, CRT_colors[CPU_NORMAL], buffer);

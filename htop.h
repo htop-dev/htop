@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include "CategoriesPanel.h"
 #include "SignalsPanel.h"
 #include "TraceScreen.h"
+#include "OpenFilesScreen.h"
 #include "AffinityPanel.h"
 
 #include "config.h"

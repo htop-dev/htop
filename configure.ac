@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([htop],[0.8.1],[loderunner@users.sourceforge.net])
+AC_INIT([htop],[0.8.2],[loderunner@users.sourceforge.net])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_HEADER([config.h])
@@ -88,8 +88,10 @@ fi
 AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="no")
 if test "x$enable_unicode" = xyes; then
    AC_CHECK_LIB([ncursesw], [refresh], [], [missing_libraries="$missing_libraries libncursesw"])
+   AC_CHECK_HEADERS([ncursesw/curses.h],[:],[missing_headers="$missing_headers $ac_header"])
 else
    AC_CHECK_LIB([ncurses], [refresh], [], [missing_libraries="$missing_libraries libncurses"])
+   AC_CHECK_HEADERS([curses.h],[:],[missing_headers="$missing_headers $ac_header"])
 fi
 
 AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))

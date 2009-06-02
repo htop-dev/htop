@@ -104,12 +104,12 @@ void Panel_moveSelectedDown(Panel* this);
 
 int Panel_getSelectedIndex(Panel* this);
 
-int Panel_getSize(Panel* this);
+int Panel_size(Panel* this);
 
 void Panel_setSelected(Panel* this, int selected);
 
 void Panel_draw(Panel* this, bool focus);
 
-void Panel_onKey(Panel* this, int key);
+bool Panel_onKey(Panel* this, int key);
 
 #endif

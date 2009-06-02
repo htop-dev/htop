@@ -32,17 +32,17 @@ typedef struct TraceScreen_ {
 
 }*/
 
-static char* tbFunctions[3] = {"AutoScroll ", "Stop Tracing   ", "Done   "};
+static char* tbFunctions[] = {"AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
 
-static char* tbKeys[3] = {"F4", "F5", "Esc"};
+static char* tbKeys[] = {"F4", "F5", "Esc"};
 
-static int tbEvents[3] = {KEY_F(4), KEY_F(5), 27};
+static int tbEvents[] = {KEY_F(4), KEY_F(5), 27};
 
 TraceScreen* TraceScreen_new(Process* process) {
    TraceScreen* this = (TraceScreen*) malloc(sizeof(TraceScreen));
    this->process = process;
    this->display = Panel_new(0, 1, COLS, LINES-2, LISTITEM_CLASS, true, ListItem_compare);
-   this->bar = FunctionBar_new(3, tbFunctions, tbKeys, tbEvents);
+   this->bar = FunctionBar_new(tbFunctions, tbKeys, tbEvents);
    this->tracing = true;
    return this;
 }
@@ -105,7 +105,7 @@ void TraceScreen_run(TraceScreen* this) {
                buffer[i] = '\0';
                if (contLine) {
                   ListItem_append((ListItem*)Panel_get(panel,
-                     Panel_getSize(panel)-1), line);
+                     Panel_size(panel)-1), line);
                   contLine = false;
                } else {
                   Panel_add(panel, (Object*) ListItem_new(line, 0));
@@ -119,7 +119,7 @@ void TraceScreen_run(TraceScreen* this) {
             contLine = true;
          }
          if (follow)
-            Panel_setSelected(panel, Panel_getSize(panel)-1);
+            Panel_setSelected(panel, Panel_size(panel)-1);
          Panel_draw(panel, true);
       }
       int ch = getch();
@@ -146,7 +146,7 @@ void TraceScreen_run(TraceScreen* this) {
       case KEY_F(4):
          follow = !follow;
          if (follow)
-            Panel_setSelected(panel, Panel_getSize(panel)-1);
+            Panel_setSelected(panel, Panel_size(panel)-1);
          break;
       case 'q':
       case 27:

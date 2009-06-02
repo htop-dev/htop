@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include "CategoriesPanel.h"
 #include "SignalsPanel.h"
 #include "TraceScreen.h"
+#include "OpenFilesScreen.h"
 #include "AffinityPanel.h"
 
 #include "config.h"
@@ -110,8 +111,8 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(13, 0, "  Space: tag processes                      F: cursor follows process");
    mvaddstr(14, 0, "      U: untag all processes");
    mvaddstr(15, 0, "   F9 k: kill process/tagged processes      P: sort by CPU%");
-   mvaddstr(16, 0, " + [ F7: lower priority (+ nice)            M: sort by MEM%");
-   mvaddstr(17, 0, " - ] F8: higher priority (root only)        T: sort by TIME");
+   mvaddstr(16, 0, " - ] F7: higher priority (root only)        M: sort by MEM%");
+   mvaddstr(17, 0, " + [ F8: lower priority (+ nice)            T: sort by TIME");
 #ifdef HAVE_PLPA
    if (pl->processorCount > 1)
       mvaddstr(18, 0, "      a: set CPU affinity                F4 I: invert sort order");
@@ -119,7 +120,7 @@ static void showHelp(ProcessList* pl) {
 #endif
       mvaddstr(18, 0, "                                         F4 I: invert sort order");
    mvaddstr(19, 0, "   F2 S: setup                           F6 >: select sort column");
-   mvaddstr(20, 0, "   F1 h: show this help screen");
+   mvaddstr(20, 0, "   F1 h: show this help screen              l: list open files with lsof");
    mvaddstr(21, 0, "  F10 q: quit                               s: trace syscalls with strace");
 
    attrset(CRT_colors[HELP_BOLD]);
@@ -155,7 +156,7 @@ static char* CategoriesFunctions[10] = {"      ", "      ", "      ", "      ", 
 static void Setup_run(Settings* settings, int headerHeight) {
    ScreenManager* scr = ScreenManager_new(0, headerHeight, 0, -1, HORIZONTAL, true);
    CategoriesPanel* panelCategories = CategoriesPanel_new(settings, scr);
-   ScreenManager_add(scr, (Panel*) panelCategories, FunctionBar_new(10, CategoriesFunctions, NULL, NULL), 16);
+   ScreenManager_add(scr, (Panel*) panelCategories, FunctionBar_new(CategoriesFunctions, NULL, NULL), 16);
    CategoriesPanel_makeMetersPage(panelCategories);
    Panel* panelFocus;
    int ch;
@@ -166,7 +167,7 @@ static void Setup_run(Settings* settings, int headerHeight) {
 static bool changePriority(Panel* panel, int delta) {
    bool ok = true;
    bool anyTagged = false;
-   for (int i = 0; i < Panel_getSize(panel); i++) {
+   for (int i = 0; i < Panel_size(panel); i++) {
       Process* p = (Process*) Panel_get(panel, i);
       if (p->tag) {
          ok = Process_setPriority(p, p->nice + delta) && ok;
@@ -188,13 +189,13 @@ static HandlerResult pickWithEnter(Panel* panel, int ch) {
    return IGNORED;
 }
 
-static Object* pickFromList(Panel* panel, Panel* list, int x, int y, char** keyLabels, FunctionBar* prevBar) {
+static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, char** keyLabels, FunctionBar* prevBar) {
    char* fuKeys[2] = {"Enter", "Esc"};
    int fuEvents[2] = {13, 27};
    if (!list->eventHandler)
       Panel_setEventHandler(list, pickWithEnter);
    ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, false);
-   ScreenManager_add(scr, list, FunctionBar_new(2, keyLabels, fuKeys, fuEvents), x - 1);
+   ScreenManager_add(scr, list, FunctionBar_new(keyLabels, fuKeys, fuEvents), x - 1);
    ScreenManager_add(scr, panel, NULL, -1);
    Panel* panelFocus;
    int ch;
@@ -209,7 +210,7 @@ static Object* pickFromList(Panel* panel, Panel* list, int x, int y, char** keyL
    return NULL;
 }
 
-static void addUserToList(int key, void* userCast, void* panelCast) {
+static void addUserToVector(int key, void* userCast, void* panelCast) {
    char* user = (char*) userCast;
    Panel* panel = (Panel*) panelCast;
    Panel_add(panel, (Object*) ListItem_new(user, key));
@@ -274,6 +275,9 @@ int main(int argc, char** argv) {
          if (arg == argc - 1) printHelpFlag();
          arg++;
          setUserOnly(argv[arg], &userOnly, &userId);
+      } else {
+         fprintf(stderr, "Error: unknown flag: %s\n", argv[arg]);
+         exit(1);
       }
       arg++;
    }
@@ -321,14 +325,14 @@ int main(int argc, char** argv) {
    }
    Panel_setRichHeader(panel, ProcessList_printHeader(pl));
    
-   char* searchFunctions[3] = {"Next  ", "Exit  ", " Search: "};
-   char* searchKeys[3] = {"F3", "Esc", "  "};
-   int searchEvents[3] = {KEY_F(3), 27, ERR};
-   FunctionBar* searchBar = FunctionBar_new(3, searchFunctions, searchKeys, searchEvents);
+   char* searchFunctions[] = {"Next  ", "Exit  ", " Search: ", NULL};
+   char* searchKeys[] = {"F3", "Esc", "  "};
+   int searchEvents[] = {KEY_F(3), 27, ERR};
+   FunctionBar* searchBar = FunctionBar_new(searchFunctions, searchKeys, searchEvents);
    
-   char* defaultFunctions[10] = {"Help  ", "Setup ", "Search", "Invert", "Tree  ",
-       "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  "};
-   FunctionBar* defaultBar = FunctionBar_new(10, defaultFunctions, NULL, NULL);
+   char* defaultFunctions[] = {"Help  ", "Setup ", "Search", "Invert", "Tree  ",
+       "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
+   FunctionBar* defaultBar = FunctionBar_new(defaultFunctions, NULL, NULL);
 
    ProcessList_scan(pl);
    usleep(75000);
@@ -512,7 +516,7 @@ int main(int argc, char** argv) {
       }
       case 'U':
       {
-         for (int i = 0; i < Panel_getSize(panel); i++) {
+         for (int i = 0; i < Panel_size(panel); i++) {
             Process* p = (Process*) Panel_get(panel, i);
             p->tag = false;
          }
@@ -558,6 +562,17 @@ int main(int argc, char** argv) {
          CRT_enableDelay();
          break;
       }
+      case 'l':
+      {
+         OpenFilesScreen* ts = OpenFilesScreen_new((Process*) Panel_getSelected(panel));
+         OpenFilesScreen_run(ts);
+         OpenFilesScreen_delete(ts);
+         clear();
+         FunctionBar_draw(defaultBar, NULL);
+         refreshTimeout = 0;
+         CRT_enableDelay();
+         break;
+      }
       case 'S':
       case 'C':
       case KEY_F(2):
@@ -581,12 +596,12 @@ int main(int argc, char** argv) {
       {
          Panel* usersPanel = Panel_new(0, 0, 0, 0, LISTITEM_CLASS, true, ListItem_compare);
          Panel_setHeader(usersPanel, "Show processes of:");
-         UsersTable_foreach(ut, addUserToList, usersPanel);
+         UsersTable_foreach(ut, addUserToVector, usersPanel);
          Vector_sort(usersPanel->items);
          ListItem* allUsers = ListItem_new("All users", -1);
          Panel_insert(usersPanel, 0, (Object*) allUsers);
-         char* fuFunctions[2] = {"Show    ", "Cancel "};
-         ListItem* picked = (ListItem*) pickFromList(panel, usersPanel, 20, headerHeight, fuFunctions, defaultBar);
+         char* fuFunctions[] = {"Show    ", "Cancel ", NULL};
+         ListItem* picked = (ListItem*) pickFromVector(panel, usersPanel, 20, headerHeight, fuFunctions, defaultBar);
          if (picked) {
             if (picked == allUsers) {
                userOnly = false;
@@ -604,15 +619,15 @@ int main(int argc, char** argv) {
             killPanel = (Panel*) SignalsPanel_new(0, 0, 0, 0);
          }
          SignalsPanel_reset((SignalsPanel*) killPanel);
-         char* fuFunctions[2] = {"Send  ", "Cancel "};
-         Signal* signal = (Signal*) pickFromList(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar);
+         char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
+         Signal* signal = (Signal*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar);
          if (signal) {
             if (signal->number != 0) {
                Panel_setHeader(panel, "Sending...");
                Panel_draw(panel, true);
                refresh();
                bool anyTagged = false;
-               for (int i = 0; i < Panel_getSize(panel); i++) {
+               for (int i = 0; i < Panel_size(panel); i++) {
                   Process* p = (Process*) Panel_get(panel, i);
                   if (p->tag) {
                      Process_sendSignal(p, signal->number);
@@ -642,12 +657,12 @@ int main(int argc, char** argv) {
          Panel* affinityPanel = AffinityPanel_new(pl->processorCount, curr);
 
          char* fuFunctions[2] = {"Set    ", "Cancel "};
-         void* set = pickFromList(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar);
+         void* set = pickFromVector(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar);
          if (set) {
             unsigned long new = AffinityPanel_getAffinity(affinityPanel);
             bool anyTagged = false;
             bool ok = true;
-            for (int i = 0; i < Panel_getSize(panel); i++) {
+            for (int i = 0; i < Panel_size(panel); i++) {
                Process* p = (Process*) Panel_get(panel, i);
                if (p->tag) {
                   ok = Process_setAffinity(p, new) && ok;
@@ -689,7 +704,7 @@ int main(int argc, char** argv) {
                Panel_setSelected(sortPanel, i);
             free(name);
          }
-         ListItem* field = (ListItem*) pickFromList(panel, sortPanel, 15, headerHeight, fuFunctions, defaultBar);
+         ListItem* field = (ListItem*) pickFromVector(panel, sortPanel, 15, headerHeight, fuFunctions, defaultBar);
          if (field) {
             settings->changed = true;
             setSortKey(pl, field->key, panel, settings);

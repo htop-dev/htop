@@ -39,7 +39,7 @@ Panel* AffinityPanel_new(int processorCount, unsigned long mask) {
 }
 
 unsigned long AffinityPanel_getAffinity(Panel* this) {
-   int size = Panel_getSize(this);
+   int size = Panel_size(this);
    unsigned long mask = 0;
    for (int i = 0; i < size; i++) {
       if (CheckItem_get((CheckItem*)Panel_get(this, i)))

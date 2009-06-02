@@ -10,18 +10,17 @@ in the source distribution for its full text.
 */
 
 #define _GNU_SOURCE
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <curses.h>
-#include <stdarg.h>
-
+#include "RichString.h"
 #include "Object.h"
 #include "CRT.h"
 #include "ListItem.h"
 #include "String.h"
 #include "ProcessList.h"
-#include "RichString.h"
+
+#include <math.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
 #include "debug.h"
 #include <assert.h>

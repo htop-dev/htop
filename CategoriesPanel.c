@@ -23,17 +23,17 @@ typedef struct CategoriesPanel_ {
 
 }*/
 
-static char* MetersFunctions[10] = {"      ", "      ", "      ", "Type  ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  "};
+static char* MetersFunctions[] = {"      ", "      ", "      ", "Type  ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 
-static char* AvailableMetersFunctions[10] = {"      ", "      ", "      ", "      ", "Add L ", "Add R ", "      ", "      ", "      ", "Done  "};
+static char* AvailableMetersFunctions[] = {"      ", "      ", "      ", "      ", "Add L ", "Add R ", "      ", "      ", "      ", "Done  ", NULL};
 
-static char* DisplayOptionsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  "};
+static char* DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static char* ColumnsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  "};
+static char* ColumnsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 
-static char* ColorsFunctions[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  "};
+static char* ColorsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static char* AvailableColumnsFunctions[10] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  "};
+static char* AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void CategoriesPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
@@ -46,26 +46,26 @@ void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
    Panel* leftMeters = (Panel*) MetersPanel_new(this->settings, "Left column", this->settings->header->leftMeters, this->scr);
    Panel* rightMeters = (Panel*) MetersPanel_new(this->settings, "Right column", this->settings->header->rightMeters, this->scr);
    Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, leftMeters, rightMeters, this->scr);
-   ScreenManager_add(this->scr, leftMeters, FunctionBar_new(10, MetersFunctions, NULL, NULL), 20);
-   ScreenManager_add(this->scr, rightMeters, FunctionBar_new(10, MetersFunctions, NULL, NULL), 20);
-   ScreenManager_add(this->scr, availableMeters, FunctionBar_new(10, AvailableMetersFunctions, NULL, NULL), -1);
+   ScreenManager_add(this->scr, leftMeters, FunctionBar_new(MetersFunctions, NULL, NULL), 20);
+   ScreenManager_add(this->scr, rightMeters, FunctionBar_new(MetersFunctions, NULL, NULL), 20);
+   ScreenManager_add(this->scr, availableMeters, FunctionBar_new(AvailableMetersFunctions, NULL, NULL), -1);
 }
 
 static void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {
    Panel* displayOptions = (Panel*) DisplayOptionsPanel_new(this->settings, this->scr);
-   ScreenManager_add(this->scr, displayOptions, FunctionBar_new(10, DisplayOptionsFunctions, NULL, NULL), -1);
+   ScreenManager_add(this->scr, displayOptions, FunctionBar_new(DisplayOptionsFunctions, NULL, NULL), -1);
 }
 
 static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
    Panel* colors = (Panel*) ColorsPanel_new(this->settings, this->scr);
-   ScreenManager_add(this->scr, colors, FunctionBar_new(10, ColorsFunctions, NULL, NULL), -1);
+   ScreenManager_add(this->scr, colors, FunctionBar_new(ColorsFunctions, NULL, NULL), -1);
 }
 
 static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    Panel* columns = (Panel*) ColumnsPanel_new(this->settings, this->scr);
    Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(this->settings, columns, this->scr);
-   ScreenManager_add(this->scr, columns, FunctionBar_new(10, ColumnsFunctions, NULL, NULL), 20);
-   ScreenManager_add(this->scr, availableColumns, FunctionBar_new(10, AvailableColumnsFunctions, NULL, NULL), -1);
+   ScreenManager_add(this->scr, columns, FunctionBar_new(ColumnsFunctions, NULL, NULL), 20);
+   ScreenManager_add(this->scr, availableColumns, FunctionBar_new(AvailableColumnsFunctions, NULL, NULL), -1);
 }
 
 static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {

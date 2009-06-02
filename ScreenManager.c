@@ -83,7 +83,7 @@ void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int
    if (fuBar)
       Vector_add(this->fuBars, fuBar);
    else
-      Vector_add(this->fuBars, FunctionBar_new(0, NULL, NULL, NULL));
+      Vector_add(this->fuBars, FunctionBar_new(NULL, NULL, NULL));
    if (!this->fuBar && fuBar) this->fuBar = fuBar;
    item->needsRedraw = true;
    this->itemCount++;
@@ -188,7 +188,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          if (focus > 0)
             focus--;
          panelFocus = (Panel*) Vector_get(this->items, focus);
-         if (Panel_getSize(panelFocus) == 0 && focus > 0)
+         if (Panel_size(panelFocus) == 0 && focus > 0)
             goto tryLeft;
          break;
       case KEY_RIGHT:
@@ -197,7 +197,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          if (focus < this->itemCount - 1)
             focus++;
          panelFocus = (Panel*) Vector_get(this->items, focus);
-         if (Panel_getSize(panelFocus) == 0 && focus < this->itemCount - 1)
+         if (Panel_size(panelFocus) == 0 && focus < this->itemCount - 1)
             goto tryRight;
          break;
       case KEY_F(10):

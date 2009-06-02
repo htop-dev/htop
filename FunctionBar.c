@@ -36,34 +36,36 @@ char* FUNCTIONBAR_CLASS = "FunctionBar";
 #define FUNCTIONBAR_CLASS NULL
 #endif
 
-static char* FunctionBar_FKeys[10] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"};
+static char* FunctionBar_FKeys[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", NULL};
 
-static char* FunctionBar_FLabels[10] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      "};
+static char* FunctionBar_FLabels[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", NULL};
 
-static int FunctionBar_FEvents[10] = {KEY_F(1), KEY_F(2), KEY_F(3), KEY_F(4), KEY_F(5), KEY_F(6), KEY_F(7), KEY_F(8), KEY_F(9), KEY_F(10)};
+static int FunctionBar_FEvents[] = {KEY_F(1), KEY_F(2), KEY_F(3), KEY_F(4), KEY_F(5), KEY_F(6), KEY_F(7), KEY_F(8), KEY_F(9), KEY_F(10)};
 
-FunctionBar* FunctionBar_new(int size, char** functions, char** keys, int* events) {
+FunctionBar* FunctionBar_new(char** functions, char** keys, int* events) {
    FunctionBar* this = malloc(sizeof(FunctionBar));
    Object_setClass(this, FUNCTIONBAR_CLASS);
    ((Object*) this)->delete = FunctionBar_delete;
    this->functions = functions;
-   this->size = size;
    if (keys && events) {
       this->staticData = false; 
-      this->functions = malloc(sizeof(char*) * size);
-      this->keys = malloc(sizeof(char*) * size);
-      this->events = malloc(sizeof(int) * size);
-      for (int i = 0; i < size; i++) {
+      this->functions = malloc(sizeof(char*) * 15);
+      this->keys = malloc(sizeof(char*) * 15);
+      this->events = malloc(sizeof(int) * 15);
+      int i = 0;
+      while (i < 15 && functions[i]) {
          this->functions[i] = String_copy(functions[i]);
          this->keys[i] = String_copy(keys[i]);
          this->events[i] = events[i];
+         i++;
       }
+      this->size = i;
    } else {
       this->staticData = true;
       this->functions = functions ? functions : FunctionBar_FLabels;
       this->keys = FunctionBar_FKeys;
       this->events = FunctionBar_FEvents;
-      assert((!functions) || this->size == 10);
+      this->size = 10;
    }
    return this;
 }

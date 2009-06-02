@@ -94,9 +94,9 @@ void Panel_init(Panel* this, int x, int y, int w, int h, char* type, bool owner)
    this->selected = 0;
    this->oldSelected = 0;
    this->needsRedraw = true;
-   this->header.len = 0;
+   RichString_prune(&(this->header));
    if (String_eq(CRT_termType, "linux"))
-      this->scrollHAmount = 40;
+      this->scrollHAmount = 20;
    else
       this->scrollHAmount = 5;
 }
@@ -213,7 +213,7 @@ int Panel_getSelectedIndex(Panel* this) {
    return this->selected;
 }
 
-int Panel_getSize(Panel* this) {
+int Panel_size(Panel* this) {
    assert (this != NULL);
 
    return Vector_size(this->items);
@@ -326,43 +326,74 @@ void Panel_draw(Panel* this, bool focus) {
    move(0, 0);
 }
 
-void Panel_onKey(Panel* this, int key) {
+bool Panel_onKey(Panel* this, int key) {
    assert (this != NULL);
    switch (key) {
    case KEY_DOWN:
       if (this->selected + 1 < Vector_size(this->items))
          this->selected++;
-      break;
+      return true;
    case KEY_UP:
       if (this->selected > 0)
          this->selected--;
-      break;
+      return true;
+   #ifdef KEY_C_DOWN
+   case KEY_C_DOWN:
+      if (this->selected + 1 < Vector_size(this->items)) {
+         this->selected++;
+         if (this->scrollV < Vector_size(this->items) - this->h) {
+            this->scrollV++;
+            this->needsRedraw = true;
+         }
+      }
+      return true;
+   #endif
+   #ifdef KEY_C_UP
+   case KEY_C_UP:
+      if (this->selected > 0) {
+         this->selected--;
+         if (this->scrollV > 0) {
+            this->scrollV--;
+            this->needsRedraw = true;
+         }
+      }
+      return true;
+   #endif
    case KEY_LEFT:
       if (this->scrollH > 0) {
-         this->scrollH -= this->scrollHAmount;
+         this->scrollH -= 5;
          this->needsRedraw = true;
       }
-      break;
+      return true;
    case KEY_RIGHT:
-      this->scrollH += this->scrollHAmount;
+      this->scrollH += 5;
       this->needsRedraw = true;
-      break;
+      return true;
    case KEY_PPAGE:
-      this->selected -= this->h;
+      this->selected -= (this->h - 1);
+      this->scrollV -= (this->h - 1);
       if (this->selected < 0)
          this->selected = 0;
-      break;
+      if (this->scrollV < 0)
+         this->scrollV = 0;
+      this->needsRedraw = true;
+      return true;
    case KEY_NPAGE:
-      this->selected += this->h;
+      this->selected += (this->h - 1);
       int size = Vector_size(this->items);
       if (this->selected >= size)
          this->selected = size - 1;
-      break;
+      this->scrollV += (this->h - 1);
+      if (this->scrollV >= MAX(0, size - this->h))
+         this->scrollV = MAX(0, size - this->h - 1);
+      this->needsRedraw = true;
+      return true;
    case KEY_HOME:
       this->selected = 0;
-      break;
+      return true;
    case KEY_END:
       this->selected = Vector_size(this->items) - 1;
-      break;
+      return true;
    }
+   return false;
 }

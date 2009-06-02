@@ -8,13 +8,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <curses.h>
 #include <ctype.h>
 
 #include "debug.h"
 #include <assert.h>
 #ifdef HAVE_LIBNCURSESW
-#include <wchar.h>
+#include <curses.h>
+#else
+#include <ncursesw/curses.h>
 #endif
 
 #define RICHSTRING_MAXLEN 300
@@ -115,6 +116,10 @@ int RichString_findChar(RichString *this, char c, int start) {
 }
 
 #endif
+
+void RichString_prune(RichString* this) {
+   this->len = 0;
+}
 
 void RichString_setAttr(RichString *this, int attrs) {
    RichString_setAttrn(this, attrs, 0, this->len - 1);
