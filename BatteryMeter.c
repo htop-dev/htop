@@ -86,7 +86,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       const FILE *file;
       char line[50];
 
-      sprintf((char *) infoPath, "%s%s/%s", batteryPath, newEntry->content, fileName);
+      snprintf((char *) infoPath, sizeof infoPath, "%s%s/%s", batteryPath, newEntry->content, fileName);
 
       if ((file = fopen(infoPath, "r")) == NULL) {
          return 0;
@@ -135,7 +135,7 @@ static ACPresence chkIsOnline() {
 
 
          char statePath[50];
-         sprintf((char *) statePath, "%s/%s/state", power_supplyPath, entryName);
+         snprintf((char *) statePath, sizeof statePath, "%s/%s/state", power_supplyPath, entryName);
          file = fopen(statePath, "r");
 
          if (!file) {
@@ -190,7 +190,7 @@ static ACPresence chkIsOnline() {
             }
 
             char onlinePath[50];
-            sprintf((char *) onlinePath, "%s/%s/online", power_supplyPath, entryName);
+            snprintf((char *) onlinePath, sizeof onlinePath, "%s/%s/online", power_supplyPath, entryName);
             file = fopen(onlinePath, "r");
 
             if (!file) {
@@ -264,7 +264,7 @@ static double getSysBatData() {
 
       const char ueventPath[50];
 
-      sprintf((char *) ueventPath, "%s%s/uevent", power_supplyPath, entryName);
+      snprintf((char *) ueventPath, sizeof ueventPath, "%s%s/uevent", power_supplyPath, entryName);
 
       FILE *file;
       if ((file = fopen(ueventPath, "r")) == NULL) {
