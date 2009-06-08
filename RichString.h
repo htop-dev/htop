@@ -16,9 +16,9 @@
 #include "debug.h"
 #include <assert.h>
 #ifdef HAVE_LIBNCURSESW
-#include <curses.h>
-#else
 #include <ncursesw/curses.h>
+#else
+#include <curses.h>
 #endif
 
 #define RICHSTRING_MAXLEN 300

@@ -150,6 +150,7 @@ void TraceScreen_run(TraceScreen* this) {
          break;
       case 'q':
       case 27:
+      case KEY_F(10):
          looping = false;
          break;
       case KEY_RESIZE:

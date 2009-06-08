@@ -1,4 +1,8 @@
 
+What's new in version 0.8.2.1
+
+* BUGFIX: Fix a minor bug which affected the build process.
+
 What's new in version 0.8.2
 
 * Integrated lsof (press 'l')
