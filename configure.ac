@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([htop],[0.8.2.1],[loderunner@users.sourceforge.net])
+AC_INIT([htop],[0.8.3],[loderunner@users.sourceforge.net])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_HEADER([config.h])
@@ -104,5 +104,5 @@ if test "$plpa_happy" = "yes"; then
    AC_DEFINE([HAVE_PLPA], [1], [Have plpa])
 fi
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
