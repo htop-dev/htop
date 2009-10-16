@@ -28,7 +28,7 @@ in the source distribution for its full text.
 typedef struct OpenFiles_ProcessData_ {
    char* data[256];
    struct OpenFiles_FileData_* files;
-   bool failed;
+   int error;
 } OpenFiles_ProcessData;
 
 typedef struct OpenFiles_FileData_ {
