@@ -19,7 +19,7 @@ int UptimeMeter_attributes[] = {
 };
 
 static void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
-   double uptime;
+   double uptime = 0;
    FILE* fd = fopen(PROCDIR "/uptime", "r");
    fscanf(fd, "%lf", &uptime);
    fclose(fd);

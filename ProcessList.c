@@ -313,7 +313,7 @@ static void ProcessList_remove(ProcessList* this, Process* p) {
    unsigned int pid = p->pid;
    int index = Vector_indexOf(this->processes, p, Process_pidCompare);
    assert(index != -1);
-   Vector_remove(this->processes, index);
+   if (index >= 0) Vector_remove(this->processes, index);
    assert(Hashtable_get(this->processTable, pid) == NULL); (void)pid;
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
@@ -730,7 +730,7 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
 
 void ProcessList_scan(ProcessList* this) {
    unsigned long long int usertime, nicetime, systemtime, systemalltime, idlealltime, idletime, totaltime;
-   unsigned long long int swapFree;
+   unsigned long long int swapFree = 0;
 
    FILE* status;
    char buffer[128];
