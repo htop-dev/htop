@@ -35,7 +35,7 @@ static unsigned long int parseUevent(FILE * file, char *key) {
    while (fgets(line, sizeof line, file)) {
       if (strncmp(line, key, strlen(key)) == 0) {
          char *value;
-         value = strtok(line, "=");
+         strtok(line, "=");
          value = strtok(NULL, "=");
          dValue = atoi(value);
          break;
@@ -122,7 +122,6 @@ static ACPresence chkIsOnline() {
       char *entryName;
 
       if (!power_supplyDir) {
-         closedir(power_supplyDir);
          return AC_ERROR;
       }
 
@@ -246,7 +245,6 @@ static double getSysBatData() {
 
 
    if (!power_supplyDir) {
-      closedir(power_supplyDir);
       return 0;
    }
 

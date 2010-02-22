@@ -488,10 +488,7 @@ static void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirna
       unsigned long long now = tv.tv_sec*1000+tv.tv_usec/1000;
       unsigned long long last_read = proc->io_read_bytes;
       unsigned long long last_write = proc->io_write_bytes;
-      while (!feof(io)) {
-         char* ok = fgets(buffer, 255, io);
-         if (!ok)
-            break;
+      while (fgets(buffer, 255, io)) {
          if (ProcessList_read(this, buffer, "rchar: %llu", &proc->io_rchar)) continue;
          if (ProcessList_read(this, buffer, "wchar: %llu", &proc->io_wchar)) continue;
          if (ProcessList_read(this, buffer, "syscr: %llu", &proc->io_syscr)) continue;
@@ -520,6 +517,7 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
    DIR* dir;
    struct dirent* entry;
    Process* prototype = this->prototype;
+   int parentPid = parent ? parent->pid : 0;
 
    dir = opendir(dirname);
    if (!dir) return false;
@@ -648,10 +646,7 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
             else {
                char buffer[256];
                process->vxid = 0;
-               while (!feof(status)) {
-                  char* ok = fgets(buffer, 255, status);
-                  if (!ok)
-                     break;
+               while (fgets(buffer, 255, status)) {
 
                   if (String_startsWith(buffer, "VxID:")) {
                      int vxid;
@@ -687,9 +682,10 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
                      command[i] = ' ';
                command[amtRead] = '\0';
             }
+            fclose(status);
+
             command[PROCESS_COMM_LEN] = '\0';
             process->comm = String_copy(command);
-            fclose(status);
          }
 
          int percent_cpu = (process->utime + process->stime - lasttimes) / 
@@ -737,8 +733,7 @@ void ProcessList_scan(ProcessList* this) {
    status = ProcessList_fopen(this, PROCMEMINFOFILE, "r");
    assert(status != NULL);
    int processors = this->processorCount;
-   while (!feof(status)) {
-      fgets(buffer, 128, status);
+   while (fgets(buffer, 128, status)) {
 
       switch (buffer[0]) {
       case 'M':

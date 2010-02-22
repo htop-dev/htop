@@ -63,12 +63,10 @@ static bool Settings_read(Settings* this, char* fileName) {
    if (fd == NULL) {
       return false;
    }
-   const int maxLine = 65535;
+   const int maxLine = 2048;
    char buffer[maxLine];
    bool readMeters = false;
-   while (!feof(fd)) {
-      buffer[0] = '\0';
-      fgets(buffer, maxLine, fd);
+   while (fgets(buffer, maxLine, fd)) {
       char** option = String_split(buffer, '=');
       if (String_eq(option[0], "fields")) {
          char* trim = String_trim(option[1]);
