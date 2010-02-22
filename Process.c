@@ -43,6 +43,10 @@ in the source distribution for its full text.
 
 /*{
 
+#ifndef Process_isThread
+#define Process_isThread(_process) (_process->pid != _process->tgid || _process->m_size == 0)
+#endif
+
 typedef enum ProcessField_ {
    PID = 1, COMM, STATE, PPID, PGRP, SESSION, TTY_NR, TPGID, FLAGS, MINFLT, CMINFLT, MAJFLT, CMAJFLT, UTIME,
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
@@ -303,7 +307,7 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case PROCESSOR: snprintf(buffer, n, "%3d ", this->processor+1); break;
    case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
    case COMM: {
-      if (this->pl->highlightThreads && (this->pid != this->tgid || this->m_size == 0)) {
+      if (this->pl->highlightThreads && Process_isThread(this)) {
          attr = CRT_colors[PROCESS_THREAD];
          baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
       }

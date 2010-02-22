@@ -45,6 +45,10 @@ in the source distribution for its full text.
 #define PROCESS_COMM_LEN 300
 
 
+#ifndef Process_isThread
+#define Process_isThread(process) (process->pid != process->tgid || process->m_size == 0)
+#endif
+
 typedef enum ProcessField_ {
    PID = 1, COMM, STATE, PPID, PGRP, SESSION, TTY_NR, TPGID, FLAGS, MINFLT, CMINFLT, MAJFLT, CMAJFLT, UTIME,
    STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
