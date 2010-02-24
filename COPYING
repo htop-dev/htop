@@ -337,3 +337,20 @@ proprietary programs.  If your program is a subroutine library, you may
 consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Library General
 Public License instead of this License.
+
+
+	Appendix 2: Special exception concerning PLPA
+
+ In the following exception, "PLPA" means (i) code released by the
+ Portable Linux Processor Affinity Project, or (ii) derivative works of
+ such code, in both cases provided that the code is covered entirely by
+ free software licensing terms.
+
+ As a special exception to the GNU GPL, the licensors of htop give you
+ permission to combine GNU GPL-licensed code in htop (and derivative
+ works of such code) with PLPA. You may copy and distribute such a
+ combined work following the terms of the GNU GPL for htop and the
+ applicable licenses of the version of PLPA used in your combined work,
+ provided that you include the source code of such version of PLPA when
+ and as the GNU GPL requires distribution of source code.
+
