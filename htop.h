@@ -4,7 +4,7 @@
 #define HEADER_htop
 /*
 htop - htop.h
-(C) 2004-2008 Hisham H. Muhammad
+(C) 2004-2010 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <stdbool.h>
 #include <locale.h>
+#include <getopt.h>
 
 #include "ProcessList.h"
 #include "CRT.h"
@@ -39,6 +40,8 @@ in the source distribution for its full text.
 //#link m
 
 #define INCSEARCH_MAX 40
+
+#define COPYRIGHT "(C) 2004-2010 Hisham Muhammad"
 
 int main(int argc, char** argv);
 
