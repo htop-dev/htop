@@ -64,6 +64,7 @@ static void CPUMeter_setValues(Meter* this, char* buffer, int size) {
       this->type->items = 3;
       cpu = MIN(100.0, MAX(0.0, (this->values[0]+this->values[1]+this->values[2])));
    }
+   if (isnan(cpu)) cpu = 0.0;
    snprintf(buffer, size, "%5.1f%%", cpu );
 }
 
