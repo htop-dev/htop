@@ -1,6 +1,6 @@
 /*
 htop - htop.c
-(C) 2004-2008 Hisham H. Muhammad
+(C) 2004-2010 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <stdbool.h>
 #include <locale.h>
+#include <getopt.h>
 
 #include "ProcessList.h"
 #include "CRT.h"
@@ -36,22 +37,29 @@ in the source distribution for its full text.
 
 #define INCSEARCH_MAX 40
 
+#define COPYRIGHT "(C) 2004-2010 Hisham Muhammad"
+
 static void printVersionFlag() {
-   clear();
-   printf("htop " VERSION " - (C) 2004-2008 Hisham Muhammad.\n");
-   printf("Released under the GNU GPL.\n\n");
+   fputs("htop " VERSION " - " COPYRIGHT "\n"
+         "Released under the GNU GPL.\n\n",
+         stdout);
    exit(0);
 }
 
 static void printHelpFlag() {
-   clear();
-   printf("htop " VERSION " - (C) 2004-2008 Hisham Muhammad.\n");
-   printf("Released under the GNU GPL.\n\n");
-   printf("-d DELAY     Delay between updates, in tenths of seconds\n\n");
-   printf("-u USERNAME  Show only processes of a given user\n\n");
-   printf("--sort-key COLUMN  Sort by this column (use --sort-key help for a column list)\n\n");
-   printf("Press F1 inside htop for online help.\n");
-   printf("See the man page for full information.\n\n");
+   fputs("htop " VERSION " - " COPYRIGHT "\n"
+         "Released under the GNU GPL.\n\n"
+         "-C --no-color         Use a monochrome color scheme\n"
+         "-d --delay=DELAY      Set the delay between updates, in tenths of seconds\n"
+         "-h --help             Print this help screen\n"
+         "-s --sort-key=COLUMN  Sort by COLUMN (try --sort-key=help for a list)\n"
+         "-u --user=USERNAME    Show only processes of a given user\n"
+         "-v --version          Print version info\n"
+         "\n"
+         "Long options may be passed with a single dash.\n\n"
+         "Press F1 inside htop for online help.\n"
+         "See 'man htop' for more information.\n",
+         stdout);
    exit(0);
 }
 
@@ -62,7 +70,7 @@ static void showHelp(ProcessList* pl) {
    for (int i = 0; i < LINES-1; i++)
       mvhline(i, 0, ' ', COLS);
 
-   mvaddstr(0, 0, "htop " VERSION " - (C) 2004-2008 Hisham Muhammad.");
+   mvaddstr(0, 0, "htop " VERSION " - " COPYRIGHT);
    mvaddstr(1, 0, "Released under the GNU GPL. See 'man' page for more info.");
 
    attrset(CRT_colors[DEFAULT_COLOR]);
@@ -139,7 +147,7 @@ static void showHelp(ProcessList* pl) {
       mvaddstr(18, 0, "      a:");
 #endif
    mvaddstr(19, 0, "   F2 S"); mvaddstr(19,40, " F6 >");
-   mvaddstr(20, 0, "   F1 h"); mvaddstr(20,40, "    l");
+   mvaddstr(20, 0, " ? F1 h"); mvaddstr(20,40, "    l");
    mvaddstr(21, 0, "  F10 q"); mvaddstr(21,40, "    s");
    attrset(CRT_colors[DEFAULT_COLOR]);
 
@@ -238,6 +246,20 @@ int main(int argc, char** argv) {
    int delay = -1;
    bool userOnly = false;
    uid_t userId = 0;
+   int usecolors = 1;
+
+   int opt, opti=0;
+   static struct option long_opts[] =
+   {
+      {"help",     no_argument,         0, 'h'},
+      {"version",  no_argument,         0, 'v'},
+      {"delay",    required_argument,   0, 'd'},
+      {"sort-key", required_argument,   0, 's'},
+      {"user",     required_argument,   0, 'u'},
+      {"no-color", no_argument,         0, 'C'},
+      {"no-colour",no_argument,         0, 'C'},
+      {0,0,0,0}
+   };
    int sortKey = 0;
 
    char *lc_ctype = getenv("LC_CTYPE");
@@ -246,43 +268,44 @@ int main(int argc, char** argv) {
    else
       setlocale(LC_CTYPE, getenv("LC_ALL"));
 
-   int arg = 1;
-   while (arg < argc) {
-      if (String_eq(argv[arg], "--help")) {
-         printHelpFlag();
-      } else if (String_eq(argv[arg], "--version")) {
-         printVersionFlag();
-      } else if (String_eq(argv[arg], "--sort-key")) {
-         if (arg == argc - 1) printHelpFlag();
-         arg++;
-         char* field = argv[arg];
-         if (String_eq(field, "help")) {
-            for (int j = 1; j < LAST_PROCESSFIELD; j++)
-               printf ("%s\n", Process_fieldNames[j]);
-            exit(0);
-         }
-         sortKey = ColumnsPanel_fieldNameToIndex(field);
-         if (sortKey == -1) {
-            fprintf(stderr, "Error: invalid column \"%s\".\n", field);
-            exit(1);
-         }
-      } else if (String_eq(argv[arg], "-d")) {
-         if (arg == argc - 1) printHelpFlag();
-         arg++;
-         sscanf(argv[arg], "%d", &delay);
-         if (delay < 1) delay = 1;
-         if (delay > 100) delay = 100;
-      } else if (String_eq(argv[arg], "-u")) {
-         if (arg == argc - 1) printHelpFlag();
-         arg++;
-         setUserOnly(argv[arg], &userOnly, &userId);
-      } else {
-         fprintf(stderr, "Error: unknown flag: %s\n", argv[arg]);
-         exit(1);
+   /* Parse arguments */
+   while ((opt = getopt_long_only(argc, argv, "hvCs:d:u:", long_opts, &opti))) {
+      if (opt == EOF) break;
+      switch (opt) {
+         case 'h':
+            printHelpFlag();
+            break;
+         case 'v':
+            printVersionFlag();
+            break;
+         case 's':
+            if (strcmp(optarg, "help")) {
+               for (int j = 1; j < LAST_PROCESSFIELD; j++)
+                  printf ("%s\n", Process_fieldNames[j]);
+               exit(0);
+            }
+
+            sortKey = ColumnsPanel_fieldNameToIndex(optarg);
+            if (sortKey == -1) {
+               fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
+               exit(1);
+            }
+            break;
+         case 'd':
+            sscanf(optarg, "%d", &delay);
+            if (delay < 1) delay = 1;
+            if (delay > 100) delay = 100;
+            break;
+         case 'u':
+            setUserOnly(optarg, &userOnly, &userId);
+            break;
+         case 'C':
+            usecolors=0;
+            break;
       }
-      arg++;
    }
-   
+
+
    if (access(PROCDIR, R_OK) != 0) {
       fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
       exit(1);
@@ -315,6 +338,8 @@ int main(int argc, char** argv) {
    // FIXME: move delay code to settings
    if (delay != -1)
       settings->delay = delay;
+   if (!usecolors) 
+      settings->colorScheme = COLORSCHEME_MONOCHROME;
    
    CRT_init(settings->delay, settings->colorScheme);
    
@@ -532,6 +557,7 @@ int main(int argc, char** argv) {
       }
       case KEY_F(1):
       case 'h':
+      case '?':
       {
          showHelp(pl);
          FunctionBar_draw(defaultBar, NULL);
