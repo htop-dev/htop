@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <sys/utsname.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "debug.h"
 #include <assert.h>

@@ -27,6 +27,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <sys/utsname.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "debug.h"
 #include <assert.h>
@@ -699,6 +700,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
          int percent_cpu = (process->utime + process->stime - lasttimes) / 
             period * 100.0;
          process->percent_cpu = MAX(MIN(percent_cpu, processors*100.0), 0.0);
+         if (isnan(process->percent_cpu)) process->percent_cpu = 0.0;
 
          process->percent_mem = (process->m_resident * PAGE_SIZE_KB) / 
             (float)(this->totalMem) * 

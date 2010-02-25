@@ -89,10 +89,10 @@ void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int
    this->itemCount++;
 }
 
-Panel* ScreenManager_remove(ScreenManager* this, int index) {
-   assert(this->itemCount > index);
-   Panel* panel = (Panel*) Vector_remove(this->items, index);
-   Vector_remove(this->fuBars, index);
+Panel* ScreenManager_remove(ScreenManager* this, int idx) {
+   assert(this->itemCount > idx);
+   Panel* panel = (Panel*) Vector_remove(this->items, idx);
+   Vector_remove(this->fuBars, idx);
    this->fuBar = NULL;
    this->itemCount--;
    return panel;

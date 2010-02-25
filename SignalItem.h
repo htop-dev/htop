@@ -21,7 +21,7 @@ in the source distribution for its full text.
 
 typedef struct Signal_ {
    Object super;
-   char* name;
+   const char* name;
    int number;
 } Signal;
 

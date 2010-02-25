@@ -18,11 +18,11 @@ in the source distribution for its full text.
 #define String_startsWith(s, match) (strstr((s), (match)) == (s))
 }*/
 
-inline char* String_copy(char* orig) {
+inline char* String_copy(const char* orig) {
    return strdup(orig);
 }
 
-char* String_cat(char* s1, char* s2) {
+char* String_cat(const char* s1, const char* s2) {
    int l1 = strlen(s1);
    int l2 = strlen(s2);
    char* out = malloc(l1 + l2 + 1);
@@ -31,7 +31,7 @@ char* String_cat(char* s1, char* s2) {
    return out;
 }
 
-char* String_trim(char* in) {
+char* String_trim(const char* in) {
    while (in[0] == ' ' || in[0] == '\t' || in[0] == '\n') {
       in++;
    }
@@ -55,7 +55,7 @@ inline int String_eq(const char* s1, const char* s2) {
    return (strcmp(s1, s2) == 0);
 }
 
-char** String_split(char* s, char sep) {
+char** String_split(const char* s, char sep) {
    const int rate = 10;
    char** out = (char**) malloc(sizeof(char*) * rate);
    int ctr = 0;
@@ -93,7 +93,7 @@ void String_freeArray(char** s) {
    free(s);
 }
 
-int String_contains_i(char* s, char* match) {
+int String_contains_i(const char* s, const char* match) {
    int lens = strlen(s);
    int lenmatch = strlen(match);
    for (int i = 0; i < lens-lenmatch; i++) {

@@ -38,11 +38,11 @@ static void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
 static void MemoryMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
-   int div = 1024; char* format = "%ldM ";
-   long int totalMem = this->total / div;
-   long int usedMem = this->values[0] / div;
-   long int buffersMem = this->values[1] / div;
-   long int cachedMem = this->values[2] / div;
+   int k = 1024; const char* format = "%ldM ";
+   long int totalMem = this->total / k;
+   long int usedMem = this->values[0] / k;
+   long int buffersMem = this->values[1] / k;
+   long int cachedMem = this->values[2] / k;
    RichString_init(out);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
    sprintf(buffer, format, totalMem);

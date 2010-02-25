@@ -21,6 +21,6 @@ typedef struct MetersPanel_ {
 } MetersPanel;
 
 
-MetersPanel* MetersPanel_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr);
+MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr);
 
 #endif

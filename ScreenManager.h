@@ -47,7 +47,7 @@ extern int ScreenManager_size(ScreenManager* this);
 
 void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int size);
 
-Panel* ScreenManager_remove(ScreenManager* this, int index);
+Panel* ScreenManager_remove(ScreenManager* this, int idx);
 
 void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2);
 

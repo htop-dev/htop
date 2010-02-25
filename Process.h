@@ -46,7 +46,7 @@ in the source distribution for its full text.
 
 
 #ifndef Process_isThread
-#define Process_isThread(process) (process->pid != process->tgid || process->m_size == 0)
+#define Process_isThread(_process) (_process->pid != _process->tgid || _process->m_size == 0)
 #endif
 
 typedef enum ProcessField_ {
@@ -75,16 +75,16 @@ typedef struct Process_ {
    struct ProcessList_ *pl;
    bool updated;
 
-   unsigned int pid;
+   pid_t pid;
    char* comm;
    int indent;
    char state;
    bool tag;
-   unsigned int ppid;
+   pid_t ppid;
    unsigned int pgrp;
    unsigned int session;
    unsigned int tty_nr;
-   unsigned int tgid;
+   pid_t tgid;
    int tpgid;
    unsigned long int flags;
    #ifdef DEBUG
@@ -161,9 +161,9 @@ extern char* PROCESS_CLASS;
 #define PROCESS_CLASS NULL
 #endif
 
-extern char *Process_fieldNames[];
+extern const char *Process_fieldNames[];
 
-extern char *Process_fieldTitles[];
+extern const char *Process_fieldTitles[];
 
 #define ONE_K 1024
 #define ONE_M (ONE_K * ONE_K)
@@ -185,7 +185,7 @@ unsigned long Process_getAffinity(Process* this);
 bool Process_setAffinity(Process* this, unsigned long mask);
 #endif
 
-void Process_sendSignal(Process* this, int signal);
+void Process_sendSignal(Process* this, int sgn);
 
 int Process_pidCompare(const void* v1, const void* v2);
 

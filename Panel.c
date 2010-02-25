@@ -113,7 +113,7 @@ inline void Panel_setRichHeader(Panel* this, RichString header) {
    this->needsRedraw = true;
 }
 
-inline void Panel_setHeader(Panel* this, char* header) {
+inline void Panel_setHeader(Panel* this, const char* header) {
    Panel_setRichHeader(this, RichString_quickString(CRT_colors[PANEL_HEADER_FOCUS], header));
 }
 

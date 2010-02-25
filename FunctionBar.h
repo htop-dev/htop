@@ -37,11 +37,11 @@ extern char* FUNCTIONBAR_CLASS;
 #define FUNCTIONBAR_CLASS NULL
 #endif
 
-FunctionBar* FunctionBar_new(char** functions, char** keys, int* events);
+FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* events);
 
 void FunctionBar_delete(Object* cast);
 
-void FunctionBar_setLabel(FunctionBar* this, int event, char* text);
+void FunctionBar_setLabel(FunctionBar* this, int event, const char* text);
 
 void FunctionBar_draw(FunctionBar* this, char* buffer);
 

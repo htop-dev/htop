@@ -28,7 +28,7 @@ int BatteryMeter_attributes[] = {
    BATTERY
 };
 
-static unsigned long int parseUevent(FILE * file, char *key) {
+static unsigned long int parseUevent(FILE * file, const char *key) {
    char line[100];
    unsigned long int dValue = 0;
 
@@ -117,7 +117,7 @@ static ACPresence chkIsOnline() {
 
    if (access(PROCDIR "/acpi/ac_adapter", F_OK) == 0) {
       const struct dirent *dirEntries;
-      char *power_supplyPath = PROCDIR "/acpi/ac_adapter";
+      const char *power_supplyPath = PROCDIR "/acpi/ac_adapter";
       DIR *power_supplyDir = opendir(power_supplyPath);
       char *entryName;
 
@@ -170,7 +170,7 @@ static ACPresence chkIsOnline() {
 
    } else {
 
-      char *power_supplyPath = "/sys/class/power_supply";
+      const char *power_supplyPath = "/sys/class/power_supply";
 
       if (access("/sys/class/power_supply", F_OK) == 0) {
          const struct dirent *dirEntries;
@@ -240,7 +240,7 @@ static double getProcBatData() {
 
 static double getSysBatData() {
    const struct dirent *dirEntries;
-   char *power_supplyPath = "/sys/class/power_supply/";
+   const char *power_supplyPath = "/sys/class/power_supply/";
    DIR *power_supplyDir = opendir(power_supplyPath);
 
 
@@ -292,7 +292,7 @@ static void BatteryMeter_setValues(Meter * this, char *buffer, int len) {
 
    this->values[0] = percent;
 
-   char *onAcText, *onBatteryText, *unknownText;
+   const char *onAcText, *onBatteryText, *unknownText;
 
    unknownText = "%.1f%%";
    if (this->mode == TEXT_METERMODE) {

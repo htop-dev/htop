@@ -53,7 +53,7 @@ typedef struct RichString_ {
 
 #ifdef HAVE_LIBNCURSESW
 
-extern void RichString_appendn(RichString* this, int attrs, char* data_c, int len);
+extern void RichString_appendn(RichString* this, int attrs, const char* data_c, int len);
 
 extern void RichString_setAttrn(RichString *this, int attrs, int start, int finish);
 
@@ -61,7 +61,7 @@ int RichString_findChar(RichString *this, char c, int start);
 
 #else
 
-extern void RichString_appendn(RichString* this, int attrs, char* data_c, int len);
+extern void RichString_appendn(RichString* this, int attrs, const char* data_c, int len);
 
 void RichString_setAttrn(RichString *this, int attrs, int start, int finish);
 
@@ -73,10 +73,10 @@ void RichString_prune(RichString* this);
 
 void RichString_setAttr(RichString *this, int attrs);
 
-extern void RichString_append(RichString* this, int attrs, char* data);
+extern void RichString_append(RichString* this, int attrs, const char* data);
 
-void RichString_write(RichString* this, int attrs, char* data);
+void RichString_write(RichString* this, int attrs, const char* data);
 
-RichString RichString_quickString(int attrs, char* data);
+RichString RichString_quickString(int attrs, const char* data);
 
 #endif

@@ -43,9 +43,9 @@ typedef struct OpenFilesScreen_ {
 
 }*/
 
-static char* tbFunctions[] = {"Refresh", "Done   ", NULL};
+static const char* tbFunctions[] = {"Refresh", "Done   ", NULL};
 
-static char* tbKeys[] = {"F5", "Esc"};
+static const char* tbKeys[] = {"F5", "Esc"};
 
 static int tbEvents[] = {KEY_F(5), 27};
 
@@ -112,7 +112,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(int pid) {
 
 static void OpenFilesScreen_scan(OpenFilesScreen* this) {
    Panel* panel = this->display;
-   int index = MAX(Panel_getSelectedIndex(panel), 0);
+   int idx = MAX(Panel_getSelectedIndex(panel), 0);
    Panel_prune(panel);
    OpenFiles_ProcessData* process = OpenFilesScreen_getProcessData(this->process->pid);
    if (process->error == 127) {
@@ -144,7 +144,7 @@ static void OpenFilesScreen_scan(OpenFilesScreen* this) {
    }
    free(process);
    Vector_sort(panel->items);
-   Panel_setSelected(panel, index);
+   Panel_setSelected(panel, idx);
 }
 
 void OpenFilesScreen_run(OpenFilesScreen* this) {

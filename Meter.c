@@ -42,7 +42,7 @@ typedef void(*Meter_Draw)(Meter*, int, int, int);
 
 struct MeterMode_ {
    Meter_Draw draw;
-   char* uiName;
+   const char* uiName;
    int h;
 };
 
@@ -53,9 +53,9 @@ struct MeterType_ {
    int items;
    double total;
    int* attributes;
-   char* name;
-   char* uiName;
-   char* caption;
+   const char* name;
+   const char* uiName;
+   const char* caption;
    MeterType_Init init;
    MeterType_Done done;
    MeterType_SetMode setMode;
@@ -161,7 +161,7 @@ void Meter_delete(Object* cast) {
    free(this);
 }
 
-void Meter_setCaption(Meter* this, char* caption) {
+void Meter_setCaption(Meter* this, const char* caption) {
    free(this->caption);
    this->caption = strdup(caption);
 }
@@ -325,7 +325,7 @@ static int GraphMeterMode_colors[21] = {
    GRAPH_8, GRAPH_8, GRAPH_9
 };
 
-static char* GraphMeterMode_characters = "^`'-.,_~'`-.,_~'`-.,_";
+static const char* GraphMeterMode_characters = "^`'-.,_~'`-.,_~'`-.,_";
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
@@ -345,15 +345,15 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    value /= this->total;
    drawBuffer[METER_BUFFER_LEN - 1] = value;
    for (int i = METER_BUFFER_LEN - w, k = 0; i < METER_BUFFER_LEN; i++, k++) {
-      double value = drawBuffer[i];
+      value = drawBuffer[i];
       DrawDot( CRT_colors[DEFAULT_COLOR], y, ' ' );
       DrawDot( CRT_colors[DEFAULT_COLOR], y+1, ' ' );
       DrawDot( CRT_colors[DEFAULT_COLOR], y+2, ' ' );
       
       double threshold = 1.00;
-      for (int i = 0; i < 21; i++, threshold -= 0.05)
+      for (int j = 0; j < 21; j++, threshold -= 0.05)
          if (value >= threshold) {
-            DrawDot(CRT_colors[GraphMeterMode_colors[i]], y+(i/7.0), GraphMeterMode_characters[i]);
+            DrawDot(CRT_colors[GraphMeterMode_colors[j]], y+(j/7.0), GraphMeterMode_characters[j]);
             break;
          }
    }
@@ -362,7 +362,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- LEDMeterMode ---------- */
 
-static char* LEDMeterMode_digits[3][10] = {
+static const char* LEDMeterMode_digits[3][10] = {
    { " __ ","    "," __ "," __ ","    "," __ "," __ "," __ "," __ "," __ "},
    { "|  |","   |"," __|"," __|","|__|","|__ ","|__ ","   |","|__|","|__|"},
    { "|__|","   |","|__ "," __|","   |"," __|","|__|","   |","|__|"," __|"},
@@ -374,6 +374,7 @@ static void LEDMeterMode_drawDigit(int x, int y, int n) {
 }
 
 static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
+   (void) w;
    MeterType* type = this->type;
    char buffer[METER_BUFFER_LEN];
    type->setValues(this, buffer, METER_BUFFER_LEN - 1);

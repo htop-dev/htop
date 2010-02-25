@@ -76,7 +76,7 @@ void Panel_done(Panel* this);
 
 extern void Panel_setRichHeader(Panel* this, RichString header);
 
-extern void Panel_setHeader(Panel* this, char* header);
+extern void Panel_setHeader(Panel* this, const char* header);
 
 void Panel_setEventHandler(Panel* this, Panel_EventHandler eh);
 

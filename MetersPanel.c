@@ -87,7 +87,7 @@ static HandlerResult MetersPanel_EventHandler(Panel* super, int ch) {
    return result;
 }
 
-MetersPanel* MetersPanel_new(Settings* settings, char* header, Vector* meters, ScreenManager* scr) {
+MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr) {
    MetersPanel* this = (MetersPanel*) malloc(sizeof(MetersPanel));
    Panel* super = (Panel*) this;
    Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);

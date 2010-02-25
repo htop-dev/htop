@@ -52,7 +52,7 @@ typedef struct RichString_ {
 
 #ifdef HAVE_LIBNCURSESW
 
-inline void RichString_appendn(RichString* this, int attrs, char* data_c, int len) {
+inline void RichString_appendn(RichString* this, int attrs, const char* data_c, int len) {
    wchar_t data[RICHSTRING_MAXLEN];
    len = mbstowcs(data, data_c, RICHSTRING_MAXLEN);
    if (len<0)
@@ -88,7 +88,7 @@ int RichString_findChar(RichString *this, char c, int start) {
 
 #else
 
-inline void RichString_appendn(RichString* this, int attrs, char* data_c, int len) {
+inline void RichString_appendn(RichString* this, int attrs, const char* data_c, int len) {
    int last = MIN(RICHSTRING_MAXLEN - 1, len + this->len);
    for (int i = this->len, j = 0; i < last; i++, j++)
       this->chstr[i] = (isprint(data_c[j]) ? data_c[j] : '?') | attrs;
@@ -108,7 +108,7 @@ void RichString_setAttrn(RichString *this, int attrs, int start, int finish) {
 int RichString_findChar(RichString *this, char c, int start) {
    chtype* ch = this->chstr + start;
    for (int i = start; i < this->len; i++) {
-      if ((*ch & 0xff) == c)
+      if ((*ch & 0xff) == (chtype) c)
          return i;
       ch++;
    }
@@ -125,16 +125,16 @@ void RichString_setAttr(RichString *this, int attrs) {
    RichString_setAttrn(this, attrs, 0, this->len - 1);
 }
 
-inline void RichString_append(RichString* this, int attrs, char* data) {
+inline void RichString_append(RichString* this, int attrs, const char* data) {
    RichString_appendn(this, attrs, data, strlen(data));
 }
 
-void RichString_write(RichString* this, int attrs, char* data) {
+void RichString_write(RichString* this, int attrs, const char* data) {
    RichString_init(this);
    RichString_append(this, attrs, data);
 }
 
-RichString RichString_quickString(int attrs, char* data) {
+RichString RichString_quickString(int attrs, const char* data) {
    RichString str;
    RichString_initVal(str);
    RichString_write(&str, attrs, data);

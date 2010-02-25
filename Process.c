@@ -73,16 +73,16 @@ typedef struct Process_ {
    struct ProcessList_ *pl;
    bool updated;
 
-   unsigned int pid;
+   pid_t pid;
    char* comm;
    int indent;
    char state;
    bool tag;
-   unsigned int ppid;
+   pid_t ppid;
    unsigned int pgrp;
    unsigned int session;
    unsigned int tty_nr;
-   unsigned int tgid;
+   pid_t tgid;
    int tpgid;
    unsigned long int flags;
    #ifdef DEBUG
@@ -160,7 +160,7 @@ char* PROCESS_CLASS = "Process";
 #define PROCESS_CLASS NULL
 #endif
 
-char *Process_fieldNames[] = {
+const char *Process_fieldNames[] = {
    "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION",
    "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT",
    "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE",
@@ -182,7 +182,7 @@ char *Process_fieldNames[] = {
 "*** report bug! ***"
 };
 
-char *Process_fieldTitles[] = {
+const char *Process_fieldTitles[] = {
    "", "  PID ", "Command ", "S ", " PPID ", " PGRP ", " SESN ",
    "  TTY ", "TPGID ", "- ", "- ", "- ", "- ", "- ",
    " UTIME+  ", " STIME+  ",  "- ", "- ", "PRI ", " NI ", "- ",
@@ -198,7 +198,7 @@ char *Process_fieldTitles[] = {
    " VXID ",
 #endif
 #ifdef HAVE_TASKSTATS
-   "   RD_CHAR ", "   WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", "     IO_RD ", "     IO_WR ", " IO_CANCEL ",
+   "   RD_CHAR ", "   WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", " IO_RBYTES ", " IO_WBYTES ", " IO_CANCEL ",
    " IORR ", " IOWR ", "   IO ",
 #endif
 };
@@ -367,7 +367,7 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case M_SHARE: Process_printLargeNumber(this, str, this->m_share * PAGE_SIZE_KB); return;
    case ST_UID: snprintf(buffer, n, "%4d ", this->st_uid); break;
    case USER: {
-      if (Process_getuid != this->st_uid)
+      if (Process_getuid != (int) this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
       if (this->user) {
       snprintf(buffer, n, "%-8s ", this->user);
@@ -435,7 +435,7 @@ static void Process_display(Object* cast, RichString* out) {
    RichString_init(out);
    for (int i = 0; fields[i]; i++)
       Process_writeField(this, out, fields[i]);
-   if (this->pl->shadowOtherUsers && this->st_uid != Process_getuid)
+   if (this->pl->shadowOtherUsers && (int)this->st_uid != Process_getuid)
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
    if (this->tag == true)
       RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
@@ -467,7 +467,7 @@ Process* Process_new(struct ProcessList_ *pl) {
 }
 
 Process* Process_clone(Process* this) {
-   Process* clone = malloc(sizeof(Process));
+   Process* copy = malloc(sizeof(Process));
    #if HAVE_TASKSTATS
    this->io_rchar = 0;
    this->io_wchar = 0;
@@ -481,10 +481,10 @@ Process* Process_clone(Process* this) {
    this->io_rate_write_time = 0;
    this->io_cancelled_write_bytes = 0;
    #endif
-   memcpy(clone, this, sizeof(Process));
+   memcpy(copy, this, sizeof(Process));
    this->comm = NULL;
    this->pid = 0;
-   return clone;
+   return copy;
 }
 
 void Process_toggleTag(Process* this) {
@@ -512,8 +512,8 @@ bool Process_setAffinity(Process* this, unsigned long mask) {
 }
 #endif
 
-void Process_sendSignal(Process* this, int signal) {
-   kill(this->pid, signal);
+void Process_sendSignal(Process* this, int sgn) {
+   kill(this->pid, sgn);
 }
 
 int Process_pidCompare(const void* v1, const void* v2) {

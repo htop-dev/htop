@@ -27,7 +27,7 @@ typedef struct ColorsPanel_ {
 
 }*/
 
-static char* ColorSchemes[] = {
+static const char* ColorSchemes[] = {
    "Default",
    "Monochromatic",
    "Black on White",

@@ -32,9 +32,9 @@ typedef struct TraceScreen_ {
 
 }*/
 
-static char* tbFunctions[] = {"AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
+static const char* tbFunctions[] = {"AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
 
-static char* tbKeys[] = {"F4", "F5", "Esc"};
+static const char* tbKeys[] = {"F4", "F5", "Esc"};
 
 static int tbEvents[] = {KEY_F(4), KEY_F(5), 27};
 

@@ -19,7 +19,7 @@ in the source distribution for its full text.
 
 typedef struct Signal_ {
    Object super;
-   char* name;
+   const char* name;
    int number;
 } Signal;
 
@@ -47,7 +47,7 @@ static void Signal_display(Object* cast, RichString* out) {
    RichString_write(out, CRT_colors[DEFAULT_COLOR], buffer);
 }
 
-static Signal* Signal_new(char* name, int number) {
+static Signal* Signal_new(const char* name, int number) {
    Signal* this = malloc(sizeof(Signal));
    Object_setClass(this, SIGNAL_CLASS);
    ((Object*)this)->display = Signal_display;

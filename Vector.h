@@ -49,19 +49,19 @@ void Vector_prune(Vector* this);
 
 void Vector_sort(Vector* this);
 
-void Vector_insert(Vector* this, int index, void* data_);
+void Vector_insert(Vector* this, int idx, void* data_);
 
-Object* Vector_take(Vector* this, int index);
+Object* Vector_take(Vector* this, int idx);
 
-Object* Vector_remove(Vector* this, int index);
+Object* Vector_remove(Vector* this, int idx);
 
-void Vector_moveUp(Vector* this, int index);
+void Vector_moveUp(Vector* this, int idx);
 
-void Vector_moveDown(Vector* this, int index);
+void Vector_moveDown(Vector* this, int idx);
 
-void Vector_set(Vector* this, int index, void* data_);
+void Vector_set(Vector* this, int idx, void* data_);
 
-extern Object* Vector_get(Vector* this, int index);
+extern Object* Vector_get(Vector* this, int idx);
 
 extern int Vector_size(Vector* this);
 

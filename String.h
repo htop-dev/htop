@@ -19,19 +19,19 @@ in the source distribution for its full text.
 
 #define String_startsWith(s, match) (strstr((s), (match)) == (s))
 
-extern char* String_copy(char* orig);
+extern char* String_copy(const char* orig);
 
-char* String_cat(char* s1, char* s2);
+char* String_cat(const char* s1, const char* s2);
 
-char* String_trim(char* in);
+char* String_trim(const char* in);
 
 extern int String_eq(const char* s1, const char* s2);
 
-char** String_split(char* s, char sep);
+char** String_split(const char* s, char sep);
 
 void String_freeArray(char** s);
 
-int String_contains_i(char* s, char* match);
+int String_contains_i(const char* s, const char* match);
 
 char* String_getToken(const char* line, const unsigned short int numMatch);
 

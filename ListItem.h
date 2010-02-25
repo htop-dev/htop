@@ -30,7 +30,7 @@ extern char* LISTITEM_CLASS;
 #define LISTITEM_CLASS NULL
 #endif
 
-ListItem* ListItem_new(char* value, int key);
+ListItem* ListItem_new(const char* value, int key);
 
 void ListItem_append(ListItem* this, char* text);
 

@@ -44,7 +44,7 @@ typedef void(*Meter_Draw)(Meter*, int, int, int);
 
 struct MeterMode_ {
    Meter_Draw draw;
-   char* uiName;
+   const char* uiName;
    int h;
 };
 
@@ -55,9 +55,9 @@ struct MeterType_ {
    int items;
    double total;
    int* attributes;
-   char* name;
-   char* uiName;
-   char* caption;
+   const char* name;
+   const char* uiName;
+   const char* caption;
    MeterType_Init init;
    MeterType_Done done;
    MeterType_SetMode setMode;
@@ -120,7 +120,7 @@ Meter* Meter_new(ProcessList* pl, int param, MeterType* type);
 
 void Meter_delete(Object* cast);
 
-void Meter_setCaption(Meter* this, char* caption);
+void Meter_setCaption(Meter* this, const char* caption);
 
 void Meter_setMode(Meter* this, int modeIndex);
 

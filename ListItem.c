@@ -44,7 +44,7 @@ static void ListItem_display(Object* cast, RichString* out) {
    RichString_write(out, CRT_colors[DEFAULT_COLOR], buffer);
 }
 
-ListItem* ListItem_new(char* value, int key) {
+ListItem* ListItem_new(const char* value, int key) {
    ListItem* this = malloc(sizeof(ListItem));
    Object_setClass(this, LISTITEM_CLASS);
    ((Object*)this)->display = ListItem_display;

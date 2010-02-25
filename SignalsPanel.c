@@ -26,13 +26,13 @@ static HandlerResult SignalsPanel_eventHandler(Panel* super, int ch) {
    int size = Panel_size(super);
    
    if (ch <= 255 && isdigit(ch)) {
-      int signal = ch-48 + this->state;
+      int sgn = ch-48 + this->state;
       for (int i = 0; i < size; i++)
-         if (((Signal*) Panel_get(super, i))->number == signal) {
+         if (((Signal*) Panel_get(super, i))->number == sgn) {
             Panel_setSelected(super, i);
             break;
          }
-      this->state = signal * 10;
+      this->state = sgn * 10;
       if (this->state > 100)
          this->state = 0;
       return HANDLED;
