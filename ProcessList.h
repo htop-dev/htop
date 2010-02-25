@@ -114,6 +114,8 @@ typedef struct ProcessList_ {
    int direction;
    bool hideThreads;
    bool shadowOtherUsers;
+   bool showThreadNames;
+   bool showingThreadNames;
    bool hideKernelThreads;
    bool hideUserlandThreads;
    bool treeView;
@@ -150,7 +152,7 @@ void ProcessList_invertSortOrder(ProcessList* this);
 
 RichString ProcessList_printHeader(ProcessList* this);
 
-Process* ProcessList_get(ProcessList* this, int index);
+Process* ProcessList_get(ProcessList* this, int idx);
 
 int ProcessList_size(ProcessList* this);
 

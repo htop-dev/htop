@@ -69,6 +69,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_new(String_copy("Hide kernel threads"), &(settings->pl->hideKernelThreads), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Hide userland threads"), &(settings->pl->hideUserlandThreads), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Display threads in a different color"), &(settings->pl->highlightThreads), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Show custom thread names"), &(settings->pl->showThreadNames), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight program \"basename\""), &(settings->pl->highlightBaseName), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight megabytes in memory counters"), &(settings->pl->highlightMegabytes), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Leave a margin around header"), &(settings->header->margin), false));

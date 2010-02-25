@@ -114,6 +114,8 @@ typedef struct ProcessList_ {
    int direction;
    bool hideThreads;
    bool shadowOtherUsers;
+   bool showThreadNames;
+   bool showingThreadNames;
    bool hideKernelThreads;
    bool hideUserlandThreads;
    bool treeView;
@@ -246,6 +248,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    this->direction = 1;
    this->hideThreads = false;
    this->shadowOtherUsers = false;
+   this->showThreadNames = true;
+   this->showingThreadNames = true;
    this->hideKernelThreads = false;
    this->hideUserlandThreads = false;
    this->treeView = false;
@@ -286,7 +290,7 @@ RichString ProcessList_printHeader(ProcessList* this) {
    RichString_initVal(out);
    ProcessField* fields = this->fields;
    for (int i = 0; fields[i]; i++) {
-      char* field = Process_fieldTitles[fields[i]];
+      const char* field = Process_fieldTitles[fields[i]];
       if (this->sortKey == fields[i])
          RichString_append(&out, CRT_colors[PANEL_HIGHLIGHT_FOCUS], field);
       else
@@ -311,28 +315,28 @@ static void ProcessList_remove(ProcessList* this, Process* p) {
    Process* pp = Hashtable_remove(this->processTable, p->pid);
    assert(pp == p); (void)pp;
    unsigned int pid = p->pid;
-   int index = Vector_indexOf(this->processes, p, Process_pidCompare);
-   assert(index != -1);
-   if (index >= 0) Vector_remove(this->processes, index);
+   int idx = Vector_indexOf(this->processes, p, Process_pidCompare);
+   assert(idx != -1);
+   if (idx >= 0) Vector_remove(this->processes, idx);
    assert(Hashtable_get(this->processTable, pid) == NULL); (void)pid;
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
-Process* ProcessList_get(ProcessList* this, int index) {
-   return (Process*) (Vector_get(this->processes, index));
+Process* ProcessList_get(ProcessList* this, int idx) {
+   return (Process*) (Vector_get(this->processes, idx));
 }
 
 int ProcessList_size(ProcessList* this) {
    return (Vector_size(this->processes));
 }
 
-static void ProcessList_buildTree(ProcessList* this, int pid, int level, int indent, int direction) {
+static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int indent, int direction) {
    Vector* children = Vector_new(PROCESS_CLASS, false, DEFAULT_SIZE, Process_compare);
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* process = (Process*) (Vector_get(this->processes, i));
       if (process->tgid == pid || (process->tgid == process->pid && process->ppid == pid)) {
-         Process* process = (Process*) (Vector_take(this->processes, i));
+         process = (Process*) (Vector_take(this->processes, i));
          Vector_add(children, process);
       }
    }
@@ -394,7 +398,7 @@ void ProcessList_sort(ProcessList* this) {
    }
 }
 
-static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, char *command) {
+static int ProcessList_readStatFile(Process *proc, FILE *f, char *command) {
    static char buf[MAX_READ];
    unsigned long int zero;
 
@@ -434,7 +438,7 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    #else
    long int uzero;
    int num = ProcessList_read(this, location, 
-      "%c %u %u %u %u %d %lu %lu %lu %lu "
+      "%c %d %u %u %u %d %lu %lu %lu %lu "
       "%lu %lu %lu %ld %ld %ld %ld %ld %ld "
       "%lu %lu %ld %lu %lu %lu %lu %lu "
       "%lu %lu %lu %lu %lu %lu %lu %lu "
@@ -459,7 +463,7 @@ static int ProcessList_readStatFile(ProcessList* this, Process *proc, FILE *f, c
    return 1;
 }
 
-static bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* dirname, char* name) {
+static bool ProcessList_readStatusFile(Process* proc, const char* dirname, char* name) {
    char statusfilename[MAX_NAME+1];
    statusfilename[MAX_NAME] = '\0';
 
@@ -474,7 +478,7 @@ static bool ProcessList_readStatusFile(ProcessList* this, Process* proc, char* d
 
 #ifdef HAVE_TASKSTATS
 
-static void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirname, char* name) {
+static void ProcessList_readIoFile(Process* proc, const char* dirname, char* name) {
    char iofilename[MAX_NAME+1];
    iofilename[MAX_NAME] = '\0';
 
@@ -513,11 +517,10 @@ static void ProcessList_readIoFile(ProcessList* this, Process* proc, char* dirna
 
 #endif
 
-static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process* parent, float period) {
+static bool ProcessList_processEntries(ProcessList* this, const char* dirname, Process* parent, pid_t parentPid, float period) {
    DIR* dir;
    struct dirent* entry;
    Process* prototype = this->prototype;
-   int parentPid = parent ? parent->pid : 0;
 
    dir = opendir(dirname);
    if (!dir) return false;
@@ -567,18 +570,18 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
             char subdirname[MAX_NAME+1];
             snprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
    
-            if (ProcessList_processEntries(this, subdirname, process, period))
+            if (ProcessList_processEntries(this, subdirname, process, pid, period))
                continue;
          }
 
          #ifdef HAVE_TASKSTATS        
-         ProcessList_readIoFile(this, process, dirname, name);
+         ProcessList_readIoFile(process, dirname, name);
          #endif
 
          process->updated = true;
 
          if (!existingProcess)
-            if (! ProcessList_readStatusFile(this, process, dirname, name))
+            if (! ProcessList_readStatusFile(process, dirname, name))
                goto errorReadingProcess;
 
          snprintf(statusfilename, MAX_NAME, "%s/%s/statm", dirname, name);
@@ -607,7 +610,7 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
          if (status == NULL)
             goto errorReadingProcess;
 
-         int success = ProcessList_readStatFile(this, process, status, command);
+         int success = ProcessList_readStatFile(process, status, command);
          fclose(status);
          if(!success) {
             goto errorReadingProcess;
@@ -668,13 +671,17 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
                fclose(status);
             }
             #endif
- 
+         }
+
+         if ( ((!existingProcess) && (!showUserlandThreads || pid == parentPid || !this->showThreadNames))
+              || (this->showingThreadNames && !this->showThreadNames) ) {
+
             snprintf(statusfilename, MAX_NAME, "%s/%s/cmdline", dirname, name);
             status = ProcessList_fopen(this, statusfilename, "r");
             if (!status) {
                goto errorReadingProcess;
             }
-
+            
             int amtRead = fread(command, 1, PROCESS_COMM_LEN - 1, status);
             if (amtRead > 0) {
                for (int i = 0; i < amtRead; i++)
@@ -683,8 +690,9 @@ static bool ProcessList_processEntries(ProcessList* this, char* dirname, Process
                command[amtRead] = '\0';
             }
             fclose(status);
-
             command[PROCESS_COMM_LEN] = '\0';
+            process->comm = String_copy(command);
+         } else if (pid != parentPid && this->showThreadNames) {
             process->comm = String_copy(command);
          }
 
@@ -729,35 +737,37 @@ void ProcessList_scan(ProcessList* this) {
    unsigned long long int swapFree = 0;
 
    FILE* status;
-   char buffer[128];
    status = ProcessList_fopen(this, PROCMEMINFOFILE, "r");
    assert(status != NULL);
    int processors = this->processorCount;
-   while (fgets(buffer, 128, status)) {
-
-      switch (buffer[0]) {
-      case 'M':
-         if (String_startsWith(buffer, "MemTotal:"))
-            ProcessList_read(this, buffer, "MemTotal: %llu kB", &this->totalMem);
-         else if (String_startsWith(buffer, "MemFree:"))
-            ProcessList_read(this, buffer, "MemFree: %llu kB", &this->freeMem);
-         else if (String_startsWith(buffer, "MemShared:"))
-            ProcessList_read(this, buffer, "MemShared: %llu kB", &this->sharedMem);
-         break;
-      case 'B':
-         if (String_startsWith(buffer, "Buffers:"))
-            ProcessList_read(this, buffer, "Buffers: %llu kB", &this->buffersMem);
-         break;
-      case 'C':
-         if (String_startsWith(buffer, "Cached:"))
-            ProcessList_read(this, buffer, "Cached: %llu kB", &this->cachedMem);
-         break;
-      case 'S':
-         if (String_startsWith(buffer, "SwapTotal:"))
-            ProcessList_read(this, buffer, "SwapTotal: %llu kB", &this->totalSwap);
-         if (String_startsWith(buffer, "SwapFree:"))
-            ProcessList_read(this, buffer, "SwapFree: %llu kB", &swapFree);
-         break;
+   {
+      char buffer[128];
+      while (fgets(buffer, 128, status)) {
+   
+         switch (buffer[0]) {
+         case 'M':
+            if (String_startsWith(buffer, "MemTotal:"))
+               ProcessList_read(this, buffer, "MemTotal: %llu kB", &this->totalMem);
+            else if (String_startsWith(buffer, "MemFree:"))
+               ProcessList_read(this, buffer, "MemFree: %llu kB", &this->freeMem);
+            else if (String_startsWith(buffer, "MemShared:"))
+               ProcessList_read(this, buffer, "MemShared: %llu kB", &this->sharedMem);
+            break;
+         case 'B':
+            if (String_startsWith(buffer, "Buffers:"))
+               ProcessList_read(this, buffer, "Buffers: %llu kB", &this->buffersMem);
+            break;
+         case 'C':
+            if (String_startsWith(buffer, "Cached:"))
+               ProcessList_read(this, buffer, "Cached: %llu kB", &this->cachedMem);
+            break;
+         case 'S':
+            if (String_startsWith(buffer, "SwapTotal:"))
+               ProcessList_read(this, buffer, "SwapTotal: %llu kB", &this->totalSwap);
+            if (String_startsWith(buffer, "SwapFree:"))
+               ProcessList_read(this, buffer, "SwapFree: %llu kB", &swapFree);
+            break;
+         }
       }
    }
 
@@ -834,7 +844,9 @@ void ProcessList_scan(ProcessList* this) {
    this->totalTasks = 0;
    this->runningTasks = 0;
 
-   ProcessList_processEntries(this, PROCDIR, NULL, period);
+   ProcessList_processEntries(this, PROCDIR, NULL, 0, period);
+   
+   this->showingThreadNames = this->showThreadNames;
    
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
