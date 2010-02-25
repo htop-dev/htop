@@ -116,13 +116,15 @@ int CRT_colors[LAST_COLORELEMENT] = { 0 };
 
 char* CRT_termType;
 
-static void CRT_handleSIGSEGV(int signal) {
+static void CRT_handleSIGSEGV(int sgn) {
+   (void) sgn;
    CRT_done();
    fprintf(stderr, "htop " VERSION " aborted. Please report bug at http://htop.sf.net\n");
    exit(1);
 }
 
-static void CRT_handleSIGTERM(int signal) {
+static void CRT_handleSIGTERM(int sgn) {
+   (void) sgn;
    CRT_done();
    exit(0);
 }
