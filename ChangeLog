@@ -7,6 +7,10 @@ What's new in version 0.8.4
   (thanks to Tom Callaway)
 * getopt-based long options and --no-color
   (thanks to Vincent Launchbury)
+* BUGFIX: Fix memory leak
+  (thanks to Pavol Rusnak)
+* Add Bash/emacs style navigation keys
+  (thanks to Daniel Schuler)
 
 What's new in version 0.8.3
 

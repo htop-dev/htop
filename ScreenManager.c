@@ -184,6 +184,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          continue;
       }
       case KEY_LEFT:
+      case KEY_CTRLB:
          tryLeft:
          if (focus > 0)
             focus--;
@@ -192,6 +193,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             goto tryLeft;
          break;
       case KEY_RIGHT:
+      case KEY_CTRLF:
       case 9:
          tryRight:
          if (focus < this->itemCount - 1)

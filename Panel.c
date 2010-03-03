@@ -64,6 +64,10 @@ char* PANEL_CLASS = "Panel";
 #define PANEL_CLASS NULL
 #endif
 
+#define KEY_CTRLN      0016            /* control-n key */
+#define KEY_CTRLP      0020            /* control-p key */
+#define KEY_CTRLF      0006            /* control-f key */
+#define KEY_CTRLB      0002            /* control-b key */
 
 Panel* Panel_new(int x, int y, int w, int h, char* type, bool owner, Object_Compare compare) {
    Panel* this;
@@ -330,10 +334,12 @@ bool Panel_onKey(Panel* this, int key) {
    assert (this != NULL);
    switch (key) {
    case KEY_DOWN:
+   case KEY_CTRLN:
       if (this->selected + 1 < Vector_size(this->items))
          this->selected++;
       return true;
    case KEY_UP:
+   case KEY_CTRLP:
       if (this->selected > 0)
          this->selected--;
       return true;
@@ -360,12 +366,14 @@ bool Panel_onKey(Panel* this, int key) {
       return true;
    #endif
    case KEY_LEFT:
+   case KEY_CTRLB:
       if (this->scrollH > 0) {
          this->scrollH -= 5;
          this->needsRedraw = true;
       }
       return true;
    case KEY_RIGHT:
+   case KEY_CTRLF:
       this->scrollH += 5;
       this->needsRedraw = true;
       return true;

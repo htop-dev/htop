@@ -65,6 +65,10 @@ extern char* PANEL_CLASS;
 #define PANEL_CLASS NULL
 #endif
 
+#define KEY_CTRLN      0016            /* control-n key */
+#define KEY_CTRLP      0020            /* control-p key */
+#define KEY_CTRLF      0006            /* control-f key */
+#define KEY_CTRLB      0002            /* control-b key */
 
 Panel* Panel_new(int x, int y, int w, int h, char* type, bool owner, Object_Compare compare);
 
