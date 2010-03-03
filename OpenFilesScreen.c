@@ -91,7 +91,10 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(int pid) {
          break;
       anyRead = true;
       char* entry = malloc(1024);
-      if (!fgets(entry, 1024, fd)) break;
+      if (!fgets(entry, 1024, fd)) {
+         free(entry);
+         break;
+      }
       char* newline = strrchr(entry, '\n');
       *newline = '\0';
       if (cmd == 'f') {
