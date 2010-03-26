@@ -52,12 +52,14 @@ FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* eve
       this->functions = malloc(sizeof(char*) * 15);
       this->keys = malloc(sizeof(char*) * 15);
       this->events = malloc(sizeof(int) * 15);
-      for (int i = 0; i < 15 && functions[i]; i++) {
+      int i = 0;
+      while (i < 15 && functions[i]) {
          this->functions[i] = String_copy(functions[i]);
          this->keys[i] = String_copy(keys[i]);
          this->events[i] = events[i];
-         this->size = i;
+         i++;
       }
+      this->size = i;
    } else {
       this->staticData = true;
       this->functions = (char**)( functions ? functions : FunctionBar_FLabels );
