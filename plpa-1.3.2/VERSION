@@ -6,8 +6,8 @@
 # <major>.<minor>.<release>.  If release is zero, then it is omitted.
 
 major=1
-minor=1
-release=0
+minor=3
+release=2
 
 # greek is used for alpha or beta release tags.  If it is non-empty,
 # it will be appended to the version number.  It does not have to be
@@ -33,4 +33,20 @@ want_svn=0
 # distribution tarball is being made from an SVN checkout, the value
 # of svn_r in this file is replaced with the output of "svnversion".
 
-svn_r=r147:149
+svn_r=r264
+
+# The shared library version of PLPA's public library.  This version
+# is maintained in accordance with the "Library Interface Versions"
+# chapter from the GNU Libtool documentation.  PLPA v<=1.3 reported
+# version 0:0:0; the next release after v1.3 will explicitly set its
+# .so version numbers according to the rules in the Libtool
+# documentation.  Notes:
+
+# 1. Since version numbers are associated with *releases*, the version
+# number maintained on the PLPA SVN trunk (and developer branches) is
+# always 0:0:0.
+
+# 2. Version numbers are described in the Libtool current:revision:age
+# format.
+
+libplpa_so_version=0:1:0

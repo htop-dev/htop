@@ -48,6 +48,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the <valgrind/valgrind.h> header file. */
+#undef HAVE_VALGRIND_VALGRIND_H
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #undef LT_OBJDIR
@@ -70,7 +73,7 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Whether we're in debugging mode or not */
+/* Whether we are in debugging more or not */
 #undef PLPA_DEBUG
 
 /* Major version of PLPA */
@@ -87,6 +90,9 @@
 
 /* The PLPA symbol prefix in all caps */
 #undef PLPA_SYM_PREFIX_CAPS
+
+/* Whether we want Valgrind support or not */
+#undef PLPA_WANT_VALGRIND_SUPPORT
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

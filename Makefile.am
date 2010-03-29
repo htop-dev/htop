@@ -1,6 +1,6 @@
 
 if HAVE_PLPA
-SUBDIRS = plpa-1.1
+SUBDIRS = plpa-1.3.2
 endif
 
 bin_PROGRAMS = htop
@@ -38,7 +38,7 @@ SUFFIXES = .h
 BUILT_SOURCES = $(myhtopheaders)
 htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h debug.h
 if HAVE_PLPA
-htop_LDADD = $(top_builddir)/plpa-1.1/src/libplpa_included.la
+htop_LDADD = $(top_builddir)/plpa-1.3.2/src/libplpa/libplpa_included.la
 endif
 
 profile:

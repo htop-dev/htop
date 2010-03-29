@@ -106,11 +106,7 @@ int PLPA_NAME(sched_setaffinity)(pid_t pid, size_t cpusetsize,
         /* Return 0 upon success.  According to
            http://www.open-mpi.org/community/lists/plpa-users/2006/02/0016.php,
            all the kernel implementations return >= 0 upon success. */
-        if (ret >= 0) {
-            return 0;
-        } else {
-            return ret;
-        }
+        return (ret >= 0) ? 0 : ret;
         break;
 
     case PLPA_NAME_CAPS(PROBE_NOT_SUPPORTED):
@@ -180,11 +176,7 @@ int PLPA_NAME(sched_getaffinity)(pid_t pid, size_t cpusetsize,
         /* Return 0 upon success.  According to
            http://www.open-mpi.org/community/lists/plpa-users/2006/02/0016.php,
            all the kernel implementations return >= 0 upon success. */
-        if (ret >= 0) {
-            return 0;
-        } else {
-            return ret;
-        }
+        return (ret >= 0) ? 0 : ret;
         break;
 
     case PLPA_NAME_CAPS(PROBE_NOT_SUPPORTED):

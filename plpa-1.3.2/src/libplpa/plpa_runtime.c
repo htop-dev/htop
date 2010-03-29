@@ -35,7 +35,7 @@ int PLPA_NAME(init)(void)
     /* Otherwise, initialize all the sybsystems */
     if (0 != (ret = pthread_mutex_init(&mutex, NULL)) ||
         0 != (ret = PLPA_NAME(api_probe_init)()) ||
-        0 != (ret = PLPA_NAME(map_init)())) {
+        0 != (ret = PLPA_NAME(set_cache_behavior)(PLPA_NAME_CAPS(CACHE_USE)))) {
         return ret;
     }
 
@@ -66,7 +66,7 @@ int PLPA_NAME(finalize)(void)
     }
 
     /* Ok, we're the last one.  Cleanup. */
-    PLPA_NAME(map_finalize)();
+    PLPA_NAME(set_cache_behavior)(PLPA_NAME_CAPS(CACHE_IGNORE));
     pthread_mutex_destroy(&mutex);
     PLPA_NAME(initialized) = 0;
     return 0;
