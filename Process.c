@@ -27,6 +27,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <pwd.h>
 #include <sched.h>
+#include <time.h>
 
 #ifdef HAVE_PLPA
 #include <plpa.h>
@@ -98,9 +99,10 @@ typedef struct Process_ {
    long int priority;
    long int nice;
    long int nlwp;
+   char starttime_show[8];
+   time_t starttime_ctime;
    #ifdef DEBUG
    long int itrealvalue;
-   unsigned long int starttime;
    unsigned long int vsize;
    long int rss;
    unsigned long int rlim;
@@ -186,7 +188,7 @@ const char *Process_fieldTitles[] = {
    "", "  PID ", "Command ", "S ", " PPID ", " PGRP ", " SESN ",
    "  TTY ", "TPGID ", "- ", "- ", "- ", "- ", "- ",
    " UTIME+  ", " STIME+  ",  "- ", "- ", "PRI ", " NI ", "- ",
-   "- ", "- ", "- ", "- ", "- ", "- ", "- ",
+   "START ", "- ", "- ", "- ", "- ", "- ", "- ",
    "- ", "- ", "- ", "- ", "- ", "- ", "- ",
    "- ", "- ", "- ", "CPU ", " VIRT ", "  RES ", "  SHR ",
    " CODE ", " DATA ", " LIB ", " DIRTY ", " UID ", "CPU% ", "MEM% ",
@@ -403,6 +405,7 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
       }
       break;
    }
+   case STARTTIME: snprintf(buffer, n, "%s", this->starttime_show); break;
    #ifdef HAVE_OPENVZ
    case CTID: snprintf(buffer, n, "%5u ", this->ctid); break;
    case VPID: snprintf(buffer, n, "%5u ", this->vpid); break;
@@ -578,6 +581,8 @@ int Process_compare(const void* v1, const void* v2) {
       return strcmp(p1->comm, p2->comm);
    case NLWP:
       return (p1->nlwp - p2->nlwp);
+   case STARTTIME:
+      return (p1->starttime_ctime - p2->starttime_ctime);
    #ifdef HAVE_OPENVZ
    case CTID:
       return (p1->ctid - p2->ctid);

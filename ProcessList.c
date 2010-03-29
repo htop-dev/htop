@@ -431,7 +431,7 @@ static int ProcessList_readStatFile(Process *proc, FILE *f, char *command) {
       &proc->minflt, &proc->cminflt, &proc->majflt, &proc->cmajflt,
       &proc->utime, &proc->stime, &proc->cutime, &proc->cstime, 
       &proc->priority, &proc->nice, &proc->nlwp, &proc->itrealvalue,
-      &proc->starttime, &proc->vsize, &proc->rss, &proc->rlim, 
+      &zero, &proc->vsize, &proc->rss, &proc->rlim, 
       &proc->startcode, &proc->endcode, &proc->startstack, &proc->kstkesp, 
       &proc->kstkeip, &proc->signal, &proc->blocked, &proc->sigignore, 
       &proc->sigcatch, &proc->wchan, &proc->nswap, &proc->cnswap, 
@@ -474,6 +474,13 @@ static bool ProcessList_readStatusFile(Process* proc, const char* dirname, char*
    if (statok == -1)
       return false;
    proc->st_uid = sstat.st_uid;
+  
+   struct tm date;
+   time_t ctime = sstat.st_ctime;
+   proc->starttime_ctime = ctime;
+   (void) localtime_r((time_t*) &ctime, &date);
+   strftime(proc->starttime_show, 7, ((ctime > time(NULL) - 86400) ? "%R " : "%b%d "), &date);
+   
    return true;
 }
 

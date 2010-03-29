@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <pwd.h>
 #include <sched.h>
+#include <time.h>
 
 #ifdef HAVE_PLPA
 #include <plpa.h>
@@ -100,9 +101,10 @@ typedef struct Process_ {
    long int priority;
    long int nice;
    long int nlwp;
+   char starttime_show[8];
+   time_t starttime_ctime;
    #ifdef DEBUG
    long int itrealvalue;
-   unsigned long int starttime;
    unsigned long int vsize;
    long int rss;
    unsigned long int rlim;
