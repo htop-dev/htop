@@ -581,8 +581,12 @@ int Process_compare(const void* v1, const void* v2) {
       return strcmp(p1->comm, p2->comm);
    case NLWP:
       return (p1->nlwp - p2->nlwp);
-   case STARTTIME:
-      return (p1->starttime_ctime - p2->starttime_ctime);
+   case STARTTIME: {
+      if (p1->starttime_ctime == p2->starttime_ctime)
+         return (p1->pid - p2->pid);
+      else
+         return (p1->starttime_ctime - p2->starttime_ctime);
+   }
    #ifdef HAVE_OPENVZ
    case CTID:
       return (p1->ctid - p2->ctid);
