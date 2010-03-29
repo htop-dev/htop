@@ -3,6 +3,8 @@ What's new in version 0.8.4
 
 * Show custom thread names
   (thanks to Anders Torger)
+* Add support for STARTTIME field
+* Upgrade PLPA to version 1.3.2
 * Fix license terms with regard to PLPA
   (thanks to Tom Callaway)
 * getopt-based long options and --no-color
