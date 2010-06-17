@@ -96,6 +96,10 @@ If none is tagged, sends to the currently selected process.
 .B F10, q
 Quit
 .TP
+.B +, - 
+When in tree view mode, expand or collapse subtree. When a subtree is collapsed
+a "+" sign shows to the left of the process name.
+.TP
 .B a (on multiprocessor machines)
 Set CPU affinity: mark which CPUs a process is allowed to use.
 .TP
