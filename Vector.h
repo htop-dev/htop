@@ -22,8 +22,6 @@ in the source distribution for its full text.
 #define DEFAULT_SIZE -1
 #endif
 
-typedef void(*Vector_procedure)(void*);
-
 typedef struct Vector_ {
    Object **array;
    Object_Compare compare;
@@ -72,9 +70,5 @@ extern int Vector_size(Vector* this);
 void Vector_add(Vector* this, void* data_);
 
 extern int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
-
-/*
-
-*/
 
 #endif

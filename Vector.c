@@ -20,8 +20,6 @@ in the source distribution for its full text.
 #define DEFAULT_SIZE -1
 #endif
 
-typedef void(*Vector_procedure)(void*);
-
 typedef struct Vector_ {
    Object **array;
    Object_Compare compare;
@@ -255,16 +253,3 @@ inline int Vector_indexOf(Vector* this, void* search_, Object_Compare compare) {
    }
    return -1;
 }
-
-/*
-
-static void Vector_foreach(Vector* this, Vector_procedure f) {
-   int i;
-   assert(Vector_isConsistent(this));
-
-   for (i = 0; i < this->items; i++)
-      f(this->array[i]);
-   assert(Vector_isConsistent(this));
-}
-
-*/

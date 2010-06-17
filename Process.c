@@ -79,6 +79,7 @@ typedef struct Process_ {
    int indent;
    char state;
    bool tag;
+   bool showChildren;
    pid_t ppid;
    unsigned int pgrp;
    unsigned int session;
@@ -331,9 +332,9 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
             n -= 4;
          }
          if (this->pl->direction == 1)
-            snprintf(buf, n, " `- ");
+            snprintf(buf, n, " `%s ", this->showChildren ? "-" : "+" );
          else
-            snprintf(buf, n, " ,- ");
+            snprintf(buf, n, " ,%s ", this->showChildren ? "-" : "+" );
          RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
          Process_writeCommand(this, attr, baseattr, str);
          return;
@@ -460,6 +461,7 @@ Process* Process_new(struct ProcessList_ *pl) {
    this->pid = 0;
    this->pl = pl;
    this->tag = false;
+   this->showChildren = true;
    this->updated = false;
    this->utime = 0;
    this->stime = 0;

@@ -117,10 +117,10 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(11, 0, "   F3 /: incremental name search            H: hide/show user threads");
    mvaddstr(12, 0, "                                            K: hide/show kernel threads");
    mvaddstr(13, 0, "  Space: tag processes                      F: cursor follows process");
-   mvaddstr(14, 0, "      U: untag all processes");
+   mvaddstr(14, 0, "      U: untag all processes              + -: expand/collapse tree");
    mvaddstr(15, 0, "   F9 k: kill process/tagged processes      P: sort by CPU%");
-   mvaddstr(16, 0, " - ] F7: higher priority (root only)        M: sort by MEM%");
-   mvaddstr(17, 0, " + [ F8: lower priority (+ nice)            T: sort by TIME");
+   mvaddstr(16, 0, "   ] F7: higher priority (root only)        M: sort by MEM%");
+   mvaddstr(17, 0, "   [ F8: lower priority (+ nice)            T: sort by TIME");
 #ifdef HAVE_PLPA
    if (pl->processorCount > 1)
       mvaddstr(18, 0, "      a: set CPU affinity                F4 I: invert sort order");
@@ -639,6 +639,16 @@ int main(int argc, char** argv) {
          }
          break;
       }
+      case '+':
+      case '=':
+      case '-':
+      {
+         Process* p = (Process*) Panel_getSelected(panel);
+         p->showChildren = !p->showChildren;
+         refreshTimeout = 0;
+         doRecalculate = true;
+         break;
+      }
       case KEY_F(9):
       case 'k':
       {
@@ -751,15 +761,12 @@ int main(int argc, char** argv) {
       }
       case KEY_F(8):
       case '[':
-      case '=':
-      case '+':
       {
          doRefresh = changePriority(panel, 1);
          break;
       }
       case KEY_F(7):
       case ']':
-      case '-':
       {
          doRefresh = changePriority(panel, -1);
          break;

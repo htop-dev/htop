@@ -331,7 +331,7 @@ int ProcessList_size(ProcessList* this) {
    return (Vector_size(this->processes));
 }
 
-static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int indent, int direction) {
+static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show) {
    Vector* children = Vector_new(PROCESS_CLASS, false, DEFAULT_SIZE, Process_compare);
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
@@ -344,17 +344,21 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
    int size = Vector_size(children);
    for (int i = 0; i < size; i++) {
       Process* process = (Process*) (Vector_get(children, i));
-      int s = this->processes2->items;
-      if (direction == 1)
-         Vector_add(this->processes2, process);
-      else
-         Vector_insert(this->processes2, 0, process);
-      assert(this->processes2->items == s+1); (void)s;
-      int nextIndent = indent;
-      if (i < size - 1)
-         nextIndent = indent | (1 << level);
-      ProcessList_buildTree(this, process->pid, level+1, nextIndent, direction);
-      process->indent = indent | (1 << level);
+      if (show) {
+         int s = this->processes2->items;
+         if (direction == 1)
+            Vector_add(this->processes2, process);
+         else
+            Vector_insert(this->processes2, 0, process);
+         assert(this->processes2->items == s+1); (void)s;
+         int nextIndent = indent;
+         if (i < size - 1)
+            nextIndent = indent | (1 << level);
+         ProcessList_buildTree(this, process->pid, level+1, nextIndent, direction, process->showChildren);
+         process->indent = indent | (1 << level);
+      } else {
+         Hashtable_remove(this->processTable, process->pid);
+      }
    }
    Vector_delete(children);
 }
@@ -382,13 +386,13 @@ void ProcessList_sort(ProcessList* this) {
       init->indent = 0;
       Vector_add(this->processes2, init);
       // Recursively empty list
-      ProcessList_buildTree(this, init->pid, 0, 0, direction);
+      ProcessList_buildTree(this, init->pid, 0, 0, direction, true);
       // Add leftovers
       while (Vector_size(this->processes)) {
          Process* p = (Process*) (Vector_take(this->processes, 0));
          p->indent = 0;
          Vector_add(this->processes2, p);
-         ProcessList_buildTree(this, p->pid, 0, 0, direction);
+         ProcessList_buildTree(this, p->pid, 0, 0, direction, p->showChildren);
       }
       assert(Vector_size(this->processes2) == vsize); (void)vsize;
       assert(Vector_size(this->processes) == 0);

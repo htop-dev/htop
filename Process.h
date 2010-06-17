@@ -81,6 +81,7 @@ typedef struct Process_ {
    int indent;
    char state;
    bool tag;
+   bool showChildren;
    pid_t ppid;
    unsigned int pgrp;
    unsigned int session;
