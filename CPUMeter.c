@@ -47,7 +47,7 @@ static void CPUMeter_setValues(Meter* this, char* buffer, int size) {
       snprintf(buffer, size, "absent");
       return;
    }
-   double total = (double) pl->totalPeriod[processor];
+   double total = (double) (pl->totalPeriod[processor] == 0 ? 1 : pl->totalPeriod[processor]);
    double cpu;
    this->values[0] = pl->nicePeriod[processor] / total * 100.0;
    this->values[1] = pl->userPeriod[processor] / total * 100.0;
