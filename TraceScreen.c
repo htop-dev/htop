@@ -142,6 +142,12 @@ void TraceScreen_run(TraceScreen* this) {
          FunctionBar_setLabel(this->bar, KEY_F(5), this->tracing?"Stop Tracing   ":"Resume Tracing ");
          TraceScreen_draw(this);
          break;
+      case KEY_HOME:
+         Panel_setSelected(panel, 0);
+         break;
+      case KEY_END:
+         Panel_setSelected(panel, Panel_size(panel)-1);
+         break;
       case 'f':
       case KEY_F(4):
          follow = !follow;
