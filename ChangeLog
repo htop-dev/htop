@@ -1,6 +1,7 @@
 
 What's new in version 0.8.4
 
+* Expand and collapse subtrees using '+' and '-' when in tree-view
 * Show custom thread names
   (thanks to Anders Torger)
 * Add support for STARTTIME field
