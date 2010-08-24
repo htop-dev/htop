@@ -35,6 +35,7 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
+
 #ifndef PROCDIR
 #define PROCDIR "/proc"
 #endif
@@ -55,50 +56,51 @@ in the source distribution for its full text.
 #define MAX_READ 2048
 #endif
 
-#ifndef PER_PROCESSOR_FIELDS
-#define PER_PROCESSOR_FIELDS 22
-#endif
-
 
 
 #ifdef DEBUG_PROC
 typedef int(*vxscanf)(void*, const char*, va_list);
 #endif
 
+typedef struct CPUData_ {
+   unsigned long long int totalTime;
+   unsigned long long int userTime;
+   unsigned long long int systemTime;
+   unsigned long long int systemAllTime;
+   unsigned long long int idleAllTime;
+   unsigned long long int idleTime;
+   unsigned long long int niceTime;
+   unsigned long long int ioWaitTime;
+   unsigned long long int irqTime;
+   unsigned long long int softIrqTime;
+   unsigned long long int stealTime;
+   unsigned long long int guestTime;
+   
+   unsigned long long int totalPeriod;
+   unsigned long long int userPeriod;
+   unsigned long long int systemPeriod;
+   unsigned long long int systemAllPeriod;
+   unsigned long long int idleAllPeriod;
+   unsigned long long int idlePeriod;
+   unsigned long long int nicePeriod;
+   unsigned long long int ioWaitPeriod;
+   unsigned long long int irqPeriod;
+   unsigned long long int softIrqPeriod;
+   unsigned long long int stealPeriod;
+   unsigned long long int guestPeriod;
+} CPUData;
+
 typedef struct ProcessList_ {
    Vector* processes;
    Vector* processes2;
    Hashtable* processTable;
-   Process* prototype;
    UsersTable* usersTable;
 
-   int processorCount;
+   int cpuCount;
    int totalTasks;
    int runningTasks;
 
-   // Must match number of PER_PROCESSOR_FIELDS constant
-   unsigned long long int* totalTime;
-   unsigned long long int* userTime;
-   unsigned long long int* systemTime;
-   unsigned long long int* systemAllTime;
-   unsigned long long int* idleAllTime;
-   unsigned long long int* idleTime;
-   unsigned long long int* niceTime;
-   unsigned long long int* ioWaitTime;
-   unsigned long long int* irqTime;
-   unsigned long long int* softIrqTime;
-   unsigned long long int* stealTime;
-   unsigned long long int* totalPeriod;
-   unsigned long long int* userPeriod;
-   unsigned long long int* systemPeriod;
-   unsigned long long int* systemAllPeriod;
-   unsigned long long int* idleAllPeriod;
-   unsigned long long int* idlePeriod;
-   unsigned long long int* nicePeriod;
-   unsigned long long int* ioWaitPeriod;
-   unsigned long long int* irqPeriod;
-   unsigned long long int* softIrqPeriod;
-   unsigned long long int* stealPeriod;
+   CPUData* cpus;
 
    unsigned long long int totalMem;
    unsigned long long int usedMem;
@@ -166,5 +168,7 @@ void ProcessList_sort(ProcessList* this);
 void ProcessList_scan(ProcessList* this);
 
 ProcessField ProcessList_keyAt(ProcessList* this, int at);
+
+void ProcessList_expandTree(ProcessList* this);
 
 #endif

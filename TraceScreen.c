@@ -32,17 +32,17 @@ typedef struct TraceScreen_ {
 
 }*/
 
-static const char* tbFunctions[] = {"AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
+static const char* tsFunctions[] = {"AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
 
-static const char* tbKeys[] = {"F4", "F5", "Esc"};
+static const char* tsKeys[] = {"F4", "F5", "Esc"};
 
-static int tbEvents[] = {KEY_F(4), KEY_F(5), 27};
+static int tsEvents[] = {KEY_F(4), KEY_F(5), 27};
 
 TraceScreen* TraceScreen_new(Process* process) {
    TraceScreen* this = (TraceScreen*) malloc(sizeof(TraceScreen));
    this->process = process;
    this->display = Panel_new(0, 1, COLS, LINES-2, LISTITEM_CLASS, true, ListItem_compare);
-   this->bar = FunctionBar_new(tbFunctions, tbKeys, tbEvents);
+   this->bar = FunctionBar_new(tsFunctions, tsKeys, tsEvents);
    this->tracing = true;
    return this;
 }

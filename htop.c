@@ -83,13 +83,16 @@ static void showHelp(ProcessList* pl) {
       addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
       addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
       addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq"); addstr("/");
-      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait");
+      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait"); addstr("/");
+      addattrstr(CRT_colors[CPU_STEAL], "steal"); addstr("/");
+      addattrstr(CRT_colors[CPU_GUEST], "guest");
       addattrstr(CRT_colors[BAR_SHADOW], " used%");
    } else {
       addattrstr(CRT_colors[CPU_NICE], "low-priority"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
-      addattrstr(CRT_colors[CPU_KERNEL], "kernel");
-      addattrstr(CRT_colors[BAR_SHADOW], "             used%");
+      addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
+      addattrstr(CRT_colors[CPU_STEAL], "virtualiz");
+      addattrstr(CRT_colors[BAR_SHADOW], "               used%");
    }
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
@@ -98,13 +101,13 @@ static void showHelp(ProcessList* pl) {
    addattrstr(CRT_colors[MEMORY_USED], "used"); addstr("/");
    addattrstr(CRT_colors[MEMORY_BUFFERS], "buffers"); addstr("/");
    addattrstr(CRT_colors[MEMORY_CACHE], "cache");
-   addattrstr(CRT_colors[BAR_SHADOW], "                used/total");
+   addattrstr(CRT_colors[BAR_SHADOW], "                            used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(5, 0, "Swap bar:      ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[SWAP], "used");
-   addattrstr(CRT_colors[BAR_SHADOW], "                              used/total");
+   addattrstr(CRT_colors[BAR_SHADOW], "                                          used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(6,0, "Type and layout of header meters are configurable in the setup screen.");
@@ -122,7 +125,7 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(16, 0, "   ] F7: higher priority (root only)        M: sort by MEM%");
    mvaddstr(17, 0, "   [ F8: lower priority (+ nice)            T: sort by TIME");
 #ifdef HAVE_PLPA
-   if (pl->processorCount > 1)
+   if (pl->cpuCount > 1)
       mvaddstr(18, 0, "      a: set CPU affinity                F4 I: invert sort order");
    else
 #endif
@@ -143,7 +146,7 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(17, 0, " - ] F8"); mvaddstr(17,40, "    T");
                                mvaddstr(18,40, " F4 I");
 #if HAVE_PLPA
-   if (pl->processorCount > 1)
+   if (pl->cpuCount > 1)
       mvaddstr(18, 0, "      a:");
 #endif
    mvaddstr(19, 0, "   F2 S"); mvaddstr(19,40, " F6 >");
@@ -685,12 +688,12 @@ int main(int argc, char** argv) {
 #ifdef HAVE_PLPA
       case 'a':
       {
-         if (pl->processorCount == 1)
+         if (pl->cpuCount == 1)
             break;
 
          unsigned long curr = Process_getAffinity((Process*) Panel_getSelected(panel));
          
-         Panel* affinityPanel = AffinityPanel_new(pl->processorCount, curr);
+         Panel* affinityPanel = AffinityPanel_new(pl->cpuCount, curr);
 
          const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
          void* set = pickFromVector(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar);
@@ -782,6 +785,7 @@ int main(int argc, char** argv) {
       case KEY_F(5):
          refreshTimeout = 0;
          pl->treeView = !pl->treeView;
+         ProcessList_expandTree(pl);
          settings->changed = true;
          break;
       case 'H':

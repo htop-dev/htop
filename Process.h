@@ -176,8 +176,6 @@ void Process_delete(Object* cast);
 
 Process* Process_new(struct ProcessList_ *pl);
 
-Process* Process_clone(Process* this);
-
 void Process_toggleTag(Process* this);
 
 bool Process_setPriority(Process* this, int priority);

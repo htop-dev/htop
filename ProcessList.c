@@ -33,6 +33,7 @@ in the source distribution for its full text.
 #include <assert.h>
 
 /*{
+
 #ifndef PROCDIR
 #define PROCDIR "/proc"
 #endif
@@ -53,10 +54,6 @@ in the source distribution for its full text.
 #define MAX_READ 2048
 #endif
 
-#ifndef PER_PROCESSOR_FIELDS
-#define PER_PROCESSOR_FIELDS 22
-#endif
-
 }*/
 
 /*{
@@ -65,40 +62,45 @@ in the source distribution for its full text.
 typedef int(*vxscanf)(void*, const char*, va_list);
 #endif
 
+typedef struct CPUData_ {
+   unsigned long long int totalTime;
+   unsigned long long int userTime;
+   unsigned long long int systemTime;
+   unsigned long long int systemAllTime;
+   unsigned long long int idleAllTime;
+   unsigned long long int idleTime;
+   unsigned long long int niceTime;
+   unsigned long long int ioWaitTime;
+   unsigned long long int irqTime;
+   unsigned long long int softIrqTime;
+   unsigned long long int stealTime;
+   unsigned long long int guestTime;
+   
+   unsigned long long int totalPeriod;
+   unsigned long long int userPeriod;
+   unsigned long long int systemPeriod;
+   unsigned long long int systemAllPeriod;
+   unsigned long long int idleAllPeriod;
+   unsigned long long int idlePeriod;
+   unsigned long long int nicePeriod;
+   unsigned long long int ioWaitPeriod;
+   unsigned long long int irqPeriod;
+   unsigned long long int softIrqPeriod;
+   unsigned long long int stealPeriod;
+   unsigned long long int guestPeriod;
+} CPUData;
+
 typedef struct ProcessList_ {
    Vector* processes;
    Vector* processes2;
    Hashtable* processTable;
-   Process* prototype;
    UsersTable* usersTable;
 
-   int processorCount;
+   int cpuCount;
    int totalTasks;
    int runningTasks;
 
-   // Must match number of PER_PROCESSOR_FIELDS constant
-   unsigned long long int* totalTime;
-   unsigned long long int* userTime;
-   unsigned long long int* systemTime;
-   unsigned long long int* systemAllTime;
-   unsigned long long int* idleAllTime;
-   unsigned long long int* idleTime;
-   unsigned long long int* niceTime;
-   unsigned long long int* ioWaitTime;
-   unsigned long long int* irqTime;
-   unsigned long long int* softIrqTime;
-   unsigned long long int* stealTime;
-   unsigned long long int* totalPeriod;
-   unsigned long long int* userPeriod;
-   unsigned long long int* systemPeriod;
-   unsigned long long int* systemAllPeriod;
-   unsigned long long int* idleAllPeriod;
-   unsigned long long int* idlePeriod;
-   unsigned long long int* nicePeriod;
-   unsigned long long int* ioWaitPeriod;
-   unsigned long long int* irqPeriod;
-   unsigned long long int* softIrqPeriod;
-   unsigned long long int* stealPeriod;
+   CPUData* cpus;
 
    unsigned long long int totalMem;
    unsigned long long int usedMem;
@@ -195,23 +197,12 @@ static inline int ProcessList_xread(ProcessList* this, vxscanf fn, void* buffer,
 
 #endif
 
-static inline void ProcessList_allocatePerProcessorBuffers(ProcessList* this, int procs) {
-   unsigned long long int** bufferPtr = &(this->totalTime);
-   unsigned long long int* buffer = calloc(procs * PER_PROCESSOR_FIELDS, sizeof(unsigned long long int));
-   for (int i = 0; i < PER_PROCESSOR_FIELDS; i++) {
-      *bufferPtr = buffer;
-      bufferPtr++;
-      buffer += procs;
-   }
-}
-
 ProcessList* ProcessList_new(UsersTable* usersTable) {
    ProcessList* this;
    this = malloc(sizeof(ProcessList));
    this->processes = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
    this->processTable = Hashtable_new(70, false);
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
-   this->prototype = Process_new(this);
    this->usersTable = usersTable;
    
    /* tree-view auxiliary buffers */
@@ -224,19 +215,19 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    FILE* status = fopen(PROCSTATFILE, "r");
    assert(status != NULL);
    char buffer[256];
-   int procs = -1;
+   int cpus = -1;
    do {
-      procs++;
+      cpus++;
       fgets(buffer, 255, status);
    } while (String_startsWith(buffer, "cpu"));
    fclose(status);
-   this->processorCount = procs - 1;
+   this->cpuCount = cpus - 1;
    
-   ProcessList_allocatePerProcessorBuffers(this, procs);
+   this->cpus = calloc(sizeof(CPUData), cpus);
 
-   for (int i = 0; i < procs; i++) {
-      this->totalTime[i] = 1;
-      this->totalPeriod[i] = 1;
+   for (int i = 0; i < cpus; i++) {
+      this->cpus[i].totalTime = 1;
+      this->cpus[i].totalPeriod = 1;
    }
 
    this->fields = calloc(sizeof(ProcessField), LAST_PROCESSFIELD+1);
@@ -265,11 +256,8 @@ void ProcessList_delete(ProcessList* this) {
    Hashtable_delete(this->processTable);
    Vector_delete(this->processes);
    Vector_delete(this->processes2);
-   Process_delete((Object*)this->prototype);
 
-   // Free first entry only;
-   // other fields are offsets of the same buffer
-   free(this->totalTime);
+   free(this->cpus);
 
    #ifdef DEBUG_PROC
    fclose(this->traceFile);
@@ -303,8 +291,10 @@ RichString ProcessList_printHeader(ProcessList* this) {
 static void ProcessList_add(ProcessList* this, Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
    assert(Hashtable_get(this->processTable, p->pid) == NULL);
+   
    Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
+   
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
@@ -357,7 +347,7 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
          ProcessList_buildTree(this, process->pid, level+1, nextIndent, direction, process->showChildren);
          process->indent = indent | (1 << level);
       } else {
-         Hashtable_remove(this->processTable, process->pid);
+         ProcessList_remove(this, process);
       }
    }
    Vector_delete(children);
@@ -532,11 +522,10 @@ static void ProcessList_readIoFile(Process* proc, const char* dirname, char* nam
 static bool ProcessList_processEntries(ProcessList* this, const char* dirname, Process* parent, pid_t parentPid, float period) {
    DIR* dir;
    struct dirent* entry;
-   Process* prototype = this->prototype;
 
    dir = opendir(dirname);
    if (!dir) return false;
-   int processors = this->processorCount;
+   int cpus = this->cpuCount;
    bool showUserlandThreads = !this->hideUserlandThreads;
    while ((entry = readdir(dir)) != NULL) {
       char* name = entry->d_name;
@@ -571,7 +560,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
             if (parent && parent->pid == pid) {
                process = parent;
             } else {
-               process = prototype;
+               process = Process_new(this);
                assert(process->comm == NULL);
                process->pid = pid;
             }
@@ -703,14 +692,16 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
             }
             fclose(status);
             command[PROCESS_COMM_LEN] = '\0';
+            free(process->comm);
             process->comm = String_copy(command);
          } else if (pid != parentPid && this->showThreadNames) {
+            free(process->comm);
             process->comm = String_copy(command);
          }
 
          int percent_cpu = (process->utime + process->stime - lasttimes) / 
             period * 100.0;
-         process->percent_cpu = MAX(MIN(percent_cpu, processors*100.0), 0.0);
+         process->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
          if (isnan(process->percent_cpu)) process->percent_cpu = 0.0;
 
          process->percent_mem = (process->m_resident * PAGE_SIZE_KB) / 
@@ -723,10 +714,8 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
          }
 
          if (!existingProcess) {
-            process = Process_clone(process);
             ProcessList_add(this, process);
          }
-
          continue;
 
          // Exception handler.
@@ -737,7 +726,8 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
             }
             if (existingProcess)
                ProcessList_remove(this, process);
-            assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
+            else
+               Process_delete((Object*)process);
          }
       }
    }
@@ -746,13 +736,13 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
 }
 
 void ProcessList_scan(ProcessList* this) {
-   unsigned long long int usertime, nicetime, systemtime, systemalltime, idlealltime, idletime, totaltime;
+   unsigned long long int usertime, nicetime, systemtime, systemalltime, idlealltime, idletime, totaltime, virtalltime;
    unsigned long long int swapFree = 0;
 
    FILE* status;
    status = ProcessList_fopen(this, PROCMEMINFOFILE, "r");
    assert(status != NULL);
-   int processors = this->processorCount;
+   int cpus = this->cpuCount;
    {
       char buffer[128];
       while (fgets(buffer, 128, status)) {
@@ -791,62 +781,66 @@ void ProcessList_scan(ProcessList* this) {
    status = ProcessList_fopen(this, PROCSTATFILE, "r");
 
    assert(status != NULL);
-   for (int i = 0; i <= processors; i++) {
+   for (int i = 0; i <= cpus; i++) {
       char buffer[256];
       int cpuid;
-      unsigned long long int ioWait, irq, softIrq, steal;
-      ioWait = irq = softIrq = steal = 0;
+      unsigned long long int ioWait, irq, softIrq, steal, guest;
+      ioWait = irq = softIrq = steal = guest = 0;
       // Dependending on your kernel version,
       // 5, 7 or 8 of these fields will be set.
       // The rest will remain at zero.
       fgets(buffer, 255, status);
       if (i == 0)
-         ProcessList_read(this, buffer, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal);
+         ProcessList_read(this, buffer, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu %llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest);
       else {
-         ProcessList_read(this, buffer, "cpu%d %llu %llu %llu %llu %llu %llu %llu %llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal);
+         ProcessList_read(this, buffer, "cpu%d %llu %llu %llu %llu %llu %llu %llu %llu %llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest);
          assert(cpuid == i - 1);
       }
       // Fields existing on kernels >= 2.6
       // (and RHEL's patched kernel 2.4...)
       idlealltime = idletime + ioWait;
-      systemalltime = systemtime + irq + softIrq + steal;
-      totaltime = usertime + nicetime + systemalltime + idlealltime;
-      assert (usertime >= this->userTime[i]);
-      assert (nicetime >= this->niceTime[i]);
-      assert (systemtime >= this->systemTime[i]);
-      assert (idletime >= this->idleTime[i]);
-      assert (totaltime >= this->totalTime[i]);
-      assert (systemalltime >= this->systemAllTime[i]);
-      assert (idlealltime >= this->idleAllTime[i]);
-      assert (ioWait >= this->ioWaitTime[i]);
-      assert (irq >= this->irqTime[i]);
-      assert (softIrq >= this->softIrqTime[i]);
-      assert (steal >= this->stealTime[i]);
-      this->userPeriod[i] = usertime - this->userTime[i];
-      this->nicePeriod[i] = nicetime - this->niceTime[i];
-      this->systemPeriod[i] = systemtime - this->systemTime[i];
-      this->systemAllPeriod[i] = systemalltime - this->systemAllTime[i];
-      this->idleAllPeriod[i] = idlealltime - this->idleAllTime[i];
-      this->idlePeriod[i] = idletime - this->idleTime[i];
-      this->ioWaitPeriod[i] = ioWait - this->ioWaitTime[i];
-      this->irqPeriod[i] = irq - this->irqTime[i];
-      this->softIrqPeriod[i] = softIrq - this->softIrqTime[i];
-      this->stealPeriod[i] = steal - this->stealTime[i];
-      this->totalPeriod[i] = totaltime - this->totalTime[i];
-      this->userTime[i] = usertime;
-      this->niceTime[i] = nicetime;
-      this->systemTime[i] = systemtime;
-      this->systemAllTime[i] = systemalltime;
-      this->idleAllTime[i] = idlealltime;
-      this->idleTime[i] = idletime;
-      this->ioWaitTime[i] = ioWait;
-      this->irqTime[i] = irq;
-      this->softIrqTime[i] = softIrq;
-      this->stealTime[i] = steal;
-      this->totalTime[i] = totaltime;
+      systemalltime = systemtime + irq + softIrq;
+      virtalltime = steal + guest;
+      totaltime = usertime + nicetime + systemalltime + idlealltime + virtalltime;
+      CPUData* cpuData = &(this->cpus[i]);
+      assert (usertime >= cpuData->userTime);
+      assert (nicetime >= cpuData->niceTime);
+      assert (systemtime >= cpuData->systemTime);
+      assert (idletime >= cpuData->idleTime);
+      assert (totaltime >= cpuData->totalTime);
+      assert (systemalltime >= cpuData->systemAllTime);
+      assert (idlealltime >= cpuData->idleAllTime);
+      assert (ioWait >= cpuData->ioWaitTime);
+      assert (irq >= cpuData->irqTime);
+      assert (softIrq >= cpuData->softIrqTime);
+      assert (steal >= cpuData->stealTime);
+      assert (guest >= cpuData->guestTime);
+      cpuData->userPeriod = usertime - cpuData->userTime;
+      cpuData->nicePeriod = nicetime - cpuData->niceTime;
+      cpuData->systemPeriod = systemtime - cpuData->systemTime;
+      cpuData->systemAllPeriod = systemalltime - cpuData->systemAllTime;
+      cpuData->idleAllPeriod = idlealltime - cpuData->idleAllTime;
+      cpuData->idlePeriod = idletime - cpuData->idleTime;
+      cpuData->ioWaitPeriod = ioWait - cpuData->ioWaitTime;
+      cpuData->irqPeriod = irq - cpuData->irqTime;
+      cpuData->softIrqPeriod = softIrq - cpuData->softIrqTime;
+      cpuData->stealPeriod = steal - cpuData->stealTime;
+      cpuData->guestPeriod = guest - cpuData->guestTime;
+      cpuData->totalPeriod = totaltime - cpuData->totalTime;
+      cpuData->userTime = usertime;
+      cpuData->niceTime = nicetime;
+      cpuData->systemTime = systemtime;
+      cpuData->systemAllTime = systemalltime;
+      cpuData->idleAllTime = idlealltime;
+      cpuData->idleTime = idletime;
+      cpuData->ioWaitTime = ioWait;
+      cpuData->irqTime = irq;
+      cpuData->softIrqTime = softIrq;
+      cpuData->stealTime = steal;
+      cpuData->guestTime = guest;
+      cpuData->totalTime = totaltime;
    }
-   float period = (float)this->totalPeriod[0] / processors;
-   fclose(status);
+   float period = (float)this->cpus[0].totalPeriod / cpus; fclose(status);
 
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
@@ -883,4 +877,12 @@ ProcessField ProcessList_keyAt(ProcessList* this, int at) {
       x += len;
    }
    return COMM;
+}
+
+void ProcessList_expandTree(ProcessList* this) {
+   int size = Vector_size(this->processes);
+   for (int i = 0; i < size; i++) {
+      Process* process = (Process*) Vector_get(this->processes, i);
+      process->showChildren = true;
+   }
 }

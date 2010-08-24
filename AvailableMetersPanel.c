@@ -91,10 +91,10 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMe
       }
    }
    MeterType* type = &CPUMeter;
-   int processors = settings->pl->processorCount;
-   if (processors > 1) {
+   int cpus = settings->pl->cpuCount;
+   if (cpus > 1) {
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));
-      for (int i = 1; i <= processors; i++) {
+      for (int i = 1; i <= cpus; i++) {
          char buffer[50];
          sprintf(buffer, "%s %d", type->uiName, i);
          Panel_add(super, (Object*) ListItem_new(buffer, i));

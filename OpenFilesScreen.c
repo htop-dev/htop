@@ -43,17 +43,17 @@ typedef struct OpenFilesScreen_ {
 
 }*/
 
-static const char* tbFunctions[] = {"Refresh", "Done   ", NULL};
+static const char* ofsFunctions[] = {"Refresh", "Done   ", NULL};
 
-static const char* tbKeys[] = {"F5", "Esc"};
+static const char* ofsKeys[] = {"F5", "Esc"};
 
-static int tbEvents[] = {KEY_F(5), 27};
+static int ofsEvents[] = {KEY_F(5), 27};
 
 OpenFilesScreen* OpenFilesScreen_new(Process* process) {
    OpenFilesScreen* this = (OpenFilesScreen*) malloc(sizeof(OpenFilesScreen));
    this->process = process;
    this->display = Panel_new(0, 1, COLS, LINES-3, LISTITEM_CLASS, true, ListItem_compare);
-   this->bar = FunctionBar_new(tbFunctions, tbKeys, tbEvents);
+   this->bar = FunctionBar_new(ofsFunctions, ofsKeys, ofsEvents);
    this->tracing = true;
    return this;
 }

@@ -471,27 +471,6 @@ Process* Process_new(struct ProcessList_ *pl) {
    return this;
 }
 
-Process* Process_clone(Process* this) {
-   Process* copy = malloc(sizeof(Process));
-   #if HAVE_TASKSTATS
-   this->io_rchar = 0;
-   this->io_wchar = 0;
-   this->io_syscr = 0;
-   this->io_syscw = 0;
-   this->io_read_bytes = 0;
-   this->io_rate_read_bps = 0;
-   this->io_rate_read_time = 0;
-   this->io_write_bytes = 0;
-   this->io_rate_write_bps = 0;
-   this->io_rate_write_time = 0;
-   this->io_cancelled_write_bytes = 0;
-   #endif
-   memcpy(copy, this, sizeof(Process));
-   this->comm = NULL;
-   this->pid = 0;
-   return copy;
-}
-
 void Process_toggleTag(Process* this) {
    this->tag = this->tag == true ? false : true;
 }
