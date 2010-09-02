@@ -75,7 +75,7 @@ static void OpenFilesScreen_draw(OpenFilesScreen* this) {
 
 static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(int pid) {
    char command[1025];
-   snprintf(command, 1024, "lsof -p %d -F 2> /dev/null", pid);
+   snprintf(command, 1024, "lsof -P -p %d -F 2> /dev/null", pid);
    FILE* fd = popen(command, "r");
    OpenFiles_ProcessData* process = calloc(sizeof(OpenFiles_ProcessData), 1);
    OpenFiles_FileData* file = NULL;
