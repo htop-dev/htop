@@ -653,12 +653,12 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
                   char** fields = String_split(trimmed, ':');
                   free(trimmed);
       
-                  char* value = String_cat(fields[2], "         ");
+                  process->cgroup = strndup(fields[2] + 1, 10);
                   String_freeArray(fields);
-                  process->cgroup = strndup(value + 1, 10);
-                  free(value);
                }
                fclose(status);
+            } else {
+               process->cgroup = strdup("");
             }
             #endif
             

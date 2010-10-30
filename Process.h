@@ -65,6 +65,9 @@ typedef enum ProcessField_ {
    #ifdef HAVE_TASKSTATS
    RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE, IO_RATE,
    #endif
+   #ifdef HAVE_CGROUP
+   CGROUP,
+   #endif
    LAST_PROCESSFIELD
 } ProcessField;
 
@@ -154,6 +157,9 @@ typedef struct Process_ {
    unsigned long long io_rate_read_time;
    double io_rate_write_bps;
    unsigned long long io_rate_write_time;   
+   #endif
+   #ifdef HAVE_CGROUP
+   char* cgroup;
    #endif
 } Process;
 
