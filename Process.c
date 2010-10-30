@@ -63,6 +63,9 @@ typedef enum ProcessField_ {
    #ifdef HAVE_TASKSTATS
    RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE, IO_RATE,
    #endif
+   #ifdef HAVE_CGROUP
+   CGROUP,
+   #endif
    LAST_PROCESSFIELD
 } ProcessField;
 
@@ -153,6 +156,9 @@ typedef struct Process_ {
    double io_rate_write_bps;
    unsigned long long io_rate_write_time;   
    #endif
+   #ifdef HAVE_CGROUP
+   char* cgroup;
+   #endif
 } Process;
 
 }*/
@@ -182,6 +188,9 @@ const char *Process_fieldNames[] = {
    "RCHAR", "WCHAR", "SYSCR", "SYSCW", "RBYTES", "WBYTES", "CNCLWB",
    "IO_READ_RATE", "IO_WRITE_RATE", "IO_RATE",
 #endif
+#ifdef HAVE_CGROUP
+   "CGROUP",
+#endif
 "*** report bug! ***"
 };
 
@@ -204,6 +213,10 @@ const char *Process_fieldTitles[] = {
    "   RD_CHAR ", "   WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", " IO_RBYTES ", " IO_WBYTES ", " IO_CANCEL ",
    " IORR ", " IOWR ", "   IO ",
 #endif
+#ifdef HAVE_CGROUP
+   "    CGROUP ",
+#endif
+"*** report bug! ***"
 };
 
 static int Process_getuid = -1;
@@ -426,6 +439,9 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case IO_WRITE_RATE: Process_outputRate(this, str, attr, buffer, n, this->io_rate_write_bps); return;
    case IO_RATE: Process_outputRate(this, str, attr, buffer, n, this->io_rate_read_bps + this->io_rate_write_bps); return;
    #endif
+   #ifdef HAVE_CGROUP
+   case CGROUP: snprintf(buffer, n, "%-10s ", this->cgroup); break;
+   #endif
 
    default:
       snprintf(buffer, n, "- ");
@@ -450,6 +466,9 @@ void Process_delete(Object* cast) {
    Process* this = (Process*) cast;
    assert (this != NULL);
    if (this->comm) free(this->comm);
+#ifdef HAVE_CGROUP
+   if (this->cgroup) free(this->cgroup);
+#endif
    free(this);
 }
 
@@ -467,6 +486,9 @@ Process* Process_new(struct ProcessList_ *pl) {
    this->stime = 0;
    this->comm = NULL;
    this->indent = 0;
+#ifdef HAVE_CGROUP
+   this->cgroup = NULL;
+#endif
    if (Process_getuid == -1) Process_getuid = getuid();
    return this;
 }
@@ -589,6 +611,10 @@ int Process_compare(const void* v1, const void* v2) {
    case IO_READ_RATE:  diff = p2->io_rate_read_bps - p1->io_rate_read_bps; goto test_diff;
    case IO_WRITE_RATE: diff = p2->io_rate_write_bps - p1->io_rate_write_bps; goto test_diff;
    case IO_RATE: diff = (p2->io_rate_read_bps + p2->io_rate_write_bps) - (p1->io_rate_read_bps + p1->io_rate_write_bps); goto test_diff;
+   #endif
+   #ifdef HAVE_CGROUP
+   case CGROUP:
+      return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
    #endif
 
    default:

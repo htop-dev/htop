@@ -642,6 +642,26 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
             }
             #endif
 
+            #ifdef HAVE_CGROUP
+            snprintf(statusfilename, MAX_NAME, "%s/%s/cgroup", dirname, name);
+            status = ProcessList_fopen(this, statusfilename, "r");
+            if (status) {
+               char buffer[256];
+               char *ok = fgets(buffer, 255, status);
+               if (ok) {
+                  char* trimmed = String_trim(buffer);
+                  char** fields = String_split(trimmed, ':');
+                  free(trimmed);
+      
+                  char* value = String_cat(fields[2], "         ");
+                  String_freeArray(fields);
+                  process->cgroup = strndup(value + 1, 10);
+                  free(value);
+               }
+               fclose(status);
+            }
+            #endif
+            
             #ifdef HAVE_VSERVER
             snprintf(statusfilename, MAX_NAME, "%s/%s/status", dirname, name);
             status = ProcessList_fopen(this, statusfilename, "r");

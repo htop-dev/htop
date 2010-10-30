@@ -4,6 +4,8 @@ What's new in version 0.8.4
 * Add support for "steal"/guest CPU time measurement
   in virtualization environments
 * Expand and collapse subtrees using '+' and '-' when in tree-view
+* Support for cgroups
+  (thanks to Guillaume Zitta and Daniel Lezcano)
 * Show custom thread names
   (thanks to Anders Torger)
 * Add support for STARTTIME field
