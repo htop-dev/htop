@@ -532,6 +532,9 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       int pid;
       // filename is a number: process directory
       pid = atoi(name);
+      
+      if (pid == parentPid)
+         continue;
 
       // The RedHat kernel hides threads with a dot.
       // I believe this is non-standard.
@@ -571,8 +574,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
             char subdirname[MAX_NAME+1];
             snprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
    
-            if (ProcessList_processEntries(this, subdirname, process, pid, period))
-               continue;
+            ProcessList_processEntries(this, subdirname, process, pid, period);
          }
 
          #ifdef HAVE_TASKSTATS        
