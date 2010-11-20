@@ -22,7 +22,11 @@ What's new in version 0.9
   (thanks to Daniel Schuler)
 * Improve battery meter support
   (thanks to Richard W.)
-* Fix IO-wait color in "Black on White" scheme
+* BUGFIX: Fix IO-wait color in "Black on White" scheme
+* BUGFIX: Fix search by process name when list is filtered by user.
+  (thanks to Sergej Pupykin for the report.)
+* BUGFIX: Fix alignment for display of memory values above 100G (sign of the times!)
+  (thanks to Jan van Haarst for the report.)
 
 What's new in version 0.8.3
 
