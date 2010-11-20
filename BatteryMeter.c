@@ -234,7 +234,6 @@ static double getProcBatData() {
       return 0;
 
    double percent = totalFull > 0 ? ((double) totalRemain * 100) / (double) totalFull : 0;
-
    return percent;
 }
 
@@ -270,8 +269,27 @@ static double getSysBatData() {
          return 0;
       }
 
-      totalFull += parseUevent(file, "POWER_SUPPLY_ENERGY_FULL=");
-      totalRemain += parseUevent(file, "POWER_SUPPLY_ENERGY_NOW=");
+      if ((totalFull += parseUevent(file, "POWER_SUPPLY_ENERGY_FULL="))) {
+         totalRemain += parseUevent(file, "POWER_SUPPLY_ENERGY_NOW=");
+      } else {
+         //reset file pointer
+         if (fseek(file, 0, SEEK_SET) < 0) {
+            fclose(file);
+            return 0;
+         }
+      }
+
+      //Some systems have it as CHARGE instead of ENERGY.
+      if ((totalFull += parseUevent(file, "POWER_SUPPLY_CHARGE_FULL="))) {
+         totalRemain += parseUevent(file, "POWER_SUPPLY_CHARGE_NOW=");
+      } else {
+        //reset file pointer
+         if (fseek(file, 0, SEEK_SET) < 0) {
+            fclose(file);
+            return 0;
+         }
+      }
+
       fclose(file);
    }
 
@@ -282,6 +300,7 @@ static double getSysBatData() {
 
 static void BatteryMeter_setValues(Meter * this, char *buffer, int len) {
    double percent = getProcBatData();
+
    if (percent == 0) {
       percent = getSysBatData();
       if (percent == 0) {

@@ -20,6 +20,8 @@ What's new in version 0.9
   (thanks to Pavol Rusnak)
 * Add Bash/emacs style navigation keys
   (thanks to Daniel Schuler)
+* Improve battery meter support
+  (thanks to Richard W.)
 * Fix IO-wait color in "Black on White" scheme
 
 What's new in version 0.8.3
