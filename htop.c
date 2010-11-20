@@ -436,14 +436,14 @@ int main(int argc, char** argv) {
 
       if (incSearchMode) {
          doRefresh = false;
+         int size = Panel_size(panel);
          if (ch == KEY_F(3)) {
             int here = Panel_getSelectedIndex(panel);
-            int size = ProcessList_size(pl);
             int i = here+1;
             while (i != here) {
                if (i == size)
                   i = 0;
-               Process* p = ProcessList_get(pl, i);
+               Process* p = (Process*) Panel_get(panel, i);
                if (String_contains_i(p->comm, incSearchBuffer)) {
                   Panel_setSelected(panel, i);
                   break;
@@ -465,8 +465,8 @@ int main(int argc, char** argv) {
          }
 
          bool found = false;
-         for (int i = 0; i < ProcessList_size(pl); i++) {
-            Process* p = ProcessList_get(pl, i);
+         for (int i = 0; i < size; i++) {
+            Process* p = (Process*) Panel_get(panel, i);
             if (String_contains_i(p->comm, incSearchBuffer)) {
                Panel_setSelected(panel, i);
                found = true;
@@ -477,7 +477,6 @@ int main(int argc, char** argv) {
             FunctionBar_draw(searchBar, incSearchBuffer);
          else
             FunctionBar_drawAttr(searchBar, incSearchBuffer, CRT_colors[FAILED_SEARCH]);
-
          continue;
       }
       if (isdigit((char)ch)) {
