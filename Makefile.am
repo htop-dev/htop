@@ -3,6 +3,8 @@ if HAVE_PLPA
 SUBDIRS = plpa-1.3.2
 endif
 
+ACLOCAL_AMFLAGS=-I m4
+
 bin_PROGRAMS = htop
 dist_man_MANS = htop.1
 EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.py \

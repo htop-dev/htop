@@ -2,17 +2,18 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([htop],[0.8.4],[loderunner@users.sourceforge.net])
+AC_INIT([htop],[0.9],[loderunner@users.sourceforge.net])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_HEADER([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
 
-AM_DISABLE_SHARED
-AM_ENABLE_STATIC
+AC_DISABLE_SHARED
+AC_ENABLE_STATIC
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
@@ -103,7 +104,7 @@ AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you 
 AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
 
 PLPA_INCLUDED
-PLPA_INIT([./plpa-1.3.2], [plpa_happy=yes], [plpa_happy=no])
+PLPA_INIT([plpa-1.3.2], [plpa_happy=yes], [plpa_happy=no])
 AM_CONDITIONAL([HAVE_PLPA], [test "$plpa_happy" = "yes"])
 if test "$plpa_happy" = "yes"; then
    AC_DEFINE([HAVE_PLPA], [1], [Have plpa])
