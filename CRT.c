@@ -334,7 +334,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[CPU_NICE] = ColorPair(Cyan,White);
       CRT_colors[CPU_NORMAL] = ColorPair(Green,White);
       CRT_colors[CPU_KERNEL] = ColorPair(Red,White);
-      CRT_colors[CPU_IOWAIT] = A_BOLD | ColorPair(Black, Black);
+      CRT_colors[CPU_IOWAIT] = A_BOLD | ColorPair(Black, White);
       CRT_colors[CPU_IRQ] = ColorPair(Blue,White);
       CRT_colors[CPU_SOFTIRQ] = ColorPair(Blue,White);
       CRT_colors[CPU_STEAL] = ColorPair(Cyan,White);
