@@ -2,7 +2,7 @@
 htop
 by Hisham Muhammad <loderunner@users.sourceforge.net>
 
-May, 2004 - June, 2009
+May, 2004 - December, 2010
 
 Introduction
 ~~~~~~~~~~~~
@@ -15,8 +15,10 @@ with the 2.4 series.
 Note that, while, htop is Linux specific -- it is based
 on the Linux /proc filesystem -- it is also reported to work
 with FreeBSD systems featuring a Linux-compatible /proc.
+This is, however, unsupported. Contact the packager for your
+system when reporting problems on platforms other than Linux.
 
-This software has evolved considerably during the last months,
+This software has evolved considerably during the last years,
 and is reasonably complete, but there is still room for
 improvement. Read the TODO file to see what's known to be missing.
 
