@@ -19,20 +19,12 @@ AC_PROG_LIBTOOL
 # Checks for libraries.
 AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
 
-if test ! -z "$missing_libraries"; then
-  AC_MSG_ERROR([missing libraries: $missing_libraries])
-fi
-
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/param.h sys/time.h unistd.h curses.h],[:],[
   missing_headers="$missing_headers $ac_header"
 ])
-
-if test ! -z "$missing_headers"; then
-  AC_MSG_ERROR([missing headers: $missing_headers])
-fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -100,13 +92,24 @@ else
    AC_CHECK_HEADERS([curses.h],[:],[missing_headers="$missing_headers $ac_header"])
 fi
 
+if test ! -z "$missing_libraries"; then
+  AC_MSG_ERROR([missing libraries: $missing_libraries])
+fi
+if test ! -z "$missing_headers"; then
+  AC_MSG_ERROR([missing headers: $missing_headers])
+fi
+
+
+
 AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
 AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
 
+AC_ARG_ENABLE(plpa, [AC_HELP_STRING([--enable-plpa], [enable PLPA support for CPU affinity])], ,enable_plpa="yes")
 PLPA_INCLUDED
 PLPA_INIT([plpa-1.3.2], [plpa_happy=yes], [plpa_happy=no])
-AM_CONDITIONAL([HAVE_PLPA], [test "$plpa_happy" = "yes"])
-if test "$plpa_happy" = "yes"; then
+AM_CONDITIONAL([HAVE_PLPA], [test "$plpa_happy" = "yes" && test "$enable_plpa" = "yes"])
+if test "$plpa_happy" = "yes" && test "$enable_plpa" = "yes"
+then
    AC_DEFINE([HAVE_PLPA], [1], [Have plpa])
 fi
 
