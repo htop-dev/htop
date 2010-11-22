@@ -98,7 +98,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, char* type, bool owner)
    this->selected = 0;
    this->oldSelected = 0;
    this->needsRedraw = true;
-   RichString_prune(&(this->header));
+   RichString_beginAllocated(this->header);
    if (String_eq(CRT_termType, "linux"))
       this->scrollHAmount = 20;
    else
@@ -108,17 +108,19 @@ void Panel_init(Panel* this, int x, int y, int w, int h, char* type, bool owner)
 void Panel_done(Panel* this) {
    assert (this != NULL);
    Vector_delete(this->items);
+   RichString_end(this->header);
 }
 
-inline void Panel_setRichHeader(Panel* this, RichString header) {
+RichString* Panel_getHeader(Panel* this) {
    assert (this != NULL);
 
-   this->header = header;
    this->needsRedraw = true;
+   return &(this->header);
 }
 
 inline void Panel_setHeader(Panel* this, const char* header) {
-   Panel_setRichHeader(this, RichString_quickString(CRT_colors[PANEL_HEADER_FOCUS], header));
+   RichString_write(&(this->header), CRT_colors[PANEL_HEADER_FOCUS], header);
+   this->needsRedraw = true;
 }
 
 void Panel_setEventHandler(Panel* this, Panel_EventHandler eh) {
@@ -136,7 +138,7 @@ void Panel_move(Panel* this, int x, int y) {
 void Panel_resize(Panel* this, int w, int h) {
    assert (this != NULL);
 
-   if (this->header.len > 0)
+   if (RichString_sizeVal(this->header) > 0)
       h--;
    this->w = w;
    this->h = h;
@@ -262,15 +264,16 @@ void Panel_draw(Panel* this, bool focus) {
    assert(first >= 0);
    assert(last <= itemCount);
 
-   if (this->header.len > 0) {
+   int headerLen = RichString_sizeVal(this->header);
+   if (headerLen > 0) {
       int attr = focus
                ? CRT_colors[PANEL_HEADER_FOCUS]
                : CRT_colors[PANEL_HEADER_UNFOCUS];
       attrset(attr);
       mvhline(y, x, ' ', this->w);
-      if (scrollH < this->header.len) {
+      if (scrollH < headerLen) {
          RichString_printoffnVal(this->header, y, x, scrollH,
-            MIN(this->header.len - scrollH, this->w));
+            MIN(headerLen - scrollH, this->w));
       }
       attrset(CRT_colors[RESET_COLOR]);
       y++;
@@ -284,22 +287,23 @@ void Panel_draw(Panel* this, bool focus) {
 
       for(int i = first, j = 0; j < this->h && i < last; i++, j++) {
          Object* itemObj = Vector_get(this->items, i);
-         RichString itemRef;
-         RichString_initVal(itemRef);
-         itemObj->display(itemObj, &itemRef);
-         int amt = MIN(itemRef.len - scrollH, this->w);
+         RichString_begin(item);
+         itemObj->display(itemObj, &item);
+         int itemLen = RichString_sizeVal(item);
+         int amt = MIN(itemLen - scrollH, this->w);
          if (i == this->selected) {
             attrset(highlight);
-            RichString_setAttr(&itemRef, highlight);
+            RichString_setAttr(&item, highlight);
             mvhline(y + j, x+0, ' ', this->w);
             if (amt > 0)
-               RichString_printoffnVal(itemRef, y+j, x+0, scrollH, amt);
+               RichString_printoffnVal(item, y+j, x+0, scrollH, amt);
             attrset(CRT_colors[RESET_COLOR]);
          } else {
             mvhline(y+j, x+0, ' ', this->w);
             if (amt > 0)
-               RichString_printoffnVal(itemRef, y+j, x+0, scrollH, amt);
+               RichString_printoffnVal(item, y+j, x+0, scrollH, amt);
          }
+         RichString_end(item);
       }
       for (int i = y + (last - first); i < y + this->h; i++)
          mvhline(i, x+0, ' ', this->w);
@@ -307,24 +311,26 @@ void Panel_draw(Panel* this, bool focus) {
 
    } else {
       Object* oldObj = Vector_get(this->items, this->oldSelected);
-      RichString oldRef;
-      RichString_initVal(oldRef);
-      oldObj->display(oldObj, &oldRef);
+      RichString_begin(old);
+      oldObj->display(oldObj, &old);
+      int oldLen = RichString_sizeVal(old);
       Object* newObj = Vector_get(this->items, this->selected);
-      RichString newRef;
-      RichString_initVal(newRef);
-      newObj->display(newObj, &newRef);
+      RichString_begin(new);
+      newObj->display(newObj, &new);
+      int newLen = RichString_sizeVal(new);
       mvhline(y+ this->oldSelected - this->scrollV, x+0, ' ', this->w);
-      if (scrollH < oldRef.len)
-         RichString_printoffnVal(oldRef, y+this->oldSelected - this->scrollV, x,
-            this->scrollH, MIN(oldRef.len - scrollH, this->w));
+      if (scrollH < oldLen)
+         RichString_printoffnVal(old, y+this->oldSelected - this->scrollV, x,
+            this->scrollH, MIN(oldLen - scrollH, this->w));
       attrset(highlight);
       mvhline(y+this->selected - this->scrollV, x+0, ' ', this->w);
-      RichString_setAttr(&newRef, highlight);
-      if (scrollH < newRef.len)
-         RichString_printoffnVal(newRef, y+this->selected - this->scrollV, x,
-            this->scrollH, MIN(newRef.len - scrollH, this->w));
+      RichString_setAttr(&new, highlight);
+      if (scrollH < newLen)
+         RichString_printoffnVal(new, y+this->selected - this->scrollV, x,
+            this->scrollH, MIN(newLen - scrollH, this->w));
       attrset(CRT_colors[RESET_COLOR]);
+      RichString_end(new);
+      RichString_end(old);
    }
    this->oldSelected = this->selected;
    move(0, 0);

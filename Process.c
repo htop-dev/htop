@@ -40,12 +40,18 @@ in the source distribution for its full text.
 #endif
 #define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
 
-#define PROCESS_COMM_LEN 300
-
 /*{
 
+#ifndef Process_isKernelThread
+#define Process_isKernelThread(_process) (_process->pgrp == 0)
+#endif
+
+#ifndef Process_isUserlandThread
+#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
+#endif
+
 #ifndef Process_isThread
-#define Process_isThread(_process) (_process->pid != _process->tgid || _process->m_size == 0)
+#define Process_isThread(_process) (Process_isUserlandThread(_process) || Process_isKernelThread(_process))
 #endif
 
 typedef enum ProcessField_ {
@@ -83,6 +89,7 @@ typedef struct Process_ {
    char state;
    bool tag;
    bool showChildren;
+   bool show;
    pid_t ppid;
    unsigned int pgrp;
    unsigned int session;
@@ -225,7 +232,7 @@ static int Process_getuid = -1;
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
 
-static void Process_printLargeNumber(Process* this, RichString *str, unsigned long number) {
+static void Process_printLargeNumber(Process* this, RichString* str, unsigned long number) {
    char buffer[11];
    int len;
    if(number >= (10 * ONE_M)) {
@@ -279,10 +286,10 @@ static void Process_printTime(RichString* str, unsigned long t) {
 }
 
 static inline void Process_writeCommand(Process* this, int attr, int baseattr, RichString* str) {
-   int start = str->len;
+   int start = RichString_size(str);
    RichString_append(str, attr, this->comm);
    if (this->pl->highlightBaseName) {
-      int finish = str->len - 1;
+      int finish = RichString_size(str) - 1;
       int space = RichString_findChar(str, ' ', start);
       if (space != -1)
          finish = space - 1;
@@ -312,10 +319,10 @@ static inline void Process_outputRate(Process* this, RichString* str, int attr, 
 }
 
 static void Process_writeField(Process* this, RichString* str, ProcessField field) {
-   char buffer[PROCESS_COMM_LEN];
+   char buffer[128]; buffer[127] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int baseattr = CRT_colors[PROCESS_BASENAME];
-   int n = PROCESS_COMM_LEN;
+   int n = sizeof(buffer) - 1;
 
    switch (field) {
    case PID: snprintf(buffer, n, "%5u ", this->pid); break;
@@ -457,7 +464,7 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
 static void Process_display(Object* cast, RichString* out) {
    Process* this = (Process*) cast;
    ProcessField* fields = this->pl->fields;
-   RichString_init(out);
+   RichString_prune(out);
    for (int i = 0; fields[i]; i++)
       Process_writeField(this, out, fields[i]);
    if (this->pl->shadowOtherUsers && (int)this->st_uid != Process_getuid)
@@ -486,6 +493,7 @@ Process* Process_new(struct ProcessList_ *pl) {
    this->pl = pl;
    this->tag = false;
    this->showChildren = true;
+   this->show = true;
    this->updated = false;
    this->utime = 0;
    this->stime = 0;

@@ -128,8 +128,6 @@ MeterType* Meter_types[] = {
    NULL
 };
 
-static RichString Meter_stringBuffer;
-
 Meter* Meter_new(ProcessList* pl, int param, MeterType* type) {
    Meter* this = calloc(sizeof(Meter), 1);
    Object_setClass(this, METER_CLASS);
@@ -166,14 +164,13 @@ void Meter_setCaption(Meter* this, const char* caption) {
    this->caption = strdup(caption);
 }
 
-static inline void Meter_displayToStringBuffer(Meter* this, char* buffer) {
+static inline void Meter_displayBuffer(Meter* this, char* buffer, RichString* out) {
    MeterType* type = this->type;
    Object_Display display = ((Object*)this)->display;
    if (display) {
-      display((Object*)this, &Meter_stringBuffer);
+      display((Object*)this, out);
    } else {
-      RichString_initVal(Meter_stringBuffer);
-      RichString_append(&Meter_stringBuffer, CRT_colors[type->attributes[0]], buffer);
+      RichString_write(out, CRT_colors[type->attributes[0]], buffer);
    }
 }
 
@@ -229,10 +226,12 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    int captionLen = strlen(this->caption);
    w -= captionLen;
    x += captionLen;
-   Meter_displayToStringBuffer(this, buffer);
    mvhline(y, x, ' ', CRT_colors[DEFAULT_COLOR]);
    attrset(CRT_colors[RESET_COLOR]);
-   RichString_printVal(Meter_stringBuffer, y, x);
+   RichString_begin(out);
+   Meter_displayBuffer(this, buffer, &out);
+   RichString_printVal(out, y, x);
+   RichString_end(out);
 }
 
 /* ---------- BarMeterMode ---------- */
@@ -378,14 +377,16 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    MeterType* type = this->type;
    char buffer[METER_BUFFER_LEN];
    type->setValues(this, buffer, METER_BUFFER_LEN - 1);
-  
-   Meter_displayToStringBuffer(this, buffer);
+   
+   RichString_begin(out);
+   Meter_displayBuffer(this, buffer, &out);
 
    attrset(CRT_colors[LED_COLOR]);
    mvaddstr(y+2, x, this->caption);
    int xx = x + strlen(this->caption);
-   for (int i = 0; i < Meter_stringBuffer.len; i++) {
-      char c = RichString_getCharVal(Meter_stringBuffer, i);
+   int len = RichString_sizeVal(out);
+   for (int i = 0; i < len; i++) {
+      char c = RichString_getCharVal(out, i);
       if (c >= '0' && c <= '9') {
          LEDMeterMode_drawDigit(xx, y, c-48);
          xx += 4;
@@ -395,6 +396,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
       }
    }
    attrset(CRT_colors[RESET_COLOR]);
+   RichString_end(out);
 }
 
 #endif

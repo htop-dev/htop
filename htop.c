@@ -241,7 +241,7 @@ static inline void setSortKey(ProcessList* pl, ProcessField sortKey, Panel* pane
    pl->direction = 1;
    pl->treeView = false;
    settings->changed = true;
-   Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+   ProcessList_printHeader(pl, Panel_getHeader(panel));
 }
 
 int main(int argc, char** argv) {
@@ -352,7 +352,7 @@ int main(int argc, char** argv) {
       pl->treeView = false;
       pl->direction = 1;
    }
-   Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+   ProcessList_printHeader(pl, Panel_getHeader(panel));
    
    const char* searchFunctions[] = {"Next  ", "Exit  ", " Search: ", NULL};
    const char* searchKeys[] = {"F3", "Esc", "  "};
@@ -395,7 +395,7 @@ int main(int argc, char** argv) {
             ProcessList_scan(pl);
             doRecalculate = false;
          }
-         if (refreshTimeout == 0) {
+         if (refreshTimeout == 0 || pl->treeView) {
             ProcessList_sort(pl);
             refreshTimeout = 1;
          }
@@ -404,7 +404,7 @@ int main(int argc, char** argv) {
          int idx = 0;
          for (int i = 0; i < size; i++) {
             Process* p = ProcessList_get(pl, i);
-            if (!userOnly || (p->st_uid == userId)) {
+            if (p->show && (!userOnly || (p->st_uid == userId))) {
                Panel_set(panel, idx, (Object*)p);
                if ((!follow && idx == currPos) || (follow && p->pid == currPid)) {
                   Panel_setSelected(panel, idx);
@@ -608,7 +608,7 @@ int main(int argc, char** argv) {
       {
          Setup_run(settings, headerHeight);
          // TODO: shouldn't need this, colors should be dynamic
-         Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+         ProcessList_printHeader(pl, Panel_getHeader(panel));
          headerHeight = Header_calculateHeight(header);
          Panel_move(panel, 0, headerHeight);
          Panel_resize(panel, COLS, LINES-headerHeight-1);
@@ -680,7 +680,7 @@ int main(int argc, char** argv) {
                napms(500);
             }
          }
-         Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+         ProcessList_printHeader(pl, Panel_getHeader(panel));
          refreshTimeout = 0;
          break;
       }
@@ -715,7 +715,7 @@ int main(int argc, char** argv) {
                beep();
          }
          ((Object*)affinityPanel)->delete((Object*)affinityPanel);
-         Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+         ProcessList_printHeader(pl, Panel_getHeader(panel));
          refreshTimeout = 0;
          break;
       }
@@ -747,7 +747,7 @@ int main(int argc, char** argv) {
             settings->changed = true;
             setSortKey(pl, field->key, panel, settings);
          } else {
-            Panel_setRichHeader(panel, ProcessList_printHeader(pl));
+            ProcessList_printHeader(pl, Panel_getHeader(panel));
          }
          ((Object*)sortPanel)->delete((Object*)sortPanel);
          refreshTimeout = 0;
@@ -825,6 +825,9 @@ int main(int argc, char** argv) {
       ((Object*)killPanel)->delete((Object*)killPanel);
    UsersTable_delete(ut);
    Settings_delete(settings);
+#ifdef HAVE_PLPA
+   plpa_finalize();
+#endif
    debug_done();
    return 0;
 }

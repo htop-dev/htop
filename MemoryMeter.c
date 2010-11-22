@@ -43,8 +43,7 @@ static void MemoryMeter_display(Object* cast, RichString* out) {
    long int usedMem = this->values[0] / k;
    long int buffersMem = this->values[1] / k;
    long int cachedMem = this->values[2] / k;
-   RichString_init(out);
-   RichString_append(out, CRT_colors[METER_TEXT], ":");
+   RichString_write(out, CRT_colors[METER_TEXT], ":");
    sprintf(buffer, format, totalMem);
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
    sprintf(buffer, format, usedMem);

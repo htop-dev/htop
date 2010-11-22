@@ -75,7 +75,7 @@ static void CPUMeter_setValues(Meter* this, char* buffer, int size) {
 static void CPUMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
-   RichString_init(out);
+   RichString_prune(out);
    if (this->param > this->pl->cpuCount) {
       RichString_append(out, CRT_colors[METER_TEXT], "absent");
       return;

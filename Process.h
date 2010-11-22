@@ -43,11 +43,17 @@ in the source distribution for its full text.
 #endif
 #define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
 
-#define PROCESS_COMM_LEN 300
 
+#ifndef Process_isKernelThread
+#define Process_isKernelThread(_process) (_process->pgrp == 0)
+#endif
+
+#ifndef Process_isUserlandThread
+#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
+#endif
 
 #ifndef Process_isThread
-#define Process_isThread(_process) (_process->pid != _process->tgid || _process->m_size == 0)
+#define Process_isThread(_process) (Process_isUserlandThread(_process) || Process_isKernelThread(_process))
 #endif
 
 typedef enum ProcessField_ {
@@ -85,6 +91,7 @@ typedef struct Process_ {
    char state;
    bool tag;
    bool showChildren;
+   bool show;
    pid_t ppid;
    unsigned int pgrp;
    unsigned int session;

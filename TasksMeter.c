@@ -26,10 +26,9 @@ static void TasksMeter_setValues(Meter* this, char* buffer, int len) {
 
 static void TasksMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
-   RichString_init(out);
    char buffer[20];
    sprintf(buffer, "%d", (int)this->total);
-   RichString_append(out, CRT_colors[METER_VALUE], buffer);
+   RichString_write(out, CRT_colors[METER_VALUE], buffer);
    RichString_append(out, CRT_colors[METER_TEXT], " total, ");
    sprintf(buffer, "%d", (int)this->values[0]);
    RichString_append(out, CRT_colors[TASKS_RUNNING], buffer);

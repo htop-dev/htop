@@ -58,10 +58,6 @@ in the source distribution for its full text.
 
 
 
-#ifdef DEBUG_PROC
-typedef int(*vxscanf)(void*, const char*, va_list);
-#endif
-
 typedef struct CPUData_ {
    unsigned long long int totalTime;
    unsigned long long int userTime;
@@ -126,26 +122,8 @@ typedef struct ProcessList_ {
    bool highlightMegabytes;
    bool highlightThreads;
    bool detailedCPUTime;
-   #ifdef DEBUG_PROC
-   FILE* traceFile;
-   #endif
 
 } ProcessList;
-
-#ifdef DEBUG_PROC
-
-#define ProcessList_read(this, buffer, format, ...) ProcessList_xread(this, (vxscanf) vsscanf, buffer, format, ## __VA_ARGS__ )
-#define ProcessList_fread(this, file, format, ...)  ProcessList_xread(this, (vxscanf) vfscanf, file, format, ## __VA_ARGS__ )
-
-#else
-
-#ifndef ProcessList_read
-#define ProcessList_fopen(this, path, mode) fopen(path, mode)
-#define ProcessList_read(this, buffer, format, ...) sscanf(buffer, format, ## __VA_ARGS__ )
-#define ProcessList_fread(this, file, format, ...) fscanf(file, format, ## __VA_ARGS__ )
-#endif
-
-#endif
 
 ProcessList* ProcessList_new(UsersTable* usersTable);
 
@@ -153,7 +131,7 @@ void ProcessList_delete(ProcessList* this);
 
 void ProcessList_invertSortOrder(ProcessList* this);
 
-RichString ProcessList_printHeader(ProcessList* this);
+void ProcessList_printHeader(ProcessList* this, RichString* header);
 
 Process* ProcessList_get(ProcessList* this, int idx);
 
@@ -164,6 +142,19 @@ void ProcessList_sort(ProcessList* this);
 #ifdef HAVE_TASKSTATS
 
 #endif
+
+#ifdef HAVE_OPENVZ
+
+#endif
+
+#ifdef HAVE_CGROUP
+
+#endif
+
+#ifdef HAVE_VSERVER
+
+#endif
+
 
 void ProcessList_scan(ProcessList* this);
 
