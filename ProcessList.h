@@ -94,6 +94,8 @@ typedef struct ProcessList_ {
 
    int cpuCount;
    int totalTasks;
+   int userlandThreads;
+   int kernelThreads;
    int runningTasks;
 
    CPUData* cpus;

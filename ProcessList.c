@@ -94,6 +94,8 @@ typedef struct ProcessList_ {
 
    int cpuCount;
    int totalTasks;
+   int userlandThreads;
+   int kernelThreads;
    int runningTasks;
 
    CPUData* cpus;
@@ -635,6 +637,11 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
             if (! ProcessList_readCmdlineFile(process, dirname, name))
                goto errorReadingProcess;
          }
+         if (Process_isKernelThread(process)) {
+            this->kernelThreads++;
+         } else {
+            this->userlandThreads++;
+         }
       }
 
       this->totalTasks++;
@@ -772,6 +779,8 @@ void ProcessList_scan(ProcessList* this) {
    }
    
    this->totalTasks = 0;
+   this->userlandThreads = 0;
+   this->kernelThreads = 0;
    this->runningTasks = 0;
 
    ProcessList_processEntries(this, PROCDIR, NULL, period);

@@ -58,7 +58,6 @@ typedef enum ColorElements_ {
    LED_COLOR,
    UPTIME,
    BATTERY,
-   TASKS_TOTAL,
    TASKS_RUNNING,
    SWAP,
    PROCESS,
