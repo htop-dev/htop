@@ -257,7 +257,6 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
       Process* process = (Process*) (Vector_get(children, i));
       if (!show)
          process->show = false;
-      show = show ? process->showChildren : false;
       int s = this->processes2->items;
       if (direction == 1)
          Vector_add(this->processes2, process);
@@ -265,7 +264,7 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
          Vector_insert(this->processes2, 0, process);
       assert(this->processes2->items == s+1); (void)s;
       int nextIndent = indent | (1 << level);
-      ProcessList_buildTree(this, process->pid, level+1, (i < size - 1) ? nextIndent : indent, direction, show);
+      ProcessList_buildTree(this, process->pid, level+1, (i < size - 1) ? nextIndent : indent, direction, show ? process->showChildren : false);
       process->indent = nextIndent;
    }
    Vector_delete(children);
