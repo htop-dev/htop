@@ -557,13 +557,10 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       if (parent && pid == parent->pid)
          continue;
 
-      bool isThread = parent;
       // The RedHat kernel hides threads with a dot.
       // I believe this is non-standard.
       if ((!this->hideThreads) && pid == 0 && name[0] == '.') {
-         char* tname = name + 1;
-         pid = atoi(tname);
-         isThread = true;
+         pid = atoi(name + 1);
       }
       if (pid <= 0) 
          continue;
@@ -593,7 +590,6 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       if (! ProcessList_readStatmFile(process, dirname, name))
          goto errorReadingProcess;
 
-      isThread = Process_isThread(process);
       process->show = ! ((hideKernelThreads && Process_isKernelThread(process)) || (hideUserlandThreads && Process_isUserlandThread(process)));
 
       char command[MAX_NAME+1];
@@ -629,7 +625,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
          ProcessList_add(this, process);
       }
 
-      if (isThread) {
+      if (Process_isThread(process)) {
          if (this->showThreadNames || Process_isKernelThread(process) || process->state == 'Z') {
             free(process->comm);
             process->comm = String_copy(command);
