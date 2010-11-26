@@ -601,10 +601,11 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       process->percent_mem = (process->m_resident * PAGE_SIZE_KB) / (float)(this->totalMem) * 100.0;
 
       if(!existingProcess) {
-         process->user = UsersTable_getRef(this->usersTable, process->st_uid);
 
          if (! ProcessList_statProcessDir(process, dirname, name))
             goto errorReadingProcess;
+
+         process->user = UsersTable_getRef(this->usersTable, process->st_uid);
 
          #ifdef HAVE_OPENVZ
          ProcessList_readOpenVZData(process, dirname, name);
