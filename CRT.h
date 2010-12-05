@@ -14,7 +14,9 @@ in the source distribution for its full text.
 #include <signal.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif
 
 #include "String.h"
 

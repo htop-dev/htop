@@ -11,7 +11,9 @@ in the source distribution for its full text.
 #include <signal.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif
 
 #include "String.h"
 
@@ -125,12 +127,14 @@ static void CRT_handleSIGSEGV(int sgn) {
    CRT_done();
    #if __linux
    fprintf(stderr, "\n\nhtop " VERSION " aborting. Please report bug at http://htop.sf.net\n");
-   #else
-   fprintf(stderr, "\n\nhtop " VERSION " aborting. Unsupported platform.\n");
-   #endif
+   #ifdef HAVE_EXECINFO_H
    size_t size = backtrace(backtraceArray, sizeof(backtraceArray));
    fprintf(stderr, "Backtrace: \n");
    backtrace_symbols_fd(backtraceArray, size, 2);
+   #endif
+   #else
+   fprintf(stderr, "\n\nhtop " VERSION " aborting. Unsupported platform.\n");
+   #endif
    abort();
 }
 

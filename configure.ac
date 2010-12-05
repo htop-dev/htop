@@ -25,6 +25,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/param.h sys/time.h unistd.h curses.h],[:],[
   missing_headers="$missing_headers $ac_header"
 ])
+AC_CHECK_HEADERS([execinfo.h],[:],[:])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
