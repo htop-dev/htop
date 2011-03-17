@@ -625,7 +625,10 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
          ProcessList_add(this, process);
       }
 
-      if (Process_isThread(process)) {
+      if (process->state == 'Z') {
+         free(process->comm);
+         process->comm = String_copy(command);
+      } else if (Process_isThread(process)) {
          if (this->showThreadNames || Process_isKernelThread(process) || process->state == 'Z') {
             free(process->comm);
             process->comm = String_copy(command);
