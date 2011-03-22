@@ -36,6 +36,7 @@ typedef struct OpenFiles_FileData_ {
 
 typedef struct OpenFilesScreen_ {
    Process* process;
+   pid_t pid;
    Panel* display;
    FunctionBar* bar;
    bool tracing;
@@ -55,6 +56,10 @@ OpenFilesScreen* OpenFilesScreen_new(Process* process) {
    this->display = Panel_new(0, 1, COLS, LINES-3, LISTITEM_CLASS, true, ListItem_compare);
    this->bar = FunctionBar_new(ofsFunctions, ofsKeys, ofsEvents);
    this->tracing = true;
+   if (Process_isThread(process))
+      this->pid = process->tgid;
+   else
+      this->pid = process->pid;
    return this;
 }
 
@@ -67,13 +72,13 @@ void OpenFilesScreen_delete(OpenFilesScreen* this) {
 static void OpenFilesScreen_draw(OpenFilesScreen* this) {
    attrset(CRT_colors[METER_TEXT]);
    mvhline(0, 0, ' ', COLS);
-   mvprintw(0, 0, "Files open in process %d - %s", this->process->pid, this->process->comm);
+   mvprintw(0, 0, "Files open in process %d - %s", this->pid, this->process->comm);
    attrset(CRT_colors[DEFAULT_COLOR]);
    Panel_draw(this->display, true);
    FunctionBar_draw(this->bar, NULL);
 }
 
-static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(int pid) {
+static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    char command[1025];
    snprintf(command, 1024, "lsof -P -p %d -F 2> /dev/null", pid);
    FILE* fd = popen(command, "r");
@@ -117,7 +122,7 @@ static void OpenFilesScreen_scan(OpenFilesScreen* this) {
    Panel* panel = this->display;
    int idx = MAX(Panel_getSelectedIndex(panel), 0);
    Panel_prune(panel);
-   OpenFiles_ProcessData* process = OpenFilesScreen_getProcessData(this->process->pid);
+   OpenFiles_ProcessData* process = OpenFilesScreen_getProcessData(this->pid);
    if (process->error == 127) {
       Panel_add(panel, (Object*) ListItem_new("Could not execute 'lsof'. Please make sure it is available in your $PATH.", 0));
    } else if (process->error == 1) {
