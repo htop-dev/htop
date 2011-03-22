@@ -90,7 +90,7 @@ void* DebugMemory_realloc(void* ptr, int size, char* file, int line, char* str) 
    return data;
 }
 
-void* DebugMemory_strdup(char* str, char* file, int line) {
+void* DebugMemory_strdup(const char* str, char* file, int line) {
    assert(str);
    char* data = strdup(str);
    DebugMemory_registerAllocation(data, file, line);
@@ -102,7 +102,7 @@ void* DebugMemory_strdup(char* str, char* file, int line) {
 }
 
 void DebugMemory_free(void* data, char* file, int line) {
-   assert(data);
+   if (!data) return;
    DebugMemory_registerDeallocation(data, file, line);
    if (singleton->file) {
       if (singleton->totals) fprintf(singleton->file, "%d\t", singleton->size);

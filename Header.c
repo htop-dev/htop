@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "debug.h"
 #include <assert.h>
+#include <time.h>
 
 /*{
 
@@ -34,7 +35,7 @@ typedef struct Header_ {
 #endif
 
 Header* Header_new(ProcessList* pl) {
-   Header* this = malloc(sizeof(Header));
+   Header* this = calloc(sizeof(Header), 1);
    this->leftMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE, NULL);
    this->rightMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE, NULL);
    this->margin = true;
@@ -132,7 +133,18 @@ void Header_defaultMeters(Header* this) {
    Vector_add(this->rightMeters, Meter_new(this->pl, 0, &UptimeMeter));
 }
 
-void Header_draw(Header* this) {
+void Header_reinit(Header* this) {
+   for (int i = 0; i < Vector_size(this->leftMeters); i++) {
+      Meter* meter = (Meter*) Vector_get(this->leftMeters, i);
+      meter->type->init(meter);
+   }
+   for (int i = 0; i < Vector_size(this->rightMeters); i++) {
+      Meter* meter = (Meter*) Vector_get(this->rightMeters, i);
+      meter->type->init(meter);
+   }
+}
+
+void Header_draw(const Header* this) {
    int height = this->height;
    int pad = this->pad;
    

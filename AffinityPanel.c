@@ -3,6 +3,7 @@
 
 #include "Panel.h"
 #include "CheckItem.h"
+#include "ProcessList.h"
 
 #include "debug.h"
 #include <assert.h>
@@ -25,14 +26,14 @@ static HandlerResult AffinityPanel_eventHandler(Panel* this, int ch) {
    return result;
 }
 
-Panel* AffinityPanel_new(int processorCount, unsigned long mask) {
+Panel* AffinityPanel_new(ProcessList* pl, unsigned long mask) {
    Panel* this = Panel_new(1, 1, 1, 1, CHECKITEM_CLASS, true, ListItem_compare);
    this->eventHandler = AffinityPanel_eventHandler;
 
    Panel_setHeader(this, "Use CPUs:");
-   for (int i = 0; i < processorCount; i++) {
+   for (int i = 0; i < pl->cpuCount; i++) {
       char number[10];
-      snprintf(number, 9, "%d", i+1);
+      snprintf(number, 9, "%d", ProcessList_cpuId(pl, i) + 1);
       Panel_add(this, (Object*) CheckItem_new(String_copy(number), NULL, mask & (1 << i)));
    }
    return this;

@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #include "debug.h"
 #include <assert.h>
+#include <time.h>
 
 
 typedef enum HeaderSide_ {
@@ -52,7 +53,9 @@ MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side);
 
 void Header_defaultMeters(Header* this);
 
-void Header_draw(Header* this);
+void Header_reinit(Header* this);
+
+void Header_draw(const Header* this);
 
 int Header_calculateHeight(Header* this);
 

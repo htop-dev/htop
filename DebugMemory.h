@@ -48,7 +48,7 @@ void* DebugMemory_calloc(int a, int b, char* file, int line);
 
 void* DebugMemory_realloc(void* ptr, int size, char* file, int line, char* str);
 
-void* DebugMemory_strdup(char* str, char* file, int line);
+void* DebugMemory_strdup(const char* str, char* file, int line);
 
 void DebugMemory_free(void* data, char* file, int line);
 

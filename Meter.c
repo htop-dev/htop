@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include <assert.h>
 
 #ifndef USE_FUNKY_MODES
+#include <time.h>
 #define USE_FUNKY_MODES 1
 #endif
 
@@ -69,12 +70,19 @@ struct Meter_ {
    int mode;
    int param;
    Meter_Draw draw;
-   void* drawBuffer;
+   void* drawData;
    int h;
    ProcessList* pl;
    double* values;
    double total;
 };
+
+#ifdef USE_FUNKY_MODES
+typedef struct GraphData_ {
+   time_t time;
+   double values[METER_BUFFER_LEN];
+} GraphData;
+#endif
 
 typedef enum {
    CUSTOM_METERMODE = 0,
@@ -152,8 +160,8 @@ void Meter_delete(Object* cast) {
    if (this->type->done) {
       this->type->done(this);
    }
-   if (this->drawBuffer)
-      free(this->drawBuffer);
+   if (this->drawData)
+      free(this->drawData);
    free(this->caption);
    free(this->values);
    free(this);
@@ -186,9 +194,9 @@ void Meter_setMode(Meter* this, int modeIndex) {
          this->type->setMode(this, modeIndex);
    } else {
       assert(modeIndex >= 1);
-      if (this->drawBuffer)
-         free(this->drawBuffer);
-      this->drawBuffer = NULL;
+      if (this->drawData)
+         free(this->drawData);
+      this->drawData = NULL;
 
       MeterMode* mode = Meter_modes[modeIndex];
       this->draw = mode->draw;
@@ -328,23 +336,30 @@ static const char* GraphMeterMode_characters = "^`'-.,_~'`-.,_~'`-.,_";
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
-   if (!this->drawBuffer) this->drawBuffer = calloc(sizeof(double), METER_BUFFER_LEN);
-   double* drawBuffer = (double*) this->drawBuffer;
+   if (!this->drawData) this->drawData = calloc(sizeof(GraphData), 1);
+   GraphData* data = (GraphData*) this->drawData;
+   const int nValues = METER_BUFFER_LEN;
+   
+   time_t now = time(NULL);
+   if (now > data->time) {
+      data->time = now;
 
-   for (int i = 0; i < METER_BUFFER_LEN - 1; i++)
-      drawBuffer[i] = drawBuffer[i+1];
-
-   MeterType* type = this->type;
-   char buffer[METER_BUFFER_LEN];
-   type->setValues(this, buffer, METER_BUFFER_LEN - 1);
-
-   double value = 0.0;
-   for (int i = 0; i < type->items; i++)
-      value += this->values[i];
-   value /= this->total;
-   drawBuffer[METER_BUFFER_LEN - 1] = value;
-   for (int i = METER_BUFFER_LEN - w, k = 0; i < METER_BUFFER_LEN; i++, k++) {
-      value = drawBuffer[i];
+      for (int i = 0; i < nValues - 1; i++)
+         data->values[i] = data->values[i+1];
+   
+      MeterType* type = this->type;
+      char buffer[nValues];
+      type->setValues(this, buffer, nValues - 1);
+   
+      double value = 0.0;
+      for (int i = 0; i < type->items; i++)
+         value += this->values[i];
+      value /= this->total;
+      data->values[nValues - 1] = value;
+   }
+   
+   for (int i = nValues - w, k = 0; i < nValues; i++, k++) {
+      double value = data->values[i];
       DrawDot( CRT_colors[DEFAULT_COLOR], y, ' ' );
       DrawDot( CRT_colors[DEFAULT_COLOR], y+1, ' ' );
       DrawDot( CRT_colors[DEFAULT_COLOR], y+2, ' ' );

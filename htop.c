@@ -164,8 +164,8 @@ static void showHelp(ProcessList* pl) {
 
 static const char* CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static void Setup_run(Settings* settings, int headerHeight) {
-   ScreenManager* scr = ScreenManager_new(0, headerHeight, 0, -1, HORIZONTAL, true);
+static void Setup_run(Settings* settings, const Header* header) {
+   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, true);
    CategoriesPanel* panelCategories = CategoriesPanel_new(settings, scr);
    ScreenManager_add(scr, (Panel*) panelCategories, FunctionBar_new(CategoriesFunctions, NULL, NULL), 16);
    CategoriesPanel_makeMetersPage(panelCategories);
@@ -201,12 +201,12 @@ static HandlerResult pickWithEnter(Panel* panel, int ch) {
    return IGNORED;
 }
 
-static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const char** keyLabels, FunctionBar* prevBar) {
+static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const char** keyLabels, FunctionBar* prevBar, Header* header) {
    const char* fuKeys[] = {"Enter", "Esc", NULL};
    int fuEvents[] = {13, 27};
    if (!list->eventHandler)
       Panel_setEventHandler(list, pickWithEnter);
-   ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, false);
+   ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, header, false);
    ScreenManager_add(scr, list, FunctionBar_new(keyLabels, fuKeys, fuEvents), x - 1);
    ScreenManager_add(scr, panel, NULL, -1);
    Panel* panelFocus;
@@ -376,7 +376,7 @@ int main(int argc, char** argv) {
    double oldTime = 0.0;
    bool recalculate;
 
-   int ch = 0;
+   int ch = ERR;
    int closeTimeout = 0;
 
    while (!quit) {
@@ -606,7 +606,7 @@ int main(int argc, char** argv) {
       case 'C':
       case KEY_F(2):
       {
-         Setup_run(settings, headerHeight);
+         Setup_run(settings, header);
          // TODO: shouldn't need this, colors should be dynamic
          ProcessList_printHeader(pl, Panel_getHeader(panel));
          headerHeight = Header_calculateHeight(header);
@@ -630,7 +630,7 @@ int main(int argc, char** argv) {
          ListItem* allUsers = ListItem_new("All users", -1);
          Panel_insert(usersPanel, 0, (Object*) allUsers);
          const char* fuFunctions[] = {"Show    ", "Cancel ", NULL};
-         ListItem* picked = (ListItem*) pickFromVector(panel, usersPanel, 20, headerHeight, fuFunctions, defaultBar);
+         ListItem* picked = (ListItem*) pickFromVector(panel, usersPanel, 20, headerHeight, fuFunctions, defaultBar, header);
          if (picked) {
             if (picked == allUsers) {
                userOnly = false;
@@ -659,7 +659,7 @@ int main(int argc, char** argv) {
          }
          SignalsPanel_reset((SignalsPanel*) killPanel);
          const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
-         Signal* sgn = (Signal*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar);
+         Signal* sgn = (Signal*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
          if (sgn) {
             if (sgn->number != 0) {
                Panel_setHeader(panel, "Sending...");
@@ -692,10 +692,10 @@ int main(int argc, char** argv) {
 
          unsigned long curr = Process_getAffinity((Process*) Panel_getSelected(panel));
          
-         Panel* affinityPanel = AffinityPanel_new(pl->cpuCount, curr);
+         Panel* affinityPanel = AffinityPanel_new(pl, curr);
 
          const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
-         void* set = pickFromVector(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar);
+         void* set = pickFromVector(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar, header);
          if (set) {
             unsigned long new = AffinityPanel_getAffinity(affinityPanel);
             bool anyTagged = false;
@@ -742,7 +742,7 @@ int main(int argc, char** argv) {
                Panel_setSelected(sortPanel, i);
             free(name);
          }
-         ListItem* field = (ListItem*) pickFromVector(panel, sortPanel, 15, headerHeight, fuFunctions, defaultBar);
+         ListItem* field = (ListItem*) pickFromVector(panel, sortPanel, 15, headerHeight, fuFunctions, defaultBar, header);
          if (field) {
             settings->changed = true;
             setSortKey(pl, field->key, panel, settings);

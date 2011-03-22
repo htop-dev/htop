@@ -332,7 +332,7 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
    case TGID: snprintf(buffer, n, "%5u ", this->tgid); break;
    case TPGID: snprintf(buffer, n, "%5d ", this->tpgid); break;
-   case PROCESSOR: snprintf(buffer, n, "%3d ", this->processor+1); break;
+   case PROCESSOR: snprintf(buffer, n, "%3d ", ProcessList_cpuId(this->pl, this->processor)); break;
    case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
    case COMM: {
       if (this->pl->highlightThreads && Process_isThread(this)) {
@@ -471,7 +471,7 @@ static void Process_display(Object* cast, RichString* out) {
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
    if (this->tag == true)
       RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
-   assert(out->len > 0);
+   assert(out->chlen > 0);
 }
 
 void Process_delete(Object* cast) {

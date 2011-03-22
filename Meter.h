@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include <assert.h>
 
 #ifndef USE_FUNKY_MODES
+#include <time.h>
 #define USE_FUNKY_MODES 1
 #endif
 
@@ -71,12 +72,19 @@ struct Meter_ {
    int mode;
    int param;
    Meter_Draw draw;
-   void* drawBuffer;
+   void* drawData;
    int h;
    ProcessList* pl;
    double* values;
    double total;
 };
+
+#ifdef USE_FUNKY_MODES
+typedef struct GraphData_ {
+   time_t time;
+   double values[METER_BUFFER_LEN];
+} GraphData;
+#endif
 
 typedef enum {
    CUSTOM_METERMODE = 0,

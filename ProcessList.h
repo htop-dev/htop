@@ -56,6 +56,9 @@ in the source distribution for its full text.
 #define MAX_READ 2048
 #endif
 
+#ifndef ProcessList_cpuId
+#define ProcessList_cpuId(pl, cpu) ((pl)->countCPUsFromZero ? (cpu)-1 : (cpu))
+#endif
 
 
 typedef struct CPUData_ {
@@ -124,6 +127,7 @@ typedef struct ProcessList_ {
    bool highlightMegabytes;
    bool highlightThreads;
    bool detailedCPUTime;
+   bool countCPUsFromZero;
 
 } ProcessList;
 

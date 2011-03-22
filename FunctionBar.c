@@ -95,11 +95,11 @@ void FunctionBar_setLabel(FunctionBar* this, int event, const char* text) {
    }
 }
 
-void FunctionBar_draw(FunctionBar* this, char* buffer) {
+void FunctionBar_draw(const FunctionBar* this, char* buffer) {
    FunctionBar_drawAttr(this, buffer, CRT_colors[FUNCTION_BAR]);
 }
 
-void FunctionBar_drawAttr(FunctionBar* this, char* buffer, int attr) {
+void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr) {
    attrset(CRT_colors[FUNCTION_BAR]);
    mvhline(LINES-1, 0, ' ', COLS);
    int x = 0;
@@ -118,7 +118,7 @@ void FunctionBar_drawAttr(FunctionBar* this, char* buffer, int attr) {
    attrset(CRT_colors[RESET_COLOR]);
 }
 
-int FunctionBar_synthesizeEvent(FunctionBar* this, int pos) {
+int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos) {
    int x = 0;
    for (int i = 0; i < this->size; i++) {
       x += strlen(this->keys[i]);

@@ -12,10 +12,12 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Object.h"
 #include "Vector.h"
+#include "Header.h"
 #include "FunctionBar.h"
 
 #include "debug.h"
 #include <assert.h>
+#include <time.h>
 
 #include <stdbool.h>
 
@@ -34,12 +36,14 @@ typedef struct ScreenManager_ {
    Vector* items;
    Vector* fuBars;
    int itemCount;
-   FunctionBar* fuBar;
+   const FunctionBar* fuBar;
+   const Header* header;
+   time_t lastScan;
    bool owner;
 } ScreenManager;
 
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, bool owner);
+ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, bool owner);
 
 void ScreenManager_delete(ScreenManager* this);
 

@@ -1,4 +1,10 @@
 
+What's new in version 0.9.1
+
+* Option for counting CPUs from zero
+  (thanks to Sean Noonan)
+* Meters update in every screen (no longer halting while on Setup, etc.)
+
 What's new in version 0.9
 
 * Add support for "steal"/guest CPU time measurement

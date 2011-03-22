@@ -9,10 +9,12 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Object.h"
 #include "Vector.h"
+#include "Header.h"
 #include "FunctionBar.h"
 
 #include "debug.h"
 #include <assert.h>
+#include <time.h>
 
 #include <stdbool.h>
 
@@ -32,13 +34,15 @@ typedef struct ScreenManager_ {
    Vector* items;
    Vector* fuBars;
    int itemCount;
-   FunctionBar* fuBar;
+   const FunctionBar* fuBar;
+   const Header* header;
+   time_t lastScan;
    bool owner;
 } ScreenManager;
 
 }*/
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, bool owner) {
+ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, bool owner) {
    ScreenManager* this;
    this = malloc(sizeof(ScreenManager));
    this->x1 = x1;
@@ -50,6 +54,7 @@ ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation ori
    this->items = Vector_new(PANEL_CLASS, owner, DEFAULT_SIZE, NULL);
    this->fuBars = Vector_new(FUNCTIONBAR_CLASS, true, DEFAULT_SIZE, NULL);
    this->itemCount = 0;
+   this->header = header;
    this->owner = owner;
    return this;
 }
@@ -119,14 +124,24 @@ void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool quit = false;
    int focus = 0;
-         
+   
    Panel* panelFocus = (Panel*) Vector_get(this->items, focus);
    if (this->fuBar)
       FunctionBar_draw(this->fuBar, NULL);
    
+   this->lastScan = 0;
+
    int ch = 0;
    while (!quit) {
       int items = this->itemCount;
+      if (this->header) {
+         time_t now = time(NULL);
+         if (now > this->lastScan) {
+            ProcessList_scan(this->header->pl);
+            this->lastScan = now;
+         }
+         Header_draw(this->header);
+      }
       for (int i = 0; i < items; i++) {
          Panel* panel = (Panel*) Vector_get(this->items, i);
          Panel_draw(panel, i == focus);

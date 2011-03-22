@@ -54,6 +54,9 @@ in the source distribution for its full text.
 #define MAX_READ 2048
 #endif
 
+#ifndef ProcessList_cpuId
+#define ProcessList_cpuId(pl, cpu) ((pl)->countCPUsFromZero ? (cpu)-1 : (cpu))
+#endif
 }*/
 
 /*{
@@ -124,6 +127,7 @@ typedef struct ProcessList_ {
    bool highlightMegabytes;
    bool highlightThreads;
    bool detailedCPUTime;
+   bool countCPUsFromZero;
 
 } ProcessList;
 }*/
@@ -132,7 +136,7 @@ static ProcessField defaultHeaders[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RE
 
 ProcessList* ProcessList_new(UsersTable* usersTable) {
    ProcessList* this;
-   this = malloc(sizeof(ProcessList));
+   this = calloc(sizeof(ProcessList), 1);
    this->processes = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
    this->processTable = Hashtable_new(70, false);
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
@@ -177,6 +181,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    this->highlightBaseName = false;
    this->highlightMegabytes = false;
    this->detailedCPUTime = false;
+   this->countCPUsFromZero = false;
 
    return this;
 }

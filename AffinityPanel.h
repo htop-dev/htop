@@ -6,11 +6,12 @@
 
 #include "Panel.h"
 #include "CheckItem.h"
+#include "ProcessList.h"
 
 #include "debug.h"
 #include <assert.h>
 
-Panel* AffinityPanel_new(int processorCount, unsigned long mask);
+Panel* AffinityPanel_new(ProcessList* pl, unsigned long mask);
 
 unsigned long AffinityPanel_getAffinity(Panel* this);
 

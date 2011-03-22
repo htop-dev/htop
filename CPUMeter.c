@@ -33,7 +33,7 @@ static void CPUMeter_init(Meter* this) {
    int cpu = this->param;
    if (this->pl->cpuCount > 1) {
       char caption[10];
-      sprintf(caption, "%-3d", cpu);
+      sprintf(caption, "%-3d ", ProcessList_cpuId(this->pl, cpu));
       Meter_setCaption(this, caption);
    }
    if (this->param == 0)
@@ -124,8 +124,8 @@ static void CPUMeter_display(Object* cast, RichString* out) {
 
 static void AllCPUsMeter_init(Meter* this) {
    int cpus = this->pl->cpuCount;
-   this->drawBuffer = malloc(sizeof(Meter*) * cpus);
-   Meter** meters = (Meter**) this->drawBuffer;
+   this->drawData = malloc(sizeof(Meter*) * cpus);
+   Meter** meters = (Meter**) this->drawData;
    for (int i = 0; i < cpus; i++)
       meters[i] = Meter_new(this->pl, i+1, &CPUMeter);
    this->h = cpus;
@@ -134,7 +134,7 @@ static void AllCPUsMeter_init(Meter* this) {
 
 static void AllCPUsMeter_done(Meter* this) {
    int cpus = this->pl->cpuCount;
-   Meter** meters = (Meter**) this->drawBuffer;
+   Meter** meters = (Meter**) this->drawData;
    for (int i = 0; i < cpus; i++)
       Meter_delete((Object*)meters[i]);
 }
@@ -148,7 +148,7 @@ static void AllCPUsMeter_setMode(Meter* this, int mode) {
 
 static void AllCPUsMeter_draw(Meter* this, int x, int y, int w) {
    int cpus = this->pl->cpuCount;
-   Meter** meters = (Meter**) this->drawBuffer;
+   Meter** meters = (Meter**) this->drawData;
    for (int i = 0; i < cpus; i++) {
       Meter_setMode(meters[i], this->mode);
       meters[i]->draw(meters[i], x, y, w);

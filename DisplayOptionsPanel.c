@@ -47,6 +47,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
       this->settings->changed = true;
       Header* header = this->settings->header;
       Header_calculateHeight(header);
+      Header_reinit(header);
       Header_draw(header);
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
    }
@@ -74,5 +75,6 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_new(String_copy("Highlight large numbers in memory counters"), &(settings->pl->highlightMegabytes), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Leave a margin around header"), &(settings->header->margin), false));
    Panel_add(super, (Object*) CheckItem_new(String_copy("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->pl->detailedCPUTime), false));
+   Panel_add(super, (Object*) CheckItem_new(String_copy("Count CPUs from 0 instead of 1"), &(settings->pl->countCPUsFromZero), false));
    return this;
 }
