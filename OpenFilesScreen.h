@@ -38,6 +38,7 @@ typedef struct OpenFiles_FileData_ {
 
 typedef struct OpenFilesScreen_ {
    Process* process;
+   pid_t pid;
    Panel* display;
    FunctionBar* bar;
    bool tracing;
