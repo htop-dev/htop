@@ -105,10 +105,10 @@ typedef struct Process_ {
    unsigned long int majflt;
    unsigned long int cmajflt;
    #endif
-   unsigned long int utime;
-   unsigned long int stime;
-   long int cutime;
-   long int cstime;
+   unsigned long long int utime;
+   unsigned long long int stime;
+   unsigned long long int cutime;
+   unsigned long long int cstime;
    long int priority;
    long int nice;
    long int nlwp;

@@ -427,8 +427,9 @@ int main(int argc, char** argv) {
             refreshTimeout--;
          if (prev == ch && !recalculate) {
             closeTimeout++;
-            if (closeTimeout == 10)
+            if (closeTimeout == 100) {
                break;
+            }
          } else
             closeTimeout = 0;
          continue;

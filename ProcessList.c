@@ -344,7 +344,7 @@ static bool ProcessList_readStatFile(Process *process, const char* dirname, cons
       "%c %d %u %u %u "
       "%d %lu "
       "%*u %*u %*u %*u "
-      "%lu %lu %ld %ld "
+      "%llu %llu %llu %llu "
       "%ld %ld %ld "
       "%*d %*u %*u %*d %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u %*u "
       "%d %d",

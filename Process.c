@@ -103,10 +103,10 @@ typedef struct Process_ {
    unsigned long int majflt;
    unsigned long int cmajflt;
    #endif
-   unsigned long int utime;
-   unsigned long int stime;
-   long int cutime;
-   long int cstime;
+   unsigned long long int utime;
+   unsigned long long int stime;
+   unsigned long long int cutime;
+   unsigned long long int cstime;
    long int priority;
    long int nice;
    long int nlwp;
@@ -263,7 +263,7 @@ static void Process_printLargeNumber(Process* this, RichString* str, unsigned lo
 
 static double jiffy = 0.0;
 
-static void Process_printTime(RichString* str, unsigned long t) {
+static void Process_printTime(RichString* str, unsigned long long t) {
    if(jiffy == 0.0) jiffy = sysconf(_SC_CLK_TCK);
    double jiffytime = 1.0 / jiffy;
 
