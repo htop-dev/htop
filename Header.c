@@ -136,11 +136,13 @@ void Header_defaultMeters(Header* this) {
 void Header_reinit(Header* this) {
    for (int i = 0; i < Vector_size(this->leftMeters); i++) {
       Meter* meter = (Meter*) Vector_get(this->leftMeters, i);
-      meter->type->init(meter);
+      if (meter->type->init)
+         meter->type->init(meter);
    }
    for (int i = 0; i < Vector_size(this->rightMeters); i++) {
       Meter* meter = (Meter*) Vector_get(this->rightMeters, i);
-      meter->type->init(meter);
+      if (meter->type->init)
+         meter->type->init(meter);
    }
 }
 
