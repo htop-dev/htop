@@ -124,12 +124,15 @@ static void CPUMeter_display(Object* cast, RichString* out) {
 
 static void AllCPUsMeter_init(Meter* this) {
    int cpus = this->pl->cpuCount;
-   this->drawData = malloc(sizeof(Meter*) * cpus);
+   if (!this->drawData)
+      this->drawData = calloc(sizeof(Meter*), cpus);
    Meter** meters = (Meter**) this->drawData;
-   for (int i = 0; i < cpus; i++)
-      meters[i] = Meter_new(this->pl, i+1, &CPUMeter);
-   this->h = cpus;
-   this->mode = BAR_METERMODE;
+   for (int i = 0; i < cpus; i++) {
+      if (!meters[i])
+         meters[i] = Meter_new(this->pl, i+1, &CPUMeter);
+      meters[i]->type->init(meters[i]);
+   }
+   this->h = Meter_modes[this->mode]->h;
 }
 
 static void AllCPUsMeter_done(Meter* this) {

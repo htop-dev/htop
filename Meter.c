@@ -155,8 +155,9 @@ Meter* Meter_new(ProcessList* pl, int param, MeterType* type) {
 }
 
 void Meter_delete(Object* cast) {
+   if (!cast)
+      return;
    Meter* this = (Meter*) cast;
-   assert (this != NULL);
    if (this->type->done) {
       this->type->done(this);
    }
