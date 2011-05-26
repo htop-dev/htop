@@ -132,7 +132,7 @@ static void AllCPUsMeter_init(Meter* this) {
          meters[i] = Meter_new(this->pl, i+1, &CPUMeter);
       meters[i]->type->init(meters[i]);
    }
-   this->h = Meter_modes[this->mode]->h;
+   this->h = Meter_modes[this->mode]->h * cpus;
 }
 
 static void AllCPUsMeter_done(Meter* this) {
