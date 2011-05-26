@@ -4,6 +4,8 @@ What's new in version 0.9.1
 * Option for counting CPUs from zero
   (thanks to Sean Noonan)
 * Meters update in every screen (no longer halting while on Setup, etc.)
+* BUGFIX: Support larger numbers for process times.
+  (thanks to Tristan Nakagawa for the report.)
 
 What's new in version 0.9
 

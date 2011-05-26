@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([htop],[0.9],[loderunner@users.sourceforge.net])
+AC_INIT([htop],[0.9.1],[loderunner@users.sourceforge.net])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_HEADER([config.h])
