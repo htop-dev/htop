@@ -544,7 +544,7 @@ static bool ProcessList_readCmdlineFile(Process* process, const char* dirname, c
 }
 
 
-static bool ProcessList_processEntries(ProcessList* this, const char* dirname, Process* parent, float period) {
+static bool ProcessList_processEntries(ProcessList* this, const char* dirname, Process* parent, double period) {
    DIR* dir;
    struct dirent* entry;
 
@@ -597,13 +597,13 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       process->show = ! ((hideKernelThreads && Process_isKernelThread(process)) || (hideUserlandThreads && Process_isUserlandThread(process)));
 
       char command[MAX_NAME+1];
-      int lasttimes = (process->utime + process->stime);
+      unsigned long long int lasttimes = (process->utime + process->stime);
       if (! ProcessList_readStatFile(process, dirname, name, command))
          goto errorReadingProcess;
       int percent_cpu = (process->utime + process->stime - lasttimes) / period * 100.0;
       process->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
       if (isnan(process->percent_cpu)) process->percent_cpu = 0.0;
-      process->percent_mem = (process->m_resident * PAGE_SIZE_KB) / (float)(this->totalMem) * 100.0;
+      process->percent_mem = (process->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
 
       if(!existingProcess) {
 
@@ -774,7 +774,7 @@ void ProcessList_scan(ProcessList* this) {
       cpuData->guestTime = guest;
       cpuData->totalTime = totaltime;
    }
-   float period = (float)this->cpus[0].totalPeriod / cpus; fclose(file);
+   double period = (double)this->cpus[0].totalPeriod / cpus; fclose(file);
 
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
