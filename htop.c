@@ -1,6 +1,6 @@
 /*
 htop - htop.c
-(C) 2004-2010 Hisham H. Muhammad
+(C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -37,7 +37,7 @@ in the source distribution for its full text.
 
 #define INCSEARCH_MAX 40
 
-#define COPYRIGHT "(C) 2004-2010 Hisham Muhammad"
+#define COPYRIGHT "(C) 2004-2011 Hisham Muhammad"
 
 static void printVersionFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
@@ -496,30 +496,37 @@ int main(int argc, char** argv) {
          MEVENT mevent;
          int ok = getmouse(&mevent);
          if (ok == OK) {
-            if (mevent.y == panel->y) {
-               int x = panel->scrollH + mevent.x + 1;
-               ProcessField field = ProcessList_keyAt(pl, x);
-               if (field == pl->sortKey) {
-                  ProcessList_invertSortOrder(pl);
-                  pl->treeView = false;
-               } else {
-                  setSortKey(pl, field, panel, settings);
+            if (mevent.bstate & BUTTON1_CLICKED) {
+               if (mevent.y == panel->y) {
+                  int x = panel->scrollH + mevent.x + 1;
+                  ProcessField field = ProcessList_keyAt(pl, x);
+                  if (field == pl->sortKey) {
+                     ProcessList_invertSortOrder(pl);
+                     pl->treeView = false;
+                  } else {
+                     setSortKey(pl, field, panel, settings);
+                  }
+                  refreshTimeout = 0;
+                  continue;
+               } else if (mevent.y >= panel->y + 1 && mevent.y < LINES - 1) {
+                  Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
+                  doRefresh = false;
+                  refreshTimeout = resetRefreshTimeout;
+                  follow = true;
+                  continue;
+               } if (mevent.y == LINES - 1) {
+                  FunctionBar* bar;
+                  if (incSearchMode) bar = searchBar;
+                  else bar = defaultBar;
+                  ch = FunctionBar_synthesizeEvent(bar, mevent.x);
                }
-               refreshTimeout = 0;
-               continue;
-            } else if (mevent.y >= panel->y + 1 && mevent.y < LINES - 1) {
-               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
-               doRefresh = false;
-               refreshTimeout = resetRefreshTimeout;
-               follow = true;
-               continue;
-            } if (mevent.y == LINES - 1) {
-               FunctionBar* bar;
-               if (incSearchMode) bar = searchBar;
-               else bar = defaultBar;
-               ch = FunctionBar_synthesizeEvent(bar, mevent.x);
+            } else if (mevent.bstate & BUTTON4_CLICKED) {
+               ch = KEY_UP;
+            #if NCURSES_MOUSE_VERSION > 1
+            } else if (mevent.bstate & BUTTON5_CLICKED) {
+               ch = KEY_DOWN;
+            #endif
             }
-
          }
       }
 
