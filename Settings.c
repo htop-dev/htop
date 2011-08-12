@@ -151,9 +151,8 @@ bool Settings_write(Settings* this) {
    if (fd == NULL) {
       return false;
    }
-   fprintf(fd, "# Beware! This file is rewritten every time htop exits.\n");
+   fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
    fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
-   fprintf(fd, "# (I know, it's in the todo list).\n");
    fprintf(fd, "fields=");
    for (int i = 0; this->pl->fields[i]; i++) {
       // This "-1" is for compatibility with the older enum format.
