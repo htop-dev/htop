@@ -228,12 +228,14 @@ static void addUserToVector(int key, void* userCast, void* panelCast) {
    Panel_add(panel, (Object*) ListItem_new(user, key));
 }
 
-static void setUserOnly(const char* userName, bool* userOnly, uid_t* userId) {
+static bool setUserOnly(const char* userName, bool* userOnly, uid_t* userId) {
    struct passwd* user = getpwnam(userName);
    if (user) {
       *userOnly = true;
       *userId = user->pw_uid;
+      return true;
    }
+   return false;
 }
 
 static inline void setSortKey(ProcessList* pl, ProcessField sortKey, Panel* panel, Settings* settings) {
@@ -295,16 +297,25 @@ int main(int argc, char** argv) {
             }
             break;
          case 'd':
-            sscanf(optarg, "%d", &delay);
-            if (delay < 1) delay = 1;
-            if (delay > 100) delay = 100;
+            if (sscanf(optarg, "%d", &delay) == 1) {
+               if (delay < 1) delay = 1;
+               if (delay > 100) delay = 100;
+            } else {
+               fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
+               exit(1);
+            }
             break;
          case 'u':
-            setUserOnly(optarg, &userOnly, &userId);
+            if (!setUserOnly(optarg, &userOnly, &userId)) {
+               fprintf(stderr, "Error: invalid user \"%s\".\n", optarg);
+               exit(1);
+            }
             break;
          case 'C':
             usecolors=0;
             break;
+         default:
+            exit(1);
       }
    }
 
