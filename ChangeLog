@@ -6,6 +6,8 @@ What's new in version 0.9.1
 * Meters update in every screen (no longer halting while on Setup, etc.)
 * BUGFIX: Support larger numbers for process times.
   (thanks to Tristan Nakagawa for the report.)
+* BUGFIX: Segfault in BarMeterMode_draw() for small terminal widths
+  (patch by Sebastian Pipping)
 
 What's new in version 0.9
 

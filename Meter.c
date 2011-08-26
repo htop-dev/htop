@@ -264,13 +264,19 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    
    w--;
    x++;
-   char bar[w];
+
+   if (w < 1) {
+      attrset(CRT_colors[RESET_COLOR]);
+      return;
+   }
+   char bar[w + 1];
    
    int blockSizes[10];
    for (int i = 0; i < w; i++)
       bar[i] = ' ';
 
-   sprintf(bar + (w-strlen(buffer)), "%s", buffer);
+   const size_t barOffset = w - MIN(strlen(buffer), w);
+   snprintf(bar + barOffset, w - barOffset + 1, "%s", buffer);
 
    // First draw in the bar[] buffer...
    double total = 0.0;
