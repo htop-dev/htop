@@ -27,7 +27,7 @@ char* String_trim(const char* in);
 
 extern int String_eq(const char* s1, const char* s2);
 
-char** String_split(const char* s, char sep);
+char** String_split(const char* s, char sep, int* n);
 
 void String_freeArray(char** s);
 

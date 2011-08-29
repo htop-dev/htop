@@ -475,10 +475,14 @@ static void ProcessList_readCGroupFile(Process* process, const char* dirname, co
    char *ok = fgets(buffer, 255, file);
    if (ok) {
       char* trimmed = String_trim(buffer);
-      char** fields = String_split(trimmed, ':');
+      int nFields;
+      char** fields = String_split(trimmed, ':', &nFields);
       free(trimmed);
-
-      process->cgroup = strndup(fields[2] + 1, 10);
+      if (nFields >= 3) {
+         process->cgroup = strndup(fields[2] + 1, 10);
+      } else {
+         process->cgroup = strdup("");
+      }
       String_freeArray(fields);
    }
    fclose(file);

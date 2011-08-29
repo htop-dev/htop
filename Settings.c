@@ -34,10 +34,10 @@ void Settings_delete(Settings* this) {
 
 static void Settings_readMeters(Settings* this, char* line, HeaderSide side) {
    char* trim = String_trim(line);
-   char** ids = String_split(trim, ' ');
+   int nIds;
+   char** ids = String_split(trim, ' ', &nIds);
    free(trim);
-   int i;
-   for (i = 0; ids[i] != NULL; i++) {
+   for (int i = 0; ids[i]; i++) {
       Header_createMeter(this->header, ids[i], side);
    }
    String_freeArray(ids);
@@ -45,10 +45,10 @@ static void Settings_readMeters(Settings* this, char* line, HeaderSide side) {
 
 static void Settings_readMeterModes(Settings* this, char* line, HeaderSide side) {
    char* trim = String_trim(line);
-   char** ids = String_split(trim, ' ');
+   int nIds;
+   char** ids = String_split(trim, ' ', &nIds);
    free(trim);
-   int i;
-   for (i = 0; ids[i] != NULL; i++) {
+   for (int i = 0; ids[i]; i++) {
       int mode = atoi(ids[i]);
       Header_setMode(this->header, i, mode, side);
    }
@@ -67,13 +67,19 @@ static bool Settings_read(Settings* this, char* fileName) {
    char buffer[maxLine];
    bool readMeters = false;
    while (fgets(buffer, maxLine, fd)) {
-      char** option = String_split(buffer, '=');
+      int nOptions;
+      char** option = String_split(buffer, '=', &nOptions);
+      if (nOptions < 2) {
+         String_freeArray(option);
+         continue;
+      }
       if (String_eq(option[0], "fields")) {
          char* trim = String_trim(option[1]);
-         char** ids = String_split(trim, ' ');
+         int nIds;
+         char** ids = String_split(trim, ' ', &nIds);
          free(trim);
          int i, j;
-         for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i] != NULL; i++) {
+         for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i]; i++) {
             // This "+1" is for compatibility with the older enum format.
             int id = atoi(ids[i]) + 1;
             if (id > 0 && id < LAST_PROCESSFIELD) {
