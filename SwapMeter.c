@@ -19,25 +19,40 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
+#define KILOBYTE 1
+#define MEGABYTE 1024
+#define GIGABYTE 1048576
+
 int SwapMeter_attributes[] = {
    SWAP
 };
+
+/* NOTE: Value is in kilobytes */
+static void SwapMeter_humanNumber(char* buffer, const long int* value) {
+   if (*value >= 10*GIGABYTE)
+      sprintf(buffer, "%ldG ", *value / GIGABYTE);
+   else if (*value >= 10*MEGABYTE)
+      sprintf(buffer, "%ldM ", *value / MEGABYTE);
+   else
+      sprintf(buffer, "%ldK ", *value);
+}
 
 static void SwapMeter_setValues(Meter* this, char* buffer, int len) {
    long int usedSwap = this->pl->usedSwap;
    this->total = this->pl->totalSwap;
    this->values[0] = usedSwap;
-   snprintf(buffer, len, "%ld/%ldMB", (long int) usedSwap / 1024, (long int) this->total / 1024);
+   snprintf(buffer, len, "%ld/%ldMB", (long int) usedSwap / MEGABYTE, (long int) this->total / MEGABYTE);
 }
 
 static void SwapMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
    long int swap = (long int) this->values[0];
+   long int total = (long int) this->total;
    RichString_write(out, CRT_colors[METER_TEXT], ":");
-   sprintf(buffer, "%ldM ", (long int) this->total / 1024);
+   SwapMeter_humanNumber(buffer, &total);
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
-   sprintf(buffer, "%ldk", swap);
+   SwapMeter_humanNumber(buffer, &swap);
    RichString_append(out, CRT_colors[METER_TEXT], "used:");
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
 }

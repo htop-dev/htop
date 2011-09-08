@@ -22,8 +22,13 @@ in the source distribution for its full text.
 #include "debug.h"
 #include <assert.h>
 
+#define KILOBYTE 1
+#define MEGABYTE 1024
+#define GIGABYTE 1048576
+
 extern int SwapMeter_attributes[];
 
+/* NOTE: Value is in kilobytes */
 extern MeterType SwapMeter;
 
 #endif
