@@ -35,8 +35,6 @@ AC_TYPE_UID_T
 
 # Checks for library functions.
 AC_FUNC_CLOSEDIR_VOID
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([memmove strncasecmp strstr strdup])
