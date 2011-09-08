@@ -295,7 +295,7 @@ int main(int argc, char** argv) {
             printVersionFlag();
             break;
          case 's':
-            if (strcmp(optarg, "help")) {
+            if (strcmp(optarg, "help") == 0) {
                for (int j = 1; j < LAST_PROCESSFIELD; j++)
                   printf ("%s\n", Process_fieldNames[j]);
                exit(0);
