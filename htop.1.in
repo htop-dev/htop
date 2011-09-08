@@ -86,11 +86,11 @@ tree view.
 Select field for sorting. The sort field is indicated by a
 highlight in the header.
 .TP
-.B F7, ], -
+.B F7, ]
 Increase selected process priority (subtract from 'nice' value).
 This can be done by the superuser only.
 .TP
-.B F8, [, +
+.B F8, [
 Decrease selected process priority (add to 'nice' value)
 .TP
 .B F9, k

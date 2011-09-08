@@ -142,8 +142,8 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(13, 0, "  Space"); mvaddstr(13,40, "    F");
    mvaddstr(14, 0, "      U"); mvaddstr(14,40, "  + -");
    mvaddstr(15, 0, "   F9 k"); mvaddstr(15,40, "    P");
-   mvaddstr(16, 0, "   [ F7"); mvaddstr(16,40, "    M");
-   mvaddstr(17, 0, "   ] F8"); mvaddstr(17,40, "    T");
+   mvaddstr(16, 0, "   ] F7"); mvaddstr(16,40, "    M");
+   mvaddstr(17, 0, "   [ F8"); mvaddstr(17,40, "    T");
                                mvaddstr(18,40, " F4 I");
 #if HAVE_PLPA
    if (pl->cpuCount > 1)
