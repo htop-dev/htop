@@ -209,7 +209,10 @@ void DebugMemory_report() {
       assert(walk->magic == 11061980);
       i++;
       fprintf(stderr, "%p %s:%d\n", walk->data, walk->file, walk->line);
+      DebugMemoryItem* old = walk;
       walk = walk->next;
+      free(old->file);
+      free(old);
    }
    fprintf(stderr, "Total:\n");
    fprintf(stderr, "%d allocations\n", singleton->allocations);
@@ -218,6 +221,7 @@ void DebugMemory_report() {
    fprintf(stderr, "%d non-freed blocks\n", i);
    if (singleton->file)
       fclose(singleton->file);
+   free(singleton);
 }
 
 #elif defined(DEBUGLITE)
