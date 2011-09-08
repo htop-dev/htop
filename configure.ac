@@ -87,7 +87,9 @@ fi
 AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="no")
 if test "x$enable_unicode" = xyes; then
    AC_CHECK_LIB([ncursesw], [refresh], [], [missing_libraries="$missing_libraries libncursesw"])
-   AC_CHECK_HEADERS([ncursesw/curses.h],[:],[missing_headers="$missing_headers $ac_header"])
+   AC_CHECK_HEADERS([ncursesw/curses.h],[:],
+        [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
+          [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])
 else
    AC_CHECK_LIB([ncurses], [refresh], [], [missing_libraries="$missing_libraries libncurses"])
    AC_CHECK_HEADERS([curses.h],[:],[missing_headers="$missing_headers $ac_header"])

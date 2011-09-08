@@ -12,10 +12,14 @@
 
 #include "debug.h"
 #include <assert.h>
-#ifdef HAVE_LIBNCURSESW
-#include <ncursesw/curses.h>
-#else
+#ifdef HAVE_CURSES_H
 #include <curses.h>
+#elif HAVE_NCURSES_H
+#include <ncurses.h>
+#elif HAVE_NCURSESW_CURSES_H
+#include <ncursesw/curses.h>
+#elif HAVE_NCURSES_NCURSES_H
+#include <ncurses/ncurses.h>
 #endif
 
 #define RICHSTRING_MAXLEN 300
