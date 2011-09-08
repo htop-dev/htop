@@ -55,7 +55,7 @@ in the source distribution for its full text.
 #endif
 
 #ifndef ProcessList_cpuId
-#define ProcessList_cpuId(pl, cpu) ((pl)->countCPUsFromZero ? (cpu)-1 : (cpu))
+#define ProcessList_cpuId(pl, cpu) ((pl)->countCPUsFromZero ? (cpu) : (cpu)+1)
 #endif
 }*/
 

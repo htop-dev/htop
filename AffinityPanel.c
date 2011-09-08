@@ -33,7 +33,7 @@ Panel* AffinityPanel_new(ProcessList* pl, unsigned long mask) {
    Panel_setHeader(this, "Use CPUs:");
    for (int i = 0; i < pl->cpuCount; i++) {
       char number[10];
-      snprintf(number, 9, "%d", ProcessList_cpuId(pl, i) + 1);
+      snprintf(number, 9, "%d", ProcessList_cpuId(pl, i));
       Panel_add(this, (Object*) CheckItem_new(String_copy(number), NULL, mask & (1 << i)));
    }
    return this;

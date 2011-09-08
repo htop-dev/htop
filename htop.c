@@ -778,7 +778,7 @@ int main(int argc, char** argv) {
             if (!ok)
                beep();
          }
-         ((Object*)affinityPanel)->delete((Object*)affinityPanel);
+         Panel_delete((Object*)affinityPanel);
          ProcessList_printHeader(pl, Panel_getHeader(panel));
          refreshTimeout = 0;
          break;
