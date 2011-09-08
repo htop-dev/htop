@@ -238,18 +238,11 @@ void Panel_setSelected(Panel* this, int selected) {
 void Panel_draw(Panel* this, bool focus) {
    assert (this != NULL);
 
-   int first, last;
    int itemCount = Vector_size(this->items);
    int scrollH = this->scrollH;
    int y = this->y; int x = this->x;
-   first = this->scrollV;
-
-   if (this->h > itemCount) {
-      last = this->scrollV + itemCount;
-      move(y + last, x + 0);
-   } else {
-      last = MIN(itemCount, this->scrollV + this->h);
-   }
+   int first = this->scrollV;
+   int last = MIN(itemCount, this->scrollV + MIN(itemCount, this->h));
    if (this->selected < first) {
       first = this->selected;
       this->scrollV = first;
