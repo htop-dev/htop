@@ -43,6 +43,8 @@ in the source distribution for its full text.
 
 #define COPYRIGHT "(C) 2004-2011 Hisham Muhammad"
 
+typedef struct IncBuffer_;
+
 int main(int argc, char** argv);
 
 #endif

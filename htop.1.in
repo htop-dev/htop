@@ -67,7 +67,12 @@ Incremental process search: type in part of a process command line and
 the selection highlight will be moved to it. While in search mode,
 pressing this key will cycle through matching occurrences.
 .TP
-.B F4, I
+.B F4, \
+Incremental process filtering: type in part of a process command line and
+only processes whose names match will be shown. To cancel filtering,
+enter the Filter option again and press Esc.
+.TP
+.B I
 Invert sort order: if sort order is increasing, switch to decreasing,
 and vice-versa.
 .TP
