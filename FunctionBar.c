@@ -111,9 +111,13 @@ void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr) {
       mvaddstr(LINES-1, x, this->functions[i]);
       x += strlen(this->functions[i]);
    }
-   if (buffer != NULL) {
+   if (buffer) {
       attrset(attr);
       mvaddstr(LINES-1, x, buffer);
+      CRT_cursorX = x + strlen(buffer);
+      curs_set(1);
+   } else {
+      curs_set(0);
    }
    attrset(CRT_colors[RESET_COLOR]);
 }

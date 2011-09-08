@@ -119,6 +119,8 @@ extern int CRT_colorScheme;
 
 extern int CRT_colors[LAST_COLORELEMENT];
 
+extern int CRT_cursorX;
+
 char* CRT_termType;
 
 void *backtraceArray[128];

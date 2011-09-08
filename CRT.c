@@ -118,6 +118,8 @@ int CRT_colorScheme = 0;
 
 int CRT_colors[LAST_COLORELEMENT] = { 0 };
 
+int CRT_cursorX = 0;
+
 char* CRT_termType;
 
 void *backtraceArray[128];
