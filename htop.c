@@ -285,7 +285,7 @@ int main(int argc, char** argv) {
       setlocale(LC_CTYPE, getenv("LC_ALL"));
 
    /* Parse arguments */
-   while ((opt = getopt_long_only(argc, argv, "hvCs:d:u:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvCs:d:u:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
