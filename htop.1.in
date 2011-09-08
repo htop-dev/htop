@@ -1,49 +1,59 @@
-.TH "htop" "1" "@PACKAGE_VERSION@" "Bartosz Fenski <fenio@o2.pl>" "Utils"
+.TH "HTOP" "1" "2011" "@PACKAGE_STRING@" "Utils"
 .SH "NAME"
 htop \- interactive process viewer
-.SH "SYNTAX"
+.SH "SYNOPSIS"
 .LP 
-.B htop 
+.B htop [\fI\-dChusv\fR]
 .SH "DESCRIPTION"
 .LP 
-This program is a free (GPL) ncurses-based process viewer. 
+Htop is a free (GPL) ncurses-based process viewer for Linux.
 .LP
-It is similar to top, but allows to scroll the list vertically and 
-horizontally to see all processes and their full command lines.
+It is similar to top, but allows you to scroll vertically and horizontally,
+so you can see all the processes running on the system, along with their full
+command lines.
 .LP
 Tasks related to processes (killing, renicing) can be done without
 entering their PIDs.
 .br 
 .SH "COMMAND-LINE OPTIONS"
-.LP 
-The following flags are supported:
+.LP
+Mandatory arguments to long options are madatory for short options too.
 .LP 
 .TP
-\fB\-d DELAY\fR
+\fB\-d \-\-delay=DELAY\fR
 Delay between updates, in tenths of seconds
 .TP
-\fB\-u USERNAME\fR
-Show only processes of a given user
+\fB\-C \-\-no-color \-\-no-colour\fR
+Start htop in monochrome mode
 .TP
-\fB\-\-sort\-key COLUMN\fR
-Sort by this column (use --sort-key help for a column list)
+\fB\-h \-\-help
+Display a help message and exit
+.TP
+\fB\-u \-\-user=USERNAME\fR
+Show only the processes of a given user
+.TP
+\fB\-s \-\-sort\-key COLUMN\fR
+Sort by this column (use \-\-sort\-key help for a column list)
+.TP
+\fB\-v \-\-version
+Output version information and exit
 .PP
 .br 
 .SH "INTERACTIVE COMMANDS"
 .LP 
-The following commands are supported:
+The following commands are supported while in htop:
 .LP 
 .TP 5
 .B Arrows, PgUP, PgDn, Home, End
-Scroll process list.
+Scroll the process list.
 .TP
 .B Space
-"Tag": mark a process. Commands that can operate on multiple processes,
+Tag or untag a process. Commands that can operate on multiple processes,
 like "kill", will then apply over the list of tagged processes, instead
 of the currently highlighted one.
 .TP
 .B U
-"Untag" all processes (remove all tags added with the Space key).
+Untag all processes (remove all tags added with the Space key).
 .TP
 .B s
 Trace process system calls: if strace(1) is installed, pressing this key
@@ -54,27 +64,23 @@ update of system calls issued by the process.
 Display open files for a process: if lsof(1) is installed, pressing this key
 will display the list of file descriptors opened by the process.
 .TP
-.B F1, h
-Help screen
+.B F1, h, ?
+Go to the help screen
 .TP
 .B F2, S
-Setup screen. There you can configure meters displayed on the top side
-of the screen, as well as set various display options, choose among
-color schemes and select the layout of the displayed columns.
+Go to the setup screen, where you can configure the meters displayed at the top
+of the screen, set various display options, choose among color schemes, and
+select which columns are displayed, in which order.
 .TP
 .B F3, /
-Incremental process search: type in part of a process command line and
-the selection highlight will be moved to it. While in search mode,
-pressing this key will cycle through matching occurrences.
+Incrementally search the command lines of all the displayed processes. The
+currently selected (highlighted) command will update as you type. While in
+search mode, pressing F3 will cycle through matching occurrences.
 .TP
-.B F4, \
+.B F4, \\\\
 Incremental process filtering: type in part of a process command line and
 only processes whose names match will be shown. To cancel filtering,
 enter the Filter option again and press Esc.
-.TP
-.B I
-Invert sort order: if sort order is increasing, switch to decreasing,
-and vice-versa.
 .TP
 .B F5, t
 Tree view: organize processes by parenthood, and layout the relations
@@ -82,16 +88,16 @@ between them as a tree. Toggling the key will switch between tree and
 your previously selected sort view. Selecting a sort view will exit
 tree view.
 .TP
-.B F6, >
-Select field for sorting. The sort field is indicated by a
+.B F6, <, >
+Select a field for sorting. The current sort field is indicated by a
 highlight in the header.
 .TP
-.B F7, ]
-Increase selected process priority (subtract from 'nice' value).
-This can be done by the superuser only.
+.B F7, ], \-
+Increase the selected process's priority (subtract from 'nice' value).
+This can only be done by the superuser.
 .TP
-.B F8, [
-Decrease selected process priority (add to 'nice' value)
+.B F8, [, +
+Decrease the selected process's priority (add to 'nice' value)
 .TP
 .B F9, k
 "Kill" process: sends a signal which is selected in a menu, to one or a group
@@ -101,7 +107,11 @@ If none is tagged, sends to the currently selected process.
 .B F10, q
 Quit
 .TP
-.B +, - 
+.B I
+Invert the sort order: if sort order is increasing, switch to decreasing, and
+vice-versa.
+.TP
+.B +, \- 
 When in tree view mode, expand or collapse subtree. When a subtree is collapsed
 a "+" sign shows to the left of the process name.
 .TP
@@ -142,10 +152,174 @@ Refresh: redraw screen and recalculate values.
 PID search: type in process ID and the selection highlight will be moved to it.
 .PD
 
+.SH "COLUMNS"
+.LP 
+The following columns can display data about each process. A value of '\-' in
+all the rows indicates that a column is unsupported on your system, or
+currently unimplemented in htop. The names below are the ones used in the
+"Available Columns" section of the setup screen. If a different name is
+shown in htop's main screen, it is shown below in parenthesis.
+.LP 
+.TP 5
+.B Command
+The full command line of the process (i.e program name and arguments).
+.TP 
+.B PID
+The process ID.
+.TP
+.B PPID
+The parent process ID.
+.TP
+.B PGRP
+The process's group ID.
+.TP
+.B SESSION (SESN)
+The process's session ID.
+.TP 
+.B TTY_NR (TTY)
+The controlling terminal of the process.
+.TP
+.B TPGID
+The process ID of the foreground process group of the controlling terminal.
+.TP
+.B STATE (S)
+The state of the process:
+   \fBS\fR for sleeping (idle)
+   \fBR\fR for running
+   \fBD\fR for disk sleep (uninterruptible)
+   \fBZ\fR for zombie (waiting for parent to read it's exit status)
+   \fBT\fR for traced or suspended (e.g by SIGTSTP)
+   \fBW\fR for paging
+.TP
+.B PROCESSOR (CPU)
+The ID of the CPU the process last executed on.
+.TP
+.B NLWP
+The number of threads in the process.
+.TP
+.B NICE (NI)
+The nice value of a process, from 19 (low priority) to -20 (high priority). A
+high value means the process is being nice, letting others have a higher
+relative priority. Only root can lower the value.
+.TP
+.B PERCENT_CPU (CPU%)
+The percentage of the CPU time that the process is currently using.
+.TP
+.B UTIME (UTIME+)
+The user CPU time, which is the amount of time the process has spent executing
+on the CPU in user mode (i.e everything but system calls), measured in clock
+ticks.
+.TP
+.B STIME (STIME+)
+The system CPU time, which is the amount of time the kernel has spent
+executing system calls on behalf of the process, measured in clock ticks.
+.TP
+.B TIME (TIME+)
+The time, measured in clock ticks that the process has spent in user and system
+time (see UTIME, STIME above).
+.TP
+.B CUTIME
+The children's user CPU time, which is the amount of time the process's
+waited-for children have spent executing in user mode (see UTIME above).
+.TP
+.B CSTIME
+The children's system CPU time, which is the amount of time the kernel has spent
+executing system calls on behalf of all the process's waited-for children (see
+STIME above).
+.TP
+.B PRIORITY (PRI)
+The kernels internal priority for the process, usually just it's nice value
+plus twenty. Different for real-time processes.
+.TP
+.B PERCENT_MEM
+The percentage of memory the process is currently using (based on the process's
+resident memory size, see M_RESIDENT below).
+.TP
+.B M_SIZE (VIRT)
+Size in memory of the total program size.
+.TP
+.B M_RESIDENT (RES)
+The resident set size, i.e the size of the text and data sections, plus stack
+usage.
+.TP
+.B M_SHARE (SHR)
+The size of the process's shared pages
+.TP
+.B M_TRS (CODE)
+The size of the text segment of the process (i.e the size of the processes
+executable instructions).
+.TP
+.B M_LRS (LIB)
+The library size of the process.
+.TP
+.B M_DRS (DATA)
+The size of the data segment plus stack usage of the process.
+.TP
+.B M_DT (DIRTY)
+The size of the dirty pages of the process.
+.TP
+.B ST_UID (UID)
+The user ID of the process owner.
+.TP
+.B USER
+The username of the process owner, or the user ID if the name can't be
+determined.
+.TP
+.B STARTTIME
+The time the process was started.
+.TP
+.B RCHAR (RD_CHAR)
+The number of bytes the process has read.
+.TP
+.B WCHAR (WR_CHAR)
+The number of bytes the process has written.
+.TP
+.B SYSCR (RD_SYSC)
+The number of read(2) syscalls for the process.
+.TP
+.B SYSCW (WR_SYSC)
+The number of write(2) syscalls for the process.
+.TP
+.B RBYTES (IO_RBYTES)
+Bytes of read(2) I/O for the process.
+.TP
+.B WBYTES (IO_WBYTES)
+Bytes of write(2) I/O for the process.
+.TP
+.B IO_READ_RATE (IORR)
+The I/O rate of read(2) in bytes per second, for the process.
+.TP
+.B IO_WRITE_RATE (IOWR)
+The I/O rate of write(2) in bytes per second, for the process.
+.TP
+.B IO_RATE (IO)
+The I/O rate, IO_READ_RATE + IO_WRITE_RATE (see above).
+.TP
+.B CNCLWB (IO_CANCEL)
+Bytes of cancelled write(2) I/O.
+.TP
+.B CGROUP
+Which cgroup the process is in.
+.TP
+.B CTID
+OpenVZ container ID, a.k.a virtual environment ID.
+.TP
+.B VPID
+OpenVZ process ID.
+.TP
+.B VXID
+VServer process ID.
+.TP
+.B All other flags
+Currently unsupported (always displays '-').
+
+.SH "SEE ALSO"
+proc(5), top(1), free(1), ps(1), uptime(1)
+
 .SH "AUTHORS"
 .LP 
 htop is developed by Hisham Muhammad <loderunner@users.sourceforge.net>.
-.br
-This man page was written by Bartosz Fenski <fenio@o2.pl> for the 
-Debian GNU/Linux distribution (but it may be used by others), and
-updated by Hisham Muhammad.
+.LP
+This man page was written by Bartosz Fenski <fenio@o2.pl> for the Debian
+GNU/Linux distribution (but it may be used by others). It was updated by Hisham
+Muhammad, and later by Vincent Launchbury, who wrote the 'Columns' section.
