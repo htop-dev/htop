@@ -33,7 +33,7 @@ static void CPUMeter_init(Meter* this) {
    int cpu = this->param;
    if (this->pl->cpuCount > 1) {
       char caption[10];
-      sprintf(caption, "%-3d ", ProcessList_cpuId(this->pl, cpu));
+      sprintf(caption, "%-3d", ProcessList_cpuId(this->pl, cpu));
       Meter_setCaption(this, caption);
    }
    if (this->param == 0)
