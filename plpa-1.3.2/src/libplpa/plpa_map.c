@@ -449,11 +449,6 @@ static void load_cache(void)
                 if (map_processor_id_to_tuple[k].socket_id == i &&
                     map_processor_id_to_tuple[k].core_id == j) {
                     *tuple_ptr = &map_processor_id_to_tuple[k];
-#if defined(PLPA_DEBUG) && PLPA_DEBUG
-                    printf("Creating map [%d]: (socket %d, core %d) -> ID %d\n",
-                           i * (max_core_id_overall + 1) + j,
-                           i, j, k);
-#endif
                     break;
                 }
             }
