@@ -1,9 +1,14 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.65)
 AC_INIT([htop],[0.9.1],[loderunner@users.sourceforge.net])
-AM_INIT_AUTOMAKE
+
+# The following two lines are required by hwloc scripts
+AC_USE_SYSTEM_EXTENSIONS
+AC_CANONICAL_TARGET
+
+AM_INIT_AUTOMAKE([1.11])
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -105,14 +110,19 @@ AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you 
 AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
 fi
 
-AC_ARG_ENABLE(plpa, [AC_HELP_STRING([--enable-plpa], [enable PLPA support for CPU affinity])], ,enable_plpa="yes")
-PLPA_INCLUDED
-PLPA_INIT([plpa-1.3.2], [plpa_happy=yes], [plpa_happy=no])
-AM_CONDITIONAL([HAVE_PLPA], [test "$plpa_happy" = "yes" && test "$enable_plpa" = "yes"])
-if test "$plpa_happy" = "yes" && test "$enable_plpa" = "yes"
+##### hwloc
+enable_xml=no
+AC_ARG_ENABLE(hwloc, [AC_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="yes")
+if test "x$enable_hwloc" = xyes
 then
-   AC_DEFINE([HAVE_PLPA], [1], [Have plpa])
+   HWLOC_SETUP_CORE([hwloc-1.2.1], [hwloc_happy=yes], [hwloc_happy=no])
 fi
+HWLOC_DO_AM_CONDITIONALS
+AM_CONDITIONAL([HAVE_HWLOC], [test "x$hwloc_happy" = "xyes"])
+if test "x$hwloc_happy" = "xyes"; then
+   AC_DEFINE([HAVE_HWLOC], 1, [Have hwloc])
+fi
+#####
 
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT

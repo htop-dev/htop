@@ -5,13 +5,13 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define _GNU_SOURCE
 #include "ProcessList.h"
 #include "Object.h"
 #include "CRT.h"
 #include "String.h"
 #include "Process.h"
 #include "RichString.h"
+#include "Affinity.h"
 
 #include "debug.h"
 
@@ -29,8 +29,8 @@ in the source distribution for its full text.
 #include <sched.h>
 #include <time.h>
 
-#ifdef HAVE_PLPA
-#include <plpa.h>
+#ifdef HAVE_HWLOC
+#include <hwloc/linux.h>
 #endif
 
 // This works only with glibc 2.1+. On earlier versions
@@ -535,15 +535,36 @@ bool Process_setPriority(Process* this, int priority) {
    return (err == 0);
 }
 
-#ifdef HAVE_PLPA
-unsigned long Process_getAffinity(Process* this) {
-   unsigned long mask = 0;
-   plpa_sched_getaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask);
-   return mask;
+#ifdef HAVE_HWLOC
+Affinity* Process_getAffinity(Process* this) {
+   hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
+   bool ok = (hwloc_linux_get_tid_cpubind(this->pl->topology, this->pid, cpuset) == 0);
+   Affinity* affinity = NULL;
+   if (ok) {
+      affinity = Affinity_new();
+      if (hwloc_bitmap_last(cpuset) == -1) {
+         for (int i = 0; i < this->pl->cpuCount; i++) {
+            Affinity_add(affinity, i);
+         }
+      } else {
+         unsigned int id;
+         hwloc_bitmap_foreach_begin(id, cpuset);
+            Affinity_add(affinity, id);
+         hwloc_bitmap_foreach_end();
+      }
+   }
+   hwloc_bitmap_free(cpuset);
+   return affinity;
 }
 
-bool Process_setAffinity(Process* this, unsigned long mask) {
-   return (plpa_sched_setaffinity(this->pid, sizeof(unsigned long), (plpa_cpu_set_t*) &mask) == 0);
+bool Process_setAffinity(Process* this, Affinity* affinity) {
+   hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
+   for (int i = 0; i < affinity->used; i++) {
+      hwloc_bitmap_set(cpuset, affinity->cpus[i]);
+   }
+   bool ok = (hwloc_linux_set_tid_cpubind(this->pl->topology, this->pid, cpuset) == 0);
+   hwloc_bitmap_free(cpuset);
+   return ok;
 }
 #endif
 

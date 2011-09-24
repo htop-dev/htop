@@ -9,7 +9,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define _GNU_SOURCE
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>

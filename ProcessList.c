@@ -101,6 +101,10 @@ typedef struct ProcessList_ {
    int kernelThreads;
    int runningTasks;
 
+   #ifdef HAVE_HWLOC
+   hwloc_topology_t topology;
+   bool topologyOk;
+   #endif
    CPUData* cpus;
 
    unsigned long long int totalMem;
@@ -155,7 +159,15 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    } while (String_startsWith(buffer, "cpu"));
    fclose(file);
    this->cpuCount = cpus - 1;
-   
+
+#ifdef HAVE_HWLOC
+   this->topologyOk = false;
+   int topoErr = hwloc_topology_init(&this->topology);
+   if (topoErr == 0) {
+      topoErr = hwloc_topology_load(this->topology);
+      this->topologyOk = true;
+   }
+#endif
    this->cpus = calloc(sizeof(CPUData), cpus);
 
    for (int i = 0; i < cpus; i++) {

@@ -1,9 +1,9 @@
 
-if HAVE_PLPA
-SUBDIRS = plpa-1.3.2
+if HAVE_HWLOC
+SUBDIRS = hwloc-1.2.1
 endif
 
-ACLOCAL_AMFLAGS=-I m4
+ACLOCAL_AMFLAGS = -I m4 -I hwloc-1.2.1/config
 
 bin_PROGRAMS = htop
 dist_man_MANS = htop.1
@@ -15,6 +15,7 @@ pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
 htop_CFLAGS = -pedantic -Wall -std=c99 -rdynamic -D_XOPEN_SOURCE_EXTENDED
+AM_CFLAGS = 
 AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\"
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
@@ -24,7 +25,7 @@ LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
 BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
 SignalItem.c SignalsPanel.c String.c SwapMeter.c TasksMeter.c TraceScreen.c \
 UptimeMeter.c UsersTable.c Vector.c AvailableColumnsPanel.c AffinityPanel.c \
-HostnameMeter.c OpenFilesScreen.c
+HostnameMeter.c OpenFilesScreen.c Affinity.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
 CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
@@ -33,14 +34,17 @@ Hashtable.h Header.h htop.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
 BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \
 ScreenManager.h Settings.h SignalItem.h SignalsPanel.h String.h \
 SwapMeter.h TasksMeter.h TraceScreen.h UptimeMeter.h UsersTable.h Vector.h \
-Process.h AffinityPanel.h HostnameMeter.h OpenFilesScreen.h
+Process.h AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h
 
 SUFFIXES = .h
 
 BUILT_SOURCES = $(myhtopheaders)
 htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h debug.h
-if HAVE_PLPA
-htop_LDADD = $(top_builddir)/plpa-1.3.2/src/libplpa/libplpa_included.la
+
+if HAVE_HWLOC
+htop_LDADD = $(HWLOC_EMBEDDED_LDADD) $(HWLOC_EMBEDDED_LIBS)
+AM_CFLAGS += $(HWLOC_EMBEDDED_CFLAGS)
+AM_CPPFLAGS += $(HWLOC_EMBEDDED_CPPFLAGS)
 endif
 
 profile:

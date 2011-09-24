@@ -1,0 +1,61 @@
+# This is the VERSION file for hwloc, describing the precise version
+# of hwloc in this distribution.  The various components of the version
+# number below are combined to form a single version number string.
+
+# major, minor, and release are generally combined in the form
+# <major>.<minor>.<release>.  If release is zero, then it is omitted.
+
+major=1
+minor=2
+release=1
+
+# greek is used for alpha or beta release tags.  If it is non-empty,
+# it will be appended to the version number.  It does not have to be
+# numeric.  Common examples include a1 (alpha release 1), b1 (beta
+# release 1), sc2005 (Super Computing 2005 release).  The only
+# requirement is that it must be entirely printable ASCII characters
+# and have no white space.
+
+greek=
+
+# If want_repo_rev=1, then the SVN r number will be included in the overall
+# hwloc version number in some form.
+
+want_repo_rev=0
+
+# If repo_rev=-1, then the repository version number will be obtained
+# dynamically at run time, either: 
+#
+# 1) via the "svnversion" command (if this is a Subversion checkout)
+#    in the form "r<svn_r>", or 
+# 2) via the "hg -v -R tip" command (if this is a Mercurial clone)
+#    in the form of "hg<hash>", using the hash tag at the tip
+# 3) via the "git log -1" command (if this is a Git clone) in the form
+#    of "git<hash>", using the hash tag at the HEAD
+# 4) with the date (if none of the above work) in the form of
+#    "date<date>".
+#
+# Alternatively, if repo_rev is not -1, the value of repo_rev_r will
+# be directly appended to the version string.  This happens during
+# "make dist", for example: if the distribution tarball is being made
+# from an SVN checkout, if repo_rev=-1, then its value is replaced
+# with the output of "svnversion".
+
+repo_rev=r3619
+
+# The date when this release was created
+
+date="Aug 16, 2011"
+
+# The shared library version of hwloc's public library.  This version
+# is maintained in accordance with the "Library Interface Versions"
+# chapter from the GNU Libtool documentation.  Notes:
+
+# 1. Since version numbers are associated with *releases*, the version
+# number maintained on the hwloc SVN trunk (and developer branches) is
+# always 0:0:0.
+
+# 2. Version numbers are described in the Libtool current:revision:age
+# format.
+
+libhwloc_so_version=3:1:3

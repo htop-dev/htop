@@ -9,12 +9,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define _GNU_SOURCE
 #include "ProcessList.h"
 #include "Object.h"
 #include "CRT.h"
 #include "String.h"
 #include "RichString.h"
+#include "Affinity.h"
 
 #include "debug.h"
 
@@ -32,8 +32,8 @@ in the source distribution for its full text.
 #include <sched.h>
 #include <time.h>
 
-#ifdef HAVE_PLPA
-#include <plpa.h>
+#ifdef HAVE_HWLOC
+#include <hwloc/linux.h>
 #endif
 
 // This works only with glibc 2.1+. On earlier versions
@@ -193,10 +193,10 @@ void Process_toggleTag(Process* this);
 
 bool Process_setPriority(Process* this, int priority);
 
-#ifdef HAVE_PLPA
-unsigned long Process_getAffinity(Process* this);
+#ifdef HAVE_HWLOC
+Affinity* Process_getAffinity(Process* this);
 
-bool Process_setAffinity(Process* this, unsigned long mask);
+bool Process_setAffinity(Process* this, Affinity* affinity);
 #endif
 
 void Process_sendSignal(Process* this, int sgn);

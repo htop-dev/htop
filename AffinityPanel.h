@@ -3,16 +3,15 @@
 #ifndef HEADER_AffinityPanel
 #define HEADER_AffinityPanel
 
-
+#include "ProcessList.h"
 #include "Panel.h"
 #include "CheckItem.h"
-#include "ProcessList.h"
 
 #include "debug.h"
 #include <assert.h>
 
-Panel* AffinityPanel_new(ProcessList* pl, unsigned long mask);
+Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity);
 
-unsigned long AffinityPanel_getAffinity(Panel* this);
+Affinity* AffinityPanel_getAffinity(Panel* this);
 
 #endif

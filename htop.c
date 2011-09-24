@@ -124,7 +124,7 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(15, 0, "   F9 k: kill process/tagged processes      P: sort by CPU%");
    mvaddstr(16, 0, "   ] F7: higher priority (root only)        M: sort by MEM%");
    mvaddstr(17, 0, "   [ F8: lower priority (+ nice)            T: sort by TIME");
-#ifdef HAVE_PLPA
+#ifdef HAVE_HWLOC
    if (pl->cpuCount > 1)
       mvaddstr(18, 0, "      a: set CPU affinity                   I: invert sort order");
    else
@@ -145,7 +145,7 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(16, 0, "   ] F7"); mvaddstr(16,40, "    M");
    mvaddstr(17, 0, "   [ F8"); mvaddstr(17,40, "    T");
                                mvaddstr(18,40, " F4 I");
-#if HAVE_PLPA
+#if HAVE_HWLOC
    if (pl->cpuCount > 1)
       mvaddstr(18, 0, "      a:");
 #endif
@@ -457,7 +457,8 @@ int main(int argc, char** argv) {
 
       Panel_draw(panel, true);
       int prev = ch;
-      move(LINES-1, CRT_cursorX);
+      if (incMode)
+         move(LINES-1, CRT_cursorX);
       ch = getch();
 
       if (ch == ERR) {
@@ -748,35 +749,36 @@ int main(int argc, char** argv) {
          refreshTimeout = 0;
          break;
       }
-#ifdef HAVE_PLPA
+#ifdef HAVE_HWLOC
       case 'a':
       {
          if (pl->cpuCount == 1)
             break;
 
-         unsigned long curr = Process_getAffinity((Process*) Panel_getSelected(panel));
-         
-         Panel* affinityPanel = AffinityPanel_new(pl, curr);
+         Affinity* affinity = Process_getAffinity((Process*) Panel_getSelected(panel));
+         Panel* affinityPanel = AffinityPanel_new(pl, affinity);
+         Affinity_delete(affinity);
 
          const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
          void* set = pickFromVector(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar, header);
          if (set) {
-            unsigned long new = AffinityPanel_getAffinity(affinityPanel);
+            Affinity* affinity = AffinityPanel_getAffinity(affinityPanel);
             bool anyTagged = false;
             bool ok = true;
             for (int i = 0; i < Panel_size(panel); i++) {
                Process* p = (Process*) Panel_get(panel, i);
                if (p->tag) {
-                  ok = Process_setAffinity(p, new) && ok;
+                  ok = Process_setAffinity(p, affinity) && ok;
                   anyTagged = true;
                }
             }
             if (!anyTagged) {
                Process* p = (Process*) Panel_getSelected(panel);
-               ok = Process_setAffinity(p, new) && ok;
+               ok = Process_setAffinity(p, affinity) && ok;
             }
             if (!ok)
                beep();
+            Affinity_delete(affinity);
          }
          Panel_delete((Object*)affinityPanel);
          ProcessList_printHeader(pl, Panel_getHeader(panel));
@@ -895,9 +897,6 @@ int main(int argc, char** argv) {
       ((Object*)killPanel)->delete((Object*)killPanel);
    UsersTable_delete(ut);
    Settings_delete(settings);
-#ifdef HAVE_PLPA
-   plpa_finalize();
-#endif
    debug_done();
    return 0;
 }
