@@ -1,5 +1,5 @@
 
-if HAVE_HWLOC
+if HAVE_BUNDLED_HWLOC
 SUBDIRS = hwloc-1.2.1
 endif
 
@@ -41,7 +41,7 @@ SUFFIXES = .h
 BUILT_SOURCES = $(myhtopheaders)
 htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h debug.h
 
-if HAVE_HWLOC
+if HAVE_BUNDLED_HWLOC
 htop_LDADD = $(HWLOC_EMBEDDED_LDADD) $(HWLOC_EMBEDDED_LIBS)
 AM_CFLAGS += $(HWLOC_EMBEDDED_CFLAGS)
 AM_CPPFLAGS += $(HWLOC_EMBEDDED_CPPFLAGS)
