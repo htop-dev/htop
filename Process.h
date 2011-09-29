@@ -181,6 +181,9 @@ extern const char *Process_fieldNames[];
 
 extern const char *Process_fieldTitles[];
 
+
+void Process_getMaxPid();
+
 #define ONE_K 1024
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)

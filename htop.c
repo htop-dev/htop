@@ -350,6 +350,7 @@ int main(int argc, char** argv) {
    UsersTable* ut = UsersTable_new();
 
    pl = ProcessList_new(ut);
+   Process_getMaxPid();
    
    Header* header = Header_new(pl);
    settings = Settings_new(pl, header);

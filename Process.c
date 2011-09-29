@@ -202,14 +202,14 @@ const char *Process_fieldNames[] = {
 };
 
 const char *Process_fieldTitles[] = {
-   "", "  PID ", "Command ", "S ", " PPID ", " PGRP ", " SESN ",
-   "  TTY ", "TPGID ", "- ", "- ", "- ", "- ", "- ",
+   "", "    PID ", "Command ", "S ", "   PPID ", " PGRP ", " SESN ",
+   "  TTY ", "  TPGID ", "- ", "- ", "- ", "- ", "- ",
    " UTIME+  ", " STIME+  ", " CUTIME+ ", " CSTIME+ ", "PRI ", " NI ", "- ",
    "START ", "- ", "- ", "- ", "- ", "- ", "- ",
    "- ", "- ", "- ", "- ", "- ", "- ", "- ",
    "- ", "- ", "- ", "CPU ", " VIRT ", "  RES ", "  SHR ",
    " CODE ", " DATA ", " LIB ", " DIRTY ", " UID ", "CPU% ", "MEM% ",
-   "USER      ", "  TIME+  ", "NLWP ", " TGID ",
+   "USER      ", "  TIME+  ", "NLWP ", "   TGID ",
 #ifdef HAVE_OPENVZ
    " CTID ", " VPID ",
 #endif
@@ -217,7 +217,7 @@ const char *Process_fieldTitles[] = {
    " VXID ",
 #endif
 #ifdef HAVE_TASKSTATS
-   "   RD_CHAR ", "   WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", "  IO_RBYTES ", "  IO_WBYTES ", " IO_CANCEL ",
+   "     RD_CHAR ", "     WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", "  IO_RBYTES ", "  IO_WBYTES ", " IO_CANCEL ",
    " IORR ", " IOWR ", "   IO ",
 #endif
 #ifdef HAVE_CGROUP
@@ -227,6 +227,32 @@ const char *Process_fieldTitles[] = {
 };
 
 static int Process_getuid = -1;
+
+static char* Process_pidFormat = "%7u ";
+static char* Process_tpgidFormat = "%7u ";
+
+void Process_getMaxPid() {
+   FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
+   if (!file) return;
+   int maxPid = 4194303;
+   fscanf(file, "%d", &maxPid);
+   fclose(file);
+   if (maxPid > 99999) {
+      Process_fieldTitles[PID] =   "    PID ";
+      Process_fieldTitles[PPID] =  "   PPID ";
+      Process_fieldTitles[TPGID] = "  TPGID ";
+      Process_fieldTitles[TGID] =  "   TGID ";
+      Process_pidFormat = "%7u ";
+      Process_tpgidFormat = "%7d ";
+   } else {
+      Process_fieldTitles[PID] =   "  PID ";
+      Process_fieldTitles[PPID] =  " PPID ";
+      Process_fieldTitles[TPGID] = "TPGID ";
+      Process_fieldTitles[TGID] =  " TGID ";
+      Process_pidFormat = "%5u ";
+      Process_tpgidFormat = "%5d ";
+   }
+}
 
 #define ONE_K 1024
 #define ONE_M (ONE_K * ONE_K)
@@ -341,13 +367,13 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    int n = sizeof(buffer) - 1;
 
    switch (field) {
-   case PID: snprintf(buffer, n, "%5u ", this->pid); break;
-   case PPID: snprintf(buffer, n, "%5u ", this->ppid); break;
+   case PID: snprintf(buffer, n, Process_pidFormat, this->pid); break;
+   case PPID: snprintf(buffer, n, Process_pidFormat, this->ppid); break;
    case PGRP: snprintf(buffer, n, "%5u ", this->pgrp); break;
    case SESSION: snprintf(buffer, n, "%5u ", this->session); break;
    case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
-   case TGID: snprintf(buffer, n, "%5u ", this->tgid); break;
-   case TPGID: snprintf(buffer, n, "%5d ", this->tpgid); break;
+   case TGID: snprintf(buffer, n, Process_pidFormat, this->tgid); break;
+   case TPGID: snprintf(buffer, n, Process_tpgidFormat, this->tpgid); break;
    case PROCESSOR: snprintf(buffer, n, "%3d ", ProcessList_cpuId(this->pl, this->processor)); break;
    case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
    case COMM: {
@@ -456,8 +482,8 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case VXID: snprintf(buffer, n, "%5u ", this->vxid); break;
    #endif
    #ifdef HAVE_TASKSTATS
-   case RCHAR:  snprintf(buffer, n, "%10llu ", this->io_rchar); break;
-   case WCHAR:  snprintf(buffer, n, "%10llu ", this->io_wchar); break;   
+   case RCHAR:  snprintf(buffer, n, "%12llu ", this->io_rchar); break;
+   case WCHAR:  snprintf(buffer, n, "%12llu ", this->io_wchar); break;   
    case SYSCR:  snprintf(buffer, n, "%10llu ", this->io_syscr); break;   
    case SYSCW:  snprintf(buffer, n, "%10llu ", this->io_syscw); break; 
    case RBYTES: Process_colorNumber(this, str, this->io_read_bytes); return;
