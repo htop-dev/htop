@@ -5,7 +5,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define _GNU_SOURCE
 #include "RichString.h"
 #include "Meter.h"
 #include "Object.h"
@@ -275,11 +274,10 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    for (int i = 0; i < w; i++)
       bar[i] = ' ';
 
-   const size_t barOffset = w - MIN(strlen(buffer), w);
+   const size_t barOffset = w - MIN((int)strlen(buffer), w);
    snprintf(bar + barOffset, w - barOffset + 1, "%s", buffer);
 
    // First draw in the bar[] buffer...
-   double total = 0.0;
    int offset = 0;
    for (int i = 0; i < type->items; i++) {
       double value = this->values[i];
@@ -302,7 +300,6 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
             }
          }
       offset = nextOffset;
-      total += this->values[i];
    }
 
    // ...then print the buffer.

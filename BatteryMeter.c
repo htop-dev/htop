@@ -45,7 +45,7 @@ static unsigned long int parseUevent(FILE * file, const char *key) {
 }
 
 static unsigned long int parseBatInfo(const char *fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
-   const DIR *batteryDir;
+   DIR* batteryDir;
    const struct dirent *dirEntries;
 
    const char batteryPath[] = PROCDIR "/acpi/battery/";
@@ -89,6 +89,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       snprintf((char *) infoPath, sizeof infoPath, "%s%s/%s", batteryPath, newEntry->content, fileName);
 
       if ((file = fopen(infoPath, "r")) == NULL) {
+         closedir(batteryDir);
          return 0;
       }
 
@@ -107,7 +108,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
 
    free(myList);
    free(newEntry);
-   closedir((DIR *) batteryDir);
+   closedir(batteryDir);
    return total;
 }
 
@@ -274,6 +275,7 @@ static double getSysBatData() {
       } else {
          //reset file pointer
          if (fseek(file, 0, SEEK_SET) < 0) {
+            closedir(power_supplyDir);
             fclose(file);
             return 0;
          }
@@ -285,6 +287,7 @@ static double getSysBatData() {
       } else {
         //reset file pointer
          if (fseek(file, 0, SEEK_SET) < 0) {
+            closedir(power_supplyDir);
             fclose(file);
             return 0;
          }

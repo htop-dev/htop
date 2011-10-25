@@ -48,10 +48,4 @@ void Object_setClass(void* this, char* class) {
    ((Object*)this)->class = class;
 }
 
-static void Object_display(Object* this, RichString* out) {
-   char objAddress[50];
-   sprintf(objAddress, "%s @ %p", this->class, (void*) this);
-   RichString_write(out, CRT_colors[DEFAULT_COLOR], objAddress);
-}
-
 #endif

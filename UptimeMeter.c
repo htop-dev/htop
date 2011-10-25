@@ -22,7 +22,7 @@ static void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
    double uptime = 0;
    FILE* fd = fopen(PROCDIR "/uptime", "r");
    if (fd) {
-      fscanf(fd, "%lf", &uptime);
+      fscanf(fd, "%64lf", &uptime);
       fclose(fd);
    }
    int totalseconds = (int) ceil(uptime);

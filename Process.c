@@ -235,7 +235,7 @@ void Process_getMaxPid() {
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
    if (!file) return;
    int maxPid = 4194303;
-   fscanf(file, "%d", &maxPid);
+   fscanf(file, "%32d", &maxPid);
    fclose(file);
    if (maxPid > 99999) {
       Process_fieldTitles[PID] =   "    PID ";
@@ -287,7 +287,7 @@ static void Process_humanNumber(Process* this, RichString* str, unsigned long nu
    }
 }
 
-static void Process_colorNumber(Process* this, RichString* str, unsigned long long number) {
+static void Process_colorNumber(RichString* str, unsigned long long number) {
    char buffer[14];
    if (number > 10000000000) {
       snprintf(buffer, 13, "%11lld ", number / 1000);
@@ -486,8 +486,8 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case WCHAR:  snprintf(buffer, n, "%12llu ", this->io_wchar); break;   
    case SYSCR:  snprintf(buffer, n, "%10llu ", this->io_syscr); break;   
    case SYSCW:  snprintf(buffer, n, "%10llu ", this->io_syscw); break; 
-   case RBYTES: Process_colorNumber(this, str, this->io_read_bytes); return;
-   case WBYTES: Process_colorNumber(this, str, this->io_write_bytes); return;
+   case RBYTES: Process_colorNumber(str, this->io_read_bytes); return;
+   case WBYTES: Process_colorNumber(str, this->io_write_bytes); return;
    case CNCLWB: snprintf(buffer, n, "%10llu ", this->io_cancelled_write_bytes); break; 
    case IO_READ_RATE:  Process_outputRate(this, str, attr, buffer, n, this->io_rate_read_bps); return;
    case IO_WRITE_RATE: Process_outputRate(this, str, attr, buffer, n, this->io_rate_write_bps); return;

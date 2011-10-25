@@ -438,7 +438,7 @@ static bool ProcessList_readStatmFile(Process* process, const char* dirname, con
    if (!file)
       return false;
 
-   int num = fscanf(file, "%d %d %d %d %d %d %d",
+   int num = fscanf(file, "%32d %32d %32d %32d %32d %32d %32d",
        &process->m_size, &process->m_resident, &process->m_share, 
        &process->m_trs, &process->m_lrs, &process->m_drs, 
        &process->m_dt);
@@ -460,13 +460,13 @@ static void ProcessList_readOpenVZData(Process* process, const char* dirname, co
    if (!file) 
       return;
    fscanf(file, 
-      "%*u %*s %*c %*u %*u %*u %*u %*u %*u %*u "
-      "%*u %*u %*u %*u %*u %*u %*u %*u "
-      "%*u %*u %*u %*u %*u %*u %*u %*u "
-      "%*u %*u %*u %*u %*u %*u %*u %*u "
-      "%*u %*u %*u %*u %*u %*u %*u %*u "
-      "%*u %*u %*u %*u %*u %*u %*u "
-      "%*u %*u %u %u",
+      "%*32u %*32s %*1c %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
+      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
+      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
+      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
+      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
+      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u "
+      "%*32u %*32u %32u %32u",
       &process->vpid, &process->ctid);
    fclose(file);
 }
