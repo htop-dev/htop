@@ -62,5 +62,5 @@ debuglite:
 .c.h:
 	scripts/MakeHeader.py $<
 
-
-
+cppcheck:
+	cppcheck -q -v . --enable=all  -ihwloc-1.2.1 -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS
