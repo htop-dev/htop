@@ -57,9 +57,23 @@ in the source distribution for its full text.
 #ifndef ProcessList_cpuId
 #define ProcessList_cpuId(pl, cpu) ((pl)->countCPUsFromZero ? (cpu) : (cpu)+1)
 #endif
-}*/
 
-/*{
+typedef enum TreeStr_ {
+   TREE_STR_HORZ,
+   TREE_STR_VERT,
+   TREE_STR_RTEE,
+   TREE_STR_BEND,
+   TREE_STR_TEND,
+   TREE_STR_OPEN,
+   TREE_STR_SHUT,
+   TREE_STR_COUNT
+} TreeStr;
+
+typedef enum TreeType_ {
+   TREE_TYPE_AUTO,
+   TREE_TYPE_ASCII,
+   TREE_TYPE_UTF8,
+} TreeType;
 
 typedef struct CPUData_ {
    unsigned long long int totalTime;
@@ -132,11 +146,33 @@ typedef struct ProcessList_ {
    bool highlightThreads;
    bool detailedCPUTime;
    bool countCPUsFromZero;
+   const char **treeStr;
 
 } ProcessList;
+
 }*/
 
 static ProcessField defaultHeaders[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
+
+const char *ProcessList_treeStrAscii[TREE_STR_COUNT] = {
+   "-", // TREE_STR_HORZ
+   "|", // TREE_STR_VERT
+   "`", // TREE_STR_RTEE
+   "`", // TREE_STR_BEND
+   ",", // TREE_STR_TEND
+   "+", // TREE_STR_OPEN
+   "-", // TREE_STR_SHUT
+};
+
+const char *ProcessList_treeStrUtf8[TREE_STR_COUNT] = {
+   "\xe2\x94\x80", // TREE_STR_HORZ ─
+   "\xe2\x94\x82", // TREE_STR_VERT │
+   "\xe2\x94\x9c", // TREE_STR_RTEE ├
+   "\xe2\x94\x94", // TREE_STR_BEND └
+   "\xe2\x94\x8c", // TREE_STR_TEND ┌
+   "+",            // TREE_STR_OPEN +
+   "\xe2\x94\x80", // TREE_STR_SHUT ─
+};
 
 ProcessList* ProcessList_new(UsersTable* usersTable) {
    ProcessList* this;
@@ -194,6 +230,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    this->highlightMegabytes = false;
    this->detailedCPUTime = false;
    this->countCPUsFromZero = false;
+   this->treeStr = NULL;
 
    return this;
 }
@@ -282,7 +319,10 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
       assert(this->processes2->items == s+1); (void)s;
       int nextIndent = indent | (1 << level);
       ProcessList_buildTree(this, process->pid, level+1, (i < size - 1) ? nextIndent : indent, direction, show ? process->showChildren : false);
-      process->indent = nextIndent;
+      if (i == size - 1)
+         process->indent = -nextIndent;
+      else
+         process->indent = nextIndent;
    }
    Vector_delete(children);
 }

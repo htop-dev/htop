@@ -2,6 +2,8 @@
 What's new in version 0.9.1
 
 * Switch from PLPA, which is now deprecated, to HWLOC.
+* Support for UTF-8 tree drawing
+  (thanks to Bin Guo)
 * Option for counting CPUs from zero
   (thanks to Sean Noonan)
 * Meters update in every screen (no longer halting while on Setup, etc.)

@@ -387,21 +387,26 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
       } else {
          char* buf = buffer;
          int maxIndent = 0;
+         const char **treeStr = this->pl->treeStr;
+         bool lastItem = (this->indent < 0);
+         int indent = (this->indent < 0 ? -this->indent : this->indent);
+         if (treeStr == NULL)
+             treeStr = ProcessList_treeStrAscii;
+
          for (int i = 0; i < 32; i++)
-            if (this->indent & (1 << i))
+            if (indent & (1 << i))
                maxIndent = i+1;
           for (int i = 0; i < maxIndent - 1; i++) {
-            if (this->indent & (1 << i))
-               snprintf(buf, n, " |  ");
+            int written;
+            if (indent & (1 << i))
+               written = snprintf(buf, n, "%s  ", treeStr[TREE_STR_VERT]);
             else
-               snprintf(buf, n, "    ");
-            buf += 4;
-            n -= 4;
+               written = snprintf(buf, n, "   ");
+            buf += written;
+            n -= written;
          }
-         if (this->pl->direction == 1)
-            snprintf(buf, n, " `%s ", this->showChildren ? "-" : "+" );
-         else
-            snprintf(buf, n, " ,%s ", this->showChildren ? "-" : "+" );
+         const char* draw = treeStr[lastItem ? (this->pl->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
+         snprintf(buf, n, "%s%s ", draw, this->showChildren ? treeStr[TREE_STR_SHUT] : treeStr[TREE_STR_OPEN] );
          RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
          Process_writeCommand(this, attr, baseattr, str);
          return;

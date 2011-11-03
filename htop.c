@@ -263,6 +263,7 @@ int main(int argc, char** argv) {
    bool userOnly = false;
    uid_t userId = 0;
    int usecolors = 1;
+   TreeType treeType = TREE_TYPE_AUTO;
 
    int opt, opti=0;
    static struct option long_opts[] =
@@ -281,8 +282,10 @@ int main(int argc, char** argv) {
    char *lc_ctype = getenv("LC_CTYPE");
    if(lc_ctype != NULL)
       setlocale(LC_CTYPE, lc_ctype);
+   else if ((lc_ctype = getenv("LC_ALL")))
+      setlocale(LC_CTYPE, lc_ctype);
    else
-      setlocale(LC_CTYPE, getenv("LC_ALL"));
+      setlocale(LC_CTYPE, "");
 
    /* Parse arguments */
    while ((opt = getopt_long(argc, argv, "hvCs:d:u:", long_opts, &opti))) {
@@ -361,6 +364,34 @@ int main(int argc, char** argv) {
       settings->delay = delay;
    if (!usecolors) 
       settings->colorScheme = COLORSCHEME_MONOCHROME;
+
+   if (treeType == TREE_TYPE_AUTO) {
+#ifdef HAVE_LIBNCURSESW
+      char *locale = setlocale(LC_ALL, NULL);
+      if (locale == NULL || locale[0] == '\0')
+         locale = setlocale(LC_CTYPE, NULL);
+      if (locale != NULL &&
+          (strstr(locale, "UTF-8") ||
+           strstr(locale, "utf-8") ||
+           strstr(locale, "UTF8")  ||
+           strstr(locale, "utf8")))
+         treeType = TREE_TYPE_UTF8;
+      else
+         treeType = TREE_TYPE_ASCII;
+#else
+      treeType = TREE_TYPE_ASCII;
+#endif
+   }
+   switch (treeType) {
+   default:
+   case TREE_TYPE_ASCII:
+      pl->treeStr = ProcessList_treeStrAscii;
+      break;
+   case TREE_TYPE_UTF8:
+      pl->treeStr = ProcessList_treeStrUtf8;
+      break;
+   }
+
    
    CRT_init(settings->delay, settings->colorScheme);
    
