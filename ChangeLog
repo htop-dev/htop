@@ -2,6 +2,7 @@
 What's new in version 0.9.1
 
 * Switch from PLPA, which is now deprecated, to HWLOC.
+* Support for typing in user names and column fields in selection panels.
 * Support for UTF-8 tree drawing
   (thanks to Bin Guo)
 * Option for counting CPUs from zero
