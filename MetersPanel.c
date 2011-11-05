@@ -27,7 +27,7 @@ static void MetersPanel_delete(Object* object) {
    free(this);
 }
 
-static HandlerResult MetersPanel_EventHandler(Panel* super, int ch) {
+static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    MetersPanel* this = (MetersPanel*) super;
    
    int selected = Panel_getSelectedIndex(super);
@@ -96,7 +96,7 @@ MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* met
    this->settings = settings;
    this->meters = meters;
    this->scr = scr;
-   super->eventHandler = MetersPanel_EventHandler;
+   super->eventHandler = MetersPanel_eventHandler;
    Panel_setHeader(super, header);
    for (int i = 0; i < Vector_size(meters); i++) {
       Meter* meter = (Meter*) Vector_get(meters, i);
