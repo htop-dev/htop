@@ -13,15 +13,15 @@
 #include <ctype.h>
 
 
+typedef struct SignalItem_ {
+   const char* name;
+   int number;
+} SignalItem;
+
 typedef struct SignalsPanel_ {
    Panel super;
-   ListItem** signals;
 } SignalsPanel;
 
-
-#ifndef SIGNAL_COUNT
-#define SIGNAL_COUNT 34
-#endif
 
 SignalsPanel* SignalsPanel_new(int x, int y, int w, int h);
 
