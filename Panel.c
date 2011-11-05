@@ -47,6 +47,7 @@ struct Panel_ {
    bool needsRedraw;
    RichString header;
    Panel_EventHandler eventHandler;
+   char* eventHandlerBuffer;
 };
 
 }*/

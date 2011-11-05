@@ -195,15 +195,41 @@ static bool changePriority(Panel* panel, int delta) {
 }
 
 static HandlerResult pickWithEnter(Panel* panel, int ch) {
-   (void) panel;
-   if (ch == 13)
+   int size = Panel_size(panel);
+ 
+   if (isalnum(ch)) {
+      int len = strlen(panel->eventHandlerBuffer);
+      if (len < 99) {
+         panel->eventHandlerBuffer[len] = ch;
+         panel->eventHandlerBuffer[len+1] = '\0';
+      }
+      for (int try = 0; try < 2; try++) {
+         len = strlen(panel->eventHandlerBuffer);
+         for (int i = 0; i < size; i++) {
+            char* cur = ((ListItem*) Panel_get(panel, i))->value;
+            while (*cur == ' ') cur++;
+            if (strncasecmp(cur, panel->eventHandlerBuffer, len) == 0) {
+               Panel_setSelected(panel, i);
+               return HANDLED;
+            }
+         }
+         panel->eventHandlerBuffer[0] = ch;
+         panel->eventHandlerBuffer[1] = '\0';
+      }
+      return HANDLED;
+   } else if (ch != ERR) {
+      panel->eventHandlerBuffer[0] = '\0';
+   }
+   if (ch == 13) {
       return BREAK_LOOP;
+   }
    return IGNORED;
 }
 
 static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const char** keyLabels, FunctionBar* prevBar, Header* header) {
    const char* fuKeys[] = {"Enter", "Esc", NULL};
    int fuEvents[] = {13, 27};
+   list->eventHandlerBuffer = calloc(100, 1);
    if (!list->eventHandler)
       Panel_setEventHandler(list, pickWithEnter);
    ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, header, false);
@@ -213,6 +239,8 @@ static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const cha
    int ch;
    ScreenManager_run(scr, &panelFocus, &ch);
    ScreenManager_delete(scr);
+   free(list->eventHandlerBuffer);
+   list->eventHandlerBuffer = NULL;
    Panel_move(panel, 0, y);
    Panel_resize(panel, COLS, LINES-y-1);
    FunctionBar_draw(prevBar, NULL);
@@ -758,7 +786,7 @@ int main(int argc, char** argv) {
          const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
          Signal* sgn = (Signal*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
          if (sgn) {
-            if (sgn->number != 0) {
+            if (sgn->super.key != 0) {
                Panel_setHeader(panel, "Sending...");
                Panel_draw(panel, true);
                refresh();
@@ -766,13 +794,13 @@ int main(int argc, char** argv) {
                for (int i = 0; i < Panel_size(panel); i++) {
                   Process* p = (Process*) Panel_get(panel, i);
                   if (p->tag) {
-                     Process_sendSignal(p, sgn->number);
+                     Process_sendSignal(p, sgn->super.key);
                      anyTagged = true;
                   }
                }
                if (!anyTagged) {
                   Process* p = (Process*) Panel_getSelected(panel);
-                  Process_sendSignal(p, sgn->number);
+                  Process_sendSignal(p, sgn->super.key);
                }
                napms(500);
             }
