@@ -8,21 +8,18 @@
 #include <assert.h>
 
 static HandlerResult AffinityPanel_eventHandler(Panel* this, int ch) {
-   HandlerResult result = IGNORED;
    CheckItem* selected = (CheckItem*) Panel_getSelected(this);
    switch(ch) {
    case KEY_MOUSE:
    case ' ':
       CheckItem_set(selected, ! (CheckItem_get(selected)) );
-      result = HANDLED;
-      break;
+      return HANDLED;
    case 0x0a:
    case 0x0d:
    case KEY_ENTER:
-      result = BREAK_LOOP;
-      break;
+      return BREAK_LOOP;
    }
-   return result;
+   return IGNORED;
 }
 
 Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity) {
