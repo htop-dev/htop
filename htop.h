@@ -22,7 +22,6 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Panel.h"
 #include "UsersTable.h"
-#include "SignalItem.h"
 #include "RichString.h"
 #include "Settings.h"
 #include "ScreenManager.h"

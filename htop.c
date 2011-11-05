@@ -18,7 +18,6 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Panel.h"
 #include "UsersTable.h"
-#include "SignalItem.h"
 #include "RichString.h"
 #include "Settings.h"
 #include "ScreenManager.h"
@@ -784,9 +783,9 @@ int main(int argc, char** argv) {
          }
          SignalsPanel_reset((SignalsPanel*) killPanel);
          const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
-         Signal* sgn = (Signal*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
+         ListItem* sgn = (ListItem*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
          if (sgn) {
-            if (sgn->super.key != 0) {
+            if (sgn->key != 0) {
                Panel_setHeader(panel, "Sending...");
                Panel_draw(panel, true);
                refresh();
@@ -794,13 +793,13 @@ int main(int argc, char** argv) {
                for (int i = 0; i < Panel_size(panel); i++) {
                   Process* p = (Process*) Panel_get(panel, i);
                   if (p->tag) {
-                     Process_sendSignal(p, sgn->super.key);
+                     Process_sendSignal(p, sgn->key);
                      anyTagged = true;
                   }
                }
                if (!anyTagged) {
                   Process* p = (Process*) Panel_getSelected(panel);
-                  Process_sendSignal(p, sgn->super.key);
+                  Process_sendSignal(p, sgn->key);
                }
                napms(500);
             }
