@@ -32,6 +32,6 @@ void Settings_delete(Settings* this);
 
 bool Settings_write(Settings* this);
 
-Settings* Settings_new(ProcessList* pl, Header* header);
+Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount);
 
 #endif

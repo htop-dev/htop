@@ -1,7 +1,12 @@
 
-What's new in version 0.9.1
+What's new in version 1.0
 
+* Performance improvements
+* Support for splitting CPU meters into two or four columns
+  (thanks to Wim Heirman)
 * Switch from PLPA, which is now deprecated, to HWLOC.
+* Bring back support for native Linux sched_setaffinity,
+  so we don't have to use HWLOC where we don't need to.
 * Support for typing in user names and column fields in selection panels.
 * Support for UTF-8 tree drawing
   (thanks to Bin Guo)

@@ -567,6 +567,7 @@ bool Process_setPriority(Process* this, int priority) {
 }
 
 #ifdef HAVE_HWLOC
+
 Affinity* Process_getAffinity(Process* this) {
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
    bool ok = (hwloc_linux_get_tid_cpubind(this->pl->topology, this->pid, cpuset) == 0);
@@ -597,6 +598,31 @@ bool Process_setAffinity(Process* this, Affinity* affinity) {
    hwloc_bitmap_free(cpuset);
    return ok;
 }
+
+#elif HAVE_NATIVE_AFFINITY
+
+Affinity* Process_getAffinity(Process* this) {
+   cpu_set_t cpuset;
+   bool ok = (sched_getaffinity(this->pid, sizeof(cpu_set_t), &cpuset) == 0);
+   if (!ok) return NULL;
+   Affinity* affinity = Affinity_new();
+   for (int i = 0; i < this->pl->cpuCount; i++) {
+      if (CPU_ISSET(i, &cpuset))
+         Affinity_add(affinity, i);
+   }
+   return affinity;
+}
+
+bool Process_setAffinity(Process* this, Affinity* affinity) {
+   cpu_set_t cpuset;
+   CPU_ZERO(&cpuset);
+   for (int i = 0; i < affinity->used; i++) {
+      CPU_SET(affinity->cpus[i], &cpuset);
+   }
+   bool ok = (sched_setaffinity(this->pid, sizeof(unsigned long), &cpuset) == 0);
+   return ok;
+}
+
 #endif
 
 void Process_sendSignal(Process* this, int sgn) {

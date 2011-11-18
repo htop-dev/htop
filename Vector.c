@@ -16,6 +16,8 @@ in the source distribution for its full text.
 
 /*{
 
+#define swap(a_,x_,y_) do{ void* tmp_ = a_[x_]; a_[x_] = a_[y_]; a_[y_] = tmp_; }while(0)
+
 #ifndef DEFAULT_SIZE
 #define DEFAULT_SIZE -1
 #endif
@@ -97,18 +99,83 @@ void Vector_prune(Vector* this) {
    this->items = 0;
 }
 
-void Vector_sort(Vector* this) {
+static int comparisons = 0;
+
+static int partition(Object** array, int left, int right, int pivotIndex, Object_Compare compare) {
+   void* pivotValue = array[pivotIndex];
+   swap(array, pivotIndex, right);
+   int storeIndex = left;
+   for (int i = left; i < right; i++) {
+      comparisons++;
+      if (compare(array[i], pivotValue) <= 0) {
+         swap(array, i, storeIndex);
+         storeIndex++;
+      }
+   }
+   swap(array, storeIndex, right);
+   return storeIndex;
+}
+
+static void quickSort(Object** array, int left, int right, Object_Compare compare) {
+   if (left >= right)
+      return;
+   int pivotIndex = (left+right) / 2;
+   int pivotNewIndex = partition(array, left, right, pivotIndex, compare);
+   quickSort(array, left, pivotNewIndex - 1, compare);
+   quickSort(array, pivotNewIndex + 1, right, compare);
+}
+
+// If I were to use only one sorting algorithm for both cases, it would probably be this one:
+/*
+
+static void combSort(Object** array, int left, int right, Object_Compare compare) {
+   int gap = right - left;
+   bool swapped = true;
+   while ((gap > 1) || swapped) {
+      if (gap > 1) {
+         gap = (int)((double)gap / 1.247330950103979);
+      }
+      swapped = false;
+      for (int i = left; gap + i <= right; i++) {
+         comparisons++;
+         if (compare(array[i], array[i+gap]) > 0) {
+            swap(array, i, i+gap);
+            swapped = true;
+         }
+      }
+   }
+}
+
+*/
+
+static void insertionSort(Object** array, int left, int right, Object_Compare compare) {
+   for (int i = left+1; i <= right; i++) {
+      void* t = array[i];
+      int j = i - 1;
+      while (j >= left) {
+         comparisons++;
+         if (compare(array[j], t) <= 0)
+            break;
+         array[j+1] = array[j];
+         j--;
+      }
+      array[j+1] = t;
+   }
+}
+
+void Vector_quickSort(Vector* this) {
    assert(this->compare);
    assert(Vector_isConsistent(this));
    Object_Compare compare = this->compare;
-   /* Insertion sort works best on mostly-sorted arrays. */
-   for (int i = 1; i < this->items; i++) {
-      int j;
-      void* t = this->array[i];
-      for (j = i-1; j >= 0 && compare(this->array[j], t) > 0; j--)
-         this->array[j+1] = this->array[j];
-      this->array[j+1] = t;
-   }
+   quickSort(this->array, 0, this->items - 1, compare);
+   assert(Vector_isConsistent(this));
+}
+
+void Vector_insertionSort(Vector* this) {
+   assert(this->compare);
+   assert(Vector_isConsistent(this));
+   Object_Compare compare = this->compare;
+   insertionSort(this->array, 0, this->items - 1, compare);
    assert(Vector_isConsistent(this));
 }
 
@@ -205,11 +272,19 @@ void Vector_set(Vector* this, int idx, void* data_) {
    assert(Vector_isConsistent(this));
 }
 
+#ifdef DEBUG
+
 inline Object* Vector_get(Vector* this, int idx) {
    assert(idx < this->items);
    assert(Vector_isConsistent(this));
    return this->array[idx];
 }
+
+#else
+
+#define Vector_get(v_, idx_) ((v_)->array[idx_])
+
+#endif
 
 inline int Vector_size(Vector* this) {
    assert(Vector_isConsistent(this));

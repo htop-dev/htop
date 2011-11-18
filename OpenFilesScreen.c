@@ -151,7 +151,7 @@ static void OpenFilesScreen_scan(OpenFilesScreen* this) {
             free(process->data[i]);
    }
    free(process);
-   Vector_sort(panel->items);
+   Vector_insertionSort(panel->items);
    Panel_setSelected(panel, idx);
 }
 

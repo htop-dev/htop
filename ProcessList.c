@@ -178,8 +178,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    ProcessList* this;
    this = calloc(sizeof(ProcessList), 1);
    this->processes = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
-   this->processTable = Hashtable_new(70, false);
-   assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
+   this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
    
    /* tree-view auxiliary buffers */
@@ -329,7 +328,7 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
 
 void ProcessList_sort(ProcessList* this) {
    if (!this->treeView) {
-      Vector_sort(this->processes);
+      Vector_insertionSort(this->processes);
    } else {
       // Save settings
       int direction = this->direction;
@@ -337,7 +336,7 @@ void ProcessList_sort(ProcessList* this) {
       // Sort by PID
       this->sortKey = PID;
       this->direction = 1;
-      Vector_sort(this->processes);
+      Vector_quickSort(this->processes);
       // Restore settings
       this->sortKey = sortKey;
       this->direction = direction;
@@ -448,23 +447,34 @@ static void ProcessList_readIoFile(Process* process, const char* dirname, char* 
    unsigned long long last_read = process->io_read_bytes;
    unsigned long long last_write = process->io_write_bytes;
    while (fgets(buffer, 255, file)) {
-      if (sscanf(buffer, "rchar: %llu", &process->io_rchar)) continue;
-      if (sscanf(buffer, "wchar: %llu", &process->io_wchar)) continue;
-      if (sscanf(buffer, "syscr: %llu", &process->io_syscr)) continue;
-      if (sscanf(buffer, "syscw: %llu", &process->io_syscw)) continue;
-      if (sscanf(buffer, "read_bytes: %llu", &process->io_read_bytes)) {
-         process->io_rate_read_bps = 
-            ((double)(process->io_read_bytes - last_read))/(((double)(now - process->io_rate_read_time))/1000);
-         process->io_rate_read_time = now;
-         continue;
+      switch (buffer[0]) {
+      case 'r':
+         if (buffer[1] == 'c')
+            sscanf(buffer, "rchar: %llu", &process->io_rchar);
+         else if (sscanf(buffer, "read_bytes: %llu", &process->io_read_bytes)) {
+            process->io_rate_read_bps = 
+               ((double)(process->io_read_bytes - last_read))/(((double)(now - process->io_rate_read_time))/1000);
+            process->io_rate_read_time = now;
+         }
+         break;
+      case 'w':
+         if (buffer[1] == 'c')
+            sscanf(buffer, "wchar: %llu", &process->io_wchar);
+         else if (sscanf(buffer, "write_bytes: %llu", &process->io_write_bytes)) {
+            process->io_rate_write_bps = 
+               ((double)(process->io_write_bytes - last_write))/(((double)(now - process->io_rate_write_time))/1000);
+            process->io_rate_write_time = now;
+         }
+         break;
+      case 's':
+         if (buffer[5] == 'r')
+            sscanf(buffer, "syscr: %llu", &process->io_syscr);
+         else
+            sscanf(buffer, "syscw: %llu", &process->io_syscw);
+         break;
+      case 'c':
+         sscanf(buffer, "cancelled_write_bytes: %llu", &process->io_cancelled_write_bytes);
       }
-      if (sscanf(buffer, "write_bytes: %llu", &process->io_write_bytes)) {
-         process->io_rate_write_bps = 
-            ((double)(process->io_write_bytes - last_write))/(((double)(now - process->io_rate_write_time))/1000);
-         process->io_rate_write_time = now;
-         continue;
-      }
-      sscanf(buffer, "cancelled_write_bytes: %llu", &process->io_cancelled_write_bytes);
    }
    fclose(file);
 }

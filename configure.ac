@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-AC_INIT([htop],[0.9.1],[loderunner@users.sourceforge.net])
+AC_INIT([htop],[1.0],[loderunner@users.sourceforge.net])
 
 # The following two lines are required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
@@ -87,9 +87,12 @@ if test "x$enable_taskstats" = xyes; then
     AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
 fi
 
-AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="no")
+AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
 if test "x$enable_unicode" = xyes; then
-   AC_CHECK_LIB([ncursesw], [refresh], [], [missing_libraries="$missing_libraries libncursesw"])
+   AC_CHECK_LIB([ncursesw], [refresh], [], [
+      missing_libraries="$missing_libraries libncursesw"
+      AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
+   ])
    AC_CHECK_HEADERS([ncursesw/curses.h],[:],
         [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
           [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])
@@ -110,10 +113,28 @@ AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you 
 AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
 fi
 
+AC_ARG_ENABLE(native_affinity, [AC_HELP_STRING([--enable-native-affinity], [enable native sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_native_affinity="yes")
+if test "x$enable_native_affinity" = xyes; then
+   AC_MSG_CHECKING([for usable sched_setaffinity])
+   AC_RUN_IFELSE([
+     AC_LANG_PROGRAM([[
+       #include <sched.h>
+       #include <errno.h>
+       static cpu_set_t cpuset;
+       ]], [[
+       CPU_ZERO(&cpuset);
+       sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+       if (errno == ENOSYS) return 1;
+       ]])],
+     [AC_DEFINE(HAVE_NATIVE_AFFINITY, 1, [Define if native sched_setaffinity and sched_getaffinity are to be used.])
+      AC_MSG_RESULT([yes])],
+     [AC_MSG_RESULT([no])])
+fi
+
 ##### hwloc
 AC_ARG_ENABLE(system-hwloc, [AC_HELP_STRING([--enable-system-hwloc], [use the copy of hwloc from your system and not the one bundled with the htop sources. (hwloc required)])], ,enable_system_hwloc="no")
 enable_xml=no
-AC_ARG_ENABLE(hwloc, [AC_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="yes")
+AC_ARG_ENABLE(hwloc, [AC_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, test "x$enable_native_affinity" = xno && enable_hwloc="yes")
 if test "x$enable_hwloc" = xyes
 then
    if test "x$enable_system_hwloc" = xyes

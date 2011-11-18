@@ -130,8 +130,13 @@ MeterType* Meter_types[] = {
    &TasksMeter,
    &UptimeMeter,
    &BatteryMeter,
-   &AllCPUsMeter,
    &HostnameMeter,
+   &AllCPUsMeter,
+   &AllCPUs2Meter,
+   &LeftCPUsMeter,
+   &RightCPUsMeter,
+   &LeftCPUs2Meter,
+   &RightCPUs2Meter,
    NULL
 };
 
@@ -147,9 +152,9 @@ Meter* Meter_new(ProcessList* pl, int param, MeterType* type) {
    this->values = calloc(sizeof(double), type->items);
    this->total = type->total;
    this->caption = strdup(type->caption);
-   Meter_setMode(this, type->mode);
    if (this->type->init)
       this->type->init(this);
+   Meter_setMode(this, type->mode);
    return this;
 }
 

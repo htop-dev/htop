@@ -122,38 +122,91 @@ static void CPUMeter_display(Object* cast, RichString* out) {
    }
 }
 
+static void AllCPUsMeter_getRange(Meter* this, int* start, int* count) {
+   int cpus = this->pl->cpuCount;
+   switch(this->type->name[0]) {
+      default:
+      case 'A': // All
+         *start = 0;
+         *count = cpus;
+         break;
+      case 'L': // First Half
+         *start = 0;
+         *count = (cpus+1) / 2;
+         break;
+      case 'R': // Second Half
+         *start = (cpus+1) / 2;
+         *count = cpus / 2;
+         break;
+   }
+}
+
 static void AllCPUsMeter_init(Meter* this) {
    int cpus = this->pl->cpuCount;
    if (!this->drawData)
       this->drawData = calloc(sizeof(Meter*), cpus);
    Meter** meters = (Meter**) this->drawData;
-   for (int i = 0; i < cpus; i++) {
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   for (int i = 0; i < count; i++) {
       if (!meters[i])
-         meters[i] = Meter_new(this->pl, i+1, &CPUMeter);
+         meters[i] = Meter_new(this->pl, start+i+1, &CPUMeter);
       meters[i]->type->init(meters[i]);
    }
-   this->h = Meter_modes[this->mode]->h * cpus;
+   if (this->mode == 0)
+      this->mode = BAR_METERMODE;
+   int h = Meter_modes[this->mode]->h;
+   if (strchr(this->type->name, '2'))
+      this->h = h * ((count+1) / 2);
+   else
+      this->h = h * count;
 }
 
 static void AllCPUsMeter_done(Meter* this) {
-   int cpus = this->pl->cpuCount;
    Meter** meters = (Meter**) this->drawData;
-   for (int i = 0; i < cpus; i++)
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   for (int i = 0; i < count; i++)
       Meter_delete((Object*)meters[i]);
 }
 
 static void AllCPUsMeter_setMode(Meter* this, int mode) {
+   Meter** meters = (Meter**) this->drawData;
    this->mode = mode;
-   int cpus = this->pl->cpuCount;
-   int h = Meter_modes[this->mode]->h;
-   this->h = h * cpus;
+   int h = Meter_modes[mode]->h;
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   for (int i = 0; i < count; i++) {
+      Meter_setMode(meters[i], mode);
+   }
+   if (strchr(this->type->name, '2'))
+      this->h = h * ((count+1) / 2);
+   else
+      this->h = h * count;
 }
 
-static void AllCPUsMeter_draw(Meter* this, int x, int y, int w) {
-   int cpus = this->pl->cpuCount;
+static void DualColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    Meter** meters = (Meter**) this->drawData;
-   for (int i = 0; i < cpus; i++) {
-      Meter_setMode(meters[i], this->mode);
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   int height = (count+1)/2;
+   int startY = y;
+   for (int i = 0; i < height; i++) {
+      meters[i]->draw(meters[i], x, y, (w-2)/2);
+      y += meters[i]->h;
+   }
+   y = startY;
+   for (int i = height; i < count; i++) {
+      meters[i]->draw(meters[i], x+(w-1)/2+2, y, (w-2)/2);
+      y += meters[i]->h;
+   }
+}
+
+static void SingleColCPUsMeter_draw(Meter* this, int x, int y, int w) {
+   Meter** meters = (Meter**) this->drawData;
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   for (int i = 0; i < count; i++) {
       meters[i]->draw(meters[i], x, y, w);
       y += meters[i]->h;
    }
@@ -178,10 +231,81 @@ MeterType AllCPUsMeter = {
    .total = 100.0,
    .attributes = CPUMeter_attributes, 
    .name = "AllCPUs",
-   .uiName = "All CPUs",
+   .uiName = "CPUs (1/1)",
    .caption = "CPU",
-   .draw = AllCPUsMeter_draw,
+   .draw = SingleColCPUsMeter_draw,
    .init = AllCPUsMeter_init,
    .setMode = AllCPUsMeter_setMode,
    .done = AllCPUsMeter_done
 };
+
+MeterType AllCPUs2Meter = {
+   .mode = 0,
+   .items = 1,
+   .total = 100.0,
+   .attributes = CPUMeter_attributes, 
+   .name = "AllCPUs2",
+   .uiName = "CPUs (1&2/2)",
+   .caption = "CPU",
+   .draw = DualColCPUsMeter_draw,
+   .init = AllCPUsMeter_init,
+   .setMode = AllCPUsMeter_setMode,
+   .done = AllCPUsMeter_done
+};
+
+MeterType LeftCPUsMeter = {
+   .mode = 0,
+   .items = 1,
+   .total = 100.0,
+   .attributes = CPUMeter_attributes, 
+   .name = "LeftCPUs",
+   .uiName = "CPUs (1/2)",
+   .caption = "CPU",
+   .draw = SingleColCPUsMeter_draw,
+   .init = AllCPUsMeter_init,
+   .setMode = AllCPUsMeter_setMode,
+   .done = AllCPUsMeter_done
+};
+
+MeterType RightCPUsMeter = {
+   .mode = 0,
+   .items = 1,
+   .total = 100.0,
+   .attributes = CPUMeter_attributes, 
+   .name = "RightCPUs",
+   .uiName = "CPUs (2/2)",
+   .caption = "CPU",
+   .draw = SingleColCPUsMeter_draw,
+   .init = AllCPUsMeter_init,
+   .setMode = AllCPUsMeter_setMode,
+   .done = AllCPUsMeter_done
+};
+
+MeterType LeftCPUs2Meter = {
+   .mode = 0,
+   .items = 1,
+   .total = 100.0,
+   .attributes = CPUMeter_attributes, 
+   .name = "LeftCPUs2",
+   .uiName = "CPUs (1&2/4)",
+   .caption = "CPU",
+   .draw = DualColCPUsMeter_draw,
+   .init = AllCPUsMeter_init,
+   .setMode = AllCPUsMeter_setMode,
+   .done = AllCPUsMeter_done
+};
+
+MeterType RightCPUs2Meter = {
+   .mode = 0,
+   .items = 1,
+   .total = 100.0,
+   .attributes = CPUMeter_attributes, 
+   .name = "RightCPUs2",
+   .uiName = "CPUs (3&4/4)",
+   .caption = "CPU",
+   .draw = DualColCPUsMeter_draw,
+   .init = AllCPUsMeter_init,
+   .setMode = AllCPUsMeter_setMode,
+   .done = AllCPUsMeter_done
+};
+

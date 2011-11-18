@@ -34,4 +34,15 @@ extern MeterType CPUMeter;
 
 extern MeterType AllCPUsMeter;
 
+extern MeterType AllCPUs2Meter;
+
+extern MeterType LeftCPUsMeter;
+
+extern MeterType RightCPUsMeter;
+
+extern MeterType LeftCPUs2Meter;
+
+extern MeterType RightCPUs2Meter;
+
+
 #endif

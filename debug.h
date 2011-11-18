@@ -8,7 +8,7 @@
    #define realloc(x,s) DebugMemory_realloc(x, s, __FILE__, __LINE__, #x)
    #define strdup(x) DebugMemory_strdup(x, __FILE__, __LINE__)
    #define free(x) DebugMemory_free(x, __FILE__, __LINE__)
-   #define debug_done() DebugMemory_report(); _nc_free_and_exit()
+   #define debug_done() DebugMemory_report(); _nc_freeall()
 
 #elif defined(DEBUGLITE)
 

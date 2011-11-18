@@ -46,6 +46,11 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
          result = HANDLED;
          break;
       }
+      default:
+      {
+         result = Panel_selectByTyping(super, ch);
+         break;
+      }
    }
    return result;
 }

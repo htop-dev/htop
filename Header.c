@@ -124,8 +124,16 @@ MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side) {
    return meter->mode;
 }
 
-void Header_defaultMeters(Header* this) {
-   Vector_add(this->leftMeters, Meter_new(this->pl, 0, &AllCPUsMeter));
+void Header_defaultMeters(Header* this, int cpuCount) {
+   if (cpuCount > 8) {
+      Vector_add(this->leftMeters, Meter_new(this->pl, 0, &LeftCPUs2Meter));
+      Vector_add(this->rightMeters, Meter_new(this->pl, 0, &RightCPUs2Meter));
+   } else if (cpuCount > 4) {
+      Vector_add(this->leftMeters, Meter_new(this->pl, 0, &LeftCPUsMeter));
+      Vector_add(this->rightMeters, Meter_new(this->pl, 0, &RightCPUsMeter));
+   } else {
+      Vector_add(this->leftMeters, Meter_new(this->pl, 0, &AllCPUsMeter));
+   }
    Vector_add(this->leftMeters, Meter_new(this->pl, 0, &MemoryMeter));
    Vector_add(this->leftMeters, Meter_new(this->pl, 0, &SwapMeter));
    Vector_add(this->rightMeters, Meter_new(this->pl, 0, &TasksMeter));

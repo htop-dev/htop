@@ -117,4 +117,7 @@ void Panel_draw(Panel* this, bool focus);
 
 bool Panel_onKey(Panel* this, int key);
 
+
+HandlerResult Panel_selectByTyping(Panel* this, int ch);
+
 #endif

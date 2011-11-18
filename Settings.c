@@ -55,7 +55,7 @@ static void Settings_readMeterModes(Settings* this, char* line, HeaderSide side)
    String_freeArray(ids);
 }
 
-static bool Settings_read(Settings* this, char* fileName) {
+static bool Settings_read(Settings* this, char* fileName, int cpuCount) {
    // TODO: implement File object and make
    // file I/O object-oriented.
    FILE* fd;
@@ -144,7 +144,7 @@ static bool Settings_read(Settings* this, char* fileName) {
    }
    fclose(fd);
    if (!readMeters) {
-      Header_defaultMeters(this->header);
+      Header_defaultMeters(this->header, cpuCount);
    }
    return true;
 }
@@ -208,7 +208,7 @@ bool Settings_write(Settings* this) {
    return true;
 }
 
-Settings* Settings_new(ProcessList* pl, Header* header) {
+Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
    Settings* this = malloc(sizeof(Settings));
    this->pl = pl;
    this->header = header;
@@ -225,15 +225,15 @@ Settings* Settings_new(ProcessList* pl, Header* header) {
    this->colorScheme = 0;
    this->changed = false;
    this->delay = DEFAULT_DELAY;
-   bool ok = Settings_read(this, this->userSettings);
+   bool ok = Settings_read(this, this->userSettings, cpuCount);
    if (!ok) {
       this->changed = true;
       // TODO: how to get SYSCONFDIR correctly through Autoconf?
       char* systemSettings = String_cat(SYSCONFDIR, "/htoprc");
-      ok = Settings_read(this, systemSettings);
+      ok = Settings_read(this, systemSettings, cpuCount);
       free(systemSettings);
       if (!ok) {
-         Header_defaultMeters(this->header);
+         Header_defaultMeters(this->header, cpuCount);
          pl->hideKernelThreads = true;
          pl->highlightMegabytes = true;
          pl->highlightThreads = false;

@@ -18,6 +18,8 @@ in the source distribution for its full text.
 #include <assert.h>
 
 
+#define swap(a_,x_,y_) do{ void* tmp_ = a_[x_]; a_[x_] = a_[y_]; a_[y_] = tmp_; }while(0)
+
 #ifndef DEFAULT_SIZE
 #define DEFAULT_SIZE -1
 #endif
@@ -45,7 +47,14 @@ int Vector_count(Vector* this);
 
 void Vector_prune(Vector* this);
 
-void Vector_sort(Vector* this);
+// If I were to use only one sorting algorithm for both cases, it would probably be this one:
+/*
+
+*/
+
+void Vector_quickSort(Vector* this);
+
+void Vector_insertionSort(Vector* this);
 
 void Vector_insert(Vector* this, int idx, void* data_);
 
@@ -59,7 +68,15 @@ void Vector_moveDown(Vector* this, int idx);
 
 void Vector_set(Vector* this, int idx, void* data_);
 
+#ifdef DEBUG
+
 extern Object* Vector_get(Vector* this, int idx);
+
+#else
+
+#define Vector_get(v_, idx_) ((v_)->array[idx_])
+
+#endif
 
 extern int Vector_size(Vector* this);
 

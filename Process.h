@@ -197,9 +197,17 @@ void Process_toggleTag(Process* this);
 bool Process_setPriority(Process* this, int priority);
 
 #ifdef HAVE_HWLOC
+
 Affinity* Process_getAffinity(Process* this);
 
 bool Process_setAffinity(Process* this, Affinity* affinity);
+
+#elif HAVE_NATIVE_AFFINITY
+
+Affinity* Process_getAffinity(Process* this);
+
+bool Process_setAffinity(Process* this, Affinity* affinity);
+
 #endif
 
 void Process_sendSignal(Process* this, int sgn);

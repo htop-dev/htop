@@ -60,6 +60,13 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
          result = HANDLED;
          break;
       }
+      default:
+      {
+         result = Panel_selectByTyping(super, ch);
+         if (result == BREAK_LOOP)
+            result = IGNORED;
+         break;
+      }
    }
    if (result == HANDLED)
       ColumnsPanel_update(super);
