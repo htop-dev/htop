@@ -123,7 +123,7 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(15, 0, "   F9 k: kill process/tagged processes      P: sort by CPU%");
    mvaddstr(16, 0, "   ] F7: higher priority (root only)        M: sort by MEM%");
    mvaddstr(17, 0, "   [ F8: lower priority (+ nice)            T: sort by TIME");
-#ifdef HAVE_HWLOC
+#if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
    if (pl->cpuCount > 1)
       mvaddstr(18, 0, "      a: set CPU affinity                   I: invert sort order");
    else
@@ -144,7 +144,7 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(16, 0, "   ] F7"); mvaddstr(16,40, "    M");
    mvaddstr(17, 0, "   [ F8"); mvaddstr(17,40, "    T");
                                mvaddstr(18,40, " F4 I");
-#if HAVE_HWLOC
+#if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
    if (pl->cpuCount > 1)
       mvaddstr(18, 0, "      a:");
 #endif
@@ -773,7 +773,7 @@ int main(int argc, char** argv) {
          refreshTimeout = 0;
          break;
       }
-#if (HAVE_HWLOC || HAVE_NATIVE_AFFINITY)
+#if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
       case 'a':
       {
          if (pl->cpuCount == 1)

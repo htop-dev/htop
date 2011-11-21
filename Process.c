@@ -29,7 +29,7 @@ in the source distribution for its full text.
 #include <sched.h>
 #include <time.h>
 
-#ifdef HAVE_HWLOC
+#ifdef HAVE_LIBHWLOC
 #include <hwloc/linux.h>
 #endif
 
@@ -566,7 +566,7 @@ bool Process_setPriority(Process* this, int priority) {
    return (err == 0);
 }
 
-#ifdef HAVE_HWLOC
+#ifdef HAVE_LIBHWLOC
 
 Affinity* Process_getAffinity(Process* this) {
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();

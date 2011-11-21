@@ -1,9 +1,5 @@
 
-if HAVE_BUNDLED_HWLOC
-SUBDIRS = hwloc-1.2.1
-endif
-
-ACLOCAL_AMFLAGS = -I m4 -I hwloc-1.2.1/config
+ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS = htop
 dist_man_MANS = htop.1
@@ -40,12 +36,6 @@ SUFFIXES = .h
 
 BUILT_SOURCES = $(myhtopheaders)
 htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h debug.h
-
-if HAVE_BUNDLED_HWLOC
-htop_LDADD = $(HWLOC_EMBEDDED_LDADD) $(HWLOC_EMBEDDED_LIBS)
-AM_CFLAGS += $(HWLOC_EMBEDDED_CFLAGS)
-AM_CPPFLAGS += $(HWLOC_EMBEDDED_CPPFLAGS)
-endif
 
 profile:
 	$(MAKE) all CFLAGS="-pg -O2"

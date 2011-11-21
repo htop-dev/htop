@@ -115,7 +115,7 @@ typedef struct ProcessList_ {
    int kernelThreads;
    int runningTasks;
 
-   #ifdef HAVE_HWLOC
+   #ifdef HAVE_LIBHWLOC
    hwloc_topology_t topology;
    bool topologyOk;
    #endif
@@ -195,7 +195,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    fclose(file);
    this->cpuCount = cpus - 1;
 
-#ifdef HAVE_HWLOC
+#ifdef HAVE_LIBHWLOC
    this->topologyOk = false;
    int topoErr = hwloc_topology_init(&this->topology);
    if (topoErr == 0) {

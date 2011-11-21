@@ -32,7 +32,7 @@ in the source distribution for its full text.
 #include <sched.h>
 #include <time.h>
 
-#ifdef HAVE_HWLOC
+#ifdef HAVE_LIBHWLOC
 #include <hwloc/linux.h>
 #endif
 
@@ -196,7 +196,7 @@ void Process_toggleTag(Process* this);
 
 bool Process_setPriority(Process* this, int priority);
 
-#ifdef HAVE_HWLOC
+#ifdef HAVE_LIBHWLOC
 
 Affinity* Process_getAffinity(Process* this);
 

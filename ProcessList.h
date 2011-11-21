@@ -117,7 +117,7 @@ typedef struct ProcessList_ {
    int kernelThreads;
    int runningTasks;
 
-   #ifdef HAVE_HWLOC
+   #ifdef HAVE_LIBHWLOC
    hwloc_topology_t topology;
    bool topologyOk;
    #endif

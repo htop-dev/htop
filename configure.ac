@@ -131,32 +131,12 @@ if test "x$enable_native_affinity" = xyes; then
      [AC_MSG_RESULT([no])])
 fi
 
-##### hwloc
-AC_ARG_ENABLE(system-hwloc, [AC_HELP_STRING([--enable-system-hwloc], [use the copy of hwloc from your system and not the one bundled with the htop sources. (hwloc required)])], ,enable_system_hwloc="no")
-enable_xml=no
-AC_ARG_ENABLE(hwloc, [AC_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, test "x$enable_native_affinity" = xno && enable_hwloc="yes")
+AC_ARG_ENABLE(hwloc, [AC_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
 if test "x$enable_hwloc" = xyes
 then
-   if test "x$enable_system_hwloc" = xyes
-   then
-      AC_CHECK_LIB([hwloc], [hwloc_linux_get_tid_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
-      AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
-
-   else
-      HWLOC_SETUP_CORE([hwloc-1.2.1], [hwloc_bundled=yes], [hwloc_bundled=no])
-   fi
+   AC_CHECK_LIB([hwloc], [hwloc_linux_get_tid_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
+   AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
 fi
-HWLOC_DO_AM_CONDITIONALS
-AM_CONDITIONAL([HAVE_HWLOC], [test "x$hwloc_bundled" = "xyes" -o "x$hwloc_system" = "xyes"])
-AM_CONDITIONAL([HAVE_BUNDLED_HWLOC], [test "x$hwloc_bundled" = "xyes"])
-if test "x$hwloc_system" = "xyes"; then
-   AC_DEFINE([HAVE_SYSTEM_HWLOC], 1, [Have system hwloc])
-   AC_DEFINE([HAVE_HWLOC], 1, [Have hwloc])
-elif test "x$hwloc_bundled" = "xyes"; then
-   AC_DEFINE([HAVE_BUNDLED_HWLOC], 1, [Use bundled hwloc])
-   AC_DEFINE([HAVE_HWLOC], 1, [Have hwloc])
-fi
-#####
 
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
