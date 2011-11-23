@@ -108,13 +108,13 @@ if test ! -z "$missing_headers"; then
   AC_MSG_ERROR([missing headers: $missing_headers])
 fi
 
-if test "$cross_compiling" = "no"; then
+if test "x$cross_compiling" = xno; then
 AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
 AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
 fi
 
 AC_ARG_ENABLE(native_affinity, [AC_HELP_STRING([--enable-native-affinity], [enable native sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_native_affinity="yes")
-if test "x$enable_native_affinity" = xyes; then
+if test "x$enable_native_affinity" = xyes -a "x$cross_compiling" = xno; then
    AC_MSG_CHECKING([for usable sched_setaffinity])
    AC_RUN_IFELSE([
      AC_LANG_PROGRAM([[
@@ -126,9 +126,12 @@ if test "x$enable_native_affinity" = xyes; then
        sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
        if (errno == ENOSYS) return 1;
        ]])],
-     [AC_DEFINE(HAVE_NATIVE_AFFINITY, 1, [Define if native sched_setaffinity and sched_getaffinity are to be used.])
-      AC_MSG_RESULT([yes])],
-     [AC_MSG_RESULT([no])])
+     [AC_MSG_RESULT([yes])],
+     [enable_native_affinity=no
+      AC_MSG_RESULT([no])])
+fi
+if test "x$enable_native_affinity" = xyes; then
+   AC_DEFINE(HAVE_NATIVE_AFFINITY, 1, [Define if native sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
 AC_ARG_ENABLE(hwloc, [AC_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
