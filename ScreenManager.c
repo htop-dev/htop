@@ -31,13 +31,14 @@ typedef struct ScreenManager_ {
    int x2;
    int y2;
    Orientation orientation;
-   Vector* items;
+   Vector* panels;
    Vector* fuBars;
-   int itemCount;
+   int panelCount;
    const FunctionBar* fuBar;
    const Header* header;
    time_t lastScan;
    bool owner;
+   bool allowFocusChange;
 } ScreenManager;
 
 }*/
@@ -51,29 +52,30 @@ ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation ori
    this->y2 = y2;
    this->fuBar = NULL;
    this->orientation = orientation;
-   this->items = Vector_new(PANEL_CLASS, owner, DEFAULT_SIZE, NULL);
+   this->panels = Vector_new(PANEL_CLASS, owner, DEFAULT_SIZE, NULL);
    this->fuBars = Vector_new(FUNCTIONBAR_CLASS, true, DEFAULT_SIZE, NULL);
-   this->itemCount = 0;
+   this->panelCount = 0;
    this->header = header;
    this->owner = owner;
+   this->allowFocusChange = true;
    return this;
 }
 
 void ScreenManager_delete(ScreenManager* this) {
-   Vector_delete(this->items);
+   Vector_delete(this->panels);
    Vector_delete(this->fuBars);
    free(this);
 }
 
 inline int ScreenManager_size(ScreenManager* this) {
-   return this->itemCount;
+   return this->panelCount;
 }
 
 void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int size) {
    if (this->orientation == HORIZONTAL) {
       int lastX = 0;
-      if (this->itemCount > 0) {
-         Panel* last = (Panel*) Vector_get(this->items, this->itemCount - 1);
+      if (this->panelCount > 0) {
+         Panel* last = (Panel*) Vector_get(this->panels, this->panelCount - 1);
          lastX = last->x + last->w + 1;
       }
       if (size > 0) {
@@ -84,22 +86,22 @@ void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int
       Panel_move(item, lastX, this->y1);
    }
    // TODO: VERTICAL
-   Vector_add(this->items, item);
+   Vector_add(this->panels, item);
    if (fuBar)
       Vector_add(this->fuBars, fuBar);
    else
       Vector_add(this->fuBars, FunctionBar_new(NULL, NULL, NULL));
    if (!this->fuBar && fuBar) this->fuBar = fuBar;
    item->needsRedraw = true;
-   this->itemCount++;
+   this->panelCount++;
 }
 
 Panel* ScreenManager_remove(ScreenManager* this, int idx) {
-   assert(this->itemCount > idx);
-   Panel* panel = (Panel*) Vector_remove(this->items, idx);
+   assert(this->panelCount > idx);
+   Panel* panel = (Panel*) Vector_remove(this->panels, idx);
    Vector_remove(this->fuBars, idx);
    this->fuBar = NULL;
-   this->itemCount--;
+   this->panelCount--;
    return panel;
 }
 
@@ -108,15 +110,15 @@ void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
    this->y1 = y1;
    this->x2 = x2;
    this->y2 = y2;
-   int items = this->itemCount;
+   int panels = this->panelCount;
    int lastX = 0;
-   for (int i = 0; i < items - 1; i++) {
-      Panel* panel = (Panel*) Vector_get(this->items, i);
+   for (int i = 0; i < panels - 1; i++) {
+      Panel* panel = (Panel*) Vector_get(this->panels, i);
       Panel_resize(panel, panel->w, LINES-y1+y2);
       Panel_move(panel, lastX, y1);
       lastX = panel->x + panel->w + 1;
    }
-   Panel* panel = (Panel*) Vector_get(this->items, items-1);
+   Panel* panel = (Panel*) Vector_get(this->panels, panels-1);
    Panel_resize(panel, COLS-x1+x2-lastX, LINES-y1+y2);
    Panel_move(panel, lastX, y1);
 }
@@ -125,7 +127,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool quit = false;
    int focus = 0;
    
-   Panel* panelFocus = (Panel*) Vector_get(this->items, focus);
+   Panel* panelFocus = (Panel*) Vector_get(this->panels, focus);
    if (this->fuBar)
       FunctionBar_draw(this->fuBar, NULL);
    
@@ -133,19 +135,21 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
 
    int ch = 0;
    while (!quit) {
-      int items = this->itemCount;
+      int panels = this->panelCount;
       if (this->header) {
          time_t now = time(NULL);
          if (now > this->lastScan) {
             ProcessList_scan(this->header->pl);
+            ProcessList_sort(this->header->pl);
             this->lastScan = now;
          }
          Header_draw(this->header);
+         ProcessList_rebuildPanel(this->header->pl, false, false, false, false, false, NULL);
       }
-      for (int i = 0; i < items; i++) {
-         Panel* panel = (Panel*) Vector_get(this->items, i);
+      for (int i = 0; i < panels; i++) {
+         Panel* panel = (Panel*) Vector_get(this->panels, i);
          Panel_draw(panel, i == focus);
-         if (i < items) {
+         if (i < panels) {
             if (this->orientation == HORIZONTAL) {
                mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
             }
@@ -166,8 +170,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             if (mevent.y == LINES - 1) {
                ch = FunctionBar_synthesizeEvent(this->fuBar, mevent.x);
             } else {
-               for (int i = 0; i < this->itemCount; i++) {
-                  Panel* panel = (Panel*) Vector_get(this->items, i);
+               for (int i = 0; i < this->panelCount; i++) {
+                  Panel* panel = (Panel*) Vector_get(this->panels, i);
                   if (mevent.x > panel->x && mevent.x <= panel->x+panel->w &&
                      mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
                      focus = i;
@@ -200,21 +204,25 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
       case KEY_LEFT:
       case KEY_CTRLB:
+         if (!this->allowFocusChange)
+            break;
          tryLeft:
          if (focus > 0)
             focus--;
-         panelFocus = (Panel*) Vector_get(this->items, focus);
+         panelFocus = (Panel*) Vector_get(this->panels, focus);
          if (Panel_size(panelFocus) == 0 && focus > 0)
             goto tryLeft;
          break;
       case KEY_RIGHT:
       case KEY_CTRLF:
       case 9:
+         if (!this->allowFocusChange)
+            break;
          tryRight:
-         if (focus < this->itemCount - 1)
+         if (focus < this->panelCount - 1)
             focus++;
-         panelFocus = (Panel*) Vector_get(this->items, focus);
-         if (Panel_size(panelFocus) == 0 && focus < this->itemCount - 1)
+         panelFocus = (Panel*) Vector_get(this->panels, focus);
+         if (Panel_size(panelFocus) == 0 && focus < this->panelCount - 1)
             goto tryRight;
          break;
       case KEY_F(10):

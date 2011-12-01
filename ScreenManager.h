@@ -33,13 +33,14 @@ typedef struct ScreenManager_ {
    int x2;
    int y2;
    Orientation orientation;
-   Vector* items;
+   Vector* panels;
    Vector* fuBars;
-   int itemCount;
+   int panelCount;
    const FunctionBar* fuBar;
    const Header* header;
    time_t lastScan;
    bool owner;
+   bool allowFocusChange;
 } ScreenManager;
 
 

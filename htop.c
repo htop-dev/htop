@@ -199,6 +199,7 @@ static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const cha
    if (!list->eventHandler)
       Panel_setEventHandler(list, Panel_selectByTyping);
    ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, header, false);
+   scr->allowFocusChange = false;
    ScreenManager_add(scr, list, FunctionBar_new(keyLabels, fuKeys, fuEvents), x - 1);
    ScreenManager_add(scr, panel, NULL, -1);
    Panel* panelFocus;
@@ -331,7 +332,6 @@ int main(int argc, char** argv) {
       exit(1);
    }
 
-   Panel* panel;
    int quit = 0;
    int refreshTimeout = 0;
    int resetRefreshTimeout = 5;
@@ -384,10 +384,11 @@ int main(int argc, char** argv) {
       break;
    }
 
-   
    CRT_init(settings->delay, settings->colorScheme);
+
+   Panel* panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, PROCESS_CLASS, false, NULL);
+   ProcessList_setPanel(pl, panel);
    
-   panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, PROCESS_CLASS, false, NULL);
    if (sortKey > 0) {
       pl->sortKey = sortKey;
       pl->treeView = false;
@@ -439,12 +440,6 @@ int main(int argc, char** argv) {
       if (recalculate)
          oldTime = newTime;
       if (doRefresh) {
-
-         int currPos = Panel_getSelectedIndex(panel);
-         pid_t currPid = 0;
-         int currScrollV = panel->scrollV;
-         if (follow)
-            currPid = ProcessList_get(pl, currPos)->pid;
          if (recalculate || doRecalculate) {
             ProcessList_scan(pl);
             doRecalculate = false;
@@ -453,27 +448,7 @@ int main(int argc, char** argv) {
             ProcessList_sort(pl);
             refreshTimeout = 1;
          }
-         Panel_prune(panel);
-         int size = ProcessList_size(pl);
-         int idx = 0;
-         for (int i = 0; i < size; i++) {
-            bool hidden = false;
-            Process* p = ProcessList_get(pl, i);
-
-            if ( (!p->show)
-               || (userOnly && (p->st_uid != userId))
-               || (filtering && !(String_contains_i(p->comm, incFilter.buffer))) )
-               hidden = true;
-
-            if (!hidden) {
-               Panel_set(panel, idx, (Object*)p);
-               if ((!follow && idx == currPos) || (follow && p->pid == currPid)) {
-                  Panel_setSelected(panel, idx);
-                  panel->scrollV = currScrollV;
-               }
-               idx++;
-            }
-         }
+         ProcessList_rebuildPanel(pl, true, follow, userOnly, userId, filtering, incFilter.buffer);
       }
       doRefresh = true;
       
@@ -746,6 +721,19 @@ int main(int argc, char** argv) {
          if (!killPanel) {
             killPanel = (Panel*) SignalsPanel_new(0, 0, 0, 0);
          }
+         bool anyTagged = false;
+         pid_t selectedPid;
+         for (int i = 0; i < Panel_size(panel); i++) {
+            Process* p = (Process*) Panel_get(panel, i);
+            if (p->tag) {
+               anyTagged = true;
+               break;
+            }
+         }
+         if (!anyTagged) {
+            Process* p = (Process*) Panel_getSelected(panel);
+            selectedPid = p->pid;
+         }
          SignalsPanel_reset((SignalsPanel*) killPanel);
          const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
          ListItem* sgn = (ListItem*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
@@ -754,17 +742,18 @@ int main(int argc, char** argv) {
                Panel_setHeader(panel, "Sending...");
                Panel_draw(panel, true);
                refresh();
-               bool anyTagged = false;
-               for (int i = 0; i < Panel_size(panel); i++) {
-                  Process* p = (Process*) Panel_get(panel, i);
-                  if (p->tag) {
-                     Process_sendSignal(p, sgn->key);
-                     anyTagged = true;
+               if (anyTagged) {
+                  for (int i = 0; i < Panel_size(panel); i++) {
+                     Process* p = (Process*) Panel_get(panel, i);
+                     if (p->tag) {
+                        Process_sendSignal(p, sgn->key);
+                        anyTagged = true;
+                     }
                   }
-               }
-               if (!anyTagged) {
+               } else {
                   Process* p = (Process*) Panel_getSelected(panel);
-                  Process_sendSignal(p, sgn->key);
+                  if (p->pid == selectedPid)
+                     Process_sendSignal(p, sgn->key);
                }
                napms(500);
             }

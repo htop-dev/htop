@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 #include "Hashtable.h"
 #include "String.h"
+#include "Panel.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -108,6 +109,13 @@ typedef struct ProcessList_ {
    Vector* processes2;
    Hashtable* processTable;
    UsersTable* usersTable;
+
+   Panel* panel;
+   bool follow;
+   bool userOnly;
+   uid_t userId;
+   bool filtering;
+   const char* incFilter;
 
    int cpuCount;
    int totalTasks;
@@ -241,6 +249,10 @@ void ProcessList_delete(ProcessList* this) {
    free(this->cpus);
    free(this->fields);
    free(this);
+}
+
+void ProcessList_setPanel(ProcessList* this, Panel* panel) {
+   this->panel = panel;
 }
 
 void ProcessList_invertSortOrder(ProcessList* this) {
@@ -886,5 +898,49 @@ void ProcessList_expandTree(ProcessList* this) {
    for (int i = 0; i < size; i++) {
       Process* process = (Process*) Vector_get(this->processes, i);
       process->showChildren = true;
+   }
+}
+
+void ProcessList_rebuildPanel(ProcessList* this, bool flags, bool follow, bool userOnly, uid_t userId, bool filtering, const char* incFilter) {
+   if (!flags) {
+      follow = this->follow;
+      userOnly = this->userOnly;
+      userId = this->userId;
+      filtering = this->filtering;
+      incFilter = this->incFilter;
+   } else {
+      this->follow = follow;
+      this->userOnly = userOnly;
+      this->userId = userId;
+      this->filtering = filtering;
+      this->incFilter = incFilter;
+   }
+
+   int currPos = Panel_getSelectedIndex(this->panel);
+   pid_t currPid = 0;
+   int currScrollV = this->panel->scrollV;
+   if (follow)
+      currPid = ProcessList_get(this, currPos)->pid;
+
+   Panel_prune(this->panel);
+   int size = ProcessList_size(this);
+   int idx = 0;
+   for (int i = 0; i < size; i++) {
+      bool hidden = false;
+      Process* p = ProcessList_get(this, i);
+
+      if ( (!p->show)
+         || (userOnly && (p->st_uid != userId))
+         || (filtering && !(String_contains_i(p->comm, incFilter))) )
+         hidden = true;
+
+      if (!hidden) {
+         Panel_set(this->panel, idx, (Object*)p);
+         if ((!follow && idx == currPos) || (follow && p->pid == currPid)) {
+            Panel_setSelected(this->panel, idx);
+            this->panel->scrollV = currScrollV;
+         }
+         idx++;
+      }
    }
 }

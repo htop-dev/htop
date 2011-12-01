@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 #include "Hashtable.h"
 #include "String.h"
+#include "Panel.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -111,6 +112,13 @@ typedef struct ProcessList_ {
    Hashtable* processTable;
    UsersTable* usersTable;
 
+   Panel* panel;
+   bool follow;
+   bool userOnly;
+   uid_t userId;
+   bool filtering;
+   const char* incFilter;
+
    int cpuCount;
    int totalTasks;
    int userlandThreads;
@@ -161,6 +169,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable);
 
 void ProcessList_delete(ProcessList* this);
 
+void ProcessList_setPanel(ProcessList* this, Panel* panel);
+
 void ProcessList_invertSortOrder(ProcessList* this);
 
 void ProcessList_printHeader(ProcessList* this, RichString* header);
@@ -193,5 +203,7 @@ void ProcessList_scan(ProcessList* this);
 ProcessField ProcessList_keyAt(ProcessList* this, int at);
 
 void ProcessList_expandTree(ProcessList* this);
+
+void ProcessList_rebuildPanel(ProcessList* this, bool flags, bool follow, bool userOnly, uid_t userId, bool filtering, const char* incFilter);
 
 #endif
