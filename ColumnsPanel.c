@@ -62,7 +62,8 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       }
       default:
       {
-         result = Panel_selectByTyping(super, ch);
+         if (isalpha(ch))
+            result = Panel_selectByTyping(super, ch);
          if (result == BREAK_LOOP)
             result = IGNORED;
          break;

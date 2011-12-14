@@ -48,7 +48,8 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
       }
       default:
       {
-         result = Panel_selectByTyping(super, ch);
+         if (isalpha(ch))
+            result = Panel_selectByTyping(super, ch);
          break;
       }
    }
