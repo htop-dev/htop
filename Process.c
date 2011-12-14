@@ -312,19 +312,24 @@ static void Process_printTime(RichString* str, unsigned long long t) {
    double realTime = t * jiffytime;
    int iRealTime = (int) realTime;
 
-   int hours = iRealTime / 3600;
+   unsigned long long hours = iRealTime / 3600;
    int minutes = (iRealTime / 60) % 60;
    int seconds = iRealTime % 60;
    int hundredths = (realTime - iRealTime) * 100;
    char buffer[11];
-   if (hours) {
-      snprintf(buffer, 10, "%2dh", hours);
+   if (hours >= 100) {
+      snprintf(buffer, 10, "%7lluh ", hours);
       RichString_append(str, CRT_colors[LARGE_NUMBER], buffer);
-      snprintf(buffer, 10, "%02d:%02d ", minutes, seconds);
    } else {
-      snprintf(buffer, 10, "%2d:%02d.%02d ", minutes, seconds, hundredths);
+      if (hours) {
+         snprintf(buffer, 10, "%2lluh", hours);
+         RichString_append(str, CRT_colors[LARGE_NUMBER], buffer);
+         snprintf(buffer, 10, "%02d:%02d ", minutes, seconds);
+      } else {
+         snprintf(buffer, 10, "%2d:%02d.%02d ", minutes, seconds, hundredths);
+      }
+      RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
    }
-   RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
 }
 
 static inline void Process_writeCommand(Process* this, int attr, int baseattr, RichString* str) {
