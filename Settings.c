@@ -217,7 +217,7 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
    home = getenv("HOME_ETC");
    if (!home) home = getenv("HOME");
    if (!home) home = "";
-   rcfile = getenv("HOMERC");
+   rcfile = getenv("HTOPRC");
    if (!rcfile)
       this->userSettings = String_cat(home, "/.htoprc");
    else
