@@ -617,7 +617,7 @@ static bool ProcessList_readCmdlineFile(Process* process, const char* dirname, c
    command[amtRead] = '\0';
    fclose(file);
    free(process->comm);
-   process->comm = String_copy(command);
+   process->comm = strdup(command);
    return true;
 }
 
@@ -710,11 +710,11 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
 
       if (process->state == 'Z') {
          free(process->comm);
-         process->comm = String_copy(command);
+         process->comm = strdup(command);
       } else if (Process_isThread(process)) {
          if (this->showThreadNames || Process_isKernelThread(process) || process->state == 'Z') {
             free(process->comm);
-            process->comm = String_copy(command);
+            process->comm = strdup(command);
          } else if (this->showingThreadNames) {
             if (! ProcessList_readCmdlineFile(process, dirname, name))
                goto errorReadingProcess;

@@ -1,4 +1,5 @@
 
+#include "config.h"
 #include "CRT.h"
 #include "ColorsPanel.h"
 
@@ -88,7 +89,7 @@ ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
 
    Panel_setHeader(super, "Colors");
    for (int i = 0; ColorSchemes[i] != NULL; i++) {
-      Panel_add(super, (Object*) CheckItem_new(String_copy(ColorSchemes[i]), NULL, false));
+      Panel_add(super, (Object*) CheckItem_new(strdup(ColorSchemes[i]), NULL, false));
    }
    CheckItem_set((CheckItem*)Panel_get(super, settings->colorScheme), true);
    return this;

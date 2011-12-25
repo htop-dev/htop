@@ -38,7 +38,7 @@ Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity) {
       } else {
          mode = false;
       }
-      Panel_add(this, (Object*) CheckItem_new(String_copy(number), NULL, mode));         
+      Panel_add(this, (Object*) CheckItem_new(strdup(number), NULL, mode));         
    }
    return this;
 }

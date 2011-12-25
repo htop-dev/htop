@@ -9,7 +9,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define _GNU_SOURCE
+#include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>

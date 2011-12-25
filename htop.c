@@ -5,7 +5,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define _GNU_SOURCE
+#include "config.h"
+
 #include <unistd.h>
 #include <math.h>
 #include <sys/param.h>
@@ -29,7 +30,6 @@ in the source distribution for its full text.
 #include "OpenFilesScreen.h"
 #include "AffinityPanel.h"
 
-#include "config.h"
 #include "debug.h"
 
 //#link m

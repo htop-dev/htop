@@ -9,10 +9,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Hashtable.h"
-#include "String.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <strings.h>
 #include <pwd.h>
 #include <sys/types.h>

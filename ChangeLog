@@ -1,6 +1,9 @@
 
 What's new in version 1.0.1
 
+* Move .htoprc to XDG-compliant path ~/.config/htop/htoprc,
+  respecting $XDG_CONFIG_HOME 
+  (thanks to Hadzhimurad Ustarkhan for the suggestion.)
 * Safer behavior on the kill screen, to make it harder to kill the wrong process.
 * BUGFIX: keep main panel up-to-date when running the screen manager,
   to fix crash when processes die while on the F9/Kill screen.

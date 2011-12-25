@@ -5,11 +5,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "UsersTable.h"
 #include "Hashtable.h"
-#include "String.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <strings.h>
 #include <pwd.h>
 #include <sys/types.h>
@@ -40,7 +41,7 @@ char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
    if (name == NULL) {
       struct passwd* userData = getpwuid(uid);
       if (userData != NULL) {
-         name = String_copy(userData->pw_name);
+         name = strdup(userData->pw_name);
          Hashtable_put(this->users, uid, name);
       }
    }

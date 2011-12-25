@@ -49,7 +49,7 @@ ListItem* ListItem_new(const char* value, int key) {
    Object_setClass(this, LISTITEM_CLASS);
    ((Object*)this)->display = ListItem_display;
    ((Object*)this)->delete = ListItem_delete;
-   this->value = String_copy(value);
+   this->value = strdup(value);
    this->key = key;
    return this;
 }

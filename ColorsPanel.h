@@ -3,6 +3,7 @@
 #ifndef HEADER_ColorsPanel
 #define HEADER_ColorsPanel
 
+#include "config.h"
 #include "CRT.h"
 
 #include "Panel.h"

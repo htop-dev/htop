@@ -9,6 +9,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
@@ -17,8 +18,6 @@ in the source distribution for its full text.
 #include "debug.h"
 
 #define String_startsWith(s, match) (strstr((s), (match)) == (s))
-
-extern char* String_copy(const char* orig);
 
 char* String_cat(const char* s1, const char* s2);
 
