@@ -5,6 +5,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Settings.h"
 #include "String.h"
 #include "ProcessList.h"
@@ -56,13 +57,10 @@ static void Settings_readMeterModes(Settings* this, char* line, HeaderSide side)
 }
 
 static bool Settings_read(Settings* this, char* fileName, int cpuCount) {
-   // TODO: implement File object and make
-   // file I/O object-oriented.
-   FILE* fd;
-   fd = fopen(fileName, "r");
-   if (fd == NULL) {
+   FILE* fd = fopen(fileName, "r");
+   if (!fd)
       return false;
-   }
+   
    const int maxLine = 2048;
    char buffer[maxLine];
    bool readMeters = false;
@@ -212,21 +210,47 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
    Settings* this = malloc(sizeof(Settings));
    this->pl = pl;
    this->header = header;
-   const char* home;
-   char* rcfile;
-   home = getenv("HOME_ETC");
-   if (!home) home = getenv("HOME");
-   if (!home) home = "";
-   rcfile = getenv("HTOPRC");
-   if (!rcfile)
-      this->userSettings = String_cat(home, "/.htoprc");
-   else
-      this->userSettings = String_copy(rcfile);
+   char* legacyDotfile = NULL;
+   char* rcfile = getenv("HTOPRC");
+   if (rcfile) {
+      this->userSettings = strdup(rcfile);
+   } else {
+      const char* home = getenv("HOME");
+      if (!home) home = "";
+      const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
+      char* configDir = NULL;
+      char* htopDir = NULL;
+      if (xdgConfigHome) {
+         this->userSettings = String_cat(xdgConfigHome, "/htop/htoprc");
+         configDir = strdup(xdgConfigHome);
+         htopDir = String_cat(xdgConfigHome, "/htop");
+      } else {
+         this->userSettings = String_cat(home, "/.config/htop/htoprc");
+         configDir = String_cat(home, "/.config");
+         htopDir = String_cat(home, "/.config/htop");
+      }
+      legacyDotfile = String_cat(home, "/.htoprc");
+      mkdir(configDir, 0700);
+      mkdir(htopDir, 0700);
+      free(htopDir);
+      free(configDir);
+      if (access(legacyDotfile, R_OK) != 0) {
+         free(legacyDotfile);
+         legacyDotfile = NULL;
+      }
+   }
    this->colorScheme = 0;
    this->changed = false;
    this->delay = DEFAULT_DELAY;
-   bool ok = Settings_read(this, this->userSettings, cpuCount);
-   if (!ok) {
+   bool ok = Settings_read(this, legacyDotfile ? legacyDotfile : this->userSettings, cpuCount);
+   if (ok) {
+      if (legacyDotfile) {
+         // Transition to new location and delete old configuration file
+         if (Settings_write(this))
+            unlink(legacyDotfile);
+         free(legacyDotfile);
+      }
+   } else {
       this->changed = true;
       // TODO: how to get SYSCONFDIR correctly through Autoconf?
       char* systemSettings = String_cat(SYSCONFDIR, "/htoprc");
