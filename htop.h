@@ -9,33 +9,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
-
-#include <unistd.h>
-#include <math.h>
-#include <sys/param.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <locale.h>
-#include <getopt.h>
-
-#include "ProcessList.h"
-#include "CRT.h"
-#include "Panel.h"
-#include "UsersTable.h"
-#include "RichString.h"
-#include "Settings.h"
-#include "ScreenManager.h"
-#include "FunctionBar.h"
-#include "ListItem.h"
-#include "CategoriesPanel.h"
-#include "SignalsPanel.h"
-#include "TraceScreen.h"
-#include "OpenFilesScreen.h"
-#include "AffinityPanel.h"
-
-#include "debug.h"
-
 //#link m
 
 #define INCSEARCH_MAX 40

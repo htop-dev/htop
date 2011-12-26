@@ -5,23 +5,27 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Object.h"
 #include "Panel.h"
-#include "Vector.h"
+
 #include "CRT.h"
 #include "RichString.h"
 #include "ListItem.h"
+#include "String.h"
+#include "debug.h"
 
 #include <math.h>
 #include <stdbool.h>
-
-#include "debug.h"
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 #include <assert.h>
-
 #include <curses.h>
+
 //#link curses
 
 /*{
+#include "Object.h"
+#include "Vector.h"
 
 typedef struct Panel_ Panel;
 

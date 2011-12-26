@@ -1,16 +1,21 @@
 /*
-htop
+htop - LoadAverageMeter.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "LoadAverageMeter.h"
-#include "Meter.h"
+
+#include "CRT.h"
+#include "debug.h"
 
 #include <curses.h>
+#include <assert.h>
 
-#include "debug.h"
+/*{
+#include "Meter.h"
+}*/
 
 int LoadAverageMeter_attributes[] = {
    LOAD_AVERAGE_FIFTEEN, LOAD_AVERAGE_FIVE, LOAD_AVERAGE_ONE

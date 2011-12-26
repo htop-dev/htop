@@ -1,17 +1,20 @@
 /*
-htop
+htop - CheckItem.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "CheckItem.h"
-#include "Object.h"
-#include "CRT.h"
 
+#include "CRT.h"
 #include "debug.h"
 
+#include <assert.h>
+#include <stdlib.h>
+
 /*{
+#include "Object.h"
 
 typedef struct CheckItem_ {
    Object super;

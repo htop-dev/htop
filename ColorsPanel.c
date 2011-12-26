@@ -1,15 +1,19 @@
+/*
+htop - ColorsPanel.c
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
-#include "config.h"
-#include "CRT.h"
 #include "ColorsPanel.h"
 
-#include "Panel.h"
+#include "CRT.h"
 #include "CheckItem.h"
-#include "Settings.h"
-#include "ScreenManager.h"
-
 #include "debug.h"
+
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 // TO ADD A NEW SCHEME:
 // * Increment the size of bool check in ColorsPanel.h
@@ -18,6 +22,9 @@
 // * Add the colors in CRT_setColors
 
 /*{
+#include "Panel.h"
+#include "Settings.h"
+#include "ScreenManager.h"
 
 typedef struct ColorsPanel_ {
    Panel super;

@@ -1,18 +1,21 @@
 /*
-htop
+htop - UptimeMeter.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "UptimeMeter.h"
-#include "Meter.h"
 
 #include "ProcessList.h"
-
 #include "CRT.h"
-
 #include "debug.h"
+
+#include <math.h>
+
+/*{
+#include "Meter.h"
+}*/
 
 int UptimeMeter_attributes[] = {
    UPTIME

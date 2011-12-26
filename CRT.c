@@ -7,18 +7,16 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 
+#include "config.h"
+#include "String.h"
+#include "debug.h"
+
 #include <curses.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
-
-#include "String.h"
-
-#include "config.h"
-#include "debug.h"
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
@@ -40,9 +38,8 @@ in the source distribution for its full text.
 
 //#link curses
 
-bool CRT_hasColors;
-
 /*{
+#include <stdbool.h>
 
 typedef enum ColorElements_ {
    RESET_COLOR,
@@ -111,6 +108,8 @@ typedef enum ColorElements_ {
 }*/
 
 // TODO: centralize these in Settings.
+
+static bool CRT_hasColors;
 
 int CRT_delay = 0;
 

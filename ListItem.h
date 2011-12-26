@@ -9,13 +9,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "String.h"
 #include "Object.h"
-#include "RichString.h"
-#include <string.h>
-
-#include "debug.h"
-
 
 typedef struct ListItem_ {
    Object super;

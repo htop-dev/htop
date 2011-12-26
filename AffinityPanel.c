@@ -1,11 +1,24 @@
+/*
+htop - AffinityPanel.c
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
-#include "ProcessList.h"
 #include "AffinityPanel.h"
-#include "Panel.h"
-#include "CheckItem.h"
 
+#include "CheckItem.h"
 #include "debug.h"
+
 #include <assert.h>
+#include <string.h>
+
+/*{
+#include "Panel.h"
+#include "Affinity.h"
+#include "ProcessList.h"
+#include "ListItem.h"
+}*/
 
 static HandlerResult AffinityPanel_eventHandler(Panel* this, int ch) {
    CheckItem* selected = (CheckItem*) Panel_getSelected(this);

@@ -1,14 +1,21 @@
+/*
+htop - MetersPanel.c
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "MetersPanel.h"
 
-#include "Panel.h"
-#include "Settings.h"
-#include "ScreenManager.h"
-
 #include "debug.h"
+
+#include <stdlib.h>
 #include <assert.h>
 
 /*{
+#include "Panel.h"
+#include "Settings.h"
+#include "ScreenManager.h"
 
 typedef struct MetersPanel_ {
    Panel super;

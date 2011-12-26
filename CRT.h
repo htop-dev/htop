@@ -9,19 +9,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
-#include <curses.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <stdbool.h>
 #ifdef HAVE_EXECINFO_H
-#include <execinfo.h>
 #endif
-
-#include "String.h"
-
-#include "config.h"
-#include "debug.h"
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
@@ -43,8 +32,7 @@ in the source distribution for its full text.
 
 //#link curses
 
-bool CRT_hasColors;
-
+#include <stdbool.h>
 
 typedef enum ColorElements_ {
    RESET_COLOR,

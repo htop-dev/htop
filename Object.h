@@ -3,20 +3,13 @@
 #ifndef HEADER_Object
 #define HEADER_Object
 /*
-htop
+htop - Object.h
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "RichString.h"
-#include "CRT.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-
-#include "debug.h"
-
 
 #ifndef DEBUG
 #define Object_setClass(obj, class)

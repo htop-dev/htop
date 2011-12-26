@@ -9,12 +9,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "ProcessList.h"
 #include "Meter.h"
-
-#include "debug.h"
-#include <assert.h>
-#include <time.h>
-
 
 typedef enum HeaderSide_ {
    LEFT_HEADER,

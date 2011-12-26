@@ -6,13 +6,28 @@ in the source distribution for its full text.
 */
 
 #include "Header.h"
-#include "Meter.h"
 
+#include "CRT.h"
+#include "CPUMeter.h"
+#include "MemoryMeter.h"
+#include "SwapMeter.h"
+#include "TasksMeter.h"
+#include "LoadAverageMeter.h"
+#include "UptimeMeter.h"
+#include "BatteryMeter.h"
+#include "ClockMeter.h"
+#include "HostnameMeter.h"
+#include "String.h"
 #include "debug.h"
+
 #include <assert.h>
 #include <time.h>
+#include <string.h>
+#include <stdlib.h>
 
 /*{
+#include "ProcessList.h"
+#include "Meter.h"
 
 typedef enum HeaderSide_ {
    LEFT_HEADER,

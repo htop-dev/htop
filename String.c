@@ -1,18 +1,19 @@
 /*
-htop
+htop - String.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
 #include "String.h"
+
+#include "config.h"
+#include "debug.h"
+
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#include "debug.h"
 
 /*{
 #define String_startsWith(s, match) (strstr((s), (match)) == (s))

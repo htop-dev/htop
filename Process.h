@@ -9,31 +9,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
-#include "Object.h"
-#include "CRT.h"
-#include "String.h"
-#include "RichString.h"
-#include "Affinity.h"
-
-#include "debug.h"
-
-#include <stdio.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <signal.h>
-#include <string.h>
-#include <stdbool.h>
-#include <pwd.h>
-#include <sched.h>
-#include <time.h>
-
 #ifdef HAVE_LIBHWLOC
-#include <hwloc/linux.h>
 #endif
 
 // This works only with glibc 2.1+. On earlier versions
@@ -43,6 +19,9 @@ in the source distribution for its full text.
 #endif
 #define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
 
+#include "Object.h"
+#include "Affinity.h"
+#include <sys/types.h>
 
 #ifndef Process_isKernelThread
 #define Process_isKernelThread(_process) (_process->pgrp == 0)

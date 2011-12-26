@@ -5,17 +5,23 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
 #include "Settings.h"
-#include "String.h"
-#include "ProcessList.h"
-#include "Header.h"
 
+#include "String.h"
+#include "Vector.h"
 #include "debug.h"
+
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #define DEFAULT_DELAY 15
 
 /*{
+#include "ProcessList.h"
+#include "Header.h"
+#include <stdbool.h>
 
 typedef struct Settings_ {
    char* userSettings;

@@ -1,5 +1,5 @@
 /*
-htop
+htop - Hashtable.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
@@ -7,13 +7,14 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 
-#include <stdlib.h>
-#include <stdbool.h>
-#include <assert.h>
-
 #include "debug.h"
 
+#include <stdlib.h>
+#include <assert.h>
+
 /*{
+#include <stdbool.h>
+
 typedef struct Hashtable_ Hashtable;
 
 typedef void(*Hashtable_PairFunction)(int, void*, void*);

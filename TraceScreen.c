@@ -5,23 +5,26 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "TraceScreen.h"
+
+#include "CRT.h"
+#include "ProcessList.h"
+#include "ListItem.h"
+
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "TraceScreen.h"
-#include "ProcessList.h"
+/*{
 #include "Process.h"
-#include "ListItem.h"
 #include "Panel.h"
 #include "FunctionBar.h"
-
-/*{
 
 typedef struct TraceScreen_ {
    Process* process;

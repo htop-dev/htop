@@ -5,19 +5,19 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Object.h"
 #include "FunctionBar.h"
+
 #include "CRT.h"
-
 #include "debug.h"
-#include <assert.h>
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <curses.h>
 
 /*{
+#include "Object.h"
 
 typedef struct FunctionBar_ {
    Object super;

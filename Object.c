@@ -1,20 +1,21 @@
 /*
-htop
+htop - Object.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Object.h"
-#include "RichString.h"
+
 #include "CRT.h"
+#include "debug.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "debug.h"
-
 /*{
+#include "RichString.h"
 
 #ifndef DEBUG
 #define Object_setClass(obj, class)

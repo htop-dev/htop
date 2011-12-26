@@ -1,24 +1,25 @@
 /*
-htop
+htop - ScreenManager.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "ScreenManager.h"
+
 #include "Panel.h"
 #include "Object.h"
-#include "Vector.h"
-#include "Header.h"
-#include "FunctionBar.h"
-
 #include "debug.h"
+
 #include <assert.h>
 #include <time.h>
-
+#include <stdlib.h>
 #include <stdbool.h>
 
 /*{
+#include "FunctionBar.h"
+#include "Vector.h"
+#include "Header.h"
 
 typedef enum Orientation_ {
    VERTICAL,

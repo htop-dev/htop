@@ -1,23 +1,26 @@
 /*
-htop
+htop - MemoryMeter.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "MemoryMeter.h"
-#include "Meter.h"
 
+#include "CRT.h"
 #include "ProcessList.h"
+#include "debug.h"
 
 #include <stdlib.h>
 #include <curses.h>
 #include <string.h>
 #include <math.h>
 #include <sys/param.h>
-
-#include "debug.h"
 #include <assert.h>
+
+/*{
+#include "Meter.h"
+}*/
 
 int MemoryMeter_attributes[] = {
    MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE

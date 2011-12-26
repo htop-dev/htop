@@ -2,19 +2,18 @@
 
 #ifndef HEADER_DebugMemory
 #define HEADER_DebugMemory
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <assert.h>
+/*
+htop - DebugMemory.h
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #undef strdup
 #undef malloc
 #undef realloc
 #undef calloc
 #undef free
-
 
 
 typedef struct DebugMemoryItem_ DebugMemoryItem;

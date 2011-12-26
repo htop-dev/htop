@@ -9,21 +9,10 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Object.h"
-#include "Vector.h"
-#include "CRT.h"
-#include "RichString.h"
-#include "ListItem.h"
-
-#include <math.h>
-#include <stdbool.h>
-
-#include "debug.h"
-#include <assert.h>
-
-#include <curses.h>
 //#link curses
 
+#include "Object.h"
+#include "Vector.h"
 
 typedef struct Panel_ Panel;
 
@@ -116,7 +105,6 @@ void Panel_setSelected(Panel* this, int selected);
 void Panel_draw(Panel* this, bool focus);
 
 bool Panel_onKey(Panel* this, int key);
-
 
 HandlerResult Panel_selectByTyping(Panel* this, int ch);
 

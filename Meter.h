@@ -9,28 +9,14 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "RichString.h"
-#include "Object.h"
-#include "CRT.h"
-#include "ListItem.h"
-#include "String.h"
-#include "ProcessList.h"
-
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-
-#include "debug.h"
-#include <assert.h>
-
 #ifndef USE_FUNKY_MODES
-#include <time.h>
 #define USE_FUNKY_MODES 1
 #endif
 
 #define METER_BUFFER_LEN 128
 
+#include "ListItem.h"
+#include "ProcessList.h"
 
 typedef struct Meter_ Meter;
 typedef struct MeterType_ MeterType;
@@ -95,17 +81,6 @@ typedef enum {
 #endif
    LAST_METERMODE
 } MeterModeId;
-
-
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
-#include "BatteryMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
 
 
 #ifndef MIN

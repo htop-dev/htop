@@ -1,20 +1,26 @@
 /*
-  htop
-  (C) 2004-2011 Hisham H. Muhammad
-  Released under the GNU GPL, see the COPYING file
-  in the source distribution for its full text.
+htop - BatteryMeter.c
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
 
-  This "Meter" written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
+This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 */
 
 #include "BatteryMeter.h"
-#include "Meter.h"
+
 #include "ProcessList.h"
 #include "CRT.h"
 #include "String.h"
 #include "debug.h"
 
+#include <string.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <unistd.h>
+
 /*{
+#include "Meter.h"
 
 typedef enum ACPresence_ {
    AC_ABSENT,

@@ -1,16 +1,24 @@
+/*
+htop - AvailableColumnsPanel.c
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "AvailableColumnsPanel.h"
-#include "Settings.h"
+
 #include "Header.h"
-#include "ScreenManager.h"
 #include "ColumnsPanel.h"
-
-#include "Panel.h"
-
 #include "debug.h"
+
 #include <assert.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 /*{
+#include "Panel.h"
+#include "Settings.h"
+#include "ScreenManager.h"
 
 typedef struct AvailableColumnsPanel_ {
    Panel super;

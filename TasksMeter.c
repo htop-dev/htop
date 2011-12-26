@@ -1,18 +1,19 @@
 /*
-htop
+htop - TasksMeter.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "TasksMeter.h"
-#include "Meter.h"
 
 #include "ProcessList.h"
-
 #include "CRT.h"
-
 #include "debug.h"
+
+/*{
+#include "Meter.h"
+}*/
 
 int TasksMeter_attributes[] = {
    TASKS_RUNNING

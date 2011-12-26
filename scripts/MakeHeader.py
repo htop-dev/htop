@@ -30,12 +30,15 @@ out.write( "" )
 
 out.write( "#ifndef HEADER_" + name )
 out.write( "#define HEADER_" + name )
+is_blank = False
 for line in file.readlines():
    line = line[:-1]
    if state == ANY:
       if line == '/*{':
          state = COPY
       elif line == selfheader:
+         pass
+      elif line.find("#include") == 0:
          pass
       elif line.find("htop - ") == 0 and line[-2:] == ".c":
          out.write(line[:-2] + ".h")
@@ -58,14 +61,22 @@ for line in file.readlines():
             state = SKIP
          else:
             out.write( line )
+         is_blank = False
+      elif line == "":
+         if not is_blank:
+            out.write( line )
+         is_blank = True
       else:
          out.write( line )
+         is_blank = False
    elif state == COPY:
+      is_blank = False
       if line == "}*/":
          state = ANY
       else:
          out.write( line )
    elif state == SKIP:
+      is_blank = False
       if len(line) >= 1 and line[0] == "}":
          if static == 1:
             state = SKIPONE
@@ -73,6 +84,7 @@ for line in file.readlines():
             state = ANY
          static = 0
    elif state == SKIPONE:
+      is_blank = False
       state = ANY
 
 out.write( "" )

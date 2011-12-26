@@ -11,16 +11,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-#include "ProcessList.h"
-
-#include <stdlib.h>
-#include <curses.h>
-#include <string.h>
-#include <math.h>
-
-#include "debug.h"
-#include <assert.h>
-
 extern int CPUMeter_attributes[];
 
 #ifndef MIN

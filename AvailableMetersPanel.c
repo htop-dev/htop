@@ -1,16 +1,24 @@
+/*
+htop - AvailableMetersPanel.c
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "AvailableMetersPanel.h"
-#include "Settings.h"
-#include "Header.h"
-#include "ScreenManager.h"
+
 #include "CPUMeter.h"
-
-#include "Panel.h"
-
+#include "Header.h"
+#include "ListItem.h"
 #include "debug.h"
+
 #include <assert.h>
+#include <stdlib.h>
 
 /*{
+#include "Settings.h"
+#include "Panel.h"
+#include "ScreenManager.h"
 
 typedef struct AvailableMetersPanel_ {
    Panel super;

@@ -2,15 +2,16 @@
 
 #ifndef HEADER_ColumnsPanel
 #define HEADER_ColumnsPanel
-
+/*
+htop - ColumnsPanel.h
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "Panel.h"
 #include "Settings.h"
 #include "ScreenManager.h"
-
-#include "debug.h"
-#include <assert.h>
-
 
 typedef struct ColumnsPanel_ {
    Panel super;

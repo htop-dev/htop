@@ -6,17 +6,20 @@ in the source distribution for its full text.
 */
 
 #include "CPUMeter.h"
-#include "Meter.h"
 
+#include "CRT.h"
 #include "ProcessList.h"
+#include "debug.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <curses.h>
 #include <string.h>
 #include <math.h>
 
-#include "debug.h"
-#include <assert.h>
+/*{
+#include "Meter.h"
+}*/
 
 int CPUMeter_attributes[] = {
    CPU_NICE, CPU_NORMAL, CPU_KERNEL, CPU_IRQ, CPU_SOFTIRQ, CPU_IOWAIT, CPU_STEAL, CPU_GUEST

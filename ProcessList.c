@@ -5,20 +5,14 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifndef CONFIG_H
-#define CONFIG_H
-#include "config.h"
-#endif
-
 #include "ProcessList.h"
-#include "Process.h"
-#include "Vector.h"
-#include "UsersTable.h"
-#include "Hashtable.h"
-#include "String.h"
-#include "Panel.h"
 
-#include <sys/types.h>
+#include "CRT.h"
+#include "String.h"
+#include "debug.h"
+
+#include <sys/time.h>
+#include <sys/utsname.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -26,14 +20,19 @@ in the source distribution for its full text.
 #include <stdio.h>
 #include <signal.h>
 #include <stdbool.h>
-#include <sys/utsname.h>
 #include <stdarg.h>
 #include <math.h>
-
-#include "debug.h"
+#include <string.h>
+#include <time.h>
 #include <assert.h>
 
 /*{
+#include "Vector.h"
+#include "Hashtable.h"
+#include "UsersTable.h"
+#include "Panel.h"
+#include "Process.h"
+#include <sys/types.h>
 
 #ifndef PROCDIR
 #define PROCDIR "/proc"

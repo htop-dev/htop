@@ -1,15 +1,23 @@
+/*
+htop - DisplayOptionsPanel.c
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "DisplayOptionsPanel.h"
 
-#include "Panel.h"
 #include "CheckItem.h"
-#include "Settings.h"
-#include "ScreenManager.h"
-
 #include "debug.h"
+
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 /*{
+#include "Panel.h"
+#include "Settings.h"
+#include "ScreenManager.h"
 
 typedef struct DisplayOptionsPanel_ {
    Panel super;

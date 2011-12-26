@@ -9,15 +9,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
-#include "String.h"
-#include "ProcessList.h"
-#include "Header.h"
-
-#include "debug.h"
-
 #define DEFAULT_DELAY 15
 
+#include "ProcessList.h"
+#include "Header.h"
+#include <stdbool.h>
 
 typedef struct Settings_ {
    char* userSettings;

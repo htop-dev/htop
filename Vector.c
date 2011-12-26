@@ -1,20 +1,21 @@
 /*
-htop
+htop - Vector.c
 (C) 2004-2011 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Vector.h"
-#include "Object.h"
+
+#include "debug.h"
+
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 
-#include "debug.h"
-#include <assert.h>
-
 /*{
+#include "Object.h"
 
 #define swap(a_,x_,y_) do{ void* tmp_ = a_[x_]; a_[x_] = a_[y_]; a_[y_] = tmp_; }while(0)
 

@@ -6,14 +6,18 @@ in the source distribution for its full text.
 */
 
 #include "ListItem.h"
-#include "String.h"
-#include "Object.h"
-#include "RichString.h"
-#include <string.h>
 
+#include "CRT.h"
+#include "String.h"
+#include "RichString.h"
 #include "debug.h"
 
+#include <string.h>
+#include <assert.h>
+#include <stdlib.h>
+
 /*{
+#include "Object.h"
 
 typedef struct ListItem_ {
    Object super;

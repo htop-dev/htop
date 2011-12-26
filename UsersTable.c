@@ -5,20 +5,21 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
 #include "UsersTable.h"
-#include "Hashtable.h"
+
+#include "config.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
 #include <pwd.h>
 #include <sys/types.h>
-
-#include "debug.h"
+#include <stdlib.h>
 #include <assert.h>
 
 /*{
+#include "Hashtable.h"
+
 typedef struct UsersTable_ {
    Hashtable* users;
 } UsersTable;

@@ -1,15 +1,23 @@
+/*
+htop - SignalsPanel.c
+(C) 2004-2011 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "SignalsPanel.h"
-#include "Panel.h"
+
 #include "ListItem.h"
 #include "RichString.h"
-
 #include "debug.h"
+
+#include <stdlib.h>
 #include <assert.h>
 
 #include <ctype.h>
 
 /*{
+#include "Panel.h"
 
 typedef struct SignalItem_ {
    const char* name;
