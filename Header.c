@@ -18,7 +18,6 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "String.h"
-#include "debug.h"
 
 #include <assert.h>
 #include <time.h>

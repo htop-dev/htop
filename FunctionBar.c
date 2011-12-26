@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 
 #include "CRT.h"
-#include "debug.h"
 
 #include <assert.h>
 #include <string.h>

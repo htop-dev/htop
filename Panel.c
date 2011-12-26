@@ -11,7 +11,6 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "ListItem.h"
 #include "String.h"
-#include "debug.h"
 
 #include <math.h>
 #include <stdbool.h>

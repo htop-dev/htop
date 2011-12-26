@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "AffinityPanel.h"
 
 #include "CheckItem.h"
-#include "debug.h"
 
 #include <assert.h>
 #include <string.h>

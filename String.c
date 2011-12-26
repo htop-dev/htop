@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "String.h"
 
 #include "config.h"
-#include "debug.h"
 
 #include <string.h>
 #include <strings.h>

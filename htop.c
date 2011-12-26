@@ -22,7 +22,6 @@ in the source distribution for its full text.
 #include "TraceScreen.h"
 #include "OpenFilesScreen.h"
 #include "AffinityPanel.h"
-#include "debug.h"
 
 #include <unistd.h>
 #include <math.h>
@@ -914,6 +913,5 @@ int main(int argc, char** argv) {
       ((Object*)killPanel)->delete((Object*)killPanel);
    UsersTable_delete(ut);
    Settings_delete(settings);
-   debug_done();
    return 0;
 }

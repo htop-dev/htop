@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-AC_INIT([htop],[1.0],[loderunner@users.sourceforge.net])
+AC_INIT([htop],[1.0.1],[loderunner@users.sourceforge.net])
 
 # The following two lines are required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS

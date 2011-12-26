@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "config.h"
 #include "String.h"
-#include "debug.h"
 
 #include <curses.h>
 #include <signal.h>

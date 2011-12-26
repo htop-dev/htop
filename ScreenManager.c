@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "Panel.h"
 #include "Object.h"
-#include "debug.h"
 
 #include <assert.h>
 #include <time.h>

@@ -13,7 +13,6 @@ in the source distribution for its full text.
 #include "ColumnsPanel.h"
 #include "ColorsPanel.h"
 #include "AvailableColumnsPanel.h"
-#include "debug.h"
 
 #include <assert.h>
 #include <stdlib.h>

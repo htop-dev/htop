@@ -7,8 +7,6 @@ in the source distribution for its full text.
 
 #include "Vector.h"
 
-#include "debug.h"
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

@@ -7,8 +7,6 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 
-#include "debug.h"
-
 #include <stdlib.h>
 #include <assert.h>
 

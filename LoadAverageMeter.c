@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "LoadAverageMeter.h"
 
 #include "CRT.h"
-#include "debug.h"
 
 #include <curses.h>
 #include <assert.h>

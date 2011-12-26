@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "ListItem.h"
 #include "RichString.h"
-#include "debug.h"
 
 #include <stdlib.h>
 #include <assert.h>

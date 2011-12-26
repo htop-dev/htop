@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "String.h"
 #include "Vector.h"
-#include "debug.h"
 
 #include <sys/stat.h>
 #include <stdlib.h>

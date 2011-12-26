@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "CheckItem.h"
 
 #include "CRT.h"
-#include "debug.h"
 
 #include <assert.h>
 #include <stdlib.h>

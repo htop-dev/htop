@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "Header.h"
 #include "ColumnsPanel.h"
-#include "debug.h"
 
 #include <assert.h>
 #include <stdlib.h>

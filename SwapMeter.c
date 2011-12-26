@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "ProcessList.h"
-#include "debug.h"
 
 #include <stdlib.h>
 #include <curses.h>

@@ -11,7 +11,6 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "String.h"
 #include "RichString.h"
-#include "debug.h"
 
 #include <stdio.h>
 #include <sys/time.h>

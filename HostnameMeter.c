@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 
 #include "CRT.h"
-#include "debug.h"
 
 #include <unistd.h>
 

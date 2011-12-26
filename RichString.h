@@ -14,7 +14,6 @@ in the source distribution for its full text.
 #include "config.h"
 #include <ctype.h>
 
-#include "debug.h"
 #include <assert.h>
 #ifdef HAVE_NCURSESW_CURSES_H
 #include <ncursesw/curses.h>

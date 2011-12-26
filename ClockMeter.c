@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 
 #include "CRT.h"
-#include "debug.h"
 
 #include <time.h>
 

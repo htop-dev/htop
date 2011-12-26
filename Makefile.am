@@ -10,12 +10,11 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-htop_CFLAGS = -pedantic -Wall -Wextra -std=c99 -rdynamic -D_XOPEN_SOURCE_EXTENDED
-AM_CFLAGS = 
-AM_CPPFLAGS = -DSYSCONFDIR=\"$(sysconfdir)\"
+htop_CFLAGS = -pedantic -Wall -Wextra -std=c99 -rdynamic -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\"
+AM_CPPFLAGS = -DNDEBUG
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
-ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c DebugMemory.c \
+ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c \
 DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
 LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
 BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
@@ -25,7 +24,7 @@ HostnameMeter.c OpenFilesScreen.c Affinity.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
 CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
-CPUMeter.h CRT.h DebugMemory.h DisplayOptionsPanel.h FunctionBar.h \
+CPUMeter.h CRT.h DisplayOptionsPanel.h FunctionBar.h \
 Hashtable.h Header.h htop.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
 BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \
 ScreenManager.h Settings.h SignalsPanel.h String.h \
@@ -35,19 +34,13 @@ Process.h AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h
 SUFFIXES = .h
 
 BUILT_SOURCES = $(myhtopheaders)
-htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h debug.h
+htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h
 
 profile:
-	$(MAKE) all CFLAGS="-pg -O2"
+	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-pg -O2"
 
 debug:
-	$(MAKE) all CFLAGS="-ggdb -DDEBUG"
-
-hardened-debug:
-	$(MAKE) all CFLAGS="-ggdb -DDEBUG" LDFLAGS="-nopie"
- 
-debuglite:
-	$(MAKE) all CFLAGS="-ggdb -DDEBUGLITE"
+	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-ggdb -DDEBUG"
 
 .c.h:
 	scripts/MakeHeader.py $<
