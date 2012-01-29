@@ -772,6 +772,7 @@ int main(int argc, char** argv) {
             break;
 
          Affinity* affinity = Process_getAffinity((Process*) Panel_getSelected(panel));
+         if (!affinity) break;
          Panel* affinityPanel = AffinityPanel_new(pl, affinity);
          Affinity_delete(affinity);
 
