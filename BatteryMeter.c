@@ -50,17 +50,11 @@ static unsigned long int parseUevent(FILE * file, const char *key) {
 }
 
 static unsigned long int parseBatInfo(const char *fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
-   DIR* batteryDir;
-   const struct dirent *dirEntries;
-
    const char batteryPath[] = PROCDIR "/acpi/battery/";
-   batteryDir = opendir(batteryPath);
-
-   if (batteryDir == NULL) {
+   DIR* batteryDir = opendir(batteryPath);
+   if (!batteryDir)
       return 0;
-   }
 
-   char *entryName;
    typedef struct listLbl {
       char *content;
       struct listLbl *next;
@@ -73,8 +67,8 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       Some of this is based off of code found in kismet (they claim it came from gkrellm).
       Written for multi battery use...
     */
-   for (dirEntries = readdir((DIR *) batteryDir); dirEntries; dirEntries = readdir((DIR *) batteryDir)) {
-      entryName = (char *) dirEntries->d_name;
+   for (const struct dirent* dirEntries = readdir((DIR *) batteryDir); dirEntries; dirEntries = readdir((DIR *) batteryDir)) {
+      char* entryName = (char *) dirEntries->d_name;
 
       if (strncmp(entryName, "BAT", 3))
          continue;
@@ -122,22 +116,16 @@ static ACPresence chkIsOnline() {
    ACPresence isOn = AC_ERROR;
 
    if (access(PROCDIR "/acpi/ac_adapter", F_OK) == 0) {
-      const struct dirent *dirEntries;
       const char *power_supplyPath = PROCDIR "/acpi/ac_adapter";
       DIR *power_supplyDir = opendir(power_supplyPath);
-      char *entryName;
-
-      if (!power_supplyDir) {
+      if (!power_supplyDir)
          return AC_ERROR;
-      }
 
-      for (dirEntries = readdir((DIR *) power_supplyDir); dirEntries; dirEntries = readdir((DIR *) power_supplyDir)) {
-         entryName = (char *) dirEntries->d_name;
+      for (const struct dirent *dirEntries = readdir((DIR *) power_supplyDir); dirEntries; dirEntries = readdir((DIR *) power_supplyDir)) {
+         char* entryName = (char *) dirEntries->d_name;
 
-         if (strncmp(entryName, "A", 1)) {
+         if (entryName[0] != 'A')
             continue;
-         }
-
 
          char statePath[50];
          snprintf((char *) statePath, sizeof statePath, "%s/%s/state", power_supplyPath, entryName);
@@ -247,11 +235,8 @@ static double getSysBatData() {
    const struct dirent *dirEntries;
    const char *power_supplyPath = "/sys/class/power_supply/";
    DIR *power_supplyDir = opendir(power_supplyPath);
-
-
-   if (!power_supplyDir) {
+   if (!power_supplyDir)
       return 0;
-   }
 
    char *entryName;
 
