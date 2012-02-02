@@ -109,7 +109,7 @@ typedef struct ProcessList_ {
    UsersTable* usersTable;
 
    Panel* panel;
-   bool follow;
+   int following;
    bool userOnly;
    uid_t userId;
    bool filtering;
@@ -899,15 +899,15 @@ void ProcessList_expandTree(ProcessList* this) {
    }
 }
 
-void ProcessList_rebuildPanel(ProcessList* this, bool flags, bool follow, bool userOnly, uid_t userId, bool filtering, const char* incFilter) {
+void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool userOnly, uid_t userId, bool filtering, const char* incFilter) {
    if (!flags) {
-      follow = this->follow;
+      following = this->following;
       userOnly = this->userOnly;
       userId = this->userId;
       filtering = this->filtering;
       incFilter = this->incFilter;
    } else {
-      this->follow = follow;
+      this->following = following;
       this->userOnly = userOnly;
       this->userId = userId;
       this->filtering = filtering;
@@ -915,10 +915,8 @@ void ProcessList_rebuildPanel(ProcessList* this, bool flags, bool follow, bool u
    }
 
    int currPos = Panel_getSelectedIndex(this->panel);
-   pid_t currPid = 0;
+   pid_t currPid = following ? following : 0;
    int currScrollV = this->panel->scrollV;
-   if (follow)
-      currPid = ProcessList_get(this, currPos)->pid;
 
    Panel_prune(this->panel);
    int size = ProcessList_size(this);
@@ -934,7 +932,7 @@ void ProcessList_rebuildPanel(ProcessList* this, bool flags, bool follow, bool u
 
       if (!hidden) {
          Panel_set(this->panel, idx, (Object*)p);
-         if ((!follow && idx == currPos) || (follow && p->pid == currPid)) {
+         if ((following == -1 && idx == currPos) || (following != -1 && p->pid == currPid)) {
             Panel_setSelected(this->panel, idx);
             this->panel->scrollV = currScrollV;
          }

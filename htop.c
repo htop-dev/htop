@@ -440,6 +440,7 @@ int main(int argc, char** argv) {
       gettimeofday(&tv, NULL);
       newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
       recalculate = (newTime - oldTime > CRT_delay);
+      int following = follow ? ((Process*)Panel_getSelected(panel))->pid : -1;
       if (recalculate)
          oldTime = newTime;
       if (doRefresh) {
@@ -451,7 +452,7 @@ int main(int argc, char** argv) {
             ProcessList_sort(pl);
             refreshTimeout = 1;
          }
-         ProcessList_rebuildPanel(pl, true, follow, userOnly, userId, filtering, incFilter.buffer);
+         ProcessList_rebuildPanel(pl, true, following, userOnly, userId, filtering, incFilter.buffer);
       }
       doRefresh = true;
       

@@ -92,7 +92,7 @@ typedef struct ProcessList_ {
    UsersTable* usersTable;
 
    Panel* panel;
-   bool follow;
+   int following;
    bool userOnly;
    uid_t userId;
    bool filtering;
@@ -183,6 +183,6 @@ ProcessField ProcessList_keyAt(ProcessList* this, int at);
 
 void ProcessList_expandTree(ProcessList* this);
 
-void ProcessList_rebuildPanel(ProcessList* this, bool flags, bool follow, bool userOnly, uid_t userId, bool filtering, const char* incFilter);
+void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool userOnly, uid_t userId, bool filtering, const char* incFilter);
 
 #endif
