@@ -239,7 +239,9 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
       mkdir(htopDir, 0700);
       free(htopDir);
       free(configDir);
-      if (access(legacyDotfile, R_OK) != 0) {
+      struct stat st;
+      lstat(legacyDotfile, &st);
+      if (access(legacyDotfile, R_OK) != 0 || S_ISLNK(st.st_mode)) {
          free(legacyDotfile);
          legacyDotfile = NULL;
       }
