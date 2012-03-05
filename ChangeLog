@@ -1,4 +1,9 @@
 
+What's new in version 1.0.2
+
+* Avoid deleting .htoprc if it is a symlink
+* BUGFIX: Fix crashes when process list is empty
+
 What's new in version 1.0.1
 
 * Move .htoprc to XDG-compliant path ~/.config/htop/htoprc,

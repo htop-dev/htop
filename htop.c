@@ -189,7 +189,7 @@ static bool changePriority(Panel* panel, int delta) {
    }
    if (!anyTagged) {
       Process* p = (Process*) Panel_getSelected(panel);
-      ok = Process_setPriority(p, p->nice + delta) && ok;
+      if (p) ok = Process_setPriority(p, p->nice + delta) && ok;
    }
    if (!ok)
       beep();
@@ -440,7 +440,8 @@ int main(int argc, char** argv) {
       gettimeofday(&tv, NULL);
       newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
       recalculate = (newTime - oldTime > CRT_delay);
-      int following = follow ? ((Process*)Panel_getSelected(panel))->pid : -1;
+      Process* p = (Process*)Panel_getSelected(panel);
+      int following = (follow && p) ? p->pid : -1;
       if (recalculate)
          oldTime = newTime;
       if (doRefresh) {
@@ -481,6 +482,7 @@ int main(int argc, char** argv) {
          doRefresh = false;
          int size = Panel_size(panel);
          if (ch == KEY_F(3)) {
+            if (Panel_size(panel) == 0) continue;
             int here = Panel_getSelectedIndex(panel);
             int i = here+1;
             while (i != here) {
@@ -541,11 +543,12 @@ int main(int argc, char** argv) {
          continue;
       }
       if (isdigit((char)ch)) {
+         if (Panel_size(panel) == 0) continue;
          pid_t pid = ch-48 + acc;
          for (int i = 0; i < ProcessList_size(pl) && ((Process*) Panel_getSelected(panel))->pid != pid; i++)
             Panel_setSelected(panel, i);
          acc = pid * 10;
-         if (acc > 100000)
+         if (acc > 10000000)
             acc = 0;
          continue;
       } else {
@@ -644,13 +647,16 @@ int main(int argc, char** argv) {
       case ' ':
       {
          Process* p = (Process*) Panel_getSelected(panel);
+         if (!p) break;
          Process_toggleTag(p);
          Panel_onKey(panel, KEY_DOWN);
          break;
       }
       case 's':
       {
-         TraceScreen* ts = TraceScreen_new((Process*) Panel_getSelected(panel));
+         Process* p = (Process*) Panel_getSelected(panel);
+         if (!p) break;
+         TraceScreen* ts = TraceScreen_new(p);
          TraceScreen_run(ts);
          TraceScreen_delete(ts);
          clear();
@@ -661,7 +667,9 @@ int main(int argc, char** argv) {
       }
       case 'l':
       {
-         OpenFilesScreen* ts = OpenFilesScreen_new((Process*) Panel_getSelected(panel));
+         Process* p = (Process*) Panel_getSelected(panel);
+         if (!p) break;
+         OpenFilesScreen* ts = OpenFilesScreen_new(p);
          OpenFilesScreen_run(ts);
          OpenFilesScreen_delete(ts);
          clear();
@@ -714,6 +722,7 @@ int main(int argc, char** argv) {
       case '-':
       {
          Process* p = (Process*) Panel_getSelected(panel);
+         if (!p) break;
          p->showChildren = !p->showChildren;
          refreshTimeout = 0;
          doRecalculate = true;
@@ -726,7 +735,7 @@ int main(int argc, char** argv) {
             killPanel = (Panel*) SignalsPanel_new(0, 0, 0, 0);
          }
          bool anyTagged = false;
-         pid_t selectedPid;
+         pid_t selectedPid = 0;
          for (int i = 0; i < Panel_size(panel); i++) {
             Process* p = (Process*) Panel_get(panel, i);
             if (p->tag) {
@@ -736,8 +745,9 @@ int main(int argc, char** argv) {
          }
          if (!anyTagged) {
             Process* p = (Process*) Panel_getSelected(panel);
-            selectedPid = p->pid;
+            if (p) selectedPid = p->pid;
          }
+         if (selectedPid == 0) break;
          SignalsPanel_reset((SignalsPanel*) killPanel);
          const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
          ListItem* sgn = (ListItem*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
@@ -772,7 +782,9 @@ int main(int argc, char** argv) {
          if (pl->cpuCount == 1)
             break;
 
-         Affinity* affinity = Process_getAffinity((Process*) Panel_getSelected(panel));
+         Process* p = (Process*) Panel_getSelected(panel);
+         if (!p) break;
+         Affinity* affinity = Process_getAffinity(p);
          if (!affinity) break;
          Panel* affinityPanel = AffinityPanel_new(pl, affinity);
          Affinity_delete(affinity);
@@ -792,7 +804,7 @@ int main(int argc, char** argv) {
             }
             if (!anyTagged) {
                Process* p = (Process*) Panel_getSelected(panel);
-               ok = Process_setAffinity(p, affinity) && ok;
+               if (p) ok = Process_setAffinity(p, affinity) && ok;
             }
             if (!ok)
                beep();

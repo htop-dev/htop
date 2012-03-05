@@ -199,8 +199,10 @@ Object* Panel_remove(Panel* this, int i) {
 
 Object* Panel_getSelected(Panel* this) {
    assert (this != NULL);
-
-   return Vector_get(this->items, this->selected);
+   if (Vector_size(this->items) > 0)
+      return Vector_get(this->items, this->selected);
+   else
+      return NULL;
 }
 
 void Panel_moveSelectedUp(Panel* this) {
