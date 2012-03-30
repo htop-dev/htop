@@ -207,7 +207,16 @@ static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const cha
    ScreenManager_add(scr, panel, NULL, -1);
    Panel* panelFocus;
    int ch;
+   bool unfollow = false;
+   if (header->pl->following == -1) {
+      Process* p = (Process*)Panel_getSelected(panel);
+      header->pl->following = p ? p->pid : -1;
+      unfollow = true;
+   }
    ScreenManager_run(scr, &panelFocus, &ch);
+   if (unfollow) {
+      header->pl->following = -1;
+   }
    ScreenManager_delete(scr);
    Panel_move(panel, 0, y);
    Panel_resize(panel, COLS, LINES-y-1);

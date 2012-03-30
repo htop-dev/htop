@@ -236,6 +236,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable) {
    this->detailedCPUTime = false;
    this->countCPUsFromZero = false;
    this->treeStr = NULL;
+   this->following = -1;
 
    return this;
 }
@@ -915,7 +916,7 @@ void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool
    }
 
    int currPos = Panel_getSelectedIndex(this->panel);
-   pid_t currPid = following ? following : 0;
+   pid_t currPid = following != -1 ? following : 0;
    int currScrollV = this->panel->scrollV;
 
    Panel_prune(this->panel);
