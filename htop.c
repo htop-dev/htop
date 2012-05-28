@@ -896,6 +896,7 @@ int main(int argc, char** argv) {
          pl->treeView = !pl->treeView;
          ProcessList_expandTree(pl);
          settings->changed = true;
+         if (following != -1) continue;
          break;
       case 'H':
          doRecalculate = true;
