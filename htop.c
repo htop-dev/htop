@@ -146,7 +146,7 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(15, 0, "   F9 k"); mvaddstr(15,40, "    P");
    mvaddstr(16, 0, "   ] F7"); mvaddstr(16,40, "    M");
    mvaddstr(17, 0, "   [ F8"); mvaddstr(17,40, "    T");
-                               mvaddstr(18,40, " F4 I");
+                               mvaddstr(18,40, "    I");
 #if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
    if (pl->cpuCount > 1)
       mvaddstr(18, 0, "      a:");
