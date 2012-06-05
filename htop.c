@@ -755,8 +755,8 @@ int main(int argc, char** argv) {
          if (!anyTagged) {
             Process* p = (Process*) Panel_getSelected(panel);
             if (p) selectedPid = p->pid;
+            if (selectedPid == 0) break;
          }
-         if (selectedPid == 0) break;
          SignalsPanel_reset((SignalsPanel*) killPanel);
          const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
          ListItem* sgn = (ListItem*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
@@ -770,7 +770,6 @@ int main(int argc, char** argv) {
                      Process* p = (Process*) Panel_get(panel, i);
                      if (p->tag) {
                         Process_sendSignal(p, sgn->key);
-                        anyTagged = true;
                      }
                   }
                } else {
