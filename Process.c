@@ -311,7 +311,7 @@ static void Process_printTime(RichString* str, unsigned long long t) {
    double jiffytime = 1.0 / jiffy;
 
    double realTime = t * jiffytime;
-   int iRealTime = (int) realTime;
+   unsigned long long iRealTime = (unsigned long long) realTime;
 
    unsigned long long hours = iRealTime / 3600;
    int minutes = (iRealTime / 60) % 60;
