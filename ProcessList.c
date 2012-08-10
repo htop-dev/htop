@@ -114,6 +114,7 @@ typedef struct ProcessList_ {
    uid_t userId;
    bool filtering;
    const char* incFilter;
+   Hashtable* pidWhiteList;
 
    int cpuCount;
    int totalTasks;
@@ -180,12 +181,13 @@ const char *ProcessList_treeStrUtf8[TREE_STR_COUNT] = {
    "\xe2\x94\x80", // TREE_STR_SHUT ─
 };
 
-ProcessList* ProcessList_new(UsersTable* usersTable) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    ProcessList* this;
    this = calloc(sizeof(ProcessList), 1);
    this->processes = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
    this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
+   this->pidWhiteList = pidWhiteList;
    
    /* tree-view auxiliary buffers */
    this->processes2 = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
@@ -599,6 +601,7 @@ static void ProcessList_readVServerData(Process* process, const char* dirname, c
 static bool ProcessList_readCmdlineFile(Process* process, const char* dirname, const char* name) {
    if (Process_isKernelThread(process))
       return true;
+
    char filename[MAX_NAME+1];
    snprintf(filename, MAX_NAME, "%s/%s/cmdline", dirname, name);
    FILE* file = fopen(filename, "r");
@@ -617,6 +620,7 @@ static bool ProcessList_readCmdlineFile(Process* process, const char* dirname, c
    fclose(file);
    free(process->comm);
    process->comm = strdup(command);
+
    return true;
 }
 
@@ -928,7 +932,8 @@ void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool
 
       if ( (!p->show)
          || (userOnly && (p->st_uid != userId))
-         || (filtering && !(String_contains_i(p->comm, incFilter))) )
+         || (filtering && !(String_contains_i(p->comm, incFilter)))
+         || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->pid)) )
          hidden = true;
 
       if (!hidden) {

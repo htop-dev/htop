@@ -29,11 +29,14 @@ Start htop in monochrome mode
 \fB\-h \-\-help
 Display a help message and exit
 .TP
-\fB\-u \-\-user=USERNAME\fR
-Show only the processes of a given user
+\fB\-p \-\-pid=PID,PID...\fR
+Show only the given PIDs
 .TP
 \fB\-s \-\-sort\-key COLUMN\fR
 Sort by this column (use \-\-sort\-key help for a column list)
+.TP
+\fB\-u \-\-user=USERNAME\fR
+Show only the processes of a given user
 .TP
 \fB\-v \-\-version
 Output version information and exit

@@ -250,7 +250,11 @@ void Panel_draw(Panel* this, bool focus) {
    int scrollH = this->scrollH;
    int y = this->y; int x = this->x;
    int first = this->scrollV;
-   int last = MIN(itemCount, this->scrollV + MIN(itemCount, this->h));
+   if (itemCount > this->h && first > itemCount - this->h) {
+      first = itemCount - this->h;
+      this->scrollV = first;
+   }
+   int last = MIN(itemCount, first + MIN(itemCount, this->h));
    if (this->selected < first) {
       first = this->selected;
       this->scrollV = first;

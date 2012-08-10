@@ -51,11 +51,12 @@ static void printVersionFlag() {
 static void printHelpFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
          "Released under the GNU GPL.\n\n"
-         "-C --no-color         Use a monochrome color scheme\n"
-         "-d --delay=DELAY      Set the delay between updates, in tenths of seconds\n"
-         "-h --help             Print this help screen\n"
-         "-s --sort-key=COLUMN  Sort by COLUMN (try --sort-key=help for a list)\n"
-         "-u --user=USERNAME    Show only processes of a given user\n"
+         "-C --no-color               Use a monochrome color scheme\n"
+         "-d --delay=DELAY            Set the delay between updates, in tenths of seconds\n"
+         "-h --help                   Print this help screen\n"
+         "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
+         "-u --user=USERNAME          Show only processes of a given user\n"
+         "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
          "-v --version          Print version info\n"
          "\n"
          "Long options may be passed with a single dash.\n\n"
@@ -269,6 +270,9 @@ int main(int argc, char** argv) {
    uid_t userId = 0;
    int usecolors = 1;
    TreeType treeType = TREE_TYPE_AUTO;
+   char *argCopy;
+   char *pid;
+   Hashtable *pidWhiteList = NULL;
 
    int opt, opti=0;
    static struct option long_opts[] =
@@ -280,6 +284,7 @@ int main(int argc, char** argv) {
       {"user",     required_argument,   0, 'u'},
       {"no-color", no_argument,         0, 'C'},
       {"no-colour",no_argument,         0, 'C'},
+      {"pid",      required_argument,   0, 'p'},
       {0,0,0,0}
    };
    int sortKey = 0;
@@ -293,7 +298,7 @@ int main(int argc, char** argv) {
       setlocale(LC_CTYPE, "");
 
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvCs:d:u:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvCs:d:u:p:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -333,6 +338,22 @@ int main(int argc, char** argv) {
          case 'C':
             usecolors=0;
             break;
+        case 'p':
+            argCopy = strdup(optarg);
+            pid = strtok(argCopy, ",");
+
+            if( !pidWhiteList ) {
+               pidWhiteList = Hashtable_new(8, false);
+            }
+
+            while( pid ) {
+                unsigned int num_pid = atoi(pid);
+                Hashtable_put(pidWhiteList, num_pid, (void *) 1);
+                pid = strtok(NULL, ",");
+            }
+            free(argCopy);
+
+            break;
          default:
             exit(1);
       }
@@ -356,7 +377,7 @@ int main(int argc, char** argv) {
    ProcessList* pl = NULL;
    UsersTable* ut = UsersTable_new();
 
-   pl = ProcessList_new(ut);
+   pl = ProcessList_new(ut, pidWhiteList);
    Process_getMaxPid();
    
    Header* header = Header_new(pl);
@@ -936,5 +957,8 @@ int main(int argc, char** argv) {
       ((Object*)killPanel)->delete((Object*)killPanel);
    UsersTable_delete(ut);
    Settings_delete(settings);
+   if(pidWhiteList) {
+      Hashtable_delete(pidWhiteList);
+   }
    return 0;
 }
