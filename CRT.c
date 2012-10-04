@@ -129,7 +129,7 @@ static void CRT_handleSIGSEGV(int sgn) {
    fprintf(stderr, "\n\nhtop " VERSION " aborting. Please report bug at http://htop.sf.net\n");
    #ifdef HAVE_EXECINFO_H
    size_t size = backtrace(backtraceArray, sizeof(backtraceArray) / sizeof(void *));
-   fprintf(stderr, "Backtrace: \n");
+   fprintf(stderr, "\n Please include in your report the following backtrace: \n");
    backtrace_symbols_fd(backtraceArray, size, 2);
    fprintf(stderr, "\nAdditionally, in order to make the above backtrace useful,");
    fprintf(stderr, "\nplease also run the following command to generate a disassembly of your binary:");

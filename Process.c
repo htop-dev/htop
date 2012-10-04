@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include <sched.h>
 #include <time.h>
 #include <assert.h>
+#include <sys/syscall.h>
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc/linux.h>
@@ -41,6 +42,7 @@ in the source distribution for its full text.
 /*{
 #include "Object.h"
 #include "Affinity.h"
+#include "IOPriority.h"
 #include <sys/types.h>
 
 #ifndef Process_isKernelThread
@@ -73,6 +75,7 @@ typedef enum ProcessField_ {
    #ifdef HAVE_CGROUP
    CGROUP,
    #endif
+   IO_PRIORITY,
    LAST_PROCESSFIELD
 } ProcessField;
 
@@ -111,6 +114,7 @@ typedef struct Process_ {
    long int priority;
    long int nice;
    long int nlwp;
+   IOPriority ioPriority;
    char starttime_show[8];
    time_t starttime_ctime;
    #ifdef DEBUG
@@ -199,6 +203,7 @@ const char *Process_fieldNames[] = {
 #ifdef HAVE_CGROUP
    "CGROUP",
 #endif
+   "IO_PRIORITY",
 "*** report bug! ***"
 };
 
@@ -224,6 +229,7 @@ const char *Process_fieldTitles[] = {
 #ifdef HAVE_CGROUP
    "    CGROUP ",
 #endif
+   "IO ",
 "*** report bug! ***"
 };
 
@@ -507,7 +513,24 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    #ifdef HAVE_CGROUP
    case CGROUP: snprintf(buffer, n, "%-10s ", this->cgroup); break;
    #endif
-
+   case IO_PRIORITY: {
+      int klass = IOPriority_class(this->ioPriority);
+      if (klass == IOPRIO_CLASS_NONE) {
+         // see note [1] above
+         snprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
+      } else if (klass == IOPRIO_CLASS_BE) {
+         snprintf(buffer, n, "B%1d ", IOPriority_data(this->ioPriority));
+      } else if (klass == IOPRIO_CLASS_RT) {
+         attr = CRT_colors[PROCESS_HIGH_PRIORITY];
+         snprintf(buffer, n, "R%1d ", IOPriority_data(this->ioPriority));
+      } else if (this->ioPriority == IOPriority_Idle) {
+         attr = CRT_colors[PROCESS_LOW_PRIORITY]; 
+         snprintf(buffer, n, "id ");
+      } else {
+         snprintf(buffer, n, "?? ");
+      }
+      break;
+   }
    default:
       snprintf(buffer, n, "- ");
    }
@@ -572,6 +595,31 @@ bool Process_setPriority(Process* this, int priority) {
    return (err == 0);
 }
 
+bool Process_changePriorityBy(Process* this, size_t delta) {
+   return Process_setPriority(this, this->nice + delta);
+}
+
+IOPriority Process_updateIOPriority(Process* this) {
+   IOPriority ioprio = syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, this->pid);
+   this->ioPriority = ioprio;
+   return ioprio;
+}
+
+bool Process_setIOPriority(Process* this, IOPriority ioprio) {
+   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->pid, ioprio);
+   return (Process_updateIOPriority(this) == ioprio);
+}
+
+/*
+[1] Note that before kernel 2.6.26 a process that has not asked for
+an io priority formally uses "none" as scheduling class, but the
+io scheduler will treat such processes as if it were in the best
+effort class. The priority within the best effort class will  be
+dynamically  derived  from  the  cpu  nice level of the process:
+io_priority = (cpu_nice + 20) / 5. -- From ionice(1) man page
+*/
+#define Process_effectiveIOPriority(p_) (IOPriority_class(p_->ioPriority) == IOPRIO_CLASS_NONE ? IOPriority_tuple(IOPRIO_CLASS_BE, (p_->nice + 20) / 5) : p_->ioPriority)
+
 #ifdef HAVE_LIBHWLOC
 
 Affinity* Process_getAffinity(Process* this) {
@@ -631,8 +679,8 @@ bool Process_setAffinity(Process* this, Affinity* affinity) {
 
 #endif
 
-void Process_sendSignal(Process* this, int sgn) {
-   kill(this->pid, sgn);
+void Process_sendSignal(Process* this, size_t sgn) {
+   kill(this->pid, (int) sgn);
 }
 
 int Process_pidCompare(const void* v1, const void* v2) {
@@ -729,7 +777,8 @@ int Process_compare(const void* v1, const void* v2) {
    case CGROUP:
       return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
    #endif
-
+   case IO_PRIORITY:
+      return Process_effectiveIOPriority(p1) - Process_effectiveIOPriority(p2);
    default:
       return (p1->pid - p2->pid);
    }

@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include "TraceScreen.h"
 #include "OpenFilesScreen.h"
 #include "AffinityPanel.h"
+#include "IOPriorityPanel.h"
 
 #include <unistd.h>
 #include <math.h>
@@ -124,18 +125,18 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(12, 0, "   F4 \\: incremental name filtering         K: hide/show kernel threads");
    mvaddstr(13, 0, "  Space: tag processes                      F: cursor follows process");
    mvaddstr(14, 0, "      U: untag all processes              + -: expand/collapse tree");
-   mvaddstr(15, 0, "   F9 k: kill process/tagged processes      P: sort by CPU%");
-   mvaddstr(16, 0, "   ] F7: higher priority (root only)        M: sort by MEM%");
-   mvaddstr(17, 0, "   [ F8: lower priority (+ nice)            T: sort by TIME");
+   mvaddstr(15, 0, "   F9 k: kill process/tagged processes  P M T: sort by CPU%, MEM% or TIME");
+   mvaddstr(16, 0, "   ] F7: higher priority (root only)        i: set IO priority");
+   mvaddstr(17, 0, "   [ F8: lower priority (+ nice)            I: invert sort order");
 #if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
    if (pl->cpuCount > 1)
-      mvaddstr(18, 0, "      a: set CPU affinity                   I: invert sort order");
+      mvaddstr(18, 0, "      a: set CPU affinity                F6 >: select sort column");
    else
 #endif
-      mvaddstr(18, 0, "                                            I: invert sort order");
-   mvaddstr(19, 0, "   F2 S: setup                           F6 >: select sort column");
-   mvaddstr(20, 0, "   F1 h: show this help screen              l: list open files with lsof");
-   mvaddstr(21, 0, "  F10 q: quit                               s: trace syscalls with strace");
+      mvaddstr(18, 0, "                                         F6 >: select sort column");
+   mvaddstr(19, 0, "   F2 S: setup                              l: list open files with lsof");
+   mvaddstr(20, 0, "   F1 h: show this help screen              s: trace syscalls with strace");
+   mvaddstr(21, 0, "  F10 q: quit");
 
    attrset(CRT_colors[HELP_BOLD]);
    mvaddstr( 9, 0, " Arrows"); mvaddstr( 9,40, " F5 t");
@@ -144,17 +145,17 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(12, 0, "   F4 \\"); mvaddstr(12,40, "    K");
    mvaddstr(13, 0, "  Space"); mvaddstr(13,40, "    F");
    mvaddstr(14, 0, "      U"); mvaddstr(14,40, "  + -");
-   mvaddstr(15, 0, "   F9 k"); mvaddstr(15,40, "    P");
-   mvaddstr(16, 0, "   ] F7"); mvaddstr(16,40, "    M");
-   mvaddstr(17, 0, "   [ F8"); mvaddstr(17,40, "    T");
-                               mvaddstr(18,40, "    I");
+   mvaddstr(15, 0, "   F9 k"); mvaddstr(15,40, "P M T");
+   mvaddstr(16, 0, "   ] F7"); mvaddstr(16,40, "    i");
+   mvaddstr(17, 0, "   [ F8"); mvaddstr(17,40, "    I");
+                               mvaddstr(18,40, " F6 >");
 #if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
    if (pl->cpuCount > 1)
       mvaddstr(18, 0, "      a:");
 #endif
-   mvaddstr(19, 0, "   F2 S"); mvaddstr(19,40, " F6 >");
-   mvaddstr(20, 0, " ? F1 h"); mvaddstr(20,40, "    l");
-   mvaddstr(21, 0, "  F10 q"); mvaddstr(21,40, "    s");
+   mvaddstr(19, 0, "   F2 S"); mvaddstr(19,40, "    l");
+   mvaddstr(20, 0, " ? F1 h"); mvaddstr(20,40, "    s");
+   mvaddstr(21, 0, "  F10 q");
    attrset(CRT_colors[DEFAULT_COLOR]);
 
    attrset(CRT_colors[HELP_BOLD]);
@@ -178,20 +179,30 @@ static void Setup_run(Settings* settings, const Header* header) {
    ScreenManager_delete(scr);
 }
 
-static bool changePriority(Panel* panel, int delta) {
+typedef bool(*ForeachProcessFn)(Process*, size_t);
+
+static bool foreachProcess(Panel* panel, ForeachProcessFn fn, int arg, bool* wasAnyTagged) {
    bool ok = true;
    bool anyTagged = false;
    for (int i = 0; i < Panel_size(panel); i++) {
       Process* p = (Process*) Panel_get(panel, i);
       if (p->tag) {
-         ok = Process_setPriority(p, p->nice + delta) && ok;
+         ok = fn(p, arg) && ok;
          anyTagged = true;
       }
    }
    if (!anyTagged) {
       Process* p = (Process*) Panel_getSelected(panel);
-      if (p) ok = Process_setPriority(p, p->nice + delta) && ok;
+      if (p) ok = fn(p, arg) && ok;
    }
+   if (wasAnyTagged)
+      *wasAnyTagged = anyTagged;
+   return ok;
+}
+
+static bool changePriority(Panel* panel, int delta) {
+   bool anyTagged;
+   bool ok = foreachProcess(panel, (ForeachProcessFn) Process_changePriorityBy, delta, &anyTagged);
    if (!ok)
       beep();
    return anyTagged;
@@ -764,20 +775,6 @@ int main(int argc, char** argv) {
          if (!killPanel) {
             killPanel = (Panel*) SignalsPanel_new(0, 0, 0, 0);
          }
-         bool anyTagged = false;
-         pid_t selectedPid = 0;
-         for (int i = 0; i < Panel_size(panel); i++) {
-            Process* p = (Process*) Panel_get(panel, i);
-            if (p->tag) {
-               anyTagged = true;
-               break;
-            }
-         }
-         if (!anyTagged) {
-            Process* p = (Process*) Panel_getSelected(panel);
-            if (p) selectedPid = p->pid;
-            if (selectedPid == 0) break;
-         }
          SignalsPanel_reset((SignalsPanel*) killPanel);
          const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
          ListItem* sgn = (ListItem*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
@@ -786,18 +783,7 @@ int main(int argc, char** argv) {
                Panel_setHeader(panel, "Sending...");
                Panel_draw(panel, true);
                refresh();
-               if (anyTagged) {
-                  for (int i = 0; i < Panel_size(panel); i++) {
-                     Process* p = (Process*) Panel_get(panel, i);
-                     if (p->tag) {
-                        Process_sendSignal(p, sgn->key);
-                     }
-                  }
-               } else {
-                  Process* p = (Process*) Panel_getSelected(panel);
-                  if (p->pid == selectedPid)
-                     Process_sendSignal(p, sgn->key);
-               }
+               foreachProcess(panel, (ForeachProcessFn) Process_sendSignal, (size_t) sgn->key, NULL);
                napms(500);
             }
          }
@@ -822,21 +808,8 @@ int main(int argc, char** argv) {
          void* set = pickFromVector(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar, header);
          if (set) {
             Affinity* affinity = AffinityPanel_getAffinity(affinityPanel);
-            bool anyTagged = false;
-            bool ok = true;
-            for (int i = 0; i < Panel_size(panel); i++) {
-               Process* p = (Process*) Panel_get(panel, i);
-               if (p->tag) {
-                  ok = Process_setAffinity(p, affinity) && ok;
-                  anyTagged = true;
-               }
-            }
-            if (!anyTagged) {
-               Process* p = (Process*) Panel_getSelected(panel);
-               if (p) ok = Process_setAffinity(p, affinity) && ok;
-            }
-            if (!ok)
-               beep();
+            bool ok = foreachProcess(panel, (ForeachProcessFn) Process_setAffinity, (size_t) affinity, NULL);
+            if (!ok) beep();
             Affinity_delete(affinity);
          }
          Panel_delete((Object*)affinityPanel);
@@ -878,6 +851,25 @@ int main(int argc, char** argv) {
          refreshTimeout = 0;
          break;
       }
+      case 'i':
+      {
+         Process* p = (Process*) Panel_getSelected(panel);
+         if (!p) break;
+         IOPriority ioprio = p->ioPriority;
+         Panel* ioprioPanel = IOPriorityPanel_new(ioprio);
+         const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
+         void* set = pickFromVector(panel, ioprioPanel, 21, headerHeight, fuFunctions, defaultBar, header);
+         if (set) {
+            IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
+            bool ok = foreachProcess(panel, (ForeachProcessFn) Process_setIOPriority, (size_t) ioprio, NULL);
+            if (!ok)
+               beep();
+         }
+         Panel_delete((Object*)ioprioPanel);
+         ProcessList_printHeader(pl, Panel_getHeader(panel));
+         refreshTimeout = 0;
+         break;
+      }
       case 'I':
       {
          refreshTimeout = 0;
@@ -914,6 +906,8 @@ int main(int argc, char** argv) {
       case KEY_F(5):
          refreshTimeout = 0;
          pl->treeView = !pl->treeView;
+         if (pl->treeView) pl->direction = 1;
+         ProcessList_printHeader(pl, Panel_getHeader(panel));
          ProcessList_expandTree(pl);
          settings->changed = true;
          if (following != -1) continue;

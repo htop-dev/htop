@@ -1,6 +1,7 @@
 
 What's new in version 1.0.2
 
+* Add IO priority support ('i' key)
 * Avoid deleting .htoprc if it is a symlink
 * BUGFIX: Fix crashes when process list is empty
 

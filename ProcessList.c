@@ -268,7 +268,7 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
    ProcessField* fields = this->fields;
    for (int i = 0; fields[i]; i++) {
       const char* field = Process_fieldTitles[fields[i]];
-      if (this->sortKey == fields[i])
+      if (!this->treeView && this->sortKey == fields[i])
          RichString_append(header, CRT_colors[PANEL_HIGHLIGHT_FOCUS], field);
       else
          RichString_append(header, CRT_colors[PANEL_HEADER_FOCUS], field);
@@ -681,6 +681,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       unsigned long long int lasttimes = (process->utime + process->stime);
       if (! ProcessList_readStatFile(process, dirname, name, command))
          goto errorReadingProcess;
+      Process_updateIOPriority(process);
       float percent_cpu = (process->utime + process->stime - lasttimes) / period * 100.0;
       process->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
       if (isnan(process->percent_cpu)) process->percent_cpu = 0.0;
