@@ -11,8 +11,10 @@ in the source distribution for its full text.
 #include "String.h"
 
 #include <curses.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
@@ -196,6 +198,13 @@ void CRT_init(int delay, int colorScheme) {
 void CRT_done() {
    curs_set(1);
    endwin();
+}
+
+void CRT_fatalError(const char* note) {
+   char* sysMsg = strerror(errno);
+   CRT_done();
+   fprintf(stderr, "%s: %s\n", note, sysMsg);
+   exit(2);
 }
 
 int CRT_readKey() {

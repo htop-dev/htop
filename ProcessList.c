@@ -193,7 +193,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    this->processes2 = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
    
    FILE* file = fopen(PROCSTATFILE, "r");
-   assert(file != NULL);
+   if (file == NULL) {
+      CRT_fatalError("Cannot open " PROCSTATFILE);
+   }
    char buffer[256];
    int cpus = -1;
    do {
@@ -758,7 +760,9 @@ void ProcessList_scan(ProcessList* this) {
    unsigned long long int swapFree = 0;
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
-   assert(file != NULL);
+   if (file == NULL) {
+      CRT_fatalError("Cannot open " PROCMEMINFOFILE);
+   }
    int cpus = this->cpuCount;
    {
       char buffer[128];
@@ -796,7 +800,9 @@ void ProcessList_scan(ProcessList* this) {
    fclose(file);
 
    file = fopen(PROCSTATFILE, "r");
-   assert(file != NULL);
+   if (file == NULL) {
+      CRT_fatalError("Cannot open " PROCSTATFILE);
+   }
    for (int i = 0; i <= cpus; i++) {
       char buffer[256];
       int cpuid;

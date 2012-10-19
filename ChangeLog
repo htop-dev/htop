@@ -3,6 +3,8 @@ What's new in version 1.0.2
 
 * Add IO priority support ('i' key)
 * Avoid deleting .htoprc if it is a symlink
+* Fail gracefully when /proc is not mounted
+  (thanks to Philipp Hagemeister)
 * BUGFIX: Fix crashes when process list is empty
 
 What's new in version 1.0.1

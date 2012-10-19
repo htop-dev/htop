@@ -119,6 +119,8 @@ void CRT_init(int delay, int colorScheme);
 
 void CRT_done();
 
+void CRT_fatalError(const char* note);
+
 int CRT_readKey();
 
 void CRT_disableDelay();
