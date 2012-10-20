@@ -208,7 +208,7 @@ const char *Process_fieldNames[] = {
 };
 
 const char *Process_fieldTitles[] = {
-   "", "    PID ", "Command ", "S ", "   PPID ", " PGRP ", " SESN ",
+   "", "    PID ", "Command ", "S ", "   PPID ", "   PGRP ", "   SESN ",
    "  TTY ", "  TPGID ", "- ", "- ", "- ", "- ", "- ",
    " UTIME+  ", " STIME+  ", " CUTIME+ ", " CSTIME+ ", "PRI ", " NI ", "- ",
    "START ", "- ", "- ", "- ", "- ", "- ", "- ",
@@ -245,17 +245,21 @@ void Process_getMaxPid() {
    fscanf(file, "%32d", &maxPid);
    fclose(file);
    if (maxPid > 99999) {
-      Process_fieldTitles[PID] =   "    PID ";
-      Process_fieldTitles[PPID] =  "   PPID ";
-      Process_fieldTitles[TPGID] = "  TPGID ";
-      Process_fieldTitles[TGID] =  "   TGID ";
+      Process_fieldTitles[PID] =     "    PID ";
+      Process_fieldTitles[PPID] =    "   PPID ";
+      Process_fieldTitles[TPGID] =   "  TPGID ";
+      Process_fieldTitles[TGID] =    "   TGID ";
+      Process_fieldTitles[PGRP] =    "   PGRP ";
+      Process_fieldTitles[SESSION] = "   SESN ";
       Process_pidFormat = "%7u ";
       Process_tpgidFormat = "%7d ";
    } else {
-      Process_fieldTitles[PID] =   "  PID ";
-      Process_fieldTitles[PPID] =  " PPID ";
-      Process_fieldTitles[TPGID] = "TPGID ";
-      Process_fieldTitles[TGID] =  " TGID ";
+      Process_fieldTitles[PID] =     "  PID ";
+      Process_fieldTitles[PPID] =    " PPID ";
+      Process_fieldTitles[TPGID] =   "TPGID ";
+      Process_fieldTitles[TGID] =    " TGID ";
+      Process_fieldTitles[PGRP] =    " PGRP ";
+      Process_fieldTitles[SESSION] = " SESN ";
       Process_pidFormat = "%5u ";
       Process_tpgidFormat = "%5d ";
    }
@@ -381,8 +385,8 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    switch (field) {
    case PID: snprintf(buffer, n, Process_pidFormat, this->pid); break;
    case PPID: snprintf(buffer, n, Process_pidFormat, this->ppid); break;
-   case PGRP: snprintf(buffer, n, "%5u ", this->pgrp); break;
-   case SESSION: snprintf(buffer, n, "%5u ", this->session); break;
+   case PGRP: snprintf(buffer, n, Process_pidFormat, this->pgrp); break;
+   case SESSION: snprintf(buffer, n, Process_pidFormat, this->session); break;
    case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
    case TGID: snprintf(buffer, n, Process_pidFormat, this->tgid); break;
    case TPGID: snprintf(buffer, n, Process_tpgidFormat, this->tpgid); break;
