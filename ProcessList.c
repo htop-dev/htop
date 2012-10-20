@@ -153,6 +153,7 @@ typedef struct ProcessList_ {
    bool highlightThreads;
    bool detailedCPUTime;
    bool countCPUsFromZero;
+   bool updateProcessNames;
    const char **treeStr;
 
 } ProcessList;
@@ -239,6 +240,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    this->highlightMegabytes = false;
    this->detailedCPUTime = false;
    this->countCPUsFromZero = false;
+   this->updateProcessNames = false;
    this->treeStr = NULL;
    this->following = -1;
 
@@ -712,6 +714,11 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
             goto errorReadingProcess;
 
          ProcessList_add(this, process);
+      } else {
+         if (this->updateProcessNames) {
+            if (! ProcessList_readCmdlineFile(process, dirname, name))
+               goto errorReadingProcess;
+         }
       }
 
       if (process->state == 'Z') {

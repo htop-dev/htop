@@ -136,6 +136,7 @@ typedef struct ProcessList_ {
    bool highlightThreads;
    bool detailedCPUTime;
    bool countCPUsFromZero;
+   bool updateProcessNames;
    const char **treeStr;
 
 } ProcessList;
