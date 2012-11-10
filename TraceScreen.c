@@ -10,6 +10,8 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "ProcessList.h"
 #include "ListItem.h"
+#include "IncSet.h"
+#include "String.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -30,39 +32,49 @@ in the source distribution for its full text.
 typedef struct TraceScreen_ {
    Process* process;
    Panel* display;
-   FunctionBar* bar;
    bool tracing;
 } TraceScreen;
 
 }*/
 
-static const char* tsFunctions[] = {"AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
+static const char* tsFunctions[] = {"Search ", "Filter ", "AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
 
-static const char* tsKeys[] = {"F4", "F5", "Esc"};
+static const char* tsKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
 
-static int tsEvents[] = {KEY_F(4), KEY_F(5), 27};
+static int tsEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
 
 TraceScreen* TraceScreen_new(Process* process) {
    TraceScreen* this = (TraceScreen*) malloc(sizeof(TraceScreen));
    this->process = process;
-   this->display = Panel_new(0, 1, COLS, LINES-2, LISTITEM_CLASS, true, ListItem_compare);
-   this->bar = FunctionBar_new(tsFunctions, tsKeys, tsEvents);
+   this->display = Panel_new(0, 1, COLS, LINES-2, LISTITEM_CLASS, false, ListItem_compare);
    this->tracing = true;
    return this;
 }
 
 void TraceScreen_delete(TraceScreen* this) {
    Panel_delete((Object*)this->display);
-   FunctionBar_delete((Object*)this->bar);
    free(this);
 }
 
-static void TraceScreen_draw(TraceScreen* this) {
+static void TraceScreen_draw(TraceScreen* this, IncSet* inc) {
    attrset(CRT_colors[PANEL_HEADER_FOCUS]);
    mvhline(0, 0, ' ', COLS);
    mvprintw(0, 0, "Trace of process %d - %s", this->process->pid, this->process->comm);
    attrset(CRT_colors[DEFAULT_COLOR]);
-   FunctionBar_draw(this->bar, NULL);
+   IncSet_drawBar(inc);
+}
+
+static inline void addLine(const char* line, Vector* lines, Panel* panel, const char* incFilter) {
+   Vector_add(lines, (Object*) ListItem_new(line, 0));
+   if (!incFilter || String_contains_i(line, incFilter))
+      Panel_add(panel, (Object*)Vector_get(lines, Vector_size(lines)-1));
+}
+
+static inline void appendLine(const char* line, Vector* lines, Panel* panel, const char* incFilter) {
+   ListItem* last = (ListItem*)Vector_get(lines, Vector_size(lines)-1);
+   ListItem_append(last, line);
+   if (incFilter && Panel_get(panel, Panel_size(panel)-1) != (Object*)last && String_contains_i(line, incFilter))
+      Panel_add(panel, (Object*)last);
 }
 
 void TraceScreen_run(TraceScreen* this) {
@@ -86,47 +98,63 @@ void TraceScreen_run(TraceScreen* this) {
    FILE* strace = fdopen(fdpair[0], "r");
    Panel* panel = this->display;
    int fd_strace = fileno(strace);
-   TraceScreen_draw(this);
    CRT_disableDelay();
    bool contLine = false;
    bool follow = false;
    bool looping = true;
+
+   FunctionBar* bar = FunctionBar_new(tsFunctions, tsKeys, tsEvents);
+   IncSet* inc = IncSet_new(bar);
+
+   Vector* lines = Vector_new(panel->items->type, true, DEFAULT_SIZE, ListItem_compare);
+
+   TraceScreen_draw(this, inc);
+   
    while (looping) {
-      fd_set fds;
-      FD_ZERO(&fds);
-      FD_SET(fd_strace, &fds);
-      struct timeval tv;
-      tv.tv_sec = 0; tv.tv_usec = 500;
-      int ready = select(fd_strace+1, &fds, NULL, NULL, &tv);
-      int nread = 0;
-      if (ready > 0)
-         nread = fread(buffer, 1, 1000, strace);
-      if (nread && this->tracing) {
-         char* line = buffer;
-         buffer[nread] = '\0';
-         for (int i = 0; i < nread; i++) {
-            if (buffer[i] == '\n') {
-               buffer[i] = '\0';
-               if (contLine) {
-                  ListItem_append((ListItem*)Panel_get(panel,
-                     Panel_size(panel)-1), line);
-                  contLine = false;
-               } else {
-                  Panel_add(panel, (Object*) ListItem_new(line, 0));
-               }
-               line = buffer+i+1;
-            }
-         }
-         if (line < buffer+nread) {
-            Panel_add(panel, (Object*) ListItem_new(line, 0));
-            buffer[nread] = '\0';
-            contLine = true;
-         }
-         if (follow)
-            Panel_setSelected(panel, Panel_size(panel)-1);
-         Panel_draw(panel, true);
-      }
+
+      Panel_draw(panel, true);
+      const char* incFilter = IncSet_filter(inc);
+
+      if (inc->active)
+         move(LINES-1, CRT_cursorX);
       int ch = getch();
+      
+      if (ch == ERR) {
+         fd_set fds;
+         FD_ZERO(&fds);
+         FD_SET(STDIN_FILENO, &fds);
+         FD_SET(fd_strace, &fds);
+         //struct timeval tv;
+         //tv.tv_sec = 0; tv.tv_usec = 500;
+         int ready = select(fd_strace+1, &fds, NULL, NULL, NULL/*&tv*/);
+         int nread = 0;
+         if (ready > 0 && FD_ISSET(fd_strace, &fds))
+            nread = fread(buffer, 1, 1000, strace);
+         if (nread && this->tracing) {
+            char* line = buffer;
+            buffer[nread] = '\0';
+            for (int i = 0; i < nread; i++) {
+               if (buffer[i] == '\n') {
+                  buffer[i] = '\0';
+                  if (contLine) {
+                     appendLine(line, lines, panel, incFilter);
+                     contLine = false;
+                  } else {
+                     addLine(line, lines, panel, incFilter);
+                  }
+                  line = buffer+i+1;
+               }
+            }
+            if (line < buffer+nread) {
+               addLine(line, lines, panel, incFilter);
+               buffer[nread] = '\0';
+               contLine = true;
+            }
+            if (follow)
+               Panel_setSelected(panel, Panel_size(panel)-1);
+         }
+      }
+            
       if (ch == KEY_MOUSE) {
          MEVENT mevent;
          int ok = getmouse(&mevent);
@@ -136,27 +164,42 @@ void TraceScreen_run(TraceScreen* this) {
                follow = false;
                ch = 0;
             } if (mevent.y == LINES - 1)
-               ch = FunctionBar_synthesizeEvent(this->bar, mevent.x);
+               ch = FunctionBar_synthesizeEvent(inc->bar, mevent.x);
       }
+      
+      if (inc->active) {
+         IncSet_handleKey(inc, ch, panel, IncSet_getListItemValue, lines);
+         continue;
+      }
+      
       switch(ch) {
       case ERR:
          continue;
-      case KEY_F(5):
-         this->tracing = !this->tracing;
-         FunctionBar_setLabel(this->bar, KEY_F(5), this->tracing?"Stop Tracing   ":"Resume Tracing ");
-         TraceScreen_draw(this);
-         break;
       case KEY_HOME:
          Panel_setSelected(panel, 0);
          break;
       case KEY_END:
          Panel_setSelected(panel, Panel_size(panel)-1);
          break;
-      case 'f':
+      case KEY_F(3):
+      case '/':
+         IncSet_activate(inc, INC_SEARCH);
+         break;
       case KEY_F(4):
+      case '\\':
+         IncSet_activate(inc, INC_FILTER);
+         break;
+      case 'f':
+      case KEY_F(8):
          follow = !follow;
          if (follow)
             Panel_setSelected(panel, Panel_size(panel)-1);
+         break;
+      case 't':
+      case KEY_F(9):
+         this->tracing = !this->tracing;
+         FunctionBar_setLabel(bar, KEY_F(9), this->tracing?"Stop Tracing   ":"Resume Tracing ");
+         TraceScreen_draw(this, inc);
          break;
       case 'q':
       case 27:
@@ -165,14 +208,17 @@ void TraceScreen_run(TraceScreen* this) {
          break;
       case KEY_RESIZE:
          Panel_resize(panel, COLS, LINES-2);
-         TraceScreen_draw(this);
+         TraceScreen_draw(this, inc);
          break;
       default:
          follow = false;
          Panel_onKey(panel, ch);
       }
-      Panel_draw(panel, true);
    }
+   
+   IncSet_delete(inc);
+   FunctionBar_delete((Object*)bar);
+   
    kill(child, SIGTERM);
    waitpid(child, NULL, 0);
    fclose(strace);

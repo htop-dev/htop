@@ -41,10 +41,12 @@ static void ListItem_delete(Object* cast) {
 static void ListItem_display(Object* cast, RichString* out) {
    ListItem* this = (ListItem*)cast;
    assert (this != NULL);
+   /*
    int len = strlen(this->value)+1;
    char buffer[len+1];
    snprintf(buffer, len, "%s", this->value);
-   RichString_write(out, CRT_colors[DEFAULT_COLOR], buffer);
+   */
+   RichString_write(out, CRT_colors[DEFAULT_COLOR], this->value/*buffer*/);
 }
 
 ListItem* ListItem_new(const char* value, int key) {
@@ -57,11 +59,13 @@ ListItem* ListItem_new(const char* value, int key) {
    return this;
 }
 
-void ListItem_append(ListItem* this, char* text) {
-   char* buf = malloc(strlen(this->value) + strlen(text) + 1);
-   sprintf(buf, "%s%s", this->value, text);
-   free(this->value);
-   this->value = buf;
+void ListItem_append(ListItem* this, const char* text) {
+   int oldLen = strlen(this->value);
+   int textLen = strlen(text);
+   int newLen = strlen(this->value) + textLen;
+   this->value = realloc(this->value, newLen + 1);
+   memcpy(this->value + oldLen, text, textLen);
+   this->value[newLen] = '\0';
 }
 
 const char* ListItem_getRef(ListItem* this) {

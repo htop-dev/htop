@@ -16,7 +16,6 @@ in the source distribution for its full text.
 typedef struct TraceScreen_ {
    Process* process;
    Panel* display;
-   FunctionBar* bar;
    bool tracing;
 } TraceScreen;
 

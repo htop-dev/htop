@@ -26,7 +26,7 @@ extern char* LISTITEM_CLASS;
 
 ListItem* ListItem_new(const char* value, int key);
 
-void ListItem_append(ListItem* this, char* text);
+void ListItem_append(ListItem* this, const char* text);
 
 const char* ListItem_getRef(ListItem* this);
 

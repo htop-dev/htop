@@ -144,7 +144,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             this->lastScan = now;
          }
          Header_draw(this->header);
-         ProcessList_rebuildPanel(this->header->pl, false, false, false, false, false, NULL);
+         ProcessList_rebuildPanel(this->header->pl, false, false, false, false, NULL);
       }
       for (int i = 0; i < panels; i++) {
          Panel* panel = (Panel*) Vector_get(this->panels, i);

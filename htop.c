@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include "OpenFilesScreen.h"
 #include "AffinityPanel.h"
 #include "IOPriorityPanel.h"
+#include "IncSet.h"
 
 #include <unistd.h>
 #include <math.h>
@@ -38,9 +39,7 @@ in the source distribution for its full text.
 
 //#link m
 
-#define INCSEARCH_MAX 40
-
-#define COPYRIGHT "(C) 2004-2011 Hisham Muhammad"
+#define COPYRIGHT "(C) 2004-2012 Hisham Muhammad"
 
 static void printVersionFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
@@ -263,15 +262,11 @@ static inline void setSortKey(ProcessList* pl, ProcessField sortKey, Panel* pane
    ProcessList_printHeader(pl, Panel_getHeader(panel));
 }
 
-typedef struct IncBuffer_ {
-   char buffer[INCSEARCH_MAX];
-   int index;
-   FunctionBar* bar;
-} IncBuffer;
-
-static void IncBuffer_reset(IncBuffer* inc) {
-   inc->index = 0;
-   inc->buffer[0] = 0;
+static const char* getMainPanelValue(Panel* panel, int i) {
+   Process* p = (Process*) Panel_get(panel, i);
+   if (p)
+      return p->comm;
+   return "";
 }
 
 int main(int argc, char** argv) {
@@ -439,27 +434,12 @@ int main(int argc, char** argv) {
       pl->direction = 1;
    }
    ProcessList_printHeader(pl, Panel_getHeader(panel));
-
-   IncBuffer incSearch, incFilter;
-   bool filtering = false;
-
-   memset(&incSearch, 0, sizeof(IncBuffer));
-   const char* searchFunctions[] = {"Next  ", "Cancel ", " Search: ", NULL};
-   const char* searchKeys[] = {"F3", "Esc", "  "};
-   int searchEvents[] = {KEY_F(3), 27, ERR};
-   incSearch.bar = FunctionBar_new(searchFunctions, searchKeys, searchEvents);
-
-   memset(&incFilter, 0, sizeof(IncBuffer));
-   const char* filterFunctions[] = {"Done  ", "Clear ", " Filter: ", NULL};
-   const char* filterKeys[] = {"Enter", "Esc", "  "};
-   int filterEvents[] = {13, 27, ERR};
-   incFilter.bar = FunctionBar_new(filterFunctions, filterKeys, filterEvents);
-   
-   IncBuffer* incMode = NULL;
    
    const char* defaultFunctions[] = {"Help  ", "Setup ", "Search", "Filter", "Tree  ",
        "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
    FunctionBar* defaultBar = FunctionBar_new(defaultFunctions, NULL, NULL);
+
+   IncSet* inc = IncSet_new(defaultBar);
 
    ProcessList_scan(pl);
    usleep(75000);
@@ -494,7 +474,7 @@ int main(int argc, char** argv) {
             ProcessList_sort(pl);
             refreshTimeout = 1;
          }
-         ProcessList_rebuildPanel(pl, true, following, userOnly, userId, filtering, incFilter.buffer);
+         ProcessList_rebuildPanel(pl, true, following, userOnly, userId, IncSet_filter(inc));
       }
       doRefresh = true;
       
@@ -502,12 +482,12 @@ int main(int argc, char** argv) {
 
       Panel_draw(panel, true);
       int prev = ch;
-      if (incMode)
+      if (inc->active)
          move(LINES-1, CRT_cursorX);
       ch = getch();
 
       if (ch == ERR) {
-         if (!incMode)
+         if (!inc->active)
             refreshTimeout--;
          if (prev == ch && !recalculate) {
             closeTimeout++;
@@ -517,83 +497,6 @@ int main(int argc, char** argv) {
          } else
             closeTimeout = 0;
          continue;
-      }
-
-      if (incMode) {
-         doRefresh = false;
-         int size = Panel_size(panel);
-         if (ch == KEY_F(3)) {
-            if (Panel_size(panel) == 0) continue;
-            int here = Panel_getSelectedIndex(panel);
-            int i = here+1;
-            while (i != here) {
-               if (i == size)
-                  i = 0;
-               Process* p = (Process*) Panel_get(panel, i);
-               if (String_contains_i(p->comm, incMode->buffer)) {
-                  Panel_setSelected(panel, i);
-                  break;
-               }
-               i++;
-            }
-            continue;
-         } else if (isprint((char)ch) && (incMode->index < INCSEARCH_MAX)) {
-            incMode->buffer[incMode->index] = ch;
-            incMode->index++;
-            incMode->buffer[incMode->index] = 0;
-            if (incMode == &incFilter) {
-               doRefresh = true;
-               if (incFilter.index == 1) filtering = true;
-            }
-         } else if ((ch == KEY_BACKSPACE || ch == 127) && (incMode->index > 0)) {
-            incMode->index--;
-            incMode->buffer[incMode->index] = 0;
-            if (incMode == &incFilter) {
-               doRefresh = true;
-               if (incFilter.index == 0) {
-                  filtering = false;
-                  IncBuffer_reset(incMode);
-               }
-            }
-         } else {
-            if (incMode == &incFilter) {
-               doRefresh = true;
-               if (ch == 27) {
-                  filtering = false;
-                  IncBuffer_reset(incMode);
-               }
-            }
-            incMode = NULL;
-            FunctionBar_draw(defaultBar, NULL);
-            continue;
-         }
-
-         bool found = false;
-         for (int i = 0; i < size; i++) {
-            Process* p = (Process*) Panel_get(panel, i);
-            if (String_contains_i(p->comm, incSearch.buffer)) {
-               Panel_setSelected(panel, i);
-               found = true;
-               break;
-            }
-         }
-         if (found)
-            FunctionBar_draw(incMode->bar, incMode->buffer);
-         else
-            FunctionBar_drawAttr(incMode->bar, incMode->buffer, CRT_colors[FAILED_SEARCH]);
-         continue;
-      }
-      if (isdigit((char)ch)) {
-         if (Panel_size(panel) == 0) continue;
-         pid_t pid = ch-48 + acc;
-         for (int i = 0; i < ProcessList_size(pl) && ((Process*) Panel_getSelected(panel))->pid != pid; i++)
-            Panel_setSelected(panel, i);
-         acc = pid * 10;
-         if (acc > 10000000)
-            acc = 0;
-         continue;
-      } else {
-         acc = 0;
       }
 
       if (ch == KEY_MOUSE) {
@@ -619,10 +522,7 @@ int main(int argc, char** argv) {
                   follow = true;
                   continue;
                } if (mevent.y == LINES - 1) {
-                  FunctionBar* bar;
-                  if (incMode) bar = incMode->bar;
-                  else bar = defaultBar;
-                  ch = FunctionBar_synthesizeEvent(bar, mevent.x);
+                  ch = FunctionBar_synthesizeEvent(inc->bar, mevent.x);
                }
             } else if (mevent.bstate & BUTTON4_CLICKED) {
                ch = KEY_UP;
@@ -634,13 +534,28 @@ int main(int argc, char** argv) {
          }
       }
 
+      if (inc->active) {
+         doRefresh = IncSet_handleKey(inc, ch, panel, getMainPanelValue, NULL);
+         continue;
+      }
+      
+      if (isdigit((char)ch)) {
+         if (Panel_size(panel) == 0) continue;
+         pid_t pid = ch-48 + acc;
+         for (int i = 0; i < ProcessList_size(pl) && ((Process*) Panel_getSelected(panel))->pid != pid; i++)
+            Panel_setSelected(panel, i);
+         acc = pid * 10;
+         if (acc > 10000000)
+            acc = 0;
+         continue;
+      } else {
+         acc = 0;
+      }
+
       switch (ch) {
       case KEY_RESIZE:
          Panel_resize(panel, COLS, LINES-headerHeight-1);
-         if (incMode)
-            FunctionBar_draw(incMode->bar, incMode->buffer);
-         else
-            FunctionBar_draw(defaultBar, NULL);
+         IncSet_drawBar(inc);
          break;
       case 'M':
       {
@@ -834,7 +749,7 @@ int main(int argc, char** argv) {
          const char* fuFunctions[] = {"Sort  ", "Cancel ", NULL};
          ProcessField* fields = pl->fields;
          for (int i = 0; fields[i]; i++) {
-            char* name = String_trim(Process_fieldTitles[fields[i]]);
+            char* name = String_trim(Process_fieldNames[fields[i]]);
             Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
             if (fields[i] == pl->sortKey)
                Panel_setSelected(sortPanel, i);
@@ -891,16 +806,13 @@ int main(int argc, char** argv) {
       }
       case KEY_F(3):
       case '/':
-         incMode = &incSearch;
-         IncBuffer_reset(incMode);
-         FunctionBar_draw(incSearch.bar, incSearch.buffer);
+         IncSet_activate(inc, INC_SEARCH);
          break;
       case KEY_F(4):
       case '\\':
-         incMode = &incFilter;
+         IncSet_activate(inc, INC_FILTER);
          refreshTimeout = 0;
          doRefresh = true;
-         FunctionBar_draw(incFilter.bar, incFilter.buffer);
          continue;
       case 't':
       case KEY_F(5):
@@ -943,8 +855,7 @@ int main(int argc, char** argv) {
       Settings_write(settings);
    Header_delete(header);
    ProcessList_delete(pl);
-   FunctionBar_delete((Object*)incFilter.bar);
-   FunctionBar_delete((Object*)incSearch.bar);
+   IncSet_delete(inc);
    FunctionBar_delete((Object*)defaultBar);
    Panel_delete((Object*)panel);
    if (killPanel)

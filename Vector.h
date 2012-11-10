@@ -23,12 +23,12 @@ typedef struct Vector_ {
    int arraySize;
    int growthRate;
    int items;
-   char* vectorType;
+   char* type;
    bool owner;
 } Vector;
 
 
-Vector* Vector_new(char* vectorType_, bool owner, int size, Object_Compare compare);
+Vector* Vector_new(char* type, bool owner, int size, Object_Compare compare);
 
 void Vector_delete(Vector* this);
 

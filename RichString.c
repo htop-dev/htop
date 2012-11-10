@@ -83,16 +83,15 @@ static inline void RichString_setLen(RichString* this, int len) {
 
 #ifdef HAVE_LIBNCURSESW
 
-inline void RichString_appendn(RichString* this, int attrs, const char* data_c, int len) {
+static inline void RichString_writeFrom(RichString* this, int attrs, const char* data_c, int from, int len) {
    wchar_t data[len+1];
    len = mbstowcs(data, data_c, len);
    if (len<0)
       return;
-   int oldLen = this->chlen;
-   int newLen = len + oldLen;
+   int newLen = from + len;
    RichString_setLen(this, newLen);
-   for (int i = oldLen, j = 0; i < newLen; i++, j++) {
-      memset(&this->chptr[i], 0, sizeof(this->chptr[i]));
+   memset(&this->chptr[from], 0, sizeof(CharType) * (newLen - from));
+   for (int i = from, j = 0; i < newLen; i++, j++) {
       this->chptr[i].chars[0] = data[j];
       this->chptr[i].attr = attrs;
    }
@@ -120,11 +119,10 @@ int RichString_findChar(RichString* this, char c, int start) {
 
 #else
 
-inline void RichString_appendn(RichString* this, int attrs, const char* data_c, int len) {
-   int oldLen = this->chlen;
-   int newLen = len + oldLen;
+static inline void RichString_writeFrom(RichString* this, int attrs, const char* data_c, int from, int len) {
+   int newLen = from + len;
    RichString_setLen(this, newLen);
-   for (int i = oldLen, j = 0; i < newLen; i++, j++)
+   for (int i = from, j = 0; i < newLen; i++, j++)
       this->chptr[i] = (isprint(data_c[j]) ? data_c[j] : '?') | attrs;
    this->chptr[newLen] = 0;
 }
@@ -160,11 +158,14 @@ void RichString_setAttr(RichString* this, int attrs) {
    RichString_setAttrn(this, attrs, 0, this->chlen - 1);
 }
 
-inline void RichString_append(RichString* this, int attrs, const char* data) {
-   RichString_appendn(this, attrs, data, strlen(data));
+void RichString_append(RichString* this, int attrs, const char* data) {
+   RichString_writeFrom(this, attrs, data, this->chlen, strlen(data));
+}
+
+void RichString_appendn(RichString* this, int attrs, const char* data, int len) {
+   RichString_writeFrom(this, attrs, data, this->chlen, len);
 }
 
 void RichString_write(RichString* this, int attrs, const char* data) {
-   RichString_setLen(this, 0);
-   RichString_appendn(this, attrs, data, strlen(data));
+   RichString_writeFrom(this, attrs, data, 0, strlen(data));
 }

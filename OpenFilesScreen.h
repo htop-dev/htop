@@ -29,7 +29,6 @@ typedef struct OpenFilesScreen_ {
    pid_t pid;
    Panel* display;
    FunctionBar* bar;
-   bool tracing;
 } OpenFilesScreen;
 
 

@@ -112,7 +112,6 @@ typedef struct ProcessList_ {
    int following;
    bool userOnly;
    uid_t userId;
-   bool filtering;
    const char* incFilter;
    Hashtable* pidWhiteList;
 
@@ -918,18 +917,16 @@ void ProcessList_expandTree(ProcessList* this) {
    }
 }
 
-void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool userOnly, uid_t userId, bool filtering, const char* incFilter) {
+void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool userOnly, uid_t userId, const char* incFilter) {
    if (!flags) {
       following = this->following;
       userOnly = this->userOnly;
       userId = this->userId;
-      filtering = this->filtering;
       incFilter = this->incFilter;
    } else {
       this->following = following;
       this->userOnly = userOnly;
       this->userId = userId;
-      this->filtering = filtering;
       this->incFilter = incFilter;
    }
 
@@ -946,7 +943,7 @@ void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool
 
       if ( (!p->show)
          || (userOnly && (p->st_uid != userId))
-         || (filtering && !(String_contains_i(p->comm, incFilter)))
+         || (incFilter && !(String_contains_i(p->comm, incFilter)))
          || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->pid)) )
          hidden = true;
 
