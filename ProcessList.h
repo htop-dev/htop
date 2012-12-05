@@ -51,12 +51,6 @@ typedef enum TreeStr_ {
    TREE_STR_COUNT
 } TreeStr;
 
-typedef enum TreeType_ {
-   TREE_TYPE_AUTO,
-   TREE_TYPE_ASCII,
-   TREE_TYPE_UTF8,
-} TreeType;
-
 typedef struct CPUData_ {
    unsigned long long int totalTime;
    unsigned long long int userTime;

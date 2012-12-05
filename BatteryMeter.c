@@ -328,10 +328,13 @@ static void BatteryMeter_setValues(Meter * this, char *buffer, int len) {
    return;
 }
 
-MeterType BatteryMeter = {
+MeterClass BatteryMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete
+   },
    .setValues = BatteryMeter_setValues,
-   .display = NULL,
-   .mode = TEXT_METERMODE,
+   .defaultMode = TEXT_METERMODE,
    .items = 1,
    .total = 100.0,
    .attributes = BatteryMeter_attributes,

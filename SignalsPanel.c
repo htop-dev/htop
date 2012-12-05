@@ -5,6 +5,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Panel.h"
 #include "SignalsPanel.h"
 
 #include "ListItem.h"
@@ -16,25 +17,13 @@ in the source distribution for its full text.
 #include <ctype.h>
 
 /*{
-#include "Panel.h"
 
 typedef struct SignalItem_ {
    const char* name;
    int number;
 } SignalItem;
 
-typedef struct SignalsPanel_ {
-   Panel super;
-} SignalsPanel;
-
 }*/
-
-static void SignalsPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
-   SignalsPanel* this = (SignalsPanel*) object;
-   Panel_done(super);
-   free(this);
-}
 
 static SignalItem signals[] = {
    { .name = " 0 Cancel",    .number = 0 },
@@ -73,21 +62,11 @@ static SignalItem signals[] = {
    { .name = "31 SIGSYS",    .number = 31 },
 };
 
-SignalsPanel* SignalsPanel_new(int x, int y, int w, int h) {
-   SignalsPanel* this = (SignalsPanel*) malloc(sizeof(SignalsPanel));
-   Panel* super = (Panel*) this;
-   Panel_init(super, x, y, w, h, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = SignalsPanel_delete;
-
+Panel* SignalsPanel_new() {
+   Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem));
    for(unsigned int i = 0; i < sizeof(signals)/sizeof(SignalItem); i++)
-      Panel_set(super, i, (Object*) ListItem_new(signals[i].name, signals[i].number));
-   SignalsPanel_reset(this);
+      Panel_set(this, i, (Object*) ListItem_new(signals[i].name, signals[i].number));
+   Panel_setHeader(this, "Send signal:");
+   Panel_setSelected(this, 16); // 16th item is SIGTERM
    return this;
-}
-
-void SignalsPanel_reset(SignalsPanel* this) {
-   Panel* super = (Panel*) this;
-
-   Panel_setHeader(super, "Send signal:");
-   Panel_setSelected(super, 16); // 16th item is SIGTERM
 }

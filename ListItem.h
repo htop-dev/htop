@@ -18,11 +18,7 @@ typedef struct ListItem_ {
 } ListItem;
 
 
-#ifdef DEBUG
-extern char* LISTITEM_CLASS;
-#else
-#define LISTITEM_CLASS NULL
-#endif
+extern ObjectClass ListItem_class;
 
 ListItem* ListItem_new(const char* value, int key);
 

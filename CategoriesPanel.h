@@ -23,6 +23,8 @@ typedef struct CategoriesPanel_ {
 
 void CategoriesPanel_makeMetersPage(CategoriesPanel* this);
 
+extern PanelClass CategoriesPanel_class;
+
 CategoriesPanel* CategoriesPanel_new(Settings* settings, ScreenManager* scr);
 
 #endif

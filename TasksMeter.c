@@ -55,10 +55,14 @@ static void TasksMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[METER_TEXT], " running");
 }
 
-MeterType TasksMeter = {
+MeterClass TasksMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = TasksMeter_display,
+   },
    .setValues = TasksMeter_setValues, 
-   .display = TasksMeter_display,
-   .mode = TEXT_METERMODE,
+   .defaultMode = TEXT_METERMODE,
    .items = 1,
    .total = 100.0,
    .attributes = TasksMeter_attributes, 

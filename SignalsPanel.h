@@ -9,20 +9,13 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Panel.h"
 
 typedef struct SignalItem_ {
    const char* name;
    int number;
 } SignalItem;
 
-typedef struct SignalsPanel_ {
-   Panel super;
-} SignalsPanel;
 
-
-SignalsPanel* SignalsPanel_new(int x, int y, int w, int h);
-
-void SignalsPanel_reset(SignalsPanel* this);
+Panel* SignalsPanel_new();
 
 #endif

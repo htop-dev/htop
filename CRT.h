@@ -101,9 +101,9 @@ typedef enum ColorElements_ {
 
 // TODO: centralize these in Settings.
 
-extern int CRT_delay;
-
 extern int CRT_colorScheme;
+
+extern bool CRT_utf8;
 
 extern int CRT_colors[LAST_COLORELEMENT];
 

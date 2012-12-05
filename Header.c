@@ -50,8 +50,8 @@ typedef struct Header_ {
 
 Header* Header_new(ProcessList* pl) {
    Header* this = calloc(sizeof(Header), 1);
-   this->leftMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE, NULL);
-   this->rightMeters = Vector_new(METER_CLASS, true, DEFAULT_SIZE, NULL);
+   this->leftMeters = Vector_new(Class(Meter), true, DEFAULT_SIZE);
+   this->rightMeters = Vector_new(Class(Meter), true, DEFAULT_SIZE);
    this->margin = true;
    this->pl = pl;
    return this;
@@ -75,7 +75,7 @@ void Header_createMeter(Header* this, char* name, HeaderSide side) {
       if (!ok) param = 0;
       *paren = '\0';
    }
-   for (MeterType** type = Meter_types; *type; type++) {
+   for (MeterClass** type = Meter_types; *type; type++) {
       if (String_eq(name, (*type)->name)) {
          Vector_add(meters, Meter_new(this->pl, param, *type));
          break;
@@ -94,7 +94,7 @@ void Header_setMode(Header* this, int i, MeterModeId mode, HeaderSide side) {
    Meter_setMode(meter, mode);
 }
 
-Meter* Header_addMeter(Header* this, MeterType* type, int param, HeaderSide side) {
+Meter* Header_addMeter(Header* this, MeterClass* type, int param, HeaderSide side) {
    Vector* meters = side == LEFT_HEADER
                        ? this->leftMeters
                        : this->rightMeters;
@@ -118,10 +118,10 @@ char* Header_readMeterName(Header* this, int i, HeaderSide side) {
                        : this->rightMeters;
    Meter* meter = (Meter*) Vector_get(meters, i);
 
-   int nameLen = strlen(meter->type->name);
+   int nameLen = strlen(Meter_name(meter));
    int len = nameLen + 100;
    char* name = malloc(len);
-   strncpy(name, meter->type->name, nameLen);
+   strncpy(name, Meter_name(meter), nameLen);
    name[nameLen] = '\0';
    if (meter->param)
       snprintf(name + nameLen, len - nameLen, "(%d)", meter->param);
@@ -140,38 +140,37 @@ MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side) {
 
 void Header_defaultMeters(Header* this, int cpuCount) {
    if (cpuCount > 8) {
-      Vector_add(this->leftMeters, Meter_new(this->pl, 0, &LeftCPUs2Meter));
-      Vector_add(this->rightMeters, Meter_new(this->pl, 0, &RightCPUs2Meter));
+      Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(LeftCPUs2Meter)));
+      Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(RightCPUs2Meter)));
    } else if (cpuCount > 4) {
-      Vector_add(this->leftMeters, Meter_new(this->pl, 0, &LeftCPUsMeter));
-      Vector_add(this->rightMeters, Meter_new(this->pl, 0, &RightCPUsMeter));
+      Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(LeftCPUsMeter)));
+      Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(RightCPUsMeter)));
    } else {
-      Vector_add(this->leftMeters, Meter_new(this->pl, 0, &AllCPUsMeter));
+      Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(AllCPUsMeter)));
    }
-   Vector_add(this->leftMeters, Meter_new(this->pl, 0, &MemoryMeter));
-   Vector_add(this->leftMeters, Meter_new(this->pl, 0, &SwapMeter));
-   Vector_add(this->rightMeters, Meter_new(this->pl, 0, &TasksMeter));
-   Vector_add(this->rightMeters, Meter_new(this->pl, 0, &LoadAverageMeter));
-   Vector_add(this->rightMeters, Meter_new(this->pl, 0, &UptimeMeter));
+   Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(MemoryMeter)));
+   Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(SwapMeter)));
+   Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(TasksMeter)));
+   Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(LoadAverageMeter)));
+   Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(UptimeMeter)));
 }
 
 void Header_reinit(Header* this) {
    for (int i = 0; i < Vector_size(this->leftMeters); i++) {
       Meter* meter = (Meter*) Vector_get(this->leftMeters, i);
-      if (meter->type->init)
-         meter->type->init(meter);
+      if (Meter_initFn(meter))
+         Meter_init(meter);
    }
    for (int i = 0; i < Vector_size(this->rightMeters); i++) {
       Meter* meter = (Meter*) Vector_get(this->rightMeters, i);
-      if (meter->type->init)
-         meter->type->init(meter);
+      if (Meter_initFn(meter))
+         Meter_init(meter);
    }
 }
 
 void Header_draw(const Header* this) {
    int height = this->height;
    int pad = this->pad;
-   
    attrset(CRT_colors[RESET_COLOR]);
    for (int y = 0; y < height; y++) {
       mvhline(y, 0, ' ', COLS);

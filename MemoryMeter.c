@@ -59,10 +59,14 @@ static void MemoryMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[MEMORY_CACHE], buffer);
 }
 
-MeterType MemoryMeter = {
+MeterClass MemoryMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = MemoryMeter_display,
+   },
    .setValues = MemoryMeter_setValues, 
-   .display = MemoryMeter_display,
-   .mode = BAR_METERMODE,
+   .defaultMode = BAR_METERMODE,
    .items = 3,
    .total = 100.0,
    .attributes = MemoryMeter_attributes,

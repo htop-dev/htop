@@ -153,12 +153,6 @@ typedef struct Process_ {
 } Process;
 
 
-#ifdef DEBUG
-extern char* PROCESS_CLASS;
-#else
-#define PROCESS_CLASS NULL
-#endif
-
 extern const char *Process_fieldNames[];
 
 extern const char *Process_fieldTitles[];
@@ -171,6 +165,8 @@ void Process_getMaxPid();
 #define ONE_G (ONE_M * ONE_K)
 
 void Process_delete(Object* cast);
+
+extern ObjectClass Process_class;
 
 Process* Process_new(struct ProcessList_ *pl);
 

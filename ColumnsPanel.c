@@ -82,15 +82,21 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
+PanelClass ColumnsPanel_class = {
+   .super = {
+      .extends = Class(Panel),
+      .delete = ColumnsPanel_delete
+   },
+   .eventHandler = ColumnsPanel_eventHandler
+};
+
 ColumnsPanel* ColumnsPanel_new(Settings* settings, ScreenManager* scr) {
-   ColumnsPanel* this = (ColumnsPanel*) malloc(sizeof(ColumnsPanel));
+   ColumnsPanel* this = AllocThis(ColumnsPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = ColumnsPanel_delete;
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
 
    this->settings = settings;
    this->scr = scr;
-   super->eventHandler = ColumnsPanel_eventHandler;
    Panel_setHeader(super, "Active Columns");
 
    ProcessField* fields = this->settings->pl->fields;

@@ -22,6 +22,8 @@ typedef struct AvailableColumnsPanel_ {
 } AvailableColumnsPanel;
 
 
+extern PanelClass AvailableColumnsPanel_class;
+
 AvailableColumnsPanel* AvailableColumnsPanel_new(Settings* settings, Panel* columns, ScreenManager* scr);
 
 #endif

@@ -34,9 +34,17 @@ static HandlerResult AffinityPanel_eventHandler(Panel* this, int ch) {
    return IGNORED;
 }
 
+PanelClass AffinityPanel_class = {
+   .super = {
+      .extends = Class(Panel),
+      .delete = Panel_delete
+   },
+   .eventHandler = AffinityPanel_eventHandler
+};
+
 Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity) {
-   Panel* this = Panel_new(1, 1, 1, 1, CHECKITEM_CLASS, true, ListItem_compare);
-   this->eventHandler = AffinityPanel_eventHandler;
+   Panel* this = Panel_new(1, 1, 1, 1, true, Class(CheckItem));
+   Object_setClass(this, Class(AffinityPanel));
 
    Panel_setHeader(this, "Use CPUs:");
    int curCpu = 0;

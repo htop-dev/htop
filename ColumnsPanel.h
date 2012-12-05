@@ -21,6 +21,8 @@ typedef struct ColumnsPanel_ {
 } ColumnsPanel;
 
 
+extern PanelClass ColumnsPanel_class;
+
 ColumnsPanel* ColumnsPanel_new(Settings* settings, ScreenManager* scr);
 
 int ColumnsPanel_fieldNameToIndex(const char* name);

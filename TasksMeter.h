@@ -13,6 +13,6 @@ in the source distribution for its full text.
 
 extern int TasksMeter_attributes[];
 
-extern MeterType TasksMeter;
+extern MeterClass TasksMeter_class;
 
 #endif

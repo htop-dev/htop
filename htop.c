@@ -210,8 +210,6 @@ static bool changePriority(Panel* panel, int delta) {
 static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const char** keyLabels, FunctionBar* prevBar, Header* header) {
    const char* fuKeys[] = {"Enter", "Esc", NULL};
    int fuEvents[] = {13, 27};
-   if (!list->eventHandler)
-      Panel_setEventHandler(list, Panel_selectByTyping);
    ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, header, false);
    scr->allowFocusChange = false;
    ScreenManager_add(scr, list, FunctionBar_new(keyLabels, fuKeys, fuEvents), x - 1);
@@ -275,7 +273,6 @@ int main(int argc, char** argv) {
    bool userOnly = false;
    uid_t userId = 0;
    int usecolors = 1;
-   TreeType treeType = TREE_TYPE_AUTO;
    char *argCopy;
    char *pid;
    Hashtable *pidWhiteList = NULL;
@@ -378,10 +375,22 @@ int main(int argc, char** argv) {
    bool doRecalculate = false;
    Settings* settings;
    
-   Panel* killPanel = NULL;
-   
    ProcessList* pl = NULL;
    UsersTable* ut = UsersTable_new();
+
+#ifdef HAVE_LIBNCURSESW
+   char *locale = setlocale(LC_ALL, NULL);
+   if (locale == NULL || locale[0] == '\0')
+      locale = setlocale(LC_CTYPE, NULL);
+   if (locale != NULL &&
+       (strstr(locale, "UTF-8") ||
+        strstr(locale, "utf-8") ||
+        strstr(locale, "UTF8")  ||
+        strstr(locale, "utf8")))
+      CRT_utf8 = true;
+   else
+      CRT_utf8 = false;
+#endif
 
    pl = ProcessList_new(ut, pidWhiteList);
    Process_getMaxPid();
@@ -396,36 +405,9 @@ int main(int argc, char** argv) {
    if (!usecolors) 
       settings->colorScheme = COLORSCHEME_MONOCHROME;
 
-   if (treeType == TREE_TYPE_AUTO) {
-#ifdef HAVE_LIBNCURSESW
-      char *locale = setlocale(LC_ALL, NULL);
-      if (locale == NULL || locale[0] == '\0')
-         locale = setlocale(LC_CTYPE, NULL);
-      if (locale != NULL &&
-          (strstr(locale, "UTF-8") ||
-           strstr(locale, "utf-8") ||
-           strstr(locale, "UTF8")  ||
-           strstr(locale, "utf8")))
-         treeType = TREE_TYPE_UTF8;
-      else
-         treeType = TREE_TYPE_ASCII;
-#else
-      treeType = TREE_TYPE_ASCII;
-#endif
-   }
-   switch (treeType) {
-   default:
-   case TREE_TYPE_ASCII:
-      pl->treeStr = ProcessList_treeStrAscii;
-      break;
-   case TREE_TYPE_UTF8:
-      pl->treeStr = ProcessList_treeStrUtf8;
-      break;
-   }
-
    CRT_init(settings->delay, settings->colorScheme);
 
-   Panel* panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, PROCESS_CLASS, false, NULL);
+   Panel* panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, false, &Process_class);
    ProcessList_setPanel(pl, panel);
    
    if (sortKey > 0) {
@@ -457,14 +439,18 @@ int main(int argc, char** argv) {
    int ch = ERR;
    int closeTimeout = 0;
 
+   bool idle = false;
+   
    while (!quit) {
       gettimeofday(&tv, NULL);
       newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
-      recalculate = (newTime - oldTime > CRT_delay);
+      recalculate = (newTime - oldTime > settings->delay);
       Process* p = (Process*)Panel_getSelected(panel);
       int following = (follow && p) ? p->pid : -1;
-      if (recalculate)
+      if (recalculate) {
+         Header_draw(header);
          oldTime = newTime;
+      }
       if (doRefresh) {
          if (recalculate || doRecalculate) {
             ProcessList_scan(pl);
@@ -475,12 +461,13 @@ int main(int argc, char** argv) {
             refreshTimeout = 1;
          }
          ProcessList_rebuildPanel(pl, true, following, userOnly, userId, IncSet_filter(inc));
+         idle = false;
       }
       doRefresh = true;
-      
-      Header_draw(header);
 
-      Panel_draw(panel, true);
+      if (!idle)
+         Panel_draw(panel, true);
+      
       int prev = ch;
       if (inc->active)
          move(LINES-1, CRT_cursorX);
@@ -496,8 +483,10 @@ int main(int argc, char** argv) {
             }
          } else
             closeTimeout = 0;
+         idle = true;
          continue;
       }
+      idle = false;
 
       if (ch == KEY_MOUSE) {
          MEVENT mevent;
@@ -655,7 +644,7 @@ int main(int argc, char** argv) {
       }
       case 'u':
       {
-         Panel* usersPanel = Panel_new(0, 0, 0, 0, LISTITEM_CLASS, true, ListItem_compare);
+         Panel* usersPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
          Panel_setHeader(usersPanel, "Show processes of:");
          UsersTable_foreach(ut, addUserToVector, usersPanel);
          Vector_insertionSort(usersPanel->items);
@@ -687,12 +676,9 @@ int main(int argc, char** argv) {
       case KEY_F(9):
       case 'k':
       {
-         if (!killPanel) {
-            killPanel = (Panel*) SignalsPanel_new(0, 0, 0, 0);
-         }
-         SignalsPanel_reset((SignalsPanel*) killPanel);
+         Panel* signalsPanel = (Panel*) SignalsPanel_new();
          const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
-         ListItem* sgn = (ListItem*) pickFromVector(panel, killPanel, 15, headerHeight, fuFunctions, defaultBar, header);
+         ListItem* sgn = (ListItem*) pickFromVector(panel, signalsPanel, 15, headerHeight, fuFunctions, defaultBar, header);
          if (sgn) {
             if (sgn->key != 0) {
                Panel_setHeader(panel, "Sending...");
@@ -703,6 +689,7 @@ int main(int argc, char** argv) {
             }
          }
          ProcessList_printHeader(pl, Panel_getHeader(panel));
+         Panel_delete((Object*)signalsPanel);
          refreshTimeout = 0;
          break;
       }
@@ -744,7 +731,7 @@ int main(int argc, char** argv) {
       case '.':
       case KEY_F(6):
       {
-         Panel* sortPanel = Panel_new(0, 0, 0, 0, LISTITEM_CLASS, true, ListItem_compare);
+         Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
          Panel_setHeader(sortPanel, "Sort by");
          const char* fuFunctions[] = {"Sort  ", "Cancel ", NULL};
          ProcessField* fields = pl->fields;
@@ -762,7 +749,7 @@ int main(int argc, char** argv) {
          } else {
             ProcessList_printHeader(pl, Panel_getHeader(panel));
          }
-         ((Object*)sortPanel)->delete((Object*)sortPanel);
+         Object_delete(sortPanel);
          refreshTimeout = 0;
          break;
       }
@@ -858,8 +845,6 @@ int main(int argc, char** argv) {
    IncSet_delete(inc);
    FunctionBar_delete((Object*)defaultBar);
    Panel_delete((Object*)panel);
-   if (killPanel)
-      ((Object*)killPanel)->delete((Object*)killPanel);
    UsersTable_delete(ut);
    Settings_delete(settings);
    if(pidWhiteList) {

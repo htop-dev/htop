@@ -57,7 +57,7 @@ static int ofsEvents[] = {KEY_F(3), KEY_F(4), KEY_F(5), 27};
 OpenFilesScreen* OpenFilesScreen_new(Process* process) {
    OpenFilesScreen* this = (OpenFilesScreen*) malloc(sizeof(OpenFilesScreen));
    this->process = process;
-   this->display = Panel_new(0, 1, COLS, LINES-3, LISTITEM_CLASS, false, ListItem_compare);
+   this->display = Panel_new(0, 1, COLS, LINES-3, false, Class(ListItem));
    if (Process_isThread(process))
       this->pid = process->tgid;
    else
@@ -170,7 +170,7 @@ void OpenFilesScreen_run(OpenFilesScreen* this) {
    FunctionBar* bar = FunctionBar_new(ofsFunctions, ofsKeys, ofsEvents);
    IncSet* inc = IncSet_new(bar);
    
-   Vector* lines = Vector_new(panel->items->type, true, DEFAULT_SIZE, ListItem_compare);
+   Vector* lines = Vector_new(panel->items->type, true, DEFAULT_SIZE);
 
    OpenFilesScreen_scan(this, lines, inc);
    OpenFilesScreen_draw(this, inc);
@@ -234,6 +234,7 @@ void OpenFilesScreen_run(OpenFilesScreen* this) {
       }
    }
 
+   Vector_delete(lines);
    FunctionBar_delete((Object*)bar);
    IncSet_delete(inc);
 }

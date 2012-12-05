@@ -63,15 +63,21 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
+PanelClass AvailableColumnsPanel_class = {
+   .super = {
+      .extends = Class(Panel),
+      .delete = AvailableColumnsPanel_delete
+   },
+   .eventHandler = AvailableColumnsPanel_eventHandler
+};
+
 AvailableColumnsPanel* AvailableColumnsPanel_new(Settings* settings, Panel* columns, ScreenManager* scr) {
-   AvailableColumnsPanel* this = (AvailableColumnsPanel*) malloc(sizeof(AvailableColumnsPanel));
+   AvailableColumnsPanel* this = AllocThis(AvailableColumnsPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = AvailableColumnsPanel_delete;
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
    
    this->settings = settings;
    this->scr = scr;
-   super->eventHandler = AvailableColumnsPanel_eventHandler;
 
    Panel_setHeader(super, "Available Columns");
 

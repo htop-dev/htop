@@ -13,6 +13,6 @@ in the source distribution for its full text.
 
 extern int UptimeMeter_attributes[];
 
-extern MeterType UptimeMeter;
+extern MeterClass UptimeMeter_class;
 
 #endif

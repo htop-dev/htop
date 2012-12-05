@@ -19,16 +19,15 @@ in the source distribution for its full text.
 
 typedef struct Vector_ {
    Object **array;
-   Object_Compare compare;
+   ObjectClass* type;
    int arraySize;
    int growthRate;
    int items;
-   char* type;
    bool owner;
 } Vector;
 
 
-Vector* Vector_new(char* type, bool owner, int size, Object_Compare compare);
+Vector* Vector_new(ObjectClass* type, bool owner, int size);
 
 void Vector_delete(Vector* this);
 

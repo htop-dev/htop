@@ -112,9 +112,11 @@ typedef enum ColorElements_ {
 
 static bool CRT_hasColors;
 
-int CRT_delay = 0;
+static int CRT_delay = 0;
 
 int CRT_colorScheme = 0;
+
+bool CRT_utf8 = false;
 
 int CRT_colors[LAST_COLORELEMENT] = { 0 };
 
@@ -158,7 +160,7 @@ void CRT_init(int delay, int colorScheme) {
    noecho();
    CRT_delay = delay;
    CRT_colorScheme = colorScheme;
-   halfdelay(CRT_delay);
+   halfdelay(CRT_delay/2);
    nonl();
    intrflush(stdscr, false);
    keypad(stdscr, true);
@@ -212,7 +214,7 @@ int CRT_readKey() {
    cbreak();
    nodelay(stdscr, FALSE);
    int ret = getch();
-   halfdelay(CRT_delay);
+   halfdelay(CRT_delay/2);
    return ret;
 }
 
@@ -223,7 +225,7 @@ void CRT_disableDelay() {
 }
 
 void CRT_enableDelay() {
-   halfdelay(CRT_delay);
+   halfdelay(CRT_delay/2);
 }
 
 void CRT_setColors(int colorScheme) {

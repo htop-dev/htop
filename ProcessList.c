@@ -68,12 +68,6 @@ typedef enum TreeStr_ {
    TREE_STR_COUNT
 } TreeStr;
 
-typedef enum TreeType_ {
-   TREE_TYPE_AUTO,
-   TREE_TYPE_ASCII,
-   TREE_TYPE_UTF8,
-} TreeType;
-
 typedef struct CPUData_ {
    unsigned long long int totalTime;
    unsigned long long int userTime;
@@ -184,13 +178,13 @@ const char *ProcessList_treeStrUtf8[TREE_STR_COUNT] = {
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    ProcessList* this;
    this = calloc(sizeof(ProcessList), 1);
-   this->processes = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
+   this->processes = Vector_new(Class(Process), true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
    this->pidWhiteList = pidWhiteList;
    
    /* tree-view auxiliary buffers */
-   this->processes2 = Vector_new(PROCESS_CLASS, true, DEFAULT_SIZE, Process_compare);
+   this->processes2 = Vector_new(Class(Process), true, DEFAULT_SIZE);
    
    FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
@@ -242,6 +236,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    this->updateProcessNames = false;
    this->treeStr = NULL;
    this->following = -1;
+
+   if (CRT_utf8)
+      this->treeStr = CRT_utf8 ? ProcessList_treeStrUtf8 : ProcessList_treeStrAscii;
 
    return this;
 }
@@ -312,7 +309,7 @@ int ProcessList_size(ProcessList* this) {
 }
 
 static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show) {
-   Vector* children = Vector_new(PROCESS_CLASS, false, DEFAULT_SIZE, Process_compare);
+   Vector* children = Vector_new(Class(Process), false, DEFAULT_SIZE);
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* process = (Process*) (Vector_get(this->processes, i));

@@ -19,11 +19,7 @@ typedef struct CheckItem_ {
 } CheckItem;
 
 
-#ifdef DEBUG
-extern char* CHECKITEM_CLASS;
-#else
-#define CHECKITEM_CLASS NULL
-#endif
+extern ObjectClass CheckItem_class;
 
 CheckItem* CheckItem_new(char* text, bool* ref, bool value);
 

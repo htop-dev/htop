@@ -26,8 +26,18 @@ typedef enum HandlerResult_ {
 
 typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
 
+typedef struct PanelClass_ {
+   const ObjectClass super;
+   const Panel_EventHandler eventHandler;
+} PanelClass;
+
+#define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
+#define Panel_eventHandlerFn(this_)    As_Panel(this_)->eventHandler
+#define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), ev_)
+
 struct Panel_ {
    Object super;
+   PanelClass* class;
    int x, y, w, h;
    WINDOW* window;
    Vector* items;
@@ -37,7 +47,6 @@ struct Panel_ {
    int oldSelected;
    bool needsRedraw;
    RichString header;
-   Panel_EventHandler eventHandler;
    char* eventHandlerBuffer;
 };
 
@@ -49,30 +58,24 @@ struct Panel_ {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-#ifdef DEBUG
-extern char* PANEL_CLASS;
-#else
-#define PANEL_CLASS NULL
-#endif
-
 #define KEY_CTRLN      0016            /* control-n key */
 #define KEY_CTRLP      0020            /* control-p key */
 #define KEY_CTRLF      0006            /* control-f key */
 #define KEY_CTRLB      0002            /* control-b key */
 
-Panel* Panel_new(int x, int y, int w, int h, char* type, bool owner, Object_Compare compare);
+extern PanelClass Panel_class;
+
+Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type);
 
 void Panel_delete(Object* cast);
 
-void Panel_init(Panel* this, int x, int y, int w, int h, char* type, bool owner);
+void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner);
 
 void Panel_done(Panel* this);
 
 RichString* Panel_getHeader(Panel* this);
 
 extern void Panel_setHeader(Panel* this, const char* header);
-
-void Panel_setEventHandler(Panel* this, Panel_EventHandler eh);
 
 void Panel_move(Panel* this, int x, int y);
 

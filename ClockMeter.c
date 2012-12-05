@@ -26,10 +26,13 @@ static void ClockMeter_setValues(Meter* this, char* buffer, int size) {
    strftime(buffer, size, "%H:%M:%S", lt);
 }
 
-MeterType ClockMeter = {
+MeterClass ClockMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete
+   },
    .setValues = ClockMeter_setValues, 
-   .display = NULL,
-   .mode = TEXT_METERMODE,
+   .defaultMode = TEXT_METERMODE,
    .total = 100.0,
    .items = 1,
    .attributes = ClockMeter_attributes,

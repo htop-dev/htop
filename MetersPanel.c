@@ -92,16 +92,22 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
+PanelClass MetersPanel_class = {
+   .super = {
+      .extends = Class(Panel),
+      .delete = MetersPanel_delete
+   },
+   .eventHandler = MetersPanel_eventHandler
+};
+
 MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr) {
-   MetersPanel* this = (MetersPanel*) malloc(sizeof(MetersPanel));
+   MetersPanel* this = AllocThis(MetersPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, LISTITEM_CLASS, true);
-   ((Object*)this)->delete = MetersPanel_delete;
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
 
    this->settings = settings;
    this->meters = meters;
    this->scr = scr;
-   super->eventHandler = MetersPanel_eventHandler;
    Panel_setHeader(super, header);
    for (int i = 0; i < Vector_size(meters); i++) {
       Meter* meter = (Meter*) Vector_get(meters, i);

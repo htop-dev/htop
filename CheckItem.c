@@ -24,12 +24,6 @@ typedef struct CheckItem_ {
 
 }*/
 
-#ifdef DEBUG
-char* CHECKITEM_CLASS = "CheckItem";
-#else
-#define CHECKITEM_CLASS NULL
-#endif
-
 static void CheckItem_delete(Object* cast) {
    CheckItem* this = (CheckItem*)cast;
    assert (this != NULL);
@@ -50,11 +44,13 @@ static void CheckItem_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
 }
 
+ObjectClass CheckItem_class = {
+   .display = CheckItem_display,
+   .delete = CheckItem_delete
+};
+
 CheckItem* CheckItem_new(char* text, bool* ref, bool value) {
-   CheckItem* this = malloc(sizeof(CheckItem));
-   Object_setClass(this, CHECKITEM_CLASS);
-   ((Object*)this)->display = CheckItem_display;
-   ((Object*)this)->delete = CheckItem_delete;
+   CheckItem* this = AllocThis(CheckItem);
    this->text = text;
    this->value = value;
    this->ref = ref;

@@ -67,10 +67,14 @@ static void LoadMeter_display(Object* cast, RichString* out) {
    RichString_write(out, CRT_colors[LOAD], buffer);
 }
 
-MeterType LoadAverageMeter = {
+MeterClass LoadAverageMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = LoadAverageMeter_display,
+   },
    .setValues = LoadAverageMeter_setValues, 
-   .display = LoadAverageMeter_display,
-   .mode = TEXT_METERMODE,
+   .defaultMode = TEXT_METERMODE,
    .items = 3,
    .total = 100.0,
    .attributes = LoadAverageMeter_attributes,
@@ -79,10 +83,14 @@ MeterType LoadAverageMeter = {
    .caption = "Load average: "
 };
 
-MeterType LoadMeter = {
+MeterClass LoadMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = LoadMeter_display,
+   },
    .setValues = LoadMeter_setValues, 
-   .display = LoadMeter_display,
-   .mode = TEXT_METERMODE,
+   .defaultMode = TEXT_METERMODE,
    .items = 1,
    .total = 100.0,
    .attributes = LoadMeter_attributes,

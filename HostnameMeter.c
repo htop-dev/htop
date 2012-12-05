@@ -24,10 +24,13 @@ static void HostnameMeter_setValues(Meter* this, char* buffer, int size) {
    gethostname(buffer, size-1);
 }
 
-MeterType HostnameMeter = {
+MeterClass HostnameMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete
+   },
    .setValues = HostnameMeter_setValues, 
-   .display = NULL,
-   .mode = TEXT_METERMODE,
+   .defaultMode = TEXT_METERMODE,
    .total = 100.0,
    .items = 1,
    .attributes = HostnameMeter_attributes,

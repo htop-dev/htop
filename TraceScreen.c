@@ -46,7 +46,7 @@ static int tsEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
 TraceScreen* TraceScreen_new(Process* process) {
    TraceScreen* this = (TraceScreen*) malloc(sizeof(TraceScreen));
    this->process = process;
-   this->display = Panel_new(0, 1, COLS, LINES-2, LISTITEM_CLASS, false, ListItem_compare);
+   this->display = Panel_new(0, 1, COLS, LINES-2, false, Class(ListItem));
    this->tracing = true;
    return this;
 }
@@ -106,7 +106,7 @@ void TraceScreen_run(TraceScreen* this) {
    FunctionBar* bar = FunctionBar_new(tsFunctions, tsKeys, tsEvents);
    IncSet* inc = IncSet_new(bar);
 
-   Vector* lines = Vector_new(panel->items->type, true, DEFAULT_SIZE, ListItem_compare);
+   Vector* lines = Vector_new(panel->items->type, true, DEFAULT_SIZE);
 
    TraceScreen_draw(this, inc);
    
@@ -122,11 +122,11 @@ void TraceScreen_run(TraceScreen* this) {
       if (ch == ERR) {
          fd_set fds;
          FD_ZERO(&fds);
-         FD_SET(STDIN_FILENO, &fds);
+//         FD_SET(STDIN_FILENO, &fds);
          FD_SET(fd_strace, &fds);
-         //struct timeval tv;
-         //tv.tv_sec = 0; tv.tv_usec = 500;
-         int ready = select(fd_strace+1, &fds, NULL, NULL, NULL/*&tv*/);
+         struct timeval tv;
+         tv.tv_sec = 0; tv.tv_usec = 500;
+         int ready = select(fd_strace+1, &fds, NULL, NULL, &tv);
          int nread = 0;
          if (ready > 0 && FD_ISSET(fd_strace, &fds))
             nread = fread(buffer, 1, 1000, strace);
@@ -218,6 +218,7 @@ void TraceScreen_run(TraceScreen* this) {
    
    IncSet_delete(inc);
    FunctionBar_delete((Object*)bar);
+   Vector_delete(lines);
    
    kill(child, SIGTERM);
    waitpid(child, NULL, 0);

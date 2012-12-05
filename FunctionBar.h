@@ -21,11 +21,7 @@ typedef struct FunctionBar_ {
 } FunctionBar;
 
 
-#ifdef DEBUG
-extern char* FUNCTIONBAR_CLASS;
-#else
-#define FUNCTIONBAR_CLASS NULL
-#endif
+extern ObjectClass FunctionBar_class;
 
 FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* events);
 

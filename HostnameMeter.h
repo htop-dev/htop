@@ -13,6 +13,6 @@ in the source distribution for its full text.
 
 extern int HostnameMeter_attributes[];
 
-extern MeterType HostnameMeter;
+extern MeterClass HostnameMeter_class;
 
 #endif

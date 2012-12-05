@@ -22,6 +22,6 @@ typedef enum ACPresence_ {
 
 extern int BatteryMeter_attributes[];
 
-extern MeterType BatteryMeter;
+extern MeterClass BatteryMeter_class;
 
 #endif

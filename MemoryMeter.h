@@ -13,6 +13,6 @@ in the source distribution for its full text.
 
 extern int MemoryMeter_attributes[];
 
-extern MeterType MemoryMeter;
+extern MeterClass MemoryMeter_class;
 
 #endif

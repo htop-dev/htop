@@ -51,7 +51,7 @@ static void ColorsPanel_delete(Object* object) {
    free(this);
 }
 
-static HandlerResult ColorsPanel_EventHandler(Panel* super, int ch) {
+static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    ColorsPanel* this = (ColorsPanel*) super;
    
    HandlerResult result = IGNORED;
@@ -83,15 +83,21 @@ static HandlerResult ColorsPanel_EventHandler(Panel* super, int ch) {
    return result;
 }
 
+PanelClass ColorsPanel_class = {
+   .super = {
+      .extends = Class(Panel),
+      .delete = ColorsPanel_delete
+   },
+   .eventHandler = ColorsPanel_eventHandler
+};
+
 ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
-   ColorsPanel* this = (ColorsPanel*) malloc(sizeof(ColorsPanel));
+   ColorsPanel* this = AllocThis(ColorsPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, CHECKITEM_CLASS, true);
-   ((Object*)this)->delete = ColorsPanel_delete;
+   Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true);
 
    this->settings = settings;
    this->scr = scr;
-   super->eventHandler = ColorsPanel_EventHandler;
 
    Panel_setHeader(super, "Colors");
    for (int i = 0; ColorSchemes[i] != NULL; i++) {

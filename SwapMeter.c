@@ -59,10 +59,14 @@ static void SwapMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
 }
 
-MeterType SwapMeter = {
+MeterClass SwapMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = SwapMeter_display,
+   },
    .setValues = SwapMeter_setValues, 
-   .display = SwapMeter_display,
-   .mode = BAR_METERMODE,
+   .defaultMode = BAR_METERMODE,
    .items = 1,
    .total = 100.0,
    .attributes = SwapMeter_attributes,

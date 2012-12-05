@@ -18,6 +18,6 @@ in the source distribution for its full text.
 extern int SwapMeter_attributes[];
 
 /* NOTE: Value is in kilobytes */
-extern MeterType SwapMeter;
+extern MeterClass SwapMeter_class;
 
 #endif

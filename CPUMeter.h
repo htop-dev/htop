@@ -20,19 +20,19 @@ extern int CPUMeter_attributes[];
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-extern MeterType CPUMeter;
+extern MeterClass CPUMeter_class;
 
-extern MeterType AllCPUsMeter;
+extern MeterClass AllCPUsMeter_class;
 
-extern MeterType AllCPUs2Meter;
+extern MeterClass AllCPUs2Meter_class;
 
-extern MeterType LeftCPUsMeter;
+extern MeterClass LeftCPUsMeter_class;
 
-extern MeterType RightCPUsMeter;
+extern MeterClass RightCPUsMeter_class;
 
-extern MeterType LeftCPUs2Meter;
+extern MeterClass LeftCPUs2Meter_class;
 
-extern MeterType RightCPUs2Meter;
+extern MeterClass RightCPUs2Meter_class;
 
 
 #endif

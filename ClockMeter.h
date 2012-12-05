@@ -13,6 +13,6 @@ in the source distribution for its full text.
 
 extern int ClockMeter_attributes[];
 
-extern MeterType ClockMeter;
+extern MeterClass ClockMeter_class;
 
 #endif

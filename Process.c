@@ -175,12 +175,6 @@ typedef struct Process_ {
 
 }*/
 
-#ifdef DEBUG
-char* PROCESS_CLASS = "Process";
-#else
-#define PROCESS_CLASS NULL
-#endif
-
 const char *Process_fieldNames[] = {
    "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION",
    "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT",
@@ -564,11 +558,16 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
+ObjectClass Process_class = {
+   .extends = Class(Object),
+   .display = Process_display,
+   .delete = Process_delete,
+   .compare = Process_compare
+};
+
 Process* Process_new(struct ProcessList_ *pl) {
    Process* this = calloc(sizeof(Process), 1);
-   Object_setClass(this, PROCESS_CLASS);
-   ((Object*)this)->display = Process_display;
-   ((Object*)this)->delete = Process_delete;
+   Object_setClass(this, Class(Process));
    this->pid = 0;
    this->pl = pl;
    this->tag = false;

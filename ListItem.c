@@ -26,12 +26,6 @@ typedef struct ListItem_ {
 
 }*/
 
-#ifdef DEBUG
-char* LISTITEM_CLASS = "ListItem";
-#else
-#define LISTITEM_CLASS NULL
-#endif
-
 static void ListItem_delete(Object* cast) {
    ListItem* this = (ListItem*)cast;
    free(this->value);
@@ -49,11 +43,13 @@ static void ListItem_display(Object* cast, RichString* out) {
    RichString_write(out, CRT_colors[DEFAULT_COLOR], this->value/*buffer*/);
 }
 
+ObjectClass ListItem_class = {
+   .display = ListItem_display,
+   .delete = ListItem_delete
+};
+
 ListItem* ListItem_new(const char* value, int key) {
-   ListItem* this = malloc(sizeof(ListItem));
-   Object_setClass(this, LISTITEM_CLASS);
-   ((Object*)this)->display = ListItem_display;
-   ((Object*)this)->delete = ListItem_delete;
+   ListItem* this = AllocThis(ListItem);
    this->value = strdup(value);
    this->key = key;
    return this;
