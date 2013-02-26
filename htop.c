@@ -217,9 +217,10 @@ static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const cha
    Panel* panelFocus;
    int ch;
    bool unfollow = false;
+   Process* p = (Process*)Panel_getSelected(panel);
+   int pid = p ? p->pid : -1;
    if (header->pl->following == -1) {
-      Process* p = (Process*)Panel_getSelected(panel);
-      header->pl->following = p ? p->pid : -1;
+      header->pl->following = pid;
       unfollow = true;
    }
    ScreenManager_run(scr, &panelFocus, &ch);
@@ -231,7 +232,11 @@ static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const cha
    Panel_resize(panel, COLS, LINES-y-1);
    FunctionBar_draw(prevBar, NULL);
    if (panelFocus == list && ch == 13) {
-      return Panel_getSelected(list);
+      Process* selected = (Process*)Panel_getSelected(panel);
+      if (selected->pid == pid)
+         return Panel_getSelected(list);
+      else
+         beep();
    }
    return NULL;
 }

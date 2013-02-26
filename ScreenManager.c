@@ -173,7 +173,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                for (int i = 0; i < this->panelCount; i++) {
                   Panel* panel = (Panel*) Vector_get(this->panels, i);
                   if (mevent.x > panel->x && mevent.x <= panel->x+panel->w &&
-                     mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
+                     mevent.y > panel->y && mevent.y <= panel->y+panel->h &&
+                     (this->allowFocusChange || panelFocus == panel) ) {
                      focus = i;
                      panelFocus = panel;
                      Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
