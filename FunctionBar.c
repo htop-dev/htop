@@ -13,7 +13,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <curses.h>
 
 /*{
 #include "Object.h"

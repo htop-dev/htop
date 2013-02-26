@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 
-#include <curses.h>
 #include <assert.h>
 
 /*{

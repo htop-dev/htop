@@ -12,7 +12,6 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <stdlib.h>
-#include <curses.h>
 #include <string.h>
 #include <math.h>
 

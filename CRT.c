@@ -9,8 +9,9 @@ in the source distribution for its full text.
 
 #include "config.h"
 #include "String.h"
+#include "RichString.h"
 
-#include <curses.h>
+#include <stdio.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
