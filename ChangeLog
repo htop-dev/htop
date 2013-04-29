@@ -1,4 +1,9 @@
 
+What's new in version 1.0.3
+
+* Performance improvements
+  (thanks to Jann Horn)
+
 What's new in version 1.0.2
 
 * Add IO priority support ('i' key)

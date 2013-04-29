@@ -14,7 +14,6 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 #include "Panel.h"
 #include "Process.h"
-#include <sys/types.h>
 
 #ifndef PROCDIR
 #define PROCDIR "/proc"
