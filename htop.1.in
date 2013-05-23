@@ -17,7 +17,7 @@ entering their PIDs.
 .br 
 .SH "COMMAND-LINE OPTIONS"
 .LP
-Mandatory arguments to long options are madatory for short options too.
+Mandatory arguments to long options are mandatory for short options too.
 .LP 
 .TP
 \fB\-d \-\-delay=DELAY\fR
@@ -190,7 +190,7 @@ The state of the process:
    \fBS\fR for sleeping (idle)
    \fBR\fR for running
    \fBD\fR for disk sleep (uninterruptible)
-   \fBZ\fR for zombie (waiting for parent to read it's exit status)
+   \fBZ\fR for zombie (waiting for parent to read its exit status)
    \fBT\fR for traced or suspended (e.g by SIGTSTP)
    \fBW\fR for paging
 .TP
@@ -231,7 +231,7 @@ executing system calls on behalf of all the process's waited-for children (see
 STIME above).
 .TP
 .B PRIORITY (PRI)
-The kernels internal priority for the process, usually just it's nice value
+The kernel's internal priority for the process, usually just its nice value
 plus twenty. Different for real-time processes.
 .TP
 .B PERCENT_MEM
