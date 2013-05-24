@@ -122,11 +122,14 @@ void ColumnsPanel_update(Panel* super) {
    // FIXME: this is crappily inefficient
    free(this->settings->pl->fields);
    this->settings->pl->fields = (ProcessField*) malloc(sizeof(ProcessField) * (size+1));
+   this->settings->pl->flags = 0;
    for (int i = 0; i < size; i++) {
       char* text = ((ListItem*) Panel_get(super, i))->value;
           int j = ColumnsPanel_fieldNameToIndex(text);
-          if (j > 0)
+          if (j > 0) {
              this->settings->pl->fields[i] = j;
+             this->settings->pl->flags |= Process_fieldFlags[j];
+          }
    }
    this->settings->pl->fields[size] = 0;
 }

@@ -24,6 +24,12 @@ in the source distribution for its full text.
 #include "IOPriority.h"
 #include <sys/types.h>
 
+#define PROCESS_FLAG_IO 1
+#define PROCESS_FLAG_IOPRIO 2
+#define PROCESS_FLAG_OPENVZ 4
+#define PROCESS_FLAG_VSERVER 8
+#define PROCESS_FLAG_CGROUP 16
+
 #ifndef Process_isKernelThread
 #define Process_isKernelThread(_process) (_process->pgrp == 0)
 #endif
@@ -154,6 +160,8 @@ typedef struct Process_ {
 
 
 extern const char *Process_fieldNames[];
+
+extern const int Process_fieldFlags[];
 
 extern const char *Process_fieldTitles[];
 

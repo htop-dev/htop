@@ -45,6 +45,12 @@ in the source distribution for its full text.
 #include "IOPriority.h"
 #include <sys/types.h>
 
+#define PROCESS_FLAG_IO 1
+#define PROCESS_FLAG_IOPRIO 2
+#define PROCESS_FLAG_OPENVZ 4
+#define PROCESS_FLAG_VSERVER 8
+#define PROCESS_FLAG_CGROUP 16
+
 #ifndef Process_isKernelThread
 #define Process_isKernelThread(_process) (_process->pgrp == 0)
 #endif
@@ -199,6 +205,31 @@ const char *Process_fieldNames[] = {
 #endif
    "IO_PRIORITY",
 "*** report bug! ***"
+};
+
+const int Process_fieldFlags[] = {
+   0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0,
+#ifdef HAVE_OPENVZ
+   PROCESS_FLAG_OPENVZ, PROCESS_FLAG_OPENVZ,
+#endif
+#ifdef HAVE_VSERVER
+   PROCESS_FLAG_VSERVER,
+#endif
+#ifdef HAVE_TASKSTATS
+   PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, 
+   PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, 
+#endif
+#ifdef HAVE_CGROUP
+   PROCESS_FLAG_CGROUP,
+#endif
+   PROCESS_FLAG_IOPRIO
 };
 
 const char *Process_fieldTitles[] = {

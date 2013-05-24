@@ -82,11 +82,13 @@ static bool Settings_read(Settings* this, char* fileName, int cpuCount) {
          char** ids = String_split(trim, ' ', &nIds);
          free(trim);
          int i, j;
+         this->pl->flags = 0;
          for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i]; i++) {
             // This "+1" is for compatibility with the older enum format.
             int id = atoi(ids[i]) + 1;
             if (id > 0 && id < LAST_PROCESSFIELD) {
                this->pl->fields[j] = id;
+               this->pl->flags |= Process_fieldFlags[id];
                j++;
             }
          }

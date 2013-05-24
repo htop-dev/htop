@@ -3,6 +3,8 @@ What's new in version 1.0.3
 
 * Performance improvements
   (thanks to Jann Horn)
+* Further performance improvements due to conditional parsing
+  of IO data depending on selected fields.
 
 What's new in version 1.0.2
 

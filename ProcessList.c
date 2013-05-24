@@ -133,6 +133,7 @@ typedef struct ProcessList_ {
    unsigned long long int usedSwap;
    unsigned long long int freeSwap;
 
+   int flags;
    ProcessField* fields;
    ProcessField sortKey;
    int direction;
@@ -235,8 +236,10 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    this->fields = calloc(sizeof(ProcessField), LAST_PROCESSFIELD+1);
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
+   this->flags = 0;
    for (int i = 0; defaultHeaders[i]; i++) {
       this->fields[i] = defaultHeaders[i];
+      this->fields[i] |= Process_fieldFlags[defaultHeaders[i]];
    }
    this->sortKey = PERCENT_CPU;
    this->direction = 1;
@@ -738,7 +741,8 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       ProcessList_processEntries(this, subdirname, process, period, tv);
 
       #ifdef HAVE_TASKSTATS
-      ProcessList_readIoFile(process, dirname, name, now);
+      if (this->flags & PROCESS_FLAG_IO)
+         ProcessList_readIoFile(process, dirname, name, now);
       #endif
 
       if (! ProcessList_readStatmFile(process, dirname, name))
@@ -750,7 +754,8 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       unsigned long long int lasttimes = (process->utime + process->stime);
       if (! ProcessList_readStatFile(process, dirname, name, command))
          goto errorReadingProcess;
-      Process_updateIOPriority(process);
+      if (this->flags & PROCESS_FLAG_IOPRIO)
+         Process_updateIOPriority(process);
       float percent_cpu = (process->utime + process->stime - lasttimes) / period * 100.0;
       process->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
       if (isnan(process->percent_cpu)) process->percent_cpu = 0.0;
@@ -764,15 +769,18 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
          process->user = UsersTable_getRef(this->usersTable, process->st_uid);
 
          #ifdef HAVE_OPENVZ
-         ProcessList_readOpenVZData(process, dirname, name);
+         if (this->flags & PROCESS_FLAG_OPENVZ)
+            ProcessList_readOpenVZData(process, dirname, name);
          #endif
 
          #ifdef HAVE_CGROUP
-         ProcessList_readCGroupFile(process, dirname, name);
+         if (this->flags & PROCESS_FLAG_CGROUP)
+            ProcessList_readCGroupFile(process, dirname, name);
          #endif
          
          #ifdef HAVE_VSERVER
-         ProcessList_readVServerData(process, dirname, name);
+         if (this->flags & PROCESS_FLAG_VSERVER)
+            ProcessList_readVServerData(process, dirname, name);
          #endif
          
          if (! ProcessList_readCmdlineFile(process, dirname, name))
