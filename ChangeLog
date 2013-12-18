@@ -1,6 +1,8 @@
 
 What's new in version 1.0.3
 
+* Fixes in accounting of guest time when using virtualization
+  (thanks to Patrick Marlier)
 * Performance improvements
   (thanks to Jann Horn)
 * Further performance improvements due to conditional parsing

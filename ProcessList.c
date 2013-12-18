@@ -886,24 +886,27 @@ void ProcessList_scan(ProcessList* this) {
    for (int i = 0; i <= cpus; i++) {
       char buffer[256];
       int cpuid;
-      unsigned long long int ioWait, irq, softIrq, steal, guest;
-      ioWait = irq = softIrq = steal = guest = 0;
+      unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
+      ioWait = irq = softIrq = steal = guest = guestnice = 0;
       // Dependending on your kernel version,
-      // 5, 7 or 8 of these fields will be set.
+      // 5, 7, 8 or 9 of these fields will be set.
       // The rest will remain at zero.
       fgets(buffer, 255, file);
       if (i == 0)
-         sscanf(buffer, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu %llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest);
+         sscanf(buffer, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
       else {
-         sscanf(buffer, "cpu%d %llu %llu %llu %llu %llu %llu %llu %llu %llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest);
+         sscanf(buffer, "cpu%d %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
          assert(cpuid == i - 1);
       }
+      // Guest time is already accounted in usertime
+      usertime = usertime - guest;
+      nicetime = nicetime - guestnice;
       // Fields existing on kernels >= 2.6
       // (and RHEL's patched kernel 2.4...)
       idlealltime = idletime + ioWait;
       systemalltime = systemtime + irq + softIrq;
-      virtalltime = steal + guest;
-      totaltime = usertime + nicetime + systemalltime + idlealltime + virtalltime;
+      virtalltime = guest + guestnice;
+      totaltime = usertime + nicetime + systemalltime + idlealltime + steal + virtalltime;
       CPUData* cpuData = &(this->cpus[i]);
       assert (usertime >= cpuData->userTime);
       assert (nicetime >= cpuData->niceTime);
@@ -916,7 +919,7 @@ void ProcessList_scan(ProcessList* this) {
       assert (irq >= cpuData->irqTime);
       assert (softIrq >= cpuData->softIrqTime);
       assert (steal >= cpuData->stealTime);
-      assert (guest >= cpuData->guestTime);
+      assert (virtalltime >= cpuData->guestTime);
       cpuData->userPeriod = usertime - cpuData->userTime;
       cpuData->nicePeriod = nicetime - cpuData->niceTime;
       cpuData->systemPeriod = systemtime - cpuData->systemTime;
@@ -927,7 +930,7 @@ void ProcessList_scan(ProcessList* this) {
       cpuData->irqPeriod = irq - cpuData->irqTime;
       cpuData->softIrqPeriod = softIrq - cpuData->softIrqTime;
       cpuData->stealPeriod = steal - cpuData->stealTime;
-      cpuData->guestPeriod = guest - cpuData->guestTime;
+      cpuData->guestPeriod = virtalltime - cpuData->guestTime;
       cpuData->totalPeriod = totaltime - cpuData->totalTime;
       cpuData->userTime = usertime;
       cpuData->niceTime = nicetime;
@@ -939,7 +942,7 @@ void ProcessList_scan(ProcessList* this) {
       cpuData->irqTime = irq;
       cpuData->softIrqTime = softIrq;
       cpuData->stealTime = steal;
-      cpuData->guestTime = guest;
+      cpuData->guestTime = virtalltime;
       cpuData->totalTime = totaltime;
    }
    double period = (double)this->cpus[0].totalPeriod / cpus; fclose(file);
