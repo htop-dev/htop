@@ -90,5 +90,6 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_new(strdup("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->pl->detailedCPUTime), false));
    Panel_add(super, (Object*) CheckItem_new(strdup("Count CPUs from 0 instead of 1"), &(settings->pl->countCPUsFromZero), false));
    Panel_add(super, (Object*) CheckItem_new(strdup("Update process names on every refresh"), &(settings->pl->updateProcessNames), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Add guest time in CPU meter percentage"), &(settings->pl->accountGuestInCPUMeter), false));
    return this;
 }

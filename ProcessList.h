@@ -130,6 +130,7 @@ typedef struct ProcessList_ {
    bool detailedCPUTime;
    bool countCPUsFromZero;
    bool updateProcessNames;
+   bool accountGuestInCPUMeter;
    const char **treeStr;
 
 } ProcessList;

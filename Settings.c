@@ -128,6 +128,8 @@ static bool Settings_read(Settings* this, char* fileName, int cpuCount) {
          this->pl->countCPUsFromZero = atoi(option[1]);
       } else if (String_eq(option[0], "update_process_names")) {
          this->pl->updateProcessNames = atoi(option[1]);
+      } else if (String_eq(option[0], "account_guest_in_cpu_meter")) {
+         this->pl->accountGuestInCPUMeter = atoi(option[1]);
       } else if (String_eq(option[0], "delay")) {
          this->delay = atoi(option[1]);
       } else if (String_eq(option[0], "color_scheme")) {
@@ -188,6 +190,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->pl->detailedCPUTime);
    fprintf(fd, "cpu_count_from_zero=%d\n", (int) this->pl->countCPUsFromZero);
    fprintf(fd, "update_process_names=%d\n", (int) this->pl->updateProcessNames);
+   fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->pl->accountGuestInCPUMeter);
    fprintf(fd, "color_scheme=%d\n", (int) this->colorScheme);
    fprintf(fd, "delay=%d\n", (int) this->delay);
    fprintf(fd, "left_meters=");

@@ -20,7 +20,7 @@ in the source distribution for its full text.
 }*/
 
 int CPUMeter_attributes[] = {
-   CPU_NICE, CPU_NORMAL, CPU_KERNEL, CPU_IRQ, CPU_SOFTIRQ, CPU_IOWAIT, CPU_STEAL, CPU_GUEST
+   CPU_NICE, CPU_NORMAL, CPU_KERNEL, CPU_IRQ, CPU_SOFTIRQ, CPU_STEAL, CPU_GUEST, CPU_IOWAIT
 };
 
 #ifndef MIN
@@ -51,24 +51,29 @@ static void CPUMeter_setValues(Meter* this, char* buffer, int size) {
    CPUData* cpuData = &(pl->cpus[cpu]);
    double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
    double percent;
-   this->values[0] = cpuData->nicePeriod / total * 100.0;
-   this->values[1] = cpuData->userPeriod / total * 100.0;
+   double* v = this->values;
+   v[0] = cpuData->nicePeriod / total * 100.0;
+   v[1] = cpuData->userPeriod / total * 100.0;
    if (pl->detailedCPUTime) {
-      this->values[2] = cpuData->systemPeriod / total * 100.0;
-      this->values[3] = cpuData->irqPeriod / total * 100.0;
-      this->values[4] = cpuData->softIrqPeriod / total * 100.0;
-      this->values[5] = cpuData->ioWaitPeriod / total * 100.0;
-      this->values[6] = cpuData->stealPeriod / total * 100.0;
-      this->values[7] = cpuData->guestPeriod / total * 100.0;
+      v[2] = cpuData->systemPeriod / total * 100.0;
+      v[3] = cpuData->irqPeriod / total * 100.0;
+      v[4] = cpuData->softIrqPeriod / total * 100.0;
+      v[5] = cpuData->stealPeriod / total * 100.0;
+      v[6] = cpuData->guestPeriod / total * 100.0;
+      v[7] = cpuData->ioWaitPeriod / total * 100.0;
       Meter_setItems(this, 8);
-      percent = MIN(100.0, MAX(0.0, (this->values[0]+this->values[1]+this->values[2]+
-                       this->values[3]+this->values[4])));
+      if (pl->accountGuestInCPUMeter) {
+         percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];
+      } else {
+         percent = v[0]+v[1]+v[2]+v[3]+v[4];
+      }       
    } else {
-      this->values[2] = cpuData->systemAllPeriod / total * 100.0;
-      this->values[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
+      v[2] = cpuData->systemAllPeriod / total * 100.0;
+      v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
       Meter_setItems(this, 4);
-      percent = MIN(100.0, MAX(0.0, (this->values[0]+this->values[1]+this->values[2]+this->values[3])));
+      percent = v[0]+v[1]+v[2]+v[3];
    }
+   percent = MIN(100.0, MAX(0.0, percent));      
    if (isnan(percent)) percent = 0.0;
    snprintf(buffer, size, "%5.1f%%", percent);
 }
@@ -97,17 +102,19 @@ static void CPUMeter_display(Object* cast, RichString* out) {
       sprintf(buffer, "%5.1f%% ", this->values[4]);
       RichString_append(out, CRT_colors[METER_TEXT], "si:");
       RichString_append(out, CRT_colors[CPU_SOFTIRQ], buffer);
-      sprintf(buffer, "%5.1f%% ", this->values[5]);
-      RichString_append(out, CRT_colors[METER_TEXT], "wa:");
-      RichString_append(out, CRT_colors[CPU_IOWAIT], buffer);
-      sprintf(buffer, "%5.1f%% ", this->values[6]);
-      RichString_append(out, CRT_colors[METER_TEXT], "st:");
-      RichString_append(out, CRT_colors[CPU_STEAL], buffer);
-      if (this->values[7]) {
-         sprintf(buffer, "%5.1f%% ", this->values[7]);
+      if (this->values[5]) {
+         sprintf(buffer, "%5.1f%% ", this->values[5]);
+         RichString_append(out, CRT_colors[METER_TEXT], "st:");
+         RichString_append(out, CRT_colors[CPU_STEAL], buffer);
+      }
+      if (this->values[6]) {
+         sprintf(buffer, "%5.1f%% ", this->values[6]);
          RichString_append(out, CRT_colors[METER_TEXT], "gu:");
          RichString_append(out, CRT_colors[CPU_GUEST], buffer);
       }
+      sprintf(buffer, "%5.1f%% ", this->values[7]);
+      RichString_append(out, CRT_colors[METER_TEXT], "wa:");
+      RichString_append(out, CRT_colors[CPU_IOWAIT], buffer);
    } else {
       sprintf(buffer, "%5.1f%% ", this->values[2]);
       RichString_append(out, CRT_colors[METER_TEXT], "sys:");

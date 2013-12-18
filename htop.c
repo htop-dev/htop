@@ -86,9 +86,9 @@ static void showHelp(ProcessList* pl) {
       addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
       addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
       addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq"); addstr("/");
-      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait"); addstr("/");
       addattrstr(CRT_colors[CPU_STEAL], "steal"); addstr("/");
-      addattrstr(CRT_colors[CPU_GUEST], "guest");
+      addattrstr(CRT_colors[CPU_GUEST], "guest"); addstr("/");
+      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait");
       addattrstr(CRT_colors[BAR_SHADOW], " used%");
    } else {
       addattrstr(CRT_colors[CPU_NICE], "low-priority"); addstr("/");
