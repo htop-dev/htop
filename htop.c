@@ -66,6 +66,43 @@ static void printHelpFlag() {
    exit(0);
 }
 
+static struct { const char* key; const char* info; } helpLeft[] = {
+   { .key = " Arrows: ", .info = "scroll process list" },
+   { .key = " Digits: ", .info = "incremental PID search" },
+   { .key = "   F3 /: ", .info = "incremental name search" },
+   { .key = "   F4 \\: ",.info = "incremental name filtering" },
+   { .key = "   F5 t: ", .info = "tree view" },
+   { .key = "      u: ", .info = "show processes of a single user" },
+   { .key = "      H: ", .info = "hide/show user threads" },
+   { .key = "      K: ", .info = "hide/show kernel threads" },
+   { .key = "      F: ", .info = "cursor follows process" },
+   { .key = "    + -: ", .info = "expand/collapse tree" },
+   { .key = "  P M T: ", .info = "sort by CPU%, MEM% or TIME" },
+   { .key = "      I: ", .info = "invert sort order" },
+   { .key = "   F6 >: ", .info = "select sort column" },
+   { .key = NULL, .info = NULL }
+};
+
+static struct { const char* key; const char* info; } helpRight[] = {
+   { .key = "  Space: ", .info = "tag process" },
+   { .key = "      c: ", .info = "tag process and its children" },
+   { .key = "      U: ", .info = "untag all processes" },
+   { .key = "   F9 k: ", .info = "kill process/tagged processes" },
+   { .key = "   F7 ]: ", .info = "higher priority (root only)" },
+   { .key = "   F8 [: ", .info = "lower priority (+ nice)" },
+#if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
+   { .key = "      a: ", .info = "set CPU affinity" },
+#endif
+   { .key = "      i: ", .info = "set IO prority" },
+   { .key = "      l: ", .info = "list open files with lsof" },
+   { .key = "      s: ", .info = "trace syscalls with strace" },
+   { .key = "         ", .info = "" },
+   { .key = "   F2 S: ", .info = "setup" },
+   { .key = "   F1 h: ", .info = "show this help screen" },
+   { .key = "  F10 q: ", .info = "quit" },
+   { .key = NULL, .info = NULL }
+};
+
 static void showHelp(ProcessList* pl) {
    clear();
    attrset(CRT_colors[HELP_BOLD]);
@@ -118,44 +155,11 @@ static void showHelp(ProcessList* pl) {
       mvaddstr(7, 0, "In monochrome, meters are displayed through different chars, in order: |#*@$%&");
    }
    mvaddstr( 8, 0, " Status: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
-   mvaddstr( 9, 0, " Arrows: scroll process list             F5 t: tree view");
-   mvaddstr(10, 0, " Digits: incremental PID search             u: show processes of a single user");
-   mvaddstr(11, 0, "   F3 /: incremental name search            H: hide/show user threads");
-   mvaddstr(12, 0, "   F4 \\: incremental name filtering         K: hide/show kernel threads");
-   mvaddstr(13, 0, "  Space: tag processes                      F: cursor follows process");
-   mvaddstr(14, 0, "      U: untag all processes              + -: expand/collapse tree");
-   mvaddstr(15, 0, "   F9 k: kill process/tagged processes  P M T: sort by CPU%, MEM% or TIME");
-   mvaddstr(16, 0, "   ] F7: higher priority (root only)        i: set IO priority");
-   mvaddstr(17, 0, "   [ F8: lower priority (+ nice)            I: invert sort order");
-#if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
-   if (pl->cpuCount > 1)
-      mvaddstr(18, 0, "      a: set CPU affinity                F6 >: select sort column");
-   else
-#endif
-      mvaddstr(18, 0, "                                         F6 >: select sort column");
-   mvaddstr(19, 0, "   F2 S: setup                              l: list open files with lsof");
-   mvaddstr(20, 0, "   F1 h: show this help screen              s: trace syscalls with strace");
-   mvaddstr(21, 0, "  F10 q: quit");
-
+   for (int i = 0; helpLeft[i].info; i++) { mvaddstr(9+i, 9,  helpLeft[i].info); }
+   for (int i = 0; helpRight[i].info; i++) { mvaddstr(9+i, 49, helpRight[i].info); }
    attrset(CRT_colors[HELP_BOLD]);
-   mvaddstr( 9, 0, " Arrows"); mvaddstr( 9,40, " F5 t");
-   mvaddstr(10, 0, " Digits"); mvaddstr(10,40, "    u");
-   mvaddstr(11, 0, "   F3 /"); mvaddstr(11,40, "    H");
-   mvaddstr(12, 0, "   F4 \\"); mvaddstr(12,40, "    K");
-   mvaddstr(13, 0, "  Space"); mvaddstr(13,40, "    F");
-   mvaddstr(14, 0, "      U"); mvaddstr(14,40, "  + -");
-   mvaddstr(15, 0, "   F9 k"); mvaddstr(15,40, "P M T");
-   mvaddstr(16, 0, "   ] F7"); mvaddstr(16,40, "    i");
-   mvaddstr(17, 0, "   [ F8"); mvaddstr(17,40, "    I");
-                               mvaddstr(18,40, " F6 >");
-#if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
-   if (pl->cpuCount > 1)
-      mvaddstr(18, 0, "      a:");
-#endif
-   mvaddstr(19, 0, "   F2 S"); mvaddstr(19,40, "    l");
-   mvaddstr(20, 0, " ? F1 h"); mvaddstr(20,40, "    s");
-   mvaddstr(21, 0, "  F10 q");
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   for (int i = 0; helpLeft[i].key;  i++) { mvaddstr(9+i, 0,  helpLeft[i].key); }
+   for (int i = 0; helpRight[i].key; i++) { mvaddstr(9+i, 40, helpRight[i].key); }
 
    attrset(CRT_colors[HELP_BOLD]);
    mvaddstr(23,0, "Press any key to return.");
