@@ -131,7 +131,7 @@ static void CRT_handleSIGSEGV(int sgn) {
    (void) sgn;
    CRT_done();
    #if __linux
-   fprintf(stderr, "\n\nhtop " VERSION " aborting. Please report bug at http://htop.sf.net\n");
+   fprintf(stderr, "\n\nhtop " VERSION " aborting. Please report bug at http://hisham.hm/htop\n");
    #ifdef HAVE_EXECINFO_H
    size_t size = backtrace(backtraceArray, sizeof(backtraceArray) / sizeof(void *));
    fprintf(stderr, "\n Please include in your report the following backtrace: \n");
