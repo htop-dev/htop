@@ -272,6 +272,17 @@ static const char* getMainPanelValue(Panel* panel, int i) {
    return "";
 }
 
+static void tagAllChildren(Panel* panel, Process* parent) {
+   parent->tag = true;
+   pid_t ppid = parent->pid;
+   for (int i = 0; i < Panel_size(panel); i++) {
+      Process* p = (Process*) Panel_get(panel, i);
+      if (!p->tag && p->ppid == ppid) {
+         tagAllChildren(panel, p);
+      }
+   }
+}
+
 int main(int argc, char** argv) {
 
    int delay = -1;
@@ -561,6 +572,13 @@ int main(int argc, char** argv) {
       {
          refreshTimeout = 0;
          setSortKey(pl, TIME, panel, settings);
+         break;
+      }
+      case 'c':
+      {
+         Process* p = (Process*) Panel_getSelected(panel);
+         if (!p) break;
+         tagAllChildren(panel, p);
          break;
       }
       case 'U':

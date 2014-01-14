@@ -1,6 +1,7 @@
 
 What's new in version 1.0.3
 
+* Tag all children ('c' key)
 * Fixes in accounting of guest time when using virtualization
   (thanks to Patrick Marlier)
 * Performance improvements
