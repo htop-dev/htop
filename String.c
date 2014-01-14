@@ -16,6 +16,7 @@ in the source distribution for its full text.
 
 /*{
 #define String_startsWith(s, match) (strstr((s), (match)) == (s))
+#define String_contains_i(s1, s2) (strcasestr(s1, s2) != NULL)
 }*/
 
 char* String_cat(const char* s1, const char* s2) {
@@ -89,17 +90,6 @@ void String_freeArray(char** s) {
       free(s[i]);
    }
    free(s);
-}
-
-int String_contains_i(const char* s, const char* match) {
-   int lens = strlen(s);
-   int lenmatch = strlen(match);
-   for (int i = 0; i < lens-lenmatch; i++) {
-      if (strncasecmp(s, match, strlen(match)) == 0)
-         return 1;
-      s++;
-   }
-   return 0;
 }
 
 char* String_getToken(const char* line, const unsigned short int numMatch) {
