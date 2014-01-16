@@ -49,7 +49,7 @@ typedef struct Header_ {
 #endif
 
 Header* Header_new(ProcessList* pl) {
-   Header* this = calloc(sizeof(Header), 1);
+   Header* this = calloc(1, sizeof(Header));
    this->leftMeters = Vector_new(Class(Meter), true, DEFAULT_SIZE);
    this->rightMeters = Vector_new(Class(Meter), true, DEFAULT_SIZE);
    this->margin = true;

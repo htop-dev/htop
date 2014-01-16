@@ -77,7 +77,7 @@ static inline void IncMode_done(IncMode* mode) {
 }
 
 IncSet* IncSet_new(FunctionBar* bar) {
-   IncSet* this = calloc(sizeof(IncSet), 1);
+   IncSet* this = calloc(1, sizeof(IncSet));
    IncMode_initSearch(&(this->modes[INC_SEARCH]));
    IncMode_initFilter(&(this->modes[INC_FILTER]));
    this->active = NULL;

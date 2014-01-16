@@ -76,7 +76,7 @@ Hashtable* Hashtable_new(int size, bool owner) {
    this = (Hashtable*) malloc(sizeof(Hashtable));
    this->items = 0;
    this->size = size;
-   this->buckets = (HashtableItem**) calloc(sizeof(HashtableItem*), size);
+   this->buckets = (HashtableItem**) calloc(size, sizeof(HashtableItem*));
    this->owner = owner;
    assert(Hashtable_isConsistent(this));
    return this;

@@ -347,7 +347,7 @@ static const char* GraphMeterMode_characters = "^`'-.,_~'`-.,_~'`-.,_";
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
-   if (!this->drawData) this->drawData = calloc(sizeof(GraphData), 1);
+   if (!this->drawData) this->drawData = calloc(1, sizeof(GraphData));
    GraphData* data = (GraphData*) this->drawData;
    const int nValues = METER_BUFFER_LEN;
    

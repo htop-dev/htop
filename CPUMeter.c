@@ -152,7 +152,7 @@ static void AllCPUsMeter_getRange(Meter* this, int* start, int* count) {
 static void AllCPUsMeter_init(Meter* this) {
    int cpus = this->pl->cpuCount;
    if (!this->drawData)
-      this->drawData = calloc(sizeof(Meter*), cpus);
+      this->drawData = calloc(cpus, sizeof(Meter*));
    Meter** meters = (Meter**) this->drawData;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);

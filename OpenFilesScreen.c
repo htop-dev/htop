@@ -83,7 +83,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    char command[1025];
    snprintf(command, 1024, "lsof -P -p %d -F 2> /dev/null", pid);
    FILE* fd = popen(command, "r");
-   OpenFiles_ProcessData* pdata = calloc(sizeof(OpenFiles_ProcessData), 1);
+   OpenFiles_ProcessData* pdata = calloc(1, sizeof(OpenFiles_ProcessData));
    OpenFiles_FileData* fdata = NULL;
    OpenFiles_ProcessData* item = pdata;
    bool anyRead = false;
@@ -104,7 +104,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       char* newline = strrchr(entry, '\n');
       *newline = '\0';
       if (cmd == 'f') {
-         OpenFiles_FileData* nextFile = calloc(sizeof(OpenFiles_ProcessData), 1);
+         OpenFiles_FileData* nextFile = calloc(1, sizeof(OpenFiles_ProcessData));
          if (fdata == NULL) {
             pdata->files = nextFile;
          } else {

@@ -20,9 +20,9 @@ typedef struct Affinity_ {
 }*/
 
 Affinity* Affinity_new() {
-   Affinity* this = calloc(sizeof(Affinity), 1);
+   Affinity* this = calloc(1, sizeof(Affinity));
    this->size = 8;
-   this->cpus = calloc(sizeof(int), this->size);
+   this->cpus = calloc(this->size, sizeof(int));
    return this;
 }
 

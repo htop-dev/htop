@@ -197,7 +197,7 @@ static ssize_t xread(int fd, void *buf, size_t count) {
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    ProcessList* this;
-   this = calloc(sizeof(ProcessList), 1);
+   this = calloc(1, sizeof(ProcessList));
    this->processes = Vector_new(Class(Process), true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
@@ -227,14 +227,14 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
       this->topologyOk = true;
    }
 #endif
-   this->cpus = calloc(sizeof(CPUData), cpus);
+   this->cpus = calloc(cpus, sizeof(CPUData));
 
    for (int i = 0; i < cpus; i++) {
       this->cpus[i].totalTime = 1;
       this->cpus[i].totalPeriod = 1;
    }
 
-   this->fields = calloc(sizeof(ProcessField), LAST_PROCESSFIELD+1);
+   this->fields = calloc(LAST_PROCESSFIELD+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;

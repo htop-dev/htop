@@ -597,7 +597,7 @@ ObjectClass Process_class = {
 };
 
 Process* Process_new(struct ProcessList_ *pl) {
-   Process* this = calloc(sizeof(Process), 1);
+   Process* this = calloc(1, sizeof(Process));
    Object_setClass(this, Class(Process));
    this->pid = 0;
    this->pl = pl;
