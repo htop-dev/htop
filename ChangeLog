@@ -8,6 +8,8 @@ What's new in version 1.0.3
   (thanks to Jann Horn)
 * Further performance improvements due to conditional parsing
   of IO data depending on selected fields.
+* BUGFIX: Fix crash when adding meters and toggling detailed CPU time.
+  (thanks to Dawid Gajownik)
 
 What's new in version 1.0.2
 

@@ -32,7 +32,6 @@ MeterClass HostnameMeter_class = {
    .setValues = HostnameMeter_setValues, 
    .defaultMode = TEXT_METERMODE,
    .total = 100.0,
-   .items = 1,
    .attributes = HostnameMeter_attributes,
    .name = "Hostname",
    .uiName = "Hostname",

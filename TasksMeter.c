@@ -63,7 +63,6 @@ MeterClass TasksMeter_class = {
    },
    .setValues = TasksMeter_setValues, 
    .defaultMode = TEXT_METERMODE,
-   .items = 1,
    .total = 100.0,
    .attributes = TasksMeter_attributes, 
    .name = "Tasks",

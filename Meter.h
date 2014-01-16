@@ -30,12 +30,13 @@ typedef struct MeterClass_ {
    const Meter_Draw draw;
    const Meter_SetValues setValues;
    const int defaultMode;
-   int items;
    const double total;
    const int* attributes;
    const char* name;
    const char* uiName;
    const char* caption;
+   const char maxItems;
+   char curItems;
 } MeterClass;
 
 #define As_Meter(this_)                ((MeterClass*)((this_)->super.klass))
@@ -48,8 +49,8 @@ typedef struct MeterClass_ {
 #define Meter_doneFn(this_)            As_Meter(this_)->done
 #define Meter_setValues(this_, c_, i_) As_Meter(this_)->setValues((Meter*)(this_), c_, i_)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
-#define Meter_getItems(this_)          As_Meter(this_)->items
-#define Meter_setItems(this_, n_)      As_Meter(this_)->items = (n_)
+#define Meter_getItems(this_)          As_Meter(this_)->curItems
+#define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName

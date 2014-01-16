@@ -335,7 +335,6 @@ MeterClass BatteryMeter_class = {
    },
    .setValues = BatteryMeter_setValues,
    .defaultMode = TEXT_METERMODE,
-   .items = 1,
    .total = 100.0,
    .attributes = BatteryMeter_attributes,
    .name = "Battery",

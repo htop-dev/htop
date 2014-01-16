@@ -52,12 +52,13 @@ typedef struct MeterClass_ {
    const Meter_Draw draw;
    const Meter_SetValues setValues;
    const int defaultMode;
-   int items;
    const double total;
    const int* attributes;
    const char* name;
    const char* uiName;
    const char* caption;
+   const char maxItems;
+   char curItems;
 } MeterClass;
 
 #define As_Meter(this_)                ((MeterClass*)((this_)->super.klass))
@@ -70,8 +71,8 @@ typedef struct MeterClass_ {
 #define Meter_doneFn(this_)            As_Meter(this_)->done
 #define Meter_setValues(this_, c_, i_) As_Meter(this_)->setValues((Meter*)(this_), c_, i_)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
-#define Meter_getItems(this_)          As_Meter(this_)->items
-#define Meter_setItems(this_, n_)      As_Meter(this_)->items = (n_)
+#define Meter_getItems(this_)          As_Meter(this_)->curItems
+#define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
@@ -146,12 +147,17 @@ MeterClass* Meter_types[] = {
 };
 
 Meter* Meter_new(ProcessList* pl, int param, MeterClass* type) {
-   Meter* this = calloc(sizeof(Meter), 1);
+   Meter* this = calloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
    this->param = param;
    this->pl = pl;
-   this->values = calloc(sizeof(double), type->items);
+   char maxItems = type->maxItems;
+   if (maxItems == 0) {
+      maxItems = 1;
+   }
+   type->curItems = maxItems;
+   this->values = calloc(maxItems, sizeof(double));
    this->total = type->total;
    this->caption = strdup(type->caption);
    if (Meter_initFn(this))
