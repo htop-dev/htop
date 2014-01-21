@@ -294,11 +294,14 @@ void Process_getMaxPid() {
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
 
+#define ONE_DECIMAL_K 1000
+#define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
+
 static void Process_humanNumber(Process* this, RichString* str, unsigned long number) {
    char buffer[11];
    int len;
-   if(number >= (10 * ONE_M)) {
-      if(number >= (100 * ONE_M)) {
+   if(number >= (10 * ONE_DECIMAL_M)) {
+      if(number >= (100 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, 10, "%4ldG ", number / ONE_M);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
       } else {
