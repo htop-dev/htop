@@ -43,7 +43,7 @@ debug:
 	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-ggdb -DDEBUG"
 
 .c.h:
-	scripts/MakeHeader.py $<
+	@srcdir@/scripts/MakeHeader.py $<
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS
