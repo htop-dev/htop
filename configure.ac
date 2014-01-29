@@ -145,5 +145,10 @@ then
    AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
 fi
 
+AC_ARG_ENABLE(oom, [AC_HELP_STRING([--enable-oom], [enable OOM score reporting])], ,enable_oom="no")
+if test "x$enable_oom" = xyes; then
+    AC_DEFINE(HAVE_OOM, 1, [Define if OOM score support enabled.])
+fi
+
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT

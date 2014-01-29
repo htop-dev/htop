@@ -81,6 +81,9 @@ typedef enum ProcessField_ {
    #ifdef HAVE_CGROUP
    CGROUP,
    #endif
+   #ifdef HAVE_OOM
+   OOM,
+   #endif
    IO_PRIORITY,
    LAST_PROCESSFIELD
 } ProcessField;
@@ -177,6 +180,9 @@ typedef struct Process_ {
    #ifdef HAVE_CGROUP
    char* cgroup;
    #endif
+   #ifdef HAVE_OOM
+   unsigned int oom;
+   #endif
 } Process;
 
 }*/
@@ -202,6 +208,9 @@ const char *Process_fieldNames[] = {
 #endif
 #ifdef HAVE_CGROUP
    "CGROUP",
+#endif
+#ifdef HAVE_OOM
+   "OOM",
 #endif
    "IO_PRIORITY",
 "*** report bug! ***"
@@ -229,6 +238,9 @@ const int Process_fieldFlags[] = {
 #ifdef HAVE_CGROUP
    PROCESS_FLAG_CGROUP,
 #endif
+#ifdef HAVE_OOM
+   0,
+#endif
    PROCESS_FLAG_IOPRIO
 };
 
@@ -254,6 +266,9 @@ const char *Process_fieldTitles[] = {
 #ifdef HAVE_CGROUP
    "    CGROUP ",
 #endif
+#ifdef HAVE_OOM
+   "    OOM ",
+#endif
    "IO ",
 "*** report bug! ***"
 };
@@ -276,6 +291,9 @@ void Process_getMaxPid() {
       Process_fieldTitles[TGID] =    "   TGID ";
       Process_fieldTitles[PGRP] =    "   PGRP ";
       Process_fieldTitles[SESSION] = "   SESN ";
+      #ifdef HAVE_OOM
+      Process_fieldTitles[OOM] =     "    OOM ";
+      #endif
       Process_pidFormat = "%7u ";
       Process_tpgidFormat = "%7d ";
    } else {
@@ -285,6 +303,9 @@ void Process_getMaxPid() {
       Process_fieldTitles[TGID] =    " TGID ";
       Process_fieldTitles[PGRP] =    " PGRP ";
       Process_fieldTitles[SESSION] = " SESN ";
+      #ifdef HAVE_OOM
+      Process_fieldTitles[OOM] =     "  OOM ";
+      #endif
       Process_pidFormat = "%5u ";
       Process_tpgidFormat = "%5d ";
    }
@@ -544,6 +565,9 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    #endif
    #ifdef HAVE_CGROUP
    case CGROUP: snprintf(buffer, n, "%-10s ", this->cgroup); break;
+   #endif
+   #ifdef HAVE_OOM
+   case OOM: snprintf(buffer, n, Process_pidFormat, this->oom); break;
    #endif
    case IO_PRIORITY: {
       int klass = IOPriority_class(this->ioPriority);
@@ -813,6 +837,10 @@ int Process_compare(const void* v1, const void* v2) {
    #ifdef HAVE_CGROUP
    case CGROUP:
       return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
+   #endif
+   #ifdef HAVE_OOM
+   case OOM:
+      return (p1->oom - p2->oom);
    #endif
    case IO_PRIORITY:
       return Process_effectiveIOPriority(p1) - Process_effectiveIOPriority(p2);

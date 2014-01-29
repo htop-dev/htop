@@ -172,6 +172,10 @@ void ProcessList_sort(ProcessList* this);
 
 #endif
 
+#ifdef HAVE_OOM
+
+#endif
+
 
 void ProcessList_scan(ProcessList* this);
 
