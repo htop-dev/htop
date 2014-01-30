@@ -313,6 +313,9 @@ OpenVZ process ID.
 .B VXID
 VServer process ID.
 .TP
+.B OOM
+OOM killer score.
+.TP
 .B All other flags
 Currently unsupported (always displays '-').
 
