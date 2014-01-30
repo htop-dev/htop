@@ -10,6 +10,8 @@ What's new in version 1.0.3
   of IO data depending on selected fields.
 * BUGFIX: Fix crash when adding meters and toggling detailed CPU time.
   (thanks to Dawid Gajownik)
+* Add column to track the OOM-killer score of processes
+  (thanks to Leigh Simpson)
 
 What's new in version 1.0.2
 
