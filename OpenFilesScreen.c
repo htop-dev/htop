@@ -29,9 +29,9 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 
 typedef struct OpenFiles_ProcessData_ {
-   char* data[256];
    struct OpenFiles_FileData_* files;
    int error;
+   char* data[256];
 } OpenFiles_ProcessData;
 
 typedef struct OpenFiles_FileData_ {

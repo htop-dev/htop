@@ -94,7 +94,6 @@ typedef struct Process_ {
    Object super;
 
    struct ProcessList_ *pl;
-   bool updated;
 
    pid_t pid;
    char* comm;
@@ -110,12 +109,12 @@ typedef struct Process_ {
    pid_t tgid;
    int tpgid;
    unsigned long int flags;
-   #ifdef DEBUG
-   unsigned long int minflt;
-   unsigned long int cminflt;
-   unsigned long int majflt;
-   unsigned long int cmajflt;
-   #endif
+
+   uid_t st_uid;
+   float percent_cpu;
+   float percent_mem;
+   char* user;
+
    unsigned long long int utime;
    unsigned long long int stime;
    unsigned long long int cutime;
@@ -126,7 +125,53 @@ typedef struct Process_ {
    IOPriority ioPriority;
    char starttime_show[8];
    time_t starttime_ctime;
+
+   #ifdef HAVE_TASKSTATS
+   unsigned long long io_rchar;
+   unsigned long long io_wchar;
+   unsigned long long io_syscr;
+   unsigned long long io_syscw;
+   unsigned long long io_read_bytes;
+   unsigned long long io_write_bytes;
+   unsigned long long io_cancelled_write_bytes;
+   double io_rate_read_bps;
+   unsigned long long io_rate_read_time;
+   double io_rate_write_bps;
+   unsigned long long io_rate_write_time;   
+   #endif
+
+   int processor;
+   int m_size;
+   int m_resident;
+   int m_share;
+   int m_trs;
+   int m_drs;
+   int m_lrs;
+   int m_dt;
+
+   #ifdef HAVE_OPENVZ
+   unsigned int ctid;
+   unsigned int vpid;
+   #endif
+   #ifdef HAVE_VSERVER
+   unsigned int vxid;
+   #endif
+
+   #ifdef HAVE_CGROUP
+   char* cgroup;
+   #endif
+   #ifdef HAVE_OOM
+   unsigned int oom;
+   #endif
+
+   int exit_signal;
+   bool updated;
+
    #ifdef DEBUG
+   unsigned long int minflt;
+   unsigned long int cminflt;
+   unsigned long int majflt;
+   unsigned long int cmajflt;
    long int itrealvalue;
    unsigned long int vsize;
    long int rss;
@@ -144,45 +189,7 @@ typedef struct Process_ {
    unsigned long int nswap;
    unsigned long int cnswap;
    #endif
-   int exit_signal;
-   int processor;
-   int m_size;
-   int m_resident;
-   int m_share;
-   int m_trs;
-   int m_drs;
-   int m_lrs;
-   int m_dt;
-   uid_t st_uid;
-   float percent_cpu;
-   float percent_mem;
-   char* user;
-   #ifdef HAVE_OPENVZ
-   unsigned int ctid;
-   unsigned int vpid;
-   #endif
-   #ifdef HAVE_VSERVER
-   unsigned int vxid;
-   #endif
-   #ifdef HAVE_TASKSTATS
-   unsigned long long io_rchar;
-   unsigned long long io_wchar;
-   unsigned long long io_syscr;
-   unsigned long long io_syscw;
-   unsigned long long io_read_bytes;
-   unsigned long long io_write_bytes;
-   unsigned long long io_cancelled_write_bytes;
-   double io_rate_read_bps;
-   unsigned long long io_rate_read_time;
-   double io_rate_write_bps;
-   unsigned long long io_rate_write_time;   
-   #endif
-   #ifdef HAVE_CGROUP
-   char* cgroup;
-   #endif
-   #ifdef HAVE_OOM
-   unsigned int oom;
-   #endif
+
 } Process;
 
 }*/

@@ -37,9 +37,9 @@ typedef struct Header_ {
    Vector* leftMeters;
    Vector* rightMeters;
    ProcessList* pl;
-   bool margin;
    int height;
    int pad;
+   bool margin;
 } Header;
 
 }*/

@@ -18,8 +18,8 @@ in the source distribution for its full text.
 typedef struct CheckItem_ {
    Object super;
    char* text;
-   bool value;
    bool* ref;
+   bool value;
 } CheckItem;
 
 }*/

@@ -143,6 +143,7 @@ MeterClass* Meter_types[] = {
    &RightCPUsMeter_class,
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
+   &BlankMeter_class,
    NULL
 };
 
@@ -469,4 +470,34 @@ MeterMode* Meter_modes[] = {
    &GraphMeterMode,
    &LEDMeterMode,
    NULL
+};
+
+/* Blank meter */
+
+static void BlankMeter_setValues(Meter* this, char* buffer, int size) {
+   (void) this; (void) buffer; (void) size;
+}
+
+static void BlankMeter_display(Object* cast, RichString* out) {
+   (void) cast;
+   RichString_prune(out);
+}
+
+int BlankMeter_attributes[] = {
+   DEFAULT_COLOR
+};
+
+MeterClass BlankMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = BlankMeter_display,
+   },
+   .setValues = BlankMeter_setValues,
+   .defaultMode = TEXT_METERMODE,
+   .total = 100.0,
+   .attributes = BlankMeter_attributes,
+   .name = "Blank",
+   .uiName = "Blank",
+   .caption = ""
 };

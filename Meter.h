@@ -123,4 +123,10 @@ ListItem* Meter_toListItem(Meter* this);
 
 extern MeterMode* Meter_modes[];
 
+/* Blank meter */
+
+extern int BlankMeter_attributes[];
+
+extern MeterClass BlankMeter_class;
+
 #endif

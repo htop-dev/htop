@@ -123,6 +123,8 @@ int CRT_colors[LAST_COLORELEMENT] = { 0 };
 
 int CRT_cursorX = 0;
 
+int CRT_scrollHAmount = 5;
+
 char* CRT_termType;
 
 void *backtraceArray[128];
@@ -173,6 +175,10 @@ void CRT_init(int delay, int colorScheme) {
       CRT_hasColors = false;
    }
    CRT_termType = getenv("TERM");
+   if (String_eq(CRT_termType, "linux"))
+      CRT_scrollHAmount = 20;
+   else
+      CRT_scrollHAmount = 5;
    if (String_eq(CRT_termType, "xterm") || String_eq(CRT_termType, "xterm-color") || String_eq(CRT_termType, "vt220")) {
       define_key("\033[H", KEY_HOME);
       define_key("\033[F", KEY_END);

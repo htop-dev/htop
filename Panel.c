@@ -53,12 +53,12 @@ struct Panel_ {
    WINDOW* window;
    Vector* items;
    int selected;
-   int scrollV, scrollH;
-   int scrollHAmount;
    int oldSelected;
+   char* eventHandlerBuffer;
+   int scrollV;
+   short scrollH;
    bool needsRedraw;
    RichString header;
-   char* eventHandlerBuffer;
 };
 
 }*/
@@ -110,10 +110,6 @@ void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool
    this->oldSelected = 0;
    this->needsRedraw = true;
    RichString_beginAllocated(this->header);
-   if (String_eq(CRT_termType, "linux"))
-      this->scrollHAmount = 20;
-   else
-      this->scrollHAmount = 5;
 }
 
 void Panel_done(Panel* this) {
@@ -299,18 +295,16 @@ void Panel_draw(Panel* this, bool focus) {
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
          int amt = MIN(itemLen - scrollH, this->w);
-         if (i == this->selected) {
+         bool selected = (i == this->selected);
+         if (selected) {
             attrset(highlight);
             RichString_setAttr(&item, highlight);
-            mvhline(y + j, x+0, ' ', this->w);
-            if (amt > 0)
-               RichString_printoffnVal(item, y+j, x+0, scrollH, amt);
-            attrset(CRT_colors[RESET_COLOR]);
-         } else {
-            mvhline(y+j, x+0, ' ', this->w);
-            if (amt > 0)
-               RichString_printoffnVal(item, y+j, x+0, scrollH, amt);
          }
+         mvhline(y + j, x, ' ', this->w);
+         if (amt > 0)
+            RichString_printoffnVal(item, y+j, x, scrollH, amt);
+         if (selected)
+            attrset(CRT_colors[RESET_COLOR]);
          RichString_end(item);
       }
       for (int i = y + (last - first); i < y + this->h; i++)
@@ -330,13 +324,13 @@ void Panel_draw(Panel* this, bool focus) {
       mvhline(y+ this->oldSelected - this->scrollV, x+0, ' ', this->w);
       if (scrollH < oldLen)
          RichString_printoffnVal(old, y+this->oldSelected - this->scrollV, x,
-            this->scrollH, MIN(oldLen - scrollH, this->w));
+            scrollH, MIN(oldLen - scrollH, this->w));
       attrset(highlight);
       mvhline(y+this->selected - this->scrollV, x+0, ' ', this->w);
       RichString_setAttr(&new, highlight);
       if (scrollH < newLen)
          RichString_printoffnVal(new, y+this->selected - this->scrollV, x,
-            this->scrollH, MIN(newLen - scrollH, this->w));
+            scrollH, MIN(newLen - scrollH, this->w));
       attrset(CRT_colors[RESET_COLOR]);
       RichString_end(new);
       RichString_end(old);
@@ -383,13 +377,13 @@ bool Panel_onKey(Panel* this, int key) {
    case KEY_LEFT:
    case KEY_CTRLB:
       if (this->scrollH > 0) {
-         this->scrollH -= 5;
+         this->scrollH -= CRT_scrollHAmount;
          this->needsRedraw = true;
       }
       return true;
    case KEY_RIGHT:
    case KEY_CTRLF:
-      this->scrollH += 5;
+      this->scrollH += CRT_scrollHAmount;
       this->needsRedraw = true;
       return true;
    case KEY_PPAGE:

@@ -79,6 +79,7 @@ typedef struct CPUData_ {
 } CPUData;
 
 typedef struct ProcessList_ {
+   const char **treeStr;
    Vector* processes;
    Vector* processes2;
    Hashtable* processTable;
@@ -86,7 +87,6 @@ typedef struct ProcessList_ {
 
    Panel* panel;
    int following;
-   bool userOnly;
    uid_t userId;
    const char* incFilter;
    Hashtable* pidWhiteList;
@@ -131,7 +131,7 @@ typedef struct ProcessList_ {
    bool countCPUsFromZero;
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
-   const char **treeStr;
+   bool userOnly;
 
 } ProcessList;
 

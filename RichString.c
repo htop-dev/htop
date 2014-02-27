@@ -154,6 +154,7 @@ void RichString_prune(RichString* this) {
       free(this->chptr);
    this->chptr = this->chstr;
    this->chlen = 0;
+   RichString_setChar(this, 0, 0);
 }
 
 void RichString_setAttr(RichString* this, int attrs) {

@@ -27,8 +27,8 @@ typedef struct Settings_ {
    ProcessList* pl;
    Header* header;
    int colorScheme;
-   bool changed;
    int delay;
+   bool changed;
 } Settings;
 
 }*/

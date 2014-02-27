@@ -109,6 +109,8 @@ extern int CRT_colors[LAST_COLORELEMENT];
 
 extern int CRT_cursorX;
 
+extern int CRT_scrollHAmount;
+
 char* CRT_termType;
 
 void *backtraceArray[128];

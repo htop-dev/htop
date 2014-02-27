@@ -42,12 +42,12 @@ struct Panel_ {
    WINDOW* window;
    Vector* items;
    int selected;
-   int scrollV, scrollH;
-   int scrollHAmount;
    int oldSelected;
+   char* eventHandlerBuffer;
+   int scrollV;
+   short scrollH;
    bool needsRedraw;
    RichString header;
-   char* eventHandlerBuffer;
 };
 
 
