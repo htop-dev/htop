@@ -165,6 +165,7 @@ typedef struct Process_ {
    #endif
 
    int exit_signal;
+   int basenameOffset;
    bool updated;
 
    #ifdef DEBUG
@@ -404,14 +405,19 @@ static inline void Process_writeCommand(Process* this, int attr, int baseattr, R
    RichString_append(str, attr, this->comm);
    if (this->pl->highlightBaseName) {
       int finish = RichString_size(str) - 1;
-      int space = RichString_findChar(str, ' ', start);
+      int space = start + this->basenameOffset;
       if (space != -1)
          finish = space - 1;
-      for (;;) {
-         int slash = RichString_findChar(str, '/', start);
-         if (slash == -1 || slash > finish)
-            break;
-         start = slash + 1;
+      int colon = RichString_findChar(str, ':', start);
+      if (colon != -1 && colon < finish) {
+         finish = colon;
+      } else {
+         for (int i = finish - start; i > 0; i--) {
+            if (this->comm[i] == '/') {
+               start += i+1;
+               break;
+            }
+         }
       }
       RichString_setAttrn(str, baseattr, start, finish);
    }

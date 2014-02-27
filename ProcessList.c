@@ -667,15 +667,15 @@ static void ProcessList_readOomData(Process* process, const char* dirname, const
    snprintf(filename, MAX_NAME, "%s/%s/oom_score", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file)
-	  return;
+      return;
    char buffer[256];
    if (!fgets(buffer, 255, file)) {
-	   return;
+      return;
    }
    unsigned int oom;
    int ok = sscanf(buffer, "%u", &oom);
    if (ok >= 1) {
-	   process->oom = oom;
+      process->oom = oom;
    }
    fclose(file);
 }
@@ -695,12 +695,20 @@ static bool ProcessList_readCmdlineFile(Process* process, const char* dirname, c
    char command[4096+1]; // max cmdline length on Linux
    int amtRead = xread(fd, command, sizeof(command) - 1);
    close(fd);
+   int tokenEnd = 0; 
    if (amtRead > 0) {
       for (int i = 0; i < amtRead; i++)
          if (command[i] == '\0' || command[i] == '\n') {
+            if (tokenEnd == 0) {
+               tokenEnd = i;
+            }
             command[i] = ' ';
          }
    }
+   if (tokenEnd == 0) {
+      tokenEnd = amtRead;
+   }
+   process->basenameOffset = tokenEnd;
    command[amtRead] = '\0';
    free(process->comm);
    process->comm = strdup(command);

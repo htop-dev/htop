@@ -144,6 +144,7 @@ typedef struct Process_ {
    #endif
 
    int exit_signal;
+   int basenameOffset;
    bool updated;
 
    #ifdef DEBUG
