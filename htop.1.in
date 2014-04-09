@@ -91,9 +91,11 @@ between them as a tree. Toggling the key will switch between tree and
 your previously selected sort view. Selecting a sort view will exit
 tree view.
 .TP
-.B F6, <, >
-Select a field for sorting. The current sort field is indicated by a
-highlight in the header.
+.B F6
+On sorted view, select a field for sorting, also accessible through < and >.
+The current sort field is indicated by a highlight in the header.
+On tree view, expand or collapse the current subtree. A "+" indicator in the
+tree node indicates that it is collapsed.
 .TP
 .B F7, ]
 Increase the selected process's priority (subtract from 'nice' value).

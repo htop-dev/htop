@@ -15,6 +15,8 @@ in the source distribution for its full text.
 
 typedef bool(*ForeachProcessFn)(Process*, size_t);
 
+void sortBy(Panel* panel, ProcessList* pl, Settings* settings, int headerHeight, FunctionBar* defaultBar, Header* header);
+
 int main(int argc, char** argv);
 
 #endif

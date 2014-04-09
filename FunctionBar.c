@@ -40,15 +40,19 @@ ObjectClass FunctionBar_class = {
 
 FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* events) {
    FunctionBar* this = AllocThis(FunctionBar);
-   this->functions = (char**) functions;
+   this->functions = calloc(16, sizeof(char*));
+   if (!functions) {
+      functions = FunctionBar_FLabels;
+   }
+   for (int i = 0; i < 15 && functions[i]; i++) {
+      this->functions[i] = strdup(functions[i]);
+   }
    if (keys && events) {
       this->staticData = false; 
-      this->functions = malloc(sizeof(char*) * 15);
       this->keys = malloc(sizeof(char*) * 15);
       this->events = malloc(sizeof(int) * 15);
       int i = 0;
       while (i < 15 && functions[i]) {
-         this->functions[i] = strdup(functions[i]);
          this->keys[i] = strdup(keys[i]);
          this->events[i] = events[i];
          i++;
@@ -56,7 +60,6 @@ FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* eve
       this->size = i;
    } else {
       this->staticData = true;
-      this->functions = (char**)( functions ? functions : FunctionBar_FLabels );
       this->keys = (char**) FunctionBar_FKeys;
       this->events = FunctionBar_FEvents;
       this->size = 10;
@@ -66,12 +69,14 @@ FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* eve
 
 void FunctionBar_delete(Object* cast) {
    FunctionBar* this = (FunctionBar*) cast;
+   for (int i = 0; i < 15 && this->functions[i]; i++) {
+      free(this->functions[i]);
+   }
+   free(this->functions);
    if (!this->staticData) {
       for (int i = 0; i < this->size; i++) {
-         free(this->functions[i]);
          free(this->keys[i]);
       }
-      free(this->functions);
       free(this->keys);
       free(this->events);
    }
@@ -79,7 +84,6 @@ void FunctionBar_delete(Object* cast) {
 }
 
 void FunctionBar_setLabel(FunctionBar* this, int event, const char* text) {
-   assert(!this->staticData);
    for (int i = 0; i < this->size; i++) {
       if (this->events[i] == event) {
          free(this->functions[i]);

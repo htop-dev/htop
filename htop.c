@@ -48,6 +48,8 @@ static void printVersionFlag() {
    exit(0);
 }
 
+static const char* defaultFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
+ 
 static void printHelpFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
          "Released under the GNU GPL.\n\n"
@@ -76,7 +78,7 @@ static struct { const char* key; const char* info; } helpLeft[] = {
    { .key = "      H: ", .info = "hide/show user threads" },
    { .key = "      K: ", .info = "hide/show kernel threads" },
    { .key = "      F: ", .info = "cursor follows process" },
-   { .key = "    + -: ", .info = "expand/collapse tree" },
+   { .key = " F6 + -: ", .info = "expand/collapse tree" },
    { .key = "  P M T: ", .info = "sort by CPU%, MEM% or TIME" },
    { .key = "      I: ", .info = "invert sort order" },
    { .key = "   F6 >: ", .info = "select sort column" },
@@ -268,10 +270,24 @@ static bool setUserOnly(const char* userName, bool* userOnly, uid_t* userId) {
    return false;
 }
 
-static inline void setSortKey(ProcessList* pl, ProcessField sortKey, Panel* panel, Settings* settings) {
+static void setTreeView(ProcessList* pl, FunctionBar* fuBar, bool mode) {
+   if (mode) {
+      FunctionBar_setLabel(fuBar, KEY_F(5), "Sorted");
+      FunctionBar_setLabel(fuBar, KEY_F(6), "Collap");
+   } else {
+      FunctionBar_setLabel(fuBar, KEY_F(5), "Tree  ");
+      FunctionBar_setLabel(fuBar, KEY_F(6), "SortBy");
+   }
+   if (mode != pl->treeView) {
+      FunctionBar_draw(fuBar, NULL);
+   }
+   pl->treeView = mode;
+}
+
+static inline void setSortKey(ProcessList* pl, FunctionBar* fuBar, ProcessField sortKey, Panel* panel, Settings* settings) {
    pl->sortKey = sortKey;
    pl->direction = 1;
-   pl->treeView = false;
+   setTreeView(pl, fuBar, false);
    settings->changed = true;
    ProcessList_printHeader(pl, Panel_getHeader(panel));
 }
@@ -292,6 +308,35 @@ static void tagAllChildren(Panel* panel, Process* parent) {
          tagAllChildren(panel, p);
       }
    }
+}
+
+static bool expandCollapse(Panel* panel) {
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (!p) return false;
+   p->showChildren = !p->showChildren;
+   return true;
+}
+
+void sortBy(Panel* panel, ProcessList* pl, Settings* settings, int headerHeight, FunctionBar* defaultBar, Header* header) {
+   Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
+   Panel_setHeader(sortPanel, "Sort by");
+   const char* fuFunctions[] = {"Sort  ", "Cancel ", NULL};
+   ProcessField* fields = pl->fields;
+   for (int i = 0; fields[i]; i++) {
+      char* name = String_trim(Process_fieldNames[fields[i]]);
+      Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
+      if (fields[i] == pl->sortKey)
+         Panel_setSelected(sortPanel, i);
+      free(name);
+   }
+   ListItem* field = (ListItem*) pickFromVector(panel, sortPanel, 15, headerHeight, fuFunctions, defaultBar, header);
+   if (field) {
+      settings->changed = true;
+      setSortKey(pl, defaultBar, field->key, panel, settings);
+   } else {
+      ProcessList_printHeader(pl, Panel_getHeader(panel));
+   }
+   Object_delete(sortPanel);
 }
 
 int main(int argc, char** argv) {
@@ -437,16 +482,15 @@ int main(int argc, char** argv) {
    Panel* panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, false, &Process_class);
    ProcessList_setPanel(pl, panel);
    
+   FunctionBar* defaultBar = FunctionBar_new(defaultFunctions, NULL, NULL);
+   setTreeView(pl, defaultBar, pl->treeView);
+   
    if (sortKey > 0) {
       pl->sortKey = sortKey;
-      pl->treeView = false;
+      setTreeView(pl, defaultBar, false);
       pl->direction = 1;
    }
    ProcessList_printHeader(pl, Panel_getHeader(panel));
-   
-   const char* defaultFunctions[] = {"Help  ", "Setup ", "Search", "Filter", "Tree  ",
-       "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
-   FunctionBar* defaultBar = FunctionBar_new(defaultFunctions, NULL, NULL);
 
    IncSet* inc = IncSet_new(defaultBar);
 
@@ -467,6 +511,8 @@ int main(int argc, char** argv) {
    int closeTimeout = 0;
 
    bool idle = false;
+   
+   bool collapsed = false;
    
    while (!quit) {
       gettimeofday(&tv, NULL);
@@ -490,9 +536,24 @@ int main(int argc, char** argv) {
          idle = false;
       }
       doRefresh = true;
+      
+      if (pl->treeView) {
+         Process* p = (Process*) Panel_getSelected(panel);
+         if (p) {
+            if (!p->showChildren && !collapsed) {
+               FunctionBar_setLabel(defaultBar, KEY_F(6), "Expand");
+               FunctionBar_draw(defaultBar, NULL);
+            } else if (p->showChildren && collapsed) {
+               FunctionBar_setLabel(defaultBar, KEY_F(6), "Collap");
+               FunctionBar_draw(defaultBar, NULL);
+            }
+            collapsed = !p->showChildren;
+         }
+      }
 
-      if (!idle)
+      if (!idle) {
          Panel_draw(panel, true);
+      }
       
       int prev = ch;
       if (inc->active)
@@ -524,9 +585,9 @@ int main(int argc, char** argv) {
                   ProcessField field = ProcessList_keyAt(pl, x);
                   if (field == pl->sortKey) {
                      ProcessList_invertSortOrder(pl);
-                     pl->treeView = false;
+                     setTreeView(pl, defaultBar, false);
                   } else {
-                     setSortKey(pl, field, panel, settings);
+                     setSortKey(pl, defaultBar, field, panel, settings);
                   }
                   refreshTimeout = 0;
                   continue;
@@ -580,13 +641,13 @@ int main(int argc, char** argv) {
       case 'M':
       {
          refreshTimeout = 0;
-         setSortKey(pl, PERCENT_MEM, panel, settings);
+         setSortKey(pl, defaultBar, PERCENT_MEM, panel, settings);
          break;
       }
       case 'T':
       {
          refreshTimeout = 0;
-         setSortKey(pl, TIME, panel, settings);
+         setSortKey(pl, defaultBar, TIME, panel, settings);
          break;
       }
       case 'c':
@@ -608,7 +669,7 @@ int main(int argc, char** argv) {
       case 'P':
       {
          refreshTimeout = 0;
-         setSortKey(pl, PERCENT_CPU, panel, settings);
+         setSortKey(pl, defaultBar, PERCENT_CPU, panel, settings);
          break;
       }
       case KEY_F(1):
@@ -704,11 +765,10 @@ int main(int argc, char** argv) {
       case '=':
       case '-':
       {
-         Process* p = (Process*) Panel_getSelected(panel);
-         if (!p) break;
-         p->showChildren = !p->showChildren;
-         refreshTimeout = 0;
-         doRecalculate = true;
+         if (expandCollapse(panel)) {
+            doRecalculate = true;         
+            refreshTimeout = 0;
+         }
          break;
       }
       case KEY_F(9):
@@ -764,31 +824,25 @@ int main(int argc, char** argv) {
          break;
       case '<':
       case ',':
-      case KEY_F(18):
       case '>':
       case '.':
+      {
+         sortBy(panel, pl, settings, headerHeight, defaultBar, header);
+         refreshTimeout = 0;
+         break;
+      }
+      case KEY_F(18):
       case KEY_F(6):
       {
-         Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
-         Panel_setHeader(sortPanel, "Sort by");
-         const char* fuFunctions[] = {"Sort  ", "Cancel ", NULL};
-         ProcessField* fields = pl->fields;
-         for (int i = 0; fields[i]; i++) {
-            char* name = String_trim(Process_fieldNames[fields[i]]);
-            Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
-            if (fields[i] == pl->sortKey)
-               Panel_setSelected(sortPanel, i);
-            free(name);
-         }
-         ListItem* field = (ListItem*) pickFromVector(panel, sortPanel, 15, headerHeight, fuFunctions, defaultBar, header);
-         if (field) {
-            settings->changed = true;
-            setSortKey(pl, field->key, panel, settings);
+         if (pl->treeView) {
+            if (expandCollapse(panel)) {
+               doRecalculate = true;
+               refreshTimeout = 0;
+            }
          } else {
-            ProcessList_printHeader(pl, Panel_getHeader(panel));
+            sortBy(panel, pl, settings, headerHeight, defaultBar, header);
+            refreshTimeout = 0;
          }
-         Object_delete(sortPanel);
-         refreshTimeout = 0;
          break;
       }
       case 'i':
@@ -842,7 +896,8 @@ int main(int argc, char** argv) {
       case 't':
       case KEY_F(5):
          refreshTimeout = 0;
-         pl->treeView = !pl->treeView;
+         collapsed = false;
+         setTreeView(pl, defaultBar, !pl->treeView);
          if (pl->treeView) pl->direction = 1;
          ProcessList_printHeader(pl, Panel_getHeader(panel));
          ProcessList_expandTree(pl);
