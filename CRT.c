@@ -182,6 +182,8 @@ void CRT_init(int delay, int colorScheme) {
    if (String_eq(CRT_termType, "xterm") || String_eq(CRT_termType, "xterm-color") || String_eq(CRT_termType, "vt220")) {
       define_key("\033[H", KEY_HOME);
       define_key("\033[F", KEY_END);
+      define_key("\033[7~", KEY_HOME);
+      define_key("\033[8~", KEY_END);
       define_key("\033OP", KEY_F(1));
       define_key("\033OQ", KEY_F(2));
       define_key("\033OR", KEY_F(3));
