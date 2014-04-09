@@ -405,14 +405,13 @@ static inline void Process_writeCommand(Process* this, int attr, int baseattr, R
    RichString_append(str, attr, this->comm);
    if (this->pl->highlightBaseName) {
       int finish = RichString_size(str) - 1;
-      int space = start + this->basenameOffset;
-      if (space != -1)
-         finish = space - 1;
+      if (this->basenameOffset != -1)
+         finish = (start + this->basenameOffset) - 1;
       int colon = RichString_findChar(str, ':', start);
       if (colon != -1 && colon < finish) {
          finish = colon;
       } else {
-         for (int i = finish - start; i > 0; i--) {
+         for (int i = finish - start; i >= 0; i--) {
             if (this->comm[i] == '/') {
                start += i+1;
                break;
@@ -648,6 +647,7 @@ Process* Process_new(struct ProcessList_ *pl) {
    this->utime = 0;
    this->stime = 0;
    this->comm = NULL;
+   this->basenameOffset = -1;
    this->indent = 0;
 #ifdef HAVE_CGROUP
    this->cgroup = NULL;

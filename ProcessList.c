@@ -708,10 +708,10 @@ static bool ProcessList_readCmdlineFile(Process* process, const char* dirname, c
    if (tokenEnd == 0) {
       tokenEnd = amtRead;
    }
-   process->basenameOffset = tokenEnd;
    command[amtRead] = '\0';
    free(process->comm);
    process->comm = strdup(command);
+   process->basenameOffset = tokenEnd;
 
    return true;
 }
@@ -831,10 +831,12 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
 
       if (process->state == 'Z') {
          free(process->comm);
+         process->basenameOffset = -1;
          process->comm = strdup(command);
       } else if (Process_isThread(process)) {
          if (this->showThreadNames || Process_isKernelThread(process) || process->state == 'Z') {
             free(process->comm);
+            process->basenameOffset = -1;
             process->comm = strdup(command);
          } else if (this->showingThreadNames) {
             if (! ProcessList_readCmdlineFile(process, dirname, name))
@@ -858,6 +860,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       errorReadingProcess: {
          if (process->comm) {
             free(process->comm);
+            process->basenameOffset = -1;
             process->comm = NULL;
          }
          if (existingProcess)
