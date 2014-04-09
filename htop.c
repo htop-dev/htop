@@ -211,6 +211,14 @@ static bool changePriority(Panel* panel, int delta) {
    return anyTagged;
 }
 
+static int selectedPid(Panel* panel) {
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (p) {
+      return p->pid;
+   }
+   return -1;
+}
+
 static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const char** keyLabels, FunctionBar* prevBar, Header* header) {
    const char* fuKeys[] = {"Enter", "Esc", NULL};
    int fuEvents[] = {13, 27};
@@ -221,8 +229,7 @@ static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const cha
    Panel* panelFocus;
    int ch;
    bool unfollow = false;
-   Process* p = (Process*)Panel_getSelected(panel);
-   int pid = p ? p->pid : -1;
+   int pid = selectedPid(panel);
    if (header->pl->following == -1) {
       header->pl->following = pid;
       unfollow = true;
@@ -237,7 +244,7 @@ static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const cha
    FunctionBar_draw(prevBar, NULL);
    if (panelFocus == list && ch == 13) {
       Process* selected = (Process*)Panel_getSelected(panel);
-      if (selected->pid == pid)
+      if (selected && selected->pid == pid)
          return Panel_getSelected(list);
       else
          beep();
@@ -465,8 +472,7 @@ int main(int argc, char** argv) {
       gettimeofday(&tv, NULL);
       newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
       recalculate = (newTime - oldTime > settings->delay);
-      Process* p = (Process*)Panel_getSelected(panel);
-      int following = (follow && p) ? p->pid : -1;
+      int following = follow ? selectedPid(panel) : -1;
       if (recalculate) {
          Header_draw(header);
          oldTime = newTime;
@@ -551,8 +557,13 @@ int main(int argc, char** argv) {
       if (isdigit((char)ch)) {
          if (Panel_size(panel) == 0) continue;
          pid_t pid = ch-48 + acc;
-         for (int i = 0; i < ProcessList_size(pl) && ((Process*) Panel_getSelected(panel))->pid != pid; i++)
+         for (int i = 0; i < ProcessList_size(pl); i++) {
             Panel_setSelected(panel, i);
+            Process* p = (Process*) Panel_getSelected(panel);
+            if (p && p->pid == pid) {
+               break;
+            }
+         }
          acc = pid * 10;
          if (acc > 10000000)
             acc = 0;
