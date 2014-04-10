@@ -335,34 +335,38 @@ static void Process_humanNumber(Process* this, RichString* str, unsigned long nu
       if(number >= (100 * ONE_DECIMAL_G)) {
          len = snprintf(buffer, 10, "%4ldT ", number / ONE_G);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+         return;
       } else if (number >= (1000 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, 10, "%3.1lfT ", (double)number / ONE_G);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
-      } else
+         return;
+      }
       #endif
       if(number >= (100 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, 10, "%4ldG ", number / ONE_M);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
-      } else {
-         len = snprintf(buffer, 10, "%3.1lfG ", (double)number / ONE_M);
-         RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+         return;
       }
+      len = snprintf(buffer, 10, "%3.1lfG ", (double)number / ONE_M);
+      RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+      return;
    } else if (number >= 100000) {
       len = snprintf(buffer, 10, "%4ldM ", number / ONE_K);
       int attr = this->pl->highlightMegabytes
                ? CRT_colors[PROCESS_MEGABYTES]
                : CRT_colors[PROCESS];
       RichString_appendn(str, attr, buffer, len);
+      return;
    } else if (this->pl->highlightMegabytes && number >= 1000) {
       len = snprintf(buffer, 10, "%2ld", number/1000);
       RichString_appendn(str, CRT_colors[PROCESS_MEGABYTES], buffer, len);
       number %= 1000;
       len = snprintf(buffer, 10, "%03ld ", number);
       RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
-   } else {
-      len = snprintf(buffer, 10, "%5ld ", number);
-      RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
+      return;
    }
+   len = snprintf(buffer, 10, "%5ld ", number);
+   RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
 }
 
 static void Process_colorNumber(RichString* str, unsigned long long number) {
