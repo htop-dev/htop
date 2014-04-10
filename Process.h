@@ -120,13 +120,13 @@ typedef struct Process_ {
    #endif
 
    int processor;
-   int m_size;
-   int m_resident;
-   int m_share;
-   int m_trs;
-   int m_drs;
-   int m_lrs;
-   int m_dt;
+   long m_size;
+   long m_resident;
+   long m_share;
+   long m_trs;
+   long m_drs;
+   long m_lrs;
+   long m_dt;
 
    #ifdef HAVE_OPENVZ
    unsigned int ctid;
@@ -188,6 +188,7 @@ void Process_getMaxPid();
 
 #define ONE_DECIMAL_K 1000
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
+#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
 void Process_delete(Object* cast);
 

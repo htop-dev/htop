@@ -141,13 +141,13 @@ typedef struct Process_ {
    #endif
 
    int processor;
-   int m_size;
-   int m_resident;
-   int m_share;
-   int m_trs;
-   int m_drs;
-   int m_lrs;
-   int m_dt;
+   long m_size;
+   long m_resident;
+   long m_share;
+   long m_trs;
+   long m_drs;
+   long m_lrs;
+   long m_dt;
 
    #ifdef HAVE_OPENVZ
    unsigned int ctid;
@@ -325,11 +325,21 @@ void Process_getMaxPid() {
 
 #define ONE_DECIMAL_K 1000
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
+#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
 static void Process_humanNumber(Process* this, RichString* str, unsigned long number) {
    char buffer[11];
    int len;
    if(number >= (10 * ONE_DECIMAL_M)) {
+      #ifdef __LP64__
+      if(number >= (100 * ONE_DECIMAL_G)) {
+         len = snprintf(buffer, 10, "%4ldT ", number / ONE_G);
+         RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+      } else if (number >= (10 * ONE_DECIMAL_G)) {
+         len = snprintf(buffer, 10, "%3.1fT ", (float)number / ONE_M);
+         RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+      } else
+      #endif
       if(number >= (100 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, 10, "%4ldG ", number / ONE_M);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
