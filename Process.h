@@ -182,11 +182,11 @@ extern const char *Process_fieldTitles[];
 
 void Process_getMaxPid();
 
-#define ONE_K 1024
+#define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
 
-#define ONE_DECIMAL_K 1000
+#define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 

@@ -319,11 +319,11 @@ void Process_getMaxPid() {
    }
 }
 
-#define ONE_K 1024
+#define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
 
-#define ONE_DECIMAL_K 1000
+#define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
@@ -335,8 +335,8 @@ static void Process_humanNumber(Process* this, RichString* str, unsigned long nu
       if(number >= (100 * ONE_DECIMAL_G)) {
          len = snprintf(buffer, 10, "%4ldT ", number / ONE_G);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
-      } else if (number >= (10 * ONE_DECIMAL_G)) {
-         len = snprintf(buffer, 10, "%3.1fT ", (float)number / ONE_M);
+      } else if (number >= (1000 * ONE_DECIMAL_M)) {
+         len = snprintf(buffer, 10, "%3.1lfT ", (double)number / ONE_G);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
       } else
       #endif
@@ -344,7 +344,7 @@ static void Process_humanNumber(Process* this, RichString* str, unsigned long nu
          len = snprintf(buffer, 10, "%4ldG ", number / ONE_M);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
       } else {
-         len = snprintf(buffer, 10, "%3.1fG ", (float)number / ONE_M);
+         len = snprintf(buffer, 10, "%3.1lfG ", (double)number / ONE_M);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
       }
    } else if (number >= 100000) {
