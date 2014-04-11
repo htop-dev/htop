@@ -741,8 +741,9 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
       }
 
       // Just skip all non-number directories.
-      if (name[0] <= '0' || name[0] >= '9')
+      if (name[0] < '0' || name[0] > '9') {
          continue;
+      }
 
       // filename is a number: process directory
       int pid = atoi(name);
