@@ -337,7 +337,7 @@ static void Process_humanNumber(Process* this, RichString* str, unsigned long nu
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
          return;
       } else if (number >= (1000 * ONE_DECIMAL_M)) {
-         len = snprintf(buffer, 10, "%3.1lfT ", (double)number / ONE_G);
+         len = snprintf(buffer, 10, "%4.1lfT ", (double)number / ONE_G);
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
          return;
       }
@@ -347,7 +347,7 @@ static void Process_humanNumber(Process* this, RichString* str, unsigned long nu
          RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
          return;
       }
-      len = snprintf(buffer, 10, "%3.1lfG ", (double)number / ONE_M);
+      len = snprintf(buffer, 10, "%4.1lfG ", (double)number / ONE_M);
       RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
       return;
    } else if (number >= 100000) {
