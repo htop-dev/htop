@@ -224,6 +224,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    int topoErr = hwloc_topology_init(&this->topology);
    if (topoErr == 0) {
       topoErr = hwloc_topology_load(this->topology);
+   }
+   if (topoErr == 0) {
       this->topologyOk = true;
    }
 #endif
