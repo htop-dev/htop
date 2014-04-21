@@ -238,11 +238,11 @@ ListItem* Meter_toListItem(Meter* this) {
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    char buffer[METER_BUFFER_LEN];
    Meter_setValues(this, buffer, METER_BUFFER_LEN - 1);
+   (void) w;
 
    attrset(CRT_colors[METER_TEXT]);
    mvaddstr(y, x, this->caption);
    int captionLen = strlen(this->caption);
-   w -= captionLen;
    x += captionLen;
    mvhline(y, x, ' ', CRT_colors[DEFAULT_COLOR]);
    attrset(CRT_colors[RESET_COLOR]);
