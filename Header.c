@@ -71,7 +71,7 @@ void Header_createMeter(Header* this, char* name, HeaderSide side) {
    char* paren = strchr(name, '(');
    int param = 0;
    if (paren) {
-      int ok = sscanf(paren, "(%d)", &param);
+      int ok = sscanf(paren, "(%10d)", &param);
       if (!ok) param = 0;
       *paren = '\0';
    }
