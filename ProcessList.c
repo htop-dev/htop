@@ -874,7 +874,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
 }
 
 void ProcessList_scan(ProcessList* this) {
-   unsigned long long int usertime, nicetime, systemtime, systemalltime, idlealltime, idletime, totaltime, virtalltime;
+   unsigned long long int usertime, nicetime, systemtime, idletime;
    unsigned long long int swapFree = 0;
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
@@ -925,6 +925,7 @@ void ProcessList_scan(ProcessList* this) {
       char buffer[256];
       int cpuid;
       unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
+      unsigned long long int systemalltime, idlealltime, totaltime, virtalltime;
       ioWait = irq = softIrq = steal = guest = guestnice = 0;
       // Dependending on your kernel version,
       // 5, 7, 8 or 9 of these fields will be set.
