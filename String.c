@@ -68,7 +68,13 @@ char** String_split(const char* s, char sep, int* n) {
       ctr++;
       if (ctr == blocks) {
          blocks += rate;
-         out = (char**) realloc(out, sizeof(char*) * blocks);
+         char** newOut = (char**) realloc(out, sizeof(char*) * blocks);
+         if (newOut) {
+            out = newOut;
+         } else {
+            blocks -= rate;
+            break;
+         }
       }
       s += size + 1;
    }
@@ -79,7 +85,10 @@ char** String_split(const char* s, char sep, int* n) {
       out[ctr] = token;
       ctr++;
    }
-   out = realloc(out, sizeof(char*) * (ctr + 1));
+   char** newOut = realloc(out, sizeof(char*) * (ctr + 1));
+   if (newOut) {
+      out = newOut;
+   }
    out[ctr] = NULL;
    *n = ctr;
    return out;
