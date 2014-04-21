@@ -85,10 +85,8 @@ int Vector_count(Vector* this) {
 
 void Vector_prune(Vector* this) {
    assert(Vector_isConsistent(this));
-   int i;
-
    if (this->owner) {
-      for (i = 0; i < this->items; i++)
+      for (int i = 0; i < this->items; i++)
          if (this->array[i]) {
             Object_delete(this->array[i]);
             //this->array[i] = NULL;
