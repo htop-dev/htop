@@ -669,13 +669,12 @@ static void ProcessList_readOomData(Process* process, const char* dirname, const
    if (!file)
       return;
    char buffer[256];
-   if (!fgets(buffer, 255, file)) {
-      return;
-   }
-   unsigned int oom;
-   int ok = sscanf(buffer, "%u", &oom);
-   if (ok >= 1) {
-      process->oom = oom;
+   if (fgets(buffer, 255, file)) {
+      unsigned int oom;
+      int ok = sscanf(buffer, "%u", &oom);
+      if (ok >= 1) {
+         process->oom = oom;
+      }
    }
    fclose(file);
 }
