@@ -396,7 +396,7 @@ int main(int argc, char** argv) {
             }
             break;
          case 'd':
-            if (sscanf(optarg, "%d", &delay) == 1) {
+            if (sscanf(optarg, "%16d", &delay) == 1) {
                if (delay < 1) delay = 1;
                if (delay > 100) delay = 100;
             } else {
@@ -413,9 +413,10 @@ int main(int argc, char** argv) {
          case 'C':
             usecolors=0;
             break;
-        case 'p':
+        case 'p': {
             argCopy = strdup(optarg);
-            pid = strtok(argCopy, ",");
+            char* saveptr;
+            pid = strtok_r(argCopy, ",", &saveptr);
 
             if( !pidWhiteList ) {
                pidWhiteList = Hashtable_new(8, false);
@@ -424,11 +425,12 @@ int main(int argc, char** argv) {
             while( pid ) {
                 unsigned int num_pid = atoi(pid);
                 Hashtable_put(pidWhiteList, num_pid, (void *) 1);
-                pid = strtok(NULL, ",");
+                pid = strtok_r(NULL, ",", &saveptr);
             }
             free(argCopy);
 
             break;
+         }
          default:
             exit(1);
       }
@@ -503,9 +505,7 @@ int main(int argc, char** argv) {
    bool follow = false;
  
    struct timeval tv;
-   double newTime = 0.0;
    double oldTime = 0.0;
-   bool recalculate;
 
    int ch = ERR;
    int closeTimeout = 0;
@@ -516,8 +516,8 @@ int main(int argc, char** argv) {
    
    while (!quit) {
       gettimeofday(&tv, NULL);
-      newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
-      recalculate = (newTime - oldTime > settings->delay);
+      double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
+      bool recalculate = (newTime - oldTime > settings->delay);
       int following = follow ? selectedPid(panel) : -1;
       if (recalculate) {
          Header_draw(header);
