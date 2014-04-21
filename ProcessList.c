@@ -538,7 +538,7 @@ static void ProcessList_readIoFile(Process* process, const char* dirname, char* 
          if (line[5] == 'r' && strncmp(line+1, "yscr: ", 6) == 0)
             process->io_syscr = strtoull(line+7, NULL, 10);
          else if (strncmp(line+1, "yscw: ", 6) == 0)
-            sscanf(line, "syscw: %llu", &process->io_syscw);
+            sscanf(line, "syscw: %32llu", &process->io_syscw);
             process->io_syscw = strtoull(line+7, NULL, 10);
          break;
       case 'c':
@@ -642,7 +642,7 @@ static void ProcessList_readVServerData(Process* process, const char* dirname, c
    while (fgets(buffer, 255, file)) {
       if (String_startsWith(buffer, "VxID:")) {
          int vxid;
-         int ok = sscanf(buffer, "VxID:\t%d", &vxid);
+         int ok = sscanf(buffer, "VxID:\t%32d", &vxid);
          if (ok >= 1) {
             process->vxid = vxid;
          }
@@ -650,7 +650,7 @@ static void ProcessList_readVServerData(Process* process, const char* dirname, c
       #if defined HAVE_ANCIENT_VSERVER
       else if (String_startsWith(buffer, "s_context:")) {
          int vxid;
-         int ok = sscanf(buffer, "s_context:\t%d", &vxid);
+         int ok = sscanf(buffer, "s_context:\t%32d", &vxid);
          if (ok >= 1) {
             process->vxid = vxid;
          }
@@ -673,7 +673,7 @@ static void ProcessList_readOomData(Process* process, const char* dirname, const
    char buffer[256];
    if (fgets(buffer, 255, file)) {
       unsigned int oom;
-      int ok = sscanf(buffer, "%u", &oom);
+      int ok = sscanf(buffer, "%32u", &oom);
       if (ok >= 1) {
          process->oom = oom;
       }
@@ -891,25 +891,25 @@ void ProcessList_scan(ProcessList* this) {
          switch (buffer[0]) {
          case 'M':
             if (String_startsWith(buffer, "MemTotal:"))
-               sscanf(buffer, "MemTotal: %llu kB", &this->totalMem);
+               sscanf(buffer, "MemTotal: %32llu kB", &this->totalMem);
             else if (String_startsWith(buffer, "MemFree:"))
-               sscanf(buffer, "MemFree: %llu kB", &this->freeMem);
+               sscanf(buffer, "MemFree: %32llu kB", &this->freeMem);
             else if (String_startsWith(buffer, "MemShared:"))
-               sscanf(buffer, "MemShared: %llu kB", &this->sharedMem);
+               sscanf(buffer, "MemShared: %32llu kB", &this->sharedMem);
             break;
          case 'B':
             if (String_startsWith(buffer, "Buffers:"))
-               sscanf(buffer, "Buffers: %llu kB", &this->buffersMem);
+               sscanf(buffer, "Buffers: %32llu kB", &this->buffersMem);
             break;
          case 'C':
             if (String_startsWith(buffer, "Cached:"))
-               sscanf(buffer, "Cached: %llu kB", &this->cachedMem);
+               sscanf(buffer, "Cached: %32llu kB", &this->cachedMem);
             break;
          case 'S':
             if (String_startsWith(buffer, "SwapTotal:"))
-               sscanf(buffer, "SwapTotal: %llu kB", &this->totalSwap);
+               sscanf(buffer, "SwapTotal: %32llu kB", &this->totalSwap);
             if (String_startsWith(buffer, "SwapFree:"))
-               sscanf(buffer, "SwapFree: %llu kB", &swapFree);
+               sscanf(buffer, "SwapFree: %32llu kB", &swapFree);
             break;
          }
       }
@@ -934,9 +934,9 @@ void ProcessList_scan(ProcessList* this) {
       // The rest will remain at zero.
       fgets(buffer, 255, file);
       if (i == 0)
-         sscanf(buffer, "cpu  %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         sscanf(buffer, "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
       else {
-         sscanf(buffer, "cpu%d %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         sscanf(buffer, "cpu%4d %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
          assert(cpuid == i - 1);
       }
       // Guest time is already accounted in usertime
