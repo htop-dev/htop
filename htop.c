@@ -339,6 +339,16 @@ void sortBy(Panel* panel, ProcessList* pl, Settings* settings, int headerHeight,
    Object_delete(sortPanel);
 }
 
+static int millisleep(unsigned long millisec) {
+   struct timespec req = {
+      .tv_sec = 0,
+      .tv_nsec = millisec * 1000000L
+   };
+   while(nanosleep(&req,&req)==-1) {
+      continue;
+   }
+}
+
 int main(int argc, char** argv) {
 
    int delay = -1;
@@ -497,7 +507,7 @@ int main(int argc, char** argv) {
    IncSet* inc = IncSet_new(defaultBar);
 
    ProcessList_scan(pl);
-   usleep(75000);
+   millisleep(75);
    
    FunctionBar_draw(defaultBar, NULL);
    
