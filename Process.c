@@ -361,11 +361,11 @@ static void Process_humanNumber(Process* this, RichString* str, unsigned long nu
       len = snprintf(buffer, 10, "%2ld", number/1000);
       RichString_appendn(str, CRT_colors[PROCESS_MEGABYTES], buffer, len);
       number %= 1000;
-      len = snprintf(buffer, 10, "%03ld ", number);
+      len = snprintf(buffer, 10, "%03lu ", number);
       RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
       return;
    }
-   len = snprintf(buffer, 10, "%5ld ", number);
+   len = snprintf(buffer, 10, "%5lu ", number);
    RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
 }
 
@@ -377,7 +377,7 @@ static void Process_colorNumber(RichString* str, unsigned long long number) {
       RichString_appendn(str, CRT_colors[PROCESS_MEGABYTES], buffer+5, 3);
       RichString_appendn(str, CRT_colors[PROCESS], buffer+8, 4);
    } else {
-      snprintf(buffer, 13, "%11lld ", number);
+      snprintf(buffer, 13, "%11llu ", number);
       RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, 2);
       RichString_appendn(str, CRT_colors[PROCESS_MEGABYTES], buffer+2, 3);
       RichString_appendn(str, CRT_colors[PROCESS], buffer+5, 3);
