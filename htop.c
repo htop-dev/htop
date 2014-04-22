@@ -36,6 +36,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <sys/param.h>
 #include <sys/time.h>
+#include <time.h>
 
 //#link m
 
@@ -339,7 +340,7 @@ void sortBy(Panel* panel, ProcessList* pl, Settings* settings, int headerHeight,
    Object_delete(sortPanel);
 }
 
-static int millisleep(unsigned long millisec) {
+static void millisleep(unsigned long millisec) {
    struct timespec req = {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
