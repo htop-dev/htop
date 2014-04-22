@@ -243,12 +243,14 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
          htopDir = String_cat(home, "/.config/htop");
       }
       legacyDotfile = String_cat(home, "/.htoprc");
-      mkdir(configDir, 0700);
-      mkdir(htopDir, 0700);
+      (void) mkdir(configDir, 0700);
+      (void) mkdir(htopDir, 0700);
       free(htopDir);
       free(configDir);
       struct stat st;
-      lstat(legacyDotfile, &st);
+      if (lstat(legacyDotfile, &st) != 0) {
+         st.st_mode = 0;
+      }
       if (access(legacyDotfile, R_OK) != 0 || S_ISLNK(st.st_mode)) {
          free(legacyDotfile);
          legacyDotfile = NULL;
