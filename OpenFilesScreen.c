@@ -28,14 +28,18 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "FunctionBar.h"
 
-typedef struct OpenFiles_ProcessData_ {
-   struct OpenFiles_FileData_* files;
-   int error;
+typedef struct OpenFiles_Data_ {
    char* data[256];
+} OpenFiles_Data;
+
+typedef struct OpenFiles_ProcessData_ {
+   OpenFiles_Data data;
+   int error;
+   struct OpenFiles_FileData_* files;
 } OpenFiles_ProcessData;
 
 typedef struct OpenFiles_FileData_ {
-   char* data[256];
+   OpenFiles_Data data;
    struct OpenFiles_FileData_* next;
 } OpenFiles_FileData;
 
@@ -85,17 +89,15 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    FILE* fd = popen(command, "r");
    OpenFiles_ProcessData* pdata = calloc(1, sizeof(OpenFiles_ProcessData));
    OpenFiles_FileData* fdata = NULL;
-   OpenFiles_ProcessData* item = pdata;
-   bool anyRead = false;
+   OpenFiles_Data* item = &(pdata->data);
    if (!fd) {
       pdata->error = 127;
       return pdata;
    }
    while (!feof(fd)) {
       int cmd = fgetc(fd);
-      if (cmd == EOF && !anyRead)
+      if (cmd == EOF)
          break;
-      anyRead = true;
       char* entry = malloc(1024);
       if (!fgets(entry, 1024, fd)) {
          free(entry);
@@ -104,14 +106,14 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       char* newline = strrchr(entry, '\n');
       *newline = '\0';
       if (cmd == 'f') {
-         OpenFiles_FileData* nextFile = calloc(1, sizeof(OpenFiles_ProcessData));
+         OpenFiles_FileData* nextFile = calloc(1, sizeof(OpenFiles_FileData));
          if (fdata == NULL) {
             pdata->files = nextFile;
          } else {
             fdata->next = nextFile;
          }
          fdata = nextFile;
-         item = (OpenFiles_ProcessData*) fdata;
+         item = &(fdata->data);
       }
       item->data[cmd] = entry;
    }
@@ -123,6 +125,12 @@ static inline void addLine(const char* line, Vector* lines, Panel* panel, const 
    Vector_add(lines, (Object*) ListItem_new(line, 0));
    if (!incFilter || String_contains_i(line, incFilter))
       Panel_add(panel, (Object*)Vector_get(lines, Vector_size(lines)-1));
+}
+
+static inline void OpenFiles_Data_clear(OpenFiles_Data* data) {
+   for (int i = 0; i < 255; i++)
+      if (data->data[i])
+         free(data->data[i]);
 }
 
 static void OpenFilesScreen_scan(OpenFilesScreen* this, Vector* lines, IncSet* inc) {
@@ -138,24 +146,21 @@ static void OpenFilesScreen_scan(OpenFilesScreen* this, Vector* lines, IncSet* i
       OpenFiles_FileData* fdata = pdata->files;
       while (fdata) {
          char entry[1024];
+         char** data = fdata->data.data;
          sprintf(entry, "%5s %4s %10s %10s %10s %s",
-            fdata->data['f'] ? fdata->data['f'] : "",
-            fdata->data['t'] ? fdata->data['t'] : "",
-            fdata->data['D'] ? fdata->data['D'] : "",
-            fdata->data['s'] ? fdata->data['s'] : "",
-            fdata->data['i'] ? fdata->data['i'] : "",
-            fdata->data['n'] ? fdata->data['n'] : "");
+            data['f'] ? data['f'] : "",
+            data['t'] ? data['t'] : "",
+            data['D'] ? data['D'] : "",
+            data['s'] ? data['s'] : "",
+            data['i'] ? data['i'] : "",
+            data['n'] ? data['n'] : "");
          addLine(entry, lines, panel, IncSet_filter(inc));
-         for (int i = 0; i < 255; i++)
-            if (fdata->data[i])
-               free(fdata->data[i]);
+         OpenFiles_Data_clear(&fdata->data);
          OpenFiles_FileData* old = fdata;
          fdata = fdata->next;
          free(old);
       }
-      for (int i = 0; i < 255; i++)
-         if (pdata->data[i])
-            free(pdata->data[i]);
+      OpenFiles_Data_clear(&pdata->data);
    }
    free(pdata);
    Vector_insertionSort(lines);
