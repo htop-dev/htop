@@ -414,7 +414,7 @@ static bool ProcessList_readStatFile(Process *process, const char* dirname, cons
 
    int size = xread(fd, buf, MAX_READ);
    close(fd);
-   if (!size) return false;
+   if (size <= 0) return false;
    buf[size] = '\0';
 
    assert(process->pid == atoi(buf));
