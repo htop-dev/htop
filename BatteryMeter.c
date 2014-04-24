@@ -59,7 +59,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
    #define MAX_BATTERIES 64
    char* batteries[MAX_BATTERIES];
    unsigned int nBatteries = 0;
-   memset(batteries, MAX_BATTERIES, sizeof (char*));
+   memset(batteries, 0, MAX_BATTERIES * sizeof(char*));
 
    struct dirent result;
    struct dirent* dirEntry;
