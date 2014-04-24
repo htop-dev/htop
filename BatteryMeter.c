@@ -56,13 +56,14 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
    if (!batteryDir)
       return 0;
 
-   char* batteries[64];
+   #define MAX_BATTERIES 64
+   char* batteries[MAX_BATTERIES];
    unsigned int nBatteries = 0;
-   memset(batteries, sizeof batteries, sizeof (char*));
+   memset(batteries, MAX_BATTERIES, sizeof (char*));
 
    struct dirent result;
    struct dirent* dirEntry;
-   while (nBatteries < sizeof batteries) {
+   while (nBatteries < MAX_BATTERIES) {
       readdir_r(batteryDir, &result, &dirEntry);
       if (!dirEntry)
          break;
