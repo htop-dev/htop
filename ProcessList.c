@@ -217,7 +217,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
       fgets(buffer, 255, file);
    } while (String_startsWith(buffer, "cpu"));
    fclose(file);
-   this->cpuCount = cpus - 1;
+   this->cpuCount = MAX(cpus - 1, 1);
 
 #ifdef HAVE_LIBHWLOC
    this->topologyOk = false;
@@ -724,7 +724,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
 
    time_t curTime = tv.tv_sec;
    #ifdef HAVE_TASKSTATS
-   unsigned long long now = tv.tv_sec*1000+tv.tv_usec/1000;
+   unsigned long long now = tv.tv_sec*1000LL+tv.tv_usec/1000LL;
    #endif
 
    dir = opendir(dirname);
@@ -884,6 +884,7 @@ void ProcessList_scan(ProcessList* this) {
       CRT_fatalError("Cannot open " PROCMEMINFOFILE);
    }
    int cpus = this->cpuCount;
+   assert(cpus > 0);
    {
       char buffer[128];
       while (fgets(buffer, 128, file)) {
