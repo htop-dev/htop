@@ -107,6 +107,8 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
+void CRT_fatalError(const char* note) __attribute__ ((noreturn));
+
 }*/
 
 // TODO: centralize these in Settings.
