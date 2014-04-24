@@ -115,6 +115,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
          fdata = nextFile;
          item = &(fdata->data);
       }
+      assert(cmd >= 0 && cmd <= 0xff);
       item->data[cmd] = entry;
    }
    pdata->error = pclose(fd);
