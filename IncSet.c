@@ -29,7 +29,7 @@ typedef enum {
 #define IncSet_filter(inc_) (inc_->filtering ? inc_->modes[INC_FILTER].buffer : NULL)
 
 typedef struct IncMode_ {
-   char buffer[INCMODE_MAX];
+   char buffer[INCMODE_MAX+1];
    int index;
    FunctionBar* bar;
    bool isFilter;
