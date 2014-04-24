@@ -217,8 +217,7 @@ static double getProcBatData() {
    if (totalRemain == 0)
       return 0;
 
-   double percent = totalFull > 0 ? ((double) totalRemain * 100) / (double) totalFull : 0;
-   return percent;
+   return totalRemain * 100.0 / (double) totalFull;
 }
 
 static double getSysBatData() {
