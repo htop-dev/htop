@@ -269,7 +269,7 @@ const char *Process_fieldTitles[] = {
 #endif
 #ifdef HAVE_TASKSTATS
    "     RD_CHAR ", "     WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", "  IO_RBYTES ", "  IO_WBYTES ", " IO_CANCEL ",
-   " IORR ", " IOWR ", "   IO ",
+   " IORR ", " IOWR ", " IORW ",
 #endif
 #ifdef HAVE_CGROUP
    "    CGROUP ",
