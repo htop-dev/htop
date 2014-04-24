@@ -147,11 +147,11 @@ typedef struct Process_ {
    int basenameOffset;
    bool updated;
 
-   #ifdef DEBUG
    unsigned long int minflt;
    unsigned long int cminflt;
    unsigned long int majflt;
    unsigned long int cmajflt;
+   #ifdef DEBUG
    long int itrealvalue;
    unsigned long int vsize;
    long int rss;

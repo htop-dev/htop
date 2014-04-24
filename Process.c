@@ -168,11 +168,11 @@ typedef struct Process_ {
    int basenameOffset;
    bool updated;
 
-   #ifdef DEBUG
    unsigned long int minflt;
    unsigned long int cminflt;
    unsigned long int majflt;
    unsigned long int cmajflt;
+   #ifdef DEBUG
    long int itrealvalue;
    unsigned long int vsize;
    long int rss;
@@ -254,7 +254,7 @@ const int Process_fieldFlags[] = {
 
 const char *Process_fieldTitles[] = {
    "", "    PID ", "Command ", "S ", "   PPID ", "   PGRP ", "   SESN ",
-   "  TTY ", "  TPGID ", "- ", "- ", "- ", "- ", "- ",
+   "  TTY ", "  TPGID ", "- ", "     MINFLT ", "    CMINFLT ", "     MAJFLT ", "    CMAJFLT ",
    " UTIME+  ", " STIME+  ", " CUTIME+ ", " CSTIME+ ", "PRI ", " NI ", "- ",
    "START ", "- ", "- ", "- ", "- ", "- ", "- ",
    "- ", "- ", "- ", "- ", "- ", "- ", "- ",
@@ -483,6 +483,10 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
    case TGID: snprintf(buffer, n, Process_pidFormat, this->tgid); break;
    case TPGID: snprintf(buffer, n, Process_tpgidFormat, this->tpgid); break;
+   case MINFLT: Process_colorNumber(str, this->minflt, coloring); return;
+   case CMINFLT: Process_colorNumber(str, this->cminflt, coloring); return;
+   case MAJFLT: Process_colorNumber(str, this->majflt, coloring); return;
+   case CMAJFLT: Process_colorNumber(str, this->cmajflt, coloring); return;
    case PROCESSOR: snprintf(buffer, n, "%3d ", ProcessList_cpuId(this->pl, this->processor)); break;
    case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
    case COMM: {
