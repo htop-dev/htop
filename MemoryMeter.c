@@ -52,7 +52,7 @@ static void MemoryMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[MEMORY_USED], buffer);
    sprintf(buffer, format, buffersMem);
    RichString_append(out, CRT_colors[METER_TEXT], "buffers:");
-   RichString_append(out, CRT_colors[MEMORY_BUFFERS], buffer);
+   RichString_append(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
    sprintf(buffer, format, cachedMem);
    RichString_append(out, CRT_colors[METER_TEXT], "cache:");
    RichString_append(out, CRT_colors[MEMORY_CACHE], buffer);

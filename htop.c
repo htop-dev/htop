@@ -121,7 +121,7 @@ static void showHelp(ProcessList* pl) {
    #define addattrstr(a,s) attrset(a);addstr(s)
    addattrstr(CRT_colors[BAR_BORDER], "[");
    if (pl->detailedCPUTime) {
-      addattrstr(CRT_colors[CPU_NICE], "low"); addstr("/");
+      addattrstr(CRT_colors[CPU_NICE_TEXT], "low"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
       addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
       addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
@@ -131,7 +131,7 @@ static void showHelp(ProcessList* pl) {
       addattrstr(CRT_colors[CPU_IOWAIT], "io-wait");
       addattrstr(CRT_colors[BAR_SHADOW], " used%");
    } else {
-      addattrstr(CRT_colors[CPU_NICE], "low-priority"); addstr("/");
+      addattrstr(CRT_colors[CPU_NICE_TEXT], "low-priority"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
       addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
       addattrstr(CRT_colors[CPU_STEAL], "virtualiz");
@@ -142,7 +142,7 @@ static void showHelp(ProcessList* pl) {
    mvaddstr(4, 0, "Memory bar:    ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[MEMORY_USED], "used"); addstr("/");
-   addattrstr(CRT_colors[MEMORY_BUFFERS], "buffers"); addstr("/");
+   addattrstr(CRT_colors[MEMORY_BUFFERS_TEXT], "buffers"); addstr("/");
    addattrstr(CRT_colors[MEMORY_CACHE], "cache");
    addattrstr(CRT_colors[BAR_SHADOW], "                            used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
