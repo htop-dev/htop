@@ -64,8 +64,8 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
    struct dirent result;
    struct dirent* dirEntry;
    while (nBatteries < MAX_BATTERIES) {
-      readdir_r(batteryDir, &result, &dirEntry);
-      if (!dirEntry)
+      int err = readdir_r(batteryDir, &result, &dirEntry);
+      if (err || !dirEntry)
          break;
       char* entryName = dirEntry->d_name;
       if (strncmp(entryName, "BAT", 3))
@@ -117,8 +117,8 @@ static ACPresence procAcpiCheck() {
    struct dirent result;
    struct dirent* dirEntry;
    for (;;) {
-      readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
-      if (!dirEntry)
+      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
+      if (err || !dirEntry)
          break;
 
       char* entryName = (char *) dirEntry->d_name;
@@ -170,8 +170,8 @@ static ACPresence sysCheck() {
    struct dirent result;
    struct dirent* dirEntry;
    for (;;) {
-      readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
-      if (!dirEntry)
+      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
+      if (err || !dirEntry)
          break;
 
       char* entryName = (char *) dirEntry->d_name;
@@ -233,8 +233,8 @@ static double getSysBatData() {
    struct dirent result;
    struct dirent* dirEntry;
    for (;;) {
-      readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
-      if (!dirEntry)
+      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
+      if (err || !dirEntry)
          break;
       char* entryName = (char *) dirEntry->d_name;
 
