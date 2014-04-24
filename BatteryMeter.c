@@ -85,9 +85,10 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
          break;
       }
 
-      char line[50];
+      char line[50] = "";
       for (unsigned short int i = 0; i < lineNum; i++) {
-         fgets(line, sizeof line, file);
+         char* ok = fgets(line, sizeof line, file);
+         if (!ok) break;
       }
 
       fclose(file);
