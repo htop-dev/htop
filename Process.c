@@ -268,7 +268,7 @@ const char *Process_fieldTitles[] = {
    " VXID ",
 #endif
 #ifdef HAVE_TASKSTATS
-   "     RD_CHAR ", "     WR_CHAR ", "   RD_SYSC ", "   WR_SYSC ", "  IO_RBYTES ", "  IO_WBYTES ", " IO_CANCEL ",
+   "    RD_CHAR ", "    WR_CHAR ", "    RD_SYSC ", "    WR_SYSC ", "  IO_RBYTES ", "  IO_WBYTES ", "  IO_CANCEL ",
    " IORR ", " IOWR ", " IORW ",
 #endif
 #ifdef HAVE_CGROUP
@@ -327,61 +327,78 @@ void Process_getMaxPid() {
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
-static void Process_humanNumber(Process* this, RichString* str, unsigned long number) {
+static void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
    char buffer[11];
    int len;
+   
+   int largeNumberColor = CRT_colors[LARGE_NUMBER];
+   int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
+   int processColor = CRT_colors[PROCESS];
+   if (!coloring) {
+      largeNumberColor = CRT_colors[PROCESS];
+      processMegabytesColor = CRT_colors[PROCESS];
+   }
+   
    if(number >= (10 * ONE_DECIMAL_M)) {
       #ifdef __LP64__
       if(number >= (100 * ONE_DECIMAL_G)) {
          len = snprintf(buffer, 10, "%4ldT ", number / ONE_G);
-         RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+         RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       } else if (number >= (1000 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, 10, "%4.1lfT ", (double)number / ONE_G);
-         RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+         RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       }
       #endif
       if(number >= (100 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, 10, "%4ldG ", number / ONE_M);
-         RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+         RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       }
       len = snprintf(buffer, 10, "%4.1lfG ", (double)number / ONE_M);
-      RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, len);
+      RichString_appendn(str, largeNumberColor, buffer, len);
       return;
    } else if (number >= 100000) {
       len = snprintf(buffer, 10, "%4ldM ", number / ONE_K);
-      int attr = this->pl->highlightMegabytes
-               ? CRT_colors[PROCESS_MEGABYTES]
-               : CRT_colors[PROCESS];
-      RichString_appendn(str, attr, buffer, len);
+      RichString_appendn(str, processMegabytesColor, buffer, len);
       return;
-   } else if (this->pl->highlightMegabytes && number >= 1000) {
+   } else if (number >= 1000) {
       len = snprintf(buffer, 10, "%2ld", number/1000);
-      RichString_appendn(str, CRT_colors[PROCESS_MEGABYTES], buffer, len);
+      RichString_appendn(str, processMegabytesColor, buffer, len);
       number %= 1000;
       len = snprintf(buffer, 10, "%03lu ", number);
-      RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
+      RichString_appendn(str, processColor, buffer, len);
       return;
    }
    len = snprintf(buffer, 10, "%5lu ", number);
-   RichString_appendn(str, CRT_colors[PROCESS], buffer, len);
+   RichString_appendn(str, processColor, buffer, len);
 }
 
-static void Process_colorNumber(RichString* str, unsigned long long number) {
+static void Process_colorNumber(RichString* str, unsigned long long number, bool coloring) {
    char buffer[14];
+
+   int largeNumberColor = CRT_colors[LARGE_NUMBER];
+   int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
+   int processColor = CRT_colors[PROCESS];
+   int processShadowColor = CRT_colors[PROCESS_SHADOW];
+   if (!coloring) {
+      largeNumberColor = CRT_colors[PROCESS];
+      processMegabytesColor = CRT_colors[PROCESS];
+      processShadowColor = CRT_colors[PROCESS];
+   }
+
    if (number > 10000000000) {
       snprintf(buffer, 13, "%11lld ", number / 1000);
-      RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, 5);
-      RichString_appendn(str, CRT_colors[PROCESS_MEGABYTES], buffer+5, 3);
-      RichString_appendn(str, CRT_colors[PROCESS], buffer+8, 4);
+      RichString_appendn(str, largeNumberColor, buffer, 5);
+      RichString_appendn(str, processMegabytesColor, buffer+5, 3);
+      RichString_appendn(str, processColor, buffer+8, 4);
    } else {
       snprintf(buffer, 13, "%11llu ", number);
-      RichString_appendn(str, CRT_colors[LARGE_NUMBER], buffer, 2);
-      RichString_appendn(str, CRT_colors[PROCESS_MEGABYTES], buffer+2, 3);
-      RichString_appendn(str, CRT_colors[PROCESS], buffer+5, 3);
-      RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer+8, 4);
+      RichString_appendn(str, largeNumberColor, buffer, 2);
+      RichString_appendn(str, processMegabytesColor, buffer+2, 3);
+      RichString_appendn(str, processColor, buffer+5, 3);
+      RichString_appendn(str, processShadowColor, buffer+8, 4);
    }
 }
 
@@ -436,7 +453,7 @@ static inline void Process_writeCommand(Process* this, int attr, int baseattr, R
    }
 }
 
-static inline void Process_outputRate(Process* this, RichString* str, int attr, char* buffer, int n, double rate) {
+static inline void Process_outputRate(RichString* str, int attr, char* buffer, int n, double rate, int coloring) {
    rate = rate / 1024;
    if (rate < 0.01)
       snprintf(buffer, n, "    0 ");
@@ -445,7 +462,7 @@ static inline void Process_outputRate(Process* this, RichString* str, int attr, 
    else if (rate <= 100)
       snprintf(buffer, n, "%5.1f ", rate);
    else {
-      Process_humanNumber(this, str, rate);
+      Process_humanNumber(str, rate, coloring);
       return;
    }
    RichString_append(str, attr, buffer);
@@ -456,6 +473,7 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    int attr = CRT_colors[DEFAULT_COLOR];
    int baseattr = CRT_colors[PROCESS_BASENAME];
    int n = sizeof(buffer) - 1;
+   bool coloring = this->pl->highlightMegabytes;
 
    switch (field) {
    case PID: snprintf(buffer, n, Process_pidFormat, this->pid); break;
@@ -524,13 +542,13 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
            : attr;
       break;
    }
-   case M_DRS: Process_humanNumber(this, str, this->m_drs * PAGE_SIZE_KB); return;
-   case M_DT: Process_humanNumber(this, str, this->m_dt * PAGE_SIZE_KB); return;
-   case M_LRS: Process_humanNumber(this, str, this->m_lrs * PAGE_SIZE_KB); return;
-   case M_TRS: Process_humanNumber(this, str, this->m_trs * PAGE_SIZE_KB); return;
-   case M_SIZE: Process_humanNumber(this, str, this->m_size * PAGE_SIZE_KB); return;
-   case M_RESIDENT: Process_humanNumber(this, str, this->m_resident * PAGE_SIZE_KB); return;
-   case M_SHARE: Process_humanNumber(this, str, this->m_share * PAGE_SIZE_KB); return;
+   case M_DRS: Process_humanNumber(str, this->m_drs * PAGE_SIZE_KB, coloring); return;
+   case M_DT: Process_humanNumber(str, this->m_dt * PAGE_SIZE_KB, coloring); return;
+   case M_LRS: Process_humanNumber(str, this->m_lrs * PAGE_SIZE_KB, coloring); return;
+   case M_TRS: Process_humanNumber(str, this->m_trs * PAGE_SIZE_KB, coloring); return;
+   case M_SIZE: Process_humanNumber(str, this->m_size * PAGE_SIZE_KB, coloring); return;
+   case M_RESIDENT: Process_humanNumber(str, this->m_resident * PAGE_SIZE_KB, coloring); return;
+   case M_SHARE: Process_humanNumber(str, this->m_share * PAGE_SIZE_KB, coloring); return;
    case ST_UID: snprintf(buffer, n, "%4d ", this->st_uid); break;
    case USER: {
       if (Process_getuid != (int) this->st_uid)
@@ -578,16 +596,16 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case VXID: snprintf(buffer, n, "%5u ", this->vxid); break;
    #endif
    #ifdef HAVE_TASKSTATS
-   case RCHAR:  snprintf(buffer, n, "%12llu ", this->io_rchar); break;
-   case WCHAR:  snprintf(buffer, n, "%12llu ", this->io_wchar); break;   
-   case SYSCR:  snprintf(buffer, n, "%10llu ", this->io_syscr); break;   
-   case SYSCW:  snprintf(buffer, n, "%10llu ", this->io_syscw); break; 
-   case RBYTES: Process_colorNumber(str, this->io_read_bytes); return;
-   case WBYTES: Process_colorNumber(str, this->io_write_bytes); return;
-   case CNCLWB: snprintf(buffer, n, "%10llu ", this->io_cancelled_write_bytes); break; 
-   case IO_READ_RATE:  Process_outputRate(this, str, attr, buffer, n, this->io_rate_read_bps); return;
-   case IO_WRITE_RATE: Process_outputRate(this, str, attr, buffer, n, this->io_rate_write_bps); return;
-   case IO_RATE: Process_outputRate(this, str, attr, buffer, n, this->io_rate_read_bps + this->io_rate_write_bps); return;
+   case RCHAR:  Process_colorNumber(str, this->io_rchar, coloring); return;
+   case WCHAR:  Process_colorNumber(str, this->io_wchar, coloring); return;
+   case SYSCR:  Process_colorNumber(str, this->io_syscr, coloring); return;
+   case SYSCW:  Process_colorNumber(str, this->io_syscw, coloring); return;
+   case RBYTES: Process_colorNumber(str, this->io_read_bytes, coloring); return;
+   case WBYTES: Process_colorNumber(str, this->io_write_bytes, coloring); return;
+   case CNCLWB: Process_colorNumber(str, this->io_cancelled_write_bytes, coloring); return;
+   case IO_READ_RATE:  Process_outputRate(str, attr, buffer, n, this->io_rate_read_bps, coloring); return;
+   case IO_WRITE_RATE: Process_outputRate(str, attr, buffer, n, this->io_rate_write_bps, coloring); return;
+   case IO_RATE: Process_outputRate(str, attr, buffer, n, this->io_rate_read_bps + this->io_rate_write_bps, coloring); return;
    #endif
    #ifdef HAVE_CGROUP
    case CGROUP: snprintf(buffer, n, "%-10s ", this->cgroup); break;
