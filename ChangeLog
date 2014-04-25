@@ -10,6 +10,7 @@ What's new in version 1.0.3
   of IO data depending on selected fields.
 * Better consistency in coloring.
 * Increase limit of buffer when tracing a deep nested process tree.
+* Display pagefault stats.
 * BUGFIX: Fix crash when adding meters and toggling detailed CPU time.
   (thanks to Dawid Gajownik)
 * Add column to track the OOM-killer score of processes

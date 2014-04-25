@@ -61,7 +61,7 @@ static void Settings_readMeterModes(Settings* this, char* line, HeaderSide side)
    String_freeArray(ids);
 }
 
-static bool Settings_read(Settings* this, char* fileName, int cpuCount) {
+static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
    FILE* fd = fopen(fileName, "r");
    if (!fd)
       return false;
@@ -265,7 +265,6 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
          // Transition to new location and delete old configuration file
          if (Settings_write(this))
             unlink(legacyDotfile);
-         free(legacyDotfile);
       }
    } else {
       this->changed = true;
@@ -280,5 +279,6 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
          pl->highlightThreads = false;
       }
    }
+   free(legacyDotfile);
    return this;
 }

@@ -623,6 +623,9 @@ int main(int argc, char** argv) {
 
       if (inc->active) {
          doRefresh = IncSet_handleKey(inc, ch, panel, getMainPanelValue, NULL);
+         if (!inc->active) {
+            follow = true;
+         }
          continue;
       }
       

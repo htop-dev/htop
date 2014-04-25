@@ -56,15 +56,16 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
    if (!batteryDir)
       return 0;
 
-   char* batteries[64];
+   #define MAX_BATTERIES 64
+   char* batteries[MAX_BATTERIES];
    unsigned int nBatteries = 0;
-   memset(batteries, sizeof batteries, sizeof (char*));
+   memset(batteries, 0, MAX_BATTERIES * sizeof(char*));
 
    struct dirent result;
    struct dirent* dirEntry;
-   while (nBatteries < sizeof batteries) {
-      readdir_r(batteryDir, &result, &dirEntry);
-      if (!dirEntry)
+   while (nBatteries < MAX_BATTERIES) {
+      int err = readdir_r(batteryDir, &result, &dirEntry);
+      if (err || !dirEntry)
          break;
       char* entryName = dirEntry->d_name;
       if (strncmp(entryName, "BAT", 3))
@@ -84,9 +85,10 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
          break;
       }
 
-      char line[50];
+      char line[50] = "";
       for (unsigned short int i = 0; i < lineNum; i++) {
-         fgets(line, sizeof line, file);
+         char* ok = fgets(line, sizeof line, file);
+         if (!ok) break;
       }
 
       fclose(file);
@@ -116,8 +118,8 @@ static ACPresence procAcpiCheck() {
    struct dirent result;
    struct dirent* dirEntry;
    for (;;) {
-      readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
-      if (!dirEntry)
+      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
+      if (err || !dirEntry)
          break;
 
       char* entryName = (char *) dirEntry->d_name;
@@ -169,8 +171,8 @@ static ACPresence sysCheck() {
    struct dirent result;
    struct dirent* dirEntry;
    for (;;) {
-      readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
-      if (!dirEntry)
+      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
+      if (err || !dirEntry)
          break;
 
       char* entryName = (char *) dirEntry->d_name;
@@ -232,8 +234,8 @@ static double getSysBatData() {
    struct dirent result;
    struct dirent* dirEntry;
    for (;;) {
-      readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
-      if (!dirEntry)
+      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
+      if (err || !dirEntry)
          break;
       char* entryName = (char *) dirEntry->d_name;
 
