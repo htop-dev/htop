@@ -338,7 +338,7 @@ static void Process_humanNumber(RichString* str, unsigned long number, bool colo
       largeNumberColor = CRT_colors[PROCESS];
       processMegabytesColor = CRT_colors[PROCESS];
    }
-   
+ 
    if(number >= (10 * ONE_DECIMAL_M)) {
       #ifdef __LP64__
       if(number >= (100 * ONE_DECIMAL_G)) {
@@ -841,10 +841,10 @@ int Process_compare(const void* v1, const void* v2) {
       return (p2->percent_cpu > p1->percent_cpu ? 1 : -1);
    case PERCENT_MEM:
       return (p2->m_resident - p1->m_resident);
-   case UTIME:
-      return (p2->utime - p1->utime);
-   case STIME:
-      return (p2->stime - p1->stime);
+   case UTIME:  diff = p2->utime - p1->utime; goto test_diff;
+   case CUTIME: diff = p2->cutime - p1->cutime; goto test_diff;
+   case STIME:  diff = p2->stime - p1->stime; goto test_diff;
+   case CSTIME: diff = p2->cstime - p2->cstime; goto test_diff;
    case TIME:
       return ((p2->utime+p2->stime) - (p1->utime+p1->stime));
    case COMM:
