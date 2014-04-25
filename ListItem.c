@@ -69,7 +69,7 @@ const char* ListItem_getRef(ListItem* this) {
    return this->value;
 }
 
-int ListItem_compare(const void* cast1, const void* cast2) {
+long ListItem_compare(const void* cast1, const void* cast2) {
    ListItem* obj1 = (ListItem*) cast1;
    ListItem* obj2 = (ListItem*) cast2;
    return strcmp(obj1->value, obj2->value);

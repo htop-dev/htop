@@ -232,8 +232,8 @@ bool Process_setAffinity(Process* this, Affinity* affinity);
 
 void Process_sendSignal(Process* this, size_t sgn);
 
-int Process_pidCompare(const void* v1, const void* v2);
+long Process_pidCompare(const void* v1, const void* v2);
 
-int Process_compare(const void* v1, const void* v2);
+long Process_compare(const void* v1, const void* v2);
 
 #endif

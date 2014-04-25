@@ -14,7 +14,7 @@ in the source distribution for its full text.
 typedef struct Object_ Object;
 
 typedef void(*Object_Display)(Object*, RichString*);
-typedef int(*Object_Compare)(const void*, const void*);
+typedef long(*Object_Compare)(const void*, const void*);
 typedef void(*Object_Delete)(Object*);
 
 #define Object_getClass(obj_)         ((Object*)(obj_))->klass

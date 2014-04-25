@@ -26,7 +26,7 @@ void ListItem_append(ListItem* this, const char* text);
 
 const char* ListItem_getRef(ListItem* this);
 
-int ListItem_compare(const void* cast1, const void* cast2);
+long ListItem_compare(const void* cast1, const void* cast2);
 
 
 #endif
