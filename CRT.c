@@ -165,9 +165,12 @@ static void CRT_handleSIGTERM(int sgn) {
 void CRT_init(int delay, int colorScheme) {
    initscr();
    noecho();
-   CRT_delay = delay;
+   CRT_delay = delay/2;
+   if (CRT_delay == 0) {
+      CRT_delay = 1;
+   }
    CRT_colorScheme = colorScheme;
-   halfdelay(CRT_delay/2);
+   halfdelay(CRT_delay);
    nonl();
    intrflush(stdscr, false);
    keypad(stdscr, true);
@@ -227,7 +230,7 @@ int CRT_readKey() {
    cbreak();
    nodelay(stdscr, FALSE);
    int ret = getch();
-   halfdelay(CRT_delay/2);
+   halfdelay(CRT_delay);
    return ret;
 }
 
@@ -238,7 +241,7 @@ void CRT_disableDelay() {
 }
 
 void CRT_enableDelay() {
-   halfdelay(CRT_delay/2);
+   halfdelay(CRT_delay);
 }
 
 void CRT_setColors(int colorScheme) {
