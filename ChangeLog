@@ -1,4 +1,8 @@
 
+What's new in version 1.0.4
+
+* BUGFIX: Fix crash when scrolling an empty filtered list.
+
 What's new in version 1.0.3
 
 * Tag all children ('c' key)
