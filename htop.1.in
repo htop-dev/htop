@@ -10,7 +10,8 @@ Htop is a free (GPL) ncurses-based process viewer for Linux.
 .LP
 It is similar to top, but allows you to scroll vertically and horizontally,
 so you can see all the processes running on the system, along with their full
-command lines.
+command lines, as well as viewing them as a process tree, selecting mutiple
+processes and acting on them all at once.
 .LP
 Tasks related to processes (killing, renicing) can be done without
 entering their PIDs.
@@ -320,6 +321,16 @@ OOM killer score.
 .TP
 .B All other flags
 Currently unsupported (always displays '-').
+
+.SH "CONFIG FILE"
+.LP 
+By default htop reads its configuration from the XDG-compliant path
+~/.config/htop/htoprc -- the configuration file is overwritten by htop's
+in-program Setup configuration, so it should not be hand-edited.
+.LP
+You may override the location of the configuration file using the $HTOPRC
+environment variable (so you can have multiple configurations for different
+machines that share the same home directory, for example).
 
 .SH "SEE ALSO"
 proc(5), top(1), free(1), ps(1), uptime(1)
