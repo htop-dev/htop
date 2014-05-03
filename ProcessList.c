@@ -242,8 +242,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    this->flags = 0;
    for (int i = 0; defaultHeaders[i]; i++) {
       this->fields[i] = defaultHeaders[i];
-      this->fields[i] |= Process_fieldFlags[defaultHeaders[i]];
+      this->flags |= Process_fieldFlags[defaultHeaders[i]];
    }
+
+   #ifdef HAVE_OPENVZ
+   this->flags |= PROCESS_FLAG_OPENVZ;
+   #endif
+
    this->sortKey = PERCENT_CPU;
    this->direction = 1;
    this->hideThreads = false;
@@ -580,9 +585,10 @@ static bool ProcessList_readStatmFile(Process* process, const char* dirname, con
 #ifdef HAVE_OPENVZ
 
 static void ProcessList_readOpenVZData(Process* process, const char* dirname, const char* name) {
-   if (access("/proc/vz", R_OK) != 0) {
+   if ( (!(this->flags & PROCESS_FLAG_OPENVZ)) || (access("/proc/vz", R_OK) != 0)) {
       process->vpid = process->pid;
       process->ctid = 0;
+      this->flags |= ~PROCESS_FLAG_OPENVZ;
       return;
    }
    char filename[MAX_NAME+1];
@@ -806,22 +812,12 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
          process->user = UsersTable_getRef(this->usersTable, process->st_uid);
 
          #ifdef HAVE_OPENVZ
-         if (this->flags & PROCESS_FLAG_OPENVZ)
-            ProcessList_readOpenVZData(process, dirname, name);
-         #endif
-
-         #ifdef HAVE_CGROUP
-         if (this->flags & PROCESS_FLAG_CGROUP)
-            ProcessList_readCGroupFile(process, dirname, name);
+         ProcessList_readOpenVZData(process, dirname, name);
          #endif
          
          #ifdef HAVE_VSERVER
          if (this->flags & PROCESS_FLAG_VSERVER)
             ProcessList_readVServerData(process, dirname, name);
-         #endif
-         
-         #ifdef HAVE_OOM
-         ProcessList_readOomData(process, dirname, name);
          #endif
 
          if (! ProcessList_readCmdlineFile(process, dirname, name))
@@ -834,6 +830,15 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
                goto errorReadingProcess;
          }
       }
+
+      #ifdef HAVE_CGROUP
+      if (this->flags & PROCESS_FLAG_CGROUP)
+         ProcessList_readCGroupFile(process, dirname, name);
+      #endif
+      
+      #ifdef HAVE_OOM
+      ProcessList_readOomData(process, dirname, name);
+      #endif
 
       if (process->state == 'Z') {
          free(process->comm);

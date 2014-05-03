@@ -663,9 +663,9 @@ static void Process_display(Object* cast, RichString* out) {
 void Process_delete(Object* cast) {
    Process* this = (Process*) cast;
    assert (this != NULL);
-   if (this->comm) free(this->comm);
+   free(this->comm);
 #ifdef HAVE_CGROUP
-   if (this->cgroup) free(this->cgroup);
+   free(this->cgroup);
 #endif
    free(this);
 }
