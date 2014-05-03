@@ -692,6 +692,7 @@ int main(int argc, char** argv) {
       {
          showHelp(pl);
          FunctionBar_draw(defaultBar, NULL);
+         recalculate = true;
          refreshTimeout = 0;
          break;
       }
