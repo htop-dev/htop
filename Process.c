@@ -262,7 +262,7 @@ const char *Process_fieldTitles[] = {
    " CODE ", " DATA ", " LIB ", " DIRTY ", " UID ", "CPU% ", "MEM% ",
    "USER      ", "  TIME+  ", "NLWP ", "   TGID ",
 #ifdef HAVE_OPENVZ
-   " CTID ", " VPID ",
+   "   CTID ", " VPID ",
 #endif
 #ifdef HAVE_VSERVER
    " VXID ",
@@ -295,6 +295,9 @@ void Process_getMaxPid() {
    if (maxPid > 99999) {
       Process_fieldTitles[PID] =     "    PID ";
       Process_fieldTitles[PPID] =    "   PPID ";
+      #ifdef HAVE_OPENVZ
+      Process_fieldTitles[VPID] =    "   VPID ";
+      #endif
       Process_fieldTitles[TPGID] =   "  TPGID ";
       Process_fieldTitles[TGID] =    "   TGID ";
       Process_fieldTitles[PGRP] =    "   PGRP ";
@@ -307,6 +310,9 @@ void Process_getMaxPid() {
    } else {
       Process_fieldTitles[PID] =     "  PID ";
       Process_fieldTitles[PPID] =    " PPID ";
+      #ifdef HAVE_OPENVZ
+      Process_fieldTitles[VPID] =    " VPID ";
+      #endif
       Process_fieldTitles[TPGID] =   "TPGID ";
       Process_fieldTitles[TGID] =    " TGID ";
       Process_fieldTitles[PGRP] =    " PGRP ";
@@ -593,8 +599,8 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    }
    case STARTTIME: snprintf(buffer, n, "%s", this->starttime_show); break;
    #ifdef HAVE_OPENVZ
-   case CTID: snprintf(buffer, n, "%5u ", this->ctid); break;
-   case VPID: snprintf(buffer, n, "%5u ", this->vpid); break;
+   case CTID: snprintf(buffer, n, "%7u ", this->ctid); break;
+   case VPID: snprintf(buffer, n, Process_pidFormat, this->vpid); break;
    #endif
    #ifdef HAVE_VSERVER
    case VXID: snprintf(buffer, n, "%5u ", this->vxid); break;
