@@ -234,7 +234,9 @@ int Panel_size(Panel* this) {
 void Panel_setSelected(Panel* this, int selected) {
    assert (this != NULL);
 
-   selected = MAX(0, MIN(Vector_size(this->items) - 1, selected));
+   selected = MIN(Vector_size(this->items) - 1, selected);
+   if (selected < 0)
+      selected = 0;
    this->selected = selected;
    if (Panel_eventHandlerFn(this)) {
       Panel_eventHandler(this, EVENT_SETSELECTED);
@@ -260,12 +262,14 @@ void Panel_draw(Panel* this, bool focus) {
    }
    if (this->selected >= last) {
       last = MIN(itemCount, this->selected + 1);
-      first = MAX(0, last - this->h);
+      first = last - this->h;
       this->scrollV = first;
       this->needsRedraw = true;
    }
-   assert(first >= 0);
-   assert(last <= itemCount);
+   if (first < 0)
+      first = 0;
+   if (last > itemCount)
+      last = itemCount;
 
    int headerLen = RichString_sizeVal(this->header);
    if (headerLen > 0) {
@@ -398,6 +402,8 @@ bool Panel_onKey(Panel* this, int key) {
    case KEY_NPAGE:
       this->selected += (this->h - 1);
       int size = Vector_size(this->items);
+      if (this->selected < 0)
+         this->selected = 0;
       if (this->selected >= size)
          this->selected = size - 1;
       this->scrollV += (this->h - 1);
