@@ -584,7 +584,7 @@ static bool ProcessList_readStatmFile(Process* process, const char* dirname, con
 
 #ifdef HAVE_OPENVZ
 
-static void ProcessList_readOpenVZData(Process* process, const char* dirname, const char* name) {
+static void ProcessList_readOpenVZData(ProcessList* this, Process* process, const char* dirname, const char* name) {
    if ( (!(this->flags & PROCESS_FLAG_OPENVZ)) || (access("/proc/vz", R_OK) != 0)) {
       process->vpid = process->pid;
       process->ctid = 0;
@@ -812,7 +812,7 @@ static bool ProcessList_processEntries(ProcessList* this, const char* dirname, P
          process->user = UsersTable_getRef(this->usersTable, process->st_uid);
 
          #ifdef HAVE_OPENVZ
-         ProcessList_readOpenVZData(process, dirname, name);
+         ProcessList_readOpenVZData(this, process, dirname, name);
          #endif
          
          #ifdef HAVE_VSERVER
