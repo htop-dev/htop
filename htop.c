@@ -529,6 +529,7 @@ int main(int argc, char** argv) {
       gettimeofday(&tv, NULL);
       double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
       bool recalculate = (newTime - oldTime > settings->delay);
+      if (newTime < oldTime) recalculate = true; // clock was adjusted?
       int following = follow ? selectedPid(panel) : -1;
       if (recalculate) {
          Header_draw(header);
