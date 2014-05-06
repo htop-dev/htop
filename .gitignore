@@ -1,0 +1,31 @@
+# the binary:
+htop
+
+# all object files
+*.o
+
+.deps/
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache/
+compile
+config.guess
+config.h
+config.h.in
+config.log
+config.status
+config.sub
+configure
+depcomp
+htop.1
+install-sh
+libtool
+ltmain.sh
+m4/libtool.m4
+m4/ltoptions.m4
+m4/ltversion.m4
+m4/lt~obsolete.m4
+missing
+stamp-h1
+
