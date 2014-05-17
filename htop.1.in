@@ -238,7 +238,7 @@ The resident set size, i.e the size of the text and data sections, plus stack
 usage.
 .TP
 .B M_SHARE (SHR)
-The size of the process's shared pages
+The size of the process's shared pages.
 .TP
 .B M_TRS (CODE)
 The size of the text segment of the process (i.e the size of the processes
@@ -261,7 +261,7 @@ The percentage of the CPU time that the process is currently using.
 .TP
 .B PERCENT_MEM (MEM%)
 The percentage of memory the process is currently using (based on the process's
-resident memory size, see M_RESIDENT below).
+resident memory size, see M_RESIDENT above).
 .TP
 .B USER
 The username of the process owner, or the user ID if the name can't be
