@@ -197,6 +197,18 @@ The controlling terminal of the process.
 .B TPGID
 The process ID of the foreground process group of the controlling terminal.
 .TP
+.B MINFLT
+The number of page faults happening in the main memory.
+.TP
+.B CMINFLT
+The number of minor faults for the process's waited-for children (see MINFLT above).
+.TP
+.B MAJFLT
+The number of page faults happening out of the main memory.
+.TP
+.B CMAJFLT
+The number of major faults for the process's waited-for children (see MAJFLT above).
+.TP
 .B UTIME (UTIME+)
 The user CPU time, which is the amount of time the process has spent executing
 on the CPU in user mode (i.e everything but system calls), measured in clock
