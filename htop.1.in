@@ -197,6 +197,18 @@ The controlling terminal of the process.
 .B TPGID
 The process ID of the foreground process group of the controlling terminal.
 .TP
+.B MINFLT
+The number of page faults happening in the main memory.
+.TP
+.B CMINFLT
+The number of minor faults for the process's waited-for children (see MINFLT above).
+.TP
+.B MAJFLT
+The number of page faults happening out of the main memory.
+.TP
+.B CMAJFLT
+The number of major faults for the process's waited-for children (see MAJFLT above).
+.TP
 .B UTIME (UTIME+)
 The user CPU time, which is the amount of time the process has spent executing
 on the CPU in user mode (i.e everything but system calls), measured in clock
@@ -238,7 +250,7 @@ The resident set size, i.e the size of the text and data sections, plus stack
 usage.
 .TP
 .B M_SHARE (SHR)
-The size of the process's shared pages
+The size of the process's shared pages.
 .TP
 .B M_TRS (CODE)
 The size of the text segment of the process (i.e the size of the processes
@@ -261,7 +273,7 @@ The percentage of the CPU time that the process is currently using.
 .TP
 .B PERCENT_MEM (MEM%)
 The percentage of memory the process is currently using (based on the process's
-resident memory size, see M_RESIDENT below).
+resident memory size, see M_RESIDENT above).
 .TP
 .B USER
 The username of the process owner, or the user ID if the name can't be
