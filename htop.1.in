@@ -1,4 +1,4 @@
-.TH "HTOP" "1" "2011" "@PACKAGE_STRING@" "Utils"
+.TH "HTOP" "1" "2014" "@PACKAGE_STRING@" "Utils"
 .SH "NAME"
 htop \- interactive process viewer
 .SH "SYNOPSIS"
@@ -173,6 +173,15 @@ The full command line of the process (i.e program name and arguments).
 .B PID
 The process ID.
 .TP
+.B STATE (S)
+The state of the process:
+   \fBS\fR for sleeping (idle)
+   \fBR\fR for running
+   \fBD\fR for disk sleep (uninterruptible)
+   \fBZ\fR for zombie (waiting for parent to read its exit status)
+   \fBT\fR for traced or suspended (e.g by SIGTSTP)
+   \fBW\fR for paging
+.TP
 .B PPID
 The parent process ID.
 .TP
@@ -188,28 +197,17 @@ The controlling terminal of the process.
 .B TPGID
 The process ID of the foreground process group of the controlling terminal.
 .TP
-.B STATE (S)
-The state of the process:
-   \fBS\fR for sleeping (idle)
-   \fBR\fR for running
-   \fBD\fR for disk sleep (uninterruptible)
-   \fBZ\fR for zombie (waiting for parent to read its exit status)
-   \fBT\fR for traced or suspended (e.g by SIGTSTP)
-   \fBW\fR for paging
+.B MINFLT
+The number of page faults happening in the main memory.
 .TP
-.B PROCESSOR (CPU)
-The ID of the CPU the process last executed on.
+.B CMINFLT
+The number of minor faults for the process's waited-for children (see MINFLT above).
 .TP
-.B NLWP
-The number of threads in the process.
+.B MAJFLT
+The number of page faults happening out of the main memory.
 .TP
-.B NICE (NI)
-The nice value of a process, from 19 (low priority) to -20 (high priority). A
-high value means the process is being nice, letting others have a higher
-relative priority. Only root can lower the value.
-.TP
-.B PERCENT_CPU (CPU%)
-The percentage of the CPU time that the process is currently using.
+.B CMAJFLT
+The number of major faults for the process's waited-for children (see MAJFLT above).
 .TP
 .B UTIME (UTIME+)
 The user CPU time, which is the amount of time the process has spent executing
@@ -220,15 +218,11 @@ ticks.
 The system CPU time, which is the amount of time the kernel has spent
 executing system calls on behalf of the process, measured in clock ticks.
 .TP
-.B TIME (TIME+)
-The time, measured in clock ticks that the process has spent in user and system
-time (see UTIME, STIME above).
-.TP
-.B CUTIME
+.B CUTIME (CUTIME+)
 The children's user CPU time, which is the amount of time the process's
 waited-for children have spent executing in user mode (see UTIME above).
 .TP
-.B CSTIME
+.B CSTIME (CSTIME+)
 The children's system CPU time, which is the amount of time the kernel has spent
 executing system calls on behalf of all the process's waited-for children (see
 STIME above).
@@ -237,9 +231,16 @@ STIME above).
 The kernel's internal priority for the process, usually just its nice value
 plus twenty. Different for real-time processes.
 .TP
-.B PERCENT_MEM
-The percentage of memory the process is currently using (based on the process's
-resident memory size, see M_RESIDENT below).
+.B NICE (NI)
+The nice value of a process, from 19 (low priority) to -20 (high priority). A
+high value means the process is being nice, letting others have a higher
+relative priority. Only root can lower the value.
+.TP
+.B STARTTIME (START)
+The time the process was started.
+.TP
+.B PROCESSOR (CPU)
+The ID of the CPU the process last executed on.
 .TP
 .B M_SIZE (VIRT)
 Size in memory of the total program size.
@@ -249,17 +250,17 @@ The resident set size, i.e the size of the text and data sections, plus stack
 usage.
 .TP
 .B M_SHARE (SHR)
-The size of the process's shared pages
+The size of the process's shared pages.
 .TP
 .B M_TRS (CODE)
 The size of the text segment of the process (i.e the size of the processes
 executable instructions).
 .TP
-.B M_LRS (LIB)
-The library size of the process.
-.TP
 .B M_DRS (DATA)
 The size of the data segment plus stack usage of the process.
+.TP
+.B M_LRS (LIB)
+The library size of the process.
 .TP
 .B M_DT (DIRTY)
 The size of the dirty pages of the process.
@@ -267,12 +268,35 @@ The size of the dirty pages of the process.
 .B ST_UID (UID)
 The user ID of the process owner.
 .TP
+.B PERCENT_CPU (CPU%)
+The percentage of the CPU time that the process is currently using.
+.TP
+.B PERCENT_MEM (MEM%)
+The percentage of memory the process is currently using (based on the process's
+resident memory size, see M_RESIDENT above).
+.TP
 .B USER
 The username of the process owner, or the user ID if the name can't be
 determined.
 .TP
-.B STARTTIME
-The time the process was started.
+.B TIME (TIME+)
+The time, measured in clock ticks that the process has spent in user and system
+time (see UTIME, STIME above).
+.TP
+.B NLWP
+The number of threads in the process.
+.TP
+.B TGID
+The thread group ID.
+.TP
+.B CTID
+OpenVZ container ID, a.k.a virtual environment ID.
+.TP
+.B VPID
+OpenVZ process ID.
+.TP
+.B VXID
+VServer process ID.
 .TP
 .B RCHAR (RD_CHAR)
 The number of bytes the process has read.
@@ -292,32 +316,29 @@ Bytes of read(2) I/O for the process.
 .B WBYTES (IO_WBYTES)
 Bytes of write(2) I/O for the process.
 .TP
+.B CNCLWB (IO_CANCEL)
+Bytes of cancelled write(2) I/O.
+.TP
 .B IO_READ_RATE (IORR)
 The I/O rate of read(2) in bytes per second, for the process.
 .TP
 .B IO_WRITE_RATE (IOWR)
 The I/O rate of write(2) in bytes per second, for the process.
 .TP
-.B IO_RATE (IO)
+.B IO_RATE (IORW)
 The I/O rate, IO_READ_RATE + IO_WRITE_RATE (see above).
-.TP
-.B CNCLWB (IO_CANCEL)
-Bytes of cancelled write(2) I/O.
 .TP
 .B CGROUP
 Which cgroup the process is in.
 .TP
-.B CTID
-OpenVZ container ID, a.k.a virtual environment ID.
-.TP
-.B VPID
-OpenVZ process ID.
-.TP
-.B VXID
-VServer process ID.
-.TP
 .B OOM
 OOM killer score.
+.TP
+.B IO_PRIORITY (IO)
+The I/O scheduling class followed by the priority if the class supports it:
+   \fBR\fR for Realtime
+   \fBB\fR for Best-effort
+   \fBid\fR for Idle
 .TP
 .B All other flags
 Currently unsupported (always displays '-').
