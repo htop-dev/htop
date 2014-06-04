@@ -507,8 +507,10 @@ int main(int argc, char** argv) {
 
    IncSet* inc = IncSet_new(defaultBar);
 
+   
    ProcessList_scan(pl);
    millisleep(75);
+   ProcessList_scan(pl);
    
    FunctionBar_draw(defaultBar, NULL);
    
