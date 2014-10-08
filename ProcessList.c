@@ -1074,7 +1074,7 @@ void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool
       if ( (!p->show)
          || (userOnly && (p->st_uid != userId))
          || (incFilter && !(String_contains_i(p->comm, incFilter)))
-         || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->pid)) )
+         || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->tgid)) )
          hidden = true;
 
       if (!hidden) {
