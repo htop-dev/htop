@@ -540,8 +540,6 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
           case 'D':
               attr = CRT_colors[PROCESS_D_STATE];
               break;
-          default:
-              attr = this->state;
       }
       break;
    }
