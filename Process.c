@@ -533,9 +533,14 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    }
    case STATE: {
       snprintf(buffer, n, "%c ", this->state);
-      attr = this->state == 'R'
-           ? CRT_colors[PROCESS_R_STATE]
-           : attr;
+      switch(this->state) {
+          case 'R':
+              attr = CRT_colors[PROCESS_R_STATE];
+              break;
+          case 'D':
+              attr = CRT_colors[PROCESS_D_STATE];
+              break;
+      }
       break;
    }
    case PRIORITY: {
