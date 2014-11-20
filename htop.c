@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include "AffinityPanel.h"
 #include "IOPriorityPanel.h"
 #include "IncSet.h"
+#include "htop.h"
 
 #include <unistd.h>
 #include <math.h>
@@ -40,7 +41,32 @@ in the source distribution for its full text.
 
 //#link m
 
-#define COPYRIGHT "(C) 2004-2012 Hisham Muhammad"
+#define COPYRIGHT "(C) 2004-2014 Hisham Muhammad"
+
+/*{
+
+typedef enum {
+   HTOP_OK = 0x00,
+   HTOP_REFRESH = 0x01,
+   HTOP_RECALCULATE = 0x03, // implies HTOP_REFRESH
+   HTOP_SAVE_SETTINGS = 0x04,
+   HTOP_KEEP_FOLLOWING = 0x08,
+   HTOP_QUIT = 0x10,
+   HTOP_REDRAW_BAR = 0x20,
+   HTOP_UPDATE_PANELHDR = 0x41, // implies HTOP_REFRESH
+} Htop_Reaction;
+
+typedef Htop_Reaction (*Htop_Action)();
+
+typedef struct State_ {
+   IncSet* inc;
+   Settings* settings;
+   UsersTable* ut;
+} State;
+
+typedef bool(*ForeachProcessFn)(Process*, size_t);
+
+}*/
 
 static void printVersionFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
@@ -185,8 +211,6 @@ static void Setup_run(Settings* settings, const Header* header) {
    ScreenManager_delete(scr);
 }
 
-typedef bool(*ForeachProcessFn)(Process*, size_t);
-
 static bool foreachProcess(Panel* panel, ForeachProcessFn fn, int arg, bool* wasAnyTagged) {
    bool ok = true;
    bool anyTagged = false;
@@ -222,7 +246,8 @@ static int selectedPid(Panel* panel) {
    return -1;
 }
 
-static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const char** keyLabels, FunctionBar* prevBar, Header* header) {
+static Object* pickFromVector(Panel* panel, Panel* list, int x, const char** keyLabels, Header* header) {
+   int y = panel->y;
    const char* fuKeys[] = {"Enter", "Esc", NULL};
    int fuEvents[] = {13, 27};
    ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, header, false);
@@ -244,7 +269,6 @@ static Object* pickFromVector(Panel* panel, Panel* list, int x, int y, const cha
    ScreenManager_delete(scr);
    Panel_move(panel, 0, y);
    Panel_resize(panel, COLS, LINES-y-1);
-   FunctionBar_draw(prevBar, NULL);
    if (panelFocus == list && ch == 13) {
       Process* selected = (Process*)Panel_getSelected(panel);
       if (selected && selected->pid == pid)
@@ -269,28 +293,6 @@ static bool setUserOnly(const char* userName, bool* userOnly, uid_t* userId) {
       return true;
    }
    return false;
-}
-
-static void setTreeView(ProcessList* pl, FunctionBar* fuBar, bool mode) {
-   if (mode) {
-      FunctionBar_setLabel(fuBar, KEY_F(5), "Sorted");
-      FunctionBar_setLabel(fuBar, KEY_F(6), "Collap");
-   } else {
-      FunctionBar_setLabel(fuBar, KEY_F(5), "Tree  ");
-      FunctionBar_setLabel(fuBar, KEY_F(6), "SortBy");
-   }
-   if (mode != pl->treeView) {
-      FunctionBar_draw(fuBar, NULL);
-   }
-   pl->treeView = mode;
-}
-
-static inline void setSortKey(ProcessList* pl, FunctionBar* fuBar, ProcessField sortKey, Panel* panel, Settings* settings) {
-   pl->sortKey = sortKey;
-   pl->direction = 1;
-   setTreeView(pl, fuBar, false);
-   settings->changed = true;
-   ProcessList_printHeader(pl, Panel_getHeader(panel));
 }
 
 static const char* getMainPanelValue(Panel* panel, int i) {
@@ -318,7 +320,15 @@ static bool expandCollapse(Panel* panel) {
    return true;
 }
 
-void sortBy(Panel* panel, ProcessList* pl, Settings* settings, int headerHeight, FunctionBar* defaultBar, Header* header) {
+static inline Htop_Reaction setSortKey(ProcessList* pl, ProcessField sortKey) {
+   pl->sortKey = sortKey;
+   pl->direction = 1;
+   pl->treeView = false;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction sortBy(Panel* panel, ProcessList* pl, Header* header) {
+   Htop_Reaction reaction = HTOP_OK;
    Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
    Panel_setHeader(sortPanel, "Sort by");
    const char* fuFunctions[] = {"Sort  ", "Cancel ", NULL};
@@ -330,14 +340,12 @@ void sortBy(Panel* panel, ProcessList* pl, Settings* settings, int headerHeight,
          Panel_setSelected(sortPanel, i);
       free(name);
    }
-   ListItem* field = (ListItem*) pickFromVector(panel, sortPanel, 15, headerHeight, fuFunctions, defaultBar, header);
+   ListItem* field = (ListItem*) pickFromVector(panel, sortPanel, 15, fuFunctions, header);
    if (field) {
-      settings->changed = true;
-      setSortKey(pl, defaultBar, field->key, panel, settings);
-   } else {
-      ProcessList_printHeader(pl, Panel_getHeader(panel));
+      reaction |= setSortKey(pl, field->key);
    }
    Object_delete(sortPanel);
+   return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
 static void millisleep(unsigned long millisec) {
@@ -347,6 +355,307 @@ static void millisleep(unsigned long millisec) {
    };
    while(nanosleep(&req,&req)==-1) {
       continue;
+   }
+}
+
+// ----------------------------------------
+
+static Htop_Reaction actionResize(Panel* panel) {
+   Panel_resize(panel, COLS, LINES-(panel->y)-1);
+   return HTOP_REDRAW_BAR;
+}
+
+static Htop_Reaction actionSortByMemory(Panel* panel, ProcessList* pl) {
+   (void) panel;
+   return setSortKey(pl, PERCENT_MEM);
+}
+
+static Htop_Reaction actionSortByCPU(Panel* panel, ProcessList* pl) {
+   (void) panel;
+   return setSortKey(pl, PERCENT_CPU);
+}
+
+static Htop_Reaction actionSortByTime(Panel* panel, ProcessList* pl) {
+   (void) panel;
+   return setSortKey(pl, TIME);
+}
+
+static Htop_Reaction actionToggleKernelThreads(Panel* panel, ProcessList* pl) {
+   (void) panel;
+   pl->hideKernelThreads = !pl->hideKernelThreads;
+   return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
+}
+
+static Htop_Reaction actionToggleUserlandThreads(Panel* panel, ProcessList* pl) {
+   (void) panel;
+   pl->hideUserlandThreads = !pl->hideUserlandThreads;
+   pl->hideThreads = pl->hideUserlandThreads;
+   return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
+}
+
+static Htop_Reaction actionToggleTreeView(Panel* panel, ProcessList* pl) {
+   (void) panel;
+   pl->treeView = !pl->treeView;
+   if (pl->treeView) pl->direction = 1;
+   ProcessList_expandTree(pl);
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction actionIncFilter(Panel* panel, ProcessList* pl, Header* header, State* state) {
+   (void) panel, (void) pl, (void) header;
+   IncSet_activate(state->inc, INC_FILTER);
+   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
+}
+
+static Htop_Reaction actionIncSearch(Panel* panel, ProcessList* pl, Header* header, State* state) {
+   (void) panel, (void) pl, (void) header;
+   IncSet_activate(state->inc, INC_SEARCH);
+   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
+}
+
+static Htop_Reaction actionHigherPriority(Panel* panel) {
+   bool changed = changePriority(panel, -1);
+   return changed ? HTOP_REFRESH : HTOP_OK;
+}
+
+static Htop_Reaction actionLowerPriority(Panel* panel) {
+   bool changed = changePriority(panel, 1);
+   return changed ? HTOP_REFRESH : HTOP_OK;
+}
+
+static Htop_Reaction actionInvertSortOrder(Panel* panel, ProcessList* pl) {
+   (void) panel;
+   ProcessList_invertSortOrder(pl);
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+}
+
+static Htop_Reaction actionSetIOPriority(Panel* panel, ProcessList* pl, Header* header) {
+   (void) panel, (void) pl;
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (!p) return HTOP_OK;
+   IOPriority ioprio = p->ioPriority;
+   Panel* ioprioPanel = IOPriorityPanel_new(ioprio);
+   const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
+   void* set = pickFromVector(panel, ioprioPanel, 21, fuFunctions, header);
+   if (set) {
+      IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
+      bool ok = foreachProcess(panel, (ForeachProcessFn) Process_setIOPriority, (size_t) ioprio, NULL);
+      if (!ok)
+         beep();
+   }
+   Panel_delete((Object*)ioprioPanel);
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction actionSetSortColumn(Panel* panel, ProcessList* pl, Header* header) {
+   return sortBy(panel, pl, header);
+}
+
+static Htop_Reaction actionExpandOrCollapse(Panel* panel) {
+   bool changed = expandCollapse(panel);
+   return changed ? HTOP_RECALCULATE : HTOP_OK;
+}
+
+static Htop_Reaction actionExpandCollapseOrSortColumn(Panel* panel, ProcessList* pl, Header* header) {
+   return pl->treeView ? actionExpandOrCollapse(panel) : actionSetSortColumn(panel, pl, header);
+}
+
+static Htop_Reaction actionQuit() {
+   return HTOP_QUIT;
+}
+
+static Htop_Reaction actionSetAffinity(Panel* panel, ProcessList* pl, Header* header) {
+   if (pl->cpuCount == 1)
+      return HTOP_OK;
+#if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (!p) return HTOP_OK;
+   Affinity* affinity = Process_getAffinity(p);
+   if (!affinity) return HTOP_OK;
+   Panel* affinityPanel = AffinityPanel_new(pl, affinity);
+   Affinity_delete(affinity);
+
+   const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
+   void* set = pickFromVector(panel, affinityPanel, 15, fuFunctions, header);
+   if (set) {
+      Affinity* affinity = AffinityPanel_getAffinity(affinityPanel);
+      bool ok = foreachProcess(panel, (ForeachProcessFn) Process_setAffinity, (size_t) affinity, NULL);
+      if (!ok) beep();
+      Affinity_delete(affinity);
+   }
+   Panel_delete((Object*)affinityPanel);
+#endif
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction actionKill(Panel* panel, ProcessList* pl, Header* header) {
+   (void) pl;
+   Panel* signalsPanel = (Panel*) SignalsPanel_new();
+   const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
+   ListItem* sgn = (ListItem*) pickFromVector(panel, signalsPanel, 15, fuFunctions, header);
+   if (sgn) {
+      if (sgn->key != 0) {
+         Panel_setHeader(panel, "Sending...");
+         Panel_draw(panel, true);
+         refresh();
+         foreachProcess(panel, (ForeachProcessFn) Process_sendSignal, (size_t) sgn->key, NULL);
+         napms(500);
+      }
+   }
+   Panel_delete((Object*)signalsPanel);
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction actionFilterByUser(Panel* panel, ProcessList* pl, Header* header, State* state) {
+   Panel* usersPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
+   Panel_setHeader(usersPanel, "Show processes of:");
+   UsersTable_foreach(state->ut, addUserToVector, usersPanel);
+   Vector_insertionSort(usersPanel->items);
+   ListItem* allUsers = ListItem_new("All users", -1);
+   Panel_insert(usersPanel, 0, (Object*) allUsers);
+   const char* fuFunctions[] = {"Show    ", "Cancel ", NULL};
+   ListItem* picked = (ListItem*) pickFromVector(panel, usersPanel, 20, fuFunctions, header);
+   if (picked) {
+      if (picked == allUsers) {
+         pl->userOnly = false;
+      } else {
+         setUserOnly(ListItem_getRef(picked), &(pl->userOnly), &(pl->userId));
+      }
+   }
+   Panel_delete((Object*)usersPanel);
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction actionFollow() {
+   return HTOP_KEEP_FOLLOWING;
+}
+
+static Htop_Reaction actionSetup(Panel* panel, ProcessList* pl, Header* header, State* state) {
+   (void) pl;
+   Setup_run(state->settings, header);
+   // TODO: shouldn't need this, colors should be dynamic
+   int headerHeight = Header_calculateHeight(header);
+   Panel_move(panel, 0, headerHeight);
+   Panel_resize(panel, COLS, LINES-headerHeight-1);
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction actionLsof(Panel* panel) {
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (!p) return HTOP_OK;
+   OpenFilesScreen* ts = OpenFilesScreen_new(p);
+   OpenFilesScreen_run(ts);
+   OpenFilesScreen_delete(ts);
+   clear();
+   CRT_enableDelay();
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
+static Htop_Reaction actionStrace(Panel* panel) {
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (!p) return HTOP_OK;
+   TraceScreen* ts = TraceScreen_new(p);
+   TraceScreen_run(ts);
+   TraceScreen_delete(ts);
+   clear();
+   CRT_enableDelay();
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
+static Htop_Reaction actionTag(Panel* panel) {
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (!p) return HTOP_OK;
+   Process_toggleTag(p);
+   Panel_onKey(panel, KEY_DOWN);
+   return HTOP_OK;
+}
+
+static Htop_Reaction actionRedraw() {
+   clear();
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
+static Htop_Reaction actionHelp(Panel* panel, ProcessList* pl) {
+   (void) panel;
+   showHelp(pl);
+   return HTOP_RECALCULATE | HTOP_REDRAW_BAR;
+}
+
+static Htop_Reaction actionUntagAll(Panel* panel) {
+   for (int i = 0; i < Panel_size(panel); i++) {
+      Process* p = (Process*) Panel_get(panel, i);
+      p->tag = false;
+   }
+   return HTOP_REFRESH;
+}
+
+static Htop_Reaction actionTagAllChildren(Panel* panel) {
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (!p) return HTOP_OK;
+   tagAllChildren(panel, p);
+   return HTOP_OK;
+}
+
+void setBindings(Htop_Action* keys) {
+   keys[KEY_RESIZE] = actionResize;
+   keys['M'] = actionSortByMemory;
+   keys['T'] = actionSortByTime;
+   keys['P'] = actionSortByCPU;
+   keys['H'] = actionToggleUserlandThreads;
+   keys['K'] = actionToggleKernelThreads;
+   keys['t'] = actionToggleTreeView;
+   keys[KEY_F(5)] = actionToggleTreeView;
+   keys[KEY_F(4)] = actionIncFilter;
+   keys['\\'] = actionIncFilter;
+   keys[KEY_F(3)] = actionIncSearch;
+   keys['/'] = actionIncSearch;
+
+   keys[']'] = actionHigherPriority;
+   keys[KEY_F(7)] = actionHigherPriority;
+   keys['['] = actionLowerPriority;
+   keys[KEY_F(8)] = actionLowerPriority;
+   keys['I'] = actionInvertSortOrder;
+   keys['i'] = actionSetIOPriority;
+   keys[KEY_F(6)] = actionExpandCollapseOrSortColumn;
+   keys[KEY_F(18)] = actionExpandCollapseOrSortColumn;
+   keys['<'] = actionSetSortColumn;
+   keys[','] = actionSetSortColumn;
+   keys['>'] = actionSetSortColumn;
+   keys['.'] = actionSetSortColumn;
+   keys[KEY_F(10)] = actionQuit;
+   keys['q'] = actionQuit;
+   keys['a'] = actionSetAffinity;
+   keys[KEY_F(9)] = actionKill;
+   keys['k'] = actionKill;
+   keys['+'] = actionExpandOrCollapse;
+   keys['='] = actionExpandOrCollapse;
+   keys['-'] = actionExpandOrCollapse;
+   keys['u'] = actionFilterByUser;
+   keys['F'] = actionFollow;
+   keys['S'] = actionSetup;
+   keys['C'] = actionSetup;
+   keys[KEY_F(2)] = actionSetup;
+   keys['l'] = actionLsof;
+   keys['s'] = actionStrace;
+   keys[' '] = actionTag;
+   keys['\014'] = actionRedraw; // Ctrl+L
+   keys[KEY_F(1)] = actionHelp;
+   keys['h'] = actionHelp;
+   keys['?'] = actionHelp;
+   keys['U'] = actionUntagAll;
+   keys['c'] = actionTagAllChildren;
+}
+
+// ----------------------------------------
+
+
+static void updateTreeFunctions(FunctionBar* fuBar, bool mode) {
+   if (mode) {
+      FunctionBar_setLabel(fuBar, KEY_F(5), "Sorted");
+      FunctionBar_setLabel(fuBar, KEY_F(6), "Collap");
+   } else {
+      FunctionBar_setLabel(fuBar, KEY_F(5), "Tree  ");
+      FunctionBar_setLabel(fuBar, KEY_F(6), "SortBy");
    }
 }
 
@@ -453,11 +762,11 @@ int main(int argc, char** argv) {
       exit(1);
    }
 
-   int quit = 0;
-   int refreshTimeout = 0;
-   int resetRefreshTimeout = 5;
+   bool quit = false;
+   int sortTimeout = 0;
+   int resetSortTimeout = 5;
    bool doRefresh = true;
-   bool doRecalculate = false;
+   bool forceRecalculate = false;
    Settings* settings;
    
    ProcessList* pl = NULL;
@@ -478,6 +787,8 @@ int main(int argc, char** argv) {
 #endif
 
    pl = ProcessList_new(ut, pidWhiteList);
+   pl->userOnly = userOnly;
+   pl->userId = userId;
    Process_getMaxPid();
    
    Header* header = Header_new(pl);
@@ -496,18 +807,17 @@ int main(int argc, char** argv) {
    ProcessList_setPanel(pl, panel);
    
    FunctionBar* defaultBar = FunctionBar_new(defaultFunctions, NULL, NULL);
-   setTreeView(pl, defaultBar, pl->treeView);
+   updateTreeFunctions(defaultBar, pl->treeView);
    
    if (sortKey > 0) {
       pl->sortKey = sortKey;
-      setTreeView(pl, defaultBar, false);
+      pl->treeView = false;
       pl->direction = 1;
    }
    ProcessList_printHeader(pl, Panel_getHeader(panel));
 
    IncSet* inc = IncSet_new(defaultBar);
 
-   
    ProcessList_scan(pl);
    millisleep(75);
    ProcessList_scan(pl);
@@ -523,31 +833,40 @@ int main(int argc, char** argv) {
    int ch = ERR;
    int closeTimeout = 0;
 
-   bool idle = false;
+   bool drawPanel = true;
    
    bool collapsed = false;
+   
+   Htop_Action keys[KEY_MAX] = { NULL };
+   setBindings(keys);
+   
+   State state = {
+      .inc = inc,
+      .settings = settings,
+      .ut = ut,
+   };
    
    while (!quit) {
       gettimeofday(&tv, NULL);
       double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
-      bool recalculate = (newTime - oldTime > settings->delay);
-      if (newTime < oldTime) recalculate = true; // clock was adjusted?
+      bool timeToRecalculate = (newTime - oldTime > settings->delay);
+      if (newTime < oldTime) timeToRecalculate = true; // clock was adjusted?
       int following = follow ? selectedPid(panel) : -1;
-      if (recalculate) {
+      if (timeToRecalculate) {
          Header_draw(header);
          oldTime = newTime;
       }
       if (doRefresh) {
-         if (recalculate || doRecalculate) {
+         if (timeToRecalculate || forceRecalculate) {
             ProcessList_scan(pl);
-            doRecalculate = false;
+            forceRecalculate = false;
          }
-         if (refreshTimeout == 0 || pl->treeView) {
+         if (sortTimeout == 0 || pl->treeView) {
             ProcessList_sort(pl);
-            refreshTimeout = 1;
+            sortTimeout = 1;
          }
-         ProcessList_rebuildPanel(pl, true, following, userOnly, userId, IncSet_filter(inc));
-         idle = false;
+         ProcessList_rebuildPanel(pl, true, following, IncSet_filter(inc));
+         drawPanel = true;
       }
       doRefresh = true;
       
@@ -563,9 +882,11 @@ int main(int argc, char** argv) {
             }
             collapsed = !p->showChildren;
          }
+      } else {
+         collapsed = false;
       }
 
-      if (!idle) {
+      if (drawPanel) {
          Panel_draw(panel, true);
       }
       
@@ -576,18 +897,20 @@ int main(int argc, char** argv) {
 
       if (ch == ERR) {
          if (!inc->active)
-            refreshTimeout--;
-         if (prev == ch && !recalculate) {
+            sortTimeout--;
+         if (prev == ch && !timeToRecalculate) {
             closeTimeout++;
             if (closeTimeout == 100) {
                break;
             }
          } else
             closeTimeout = 0;
-         idle = true;
+         drawPanel = false;
          continue;
       }
-      idle = false;
+      drawPanel = true;
+
+      Htop_Reaction reaction = HTOP_OK;
 
       if (ch == KEY_MOUSE) {
          MEVENT mevent;
@@ -599,18 +922,17 @@ int main(int argc, char** argv) {
                   ProcessField field = ProcessList_keyAt(pl, x);
                   if (field == pl->sortKey) {
                      ProcessList_invertSortOrder(pl);
-                     setTreeView(pl, defaultBar, false);
+                     pl->treeView = false;
+                     reaction |= HTOP_REDRAW_BAR;
                   } else {
-                     setSortKey(pl, defaultBar, field, panel, settings);
+                     reaction |= setSortKey(pl, field);
                   }
-                  refreshTimeout = 0;
-                  continue;
+                  sortTimeout = 0;
+                  ch = ERR;
                } else if (mevent.y >= panel->y + 1 && mevent.y < LINES - 1) {
                   Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
-                  doRefresh = false;
-                  refreshTimeout = resetRefreshTimeout;
                   follow = true;
-                  continue;
+                  ch = ERR;
                } if (mevent.y == LINES - 1) {
                   ch = FunctionBar_synthesizeEvent(inc->bar, mevent.x);
                }
@@ -650,298 +972,38 @@ int main(int argc, char** argv) {
          acc = 0;
       }
 
-      switch (ch) {
-      case KEY_RESIZE:
-         Panel_resize(panel, COLS, LINES-headerHeight-1);
-         IncSet_drawBar(inc);
-         break;
-      case 'M':
-      {
-         refreshTimeout = 0;
-         setSortKey(pl, defaultBar, PERCENT_MEM, panel, settings);
-         break;
-      }
-      case 'T':
-      {
-         refreshTimeout = 0;
-         setSortKey(pl, defaultBar, TIME, panel, settings);
-         break;
-      }
-      case 'c':
-      {
-         Process* p = (Process*) Panel_getSelected(panel);
-         if (!p) break;
-         tagAllChildren(panel, p);
-         break;
-      }
-      case 'U':
-      {
-         for (int i = 0; i < Panel_size(panel); i++) {
-            Process* p = (Process*) Panel_get(panel, i);
-            p->tag = false;
-         }
-         doRefresh = true;
-         break;
-      }
-      case 'P':
-      {
-         refreshTimeout = 0;
-         setSortKey(pl, defaultBar, PERCENT_CPU, panel, settings);
-         break;
-      }
-      case KEY_F(1):
-      case 'h':
-      case '?':
-      {
-         showHelp(pl);
-         FunctionBar_draw(defaultBar, NULL);
-         recalculate = true;
-         refreshTimeout = 0;
-         break;
-      }
-      case '\014': // Ctrl+L
-      {
-         clear();
-         FunctionBar_draw(defaultBar, NULL);
-         refreshTimeout = 0;
-         break;
-      }
-      case ' ':
-      {
-         Process* p = (Process*) Panel_getSelected(panel);
-         if (!p) break;
-         Process_toggleTag(p);
-         Panel_onKey(panel, KEY_DOWN);
-         break;
-      }
-      case 's':
-      {
-         Process* p = (Process*) Panel_getSelected(panel);
-         if (!p) break;
-         TraceScreen* ts = TraceScreen_new(p);
-         TraceScreen_run(ts);
-         TraceScreen_delete(ts);
-         clear();
-         FunctionBar_draw(defaultBar, NULL);
-         refreshTimeout = 0;
-         CRT_enableDelay();
-         break;
-      }
-      case 'l':
-      {
-         Process* p = (Process*) Panel_getSelected(panel);
-         if (!p) break;
-         OpenFilesScreen* ts = OpenFilesScreen_new(p);
-         OpenFilesScreen_run(ts);
-         OpenFilesScreen_delete(ts);
-         clear();
-         FunctionBar_draw(defaultBar, NULL);
-         refreshTimeout = 0;
-         CRT_enableDelay();
-         break;
-      }
-      case 'S':
-      case 'C':
-      case KEY_F(2):
-      {
-         Setup_run(settings, header);
-         // TODO: shouldn't need this, colors should be dynamic
-         ProcessList_printHeader(pl, Panel_getHeader(panel));
-         headerHeight = Header_calculateHeight(header);
-         Panel_move(panel, 0, headerHeight);
-         Panel_resize(panel, COLS, LINES-headerHeight-1);
-         FunctionBar_draw(defaultBar, NULL);
-         refreshTimeout = 0;
-         break;
-      }
-      case 'F':
-      {
-         follow = true;
-         continue;
-      }
-      case 'u':
-      {
-         Panel* usersPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
-         Panel_setHeader(usersPanel, "Show processes of:");
-         UsersTable_foreach(ut, addUserToVector, usersPanel);
-         Vector_insertionSort(usersPanel->items);
-         ListItem* allUsers = ListItem_new("All users", -1);
-         Panel_insert(usersPanel, 0, (Object*) allUsers);
-         const char* fuFunctions[] = {"Show    ", "Cancel ", NULL};
-         ListItem* picked = (ListItem*) pickFromVector(panel, usersPanel, 20, headerHeight, fuFunctions, defaultBar, header);
-         if (picked) {
-            if (picked == allUsers) {
-               userOnly = false;
-            } else {
-               setUserOnly(ListItem_getRef(picked), &userOnly, &userId);
-            }
-         }
-         Panel_delete((Object*)usersPanel);
-         break;
-      }
-      case '+':
-      case '=':
-      case '-':
-      {
-         if (expandCollapse(panel)) {
-            doRecalculate = true;         
-            refreshTimeout = 0;
-         }
-         break;
-      }
-      case KEY_F(9):
-      case 'k':
-      {
-         Panel* signalsPanel = (Panel*) SignalsPanel_new();
-         const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
-         ListItem* sgn = (ListItem*) pickFromVector(panel, signalsPanel, 15, headerHeight, fuFunctions, defaultBar, header);
-         if (sgn) {
-            if (sgn->key != 0) {
-               Panel_setHeader(panel, "Sending...");
-               Panel_draw(panel, true);
-               refresh();
-               foreachProcess(panel, (ForeachProcessFn) Process_sendSignal, (size_t) sgn->key, NULL);
-               napms(500);
-            }
-         }
-         ProcessList_printHeader(pl, Panel_getHeader(panel));
-         Panel_delete((Object*)signalsPanel);
-         refreshTimeout = 0;
-         break;
-      }
-#if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
-      case 'a':
-      {
-         if (pl->cpuCount == 1)
-            break;
-
-         Process* p = (Process*) Panel_getSelected(panel);
-         if (!p) break;
-         Affinity* affinity = Process_getAffinity(p);
-         if (!affinity) break;
-         Panel* affinityPanel = AffinityPanel_new(pl, affinity);
-         Affinity_delete(affinity);
-
-         const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
-         void* set = pickFromVector(panel, affinityPanel, 15, headerHeight, fuFunctions, defaultBar, header);
-         if (set) {
-            Affinity* affinity = AffinityPanel_getAffinity(affinityPanel);
-            bool ok = foreachProcess(panel, (ForeachProcessFn) Process_setAffinity, (size_t) affinity, NULL);
-            if (!ok) beep();
-            Affinity_delete(affinity);
-         }
-         Panel_delete((Object*)affinityPanel);
-         ProcessList_printHeader(pl, Panel_getHeader(panel));
-         refreshTimeout = 0;
-         break;
-      }
-#endif
-      case KEY_F(10):
-      case 'q':
-         quit = 1;
-         break;
-      case '<':
-      case ',':
-      case '>':
-      case '.':
-      {
-         sortBy(panel, pl, settings, headerHeight, defaultBar, header);
-         refreshTimeout = 0;
-         break;
-      }
-      case KEY_F(18):
-      case KEY_F(6):
-      {
-         if (pl->treeView) {
-            if (expandCollapse(panel)) {
-               doRecalculate = true;
-               refreshTimeout = 0;
-            }
-         } else {
-            sortBy(panel, pl, settings, headerHeight, defaultBar, header);
-            refreshTimeout = 0;
-         }
-         break;
-      }
-      case 'i':
-      {
-         Process* p = (Process*) Panel_getSelected(panel);
-         if (!p) break;
-         IOPriority ioprio = p->ioPriority;
-         Panel* ioprioPanel = IOPriorityPanel_new(ioprio);
-         const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
-         void* set = pickFromVector(panel, ioprioPanel, 21, headerHeight, fuFunctions, defaultBar, header);
-         if (set) {
-            IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
-            bool ok = foreachProcess(panel, (ForeachProcessFn) Process_setIOPriority, (size_t) ioprio, NULL);
-            if (!ok)
-               beep();
-         }
-         Panel_delete((Object*)ioprioPanel);
-         ProcessList_printHeader(pl, Panel_getHeader(panel));
-         refreshTimeout = 0;
-         break;
-      }
-      case 'I':
-      {
-         refreshTimeout = 0;
-         settings->changed = true;
-         ProcessList_invertSortOrder(pl);
-         break;
-      }
-      case KEY_F(8):
-      case '[':
-      {
-         doRefresh = changePriority(panel, 1);
-         break;
-      }
-      case KEY_F(7):
-      case ']':
-      {
-         doRefresh = changePriority(panel, -1);
-         break;
-      }
-      case KEY_F(3):
-      case '/':
-         IncSet_activate(inc, INC_SEARCH);
-         break;
-      case KEY_F(4):
-      case '\\':
-         IncSet_activate(inc, INC_FILTER);
-         refreshTimeout = 0;
-         doRefresh = true;
-         continue;
-      case 't':
-      case KEY_F(5):
-         refreshTimeout = 0;
-         collapsed = false;
-         setTreeView(pl, defaultBar, !pl->treeView);
-         if (pl->treeView) pl->direction = 1;
-         ProcessList_printHeader(pl, Panel_getHeader(panel));
-         ProcessList_expandTree(pl);
-         settings->changed = true;
-         if (following != -1) continue;
-         break;
-      case 'H':
-         doRecalculate = true;
-         refreshTimeout = 0;
-         pl->hideUserlandThreads = !pl->hideUserlandThreads;
-         pl->hideThreads = pl->hideUserlandThreads;
-         settings->changed = true;
-         break;
-      case 'K':
-         doRecalculate = true;
-         refreshTimeout = 0;
-         pl->hideKernelThreads = !pl->hideKernelThreads;
-         settings->changed = true;
-         break;
-      default:
+      if(ch != ERR && keys[ch]) {
+         reaction |= (keys[ch])(panel, pl, header, &state);
+      } else {
          doRefresh = false;
-         refreshTimeout = resetRefreshTimeout;
+         sortTimeout = resetSortTimeout;
          Panel_onKey(panel, ch);
-         break;
       }
-      follow = false;
+      
+      // Reaction handlers:
+
+      if (reaction & HTOP_REDRAW_BAR) {
+         updateTreeFunctions(defaultBar, pl->treeView);
+         IncSet_drawBar(inc);
+      }
+      if (reaction & HTOP_UPDATE_PANELHDR) {
+         ProcessList_printHeader(pl, Panel_getHeader(panel));
+      }
+      if (reaction & HTOP_REFRESH) {
+         doRefresh = true;
+         sortTimeout = 0;
+      }      
+      if (reaction & HTOP_RECALCULATE) {
+         forceRecalculate = true;
+         sortTimeout = 0;
+      }
+      if (reaction & HTOP_SAVE_SETTINGS) {
+         settings->changed = true;
+      }
+      if (reaction & HTOP_QUIT) {
+         quit = true;
+      }
+      follow = (reaction & HTOP_KEEP_FOLLOWING);
    }
    attron(CRT_colors[RESET_COLOR]);
    mvhline(LINES-1, 0, ' ', COLS);
@@ -953,11 +1015,14 @@ int main(int argc, char** argv) {
       Settings_write(settings);
    Header_delete(header);
    ProcessList_delete(pl);
-   IncSet_delete(inc);
+   
    FunctionBar_delete((Object*)defaultBar);
    Panel_delete((Object*)panel);
+   
+   IncSet_delete(inc);
    UsersTable_delete(ut);
    Settings_delete(settings);
+   
    if(pidWhiteList) {
       Hashtable_delete(pidWhiteList);
    }

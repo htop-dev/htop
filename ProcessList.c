@@ -1047,16 +1047,12 @@ void ProcessList_expandTree(ProcessList* this) {
    }
 }
 
-void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool userOnly, uid_t userId, const char* incFilter) {
+void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, const char* incFilter) {
    if (!flags) {
       following = this->following;
-      userOnly = this->userOnly;
-      userId = this->userId;
       incFilter = this->incFilter;
    } else {
       this->following = following;
-      this->userOnly = userOnly;
-      this->userId = userId;
       this->incFilter = incFilter;
    }
 
@@ -1072,7 +1068,7 @@ void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, bool
       Process* p = ProcessList_get(this, i);
 
       if ( (!p->show)
-         || (userOnly && (p->st_uid != userId))
+         || (this->userOnly && (p->st_uid != this->userId))
          || (incFilter && !(String_contains_i(p->comm, incFilter)))
          || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->pid)) )
          hidden = true;

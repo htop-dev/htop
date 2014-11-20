@@ -10,7 +10,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 
-#define RICHSTRING_MAXLEN 300
+#define RICHSTRING_MAXLEN 350
 
 /*{
 #include "config.h"
@@ -52,8 +52,8 @@ in the source distribution for its full text.
 
 typedef struct RichString_ {
    int chlen;
-   CharType chstr[RICHSTRING_MAXLEN+1];
    CharType* chptr;
+   CharType chstr[RICHSTRING_MAXLEN+1];
 } RichString;
 
 }*/
@@ -64,7 +64,7 @@ typedef struct RichString_ {
 
 #define charBytes(n) (sizeof(CharType) * (n)) 
 
-static inline void RichString_setLen(RichString* this, int len) {
+static void RichString_extendLen(RichString* this, int len) {
    if (this->chlen <= RICHSTRING_MAXLEN) {
       if (len > RICHSTRING_MAXLEN) {
          this->chptr = malloc(charBytes(len+1));
@@ -83,6 +83,8 @@ static inline void RichString_setLen(RichString* this, int len) {
    this->chlen = len;
 }
 
+#define RichString_setLen(this, len) do{ if(len < RICHSTRING_MAXLEN) { RichString_setChar(this,len,0); this->chlen=len; } else RichString_extendLen(this,len); }while(0)
+
 #ifdef HAVE_LIBNCURSESW
 
 static inline void RichString_writeFrom(RichString* this, int attrs, const char* data_c, int from, int len) {
@@ -92,10 +94,11 @@ static inline void RichString_writeFrom(RichString* this, int attrs, const char*
       return;
    int newLen = from + len;
    RichString_setLen(this, newLen);
-   memset(&this->chptr[from], 0, sizeof(CharType) * (newLen - from));
    for (int i = from, j = 0; i < newLen; i++, j++) {
-      this->chptr[i].chars[0] = data[j];
-      this->chptr[i].attr = attrs;
+      CharType* c = &(this->chptr[i]);
+      c->attr = attrs;
+      c->chars[0] = data[j];
+      c->chars[1] = 0;
    }
    this->chptr[newLen].chars[0] = 0;
 }
