@@ -14,6 +14,7 @@ AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
+# ----------------------------------------------------------------------
 AC_PROG_CC
 AM_PROG_CC_C_O
 
@@ -22,9 +23,11 @@ AC_ENABLE_STATIC
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
+# ----------------------------------------------------------------------
 AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
 
 # Checks for header files.
+# ----------------------------------------------------------------------
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/param.h sys/time.h unistd.h],[:],[
@@ -33,12 +36,14 @@ AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/param.h sys/time.h unistd.h],[
 AC_CHECK_HEADERS([execinfo.h],[:],[:])
 
 # Checks for typedefs, structures, and compiler characteristics.
+# ----------------------------------------------------------------------
 AC_HEADER_STDBOOL
 AC_C_CONST
 AC_TYPE_PID_T
 AC_TYPE_UID_T
 
-# Checks for library functions.
+# Checks for library functions and compiler features.
+# ----------------------------------------------------------------------
 AC_FUNC_CLOSEDIR_VOID
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
@@ -52,6 +57,8 @@ AC_TRY_COMPILE(AC_INCLUDES_DEFAULT, [char *a; a = strdup("foo"); int i = 0; i++;
    AC_MSG_ERROR([htop is written in C99. A newer version of gcc is required.]))
 CFLAGS="$save_cflags"
 
+# Checks for features and flags.
+# ----------------------------------------------------------------------
 PROCDIR=/proc
 AC_ARG_WITH(proc, [  --with-proc=DIR      Location of a Linux-compatible proc filesystem (default=/proc).],
 
@@ -60,6 +67,11 @@ AC_ARG_WITH(proc, [  --with-proc=DIR      Location of a Linux-compatible proc fi
       PROCDIR="$withval"
    fi,
    AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
+
+if test "x$cross_compiling" = xno; then
+AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
+AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
+fi
 
 AC_ARG_ENABLE(openvz, [AC_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
 if test "x$enable_openvz" = xyes; then
@@ -105,18 +117,6 @@ else
             [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
 fi
 
-if test ! -z "$missing_libraries"; then
-  AC_MSG_ERROR([missing libraries: $missing_libraries])
-fi
-if test ! -z "$missing_headers"; then
-  AC_MSG_ERROR([missing headers: $missing_headers])
-fi
-
-if test "x$cross_compiling" = xno; then
-AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
-AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
-fi
-
 AC_ARG_ENABLE(native_affinity, [AC_HELP_STRING([--enable-native-affinity], [enable native sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_native_affinity="yes")
 if test "x$enable_native_affinity" = xyes -a "x$cross_compiling" = xno; then
    AC_MSG_CHECKING([for usable sched_setaffinity])
@@ -150,5 +150,16 @@ if test "x$enable_oom" = xyes; then
     AC_DEFINE(HAVE_OOM, 1, [Define if OOM score support enabled.])
 fi
 
+# Bail out on errors.
+# ----------------------------------------------------------------------
+if test ! -z "$missing_libraries"; then
+  AC_MSG_ERROR([missing libraries: $missing_libraries])
+fi
+if test ! -z "$missing_headers"; then
+  AC_MSG_ERROR([missing headers: $missing_headers])
+fi
+
+# We're done, let's go!
+# ----------------------------------------------------------------------
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
