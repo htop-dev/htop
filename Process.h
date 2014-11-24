@@ -4,7 +4,7 @@
 #define HEADER_Process
 /*
 htop - Process.h
-(C) 2004-2011 Hisham H. Muhammad
+(C) 2004-2014 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -12,7 +12,7 @@ in the source distribution for its full text.
 #ifdef HAVE_LIBHWLOC
 #endif
 
-// This works only with glibc 2.1+. On earlier versions
+// On Linux, this works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
 #ifndef PAGE_SIZE
 #define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
@@ -21,7 +21,7 @@ in the source distribution for its full text.
 
 #include "Object.h"
 #include "Affinity.h"
-#include "IOPriority.h"
+
 #include <sys/types.h>
 
 #define PROCESS_FLAG_IO 1
@@ -101,7 +101,6 @@ typedef struct Process_ {
    long int priority;
    long int nice;
    long int nlwp;
-   IOPriority ioPriority;
    char starttime_show[8];
    time_t starttime_ctime;
 
@@ -201,20 +200,6 @@ void Process_toggleTag(Process* this);
 bool Process_setPriority(Process* this, int priority);
 
 bool Process_changePriorityBy(Process* this, size_t delta);
-
-IOPriority Process_updateIOPriority(Process* this);
-
-bool Process_setIOPriority(Process* this, IOPriority ioprio);
-
-/*
-[1] Note that before kernel 2.6.26 a process that has not asked for
-an io priority formally uses "none" as scheduling class, but the
-io scheduler will treat such processes as if it were in the best
-effort class. The priority within the best effort class will  be
-dynamically  derived  from  the  cpu  nice level of the process:
-extern io_priority;
-*/
-#define Process_effectiveIOPriority(p_) (IOPriority_class(p_->ioPriority) == IOPRIO_CLASS_NONE ? IOPriority_tuple(IOPRIO_CLASS_BE, (p_->nice + 20) / 5) : p_->ioPriority)
 
 #ifdef HAVE_LIBHWLOC
 

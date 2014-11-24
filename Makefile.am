@@ -1,7 +1,9 @@
 
 ACLOCAL_AMFLAGS = -I m4
+AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = htop
+
 dist_man_MANS = htop.1
 EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.py \
 install-sh autogen.sh missing
@@ -10,7 +12,7 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-htop_CFLAGS = -pedantic -Wall -Wextra -std=c99 -rdynamic -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\"
+htop_CFLAGS = -pedantic -Wall -Wextra -std=c99 -rdynamic -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(my_htop_platform)"
 AM_CPPFLAGS = -DNDEBUG
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
@@ -18,23 +20,42 @@ ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c \
 DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
 LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
 BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
-IOPriorityPanel.c SignalsPanel.c String.c SwapMeter.c TasksMeter.c TraceScreen.c \
+SignalsPanel.c String.c SwapMeter.c TasksMeter.c TraceScreen.c \
 UptimeMeter.c UsersTable.c Vector.c AvailableColumnsPanel.c AffinityPanel.c \
-HostnameMeter.c OpenFilesScreen.c Affinity.c IOPriority.c IncSet.c
+HostnameMeter.c OpenFilesScreen.c Affinity.c IncSet.c Action.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
 CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
-IOPriorityPanel.h CPUMeter.h CRT.h DisplayOptionsPanel.h FunctionBar.h \
+CPUMeter.h CRT.h DisplayOptionsPanel.h FunctionBar.h \
 Hashtable.h Header.h htop.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
 BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \
 ScreenManager.h Settings.h SignalsPanel.h String.h SwapMeter.h TasksMeter.h \
 TraceScreen.h UptimeMeter.h UsersTable.h Vector.h Process.h AffinityPanel.h \
-HostnameMeter.h OpenFilesScreen.h Affinity.h IOPriority.h IncSet.h
+HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h
+
+if HTOP_LINUX
+myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
+linux/LinuxProcessList.c linux/LinuxCRT.c
+
+myhtopplatheaders = linux/Platform.h linux/IOPriorityPanel.h linux/IOPriority.h \
+linux/LinuxProcessList.h linux/LinuxCRT.h
+endif
+
+if HTOP_UNSUPPORTED
+myhtopplatsources = unsupported/Platform.c unsupported/UnsupportedProcessList.c \
+unsupported/UnsupportedCRT.c
+
+myhtopplatheaders = unsupported/Platform.h unsupported/UnsupportedProcessList.h \
+unsupported/UnsupportedCRT.h
+endif
 
 SUFFIXES = .h
 
-BUILT_SOURCES = $(myhtopheaders)
-htop_SOURCES = $(myhtopheaders) $(myhtopsources) config.h
+BUILT_SOURCES = $(myhtopheaders) $(myhtopplatheaders)
+htop_SOURCES  = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources) config.h
+
+target:
+	echo $(htop_SOURCES)
 
 profile:
 	$(MAKE) all CFLAGS="-pg" AM_CPPFLAGS="-pg -O2 -DNDEBUG"
@@ -47,3 +68,4 @@ debug:
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS
+

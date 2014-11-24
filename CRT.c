@@ -7,7 +7,6 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 
-#include "config.h"
 #include "String.h"
 #include "RichString.h"
 
@@ -16,9 +15,6 @@ in the source distribution for its full text.
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_EXECINFO_H
-#include <execinfo.h>
-#endif
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
@@ -112,6 +108,8 @@ typedef enum ColorElements_ {
 
 void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 
+void CRT_handleSIGSEGV(int sgn);
+
 }*/
 
 // TODO: centralize these in Settings.
@@ -133,27 +131,6 @@ int CRT_scrollHAmount = 5;
 char* CRT_termType;
 
 void *backtraceArray[128];
-
-static void CRT_handleSIGSEGV(int sgn) {
-   (void) sgn;
-   CRT_done();
-   #if __linux
-   fprintf(stderr, "\n\nhtop " VERSION " aborting. Please report bug at http://hisham.hm/htop\n");
-   #ifdef HAVE_EXECINFO_H
-   size_t size = backtrace(backtraceArray, sizeof(backtraceArray) / sizeof(void *));
-   fprintf(stderr, "\n Please include in your report the following backtrace: \n");
-   backtrace_symbols_fd(backtraceArray, size, 2);
-   fprintf(stderr, "\nAdditionally, in order to make the above backtrace useful,");
-   fprintf(stderr, "\nplease also run the following command to generate a disassembly of your binary:");
-   fprintf(stderr, "\n\n   objdump -d `which htop` > ~/htop.objdump");
-   fprintf(stderr, "\n\nand then attach the file ~/htop.objdump to your bug report.");
-   fprintf(stderr, "\n\nThank you for helping to improve htop!\n\n");
-   #endif
-   #else
-   fprintf(stderr, "\n\nhtop " VERSION " aborting. Unsupported platform.\n");
-   #endif
-   abort();
-}
 
 static void CRT_handleSIGTERM(int sgn) {
    (void) sgn;

@@ -22,6 +22,19 @@ AC_DISABLE_SHARED
 AC_ENABLE_STATIC
 AC_PROG_LIBTOOL
 
+# Checks for platform.
+# ----------------------------------------------------------------------
+case "$target" in
+*linux*)
+   my_htop_platform=linux
+   ;;
+*)
+   my_htop_platform=unsupported
+   ;;
+esac
+AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
+AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
+
 # Checks for libraries.
 # ----------------------------------------------------------------------
 AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
@@ -60,17 +73,25 @@ CFLAGS="$save_cflags"
 # Checks for features and flags.
 # ----------------------------------------------------------------------
 PROCDIR=/proc
+
+AC_ARG_ENABLE(proc, [AC_HELP_STRING([--enable-proc], [use Linux-compatible proc filesystem])], enable_proc="yes", enable_proc="no")
+if test "x$enable_proc" = xyes; then
+   AC_DEFINE(HAVE_PROC, 1, [Define if using a Linux-compatible proc filesystem.])
+fi
+
 AC_ARG_WITH(proc, [  --with-proc=DIR      Location of a Linux-compatible proc filesystem (default=/proc).],
 
-   if test -n "$withval"; then
-      AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
-      PROCDIR="$withval"
-   fi,
-   AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
+if test -n "$withval"; then
+   AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
+   PROCDIR="$withval"
+fi,
+AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
 
 if test "x$cross_compiling" = xno; then
-AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find /proc/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
-AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find /proc/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
+   if test "x$enable_proc" = xyes; then
+      AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find $PROCDIR/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
+      AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find $PROCDIR/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
+   fi
 fi
 
 AC_ARG_ENABLE(openvz, [AC_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
@@ -161,5 +182,6 @@ fi
 
 # We're done, let's go!
 # ----------------------------------------------------------------------
+AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT

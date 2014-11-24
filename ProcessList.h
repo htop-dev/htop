@@ -15,18 +15,6 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Process.h"
 
-#ifndef PROCDIR
-#define PROCDIR "/proc"
-#endif
-
-#ifndef PROCSTATFILE
-#define PROCSTATFILE PROCDIR "/stat"
-#endif
-
-#ifndef PROCMEMINFOFILE
-#define PROCMEMINFOFILE PROCDIR "/meminfo"
-#endif
-
 #ifndef MAX_NAME
 #define MAX_NAME 128
 #endif
@@ -135,12 +123,15 @@ typedef struct ProcessList_ {
 
 } ProcessList;
 
+ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList);
+void ProcessList_scan(ProcessList* pl);
+
 
 extern const char *ProcessList_treeStrAscii[TREE_STR_COUNT];
 
 extern const char *ProcessList_treeStrUtf8[TREE_STR_COUNT];
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList);
+ProcessList* ProcessList_init(ProcessList* this, UsersTable* usersTable, Hashtable* pidWhiteList);
 
 void ProcessList_delete(ProcessList* this);
 
@@ -150,39 +141,21 @@ void ProcessList_invertSortOrder(ProcessList* this);
 
 void ProcessList_printHeader(ProcessList* this, RichString* header);
 
+void ProcessList_add(ProcessList* this, Process* p);
+
+void ProcessList_remove(ProcessList* this, Process* p);
+
 Process* ProcessList_get(ProcessList* this, int idx);
 
 int ProcessList_size(ProcessList* this);
 
 void ProcessList_sort(ProcessList* this);
 
-#ifdef HAVE_TASKSTATS
-
-#endif
-
-#ifdef HAVE_OPENVZ
-
-#endif
-
-#ifdef HAVE_CGROUP
-
-#endif
-
-#ifdef HAVE_VSERVER
-
-#endif
-
-#ifdef HAVE_OOM
-
-#endif
-
-
-void ProcessList_scan(ProcessList* this);
-
 ProcessField ProcessList_keyAt(ProcessList* this, int at);
 
 void ProcessList_expandTree(ProcessList* this);
 
 void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, const char* incFilter);
+
 
 #endif

@@ -22,8 +22,9 @@ in the source distribution for its full text.
 #include "TraceScreen.h"
 #include "OpenFilesScreen.h"
 #include "AffinityPanel.h"
-#include "IOPriorityPanel.h"
+#include "Platform.h"
 #include "IncSet.h"
+#include "Action.h"
 #include "htop.h"
 
 #include <unistd.h>
@@ -42,31 +43,6 @@ in the source distribution for its full text.
 //#link m
 
 #define COPYRIGHT "(C) 2004-2014 Hisham Muhammad"
-
-/*{
-
-typedef enum {
-   HTOP_OK = 0x00,
-   HTOP_REFRESH = 0x01,
-   HTOP_RECALCULATE = 0x03, // implies HTOP_REFRESH
-   HTOP_SAVE_SETTINGS = 0x04,
-   HTOP_KEEP_FOLLOWING = 0x08,
-   HTOP_QUIT = 0x10,
-   HTOP_REDRAW_BAR = 0x20,
-   HTOP_UPDATE_PANELHDR = 0x41, // implies HTOP_REFRESH
-} Htop_Reaction;
-
-typedef Htop_Reaction (*Htop_Action)();
-
-typedef struct State_ {
-   IncSet* inc;
-   Settings* settings;
-   UsersTable* ut;
-} State;
-
-typedef bool(*ForeachProcessFn)(Process*, size_t);
-
-}*/
 
 static void printVersionFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
@@ -211,28 +187,9 @@ static void Setup_run(Settings* settings, const Header* header) {
    ScreenManager_delete(scr);
 }
 
-static bool foreachProcess(Panel* panel, ForeachProcessFn fn, int arg, bool* wasAnyTagged) {
-   bool ok = true;
-   bool anyTagged = false;
-   for (int i = 0; i < Panel_size(panel); i++) {
-      Process* p = (Process*) Panel_get(panel, i);
-      if (p->tag) {
-         ok = fn(p, arg) && ok;
-         anyTagged = true;
-      }
-   }
-   if (!anyTagged) {
-      Process* p = (Process*) Panel_getSelected(panel);
-      if (p) ok = fn(p, arg) && ok;
-   }
-   if (wasAnyTagged)
-      *wasAnyTagged = anyTagged;
-   return ok;
-}
-
 static bool changePriority(Panel* panel, int delta) {
    bool anyTagged;
-   bool ok = foreachProcess(panel, (ForeachProcessFn) Process_changePriorityBy, delta, &anyTagged);
+   bool ok = Action_foreachProcess(panel, (Action_ForeachProcessFn) Process_changePriorityBy, delta, &anyTagged);
    if (!ok)
       beep();
    return anyTagged;
@@ -429,24 +386,6 @@ static Htop_Reaction actionInvertSortOrder(Panel* panel, ProcessList* pl) {
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
-static Htop_Reaction actionSetIOPriority(Panel* panel, ProcessList* pl, Header* header) {
-   (void) panel, (void) pl;
-   Process* p = (Process*) Panel_getSelected(panel);
-   if (!p) return HTOP_OK;
-   IOPriority ioprio = p->ioPriority;
-   Panel* ioprioPanel = IOPriorityPanel_new(ioprio);
-   const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
-   void* set = pickFromVector(panel, ioprioPanel, 21, fuFunctions, header);
-   if (set) {
-      IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = foreachProcess(panel, (ForeachProcessFn) Process_setIOPriority, (size_t) ioprio, NULL);
-      if (!ok)
-         beep();
-   }
-   Panel_delete((Object*)ioprioPanel);
-   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
-}
-
 static Htop_Reaction actionSetSortColumn(Panel* panel, ProcessList* pl, Header* header) {
    return sortBy(panel, pl, header);
 }
@@ -479,11 +418,14 @@ static Htop_Reaction actionSetAffinity(Panel* panel, ProcessList* pl, Header* he
    void* set = pickFromVector(panel, affinityPanel, 15, fuFunctions, header);
    if (set) {
       Affinity* affinity = AffinityPanel_getAffinity(affinityPanel);
-      bool ok = foreachProcess(panel, (ForeachProcessFn) Process_setAffinity, (size_t) affinity, NULL);
+      bool ok = Action_foreachProcess(panel, (Action_ForeachProcessFn) Process_setAffinity, (size_t) affinity, NULL);
       if (!ok) beep();
       Affinity_delete(affinity);
    }
    Panel_delete((Object*)affinityPanel);
+#else
+   (void) panel;
+   (void) header;
 #endif
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
@@ -498,7 +440,7 @@ static Htop_Reaction actionKill(Panel* panel, ProcessList* pl, Header* header) {
          Panel_setHeader(panel, "Sending...");
          Panel_draw(panel, true);
          refresh();
-         foreachProcess(panel, (ForeachProcessFn) Process_sendSignal, (size_t) sgn->key, NULL);
+         Action_foreachProcess(panel, (Action_ForeachProcessFn) Process_sendSignal, (size_t) sgn->key, NULL);
          napms(500);
       }
    }
@@ -596,7 +538,7 @@ static Htop_Reaction actionTagAllChildren(Panel* panel) {
    return HTOP_OK;
 }
 
-void setBindings(Htop_Action* keys) {
+static void setBindings(Htop_Action* keys) {
    keys[KEY_RESIZE] = actionResize;
    keys['M'] = actionSortByMemory;
    keys['T'] = actionSortByTime;
@@ -615,7 +557,6 @@ void setBindings(Htop_Action* keys) {
    keys['['] = actionLowerPriority;
    keys[KEY_F(8)] = actionLowerPriority;
    keys['I'] = actionInvertSortOrder;
-   keys['i'] = actionSetIOPriority;
    keys[KEY_F(6)] = actionExpandCollapseOrSortColumn;
    keys[KEY_F(18)] = actionExpandCollapseOrSortColumn;
    keys['<'] = actionSetSortColumn;
@@ -761,17 +702,7 @@ int main(int argc, char** argv) {
       fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
       exit(1);
    }
-
-   bool quit = false;
-   int sortTimeout = 0;
-   int resetSortTimeout = 5;
-   bool doRefresh = true;
-   bool forceRecalculate = false;
-   Settings* settings;
    
-   ProcessList* pl = NULL;
-   UsersTable* ut = UsersTable_new();
-
 #ifdef HAVE_LIBNCURSESW
    char *locale = setlocale(LC_ALL, NULL);
    if (locale == NULL || locale[0] == '\0')
@@ -786,13 +717,14 @@ int main(int argc, char** argv) {
       CRT_utf8 = false;
 #endif
 
-   pl = ProcessList_new(ut, pidWhiteList);
+   UsersTable* ut = UsersTable_new();
+   ProcessList* pl = ProcessList_new(ut, pidWhiteList);
    pl->userOnly = userOnly;
    pl->userId = userId;
    Process_getMaxPid();
    
    Header* header = Header_new(pl);
-   settings = Settings_new(pl, header, pl->cpuCount);
+   Settings* settings = Settings_new(pl, header, pl->cpuCount);
    int headerHeight = Header_calculateHeight(header);
 
    // FIXME: move delay code to settings
@@ -839,12 +771,19 @@ int main(int argc, char** argv) {
    
    Htop_Action keys[KEY_MAX] = { NULL };
    setBindings(keys);
+   Platform_setBindings(keys);
    
    State state = {
       .inc = inc,
       .settings = settings,
       .ut = ut,
    };
+
+   bool quit = false;
+   int sortTimeout = 0;
+   int resetSortTimeout = 5;
+   bool doRefresh = true;
+   bool forceRecalculate = false;
    
    while (!quit) {
       gettimeofday(&tv, NULL);

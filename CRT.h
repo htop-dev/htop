@@ -9,9 +9,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifdef HAVE_EXECINFO_H
-#endif
-
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
 #define COLORSCHEME_DEFAULT 0
@@ -102,6 +99,8 @@ typedef enum ColorElements_ {
 } ColorElements;
 
 void CRT_fatalError(const char* note) __attribute__ ((noreturn));
+
+void CRT_handleSIGSEGV(int sgn);
 
 
 // TODO: centralize these in Settings.
