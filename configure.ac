@@ -32,8 +32,6 @@ case "$target" in
    my_htop_platform=unsupported
    ;;
 esac
-AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
-AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 
 # Checks for libraries.
 # ----------------------------------------------------------------------
@@ -76,6 +74,8 @@ PROCDIR=/proc
 
 AC_ARG_ENABLE(proc, [AC_HELP_STRING([--enable-proc], [use Linux-compatible proc filesystem])], enable_proc="yes", enable_proc="no")
 if test "x$enable_proc" = xyes; then
+   # An enabled proc assumes we're emulating Linux.
+   my_htop_platform=linux
    AC_DEFINE(HAVE_PROC, 1, [Define if using a Linux-compatible proc filesystem.])
 fi
 
@@ -182,6 +182,8 @@ fi
 
 # We're done, let's go!
 # ----------------------------------------------------------------------
+AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
+AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
