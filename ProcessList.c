@@ -10,23 +10,8 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "String.h"
 
-#include <sys/time.h>
-#include <sys/utsname.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <dirent.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <math.h>
 #include <string.h>
-#include <time.h>
-#include <assert.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <errno.h>
 
 /*{
 #include "Vector.h"

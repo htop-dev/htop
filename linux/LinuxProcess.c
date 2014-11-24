@@ -6,8 +6,16 @@ in the source distribution for its full text.
 */
 
 #include "Process.h"
+#include "ProcessList.h"
+#include "LinuxProcess.h"
+#include "CRT.h"
+
+#include <unistd.h>
+#include <sys/syscall.h>
 
 /*{
+
+#include "IOPriority.h"
 
 typedef struct LinuxProcess_ {
    Process super;
@@ -24,26 +32,29 @@ effort class. The priority within the best effort class will  be
 dynamically  derived  from  the  cpu  nice level of the process:
 io_priority = (cpu_nice + 20) / 5. -- From ionice(1) man page
 */
-#define LinuxProcess_effectiveIOPriority(p_) (IOPriority_class(p_->ioPriority) == IOPRIO_CLASS_NONE ? IOPriority_tuple(IOPRIO_CLASS_BE, (p_->nice + 20) / 5) : p_->ioPriority)
+#define LinuxProcess_effectiveIOPriority(p_) (IOPriority_class(p_->ioPriority) == IOPRIO_CLASS_NONE ? IOPriority_tuple(IOPRIO_CLASS_BE, (p_->super.nice + 20) / 5) : p_->ioPriority)
 
-IOPriority LinuxProcess_updateIOPriority(Process* this) {
-   IOPriority ioprio = syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, this->pid);
+IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this) {
+   IOPriority ioprio = syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, this->super.pid);
    this->ioPriority = ioprio;
    return ioprio;
 }
 
-bool LinuxProcess_setIOPriority(Process* this, IOPriority ioprio) {
-   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->pid, ioprio);
-   return (Process_updateIOPriority(this) == ioprio);
+bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio) {
+   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->super.pid, ioprio);
+   return (LinuxProcess_updateIOPriority(this) == ioprio);
 }
 
-void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field) {
+void LinuxProcess_writeField(LinuxProcess* this, RichString* str, ProcessField field) {
+   char buffer[256]; buffer[255] = '\0';
+   int attr = CRT_colors[DEFAULT_COLOR];
+   int n = sizeof(buffer) - 1;
    switch (field) {
    case IO_PRIORITY: {
       int klass = IOPriority_class(this->ioPriority);
       if (klass == IOPRIO_CLASS_NONE) {
          // see note [1] above
-         snprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
+         snprintf(buffer, n, "B%1d ", (int) (this->super.nice + 20) / 5);
       } else if (klass == IOPRIO_CLASS_BE) {
          snprintf(buffer, n, "B%1d ", IOPriority_data(this->ioPriority));
       } else if (klass == IOPRIO_CLASS_RT) {
@@ -61,7 +72,6 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
       snprintf(buffer, n, "- ");
    }
    RichString_append(str, attr, buffer);
-   }
 }
 
 long LinuxProcess_compare(const void* v1, const void* v2) {
@@ -76,10 +86,8 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    }
    switch (pl->sortKey) {
    case IO_PRIORITY:
-      return Process_effectiveIOPriority(p1) - Process_effectiveIOPriority(p2);
+      return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
    default:
-      return (p1->pid - p2->pid);
+      return (p1->super.pid - p2->super.pid);
    }
-   test_diff:
-   return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
 }

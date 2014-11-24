@@ -35,10 +35,10 @@ HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h
 
 if HTOP_LINUX
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
-linux/LinuxProcessList.c linux/LinuxCRT.c
+linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c
 
 myhtopplatheaders = linux/Platform.h linux/IOPriorityPanel.h linux/IOPriority.h \
-linux/LinuxProcessList.h linux/LinuxCRT.h
+linux/LinuxProcess.h linux/LinuxProcessList.h linux/LinuxCRT.h
 endif
 
 if HTOP_UNSUPPORTED

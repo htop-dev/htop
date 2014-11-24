@@ -26,7 +26,6 @@ in the source distribution for its full text.
 #include <sched.h>
 #include <time.h>
 #include <assert.h>
-#include <sys/syscall.h>
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc/linux.h>

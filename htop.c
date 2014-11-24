@@ -195,47 +195,6 @@ static bool changePriority(Panel* panel, int delta) {
    return anyTagged;
 }
 
-static int selectedPid(Panel* panel) {
-   Process* p = (Process*) Panel_getSelected(panel);
-   if (p) {
-      return p->pid;
-   }
-   return -1;
-}
-
-static Object* pickFromVector(Panel* panel, Panel* list, int x, const char** keyLabels, Header* header) {
-   int y = panel->y;
-   const char* fuKeys[] = {"Enter", "Esc", NULL};
-   int fuEvents[] = {13, 27};
-   ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, header, false);
-   scr->allowFocusChange = false;
-   ScreenManager_add(scr, list, FunctionBar_new(keyLabels, fuKeys, fuEvents), x - 1);
-   ScreenManager_add(scr, panel, NULL, -1);
-   Panel* panelFocus;
-   int ch;
-   bool unfollow = false;
-   int pid = selectedPid(panel);
-   if (header->pl->following == -1) {
-      header->pl->following = pid;
-      unfollow = true;
-   }
-   ScreenManager_run(scr, &panelFocus, &ch);
-   if (unfollow) {
-      header->pl->following = -1;
-   }
-   ScreenManager_delete(scr);
-   Panel_move(panel, 0, y);
-   Panel_resize(panel, COLS, LINES-y-1);
-   if (panelFocus == list && ch == 13) {
-      Process* selected = (Process*)Panel_getSelected(panel);
-      if (selected && selected->pid == pid)
-         return Panel_getSelected(list);
-      else
-         beep();
-   }
-   return NULL;
-}
-
 static void addUserToVector(int key, void* userCast, void* panelCast) {
    char* user = (char*) userCast;
    Panel* panel = (Panel*) panelCast;
@@ -297,7 +256,7 @@ static Htop_Reaction sortBy(Panel* panel, ProcessList* pl, Header* header) {
          Panel_setSelected(sortPanel, i);
       free(name);
    }
-   ListItem* field = (ListItem*) pickFromVector(panel, sortPanel, 15, fuFunctions, header);
+   ListItem* field = (ListItem*) Action_pickFromVector(panel, sortPanel, 15, fuFunctions, header);
    if (field) {
       reaction |= setSortKey(pl, field->key);
    }
@@ -415,7 +374,7 @@ static Htop_Reaction actionSetAffinity(Panel* panel, ProcessList* pl, Header* he
    Affinity_delete(affinity);
 
    const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
-   void* set = pickFromVector(panel, affinityPanel, 15, fuFunctions, header);
+   void* set = Action_pickFromVector(panel, affinityPanel, 15, fuFunctions, header);
    if (set) {
       Affinity* affinity = AffinityPanel_getAffinity(affinityPanel);
       bool ok = Action_foreachProcess(panel, (Action_ForeachProcessFn) Process_setAffinity, (size_t) affinity, NULL);
@@ -434,7 +393,7 @@ static Htop_Reaction actionKill(Panel* panel, ProcessList* pl, Header* header) {
    (void) pl;
    Panel* signalsPanel = (Panel*) SignalsPanel_new();
    const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
-   ListItem* sgn = (ListItem*) pickFromVector(panel, signalsPanel, 15, fuFunctions, header);
+   ListItem* sgn = (ListItem*) Action_pickFromVector(panel, signalsPanel, 15, fuFunctions, header);
    if (sgn) {
       if (sgn->key != 0) {
          Panel_setHeader(panel, "Sending...");
@@ -456,7 +415,7 @@ static Htop_Reaction actionFilterByUser(Panel* panel, ProcessList* pl, Header* h
    ListItem* allUsers = ListItem_new("All users", -1);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
    const char* fuFunctions[] = {"Show    ", "Cancel ", NULL};
-   ListItem* picked = (ListItem*) pickFromVector(panel, usersPanel, 20, fuFunctions, header);
+   ListItem* picked = (ListItem*) Action_pickFromVector(panel, usersPanel, 20, fuFunctions, header);
    if (picked) {
       if (picked == allUsers) {
          pl->userOnly = false;
@@ -790,7 +749,7 @@ int main(int argc, char** argv) {
       double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
       bool timeToRecalculate = (newTime - oldTime > settings->delay);
       if (newTime < oldTime) timeToRecalculate = true; // clock was adjusted?
-      int following = follow ? selectedPid(panel) : -1;
+      int following = follow ? Action_selectedPid(panel) : -1;
       if (timeToRecalculate) {
          Header_draw(header);
          oldTime = newTime;

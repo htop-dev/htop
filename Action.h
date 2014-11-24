@@ -36,7 +36,10 @@ typedef struct State_ {
 typedef bool(*Action_ForeachProcessFn)(Process*, size_t);
 
 
+int Action_selectedPid(Panel* panel);
+
 bool Action_foreachProcess(Panel* panel, Action_ForeachProcessFn fn, int arg, bool* wasAnyTagged);
 
+Object* Action_pickFromVector(Panel* panel, Panel* list, int x, const char** keyLabels, Header* header);
 
 #endif

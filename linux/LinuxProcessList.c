@@ -5,9 +5,31 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
+#include "LinuxProcessList.h"
+#include "LinuxProcess.h"
+#include "CRT.h"
+#include "String.h"
+#include <errno.h>
+#include <sys/time.h>
+#include <sys/utsname.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <math.h>
+#include <string.h>
+#include <time.h>
+#include <assert.h>
+#include <sys/types.h>
+#include <fcntl.h>
 
 /*{
+
+#include "ProcessList.h"
 
 #ifndef PROCDIR
 #define PROCDIR "/proc"
@@ -463,7 +485,7 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
       if (! LinuxProcessList_readStatFile(process, dirname, name, command))
          goto errorReadingProcess;
       if (this->flags & PROCESS_FLAG_IOPRIO)
-         Process_updateIOPriority(process);
+         LinuxProcess_updateIOPriority((LinuxProcess*)process);
       float percent_cpu = (process->utime + process->stime - lasttimes) / period * 100.0;
       process->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
       if (isnan(process->percent_cpu)) process->percent_cpu = 0.0;
