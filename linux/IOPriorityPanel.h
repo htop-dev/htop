@@ -17,4 +17,5 @@ Panel* IOPriorityPanel_new(IOPriority currPrio);
 
 IOPriority IOPriorityPanel_getIOPriority(Panel* this);
 
+
 #endif
