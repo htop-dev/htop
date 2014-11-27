@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "String.h"
 #include "RichString.h"
+#include "Platform.h"
 
 #include <stdio.h>
 #include <sys/time.h>
@@ -284,12 +285,9 @@ static int Process_getuid = -1;
 static char* Process_pidFormat = "%7u ";
 static char* Process_tpgidFormat = "%7u ";
 
-void Process_getMaxPid() {
-   FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
-   if (!file) return;
-   int maxPid = 4194303;
-   fscanf(file, "%32d", &maxPid);
-   fclose(file);
+void Process_setupColumnWidths() {
+   int maxPid = Platform_getMaxPid();
+   if (maxPid == -1) return;
    if (maxPid > 99999) {
       Process_fieldTitles[PID] =     "    PID ";
       Process_fieldTitles[PPID] =    "   PPID ";

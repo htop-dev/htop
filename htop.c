@@ -681,7 +681,7 @@ int main(int argc, char** argv) {
    ProcessList* pl = ProcessList_new(ut, pidWhiteList);
    pl->userOnly = userOnly;
    pl->userId = userId;
-   Process_getMaxPid();
+   Process_setupColumnWidths();
    
    Header* header = Header_new(pl);
    Settings* settings = Settings_new(pl, header, pl->cpuCount);
