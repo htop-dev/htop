@@ -18,8 +18,9 @@ typedef struct FreeBSDProcessList_ {
 } FreeBSDProcessList;
 
 
-
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList);
+
+void ProcessList_delete(ProcessList* this);
 
 void ProcessList_scan(ProcessList* this);
 
