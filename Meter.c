@@ -7,15 +7,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
-#include "BatteryMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
 #include "RichString.h"
 #include "Object.h"
 #include "CRT.h"
@@ -124,27 +115,6 @@ MeterClass Meter_class = {
    .super = {
       .extends = Class(Object)
    }
-};
-
-MeterClass* Meter_types[] = {
-   &CPUMeter_class,
-   &ClockMeter_class,
-   &LoadAverageMeter_class,
-   &LoadMeter_class,
-   &MemoryMeter_class,
-   &SwapMeter_class,
-   &TasksMeter_class,
-   &UptimeMeter_class,
-   &BatteryMeter_class,
-   &HostnameMeter_class,
-   &AllCPUsMeter_class,
-   &AllCPUs2Meter_class,
-   &LeftCPUsMeter_class,
-   &RightCPUsMeter_class,
-   &LeftCPUs2Meter_class,
-   &RightCPUs2Meter_class,
-   &BlankMeter_class,
-   NULL
 };
 
 Meter* Meter_new(ProcessList* pl, int param, MeterClass* type) {

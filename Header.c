@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "String.h"
+#include "Platform.h"
 
 #include <assert.h>
 #include <time.h>
@@ -66,7 +67,7 @@ void Header_createMeter(Header* this, char* name, HeaderSide side) {
       if (!ok) param = 0;
       *paren = '\0';
    }
-   for (MeterClass** type = Meter_types; *type; type++) {
+   for (MeterClass** type = Platform_meterTypes; *type; type++) {
       if (String_eq(name, (*type)->name)) {
          Vector_add(meters, Meter_new(this->pl, param, *type));
          break;

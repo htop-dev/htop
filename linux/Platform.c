@@ -9,6 +9,16 @@ in the source distribution for its full text.
 #include "IOPriority.h"
 #include "IOPriorityPanel.h"
 #include "LinuxProcess.h"
+#include "Meter.h"
+#include "CPUMeter.h"
+#include "MemoryMeter.h"
+#include "SwapMeter.h"
+#include "TasksMeter.h"
+#include "LoadAverageMeter.h"
+#include "UptimeMeter.h"
+#include "BatteryMeter.h"
+#include "ClockMeter.h"
+#include "HostnameMeter.h"
 
 /*{
 #include "Action.h"
@@ -35,3 +45,25 @@ static Htop_Reaction Platform_actionSetIOPriority(Panel* panel, ProcessList* pl,
 void Platform_setBindings(Htop_Action* keys) {
    keys['i'] = Platform_actionSetIOPriority;
 }
+
+MeterClass* Platform_meterTypes[] = {
+   &CPUMeter_class,
+   &ClockMeter_class,
+   &LoadAverageMeter_class,
+   &LoadMeter_class,
+   &MemoryMeter_class,
+   &SwapMeter_class,
+   &TasksMeter_class,
+   &UptimeMeter_class,
+   &BatteryMeter_class,
+   &HostnameMeter_class,
+   &AllCPUsMeter_class,
+   &AllCPUs2Meter_class,
+   &LeftCPUsMeter_class,
+   &RightCPUsMeter_class,
+   &LeftCPUs2Meter_class,
+   &RightCPUs2Meter_class,
+   &BlankMeter_class,
+   NULL
+};
+
