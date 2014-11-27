@@ -17,4 +17,6 @@ extern MeterClass* Platform_meterTypes[];
 
 int Platform_getUptime();
 
+void Platform_getLoadAverage(double* one, double* five, double* fifteen);
+
 #endif

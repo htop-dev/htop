@@ -20,6 +20,8 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
+#include <sys/resource.h>
+#include <vm/vm_param.h>
 #include <time.h>
 
 /*{
@@ -63,4 +65,21 @@ int Platform_getUptime() {
    gettimeofday(&currTime, NULL);
 
    return (int) difftime(currTime.tv_sec, bootTime.tv_sec);
+}
+
+void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
+   struct loadavg loadAverage;
+   int mib[2] = { CTL_VM, VM_LOADAVG };
+   size_t size = sizeof(loadAverage);
+   
+   int err = sysctl(mib, 2, &loadAverage, &size, NULL, 0);
+   if (err) {
+      *one = 0;
+      *five = 0;
+      *fifteen = 0;
+      return;
+   }
+   *one     = (double) loadAverage.ldavg[0] / loadAverage.fscale;
+   *five    = (double) loadAverage.ldavg[1] / loadAverage.fscale;
+   *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
