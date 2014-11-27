@@ -20,6 +20,8 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 
+#include <math.h>
+
 /*{
 #include "Action.h"
 }*/
@@ -67,3 +69,12 @@ MeterClass* Platform_meterTypes[] = {
    NULL
 };
 
+int Platform_getUptime() {
+   double uptime = 0;
+   FILE* fd = fopen(PROCDIR "/uptime", "r");
+   if (fd) {
+      fscanf(fd, "%64lf", &uptime);
+      fclose(fd);
+   }
+   int totalseconds = (int) floor(uptime);
+}
