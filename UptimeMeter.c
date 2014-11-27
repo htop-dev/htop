@@ -6,11 +6,8 @@ in the source distribution for its full text.
 */
 
 #include "UptimeMeter.h"
-
-#include "ProcessList.h"
+#include "Platform.h"
 #include "CRT.h"
-
-#include <math.h>
 
 /*{
 #include "Meter.h"
@@ -21,13 +18,11 @@ int UptimeMeter_attributes[] = {
 };
 
 static void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
-   double uptime = 0;
-   FILE* fd = fopen(PROCDIR "/uptime", "r");
-   if (fd) {
-      fscanf(fd, "%64lf", &uptime);
-      fclose(fd);
+   int totalseconds = Platform_getUptime();
+   if (totalseconds == -1) {
+      snprintf(buffer, len, "(unknown)");
+      return;
    }
-   int totalseconds = (int) ceil(uptime);
    int seconds = totalseconds % 60;
    int minutes = (totalseconds/60) % 60;
    int hours = (totalseconds/3600) % 24;
