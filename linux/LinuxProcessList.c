@@ -571,55 +571,56 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
    return true;
 }
 
-void ProcessList_scan(ProcessList* this) {
-   unsigned long long int usertime, nicetime, systemtime, idletime;
+static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    unsigned long long int swapFree = 0;
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCMEMINFOFILE);
    }
-   int cpus = this->cpuCount;
-   assert(cpus > 0);
-   {
-      char buffer[128];
-      while (fgets(buffer, 128, file)) {
-   
-         switch (buffer[0]) {
-         case 'M':
-            if (String_startsWith(buffer, "MemTotal:"))
-               sscanf(buffer, "MemTotal: %32llu kB", &this->totalMem);
-            else if (String_startsWith(buffer, "MemFree:"))
-               sscanf(buffer, "MemFree: %32llu kB", &this->freeMem);
-            else if (String_startsWith(buffer, "MemShared:"))
-               sscanf(buffer, "MemShared: %32llu kB", &this->sharedMem);
-            break;
-         case 'B':
-            if (String_startsWith(buffer, "Buffers:"))
-               sscanf(buffer, "Buffers: %32llu kB", &this->buffersMem);
-            break;
-         case 'C':
-            if (String_startsWith(buffer, "Cached:"))
-               sscanf(buffer, "Cached: %32llu kB", &this->cachedMem);
-            break;
-         case 'S':
-            if (String_startsWith(buffer, "SwapTotal:"))
-               sscanf(buffer, "SwapTotal: %32llu kB", &this->totalSwap);
-            if (String_startsWith(buffer, "SwapFree:"))
-               sscanf(buffer, "SwapFree: %32llu kB", &swapFree);
-            break;
-         }
+   char buffer[128];
+   while (fgets(buffer, 128, file)) {
+
+      switch (buffer[0]) {
+      case 'M':
+         if (String_startsWith(buffer, "MemTotal:"))
+            sscanf(buffer, "MemTotal: %32llu kB", &this->totalMem);
+         else if (String_startsWith(buffer, "MemFree:"))
+            sscanf(buffer, "MemFree: %32llu kB", &this->freeMem);
+         else if (String_startsWith(buffer, "MemShared:"))
+            sscanf(buffer, "MemShared: %32llu kB", &this->sharedMem);
+         break;
+      case 'B':
+         if (String_startsWith(buffer, "Buffers:"))
+            sscanf(buffer, "Buffers: %32llu kB", &this->buffersMem);
+         break;
+      case 'C':
+         if (String_startsWith(buffer, "Cached:"))
+            sscanf(buffer, "Cached: %32llu kB", &this->cachedMem);
+         break;
+      case 'S':
+         if (String_startsWith(buffer, "SwapTotal:"))
+            sscanf(buffer, "SwapTotal: %32llu kB", &this->totalSwap);
+         if (String_startsWith(buffer, "SwapFree:"))
+            sscanf(buffer, "SwapFree: %32llu kB", &swapFree);
+         break;
       }
    }
 
    this->usedMem = this->totalMem - this->freeMem;
    this->usedSwap = this->totalSwap - swapFree;
    fclose(file);
+}
 
-   file = fopen(PROCSTATFILE, "r");
+static inline double LinuxProcessList_scanCPUTime(ProcessList* this) {
+   unsigned long long int usertime, nicetime, systemtime, idletime;
+
+   FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
+   int cpus = this->cpuCount;
+   assert(cpus > 0);
    for (int i = 0; i <= cpus; i++) {
       char buffer[256];
       int cpuid;
@@ -684,6 +685,14 @@ void ProcessList_scan(ProcessList* this) {
       cpuData->totalTime = totaltime;
    }
    double period = (double)this->cpus[0].totalPeriod / cpus; fclose(file);
+   return period;
+}
+
+void ProcessList_scan(ProcessList* this) {
+
+   LinuxProcessList_scanMemoryInfo(this);
+   
+   double period = LinuxProcessList_scanCPUTime(this);
 
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
