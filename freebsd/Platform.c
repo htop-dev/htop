@@ -83,3 +83,13 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *five    = (double) loadAverage.ldavg[1] / loadAverage.fscale;
    *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
+
+int Platform_getMaxPid() {
+   int maxPid;
+   size_t size = sizeof(maxPid);
+   int err = sysctlbyname("kern.pid_max", &maxPid, &size, NULL, 0);
+   if (err) {
+      return 99999;
+   }
+   return maxPid;
+}

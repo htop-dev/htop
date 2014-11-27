@@ -19,4 +19,6 @@ int Platform_getUptime();
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
+int Platform_getMaxPid();
+
 #endif
