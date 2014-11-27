@@ -179,7 +179,7 @@ extern const int Process_fieldFlags[];
 extern const char *Process_fieldTitles[];
 
 
-void Process_getMaxPid();
+void Process_setupColumnWidths();
 
 #define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)
