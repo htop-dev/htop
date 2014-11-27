@@ -13,7 +13,6 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
-#include "BatteryMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 
@@ -26,6 +25,7 @@ in the source distribution for its full text.
 
 /*{
 #include "Action.h"
+#include "BatteryMeter.h"
 }*/
 
 void Platform_setBindings(Htop_Action* keys) {
@@ -93,3 +93,10 @@ int Platform_getMaxPid() {
    }
    return maxPid;
 }
+
+void Platform_getBatteryLevel(double* level, ACPresence* isOnAC) {
+   // TODO
+   *level = -1;
+   *isOnAC = AC_ERROR;
+}
+
