@@ -61,6 +61,23 @@ static void Settings_readMeterModes(Settings* this, char* line, HeaderSide side)
    String_freeArray(ids);
 }
 
+static void Settings_defaultMeters(Header* header, int cpuCount) {
+   if (cpuCount > 8) {
+      Header_createMeter(header, "LeftCPUs2", LEFT_HEADER);
+      Header_createMeter(header, "RightCPUs2", RIGHT_HEADER);
+   } else if (cpuCount > 4) {
+      Header_createMeter(header, "LeftCPUs", LEFT_HEADER);
+      Header_createMeter(header, "RightCPUs", RIGHT_HEADER);
+   } else {
+      Header_createMeter(header, "AllCPUs", LEFT_HEADER);
+   }
+   Header_createMeter(header, "Memory", LEFT_HEADER);
+   Header_createMeter(header, "Swap", LEFT_HEADER);
+   Header_createMeter(header, "Tasks", RIGHT_HEADER);
+   Header_createMeter(header, "LoadAverage", RIGHT_HEADER);
+   Header_createMeter(header, "Uptime", RIGHT_HEADER);
+}
+
 static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
    FILE* fd = fopen(fileName, "r");
    if (!fd)
@@ -153,7 +170,7 @@ static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
    }
    fclose(fd);
    if (!readMeters) {
-      Header_defaultMeters(this->header, cpuCount);
+      Settings_defaultMeters(this->header, cpuCount);
    }
    return true;
 }
@@ -273,7 +290,7 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
       ok = Settings_read(this, systemSettings, cpuCount);
       free(systemSettings);
       if (!ok) {
-         Header_defaultMeters(this->header, cpuCount);
+         Settings_defaultMeters(this->header, cpuCount);
          pl->hideKernelThreads = true;
          pl->highlightMegabytes = true;
          pl->highlightThreads = false;
