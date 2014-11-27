@@ -8,8 +8,7 @@ in the source distribution for its full text.
 #include "LoadAverageMeter.h"
 
 #include "CRT.h"
-
-#include <assert.h>
+#include "Platform.h"
 
 /*{
 #include "Meter.h"
@@ -21,21 +20,8 @@ int LoadAverageMeter_attributes[] = {
 
 int LoadMeter_attributes[] = { LOAD };
 
-static inline void LoadAverageMeter_scan(double* one, double* five, double* fifteen) {
-   int activeProcs, totalProcs, lastProc;
-   *one = 0; *five = 0; *fifteen = 0;
-   FILE *fd = fopen(PROCDIR "/loadavg", "r");
-   if (fd) {
-      int total = fscanf(fd, "%32lf %32lf %32lf %32d/%32d %32d", one, five, fifteen,
-         &activeProcs, &totalProcs, &lastProc);
-      (void) total;
-      assert(total == 6);
-      fclose(fd);
-   }
-}
-
 static void LoadAverageMeter_setValues(Meter* this, char* buffer, int size) {
-   LoadAverageMeter_scan(&this->values[2], &this->values[1], &this->values[0]);
+   Platform_getLoadAverage(&this->values[2], &this->values[1], &this->values[0]);
    snprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[2], this->values[1], this->values[0]);
 }
 
@@ -52,7 +38,7 @@ static void LoadAverageMeter_display(Object* cast, RichString* out) {
 
 static void LoadMeter_setValues(Meter* this, char* buffer, int size) {
    double five, fifteen;
-   LoadAverageMeter_scan(&this->values[0], &five, &fifteen);
+   Platform_getLoadAverage(&this->values[0], &five, &fifteen);
    if (this->values[0] > this->total) {
       this->total = this->values[0];
    }
