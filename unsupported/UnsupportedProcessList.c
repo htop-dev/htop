@@ -26,6 +26,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    return this;
 }
 
+void ProcessList_delete(ProcessList* this) {
+   ProcessList_done(this);
+   free(this);
+}
+
 void ProcessList_scan(ProcessList* this) {
    (void) this;
    // stub!

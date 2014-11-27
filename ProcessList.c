@@ -129,6 +129,7 @@ typedef struct ProcessList_ {
 } ProcessList;
 
 ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList);
+void ProcessList_delete(ProcessList* pl);
 void ProcessList_scan(ProcessList* pl);
 
 }*/
@@ -211,13 +212,12 @@ ProcessList* ProcessList_init(ProcessList* this, UsersTable* usersTable, Hashtab
    return this;
 }
 
-void ProcessList_delete(ProcessList* this) {
+void ProcessList_done(ProcessList* this) {
    Hashtable_delete(this->processTable);
    Vector_delete(this->processes);
    Vector_delete(this->processes2);
    free(this->cpus);
    free(this->fields);
-   free(this);
 }
 
 void ProcessList_setPanel(ProcessList* this, Panel* panel) {
