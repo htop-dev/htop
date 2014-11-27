@@ -9,6 +9,8 @@ in the source distribution for its full text.
 #include "IOPriority.h"
 #include "IOPriorityPanel.h"
 #include "LinuxProcess.h"
+#include "Battery.h"
+
 #include "Meter.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
@@ -16,7 +18,6 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
-#include "BatteryMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 
@@ -25,6 +26,7 @@ in the source distribution for its full text.
 
 /*{
 #include "Action.h"
+#include "BatteryMeter.h"
 }*/
 
 static Htop_Reaction Platform_actionSetIOPriority(Panel* panel, ProcessList* pl, Header* header) {
@@ -102,3 +104,19 @@ int Platform_getMaxPid() {
    return maxPid;
 }
 
+void Platform_getBatteryLevel(double* level, ACPresence* isOnAC) {
+
+   double percent = Battery_getProcBatData();
+
+   if (percent == 0) {
+      percent = Battery_getSysBatData();
+      if (percent == 0) {
+         *level = -1;
+         *isOnAC = AC_ERROR;
+         return;
+      }
+   }
+
+   *isOnAC = Battery_isOnAC();
+   *level = percent;
+}
