@@ -77,7 +77,7 @@ int Platform_getUptime() {
       fscanf(fd, "%64lf", &uptime);
       fclose(fd);
    }
-   int totalseconds = (int) floor(uptime);
+   return (int) floor(uptime);
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
