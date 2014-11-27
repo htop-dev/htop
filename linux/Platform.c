@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 
 #include <math.h>
+#include <assert.h>
 
 /*{
 #include "Action.h"
@@ -78,3 +79,17 @@ int Platform_getUptime() {
    }
    int totalseconds = (int) floor(uptime);
 }
+
+void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
+   int activeProcs, totalProcs, lastProc;
+   *one = 0; *five = 0; *fifteen = 0;
+   FILE *fd = fopen(PROCDIR "/loadavg", "r");
+   if (fd) {
+      int total = fscanf(fd, "%32lf %32lf %32lf %32d/%32d %32d", one, five, fifteen,
+         &activeProcs, &totalProcs, &lastProc);
+      (void) total;
+      assert(total == 6);
+      fclose(fd);
+   }
+}
+

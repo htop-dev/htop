@@ -48,3 +48,9 @@ MeterClass* Platform_meterTypes[] = {
 int Platform_getUptime() {
    return -1;
 }
+
+void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
+   *one = 0;
+   *five = 0;
+   *fifteen = 0;
+}
