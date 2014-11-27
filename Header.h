@@ -47,8 +47,6 @@ char* Header_readMeterName(Header* this, int i, HeaderSide side);
 
 MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side);
 
-void Header_defaultMeters(Header* this, int cpuCount);
-
 void Header_reinit(Header* this);
 
 void Header_draw(const Header* this);

@@ -13,5 +13,7 @@ in the source distribution for its full text.
 
 void Platform_setBindings(Htop_Action* keys);
 
+extern MeterClass* Platform_meterTypes[];
+
 
 #endif

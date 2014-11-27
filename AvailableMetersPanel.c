@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "Header.h"
 #include "ListItem.h"
+#include "Platform.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -56,7 +57,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case 'l':
       case 'L':
       {
-         AvailableMetersPanel_addHeader(header, this->leftPanel, Meter_types[type], param, LEFT_HEADER);
+         AvailableMetersPanel_addHeader(header, this->leftPanel, Platform_meterTypes[type], param, LEFT_HEADER);
          result = HANDLED;
          break;
       }
@@ -64,7 +65,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case 'r':
       case 'R':
       {
-         AvailableMetersPanel_addHeader(header, this->rightPanel, Meter_types[type], param, RIGHT_HEADER);
+         AvailableMetersPanel_addHeader(header, this->rightPanel, Platform_meterTypes[type], param, RIGHT_HEADER);
          result = HANDLED;
          break;
       }
@@ -97,8 +98,8 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMe
    this->scr = scr;
 
    Panel_setHeader(super, "Available meters");
-   for (int i = 1; Meter_types[i]; i++) {
-      MeterClass* type = Meter_types[i];
+   for (int i = 1; Platform_meterTypes[i]; i++) {
+      MeterClass* type = Platform_meterTypes[i];
       if (type != &CPUMeter_class) {
          Panel_add(super, (Object*) ListItem_new(type->uiName, i << 16));
       }

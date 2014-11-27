@@ -21,7 +21,7 @@ DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
 LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
 BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
 SignalsPanel.c String.c SwapMeter.c TasksMeter.c TraceScreen.c \
-UptimeMeter.c UsersTable.c Vector.c AvailableColumnsPanel.c AffinityPanel.c \
+UsersTable.c Vector.c AvailableColumnsPanel.c AffinityPanel.c \
 HostnameMeter.c OpenFilesScreen.c Affinity.c IncSet.c Action.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
@@ -30,15 +30,17 @@ CPUMeter.h CRT.h DisplayOptionsPanel.h FunctionBar.h \
 Hashtable.h Header.h htop.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
 BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \
 ScreenManager.h Settings.h SignalsPanel.h String.h SwapMeter.h TasksMeter.h \
-TraceScreen.h UptimeMeter.h UsersTable.h Vector.h Process.h AffinityPanel.h \
+TraceScreen.h UsersTable.h Vector.h Process.h AffinityPanel.h \
 HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h
 
 if HTOP_LINUX
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
-linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c
+linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c \
+linux/UptimeMeter.c
 
 myhtopplatheaders = linux/Platform.h linux/IOPriorityPanel.h linux/IOPriority.h \
-linux/LinuxProcess.h linux/LinuxProcessList.h linux/LinuxCRT.h
+linux/LinuxProcess.h linux/LinuxProcessList.h linux/LinuxCRT.h \
+linux/UptimeMeter.h
 endif
 
 if HTOP_FREEBSD

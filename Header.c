@@ -8,16 +8,8 @@ in the source distribution for its full text.
 #include "Header.h"
 
 #include "CRT.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
-#include "BatteryMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
 #include "String.h"
+#include "Platform.h"
 
 #include <assert.h>
 #include <time.h>
@@ -75,7 +67,7 @@ void Header_createMeter(Header* this, char* name, HeaderSide side) {
       if (!ok) param = 0;
       *paren = '\0';
    }
-   for (MeterClass** type = Meter_types; *type; type++) {
+   for (MeterClass** type = Platform_meterTypes; *type; type++) {
       if (String_eq(name, (*type)->name)) {
          Vector_add(meters, Meter_new(this->pl, param, *type));
          break;
@@ -136,23 +128,6 @@ MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side) {
 
    Meter* meter = (Meter*) Vector_get(meters, i);
    return meter->mode;
-}
-
-void Header_defaultMeters(Header* this, int cpuCount) {
-   if (cpuCount > 8) {
-      Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(LeftCPUs2Meter)));
-      Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(RightCPUs2Meter)));
-   } else if (cpuCount > 4) {
-      Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(LeftCPUsMeter)));
-      Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(RightCPUsMeter)));
-   } else {
-      Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(AllCPUsMeter)));
-   }
-   Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(MemoryMeter)));
-   Vector_add(this->leftMeters, Meter_new(this->pl, 0, (MeterClass*) Class(SwapMeter)));
-   Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(TasksMeter)));
-   Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(LoadAverageMeter)));
-   Vector_add(this->rightMeters, Meter_new(this->pl, 0, (MeterClass*) Class(UptimeMeter)));
 }
 
 void Header_reinit(Header* this) {

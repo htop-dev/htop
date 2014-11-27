@@ -99,8 +99,6 @@ typedef struct GraphData_ {
 
 extern MeterClass Meter_class;
 
-extern MeterClass* Meter_types[];
-
 Meter* Meter_new(ProcessList* pl, int param, MeterClass* type);
 
 void Meter_delete(Object* cast);
