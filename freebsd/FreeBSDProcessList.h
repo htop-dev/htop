@@ -3,11 +3,19 @@
 #ifndef HEADER_FreeBSDProcessList
 #define HEADER_FreeBSDProcessList
 /*
-htop - UnsupportedProcessList.h
+htop - FreeBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
+
+
+#include <kvm.h>
+
+typedef struct FreeBSDProcessList_ {
+   ProcessList super;
+   kvm_t* kd;
+} FreeBSDProcessList;
 
 
 
