@@ -17,6 +17,11 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/time.h>
+#include <time.h>
+
 /*{
 #include "Action.h"
 }*/
@@ -46,3 +51,16 @@ MeterClass* Platform_meterTypes[] = {
    NULL
 };
 
+int Platform_getUptime() {
+   struct timeval bootTime, currTime;
+   int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+   size_t size = sizeof(bootTime);
+   
+   int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
+   if (err) {
+      return -1;
+   }
+   gettimeofday(&currTime, NULL);
+
+   return (int) difftime(currTime.tv_sec, bootTime.tv_sec);
+}

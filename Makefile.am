@@ -43,12 +43,10 @@ endif
 
 if HTOP_FREEBSD
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
-freebsd/FreeBSDCRT.c \
-freebsd/UptimeMeter.c
+freebsd/FreeBSDCRT.c
 
 myhtopplatheaders = freebsd/Platform.h freebsd/FreeBSDProcessList.h \
-freebsd/FreeBSDCRT.h \
-freebsd/UptimeMeter.h
+freebsd/FreeBSDCRT.h
 endif
 
 if HTOP_UNSUPPORTED

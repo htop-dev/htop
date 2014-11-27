@@ -15,5 +15,6 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
 
+int Platform_getUptime();
 
 #endif
