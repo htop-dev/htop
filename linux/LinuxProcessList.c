@@ -571,10 +571,7 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
    return true;
 }
 
-void ProcessList_scan(ProcessList* this) {
-   unsigned long long int usertime, nicetime, systemtime, idletime;
-   unsigned long long int swapFree = 0;
-
+static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    FILE* file = fopen(PROCMEMINFOFILE, "r");
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCMEMINFOFILE);
@@ -615,8 +612,10 @@ void ProcessList_scan(ProcessList* this) {
    this->usedMem = this->totalMem - this->freeMem;
    this->usedSwap = this->totalSwap - swapFree;
    fclose(file);
+}
 
-   file = fopen(PROCSTATFILE, "r");
+static inline double LinuxProcessList_readCPUTime(ProcessList* this) {
+   FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
@@ -684,6 +683,16 @@ void ProcessList_scan(ProcessList* this) {
       cpuData->totalTime = totaltime;
    }
    double period = (double)this->cpus[0].totalPeriod / cpus; fclose(file);
+   return period;
+}
+
+void ProcessList_scan(ProcessList* this) {
+   unsigned long long int usertime, nicetime, systemtime, idletime;
+   unsigned long long int swapFree = 0;
+
+   LinuxProcessList_scanMemoryInfo(this);
+   
+   LinuxProcessList_scanCPUTime(this);
 
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
