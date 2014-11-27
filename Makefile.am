@@ -41,6 +41,14 @@ myhtopplatheaders = linux/Platform.h linux/IOPriorityPanel.h linux/IOPriority.h 
 linux/LinuxProcess.h linux/LinuxProcessList.h linux/LinuxCRT.h
 endif
 
+if HTOP_FREEBSD
+myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
+freebsd/FreeBSDCRT.c
+
+myhtopplatheaders = freebsd/Platform.h freebsd/FreeBSDProcessList.h \
+freebsd/FreeBSDCRT.h
+endif
+
 if HTOP_UNSUPPORTED
 myhtopplatsources = unsupported/Platform.c unsupported/UnsupportedProcessList.c \
 unsupported/UnsupportedCRT.c

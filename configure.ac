@@ -28,6 +28,9 @@ case "$target" in
 *linux*)
    my_htop_platform=linux
    ;;
+*freebsd*)
+   my_htop_platform=freebsd
+   ;;
 *)
    my_htop_platform=unsupported
    ;;
@@ -183,6 +186,7 @@ fi
 # We're done, let's go!
 # ----------------------------------------------------------------------
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
+AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
