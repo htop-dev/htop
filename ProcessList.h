@@ -124,6 +124,7 @@ typedef struct ProcessList_ {
 } ProcessList;
 
 ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList);
+void ProcessList_delete(ProcessList* pl);
 void ProcessList_scan(ProcessList* pl);
 
 
@@ -133,7 +134,7 @@ extern const char *ProcessList_treeStrUtf8[TREE_STR_COUNT];
 
 ProcessList* ProcessList_init(ProcessList* this, UsersTable* usersTable, Hashtable* pidWhiteList);
 
-void ProcessList_delete(ProcessList* this);
+void ProcessList_done(ProcessList* this);
 
 void ProcessList_setPanel(ProcessList* this, Panel* panel);
 

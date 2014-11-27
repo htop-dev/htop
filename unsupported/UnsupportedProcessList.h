@@ -13,6 +13,8 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList);
 
+void ProcessList_delete(ProcessList* this);
+
 void ProcessList_scan(ProcessList* this);
 
 #endif

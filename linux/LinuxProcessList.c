@@ -77,6 +77,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    return this;
 }
 
+void ProcessList_delete(ProcessList* this) {
+   ProcessList_done(this);
+   free(this);
+}
+
 static ssize_t xread(int fd, void *buf, size_t count) {
   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
   size_t alreadyRead = 0;
