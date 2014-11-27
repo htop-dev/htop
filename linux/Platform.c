@@ -76,5 +76,5 @@ int Platform_getUptime() {
       fscanf(fd, "%64lf", &uptime);
       fclose(fd);
    }
-   int totalseconds = (int) floor(uptime);
+   return (int) floor(uptime);
 }
