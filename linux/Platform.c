@@ -93,3 +93,12 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    }
 }
 
+int Platform_getMaxPid() {
+   FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
+   if (!file) return -1;
+   int maxPid = 4194303;
+   fscanf(file, "%32d", &maxPid);
+   fclose(file);
+   return maxPid;
+}
+

@@ -54,3 +54,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *five = 0;
    *fifteen = 0;
 }
+
+int Platform_getMaxPid() {
+   return -1;
+}
