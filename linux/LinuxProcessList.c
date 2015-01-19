@@ -63,7 +63,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    fclose(file);
 
    this->cpuCount = MAX(cpus - 1, 1);
-   this->cpus = realloc(this->cpus, cpus * sizeof(CPUData));
+   this->cpus = calloc(cpus, sizeof(CPUData));
 
    for (int i = 0; i < cpus; i++) {
       this->cpus[i].totalTime = 1;
