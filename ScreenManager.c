@@ -6,8 +6,8 @@ in the source distribution for its full text.
 */
 
 #include "ScreenManager.h"
+#include "ProcessList.h"
 
-#include "Panel.h"
 #include "Object.h"
 
 #include <assert.h>
@@ -19,6 +19,8 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 #include "Vector.h"
 #include "Header.h"
+#include "Settings.h"
+#include "Panel.h"
 
 typedef enum Orientation_ {
    VERTICAL,
@@ -36,14 +38,14 @@ typedef struct ScreenManager_ {
    int panelCount;
    const FunctionBar* fuBar;
    const Header* header;
-   time_t lastScan;
+   const Settings* settings;
    bool owner;
    bool allowFocusChange;
 } ScreenManager;
 
 }*/
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, bool owner) {
+ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner) {
    ScreenManager* this;
    this = malloc(sizeof(ScreenManager));
    this->x1 = x1;
@@ -56,6 +58,7 @@ ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation ori
    this->fuBars = Vector_new(Class(FunctionBar), true, DEFAULT_SIZE);
    this->panelCount = 0;
    this->header = header;
+   this->settings = settings;
    this->owner = owner;
    this->allowFocusChange = true;
    return this;
@@ -130,37 +133,68 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    Panel* panelFocus = (Panel*) Vector_get(this->panels, focus);
    if (this->fuBar)
       FunctionBar_draw(this->fuBar, NULL);
-   
-   this->lastScan = 0;
 
-   int ch = 0;
+   struct timeval tv;
+   double oldTime = 0.0;
+
+   int ch = ERR;
+   int closeTimeout = 0;
+
+   bool drawPanel = true;
+   bool timeToRecalculate = true;
+   bool doRefresh = true;
+   bool forceRecalculate = false;
+   int sortTimeout = 0;
+   int resetSortTimeout = 5;
+
    while (!quit) {
       int panels = this->panelCount;
       if (this->header) {
-         time_t now = time(NULL);
-         if (now > this->lastScan) {
-            ProcessList_scan(this->header->pl);
-            ProcessList_sort(this->header->pl);
-            this->lastScan = now;
+         gettimeofday(&tv, NULL);
+         double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
+         timeToRecalculate = (newTime - oldTime > this->settings->delay);
+         if (newTime < oldTime) timeToRecalculate = true; // clock was adjusted?
+
+         if (timeToRecalculate) {
+            Header_draw(this->header);
+            oldTime = newTime;
          }
-         Header_draw(this->header);
-         ProcessList_rebuildPanel(this->header->pl, false, false, NULL);
+
+         if (doRefresh) {
+            if (timeToRecalculate || forceRecalculate) {
+               ProcessList_scan(this->header->pl);
+               forceRecalculate = false;
+            }
+            if (sortTimeout == 0 || this->settings->treeView) {
+               ProcessList_sort(this->header->pl);
+               sortTimeout = 1;
+            }
+            //this->header->pl->incFilter = IncSet_filter(inc);
+            ProcessList_rebuildPanel(this->header->pl);
+            drawPanel = true;
+         }
+         doRefresh = true;
       }
-      for (int i = 0; i < panels; i++) {
-         Panel* panel = (Panel*) Vector_get(this->panels, i);
-         Panel_draw(panel, i == focus);
-         if (i < panels) {
-            if (this->orientation == HORIZONTAL) {
-               mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
+      
+      if (drawPanel) {
+         for (int i = 0; i < panels; i++) {
+            Panel* panel = (Panel*) Vector_get(this->panels, i);
+            Panel_draw(panel, i == focus);
+            if (i < panels) {
+               if (this->orientation == HORIZONTAL) {
+                  mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
+               }
             }
          }
       }
+      
       FunctionBar* bar = (FunctionBar*) Vector_get(this->fuBars, focus);
       if (bar)
          this->fuBar = bar;
       if (this->fuBar)
          FunctionBar_draw(this->fuBar, NULL);
 
+      int prevCh = ch;
       ch = getch();
       
       if (ch == KEY_MOUSE) {
@@ -187,17 +221,36 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       
       if (Panel_eventHandlerFn(panelFocus)) {
          HandlerResult result = Panel_eventHandler(panelFocus, ch);
-         if (result == HANDLED) {
+         if (result & REFRESH) {
+            doRefresh = true;
+            sortTimeout = 0;
+         }
+         if (result & RECALCULATE) {
+            forceRecalculate = true;
+            sortTimeout = 0;
+         }
+         if (result & HANDLED) {
             continue;
-         } else if (result == BREAK_LOOP) {
+         } else if (result & BREAK_LOOP) {
             quit = true;
             continue;
          }
       }
       
-      switch (ch) {
-      case ERR:
+      if (ch == ERR) {
+         if (prevCh == ch && !timeToRecalculate) {
+            closeTimeout++;
+            if (closeTimeout == 100) {
+               break;
+            }
+         } else
+            closeTimeout = 0;
+         drawPanel = false;
          continue;
+      }
+      drawPanel = true;
+      
+      switch (ch) {
       case KEY_RESIZE:
       {
          ScreenManager_resize(this, this->x1, this->y1, this->x2, this->y2);
@@ -237,6 +290,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
    }
 
-   *lastFocus = panelFocus;
-   *lastKey = ch;
+   if (lastFocus)
+      *lastFocus = panelFocus;
+   if (lastKey)
+      *lastKey = ch;
 }

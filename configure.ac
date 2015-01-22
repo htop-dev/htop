@@ -4,6 +4,8 @@
 AC_PREREQ(2.65)
 AC_INIT([htop],[1.0.3],[hisham@gobolinux.org])
 
+year=$(date +%Y)
+
 # The following two lines are required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 AC_CANONICAL_TARGET
@@ -179,6 +181,8 @@ fi
 if test ! -z "$missing_headers"; then
   AC_MSG_ERROR([missing headers: $missing_headers])
 fi
+
+AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-$year Hisham Muhammad", [Copyright message.])
 
 # We're done, let's go!
 # ----------------------------------------------------------------------

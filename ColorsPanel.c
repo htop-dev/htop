@@ -72,7 +72,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
 
    if (result == HANDLED) {
       this->settings->changed = true;
-      Header* header = this->settings->header;
+      const Header* header = this->scr->header;
       CRT_setColors(mark);
       Panel* menu = (Panel*) Vector_get(this->scr->panels, 0);
       Header_draw(header);

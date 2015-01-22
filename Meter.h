@@ -9,10 +9,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define METER_BUFFER_LEN 128
+#define METER_BUFFER_LEN 256
 
 #include "ListItem.h"
-#include "ProcessList.h"
+
+#include <sys/time.h>
 
 typedef struct Meter_ Meter;
 
@@ -64,7 +65,7 @@ struct Meter_ {
    int param;
    void* drawData;
    int h;
-   ProcessList* pl;
+   struct ProcessList_* pl;
    double* values;
    double total;
 };
@@ -99,7 +100,7 @@ typedef struct GraphData_ {
 
 extern MeterClass Meter_class;
 
-Meter* Meter_new(ProcessList* pl, int param, MeterClass* type);
+Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type);
 
 void Meter_delete(Object* cast);
 
@@ -114,8 +115,6 @@ ListItem* Meter_toListItem(Meter* this);
 /* ---------- BarMeterMode ---------- */
 
 /* ---------- GraphMeterMode ---------- */
-
-#define DrawDot(a,y,c) do { attrset(a); mvaddch(y, x+k, c); } while(0)
 
 /* ---------- LEDMeterMode ---------- */
 

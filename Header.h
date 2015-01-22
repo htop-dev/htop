@@ -9,20 +9,15 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
 #include "Meter.h"
-
-typedef enum HeaderSide_ {
-   LEFT_HEADER,
-   RIGHT_HEADER
-} HeaderSide;
+#include "Vector.h"
 
 typedef struct Header_ {
-   Vector* leftMeters;
-   Vector* rightMeters;
-   ProcessList* pl;
+   Vector** columns;
+   struct ProcessList_* pl;
    int height;
    int pad;
+   int nrColumns;
    bool margin;
 } Header;
 
@@ -31,21 +26,25 @@ typedef struct Header_ {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-Header* Header_new(ProcessList* pl);
+#ifndef Header_forEachColumn
+#define Header_forEachColumn(this_, i_) for (int i_=0; i_ < this->nrColumns; i_++)
+#endif
+
+Header* Header_new(struct ProcessList_* pl, int nrColumns);
 
 void Header_delete(Header* this);
 
-void Header_createMeter(Header* this, char* name, HeaderSide side);
+MeterModeId Header_addMeterByName(Header* this, char* name, int column);
 
-void Header_setMode(Header* this, int i, MeterModeId mode, HeaderSide side);
+void Header_setMode(Header* this, int i, MeterModeId mode, int column);
 
-Meter* Header_addMeter(Header* this, MeterClass* type, int param, HeaderSide side);
+Meter* Header_addMeterByClass(Header* this, MeterClass* type, int param, int column);
 
-int Header_size(Header* this, HeaderSide side);
+int Header_size(Header* this, int column);
 
-char* Header_readMeterName(Header* this, int i, HeaderSide side);
+char* Header_readMeterName(Header* this, int i, int column);
 
-MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side);
+MeterModeId Header_readMeterMode(Header* this, int i, int column);
 
 void Header_reinit(Header* this);
 

@@ -31,6 +31,56 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 
+typedef struct CPUData_ {
+   unsigned long long int totalTime;
+   unsigned long long int userTime;
+   unsigned long long int systemTime;
+   unsigned long long int systemAllTime;
+   unsigned long long int idleAllTime;
+   unsigned long long int idleTime;
+   unsigned long long int niceTime;
+   unsigned long long int ioWaitTime;
+   unsigned long long int irqTime;
+   unsigned long long int softIrqTime;
+   unsigned long long int stealTime;
+   unsigned long long int guestTime;
+   
+   unsigned long long int totalPeriod;
+   unsigned long long int userPeriod;
+   unsigned long long int systemPeriod;
+   unsigned long long int systemAllPeriod;
+   unsigned long long int idleAllPeriod;
+   unsigned long long int idlePeriod;
+   unsigned long long int nicePeriod;
+   unsigned long long int ioWaitPeriod;
+   unsigned long long int irqPeriod;
+   unsigned long long int softIrqPeriod;
+   unsigned long long int stealPeriod;
+   unsigned long long int guestPeriod;
+} CPUData;
+
+typedef struct LinuxProcessList_ {
+   ProcessList super;
+   
+   int totalTasks;
+   int userlandThreads;
+   int kernelThreads;
+   int runningTasks;
+
+   CPUData* cpus;
+
+   unsigned long long int totalMem;
+   unsigned long long int usedMem;
+   unsigned long long int freeMem;
+   unsigned long long int sharedMem;
+   unsigned long long int buffersMem;
+   unsigned long long int cachedMem;
+   unsigned long long int totalSwap;
+   unsigned long long int usedSwap;
+   unsigned long long int freeSwap;
+
+} LinuxProcessList;
+
 #ifndef PROCDIR
 #define PROCDIR "/proc"
 #endif
@@ -45,9 +95,10 @@ in the source distribution for its full text.
 
 }*/
    
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
-   ProcessList* this = calloc(1, sizeof(ProcessList));
-   ProcessList_init(this, usersTable, pidWhiteList);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+   LinuxProcessList* this = calloc(1, sizeof(LinuxProcessList));
+   ProcessList* pl = &(this->super);
+   ProcessList_init(pl, usersTable, pidWhiteList, userId);
 
    // Update CPU count:
    FILE* file = fopen(PROCSTATFILE, "r");
@@ -62,7 +113,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    } while (String_startsWith(buffer, "cpu"));
    fclose(file);
 
-   this->cpuCount = MAX(cpus - 1, 1);
+   pl->cpuCount = MAX(cpus - 1, 1);
    this->cpus = calloc(cpus, sizeof(CPUData));
 
    for (int i = 0; i < cpus; i++) {
@@ -74,11 +125,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
    this->flags |= PROCESS_FLAG_OPENVZ;
    #endif
 
-   return this;
+   return pl;
 }
 
-void ProcessList_delete(ProcessList* this) {
-   ProcessList_done(this);
+void ProcessList_delete(ProcessList* pl) {
+   LinuxProcessList* this = (LinuxProcessList*) pl;
+   ProcessList_done(pl);
+   free(this->cpus);
    free(this);
 }
 
@@ -166,7 +219,6 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    location += 1;
    assert(location != NULL);
    process->processor = strtol(location, &location, 10);
-   assert(location == NULL);
 
    return true;
 }
@@ -200,8 +252,11 @@ static void LinuxProcessList_readIoFile(Process* process, const char* dirname, c
 
    snprintf(filename, MAX_NAME, "%s/%s/io", dirname, name);
    int fd = open(filename, O_RDONLY);
-   if (fd == -1)
+   if (fd == -1) {
+      process->io_rate_read_bps = -1;
+      process->io_rate_write_bps = -1;
       return;
+   }
    
    char buffer[1024];
    ssize_t buflen = xread(fd, buffer, 1023);
@@ -420,9 +475,10 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    return true;
 }
 
-static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirname, Process* parent, double period, struct timeval tv) {
+static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* dirname, Process* parent, double period, struct timeval tv) {
    DIR* dir;
    struct dirent* entry;
+   Settings* settings = this->super.settings;
 
    time_t curTime = tv.tv_sec;
    #ifdef HAVE_TASKSTATS
@@ -431,15 +487,15 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
 
    dir = opendir(dirname);
    if (!dir) return false;
-   int cpus = this->cpuCount;
-   bool hideKernelThreads = this->hideKernelThreads;
-   bool hideUserlandThreads = this->hideUserlandThreads;
+   int cpus = this->super.cpuCount;
+   bool hideKernelThreads = settings->hideKernelThreads;
+   bool hideUserlandThreads = settings->hideUserlandThreads;
    while ((entry = readdir(dir)) != NULL) {
       char* name = entry->d_name;
 
       // The RedHat kernel hides threads with a dot.
       // I believe this is non-standard.
-      if ((!this->hideThreads) && name[0] == '.') {
+      if ((!settings->hideThreads) && name[0] == '.') {
          name++;
       }
 
@@ -458,14 +514,14 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
          continue;
 
       Process* process = NULL;
-      Process* existingProcess = (Process*) Hashtable_get(this->processTable, pid);
+      Process* existingProcess = (Process*) Hashtable_get(this->super.processTable, pid);
 
       if (existingProcess) {
          assert(Vector_indexOf(this->processes, existingProcess, Process_pidCompare) != -1);
          process = existingProcess;
          assert(process->pid == pid);
       } else {
-         process = Process_new(this);
+         process = Process_new(settings);
          assert(process->comm == NULL);
          process->pid = pid;
          process->tgid = parent ? parent->pid : pid;
@@ -476,7 +532,7 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
       LinuxProcessList_processEntries(this, subdirname, process, period, tv);
 
       #ifdef HAVE_TASKSTATS
-      if (this->flags & PROCESS_FLAG_IO)
+      if (settings->flags & PROCESS_FLAG_IO)
          LinuxProcessList_readIoFile(process, dirname, name, now);
       #endif
 
@@ -489,7 +545,7 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
       unsigned long long int lasttimes = (process->utime + process->stime);
       if (! LinuxProcessList_readStatFile(process, dirname, name, command))
          goto errorReadingProcess;
-      if (this->flags & PROCESS_FLAG_IOPRIO)
+      if (settings->flags & PROCESS_FLAG_IOPRIO)
          LinuxProcess_updateIOPriority((LinuxProcess*)process);
       float percent_cpu = (process->utime + process->stime - lasttimes) / period * 100.0;
       process->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
@@ -501,30 +557,30 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
          if (! LinuxProcessList_statProcessDir(process, dirname, name, curTime))
             goto errorReadingProcess;
 
-         process->user = UsersTable_getRef(this->usersTable, process->st_uid);
+         process->user = UsersTable_getRef(this->super.usersTable, process->st_uid);
 
          #ifdef HAVE_OPENVZ
          LinuxProcessList_readOpenVZData(this, process, dirname, name);
          #endif
          
          #ifdef HAVE_VSERVER
-         if (this->flags & PROCESS_FLAG_VSERVER)
+         if (settings->flags & PROCESS_FLAG_VSERVER)
             LinuxProcessList_readVServerData(process, dirname, name);
          #endif
 
          if (! LinuxProcessList_readCmdlineFile(process, dirname, name))
             goto errorReadingProcess;
 
-         ProcessList_add(this, process);
+         ProcessList_add((ProcessList*)this, process);
       } else {
-         if (this->updateProcessNames) {
+         if (settings->updateProcessNames) {
             if (! LinuxProcessList_readCmdlineFile(process, dirname, name))
                goto errorReadingProcess;
          }
       }
 
       #ifdef HAVE_CGROUP
-      if (this->flags & PROCESS_FLAG_CGROUP)
+      if (settings->flags & PROCESS_FLAG_CGROUP)
          LinuxProcessList_readCGroupFile(process, dirname, name);
       #endif
       
@@ -537,11 +593,11 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
          process->basenameOffset = -1;
          process->comm = strdup(command);
       } else if (Process_isThread(process)) {
-         if (this->showThreadNames || Process_isKernelThread(process) || process->state == 'Z') {
+         if (settings->showThreadNames || Process_isKernelThread(process) || process->state == 'Z') {
             free(process->comm);
             process->basenameOffset = -1;
             process->comm = strdup(command);
-         } else if (this->showingThreadNames) {
+         } else if (settings->showThreadNames) {
             if (! LinuxProcessList_readCmdlineFile(process, dirname, name))
                goto errorReadingProcess;
          }
@@ -567,7 +623,7 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
             process->comm = NULL;
          }
          if (existingProcess)
-            ProcessList_remove(this, process);
+            ProcessList_remove((ProcessList*)this, process);
          else
             Process_delete((Object*)process);
       }
@@ -576,7 +632,7 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
    return true;
 }
 
-static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
+static inline void LinuxProcessList_scanMemoryInfo(LinuxProcessList* this) {
    unsigned long long int swapFree = 0;
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
@@ -617,14 +673,14 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    fclose(file);
 }
 
-static inline double LinuxProcessList_scanCPUTime(ProcessList* this) {
+static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
    unsigned long long int usertime, nicetime, systemtime, idletime;
 
    FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
-   int cpus = this->cpuCount;
+   int cpus = this->super.cpuCount;
    assert(cpus > 0);
    for (int i = 0; i <= cpus; i++) {
       char buffer[256];
@@ -693,15 +749,16 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* this) {
    return period;
 }
 
-void ProcessList_scan(ProcessList* this) {
+void ProcessList_scan(ProcessList* super) {
+   LinuxProcessList* this = (LinuxProcessList*) super;
 
    LinuxProcessList_scanMemoryInfo(this);
    
    double period = LinuxProcessList_scanCPUTime(this);
 
    // mark all process as "dirty"
-   for (int i = 0; i < Vector_size(this->processes); i++) {
-      Process* p = (Process*) Vector_get(this->processes, i);
+   for (int i = 0; i < Vector_size(super->processes); i++) {
+      Process* p = (Process*) Vector_get(super->processes, i);
       p->updated = false;
    }
    
@@ -714,12 +771,10 @@ void ProcessList_scan(ProcessList* this) {
    gettimeofday(&tv, NULL);
    LinuxProcessList_processEntries(this, PROCDIR, NULL, period, tv);
    
-   this->showingThreadNames = this->showThreadNames;
-   
-   for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
-      Process* p = (Process*) Vector_get(this->processes, i);
+   for (int i = Vector_size(this->super.processes) - 1; i >= 0; i--) {
+      Process* p = (Process*) Vector_get(this->super.processes, i);
       if (p->updated == false)
-         ProcessList_remove(this, p);
+         ProcessList_remove(super, p);
       else
          p->updated = false;
    }

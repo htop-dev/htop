@@ -17,9 +17,11 @@ in the source distribution for its full text.
 typedef struct Panel_ Panel;
 
 typedef enum HandlerResult_ {
-   HANDLED,
-   IGNORED,
-   BREAK_LOOP
+   HANDLED     = 0x00,
+   IGNORED     = 0x01,
+   BREAK_LOOP  = 0x02,
+   REFRESH     = 0x04,
+   RECALCULATE = 0x08,
 } HandlerResult;
 
 #define EVENT_SETSELECTED -1
@@ -43,7 +45,7 @@ struct Panel_ {
    Vector* items;
    int selected;
    int oldSelected;
-   char* eventHandlerBuffer;
+   void* eventHandlerState;
    int scrollV;
    short scrollH;
    bool needsRedraw;

@@ -21,12 +21,15 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Settings.h"
 #include "ScreenManager.h"
+#include "ProcessList.h"
 
 typedef struct CategoriesPanel_ {
    Panel super;
+   ScreenManager* scr;
 
    Settings* settings;
-   ScreenManager* scr;
+   Header* header;
+   ProcessList* pl;
 } CategoriesPanel;
 
 }*/
@@ -51,9 +54,9 @@ static void CategoriesPanel_delete(Object* object) {
 }
 
 void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
-   Panel* leftMeters = (Panel*) MetersPanel_new(this->settings, "Left column", this->settings->header->leftMeters, this->scr);
-   Panel* rightMeters = (Panel*) MetersPanel_new(this->settings, "Right column", this->settings->header->rightMeters, this->scr);
-   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, leftMeters, rightMeters, this->scr);
+   Panel* leftMeters = (Panel*) MetersPanel_new(this->settings, "Left column", this->header->columns[0], this->scr);
+   Panel* rightMeters = (Panel*) MetersPanel_new(this->settings, "Right column", this->header->columns[1], this->scr);
+   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, leftMeters, rightMeters, this->scr, this->pl);
    ScreenManager_add(this->scr, leftMeters, FunctionBar_new(MetersFunctions, NULL, NULL), 20);
    ScreenManager_add(this->scr, rightMeters, FunctionBar_new(MetersFunctions, NULL, NULL), 20);
    ScreenManager_add(this->scr, availableMeters, FunctionBar_new(AvailableMetersFunctions, NULL, NULL), -1);
@@ -70,8 +73,8 @@ static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
 }
 
 static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
-   Panel* columns = (Panel*) ColumnsPanel_new(this->settings, this->scr);
-   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(this->settings, columns, this->scr);
+   Panel* columns = (Panel*) ColumnsPanel_new(this->settings);
+   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns);
    ScreenManager_add(this->scr, columns, FunctionBar_new(ColumnsFunctions, NULL, NULL), 20);
    ScreenManager_add(this->scr, availableColumns, FunctionBar_new(AvailableColumnsFunctions, NULL, NULL), -1);
 }
@@ -140,13 +143,15 @@ PanelClass CategoriesPanel_class = {
    .eventHandler = CategoriesPanel_eventHandler
 };
 
-CategoriesPanel* CategoriesPanel_new(Settings* settings, ScreenManager* scr) {
+CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl) {
    CategoriesPanel* this = AllocThis(CategoriesPanel);
    Panel* super = (Panel*) this;
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
 
-   this->settings = settings;
    this->scr = scr;
+   this->settings = settings;
+   this->header = header;
+   this->pl = pl;
    Panel_setHeader(super, "Setup");
    Panel_add(super, (Object*) ListItem_new("Meters", 0));
    Panel_add(super, (Object*) ListItem_new("Display options", 0));

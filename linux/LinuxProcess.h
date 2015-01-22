@@ -32,8 +32,8 @@ IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
 
 bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio);
 
-void LinuxProcess_writeField(LinuxProcess* this, RichString* str, ProcessField field);
+void Process_writeField(Process* this, RichString* str, ProcessField field);
 
-long LinuxProcess_compare(const void* v1, const void* v2);
+long Process_compare(const void* v1, const void* v2);
 
 #endif

@@ -18,64 +18,138 @@ in the source distribution for its full text.
 #define DEFAULT_DELAY 15
 
 /*{
-#include "ProcessList.h"
-#include "Header.h"
+#include "Process.h"
 #include <stdbool.h>
 
+typedef struct {
+   int len;
+   char** names;
+   int* modes;
+} MeterColumnSettings;
+   
 typedef struct Settings_ {
-   char* userSettings;
-   ProcessList* pl;
-   Header* header;
+   char* filename;
+   
+   MeterColumnSettings columns[2];
+
+   ProcessField* fields;
+   int flags;
    int colorScheme;
    int delay;
+
+   int direction;
+   ProcessField sortKey;
+
+   bool countCPUsFromZero;
+   bool detailedCPUTime;
+   bool treeView;
+   bool hideThreads;
+   bool shadowOtherUsers;
+   bool showThreadNames;
+   bool hideKernelThreads;
+   bool hideUserlandThreads;
+   bool highlightBaseName;
+   bool highlightMegabytes;
+   bool highlightThreads;
+   bool updateProcessNames;
+   bool accountGuestInCPUMeter;
+   bool headerMargin;
+
    bool changed;
 } Settings;
 
+#ifndef Settings_cpuId
+#define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromZero ? (cpu) : (cpu)+1)
+#endif
+
 }*/
 
+static ProcessField defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
+
+//static ProcessField defaultIoFields[] = { PID, IO_PRIORITY, USER, IO_READ_RATE, IO_WRITE_RATE, IO_RATE, COMM, 0 };
+
 void Settings_delete(Settings* this) {
-   free(this->userSettings);
+   free(this->filename);
+   free(this->fields);
+   for (unsigned int i = 0; i < (sizeof(this->columns)/sizeof(MeterColumnSettings)); i++) {
+      String_freeArray(this->columns[i].names);
+      free(this->columns[i].modes);
+   }
    free(this);
 }
 
-static void Settings_readMeters(Settings* this, char* line, HeaderSide side) {
+static void Settings_readMeters(Settings* this, char* line, int column) {
    char* trim = String_trim(line);
    int nIds;
    char** ids = String_split(trim, ' ', &nIds);
    free(trim);
-   for (int i = 0; ids[i]; i++) {
-      Header_createMeter(this->header, ids[i], side);
-   }
-   String_freeArray(ids);
+   this->columns[column].names = ids;
 }
 
-static void Settings_readMeterModes(Settings* this, char* line, HeaderSide side) {
+static void Settings_readMeterModes(Settings* this, char* line, int column) {
    char* trim = String_trim(line);
    int nIds;
    char** ids = String_split(trim, ' ', &nIds);
    free(trim);
+   int len = 0;
    for (int i = 0; ids[i]; i++) {
-      int mode = atoi(ids[i]);
-      Header_setMode(this->header, i, mode, side);
+      len++;
+   }
+   this->columns[column].len = len;
+   int* modes = calloc(len, sizeof(int));
+   for (int i = 0; i < len; i++) {
+      modes[i] = atoi(ids[i]);
    }
    String_freeArray(ids);
+   this->columns[column].modes = modes;
 }
 
-static void Settings_defaultMeters(Header* header, int cpuCount) {
+static void Settings_defaultMeters(Settings* this, int cpuCount) {
+   int sizes[] = { 3, 3 };
+   if (cpuCount > 4) {
+      sizes[1]++;
+   }
+   for (int i = 0; i < 2; i++) {
+      this->columns[i].names = calloc(sizes[i], sizeof(char*));
+      this->columns[i].modes = calloc(sizes[i], sizeof(int));
+   }
+   
+   int r = 0;
    if (cpuCount > 8) {
-      Header_createMeter(header, "LeftCPUs2", LEFT_HEADER);
-      Header_createMeter(header, "RightCPUs2", RIGHT_HEADER);
+      this->columns[0].names[0] = strdup("LeftCPUs2");
+      this->columns[1].names[r++] = strdup("RightCPUs2");
    } else if (cpuCount > 4) {
-      Header_createMeter(header, "LeftCPUs", LEFT_HEADER);
-      Header_createMeter(header, "RightCPUs", RIGHT_HEADER);
+      this->columns[0].names[0] = strdup("LeftCPUs");
+      this->columns[1].names[r++] = strdup("RightCPUs");
    } else {
-      Header_createMeter(header, "AllCPUs", LEFT_HEADER);
+      this->columns[0].names[0] = strdup("AllCPUs");
    }
-   Header_createMeter(header, "Memory", LEFT_HEADER);
-   Header_createMeter(header, "Swap", LEFT_HEADER);
-   Header_createMeter(header, "Tasks", RIGHT_HEADER);
-   Header_createMeter(header, "LoadAverage", RIGHT_HEADER);
-   Header_createMeter(header, "Uptime", RIGHT_HEADER);
+   this->columns[0].names[1] = strdup("Memory");
+   this->columns[0].names[2] = strdup("Swap");
+   
+   this->columns[1].names[r++] = strdup("Tasks");
+   this->columns[1].names[r++] = strdup("LoadAverage");
+   this->columns[1].names[r++] = strdup("Uptime");
+}
+
+static void readFields(ProcessField* fields, int* flags, const char* line) {
+   char* trim = String_trim(line);
+   int nIds;
+   char** ids = String_split(trim, ' ', &nIds);
+   free(trim);
+   int i, j;
+   *flags = 0;
+   for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i]; i++) {
+      // This "+1" is for compatibility with the older enum format.
+      int id = atoi(ids[i]) + 1;
+      if (id > 0 && id < LAST_PROCESSFIELD) {
+         fields[j] = id;
+         *flags |= Process_fields[id].flags;
+         j++;
+      }
+   }
+   fields[j] = (ProcessField) NULL;
+   String_freeArray(ids);
 }
 
 static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
@@ -94,59 +168,43 @@ static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
          continue;
       }
       if (String_eq(option[0], "fields")) {
-         char* trim = String_trim(option[1]);
-         int nIds;
-         char** ids = String_split(trim, ' ', &nIds);
-         free(trim);
-         int i, j;
-         this->pl->flags = 0;
-         for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i]; i++) {
-            // This "+1" is for compatibility with the older enum format.
-            int id = atoi(ids[i]) + 1;
-            if (id > 0 && id < LAST_PROCESSFIELD) {
-               this->pl->fields[j] = id;
-               this->pl->flags |= Process_fieldFlags[id];
-               j++;
-            }
-         }
-         this->pl->fields[j] = (ProcessField) NULL;
-         String_freeArray(ids);
+         readFields(this->fields, &(this->flags), option[1]);
       } else if (String_eq(option[0], "sort_key")) {
          // This "+1" is for compatibility with the older enum format.
-         this->pl->sortKey = atoi(option[1]) + 1;
+         this->sortKey = atoi(option[1]) + 1;
       } else if (String_eq(option[0], "sort_direction")) {
-         this->pl->direction = atoi(option[1]);
+         this->direction = atoi(option[1]);
       } else if (String_eq(option[0], "tree_view")) {
-         this->pl->treeView = atoi(option[1]);
+         this->treeView = atoi(option[1]);
       } else if (String_eq(option[0], "hide_threads")) {
-         this->pl->hideThreads = atoi(option[1]);
+         this->hideThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
-         this->pl->hideKernelThreads = atoi(option[1]);
+         this->hideKernelThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_userland_threads")) {
-         this->pl->hideUserlandThreads = atoi(option[1]);
+         this->hideUserlandThreads = atoi(option[1]);
       } else if (String_eq(option[0], "shadow_other_users")) {
-         this->pl->shadowOtherUsers = atoi(option[1]);
+         this->shadowOtherUsers = atoi(option[1]);
       } else if (String_eq(option[0], "show_thread_names")) {
-         this->pl->showThreadNames = atoi(option[1]);
+         this->showThreadNames = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_base_name")) {
-         this->pl->highlightBaseName = atoi(option[1]);
+         this->highlightBaseName = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_megabytes")) {
-         this->pl->highlightMegabytes = atoi(option[1]);
+         this->highlightMegabytes = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_threads")) {
-         this->pl->highlightThreads = atoi(option[1]);
+         this->highlightThreads = atoi(option[1]);
       } else if (String_eq(option[0], "header_margin")) {
-         this->header->margin = atoi(option[1]);
+         this->headerMargin = atoi(option[1]);
       } else if (String_eq(option[0], "expand_system_time")) {
          // Compatibility option.
-         this->pl->detailedCPUTime = atoi(option[1]);
+         this->detailedCPUTime = atoi(option[1]);
       } else if (String_eq(option[0], "detailed_cpu_time")) {
-         this->pl->detailedCPUTime = atoi(option[1]);
+         this->detailedCPUTime = atoi(option[1]);
       } else if (String_eq(option[0], "cpu_count_from_zero")) {
-         this->pl->countCPUsFromZero = atoi(option[1]);
+         this->countCPUsFromZero = atoi(option[1]);
       } else if (String_eq(option[0], "update_process_names")) {
-         this->pl->updateProcessNames = atoi(option[1]);
+         this->updateProcessNames = atoi(option[1]);
       } else if (String_eq(option[0], "account_guest_in_cpu_meter")) {
-         this->pl->accountGuestInCPUMeter = atoi(option[1]);
+         this->accountGuestInCPUMeter = atoi(option[1]);
       } else if (String_eq(option[0], "delay")) {
          this->delay = atoi(option[1]);
       } else if (String_eq(option[0], "color_scheme")) {
@@ -154,96 +212,118 @@ static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
          if (this->colorScheme < 0) this->colorScheme = 0;
          if (this->colorScheme > 5) this->colorScheme = 5;
       } else if (String_eq(option[0], "left_meters")) {
-         Settings_readMeters(this, option[1], LEFT_HEADER);
+         Settings_readMeters(this, option[1], 0);
          readMeters = true;
       } else if (String_eq(option[0], "right_meters")) {
-         Settings_readMeters(this, option[1], RIGHT_HEADER);
+         Settings_readMeters(this, option[1], 1);
          readMeters = true;
       } else if (String_eq(option[0], "left_meter_modes")) {
-         Settings_readMeterModes(this, option[1], LEFT_HEADER);
+         Settings_readMeterModes(this, option[1], 0);
          readMeters = true;
       } else if (String_eq(option[0], "right_meter_modes")) {
-         Settings_readMeterModes(this, option[1], RIGHT_HEADER);
+         Settings_readMeterModes(this, option[1], 1);
          readMeters = true;
       }
       String_freeArray(option);
    }
    fclose(fd);
    if (!readMeters) {
-      Settings_defaultMeters(this->header, cpuCount);
+      Settings_defaultMeters(this, cpuCount);
    }
    return true;
 }
 
+static void writeFields(FILE* fd, ProcessField* fields, const char* name) {
+   fprintf(fd, "%s=", name);
+   for (int i = 0; fields[i]; i++) {
+      // This "-1" is for compatibility with the older enum format.
+      fprintf(fd, "%d ", (int) fields[i]-1);
+   }
+   fprintf(fd, "\n");
+}
+
+static void writeMeters(Settings* this, FILE* fd, int column) {
+   for (int i = 0; i < this->columns[column].len; i++) {
+      fprintf(fd, "%s ", this->columns[column].names[i]);
+   }
+   fprintf(fd, "\n");
+}
+
+static void writeMeterModes(Settings* this, FILE* fd, int column) {
+   for (int i = 0; i < this->columns[column].len; i++) {
+      fprintf(fd, "%d ", this->columns[column].modes[i]);
+   }
+   fprintf(fd, "\n");
+}
+
 bool Settings_write(Settings* this) {
-   // TODO: implement File object and make
-   // file I/O object-oriented.
    FILE* fd;
-   fd = fopen(this->userSettings, "w");
+   fd = fopen(this->filename, "w");
    if (fd == NULL) {
       return false;
    }
    fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
    fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
-   fprintf(fd, "fields=");
-   for (int i = 0; this->pl->fields[i]; i++) {
-      // This "-1" is for compatibility with the older enum format.
-      fprintf(fd, "%d ", (int) this->pl->fields[i]-1);
-   }
-   fprintf(fd, "\n");
+   writeFields(fd, this->fields, "fields");
    // This "-1" is for compatibility with the older enum format.
-   fprintf(fd, "sort_key=%d\n", (int) this->pl->sortKey-1);
-   fprintf(fd, "sort_direction=%d\n", (int) this->pl->direction);
-   fprintf(fd, "hide_threads=%d\n", (int) this->pl->hideThreads);
-   fprintf(fd, "hide_kernel_threads=%d\n", (int) this->pl->hideKernelThreads);
-   fprintf(fd, "hide_userland_threads=%d\n", (int) this->pl->hideUserlandThreads);
-   fprintf(fd, "shadow_other_users=%d\n", (int) this->pl->shadowOtherUsers);
-   fprintf(fd, "show_thread_names=%d\n", (int) this->pl->showThreadNames);
-   fprintf(fd, "highlight_base_name=%d\n", (int) this->pl->highlightBaseName);
-   fprintf(fd, "highlight_megabytes=%d\n", (int) this->pl->highlightMegabytes);
-   fprintf(fd, "highlight_threads=%d\n", (int) this->pl->highlightThreads);
-   fprintf(fd, "tree_view=%d\n", (int) this->pl->treeView);
-   fprintf(fd, "header_margin=%d\n", (int) this->header->margin);
-   fprintf(fd, "detailed_cpu_time=%d\n", (int) this->pl->detailedCPUTime);
-   fprintf(fd, "cpu_count_from_zero=%d\n", (int) this->pl->countCPUsFromZero);
-   fprintf(fd, "update_process_names=%d\n", (int) this->pl->updateProcessNames);
-   fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->pl->accountGuestInCPUMeter);
+   fprintf(fd, "sort_key=%d\n", (int) this->sortKey-1);
+   fprintf(fd, "sort_direction=%d\n", (int) this->direction);
+   fprintf(fd, "hide_threads=%d\n", (int) this->hideThreads);
+   fprintf(fd, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
+   fprintf(fd, "hide_userland_threads=%d\n", (int) this->hideUserlandThreads);
+   fprintf(fd, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
+   fprintf(fd, "show_thread_names=%d\n", (int) this->showThreadNames);
+   fprintf(fd, "highlight_base_name=%d\n", (int) this->highlightBaseName);
+   fprintf(fd, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
+   fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
+   fprintf(fd, "tree_view=%d\n", (int) this->treeView);
+   fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
+   fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
+   fprintf(fd, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
+   fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
+   fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
    fprintf(fd, "color_scheme=%d\n", (int) this->colorScheme);
    fprintf(fd, "delay=%d\n", (int) this->delay);
-   fprintf(fd, "left_meters=");
-   for (int i = 0; i < Header_size(this->header, LEFT_HEADER); i++) {
-      char* name = Header_readMeterName(this->header, i, LEFT_HEADER);
-      fprintf(fd, "%s ", name);
-      free(name);
-   }
-   fprintf(fd, "\n");
-   fprintf(fd, "left_meter_modes=");
-   for (int i = 0; i < Header_size(this->header, LEFT_HEADER); i++)
-      fprintf(fd, "%d ", Header_readMeterMode(this->header, i, LEFT_HEADER));
-   fprintf(fd, "\n");
-   fprintf(fd, "right_meters=");
-   for (int i = 0; i < Header_size(this->header, RIGHT_HEADER); i++) {
-      char* name = Header_readMeterName(this->header, i, RIGHT_HEADER);
-      fprintf(fd, "%s ", name);
-      free(name);
-   }
-   fprintf(fd, "\n");
-   fprintf(fd, "right_meter_modes=");
-   for (int i = 0; i < Header_size(this->header, RIGHT_HEADER); i++)
-      fprintf(fd, "%d ", Header_readMeterMode(this->header, i, RIGHT_HEADER));
-   fprintf(fd, "\n");
+   fprintf(fd, "left_meters="); writeMeters(this, fd, 0);
+   fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
+   fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
+   fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
    fclose(fd);
    return true;
 }
 
-Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
-   Settings* this = malloc(sizeof(Settings));
-   this->pl = pl;
-   this->header = header;
+Settings* Settings_new(int cpuCount) {
+  
+   Settings* this = calloc(1, sizeof(Settings));
+
+   this->sortKey = PERCENT_CPU;
+   this->direction = 1;
+   this->hideThreads = false;
+   this->shadowOtherUsers = false;
+   this->showThreadNames = false;
+   this->hideKernelThreads = false;
+   this->hideUserlandThreads = false;
+   this->treeView = false;
+   this->highlightBaseName = false;
+   this->highlightMegabytes = false;
+   this->detailedCPUTime = false;
+   this->countCPUsFromZero = false;
+   this->updateProcessNames = false;
+   
+   this->fields = calloc(LAST_PROCESSFIELD+1, sizeof(ProcessField));
+   // TODO: turn 'fields' into a Vector,
+   // (and ProcessFields into proper objects).
+   this->flags = 0;
+   ProcessField* defaults = defaultFields;
+   for (int i = 0; defaults[i]; i++) {
+      this->fields[i] = defaults[i];
+      this->flags |= Process_fields[defaults[i]].flags;
+   }
+
    char* legacyDotfile = NULL;
    char* rcfile = getenv("HTOPRC");
    if (rcfile) {
-      this->userSettings = strdup(rcfile);
+      this->filename = strdup(rcfile);
    } else {
       const char* home = getenv("HOME");
       if (!home) home = "";
@@ -251,11 +331,11 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
       char* configDir = NULL;
       char* htopDir = NULL;
       if (xdgConfigHome) {
-         this->userSettings = String_cat(xdgConfigHome, "/htop/htoprc");
+         this->filename = String_cat(xdgConfigHome, "/htop/htoprc");
          configDir = strdup(xdgConfigHome);
          htopDir = String_cat(xdgConfigHome, "/htop");
       } else {
-         this->userSettings = String_cat(home, "/.config/htop/htoprc");
+         this->filename = String_cat(home, "/.config/htop/htoprc");
          configDir = String_cat(home, "/.config");
          htopDir = String_cat(home, "/.config/htop");
       }
@@ -276,7 +356,7 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
    this->colorScheme = 0;
    this->changed = false;
    this->delay = DEFAULT_DELAY;
-   bool ok = Settings_read(this, legacyDotfile ? legacyDotfile : this->userSettings, cpuCount);
+   bool ok = Settings_read(this, legacyDotfile ? legacyDotfile : this->filename, cpuCount);
    if (ok) {
       if (legacyDotfile) {
          // Transition to new location and delete old configuration file
@@ -290,12 +370,19 @@ Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount) {
       ok = Settings_read(this, systemSettings, cpuCount);
       free(systemSettings);
       if (!ok) {
-         Settings_defaultMeters(this->header, cpuCount);
-         pl->hideKernelThreads = true;
-         pl->highlightMegabytes = true;
-         pl->highlightThreads = false;
+         Settings_defaultMeters(this, cpuCount);
+         this->hideKernelThreads = true;
+         this->highlightMegabytes = true;
+         this->highlightThreads = false;
       }
    }
    free(legacyDotfile);
    return this;
+}
+
+void Settings_invertSortOrder(Settings* this) {
+   if (this->direction == 1)
+      this->direction = -1;
+   else
+      this->direction = 1;
 }

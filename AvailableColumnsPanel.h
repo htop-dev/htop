@@ -10,20 +10,15 @@ in the source distribution for its full text.
 */
 
 #include "Panel.h"
-#include "Settings.h"
-#include "ScreenManager.h"
 
 typedef struct AvailableColumnsPanel_ {
    Panel super;
    Panel* columns;
-
-   Settings* settings;
-   ScreenManager* scr;
 } AvailableColumnsPanel;
 
 
 extern PanelClass AvailableColumnsPanel_class;
 
-AvailableColumnsPanel* AvailableColumnsPanel_new(Settings* settings, Panel* columns, ScreenManager* scr);
+AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns);
 
 #endif

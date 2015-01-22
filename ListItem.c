@@ -22,6 +22,7 @@ typedef struct ListItem_ {
    Object super;
    char* value;
    int key;
+   bool moving;
 } ListItem;
 
 }*/
@@ -33,14 +34,19 @@ static void ListItem_delete(Object* cast) {
 }
 
 static void ListItem_display(Object* cast, RichString* out) {
-   ListItem* this = (ListItem*)cast;
+   ListItem* const this = (ListItem*)cast;
    assert (this != NULL);
    /*
    int len = strlen(this->value)+1;
    char buffer[len+1];
    snprintf(buffer, len, "%s", this->value);
    */
-   RichString_write(out, CRT_colors[DEFAULT_COLOR], this->value/*buffer*/);
+   if (this->moving) {
+      RichString_write(out, CRT_colors[DEFAULT_COLOR], "↕ ");
+   } else {
+      RichString_prune(out);
+   }
+   RichString_append(out, CRT_colors[DEFAULT_COLOR], this->value/*buffer*/);
 }
 
 ObjectClass ListItem_class = {
@@ -53,6 +59,7 @@ ListItem* ListItem_new(const char* value, int key) {
    ListItem* this = AllocThis(ListItem);
    this->value = strdup(value);
    this->key = key;
+   this->moving = false;
    return this;
 }
 

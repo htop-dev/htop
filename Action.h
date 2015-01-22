@@ -12,7 +12,10 @@ in the source distribution for its full text.
 
 #include "IncSet.h"
 #include "Settings.h"
+#include "Header.h"
 #include "UsersTable.h"
+#include "ProcessList.h"
+#include "Panel.h"
 
 typedef enum {
    HTOP_OK = 0x00,
@@ -31,6 +34,9 @@ typedef struct State_ {
    IncSet* inc;
    Settings* settings;
    UsersTable* ut;
+   ProcessList* pl;
+   Panel* panel;
+   Header* header;
 } State;
 
 typedef bool(*Action_ForeachProcessFn)(Process*, size_t);
@@ -40,6 +46,15 @@ int Action_selectedPid(Panel* panel);
 
 bool Action_foreachProcess(Panel* panel, Action_ForeachProcessFn fn, int arg, bool* wasAnyTagged);
 
-Object* Action_pickFromVector(Panel* panel, Panel* list, int x, const char** keyLabels, Header* header);
+Object* Action_pickFromVector(State* st, Panel* list, int x, const char** keyLabels);
+
+// ----------------------------------------
+
+bool Action_setUserOnly(const char* userName, uid_t* userId);
+
+// ----------------------------------------
+
+void Action_setBindings(Htop_Action* keys);
+
 
 #endif

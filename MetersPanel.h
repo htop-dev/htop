@@ -19,6 +19,7 @@ typedef struct MetersPanel_ {
    Settings* settings;
    Vector* meters;
    ScreenManager* scr;
+   bool moving;
 } MetersPanel;
 
 

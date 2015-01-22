@@ -9,9 +9,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifdef HAVE_LIBHWLOC
-#endif
-
 // On Linux, this works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
 #ifndef PAGE_SIZE
@@ -20,7 +17,6 @@ in the source distribution for its full text.
 #define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
 
 #include "Object.h"
-#include "Affinity.h"
 
 #include <sys/types.h>
 
@@ -67,12 +63,10 @@ typedef enum ProcessField_ {
    LAST_PROCESSFIELD
 } ProcessField;
 
-struct ProcessList_;
-
 typedef struct Process_ {
    Object super;
 
-   struct ProcessList_ *pl;
+   struct Settings_* settings;
 
    pid_t pid;
    char* comm;
@@ -112,10 +106,10 @@ typedef struct Process_ {
    unsigned long long io_read_bytes;
    unsigned long long io_write_bytes;
    unsigned long long io_cancelled_write_bytes;
-   double io_rate_read_bps;
    unsigned long long io_rate_read_time;
-   double io_rate_write_bps;
    unsigned long long io_rate_write_time;   
+   double io_rate_read_bps;
+   double io_rate_write_bps;
    #endif
 
    int processor;
@@ -171,12 +165,18 @@ typedef struct Process_ {
 
 } Process;
 
+typedef struct ProcessFieldData_ {
+   const char* name;
+   const char* title;
+   const char* description;
+   int flags;
+} ProcessFieldData;
 
-extern const char *Process_fieldNames[];
+void Process_writeField(Process* this, RichString* str, ProcessField field);
+long Process_compare(const void* v1, const void* v2);
 
-extern const int Process_fieldFlags[];
 
-extern const char *Process_fieldTitles[];
+extern ProcessFieldData Process_fields[];
 
 
 void Process_setupColumnWidths();
@@ -189,11 +189,13 @@ void Process_setupColumnWidths();
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
+void Process_writeDefaultField(Process* this, RichString* str, ProcessField field);
+
 void Process_delete(Object* cast);
 
 extern ObjectClass Process_class;
 
-Process* Process_new(struct ProcessList_ *pl);
+Process* Process_new(struct Settings_* settings);
 
 void Process_toggleTag(Process* this);
 
@@ -201,24 +203,10 @@ bool Process_setPriority(Process* this, int priority);
 
 bool Process_changePriorityBy(Process* this, size_t delta);
 
-#ifdef HAVE_LIBHWLOC
-
-Affinity* Process_getAffinity(Process* this);
-
-bool Process_setAffinity(Process* this, Affinity* affinity);
-
-#elif HAVE_NATIVE_AFFINITY
-
-Affinity* Process_getAffinity(Process* this);
-
-bool Process_setAffinity(Process* this, Affinity* affinity);
-
-#endif
-
 void Process_sendSignal(Process* this, size_t sgn);
 
 long Process_pidCompare(const void* v1, const void* v2);
 
-long Process_compare(const void* v1, const void* v2);
+long Process_defaultCompare(const void* v1, const void* v2);
 
 #endif

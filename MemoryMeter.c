@@ -8,7 +8,7 @@ in the source distribution for its full text.
 #include "MemoryMeter.h"
 
 #include "CRT.h"
-#include "ProcessList.h"
+#include "Platform.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -25,15 +25,8 @@ int MemoryMeter_attributes[] = {
 };
 
 static void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
-   long int usedMem = this->pl->usedMem;
-   long int buffersMem = this->pl->buffersMem;
-   long int cachedMem = this->pl->cachedMem;
-   usedMem -= buffersMem + cachedMem;
-   this->total = this->pl->totalMem;
-   this->values[0] = usedMem;
-   this->values[1] = buffersMem;
-   this->values[2] = cachedMem;
-   snprintf(buffer, size, "%ld/%ldMB", (long int) usedMem / 1024, (long int) this->total / 1024);
+   Platform_setMemoryValues(this);
+   snprintf(buffer, size, "%ld/%ldMB", (long int) this->values[0] / 1024, (long int) this->total / 1024);
 }
 
 static void MemoryMeter_display(Object* cast, RichString* out) {

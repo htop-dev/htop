@@ -8,7 +8,7 @@ in the source distribution for its full text.
 #include "SwapMeter.h"
 
 #include "CRT.h"
-#include "ProcessList.h"
+#include "Platform.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -34,11 +34,8 @@ static void SwapMeter_humanNumber(char* buffer, const long int* value) {
 }
 
 static void SwapMeter_setValues(Meter* this, char* buffer, int len) {
-   long int usedSwap = this->pl->usedSwap;
-   this->total = this->pl->totalSwap;
-   this->values[0] = usedSwap;
-
-   snprintf(buffer, len, "%ld/%ldMB", (long int) usedSwap / MEGABYTE, (long int) this->total / MEGABYTE);
+   Platform_setSwapValues(this);
+   snprintf(buffer, len, "%ld/%ldMB", (long int) this->values[0] / MEGABYTE, (long int) this->total / MEGABYTE);
 }
 
 static void SwapMeter_display(Object* cast, RichString* out) {

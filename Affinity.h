@@ -9,19 +9,39 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifdef HAVE_LIBHWLOC
+#elif HAVE_NATIVE_AFFINITY
+#endif
+
+#include "Process.h"
+#include "ProcessList.h"
 
 typedef struct Affinity_ {
+   ProcessList* pl;
    int size;
    int used;
    int* cpus;
 } Affinity;
 
 
-Affinity* Affinity_new();
+Affinity* Affinity_new(ProcessList* pl);
 
 void Affinity_delete(Affinity* this);
 
 void Affinity_add(Affinity* this, int id);
 
+#ifdef HAVE_LIBHWLOC
+
+Affinity* Affinity_get(Process* proc, ProcessList* pl);
+
+bool Affinity_set(Process* proc, Affinity* this);
+
+#elif HAVE_NATIVE_AFFINITY
+
+Affinity* Affinity_get(Process* proc, ProcessList* pl);
+
+bool Affinity_set(Process* proc, Affinity* this);
+
+#endif
 
 #endif

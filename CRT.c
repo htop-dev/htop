@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
@@ -38,6 +39,17 @@ in the source distribution for its full text.
 
 /*{
 #include <stdbool.h>
+
+typedef enum TreeStr_ {
+   TREE_STR_HORZ,
+   TREE_STR_VERT,
+   TREE_STR_RTEE,
+   TREE_STR_BEND,
+   TREE_STR_TEND,
+   TREE_STR_OPEN,
+   TREE_STR_SHUT,
+   TREE_STR_COUNT
+} TreeStr;
 
 typedef enum ColorElements_ {
    RESET_COLOR,
@@ -73,13 +85,6 @@ typedef enum ColorElements_ {
    BAR_SHADOW,
    GRAPH_1,
    GRAPH_2,
-   GRAPH_3,
-   GRAPH_4,
-   GRAPH_5,
-   GRAPH_6,
-   GRAPH_7,
-   GRAPH_8,
-   GRAPH_9,
    MEMORY_USED,
    MEMORY_BUFFERS,
    MEMORY_BUFFERS_TEXT,
@@ -112,13 +117,31 @@ void CRT_handleSIGSEGV(int sgn);
 
 }*/
 
-// TODO: centralize these in Settings.
+const char *CRT_treeStrAscii[TREE_STR_COUNT] = {
+   "-", // TREE_STR_HORZ
+   "|", // TREE_STR_VERT
+   "`", // TREE_STR_RTEE
+   "`", // TREE_STR_BEND
+   ",", // TREE_STR_TEND
+   "+", // TREE_STR_OPEN
+   "-", // TREE_STR_SHUT
+};
+
+const char *CRT_treeStrUtf8[TREE_STR_COUNT] = {
+   "\xe2\x94\x80", // TREE_STR_HORZ ─
+   "\xe2\x94\x82", // TREE_STR_VERT │
+   "\xe2\x94\x9c", // TREE_STR_RTEE ├
+   "\xe2\x94\x94", // TREE_STR_BEND └
+   "\xe2\x94\x8c", // TREE_STR_TEND ┌
+   "+",            // TREE_STR_OPEN +
+   "\xe2\x94\x80", // TREE_STR_SHUT ─
+};
+
+const char **CRT_treeStr = CRT_treeStrAscii;
 
 static bool CRT_hasColors;
 
 static int CRT_delay = 0;
-
-int CRT_colorScheme = 0;
 
 bool CRT_utf8 = false;
 
@@ -129,6 +152,10 @@ int CRT_cursorX = 0;
 int CRT_scrollHAmount = 5;
 
 char* CRT_termType;
+
+// TODO move color scheme to Settings, perhaps?
+
+int CRT_colorScheme = 0;
 
 void *backtraceArray[128];
 
@@ -187,6 +214,22 @@ void CRT_init(int delay, int colorScheme) {
    if (!has_colors())
       CRT_colorScheme = 1;
    CRT_setColors(CRT_colorScheme);
+
+#ifdef HAVE_LIBNCURSESW
+   char *locale = setlocale(LC_ALL, NULL);
+   if (locale == NULL || locale[0] == '\0')
+      locale = setlocale(LC_CTYPE, NULL);
+   if (locale != NULL &&
+       (strstr(locale, "UTF-8") ||
+        strstr(locale, "utf-8") ||
+        strstr(locale, "UTF8")  ||
+        strstr(locale, "utf8")))
+      CRT_utf8 = true;
+   else
+      CRT_utf8 = false;
+#endif
+
+   CRT_treeStr = CRT_utf8 ? CRT_treeStrUtf8 : CRT_treeStrAscii;
 
    mousemask(BUTTON1_CLICKED, NULL);
 }
@@ -267,14 +310,7 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[BAR_SHADOW] = A_DIM;
       CRT_colors[SWAP] = A_BOLD;
       CRT_colors[GRAPH_1] = A_BOLD;
-      CRT_colors[GRAPH_2] = A_BOLD;
-      CRT_colors[GRAPH_3] = A_BOLD;
-      CRT_colors[GRAPH_4] = A_NORMAL;
-      CRT_colors[GRAPH_5] = A_NORMAL;
-      CRT_colors[GRAPH_6] = A_NORMAL;
-      CRT_colors[GRAPH_7] = A_DIM;
-      CRT_colors[GRAPH_8] = A_DIM;
-      CRT_colors[GRAPH_9] = A_DIM;
+      CRT_colors[GRAPH_2] = A_NORMAL;
       CRT_colors[MEMORY_USED] = A_BOLD;
       CRT_colors[MEMORY_BUFFERS] = A_NORMAL;
       CRT_colors[MEMORY_BUFFERS_TEXT] = A_NORMAL;
@@ -330,15 +366,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[BAR_BORDER] = ColorPair(Blue,White);
       CRT_colors[BAR_SHADOW] = ColorPair(Black,White);
       CRT_colors[SWAP] = ColorPair(Red,White);
-      CRT_colors[GRAPH_1] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_2] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_3] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_4] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_5] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_6] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_7] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_8] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_9] = ColorPair(Yellow,White);
+      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Blue,White);
+      CRT_colors[GRAPH_2] = ColorPair(Blue,White);
       CRT_colors[MEMORY_USED] = ColorPair(Green,White);
       CRT_colors[MEMORY_BUFFERS] = ColorPair(Cyan,White);
       CRT_colors[MEMORY_BUFFERS_TEXT] = ColorPair(Cyan,White);
@@ -394,15 +423,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[BAR_BORDER] = ColorPair(Blue,Black);
       CRT_colors[BAR_SHADOW] = ColorPair(Black,Black);
       CRT_colors[SWAP] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_1] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_2] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_3] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_4] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_5] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_6] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_7] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_8] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_9] = ColorPair(Yellow,Black);
+      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Cyan,Black);
+      CRT_colors[GRAPH_2] = ColorPair(Cyan,Black);
       CRT_colors[MEMORY_USED] = ColorPair(Green,Black);
       CRT_colors[MEMORY_BUFFERS] = ColorPair(Cyan,Black);
       CRT_colors[MEMORY_BUFFERS_TEXT] = ColorPair(Cyan,Black);
@@ -458,15 +480,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[BAR_BORDER] = A_BOLD | ColorPair(Yellow,Blue);
       CRT_colors[BAR_SHADOW] = ColorPair(Cyan,Blue);
       CRT_colors[SWAP] = ColorPair(Red,Blue);
-      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_2] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_3] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_4] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_5] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_6] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_7] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_8] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_9] = A_BOLD | ColorPair(Yellow,Blue);
+      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Cyan,Blue);
+      CRT_colors[GRAPH_2] = ColorPair(Cyan,Blue);
       CRT_colors[MEMORY_USED] = A_BOLD | ColorPair(Green,Blue);
       CRT_colors[MEMORY_BUFFERS] = A_BOLD | ColorPair(Cyan,Blue);
       CRT_colors[MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Cyan,Blue);
@@ -522,15 +537,8 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[BAR_BORDER] = A_BOLD | ColorPair(Green,Black);
       CRT_colors[BAR_SHADOW] = ColorPair(Cyan,Black);
       CRT_colors[SWAP] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[GRAPH_2] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_3] = A_BOLD | ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_4] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[GRAPH_5] = ColorPair(Green,Black);
-      CRT_colors[GRAPH_6] = ColorPair(Cyan,Black);
-      CRT_colors[GRAPH_7] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[GRAPH_8] = ColorPair(Blue,Black);
-      CRT_colors[GRAPH_9] = A_BOLD | ColorPair(Black,Black);
+      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Green,Black);
+      CRT_colors[GRAPH_2] = ColorPair(Green,Black);
       CRT_colors[MEMORY_USED] = ColorPair(Green,Black);
       CRT_colors[MEMORY_BUFFERS] = ColorPair(Blue,Black);
       CRT_colors[MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue,Black);
@@ -587,22 +595,15 @@ void CRT_setColors(int colorScheme) {
       CRT_colors[BAR_BORDER] = A_BOLD;
       CRT_colors[BAR_SHADOW] = A_BOLD | ColorPair(Black,Black);
       CRT_colors[SWAP] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[GRAPH_2] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_3] = A_BOLD | ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_4] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[GRAPH_5] = ColorPair(Green,Black);
-      CRT_colors[GRAPH_6] = ColorPair(Cyan,Black);
-      CRT_colors[GRAPH_7] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[GRAPH_8] = ColorPair(Blue,Black);
-      CRT_colors[GRAPH_9] = A_BOLD | ColorPair(Black,Black);
+      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Cyan,Black);
+      CRT_colors[GRAPH_2] = ColorPair(Cyan,Black);
       CRT_colors[MEMORY_USED] = ColorPair(Green,Black);
       CRT_colors[MEMORY_BUFFERS] = ColorPair(Blue,Black);
       CRT_colors[MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue,Black);
       CRT_colors[MEMORY_CACHE] = ColorPair(Yellow,Black);
-      CRT_colors[LOAD_AVERAGE_FIFTEEN] = A_BOLD | ColorPair(Black,Black);
-      CRT_colors[LOAD_AVERAGE_FIVE] = A_NORMAL;
-      CRT_colors[LOAD_AVERAGE_ONE] = A_BOLD;
+      CRT_colors[LOAD_AVERAGE_FIFTEEN] = A_NORMAL;
+      CRT_colors[LOAD_AVERAGE_FIVE] = ColorPair(Cyan,Black);
+      CRT_colors[LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(Cyan,Black);
       CRT_colors[LOAD] = A_BOLD;
       CRT_colors[HELP_BOLD] = A_BOLD | ColorPair(Cyan,Black);
       CRT_colors[CLOCK] = A_BOLD;

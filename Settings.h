@@ -11,24 +11,57 @@ in the source distribution for its full text.
 
 #define DEFAULT_DELAY 15
 
-#include "ProcessList.h"
-#include "Header.h"
+#include "Process.h"
 #include <stdbool.h>
 
+typedef struct {
+   int len;
+   char** names;
+   int* modes;
+} MeterColumnSettings;
+   
 typedef struct Settings_ {
-   char* userSettings;
-   ProcessList* pl;
-   Header* header;
+   char* filename;
+   
+   MeterColumnSettings columns[2];
+
+   ProcessField* fields;
+   int flags;
    int colorScheme;
    int delay;
+
+   int direction;
+   ProcessField sortKey;
+
+   bool countCPUsFromZero;
+   bool detailedCPUTime;
+   bool treeView;
+   bool hideThreads;
+   bool shadowOtherUsers;
+   bool showThreadNames;
+   bool hideKernelThreads;
+   bool hideUserlandThreads;
+   bool highlightBaseName;
+   bool highlightMegabytes;
+   bool highlightThreads;
+   bool updateProcessNames;
+   bool accountGuestInCPUMeter;
+   bool headerMargin;
+
    bool changed;
 } Settings;
+
+#ifndef Settings_cpuId
+#define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromZero ? (cpu) : (cpu)+1)
+#endif
 
 
 void Settings_delete(Settings* this);
 
 bool Settings_write(Settings* this);
 
-Settings* Settings_new(ProcessList* pl, Header* header, int cpuCount);
+Settings* Settings_new(int cpuCount);
+
+void Settings_invertSortOrder(Settings* this);
 
 #endif

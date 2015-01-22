@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "TasksMeter.h"
 
-#include "ProcessList.h"
+#include "Platform.h"
 #include "CRT.h"
 
 /*{
@@ -15,42 +15,43 @@ in the source distribution for its full text.
 }*/
 
 int TasksMeter_attributes[] = {
-   TASKS_RUNNING
+   CPU_KERNEL, PROCESS_THREAD, PROCESS, TASKS_RUNNING
 };
 
 static void TasksMeter_setValues(Meter* this, char* buffer, int len) {
-   ProcessList* pl = this->pl;
-   this->total = pl->totalTasks;
-   this->values[0] = pl->runningTasks;
+   Platform_setTasksValues(this);
    snprintf(buffer, len, "%d/%d", (int) this->values[0], (int) this->total);
 }
 
 static void TasksMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
-   ProcessList* pl = this->pl;
+   Settings* settings = this->pl->settings;
    char buffer[20];
-   sprintf(buffer, "%d", (int)(this->total - pl->userlandThreads - pl->kernelThreads));
+   
+   int processes = (int) this->values[2];
+   
+   sprintf(buffer, "%d", processes);
    RichString_write(out, CRT_colors[METER_VALUE], buffer);
    int threadValueColor = CRT_colors[METER_VALUE];
    int threadCaptionColor = CRT_colors[METER_TEXT];
-   if (pl->highlightThreads) {
+   if (settings->highlightThreads) {
       threadValueColor = CRT_colors[PROCESS_THREAD_BASENAME];
       threadCaptionColor = CRT_colors[PROCESS_THREAD];
    }
-   if (!pl->hideUserlandThreads) {
+   if (!settings->hideUserlandThreads) {
       RichString_append(out, CRT_colors[METER_TEXT], ", ");
-      sprintf(buffer, "%d", (int)pl->userlandThreads);
+      sprintf(buffer, "%d", (int)this->values[1]);
       RichString_append(out, threadValueColor, buffer);
       RichString_append(out, threadCaptionColor, " thr");
    }
-   if (!pl->hideKernelThreads) {
+   if (!settings->hideKernelThreads) {
       RichString_append(out, CRT_colors[METER_TEXT], ", ");
-      sprintf(buffer, "%d", (int)pl->kernelThreads);
+      sprintf(buffer, "%d", (int)this->values[0]);
       RichString_append(out, threadValueColor, buffer);
       RichString_append(out, threadCaptionColor, " kthr");
    }
    RichString_append(out, CRT_colors[METER_TEXT], "; ");
-   sprintf(buffer, "%d", (int)this->values[0]);
+   sprintf(buffer, "%d", (int)this->values[3]);
    RichString_append(out, CRT_colors[TASKS_RUNNING], buffer);
    RichString_append(out, CRT_colors[METER_TEXT], " running");
 }
@@ -64,6 +65,7 @@ MeterClass TasksMeter_class = {
    .setValues = TasksMeter_setValues, 
    .defaultMode = TEXT_METERMODE,
    .total = 100.0,
+   .maxItems = 4,
    .attributes = TasksMeter_attributes, 
    .name = "Tasks",
    .uiName = "Task counter",

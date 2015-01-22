@@ -52,9 +52,9 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
 
    if (result == HANDLED) {
       this->settings->changed = true;
-      Header* header = this->settings->header;
-      Header_calculateHeight(header);
-      Header_reinit(header);
+      const Header* header = this->scr->header;
+      Header_calculateHeight((Header*) header);
+      Header_reinit((Header*) header);
       Header_draw(header);
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
    }
@@ -78,18 +78,18 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    this->scr = scr;
 
    Panel_setHeader(super, "Display options");
-   Panel_add(super, (Object*) CheckItem_new(strdup("Tree view"), &(settings->pl->treeView), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Shadow other users' processes"), &(settings->pl->shadowOtherUsers), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Hide kernel threads"), &(settings->pl->hideKernelThreads), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Hide userland threads"), &(settings->pl->hideUserlandThreads), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Display threads in a different color"), &(settings->pl->highlightThreads), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Show custom thread names"), &(settings->pl->showThreadNames), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Highlight program \"basename\""), &(settings->pl->highlightBaseName), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Highlight large numbers in memory counters"), &(settings->pl->highlightMegabytes), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Leave a margin around header"), &(settings->header->margin), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->pl->detailedCPUTime), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Count CPUs from 0 instead of 1"), &(settings->pl->countCPUsFromZero), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Update process names on every refresh"), &(settings->pl->updateProcessNames), false));
-   Panel_add(super, (Object*) CheckItem_new(strdup("Add guest time in CPU meter percentage"), &(settings->pl->accountGuestInCPUMeter), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Tree view"), &(settings->treeView), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Shadow other users' processes"), &(settings->shadowOtherUsers), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Hide kernel threads"), &(settings->hideKernelThreads), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Hide userland threads"), &(settings->hideUserlandThreads), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Display threads in a different color"), &(settings->highlightThreads), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Show custom thread names"), &(settings->showThreadNames), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Highlight program \"basename\""), &(settings->highlightBaseName), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Highlight large numbers in memory counters"), &(settings->highlightMegabytes), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Leave a margin around header"), &(settings->headerMargin), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->detailedCPUTime), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Count CPUs from 0 instead of 1"), &(settings->countCPUsFromZero), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Update process names on every refresh"), &(settings->updateProcessNames), false));
+   Panel_add(super, (Object*) CheckItem_new(strdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter), false));
    return this;
 }

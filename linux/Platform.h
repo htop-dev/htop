@@ -24,4 +24,12 @@ int Platform_getMaxPid();
 
 void Platform_getBatteryLevel(double* level, ACPresence* isOnAC);
 
+double Platform_setCPUValues(Meter* this, int cpu);
+
+void Platform_setMemoryValues(Meter* this);
+
+void Platform_setSwapValues(Meter* this);
+
+void Platform_setTasksValues(Meter* this);
+
 #endif

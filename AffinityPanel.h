@@ -18,6 +18,6 @@ extern PanelClass AffinityPanel_class;
 
 Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity);
 
-Affinity* AffinityPanel_getAffinity(Panel* this);
+Affinity* AffinityPanel_getAffinity(Panel* this, ProcessList* pl);
 
 #endif

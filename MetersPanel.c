@@ -21,6 +21,7 @@ typedef struct MetersPanel_ {
    Settings* settings;
    Vector* meters;
    ScreenManager* scr;
+   bool moving;
 } MetersPanel;
 
 }*/
@@ -42,6 +43,13 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
+      {
+         this->moving = !(this->moving);
+         ((ListItem*)Panel_getSelected(super))->moving = this->moving;
+         result = HANDLED;
+         break;
+      }
+      case ' ':
       case KEY_F(4):
       case 't':
       {
@@ -53,6 +61,13 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          result = HANDLED;
          break;
       }
+      case KEY_UP:
+      {
+         if (!this->moving) {
+            break;
+         }
+         /* else fallthrough */
+      }
       case KEY_F(7):
       case '[':
       case '-':
@@ -61,6 +76,13 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          Panel_moveSelectedUp(super);
          result = HANDLED;
          break;
+      }
+      case KEY_DOWN:
+      {
+         if (!this->moving) {
+            break;
+         }
+         /* else fallthrough */
       }
       case KEY_F(8):
       case ']':
@@ -83,7 +105,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       }
    }
    if (result == HANDLED) {
-      Header* header = this->settings->header;
+      Header* header = (Header*) this->scr->header;
       this->settings->changed = true;
       Header_calculateHeight(header);
       Header_draw(header);
@@ -108,6 +130,7 @@ MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* met
    this->settings = settings;
    this->meters = meters;
    this->scr = scr;
+   this->moving = false;
    Panel_setHeader(super, header);
    for (int i = 0; i < Vector_size(meters); i++) {
       Meter* meter = (Meter*) Vector_get(meters, i);

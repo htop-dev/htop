@@ -21,11 +21,12 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <sys/time.h>
 
-#define METER_BUFFER_LEN 128
+#define METER_BUFFER_LEN 256
 
 /*{
 #include "ListItem.h"
-#include "ProcessList.h"
+
+#include <sys/time.h>
 
 typedef struct Meter_ Meter;
 
@@ -77,7 +78,7 @@ struct Meter_ {
    int param;
    void* drawData;
    int h;
-   ProcessList* pl;
+   struct ProcessList_* pl;
    double* values;
    double total;
 };
@@ -117,7 +118,7 @@ MeterClass Meter_class = {
    }
 };
 
-Meter* Meter_new(ProcessList* pl, int param, MeterClass* type) {
+Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
    Meter* this = calloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
@@ -302,25 +303,41 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- GraphMeterMode ---------- */
 
-#define DrawDot(a,y,c) do { attrset(a); mvaddch(y, x+k, c); } while(0)
-
-static int GraphMeterMode_colors[21] = {
-   GRAPH_1, GRAPH_1, GRAPH_1,
-   GRAPH_2, GRAPH_2, GRAPH_2,
-   GRAPH_3, GRAPH_3, GRAPH_3,
-   GRAPH_4, GRAPH_4, GRAPH_4,
-   GRAPH_5, GRAPH_5, GRAPH_6,
-   GRAPH_7, GRAPH_7, GRAPH_7,
-   GRAPH_8, GRAPH_8, GRAPH_9
+static const char* GraphMeterMode_dotsUtf8[5][5] = {
+   { /*00*/"⠀", /*01*/"⢀", /*02*/"⢠", /*03*/"⢰", /*04*/ "⢸" },
+   { /*10*/"⡀", /*11*/"⣀", /*12*/"⣠", /*13*/"⣰", /*14*/ "⣸" },
+   { /*20*/"⡄", /*21*/"⣄", /*22*/"⣤", /*23*/"⣴", /*24*/ "⣼" },
+   { /*30*/"⡆", /*31*/"⣆", /*32*/"⣦", /*33*/"⣶", /*34*/ "⣾" },
+   { /*40*/"⡇", /*41*/"⣇", /*42*/"⣧", /*43*/"⣷", /*44*/ "⣿" },
 };
 
-static const char* GraphMeterMode_characters = "^`'-.,_~'`-.,_~'`-.,_";
+static const char* GraphMeterMode_dotsAscii[5][5] = {
+   { /*00*/" ", /*01*/".", /*02*/".", /*03*/":", /*04*/ ":" },
+   { /*10*/"⡀", /*11*/".", /*12*/".", /*13*/":", /*14*/ ":" },
+   { /*20*/".", /*21*/".", /*22*/".", /*23*/":", /*24*/ ":" },
+   { /*30*/":", /*31*/":", /*32*/":", /*33*/":", /*34*/ ":" },
+   { /*40*/":", /*41*/":", /*42*/":", /*43*/":", /*44*/ ":" },
+};
+
+static const char* (*GraphMeterMode_dots)[5];
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    if (!this->drawData) this->drawData = calloc(1, sizeof(GraphData));
-   GraphData* data = (GraphData*) this->drawData;
+    GraphData* data = (GraphData*) this->drawData;
    const int nValues = METER_BUFFER_LEN;
+
+   if (CRT_utf8) {
+      GraphMeterMode_dots = GraphMeterMode_dotsUtf8;
+   } else {
+      GraphMeterMode_dots = GraphMeterMode_dotsAscii;
+   }
+
+   attrset(CRT_colors[METER_TEXT]);
+   int captionLen = 3;
+   mvaddnstr(y, x, this->caption, captionLen);
+   x += captionLen;
+   w -= captionLen;
    
    struct timeval now;
    gettimeofday(&now, NULL);
@@ -342,18 +359,26 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       data->values[nValues - 1] = value;
    }
    
-   for (int i = nValues - w, k = 0; i < nValues; i++, k++) {
-      double value = data->values[i];
-      DrawDot( CRT_colors[DEFAULT_COLOR], y, ' ' );
-      DrawDot( CRT_colors[DEFAULT_COLOR], y+1, ' ' );
-      DrawDot( CRT_colors[DEFAULT_COLOR], y+2, ' ' );
+   for (int i = nValues - (w*2) + 2, k = 0; i < nValues; i+=2, k++) {
+      const double dot = (1.0 / 16);
+      int v1 = data->values[i] / dot;
+      int v2 = data->values[i+1] / dot;
       
-      double threshold = 1.00;
-      for (int j = 0; j < 21; j++, threshold -= 0.05)
-         if (value >= threshold) {
-            DrawDot(CRT_colors[GraphMeterMode_colors[j]], y+(j/7.0), GraphMeterMode_characters[j]);
-            break;
-         }
+      if (v1 == 0) v1 = 1;
+      if (v2 == 0) v2 = 1;
+      
+      int level = 12;
+      int colorIdx = GRAPH_1;
+      for (int line = 0; line < 4; line++) {
+         
+         int line1 = MIN(4, MAX(0, v1 - level));
+         int line2 = MIN(4, MAX(0, v2 - level));
+ 
+         attrset(CRT_colors[colorIdx]);
+         mvaddstr(y+line, x+k, GraphMeterMode_dots[line1][line2]);
+         colorIdx = GRAPH_2;
+         level -= 4;
+      }
    }
    attrset(CRT_colors[RESET_COLOR]);
 }
@@ -372,18 +397,22 @@ static const char* LEDMeterMode_digitsUtf8[3][10] = {
    { "└──┘","  ╵ ","└──╴","╶──┘","   ╵","╶──┘","└──┘","   ╵","└──┘"," ──┘"},
 };
 
+static const char* (*LEDMeterMode_digits)[10];
+
 static void LEDMeterMode_drawDigit(int x, int y, int n) {
-   if (CRT_utf8) {
-      for (int i = 0; i < 3; i++)
-         mvaddstr(y+i, x, LEDMeterMode_digitsUtf8[i][n]);
-   } else {
-      for (int i = 0; i < 3; i++)
-         mvaddstr(y+i, x, LEDMeterMode_digitsAscii[i][n]);
-   }
+   for (int i = 0; i < 3; i++)
+      mvaddstr(y+i, x, LEDMeterMode_digits[i][n]);
 }
 
 static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    (void) w;
+
+   if (CRT_utf8) {
+      LEDMeterMode_digits = LEDMeterMode_digitsUtf8;
+   } else {
+      LEDMeterMode_digits = LEDMeterMode_digitsAscii;
+   }
+
    char buffer[METER_BUFFER_LEN];
    Meter_setValues(this, buffer, METER_BUFFER_LEN - 1);
    
@@ -423,7 +452,7 @@ static MeterMode TextMeterMode = {
 
 static MeterMode GraphMeterMode = {
    .uiName = "Graph",
-   .h = 3,
+   .h = 4,
    .draw = GraphMeterMode_draw,
 };
 

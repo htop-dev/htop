@@ -19,14 +19,16 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "Panel.h"
 #include "ScreenManager.h"
+#include "ProcessList.h"
 
 typedef struct AvailableMetersPanel_ {
    Panel super;
+   ScreenManager* scr;
 
    Settings* settings;
+   Header* header;
    Panel* leftPanel;
    Panel* rightPanel;
-   ScreenManager* scr;
 } AvailableMetersPanel;
 
 }*/
@@ -38,14 +40,14 @@ static void AvailableMetersPanel_delete(Object* object) {
    free(this);
 }
 
-static inline void AvailableMetersPanel_addHeader(Header* header, Panel* panel, MeterClass* type, int param, HeaderSide side) {
-   Meter* meter = (Meter*) Header_addMeter(header, type, param, side);
+static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, MeterClass* type, int param, int column) {
+   Meter* meter = (Meter*) Header_addMeterByClass(header, type, param, column);
    Panel_add(panel, (Object*) Meter_toListItem(meter));
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
-   Header* header = this->settings->header;
+   Header* header = this->header;
    
    ListItem* selected = (ListItem*) Panel_getSelected(super);
    int param = selected->key & 0xff;
@@ -57,7 +59,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case 'l':
       case 'L':
       {
-         AvailableMetersPanel_addHeader(header, this->leftPanel, Platform_meterTypes[type], param, LEFT_HEADER);
+         AvailableMetersPanel_addMeter(header, this->leftPanel, Platform_meterTypes[type], param, 0);
          result = HANDLED;
          break;
       }
@@ -65,7 +67,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case 'r':
       case 'R':
       {
-         AvailableMetersPanel_addHeader(header, this->rightPanel, Platform_meterTypes[type], param, RIGHT_HEADER);
+         AvailableMetersPanel_addMeter(header, this->rightPanel, Platform_meterTypes[type], param, 1);
          result = HANDLED;
          break;
       }
@@ -87,12 +89,13 @@ PanelClass AvailableMetersPanel_class = {
    .eventHandler = AvailableMetersPanel_eventHandler
 };
 
-AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr) {
+AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr, ProcessList* pl) {
    AvailableMetersPanel* this = AllocThis(AvailableMetersPanel);
    Panel* super = (Panel*) this;
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
    
    this->settings = settings;
+   this->header = header;
    this->leftPanel = leftMeters;
    this->rightPanel = rightMeters;
    this->scr = scr;
@@ -105,7 +108,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMe
       }
    }
    MeterClass* type = &CPUMeter_class;
-   int cpus = settings->pl->cpuCount;
+   int cpus = pl->cpuCount;
    if (cpus > 1) {
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));
       for (int i = 1; i <= cpus; i++) {

@@ -31,6 +31,17 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
+typedef enum TreeStr_ {
+   TREE_STR_HORZ,
+   TREE_STR_VERT,
+   TREE_STR_RTEE,
+   TREE_STR_BEND,
+   TREE_STR_TEND,
+   TREE_STR_OPEN,
+   TREE_STR_SHUT,
+   TREE_STR_COUNT
+} TreeStr;
+
 typedef enum ColorElements_ {
    RESET_COLOR,
    DEFAULT_COLOR,
@@ -65,13 +76,6 @@ typedef enum ColorElements_ {
    BAR_SHADOW,
    GRAPH_1,
    GRAPH_2,
-   GRAPH_3,
-   GRAPH_4,
-   GRAPH_5,
-   GRAPH_6,
-   GRAPH_7,
-   GRAPH_8,
-   GRAPH_9,
    MEMORY_USED,
    MEMORY_BUFFERS,
    MEMORY_BUFFERS_TEXT,
@@ -103,9 +107,11 @@ void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 void CRT_handleSIGSEGV(int sgn);
 
 
-// TODO: centralize these in Settings.
+extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
 
-extern int CRT_colorScheme;
+extern const char *CRT_treeStrUtf8[TREE_STR_COUNT];
+
+extern const char **CRT_treeStr;
 
 extern bool CRT_utf8;
 
@@ -116,6 +122,10 @@ extern int CRT_cursorX;
 extern int CRT_scrollHAmount;
 
 char* CRT_termType;
+
+// TODO move color scheme to Settings, perhaps?
+
+extern int CRT_colorScheme;
 
 void *backtraceArray[128];
 
