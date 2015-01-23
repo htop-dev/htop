@@ -15,10 +15,27 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 #define _GNU_SOURCE
 #endif
 
-ACPresence Battery_isOnAC();
+#define SYS_POWERSUPPLY_DIR "/sys/class/power_supply"
 
-double Battery_getProcBatData();
+// ----------------------------------------
+// READ FROM /proc
+// ----------------------------------------
 
-double Battery_getSysBatData();
+// This implementation reading from from /proc/acpi is really inefficient,
+// but I think this is on the way out so I did not rewrite it.
+// The /sys implementation below does things the right way.
+
+// ----------------------------------------
+// READ FROM /sys
+// ----------------------------------------
+
+/**
+ * Returns a pointer to the suffix of `str` if its beginning matches `prefix`.
+ * Returns NULL if the prefix does not match.
+ * Examples: 
+ * match("hello world", "hello "); -> "world"
+ * match("hello world", "goodbye "); -> NULL
+ */
+void Battery_getData(double* level, ACPresence* isOnAC);
 
 #endif

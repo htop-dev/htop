@@ -27,6 +27,7 @@ in the source distribution for its full text.
 
 /*{
 #include "Action.h"
+#include "MainPanel.h"
 #include "BatteryMeter.h"
 }*/
 
@@ -41,7 +42,7 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    void* set = Action_pickFromVector(st, ioprioPanel, 21, fuFunctions);
    if (set) {
       IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = Action_foreachProcess(panel, (Action_ForeachProcessFn) LinuxProcess_setIOPriority, (size_t) ioprio, NULL);
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) LinuxProcess_setIOPriority, (size_t) ioprio, NULL);
       if (!ok)
          beep();
    }
@@ -104,23 +105,6 @@ int Platform_getMaxPid() {
    fscanf(file, "%32d", &maxPid);
    fclose(file);
    return maxPid;
-}
-
-void Platform_getBatteryLevel(double* level, ACPresence* isOnAC) {
-
-   double percent = Battery_getProcBatData();
-
-   if (percent == 0) {
-      percent = Battery_getSysBatData();
-      if (percent == 0) {
-         *level = -1;
-         *isOnAC = AC_ERROR;
-         return;
-      }
-   }
-
-   *isOnAC = Battery_isOnAC();
-   *level = percent;
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {

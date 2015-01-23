@@ -81,10 +81,11 @@ void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int
          Panel* last = (Panel*) Vector_get(this->panels, this->panelCount - 1);
          lastX = last->x + last->w + 1;
       }
+      int height = LINES - this->y1 + this->y2;
       if (size > 0) {
-         Panel_resize(item, size, LINES-this->y1+this->y2);
+         Panel_resize(item, size, height);
       } else {
-         Panel_resize(item, COLS-this->x1+this->x2-lastX, LINES-this->y1+this->y2);
+         Panel_resize(item, COLS-this->x1+this->x2-lastX, height);
       }
       Panel_move(item, lastX, this->y1);
    }
@@ -114,16 +115,19 @@ void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
    this->x2 = x2;
    this->y2 = y2;
    int panels = this->panelCount;
-   int lastX = 0;
-   for (int i = 0; i < panels - 1; i++) {
-      Panel* panel = (Panel*) Vector_get(this->panels, i);
-      Panel_resize(panel, panel->w, LINES-y1+y2);
+   if (this->orientation == HORIZONTAL) {
+      int lastX = 0;
+      for (int i = 0; i < panels - 1; i++) {
+         Panel* panel = (Panel*) Vector_get(this->panels, i);
+         Panel_resize(panel, panel->w, LINES-y1+y2);
+         Panel_move(panel, lastX, y1);
+         lastX = panel->x + panel->w + 1;
+      }
+      Panel* panel = (Panel*) Vector_get(this->panels, panels-1);
+      Panel_resize(panel, COLS-x1+x2-lastX, LINES-y1+y2);
       Panel_move(panel, lastX, y1);
-      lastX = panel->x + panel->w + 1;
    }
-   Panel* panel = (Panel*) Vector_get(this->panels, panels-1);
-   Panel_resize(panel, COLS-x1+x2-lastX, LINES-y1+y2);
-   Panel_move(panel, lastX, y1);
+   // TODO: VERTICAL
 }
 
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
@@ -154,24 +158,28 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
          timeToRecalculate = (newTime - oldTime > this->settings->delay);
          if (newTime < oldTime) timeToRecalculate = true; // clock was adjusted?
-
-         if (timeToRecalculate) {
-            Header_draw(this->header);
-            oldTime = newTime;
-         }
-
+//fprintf(stderr, "\n%p %f ", this, newTime);
          if (doRefresh) {
             if (timeToRecalculate || forceRecalculate) {
                ProcessList_scan(this->header->pl);
-               forceRecalculate = false;
+//fprintf(stderr, "scan ");
             }
+//fprintf(stderr, "sortTo=%d ", sortTimeout);
             if (sortTimeout == 0 || this->settings->treeView) {
                ProcessList_sort(this->header->pl);
+//fprintf(stderr, "sort ");
                sortTimeout = 1;
             }
             //this->header->pl->incFilter = IncSet_filter(inc);
             ProcessList_rebuildPanel(this->header->pl);
+//fprintf(stderr, "rebuild ");
             drawPanel = true;
+         }
+         if (timeToRecalculate || forceRecalculate) {
+            Header_draw(this->header);
+//fprintf(stderr, "drawHeader ");
+            oldTime = newTime;
+            forceRecalculate = false;
          }
          doRefresh = true;
       }
@@ -180,6 +188,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          for (int i = 0; i < panels; i++) {
             Panel* panel = (Panel*) Vector_get(this->panels, i);
             Panel_draw(panel, i == focus);
+//fprintf(stderr, "drawPanel ");
             if (i < panels) {
                if (this->orientation == HORIZONTAL) {
                   mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
@@ -196,6 +205,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
 
       int prevCh = ch;
       ch = getch();
+
+//fprintf(stderr, "ch=%d ", ch);
       
       if (ch == KEY_MOUSE) {
          MEVENT mevent;
@@ -218,9 +229,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             }
          }
       }
-      
       if (Panel_eventHandlerFn(panelFocus)) {
          HandlerResult result = Panel_eventHandler(panelFocus, ch);
+//fprintf(stderr, "eventResult=%d ", result);
          if (result & REFRESH) {
             doRefresh = true;
             sortTimeout = 0;
@@ -230,14 +241,15 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             sortTimeout = 0;
          }
          if (result & HANDLED) {
+            drawPanel = true;
             continue;
          } else if (result & BREAK_LOOP) {
             quit = true;
             continue;
          }
       }
-      
       if (ch == ERR) {
+         sortTimeout--;
          if (prevCh == ch && !timeToRecalculate) {
             closeTimeout++;
             if (closeTimeout == 100) {
@@ -246,6 +258,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          } else
             closeTimeout = 0;
          drawPanel = false;
+//fprintf(stderr, "err ");
          continue;
       }
       drawPanel = true;
@@ -285,9 +298,12 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          quit = true;
          continue;
       default:
+//fprintf(stderr, "onKey ");
+         sortTimeout = resetSortTimeout;
          Panel_onKey(panelFocus, ch);
          break;
       }
+//fprintf(stderr, "loop ");
    }
 
    if (lastFocus)

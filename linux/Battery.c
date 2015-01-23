@@ -11,28 +11,24 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 #define _GNU_SOURCE
 #endif
 #include <dirent.h>
+#include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <time.h>
 #include "BatteryMeter.h"
 #include "String.h"
 
-static unsigned long int parseUevent(FILE * file, const char *key) {
-   char line[100];
-   unsigned long int dValue = 0;
-   char* saveptr;
+#define SYS_POWERSUPPLY_DIR "/sys/class/power_supply"
 
-   while (fgets(line, sizeof line, file)) {
-      if (strncmp(line, key, strlen(key)) == 0) {
-         char *value;
-         strtok_r(line, "=", &saveptr);
-         value = strtok_r(NULL, "=", &saveptr);
-         dValue = atoi(value);
-         break;
-      }
-   }
-   return dValue;
-}
+// ----------------------------------------
+// READ FROM /proc
+// ----------------------------------------
+
+// This implementation reading from from /proc/acpi is really inefficient,
+// but I think this is on the way out so I did not rewrite it.
+// The /sys implementation below does things the right way.
 
 static unsigned long int parseBatInfo(const char *fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
    const char batteryPath[] = PROCDIR "/acpi/battery/";
@@ -94,15 +90,15 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
 static ACPresence procAcpiCheck() {
    ACPresence isOn = AC_ERROR;
    const char *power_supplyPath = PROCDIR "/acpi/ac_adapter";
-   DIR *power_supplyDir = opendir(power_supplyPath);
-   if (!power_supplyDir) {
+   DIR *dir = opendir(power_supplyPath);
+   if (!dir) {
       return AC_ERROR;
    }
 
    struct dirent result;
    struct dirent* dirEntry;
    for (;;) {
-      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
+      int err = readdir_r((DIR *) dir, &result, &dirEntry);
       if (err || !dirEntry)
          break;
 
@@ -139,62 +135,12 @@ static ACPresence procAcpiCheck() {
       }
    }
 
-   if (power_supplyDir)
-      closedir(power_supplyDir);
+   if (dir)
+      closedir(dir);
    return isOn;
 }
 
-static ACPresence sysCheck() {
-   ACPresence isOn = AC_ERROR;
-   const char *power_supplyPath = "/sys/class/power_supply";
-   DIR *power_supplyDir = opendir(power_supplyPath);
-   if (!power_supplyDir) {
-      return AC_ERROR;
-   }
-
-   struct dirent result;
-   struct dirent* dirEntry;
-   for (;;) {
-      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
-      if (err || !dirEntry)
-         break;
-
-      char* entryName = (char *) dirEntry->d_name;
-      if (strncmp(entryName, "A", 1)) {
-         continue;
-      }
-      char onlinePath[50];
-      snprintf((char *) onlinePath, sizeof onlinePath, "%s/%s/online", power_supplyPath, entryName);
-      FILE* file = fopen(onlinePath, "r");
-      if (!file) {
-         isOn = AC_ERROR;
-      } else {
-         isOn = (fgetc(file) - '0');
-         fclose(file);
-         if (isOn == AC_PRESENT) {
-            // If any AC adapter is being used then stop
-            break;
-         }
-      }
-   }
-
-   if (power_supplyDir)
-      closedir(power_supplyDir);
-
-   return isOn;
-}
-
-ACPresence Battery_isOnAC() {
-   if (access(PROCDIR "/acpi/ac_adapter", F_OK) == 0) {
-      return procAcpiCheck();
-   } else if (access("/sys/class/power_supply", F_OK) == 0) {
-      return sysCheck();
-   } else {
-      return AC_ERROR;
-   }
-}
-
-double Battery_getProcBatData() {
+static double Battery_getProcBatData() {
    const unsigned long int totalFull = parseBatInfo("info", 3, 4);
    if (totalFull == 0)
       return 0;
@@ -206,11 +152,58 @@ double Battery_getProcBatData() {
    return totalRemain * 100.0 / (double) totalFull;
 }
 
-double Battery_getSysBatData() {
-   const char *power_supplyPath = "/sys/class/power_supply/";
-   DIR *power_supplyDir = opendir(power_supplyPath);
-   if (!power_supplyDir)
-      return 0;
+static void Battery_getProcData(double* level, ACPresence* isOnAC) {
+   *level = Battery_getProcBatData();
+   *isOnAC = procAcpiCheck();
+}
+
+// ----------------------------------------
+// READ FROM /sys
+// ----------------------------------------
+
+static inline ssize_t xread(int fd, void *buf, size_t count) {
+  // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
+  size_t alreadyRead = 0;
+  for(;;) {
+     ssize_t res = read(fd, buf, count);
+     if (res == -1 && errno == EINTR) continue;
+     if (res > 0) {
+       buf = ((char*)buf)+res;
+       count -= res;
+       alreadyRead += res;
+     }
+     if (res == -1) return -1;
+     if (count == 0 || res == 0) return alreadyRead;
+  }
+}
+
+/**
+ * Returns a pointer to the suffix of `str` if its beginning matches `prefix`.
+ * Returns NULL if the prefix does not match.
+ * Examples: 
+ * match("hello world", "hello "); -> "world"
+ * match("hello world", "goodbye "); -> NULL
+ */
+static inline const char* match(const char* str, const char* prefix) {
+   for (;;) {
+      if (*prefix == '\0') {
+         return str;
+      }
+      if (*prefix != *str) {
+         return NULL;
+      }
+      prefix++; str++;
+   }
+}
+
+static void Battery_getSysData(double* level, ACPresence* isOnAC) {
+      
+   *level = 0;
+   *isOnAC = AC_ERROR;
+
+   DIR *dir = opendir(SYS_POWERSUPPLY_DIR);
+   if (!dir)
+      return;
 
    unsigned long int totalFull = 0;
    unsigned long int totalRemain = 0;
@@ -218,52 +211,120 @@ double Battery_getSysBatData() {
    struct dirent result;
    struct dirent* dirEntry;
    for (;;) {
-      int err = readdir_r((DIR *) power_supplyDir, &result, &dirEntry);
+      int err = readdir_r((DIR *) dir, &result, &dirEntry);
       if (err || !dirEntry)
          break;
       char* entryName = (char *) dirEntry->d_name;
+      const char filePath[50];
 
-      if (strncmp(entryName, "BAT", 3)) {
-         continue;
-      }
-
-      const char ueventPath[50];
-
-      snprintf((char *) ueventPath, sizeof ueventPath, "%s%s/uevent", power_supplyPath, entryName);
-
-      FILE *file;
-      if ((file = fopen(ueventPath, "r")) == NULL) {
-         closedir(power_supplyDir);
-         return 0;
-      }
-
-      if ((totalFull += parseUevent(file, "POWER_SUPPLY_ENERGY_FULL="))) {
-         totalRemain += parseUevent(file, "POWER_SUPPLY_ENERGY_NOW=");
-      } else {
-         //reset file pointer
-         if (fseek(file, 0, SEEK_SET) < 0) {
-            closedir(power_supplyDir);
-            fclose(file);
-            return 0;
+      if (entryName[0] == 'B' && entryName[1] == 'A' && entryName[2] == 'T') {
+         
+         snprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
+         int fd = open(filePath, O_RDONLY);
+         if (fd == -1) {
+            closedir(dir);
+            return;
+         }
+         char buffer[1024];
+         ssize_t buflen = xread(fd, buffer, 1023);
+         close(fd);
+         if (buflen < 1) {
+            closedir(dir);
+            return;
+         }
+         buffer[buflen] = '\0';
+         char *buf = buffer;
+         char *line = NULL;
+         bool full = false;
+         bool now = false;
+         while ((line = strsep(&buf, "\n")) != NULL) {
+            const char* ps = match(line, "POWER_SUPPLY_");
+            if (!ps) {
+               continue;
+            }
+            const char* energy = match(ps, "ENERGY_");
+            if (!energy) {
+               energy = match(ps, "CHARGE_");
+            }
+            if (!energy) {
+               continue;
+            }
+            const char* value = (!full) ? match(energy, "FULL=") : NULL;
+            if (value) {
+               totalFull += atoi(value);
+               full = true;
+               if (now) break;
+               continue;
+            }
+            value = (!now) ? match(energy, "NOW=") : NULL;
+            if (value) {
+               totalRemain += atoi(value);
+               now = true;
+               if (full) break;
+               continue;
+            }
+         }
+      } else if (entryName[0] == 'A') {
+         if (*isOnAC != AC_ERROR) {
+            continue;
+         }
+      
+         snprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
+         int fd = open(filePath, O_RDONLY);
+         if (fd == -1) {
+            closedir(dir);
+            return;
+         }
+         char buffer[2] = "";
+         for(;;) {
+            ssize_t res = read(fd, buffer, 1);
+            if (res == -1 && errno == EINTR) continue;
+            break;
+         }
+         close(fd);
+         if (buffer[0] == '0') {
+            *isOnAC = AC_ABSENT;
+         } else if (buffer[0] == '1') {
+            *isOnAC = AC_PRESENT;
          }
       }
+   }
+   closedir(dir);
+   *level = totalFull > 0 ? ((double) totalRemain * 100) / (double) totalFull : 0;
+}
 
-      //Some systems have it as CHARGE instead of ENERGY.
-      if ((totalFull += parseUevent(file, "POWER_SUPPLY_CHARGE_FULL="))) {
-         totalRemain += parseUevent(file, "POWER_SUPPLY_CHARGE_NOW=");
-      } else {
-        //reset file pointer
-         if (fseek(file, 0, SEEK_SET) < 0) {
-            closedir(power_supplyDir);
-            fclose(file);
-            return 0;
-         }
-      }
+static enum { BAT_PROC, BAT_SYS, BAT_ERR } Battery_method = BAT_PROC;
 
-      fclose(file);
+static time_t Battery_cacheTime = 0;
+static double Battery_cacheLevel = 0;
+static ACPresence Battery_cacheIsOnAC = 0;
+
+void Battery_getData(double* level, ACPresence* isOnAC) {
+   time_t now = time(NULL);
+   // update battery reading is slow. Update it each 10 seconds only.
+   if (now < Battery_cacheTime + 10) {
+      *level = Battery_cacheLevel;
+      *isOnAC = Battery_cacheIsOnAC;
+      return;
    }
 
-   const double percent = totalFull > 0 ? ((double) totalRemain * 100) / (double) totalFull : 0;
-   closedir(power_supplyDir);
-   return percent;
+   if (Battery_method == BAT_PROC) {
+      Battery_getProcData(level, isOnAC);
+      if (*level == 0) {
+         Battery_method = BAT_SYS;
+      }
+   }
+   if (Battery_method == BAT_SYS) {
+      Battery_getSysData(level, isOnAC);
+      if (*level == 0) {
+         Battery_method = BAT_ERR;
+      }
+   }
+   if (Battery_method == BAT_ERR) {
+      *level = -1;
+      *isOnAC = AC_ERROR;
+   }
+   Battery_cacheLevel = *level;
+   Battery_cacheIsOnAC = *isOnAC;
+   Battery_cacheTime = now;
 }

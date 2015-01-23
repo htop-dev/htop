@@ -10,15 +10,16 @@ in the source distribution for its full text.
 */
 
 #include "Meter.h"
+#include "Settings.h"
 #include "Vector.h"
 
 typedef struct Header_ {
    Vector** columns;
+   Settings* settings;
    struct ProcessList_* pl;
-   int height;
-   int pad;
    int nrColumns;
-   bool margin;
+   int pad;
+   int height;
 } Header;
 
 
@@ -30,9 +31,11 @@ typedef struct Header_ {
 #define Header_forEachColumn(this_, i_) for (int i_=0; i_ < this->nrColumns; i_++)
 #endif
 
-Header* Header_new(struct ProcessList_* pl, int nrColumns);
+Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns);
 
 void Header_delete(Header* this);
+
+void Header_populateFromSettings(Header* this);
 
 MeterModeId Header_addMeterByName(Header* this, char* name, int column);
 

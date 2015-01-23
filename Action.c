@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "AffinityPanel.h"
 #include "CategoriesPanel.h"
 #include "CRT.h"
+#include "MainPanel.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
 #include "ScreenManager.h"
@@ -58,36 +59,7 @@ typedef struct State_ {
    Header* header;
 } State;
 
-typedef bool(*Action_ForeachProcessFn)(Process*, size_t);
-
 }*/
-
-int Action_selectedPid(Panel* panel) {
-   Process* p = (Process*) Panel_getSelected(panel);
-   if (p) {
-      return p->pid;
-   }
-   return -1;
-}
-
-bool Action_foreachProcess(Panel* panel, Action_ForeachProcessFn fn, int arg, bool* wasAnyTagged) {
-   bool ok = true;
-   bool anyTagged = false;
-   for (int i = 0; i < Panel_size(panel); i++) {
-      Process* p = (Process*) Panel_get(panel, i);
-      if (p->tag) {
-         ok = fn(p, arg) && ok;
-         anyTagged = true;
-      }
-   }
-   if (!anyTagged) {
-      Process* p = (Process*) Panel_getSelected(panel);
-      if (p) ok = fn(p, arg) && ok;
-   }
-   if (wasAnyTagged)
-      *wasAnyTagged = anyTagged;
-   return ok;
-}
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, const char** keyLabels) {
    Panel* panel = st->panel;
@@ -97,14 +69,14 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, const char** keyLab
    int y = panel->y;
    const char* fuKeys[] = {"Enter", "Esc", NULL};
    int fuEvents[] = {13, 27};
-   ScreenManager* scr = ScreenManager_new(0, y, 0, -1, HORIZONTAL, header, settings, false);
+   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, false);
    scr->allowFocusChange = false;
    ScreenManager_add(scr, list, FunctionBar_new(keyLabels, fuKeys, fuEvents), x - 1);
    ScreenManager_add(scr, panel, NULL, -1);
    Panel* panelFocus;
    int ch;
    bool unfollow = false;
-   int pid = Action_selectedPid(panel);
+   int pid = MainPanel_selectedPid((MainPanel*)panel);
    if (header->pl->following == -1) {
       header->pl->following = pid;
       unfollow = true;
@@ -141,9 +113,9 @@ static void Setup_run(Settings* settings, const Header* header, ProcessList* pl)
    ScreenManager_delete(scr);
 }
 
-static bool changePriority(Panel* panel, int delta) {
+static bool changePriority(MainPanel* panel, int delta) {
    bool anyTagged;
-   bool ok = Action_foreachProcess(panel, (Action_ForeachProcessFn) Process_changePriorityBy, delta, &anyTagged);
+   bool ok = MainPanel_foreachProcess(panel, (MainPanel_ForeachProcessFn) Process_changePriorityBy, delta, &anyTagged);
    if (!ok)
       beep();
    return anyTagged;
@@ -163,13 +135,6 @@ bool Action_setUserOnly(const char* userName, uid_t* userId) {
    }
    *userId = -1;
    return false;
-}
-
-static const char* getMainPanelValue(Panel* panel, int i) {
-   Process* p = (Process*) Panel_get(panel, i);
-   if (p)
-      return p->comm;
-   return "";
 }
 
 static void tagAllChildren(Panel* panel, Process* parent) {
@@ -266,12 +231,12 @@ static Htop_Reaction actionIncSearch(State* st) {
 }
 
 static Htop_Reaction actionHigherPriority(State* st) {
-   bool changed = changePriority(st->panel, -1);
+   bool changed = changePriority((MainPanel*)st->panel, -1);
    return changed ? HTOP_REFRESH : HTOP_OK;
 }
 
 static Htop_Reaction actionLowerPriority(State* st) {
-   bool changed = changePriority(st->panel, 1);
+   bool changed = changePriority((MainPanel*)st->panel, 1);
    return changed ? HTOP_REFRESH : HTOP_OK;
 }
 
@@ -314,7 +279,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    void* set = Action_pickFromVector(st, affinityPanel, 15, fuFunctions);
    if (set) {
       Affinity* affinity = AffinityPanel_getAffinity(affinityPanel, st->pl);
-      bool ok = Action_foreachProcess(panel, (Action_ForeachProcessFn) Affinity_set, (size_t) affinity, NULL);
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) Affinity_set, (size_t) affinity, NULL);
       if (!ok) beep();
       Affinity_delete(affinity);
    }
@@ -332,7 +297,7 @@ static Htop_Reaction actionKill(State* st) {
          Panel_setHeader(st->panel, "Sending...");
          Panel_draw(st->panel, true);
          refresh();
-         Action_foreachProcess(st->panel, (Action_ForeachProcessFn) Process_sendSignal, (size_t) sgn->key, NULL);
+         MainPanel_foreachProcess((MainPanel*)st->panel, (MainPanel_ForeachProcessFn) Process_sendSignal, (size_t) sgn->key, NULL);
          napms(500);
       }
    }
@@ -361,7 +326,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
 }
 
 static Htop_Reaction actionFollow(State* st) {
-   st->pl->following = Action_selectedPid(st->panel);
+   st->pl->following = MainPanel_selectedPid((MainPanel*)st->panel);
    return HTOP_KEEP_FOLLOWING;
 }
 

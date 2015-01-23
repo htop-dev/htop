@@ -23,6 +23,8 @@ in the source distribution for its full text.
 
 #define METER_BUFFER_LEN 256
 
+#define GRAPH_DELAY (DEFAULT_DELAY/2)
+
 /*{
 #include "ListItem.h"
 
@@ -342,7 +344,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    struct timeval now;
    gettimeofday(&now, NULL);
    if (!timercmp(&now, &(data->time), <)) {
-      struct timeval delay = { .tv_sec = (int)(DEFAULT_DELAY/10), .tv_usec = (DEFAULT_DELAY-((int)(DEFAULT_DELAY/10)*10)) * 100000 };
+      struct timeval delay = { .tv_sec = (int)(GRAPH_DELAY/10), .tv_usec = (GRAPH_DELAY-((int)(GRAPH_DELAY/10)*10)) * 100000 };
       timeradd(&now, &delay, &(data->time));
 
       for (int i = 0; i < nValues - 1; i++)

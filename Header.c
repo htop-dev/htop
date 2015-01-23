@@ -18,15 +18,16 @@ in the source distribution for its full text.
 
 /*{
 #include "Meter.h"
+#include "Settings.h"
 #include "Vector.h"
 
 typedef struct Header_ {
    Vector** columns;
+   Settings* settings;
    struct ProcessList_* pl;
-   int height;
-   int pad;
    int nrColumns;
-   bool margin;
+   int pad;
+   int height;
 } Header;
 
 }*/
@@ -39,15 +40,15 @@ typedef struct Header_ {
 #define Header_forEachColumn(this_, i_) for (int i_=0; i_ < this->nrColumns; i_++)
 #endif
 
-Header* Header_new(struct ProcessList_* pl, int nrColumns) {
+Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns) {
    Header* this = calloc(1, sizeof(Header));
    this->columns = calloc(nrColumns, sizeof(Vector*));
+   this->settings = settings;
+   this->pl = pl;
    this->nrColumns = nrColumns;
    Header_forEachColumn(this, i) {
       this->columns[i] = Vector_new(Class(Meter), true, DEFAULT_SIZE);
    }
-   this->margin = true;
-   this->pl = pl;
    return this;
 }
 
@@ -57,6 +58,17 @@ void Header_delete(Header* this) {
    }
    free(this->columns);
    free(this);
+}
+
+void Header_populateFromSettings(Header* this) {
+   Header_forEachColumn(this, col) {
+      MeterColumnSettings* colSettings = &this->settings->columns[col];
+      for (int i = 0; i < colSettings->len; i++) {
+         Header_addMeterByName(this, colSettings->names[i], col);
+         Header_setMode(this, i, colSettings->modes[i], col);
+      }
+   }
+   Header_calculateHeight(this);
 }
 
 MeterModeId Header_addMeterByName(Header* this, char* name, int column) {
@@ -157,7 +169,7 @@ void Header_draw(const Header* this) {
 }
 
 int Header_calculateHeight(Header* this) {
-   int pad = this->margin ? 2 : 0;
+   int pad = this->settings->headerMargin ? 2 : 0;
    int maxHeight = pad;
 
    Header_forEachColumn(this, col) {
@@ -170,5 +182,6 @@ int Header_calculateHeight(Header* this) {
       maxHeight = MAX(maxHeight, height);
    }
    this->height = maxHeight;
+   this->pad = pad;
    return maxHeight;
 }

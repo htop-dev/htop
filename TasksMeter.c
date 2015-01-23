@@ -20,7 +20,10 @@ int TasksMeter_attributes[] = {
 
 static void TasksMeter_setValues(Meter* this, char* buffer, int len) {
    Platform_setTasksValues(this);
-   snprintf(buffer, len, "%d/%d", (int) this->values[0], (int) this->total);
+   if (this->pl->settings->hideKernelThreads) {
+      this->values[0] = 0;
+   }
+   snprintf(buffer, len, "%d/%d", (int) this->values[3], (int) this->total);
 }
 
 static void TasksMeter_display(Object* cast, RichString* out) {

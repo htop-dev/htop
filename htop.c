@@ -188,9 +188,12 @@ int main(int argc, char** argv) {
    UsersTable* ut = UsersTable_new();
    ProcessList* pl = ProcessList_new(ut, flags.pidWhiteList, flags.userId);
    
-   Header* header = Header_new(pl, 2);
    Settings* settings = Settings_new(pl->cpuCount);
    pl->settings = settings;
+
+   Header* header = Header_new(pl, settings, 2);
+
+   Header_populateFromSettings(header);
 
    if (flags.delay != -1)
       settings->delay = flags.delay;
@@ -225,8 +228,8 @@ int main(int argc, char** argv) {
    };
    MainPanel_setState(panel, &state);
    
-   ScreenManager* scr = ScreenManager_new(0, 0, 0, -1, HORIZONTAL, header, settings, true);
-   ScreenManager_add(scr, (Panel*) panel, defaultBar, 0);
+   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
+   ScreenManager_add(scr, (Panel*) panel, defaultBar, -1);
 
    ProcessList_scan(pl);
    millisleep(75);
@@ -265,7 +268,7 @@ int main(int argc, char** argv) {
       double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
       bool timeToRecalculate = (newTime - oldTime > settings->delay);
       if (newTime < oldTime) timeToRecalculate = true; // clock was adjusted?
-      int following = follow ? Action_selectedPid(panel) : -1;
+      int following = follow ? MainPanel_selectedPid((MainPanel*)panel) : -1;
       if (timeToRecalculate) {
          Header_draw(header);
          oldTime = newTime;

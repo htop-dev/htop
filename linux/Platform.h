@@ -10,6 +10,7 @@ in the source distribution for its full text.
 */
 
 #include "Action.h"
+#include "MainPanel.h"
 #include "BatteryMeter.h"
 
 void Platform_setBindings(Htop_Action* keys);
@@ -21,8 +22,6 @@ int Platform_getUptime();
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
-
-void Platform_getBatteryLevel(double* level, ACPresence* isOnAC);
 
 double Platform_setCPUValues(Meter* this, int cpu);
 

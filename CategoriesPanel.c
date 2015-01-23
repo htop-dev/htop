@@ -111,7 +111,6 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
             result = IGNORED;
          break;
    }
-
    if (result == HANDLED) {
       int size = ScreenManager_size(this->scr);
       for (int i = 1; i < size; i++)
@@ -131,7 +130,6 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
             break;
       }
    }
-
    return result;
 }
 

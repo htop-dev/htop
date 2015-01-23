@@ -17,11 +17,11 @@ in the source distribution for its full text.
 typedef struct Panel_ Panel;
 
 typedef enum HandlerResult_ {
-   HANDLED     = 0x00,
-   IGNORED     = 0x01,
-   BREAK_LOOP  = 0x02,
-   REFRESH     = 0x04,
-   RECALCULATE = 0x08,
+   HANDLED     = 0x01,
+   IGNORED     = 0x02,
+   BREAK_LOOP  = 0x04,
+   REFRESH     = 0x08,
+   RECALCULATE = 0x10,
 } HandlerResult;
 
 #define EVENT_SETSELECTED -1

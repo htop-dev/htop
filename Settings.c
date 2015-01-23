@@ -26,7 +26,7 @@ typedef struct {
    char** names;
    int* modes;
 } MeterColumnSettings;
-   
+
 typedef struct Settings_ {
    char* filename;
    
