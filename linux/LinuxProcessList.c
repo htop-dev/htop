@@ -166,7 +166,6 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    location += 1;
    assert(location != NULL);
    process->processor = strtol(location, &location, 10);
-   assert(location == NULL);
 
    return true;
 }
