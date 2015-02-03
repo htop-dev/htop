@@ -34,9 +34,13 @@ typedef struct CategoriesPanel_ {
 
 }*/
 
-static const char* MetersFunctions[] = {"      ", "      ", "      ", "Type  ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
+static const char* MetersFunctions[] = {"Type  ", "Move  ", "Delete", "Done  ", NULL};
+static const char* MetersKeys[] = {"Space", "Enter", "Del", "Esc"};
+static int MetersEvents[] = {' ', 13, 27, KEY_DC};
 
-static const char* AvailableMetersFunctions[] = {"      ", "      ", "      ", "      ", "Add L ", "Add R ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* AvailableMetersFunctions[] = {"Add   ", "Done  ", NULL};
+static const char* AvailableMetersKeys[] = {"Enter", "Esc"};
+static int AvailableMetersEvents[] = {13, 27};
 
 static const char* DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
@@ -54,12 +58,14 @@ static void CategoriesPanel_delete(Object* object) {
 }
 
 void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
-   Panel* leftMeters = (Panel*) MetersPanel_new(this->settings, "Left column", this->header->columns[0], this->scr);
-   Panel* rightMeters = (Panel*) MetersPanel_new(this->settings, "Right column", this->header->columns[1], this->scr);
-   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, leftMeters, rightMeters, this->scr, this->pl);
-   ScreenManager_add(this->scr, leftMeters, FunctionBar_new(MetersFunctions, NULL, NULL), 20);
-   ScreenManager_add(this->scr, rightMeters, FunctionBar_new(MetersFunctions, NULL, NULL), 20);
-   ScreenManager_add(this->scr, availableMeters, FunctionBar_new(AvailableMetersFunctions, NULL, NULL), -1);
+   MetersPanel* leftMeters = MetersPanel_new(this->settings, "Left column", this->header->columns[0], this->scr);
+   MetersPanel* rightMeters = MetersPanel_new(this->settings, "Right column", this->header->columns[1], this->scr);
+   leftMeters->rightNeighbor = rightMeters;
+   rightMeters->leftNeighbor = leftMeters;
+   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, (Panel*) leftMeters, (Panel*) rightMeters, this->scr, this->pl);
+   ScreenManager_add(this->scr, (Panel*) leftMeters, FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents), 20);
+   ScreenManager_add(this->scr, (Panel*) rightMeters, FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents), 20);
+   ScreenManager_add(this->scr, availableMeters, FunctionBar_new(AvailableMetersFunctions, AvailableMetersKeys, AvailableMetersEvents), -1);
 }
 
 static void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {

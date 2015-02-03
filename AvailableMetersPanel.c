@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "AvailableMetersPanel.h"
+#include "MetersPanel.h"
 
 #include "CPUMeter.h"
 #include "Header.h"
@@ -43,6 +44,9 @@ static void AvailableMetersPanel_delete(Object* object) {
 static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, MeterClass* type, int param, int column) {
    Meter* meter = (Meter*) Header_addMeterByClass(header, type, param, column);
    Panel_add(panel, (Object*) Meter_toListItem(meter));
+   Panel_setSelected(panel, Panel_size(panel) - 1);
+   ((MetersPanel*)panel)->moving = true;
+   ((ListItem*)Panel_getSelected(panel))->moving = true;
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
@@ -53,6 +57,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    int param = selected->key & 0xff;
    int type = selected->key >> 16;
    HandlerResult result = IGNORED;
+   bool update = false;
 
    switch(ch) {
       case KEY_F(5):
@@ -61,18 +66,23 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       {
          AvailableMetersPanel_addMeter(header, this->leftPanel, Platform_meterTypes[type], param, 0);
          result = HANDLED;
+         update = true;
          break;
       }
+      case 0x0a:
+      case 0x0d:
+      case KEY_ENTER:
       case KEY_F(6):
       case 'r':
       case 'R':
       {
          AvailableMetersPanel_addMeter(header, this->rightPanel, Platform_meterTypes[type], param, 1);
-         result = HANDLED;
+         result = (KEY_LEFT << 16) | SYNTH_KEY;
+         update = true;
          break;
       }
    }
-   if (result == HANDLED) {
+   if (update) {
       this->settings->changed = true;
       Header_calculateHeight(header);
       Header_draw(header);

@@ -192,6 +192,10 @@ void Vector_insert(Vector* this, int idx, void* data_) {
    assert(idx <= this->items);
    assert(Object_isA(data, this->type));
    assert(Vector_isConsistent(this));
+
+   if (idx > this->items) {
+      idx = this->items;
+   }
    
    Vector_checkArraySize(this);
    //assert(this->array[this->items] == NULL);

@@ -22,6 +22,7 @@ typedef enum HandlerResult_ {
    BREAK_LOOP  = 0x04,
    REFRESH     = 0x08,
    RECALCULATE = 0x10,
+   SYNTH_KEY   = 0x20,
 } HandlerResult;
 
 #define EVENT_SETSELECTED -1

@@ -15,14 +15,18 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "ScreenManager.h"
 
-typedef struct MetersPanel_ {
+typedef struct MetersPanel_ MetersPanel;
+
+struct MetersPanel_ {
    Panel super;
 
    Settings* settings;
    Vector* meters;
    ScreenManager* scr;
+   MetersPanel* leftNeighbor;
+   MetersPanel* rightNeighbor;
    bool moving;
-} MetersPanel;
+};
 
 }*/
 
@@ -33,11 +37,34 @@ static void MetersPanel_delete(Object* object) {
    free(this);
 }
 
+static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
+   Panel* super = (Panel*) this;
+   if (this->moving) {
+      this->moving = false;
+      ((ListItem*)Panel_getSelected(super))->moving = false;
+      if (neighbor) {
+         if (selected < Vector_size(this->meters)) {
+            Meter* meter = (Meter*) Vector_take(this->meters, selected);
+            Panel_remove(super, selected);
+            Vector_insert(neighbor->meters, selected, meter);
+            Panel_insert(&(neighbor->super), selected, (Object*) Meter_toListItem(meter));
+            Panel_setSelected(&(neighbor->super), selected);
+
+            neighbor->moving = true;
+            ((ListItem*)Panel_getSelected((Panel*)neighbor))->moving = true;
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
 static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    MetersPanel* this = (MetersPanel*) super;
    
    int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
+   bool sideMove = false;
 
    switch(ch) {
       case 0x0a:
@@ -93,6 +120,18 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          result = HANDLED;
          break;
       }
+      case KEY_RIGHT:
+      {
+         sideMove = moveToNeighbor(this, this->rightNeighbor, selected);
+         // don't set HANDLED; let ScreenManager handle focus.
+         break;
+      }
+      case KEY_LEFT:
+      {
+         sideMove = moveToNeighbor(this, this->leftNeighbor, selected);
+         // don't set HANDLED; let ScreenManager handle focus.
+         break;
+      }
       case KEY_F(9):
       case KEY_DC:
       {
@@ -104,7 +143,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          break;
       }
    }
-   if (result == HANDLED) {
+   if (result == HANDLED || sideMove) {
       Header* header = (Header*) this->scr->header;
       this->settings->changed = true;
       Header_calculateHeight(header);

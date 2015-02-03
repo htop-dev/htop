@@ -231,7 +231,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
       if (Panel_eventHandlerFn(panelFocus)) {
          HandlerResult result = Panel_eventHandler(panelFocus, ch);
-//fprintf(stderr, "eventResult=%d ", result);
+         if (result & SYNTH_KEY) {
+            ch = result >> 16;
+         }
          if (result & REFRESH) {
             doRefresh = true;
             sortTimeout = 0;
