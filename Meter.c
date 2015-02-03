@@ -51,6 +51,7 @@ typedef struct MeterClass_ {
    const char* name;
    const char* uiName;
    const char* caption;
+   const char* description;
    const char maxItems;
    char curItems;
 } MeterClass;

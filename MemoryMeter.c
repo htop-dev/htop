@@ -62,7 +62,7 @@ MeterClass MemoryMeter_class = {
    .maxItems = 3,
    .total = 100.0,
    .attributes = MemoryMeter_attributes,
-   "Memory",
-   "Memory",
-   "Mem"
+   .name = "Memory",
+   .uiName = "Memory",
+   .caption = "Mem"
 };
