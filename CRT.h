@@ -11,13 +11,6 @@ in the source distribution for its full text.
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
-#define COLORSCHEME_DEFAULT 0
-#define COLORSCHEME_MONOCHROME 1
-#define COLORSCHEME_BLACKONWHITE 2
-#define COLORSCHEME_BLACKONWHITE2 3
-#define COLORSCHEME_MIDNIGHT 4
-#define COLORSCHEME_BLACKNIGHT 5
-
 #define Black COLOR_BLACK
 #define Red COLOR_RED
 #define Green COLOR_GREEN
@@ -41,6 +34,16 @@ typedef enum TreeStr_ {
    TREE_STR_SHUT,
    TREE_STR_COUNT
 } TreeStr;
+
+typedef enum ColorSchemes_ {
+   COLORSCHEME_DEFAULT = 0,
+   COLORSCHEME_MONOCHROME = 1,
+   COLORSCHEME_BLACKONWHITE = 2,
+   COLORSCHEME_LIGHTTERMINAL = 3,
+   COLORSCHEME_MIDNIGHT = 4,
+   COLORSCHEME_BLACKNIGHT = 5,
+   LAST_COLORSCHEME = 6,
+} ColorSchemes;
 
 typedef enum ColorElements_ {
    RESET_COLOR,
@@ -115,7 +118,9 @@ extern const char **CRT_treeStr;
 
 extern bool CRT_utf8;
 
-extern int CRT_colors[LAST_COLORELEMENT];
+int* CRT_colors;
+
+extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
 
 extern int CRT_cursorX;
 

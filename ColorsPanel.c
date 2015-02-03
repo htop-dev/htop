@@ -16,7 +16,7 @@ in the source distribution for its full text.
 
 // TO ADD A NEW SCHEME:
 // * Increment the size of bool check in ColorsPanel.h
-// * Add the entry in the ColorSchemes array below in the file
+// * Add the entry in the ColorSchemeNames array below in the file
 // * Add a define in CRT.h that matches the order of the array
 // * Add the colors in CRT_setColors
 
@@ -34,7 +34,7 @@ typedef struct ColorsPanel_ {
 
 }*/
 
-static const char* ColorSchemes[] = {
+static const char* ColorSchemeNames[] = {
    "Default",
    "Monochromatic",
    "Black on White",
@@ -63,7 +63,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    case KEY_ENTER:
    case KEY_MOUSE:
    case ' ':
-      for (int i = 0; ColorSchemes[i] != NULL; i++)
+      for (int i = 0; ColorSchemeNames[i] != NULL; i++)
          CheckItem_set((CheckItem*)Panel_get(super, i), false);
       CheckItem_set((CheckItem*)Panel_get(super, mark), true);
       this->settings->colorScheme = mark;
@@ -100,8 +100,8 @@ ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
    this->scr = scr;
 
    Panel_setHeader(super, "Colors");
-   for (int i = 0; ColorSchemes[i] != NULL; i++) {
-      Panel_add(super, (Object*) CheckItem_new(strdup(ColorSchemes[i]), NULL, false));
+   for (int i = 0; ColorSchemeNames[i] != NULL; i++) {
+      Panel_add(super, (Object*) CheckItem_new(strdup(ColorSchemeNames[i]), NULL, false));
    }
    CheckItem_set((CheckItem*)Panel_get(super, settings->colorScheme), true);
    return this;
