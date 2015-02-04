@@ -319,13 +319,13 @@ Bytes of write(2) I/O for the process.
 .B CNCLWB (IO_CANCEL)
 Bytes of cancelled write(2) I/O.
 .TP
-.B IO_READ_RATE (IORR)
+.B IO_READ_RATE (DISK READ)
 The I/O rate of read(2) in bytes per second, for the process.
 .TP
-.B IO_WRITE_RATE (IOWR)
+.B IO_WRITE_RATE (DISK WRITE)
 The I/O rate of write(2) in bytes per second, for the process.
 .TP
-.B IO_RATE (IORW)
+.B IO_RATE (DISK R/W)
 The I/O rate, IO_READ_RATE + IO_WRITE_RATE (see above).
 .TP
 .B CGROUP
