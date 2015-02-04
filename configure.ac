@@ -70,6 +70,19 @@ AC_TRY_COMPILE(AC_INCLUDES_DEFAULT, [char *a; a = strdup("foo"); int i = 0; i++;
    AC_MSG_ERROR([htop is written in C99. A newer version of gcc is required.]))
 CFLAGS="$save_cflags"
 
+save_cflags="${CFLAGS}"
+CFLAGS="$CFLAGS -Wextra"
+AC_MSG_CHECKING([if compiler supports -Wextra])
+AC_TRY_COMPILE([], [], [
+   wextra_flag=-Wextra
+   AC_MSG_RESULT([yes])
+],[
+   wextra_flag=
+   AC_MSG_RESULT([no])
+])
+CFLAGS="$save_cflags"
+AC_SUBST(wextra_flag)
+
 # Checks for features and flags.
 # ----------------------------------------------------------------------
 PROCDIR=/proc
