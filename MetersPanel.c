@@ -170,6 +170,8 @@ MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* met
    this->meters = meters;
    this->scr = scr;
    this->moving = false;
+   this->rightNeighbor = NULL;
+   this->leftNeighbor = NULL;
    Panel_setHeader(super, header);
    for (int i = 0; i < Vector_size(meters); i++) {
       Meter* meter = (Meter*) Vector_get(meters, i);
