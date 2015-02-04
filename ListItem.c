@@ -42,7 +42,7 @@ static void ListItem_display(Object* cast, RichString* out) {
    snprintf(buffer, len, "%s", this->value);
    */
    if (this->moving) {
-      RichString_write(out, CRT_colors[DEFAULT_COLOR], "↕ ");
+      RichString_write(out, CRT_colors[DEFAULT_COLOR], CRT_utf8 ? "↕ " : "+ ");
    } else {
       RichString_prune(out);
    }
