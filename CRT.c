@@ -50,7 +50,7 @@ typedef enum ColorSchemes_ {
    COLORSCHEME_BLACKONWHITE = 2,
    COLORSCHEME_LIGHTTERMINAL = 3,
    COLORSCHEME_MIDNIGHT = 4,
-   COLORSCHEME_BLACKNIGHT = 5
+   COLORSCHEME_BLACKNIGHT = 5,
    LAST_COLORSCHEME = 6,
 } ColorSchemes;
 
@@ -144,7 +144,7 @@ const char **CRT_treeStr = CRT_treeStrAscii;
 
 static bool CRT_hasColors;
 
-static int CRT_delay = 0;
+int CRT_delay = 0;
 
 bool CRT_utf8 = false;
 
@@ -189,9 +189,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [MEMORY_BUFFERS] = ColorPair(Blue,Black),
       [MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue,Black),
       [MEMORY_CACHE] = ColorPair(Yellow,Black),
-      [LOAD_AVERAGE_FIFTEEN] = A_NORMAL,
-      [LOAD_AVERAGE_FIVE] = ColorPair(Cyan,Black),
-      [LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(Cyan,Black),
+      [LOAD_AVERAGE_FIFTEEN] = ColorPair(Cyan,Black),
+      [LOAD_AVERAGE_FIVE] = A_BOLD | ColorPair(Cyan,Black),
+      [LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(White,Black),
       [LOAD] = A_BOLD,
       [HELP_BOLD] = A_BOLD | ColorPair(Cyan,Black),
       [CLOCK] = A_BOLD,
@@ -524,7 +524,7 @@ static void CRT_handleSIGTERM(int sgn) {
 void CRT_init(int delay, int colorScheme) {
    initscr();
    noecho();
-   CRT_delay = delay/2;
+   CRT_delay = delay;
    if (CRT_delay == 0) {
       CRT_delay = 1;
    }

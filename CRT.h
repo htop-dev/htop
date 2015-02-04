@@ -116,6 +116,8 @@ extern const char *CRT_treeStrUtf8[TREE_STR_COUNT];
 
 extern const char **CRT_treeStr;
 
+extern int CRT_delay;
+
 extern bool CRT_utf8;
 
 int* CRT_colors;
