@@ -45,6 +45,8 @@ in the source distribution for its full text.
 
 #include <sys/types.h>
 
+typedef struct Settings_ Settings;
+
 #define PROCESS_FLAG_IO 1
 #define PROCESS_FLAG_IOPRIO 2
 #define PROCESS_FLAG_OPENVZ 4
@@ -643,14 +645,12 @@ static void Process_display(Object* cast, RichString* out) {
    assert(out->chlen > 0);
 }
 
-void Process_delete(Object* cast) {
-   Process* this = (Process*) cast;
+void Process_done(Process* this) {
    assert (this != NULL);
    free(this->comm);
 #ifdef HAVE_CGROUP
    free(this->cgroup);
 #endif
-   free(this);
 }
 
 ObjectClass Process_class = {
@@ -660,9 +660,7 @@ ObjectClass Process_class = {
    .compare = Process_compare
 };
 
-Process* Process_new(struct ProcessList_ *pl) {
-   Process* this = calloc(1, sizeof(Process));
-   Object_setClass(this, Class(Process));
+void Process_init(Process* this, struct Settings_* settings, struct ProcessList_* pl) {
    this->pid = 0;
    this->pl = pl;
    this->tag = false;
@@ -678,7 +676,6 @@ Process* Process_new(struct ProcessList_ *pl) {
    this->cgroup = NULL;
 #endif
    if (Process_getuid == -1) Process_getuid = getuid();
-   return this;
 }
 
 void Process_toggleTag(Process* this) {

@@ -60,3 +60,7 @@ int Platform_getMaxPid() {
    return -1;
 }
 
+void Platform_getBatteryLevel(double* level, ACPresence* isOnAC) {
+   *level = -1;
+   *isOnAC = AC_ERROR;
+}

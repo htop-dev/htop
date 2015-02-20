@@ -24,6 +24,8 @@ in the source distribution for its full text.
 
 #include <sys/types.h>
 
+typedef struct Settings_ Settings;
+
 #define PROCESS_FLAG_IO 1
 #define PROCESS_FLAG_IOPRIO 2
 #define PROCESS_FLAG_OPENVZ 4
@@ -189,11 +191,11 @@ void Process_setupColumnWidths();
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
-void Process_delete(Object* cast);
+void Process_done(Process* this);
 
 extern ObjectClass Process_class;
 
-Process* Process_new(struct ProcessList_ *pl);
+void Process_init(Process* this, struct Settings_* settings, struct ProcessList_* pl);
 
 void Process_toggleTag(Process* this);
 

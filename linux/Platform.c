@@ -27,6 +27,7 @@ in the source distribution for its full text.
 /*{
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "LinuxProcess.h"
 }*/
 
 static Htop_Reaction Platform_actionSetIOPriority(Panel* panel, ProcessList* pl, Header* header) {

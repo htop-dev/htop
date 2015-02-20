@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "LinuxProcess.h"
 #include "CRT.h"
 
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 
@@ -22,7 +23,22 @@ typedef struct LinuxProcess_ {
    IOPriority ioPriority;
 } LinuxProcess;
 
+#define Process_delete LinuxProcess_delete
+
 }*/
+
+LinuxProcess* LinuxProcess_new(Settings* settings, ProcessList* pl) {
+   LinuxProcess* this = calloc(sizeof(LinuxProcess), 1);
+   Process_init(&this->super, settings, pl);
+   return this;
+}
+
+void LinuxProcess_delete(Object* cast) {
+   LinuxProcess* this = (LinuxProcess*) this;
+   Object_setClass(this, Class(Process));
+   Process_done((Process*)cast);
+   free(this);
+}
 
 /*
 [1] Note that before kernel 2.6.26 a process that has not asked for

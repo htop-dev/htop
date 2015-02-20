@@ -33,6 +33,9 @@ case "$target" in
    ;;
 esac
 
+my_htop_platform=unsupported
+
+
 # Checks for libraries.
 # ----------------------------------------------------------------------
 AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
