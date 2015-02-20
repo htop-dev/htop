@@ -241,7 +241,6 @@ void ProcessList_expandTree(ProcessList* this) {
 }
 
 void ProcessList_rebuildPanel(ProcessList* this) {
-   int following = this->following;
    const char* incFilter = this->incFilter;
 
    int currPos = Panel_getSelectedIndex(this->panel);

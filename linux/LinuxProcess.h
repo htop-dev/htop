@@ -17,6 +17,12 @@ typedef struct LinuxProcess_ {
    IOPriority ioPriority;
 } LinuxProcess;
 
+#define Process_delete LinuxProcess_delete
+
+
+LinuxProcess* LinuxProcess_new(Settings* settings);
+
+void LinuxProcess_delete(Object* cast);
 
 /*
 [1] Note that before kernel 2.6.26 a process that has not asked for

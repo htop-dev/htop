@@ -158,26 +158,20 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
          timeToRecalculate = (newTime - oldTime > this->settings->delay);
          if (newTime < oldTime) timeToRecalculate = true; // clock was adjusted?
-//fprintf(stderr, "\n%p %f ", this, newTime);
          if (doRefresh) {
             if (timeToRecalculate || forceRecalculate) {
                ProcessList_scan(this->header->pl);
-//fprintf(stderr, "scan ");
             }
-//fprintf(stderr, "sortTo=%d ", sortTimeout);
             if (sortTimeout == 0 || this->settings->treeView) {
                ProcessList_sort(this->header->pl);
-//fprintf(stderr, "sort ");
                sortTimeout = 1;
             }
             //this->header->pl->incFilter = IncSet_filter(inc);
             ProcessList_rebuildPanel(this->header->pl);
-//fprintf(stderr, "rebuild ");
             drawPanel = true;
          }
          if (timeToRecalculate || forceRecalculate) {
             Header_draw(this->header);
-//fprintf(stderr, "drawHeader ");
             oldTime = newTime;
             forceRecalculate = false;
          }
@@ -188,7 +182,6 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          for (int i = 0; i < panels; i++) {
             Panel* panel = (Panel*) Vector_get(this->panels, i);
             Panel_draw(panel, i == focus);
-//fprintf(stderr, "drawPanel ");
             if (i < panels) {
                if (this->orientation == HORIZONTAL) {
                   mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
@@ -206,8 +199,6 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       int prevCh = ch;
       ch = getch();
 
-//fprintf(stderr, "ch=%d ", ch);
-      
       if (ch == KEY_MOUSE) {
          MEVENT mevent;
          int ok = getmouse(&mevent);
@@ -260,7 +251,6 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          } else
             closeTimeout = 0;
          drawPanel = false;
-//fprintf(stderr, "err ");
          continue;
       }
       drawPanel = true;
@@ -300,12 +290,10 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          quit = true;
          continue;
       default:
-//fprintf(stderr, "onKey ");
          sortTimeout = resetSortTimeout;
          Panel_onKey(panelFocus, ch);
          break;
       }
-//fprintf(stderr, "loop ");
    }
 
    if (lastFocus)

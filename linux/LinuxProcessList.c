@@ -375,6 +375,7 @@ static void LinuxProcessList_readCGroupFile(Process* process, const char* dirnam
       int nFields;
       char** fields = String_split(trimmed, ':', &nFields);
       free(trimmed);
+      free(process->cgroup);
       if (nFields >= 3) {
          process->cgroup = strndup(fields[2] + 1, 10);
       } else {
@@ -521,7 +522,7 @@ static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* 
          process = existingProcess;
          assert(process->pid == pid);
       } else {
-         process = Process_new(settings);
+         process = (Process*) LinuxProcess_new(settings);
          assert(process->comm == NULL);
          process->pid = pid;
          process->tgid = parent ? parent->pid : pid;
@@ -625,7 +626,7 @@ static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* 
          if (existingProcess)
             ProcessList_remove((ProcessList*)this, process);
          else
-            Process_delete((Object*)process);
+            LinuxProcess_delete((Object*)process);
       }
    }
    closedir(dir);

@@ -191,11 +191,11 @@ void Process_setupColumnWidths();
 
 void Process_writeDefaultField(Process* this, RichString* str, ProcessField field);
 
-void Process_delete(Object* cast);
+void Process_done(Process* this);
 
 extern ObjectClass Process_class;
 
-Process* Process_new(struct Settings_* settings);
+void Process_init(Process* this, struct Settings_* settings);
 
 void Process_toggleTag(Process* this);
 

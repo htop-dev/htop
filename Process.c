@@ -647,14 +647,12 @@ static void Process_display(Object* cast, RichString* out) {
    assert(out->chlen > 0);
 }
 
-void Process_delete(Object* cast) {
-   Process* this = (Process*) cast;
+void Process_done(Process* this) {
    assert (this != NULL);
    free(this->comm);
 #ifdef HAVE_CGROUP
    free(this->cgroup);
 #endif
-   free(this);
 }
 
 ObjectClass Process_class = {
@@ -664,9 +662,7 @@ ObjectClass Process_class = {
    .compare = Process_compare
 };
 
-Process* Process_new(struct Settings_* settings) {
-   Process* this = calloc(1, sizeof(Process));
-   Object_setClass(this, Class(Process));
+void Process_init(Process* this, struct Settings_* settings) {
    this->pid = 0;
    this->settings = settings;
    this->tag = false;
@@ -682,7 +678,6 @@ Process* Process_new(struct Settings_* settings) {
    this->cgroup = NULL;
 #endif
    if (Process_getuid == -1) Process_getuid = getuid();
-   return this;
 }
 
 void Process_toggleTag(Process* this) {
