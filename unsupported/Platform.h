@@ -10,11 +10,18 @@ in the source distribution for its full text.
 */
 
 #include "Action.h"
+#include "BatteryMeter.h"
+#include "UnsupportedProcess.h"
 
 void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
 
 int Platform_getUptime();
+
+void Platform_getLoadAverage(double* one, double* five, double* fifteen);
+
+int Platform_getMaxPid();
+
 
 #endif
