@@ -22,14 +22,14 @@ in the source distribution for its full text.
 #include "Header.h"
 #include <stdbool.h>
 
-struct Settings_ {
+typedef struct Settings_ {
    char* userSettings;
    ProcessList* pl;
    Header* header;
    int colorScheme;
    int delay;
    bool changed;
-};
+} Settings;
 
 }*/
 

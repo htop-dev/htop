@@ -24,8 +24,6 @@ in the source distribution for its full text.
 
 #include <sys/types.h>
 
-typedef struct Settings_ Settings;
-
 #define PROCESS_FLAG_IO 1
 #define PROCESS_FLAG_IOPRIO 2
 #define PROCESS_FLAG_OPENVZ 4
@@ -195,7 +193,7 @@ void Process_done(Process* this);
 
 extern ObjectClass Process_class;
 
-void Process_init(Process* this, struct Settings_* settings, struct ProcessList_* pl);
+void Process_init(Process* this, struct ProcessList_* pl);
 
 void Process_toggleTag(Process* this);
 

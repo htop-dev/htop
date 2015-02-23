@@ -20,7 +20,7 @@ typedef struct LinuxProcess_ {
 #define Process_delete LinuxProcess_delete
 
 
-LinuxProcess* LinuxProcess_new(Settings* settings);
+LinuxProcess* LinuxProcess_new(ProcessList* pl);
 
 void LinuxProcess_delete(Object* cast);
 

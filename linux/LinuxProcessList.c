@@ -465,7 +465,7 @@ static bool LinuxProcessList_processEntries(ProcessList* this, const char* dirna
          process = existingProcess;
          assert(process->pid == pid);
       } else {
-         process = (Process*) LinuxProcess_new(settings, this);
+         process = (Process*) LinuxProcess_new(this);
          assert(process->comm == NULL);
          process->pid = pid;
          process->tgid = parent ? parent->pid : pid;
