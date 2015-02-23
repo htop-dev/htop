@@ -80,8 +80,9 @@ int Platform_getUptime() {
    double uptime = 0;
    FILE* fd = fopen(PROCDIR "/uptime", "r");
    if (fd) {
-      fscanf(fd, "%64lf", &uptime);
+      int n = fscanf(fd, "%64lf", &uptime);
       fclose(fd);
+      if (n <= 0) return 0;
    }
    return (int) floor(uptime);
 }
@@ -103,7 +104,7 @@ int Platform_getMaxPid() {
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
    if (!file) return -1;
    int maxPid = 4194303;
-   fscanf(file, "%32d", &maxPid);
+   (void) fscanf(file, "%32d", &maxPid);
    fclose(file);
    return maxPid;
 }

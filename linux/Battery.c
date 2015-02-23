@@ -117,7 +117,8 @@ static ACPresence procAcpiCheck() {
       }
 
       char line[100];
-      fgets(line, sizeof line, file);
+      char* ok = fgets(line, sizeof line, file);
+      if (!ok) continue;
       line[sizeof(line) - 1] = '\0';
 
       fclose(file);

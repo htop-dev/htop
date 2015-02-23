@@ -344,7 +344,7 @@ static void LinuxProcessList_readOpenVZData(ProcessList* this, Process* process,
    FILE* file = fopen(filename, "r");
    if (!file) 
       return;
-   fscanf(file, 
+   (void) fscanf(file, 
       "%*32u %*32s %*1c %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
       "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
       "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
@@ -692,7 +692,8 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       // Dependending on your kernel version,
       // 5, 7, 8 or 9 of these fields will be set.
       // The rest will remain at zero.
-      fgets(buffer, 255, file);
+      char* ok = fgets(buffer, 255, file);
+      if (!ok) buffer[0] = '\0';
       if (i == 0)
          sscanf(buffer, "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
       else {
