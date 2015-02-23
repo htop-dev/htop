@@ -42,11 +42,13 @@ linux/LinuxProcess.h linux/LinuxProcessList.h linux/LinuxCRT.h linux/Battery.h
 endif
 
 if HTOP_UNSUPPORTED
-myhtopplatsources = unsupported/Platform.c unsupported/UnsupportedProcessList.c \
-unsupported/UnsupportedCRT.c
+myhtopplatsources = unsupported/Platform.c \
+unsupported/UnsupportedProcess.c unsupported/UnsupportedProcessList.c \
+unsupported/UnsupportedCRT.c unsupported/Battery.c
 
-myhtopplatheaders = unsupported/Platform.h unsupported/UnsupportedProcessList.h \
-unsupported/UnsupportedCRT.h
+myhtopplatheaders = unsupported/Platform.h \
+unsupported/UnsupportedProcess.h unsupported/UnsupportedProcessList.h \
+unsupported/UnsupportedCRT.h unsupported/Battery.h
 endif
 
 SUFFIXES = .h
