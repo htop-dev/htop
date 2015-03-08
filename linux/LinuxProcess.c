@@ -35,7 +35,7 @@ LinuxProcess* LinuxProcess_new(ProcessList* pl) {
 }
 
 void LinuxProcess_delete(Object* cast) {
-   LinuxProcess* this = (LinuxProcess*) this;
+   LinuxProcess* this = (LinuxProcess*) cast;
    Process_done((Process*)cast);
    free(this);
 }
