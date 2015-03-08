@@ -312,22 +312,27 @@ static void LinuxProcessList_readCGroupFile(Process* process, const char* dirnam
       process->cgroup = strdup("");
       return;
    }
-   char buffer[256];
-   char *ok = fgets(buffer, 255, file);
-   if (ok) {
-      char* trimmed = String_trim(buffer);
-      int nFields;
-      char** fields = String_split(trimmed, ':', &nFields);
-      free(trimmed);
-      free(process->cgroup);
-      if (nFields >= 3) {
-         process->cgroup = strndup(fields[2] + 1, 10);
-      } else {
-         process->cgroup = strdup("");
+   char output[256];
+   output[0] = '\0';
+   char* at = output;
+   int left = 255;
+   while (!feof(file) && left > 0) {
+      char buffer[256];
+      char *ok = fgets(buffer, 255, file);
+      if (!ok) break;
+      char* group = strchr(buffer, ':');
+      if (!group) break;
+      if (at != output) {
+         *at = ';';
+         at++;
+         left--;
       }
-      String_freeArray(fields);
+      int wrote = snprintf(at, left, "%s", group);
+      left -= wrote;
    }
    fclose(file);
+   free(process->cgroup);
+   process->cgroup = strdup(output);
 }
 
 #endif
