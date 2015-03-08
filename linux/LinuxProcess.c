@@ -29,13 +29,13 @@ typedef struct LinuxProcess_ {
 
 LinuxProcess* LinuxProcess_new(Settings* settings) {
    LinuxProcess* this = calloc(sizeof(LinuxProcess), 1);
+   Object_setClass(this, Class(Process));
    Process_init(&this->super, settings);
    return this;
 }
 
 void LinuxProcess_delete(Object* cast) {
-   LinuxProcess* this = (LinuxProcess*) this;
-   Object_setClass(this, Class(Process));
+   LinuxProcess* this = (LinuxProcess*) cast;
    Process_done((Process*)cast);
    free(this);
 }
