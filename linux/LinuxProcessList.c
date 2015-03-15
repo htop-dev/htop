@@ -122,7 +122,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    }
 
    #ifdef HAVE_OPENVZ
-   this->flags |= PROCESS_FLAG_OPENVZ;
+   this->flags |= PROCESS_FLAG_LINUX_OPENVZ;
    #endif
 
    return pl;
@@ -333,10 +333,10 @@ static bool LinuxProcessList_readStatmFile(Process* process, const char* dirname
 #ifdef HAVE_OPENVZ
 
 static void LinuxProcessList_readOpenVZData(ProcessList* this, Process* process, const char* dirname, const char* name) {
-   if ( (!(this->flags & PROCESS_FLAG_OPENVZ)) || (access("/proc/vz", R_OK) != 0)) {
+   if ( (!(this->flags & PROCESS_FLAG_LINUX_OPENVZ)) || (access("/proc/vz", R_OK) != 0)) {
       process->vpid = process->pid;
       process->ctid = 0;
-      this->flags |= ~PROCESS_FLAG_OPENVZ;
+      this->flags |= ~PROCESS_FLAG_LINUX_OPENVZ;
       return;
    }
    char filename[MAX_NAME+1];
@@ -546,7 +546,7 @@ static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* 
       unsigned long long int lasttimes = (process->utime + process->stime);
       if (! LinuxProcessList_readStatFile(process, dirname, name, command))
          goto errorReadingProcess;
-      if (settings->flags & PROCESS_FLAG_IOPRIO)
+      if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO)
          LinuxProcess_updateIOPriority((LinuxProcess*)process);
       float percent_cpu = (process->utime + process->stime - lasttimes) / period * 100.0;
       process->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
@@ -565,7 +565,7 @@ static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* 
          #endif
          
          #ifdef HAVE_VSERVER
-         if (settings->flags & PROCESS_FLAG_VSERVER)
+         if (settings->flags & PROCESS_FLAG_LINUX_VSERVER)
             LinuxProcessList_readVServerData(process, dirname, name);
          #endif
 
@@ -581,7 +581,7 @@ static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* 
       }
 
       #ifdef HAVE_CGROUP
-      if (settings->flags & PROCESS_FLAG_CGROUP)
+      if (settings->flags & PROCESS_FLAG_LINUX_CGROUP)
          LinuxProcessList_readCGroupFile(process, dirname, name);
       #endif
       

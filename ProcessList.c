@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "ProcessList.h"
+#include "Platform.h"
 
 #include "CRT.h"
 #include "String.h"

@@ -10,6 +10,36 @@ in the source distribution for its full text.
 */
 
 
+#define PROCESS_FLAG_LINUX_IOPRIO   0x0100
+#define PROCESS_FLAG_LINUX_OPENVZ   0x0200
+#define PROCESS_FLAG_LINUX_VSERVER  0x0400
+#define PROCESS_FLAG_LINUX_CGROUP   0x0800
+
+typedef enum LinuxProcessFields {
+   PID = 1, COMM, STATE, PPID, PGRP, SESSION, TTY_NR, TPGID, FLAGS, MINFLT, CMINFLT, MAJFLT, CMAJFLT, UTIME,
+   STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
+   STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
+   PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
+   USER, TIME, NLWP, TGID,
+   #ifdef HAVE_OPENVZ
+   CTID, VPID,
+   #endif
+   #ifdef HAVE_VSERVER
+   VXID,
+   #endif
+   #ifdef HAVE_TASKSTATS
+   RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE, IO_RATE,
+   #endif
+   #ifdef HAVE_CGROUP
+   CGROUP,
+   #endif
+   #ifdef HAVE_OOM
+   OOM,
+   #endif
+   IO_PRIORITY,
+   LAST_PROCESSFIELD
+} LinuxProcessField;
+
 #include "IOPriority.h"
 
 typedef struct LinuxProcess_ {
@@ -19,6 +49,13 @@ typedef struct LinuxProcess_ {
 
 #define Process_delete LinuxProcess_delete
 
+
+extern ProcessFieldData Process_fields[];
+
+extern char* Process_pidFormat;
+extern char* Process_tpgidFormat;
+
+void Process_setupColumnWidths();
 
 LinuxProcess* LinuxProcess_new(Settings* settings);
 

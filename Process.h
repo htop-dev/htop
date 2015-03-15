@@ -20,11 +20,7 @@ in the source distribution for its full text.
 
 #include <sys/types.h>
 
-#define PROCESS_FLAG_IO 1
-#define PROCESS_FLAG_IOPRIO 2
-#define PROCESS_FLAG_OPENVZ 4
-#define PROCESS_FLAG_VSERVER 8
-#define PROCESS_FLAG_CGROUP 16
+#define PROCESS_FLAG_IO 0x0001
 
 #ifndef Process_isKernelThread
 #define Process_isKernelThread(_process) (_process->pgrp == 0)
@@ -38,30 +34,7 @@ in the source distribution for its full text.
 #define Process_isThread(_process) (Process_isUserlandThread(_process) || Process_isKernelThread(_process))
 #endif
 
-typedef enum ProcessField_ {
-   PID = 1, COMM, STATE, PPID, PGRP, SESSION, TTY_NR, TPGID, FLAGS, MINFLT, CMINFLT, MAJFLT, CMAJFLT, UTIME,
-   STIME, CUTIME, CSTIME, PRIORITY, NICE, ITREALVALUE, STARTTIME, VSIZE, RSS, RLIM, STARTCODE, ENDCODE,
-   STARTSTACK, KSTKESP, KSTKEIP, SIGNAL, BLOCKED, SSIGIGNORE, SIGCATCH, WCHAN, NSWAP, CNSWAP, EXIT_SIGNAL,
-   PROCESSOR, M_SIZE, M_RESIDENT, M_SHARE, M_TRS, M_DRS, M_LRS, M_DT, ST_UID, PERCENT_CPU, PERCENT_MEM,
-   USER, TIME, NLWP, TGID,
-   #ifdef HAVE_OPENVZ
-   CTID, VPID,
-   #endif
-   #ifdef HAVE_VSERVER
-   VXID,
-   #endif
-   #ifdef HAVE_TASKSTATS
-   RCHAR, WCHAR, SYSCR, SYSCW, RBYTES, WBYTES, CNCLWB, IO_READ_RATE, IO_WRITE_RATE, IO_RATE,
-   #endif
-   #ifdef HAVE_CGROUP
-   CGROUP,
-   #endif
-   #ifdef HAVE_OOM
-   OOM,
-   #endif
-   IO_PRIORITY,
-   LAST_PROCESSFIELD
-} ProcessField;
+typedef int ProcessField;
 
 typedef struct Process_ {
    Object super;
@@ -71,6 +44,10 @@ typedef struct Process_ {
    pid_t pid;
    char* comm;
    int indent;
+
+   int basenameOffset;
+   bool updated;
+
    char state;
    bool tag;
    bool showChildren;
@@ -137,8 +114,6 @@ typedef struct Process_ {
    #endif
 
    int exit_signal;
-   int basenameOffset;
-   bool updated;
 
    unsigned long int minflt;
    unsigned long int cminflt;
@@ -175,11 +150,6 @@ typedef struct ProcessFieldData_ {
 void Process_writeField(Process* this, RichString* str, ProcessField field);
 long Process_compare(const void* v1, const void* v2);
 
-
-extern ProcessFieldData Process_fields[];
-
-
-void Process_setupColumnWidths();
 
 #define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)

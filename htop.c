@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "ScreenManager.h"
 #include "Settings.h"
 #include "UsersTable.h"
+#include "Platform.h"
 
 #include <getopt.h>
 #include <locale.h>
@@ -101,7 +102,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             break;
          case 's':
             if (strcmp(optarg, "help") == 0) {
-               for (int j = 1; j < LAST_PROCESSFIELD; j++) {
+               for (int j = 1; j < Platform_numberOfFields; j++) {
                   const char* name = Process_fields[j].name;
                   if (name) printf ("%s\n", name);
                }

@@ -14,6 +14,9 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "LinuxProcess.h"
 
+
+extern int Platform_numberOfFields;
+
 void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
