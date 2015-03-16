@@ -65,10 +65,6 @@ typedef struct Settings_ {
 
 }*/
 
-static ProcessField defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
-
-//static ProcessField defaultIoFields[] = { PID, IO_PRIORITY, USER, IO_READ_RATE, IO_WRITE_RATE, IO_RATE, COMM, 0 };
-
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->fields);
@@ -315,7 +311,7 @@ Settings* Settings_new(int cpuCount) {
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;
-   ProcessField* defaults = defaultFields;
+   ProcessField* defaults = Platform_defaultFields;
    for (int i = 0; defaults[i]; i++) {
       this->fields[i] = defaults[i];
       this->flags |= Process_fields[defaults[i]].flags;

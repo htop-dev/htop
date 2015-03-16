@@ -22,26 +22,40 @@ in the source distribution for its full text.
 
 #define PROCESS_FLAG_IO 0x0001
 
-#ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->pgrp == 0)
-#endif
-
-#ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
-
-#ifndef Process_isThread
-#define Process_isThread(_process) (Process_isUserlandThread(_process) || Process_isKernelThread(_process))
-#endif
-
-typedef int ProcessField;
+typedef enum ProcessFields {
+   PID = 1,
+   COMM = 2,
+   STATE = 3,
+   PPID = 4,
+   PGRP = 5,
+   SESSION = 6,
+   TTY_NR = 7,
+   TPGID = 8,
+   MINFLT = 10,
+   MAJFLT = 12,
+   PRIORITY = 18,
+   NICE = 19,
+   STARTTIME = 21,
+   M_SIZE = 39,
+   M_RESIDENT = 40,
+   ST_UID = 46,
+   PERCENT_CPU = 47,
+   PERCENT_MEM = 48,
+   USER = 49,
+   TIME = 50,
+   NLWP = 51,
+   TGID = 52,
+} ProcessField;
 
 typedef struct Process_ {
    Object super;
 
    struct Settings_* settings;
 
+   unsigned long long int time;
    pid_t pid;
+   pid_t ppid;
+   pid_t tgid;
    char* comm;
    int indent;
 
@@ -52,73 +66,30 @@ typedef struct Process_ {
    bool tag;
    bool showChildren;
    bool show;
-   pid_t ppid;
    unsigned int pgrp;
    unsigned int session;
    unsigned int tty_nr;
-   pid_t tgid;
    int tpgid;
+   uid_t st_uid;
    unsigned long int flags;
 
-   uid_t st_uid;
    float percent_cpu;
    float percent_mem;
    char* user;
 
-   unsigned long long int utime;
-   unsigned long long int stime;
-   unsigned long long int cutime;
-   unsigned long long int cstime;
    long int priority;
    long int nice;
    long int nlwp;
    char starttime_show[8];
    time_t starttime_ctime;
 
-   #ifdef HAVE_TASKSTATS
-   unsigned long long io_rchar;
-   unsigned long long io_wchar;
-   unsigned long long io_syscr;
-   unsigned long long io_syscw;
-   unsigned long long io_read_bytes;
-   unsigned long long io_write_bytes;
-   unsigned long long io_cancelled_write_bytes;
-   unsigned long long io_rate_read_time;
-   unsigned long long io_rate_write_time;   
-   double io_rate_read_bps;
-   double io_rate_write_bps;
-   #endif
-
-   int processor;
    long m_size;
    long m_resident;
-   long m_share;
-   long m_trs;
-   long m_drs;
-   long m_lrs;
-   long m_dt;
-
-   #ifdef HAVE_OPENVZ
-   unsigned int ctid;
-   unsigned int vpid;
-   #endif
-   #ifdef HAVE_VSERVER
-   unsigned int vxid;
-   #endif
-
-   #ifdef HAVE_CGROUP
-   char* cgroup;
-   #endif
-   #ifdef HAVE_OOM
-   unsigned int oom;
-   #endif
 
    int exit_signal;
 
    unsigned long int minflt;
-   unsigned long int cminflt;
    unsigned long int majflt;
-   unsigned long int cmajflt;
    #ifdef DEBUG
    long int itrealvalue;
    unsigned long int vsize;
@@ -147,8 +118,15 @@ typedef struct ProcessFieldData_ {
    int flags;
 } ProcessFieldData;
 
+// Implemented in platform-specific code:
+void Process_setupColumnWidths();
 void Process_writeField(Process* this, RichString* str, ProcessField field);
 long Process_compare(const void* v1, const void* v2);
+void Process_delete(Object* cast);
+bool Process_isThread(Process* this);
+extern ProcessFieldData Process_fields[];
+extern char* Process_pidFormat;
+extern char* Process_tpgidFormat;
 
 
 #define ONE_K 1024L
@@ -158,6 +136,14 @@ long Process_compare(const void* v1, const void* v2);
 #define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
+
+void Process_humanNumber(RichString* str, unsigned long number, bool coloring);
+
+void Process_colorNumber(RichString* str, unsigned long long number, bool coloring);
+
+void Process_printTime(RichString* str, unsigned long long t);
+
+void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring);
 
 void Process_writeDefaultField(Process* this, RichString* str, ProcessField field);
 

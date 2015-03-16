@@ -75,7 +75,7 @@ AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns) {
 
    Panel_setHeader(super, "Available Columns");
 
-   for (int i = 1; i < LAST_PROCESSFIELD; i++) {
+   for (int i = 1; i < Platform_numberOfFields; i++) {
       if (i != COMM && Process_fields[i].description) {
          char description[256];
          snprintf(description, sizeof(description), "%s - %s", Process_fields[i].name, Process_fields[i].description);
