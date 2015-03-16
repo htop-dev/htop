@@ -11,19 +11,18 @@ in the source distribution for its full text.
 
 #include "Panel.h"
 #include "Settings.h"
-#include "ScreenManager.h"
 
 typedef struct ColumnsPanel_ {
    Panel super;
 
    Settings* settings;
-   ScreenManager* scr;
+   bool moving;
 } ColumnsPanel;
 
 
 extern PanelClass ColumnsPanel_class;
 
-ColumnsPanel* ColumnsPanel_new(Settings* settings, ScreenManager* scr);
+ColumnsPanel* ColumnsPanel_new(Settings* settings);
 
 int ColumnsPanel_fieldNameToIndex(const char* name);
 

@@ -12,11 +12,11 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-htop_CFLAGS = -pedantic -Wall -Wextra -std=c99 -rdynamic -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(my_htop_platform)"
+htop_CFLAGS = -pedantic -Wall $(wextra_flag) -std=c99 -rdynamic -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(my_htop_platform)"
 AM_CPPFLAGS = -DNDEBUG
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
-ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c \
+ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c MainPanel.c \
 DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
 LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
 BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
@@ -26,7 +26,7 @@ HostnameMeter.c OpenFilesScreen.c Affinity.c IncSet.c Action.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
 CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
-CPUMeter.h CRT.h DisplayOptionsPanel.h FunctionBar.h \
+CPUMeter.h CRT.h MainPanel.h DisplayOptionsPanel.h FunctionBar.h \
 Hashtable.h Header.h htop.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
 BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \
 ScreenManager.h Settings.h SignalsPanel.h String.h SwapMeter.h TasksMeter.h \
@@ -50,11 +50,13 @@ freebsd/FreeBSDCRT.h
 endif
 
 if HTOP_UNSUPPORTED
-myhtopplatsources = unsupported/Platform.c unsupported/UnsupportedProcessList.c \
-unsupported/UnsupportedCRT.c
+myhtopplatsources = unsupported/Platform.c \
+unsupported/UnsupportedProcess.c unsupported/UnsupportedProcessList.c \
+unsupported/UnsupportedCRT.c unsupported/Battery.c
 
-myhtopplatheaders = unsupported/Platform.h unsupported/UnsupportedProcessList.h \
-unsupported/UnsupportedCRT.h
+myhtopplatheaders = unsupported/Platform.h \
+unsupported/UnsupportedProcess.h unsupported/UnsupportedProcessList.h \
+unsupported/UnsupportedCRT.h unsupported/Battery.h
 endif
 
 SUFFIXES = .h

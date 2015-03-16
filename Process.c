@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "Process.h"
 
-#include "ProcessList.h"
+#include "Settings.h"
 #include "CRT.h"
 #include "String.h"
 #include "RichString.h"
@@ -24,13 +24,8 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdbool.h>
 #include <pwd.h>
-#include <sched.h>
 #include <time.h>
 #include <assert.h>
-
-#ifdef HAVE_LIBHWLOC
-#include <hwloc/linux.h>
-#endif
 
 // On Linux, this works only with glibc 2.1+. On earlier versions
 // the behavior is similar to have a hardcoded page size.
@@ -41,7 +36,6 @@ in the source distribution for its full text.
 
 /*{
 #include "Object.h"
-#include "Affinity.h"
 
 #include <sys/types.h>
 
@@ -88,12 +82,10 @@ typedef enum ProcessField_ {
    LAST_PROCESSFIELD
 } ProcessField;
 
-struct ProcessList_;
-
 typedef struct Process_ {
    Object super;
 
-   struct ProcessList_ *pl;
+   struct Settings_* settings;
 
    pid_t pid;
    char* comm;
@@ -133,10 +125,10 @@ typedef struct Process_ {
    unsigned long long io_read_bytes;
    unsigned long long io_write_bytes;
    unsigned long long io_cancelled_write_bytes;
-   double io_rate_read_bps;
    unsigned long long io_rate_read_time;
-   double io_rate_write_bps;
    unsigned long long io_rate_write_time;   
+   double io_rate_read_bps;
+   double io_rate_write_bps;
    #endif
 
    int processor;
@@ -192,92 +184,99 @@ typedef struct Process_ {
 
 } Process;
 
+typedef struct ProcessFieldData_ {
+   const char* name;
+   const char* title;
+   const char* description;
+   int flags;
+} ProcessFieldData;
+
+void Process_writeField(Process* this, RichString* str, ProcessField field);
+long Process_compare(const void* v1, const void* v2);
+
 }*/
 
-const char *Process_fieldNames[] = {
-   "", "PID", "Command", "STATE", "PPID", "PGRP", "SESSION",
-   "TTY_NR", "TPGID", "FLAGS", "MINFLT", "CMINFLT", "MAJFLT", "CMAJFLT",
-   "UTIME", "STIME", "CUTIME", "CSTIME", "PRIORITY", "NICE", "ITREALVALUE",
-   "STARTTIME", "VSIZE", "RSS", "RLIM", "STARTCODE", "ENDCODE", "STARTSTACK",
-   "KSTKESP", "KSTKEIP", "SIGNAL", "BLOCKED", "SIGIGNORE", "SIGCATCH", "WCHAN",
-   "NSWAP", "CNSWAP", "EXIT_SIGNAL", "PROCESSOR", "M_SIZE", "M_RESIDENT", "M_SHARE",
-   "M_TRS", "M_DRS", "M_LRS", "M_DT", "ST_UID", "PERCENT_CPU", "PERCENT_MEM",
-   "USER", "TIME", "NLWP", "TGID", 
+ProcessFieldData Process_fields[] = {
+   { .name = "", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
+   { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
+   { .name = "STATE", .title = "S ", .description = "Process state (S sleeping, R running, D disk, Z zombie, T traced, W paging)", .flags = 0, },
+   { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
+   { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
+   { .name = "SESSION", .title = "   SESN ", .description = "Process's session ID", .flags = 0, },
+   { .name = "TTY_NR", .title = "  TTY ", .description = "Controlling terminal", .flags = 0, },
+   { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
+   { .name = "FLAGS", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
+   { .name = "CMINFLT", .title = "    CMINFLT ", .description = "Children processes' minor faults", .flags = 0, },
+   { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
+   { .name = "CMAJFLT", .title = "    CMAJFLT ", .description = "Children processes' major faults", .flags = 0, },
+   { .name = "UTIME", .title = " UTIME+  ", .description = "User CPU time - time the process spent executing in user mode", .flags = 0, },
+   { .name = "STIME", .title = " STIME+  ", .description = "System CPU time - time the kernel spent running system calls for this process", .flags = 0, },
+   { .name = "CUTIME", .title = " CUTIME+ ", .description = "Children processes' user CPU time", .flags = 0, },
+   { .name = "CSTIME", .title = " CSTIME+ ", .description = "Children processes' system CPU time", .flags = 0, },
+   { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = 0, },
+   { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = 0, },
+   { .name = "ITREALVALUE", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "STARTTIME", .title = "START ", .description = "Time the process was started", .flags = 0, },
+   { .name = "VSIZE", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "RSS", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "RLIM", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "STARTCODE", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "ENDCODE", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "STARTSTACK", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "KSTKESP", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "KSTKEIP", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "SIGNAL", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "BLOCKED", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "SIGIGNORE", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "SIGCATCH", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "WCHAN", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "NSWAP", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "CNSWAP", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "EXIT_SIGNAL", .title = NULL, .description = NULL, .flags = 0, },
+   { .name = "PROCESSOR", .title = "CPU ", .description = "Id of the CPU the process last executed on", .flags = 0, },
+   { .name = "M_SIZE", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, },
+   { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, },
+   { .name = "M_SHARE", .title = "  SHR ", .description = "Size of the process's shared pages", .flags = 0, },
+   { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, },
+   { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, },
+   { .name = "M_LRS", .title = " LIB ", .description = "The library size of the process", .flags = 0, },
+   { .name = "M_DT", .title = " DIRTY ", .description = "Size of the dirty pages of the process", .flags = 0, },
+   { .name = "ST_UID", .title = " UID ", .description = "User ID of the process owner", .flags = 0, },
+   { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, },
+   { .name = "PERCENT_MEM", .title = "MEM% ", .description = "Percentage of the memory the process is using, based on resident memory size", .flags = 0, },
+   { .name = "USER", .title = "USER      ", .description = "Username of the process owner (or user ID if name cannot be determined)", .flags = 0, },
+   { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
+   { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
+   { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
 #ifdef HAVE_OPENVZ
-   "CTID", "VPID",
+   { .name = "CTID", .title = "   CTID ", .description = "OpenVZ container ID (a.k.a. virtual environment ID)", .flags = PROCESS_FLAG_OPENVZ, },
+   { .name = "VPID", .title = " VPID ", .description = "OpenVZ process ID", .flags = PROCESS_FLAG_OPENVZ, },
 #endif
 #ifdef HAVE_VSERVER
-   "VXID",
+   { .name = "VXID", .title = " VXID ", .description = "VServer process ID", .flags = PROCESS_FLAG_VSERVER, },
 #endif
 #ifdef HAVE_TASKSTATS
-   "RCHAR", "WCHAR", "SYSCR", "SYSCW", "RBYTES", "WBYTES", "CNCLWB",
-   "IO_READ_RATE", "IO_WRITE_RATE", "IO_RATE",
+   { .name = "RCHAR", .title = "    RD_CHAR ", .description = "Number of bytes the process has read", .flags = PROCESS_FLAG_IO, },
+   { .name = "WCHAR", .title = "    WR_CHAR ", .description = "Number of bytes the process has written", .flags = PROCESS_FLAG_IO, },
+   { .name = "SYSCR", .title = "    RD_SYSC ", .description = "Number of read(2) syscalls for the process", .flags = PROCESS_FLAG_IO, },
+   { .name = "SYSCW", .title = "    WR_SYSC ", .description = "Number of write(2) syscalls for the process", .flags = PROCESS_FLAG_IO, },
+   { .name = "RBYTES", .title = "  IO_RBYTES ", .description = "Bytes of read(2) I/O for the process", .flags = PROCESS_FLAG_IO, },
+   { .name = "WBYTES", .title = "  IO_WBYTES ", .description = "Bytes of write(2) I/O for the process", .flags = PROCESS_FLAG_IO, },
+   { .name = "CNCLWB", .title = "  IO_CANCEL ", .description = "Bytes of cancelled write(2) I/O", .flags = PROCESS_FLAG_IO, },
+   { .name = "IO_READ_RATE", .title = "  DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
+   { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
+   { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, },
 #endif
 #ifdef HAVE_CGROUP
-   "CGROUP",
+   { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_CGROUP, },
 #endif
 #ifdef HAVE_OOM
-   "OOM",
+   { .name = "OOM", .title = "    OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = 0, },
 #endif
-   "IO_PRIORITY",
-"*** report bug! ***"
-};
-
-const int Process_fieldFlags[] = {
-   0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0,
-#ifdef HAVE_OPENVZ
-   PROCESS_FLAG_OPENVZ, PROCESS_FLAG_OPENVZ,
-#endif
-#ifdef HAVE_VSERVER
-   PROCESS_FLAG_VSERVER,
-#endif
-#ifdef HAVE_TASKSTATS
-   PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, 
-   PROCESS_FLAG_IO, PROCESS_FLAG_IO, PROCESS_FLAG_IO, 
-#endif
-#ifdef HAVE_CGROUP
-   PROCESS_FLAG_CGROUP,
-#endif
-#ifdef HAVE_OOM
-   0,
-#endif
-   PROCESS_FLAG_IOPRIO
-};
-
-const char *Process_fieldTitles[] = {
-   "", "    PID ", "Command ", "S ", "   PPID ", "   PGRP ", "   SESN ",
-   "  TTY ", "  TPGID ", "- ", "     MINFLT ", "    CMINFLT ", "     MAJFLT ", "    CMAJFLT ",
-   " UTIME+  ", " STIME+  ", " CUTIME+ ", " CSTIME+ ", "PRI ", " NI ", "- ",
-   "START ", "- ", "- ", "- ", "- ", "- ", "- ",
-   "- ", "- ", "- ", "- ", "- ", "- ", "- ",
-   "- ", "- ", "- ", "CPU ", " VIRT ", "  RES ", "  SHR ",
-   " CODE ", " DATA ", " LIB ", " DIRTY ", " UID ", "CPU% ", "MEM% ",
-   "USER      ", "  TIME+  ", "NLWP ", "   TGID ",
-#ifdef HAVE_OPENVZ
-   "   CTID ", " VPID ",
-#endif
-#ifdef HAVE_VSERVER
-   " VXID ",
-#endif
-#ifdef HAVE_TASKSTATS
-   "    RD_CHAR ", "    WR_CHAR ", "    RD_SYSC ", "    WR_SYSC ", "  IO_RBYTES ", "  IO_WBYTES ", "  IO_CANCEL ",
-   " IORR ", " IOWR ", " IORW ",
-#endif
-#ifdef HAVE_CGROUP
-   "    CGROUP ",
-#endif
-#ifdef HAVE_OOM
-   "    OOM ",
-#endif
-   "IO ",
-"*** report bug! ***"
+   { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_IOPRIO, },
+   { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 static int Process_getuid = -1;
@@ -289,32 +288,32 @@ void Process_setupColumnWidths() {
    int maxPid = Platform_getMaxPid();
    if (maxPid == -1) return;
    if (maxPid > 99999) {
-      Process_fieldTitles[PID] =     "    PID ";
-      Process_fieldTitles[PPID] =    "   PPID ";
+      Process_fields[PID].title =     "    PID ";
+      Process_fields[PPID].title =    "   PPID ";
       #ifdef HAVE_OPENVZ
-      Process_fieldTitles[VPID] =    "   VPID ";
+      Process_fields[VPID].title =    "   VPID ";
       #endif
-      Process_fieldTitles[TPGID] =   "  TPGID ";
-      Process_fieldTitles[TGID] =    "   TGID ";
-      Process_fieldTitles[PGRP] =    "   PGRP ";
-      Process_fieldTitles[SESSION] = "   SESN ";
+      Process_fields[TPGID].title =   "  TPGID ";
+      Process_fields[TGID].title =    "   TGID ";
+      Process_fields[PGRP].title =    "   PGRP ";
+      Process_fields[SESSION].title = "   SESN ";
       #ifdef HAVE_OOM
-      Process_fieldTitles[OOM] =     "    OOM ";
+      Process_fields[OOM].title =     "    OOM ";
       #endif
       Process_pidFormat = "%7u ";
       Process_tpgidFormat = "%7d ";
    } else {
-      Process_fieldTitles[PID] =     "  PID ";
-      Process_fieldTitles[PPID] =    " PPID ";
+      Process_fields[PID].title =     "  PID ";
+      Process_fields[PPID].title =    " PPID ";
       #ifdef HAVE_OPENVZ
-      Process_fieldTitles[VPID] =    " VPID ";
+      Process_fields[VPID].title =    " VPID ";
       #endif
-      Process_fieldTitles[TPGID] =   "TPGID ";
-      Process_fieldTitles[TGID] =    " TGID ";
-      Process_fieldTitles[PGRP] =    " PGRP ";
-      Process_fieldTitles[SESSION] = " SESN ";
+      Process_fields[TPGID].title =   "TPGID ";
+      Process_fields[TGID].title =    " TGID ";
+      Process_fields[PGRP].title =    " PGRP ";
+      Process_fields[SESSION].title = " SESN ";
       #ifdef HAVE_OOM
-      Process_fieldTitles[OOM] =     "  OOM ";
+      Process_fields[OOM].title =     "  OOM ";
       #endif
       Process_pidFormat = "%5u ";
       Process_tpgidFormat = "%5d ";
@@ -436,7 +435,7 @@ static void Process_printTime(RichString* str, unsigned long long t) {
 static inline void Process_writeCommand(Process* this, int attr, int baseattr, RichString* str) {
    int start = RichString_size(str);
    RichString_append(str, attr, this->comm);
-   if (this->pl->highlightBaseName) {
+   if (this->settings->highlightBaseName) {
       int finish = RichString_size(str) - 1;
       if (this->basenameOffset != -1)
          finish = (start + this->basenameOffset) - 1;
@@ -455,27 +454,35 @@ static inline void Process_writeCommand(Process* this, int attr, int baseattr, R
    }
 }
 
-static inline void Process_outputRate(RichString* str, int attr, char* buffer, int n, double rate, int coloring) {
-   rate = rate / 1024;
-   if (rate < 0.01)
-      snprintf(buffer, n, "    0 ");
-   else if (rate <= 10)
-      snprintf(buffer, n, "%5.2f ", rate);
-   else if (rate <= 100)
-      snprintf(buffer, n, "%5.1f ", rate);
-   else {
-      Process_humanNumber(str, rate, coloring);
-      return;
+static inline void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring) {
+   int largeNumberColor = CRT_colors[LARGE_NUMBER];
+   int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
+   int processColor = CRT_colors[PROCESS];
+   if (!coloring) {
+      largeNumberColor = CRT_colors[PROCESS];
+      processMegabytesColor = CRT_colors[PROCESS];
    }
-   RichString_append(str, attr, buffer);
+   if (rate < ONE_K) {
+      int len = snprintf(buffer, n, "%7.2f B/s ", rate);
+      RichString_appendn(str, processColor, buffer, len);
+   } else if (rate < ONE_K * ONE_K) {
+      int len = snprintf(buffer, n, "%7.2f K/s ", rate / ONE_K);
+      RichString_appendn(str, processColor, buffer, len);
+   } else if (rate < ONE_K * ONE_K * ONE_K) {
+      int len = snprintf(buffer, n, "%7.2f M/s ", rate / ONE_K / ONE_K);
+      RichString_appendn(str, processMegabytesColor, buffer, len);
+   } else {
+      int len = snprintf(buffer, n, "%7.2f G/s ", rate / ONE_K / ONE_K / ONE_K);
+      RichString_appendn(str, largeNumberColor, buffer, len);
+   }
 }
 
-static void Process_writeField(Process* this, RichString* str, ProcessField field) {
+void Process_writeDefaultField(Process* this, RichString* str, ProcessField field) {
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int baseattr = CRT_colors[PROCESS_BASENAME];
    int n = sizeof(buffer) - 1;
-   bool coloring = this->pl->highlightMegabytes;
+   bool coloring = this->settings->highlightMegabytes;
 
    switch (field) {
    case PID: snprintf(buffer, n, Process_pidFormat, this->pid); break;
@@ -489,24 +496,21 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case CMINFLT: Process_colorNumber(str, this->cminflt, coloring); return;
    case MAJFLT: Process_colorNumber(str, this->majflt, coloring); return;
    case CMAJFLT: Process_colorNumber(str, this->cmajflt, coloring); return;
-   case PROCESSOR: snprintf(buffer, n, "%3d ", ProcessList_cpuId(this->pl, this->processor)); break;
+   case PROCESSOR: snprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor)); break;
    case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
    case COMM: {
-      if (this->pl->highlightThreads && Process_isThread(this)) {
+      if (this->settings->highlightThreads && Process_isThread(this)) {
          attr = CRT_colors[PROCESS_THREAD];
          baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
       }
-      if (!this->pl->treeView || this->indent == 0) {
+      if (!this->settings->treeView || this->indent == 0) {
          Process_writeCommand(this, attr, baseattr, str);
          return;
       } else {
          char* buf = buffer;
          int maxIndent = 0;
-         const char **treeStr = this->pl->treeStr;
          bool lastItem = (this->indent < 0);
          int indent = (this->indent < 0 ? -this->indent : this->indent);
-         if (treeStr == NULL)
-             treeStr = ProcessList_treeStrAscii;
 
          for (int i = 0; i < 32; i++)
             if (indent & (1 << i))
@@ -514,14 +518,14 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
           for (int i = 0; i < maxIndent - 1; i++) {
             int written;
             if (indent & (1 << i))
-               written = snprintf(buf, n, "%s  ", treeStr[TREE_STR_VERT]);
+               written = snprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
             else
                written = snprintf(buf, n, "   ");
             buf += written;
             n -= written;
          }
-         const char* draw = treeStr[lastItem ? (this->pl->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
-         snprintf(buf, n, "%s%s ", draw, this->showChildren ? treeStr[TREE_STR_SHUT] : treeStr[TREE_STR_OPEN] );
+         const char* draw = CRT_treeStr[lastItem ? (this->settings->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
+         snprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
          RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
          Process_writeCommand(this, attr, baseattr, str);
          return;
@@ -614,9 +618,9 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    case RBYTES: Process_colorNumber(str, this->io_read_bytes, coloring); return;
    case WBYTES: Process_colorNumber(str, this->io_write_bytes, coloring); return;
    case CNCLWB: Process_colorNumber(str, this->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Process_outputRate(str, attr, buffer, n, this->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Process_outputRate(str, attr, buffer, n, this->io_rate_write_bps, coloring); return;
-   case IO_RATE: Process_outputRate(str, attr, buffer, n, this->io_rate_read_bps + this->io_rate_write_bps, coloring); return;
+   case IO_READ_RATE:  Process_outputRate(str, buffer, n, this->io_rate_read_bps, coloring); return;
+   case IO_WRITE_RATE: Process_outputRate(str, buffer, n, this->io_rate_write_bps, coloring); return;
+   case IO_RATE: Process_outputRate(str, buffer, n, this->io_rate_read_bps + this->io_rate_write_bps, coloring); return;
    #endif
    #ifdef HAVE_CGROUP
    case CGROUP: snprintf(buffer, n, "%-10s ", this->cgroup); break;
@@ -632,25 +636,23 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
 
 static void Process_display(Object* cast, RichString* out) {
    Process* this = (Process*) cast;
-   ProcessField* fields = this->pl->fields;
+   ProcessField* fields = this->settings->fields;
    RichString_prune(out);
    for (int i = 0; fields[i]; i++)
       Process_writeField(this, out, fields[i]);
-   if (this->pl->shadowOtherUsers && (int)this->st_uid != Process_getuid)
+   if (this->settings->shadowOtherUsers && (int)this->st_uid != Process_getuid)
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
    if (this->tag == true)
       RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
    assert(out->chlen > 0);
 }
 
-void Process_delete(Object* cast) {
-   Process* this = (Process*) cast;
+void Process_done(Process* this) {
    assert (this != NULL);
    free(this->comm);
 #ifdef HAVE_CGROUP
    free(this->cgroup);
 #endif
-   free(this);
 }
 
 ObjectClass Process_class = {
@@ -660,11 +662,9 @@ ObjectClass Process_class = {
    .compare = Process_compare
 };
 
-Process* Process_new(struct ProcessList_ *pl) {
-   Process* this = calloc(1, sizeof(Process));
-   Object_setClass(this, Class(Process));
+void Process_init(Process* this, struct Settings_* settings) {
    this->pid = 0;
-   this->pl = pl;
+   this->settings = settings;
    this->tag = false;
    this->showChildren = true;
    this->show = true;
@@ -678,7 +678,6 @@ Process* Process_new(struct ProcessList_ *pl) {
    this->cgroup = NULL;
 #endif
    if (Process_getuid == -1) Process_getuid = getuid();
-   return this;
 }
 
 void Process_toggleTag(Process* this) {
@@ -698,65 +697,6 @@ bool Process_changePriorityBy(Process* this, size_t delta) {
    return Process_setPriority(this, this->nice + delta);
 }
 
-#ifdef HAVE_LIBHWLOC
-
-Affinity* Process_getAffinity(Process* this) {
-   hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
-   bool ok = (hwloc_linux_get_tid_cpubind(this->pl->topology, this->pid, cpuset) == 0);
-   Affinity* affinity = NULL;
-   if (ok) {
-      affinity = Affinity_new();
-      if (hwloc_bitmap_last(cpuset) == -1) {
-         for (int i = 0; i < this->pl->cpuCount; i++) {
-            Affinity_add(affinity, i);
-         }
-      } else {
-         unsigned int id;
-         hwloc_bitmap_foreach_begin(id, cpuset);
-            Affinity_add(affinity, id);
-         hwloc_bitmap_foreach_end();
-      }
-   }
-   hwloc_bitmap_free(cpuset);
-   return affinity;
-}
-
-bool Process_setAffinity(Process* this, Affinity* affinity) {
-   hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
-   for (int i = 0; i < affinity->used; i++) {
-      hwloc_bitmap_set(cpuset, affinity->cpus[i]);
-   }
-   bool ok = (hwloc_linux_set_tid_cpubind(this->pl->topology, this->pid, cpuset) == 0);
-   hwloc_bitmap_free(cpuset);
-   return ok;
-}
-
-#elif HAVE_NATIVE_AFFINITY
-
-Affinity* Process_getAffinity(Process* this) {
-   cpu_set_t cpuset;
-   bool ok = (sched_getaffinity(this->pid, sizeof(cpu_set_t), &cpuset) == 0);
-   if (!ok) return NULL;
-   Affinity* affinity = Affinity_new();
-   for (int i = 0; i < this->pl->cpuCount; i++) {
-      if (CPU_ISSET(i, &cpuset))
-         Affinity_add(affinity, i);
-   }
-   return affinity;
-}
-
-bool Process_setAffinity(Process* this, Affinity* affinity) {
-   cpu_set_t cpuset;
-   CPU_ZERO(&cpuset);
-   for (int i = 0; i < affinity->used; i++) {
-      CPU_SET(affinity->cpus[i], &cpuset);
-   }
-   bool ok = (sched_setaffinity(this->pid, sizeof(unsigned long), &cpuset) == 0);
-   return ok;
-}
-
-#endif
-
 void Process_sendSignal(Process* this, size_t sgn) {
    kill(this->pid, (int) sgn);
 }
@@ -767,10 +707,10 @@ long Process_pidCompare(const void* v1, const void* v2) {
    return (p1->pid - p2->pid);
 }
 
-long Process_compare(const void* v1, const void* v2) {
+long Process_defaultCompare(const void* v1, const void* v2) {
    Process *p1, *p2;
-   ProcessList *pl = ((Process*)v1)->pl;
-   if (pl->direction == 1) {
+   Settings *settings = ((Process*)v1)->settings;
+   if (settings->direction == 1) {
       p1 = (Process*)v1;
       p2 = (Process*)v2;
    } else {
@@ -778,7 +718,7 @@ long Process_compare(const void* v1, const void* v2) {
       p1 = (Process*)v2;
    }
    long long diff;
-   switch (pl->sortKey) {
+   switch (settings->sortKey) {
    case PID:
       return (p1->pid - p2->pid);
    case PPID:

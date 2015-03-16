@@ -11,11 +11,8 @@ in the source distribution for its full text.
 
 //#link m
 
-#define COPYRIGHT "(C) 2004-2014 Hisham Muhammad"
-
 // ----------------------------------------
 
-// ----------------------------------------
 
 int main(int argc, char** argv);
 

@@ -17,21 +17,17 @@ in the source distribution for its full text.
 #include <stdlib.h>
 
 /*{
-#include "ProcessList.h"
 #include "Meter.h"
-
-typedef enum HeaderSide_ {
-   LEFT_HEADER,
-   RIGHT_HEADER
-} HeaderSide;
+#include "Settings.h"
+#include "Vector.h"
 
 typedef struct Header_ {
-   Vector* leftMeters;
-   Vector* rightMeters;
-   ProcessList* pl;
-   int height;
+   Vector** columns;
+   Settings* settings;
+   struct ProcessList_* pl;
+   int nrColumns;
    int pad;
-   bool margin;
+   int height;
 } Header;
 
 }*/
@@ -40,25 +36,43 @@ typedef struct Header_ {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-Header* Header_new(ProcessList* pl) {
+#ifndef Header_forEachColumn
+#define Header_forEachColumn(this_, i_) for (int i_=0; i_ < this->nrColumns; i_++)
+#endif
+
+Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns) {
    Header* this = calloc(1, sizeof(Header));
-   this->leftMeters = Vector_new(Class(Meter), true, DEFAULT_SIZE);
-   this->rightMeters = Vector_new(Class(Meter), true, DEFAULT_SIZE);
-   this->margin = true;
+   this->columns = calloc(nrColumns, sizeof(Vector*));
+   this->settings = settings;
    this->pl = pl;
+   this->nrColumns = nrColumns;
+   Header_forEachColumn(this, i) {
+      this->columns[i] = Vector_new(Class(Meter), true, DEFAULT_SIZE);
+   }
    return this;
 }
 
 void Header_delete(Header* this) {
-   Vector_delete(this->leftMeters);
-   Vector_delete(this->rightMeters);
+   Header_forEachColumn(this, i) {
+      Vector_delete(this->columns[i]);
+   }
+   free(this->columns);
    free(this);
 }
 
-void Header_createMeter(Header* this, char* name, HeaderSide side) {
-   Vector* meters = side == LEFT_HEADER
-                       ? this->leftMeters
-                       : this->rightMeters;
+void Header_populateFromSettings(Header* this) {
+   Header_forEachColumn(this, col) {
+      MeterColumnSettings* colSettings = &this->settings->columns[col];
+      for (int i = 0; i < colSettings->len; i++) {
+         Header_addMeterByName(this, colSettings->names[i], col);
+         Header_setMode(this, i, colSettings->modes[i], col);
+      }
+   }
+   Header_calculateHeight(this);
+}
+
+MeterModeId Header_addMeterByName(Header* this, char* name, int column) {
+   Vector* meters = this->columns[column];
 
    char* paren = strchr(name, '(');
    int param = 0;
@@ -67,18 +81,20 @@ void Header_createMeter(Header* this, char* name, HeaderSide side) {
       if (!ok) param = 0;
       *paren = '\0';
    }
+   MeterModeId mode = TEXT_METERMODE;
    for (MeterClass** type = Platform_meterTypes; *type; type++) {
       if (String_eq(name, (*type)->name)) {
-         Vector_add(meters, Meter_new(this->pl, param, *type));
+         Meter* meter = Meter_new(this->pl, param, *type);
+         Vector_add(meters, meter);
+         mode = meter->mode;
          break;
       }
    }
+   return mode;
 }
 
-void Header_setMode(Header* this, int i, MeterModeId mode, HeaderSide side) {
-   Vector* meters = side == LEFT_HEADER
-                       ? this->leftMeters
-                       : this->rightMeters;
+void Header_setMode(Header* this, int i, MeterModeId mode, int column) {
+   Vector* meters = this->columns[column];
 
    if (i >= Vector_size(meters))
       return;
@@ -86,28 +102,21 @@ void Header_setMode(Header* this, int i, MeterModeId mode, HeaderSide side) {
    Meter_setMode(meter, mode);
 }
 
-Meter* Header_addMeter(Header* this, MeterClass* type, int param, HeaderSide side) {
-   Vector* meters = side == LEFT_HEADER
-                       ? this->leftMeters
-                       : this->rightMeters;
+Meter* Header_addMeterByClass(Header* this, MeterClass* type, int param, int column) {
+   Vector* meters = this->columns[column];
 
    Meter* meter = Meter_new(this->pl, param, type);
    Vector_add(meters, meter);
    return meter;
 }
 
-int Header_size(Header* this, HeaderSide side) {
-   Vector* meters = side == LEFT_HEADER
-                       ? this->leftMeters
-                       : this->rightMeters;
-
+int Header_size(Header* this, int column) {
+   Vector* meters = this->columns[column];
    return Vector_size(meters);
 }
 
-char* Header_readMeterName(Header* this, int i, HeaderSide side) {
-   Vector* meters = side == LEFT_HEADER
-                       ? this->leftMeters
-                       : this->rightMeters;
+char* Header_readMeterName(Header* this, int i, int column) {
+   Vector* meters = this->columns[column];
    Meter* meter = (Meter*) Vector_get(meters, i);
 
    int nameLen = strlen(Meter_name(meter));
@@ -121,25 +130,20 @@ char* Header_readMeterName(Header* this, int i, HeaderSide side) {
    return name;
 }
 
-MeterModeId Header_readMeterMode(Header* this, int i, HeaderSide side) {
-   Vector* meters = side == LEFT_HEADER
-                       ? this->leftMeters
-                       : this->rightMeters;
+MeterModeId Header_readMeterMode(Header* this, int i, int column) {
+   Vector* meters = this->columns[column];
 
    Meter* meter = (Meter*) Vector_get(meters, i);
    return meter->mode;
 }
 
 void Header_reinit(Header* this) {
-   for (int i = 0; i < Vector_size(this->leftMeters); i++) {
-      Meter* meter = (Meter*) Vector_get(this->leftMeters, i);
-      if (Meter_initFn(meter))
-         Meter_init(meter);
-   }
-   for (int i = 0; i < Vector_size(this->rightMeters); i++) {
-      Meter* meter = (Meter*) Vector_get(this->rightMeters, i);
-      if (Meter_initFn(meter))
-         Meter_init(meter);
+   Header_forEachColumn(this, col) {
+      for (int i = 0; i < Vector_size(this->columns[col]); i++) {
+         Meter* meter = (Meter*) Vector_get(this->columns[col], i);
+         if (Meter_initFn(meter))
+            Meter_init(meter);
+      }
    }
 }
 
@@ -150,32 +154,34 @@ void Header_draw(const Header* this) {
    for (int y = 0; y < height; y++) {
       mvhline(y, 0, ' ', COLS);
    }
-   for (int y = (pad / 2), i = 0; i < Vector_size(this->leftMeters); i++) {
-      Meter* meter = (Meter*) Vector_get(this->leftMeters, i);
-      meter->draw(meter, pad, y, COLS / 2 - (pad * 2 - 1) - 1);
-      y += meter->h;
-   }
-   for (int y = (pad / 2), i = 0; i < Vector_size(this->rightMeters); i++) {
-      Meter* meter = (Meter*) Vector_get(this->rightMeters, i);
-      meter->draw(meter, COLS / 2 + pad, y, COLS / 2 - (pad * 2 - 1) - 1);
-      y += meter->h;
+   int width = COLS / this->nrColumns - (pad * this->nrColumns - 1) - 1;
+   int x = pad;
+   
+   Header_forEachColumn(this, col) {
+      Vector* meters = this->columns[col];
+      for (int y = (pad / 2), i = 0; i < Vector_size(meters); i++) {
+         Meter* meter = (Meter*) Vector_get(meters, i);
+         meter->draw(meter, x, y, width);
+         y += meter->h;
+      }
+      x += width + pad;
    }
 }
 
 int Header_calculateHeight(Header* this) {
-   int pad = this->margin ? 2 : 0;
-   int leftHeight = pad;
-   int rightHeight = pad;
+   int pad = this->settings->headerMargin ? 2 : 0;
+   int maxHeight = pad;
 
-   for (int i = 0; i < Vector_size(this->leftMeters); i++) {
-      Meter* meter = (Meter*) Vector_get(this->leftMeters, i);
-      leftHeight += meter->h;
+   Header_forEachColumn(this, col) {
+      Vector* meters = this->columns[col];
+      int height = pad;
+      for (int i = 0; i < Vector_size(meters); i++) {
+         Meter* meter = (Meter*) Vector_get(meters, i);
+         height += meter->h;
+      }
+      maxHeight = MAX(maxHeight, height);
    }
-   for (int i = 0; i < Vector_size(this->rightMeters); i++) {
-      Meter* meter = (Meter*) Vector_get(this->rightMeters, i);
-      rightHeight += meter->h;
-   }
+   this->height = maxHeight;
    this->pad = pad;
-   this->height = MAX(leftHeight, rightHeight);
-   return this->height;
+   return maxHeight;
 }

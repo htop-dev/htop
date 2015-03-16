@@ -13,13 +13,18 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "ScreenManager.h"
 
-typedef struct MetersPanel_ {
+typedef struct MetersPanel_ MetersPanel;
+
+struct MetersPanel_ {
    Panel super;
 
    Settings* settings;
    Vector* meters;
    ScreenManager* scr;
-} MetersPanel;
+   MetersPanel* leftNeighbor;
+   MetersPanel* rightNeighbor;
+   bool moving;
+};
 
 
 extern PanelClass MetersPanel_class;

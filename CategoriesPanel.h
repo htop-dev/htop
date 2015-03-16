@@ -12,12 +12,15 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Settings.h"
 #include "ScreenManager.h"
+#include "ProcessList.h"
 
 typedef struct CategoriesPanel_ {
    Panel super;
+   ScreenManager* scr;
 
    Settings* settings;
-   ScreenManager* scr;
+   Header* header;
+   ProcessList* pl;
 } CategoriesPanel;
 
 
@@ -25,6 +28,6 @@ void CategoriesPanel_makeMetersPage(CategoriesPanel* this);
 
 extern PanelClass CategoriesPanel_class;
 
-CategoriesPanel* CategoriesPanel_new(Settings* settings, ScreenManager* scr);
+CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl);
 
 #endif

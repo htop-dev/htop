@@ -50,7 +50,7 @@ Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity) {
    int curCpu = 0;
    for (int i = 0; i < pl->cpuCount; i++) {
       char number[10];
-      snprintf(number, 9, "%d", ProcessList_cpuId(pl, i));
+      snprintf(number, 9, "%d", Settings_cpuId(pl->settings, i));
       bool mode;
       if (curCpu < affinity->used && affinity->cpus[curCpu] == i) {
          mode = true;
@@ -63,8 +63,8 @@ Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity) {
    return this;
 }
 
-Affinity* AffinityPanel_getAffinity(Panel* this) {
-   Affinity* affinity = Affinity_new();
+Affinity* AffinityPanel_getAffinity(Panel* this, ProcessList* pl) {
+   Affinity* affinity = Affinity_new(pl);
    int size = Panel_size(this);
    for (int i = 0; i < size; i++) {
       if (CheckItem_get((CheckItem*)Panel_get(this, i)))

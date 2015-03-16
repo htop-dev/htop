@@ -8,7 +8,8 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 
 #include "CRT.h"
-#include "ProcessList.h"
+#include "Settings.h"
+#include "Platform.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -34,7 +35,7 @@ static void CPUMeter_init(Meter* this) {
    int cpu = this->param;
    if (this->pl->cpuCount > 1) {
       char caption[10];
-      sprintf(caption, "%-3d", ProcessList_cpuId(this->pl, cpu - 1));
+      sprintf(caption, "%-3d", Settings_cpuId(this->pl->settings, cpu - 1));
       Meter_setCaption(this, caption);
    }
    if (this->param == 0)
@@ -42,39 +43,12 @@ static void CPUMeter_init(Meter* this) {
 }
 
 static void CPUMeter_setValues(Meter* this, char* buffer, int size) {
-   ProcessList* pl = this->pl;
    int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
       snprintf(buffer, size, "absent");
       return;
    }
-   CPUData* cpuData = &(pl->cpus[cpu]);
-   double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
-   double percent;
-   double* v = this->values;
-   v[0] = cpuData->nicePeriod / total * 100.0;
-   v[1] = cpuData->userPeriod / total * 100.0;
-   if (pl->detailedCPUTime) {
-      v[2] = cpuData->systemPeriod / total * 100.0;
-      v[3] = cpuData->irqPeriod / total * 100.0;
-      v[4] = cpuData->softIrqPeriod / total * 100.0;
-      v[5] = cpuData->stealPeriod / total * 100.0;
-      v[6] = cpuData->guestPeriod / total * 100.0;
-      v[7] = cpuData->ioWaitPeriod / total * 100.0;
-      Meter_setItems(this, 8);
-      if (pl->accountGuestInCPUMeter) {
-         percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];
-      } else {
-         percent = v[0]+v[1]+v[2]+v[3]+v[4];
-      }       
-   } else {
-      v[2] = cpuData->systemAllPeriod / total * 100.0;
-      v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
-      Meter_setItems(this, 4);
-      percent = v[0]+v[1]+v[2]+v[3];
-   }
-   percent = MIN(100.0, MAX(0.0, percent));      
-   if (isnan(percent)) percent = 0.0;
+   double percent = Platform_setCPUValues(this, cpu);
    snprintf(buffer, size, "%5.1f%%", percent);
 }
 
@@ -89,7 +63,7 @@ static void CPUMeter_display(Object* cast, RichString* out) {
    sprintf(buffer, "%5.1f%% ", this->values[1]);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
    RichString_append(out, CRT_colors[CPU_NORMAL], buffer);
-   if (this->pl->detailedCPUTime) {
+   if (this->pl->settings->detailedCPUTime) {
       sprintf(buffer, "%5.1f%% ", this->values[2]);
       RichString_append(out, CRT_colors[METER_TEXT], "sy:");
       RichString_append(out, CRT_colors[CPU_KERNEL], buffer);
@@ -248,6 +222,7 @@ MeterClass AllCPUsMeter_class = {
    .attributes = CPUMeter_attributes, 
    .name = "AllCPUs",
    .uiName = "CPUs (1/1)",
+   .description = "CPUs (1/1): all CPUs",
    .caption = "CPU",
    .draw = SingleColCPUsMeter_draw,
    .init = AllCPUsMeter_init,
@@ -266,6 +241,7 @@ MeterClass AllCPUs2Meter_class = {
    .attributes = CPUMeter_attributes, 
    .name = "AllCPUs2",
    .uiName = "CPUs (1&2/2)",
+   .description = "CPUs (1&2/2): all CPUs in 2 shorter columns",
    .caption = "CPU",
    .draw = DualColCPUsMeter_draw,
    .init = AllCPUsMeter_init,
@@ -284,6 +260,7 @@ MeterClass LeftCPUsMeter_class = {
    .attributes = CPUMeter_attributes, 
    .name = "LeftCPUs",
    .uiName = "CPUs (1/2)",
+   .description = "CPUs (1/2): first half of list",
    .caption = "CPU",
    .draw = SingleColCPUsMeter_draw,
    .init = AllCPUsMeter_init,
@@ -302,6 +279,7 @@ MeterClass RightCPUsMeter_class = {
    .attributes = CPUMeter_attributes, 
    .name = "RightCPUs",
    .uiName = "CPUs (2/2)",
+   .description = "CPUs (2/2): second half of list",
    .caption = "CPU",
    .draw = SingleColCPUsMeter_draw,
    .init = AllCPUsMeter_init,
@@ -319,6 +297,7 @@ MeterClass LeftCPUs2Meter_class = {
    .total = 100.0,
    .attributes = CPUMeter_attributes, 
    .name = "LeftCPUs2",
+   .description = "CPUs (1&2/4): first half in 2 shorter columns",
    .uiName = "CPUs (1&2/4)",
    .caption = "CPU",
    .draw = DualColCPUsMeter_draw,
@@ -338,6 +317,7 @@ MeterClass RightCPUs2Meter_class = {
    .attributes = CPUMeter_attributes, 
    .name = "RightCPUs2",
    .uiName = "CPUs (3&4/4)",
+   .description = "CPUs (3&4/4): second half in 2 shorter columns",
    .caption = "CPU",
    .draw = DualColCPUsMeter_draw,
    .init = AllCPUsMeter_init,

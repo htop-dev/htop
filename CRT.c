@@ -15,15 +15,9 @@ in the source distribution for its full text.
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
-
-#define COLORSCHEME_DEFAULT 0
-#define COLORSCHEME_MONOCHROME 1
-#define COLORSCHEME_BLACKONWHITE 2
-#define COLORSCHEME_BLACKONWHITE2 3
-#define COLORSCHEME_MIDNIGHT 4
-#define COLORSCHEME_BLACKNIGHT 5
 
 #define Black COLOR_BLACK
 #define Red COLOR_RED
@@ -38,6 +32,27 @@ in the source distribution for its full text.
 
 /*{
 #include <stdbool.h>
+
+typedef enum TreeStr_ {
+   TREE_STR_HORZ,
+   TREE_STR_VERT,
+   TREE_STR_RTEE,
+   TREE_STR_BEND,
+   TREE_STR_TEND,
+   TREE_STR_OPEN,
+   TREE_STR_SHUT,
+   TREE_STR_COUNT
+} TreeStr;
+
+typedef enum ColorSchemes_ {
+   COLORSCHEME_DEFAULT = 0,
+   COLORSCHEME_MONOCHROME = 1,
+   COLORSCHEME_BLACKONWHITE = 2,
+   COLORSCHEME_LIGHTTERMINAL = 3,
+   COLORSCHEME_MIDNIGHT = 4,
+   COLORSCHEME_BLACKNIGHT = 5,
+   LAST_COLORSCHEME = 6,
+} ColorSchemes;
 
 typedef enum ColorElements_ {
    RESET_COLOR,
@@ -73,13 +88,6 @@ typedef enum ColorElements_ {
    BAR_SHADOW,
    GRAPH_1,
    GRAPH_2,
-   GRAPH_3,
-   GRAPH_4,
-   GRAPH_5,
-   GRAPH_6,
-   GRAPH_7,
-   GRAPH_8,
-   GRAPH_9,
    MEMORY_USED,
    MEMORY_BUFFERS,
    MEMORY_BUFFERS_TEXT,
@@ -112,23 +120,396 @@ void CRT_handleSIGSEGV(int sgn);
 
 }*/
 
-// TODO: centralize these in Settings.
+const char *CRT_treeStrAscii[TREE_STR_COUNT] = {
+   "-", // TREE_STR_HORZ
+   "|", // TREE_STR_VERT
+   "`", // TREE_STR_RTEE
+   "`", // TREE_STR_BEND
+   ",", // TREE_STR_TEND
+   "+", // TREE_STR_OPEN
+   "-", // TREE_STR_SHUT
+};
+
+const char *CRT_treeStrUtf8[TREE_STR_COUNT] = {
+   "\xe2\x94\x80", // TREE_STR_HORZ ─
+   "\xe2\x94\x82", // TREE_STR_VERT │
+   "\xe2\x94\x9c", // TREE_STR_RTEE ├
+   "\xe2\x94\x94", // TREE_STR_BEND └
+   "\xe2\x94\x8c", // TREE_STR_TEND ┌
+   "+",            // TREE_STR_OPEN +
+   "\xe2\x94\x80", // TREE_STR_SHUT ─
+};
+
+const char **CRT_treeStr = CRT_treeStrAscii;
 
 static bool CRT_hasColors;
 
-static int CRT_delay = 0;
-
-int CRT_colorScheme = 0;
+int CRT_delay = 0;
 
 bool CRT_utf8 = false;
 
-int CRT_colors[LAST_COLORELEMENT] = { 0 };
+int* CRT_colors;
+
+int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
+   [COLORSCHEME_DEFAULT] = {
+      [RESET_COLOR] = ColorPair(White,Black),
+      [DEFAULT_COLOR] = ColorPair(White,Black),
+      [FUNCTION_BAR] = ColorPair(Black,Cyan),
+      [FUNCTION_KEY] = ColorPair(White,Black),
+      [PANEL_HEADER_FOCUS] = ColorPair(Black,Green),
+      [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green),
+      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Black,White),
+      [FAILED_SEARCH] = ColorPair(Red,Cyan),
+      [UPTIME] = A_BOLD | ColorPair(Cyan,Black),
+      [BATTERY] = A_BOLD | ColorPair(Cyan,Black),
+      [LARGE_NUMBER] = A_BOLD | ColorPair(Red,Black),
+      [METER_TEXT] = ColorPair(Cyan,Black),
+      [METER_VALUE] = A_BOLD | ColorPair(Cyan,Black),
+      [LED_COLOR] = ColorPair(Green,Black),
+      [TASKS_RUNNING] = A_BOLD | ColorPair(Green,Black),
+      [PROCESS] = A_NORMAL,
+      [PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Black),
+      [PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Black),
+      [PROCESS_MEGABYTES] = ColorPair(Cyan,Black),
+      [PROCESS_BASENAME] = A_BOLD | ColorPair(Cyan,Black),
+      [PROCESS_TREE] = ColorPair(Cyan,Black),
+      [PROCESS_R_STATE] = ColorPair(Green,Black),
+      [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black),
+      [PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Red,Black),
+      [PROCESS_THREAD] = ColorPair(Green,Black),
+      [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Green,Black),
+      [BAR_BORDER] = A_BOLD,
+      [BAR_SHADOW] = A_BOLD | ColorPair(Black,Black),
+      [SWAP] = ColorPair(Red,Black),
+      [GRAPH_1] = A_BOLD | ColorPair(Cyan,Black),
+      [GRAPH_2] = ColorPair(Cyan,Black),
+      [MEMORY_USED] = ColorPair(Green,Black),
+      [MEMORY_BUFFERS] = ColorPair(Blue,Black),
+      [MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue,Black),
+      [MEMORY_CACHE] = ColorPair(Yellow,Black),
+      [LOAD_AVERAGE_FIFTEEN] = ColorPair(Cyan,Black),
+      [LOAD_AVERAGE_FIVE] = A_BOLD | ColorPair(Cyan,Black),
+      [LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(White,Black),
+      [LOAD] = A_BOLD,
+      [HELP_BOLD] = A_BOLD | ColorPair(Cyan,Black),
+      [CLOCK] = A_BOLD,
+      [CHECK_BOX] = ColorPair(Cyan,Black),
+      [CHECK_MARK] = A_BOLD,
+      [CHECK_TEXT] = A_NORMAL,
+      [HOSTNAME] = A_BOLD,
+      [CPU_NICE] = ColorPair(Blue,Black),
+      [CPU_NICE_TEXT] = A_BOLD | ColorPair(Blue,Black),
+      [CPU_NORMAL] = ColorPair(Green,Black),
+      [CPU_KERNEL] = ColorPair(Red,Black),
+      [CPU_IOWAIT] = A_BOLD | ColorPair(Black, Black),
+      [CPU_IRQ] = ColorPair(Yellow,Black),
+      [CPU_SOFTIRQ] = ColorPair(Magenta,Black),
+      [CPU_STEAL] = ColorPair(Cyan,Black),
+      [CPU_GUEST] = ColorPair(Cyan,Black),
+   },
+   [COLORSCHEME_MONOCHROME] = {
+      [RESET_COLOR] = A_NORMAL,
+      [DEFAULT_COLOR] = A_NORMAL,
+      [FUNCTION_BAR] = A_REVERSE,
+      [FUNCTION_KEY] = A_NORMAL,
+      [PANEL_HEADER_FOCUS] = A_REVERSE,
+      [PANEL_HEADER_UNFOCUS] = A_REVERSE,
+      [PANEL_HIGHLIGHT_FOCUS] = A_REVERSE,
+      [PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD,
+      [FAILED_SEARCH] = A_REVERSE | A_BOLD,
+      [UPTIME] = A_BOLD,
+      [BATTERY] = A_BOLD,
+      [LARGE_NUMBER] = A_BOLD,
+      [METER_TEXT] = A_NORMAL,
+      [METER_VALUE] = A_BOLD,
+      [LED_COLOR] = A_NORMAL,
+      [TASKS_RUNNING] = A_BOLD,
+      [PROCESS] = A_NORMAL,
+      [PROCESS_SHADOW] = A_DIM,
+      [PROCESS_TAG] = A_BOLD,
+      [PROCESS_MEGABYTES] = A_BOLD,
+      [PROCESS_BASENAME] = A_BOLD,
+      [PROCESS_TREE] = A_BOLD,
+      [PROCESS_R_STATE] = A_BOLD,
+      [PROCESS_D_STATE] = A_BOLD,
+      [PROCESS_HIGH_PRIORITY] = A_BOLD,
+      [PROCESS_LOW_PRIORITY] = A_DIM,
+      [PROCESS_THREAD] = A_BOLD,
+      [PROCESS_THREAD_BASENAME] = A_REVERSE,
+      [BAR_BORDER] = A_BOLD,
+      [BAR_SHADOW] = A_DIM,
+      [SWAP] = A_BOLD,
+      [GRAPH_1] = A_BOLD,
+      [GRAPH_2] = A_NORMAL,
+      [MEMORY_USED] = A_BOLD,
+      [MEMORY_BUFFERS] = A_NORMAL,
+      [MEMORY_BUFFERS_TEXT] = A_NORMAL,
+      [MEMORY_CACHE] = A_NORMAL,
+      [LOAD_AVERAGE_FIFTEEN] = A_DIM,
+      [LOAD_AVERAGE_FIVE] = A_NORMAL,
+      [LOAD_AVERAGE_ONE] = A_BOLD,
+      [LOAD] = A_BOLD,
+      [HELP_BOLD] = A_BOLD,
+      [CLOCK] = A_BOLD,
+      [CHECK_BOX] = A_BOLD,
+      [CHECK_MARK] = A_NORMAL,
+      [CHECK_TEXT] = A_NORMAL,
+      [HOSTNAME] = A_BOLD,
+      [CPU_NICE] = A_NORMAL,
+      [CPU_NICE_TEXT] = A_NORMAL,
+      [CPU_NORMAL] = A_BOLD,
+      [CPU_KERNEL] = A_BOLD,
+      [CPU_IOWAIT] = A_NORMAL,
+      [CPU_IRQ] = A_BOLD,
+      [CPU_SOFTIRQ] = A_BOLD,
+      [CPU_STEAL] = A_REVERSE,
+      [CPU_GUEST] = A_REVERSE,
+   },
+   [COLORSCHEME_BLACKONWHITE] = {
+      [RESET_COLOR] = ColorPair(Black,White),
+      [DEFAULT_COLOR] = ColorPair(Black,White),
+      [FUNCTION_BAR] = ColorPair(Black,Cyan),
+      [FUNCTION_KEY] = ColorPair(Black,White),
+      [PANEL_HEADER_FOCUS] = ColorPair(Black,Green),
+      [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green),
+      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Blue,White),
+      [FAILED_SEARCH] = ColorPair(Red,Cyan),
+      [UPTIME] = ColorPair(Yellow,White),
+      [BATTERY] = ColorPair(Yellow,White),
+      [LARGE_NUMBER] = ColorPair(Red,White),
+      [METER_TEXT] = ColorPair(Blue,White),
+      [METER_VALUE] = ColorPair(Black,White),
+      [LED_COLOR] = ColorPair(Green,White),
+      [TASKS_RUNNING] = ColorPair(Green,White),
+      [PROCESS] = ColorPair(Black,White),
+      [PROCESS_SHADOW] = A_BOLD | ColorPair(Black,White),
+      [PROCESS_TAG] = ColorPair(White,Blue),
+      [PROCESS_MEGABYTES] = ColorPair(Blue,White),
+      [PROCESS_BASENAME] = ColorPair(Blue,White),
+      [PROCESS_TREE] = ColorPair(Green,White),
+      [PROCESS_R_STATE] = ColorPair(Green,White),
+      [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,White),
+      [PROCESS_HIGH_PRIORITY] = ColorPair(Red,White),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Red,White),
+      [PROCESS_THREAD] = ColorPair(Blue,White),
+      [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,White),
+      [BAR_BORDER] = ColorPair(Blue,White),
+      [BAR_SHADOW] = ColorPair(Black,White),
+      [SWAP] = ColorPair(Red,White),
+      [GRAPH_1] = A_BOLD | ColorPair(Blue,White),
+      [GRAPH_2] = ColorPair(Blue,White),
+      [MEMORY_USED] = ColorPair(Green,White),
+      [MEMORY_BUFFERS] = ColorPair(Cyan,White),
+      [MEMORY_BUFFERS_TEXT] = ColorPair(Cyan,White),
+      [MEMORY_CACHE] = ColorPair(Yellow,White),
+      [LOAD_AVERAGE_FIFTEEN] = ColorPair(Black,White),
+      [LOAD_AVERAGE_FIVE] = ColorPair(Black,White),
+      [LOAD_AVERAGE_ONE] = ColorPair(Black,White),
+      [LOAD] = ColorPair(Black,White),
+      [HELP_BOLD] = ColorPair(Blue,White),
+      [CLOCK] = ColorPair(Black,White),
+      [CHECK_BOX] = ColorPair(Blue,White),
+      [CHECK_MARK] = ColorPair(Black,White),
+      [CHECK_TEXT] = ColorPair(Black,White),
+      [HOSTNAME] = ColorPair(Black,White),
+      [CPU_NICE] = ColorPair(Cyan,White),
+      [CPU_NICE_TEXT] = ColorPair(Cyan,White),
+      [CPU_NORMAL] = ColorPair(Green,White),
+      [CPU_KERNEL] = ColorPair(Red,White),
+      [CPU_IOWAIT] = A_BOLD | ColorPair(Black, White),
+      [CPU_IRQ] = ColorPair(Blue,White),
+      [CPU_SOFTIRQ] = ColorPair(Blue,White),
+      [CPU_STEAL] = ColorPair(Cyan,White),
+      [CPU_GUEST] = ColorPair(Cyan,White),
+   },
+   [COLORSCHEME_LIGHTTERMINAL] = {
+      [RESET_COLOR] = ColorPair(Black,Black),
+      [DEFAULT_COLOR] = ColorPair(Black,Black),
+      [FUNCTION_BAR] = ColorPair(Black,Cyan),
+      [FUNCTION_KEY] = ColorPair(Black,Black),
+      [PANEL_HEADER_FOCUS] = ColorPair(Black,Green),
+      [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green),
+      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Blue,Black),
+      [FAILED_SEARCH] = ColorPair(Red,Cyan),
+      [UPTIME] = ColorPair(Yellow,Black),
+      [BATTERY] = ColorPair(Yellow,Black),
+      [LARGE_NUMBER] = ColorPair(Red,Black),
+      [METER_TEXT] = ColorPair(Blue,Black),
+      [METER_VALUE] = ColorPair(Black,Black),
+      [LED_COLOR] = ColorPair(Green,Black),
+      [TASKS_RUNNING] = ColorPair(Green,Black),
+      [PROCESS] = ColorPair(Black,Black),
+      [PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Black),
+      [PROCESS_TAG] = ColorPair(White,Blue),
+      [PROCESS_MEGABYTES] = ColorPair(Blue,Black),
+      [PROCESS_BASENAME] = ColorPair(Green,Black),
+      [PROCESS_TREE] = ColorPair(Blue,Black),
+      [PROCESS_R_STATE] = ColorPair(Green,Black),
+      [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black),
+      [PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Red,Black),
+      [PROCESS_THREAD] = ColorPair(Blue,Black),
+      [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,Black),
+      [BAR_BORDER] = ColorPair(Blue,Black),
+      [BAR_SHADOW] = ColorPair(Black,Black),
+      [SWAP] = ColorPair(Red,Black),
+      [GRAPH_1] = A_BOLD | ColorPair(Cyan,Black),
+      [GRAPH_2] = ColorPair(Cyan,Black),
+      [MEMORY_USED] = ColorPair(Green,Black),
+      [MEMORY_BUFFERS] = ColorPair(Cyan,Black),
+      [MEMORY_BUFFERS_TEXT] = ColorPair(Cyan,Black),
+      [MEMORY_CACHE] = ColorPair(Yellow,Black),
+      [LOAD_AVERAGE_FIFTEEN] = ColorPair(Black,Black),
+      [LOAD_AVERAGE_FIVE] = ColorPair(Black,Black),
+      [LOAD_AVERAGE_ONE] = ColorPair(Black,Black),
+      [LOAD] = ColorPair(White,Black),
+      [HELP_BOLD] = ColorPair(Blue,Black),
+      [CLOCK] = ColorPair(White,Black),
+      [CHECK_BOX] = ColorPair(Blue,Black),
+      [CHECK_MARK] = ColorPair(Black,Black),
+      [CHECK_TEXT] = ColorPair(Black,Black),
+      [HOSTNAME] = ColorPair(White,Black),
+      [CPU_NICE] = ColorPair(Cyan,Black),
+      [CPU_NICE_TEXT] = ColorPair(Cyan,Black),
+      [CPU_NORMAL] = ColorPair(Green,Black),
+      [CPU_KERNEL] = ColorPair(Red,Black),
+      [CPU_IOWAIT] = A_BOLD | ColorPair(Black, Black),
+      [CPU_IRQ] = A_BOLD | ColorPair(Blue,Black),
+      [CPU_SOFTIRQ] = ColorPair(Blue,Black),
+      [CPU_STEAL] = ColorPair(Black,Black),
+      [CPU_GUEST] = ColorPair(Black,Black),
+   },
+   [COLORSCHEME_MIDNIGHT] = {
+      [RESET_COLOR] = ColorPair(White,Blue),
+      [DEFAULT_COLOR] = ColorPair(White,Blue),
+      [FUNCTION_BAR] = ColorPair(Black,Cyan),
+      [FUNCTION_KEY] = A_NORMAL,
+      [PANEL_HEADER_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Cyan),
+      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,White),
+      [PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD | ColorPair(Yellow,Blue),
+      [FAILED_SEARCH] = ColorPair(Red,Cyan),
+      [UPTIME] = A_BOLD | ColorPair(Yellow,Blue),
+      [BATTERY] = A_BOLD | ColorPair(Yellow,Blue),
+      [LARGE_NUMBER] = A_BOLD | ColorPair(Red,Blue),
+      [METER_TEXT] = ColorPair(Cyan,Blue),
+      [METER_VALUE] = A_BOLD | ColorPair(Cyan,Blue),
+      [LED_COLOR] = ColorPair(Green,Blue),
+      [TASKS_RUNNING] = A_BOLD | ColorPair(Green,Blue),
+      [PROCESS] = ColorPair(White,Blue),
+      [PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Blue),
+      [PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Blue),
+      [PROCESS_MEGABYTES] = ColorPair(Cyan,Blue),
+      [PROCESS_BASENAME] = A_BOLD | ColorPair(Cyan,Blue),
+      [PROCESS_TREE] = ColorPair(Cyan,Blue),
+      [PROCESS_R_STATE] = ColorPair(Green,Blue),
+      [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Blue),
+      [PROCESS_HIGH_PRIORITY] = ColorPair(Red,Blue),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Red,Blue),
+      [PROCESS_THREAD] = ColorPair(Green,Blue),
+      [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Green,Blue),
+      [BAR_BORDER] = A_BOLD | ColorPair(Yellow,Blue),
+      [BAR_SHADOW] = ColorPair(Cyan,Blue),
+      [SWAP] = ColorPair(Red,Blue),
+      [GRAPH_1] = A_BOLD | ColorPair(Cyan,Blue),
+      [GRAPH_2] = ColorPair(Cyan,Blue),
+      [MEMORY_USED] = A_BOLD | ColorPair(Green,Blue),
+      [MEMORY_BUFFERS] = A_BOLD | ColorPair(Cyan,Blue),
+      [MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Cyan,Blue),
+      [MEMORY_CACHE] = A_BOLD | ColorPair(Yellow,Blue),
+      [LOAD_AVERAGE_FIFTEEN] = A_BOLD | ColorPair(Black,Blue),
+      [LOAD_AVERAGE_FIVE] = A_NORMAL | ColorPair(White,Blue),
+      [LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(White,Blue),
+      [LOAD] = A_BOLD | ColorPair(White,Blue),
+      [HELP_BOLD] = A_BOLD | ColorPair(Cyan,Blue),
+      [CLOCK] = ColorPair(White,Blue),
+      [CHECK_BOX] = ColorPair(Cyan,Blue),
+      [CHECK_MARK] = A_BOLD | ColorPair(White,Blue),
+      [CHECK_TEXT] = A_NORMAL | ColorPair(White,Blue),
+      [HOSTNAME] = ColorPair(White,Blue),
+      [CPU_NICE] = A_BOLD | ColorPair(Cyan,Blue),
+      [CPU_NICE_TEXT] = A_BOLD | ColorPair(Cyan,Blue),
+      [CPU_NORMAL] = A_BOLD | ColorPair(Green,Blue),
+      [CPU_KERNEL] = A_BOLD | ColorPair(Red,Blue),
+      [CPU_IOWAIT] = A_BOLD | ColorPair(Blue,Blue),
+      [CPU_IRQ] = A_BOLD | ColorPair(Black,Blue),
+      [CPU_SOFTIRQ] = ColorPair(Black,Blue),
+      [CPU_STEAL] = ColorPair(White,Blue),
+      [CPU_GUEST] = ColorPair(White,Blue),
+   },
+   [COLORSCHEME_BLACKNIGHT] = {
+      [RESET_COLOR] = ColorPair(Cyan,Black),
+      [DEFAULT_COLOR] = ColorPair(Cyan,Black),
+      [FUNCTION_BAR] = ColorPair(Black,Green),
+      [FUNCTION_KEY] = ColorPair(Cyan,Black),
+      [PANEL_HEADER_FOCUS] = ColorPair(Black,Green),
+      [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green),
+      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Black,White),
+      [FAILED_SEARCH] = ColorPair(Red,Cyan),
+      [UPTIME] = ColorPair(Green,Black),
+      [BATTERY] = ColorPair(Green,Black),
+      [LARGE_NUMBER] = A_BOLD | ColorPair(Red,Black),
+      [METER_TEXT] = ColorPair(Cyan,Black),
+      [METER_VALUE] = ColorPair(Green,Black),
+      [LED_COLOR] = ColorPair(Green,Black),
+      [TASKS_RUNNING] = A_BOLD | ColorPair(Green,Black),
+      [PROCESS] = ColorPair(Cyan,Black),
+      [PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Black),
+      [PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Black),
+      [PROCESS_MEGABYTES] = A_BOLD | ColorPair(Green,Black),
+      [PROCESS_BASENAME] = A_BOLD | ColorPair(Green,Black),
+      [PROCESS_TREE] = ColorPair(Cyan,Black),
+      [PROCESS_THREAD] = ColorPair(Green,Black),
+      [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,Black),
+      [PROCESS_R_STATE] = ColorPair(Green,Black),
+      [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black),
+      [PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Red,Black),
+      [BAR_BORDER] = A_BOLD | ColorPair(Green,Black),
+      [BAR_SHADOW] = ColorPair(Cyan,Black),
+      [SWAP] = ColorPair(Red,Black),
+      [GRAPH_1] = A_BOLD | ColorPair(Green,Black),
+      [GRAPH_2] = ColorPair(Green,Black),
+      [MEMORY_USED] = ColorPair(Green,Black),
+      [MEMORY_BUFFERS] = ColorPair(Blue,Black),
+      [MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue,Black),
+      [MEMORY_CACHE] = ColorPair(Yellow,Black),
+      [LOAD_AVERAGE_FIFTEEN] = ColorPair(Green,Black),
+      [LOAD_AVERAGE_FIVE] = ColorPair(Green,Black),
+      [LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(Green,Black),
+      [LOAD] = A_BOLD,
+      [HELP_BOLD] = A_BOLD | ColorPair(Cyan,Black),
+      [CLOCK] = ColorPair(Green,Black),
+      [CHECK_BOX] = ColorPair(Green,Black),
+      [CHECK_MARK] = A_BOLD | ColorPair(Green,Black),
+      [CHECK_TEXT] = ColorPair(Cyan,Black),
+      [HOSTNAME] = ColorPair(Green,Black),
+      [CPU_NICE] = ColorPair(Blue,Black),
+      [CPU_NICE_TEXT] = A_BOLD | ColorPair(Blue,Black),
+      [CPU_NORMAL] = ColorPair(Green,Black),
+      [CPU_KERNEL] = ColorPair(Red,Black),
+      [CPU_IOWAIT] = ColorPair(Yellow,Black),
+      [CPU_IRQ] = A_BOLD | ColorPair(Blue,Black),
+      [CPU_SOFTIRQ] = ColorPair(Blue,Black),
+      [CPU_STEAL] = ColorPair(Cyan,Black),
+      [CPU_GUEST] = ColorPair(Cyan,Black),
+   }
+};
 
 int CRT_cursorX = 0;
 
 int CRT_scrollHAmount = 5;
 
 char* CRT_termType;
+
+// TODO move color scheme to Settings, perhaps?
+
+int CRT_colorScheme = 0;
 
 void *backtraceArray[128];
 
@@ -143,10 +524,11 @@ static void CRT_handleSIGTERM(int sgn) {
 void CRT_init(int delay, int colorScheme) {
    initscr();
    noecho();
-   CRT_delay = delay/2;
+   CRT_delay = delay;
    if (CRT_delay == 0) {
       CRT_delay = 1;
    }
+   CRT_colors = CRT_colorSchemes[colorScheme];
    CRT_colorScheme = colorScheme;
    halfdelay(CRT_delay);
    nonl();
@@ -187,6 +569,22 @@ void CRT_init(int delay, int colorScheme) {
    if (!has_colors())
       CRT_colorScheme = 1;
    CRT_setColors(CRT_colorScheme);
+
+#ifdef HAVE_LIBNCURSESW
+   char *locale = setlocale(LC_ALL, NULL);
+   if (locale == NULL || locale[0] == '\0')
+      locale = setlocale(LC_CTYPE, NULL);
+   if (locale != NULL &&
+       (strstr(locale, "UTF-8") ||
+        strstr(locale, "utf-8") ||
+        strstr(locale, "UTF8")  ||
+        strstr(locale, "utf8")))
+      CRT_utf8 = true;
+   else
+      CRT_utf8 = false;
+#endif
+
+   CRT_treeStr = CRT_utf8 ? CRT_treeStrUtf8 : CRT_treeStrAscii;
 
    mousemask(BUTTON1_CLICKED, NULL);
 }
@@ -233,391 +631,5 @@ void CRT_setColors(int colorScheme) {
          for (int j = 0; j < 8; j++)
             init_pair((7-i)*8+j, i, (j==0?-1:j));
    }
-
-   if (colorScheme == COLORSCHEME_MONOCHROME) {
-      CRT_colors[RESET_COLOR] = A_NORMAL;
-      CRT_colors[DEFAULT_COLOR] = A_NORMAL;
-      CRT_colors[FUNCTION_BAR] = A_REVERSE;
-      CRT_colors[FUNCTION_KEY] = A_NORMAL;
-      CRT_colors[PANEL_HEADER_FOCUS] = A_REVERSE;
-      CRT_colors[PANEL_HEADER_UNFOCUS] = A_REVERSE;
-      CRT_colors[PANEL_HIGHLIGHT_FOCUS] = A_REVERSE;
-      CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD;
-      CRT_colors[FAILED_SEARCH] = A_REVERSE | A_BOLD;
-      CRT_colors[UPTIME] = A_BOLD;
-      CRT_colors[BATTERY] = A_BOLD;
-      CRT_colors[LARGE_NUMBER] = A_BOLD;
-      CRT_colors[METER_TEXT] = A_NORMAL;
-      CRT_colors[METER_VALUE] = A_BOLD;
-      CRT_colors[LED_COLOR] = A_NORMAL;
-      CRT_colors[TASKS_RUNNING] = A_BOLD;
-      CRT_colors[PROCESS] = A_NORMAL;
-      CRT_colors[PROCESS_SHADOW] = A_DIM;
-      CRT_colors[PROCESS_TAG] = A_BOLD;
-      CRT_colors[PROCESS_MEGABYTES] = A_BOLD;
-      CRT_colors[PROCESS_BASENAME] = A_BOLD;
-      CRT_colors[PROCESS_TREE] = A_BOLD;
-      CRT_colors[PROCESS_R_STATE] = A_BOLD;
-      CRT_colors[PROCESS_D_STATE] = A_BOLD;
-      CRT_colors[PROCESS_HIGH_PRIORITY] = A_BOLD;
-      CRT_colors[PROCESS_LOW_PRIORITY] = A_DIM;
-      CRT_colors[PROCESS_THREAD] = A_BOLD;
-      CRT_colors[PROCESS_THREAD_BASENAME] = A_REVERSE;
-      CRT_colors[BAR_BORDER] = A_BOLD;
-      CRT_colors[BAR_SHADOW] = A_DIM;
-      CRT_colors[SWAP] = A_BOLD;
-      CRT_colors[GRAPH_1] = A_BOLD;
-      CRT_colors[GRAPH_2] = A_BOLD;
-      CRT_colors[GRAPH_3] = A_BOLD;
-      CRT_colors[GRAPH_4] = A_NORMAL;
-      CRT_colors[GRAPH_5] = A_NORMAL;
-      CRT_colors[GRAPH_6] = A_NORMAL;
-      CRT_colors[GRAPH_7] = A_DIM;
-      CRT_colors[GRAPH_8] = A_DIM;
-      CRT_colors[GRAPH_9] = A_DIM;
-      CRT_colors[MEMORY_USED] = A_BOLD;
-      CRT_colors[MEMORY_BUFFERS] = A_NORMAL;
-      CRT_colors[MEMORY_BUFFERS_TEXT] = A_NORMAL;
-      CRT_colors[MEMORY_CACHE] = A_NORMAL;
-      CRT_colors[LOAD_AVERAGE_FIFTEEN] = A_DIM;
-      CRT_colors[LOAD_AVERAGE_FIVE] = A_NORMAL;
-      CRT_colors[LOAD_AVERAGE_ONE] = A_BOLD;
-      CRT_colors[LOAD] = A_BOLD;
-      CRT_colors[HELP_BOLD] = A_BOLD;
-      CRT_colors[CLOCK] = A_BOLD;
-      CRT_colors[CHECK_BOX] = A_BOLD;
-      CRT_colors[CHECK_MARK] = A_NORMAL;
-      CRT_colors[CHECK_TEXT] = A_NORMAL;
-      CRT_colors[HOSTNAME] = A_BOLD;
-      CRT_colors[CPU_NICE] = A_NORMAL;
-      CRT_colors[CPU_NICE_TEXT] = A_NORMAL;
-      CRT_colors[CPU_NORMAL] = A_BOLD;
-      CRT_colors[CPU_KERNEL] = A_BOLD;
-      CRT_colors[CPU_IOWAIT] = A_NORMAL;
-      CRT_colors[CPU_IRQ] = A_BOLD;
-      CRT_colors[CPU_SOFTIRQ] = A_BOLD;
-      CRT_colors[CPU_STEAL] = A_REVERSE;
-      CRT_colors[CPU_GUEST] = A_REVERSE;
-   } else if (CRT_colorScheme == COLORSCHEME_BLACKONWHITE) {
-      CRT_colors[RESET_COLOR] = ColorPair(Black,White);
-      CRT_colors[DEFAULT_COLOR] = ColorPair(Black,White);
-      CRT_colors[FUNCTION_BAR] = ColorPair(Black,Cyan);
-      CRT_colors[FUNCTION_KEY] = ColorPair(Black,White);
-      CRT_colors[PANEL_HEADER_FOCUS] = ColorPair(Black,Green);
-      CRT_colors[PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green);
-      CRT_colors[PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan);
-      CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Blue,White);
-      CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
-      CRT_colors[UPTIME] = ColorPair(Yellow,White);
-      CRT_colors[BATTERY] = ColorPair(Yellow,White);
-      CRT_colors[LARGE_NUMBER] = ColorPair(Red,White);
-      CRT_colors[METER_TEXT] = ColorPair(Blue,White);
-      CRT_colors[METER_VALUE] = ColorPair(Black,White);
-      CRT_colors[LED_COLOR] = ColorPair(Green,White);
-      CRT_colors[TASKS_RUNNING] = ColorPair(Green,White);
-      CRT_colors[PROCESS] = ColorPair(Black,White);
-      CRT_colors[PROCESS_SHADOW] = A_BOLD | ColorPair(Black,White);
-      CRT_colors[PROCESS_TAG] = ColorPair(White,Blue);
-      CRT_colors[PROCESS_MEGABYTES] = ColorPair(Blue,White);
-      CRT_colors[PROCESS_BASENAME] = ColorPair(Blue,White);
-      CRT_colors[PROCESS_TREE] = ColorPair(Green,White);
-      CRT_colors[PROCESS_R_STATE] = ColorPair(Green,White);
-      CRT_colors[PROCESS_D_STATE] = A_BOLD | ColorPair(Red,White);
-      CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,White);
-      CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,White);
-      CRT_colors[PROCESS_THREAD] = ColorPair(Blue,White);
-      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,White);
-      CRT_colors[BAR_BORDER] = ColorPair(Blue,White);
-      CRT_colors[BAR_SHADOW] = ColorPair(Black,White);
-      CRT_colors[SWAP] = ColorPair(Red,White);
-      CRT_colors[GRAPH_1] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_2] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_3] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_4] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_5] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_6] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_7] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_8] = ColorPair(Yellow,White);
-      CRT_colors[GRAPH_9] = ColorPair(Yellow,White);
-      CRT_colors[MEMORY_USED] = ColorPair(Green,White);
-      CRT_colors[MEMORY_BUFFERS] = ColorPair(Cyan,White);
-      CRT_colors[MEMORY_BUFFERS_TEXT] = ColorPair(Cyan,White);
-      CRT_colors[MEMORY_CACHE] = ColorPair(Yellow,White);
-      CRT_colors[LOAD_AVERAGE_FIFTEEN] = ColorPair(Black,White);
-      CRT_colors[LOAD_AVERAGE_FIVE] = ColorPair(Black,White);
-      CRT_colors[LOAD_AVERAGE_ONE] = ColorPair(Black,White);
-      CRT_colors[LOAD] = ColorPair(Black,White);
-      CRT_colors[HELP_BOLD] = ColorPair(Blue,White);
-      CRT_colors[CLOCK] = ColorPair(Black,White);
-      CRT_colors[CHECK_BOX] = ColorPair(Blue,White);
-      CRT_colors[CHECK_MARK] = ColorPair(Black,White);
-      CRT_colors[CHECK_TEXT] = ColorPair(Black,White);
-      CRT_colors[HOSTNAME] = ColorPair(Black,White);
-      CRT_colors[CPU_NICE] = ColorPair(Cyan,White);
-      CRT_colors[CPU_NICE_TEXT] = ColorPair(Cyan,White);
-      CRT_colors[CPU_NORMAL] = ColorPair(Green,White);
-      CRT_colors[CPU_KERNEL] = ColorPair(Red,White);
-      CRT_colors[CPU_IOWAIT] = A_BOLD | ColorPair(Black, White);
-      CRT_colors[CPU_IRQ] = ColorPair(Blue,White);
-      CRT_colors[CPU_SOFTIRQ] = ColorPair(Blue,White);
-      CRT_colors[CPU_STEAL] = ColorPair(Cyan,White);
-      CRT_colors[CPU_GUEST] = ColorPair(Cyan,White);
-   } else if (CRT_colorScheme == COLORSCHEME_BLACKONWHITE2) {
-      CRT_colors[RESET_COLOR] = ColorPair(Black,Black);
-      CRT_colors[DEFAULT_COLOR] = ColorPair(Black,Black);
-      CRT_colors[FUNCTION_BAR] = ColorPair(Black,Cyan);
-      CRT_colors[FUNCTION_KEY] = ColorPair(Black,Black);
-      CRT_colors[PANEL_HEADER_FOCUS] = ColorPair(Black,Green);
-      CRT_colors[PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green);
-      CRT_colors[PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan);
-      CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Blue,Black);
-      CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
-      CRT_colors[UPTIME] = ColorPair(Yellow,Black);
-      CRT_colors[BATTERY] = ColorPair(Yellow,Black);
-      CRT_colors[LARGE_NUMBER] = ColorPair(Red,Black);
-      CRT_colors[METER_TEXT] = ColorPair(Blue,Black);
-      CRT_colors[METER_VALUE] = ColorPair(Black,Black);
-      CRT_colors[LED_COLOR] = ColorPair(Green,Black);
-      CRT_colors[TASKS_RUNNING] = ColorPair(Green,Black);
-      CRT_colors[PROCESS] = ColorPair(Black,Black);
-      CRT_colors[PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Black);
-      CRT_colors[PROCESS_TAG] = ColorPair(White,Blue);
-      CRT_colors[PROCESS_MEGABYTES] = ColorPair(Blue,Black);
-      CRT_colors[PROCESS_BASENAME] = ColorPair(Green,Black);
-      CRT_colors[PROCESS_TREE] = ColorPair(Blue,Black);
-      CRT_colors[PROCESS_R_STATE] = ColorPair(Green,Black);
-      CRT_colors[PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black);
-      CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,Black);
-      CRT_colors[PROCESS_THREAD] = ColorPair(Blue,Black);
-      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[BAR_BORDER] = ColorPair(Blue,Black);
-      CRT_colors[BAR_SHADOW] = ColorPair(Black,Black);
-      CRT_colors[SWAP] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_1] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_2] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_3] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_4] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_5] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_6] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_7] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_8] = ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_9] = ColorPair(Yellow,Black);
-      CRT_colors[MEMORY_USED] = ColorPair(Green,Black);
-      CRT_colors[MEMORY_BUFFERS] = ColorPair(Cyan,Black);
-      CRT_colors[MEMORY_BUFFERS_TEXT] = ColorPair(Cyan,Black);
-      CRT_colors[MEMORY_CACHE] = ColorPair(Yellow,Black);
-      CRT_colors[LOAD_AVERAGE_FIFTEEN] = ColorPair(Black,Black);
-      CRT_colors[LOAD_AVERAGE_FIVE] = ColorPair(Black,Black);
-      CRT_colors[LOAD_AVERAGE_ONE] = ColorPair(Black,Black);
-      CRT_colors[LOAD] = ColorPair(White,Black);
-      CRT_colors[HELP_BOLD] = ColorPair(Blue,Black);
-      CRT_colors[CLOCK] = ColorPair(White,Black);
-      CRT_colors[CHECK_BOX] = ColorPair(Blue,Black);
-      CRT_colors[CHECK_MARK] = ColorPair(Black,Black);
-      CRT_colors[CHECK_TEXT] = ColorPair(Black,Black);
-      CRT_colors[HOSTNAME] = ColorPair(White,Black);
-      CRT_colors[CPU_NICE] = ColorPair(Cyan,Black);
-      CRT_colors[CPU_NICE_TEXT] = ColorPair(Cyan,Black);
-      CRT_colors[CPU_NORMAL] = ColorPair(Green,Black);
-      CRT_colors[CPU_KERNEL] = ColorPair(Red,Black);
-      CRT_colors[CPU_IOWAIT] = A_BOLD | ColorPair(Black, Black);
-      CRT_colors[CPU_IRQ] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[CPU_SOFTIRQ] = ColorPair(Blue,Black);
-      CRT_colors[CPU_STEAL] = ColorPair(Black,Black);
-      CRT_colors[CPU_GUEST] = ColorPair(Black,Black);
-   } else if (CRT_colorScheme == COLORSCHEME_MIDNIGHT) {
-      CRT_colors[RESET_COLOR] = ColorPair(White,Blue);
-      CRT_colors[DEFAULT_COLOR] = ColorPair(White,Blue);
-      CRT_colors[FUNCTION_BAR] = ColorPair(Black,Cyan);
-      CRT_colors[FUNCTION_KEY] = A_NORMAL;
-      CRT_colors[PANEL_HEADER_FOCUS] = ColorPair(Black,Cyan);
-      CRT_colors[PANEL_HEADER_UNFOCUS] = ColorPair(Black,Cyan);
-      CRT_colors[PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,White);
-      CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
-      CRT_colors[UPTIME] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[BATTERY] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[LARGE_NUMBER] = A_BOLD | ColorPair(Red,Blue);
-      CRT_colors[METER_TEXT] = ColorPair(Cyan,Blue);
-      CRT_colors[METER_VALUE] = A_BOLD | ColorPair(Cyan,Blue);
-      CRT_colors[LED_COLOR] = ColorPair(Green,Blue);
-      CRT_colors[TASKS_RUNNING] = A_BOLD | ColorPair(Green,Blue);
-      CRT_colors[PROCESS] = ColorPair(White,Blue);
-      CRT_colors[PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Blue);
-      CRT_colors[PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[PROCESS_MEGABYTES] = ColorPair(Cyan,Blue);
-      CRT_colors[PROCESS_BASENAME] = A_BOLD | ColorPair(Cyan,Blue);
-      CRT_colors[PROCESS_TREE] = ColorPair(Cyan,Blue);
-      CRT_colors[PROCESS_R_STATE] = ColorPair(Green,Blue);
-      CRT_colors[PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Blue);
-      CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,Blue);
-      CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,Blue);
-      CRT_colors[PROCESS_THREAD] = ColorPair(Green,Blue);
-      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Green,Blue);
-      CRT_colors[BAR_BORDER] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[BAR_SHADOW] = ColorPair(Cyan,Blue);
-      CRT_colors[SWAP] = ColorPair(Red,Blue);
-      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_2] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_3] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_4] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_5] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_6] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_7] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_8] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[GRAPH_9] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[MEMORY_USED] = A_BOLD | ColorPair(Green,Blue);
-      CRT_colors[MEMORY_BUFFERS] = A_BOLD | ColorPair(Cyan,Blue);
-      CRT_colors[MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Cyan,Blue);
-      CRT_colors[MEMORY_CACHE] = A_BOLD | ColorPair(Yellow,Blue);
-      CRT_colors[LOAD_AVERAGE_FIFTEEN] = A_BOLD | ColorPair(Black,Blue);
-      CRT_colors[LOAD_AVERAGE_FIVE] = A_NORMAL | ColorPair(White,Blue);
-      CRT_colors[LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(White,Blue);
-      CRT_colors[LOAD] = A_BOLD | ColorPair(White,Blue);
-      CRT_colors[HELP_BOLD] = A_BOLD | ColorPair(Cyan,Blue);
-      CRT_colors[CLOCK] = ColorPair(White,Blue);
-      CRT_colors[CHECK_BOX] = ColorPair(Cyan,Blue);
-      CRT_colors[CHECK_MARK] = A_BOLD | ColorPair(White,Blue);
-      CRT_colors[CHECK_TEXT] = A_NORMAL | ColorPair(White,Blue);
-      CRT_colors[HOSTNAME] = ColorPair(White,Blue);
-      CRT_colors[CPU_NICE] = A_BOLD | ColorPair(Cyan,Blue);
-      CRT_colors[CPU_NICE_TEXT] = A_BOLD | ColorPair(Cyan,Blue);
-      CRT_colors[CPU_NORMAL] = A_BOLD | ColorPair(Green,Blue);
-      CRT_colors[CPU_KERNEL] = A_BOLD | ColorPair(Red,Blue);
-      CRT_colors[CPU_IOWAIT] = A_BOLD | ColorPair(Blue,Blue);
-      CRT_colors[CPU_IRQ] = A_BOLD | ColorPair(Black,Blue);
-      CRT_colors[CPU_SOFTIRQ] = ColorPair(Black,Blue);
-      CRT_colors[CPU_STEAL] = ColorPair(White,Blue);
-      CRT_colors[CPU_GUEST] = ColorPair(White,Blue);
-   } else if (CRT_colorScheme == COLORSCHEME_BLACKNIGHT) {
-      CRT_colors[RESET_COLOR] = ColorPair(Cyan,Black);
-      CRT_colors[DEFAULT_COLOR] = ColorPair(Cyan,Black);
-      CRT_colors[FUNCTION_BAR] = ColorPair(Black,Green);
-      CRT_colors[FUNCTION_KEY] = ColorPair(Cyan,Black);
-      CRT_colors[PANEL_HEADER_FOCUS] = ColorPair(Black,Green);
-      CRT_colors[PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green);
-      CRT_colors[PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan);
-      CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Black,White);
-      CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
-      CRT_colors[UPTIME] = ColorPair(Green,Black);
-      CRT_colors[BATTERY] = ColorPair(Green,Black);
-      CRT_colors[LARGE_NUMBER] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[METER_TEXT] = ColorPair(Cyan,Black);
-      CRT_colors[METER_VALUE] = ColorPair(Green,Black);
-      CRT_colors[LED_COLOR] = ColorPair(Green,Black);
-      CRT_colors[TASKS_RUNNING] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[PROCESS] = ColorPair(Cyan,Black);
-      CRT_colors[PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Black);
-      CRT_colors[PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Black);
-      CRT_colors[PROCESS_MEGABYTES] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[PROCESS_BASENAME] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[PROCESS_TREE] = ColorPair(Cyan,Black);
-      CRT_colors[PROCESS_THREAD] = ColorPair(Green,Black);
-      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[PROCESS_R_STATE] = ColorPair(Green,Black);
-      CRT_colors[PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black);
-      CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,Black);
-      CRT_colors[BAR_BORDER] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[BAR_SHADOW] = ColorPair(Cyan,Black);
-      CRT_colors[SWAP] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[GRAPH_2] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_3] = A_BOLD | ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_4] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[GRAPH_5] = ColorPair(Green,Black);
-      CRT_colors[GRAPH_6] = ColorPair(Cyan,Black);
-      CRT_colors[GRAPH_7] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[GRAPH_8] = ColorPair(Blue,Black);
-      CRT_colors[GRAPH_9] = A_BOLD | ColorPair(Black,Black);
-      CRT_colors[MEMORY_USED] = ColorPair(Green,Black);
-      CRT_colors[MEMORY_BUFFERS] = ColorPair(Blue,Black);
-      CRT_colors[MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[MEMORY_CACHE] = ColorPair(Yellow,Black);
-      CRT_colors[LOAD_AVERAGE_FIFTEEN] = ColorPair(Green,Black);
-      CRT_colors[LOAD_AVERAGE_FIVE] = ColorPair(Green,Black);
-      CRT_colors[LOAD_AVERAGE_ONE] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[LOAD] = A_BOLD;
-      CRT_colors[HELP_BOLD] = A_BOLD | ColorPair(Cyan,Black);
-      CRT_colors[CLOCK] = ColorPair(Green,Black);
-      CRT_colors[CHECK_BOX] = ColorPair(Green,Black);
-      CRT_colors[CHECK_MARK] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[CHECK_TEXT] = ColorPair(Cyan,Black);
-      CRT_colors[HOSTNAME] = ColorPair(Green,Black);
-      CRT_colors[CPU_NICE] = ColorPair(Blue,Black);
-      CRT_colors[CPU_NICE_TEXT] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[CPU_NORMAL] = ColorPair(Green,Black);
-      CRT_colors[CPU_KERNEL] = ColorPair(Red,Black);
-      CRT_colors[CPU_IOWAIT] = ColorPair(Yellow,Black);
-      CRT_colors[CPU_IRQ] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[CPU_SOFTIRQ] = ColorPair(Blue,Black);
-      CRT_colors[CPU_STEAL] = ColorPair(Cyan,Black);
-      CRT_colors[CPU_GUEST] = ColorPair(Cyan,Black);
-   } else {
-      /* Default */
-      CRT_colors[RESET_COLOR] = ColorPair(White,Black);
-      CRT_colors[DEFAULT_COLOR] = ColorPair(White,Black);
-      CRT_colors[FUNCTION_BAR] = ColorPair(Black,Cyan);
-      CRT_colors[FUNCTION_KEY] = ColorPair(White,Black);
-      CRT_colors[PANEL_HEADER_FOCUS] = ColorPair(Black,Green);
-      CRT_colors[PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green);
-      CRT_colors[PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan);
-      CRT_colors[PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Black,White);
-      CRT_colors[FAILED_SEARCH] = ColorPair(Red,Cyan);
-      CRT_colors[UPTIME] = A_BOLD | ColorPair(Cyan,Black);
-      CRT_colors[BATTERY] = A_BOLD | ColorPair(Cyan,Black);
-      CRT_colors[LARGE_NUMBER] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[METER_TEXT] = ColorPair(Cyan,Black);
-      CRT_colors[METER_VALUE] = A_BOLD | ColorPair(Cyan,Black);
-      CRT_colors[LED_COLOR] = ColorPair(Green,Black);
-      CRT_colors[TASKS_RUNNING] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[PROCESS] = A_NORMAL;
-      CRT_colors[PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Black);
-      CRT_colors[PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Black);
-      CRT_colors[PROCESS_MEGABYTES] = ColorPair(Cyan,Black);
-      CRT_colors[PROCESS_BASENAME] = A_BOLD | ColorPair(Cyan,Black);
-      CRT_colors[PROCESS_TREE] = ColorPair(Cyan,Black);
-      CRT_colors[PROCESS_R_STATE] = ColorPair(Green,Black);
-      CRT_colors[PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black);
-      CRT_colors[PROCESS_LOW_PRIORITY] = ColorPair(Red,Black);
-      CRT_colors[PROCESS_THREAD] = ColorPair(Green,Black);
-      CRT_colors[PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[BAR_BORDER] = A_BOLD;
-      CRT_colors[BAR_SHADOW] = A_BOLD | ColorPair(Black,Black);
-      CRT_colors[SWAP] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_1] = A_BOLD | ColorPair(Red,Black);
-      CRT_colors[GRAPH_2] = ColorPair(Red,Black);
-      CRT_colors[GRAPH_3] = A_BOLD | ColorPair(Yellow,Black);
-      CRT_colors[GRAPH_4] = A_BOLD | ColorPair(Green,Black);
-      CRT_colors[GRAPH_5] = ColorPair(Green,Black);
-      CRT_colors[GRAPH_6] = ColorPair(Cyan,Black);
-      CRT_colors[GRAPH_7] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[GRAPH_8] = ColorPair(Blue,Black);
-      CRT_colors[GRAPH_9] = A_BOLD | ColorPair(Black,Black);
-      CRT_colors[MEMORY_USED] = ColorPair(Green,Black);
-      CRT_colors[MEMORY_BUFFERS] = ColorPair(Blue,Black);
-      CRT_colors[MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[MEMORY_CACHE] = ColorPair(Yellow,Black);
-      CRT_colors[LOAD_AVERAGE_FIFTEEN] = A_BOLD | ColorPair(Black,Black);
-      CRT_colors[LOAD_AVERAGE_FIVE] = A_NORMAL;
-      CRT_colors[LOAD_AVERAGE_ONE] = A_BOLD;
-      CRT_colors[LOAD] = A_BOLD;
-      CRT_colors[HELP_BOLD] = A_BOLD | ColorPair(Cyan,Black);
-      CRT_colors[CLOCK] = A_BOLD;
-      CRT_colors[CHECK_BOX] = ColorPair(Cyan,Black);
-      CRT_colors[CHECK_MARK] = A_BOLD;
-      CRT_colors[CHECK_TEXT] = A_NORMAL;
-      CRT_colors[HOSTNAME] = A_BOLD;
-      CRT_colors[CPU_NICE] = ColorPair(Blue,Black);
-      CRT_colors[CPU_NICE_TEXT] = A_BOLD | ColorPair(Blue,Black);
-      CRT_colors[CPU_NORMAL] = ColorPair(Green,Black);
-      CRT_colors[CPU_KERNEL] = ColorPair(Red,Black);
-      CRT_colors[CPU_IOWAIT] = A_BOLD | ColorPair(Black, Black);
-      CRT_colors[CPU_IRQ] = ColorPair(Yellow,Black);
-      CRT_colors[CPU_SOFTIRQ] = ColorPair(Magenta,Black);
-      CRT_colors[CPU_STEAL] = ColorPair(Cyan,Black);
-      CRT_colors[CPU_GUEST] = ColorPair(Cyan,Black);
-   }
+   CRT_colors = CRT_colorSchemes[colorScheme];
 }

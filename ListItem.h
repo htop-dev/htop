@@ -15,6 +15,7 @@ typedef struct ListItem_ {
    Object super;
    char* value;
    int key;
+   bool moving;
 } ListItem;
 
 

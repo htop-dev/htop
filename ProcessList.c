@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 #include "Panel.h"
 #include "Process.h"
+#include "Settings.h"
 
 #ifndef MAX_NAME
 #define MAX_NAME 128
@@ -28,51 +29,9 @@ in the source distribution for its full text.
 #define MAX_READ 2048
 #endif
 
-#ifndef ProcessList_cpuId
-#define ProcessList_cpuId(pl, cpu) ((pl)->countCPUsFromZero ? (cpu) : (cpu)+1)
-#endif
-
-typedef enum TreeStr_ {
-   TREE_STR_HORZ,
-   TREE_STR_VERT,
-   TREE_STR_RTEE,
-   TREE_STR_BEND,
-   TREE_STR_TEND,
-   TREE_STR_OPEN,
-   TREE_STR_SHUT,
-   TREE_STR_COUNT
-} TreeStr;
-
-typedef struct CPUData_ {
-   unsigned long long int totalTime;
-   unsigned long long int userTime;
-   unsigned long long int systemTime;
-   unsigned long long int systemAllTime;
-   unsigned long long int idleAllTime;
-   unsigned long long int idleTime;
-   unsigned long long int niceTime;
-   unsigned long long int ioWaitTime;
-   unsigned long long int irqTime;
-   unsigned long long int softIrqTime;
-   unsigned long long int stealTime;
-   unsigned long long int guestTime;
-   
-   unsigned long long int totalPeriod;
-   unsigned long long int userPeriod;
-   unsigned long long int systemPeriod;
-   unsigned long long int systemAllPeriod;
-   unsigned long long int idleAllPeriod;
-   unsigned long long int idlePeriod;
-   unsigned long long int nicePeriod;
-   unsigned long long int ioWaitPeriod;
-   unsigned long long int irqPeriod;
-   unsigned long long int softIrqPeriod;
-   unsigned long long int stealPeriod;
-   unsigned long long int guestPeriod;
-} CPUData;
-
 typedef struct ProcessList_ {
-   const char **treeStr;
+   Settings* settings;
+
    Vector* processes;
    Vector* processes2;
    Hashtable* processTable;
@@ -84,90 +43,33 @@ typedef struct ProcessList_ {
    const char* incFilter;
    Hashtable* pidWhiteList;
 
-   int cpuCount;
-   int totalTasks;
-   int userlandThreads;
-   int kernelThreads;
-   int runningTasks;
-
    #ifdef HAVE_LIBHWLOC
    hwloc_topology_t topology;
    bool topologyOk;
    #endif
-   CPUData* cpus;
 
-   unsigned long long int totalMem;
-   unsigned long long int usedMem;
-   unsigned long long int freeMem;
-   unsigned long long int sharedMem;
-   unsigned long long int buffersMem;
-   unsigned long long int cachedMem;
-   unsigned long long int totalSwap;
-   unsigned long long int usedSwap;
-   unsigned long long int freeSwap;
-
-   int flags;
-   ProcessField* fields;
-   ProcessField sortKey;
-   int direction;
-   bool hideThreads;
-   bool shadowOtherUsers;
-   bool showThreadNames;
-   bool showingThreadNames;
-   bool hideKernelThreads;
-   bool hideUserlandThreads;
-   bool treeView;
-   bool highlightBaseName;
-   bool highlightMegabytes;
-   bool highlightThreads;
-   bool detailedCPUTime;
-   bool countCPUsFromZero;
-   bool updateProcessNames;
-   bool accountGuestInCPUMeter;
-   bool userOnly;
+   int cpuCount;
 
 } ProcessList;
 
-ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList);
+ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList, uid_t userId);
 void ProcessList_delete(ProcessList* pl);
 void ProcessList_scan(ProcessList* pl);
 
 }*/
 
-static ProcessField defaultHeaders[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
-
-const char *ProcessList_treeStrAscii[TREE_STR_COUNT] = {
-   "-", // TREE_STR_HORZ
-   "|", // TREE_STR_VERT
-   "`", // TREE_STR_RTEE
-   "`", // TREE_STR_BEND
-   ",", // TREE_STR_TEND
-   "+", // TREE_STR_OPEN
-   "-", // TREE_STR_SHUT
-};
-
-const char *ProcessList_treeStrUtf8[TREE_STR_COUNT] = {
-   "\xe2\x94\x80", // TREE_STR_HORZ ─
-   "\xe2\x94\x82", // TREE_STR_VERT │
-   "\xe2\x94\x9c", // TREE_STR_RTEE ├
-   "\xe2\x94\x94", // TREE_STR_BEND └
-   "\xe2\x94\x8c", // TREE_STR_TEND ┌
-   "+",            // TREE_STR_OPEN +
-   "\xe2\x94\x80", // TREE_STR_SHUT ─
-};
-
-ProcessList* ProcessList_init(ProcessList* this, UsersTable* usersTable, Hashtable* pidWhiteList) {
+ProcessList* ProcessList_init(ProcessList* this, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    this->processes = Vector_new(Class(Process), true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
    this->pidWhiteList = pidWhiteList;
+   this->userId = userId;
    
    // tree-view auxiliary buffers
    this->processes2 = Vector_new(Class(Process), true, DEFAULT_SIZE);
    
    // set later by platform-specific code
    this->cpuCount = 0;
-   this->cpus = NULL;
 
 #ifdef HAVE_LIBHWLOC
    this->topologyOk = false;
@@ -180,34 +82,7 @@ ProcessList* ProcessList_init(ProcessList* this, UsersTable* usersTable, Hashtab
    }
 #endif
 
-   this->fields = calloc(LAST_PROCESSFIELD+1, sizeof(ProcessField));
-   // TODO: turn 'fields' into a Vector,
-   // (and ProcessFields into proper objects).
-   this->flags = 0;
-   for (int i = 0; defaultHeaders[i]; i++) {
-      this->fields[i] = defaultHeaders[i];
-      this->flags |= Process_fieldFlags[defaultHeaders[i]];
-   }
-
-   this->sortKey = PERCENT_CPU;
-   this->direction = 1;
-   this->hideThreads = false;
-   this->shadowOtherUsers = false;
-   this->showThreadNames = false;
-   this->showingThreadNames = false;
-   this->hideKernelThreads = false;
-   this->hideUserlandThreads = false;
-   this->treeView = false;
-   this->highlightBaseName = false;
-   this->highlightMegabytes = false;
-   this->detailedCPUTime = false;
-   this->countCPUsFromZero = false;
-   this->updateProcessNames = false;
-   this->treeStr = NULL;
    this->following = -1;
-
-   if (CRT_utf8)
-      this->treeStr = CRT_utf8 ? ProcessList_treeStrUtf8 : ProcessList_treeStrAscii;
 
    return this;
 }
@@ -216,27 +91,19 @@ void ProcessList_done(ProcessList* this) {
    Hashtable_delete(this->processTable);
    Vector_delete(this->processes);
    Vector_delete(this->processes2);
-   free(this->cpus);
-   free(this->fields);
 }
 
 void ProcessList_setPanel(ProcessList* this, Panel* panel) {
    this->panel = panel;
 }
 
-void ProcessList_invertSortOrder(ProcessList* this) {
-   if (this->direction == 1)
-      this->direction = -1;
-   else
-      this->direction = 1;
-}
-
 void ProcessList_printHeader(ProcessList* this, RichString* header) {
    RichString_prune(header);
-   ProcessField* fields = this->fields;
+   ProcessField* fields = this->settings->fields;
    for (int i = 0; fields[i]; i++) {
-      const char* field = Process_fieldTitles[fields[i]];
-      if (!this->treeView && this->sortKey == fields[i])
+      const char* field = Process_fields[fields[i]].title;
+      if (!field) field = "- ";
+      if (!this->settings->treeView && this->settings->sortKey == fields[i])
          RichString_append(header, CRT_colors[PANEL_HIGHLIGHT_FOCUS], field);
       else
          RichString_append(header, CRT_colors[PANEL_HEADER_FOCUS], field);
@@ -308,19 +175,19 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
 }
 
 void ProcessList_sort(ProcessList* this) {
-   if (!this->treeView) {
+   if (!this->settings->treeView) {
       Vector_insertionSort(this->processes);
    } else {
       // Save settings
-      int direction = this->direction;
-      int sortKey = this->sortKey;
+      int direction = this->settings->direction;
+      int sortKey = this->settings->sortKey;
       // Sort by PID
-      this->sortKey = PID;
-      this->direction = 1;
+      this->settings->sortKey = PID;
+      this->settings->direction = 1;
       Vector_quickSort(this->processes);
       // Restore settings
-      this->sortKey = sortKey;
-      this->direction = direction;
+      this->settings->sortKey = sortKey;
+      this->settings->direction = direction;
       // Take PID 1 as root and add to the new listing
       int vsize = Vector_size(this->processes);
       Process* init = (Process*) (Vector_take(this->processes, 0));
@@ -351,10 +218,12 @@ void ProcessList_sort(ProcessList* this) {
 
 ProcessField ProcessList_keyAt(ProcessList* this, int at) {
    int x = 0;
-   ProcessField* fields = this->fields;
+   ProcessField* fields = this->settings->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
-      int len = strlen(Process_fieldTitles[field]);
+      const char* title = Process_fields[field].title;
+      if (!title) title = "- ";
+      int len = strlen(title);
       if (at >= x && at <= x + len) {
          return field;
       }
@@ -371,17 +240,11 @@ void ProcessList_expandTree(ProcessList* this) {
    }
 }
 
-void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, const char* incFilter) {
-   if (!flags) {
-      following = this->following;
-      incFilter = this->incFilter;
-   } else {
-      this->following = following;
-      this->incFilter = incFilter;
-   }
+void ProcessList_rebuildPanel(ProcessList* this) {
+   const char* incFilter = this->incFilter;
 
    int currPos = Panel_getSelectedIndex(this->panel);
-   pid_t currPid = following != -1 ? following : 0;
+   pid_t currPid = this->following != -1 ? this->following : 0;
    int currScrollV = this->panel->scrollV;
 
    Panel_prune(this->panel);
@@ -392,14 +255,14 @@ void ProcessList_rebuildPanel(ProcessList* this, bool flags, int following, cons
       Process* p = ProcessList_get(this, i);
 
       if ( (!p->show)
-         || (this->userOnly && (p->st_uid != this->userId))
+         || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
          || (incFilter && !(String_contains_i(p->comm, incFilter)))
          || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->pid)) )
          hidden = true;
 
       if (!hidden) {
          Panel_set(this->panel, idx, (Object*)p);
-         if ((following == -1 && idx == currPos) || (following != -1 && p->pid == currPid)) {
+         if ((this->following == -1 && idx == currPos) || (this->following != -1 && p->pid == currPid)) {
             Panel_setSelected(this->panel, idx);
             this->panel->scrollV = currScrollV;
          }

@@ -56,6 +56,8 @@ for line in file.readlines():
             state = SKIP
          elif equals != -1:
             out.write("extern " + line[:equals] + ";" )
+         elif line.startswith("typedef struct"):
+            state = SKIP
          elif line[-1] == "{":
             out.write( line[:-2].replace("inline", "extern") + ";" )
             state = SKIP

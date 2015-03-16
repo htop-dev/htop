@@ -4,6 +4,8 @@
 AC_PREREQ(2.65)
 AC_INIT([htop],[1.0.3],[hisham@gobolinux.org])
 
+year=$(date +%Y)
+
 # The following two lines are required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 AC_CANONICAL_TARGET
@@ -70,6 +72,19 @@ AC_TRY_COMPILE(AC_INCLUDES_DEFAULT, [char *a; a = strdup("foo"); int i = 0; i++;
    AC_MSG_RESULT([yes]),
    AC_MSG_ERROR([htop is written in C99. A newer version of gcc is required.]))
 CFLAGS="$save_cflags"
+
+save_cflags="${CFLAGS}"
+CFLAGS="$CFLAGS -Wextra"
+AC_MSG_CHECKING([if compiler supports -Wextra])
+AC_TRY_COMPILE([], [], [
+   wextra_flag=-Wextra
+   AC_MSG_RESULT([yes])
+],[
+   wextra_flag=
+   AC_MSG_RESULT([no])
+])
+CFLAGS="$save_cflags"
+AC_SUBST(wextra_flag)
 
 # Checks for features and flags.
 # ----------------------------------------------------------------------
@@ -186,6 +201,8 @@ fi
 if test ! -z "$missing_headers"; then
   AC_MSG_ERROR([missing headers: $missing_headers])
 fi
+
+AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-$year Hisham Muhammad", [Copyright message.])
 
 # We're done, let's go!
 # ----------------------------------------------------------------------

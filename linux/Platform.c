@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "IOPriority.h"
 #include "IOPriorityPanel.h"
 #include "LinuxProcess.h"
+#include "LinuxProcessList.h"
 #include "Battery.h"
 
 #include "Meter.h"
@@ -26,20 +27,23 @@ in the source distribution for its full text.
 
 /*{
 #include "Action.h"
+#include "MainPanel.h"
 #include "BatteryMeter.h"
+#include "LinuxProcess.h"
 }*/
 
-static Htop_Reaction Platform_actionSetIOPriority(Panel* panel, ProcessList* pl, Header* header) {
-   (void) panel, (void) pl;
+static Htop_Reaction Platform_actionSetIOPriority(State* st) {
+   Panel* panel = st->panel;
+
    LinuxProcess* p = (LinuxProcess*) Panel_getSelected(panel);
    if (!p) return HTOP_OK;
    IOPriority ioprio = p->ioPriority;
    Panel* ioprioPanel = IOPriorityPanel_new(ioprio);
    const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
-   void* set = Action_pickFromVector(panel, ioprioPanel, 21, fuFunctions, header);
+   void* set = Action_pickFromVector(st, ioprioPanel, 21, fuFunctions);
    if (set) {
       IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = Action_foreachProcess(panel, (Action_ForeachProcessFn) LinuxProcess_setIOPriority, (size_t) ioprio, NULL);
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) LinuxProcess_setIOPriority, (size_t) ioprio, NULL);
       if (!ok)
          beep();
    }
@@ -76,8 +80,9 @@ int Platform_getUptime() {
    double uptime = 0;
    FILE* fd = fopen(PROCDIR "/uptime", "r");
    if (fd) {
-      fscanf(fd, "%64lf", &uptime);
+      int n = fscanf(fd, "%64lf", &uptime);
       fclose(fd);
+      if (n <= 0) return 0;
    }
    return (int) floor(uptime);
 }
@@ -99,24 +104,67 @@ int Platform_getMaxPid() {
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
    if (!file) return -1;
    int maxPid = 4194303;
-   fscanf(file, "%32d", &maxPid);
+   (void) fscanf(file, "%32d", &maxPid);
    fclose(file);
    return maxPid;
 }
 
-void Platform_getBatteryLevel(double* level, ACPresence* isOnAC) {
-
-   double percent = Battery_getProcBatData();
-
-   if (percent == 0) {
-      percent = Battery_getSysBatData();
-      if (percent == 0) {
-         *level = -1;
-         *isOnAC = AC_ERROR;
-         return;
-      }
+double Platform_setCPUValues(Meter* this, int cpu) {
+   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
+   CPUData* cpuData = &(pl->cpus[cpu]);
+   double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
+   double percent;
+   double* v = this->values;
+   v[0] = cpuData->nicePeriod / total * 100.0;
+   v[1] = cpuData->userPeriod / total * 100.0;
+   if (this->pl->settings->detailedCPUTime) {
+      v[2] = cpuData->systemPeriod / total * 100.0;
+      v[3] = cpuData->irqPeriod / total * 100.0;
+      v[4] = cpuData->softIrqPeriod / total * 100.0;
+      v[5] = cpuData->stealPeriod / total * 100.0;
+      v[6] = cpuData->guestPeriod / total * 100.0;
+      v[7] = cpuData->ioWaitPeriod / total * 100.0;
+      Meter_setItems(this, 8);
+      if (this->pl->settings->accountGuestInCPUMeter) {
+         percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];
+      } else {
+         percent = v[0]+v[1]+v[2]+v[3]+v[4];
+      }       
+   } else {
+      v[2] = cpuData->systemAllPeriod / total * 100.0;
+      v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
+      Meter_setItems(this, 4);
+      percent = v[0]+v[1]+v[2]+v[3];
    }
+   percent = MIN(100.0, MAX(0.0, percent));      
+   if (isnan(percent)) percent = 0.0;
+   return percent;
+}
 
-   *isOnAC = Battery_isOnAC();
-   *level = percent;
+void Platform_setMemoryValues(Meter* this) {
+   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
+   long int usedMem = pl->usedMem;
+   long int buffersMem = pl->buffersMem;
+   long int cachedMem = pl->cachedMem;
+   usedMem -= buffersMem + cachedMem;
+   this->total = pl->totalMem;
+   this->values[0] = usedMem;
+   this->values[1] = buffersMem;
+   this->values[2] = cachedMem;
+}
+
+void Platform_setSwapValues(Meter* this) {
+   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
+   this->total = pl->totalSwap;
+   this->values[0] = pl->usedSwap;
+}
+
+void Platform_setTasksValues(Meter* this) {
+   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
+   this->values[0] = pl->kernelThreads;
+   this->values[1] = pl->userlandThreads;
+   this->values[2] = pl->totalTasks - pl->kernelThreads - pl->userlandThreads;
+   this->values[3] = pl->runningTasks;
+   if (pl->totalTasks > this->total)
+      this->total = pl->totalTasks;
 }

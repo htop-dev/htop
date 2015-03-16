@@ -11,13 +11,6 @@ in the source distribution for its full text.
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
-#define COLORSCHEME_DEFAULT 0
-#define COLORSCHEME_MONOCHROME 1
-#define COLORSCHEME_BLACKONWHITE 2
-#define COLORSCHEME_BLACKONWHITE2 3
-#define COLORSCHEME_MIDNIGHT 4
-#define COLORSCHEME_BLACKNIGHT 5
-
 #define Black COLOR_BLACK
 #define Red COLOR_RED
 #define Green COLOR_GREEN
@@ -30,6 +23,27 @@ in the source distribution for its full text.
 //#link curses
 
 #include <stdbool.h>
+
+typedef enum TreeStr_ {
+   TREE_STR_HORZ,
+   TREE_STR_VERT,
+   TREE_STR_RTEE,
+   TREE_STR_BEND,
+   TREE_STR_TEND,
+   TREE_STR_OPEN,
+   TREE_STR_SHUT,
+   TREE_STR_COUNT
+} TreeStr;
+
+typedef enum ColorSchemes_ {
+   COLORSCHEME_DEFAULT = 0,
+   COLORSCHEME_MONOCHROME = 1,
+   COLORSCHEME_BLACKONWHITE = 2,
+   COLORSCHEME_LIGHTTERMINAL = 3,
+   COLORSCHEME_MIDNIGHT = 4,
+   COLORSCHEME_BLACKNIGHT = 5,
+   LAST_COLORSCHEME = 6,
+} ColorSchemes;
 
 typedef enum ColorElements_ {
    RESET_COLOR,
@@ -65,13 +79,6 @@ typedef enum ColorElements_ {
    BAR_SHADOW,
    GRAPH_1,
    GRAPH_2,
-   GRAPH_3,
-   GRAPH_4,
-   GRAPH_5,
-   GRAPH_6,
-   GRAPH_7,
-   GRAPH_8,
-   GRAPH_9,
    MEMORY_USED,
    MEMORY_BUFFERS,
    MEMORY_BUFFERS_TEXT,
@@ -103,19 +110,29 @@ void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 void CRT_handleSIGSEGV(int sgn);
 
 
-// TODO: centralize these in Settings.
+extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
 
-extern int CRT_colorScheme;
+extern const char *CRT_treeStrUtf8[TREE_STR_COUNT];
+
+extern const char **CRT_treeStr;
+
+extern int CRT_delay;
 
 extern bool CRT_utf8;
 
-extern int CRT_colors[LAST_COLORELEMENT];
+int* CRT_colors;
+
+extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
 
 extern int CRT_cursorX;
 
 extern int CRT_scrollHAmount;
 
 char* CRT_termType;
+
+// TODO move color scheme to Settings, perhaps?
+
+extern int CRT_colorScheme;
 
 void *backtraceArray[128];
 

@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "AvailableMetersPanel.h"
+#include "MetersPanel.h"
 
 #include "CPUMeter.h"
 #include "Header.h"
@@ -19,14 +20,16 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "Panel.h"
 #include "ScreenManager.h"
+#include "ProcessList.h"
 
 typedef struct AvailableMetersPanel_ {
    Panel super;
+   ScreenManager* scr;
 
    Settings* settings;
+   Header* header;
    Panel* leftPanel;
    Panel* rightPanel;
-   ScreenManager* scr;
 } AvailableMetersPanel;
 
 }*/
@@ -38,39 +41,48 @@ static void AvailableMetersPanel_delete(Object* object) {
    free(this);
 }
 
-static inline void AvailableMetersPanel_addHeader(Header* header, Panel* panel, MeterClass* type, int param, HeaderSide side) {
-   Meter* meter = (Meter*) Header_addMeter(header, type, param, side);
+static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, MeterClass* type, int param, int column) {
+   Meter* meter = (Meter*) Header_addMeterByClass(header, type, param, column);
    Panel_add(panel, (Object*) Meter_toListItem(meter));
+   Panel_setSelected(panel, Panel_size(panel) - 1);
+   ((MetersPanel*)panel)->moving = true;
+   ((ListItem*)Panel_getSelected(panel))->moving = true;
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
-   Header* header = this->settings->header;
+   Header* header = this->header;
    
    ListItem* selected = (ListItem*) Panel_getSelected(super);
    int param = selected->key & 0xff;
    int type = selected->key >> 16;
    HandlerResult result = IGNORED;
+   bool update = false;
 
    switch(ch) {
       case KEY_F(5):
       case 'l':
       case 'L':
       {
-         AvailableMetersPanel_addHeader(header, this->leftPanel, Platform_meterTypes[type], param, LEFT_HEADER);
+         AvailableMetersPanel_addMeter(header, this->leftPanel, Platform_meterTypes[type], param, 0);
          result = HANDLED;
+         update = true;
          break;
       }
+      case 0x0a:
+      case 0x0d:
+      case KEY_ENTER:
       case KEY_F(6):
       case 'r':
       case 'R':
       {
-         AvailableMetersPanel_addHeader(header, this->rightPanel, Platform_meterTypes[type], param, RIGHT_HEADER);
-         result = HANDLED;
+         AvailableMetersPanel_addMeter(header, this->rightPanel, Platform_meterTypes[type], param, 1);
+         result = (KEY_LEFT << 16) | SYNTH_KEY;
+         update = true;
          break;
       }
    }
-   if (result == HANDLED) {
+   if (update) {
       this->settings->changed = true;
       Header_calculateHeight(header);
       Header_draw(header);
@@ -87,12 +99,13 @@ PanelClass AvailableMetersPanel_class = {
    .eventHandler = AvailableMetersPanel_eventHandler
 };
 
-AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr) {
+AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr, ProcessList* pl) {
    AvailableMetersPanel* this = AllocThis(AvailableMetersPanel);
    Panel* super = (Panel*) this;
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
    
    this->settings = settings;
+   this->header = header;
    this->leftPanel = leftMeters;
    this->rightPanel = rightMeters;
    this->scr = scr;
@@ -101,11 +114,12 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Panel* leftMe
    for (int i = 1; Platform_meterTypes[i]; i++) {
       MeterClass* type = Platform_meterTypes[i];
       if (type != &CPUMeter_class) {
-         Panel_add(super, (Object*) ListItem_new(type->uiName, i << 16));
+         const char* label = type->description ? type->description : type->uiName;
+         Panel_add(super, (Object*) ListItem_new(label, i << 16));
       }
    }
    MeterClass* type = &CPUMeter_class;
-   int cpus = settings->pl->cpuCount;
+   int cpus = pl->cpuCount;
    if (cpus > 1) {
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));
       for (int i = 1; i <= cpus; i++) {

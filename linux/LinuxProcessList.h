@@ -12,6 +12,56 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 
+typedef struct CPUData_ {
+   unsigned long long int totalTime;
+   unsigned long long int userTime;
+   unsigned long long int systemTime;
+   unsigned long long int systemAllTime;
+   unsigned long long int idleAllTime;
+   unsigned long long int idleTime;
+   unsigned long long int niceTime;
+   unsigned long long int ioWaitTime;
+   unsigned long long int irqTime;
+   unsigned long long int softIrqTime;
+   unsigned long long int stealTime;
+   unsigned long long int guestTime;
+   
+   unsigned long long int totalPeriod;
+   unsigned long long int userPeriod;
+   unsigned long long int systemPeriod;
+   unsigned long long int systemAllPeriod;
+   unsigned long long int idleAllPeriod;
+   unsigned long long int idlePeriod;
+   unsigned long long int nicePeriod;
+   unsigned long long int ioWaitPeriod;
+   unsigned long long int irqPeriod;
+   unsigned long long int softIrqPeriod;
+   unsigned long long int stealPeriod;
+   unsigned long long int guestPeriod;
+} CPUData;
+
+typedef struct LinuxProcessList_ {
+   ProcessList super;
+   
+   int totalTasks;
+   int userlandThreads;
+   int kernelThreads;
+   int runningTasks;
+
+   CPUData* cpus;
+
+   unsigned long long int totalMem;
+   unsigned long long int usedMem;
+   unsigned long long int freeMem;
+   unsigned long long int sharedMem;
+   unsigned long long int buffersMem;
+   unsigned long long int cachedMem;
+   unsigned long long int totalSwap;
+   unsigned long long int usedSwap;
+   unsigned long long int freeSwap;
+
+} LinuxProcessList;
+
 #ifndef PROCDIR
 #define PROCDIR "/proc"
 #endif
@@ -25,9 +75,9 @@ in the source distribution for its full text.
 #endif
 
    
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
-void ProcessList_delete(ProcessList* this);
+void ProcessList_delete(ProcessList* pl);
 
 
 #ifdef HAVE_TASKSTATS
@@ -50,7 +100,7 @@ void ProcessList_delete(ProcessList* this);
 
 #endif
 
-void ProcessList_scan(ProcessList* this);
+void ProcessList_scan(ProcessList* super);
 
 
 #endif

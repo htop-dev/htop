@@ -18,6 +18,7 @@ in the source distribution for its full text.
 /*{
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "UnsupportedProcess.h"
 }*/
 
 void Platform_setBindings(Htop_Action* keys) {
@@ -57,10 +58,5 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 
 int Platform_getMaxPid() {
    return -1;
-}
-
-void Platform_getBatteryLevel(double* level, ACPresence* isOnAC) {
-   *level = -1;
-   *isOnAC = AC_ERROR;
 }
 

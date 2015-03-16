@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "LinuxProcess.h"
 #include "CRT.h"
 
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 
@@ -22,7 +23,22 @@ typedef struct LinuxProcess_ {
    IOPriority ioPriority;
 } LinuxProcess;
 
+#define Process_delete LinuxProcess_delete
+
 }*/
+
+LinuxProcess* LinuxProcess_new(Settings* settings) {
+   LinuxProcess* this = calloc(sizeof(LinuxProcess), 1);
+   Process_init(&this->super, settings);
+   return this;
+}
+
+void LinuxProcess_delete(Object* cast) {
+   LinuxProcess* this = (LinuxProcess*) this;
+   Object_setClass(this, Class(Process));
+   Process_done((Process*)cast);
+   free(this);
+}
 
 /*
 [1] Note that before kernel 2.6.26 a process that has not asked for
@@ -45,22 +61,23 @@ bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio) {
    return (LinuxProcess_updateIOPriority(this) == ioprio);
 }
 
-void LinuxProcess_writeField(LinuxProcess* this, RichString* str, ProcessField field) {
+void Process_writeField(Process* this, RichString* str, ProcessField field) {
+   LinuxProcess* lp = (LinuxProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
    switch (field) {
    case IO_PRIORITY: {
-      int klass = IOPriority_class(this->ioPriority);
+      int klass = IOPriority_class(lp->ioPriority);
       if (klass == IOPRIO_CLASS_NONE) {
          // see note [1] above
-         snprintf(buffer, n, "B%1d ", (int) (this->super.nice + 20) / 5);
+         snprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
       } else if (klass == IOPRIO_CLASS_BE) {
-         snprintf(buffer, n, "B%1d ", IOPriority_data(this->ioPriority));
+         snprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
       } else if (klass == IOPRIO_CLASS_RT) {
          attr = CRT_colors[PROCESS_HIGH_PRIORITY];
-         snprintf(buffer, n, "R%1d ", IOPriority_data(this->ioPriority));
-      } else if (this->ioPriority == IOPriority_Idle) {
+         snprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
+      } else if (lp->ioPriority == IOPriority_Idle) {
          attr = CRT_colors[PROCESS_LOW_PRIORITY]; 
          snprintf(buffer, n, "id ");
       } else {
@@ -69,25 +86,26 @@ void LinuxProcess_writeField(LinuxProcess* this, RichString* str, ProcessField f
       break;
    }
    default:
-      snprintf(buffer, n, "- ");
+      Process_writeDefaultField(this, str, field);
+      return;
    }
    RichString_append(str, attr, buffer);
 }
 
-long LinuxProcess_compare(const void* v1, const void* v2) {
+long Process_compare(const void* v1, const void* v2) {
    LinuxProcess *p1, *p2;
-   ProcessList *pl = ((Process*)v1)->pl;
-   if (pl->direction == 1) {
+   Settings *settings = ((Process*)v1)->settings;
+   if (settings->direction == 1) {
       p1 = (LinuxProcess*)v1;
       p2 = (LinuxProcess*)v2;
    } else {
       p2 = (LinuxProcess*)v1;
       p1 = (LinuxProcess*)v2;
    }
-   switch (pl->sortKey) {
+   switch (settings->sortKey) {
    case IO_PRIORITY:
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
    default:
-      return (p1->super.pid - p2->super.pid);
+      return Process_defaultCompare(v1, v2);
    }
 }

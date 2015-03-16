@@ -9,7 +9,7 @@ This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 
 #include "BatteryMeter.h"
 
-#include "Platform.h"
+#include "Battery.h"
 #include "ProcessList.h"
 #include "CRT.h"
 #include "String.h"
@@ -35,7 +35,7 @@ static void BatteryMeter_setValues(Meter * this, char *buffer, int len) {
    ACPresence isOnAC;
    double percent;
    
-   Platform_getBatteryLevel(&percent, &isOnAC);
+   Battery_getData(&percent, &isOnAC);
 
    if (percent == -1) {
       this->values[0] = 0;
