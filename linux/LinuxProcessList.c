@@ -475,6 +475,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
 }
 
 static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* dirname, Process* parent, double period, struct timeval tv) {
+   ProcessList* pl = (ProcessList*) this;
    DIR* dir;
    struct dirent* entry;
    Settings* settings = this->super.settings;
@@ -551,7 +552,7 @@ static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* 
       float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;
       proc->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
       if (isnan(proc->percent_cpu)) proc->percent_cpu = 0.0;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(pl->totalMem) * 100.0;
 
       if(!existingProc) {
 
@@ -633,7 +634,7 @@ static bool LinuxProcessList_processEntries(LinuxProcessList* this, const char* 
    return true;
 }
 
-static inline void LinuxProcessList_scanMemoryInfo(LinuxProcessList* this) {
+static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    unsigned long long int swapFree = 0;
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
@@ -754,7 +755,7 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
 void ProcessList_scan(ProcessList* super) {
    LinuxProcessList* this = (LinuxProcessList*) super;
 
-   LinuxProcessList_scanMemoryInfo(this);
+   LinuxProcessList_scanMemoryInfo(super);
    
    double period = LinuxProcessList_scanCPUTime(this);
 

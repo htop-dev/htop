@@ -149,7 +149,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
+   ProcessList* pl = (ProcessList*) this->pl;
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
@@ -161,7 +161,7 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
+   ProcessList* pl = (ProcessList*) this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
 }

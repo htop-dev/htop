@@ -75,7 +75,7 @@ typedef enum LinuxProcessFields {
    OOM = 114,
    #endif
    IO_PRIORITY = 115,
-   LAST_PROCESSFIELD
+   LAST_PROCESSFIELD = 116,
 } LinuxProcessField;
 
 #include "IOPriority.h"
