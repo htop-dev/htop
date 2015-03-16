@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 #include "String.h"
 #include "TraceScreen.h"
+#include "Platform.h"
 
 #include <ctype.h>
 #include <math.h>

@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "Settings.h"
+#include "Platform.h"
 
 #include "String.h"
 #include "Vector.h"
@@ -139,10 +140,10 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
    free(trim);
    int i, j;
    *flags = 0;
-   for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i]; i++) {
+   for (j = 0, i = 0; i < Platform_numberOfFields && ids[i]; i++) {
       // This "+1" is for compatibility with the older enum format.
       int id = atoi(ids[i]) + 1;
-      if (id > 0 && id < LAST_PROCESSFIELD) {
+      if (id > 0 && id < Platform_numberOfFields) {
          fields[j] = id;
          *flags |= Process_fields[id].flags;
          j++;
@@ -310,7 +311,7 @@ Settings* Settings_new(int cpuCount) {
    this->countCPUsFromZero = false;
    this->updateProcessNames = false;
    
-   this->fields = calloc(LAST_PROCESSFIELD+1, sizeof(ProcessField));
+   this->fields = calloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;

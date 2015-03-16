@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "AvailableColumnsPanel.h"
+#include "Platform.h"
 
 #include "Header.h"
 #include "ColumnsPanel.h"

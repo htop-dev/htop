@@ -30,7 +30,10 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 #include "BatteryMeter.h"
 #include "LinuxProcess.h"
+
 }*/
+
+int Platform_numberOfFields = LAST_PROCESSFIELD;
 
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    Panel* panel = st->panel;
