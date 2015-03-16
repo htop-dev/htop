@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "MainPanel.h"
 #include "BatteryMeter.h"
+#include "LinuxProcess.h"
 }*/
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };

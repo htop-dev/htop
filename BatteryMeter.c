@@ -13,6 +13,7 @@ This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 #include "ProcessList.h"
 #include "CRT.h"
 #include "String.h"
+#include "Platform.h"
 
 #include <string.h>
 #include <stdlib.h>
