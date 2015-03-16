@@ -12,8 +12,8 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "MainPanel.h"
 #include "BatteryMeter.h"
-#include "LinuxProcess.h"
 
+extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;
 
