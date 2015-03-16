@@ -49,6 +49,16 @@ typedef struct ProcessList_ {
    bool topologyOk;
    #endif
 
+   unsigned long long int totalMem;
+   unsigned long long int usedMem;
+   unsigned long long int freeMem;
+   unsigned long long int sharedMem;
+   unsigned long long int buffersMem;
+   unsigned long long int cachedMem;
+   unsigned long long int totalSwap;
+   unsigned long long int usedSwap;
+   unsigned long long int freeSwap;
+
    int cpuCount;
 
 } ProcessList;

@@ -12,13 +12,21 @@ in the source distribution for its full text.
 
 #include <kvm.h>
 
+typedef struct CPUData_ {
+   unsigned long long int totalTime;
+   unsigned long long int totalPeriod;
+} CPUData;
+
 typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
+
+   CPUData* cpus;
+
 } FreeBSDProcessList;
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
 

@@ -18,9 +18,17 @@ in the source distribution for its full text.
 
 #include <kvm.h>
 
+typedef struct CPUData_ {
+   unsigned long long int totalTime;
+   unsigned long long int totalPeriod;
+} CPUData;
+
 typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
+
+   CPUData* cpus;
+
 } FreeBSDProcessList;
 
 }*/
@@ -31,21 +39,21 @@ static int MIB_hw_physmem[2];
 
 static int pageSizeKb;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    FreeBSDProcessList* fpl = calloc(1, sizeof(FreeBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
-   ProcessList_init(pl, usersTable, pidWhiteList);
+   ProcessList_init(pl, usersTable, pidWhiteList, userId);
 
    int cpus = 1;
    size_t sizeof_cpus = sizeof(cpus);
    int err = sysctlbyname("hw.ncpu", &cpus, &sizeof_cpus, NULL, 0);
    if (err) cpus = 1;
    pl->cpuCount = MAX(cpus, 1);
-   pl->cpus = realloc(pl->cpus, cpus * sizeof(CPUData));
+   fpl->cpus = realloc(fpl->cpus, cpus * sizeof(CPUData));
 
    for (int i = 0; i < cpus; i++) {
-      pl->cpus[i].totalTime = 1;
-      pl->cpus[i].totalPeriod = 1;
+      fpl->cpus[i].totalTime = 1;
+      fpl->cpus[i].totalPeriod = 1;
    }
    
    size_t len;

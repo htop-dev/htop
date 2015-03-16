@@ -129,7 +129,9 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
 
    ProcessField* fields = this->settings->fields;
    for (; *fields; fields++) {
-      Panel_add(super, (Object*) ListItem_new(Process_fields[*fields].name, *fields));
+      if (Process_fields[*fields].name) {
+         Panel_add(super, (Object*) ListItem_new(Process_fields[*fields].name, *fields));
+      }
    }
    return this;
 }

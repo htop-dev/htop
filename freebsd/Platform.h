@@ -12,6 +12,13 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 
+extern ProcessFieldData Process_fields[];
+
+
+extern ProcessField Platform_defaultFields[];
+
+extern int Platform_numberOfFields;
+
 void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
@@ -22,7 +29,12 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
 
-void Platform_getBatteryLevel(double* level, ACPresence* isOnAC);
+double Platform_setCPUValues(Meter* this, int cpu);
 
+void Platform_setMemoryValues(Meter* this);
+
+void Platform_setSwapValues(Meter* this);
+
+void Platform_setTasksValues(Meter* this);
 
 #endif

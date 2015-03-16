@@ -139,7 +139,7 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
    for (j = 0, i = 0; i < Platform_numberOfFields && ids[i]; i++) {
       // This "+1" is for compatibility with the older enum format.
       int id = atoi(ids[i]) + 1;
-      if (id > 0 && id < Platform_numberOfFields) {
+      if (id > 0 && Process_fields[id].name && id < Platform_numberOfFields) {
          fields[j] = id;
          *flags |= Process_fields[id].flags;
          j++;

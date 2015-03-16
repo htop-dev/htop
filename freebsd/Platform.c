@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
+#include "FreeBSDProcess.h"
 
 #include <sys/types.h>
 #include <sys/sysctl.h>
@@ -26,7 +27,14 @@ in the source distribution for its full text.
 /*{
 #include "Action.h"
 #include "BatteryMeter.h"
+
+extern ProcessFieldData Process_fields[];
+
 }*/
+
+ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
+
+int Platform_numberOfFields = LAST_PROCESSFIELD;
 
 void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
@@ -94,9 +102,18 @@ int Platform_getMaxPid() {
    return maxPid;
 }
 
-void Platform_getBatteryLevel(double* level, ACPresence* isOnAC) {
+double Platform_setCPUValues(Meter* this, int cpu) {
    // TODO
-   *level = -1;
-   *isOnAC = AC_ERROR;
 }
 
+void Platform_setMemoryValues(Meter* this) {
+   // TODO
+}
+
+void Platform_setSwapValues(Meter* this) {
+   // TODO
+}
+
+void Platform_setTasksValues(Meter* this) {
+   // TODO
+}

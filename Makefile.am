@@ -12,7 +12,7 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-htop_CFLAGS = -pedantic -Wall $(wextra_flag) -std=c99 -rdynamic -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(my_htop_platform)"
+htop_CFLAGS = -pedantic -Wall $(wextra_flag) -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(my_htop_platform)"
 AM_CPPFLAGS = -DNDEBUG
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
@@ -34,6 +34,7 @@ UptimeMeter.h TraceScreen.h UsersTable.h Vector.h Process.h AffinityPanel.h \
 HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h
 
 if HTOP_LINUX
+htop_CFLAGS += -rdynamic 
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
 linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c
 
@@ -43,10 +44,10 @@ endif
 
 if HTOP_FREEBSD
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
-freebsd/FreeBSDCRT.c
+freebsd/FreeBSDProcess.c freebsd/FreeBSDCRT.c freebsd/Battery.c
 
 myhtopplatheaders = freebsd/Platform.h freebsd/FreeBSDProcessList.h \
-freebsd/FreeBSDCRT.h
+freebsd/FreeBSDProcess.h freebsd/FreeBSDCRT.h freebsd/Battery.h
 endif
 
 if HTOP_UNSUPPORTED
