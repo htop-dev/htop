@@ -103,7 +103,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, const char** keyLab
 
 static const char* CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static void Setup_run(Settings* settings, const Header* header, ProcessList* pl) {
+static void Action_runSetup(Settings* settings, const Header* header, ProcessList* pl) {
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
    CategoriesPanel* panelCategories = CategoriesPanel_new(scr, settings, (Header*) header, pl);
    ScreenManager_add(scr, (Panel*) panelCategories, FunctionBar_new(CategoriesFunctions, NULL, NULL), 16);
@@ -332,7 +332,7 @@ static Htop_Reaction actionFollow(State* st) {
 }
 
 static Htop_Reaction actionSetup(State* st) {
-   Setup_run(st->settings, st->header, st->pl);
+   Action_runSetup(st->settings, st->header, st->pl);
    // TODO: shouldn't need this, colors should be dynamic
    int headerHeight = Header_calculateHeight(st->header);
    Panel_move(st->panel, 0, headerHeight);
