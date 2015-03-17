@@ -51,7 +51,6 @@ typedef enum LinuxProcessFields {
    STIME = 15,
    CUTIME = 16,
    CSTIME = 17,
-   PROCESSOR = 38,
    M_SHARE = 41,
    M_TRS = 42,
    M_DRS = 43,
@@ -97,7 +96,6 @@ typedef struct LinuxProcess_ {
    unsigned long long int stime;
    unsigned long long int cutime;
    unsigned long long int cstime;
-   int processor;
    long m_share;
    long m_trs;
    long m_drs;
@@ -309,7 +307,6 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    switch ((int)field) {
    case CMINFLT: Process_colorNumber(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
-   case PROCESSOR: snprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, lp->processor)); break;
    case M_DRS: Process_humanNumber(str, lp->m_drs * PAGE_SIZE_KB, coloring); return;
    case M_DT: Process_humanNumber(str, lp->m_dt * PAGE_SIZE_KB, coloring); return;
    case M_LRS: Process_humanNumber(str, lp->m_lrs * PAGE_SIZE_KB, coloring); return;
@@ -381,8 +378,6 @@ long Process_compare(const void* v1, const void* v2) {
    }
    long long diff;
    switch ((int)settings->sortKey) {
-   case PROCESSOR:
-      return (p1->processor - p2->processor);
    case M_DRS:
       return (p2->m_drs - p1->m_drs);
    case M_DT:

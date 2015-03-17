@@ -165,13 +165,3 @@ void Platform_setSwapValues(Meter* this) {
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
 }
-
-void Platform_setTasksValues(Meter* this) {
-   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
-   this->values[0] = pl->kernelThreads;
-   this->values[1] = pl->userlandThreads;
-   this->values[2] = pl->totalTasks - pl->kernelThreads - pl->userlandThreads;
-   this->values[3] = pl->runningTasks;
-   if (pl->totalTasks > this->total)
-      this->total = pl->totalTasks;
-}

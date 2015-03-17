@@ -19,7 +19,14 @@ int TasksMeter_attributes[] = {
 };
 
 static void TasksMeter_setValues(Meter* this, char* buffer, int len) {
-   Platform_setTasksValues(this);
+   ProcessList* pl = this->pl;
+   this->values[0] = pl->kernelThreads;
+   this->values[1] = pl->userlandThreads;
+   this->values[2] = pl->totalTasks - pl->kernelThreads - pl->userlandThreads;
+   this->values[3] = pl->runningTasks;
+   if (pl->totalTasks > this->total) {
+      this->total = pl->totalTasks;
+   }
    if (this->pl->settings->hideKernelThreads) {
       this->values[0] = 0;
    }

@@ -49,6 +49,11 @@ typedef struct ProcessList_ {
    bool topologyOk;
    #endif
 
+   int totalTasks;
+   int runningTasks;
+   int userlandThreads;
+   int kernelThreads;
+
    unsigned long long int totalMem;
    unsigned long long int usedMem;
    unsigned long long int freeMem;
@@ -65,7 +70,7 @@ typedef struct ProcessList_ {
 
 ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList, uid_t userId);
 void ProcessList_delete(ProcessList* pl);
-void ProcessList_scan(ProcessList* pl);
+void ProcessList_goThroughEntries(ProcessList* pl);
 
 }*/
 
@@ -282,3 +287,40 @@ void ProcessList_rebuildPanel(ProcessList* this) {
    }
 }
 
+Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_new_fn constructor) {
+   Process* proc = (Process*) Hashtable_get(this->processTable, pid);
+   *preExisting = proc;
+   if (proc) {
+      assert(Vector_indexOf(this->processes, proc, Process_pidCompare) != -1);
+      assert(proc->pid == pid);
+   } else {
+      proc = constructor(this->settings);
+      assert(proc->comm == NULL);
+      proc->pid = pid;
+   }
+   return proc;
+}
+
+void ProcessList_scan(ProcessList* this) {
+
+   // mark all process as "dirty"
+   for (int i = 0; i < Vector_size(this->processes); i++) {
+      Process* p = (Process*) Vector_get(this->processes, i);
+      p->updated = false;
+   }
+
+   this->totalTasks = 0;
+   this->userlandThreads = 0;
+   this->kernelThreads = 0;
+   this->runningTasks = 0;
+
+   ProcessList_goThroughEntries(this);
+   
+   for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
+      Process* p = (Process*) Vector_get(this->processes, i);
+      if (p->updated == false)
+         ProcessList_remove(this, p);
+      else
+         p->updated = false;
+   }
+}

@@ -26,6 +26,14 @@ typedef struct FreeBSDProcess_ {
    Process super;
 } FreeBSDProcess;
 
+#ifndef Process_isKernelThread
+#define Process_isKernelThread(_process) (_process->pgrp == 0)
+#endif
+
+#ifndef Process_isUserlandThread
+#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
+#endif
+
 }*/
 
 ProcessFieldData Process_fields[] = {
@@ -44,6 +52,7 @@ ProcessFieldData Process_fields[] = {
    [NICE] = { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = 0, },
    [STARTTIME] = { .name = "STARTTIME", .title = "START ", .description = "Time the process was started", .flags = 0, },
 
+   [PROCESSOR] = { .name = "PROCESSOR", .title = "CPU ", .description = "Id of the CPU the process last executed on", .flags = 0, },
    [M_SIZE] = { .name = "M_SIZE", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, },
    [M_RESIDENT] = { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, },
    [ST_UID] = { .name = "ST_UID", .title = " UID ", .description = "User ID of the process owner", .flags = 0, },
@@ -128,7 +137,5 @@ long Process_compare(const void* v1, const void* v2) {
 }
 
 bool Process_isThread(Process* this) {
-   (void) this;
-   // TODO
-   return false;
+   return (Process_isKernelThread(this));
 }

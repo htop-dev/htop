@@ -6,8 +6,8 @@ in the source distribution for its full text.
 */
 
 #include "Process.h"
-
 #include "Settings.h"
+
 #include "CRT.h"
 #include "String.h"
 #include "RichString.h"
@@ -55,6 +55,7 @@ typedef enum ProcessFields {
    PRIORITY = 18,
    NICE = 19,
    STARTTIME = 21,
+   PROCESSOR = 38,
    M_SIZE = 39,
    M_RESIDENT = 40,
    ST_UID = 46,
@@ -91,6 +92,7 @@ typedef struct Process_ {
    int tpgid;
    uid_t st_uid;
    unsigned long int flags;
+   int processor;
 
    float percent_cpu;
    float percent_mem;
@@ -146,6 +148,8 @@ bool Process_isThread(Process* this);
 extern ProcessFieldData Process_fields[];
 extern char* Process_pidFormat;
 extern char* Process_tpgidFormat;
+
+typedef Process*(*Process_new_fn)(struct Settings_*);
 
 }*/
 
@@ -234,19 +238,13 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
    }
 }
 
-static double jiffy = 0.0;
+void Process_printTime(RichString* str, unsigned long long totalHundredths) {
+   unsigned long long totalSeconds = totalHundredths / 100;
 
-void Process_printTime(RichString* str, unsigned long long t) {
-   if(jiffy == 0.0) jiffy = sysconf(_SC_CLK_TCK);
-   double jiffytime = 1.0 / jiffy;
-
-   double realTime = t * jiffytime;
-   unsigned long long iRealTime = (unsigned long long) realTime;
-
-   unsigned long long hours = iRealTime / 3600;
-   int minutes = (iRealTime / 60) % 60;
-   int seconds = iRealTime % 60;
-   int hundredths = (realTime - iRealTime) * 100;
+   unsigned long long hours = totalSeconds / 3600;
+   int minutes = (totalSeconds / 60) % 60;
+   int seconds = totalSeconds % 60;
+   int hundredths = totalHundredths - (totalSeconds * 100);
    char buffer[11];
    if (hours >= 100) {
       snprintf(buffer, 10, "%7lluh ", hours);
@@ -389,6 +387,7 @@ void Process_writeDefaultField(Process* this, RichString* str, ProcessField fiel
          snprintf(buffer, n, "%3ld ", this->priority);
       break;
    }
+   case PROCESSOR: snprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor)); break;
    case SESSION: snprintf(buffer, n, Process_pidFormat, this->session); break;
    case STARTTIME: snprintf(buffer, n, "%s", this->starttime_show); break;
    case STATE: {
@@ -527,6 +526,8 @@ long Process_defaultCompare(const void* v1, const void* v2) {
       return (p1->ppid - p2->ppid);
    case PRIORITY:
       return (p1->priority - p2->priority);
+   case PROCESSOR:
+      return (p1->processor - p2->processor);
    case SESSION:
       return (p1->session - p2->session);
    case STARTTIME: {

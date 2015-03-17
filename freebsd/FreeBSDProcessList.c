@@ -7,12 +7,15 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 #include "FreeBSDProcessList.h"
+#include "FreeBSDProcess.h"
 
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <sys/user.h>
 #include <fcntl.h>
+#include <string.h>
 
 /*{
 
@@ -103,10 +106,101 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->buffersMem = 0; // not exposed to userspace
 }
 
-void ProcessList_scan(ProcessList* this) {
-   (void) this;
+char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
+   char** argv = kvm_getargv(kd, kproc, 0);
+   if (!argv) {
+      return strdup(kproc->ki_comm);
+   }
+   int len = 0;
+   for (int i = 0; argv[i]; i++) {
+      len += strlen(argv[i]) + 1;
+   }
+   char* comm = malloc(len * sizeof(char));
+   char* at = comm;
+   *basenameEnd = 0;
+   for (int i = 0; argv[i]; i++) {
+      at = stpcpy(at, argv[i]);
+      if (!*basenameEnd) {
+         *basenameEnd = at - comm;
+      }
+      *at = ' ';
+      at++;
+   }
+   at--;
+   *at = '\0';
+   return comm;
+}
 
+void ProcessList_goThroughEntries(ProcessList* this) {
+   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
+   Settings* settings = this->settings;
+   bool hideKernelThreads = settings->hideKernelThreads;
+   bool hideUserlandThreads = settings->hideUserlandThreads;
+   
    FreeBSDProcessList_scanMemoryInfo(this);
+   
+   int count = 0;
+   struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_ALL, 0, &count);
+   
+   for (int i = 0; i < count; i++) {
+      struct kinfo_proc* kproc = &kprocs[i];
+      
+      bool preExisting = false;
+      Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_new_fn) FreeBSDProcess_new);
+      FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
-   // stub!
+      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      
+      if (!preExisting) {
+         proc->ppid = kproc->ki_ppid;
+         proc->tpgid = kproc->ki_tpgid;
+         proc->tgid = kproc->ki_pid;
+         proc->session = kproc->ki_sid;
+         proc->tty_nr = kproc->ki_tdev;
+         proc->pgrp = kproc->ki_pgid;
+         proc->st_uid = kproc->ki_uid;
+         proc->starttime_ctime = kproc->ki_start.tv_sec;
+         proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
+         ProcessList_add((ProcessList*)this, proc);
+         proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
+      } else {
+         if (settings->updateProcessNames) {
+            free(proc->comm);
+            proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
+         }
+      }
+
+      proc->m_size = kproc->ki_size / pageSizeKb / 1000;
+      proc->m_resident = kproc->ki_rssize; // * pageSizeKb;
+      proc->nlwp = kproc->ki_numthreads;
+      proc->time = (kproc->ki_runtime + 5000) / 10000;
+      proc->priority = kproc->ki_pri.pri_level - PZERO;
+      if (kproc->ki_pri.pri_class == PRI_TIMESHARE) {
+         proc->nice = kproc->ki_nice - NZERO;
+      } else if (PRI_IS_REALTIME(kproc->ki_pri.pri_class)) {
+         proc->nice = PRIO_MIN - 1 - (PRI_MAX_REALTIME - kproc->ki_pri.pri_level);
+      } else {
+         proc->nice = PRIO_MAX + 1 + kproc->ki_pri.pri_level - PRI_MIN_IDLE;
+      }
+
+      switch (kproc->ki_stat) {
+      case SIDL:   proc->state = 'I'; break;
+      case SRUN:   proc->state = 'R'; break;
+      case SSLEEP: proc->state = 'S'; break;
+      case SSTOP:  proc->state = 'T'; break;
+      case SZOMB:  proc->state = 'Z'; break;
+      case SWAIT:  proc->state = 'D'; break;
+      case SLOCK:  proc->state = 'L'; break;
+      default:     proc->state = '?';
+      }
+
+      if (Process_isKernelThread(proc)) {
+         this->kernelThreads++;
+      }
+      
+      this->totalTasks++;
+      if (proc->state == 'R')
+         this->runningTasks++;
+      proc->updated = true;
+   }
 }

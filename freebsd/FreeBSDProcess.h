@@ -19,6 +19,14 @@ typedef struct FreeBSDProcess_ {
    Process super;
 } FreeBSDProcess;
 
+#ifndef Process_isKernelThread
+#define Process_isKernelThread(_process) (_process->pgrp == 0)
+#endif
+
+#ifndef Process_isUserlandThread
+#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
+#endif
+
 
 extern ProcessFieldData Process_fields[];
 

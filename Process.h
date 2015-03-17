@@ -36,6 +36,7 @@ typedef enum ProcessFields {
    PRIORITY = 18,
    NICE = 19,
    STARTTIME = 21,
+   PROCESSOR = 38,
    M_SIZE = 39,
    M_RESIDENT = 40,
    ST_UID = 46,
@@ -72,6 +73,7 @@ typedef struct Process_ {
    int tpgid;
    uid_t st_uid;
    unsigned long int flags;
+   int processor;
 
    float percent_cpu;
    float percent_mem;
@@ -128,6 +130,8 @@ extern ProcessFieldData Process_fields[];
 extern char* Process_pidFormat;
 extern char* Process_tpgidFormat;
 
+typedef Process*(*Process_new_fn)(struct Settings_*);
+
 
 #define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)
@@ -141,7 +145,7 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring);
 
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring);
 
-void Process_printTime(RichString* str, unsigned long long t);
+void Process_printTime(RichString* str, unsigned long long totalHundredths);
 
 void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring);
 

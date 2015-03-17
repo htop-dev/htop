@@ -43,6 +43,11 @@ typedef struct ProcessList_ {
    bool topologyOk;
    #endif
 
+   int totalTasks;
+   int runningTasks;
+   int userlandThreads;
+   int kernelThreads;
+
    unsigned long long int totalMem;
    unsigned long long int usedMem;
    unsigned long long int freeMem;
@@ -59,7 +64,7 @@ typedef struct ProcessList_ {
 
 ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList, uid_t userId);
 void ProcessList_delete(ProcessList* pl);
-void ProcessList_scan(ProcessList* pl);
+void ProcessList_goThroughEntries(ProcessList* pl);
 
 
 ProcessList* ProcessList_init(ProcessList* this, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
@@ -86,5 +91,8 @@ void ProcessList_expandTree(ProcessList* this);
 
 void ProcessList_rebuildPanel(ProcessList* this);
 
+Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_new_fn constructor);
+
+void ProcessList_scan(ProcessList* this);
 
 #endif
