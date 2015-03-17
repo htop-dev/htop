@@ -42,11 +42,6 @@ typedef struct CPUData_ {
 
 typedef struct LinuxProcessList_ {
    ProcessList super;
-   
-   int totalTasks;
-   int userlandThreads;
-   int kernelThreads;
-   int runningTasks;
 
    CPUData* cpus;
 
@@ -90,7 +85,6 @@ void ProcessList_delete(ProcessList* pl);
 
 #endif
 
-void ProcessList_scan(ProcessList* super);
-
+void ProcessList_goThroughEntries(ProcessList* super);
 
 #endif

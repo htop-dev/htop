@@ -212,7 +212,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    process->exit_signal = strtol(location, &location, 10);
    location += 1;
    assert(location != NULL);
-   lp->processor = strtol(location, &location, 10);
+   process->processor = strtol(location, &location, 10);
    
    process->time = lp->utime + lp->stime;
 
@@ -597,22 +597,22 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
                goto errorReadingProcess;
          }
          if (Process_isKernelThread(proc)) {
-            this->kernelThreads++;
+            pl->kernelThreads++;
          } else {
-            this->userlandThreads++;
+            pl->userlandThreads++;
          }
       }
 
-      this->totalTasks++;
+      pl->totalTasks++;
       if (proc->state == 'R')
-         this->runningTasks++;
+         pl->runningTasks++;
       proc->updated = true;
       continue;
 
       // Exception handler.
       errorReadingProcess: {
          if (preExisting) {
-            ProcessList_remove((pl, proc);
+            ProcessList_remove(pl, proc);
          } else {
             Process_delete((Object*)proc);
          }

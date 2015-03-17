@@ -43,7 +43,6 @@ typedef enum LinuxProcessFields {
    STIME = 15,
    CUTIME = 16,
    CSTIME = 17,
-   PROCESSOR = 38,
    M_SHARE = 41,
    M_TRS = 42,
    M_DRS = 43,
@@ -89,7 +88,6 @@ typedef struct LinuxProcess_ {
    unsigned long long int stime;
    unsigned long long int cutime;
    unsigned long long int cstime;
-   int processor;
    long m_share;
    long m_trs;
    long m_drs;
