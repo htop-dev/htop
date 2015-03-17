@@ -65,10 +65,39 @@ void Header_populateFromSettings(Header* this) {
       MeterColumnSettings* colSettings = &this->settings->columns[col];
       for (int i = 0; i < colSettings->len; i++) {
          Header_addMeterByName(this, colSettings->names[i], col);
-         Header_setMode(this, i, colSettings->modes[i], col);
+         if (colSettings->modes[i] != 0) {
+            Header_setMode(this, i, colSettings->modes[i], col);
+         }
       }
    }
    Header_calculateHeight(this);
+}
+
+void Header_writeBackToSettings(const Header* this) {
+   Header_forEachColumn(this, col) {
+      MeterColumnSettings* colSettings = &this->settings->columns[col];
+      
+      String_freeArray(colSettings->names);
+      free(colSettings->modes);
+      
+      Vector* vec = this->columns[col];
+      int len = Vector_size(vec);
+      
+      colSettings->names = calloc(len+1, sizeof(char*));
+      colSettings->modes = calloc(len, sizeof(int));
+      
+      for (int i = 0; i < len; i++) {
+         Meter* meter = (Meter*) Vector_get(vec, i);
+         char* name = calloc(64, sizeof(char*));
+         if (meter->param) {
+            snprintf(name, 63, "%s(%d)", As_Meter(meter)->name, meter->param);
+         } else {
+            snprintf(name, 63, "%s", As_Meter(meter)->name);
+         }
+         colSettings->names[i] = name;
+         colSettings->modes[i] = meter->mode;
+      }
+   }
 }
 
 MeterModeId Header_addMeterByName(Header* this, char* name, int column) {

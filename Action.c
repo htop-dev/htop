@@ -112,6 +112,9 @@ static void Action_runSetup(Settings* settings, const Header* header, ProcessLis
    int ch;
    ScreenManager_run(scr, &panelFocus, &ch);
    ScreenManager_delete(scr);
+   if (settings->changed) {
+      Header_writeBackToSettings(header);
+   }
 }
 
 static bool changePriority(MainPanel* panel, int delta) {

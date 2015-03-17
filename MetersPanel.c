@@ -40,16 +40,17 @@ static void MetersPanel_delete(Object* object) {
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
    Panel* super = (Panel*) this;
    if (this->moving) {
-      this->moving = false;
-      ((ListItem*)Panel_getSelected(super))->moving = false;
       if (neighbor) {
          if (selected < Vector_size(this->meters)) {
+            ((ListItem*)Panel_getSelected(super))->moving = false;
+
             Meter* meter = (Meter*) Vector_take(this->meters, selected);
             Panel_remove(super, selected);
             Vector_insert(neighbor->meters, selected, meter);
-            Panel_insert(&(neighbor->super), selected, (Object*) Meter_toListItem(meter));
+            Panel_insert(&(neighbor->super), selected, (Object*) Meter_toListItem(meter, false));
             Panel_setSelected(&(neighbor->super), selected);
 
+            this->moving = false;
             neighbor->moving = true;
             ((ListItem*)Panel_getSelected((Panel*)neighbor))->moving = true;
             return true;
@@ -84,7 +85,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          int mode = meter->mode + 1;
          if (mode == LAST_METERMODE) mode = 1;
          Meter_setMode(meter, mode);
-         Panel_set(super, selected, (Object*) Meter_toListItem(meter));
+         Panel_set(super, selected, (Object*) Meter_toListItem(meter, this->moving));
          result = HANDLED;
          break;
       }
@@ -123,13 +124,20 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_RIGHT:
       {
          sideMove = moveToNeighbor(this, this->rightNeighbor, selected);
-         // don't set HANDLED; let ScreenManager handle focus.
+         if (this->moving && !sideMove) {
+            // lock user here until it exits positioning-mode
+            result = HANDLED;
+         }
+         // if user is free, don't set HANDLED;
+         // let ScreenManager handle focus.
          break;
       }
       case KEY_LEFT:
       {
          sideMove = moveToNeighbor(this, this->leftNeighbor, selected);
-         // don't set HANDLED; let ScreenManager handle focus.
+         if (this->moving && !sideMove) {
+            result = HANDLED;
+         }
          break;
       }
       case KEY_F(9):
@@ -175,7 +183,7 @@ MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* met
    Panel_setHeader(super, header);
    for (int i = 0; i < Vector_size(meters); i++) {
       Meter* meter = (Meter*) Vector_get(meters, i);
-      Panel_add(super, (Object*) Meter_toListItem(meter));
+      Panel_add(super, (Object*) Meter_toListItem(meter, false));
    }
    return this;
 }

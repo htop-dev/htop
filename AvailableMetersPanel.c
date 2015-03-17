@@ -43,7 +43,7 @@ static void AvailableMetersPanel_delete(Object* object) {
 
 static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, MeterClass* type, int param, int column) {
    Meter* meter = (Meter*) Header_addMeterByClass(header, type, param, column);
-   Panel_add(panel, (Object*) Meter_toListItem(meter));
+   Panel_add(panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected(panel, Panel_size(panel) - 1);
    ((MetersPanel*)panel)->moving = true;
    ((ListItem*)Panel_getSelected(panel))->moving = true;

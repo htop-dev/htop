@@ -191,7 +191,7 @@ void Meter_setMode(Meter* this, int modeIndex) {
    this->mode = modeIndex;
 }
 
-ListItem* Meter_toListItem(Meter* this) {
+ListItem* Meter_toListItem(Meter* this, bool moving) {
    char mode[21];
    if (this->mode)
       snprintf(mode, 20, " [%s]", Meter_modes[this->mode]->uiName);
@@ -204,7 +204,9 @@ ListItem* Meter_toListItem(Meter* this) {
       number[0] = '\0';
    char buffer[51];
    snprintf(buffer, 50, "%s%s%s", Meter_uiName(this), number, mode);
-   return ListItem_new(buffer, 0);
+   ListItem* li = ListItem_new(buffer, 0);
+   li->moving = moving;
+   return li;
 }
 
 /* ---------- TextMeterMode ---------- */

@@ -111,7 +111,7 @@ void Meter_setCaption(Meter* this, const char* caption);
 
 void Meter_setMode(Meter* this, int modeIndex);
 
-ListItem* Meter_toListItem(Meter* this);
+ListItem* Meter_toListItem(Meter* this, bool moving);
 
 /* ---------- TextMeterMode ---------- */
 

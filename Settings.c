@@ -109,6 +109,7 @@ static void Settings_defaultMeters(Settings* this, int cpuCount) {
    for (int i = 0; i < 2; i++) {
       this->columns[i].names = calloc(sizes[i], sizeof(char*));
       this->columns[i].modes = calloc(sizes[i], sizeof(int));
+      this->columns[i].len = sizes[i];
    }
    
    int r = 0;
@@ -371,6 +372,7 @@ Settings* Settings_new(int cpuCount) {
          this->hideKernelThreads = true;
          this->highlightMegabytes = true;
          this->highlightThreads = false;
+         this->headerMargin = true;
       }
    }
    free(legacyDotfile);
