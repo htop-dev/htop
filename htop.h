@@ -11,7 +11,7 @@ in the source distribution for its full text.
 
 //#link m
 
-#define COPYRIGHT "(C) 2004-2014 Hisham Muhammad"
+#define COPYRIGHT "(C) 2004-2015 Hisham Muhammad"
 
 // ----------------------------------------
 
