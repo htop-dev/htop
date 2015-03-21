@@ -1,4 +1,4 @@
-.TH "HTOP" "1" "2014" "@PACKAGE_STRING@" "Utils"
+.TH "HTOP" "1" "2015" "@PACKAGE_STRING@" "Utils"
 .SH "NAME"
 htop \- interactive process viewer
 .SH "SYNOPSIS"
