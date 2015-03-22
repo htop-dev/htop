@@ -130,6 +130,45 @@ void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
    // TODO: VERTICAL
 }
 
+static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool *rescan, bool *timedOut) {
+   ProcessList* pl = this->header->pl;
+
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+   double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
+   *timedOut = (newTime - *oldTime > this->settings->delay);
+   *rescan = *rescan || *timedOut;
+   if (newTime < *oldTime) *rescan = true; // clock was adjusted?
+   if (*rescan) {
+      *oldTime = newTime;
+      ProcessList_scan(pl);
+      if (*sortTimeout == 0 || this->settings->treeView) {
+         ProcessList_sort(pl);
+         *sortTimeout = 1;
+      }
+      *redraw = true;
+   }
+   if (*redraw) {
+      //pl->incFilter = IncSet_filter(inc);
+      ProcessList_rebuildPanel(pl);
+      Header_draw(this->header);
+   }
+   *rescan = false;
+}
+
+static void ScreenManager_drawPanels(ScreenManager* this, int focus) {
+   int nPanels = this->panelCount;
+   for (int i = 0; i < nPanels; i++) {
+      Panel* panel = (Panel*) Vector_get(this->panels, i);
+      Panel_draw(panel, i == focus);
+      if (i < nPanels) {
+         if (this->orientation == HORIZONTAL) {
+            mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
+         }
+      }
+   }
+}
+
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool quit = false;
    int focus = 0;
@@ -138,56 +177,24 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    if (this->fuBar)
       FunctionBar_draw(this->fuBar, NULL);
 
-   struct timeval tv;
    double oldTime = 0.0;
 
    int ch = ERR;
    int closeTimeout = 0;
 
-   bool drawPanel = true;
-   bool timeToRecalculate = true;
-   bool doRefresh = true;
-   bool forceRecalculate = false;
+   bool timedOut = true;
+   bool redraw = true;
+   bool rescan = false;
    int sortTimeout = 0;
    int resetSortTimeout = 5;
 
    while (!quit) {
-      int panels = this->panelCount;
       if (this->header) {
-         gettimeofday(&tv, NULL);
-         double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
-         timeToRecalculate = (newTime - oldTime > this->settings->delay);
-         if (newTime < oldTime) timeToRecalculate = true; // clock was adjusted?
-         if (doRefresh) {
-            if (timeToRecalculate || forceRecalculate) {
-               ProcessList_scan(this->header->pl);
-            }
-            if (sortTimeout == 0 || this->settings->treeView) {
-               ProcessList_sort(this->header->pl);
-               sortTimeout = 1;
-            }
-            //this->header->pl->incFilter = IncSet_filter(inc);
-            ProcessList_rebuildPanel(this->header->pl);
-            drawPanel = true;
-         }
-         if (timeToRecalculate || forceRecalculate) {
-            Header_draw(this->header);
-            oldTime = newTime;
-            forceRecalculate = false;
-         }
-         doRefresh = true;
+         checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut);
       }
       
-      if (drawPanel) {
-         for (int i = 0; i < panels; i++) {
-            Panel* panel = (Panel*) Vector_get(this->panels, i);
-            Panel_draw(panel, i == focus);
-            if (i < panels) {
-               if (this->orientation == HORIZONTAL) {
-                  mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
-               }
-            }
-         }
+      if (redraw) {
+         ScreenManager_drawPanels(this, focus);
       }
       
       FunctionBar* bar = (FunctionBar*) Vector_get(this->fuBars, focus);
@@ -225,16 +232,16 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          if (result & SYNTH_KEY) {
             ch = result >> 16;
          }
-         if (result & REFRESH) {
-            doRefresh = true;
+         if (result & REDRAW) {
+            //redraw = true;
             sortTimeout = 0;
          }
-         if (result & RECALCULATE) {
-            forceRecalculate = true;
+         if (result & RESCAN) {
+            rescan = true;
             sortTimeout = 0;
          }
          if (result & HANDLED) {
-            drawPanel = true;
+            redraw = true;
             continue;
          } else if (result & BREAK_LOOP) {
             quit = true;
@@ -243,17 +250,17 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
       if (ch == ERR) {
          sortTimeout--;
-         if (prevCh == ch && !timeToRecalculate) {
+         if (prevCh == ch && !timedOut) {
             closeTimeout++;
             if (closeTimeout == 100) {
                break;
             }
          } else
             closeTimeout = 0;
-         drawPanel = false;
+         redraw = false;
          continue;
       }
-      drawPanel = true;
+      redraw = true;
       
       switch (ch) {
       case KEY_RESIZE:

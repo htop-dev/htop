@@ -31,8 +31,8 @@ typedef enum HandlerResult_ {
    HANDLED     = 0x01,
    IGNORED     = 0x02,
    BREAK_LOOP  = 0x04,
-   REFRESH     = 0x08,
-   RECALCULATE = 0x10,
+   REDRAW      = 0x08,
+   RESCAN      = 0x10,
    SYNTH_KEY   = 0x20,
 } HandlerResult;
 

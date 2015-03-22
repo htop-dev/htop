@@ -98,10 +98,10 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       ProcessList_printHeader(this->state->pl, Panel_getHeader(super));
    }
    if (reaction & HTOP_REFRESH) {
-      result |= REFRESH;
+      result |= REDRAW;
    }      
    if (reaction & HTOP_RECALCULATE) {
-      result |= RECALCULATE;
+      result |= RESCAN;
    }
    if (reaction & HTOP_SAVE_SETTINGS) {
       this->state->settings->changed = true;
