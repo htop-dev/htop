@@ -128,7 +128,7 @@ static inline void RichString_writeFrom(RichString* this, int attrs, const char*
    int newLen = from + len;
    RichString_setLen(this, newLen);
    for (int i = from, j = 0; i < newLen; i++, j++)
-      this->chptr[i] = (isprint(data_c[j]) ? data_c[j] : '?') | attrs;
+      this->chptr[i] = (data_c[j] >= 32 ? data_c[j] : '?') | attrs;
    this->chptr[newLen] = 0;
 }
 

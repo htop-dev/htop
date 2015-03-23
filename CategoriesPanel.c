@@ -102,7 +102,7 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
          break;
       }
       default:
-         if (isalpha(ch))
+         if (ch < 255 && isalpha(ch))
             result = Panel_selectByTyping(super, ch);
          if (result == BREAK_LOOP)
             result = IGNORED;
