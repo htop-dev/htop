@@ -62,12 +62,8 @@ static SignalItem signals[] = {
    { .name = "31 SIGSYS",    .number = 31 },
 };
 
-static const char* SignalsFunctions[] = {"Send  ", "Cancel ", NULL};
-static const char* SignalsKeys[] = {"Enter", "Esc", NULL};
-static int SignalsEvents[] = {13, 27};
-
 Panel* SignalsPanel_new() {
-   Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem), FunctionBar_new(SignalsFunctions, SignalsKeys, SignalsEvents));
+   Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem), FunctionBar_newEnterEsc("Send   ", "Cancel "));
    for(unsigned int i = 0; i < sizeof(signals)/sizeof(SignalItem); i++)
       Panel_set(this, i, (Object*) ListItem_new(signals[i].name, signals[i].number));
    Panel_setHeader(this, "Send signal:");

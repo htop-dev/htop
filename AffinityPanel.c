@@ -42,12 +42,8 @@ PanelClass AffinityPanel_class = {
    .eventHandler = AffinityPanel_eventHandler
 };
 
-static const char* AffinityFunctions[] = {"Set    ", "Cancel ", NULL};
-static const char* AffinityKeys[] = {"Enter", "Esc", NULL};
-static int AffinityEvents[] = {13, 27};
-
 Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity) {
-   Panel* this = Panel_new(1, 1, 1, 1, true, Class(CheckItem), FunctionBar_new(AffinityFunctions, AffinityKeys, AffinityEvents));
+   Panel* this = Panel_new(1, 1, 1, 1, true, Class(CheckItem), FunctionBar_newEnterEsc("Set    ", "Cancel "));
    Object_setClass(this, Class(AffinityPanel));
 
    Panel_setHeader(this, "Use CPUs:");

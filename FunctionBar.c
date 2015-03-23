@@ -33,6 +33,14 @@ static const char* FunctionBar_FLabels[] = {"      ", "      ", "      ", "     
 
 static int FunctionBar_FEvents[] = {KEY_F(1), KEY_F(2), KEY_F(3), KEY_F(4), KEY_F(5), KEY_F(6), KEY_F(7), KEY_F(8), KEY_F(9), KEY_F(10)};
 
+static const char* FunctionBar_EnterEscKeys[] = {"Enter", "Esc", NULL};
+static int FunctionBar_EnterEscEvents[] = {13, 27};
+
+FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
+   const char* functions[] = {enter, esc, NULL};
+   return FunctionBar_new(functions, FunctionBar_EnterEscKeys, FunctionBar_EnterEscEvents);
+}
+
 FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* events) {
    FunctionBar* this = calloc(1, sizeof(FunctionBar));
    this->functions = calloc(16, sizeof(char*));

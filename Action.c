@@ -161,13 +161,9 @@ static inline Htop_Reaction setSortKey(Settings* settings, ProcessField sortKey)
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR;
 }
 
-static const char* SortFunctions[] = {"Sort  ", "Cancel ", NULL};
-static const char* SortKeys[] = {"Enter", "Esc", NULL};
-static int SortEvents[] = {13, 27};
-
 static Htop_Reaction sortBy(State* st) {
    Htop_Reaction reaction = HTOP_OK;
-   Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_new(SortFunctions, SortKeys, SortEvents));
+   Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
    ProcessField* fields = st->settings->fields;
    for (int i = 0; fields[i]; i++) {
@@ -307,12 +303,8 @@ static Htop_Reaction actionKill(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
-static const char* UsersFunctions[] = {"Show    ", "Cancel ", NULL};
-static const char* UsersKeys[] = {"Enter", "Esc", NULL};
-static int UsersEvents[] = {13, 27};
-
 static Htop_Reaction actionFilterByUser(State* st) {
-   Panel* usersPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_new(UsersFunctions, UsersKeys, UsersEvents));
+   Panel* usersPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_newEnterEsc("Show   ", "Cancel "));
    Panel_setHeader(usersPanel, "Show processes of:");
    UsersTable_foreach(st->ut, addUserToVector, usersPanel);
    Vector_insertionSort(usersPanel->items);
