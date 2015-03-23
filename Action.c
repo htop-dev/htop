@@ -52,7 +52,6 @@ typedef enum {
 typedef Htop_Reaction (*Htop_Action)();
 
 typedef struct State_ {
-   IncSet* inc;
    Settings* settings;
    UsersTable* ut;
    ProcessList* pl;
@@ -225,12 +224,14 @@ static Htop_Reaction actionToggleTreeView(State* st) {
 }
 
 static Htop_Reaction actionIncFilter(State* st) {
-   IncSet_activate(st->inc, INC_FILTER);
+   IncSet* inc = ((MainPanel*)st->panel)->inc;
+   IncSet_activate(inc, INC_FILTER);
+   st->pl->incFilter = IncSet_filter(inc);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionIncSearch(State* st) {
-   IncSet_activate(st->inc, INC_SEARCH);
+   IncSet_activate(((MainPanel*)st->panel)->inc, INC_SEARCH);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 

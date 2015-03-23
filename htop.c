@@ -233,10 +233,7 @@ int main(int argc, char** argv) {
    }
    ProcessList_printHeader(pl, Panel_getHeader((Panel*)panel));
 
-   IncSet* inc = IncSet_new(defaultBar);
-
    State state = {
-      .inc = inc,
       .settings = settings,
       .ut = ut,
       .pl = pl,
@@ -460,7 +457,6 @@ int main(int argc, char** argv) {
    
    ScreenManager_delete(scr);
    
-   IncSet_delete(inc);
    UsersTable_delete(ut);
    Settings_delete(settings);
    

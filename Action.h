@@ -31,7 +31,6 @@ typedef enum {
 typedef Htop_Reaction (*Htop_Action)();
 
 typedef struct State_ {
-   IncSet* inc;
    Settings* settings;
    UsersTable* ut;
    ProcessList* pl;

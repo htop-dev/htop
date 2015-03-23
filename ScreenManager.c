@@ -149,7 +149,6 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       *redraw = true;
    }
    if (*redraw) {
-      //pl->incFilter = IncSet_filter(inc);
       ProcessList_rebuildPanel(pl);
       Header_draw(this->header);
    }
@@ -195,13 +194,12 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       
       if (redraw) {
          ScreenManager_drawPanels(this, focus);
+         FunctionBar* bar = (FunctionBar*) Vector_get(this->fuBars, focus);
+         if (bar)
+            this->fuBar = bar;
+         if (this->fuBar)
+            FunctionBar_draw(this->fuBar, NULL);
       }
-      
-      FunctionBar* bar = (FunctionBar*) Vector_get(this->fuBars, focus);
-      if (bar)
-         this->fuBar = bar;
-      if (this->fuBar)
-         FunctionBar_draw(this->fuBar, NULL);
 
       int prevCh = ch;
       ch = getch();

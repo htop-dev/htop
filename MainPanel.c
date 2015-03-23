@@ -20,6 +20,7 @@ in the source distribution for its full text.
 typedef struct MainPanel_ {
    Panel super;
    State* state;
+   IncSet* inc;
    FunctionBar* fuBar;
    Htop_Action *keys;
    pid_t pidSearch;
@@ -65,7 +66,13 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (ch == 27) {
       return HANDLED;
    }
-   if(ch != ERR && this->keys[ch]) {
+   if (ch != ERR && this->inc->active) {
+      bool redraw = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
+      if (redraw) {
+         reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
+      }
+      reaction |= HTOP_KEEP_FOLLOWING;
+   } else if (ch != ERR && this->keys[ch]) {
       reaction |= (this->keys[ch])(this->state);
       result = HANDLED;
    } else if (isdigit(ch)) {
@@ -92,7 +99,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
 
    if (reaction & HTOP_REDRAW_BAR) {
       MainPanel_updateTreeFunctions(this->fuBar, this->state->settings->treeView);
-      IncSet_drawBar(this->state->inc);
+      IncSet_drawBar(this->inc);
    }
    if (reaction & HTOP_UPDATE_PANELHDR) {
       ProcessList_printHeader(this->state->pl, Panel_getHeader(super));
@@ -163,6 +170,7 @@ MainPanel* MainPanel_new(FunctionBar* fuBar) {
    Panel_init((Panel*) this, 1, 1, 1, 1, Class(Process), false);
    this->keys = calloc(KEY_MAX, sizeof(Htop_Action));
    this->fuBar = fuBar;
+   this->inc = IncSet_new(fuBar);
 
    Action_setBindings(this->keys);
    Platform_setBindings(this->keys);
@@ -178,6 +186,7 @@ void MainPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    MainPanel* this = (MainPanel*) object;
    Panel_done(super);
+   IncSet_delete(this->inc);
    free(this->keys);
    free(this);
 }

@@ -16,6 +16,7 @@ in the source distribution for its full text.
 typedef struct MainPanel_ {
    Panel super;
    State* state;
+   IncSet* inc;
    FunctionBar* fuBar;
    Htop_Action *keys;
    pid_t pidSearch;
