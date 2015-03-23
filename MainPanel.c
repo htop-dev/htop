@@ -30,13 +30,15 @@ typedef bool(*MainPanel_ForeachProcessFn)(Process*, size_t);
 
 }*/
 
-void MainPanel_updateTreeFunctions(FunctionBar* fuBar, bool mode) {
+static const char* MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
+
+void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
    if (mode) {
-      FunctionBar_setLabel(fuBar, KEY_F(5), "Sorted");
-      FunctionBar_setLabel(fuBar, KEY_F(6), "Collap");
+      FunctionBar_setLabel(this->fuBar, KEY_F(5), "Sorted");
+      FunctionBar_setLabel(this->fuBar, KEY_F(6), "Collap");
    } else {
-      FunctionBar_setLabel(fuBar, KEY_F(5), "Tree  ");
-      FunctionBar_setLabel(fuBar, KEY_F(6), "SortBy");
+      FunctionBar_setLabel(this->fuBar, KEY_F(5), "Tree  ");
+      FunctionBar_setLabel(this->fuBar, KEY_F(6), "SortBy");
    }
 }
 
@@ -98,7 +100,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    }
 
    if (reaction & HTOP_REDRAW_BAR) {
-      MainPanel_updateTreeFunctions(this->fuBar, this->state->settings->treeView);
+      MainPanel_updateTreeFunctions(this, this->state->settings->treeView);
       IncSet_drawBar(this->inc);
    }
    if (reaction & HTOP_UPDATE_PANELHDR) {
@@ -165,12 +167,12 @@ PanelClass MainPanel_class = {
    .eventHandler = MainPanel_eventHandler
 };
 
-MainPanel* MainPanel_new(FunctionBar* fuBar) {
+MainPanel* MainPanel_new() {
    MainPanel* this = AllocThis(MainPanel);
-   Panel_init((Panel*) this, 1, 1, 1, 1, Class(Process), false);
+   this->fuBar = FunctionBar_new(MainFunctions, NULL, NULL);
+   Panel_init((Panel*) this, 1, 1, 1, 1, Class(Process), false, this->fuBar);
    this->keys = calloc(KEY_MAX, sizeof(Htop_Action));
-   this->fuBar = fuBar;
-   this->inc = IncSet_new(fuBar);
+   this->inc = IncSet_new(this->fuBar);
 
    Action_setBindings(this->keys);
    Platform_setBindings(this->keys);

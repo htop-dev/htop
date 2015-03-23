@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #include "Object.h"
 #include "Vector.h"
+#include "FunctionBar.h"
 
 typedef struct Panel_ Panel;
 
@@ -50,6 +51,8 @@ struct Panel_ {
    int scrollV;
    short scrollH;
    bool needsRedraw;
+   FunctionBar* currentBar;
+   FunctionBar* defaultBar;
    RichString header;
 };
 
@@ -68,11 +71,11 @@ struct Panel_ {
 
 extern PanelClass Panel_class;
 
-Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type);
+Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar);
 
 void Panel_delete(Object* cast);
 
-void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner);
+void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner, FunctionBar* fuBar);
 
 void Panel_done(Panel* this);
 

@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "IncSet.h"
 #include "String.h"
+#include "FunctionBar.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -26,7 +27,6 @@ in the source distribution for its full text.
 /*{
 #include "Process.h"
 #include "Panel.h"
-#include "FunctionBar.h"
 
 typedef struct OpenFiles_Data_ {
    char* data[256];
@@ -47,21 +47,21 @@ typedef struct OpenFilesScreen_ {
    Process* process;
    pid_t pid;
    Panel* display;
-   FunctionBar* bar;
 } OpenFilesScreen;
 
 }*/
 
-static const char* ofsFunctions[] = {"Search ", "Filter ", "Refresh", "Done   ", NULL};
+static const char* OpenFilesScreenFunctions[] = {"Search ", "Filter ", "Refresh", "Done   ", NULL};
 
-static const char* ofsKeys[] = {"F3", "F4", "F5", "Esc"};
+static const char* OpenFilesScreenKeys[] = {"F3", "F4", "F5", "Esc"};
 
-static int ofsEvents[] = {KEY_F(3), KEY_F(4), KEY_F(5), 27};
+static int OpenFilesScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(5), 27};
 
 OpenFilesScreen* OpenFilesScreen_new(Process* process) {
    OpenFilesScreen* this = (OpenFilesScreen*) malloc(sizeof(OpenFilesScreen));
    this->process = process;
-   this->display = Panel_new(0, 1, COLS, LINES-3, false, Class(ListItem));
+   FunctionBar* bar = FunctionBar_new(OpenFilesScreenFunctions, OpenFilesScreenKeys, OpenFilesScreenEvents);
+   this->display = Panel_new(0, 1, COLS, LINES-3, false, Class(ListItem), bar);
    if (Process_isThread(process))
       this->pid = process->tgid;
    else
@@ -173,7 +173,7 @@ void OpenFilesScreen_run(OpenFilesScreen* this) {
    Panel* panel = this->display;
    Panel_setHeader(panel, "   FD TYPE     DEVICE       SIZE       NODE NAME");
 
-   FunctionBar* bar = FunctionBar_new(ofsFunctions, ofsKeys, ofsEvents);
+   FunctionBar* bar = panel->defaultBar;
    IncSet* inc = IncSet_new(bar);
    
    Vector* lines = Vector_new(panel->items->type, true, DEFAULT_SIZE);
@@ -241,6 +241,5 @@ void OpenFilesScreen_run(OpenFilesScreen* this) {
    }
 
    Vector_delete(lines);
-   FunctionBar_delete((Object*)bar);
    IncSet_delete(inc);
 }

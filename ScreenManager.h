@@ -27,9 +27,7 @@ typedef struct ScreenManager_ {
    int y2;
    Orientation orientation;
    Vector* panels;
-   Vector* fuBars;
    int panelCount;
-   const FunctionBar* fuBar;
    const Header* header;
    const Settings* settings;
    bool owner;
@@ -43,7 +41,7 @@ void ScreenManager_delete(ScreenManager* this);
 
 extern int ScreenManager_size(ScreenManager* this);
 
-void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int size);
+void ScreenManager_add(ScreenManager* this, Panel* item, int size);
 
 Panel* ScreenManager_remove(ScreenManager* this, int idx);
 

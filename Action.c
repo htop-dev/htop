@@ -61,18 +61,16 @@ typedef struct State_ {
 
 }*/
 
-Object* Action_pickFromVector(State* st, Panel* list, int x, const char** keyLabels) {
+Object* Action_pickFromVector(State* st, Panel* list, int x) {
    Panel* panel = st->panel;
    Header* header = st->header;
    Settings* settings = st->settings;
    
    int y = panel->y;
-   const char* fuKeys[] = {"Enter", "Esc", NULL};
-   int fuEvents[] = {13, 27};
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, false);
    scr->allowFocusChange = false;
-   ScreenManager_add(scr, list, FunctionBar_new(keyLabels, fuKeys, fuEvents), x - 1);
-   ScreenManager_add(scr, panel, NULL, -1);
+   ScreenManager_add(scr, list, x - 1);
+   ScreenManager_add(scr, panel, -1);
    Panel* panelFocus;
    int ch;
    bool unfollow = false;
@@ -100,12 +98,10 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, const char** keyLab
 
 // ----------------------------------------
 
-static const char* CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
-
 static void Action_runSetup(Settings* settings, const Header* header, ProcessList* pl) {
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
    CategoriesPanel* panelCategories = CategoriesPanel_new(scr, settings, (Header*) header, pl);
-   ScreenManager_add(scr, (Panel*) panelCategories, FunctionBar_new(CategoriesFunctions, NULL, NULL), 16);
+   ScreenManager_add(scr, (Panel*) panelCategories, 16);
    CategoriesPanel_makeMetersPage(panelCategories);
    Panel* panelFocus;
    int ch;
@@ -165,11 +161,14 @@ static inline Htop_Reaction setSortKey(Settings* settings, ProcessField sortKey)
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR;
 }
 
+static const char* SortFunctions[] = {"Sort  ", "Cancel ", NULL};
+static const char* SortKeys[] = {"Enter", "Esc", NULL};
+static int SortEvents[] = {13, 27};
+
 static Htop_Reaction sortBy(State* st) {
    Htop_Reaction reaction = HTOP_OK;
-   Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
+   Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_new(SortFunctions, SortKeys, SortEvents));
    Panel_setHeader(sortPanel, "Sort by");
-   const char* fuFunctions[] = {"Sort  ", "Cancel ", NULL};
    ProcessField* fields = st->settings->fields;
    for (int i = 0; fields[i]; i++) {
       char* name = String_trim(Process_fields[fields[i]].name);
@@ -178,7 +177,7 @@ static Htop_Reaction sortBy(State* st) {
          Panel_setSelected(sortPanel, i);
       free(name);
    }
-   ListItem* field = (ListItem*) Action_pickFromVector(st, sortPanel, 15, fuFunctions);
+   ListItem* field = (ListItem*) Action_pickFromVector(st, sortPanel, 15);
    if (field) {
       reaction |= setSortKey(st->settings, field->key);
    }
@@ -280,8 +279,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    Panel* affinityPanel = AffinityPanel_new(st->pl, affinity);
    Affinity_delete(affinity);
 
-   const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
-   void* set = Action_pickFromVector(st, affinityPanel, 15, fuFunctions);
+   void* set = Action_pickFromVector(st, affinityPanel, 15);
    if (set) {
       Affinity* affinity = AffinityPanel_getAffinity(affinityPanel, st->pl);
       bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) Affinity_set, (size_t) affinity, NULL);
@@ -295,8 +293,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
 
 static Htop_Reaction actionKill(State* st) {
    Panel* signalsPanel = (Panel*) SignalsPanel_new();
-   const char* fuFunctions[] = {"Send  ", "Cancel ", NULL};
-   ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15, fuFunctions);
+   ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15);
    if (sgn) {
       if (sgn->key != 0) {
          Panel_setHeader(st->panel, "Sending...");
@@ -310,15 +307,18 @@ static Htop_Reaction actionKill(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
+static const char* UsersFunctions[] = {"Show    ", "Cancel ", NULL};
+static const char* UsersKeys[] = {"Enter", "Esc", NULL};
+static int UsersEvents[] = {13, 27};
+
 static Htop_Reaction actionFilterByUser(State* st) {
-   Panel* usersPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem));
+   Panel* usersPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_new(UsersFunctions, UsersKeys, UsersEvents));
    Panel_setHeader(usersPanel, "Show processes of:");
    UsersTable_foreach(st->ut, addUserToVector, usersPanel);
    Vector_insertionSort(usersPanel->items);
    ListItem* allUsers = ListItem_new("All users", -1);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
-   const char* fuFunctions[] = {"Show    ", "Cancel ", NULL};
-   ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20, fuFunctions);
+   ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20);
    if (picked) {
       if (picked == allUsers) {
          st->pl->userId = -1;

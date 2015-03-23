@@ -34,6 +34,10 @@ typedef struct AvailableMetersPanel_ {
 
 }*/
 
+static const char* AvailableMetersFunctions[] = {"Add   ", "Done  ", NULL};
+static const char* AvailableMetersKeys[] = {"Enter", "Esc"};
+static int AvailableMetersEvents[] = {13, 27};
+
 static void AvailableMetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    AvailableMetersPanel* this = (AvailableMetersPanel*) object;
@@ -102,7 +106,8 @@ PanelClass AvailableMetersPanel_class = {
 AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr, ProcessList* pl) {
    AvailableMetersPanel* this = AllocThis(AvailableMetersPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
+   FunctionBar* fuBar = FunctionBar_new(AvailableMetersFunctions, AvailableMetersKeys, AvailableMetersEvents);
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
    
    this->settings = settings;
    this->header = header;

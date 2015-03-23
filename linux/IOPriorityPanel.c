@@ -13,8 +13,13 @@ in the source distribution for its full text.
 #include "ListItem.h"
 }*/
 
+static const char* IOPriorityFunctions[] = {"Set    ", "Cancel ", NULL};
+static const char* IOPriorityKeys[] = {"Enter", "Esc", NULL};
+static int IOPriorityEvents[] = {13, 27};
+
 Panel* IOPriorityPanel_new(IOPriority currPrio) {
-   Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem));
+   FunctionBar* fuBar = FunctionBar_new(IOPriorityFunctions, IOPriorityKeys, IOPriorityEvents);
+   Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem), fuBar);
 
    Panel_setHeader(this, "IO Priority:");
    Panel_add(this, (Object*) ListItem_new("None (based on nice)", IOPriority_None));

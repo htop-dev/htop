@@ -11,7 +11,6 @@ in the source distribution for its full text.
 
 #include "Process.h"
 #include "Panel.h"
-#include "FunctionBar.h"
 
 typedef struct TraceScreen_ {
    Process* process;

@@ -34,6 +34,8 @@ typedef struct ColorsPanel_ {
 
 }*/
 
+static const char* ColorsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+
 static const char* ColorSchemeNames[] = {
    "Default",
    "Monochromatic",
@@ -94,7 +96,8 @@ PanelClass ColorsPanel_class = {
 ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
    ColorsPanel* this = AllocThis(ColorsPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true);
+   FunctionBar* fuBar = FunctionBar_new(ColorsFunctions, NULL, NULL);
+   Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true, fuBar);
 
    this->settings = settings;
    this->scr = scr;

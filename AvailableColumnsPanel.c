@@ -26,6 +26,8 @@ typedef struct AvailableColumnsPanel_ {
 
 }*/
 
+static const char* AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+
 static void AvailableColumnsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) object;
@@ -71,7 +73,8 @@ PanelClass AvailableColumnsPanel_class = {
 AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns) {
    AvailableColumnsPanel* this = AllocThis(AvailableColumnsPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
+   FunctionBar* fuBar = FunctionBar_new(AvailableColumnsFunctions, NULL, NULL);
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    Panel_setHeader(super, "Available Columns");
 

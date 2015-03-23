@@ -34,21 +34,7 @@ typedef struct CategoriesPanel_ {
 
 }*/
 
-static const char* MetersFunctions[] = {"Type  ", "Move  ", "Delete", "Done  ", NULL};
-static const char* MetersKeys[] = {"Space", "Enter", "Del", "Esc"};
-static int MetersEvents[] = {' ', 13, 27, KEY_DC};
-
-static const char* AvailableMetersFunctions[] = {"Add   ", "Done  ", NULL};
-static const char* AvailableMetersKeys[] = {"Enter", "Esc"};
-static int AvailableMetersEvents[] = {13, 27};
-
-static const char* DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
-
-static const char* ColumnsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
-
-static const char* ColorsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
-
-static const char* AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void CategoriesPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
@@ -63,26 +49,26 @@ void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
    leftMeters->rightNeighbor = rightMeters;
    rightMeters->leftNeighbor = leftMeters;
    Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, (Panel*) leftMeters, (Panel*) rightMeters, this->scr, this->pl);
-   ScreenManager_add(this->scr, (Panel*) leftMeters, FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents), 20);
-   ScreenManager_add(this->scr, (Panel*) rightMeters, FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents), 20);
-   ScreenManager_add(this->scr, availableMeters, FunctionBar_new(AvailableMetersFunctions, AvailableMetersKeys, AvailableMetersEvents), -1);
+   ScreenManager_add(this->scr, (Panel*) leftMeters, 20);
+   ScreenManager_add(this->scr, (Panel*) rightMeters, 20);
+   ScreenManager_add(this->scr, availableMeters, -1);
 }
 
 static void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {
    Panel* displayOptions = (Panel*) DisplayOptionsPanel_new(this->settings, this->scr);
-   ScreenManager_add(this->scr, displayOptions, FunctionBar_new(DisplayOptionsFunctions, NULL, NULL), -1);
+   ScreenManager_add(this->scr, displayOptions, -1);
 }
 
 static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
    Panel* colors = (Panel*) ColorsPanel_new(this->settings, this->scr);
-   ScreenManager_add(this->scr, colors, FunctionBar_new(ColorsFunctions, NULL, NULL), -1);
+   ScreenManager_add(this->scr, colors, -1);
 }
 
 static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    Panel* columns = (Panel*) ColumnsPanel_new(this->settings);
    Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns);
-   ScreenManager_add(this->scr, columns, FunctionBar_new(ColumnsFunctions, NULL, NULL), 20);
-   ScreenManager_add(this->scr, availableColumns, FunctionBar_new(AvailableColumnsFunctions, NULL, NULL), -1);
+   ScreenManager_add(this->scr, columns, 20);
+   ScreenManager_add(this->scr, availableColumns, -1);
 }
 
 static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
@@ -150,7 +136,8 @@ PanelClass CategoriesPanel_class = {
 CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl) {
    CategoriesPanel* this = AllocThis(CategoriesPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
+   FunctionBar* fuBar = FunctionBar_new(CategoriesFunctions, NULL, NULL);
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->scr = scr;
    this->settings = settings;

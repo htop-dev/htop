@@ -28,6 +28,8 @@ typedef struct ColumnsPanel_ {
 
 }*/
 
+static const char* ColumnsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
+
 static void ColumnsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    ColumnsPanel* this = (ColumnsPanel*) object;
@@ -121,7 +123,8 @@ PanelClass ColumnsPanel_class = {
 ColumnsPanel* ColumnsPanel_new(Settings* settings) {
    ColumnsPanel* this = AllocThis(ColumnsPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
+   FunctionBar* fuBar = FunctionBar_new(ColumnsFunctions, NULL, NULL);
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->settings = settings;
    this->moving = false;

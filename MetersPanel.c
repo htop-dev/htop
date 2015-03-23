@@ -30,6 +30,10 @@ struct MetersPanel_ {
 
 }*/
 
+static const char* MetersFunctions[] = {"Type  ", "Move  ", "Delete", "Done  ", NULL};
+static const char* MetersKeys[] = {"Space", "Enter", "Del", "Esc"};
+static int MetersEvents[] = {' ', 13, 27, KEY_DC};
+
 static void MetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    MetersPanel* this = (MetersPanel*) object;
@@ -172,7 +176,8 @@ PanelClass MetersPanel_class = {
 MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr) {
    MetersPanel* this = AllocThis(MetersPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true);
+   FunctionBar* fuBar = FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents);
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->settings = settings;
    this->meters = meters;

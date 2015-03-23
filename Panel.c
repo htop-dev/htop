@@ -24,6 +24,7 @@ in the source distribution for its full text.
 /*{
 #include "Object.h"
 #include "Vector.h"
+#include "FunctionBar.h"
 
 typedef struct Panel_ Panel;
 
@@ -61,6 +62,8 @@ struct Panel_ {
    int scrollV;
    short scrollH;
    bool needsRedraw;
+   FunctionBar* currentBar;
+   FunctionBar* defaultBar;
    RichString header;
 };
 
@@ -86,11 +89,11 @@ PanelClass Panel_class = {
    .eventHandler = Panel_selectByTyping
 };
 
-Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type) {
+Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar) {
    Panel* this;
    this = malloc(sizeof(Panel));
    Object_setClass(this, Class(Panel));
-   Panel_init(this, x, y, w, h, type, owner);
+   Panel_init(this, x, y, w, h, type, owner, fuBar);
    return this;
 }
 
@@ -100,7 +103,7 @@ void Panel_delete(Object* cast) {
    free(this);
 }
 
-void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner) {
+void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner, FunctionBar* fuBar) {
    this->x = x;
    this->y = y;
    this->w = w;
@@ -113,12 +116,15 @@ void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool
    this->oldSelected = 0;
    this->needsRedraw = true;
    RichString_beginAllocated(this->header);
+   this->defaultBar = fuBar;
+   this->currentBar = fuBar;
 }
 
 void Panel_done(Panel* this) {
    assert (this != NULL);
    free(this->eventHandlerState);
    Vector_delete(this->items);
+   FunctionBar_delete(this->defaultBar);
    RichString_end(this->header);
 }
 

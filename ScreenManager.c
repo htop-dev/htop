@@ -34,9 +34,7 @@ typedef struct ScreenManager_ {
    int y2;
    Orientation orientation;
    Vector* panels;
-   Vector* fuBars;
    int panelCount;
-   const FunctionBar* fuBar;
    const Header* header;
    const Settings* settings;
    bool owner;
@@ -52,10 +50,8 @@ ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation ori
    this->y1 = y1;
    this->x2 = x2;
    this->y2 = y2;
-   this->fuBar = NULL;
    this->orientation = orientation;
    this->panels = Vector_new(Class(Panel), owner, DEFAULT_SIZE);
-   this->fuBars = Vector_new(Class(FunctionBar), true, DEFAULT_SIZE);
    this->panelCount = 0;
    this->header = header;
    this->settings = settings;
@@ -66,7 +62,6 @@ ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation ori
 
 void ScreenManager_delete(ScreenManager* this) {
    Vector_delete(this->panels);
-   Vector_delete(this->fuBars);
    free(this);
 }
 
@@ -74,7 +69,7 @@ inline int ScreenManager_size(ScreenManager* this) {
    return this->panelCount;
 }
 
-void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int size) {
+void ScreenManager_add(ScreenManager* this, Panel* item, int size) {
    if (this->orientation == HORIZONTAL) {
       int lastX = 0;
       if (this->panelCount > 0) {
@@ -91,11 +86,6 @@ void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int
    }
    // TODO: VERTICAL
    Vector_add(this->panels, item);
-   if (fuBar)
-      Vector_add(this->fuBars, fuBar);
-   else
-      Vector_add(this->fuBars, FunctionBar_new(NULL, NULL, NULL));
-   if (!this->fuBar && fuBar) this->fuBar = fuBar;
    item->needsRedraw = true;
    this->panelCount++;
 }
@@ -103,8 +93,6 @@ void ScreenManager_add(ScreenManager* this, Panel* item, FunctionBar* fuBar, int
 Panel* ScreenManager_remove(ScreenManager* this, int idx) {
    assert(this->panelCount > idx);
    Panel* panel = (Panel*) Vector_remove(this->panels, idx);
-   Vector_remove(this->fuBars, idx);
-   this->fuBar = NULL;
    this->panelCount--;
    return panel;
 }
@@ -173,8 +161,6 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    int focus = 0;
    
    Panel* panelFocus = (Panel*) Vector_get(this->panels, focus);
-   if (this->fuBar)
-      FunctionBar_draw(this->fuBar, NULL);
 
    double oldTime = 0.0;
 
@@ -194,11 +180,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       
       if (redraw) {
          ScreenManager_drawPanels(this, focus);
-         FunctionBar* bar = (FunctionBar*) Vector_get(this->fuBars, focus);
-         if (bar)
-            this->fuBar = bar;
-         if (this->fuBar)
-            FunctionBar_draw(this->fuBar, NULL);
+         FunctionBar_draw(panelFocus->currentBar, NULL);
       }
 
       int prevCh = ch;
@@ -209,7 +191,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          int ok = getmouse(&mevent);
          if (ok == OK) {
             if (mevent.y == LINES - 1) {
-               ch = FunctionBar_synthesizeEvent(this->fuBar, mevent.x);
+               ch = FunctionBar_synthesizeEvent(panelFocus->currentBar, mevent.x);
             } else {
                for (int i = 0; i < this->panelCount; i++) {
                   Panel* panel = (Panel*) Vector_get(this->panels, i);

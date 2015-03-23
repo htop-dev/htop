@@ -73,7 +73,7 @@ static inline void IncMode_initFilter(IncMode* filter) {
 }
 
 static inline void IncMode_done(IncMode* mode) {
-   FunctionBar_delete((Object*)mode->bar);
+   FunctionBar_delete(mode->bar);
 }
 
 IncSet* IncSet_new(FunctionBar* bar) {
@@ -202,10 +202,11 @@ const char* IncSet_getListItemValue(Panel* panel, int i) {
    return "";
 }
 
-void IncSet_activate(IncSet* this, IncType type) {
+void IncSet_activate(IncSet* this, IncType type, FunctionBar** setBar) {
    this->active = &(this->modes[type]);
    this->bar = this->active->bar;
    FunctionBar_draw(this->active->bar, this->active->buffer);
+   setBar = 
 }
 
 void IncSet_drawBar(IncSet* this) {

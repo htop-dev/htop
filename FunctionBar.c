@@ -6,19 +6,18 @@ in the source distribution for its full text.
 */
 
 #include "FunctionBar.h"
-
 #include "CRT.h"
+#include "RichString.h"
 
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 /*{
-#include "Object.h"
+
+#include <stdbool.h>
 
 typedef struct FunctionBar_ {
-   Object super;
    int size;
    char** functions;
    char** keys;
@@ -34,12 +33,8 @@ static const char* FunctionBar_FLabels[] = {"      ", "      ", "      ", "     
 
 static int FunctionBar_FEvents[] = {KEY_F(1), KEY_F(2), KEY_F(3), KEY_F(4), KEY_F(5), KEY_F(6), KEY_F(7), KEY_F(8), KEY_F(9), KEY_F(10)};
 
-ObjectClass FunctionBar_class = {
-   .delete = FunctionBar_delete
-};
-
 FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* events) {
-   FunctionBar* this = AllocThis(FunctionBar);
+   FunctionBar* this = calloc(1, sizeof(FunctionBar));
    this->functions = calloc(16, sizeof(char*));
    if (!functions) {
       functions = FunctionBar_FLabels;
@@ -67,8 +62,7 @@ FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* eve
    return this;
 }
 
-void FunctionBar_delete(Object* cast) {
-   FunctionBar* this = (FunctionBar*) cast;
+void FunctionBar_delete(FunctionBar* this) {
    for (int i = 0; i < 15 && this->functions[i]; i++) {
       free(this->functions[i]);
    }

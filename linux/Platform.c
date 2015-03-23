@@ -46,8 +46,7 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    if (!p) return HTOP_OK;
    IOPriority ioprio = p->ioPriority;
    Panel* ioprioPanel = IOPriorityPanel_new(ioprio);
-   const char* fuFunctions[] = {"Set    ", "Cancel ", NULL};
-   void* set = Action_pickFromVector(st, ioprioPanel, 21, fuFunctions);
+   void* set = Action_pickFromVector(st, ioprioPanel, 21);
    if (set) {
       IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
       bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) LinuxProcess_setIOPriority, (size_t) ioprio, NULL);

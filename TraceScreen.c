@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "IncSet.h"
 #include "String.h"
+#include "FunctionBar.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -27,7 +28,6 @@ in the source distribution for its full text.
 /*{
 #include "Process.h"
 #include "Panel.h"
-#include "FunctionBar.h"
 
 typedef struct TraceScreen_ {
    Process* process;
@@ -37,16 +37,17 @@ typedef struct TraceScreen_ {
 
 }*/
 
-static const char* tsFunctions[] = {"Search ", "Filter ", "AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
+static const char* TraceScreenFunctions[] = {"Search ", "Filter ", "AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
 
-static const char* tsKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
+static const char* TraceScreenKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
 
-static int tsEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
+static int TraceScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
 
 TraceScreen* TraceScreen_new(Process* process) {
    TraceScreen* this = (TraceScreen*) malloc(sizeof(TraceScreen));
    this->process = process;
-   this->display = Panel_new(0, 1, COLS, LINES-2, false, Class(ListItem));
+   FunctionBar* fuBar = FunctionBar_new(TraceScreenFunctions, TraceScreenKeys, TraceScreenEvents);
+   this->display = Panel_new(0, 1, COLS, LINES-2, false, Class(ListItem), fuBar);
    this->tracing = true;
    return this;
 }
@@ -105,7 +106,7 @@ void TraceScreen_run(TraceScreen* this) {
    bool follow = false;
    bool looping = true;
 
-   FunctionBar* bar = FunctionBar_new(tsFunctions, tsKeys, tsEvents);
+   FunctionBar* bar = panel->defaultBar;
    IncSet* inc = IncSet_new(bar);
 
    Vector* lines = Vector_new(panel->items->type, true, DEFAULT_SIZE);
@@ -219,7 +220,6 @@ void TraceScreen_run(TraceScreen* this) {
    }
    
    IncSet_delete(inc);
-   FunctionBar_delete((Object*)bar);
    Vector_delete(lines);
    
    kill(child, SIGTERM);

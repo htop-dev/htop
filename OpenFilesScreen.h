@@ -11,7 +11,6 @@ in the source distribution for its full text.
 
 #include "Process.h"
 #include "Panel.h"
-#include "FunctionBar.h"
 
 typedef struct OpenFiles_Data_ {
    char* data[256];
@@ -32,7 +31,6 @@ typedef struct OpenFilesScreen_ {
    Process* process;
    pid_t pid;
    Panel* display;
-   FunctionBar* bar;
 } OpenFilesScreen;
 
 

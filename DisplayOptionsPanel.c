@@ -27,6 +27,8 @@ typedef struct DisplayOptionsPanel_ {
 
 }*/
 
+static const char* DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+
 static void DisplayOptionsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
@@ -72,7 +74,8 @@ PanelClass DisplayOptionsPanel_class = {
 DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* scr) {
    DisplayOptionsPanel* this = AllocThis(DisplayOptionsPanel);
    Panel* super = (Panel*) this;
-   Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true);
+   FunctionBar* fuBar = FunctionBar_new(DisplayOptionsFunctions, NULL, NULL);
+   Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true, fuBar);
 
    this->settings = settings;
    this->scr = scr;

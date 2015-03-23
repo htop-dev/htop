@@ -34,8 +34,6 @@ static void printVersionFlag() {
          stdout);
    exit(0);
 }
-
-static const char* defaultFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
  
 static void printHelpFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
@@ -218,13 +216,11 @@ int main(int argc, char** argv) {
       settings->colorScheme = COLORSCHEME_MONOCHROME;
 
    CRT_init(settings->delay, settings->colorScheme);
-
-   FunctionBar* defaultBar = FunctionBar_new(defaultFunctions, NULL, NULL);
    
-   MainPanel* panel = MainPanel_new(defaultBar);
+   MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
 
-   MainPanel_updateTreeFunctions(defaultBar, settings->treeView);
+   MainPanel_updateTreeFunctions(panel, settings->treeView);
       
    if (flags.sortKey > 0) {
       settings->sortKey = flags.sortKey;
@@ -243,7 +239,7 @@ int main(int argc, char** argv) {
    MainPanel_setState(panel, &state);
    
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
-   ScreenManager_add(scr, (Panel*) panel, defaultBar, -1);
+   ScreenManager_add(scr, (Panel*) panel, -1);
 
    ProcessList_scan(pl);
    millisleep(75);

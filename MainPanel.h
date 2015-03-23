@@ -25,7 +25,7 @@ typedef struct MainPanel_ {
 typedef bool(*MainPanel_ForeachProcessFn)(Process*, size_t);
 
 
-void MainPanel_updateTreeFunctions(FunctionBar* fuBar, bool mode);
+void MainPanel_updateTreeFunctions(MainPanel* this, bool mode);
 
 void MainPanel_pidSearch(MainPanel* this, int ch);
 
@@ -37,7 +37,7 @@ bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, in
 
 extern PanelClass MainPanel_class;
 
-MainPanel* MainPanel_new(FunctionBar* fuBar);
+MainPanel* MainPanel_new();
 
 void MainPanel_setState(MainPanel* this, State* state);
 
