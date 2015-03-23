@@ -198,7 +198,7 @@ void OpenFilesScreen_run(OpenFilesScreen* this) {
                Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV);
                ch = 0;
             } if (mevent.y == LINES - 1)
-               ch = FunctionBar_synthesizeEvent(inc->bar, mevent.x);
+               ch = IncSet_synthesizeEvent(inc, mevent.x);
       }
 
       if (inc->active) {
@@ -211,11 +211,11 @@ void OpenFilesScreen_run(OpenFilesScreen* this) {
          continue;
       case KEY_F(3):
       case '/':
-         IncSet_activate(inc, INC_SEARCH);
+         IncSet_activate(inc, INC_SEARCH, panel);
          break;
       case KEY_F(4):
       case '\\':
-         IncSet_activate(inc, INC_FILTER);
+         IncSet_activate(inc, INC_FILTER, panel);
          break;
       case KEY_F(5):
          clear();

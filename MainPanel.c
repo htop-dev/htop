@@ -21,24 +21,26 @@ typedef struct MainPanel_ {
    Panel super;
    State* state;
    IncSet* inc;
-   FunctionBar* fuBar;
    Htop_Action *keys;
    pid_t pidSearch;
 } MainPanel;
 
 typedef bool(*MainPanel_ForeachProcessFn)(Process*, size_t);
 
+#define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
+
 }*/
 
 static const char* MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
 
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
+   FunctionBar* bar = MainPanel_getFunctionBar(this);
    if (mode) {
-      FunctionBar_setLabel(this->fuBar, KEY_F(5), "Sorted");
-      FunctionBar_setLabel(this->fuBar, KEY_F(6), "Collap");
+      FunctionBar_setLabel(bar, KEY_F(5), "Sorted");
+      FunctionBar_setLabel(bar, KEY_F(6), "Collap");
    } else {
-      FunctionBar_setLabel(this->fuBar, KEY_F(5), "Tree  ");
-      FunctionBar_setLabel(this->fuBar, KEY_F(6), "SortBy");
+      FunctionBar_setLabel(bar, KEY_F(5), "Tree  ");
+      FunctionBar_setLabel(bar, KEY_F(6), "SortBy");
    }
 }
 
@@ -65,15 +67,16 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    
    Htop_Reaction reaction = HTOP_OK;
 
-   if (ch == 27) {
-      return HANDLED;
-   }
    if (ch != ERR && this->inc->active) {
-      bool redraw = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
-      if (redraw) {
+      bool filterChanged = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
+      if (filterChanged) {
+         this->state->pl->incFilter = IncSet_filter(this->inc);
          reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
       reaction |= HTOP_KEEP_FOLLOWING;
+      result = HANDLED;
+   } else if (ch == 27) {
+      return HANDLED;
    } else if (ch != ERR && this->keys[ch]) {
       reaction |= (this->keys[ch])(this->state);
       result = HANDLED;
@@ -169,10 +172,9 @@ PanelClass MainPanel_class = {
 
 MainPanel* MainPanel_new() {
    MainPanel* this = AllocThis(MainPanel);
-   this->fuBar = FunctionBar_new(MainFunctions, NULL, NULL);
-   Panel_init((Panel*) this, 1, 1, 1, 1, Class(Process), false, this->fuBar);
+   Panel_init((Panel*) this, 1, 1, 1, 1, Class(Process), false, FunctionBar_new(MainFunctions, NULL, NULL));
    this->keys = calloc(KEY_MAX, sizeof(Htop_Action));
-   this->inc = IncSet_new(this->fuBar);
+   this->inc = IncSet_new(MainPanel_getFunctionBar(this));
 
    Action_setBindings(this->keys);
    Platform_setBindings(this->keys);

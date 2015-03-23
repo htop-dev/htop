@@ -79,7 +79,6 @@ static inline void appendLine(const char* line, Vector* lines, Panel* panel, con
 }
 
 void TraceScreen_run(TraceScreen* this) {
-//   if (this->process->pid == getpid()) return;
    char buffer[1001];
    int fdpair[2];
    int err = pipe(fdpair);
@@ -167,7 +166,7 @@ void TraceScreen_run(TraceScreen* this) {
                follow = false;
                ch = 0;
             } if (mevent.y == LINES - 1)
-               ch = FunctionBar_synthesizeEvent(inc->bar, mevent.x);
+               ch = IncSet_synthesizeEvent(inc, mevent.x);
       }
       
       if (inc->active) {
@@ -186,11 +185,11 @@ void TraceScreen_run(TraceScreen* this) {
          break;
       case KEY_F(3):
       case '/':
-         IncSet_activate(inc, INC_SEARCH);
+         IncSet_activate(inc, INC_SEARCH, panel);
          break;
       case KEY_F(4):
       case '\\':
-         IncSet_activate(inc, INC_FILTER);
+         IncSet_activate(inc, INC_FILTER, panel);
          break;
       case 'f':
       case KEY_F(8):

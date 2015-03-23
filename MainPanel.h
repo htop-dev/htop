@@ -17,12 +17,13 @@ typedef struct MainPanel_ {
    Panel super;
    State* state;
    IncSet* inc;
-   FunctionBar* fuBar;
    Htop_Action *keys;
    pid_t pidSearch;
 } MainPanel;
 
 typedef bool(*MainPanel_ForeachProcessFn)(Process*, size_t);
+
+#define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
 
 
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode);

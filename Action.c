@@ -224,13 +224,13 @@ static Htop_Reaction actionToggleTreeView(State* st) {
 
 static Htop_Reaction actionIncFilter(State* st) {
    IncSet* inc = ((MainPanel*)st->panel)->inc;
-   IncSet_activate(inc, INC_FILTER);
+   IncSet_activate(inc, INC_FILTER, st->panel);
    st->pl->incFilter = IncSet_filter(inc);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionIncSearch(State* st) {
-   IncSet_activate(((MainPanel*)st->panel)->inc, INC_SEARCH);
+   IncSet_activate(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 

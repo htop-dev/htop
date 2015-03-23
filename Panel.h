@@ -56,6 +56,8 @@ struct Panel_ {
    RichString header;
 };
 
+#define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
+
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

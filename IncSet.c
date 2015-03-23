@@ -38,7 +38,6 @@ typedef struct IncMode_ {
 typedef struct IncSet_ {
    IncMode modes[2];
    IncMode* active;
-   FunctionBar* bar;
    FunctionBar* defaultBar;
    bool filtering;
 } IncSet;
@@ -82,7 +81,6 @@ IncSet* IncSet_new(FunctionBar* bar) {
    IncMode_initFilter(&(this->modes[INC_FILTER]));
    this->active = NULL;
    this->filtering = false;
-   this->bar = bar;
    this->defaultBar = bar;
    return this;
 }
@@ -137,7 +135,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       return true;
    IncMode* mode = this->active;
    int size = Panel_size(panel);
-   bool filterChange = false;
+   bool filterChanged = false;
    bool doSearch = true;
    if (ch == KEY_F(3)) {
       if (size == 0) return true;
@@ -158,14 +156,14 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       mode->index++;
       mode->buffer[mode->index] = 0;
       if (mode->isFilter) {
-         filterChange = true;
+         filterChanged = true;
          if (mode->index == 1) this->filtering = true;
       }
    } else if ((ch == KEY_BACKSPACE || ch == 127) && (mode->index > 0)) {
       mode->index--;
       mode->buffer[mode->index] = 0;
       if (mode->isFilter) {
-         filterChange = true;
+         filterChanged = true;
          if (mode->index == 0) {
             this->filtering = false;
             IncMode_reset(mode);
@@ -173,7 +171,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       }
    } else {
       if (mode->isFilter) {
-         filterChange = true;
+         filterChanged = true;
          if (ch == 27) {
             this->filtering = false;
             IncMode_reset(mode);
@@ -182,17 +180,17 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
          IncMode_reset(mode);
       }
       this->active = NULL;
-      this->bar = this->defaultBar;
+      Panel_setDefaultBar(panel);
       FunctionBar_draw(this->defaultBar, NULL);
       doSearch = false;
    }
    if (doSearch) {
       search(mode, panel, getPanelValue);
    }
-   if (filterChange && lines) {
+   if (filterChanged && lines) {
       updateWeakPanel(this, panel, lines);
    }
-   return filterChange;
+   return filterChanged;
 }
 
 const char* IncSet_getListItemValue(Panel* panel, int i) {
@@ -202,13 +200,24 @@ const char* IncSet_getListItemValue(Panel* panel, int i) {
    return "";
 }
 
-void IncSet_activate(IncSet* this, IncType type, FunctionBar** setBar) {
+void IncSet_activate(IncSet* this, IncType type, Panel* panel) {
    this->active = &(this->modes[type]);
-   this->bar = this->active->bar;
    FunctionBar_draw(this->active->bar, this->active->buffer);
-   setBar = 
+   panel->currentBar = this->active->bar;
 }
 
 void IncSet_drawBar(IncSet* this) {
-   FunctionBar_draw(this->bar, this->active ? this->active->buffer : NULL);
+   if (this->active) {
+      FunctionBar_draw(this->active->bar, this->active->buffer);
+   } else {
+      FunctionBar_draw(this->defaultBar, NULL);
+   }
+}
+
+int IncSet_synthesizeEvent(IncSet* this, int x) {
+   if (this->active) {
+      return FunctionBar_synthesizeEvent(this->active->bar, x);
+   } else {
+      return FunctionBar_synthesizeEvent(this->defaultBar, x);
+   }
 }
