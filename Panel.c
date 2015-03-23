@@ -431,7 +431,7 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
       this->eventHandlerState = calloc(100, 1);
    char* buffer = this->eventHandlerState;
 
-   if (isalnum(ch)) {
+   if (ch < 255 && isalnum(ch)) {
       int len = strlen(buffer);
       if (len < 99) {
          buffer[len] = ch;

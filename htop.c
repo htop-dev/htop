@@ -381,7 +381,7 @@ int main(int argc, char** argv) {
          continue;
       }
       
-      if (isdigit((char)ch)) {
+      if (ch < 255 && isdigit((char)ch)) {
          if (Panel_size(panel) == 0) continue;
          pid_t pid = ch-48 + acc;
          for (int i = 0; i < ProcessList_size(pl); i++) {

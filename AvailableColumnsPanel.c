@@ -54,7 +54,7 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
       }
       default:
       {
-         if (isalpha(ch))
+         if (ch < 255 && isalpha(ch))
             result = Panel_selectByTyping(super, ch);
          break;
       }
