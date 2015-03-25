@@ -74,9 +74,18 @@ profile:
 debug:
 	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-ggdb -DDEBUG"
 
+coverage:
+	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" AM_LDFLAGS="-lgcov"
+
 .c.h:
 	@srcdir@/scripts/MakeHeader.py $<
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS
 
+.PHONY: lcov
+
+lcov:
+	mkdir -p lcov
+	lcov --capture --directory . --output-file coverage.info
+	genhtml coverage.info --output-directory lcov
