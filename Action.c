@@ -154,7 +154,7 @@ static bool expandCollapse(Panel* panel) {
    return true;
 }
 
-static inline Htop_Reaction setSortKey(Settings* settings, ProcessField sortKey) {
+Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
    settings->sortKey = sortKey;
    settings->direction = 1;
    settings->treeView = false;
@@ -175,7 +175,7 @@ static Htop_Reaction sortBy(State* st) {
    }
    ListItem* field = (ListItem*) Action_pickFromVector(st, sortPanel, 15);
    if (field) {
-      reaction |= setSortKey(st->settings, field->key);
+      reaction |= Action_setSortKey(st->settings, field->key);
    }
    Object_delete(sortPanel);
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
@@ -189,15 +189,15 @@ static Htop_Reaction actionResize(State* st) {
 }
 
 static Htop_Reaction actionSortByMemory(State* st) {
-   return setSortKey(st->settings, PERCENT_MEM);
+   return Action_setSortKey(st->settings, PERCENT_MEM);
 }
 
 static Htop_Reaction actionSortByCPU(State* st) {
-   return setSortKey(st->settings, PERCENT_CPU);
+   return Action_setSortKey(st->settings, PERCENT_CPU);
 }
 
 static Htop_Reaction actionSortByTime(State* st) {
-   return setSortKey(st->settings, TIME);
+   return Action_setSortKey(st->settings, TIME);
 }
 
 static Htop_Reaction actionToggleKernelThreads(State* st) {

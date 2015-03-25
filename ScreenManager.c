@@ -190,7 +190,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       int prevCh = ch;
       ch = getch();
 
+      HandlerResult result = IGNORED;
       if (ch == KEY_MOUSE) {
+         ch = ERR;
          MEVENT mevent;
          int ok = getmouse(&mevent);
          if (ok == OK) {
@@ -199,37 +201,22 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             } else {
                for (int i = 0; i < this->panelCount; i++) {
                   Panel* panel = (Panel*) Vector_get(this->panels, i);
-                  if (mevent.x > panel->x && mevent.x <= panel->x+panel->w &&
-                     mevent.y > panel->y && mevent.y <= panel->y+panel->h &&
-                     (this->allowFocusChange || panelFocus == panel) ) {
-                     focus = i;
-                     panelFocus = setCurrentPanel(panel);
-                     Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
-                     break;
+                  if (mevent.x >= panel->x && mevent.x <= panel->x+panel->w) {
+                     if (mevent.y == panel->y) {
+                        ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
+                        break;
+                     } else if (mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
+                        if (panel == panelFocus || this->allowFocusChange) {
+                           focus = i;
+                           panelFocus = setCurrentPanel(panel);
+                           Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
+                        }
+                        ch = KEY_MOUSE;
+                        break;
+                     }
                   }
                }
             }
-         }
-      }
-      if (Panel_eventHandlerFn(panelFocus)) {
-         HandlerResult result = Panel_eventHandler(panelFocus, ch);
-         if (result & SYNTH_KEY) {
-            ch = result >> 16;
-         }
-         if (result & REDRAW) {
-            //redraw = true;
-            sortTimeout = 0;
-         }
-         if (result & RESCAN) {
-            rescan = true;
-            sortTimeout = 0;
-         }
-         if (result & HANDLED) {
-            redraw = true;
-            continue;
-         } else if (result & BREAK_LOOP) {
-            quit = true;
-            continue;
          }
       }
       if (ch == ERR) {
@@ -245,6 +232,25 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          continue;
       }
       redraw = true;
+      if (Panel_eventHandlerFn(panelFocus)) {
+         result = Panel_eventHandler(panelFocus, ch);
+      }
+      if (result & SYNTH_KEY) {
+         ch = result >> 16;
+      }
+      if (result & REDRAW) {
+         sortTimeout = 0;
+      }
+      if (result & RESCAN) {
+         rescan = true;
+         sortTimeout = 0;
+      }
+      if (result & HANDLED) {
+         continue;
+      } else if (result & BREAK_LOOP) {
+         quit = true;
+         continue;
+      }
       
       switch (ch) {
       case KEY_RESIZE:

@@ -37,7 +37,11 @@ typedef enum HandlerResult_ {
    SYNTH_KEY   = 0x20,
 } HandlerResult;
 
-#define EVENT_SETSELECTED -1
+#define EVENT_SET_SELECTED -1
+
+#define EVENT_HEADER_CLICK(x_) (-10000 + x_)
+#define EVENT_IS_HEADER_CLICK(ev_) (ev_ >= -10000 && ev_ <= -9000)
+#define EVENT_HEADER_CLICK_GET_X(ev_) (ev_ + 10000)
 
 typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
 
@@ -88,7 +92,7 @@ PanelClass Panel_class = {
       .extends = Class(Object),
       .delete = Panel_delete
    },
-   .eventHandler = Panel_selectByTyping
+   .eventHandler = Panel_selectByTyping,
 };
 
 Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar) {
@@ -250,7 +254,7 @@ void Panel_setSelected(Panel* this, int selected) {
       selected = 0;
    this->selected = selected;
    if (Panel_eventHandlerFn(this)) {
-      Panel_eventHandler(this, EVENT_SETSELECTED);
+      Panel_eventHandler(this, EVENT_SET_SELECTED);
    }
 }
 

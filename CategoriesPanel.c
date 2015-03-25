@@ -78,7 +78,7 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
 
    int selected = Panel_getSelectedIndex(super);
    switch (ch) {
-      case EVENT_SETSELECTED:
+      case EVENT_SET_SELECTED:
          result = HANDLED;
          break;
       case KEY_UP:

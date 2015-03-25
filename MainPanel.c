@@ -67,7 +67,21 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    
    Htop_Reaction reaction = HTOP_OK;
 
-   if (ch != ERR && this->inc->active) {
+   if (EVENT_IS_HEADER_CLICK(ch)) {
+      int x = EVENT_HEADER_CLICK_GET_X(ch);
+      ProcessList* pl = this->state->pl;
+      Settings* settings = this->state->settings;
+      int hx = super->scrollH + x + 1;
+      ProcessField field = ProcessList_keyAt(pl, hx);
+      if (field == settings->sortKey) {
+         Settings_invertSortOrder(settings);
+         settings->treeView = false;
+      } else {
+         reaction |= Action_setSortKey(settings, field);
+      }
+      reaction |= HTOP_RECALCULATE;
+      result = HANDLED;
+   } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
       if (filterChanged) {
          this->state->pl->incFilter = IncSet_filter(this->inc);
