@@ -107,7 +107,7 @@ static void Settings_defaultMeters(Settings* this, int cpuCount) {
       sizes[1]++;
    }
    for (int i = 0; i < 2; i++) {
-      this->columns[i].names = calloc(sizes[i], sizeof(char*));
+      this->columns[i].names = calloc(sizes[i] + 1, sizeof(char*));
       this->columns[i].modes = calloc(sizes[i], sizeof(int));
       this->columns[i].len = sizes[i];
    }
