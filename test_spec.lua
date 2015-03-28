@@ -1,9 +1,9 @@
 #!/usr/bin/env lua
 
-local VISUALTEST = os.getenv("VISUALTEST")
+local VISUALDELAY = os.getenv("VISUALDELAY")
  
-local visual = VISUALTEST or false
-local visual_delay = VISUALTEST and (tonumber(VISUALTEST)) or 0.1
+local visual = VISUALDELAY or false
+local visual_delay = VISUALDELAY and (tonumber(VISUALDELAY)) or 0.1
 
 local signal = require("posix.signal")
 local unistd = require("posix.unistd")
@@ -133,6 +133,25 @@ describe("htop test suite", function()
       send(curses.KEY_DOWN, 3)
       send(curses.KEY_F10)
    end)
+   running_it("adds and removes PPID column", function()
+      send("S")
+      send(curses.KEY_DOWN, 3)
+      send(curses.KEY_RIGHT, 2)
+      send(curses.KEY_DOWN, 2)
+      send("\n")
+      send(curses.KEY_F10)
+      delay(0.2)
+      local ppid = check_string_at(2, pos_panelhdr, "PPID")
+      send("S")
+      send(curses.KEY_DOWN, 3)
+      send(curses.KEY_RIGHT, 1)
+      send(curses.KEY_DC)
+      send(curses.KEY_F10)
+      delay(0.2)
+      local not_ppid = check_string_at(2, pos_panelhdr, "PPID")
+      assert.equal(check(ppid))
+      assert.not_equal(check(not_ppid))
+   end)
    running_it("changes CPU affinity for a process", function()
       send("a")
       send(" \n")
@@ -146,7 +165,7 @@ describe("htop test suite", function()
       send("\n")
       local time = check_string_at(41, 2, "Time")
       send(curses.KEY_DC)
-      delay(0.1)
+      delay(0.3)
       local not_time = check_string_at(41, 2, "Time")
       send(ESC)
       assert.equal(check(time))
