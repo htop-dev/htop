@@ -5,7 +5,6 @@ local VISUALDELAY = os.getenv("VISUALDELAY")
 local visual = VISUALDELAY or false
 local visual_delay = VISUALDELAY and (tonumber(VISUALDELAY)) or 0.1
 
-local signal = require("posix.signal")
 local unistd = require("posix.unistd")
 local time = require("posix.time")
 local curses = require("posix.curses")
@@ -17,7 +16,10 @@ os.execute("make coverage")
 os.execute("rm -f *.gcda */*.gcda")
 os.execute("rm -f coverage.info test.htoprc")
 os.execute("rm -rf lcov")
+os.execute("killall htop")
+os.execute("ps aux | grep '[s]leep 12345' | awk '{print $2}' | xargs kill 2> /dev/null")
 
+os.execute("cp ./default.htoprc ./test.htoprc")
 rt:forkPty("HTOPRC=./test.htoprc ./htop")
 
 local stdscr, term_win
@@ -65,6 +67,7 @@ local function show(key)
 end
 
 local function send(key, times)
+   if times == 0 then return end
    for i = 1, times or 1 do 
       delay(0.003) -- 30ms delay to avoid clobbering Esc sequences
       if type(key) == "string" then
@@ -95,31 +98,34 @@ local function check_string_at(x, y, str)
    return { str, string_at(x, y, #str) }
 end
 
-local ESC = 27
+local ESC = "\27\27"
 
 time.nanosleep({ tv_sec = 0, tv_nsec = 150000000 }) -- give some time for htop to initialize.
 
-local pos_panelhdr = (function()
-   for i = 1, 24 do
-      if is_string_at(3, i, "PID") then
-         return i
+local y_panelhdr = (function()
+   for y = 1, 24 do
+      if is_string_at(3, y, "PID") then
+         return y
       end
    end
 end)() or 1
 
+local x_metercol2 = 43
+
 show()
 
-local terminated = false
-signal.signal(signal.SIGCHLD, function(_)
-   terminated = true
-end)
+os.execute("sleep 12345 &")
+
+local function terminated()
+   return not os.execute("ps aux | grep -q '\\./[h]top'")
+end
 
 local function running_it(desc, fn)
    it(desc, function()
-      assert(not terminated)
+      assert(not terminated())
       show()
       fn()
-      assert(not terminated)
+      assert(not terminated())
    end)
 end
 
@@ -127,12 +133,181 @@ local function check(t)
    return t[1], t[2]
 end
 
+local attrs = {
+   black_on_cyan = 6,
+   red_on_cyan = 22,
+}
+
+local function find_selected_y()
+   for y = y_panelhdr + 1, rt:rows() - 1 do
+      local attr = rt:cellAttr(y-1, 1)
+      if attr == attrs.black_on_cyan then
+         return y
+      end
+   end
+   return y_panelhdr + 1
+end
+
+local function find_command_x()
+   for x = 1, 80 do
+      if is_string_at(x, y_panelhdr, "Command") then
+         return x
+      end
+   end
+   return 64
+end
+
 describe("htop test suite", function()
+   
+   running_it("performs incremental filter", function()
+      send("\\")
+      send("busted")
+      send("\n")
+      delay(0.2)
+      rt:update()
+      local pid = ("      "..tostring(unistd.getpid())):sub(-5)
+      local ourpid = check_string_at(1, y_panelhdr + 1, pid)
+      send("\\")
+      send(ESC)
+      send(curses.KEY_F5)
+      send(curses.KEY_HOME)
+      delay(0.15)
+      rt:update()
+      local initpid = check_string_at(1, y_panelhdr + 1, "    1")
+      delay(0.15)
+      rt:update()
+      send(curses.KEY_F5)
+      assert.equal(check(ourpid))
+      assert.equal(check(initpid))
+   end)
+
+   running_it("performs incremental search", function()
+      send(curses.KEY_HOME)
+      send("/")
+      send("busted")
+      local attr = rt:cellAttr(rt:rows() - 1, 30)
+      send("\n")
+      delay(0.4)
+      rt:update()
+      local line = find_selected_y()
+      local pid = ("      "..tostring(unistd.getpid())):sub(-5)
+      assert.equal(attr, attrs.black_on_cyan)
+      local ourpid = check_string_at(1, line, pid)
+      send(curses.KEY_HOME)
+      assert.equal(check(ourpid))
+   end)
+
+   running_it("kills a process", function()
+      send(curses.KEY_HOME)
+      send("\\")
+      send("sleep 12345")
+      local attr = rt:cellAttr(rt:rows() - 1, 30)
+      assert.equal(attr, attrs.black_on_cyan)
+      send("\n")
+      delay(0.3)
+      rt:update()
+      local col = find_command_x()
+      local procname = check_string_at(col, y_panelhdr + 1, "sleep 12345")
+      send("k")
+      send("\n")
+      send("\\")
+      send(ESC)
+      delay(0.3)
+      assert.equal(check(procname))
+      assert.not_equal((os.execute("ps aux | grep -q '[s]leep 12345'")), true)
+   end)
+
+   running_it("runs strace", function()
+      send(curses.KEY_HOME)
+      send("/")
+      send("busted")
+      send("\n")
+      send("s")
+      delay(1)
+      delay(1)
+      send(ESC)
+   end)
+
+   running_it("runs lsof", function()
+      send(curses.KEY_HOME)
+      send("/")
+      send("busted")
+      send("\n")
+      send("l")
+      delay(1)
+      delay(1)
+      send(ESC)
+   end)
+
+   running_it("cycles through meter modes", function()
+      send("S")
+      send(curses.KEY_RIGHT)
+      send(curses.KEY_DOWN)
+      send("\n\n\n\n\n")
+      send(ESC)
+   end)
+
+   running_it("show process of a user", function()
+      send(curses.KEY_F5)
+      send("u")
+      send(curses.KEY_DOWN)
+      delay(0.3)
+      rt:update()
+      local chosen = string_at(1, y_panelhdr + 2, 9)
+      send("\n")
+      send(curses.KEY_HOME)
+      delay(0.3)
+      rt:update()
+      local shown = string_at(7, y_panelhdr + 1, 9)
+      send("u")
+      send("\n")
+      send(curses.KEY_HOME)
+      delay(0.3)
+      rt:update()
+      local inituser = string_at(7, y_panelhdr + 1, 9)
+      send(curses.KEY_F5)
+      assert.equal(shown, chosen)
+      assert.equal(inituser, "root     ")
+   end)
+
+   running_it("performs failing search", function()
+      send(curses.KEY_HOME)
+      send("/")
+      send("xxxxxxxxxx")
+      delay(0.3)
+      rt:update()
+      local attr = rt:cellAttr(rt:rows() - 1, 30)
+      assert.equal(attr, attrs.red_on_cyan)
+      send("\n")
+   end)
+
+   running_it("cycles through search", function()
+      send(curses.KEY_HOME)
+      send("/")
+      send("sh")
+      local lastpid
+      local pidpairs = {}
+      for _ = 1, 3 do
+         send(curses.KEY_F3)
+         local line = find_selected_y()
+         local pid = string_at(1, line, 5)
+         if lastpid then
+            pidpairs[#pidpairs + 1] = { lastpid, pid }
+            lastpid = pid
+         end
+      end
+      send(curses.KEY_HOME)
+      for _, pair in pairs(pidpairs) do
+         assert.not_equal(pair[1], pair[2])
+      end
+   end)
+   
    running_it("visits each setup screen", function()
       send("S")
       send(curses.KEY_DOWN, 3)
       send(curses.KEY_F10)
    end)
+   
    running_it("adds and removes PPID column", function()
       send("S")
       send(curses.KEY_DOWN, 3)
@@ -141,51 +316,129 @@ describe("htop test suite", function()
       send("\n")
       send(curses.KEY_F10)
       delay(0.2)
-      local ppid = check_string_at(2, pos_panelhdr, "PPID")
+      local ppid = check_string_at(2, y_panelhdr, "PPID")
       send("S")
       send(curses.KEY_DOWN, 3)
       send(curses.KEY_RIGHT, 1)
       send(curses.KEY_DC)
       send(curses.KEY_F10)
       delay(0.2)
-      local not_ppid = check_string_at(2, pos_panelhdr, "PPID")
+      local not_ppid = check_string_at(2, y_panelhdr, "PPID")
       assert.equal(check(ppid))
       assert.not_equal(check(not_ppid))
    end)
+   
    running_it("changes CPU affinity for a process", function()
       send("a")
       send(" \n")
       send(ESC)
    end)
-   running_it("adds and removes a clock widget", function()
-      send("S")
-      send(curses.KEY_RIGHT, 3)
+   
+   running_it("changes IO priority for a process", function()
+      send("/")
+      send("htop")
       send("\n")
-      send(curses.KEY_UP, 4)
-      send("\n")
-      local time = check_string_at(41, 2, "Time")
-      send(curses.KEY_DC)
-      delay(0.3)
-      local not_time = check_string_at(41, 2, "Time")
-      send(ESC)
-      assert.equal(check(time))
-      assert.not_equal(check(not_time))
-   end)
-   running_it("adds a hostname widget", function()
-      send("S")
-      send(curses.KEY_RIGHT, 3)
-      send(curses.KEY_DOWN, 8)
-      send("\n")
+      send("i")
+      send(curses.KEY_END)
       send("\n")
       send(ESC)
    end)
+   
+   local meters = {
+      { name = "clock", down = 0, string = "Time" },
+      { name = "load", down = 2, string = "Load" },
+      { name = "battery", down = 7, string = "Battery" },
+      { name = "hostname", down = 8, string = "Hostname" },
+   }
+   
+   for _, item in ipairs(meters) do
+      running_it("adds and removes a "..item.name.." widget", function()
+         send("S")
+         send(curses.KEY_RIGHT, 3)
+         send(curses.KEY_DOWN, item.down)
+         if branch == "wip" then
+            send("\n")
+            send(curses.KEY_UP, 4)
+            send("\n")
+         else
+            send(curses.KEY_F6)
+            send(curses.KEY_LEFT)
+            send(curses.KEY_DOWN, 4)
+            send(curses.KEY_F7, 4)
+         end
+         delay(0.15)
+         rt:update()
+         local with = check_string_at(x_metercol2, 2, item.string)
+         send(curses.KEY_DC)
+         delay(0.15)
+         local without = check_string_at(x_metercol2, 2, item.string)
+         send(curses.KEY_F10)
+         assert.equal(check(with))
+         assert.not_equal(check(without))
+      end)
+   end
+
+   running_it("goes through themes", function()
+      send(curses.KEY_F2)
+      send(curses.KEY_DOWN, 2)
+      send(curses.KEY_RIGHT)
+      for i = 1, 6 do
+         send("\n")
+         send(curses.KEY_DOWN)
+      end
+      send(curses.KEY_UP, 6)
+      send("\n")
+      send(curses.KEY_F10)
+   end)
+   
+   local display_options = {
+      { name = "tree view", down = 0 },
+      { name = "shadow other user's process", down = 1 },
+      { name = "hide kernel threads", down = 2 },
+      { name = "hide userland threads", down = 3 },
+      { name = "display threads in different color", down = 4 },
+      { name = "show custom thread names", down = 5 },
+      { name = "highlight basename", down = 6 },
+      { name = "highlight large numbers", down = 7 },
+      { name = "leave margin around header", down = 8 },
+      { name = "use detailed CPU time", down = 9 },
+      { name = "count from zero", down = 10 },
+      { name = "update process names", down = 11 },
+      { name = "guest time in CPU%", down = 12 },
+   }
+   
+   for _, item in ipairs(display_options) do
+      running_it("checks display option to "..item.name, function()
+         for _ = 1, 2 do
+            send("S")
+            send(curses.KEY_DOWN)
+            send(curses.KEY_RIGHT)
+            send(curses.KEY_DOWN, item.down)
+            send("\n")
+            send(curses.KEY_F10)
+            delay(0.1)
+         end
+      end)
+   end
+   
+   for i = 1, 53 do
+      running_it("show column "..i, function()
+         send("S")
+         send(curses.KEY_END)
+         send(curses.KEY_RIGHT, 2)
+         send(curses.KEY_DOWN, i)
+         send("\n")
+         send(curses.KEY_F10)
+      end)
+   end
+   
    it("finally quits", function()
-      assert(not terminated)
+      assert(not terminated())
       send("q")
-      while not terminated do
+      while not terminated() do
          unistd.sleep(1)
       end
-      assert(terminated)
+      assert(terminated())
       if visual then
          curses.endwin()
       end
