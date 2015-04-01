@@ -171,6 +171,15 @@ typedef struct Process_ {
 
 } Process;
 
+typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
+
+typedef struct ProcessClass_ {
+   const ObjectClass super;
+   const Process_WriteField writeField;
+} ProcessClass;
+
+#define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
+
 
 extern const char *Process_fieldNames[];
 
@@ -189,9 +198,13 @@ void Process_setupColumnWidths();
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
+void Process_writeField(Process* this, RichString* str, ProcessField field);
+
+void Process_display(Object* cast, RichString* out);
+
 void Process_done(Process* this);
 
-extern ObjectClass Process_class;
+extern ProcessClass Process_class;
 
 void Process_init(Process* this, struct ProcessList_* pl);
 

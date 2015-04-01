@@ -20,6 +20,8 @@ typedef struct LinuxProcess_ {
 #define Process_delete LinuxProcess_delete
 
 
+extern ProcessClass LinuxProcess_class;
+
 LinuxProcess* LinuxProcess_new(ProcessList* pl);
 
 void LinuxProcess_delete(Object* cast);

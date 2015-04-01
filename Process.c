@@ -192,6 +192,15 @@ typedef struct Process_ {
 
 } Process;
 
+typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
+
+typedef struct ProcessClass_ {
+   const ObjectClass super;
+   const Process_WriteField writeField;
+} ProcessClass;
+
+#define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
+
 }*/
 
 const char *Process_fieldNames[] = {
@@ -470,7 +479,7 @@ static inline void Process_outputRate(RichString* str, int attr, char* buffer, i
    RichString_append(str, attr, buffer);
 }
 
-static void Process_writeField(Process* this, RichString* str, ProcessField field) {
+void Process_writeField(Process* this, RichString* str, ProcessField field) {
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int baseattr = CRT_colors[PROCESS_BASENAME];
@@ -630,12 +639,12 @@ static void Process_writeField(Process* this, RichString* str, ProcessField fiel
    RichString_append(str, attr, buffer);
 }
 
-static void Process_display(Object* cast, RichString* out) {
+void Process_display(Object* cast, RichString* out) {
    Process* this = (Process*) cast;
    ProcessField* fields = this->pl->fields;
    RichString_prune(out);
    for (int i = 0; fields[i]; i++)
-      Process_writeField(this, out, fields[i]);
+      As_Process(this)->writeField(this, out, fields[i]);
    if (this->pl->shadowOtherUsers && (int)this->st_uid != Process_getuid)
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
    if (this->tag == true)
@@ -651,11 +660,14 @@ void Process_done(Process* this) {
 #endif
 }
 
-ObjectClass Process_class = {
-   .extends = Class(Object),
-   .display = Process_display,
-   .delete = Process_delete,
-   .compare = Process_compare
+ProcessClass Process_class = {
+   .super = {
+      .extends = Class(Object),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = Process_compare
+   },
+   .writeField = Process_writeField,
 };
 
 void Process_init(Process* this, struct ProcessList_* pl) {

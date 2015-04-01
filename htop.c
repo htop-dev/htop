@@ -694,7 +694,7 @@ int main(int argc, char** argv) {
 
    CRT_init(settings->delay, settings->colorScheme);
 
-   Panel* panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, false, &Process_class);
+   Panel* panel = Panel_new(0, headerHeight, COLS, LINES - headerHeight - 2, false, (ObjectClass*) &Process_class);
    ProcessList_setPanel(pl, panel);
    
    FunctionBar* defaultBar = FunctionBar_new(defaultFunctions, NULL, NULL);

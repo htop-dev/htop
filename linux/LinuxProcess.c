@@ -27,9 +27,19 @@ typedef struct LinuxProcess_ {
 
 }*/
 
+ProcessClass LinuxProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = LinuxProcess_compare
+   },
+   .writeField = (Process_WriteField) LinuxProcess_writeField,
+};
+
 LinuxProcess* LinuxProcess_new(ProcessList* pl) {
    LinuxProcess* this = calloc(sizeof(LinuxProcess), 1);
-   Object_setClass(this, Class(Process));
+   Object_setClass(this, Class(LinuxProcess));
    Process_init(&this->super, pl);
    return this;
 }
@@ -85,7 +95,8 @@ void LinuxProcess_writeField(LinuxProcess* this, RichString* str, ProcessField f
       break;
    }
    default:
-      snprintf(buffer, n, "- ");
+      Process_writeField((Process*)this, str, field);
+      return;
    }
    RichString_append(str, attr, buffer);
 }
@@ -104,6 +115,6 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    case IO_PRIORITY:
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
    default:
-      return (p1->super.pid - p2->super.pid);
+      return Process_compare(v1, v2);
    }
 }
