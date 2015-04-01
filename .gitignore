@@ -4,6 +4,12 @@ htop
 # all object files
 *.o
 
+*.gcda
+*/*.gcda
+*.gcno
+*/*.gcno
+*.h.gch
+
 .deps/
 Makefile
 Makefile.in
