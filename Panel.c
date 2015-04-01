@@ -48,7 +48,6 @@ typedef struct PanelClass_ {
 
 struct Panel_ {
    Object super;
-   PanelClass* class;
    int x, y, w, h;
    WINDOW* window;
    Vector* items;
