@@ -12,6 +12,16 @@ local rote = require("rote")
 
 local rt = rote.RoteTerm(24, 80)
 
+local function os_execread(cmd)
+   local fd = io.popen(cmd, "r")
+   local out = fd:read("*a")
+   fd:close()
+   return (out:gsub("\n$", ""))
+end
+local branch = os_execread("git branch | grep '*'"):sub(3)
+
+print("Running in branch "..branch)
+
 os.execute("make coverage")
 os.execute("rm -f *.gcda */*.gcda")
 os.execute("rm -f coverage.info test.htoprc")
@@ -110,7 +120,7 @@ local y_panelhdr = (function()
    end
 end)() or 1
 
-local x_metercol2 = 43
+local x_metercol2 = (branch == "wip") and 41 or 43
 
 show()
 
