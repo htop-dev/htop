@@ -130,7 +130,15 @@ extern ProcessFieldData Process_fields[];
 extern char* Process_pidFormat;
 extern char* Process_tpgidFormat;
 
-typedef Process*(*Process_new_fn)(struct Settings_*);
+typedef Process*(*Process_New)(struct Settings_*);
+typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
+
+typedef struct ProcessClass_ {
+   const ObjectClass super;
+   const Process_WriteField writeField;
+} ProcessClass;
+
+#define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
 
 
 #define ONE_K 1024L
@@ -149,11 +157,13 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths);
 
 void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring);
 
-void Process_writeDefaultField(Process* this, RichString* str, ProcessField field);
+void Process_writeField(Process* this, RichString* str, ProcessField field);
+
+void Process_display(Object* cast, RichString* out);
 
 void Process_done(Process* this);
 
-extern ObjectClass Process_class;
+extern ProcessClass Process_class;
 
 void Process_init(Process* this, struct Settings_* settings);
 
@@ -167,6 +177,6 @@ void Process_sendSignal(Process* this, size_t sgn);
 
 long Process_pidCompare(const void* v1, const void* v2);
 
-long Process_defaultCompare(const void* v1, const void* v2);
+long Process_compare(const void* v1, const void* v2);
 
 #endif

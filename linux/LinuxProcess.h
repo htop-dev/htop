@@ -137,6 +137,8 @@ extern char* Process_tpgidFormat;
 
 void Process_setupColumnWidths();
 
+extern ProcessClass LinuxProcess_class;
+
 LinuxProcess* LinuxProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
@@ -155,9 +157,9 @@ IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
 
 bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio);
 
-void Process_writeField(Process* this, RichString* str, ProcessField field);
+void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field);
 
-long Process_compare(const void* v1, const void* v2);
+long LinuxProcess_compare(const void* v1, const void* v2);
 
 bool Process_isThread(Process* this);
 

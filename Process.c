@@ -149,7 +149,15 @@ extern ProcessFieldData Process_fields[];
 extern char* Process_pidFormat;
 extern char* Process_tpgidFormat;
 
-typedef Process*(*Process_new_fn)(struct Settings_*);
+typedef Process*(*Process_New)(struct Settings_*);
+typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
+
+typedef struct ProcessClass_ {
+   const ObjectClass super;
+   const Process_WriteField writeField;
+} ProcessClass;
+
+#define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
 
 }*/
 
@@ -306,7 +314,7 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
    }
 }
 
-void Process_writeDefaultField(Process* this, RichString* str, ProcessField field) {
+void Process_writeField(Process* this, RichString* str, ProcessField field) {
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int baseattr = CRT_colors[PROCESS_BASENAME];
@@ -427,12 +435,12 @@ void Process_writeDefaultField(Process* this, RichString* str, ProcessField fiel
    RichString_append(str, attr, buffer);
 }
 
-static void Process_display(Object* cast, RichString* out) {
+void Process_display(Object* cast, RichString* out) {
    Process* this = (Process*) cast;
    ProcessField* fields = this->settings->fields;
    RichString_prune(out);
    for (int i = 0; fields[i]; i++)
-      Process_writeField(this, out, fields[i]);
+      As_Process(this)->writeField(this, out, fields[i]);
    if (this->settings->shadowOtherUsers && (int)this->st_uid != Process_getuid)
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
    if (this->tag == true)
@@ -445,11 +453,14 @@ void Process_done(Process* this) {
    free(this->comm);
 }
 
-ObjectClass Process_class = {
-   .extends = Class(Object),
-   .display = Process_display,
-   .delete = Process_delete,
-   .compare = Process_compare
+ProcessClass Process_class = {
+   .super = {
+      .extends = Class(Object),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = Process_compare
+   },
+   .writeField = Process_writeField,
 };
 
 void Process_init(Process* this, struct Settings_* settings) {
@@ -489,7 +500,7 @@ long Process_pidCompare(const void* v1, const void* v2) {
    return (p1->pid - p2->pid);
 }
 
-long Process_defaultCompare(const void* v1, const void* v2) {
+long Process_compare(const void* v1, const void* v2) {
    Process *p1, *p2;
    Settings *settings = ((Process*)v1)->settings;
    if (settings->direction == 1) {

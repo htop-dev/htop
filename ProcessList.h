@@ -91,7 +91,7 @@ void ProcessList_expandTree(ProcessList* this);
 
 void ProcessList_rebuildPanel(ProcessList* this);
 
-Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_new_fn constructor);
+Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor);
 
 void ProcessList_scan(ProcessList* this);
 

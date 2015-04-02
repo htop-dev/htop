@@ -261,9 +261,19 @@ void Process_setupColumnWidths() {
    }
 }
 
+ProcessClass LinuxProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = LinuxProcess_compare
+   },
+   .writeField = (Process_WriteField) LinuxProcess_writeField,
+};
+
 LinuxProcess* LinuxProcess_new(Settings* settings) {
    LinuxProcess* this = calloc(sizeof(LinuxProcess), 1);
-   Object_setClass(this, Class(Process));
+   Object_setClass(this, Class(LinuxProcess));
    Process_init(&this->super, settings);
    return this;
 }
@@ -298,7 +308,7 @@ bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio) {
    return (LinuxProcess_updateIOPriority(this) == ioprio);
 }
 
-void Process_writeField(Process* this, RichString* str, ProcessField field) {
+void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field) {
    LinuxProcess* lp = (LinuxProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
@@ -360,13 +370,13 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       break;
    }
    default:
-      Process_writeDefaultField(this, str, field);
+      Process_writeField((Process*)this, str, field);
       return;
    }
    RichString_append(str, attr, buffer);
 }
 
-long Process_compare(const void* v1, const void* v2) {
+long LinuxProcess_compare(const void* v1, const void* v2) {
    LinuxProcess *p1, *p2;
    Settings *settings = ((Process*)v1)->settings;
    if (settings->direction == 1) {
@@ -425,7 +435,7 @@ long Process_compare(const void* v1, const void* v2) {
    case IO_PRIORITY:
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
    default:
-      return Process_defaultCompare(v1, v2);
+      return Process_compare(v1, v2);
    }
    test_diff:
    return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);

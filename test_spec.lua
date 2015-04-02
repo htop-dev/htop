@@ -20,7 +20,7 @@ os.execute("killall htop")
 os.execute("ps aux | grep '[s]leep 12345' | awk '{print $2}' | xargs kill 2> /dev/null")
 
 os.execute("cp ./default.htoprc ./test.htoprc")
-rt:forkPty("HTOPRC=./test.htoprc ./htop")
+rt:forkPty("LC_ALL=C HTOPRC=./test.htoprc ./htop")
 
 local stdscr, term_win
 -- Curses initalization needed even when not in visual mode
@@ -68,7 +68,7 @@ end
 
 local function send(key, times)
    if times == 0 then return end
-   for i = 1, times or 1 do 
+   for _ = 1, times or 1 do
       delay(0.003) -- 30ms delay to avoid clobbering Esc sequences
       if type(key) == "string" then
          for c in key:gmatch('.') do
@@ -138,8 +138,9 @@ local attrs = {
    red_on_cyan = 22,
 }
 
-local function find_selected_y()
-   for y = y_panelhdr + 1, rt:rows() - 1 do
+local function find_selected_y(from)
+   rt:update()
+   for y = from or (y_panelhdr + 1), rt:rows() - 1 do
       local attr = rt:cellAttr(y-1, 1)
       if attr == attrs.black_on_cyan then
          return y
@@ -161,7 +162,7 @@ describe("htop test suite", function()
    
    running_it("performs incremental filter", function()
       send("\\")
-      send("busted")
+      send("x\127bux\127sted") -- test backspace
       send("\n")
       delay(0.2)
       rt:update()
@@ -188,7 +189,6 @@ describe("htop test suite", function()
       local attr = rt:cellAttr(rt:rows() - 1, 30)
       send("\n")
       delay(0.4)
-      rt:update()
       local line = find_selected_y()
       local pid = ("      "..tostring(unistd.getpid())):sub(-5)
       assert.equal(attr, attrs.black_on_cyan)
@@ -224,7 +224,6 @@ describe("htop test suite", function()
       send("\n")
       send("s")
       delay(1)
-      delay(1)
       send(ESC)
    end)
 
@@ -235,15 +234,48 @@ describe("htop test suite", function()
       send("\n")
       send("l")
       delay(1)
-      delay(1)
       send(ESC)
    end)
 
-   running_it("cycles through meter modes", function()
+   running_it("performs filtering in lsof", function()
+      send(curses.KEY_HOME)
+      send("/")
+      send("htop")
+      send("\n")
+      send("l")
+      send(curses.KEY_F4)
+      send("pipe")
+      delay(1)
+      local pipefd = check_string_at(1, 3, "    3")
+      send(ESC)
+      assert.equal(check(pipefd))
+   end)
+
+   running_it("performs search in lsof", function()
+      send(curses.KEY_HOME)
+      send("/")
+      send("htop")
+      send("\n")
+      send("l")
+      send(curses.KEY_F3)
+      send("pipe")
+      delay(1)
+      local line = find_selected_y(3)
+      local pipefd = check_string_at(1, line, "    3")
+      send(ESC)
+      assert.equal(check(pipefd))
+   end)
+
+
+   running_it("cycles through meter modes in the default meters", function()
       send("S")
-      send(curses.KEY_RIGHT)
-      send(curses.KEY_DOWN)
-      send("\n\n\n\n\n")
+      for _ = 1, 2 do
+         send(curses.KEY_RIGHT)
+         for _ = 1, 3 do
+            send("\n", 4)
+            send(curses.KEY_DOWN)
+         end
+      end
       send(ESC)
    end)
 
@@ -366,6 +398,7 @@ describe("htop test suite", function()
             send(curses.KEY_DOWN, 4)
             send(curses.KEY_F7, 4)
          end
+         send(curses.KEY_F4, 4) -- cycle through meter modes
          delay(0.15)
          rt:update()
          local with = check_string_at(x_metercol2, 2, item.string)
@@ -382,7 +415,7 @@ describe("htop test suite", function()
       send(curses.KEY_F2)
       send(curses.KEY_DOWN, 2)
       send(curses.KEY_RIGHT)
-      for i = 1, 6 do
+      for _ = 1, 6 do
          send("\n")
          send(curses.KEY_DOWN)
       end
@@ -420,8 +453,22 @@ describe("htop test suite", function()
          end
       end)
    end
+
+   running_it("shows detailed CPU with guest time", function()
+      for _ = 1, 2 do
+         send("S")
+         send(curses.KEY_DOWN)
+         send(curses.KEY_RIGHT)
+         send(curses.KEY_DOWN, 9)
+         send("\n")
+         send(curses.KEY_DOWN, 3)
+         send("\n")
+         send(curses.KEY_F10)
+         delay(0.1)
+      end
+   end)
    
-   for i = 1, 53 do
+   for i = 1, 62 do
       running_it("show column "..i, function()
          send("S")
          send(curses.KEY_END)
