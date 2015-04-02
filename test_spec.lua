@@ -76,7 +76,7 @@ local function show(key)
    end
 end
 
-local function send(key, times)
+local function send(key, times, quick)
    if times == 0 then return end
    for _ = 1, times or 1 do
       delay(0.003) -- 30ms delay to avoid clobbering Esc sequences
@@ -87,6 +87,11 @@ local function send(key, times)
       else
          rt:keyPress(key)
       end
+      if not quick then
+         show(key)
+      end
+   end
+   if quick then
       show(key)
    end
 end
@@ -146,6 +151,8 @@ end
 local attrs = {
    black_on_cyan = 6,
    red_on_cyan = 22,
+   white_on_black = 176,
+   yellow_on_black = 112,
 }
 
 local function find_selected_y(from)
@@ -166,6 +173,15 @@ local function find_command_x()
       end
    end
    return 64
+end
+
+local function set_display_option(n)
+   send("S")
+   send(curses.KEY_DOWN)
+   send(curses.KEY_RIGHT)
+   send(curses.KEY_DOWN, n)
+   send("\n")
+   send(curses.KEY_F10)
 end
 
 describe("htop test suite", function()
@@ -375,6 +391,19 @@ describe("htop test suite", function()
       send(" \n")
       send(ESC)
    end)
+
+   running_it("renices for a process", function()
+      send("/")
+      send("busted")
+      send("\n")
+      local line = find_selected_y()
+      local before = check_string_at(22, line, " 0")
+      send(curses.KEY_F8)
+      delay(0.3)
+      local after = check_string_at(22, line, " 1")
+      assert.equal(check(before))
+      assert.equal(check(after))
+   end)
    
    running_it("changes IO priority for a process", function()
       send("/")
@@ -384,6 +413,15 @@ describe("htop test suite", function()
       send(curses.KEY_END)
       send("\n")
       send(ESC)
+   end)
+
+   running_it("shows help", function()
+      send(curses.KEY_F1)
+      send("\n")
+      set_display_option(9)
+      send(curses.KEY_F1)
+      send("\n")
+      set_display_option(9)
    end)
    
    local meters = {
@@ -453,12 +491,7 @@ describe("htop test suite", function()
    for _, item in ipairs(display_options) do
       running_it("checks display option to "..item.name, function()
          for _ = 1, 2 do
-            send("S")
-            send(curses.KEY_DOWN)
-            send(curses.KEY_RIGHT)
-            send(curses.KEY_DOWN, item.down)
-            send("\n")
-            send(curses.KEY_F10)
+            set_display_option(item.down)
             delay(0.1)
          end
       end)
@@ -477,15 +510,73 @@ describe("htop test suite", function()
          delay(0.1)
       end
    end)
+
+   running_it("expands and collapses tree", function()
+      send(curses.KEY_F5) -- tree view
+      send(curses.KEY_HOME)
+      send(curses.KEY_DOWN) -- second process in the tree
+      send("-")
+      send("+")
+      send(curses.KEY_F5)
+   end)
+
+   running_it("sets sort key", function()
+      send(".")
+      send("\n")
+   end)
+
+   running_it("tags all children", function()
+      send(curses.KEY_F5) -- tree view
+      send(curses.KEY_HOME) -- ensure we're at init
+      send("c")
+      local taggedattrs = {}
+      rt:update()
+      for y = y_panelhdr + 2, 23 do
+         table.insert(taggedattrs, rt:cellAttr(y-1, 4))
+      end
+      delay(0.2)
+      send("U")
+      local untaggedattrs = {}
+      rt:update()
+      for y = y_panelhdr + 2, 23 do
+         table.insert(untaggedattrs, rt:cellAttr(y-1, 4))
+      end
+      send(curses.KEY_F5)
+
+      for _, taggedattr in ipairs(taggedattrs) do
+         assert.equal(attrs.yellow_on_black, taggedattr)
+      end
+      for _, untaggedattr in ipairs(untaggedattrs) do
+         assert.equal(attrs.white_on_black, untaggedattr)
+      end
+   end)
    
    for i = 1, 62 do
       running_it("show column "..i, function()
          send("S")
          send(curses.KEY_END)
-         send(curses.KEY_RIGHT, 2)
-         send(curses.KEY_DOWN, i)
+         send(curses.KEY_RIGHT, 1)
+         if i > 1 then
+            send(curses.KEY_DC)
+         end
+         send(curses.KEY_RIGHT, 1)
+         local down = i
+         while down > 13 do
+            send(curses.KEY_NPAGE)
+            down = down - 13
+         end
+         send(curses.KEY_DOWN, down, "quick")
          send("\n")
          send(curses.KEY_F10)
+         if i == 62 then
+            send("S")
+            send(curses.KEY_END)
+            send(curses.KEY_RIGHT, 1)
+            if i > 1 then
+               send(curses.KEY_DC)
+            end
+            send(curses.KEY_F10)
+         end
       end)
    end
    
