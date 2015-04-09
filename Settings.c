@@ -208,8 +208,7 @@ static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
          this->delay = atoi(option[1]);
       } else if (String_eq(option[0], "color_scheme")) {
          this->colorScheme = atoi(option[1]);
-         if (this->colorScheme < 0) this->colorScheme = 0;
-         if (this->colorScheme >= LAST_COLORSCHEME) this->colorScheme = LAST_COLORSCHEME - 1;
+         if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) this->colorScheme = 0;
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
          readMeters = true;
