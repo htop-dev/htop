@@ -189,7 +189,6 @@ static void Vector_checkArraySize(Vector* this) {
 void Vector_insert(Vector* this, int idx, void* data_) {
    Object* data = data_;
    assert(idx >= 0);
-   assert(idx <= this->items);
    assert(Object_isA(data, this->type));
    assert(Vector_isConsistent(this));
 
