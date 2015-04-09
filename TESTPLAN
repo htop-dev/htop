@@ -64,7 +64,6 @@ Main screen:
       <s> - enter STrace screen.
 
       <F5>, <t> - toggle between Tree and Sorted view, update F5 in FunctionBar, follow process
-*** FAILING: not following process.
       
       <u> - enter User screen.
 
@@ -77,7 +76,6 @@ Main screen:
       <D>, <E> - do nothing.
       
       <F> - follow process.
-*** FAILING: not following process.
 
       <G> - do nothing.
       
