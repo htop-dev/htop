@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "String.h"
 #include "Vector.h"
+#include "CRT.h"
 
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -208,7 +209,7 @@ static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
       } else if (String_eq(option[0], "color_scheme")) {
          this->colorScheme = atoi(option[1]);
          if (this->colorScheme < 0) this->colorScheme = 0;
-         if (this->colorScheme > 5) this->colorScheme = 5;
+         if (this->colorScheme >= LAST_COLORSCHEME) this->colorScheme = LAST_COLORSCHEME - 1;
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
          readMeters = true;
