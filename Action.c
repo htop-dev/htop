@@ -158,7 +158,7 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
    settings->sortKey = sortKey;
    settings->direction = 1;
    settings->treeView = false;
-   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction sortBy(State* st) {
@@ -324,6 +324,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
 
 static Htop_Reaction actionFollow(State* st) {
    st->pl->following = MainPanel_selectedPid((MainPanel*)st->panel);
+   Panel_setSelectionColor(st->panel, CRT_colors[PANEL_SELECTION_FOLLOW]);
    return HTOP_KEEP_FOLLOWING;
 }
 

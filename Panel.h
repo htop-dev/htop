@@ -57,6 +57,7 @@ struct Panel_ {
    FunctionBar* currentBar;
    FunctionBar* defaultBar;
    RichString header;
+   int selectionColor;
 };
 
 #define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
@@ -83,6 +84,8 @@ void Panel_delete(Object* cast);
 void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner, FunctionBar* fuBar);
 
 void Panel_done(Panel* this);
+
+void Panel_setSelectionColor(Panel* this, int color);
 
 RichString* Panel_getHeader(Panel* this);
 

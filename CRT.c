@@ -51,7 +51,8 @@ typedef enum ColorSchemes_ {
    COLORSCHEME_LIGHTTERMINAL = 3,
    COLORSCHEME_MIDNIGHT = 4,
    COLORSCHEME_BLACKNIGHT = 5,
-   LAST_COLORSCHEME = 6,
+   COLORSCHEME_BROKENGRAY = 6,
+   LAST_COLORSCHEME = 7,
 } ColorSchemes;
 
 typedef enum ColorElements_ {
@@ -62,8 +63,9 @@ typedef enum ColorElements_ {
    FAILED_SEARCH,
    PANEL_HEADER_FOCUS,
    PANEL_HEADER_UNFOCUS,
-   PANEL_HIGHLIGHT_FOCUS,
-   PANEL_HIGHLIGHT_UNFOCUS,
+   PANEL_SELECTION_FOCUS,
+   PANEL_SELECTION_FOLLOW,
+   PANEL_SELECTION_UNFOCUS,
    LARGE_NUMBER,
    METER_TEXT,
    METER_VALUE,
@@ -158,8 +160,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [FUNCTION_KEY] = ColorPair(White,Black),
       [PANEL_HEADER_FOCUS] = ColorPair(Black,Green),
       [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green),
-      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan),
-      [PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Black,White),
+      [PANEL_SELECTION_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_SELECTION_FOLLOW] = ColorPair(Black,Yellow),
+      [PANEL_SELECTION_UNFOCUS] = ColorPair(Black,White),
       [FAILED_SEARCH] = ColorPair(Red,Cyan),
       [UPTIME] = A_BOLD | ColorPair(Cyan,Black),
       [BATTERY] = A_BOLD | ColorPair(Cyan,Black),
@@ -216,8 +219,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [FUNCTION_KEY] = A_NORMAL,
       [PANEL_HEADER_FOCUS] = A_REVERSE,
       [PANEL_HEADER_UNFOCUS] = A_REVERSE,
-      [PANEL_HIGHLIGHT_FOCUS] = A_REVERSE,
-      [PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD,
+      [PANEL_SELECTION_FOCUS] = A_REVERSE,
+      [PANEL_SELECTION_FOLLOW] = A_REVERSE,
+      [PANEL_SELECTION_UNFOCUS] = A_BOLD,
       [FAILED_SEARCH] = A_REVERSE | A_BOLD,
       [UPTIME] = A_BOLD,
       [BATTERY] = A_BOLD,
@@ -274,8 +278,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [FUNCTION_KEY] = ColorPair(Black,White),
       [PANEL_HEADER_FOCUS] = ColorPair(Black,Green),
       [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green),
-      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan),
-      [PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Blue,White),
+      [PANEL_SELECTION_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_SELECTION_FOLLOW] = ColorPair(Black,Yellow),
+      [PANEL_SELECTION_UNFOCUS] = ColorPair(Blue,White),
       [FAILED_SEARCH] = ColorPair(Red,Cyan),
       [UPTIME] = ColorPair(Yellow,White),
       [BATTERY] = ColorPair(Yellow,White),
@@ -332,8 +337,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [FUNCTION_KEY] = ColorPair(Black,Black),
       [PANEL_HEADER_FOCUS] = ColorPair(Black,Green),
       [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green),
-      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan),
-      [PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Blue,Black),
+      [PANEL_SELECTION_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_SELECTION_FOLLOW] = ColorPair(Black,Yellow),
+      [PANEL_SELECTION_UNFOCUS] = ColorPair(Blue,Black),
       [FAILED_SEARCH] = ColorPair(Red,Cyan),
       [UPTIME] = ColorPair(Yellow,Black),
       [BATTERY] = ColorPair(Yellow,Black),
@@ -390,8 +396,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [FUNCTION_KEY] = A_NORMAL,
       [PANEL_HEADER_FOCUS] = ColorPair(Black,Cyan),
       [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Cyan),
-      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,White),
-      [PANEL_HIGHLIGHT_UNFOCUS] = A_BOLD | ColorPair(Yellow,Blue),
+      [PANEL_SELECTION_FOCUS] = ColorPair(Black,White),
+      [PANEL_SELECTION_FOLLOW] = ColorPair(Black,Yellow),
+      [PANEL_SELECTION_UNFOCUS] = A_BOLD | ColorPair(Yellow,Blue),
       [FAILED_SEARCH] = ColorPair(Red,Cyan),
       [UPTIME] = A_BOLD | ColorPair(Yellow,Blue),
       [BATTERY] = A_BOLD | ColorPair(Yellow,Blue),
@@ -448,8 +455,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [FUNCTION_KEY] = ColorPair(Cyan,Black),
       [PANEL_HEADER_FOCUS] = ColorPair(Black,Green),
       [PANEL_HEADER_UNFOCUS] = ColorPair(Black,Green),
-      [PANEL_HIGHLIGHT_FOCUS] = ColorPair(Black,Cyan),
-      [PANEL_HIGHLIGHT_UNFOCUS] = ColorPair(Black,White),
+      [PANEL_SELECTION_FOCUS] = ColorPair(Black,Cyan),
+      [PANEL_SELECTION_FOLLOW] = ColorPair(Black,Yellow),
+      [PANEL_SELECTION_UNFOCUS] = ColorPair(Black,White),
       [FAILED_SEARCH] = ColorPair(Red,Cyan),
       [UPTIME] = ColorPair(Green,Black),
       [BATTERY] = ColorPair(Green,Black),
@@ -498,7 +506,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Blue,Black),
       [CPU_STEAL] = ColorPair(Cyan,Black),
       [CPU_GUEST] = ColorPair(Cyan,Black),
-   }
+   },
+   [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
 };
 
 int CRT_cursorX = 0;
@@ -530,6 +539,12 @@ void CRT_init(int delay, int colorScheme) {
    }
    CRT_colors = CRT_colorSchemes[colorScheme];
    CRT_colorScheme = colorScheme;
+   
+   for (int i = 0; i < LAST_COLORELEMENT; i++) {
+      int color = CRT_colorSchemes[COLORSCHEME_DEFAULT][i];
+      CRT_colorSchemes[COLORSCHEME_BROKENGRAY][i] = color == (A_BOLD | ColorPair(Black,Black)) ? ColorPair(White,Black) : color;
+   }
+   
    halfdelay(CRT_delay);
    nonl();
    intrflush(stdscr, false);
