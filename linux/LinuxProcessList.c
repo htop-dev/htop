@@ -422,8 +422,6 @@ static void LinuxProcessList_readVServerData(LinuxProcess* process, const char* 
 
 #endif
 
-#ifdef HAVE_OOM
-
 static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirname, const char* name) {
    char filename[MAX_NAME+1];
    snprintf(filename, MAX_NAME, "%s/%s/oom_score", dirname, name);
@@ -440,8 +438,6 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
    }
    fclose(file);
 }
-
-#endif
 
 static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirname, const char* name) {
    if (Process_isKernelThread(process))
@@ -579,9 +575,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          LinuxProcessList_readCGroupFile(lp, dirname, name);
       #endif
       
-      #ifdef HAVE_OOM
-      LinuxProcessList_readOomData(lp, dirname, name);
-      #endif
+      if (settings->flags & PROCESS_FLAG_LINUX_OOM)
+         LinuxProcessList_readOomData(lp, dirname, name);
 
       if (proc->state == 'Z') {
          free(proc->comm);

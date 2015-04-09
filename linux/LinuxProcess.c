@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_OPENVZ   0x0200
 #define PROCESS_FLAG_LINUX_VSERVER  0x0400
 #define PROCESS_FLAG_LINUX_CGROUP   0x0800
+#define PROCESS_FLAG_LINUX_OOM      0x1000
 
 typedef enum UnsupportedProcessFields {
    FLAGS = 9,
@@ -78,9 +79,7 @@ typedef enum LinuxProcessFields {
    #ifdef HAVE_CGROUP
    CGROUP = 113,
    #endif
-   #ifdef HAVE_OOM
    OOM = 114,
-   #endif
    IO_PRIORITY = 115,
    LAST_PROCESSFIELD = 116,
 } LinuxProcessField;
@@ -124,9 +123,7 @@ typedef struct LinuxProcess_ {
    #ifdef HAVE_CGROUP
    char* cgroup;
    #endif
-   #ifdef HAVE_OOM
    unsigned int oom;
-   #endif
 } LinuxProcess;
 
 #ifndef Process_isKernelThread
@@ -215,9 +212,7 @@ ProcessFieldData Process_fields[] = {
 #ifdef HAVE_CGROUP
    [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
 #endif
-#ifdef HAVE_OOM
-   [OOM] = { .name = "OOM", .title = "    OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = 0, },
-#endif
+   [OOM] = { .name = "OOM", .title = "    OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
    [IO_PRIORITY] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
@@ -238,9 +233,7 @@ void Process_setupColumnWidths() {
       Process_fields[TGID].title =    "   TGID ";
       Process_fields[PGRP].title =    "   PGRP ";
       Process_fields[SESSION].title = "   SESN ";
-      #ifdef HAVE_OOM
       Process_fields[OOM].title =     "    OOM ";
-      #endif
       Process_pidFormat = "%7u ";
       Process_tpgidFormat = "%7d ";
    } else {
@@ -253,9 +246,7 @@ void Process_setupColumnWidths() {
       Process_fields[TGID].title =    " TGID ";
       Process_fields[PGRP].title =    " PGRP ";
       Process_fields[SESSION].title = " SESN ";
-      #ifdef HAVE_OOM
       Process_fields[OOM].title =     "  OOM ";
-      #endif
       Process_pidFormat = "%5u ";
       Process_tpgidFormat = "%5d ";
    }
@@ -348,9 +339,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    #ifdef HAVE_CGROUP
    case CGROUP: snprintf(buffer, n, "%-10s ", lp->cgroup); break;
    #endif
-   #ifdef HAVE_OOM
    case OOM: snprintf(buffer, n, Process_pidFormat, lp->oom); break;
-   #endif
    case IO_PRIORITY: {
       int klass = IOPriority_class(lp->ioPriority);
       if (klass == IOPRIO_CLASS_NONE) {
@@ -416,22 +405,20 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    #endif
    #ifdef HAVE_OPENVZ
    case CTID:
-      return (p1->ctid - p2->ctid);
+      return (p2->ctid - p1->ctid);
    case VPID:
-      return (p1->vpid - p2->vpid);
+      return (p2->vpid - p1->vpid);
    #endif
    #ifdef HAVE_VSERVER
    case VXID:
-      return (p1->vxid - p2->vxid);
+      return (p2->vxid - p1->vxid);
    #endif
    #ifdef HAVE_CGROUP
    case CGROUP:
       return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
    #endif
-   #ifdef HAVE_OOM
    case OOM:
-      return (p1->oom - p2->oom);
-   #endif
+      return (p2->oom - p1->oom);
    case IO_PRIORITY:
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
    default:
