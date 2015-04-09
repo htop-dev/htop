@@ -99,6 +99,8 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    } else {
       if (ch != ERR) {
          this->pidSearch = 0;
+      } else {
+         reaction |= HTOP_KEEP_FOLLOWING;
       }
       switch (ch) {
       case KEY_LEFT:
