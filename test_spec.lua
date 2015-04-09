@@ -179,7 +179,7 @@ local function set_display_option(n)
    send("S")
    send(curses.KEY_DOWN)
    send(curses.KEY_RIGHT)
-   send(curses.KEY_DOWN, n)
+   send(curses.KEY_DOWN, n, "quick")
    send("\n")
    send(curses.KEY_F10)
 end
@@ -221,6 +221,38 @@ describe("htop test suite", function()
       send("\n")
       send(curses.KEY_HOME)
       assert.equal(check(ourpid))
+   end)
+
+   running_it("performs pid search", function()
+      send(curses.KEY_F5)
+      send(curses.KEY_END)
+      send("1")
+      delay(0.3)
+      local line = find_selected_y()
+      local initpid = check_string_at(1, line, "    1")
+      send(curses.KEY_F5)
+      assert.equal(check(initpid))
+   end)
+
+
+   running_it("horizontal scroll", function()
+      local h_scroll = 20
+      send(curses.KEY_F5)
+      delay(0.15)
+      local str1 = string_at(1+h_scroll, y_panelhdr+1, 5)
+      send(curses.KEY_RIGHT)
+      delay(0.15)
+      local str2 = string_at(1, y_panelhdr+1, 5)
+      send(curses.KEY_LEFT)
+      delay(0.15)
+      local str3 = string_at(1+h_scroll, y_panelhdr+1, 5)
+      send(curses.KEY_LEFT)
+      delay(0.15)
+      local str4 = string_at(1+h_scroll, y_panelhdr+1, 5)
+      send(curses.KEY_F5)
+      assert.equal(str1, str2)
+      assert.equal(str2, str3)
+      assert.equal(str3, str4)
    end)
 
    running_it("kills a process", function()
@@ -404,6 +436,32 @@ describe("htop test suite", function()
       assert.equal(check(before))
       assert.equal(check(after))
    end)
+
+   running_it("tries to lower nice for a process", function()
+      send("/")
+      send("busted")
+      send("\n")
+      local line = find_selected_y()
+      local before = string_at(22, line, 2)
+      send(curses.KEY_F7)
+      delay(0.3)
+      local after = string_at(22, line, 2)
+      assert.equal(before, after) -- no permissions
+   end)
+
+   running_it("invert sort order", function()
+      local cpu_col = 45
+      send("P")
+      send("I")
+      send(curses.KEY_HOME)
+      delay(0.3)
+      local zerocpu = check_string_at(cpu_col, y_panelhdr + 1, " 0.0")
+      send("I")
+      delay(0.3)
+      local nonzerocpu = check_string_at(cpu_col, y_panelhdr + 1, " 0.0")
+      assert.equal(check(zerocpu))
+      assert.not_equal(check(nonzerocpu))
+   end)
    
    running_it("changes IO priority for a process", function()
       send("/")
@@ -423,14 +481,54 @@ describe("htop test suite", function()
       send("\n")
       set_display_option(9)
    end)
+
+   running_it("moves meters around", function()
+      if branch == "wip" then
+         send("S")
+         send(curses.KEY_RIGHT)
+         send(curses.KEY_UP)
+         send("\n")
+         send(curses.KEY_DOWN)
+         send(curses.KEY_UP)
+         send(curses.KEY_RIGHT)
+         send(curses.KEY_RIGHT)
+         send(curses.KEY_LEFT)
+         send(curses.KEY_LEFT)
+         send("\n")
+         send(curses.KEY_F10)
+      end
+   end)
    
    local meters = {
       { name = "clock", down = 0, string = "Time" },
       { name = "load", down = 2, string = "Load" },
       { name = "battery", down = 7, string = "Battery" },
       { name = "hostname", down = 8, string = "Hostname" },
+      { name = "memory", down = 3, string = "Memory" },
+      { name = "CPU average", down = 16, string = "Avg" },
    }
-   
+
+   running_it("checks various CPU meters", function()
+      send("S")
+      send(curses.KEY_RIGHT, 3)
+      send(curses.KEY_DOWN, 9, "quick")
+      for _ = 9, 14 do
+         if branch == "wip" then
+            send("\n")
+            send("\n")
+            send(curses.KEY_DC)
+            send(curses.KEY_RIGHT)
+            send(curses.KEY_DOWN)
+         else
+            send(curses.KEY_F6)
+            send(curses.KEY_LEFT)
+            send(curses.KEY_DC)
+            send(curses.KEY_RIGHT)
+            send(curses.KEY_DOWN, 4)
+         end
+      end
+   end)
+
    for _, item in ipairs(meters) do
       running_it("adds and removes a "..item.name.." widget", function()
          send("S")
@@ -506,6 +604,10 @@ describe("htop test suite", function()
          send("\n")
          send(curses.KEY_DOWN, 3)
          send("\n")
+         send(curses.KEY_LEFT)
+         send(curses.KEY_UP)
+         send(curses.KEY_RIGHT)
+         send(curses.KEY_F4, 4) -- cycle through CPU meter modes
          send(curses.KEY_F10)
          delay(0.1)
       end
