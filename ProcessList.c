@@ -74,15 +74,15 @@ void ProcessList_goThroughEntries(ProcessList* pl);
 
 }*/
 
-ProcessList* ProcessList_init(ProcessList* this, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
-   this->processes = Vector_new(Class(Process), true, DEFAULT_SIZE);
+ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+   this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
    this->pidWhiteList = pidWhiteList;
    this->userId = userId;
    
-   // tree-view auxiliary buffers
-   this->processes2 = Vector_new(Class(Process), true, DEFAULT_SIZE);
+   // tree-view auxiliary buffer
+   this->processes2 = Vector_new(klass, true, DEFAULT_SIZE);
    
    // set later by platform-specific code
    this->cpuCount = 0;

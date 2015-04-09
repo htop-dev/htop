@@ -45,7 +45,7 @@ static int pageSizeKb;
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    FreeBSDProcessList* fpl = calloc(1, sizeof(FreeBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
-   ProcessList_init(pl, usersTable, pidWhiteList, userId);
+   ProcessList_init(pl, Class(FreeBSDProcess), usersTable, pidWhiteList, userId);
 
    int cpus = 1;
    size_t sizeof_cpus = sizeof(cpus);

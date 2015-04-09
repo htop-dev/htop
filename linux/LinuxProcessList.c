@@ -83,7 +83,7 @@ typedef struct LinuxProcessList_ {
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    LinuxProcessList* this = calloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
-   ProcessList_init(pl, usersTable, pidWhiteList, userId);
+   ProcessList_init(pl, Class(LinuxProcess), usersTable, pidWhiteList, userId);
 
    // Update CPU count:
    FILE* file = fopen(PROCSTATFILE, "r");

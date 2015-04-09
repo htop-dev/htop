@@ -36,6 +36,16 @@ typedef struct FreeBSDProcess_ {
 
 }*/
 
+ProcessClass FreeBSDProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = FreeBSDProcess_compare
+   },
+   .writeField = (Process_WriteField) FreeBSDProcess_writeField,
+};
+
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
@@ -94,7 +104,7 @@ void Process_setupColumnWidths() {
 
 FreeBSDProcess* FreeBSDProcess_new(Settings* settings) {
    FreeBSDProcess* this = calloc(sizeof(FreeBSDProcess), 1);
-   Object_setClass(this, Class(Process));
+   Object_setClass(this, Class(FreeBSDProcess));
    Process_init(&this->super, settings);
    return this;
 }
@@ -105,7 +115,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-void Process_writeField(Process* this, RichString* str, ProcessField field) {
+void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField field) {
    //FreeBSDProcess* fp = (FreeBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -113,13 +123,13 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    switch (field) {
    // add FreeBSD-specific fields here
    default:
-      Process_writeDefaultField(this, str, field);
+      Process_writeField(this, str, field);
       return;
    }
    RichString_append(str, attr, buffer);
 }
 
-long Process_compare(const void* v1, const void* v2) {
+long FreeBSDProcess_compare(const void* v1, const void* v2) {
    FreeBSDProcess *p1, *p2;
    Settings *settings = ((Process*)v1)->settings;
    if (settings->direction == 1) {
@@ -132,7 +142,7 @@ long Process_compare(const void* v1, const void* v2) {
    switch (settings->sortKey) {
    // add FreeBSD-specific fields here
    default:
-      return Process_defaultCompare(v1, v2);
+      return Process_compare(v1, v2);
    }
 }
 
