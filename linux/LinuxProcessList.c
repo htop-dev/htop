@@ -106,10 +106,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       this->cpus[i].totalPeriod = 1;
    }
 
-   #ifdef HAVE_OPENVZ
-   this->flags |= PROCESS_FLAG_LINUX_OPENVZ;
-   #endif
-
    return pl;
 }
 
@@ -328,19 +324,18 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
 
 #ifdef HAVE_OPENVZ
 
-static void LinuxProcessList_readOpenVZData(ProcessList* this, Process* process, const char* dirname, const char* name) {
-   if ( (!(this->flags & PROCESS_FLAG_LINUX_OPENVZ)) || (access("/proc/vz", R_OK) != 0)) {
-      process->vpid = process->pid;
+static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* dirname, const char* name) {
+   if ( (access("/proc/vz", R_OK) != 0)) {
+      process->vpid = process->super.pid;
       process->ctid = 0;
-      this->flags |= ~PROCESS_FLAG_LINUX_OPENVZ;
       return;
    }
    char filename[MAX_NAME+1];
    snprintf(filename, MAX_NAME, "%s/%s/stat", dirname, name);
    FILE* file = fopen(filename, "r");
-   if (!file) 
+   if (!file)
       return;
-   (void) fscanf(file, 
+   (void) fscanf(file,
       "%*32u %*32s %*1c %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
       "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
       "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
@@ -350,6 +345,7 @@ static void LinuxProcessList_readOpenVZData(ProcessList* this, Process* process,
       "%*32u %*32u %32u %32u",
       &process->vpid, &process->ctid);
    fclose(file);
+   return;
 }
 
 #endif
@@ -551,22 +547,27 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          proc->user = UsersTable_getRef(pl->usersTable, proc->st_uid);
 
          #ifdef HAVE_OPENVZ
-         LinuxProcessList_readOpenVZData(this, lp, dirname, name);
+         if (settings->flags & PROCESS_FLAG_LINUX_OPENVZ) {
+            LinuxProcessList_readOpenVZData(lp, dirname, name);
+         }
          #endif
          
          #ifdef HAVE_VSERVER
-         if (settings->flags & PROCESS_FLAG_LINUX_VSERVER)
+         if (settings->flags & PROCESS_FLAG_LINUX_VSERVER) {
             LinuxProcessList_readVServerData(lp, dirname, name);
+         }
          #endif
 
-         if (! LinuxProcessList_readCmdlineFile(proc, dirname, name))
+         if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
             goto errorReadingProcess;
+         }
 
          ProcessList_add(pl, proc);
       } else {
          if (settings->updateProcessNames) {
-            if (! LinuxProcessList_readCmdlineFile(proc, dirname, name))
+            if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
                goto errorReadingProcess;
+            }
          }
       }
 
