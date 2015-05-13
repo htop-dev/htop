@@ -39,6 +39,7 @@ typedef struct Settings_ {
    int colorScheme;
    int delay;
 
+   int cpuCount;
    int direction;
    ProcessField sortKey;
 
@@ -102,9 +103,9 @@ static void Settings_readMeterModes(Settings* this, char* line, int column) {
    this->columns[column].modes = modes;
 }
 
-static void Settings_defaultMeters(Settings* this, int cpuCount) {
+static void Settings_defaultMeters(Settings* this) {
    int sizes[] = { 3, 3 };
-   if (cpuCount > 4) {
+   if (this->cpuCount > 4) {
       sizes[1]++;
    }
    for (int i = 0; i < 2; i++) {
@@ -114,10 +115,10 @@ static void Settings_defaultMeters(Settings* this, int cpuCount) {
    }
    
    int r = 0;
-   if (cpuCount > 8) {
+   if (this->cpuCount > 8) {
       this->columns[0].names[0] = strdup("LeftCPUs2");
       this->columns[1].names[r++] = strdup("RightCPUs2");
-   } else if (cpuCount > 4) {
+   } else if (this->cpuCount > 4) {
       this->columns[0].names[0] = strdup("LeftCPUs");
       this->columns[1].names[r++] = strdup("RightCPUs");
    } else {
@@ -151,7 +152,7 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
    String_freeArray(ids);
 }
 
-static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
+static bool Settings_read(Settings* this, const char* fileName) {
    FILE* fd = fopen(fileName, "r");
    if (!fd)
       return false;
@@ -226,7 +227,7 @@ static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
    }
    fclose(fd);
    if (!readMeters) {
-      Settings_defaultMeters(this, cpuCount);
+      Settings_defaultMeters(this);
    }
    return true;
 }
@@ -307,6 +308,7 @@ Settings* Settings_new(int cpuCount) {
    this->detailedCPUTime = false;
    this->countCPUsFromZero = false;
    this->updateProcessNames = false;
+   this->cpuCount = cpuCount;
    
    this->fields = calloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
@@ -354,7 +356,7 @@ Settings* Settings_new(int cpuCount) {
    this->colorScheme = 0;
    this->changed = false;
    this->delay = DEFAULT_DELAY;
-   bool ok = Settings_read(this, legacyDotfile ? legacyDotfile : this->filename, cpuCount);
+   bool ok = Settings_read(this, legacyDotfile ? legacyDotfile : this->filename);
    if (ok) {
       if (legacyDotfile) {
          // Transition to new location and delete old configuration file
@@ -365,10 +367,10 @@ Settings* Settings_new(int cpuCount) {
       this->changed = true;
       // TODO: how to get SYSCONFDIR correctly through Autoconf?
       char* systemSettings = String_cat(SYSCONFDIR, "/htoprc");
-      ok = Settings_read(this, systemSettings, cpuCount);
+      ok = Settings_read(this, systemSettings);
       free(systemSettings);
       if (!ok) {
-         Settings_defaultMeters(this, cpuCount);
+         Settings_defaultMeters(this);
          this->hideKernelThreads = true;
          this->highlightMegabytes = true;
          this->highlightThreads = false;
