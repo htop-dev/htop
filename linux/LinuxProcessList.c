@@ -94,7 +94,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    int cpus = -1;
    do {
       cpus++;
-      fgets(buffer, 255, file);
+      char * s = fgets(buffer, 255, file);
+      (void) s;
    } while (String_startsWith(buffer, "cpu"));
    fclose(file);
 
