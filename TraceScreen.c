@@ -93,7 +93,8 @@ void TraceScreen_run(TraceScreen* this) {
          execlp("strace", "strace", "-p", buffer, NULL);
       }
       const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
-      write(fdpair[1], message, strlen(message));
+      ssize_t written = write(fdpair[1], message, strlen(message));
+      (void) written;
       exit(1);
    }
    fcntl(fdpair[0], F_SETFL, O_NONBLOCK);
