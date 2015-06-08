@@ -9,6 +9,7 @@ htop
 *.gcno
 */*.gcno
 *.h.gch
+*/.dirstamp
 
 .deps/
 Makefile
