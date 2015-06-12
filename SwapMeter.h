@@ -11,13 +11,8 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-#define KILOBYTE 1
-#define MEGABYTE 1024
-#define GIGABYTE 1048576
-
 extern int SwapMeter_attributes[];
 
-/* NOTE: Value is in kilobytes */
 extern MeterClass SwapMeter_class;
 
 #endif

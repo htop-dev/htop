@@ -40,22 +40,17 @@ static void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
 static void MemoryMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
-   int k = 1024; const char* format = "%ldM ";
-   long int totalMem = this->total / k;
-   long int usedMem = this->values[0] / k;
-   long int buffersMem = this->values[1] / k;
-   long int cachedMem = this->values[2] / k;
    RichString_write(out, CRT_colors[METER_TEXT], ":");
-   sprintf(buffer, format, totalMem);
+   Meter_humanUnit(buffer, this->total, 50);
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
-   sprintf(buffer, format, usedMem);
-   RichString_append(out, CRT_colors[METER_TEXT], "used:");
+   Meter_humanUnit(buffer, this->values[0], 50);
+   RichString_append(out, CRT_colors[METER_TEXT], " used:");
    RichString_append(out, CRT_colors[MEMORY_USED], buffer);
-   sprintf(buffer, format, buffersMem);
-   RichString_append(out, CRT_colors[METER_TEXT], "buffers:");
+   Meter_humanUnit(buffer, this->values[1], 50);
+   RichString_append(out, CRT_colors[METER_TEXT], " buffers:");
    RichString_append(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
-   sprintf(buffer, format, cachedMem);
-   RichString_append(out, CRT_colors[METER_TEXT], "cache:");
+   Meter_humanUnit(buffer, this->values[2], 50);
+   RichString_append(out, CRT_colors[METER_TEXT], " cache:");
    RichString_append(out, CRT_colors[MEMORY_CACHE], buffer);
 }
 
