@@ -25,8 +25,16 @@ int MemoryMeter_attributes[] = {
 };
 
 static void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
+   int written;
    Platform_setMemoryValues(this);
-   snprintf(buffer, size, "%ld/%ldM", (long int) this->values[0] / 1024, (long int) this->total / 1024);
+
+   written = Meter_humanUnit(buffer, this->values[0], size);
+   buffer += written;
+   if ((size -= written) > 0) {
+      *buffer++ = '/';
+      size--;
+      Meter_humanUnit(buffer, this->total, size);
+   }
 }
 
 static void MemoryMeter_display(Object* cast, RichString* out) {

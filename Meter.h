@@ -105,6 +105,8 @@ extern MeterClass Meter_class;
 
 Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type);
 
+int Meter_humanUnit(char* buffer, unsigned long int value, int size);
+
 void Meter_delete(Object* cast);
 
 void Meter_setCaption(Meter* this, const char* caption);

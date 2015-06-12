@@ -33,9 +33,17 @@ static void SwapMeter_humanNumber(char* buffer, const long int* value) {
    sprintf(buffer, "%ldM ", *value / MEGABYTE);
 }
 
-static void SwapMeter_setValues(Meter* this, char* buffer, int len) {
+static void SwapMeter_setValues(Meter* this, char* buffer, int size) {
+   int written;
    Platform_setSwapValues(this);
-   snprintf(buffer, len, "%ld/%ldM", (long int) this->values[0] / MEGABYTE, (long int) this->total / MEGABYTE);
+
+   written = Meter_humanUnit(buffer, this->values[0], size);
+   buffer += written;
+   if ((size -= written) > 0) {
+      *buffer++ = '/';
+      size--;
+      Meter_humanUnit(buffer, this->total, size);
+   }
 }
 
 static void SwapMeter_display(Object* cast, RichString* out) {
