@@ -76,6 +76,8 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case 0x0d:
       case KEY_ENTER:
       {
+         if (!Vector_size(this->meters))
+            break;
          this->moving = !(this->moving);
          ((ListItem*)Panel_getSelected(super))->moving = this->moving;
          result = HANDLED;
@@ -85,6 +87,8 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(4):
       case 't':
       {
+         if (!Vector_size(this->meters))
+            break;
          Meter* meter = (Meter*) Vector_get(this->meters, selected);
          int mode = meter->mode + 1;
          if (mode == LAST_METERMODE) mode = 1;
@@ -147,6 +151,8 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(9):
       case KEY_DC:
       {
+         if (!Vector_size(this->meters))
+            break;
          if (selected < Vector_size(this->meters)) {
             Vector_remove(this->meters, selected);
             Panel_remove(super, selected);
