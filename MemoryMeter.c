@@ -26,7 +26,7 @@ int MemoryMeter_attributes[] = {
 
 static void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
    Platform_setMemoryValues(this);
-   snprintf(buffer, size, "%ld/%ldMB", (long int) this->values[0] / 1024, (long int) this->total / 1024);
+   snprintf(buffer, size, "%ld/%ldM", (long int) this->values[0] / 1024, (long int) this->total / 1024);
 }
 
 static void MemoryMeter_display(Object* cast, RichString* out) {
