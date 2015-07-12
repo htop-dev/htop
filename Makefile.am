@@ -13,6 +13,7 @@ pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
 htop_CFLAGS = -pedantic -Wall $(wextra_flag) -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
+htop_LDFLAGS = 
 AM_CPPFLAGS = -DNDEBUG
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
@@ -48,6 +49,15 @@ freebsd/FreeBSDProcess.c freebsd/FreeBSDCRT.c freebsd/Battery.c
 
 myhtopplatheaders = freebsd/Platform.h freebsd/FreeBSDProcessList.h \
 freebsd/FreeBSDProcess.h freebsd/FreeBSDCRT.h freebsd/Battery.h
+endif
+
+if HTOP_DARWIN
+htop_LDFLAGS += -framework IOKit -framework CoreFoundation
+myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
+darwin/DarwinProcessList.c darwin/DarwinCRT.c darwin/Battery.c
+
+myhtopplatheaders = darwin/Platform.h darwin/DarwinProcess.h \
+darwin/DarwinProcessList.h darwin/DarwinCRT.h darwin/Battery.h
 endif
 
 if HTOP_UNSUPPORTED

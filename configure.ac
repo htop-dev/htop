@@ -33,6 +33,9 @@ case "$target" in
 *freebsd*)
    my_htop_platform=freebsd
    ;;
+*darwin*)
+   my_htop_platform=darwin
+   ;;
 *)
    my_htop_platform=unsupported
    ;;
@@ -203,6 +206,7 @@ AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-$year Hisham Muhammad", [Copyright messa
 # ----------------------------------------------------------------------
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
 AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])
+AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
