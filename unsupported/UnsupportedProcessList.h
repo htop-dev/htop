@@ -11,10 +11,12 @@ in the source distribution for its full text.
 
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
 
-void ProcessList_scan(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* super);
+
+void UnsupportedProcessList_scan(ProcessList* this);
 
 #endif

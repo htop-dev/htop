@@ -9,14 +9,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
-typedef struct UnsupportedProcess_ {
-   Process super;
-   // add platform-specific fields here
-} UnsupportedProcess;
+#include "Settings.h"
 
 #define Process_delete UnsupportedProcess_delete
 
+
+Process* UnsupportedProcess_new(Settings* settings);
 
 void UnsupportedProcess_delete(Object* cast);
 

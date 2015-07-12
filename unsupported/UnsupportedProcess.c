@@ -10,25 +10,21 @@ in the source distribution for its full text.
 #include <stdlib.h>
 
 /*{
-
-typedef struct UnsupportedProcess_ {
-   Process super;
-   // add platform-specific fields here
-} UnsupportedProcess;
+#include "Settings.h"
 
 #define Process_delete UnsupportedProcess_delete
 
 }*/
 
-UnsupportedProcess* UnsupportedProcess_new(Settings* settings) {
-   UnsupportedProcess* this = calloc(sizeof(UnsupportedProcess), 1);
+Process* UnsupportedProcess_new(Settings* settings) {
+   Process* this = calloc(sizeof(Process), 1);
    Object_setClass(this, Class(Process));
-   Process_init(&this->super, settings);
+   Process_init(this, settings);
    return this;
 }
 
 void UnsupportedProcess_delete(Object* cast) {
-   UnsupportedProcess* this = (UnsupportedProcess*) cast;
+   Process* this = (Process*) cast;
    Object_setClass(this, Class(Process));
    Process_done((Process*)cast);
    // free platform-specific fields here
