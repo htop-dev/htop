@@ -34,7 +34,7 @@ int Platform_getMaxPid();
 
 void Process_setupColumnWidths();
 
-double Platform_setCPUValues(Meter* this, int cpu);
+double Platform_setCPUValues(Meter* mtr, int cpu);
 
 void Platform_setMemoryValues(Meter* this);
 

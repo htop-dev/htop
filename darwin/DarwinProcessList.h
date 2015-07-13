@@ -15,17 +15,14 @@ in the source distribution for its full text.
 typedef struct DarwinProcessList_ {
    ProcessList super;
 
-   host_basic_info_data_t prev_hinfo;
-   vm_statistics64_data_t prev_vminfo;
-   processor_info_data_t prev_cpus;
+   host_basic_info_data_t host_info;
+   processor_cpu_load_info_t cpu_load;
 } DarwinProcessList;
 
 
 void ProcessList_getHostInfo(host_basic_info_data_t *p);
 
-void ProcessList_getVMInfo(vm_statistics64_data_t *p);
-
-unsigned ProcessList_getCPUInfo(processor_info_data_t *p);
+unsigned ProcessList_updateCPULoadInfo(processor_cpu_load_info_t *p);
 
 struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count);
 

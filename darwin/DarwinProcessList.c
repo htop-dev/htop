@@ -14,6 +14,8 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <stdio.h>
 #include <libproc.h>
+#include <mach/vm_page_size.h>
+#include <sys/mman.h>
 
 /*{
 #include <mach/mach_host.h>
@@ -22,8 +24,8 @@ in the source distribution for its full text.
 typedef struct DarwinProcessList_ {
    ProcessList super;
 
-   host_basic_info_data_t prev_hinfo;
-   processor_info_data_t prev_cpus;
+   host_basic_info_data_t host_info;
+   processor_cpu_load_info_t cpu_load;
 } DarwinProcessList;
 
 }*/
@@ -37,9 +39,16 @@ void ProcessList_getHostInfo(host_basic_info_data_t *p) {
    }
 }
 
-unsigned ProcessList_getCPUInfo(processor_info_data_t *p) {
-   mach_msg_type_number_t info_size = PROCESSOR_CPU_LOAD_INFO_COUNT;
+unsigned ProcessList_updateCPULoadInfo(processor_cpu_load_info_t *p) {
+   mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
    unsigned cpu_count;
+
+   if(NULL != p) {
+       if(0 != munmap(*p, vm_page_size)) {
+           fprintf(stderr, "Unable to free old CPU load information\n");
+           exit(8);
+       }
+   }
 
    if(0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size)) {
        fprintf(stderr, "Unable to retrieve CPU info\n");
@@ -86,8 +95,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    ProcessList_init(&this->super, Class(Process), usersTable, pidWhiteList, userId);
    
    /* Initialize the previous information */
-   this->super.cpuCount = ProcessList_getCPUInfo(&this->prev_cpus);
-   ProcessList_getHostInfo(&this->prev_hinfo);
+   this->cpu_load = NULL;
+   this->super.cpuCount = ProcessList_updateCPULoadInfo(&this->cpu_load);
+   ProcessList_getHostInfo(&this->host_info);
 
    return &this->super;
 }
@@ -107,6 +117,9 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
     gettimeofday(&tv, NULL); /* Start processing time */
 
+    /* Update the global data (CPU times) */
+    ProcessList_updateCPULoadInfo(&dpl->cpu_load);
+
     /* We use kinfo_procs for initial data since :
      *
      * 1) They always succeed.
@@ -120,7 +133,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
        proc = ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, DarwinProcess_new);
 
        DarwinProcess_setFromKInfoProc(proc, ps + i, tv.tv_sec, preExisting);
-       DarwinProcess_setFromLibprocPidinfo(proc, dpl->prev_hinfo.max_mem, preExisting);
+       DarwinProcess_setFromLibprocPidinfo(proc, dpl->host_info.max_mem, preExisting);
 
        if(!preExisting) {
            proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);

@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
+#include "DarwinProcessList.h"
 
 #include <stdlib.h>
 
@@ -131,10 +132,31 @@ void Process_setupColumnWidths() {
    }
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
-    DarwinProcessList *dpl = (DarwinProcessList *)this->pl;
+double Platform_setCPUValues(Meter* mtr, int cpu) {
+    /* All just from CPUMeter.c */
+    static const int CPU_METER_NICE = 0;
+    static const int CPU_METER_NORMAL = 1;
+    static const int CPU_METER_KERNEL = 2;
 
-	return 0.0;
+    DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
+    processor_cpu_load_info_t ticks = &dpl->cpu_load[cpu-1];
+    double total = 0;
+
+    /* Take the sums */
+    for(size_t i = 0; i < CPU_STATE_MAX; ++i) {
+        total += (double)ticks->cpu_ticks[i];
+    }
+
+    mtr->values[CPU_METER_NICE] = (double)ticks->cpu_ticks[CPU_STATE_NICE] * 100.0 / total;
+    mtr->values[CPU_METER_NORMAL] = (double)ticks->cpu_ticks[CPU_STATE_USER] * 100.0 / total;
+    mtr->values[CPU_METER_KERNEL] = (double)ticks->cpu_ticks[CPU_STATE_SYSTEM] * 100.0 / total;
+
+    Meter_setItems(mtr, 3);
+
+    /* Convert to percent and return */
+    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
+
+	return MIN(100.0, MAX(0.0, total));
 }
 
 void Platform_setMemoryValues(Meter* this) {
