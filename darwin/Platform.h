@@ -40,7 +40,5 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
-bool Process_isThread(Process* this);
-
 
 #endif

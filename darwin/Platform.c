@@ -16,6 +16,8 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
 
+#include <stdlib.h>
+
 /*{
 #include "Action.h"
 #include "BatteryMeter.h"
@@ -87,13 +89,22 @@ int Platform_getUptime() {
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   *one = 0;
-   *five = 0;
-   *fifteen = 0;
+   double results[3];
+
+   if(3 == getloadavg(results, 3)) {
+      *one = results[0];
+      *five = results[1];
+      *fifteen = results[2];
+   } else {
+      *one = 0;
+      *five = 0;
+      *fifteen = 0;
+   }
 }
 
 int Platform_getMaxPid() {
-   return 1;
+   /* http://opensource.apple.com/source/xnu/xnu-2782.1.97/bsd/sys/proc_internal.hh */
+   return 99999;
 }
 
 void Process_setupColumnWidths() {
@@ -121,6 +132,8 @@ void Process_setupColumnWidths() {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
+    DarwinProcessList *dpl = (DarwinProcessList *)this->pl;
+
 	return 0.0;
 }
 
@@ -128,9 +141,5 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-}
-
-bool Process_isThread(Process* this) {
-   return false;
 }
 

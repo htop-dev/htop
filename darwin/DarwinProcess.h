@@ -10,13 +10,23 @@ in the source distribution for its full text.
 */
 
 #include "Settings.h"
-
-#define Process_delete DarwinProcess_delete
+#include <sys/sysctl.h>
 
 
 Process* DarwinProcess_new(Settings* settings);
 
-void DarwinProcess_delete(Object* cast);
+void Process_delete(Object* cast);
 
+bool Process_isThread(Process* this);
+
+void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now);
+
+char *DarwinProcessList_getCmdLine(struct kinfo_proc* k, int show_args );
+
+void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists);
+
+void DarwinProcess_setFromLibprocPidinfo(Process *proc, uint64_t total_memory, bool preExisting);
+
+void DarwinProcess_parseThreads(Process *proc, time_t now, bool preExisting);
 
 #endif

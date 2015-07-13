@@ -9,7 +9,25 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <mach/mach_host.h>
+#include <sys/sysctl.h>
 
+typedef struct DarwinProcessList_ {
+   ProcessList super;
+
+   host_basic_info_data_t prev_hinfo;
+   vm_statistics64_data_t prev_vminfo;
+   processor_info_data_t prev_cpus;
+} DarwinProcessList;
+
+
+void ProcessList_getHostInfo(host_basic_info_data_t *p);
+
+void ProcessList_getVMInfo(vm_statistics64_data_t *p);
+
+unsigned ProcessList_getCPUInfo(processor_info_data_t *p);
+
+struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count);
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 

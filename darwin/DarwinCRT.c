@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <execinfo.h>
 
 void CRT_handleSIGSEGV(int sgn) {
     (void) sgn;
