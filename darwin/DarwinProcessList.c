@@ -25,7 +25,8 @@ typedef struct DarwinProcessList_ {
    ProcessList super;
 
    host_basic_info_data_t host_info;
-   processor_cpu_load_info_t cpu_load;
+   processor_cpu_load_info_t prev_load;
+   processor_cpu_load_info_t curr_load;
 } DarwinProcessList;
 
 }*/
@@ -39,16 +40,20 @@ void ProcessList_getHostInfo(host_basic_info_data_t *p) {
    }
 }
 
-unsigned ProcessList_updateCPULoadInfo(processor_cpu_load_info_t *p) {
-   mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
-   unsigned cpu_count;
-
-   if(NULL != p) {
+void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p) {
+   if(NULL != p && NULL != *p) {
        if(0 != munmap(*p, vm_page_size)) {
            fprintf(stderr, "Unable to free old CPU load information\n");
            exit(8);
        }
    }
+
+   *p = NULL;
+}
+
+unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
+   mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
+   unsigned cpu_count;
 
    if(0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size)) {
        fprintf(stderr, "Unable to retrieve CPU info\n");
@@ -95,9 +100,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    ProcessList_init(&this->super, Class(Process), usersTable, pidWhiteList, userId);
    
    /* Initialize the previous information */
-   this->cpu_load = NULL;
-   this->super.cpuCount = ProcessList_updateCPULoadInfo(&this->cpu_load);
+   this->super.cpuCount = ProcessList_allocateCPULoadInfo(&this->prev_load);
    ProcessList_getHostInfo(&this->host_info);
+   ProcessList_allocateCPULoadInfo(&this->curr_load);
 
    return &this->super;
 }
@@ -118,7 +123,9 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     gettimeofday(&tv, NULL); /* Start processing time */
 
     /* Update the global data (CPU times) */
-    ProcessList_updateCPULoadInfo(&dpl->cpu_load);
+    ProcessList_freeCPULoadInfo(&dpl->prev_load);
+    dpl->prev_load = dpl->curr_load;
+    ProcessList_allocateCPULoadInfo(&dpl->curr_load);
 
     /* We use kinfo_procs for initial data since :
      *

@@ -139,17 +139,21 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
     static const int CPU_METER_KERNEL = 2;
 
     DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
-    processor_cpu_load_info_t ticks = &dpl->cpu_load[cpu-1];
+    processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];
+    processor_cpu_load_info_t curr = &dpl->curr_load[cpu-1];
     double total = 0;
 
     /* Take the sums */
     for(size_t i = 0; i < CPU_STATE_MAX; ++i) {
-        total += (double)ticks->cpu_ticks[i];
+        total += (double)curr->cpu_ticks[i] - (double)prev->cpu_ticks[i];
     }
 
-    mtr->values[CPU_METER_NICE] = (double)ticks->cpu_ticks[CPU_STATE_NICE] * 100.0 / total;
-    mtr->values[CPU_METER_NORMAL] = (double)ticks->cpu_ticks[CPU_STATE_USER] * 100.0 / total;
-    mtr->values[CPU_METER_KERNEL] = (double)ticks->cpu_ticks[CPU_STATE_SYSTEM] * 100.0 / total;
+    mtr->values[CPU_METER_NICE]
+            = ((double)curr->cpu_ticks[CPU_STATE_NICE] - (double)prev->cpu_ticks[CPU_STATE_NICE])* 100.0 / total;
+    mtr->values[CPU_METER_NORMAL]
+            = ((double)curr->cpu_ticks[CPU_STATE_USER] - (double)prev->cpu_ticks[CPU_STATE_USER])* 100.0 / total;
+    mtr->values[CPU_METER_KERNEL]
+            = ((double)curr->cpu_ticks[CPU_STATE_SYSTEM] - (double)prev->cpu_ticks[CPU_STATE_SYSTEM])* 100.0 / total;
 
     Meter_setItems(mtr, 3);
 

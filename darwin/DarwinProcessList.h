@@ -16,13 +16,16 @@ typedef struct DarwinProcessList_ {
    ProcessList super;
 
    host_basic_info_data_t host_info;
-   processor_cpu_load_info_t cpu_load;
+   processor_cpu_load_info_t prev_load;
+   processor_cpu_load_info_t curr_load;
 } DarwinProcessList;
 
 
 void ProcessList_getHostInfo(host_basic_info_data_t *p);
 
-unsigned ProcessList_updateCPULoadInfo(processor_cpu_load_info_t *p);
+void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p);
+
+unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p);
 
 struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count);
 
