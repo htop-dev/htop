@@ -10,6 +10,8 @@ in the source distribution for its full text.
 */
 
 #include "Settings.h"
+#include "DarwinProcessList.h"
+
 #include <sys/sysctl.h>
 
 
@@ -25,7 +27,7 @@ char *DarwinProcessList_getCmdLine(struct kinfo_proc* k, int show_args );
 
 void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists);
 
-void DarwinProcess_setFromLibprocPidinfo(Process *proc, uint64_t total_memory, bool preExisting);
+void DarwinProcess_setFromLibprocPidinfo(Process *proc, DarwinProcessList *dpl, bool preExisting);
 
 void DarwinProcess_parseThreads(Process *proc, time_t now, bool preExisting);
 

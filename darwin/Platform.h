@@ -36,7 +36,7 @@ void Process_setupColumnWidths();
 
 double Platform_setCPUValues(Meter* mtr, int cpu);
 
-void Platform_setMemoryValues(Meter* this);
+void Platform_setMemoryValues(Meter* mtr);
 
 void Platform_setSwapValues(Meter* this);
 

@@ -16,8 +16,10 @@ in the source distribution for its full text.
 #include <libproc.h>
 #include <mach/vm_page_size.h>
 #include <sys/mman.h>
+#include <utmpx.h>
 
 /*{
+#include "ProcessList.h"
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
 
@@ -25,8 +27,11 @@ typedef struct DarwinProcessList_ {
    ProcessList super;
 
    host_basic_info_data_t host_info;
+   vm_statistics64_data_t vm_stats;
    processor_cpu_load_info_t prev_load;
    processor_cpu_load_info_t curr_load;
+   uint64_t kernel_threads;
+   uint64_t user_threads;
 } DarwinProcessList;
 
 }*/
@@ -61,6 +66,15 @@ unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
    }
 
    return cpu_count;
+}
+
+void ProcessList_getVMStats(vm_statistics64_t p) {
+    mach_msg_type_number_t info_size = HOST_VM_INFO64_COUNT;
+
+    if(0 != host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info_t)p, &info_size)) {
+       fprintf(stderr, "Unable to retrieve VM statistics\n");
+       exit(9);
+    }
 }
 
 struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
@@ -98,11 +112,19 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    DarwinProcessList* this = calloc(1, sizeof(DarwinProcessList));
 
    ProcessList_init(&this->super, Class(Process), usersTable, pidWhiteList, userId);
-   
-   /* Initialize the previous information */
+
+   /* Initialize the CPU information */
    this->super.cpuCount = ProcessList_allocateCPULoadInfo(&this->prev_load);
    ProcessList_getHostInfo(&this->host_info);
    ProcessList_allocateCPULoadInfo(&this->curr_load);
+
+   /* Initialize the VM statistics */
+   ProcessList_getVMStats(&this->vm_stats);
+
+   this->super.kernelThreads = 0;
+   this->super.userlandThreads = 0;
+   this->super.totalTasks = 0;
+   this->super.runningTasks = 0;
 
    return &this->super;
 }
@@ -122,10 +144,17 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
     gettimeofday(&tv, NULL); /* Start processing time */
 
-    /* Update the global data (CPU times) */
+    /* Update the global data (CPU times and VM stats) */
     ProcessList_freeCPULoadInfo(&dpl->prev_load);
     dpl->prev_load = dpl->curr_load;
     ProcessList_allocateCPULoadInfo(&dpl->curr_load);
+    ProcessList_getVMStats(&dpl->vm_stats);
+
+    /* Clear the thread counts */
+    super->kernelThreads = 0;
+    super->userlandThreads = 0;
+    super->totalTasks = 0;
+    super->runningTasks = 0;
 
     /* We use kinfo_procs for initial data since :
      *
@@ -140,7 +169,9 @@ void ProcessList_goThroughEntries(ProcessList* super) {
        proc = ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, DarwinProcess_new);
 
        DarwinProcess_setFromKInfoProc(proc, ps + i, tv.tv_sec, preExisting);
-       DarwinProcess_setFromLibprocPidinfo(proc, dpl->host_info.max_mem, preExisting);
+       DarwinProcess_setFromLibprocPidinfo(proc, dpl, preExisting);
+
+       super->totalTasks += 1;
 
        if(!preExisting) {
            proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);

@@ -9,6 +9,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "ProcessList.h"
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
 
@@ -16,8 +17,11 @@ typedef struct DarwinProcessList_ {
    ProcessList super;
 
    host_basic_info_data_t host_info;
+   vm_statistics64_data_t vm_stats;
    processor_cpu_load_info_t prev_load;
    processor_cpu_load_info_t curr_load;
+   uint64_t kernel_threads;
+   uint64_t user_threads;
 } DarwinProcessList;
 
 
@@ -26,6 +30,8 @@ void ProcessList_getHostInfo(host_basic_info_data_t *p);
 void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p);
 
 unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p);
+
+void ProcessList_getVMStats(vm_statistics64_t p);
 
 struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count);
 

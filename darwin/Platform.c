@@ -62,7 +62,6 @@ MeterClass* Platform_meterTypes[] = {
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,
-   &SwapMeter_class,
    &TasksMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
@@ -86,7 +85,17 @@ char* Process_pidFormat = "%7u ";
 char* Process_tpgidFormat = "%7u ";
 
 int Platform_getUptime() {
-   return 0;
+    struct timeval bootTime, currTime;
+    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+    size_t size = sizeof(bootTime);
+
+    int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
+    if (err) {
+       return -1;
+    }
+    gettimeofday(&currTime, NULL);
+
+    return (int) difftime(currTime.tv_sec, bootTime.tv_sec);
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
@@ -163,7 +172,16 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
 	return MIN(100.0, MAX(0.0, total));
 }
 
-void Platform_setMemoryValues(Meter* this) {
+void Platform_setMemoryValues(Meter* mtr) {
+    DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
+    vm_statistics64_t vm = &dpl->vm_stats;
+    double page_K = (double)vm_page_size / (double)1024;
+
+    mtr->total = dpl->host_info.max_mem / 1024;
+    mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_K;
+    mtr->values[1] = (double)vm->purgeable_count * page_K;
+    mtr->values[2] = (double)vm->inactive_count * page_K;
+
 }
 
 void Platform_setSwapValues(Meter* this) {

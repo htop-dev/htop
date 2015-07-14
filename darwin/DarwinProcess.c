@@ -14,6 +14,8 @@ in the source distribution for its full text.
 
 /*{
 #include "Settings.h"
+#include "DarwinProcessList.h"
+
 #include <sys/sysctl.h>
 
 }*/
@@ -285,15 +287,22 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
     proc->updated = true;
 }
 
-void DarwinProcess_setFromLibprocPidinfo(Process *proc, uint64_t total_memory, bool preExisting) {
+void DarwinProcess_setFromLibprocPidinfo(Process *proc, DarwinProcessList *dpl, bool preExisting) {
     struct proc_taskinfo pti;
 
     if(sizeof(pti) == proc_pidinfo(proc->pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+        proc->time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
         proc->nlwp = pti.pti_threadnum;
         proc->m_size = pti.pti_virtual_size / 1024;
         proc->m_resident = pti.pti_resident_size / 1024;
         proc->majflt = pti.pti_faults;
-        proc->percent_mem = (double)pti.pti_resident_size * 100.0 / (double)total_memory;
+        proc->percent_mem = (double)pti.pti_resident_size * 100.0
+                / (double)dpl->host_info.max_mem;
+
+        dpl->super.kernelThreads += 0; /*pti.pti_threads_system;*/
+        dpl->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
+        dpl->super.totalTasks += pti.pti_threadnum;
+        dpl->super.runningTasks += pti.pti_numrunning;
     }
 }
 
