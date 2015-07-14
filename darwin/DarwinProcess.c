@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <libproc.h>
 #include <string.h>
+#include <stdio.h>
 
 /*{
 #include "Settings.h"
@@ -18,24 +19,45 @@ in the source distribution for its full text.
 
 #include <sys/sysctl.h>
 
+typedef struct DarwinProcess_ {
+   Process super;
+
+   uint64_t utime;
+   uint64_t stime;
+} DarwinProcess;
+
 }*/
 
-Process* DarwinProcess_new(Settings* settings) {
-   Process* this = calloc(sizeof(Process), 1);
-   Object_setClass(this, Class(Process));
-   Process_init(this, settings);
+ProcessClass DarwinProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = Process_compare
+   },
+   .writeField = Process_writeField,
+};
+
+DarwinProcess* DarwinProcess_new(Settings* settings) {
+   DarwinProcess* this = calloc(sizeof(DarwinProcess), 1);
+   Object_setClass(this, Class(DarwinProcess));
+   Process_init(&this->super, settings);
+
+   this->utime = 0;
+   this->stime = 0;
+
    return this;
 }
 
 void Process_delete(Object* cast) {
-   Process* this = (Process*) cast;
-   Object_setClass(this, Class(Process));
-   Process_done((Process*)cast);
+   DarwinProcess* this = (DarwinProcess*) cast;
+   Process_done(&this->super);
    // free platform-specific fields here
    free(this);
 }
 
 bool Process_isThread(Process* this) {
+   (void) this;
    return false;
 }
 
@@ -47,7 +69,7 @@ void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t no
     strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
 }
 
-char *DarwinProcessList_getCmdLine(struct kinfo_proc* k, int show_args ) {
+char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;
@@ -264,7 +286,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
        /* The command is from the old Mac htop */
        char *slash;
 
-       proc->comm = DarwinProcessList_getCmdLine(ps, false);
+       proc->comm = DarwinProcess_getCmdLine(ps, false);
        slash = strrchr(proc->comm, '/');
        proc->basenameOffset = (NULL != slash) ? (slash - proc->comm) : 0;
     }
@@ -287,36 +309,36 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
     proc->updated = true;
 }
 
-void DarwinProcess_setFromLibprocPidinfo(Process *proc, DarwinProcessList *dpl, bool preExisting) {
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl) {
     struct proc_taskinfo pti;
 
-    if(sizeof(pti) == proc_pidinfo(proc->pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-        proc->time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
-        proc->nlwp = pti.pti_threadnum;
-        proc->m_size = pti.pti_virtual_size / 1024;
-        proc->m_resident = pti.pti_resident_size / 1024;
-        proc->majflt = pti.pti_faults;
-        proc->percent_mem = (double)pti.pti_resident_size * 100.0
+    if(sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+        if(0 != proc->utime || 0 != proc->stime) {
+            uint64_t diff = (pti.pti_total_system - proc->stime)
+                    + (pti.pti_total_user - proc->utime);
+
+            proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount
+                    / ((double)dpl->global_diff * 100000.0);
+
+//            fprintf(stderr, "%f %llu %llu %llu %llu %llu\n", proc->super.percent_cpu,
+//                    proc->stime, proc->utime, pti.pti_total_system, pti.pti_total_user, dpl->global_diff);
+//        exit(7);
+        }
+
+        proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
+        proc->super.nlwp = pti.pti_threadnum;
+        proc->super.m_size = pti.pti_virtual_size / 1024;
+        proc->super.m_resident = pti.pti_resident_size / 1024;
+        proc->super.majflt = pti.pti_faults;
+        proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
                 / (double)dpl->host_info.max_mem;
+
+        proc->stime = pti.pti_total_system;
+        proc->utime = pti.pti_total_user;
 
         dpl->super.kernelThreads += 0; /*pti.pti_threads_system;*/
         dpl->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
         dpl->super.totalTasks += pti.pti_threadnum;
         dpl->super.runningTasks += pti.pti_numrunning;
     }
-}
-
-void DarwinProcess_parseThreads(Process *proc, time_t now, bool preExisting) {
-    static const size_t IDS_SZ = sizeof(uint64_t) * 2048;
-
-    uint64_t *thread_ids = (uint64_t *)malloc(IDS_SZ);
-    size_t bytes = proc_pidinfo(proc->pid, PROC_PIDLISTTHREADS, 0, thread_ids, IDS_SZ);
-
-    if(0 < bytes) {
-        size_t count = bytes / sizeof(uint64_t);
-
-        proc->nlwp = count;
-    }
-
-    free(thread_ids); /* TODO Keep reusing this block */
 }

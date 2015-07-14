@@ -32,6 +32,7 @@ typedef struct DarwinProcessList_ {
    processor_cpu_load_info_t curr_load;
    uint64_t kernel_threads;
    uint64_t user_threads;
+   uint64_t global_diff;
 } DarwinProcessList;
 
 }*/
@@ -60,6 +61,7 @@ unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
    mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
    unsigned cpu_count;
 
+   // TODO Improving the accuracy of the load counts woule help a lot.
    if(0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size)) {
        fprintf(stderr, "Unable to retrieve CPU info\n");
        exit(4);
@@ -139,7 +141,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 	bool preExisting = true;
 	struct kinfo_proc *ps;
 	size_t count;
-    Process *proc;
+    DarwinProcess *proc;
     struct timeval tv;
 
     gettimeofday(&tv, NULL); /* Start processing time */
@@ -149,6 +151,14 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     dpl->prev_load = dpl->curr_load;
     ProcessList_allocateCPULoadInfo(&dpl->curr_load);
     ProcessList_getVMStats(&dpl->vm_stats);
+
+    /* Get the time difference */
+    dpl->global_diff = 0;
+    for(int i = 0; i < dpl->super.cpuCount; ++i) {
+        for(size_t j = 0; j < CPU_STATE_MAX; ++j) {
+            dpl->global_diff += dpl->curr_load[i].cpu_ticks[j] - dpl->prev_load[i].cpu_ticks[j];
+        }
+    }
 
     /* Clear the thread counts */
     super->kernelThreads = 0;
@@ -166,17 +176,17 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     ps = ProcessList_getKInfoProcs(&count);
 
     for(size_t i = 0; i < count; ++i) {
-       proc = ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, DarwinProcess_new);
+       proc = (DarwinProcess *)ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
 
-       DarwinProcess_setFromKInfoProc(proc, ps + i, tv.tv_sec, preExisting);
-       DarwinProcess_setFromLibprocPidinfo(proc, dpl, preExisting);
+       DarwinProcess_setFromKInfoProc(&proc->super, ps + i, tv.tv_sec, preExisting);
+       DarwinProcess_setFromLibprocPidinfo(proc, dpl);
 
        super->totalTasks += 1;
 
        if(!preExisting) {
-           proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
+           proc->super.user = UsersTable_getRef(super->usersTable, proc->super.st_uid);
 
-           ProcessList_add(super, proc);
+           ProcessList_add(super, &proc->super);
        }
     }
 

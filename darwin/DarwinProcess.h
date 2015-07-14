@@ -14,8 +14,17 @@ in the source distribution for its full text.
 
 #include <sys/sysctl.h>
 
+typedef struct DarwinProcess_ {
+   Process super;
 
-Process* DarwinProcess_new(Settings* settings);
+   uint64_t utime;
+   uint64_t stime;
+} DarwinProcess;
+
+
+extern ProcessClass DarwinProcess_class;
+
+DarwinProcess* DarwinProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
 
@@ -23,12 +32,10 @@ bool Process_isThread(Process* this);
 
 void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now);
 
-char *DarwinProcessList_getCmdLine(struct kinfo_proc* k, int show_args );
+char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args );
 
 void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists);
 
-void DarwinProcess_setFromLibprocPidinfo(Process *proc, DarwinProcessList *dpl, bool preExisting);
-
-void DarwinProcess_parseThreads(Process *proc, time_t now, bool preExisting);
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl);
 
 #endif

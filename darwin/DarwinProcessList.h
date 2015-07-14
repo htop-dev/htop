@@ -22,6 +22,7 @@ typedef struct DarwinProcessList_ {
    processor_cpu_load_info_t curr_load;
    uint64_t kernel_threads;
    uint64_t user_threads;
+   uint64_t global_diff;
 } DarwinProcessList;
 
 
