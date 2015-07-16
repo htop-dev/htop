@@ -308,23 +308,24 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- GraphMeterMode ---------- */
 
-static const char* GraphMeterMode_dotsUtf8[5][5] = {
-   { /*00*/"⠀", /*01*/"⢀", /*02*/"⢠", /*03*/"⢰", /*04*/ "⢸" },
-   { /*10*/"⡀", /*11*/"⣀", /*12*/"⣠", /*13*/"⣰", /*14*/ "⣸" },
-   { /*20*/"⡄", /*21*/"⣄", /*22*/"⣤", /*23*/"⣴", /*24*/ "⣼" },
-   { /*30*/"⡆", /*31*/"⣆", /*32*/"⣦", /*33*/"⣶", /*34*/ "⣾" },
-   { /*40*/"⡇", /*41*/"⣇", /*42*/"⣧", /*43*/"⣷", /*44*/ "⣿" },
+#define PIXPERROW_UTF8 4
+static const char* GraphMeterMode_dotsUtf8[] = {
+   /*00*/"⠀", /*01*/"⢀", /*02*/"⢠", /*03*/"⢰", /*04*/ "⢸",
+   /*10*/"⡀", /*11*/"⣀", /*12*/"⣠", /*13*/"⣰", /*14*/ "⣸",
+   /*20*/"⡄", /*21*/"⣄", /*22*/"⣤", /*23*/"⣴", /*24*/ "⣼",
+   /*30*/"⡆", /*31*/"⣆", /*32*/"⣦", /*33*/"⣶", /*34*/ "⣾",
+   /*40*/"⡇", /*41*/"⣇", /*42*/"⣧", /*43*/"⣷", /*44*/ "⣿"
 };
 
-static const char* GraphMeterMode_dotsAscii[5][5] = {
-   { /*00*/" ", /*01*/".", /*02*/".", /*03*/":", /*04*/ ":" },
-   { /*10*/".", /*11*/".", /*12*/".", /*13*/":", /*14*/ ":" },
-   { /*20*/".", /*21*/".", /*22*/".", /*23*/":", /*24*/ ":" },
-   { /*30*/":", /*31*/":", /*32*/":", /*33*/":", /*34*/ ":" },
-   { /*40*/":", /*41*/":", /*42*/":", /*43*/":", /*44*/ ":" },
+#define PIXPERROW_ASCII 2
+static const char* GraphMeterMode_dotsAscii[] = {
+   /*00*/" ", /*01*/".", /*02*/":",
+   /*10*/".", /*11*/".", /*12*/":",
+   /*20*/":", /*21*/":", /*22*/":"
 };
 
-static const char* (*GraphMeterMode_dots)[5];
+static const char** GraphMeterMode_dots;
+static int pixperrow;
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
@@ -334,8 +335,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    if (CRT_utf8) {
       GraphMeterMode_dots = GraphMeterMode_dotsUtf8;
+      pixperrow = PIXPERROW_UTF8;
    } else {
       GraphMeterMode_dots = GraphMeterMode_dotsAscii;
+      pixperrow = PIXPERROW_ASCII;
    }
 
    attrset(CRT_colors[METER_TEXT]);
@@ -365,24 +368,24 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    }
    
    for (int i = nValues - (w*2) + 2, k = 0; i < nValues; i+=2, k++) {
-      const double dot = (1.0 / 16);
+      const double dot = (1.0 / (pixperrow * 4));
       int v1 = data->values[i] / dot;
       int v2 = data->values[i+1] / dot;
       
       if (v1 == 0) v1 = 1;
       if (v2 == 0) v2 = 1;
       
-      int level = 12;
+      int level = pixperrow * 3;
       int colorIdx = GRAPH_1;
       for (int line = 0; line < 4; line++) {
          
-         int line1 = MIN(4, MAX(0, v1 - level));
-         int line2 = MIN(4, MAX(0, v2 - level));
+         int line1 = MIN(pixperrow, MAX(0, v1 - level));
+         int line2 = MIN(pixperrow, MAX(0, v2 - level));
  
          attrset(CRT_colors[colorIdx]);
-         mvaddstr(y+line, x+k, GraphMeterMode_dots[line1][line2]);
+         mvaddstr(y+line, x+k, GraphMeterMode_dots[line1 * (pixperrow + 1) + line2]);
          colorIdx = GRAPH_2;
-         level -= 4;
+         level -= pixperrow;
       }
    }
    attrset(CRT_colors[RESET_COLOR]);
@@ -390,23 +393,23 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- LEDMeterMode ---------- */
 
-static const char* LEDMeterMode_digitsAscii[3][10] = {
-   { " __ ","    "," __ "," __ ","    "," __ "," __ "," __ "," __ "," __ "},
-   { "|  |","   |"," __|"," __|","|__|","|__ ","|__ ","   |","|__|","|__|"},
-   { "|__|","   |","|__ "," __|","   |"," __|","|__|","   |","|__|"," __|"},
+static const char* LEDMeterMode_digitsAscii[] = {
+   " __ ","    "," __ "," __ ","    "," __ "," __ "," __ "," __ "," __ ",
+   "|  |","   |"," __|"," __|","|__|","|__ ","|__ ","   |","|__|","|__|",
+   "|__|","   |","|__ "," __|","   |"," __|","|__|","   |","|__|"," __|"
 };
 
-static const char* LEDMeterMode_digitsUtf8[3][10] = {
-   { "┌──┐","  ┐ ","╶──┐","╶──┐","╷  ╷","┌──╴","┌──╴","╶──┐","┌──┐","┌──┐"},
-   { "│  │","  │ ","┌──┘"," ──┤","└──┤","└──┐","├──┐","   │","├──┤","└──┤"},
-   { "└──┘","  ╵ ","└──╴","╶──┘","   ╵","╶──┘","└──┘","   ╵","└──┘"," ──┘"},
+static const char* LEDMeterMode_digitsUtf8[] = {
+   "┌──┐","  ┐ ","╶──┐","╶──┐","╷  ╷","┌──╴","┌──╴","╶──┐","┌──┐","┌──┐",
+   "│  │","  │ ","┌──┘"," ──┤","└──┤","└──┐","├──┐","   │","├──┤","└──┤",
+   "└──┘","  ╵ ","└──╴","╶──┘","   ╵","╶──┘","└──┘","   ╵","└──┘"," ──┘"
 };
 
-static const char* (*LEDMeterMode_digits)[10];
+static const char** LEDMeterMode_digits;
 
 static void LEDMeterMode_drawDigit(int x, int y, int n) {
    for (int i = 0; i < 3; i++)
-      mvaddstr(y+i, x, LEDMeterMode_digits[i][n]);
+      mvaddstr(y+i, x, LEDMeterMode_digits[i * 10 + n]);
 }
 
 static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
