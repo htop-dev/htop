@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
+#include <langinfo.h>
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
@@ -589,14 +590,7 @@ void CRT_init(int delay, int colorScheme) {
    setlocale(LC_ALL, "");
 
 #ifdef HAVE_LIBNCURSESW
-   char *locale = setlocale(LC_ALL, NULL);
-   if (locale == NULL || locale[0] == '\0')
-      locale = setlocale(LC_CTYPE, NULL);
-   if (locale != NULL &&
-       (strstr(locale, "UTF-8") ||
-        strstr(locale, "utf-8") ||
-        strstr(locale, "UTF8")  ||
-        strstr(locale, "utf8")))
+   if(strcmp(nl_langinfo(CODESET), "UTF-8") == 0)
       CRT_utf8 = true;
    else
       CRT_utf8 = false;
