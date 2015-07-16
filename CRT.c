@@ -585,6 +585,9 @@ void CRT_init(int delay, int colorScheme) {
       CRT_colorScheme = 1;
    CRT_setColors(CRT_colorScheme);
 
+   /* initialize locale */
+   setlocale(LC_ALL, "");
+
 #ifdef HAVE_LIBNCURSESW
    char *locale = setlocale(LC_ALL, NULL);
    if (locale == NULL || locale[0] == '\0')
