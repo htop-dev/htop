@@ -308,6 +308,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- GraphMeterMode ---------- */
 
+#ifdef HAVE_LIBNCURSESW
+
 #define PIXPERROW_UTF8 4
 static const char* GraphMeterMode_dotsUtf8[] = {
    /*00*/"⠀", /*01*/"⢀", /*02*/"⢠", /*03*/"⢰", /*04*/ "⢸",
@@ -316,6 +318,8 @@ static const char* GraphMeterMode_dotsUtf8[] = {
    /*30*/"⡆", /*31*/"⣆", /*32*/"⣦", /*33*/"⣶", /*34*/ "⣾",
    /*40*/"⡇", /*41*/"⣇", /*42*/"⣧", /*43*/"⣷", /*44*/ "⣿"
 };
+
+#endif
 
 #define PIXPERROW_ASCII 2
 static const char* GraphMeterMode_dotsAscii[] = {
@@ -333,10 +337,13 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
     GraphData* data = (GraphData*) this->drawData;
    const int nValues = METER_BUFFER_LEN;
 
+#ifdef HAVE_LIBNCURSESW
    if (CRT_utf8) {
       GraphMeterMode_dots = GraphMeterMode_dotsUtf8;
       pixperrow = PIXPERROW_UTF8;
-   } else {
+   } else
+#endif
+   {
       GraphMeterMode_dots = GraphMeterMode_dotsAscii;
       pixperrow = PIXPERROW_ASCII;
    }
@@ -399,11 +406,15 @@ static const char* LEDMeterMode_digitsAscii[] = {
    "|__|","   |","|__ "," __|","   |"," __|","|__|","   |","|__|"," __|"
 };
 
+#ifdef HAVE_LIBNCURSESW
+
 static const char* LEDMeterMode_digitsUtf8[] = {
    "┌──┐","  ┐ ","╶──┐","╶──┐","╷  ╷","┌──╴","┌──╴","╶──┐","┌──┐","┌──┐",
    "│  │","  │ ","┌──┘"," ──┤","└──┤","└──┐","├──┐","   │","├──┤","└──┤",
    "└──┘","  ╵ ","└──╴","╶──┘","   ╵","╶──┘","└──┘","   ╵","└──┘"," ──┘"
 };
+
+#endif
 
 static const char** LEDMeterMode_digits;
 
@@ -415,11 +426,12 @@ static void LEDMeterMode_drawDigit(int x, int y, int n) {
 static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    (void) w;
 
-   if (CRT_utf8) {
+#ifdef HAVE_LIBNCURSESW
+   if (CRT_utf8)
       LEDMeterMode_digits = LEDMeterMode_digitsUtf8;
-   } else {
+   else
+#endif
       LEDMeterMode_digits = LEDMeterMode_digitsAscii;
-   }
 
    char buffer[METER_BUFFER_LEN];
    Meter_setValues(this, buffer, METER_BUFFER_LEN - 1);
@@ -427,7 +439,11 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    RichString_begin(out);
    Meter_displayBuffer(this, buffer, &out);
 
-   int yText = CRT_utf8 ? y+1 : y+2;
+   int yText =
+#ifdef HAVE_LIBNCURSESW
+	   CRT_utf8 ? y+1 :
+#endif
+	   y+2;
    attrset(CRT_colors[LED_COLOR]);
    mvaddstr(yText, x, this->caption);
    int xx = x + strlen(this->caption);

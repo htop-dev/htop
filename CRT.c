@@ -133,6 +133,8 @@ const char *CRT_treeStrAscii[TREE_STR_COUNT] = {
    "-", // TREE_STR_SHUT
 };
 
+#ifdef HAVE_LIBNCURSESW
+
 const char *CRT_treeStrUtf8[TREE_STR_COUNT] = {
    "\xe2\x94\x80", // TREE_STR_HORZ ─
    "\xe2\x94\x82", // TREE_STR_VERT │
@@ -143,13 +145,15 @@ const char *CRT_treeStrUtf8[TREE_STR_COUNT] = {
    "\xe2\x94\x80", // TREE_STR_SHUT ─
 };
 
+bool CRT_utf8 = false;
+
+#endif
+
 const char **CRT_treeStr = CRT_treeStrAscii;
 
 static bool CRT_hasColors;
 
 int CRT_delay = 0;
-
-bool CRT_utf8 = false;
 
 int* CRT_colors;
 
@@ -596,7 +600,11 @@ void CRT_init(int delay, int colorScheme) {
       CRT_utf8 = false;
 #endif
 
-   CRT_treeStr = CRT_utf8 ? CRT_treeStrUtf8 : CRT_treeStrAscii;
+   CRT_treeStr =
+#ifdef HAVE_LIBNCURSESW
+	   CRT_utf8 ? CRT_treeStrUtf8 :
+#endif
+	   CRT_treeStrAscii;
 
    mousemask(BUTTON1_CLICKED, NULL);
 }
