@@ -390,7 +390,7 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    case UTIME:  diff = p2->utime - p1->utime; goto test_diff;
    case CUTIME: diff = p2->cutime - p1->cutime; goto test_diff;
    case STIME:  diff = p2->stime - p1->stime; goto test_diff;
-   case CSTIME: diff = p2->cstime - p2->cstime; goto test_diff;
+   case CSTIME: diff = p2->cstime - p1->cstime; goto test_diff;
    #ifdef HAVE_TASKSTATS
    case RCHAR:  diff = p2->io_rchar - p1->io_rchar; goto test_diff;
    case WCHAR:  diff = p2->io_wchar - p1->io_wchar; goto test_diff;
