@@ -45,6 +45,7 @@ typedef struct Settings_ {
    bool countCPUsFromZero;
    bool detailedCPUTime;
    bool treeView;
+   bool showProgramPath;
    bool hideThreads;
    bool shadowOtherUsers;
    bool showThreadNames;
@@ -185,6 +186,8 @@ static bool Settings_read(Settings* this, const char* fileName, int cpuCount) {
          this->shadowOtherUsers = atoi(option[1]);
       } else if (String_eq(option[0], "show_thread_names")) {
          this->showThreadNames = atoi(option[1]);
+      } else if (String_eq(option[0], "show_program_path")) {
+         this->showProgramPath = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_base_name")) {
          this->highlightBaseName = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_megabytes")) {
@@ -271,6 +274,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "hide_userland_threads=%d\n", (int) this->hideUserlandThreads);
    fprintf(fd, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
    fprintf(fd, "show_thread_names=%d\n", (int) this->showThreadNames);
+   fprintf(fd, "show_program_path=%d\n", (int) this->showProgramPath);
    fprintf(fd, "highlight_base_name=%d\n", (int) this->highlightBaseName);
    fprintf(fd, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
    fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
