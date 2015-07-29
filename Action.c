@@ -211,6 +211,11 @@ static Htop_Reaction actionToggleUserlandThreads(State* st) {
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
 }
 
+static Htop_Reaction actionToggleProgramPath(State* st) {
+   st->settings->showProgramPath = !st->settings->showProgramPath;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+}
+
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
    if (st->settings->treeView) st->settings->direction = 1;
@@ -501,6 +506,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['P'] = actionSortByCPU;
    keys['H'] = actionToggleUserlandThreads;
    keys['K'] = actionToggleKernelThreads;
+   keys['p'] = actionToggleProgramPath;
    keys['t'] = actionToggleTreeView;
    keys[KEY_F(5)] = actionToggleTreeView;
    keys[KEY_F(4)] = actionIncFilter;
