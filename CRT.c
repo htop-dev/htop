@@ -587,7 +587,7 @@ void CRT_init(int delay, int colorScheme) {
    CRT_setColors(CRT_colorScheme);
 
    /* initialize locale */
-   setlocale(LC_ALL, "");
+   setlocale(LC_CTYPE, "");
 
 #ifdef HAVE_LIBNCURSESW
    if(strcmp(nl_langinfo(CODESET), "UTF-8") == 0)
