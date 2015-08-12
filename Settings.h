@@ -30,6 +30,7 @@ typedef struct Settings_ {
    int colorScheme;
    int delay;
 
+   int cpuCount;
    int direction;
    ProcessField sortKey;
 
