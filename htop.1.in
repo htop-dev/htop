@@ -353,6 +353,15 @@ You may override the location of the configuration file using the $HTOPRC
 environment variable (so you can have multiple configurations for different
 machines that share the same home directory, for example).
 
+.SH "MEMORY SIZES"
+.LP
+Memory sizes in htop are displayed as they are in tools from the GNU Coreutils
+(when ran with the --human-readable option). This means that sizes are printed
+in powers of 1024. (e.g., 1023M = 1072693248 Bytes)
+.LP
+The decision to use this convention was made in order to conserve screen space
+and make memory size representations consistent throughout htop.
+
 .SH "SEE ALSO"
 proc(5), top(1), free(1), ps(1), uptime(1)
 

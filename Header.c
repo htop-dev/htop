@@ -85,6 +85,7 @@ void Header_writeBackToSettings(const Header* this) {
       
       colSettings->names = calloc(len+1, sizeof(char*));
       colSettings->modes = calloc(len, sizeof(int));
+      colSettings->len = len;
       
       for (int i = 0; i < len; i++) {
          Meter* meter = (Meter*) Vector_get(vec, i);

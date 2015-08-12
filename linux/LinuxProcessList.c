@@ -94,7 +94,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    int cpus = -1;
    do {
       cpus++;
-      fgets(buffer, 255, file);
+      char * s = fgets(buffer, 255, file);
+      (void) s;
    } while (String_startsWith(buffer, "cpu"));
    fclose(file);
 
@@ -674,7 +675,7 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
       unsigned long long int systemalltime, idlealltime, totaltime, virtalltime;
       ioWait = irq = softIrq = steal = guest = guestnice = 0;
-      // Dependending on your kernel version,
+      // Depending on your kernel version,
       // 5, 7, 8 or 9 of these fields will be set.
       // The rest will remain at zero.
       char* ok = fgets(buffer, 255, file);

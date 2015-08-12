@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
+#include <langinfo.h>
 
 #define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
 
@@ -180,7 +181,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [PROCESS_R_STATE] = ColorPair(Green,Black),
       [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black),
       [PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black),
-      [PROCESS_LOW_PRIORITY] = ColorPair(Red,Black),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Green,Black),
       [PROCESS_THREAD] = ColorPair(Green,Black),
       [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Green,Black),
       [BAR_BORDER] = A_BOLD,
@@ -298,7 +299,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [PROCESS_R_STATE] = ColorPair(Green,White),
       [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,White),
       [PROCESS_HIGH_PRIORITY] = ColorPair(Red,White),
-      [PROCESS_LOW_PRIORITY] = ColorPair(Red,White),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Green,White),
       [PROCESS_THREAD] = ColorPair(Blue,White),
       [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,White),
       [BAR_BORDER] = ColorPair(Blue,White),
@@ -357,7 +358,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [PROCESS_R_STATE] = ColorPair(Green,Black),
       [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black),
       [PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black),
-      [PROCESS_LOW_PRIORITY] = ColorPair(Red,Black),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Green,Black),
       [PROCESS_THREAD] = ColorPair(Blue,Black),
       [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Blue,Black),
       [BAR_BORDER] = ColorPair(Blue,Black),
@@ -416,7 +417,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [PROCESS_R_STATE] = ColorPair(Green,Blue),
       [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Blue),
       [PROCESS_HIGH_PRIORITY] = ColorPair(Red,Blue),
-      [PROCESS_LOW_PRIORITY] = ColorPair(Red,Blue),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Green,Blue),
       [PROCESS_THREAD] = ColorPair(Green,Blue),
       [PROCESS_THREAD_BASENAME] = A_BOLD | ColorPair(Green,Blue),
       [BAR_BORDER] = A_BOLD | ColorPair(Yellow,Blue),
@@ -477,7 +478,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [PROCESS_R_STATE] = ColorPair(Green,Black),
       [PROCESS_D_STATE] = A_BOLD | ColorPair(Red,Black),
       [PROCESS_HIGH_PRIORITY] = ColorPair(Red,Black),
-      [PROCESS_LOW_PRIORITY] = ColorPair(Red,Black),
+      [PROCESS_LOW_PRIORITY] = ColorPair(Green,Black),
       [BAR_BORDER] = A_BOLD | ColorPair(Green,Black),
       [BAR_SHADOW] = ColorPair(Cyan,Black),
       [SWAP] = ColorPair(Red,Black),
@@ -585,15 +586,11 @@ void CRT_init(int delay, int colorScheme) {
       CRT_colorScheme = 1;
    CRT_setColors(CRT_colorScheme);
 
+   /* initialize locale */
+   setlocale(LC_CTYPE, "");
+
 #ifdef HAVE_LIBNCURSESW
-   char *locale = setlocale(LC_ALL, NULL);
-   if (locale == NULL || locale[0] == '\0')
-      locale = setlocale(LC_CTYPE, NULL);
-   if (locale != NULL &&
-       (strstr(locale, "UTF-8") ||
-        strstr(locale, "utf-8") ||
-        strstr(locale, "UTF8")  ||
-        strstr(locale, "utf8")))
+   if(strcmp(nl_langinfo(CODESET), "UTF-8") == 0)
       CRT_utf8 = true;
    else
       CRT_utf8 = false;

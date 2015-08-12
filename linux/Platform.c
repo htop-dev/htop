@@ -110,7 +110,8 @@ int Platform_getMaxPid() {
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
    if (!file) return -1;
    int maxPid = 4194303;
-   (void) fscanf(file, "%32d", &maxPid);
+   int match = fscanf(file, "%32d", &maxPid);
+   (void) match;
    fclose(file);
    return maxPid;
 }
