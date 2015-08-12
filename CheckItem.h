@@ -21,7 +21,9 @@ typedef struct CheckItem_ {
 
 extern ObjectClass CheckItem_class;
 
-CheckItem* CheckItem_new(char* text, bool* ref, bool value);
+CheckItem* CheckItem_newByRef(char* text, bool* ref);
+
+CheckItem* CheckItem_newByVal(char* text, bool value);
 
 void CheckItem_set(CheckItem* this, bool value);
 

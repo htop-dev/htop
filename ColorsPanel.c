@@ -105,7 +105,7 @@ ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
 
    Panel_setHeader(super, "Colors");
    for (int i = 0; ColorSchemeNames[i] != NULL; i++) {
-      Panel_add(super, (Object*) CheckItem_new(strdup(ColorSchemeNames[i]), NULL, false));
+      Panel_add(super, (Object*) CheckItem_newByVal(strdup(ColorSchemeNames[i]), false));
    }
    CheckItem_set((CheckItem*)Panel_get(super, settings->colorScheme), true);
    return this;

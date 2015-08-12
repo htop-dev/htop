@@ -49,11 +49,19 @@ ObjectClass CheckItem_class = {
    .delete = CheckItem_delete
 };
 
-CheckItem* CheckItem_new(char* text, bool* ref, bool value) {
+CheckItem* CheckItem_newByRef(char* text, bool* ref) {
+   CheckItem* this = AllocThis(CheckItem);
+   this->text = text;
+   this->value = false;
+   this->ref = ref;
+   return this;
+}
+
+CheckItem* CheckItem_newByVal(char* text, bool value) {
    CheckItem* this = AllocThis(CheckItem);
    this->text = text;
    this->value = value;
-   this->ref = ref;
+   this->ref = NULL;
    return this;
 }
 
