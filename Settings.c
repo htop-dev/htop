@@ -313,6 +313,7 @@ Settings* Settings_new(int cpuCount) {
    this->countCPUsFromZero = false;
    this->updateProcessNames = false;
    this->cpuCount = cpuCount;
+   this->showProgramPath = true;
    
    this->fields = calloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
