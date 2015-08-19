@@ -530,6 +530,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['a'] = actionSetAffinity;
    keys[KEY_F(9)] = actionKill;
    keys['k'] = actionKill;
+   keys[KEY_RECLICK] = actionExpandOrCollapse;
    keys['+'] = actionExpandOrCollapse;
    keys['='] = actionExpandOrCollapse;
    keys['-'] = actionExpandOrCollapse;

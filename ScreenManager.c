@@ -208,12 +208,16 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                            ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
                            break;
                         } else if (mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
+                           ch = KEY_MOUSE;
                            if (panel == panelFocus || this->allowFocusChange) {
                               focus = i;
                               panelFocus = setCurrentPanel(panel);
+                              Object* oldSelection = Panel_getSelected(panel);
                               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
+                              if (Panel_getSelected(panel) == oldSelection) {
+                                 ch = KEY_RECLICK;
+                              }
                            }
-                           ch = KEY_MOUSE;
                            break;
                         }
                      }
