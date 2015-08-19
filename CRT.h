@@ -20,6 +20,9 @@ in the source distribution for its full text.
 #define Cyan COLOR_CYAN
 #define White COLOR_WHITE
 
+#define KEY_WHEELUP KEY_F(20)
+#define KEY_WHEELDOWN KEY_F(21)
+
 //#link curses
 
 #include <stdbool.h>
@@ -129,6 +132,8 @@ extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
 extern int CRT_cursorX;
 
 extern int CRT_scrollHAmount;
+
+extern int CRT_scrollWheelVAmount;
 
 char* CRT_termType;
 

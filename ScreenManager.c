@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 
 #include "Object.h"
+#include "CRT.h"
 
 #include <assert.h>
 #include <time.h>
@@ -196,26 +197,34 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          MEVENT mevent;
          int ok = getmouse(&mevent);
          if (ok == OK) {
-            if (mevent.y == LINES - 1) {
-               ch = FunctionBar_synthesizeEvent(panelFocus->currentBar, mevent.x);
-            } else {
-               for (int i = 0; i < this->panelCount; i++) {
-                  Panel* panel = (Panel*) Vector_get(this->panels, i);
-                  if (mevent.x >= panel->x && mevent.x <= panel->x+panel->w) {
-                     if (mevent.y == panel->y) {
-                        ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
-                        break;
-                     } else if (mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
-                        if (panel == panelFocus || this->allowFocusChange) {
-                           focus = i;
-                           panelFocus = setCurrentPanel(panel);
-                           Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
+            if (mevent.bstate & BUTTON1_RELEASED) {
+               if (mevent.y == LINES - 1) {
+                  ch = FunctionBar_synthesizeEvent(panelFocus->currentBar, mevent.x);
+               } else {
+                  for (int i = 0; i < this->panelCount; i++) {
+                     Panel* panel = (Panel*) Vector_get(this->panels, i);
+                     if (mevent.x >= panel->x && mevent.x <= panel->x+panel->w) {
+                        if (mevent.y == panel->y) {
+                           ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
+                           break;
+                        } else if (mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
+                           if (panel == panelFocus || this->allowFocusChange) {
+                              focus = i;
+                              panelFocus = setCurrentPanel(panel);
+                              Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
+                           }
+                           ch = KEY_MOUSE;
+                           break;
                         }
-                        ch = KEY_MOUSE;
-                        break;
                      }
                   }
                }
+            #if NCURSES_MOUSE_VERSION > 1
+            } else if (mevent.bstate & BUTTON4_PRESSED) {
+               ch = KEY_WHEELUP;
+            } else if (mevent.bstate & BUTTON5_PRESSED) {
+               ch = KEY_WHEELDOWN;
+            #endif
             }
          }
       }

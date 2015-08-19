@@ -412,6 +412,21 @@ bool Panel_onKey(Panel* this, int key) {
       this->scrollV += (this->h - 1);
       this->needsRedraw = true;
       break;
+   case KEY_WHEELUP:
+      this->selected -= CRT_scrollWheelVAmount;
+      this->scrollV -= CRT_scrollWheelVAmount;
+      this->needsRedraw = true;
+      break;
+   case KEY_WHEELDOWN:
+   {
+      this->selected += CRT_scrollWheelVAmount;
+      this->scrollV += CRT_scrollWheelVAmount;
+      if (this->scrollV > Vector_size(this->items) - this->h) {
+         this->scrollV = Vector_size(this->items) - this->h;
+      }
+      this->needsRedraw = true;
+      break;
+   }
    case KEY_HOME:
       this->selected = 0;
       break;

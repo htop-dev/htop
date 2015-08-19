@@ -29,6 +29,9 @@ in the source distribution for its full text.
 #define Cyan COLOR_CYAN
 #define White COLOR_WHITE
 
+#define KEY_WHEELUP KEY_F(20)
+#define KEY_WHEELDOWN KEY_F(21)
+
 //#link curses
 
 /*{
@@ -515,6 +518,8 @@ int CRT_cursorX = 0;
 
 int CRT_scrollHAmount = 5;
 
+int CRT_scrollWheelVAmount = 10;
+
 char* CRT_termType;
 
 // TODO move color scheme to Settings, perhaps?
@@ -550,6 +555,7 @@ void CRT_init(int delay, int colorScheme) {
    nonl();
    intrflush(stdscr, false);
    keypad(stdscr, true);
+   mouseinterval(0);
    curs_set(0);
    if (has_colors()) {
       start_color();
@@ -598,7 +604,11 @@ void CRT_init(int delay, int colorScheme) {
 
    CRT_treeStr = CRT_utf8 ? CRT_treeStrUtf8 : CRT_treeStrAscii;
 
-   mousemask(BUTTON1_CLICKED, NULL);
+#if NCURSES_MOUSE_VERSION > 1
+   mousemask(BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
+#else
+   mousemask(BUTTON1_RELEASED, NULL);
+#endif
 }
 
 void CRT_done() {
