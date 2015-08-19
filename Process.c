@@ -9,7 +9,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 #include "CRT.h"
-#include "String.h"
+#include "StringUtils.h"
 #include "RichString.h"
 #include "Platform.h"
 

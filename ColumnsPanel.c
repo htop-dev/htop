@@ -8,7 +8,7 @@ in the source distribution for its full text.
 #include "ColumnsPanel.h"
 #include "Platform.h"
 
-#include "String.h"
+#include "StringUtils.h"
 #include "ListItem.h"
 
 #include <assert.h>

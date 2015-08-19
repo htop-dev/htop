@@ -12,7 +12,7 @@ This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 #include "Battery.h"
 #include "ProcessList.h"
 #include "CRT.h"
-#include "String.h"
+#include "StringUtils.h"
 #include "Platform.h"
 
 #include <string.h>

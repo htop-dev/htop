@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ScreenManager.h"
 #include "SignalsPanel.h"
-#include "String.h"
+#include "StringUtils.h"
 #include "TraceScreen.h"
 #include "Platform.h"
 

@@ -18,7 +18,7 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 #include <fcntl.h>
 #include <time.h>
 #include "BatteryMeter.h"
-#include "String.h"
+#include "StringUtils.h"
 
 #define SYS_POWERSUPPLY_DIR "/sys/class/power_supply"
 

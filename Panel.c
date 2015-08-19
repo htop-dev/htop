@@ -10,7 +10,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "RichString.h"
 #include "ListItem.h"
-#include "String.h"
+#include "StringUtils.h"
 
 #include <math.h>
 #include <stdbool.h>

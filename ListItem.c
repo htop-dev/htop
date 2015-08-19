@@ -8,7 +8,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 
 #include "CRT.h"
-#include "String.h"
+#include "StringUtils.h"
 #include "RichString.h"
 
 #include <string.h>

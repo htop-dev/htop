@@ -6,7 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "IncSet.h"
-#include "String.h"
+#include "StringUtils.h"
 #include "Panel.h"
 #include "ListItem.h"
 #include "CRT.h"

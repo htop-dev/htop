@@ -10,7 +10,7 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "Object.h"
 #include "CRT.h"
-#include "String.h"
+#include "StringUtils.h"
 #include "ListItem.h"
 #include "Settings.h"
 

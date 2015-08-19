@@ -8,7 +8,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "Platform.h"
 
-#include "String.h"
+#include "StringUtils.h"
 #include "Vector.h"
 #include "CRT.h"
 
