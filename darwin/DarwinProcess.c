@@ -62,11 +62,11 @@ bool Process_isThread(Process* this) {
 }
 
 void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now) {
-    struct tm date;
+   struct tm date;
 
-    proc->starttime_ctime = ep->p_starttime.tv_sec;
-    (void) localtime_r(&proc->starttime_ctime, &date);
-    strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
+   proc->starttime_ctime = ep->p_starttime.tv_sec;
+   (void) localtime_r(&proc->starttime_ctime, &date);
+   strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
 }
 
 char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
@@ -253,92 +253,92 @@ ERROR_A:
 }
 
 void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists) {
-    struct extern_proc *ep = &ps->kp_proc;
+   struct extern_proc *ep = &ps->kp_proc;
 
-    /* UNSET HERE :
-     *
-     * processor
-     * user (set at ProcessList level)
-     * nlwp
-     * percent_cpu
-     * percent_mem
-     * m_size
-     * m_resident
-     * minflt
-     * majflt
-     */
+   /* UNSET HERE :
+    *
+    * processor
+    * user (set at ProcessList level)
+    * nlwp
+    * percent_cpu
+    * percent_mem
+    * m_size
+    * m_resident
+    * minflt
+    * majflt
+    */
 
-    /* First, the "immutable" parts */
-    if(!exists) {
-       /* Set the PID/PGID/etc. */
-       proc->pid = ep->p_pid;
-       proc->ppid = ps->kp_eproc.e_ppid;
-       proc->pgrp = ps->kp_eproc.e_pgid;
-       proc->session = 0; /* TODO Get the session id */
-       proc->tgid = ps->kp_eproc.e_tpgid;
-       proc->st_uid = ps->kp_eproc.e_ucred.cr_uid;
-       /* e_tdev = (major << 24) | (minor & 0xffffff) */
-       /* e_tdev == -1 for "no device" */
-       proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
+   /* First, the "immutable" parts */
+   if(!exists) {
+      /* Set the PID/PGID/etc. */
+      proc->pid = ep->p_pid;
+      proc->ppid = ps->kp_eproc.e_ppid;
+      proc->pgrp = ps->kp_eproc.e_pgid;
+      proc->session = 0; /* TODO Get the session id */
+      proc->tgid = ps->kp_eproc.e_tpgid;
+      proc->st_uid = ps->kp_eproc.e_ucred.cr_uid;
+      /* e_tdev = (major << 24) | (minor & 0xffffff) */
+      /* e_tdev == -1 for "no device" */
+      proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
 
-       DarwinProcess_setStartTime(proc, ep, now);
+      DarwinProcess_setStartTime(proc, ep, now);
 
-       /* The command is from the old Mac htop */
-       char *slash;
+      /* The command is from the old Mac htop */
+      char *slash;
 
-       proc->comm = DarwinProcess_getCmdLine(ps, false);
-       slash = strrchr(proc->comm, '/');
-       proc->basenameOffset = (NULL != slash) ? (slash - proc->comm) : 0;
-    }
+      proc->comm = DarwinProcess_getCmdLine(ps, false);
+      slash = strrchr(proc->comm, '/');
+      proc->basenameOffset = (NULL != slash) ? (slash - proc->comm) : 0;
+   }
 
-    /* Mutable information */
-    proc->nice = ep->p_nice;
-    proc->priority = ep->p_priority;
+   /* Mutable information */
+   proc->nice = ep->p_nice;
+   proc->priority = ep->p_priority;
 
-    /* Set the state */
-    switch(ep->p_stat) {
-    case SIDL:   proc->state = 'I'; break;
-    case SRUN:   proc->state = 'R'; break;
-    case SSLEEP: proc->state = 'S'; break;
-    case SSTOP:  proc->state = 'T'; break;
-    case SZOMB:  proc->state = 'Z'; break;
-    default:     proc->state = '?'; break;
-    }
+   /* Set the state */
+   switch(ep->p_stat) {
+   case SIDL:   proc->state = 'I'; break;
+   case SRUN:   proc->state = 'R'; break;
+   case SSLEEP: proc->state = 'S'; break;
+   case SSTOP:  proc->state = 'T'; break;
+   case SZOMB:  proc->state = 'Z'; break;
+   default:     proc->state = '?'; break;
+   }
 
-    /* Make sure the updated flag is set */
-    proc->updated = true;
+   /* Make sure the updated flag is set */
+   proc->updated = true;
 }
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl) {
-    struct proc_taskinfo pti;
+   struct proc_taskinfo pti;
 
-    if(sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-        if(0 != proc->utime || 0 != proc->stime) {
-            uint64_t diff = (pti.pti_total_system - proc->stime)
-                    + (pti.pti_total_user - proc->utime);
+   if(sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+      if(0 != proc->utime || 0 != proc->stime) {
+         uint64_t diff = (pti.pti_total_system - proc->stime)
+                  + (pti.pti_total_user - proc->utime);
 
-            proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount
-                    / ((double)dpl->global_diff * 100000.0);
+         proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount
+                  / ((double)dpl->global_diff * 100000.0);
 
-//            fprintf(stderr, "%f %llu %llu %llu %llu %llu\n", proc->super.percent_cpu,
-//                    proc->stime, proc->utime, pti.pti_total_system, pti.pti_total_user, dpl->global_diff);
-//        exit(7);
-        }
+//       fprintf(stderr, "%f %llu %llu %llu %llu %llu\n", proc->super.percent_cpu,
+//               proc->stime, proc->utime, pti.pti_total_system, pti.pti_total_user, dpl->global_diff);
+//       exit(7);
+      }
 
-        proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
-        proc->super.nlwp = pti.pti_threadnum;
-        proc->super.m_size = pti.pti_virtual_size / 1024;
-        proc->super.m_resident = pti.pti_resident_size / 1024;
-        proc->super.majflt = pti.pti_faults;
-        proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
-                / (double)dpl->host_info.max_mem;
+      proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
+      proc->super.nlwp = pti.pti_threadnum;
+      proc->super.m_size = pti.pti_virtual_size / 1024;
+      proc->super.m_resident = pti.pti_resident_size / 1024;
+      proc->super.majflt = pti.pti_faults;
+      proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
+              / (double)dpl->host_info.max_mem;
 
-        proc->stime = pti.pti_total_system;
-        proc->utime = pti.pti_total_user;
+      proc->stime = pti.pti_total_system;
+      proc->utime = pti.pti_total_user;
 
-        dpl->super.kernelThreads += 0; /*pti.pti_threads_system;*/
-        dpl->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
-        dpl->super.totalTasks += pti.pti_threadnum;
-        dpl->super.runningTasks += pti.pti_numrunning;
-    }
+      dpl->super.kernelThreads += 0; /*pti.pti_threads_system;*/
+      dpl->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
+      dpl->super.totalTasks += pti.pti_threadnum;
+      dpl->super.runningTasks += pti.pti_numrunning;
+   }
 }

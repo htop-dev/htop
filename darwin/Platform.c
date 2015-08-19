@@ -85,17 +85,17 @@ char* Process_pidFormat = "%7u ";
 char* Process_tpgidFormat = "%7u ";
 
 int Platform_getUptime() {
-    struct timeval bootTime, currTime;
-    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
-    size_t size = sizeof(bootTime);
+   struct timeval bootTime, currTime;
+   int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+   size_t size = sizeof(bootTime);
 
-    int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
-    if (err) {
-       return -1;
-    }
-    gettimeofday(&currTime, NULL);
+   int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
+   if (err) {
+      return -1;
+   }
+   gettimeofday(&currTime, NULL);
 
-    return (int) difftime(currTime.tv_sec, bootTime.tv_sec);
+   return (int) difftime(currTime.tv_sec, bootTime.tv_sec);
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
@@ -142,46 +142,45 @@ void Process_setupColumnWidths() {
 }
 
 double Platform_setCPUValues(Meter* mtr, int cpu) {
-    /* All just from CPUMeter.c */
-    static const int CPU_METER_NICE = 0;
-    static const int CPU_METER_NORMAL = 1;
-    static const int CPU_METER_KERNEL = 2;
+   /* All just from CPUMeter.c */
+   static const int CPU_METER_NICE = 0;
+   static const int CPU_METER_NORMAL = 1;
+   static const int CPU_METER_KERNEL = 2;
 
-    DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
-    processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];
-    processor_cpu_load_info_t curr = &dpl->curr_load[cpu-1];
-    double total = 0;
+   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
+   processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];
+   processor_cpu_load_info_t curr = &dpl->curr_load[cpu-1];
+   double total = 0;
 
-    /* Take the sums */
-    for(size_t i = 0; i < CPU_STATE_MAX; ++i) {
-        total += (double)curr->cpu_ticks[i] - (double)prev->cpu_ticks[i];
-    }
+   /* Take the sums */
+   for(size_t i = 0; i < CPU_STATE_MAX; ++i) {
+      total += (double)curr->cpu_ticks[i] - (double)prev->cpu_ticks[i];
+   }
 
-    mtr->values[CPU_METER_NICE]
-            = ((double)curr->cpu_ticks[CPU_STATE_NICE] - (double)prev->cpu_ticks[CPU_STATE_NICE])* 100.0 / total;
-    mtr->values[CPU_METER_NORMAL]
-            = ((double)curr->cpu_ticks[CPU_STATE_USER] - (double)prev->cpu_ticks[CPU_STATE_USER])* 100.0 / total;
-    mtr->values[CPU_METER_KERNEL]
-            = ((double)curr->cpu_ticks[CPU_STATE_SYSTEM] - (double)prev->cpu_ticks[CPU_STATE_SYSTEM])* 100.0 / total;
+   mtr->values[CPU_METER_NICE]
+           = ((double)curr->cpu_ticks[CPU_STATE_NICE] - (double)prev->cpu_ticks[CPU_STATE_NICE])* 100.0 / total;
+   mtr->values[CPU_METER_NORMAL]
+           = ((double)curr->cpu_ticks[CPU_STATE_USER] - (double)prev->cpu_ticks[CPU_STATE_USER])* 100.0 / total;
+   mtr->values[CPU_METER_KERNEL]
+           = ((double)curr->cpu_ticks[CPU_STATE_SYSTEM] - (double)prev->cpu_ticks[CPU_STATE_SYSTEM])* 100.0 / total;
 
-    Meter_setItems(mtr, 3);
+   Meter_setItems(mtr, 3);
 
-    /* Convert to percent and return */
-    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
+   /* Convert to percent and return */
+   total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
 
-	return MIN(100.0, MAX(0.0, total));
+   return MIN(100.0, MAX(0.0, total));
 }
 
 void Platform_setMemoryValues(Meter* mtr) {
-    DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
-    vm_statistics64_t vm = &dpl->vm_stats;
-    double page_K = (double)vm_page_size / (double)1024;
+   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
+   vm_statistics64_t vm = &dpl->vm_stats;
+   double page_K = (double)vm_page_size / (double)1024;
 
-    mtr->total = dpl->host_info.max_mem / 1024;
-    mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_K;
-    mtr->values[1] = (double)vm->purgeable_count * page_K;
-    mtr->values[2] = (double)vm->inactive_count * page_K;
-
+   mtr->total = dpl->host_info.max_mem / 1024;
+   mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_K;
+   mtr->values[1] = (double)vm->purgeable_count * page_K;
+   mtr->values[2] = (double)vm->inactive_count * page_K;
 }
 
 void Platform_setSwapValues(Meter* this) {
