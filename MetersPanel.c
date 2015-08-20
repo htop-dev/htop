@@ -32,7 +32,7 @@ struct MetersPanel_ {
 
 static const char* MetersFunctions[] = {"Type  ", "Move  ", "Delete", "Done  ", NULL};
 static const char* MetersKeys[] = {"Space", "Enter", "Del", "Esc"};
-static int MetersEvents[] = {' ', 13, 27, KEY_DC};
+static int MetersEvents[] = {' ', 13, KEY_DC, 27};
 
 static void MetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
