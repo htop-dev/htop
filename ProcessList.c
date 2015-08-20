@@ -164,7 +164,7 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* process = (Process*) (Vector_get(this->processes, i));
-      if (process->tgid == pid || (process->tgid == process->pid && process->ppid == pid)) {
+      if (process->show && (process->tgid == pid || (process->tgid == process->pid && process->ppid == pid))) {
          process = (Process*) (Vector_take(this->processes, i));
          Vector_add(children, process);
       }
