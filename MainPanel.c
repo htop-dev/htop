@@ -79,7 +79,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       } else {
          reaction |= Action_setSortKey(settings, field);
       }
-      reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR;
+      reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS; 
       result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
