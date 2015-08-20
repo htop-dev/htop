@@ -237,7 +237,7 @@ plus twenty. Different for real-time processes.
 .B NICE (NI)
 The nice value of a process, from 19 (low priority) to -20 (high priority). A
 high value means the process is being nice, letting others have a higher
-relative priority. Only root can lower the value.
+relative priority. The usual OS permission restrictions for adjusting priority apply.
 .TP
 .B STARTTIME (START)
 The time the process was started.
@@ -366,7 +366,7 @@ The decision to use this convention was made in order to conserve screen space
 and make memory size representations consistent throughout htop.
 
 .SH "SEE ALSO"
-proc(5), top(1), free(1), ps(1), uptime(1)
+proc(5), top(1), free(1), ps(1), uptime(1), limits.conf(5)
 
 .SH "AUTHORS"
 .LP 
