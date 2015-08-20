@@ -98,7 +98,7 @@ static inline void RichString_writeFrom(RichString* this, int attrs, const char*
    for (int i = from, j = 0; i < newLen; i++, j++) {
       CharType* c = &(this->chptr[i]);
       c->attr = attrs;
-      c->chars[0] = data[j];
+      c->chars[0] = (iswprint(data[j]) ? data[j] : '?');
       c->chars[1] = 0;
    }
    this->chptr[newLen].chars[0] = 0;
