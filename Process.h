@@ -53,6 +53,11 @@ typedef enum ProcessFields {
    TGID = 52,
 } ProcessField;
 
+typedef struct ProcessPidColumn_ {
+   int id;
+   char* label;
+} ProcessPidColumn;
+
 typedef struct Process_ {
    Object super;
 
@@ -126,14 +131,13 @@ typedef struct ProcessFieldData_ {
 } ProcessFieldData;
 
 // Implemented in platform-specific code:
-void Process_setupColumnWidths();
 void Process_writeField(Process* this, RichString* str, ProcessField field);
 long Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
 bool Process_isThread(Process* this);
 extern ProcessFieldData Process_fields[];
-extern char* Process_pidFormat;
-extern char* Process_tpgidFormat;
+extern ProcessPidColumn Process_pidColumns[];
+extern char Process_pidFormat[20];
 
 typedef Process*(*Process_New)(struct Settings_*);
 typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
@@ -153,6 +157,10 @@ typedef struct ProcessClass_ {
 #define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
+
+extern char Process_pidFormat[20];
+
+void Process_setupColumnWidths();
 
 void Process_humanNumber(RichString* str, unsigned long number, bool coloring);
 

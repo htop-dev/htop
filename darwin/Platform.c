@@ -82,7 +82,6 @@ void Platform_setBindings(Htop_Action* keys) {
 
 int Platform_numberOfFields = 100;
 char* Process_pidFormat = "%7u ";
-char* Process_tpgidFormat = "%7u ";
 
 int Platform_getUptime() {
    struct timeval bootTime, currTime;
@@ -117,29 +116,15 @@ int Platform_getMaxPid() {
    return 99999;
 }
 
-void Process_setupColumnWidths() {
-   int maxPid = Platform_getMaxPid();
-   if (maxPid == -1) return;
-   if (maxPid > 99999) {
-      Process_fields[PID].title =     "    PID ";
-      Process_fields[PPID].title =    "   PPID ";
-      Process_fields[TPGID].title =   "  TPGID ";
-      Process_fields[TGID].title =    "   TGID ";
-      Process_fields[PGRP].title =    "   PGRP ";
-      Process_fields[SESSION].title = "   SESN ";
-      Process_pidFormat = "%7u ";
-      Process_tpgidFormat = "%7d ";
-   } else {
-      Process_fields[PID].title =     "  PID ";
-      Process_fields[PPID].title =    " PPID ";
-      Process_fields[TPGID].title =   "TPGID ";
-      Process_fields[TGID].title =    " TGID ";
-      Process_fields[PGRP].title =    " PGRP ";
-      Process_fields[SESSION].title = " SESN ";
-      Process_pidFormat = "%5u ";
-      Process_tpgidFormat = "%5d ";
-   }
-}
+ProcessPidColumn Process_pidColumns[] = {
+   { .id = PID, .label = "PID" },
+   { .id = PPID, .label = "PPID" },
+   { .id = TPGID, .label = "TPGID" },
+   { .id = TGID, .label = "TGID" },
+   { .id = PGRP, .label = "PGRP" },
+   { .id = SESSION, .label = "SESN" },
+   { .id = 0, .label = NULL },
+};
 
 double Platform_setCPUValues(Meter* mtr, int cpu) {
    /* All just from CPUMeter.c */

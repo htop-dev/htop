@@ -33,9 +33,6 @@ extern ProcessClass FreeBSDProcess_class;
 extern ProcessFieldData Process_fields[];
 
 extern char* Process_pidFormat;
-extern char* Process_tpgidFormat;
-
-void Process_setupColumnWidths();
 
 FreeBSDProcess* FreeBSDProcess_new(Settings* settings);
 

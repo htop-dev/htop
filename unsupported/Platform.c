@@ -80,7 +80,6 @@ void Platform_setBindings(Htop_Action* keys) {
 
 int Platform_numberOfFields = 100;
 char* Process_pidFormat = "%7u ";
-char* Process_tpgidFormat = "%7u ";
 
 int Platform_getUptime() {
    return 0;
@@ -107,7 +106,6 @@ void Process_setupColumnWidths() {
       Process_fields[PGRP].title =    "   PGRP ";
       Process_fields[SESSION].title = "   SESN ";
       Process_pidFormat = "%7u ";
-      Process_tpgidFormat = "%7d ";
    } else {
       Process_fields[PID].title =     "  PID ";
       Process_fields[PPID].title =    " PPID ";
@@ -116,7 +114,6 @@ void Process_setupColumnWidths() {
       Process_fields[PGRP].title =    " PGRP ";
       Process_fields[SESSION].title = " SESN ";
       Process_pidFormat = "%5u ";
-      Process_tpgidFormat = "%5d ";
    }
 }
 

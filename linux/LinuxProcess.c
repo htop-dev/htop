@@ -217,40 +217,19 @@ ProcessFieldData Process_fields[] = {
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
-char* Process_pidFormat = "%7u ";
-char* Process_tpgidFormat = "%7u ";
-
-void Process_setupColumnWidths() {
-   int maxPid = Platform_getMaxPid();
-   if (maxPid == -1) return;
-   if (maxPid > 99999) {
-      Process_fields[PID].title =     "    PID ";
-      Process_fields[PPID].title =    "   PPID ";
-      #ifdef HAVE_OPENVZ
-      Process_fields[VPID].title =    "   VPID ";
-      #endif
-      Process_fields[TPGID].title =   "  TPGID ";
-      Process_fields[TGID].title =    "   TGID ";
-      Process_fields[PGRP].title =    "   PGRP ";
-      Process_fields[SESSION].title = "   SESN ";
-      Process_fields[OOM].title =     "    OOM ";
-      Process_pidFormat = "%7u ";
-      Process_tpgidFormat = "%7d ";
-   } else {
-      Process_fields[PID].title =     "  PID ";
-      Process_fields[PPID].title =    " PPID ";
-      #ifdef HAVE_OPENVZ
-      Process_fields[VPID].title =    " VPID ";
-      #endif
-      Process_fields[TPGID].title =   "TPGID ";
-      Process_fields[TGID].title =    " TGID ";
-      Process_fields[PGRP].title =    " PGRP ";
-      Process_fields[SESSION].title = " SESN ";
-      Process_fields[OOM].title =     "  OOM ";
-      Process_pidFormat = "%5u ";
-      Process_tpgidFormat = "%5d ";
-   }
-}
+ProcessPidColumn Process_pidColumns[] = {
+   { .id = PID, .label = "PID" },
+   { .id = PPID, .label = "PPID" },
+   #ifdef HAVE_OPENVZ
+   { .id = VPID, .label = "VPID" },
+   #endif
+   { .id = TPGID, .label = "TPGID" },
+   { .id = TGID, .label = "TGID" },
+   { .id = PGRP, .label = "PGRP" },
+   { .id = SESSION, .label = "SESN" },
+   { .id = OOM, .label = "OOM" },
+   { .id = 0, .label = NULL },
+};
 
 ProcessClass LinuxProcess_class = {
    .super = {

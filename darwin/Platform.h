@@ -24,15 +24,12 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern int Platform_numberOfFields;
 extern char* Process_pidFormat;
-extern char* Process_tpgidFormat;
 
 int Platform_getUptime();
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
-
-void Process_setupColumnWidths();
 
 double Platform_setCPUValues(Meter* mtr, int cpu);
 

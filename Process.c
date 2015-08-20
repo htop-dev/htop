@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include <pwd.h>
 #include <time.h>
 #include <assert.h>
+#include <math.h>
 
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get
@@ -71,6 +72,11 @@ typedef enum ProcessFields {
    NLWP = 51,
    TGID = 52,
 } ProcessField;
+
+typedef struct ProcessPidColumn_ {
+   int id;
+   char* label;
+} ProcessPidColumn;
 
 typedef struct Process_ {
    Object super;
@@ -145,14 +151,13 @@ typedef struct ProcessFieldData_ {
 } ProcessFieldData;
 
 // Implemented in platform-specific code:
-void Process_setupColumnWidths();
 void Process_writeField(Process* this, RichString* str, ProcessField field);
 long Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
 bool Process_isThread(Process* this);
 extern ProcessFieldData Process_fields[];
-extern char* Process_pidFormat;
-extern char* Process_tpgidFormat;
+extern ProcessPidColumn Process_pidColumns[];
+extern char Process_pidFormat[20];
 
 typedef Process*(*Process_New)(struct Settings_*);
 typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
@@ -175,6 +180,23 @@ static int Process_getuid = -1;
 #define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
+
+char Process_pidFormat[20] = "%7u ";
+
+static char Process_titleBuffer[20][20];
+
+void Process_setupColumnWidths() {
+   int maxPid = Platform_getMaxPid();
+   if (maxPid == -1) return;
+   int digits = ceil(log10(maxPid));
+   assert(digits < 20);
+   for (int i = 0; Process_pidColumns[i].label; i++) {
+      assert(i < 20);
+      sprintf(Process_titleBuffer[i], "%*s ", digits, Process_pidColumns[i].label);
+      Process_fields[Process_pidColumns[i].id].title = Process_titleBuffer[i];
+   }
+   sprintf(Process_pidFormat, "%%%du ", digits);
+}
 
 void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
    char buffer[11];
@@ -426,7 +448,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case ST_UID: snprintf(buffer, n, "%4d ", this->st_uid); break;
    case TIME: Process_printTime(str, this->time); return;
    case TGID: snprintf(buffer, n, Process_pidFormat, this->tgid); break;
-   case TPGID: snprintf(buffer, n, Process_tpgidFormat, this->tpgid); break;
+   case TPGID: snprintf(buffer, n, Process_pidFormat, this->tpgid); break;
    case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
    case USER: {
       if (Process_getuid != (int) this->st_uid)

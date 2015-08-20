@@ -129,10 +129,7 @@ typedef struct LinuxProcess_ {
 
 extern ProcessFieldData Process_fields[];
 
-extern char* Process_pidFormat;
-extern char* Process_tpgidFormat;
-
-void Process_setupColumnWidths();
+extern ProcessPidColumn Process_pidColumns[];
 
 extern ProcessClass LinuxProcess_class;
 
