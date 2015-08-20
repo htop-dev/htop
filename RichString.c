@@ -32,8 +32,8 @@ in the source distribution for its full text.
 #define RichString_size(this) ((this)->chlen)
 #define RichString_sizeVal(this) ((this).chlen)
 
-#define RichString_begin(this) RichString (this); (this).chlen = 0; (this).chptr = (this).chstr;
-#define RichString_beginAllocated(this) (this).chlen = 0; (this).chptr = (this).chstr;
+#define RichString_begin(this) RichString (this); memset(&this, 0, sizeof(RichString)); (this).chptr = (this).chstr;
+#define RichString_beginAllocated(this) memset(&this, 0, sizeof(RichString)); (this).chptr = (this).chstr;
 #define RichString_end(this) RichString_prune(&(this));
 
 #ifdef HAVE_LIBNCURSESW
@@ -79,6 +79,7 @@ static void RichString_extendLen(RichString* this, int len) {
          this->chptr = realloc(this->chptr, charBytes(len+1));
       }
    }
+
    RichString_setChar(this, len, 0);
    this->chlen = len;
 }
@@ -155,9 +156,8 @@ int RichString_findChar(RichString* this, char c, int start) {
 void RichString_prune(RichString* this) {
    if (this->chlen > RICHSTRING_MAXLEN)
       free(this->chptr);
+   memset(this, 0, sizeof(RichString));
    this->chptr = this->chstr;
-   this->chlen = 0;
-   RichString_setChar(this, 0, 0);
 }
 
 void RichString_setAttr(RichString* this, int attrs) {
