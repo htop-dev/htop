@@ -118,13 +118,17 @@ void CRT_handleSIGSEGV(int sgn);
 
 extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
 
+#ifdef HAVE_LIBNCURSESW
+
 extern const char *CRT_treeStrUtf8[TREE_STR_COUNT];
+
+extern bool CRT_utf8;
+
+#endif
 
 extern const char **CRT_treeStr;
 
 extern int CRT_delay;
-
-extern bool CRT_utf8;
 
 int* CRT_colors;
 

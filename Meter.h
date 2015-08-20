@@ -119,7 +119,18 @@ ListItem* Meter_toListItem(Meter* this, bool moving);
 
 /* ---------- GraphMeterMode ---------- */
 
+#ifdef HAVE_LIBNCURSESW
+
+#define PIXPERROW_UTF8 4
+#endif
+
+#define PIXPERROW_ASCII 2
+
 /* ---------- LEDMeterMode ---------- */
+
+#ifdef HAVE_LIBNCURSESW
+
+#endif
 
 extern MeterMode* Meter_modes[];
 
