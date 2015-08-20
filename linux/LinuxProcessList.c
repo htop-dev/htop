@@ -661,7 +661,6 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
 }
 
 static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
-   unsigned long long int usertime, nicetime, systemtime, idletime;
 
    FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
@@ -671,9 +670,8 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
    assert(cpus > 0);
    for (int i = 0; i <= cpus; i++) {
       char buffer[256];
-      int cpuid;
+      unsigned long long int usertime, nicetime, systemtime, idletime;
       unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
-      unsigned long long int systemalltime, idlealltime, totaltime, virtalltime;
       ioWait = irq = softIrq = steal = guest = guestnice = 0;
       // Depending on your kernel version,
       // 5, 7, 8 or 9 of these fields will be set.
@@ -681,8 +679,9 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       char* ok = fgets(buffer, 255, file);
       if (!ok) buffer[0] = '\0';
       if (i == 0)
-         sscanf(buffer, "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
       else {
+         int cpuid;
          sscanf(buffer, "cpu%4d %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
          assert(cpuid == i - 1);
       }
@@ -691,10 +690,10 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       nicetime = nicetime - guestnice;
       // Fields existing on kernels >= 2.6
       // (and RHEL's patched kernel 2.4...)
-      idlealltime = idletime + ioWait;
-      systemalltime = systemtime + irq + softIrq;
-      virtalltime = guest + guestnice;
-      totaltime = usertime + nicetime + systemalltime + idlealltime + steal + virtalltime;
+      unsigned long long int idlealltime = idletime + ioWait;
+      unsigned long long int systemalltime = systemtime + irq + softIrq;
+      unsigned long long int virtalltime = guest + guestnice;
+      unsigned long long int totaltime = usertime + nicetime + systemalltime + idlealltime + steal + virtalltime;
       CPUData* cpuData = &(this->cpus[i]);
       assert (usertime >= cpuData->userTime);
       assert (nicetime >= cpuData->niceTime);
