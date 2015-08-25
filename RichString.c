@@ -29,6 +29,10 @@ in the source distribution for its full text.
 #include <curses.h>
 #endif
 
+#ifdef HAVE_LIBNCURSESW
+#include <wctype.h>
+#endif
+
 #define RichString_size(this) ((this)->chlen)
 #define RichString_sizeVal(this) ((this).chlen)
 
