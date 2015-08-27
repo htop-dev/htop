@@ -20,34 +20,31 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-#define KILOBYTE 1
-#define MEGABYTE 1024
-#define GIGABYTE 1048576
-
 int SwapMeter_attributes[] = {
    SWAP
 };
 
-/* NOTE: Value is in kilobytes */
-static void SwapMeter_humanNumber(char* buffer, const long int* value) {
-   sprintf(buffer, "%ldM ", *value / MEGABYTE);
-}
-
-static void SwapMeter_setValues(Meter* this, char* buffer, int len) {
+static void SwapMeter_setValues(Meter* this, char* buffer, int size) {
+   int written;
    Platform_setSwapValues(this);
-   snprintf(buffer, len, "%ld/%ldM", (long int) this->values[0] / MEGABYTE, (long int) this->total / MEGABYTE);
+
+   written = Meter_humanUnit(buffer, this->values[0], size);
+   buffer += written;
+   if ((size -= written) > 0) {
+      *buffer++ = '/';
+      size--;
+      Meter_humanUnit(buffer, this->total, size);
+   }
 }
 
 static void SwapMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
-   long int swap = (long int) this->values[0];
-   long int total = (long int) this->total;
    RichString_write(out, CRT_colors[METER_TEXT], ":");
-   SwapMeter_humanNumber(buffer, &total);
+   Meter_humanUnit(buffer, this->total, 50);
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
-   SwapMeter_humanNumber(buffer, &swap);
-   RichString_append(out, CRT_colors[METER_TEXT], "used:");
+   Meter_humanUnit(buffer, this->values[0], 50);
+   RichString_append(out, CRT_colors[METER_TEXT], " used:");
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
 }
 

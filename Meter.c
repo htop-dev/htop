@@ -141,6 +141,34 @@ Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
    return this;
 }
 
+int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
+	const char * prefix = "KMGTPEZY";
+	unsigned long int powi = 1;
+	unsigned int written, powj = 1, precision = 2;
+
+	for(;;) {
+		if (value / 1024 < powi)
+			break;
+
+		if (prefix[1] == 0)
+			break;
+
+		powi *= 1024;
+		++prefix;
+	}
+
+	for (; precision > 0; precision--) {
+		powj *= 10;
+		if (value / powi < powj)
+			break;
+	}
+
+	written = snprintf(buffer, size, "%.*f%c",
+		precision, (double) value / powi, *prefix);
+
+	return written;
+}
+
 void Meter_delete(Object* cast) {
    if (!cast)
       return;
