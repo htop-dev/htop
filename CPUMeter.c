@@ -170,16 +170,17 @@ static void AllCPUsMeter_updateMode(Meter* this, int mode) {
 static void DualColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    Meter** meters = (Meter**) this->drawData;
    int start, count;
+   int pad = this->pl->settings->headerMargin ? 2 : 0;
    AllCPUsMeter_getRange(this, &start, &count);
    int height = (count+1)/2;
    int startY = y;
    for (int i = 0; i < height; i++) {
-      meters[i]->draw(meters[i], x, y, (w-2)/2);
+      meters[i]->draw(meters[i], x, y, (w-pad)/2);
       y += meters[i]->h;
    }
    y = startY;
    for (int i = height; i < count; i++) {
-      meters[i]->draw(meters[i], x+(w-1)/2+2, y, (w-2)/2);
+      meters[i]->draw(meters[i], x+(w-1)/2+1+(pad/2), y, (w-pad)/2);
       y += meters[i]->h;
    }
 }
