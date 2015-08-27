@@ -254,7 +254,10 @@ int Panel_size(Panel* this) {
 void Panel_setSelected(Panel* this, int selected) {
    assert (this != NULL);
 
-   selected = MIN(Vector_size(this->items) - 1, selected);
+   int size = Vector_size(this->items);
+   if (selected >= size) {
+      return;
+   }
    if (selected < 0)
       selected = 0;
    this->selected = selected;
