@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "DisplayOptionsPanel.h"
 
 #include "CheckItem.h"
+#include "CRT.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -47,6 +48,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    case 0x0d:
    case KEY_ENTER:
    case KEY_MOUSE:
+   case KEY_RECLICK:
    case ' ':
       CheckItem_set(selected, ! (CheckItem_get(selected)) );
       result = HANDLED;

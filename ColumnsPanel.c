@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "StringUtils.h"
 #include "ListItem.h"
+#include "CRT.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -49,6 +50,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case 0x0d:
       case KEY_ENTER:
       case KEY_MOUSE:
+      case KEY_RECLICK:
       {
          if (selected < size - 1) {
             this->moving = !(this->moving);

@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "AffinityPanel.h"
+#include "CRT.h"
 
 #include "CheckItem.h"
 
@@ -23,6 +24,7 @@ static HandlerResult AffinityPanel_eventHandler(Panel* this, int ch) {
    CheckItem* selected = (CheckItem*) Panel_getSelected(this);
    switch(ch) {
    case KEY_MOUSE:
+   case KEY_RECLICK:
    case ' ':
       CheckItem_set(selected, ! (CheckItem_get(selected)) );
       return HANDLED;
