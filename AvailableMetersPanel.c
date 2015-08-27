@@ -45,8 +45,8 @@ static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, M
    Meter* meter = (Meter*) Header_addMeterByClass(header, type, param, column);
    Panel_add(panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected(panel, Panel_size(panel) - 1);
-   ((MetersPanel*)panel)->moving = true;
-   ((ListItem*)Panel_getSelected(panel))->moving = true;
+   MetersPanel_setMoving((MetersPanel*)panel, true);
+   FunctionBar_draw(panel->currentBar, NULL);
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {

@@ -34,6 +34,11 @@ static const char* MetersFunctions[] = {"Type  ", "Move  ", "Delete", "Done  ", 
 static const char* MetersKeys[] = {"Space", "Enter", "Del", "Esc"};
 static int MetersEvents[] = {' ', 13, KEY_DC, 27};
 
+static const char* MetersMovingFunctions[] = {"Up    ", "Down  ", "Left  ", "Right ",  "Confirm", "Delete", "Done  ", NULL};
+static const char* MetersMovingKeys[] = {"Up", "Dn", "Lt", "Rt", "Arrows", "Enter", "Del", "Esc"};
+static int MetersMovingEvents[] = {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 13, KEY_DC, 27};
+static FunctionBar* Meters_movingBar = NULL;
+
 static void MetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    MetersPanel* this = (MetersPanel*) object;
@@ -41,12 +46,23 @@ static void MetersPanel_delete(Object* object) {
    free(this);
 }
 
+void MetersPanel_setMoving(MetersPanel* this, bool moving) {
+   Panel* super = (Panel*) this;
+   this->moving = moving;
+   ((ListItem*)Panel_getSelected(super))->moving = moving;
+   if (!moving) {
+      Panel_setDefaultBar(super);
+   } else {
+      super->currentBar = Meters_movingBar;
+   }
+}
+
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
    Panel* super = (Panel*) this;
    if (this->moving) {
       if (neighbor) {
          if (selected < Vector_size(this->meters)) {
-            ((ListItem*)Panel_getSelected(super))->moving = false;
+            MetersPanel_setMoving(this, false);
 
             Meter* meter = (Meter*) Vector_take(this->meters, selected);
             Panel_remove(super, selected);
@@ -54,9 +70,7 @@ static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int 
             Panel_insert(&(neighbor->super), selected, (Object*) Meter_toListItem(meter, false));
             Panel_setSelected(&(neighbor->super), selected);
 
-            this->moving = false;
-            neighbor->moving = true;
-            ((ListItem*)Panel_getSelected((Panel*)neighbor))->moving = true;
+            MetersPanel_setMoving(neighbor, true);
             return true;
          }
       }
@@ -78,8 +92,8 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       {
          if (!Vector_size(this->meters))
             break;
-         this->moving = !(this->moving);
-         ((ListItem*)Panel_getSelected(super))->moving = this->moving;
+         MetersPanel_setMoving(this, !(this->moving));
+         FunctionBar_draw(this->super.currentBar, NULL);
          result = HANDLED;
          break;
       }
@@ -183,6 +197,9 @@ MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* met
    MetersPanel* this = AllocThis(MetersPanel);
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents);
+   if (!Meters_movingBar) {
+      Meters_movingBar = FunctionBar_new(MetersMovingFunctions, MetersMovingKeys, MetersMovingEvents);
+   }
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->settings = settings;
