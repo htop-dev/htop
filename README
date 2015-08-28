@@ -3,33 +3,20 @@ htop
 
 by Hisham Muhammad <hisham@gobolinux.org>
 
-May, 2004 - January, 2014
-
-Note
-----
-
-![Alert](http://i.imgur.com/ugIqB9s.png)  **Mac users, [click here](https://www.bountysource.com/fundraisers/554-mac-os-x-support-in-the-official-htop-1-x-tree)!** The htop version you are using is a 5-year old fork -- help bring htop 1.x to the Mac!
+2004 - 2015
 
 Introduction
 ------------
 
 This is htop, an interactive process viewer.
-It requires ncurses. It is tested with Linux 2.6,
-but is also reported to work (and was originally developed)
-with the 2.4 series.
+It requires ncurses. It is developed primarily on Linux,
+but we also have code for running under FreeBSD and Mac OS X.
 
-Note that, while, htop is Linux specific -- it is based
-on the Linux /proc filesystem -- it is also reported to work
-with FreeBSD systems featuring a Linux-compatible /proc.
-This is, however, unsupported. Contact the packager for your
-system when reporting problems on platforms other than Linux.
+This software has evolved considerably over the years,
+and is reasonably complete, but there is always room forimprovement.
 
-This software has evolved considerably during the last years,
-and is reasonably complete, but there is still room for
-improvement. Read the TODO file to see what's known to be missing.
-
-Comparison between 'htop' and 'top'
------------------------------------
+Comparison between 'htop' and classic 'top'
+-------------------------------------------
 
 * In 'htop' you can scroll the list vertically and horizontally
   to see all processes and full command lines.
