@@ -142,31 +142,31 @@ Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
 }
 
 int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
-	const char * prefix = "KMGTPEZY";
-	unsigned long int powi = 1;
-	unsigned int written, powj = 1, precision = 2;
+   const char * prefix = "KMGTPEZY";
+   unsigned long int powi = 1;
+   unsigned int written, powj = 1, precision = 2;
 
-	for(;;) {
-		if (value / 1024 < powi)
-			break;
+   for(;;) {
+      if (value / 1024 < powi)
+         break;
 
-		if (prefix[1] == 0)
-			break;
+      if (prefix[1] == 0)
+         break;
 
-		powi *= 1024;
-		++prefix;
-	}
+      powi *= 1024;
+      ++prefix;
+   }
 
-	for (; precision > 0; precision--) {
-		powj *= 10;
-		if (value / powi < powj)
-			break;
-	}
+   for (; precision > 0; precision--) {
+      powj *= 10;
+      if (value / powi < powj)
+         break;
+   }
 
-	written = snprintf(buffer, size, "%.*f%c",
-		precision, (double) value / powi, *prefix);
+   written = snprintf(buffer, size, "%.*f%c",
+      precision, (double) value / powi, *prefix);
 
-	return written;
+   return written;
 }
 
 void Meter_delete(Object* cast) {
@@ -463,9 +463,9 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
 
    int yText =
 #ifdef HAVE_LIBNCURSESW
-	   CRT_utf8 ? y+1 :
+      CRT_utf8 ? y+1 :
 #endif
-	   y+2;
+      y+2;
    attrset(CRT_colors[LED_COLOR]);
    mvaddstr(yText, x, this->caption);
    int xx = x + strlen(this->caption);
