@@ -44,7 +44,7 @@ in the source distribution for its full text.
 #define RichString_printVal(this, y, x) mvadd_wchstr(y, x, (this).chptr)
 #define RichString_printoffnVal(this, y, x, off, n) mvadd_wchnstr(y, x, (this).chptr + off, n)
 #define RichString_getCharVal(this, i) ((this).chptr[i].chars[0] & 255)
-#define RichString_setChar(this, at, ch) do{ (this)->chptr[(at)].chars[0] = ch; } while(0)
+#define RichString_setChar(this, at, ch) do{ (this)->chptr[(at)] = (CharType) { .chars = { ch, 0 } }; } while(0)
 #define CharType cchar_t
 #else
 #define RichString_printVal(this, y, x) mvaddchstr(y, x, (this).chptr)
@@ -71,16 +71,16 @@ typedef struct RichString_ {
 static void RichString_extendLen(RichString* this, int len) {
    if (this->chlen <= RICHSTRING_MAXLEN) {
       if (len > RICHSTRING_MAXLEN) {
-         this->chptr = malloc(charBytes(len+1));
-         memcpy(this->chptr, this->chstr, charBytes(this->chlen+1));
+         this->chptr = malloc(charBytes(len + 1));
+         memcpy(this->chptr, this->chstr, charBytes(this->chlen));
       }
    } else {
       if (len <= RICHSTRING_MAXLEN) {
-         memcpy(this->chstr, this->chptr, charBytes(this->chlen));
+         memcpy(this->chstr, this->chptr, charBytes(len));
          free(this->chptr);
          this->chptr = this->chstr;
       } else {
-         this->chptr = realloc(this->chptr, charBytes(len+1));
+         this->chptr = realloc(this->chptr, charBytes(len + 1));
       }
    }
 
@@ -95,17 +95,14 @@ static void RichString_extendLen(RichString* this, int len) {
 static inline void RichString_writeFrom(RichString* this, int attrs, const char* data_c, int from, int len) {
    wchar_t data[len+1];
    len = mbstowcs(data, data_c, len);
-   if (len<0)
+   if (len < 0)
       return;
    int newLen = from + len;
    RichString_setLen(this, newLen);
    for (int i = from, j = 0; i < newLen; i++, j++) {
       CharType* c = &(this->chptr[i]);
-      c->attr = attrs;
-      c->chars[0] = (iswprint(data[j]) ? data[j] : '?');
-      c->chars[1] = 0;
+      *c = (CharType) { .attr = attrs, .chars = { (iswprint(data[j]) ? data[j] : '?') } };
    }
-   this->chptr[newLen].chars[0] = 0;
 }
 
 inline void RichString_setAttrn(RichString* this, int attrs, int start, int finish) {
