@@ -14,7 +14,7 @@ but we also have code for running under FreeBSD and Mac OS X
 (help and testing are wanted for these platforms!)
 
 This software has evolved considerably over the years,
-and is reasonably complete, but there is always room forimprovement.
+and is reasonably complete, but there is always room for improvement.
 
 Comparison between 'htop' and classic 'top'
 -------------------------------------------
