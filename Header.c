@@ -89,7 +89,7 @@ void Header_writeBackToSettings(const Header* this) {
       
       for (int i = 0; i < len; i++) {
          Meter* meter = (Meter*) Vector_get(vec, i);
-         char* name = calloc(64, sizeof(char*));
+         char* name = calloc(64, sizeof(char));
          if (meter->param) {
             snprintf(name, 63, "%s(%d)", As_Meter(meter)->name, meter->param);
          } else {
