@@ -242,7 +242,7 @@ ProcessClass LinuxProcess_class = {
 };
 
 LinuxProcess* LinuxProcess_new(Settings* settings) {
-   LinuxProcess* this = calloc(sizeof(LinuxProcess), 1);
+   LinuxProcess* this = calloc(1, sizeof(LinuxProcess));
    Object_setClass(this, Class(LinuxProcess));
    Process_init(&this->super, settings);
    return this;

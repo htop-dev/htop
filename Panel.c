@@ -455,7 +455,7 @@ bool Panel_onKey(Panel* this, int key) {
 HandlerResult Panel_selectByTyping(Panel* this, int ch) {
    int size = Panel_size(this);
    if (!this->eventHandlerState)
-      this->eventHandlerState = calloc(100, 1);
+      this->eventHandlerState = calloc(100, sizeof(char));
    char* buffer = this->eventHandlerState;
 
    if (ch < 255 && isalnum(ch)) {
