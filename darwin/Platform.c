@@ -81,7 +81,6 @@ void Platform_setBindings(Htop_Action* keys) {
 }
 
 int Platform_numberOfFields = 100;
-char* Process_pidFormat = "%7u ";
 
 int Platform_getUptime() {
    struct timeval bootTime, currTime;
