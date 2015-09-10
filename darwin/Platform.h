@@ -23,7 +23,6 @@ extern MeterClass* Platform_meterTypes[];
 void Platform_setBindings(Htop_Action* keys);
 
 extern int Platform_numberOfFields;
-extern char* Process_pidFormat;
 
 int Platform_getUptime();
 
