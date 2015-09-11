@@ -157,6 +157,9 @@ int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
       ++prefix;
    }
 
+   if (*prefix == 'K')
+      precision = 0;
+
    for (; precision > 0; precision--) {
       powj *= 10;
       if (value / powi < powj)

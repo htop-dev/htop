@@ -39,7 +39,7 @@ ProcessClass DarwinProcess_class = {
 };
 
 DarwinProcess* DarwinProcess_new(Settings* settings) {
-   DarwinProcess* this = calloc(sizeof(DarwinProcess), 1);
+   DarwinProcess* this = calloc(1, sizeof(DarwinProcess));
    Object_setClass(this, Class(DarwinProcess));
    Process_init(&this->super, settings);
 
