@@ -1,7 +1,21 @@
 
 What's new in version 1.0.4
 
+* Platform abstraction layer
+* Prototype FreeBSD support
+* Initial Mac OS X support
+  (thanks to David Hunt)
+* Support for NCurses 6 ABI, including mouse wheel support
+* Much improved mouse responsiveness
+* Higher-resolution UTF-8 based Graph mode
+  (Thanks to James Hall from vtop for the idea!)
+* Show program path settings
+  (thanks to Tobias Geerinckx-Rice)
 * BUGFIX: Fix crash when scrolling an empty filtered list.
+* Use dynamic units for text display, and several fixes
+  (thanks to Christian Hesse)
+* Several tweaks and bugfixes
+  (See the Git log for details and contributors!)
 
 What's new in version 1.0.3
 
