@@ -115,7 +115,7 @@ char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    for (int i = 0; argv[i]; i++) {
       len += strlen(argv[i]) + 1;
    }
-   char* comm = malloc(len * sizeof(char));
+   char* comm = malloc(len);
    char* at = comm;
    *basenameEnd = 0;
    for (int i = 0; argv[i]; i++) {

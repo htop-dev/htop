@@ -73,10 +73,8 @@ unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
 void ProcessList_getVMStats(vm_statistics64_t p) {
     mach_msg_type_number_t info_size = HOST_VM_INFO64_COUNT;
 
-    if(0 != host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info_t)p, &info_size)) {
-       fprintf(stderr, "Unable to retrieve VM statistics\n");
-       exit(9);
-    }
+    if (host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info_t)p, &info_size) != 0)
+       err(9, "Unable to retrieve VM statistics\n");
 }
 
 struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
@@ -88,21 +86,15 @@ struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
     * process entry or two.
     */
    *count = 0;
-   if(0 > sysctl(mib, 4, NULL, count, NULL, 0)) {
-      fprintf(stderr, "Unable to get size of kproc_infos");
-      exit(5);
-   }
+   if (sysctl(mib, 4, NULL, count, NULL, 0) < 0)
+      err(5, "Unable to get size of kproc_infos");
 
-   processes = (struct kinfo_proc *)malloc(*count);
-   if(NULL == processes) {
-      fprintf(stderr, "Out of memory for kproc_infos\n");
-      exit(6);
-   }
+   processes = malloc(*count);
+   if (processes == NULL)
+      err(6, "Out of memory for kproc_infos");
 
-   if(0 > sysctl(mib, 4, processes, count, NULL, 0)) {
-      fprintf(stderr, "Unable to get kinfo_procs\n");
-      exit(7);
-   }
+   if (sysctl(mib, 4, processes, count, NULL, 0) < 0)
+      err(7, "Unable to get kinfo_procs");
 
    *count = *count / sizeof(struct kinfo_proc);
 

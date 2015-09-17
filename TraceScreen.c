@@ -44,7 +44,7 @@ static const char* TraceScreenKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
 static int TraceScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
 
 TraceScreen* TraceScreen_new(Process* process) {
-   TraceScreen* this = (TraceScreen*) malloc(sizeof(TraceScreen));
+   TraceScreen* this = malloc(sizeof(TraceScreen));
    this->process = process;
    FunctionBar* fuBar = FunctionBar_new(TraceScreenFunctions, TraceScreenKeys, TraceScreenEvents);
    this->display = Panel_new(0, 1, COLS, LINES-2, false, Class(ListItem), fuBar);

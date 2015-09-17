@@ -63,7 +63,7 @@ int Hashtable_count(Hashtable* this) {
 static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
    HashtableItem* this;
    
-   this = (HashtableItem*) malloc(sizeof(HashtableItem));
+   this = malloc(sizeof(HashtableItem));
    this->key = key;
    this->value = value;
    this->next = NULL;
@@ -73,7 +73,7 @@ static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
 Hashtable* Hashtable_new(int size, bool owner) {
    Hashtable* this;
    
-   this = (Hashtable*) malloc(sizeof(Hashtable));
+   this = malloc(sizeof(Hashtable));
    this->items = 0;
    this->size = size;
    this->buckets = (HashtableItem**) calloc(size, sizeof(HashtableItem*));

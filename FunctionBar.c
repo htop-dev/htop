@@ -52,8 +52,8 @@ FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* eve
    }
    if (keys && events) {
       this->staticData = false; 
-      this->keys = malloc(sizeof(char*) * 15);
-      this->events = malloc(sizeof(int) * 15);
+      this->keys = calloc(15, sizeof(char*));
+      this->events = calloc(15, sizeof(int));
       int i = 0;
       while (i < 15 && functions[i]) {
          this->keys[i] = strdup(keys[i]);

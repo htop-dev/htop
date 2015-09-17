@@ -55,13 +55,13 @@ inline int String_eq(const char* s1, const char* s2) {
 char** String_split(const char* s, char sep, int* n) {
    *n = 0;
    const int rate = 10;
-   char** out = (char**) malloc(sizeof(char*) * rate);
+   char** out = calloc(rate, sizeof(char**));
    int ctr = 0;
    int blocks = rate;
    char* where;
    while ((where = strchr(s, sep)) != NULL) {
       int size = where - s;
-      char* token = (char*) malloc(size + 1);
+      char* token = malloc(size + 1);
       strncpy(token, s, size);
       token[size] = '\0';
       out[ctr] = token;
@@ -80,7 +80,7 @@ char** String_split(const char* s, char sep, int* n) {
    }
    if (s[0] != '\0') {
       int size = strlen(s);
-      char* token = (char*) malloc(size + 1);
+      char* token = malloc(size + 1);
       strncpy(token, s, size + 1);
       out[ctr] = token;
       ctr++;

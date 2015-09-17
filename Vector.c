@@ -37,7 +37,7 @@ Vector* Vector_new(ObjectClass* type, bool owner, int size) {
 
    if (size == DEFAULT_SIZE)
       size = 10;
-   this = (Vector*) malloc(sizeof(Vector));
+   this = malloc(sizeof(Vector));
    this->growthRate = size;
    this->array = (Object**) calloc(size, sizeof(Object*));
    this->arraySize = size;
