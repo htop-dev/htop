@@ -1,6 +1,6 @@
 #!/bin/sh
 
-glibtoolize=$(which glibtoolize)
+glibtoolize=$(which glibtoolize 2> /dev/null)
 if [ ${#glibtoolize} -gt 0 ]
 then libtoolize=glibtoolize
 else libtoolize=libtoolize
