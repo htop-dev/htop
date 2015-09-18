@@ -55,7 +55,7 @@ inline int String_eq(const char* s1, const char* s2) {
 char** String_split(const char* s, char sep, int* n) {
    *n = 0;
    const int rate = 10;
-   char** out = calloc(rate, sizeof(char**));
+   char** out = calloc(rate, sizeof(char*));
    int ctr = 0;
    int blocks = rate;
    char* where;

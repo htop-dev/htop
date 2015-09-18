@@ -108,24 +108,21 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             }
             flags.sortKey = ColumnsPanel_fieldNameToIndex(optarg);
             if (flags.sortKey == -1) {
-               fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
-               exit(1);
-            }
+               errx(1, stderr, "Error: invalid column \"%s\".\n", optarg);
+			}
             break;
          case 'd':
             if (sscanf(optarg, "%16d", &(flags.delay)) == 1) {
                if (flags.delay < 1) flags.delay = 1;
                if (flags.delay > 100) flags.delay = 100;
             } else {
-               fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
-               exit(1);
+               errx(1, stderr, "Error: invalid delay value \"%s\".\n", optarg);
             }
             break;
          case 'u':
             if (!Action_setUserOnly(optarg, &(flags.userId))) {
-               fprintf(stderr, "Error: invalid user \"%s\".\n", optarg);
-               exit(1);
-            }
+               errx(1, stderr, "Error: invalid user \"%s\".\n", optarg);
+			}
             break;
          case 'C':
             flags.useColors = false;

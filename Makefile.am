@@ -51,6 +51,14 @@ myhtopplatheaders = freebsd/Platform.h freebsd/FreeBSDProcessList.h \
 freebsd/FreeBSDProcess.h freebsd/FreeBSDCRT.h freebsd/Battery.h
 endif
 
+if HTOP_OPENBSD
+myhtopplatsources = openbsd/Platform.c openbsd/OpenBSDProcessList.c \
+openbsd/OpenBSDProcess.c openbsd/OpenBSDCRT.c openbsd/Battery.c
+
+myhtopplatheaders = openbsd/Platform.h openbsd/OpenBSDProcessList.h \
+openbsd/OpenBSDProcess.h openbsd/OpenBSDCRT.h openbsd/Battery.h
+endif
+
 if HTOP_DARWIN
 htop_LDFLAGS += -framework IOKit -framework CoreFoundation
 myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
