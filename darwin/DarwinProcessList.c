@@ -14,7 +14,6 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <stdio.h>
 #include <libproc.h>
-#include <mach/vm_page_size.h>
 #include <sys/mman.h>
 #include <utmpx.h>
 
