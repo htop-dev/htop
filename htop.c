@@ -132,11 +132,11 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             char* saveptr;
             char* pid = strtok_r(argCopy, ",", &saveptr);
 
-            if( !flags.pidWhiteList ) {
+            if(!flags.pidWhiteList) {
                flags.pidWhiteList = Hashtable_new(8, false);
             }
 
-            while( pid ) {
+            while(pid) {
                 unsigned int num_pid = atoi(pid);
                 Hashtable_put(flags.pidWhiteList, num_pid, (void *) 1);
                 pid = strtok_r(NULL, ",", &saveptr);
@@ -176,8 +176,7 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_PROC
    if (access(PROCDIR, R_OK) != 0) {
-      fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
-      exit(1);
+      errx(1, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
    }
 #endif
    

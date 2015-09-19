@@ -41,16 +41,14 @@ void ProcessList_getHostInfo(host_basic_info_data_t *p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
 
    if(0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
-       fprintf(stderr, "Unable to retrieve host info\n");
-       exit(2);
+       err(2, "Unable to retrieve host info\n");
    }
 }
 
 void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p) {
    if(NULL != p && NULL != *p) {
        if(0 != munmap(*p, vm_page_size)) {
-           fprintf(stderr, "Unable to free old CPU load information\n");
-           exit(8);
+           err(8, "Unable to free old CPU load information\n");
        }
    }
 
@@ -63,8 +61,7 @@ unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
 
    // TODO Improving the accuracy of the load counts woule help a lot.
    if(0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size)) {
-       fprintf(stderr, "Unable to retrieve CPU info\n");
-       exit(4);
+       err(4, "Unable to retrieve CPU info\n");
    }
 
    return cpu_count;
@@ -91,7 +88,7 @@ struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
 
    processes = malloc(*count);
    if (processes == NULL)
-      err(6, "Out of memory for kproc_infos");
+      errx(6, "Out of memory for kproc_infos");
 
    if (sysctl(mib, 4, processes, count, NULL, 0) < 0)
       err(7, "Unable to get kinfo_procs");
