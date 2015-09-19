@@ -242,7 +242,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       }
       
       this->totalTasks++;
-      if (proc->state == 'R') {
+      // SRUN ('R') means runnable, not running
+      if (proc->state == 'P') {
          this->runningTasks++;
       }
       proc->updated = true;
