@@ -609,9 +609,9 @@ void CRT_init(int delay, int colorScheme) {
 
    CRT_treeStr =
 #ifdef HAVE_LIBNCURSESW
-	   CRT_utf8 ? CRT_treeStrUtf8 :
+      CRT_utf8 ? CRT_treeStrUtf8 :
 #endif
-	   CRT_treeStrAscii;
+      CRT_treeStrAscii;
 
 #if NCURSES_MOUSE_VERSION > 1
    mousemask(BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);

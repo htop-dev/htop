@@ -109,7 +109,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             flags.sortKey = ColumnsPanel_fieldNameToIndex(optarg);
             if (flags.sortKey == -1) {
                errx(1, stderr, "Error: invalid column \"%s\".\n", optarg);
-			}
+            }
             break;
          case 'd':
             if (sscanf(optarg, "%16d", &(flags.delay)) == 1) {
@@ -122,7 +122,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
          case 'u':
             if (!Action_setUserOnly(optarg, &(flags.userId))) {
                errx(1, stderr, "Error: invalid user \"%s\".\n", optarg);
-			}
+            }
             break;
          case 'C':
             flags.useColors = false;

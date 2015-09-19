@@ -244,7 +244,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       this->totalTasks++;
       if (proc->state == 'R') {
          this->runningTasks++;
-	  }
+      }
       proc->updated = true;
    }
 }
