@@ -60,34 +60,34 @@ static int64_t old_v[MAXCPU][5];
  * useful on BSD machines for calculating cpu state percentages.
  */
 static int percentages(int cnt, int64_t *out, int64_t *new, int64_t *old, int64_t *diffs) {
-	int64_t change, total_change, *dp, half_total;
-	int i;
+   int64_t change, total_change, *dp, half_total;
+   int i;
 
-	/* initialization */
-	total_change = 0;
-	dp = diffs;
+   /* initialization */
+   total_change = 0;
+   dp = diffs;
 
-	/* calculate changes for each state and the overall change */
-	for (i = 0; i < cnt; i++) {
-		if ((change = *new - *old) < 0) {
-			/* this only happens when the counter wraps */
-			change = INT64_MAX - *old + *new;
-		}
-		total_change += (*dp++ = change);
-		*old++ = *new++;
-	}
+   /* calculate changes for each state and the overall change */
+   for (i = 0; i < cnt; i++) {
+      if ((change = *new - *old) < 0) {
+         /* this only happens when the counter wraps */
+         change = INT64_MAX - *old + *new;
+      }
+      total_change += (*dp++ = change);
+      *old++ = *new++;
+   }
 
-	/* avoid divide by zero potential */
-	if (total_change == 0)
-		total_change = 1;
+   /* avoid divide by zero potential */
+   if (total_change == 0)
+      total_change = 1;
 
-	/* calculate percentages based on overall change, rounding up */
-	half_total = total_change / 2l;
-	for (i = 0; i < cnt; i++)
-		*out++ = ((*diffs++ * 1000 + half_total) / total_change);
+   /* calculate percentages based on overall change, rounding up */
+   half_total = total_change / 2l;
+   for (i = 0; i < cnt; i++)
+      *out++ = ((*diffs++ * 1000 + half_total) / total_change);
 
-	/* return the total in case the caller wants to use it */
-	return (total_change);
+   /* return the total in case the caller wants to use it */
+   return (total_change);
 }
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
@@ -157,40 +157,40 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-	int i;
-	double perc;
+   int i;
+   double perc;
 
-	OpenBSDProcessList* pl = (OpenBSDProcessList*) this->pl;
-	CPUData* cpuData = &(pl->cpus[cpu]);
-	int64_t new_v[CPUSTATES], diff_v[CPUSTATES], scratch_v[CPUSTATES];
-	double *v = this->values;
-	size_t size = sizeof(double) * CPUSTATES;
-	int mib[] = { CTL_KERN, KERN_CPTIME2, cpu-1 };
-	if (sysctl(mib, 3, new_v, &size, NULL, 0) == -1) {
-		puts("err!");
-		//return 0.;
-	}
+   OpenBSDProcessList* pl = (OpenBSDProcessList*) this->pl;
+   CPUData* cpuData = &(pl->cpus[cpu]);
+   int64_t new_v[CPUSTATES], diff_v[CPUSTATES], scratch_v[CPUSTATES];
+   double *v = this->values;
+   size_t size = sizeof(double) * CPUSTATES;
+   int mib[] = { CTL_KERN, KERN_CPTIME2, cpu-1 };
+   if (sysctl(mib, 3, new_v, &size, NULL, 0) == -1) {
+      puts("err!");
+      //return 0.;
+   }
 
-	// XXX: why?
-	cpuData->totalPeriod = 1;
+   // XXX: why?
+   cpuData->totalPeriod = 1;
 
-	percentages(CPUSTATES, diff_v, new_v,
-			(int64_t *)old_v[cpu-1], scratch_v);
+   percentages(CPUSTATES, diff_v, new_v,
+         (int64_t *)old_v[cpu-1], scratch_v);
 
-	for (i = 0; i < CPUSTATES; i++) {
-		old_v[cpu-1][i] = new_v[i];
-		v[i] = diff_v[i] / 10.;
-	}
+   for (i = 0; i < CPUSTATES; i++) {
+      old_v[cpu-1][i] = new_v[i];
+      v[i] = diff_v[i] / 10.;
+   }
 
-	Meter_setItems(this, 4);
+   Meter_setItems(this, 4);
 
-	perc = v[0] + v[1] + v[2] + v[3];
+   perc = v[0] + v[1] + v[2] + v[3];
 
-	if (perc <= 100. && perc >= 0.) {
-		return perc;
-	} else {
-		return 12.34;
-	}
+   if (perc <= 100. && perc >= 0.) {
+      return perc;
+   } else {
+      return 12.34;
+   }
 }
 
 void Platform_setMemoryValues(Meter* this) {
@@ -212,41 +212,41 @@ void Platform_setMemoryValues(Meter* this) {
  * Taken almost directly from OpenBSD's top(1)
  */
 void Platform_setSwapValues(Meter* this) {
-	ProcessList* pl = (ProcessList*) this->pl;
-	struct swapent *swdev;
-	unsigned long long int total, used;
-	int nswap, rnswap, i;
-	nswap = swapctl(SWAP_NSWAP, 0, 0);
-	if (nswap == 0) {
-		return;
-	}
+   ProcessList* pl = (ProcessList*) this->pl;
+   struct swapent *swdev;
+   unsigned long long int total, used;
+   int nswap, rnswap, i;
+   nswap = swapctl(SWAP_NSWAP, 0, 0);
+   if (nswap == 0) {
+      return;
+   }
 
-	swdev = calloc(nswap, sizeof(*swdev));
-	if (swdev == NULL) {
-		return;
-	}
+   swdev = calloc(nswap, sizeof(*swdev));
+   if (swdev == NULL) {
+      return;
+   }
 
-	rnswap = swapctl(SWAP_STATS, swdev, nswap);
-	if (rnswap == -1) {
-		free(swdev);
-		return;
-	}
+   rnswap = swapctl(SWAP_STATS, swdev, nswap);
+   if (rnswap == -1) {
+      free(swdev);
+      return;
+   }
 
-	// if rnswap != nswap, then what?
+   // if rnswap != nswap, then what?
 
-	/* Total things up */
-	total = used = 0;
-	for (i = 0; i < nswap; i++) {
-		if (swdev[i].se_flags & SWF_ENABLE) {
-			used += (swdev[i].se_inuse / (1024 / DEV_BSIZE));
-			total += (swdev[i].se_nblks / (1024 / DEV_BSIZE));
-		}
-	}
+   /* Total things up */
+   total = used = 0;
+   for (i = 0; i < nswap; i++) {
+      if (swdev[i].se_flags & SWF_ENABLE) {
+         used += (swdev[i].se_inuse / (1024 / DEV_BSIZE));
+         total += (swdev[i].se_nblks / (1024 / DEV_BSIZE));
+      }
+   }
 
-	this->total = pl->totalSwap = total;
-	this->values[0] = pl->usedSwap = used;
+   this->total = pl->totalSwap = total;
+   this->values[0] = pl->usedSwap = used;
 
-	free(swdev);
+   free(swdev);
 }
 
 void Platform_setTasksValues(Meter* this) {

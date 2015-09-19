@@ -60,7 +60,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0)
-	  err(1, "fscale sysctl call failed");
+     err(1, "fscale sysctl call failed");
 
    for (i = 0; i < pl->cpuCount; i++) {
       fpl->cpus[i].totalTime = 1;
@@ -90,14 +90,14 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    size_t size = sizeof(uvmexp);
 
    if (sysctl(uvmexp_mib, 2, &uvmexp, &size, NULL, 0) < 0) {
-	   err(1, "uvmexp sysctl call failed");
+      err(1, "uvmexp sysctl call failed");
    }
 
    //kb_pagesize = uvmexp.pagesize / 1024;
    pl->usedMem = uvmexp.active * pageSizeKb;
    pl->totalMem = uvmexp.npages * pageSizeKb;
 
-	/*
+   /*
    const OpenBSDProcessList* fpl = (OpenBSDProcessList*) pl;
    
    size_t len = sizeof(pl->totalMem);
@@ -142,14 +142,14 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    while (*argv != NULL) {
       cpsz = MIN(len, strlen(*argv));
       strncpy(buf, *argv, cpsz);
-	  buf += cpsz;
-	  len -= cpsz;
-	  argv++;
-	  if (len > 0) {
-		  *buf = ' ';
-		  buf++;
-		  len--;
-	  }
+     buf += cpsz;
+     len -= cpsz;
+     argv++;
+     if (len > 0) {
+        *buf = ' ';
+        buf++;
+        len--;
+     }
    }
 
    *buf = '\0';
@@ -160,12 +160,12 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
  * Taken from OpenBSD's ps(1).
  */
 double getpcpu(const struct kinfo_proc *kp) {
-	if (fscale == 0)
-		return (0.0);
+   if (fscale == 0)
+      return (0.0);
 
-#define	fxtofl(fixpt)	((double)(fixpt) / fscale)
+#define   fxtofl(fixpt)   ((double)(fixpt) / fscale)
 
-	return (100.0 * fxtofl(kp->p_pctcpu));
+   return (100.0 * fxtofl(kp->p_pctcpu));
 }
 
 void ProcessList_goThroughEntries(ProcessList* this) {
@@ -194,7 +194,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       fp = (OpenBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc))
-			         || (hideUserlandThreads && Process_isUserlandThread(proc)));
+                  || (hideUserlandThreads && Process_isUserlandThread(proc)));
       
       if (!preExisting) {
          proc->ppid = kproc->p_ppid;
@@ -217,24 +217,24 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->m_size = kproc->p_vm_dsize;
       proc->m_resident = kproc->p_vm_rssize;
-	  proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
-	  proc->percent_cpu = MAX(MIN(getpcpu(kproc), this->cpuCount*100.0), 0.0);
+      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
+      proc->percent_cpu = MAX(MIN(getpcpu(kproc), this->cpuCount*100.0), 0.0);
       //proc->nlwp = kproc->p_numthreads;
       //proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 10);
-	  proc->nice = kproc->p_nice - 20;
-	  proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000);
-	  proc->time *= 100;
+      proc->nice = kproc->p_nice - 20;
+      proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000);
+      proc->time *= 100;
       proc->priority = kproc->p_priority - PZERO;
 
       switch (kproc->p_stat) {
-      case SIDL:    proc->state = 'I'; break;
-      case SRUN:    proc->state = 'R'; break;
-      case SSLEEP:  proc->state = 'S'; break;
-      case SSTOP:   proc->state = 'T'; break;
-      case SZOMB:   proc->state = 'Z'; break;
-      case SDEAD:   proc->state = 'D'; break;
-      case SONPROC: proc->state = 'P'; break;
-      default:      proc->state = '?';
+         case SIDL:    proc->state = 'I'; break;
+         case SRUN:    proc->state = 'R'; break;
+         case SSLEEP:  proc->state = 'S'; break;
+         case SSTOP:   proc->state = 'T'; break;
+         case SZOMB:   proc->state = 'Z'; break;
+         case SDEAD:   proc->state = 'D'; break;
+         case SONPROC: proc->state = 'P'; break;
+         default:      proc->state = '?';
       }
 
       if (Process_isKernelThread(proc)) {
@@ -242,8 +242,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       }
       
       this->totalTasks++;
-      if (proc->state == 'R')
+      if (proc->state == 'R') {
          this->runningTasks++;
+	  }
       proc->updated = true;
    }
 }
