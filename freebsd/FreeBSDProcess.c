@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 
@@ -19,15 +20,22 @@ in the source distribution for its full text.
 
 typedef enum FreeBSDProcessFields {
    // Add platform-specific fields here, with ids >= 100
-   LAST_PROCESSFIELD = 100,
+   JID   = 100,
+   JAIL  = 101,
+   LAST_PROCESSFIELD = 102,
 } FreeBSDProcessField;
+
 
 typedef struct FreeBSDProcess_ {
    Process super;
+   int   kernel;
+   int   jid;
+   char* jname;
 } FreeBSDProcess;
 
+
 #ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->pgrp == 0)
+#define Process_isKernelThread(_process) (_process->kernel == 1)
 #endif
 
 #ifndef Process_isUserlandThread
@@ -72,10 +80,13 @@ ProcessFieldData Process_fields[] = {
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
+   [JID] = { .name = "JID", .title = "    JID ", .description = "Jail prison ID", .flags = 0, },
+   [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 ProcessPidColumn Process_pidColumns[] = {
+   { .id = JID, .label = "JID" },
    { .id = PID, .label = "PID" },
    { .id = PPID, .label = "PPID" },
    { .id = TPGID, .label = "TPGID" },
@@ -95,16 +106,26 @@ FreeBSDProcess* FreeBSDProcess_new(Settings* settings) {
 void Process_delete(Object* cast) {
    FreeBSDProcess* this = (FreeBSDProcess*) cast;
    Process_done((Process*)cast);
+   free(this->jname);
    free(this);
 }
 
 void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField field) {
-   //FreeBSDProcess* fp = (FreeBSDProcess*) this;
+   FreeBSDProcess* fp = (FreeBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   //int n = sizeof(buffer) - 1;
+   int n = sizeof(buffer) - 1;
    switch (field) {
    // add FreeBSD-specific fields here
+   case JID: snprintf(buffer, n, Process_pidFormat, fp->jid); break;
+   case JAIL:{
+      snprintf(buffer, n, "%-11s ", fp->jname); break;
+      if (buffer[11] != '\0') {
+         buffer[11] = ' ';
+         buffer[12] = '\0';
+      }
+      break;
+   }
    default:
       Process_writeField(this, str, field);
       return;
@@ -124,11 +145,20 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
    }
    switch (settings->sortKey) {
    // add FreeBSD-specific fields here
+   case JID:
+      return (p1->jid - p2->jid);
+   case JAIL:
+      return strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
    default:
       return Process_compare(v1, v2);
    }
 }
 
 bool Process_isThread(Process* this) {
-   return (Process_isKernelThread(this));
+   FreeBSDProcess* fp = (FreeBSDProcess*) this;
+
+   if (fp->kernel == 1 )
+      return 1;
+   else
+      return (Process_isUserlandThread(this));
 }
