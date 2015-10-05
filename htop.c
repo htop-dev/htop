@@ -108,8 +108,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             }
             flags.sortKey = ColumnsPanel_fieldNameToIndex(optarg);
             if (flags.sortKey == -1) {
-               fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
-               exit(1);
+               errx(1, stderr, "Error: invalid column \"%s\".\n", optarg);
             }
             break;
          case 'd':
@@ -117,14 +116,12 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
                if (flags.delay < 1) flags.delay = 1;
                if (flags.delay > 100) flags.delay = 100;
             } else {
-               fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
-               exit(1);
+               errx(1, stderr, "Error: invalid delay value \"%s\".\n", optarg);
             }
             break;
          case 'u':
             if (!Action_setUserOnly(optarg, &(flags.userId))) {
-               fprintf(stderr, "Error: invalid user \"%s\".\n", optarg);
-               exit(1);
+               errx(1, stderr, "Error: invalid user \"%s\".\n", optarg);
             }
             break;
          case 'C':
@@ -135,11 +132,11 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             char* saveptr;
             char* pid = strtok_r(argCopy, ",", &saveptr);
 
-            if( !flags.pidWhiteList ) {
+            if(!flags.pidWhiteList) {
                flags.pidWhiteList = Hashtable_new(8, false);
             }
 
-            while( pid ) {
+            while(pid) {
                 unsigned int num_pid = atoi(pid);
                 Hashtable_put(flags.pidWhiteList, num_pid, (void *) 1);
                 pid = strtok_r(NULL, ",", &saveptr);
@@ -179,8 +176,7 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_PROC
    if (access(PROCDIR, R_OK) != 0) {
-      fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
-      exit(1);
+      errx(1, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
    }
 #endif
    

@@ -58,7 +58,7 @@ static const char* OpenFilesScreenKeys[] = {"F3", "F4", "F5", "Esc"};
 static int OpenFilesScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(5), 27};
 
 OpenFilesScreen* OpenFilesScreen_new(Process* process) {
-   OpenFilesScreen* this = (OpenFilesScreen*) malloc(sizeof(OpenFilesScreen));
+   OpenFilesScreen* this = malloc(sizeof(OpenFilesScreen));
    this->process = process;
    FunctionBar* bar = FunctionBar_new(OpenFilesScreenFunctions, OpenFilesScreenKeys, OpenFilesScreenEvents);
    this->display = Panel_new(0, 1, COLS, LINES-3, false, Class(ListItem), bar);

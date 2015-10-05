@@ -44,9 +44,9 @@ static void ListItem_display(Object* cast, RichString* out) {
    if (this->moving) {
       RichString_write(out, CRT_colors[DEFAULT_COLOR],
 #ifdef HAVE_LIBNCURSESW
-		      CRT_utf8 ? "↕ " :
+            CRT_utf8 ? "↕ " :
 #endif
-		      "+ ");
+            "+ ");
    } else {
       RichString_prune(out);
    }
