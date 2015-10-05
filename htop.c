@@ -108,7 +108,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             }
             flags.sortKey = ColumnsPanel_fieldNameToIndex(optarg);
             if (flags.sortKey == -1) {
-               errx(1, stderr, "Error: invalid column \"%s\".\n", optarg);
+               fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
             }
             break;
          case 'd':
@@ -116,12 +116,12 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
                if (flags.delay < 1) flags.delay = 1;
                if (flags.delay > 100) flags.delay = 100;
             } else {
-               errx(1, stderr, "Error: invalid delay value \"%s\".\n", optarg);
+               fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
             }
             break;
          case 'u':
             if (!Action_setUserOnly(optarg, &(flags.userId))) {
-               errx(1, stderr, "Error: invalid user \"%s\".\n", optarg);
+               fprintf(stderr, "Error: invalid user \"%s\".\n", optarg);
             }
             break;
          case 'C':
@@ -176,7 +176,7 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_PROC
    if (access(PROCDIR, R_OK) != 0) {
-      errx(1, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
+      fprintf("Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
    }
 #endif
    
