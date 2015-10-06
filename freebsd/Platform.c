@@ -37,7 +37,7 @@ ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_R
 
 int Platform_numberOfFields = LAST_PROCESSFIELD;
 
-static SignalItem Platform_signals[] = {
+SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
    { .name = " 1 SIGHUP",    .number =  1 },
    { .name = " 2 SIGINT",    .number =  2 },
