@@ -31,6 +31,10 @@ in the source distribution for its full text.
 
 extern ProcessFieldData Process_fields[];
 
+#ifndef DEFAULT_SIGNAL
+#define DEFAULT_SIGNAL 15
+#endif
+
 static SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
    { .name = " 1 SIGHUP",    .number =  1 },

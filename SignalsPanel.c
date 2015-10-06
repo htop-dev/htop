@@ -31,6 +31,6 @@ Panel* SignalsPanel_new() {
    for(unsigned int i = 0; i < Platform_numberOfSignals; i++)
       Panel_set(this, i, (Object*) ListItem_new(Platform_signals[i].name, Platform_signals[i].number));
    Panel_setHeader(this, "Send signal:");
-   Panel_setSelected(this, 16); // 16th item is SIGTERM
+   Panel_setSelected(this, DEFAULT_SIGNAL);
    return this;
 }
