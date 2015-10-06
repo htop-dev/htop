@@ -13,10 +13,15 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 #include "BatteryMeter.h"
 #include "LinuxProcess.h"
+#include "SignalsPanel.h"
 
 extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;
+
+extern SignalItem Platform_signals[];
+
+extern unsigned int Platform_numberOfSignals;
 
 void Platform_setBindings(Htop_Action* keys);
 
