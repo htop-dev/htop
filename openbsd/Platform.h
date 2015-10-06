@@ -12,6 +12,7 @@ in the source distribution for its full text.
 
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "SignalsPanel.h"
 
 extern ProcessFieldData Process_fields[];
 
@@ -34,6 +35,10 @@ extern ProcessFieldData Process_fields[];
 extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;
+
+extern SignalItem Platform_signals[];
+
+extern unsigned int Platform_numberOfSignals;
 
 void Platform_setBindings(Htop_Action* keys);
 
