@@ -32,11 +32,6 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "LinuxProcess.h"
 #include "SignalsPanel.h"
-
-#ifndef DEFAULT_SIGNAL
-#define DEFAULT_SIGNAL 16
-#endif
-
 }*/
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
