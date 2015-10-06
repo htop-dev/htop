@@ -105,7 +105,8 @@ SignalItem Platform_signals[] = {
    { .name = " 3 SIGQUIT",   .number =  3 },
    { .name = " 4 SIGILL",    .number =  4 },
    { .name = " 5 SIGTRAP",   .number =  5 },
-   { .name = " 6 SIGABRT",   .number =  6 },   /* a.k.a. SIGIOT */
+   { .name = " 6 SIGABRT",   .number =  6 },
+   { .name = " 6 SIGIOT",    .number =  6 },
    { .name = " 7 SIGEMT",    .number =  7 },
    { .name = " 8 SIGFPE",    .number =  8 },
    { .name = " 9 SIGKILL",   .number =  9 },
