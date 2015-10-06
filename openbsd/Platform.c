@@ -95,6 +95,9 @@ ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_R
 
 int Platform_numberOfFields = LAST_PROCESSFIELD;
 
+/*
+ * See /usr/include/sys/signal.h
+ */
 SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
    { .name = " 1 SIGHUP",    .number =  1 },
