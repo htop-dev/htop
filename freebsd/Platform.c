@@ -31,12 +31,6 @@ in the source distribution for its full text.
 
 extern ProcessFieldData Process_fields[];
 
-}*/
-
-ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
-
-int Platform_numberOfFields = LAST_PROCESSFIELD;
-
 static SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
    { .name = " 1 SIGHUP",    .number =  1 },
@@ -74,6 +68,12 @@ static SignalItem Platform_signals[] = {
    { .name = "33 SIGLIBRT",  .number = 33 },
 };
 
+}*/
+
+ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
+
+int Platform_numberOfFields = LAST_PROCESSFIELD;
+
 unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
 
 void Platform_setBindings(Htop_Action* keys) {
@@ -105,7 +105,7 @@ int Platform_getUptime() {
    struct timeval bootTime, currTime;
    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
-   
+
    int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
    if (err) {
       return -1;
@@ -119,7 +119,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    struct loadavg loadAverage;
    int mib[2] = { CTL_VM, VM_LOADAVG };
    size_t size = sizeof(loadAverage);
-   
+
    int err = sysctl(mib, 2, &loadAverage, &size, NULL, 0);
    if (err) {
       *one = 0;
