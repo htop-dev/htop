@@ -199,6 +199,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(fp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
+
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
          proc->pid = kproc->ki_pid;
@@ -206,7 +207,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
            fp->kernel = 1;
          else
            fp->kernel = 0;
-         proc->ppid = kproc->ki_ppid;
          proc->tpgid = kproc->ki_tpgid;
          proc->tgid = kproc->ki_pid;
          proc->session = kproc->ki_sid;
@@ -219,11 +219,18 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
+         if(fp->jid != kproc->ki_jid) {
+            fp->jid = kproc->ki_jid;
+            free(fp->jname);
+            fp->jname = FreeBSDProcessList_readJailName(kproc);
+         }
          if (settings->updateProcessNames) {
             free(proc->comm);
             proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
          }
       }
+
+      proc->ppid = kproc->ki_ppid;
 
       proc->m_size = kproc->ki_size / pageSizeKb / 1000;
       proc->m_resident = kproc->ki_rssize; // * pageSizeKb;

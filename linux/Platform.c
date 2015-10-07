@@ -176,14 +176,14 @@ double Platform_setCPUValues(Meter* this, int cpu) {
          percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];
       } else {
          percent = v[0]+v[1]+v[2]+v[3]+v[4];
-      }       
+      }
    } else {
       v[2] = cpuData->systemAllPeriod / total * 100.0;
       v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
       Meter_setItems(this, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    }
-   percent = MIN(100.0, MAX(0.0, percent));      
+   percent = MIN(100.0, MAX(0.0, percent));
    if (isnan(percent)) percent = 0.0;
    return percent;
 }
