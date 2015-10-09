@@ -38,6 +38,7 @@ in the source distribution for its full text.
 /*{
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "SignalsPanel.h"
 
 extern ProcessFieldData Process_fields[];
 
@@ -231,7 +232,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    if (perc <= 100. && perc >= 0.) {
       return perc;
    } else {
-      return 12.34;
+      return 0.;
    }
 }
 

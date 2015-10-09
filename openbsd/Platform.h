@@ -36,6 +36,9 @@ extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;
 
+/*
+ * See /usr/include/sys/signal.h
+ */
 extern SignalItem Platform_signals[];
 
 extern unsigned int Platform_numberOfSignals;
