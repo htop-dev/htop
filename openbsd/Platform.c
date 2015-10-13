@@ -167,7 +167,7 @@ int Platform_getUptime() {
    struct timeval bootTime, currTime;
    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
-   
+
    int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
    if (err) {
       return -1;
@@ -181,7 +181,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    struct loadavg loadAverage;
    int mib[2] = { CTL_VM, VM_LOADAVG };
    size_t size = sizeof(loadAverage);
-   
+
    int err = sysctl(mib, 2, &loadAverage, &size, NULL, 0);
    if (err) {
       *one = 0;

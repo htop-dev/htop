@@ -52,7 +52,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    OpenBSDProcessList* fpl = calloc(1, sizeof(OpenBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
    size_t size = sizeof(pl->cpuCount);
-   
+
    ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidWhiteList, userId);
    pl->cpuCount = 1;    // default to 1 on sysctl() error
    (void)sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
@@ -66,7 +66,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       fpl->cpus[i].totalTime = 1;
       fpl->cpus[i].totalPeriod = 1;
    }
-   
+
    pageSizeKb = PAGE_SIZE_KB;
 
    // XXX: last arg should eventually be an errbuf
@@ -79,7 +79,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 void ProcessList_delete(ProcessList* this) {
    const OpenBSDProcessList* fpl = (OpenBSDProcessList*) this;
    if (fpl->kd) kvm_close(fpl->kd);
-  
+
    ProcessList_done(this);
    free(this);
 }
@@ -99,7 +99,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    /*
    const OpenBSDProcessList* fpl = (OpenBSDProcessList*) pl;
-   
+
    size_t len = sizeof(pl->totalMem);
    sysctl(MIB_hw_physmem, 2, &(pl->totalMem), &len, NULL, 0);
    pl->totalMem /= 1024;
@@ -108,7 +108,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->freeMem = pl->totalMem - pl->usedMem;
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
    pl->cachedMem *= pageSizeKb;
-   
+
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(fpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
    pl->totalSwap = 0;
@@ -119,7 +119,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    pl->totalSwap *= pageSizeKb;
    pl->usedSwap *= pageSizeKb;
-   
+
    pl->sharedMem = 0;  // currently unused
    pl->buffersMem = 0; // not exposed to userspace
    */
@@ -179,23 +179,23 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    OpenBSDProcess* fp;
    int count = 0;
    int i;
-   
+
    OpenBSDProcessList_scanMemoryInfo(this);
-   
+
    // use KERN_PROC_KTHREAD to also include kernel threads
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
    //struct kinfo_proc* kprocs = getprocs(KERN_PROC_ALL, 0, &count);
-   
+
    for (i = 0; i < count; i++) {
       kproc = &kprocs[i];
-      
+
       preExisting = false;
       proc = ProcessList_getProcess(this, kproc->p_pid, &preExisting, (Process_New) OpenBSDProcess_new);
       fp = (OpenBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc))
                   || (hideUserlandThreads && Process_isUserlandThread(proc)));
-      
+
       if (!preExisting) {
          proc->ppid = kproc->p_ppid;
          proc->tpgid = kproc->p_tpgid;
@@ -240,7 +240,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if (Process_isKernelThread(proc)) {
          this->kernelThreads++;
       }
-      
+
       this->totalTasks++;
       // SRUN ('R') means runnable, not running
       if (proc->state == 'P') {
