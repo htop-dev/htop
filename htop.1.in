@@ -351,8 +351,9 @@ Currently unsupported (always displays '-').
 By default htop reads its configuration from the XDG-compliant path
 ~/.config/htop/htoprc -- the configuration file is overwritten by htop's
 in-program Setup configuration, so it should not be hand-edited. If no
-user configuration exists htop tries to read system-wide configuration
-from @sysconfdir@/htoprc and falls back to hard coded default.
+user configuration exists htop tries to read the system-wide configuration
+from @sysconfdir@/htoprc and as a last resort, falls back to its
+hard coded defaults.
 .LP
 You may override the location of the configuration file using the $HTOPRC
 environment variable (so you can have multiple configurations for different
