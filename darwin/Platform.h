@@ -16,6 +16,10 @@ in the source distribution for its full text.
 
 extern ProcessField Platform_defaultFields[];
 
+extern SignalItem Platform_signals[];
+
+extern unsigned int Platform_numberOfSignals;
+
 extern ProcessFieldData Process_fields[];
 
 extern MeterClass* Platform_meterTypes[];
@@ -29,6 +33,8 @@ int Platform_getUptime();
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
+
+extern ProcessPidColumn Process_pidColumns[];
 
 double Platform_setCPUValues(Meter* mtr, int cpu);
 

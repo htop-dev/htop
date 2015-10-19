@@ -12,15 +12,22 @@ in the source distribution for its full text.
 
 typedef enum FreeBSDProcessFields {
    // Add platform-specific fields here, with ids >= 100
-   LAST_PROCESSFIELD = 100,
+   JID   = 100,
+   JAIL  = 101,
+   LAST_PROCESSFIELD = 102,
 } FreeBSDProcessField;
+
 
 typedef struct FreeBSDProcess_ {
    Process super;
+   int   kernel;
+   int   jid;
+   char* jname;
 } FreeBSDProcess;
 
+
 #ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->pgrp == 0)
+#define Process_isKernelThread(_process) (_process->kernel == 1)
 #endif
 
 #ifndef Process_isUserlandThread
@@ -32,7 +39,7 @@ extern ProcessClass FreeBSDProcess_class;
 
 extern ProcessFieldData Process_fields[];
 
-extern char* Process_pidFormat;
+extern ProcessPidColumn Process_pidColumns[];
 
 FreeBSDProcess* FreeBSDProcess_new(Settings* settings);
 

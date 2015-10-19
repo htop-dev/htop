@@ -11,6 +11,12 @@ in the source distribution for its full text.
 
 
 #include <kvm.h>
+#include <sys/param.h>
+#include <sys/jail.h>
+#include <sys/uio.h>
+
+#define JAIL_ERRMSGLEN	1024
+char jail_errmsg[JAIL_ERRMSGLEN];
 
 typedef struct CPUData_ {
    unsigned long long int totalTime;
@@ -31,6 +37,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 void ProcessList_delete(ProcessList* this);
 
 char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
+
+char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
 
 void ProcessList_goThroughEntries(ProcessList* this);
 
