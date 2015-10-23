@@ -18,6 +18,19 @@ in the source distribution for its full text.
 
 /*{
 #include "Meter.h"
+
+typedef enum {
+   CPU_METER_NICE = 0,
+   CPU_METER_NORMAL = 1,
+   CPU_METER_KERNEL = 2,
+   CPU_METER_IRQ = 3,
+   CPU_METER_SOFTIRQ = 4,
+   CPU_METER_STEAL = 5,
+   CPU_METER_GUEST = 6,
+   CPU_METER_IOWAIT = 7,
+   CPU_METER_ITEMCOUNT = 8, // number of entries in this enum
+} CPUMeterValues;
+
 }*/
 
 int CPUMeter_attributes[] = {
@@ -48,6 +61,7 @@ static void CPUMeter_setValues(Meter* this, char* buffer, int size) {
       snprintf(buffer, size, "absent");
       return;
    }
+   memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
    double percent = Platform_setCPUValues(this, cpu);
    snprintf(buffer, size, "%5.1f%%", percent);
 }
@@ -60,44 +74,44 @@ static void CPUMeter_display(Object* cast, RichString* out) {
       RichString_append(out, CRT_colors[METER_TEXT], "absent");
       return;
    }
-   sprintf(buffer, "%5.1f%% ", this->values[1]);
+   sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_NORMAL]);
    RichString_append(out, CRT_colors[METER_TEXT], ":");
    RichString_append(out, CRT_colors[CPU_NORMAL], buffer);
    if (this->pl->settings->detailedCPUTime) {
-      sprintf(buffer, "%5.1f%% ", this->values[2]);
+      sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_KERNEL]);
       RichString_append(out, CRT_colors[METER_TEXT], "sy:");
       RichString_append(out, CRT_colors[CPU_KERNEL], buffer);
-      sprintf(buffer, "%5.1f%% ", this->values[0]);
+      sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_NICE]);
       RichString_append(out, CRT_colors[METER_TEXT], "ni:");
       RichString_append(out, CRT_colors[CPU_NICE_TEXT], buffer);
-      sprintf(buffer, "%5.1f%% ", this->values[3]);
+      sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_IRQ]);
       RichString_append(out, CRT_colors[METER_TEXT], "hi:");
       RichString_append(out, CRT_colors[CPU_IRQ], buffer);
-      sprintf(buffer, "%5.1f%% ", this->values[4]);
+      sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_SOFTIRQ]);
       RichString_append(out, CRT_colors[METER_TEXT], "si:");
       RichString_append(out, CRT_colors[CPU_SOFTIRQ], buffer);
-      if (this->values[5]) {
-         sprintf(buffer, "%5.1f%% ", this->values[5]);
+      if (this->values[CPU_METER_STEAL]) {
+         sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_STEAL]);
          RichString_append(out, CRT_colors[METER_TEXT], "st:");
          RichString_append(out, CRT_colors[CPU_STEAL], buffer);
       }
-      if (this->values[6]) {
-         sprintf(buffer, "%5.1f%% ", this->values[6]);
+      if (this->values[CPU_METER_GUEST]) {
+         sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_GUEST]);
          RichString_append(out, CRT_colors[METER_TEXT], "gu:");
          RichString_append(out, CRT_colors[CPU_GUEST], buffer);
       }
-      sprintf(buffer, "%5.1f%% ", this->values[7]);
+      sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_IOWAIT]);
       RichString_append(out, CRT_colors[METER_TEXT], "wa:");
       RichString_append(out, CRT_colors[CPU_IOWAIT], buffer);
    } else {
-      sprintf(buffer, "%5.1f%% ", this->values[2]);
+      sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_KERNEL]);
       RichString_append(out, CRT_colors[METER_TEXT], "sys:");
       RichString_append(out, CRT_colors[CPU_KERNEL], buffer);
-      sprintf(buffer, "%5.1f%% ", this->values[0]);
+      sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_NICE]);
       RichString_append(out, CRT_colors[METER_TEXT], "low:");
       RichString_append(out, CRT_colors[CPU_NICE_TEXT], buffer);
-      if (this->values[3]) {
-         sprintf(buffer, "%5.1f%% ", this->values[3]);
+      if (this->values[CPU_METER_IRQ]) {
+         sprintf(buffer, "%5.1f%% ", this->values[CPU_METER_IRQ]);
          RichString_append(out, CRT_colors[METER_TEXT], "vir:");
          RichString_append(out, CRT_colors[CPU_GUEST], buffer);
       }
@@ -203,7 +217,7 @@ MeterClass CPUMeter_class = {
    },
    .setValues = CPUMeter_setValues, 
    .defaultMode = BAR_METERMODE,
-   .maxItems = 8,
+   .maxItems = CPU_METER_ITEMCOUNT,
    .total = 100.0,
    .attributes = CPUMeter_attributes, 
    .name = "CPU",

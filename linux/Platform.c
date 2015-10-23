@@ -162,15 +162,15 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
    double percent;
    double* v = this->values;
-   v[0] = cpuData->nicePeriod / total * 100.0;
-   v[1] = cpuData->userPeriod / total * 100.0;
+   v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
+   v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
    if (this->pl->settings->detailedCPUTime) {
-      v[2] = cpuData->systemPeriod / total * 100.0;
-      v[3] = cpuData->irqPeriod / total * 100.0;
-      v[4] = cpuData->softIrqPeriod / total * 100.0;
-      v[5] = cpuData->stealPeriod / total * 100.0;
-      v[6] = cpuData->guestPeriod / total * 100.0;
-      v[7] = cpuData->ioWaitPeriod / total * 100.0;
+      v[CPU_METER_KERNEL]  = cpuData->systemPeriod / total * 100.0;
+      v[CPU_METER_IRQ]     = cpuData->irqPeriod / total * 100.0;
+      v[CPU_METER_SOFTIRQ] = cpuData->softIrqPeriod / total * 100.0;
+      v[CPU_METER_STEAL]   = cpuData->stealPeriod / total * 100.0;
+      v[CPU_METER_GUEST]   = cpuData->guestPeriod / total * 100.0;
+      v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
       Meter_setItems(this, 8);
       if (this->pl->settings->accountGuestInCPUMeter) {
          percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];

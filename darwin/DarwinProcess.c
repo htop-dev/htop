@@ -220,11 +220,11 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
                /* Convert previous '\0'. */
                *np = ' ';
             }
-           /* Note location of current '\0'. */
-           np = cp;
-        }
-     }
-  }
+            /* Note location of current '\0'. */
+            np = cp;
+         }
+      }
+   }
 #endif
 
    /*
