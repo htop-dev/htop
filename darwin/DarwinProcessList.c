@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include <libproc.h>
 #include <sys/mman.h>
 #include <utmpx.h>
+#include <err.h>
 
 /*{
 #include "ProcessList.h"

@@ -167,7 +167,10 @@ ProcessPidColumn Process_pidColumns[] = {
 static double Platform_setCPUAverageValues(Meter* mtr) {
    DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
    int cpus = dpl->super.cpuCount;
-   double sumNice, sumNormal, sumKernel, sumPercent;
+   double sumNice = 0.0;
+   double sumNormal = 0.0;
+   double sumKernel = 0.0;
+   double sumPercent = 0.0;
    for (int i = 1; i <= cpus; i++) {
       sumPercent += Platform_setCPUValues(mtr, i);
       sumNice    += mtr->values[CPU_METER_NICE];
