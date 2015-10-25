@@ -21,6 +21,7 @@ in the source distribution for its full text.
 
 /*{
 #include "Action.h"
+#include "CPUMeter.h"
 #include "BatteryMeter.h"
 #include "DarwinProcess.h"
 }*/
@@ -163,11 +164,30 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
 
+static double Platform_setCPUAverageValues(Meter* mtr) {
+   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
+   int cpus = dpl->super.cpuCount;
+   double sumNice = 0.0;
+   double sumNormal = 0.0;
+   double sumKernel = 0.0;
+   double sumPercent = 0.0;
+   for (int i = 1; i <= cpus; i++) {
+      sumPercent += Platform_setCPUValues(mtr, i);
+      sumNice    += mtr->values[CPU_METER_NICE];
+      sumNormal  += mtr->values[CPU_METER_NORMAL];
+      sumKernel  += mtr->values[CPU_METER_KERNEL];
+   }
+   mtr->values[CPU_METER_NICE]   = sumNice   / cpus;
+   mtr->values[CPU_METER_NORMAL] = sumNormal / cpus;
+   mtr->values[CPU_METER_KERNEL] = sumKernel / cpus;
+   return sumPercent / cpus;
+}
+
 double Platform_setCPUValues(Meter* mtr, int cpu) {
-   /* All just from CPUMeter.c */
-   static const int CPU_METER_NICE = 0;
-   static const int CPU_METER_NORMAL = 1;
-   static const int CPU_METER_KERNEL = 2;
+
+   if (cpu == 0) {
+      return Platform_setCPUAverageValues(mtr);
+   }
 
    DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
    processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];

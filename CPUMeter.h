@@ -11,6 +11,19 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
+typedef enum {
+   CPU_METER_NICE = 0,
+   CPU_METER_NORMAL = 1,
+   CPU_METER_KERNEL = 2,
+   CPU_METER_IRQ = 3,
+   CPU_METER_SOFTIRQ = 4,
+   CPU_METER_STEAL = 5,
+   CPU_METER_GUEST = 6,
+   CPU_METER_IOWAIT = 7,
+   CPU_METER_ITEMCOUNT = 8, // number of entries in this enum
+} CPUMeterValues;
+
+
 extern int CPUMeter_attributes[];
 
 #ifndef MIN
