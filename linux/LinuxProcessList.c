@@ -695,8 +695,6 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       unsigned long long int virtalltime = guest + guestnice;
       unsigned long long int totaltime = usertime + nicetime + systemalltime + idlealltime + steal + virtalltime;
       CPUData* cpuData = &(this->cpus[i]);
-      assert (usertime >= cpuData->userTime);
-      assert (nicetime >= cpuData->niceTime);
       assert (systemtime >= cpuData->systemTime);
       assert (idletime >= cpuData->idleTime);
       assert (totaltime >= cpuData->totalTime);
@@ -707,8 +705,11 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       assert (softIrq >= cpuData->softIrqTime);
       assert (steal >= cpuData->stealTime);
       assert (virtalltime >= cpuData->guestTime);
-      cpuData->userPeriod = usertime - cpuData->userTime;
-      cpuData->nicePeriod = nicetime - cpuData->niceTime;
+      // Since we do a subtraction (usertime - guest) and cputime64_to_clock_t()
+      // used in /proc/stat rounds down numbers, it can lead to a case where the
+      // integer overflow.
+      cpuData->userPeriod = (usertime > cpuData->userTime) ? usertime - cpuData->userTime : 0;
+      cpuData->nicePeriod = (nicetime > cpuData->niceTime) ? nicetime - cpuData->niceTime : 0;
       cpuData->systemPeriod = systemtime - cpuData->systemTime;
       cpuData->systemAllPeriod = systemalltime - cpuData->systemAllTime;
       cpuData->idleAllPeriod = idlealltime - cpuData->idleAllTime;
@@ -732,7 +733,8 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       cpuData->guestTime = virtalltime;
       cpuData->totalTime = totaltime;
    }
-   double period = (double)this->cpus[0].totalPeriod / cpus; fclose(file);
+   double period = (double)this->cpus[0].totalPeriod / cpus;
+   fclose(file);
    return period;
 }
 
