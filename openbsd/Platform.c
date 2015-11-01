@@ -210,8 +210,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    size_t size = sizeof(double) * CPUSTATES;
    int mib[] = { CTL_KERN, KERN_CPTIME2, cpu-1 };
    if (sysctl(mib, 3, new_v, &size, NULL, 0) == -1) {
-      puts("err!");
-      //return 0.;
+      return 0.;
    }
 
    // XXX: why?
