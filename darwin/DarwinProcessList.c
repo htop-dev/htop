@@ -40,14 +40,14 @@ void ProcessList_getHostInfo(host_basic_info_data_t *p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
 
    if(0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
-       err(2, "Unable to retrieve host info\n");
+       CRT_fatalError("Unable to retrieve host info\n");
    }
 }
 
 void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p) {
    if(NULL != p && NULL != *p) {
        if(0 != munmap(*p, vm_page_size)) {
-           err(8, "Unable to free old CPU load information\n");
+           CRT_fatalError("Unable to free old CPU load information\n");
        }
    }
 
@@ -60,7 +60,7 @@ unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
 
    // TODO Improving the accuracy of the load counts woule help a lot.
    if(0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size)) {
-       err(4, "Unable to retrieve CPU info\n");
+       CRT_fatalError("Unable to retrieve CPU info\n");
    }
 
    return cpu_count;
@@ -70,7 +70,7 @@ void ProcessList_getVMStats(vm_statistics64_t p) {
     mach_msg_type_number_t info_size = HOST_VM_INFO64_COUNT;
 
     if (host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info_t)p, &info_size) != 0)
-       err(9, "Unable to retrieve VM statistics\n");
+       CRT_fatalError("Unable to retrieve VM statistics\n");
 }
 
 struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
@@ -83,14 +83,14 @@ struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
     */
    *count = 0;
    if (sysctl(mib, 4, NULL, count, NULL, 0) < 0)
-      err(5, "Unable to get size of kproc_infos");
+      CRT_fatalError("Unable to get size of kproc_infos");
 
    processes = malloc(*count);
    if (processes == NULL)
-      errx(6, "Out of memory for kproc_infos");
+      CRT_fatalError("Out of memory for kproc_infos");
 
    if (sysctl(mib, 4, processes, count, NULL, 0) < 0)
-      err(7, "Unable to get kinfo_procs");
+      CRT_fatalError("Unable to get kinfo_procs");
 
    *count = *count / sizeof(struct kinfo_proc);
 

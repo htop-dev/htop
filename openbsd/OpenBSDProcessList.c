@@ -13,7 +13,6 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <err.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/proc.h>
@@ -60,7 +59,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0)
-     err(1, "fscale sysctl call failed");
+     CRT_fatalError("fscale sysctl call failed");
 
    for (i = 0; i < pl->cpuCount; i++) {
       fpl->cpus[i].totalTime = 1;
@@ -90,7 +89,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    size_t size = sizeof(uvmexp);
 
    if (sysctl(uvmexp_mib, 2, &uvmexp, &size, NULL, 0) < 0) {
-      err(1, "uvmexp sysctl call failed");
+      CRT_fatalError("uvmexp sysctl call failed");
    }
 
    //kb_pagesize = uvmexp.pagesize / 1024;
@@ -133,11 +132,11 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    argv = kvm_getargv(kd, kproc, 500);
 
    if (argv == NULL)
-      err(1, "kvm call failed");
+      CRT_fatalError("kvm call failed");
 
    str = buf = malloc(len+1);
    if (str == NULL)
-      err(1, "out of memory");
+      CRT_fatalError("out of memory");
 
    while (*argv != NULL) {
       cpsz = MIN(len, strlen(*argv));
