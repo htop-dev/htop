@@ -38,6 +38,7 @@ in the source distribution for its full text.
 /*{
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "SignalsPanel.h"
 
 extern ProcessFieldData Process_fields[];
 
@@ -167,7 +168,7 @@ int Platform_getUptime() {
    struct timeval bootTime, currTime;
    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
-   
+
    int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
    if (err) {
       return -1;
@@ -181,7 +182,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    struct loadavg loadAverage;
    int mib[2] = { CTL_VM, VM_LOADAVG };
    size_t size = sizeof(loadAverage);
-   
+
    int err = sysctl(mib, 2, &loadAverage, &size, NULL, 0);
    if (err) {
       *one = 0;
@@ -210,8 +211,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    size_t size = sizeof(double) * CPUSTATES;
    int mib[] = { CTL_KERN, KERN_CPTIME2, cpu-1 };
    if (sysctl(mib, 3, new_v, &size, NULL, 0) == -1) {
-      puts("err!");
-      //return 0.;
+      return 0.;
    }
 
    // XXX: why?
@@ -232,7 +232,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    if (perc <= 100. && perc >= 0.) {
       return perc;
    } else {
-      return 12.34;
+      return 0.;
    }
 }
 
