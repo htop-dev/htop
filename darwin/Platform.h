@@ -11,6 +11,8 @@ in the source distribution for its full text.
 */
 
 #include "Action.h"
+#include "SignalsPanel.h"
+#include "CPUMeter.h"
 #include "BatteryMeter.h"
 #include "DarwinProcess.h"
 
