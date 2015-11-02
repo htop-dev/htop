@@ -171,6 +171,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
             Vector_remove(this->meters, selected);
             Panel_remove(super, selected);
          }
+         MetersPanel_setMoving(this, false);
          result = HANDLED;
          break;
       }

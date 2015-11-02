@@ -256,7 +256,7 @@ void Panel_setSelected(Panel* this, int selected) {
 
    int size = Vector_size(this->items);
    if (selected >= size) {
-      return;
+      selected = size - 1;
    }
    if (selected < 0)
       selected = 0;
