@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <stdlib.h>
 #include <assert.h>
+#include "CRT.h"
 
 /*{
 #include "Panel.h"
@@ -51,8 +52,10 @@ void MetersPanel_setMoving(MetersPanel* this, bool moving) {
    this->moving = moving;
    ((ListItem*)Panel_getSelected(super))->moving = moving;
    if (!moving) {
+      Panel_setSelectionColor(super, CRT_colors[PANEL_SELECTION_FOCUS]);
       Panel_setDefaultBar(super);
    } else {
+      Panel_setSelectionColor(super, CRT_colors[PANEL_SELECTION_FOLLOW]);
       super->currentBar = Meters_movingBar;
    }
 }
