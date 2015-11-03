@@ -6,6 +6,7 @@ then libtoolize=glibtoolize
 else libtoolize=libtoolize
 fi
 
+mkdir -p m4
 aclocal -I m4
 autoconf
 autoheader
