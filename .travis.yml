@@ -7,3 +7,5 @@ compiler:
 os:
   - linux
   - osx
+
+script: ./autogen.sh && ./configure && make

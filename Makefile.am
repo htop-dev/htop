@@ -83,9 +83,6 @@ SUFFIXES = .h
 BUILT_SOURCES = $(myhtopheaders) $(myhtopplatheaders)
 htop_SOURCES  = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources) config.h
 
-test:
-	echo "Test suite not integrated yet."
-
 target:
 	echo $(htop_SOURCES)
 
