@@ -102,6 +102,7 @@ MeterClass* Platform_meterTypes[] = {
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,
+   &SwapMeter_class,
    &TasksMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
@@ -226,7 +227,12 @@ void Platform_setMemoryValues(Meter* mtr) {
    mtr->values[2] = (double)vm->inactive_count * page_K;
 }
 
-void Platform_setSwapValues(Meter* this) {
-   (void) this;
-}
+void Platform_setSwapValues(Meter* mtr) {
+  int mib[2] = {CTL_VM, VM_SWAPUSAGE};
+  struct xsw_usage swapused;
+  size_t swlen = sizeof(swapused);
+  sysctl(mib, 2, &swapused, &swlen, NULL, 0);
 
+  mtr->total = swapused.xsu_total / 1024;
+  mtr->values[0] = swapused.xsu_used / 1024;
+}
