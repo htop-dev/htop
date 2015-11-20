@@ -2,9 +2,15 @@
 What's new in version 1.0.4
 
 * Platform abstraction layer
-* Prototype FreeBSD support
+* Initial FreeBSD support
 * Initial Mac OS X support
   (thanks to David Hunt)
+* Swap meter for Mac OSX
+  (thanks to Ștefan Rusu)
+* OpenBSD port
+  (thanks to Michael McConville)
+* FreeBSD support improvements
+  (thanks to Martin Misuth)
 * Support for NCurses 6 ABI, including mouse wheel support
 * Much improved mouse responsiveness
 * Higher-resolution UTF-8 based Graph mode
@@ -14,6 +20,8 @@ What's new in version 1.0.4
 * BUGFIX: Fix crash when scrolling an empty filtered list.
 * Use dynamic units for text display, and several fixes
   (thanks to Christian Hesse)
+* BUGFIX: fix error caused by overflow in usertime calculation.
+  (thanks to Patrick Marlier)
 * Several tweaks and bugfixes
   (See the Git log for details and contributors!)
 
