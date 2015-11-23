@@ -171,7 +171,7 @@ shown in htop's main screen, it is shown below in parenthesis.
 .LP 
 .TP 5
 .B Command
-The full command line of the process (i.e program name and arguments).
+The full command line of the process (i.e. program name and arguments).
 .TP 
 .B PID
 The process ID.
@@ -214,7 +214,7 @@ The number of major faults for the process's waited-for children (see MAJFLT abo
 .TP
 .B UTIME (UTIME+)
 The user CPU time, which is the amount of time the process has spent executing
-on the CPU in user mode (i.e everything but system calls), measured in clock
+on the CPU in user mode (i.e. everything but system calls), measured in clock
 ticks.
 .TP
 .B STIME (STIME+)
@@ -246,21 +246,22 @@ The time the process was started.
 The ID of the CPU the process last executed on.
 .TP
 .B M_SIZE (VIRT)
-Size in memory of the total program size.
+The size of the virtual memory of the process.
 .TP
 .B M_RESIDENT (RES)
-The resident set size, i.e the size of the text and data sections, plus stack
-usage.
+The resident set size (text + data + stack) of the process (i.e. the size of the
+process's used physical memory).
 .TP
 .B M_SHARE (SHR)
 The size of the process's shared pages.
 .TP
 .B M_TRS (CODE)
-The size of the text segment of the process (i.e the size of the processes
+The text resident set size of the process (i.e. the size of the process's
 executable instructions).
 .TP
 .B M_DRS (DATA)
-The size of the data segment plus stack usage of the process.
+The data resident set size (data + stack) of the process (i.e. the size of anything
+except the process's executable instructions).
 .TP
 .B M_LRS (LIB)
 The library size of the process.
