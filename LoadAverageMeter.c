@@ -65,7 +65,7 @@ MeterClass LoadAverageMeter_class = {
    .attributes = LoadAverageMeter_attributes,
    .name = "LoadAverage",
    .uiName = "Load average",
-   .description = "Load averages: 15 minutes, 5 minutes, 1 minute",
+   .description = "Load averages: 1 minute, 5 minutes, 15 minutes",
    .caption = "Load average: "
 };
 
