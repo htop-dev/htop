@@ -251,7 +251,6 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    mvaddstr(y, x, this->caption);
    int captionLen = strlen(this->caption);
    x += captionLen;
-   mvhline(y, x, ' ', CRT_colors[DEFAULT_COLOR]);
    attrset(CRT_colors[RESET_COLOR]);
    RichString_begin(out);
    Meter_displayBuffer(this, buffer, &out);
