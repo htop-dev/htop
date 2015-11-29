@@ -621,6 +621,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
 static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    unsigned long long int swapFree = 0;
+   unsigned long long int slab = 0;
+   unsigned long long int shmem = 0;
+   unsigned long long int sreclaimable = 0;
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
    if (file == NULL) {
@@ -629,33 +632,42 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    char buffer[128];
    while (fgets(buffer, 128, file)) {
 
+      #define tryRead(label, variable) (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu kB", variable))
       switch (buffer[0]) {
       case 'M':
-         if (String_startsWith(buffer, "MemTotal:"))
-            sscanf(buffer, "MemTotal: %32llu kB", &this->totalMem);
-         else if (String_startsWith(buffer, "MemFree:"))
-            sscanf(buffer, "MemFree: %32llu kB", &this->freeMem);
-         else if (String_startsWith(buffer, "MemShared:"))
-            sscanf(buffer, "MemShared: %32llu kB", &this->sharedMem);
+         if (tryRead("MemTotal:", &this->totalMem)) {}
+         else if (tryRead("MemFree:", &this->freeMem)) {}
+         else if (tryRead("MemShared:", &this->sharedMem)) {}
          break;
       case 'B':
-         if (String_startsWith(buffer, "Buffers:"))
-            sscanf(buffer, "Buffers: %32llu kB", &this->buffersMem);
+         if (tryRead("Buffers:", &this->buffersMem)) {}
          break;
       case 'C':
-         if (String_startsWith(buffer, "Cached:"))
-            sscanf(buffer, "Cached: %32llu kB", &this->cachedMem);
+         if (tryRead("Cached:", &this->cachedMem)) {}
          break;
       case 'S':
-         if (String_startsWith(buffer, "SwapTotal:"))
-            sscanf(buffer, "SwapTotal: %32llu kB", &this->totalSwap);
-         if (String_startsWith(buffer, "SwapFree:"))
-            sscanf(buffer, "SwapFree: %32llu kB", &swapFree);
+         switch (buffer[1]) {
+         case 'w':
+            if (tryRead("SwapTotal:", &this->totalSwap)) {}
+            else if (tryRead("SwapFree:", &swapFree)) {}
+            break;
+         case 'l':
+            if (tryRead("Slab:", &slab)) {}
+            break;
+         case 'h':
+            if (tryRead("Shmem:", &shmem)) {}
+            break;
+         case 'R':
+            if (tryRead("SReclaimable:", &sreclaimable)) {}
+            break;
+         }
          break;
       }
+      #undef tryRead
    }
 
-   this->usedMem = this->totalMem - this->freeMem;
+   this->usedMem = this->totalMem - this->freeMem + (slab - sreclaimable) + shmem;
+   this->cachedMem = this->cachedMem + sreclaimable;
    this->usedSwap = this->totalSwap - swapFree;
    fclose(file);
 }
