@@ -621,7 +621,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
 static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    unsigned long long int swapFree = 0;
-   unsigned long long int slab = 0;
    unsigned long long int shmem = 0;
    unsigned long long int sreclaimable = 0;
 
@@ -651,9 +650,6 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
             if (tryRead("SwapTotal:", &this->totalSwap)) {}
             else if (tryRead("SwapFree:", &swapFree)) {}
             break;
-         case 'l':
-            if (tryRead("Slab:", &slab)) {}
-            break;
          case 'h':
             if (tryRead("Shmem:", &shmem)) {}
             break;
@@ -666,8 +662,8 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
       #undef tryRead
    }
 
-   this->usedMem = this->totalMem - this->freeMem + (slab - sreclaimable) + shmem;
-   this->cachedMem = this->cachedMem + sreclaimable;
+   this->usedMem = this->totalMem - this->freeMem;
+   this->cachedMem = this->cachedMem + sreclaimable - shmem;
    this->usedSwap = this->totalSwap - swapFree;
    fclose(file);
 }
