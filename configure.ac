@@ -144,14 +144,25 @@ if test "x$enable_taskstats" = xyes; then
     AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
 fi
 
+# HTOP_CHECK_NCURSES_LIBRARY(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
+m4_define([HTOP_CHECK_NCURSES_LIBRARY],
+[
+   AC_CHECK_LIB([$1], [$2], [
+      AC_DEFINE([$3], 1, [The library is present.])
+      config_script=$([$4] --libs 2> /dev/null)
+      if test ! "x$config_script" = x; then
+         LIBS="$config_script $LIBS "
+      else
+         LIBS="-l[$1] $LIBS "
+      fi
+   ], [$5])
+])
+
 AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
 if test "x$enable_unicode" = xyes; then
-   AC_CHECK_LIB([ncursesw6], [addnwstr], [
-      AC_DEFINE(HAVE_LIBNCURSESW, 1, [])
-      LIBS="-lncursesw6 $LIBS "
-   ], [
-      AC_CHECK_LIB([ncursesw], [addnwstr], [], [
-         AC_CHECK_LIB([ncurses], [addnwstr], [], [
+   HTOP_CHECK_NCURSES_LIBRARY([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config", [
+      HTOP_CHECK_NCURSES_LIBRARY([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config", [
+         HTOP_CHECK_NCURSES_LIBRARY([ncurses], [addnwstr], [HAVE_LIBNCURSES], "ncurses5-config", [
             missing_libraries="$missing_libraries libncursesw"
             AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
          ])
@@ -162,7 +173,11 @@ if test "x$enable_unicode" = xyes; then
          [AC_CHECK_HEADERS([ncurses/curses.h],[:],
             [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
 else
-   AC_CHECK_LIB([ncurses], [refresh], [], [missing_libraries="$missing_libraries libncurses"])
+   HTOP_CHECK_NCURSES_LIBRARY([ncurses6], [refresh], [HAVE_LIBNCURSES], "ncurses6-config", [
+      HTOP_CHECK_NCURSES_LIBRARY([ncurses], [refresh], [HAVE_LIBNCURSES], "ncurses5-config", [
+         missing_libraries="$missing_libraries libncurses"
+      ])
+   ])
    AC_CHECK_HEADERS([curses.h],[:],
       [AC_CHECK_HEADERS([ncurses/curses.h],[:],
          [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
