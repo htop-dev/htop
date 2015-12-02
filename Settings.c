@@ -154,7 +154,12 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
 }
 
 static bool Settings_read(Settings* this, const char* fileName) {
-   FILE* fd = fopen(fileName, "r");
+   FILE* fd;
+   uid_t euid = geteuid();
+
+   seteuid(getuid());
+   fd = fopen(fileName, "w");
+   seteuid(euid);
    if (!fd)
       return false;
    
@@ -260,7 +265,11 @@ static void writeMeterModes(Settings* this, FILE* fd, int column) {
 
 bool Settings_write(Settings* this) {
    FILE* fd;
+   uid_t euid = geteuid();
+
+   seteuid(getuid());
    fd = fopen(this->filename, "w");
+   seteuid(euid);
    if (fd == NULL) {
       return false;
    }
@@ -345,6 +354,8 @@ Settings* Settings_new(int cpuCount) {
          htopDir = String_cat(home, "/.config/htop");
       }
       legacyDotfile = String_cat(home, "/.htoprc");
+      uid_t euid = geteuid();
+      seteuid(getuid());
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
       free(htopDir);
@@ -357,6 +368,7 @@ Settings* Settings_new(int cpuCount) {
          free(legacyDotfile);
          legacyDotfile = NULL;
       }
+      seteuid(euid);
    }
    this->colorScheme = 0;
    this->changed = false;
