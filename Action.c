@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "AffinityPanel.h"
 #include "CategoriesPanel.h"
 #include "CRT.h"
+#include "EnvScreen.h"
 #include "MainPanel.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
@@ -404,6 +405,7 @@ static struct { const char* key; const char* info; } helpRight[] = {
 #if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
    { .key = "      a: ", .info = "set CPU affinity" },
 #endif
+   { .key = "      e: ", .info = "show process environment" },
    { .key = "      i: ", .info = "set IO prority" },
    { .key = "      l: ", .info = "list open files with lsof" },
    { .key = "      s: ", .info = "trace syscalls with strace" },
@@ -499,6 +501,18 @@ static Htop_Reaction actionTagAllChildren(State* st) {
    return HTOP_OK;
 }
 
+static Htop_Reaction actionShowEnvScreen(State* st) {
+   Process* p = (Process*) Panel_getSelected(st->panel);
+   if (!p) return HTOP_OK;
+   EnvScreen* ts = EnvScreen_new(p);
+   EnvScreen_run(ts);
+   EnvScreen_delete(ts);
+   clear();
+   CRT_enableDelay();
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
+
 void Action_setBindings(Htop_Action* keys) {
    keys[KEY_RESIZE] = actionResize;
    keys['M'] = actionSortByMemory;
@@ -548,5 +562,6 @@ void Action_setBindings(Htop_Action* keys) {
    keys['?'] = actionHelp;
    keys['U'] = actionUntagAll;
    keys['c'] = actionTagAllChildren;
+   keys['e'] = actionShowEnvScreen;
 }
 
