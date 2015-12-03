@@ -157,3 +157,8 @@ void Platform_setSwapValues(Meter* this) {
 void Platform_setTasksValues(Meter* this) {
    // TODO
 }
+
+char* Platform_getProcessEnv(pid_t pid) {
+   // TODO
+   return NULL;
+}

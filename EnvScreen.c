@@ -1,14 +1,14 @@
 #include "EnvScreen.h"
 
+#include "config.h"
 #include "CRT.h"
 #include "IncSet.h"
 #include "ListItem.h"
+#include "Platform.h"
 #include "StringUtils.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include <sys/sysctl.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 /*{
@@ -65,51 +65,15 @@ static void EnvScreen_scan(EnvScreen* this, Vector* lines, IncSet* inc) {
    Panel_prune(panel);
 
    if (uid == 0 || uid == this->process->st_uid) {
-       long argmax = sysconf(_SC_ARG_MAX);
-       char* buf = malloc(argmax);
-       size_t bufsz = argmax;
-       if (buf) {
-           int mib[3];
-           mib[0] = CTL_KERN;
-           mib[1] = KERN_PROCARGS2;
-           mib[2] = this->process->pid;
-           bufsz = argmax;
-           if (sysctl(mib, 3, buf, &bufsz, 0, 0) == 0) {
-               if (bufsz > sizeof(int)) {
-                   char *p = buf, *endp = buf + bufsz;
-                   int argc = *(int*)p;
-                   p += sizeof(int);
-
-                   // skip exe
-                   p = strchr(p, 0)+1;
-
-                   // skip padding
-                   while(!*p && p < endp)
-                       ++p;
-
-                   // skip argv
-                   for (; argc-- && p < endp; p = strrchr(p, 0)+1)
-                       ;
-
-                   // skip padding
-                   while(!*p && p < endp)
-                       ++p;
-
-                   for (; *p && p < endp; p = strrchr(p, 0)+1)
-                       addLine(p, lines, panel, IncSet_filter(inc));
-               }
-               else {
-                   addLine("Could not allocate memory.", lines, panel, IncSet_filter(inc));
-               }
-           }
-           else {
-               addLine("sysctl(KERN_PROCARGS2) failed.", lines, panel, IncSet_filter(inc));
-           }
-           free(buf);
-       }
-       else {
-           addLine("Out of memory.", lines, panel, IncSet_filter(inc));
-       }
+      char *env = Platform_getProcessEnv(this->process->pid);
+      if (env) {
+         for (char *p = env; *p; p = strrchr(p, 0)+1)
+            addLine(p, lines, panel, IncSet_filter(inc));
+         free(env);
+      }
+      else {
+         addLine("Could not read process environment.", lines, panel, IncSet_filter(inc));
+      }
    }
    else {
        addLine("Process belongs to different user.", lines, panel, IncSet_filter(inc));
