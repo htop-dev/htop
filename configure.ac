@@ -147,15 +147,22 @@ fi
 # HTOP_CHECK_NCURSES_LIBRARY(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
 m4_define([HTOP_CHECK_NCURSES_LIBRARY],
 [
+   config_script=$([$4] --libs 2> /dev/null)
+   save_LDFLAGS="$LDFLAGS"
+   if test ! "x$config_script" = x; then
+      LDFLAGS="$config_script $LDFLAGS"
+   fi
    AC_CHECK_LIB([$1], [$2], [
       AC_DEFINE([$3], 1, [The library is present.])
-      config_script=$([$4] --libs 2> /dev/null)
       if test ! "x$config_script" = x; then
          LIBS="$config_script $LIBS "
       else
          LIBS="-l[$1] $LIBS "
       fi
-   ], [$5])
+      LDFLAGS="$save_LDFLAGS"
+   ], [
+      LDFLAGS="$save_LDFLAGS"
+   $5])
 ])
 
 AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
