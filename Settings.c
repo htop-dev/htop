@@ -158,7 +158,7 @@ static bool Settings_read(Settings* this, const char* fileName) {
    uid_t euid = geteuid();
 
    seteuid(getuid());
-   fd = fopen(fileName, "w");
+   fd = fopen(fileName, "r");
    seteuid(euid);
    if (!fd)
       return false;
