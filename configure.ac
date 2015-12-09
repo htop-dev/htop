@@ -144,47 +144,59 @@ if test "x$enable_taskstats" = xyes; then
     AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
 fi
 
-# HTOP_CHECK_NCURSES_LIBRARY(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
-m4_define([HTOP_CHECK_NCURSES_LIBRARY],
+# HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
+m4_define([HTOP_CHECK_SCRIPT],
 [
-   config_script=$([$4] --libs 2> /dev/null)
-   save_LDFLAGS="$LDFLAGS"
-   if test ! "x$config_script" = x; then
-      LDFLAGS="$config_script $LDFLAGS"
+   htop_config_script=$([$4] --libs 2> /dev/null)
+   htop_script_success=no
+   htop_save_LDFLAGS="$LDFLAGS"
+   if test ! "x$htop_config_script" = x; then
+      LDFLAGS="$htop_config_script $LDFLAGS"
+      AC_CHECK_LIB([$1], [$2], [
+         AC_DEFINE([$3], 1, [The library is present.])
+         LIBS="$htop_config_script $LIBS "
+         htop_script_success=yes
+      ], [])
+      LDFLAGS="$save_LDFLAGS"
    fi
+   if test "x$htop_script_success" = no; then
+      [$5]
+   fi
+])
+
+# HTOP_CHECK_LIB(LIBNAME, FUNCTION, DEFINE, ELSE_PART)
+m4_define([HTOP_CHECK_LIB],
+[
    AC_CHECK_LIB([$1], [$2], [
       AC_DEFINE([$3], 1, [The library is present.])
-      if test ! "x$config_script" = x; then
-         LIBS="$config_script $LIBS "
-      else
-         LIBS="-l[$1] $LIBS "
-      fi
-      LDFLAGS="$save_LDFLAGS"
-   ], [
-      LDFLAGS="$save_LDFLAGS"
-   $5])
+      LIBS="-l[$1] $LIBS "
+   ], [$4])
 ])
 
 AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
 if test "x$enable_unicode" = xyes; then
-   HTOP_CHECK_NCURSES_LIBRARY([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config", [
-      HTOP_CHECK_NCURSES_LIBRARY([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config", [
-         HTOP_CHECK_NCURSES_LIBRARY([ncurses], [addnwstr], [HAVE_LIBNCURSES], "ncurses5-config", [
-            missing_libraries="$missing_libraries libncursesw"
-            AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
-         ])
-      ])
-   ])
+   HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
+    HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config",
+     HTOP_CHECK_SCRIPT([ncurses], [addnwstr], [HAVE_LIBNCURSESW], "ncurses5-config",
+      HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
+       HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
+        HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
+      missing_libraries="$missing_libraries libncursesw"
+      AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
+   ))))))
+
    AC_CHECK_HEADERS([ncursesw/curses.h],[:],
       [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
          [AC_CHECK_HEADERS([ncurses/curses.h],[:],
             [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
 else
-   HTOP_CHECK_NCURSES_LIBRARY([ncurses6], [refresh], [HAVE_LIBNCURSES], "ncurses6-config", [
-      HTOP_CHECK_NCURSES_LIBRARY([ncurses], [refresh], [HAVE_LIBNCURSES], "ncurses5-config", [
-         missing_libraries="$missing_libraries libncurses"
-      ])
-   ])
+   HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], "ncurses6-config",
+    HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], "ncurses5-config",
+     HTOP_CHECK_LIB([ncurses6],  [refresh], [HAVE_LIBNCURSES],
+      HTOP_CHECK_LIB([ncurses],  [refresh], [HAVE_LIBNCURSES],
+      missing_libraries="$missing_libraries libncurses"
+   ))))
+   
    AC_CHECK_HEADERS([curses.h],[:],
       [AC_CHECK_HEADERS([ncurses/curses.h],[:],
          [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
