@@ -159,7 +159,7 @@ m4_define([HTOP_CHECK_SCRIPT],
       ], [])
       LDFLAGS="$save_LDFLAGS"
    fi
-   if test "x$htop_script_success" = no; then
+   if test "x$htop_script_success" = xno; then
       [$5]
    fi
 ])
