@@ -224,6 +224,10 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             free(fp->jname);
             fp->jname = FreeBSDProcessList_readJailName(kproc);
          }
+         if(proc->st_uid != kproc->ki_uid) {
+            proc->st_uid = kproc->ki_uid;
+            proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
+         }
          if (settings->updateProcessNames) {
             free(proc->comm);
             proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
