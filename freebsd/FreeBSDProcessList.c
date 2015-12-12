@@ -23,13 +23,20 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <sys/jail.h>
 #include <sys/uio.h>
+#include <sys/resource.h>
 
 #define JAIL_ERRMSGLEN	1024
 char jail_errmsg[JAIL_ERRMSGLEN];
 
 typedef struct CPUData_ {
-   unsigned long long int totalTime;
-   unsigned long long int totalPeriod;
+
+   double userPercent;
+   double nicePercent;
+   double systemPercent;
+   double irqPercent;
+   double idlePercent;
+   double systemAllPercent;
+
 } CPUData;
 
 typedef struct FreeBSDProcessList_ {
@@ -37,6 +44,12 @@ typedef struct FreeBSDProcessList_ {
    kvm_t* kd;
 
    CPUData* cpus;
+
+   unsigned long   *cp_time_o;
+   unsigned long   *cp_time_n;
+
+   unsigned long  *cp_times_o;
+   unsigned long  *cp_times_n;
 
 } FreeBSDProcessList;
 
@@ -46,24 +59,16 @@ static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_cache_count[4];
 static int MIB_hw_physmem[2];
 
+static int MIB_kern_cp_time[2];
+static int MIB_kern_cp_times[2];
+
 static int pageSizeKb;
+
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    FreeBSDProcessList* fpl = calloc(1, sizeof(FreeBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
    ProcessList_init(pl, Class(FreeBSDProcess), usersTable, pidWhiteList, userId);
-
-   int cpus = 1;
-   size_t sizeof_cpus = sizeof(cpus);
-   int err = sysctlbyname("hw.ncpu", &cpus, &sizeof_cpus, NULL, 0);
-   if (err) cpus = 1;
-   pl->cpuCount = MAX(cpus, 1);
-   fpl->cpus = realloc(fpl->cpus, cpus * sizeof(CPUData));
-
-   for (int i = 0; i < cpus; i++) {
-      fpl->cpus[i].totalTime = 1;
-      fpl->cpus[i].totalPeriod = 1;
-   }
 
    size_t len;
    len = 4; sysctlnametomib("vm.stats.vm.v_wire_count",  MIB_vm_stats_vm_v_wire_count, &len);
@@ -74,6 +79,50 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    fpl->kd = kvm_open(NULL, "/dev/null", NULL, 0, NULL);
    assert(fpl->kd);
 
+   int smp = 0;
+   size_t sizeof_smp = sizeof(smp);
+
+   if (sysctlbyname("kern.smp.active", &smp, &sizeof_smp, NULL, 0) != 0 || sizeof_smp != sizeof(smp)) {
+      smp = 0;
+   }
+
+   int cpus = 1;
+   size_t sizeof_cpus = sizeof(cpus);
+
+   if (smp) {
+      int err = sysctlbyname("kern.smp.cpus", &cpus, &sizeof_cpus, NULL, 0);
+      if (err) cpus = 1;
+   } else {
+      cpus = 1;
+   }
+
+   size_t sizeof_cp_time_array = sizeof(unsigned long) * CPUSTATES;
+   len = 2; sysctlnametomib("kern.cp_time", MIB_kern_cp_time, &len);
+   fpl->cp_time_o = calloc(cpus, sizeof_cp_time_array);
+   fpl->cp_time_n = calloc(cpus, sizeof_cp_time_array);
+   len = sizeof_cp_time_array;
+
+   // fetch intial single (or average) CPU clicks from kernel
+   sysctl(MIB_kern_cp_time, 2, fpl->cp_time_o, &len, NULL, 0);
+
+   // on smp box, fetch rest of intial CPU's clicks
+   if (cpus > 1) {
+      len = 2; sysctlnametomib("kern.cp_times", MIB_kern_cp_times, &len);
+      fpl->cp_times_o = calloc(cpus, sizeof_cp_time_array);
+      fpl->cp_times_n = calloc(cpus, sizeof_cp_time_array);
+      len = cpus * sizeof_cp_time_array;
+      sysctl(MIB_kern_cp_times, 2, fpl->cp_times_o, &len, NULL, 0);
+   }
+
+   pl->cpuCount = MAX(cpus, 1);
+
+   if (cpus == 1 ) {
+     fpl->cpus = realloc(fpl->cpus, sizeof(CPUData));
+   } else {
+     // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
+     fpl->cpus = realloc(fpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+   }
+
    return pl;
 }
 
@@ -81,8 +130,93 @@ void ProcessList_delete(ProcessList* this) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
    if (fpl->kd) kvm_close(fpl->kd);
 
+   if (fpl->cp_time_o != NULL) free(fpl->cp_time_o);
+   if (fpl->cp_time_n != NULL) free(fpl->cp_time_n);
+   if (fpl->cp_times_o != NULL) free(fpl->cp_times_o);
+   if (fpl->cp_times_n != NULL) free(fpl->cp_times_n);
+
    ProcessList_done(this);
    free(this);
+}
+
+static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
+   const FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
+
+   int cpus   = pl->cpuCount;   // actual CPU count
+   int maxcpu = cpus;           // max iteration (in case we have average + smp)
+   int cp_times_offset;
+
+   assert(cpus > 0);
+
+   size_t sizeof_cp_time_array;
+
+   unsigned long     *cp_time_n; // old clicks state
+   unsigned long     *cp_time_o; // current clicks state
+
+   unsigned long long total_o = 0;
+   unsigned long long total_n = 0;
+   unsigned long long total_d = 0;
+   unsigned long cp_time_d[CPUSTATES];
+   double        cp_time_p[CPUSTATES];
+
+   // get averages or single CPU clicks
+   sizeof_cp_time_array = sizeof(unsigned long) * CPUSTATES;
+   sysctl(MIB_kern_cp_time, 2, fpl->cp_time_n, &sizeof_cp_time_array, NULL, 0);
+
+   // get rest of CPUs
+   if (cpus > 1) {
+       // on smp systems FreeBSD kernel concats all CPU states into one long array in
+       // kern.cp_times sysctl OID
+       // we store averages in fpl->cpus[0], and actual cores after that
+       maxcpu = cpus + 1;
+       sizeof_cp_time_array = cpus * sizeof(unsigned long) * CPUSTATES;
+       sysctl(MIB_kern_cp_times, 2, fpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
+   }
+
+   for (int i = 0; i < maxcpu; i++) {
+      if (cpus == 1) {
+         // single CPU box
+         cp_time_n = fpl->cp_time_n;
+         cp_time_o = fpl->cp_time_o;
+      } else {
+         if (i == 0 ) {
+           // average
+           cp_time_n = fpl->cp_time_n;
+           cp_time_o = fpl->cp_time_o;
+         } else {
+           // specific smp cores
+           cp_times_offset = i - 1;
+           cp_time_n = fpl->cp_times_n + (cp_times_offset * CPUSTATES);
+           cp_time_o = fpl->cp_times_o + (cp_times_offset * CPUSTATES);
+         }
+      }
+
+      // diff old vs new
+      for (int s = 0; s < CPUSTATES; s++) {
+        cp_time_d[s] = cp_time_n[s] - cp_time_o[s];
+        total_o += cp_time_o[s];
+        total_n += cp_time_n[s];
+      }
+
+      // totals
+      total_d = total_n - total_o;
+      if (total_d < 1 ) total_d = 1;
+
+      // save current state as old and calc percentages
+      for (int s = 0; s < CPUSTATES; ++s) {
+        cp_time_o[s] = cp_time_n[s];
+        cp_time_p[s] = ((double)cp_time_d[s]) / ((double)total_d) * 100;
+      }
+
+      CPUData* cpuData = &(fpl->cpus[i]);
+      cpuData->userPercent      = cp_time_p[CP_USER];
+      cpuData->nicePercent      = cp_time_p[CP_NICE];
+      cpuData->systemPercent    = cp_time_p[CP_SYS];
+      cpuData->irqPercent       = cp_time_p[CP_INTR];
+      cpuData->systemAllPercent = cp_time_p[CP_SYS] + cp_time_p[CP_INTR];
+      // this one is not really used, but we store it anyway
+      cpuData->idlePercent      = cp_time_p[CP_IDLE];
+   }
 }
 
 static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
@@ -186,6 +320,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
    FreeBSDProcessList_scanMemoryInfo(this);
+   FreeBSDProcessList_scanCPUTime(this);
 
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_ALL, 0, &count);
@@ -198,7 +333,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(fp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
-
 
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
@@ -220,11 +354,17 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
          if(fp->jid != kproc->ki_jid) {
+            // proces can enter jail anytime
             fp->jid = kproc->ki_jid;
             free(fp->jname);
             fp->jname = FreeBSDProcessList_readJailName(kproc);
          }
+         if (proc->ppid != kproc->ki_ppid) {
+            // if there are reapers in the system, proces can get reparented anytime
+            proc->ppid = kproc->ki_ppid;
+         }
          if(proc->st_uid != kproc->ki_uid) {
+            // some proceses change users (eg. to lower privs)
             proc->st_uid = kproc->ki_uid;
             proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          }
@@ -233,8 +373,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
          }
       }
-
-      proc->ppid = kproc->ki_ppid;
 
       proc->m_size = kproc->ki_size / pageSizeKb / 1000;
       proc->m_resident = kproc->ki_rssize; // * pageSizeKb;
@@ -252,7 +390,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       } else {
          proc->nice = PRIO_MAX + 1 + kproc->ki_pri.pri_level - PRI_MIN_IDLE;
       }
-
 
       switch (kproc->ki_stat) {
       case SIDL:   proc->state = 'I'; break;
