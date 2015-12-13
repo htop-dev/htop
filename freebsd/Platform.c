@@ -187,7 +187,9 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-   // TODO
+   ProcessList* pl = (ProcessList*) this->pl;
+   this->total = pl->totalSwap;
+   this->values[0] = pl->usedSwap;
 }
 
 void Platform_setTasksValues(Meter* this) {
