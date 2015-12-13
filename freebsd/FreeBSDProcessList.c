@@ -63,7 +63,7 @@ static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
 
 static int pageSizeKb;
-
+static int kernelFScale;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    FreeBSDProcessList* fpl = calloc(1, sizeof(FreeBSDProcessList));
@@ -78,6 +78,12 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    fpl->kd = kvm_open(NULL, "/dev/null", NULL, 0, NULL);
    assert(fpl->kd);
+
+   size_t sizeof_kernelFScale = sizeof(kernelFScale);
+   if (sysctlbyname("kern.fscale", &kernelFScale, &sizeof_kernelFScale, NULL, 0) == -1) {
+      //sane default on x86 machines, in case this sysctl call failed
+      kernelFScale = 2048;
+   }
 
    int smp = 0;
    size_t sizeof_smp = sizeof(smp);
@@ -322,6 +328,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    FreeBSDProcessList_scanMemoryInfo(this);
    FreeBSDProcessList_scanCPUTime(this);
 
+   int cpus = this->cpuCount;
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_ALL, 0, &count);
 
@@ -378,6 +385,15 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->m_resident = kproc->ki_rssize; // * pageSizeKb;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
+
+      proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
+      if (cpus > 1 ) {
+         proc->percent_cpu = proc->percent_cpu / (double) cpus;
+      }
+      if (proc->percent_cpu >= 99.8) {
+         // don't break formatting
+         proc->percent_cpu = 99.8;
+      }
 
       proc->priority = kproc->ki_pri.pri_level - PZERO;
 
