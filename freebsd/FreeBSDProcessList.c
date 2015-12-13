@@ -43,6 +43,15 @@ typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
+   int zfsArcEnabled;
+
+   unsigned long long int memWire;
+   unsigned long long int memActive;
+   unsigned long long int memInactive;
+   unsigned long long int memFree;
+   unsigned long long int memZfsArc;
+
+
    CPUData* cpus;
 
    unsigned long   *cp_time_o;
@@ -55,15 +64,26 @@ typedef struct FreeBSDProcessList_ {
 
 }*/
 
-static int MIB_vm_stats_vm_v_wire_count[4];
-static int MIB_vm_stats_vm_v_cache_count[4];
+
 static int MIB_hw_physmem[2];
+static int MIB_vm_stats_vm_v_page_count[4];
+static int pageSize;
+static int pageSizeKb;
+
+static int MIB_vm_stats_vm_v_wire_count[4];
+static int MIB_vm_stats_vm_v_active_count[4];
+static int MIB_vm_stats_vm_v_cache_count[4];
+static int MIB_vm_stats_vm_v_inactive_count[4];
+static int MIB_vm_stats_vm_v_free_count[4];
+
+static int MIB_vfs_bufspace[2];
+
+static int MIB_kstat_zfs_misc_arcstats_size[5];
 
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
-
-static int pageSizeKb;
 static int kernelFScale;
+
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    FreeBSDProcessList* fpl = calloc(1, sizeof(FreeBSDProcessList));
@@ -71,32 +91,54 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    ProcessList_init(pl, Class(FreeBSDProcess), usersTable, pidWhiteList, userId);
 
    size_t len;
-   len = 4; sysctlnametomib("vm.stats.vm.v_wire_count",  MIB_vm_stats_vm_v_wire_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
-   len = 2; sysctlnametomib("hw.physmem",                MIB_hw_physmem, &len);
-   pageSizeKb = PAGE_SIZE_KB;
 
-   fpl->kd = kvm_open(NULL, "/dev/null", NULL, 0, NULL);
-   assert(fpl->kd);
+   // physical memory in system: hw.physmem
+   // physical page size: hw.pagesize
+   // usable pagesize : vm.stats.vm.v_page_size
+   len = 2; sysctlnametomib("hw.physmem", MIB_hw_physmem, &len);
 
-   size_t sizeof_kernelFScale = sizeof(kernelFScale);
-   if (sysctlbyname("kern.fscale", &kernelFScale, &sizeof_kernelFScale, NULL, 0) == -1) {
-      //sane default on x86 machines, in case this sysctl call failed
-      kernelFScale = 2048;
+   len = sizeof(pageSize);
+   if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1) {
+      pageSize = PAGE_SIZE;
+      pageSizeKb = PAGE_SIZE_KB;
+   } else {
+      pageSizeKb = pageSize / ONE_K;
    }
 
-   int smp = 0;
-   size_t sizeof_smp = sizeof(smp);
+   // usable page count vm.stats.vm.v_page_count
+   // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
+   len = 4; sysctlnametomib("vm.stats.vm.v_page_count", MIB_vm_stats_vm_v_page_count, &len);
 
-   if (sysctlbyname("kern.smp.active", &smp, &sizeof_smp, NULL, 0) != 0 || sizeof_smp != sizeof(smp)) {
+   len = 4; sysctlnametomib("vm.stats.vm.v_wire_count", MIB_vm_stats_vm_v_wire_count, &len);
+   len = 4; sysctlnametomib("vm.stats.vm.v_active_count", MIB_vm_stats_vm_v_active_count, &len);
+   len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
+   len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
+   len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
+
+   len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
+
+   len = sizeof(fpl->memZfsArc);
+   if (sysctlbyname("kstat.zfs.misc.arcstats.size", &fpl->memZfsArc, &len,
+	    NULL, 0) == 0 && fpl->memZfsArc != 0) {
+      sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
+		  fpl->zfsArcEnabled = 1;
+   } else {
+		  fpl->zfsArcEnabled = 0;
+   }
+
+
+   int smp = 0;
+   len = sizeof(smp);
+
+   if (sysctlbyname("kern.smp.active", &smp, &len, NULL, 0) != 0 || len != sizeof(smp)) {
       smp = 0;
    }
 
    int cpus = 1;
-   size_t sizeof_cpus = sizeof(cpus);
+   len = sizeof(cpus);
 
    if (smp) {
-      int err = sysctlbyname("kern.smp.cpus", &cpus, &sizeof_cpus, NULL, 0);
+      int err = sysctlbyname("kern.smp.cpus", &cpus, &len, NULL, 0);
       if (err) cpus = 1;
    } else {
       cpus = 1;
@@ -128,6 +170,16 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
      // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
      fpl->cpus = realloc(fpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
    }
+
+
+   len = sizeof(kernelFScale);
+   if (sysctlbyname("kern.fscale", &kernelFScale, &len, NULL, 0) == -1) {
+      //sane default for kernel provded CPU precentage scaling, at least on x86 machines, in case this sysctl call failed
+      kernelFScale = 2048;
+   }
+
+   fpl->kd = kvm_open(NULL, "/dev/null", NULL, 0, NULL);
+   assert(fpl->kd);
 
    return pl;
 }
@@ -226,16 +278,58 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
 }
 
 static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
-   const FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
+   FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
 
+   // @etosan:
+   // memory counter relationships seem to be these:
+   //  total = active + wired + inactive + cache + free
+   //  htop_used (unavail to anybody) = active + wired
+   //  htop_cache (for cache meter)   = buffers + cache
+   //  user_free (avail to procs)     = buffers + inactive + cache + free
+   //
+   // with ZFS ARC situation becomes bit muddled, as ARC behaves like "user_free"
+   // and belongs into cache, but is reported as wired by kernel
+   //
+   // htop_used   = active + (wired - arc)
+   // htop_cache  = buffers + cache + arc
    size_t len = sizeof(pl->totalMem);
+
+   //disabled for now, as it is always smaller than phycal amount of memory...
+   //...to avoid "where is my memory?" questions
+   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(pl->totalMem), &len, NULL, 0);
+   //pl->totalMem *= pageSizeKb;
    sysctl(MIB_hw_physmem, 2, &(pl->totalMem), &len, NULL, 0);
    pl->totalMem /= 1024;
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(pl->usedMem), &len, NULL, 0);
-   pl->usedMem *= pageSizeKb;
-   pl->freeMem = pl->totalMem - pl->usedMem;
+
+   sysctl(MIB_vm_stats_vm_v_active_count, 4, &(fpl->memActive), &len, NULL, 0);
+   fpl->memActive *= pageSizeKb;
+
+   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(fpl->memWire), &len, NULL, 0);
+   fpl->memWire *= pageSizeKb;
+
+   sysctl(MIB_vfs_bufspace, 2, &(pl->buffersMem), &len, NULL, 0);
+   pl->buffersMem /= 1024;
+
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
    pl->cachedMem *= pageSizeKb;
+
+   if (fpl->zfsArcEnabled) {
+      len = sizeof(fpl->memZfsArc);
+      sysctl(MIB_kstat_zfs_misc_arcstats_size, 5, &(fpl->memZfsArc), &len , NULL, 0);
+      fpl->memZfsArc /= 1024;
+      fpl->memWire -= fpl->memZfsArc;
+      pl->cachedMem += fpl->memZfsArc;
+      // maybe when we learn how to make custom memory meter
+      // we could do custom arc breakdown?
+   }
+
+   pl->usedMem = fpl->memActive + fpl->memWire;
+
+   //currently unused, same as with arc, custom meter perhaps
+   //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &(fpl->memInactive), &len, NULL, 0);
+   //sysctl(MIB_vm_stats_vm_v_free_count, 4, &(fpl->memFree), &len, NULL, 0);
+   //pl->freeMem  = fpl->memInactive + fpl->memFree;
+   //pl->freeMem *= pageSizeKb;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(fpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
@@ -249,7 +343,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap *= pageSizeKb;
 
    pl->sharedMem = 0;  // currently unused
-   pl->buffersMem = 0; // not exposed to userspace
 }
 
 char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
@@ -334,8 +427,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
-
       bool preExisting = false;
+      bool isIdleProcess = false;
       Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
@@ -381,16 +474,23 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          }
       }
 
-      proc->m_size = kproc->ki_size / pageSizeKb / 1000;
-      proc->m_resident = kproc->ki_rssize; // * pageSizeKb;
+      // from FreeBSD source /src/usr.bin/top/machine.c
+      proc->m_size = kproc->ki_size / 1024;
+      proc->m_resident = kproc->ki_rssize * pageSizeKb;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
-      if (cpus > 1 ) {
-         proc->percent_cpu = proc->percent_cpu / (double) cpus;
+      if (proc->percent_cpu > 0.1) {
+         // system idle process should own all CPU time left regardless of CPU count
+         if ( strcmp("idle", kproc->ki_comm) == 0 ) {
+            isIdleProcess = true;
+         } else {
+            if (cpus > 1)
+               proc->percent_cpu = proc->percent_cpu / (double) cpus;
+         }
       }
-      if (proc->percent_cpu >= 99.8) {
+      if (isIdleProcess == false && proc->percent_cpu >= 99.8) {
          // don't break formatting
          proc->percent_cpu = 99.8;
       }
@@ -398,7 +498,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->priority = kproc->ki_pri.pri_level - PZERO;
 
       if (strcmp("intr", kproc->ki_comm) == 0 && kproc->ki_flag & P_SYSTEM) {
-         proc->nice = 0; //@etosan: freebsd intr kernel process (not thread) has weird nice value
+         proc->nice = 0; //@etosan: intr kernel process (not thread) has weird nice value
       } else if (kproc->ki_pri.pri_class == PRI_TIMESHARE) {
          proc->nice = kproc->ki_nice - NZERO;
       } else if (PRI_IS_REALTIME(kproc->ki_pri.pri_class)) {
