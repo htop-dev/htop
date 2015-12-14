@@ -78,6 +78,10 @@ typedef struct LinuxProcessList_ {
 #define PROCMEMINFOFILE PROCDIR "/meminfo"
 #endif
 
+#ifndef PROC_LINE_LENGTH
+#define PROC_LINE_LENGTH 512
+#endif
+
 }*/
    
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
@@ -90,11 +94,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
-   char buffer[256];
+   char buffer[PROC_LINE_LENGTH + 1];
    int cpus = -1;
    do {
       cpus++;
-      char * s = fgets(buffer, 255, file);
+      char * s = fgets(buffer, PROC_LINE_LENGTH, file);
       (void) s;
    } while (String_startsWith(buffer, "cpu"));
    fclose(file);
@@ -306,8 +310,8 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
    int fd = open(filename, O_RDONLY);
    if (fd == -1)
       return false;
-   char buf[256];
-   ssize_t rres = xread(fd, buf, 255);
+   char buf[PROC_LINE_LENGTH + 1];
+   ssize_t rres = xread(fd, buf, PROC_LINE_LENGTH);
    close(fd);
    if (rres < 1) return false;
 
@@ -361,13 +365,13 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
       process->cgroup = strdup("");
       return;
    }
-   char output[256];
+   char output[PROC_LINE_LENGTH + 1];
    output[0] = '\0';
    char* at = output;
-   int left = 255;
+   int left = PROC_LINE_LENGTH;
    while (!feof(file) && left > 0) {
-      char buffer[256];
-      char *ok = fgets(buffer, 255, file);
+      char buffer[PROC_LINE_LENGTH + 1];
+      char *ok = fgets(buffer, PROC_LINE_LENGTH, file);
       if (!ok) break;
       char* group = strchr(buffer, ':');
       if (!group) break;
@@ -394,9 +398,9 @@ static void LinuxProcessList_readVServerData(LinuxProcess* process, const char* 
    FILE* file = fopen(filename, "r");
    if (!file)
       return;
-   char buffer[256];
+   char buffer[PROC_LINE_LENGTH + 1];
    process->vxid = 0;
-   while (fgets(buffer, 255, file)) {
+   while (fgets(buffer, PROC_LINE_LENGTH, file)) {
       if (String_startsWith(buffer, "VxID:")) {
          int vxid;
          int ok = sscanf(buffer, "VxID:\t%32d", &vxid);
@@ -425,8 +429,8 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
    FILE* file = fopen(filename, "r");
    if (!file)
       return;
-   char buffer[256];
-   if (fgets(buffer, 255, file)) {
+   char buffer[PROC_LINE_LENGTH + 1];
+   if (fgets(buffer, PROC_LINE_LENGTH, file)) {
       unsigned int oom;
       int ok = sscanf(buffer, "%32u", &oom);
       if (ok >= 1) {
@@ -677,14 +681,14 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
    int cpus = this->super.cpuCount;
    assert(cpus > 0);
    for (int i = 0; i <= cpus; i++) {
-      char buffer[256];
+      char buffer[PROC_LINE_LENGTH + 1];
       unsigned long long int usertime, nicetime, systemtime, idletime;
       unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
       ioWait = irq = softIrq = steal = guest = guestnice = 0;
       // Depending on your kernel version,
       // 5, 7, 8 or 9 of these fields will be set.
       // The rest will remain at zero.
-      char* ok = fgets(buffer, 255, file);
+      char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
       if (!ok) buffer[0] = '\0';
       if (i == 0)
          sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
