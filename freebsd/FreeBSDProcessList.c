@@ -441,6 +441,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
            fp->kernel = 1;
          else
            fp->kernel = 0;
+         proc->ppid = kproc->ki_ppid;
          proc->tpgid = kproc->ki_tpgid;
          proc->tgid = kproc->ki_pid;
          proc->session = kproc->ki_sid;
