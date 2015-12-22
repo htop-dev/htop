@@ -36,7 +36,7 @@ static const char* MetersKeys[] = {"Space", "Enter", "Del", "Esc"};
 static int MetersEvents[] = {' ', 13, KEY_DC, 27};
 
 static const char* MetersMovingFunctions[] = {"Up    ", "Down  ", "Left  ", "Right ",  "Confirm", "Delete", "Done  ", NULL};
-static const char* MetersMovingKeys[] = {"Up", "Dn", "Lt", "Rt", "Arrows", "Enter", "Del", "Esc"};
+static const char* MetersMovingKeys[] = {"Up", "Dn", "Lt", "Rt", "Enter", "Del", "Esc"};
 static int MetersMovingEvents[] = {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 13, KEY_DC, 27};
 static FunctionBar* Meters_movingBar = NULL;
 
