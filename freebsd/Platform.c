@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "FreeBSDProcess.h"
+#include "FreeBSDProcessList.h"
 
 #include <sys/types.h>
 #include <sys/sysctl.h>
@@ -105,7 +106,7 @@ int Platform_getUptime() {
    struct timeval bootTime, currTime;
    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
-   
+
    int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
    if (err) {
       return -1;
@@ -119,7 +120,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    struct loadavg loadAverage;
    int mib[2] = { CTL_VM, VM_LOADAVG };
    size_t size = sizeof(loadAverage);
-   
+
    int err = sysctl(mib, 2, &loadAverage, &size, NULL, 0);
    if (err) {
       *one = 0;
@@ -143,15 +144,52 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-   // TODO
+   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this->pl;
+   int cpus = this->pl->cpuCount;
+   CPUData* cpuData;
+
+   if (cpus == 1) {
+     // single CPU box has everything in fpl->cpus[0]
+     cpuData = &(fpl->cpus[0]);
+   } else {
+     cpuData = &(fpl->cpus[cpu]);
+   }
+
+   double  percent;
+   double* v = this->values;
+
+   v[CPU_METER_NICE]   = cpuData->nicePercent;
+   v[CPU_METER_NORMAL] = cpuData->userPercent;
+   if (this->pl->settings->detailedCPUTime) {
+      v[CPU_METER_KERNEL]  = cpuData->systemPercent;
+      v[CPU_METER_IRQ]     = cpuData->irqPercent;
+      Meter_setItems(this, 4);
+      percent = v[0]+v[1]+v[2]+v[3];
+   } else {
+      v[2] = cpuData->systemAllPercent;
+      Meter_setItems(this, 3);
+      percent = v[0]+v[1]+v[2];
+   }
+
+   percent = MIN(100.0, MAX(0.0, percent));
+   if (isnan(percent)) percent = 0.0;
+   return percent;
 }
 
 void Platform_setMemoryValues(Meter* this) {
    // TODO
+   ProcessList* pl = (ProcessList*) this->pl;
+
+   this->total = pl->totalMem;
+   this->values[0] = pl->usedMem;
+   this->values[1] = pl->buffersMem;
+   this->values[2] = pl->cachedMem;
 }
 
 void Platform_setSwapValues(Meter* this) {
-   // TODO
+   ProcessList* pl = (ProcessList*) this->pl;
+   this->total = pl->totalSwap;
+   this->values[0] = pl->usedSwap;
 }
 
 void Platform_setTasksValues(Meter* this) {
