@@ -139,7 +139,8 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    for (i = 0; arg[i] != NULL; i++) {
       len += strlen(arg[i]) + 1;
    }
-   buf = s = malloc(len);
+   if ((buf = s = malloc(len)) == NULL)
+      err(1, NULL);
    for (i = 0; arg[i] != NULL; i++) {
       n = strlcpy(buf, arg[i], (s + len) - buf);
       buf += n;
