@@ -60,7 +60,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0)
-     errx(1, "fscale sysctl call failed");
+     err(1, "fscale sysctl call failed");
 
    for (i = 0; i < pl->cpuCount; i++) {
       fpl->cpus[i].totalTime = 1;
@@ -90,7 +90,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    size_t size = sizeof(uvmexp);
 
    if (sysctl(uvmexp_mib, 2, &uvmexp, &size, NULL, 0) < 0) {
-      errx(1, "uvmexp sysctl call failed");
+      err(1, "uvmexp sysctl call failed");
    }
 
    //kb_pagesize = uvmexp.pagesize / 1024;
