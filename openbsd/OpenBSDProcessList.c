@@ -132,9 +132,12 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
 
    arg = kvm_getargv(kd, kproc, 500);
    if (arg == NULL) {
-      return "[zombie]";
       // the FreeBSD port uses ki_comm, but we don't have it
       //return strndup(kproc->ki_comm);
+      if ((s = strdup("[zombie]")) == NULL) {
+	      err(1, NULL);
+      }
+      return s;
    }
    for (i = 0; arg[i] != NULL; i++) {
       len += strlen(arg[i]) + 1;
