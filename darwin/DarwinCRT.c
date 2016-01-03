@@ -28,7 +28,7 @@ void CRT_handleSIGSEGV(int sgn) {
    #endif
    #else
    fprintf(stderr, "\nUnfortunately, you seem to be using an unsupported platform!");
-   fprintf(stderr, "\nPlease contact your platform package mantainer!\n\n");
+   fprintf(stderr, "\nPlease contact your platform package maintainer!\n\n");
    #endif
    abort();
 }
