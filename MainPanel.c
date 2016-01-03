@@ -91,7 +91,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       result = HANDLED;
    } else if (ch == 27) {
       return HANDLED;
-   } else if (ch != ERR && this->keys[ch]) {
+   } else if (ch != ERR && ch > 0 && ch < KEY_MAX && this->keys[ch]) {
       reaction |= (this->keys[ch])(this->state);
       result = HANDLED;
    } else if (isdigit(ch)) {
