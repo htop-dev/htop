@@ -130,28 +130,34 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    size_t cpsz, len = 0, n;
    int i;
 
+   /*
+    * We attempt to fall back to just the command name (argv[0]) if we
+    * fail to construct the full command at any point.
+    */
    arg = kvm_getargv(kd, kproc, 500);
    if (arg == NULL) {
-      // the FreeBSD port uses ki_comm, but we don't have it
-      //return strndup(kproc->ki_comm);
-      if ((s = strdup("[zombie]")) == NULL) {
-	      err(1, NULL);
+      if ((s = strdup(kproc->p_comm)) == NULL) {
+         err(1, NULL);
       }
       return s;
    }
    for (i = 0; arg[i] != NULL; i++) {
       len += strlen(arg[i]) + 1;
    }
-   if ((buf = s = malloc(len)) == NULL)
-      err(1, NULL);
+   if ((buf = s = malloc(len)) == NULL) {
+      if ((s = strdup(kproc->p_comm)) == NULL) {
+         err(1, NULL);
+      }
+      return s;
+   }
    for (i = 0; arg[i] != NULL; i++) {
       n = strlcpy(buf, arg[i], (s + len) - buf);
       buf += n;
       if (i == 0) {
-          *basenameEnd = n;
+         *basenameEnd = n;
       }
-      buf++;
       *buf = ' ';
+      buf++;
    }
    *(buf - 1) = '\0';
    return s;
