@@ -12,6 +12,7 @@ in the source distribution for its full text.
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <err.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -59,7 +60,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0)
-     CRT_fatalError("fscale sysctl call failed");
+     err(1, "fscale sysctl call failed");
 
    for (i = 0; i < pl->cpuCount; i++) {
       fpl->cpus[i].totalTime = 1;
@@ -89,7 +90,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    size_t size = sizeof(uvmexp);
 
    if (sysctl(uvmexp_mib, 2, &uvmexp, &size, NULL, 0) < 0) {
-      CRT_fatalError("uvmexp sysctl call failed");
+      err(1, "uvmexp sysctl call failed");
    }
 
    //kb_pagesize = uvmexp.pagesize / 1024;
@@ -125,34 +126,41 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 }
 
 char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
-   char *str, *buf, **argv;
-   size_t cpsz;
-   size_t len = 500;
+   char *s, *buf, **arg;
+   size_t cpsz, len = 0, n;
+   int i;
 
-   argv = kvm_getargv(kd, kproc, 500);
-
-   if (argv == NULL)
-      CRT_fatalError("kvm call failed");
-
-   str = buf = malloc(len+1);
-   if (str == NULL)
-      CRT_fatalError("out of memory");
-
-   while (*argv != NULL) {
-      cpsz = MIN(len, strlen(*argv));
-      strncpy(buf, *argv, cpsz);
-     buf += cpsz;
-     len -= cpsz;
-     argv++;
-     if (len > 0) {
-        *buf = ' ';
-        buf++;
-        len--;
-     }
+   /*
+    * We attempt to fall back to just the command name (argv[0]) if we
+    * fail to construct the full command at any point.
+    */
+   arg = kvm_getargv(kd, kproc, 500);
+   if (arg == NULL) {
+      if ((s = strdup(kproc->p_comm)) == NULL) {
+         err(1, NULL);
+      }
+      return s;
    }
-
-   *buf = '\0';
-   return str;
+   for (i = 0; arg[i] != NULL; i++) {
+      len += strlen(arg[i]) + 1;
+   }
+   if ((buf = s = malloc(len)) == NULL) {
+      if ((s = strdup(kproc->p_comm)) == NULL) {
+         err(1, NULL);
+      }
+      return s;
+   }
+   for (i = 0; arg[i] != NULL; i++) {
+      n = strlcpy(buf, arg[i], (s + len) - buf);
+      buf += n;
+      if (i == 0) {
+         *basenameEnd = n;
+      }
+      *buf = ' ';
+      buf++;
+   }
+   *(buf - 1) = '\0';
+   return s;
 }
 
 /*
