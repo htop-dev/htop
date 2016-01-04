@@ -48,19 +48,21 @@ static long fscale;
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    int mib[] = { CTL_HW, HW_NCPU };
    int fmib[] = { CTL_KERN, KERN_FSCALE };
-   int i;
+   int i, e;
    OpenBSDProcessList* fpl = calloc(1, sizeof(OpenBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
    size_t size = sizeof(pl->cpuCount);
 
    ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidWhiteList, userId);
-   pl->cpuCount = 1;    // default to 1 on sysctl() error
-   (void)sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
+   e = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
+   if (e == -1 || pl->cpuCount < 1) {
+      pl->cpuCount = 1;
+   }
    fpl->cpus = realloc(fpl->cpus, pl->cpuCount * sizeof(CPUData));
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0)
-     err(1, "fscale sysctl call failed");
+      err(1, "fscale sysctl call failed");
 
    for (i = 0; i < pl->cpuCount; i++) {
       fpl->cpus[i].totalTime = 1;
@@ -79,6 +81,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 void ProcessList_delete(ProcessList* this) {
    const OpenBSDProcessList* fpl = (OpenBSDProcessList*) this;
    if (fpl->kd) kvm_close(fpl->kd);
+
+   free(fpl->cpus);
 
    ProcessList_done(this);
    free(this);
