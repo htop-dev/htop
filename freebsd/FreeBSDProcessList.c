@@ -192,6 +192,7 @@ void ProcessList_delete(ProcessList* this) {
    if (fpl->cp_time_n != NULL) free(fpl->cp_time_n);
    if (fpl->cp_times_o != NULL) free(fpl->cp_times_o);
    if (fpl->cp_times_n != NULL) free(fpl->cp_times_n);
+   free(fpl->cpus);
 
    ProcessList_done(this);
    free(this);
