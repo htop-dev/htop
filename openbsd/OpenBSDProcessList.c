@@ -49,8 +49,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    int mib[] = { CTL_HW, HW_NCPU };
    int fmib[] = { CTL_KERN, KERN_FSCALE };
    int i, e;
-   OpenBSDProcessList* fpl = calloc(1, sizeof(OpenBSDProcessList));
-   ProcessList* pl = (ProcessList*) fpl;
+   OpenBSDProcessList* opl = calloc(1, sizeof(OpenBSDProcessList));
+   ProcessList* pl = (ProcessList*) opl;
    size_t size = sizeof(pl->cpuCount);
 
    ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidWhiteList, userId);
@@ -58,31 +58,31 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    if (e == -1 || pl->cpuCount < 1) {
       pl->cpuCount = 1;
    }
-   fpl->cpus = realloc(fpl->cpus, pl->cpuCount * sizeof(CPUData));
+   opl->cpus = realloc(opl->cpus, pl->cpuCount * sizeof(CPUData));
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0)
       err(1, "fscale sysctl call failed");
 
    for (i = 0; i < pl->cpuCount; i++) {
-      fpl->cpus[i].totalTime = 1;
-      fpl->cpus[i].totalPeriod = 1;
+      opl->cpus[i].totalTime = 1;
+      opl->cpus[i].totalPeriod = 1;
    }
 
    pageSizeKb = PAGE_SIZE_KB;
 
    // XXX: last arg should eventually be an errbuf
-   fpl->kd = kvm_open(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-   assert(fpl->kd);
+   opl->kd = kvm_open(NULL, NULL, NULL, KVM_NO_FILES, NULL);
+   assert(opl->kd);
 
    return pl;
 }
 
 void ProcessList_delete(ProcessList* this) {
-   const OpenBSDProcessList* fpl = (OpenBSDProcessList*) this;
-   if (fpl->kd) kvm_close(fpl->kd);
+   const OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
+   if (opl->kd) kvm_close(opl->kd);
 
-   free(fpl->cpus);
+   free(opl->cpus);
 
    ProcessList_done(this);
    free(this);
@@ -102,7 +102,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->totalMem = uvmexp.npages * pageSizeKb;
 
    /*
-   const OpenBSDProcessList* fpl = (OpenBSDProcessList*) pl;
+   const OpenBSDProcessList* opl = (OpenBSDProcessList*) pl;
 
    size_t len = sizeof(pl->totalMem);
    sysctl(MIB_hw_physmem, 2, &(pl->totalMem), &len, NULL, 0);
@@ -114,7 +114,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->cachedMem *= pageSizeKb;
 
    struct kvm_swap swap[16];
-   int nswap = kvm_getswapinfo(fpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
+   int nswap = kvm_getswapinfo(opl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
    pl->totalSwap = 0;
    pl->usedSwap = 0;
    for (int i = 0; i < nswap; i++) {
@@ -180,7 +180,7 @@ double getpcpu(const struct kinfo_proc *kp) {
 }
 
 void ProcessList_goThroughEntries(ProcessList* this) {
-   OpenBSDProcessList* fpl = (OpenBSDProcessList*) this;
+   OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
    Settings* settings = this->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
@@ -194,7 +194,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    OpenBSDProcessList_scanMemoryInfo(this);
 
    // use KERN_PROC_KTHREAD to also include kernel threads
-   struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
+   struct kinfo_proc* kprocs = kvm_getprocs(opl->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
    //struct kinfo_proc* kprocs = getprocs(KERN_PROC_ALL, 0, &count);
 
    for (i = 0; i < count; i++) {
@@ -218,11 +218,11 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->starttime_ctime = kproc->p_ustart_sec;
          proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          ProcessList_add((ProcessList*)this, proc);
-         proc->comm = OpenBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
+         proc->comm = OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->basenameOffset);
       } else {
          if (settings->updateProcessNames) {
             free(proc->comm);
-            proc->comm = OpenBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
+            proc->comm = OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->basenameOffset);
          }
       }
 
