@@ -188,10 +188,10 @@ void ProcessList_delete(ProcessList* this) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
    if (fpl->kd) kvm_close(fpl->kd);
 
-   if (fpl->cp_time_o != NULL) free(fpl->cp_time_o);
-   if (fpl->cp_time_n != NULL) free(fpl->cp_time_n);
-   if (fpl->cp_times_o != NULL) free(fpl->cp_times_o);
-   if (fpl->cp_times_n != NULL) free(fpl->cp_times_n);
+   free(fpl->cp_time_o);
+   free(fpl->cp_time_n);
+   free(fpl->cp_times_o);
+   free(fpl->cp_times_n);
    free(fpl->cpus);
 
    ProcessList_done(this);
