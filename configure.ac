@@ -103,7 +103,7 @@ if test "x$enable_proc" = xyes; then
    AC_DEFINE(HAVE_PROC, 1, [Define if using a Linux-compatible proc filesystem.])
 fi
 
-AC_ARG_WITH(proc, [  --with-proc=DIR      Location of a Linux-compatible proc filesystem (default=/proc).],
+AC_ARG_WITH(proc, [AC_HELP_STRING([--with-proc=DIR], [Location of a Linux-compatible proc filesystem (default=/proc).])],
 
 if test -n "$withval"; then
    AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
