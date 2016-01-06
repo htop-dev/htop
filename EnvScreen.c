@@ -60,23 +60,20 @@ static inline void addLine(const char* line, Vector* lines, Panel* panel, const 
 static void EnvScreen_scan(EnvScreen* this, Vector* lines, IncSet* inc) {
    Panel* panel = this->display;
    int idx = MAX(Panel_getSelectedIndex(panel), 0);
-   uid_t uid = getuid();
 
    Panel_prune(panel);
 
-   if (uid == 0 || uid == this->process->st_uid) {
-      char *env = Platform_getProcessEnv(this->process->pid);
-      if (env) {
-         for (char *p = env; *p; p = strrchr(p, 0)+1)
-            addLine(p, lines, panel, IncSet_filter(inc));
-         free(env);
-      }
-      else {
-         addLine("Could not read process environment.", lines, panel, IncSet_filter(inc));
-      }
+   uid_t euid = geteuid();
+   seteuid(getuid());
+   char *env = Platform_getProcessEnv(this->process->pid);
+   seteuid(euid);
+   if (env) {
+      for (char *p = env; *p; p = strrchr(p, 0)+1)
+         addLine(p, lines, panel, IncSet_filter(inc));
+      free(env);
    }
    else {
-       addLine("Process belongs to different user.", lines, panel, IncSet_filter(inc));
+      addLine("Could not read process environment.", lines, panel, IncSet_filter(inc));
    }
 
    Vector_insertionSort(lines);
