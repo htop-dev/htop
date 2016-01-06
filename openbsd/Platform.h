@@ -11,6 +11,7 @@ in the source distribution for its full text.
 */
 
 #include "Action.h"
+#include "SignalsPanel.h"
 #include "BatteryMeter.h"
 
 extern ProcessFieldData Process_fields[];
