@@ -244,6 +244,29 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          redraw = false;
          continue;
       }
+      else if (ch == 27) {
+         int ch2 = getch();
+         if (ch2 != ERR) {
+            switch(ch2)
+            {
+            case 'h':
+               ch = KEY_LEFT;
+               break;
+            case 'j':
+               ch = KEY_DOWN;
+               break;
+            case 'k':
+               ch = KEY_UP;
+               break;
+            case 'l':
+               ch = KEY_RIGHT;
+               break;
+            default:
+               ungetch(ch2);
+               break;
+            }
+         }
+      }
       redraw = true;
       if (Panel_eventHandlerFn(panelFocus)) {
          result = Panel_eventHandler(panelFocus, ch);
