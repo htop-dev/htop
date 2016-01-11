@@ -404,7 +404,7 @@ static struct { const char* key; const char* info; } helpRight[] = {
 #if (HAVE_LIBHWLOC || HAVE_NATIVE_AFFINITY)
    { .key = "      a: ", .info = "set CPU affinity" },
 #endif
-   { .key = "      i: ", .info = "set IO prority" },
+   { .key = "      i: ", .info = "set IO priority" },
    { .key = "      l: ", .info = "list open files with lsof" },
    { .key = "      s: ", .info = "trace syscalls with strace" },
    { .key = "         ", .info = "" },
