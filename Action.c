@@ -346,9 +346,9 @@ static Htop_Reaction actionSetup(State* st) {
 static Htop_Reaction actionLsof(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
-   OpenFilesScreen* ts = OpenFilesScreen_new(p);
-   OpenFilesScreen_run(ts);
-   OpenFilesScreen_delete(ts);
+   OpenFilesScreen* ofs = OpenFilesScreen_new(p);
+   InfoScreen_run((InfoScreen*)ofs);
+   OpenFilesScreen_delete((Object*)ofs);
    clear();
    CRT_enableDelay();
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
@@ -358,8 +358,11 @@ static Htop_Reaction actionStrace(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
    TraceScreen* ts = TraceScreen_new(p);
-   TraceScreen_run(ts);
-   TraceScreen_delete(ts);
+   bool ok = TraceScreen_forkTracer(ts);
+   if (ok) {
+      InfoScreen_run((InfoScreen*)ts);
+   }
+   TraceScreen_delete((Object*)ts);
    clear();
    CRT_enableDelay();
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
@@ -504,9 +507,9 @@ static Htop_Reaction actionTagAllChildren(State* st) {
 static Htop_Reaction actionShowEnvScreen(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
-   EnvScreen* ts = EnvScreen_new(p);
-   EnvScreen_run(ts);
-   EnvScreen_delete(ts);
+   EnvScreen* es = EnvScreen_new(p);
+   InfoScreen_run((InfoScreen*)es);
+   EnvScreen_delete((Object*)es);
    clear();
    CRT_enableDelay();
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
