@@ -49,6 +49,7 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
 
 // ----------------------------------------
 
+
 void Action_setBindings(Htop_Action* keys);
 
 
