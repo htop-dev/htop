@@ -25,6 +25,9 @@ in the source distribution for its full text.
 
 #include <math.h>
 #include <assert.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*{
 #include "Action.h"
@@ -204,4 +207,29 @@ void Platform_setSwapValues(Meter* this) {
    ProcessList* pl = (ProcessList*) this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
+}
+
+char* Platform_getProcessEnv(pid_t pid) {
+   char procname[32+1];
+   snprintf(procname, 32, "/proc/%d/environ", pid);
+   FILE* fd = fopen(procname, "r");
+   char *env = NULL;
+   if (fd) {
+      size_t capacity = 4096, size = 0, bytes;
+      env = malloc(capacity);
+      while (env && (bytes = fread(env+size, 1, capacity-size, fd)) > 0) {
+         size += bytes;
+         capacity *= 2;
+         env = realloc(env, capacity);
+      }
+      fclose(fd);
+      if (size < 2 || env[size-1] || env[size-2]) {
+         if (size + 2 < capacity) {
+            env = realloc(env, capacity+2);
+         }
+         env[size] = 0;
+         env[size+1] = 0;
+      }
+   }
+   return env;
 }
