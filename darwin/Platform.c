@@ -218,7 +218,7 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
 
 void Platform_setMemoryValues(Meter* mtr) {
    DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
-   vm_statistics64_t vm = &dpl->vm_stats;
+   vm_statistics_t vm = &dpl->vm_stats;
    double page_K = (double)vm_page_size / (double)1024;
 
    mtr->total = dpl->host_info.max_mem / 1024;

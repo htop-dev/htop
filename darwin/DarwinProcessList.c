@@ -28,7 +28,7 @@ typedef struct DarwinProcessList_ {
    ProcessList super;
 
    host_basic_info_data_t host_info;
-   vm_statistics64_data_t vm_stats;
+   vm_statistics_data_t vm_stats;
    processor_cpu_load_info_t prev_load;
    processor_cpu_load_info_t curr_load;
    uint64_t kernel_threads;
@@ -68,10 +68,10 @@ unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
    return cpu_count;
 }
 
-void ProcessList_getVMStats(vm_statistics64_t p) {
-    mach_msg_type_number_t info_size = HOST_VM_INFO64_COUNT;
+void ProcessList_getVMStats(vm_statistics_t p) {
+    mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
 
-    if (host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info_t)p, &info_size) != 0)
+    if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)p, &info_size) != 0)
        CRT_fatalError("Unable to retrieve VM statistics\n");
 }
 
