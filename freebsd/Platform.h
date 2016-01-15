@@ -16,6 +16,10 @@ in the source distribution for its full text.
 extern ProcessFieldData Process_fields[];
 
 
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
+
 extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;
@@ -41,5 +45,7 @@ void Platform_setMemoryValues(Meter* this);
 void Platform_setSwapValues(Meter* this);
 
 void Platform_setTasksValues(Meter* this);
+
+char* Platform_getProcessEnv(pid_t pid);
 
 #endif

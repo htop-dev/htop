@@ -114,6 +114,9 @@ typedef struct GraphData_ {
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
 
 MeterClass Meter_class = {
    .super = {
@@ -297,8 +300,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    int items = Meter_getItems(this);
    for (int i = 0; i < items; i++) {
       double value = this->values[i];
-      value = MAX(value, 0);
-      value = MIN(value, this->total);
+      value = CLAMP(value, 0.0, this->total);
       if (value > 0) {
          blockSizes[i] = ceil((value/this->total) * w);
       } else {
@@ -306,7 +308,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       }
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
-      nextOffset = MIN(MAX(nextOffset, 0), w);
+      nextOffset = CLAMP(nextOffset, 0, w);
       for (int j = offset; j < nextOffset; j++)
          if (bar[j] == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
@@ -324,8 +326,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       attrset(CRT_colors[Meter_attributes(this)[i]]);
       mvaddnstr(y, x + offset, bar + offset, blockSizes[i]);
       offset += blockSizes[i];
-      offset = MAX(offset, 0);
-      offset = MIN(offset, w);
+      offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
       attrset(CRT_colors[BAR_SHADOW]);
@@ -406,13 +407,13 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    
    for (int i = nValues - (w*2) + 2, k = 0; i < nValues; i+=2, k++) {
       const double dot = (1.0 / (GraphMeterMode_pixPerRow * 4));
-      int v1 = MIN(GraphMeterMode_pixPerRow * 4, MAX(1, data->values[i] / dot));
-      int v2 = MIN(GraphMeterMode_pixPerRow * 4, MAX(1, data->values[i+1] / dot));
+      int v1 = CLAMP(data->values[i] / dot, 1, GraphMeterMode_pixPerRow * 4);
+      int v2 = CLAMP(data->values[i+1] / dot, 1, GraphMeterMode_pixPerRow * 4);
 
       int colorIdx = GRAPH_1;
       for (int line = 0; line < 4; line++) {
-         int line1 = MIN(GraphMeterMode_pixPerRow, MAX(0, v1 - (GraphMeterMode_pixPerRow * (3 - line))));
-         int line2 = MIN(GraphMeterMode_pixPerRow, MAX(0, v2 - (GraphMeterMode_pixPerRow * (3 - line))));
+         int line1 = CLAMP(v1 - (GraphMeterMode_pixPerRow * (3 - line)), 0, GraphMeterMode_pixPerRow);
+         int line2 = CLAMP(v2 - (GraphMeterMode_pixPerRow * (3 - line)), 0, GraphMeterMode_pixPerRow);
 
          attrset(CRT_colors[colorIdx]);
          mvaddstr(y+line, x+k, GraphMeterMode_dots[line1 * (GraphMeterMode_pixPerRow + 1) + line2]);

@@ -63,6 +63,10 @@ typedef struct LinuxProcessList_ {
 #define PROC_LINE_LENGTH 512
 #endif
 
+
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
    
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 

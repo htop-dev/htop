@@ -27,6 +27,10 @@ in the source distribution for its full text.
 #include "DarwinProcess.h"
 }*/
 
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
+
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 SignalItem Platform_signals[] = {
@@ -213,7 +217,7 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
    /* Convert to percent and return */
    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
 
-   return MIN(100.0, MAX(0.0, total));
+   return CLAMP(total, 0.0, 100.0);
 }
 
 void Platform_setMemoryValues(Meter* mtr) {

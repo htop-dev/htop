@@ -37,6 +37,10 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 }*/
 
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
+
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 //static ProcessField defaultIoFields[] = { PID, IO_PRIORITY, USER, IO_READ_RATE, IO_WRITE_RATE, IO_RATE, COMM, 0 };
@@ -186,7 +190,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       Meter_setItems(this, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    }
-   percent = MIN(100.0, MAX(0.0, percent));
+   percent = CLAMP(percent, 0.0, 100.0);
    if (isnan(percent)) percent = 0.0;
    return percent;
 }

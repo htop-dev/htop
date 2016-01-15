@@ -100,6 +100,9 @@ typedef struct GraphData_ {
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
 
 extern MeterClass Meter_class;
 
