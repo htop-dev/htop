@@ -16,6 +16,10 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "DarwinProcess.h"
 
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
+
 extern ProcessField Platform_defaultFields[];
 
 extern SignalItem Platform_signals[];

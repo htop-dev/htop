@@ -62,10 +62,6 @@ typedef struct RichString_ {
 
 }*/
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-
 #define charBytes(n) (sizeof(CharType) * (n)) 
 
 static void RichString_extendLen(RichString* this, int len) {

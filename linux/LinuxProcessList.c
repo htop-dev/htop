@@ -83,6 +83,10 @@ typedef struct LinuxProcessList_ {
 #endif
 
 }*/
+
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
    
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    LinuxProcessList* this = calloc(1, sizeof(LinuxProcessList));
@@ -540,7 +544,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO)
          LinuxProcess_updateIOPriority(lp);
       float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;
-      proc->percent_cpu = MAX(MIN(percent_cpu, cpus*100.0), 0.0);
+      proc->percent_cpu = CLAMP(percent_cpu, 0.0, cpus * 100.0);
       if (isnan(proc->percent_cpu)) proc->percent_cpu = 0.0;
       proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(pl->totalMem) * 100.0;
 

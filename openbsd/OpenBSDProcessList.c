@@ -42,6 +42,10 @@ typedef struct OpenBSDProcessList_ {
 
 }*/
 
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
+
 static int pageSizeKb;
 static long fscale;
 
@@ -229,7 +233,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->m_size = kproc->p_vm_dsize;
       proc->m_resident = kproc->p_vm_rssize;
       proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
-      proc->percent_cpu = MAX(MIN(getpcpu(kproc), this->cpuCount*100.0), 0.0);
+      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->cpuCount*100.0);
       //proc->nlwp = kproc->p_numthreads;
       //proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 10);
       proc->nice = kproc->p_nice - 20;
