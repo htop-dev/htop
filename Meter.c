@@ -408,9 +408,9 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    }
    
    for (int i = nValues - (w*2) + 2, k = 0; i < nValues; i+=2, k++) {
-      const double dot = (1.0 / (GraphMeterMode_pixPerRow * GRAPH_HEIGHT));
-      int v1 = CLAMP(data->values[i] / dot, 1, GraphMeterMode_pixPerRow * GRAPH_HEIGHT);
-      int v2 = CLAMP(data->values[i+1] / dot, 1, GraphMeterMode_pixPerRow * GRAPH_HEIGHT);
+      int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
+      int v1 = CLAMP(data->values[i] * pix, 1, pix);
+      int v2 = CLAMP(data->values[i+1] * pix, 1, pix);
 
       int colorIdx = GRAPH_1;
       for (int line = 0; line < GRAPH_HEIGHT; line++) {
