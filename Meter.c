@@ -25,6 +25,8 @@ in the source distribution for its full text.
 
 #define GRAPH_DELAY (DEFAULT_DELAY/2)
 
+#define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
+
 /*{
 #include "ListItem.h"
 
@@ -406,14 +408,14 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    }
    
    for (int i = nValues - (w*2) + 2, k = 0; i < nValues; i+=2, k++) {
-      const double dot = (1.0 / (GraphMeterMode_pixPerRow * 4));
-      int v1 = CLAMP(data->values[i] / dot, 1, GraphMeterMode_pixPerRow * 4);
-      int v2 = CLAMP(data->values[i+1] / dot, 1, GraphMeterMode_pixPerRow * 4);
+      const double dot = (1.0 / (GraphMeterMode_pixPerRow * GRAPH_HEIGHT));
+      int v1 = CLAMP(data->values[i] / dot, 1, GraphMeterMode_pixPerRow * GRAPH_HEIGHT);
+      int v2 = CLAMP(data->values[i+1] / dot, 1, GraphMeterMode_pixPerRow * GRAPH_HEIGHT);
 
       int colorIdx = GRAPH_1;
-      for (int line = 0; line < 4; line++) {
-         int line1 = CLAMP(v1 - (GraphMeterMode_pixPerRow * (3 - line)), 0, GraphMeterMode_pixPerRow);
-         int line2 = CLAMP(v2 - (GraphMeterMode_pixPerRow * (3 - line)), 0, GraphMeterMode_pixPerRow);
+      for (int line = 0; line < GRAPH_HEIGHT; line++) {
+         int line1 = CLAMP(v1 - (GraphMeterMode_pixPerRow * (GRAPH_HEIGHT - 1 - line)), 0, GraphMeterMode_pixPerRow);
+         int line2 = CLAMP(v2 - (GraphMeterMode_pixPerRow * (GRAPH_HEIGHT - 1 - line)), 0, GraphMeterMode_pixPerRow);
 
          attrset(CRT_colors[colorIdx]);
          mvaddstr(y+line, x+k, GraphMeterMode_dots[line1 * (GraphMeterMode_pixPerRow + 1) + line2]);
@@ -501,7 +503,7 @@ static MeterMode TextMeterMode = {
 
 static MeterMode GraphMeterMode = {
    .uiName = "Graph",
-   .h = 4,
+   .h = GRAPH_HEIGHT,
    .draw = GraphMeterMode_draw,
 };
 
