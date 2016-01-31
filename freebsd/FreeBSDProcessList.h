@@ -14,22 +14,46 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <sys/jail.h>
 #include <sys/uio.h>
+#include <sys/resource.h>
 
 #define JAIL_ERRMSGLEN	1024
 char jail_errmsg[JAIL_ERRMSGLEN];
 
 typedef struct CPUData_ {
-   unsigned long long int totalTime;
-   unsigned long long int totalPeriod;
+
+   double userPercent;
+   double nicePercent;
+   double systemPercent;
+   double irqPercent;
+   double idlePercent;
+   double systemAllPercent;
+
 } CPUData;
 
 typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
+   int zfsArcEnabled;
+
+   unsigned long long int memWire;
+   unsigned long long int memActive;
+   unsigned long long int memInactive;
+   unsigned long long int memFree;
+   unsigned long long int memZfsArc;
+
+
    CPUData* cpus;
 
+   unsigned long   *cp_time_o;
+   unsigned long   *cp_time_n;
+
+   unsigned long  *cp_times_o;
+   unsigned long  *cp_times_n;
+
 } FreeBSDProcessList;
+
+
 
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
