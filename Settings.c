@@ -323,6 +323,7 @@ Settings* Settings_new(int cpuCount) {
    this->updateProcessNames = false;
    this->cpuCount = cpuCount;
    this->showProgramPath = true;
+   this->highlightThreads = true;
    
    this->fields = calloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
@@ -390,7 +391,7 @@ Settings* Settings_new(int cpuCount) {
          Settings_defaultMeters(this);
          this->hideKernelThreads = true;
          this->highlightMegabytes = true;
-         this->highlightThreads = false;
+         this->highlightThreads = true;
          this->headerMargin = true;
       }
    }
