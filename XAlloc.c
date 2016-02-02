@@ -20,6 +20,7 @@ void* xMalloc(size_t size) {
       curs_set(1);
       endwin();
       write(2, oomMessage, sizeof oomMessage - 1);
+      exit(1);
    }
    return data;
 }
@@ -30,6 +31,7 @@ void* xCalloc(size_t nmemb, size_t size) {
       curs_set(1);
       endwin();
       write(2, oomMessage, sizeof oomMessage - 1);
+      exit(1);
    }
    return data;
 }
@@ -40,6 +42,7 @@ void* xRealloc(void* ptr, size_t size) {
       curs_set(1);
       endwin();
       write(2, oomMessage, sizeof oomMessage - 1);
+      exit(1);
    }
    return data;
 }
@@ -50,6 +53,7 @@ char* xStrdup(const char* str) {
       curs_set(1);
       endwin();
       write(2, oomMessage, sizeof oomMessage - 1);
+      exit(1);
    }
    return data;
 }
