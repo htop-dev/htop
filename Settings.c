@@ -118,19 +118,29 @@ static void Settings_defaultMeters(Settings* this) {
    int r = 0;
    if (this->cpuCount > 8) {
       this->columns[0].names[0] = xStrdup("LeftCPUs2");
-      this->columns[1].names[r++] = xStrdup("RightCPUs2");
+      this->columns[0].modes[0] = BAR_METERMODE;
+      this->columns[1].names[r] = xStrdup("RightCPUs2");
+      this->columns[1].modes[r++] = BAR_METERMODE;
    } else if (this->cpuCount > 4) {
       this->columns[0].names[0] = xStrdup("LeftCPUs");
-      this->columns[1].names[r++] = xStrdup("RightCPUs");
+      this->columns[0].modes[0] = BAR_METERMODE;
+      this->columns[1].names[r] = xStrdup("RightCPUs");
+      this->columns[1].modes[r++] = BAR_METERMODE;
    } else {
       this->columns[0].names[0] = xStrdup("AllCPUs");
+      this->columns[0].modes[0] = BAR_METERMODE;
    }
    this->columns[0].names[1] = xStrdup("Memory");
+   this->columns[0].modes[1] = BAR_METERMODE;
    this->columns[0].names[2] = xStrdup("Swap");
+   this->columns[0].modes[2] = BAR_METERMODE;
    
-   this->columns[1].names[r++] = xStrdup("Tasks");
-   this->columns[1].names[r++] = xStrdup("LoadAverage");
-   this->columns[1].names[r++] = xStrdup("Uptime");
+   this->columns[1].names[r] = xStrdup("Tasks");
+   this->columns[1].modes[r++] = TEXT_METERMODE;
+   this->columns[1].names[r] = xStrdup("LoadAverage");
+   this->columns[1].modes[r++] = TEXT_METERMODE;
+   this->columns[1].names[r] = xStrdup("Uptime");
+   this->columns[1].modes[r++] = TEXT_METERMODE;
 }
 
 static void readFields(ProcessField* fields, int* flags, const char* line) {
