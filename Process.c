@@ -88,6 +88,7 @@ typedef struct Process_ {
    pid_t ppid;
    pid_t tgid;
    char* comm;
+   int commLen;
    int indent;
 
    int basenameOffset;
