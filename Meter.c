@@ -127,7 +127,7 @@ MeterClass Meter_class = {
 };
 
 Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
-   Meter* this = calloc(1, sizeof(Meter));
+   Meter* this = xCalloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
    this->param = param;
@@ -137,9 +137,9 @@ Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
       maxItems = 1;
    }
    type->curItems = maxItems;
-   this->values = calloc(maxItems, sizeof(double));
+   this->values = xCalloc(maxItems, sizeof(double));
    this->total = type->total;
-   this->caption = strdup(type->caption);
+   this->caption = xStrdup(type->caption);
    if (Meter_initFn(this))
       Meter_init(this);
    Meter_setMode(this, type->defaultMode);
@@ -193,7 +193,7 @@ void Meter_delete(Object* cast) {
 
 void Meter_setCaption(Meter* this, const char* caption) {
    free(this->caption);
-   this->caption = strdup(caption);
+   this->caption = xStrdup(caption);
 }
 
 static inline void Meter_displayBuffer(Meter* this, char* buffer, RichString* out) {
@@ -366,7 +366,7 @@ static int GraphMeterMode_pixPerRow;
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
-   if (!this->drawData) this->drawData = calloc(1, sizeof(GraphData));
+   if (!this->drawData) this->drawData = xCalloc(1, sizeof(GraphData));
     GraphData* data = (GraphData*) this->drawData;
    const int nValues = METER_BUFFER_LEN;
 

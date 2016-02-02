@@ -83,19 +83,19 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    this->scr = scr;
 
    Panel_setHeader(super, "Display options");
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Tree view"), &(settings->treeView)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Shadow other users' processes"), &(settings->shadowOtherUsers)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Hide kernel threads"), &(settings->hideKernelThreads)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Hide userland threads"), &(settings->hideUserlandThreads)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Display threads in a different color"), &(settings->highlightThreads)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Show custom thread names"), &(settings->showThreadNames)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Show program path"), &(settings->showProgramPath)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Highlight program \"basename\""), &(settings->highlightBaseName)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Highlight large numbers in memory counters"), &(settings->highlightMegabytes)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Leave a margin around header"), &(settings->headerMargin)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->detailedCPUTime)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Count CPUs from 0 instead of 1"), &(settings->countCPUsFromZero)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Update process names on every refresh"), &(settings->updateProcessNames)));
-   Panel_add(super, (Object*) CheckItem_newByRef(strdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Tree view"), &(settings->treeView)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Shadow other users' processes"), &(settings->shadowOtherUsers)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide kernel threads"), &(settings->hideKernelThreads)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide userland threads"), &(settings->hideUserlandThreads)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Display threads in a different color"), &(settings->highlightThreads)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show custom thread names"), &(settings->showThreadNames)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show program path"), &(settings->showProgramPath)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight program \"basename\""), &(settings->highlightBaseName)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight large numbers in memory counters"), &(settings->highlightMegabytes)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Leave a margin around header"), &(settings->headerMargin)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->detailedCPUTime)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Count CPUs from 0 instead of 1"), &(settings->countCPUsFromZero)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Update process names on every refresh"), &(settings->updateProcessNames)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
    return this;
 }

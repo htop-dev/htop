@@ -58,7 +58,7 @@ InfoScreenClass OpenFilesScreen_class = {
 };
 
 OpenFilesScreen* OpenFilesScreen_new(Process* process) {
-   OpenFilesScreen* this = malloc(sizeof(OpenFilesScreen));
+   OpenFilesScreen* this = xMalloc(sizeof(OpenFilesScreen));
    Object_setClass(this, Class(OpenFilesScreen));
    if (Process_isThread(process))
       this->pid = process->tgid;
@@ -79,7 +79,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    char command[1025];
    snprintf(command, 1024, "lsof -P -p %d -F 2> /dev/null", pid);
    FILE* fd = popen(command, "r");
-   OpenFiles_ProcessData* pdata = calloc(1, sizeof(OpenFiles_ProcessData));
+   OpenFiles_ProcessData* pdata = xCalloc(1, sizeof(OpenFiles_ProcessData));
    OpenFiles_FileData* fdata = NULL;
    OpenFiles_Data* item = &(pdata->data);
    if (!fd) {
@@ -90,7 +90,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       int cmd = fgetc(fd);
       if (cmd == EOF)
          break;
-      char* entry = malloc(1024);
+      char* entry = xMalloc(1024);
       if (!fgets(entry, 1024, fd)) {
          free(entry);
          break;
@@ -98,7 +98,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       char* newline = strrchr(entry, '\n');
       *newline = '\0';
       if (cmd == 'f') {
-         OpenFiles_FileData* nextFile = calloc(1, sizeof(OpenFiles_FileData));
+         OpenFiles_FileData* nextFile = xCalloc(1, sizeof(OpenFiles_FileData));
          if (fdata == NULL) {
             pdata->files = nextFile;
          } else {

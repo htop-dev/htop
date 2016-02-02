@@ -37,9 +37,9 @@ Vector* Vector_new(ObjectClass* type, bool owner, int size) {
 
    if (size == DEFAULT_SIZE)
       size = 10;
-   this = malloc(sizeof(Vector));
+   this = xMalloc(sizeof(Vector));
    this->growthRate = size;
-   this->array = (Object**) calloc(size, sizeof(Object*));
+   this->array = (Object**) xCalloc(size, sizeof(Object*));
    this->arraySize = size;
    this->items = 0;
    this->type = type;
@@ -179,7 +179,7 @@ static void Vector_checkArraySize(Vector* this) {
       //int i;
       //i = this->arraySize;
       this->arraySize = this->items + this->growthRate;
-      this->array = (Object**) realloc(this->array, sizeof(Object*) * this->arraySize);
+      this->array = (Object**) xRealloc(this->array, sizeof(Object*) * this->arraySize);
       //for (; i < this->arraySize; i++)
       //   this->array[i] = NULL;
    }

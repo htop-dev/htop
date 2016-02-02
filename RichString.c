@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "RichString.h"
+#include "XAlloc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -67,7 +68,7 @@ typedef struct RichString_ {
 static void RichString_extendLen(RichString* this, int len) {
    if (this->chlen <= RICHSTRING_MAXLEN) {
       if (len > RICHSTRING_MAXLEN) {
-         this->chptr = malloc(charBytes(len + 1));
+         this->chptr = xMalloc(charBytes(len + 1));
          memcpy(this->chptr, this->chstr, charBytes(this->chlen));
       }
    } else {
@@ -76,7 +77,7 @@ static void RichString_extendLen(RichString* this, int len) {
          free(this->chptr);
          this->chptr = this->chstr;
       } else {
-         this->chptr = realloc(this->chptr, charBytes(len + 1));
+         this->chptr = xRealloc(this->chptr, charBytes(len + 1));
       }
    }
 

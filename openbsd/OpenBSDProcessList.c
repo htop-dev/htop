@@ -53,7 +53,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    int mib[] = { CTL_HW, HW_NCPU };
    int fmib[] = { CTL_KERN, KERN_FSCALE };
    int i, e;
-   OpenBSDProcessList* opl = calloc(1, sizeof(OpenBSDProcessList));
+   OpenBSDProcessList* opl = xCalloc(1, sizeof(OpenBSDProcessList));
    ProcessList* pl = (ProcessList*) opl;
    size_t size = sizeof(pl->cpuCount);
 
@@ -62,7 +62,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    if (e == -1 || pl->cpuCount < 1) {
       pl->cpuCount = 1;
    }
-   opl->cpus = realloc(opl->cpus, pl->cpuCount * sizeof(CPUData));
+   opl->cpus = xRealloc(opl->cpus, pl->cpuCount * sizeof(CPUData));
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0)
@@ -144,7 +144,7 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
     */
    arg = kvm_getargv(kd, kproc, 500);
    if (arg == NULL) {
-      if ((s = strdup(kproc->p_comm)) == NULL) {
+      if ((s = xStrdup(kproc->p_comm)) == NULL) {
          err(1, NULL);
       }
       return s;
@@ -152,8 +152,8 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    for (i = 0; arg[i] != NULL; i++) {
       len += strlen(arg[i]) + 1;
    }
-   if ((buf = s = malloc(len)) == NULL) {
-      if ((s = strdup(kproc->p_comm)) == NULL) {
+   if ((buf = s = xMalloc(len)) == NULL) {
+      if ((s = xStrdup(kproc->p_comm)) == NULL) {
          err(1, NULL);
       }
       return s;

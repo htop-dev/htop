@@ -24,7 +24,7 @@ BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
 SignalsPanel.c StringUtils.c SwapMeter.c TasksMeter.c UptimeMeter.c \
 TraceScreen.c UsersTable.c Vector.c AvailableColumnsPanel.c AffinityPanel.c \
 HostnameMeter.c OpenFilesScreen.c Affinity.c IncSet.c Action.c EnvScreen.c \
-InfoScreen.c
+InfoScreen.c XAlloc.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
 CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
@@ -34,7 +34,7 @@ BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h
 ScreenManager.h Settings.h SignalsPanel.h StringUtils.h SwapMeter.h \
 TasksMeter.h UptimeMeter.h TraceScreen.h UsersTable.h Vector.h Process.h \
 AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
-EnvScreen.h InfoScreen.h
+EnvScreen.h InfoScreen.h XAlloc.h
 
 if HTOP_LINUX
 htop_CFLAGS += -rdynamic 

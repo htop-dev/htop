@@ -87,7 +87,7 @@ struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
    if (sysctl(mib, 4, NULL, count, NULL, 0) < 0)
       CRT_fatalError("Unable to get size of kproc_infos");
 
-   processes = malloc(*count);
+   processes = xMalloc(*count);
    if (processes == NULL)
       CRT_fatalError("Out of memory for kproc_infos");
 
@@ -101,7 +101,7 @@ struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
 
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
-   DarwinProcessList* this = calloc(1, sizeof(DarwinProcessList));
+   DarwinProcessList* this = xCalloc(1, sizeof(DarwinProcessList));
 
    ProcessList_init(&this->super, Class(Process), usersTable, pidWhiteList, userId);
 

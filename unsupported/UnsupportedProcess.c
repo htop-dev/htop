@@ -17,7 +17,7 @@ in the source distribution for its full text.
 }*/
 
 Process* UnsupportedProcess_new(Settings* settings) {
-   Process* this = calloc(1, sizeof(Process));
+   Process* this = xCalloc(1, sizeof(Process));
    Object_setClass(this, Class(Process));
    Process_init(this, settings);
    return this;

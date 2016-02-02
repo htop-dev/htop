@@ -61,7 +61,7 @@ ObjectClass ListItem_class = {
 
 ListItem* ListItem_new(const char* value, int key) {
    ListItem* this = AllocThis(ListItem);
-   this->value = strdup(value);
+   this->value = xStrdup(value);
    this->key = key;
    this->moving = false;
    return this;
@@ -71,7 +71,7 @@ void ListItem_append(ListItem* this, const char* text) {
    int oldLen = strlen(this->value);
    int textLen = strlen(text);
    int newLen = strlen(this->value) + textLen;
-   this->value = realloc(this->value, newLen + 1);
+   this->value = xRealloc(this->value, newLen + 1);
    memcpy(this->value + oldLen, text, textLen);
    this->value[newLen] = '\0';
 }

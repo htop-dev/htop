@@ -19,7 +19,7 @@ void* xMalloc(size_t size) {
    if (!data && size > 0) {
       curs_set(1);
       endwin();
-      write(2, oomMessage, sizeof oomMessage);
+      write(2, oomMessage, sizeof oomMessage - 1);
    }
    return data;
 }
@@ -29,7 +29,7 @@ void* xCalloc(size_t nmemb, size_t size) {
    if (!data && nmemb > 0 && size > 0) {
       curs_set(1);
       endwin();
-      write(2, oomMessage, sizeof oomMessage);
+      write(2, oomMessage, sizeof oomMessage - 1);
    }
    return data;
 }
@@ -39,7 +39,7 @@ void* xRealloc(void* ptr, size_t size) {
    if (!data && size > 0) {
       curs_set(1);
       endwin();
-      write(2, oomMessage, sizeof oomMessage);
+      write(2, oomMessage, sizeof oomMessage - 1);
    }
    return data;
 }
@@ -49,7 +49,7 @@ char* xStrdup(const char* str) {
    if (!data && str) {
       curs_set(1);
       endwin();
-      write(2, oomMessage, sizeof oomMessage);
+      write(2, oomMessage, sizeof oomMessage - 1);
    }
    return data;
 }

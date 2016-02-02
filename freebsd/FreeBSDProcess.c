@@ -97,7 +97,7 @@ ProcessPidColumn Process_pidColumns[] = {
 };
 
 FreeBSDProcess* FreeBSDProcess_new(Settings* settings) {
-   FreeBSDProcess* this = calloc(1, sizeof(FreeBSDProcess));
+   FreeBSDProcess* this = xCalloc(1, sizeof(FreeBSDProcess));
    Object_setClass(this, Class(FreeBSDProcess));
    Process_init(&this->super, settings);
    return this;

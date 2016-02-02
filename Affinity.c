@@ -29,9 +29,9 @@ typedef struct Affinity_ {
 }*/
 
 Affinity* Affinity_new(ProcessList* pl) {
-   Affinity* this = calloc(1, sizeof(Affinity));
+   Affinity* this = xCalloc(1, sizeof(Affinity));
    this->size = 8;
-   this->cpus = calloc(this->size, sizeof(int));
+   this->cpus = xCalloc(this->size, sizeof(int));
    this->pl = pl;
    return this;
 }
@@ -44,7 +44,7 @@ void Affinity_delete(Affinity* this) {
 void Affinity_add(Affinity* this, int id) {
    if (this->used == this->size) {
       this->size *= 2;
-      this->cpus = realloc(this->cpus, sizeof(int) * this->size);
+      this->cpus = xRealloc(this->cpus, sizeof(int) * this->size);
    }
    this->cpus[this->used] = id;
    this->used++;

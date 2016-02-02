@@ -190,7 +190,7 @@ PanelClass MainPanel_class = {
 MainPanel* MainPanel_new() {
    MainPanel* this = AllocThis(MainPanel);
    Panel_init((Panel*) this, 1, 1, 1, 1, Class(Process), false, FunctionBar_new(MainFunctions, NULL, NULL));
-   this->keys = calloc(KEY_MAX, sizeof(Htop_Action));
+   this->keys = xCalloc(KEY_MAX, sizeof(Htop_Action));
    this->inc = IncSet_new(MainPanel_getFunctionBar(this));
 
    Action_setBindings(this->keys);

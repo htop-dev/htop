@@ -96,7 +96,7 @@ static void Settings_readMeterModes(Settings* this, char* line, int column) {
       len++;
    }
    this->columns[column].len = len;
-   int* modes = calloc(len, sizeof(int));
+   int* modes = xCalloc(len, sizeof(int));
    for (int i = 0; i < len; i++) {
       modes[i] = atoi(ids[i]);
    }
@@ -110,27 +110,27 @@ static void Settings_defaultMeters(Settings* this) {
       sizes[1]++;
    }
    for (int i = 0; i < 2; i++) {
-      this->columns[i].names = calloc(sizes[i] + 1, sizeof(char*));
-      this->columns[i].modes = calloc(sizes[i], sizeof(int));
+      this->columns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
+      this->columns[i].modes = xCalloc(sizes[i], sizeof(int));
       this->columns[i].len = sizes[i];
    }
    
    int r = 0;
    if (this->cpuCount > 8) {
-      this->columns[0].names[0] = strdup("LeftCPUs2");
-      this->columns[1].names[r++] = strdup("RightCPUs2");
+      this->columns[0].names[0] = xStrdup("LeftCPUs2");
+      this->columns[1].names[r++] = xStrdup("RightCPUs2");
    } else if (this->cpuCount > 4) {
-      this->columns[0].names[0] = strdup("LeftCPUs");
-      this->columns[1].names[r++] = strdup("RightCPUs");
+      this->columns[0].names[0] = xStrdup("LeftCPUs");
+      this->columns[1].names[r++] = xStrdup("RightCPUs");
    } else {
-      this->columns[0].names[0] = strdup("AllCPUs");
+      this->columns[0].names[0] = xStrdup("AllCPUs");
    }
-   this->columns[0].names[1] = strdup("Memory");
-   this->columns[0].names[2] = strdup("Swap");
+   this->columns[0].names[1] = xStrdup("Memory");
+   this->columns[0].names[2] = xStrdup("Swap");
    
-   this->columns[1].names[r++] = strdup("Tasks");
-   this->columns[1].names[r++] = strdup("LoadAverage");
-   this->columns[1].names[r++] = strdup("Uptime");
+   this->columns[1].names[r++] = xStrdup("Tasks");
+   this->columns[1].names[r++] = xStrdup("LoadAverage");
+   this->columns[1].names[r++] = xStrdup("Uptime");
 }
 
 static void readFields(ProcessField* fields, int* flags, const char* line) {
@@ -306,7 +306,7 @@ bool Settings_write(Settings* this) {
 
 Settings* Settings_new(int cpuCount) {
   
-   Settings* this = calloc(1, sizeof(Settings));
+   Settings* this = xCalloc(1, sizeof(Settings));
 
    this->sortKey = PERCENT_CPU;
    this->direction = 1;
@@ -324,7 +324,7 @@ Settings* Settings_new(int cpuCount) {
    this->cpuCount = cpuCount;
    this->showProgramPath = true;
    
-   this->fields = calloc(Platform_numberOfFields+1, sizeof(ProcessField));
+   this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;
@@ -337,7 +337,7 @@ Settings* Settings_new(int cpuCount) {
    char* legacyDotfile = NULL;
    char* rcfile = getenv("HTOPRC");
    if (rcfile) {
-      this->filename = strdup(rcfile);
+      this->filename = xStrdup(rcfile);
    } else {
       const char* home = getenv("HOME");
       if (!home) home = "";
@@ -346,7 +346,7 @@ Settings* Settings_new(int cpuCount) {
       char* htopDir = NULL;
       if (xdgConfigHome) {
          this->filename = String_cat(xdgConfigHome, "/htop/htoprc");
-         configDir = strdup(xdgConfigHome);
+         configDir = xStrdup(xdgConfigHome);
          htopDir = String_cat(xdgConfigHome, "/htop");
       } else {
          this->filename = String_cat(home, "/.config/htop/htoprc");

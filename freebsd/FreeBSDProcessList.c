@@ -86,7 +86,7 @@ static int kernelFScale;
 
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
-   FreeBSDProcessList* fpl = calloc(1, sizeof(FreeBSDProcessList));
+   FreeBSDProcessList* fpl = xCalloc(1, sizeof(FreeBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
    ProcessList_init(pl, Class(FreeBSDProcess), usersTable, pidWhiteList, userId);
 
@@ -146,8 +146,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    size_t sizeof_cp_time_array = sizeof(unsigned long) * CPUSTATES;
    len = 2; sysctlnametomib("kern.cp_time", MIB_kern_cp_time, &len);
-   fpl->cp_time_o = calloc(cpus, sizeof_cp_time_array);
-   fpl->cp_time_n = calloc(cpus, sizeof_cp_time_array);
+   fpl->cp_time_o = xCalloc(cpus, sizeof_cp_time_array);
+   fpl->cp_time_n = xCalloc(cpus, sizeof_cp_time_array);
    len = sizeof_cp_time_array;
 
    // fetch intial single (or average) CPU clicks from kernel
@@ -156,8 +156,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    // on smp box, fetch rest of intial CPU's clicks
    if (cpus > 1) {
       len = 2; sysctlnametomib("kern.cp_times", MIB_kern_cp_times, &len);
-      fpl->cp_times_o = calloc(cpus, sizeof_cp_time_array);
-      fpl->cp_times_n = calloc(cpus, sizeof_cp_time_array);
+      fpl->cp_times_o = xCalloc(cpus, sizeof_cp_time_array);
+      fpl->cp_times_n = xCalloc(cpus, sizeof_cp_time_array);
       len = cpus * sizeof_cp_time_array;
       sysctl(MIB_kern_cp_times, 2, fpl->cp_times_o, &len, NULL, 0);
    }
@@ -165,10 +165,10 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    pl->cpuCount = MAX(cpus, 1);
 
    if (cpus == 1 ) {
-     fpl->cpus = realloc(fpl->cpus, sizeof(CPUData));
+     fpl->cpus = xRealloc(fpl->cpus, sizeof(CPUData));
    } else {
      // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
-     fpl->cpus = realloc(fpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+     fpl->cpus = xRealloc(fpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
    }
 
 
@@ -349,13 +349,13 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
-      return strdup(kproc->ki_comm);
+      return xStrdup(kproc->ki_comm);
    }
    int len = 0;
    for (int i = 0; argv[i]; i++) {
       len += strlen(argv[i]) + 1;
    }
-   char* comm = malloc(len);
+   char* comm = xMalloc(len);
    char* at = comm;
    *basenameEnd = 0;
    for (int i = 0; argv[i]; i++) {
@@ -398,7 +398,7 @@ char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
             snprintf(jail_errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
             return NULL;
       } else if (jid == kproc->ki_jid) {
-         jname = strdup(jnamebuf);
+         jname = xStrdup(jnamebuf);
          if (jname == NULL)
             strerror_r(errno, jail_errmsg, JAIL_ERRMSGLEN);
          return jname;
@@ -408,7 +408,7 @@ char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
    } else {
       jnamebuf[0]='-';
       jnamebuf[1]='\0';
-      jname = strdup(jnamebuf);
+      jname = xStrdup(jnamebuf);
    }
    return jname;
 }

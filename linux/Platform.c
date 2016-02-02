@@ -220,16 +220,16 @@ char* Platform_getProcessEnv(pid_t pid) {
    char *env = NULL;
    if (fd) {
       size_t capacity = 4096, size = 0, bytes;
-      env = malloc(capacity);
+      env = xMalloc(capacity);
       while (env && (bytes = fread(env+size, 1, capacity-size, fd)) > 0) {
          size += bytes;
          capacity *= 2;
-         env = realloc(env, capacity);
+         env = xRealloc(env, capacity);
       }
       fclose(fd);
       if (size < 2 || env[size-1] || env[size-2]) {
          if (size + 2 < capacity) {
-            env = realloc(env, capacity+2);
+            env = xRealloc(env, capacity+2);
          }
          env[size] = 0;
          env[size+1] = 0;

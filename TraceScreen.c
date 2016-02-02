@@ -59,7 +59,7 @@ InfoScreenClass TraceScreen_class = {
 };
 
 TraceScreen* TraceScreen_new(Process* process) {
-   TraceScreen* this = malloc(sizeof(TraceScreen));
+   TraceScreen* this = xMalloc(sizeof(TraceScreen));
    Object_setClass(this, Class(TraceScreen));
    this->tracing = true;
    this->contLine = false;
