@@ -86,7 +86,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Tree view"), &(settings->treeView)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Shadow other users' processes"), &(settings->shadowOtherUsers)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide kernel threads"), &(settings->hideKernelThreads)));
-   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide userland threads"), &(settings->hideUserlandThreads)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide userland process threads"), &(settings->hideUserlandThreads)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Display threads in a different color"), &(settings->highlightThreads)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show custom thread names"), &(settings->showThreadNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show program path"), &(settings->showProgramPath)));

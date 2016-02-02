@@ -388,7 +388,7 @@ static struct { const char* key; const char* info; } helpLeft[] = {
    { .key = "   F4 \\: ",.info = "incremental name filtering" },
    { .key = "   F5 t: ", .info = "tree view" },
    { .key = "      u: ", .info = "show processes of a single user" },
-   { .key = "      H: ", .info = "hide/show user threads" },
+   { .key = "      H: ", .info = "hide/show user process threads" },
    { .key = "      K: ", .info = "hide/show kernel threads" },
    { .key = "      F: ", .info = "cursor follows process" },
    { .key = " F6 + -: ", .info = "expand/collapse tree" },
@@ -478,6 +478,10 @@ static Htop_Reaction actionHelp(State* st) {
    attrset(CRT_colors[HELP_BOLD]);
    for (int i = 0; helpLeft[i].key;  i++) { mvaddstr(9+i, 0,  helpLeft[i].key); }
    for (int i = 0; helpRight[i].key; i++) { mvaddstr(9+i, 40, helpRight[i].key); }
+   attrset(CRT_colors[PROCESS_THREAD]);
+   mvaddstr(15, 32, "threads");
+   mvaddstr(16, 26, "threads");
+   attrset(CRT_colors[DEFAULT_COLOR]);
 
    attrset(CRT_colors[HELP_BOLD]);
    mvaddstr(23,0, "Press any key to return.");

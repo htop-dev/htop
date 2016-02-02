@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-AC_INIT([htop],[1.0.3],[hisham@gobolinux.org])
+AC_INIT([htop],[2.0.0],[hisham@gobolinux.org])
 
 year=$(date +%Y)
 
