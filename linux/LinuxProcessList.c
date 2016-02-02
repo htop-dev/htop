@@ -149,7 +149,7 @@ static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
    return (unsigned long long) t * jiffytime * 100;
 }
 
-static bool LinuxProcessList_readStatFile(Process *process, const char* dirname, const char* name, char* command) {
+static bool LinuxProcessList_readStatFile(Process *process, const char* dirname, const char* name, char* command, int* commLen) {
    LinuxProcess* lp = (LinuxProcess*) process;
    char filename[MAX_NAME+1];
    snprintf(filename, MAX_NAME, "%s/%s/stat", dirname, name);
@@ -175,6 +175,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    int commsize = end - location;
    memcpy(command, location, commsize);
    command[commsize] = '\0';
+   *commLen = commsize;
    location = end + 2;
 
    process->state = location[0];
@@ -444,6 +445,16 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
    fclose(file);
 }
 
+static void setCommand(Process* process, const char* command, int len) {
+   if (process->comm && process->commLen <= len) {
+      strncpy(process->comm, command, len + 1);
+   } else {
+      free(process->comm);
+      process->comm = xStrdup(command);
+   }
+   process->commLen = len;
+}
+
 static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirname, const char* name) {
    if (Process_isKernelThread(process))
       return true;
@@ -471,9 +482,8 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
       tokenEnd = amtRead;
    }
    command[amtRead] = '\0';
-   free(process->comm);
-   process->comm = strdup(command);
    process->basenameOffset = tokenEnd;
+   setCommand(process, command, amtRead);
 
    return true;
 }
@@ -539,7 +549,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       char command[MAX_NAME+1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
-      if (! LinuxProcessList_readStatFile(proc, dirname, name, command))
+      int commLen = 0;
+      if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen))
          goto errorReadingProcess;
       if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO)
          LinuxProcess_updateIOPriority(lp);
@@ -589,14 +600,12 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          LinuxProcessList_readOomData(lp, dirname, name);
 
       if (proc->state == 'Z') {
-         free(proc->comm);
          proc->basenameOffset = -1;
-         proc->comm = strdup(command);
+         setCommand(proc, command, commLen);
       } else if (Process_isThread(proc)) {
          if (settings->showThreadNames || Process_isKernelThread(proc) || proc->state == 'Z') {
-            free(proc->comm);
             proc->basenameOffset = -1;
-            proc->comm = strdup(command);
+            setCommand(proc, command, commLen);
          } else if (settings->showThreadNames) {
             if (! LinuxProcessList_readCmdlineFile(proc, dirname, name))
                goto errorReadingProcess;
