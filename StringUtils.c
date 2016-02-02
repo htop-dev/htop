@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "StringUtils.h"
+#include "XAlloc.h"
 
 #include "config.h"
 
@@ -22,7 +23,7 @@ in the source distribution for its full text.
 char* String_cat(const char* s1, const char* s2) {
    int l1 = strlen(s1);
    int l2 = strlen(s2);
-   char* out = malloc(l1 + l2 + 1);
+   char* out = xMalloc(l1 + l2 + 1);
    strncpy(out, s1, l1);
    strncpy(out+l1, s2, l2+1);
    return out;
@@ -36,7 +37,7 @@ char* String_trim(const char* in) {
    while (len > 0 && (in[len-1] == ' ' || in[len-1] == '\t' || in[len-1] == '\n')) {
       len--;
    }
-   char* out = malloc(len+1);
+   char* out = xMalloc(len+1);
    strncpy(out, in, len);
    out[len] = '\0';
    return out;
@@ -55,20 +56,20 @@ inline int String_eq(const char* s1, const char* s2) {
 char** String_split(const char* s, char sep, int* n) {
    *n = 0;
    const int rate = 10;
-   char** out = calloc(rate, sizeof(char*));
+   char** out = xCalloc(rate, sizeof(char*));
    int ctr = 0;
    int blocks = rate;
    char* where;
    while ((where = strchr(s, sep)) != NULL) {
       int size = where - s;
-      char* token = malloc(size + 1);
+      char* token = xMalloc(size + 1);
       strncpy(token, s, size);
       token[size] = '\0';
       out[ctr] = token;
       ctr++;
       if (ctr == blocks) {
          blocks += rate;
-         char** newOut = (char**) realloc(out, sizeof(char*) * blocks);
+         char** newOut = (char**) xRealloc(out, sizeof(char*) * blocks);
          if (newOut) {
             out = newOut;
          } else {
@@ -80,12 +81,12 @@ char** String_split(const char* s, char sep, int* n) {
    }
    if (s[0] != '\0') {
       int size = strlen(s);
-      char* token = malloc(size + 1);
+      char* token = xMalloc(size + 1);
       strncpy(token, s, size + 1);
       out[ctr] = token;
       ctr++;
    }
-   char** newOut = realloc(out, sizeof(char*) * (ctr + 1));
+   char** newOut = xRealloc(out, sizeof(char*) * (ctr + 1));
    if (newOut) {
       out = newOut;
    }
@@ -125,5 +126,5 @@ char* String_getToken(const char* line, const unsigned short int numMatch) {
    }
 
    match[foundCount] = '\0';
-   return((char*)strdup(match));
+   return((char*)xStrdup(match));
 }

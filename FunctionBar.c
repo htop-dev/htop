@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 #include "CRT.h"
 #include "RichString.h"
+#include "XAlloc.h"
 
 #include <assert.h>
 #include <string.h>
@@ -42,21 +43,21 @@ FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
 }
 
 FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* events) {
-   FunctionBar* this = calloc(1, sizeof(FunctionBar));
-   this->functions = calloc(16, sizeof(char*));
+   FunctionBar* this = xCalloc(1, sizeof(FunctionBar));
+   this->functions = xCalloc(16, sizeof(char*));
    if (!functions) {
       functions = FunctionBar_FLabels;
    }
    for (int i = 0; i < 15 && functions[i]; i++) {
-      this->functions[i] = strdup(functions[i]);
+      this->functions[i] = xStrdup(functions[i]);
    }
    if (keys && events) {
       this->staticData = false; 
-      this->keys = calloc(15, sizeof(char*));
-      this->events = calloc(15, sizeof(int));
+      this->keys = xCalloc(15, sizeof(char*));
+      this->events = xCalloc(15, sizeof(int));
       int i = 0;
       while (i < 15 && functions[i]) {
-         this->keys[i] = strdup(keys[i]);
+         this->keys[i] = xStrdup(keys[i]);
          this->events[i] = events[i];
          i++;
       }
@@ -89,7 +90,7 @@ void FunctionBar_setLabel(FunctionBar* this, int event, const char* text) {
    for (int i = 0; i < this->size; i++) {
       if (this->events[i] == event) {
          free(this->functions[i]);
-         this->functions[i] = strdup(text);
+         this->functions[i] = xStrdup(text);
          break;
       }
    }

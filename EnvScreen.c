@@ -29,7 +29,7 @@ InfoScreenClass EnvScreen_class = {
 };
 
 EnvScreen* EnvScreen_new(Process* process) {
-   EnvScreen* this = malloc(sizeof(EnvScreen));
+   EnvScreen* this = xMalloc(sizeof(EnvScreen));
    Object_setClass(this, Class(EnvScreen));
    return (EnvScreen*) InfoScreen_init(&this->super, process, NULL, LINES-3, " ");
 }

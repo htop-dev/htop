@@ -60,7 +60,7 @@ Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity) {
       } else {
          mode = false;
       }
-      Panel_add(this, (Object*) CheckItem_newByVal(strdup(number), mode));
+      Panel_add(this, (Object*) CheckItem_newByVal(xStrdup(number), mode));
    }
    return this;
 }

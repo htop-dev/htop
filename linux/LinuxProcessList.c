@@ -89,7 +89,7 @@ typedef struct LinuxProcessList_ {
 #endif
    
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
-   LinuxProcessList* this = calloc(1, sizeof(LinuxProcessList));
+   LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
    ProcessList_init(pl, Class(LinuxProcess), usersTable, pidWhiteList, userId);
 
@@ -108,7 +108,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    fclose(file);
 
    pl->cpuCount = MAX(cpus - 1, 1);
-   this->cpus = calloc(cpus, sizeof(CPUData));
+   this->cpus = xCalloc(cpus, sizeof(CPUData));
 
    for (int i = 0; i < cpus; i++) {
       this->cpus[i].totalTime = 1;
@@ -366,7 +366,7 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
    snprintf(filename, MAX_NAME, "%s/%s/cgroup", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file) {
-      process->cgroup = strdup("");
+      process->cgroup = xStrdup("");
       return;
    }
    char output[PROC_LINE_LENGTH + 1];
@@ -389,7 +389,7 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
    }
    fclose(file);
    free(process->cgroup);
-   process->cgroup = strdup(output);
+   process->cgroup = xStrdup(output);
 }
 
 #endif

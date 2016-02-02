@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 /*{
 #include "RichString.h"
+#include "XAlloc.h"
 
 typedef struct Object_ Object;
 
@@ -26,7 +27,7 @@ typedef void(*Object_Delete)(Object*);
 
 #define Class(class_)                 ((ObjectClass*)(&(class_ ## _class)))
 
-#define AllocThis(class_) (class_*) malloc(sizeof(class_)); Object_setClass(this, Class(class_));
+#define AllocThis(class_) (class_*) xMalloc(sizeof(class_)); Object_setClass(this, Class(class_));
  
 typedef struct ObjectClass_ {
    const void* extends;

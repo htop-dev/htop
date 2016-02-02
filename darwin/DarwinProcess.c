@@ -39,7 +39,7 @@ ProcessClass DarwinProcess_class = {
 };
 
 DarwinProcess* DarwinProcess_new(Settings* settings) {
-   DarwinProcess* this = calloc(1, sizeof(DarwinProcess));
+   DarwinProcess* this = xCalloc(1, sizeof(DarwinProcess));
    Object_setClass(this, Class(DarwinProcess));
    Process_init(&this->super, settings);
 
@@ -85,7 +85,7 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
    }
 
    /* Allocate space for the arguments. */
-   procargs = ( char * ) malloc( argmax );
+   procargs = ( char * ) xMalloc( argmax );
    if ( procargs == NULL ) {
       goto ERROR_A;
    }
@@ -237,7 +237,7 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
    }
 
    /* Make a copy of the string. */
-   retval = strdup(sp);
+   retval = xStrdup(sp);
 
    /* Clean up. */
    free( procargs );
@@ -247,7 +247,7 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
 ERROR_B:
    free( procargs );
 ERROR_A:
-   retval = strdup(k->kp_proc.p_comm);
+   retval = xStrdup(k->kp_proc.p_comm);
 
    return retval;
 }

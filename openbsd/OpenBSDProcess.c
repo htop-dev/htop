@@ -186,7 +186,7 @@ ProcessPidColumn Process_pidColumns[] = {
 };
 
 OpenBSDProcess* OpenBSDProcess_new(Settings* settings) {
-   OpenBSDProcess* this = calloc(sizeof(OpenBSDProcess), 1);
+   OpenBSDProcess* this = xCalloc(sizeof(OpenBSDProcess), 1);
    Object_setClass(this, Class(OpenBSDProcess));
    Process_init(&this->super, settings);
    return this;

@@ -264,7 +264,7 @@ void Platform_setSwapValues(Meter* this) {
       return;
    }
 
-   swdev = calloc(nswap, sizeof(*swdev));
+   swdev = xCalloc(nswap, sizeof(*swdev));
    if (swdev == NULL) {
       return;
    }

@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "Hashtable.h"
+#include "XAlloc.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -63,7 +64,7 @@ int Hashtable_count(Hashtable* this) {
 static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
    HashtableItem* this;
    
-   this = malloc(sizeof(HashtableItem));
+   this = xMalloc(sizeof(HashtableItem));
    this->key = key;
    this->value = value;
    this->next = NULL;
@@ -73,10 +74,10 @@ static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
 Hashtable* Hashtable_new(int size, bool owner) {
    Hashtable* this;
    
-   this = malloc(sizeof(Hashtable));
+   this = xMalloc(sizeof(Hashtable));
    this->items = 0;
    this->size = size;
-   this->buckets = (HashtableItem**) calloc(size, sizeof(HashtableItem*));
+   this->buckets = (HashtableItem**) xCalloc(size, sizeof(HashtableItem*));
    this->owner = owner;
    assert(Hashtable_isConsistent(this));
    return this;

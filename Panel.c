@@ -97,7 +97,7 @@ PanelClass Panel_class = {
 
 Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar) {
    Panel* this;
-   this = malloc(sizeof(Panel));
+   this = xMalloc(sizeof(Panel));
    Object_setClass(this, Class(Panel));
    Panel_init(this, x, y, w, h, type, owner, fuBar);
    return this;
@@ -455,7 +455,7 @@ bool Panel_onKey(Panel* this, int key) {
 HandlerResult Panel_selectByTyping(Panel* this, int ch) {
    int size = Panel_size(this);
    if (!this->eventHandlerState)
-      this->eventHandlerState = calloc(100, sizeof(char));
+      this->eventHandlerState = xCalloc(100, sizeof(char));
    char* buffer = this->eventHandlerState;
 
    if (ch < 255 && isalnum(ch)) {

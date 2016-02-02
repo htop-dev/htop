@@ -128,7 +128,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             flags.useColors = false;
             break;
          case 'p': {
-            char* argCopy = strdup(optarg);
+            char* argCopy = xStrdup(optarg);
             char* saveptr;
             char* pid = strtok_r(argCopy, ",", &saveptr);
 

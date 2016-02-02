@@ -16,7 +16,7 @@ in the source distribution for its full text.
 }*/
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
-   ProcessList* this = calloc(1, sizeof(ProcessList));
+   ProcessList* this = xCalloc(1, sizeof(ProcessList));
    ProcessList_init(this, Class(Process), usersTable, pidWhiteList, userId);
    
    return this;

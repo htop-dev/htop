@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "UsersTable.h"
+#include "XAlloc.h"
 
 #include "config.h"
 
@@ -27,7 +28,7 @@ typedef struct UsersTable_ {
 
 UsersTable* UsersTable_new() {
    UsersTable* this;
-   this = malloc(sizeof(UsersTable));
+   this = xMalloc(sizeof(UsersTable));
    this->users = Hashtable_new(20, true);
    return this;
 }
@@ -42,7 +43,7 @@ char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
    if (name == NULL) {
       struct passwd* userData = getpwuid(uid);
       if (userData != NULL) {
-         name = strdup(userData->pw_name);
+         name = xStrdup(userData->pw_name);
          Hashtable_put(this->users, uid, name);
       }
    }

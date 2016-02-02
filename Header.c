@@ -41,8 +41,8 @@ typedef struct Header_ {
 #endif
 
 Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns) {
-   Header* this = calloc(1, sizeof(Header));
-   this->columns = calloc(nrColumns, sizeof(Vector*));
+   Header* this = xCalloc(1, sizeof(Header));
+   this->columns = xCalloc(nrColumns, sizeof(Vector*));
    this->settings = settings;
    this->pl = pl;
    this->nrColumns = nrColumns;
@@ -83,13 +83,13 @@ void Header_writeBackToSettings(const Header* this) {
       Vector* vec = this->columns[col];
       int len = Vector_size(vec);
       
-      colSettings->names = calloc(len+1, sizeof(char*));
-      colSettings->modes = calloc(len, sizeof(int));
+      colSettings->names = xCalloc(len+1, sizeof(char*));
+      colSettings->modes = xCalloc(len, sizeof(int));
       colSettings->len = len;
       
       for (int i = 0; i < len; i++) {
          Meter* meter = (Meter*) Vector_get(vec, i);
-         char* name = calloc(64, sizeof(char));
+         char* name = xCalloc(64, sizeof(char));
          if (meter->param) {
             snprintf(name, 63, "%s(%d)", As_Meter(meter)->name, meter->param);
          } else {
@@ -151,7 +151,7 @@ char* Header_readMeterName(Header* this, int i, int column) {
 
    int nameLen = strlen(Meter_name(meter));
    int len = nameLen + 100;
-   char* name = malloc(len);
+   char* name = xMalloc(len);
    strncpy(name, Meter_name(meter), nameLen);
    name[nameLen] = '\0';
    if (meter->param)
