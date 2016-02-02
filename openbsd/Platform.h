@@ -11,8 +11,8 @@ in the source distribution for its full text.
 */
 
 #include "Action.h"
-#include "SignalsPanel.h"
 #include "BatteryMeter.h"
+#include "SignalsPanel.h"
 
 extern ProcessFieldData Process_fields[];
 
@@ -67,5 +67,7 @@ void Platform_setMemoryValues(Meter* this);
 void Platform_setSwapValues(Meter* this);
 
 void Platform_setTasksValues(Meter* this);
+
+char* Platform_getProcessEnv(pid_t pid);
 
 #endif
