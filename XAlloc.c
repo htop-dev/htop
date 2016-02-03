@@ -27,7 +27,7 @@ void* xMalloc(size_t size) {
 
 void* xCalloc(size_t nmemb, size_t size) {
    void* data = calloc(nmemb, size);
-   if (!data && nmemb > 0 && size > 0) {
+   if (!data) {
       curs_set(1);
       endwin();
       write(2, oomMessage, sizeof oomMessage - 1);
