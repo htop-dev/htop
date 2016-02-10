@@ -182,7 +182,7 @@ static int Process_getuid = -1;
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
-char Process_pidFormat[20] = "%7u ";
+char Process_pidFormat[20] = "%7d ";
 
 static char Process_titleBuffer[20][20];
 
@@ -196,7 +196,7 @@ void Process_setupColumnWidths() {
       sprintf(Process_titleBuffer[i], "%*s ", digits, Process_pidColumns[i].label);
       Process_fields[Process_pidColumns[i].id].title = Process_titleBuffer[i];
    }
-   sprintf(Process_pidFormat, "%%%du ", digits);
+   sprintf(Process_pidFormat, "%%%dd ", digits);
 }
 
 void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
