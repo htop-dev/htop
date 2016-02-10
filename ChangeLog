@@ -13,6 +13,8 @@ What's new in version 2.0.0
   (thanks to Martin Misuth)
 * Support for NCurses 6 ABI, including mouse wheel support
 * Much improved mouse responsiveness
+* Process environment variables screen
+  (thanks to Michael Klein)
 * Higher-resolution UTF-8 based Graph mode
   (Thanks to James Hall from vtop for the idea!)
 * Show program path settings
@@ -22,6 +24,8 @@ What's new in version 2.0.0
   (thanks to Christian Hesse)
 * BUGFIX: fix error caused by overflow in usertime calculation.
   (thanks to Patrick Marlier)
+* Catch all memory allocation errors
+  (thanks to Michael McConville for the push)
 * Several tweaks and bugfixes
   (See the Git log for details and contributors!)
 
