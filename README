@@ -41,11 +41,8 @@ probably used to the common routine:
 
     ./autogen.sh && ./configure && make
 
-If you want to replace currently installed version of `htop` use `--prefix` flag. `--prefix=/usr`
-will install `htop` into `/usr/bin/htop`.
-
-    ./autogen.sh && ./configure --prefix=/usr && make
-    make install
+By default `make install` will install into `/usr/local`, for changing
+the path use `./configure --prefix=/some/path`.
 
 See the manual page (`man htop`) or the on-line help ('F1' or 'h'
 inside `htop`) for a list of supported key commands.
