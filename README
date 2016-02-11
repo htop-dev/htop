@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/hishamhm/htop.svg?branch=master)](https://travis-ci.org/hishamhm/htop)
-[![PayPal donate](https://img.shields.io/badge/paypal-donate-green.svg)](http://hisham.hm/htop/index.php?page=author#paypal)
+[![PayPal donate](https://img.shields.io/badge/paypal-donate-green.svg)](http://hisham.hm/htop/index.php?page=donate)
 
 [htop](http://hisham.hm/htop/)
 ====
@@ -38,8 +38,13 @@ Compilation instructions
 ------------------------
 
 This program is distributed as a standard autotools-based package.
-See the [INSTALL](/INSTALL) file for detailed instructions, but you are
-probably used to the common routine:
+See the [INSTALL](/INSTALL) file for detailed instructions.
+
+When compiling from a release tarball, run:
+
+    ./configure && make
+
+For compiling sources downloaded from the Git repository, run:
 
     ./autogen.sh && ./configure && make
 
