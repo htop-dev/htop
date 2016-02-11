@@ -1,50 +1,56 @@
-htop
+[![Build Status](https://travis-ci.org/hishamhm/htop.svg?branch=master)](https://travis-ci.org/hishamhm/htop)
+[![PayPal donate](https://img.shields.io/badge/paypal-donate-green.svg)](http://hisham.hm/htop/index.php?page=author#paypal)
+
+[htop](http://hisham.hm/htop/)
 ====
 
-by Hisham Muhammad <hisham@gobolinux.org>
-
-2004 - 2015
+by Hisham Muhammad <hisham@gobolinux.org> (2004 - 2016)
 
 Introduction
 ------------
 
-This is htop, an interactive process viewer.
-It requires ncurses. It is developed primarily on Linux,
+This is `htop`, an interactive process viewer.
+It requires `ncurses`. It is developed primarily on Linux,
 but we also have code for running under FreeBSD and Mac OS X
 (help and testing are wanted for these platforms!)
 
 This software has evolved considerably over the years,
 and is reasonably complete, but there is always room for improvement.
 
-Comparison between 'htop' and classic 'top'
+Comparison between `htop` and classic `top`
 -------------------------------------------
 
-* In 'htop' you can scroll the list vertically and horizontally
+* In `htop` you can scroll the list vertically and horizontally
   to see all processes and full command lines.
-* In 'top' you are subject to a delay for each unassigned
+* In `top` you are subject to a delay for each unassigned
   key you press (especially annoying when multi-key escape
   sequences are triggered by accident).
-* 'htop' starts faster ('top' seems to collect data for a while
+* `htop` starts faster (`top` seems to collect data for a while
   before displaying anything).
-* In 'htop' you don't need to type the process number to
-  kill a process, in 'top' you do.
-* In 'htop' you don't need to type the process number or
-  the priority value to renice a process, in 'top' you do.
-* In 'htop' you can kill multiple processes at once.
-* 'top' is older, hence, more tested.
+* In `htop` you don't need to type the process number to
+  kill a process, in `top` you do.
+* In `htop` you don't need to type the process number or
+  the priority value to renice a process, in `top` you do.
+* In `htop` you can kill multiple processes at once.
+* `top` is older, hence, more tested.
 
 Compilation instructions
 ------------------------
 
 This program is distributed as a standard autotools-based package.
-See the INSTALL file for detailed instructions, but you are
-probably used to the common `./configure`/`make`/`make install` routine.
+See the [INSTALL](/INSTALL) file for detailed instructions, but you are
+probably used to the common routine:
 
-When fetching the code from the development repository, you need
-to run the `./autogen.sh` script, which in turn requires autotools
-to be installed.
+    ./autogen.sh && ./configure && make
 
-See the manual page (man htop) or the on-line help ('F1' or 'h'
-inside htop) for a list of supported key commands.
+By default `make install` will install into `/usr/local`, for changing
+the path use `./configure --prefix=/some/path`.
 
-if not all keys work check your curses configuration.
+See the manual page (`man htop`) or the on-line help ('F1' or 'h'
+inside `htop`) for a list of supported key commands.
+
+If not all keys work check your curses configuration.
+
+## License
+
+GNU General Public License, version 2 (GPL-2.0)
