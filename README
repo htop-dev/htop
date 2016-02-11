@@ -49,12 +49,6 @@ inside `htop`) for a list of supported key commands.
 
 If not all keys work check your curses configuration.
 
-### Prerequisites
-
-#### Debian/Ubuntu
-
-    apt-get install build-essential libncursesw5-dev autotools-dev
-
 ## License
 
 GNU General Public License, version 2 (GPL-2.0)
