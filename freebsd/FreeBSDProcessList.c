@@ -477,8 +477,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       }
 
       // from FreeBSD source /src/usr.bin/top/machine.c
-      proc->m_size = kproc->ki_size / 1024;
-      proc->m_resident = kproc->ki_rssize * pageSizeKb;
+      proc->m_size = kproc->ki_size / 1024 / pageSizeKb;
+      proc->m_resident = kproc->ki_rssize;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 

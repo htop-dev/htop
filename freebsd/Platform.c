@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 #include <vm/vm_param.h>
 #include <time.h>
+#include <math.h>
 
 /*{
 #include "Action.h"

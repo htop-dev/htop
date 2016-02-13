@@ -115,7 +115,7 @@ void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
-   switch (field) {
+   switch ((int) field) {
    // add FreeBSD-specific fields here
    case JID: snprintf(buffer, n, Process_pidFormat, fp->jid); break;
    case JAIL:{
@@ -143,7 +143,7 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
       p2 = (FreeBSDProcess*)v1;
       p1 = (FreeBSDProcess*)v2;
    }
-   switch (settings->sortKey) {
+   switch ((int) settings->sortKey) {
    // add FreeBSD-specific fields here
    case JID:
       return (p1->jid - p2->jid);
