@@ -211,8 +211,8 @@ if test "$my_htop_platform" = "openbsd"; then
    AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
 fi
 
-AC_ARG_ENABLE(native_affinity, [AC_HELP_STRING([--enable-native-affinity], [enable native sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_native_affinity="yes")
-if test "x$enable_native_affinity" = xyes -a "x$cross_compiling" = xno; then
+AC_ARG_ENABLE(linux_affinity, [AC_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
+if test "x$enable_linux_affinity" = xyes -a "x$cross_compiling" = xno; then
    AC_MSG_CHECKING([for usable sched_setaffinity])
    AC_RUN_IFELSE([
      AC_LANG_PROGRAM([[
@@ -225,17 +225,17 @@ if test "x$enable_native_affinity" = xyes -a "x$cross_compiling" = xno; then
        if (errno == ENOSYS) return 1;
        ]])],
      [AC_MSG_RESULT([yes])],
-     [enable_native_affinity=no
+     [enable_linux_affinity=no
       AC_MSG_RESULT([no])])
 fi
-if test "x$enable_native_affinity" = xyes; then
-   AC_DEFINE(HAVE_NATIVE_AFFINITY, 1, [Define if native sched_setaffinity and sched_getaffinity are to be used.])
+if test "x$enable_linux_affinity" = xyes; then
+   AC_DEFINE(HAVE_LINUX_AFFINITY, 1, [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
 AC_ARG_ENABLE(hwloc, [AC_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
 if test "x$enable_hwloc" = xyes
 then
-   AC_CHECK_LIB([hwloc], [hwloc_linux_get_tid_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
+   AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
    AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
 fi
 

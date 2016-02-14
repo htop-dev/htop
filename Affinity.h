@@ -10,7 +10,12 @@ in the source distribution for its full text.
 */
 
 #ifdef HAVE_LIBHWLOC
-#elif HAVE_NATIVE_AFFINITY
+#if __linux__
+#define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_THREAD
+#else
+#define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_PROCESS
+#endif
+#elif HAVE_LINUX_AFFINITY
 #endif
 
 #include "Process.h"
@@ -36,7 +41,7 @@ Affinity* Affinity_get(Process* proc, ProcessList* pl);
 
 bool Affinity_set(Process* proc, Affinity* this);
 
-#elif HAVE_NATIVE_AFFINITY
+#elif HAVE_LINUX_AFFINITY
 
 Affinity* Affinity_get(Process* proc, ProcessList* pl);
 

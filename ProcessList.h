@@ -16,6 +16,10 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "Settings.h"
 
+#ifdef HAVE_LIBHWLOC
+#include <hwloc.h>
+#endif
+
 #ifndef MAX_NAME
 #define MAX_NAME 128
 #endif

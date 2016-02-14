@@ -10,8 +10,13 @@ in the source distribution for its full text.
 #include <stdlib.h>
 
 #ifdef HAVE_LIBHWLOC
-#include <hwloc/linux.h>
-#elif HAVE_NATIVE_AFFINITY
+#include <hwloc.h>
+#if __linux__
+#define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_THREAD
+#else
+#define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_PROCESS
+#endif
+#elif HAVE_LINUX_AFFINITY
 #include <sched.h>
 #endif
 
@@ -55,7 +60,7 @@ void Affinity_add(Affinity* this, int id) {
 
 Affinity* Affinity_get(Process* proc, ProcessList* pl) {
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
-   bool ok = (hwloc_linux_get_tid_cpubind(pl->topology, proc->pid, cpuset) == 0);
+   bool ok = (hwloc_get_proc_cpubind(pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
    Affinity* affinity = NULL;
    if (ok) {
       affinity = Affinity_new(pl);
@@ -76,15 +81,15 @@ Affinity* Affinity_get(Process* proc, ProcessList* pl) {
 
 bool Affinity_set(Process* proc, Affinity* this) {
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
-   for (int i = 0; i < affinity->used; i++) {
-      hwloc_bitmap_set(cpuset, affinity->cpus[i]);
+   for (int i = 0; i < this->used; i++) {
+      hwloc_bitmap_set(cpuset, this->cpus[i]);
    }
-   bool ok = (hwloc_linux_set_tid_cpubind(this->pl->topology, proc->pid, cpuset) == 0);
+   bool ok = (hwloc_set_proc_cpubind(this->pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
    hwloc_bitmap_free(cpuset);
    return ok;
 }
 
-#elif HAVE_NATIVE_AFFINITY
+#elif HAVE_LINUX_AFFINITY
 
 Affinity* Affinity_get(Process* proc, ProcessList* pl) {
    cpu_set_t cpuset;
