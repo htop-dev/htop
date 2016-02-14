@@ -12,7 +12,12 @@ in the source distribution for its full text.
 
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "SignalsPanel.h"
 #include "UnsupportedProcess.h"
+
+extern SignalItem Platform_signals[];
+
+extern unsigned int Platform_numberOfSignals;
 
 extern ProcessField Platform_defaultFields[];
 
@@ -23,15 +28,16 @@ extern MeterClass* Platform_meterTypes[];
 void Platform_setBindings(Htop_Action* keys);
 
 extern int Platform_numberOfFields;
-extern char* Process_pidFormat;
+
+extern char Process_pidFormat[20];
+
+extern ProcessPidColumn Process_pidColumns[];
 
 int Platform_getUptime();
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
-
-void Process_setupColumnWidths();
 
 double Platform_setCPUValues(Meter* this, int cpu);
 

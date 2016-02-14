@@ -19,8 +19,15 @@ in the source distribution for its full text.
 /*{
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "SignalsPanel.h"
 #include "UnsupportedProcess.h"
 }*/
+
+SignalItem Platform_signals[] = {
+   { .name = " 0 Cancel",    .number =  0 },
+};
+
+unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
@@ -79,7 +86,12 @@ void Platform_setBindings(Htop_Action* keys) {
 }
 
 int Platform_numberOfFields = 100;
-char* Process_pidFormat = "%7u ";
+
+extern char Process_pidFormat[20];
+
+ProcessPidColumn Process_pidColumns[] = {
+   { .id = 0, .label = NULL },
+};
 
 int Platform_getUptime() {
    return 0;
@@ -95,42 +107,26 @@ int Platform_getMaxPid() {
    return 1;
 }
 
-void Process_setupColumnWidths() {
-   int maxPid = Platform_getMaxPid();
-   if (maxPid == -1) return;
-   if (maxPid > 99999) {
-      Process_fields[PID].title =     "    PID ";
-      Process_fields[PPID].title =    "   PPID ";
-      Process_fields[TPGID].title =   "  TPGID ";
-      Process_fields[TGID].title =    "   TGID ";
-      Process_fields[PGRP].title =    "   PGRP ";
-      Process_fields[SESSION].title = "   SESN ";
-      Process_pidFormat = "%7u ";
-   } else {
-      Process_fields[PID].title =     "  PID ";
-      Process_fields[PPID].title =    " PPID ";
-      Process_fields[TPGID].title =   "TPGID ";
-      Process_fields[TGID].title =    " TGID ";
-      Process_fields[PGRP].title =    " PGRP ";
-      Process_fields[SESSION].title = " SESN ";
-      Process_pidFormat = "%5u ";
-   }
-}
-
 double Platform_setCPUValues(Meter* this, int cpu) {
-	return 0.0;
+   (void) this;
+   (void) cpu;
+   return 0.0;
 }
 
 void Platform_setMemoryValues(Meter* this) {
+   (void) this;
 }
 
 void Platform_setSwapValues(Meter* this) {
+   (void) this;
 }
 
 bool Process_isThread(Process* this) {
+   (void) this;
    return false;
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
+   (void) pid;
    return NULL;
 }

@@ -446,7 +446,7 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
 }
 
 static void setCommand(Process* process, const char* command, int len) {
-   if (process->comm && process->commLen <= len) {
+   if (process->comm && process->commLen >= len) {
       strncpy(process->comm, command, len + 1);
    } else {
       free(process->comm);

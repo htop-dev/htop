@@ -50,7 +50,10 @@ static void MetersPanel_delete(Object* object) {
 void MetersPanel_setMoving(MetersPanel* this, bool moving) {
    Panel* super = (Panel*) this;
    this->moving = moving;
-   ((ListItem*)Panel_getSelected(super))->moving = moving;
+   ListItem* selected = (ListItem*)Panel_getSelected(super);
+   if (selected) {
+      selected->moving = moving;
+   }
    if (!moving) {
       Panel_setSelectionColor(super, CRT_colors[PANEL_SELECTION_FOCUS]);
       Panel_setDefaultBar(super);
