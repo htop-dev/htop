@@ -292,15 +292,16 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
          }
          break;
       case 's':
-         if (line[5] == 'r' && strncmp(line+1, "yscr: ", 6) == 0)
+         if (line[5] == 'r' && strncmp(line+1, "yscr: ", 6) == 0) {
             process->io_syscr = strtoull(line+7, NULL, 10);
-         else if (strncmp(line+1, "yscw: ", 6) == 0)
-            sscanf(line, "syscw: %32llu", &process->io_syscw);
+         } else if (strncmp(line+1, "yscw: ", 6) == 0) {
             process->io_syscw = strtoull(line+7, NULL, 10);
+         }
          break;
       case 'c':
-         if (strncmp(line+1, "ancelled_write_bytes: ", 22) == 0)
+         if (strncmp(line+1, "ancelled_write_bytes: ", 22) == 0) {
            process->io_cancelled_write_bytes = strtoull(line+23, NULL, 10);
+        }
       }
    }
 }
