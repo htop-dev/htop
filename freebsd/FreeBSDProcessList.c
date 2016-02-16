@@ -483,6 +483,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
+      proc->percent_mem = 100.0 * (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem);
+
       if (proc->percent_cpu > 0.1) {
          // system idle process should own all CPU time left regardless of CPU count
          if ( strcmp("idle", kproc->ki_comm) == 0 ) {
