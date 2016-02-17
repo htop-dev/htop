@@ -409,7 +409,7 @@ static struct { const char* key; const char* info; } helpRight[] = {
    { .key = "      a: ", .info = "set CPU affinity" },
 #endif
    { .key = "      e: ", .info = "show process environment" },
-   { .key = "      i: ", .info = "set IO prority" },
+   { .key = "      i: ", .info = "set IO priority" },
    { .key = "      l: ", .info = "list open files with lsof" },
    { .key = "      s: ", .info = "trace syscalls with strace" },
    { .key = "         ", .info = "" },
