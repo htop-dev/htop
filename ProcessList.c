@@ -311,6 +311,7 @@ void ProcessList_scan(ProcessList* this) {
    for (int i = 0; i < Vector_size(this->processes); i++) {
       Process* p = (Process*) Vector_get(this->processes, i);
       p->updated = false;
+      p->show = true;
    }
 
    this->totalTasks = 0;
