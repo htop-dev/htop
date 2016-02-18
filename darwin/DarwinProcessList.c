@@ -168,8 +168,10 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     for(size_t i = 0; i < count; ++i) {
        proc = (DarwinProcess *)ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
 
-       DarwinProcess_setFromKInfoProc(&proc->super, ps + i, tv.tv_sec, preExisting);
+       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], tv.tv_sec, preExisting);
        DarwinProcess_setFromLibprocPidinfo(proc, dpl);
+       
+       DarwinProcess_scanThreads(proc);
 
        super->totalTasks += 1;
 

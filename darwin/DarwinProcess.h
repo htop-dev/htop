@@ -38,4 +38,6 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl);
 
+void DarwinProcess_scanThreads(DarwinProcess *dp);
+
 #endif

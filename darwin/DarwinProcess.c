@@ -13,6 +13,8 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdio.h>
 
+#include <mach/mach.h>
+
 /*{
 #include "Settings.h"
 #include "DarwinProcessList.h"
@@ -296,15 +298,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
    proc->nice = ep->p_nice;
    proc->priority = ep->p_priority;
 
-   /* Set the state */
-   switch(ep->p_stat) {
-   case SIDL:   proc->state = 'I'; break;
-   case SRUN:   proc->state = 'R'; break;
-   case SSLEEP: proc->state = 'S'; break;
-   case SSTOP:  proc->state = 'T'; break;
-   case SZOMB:  proc->state = 'Z'; break;
-   default:     proc->state = '?'; break;
-   }
+   proc->state = (ep->p_stat == SZOMB) ? 'Z' : '?';
 
    /* Make sure the updated flag is set */
    proc->updated = true;
@@ -342,4 +336,65 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
       dpl->super.totalTasks += pti.pti_threadnum;
       dpl->super.runningTasks += pti.pti_numrunning;
    }
+}
+
+/*
+ * Scan threads for process state information.
+ * Based on: http://stackoverflow.com/questions/6788274/ios-mac-cpu-usage-for-thread
+ * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
+ */
+void DarwinProcess_scanThreads(DarwinProcess *dp) {
+   Process* proc = (Process*) dp;
+   kern_return_t ret;
+   
+   if (proc->state == 'Z') {
+      return;
+   }
+
+   task_t port;
+   ret = task_for_pid(mach_task_self(), proc->pid, &port);
+   if (ret != KERN_SUCCESS) {
+      return;
+   }
+   
+   task_info_data_t tinfo;
+   mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
+   ret = task_info(port, TASK_BASIC_INFO, (task_info_t) tinfo, &task_info_count);
+   if (ret != KERN_SUCCESS) {
+      return;
+   }
+   
+   thread_array_t thread_list;
+   mach_msg_type_number_t thread_count;
+   ret = task_threads(port, &thread_list, &thread_count);
+   if (ret != KERN_SUCCESS) {
+      mach_port_deallocate(mach_task_self(), port);
+      return;
+   }
+   
+   integer_t run_state = 999;
+   for (unsigned int i = 0; i < thread_count; i++) {
+      thread_info_data_t thinfo;
+      mach_msg_type_number_t thread_info_count = THREAD_BASIC_INFO_COUNT;
+      ret = thread_info(thread_list[i], THREAD_BASIC_INFO, (thread_info_t)thinfo, &thread_info_count);
+      if (ret == KERN_SUCCESS) {
+         thread_basic_info_t basic_info_th = (thread_basic_info_t) thinfo;
+         if (basic_info_th->run_state < run_state) {
+            run_state = basic_info_th->run_state;
+         }
+         mach_port_deallocate(mach_task_self(), thread_list[i]);
+      }
+   }
+   vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
+   mach_port_deallocate(mach_task_self(), port);
+
+   char state = '?';
+   switch (run_state) {
+      case TH_STATE_RUNNING: state = 'R'; break;
+      case TH_STATE_STOPPED: state = 'S'; break;
+      case TH_STATE_WAITING: state = 'W'; break;
+      case TH_STATE_UNINTERRUPTIBLE: state = 'U'; break;
+      case TH_STATE_HALTED: state = 'H'; break;
+   }
+   proc->state = state;
 }
