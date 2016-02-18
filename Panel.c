@@ -441,7 +441,7 @@ bool Panel_onKey(Panel* this, int key) {
    }
 
    // ensure selection within bounds
-   if (this->selected < 0) {
+   if (this->selected < 0 || size == 0) {
       this->selected = 0;
       this->needsRedraw = true;
    } else if (this->selected >= size) {   
