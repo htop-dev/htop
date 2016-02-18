@@ -275,7 +275,8 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
       proc->ppid = ps->kp_eproc.e_ppid;
       proc->pgrp = ps->kp_eproc.e_pgid;
       proc->session = 0; /* TODO Get the session id */
-      proc->tgid = ps->kp_eproc.e_tpgid;
+      proc->tpgid = ps->kp_eproc.e_tpgid;
+      proc->tgid = proc->pid;
       proc->st_uid = ps->kp_eproc.e_ucred.cr_uid;
       /* e_tdev = (major << 24) | (minor & 0xffffff) */
       /* e_tdev == -1 for "no device" */
