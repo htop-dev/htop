@@ -585,7 +585,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
          ProcessList_add(pl, proc);
       } else {
-         if (settings->updateProcessNames) {
+         if (settings->updateProcessNames && proc->state != 'Z') {
             if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
                goto errorReadingProcess;
             }
@@ -600,11 +600,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (settings->flags & PROCESS_FLAG_LINUX_OOM)
          LinuxProcessList_readOomData(lp, dirname, name);
 
-      if (proc->state == 'Z') {
+      if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;
          setCommand(proc, command, commLen);
       } else if (Process_isThread(proc)) {
-         if (settings->showThreadNames || Process_isKernelThread(proc) || proc->state == 'Z') {
+         if (settings->showThreadNames || Process_isKernelThread(proc) || (proc->state == 'Z' && proc->basenameOffset == 0)) {
             proc->basenameOffset = -1;
             setCommand(proc, command, commLen);
          } else if (settings->showThreadNames) {
