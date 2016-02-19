@@ -115,6 +115,8 @@ void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 
 void CRT_handleSIGSEGV(int sgn);
 
+#define KEY_ALT(x) KEY_F(60) + (x - 'A')
+
 
 extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
 

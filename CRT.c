@@ -125,6 +125,8 @@ void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 
 void CRT_handleSIGSEGV(int sgn);
 
+#define KEY_ALT(x) KEY_F(60) + (x - 'A')
+
 }*/
 
 const char *CRT_treeStrAscii[TREE_STR_COUNT] = {
@@ -587,6 +589,11 @@ void CRT_init(int delay, int colorScheme) {
       define_key("\033[13~", KEY_F(3));
       define_key("\033[14~", KEY_F(4));
       define_key("\033[17;2~", KEY_F(18));
+      char sequence[3] = "\033a";
+      for (char c = 'a'; c <= 'z'; c++) {
+         sequence[1] = c;
+         define_key(sequence, KEY_ALT('A' + (c - 'a')));
+      }
    }
 #ifndef DEBUG
    signal(11, CRT_handleSIGSEGV);
@@ -618,6 +625,7 @@ void CRT_init(int delay, int colorScheme) {
 #else
    mousemask(BUTTON1_RELEASED, NULL);
 #endif
+
 }
 
 void CRT_done() {

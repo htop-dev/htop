@@ -116,6 +116,7 @@ void InfoScreen_run(InfoScreen* this) {
 
       if (this->inc->active)
          move(LINES-1, CRT_cursorX);
+      ESCDELAY = 25;
       int ch = getch();
       
       if (ch == ERR) {
