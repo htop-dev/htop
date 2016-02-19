@@ -4,6 +4,8 @@ local VISUALDELAY = os.getenv("VISUALDELAY")
  
 local visual = VISUALDELAY or false
 local visual_delay = VISUALDELAY and (tonumber(VISUALDELAY)) or 0.1
+local short_delay = 0.3
+local long_delay = 1
 
 local unistd = require("posix.unistd")
 local time = require("posix.time")
@@ -12,15 +14,16 @@ local rote = require("rote")
 
 local rt = rote.RoteTerm(24, 80)
 
+--[[
 local function os_execread(cmd)
    local fd = io.popen(cmd, "r")
    local out = fd:read("*a")
    fd:close()
    return (out:gsub("\n$", ""))
 end
-local branch = os_execread("git branch | grep '*'"):sub(3)
-
-print("Running in branch "..branch)
+]]
+--local branch = os_execread("git branch | grep '*'"):sub(3)
+--print("Running in branch "..branch)
 
 os.execute("make coverage")
 os.execute("rm -f *.gcda */*.gcda")
@@ -30,7 +33,7 @@ os.execute("killall htop")
 os.execute("ps aux | grep '[s]leep 12345' | awk '{print $2}' | xargs kill 2> /dev/null")
 
 os.execute("cp ./default.htoprc ./test.htoprc")
-rt:forkPty("LC_ALL=C HTOPRC=./test.htoprc ./htop")
+rt:forkPty("LC_ALL=C HTOPRC=./test.htoprc ./htop 2> htop-valgrind.txt")
 
 local stdscr, term_win
 -- Curses initalization needed even when not in visual mode
@@ -57,10 +60,6 @@ if visual then
    end
 else
    curses.endwin()
-end
-
-local function delay(t)
-   time.nanosleep({ tv_sec = math.floor(t), tv_nsec = (t - math.floor(t)) * 1000000000 })
 end
 
 local function show(key)
@@ -115,7 +114,12 @@ end
 
 local ESC = "\27\27"
 
-time.nanosleep({ tv_sec = 0, tv_nsec = 150000000 }) -- give some time for htop to initialize.
+function delay(t)
+   time.nanosleep({ tv_sec = math.floor(t), tv_nsec = (t - math.floor(t)) * 1000000000 })
+end
+
+delay(2) -- give some time for htop to initialize.
+rt:update()
 
 local y_panelhdr = (function()
    for y = 1, 24 do
@@ -125,7 +129,9 @@ local y_panelhdr = (function()
    end
 end)() or 1
 
-local x_metercol2 = (branch == "wip") and 41 or 43
+assert.not_equal(y_panelhdr, 1)
+
+local x_metercol2 = 41
 
 show()
 
@@ -190,7 +196,7 @@ describe("htop test suite", function()
       send("\\")
       send("x\127bux\127sted") -- test backspace
       send("\n")
-      delay(0.2)
+      delay(short_delay)
       rt:update()
       local pid = ("      "..tostring(unistd.getpid())):sub(-5)
       local ourpid = check_string_at(1, y_panelhdr + 1, pid)
@@ -198,10 +204,10 @@ describe("htop test suite", function()
       send(ESC)
       send(curses.KEY_F5)
       send(curses.KEY_HOME)
-      delay(0.15)
+      delay(short_delay)
       rt:update()
       local initpid = check_string_at(1, y_panelhdr + 1, "    1")
-      delay(0.15)
+      delay(short_delay)
       rt:update()
       send(curses.KEY_F5)
       assert.equal(check(ourpid))
@@ -213,7 +219,7 @@ describe("htop test suite", function()
       send("/")
       send("busted")
       local attr = rt:cellAttr(rt:rows() - 1, 30)
-      delay(0.3)
+      delay(short_delay)
       local line = find_selected_y()
       local pid = ("      "..tostring(unistd.getpid())):sub(-5)
       assert.equal(attr, attrs.black_on_cyan)
@@ -227,7 +233,7 @@ describe("htop test suite", function()
       send(curses.KEY_F5)
       send(curses.KEY_END)
       send("1")
-      delay(0.3)
+      delay(short_delay)
       local line = find_selected_y()
       local initpid = check_string_at(1, line, "    1")
       send(curses.KEY_F5)
@@ -238,16 +244,16 @@ describe("htop test suite", function()
    running_it("horizontal scroll", function()
       local h_scroll = 20
       send(curses.KEY_F5)
-      delay(0.15)
+      delay(short_delay)
       local str1 = string_at(1+h_scroll, y_panelhdr+1, 5)
       send(curses.KEY_RIGHT)
-      delay(0.15)
+      delay(short_delay)
       local str2 = string_at(1, y_panelhdr+1, 5)
       send(curses.KEY_LEFT)
-      delay(0.15)
+      delay(short_delay)
       local str3 = string_at(1+h_scroll, y_panelhdr+1, 5)
       send(curses.KEY_LEFT)
-      delay(0.15)
+      delay(short_delay)
       local str4 = string_at(1+h_scroll, y_panelhdr+1, 5)
       send(curses.KEY_F5)
       assert.equal(str1, str2)
@@ -262,7 +268,7 @@ describe("htop test suite", function()
       local attr = rt:cellAttr(rt:rows() - 1, 30)
       assert.equal(attr, attrs.black_on_cyan)
       send("\n")
-      delay(0.3)
+      delay(short_delay)
       rt:update()
       local col = find_command_x()
       local procname = check_string_at(col, y_panelhdr + 1, "sleep 12345")
@@ -270,7 +276,7 @@ describe("htop test suite", function()
       send("\n")
       send("\\")
       send(ESC)
-      delay(0.3)
+      delay(short_delay)
       assert.equal(check(procname))
       assert.not_equal((os.execute("ps aux | grep -q '[s]leep 12345'")), true)
    end)
@@ -281,7 +287,7 @@ describe("htop test suite", function()
       send("busted")
       send("\n")
       send("s")
-      delay(1)
+      delay(long_delay)
       send(ESC)
    end)
 
@@ -291,7 +297,7 @@ describe("htop test suite", function()
       send("busted")
       send("\n")
       send("l")
-      delay(1)
+      delay(long_delay)
       send(ESC)
    end)
 
@@ -303,7 +309,7 @@ describe("htop test suite", function()
       send("l")
       send(curses.KEY_F4)
       send("pipe")
-      delay(1)
+      delay(long_delay)
       local pipefd = check_string_at(1, 3, "    3")
       send(ESC)
       assert.equal(check(pipefd))
@@ -317,7 +323,7 @@ describe("htop test suite", function()
       send("l")
       send(curses.KEY_F3)
       send("pipe")
-      delay(1)
+      delay(long_delay)
       local line = find_selected_y(3)
       local pipefd = check_string_at(1, line, "    3")
       send(ESC)
@@ -341,18 +347,18 @@ describe("htop test suite", function()
       send(curses.KEY_F5)
       send("u")
       send(curses.KEY_DOWN)
-      delay(0.3)
+      delay(short_delay)
       rt:update()
       local chosen = string_at(1, y_panelhdr + 2, 9)
       send("\n")
       send(curses.KEY_HOME)
-      delay(0.3)
+      delay(short_delay)
       rt:update()
       local shown = string_at(7, y_panelhdr + 1, 9)
       send("u")
       send("\n")
       send(curses.KEY_HOME)
-      delay(0.3)
+      delay(short_delay)
       rt:update()
       local inituser = string_at(7, y_panelhdr + 1, 9)
       send(curses.KEY_F5)
@@ -364,7 +370,7 @@ describe("htop test suite", function()
       send(curses.KEY_HOME)
       send("/")
       send("xxxxxxxxxx")
-      delay(0.3)
+      delay(short_delay)
       rt:update()
       local attr = rt:cellAttr(rt:rows() - 1, 30)
       assert.equal(attr, attrs.red_on_cyan)
@@ -405,14 +411,14 @@ describe("htop test suite", function()
       send(curses.KEY_DOWN, 2)
       send("\n")
       send(curses.KEY_F10)
-      delay(0.2)
+      delay(short_delay)
       local ppid = check_string_at(2, y_panelhdr, "PPID")
       send("S")
       send(curses.KEY_DOWN, 3)
       send(curses.KEY_RIGHT, 1)
       send(curses.KEY_DC)
       send(curses.KEY_F10)
-      delay(0.2)
+      delay(short_delay)
       local not_ppid = check_string_at(2, y_panelhdr, "PPID")
       assert.equal(check(ppid))
       assert.not_equal(check(not_ppid))
@@ -431,7 +437,7 @@ describe("htop test suite", function()
       local line = find_selected_y()
       local before = check_string_at(22, line, " 0")
       send(curses.KEY_F8)
-      delay(0.3)
+      delay(short_delay)
       local after = check_string_at(22, line, " 1")
       assert.equal(check(before))
       assert.equal(check(after))
@@ -444,7 +450,7 @@ describe("htop test suite", function()
       local line = find_selected_y()
       local before = string_at(22, line, 2)
       send(curses.KEY_F7)
-      delay(0.3)
+      delay(short_delay)
       local after = string_at(22, line, 2)
       assert.equal(before, after) -- no permissions
    end)
@@ -454,10 +460,10 @@ describe("htop test suite", function()
       send("P")
       send("I")
       send(curses.KEY_HOME)
-      delay(0.3)
+      delay(short_delay)
       local zerocpu = check_string_at(cpu_col, y_panelhdr + 1, " 0.0")
       send("I")
-      delay(0.3)
+      delay(short_delay)
       local nonzerocpu = check_string_at(cpu_col, y_panelhdr + 1, " 0.0")
       assert.equal(check(zerocpu))
       assert.not_equal(check(nonzerocpu))
@@ -483,20 +489,18 @@ describe("htop test suite", function()
    end)
 
    running_it("moves meters around", function()
-      if branch == "wip" then
-         send("S")
-         send(curses.KEY_RIGHT)
-         send(curses.KEY_UP)
-         send("\n")
-         send(curses.KEY_DOWN)
-         send(curses.KEY_UP)
-         send(curses.KEY_RIGHT)
-         send(curses.KEY_RIGHT)
-         send(curses.KEY_LEFT)
-         send(curses.KEY_LEFT)
-         send("\n")
-         send(curses.KEY_F10)
-      end
+      send("S")
+      send(curses.KEY_RIGHT)
+      send(curses.KEY_UP)
+      send("\n")
+      send(curses.KEY_DOWN)
+      send(curses.KEY_UP)
+      send(curses.KEY_RIGHT)
+      send(curses.KEY_RIGHT)
+      send(curses.KEY_LEFT)
+      send(curses.KEY_LEFT)
+      send("\n")
+      send(curses.KEY_F10)
    end)
    
    local meters = {
@@ -504,7 +508,7 @@ describe("htop test suite", function()
       { name = "load", down = 2, string = "Load" },
       { name = "battery", down = 7, string = "Battery" },
       { name = "hostname", down = 8, string = "Hostname" },
-      { name = "memory", down = 3, string = "Memory" },
+      { name = "memory", down = 3, string = "Mem" },
       { name = "CPU average", down = 16, string = "Avg" },
    }
 
@@ -513,19 +517,11 @@ describe("htop test suite", function()
       send(curses.KEY_RIGHT, 3)
       send(curses.KEY_DOWN, 9, "quick")
       for _ = 9, 14 do
-         if branch == "wip" then
-            send("\n")
-            send("\n")
-            send(curses.KEY_DC)
-            send(curses.KEY_RIGHT)
-            send(curses.KEY_DOWN)
-         else
-            send(curses.KEY_F6)
-            send(curses.KEY_LEFT)
-            send(curses.KEY_DC)
-            send(curses.KEY_RIGHT)
-            send(curses.KEY_DOWN, 4)
-         end
+         send("\n")
+         send("\n")
+         send(curses.KEY_DC)
+         send(curses.KEY_RIGHT)
+         send(curses.KEY_DOWN)
       end
    end)
 
@@ -534,22 +530,15 @@ describe("htop test suite", function()
          send("S")
          send(curses.KEY_RIGHT, 3)
          send(curses.KEY_DOWN, item.down)
-         if branch == "wip" then
-            send("\n")
-            send(curses.KEY_UP, 4)
-            send("\n")
-         else
-            send(curses.KEY_F6)
-            send(curses.KEY_LEFT)
-            send(curses.KEY_DOWN, 4)
-            send(curses.KEY_F7, 4)
-         end
+         send("\n")
+         send(curses.KEY_UP, 4)
+         send("\n")
          send(curses.KEY_F4, 4) -- cycle through meter modes
-         delay(0.15)
+         delay(short_delay)
          rt:update()
          local with = check_string_at(x_metercol2, 2, item.string)
          send(curses.KEY_DC)
-         delay(0.15)
+         delay(short_delay)
          local without = check_string_at(x_metercol2, 2, item.string)
          send(curses.KEY_F10)
          assert.equal(check(with))
@@ -590,7 +579,7 @@ describe("htop test suite", function()
       running_it("checks display option to "..item.name, function()
          for _ = 1, 2 do
             set_display_option(item.down)
-            delay(0.1)
+            delay(short_delay)
          end
       end)
    end
@@ -609,7 +598,7 @@ describe("htop test suite", function()
          send(curses.KEY_RIGHT)
          send(curses.KEY_F4, 4) -- cycle through CPU meter modes
          send(curses.KEY_F10)
-         delay(0.1)
+         delay(short_delay)
       end
    end)
 
@@ -636,7 +625,7 @@ describe("htop test suite", function()
       for y = y_panelhdr + 2, 23 do
          table.insert(taggedattrs, rt:cellAttr(y-1, 4))
       end
-      delay(0.2)
+      delay(short_delay)
       send("U")
       local untaggedattrs = {}
       rt:update()
@@ -687,6 +676,7 @@ describe("htop test suite", function()
       send("q")
       while not terminated() do
          unistd.sleep(1)
+         send("q")
       end
       assert(terminated())
       if visual then
