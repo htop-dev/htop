@@ -176,7 +176,8 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_PROC
    if (access(PROCDIR, R_OK) != 0) {
-      fprintf("Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
+      fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
+      exit(1);
    }
 #endif
    
