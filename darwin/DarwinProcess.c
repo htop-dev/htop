@@ -71,7 +71,7 @@ void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t no
    strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
 }
 
-char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
+char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;
@@ -169,13 +169,7 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
    /* Save where the argv[0] string starts. */
    sp = cp;
 
-   /*
-    * Iterate through the '\0'-terminated strings and convert '\0' to ' '
-    * until a string is found that has a '=' character in it (or there are
-    * no more strings in procargs).  There is no way to deterministically
-    * know where the command arguments end and the environment strings
-    * start, which is why the '=' character is searched for as a heuristic.
-    */
+   *basenameOffset = 0;
    for ( np = NULL; c < nargs && cp < &procargs[size]; cp++ ) {
       if ( *cp == '\0' ) {
          c++;
@@ -185,49 +179,11 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
          }
         /* Note location of current '\0'. */
         np = cp;
-
-        if ( !show_args ) {
-           /*
-            * Don't convert '\0' characters to ' '.
-            * However, we needed to know that the
-            * command name was terminated, which we
-            * now know.
-            */
-           break;
+        if (*basenameOffset == 0) {
+           *basenameOffset = cp - sp;
         }
      }
-  }
-#if 0
-   /*
-    * If eflg is non-zero, continue converting '\0' characters to ' '
-    * characters until no more strings that look like environment settings
-    * follow.
-    */
-   if ( ( eflg != 0 )
-         && ( ( getuid(  ) == 0 )
-              || ( k->kp_eproc.e_pcred.p_ruid == getuid(  ) ) ) ) {
-      for ( ; cp < &procargs[size]; cp++ ) {
-         if ( *cp == '\0' ) {
-            if ( np != NULL ) {
-               if ( &np[1] == cp ) {
-                  /*
-                   * Two '\0' characters in a row.
-                   * This should normally only
-                   * happen after all the strings
-                   * have been seen, but in any
-                   * case, stop parsing.
-                   */
-                  break;
-               }
-               /* Convert previous '\0'. */
-               *np = ' ';
-            }
-            /* Note location of current '\0'. */
-            np = cp;
-         }
-      }
    }
-#endif
 
    /*
     * sp points to the beginning of the arguments/environment string, and
@@ -236,6 +192,9 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args ) {
    if ( np == NULL || np == sp ) {
       /* Empty or unterminated string. */
       goto ERROR_B;
+   }
+   if (*basenameOffset == 0) {
+      *basenameOffset = np - sp;
    }
 
    /* Make a copy of the string. */
@@ -250,7 +209,8 @@ ERROR_B:
    free( procargs );
 ERROR_A:
    retval = xStrdup(k->kp_proc.p_comm);
-
+   *basenameOffset = strlen(retval);
+   
    return retval;
 }
 
@@ -285,13 +245,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
       proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
 
       DarwinProcess_setStartTime(proc, ep, now);
-
-      /* The command is from the old Mac htop */
-      char *slash;
-
-      proc->comm = DarwinProcess_getCmdLine(ps, false);
-      slash = strrchr(proc->comm, '/');
-      proc->basenameOffset = (NULL != slash) ? (slash - proc->comm) : 0;
+      proc->comm = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
    }
 
    /* Mutable information */

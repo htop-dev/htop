@@ -32,12 +32,17 @@ bool Process_isThread(Process* this);
 
 void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now);
 
-char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int show_args );
+char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset);
 
 void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists);
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl);
 
+/*
+ * Scan threads for process state information.
+ * Based on: http://stackoverflow.com/questions/6788274/ios-mac-cpu-usage-for-thread
+ * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
+ */
 void DarwinProcess_scanThreads(DarwinProcess *dp);
 
 #endif
