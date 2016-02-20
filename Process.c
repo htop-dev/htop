@@ -335,7 +335,10 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
       largeNumberColor = CRT_colors[PROCESS];
       processMegabytesColor = CRT_colors[PROCESS];
    }
-   if (rate < ONE_K) {
+   if (rate == -1) {
+      int len = snprintf(buffer, n, "    no perm ");
+      RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
+   } else if (rate < ONE_K) {
       int len = snprintf(buffer, n, "%7.2f B/s ", rate);
       RichString_appendn(str, processColor, buffer, len);
    } else if (rate < ONE_K * ONE_K) {

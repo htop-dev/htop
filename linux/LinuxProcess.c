@@ -313,7 +313,12 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case CNCLWB: Process_colorNumber(str, lp->io_cancelled_write_bytes, coloring); return;
    case IO_READ_RATE:  Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring); return;
    case IO_WRITE_RATE: Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Process_outputRate(str, buffer, n, lp->io_rate_read_bps + lp->io_rate_write_bps, coloring); return;
+   case IO_RATE: {
+      double totalRate = (lp->io_rate_read_bps != -1)
+                       ? (lp->io_rate_read_bps + lp->io_rate_write_bps)
+                       : -1;
+      Process_outputRate(str, buffer, n, totalRate, coloring); return;
+   }
    #endif
    #ifdef HAVE_OPENVZ
    case CTID: snprintf(buffer, n, "%7u ", lp->ctid); break;
