@@ -721,31 +721,23 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       unsigned long long int virtalltime = guest + guestnice;
       unsigned long long int totaltime = usertime + nicetime + systemalltime + idlealltime + steal + virtalltime;
       CPUData* cpuData = &(this->cpus[i]);
-      assert (systemtime >= cpuData->systemTime);
-      assert (idletime >= cpuData->idleTime);
-      assert (totaltime >= cpuData->totalTime);
-      assert (systemalltime >= cpuData->systemAllTime);
-      assert (idlealltime >= cpuData->idleAllTime);
-      assert (ioWait >= cpuData->ioWaitTime);
-      assert (irq >= cpuData->irqTime);
-      assert (softIrq >= cpuData->softIrqTime);
-      assert (steal >= cpuData->stealTime);
-      assert (virtalltime >= cpuData->guestTime);
       // Since we do a subtraction (usertime - guest) and cputime64_to_clock_t()
       // used in /proc/stat rounds down numbers, it can lead to a case where the
       // integer overflow.
-      cpuData->userPeriod = (usertime > cpuData->userTime) ? usertime - cpuData->userTime : 0;
-      cpuData->nicePeriod = (nicetime > cpuData->niceTime) ? nicetime - cpuData->niceTime : 0;
-      cpuData->systemPeriod = systemtime - cpuData->systemTime;
-      cpuData->systemAllPeriod = systemalltime - cpuData->systemAllTime;
-      cpuData->idleAllPeriod = idlealltime - cpuData->idleAllTime;
-      cpuData->idlePeriod = idletime - cpuData->idleTime;
-      cpuData->ioWaitPeriod = ioWait - cpuData->ioWaitTime;
-      cpuData->irqPeriod = irq - cpuData->irqTime;
-      cpuData->softIrqPeriod = softIrq - cpuData->softIrqTime;
-      cpuData->stealPeriod = steal - cpuData->stealTime;
-      cpuData->guestPeriod = virtalltime - cpuData->guestTime;
-      cpuData->totalPeriod = totaltime - cpuData->totalTime;
+      #define WRAP_SUBTRACT(a,b) (a > b) ? a - b : 0
+      cpuData->userPeriod = WRAP_SUBTRACT(usertime, cpuData->userTime);
+      cpuData->nicePeriod = WRAP_SUBTRACT(nicetime, cpuData->niceTime);
+      cpuData->systemPeriod = WRAP_SUBTRACT(systemtime, cpuData->systemTime);
+      cpuData->systemAllPeriod = WRAP_SUBTRACT(systemalltime, cpuData->systemAllTime);
+      cpuData->idleAllPeriod = WRAP_SUBTRACT(idlealltime, cpuData->idleAllTime);
+      cpuData->idlePeriod = WRAP_SUBTRACT(idletime, cpuData->idleTime);
+      cpuData->ioWaitPeriod = WRAP_SUBTRACT(ioWait, cpuData->ioWaitTime);
+      cpuData->irqPeriod = WRAP_SUBTRACT(irq, cpuData->irqTime);
+      cpuData->softIrqPeriod = WRAP_SUBTRACT(softIrq, cpuData->softIrqTime);
+      cpuData->stealPeriod = WRAP_SUBTRACT(steal, cpuData->stealTime);
+      cpuData->guestPeriod = WRAP_SUBTRACT(virtalltime, cpuData->guestTime);
+      cpuData->totalPeriod = WRAP_SUBTRACT(totaltime, cpuData->totalTime);
+      #undef WRAP_SUBTRACT
       cpuData->userTime = usertime;
       cpuData->niceTime = nicetime;
       cpuData->systemTime = systemtime;
