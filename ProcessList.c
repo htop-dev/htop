@@ -108,6 +108,11 @@ ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable*
 }
 
 void ProcessList_done(ProcessList* this) {
+#ifdef HAVE_LIBHWLOC
+   if (this->topologyOk) {
+      hwloc_topology_destroy(this->topology);
+   }
+#endif
    Hashtable_delete(this->processTable);
    Vector_delete(this->processes);
    Vector_delete(this->processes2);
