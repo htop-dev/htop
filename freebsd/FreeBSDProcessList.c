@@ -212,9 +212,6 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
    unsigned long     *cp_time_n; // old clicks state
    unsigned long     *cp_time_o; // current clicks state
 
-   unsigned long long total_o = 0;
-   unsigned long long total_n = 0;
-   unsigned long long total_d = 0;
    unsigned long cp_time_d[CPUSTATES];
    double        cp_time_p[CPUSTATES];
 
@@ -251,6 +248,9 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
       }
 
       // diff old vs new
+      unsigned long long total_o = 0;
+      unsigned long long total_n = 0;
+      unsigned long long total_d = 0;
       for (int s = 0; s < CPUSTATES; s++) {
         cp_time_d[s] = cp_time_n[s] - cp_time_o[s];
         total_o += cp_time_o[s];
