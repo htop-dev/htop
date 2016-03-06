@@ -161,7 +161,7 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
     * (argv[0]) if we fail to construct the full command.
     */
    arg = kvm_getargv(kd, kproc, 500);
-   if (arg == NULL) {
+   if (arg == NULL || *arg == NULL) {
       *basenameEnd = strlen(kproc->p_comm);
       return xStrdup(kproc->p_comm);
    }
@@ -169,18 +169,23 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
       len += strlen(arg[i]) + 1;   /* room for arg and trailing space or NUL */
    }
    /* don't use xMalloc here - we want to handle huge argv's gracefully */
-   if ((s = xCalloc(len, 1)) == NULL) {
+   if ((s = malloc(len)) == NULL) {
       *basenameEnd = strlen(kproc->p_comm);
       return xStrdup(kproc->p_comm);
    }
+
+   *s = '\0';
+
    for (i = 0; arg[i] != NULL; i++) {
       n = strlcat(s, arg[i], len);
       if (i == 0) {
          /* TODO: rename all basenameEnd to basenameLen, make size_t */
          *basenameEnd = MINIMUM(n, len-1);
       }
+      /* the trailing space should get truncated anyway */
       strlcat(s, " ", len);
    }
+
    return s;
 }
 
