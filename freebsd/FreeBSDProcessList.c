@@ -14,7 +14,9 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
+#include <err.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <string.h>
 
 /*{
@@ -86,11 +88,11 @@ static int kernelFScale;
 
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+   size_t len;
+   char errbuf[_POSIX2_LINE_MAX];
    FreeBSDProcessList* fpl = xCalloc(1, sizeof(FreeBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
    ProcessList_init(pl, Class(FreeBSDProcess), usersTable, pidWhiteList, userId);
-
-   size_t len;
 
    // physical memory in system: hw.physmem
    // physical page size: hw.pagesize
@@ -178,8 +180,10 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       kernelFScale = 2048;
    }
 
-   fpl->kd = kvm_open(NULL, "/dev/null", NULL, 0, NULL);
-   assert(fpl->kd);
+   fpl->kd = kvm_openfiles(NULL, "/dev/null", NULL, 0, errbuf);
+   if (fpl->kd == NULL) {
+      errx(1, "kvm_open: %s", errbuf);
+   }
 
    return pl;
 }
