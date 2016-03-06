@@ -12,14 +12,15 @@ in the source distribution for its full text.
 
 #include <unistd.h>
 #include <stdlib.h>
-#include <err.h>
-#include <errno.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
+#include <err.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <string.h>
 #include <sys/resource.h>
 
@@ -42,22 +43,37 @@ typedef struct OpenBSDProcessList_ {
 
 }*/
 
-#ifndef CLAMP
-#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+/*
+ * avoid relying on or conflicting with MIN() and MAX() in sys/param.h
+ */
+#ifndef MINIMUM
+#define MINIMUM(x, y)		((x) > (y) ? (y) : (x))
 #endif
 
-static int pageSizeKb;
+#ifndef MAXIMUM
+#define MAXIMUM(x, y)		((x) > (y) ? (x) : (y))
+#endif
+
+#ifndef CLAMP
+#define CLAMP(x, low, high)	(((x) > (high)) ? (high) : MAXIMUM(x, low))
+#endif
+
 static long fscale;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    int mib[] = { CTL_HW, HW_NCPU };
    int fmib[] = { CTL_KERN, KERN_FSCALE };
    int i, e;
-   OpenBSDProcessList* opl = xCalloc(1, sizeof(OpenBSDProcessList));
-   ProcessList* pl = (ProcessList*) opl;
-   size_t size = sizeof(pl->cpuCount);
+   OpenBSDProcessList* opl;
+   ProcessList* pl;
+   size_t size;
+   char errbuf[_POSIX2_LINE_MAX];
 
+   opl = xCalloc(1, sizeof(OpenBSDProcessList));
+   pl = (ProcessList*) opl;
+   size = sizeof(pl->cpuCount);
    ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidWhiteList, userId);
+
    e = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
    if (e == -1 || pl->cpuCount < 1) {
       pl->cpuCount = 1;
@@ -65,26 +81,29 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    opl->cpus = xRealloc(opl->cpus, pl->cpuCount * sizeof(CPUData));
 
    size = sizeof(fscale);
-   if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0)
+   if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0) {
       err(1, "fscale sysctl call failed");
+   }
 
    for (i = 0; i < pl->cpuCount; i++) {
       opl->cpus[i].totalTime = 1;
       opl->cpus[i].totalPeriod = 1;
    }
 
-   pageSizeKb = PAGE_SIZE_KB;
-
-   // XXX: last arg should eventually be an errbuf
-   opl->kd = kvm_open(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-   assert(opl->kd);
+   opl->kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
+   if (opl->kd == NULL) {
+      errx(1, "kvm_open: %s", errbuf);
+   }
 
    return pl;
 }
 
 void ProcessList_delete(ProcessList* this) {
    const OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
-   if (opl->kd) kvm_close(opl->kd);
+
+   if (opl->kd) {
+      kvm_close(opl->kd);
+   }
 
    free(opl->cpus);
 
@@ -101,9 +120,8 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       err(1, "uvmexp sysctl call failed");
    }
 
-   //kb_pagesize = uvmexp.pagesize / 1024;
-   pl->usedMem = uvmexp.active * pageSizeKb;
-   pl->totalMem = uvmexp.npages * pageSizeKb;
+   pl->usedMem = uvmexp.active * PAGE_SIZE_KB;
+   pl->totalMem = uvmexp.npages * PAGE_SIZE_KB;
 
    /*
    const OpenBSDProcessList* opl = (OpenBSDProcessList*) pl;
@@ -112,10 +130,10 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    sysctl(MIB_hw_physmem, 2, &(pl->totalMem), &len, NULL, 0);
    pl->totalMem /= 1024;
    sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(pl->usedMem), &len, NULL, 0);
-   pl->usedMem *= pageSizeKb;
+   pl->usedMem *= PAGE_SIZE_KB;
    pl->freeMem = pl->totalMem - pl->usedMem;
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
-   pl->cachedMem *= pageSizeKb;
+   pl->cachedMem *= PAGE_SIZE_KB;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(opl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
@@ -125,8 +143,8 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->totalSwap += swap[i].ksw_total;
       pl->usedSwap += swap[i].ksw_used;
    }
-   pl->totalSwap *= pageSizeKb;
-   pl->usedSwap *= pageSizeKb;
+   pl->totalSwap *= PAGE_SIZE_KB;
+   pl->usedSwap *= PAGE_SIZE_KB;
 
    pl->sharedMem = 0;  // currently unused
    pl->buffersMem = 0; // not exposed to userspace
@@ -134,40 +152,35 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 }
 
 char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
-   char *s, *buf, **arg;
-   size_t cpsz, len = 0, n;
+   char *s, **arg;
+   size_t len = 0, n;
    int i;
 
    /*
-    * We attempt to fall back to just the command name (argv[0]) if we
-    * fail to construct the full command at any point.
+    * Like OpenBSD's top(1), we try to fall back to the command name
+    * (argv[0]) if we fail to construct the full command.
     */
    arg = kvm_getargv(kd, kproc, 500);
    if (arg == NULL) {
-      if ((s = xStrdup(kproc->p_comm)) == NULL) {
-         err(1, NULL);
-      }
-      return s;
+      *basenameEnd = strlen(kproc->p_comm);
+      return xStrdup(kproc->p_comm);
    }
    for (i = 0; arg[i] != NULL; i++) {
-      len += strlen(arg[i]) + 1;
+      len += strlen(arg[i]) + 1;   /* room for arg and trailing space or NUL */
    }
-   if ((buf = s = xMalloc(len)) == NULL) {
-      if ((s = xStrdup(kproc->p_comm)) == NULL) {
-         err(1, NULL);
-      }
-      return s;
+   /* don't use xMalloc here - we want to handle huge argv's gracefully */
+   if ((s = xCalloc(len, 1)) == NULL) {
+      *basenameEnd = strlen(kproc->p_comm);
+      return xStrdup(kproc->p_comm);
    }
    for (i = 0; arg[i] != NULL; i++) {
-      n = strlcpy(buf, arg[i], (s + len) - buf);
-      buf += n;
+      n = strlcat(s, arg[i], len);
       if (i == 0) {
-         *basenameEnd = n;
+         /* TODO: rename all basenameEnd to basenameLen, make size_t */
+         *basenameEnd = MINIMUM(n, len-1);
       }
-      *buf = ' ';
-      buf++;
+      strlcat(s, " ", len);
    }
-   *(buf - 1) = '\0';
    return s;
 }
 
