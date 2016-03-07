@@ -86,9 +86,6 @@ static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
 static int kernelFScale;
 
-// XXX hack
-static unsigned long long int Global_totalMem;
-
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    size_t len;
    char errbuf[_POSIX2_LINE_MAX];
@@ -307,8 +304,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //pl->totalMem *= pageSizeKb;
    sysctl(MIB_hw_physmem, 2, &(pl->totalMem), &len, NULL, 0);
    pl->totalMem /= 1024;
-   // XXX hack
-   Global_totalMem = pl->totalMem;
 
    sysctl(MIB_vm_stats_vm_v_active_count, 4, &(fpl->memActive), &len, NULL, 0);
    fpl->memActive *= pageSizeKb;
@@ -487,7 +482,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       // from FreeBSD source /src/usr.bin/top/machine.c
       proc->m_size = kproc->ki_size / 1024 / pageSizeKb;
       proc->m_resident = kproc->ki_rssize;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(Global_totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
