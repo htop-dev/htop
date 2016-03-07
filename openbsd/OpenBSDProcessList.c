@@ -10,19 +10,20 @@ in the source distribution for its full text.
 #include "OpenBSDProcessList.h"
 #include "OpenBSDProcess.h"
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/proc.h>
-#include <sys/sysctl.h>
-#include <sys/user.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <limits.h>
-#include <string.h>
+#include <sys/mount.h>
+#include <sys/param.h>
+#include <sys/proc.h>
 #include <sys/resource.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#include <sys/user.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 /*{
 
@@ -114,14 +115,26 @@ void ProcessList_delete(ProcessList* this) {
 static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    static int uvmexp_mib[] = {CTL_VM, VM_UVMEXP};
    struct uvmexp uvmexp;
-   size_t size = sizeof(uvmexp);
+   size_t size_uvmexp = sizeof(uvmexp);
 
-   if (sysctl(uvmexp_mib, 2, &uvmexp, &size, NULL, 0) < 0) {
+   if (sysctl(uvmexp_mib, 2, &uvmexp, &size_uvmexp, NULL, 0) < 0) {
       err(1, "uvmexp sysctl call failed");
    }
 
-   pl->usedMem = uvmexp.active * PAGE_SIZE_KB;
    pl->totalMem = uvmexp.npages * PAGE_SIZE_KB;
+
+   // Taken from OpenBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
+   static int bcache_mib[] = {CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT};
+   struct bcachestats bcstats;
+   size_t size_bcstats = sizeof(bcstats);
+
+   if (sysctl(bcache_mib, 3, &bcstats, &size_bcstats, NULL, 0) < 0) {
+      err(1, "cannot get vfs.bcachestat");
+   }
+
+   pl->cachedMem = bcstats.numbufpages * PAGE_SIZE_KB;
+   pl->freeMem = uvmexp.free * PAGE_SIZE_KB;
+   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * PAGE_SIZE_KB;
 
    /*
    const OpenBSDProcessList* opl = (OpenBSDProcessList*) pl;
