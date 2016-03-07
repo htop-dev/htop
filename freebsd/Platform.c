@@ -163,15 +163,15 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    double  percent;
    double* v = this->values;
 
-   v[CPU_METER_NICE]   = cpuData->nicePercent;
-   v[CPU_METER_NORMAL] = cpuData->userPercent;
+   v[CPU_METER_NICE]   = cpuData->nicePercent * cpus;
+   v[CPU_METER_NORMAL] = cpuData->userPercent * cpus;
    if (this->pl->settings->detailedCPUTime) {
-      v[CPU_METER_KERNEL]  = cpuData->systemPercent;
-      v[CPU_METER_IRQ]     = cpuData->irqPercent;
+      v[CPU_METER_KERNEL]  = cpuData->systemPercent * cpus;
+      v[CPU_METER_IRQ]     = cpuData->irqPercent * cpus;
       Meter_setItems(this, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    } else {
-      v[2] = cpuData->systemAllPercent;
+      v[2] = cpuData->systemAllPercent * cpus;
       Meter_setItems(this, 3);
       percent = v[0]+v[1]+v[2];
    }
