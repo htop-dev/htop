@@ -11,5 +11,4 @@ in the source distribution for its full text.
 
 void Battery_getData(double* level, ACPresence* isOnAC);
 
-
 #endif

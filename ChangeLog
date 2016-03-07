@@ -1,4 +1,23 @@
 
+What's new in version 2.0.1
+
+* OpenBSD: Various fixes and improvements
+  (thanks to Michael McConville and Juan Francisco Cantero Hurtado)
+* FreeBSD: fix CPU and memory readings
+  (thanks to Tim Creech, Hung-Yi Chen, Bernard Spil, Greg V)
+* FreeBSD: add battery support
+  (thanks to Greg V)
+* Linux: Retain last-obtained name of a zombie process
+* Mac OS X: Improve portability for OS X versions
+  (thanks to Michael Klein)
+* Mac OS X: Fix reading command-line arguments and basename
+* Mac OS X: Fix process state information
+* Mac OS X: Fix tree view collapsing/expanding
+* Mac OS X: Fix tree organization
+* Mac OS X: Fix memory accounting
+* Fix crash when emptying a column of meters
+* Make Esc key more responsive
+
 What's new in version 2.0.0
 
 * Platform abstraction layer
