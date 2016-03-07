@@ -27,10 +27,20 @@ typedef struct OpenBSDProcessList_ {
 } OpenBSDProcessList;
 
 
-#ifndef CLAMP
-#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+/*
+ * avoid relying on or conflicting with MIN() and MAX() in sys/param.h
+ */
+#ifndef MINIMUM
+#define MINIMUM(x, y)		((x) > (y) ? (y) : (x))
 #endif
 
+#ifndef MAXIMUM
+#define MAXIMUM(x, y)		((x) > (y) ? (x) : (y))
+#endif
+
+#ifndef CLAMP
+#define CLAMP(x, low, high)	(((x) > (high)) ? (high) : MAXIMUM(x, low))
+#endif
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
