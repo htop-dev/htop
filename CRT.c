@@ -125,7 +125,7 @@ void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 
 void CRT_handleSIGSEGV(int sgn);
 
-#define KEY_ALT(x) KEY_F(64) + (x - 'A')
+#define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 
 }*/
 
