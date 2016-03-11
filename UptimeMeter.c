@@ -51,6 +51,7 @@ MeterClass UptimeMeter_class = {
    },
    .setValues = UptimeMeter_setValues, 
    .defaultMode = TEXT_METERMODE,
+   .maxItems = 1,
    .total = 100.0,
    .attributes = UptimeMeter_attributes,
    .name = "Uptime",
