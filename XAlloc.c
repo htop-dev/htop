@@ -29,7 +29,7 @@ void* xMalloc(size_t size) {
 
 void* xCalloc(size_t nmemb, size_t size) {
    void* data = calloc(nmemb, size);
-   if (!data) {
+   if (!data && nmemb > 0 && size > 0) {
       fail();
    }
    return data;
