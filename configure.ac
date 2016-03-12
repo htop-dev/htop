@@ -7,19 +7,23 @@ AC_INIT([htop],[2.0.1],[hisham@gobolinux.org])
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
 year=$(date -u -d "@$SOURCE_DATE_EPOCH" "+%Y" 2>/dev/null || date -u -r "$SOURCE_DATE_EPOCH" "+%Y" 2>/dev/null || date -u "+%Y")
 
-# The following two lines are required by hwloc scripts
-AC_USE_SYSTEM_EXTENSIONS
+AC_CONFIG_SRCDIR([htop.c])
+AC_CONFIG_AUX_DIR([.])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
+
+# Required by hwloc scripts
 AC_CANONICAL_TARGET
 
 AM_INIT_AUTOMAKE([1.11])
-AC_CONFIG_SRCDIR([htop.c])
-AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
 # ----------------------------------------------------------------------
 AC_PROG_CC
 AM_PROG_CC_C_O
+
+# Required by hwloc scripts
+AC_USE_SYSTEM_EXTENSIONS
 
 LT_INIT([disable-shared static])
 
