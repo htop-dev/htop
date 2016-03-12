@@ -13,7 +13,7 @@ AC_CANONICAL_TARGET
 
 AM_INIT_AUTOMAKE([1.11])
 AC_CONFIG_SRCDIR([htop.c])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
@@ -21,9 +21,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CC
 AM_PROG_CC_C_O
 
-AC_DISABLE_SHARED
-AC_ENABLE_STATIC
-AC_PROG_LIBTOOL
+LT_INIT([disable-shared static])
 
 # Checks for platform.
 # ----------------------------------------------------------------------
@@ -75,15 +73,16 @@ AC_CHECK_FUNCS([memmove strncasecmp strstr strdup])
 save_cflags="${CFLAGS}"
 CFLAGS="${CFLAGS} -std=c99"
 AC_MSG_CHECKING([whether gcc -std=c99 option works])
-AC_TRY_COMPILE(AC_INCLUDES_DEFAULT, [char *a; a = strdup("foo"); int i = 0; i++; // C99],
-   AC_MSG_RESULT([yes]),
-   AC_MSG_ERROR([htop is written in C99. A newer version of gcc is required.]))
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+   [AC_INCLUDES_DEFAULT], [[char *a; a = strdup("foo"); int i = 0; i++; // C99]])],
+   [AC_MSG_RESULT([yes])],
+   [AC_MSG_ERROR([htop is written in C99. A newer version of gcc is required.])])
 CFLAGS="$save_cflags"
 
 save_cflags="${CFLAGS}"
 CFLAGS="$CFLAGS -Wextra"
 AC_MSG_CHECKING([if compiler supports -Wextra])
-AC_TRY_COMPILE([], [], [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],[
    wextra_flag=-Wextra
    AC_MSG_RESULT([yes])
 ],[
@@ -97,14 +96,14 @@ AC_SUBST(wextra_flag)
 # ----------------------------------------------------------------------
 PROCDIR=/proc
 
-AC_ARG_ENABLE(proc, [AC_HELP_STRING([--enable-proc], [use Linux-compatible proc filesystem])], enable_proc="yes", enable_proc="no")
+AC_ARG_ENABLE(proc, [AS_HELP_STRING([--enable-proc], [use Linux-compatible proc filesystem])], enable_proc="yes", enable_proc="no")
 if test "x$enable_proc" = xyes; then
    # An enabled proc assumes we're emulating Linux.
    my_htop_platform=linux
    AC_DEFINE(HAVE_PROC, 1, [Define if using a Linux-compatible proc filesystem.])
 fi
 
-AC_ARG_WITH(proc, [AC_HELP_STRING([--with-proc=DIR], [Location of a Linux-compatible proc filesystem (default=/proc).])],
+AC_ARG_WITH(proc, [AS_HELP_STRING([--with-proc=DIR], [Location of a Linux-compatible proc filesystem (default=/proc).])],
 
 if test -n "$withval"; then
    AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
@@ -119,28 +118,28 @@ if test "x$cross_compiling" = xno; then
    fi
 fi
 
-AC_ARG_ENABLE(openvz, [AC_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
+AC_ARG_ENABLE(openvz, [AS_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
 if test "x$enable_openvz" = xyes; then
    AC_DEFINE(HAVE_OPENVZ, 1, [Define if openvz support enabled.])
 fi
 
-AC_ARG_ENABLE(cgroup, [AC_HELP_STRING([--enable-cgroup], [enable cgroups support])], ,enable_cgroup="no")
+AC_ARG_ENABLE(cgroup, [AS_HELP_STRING([--enable-cgroup], [enable cgroups support])], ,enable_cgroup="no")
 if test "x$enable_cgroup" = xyes; then
    AC_DEFINE(HAVE_CGROUP, 1, [Define if cgroup support enabled.])
 fi
 
-AC_ARG_ENABLE(vserver, [AC_HELP_STRING([--enable-vserver], [enable VServer support])], ,enable_vserver="no")
+AC_ARG_ENABLE(vserver, [AS_HELP_STRING([--enable-vserver], [enable VServer support])], ,enable_vserver="no")
 if test "x$enable_vserver" = xyes; then
     AC_DEFINE(HAVE_VSERVER, 1, [Define if vserver support enabled.])
 fi
 
-AC_ARG_ENABLE(ancient_vserver, [AC_HELP_STRING([--enable-ancient-vserver], [enable ancient VServer support (implies --enable-vserver)])], ,enable_ancient_vserver="no")
+AC_ARG_ENABLE(ancient_vserver, [AS_HELP_STRING([--enable-ancient-vserver], [enable ancient VServer support (implies --enable-vserver)])], ,enable_ancient_vserver="no")
 if test "x$enable_ancient_vserver" = xyes; then
     AC_DEFINE(HAVE_VSERVER, 1, [Define if vserver support enabled.])
     AC_DEFINE(HAVE_ANCIENT_VSERVER, 1, [Define if ancient vserver support enabled.])
 fi
 
-AC_ARG_ENABLE(taskstats, [AC_HELP_STRING([--enable-taskstats], [enable per-task IO Stats (taskstats kernel sup required)])], ,enable_taskstats="yes")
+AC_ARG_ENABLE(taskstats, [AS_HELP_STRING([--enable-taskstats], [enable per-task IO Stats (taskstats kernel sup required)])], ,enable_taskstats="yes")
 if test "x$enable_taskstats" = xyes; then
     AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
 fi
@@ -174,7 +173,7 @@ m4_define([HTOP_CHECK_LIB],
    ], [$4])
 ])
 
-AC_ARG_ENABLE(unicode, [AC_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
+AC_ARG_ENABLE(unicode, [AS_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
 if test "x$enable_unicode" = xyes; then
    HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
     HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config",
@@ -212,7 +211,7 @@ if test "$my_htop_platform" = "openbsd"; then
    AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
 fi
 
-AC_ARG_ENABLE(linux_affinity, [AC_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
+AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
 if test "x$enable_linux_affinity" = xyes -a "x$cross_compiling" = xno; then
    AC_MSG_CHECKING([for usable sched_setaffinity])
    AC_RUN_IFELSE([
@@ -233,7 +232,7 @@ if test "x$enable_linux_affinity" = xyes; then
    AC_DEFINE(HAVE_LINUX_AFFINITY, 1, [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
-AC_ARG_ENABLE(hwloc, [AC_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
+AC_ARG_ENABLE(hwloc, [AS_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
 if test "x$enable_hwloc" = xyes
 then
    AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
