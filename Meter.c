@@ -132,12 +132,8 @@ Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
    this->h = 1;
    this->param = param;
    this->pl = pl;
-   char maxItems = type->maxItems;
-   if (maxItems == 0) {
-      maxItems = 1;
-   }
-   type->curItems = maxItems;
-   this->values = xCalloc(maxItems, sizeof(double));
+   type->curItems = type->maxItems;
+   this->values = xCalloc(type->maxItems, sizeof(double));
    this->total = type->total;
    this->caption = xStrdup(type->caption);
    if (Meter_initFn(this))
@@ -550,6 +546,7 @@ MeterClass BlankMeter_class = {
    },
    .setValues = BlankMeter_setValues,
    .defaultMode = TEXT_METERMODE,
+   .maxItems = 0,
    .total = 100.0,
    .attributes = BlankMeter_attributes,
    .name = "Blank",

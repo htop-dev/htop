@@ -34,6 +34,7 @@ MeterClass ClockMeter_class = {
    },
    .setValues = ClockMeter_setValues, 
    .defaultMode = TEXT_METERMODE,
+   .maxItems = 1,
    .total = 1440, /* 24*60 */
    .attributes = ClockMeter_attributes,
    .name = "Clock",

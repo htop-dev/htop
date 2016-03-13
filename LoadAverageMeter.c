@@ -77,6 +77,7 @@ MeterClass LoadMeter_class = {
    },
    .setValues = LoadMeter_setValues, 
    .defaultMode = TEXT_METERMODE,
+   .maxItems = 1,
    .total = 100.0,
    .attributes = LoadMeter_attributes,
    .name = "Load",
