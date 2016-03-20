@@ -112,20 +112,22 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    this->scr = scr;
 
    Panel_setHeader(super, "Available meters");
+   // Platform_meterTypes[0] should be always (&CPUMeter_class), which we will
+   // handle separately in the code below.
    for (int i = 1; Platform_meterTypes[i]; i++) {
       MeterClass* type = Platform_meterTypes[i];
-      if (type != &CPUMeter_class) {
-         const char* label = type->description ? type->description : type->uiName;
-         Panel_add(super, (Object*) ListItem_new(label, i << 16));
-      }
+      assert(type != &CPUMeter_class);
+      const char* label = type->description ? type->description : type->uiName;
+      Panel_add(super, (Object*) ListItem_new(label, i << 16));
    }
+   // Handle (&CPUMeter_class)
    MeterClass* type = &CPUMeter_class;
    int cpus = pl->cpuCount;
    if (cpus > 1) {
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));
       for (int i = 1; i <= cpus; i++) {
          char buffer[50];
-         sprintf(buffer, "%s %d", type->uiName, i);
+         snprintf(buffer, 50, "%s %d", type->uiName, i);
          Panel_add(super, (Object*) ListItem_new(buffer, i));
       }
    } else {
