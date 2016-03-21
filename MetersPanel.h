@@ -27,6 +27,8 @@ struct MetersPanel_ {
 };
 
 
+// Note: In code the meters are known to have bar/text/graph "Modes", but in UI
+// we call them "Styles".
 
 void MetersPanel_setMoving(MetersPanel* this, bool moving);
 

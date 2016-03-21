@@ -31,7 +31,9 @@ struct MetersPanel_ {
 
 }*/
 
-static const char* MetersFunctions[] = {"Type  ", "Move  ", "Delete", "Done  ", NULL};
+// Note: In code the meters are known to have bar/text/graph "Modes", but in UI
+// we call them "Styles".
+static const char* MetersFunctions[] = {"Style ", "Move  ", "Delete", "Done  ", NULL};
 static const char* MetersKeys[] = {"Space", "Enter", "Del", "Esc"};
 static int MetersEvents[] = {' ', 13, KEY_DC, 27};
 
