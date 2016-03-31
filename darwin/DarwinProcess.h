@@ -19,6 +19,7 @@ typedef struct DarwinProcess_ {
 
    uint64_t utime;
    uint64_t stime;
+   bool taskAccess;
 } DarwinProcess;
 
 
