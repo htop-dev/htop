@@ -26,6 +26,7 @@ typedef struct DarwinProcess_ {
 
    uint64_t utime;
    uint64_t stime;
+   bool taskAccess;
 } DarwinProcess;
 
 }*/
@@ -47,6 +48,7 @@ DarwinProcess* DarwinProcess_new(Settings* settings) {
 
    this->utime = 0;
    this->stime = 0;
+   this->taskAccess = true;
 
    return this;
 }
@@ -301,6 +303,10 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
    Process* proc = (Process*) dp;
    kern_return_t ret;
    
+   if (!dp->taskAccess) {
+      return;
+   }
+   
    if (proc->state == 'Z') {
       return;
    }
@@ -308,6 +314,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
    task_t port;
    ret = task_for_pid(mach_task_self(), proc->pid, &port);
    if (ret != KERN_SUCCESS) {
+      dp->taskAccess = false;
       return;
    }
    
@@ -315,6 +322,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
    mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
    ret = task_info(port, TASK_BASIC_INFO, (task_info_t) tinfo, &task_info_count);
    if (ret != KERN_SUCCESS) {
+      dp->taskAccess = false;
       return;
    }
    
@@ -322,6 +330,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
    mach_msg_type_number_t thread_count;
    ret = task_threads(port, &thread_list, &thread_count);
    if (ret != KERN_SUCCESS) {
+      dp->taskAccess = false;
       mach_port_deallocate(mach_task_self(), port);
       return;
    }
