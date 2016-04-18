@@ -27,7 +27,7 @@ AC_PROG_LIBTOOL
 # Checks for platform.
 # ----------------------------------------------------------------------
 case "$target_os" in
-linux*)
+linux*|gnu*)
    my_htop_platform=linux
    ;;
 freebsd*|kfreebsd*)
