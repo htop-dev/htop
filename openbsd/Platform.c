@@ -265,9 +265,6 @@ void Platform_setSwapValues(Meter* this) {
    }
 
    swdev = xCalloc(nswap, sizeof(*swdev));
-   if (swdev == NULL) {
-      return;
-   }
 
    rnswap = swapctl(SWAP_STATS, swdev, nswap);
    if (rnswap == -1) {

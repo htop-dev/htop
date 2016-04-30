@@ -280,11 +280,9 @@ char* Platform_getProcessEnv(pid_t pid) {
 
                size_t size = endp - p;
                env = xMalloc(size+2);
-               if (env) {
-                  memcpy(env, p, size);
-                  env[size] = 0;
-                  env[size+1] = 0;
-               }
+               memcpy(env, p, size);
+               env[size] = 0;
+               env[size+1] = 0;
             }
          }
          free(buf);
