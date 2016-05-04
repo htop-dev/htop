@@ -394,7 +394,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
          int indent = (this->indent < 0 ? -this->indent : this->indent);
 
          for (int i = 0; i < 32; i++)
-            if (indent & (1 << i))
+            if (indent & (1U << i))
                maxIndent = i+1;
           for (int i = 0; i < maxIndent - 1; i++) {
             int written;
