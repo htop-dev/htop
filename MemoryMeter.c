@@ -24,7 +24,7 @@ int MemoryMeter_attributes[] = {
    MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE
 };
 
-static void MemoryMeter_setValues(Meter* this, char* buffer, int size) {
+static void MemoryMeter_updateValues(Meter* this, char* buffer, int size) {
    int written;
    Platform_setMemoryValues(this);
 
@@ -60,7 +60,7 @@ MeterClass MemoryMeter_class = {
       .delete = Meter_delete,
       .display = MemoryMeter_display,
    },
-   .setValues = MemoryMeter_setValues, 
+   .updateValues = MemoryMeter_updateValues, 
    .defaultMode = BAR_METERMODE,
    .maxItems = 3,
    .total = 100.0,

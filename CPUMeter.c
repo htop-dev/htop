@@ -55,7 +55,7 @@ static void CPUMeter_init(Meter* this) {
       Meter_setCaption(this, "Avg");
 }
 
-static void CPUMeter_setValues(Meter* this, char* buffer, int size) {
+static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
    int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
       snprintf(buffer, size, "absent");
@@ -215,7 +215,7 @@ MeterClass CPUMeter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
-   .setValues = CPUMeter_setValues, 
+   .updateValues = CPUMeter_updateValues,
    .defaultMode = BAR_METERMODE,
    .maxItems = CPU_METER_ITEMCOUNT,
    .total = 100.0,

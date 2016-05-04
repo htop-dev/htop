@@ -18,7 +18,7 @@ int TasksMeter_attributes[] = {
    CPU_KERNEL, PROCESS_THREAD, PROCESS, TASKS_RUNNING
 };
 
-static void TasksMeter_setValues(Meter* this, char* buffer, int len) {
+static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
    ProcessList* pl = this->pl;
    this->values[0] = pl->kernelThreads;
    this->values[1] = pl->userlandThreads;
@@ -72,7 +72,7 @@ MeterClass TasksMeter_class = {
       .delete = Meter_delete,
       .display = TasksMeter_display,
    },
-   .setValues = TasksMeter_setValues, 
+   .updateValues = TasksMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 4,
    .total = 100.0,

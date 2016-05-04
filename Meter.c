@@ -37,7 +37,7 @@ typedef struct Meter_ Meter;
 typedef void(*Meter_Init)(Meter*);
 typedef void(*Meter_Done)(Meter*);
 typedef void(*Meter_UpdateMode)(Meter*, int);
-typedef void(*Meter_SetValues)(Meter*, char*, int);
+typedef void(*Meter_UpdateValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 
 typedef struct MeterClass_ {
@@ -46,7 +46,7 @@ typedef struct MeterClass_ {
    const Meter_Done done;
    const Meter_UpdateMode updateMode;
    const Meter_Draw draw;
-   const Meter_SetValues setValues;
+   const Meter_UpdateValues updateValues;
    const int defaultMode;
    const double total;
    const int* attributes;
@@ -66,7 +66,8 @@ typedef struct MeterClass_ {
 #define Meter_updateMode(this_, m_)    As_Meter(this_)->updateMode((Meter*)(this_), m_)
 #define Meter_drawFn(this_)            As_Meter(this_)->draw
 #define Meter_doneFn(this_)            As_Meter(this_)->done
-#define Meter_setValues(this_, c_, i_) As_Meter(this_)->setValues((Meter*)(this_), c_, i_)
+#define Meter_updateValues(this_, buf_, sz_) \
+                                       As_Meter(this_)->updateValues((Meter*)(this_), buf_, sz_)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
 #define Meter_getItems(this_)          As_Meter(this_)->curItems
 #define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)
@@ -245,7 +246,7 @@ ListItem* Meter_toListItem(Meter* this, bool moving) {
 
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    char buffer[METER_BUFFER_LEN];
-   Meter_setValues(this, buffer, METER_BUFFER_LEN - 1);
+   Meter_updateValues(this, buffer, METER_BUFFER_LEN - 1);
    (void) w;
 
    attrset(CRT_colors[METER_TEXT]);
@@ -265,7 +266,7 @@ static char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    char buffer[METER_BUFFER_LEN];
-   Meter_setValues(this, buffer, METER_BUFFER_LEN - 1);
+   Meter_updateValues(this, buffer, METER_BUFFER_LEN - 1);
 
    w -= 2;
    attrset(CRT_colors[METER_TEXT]);
@@ -390,7 +391,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
          data->values[i] = data->values[i+1];
    
       char buffer[nValues];
-      Meter_setValues(this, buffer, nValues - 1);
+      Meter_updateValues(this, buffer, nValues - 1);
    
       double value = 0.0;
       int items = Meter_getItems(this);
@@ -459,7 +460,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
       LEDMeterMode_digits = LEDMeterMode_digitsAscii;
 
    char buffer[METER_BUFFER_LEN];
-   Meter_setValues(this, buffer, METER_BUFFER_LEN - 1);
+   Meter_updateValues(this, buffer, METER_BUFFER_LEN - 1);
    
    RichString_begin(out);
    Meter_displayBuffer(this, buffer, &out);
@@ -522,7 +523,7 @@ MeterMode* Meter_modes[] = {
 
 /* Blank meter */
 
-static void BlankMeter_setValues(Meter* this, char* buffer, int size) {
+static void BlankMeter_updateValues(Meter* this, char* buffer, int size) {
    (void) this; (void) buffer; (void) size;
 }
 
@@ -541,7 +542,7 @@ MeterClass BlankMeter_class = {
       .delete = Meter_delete,
       .display = BlankMeter_display,
    },
-   .setValues = BlankMeter_setValues,
+   .updateValues = BlankMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 0,
    .total = 100.0,

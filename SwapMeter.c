@@ -24,7 +24,7 @@ int SwapMeter_attributes[] = {
    SWAP
 };
 
-static void SwapMeter_setValues(Meter* this, char* buffer, int size) {
+static void SwapMeter_updateValues(Meter* this, char* buffer, int size) {
    int written;
    Platform_setSwapValues(this);
 
@@ -54,7 +54,7 @@ MeterClass SwapMeter_class = {
       .delete = Meter_delete,
       .display = SwapMeter_display,
    },
-   .setValues = SwapMeter_setValues, 
+   .updateValues = SwapMeter_updateValues,
    .defaultMode = BAR_METERMODE,
    .maxItems = 1,
    .total = 100.0,

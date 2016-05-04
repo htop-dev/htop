@@ -24,7 +24,7 @@ typedef struct Meter_ Meter;
 typedef void(*Meter_Init)(Meter*);
 typedef void(*Meter_Done)(Meter*);
 typedef void(*Meter_UpdateMode)(Meter*, int);
-typedef void(*Meter_SetValues)(Meter*, char*, int);
+typedef void(*Meter_UpdateValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 
 typedef struct MeterClass_ {
@@ -33,7 +33,7 @@ typedef struct MeterClass_ {
    const Meter_Done done;
    const Meter_UpdateMode updateMode;
    const Meter_Draw draw;
-   const Meter_SetValues setValues;
+   const Meter_UpdateValues updateValues;
    const int defaultMode;
    const double total;
    const int* attributes;
@@ -53,7 +53,8 @@ typedef struct MeterClass_ {
 #define Meter_updateMode(this_, m_)    As_Meter(this_)->updateMode((Meter*)(this_), m_)
 #define Meter_drawFn(this_)            As_Meter(this_)->draw
 #define Meter_doneFn(this_)            As_Meter(this_)->done
-#define Meter_setValues(this_, c_, i_) As_Meter(this_)->setValues((Meter*)(this_), c_, i_)
+#define Meter_updateValues(this_, buf_, sz_) \
+                                       As_Meter(this_)->updateValues((Meter*)(this_), buf_, sz_)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
 #define Meter_getItems(this_)          As_Meter(this_)->curItems
 #define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)
