@@ -20,7 +20,7 @@ int LoadAverageMeter_attributes[] = {
 
 int LoadMeter_attributes[] = { LOAD };
 
-static void LoadAverageMeter_setValues(Meter* this, char* buffer, int size) {
+static void LoadAverageMeter_updateValues(Meter* this, char* buffer, int size) {
    Platform_getLoadAverage(&this->values[0], &this->values[1], &this->values[2]);
    snprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
 }
@@ -36,7 +36,7 @@ static void LoadAverageMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[LOAD_AVERAGE_FIFTEEN], buffer);
 }
 
-static void LoadMeter_setValues(Meter* this, char* buffer, int size) {
+static void LoadMeter_updateValues(Meter* this, char* buffer, int size) {
    double five, fifteen;
    Platform_getLoadAverage(&this->values[0], &five, &fifteen);
    if (this->values[0] > this->total) {
@@ -58,7 +58,7 @@ MeterClass LoadAverageMeter_class = {
       .delete = Meter_delete,
       .display = LoadAverageMeter_display,
    },
-   .setValues = LoadAverageMeter_setValues, 
+   .updateValues = LoadAverageMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 3,
    .total = 100.0,
@@ -75,7 +75,7 @@ MeterClass LoadMeter_class = {
       .delete = Meter_delete,
       .display = LoadMeter_display,
    },
-   .setValues = LoadMeter_setValues, 
+   .updateValues = LoadMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
    .total = 100.0,

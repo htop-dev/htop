@@ -17,7 +17,7 @@ int UptimeMeter_attributes[] = {
    UPTIME
 };
 
-static void UptimeMeter_setValues(Meter* this, char* buffer, int len) {
+static void UptimeMeter_updateValues(Meter* this, char* buffer, int len) {
    int totalseconds = Platform_getUptime();
    if (totalseconds == -1) {
       snprintf(buffer, len, "(unknown)");
@@ -49,7 +49,7 @@ MeterClass UptimeMeter_class = {
       .extends = Class(Meter),
       .delete = Meter_delete
    },
-   .setValues = UptimeMeter_setValues, 
+   .updateValues = UptimeMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
    .total = 100.0,

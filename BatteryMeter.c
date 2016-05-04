@@ -32,7 +32,7 @@ int BatteryMeter_attributes[] = {
    BATTERY
 };
 
-static void BatteryMeter_setValues(Meter * this, char *buffer, int len) {
+static void BatteryMeter_updateValues(Meter * this, char *buffer, int len) {
    ACPresence isOnAC;
    double percent;
    
@@ -73,7 +73,7 @@ MeterClass BatteryMeter_class = {
       .extends = Class(Meter),
       .delete = Meter_delete
    },
-   .setValues = BatteryMeter_setValues,
+   .updateValues = BatteryMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
    .total = 100.0,

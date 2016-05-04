@@ -19,7 +19,7 @@ int ClockMeter_attributes[] = {
    CLOCK
 };
 
-static void ClockMeter_setValues(Meter* this, char* buffer, int size) {
+static void ClockMeter_updateValues(Meter* this, char* buffer, int size) {
    time_t t = time(NULL);
    struct tm result;
    struct tm *lt = localtime_r(&t, &result);
@@ -32,7 +32,7 @@ MeterClass ClockMeter_class = {
       .extends = Class(Meter),
       .delete = Meter_delete
    },
-   .setValues = ClockMeter_setValues, 
+   .updateValues = ClockMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
    .total = 1440, /* 24*60 */
