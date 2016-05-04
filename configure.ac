@@ -27,17 +27,17 @@ AC_PROG_LIBTOOL
 
 # Checks for platform.
 # ----------------------------------------------------------------------
-case "$target" in
-*linux*)
+case "$target_os" in
+linux*|gnu*)
    my_htop_platform=linux
    ;;
-*freebsd*)
+freebsd*|kfreebsd*)
    my_htop_platform=freebsd
    ;;
-*openbsd*)
+openbsd*)
    my_htop_platform=openbsd
    ;;
-*darwin*)
+darwin*)
    my_htop_platform=darwin
    ;;
 *)
