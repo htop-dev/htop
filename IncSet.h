@@ -35,6 +35,7 @@ typedef struct IncSet_ {
    IncMode* active;
    FunctionBar* defaultBar;
    bool filtering;
+   bool found;
 } IncSet;
 
 typedef const char* (*IncMode_GetPanelValue)(Panel*, int);

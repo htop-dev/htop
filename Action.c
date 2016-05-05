@@ -328,7 +328,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
-static Htop_Reaction actionFollow(State* st) {
+Htop_Reaction Action_follow(State* st) {
    st->pl->following = MainPanel_selectedPid((MainPanel*)st->panel);
    Panel_setSelectionColor(st->panel, CRT_colors[PANEL_SELECTION_FOLLOW]);
    return HTOP_KEEP_FOLLOWING;
@@ -557,7 +557,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['='] = actionExpandOrCollapse;
    keys['-'] = actionExpandOrCollapse;
    keys['u'] = actionFilterByUser;
-   keys['F'] = actionFollow;
+   keys['F'] = Action_follow;
    keys['S'] = actionSetup;
    keys['C'] = actionSetup;
    keys[KEY_F(2)] = actionSetup;

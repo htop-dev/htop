@@ -40,6 +40,7 @@ typedef struct IncSet_ {
    IncMode* active;
    FunctionBar* defaultBar;
    bool filtering;
+   bool found;
 } IncSet;
 
 typedef const char* (*IncMode_GetPanelValue)(Panel*, int);
@@ -114,7 +115,7 @@ static void updateWeakPanel(IncSet* this, Panel* panel, Vector* lines) {
    }
 }
 
-static void search(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue) {
+static bool search(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue) {
    int size = Panel_size(panel);
    bool found = false;
    for (int i = 0; i < size; i++) {
@@ -128,6 +129,7 @@ static void search(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelVa
       FunctionBar_draw(mode->bar, mode->buffer);
    else
       FunctionBar_drawAttr(mode->bar, mode->buffer, CRT_colors[FAILED_SEARCH]);
+   return found;
 }
 
 bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines) {
@@ -151,23 +153,29 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
          }
       }
       doSearch = false;
-   } else if (ch < 255 && isprint((char)ch) && (mode->index < INCMODE_MAX)) {
-      mode->buffer[mode->index] = ch;
-      mode->index++;
-      mode->buffer[mode->index] = 0;
-      if (mode->isFilter) {
-         filterChanged = true;
-         if (mode->index == 1) this->filtering = true;
-      }
-   } else if ((ch == KEY_BACKSPACE || ch == 127) && (mode->index > 0)) {
-      mode->index--;
-      mode->buffer[mode->index] = 0;
-      if (mode->isFilter) {
-         filterChanged = true;
-         if (mode->index == 0) {
-            this->filtering = false;
-            IncMode_reset(mode);
+   } else if (ch < 255 && isprint((char)ch)) {
+      if (mode->index < INCMODE_MAX) {
+         mode->buffer[mode->index] = ch;
+         mode->index++;
+         mode->buffer[mode->index] = 0;
+         if (mode->isFilter) {
+            filterChanged = true;
+            if (mode->index == 1) this->filtering = true;
          }
+      }
+   } else if ((ch == KEY_BACKSPACE || ch == 127)) {
+      if (mode->index > 0) {
+         mode->index--;
+         mode->buffer[mode->index] = 0;
+         if (mode->isFilter) {
+            filterChanged = true;
+            if (mode->index == 0) {
+               this->filtering = false;
+               IncMode_reset(mode);
+            }
+         }
+      } else {
+         doSearch = false;
       }
    } else if (ch == KEY_RESIZE) {
      Panel_resize(panel, COLS, LINES-panel->y-1);
@@ -187,7 +195,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       doSearch = false;
    }
    if (doSearch) {
-      search(mode, panel, getPanelValue);
+      this->found = search(mode, panel, getPanelValue);
    }
    if (filterChanged && lines) {
       updateWeakPanel(this, panel, lines);
