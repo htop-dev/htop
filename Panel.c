@@ -412,7 +412,7 @@ bool Panel_onKey(Panel* this, int key) {
       break;
    case KEY_NPAGE:
       this->selected += (this->h - 1);
-      this->scrollV += (this->h - 1);
+      this->scrollV = MIN(MAX(0, Vector_size(this->items) - this->h), this->selected - this->h);
       this->needsRedraw = true;
       break;
    case KEY_WHEELUP:
