@@ -37,7 +37,7 @@ typedef struct Header_ {
 #endif
 
 #ifndef Header_forEachColumn
-#define Header_forEachColumn(this_, i_) for (int i_=0; i_ < this->nrColumns; i_++)
+#define Header_forEachColumn(this_, i_) for (int (i_)=0; (i_) < (this_)->nrColumns; ++(i_))
 #endif
 
 Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns) {
