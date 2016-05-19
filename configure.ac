@@ -2,6 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
+LT_PREREQ([2.4.2])
 AC_INIT([htop],[2.0.1],[hisham@gobolinux.org])
 
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
