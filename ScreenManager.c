@@ -189,7 +189,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
 
       int prevCh = ch;
-      ESCDELAY = 25;
+      set_escdelay(25);
       ch = getch();
 
       HandlerResult result = IGNORED;
