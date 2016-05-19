@@ -427,7 +427,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    int cpus = this->cpuCount;
    int count = 0;
-   struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_ALL, 0, &count);
+   struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
 
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
@@ -494,10 +494,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          if ( strcmp("idle", kproc->ki_comm) == 0 ) {
             isIdleProcess = true;
          }
-      }
-      if (isIdleProcess == false && proc->percent_cpu >= 99.8) {
-         // don't break formatting
-         proc->percent_cpu = 99.8;
       }
 
       proc->priority = kproc->ki_pri.pri_level - PZERO;
