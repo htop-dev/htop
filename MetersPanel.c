@@ -61,6 +61,7 @@ void MetersPanel_setMoving(MetersPanel* this, bool moving) {
       Panel_setSelectionColor(super, CRT_colors[PANEL_SELECTION_FOLLOW]);
       super->currentBar = Meters_movingBar;
    }
+   FunctionBar_draw(this->super.currentBar, NULL);
 }
 
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
@@ -99,7 +100,6 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          if (!Vector_size(this->meters))
             break;
          MetersPanel_setMoving(this, !(this->moving));
-         FunctionBar_draw(this->super.currentBar, NULL);
          result = HANDLED;
          break;
       }
