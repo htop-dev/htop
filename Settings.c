@@ -167,9 +167,9 @@ static bool Settings_read(Settings* this, const char* fileName) {
    FILE* fd;
    uid_t euid = geteuid();
 
-   seteuid(getuid());
+   (void) seteuid(getuid());
    fd = fopen(fileName, "r");
-   seteuid(euid);
+   (void) seteuid(euid);
    if (!fd)
       return false;
    
@@ -277,9 +277,9 @@ bool Settings_write(Settings* this) {
    FILE* fd;
    uid_t euid = geteuid();
 
-   seteuid(getuid());
+   (void) seteuid(getuid());
    fd = fopen(this->filename, "w");
-   seteuid(euid);
+   (void) seteuid(euid);
    if (fd == NULL) {
       return false;
    }
@@ -366,7 +366,7 @@ Settings* Settings_new(int cpuCount) {
       }
       legacyDotfile = String_cat(home, "/.htoprc");
       uid_t euid = geteuid();
-      seteuid(getuid());
+      (void) seteuid(getuid());
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
       free(htopDir);
@@ -379,7 +379,7 @@ Settings* Settings_new(int cpuCount) {
          free(legacyDotfile);
          legacyDotfile = NULL;
       }
-      seteuid(euid);
+      (void) seteuid(euid);
    }
    this->colorScheme = 0;
    this->changed = false;

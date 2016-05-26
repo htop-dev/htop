@@ -95,7 +95,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
    this->child = fork();
    if (this->child == -1) return false;
    if (this->child == 0) {
-      seteuid(getuid());
+      (void) seteuid(getuid());
       dup2(this->fdpair[1], STDERR_FILENO);
       int ok = fcntl(this->fdpair[1], F_SETFL, O_NONBLOCK);
       if (ok != -1) {

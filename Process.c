@@ -518,10 +518,10 @@ void Process_toggleTag(Process* this) {
 
 bool Process_setPriority(Process* this, int priority) {
    uid_t euid = geteuid();
-   seteuid(getuid());
+   (void) seteuid(getuid());
    int old_prio = getpriority(PRIO_PROCESS, this->pid);
    int err = setpriority(PRIO_PROCESS, this->pid, priority);
-   seteuid(euid);
+   (void) seteuid(euid);
    if (err == 0 && old_prio != getpriority(PRIO_PROCESS, this->pid)) {
       this->nice = priority;
    }
@@ -534,9 +534,9 @@ bool Process_changePriorityBy(Process* this, size_t delta) {
 
 void Process_sendSignal(Process* this, size_t sgn) {
    uid_t euid = geteuid();
-   seteuid(getuid());
+   (void) seteuid(getuid());
    kill(this->pid, (int) sgn);
-   seteuid(euid);
+   (void) seteuid(euid);
 }
 
 long Process_pidCompare(const void* v1, const void* v2) {
