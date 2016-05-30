@@ -44,8 +44,11 @@ void* xRealloc(void* ptr, size_t size) {
 }
 
 char* xStrdup(const char* str) {
+   if (!str) {
+      fail();
+   }
    char* data = strdup(str);
-   if (!data && str) {
+   if (!data) {
       fail();
    }
    return data;
