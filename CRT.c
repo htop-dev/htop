@@ -599,6 +599,7 @@ void CRT_init(int delay, int colorScheme) {
    signal(11, CRT_handleSIGSEGV);
 #endif
    signal(SIGTERM, CRT_handleSIGTERM);
+   signal(SIGQUIT, CRT_handleSIGTERM);
    use_default_colors();
    if (!has_colors())
       CRT_colorScheme = 1;
