@@ -159,7 +159,7 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
          j++;
       }
    }
-   fields[j] = (ProcessField) NULL;
+   fields[j] = NULL_PROCESSFIELD;
    String_freeArray(ids);
 }
 
