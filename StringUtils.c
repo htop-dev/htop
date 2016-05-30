@@ -69,13 +69,7 @@ char** String_split(const char* s, char sep, int* n) {
       ctr++;
       if (ctr == blocks) {
          blocks += rate;
-         char** newOut = (char**) xRealloc(out, sizeof(char*) * blocks);
-         if (newOut) {
-            out = newOut;
-         } else {
-            blocks -= rate;
-            break;
-         }
+         out = (char**) xRealloc(out, sizeof(char*) * blocks);
       }
       s += size + 1;
    }
@@ -86,10 +80,7 @@ char** String_split(const char* s, char sep, int* n) {
       out[ctr] = token;
       ctr++;
    }
-   char** newOut = xRealloc(out, sizeof(char*) * (ctr + 1));
-   if (newOut) {
-      out = newOut;
-   }
+   out = xRealloc(out, sizeof(char*) * (ctr + 1));
    out[ctr] = NULL;
    *n = ctr;
    return out;
