@@ -181,8 +181,7 @@ void Meter_delete(Object* cast) {
    if (Meter_doneFn(this)) {
       Meter_done(this);
    }
-   if (this->drawData)
-      free(this->drawData);
+   free(this->drawData);
    free(this->caption);
    free(this->values);
    free(this);
@@ -213,8 +212,7 @@ void Meter_setMode(Meter* this, int modeIndex) {
          Meter_updateMode(this, modeIndex);
    } else {
       assert(modeIndex >= 1);
-      if (this->drawData)
-         free(this->drawData);
+      free(this->drawData);
       this->drawData = NULL;
 
       MeterMode* mode = Meter_modes[modeIndex];
