@@ -5,6 +5,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#include <assert.h>
 #include <err.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,10 +44,19 @@ void* xRealloc(void* ptr, size_t size) {
    return data;
 }
 
-char* xStrdup(const char* str) {
-   if (!str) {
-      fail();
-   }
+#undef xStrdup
+#undef xStrdup_
+#ifdef NDEBUG
+# define xStrdup_ xStrdup
+#else
+# define xStrdup(str_) (assert(str_), xStrdup_(str_))
+#endif
+
+#if ((__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
+char* xStrdup_(const char* str) __attribute__((nonnull));
+#endif // GNU C 3.3 or later
+
+char* xStrdup_(const char* str) {
    char* data = strdup(str);
    if (!data) {
       fail();
