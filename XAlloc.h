@@ -15,6 +15,18 @@ void* xCalloc(size_t nmemb, size_t size);
 
 void* xRealloc(void* ptr, size_t size);
 
-char* xStrdup(const char* str);
+#undef xStrdup
+#undef xStrdup_
+#ifdef NDEBUG
+# define xStrdup_ xStrdup
+#else
+# define xStrdup(str_) (assert(str_), xStrdup_(str_))
+#endif
+
+#if ((__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
+char* xStrdup_(const char* str) __attribute__((nonnull));
+#endif // GNU C 3.3 or later
+
+char* xStrdup_(const char* str);
 
 #endif
