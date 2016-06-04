@@ -7,6 +7,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <assert.h>
 #include <stdlib.h>
 
 void* xMalloc(size_t size);
@@ -23,9 +24,13 @@ void* xRealloc(void* ptr, size_t size);
 # define xStrdup(str_) (assert(str_), xStrdup_(str_))
 #endif
 
-#if ((__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
+#ifndef __has_attribute // Clang's macro
+# define __has_attribute(x) 0
+#endif
+#if (__has_attribute(nonnull) || \
+    ((__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)))
 char* xStrdup_(const char* str) __attribute__((nonnull));
-#endif // GNU C 3.3 or later
+#endif // __has_attribute(nonnull) || GNU C 3.3 or later
 
 char* xStrdup_(const char* str);
 
