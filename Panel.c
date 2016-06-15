@@ -61,6 +61,7 @@ struct Panel_ {
    Vector* items;
    int selected;
    int oldSelected;
+   int selectedLen;
    void* eventHandlerState;
    int scrollV;
    short scrollH;
@@ -82,10 +83,7 @@ struct Panel_ {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-#define KEY_CTRLN      0016            /* control-n key */
-#define KEY_CTRLP      0020            /* control-p key */
-#define KEY_CTRLF      0006            /* control-f key */
-#define KEY_CTRLB      0002            /* control-b key */
+#define KEY_CTRL(l) ((l)-'A'+1)
 
 PanelClass Panel_class = {
    .super = {
@@ -327,6 +325,7 @@ void Panel_draw(Panel* this, bool focus) {
          if (selected) {
             attrset(selectionColor);
             RichString_setAttr(&item, selectionColor);
+            this->selectedLen = itemLen;
          }
          mvhline(y + line, x, ' ', this->w);
          if (amt > 0)
@@ -352,6 +351,7 @@ void Panel_draw(Panel* this, bool focus) {
       RichString_begin(new);
       Object_display(newObj, &new);
       int newLen = RichString_sizeVal(new);
+      this->selectedLen = newLen;
       mvhline(y+ this->oldSelected - first, x+0, ' ', this->w);
       if (scrollH < oldLen)
          RichString_printoffnVal(old, y+this->oldSelected - first, x,
@@ -376,11 +376,11 @@ bool Panel_onKey(Panel* this, int key) {
    int size = Vector_size(this->items);
    switch (key) {
    case KEY_DOWN:
-   case KEY_CTRLN:
+   case KEY_CTRL('N'):
       this->selected++;
       break;
    case KEY_UP:
-   case KEY_CTRLP:
+   case KEY_CTRL('P'):
       this->selected--;
       break;
    #ifdef KEY_C_DOWN
@@ -394,14 +394,14 @@ bool Panel_onKey(Panel* this, int key) {
       break;
    #endif
    case KEY_LEFT:
-   case KEY_CTRLB:
+   case KEY_CTRL('B'):
       if (this->scrollH > 0) {
-         this->scrollH -= CRT_scrollHAmount;
+         this->scrollH -= MAX(CRT_scrollHAmount, 0);
          this->needsRedraw = true;
       }
       break;
    case KEY_RIGHT:
-   case KEY_CTRLF:
+   case KEY_CTRL('F'):
       this->scrollH += CRT_scrollHAmount;
       this->needsRedraw = true;
       break;
@@ -435,6 +435,14 @@ bool Panel_onKey(Panel* this, int key) {
       break;
    case KEY_END:
       this->selected = size - 1;
+      break;
+   case KEY_CTRL('A'):
+   case '^':
+      this->scrollH = 0;
+      break;
+   case KEY_CTRL('E'):
+   case '$':
+      this->scrollH = MAX(this->selectedLen - this->w, 0);
       break;
    default:
       return false;

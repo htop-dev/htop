@@ -82,9 +82,9 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
          result = HANDLED;
          break;
       case KEY_UP:
-      case KEY_CTRLP:
+      case KEY_CTRL('P'):
       case KEY_DOWN:
-      case KEY_CTRLN:
+      case KEY_CTRL('N'):
       case KEY_NPAGE:
       case KEY_PPAGE:
       case KEY_HOME:

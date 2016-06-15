@@ -279,7 +279,10 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          continue;
       }
       case KEY_LEFT:
-      case KEY_CTRLB:
+      case KEY_CTRL('B'):
+         if (this->panelCount < 2) {
+            goto defaultHandler;
+         }
          if (!this->allowFocusChange)
             break;
          tryLeft:
@@ -290,8 +293,11 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             goto tryLeft;
          break;
       case KEY_RIGHT:
-      case KEY_CTRLF:
+      case KEY_CTRL('F'):
       case 9:
+         if (this->panelCount < 2) {
+            goto defaultHandler;
+         }
          if (!this->allowFocusChange)
             break;
          tryRight:
@@ -307,6 +313,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          quit = true;
          continue;
       default:
+         defaultHandler:
          sortTimeout = resetSortTimeout;
          Panel_onKey(panelFocus, ch);
          break;

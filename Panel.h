@@ -50,6 +50,7 @@ struct Panel_ {
    Vector* items;
    int selected;
    int oldSelected;
+   int selectedLen;
    void* eventHandlerState;
    int scrollV;
    short scrollH;
@@ -70,10 +71,7 @@ struct Panel_ {
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
-#define KEY_CTRLN      0016            /* control-n key */
-#define KEY_CTRLP      0020            /* control-p key */
-#define KEY_CTRLF      0006            /* control-f key */
-#define KEY_CTRLB      0002            /* control-b key */
+#define KEY_CTRL(l) ((l)-'A'+1)
 
 extern PanelClass Panel_class;
 
