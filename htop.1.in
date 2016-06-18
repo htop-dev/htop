@@ -48,7 +48,7 @@ Output version information and exit
 The following commands are supported while in htop:
 .LP 
 .TP 5
-.B Up, Alt+k
+.B Up, Alt-k
 Select (hightlight) the previous process in the process list. Scroll the list
 if necessary.
 .TP
@@ -71,10 +71,10 @@ Scroll to the top of the process list and select the first process.
 .B End
 Scroll to the bottom of the process list and select the last process.
 .TP
-.B Ctrl+A, ^
+.B Ctrl-A, ^
 Scroll left to the beginning of the process entry (i.e. beginning of line).
 .TP
-.B Ctrl+E, $
+.B Ctrl-E, $
 Scroll right to the end of the process entry (i.e. end of line).
 .TP
 .B Space
