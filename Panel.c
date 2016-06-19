@@ -439,10 +439,12 @@ bool Panel_onKey(Panel* this, int key) {
    case KEY_CTRL('A'):
    case '^':
       this->scrollH = 0;
+      this->needsRedraw = true;
       break;
    case KEY_CTRL('E'):
    case '$':
       this->scrollH = MAX(this->selectedLen - this->w, 0);
+      this->needsRedraw = true;
       break;
    default:
       return false;
