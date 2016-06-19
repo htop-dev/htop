@@ -86,17 +86,12 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       pdata->error = 127;
       return pdata;
    }
-   while (!feof(fd)) {
-      int cmd = fgetc(fd);
-      if (cmd == EOF)
-         break;
-      char* entry = xMalloc(1024);
-      if (!fgets(entry, 1024, fd)) {
-         free(entry);
+   for (;;) {
+      char* line = String_readLine(fd);
+      if (!line) {
          break;
       }
-      char* newline = strrchr(entry, '\n');
-      *newline = '\0';
+      unsigned char cmd = line[0];
       if (cmd == 'f') {
          OpenFiles_FileData* nextFile = xCalloc(1, sizeof(OpenFiles_FileData));
          if (fdata == NULL) {
@@ -108,7 +103,8 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
          item = &(fdata->data);
       }
       assert(cmd >= 0 && cmd <= 0xff);
-      item->data[cmd] = entry;
+      item->data[cmd] = xStrdup(line + 1);
+      free(line);
    }
    pdata->error = pclose(fd);
    return pdata;
@@ -132,9 +128,11 @@ void OpenFilesScreen_scan(InfoScreen* this) {
    } else {
       OpenFiles_FileData* fdata = pdata->files;
       while (fdata) {
-         char entry[1024];
          char** data = fdata->data.data;
-         sprintf(entry, "%5s %4s %10s %10s %10s %s",
+         int lenN = data['n'] ? strlen(data['n']) : 0;
+         int sizeEntry = 5 + 7 + 10 + 10 + 10 + lenN + 5 /*spaces*/ + 1 /*null*/;
+         char* entry = xMalloc(sizeEntry);
+         snprintf(entry, sizeEntry, "%5.5s %7.7s %10.10s %10.10s %10.10s %s",
             data['f'] ? data['f'] : "",
             data['t'] ? data['t'] : "",
             data['D'] ? data['D'] : "",

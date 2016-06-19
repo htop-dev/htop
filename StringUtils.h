@@ -9,6 +9,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdio.h>
+
 #define String_startsWith(s, match) (strstr((s), (match)) == (s))
 #define String_contains_i(s1, s2) (strcasestr(s1, s2) != NULL)
 
@@ -23,5 +25,7 @@ char** String_split(const char* s, char sep, int* n);
 void String_freeArray(char** s);
 
 char* String_getToken(const char* line, const unsigned short int numMatch);
+
+char* String_readLine(FILE* fd);
 
 #endif

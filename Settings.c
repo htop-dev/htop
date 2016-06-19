@@ -173,12 +173,15 @@ static bool Settings_read(Settings* this, const char* fileName) {
    if (!fd)
       return false;
    
-   const int maxLine = 2048;
-   char buffer[maxLine];
    bool readMeters = false;
-   while (fgets(buffer, maxLine, fd)) {
+   for (;;) {
+      char* line = String_readLine(fd);
+      if (!line) {
+         break;
+      }
       int nOptions;
-      char** option = String_split(buffer, '=', &nOptions);
+      char** option = String_split(line, '=', &nOptions);
+      free (line);
       if (nOptions < 2) {
          String_freeArray(option);
          continue;

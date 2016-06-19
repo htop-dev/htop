@@ -65,10 +65,11 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
          break;
       }
 
-      char line[50] = "";
+      char* line = NULL;
       for (unsigned short int i = 0; i < lineNum; i++) {
-         char* ok = fgets(line, sizeof line, file);
-         if (!ok) break;
+         free(line);
+         line = String_readLine(file);
+         if (!line) break;
       }
 
       fclose(file);
@@ -76,7 +77,8 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       char *foundNumStr = String_getToken(line, wordNum);
       const unsigned long int foundNum = atoi(foundNumStr);
       free(foundNumStr);
-
+      free(line);
+      
       total += foundNum;
    }
 
@@ -116,14 +118,13 @@ static ACPresence procAcpiCheck() {
          continue;
       }
 
-      char line[100];
-      char* ok = fgets(line, sizeof line, file);
-      if (!ok) continue;
-      line[sizeof(line) - 1] = '\0';
+      char* line = String_readLine(file);
+      if (!line) continue;
 
       fclose(file);
 
       const char *isOnline = String_getToken(line, 2);
+      free(line);
 
       if (strcmp(isOnline, "on-line") == 0) {
          isOn = AC_PRESENT;
