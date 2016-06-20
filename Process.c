@@ -194,7 +194,7 @@ void Process_setupColumnWidths() {
    assert(digits < 20);
    for (int i = 0; Process_pidColumns[i].label; i++) {
       assert(i < 20);
-      snprintf(Process_titleBuffer[i], digits + 2, "%*s ", digits, Process_pidColumns[i].label);
+      snprintf(Process_titleBuffer[i], 20, "%*s ", digits, Process_pidColumns[i].label);
       Process_fields[Process_pidColumns[i].id].title = Process_titleBuffer[i];
    }
    sprintf(Process_pidFormat, "%%%dd ", digits);
