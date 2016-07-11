@@ -147,7 +147,12 @@ fi
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
 m4_define([HTOP_CHECK_SCRIPT],
 [
-   htop_config_script=$([$4] --libs 2> /dev/null)
+   if test ! -z "m4_toupper($HTOP_[$1]_CONFIG_SCRIPT)"; then
+      # to be used to set the path to ncurses*-config when cross-compiling
+      htop_config_script=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --libs 2> /dev/null)
+   else
+      htop_config_script=$([$4] --libs 2> /dev/null)
+   fi
    htop_script_success=no
    htop_save_LDFLAGS="$LDFLAGS"
    if test ! "x$htop_config_script" = x; then
