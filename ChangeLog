@@ -1,4 +1,19 @@
 
+What's new in version 2.0.2
+
+* Mac OS X: stop trying when task_for_pid fails for a process,
+  stops spamming logs with errors.
+* Add Ctrl+A and Ctrl+E to go to beginning and end of line
+* FreeBSD: fixes for CPU calculation
+  (thanks to Tim Creech, Andy Pilate)
+* Usability: auto-follow process after a search.
+* Use Linux backend on GNU Hurd
+* Improvement for reproducible builds.
+* BUGFIX: Fix behavior of Alt-key combinations
+  (thanks to Kang-Che Sung)
+* Various code tweaks and cleanups
+  (thanks to Kang-Che Sung)
+
 What's new in version 2.0.1
 
 * OpenBSD: Various fixes and improvements
