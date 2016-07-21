@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.65)
 LT_PREREQ([2.4.2])
-AC_INIT([htop],[2.0.1],[hisham@gobolinux.org])
+AC_INIT([htop],[2.0.2],[hisham@gobolinux.org])
 
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
 year=$(date -u -d "@$SOURCE_DATE_EPOCH" "+%Y" 2>/dev/null || date -u -r "$SOURCE_DATE_EPOCH" "+%Y" 2>/dev/null || date -u "+%Y")
