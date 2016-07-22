@@ -260,7 +260,7 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- BarMeterMode ---------- */
 
-static char BarMeterMode_characters[] = "|#*@$%&.";
+static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    char buffer[METER_BUFFER_LEN];
