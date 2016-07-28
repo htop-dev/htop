@@ -83,14 +83,14 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
-      if (this->inc->found) {
-         reaction |= Action_follow(this->state);
-      }
       if (filterChanged) {
          this->state->pl->incFilter = IncSet_filter(this->inc);
          reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
-      reaction |= HTOP_KEEP_FOLLOWING;
+      if (this->inc->found) {
+         reaction |= Action_follow(this->state);
+         reaction |= HTOP_KEEP_FOLLOWING;
+      }
       result = HANDLED;
    } else if (ch == 27) {
       return HANDLED;
