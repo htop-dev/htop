@@ -29,13 +29,6 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 // READ FROM /sys
 // ----------------------------------------
 
-/**
- * Returns a pointer to the suffix of `str` if its beginning matches `prefix`.
- * Returns NULL if the prefix does not match.
- * Examples: 
- * match("hello world", "hello "); -> "world"
- * match("hello world", "goodbye "); -> NULL
- */
 void Battery_getData(double* level, ACPresence* isOnAC);
 
 #endif

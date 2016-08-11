@@ -179,25 +179,6 @@ static inline ssize_t xread(int fd, void *buf, size_t count) {
   }
 }
 
-/**
- * Returns a pointer to the suffix of `str` if its beginning matches `prefix`.
- * Returns NULL if the prefix does not match.
- * Examples: 
- * match("hello world", "hello "); -> "world"
- * match("hello world", "goodbye "); -> NULL
- */
-static inline const char* match(const char* str, const char* prefix) {
-   for (;;) {
-      if (*prefix == '\0') {
-         return str;
-      }
-      if (*prefix != *str) {
-         return NULL;
-      }
-      prefix++; str++;
-   }
-}
-
 static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       
    *level = 0;
@@ -240,6 +221,8 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
          bool full = false;
          bool now = false;
          while ((line = strsep(&buf, "\n")) != NULL) {
+   #define match(str,prefix) \
+           (String_startsWith(str,prefix) ? (str) + strlen(prefix) : NULL)
             const char* ps = match(line, "POWER_SUPPLY_");
             if (!ps) {
                continue;
@@ -266,6 +249,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
                continue;
             }
          }
+   #undef match
       } else if (entryName[0] == 'A') {
          if (*isOnAC != AC_ERROR) {
             continue;

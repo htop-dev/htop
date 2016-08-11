@@ -11,8 +11,13 @@ in the source distribution for its full text.
 
 #include <stdio.h>
 
-#define String_startsWith(s, match) (strstr((s), (match)) == (s))
+#define String_startsWith(s, match) (strncmp((s),(match),strlen(match)) == 0)
 #define String_contains_i(s1, s2) (strcasestr(s1, s2) != NULL)
+
+/*
+ * String_startsWith gives better performance if strlen(match) can be computed
+ * at compile time (e.g. when they are immutable string literals). :)
+ */
 
 char* String_cat(const char* s1, const char* s2);
 
