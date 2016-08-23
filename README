@@ -40,7 +40,7 @@ Compilation instructions
 This program is distributed as a standard autotools-based package.
 See the [INSTALL](/INSTALL) file for detailed instructions.
 
-When compiling from a release tarball, run:
+When compiling from a [release tarball](https://hisham.hm/htop/releases/), run:
 
     ./configure && make
 
