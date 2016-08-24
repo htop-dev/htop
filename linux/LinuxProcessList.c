@@ -471,23 +471,25 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    close(fd);
    int tokenEnd = 0; 
    int lastChar = 0;
-   if (amtRead > 0) {
-      for (int i = 0; i < amtRead; i++)
-         if (command[i] == '\0' || command[i] == '\n') {
-            if (tokenEnd == 0) {
-               tokenEnd = i;
-            }
-            command[i] = ' ';
-         } else {
-            lastChar = i;
+   if (amtRead <= 0) {
+      return false;
+   }
+   for (int i = 0; i < amtRead; i++) {
+      if (command[i] == '\0' || command[i] == '\n') {
+         if (tokenEnd == 0) {
+            tokenEnd = i;
          }
+         command[i] = ' ';
+      } else {
+         lastChar = i;
+      }
    }
    if (tokenEnd == 0) {
       tokenEnd = amtRead;
    }
    command[lastChar + 1] = '\0';
    process->basenameOffset = tokenEnd;
-   setCommand(process, command, lastChar + 1);
+   setCommand(process, command, lastChar);
 
    return true;
 }
