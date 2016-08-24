@@ -93,6 +93,9 @@ char** String_split(const char* s, char sep, int* n) {
 }
 
 void String_freeArray(char** s) {
+   if (!s) {
+      return;
+   }
    for (int i = 0; s[i] != NULL; i++) {
       free(s[i]);
    }
