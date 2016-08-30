@@ -24,9 +24,9 @@ extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;
 
-extern SignalItem Platform_signals[];
+extern const SignalItem Platform_signals[];
 
-extern unsigned int Platform_numberOfSignals;
+extern const unsigned int Platform_numberOfSignals;
 
 void Platform_setBindings(Htop_Action* keys);
 
