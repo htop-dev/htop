@@ -39,9 +39,9 @@ extern int Platform_numberOfFields;
 /*
  * See /usr/include/sys/signal.h
  */
-extern SignalItem Platform_signals[];
+extern const SignalItem Platform_signals[];
 
-extern unsigned int Platform_numberOfSignals;
+extern const unsigned int Platform_numberOfSignals;
 
 void Platform_setBindings(Htop_Action* keys);
 

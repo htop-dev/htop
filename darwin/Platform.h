@@ -22,9 +22,9 @@ in the source distribution for its full text.
 
 extern ProcessField Platform_defaultFields[];
 
-extern SignalItem Platform_signals[];
+extern const SignalItem Platform_signals[];
 
-extern unsigned int Platform_numberOfSignals;
+extern const unsigned int Platform_numberOfSignals;
 
 extern ProcessFieldData Process_fields[];
 

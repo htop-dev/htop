@@ -43,7 +43,7 @@ ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_R
 
 int Platform_numberOfFields = LAST_PROCESSFIELD;
 
-SignalItem Platform_signals[] = {
+const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
    { .name = " 1 SIGHUP",    .number =  1 },
    { .name = " 2 SIGINT",    .number =  2 },
@@ -80,7 +80,7 @@ SignalItem Platform_signals[] = {
    { .name = "33 SIGLIBRT",  .number = 33 },
 };
 
-unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
+const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
 
 void Platform_setBindings(Htop_Action* keys) {
    (void) keys;

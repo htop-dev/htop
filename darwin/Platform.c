@@ -33,7 +33,7 @@ in the source distribution for its full text.
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
-SignalItem Platform_signals[] = {
+const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
    { .name = " 1 SIGHUP",    .number =  1 },
    { .name = " 2 SIGINT",    .number =  2 },
@@ -69,7 +69,7 @@ SignalItem Platform_signals[] = {
    { .name = "31 SIGUSR2",   .number = 31 },
 };
 
-unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
+const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
 
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
