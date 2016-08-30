@@ -36,7 +36,7 @@ os.execute("cp ./default.htoprc ./test.htoprc")
 rt:forkPty("LC_ALL=C HTOPRC=./test.htoprc ./htop 2> htop-valgrind.txt")
 
 local stdscr, term_win
--- Curses initalization needed even when not in visual mode
+-- Curses initialization needed even when not in visual mode
 -- because luaposix only initializes KEY_* constants after initscr().
 stdscr = curses.initscr()
 if visual then

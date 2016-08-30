@@ -151,10 +151,10 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    fpl->cp_time_n = xCalloc(cpus, sizeof_cp_time_array);
    len = sizeof_cp_time_array;
 
-   // fetch intial single (or average) CPU clicks from kernel
+   // fetch initial single (or average) CPU clicks from kernel
    sysctl(MIB_kern_cp_time, 2, fpl->cp_time_o, &len, NULL, 0);
 
-   // on smp box, fetch rest of intial CPU's clicks
+   // on smp box, fetch rest of initial CPU's clicks
    if (cpus > 1) {
       len = 2; sysctlnametomib("kern.cp_times", MIB_kern_cp_times, &len);
       fpl->cp_times_o = xCalloc(cpus, sizeof_cp_time_array);
@@ -175,7 +175,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    len = sizeof(kernelFScale);
    if (sysctlbyname("kern.fscale", &kernelFScale, &len, NULL, 0) == -1) {
-      //sane default for kernel provded CPU precentage scaling, at least on x86 machines, in case this sysctl call failed
+      //sane default for kernel provided CPU percentage scaling, at least on x86 machines, in case this sysctl call failed
       kernelFScale = 2048;
    }
 
@@ -459,17 +459,17 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
          if(fp->jid != kproc->ki_jid) {
-            // proces can enter jail anytime
+            // process can enter jail anytime
             fp->jid = kproc->ki_jid;
             free(fp->jname);
             fp->jname = FreeBSDProcessList_readJailName(kproc);
          }
          if (proc->ppid != kproc->ki_ppid) {
-            // if there are reapers in the system, proces can get reparented anytime
+            // if there are reapers in the system, process can get reparented anytime
             proc->ppid = kproc->ki_ppid;
          }
          if(proc->st_uid != kproc->ki_uid) {
-            // some proceses change users (eg. to lower privs)
+            // some processes change users (eg. to lower privs)
             proc->st_uid = kproc->ki_uid;
             proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          }
