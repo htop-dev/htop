@@ -429,7 +429,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case PID: snprintf(buffer, n, Process_pidFormat, this->pid); break;
    case PPID: snprintf(buffer, n, Process_pidFormat, this->ppid); break;
    case PRIORITY: {
-      if(this->priority == -100)
+      if(this->priority <= -100)
          snprintf(buffer, n, " RT ");
       else
          snprintf(buffer, n, "%3ld ", this->priority);
