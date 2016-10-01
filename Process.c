@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -454,7 +455,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case TIME: Process_printTime(str, this->time); return;
    case TGID: snprintf(buffer, n, Process_pidFormat, this->tgid); break;
    case TPGID: snprintf(buffer, n, Process_pidFormat, this->tpgid); break;
-   case TTY_NR: snprintf(buffer, n, "%5u ", this->tty_nr); break;
+   case TTY_NR: snprintf(buffer, n, "%3u:%3u ", major(this->tty_nr), minor(this->tty_nr)); break;
    case USER: {
       if (Process_getuid != (int) this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];

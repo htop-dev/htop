@@ -124,6 +124,7 @@ typedef struct LinuxProcess_ {
    char* cgroup;
    #endif
    unsigned int oom;
+   char* ttyDevice;
 } LinuxProcess;
 
 #ifndef Process_isKernelThread
@@ -144,7 +145,7 @@ ProcessFieldData Process_fields[] = {
    [PPID] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
    [PGRP] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
    [SESSION] = { .name = "SESSION", .title = "   SESN ", .description = "Process's session ID", .flags = 0, },
-   [TTY_NR] = { .name = "TTY_NR", .title = "  TTY ", .description = "Controlling terminal", .flags = 0, },
+   [TTY_NR] = { .name = "TTY_NR", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
    [TPGID] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
    [FLAGS] = { .name = "FLAGS", .title = NULL, .description = NULL, .flags = 0, },
    [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
@@ -254,6 +255,7 @@ void Process_delete(Object* cast) {
 #ifdef HAVE_CGROUP
    free(this->cgroup);
 #endif
+   free(this->ttyDevice);
    free(this);
 }
 
@@ -292,6 +294,15 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
    switch ((int)field) {
+   case TTY_NR: {
+      if (lp->ttyDevice) {
+         snprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
+      } else {
+         attr = CRT_colors[PROCESS_SHADOW];
+         snprintf(buffer, n, "?        ");
+      }
+      break;
+   }
    case CMINFLT: Process_colorNumber(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
    case M_DRS: Process_humanNumber(str, lp->m_drs * PAGE_SIZE_KB, coloring); return;

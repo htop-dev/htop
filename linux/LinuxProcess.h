@@ -116,6 +116,7 @@ typedef struct LinuxProcess_ {
    char* cgroup;
    #endif
    unsigned int oom;
+   char* ttyDevice;
 } LinuxProcess;
 
 #ifndef Process_isKernelThread

@@ -59,11 +59,19 @@ typedef struct CPUData_ {
    unsigned long long int guestPeriod;
 } CPUData;
 
+typedef struct TtyDriver_ {
+   char* path;
+   unsigned int major;
+   unsigned int minorFrom;
+   unsigned int minorTo;
+} TtyDriver;
+
 typedef struct LinuxProcessList_ {
    ProcessList super;
-
+   
    CPUData* cpus;
-
+   TtyDriver* ttyDrivers;
+   
 } LinuxProcessList;
 
 #ifndef PROCDIR
@@ -78,6 +86,10 @@ typedef struct LinuxProcessList_ {
 #define PROCMEMINFOFILE PROCDIR "/meminfo"
 #endif
 
+#ifndef PROCTTYDRIVERSFILE
+#define PROCTTYDRIVERSFILE PROCDIR "/tty/drivers"
+#endif
+
 #ifndef PROC_LINE_LENGTH
 #define PROC_LINE_LENGTH 512
 #endif
@@ -87,11 +99,105 @@ typedef struct LinuxProcessList_ {
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
-   
+
+static ssize_t xread(int fd, void *buf, size_t count) {
+  // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
+  size_t alreadyRead = 0;
+  for(;;) {
+     ssize_t res = read(fd, buf, count);
+     if (res == -1 && errno == EINTR) continue;
+     if (res > 0) {
+       buf = ((char*)buf)+res;
+       count -= res;
+       alreadyRead += res;
+     }
+     if (res == -1) return -1;
+     if (count == 0 || res == 0) return alreadyRead;
+  }
+}
+
+static int sortTtyDrivers(const void* va, const void* vb) {
+   TtyDriver* a = (TtyDriver*) va;
+   TtyDriver* b = (TtyDriver*) vb;
+   return (a->major == b->major) ? (a->minorFrom - b->minorFrom) : (a->major - b->major);
+}
+
+static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
+   TtyDriver* ttyDrivers;
+   int fd = open(PROCTTYDRIVERSFILE, O_RDONLY);
+   if (fd == -1)
+      return;
+   char* buf = NULL;
+   int bufSize = MAX_READ;
+   int bufLen = 0;
+   for(;;) {
+      buf = realloc(buf, bufSize);
+      int size = xread(fd, buf + bufLen, MAX_READ);
+      if (size <= 0) {
+         buf[bufLen] = '\0';
+         close(fd);
+         break;
+      }
+      bufLen += size;
+      bufSize += MAX_READ;
+   }
+   if (bufLen == 0) {
+      free(buf);
+      return;
+   }
+   int numDrivers = 0;
+   int allocd = 10;
+   ttyDrivers = malloc(sizeof(TtyDriver) * allocd);
+   char* at = buf;
+   while (*at != '\0') {
+      at = strchr(at, ' ');    // skip first token
+      while (*at == ' ') at++; // skip spaces
+      char* token = at;        // mark beginning of path
+      at = strchr(at, ' ');    // find end of path
+      *at = '\0'; at++;        // clear and skip
+      ttyDrivers[numDrivers].path = strdup(token); // save
+      while (*at == ' ') at++; // skip spaces
+      token = at;              // mark beginning of major
+      at = strchr(at, ' ');    // find end of major
+      *at = '\0'; at++;        // clear and skip
+      ttyDrivers[numDrivers].major = atoi(token); // save
+      while (*at == ' ') at++; // skip spaces
+      token = at;              // mark beginning of minorFrom
+      while (*at >= '0' && *at <= '9') at++; //find end of minorFrom
+      if (*at == '-') {        // if has range
+         *at = '\0'; at++;        // clear and skip
+         ttyDrivers[numDrivers].minorFrom = atoi(token); // save
+         token = at;              // mark beginning of minorTo
+         at = strchr(at, ' ');    // find end of minorTo
+         *at = '\0'; at++;        // clear and skip
+         ttyDrivers[numDrivers].minorTo = atoi(token); // save
+      } else {                 // no range
+         *at = '\0'; at++;        // clear and skip
+         ttyDrivers[numDrivers].minorFrom = atoi(token); // save
+         ttyDrivers[numDrivers].minorTo = atoi(token); // save
+      }
+      at = strchr(at, '\n');   // go to end of line
+      at++;                    // skip
+      numDrivers++;
+      if (numDrivers == allocd) {
+         allocd += 10;
+         ttyDrivers = realloc(ttyDrivers, sizeof(TtyDriver) * allocd);
+      }
+   }
+   free(buf);
+   numDrivers++;
+   ttyDrivers = realloc(ttyDrivers, sizeof(TtyDriver) * numDrivers);
+   ttyDrivers[numDrivers - 1].path = NULL;
+   qsort(ttyDrivers, numDrivers - 1, sizeof(TtyDriver), sortTtyDrivers);
+   this->ttyDrivers = ttyDrivers;
+}
+
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
    ProcessList_init(pl, Class(LinuxProcess), usersTable, pidWhiteList, userId);
+   
+   LinuxProcessList_initTtyDrivers(this);
 
    // Update CPU count:
    FILE* file = fopen(PROCSTATFILE, "r");
@@ -122,23 +228,13 @@ void ProcessList_delete(ProcessList* pl) {
    LinuxProcessList* this = (LinuxProcessList*) pl;
    ProcessList_done(pl);
    free(this->cpus);
+   if (this->ttyDrivers) {
+      for(int i = 0; this->ttyDrivers[i].path; i++) {
+         free(this->ttyDrivers[i].path);
+      }
+      free(this->ttyDrivers);
+   }
    free(this);
-}
-
-static ssize_t xread(int fd, void *buf, size_t count) {
-  // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
-  size_t alreadyRead = 0;
-  for(;;) {
-     ssize_t res = read(fd, buf, count);
-     if (res == -1 && errno == EINTR) continue;
-     if (res > 0) {
-       buf = ((char*)buf)+res;
-       count -= res;
-       alreadyRead += res;
-     }
-     if (res == -1) return -1;
-     if (count == 0 || res == 0) return alreadyRead;
-  }
 }
 
 static double jiffy = 0.0;
@@ -221,7 +317,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    process->processor = strtol(location, &location, 10);
    
    process->time = lp->utime + lp->stime;
-
+   
    return true;
 }
 
@@ -494,6 +590,48 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    return true;
 }
 
+static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned int tty_nr) {
+   unsigned int maj = major(tty_nr);
+   unsigned int min = minor(tty_nr);
+
+   int i = -1;
+   for (;;) {
+      i++;
+      if ((!ttyDrivers[i].path) || maj < ttyDrivers[i].major) {
+         break;
+      } 
+      if (maj > ttyDrivers[i].major) {
+         continue;
+      }
+      if (min < ttyDrivers[i].minorFrom) {
+         break;
+      } 
+      if (min > ttyDrivers[i].minorTo) {
+         continue;
+      }
+      unsigned int idx = min - ttyDrivers[i].minorFrom;
+      struct stat sstat;
+      char* fullPath;
+      for(;;) {
+         asprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
+         int err = stat(fullPath, &sstat);
+         if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) return fullPath;
+         free(fullPath);
+         asprintf(&fullPath, "%s%d", ttyDrivers[i].path, idx);
+         err = stat(fullPath, &sstat);
+         if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) return fullPath;
+         free(fullPath);
+         if (idx == min) break;
+         idx = min;
+      }
+      int err = stat(ttyDrivers[i].path, &sstat);
+      if (err == 0 && tty_nr == sstat.st_rdev) return strdup(ttyDrivers[i].path);
+   }
+   char* out;
+   asprintf(&out, "/dev/%u:%u", maj, min);
+   return out;
+}
+
 static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char* dirname, Process* parent, double period, struct timeval tv) {
    ProcessList* pl = (ProcessList*) this;
    DIR* dir;
@@ -556,8 +694,13 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       char command[MAX_NAME+1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       int commLen = 0;
+      unsigned int tty_nr = proc->tty_nr;
       if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen))
          goto errorReadingProcess;
+      if (tty_nr != proc->tty_nr && this->ttyDrivers) {
+         free(lp->ttyDevice);
+         lp->ttyDevice = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
+      }
       if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO)
          LinuxProcess_updateIOPriority(lp);
       float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;

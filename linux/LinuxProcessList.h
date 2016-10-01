@@ -40,11 +40,19 @@ typedef struct CPUData_ {
    unsigned long long int guestPeriod;
 } CPUData;
 
+typedef struct TtyDriver_ {
+   char* path;
+   unsigned int major;
+   unsigned int minorFrom;
+   unsigned int minorTo;
+} TtyDriver;
+
 typedef struct LinuxProcessList_ {
    ProcessList super;
-
+   
    CPUData* cpus;
-
+   TtyDriver* ttyDrivers;
+   
 } LinuxProcessList;
 
 #ifndef PROCDIR
@@ -59,6 +67,10 @@ typedef struct LinuxProcessList_ {
 #define PROCMEMINFOFILE PROCDIR "/meminfo"
 #endif
 
+#ifndef PROCTTYDRIVERSFILE
+#define PROCTTYDRIVERSFILE PROCDIR "/tty/drivers"
+#endif
+
 #ifndef PROC_LINE_LENGTH
 #define PROC_LINE_LENGTH 512
 #endif
@@ -67,7 +79,7 @@ typedef struct LinuxProcessList_ {
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
-   
+
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* pl);
