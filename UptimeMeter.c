@@ -33,11 +33,11 @@ static void UptimeMeter_updateValues(Meter* this, char* buffer, int len) {
    }
    char daysbuf[15];
    if (days > 100) {
-      sprintf(daysbuf, "%d days(!), ", days);
+      snprintf(daysbuf, sizeof(daysbuf), "%d days(!), ", days);
    } else if (days > 1) {
-      sprintf(daysbuf, "%d days, ", days);
+      snprintf(daysbuf, sizeof(daysbuf), "%d days, ", days);
    } else if (days == 1) {
-      sprintf(daysbuf, "1 day, ");
+      snprintf(daysbuf, sizeof(daysbuf), "1 day, ");
    } else {
       daysbuf[0] = '\0';
    }

@@ -198,7 +198,7 @@ void Process_setupColumnWidths() {
       snprintf(Process_titleBuffer[i], 20, "%*s ", digits, Process_pidColumns[i].label);
       Process_fields[Process_pidColumns[i].id].title = Process_titleBuffer[i];
    }
-   sprintf(Process_pidFormat, "%%%dd ", digits);
+   snprintf(Process_pidFormat, sizeof(Process_pidFormat), "%%%dd ", digits);
 }
 
 void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {

@@ -99,7 +99,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       dup2(this->fdpair[1], STDERR_FILENO);
       int ok = fcntl(this->fdpair[1], F_SETFL, O_NONBLOCK);
       if (ok != -1) {
-         sprintf(buffer, "%d", this->super.process->pid);
+         snprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
          execlp("strace", "strace", "-p", buffer, NULL);
       }
       const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
