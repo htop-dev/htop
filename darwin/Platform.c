@@ -78,7 +78,7 @@ ProcessFieldData Process_fields[] = {
    [STATE] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping, R running, D disk, Z zombie, T traced, W paging)", .flags = 0, },
    [PPID] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
    [PGRP] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
-   [SESSION] = { .name = "SESSION", .title = "   SESN ", .description = "Process's session ID", .flags = 0, },
+   [SESSION] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },
    [TTY_NR] = { .name = "TTY_NR", .title = "    TTY ", .description = "Controlling terminal", .flags = 0, },
    [TPGID] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
    [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
@@ -166,7 +166,7 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = TPGID, .label = "TPGID" },
    { .id = TGID, .label = "TGID" },
    { .id = PGRP, .label = "PGRP" },
-   { .id = SESSION, .label = "SESN" },
+   { .id = SESSION, .label = "SID" },
    { .id = 0, .label = NULL },
 };
 
