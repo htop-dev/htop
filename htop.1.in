@@ -217,7 +217,7 @@ The parent process ID.
 .B PGRP
 The process's group ID.
 .TP
-.B SESSION (SESN)
+.B SESSION (SID)
 The process's session ID.
 .TP 
 .B TTY_NR (TTY)

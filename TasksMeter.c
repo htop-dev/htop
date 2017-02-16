@@ -40,7 +40,7 @@ static void TasksMeter_display(Object* cast, RichString* out) {
    
    int processes = (int) this->values[2];
    
-   sprintf(buffer, "%d", processes);
+   snprintf(buffer, sizeof(buffer), "%d", processes);
    RichString_write(out, CRT_colors[METER_VALUE], buffer);
    int threadValueColor = CRT_colors[METER_VALUE];
    int threadCaptionColor = CRT_colors[METER_TEXT];
@@ -50,18 +50,18 @@ static void TasksMeter_display(Object* cast, RichString* out) {
    }
    if (!settings->hideUserlandThreads) {
       RichString_append(out, CRT_colors[METER_TEXT], ", ");
-      sprintf(buffer, "%d", (int)this->values[1]);
+      snprintf(buffer, sizeof(buffer), "%d", (int)this->values[1]);
       RichString_append(out, threadValueColor, buffer);
       RichString_append(out, threadCaptionColor, " thr");
    }
    if (!settings->hideKernelThreads) {
       RichString_append(out, CRT_colors[METER_TEXT], ", ");
-      sprintf(buffer, "%d", (int)this->values[0]);
+      snprintf(buffer, sizeof(buffer), "%d", (int)this->values[0]);
       RichString_append(out, threadValueColor, buffer);
       RichString_append(out, threadCaptionColor, " kthr");
    }
    RichString_append(out, CRT_colors[METER_TEXT], "; ");
-   sprintf(buffer, "%d", (int)this->values[3]);
+   snprintf(buffer, sizeof(buffer), "%d", (int)this->values[3]);
    RichString_append(out, CRT_colors[TASKS_RUNNING], buffer);
    RichString_append(out, CRT_colors[METER_TEXT], " running");
 }
