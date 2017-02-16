@@ -310,6 +310,9 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
       *level = -1;
       *isOnAC = AC_ERROR;
    }
+   if (*level > 100.0) {
+      *level = 100.0;
+   }
    Battery_cacheLevel = *level;
    Battery_cacheIsOnAC = *isOnAC;
    Battery_cacheTime = now;
