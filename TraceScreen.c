@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
