@@ -4,6 +4,11 @@ htop
 # all object files
 *.o
 
+# skip all backups
+*.bak
+*~
+
+# skip coverage files
 *.gcda
 */*.gcda
 *.gcno
@@ -22,6 +27,7 @@ config.h
 config.h.in
 config.log
 config.status
+config.cache
 config.sub
 configure
 depcomp
@@ -32,4 +38,3 @@ ltmain.sh
 m4/
 missing
 stamp-h1
-

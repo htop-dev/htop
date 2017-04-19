@@ -26,7 +26,7 @@ AM_PROG_CC_C_O
 # Required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
-LT_INIT([disable-shared static])
+#LT_INIT([disable-shared static])
 
 # Checks for platform.
 # ----------------------------------------------------------------------
@@ -39,6 +39,9 @@ freebsd*|kfreebsd*)
    ;;
 openbsd*)
    my_htop_platform=openbsd
+   ;;
+dragonfly*)
+   my_htop_platform=dragonflybsd
    ;;
 darwin*)
    my_htop_platform=darwin
@@ -186,14 +189,15 @@ m4_define([HTOP_CHECK_LIB],
 AC_ARG_ENABLE(unicode, [AS_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
 if test "x$enable_unicode" = xyes; then
    HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-    HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config",
-     HTOP_CHECK_SCRIPT([ncurses], [addnwstr], [HAVE_LIBNCURSESW], "ncurses5-config",
-      HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
-       HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
-        HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
-      missing_libraries="$missing_libraries libncursesw"
-      AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
-   ))))))
+    HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
+     HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config",
+      HTOP_CHECK_SCRIPT([ncurses], [addnwstr], [HAVE_LIBNCURSESW], "ncurses5-config",
+       HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
+        HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
+         HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
+       missing_libraries="$missing_libraries libncursesw"
+       AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
+   )))))))
 
    AC_CHECK_HEADERS([ncursesw/curses.h],[:],
       [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
@@ -264,6 +268,7 @@ AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-$year Hisham Muhammad", [Copyright messa
 # ----------------------------------------------------------------------
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
 AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])
+AM_CONDITIONAL([HTOP_DRAGONFLYBSD], [test "$my_htop_platform" = dragonflybsd])
 AM_CONDITIONAL([HTOP_OPENBSD], [test "$my_htop_platform" = openbsd])
 AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
