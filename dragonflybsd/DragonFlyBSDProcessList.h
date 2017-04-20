@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <sys/jail.h>
 #include <sys/uio.h>
 #include <sys/resource.h>
+#include "Hashtable.h"
 #include "DragonFlyBSDProcess.h"
 
 #define JAIL_ERRMSGLEN	1024
@@ -52,6 +53,7 @@ typedef struct DragonFlyBSDProcessList_ {
    unsigned long  *cp_times_o;
    unsigned long  *cp_times_n;
 
+   Hashtable *jails;
 } DragonFlyBSDProcessList;
 
 
@@ -64,7 +66,7 @@ void ProcessList_delete(ProcessList* this);
 
 char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
 
-char* DragonFlyBSDProcessList_readJailName(struct kinfo_proc* kproc);
+char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid);
 
 void ProcessList_goThroughEntries(ProcessList* this);
 

@@ -19,7 +19,7 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #include <limits.h>
 #include <string.h>
-
+#include <sys/param.h>
 
 /*{
 
@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include <sys/jail.h>
 #include <sys/uio.h>
 #include <sys/resource.h>
+#include "Hashtable.h"
 #include "DragonFlyBSDProcess.h"
 
 #define JAIL_ERRMSGLEN	1024
@@ -64,6 +65,7 @@ typedef struct DragonFlyBSDProcessList_ {
    unsigned long  *cp_times_o;
    unsigned long  *cp_times_n;
 
+   Hashtable *jails;
 } DragonFlyBSDProcessList;
 
 }*/
@@ -170,6 +172,9 @@ void ProcessList_delete(ProcessList* this) {
    const DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
    if (dfpl->kd) kvm_close(dfpl->kd);
 
+   if (dfpl->jails) {
+      Hashtable_delete(dfpl->jails);
+   }
    free(dfpl->cp_time_o);
    free(dfpl->cp_time_n);
    free(dfpl->cp_times_o);
@@ -336,49 +341,68 @@ char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kpro
    return comm;
 }
 
-char* DragonFlyBSDProcessList_readJailName(struct kinfo_proc* kproc) {
-   char*  jname;
-   char   jnamebuf[MAXHOSTNAMELEN];
+static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* dfpl) {
+   size_t len;
+   char *jls; /* Jail list */
+   char *curpos;
+   char *nextpos;
 
-   if (kproc->kp_jailid != 0 ){
-      memset(jnamebuf, 0, sizeof(jnamebuf));
-#if 0 /*EXCLUDED*/
-      int    jid;
-      struct iovec jiov[6];
-      *(const void **)&jiov[0].iov_base = "jid";
-      jiov[0].iov_len = sizeof("jid");
-      jiov[1].iov_base = &kproc->kp_jailid;
-      jiov[1].iov_len = sizeof(kproc->kp_jailid);
-      *(const void **)&jiov[2].iov_base = "name";
-      jiov[2].iov_len = sizeof("name");
-      jiov[3].iov_base = jnamebuf;
-      jiov[3].iov_len = sizeof(jnamebuf);
-      *(const void **)&jiov[4].iov_base = "errmsg";
-      jiov[4].iov_len = sizeof("errmsg");
-      jiov[5].iov_base = jail_errmsg;
-      jiov[5].iov_len = JAIL_ERRMSGLEN;
-      jail_errmsg[0] = 0;
-      jid = jail_get(jiov, 6, 0);		// not available on dragonfly
-      if (jid < 0) {
-         if (!jail_errmsg[0])
-            snprintf(jail_errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
-            return NULL;
-      } else if (jid == kproc->kp_jailid) {
-         jname = xStrdup(jnamebuf);
-         if (jname == NULL)
-            strerror_r(errno, jail_errmsg, JAIL_ERRMSGLEN);
-         return jname;
-      } else {
-         return NULL;
+   if (sysctlbyname("jail.list", NULL, &len, NULL, 0) == -1) {
+      fprintf(stderr, "initial sysctlbyname / jail.list failed\n");
+      exit(3);
+   }
+retry:
+   if (len == 0)
+      return;
+
+   jls = xMalloc(len);
+   if (jls == NULL) {
+      fprintf(stderr, "xMalloc failed\n");
+      exit(4);
+   }
+   if (sysctlbyname("jail.list", jls, &len, NULL, 0) == -1) {
+      if (errno == ENOMEM) {
+         free(jls);
+         goto retry;
       }
-#endif
-      // TODO: need to figure out how to retreive the jail->hostname on dragonfly
-      snprintf(jnamebuf, MAXHOSTNAMELEN, "<jail=%i>", kproc->kp_jailid);
-      jname = xStrdup(jnamebuf);
+      fprintf(stderr, "sysctlbyname / jail.list failed\n");
+      exit(5);
+   }
+
+   if (dfpl->jails) {
+      Hashtable_delete(dfpl->jails);
+   }
+   dfpl->jails = Hashtable_new(20, true);
+   curpos = jls;
+   while (curpos) {
+      int jailid;
+      char *str_hostname;
+      nextpos = strchr(curpos, '\n');
+      if (nextpos)
+         *nextpos++ = 0;
+
+      jailid = atoi(strtok(curpos, " "));
+      str_hostname = strtok(NULL, " ");
+
+      char *jname = (char *) (Hashtable_get(dfpl->jails, jailid));
+      if (jname == NULL) {
+         jname = xStrdup(str_hostname);
+         Hashtable_put(dfpl->jails, jailid, jname);
+      }
+
+      curpos = nextpos;
+  }
+  free(jls);
+}
+
+char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid) {
+   char*  hostname;
+   char*  jname;
+
+   if (jailid != 0 && dfpl->jails && (hostname = (char *)Hashtable_get(dfpl->jails, jailid))) {
+      jname = xStrdup(hostname);
    } else {
-      jnamebuf[0]='-';
-      jnamebuf[1]='\0';
-      jname = xStrdup(jnamebuf);
+      jname = xStrdup("-");
    }
    return jname;
 }
@@ -391,6 +415,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    DragonFlyBSDProcessList_scanMemoryInfo(this);
    DragonFlyBSDProcessList_scanCPUTime(this);
+   DragonFlyBSDProcessList_scanJails(dfpl);
 
    int count = 0;
 
@@ -431,13 +456,13 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
          ProcessList_add((ProcessList*)this, proc);
          proc->comm = DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->basenameOffset);
-         dfp->jname = DragonFlyBSDProcessList_readJailName(kproc);
+         dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
       } else {
          proc->processor = kproc->kp_lwp.kl_cpuid;
          if(dfp->jid != kproc->kp_jailid) {	// process can enter jail anytime
             dfp->jid = kproc->kp_jailid;
             free(dfp->jname);
-            dfp->jname = DragonFlyBSDProcessList_readJailName(kproc);
+            dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
          }
          if (proc->ppid != kproc->kp_ppid) {	// if there are reapers in the system, process can get reparented anytime
             proc->ppid = kproc->kp_ppid;
