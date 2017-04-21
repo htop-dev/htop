@@ -445,7 +445,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          }
          proc->ppid = kproc->kp_ppid;		// parent process id
          proc->tpgid = kproc->kp_tpgid;		// tty process group id
-         proc->tgid = kproc->kp_lwp.kl_tid;	// thread group id
+         //proc->tgid = kproc->kp_lwp.kl_tid;	// thread group id
+         proc->tgid = kproc->kp_pid;		// thread group id
          proc->pgrp = kproc->kp_pgid;		// process group id
          proc->session = kproc->kp_sid;
          proc->tty_nr = kproc->kp_tdev;		// control terminal device number
