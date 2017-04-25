@@ -395,7 +395,7 @@ static struct { const char* key; const char* info; } helpLeft[] = {
    { .key = " F6 + -: ", .info = "expand/collapse tree" },
    { .key = "  P M T: ", .info = "sort by CPU%, MEM% or TIME" },
    { .key = "      I: ", .info = "invert sort order" },
-   { .key = "< > , .: ", .info = "select sort column" },
+   { .key = " F6 > .: ", .info = "select sort column" },
    { .key = NULL, .info = NULL }
 };
 
