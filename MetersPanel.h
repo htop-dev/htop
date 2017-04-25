@@ -27,6 +27,12 @@ struct MetersPanel_ {
 };
 
 
+// Note: In code the meters are known to have bar/text/graph "Modes", but in UI
+// we call them "Styles".
+// We avoid UTF-8 arrows ← → here as they might display full-width on Chinese
+// terminals, breaking our aligning.
+// In <http://unicode.org/reports/tr11/>, arrows (U+2019..U+2199) are
+// considered "Ambiguous characters".
 
 void MetersPanel_setMoving(MetersPanel* this, bool moving);
 
