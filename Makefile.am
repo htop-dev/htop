@@ -53,6 +53,15 @@ myhtopplatheaders = freebsd/Platform.h freebsd/FreeBSDProcessList.h \
 freebsd/FreeBSDProcess.h freebsd/FreeBSDCRT.h freebsd/Battery.h
 endif
 
+if HTOP_DRAGONFLYBSD
+htop_LDFLAGS += -lkvm -lkinfo -lexecinfo
+myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
+dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/DragonFlyBSDCRT.c dragonflybsd/Battery.c
+
+myhtopplatheaders = dragonflybsd/Platform.h dragonflybsd/DragonFlyBSDProcessList.h \
+dragonflybsd/DragonFlyBSDProcess.h dragonflybsd/DragonFlyBSDCRT.h dragonflybsd/Battery.h
+endif
+
 if HTOP_OPENBSD
 myhtopplatsources = openbsd/Platform.c openbsd/OpenBSDProcessList.c \
 openbsd/OpenBSDProcess.c openbsd/OpenBSDCRT.c openbsd/Battery.c
