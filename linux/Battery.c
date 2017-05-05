@@ -72,6 +72,8 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
 
       fclose(file);
 
+      if (!line) break;
+
       char *foundNumStr = String_getToken(line, wordNum);
       const unsigned long int foundNum = atoi(foundNumStr);
       free(foundNumStr);
