@@ -9,7 +9,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define ColorPair(i,j) COLOR_PAIR((7-i)*8+j)
+#define ColorIndex(i,j) ((7-i)*8+j)
+
+#define ColorPair(i,j) COLOR_PAIR(ColorIndex(i,j))
 
 #define Black COLOR_BLACK
 #define Red COLOR_RED
@@ -19,6 +21,8 @@ in the source distribution for its full text.
 #define Magenta COLOR_MAGENTA
 #define Cyan COLOR_CYAN
 #define White COLOR_WHITE
+
+#define ColorPairGrayBlack ColorPair(Magenta,Magenta)
 
 #define KEY_WHEELUP KEY_F(20)
 #define KEY_WHEELDOWN KEY_F(21)
