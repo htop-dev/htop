@@ -575,7 +575,7 @@ void CRT_init(int delay, int colorScheme) {
       CRT_scrollHAmount = 20;
    else
       CRT_scrollHAmount = 5;
-   if (String_eq(CRT_termType, "xterm") || String_eq(CRT_termType, "xterm-color") || String_eq(CRT_termType, "vt220")) {
+   if (String_startsWith(CRT_termType, "xterm") || String_eq(CRT_termType, "vt220")) {
       define_key("\033[H", KEY_HOME);
       define_key("\033[F", KEY_END);
       define_key("\033[7~", KEY_HOME);
