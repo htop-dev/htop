@@ -35,7 +35,7 @@ typedef int IOPriority;
 #define IOPriority_error 0xffffffff
 
 #define IOPriority_None IOPriority_tuple(IOPRIO_CLASS_NONE, 0)
-#define IOPriority_Idle IOPriority_tuple(IOPRIO_CLASS_IDLE, 0)
+#define IOPriority_Idle IOPriority_tuple(IOPRIO_CLASS_IDLE, 7)
 
 }*/
 
