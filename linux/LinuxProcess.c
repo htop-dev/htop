@@ -352,7 +352,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
       } else if (klass == IOPRIO_CLASS_RT) {
          attr = CRT_colors[PROCESS_HIGH_PRIORITY];
          snprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
-      } else if (lp->ioPriority == IOPriority_Idle) {
+      } else if (klass == IOPRIO_CLASS_IDLE) {
          attr = CRT_colors[PROCESS_LOW_PRIORITY]; 
          snprintf(buffer, n, "id ");
       } else {
