@@ -144,7 +144,7 @@ int Platform_getMaxPid() {
    size_t size = sizeof(maxPid);
    int err = sysctlbyname("kern.pid_max", &maxPid, &size, NULL, 0);
    if (err) {
-      return 99999;
+      return 999999;
    }
    return maxPid;
 }
