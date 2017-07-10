@@ -262,7 +262,10 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
       processShadowColor = CRT_colors[PROCESS];
    }
 
-   if (number > 10000000000) {
+   if ((long long) number == -1LL) {
+      int len = snprintf(buffer, 13, "    no perm ");
+      RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
+   } else if (number > 10000000000) {
       snprintf(buffer, 13, "%11lld ", number / 1000);
       RichString_appendn(str, largeNumberColor, buffer, 5);
       RichString_appendn(str, processMegabytesColor, buffer+5, 3);

@@ -353,6 +353,15 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
    if (fd == -1) {
       process->io_rate_read_bps = -1;
       process->io_rate_write_bps = -1;
+      process->io_rchar = -1LL;
+      process->io_wchar = -1LL;
+      process->io_syscr = -1LL;
+      process->io_syscw = -1LL;
+      process->io_read_bytes = -1LL;
+      process->io_write_bytes = -1LL;
+      process->io_cancelled_write_bytes = -1LL;
+      process->io_rate_read_time = -1LL;
+      process->io_rate_write_time = -1LL;
       return;
    }
    
@@ -529,8 +538,9 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
    char filename[MAX_NAME+1];
    snprintf(filename, MAX_NAME, "%s/%s/oom_score", dirname, name);
    FILE* file = fopen(filename, "r");
-   if (!file)
+   if (!file) {
       return;
+   }
    char buffer[PROC_LINE_LENGTH + 1];
    if (fgets(buffer, PROC_LINE_LENGTH, file)) {
       unsigned int oom;
