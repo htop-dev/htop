@@ -275,3 +275,17 @@ AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
+
+if test "$my_htop_platform" = "unsupported"
+then
+   echo ""
+   echo "****************************************************************"
+   echo "WARNING! This platform is not currently supported by htop."
+   echo ""
+   echo "The code will build, but it will produce a dummy version of htop"
+   echo "which shows no processes, using the files from the unsupported/"
+   echo "directory. This is meant to be a skeleton, to be used as a"
+   echo "starting point if you are porting htop to a new platform."
+   echo "****************************************************************"
+   echo ""
+fi
