@@ -43,9 +43,9 @@ typedef struct TraceScreen_ {
 
 }*/
 
-static const char* TraceScreenFunctions[] = {"Search ", "Filter ", "AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
+static const char* const TraceScreenFunctions[] = {"Search ", "Filter ", "AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
 
-static const char* TraceScreenKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
+static const char* const TraceScreenKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
 
 static int TraceScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
 

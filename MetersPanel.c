@@ -33,16 +33,16 @@ struct MetersPanel_ {
 
 // Note: In code the meters are known to have bar/text/graph "Modes", but in UI
 // we call them "Styles".
-static const char* MetersFunctions[] = {"Style ", "Move  ", "                                       ", "Delete", "Done  ", NULL};
-static const char* MetersKeys[] = {"Space", "Enter", "  ", "Del", "F10"};
+static const char* const MetersFunctions[] = {"Style ", "Move  ", "                                       ", "Delete", "Done  ", NULL};
+static const char* const MetersKeys[] = {"Space", "Enter", "  ", "Del", "F10"};
 static int MetersEvents[] = {' ', 13, ERR, KEY_DC, KEY_F(10)};
 
 // We avoid UTF-8 arrows ← → here as they might display full-width on Chinese
 // terminals, breaking our aligning.
 // In <http://unicode.org/reports/tr11/>, arrows (U+2019..U+2199) are
 // considered "Ambiguous characters".
-static const char* MetersMovingFunctions[] = {"Style ", "Lock  ", "Up    ", "Down  ", "Left  ", "Right ", "       ", "Delete", "Done  ", NULL};
-static const char* MetersMovingKeys[] = {"Space", "Enter", "Up", "Dn", "<-", "->", "  ", "Del", "F10"};
+static const char* const MetersMovingFunctions[] = {"Style ", "Lock  ", "Up    ", "Down  ", "Left  ", "Right ", "       ", "Delete", "Done  ", NULL};
+static const char* const MetersMovingKeys[] = {"Space", "Enter", "Up", "Dn", "<-", "->", "  ", "Del", "F10"};
 static int MetersMovingEvents[] = {' ', 13, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ERR, KEY_DC, KEY_F(10)};
 static FunctionBar* Meters_movingBar = NULL;
 

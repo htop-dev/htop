@@ -28,21 +28,21 @@ typedef struct FunctionBar_ {
 
 }*/
 
-static const char* FunctionBar_FKeys[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", NULL};
+static const char* const FunctionBar_FKeys[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", NULL};
 
-static const char* FunctionBar_FLabels[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", NULL};
+static const char* const FunctionBar_FLabels[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", NULL};
 
 static int FunctionBar_FEvents[] = {KEY_F(1), KEY_F(2), KEY_F(3), KEY_F(4), KEY_F(5), KEY_F(6), KEY_F(7), KEY_F(8), KEY_F(9), KEY_F(10)};
 
-static const char* FunctionBar_EnterEscKeys[] = {"Enter", "Esc", NULL};
-static int FunctionBar_EnterEscEvents[] = {13, 27};
+static const char* const FunctionBar_EnterEscKeys[] = {"Enter", "Esc", NULL};
+static const int FunctionBar_EnterEscEvents[] = {13, 27};
 
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
    const char* functions[] = {enter, esc, NULL};
    return FunctionBar_new(functions, FunctionBar_EnterEscKeys, FunctionBar_EnterEscEvents);
 }
 
-FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* events) {
+FunctionBar* FunctionBar_new(const char* const* functions, const char* const* keys, const int* events) {
    FunctionBar* this = xCalloc(1, sizeof(FunctionBar));
    this->functions = xCalloc(16, sizeof(char*));
    if (!functions) {

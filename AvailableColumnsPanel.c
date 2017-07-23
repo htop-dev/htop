@@ -26,7 +26,7 @@ typedef struct AvailableColumnsPanel_ {
 
 }*/
 
-static const char* AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void AvailableColumnsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
