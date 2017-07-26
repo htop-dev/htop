@@ -9,6 +9,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#if HAVE_SETUID_ENABLED
+#endif
+
 #define ColorIndex(i,j) ((7-i)*8+j)
 
 #define ColorPair(i,j) COLOR_PAIR(ColorIndex(i,j))
@@ -153,6 +156,25 @@ char* CRT_termType;
 extern int CRT_colorScheme;
 
 void *backtraceArray[128];
+
+#if HAVE_SETUID_ENABLED
+
+#define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
+
+void CRT_dropPrivileges();
+
+void CRT_restorePrivileges();
+
+#else
+
+/* Turn setuid operations into NOPs */
+
+#ifndef CRT_dropPrivileges
+#define CRT_dropPrivileges()
+#define CRT_restorePrivileges()
+#endif
+
+#endif
 
 // TODO: pass an instance of Settings instead.
 

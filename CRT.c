@@ -5,6 +5,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "CRT.h"
 
 #include "StringUtils.h"
@@ -17,6 +18,10 @@ in the source distribution for its full text.
 #include <string.h>
 #include <locale.h>
 #include <langinfo.h>
+#if HAVE_SETUID_ENABLED
+#include <unistd.h>
+#include <sys/types.h>
+#endif
 
 #define ColorIndex(i,j) ((7-i)*8+j)
 
@@ -544,6 +549,48 @@ static void CRT_handleSIGTERM(int sgn) {
    CRT_done();
    exit(0);
 }
+
+#if HAVE_SETUID_ENABLED
+
+static int CRT_euid = -1;
+
+static int CRT_egid = -1;
+
+#define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
+
+void CRT_dropPrivileges() {
+   CRT_egid = getegid();
+   CRT_euid = geteuid();
+   if (setegid(getgid()) == -1) {
+      DIE("Fatal error: failed dropping group privileges.\n");
+   }
+   if (seteuid(getuid()) == -1) {
+      DIE("Fatal error: failed dropping user privileges.\n");
+   }
+}
+
+void CRT_restorePrivileges() {
+   if (CRT_egid == -1 || CRT_euid == -1) {
+      DIE("Fatal error: internal inconsistency.\n");
+   }
+   if (setegid(CRT_egid) == -1) {
+      DIE("Fatal error: failed restoring group privileges.\n");
+   }
+   if (seteuid(CRT_euid) == -1) {
+      DIE("Fatal error: failed restoring user privileges.\n");
+   }
+}
+
+#else
+
+/* Turn setuid operations into NOPs */
+
+#ifndef CRT_dropPrivileges
+#define CRT_dropPrivileges()
+#define CRT_restorePrivileges()
+#endif
+
+#endif
 
 // TODO: pass an instance of Settings instead.
 

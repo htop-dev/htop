@@ -165,11 +165,10 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
 
 static bool Settings_read(Settings* this, const char* fileName) {
    FILE* fd;
-   uid_t euid = geteuid();
-
-   (void) seteuid(getuid());
+   
+   CRT_dropPrivileges();
    fd = fopen(fileName, "r");
-   (void) seteuid(euid);
+   CRT_restorePrivileges();
    if (!fd)
       return false;
    
@@ -278,11 +277,11 @@ static void writeMeterModes(Settings* this, FILE* fd, int column) {
 
 bool Settings_write(Settings* this) {
    FILE* fd;
-   uid_t euid = geteuid();
 
-   (void) seteuid(getuid());
+   CRT_dropPrivileges();
    fd = fopen(this->filename, "w");
-   (void) seteuid(euid);
+   CRT_restorePrivileges();
+
    if (fd == NULL) {
       return false;
    }
@@ -368,8 +367,8 @@ Settings* Settings_new(int cpuCount) {
          htopDir = String_cat(home, "/.config/htop");
       }
       legacyDotfile = String_cat(home, "/.htoprc");
-      uid_t euid = geteuid();
-      (void) seteuid(getuid());
+      
+      CRT_dropPrivileges();
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
       free(htopDir);
@@ -382,7 +381,7 @@ Settings* Settings_new(int cpuCount) {
          free(legacyDotfile);
          legacyDotfile = NULL;
       }
-      (void) seteuid(euid);
+      CRT_restorePrivileges();
    }
    this->colorScheme = 0;
    this->changed = false;
