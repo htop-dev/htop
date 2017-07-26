@@ -254,23 +254,29 @@ static bool Settings_read(Settings* this, const char* fileName) {
 
 static void writeFields(FILE* fd, ProcessField* fields, const char* name) {
    fprintf(fd, "%s=", name);
+   const char* sep = "";
    for (int i = 0; fields[i]; i++) {
       // This "-1" is for compatibility with the older enum format.
-      fprintf(fd, "%d ", (int) fields[i]-1);
+      fprintf(fd, "%s%d", sep, (int) fields[i]-1);
+      sep = " ";
    }
    fprintf(fd, "\n");
 }
 
 static void writeMeters(Settings* this, FILE* fd, int column) {
+   const char* sep = "";
    for (int i = 0; i < this->columns[column].len; i++) {
-      fprintf(fd, "%s ", this->columns[column].names[i]);
+      fprintf(fd, "%s%s", sep, this->columns[column].names[i]);
+      sep = " ";
    }
    fprintf(fd, "\n");
 }
 
 static void writeMeterModes(Settings* this, FILE* fd, int column) {
+   const char* sep = "";
    for (int i = 0; i < this->columns[column].len; i++) {
-      fprintf(fd, "%d ", this->columns[column].modes[i]);
+      fprintf(fd, "%s%d", sep, this->columns[column].modes[i]);
+      sep = " ";
    }
    fprintf(fd, "\n");
 }

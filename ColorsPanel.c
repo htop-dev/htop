@@ -34,9 +34,9 @@ typedef struct ColorsPanel_ {
 
 }*/
 
-static const char* ColorsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const ColorsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static const char* ColorSchemeNames[] = {
+static const char* const ColorSchemeNames[] = {
    "Default",
    "Monochromatic",
    "Black on White",

@@ -19,7 +19,7 @@ Panel* IOPriorityPanel_new(IOPriority currPrio) {
    Panel_setHeader(this, "IO Priority:");
    Panel_add(this, (Object*) ListItem_new("None (based on nice)", IOPriority_None));
    if (currPrio == IOPriority_None) Panel_setSelected(this, 0);
-   struct { int klass; const char* name; } classes[] = {
+   static const struct { int klass; const char* name; } classes[] = {
       { .klass = IOPRIO_CLASS_RT, .name = "Realtime" },
       { .klass = IOPRIO_CLASS_BE, .name = "Best-effort" },
       { .klass = 0, .name = NULL }

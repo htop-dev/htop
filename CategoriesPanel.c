@@ -34,7 +34,7 @@ typedef struct CategoriesPanel_ {
 
 }*/
 
-static const char* CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void CategoriesPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
