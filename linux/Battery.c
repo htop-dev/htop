@@ -41,11 +41,9 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
    unsigned int nBatteries = 0;
    memset(batteries, 0, MAX_BATTERIES * sizeof(char*));
 
-   struct dirent result;
-   struct dirent* dirEntry;
    while (nBatteries < MAX_BATTERIES) {
-      int err = readdir_r(batteryDir, &result, &dirEntry);
-      if (err || !dirEntry)
+      struct dirent* dirEntry = readdir(batteryDir);
+      if (!dirEntry)
          break;
       char* entryName = dirEntry->d_name;
       if (strncmp(entryName, "BAT", 3))
@@ -97,11 +95,9 @@ static ACPresence procAcpiCheck() {
       return AC_ERROR;
    }
 
-   struct dirent result;
-   struct dirent* dirEntry;
    for (;;) {
-      int err = readdir_r((DIR *) dir, &result, &dirEntry);
-      if (err || !dirEntry)
+      struct dirent* dirEntry = readdir((DIR *) dir);
+      if (!dirEntry)
          break;
 
       char* entryName = (char *) dirEntry->d_name;
@@ -191,11 +187,9 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
    unsigned long int totalFull = 0;
    unsigned long int totalRemain = 0;
 
-   struct dirent result;
-   struct dirent* dirEntry;
    for (;;) {
-      int err = readdir_r((DIR *) dir, &result, &dirEntry);
-      if (err || !dirEntry)
+      struct dirent* dirEntry = readdir((DIR *) dir);
+      if (!dirEntry)
          break;
       char* entryName = (char *) dirEntry->d_name;
       const char filePath[50];
