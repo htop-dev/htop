@@ -31,7 +31,7 @@ typedef bool(*MainPanel_ForeachProcessFn)(Process*, size_t);
 
 }*/
 
-static const char* MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
+static const char* const MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
 
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
    FunctionBar* bar = MainPanel_getFunctionBar(this);

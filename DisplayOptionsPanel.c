@@ -28,7 +28,7 @@ typedef struct DisplayOptionsPanel_ {
 
 }*/
 
-static const char* DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void DisplayOptionsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;

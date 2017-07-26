@@ -52,8 +52,8 @@ static void IncMode_reset(IncMode* mode) {
    mode->buffer[0] = 0;
 }
 
-static const char* searchFunctions[] = {"Next  ", "Cancel ", " Search: ", NULL};
-static const char* searchKeys[] = {"F3", "Esc", "  "};
+static const char* const searchFunctions[] = {"Next  ", "Cancel ", " Search: ", NULL};
+static const char* const searchKeys[] = {"F3", "Esc", "  "};
 static int searchEvents[] = {KEY_F(3), 27, ERR};
 
 static inline void IncMode_initSearch(IncMode* search) {
@@ -62,8 +62,8 @@ static inline void IncMode_initSearch(IncMode* search) {
    search->isFilter = false;
 }
 
-static const char* filterFunctions[] = {"Done  ", "Clear ", " Filter: ", NULL};
-static const char* filterKeys[] = {"Enter", "Esc", "  "};
+static const char* const filterFunctions[] = {"Done  ", "Clear ", " Filter: ", NULL};
+static const char* const filterKeys[] = {"Enter", "Esc", "  "};
 static int filterEvents[] = {13, 27, ERR};
 
 static inline void IncMode_initFilter(IncMode* filter) {

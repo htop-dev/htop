@@ -24,7 +24,7 @@ typedef struct FunctionBar_ {
 
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc);
 
-FunctionBar* FunctionBar_new(const char** functions, const char** keys, int* events);
+FunctionBar* FunctionBar_new(const char* const* functions, const char* const* keys, const int* events);
 
 void FunctionBar_delete(FunctionBar* this);
 
