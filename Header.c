@@ -91,9 +91,9 @@ void Header_writeBackToSettings(const Header* this) {
          Meter* meter = (Meter*) Vector_get(vec, i);
          char* name = xCalloc(64, sizeof(char));
          if (meter->param) {
-            snprintf(name, 63, "%s(%d)", As_Meter(meter)->name, meter->param);
+            xSnprintf(name, 63, "%s(%d)", As_Meter(meter)->name, meter->param);
          } else {
-            snprintf(name, 63, "%s", As_Meter(meter)->name);
+            xSnprintf(name, 63, "%s", As_Meter(meter)->name);
          }
          colSettings->names[i] = name;
          colSettings->modes[i] = meter->mode;
@@ -155,7 +155,7 @@ char* Header_readMeterName(Header* this, int i, int column) {
    strncpy(name, Meter_name(meter), nameLen);
    name[nameLen] = '\0';
    if (meter->param)
-      snprintf(name + nameLen, len - nameLen, "(%d)", meter->param);
+      xSnprintf(name + nameLen, len - nameLen, "(%d)", meter->param);
 
    return name;
 }

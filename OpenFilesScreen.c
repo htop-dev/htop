@@ -77,7 +77,7 @@ void OpenFilesScreen_draw(InfoScreen* this) {
 
 static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    char command[1025];
-   snprintf(command, 1024, "lsof -P -p %d -F 2> /dev/null", pid);
+   xSnprintf(command, 1024, "lsof -P -p %d -F 2> /dev/null", pid);
    FILE* fd = popen(command, "r");
    OpenFiles_ProcessData* pdata = xCalloc(1, sizeof(OpenFiles_ProcessData));
    OpenFiles_FileData* fdata = NULL;
@@ -131,7 +131,7 @@ void OpenFilesScreen_scan(InfoScreen* this) {
          int lenN = data['n'] ? strlen(data['n']) : 0;
          int sizeEntry = 5 + 7 + 10 + 10 + 10 + lenN + 5 /*spaces*/ + 1 /*null*/;
          char* entry = xMalloc(sizeEntry);
-         snprintf(entry, sizeEntry, "%5.5s %7.7s %10.10s %10.10s %10.10s %s",
+         xSnprintf(entry, sizeEntry, "%5.5s %7.7s %10.10s %10.10s %10.10s %s",
             data['f'] ? data['f'] : "",
             data['t'] ? data['t'] : "",
             data['D'] ? data['D'] : "",

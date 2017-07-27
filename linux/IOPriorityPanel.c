@@ -27,7 +27,7 @@ Panel* IOPriorityPanel_new(IOPriority currPrio) {
    for (int c = 0; classes[c].name; c++) {
       for (int i = 0; i < 8; i++) {
          char name[50];
-         snprintf(name, sizeof(name)-1, "%s %d %s", classes[c].name, i, i == 0 ? "(High)" : (i == 7 ? "(Low)" : ""));
+         xSnprintf(name, sizeof(name)-1, "%s %d %s", classes[c].name, i, i == 0 ? "(High)" : (i == 7 ? "(Low)" : ""));
          IOPriority ioprio = IOPriority_tuple(classes[c].klass, i);
          Panel_add(this, (Object*) ListItem_new(name, ioprio));
          if (currPrio == ioprio) Panel_setSelected(this, Panel_size(this) - 1);

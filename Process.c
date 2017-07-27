@@ -195,10 +195,10 @@ void Process_setupColumnWidths() {
    assert(digits < 20);
    for (int i = 0; Process_pidColumns[i].label; i++) {
       assert(i < 20);
-      snprintf(Process_titleBuffer[i], 20, "%*s ", digits, Process_pidColumns[i].label);
+      xSnprintf(Process_titleBuffer[i], 20, "%*s ", digits, Process_pidColumns[i].label);
       Process_fields[Process_pidColumns[i].id].title = Process_titleBuffer[i];
    }
-   snprintf(Process_pidFormat, sizeof(Process_pidFormat), "%%%dd ", digits);
+   xSnprintf(Process_pidFormat, sizeof(Process_pidFormat), "%%%dd ", digits);
 }
 
 void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
@@ -266,12 +266,12 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
       int len = snprintf(buffer, 13, "    no perm ");
       RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
    } else if (number > 10000000000) {
-      snprintf(buffer, 13, "%11lld ", number / 1000);
+      xSnprintf(buffer, 13, "%11lld ", number / 1000);
       RichString_appendn(str, largeNumberColor, buffer, 5);
       RichString_appendn(str, processMegabytesColor, buffer+5, 3);
       RichString_appendn(str, processColor, buffer+8, 4);
    } else {
-      snprintf(buffer, 13, "%11llu ", number);
+      xSnprintf(buffer, 13, "%11llu ", number);
       RichString_appendn(str, largeNumberColor, buffer, 2);
       RichString_appendn(str, processMegabytesColor, buffer+2, 3);
       RichString_appendn(str, processColor, buffer+5, 3);
@@ -288,15 +288,15 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths) {
    int hundredths = totalHundredths - (totalSeconds * 100);
    char buffer[11];
    if (hours >= 100) {
-      snprintf(buffer, 10, "%7lluh ", hours);
+      xSnprintf(buffer, 10, "%7lluh ", hours);
       RichString_append(str, CRT_colors[LARGE_NUMBER], buffer);
    } else {
       if (hours) {
-         snprintf(buffer, 10, "%2lluh", hours);
+         xSnprintf(buffer, 10, "%2lluh", hours);
          RichString_append(str, CRT_colors[LARGE_NUMBER], buffer);
-         snprintf(buffer, 10, "%02d:%02d ", minutes, seconds);
+         xSnprintf(buffer, 10, "%02d:%02d ", minutes, seconds);
       } else {
-         snprintf(buffer, 10, "%2d:%02d.%02d ", minutes, seconds, hundredths);
+         xSnprintf(buffer, 10, "%2d:%02d.%02d ", minutes, seconds, hundredths);
       }
       RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
    }
@@ -368,19 +368,19 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    switch (field) {
    case PERCENT_CPU: {
       if (this->percent_cpu > 999.9) {
-         snprintf(buffer, n, "%4d ", (unsigned int)this->percent_cpu); 
+         xSnprintf(buffer, n, "%4d ", (unsigned int)this->percent_cpu); 
       } else if (this->percent_cpu > 99.9) {
-         snprintf(buffer, n, "%3d. ", (unsigned int)this->percent_cpu); 
+         xSnprintf(buffer, n, "%3d. ", (unsigned int)this->percent_cpu); 
       } else {
-         snprintf(buffer, n, "%4.1f ", this->percent_cpu);
+         xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
       }
       break;
    }
    case PERCENT_MEM: {
       if (this->percent_mem > 99.9) {
-         snprintf(buffer, n, "100. "); 
+         xSnprintf(buffer, n, "100. "); 
       } else {
-         snprintf(buffer, n, "%4.1f ", this->percent_mem);
+         xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
       }
       break;
    }
@@ -411,7 +411,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
             n -= written;
          }
          const char* draw = CRT_treeStr[lastItem ? (this->settings->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
-         snprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
+         xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
          RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
          Process_writeCommand(this, attr, baseattr, str);
          return;
@@ -422,28 +422,28 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case M_RESIDENT: Process_humanNumber(str, this->m_resident * PAGE_SIZE_KB, coloring); return;
    case M_SIZE: Process_humanNumber(str, this->m_size * PAGE_SIZE_KB, coloring); return;
    case NICE: {
-      snprintf(buffer, n, "%3ld ", this->nice);
+      xSnprintf(buffer, n, "%3ld ", this->nice);
       attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
            : this->nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
            : attr;
       break;
    }
-   case NLWP: snprintf(buffer, n, "%4ld ", this->nlwp); break;
-   case PGRP: snprintf(buffer, n, Process_pidFormat, this->pgrp); break;
-   case PID: snprintf(buffer, n, Process_pidFormat, this->pid); break;
-   case PPID: snprintf(buffer, n, Process_pidFormat, this->ppid); break;
+   case NLWP: xSnprintf(buffer, n, "%4ld ", this->nlwp); break;
+   case PGRP: xSnprintf(buffer, n, Process_pidFormat, this->pgrp); break;
+   case PID: xSnprintf(buffer, n, Process_pidFormat, this->pid); break;
+   case PPID: xSnprintf(buffer, n, Process_pidFormat, this->ppid); break;
    case PRIORITY: {
       if(this->priority <= -100)
-         snprintf(buffer, n, " RT ");
+         xSnprintf(buffer, n, " RT ");
       else
-         snprintf(buffer, n, "%3ld ", this->priority);
+         xSnprintf(buffer, n, "%3ld ", this->priority);
       break;
    }
-   case PROCESSOR: snprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor)); break;
-   case SESSION: snprintf(buffer, n, Process_pidFormat, this->session); break;
-   case STARTTIME: snprintf(buffer, n, "%s", this->starttime_show); break;
+   case PROCESSOR: xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor)); break;
+   case SESSION: xSnprintf(buffer, n, Process_pidFormat, this->session); break;
+   case STARTTIME: xSnprintf(buffer, n, "%s", this->starttime_show); break;
    case STATE: {
-      snprintf(buffer, n, "%c ", this->state);
+      xSnprintf(buffer, n, "%c ", this->state);
       switch(this->state) {
           case 'R':
               attr = CRT_colors[PROCESS_R_STATE];
@@ -454,18 +454,18 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       }
       break;
    }
-   case ST_UID: snprintf(buffer, n, "%4d ", this->st_uid); break;
+   case ST_UID: xSnprintf(buffer, n, "%4d ", this->st_uid); break;
    case TIME: Process_printTime(str, this->time); return;
-   case TGID: snprintf(buffer, n, Process_pidFormat, this->tgid); break;
-   case TPGID: snprintf(buffer, n, Process_pidFormat, this->tpgid); break;
-   case TTY_NR: snprintf(buffer, n, "%3u:%3u ", major(this->tty_nr), minor(this->tty_nr)); break;
+   case TGID: xSnprintf(buffer, n, Process_pidFormat, this->tgid); break;
+   case TPGID: xSnprintf(buffer, n, Process_pidFormat, this->tpgid); break;
+   case TTY_NR: xSnprintf(buffer, n, "%3u:%3u ", major(this->tty_nr), minor(this->tty_nr)); break;
    case USER: {
       if (Process_getuid != (int) this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
       if (this->user) {
-         snprintf(buffer, n, "%-9s ", this->user);
+         xSnprintf(buffer, n, "%-9s ", this->user);
       } else {
-         snprintf(buffer, n, "%-9d ", this->st_uid);
+         xSnprintf(buffer, n, "%-9d ", this->st_uid);
       }
       if (buffer[9] != '\0') {
          buffer[9] = ' ';
@@ -474,7 +474,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       break;
    }
    default:
-      snprintf(buffer, n, "- ");
+      xSnprintf(buffer, n, "- ");
    }
    RichString_append(str, attr, buffer);
 }

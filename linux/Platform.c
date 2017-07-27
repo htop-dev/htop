@@ -215,7 +215,7 @@ void Platform_setSwapValues(Meter* this) {
 
 char* Platform_getProcessEnv(pid_t pid) {
    char procname[32+1];
-   snprintf(procname, 32, "/proc/%d/environ", pid);
+   xSnprintf(procname, 32, "/proc/%d/environ", pid);
    FILE* fd = fopen(procname, "r");
    char *env = NULL;
    if (fd) {

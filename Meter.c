@@ -225,16 +225,16 @@ void Meter_setMode(Meter* this, int modeIndex) {
 ListItem* Meter_toListItem(Meter* this, bool moving) {
    char mode[21];
    if (this->mode)
-      snprintf(mode, 20, " [%s]", Meter_modes[this->mode]->uiName);
+      xSnprintf(mode, 20, " [%s]", Meter_modes[this->mode]->uiName);
    else
       mode[0] = '\0';
    char number[11];
    if (this->param > 0)
-      snprintf(number, 10, " %d", this->param);
+      xSnprintf(number, 10, " %d", this->param);
    else
       number[0] = '\0';
    char buffer[51];
-   snprintf(buffer, 50, "%s%s%s", Meter_uiName(this), number, mode);
+   xSnprintf(buffer, 50, "%s%s%s", Meter_uiName(this), number, mode);
    ListItem* li = ListItem_new(buffer, 0);
    li->moving = moving;
    return li;
@@ -287,7 +287,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    
    int blockSizes[10];
 
-   snprintf(bar, w + 1, "%*s", w, buffer);
+   xSnprintf(bar, w + 1, "%*s", w, buffer);
 
    // First draw in the bar[] buffer...
    int offset = 0;

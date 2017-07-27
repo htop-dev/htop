@@ -56,7 +56,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
    unsigned long int total = 0;
    for (unsigned int i = 0; i < nBatteries; i++) {
       char infoPath[30];
-      snprintf(infoPath, sizeof infoPath, "%s%s/%s", batteryPath, batteries[i], fileName);
+      xSnprintf(infoPath, sizeof infoPath, "%s%s/%s", batteryPath, batteries[i], fileName);
 
       FILE* file = fopen(infoPath, "r");
       if (!file) {
@@ -106,7 +106,7 @@ static ACPresence procAcpiCheck() {
          continue;
 
       char statePath[50];
-      snprintf((char *) statePath, sizeof statePath, "%s/%s/state", power_supplyPath, entryName);
+      xSnprintf((char *) statePath, sizeof statePath, "%s/%s/state", power_supplyPath, entryName);
       FILE* file = fopen(statePath, "r");
 
       if (!file) {
@@ -196,7 +196,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
 
       if (entryName[0] == 'B' && entryName[1] == 'A' && entryName[2] == 'T') {
          
-         snprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
+         xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
          int fd = open(filePath, O_RDONLY);
          if (fd == -1) {
             closedir(dir);
@@ -249,7 +249,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
             continue;
          }
       
-         snprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
+         xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
          int fd = open(filePath, O_RDONLY);
          if (fd == -1) {
             closedir(dir);

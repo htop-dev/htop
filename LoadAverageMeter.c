@@ -22,17 +22,17 @@ int LoadMeter_attributes[] = { LOAD };
 
 static void LoadAverageMeter_updateValues(Meter* this, char* buffer, int size) {
    Platform_getLoadAverage(&this->values[0], &this->values[1], &this->values[2]);
-   snprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
+   xSnprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
 }
 
 static void LoadAverageMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
    char buffer[20];
-   snprintf(buffer, sizeof(buffer), "%.2f ", this->values[0]);
+   xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[0]);
    RichString_write(out, CRT_colors[LOAD_AVERAGE_ONE], buffer);
-   snprintf(buffer, sizeof(buffer), "%.2f ", this->values[1]);
+   xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[1]);
    RichString_append(out, CRT_colors[LOAD_AVERAGE_FIVE], buffer);
-   snprintf(buffer, sizeof(buffer), "%.2f ", this->values[2]);
+   xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[2]);
    RichString_append(out, CRT_colors[LOAD_AVERAGE_FIFTEEN], buffer);
 }
 
@@ -42,13 +42,13 @@ static void LoadMeter_updateValues(Meter* this, char* buffer, int size) {
    if (this->values[0] > this->total) {
       this->total = this->values[0];
    }
-   snprintf(buffer, size, "%.2f", this->values[0]);
+   xSnprintf(buffer, size, "%.2f", this->values[0]);
 }
 
 static void LoadMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
    char buffer[20];
-   snprintf(buffer, sizeof(buffer), "%.2f ", ((Meter*)this)->values[0]);
+   xSnprintf(buffer, sizeof(buffer), "%.2f ", ((Meter*)this)->values[0]);
    RichString_write(out, CRT_colors[LOAD], buffer);
 }
 

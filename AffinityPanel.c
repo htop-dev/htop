@@ -52,7 +52,7 @@ Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity) {
    int curCpu = 0;
    for (int i = 0; i < pl->cpuCount; i++) {
       char number[10];
-      snprintf(number, 9, "%d", Settings_cpuId(pl->settings, i));
+      xSnprintf(number, 9, "%d", Settings_cpuId(pl->settings, i));
       bool mode;
       if (curCpu < affinity->used && affinity->cpus[curCpu] == i) {
          mode = true;

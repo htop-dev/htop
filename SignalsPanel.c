@@ -44,7 +44,7 @@ Panel* SignalsPanel_new() {
       static char buf[15];
       for (int sig = SIGRTMIN; sig <= SIGRTMAX; i++, sig++) {
          int n = sig - SIGRTMIN;
-         snprintf(buf, 15, "%2d SIGRTMIN%-+3d", sig, n);
+         xSnprintf(buf, 15, "%2d SIGRTMIN%-+3d", sig, n);
          if (n == 0) {
             buf[11] = '\0';
          }

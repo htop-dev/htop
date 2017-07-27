@@ -296,10 +296,10 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    switch ((int)field) {
    case TTY_NR: {
       if (lp->ttyDevice) {
-         snprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
+         xSnprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
-         snprintf(buffer, n, "?        ");
+         xSnprintf(buffer, n, "?        ");
       }
       break;
    }
@@ -332,31 +332,31 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    }
    #endif
    #ifdef HAVE_OPENVZ
-   case CTID: snprintf(buffer, n, "%7u ", lp->ctid); break;
-   case VPID: snprintf(buffer, n, Process_pidFormat, lp->vpid); break;
+   case CTID: xSnprintf(buffer, n, "%7u ", lp->ctid); break;
+   case VPID: xSnprintf(buffer, n, Process_pidFormat, lp->vpid); break;
    #endif
    #ifdef HAVE_VSERVER
-   case VXID: snprintf(buffer, n, "%5u ", lp->vxid); break;
+   case VXID: xSnprintf(buffer, n, "%5u ", lp->vxid); break;
    #endif
    #ifdef HAVE_CGROUP
-   case CGROUP: snprintf(buffer, n, "%-10s ", lp->cgroup); break;
+   case CGROUP: xSnprintf(buffer, n, "%-10s ", lp->cgroup); break;
    #endif
-   case OOM: snprintf(buffer, n, Process_pidFormat, lp->oom); break;
+   case OOM: xSnprintf(buffer, n, Process_pidFormat, lp->oom); break;
    case IO_PRIORITY: {
       int klass = IOPriority_class(lp->ioPriority);
       if (klass == IOPRIO_CLASS_NONE) {
          // see note [1] above
-         snprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
+         xSnprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
       } else if (klass == IOPRIO_CLASS_BE) {
-         snprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
+         xSnprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
       } else if (klass == IOPRIO_CLASS_RT) {
          attr = CRT_colors[PROCESS_HIGH_PRIORITY];
-         snprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
+         xSnprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
       } else if (klass == IOPRIO_CLASS_IDLE) {
          attr = CRT_colors[PROCESS_LOW_PRIORITY]; 
-         snprintf(buffer, n, "id ");
+         xSnprintf(buffer, n, "id ");
       } else {
-         snprintf(buffer, n, "?? ");
+         xSnprintf(buffer, n, "?? ");
       }
       break;
    }

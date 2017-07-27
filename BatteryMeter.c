@@ -40,7 +40,7 @@ static void BatteryMeter_updateValues(Meter * this, char *buffer, int len) {
 
    if (percent == -1) {
       this->values[0] = 0;
-      snprintf(buffer, len, "n/a");
+      xSnprintf(buffer, len, "n/a");
       return;
    }
 
@@ -58,11 +58,11 @@ static void BatteryMeter_updateValues(Meter * this, char *buffer, int len) {
    }
 
    if (isOnAC == AC_PRESENT) {
-      snprintf(buffer, len, onAcText, percent);
+      xSnprintf(buffer, len, onAcText, percent);
    } else if (isOnAC == AC_ABSENT) {
-      snprintf(buffer, len, onBatteryText, percent);
+      xSnprintf(buffer, len, onBatteryText, percent);
    } else {
-      snprintf(buffer, len, unknownText, percent);
+      xSnprintf(buffer, len, unknownText, percent);
    }
 
    return;

@@ -91,8 +91,8 @@ void TraceScreen_draw(InfoScreen* this) {
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
    char buffer[1001];
-   int err = pipe(this->fdpair);
-   if (err == -1) return false;
+   int error = pipe(this->fdpair);
+   if (error == -1) return false;
    this->child = fork();
    if (this->child == -1) return false;
    if (this->child == 0) {
@@ -100,7 +100,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       dup2(this->fdpair[1], STDERR_FILENO);
       int ok = fcntl(this->fdpair[1], F_SETFL, O_NONBLOCK);
       if (ok != -1) {
-         snprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
+         xSnprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
          execlp("strace", "strace", "-p", buffer, NULL);
       }
       const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";

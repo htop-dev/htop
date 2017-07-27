@@ -20,7 +20,7 @@ int UptimeMeter_attributes[] = {
 static void UptimeMeter_updateValues(Meter* this, char* buffer, int len) {
    int totalseconds = Platform_getUptime();
    if (totalseconds == -1) {
-      snprintf(buffer, len, "(unknown)");
+      xSnprintf(buffer, len, "(unknown)");
       return;
    }
    int seconds = totalseconds % 60;
@@ -31,17 +31,17 @@ static void UptimeMeter_updateValues(Meter* this, char* buffer, int len) {
    if (days > this->total) {
       this->total = days;
    }
-   char daysbuf[15];
+   char daysbuf[32];
    if (days > 100) {
-      snprintf(daysbuf, sizeof(daysbuf), "%d days(!), ", days);
+      xSnprintf(daysbuf, sizeof(daysbuf), "%d days(!), ", days);
    } else if (days > 1) {
-      snprintf(daysbuf, sizeof(daysbuf), "%d days, ", days);
+      xSnprintf(daysbuf, sizeof(daysbuf), "%d days, ", days);
    } else if (days == 1) {
-      snprintf(daysbuf, sizeof(daysbuf), "1 day, ");
+      xSnprintf(daysbuf, sizeof(daysbuf), "1 day, ");
    } else {
       daysbuf[0] = '\0';
    }
-   snprintf(buffer, len, "%s%02d:%02d:%02d", daysbuf, hours, minutes, seconds);
+   xSnprintf(buffer, len, "%s%02d:%02d:%02d", daysbuf, hours, minutes, seconds);
 }
 
 MeterClass UptimeMeter_class = {

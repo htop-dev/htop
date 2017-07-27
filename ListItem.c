@@ -39,7 +39,7 @@ static void ListItem_display(Object* cast, RichString* out) {
    /*
    int len = strlen(this->value)+1;
    char buffer[len+1];
-   snprintf(buffer, len, "%s", this->value);
+   xSnprintf(buffer, len, "%s", this->value);
    */
    if (this->moving) {
       RichString_write(out, CRT_colors[DEFAULT_COLOR],

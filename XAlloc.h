@@ -7,6 +7,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <err.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -15,6 +16,8 @@ void* xMalloc(size_t size);
 void* xCalloc(size_t nmemb, size_t size);
 
 void* xRealloc(void* ptr, size_t size);
+
+#define xSnprintf(fmt, len, ...) do { int _l=len; int _n=snprintf(fmt, _l, __VA_ARGS__); if (!(_n > -1 && _n < _l)) { curs_set(1); endwin(); err(1, NULL); } } while(0)
 
 #undef xStrdup
 #undef xStrdup_

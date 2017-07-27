@@ -398,7 +398,7 @@ char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
       jid = jail_get(jiov, 6, 0);
       if (jid < 0) {
          if (!jail_errmsg[0])
-            snprintf(jail_errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
+            xSnprintf(jail_errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
             return NULL;
       } else if (jid == kproc->ki_jid) {
          jname = xStrdup(jnamebuf);
