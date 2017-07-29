@@ -2,8 +2,11 @@
 import os, sys, string
 try:
    from cStringIO import StringIO
-except:
-   from StringIO import StringIO
+except ImportError:
+   try:
+      from StringIO import StringIO
+   except ImportError:
+      from io import StringIO
 
 ANY=1
 COPY=2
