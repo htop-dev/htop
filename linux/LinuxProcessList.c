@@ -491,7 +491,7 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
          at++;
          left--;
       }
-      int wrote = xSnprintf(at, left, "%s", group);
+      int wrote = snprintf(at, left, "%s", group);
       left -= wrote;
    }
    fclose(file);
