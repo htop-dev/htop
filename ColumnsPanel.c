@@ -65,8 +65,8 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
          if (!this->moving) {
             break;
          }
-         /* else fallthrough */
       }
+         /* else fallthrough */
       case KEY_F(7):
       case '[':
       case '-':
@@ -81,8 +81,8 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
          if (!this->moving) {
             break;
          }
-         /* else fallthrough */
       }
+         /* else fallthrough */
       case KEY_F(8):
       case ']':
       case '+':
