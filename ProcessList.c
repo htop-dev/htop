@@ -213,23 +213,45 @@ void ProcessList_sort(ProcessList* this) {
       // Restore settings
       this->settings->sortKey = sortKey;
       this->settings->direction = direction;
-      // Take PID 1 as root and add to the new listing
       int vsize = Vector_size(this->processes);
-      Process* init = (Process*) (Vector_take(this->processes, 0));
-      if (!init) return;
-      // This assertion crashes on hardened kernels.
-      // I wonder how well tree view works on those systems.
-      // assert(init->pid == 1);
-      init->indent = 0;
-      Vector_add(this->processes2, init);
-      // Recursively empty list
-      ProcessList_buildTree(this, init->pid, 0, 0, direction, true);
-      // Add leftovers
-      while (Vector_size(this->processes)) {
-         Process* p = (Process*) (Vector_take(this->processes, 0));
-         p->indent = 0;
-         Vector_add(this->processes2, p);
-         ProcessList_buildTree(this, p->pid, 0, 0, direction, p->showChildren);
+      // Find all processes whose parent is not visible
+      int size;
+      while ((size = Vector_size(this->processes))) {
+         int i;
+         for (i = 0; i < size; i++) {
+            Process* process = (Process*)(Vector_get(this->processes, i));
+            // Immediately consume not shown processes
+            if (!process->show) {
+               process = (Process*)(Vector_take(this->processes, i));
+               process->indent = 0;
+               Vector_add(this->processes2, process);
+               ProcessList_buildTree(this, process->pid, 0, 0, direction, false);
+               break;
+            }
+            pid_t ppid = process->tgid == process->pid ? process->ppid : process->tgid;
+            // Bisect the process vector to find parent
+            int l = 0, r = size;
+            while (l < r) {
+               int c = (l + r) / 2;
+               pid_t pid = ((Process*)(Vector_get(this->processes, c)))->pid;
+               if (ppid == pid)
+                  break;
+               else if (ppid < pid)
+                  r = c;
+               else
+                  l = c + 1;
+            }
+            // If parent not found, then construct the tree with this root
+            if (l >= r) {
+               process = (Process*)(Vector_take(this->processes, i));
+               process->indent = 0;
+               Vector_add(this->processes2, process);
+               ProcessList_buildTree(this, process->pid, 0, 0, direction, process->showChildren);
+               break;
+            }
+         }
+         // There should be no loop in the process tree
+         assert(i < size);
       }
       assert(Vector_size(this->processes2) == vsize); (void)vsize;
       assert(Vector_size(this->processes) == 0);
