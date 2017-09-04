@@ -234,12 +234,13 @@ void ProcessList_sort(ProcessList* this) {
             while (l < r) {
                int c = (l + r) / 2;
                pid_t pid = ((Process*)(Vector_get(this->processes, c)))->pid;
-               if (ppid == pid)
+               if (ppid == pid) {
                   break;
-               else if (ppid < pid)
+               } else if (ppid < pid) {
                   r = c;
-               else
+               } else {
                   l = c + 1;
+               }
             }
             // If parent not found, then construct the tree with this root
             if (l >= r) {
