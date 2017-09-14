@@ -142,7 +142,7 @@ static void tagAllChildren(Panel* panel, Process* parent) {
    pid_t ppid = parent->pid;
    for (int i = 0; i < Panel_size(panel); i++) {
       Process* p = (Process*) Panel_get(panel, i);
-      if (!p->tag && p->ppid == ppid) {
+      if (!p->tag && Process_isChildOf(p, ppid)) {
          tagAllChildren(panel, p);
       }
    }

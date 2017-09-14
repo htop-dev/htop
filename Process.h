@@ -151,6 +151,8 @@ typedef struct ProcessClass_ {
 
 #define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
 
+#define Process_isChildOf(process_, pid_) (process_->tgid == pid_ || (process_->tgid == process_->pid && process_->ppid == pid_))
+
 
 #define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)

@@ -172,6 +172,8 @@ typedef struct ProcessClass_ {
 
 #define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
 
+#define Process_isChildOf(process_, pid_) (process_->tgid == pid_ || (process_->tgid == process_->pid && process_->ppid == pid_))
+
 }*/
 
 static int Process_getuid = -1;
