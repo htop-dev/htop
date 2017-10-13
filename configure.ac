@@ -2,7 +2,6 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-LT_PREREQ([2.4.0])
 AC_INIT([htop],[2.0.2],[hisham@gobolinux.org])
 
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
@@ -25,8 +24,6 @@ AM_PROG_CC_C_O
 
 # Required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
-
-#LT_INIT([disable-shared static])
 
 # Checks for platform.
 # ----------------------------------------------------------------------
