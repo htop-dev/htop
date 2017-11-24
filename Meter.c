@@ -152,7 +152,7 @@ int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
       if (value / 1024 < powi)
          break;
 
-      if (prefix[1] == 0)
+      if (prefix[1] == '\0')
          break;
 
       powi *= 1024;
