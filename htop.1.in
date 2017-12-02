@@ -49,11 +49,11 @@ The following commands are supported while in htop:
 .LP 
 .TP 5
 .B Up, Alt-k
-Select (hightlight) the previous process in the process list. Scroll the list
+Select (highlight) the previous process in the process list. Scroll the list
 if necessary.
 .TP
 .B Down, Alt-j
-Select (hightlight) the next process in the process list. Scroll the list if
+Select (highlight) the next process in the process list. Scroll the list if
 necessary.
 .TP
 .B Left, Alt-h
