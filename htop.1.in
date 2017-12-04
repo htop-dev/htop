@@ -370,6 +370,15 @@ The I/O scheduling class followed by the priority if the class supports it:
    \fBB\fR for Best-effort
    \fBid\fR for Idle
 .TP
+.B PERCENT_CPU_DELAY (CPUD%)
+The percentage of time spent waiting for a CPU (while runnable). Requires CAP_NET_ADMIN.
+.TP
+.B PERCENT_IO_DELAY (IOD%)
+The percentage of time spent waiting for the completion of synchronous block I/O. Requires CAP_NET_ADMIN.
+.TP
+.B PERCENT_SWAP_DELAY (SWAPD%)
+The percentage of time spent swapping in pages. Requires CAP_NET_ADMIN.
+.TP
 .B All other flags
 Currently unsupported (always displays '-').
 
