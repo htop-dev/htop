@@ -231,6 +231,11 @@ void ProcessList_sort(ProcessList* this) {
             pid_t ppid = process->tgid == process->pid ? process->ppid : process->tgid;
             // Bisect the process vector to find parent
             int l = 0, r = size;
+            // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)
+            // on Mac OS X 10.11.6) cancel bisecting and regard this process as
+            // root.
+            if (process->pid == ppid)
+               r = 0;
             while (l < r) {
                int c = (l + r) / 2;
                pid_t pid = ((Process*)(Vector_get(this->processes, c)))->pid;
