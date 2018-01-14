@@ -153,6 +153,8 @@ typedef struct ProcessClass_ {
 
 #define Process_isChildOf(process_, pid_) (process_->tgid == pid_ || (process_->tgid == process_->pid && process_->ppid == pid_))
 
+#define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
+
 
 #define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)
