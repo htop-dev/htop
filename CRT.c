@@ -530,8 +530,6 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
 };
 
-int CRT_cursorX = 0;
-
 int CRT_scrollHAmount = 5;
 
 int CRT_scrollWheelVAmount = 10;

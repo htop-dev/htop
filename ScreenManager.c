@@ -157,7 +157,8 @@ static void ScreenManager_drawPanels(ScreenManager* this, int focus) {
    }
 }
 
-static Panel* setCurrentPanel(Panel* panel) {
+static Panel* setCurrentPanel(ScreenManager* this, int focus) {
+   Panel* panel = (Panel*) Vector_get(this->panels, focus);
    FunctionBar_draw(panel->currentBar, NULL);
    return panel;
 }
@@ -166,7 +167,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool quit = false;
    int focus = 0;
    
-   Panel* panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+   Panel* panelFocus = setCurrentPanel(this, focus);
 
    double oldTime = 0.0;
 
@@ -189,8 +190,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
 
       int prevCh = ch;
-      set_escdelay(25);
-      ch = getch();
+      ch = Panel_getCh(panelFocus);
 
       HandlerResult result = IGNORED;
       if (ch == KEY_MOUSE) {
@@ -212,7 +212,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                            ch = KEY_MOUSE;
                            if (panel == panelFocus || this->allowFocusChange) {
                               focus = i;
-                              panelFocus = setCurrentPanel(panel);
+                              panelFocus = setCurrentPanel(this, i);
                               Object* oldSelection = Panel_getSelected(panel);
                               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
                               if (Panel_getSelected(panel) == oldSelection) {
@@ -288,7 +288,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          tryLeft:
          if (focus > 0)
             focus--;
-         panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+         panelFocus = setCurrentPanel(this, focus);
          if (Panel_size(panelFocus) == 0 && focus > 0)
             goto tryLeft;
          break;
@@ -303,7 +303,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          tryRight:
          if (focus < this->panelCount - 1)
             focus++;
-         panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+         panelFocus = setCurrentPanel(this, focus);
          if (Panel_size(panelFocus) == 0 && focus < this->panelCount - 1)
             goto tryRight;
          break;

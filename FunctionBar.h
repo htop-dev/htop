@@ -30,9 +30,9 @@ void FunctionBar_delete(FunctionBar* this);
 
 void FunctionBar_setLabel(FunctionBar* this, int event, const char* text);
 
-void FunctionBar_draw(const FunctionBar* this, char* buffer);
+int FunctionBar_draw(const FunctionBar* this, char* buffer);
 
-void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr);
+int FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr);
 
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos);
 

@@ -143,8 +143,6 @@ int* CRT_colors;
 
 extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
 
-extern int CRT_cursorX;
-
 extern int CRT_scrollHAmount;
 
 extern int CRT_scrollWheelVAmount;
