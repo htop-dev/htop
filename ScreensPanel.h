@@ -40,7 +40,7 @@ typedef struct ScreenListItem_ {
 
 extern ObjectClass ScreenListItem_class;
 
-ScreenListItem* ScreenListItem_new(const char* value, int key, ScreenSettings* ss);
+ScreenListItem* ScreenListItem_new(const char* value, ScreenSettings* ss);
 
 extern PanelClass ScreensPanel_class;
 

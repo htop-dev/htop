@@ -53,9 +53,9 @@ ObjectClass ScreenListItem_class = {
    .compare = ListItem_compare
 };
 
-ScreenListItem* ScreenListItem_new(const char* value, int key, ScreenSettings* ss) {
+ScreenListItem* ScreenListItem_new(const char* value, ScreenSettings* ss) {
    ScreenListItem* this = AllocThis(ScreenListItem);
-   ListItem_init((ListItem*)this, value, key);
+   ListItem_init((ListItem*)this, value, 0);
    this->ss = ss;
    return this;
 }
@@ -150,6 +150,17 @@ static void rebuildSettingsArray(Panel* super) {
    }
 }
 
+static void addNewScreen(Panel* super) {
+   ScreensPanel* const this = (ScreensPanel*) super;
+
+   char* name = "New";
+   ScreenSettings* ss = Settings_newScreen(this->settings, name, "PID Command");
+   ScreenListItem* item = ScreenListItem_new(name, ss);
+   int idx = Panel_getSelectedIndex(super);
+   Panel_insert(super, idx + 1, (Object*) item);
+   Panel_setSelected(super, idx + 1);
+}
+
 static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
    
@@ -190,10 +201,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       case KEY_F(5):
       case KEY_CTRL('N'):
       {
-         ListItem* item = ListItem_new("", 0);
-         int idx = Panel_getSelectedIndex(super);
-         Panel_insert(super, idx + 1, (Object*) item);
-         Panel_setSelected(super, idx + 1);
+         addNewScreen(super);
          startRenaming(super);
          shouldRebuildArray = true;
          result = HANDLED;
@@ -300,7 +308,7 @@ ScreensPanel* ScreensPanel_new(Settings* settings) {
    for (unsigned int i = 0; i < settings->nScreens; i++) {
       ScreenSettings* ss = settings->screens[i];
       char* name = ss->name;
-      Panel_add(super, (Object*) ScreenListItem_new(name, i, ss));
+      Panel_add(super, (Object*) ScreenListItem_new(name, ss));
    }
    return this;
 }
