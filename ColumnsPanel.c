@@ -22,8 +22,9 @@ in the source distribution for its full text.
 
 typedef struct ColumnsPanel_ {
    Panel super;
+   ScreenSettings* ss;
+   bool* changed;
 
-   Settings* settings;
    bool moving;
 } ColumnsPanel;
 
@@ -123,22 +124,31 @@ PanelClass ColumnsPanel_class = {
    .eventHandler = ColumnsPanel_eventHandler
 };
 
-ColumnsPanel* ColumnsPanel_new(Settings* settings) {
-   ColumnsPanel* this = AllocThis(ColumnsPanel);
+void ColumnsPanel_fill(ColumnsPanel* this, ScreenSettings* ss) {
    Panel* super = (Panel*) this;
-   FunctionBar* fuBar = FunctionBar_new(ColumnsFunctions, NULL, NULL);
-   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
-
-   this->settings = settings;
-   this->moving = false;
-   Panel_setHeader(super, "Active Columns");
-
-   ProcessField* fields = this->settings->fields;
+   Panel_prune(super);
+   ProcessField* fields = ss->fields;
    for (; *fields; fields++) {
       if (Process_fields[*fields].name) {
          Panel_add(super, (Object*) ListItem_new(Process_fields[*fields].name, *fields));
       }
    }
+   this->ss = ss;
+}
+
+ColumnsPanel* ColumnsPanel_new(ScreenSettings* ss, bool* changed) {
+   ColumnsPanel* this = AllocThis(ColumnsPanel);
+   Panel* super = (Panel*) this;
+   FunctionBar* fuBar = FunctionBar_new(ColumnsFunctions, NULL, NULL);
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
+
+   this->ss = ss;
+   this->changed = changed;
+   this->moving = false;
+   Panel_setHeader(super, "Active Columns");
+   
+   ColumnsPanel_fill(this, ss);
+
    return this;
 }
 
@@ -154,14 +164,14 @@ int ColumnsPanel_fieldNameToIndex(const char* name) {
 void ColumnsPanel_update(Panel* super) {
    ColumnsPanel* this = (ColumnsPanel*) super;
    int size = Panel_size(super);
-   this->settings->changed = true;
-   this->settings->fields = xRealloc(this->settings->fields, sizeof(ProcessField) * (size+1));
-   this->settings->flags = 0;
+   *(this->changed) = true;
+   this->ss->fields = xRealloc(this->ss->fields, sizeof(ProcessField) * (size+1));
+   this->ss->flags = 0;
    for (int i = 0; i < size; i++) {
       int key = ((ListItem*) Panel_get(super, i))->key;
-      this->settings->fields[i] = key;
-      this->settings->flags |= Process_fields[key].flags;
+      this->ss->fields[i] = key;
+      this->ss->flags |= key < 1000 ? Process_fields[key].flags : 0;
    }
-   this->settings->fields[size] = 0;
+   this->ss->fields[size] = 0;
 }
 

@@ -404,7 +404,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
 long LinuxProcess_compare(const void* v1, const void* v2) {
    LinuxProcess *p1, *p2;
    Settings *settings = ((Process*)v1)->settings;
-   if (settings->direction == 1) {
+   if (settings->ss->direction == 1) {
       p1 = (LinuxProcess*)v1;
       p2 = (LinuxProcess*)v2;
    } else {
@@ -412,7 +412,7 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       p1 = (LinuxProcess*)v2;
    }
    long long diff;
-   switch ((int)settings->sortKey) {
+   switch ((int)settings->ss->sortKey) {
    case M_DRS:
       return (p2->m_drs - p1->m_drs);
    case M_DT:

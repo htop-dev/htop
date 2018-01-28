@@ -393,7 +393,8 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
          attr = CRT_colors[PROCESS_THREAD];
          baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
       }
-      if (!this->settings->treeView || this->indent == 0) {
+      ScreenSettings* ss = this->settings->ss;
+      if (!ss->treeView || this->indent == 0) {
          Process_writeCommand(this, attr, baseattr, str);
          return;
       } else {
@@ -414,7 +415,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
             buf += written;
             n -= written;
          }
-         const char* draw = CRT_treeStr[lastItem ? (this->settings->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
+         const char* draw = CRT_treeStr[lastItem ? (ss->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
          xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
          RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
          Process_writeCommand(this, attr, baseattr, str);
@@ -485,7 +486,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
 
 void Process_display(Object* cast, RichString* out) {
    Process* this = (Process*) cast;
-   ProcessField* fields = this->settings->fields;
+   ProcessField* fields = this->settings->ss->fields;
    RichString_prune(out);
    for (int i = 0; fields[i]; i++)
       As_Process(this)->writeField(this, out, fields[i]);
@@ -555,14 +556,15 @@ long Process_pidCompare(const void* v1, const void* v2) {
 long Process_compare(const void* v1, const void* v2) {
    Process *p1, *p2;
    Settings *settings = ((Process*)v1)->settings;
-   if (settings->direction == 1) {
+   ScreenSettings* ss = settings->ss;
+   if (ss->direction == 1) {
       p1 = (Process*)v1;
       p2 = (Process*)v2;
    } else {
       p2 = (Process*)v1;
       p1 = (Process*)v2;
    }
-   switch (settings->sortKey) {
+   switch (ss->sortKey) {
    case PERCENT_CPU:
       return (p2->percent_cpu > p1->percent_cpu ? 1 : -1);
    case PERCENT_MEM:

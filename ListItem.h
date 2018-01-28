@@ -19,7 +19,13 @@ typedef struct ListItem_ {
 } ListItem;
 
 
+void ListItem_delete(Object* cast);
+
+void ListItem_display(Object* cast, RichString* out);
+
 extern ObjectClass ListItem_class;
+
+void ListItem_init(ListItem* this, const char* value, int key);
 
 ListItem* ListItem_new(const char* value, int key);
 
