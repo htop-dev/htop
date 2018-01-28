@@ -29,26 +29,33 @@ typedef struct {
    int* modes;
 } MeterColumnSettings;
 
+typedef struct {
+   char* name;
+   ProcessField* fields;
+   int flags;
+   int direction;
+   ProcessField sortKey;
+   bool treeView;
+} ScreenSettings;
+
 typedef struct Settings_ {
    char* filename;
    
-   MeterColumnSettings columns[2];
+   MeterColumnSettings meterColumns[2];
 
-   char** screens;
-   int nScreens;
+   ScreenSettings** screens;
+   unsigned int nScreens;
+   unsigned int ssIndex;
+   ScreenSettings* ss;
 
-   ProcessField* fields;
    int flags;
    int colorScheme;
    int delay;
 
    int cpuCount;
-   int direction;
-   ProcessField sortKey;
 
    bool countCPUsFromZero;
    bool detailedCPUTime;
-   bool treeView;
    bool showProgramPath;
    bool hideThreads;
    bool shadowOtherUsers;
@@ -80,8 +87,10 @@ static void writeList(FILE* fd, char** list, int len) {
    fprintf(fd, "\n");
 }
 
-static char** readQuotedList(char* line, int* size) {
-   *size = 0;
+/*
+
+static char** readQuotedList(char* line) {
+   int n = 0;
    char** list = xCalloc(sizeof(char*), 1);
    int start = 0;
    for (;;) {
@@ -100,50 +109,51 @@ static char** readQuotedList(char* line, int* size) {
       char* item = xMalloc(len + 1);
       strncpy(item, line + start, len);
       item[len] = '\0';
-      list[*size] = item;
-      (*size)++;
-      list = xRealloc(list, sizeof(char*) * (*size + 1));
+      list[n] = item;
+      n++;
+      list = xRealloc(list, sizeof(char*) * (n + 1));
       start = close + 1;
    }
-   list[*size] = NULL;
+   list[n] = NULL;
    return list;
 }
 
-static void writeQuotedList(FILE* fd, char** list, int len) {
+static void writeQuotedList(FILE* fd, char** list) {
    const char* sep = "";
-   for (int i = 0; i < len; i++) {
+   for (int i = 0; list[i]; i++) {
       fprintf(fd, "%s\"%s\"", sep, list[i]);
       sep = " ";
    }
    fprintf(fd, "\n");
 }
 
+*/
+
 void Settings_delete(Settings* this) {
    free(this->filename);
-   free(this->fields);
-   for (unsigned int i = 0; i < (sizeof(this->columns)/sizeof(MeterColumnSettings)); i++) {
-      String_freeArray(this->columns[i].names);
-      free(this->columns[i].modes);
+   for (unsigned int i = 0; i < (sizeof(this->meterColumns)/sizeof(MeterColumnSettings)); i++) {
+      String_freeArray(this->meterColumns[i].names);
+      free(this->meterColumns[i].modes);
    }
-   String_freeArray(this->screens);
+   if (this->screens) {
+      for (unsigned int i = 0; this->screens[i]; i++) {
+         free(this->screens[i]->name);
+         free(this->screens[i]->fields);
+      }
+      free(this->screens);
+   }
    free(this);
 }
 
-static void Settings_readMeters(Settings* this, char* line, int column) {
+static void Settings_readMeters(Settings* this, char* line, int side) {
    char* trim = String_trim(line);
    int nIds;
    char** ids = String_split(trim, ' ', &nIds);
    free(trim);
-   this->columns[column].names = ids;
+   this->meterColumns[side].names = ids;
 }
 
-static void Settings_readScreens(Settings* this, char* line) {
-   char* trim = String_trim(line);
-   this->screens = readQuotedList(trim, &(this->nScreens));
-   free(trim);
-}
-
-static void Settings_readMeterModes(Settings* this, char* line, int column) {
+static void Settings_readMeterModes(Settings* this, char* line, int side) {
    char* trim = String_trim(line);
    int nIds;
    char** ids = String_split(trim, ' ', &nIds);
@@ -152,13 +162,13 @@ static void Settings_readMeterModes(Settings* this, char* line, int column) {
    for (int i = 0; ids[i]; i++) {
       len++;
    }
-   this->columns[column].len = len;
+   this->meterColumns[side].len = len;
    int* modes = xCalloc(len, sizeof(int));
    for (int i = 0; i < len; i++) {
       modes[i] = atoi(ids[i]);
    }
    String_freeArray(ids);
-   this->columns[column].modes = modes;
+   this->meterColumns[side].modes = modes;
 }
 
 static void Settings_defaultMeters(Settings* this) {
@@ -167,44 +177,54 @@ static void Settings_defaultMeters(Settings* this) {
       sizes[1]++;
    }
    for (int i = 0; i < 2; i++) {
-      this->columns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
-      this->columns[i].modes = xCalloc(sizes[i], sizeof(int));
-      this->columns[i].len = sizes[i];
+      this->meterColumns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
+      this->meterColumns[i].modes = xCalloc(sizes[i], sizeof(int));
+      this->meterColumns[i].len = sizes[i];
    }
    
    int r = 0;
    if (this->cpuCount > 8) {
-      this->columns[0].names[0] = xStrdup("LeftCPUs2");
-      this->columns[0].modes[0] = BAR_METERMODE;
-      this->columns[1].names[r] = xStrdup("RightCPUs2");
-      this->columns[1].modes[r++] = BAR_METERMODE;
+      this->meterColumns[0].names[0] = xStrdup("LeftCPUs2");
+      this->meterColumns[0].modes[0] = BAR_METERMODE;
+      this->meterColumns[1].names[r] = xStrdup("RightCPUs2");
+      this->meterColumns[1].modes[r++] = BAR_METERMODE;
    } else if (this->cpuCount > 4) {
-      this->columns[0].names[0] = xStrdup("LeftCPUs");
-      this->columns[0].modes[0] = BAR_METERMODE;
-      this->columns[1].names[r] = xStrdup("RightCPUs");
-      this->columns[1].modes[r++] = BAR_METERMODE;
+      this->meterColumns[0].names[0] = xStrdup("LeftCPUs");
+      this->meterColumns[0].modes[0] = BAR_METERMODE;
+      this->meterColumns[1].names[r] = xStrdup("RightCPUs");
+      this->meterColumns[1].modes[r++] = BAR_METERMODE;
    } else {
-      this->columns[0].names[0] = xStrdup("AllCPUs");
-      this->columns[0].modes[0] = BAR_METERMODE;
+      this->meterColumns[0].names[0] = xStrdup("AllCPUs");
+      this->meterColumns[0].modes[0] = BAR_METERMODE;
    }
-   this->columns[0].names[1] = xStrdup("Memory");
-   this->columns[0].modes[1] = BAR_METERMODE;
-   this->columns[0].names[2] = xStrdup("Swap");
-   this->columns[0].modes[2] = BAR_METERMODE;
+   this->meterColumns[0].names[1] = xStrdup("Memory");
+   this->meterColumns[0].modes[1] = BAR_METERMODE;
+   this->meterColumns[0].names[2] = xStrdup("Swap");
+   this->meterColumns[0].modes[2] = BAR_METERMODE;
    
-   this->columns[1].names[r] = xStrdup("Tasks");
-   this->columns[1].modes[r++] = TEXT_METERMODE;
-   this->columns[1].names[r] = xStrdup("LoadAverage");
-   this->columns[1].modes[r++] = TEXT_METERMODE;
-   this->columns[1].names[r] = xStrdup("Uptime");
-   this->columns[1].modes[r++] = TEXT_METERMODE;
+   this->meterColumns[1].names[r] = xStrdup("Tasks");
+   this->meterColumns[1].modes[r++] = TEXT_METERMODE;
+   this->meterColumns[1].names[r] = xStrdup("LoadAverage");
+   this->meterColumns[1].modes[r++] = TEXT_METERMODE;
+   this->meterColumns[1].names[r] = xStrdup("Uptime");
+   this->meterColumns[1].modes[r++] = TEXT_METERMODE;
 }
 
-static void Settings_defaultScreens(Settings* this) {
-   this->screens = xMalloc(sizeof(char*) * 3);
-   this->screens[0] = xStrdup("Overview");
-   this->screens[1] = xStrdup("I/O");
-   this->screens[2] = NULL;
+static int toFieldIndex(const char* str) {
+   if (isdigit(str[0])) {
+      // This "+1" is for compatibility with the older enum format.
+      int id = atoi(str) + 1;
+      if (Process_fields[id].name && id < Platform_numberOfFields) {
+         return id;
+      }
+   } else {
+      for (int p = 1; p < LAST_PROCESSFIELD; p++) {
+         if (Process_fields[p].name && strcmp(Process_fields[p].name, str) == 0) {
+            return p;
+         }
+      }
+   }
+   return -1;
 }
 
 static void readFields(ProcessField* fields, int* flags, const char* line) {
@@ -215,16 +235,34 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
    int i, j;
    *flags = 0;
    for (j = 0, i = 0; i < Platform_numberOfFields && ids[i]; i++) {
-      // This "+1" is for compatibility with the older enum format.
-      int id = atoi(ids[i]) + 1;
-      if (id > 0 && Process_fields[id].name && id < Platform_numberOfFields) {
-         fields[j] = id;
-         *flags |= Process_fields[id].flags;
+      int idx = toFieldIndex(ids[i]);
+      if (idx != -1) {
+         fields[j] = idx;
+         *flags |= Process_fields[idx].flags;
          j++;
       }
    }
    fields[j] = NULL_PROCESSFIELD;
    String_freeArray(ids);
+}
+
+static void Settings_readScreen(Settings* this, const char* name, const char* line) {
+   ScreenSettings* ss = xCalloc(sizeof(ScreenSettings), 1);
+   ss->name = xStrdup(name);
+   ss->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
+   ss->flags = 0;
+   ss->direction = 1;
+   ss->treeView = 0;
+   readFields(ss->fields, &(ss->flags), line);
+   this->screens[this->nScreens] = ss;
+   this->nScreens++;
+   this->screens = xRealloc(this->screens, sizeof(ScreenSettings*) * (this->nScreens + 1));
+   this->screens[this->nScreens] = NULL;
+}
+
+static void Settings_defaultScreens(Settings* this) {
+   Settings_readScreen(this, "Default", "PID USER PRIORITY NICE M_SIZE M_RESIDENT M_SHARE STATE PERCENT_CPU PERCENT_MEM TIME Command");
+   Settings_readScreen(this, "I/O", "PID IO_PRIORITY USER IO_READ_RATE IO_WRITE_RATE Command");
 }
 
 static bool Settings_read(Settings* this, const char* fileName) {
@@ -237,6 +275,9 @@ static bool Settings_read(Settings* this, const char* fileName) {
       return false;
    
    bool readMeters = false;
+   ProcessField* legacyFields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
+   int legacyFlags;
+   bool legacyFieldsRead = false;
    for (;;) {
       char* line = String_readLine(fd);
       if (!line) {
@@ -250,14 +291,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          continue;
       }
       if (String_eq(option[0], "fields")) {
-         readFields(this->fields, &(this->flags), option[1]);
-      } else if (String_eq(option[0], "sort_key")) {
-         // This "+1" is for compatibility with the older enum format.
-         this->sortKey = atoi(option[1]) + 1;
-      } else if (String_eq(option[0], "sort_direction")) {
-         this->direction = atoi(option[1]);
-      } else if (String_eq(option[0], "tree_view")) {
-         this->treeView = atoi(option[1]);
+         readFields(legacyFields, &legacyFlags, option[1]);
+         legacyFieldsRead = true;
       } else if (String_eq(option[0], "hide_threads")) {
          this->hideThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
@@ -306,14 +341,31 @@ static bool Settings_read(Settings* this, const char* fileName) {
       } else if (String_eq(option[0], "right_meter_modes")) {
          Settings_readMeterModes(this, option[1], 1);
          readMeters = true;
-      } else if (String_eq(option[0], "screens")) {
-         Settings_readScreens(this, option[1]);
+      } else if (strncmp(option[0], "screen:", 7) == 0) {
+         Settings_readScreen(this, option[0] + 7, option[1]);
+      } else if (String_eq(option[0], ".tree_view")) {
+         if (this->nScreens > 0) {
+            this->screens[this->nScreens - 1]->treeView = atoi(option[1]);
+         }
+      } else if (String_eq(option[0], ".sort_direction")) {
+         if (this->nScreens > 0) {
+            this->screens[this->nScreens - 1]->direction = atoi(option[1]);
+         }
+      } else if (String_eq(option[0], ".sort_key")) {
+         if (this->nScreens > 0) {
+            this->screens[this->nScreens - 1]->sortKey = toFieldIndex(option[1]);
+         }
       }
       String_freeArray(option);
    }
    fclose(fd);
-   if (!this->screens) {
+   if (this->nScreens == 0) {
       Settings_defaultScreens(this);
+      if (legacyFieldsRead) {
+         free(this->screens[0]->fields);
+         this->screens[0]->fields = legacyFields;
+         this->screens[0]->flags = legacyFlags;
+      }
    }
    if (!readMeters) {
       Settings_defaultMeters(this);
@@ -321,25 +373,28 @@ static bool Settings_read(Settings* this, const char* fileName) {
    return true;
 }
 
-static void writeFields(FILE* fd, ProcessField* fields, const char* name) {
-   fprintf(fd, "%s=", name);
+static void writeFields(FILE* fd, ProcessField* fields, bool byName) {
    const char* sep = "";
    for (int i = 0; fields[i]; i++) {
-      // This "-1" is for compatibility with the older enum format.
-      fprintf(fd, "%s%d", sep, (int) fields[i]-1);
+      if (byName) {
+         fprintf(fd, "%s%s", sep, Process_fields[fields[i]].name);
+      } else {
+         // This " - 1" is for compatibility with the older enum format.
+         fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
+      }
       sep = " ";
    }
    fprintf(fd, "\n");
 }
 
-static void writeMeters(Settings* this, FILE* fd, int column) {
-   writeList(fd, this->columns[column].names, this->columns[column].len);
+static void writeMeters(Settings* this, FILE* fd, int side) {
+   writeList(fd, this->meterColumns[side].names, this->meterColumns[side].len);
 }
 
-static void writeMeterModes(Settings* this, FILE* fd, int column) {
+static void writeMeterModes(Settings* this, FILE* fd, int side) {
    const char* sep = "";
-   for (int i = 0; i < this->columns[column].len; i++) {
-      fprintf(fd, "%s%d", sep, this->columns[column].modes[i]);
+   for (int i = 0; i < this->meterColumns[side].len; i++) {
+      fprintf(fd, "%s%d", sep, this->meterColumns[side].modes[i]);
       sep = " ";
    }
    fprintf(fd, "\n");
@@ -357,10 +412,7 @@ bool Settings_write(Settings* this) {
    }
    fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
    fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
-   writeFields(fd, this->fields, "fields");
-   // This "-1" is for compatibility with the older enum format.
-   fprintf(fd, "sort_key=%d\n", (int) this->sortKey-1);
-   fprintf(fd, "sort_direction=%d\n", (int) this->direction);
+   fprintf(fd, "fields="); writeFields(fd, this->screens[0]->fields, false);
    fprintf(fd, "hide_threads=%d\n", (int) this->hideThreads);
    fprintf(fd, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
    fprintf(fd, "hide_userland_threads=%d\n", (int) this->hideUserlandThreads);
@@ -370,7 +422,6 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "highlight_base_name=%d\n", (int) this->highlightBaseName);
    fprintf(fd, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
    fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
-   fprintf(fd, "tree_view=%d\n", (int) this->treeView);
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
    fprintf(fd, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
@@ -382,8 +433,16 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
    fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
    fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
-   if (this->nScreens > 0) {
-      fprintf(fd, "screens="); writeQuotedList(fd, this->screens, this->nScreens);
+   if (this->screens && this->screens[0]) {
+      for (unsigned int i = 0; i < this->nScreens; i++) {
+         ScreenSettings* ss = this->screens[i];
+         fprintf(fd, "screen:%s=", ss->name);
+         writeFields(fd, ss->fields, true);
+         fprintf(fd, ".tree_view=%d\n", (int) ss->treeView);
+         // This "-1" is for compatibility with the older enum format.
+         fprintf(fd, ".sort_key=%d\n", (int) ss->sortKey-1);
+         fprintf(fd, ".sort_direction=%d\n", (int) ss->direction);
+      }
    }
    fclose(fd);
    return true;
@@ -393,14 +452,11 @@ Settings* Settings_new(int cpuCount) {
   
    Settings* this = xCalloc(1, sizeof(Settings));
 
-   this->sortKey = PERCENT_CPU;
-   this->direction = 1;
    this->hideThreads = false;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
    this->hideKernelThreads = false;
    this->hideUserlandThreads = false;
-   this->treeView = false;
    this->highlightBaseName = false;
    this->highlightMegabytes = false;
    this->detailedCPUTime = false;
@@ -410,15 +466,8 @@ Settings* Settings_new(int cpuCount) {
    this->showProgramPath = true;
    this->highlightThreads = true;
    
-   this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
-   // TODO: turn 'fields' into a Vector,
-   // (and ProcessFields into proper objects).
-   this->flags = 0;
-   ProcessField* defaults = Platform_defaultFields;
-   for (int i = 0; defaults[i]; i++) {
-      this->fields[i] = defaults[i];
-      this->flags |= Process_fields[defaults[i]].flags;
-   }
+   this->screens = xCalloc(sizeof(ScreenSettings*), 1);
+   this->nScreens = 0;
 
    char* legacyDotfile = NULL;
    char* rcfile = getenv("HTOPRC");
@@ -481,11 +530,15 @@ Settings* Settings_new(int cpuCount) {
          this->headerMargin = true;
       }
    }
+
+   this->ssIndex = 0;
+   this->ss = this->screens[this->ssIndex];
+
    free(legacyDotfile);
    return this;
 }
 
-void Settings_invertSortOrder(Settings* this) {
+void ScreenSettings_invertSortOrder(ScreenSettings* this) {
    if (this->direction == 1)
       this->direction = -1;
    else

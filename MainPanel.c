@@ -67,15 +67,17 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    
    Htop_Reaction reaction = HTOP_OK;
 
+   Settings* settings = this->state->settings;
+   ScreenSettings* ss = settings->ss;
+
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
       ProcessList* pl = this->state->pl;
-      Settings* settings = this->state->settings;
       int hx = super->scrollH + x + 1;
       ProcessField field = ProcessList_keyAt(pl, hx);
-      if (field == settings->sortKey) {
-         Settings_invertSortOrder(settings);
-         settings->treeView = false;
+      if (field == ss->sortKey) {
+         ScreenSettings_invertSortOrder(ss);
+         ss->treeView = false;
       } else {
          reaction |= Action_setSortKey(settings, field);
       }
@@ -108,8 +110,8 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    }
 
    if (reaction & HTOP_REDRAW_BAR) {
-      MainPanel_updateTreeFunctions(this, this->state->settings->treeView);
-      IncSet_drawBar(this->inc);
+      MainPanel_updateTreeFunctions(this, settings->ss->treeView);
+      IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
    }
    if (reaction & HTOP_UPDATE_PANELHDR) {
       ProcessList_printHeader(this->state->pl, Panel_getHeader(super));

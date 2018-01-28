@@ -62,7 +62,7 @@ void Header_delete(Header* this) {
 
 void Header_populateFromSettings(Header* this) {
    Header_forEachColumn(this, col) {
-      MeterColumnSettings* colSettings = &this->settings->columns[col];
+      MeterColumnSettings* colSettings = &this->settings->meterColumns[col];
       for (int i = 0; i < colSettings->len; i++) {
          Header_addMeterByName(this, colSettings->names[i], col);
          if (colSettings->modes[i] != 0) {
@@ -75,7 +75,7 @@ void Header_populateFromSettings(Header* this) {
 
 void Header_writeBackToSettings(const Header* this) {
    Header_forEachColumn(this, col) {
-      MeterColumnSettings* colSettings = &this->settings->columns[col];
+      MeterColumnSettings* colSettings = &this->settings->meterColumns[col];
       
       String_freeArray(colSettings->names);
       free(colSettings->modes);

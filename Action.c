@@ -156,9 +156,10 @@ static bool expandCollapse(Panel* panel) {
 }
 
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
-   settings->sortKey = sortKey;
-   settings->direction = 1;
-   settings->treeView = false;
+   ScreenSettings* ss = settings->ss;
+   ss->sortKey = sortKey;
+   ss->direction = 1;
+   ss->treeView = false;
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR | HTOP_KEEP_FOLLOWING;
 }
 
@@ -166,11 +167,12 @@ static Htop_Reaction sortBy(State* st) {
    Htop_Reaction reaction = HTOP_OK;
    Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
-   ProcessField* fields = st->settings->fields;
+   ScreenSettings* ss = st->settings->ss;
+   ProcessField* fields = ss->fields;
    for (int i = 0; fields[i]; i++) {
       char* name = String_trim(Process_fields[fields[i]].name);
       Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
-      if (fields[i] == st->settings->sortKey)
+      if (fields[i] == ss->sortKey)
          Panel_setSelected(sortPanel, i);
       free(name);
    }
@@ -218,8 +220,9 @@ static Htop_Reaction actionToggleProgramPath(State* st) {
 }
 
 static Htop_Reaction actionToggleTreeView(State* st) {
-   st->settings->treeView = !st->settings->treeView;
-   if (st->settings->treeView) st->settings->direction = 1;
+   ScreenSettings* ss = st->settings->ss;
+   ss->treeView = !ss->treeView;
+   if (ss->treeView) ss->direction = 1;
    ProcessList_expandTree(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
@@ -247,7 +250,7 @@ static Htop_Reaction actionLowerPriority(State* st) {
 }
 
 static Htop_Reaction actionInvertSortOrder(State* st) {
-   Settings_invertSortOrder(st->settings);
+   ScreenSettings_invertSortOrder(st->settings->ss);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
@@ -261,11 +264,21 @@ static Htop_Reaction actionExpandOrCollapse(State* st) {
 }
 
 static Htop_Reaction actionExpandCollapseOrSortColumn(State* st) {
-   return st->settings->treeView ? actionExpandOrCollapse(st) : actionSetSortColumn(st);
+   return st->settings->ss->treeView ? actionExpandOrCollapse(st) : actionSetSortColumn(st);
 }
 
 static Htop_Reaction actionQuit() {
    return HTOP_QUIT;
+}
+
+static Htop_Reaction actionNextScreen(State* st) {
+   Settings* settings = st->settings;
+   settings->ssIndex++;
+   if (settings->ssIndex == settings->nScreens) {
+      settings->ssIndex = 0;
+   }
+   settings->ss = settings->screens[settings->ssIndex];
+   return HTOP_REFRESH;
 }
 
 static Htop_Reaction actionSetAffinity(State* st) {
@@ -571,5 +584,6 @@ void Action_setBindings(Htop_Action* keys) {
    keys['U'] = actionUntagAll;
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
+   keys['\t'] = actionNextScreen;
 }
 

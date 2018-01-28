@@ -9,7 +9,6 @@ in the source distribution for its full text.
 #include "Platform.h"
 
 #include "StringUtils.h"
-#include "ListItem.h"
 #include "CRT.h"
 
 #include <assert.h>
@@ -19,7 +18,10 @@ in the source distribution for its full text.
 
 /*{
 #include "Panel.h"
+#include "ScreenManager.h"
+#include "ColumnsPanel.h"
 #include "Settings.h"
+#include "ListItem.h"
 
 #ifndef SCREEN_NAME_LEN
 #define SCREEN_NAME_LEN 20
@@ -27,8 +29,10 @@ in the source distribution for its full text.
 
 typedef struct ScreensPanel_ {
    Panel super;
-
+   
+   ScreenManager* scr;
    Settings* settings;
+   ColumnsPanel* columns;
    char buffer[SCREEN_NAME_LEN + 1];
    char* saved;
    int cursor;
@@ -36,9 +40,27 @@ typedef struct ScreensPanel_ {
    bool renaming;
 } ScreensPanel;
 
+typedef struct ScreenListItem_ {
+   ListItem super;
+   ScreenSettings* ss;
+} ScreenListItem;
+
 }*/
 
-static const char* const ScreensFunctions[] = {"      ", "Rename", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
+ObjectClass ScreenListItem_class = {
+   .display = ListItem_display,
+   .delete = ListItem_delete,
+   .compare = ListItem_compare
+};
+
+ScreenListItem* ScreenListItem_new(const char* value, int key, ScreenSettings* ss) {
+   ScreenListItem* this = AllocThis(ScreenListItem);
+   ListItem_init((ListItem*)this, value, key);
+   this->ss = ss;
+   return this;
+}
+
+static const char* const ScreensFunctions[] = {"      ", "Rename", "      ", "      ", "New   ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 
 static void ScreensPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
@@ -81,6 +103,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
             this->renaming = false;
             super->cursorOn = false;
             Panel_setSelectionColor(super, CRT_colors[PANEL_SELECTION_FOCUS]);
+            ScreensPanel_update(super);
             break;
          }
          case 27: // Esc
@@ -94,11 +117,10 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
          }
       }
    }
-   ScreensPanel_update(super);
    return HANDLED;
 }
 
-void startRenaming(Panel* super) {
+static void startRenaming(Panel* super) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
    ListItem* item = (ListItem*) Panel_getSelected(super);
@@ -115,10 +137,25 @@ void startRenaming(Panel* super) {
    Panel_setCursorToSelection(super);
 }
 
+static void rebuildSettingsArray(Panel* super) {
+   ScreensPanel* const this = (ScreensPanel*) super;
+
+   int n = Panel_size(super);
+   free(this->settings->screens);
+   this->settings->screens = xMalloc(sizeof(ScreenSettings*) * (n + 1));
+   this->settings->screens[n] = NULL;
+   for (int i = 0; i < n; i++) {
+      ScreenListItem* item = (ScreenListItem*) Panel_get(super, i);
+      this->settings->screens[i] = item->ss;
+   }
+}
+
 static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
    
    int selected = Panel_getSelectedIndex(super);
+   ScreenListItem* oldFocus = (ScreenListItem*) Panel_getSelected(super);
+   bool shouldRebuildArray = false;
    HandlerResult result = IGNORED;
    switch(ch) {
       case 0x0a:
@@ -133,27 +170,39 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
          result = HANDLED;
          break;
       }
+      case EVENT_SET_SELECTED:
+         result = HANDLED;
+         break;
+      case KEY_NPAGE:
+      case KEY_PPAGE:
+      case KEY_HOME:
+      case KEY_END: {
+         Panel_onKey(super, ch);
+         break;
+      }
       case KEY_F(2):
-      case 0x12: /* Ctrl+R */
+      case KEY_CTRL('R'):
       {
          startRenaming(super);
          result = HANDLED;
          break;
       }
       case KEY_F(5):
-      case 0x0e: /* Ctrl+N */
+      case KEY_CTRL('N'):
       {
          ListItem* item = ListItem_new("", 0);
          int idx = Panel_getSelectedIndex(super);
          Panel_insert(super, idx + 1, (Object*) item);
          Panel_setSelected(super, idx + 1);
          startRenaming(super);
+         shouldRebuildArray = true;
          result = HANDLED;
          break;
       }
       case KEY_UP:
       {
          if (!this->moving) {
+            Panel_onKey(super, ch);
             break;
          }
          /* else fallthrough */
@@ -163,12 +212,14 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       case '-':
       {
          Panel_moveSelectedUp(super);
+         shouldRebuildArray = true;
          result = HANDLED;
          break;
       }
       case KEY_DOWN:
       {
          if (!this->moving) {
+            Panel_onKey(super, ch);
             break;
          }
          /* else fallthrough */
@@ -178,13 +229,17 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       case '+':
       {
          Panel_moveSelectedDown(super);
+         shouldRebuildArray = true;
          result = HANDLED;
          break;
       }
       case KEY_F(9):
       //case KEY_DC:
       {
-         Panel_remove(super, selected);
+         if (Panel_size(super) > 1) {
+            Panel_remove(super, selected);
+         }
+         shouldRebuildArray = true;
          result = HANDLED;
          break;
       }
@@ -196,6 +251,14 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
             result = IGNORED;
          break;
       }
+   }
+   ScreenListItem* newFocus = (ScreenListItem*) Panel_getSelected(super);
+   if (oldFocus != newFocus) {
+      ColumnsPanel_fill(this->columns, newFocus->ss);
+      result = HANDLED;
+   }
+   if (shouldRebuildArray) {
+      rebuildSettingsArray(super);
    }
    if (result == HANDLED)
       ScreensPanel_update(super);
@@ -227,16 +290,17 @@ ScreensPanel* ScreensPanel_new(Settings* settings) {
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->settings = settings;
+   this->columns = ColumnsPanel_new(settings->screens[0], &(settings->changed));
    this->moving = false;
    this->renaming = false;
    super->cursorOn = false;
    this->cursor = 0;
    Panel_setHeader(super, "Screens");
 
-   char** screens = this->settings->screens;
-   for (; *screens; screens++) {
-      char* name = *screens;
-      Panel_add(super, (Object*) ListItem_new(name, 0));
+   for (unsigned int i = 0; i < settings->nScreens; i++) {
+      ScreenSettings* ss = settings->screens[i];
+      char* name = ss->name;
+      Panel_add(super, (Object*) ScreenListItem_new(name, i, ss));
    }
    return this;
 }
@@ -248,7 +312,7 @@ void ScreensPanel_update(Panel* super) {
    this->settings->screens = xRealloc(this->settings->screens, sizeof(char*) * (size+1));
    for (int i = 0; i < size; i++) {
       char* name = ((ListItem*) Panel_get(super, i))->value;
-      this->settings->screens[i] = xStrdup(name);
+      this->settings->screens[i]->name = xStrdup(name);
    }
    this->settings->screens[size] = NULL;
 }
