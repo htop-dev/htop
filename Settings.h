@@ -25,6 +25,9 @@ typedef struct Settings_ {
    
    MeterColumnSettings columns[2];
 
+   char** screens;
+   int nScreens;
+
    ProcessField* fields;
    int flags;
    int colorScheme;
