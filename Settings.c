@@ -433,6 +433,13 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
    fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
    fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
+
+   // Legacy compatibility with older versions of htop
+   fprintf(fd, "tree_view=%d\n", (int) this->screens[0]->treeView);
+   // This "-1" is for compatibility with the older enum format.
+   fprintf(fd, "sort_key=%d\n", (int) this->screens[0]->sortKey-1);
+   fprintf(fd, "sort_direction=%d\n", (int) this->screens[0]->direction);
+
    if (this->screens && this->screens[0]) {
       for (unsigned int i = 0; i < this->nScreens; i++) {
          ScreenSettings* ss = this->screens[i];
