@@ -33,6 +33,7 @@ typedef struct IncMode_ {
 typedef struct IncSet_ {
    IncMode modes[2];
    IncMode* active;
+   Panel* panel;
    FunctionBar* defaultBar;
    bool filtering;
    bool found;
@@ -45,13 +46,13 @@ IncSet* IncSet_new(FunctionBar* bar);
 
 void IncSet_delete(IncSet* this);
 
+void IncSet_activate(IncSet* this, IncType type, Panel* panel);
+
 bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines);
 
 const char* IncSet_getListItemValue(Panel* panel, int i);
 
-void IncSet_activate(IncSet* this, IncType type, Panel* panel);
-
-void IncSet_drawBar(IncSet* this);
+void IncSet_drawBar(IncSet* this, int attr);
 
 int IncSet_synthesizeEvent(IncSet* this, int x);
 

@@ -46,6 +46,7 @@ typedef struct PanelClass_ {
 struct Panel_ {
    Object super;
    int x, y, w, h;
+   int cursorX, cursorY;
    WINDOW* window;
    Vector* items;
    int selected;
@@ -55,6 +56,7 @@ struct Panel_ {
    int scrollV;
    short scrollH;
    bool needsRedraw;
+   bool cursorOn;
    FunctionBar* currentBar;
    FunctionBar* defaultBar;
    RichString header;
@@ -72,6 +74,8 @@ struct Panel_ {
 #endif
 
 #define KEY_CTRL(l) ((l)-'A'+1)
+
+void Panel_setCursorToSelection(Panel* this);
 
 extern PanelClass Panel_class;
 
@@ -122,5 +126,8 @@ void Panel_draw(Panel* this, bool focus);
 bool Panel_onKey(Panel* this, int key);
 
 HandlerResult Panel_selectByTyping(Panel* this, int ch);
+
+int Panel_getCh(Panel* this);
+
 
 #endif

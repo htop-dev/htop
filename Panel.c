@@ -57,6 +57,7 @@ typedef struct PanelClass_ {
 struct Panel_ {
    Object super;
    int x, y, w, h;
+   int cursorX, cursorY;
    WINDOW* window;
    Vector* items;
    int selected;
@@ -66,6 +67,7 @@ struct Panel_ {
    int scrollV;
    short scrollH;
    bool needsRedraw;
+   bool cursorOn;
    FunctionBar* currentBar;
    FunctionBar* defaultBar;
    RichString header;
@@ -84,6 +86,11 @@ struct Panel_ {
 #endif
 
 #define KEY_CTRL(l) ((l)-'A'+1)
+
+void Panel_setCursorToSelection(Panel* this) {
+   this->cursorY = this->y + this->selected - this->scrollV + 1;
+   this->cursorX = this->x + this->selectedLen - this->scrollH;
+}
 
 PanelClass Panel_class = {
    .super = {
@@ -112,6 +119,8 @@ void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool
    this->y = y;
    this->w = w;
    this->h = h;
+   this->cursorX = 0;
+   this->cursorY = 0;
    this->eventHandlerState = NULL;
    this->items = Vector_new(type, owner, DEFAULT_SIZE);
    this->scrollV = 0;
@@ -367,7 +376,6 @@ void Panel_draw(Panel* this, bool focus) {
       RichString_end(old);
    }
    this->oldSelected = this->selected;
-   move(0, 0);
 }
 
 bool Panel_onKey(Panel* this, int key) {
@@ -499,3 +507,15 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
    }
    return IGNORED;
 }
+
+int Panel_getCh(Panel* this) {
+   if (this->cursorOn) {
+      move(this->cursorY, this->cursorX);
+      curs_set(1);
+   } else {
+      curs_set(0);
+   }
+   set_escdelay(25);
+   return getch();
+}
+

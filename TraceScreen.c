@@ -86,7 +86,7 @@ void TraceScreen_draw(InfoScreen* this) {
    mvhline(0, 0, ' ', COLS);
    mvprintw(0, 0, "Trace of process %d - %s", this->process->pid, this->process->comm);
    attrset(CRT_colors[DEFAULT_COLOR]);
-   IncSet_drawBar(this->inc);
+   IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {

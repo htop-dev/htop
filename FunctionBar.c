@@ -96,11 +96,12 @@ void FunctionBar_setLabel(FunctionBar* this, int event, const char* text) {
    }
 }
 
-void FunctionBar_draw(const FunctionBar* this, char* buffer) {
-   FunctionBar_drawAttr(this, buffer, CRT_colors[FUNCTION_BAR]);
+int FunctionBar_draw(const FunctionBar* this, char* buffer) {
+   return FunctionBar_drawAttr(this, buffer, CRT_colors[FUNCTION_BAR]);
 }
 
-void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr) {
+int FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr) {
+   int cursorX = 0;
    attrset(CRT_colors[FUNCTION_BAR]);
    mvhline(LINES-1, 0, ' ', COLS);
    int x = 0;
@@ -115,12 +116,10 @@ void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr) {
    if (buffer) {
       attrset(attr);
       mvaddstr(LINES-1, x, buffer);
-      CRT_cursorX = x + strlen(buffer);
-      curs_set(1);
-   } else {
-      curs_set(0);
+      cursorX = x + strlen(buffer);
    }
    attrset(CRT_colors[RESET_COLOR]);
+   return cursorX;
 }
 
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos) {
