@@ -74,6 +74,8 @@ typedef struct Settings_ {
 
 void Settings_delete(Settings* this);
 
+ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char* line);
+
 bool Settings_write(Settings* this);
 
 Settings* Settings_new(int cpuCount);

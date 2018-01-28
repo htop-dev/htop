@@ -246,7 +246,7 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
    String_freeArray(ids);
 }
 
-static void Settings_readScreen(Settings* this, const char* name, const char* line) {
+ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char* line) {
    ScreenSettings* ss = xCalloc(sizeof(ScreenSettings), 1);
    ss->name = xStrdup(name);
    ss->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
@@ -258,11 +258,12 @@ static void Settings_readScreen(Settings* this, const char* name, const char* li
    this->nScreens++;
    this->screens = xRealloc(this->screens, sizeof(ScreenSettings*) * (this->nScreens + 1));
    this->screens[this->nScreens] = NULL;
+   return ss;
 }
 
 static void Settings_defaultScreens(Settings* this) {
-   Settings_readScreen(this, "Default", "PID USER PRIORITY NICE M_SIZE M_RESIDENT M_SHARE STATE PERCENT_CPU PERCENT_MEM TIME Command");
-   Settings_readScreen(this, "I/O", "PID IO_PRIORITY USER IO_READ_RATE IO_WRITE_RATE Command");
+   Settings_newScreen(this, "Default", "PID USER PRIORITY NICE M_SIZE M_RESIDENT M_SHARE STATE PERCENT_CPU PERCENT_MEM TIME Command");
+   Settings_newScreen(this, "I/O", "PID IO_PRIORITY USER IO_READ_RATE IO_WRITE_RATE Command");
 }
 
 static bool Settings_read(Settings* this, const char* fileName) {
@@ -342,7 +343,7 @@ static bool Settings_read(Settings* this, const char* fileName) {
          Settings_readMeterModes(this, option[1], 1);
          readMeters = true;
       } else if (strncmp(option[0], "screen:", 7) == 0) {
-         Settings_readScreen(this, option[0] + 7, option[1]);
+         Settings_newScreen(this, option[0] + 7, option[1]);
       } else if (String_eq(option[0], ".tree_view")) {
          if (this->nScreens > 0) {
             this->screens[this->nScreens - 1]->treeView = atoi(option[1]);
