@@ -34,6 +34,9 @@ typedef struct Settings_ {
    
    MeterColumnSettings columns[2];
 
+   char** screens;
+   int nScreens;
+
    ProcessField* fields;
    int flags;
    int colorScheme;
@@ -68,6 +71,53 @@ typedef struct Settings_ {
 
 }*/
 
+static void writeList(FILE* fd, char** list, int len) {
+   const char* sep = "";
+   for (int i = 0; i < len; i++) {
+      fprintf(fd, "%s%s", sep, list[i]);
+      sep = " ";
+   }
+   fprintf(fd, "\n");
+}
+
+static char** readQuotedList(char* line, int* size) {
+   *size = 0;
+   char** list = xCalloc(sizeof(char*), 1);
+   int start = 0;
+   for (;;) {
+      while (line[start] && line[start] == ' ') {
+         start++;
+      }
+      if (line[start] != '"') {
+         break;
+      }
+      start++;
+      int close = start;
+      while (line[close] && line[close] != '"') {
+         close++;
+      }
+      int len = close - start;
+      char* item = xMalloc(len + 1);
+      strncpy(item, line + start, len);
+      item[len] = '\0';
+      list[*size] = item;
+      (*size)++;
+      list = xRealloc(list, sizeof(char*) * (*size + 1));
+      start = close + 1;
+   }
+   list[*size] = NULL;
+   return list;
+}
+
+static void writeQuotedList(FILE* fd, char** list, int len) {
+   const char* sep = "";
+   for (int i = 0; i < len; i++) {
+      fprintf(fd, "%s\"%s\"", sep, list[i]);
+      sep = " ";
+   }
+   fprintf(fd, "\n");
+}
+
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->fields);
@@ -75,6 +125,7 @@ void Settings_delete(Settings* this) {
       String_freeArray(this->columns[i].names);
       free(this->columns[i].modes);
    }
+   String_freeArray(this->screens);
    free(this);
 }
 
@@ -84,6 +135,12 @@ static void Settings_readMeters(Settings* this, char* line, int column) {
    char** ids = String_split(trim, ' ', &nIds);
    free(trim);
    this->columns[column].names = ids;
+}
+
+static void Settings_readScreens(Settings* this, char* line) {
+   char* trim = String_trim(line);
+   this->screens = readQuotedList(trim, &(this->nScreens));
+   free(trim);
 }
 
 static void Settings_readMeterModes(Settings* this, char* line, int column) {
@@ -141,6 +198,13 @@ static void Settings_defaultMeters(Settings* this) {
    this->columns[1].modes[r++] = TEXT_METERMODE;
    this->columns[1].names[r] = xStrdup("Uptime");
    this->columns[1].modes[r++] = TEXT_METERMODE;
+}
+
+static void Settings_defaultScreens(Settings* this) {
+   this->screens = xMalloc(sizeof(char*) * 3);
+   this->screens[0] = xStrdup("Overview");
+   this->screens[1] = xStrdup("I/O");
+   this->screens[2] = NULL;
 }
 
 static void readFields(ProcessField* fields, int* flags, const char* line) {
@@ -242,10 +306,15 @@ static bool Settings_read(Settings* this, const char* fileName) {
       } else if (String_eq(option[0], "right_meter_modes")) {
          Settings_readMeterModes(this, option[1], 1);
          readMeters = true;
+      } else if (String_eq(option[0], "screens")) {
+         Settings_readScreens(this, option[1]);
       }
       String_freeArray(option);
    }
    fclose(fd);
+   if (!this->screens) {
+      Settings_defaultScreens(this);
+   }
    if (!readMeters) {
       Settings_defaultMeters(this);
    }
@@ -264,12 +333,7 @@ static void writeFields(FILE* fd, ProcessField* fields, const char* name) {
 }
 
 static void writeMeters(Settings* this, FILE* fd, int column) {
-   const char* sep = "";
-   for (int i = 0; i < this->columns[column].len; i++) {
-      fprintf(fd, "%s%s", sep, this->columns[column].names[i]);
-      sep = " ";
-   }
-   fprintf(fd, "\n");
+   writeList(fd, this->columns[column].names, this->columns[column].len);
 }
 
 static void writeMeterModes(Settings* this, FILE* fd, int column) {
@@ -318,6 +382,9 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
    fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
    fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
+   if (this->nScreens > 0) {
+      fprintf(fd, "screens="); writeQuotedList(fd, this->screens, this->nScreens);
+   }
    fclose(fd);
    return true;
 }
@@ -407,6 +474,7 @@ Settings* Settings_new(int cpuCount) {
       free(systemSettings);
       if (!ok) {
          Settings_defaultMeters(this);
+         Settings_defaultScreens(this);
          this->hideKernelThreads = true;
          this->highlightMegabytes = true;
          this->highlightThreads = true;
