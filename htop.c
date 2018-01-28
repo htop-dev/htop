@@ -203,12 +203,12 @@ int main(int argc, char** argv) {
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
 
-   MainPanel_updateTreeFunctions(panel, settings->treeView);
+   MainPanel_updateTreeFunctions(panel, settings->screens[0]->treeView);
       
    if (flags.sortKey > 0) {
-      settings->sortKey = flags.sortKey;
-      settings->treeView = false;
-      settings->direction = 1;
+      settings->screens[0]->sortKey = flags.sortKey;
+      settings->screens[0]->treeView = false;
+      settings->screens[0]->direction = 1;
    }
    ProcessList_printHeader(pl, Panel_getHeader((Panel*)panel));
 

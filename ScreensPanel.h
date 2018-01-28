@@ -10,7 +10,10 @@ in the source distribution for its full text.
 */
 
 #include "Panel.h"
+#include "ScreenManager.h"
+#include "ColumnsPanel.h"
 #include "Settings.h"
+#include "ListItem.h"
 
 #ifndef SCREEN_NAME_LEN
 #define SCREEN_NAME_LEN 20
@@ -18,8 +21,10 @@ in the source distribution for its full text.
 
 typedef struct ScreensPanel_ {
    Panel super;
-
+   
+   ScreenManager* scr;
    Settings* settings;
+   ColumnsPanel* columns;
    char buffer[SCREEN_NAME_LEN + 1];
    char* saved;
    int cursor;
@@ -27,8 +32,15 @@ typedef struct ScreensPanel_ {
    bool renaming;
 } ScreensPanel;
 
+typedef struct ScreenListItem_ {
+   ListItem super;
+   ScreenSettings* ss;
+} ScreenListItem;
 
-void startRenaming(Panel* super);
+
+extern ObjectClass ScreenListItem_class;
+
+ScreenListItem* ScreenListItem_new(const char* value, int key, ScreenSettings* ss);
 
 extern PanelClass ScreensPanel_class;
 

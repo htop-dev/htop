@@ -27,13 +27,13 @@ typedef struct ListItem_ {
 
 }*/
 
-static void ListItem_delete(Object* cast) {
+void ListItem_delete(Object* cast) {
    ListItem* this = (ListItem*)cast;
    free(this->value);
    free(this);
 }
 
-static void ListItem_display(Object* cast, RichString* out) {
+void ListItem_display(Object* cast, RichString* out) {
    ListItem* const this = (ListItem*)cast;
    assert (this != NULL);
    /*
@@ -59,11 +59,15 @@ ObjectClass ListItem_class = {
    .compare = ListItem_compare
 };
 
-ListItem* ListItem_new(const char* value, int key) {
-   ListItem* this = AllocThis(ListItem);
+void ListItem_init(ListItem* this, const char* value, int key) {
    this->value = xStrdup(value);
    this->key = key;
    this->moving = false;
+}
+
+ListItem* ListItem_new(const char* value, int key) {
+   ListItem* this = AllocThis(ListItem);
+   ListItem_init(this, value, key);
    return this;
 }
 

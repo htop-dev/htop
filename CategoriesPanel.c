@@ -10,7 +10,6 @@ in the source distribution for its full text.
 #include "AvailableMetersPanel.h"
 #include "MetersPanel.h"
 #include "DisplayOptionsPanel.h"
-#include "ColumnsPanel.h"
 #include "ScreensPanel.h"
 #include "ColorsPanel.h"
 #include "AvailableColumnsPanel.h"
@@ -67,7 +66,7 @@ static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
 
 static void CategoriesPanel_makeScreensPage(CategoriesPanel* this) {
    Panel* screens = (Panel*) ScreensPanel_new(this->settings);
-   Panel* columns = (Panel*) ColumnsPanel_new(this->settings);
+   Panel* columns = (Panel*) ((ScreensPanel*)screens)->columns;
    Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns);
    ScreenManager_add(this->scr, screens, 20);
    ScreenManager_add(this->scr, columns, 20);

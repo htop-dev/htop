@@ -71,30 +71,46 @@ inline int ScreenManager_size(ScreenManager* this) {
 }
 
 void ScreenManager_add(ScreenManager* this, Panel* item, int size) {
+   ScreenManager_insert(this, item, size, Vector_size(this->panels));
+}
+
+void ScreenManager_insert(ScreenManager* this, Panel* item, int size, int idx) {
    if (this->orientation == HORIZONTAL) {
       int lastX = 0;
-      if (this->panelCount > 0) {
-         Panel* last = (Panel*) Vector_get(this->panels, this->panelCount - 1);
+      if (idx > 0) {
+         Panel* last = (Panel*) Vector_get(this->panels, idx - 1);
          lastX = last->x + last->w + 1;
       }
       int height = LINES - this->y1 + this->y2;
-      if (size > 0) {
-         Panel_resize(item, size, height);
-      } else {
-         Panel_resize(item, COLS-this->x1+this->x2-lastX, height);
+      if (size <= 0) {
+         size = COLS-this->x1+this->x2-lastX;
       }
+      Panel_resize(item, size, height);
       Panel_move(item, lastX, this->y1);
+      if (idx < this->panelCount) {
+         for (int i = idx + 1; i <= this->panelCount; i++) {
+            Panel* p = (Panel*) Vector_get(this->panels, i);
+            Panel_move(p, p->x + size, p->y);
+         }
+      }
    }
    // TODO: VERTICAL
-   Vector_add(this->panels, item);
+   Vector_insert(this->panels, idx, item);
    item->needsRedraw = true;
    this->panelCount++;
 }
 
 Panel* ScreenManager_remove(ScreenManager* this, int idx) {
    assert(this->panelCount > idx);
+   int w = ((Panel*) Vector_get(this->panels, idx))->w;
    Panel* panel = (Panel*) Vector_remove(this->panels, idx);
    this->panelCount--;
+   if (idx < this->panelCount) {
+      for (int i = idx; i < this->panelCount; i++) {
+         Panel* p = (Panel*) Vector_get(this->panels, i);
+         Panel_move(p, p->x - w, p->y);
+      }
+   }
    return panel;
 }
 
@@ -131,7 +147,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    if (*rescan) {
       *oldTime = newTime;
       ProcessList_scan(pl);
-      if (*sortTimeout == 0 || this->settings->treeView) {
+      if (*sortTimeout == 0 || this->settings->ss->treeView) {
          ProcessList_sort(pl);
          *sortTimeout = 1;
       }
