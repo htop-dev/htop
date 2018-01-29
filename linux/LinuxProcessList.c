@@ -755,6 +755,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
    DIR* dir;
    struct dirent* entry;
    Settings* settings = pl->settings;
+   ScreenSettings* ss = settings->ss;
 
    time_t curTime = tv.tv_sec;
    #ifdef HAVE_TASKSTATS
@@ -800,7 +801,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       LinuxProcessList_recurseProcTree(this, subdirname, proc, period, tv);
 
       #ifdef HAVE_TASKSTATS
-      if (settings->flags & PROCESS_FLAG_IO)
+      if (ss->flags & PROCESS_FLAG_IO)
          LinuxProcessList_readIoFile(lp, dirname, name, now);
       #endif
 
@@ -819,7 +820,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          free(lp->ttyDevice);
          lp->ttyDevice = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
       }
-      if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO)
+      if (ss->flags & PROCESS_FLAG_LINUX_IOPRIO)
          LinuxProcess_updateIOPriority(lp);
       float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;
       proc->percent_cpu = CLAMP(percent_cpu, 0.0, cpus * 100.0);
@@ -834,13 +835,13 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          proc->user = UsersTable_getRef(pl->usersTable, proc->st_uid);
 
          #ifdef HAVE_OPENVZ
-         if (settings->flags & PROCESS_FLAG_LINUX_OPENVZ) {
+         if (ss->flags & PROCESS_FLAG_LINUX_OPENVZ) {
             LinuxProcessList_readOpenVZData(lp, dirname, name);
          }
          #endif
          
          #ifdef HAVE_VSERVER
-         if (settings->flags & PROCESS_FLAG_LINUX_VSERVER) {
+         if (ss->flags & PROCESS_FLAG_LINUX_VSERVER) {
             LinuxProcessList_readVServerData(lp, dirname, name);
          }
          #endif
@@ -863,11 +864,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       #endif
 
       #ifdef HAVE_CGROUP
-      if (settings->flags & PROCESS_FLAG_LINUX_CGROUP)
+      if (ss->flags & PROCESS_FLAG_LINUX_CGROUP)
          LinuxProcessList_readCGroupFile(lp, dirname, name);
       #endif
       
-      if (settings->flags & PROCESS_FLAG_LINUX_OOM)
+      if (ss->flags & PROCESS_FLAG_LINUX_OOM)
          LinuxProcessList_readOomData(lp, dirname, name);
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
