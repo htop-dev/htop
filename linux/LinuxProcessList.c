@@ -660,6 +660,32 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
 
 #endif
 
+#ifdef HAVE_PERFCOUNTERS
+
+static void LinuxProcessList_readPerfCounters(LinuxProcess* lp) {
+   if (!lp->cycleCounter) {
+      lp->cycleCounter = PerfCounter_new(lp->super.pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+   }
+   if (!lp->insnCounter) {
+      lp->insnCounter = PerfCounter_new(lp->super.pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+   }
+   bool cOk = PerfCounter_read(lp->cycleCounter);
+   bool iOk = PerfCounter_read(lp->insnCounter);
+   if (cOk && iOk) {
+      uint64_t i = PerfCounter_delta(lp->insnCounter);
+      uint64_t c = PerfCounter_delta(lp->cycleCounter);
+      if (c > 0) {
+         lp->ipc = (double)i / c;
+      } else {
+         lp->ipc = 0;
+      }
+   } else {
+      lp->ipc = -1;
+   }
+}
+
+#endif
+
 static void setCommand(Process* process, const char* command, int len) {
    if (process->comm && process->commLen >= len) {
       strncpy(process->comm, command, len + 1);
@@ -870,6 +896,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       
       if (ss->flags & PROCESS_FLAG_LINUX_OOM)
          LinuxProcessList_readOomData(lp, dirname, name);
+
+      #ifdef HAVE_PERFCOUNTERS
+      if (ss->flags & PROCESS_FLAG_LINUX_HPC)
+         LinuxProcessList_readPerfCounters(lp);
+      #endif
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;

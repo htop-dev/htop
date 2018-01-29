@@ -257,8 +257,10 @@ then
 fi
 
 AC_ARG_ENABLE(perfcounters, [AS_HELP_STRING([--enable-perfcounters], [enable hardware performance counters])],, enable_perfcounters="yes")
-if test "x$enable_perfcounters_$my_htop_platform" = xyes_linux
+if test "x$enable_perfcounters" = "xyes" -a "$my_htop_platform" = "linux"
 then
+   AC_DEFINE(HAVE_PERFCOUNTERS, 1, [Define if hardware performance counter support should be enabled.])
+
    AC_CHECK_HEADERS([linux/perf_counter.h], [have_perf_counter=yes],
                                             [have_perf_counter=no])
    
