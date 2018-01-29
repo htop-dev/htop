@@ -18,11 +18,14 @@ in the source distribution for its full text.
 
 /*{
 
+#include "PerfCounter.h"
+
 #define PROCESS_FLAG_LINUX_IOPRIO   0x0100
 #define PROCESS_FLAG_LINUX_OPENVZ   0x0200
 #define PROCESS_FLAG_LINUX_VSERVER  0x0400
 #define PROCESS_FLAG_LINUX_CGROUP   0x0800
 #define PROCESS_FLAG_LINUX_OOM      0x1000
+#define PROCESS_FLAG_LINUX_HPC      0x2000
 
 typedef enum UnsupportedProcessFields {
    FLAGS = 9,
@@ -86,7 +89,10 @@ typedef enum LinuxProcessFields {
    PERCENT_IO_DELAY = 117,
    PERCENT_SWAP_DELAY = 118,
    #endif
-   LAST_PROCESSFIELD = 119,
+   #ifdef HAVE_PERFCOUNTERS
+   IPC = 119,
+   #endif
+   LAST_PROCESSFIELD = 120,
 } LinuxProcessField;
 
 #include "IOPriority.h"
@@ -138,6 +144,11 @@ typedef struct LinuxProcess_ {
    float cpu_delay_percent;
    float blkio_delay_percent;
    float swapin_delay_percent;
+   #endif
+   #ifdef HAVE_PERFCOUNTERS
+   PerfCounter* cycleCounter;
+   PerfCounter* insnCounter;
+   double ipc;
    #endif
 } LinuxProcess;
 
@@ -234,6 +245,9 @@ ProcessFieldData Process_fields[] = {
    [PERCENT_IO_DELAY] = { .name = "PERCENT_IO_DELAY", .title = "IOD% ", .description = "Block I/O delay %", .flags = 0, },
    [PERCENT_SWAP_DELAY] = { .name = "PERCENT_SWAP_DELAY", .title = "SWAPD% ", .description = "Swapin delay %", .flags = 0, },
 #endif
+#ifdef HAVE_PERFCOUNTERS
+   [IPC] = { .name = "IPC", .title = "  IPC ", .description = "Executed instructions per cycle", .flags = PROCESS_FLAG_LINUX_HPC, },
+#endif
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -273,6 +287,10 @@ void Process_delete(Object* cast) {
    Process_done((Process*)cast);
 #ifdef HAVE_CGROUP
    free(this->cgroup);
+#endif
+#ifdef HAVE_PERFCOUNTERS
+   PerfCounter_delete(this->cycleCounter);
+   PerfCounter_delete(this->insnCounter);
 #endif
    free(this->ttyDevice);
    free(this);
@@ -394,6 +412,16 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case PERCENT_IO_DELAY: LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n); break;
    case PERCENT_SWAP_DELAY: LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n); break;
    #endif
+   #ifdef HAVE_PERFCOUNTERS
+   case IPC: {
+      if (lp->ipc == -1) {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "  N/A "); break;
+      } else {
+         xSnprintf(buffer, n, "%5.2f ", lp->ipc); break;
+      }
+   }
+   #endif
    default:
       Process_writeField((Process*)this, str, field);
       return;
@@ -462,6 +490,10 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       return (p2->blkio_delay_percent > p1->blkio_delay_percent ? 1 : -1);
    case PERCENT_SWAP_DELAY:
       return (p2->swapin_delay_percent > p1->swapin_delay_percent ? 1 : -1);
+   #endif
+   #ifdef HAVE_PERFCOUNTERS
+   case IPC:
+      return (p2->ipc > p1->ipc ? 1 : -1);
    #endif
    case IO_PRIORITY:
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);

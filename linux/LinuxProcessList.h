@@ -116,6 +116,10 @@ void ProcessList_delete(ProcessList* pl);
 
 #endif
 
+#ifdef HAVE_PERFCOUNTERS
+
+#endif
+
 void ProcessList_goThroughEntries(ProcessList* super);
 
 #endif
