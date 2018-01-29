@@ -256,6 +256,50 @@ then
    AC_DEFINE(HAVE_SETUID_ENABLED, 1, [Define if setuid support should be enabled.])
 fi
 
+AC_ARG_ENABLE(perfcounters, [AS_HELP_STRING([--enable-perfcounters], [enable hardware performance counters])],, enable_perfcounters="yes")
+if test "x$enable_perfcounters_$my_htop_platform" = xyes_linux
+then
+   AC_CHECK_HEADERS([linux/perf_counter.h], [have_perf_counter=yes],
+                                            [have_perf_counter=no])
+   
+   AC_CHECK_HEADERS([linux/perf_event.h], [have_perf_event=yes],
+                                          [have_perf_event=no])
+   
+   if test "x${have_perf_counter}" = xno -a "x${have_perf_event}" = xno; then
+      os=`uname -s -r`
+      AC_MSG_FAILURE([
+     ------------------------------------------------------------
+      Could not locate linux/perf_count.h or linux/perf_event.h.
+      Are performance counters supported on this machine?
+      Linux 2.6.31+ is required.
+      uname reports: ${os}
+     ------------------------------------------------------------])
+   fi
+   
+   # Check for hardware architecture
+   no_target=yes
+   AC_MSG_CHECKING([hardware])
+   hw=`uname -m`
+   case $hw in
+      x86_64 | i386 | i686 ) :
+         AC_MSG_RESULT([x86])
+         AC_DEFINE([TARGET_X86], [1], [Define to 1 if the target is x86.])
+         no_target=no
+         ;;
+      unknown ) :
+         AC_MSG_RESULT([unknown])
+         AC_MSG_WARN([Could not detect architecture])
+         ;;
+      * ) :
+         AC_MSG_RESULT([$hw])
+         ;;
+   esac
+   
+   if test x$no_target = xyes; then
+      AC_DEFINE([NOTARGET], [1], [Define to 1 when no specific target is supported.])
+   fi
+fi
+
 AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable linux delay accounting])],, enable_delayacct="no")
 if test "x$enable_delayacct" = xyes
 then
