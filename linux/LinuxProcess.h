@@ -176,5 +176,4 @@ long LinuxProcess_compare(const void* v1, const void* v2);
 
 bool Process_isThread(Process* this);
 
-
 #endif

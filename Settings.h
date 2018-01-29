@@ -39,7 +39,6 @@ typedef struct Settings_ {
    unsigned int ssIndex;
    ScreenSettings* ss;
 
-   int flags;
    int colorScheme;
    int delay;
 
