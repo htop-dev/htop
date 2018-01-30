@@ -209,16 +209,21 @@ static void Settings_defaultMeters(Settings* this) {
    this->meterColumns[1].modes[r++] = TEXT_METERMODE;
 }
 
+static const char* toFieldName(int i) {
+   return Process_fields[i].name;
+}
+
 static int toFieldIndex(const char* str) {
    if (isdigit(str[0])) {
       // This "+1" is for compatibility with the older enum format.
       int id = atoi(str) + 1;
-      if (Process_fields[id].name && id < Platform_numberOfFields) {
+      if (id < Platform_numberOfFields && toFieldName(id)) {
          return id;
       }
    } else {
       for (int p = 1; p < LAST_PROCESSFIELD; p++) {
-         if (Process_fields[p].name && strcmp(Process_fields[p].name, str) == 0) {
+         const char* pName = toFieldName(p);
+         if (pName && strcmp(pName, str) == 0) {
             return p;
          }
       }
@@ -377,7 +382,7 @@ static void writeFields(FILE* fd, ProcessField* fields, bool byName) {
    const char* sep = "";
    for (int i = 0; fields[i]; i++) {
       if (byName) {
-         fprintf(fd, "%s%s", sep, Process_fields[fields[i]].name);
+         fprintf(fd, "%s%s", sep, toFieldName(fields[i]));
       } else {
          // This " - 1" is for compatibility with the older enum format.
          fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
@@ -446,8 +451,7 @@ bool Settings_write(Settings* this) {
          fprintf(fd, "screen:%s=", ss->name);
          writeFields(fd, ss->fields, true);
          fprintf(fd, ".tree_view=%d\n", (int) ss->treeView);
-         // This "-1" is for compatibility with the older enum format.
-         fprintf(fd, ".sort_key=%d\n", (int) ss->sortKey-1);
+         fprintf(fd, ".sort_key=%s\n", toFieldName(ss->sortKey));
          fprintf(fd, ".sort_direction=%d\n", (int) ss->direction);
       }
    }
