@@ -103,6 +103,9 @@ profile:
 debug:
 	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-ggdb -DDEBUG"
 
+symbols:
+	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-ggdb -DNDEBUG"
+
 coverage:
 	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" LDFLAGS="-lgcov"
 
