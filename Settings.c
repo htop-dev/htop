@@ -267,7 +267,9 @@ ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char*
 
 static void Settings_defaultScreens(Settings* this) {
    Settings_newScreen(this, "Default", "PID USER PRIORITY NICE M_SIZE M_RESIDENT M_SHARE STATE PERCENT_CPU PERCENT_MEM TIME Command");
-   Settings_newScreen(this, "I/O", "PID IO_PRIORITY USER IO_READ_RATE IO_WRITE_RATE PERCENT_SWAP_DELAY PERCENT_IO_DELAY Command");
+   this->screens[0]->sortKey = toFieldIndex("PERCENT_CPU");
+   Settings_newScreen(this, "I/O", "PID IO_PRIORITY USER IO_RATE IO_READ_RATE IO_WRITE_RATE PERCENT_SWAP_DELAY PERCENT_IO_DELAY Command");
+   this->screens[0]->sortKey = toFieldIndex("IO_RATE");
 }
 
 static bool Settings_read(Settings* this, const char* fileName) {
