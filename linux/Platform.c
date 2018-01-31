@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "LinuxProcess.h"
+#include "CRT.h"
 
 #include <math.h>
 #include <assert.h>

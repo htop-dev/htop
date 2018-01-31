@@ -12,6 +12,7 @@ ANY=1
 COPY=2
 SKIP=3
 SKIPONE=4
+COPYDEFINE=5
 
 state = ANY
 static = 0
@@ -49,7 +50,11 @@ for line in file.readlines():
       elif len(line) > 1:
          static = 0
          equals = line.find(" = ")
-         if line[-3:] == "= {":
+         if line[:7] == "#define":
+            if line[-1:] == "\\":
+               state = COPYDEFINE
+            out.write( line + "\n")
+         elif line[-3:] == "= {":
             out.write( "extern " + line[:-4] + ";\n" )
             state = SKIP
          elif equals != -1:
@@ -60,7 +65,7 @@ for line in file.readlines():
             out.write( line[:-2].replace("inline", "extern") + ";\n" )
             state = SKIP
          else:
-            out.write( line + "\n")
+            out.write( line + "\n" )
          is_blank = False
       elif line == "":
          if not is_blank:
@@ -69,6 +74,11 @@ for line in file.readlines():
       else:
          out.write( line  + "\n")
          is_blank = False
+   elif state == COPYDEFINE:
+      is_blank = False
+      out.write( line + "\n")
+      if line[-1:] != "\\":
+         state = ANY
    elif state == COPY:
       is_blank = False
       if line == "}*/":

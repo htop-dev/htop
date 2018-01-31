@@ -118,6 +118,50 @@ void ProcessList_delete(ProcessList* pl);
 
 #ifdef HAVE_PERFCOUNTERS
 
+#define READ_COUNTER(_b, _var, _flag, _type, _config)           \
+   bool _b ## Ok = false;                                       \
+   uint64_t _b ## Delta = 0;                                    \
+   if (flags & _flag) {                                         \
+      if (!_var) {                                              \
+         _var = PerfCounter_new(lp->super.pid, _type, _config); \
+         _b ## Ok = PerfCounter_read(_var);                     \
+         _b ## Delta = 0;                                       \
+      } else {                                                  \
+         _b ## Ok = PerfCounter_read(_var);                     \
+         _b ## Delta = PerfCounter_delta(_var);                 \
+      }                                                         \
+      if (_b ## Ok) {                                           \
+      }                                                         \
+   } else {                                                     \
+      if (_var) {                                               \
+         PerfCounter_delete(_var);                              \
+         _var = NULL;                                           \
+      }                                                         \
+   }
+
+#define SET_IF(_ok, _var, _exp) \
+   if (_ok) {                   \
+      _var = _exp;              \
+   } else {                     \
+      _var = -1;                \
+   }
+
+#define SET_IFNZ(_ok, _z, _var, _exp) \
+   if (_ok) {                         \
+      if (_z > 0) {                   \
+         _var = _exp;                 \
+      } else {                        \
+         _var = 0;                    \
+      }                               \
+   } else {                           \
+      _var = -1;                      \
+   }
+
+#define L1DR  (PERF_COUNT_HW_CACHE_L1D | (PERF_COUNT_HW_CACHE_OP_READ  << 8) | (PERF_COUNT_HW_CACHE_RESULT_ACCESS << 16))
+#define L1DRM (PERF_COUNT_HW_CACHE_L1D | (PERF_COUNT_HW_CACHE_OP_READ  << 8) | (PERF_COUNT_HW_CACHE_RESULT_MISS   << 16))
+#define L1DW  (PERF_COUNT_HW_CACHE_L1D | (PERF_COUNT_HW_CACHE_OP_WRITE << 8) | (PERF_COUNT_HW_CACHE_RESULT_ACCESS << 16))
+#define L1DWM (PERF_COUNT_HW_CACHE_L1D | (PERF_COUNT_HW_CACHE_OP_WRITE << 8) | (PERF_COUNT_HW_CACHE_RESULT_MISS   << 16))
+
 #endif
 
 void ProcessList_goThroughEntries(ProcessList* super);

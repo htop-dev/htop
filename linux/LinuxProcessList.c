@@ -647,9 +647,9 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
    }
 
    if (nl_send_sync(this->netlink_socket, msg) < 0) {
-      process->swapin_delay_percent = -1LL;
-      process->blkio_delay_percent = -1LL;
-      process->cpu_delay_percent = -1LL;
+      process->swapin_delay_percent = -1;
+      process->blkio_delay_percent = -1;
+      process->cpu_delay_percent = -1;
       return;
    }
    
@@ -662,26 +662,71 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
 
 #ifdef HAVE_PERFCOUNTERS
 
-static void LinuxProcessList_readPerfCounters(LinuxProcess* lp) {
-   if (!lp->cycleCounter) {
-      lp->cycleCounter = PerfCounter_new(lp->super.pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+#define READ_COUNTER(_b, _var, _flag, _type, _config)           \
+   bool _b ## Ok = false;                                       \
+   uint64_t _b ## Delta = 0;                                    \
+   if (flags & _flag) {                                         \
+      if (!_var) {                                              \
+         _var = PerfCounter_new(lp->super.pid, _type, _config); \
+         _b ## Ok = PerfCounter_read(_var);                     \
+         _b ## Delta = 0;                                       \
+      } else {                                                  \
+         _b ## Ok = PerfCounter_read(_var);                     \
+         _b ## Delta = PerfCounter_delta(_var);                 \
+      }                                                         \
+      if (_b ## Ok) {                                           \
+      }                                                         \
+   } else {                                                     \
+      if (_var) {                                               \
+         PerfCounter_delete(_var);                              \
+         _var = NULL;                                           \
+      }                                                         \
    }
-   if (!lp->insnCounter) {
-      lp->insnCounter = PerfCounter_new(lp->super.pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+
+#define SET_IF(_ok, _var, _exp) \
+   if (_ok) {                   \
+      _var = _exp;              \
+   } else {                     \
+      _var = -1;                \
    }
-   bool cOk = PerfCounter_read(lp->cycleCounter);
-   bool iOk = PerfCounter_read(lp->insnCounter);
-   if (cOk && iOk) {
-      uint64_t i = PerfCounter_delta(lp->insnCounter);
-      uint64_t c = PerfCounter_delta(lp->cycleCounter);
-      if (c > 0) {
-         lp->ipc = (double)i / c;
-      } else {
-         lp->ipc = 0;
-      }
-   } else {
-      lp->ipc = -1;
+
+#define SET_IFNZ(_ok, _z, _var, _exp) \
+   if (_ok) {                         \
+      if (_z > 0) {                   \
+         _var = _exp;                 \
+      } else {                        \
+         _var = 0;                    \
+      }                               \
+   } else {                           \
+      _var = -1;                      \
    }
+
+#define L1DR  (PERF_COUNT_HW_CACHE_L1D | (PERF_COUNT_HW_CACHE_OP_READ  << 8) | (PERF_COUNT_HW_CACHE_RESULT_ACCESS << 16))
+#define L1DRM (PERF_COUNT_HW_CACHE_L1D | (PERF_COUNT_HW_CACHE_OP_READ  << 8) | (PERF_COUNT_HW_CACHE_RESULT_MISS   << 16))
+#define L1DW  (PERF_COUNT_HW_CACHE_L1D | (PERF_COUNT_HW_CACHE_OP_WRITE << 8) | (PERF_COUNT_HW_CACHE_RESULT_ACCESS << 16))
+#define L1DWM (PERF_COUNT_HW_CACHE_L1D | (PERF_COUNT_HW_CACHE_OP_WRITE << 8) | (PERF_COUNT_HW_CACHE_RESULT_MISS   << 16))
+
+static void LinuxProcessList_readPerfCounters(LinuxProcess* lp, uint64_t flags) {
+
+   READ_COUNTER(c, lp->cycleCounter, PROCESS_FLAG_LINUX_HPC_CYCLE, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+   READ_COUNTER(i, lp->insnCounter,  PROCESS_FLAG_LINUX_HPC_INSN,  PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+   READ_COUNTER(m, lp->missCounter,  PROCESS_FLAG_LINUX_HPC_MISS,  PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES);
+   READ_COUNTER(b, lp->brCounter,    PROCESS_FLAG_LINUX_HPC_BMISS, PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES);
+
+   READ_COUNTER(r, lp->l1drCounter,  PROCESS_FLAG_LINUX_HPC_L1DR,  PERF_TYPE_HW_CACHE, L1DR);
+   READ_COUNTER(R, lp->l1drmCounter, PROCESS_FLAG_LINUX_HPC_L1DRM, PERF_TYPE_HW_CACHE, L1DRM);
+   READ_COUNTER(w, lp->l1dwCounter,  PROCESS_FLAG_LINUX_HPC_L1DW,  PERF_TYPE_HW_CACHE, L1DW);
+   READ_COUNTER(W, lp->l1dwmCounter, PROCESS_FLAG_LINUX_HPC_L1DWM, PERF_TYPE_HW_CACHE, L1DWM);
+
+   SET_IF(cOk, lp->mcycle, (double)cDelta / 1000000);
+   SET_IF(iOk, lp->minstr, (double)iDelta / 1000000);
+   SET_IFNZ(cOk && iOk, cDelta, lp->ipc,    (double)iDelta / cDelta);
+   SET_IFNZ(mOk && iOk, iDelta, lp->pMiss,  100 * ((double)mDelta / iDelta));
+   SET_IFNZ(bOk && iOk, iDelta, lp->pBMiss, 100 * ((double)bDelta / iDelta));
+   SET_IF(rOk, lp->l1dr,  (double)rDelta / 1000);
+   SET_IF(ROk, lp->l1drm, (double)RDelta / 1000);
+   SET_IF(wOk, lp->l1dw,  (double)wDelta / 1000);
+   SET_IF(WOk, lp->l1dwm, (double)WDelta / 1000);
 }
 
 #endif
@@ -899,7 +944,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       #ifdef HAVE_PERFCOUNTERS
       if (ss->flags & PROCESS_FLAG_LINUX_HPC)
-         LinuxProcessList_readPerfCounters(lp);
+         LinuxProcessList_readPerfCounters(lp, ss->flags);
       #endif
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {

@@ -48,6 +48,7 @@ typedef struct ScreenListItem_ {
 }*/
 
 ObjectClass ScreenListItem_class = {
+   .extends = Class(ListItem),
    .display = ListItem_display,
    .delete = ListItem_delete,
    .compare = ListItem_compare
@@ -319,8 +320,11 @@ void ScreensPanel_update(Panel* super) {
    this->settings->changed = true;
    this->settings->screens = xRealloc(this->settings->screens, sizeof(char*) * (size+1));
    for (int i = 0; i < size; i++) {
-      char* name = ((ListItem*) Panel_get(super, i))->value;
-      this->settings->screens[i]->name = xStrdup(name);
+      ScreenListItem* item = (ScreenListItem*) Panel_get(super, i);
+      ScreenSettings* ss = item->ss;
+      free(ss->name);
+      this->settings->screens[i] = ss;
+      ss->name = xStrdup(((ListItem*) item)->value);
    }
    this->settings->screens[size] = NULL;
 }
