@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #include <time.h>
 #include <assert.h>
 #include <math.h>
+#include <inttypes.h>
 
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get
@@ -150,7 +151,7 @@ typedef struct ProcessFieldData_ {
    const char* name;
    const char* title;
    const char* description;
-   int flags;
+   uint64_t flags;
 } ProcessFieldData;
 
 // Implemented in platform-specific code:
@@ -362,6 +363,21 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
    }
 }
 
+void Process_printPercentage(float val, char* buffer, int n, int* attr) {
+   if (val >= 0) {
+      if (val < 100) {
+         xSnprintf(buffer, n, "%4.1f ", val);
+      } else if (val < 1000) {
+         xSnprintf(buffer, n, "%3d. ", (unsigned int)val); 
+      } else {
+         xSnprintf(buffer, n, "%4d ", (unsigned int)val); 
+      }
+   } else {
+      *attr = CRT_colors[PROCESS_SHADOW];
+      xSnprintf(buffer, n, " N/A ");
+   }
+}
+
 void Process_writeField(Process* this, RichString* str, ProcessField field) {
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -370,24 +386,8 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    bool coloring = this->settings->highlightMegabytes;
 
    switch (field) {
-   case PERCENT_CPU: {
-      if (this->percent_cpu > 999.9) {
-         xSnprintf(buffer, n, "%4d ", (unsigned int)this->percent_cpu); 
-      } else if (this->percent_cpu > 99.9) {
-         xSnprintf(buffer, n, "%3d. ", (unsigned int)this->percent_cpu); 
-      } else {
-         xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
-      }
-      break;
-   }
-   case PERCENT_MEM: {
-      if (this->percent_mem > 99.9) {
-         xSnprintf(buffer, n, "100. "); 
-      } else {
-         xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
-      }
-      break;
-   }
+   case PERCENT_CPU: Process_printPercentage(this->percent_cpu, buffer, n, &attr); break;
+   case PERCENT_MEM: Process_printPercentage(this->percent_mem, buffer, n, &attr); break;
    case COMM: {
       if (this->settings->highlightThreads && Process_isThread(this)) {
          attr = CRT_colors[PROCESS_THREAD];

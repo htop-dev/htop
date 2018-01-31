@@ -129,7 +129,7 @@ typedef struct ProcessFieldData_ {
    const char* name;
    const char* title;
    const char* description;
-   int flags;
+   uint64_t flags;
 } ProcessFieldData;
 
 // Implemented in platform-specific code:
@@ -175,6 +175,8 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
 void Process_printTime(RichString* str, unsigned long long totalHundredths);
 
 void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring);
+
+void Process_printPercentage(float val, char* buffer, int n, int* attr);
 
 void Process_writeField(Process* this, RichString* str, ProcessField field);
 

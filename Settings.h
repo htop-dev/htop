@@ -9,7 +9,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define DEFAULT_DELAY 15
 
 #include "Process.h"
 #include <stdbool.h>
