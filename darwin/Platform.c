@@ -25,6 +25,11 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "BatteryMeter.h"
 #include "DarwinProcess.h"
+
+typedef enum DarwinProcessFields {
+   LAST_PROCESSFIELD = 100,
+} DarwinProcessField;
+
 }*/
 
 #ifndef CLAMP
@@ -97,7 +102,7 @@ ProcessFieldData Process_fields[] = {
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
-   [100] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
+   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 MeterClass* Platform_meterTypes[] = {
