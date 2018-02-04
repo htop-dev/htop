@@ -28,7 +28,6 @@ in the source distribution for its full text.
 #include <time.h>
 #include <assert.h>
 #include <math.h>
-#include <inttypes.h>
 
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get
@@ -46,6 +45,7 @@ in the source distribution for its full text.
 #include "Object.h"
 
 #include <sys/types.h>
+#include <inttypes.h>
 
 #define PROCESS_FLAG_IO 0x0001
 
