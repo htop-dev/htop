@@ -16,6 +16,10 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "DarwinProcess.h"
 
+typedef enum DarwinProcessFields {
+   LAST_PROCESSFIELD = 100,
+} DarwinProcessField;
+
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
