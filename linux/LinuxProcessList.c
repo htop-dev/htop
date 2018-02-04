@@ -665,7 +665,7 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
 #define READ_COUNTER(_b, _var, _flag, _type, _config)           \
    bool _b ## Ok = false;                                       \
    uint64_t _b ## Delta = 0;                                    \
-   if (flags & _flag) {                                         \
+   if (flags & _flag && lp->super.show) {                       \
       if (!_var) {                                              \
          _var = PerfCounter_new(lp->super.pid, _type, _config); \
          _b ## Ok = PerfCounter_read(_var);                     \
