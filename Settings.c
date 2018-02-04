@@ -268,8 +268,12 @@ ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char*
 static void Settings_defaultScreens(Settings* this) {
    Settings_newScreen(this, "Default", "PID USER PRIORITY NICE M_SIZE M_RESIDENT M_SHARE STATE PERCENT_CPU PERCENT_MEM TIME Command");
    this->screens[0]->sortKey = toFieldIndex("PERCENT_CPU");
-   Settings_newScreen(this, "I/O", "PID IO_PRIORITY USER IO_RATE IO_READ_RATE IO_WRITE_RATE PERCENT_SWAP_DELAY PERCENT_IO_DELAY Command");
-   this->screens[0]->sortKey = toFieldIndex("IO_RATE");
+   Settings_newScreen(this, "I/O", "PID USER IO_PRIORITY IO_RATE IO_READ_RATE IO_WRITE_RATE PERCENT_SWAP_DELAY PERCENT_IO_DELAY Command");
+   this->screens[1]->sortKey = toFieldIndex("IO_RATE");
+   Settings_newScreen(this, "Perf Counters", "PID USER PERCENT_CPU PROCESSOR MCYCLE MINSTR IPC PERCENT_MISS PERCENT_BMISS Command");
+   this->screens[2]->sortKey = toFieldIndex("MCYCLE");
+   Settings_newScreen(this, "L1 Data Cache", "PID USER PERCENT_CPU L1DREADS L1DRMISSES L1DWRITES L1DWMISSES Command");
+   this->screens[3]->sortKey = toFieldIndex("L1DREADS");
 }
 
 static bool Settings_read(Settings* this, const char* fileName) {
