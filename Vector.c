@@ -284,10 +284,18 @@ inline Object* Vector_get(Vector* this, int idx) {
 
 #endif
 
+#ifdef DEBUG
+
 inline int Vector_size(Vector* this) {
    assert(Vector_isConsistent(this));
    return this->items;
 }
+
+#else
+
+#define Vector_size(v_) ((v_)->items)
+
+#endif
 
 /*
 

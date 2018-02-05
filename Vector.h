@@ -70,7 +70,15 @@ extern Object* Vector_get(Vector* this, int idx);
 
 #endif
 
+#ifdef DEBUG
+
 extern int Vector_size(Vector* this);
+
+#else
+
+#define Vector_size(v_) ((v_)->items)
+
+#endif
 
 /*
 
