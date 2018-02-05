@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #define White COLOR_WHITE
 
 #define ColorPairGrayBlack ColorPair(Magenta,Magenta)
+#define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
 
 #define KEY_WHEELUP KEY_F(20)
 #define KEY_WHEELDOWN KEY_F(21)
