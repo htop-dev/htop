@@ -259,6 +259,7 @@ fi
 AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable linux delay accounting])],, enable_delayacct="no")
 if test "x$enable_delayacct" = xyes
 then
+   PKG_PROG_PKG_CONFIG()
    PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
    PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
    CFLAGS+=" $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
