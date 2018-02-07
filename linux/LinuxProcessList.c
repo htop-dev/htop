@@ -436,7 +436,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
          }
          break;
       case 's':
-         if (line[5] == 'r' && strncmp(line+1, "yscr: ", 6) == 0) {
+         if (line[4] == 'r' && strncmp(line+1, "yscr: ", 6) == 0) {
             process->io_syscr = strtoull(line+7, NULL, 10);
          } else if (strncmp(line+1, "yscw: ", 6) == 0) {
             process->io_syscw = strtoull(line+7, NULL, 10);
