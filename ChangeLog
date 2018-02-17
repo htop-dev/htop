@@ -2,6 +2,8 @@ What's new in version 2.1.1
 
 * Check for pkg-config when building with --enable-delayacct
   (thanks to @florian2833z for the report)
+* BUGFIX: fix behavior of SYSCR column
+  (thanks to Marc Kleine-Budde)
 * BUGFIX: preserve LDFLAGS when building
   (thanks to Lance Frederickson for the report)
 * BUGFIX: fix issue with small terminals
