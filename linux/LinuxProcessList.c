@@ -595,36 +595,36 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
 
 static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
    struct nlmsghdr *nlhdr;
-  	struct nlattr *nlattrs[TASKSTATS_TYPE_MAX + 1];
-  	struct nlattr *nlattr;
-	struct taskstats *stats;
-	int rem;
-	unsigned long long int timeDelta;
-	LinuxProcess* lp = (LinuxProcess*) linuxProcess;
+   struct nlattr *nlattrs[TASKSTATS_TYPE_MAX + 1];
+   struct nlattr *nlattr;
+   struct taskstats *stats;
+   int rem;
+   unsigned long long int timeDelta;
+   LinuxProcess* lp = (LinuxProcess*) linuxProcess;
 
-	nlhdr = nlmsg_hdr(nlmsg);
+   nlhdr = nlmsg_hdr(nlmsg);
 
    if (genlmsg_parse(nlhdr, 0, nlattrs, TASKSTATS_TYPE_MAX, NULL) < 0) {
       return NL_SKIP;
-	}
+   }
 
-	if ((nlattr = nlattrs[TASKSTATS_TYPE_AGGR_PID]) || (nlattr = nlattrs[TASKSTATS_TYPE_NULL])) {
-		stats = nla_data(nla_next(nla_data(nlattr), &rem));
-		assert(lp->super.pid == stats->ac_pid);
-		timeDelta = (stats->ac_etime*1000 - lp->delay_read_time);
-		#define BOUNDS(x) isnan(x) ? 0.0 : (x > 100) ? 100.0 : x;
-		#define DELTAPERC(x,y) BOUNDS((float) (x - y) / timeDelta * 100);
-		lp->cpu_delay_percent = DELTAPERC(stats->cpu_delay_total, lp->cpu_delay_total);
-		lp->blkio_delay_percent = DELTAPERC(stats->blkio_delay_total, lp->blkio_delay_total);
-		lp->swapin_delay_percent = DELTAPERC(stats->swapin_delay_total, lp->swapin_delay_total);
-		#undef DELTAPERC
-		#undef BOUNDS
-		lp->swapin_delay_total = stats->swapin_delay_total;
-		lp->blkio_delay_total = stats->blkio_delay_total;
-		lp->cpu_delay_total = stats->cpu_delay_total;
-		lp->delay_read_time = stats->ac_etime*1000;
-	}
-  	return NL_OK;
+   if ((nlattr = nlattrs[TASKSTATS_TYPE_AGGR_PID]) || (nlattr = nlattrs[TASKSTATS_TYPE_NULL])) {
+      stats = nla_data(nla_next(nla_data(nlattr), &rem));
+      assert(lp->super.pid == stats->ac_pid);
+      timeDelta = (stats->ac_etime*1000 - lp->delay_read_time);
+      #define BOUNDS(x) isnan(x) ? 0.0 : (x > 100) ? 100.0 : x;
+      #define DELTAPERC(x,y) BOUNDS((float) (x - y) / timeDelta * 100);
+      lp->cpu_delay_percent = DELTAPERC(stats->cpu_delay_total, lp->cpu_delay_total);
+      lp->blkio_delay_percent = DELTAPERC(stats->blkio_delay_total, lp->blkio_delay_total);
+      lp->swapin_delay_percent = DELTAPERC(stats->swapin_delay_total, lp->swapin_delay_total);
+      #undef DELTAPERC
+      #undef BOUNDS
+      lp->swapin_delay_total = stats->swapin_delay_total;
+      lp->blkio_delay_total = stats->blkio_delay_total;
+      lp->cpu_delay_total = stats->cpu_delay_total;
+      lp->delay_read_time = stats->ac_etime*1000;
+   }
+   return NL_OK;
 }
 
 static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProcess* process) {
