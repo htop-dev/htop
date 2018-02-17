@@ -185,6 +185,7 @@ static Htop_Reaction sortBy(State* st) {
 // ----------------------------------------
 
 static Htop_Reaction actionResize(State* st) {
+   clear();
    Panel_resize(st->panel, COLS, LINES-(st->panel->y)-1);
    return HTOP_REDRAW_BAR;
 }
