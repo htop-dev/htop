@@ -1,3 +1,13 @@
+What's new in version 2.1.1
+
+* Check for pkg-config when building with --enable-delayacct
+  (thanks to @florian2833z for the report)
+* BUGFIX: fix issue with small terminals
+  (thanks to Daniel Elf for the report)
+* BUGFIX: fix crash with particular keycodes
+  (thanks to Wellington Torrejais da Silva for the report)
+* BUGFIX: fix terminal color issues
+  (thanks to Kang-Che Sung for the report)
 
 What's new in version 2.1.0
 
