@@ -115,8 +115,9 @@ void InfoScreen_run(InfoScreen* this) {
 
       Panel_draw(panel, true);
 
-      if (this->inc->active)
-         move(LINES-1, CRT_cursorX);
+      if (this->inc->active) {
+         (void) move(LINES-1, CRT_cursorX);
+      }
       set_escdelay(25);
       int ch = getch();
       

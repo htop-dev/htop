@@ -190,9 +190,9 @@ void Process_toggleTag(Process* this);
 
 bool Process_setPriority(Process* this, int priority);
 
-bool Process_changePriorityBy(Process* this, size_t delta);
+bool Process_changePriorityBy(Process* this, int delta);
 
-void Process_sendSignal(Process* this, size_t sgn);
+void Process_sendSignal(Process* this, int sgn);
 
 long Process_pidCompare(const void* v1, const void* v2);
 

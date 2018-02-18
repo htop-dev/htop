@@ -536,11 +536,11 @@ bool Process_setPriority(Process* this, int priority) {
    return (err == 0);
 }
 
-bool Process_changePriorityBy(Process* this, size_t delta) {
+bool Process_changePriorityBy(Process* this, int delta) {
    return Process_setPriority(this, this->nice + delta);
 }
 
-void Process_sendSignal(Process* this, size_t sgn) {
+void Process_sendSignal(Process* this, int sgn) {
    CRT_dropPrivileges();
    kill(this->pid, (int) sgn);
    CRT_restorePrivileges();

@@ -130,7 +130,7 @@ void OpenFilesScreen_scan(InfoScreen* this) {
          char** data = fdata->data.data;
          int lenN = data['n'] ? strlen(data['n']) : 0;
          int sizeEntry = 5 + 7 + 10 + 10 + 10 + lenN + 5 /*spaces*/ + 1 /*null*/;
-         char* entry = xMalloc(sizeEntry);
+         char entry[sizeEntry];
          xSnprintf(entry, sizeEntry, "%5.5s %7.7s %10.10s %10.10s %10.10s %s",
             data['f'] ? data['f'] : "",
             data['t'] ? data['t'] : "",

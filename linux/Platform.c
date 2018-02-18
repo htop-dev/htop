@@ -96,7 +96,7 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    void* set = Action_pickFromVector(st, ioprioPanel, 21);
    if (set) {
       IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) LinuxProcess_setIOPriority, (size_t) ioprio, NULL);
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) LinuxProcess_setIOPriority, (Arg){ .i = ioprio }, NULL);
       if (!ok)
          beep();
    }

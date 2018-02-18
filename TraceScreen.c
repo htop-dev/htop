@@ -108,7 +108,8 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       (void) written;
       exit(1);
    }
-   fcntl(this->fdpair[0], F_SETFL, O_NONBLOCK);
+   int ok = fcntl(this->fdpair[0], F_SETFL, O_NONBLOCK);
+   if (ok == -1) return false;
    this->strace = fdopen(this->fdpair[0], "r");
    this->fd_strace = fileno(this->strace);
    return true;
