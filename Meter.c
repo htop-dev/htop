@@ -404,7 +404,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       k = -i/2;
       i = 0;
    }
-   for (; i < nValues; i+=2, k++) {
+   for (; i < nValues - 1; i+=2, k++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
       int v1 = CLAMP((int) lround(data->values[i] * pix), 1, pix);
       int v2 = CLAMP((int) lround(data->values[i+1] * pix), 1, pix);
