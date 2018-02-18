@@ -382,10 +382,8 @@ Settings* Settings_new(int cpuCount) {
       free(htopDir);
       free(configDir);
       struct stat st;
-      if (lstat(legacyDotfile, &st) != 0) {
-         st.st_mode = 0;
-      }
-      if (access(legacyDotfile, R_OK) != 0 || S_ISLNK(st.st_mode)) {
+      int err = lstat(legacyDotfile, &st);
+      if (err || S_ISLNK(st.st_mode)) {
          free(legacyDotfile);
          legacyDotfile = NULL;
       }
@@ -394,28 +392,33 @@ Settings* Settings_new(int cpuCount) {
    this->colorScheme = 0;
    this->changed = false;
    this->delay = DEFAULT_DELAY;
-   bool ok = Settings_read(this, legacyDotfile ? legacyDotfile : this->filename);
-   if (ok) {
-      if (legacyDotfile) {
+   bool ok = false;
+   if (legacyDotfile) {
+      ok = Settings_read(this, legacyDotfile);
+      if (ok) {
          // Transition to new location and delete old configuration file
          if (Settings_write(this))
             unlink(legacyDotfile);
       }
-   } else {
+      free(legacyDotfile);
+   }
+   if (!ok) {
+      ok = Settings_read(this, this->filename);
+   }
+   if (!ok) {
       this->changed = true;
       // TODO: how to get SYSCONFDIR correctly through Autoconf?
       char* systemSettings = String_cat(SYSCONFDIR, "/htoprc");
       ok = Settings_read(this, systemSettings);
       free(systemSettings);
-      if (!ok) {
-         Settings_defaultMeters(this);
-         this->hideKernelThreads = true;
-         this->highlightMegabytes = true;
-         this->highlightThreads = true;
-         this->headerMargin = true;
-      }
    }
-   free(legacyDotfile);
+   if (!ok) {
+      Settings_defaultMeters(this);
+      this->hideKernelThreads = true;
+      this->highlightMegabytes = true;
+      this->highlightThreads = true;
+      this->headerMargin = true;
+   }
    return this;
 }
 
