@@ -68,8 +68,3 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     proc->minflt = 20;
     proc->majflt = 20;
 }
-
-void UnsupportedProcessList_scan(ProcessList* this) {
-   (void) this;
-   // stub!
-}

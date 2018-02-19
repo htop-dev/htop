@@ -17,6 +17,4 @@ void ProcessList_delete(ProcessList* this);
 
 void ProcessList_goThroughEntries(ProcessList* super);
 
-void UnsupportedProcessList_scan(ProcessList* this);
-
 #endif
