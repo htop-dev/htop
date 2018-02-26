@@ -66,7 +66,7 @@ dnl glibc 2.25 deprecates 'major' and 'minor' in <sys/types.h> and requires to
 dnl include <sys/sysmacros.h>. However the logic in AC_HEADER_MAJOR has not yet
 dnl been updated in Autoconf 2.69, so use a workaround:
 m4_version_prereq([2.70], [],
-[if test $ac_cv_header_sys_mkdev_h = no; then
+[if test "x$ac_cv_header_sys_mkdev_h" = xno; then
    AC_CHECK_HEADER(sys/sysmacros.h, [AC_DEFINE(MAJOR_IN_SYSMACROS, 1,
       [Define to 1 if `major', `minor', and `makedev' are declared in <sys/sysmacros.h>.])])
 fi])
@@ -278,8 +278,8 @@ then
    PKG_PROG_PKG_CONFIG()
    PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
    PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
-   CFLAGS+=" $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
-   LIBS+=" $LIBNL3_LIBS $LIBNL3GENL_LIBS"
+   CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
+   LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
    AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
 fi
 
