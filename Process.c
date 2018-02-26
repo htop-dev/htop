@@ -28,6 +28,12 @@ in the source distribution for its full text.
 #include <time.h>
 #include <assert.h>
 #include <math.h>
+#ifdef MAJOR_IN_MKDEV
+#include <sys/mkdev.h>
+#elif defined(MAJOR_IN_SYSMACROS) || \
+   (defined(HAVE_SYS_SYSMACROS_H) && HAVE_SYS_SYSMACROS_H)
+#include <sys/sysmacros.h>
+#endif
 
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get
