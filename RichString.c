@@ -63,6 +63,10 @@ typedef struct RichString_ {
 
 }*/
 
+#ifndef CLAMP
+#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
+
 #define charBytes(n) (sizeof(CharType) * (n)) 
 
 static void RichString_extendLen(RichString* this, int len) {
@@ -103,6 +107,7 @@ static inline void RichString_writeFrom(RichString* this, int attrs, const char*
 
 inline void RichString_setAttrn(RichString* this, int attrs, int start, int finish) {
    cchar_t* ch = this->chptr + start;
+   finish = CLAMP(finish, 0, this->chlen - 1);
    for (int i = start; i <= finish; i++) {
       ch->attr = attrs;
       ch++;
@@ -132,6 +137,7 @@ static inline void RichString_writeFrom(RichString* this, int attrs, const char*
 
 void RichString_setAttrn(RichString* this, int attrs, int start, int finish) {
    chtype* ch = this->chptr + start;
+   finish = CLAMP(finish, 0, this->chlen - 1);
    for (int i = start; i <= finish; i++) {
       *ch = (*ch & 0xff) | attrs;
       ch++;
