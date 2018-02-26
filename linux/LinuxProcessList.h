@@ -9,6 +9,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifdef MAJOR_IN_MKDEV
+#elif defined(MAJOR_IN_SYSMACROS) || \
+   (defined(HAVE_SYS_SYSMACROS_H) && HAVE_SYS_SYSMACROS_H)
+#endif
+
 #ifdef HAVE_DELAYACCT
 #endif
 
