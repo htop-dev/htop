@@ -79,6 +79,16 @@ myhtopplatheaders = darwin/Platform.h darwin/DarwinProcess.h \
 darwin/DarwinProcessList.h darwin/DarwinCRT.h darwin/Battery.h
 endif
 
+if HTOP_SOLARIS
+myhtopplatsources = solaris/Platform.c \
+solaris/SolarisProcess.c solaris/SolarisProcessList.c \
+solaris/SolarisCRT.c solaris/Battery.c
+
+myhtopplatheaders = solaris/Platform.h \
+solaris/SolarisProcess.h solaris/SolarisProcessList.h \
+solaris/SolarisCRT.h solaris/Battery.h
+endif
+
 if HTOP_UNSUPPORTED
 myhtopplatsources = unsupported/Platform.c \
 unsupported/UnsupportedProcess.c unsupported/UnsupportedProcessList.c \
