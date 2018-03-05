@@ -1,7 +1,7 @@
 /*
 htop - SolarisProcess.c
 (C) 2015 Hisham H. Muhammad
-(C) 2017 Guy M. Broome
+(C) 2017,2018 Guy M. Broome
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
