@@ -62,16 +62,6 @@ typedef struct SolarisProcessList_ {
 
 }*/
 
-static void setCommand(Process* process, const char* command, int len) {
-   if (process->comm && process->commLen >= len) {
-      strncpy(process->comm, command, len + 1);
-   } else {
-      free(process->comm);
-      process->comm = xStrdup(command);
-   }
-   process->commLen = len;
-}
-
 char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
   char* zname;
   if ( sproc->zoneid == 0 ) {
@@ -326,7 +316,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->user            = UsersTable_getRef(this->usersTable, proc->st_uid);
          proc->nlwp            = _psinfo.pr_nlwp;
          proc->session         = _pstatus.pr_sid;
-         setCommand(proc,_psinfo.pr_fname,PRFNSZ);
+         proc->comm            = xStrdup(_psinfo.pr_fname);
+         proc->commLen         = strnlen(_psinfo.pr_fname,PRFNSZ); 
          sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
          proc->minflt          = _prusage.pr_minf; 
@@ -355,7 +346,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->pgrp            = _psinfo.pr_pgid;
          proc->nlwp            = _psinfo.pr_nlwp;
          proc->user            = UsersTable_getRef(this->usersTable, proc->st_uid);
-         setCommand(proc,_psinfo.pr_fname,PRFNSZ);
+	 proc->comm            = xStrdup(_psinfo.pr_fname);
+         proc->commLen         = strnlen(_psinfo.pr_fname,PRFNSZ);
          sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
          proc->minflt          = _prusage.pr_minf;
