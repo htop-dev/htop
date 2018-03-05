@@ -346,7 +346,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->pgrp            = _psinfo.pr_pgid;
          proc->nlwp            = _psinfo.pr_nlwp;
          proc->user            = UsersTable_getRef(this->usersTable, proc->st_uid);
-	 proc->comm            = xStrdup(_psinfo.pr_fname);
+         proc->comm            = xStrdup(_psinfo.pr_fname);
          proc->commLen         = strnlen(_psinfo.pr_fname,PRFNSZ);
          sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
