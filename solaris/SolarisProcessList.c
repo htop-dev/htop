@@ -7,8 +7,8 @@ in the source distribution for its full text.
 */
 
 #include "ProcessList.h"
-#include "SolarisProcessList.h"
 #include "SolarisProcess.h"
+#include "SolarisProcessList.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -31,7 +31,7 @@ in the source distribution for its full text.
 
 #include <kstat.h>
 #include <sys/param.h>
-#include <sys/zone.h>
+#include <zone.h>
 #include <sys/uio.h>
 #include <sys/resource.h>
 #include <sys/sysconf.h>
@@ -72,15 +72,17 @@ static void setCommand(Process* process, const char* command, int len) {
    process->commLen = len;
 }
 
-static void setZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
+char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
+  char* zname;
   if ( sproc->zoneid == 0 ) {
-     strncpy( sproc->zname, "global    ", 11);
+     zname = xStrdup("global    ");
   } else if ( kd == NULL ) {
-     strncpy( sproc->zname, "unknown   ", 11);
+     zname = xStrdup("unknown   ");
   } else {
      kstat_t* ks = kstat_lookup( kd, "zones", sproc->zoneid, NULL );
-     strncpy( sproc->zname, ks->ks_name, strlen(ks->ks_name) );
+     zname = xStrdup(ks->ks_name);
   }
+  return zname;
 }
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
@@ -325,7 +327,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->nlwp            = _psinfo.pr_nlwp;
          proc->session         = _pstatus.pr_sid;
          setCommand(proc,_psinfo.pr_fname,PRFNSZ);
-         setZoneName(spl->kd,sproc);
+         sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
          proc->minflt          = _prusage.pr_minf; 
          proc->m_resident      = (_psinfo.pr_rssize)/8;
@@ -354,7 +356,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->nlwp            = _psinfo.pr_nlwp;
          proc->user            = UsersTable_getRef(this->usersTable, proc->st_uid);
          setCommand(proc,_psinfo.pr_fname,PRFNSZ);
-         setZoneName(spl->kd,sproc);
+         sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
          proc->minflt          = _prusage.pr_minf;
          proc->m_resident      = (_psinfo.pr_rssize)/8;

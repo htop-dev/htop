@@ -15,7 +15,7 @@ in the source distribution for its full text.
 
 #include <kstat.h>
 #include <sys/param.h>
-#include <sys/zone.h>
+#include <zone.h>
 #include <sys/uio.h>
 #include <sys/resource.h>
 #include <sys/sysconf.h>
@@ -44,10 +44,14 @@ typedef struct SolarisProcessList_ {
    CPUData* cpus;
 } SolarisProcessList;
 
+
+char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc);
+
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
 
 void ProcessList_goThroughEntries(ProcessList* this);
+
 
 #endif
