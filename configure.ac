@@ -243,6 +243,7 @@ fi
 
 if test "$my_htop_platform" = "solaris"; then
    AC_CHECK_LIB([kstat], [kstat_open], [], [missing_libraries="$missing_libraries libkstat"])
+   AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
 fi
 
 AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
