@@ -76,16 +76,35 @@ void OpenFilesScreen_draw(InfoScreen* this) {
 }
 
 static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
-   char command[1025];
-   xSnprintf(command, 1024, "lsof -P -p %d -F 2> /dev/null", pid);
-   FILE* fd = popen(command, "r");
+   char buffer[1025];
+   xSnprintf(buffer, 1024, "%d", pid);
    OpenFiles_ProcessData* pdata = xCalloc(1, sizeof(OpenFiles_ProcessData));
    OpenFiles_FileData* fdata = NULL;
    OpenFiles_Data* item = &(pdata->data);
-   if (!fd) {
-      pdata->error = 127;
+   int fdpair[2];
+   if (pipe(fdpair) == -1) {
+      pdata->error = 1;
       return pdata;
    }
+   pid_t child = fork();
+   if (child == -1) {
+      pdata->error = 1;
+      return pdata;
+   }
+   if (child == 0) {
+      close(fdpair[0]);
+      dup2(fdpair[1], STDOUT_FILENO);
+      close(fdpair[1]);
+      int fdnull = open("/dev/null", O_WRONLY);
+      if (fdnull < 0)
+         exit(1);
+      dup2(fdnull, STDERR_FILENO);
+      close(fdnull);
+      execlp("lsof", "lsof", "-P", "-p", buffer, "-F", NULL);
+      exit(127);
+   }
+   close(fdpair[1]);
+   FILE* fd = fdopen(fdpair[0], "r");
    for (;;) {
       char* line = String_readLine(fd);
       if (!line) {
@@ -105,7 +124,15 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       item->data[cmd] = xStrdup(line + 1);
       free(line);
    }
-   pdata->error = pclose(fd);
+   int wstatus;
+   if (waitpid(child, &wstatus, 0) == -1) {
+      pdata->error = 1;
+      return pdata;
+   }
+   if (!WIFEXITED(wstatus))
+      pdata->error = 1;
+   else
+      pdata->error = WEXITSTATUS(wstatus);
    return pdata;
 }
 
