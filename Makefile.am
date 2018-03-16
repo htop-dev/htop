@@ -12,8 +12,8 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-htop_CFLAGS = -pedantic -Wall $(wextra_flag) -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
-htop_LDFLAGS = 
+AM_CFLAGS = -pedantic -Wall $(wextra_flag) -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
+AM_LDFLAGS =
 AM_CPPFLAGS = -DNDEBUG
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
@@ -37,7 +37,7 @@ AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
 EnvScreen.h InfoScreen.h XAlloc.h
 
 if HTOP_LINUX
-htop_CFLAGS += -rdynamic 
+AM_CFLAGS += -rdynamic
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
 linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c
 
@@ -54,7 +54,7 @@ freebsd/FreeBSDProcess.h freebsd/FreeBSDCRT.h freebsd/Battery.h
 endif
 
 if HTOP_DRAGONFLYBSD
-htop_LDFLAGS += -lkvm -lkinfo -lexecinfo
+AM_LDFLAGS += -lkvm -lkinfo -lexecinfo
 myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
 dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/DragonFlyBSDCRT.c dragonflybsd/Battery.c
 
@@ -71,7 +71,7 @@ openbsd/OpenBSDProcess.h openbsd/OpenBSDCRT.h openbsd/Battery.h
 endif
 
 if HTOP_DARWIN
-htop_LDFLAGS += -framework IOKit -framework CoreFoundation
+AM_LDFLAGS += -framework IOKit -framework CoreFoundation
 myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
 darwin/DarwinProcessList.c darwin/DarwinCRT.c darwin/Battery.c
 
