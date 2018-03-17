@@ -36,73 +36,161 @@ TasksMeter.h UptimeMeter.h TraceScreen.h UsersTable.h Vector.h Process.h \
 AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
 EnvScreen.h InfoScreen.h XAlloc.h
 
+all_platform_headers =
+
+# Linux
+# -----
+
+linux_platform_headers = \
+	linux/Platform.h \
+	linux/IOPriorityPanel.h \
+	linux/IOPriority.h \
+	linux/LinuxProcess.h \
+	linux/LinuxProcessList.h \
+	linux/LinuxCRT.h \
+	linux/Battery.h
+
+all_platform_headers += $(linux_platform_headers)
+
 if HTOP_LINUX
 AM_CFLAGS += -rdynamic
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
 linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c
 
-myhtopplatheaders = linux/Platform.h linux/IOPriorityPanel.h linux/IOPriority.h \
-linux/LinuxProcess.h linux/LinuxProcessList.h linux/LinuxCRT.h linux/Battery.h
+myhtopplatheaders = $(linux_platform_headers)
 endif
+
+# FreeBSD
+# -------
+
+freebsd_platform_headers = \
+	freebsd/Platform.h \
+	freebsd/FreeBSDProcessList.h \
+	freebsd/FreeBSDProcess.h \
+	freebsd/FreeBSDCRT.h \
+	freebsd/Battery.h
+
+all_platform_headers += $(freebsd_platform_headers)
 
 if HTOP_FREEBSD
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
 freebsd/FreeBSDProcess.c freebsd/FreeBSDCRT.c freebsd/Battery.c
 
-myhtopplatheaders = freebsd/Platform.h freebsd/FreeBSDProcessList.h \
-freebsd/FreeBSDProcess.h freebsd/FreeBSDCRT.h freebsd/Battery.h
+myhtopplatheaders = $(freebsd_platform_headers)
 endif
+
+# DragonFlyBSD
+# ------------
+
+dragonflybsd_platform_headers = \
+	dragonflybsd/Platform.h \
+	dragonflybsd/DragonFlyBSDProcessList.h \
+	dragonflybsd/DragonFlyBSDProcess.h \
+	dragonflybsd/DragonFlyBSDCRT.h \
+	dragonflybsd/Battery.h
+
+all_platform_headers += $(dragonflybsd_platform_headers)
 
 if HTOP_DRAGONFLYBSD
 AM_LDFLAGS += -lkvm -lkinfo -lexecinfo
 myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
 dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/DragonFlyBSDCRT.c dragonflybsd/Battery.c
 
-myhtopplatheaders = dragonflybsd/Platform.h dragonflybsd/DragonFlyBSDProcessList.h \
-dragonflybsd/DragonFlyBSDProcess.h dragonflybsd/DragonFlyBSDCRT.h dragonflybsd/Battery.h
+myhtopplatheaders = $(dragonflybsd_platform_headers)
 endif
+
+# OpenBSD
+# -------
+
+openbsd_platform_headers = \
+	openbsd/Platform.h \
+	openbsd/OpenBSDProcessList.h \
+	openbsd/OpenBSDProcess.h \
+	openbsd/OpenBSDCRT.h \
+	openbsd/Battery.h
+
+all_platform_headers += $(openbsd_platform_headers)
 
 if HTOP_OPENBSD
 myhtopplatsources = openbsd/Platform.c openbsd/OpenBSDProcessList.c \
 openbsd/OpenBSDProcess.c openbsd/OpenBSDCRT.c openbsd/Battery.c
 
-myhtopplatheaders = openbsd/Platform.h openbsd/OpenBSDProcessList.h \
-openbsd/OpenBSDProcess.h openbsd/OpenBSDCRT.h openbsd/Battery.h
+myhtopplatheaders = $(openbsd_platform_headers)
 endif
+
+# Darwin
+# ------
+
+darwin_platform_headers = \
+	darwin/Platform.h \
+	darwin/DarwinProcess.h \
+	darwin/DarwinProcessList.h \
+	darwin/DarwinCRT.h \
+	darwin/Battery.h
+
+all_platform_headers += $(darwin_platform_headers)
 
 if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
 myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
 darwin/DarwinProcessList.c darwin/DarwinCRT.c darwin/Battery.c
 
-myhtopplatheaders = darwin/Platform.h darwin/DarwinProcess.h \
-darwin/DarwinProcessList.h darwin/DarwinCRT.h darwin/Battery.h
+myhtopplatheaders = $(darwin_platform_headers)
 endif
+
+# Solaris
+# -------
+
+solaris_platform_headers = \
+	solaris/Platform.h \
+	solaris/SolarisProcess.h \
+	solaris/SolarisProcessList.h \
+	solaris/SolarisCRT.h \
+	solaris/Battery.h
+
+all_platform_headers += $(solaris_platform_headers)
 
 if HTOP_SOLARIS
 myhtopplatsources = solaris/Platform.c \
 solaris/SolarisProcess.c solaris/SolarisProcessList.c \
 solaris/SolarisCRT.c solaris/Battery.c
 
-myhtopplatheaders = solaris/Platform.h \
-solaris/SolarisProcess.h solaris/SolarisProcessList.h \
-solaris/SolarisCRT.h solaris/Battery.h
+myhtopplatheaders = $(solaris_platform_headers)
 endif
+
+# Unsupported
+# -----------
+
+unsupported_platform_headers = \
+	unsupported/Platform.h \
+	unsupported/UnsupportedProcess.h \
+	unsupported/UnsupportedProcessList.h \
+	unsupported/UnsupportedCRT.h \
+	unsupported/Battery.h
+
+all_platform_headers += $(unsupported_platform_headers)
 
 if HTOP_UNSUPPORTED
 myhtopplatsources = unsupported/Platform.c \
 unsupported/UnsupportedProcess.c unsupported/UnsupportedProcessList.c \
 unsupported/UnsupportedCRT.c unsupported/Battery.c
 
-myhtopplatheaders = unsupported/Platform.h \
-unsupported/UnsupportedProcess.h unsupported/UnsupportedProcessList.h \
-unsupported/UnsupportedCRT.h unsupported/Battery.h
+myhtopplatheaders = $(unsupported_platform_headers)
 endif
+
+# ----
 
 SUFFIXES = .h
 
 BUILT_SOURCES = $(myhtopheaders) $(myhtopplatheaders)
 htop_SOURCES  = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources) config.h
+
+.PHONY: htop-headers clean-htop-headers
+
+htop-headers: $(myhtopheaders) $(all_platform_headers)
+
+clean-htop-headers:
+	-rm -f $(myhtopheaders) $(all_platform_headers)
 
 target:
 	echo $(htop_SOURCES)
