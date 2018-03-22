@@ -299,6 +299,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       fread(&_prusage,sizeof(prusage_t),1,fp);
       fclose(fp);
 
+      double kb_per_page = ((double)PAGE_SIZE / (double)1024.0);
+
       if(!preExisting) {
          sproc->kernel         = false;
          proc->pid             = _psinfo.pr_pid;
@@ -321,8 +323,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
          proc->minflt          = _prusage.pr_minf; 
-         proc->m_resident      = (_psinfo.pr_rssize)/8;
-         proc->m_size          = (_psinfo.pr_size)/8;
+         proc->m_resident      = (long)(((double)_psinfo.pr_rssize)/kb_per_page);
+         proc->m_size          = (long)(((double)_psinfo.pr_size)/kb_per_page);
          proc->priority        = _psinfo.pr_lwp.pr_pri;
          proc->nice            = _psinfo.pr_lwp.pr_nice;
          proc->processor       = _psinfo.pr_lwp.pr_onpro;
@@ -351,8 +353,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
          proc->minflt          = _prusage.pr_minf;
-         proc->m_resident      = (_psinfo.pr_rssize)/8;
-         proc->m_size          = (_psinfo.pr_size)/8;
+         proc->m_resident      = (long)(((double)_psinfo.pr_rssize)/kb_per_page); 
+         proc->m_size          = (long)(((double)_psinfo.pr_size)/kb_per_page); 
          proc->priority        = _psinfo.pr_lwp.pr_pri;
          proc->nice            = _psinfo.pr_lwp.pr_nice;
          proc->processor       = _psinfo.pr_lwp.pr_onpro;
