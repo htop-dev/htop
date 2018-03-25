@@ -748,9 +748,6 @@ static void setCommand(Process* process, const char* command, int len) {
 }
 
 static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirname, const char* name) {
-   if (Process_isKernelThread(process))
-      return true;
-
    char filename[MAX_NAME+1];
    xSnprintf(filename, MAX_NAME, "%s/%s/cmdline", dirname, name);
    int fd = open(filename, O_RDONLY);
@@ -762,7 +759,10 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    close(fd);
    int tokenEnd = 0; 
    int lastChar = 0;
-   if (amtRead <= 0) {
+   if (amtRead == 0) {
+      ((LinuxProcess*)process)->isKernelThread = true;
+      return true;
+   } else if (amtRead < 0) {
       return false;
    }
    for (int i = 0; i < amtRead; i++) {
