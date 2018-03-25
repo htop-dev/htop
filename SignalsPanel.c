@@ -41,10 +41,10 @@ Panel* SignalsPanel_new() {
    }
    #if (defined(SIGRTMIN) && defined(SIGRTMAX))
    if (SIGRTMAX - SIGRTMIN <= 100) {
-      static char buf[15];
+      static char buf[16];
       for (int sig = SIGRTMIN; sig <= SIGRTMAX; i++, sig++) {
          int n = sig - SIGRTMIN;
-         xSnprintf(buf, 15, "%2d SIGRTMIN%-+3d", sig, n);
+         xSnprintf(buf, 16, "%2d SIGRTMIN%-+3d", sig, n);
          if (n == 0) {
             buf[11] = '\0';
          }
