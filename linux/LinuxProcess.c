@@ -93,6 +93,7 @@ typedef enum LinuxProcessFields {
 
 typedef struct LinuxProcess_ {
    Process super;
+   bool isKernelThread;
    IOPriority ioPriority;
    unsigned long int cminflt;
    unsigned long int cmajflt;
@@ -142,7 +143,7 @@ typedef struct LinuxProcess_ {
 } LinuxProcess;
 
 #ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->pgrp == 0)
+#define Process_isKernelThread(_process) ((LinuxProcess*)(_process)->isKernelThread)
 #endif
 
 #ifndef Process_isUserlandThread
