@@ -18,6 +18,34 @@ in the source distribution for its full text.
 #include <sys/mman.h>
 #include <utmpx.h>
 #include <err.h>
+#include <sys/sysctl.h>
+#include <stdbool.h>
+
+struct kern {
+    short int version[3];
+};
+
+void GetKernelVersion(struct kern *k) {
+   static short int version_[3] = {0};
+   if (!version_[0]) {
+      // just in case it fails someday
+      version_[0] = version_[1] = version_[2] = -1;
+      char str[256] = {0};
+      size_t size = sizeof(str);
+      int ret = sysctlbyname("kern.osrelease", str, &size, NULL, 0);
+      if (ret == 0) sscanf(str, "%hd.%hd.%hd", &version_[0], &version_[1], &version_[2]);
+    }
+    memcpy(k->version, version_, sizeof(version_));
+}
+
+int CompareKernelVersion(short int major, short int minor, short int component) {
+    struct kern k;
+    GetKernelVersion(&k);
+    if ( k.version[0] !=  major) return major - k.version[0];
+    if ( k.version[1] !=  minor) return minor - k.version[1];
+    if ( k.version[2] !=  component) return component - k.version[2];
+    return 0;
+}
 
 /*{
 #include "ProcessList.h"
@@ -170,9 +198,13 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
        DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], tv.tv_sec, preExisting);
        DarwinProcess_setFromLibprocPidinfo(proc, dpl);
-       
-       // Disabled due to bug in macOS High Sierra
-       // DarwinProcess_scanThreads(proc);
+
+       // Disabled for High Sierra due to bug in macOS High Sierra
+       bool isScanThreadSupported  = ! ( CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);
+
+       if (isScanThreadSupported){
+           DarwinProcess_scanThreads(proc);
+       }
 
        super->totalTasks += 1;
 
