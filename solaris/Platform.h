@@ -14,7 +14,10 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
+#include <signal.h>
 #include <sys/mkdev.h>
+
+#define  kill(pid, signal) kill(pid / 1024, signal)
 
 extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;

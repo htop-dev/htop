@@ -21,7 +21,8 @@ typedef enum SolarisProcessFields {
    TASKID = 103,
    POOLID = 104,
    CONTID = 105,
-   LAST_PROCESSFIELD = 106,
+   LWPID = 106,
+   LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
 
 
@@ -34,6 +35,10 @@ typedef struct SolarisProcess_ {
    projid_t   projid;
    poolid_t   poolid;
    ctid_t     contid;
+   bool       is_lwp;
+   pid_t      realpid;
+   pid_t      realppid;
+   pid_t      lwpid;
 } SolarisProcess;
 
 

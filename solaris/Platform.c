@@ -35,7 +35,10 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
+#include <signal.h>
 #include <sys/mkdev.h>
+
+#define  kill(pid, signal) kill(pid / 1024, signal)
 
 extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;
@@ -91,7 +94,7 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
 
-ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
+ProcessField Platform_defaultFields[] = { PID, LWPID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 MeterClass* Platform_meterTypes[] = {
    &CPUMeter_class,
