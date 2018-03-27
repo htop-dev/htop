@@ -381,8 +381,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    prusage_t _prusage;
    char filename[MAX_NAME+1];
    FILE *fp = NULL;
-   uint64_t addRunning = 0;
-   uint64_t addTotal = 0;
    struct timeval tv;
    struct tm date;
 
@@ -397,8 +395,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    // We always count the scheduler
    this->kernelThreads = 1;
    while ((entry = readdir(dir)) != NULL) {
-      addRunning = 0;
-      addTotal = 0;
       name = entry->d_name;
       pid = atoi(name);
       proc = ProcessList_getProcess(this, pid, &preExisting, (Process_New) SolarisProcess_new);
@@ -497,6 +493,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          sproc->poolid         = _psinfo.pr_poolid;
          sproc->contid         = _psinfo.pr_contract;
       }
+
       if (proc->nlwp > 1) {
          ProcessList_enumerateLWPs(proc, name, this, tv);
       }
@@ -505,22 +502,23 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       if (sproc->kernel && !this->settings->hideKernelThreads) {
          this->kernelThreads += proc->nlwp;
-         addTotal = proc->nlwp+1;
-         if (proc->state == 'O') addRunning++;
+         this->totalTasks += proc->nlwp+1;
+         if (proc->state == 'O') this->runningTasks++;
       } else if (!sproc->kernel) {
-         if (proc->state == 'O') addRunning++;
+         if (proc->state == 'O') this->runningTasks++;
          if (this->settings->hideUserlandThreads) {
-            addTotal++;
+            this->totalTasks++;
          } else {
             this->userlandThreads += proc->nlwp;
-            addTotal = proc->nlwp+1;
+            this->totalTasks += proc->nlwp+1;
          }
       }
 
-      this->runningTasks+=addRunning;
-      this->totalTasks+=addTotal;
       proc->updated = true;
+
    } // while ((entry = readdir(dir)) != NULL)
+
    closedir(dir);
+
 }
 
