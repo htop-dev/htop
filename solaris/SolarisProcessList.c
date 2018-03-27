@@ -243,6 +243,144 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
+void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struct timeval tv) {
+   Process *lwp;
+   SolarisProcess *slwp;
+   SolarisProcess *sproc = (SolarisProcess*) proc;
+   Settings* settings = pl->settings;
+   bool hideKernelThreads = settings->hideKernelThreads;
+   bool hideUserlandThreads = settings->hideUserlandThreads;
+   char lwpdir[MAX_NAME+1];
+   DIR* dir = NULL;
+   FILE* fp = NULL;
+   pid_t lwpid;
+   bool preExisting = false;   
+   char filename[MAX_NAME+1];
+   lwpsinfo_t _lwpsinfo;
+   prusage_t _lwprusage;
+   struct tm date;
+   xSnprintf(lwpdir, MAX_NAME, "%s/%s/lwp", PROCDIR, name);
+   struct dirent* entry;
+   char* lwpname;
+   bool haveUsage = false;
+
+   dir = opendir(lwpdir);
+   if (!dir) return;
+   while ((entry = readdir(dir)) != NULL) {
+      lwpname = entry->d_name;
+      // With 10 bits to spare, we can only list up to 1023 unique LWPs per process
+      if (atoi(lwpname) > 1023) break;
+      lwpid   = proc->pid + atoi(lwpname);
+      lwp     = ProcessList_getProcess(pl, lwpid, &preExisting, (Process_New) SolarisProcess_new);
+      slwp    = (SolarisProcess*) lwp;
+      xSnprintf(filename, MAX_NAME, "%s/%s/lwp/%s/lwpsinfo", PROCDIR, name, lwpname);
+      fp   = fopen(filename, "r");
+      if ( fp == NULL ) continue;
+      fread(&_lwpsinfo,sizeof(lwpsinfo_t),1,fp);
+      fclose(fp);
+      xSnprintf(filename, MAX_NAME, "%s/%s/lwp/%s/lwpusage", PROCDIR, name, lwpname);
+      fp   = fopen(filename, "r");
+      if ( fp != NULL ) {
+         haveUsage = true;
+         fread(&_lwprusage,sizeof(prusage_t),1,fp);
+         fclose(fp);
+      }
+      slwp->is_lwp = TRUE;
+
+      if (!preExisting) {
+         lwp->basenameOffset  = -1;
+         slwp->kernel         = sproc->kernel;
+         // Fake values used for sorting
+         lwp->pid             = lwpid;
+         lwp->ppid            = proc->pid;
+         lwp->tgid            = proc->pid;
+         // Corresponding real values used for display
+         slwp->realpid        = sproc->realpid;
+         slwp->realppid       = sproc->realpid;
+         slwp->lwpid          = atoi(lwpname);
+         slwp->zoneid         = sproc->zoneid;
+         lwp->tty_nr          = proc->tty_nr;
+         lwp->pgrp            = proc->pgrp;
+         lwp->percent_cpu     = ((uint16_t)_lwpsinfo.pr_pctcpu/(double)32768)*(double)100.0;
+         // Not tracked per thread
+         lwp->percent_mem     = (double)0.0;
+         lwp->st_uid          = proc->st_uid;
+         lwp->user            = UsersTable_getRef(pl->usersTable, lwp->st_uid);
+         lwp->nlwp            = 0;
+         lwp->session         = proc->session;
+         lwp->comm            = xStrdup(proc->comm);
+         lwp->commLen         = strnlen(proc->comm,PRFNSZ);
+         slwp->zname          = sproc->zname;
+         if (haveUsage) {
+            lwp->majflt       = _lwprusage.pr_majf;
+            lwp->minflt       = _lwprusage.pr_minf;
+         } else {
+            lwp->majflt       = 0;
+            lwp->minflt       = 0;
+         }
+         lwp->m_resident      = 0;
+         lwp->m_size          = 0;
+         lwp->priority        = _lwpsinfo.pr_pri;
+         lwp->nice            = _lwpsinfo.pr_nice;
+         lwp->processor       = _lwpsinfo.pr_onpro;
+         lwp->state           = _lwpsinfo.pr_sname;
+         lwp->time            = _lwpsinfo.pr_time.tv_sec;
+         slwp->taskid         = sproc->taskid;
+         slwp->projid         = sproc->projid;
+         slwp->poolid         = sproc->poolid;
+         slwp->contid         = sproc->contid;
+         lwp->starttime_ctime = _lwpsinfo.pr_start.tv_sec;
+         (void) localtime_r((time_t*) &lwp->starttime_ctime, &date);
+         strftime(lwp->starttime_show, 7, ((lwp->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
+         ProcessList_add(pl, lwp);
+      } else {
+         slwp->zoneid         = sproc->zoneid;
+         lwp->pgrp            = proc->pgrp;
+         lwp->percent_cpu     = ((uint16_t)_lwpsinfo.pr_pctcpu/(double)32768)*(double)100.0;
+         // Not tracked per thread
+         lwp->percent_mem     = (double)0.0;
+         lwp->st_uid          = proc->st_uid;
+         lwp->user            = UsersTable_getRef(pl->usersTable, lwp->st_uid);
+         lwp->nlwp            = 0;
+         lwp->session         = proc->session;
+         lwp->comm            = xStrdup(proc->comm);
+         lwp->commLen         = strnlen(proc->comm,PRFNSZ);
+         slwp->zname          = sproc->zname;
+         if (haveUsage) {
+            lwp->majflt       = _lwprusage.pr_majf;
+            lwp->minflt       = _lwprusage.pr_minf;
+         }
+         lwp->m_resident      = 0;
+         lwp->m_size          = 0;
+         lwp->priority        = _lwpsinfo.pr_pri;
+         lwp->nice            = _lwpsinfo.pr_nice;
+         lwp->processor       = _lwpsinfo.pr_onpro;
+         lwp->state           = _lwpsinfo.pr_sname;
+         lwp->time            = _lwpsinfo.pr_time.tv_sec;
+         slwp->taskid         = sproc->taskid;
+         slwp->projid         = sproc->projid;
+         slwp->poolid         = sproc->poolid;
+         slwp->contid         = sproc->contid;
+      }
+      if (slwp->kernel) {
+         if(!hideKernelThreads) {
+            lwp->show = true;
+         } else {
+            lwp->show = false;
+         }
+      } else {
+         if(!hideUserlandThreads) {
+            lwp->show = true;
+         } else {
+            lwp->show = false;
+         }
+      }
+      lwp->updated = true;
+   }
+   closedir(dir);
+}
+
+
 void ProcessList_goThroughEntries(ProcessList* this) {
    SolarisProcessList* spl = (SolarisProcessList*) this;
    Settings* settings = this->settings;
@@ -254,7 +392,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    int    pid;
    bool   preExisting = false;
    Process* proc = NULL;
-   Process* parent = NULL;
    SolarisProcess* sproc = NULL;
    psinfo_t _psinfo;
    pstatus_t _pstatus;
@@ -280,7 +417,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       name = entry->d_name;
       pid = atoi(name);
       proc = ProcessList_getProcess(this, pid, &preExisting, (Process_New) SolarisProcess_new);
-      proc->tgid = parent ? parent->pid : pid;
       sproc = (SolarisProcess *) proc;
       xSnprintf(filename, MAX_NAME, "%s/%s/psinfo", PROCDIR, name);
       fp = fopen(filename, "r");
@@ -298,14 +434,17 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if ( fp == NULL ) continue;
       fread(&_prusage,sizeof(prusage_t),1,fp);
       fclose(fp);
-
-      double kb_per_page = ((double)PAGE_SIZE / (double)1024.0);
+      sproc->is_lwp = FALSE;
 
       if(!preExisting) {
-         sproc->kernel         = false;
-         proc->pid             = _psinfo.pr_pid;
-         proc->ppid            = _psinfo.pr_ppid;
-         proc->tgid            = _psinfo.pr_pid;
+         // Fake PID values used for sorting, since Solaris LWPs lack unique PIDs
+         proc->pid             = (_psinfo.pr_pid * 1024);
+         proc->ppid            = (_psinfo.pr_ppid * 1024); 
+         proc->tgid            = (_psinfo.pr_ppid * 1024);
+         // Corresponding real values used for display
+         sproc->realpid        = _psinfo.pr_pid;
+         sproc->realppid       = _psinfo.pr_ppid;
+         sproc->lwpid          = 0; 
          sproc->zoneid         = _psinfo.pr_zoneid;
          proc->tty_nr          = _psinfo.pr_ttydev;
          proc->pgrp            = _psinfo.pr_pgid;
@@ -323,8 +462,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
          proc->minflt          = _prusage.pr_minf; 
-         proc->m_resident      = (long)(((double)_psinfo.pr_rssize)/kb_per_page);
-         proc->m_size          = (long)(((double)_psinfo.pr_size)/kb_per_page);
+         proc->m_resident      = _psinfo.pr_rssize/PAGE_SIZE_KB;
+         proc->m_size          = _psinfo.pr_size/PAGE_SIZE_KB;
          proc->priority        = _psinfo.pr_lwp.pr_pri;
          proc->nice            = _psinfo.pr_lwp.pr_nice;
          proc->processor       = _psinfo.pr_lwp.pr_onpro;
@@ -335,11 +474,19 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          sproc->poolid         = _psinfo.pr_poolid;
          sproc->contid         = _psinfo.pr_contract;
          proc->starttime_ctime = _psinfo.pr_start.tv_sec;
+         if ((sproc->realppid <= 0) && !(sproc->realpid <= 1)) {
+            sproc->kernel = true;
+         } else {
+            sproc->kernel = false;
+         }
          (void) localtime_r((time_t*) &proc->starttime_ctime, &date);
          strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date); 
          ProcessList_add(this, proc);
       } else {
-         proc->ppid            = _psinfo.pr_ppid;
+         proc->ppid            = (_psinfo.pr_ppid * 1024);
+         proc->tgid            = (_psinfo.pr_ppid * 1024);
+         sproc->realppid       = _psinfo.pr_ppid;
+         sproc->lwpid          = 0; 
          sproc->zoneid         = _psinfo.pr_zoneid;
          // See note above about these percentages
          proc->percent_cpu     = ((uint16_t)_psinfo.pr_pctcpu/(double)32768)*(double)100.0;
@@ -353,8 +500,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
          proc->majflt          = _prusage.pr_majf;
          proc->minflt          = _prusage.pr_minf;
-         proc->m_resident      = (long)(((double)_psinfo.pr_rssize)/kb_per_page); 
-         proc->m_size          = (long)(((double)_psinfo.pr_size)/kb_per_page); 
+         proc->m_resident      = _psinfo.pr_rssize/PAGE_SIZE_KB; 
+         proc->m_size          = _psinfo.pr_size/PAGE_SIZE_KB; 
          proc->priority        = _psinfo.pr_lwp.pr_pri;
          proc->nice            = _psinfo.pr_lwp.pr_nice;
          proc->processor       = _psinfo.pr_lwp.pr_onpro;
@@ -365,8 +512,11 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          sproc->poolid         = _psinfo.pr_poolid;
          sproc->contid         = _psinfo.pr_contract;
       }
-      proc->show = !(hideKernelThreads && (_pstatus.pr_flags & PR_ISSYS));
-      if (_pstatus.pr_flags & PR_ISSYS) {
+      if (proc->nlwp > 1) {
+         ProcessList_enumerateLWPs(proc, name, this, tv);
+      }
+      proc->show = !(hideKernelThreads && sproc->kernel);
+      if (_pstatus.pr_flags & sproc->kernel) {
          if (hideKernelThreads) {
             addRunning = 0;
             addTotal   = 0;

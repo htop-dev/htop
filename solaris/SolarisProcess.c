@@ -29,7 +29,8 @@ typedef enum SolarisProcessFields {
    TASKID = 103,
    POOLID = 104,
    CONTID = 105,
-   LAST_PROCESSFIELD = 106,
+   LWPID = 106,
+   LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
 
 
@@ -42,6 +43,10 @@ typedef struct SolarisProcess_ {
    projid_t   projid;
    poolid_t   poolid;
    ctid_t     contid;
+   bool       is_lwp;
+   pid_t      realpid;
+   pid_t      realppid;
+   pid_t      lwpid;
 } SolarisProcess;
 
 
@@ -67,7 +72,7 @@ ProcessClass SolarisProcess_class = {
 
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
-   [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
+   [PID] = { .name = "PID", .title = "    PID    ", .description = "Process/thread ID", .flags = 0, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
    [STATE] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping, R running, D disk, Z zombie, T traced, W paging)", .flags = 0, },
    [PPID] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
@@ -96,6 +101,7 @@ ProcessFieldData Process_fields[] = {
    [TASKID] = { .name = "TASKID", .title = " TSKID ", .description = "Task ID", .flags = 0, },
    [POOLID] = { .name = "POOLID", .title = " POLID ", .description = "Pool ID", .flags = 0, },
    [CONTID] = { .name = "CONTID", .title = " CNTID ", .description = "Contract ID", .flags = 0, },
+   [LWPID] = { .name = "LWPID", .title = " LWPID ", .description = "LWP ID", .flags = 0, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -107,6 +113,7 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = CONTID, .label = "CNTID" },
    { .id = PID, .label = "PID" },
    { .id = PPID, .label = "PPID" },
+   { .id = LWPID, .label = "LWPID" },
    { .id = TPGID, .label = "TPGID" },
    { .id = TGID, .label = "TGID" },
    { .id = PGRP, .label = "PGRP" },
@@ -148,6 +155,15 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
       }
       break;
    }
+   case PID: xSnprintf(buffer, n, Process_pidFormat, sp->realpid); break;
+   case PPID: xSnprintf(buffer, n, Process_pidFormat, sp->realppid); break;
+   case LWPID:{
+      if (sp->lwpid <= 0) {
+         xSnprintf(buffer, n, "    - ");   
+      } else {
+         xSnprintf(buffer, n, Process_pidFormat, sp->lwpid); break;
+      }
+   }; break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -178,6 +194,12 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
       return (p1->contid - p2->contid);
    case ZONE:
       return strcmp(p1->zname ? p1->zname : "global", p2->zname ? p2->zname : "global");
+   case PID:
+      return (p1->realpid - p2->realpid);
+   case PPID:
+      return (p1->realppid - p2->realppid);
+   case LWPID:
+      return (p1->lwpid - p2->lwpid);
    default:
       return Process_compare(v1, v2);
    }
@@ -186,8 +208,11 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
 bool Process_isThread(Process* this) {
    SolarisProcess* fp = (SolarisProcess*) this;
 
-   if (fp->kernel == 1 )
+   if (fp->kernel == 1 ) {
       return 1;
-   else
+   } else if (fp->is_lwp) {
+      return 1;
+   } else {
       return 0;
+   }
 }

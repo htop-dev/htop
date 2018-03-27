@@ -51,6 +51,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
 void ProcessList_delete(ProcessList* this);
 
+void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struct timeval tv);
+
 void ProcessList_goThroughEntries(ProcessList* this);
 
 
