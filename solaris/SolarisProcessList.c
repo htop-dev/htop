@@ -171,7 +171,7 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
 static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    SolarisProcessList* spl = (SolarisProcessList*) pl;
    kstat_t             *meminfo = NULL;
-   int                 ksrphyserr = 0;
+   int                 ksrphyserr = -1;
    kstat_named_t       *totalmem_pgs = NULL;
    kstat_named_t       *lockedmem_pgs = NULL;
    kstat_named_t       *pages = NULL;
@@ -181,10 +181,6 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    uint64_t            totalfree = 0;
    int                 nswap = 0;
    char                *spath = NULL; 
-   // PAGE_SIZE is a macro to a function call.
-   // Since we use it so much in here, go ahead copy
-   // the value locally.
-   int              pgsiz = PAGE_SIZE;
 
    // Part 1 - physical memory
    if (spl->kd != NULL) { meminfo    = kstat_lookup(spl->kd,"unix",0,"system_pages"); }
@@ -194,19 +190,19 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       lockedmem_pgs  = kstat_data_lookup( meminfo, "pageslocked" );
       pages          = kstat_data_lookup( meminfo, "pagestotal" );
 
-      pl->totalMem   = ((totalmem_pgs->value.ui64)/1024)  * pgsiz;
-      pl->usedMem    = ((lockedmem_pgs->value.ui64)/1024) * pgsiz;
+      pl->totalMem   = totalmem_pgs->value.ui64 * PAGE_SIZE_KB;
+      pl->usedMem    = lockedmem_pgs->value.ui64 * PAGE_SIZE_KB;
       // Not sure how to implement this on Solaris - suggestions welcome!
       pl->cachedMem  = 0;     
       // Not really "buffers" but the best Solaris analogue that I can find to
       // "memory in use but not by programs or the kernel itself"
-      pl->buffersMem = (((totalmem_pgs->value.ui64)/1024) - (pages->value.ui64)/1024) * pgsiz;
+      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * PAGE_SIZE_KB;
    } else {
       // Fall back to basic sysconf if kstat isn't working
-      pl->totalMem = sysconf(_SC_PHYS_PAGES) * pgsiz;
+      pl->totalMem = sysconf(_SC_PHYS_PAGES) * PAGE_SIZE;
       pl->buffersMem = 0;
       pl->cachedMem  = 0;
-      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * pgsiz);
+      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * PAGE_SIZE);
    }
    
    // Part 2 - swap
@@ -231,8 +227,8 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       }
       free(sl);
    }
-   pl->totalSwap = (totalswap * pgsiz)/1024;
-   pl->usedSwap  = pl->totalSwap - ((totalfree * pgsiz)/1024); 
+   pl->totalSwap = totalswap * PAGE_SIZE_KB;
+   pl->usedSwap  = pl->totalSwap - (totalfree * PAGE_SIZE_KB); 
 }
 
 void ProcessList_delete(ProcessList* this) {
@@ -247,9 +243,6 @@ void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struc
    Process *lwp;
    SolarisProcess *slwp;
    SolarisProcess *sproc = (SolarisProcess*) proc;
-   Settings* settings = pl->settings;
-   bool hideKernelThreads = settings->hideKernelThreads;
-   bool hideUserlandThreads = settings->hideUserlandThreads;
    char lwpdir[MAX_NAME+1];
    DIR* dir = NULL;
    FILE* fp = NULL;
@@ -285,7 +278,7 @@ void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struc
          fread(&_lwprusage,sizeof(prusage_t),1,fp);
          fclose(fp);
       }
-      slwp->is_lwp = TRUE;
+      slwp->is_lwp = true;
 
       if (!preExisting) {
          lwp->basenameOffset  = -1;
@@ -333,6 +326,7 @@ void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struc
          (void) localtime_r((time_t*) &lwp->starttime_ctime, &date);
          strftime(lwp->starttime_show, 7, ((lwp->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
          ProcessList_add(pl, lwp);
+         lwp->show            = false;
       } else {
          slwp->zoneid         = sproc->zoneid;
          lwp->pgrp            = proc->pgrp;
@@ -361,22 +355,12 @@ void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struc
          slwp->projid         = sproc->projid;
          slwp->poolid         = sproc->poolid;
          slwp->contid         = sproc->contid;
+         lwp->show            = false;
       }
       // Top-level process only gets this for the representative LWP
       if (lwp->state == 'O') proc->state = 'O';
-      if (slwp->kernel) {
-         if(!hideKernelThreads) {
-            lwp->show = true;
-         } else {
-            lwp->show = false;
-         }
-      } else {
-         if(!hideUserlandThreads) {
-            lwp->show = true;
-         } else {
-            lwp->show = false;
-         }
-      }
+      if (slwp->kernel  && !pl->settings->hideKernelThreads)   lwp->show = true;
+      if (!slwp->kernel && !pl->settings->hideUserlandThreads) lwp->show = true;
       lwp->updated = true;
    }
    closedir(dir);
@@ -385,9 +369,6 @@ void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struc
 
 void ProcessList_goThroughEntries(ProcessList* this) {
    SolarisProcessList* spl = (SolarisProcessList*) this;
-   Settings* settings = this->settings;
-   bool hideKernelThreads = settings->hideKernelThreads;
-   bool hideUserlandThreads = settings->hideUserlandThreads;
    DIR* dir = NULL;
    struct dirent* entry = NULL;
    char*  name = NULL;
@@ -519,38 +500,23 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if (proc->nlwp > 1) {
          ProcessList_enumerateLWPs(proc, name, this, tv);
       }
-      proc->show = !(hideKernelThreads && sproc->kernel);
-      if (sproc->kernel) {
-         if (hideKernelThreads) {
-            addRunning = 0;
-            addTotal   = 0;
-         } else {
-            this->kernelThreads += proc->nlwp;
-            if (proc->state == 'O') {
-               addRunning++;
-               addTotal = proc->nlwp+1;
-            } else {
-               addTotal = proc->nlwp+1;
-            }
-         }
-      } else {
-         if (hideUserlandThreads) {
-            if(proc->state == 'O') {
-               addRunning++;
-               addTotal++;
-            } else {
-               addTotal++;
-            }
+
+      proc->show = !(this->settings->hideKernelThreads && sproc->kernel);
+
+      if (sproc->kernel && !this->settings->hideKernelThreads) {
+         this->kernelThreads += proc->nlwp;
+         addTotal = proc->nlwp+1;
+         if (proc->state == 'O') addRunning++;
+      } else if (!sproc->kernel) {
+         if (proc->state == 'O') addRunning++;
+         if (this->settings->hideUserlandThreads) {
+            addTotal++;
          } else {
             this->userlandThreads += proc->nlwp;
-            if(proc->state == 'O') {
-               addRunning++;
-               addTotal = proc->nlwp+1;
-            } else {
-               addTotal = proc->nlwp+1;
-            }
+            addTotal = proc->nlwp+1;
          }
       }
+
       this->runningTasks+=addRunning;
       this->totalTasks+=addTotal;
       proc->updated = true;
