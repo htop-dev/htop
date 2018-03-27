@@ -413,6 +413,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    dir = opendir(PROCDIR); 
    if (!dir) return; // Is proc mounted?
+   // We always count the scheduler
+   this->kernelThreads = 1;
    while ((entry = readdir(dir)) != NULL) {
       addRunning = 0;
       addTotal = 0;
@@ -518,7 +520,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          ProcessList_enumerateLWPs(proc, name, this, tv);
       }
       proc->show = !(hideKernelThreads && sproc->kernel);
-      if (_pstatus.pr_flags & sproc->kernel) {
+      if (sproc->kernel) {
          if (hideKernelThreads) {
             addRunning = 0;
             addTotal   = 0;
