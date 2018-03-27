@@ -362,6 +362,8 @@ void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struc
          slwp->poolid         = sproc->poolid;
          slwp->contid         = sproc->contid;
       }
+      // Top-level process only gets this for the representative LWP
+      if (lwp->state == 'O') proc->state = 'O';
       if (slwp->kernel) {
          if(!hideKernelThreads) {
             lwp->show = true;
