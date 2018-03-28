@@ -236,6 +236,12 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
+/* NOTE: the following is a callback function of type proc_walk_f
+ *       and MUST conform to the appropriate definition in order
+ *       to work.  See libproc(3LIB) on a Solaris or Illumos
+ *       system for more info.
+ */ 
+
 int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr) {
    struct timeval tv;
    struct tm date;
@@ -320,7 +326,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       // See note above (in common section) about this BINARY FRACTION
       proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu/(double)32768)*(double)100.0;
       proc->time            = _psinfo->pr_time.tv_sec;
-      if(!preExisting) { // Tasks done only for NEW processes
+      if(!preExistingP) { // Tasks done only for NEW processes
          sproc->is_lwp = false;
          proc->starttime_ctime = _psinfo->pr_start.tv_sec;
       }
@@ -343,7 +349,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    } else { // We are not in the master LWP, so jump to the LWP handling code
       lwp->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu/(double)32768)*(double)100.0;
       lwp->time               = _lwpsinfo->pr_time.tv_sec;
-      if (!preExisting) { // Tasks done only for NEW LWPs
+      if (!preExistingL) { // Tasks done only for NEW LWPs
          slwp->is_lwp         = true; 
          lwp->basenameOffset  = -1;
          lwp->ppid            = proc->pid;
