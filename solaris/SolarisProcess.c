@@ -159,13 +159,7 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
    }
    case PID: xSnprintf(buffer, n, Process_pidFormat, sp->realpid); break;
    case PPID: xSnprintf(buffer, n, Process_pidFormat, sp->realppid); break;
-   case LWPID:{
-      if (sp->lwpid <= 0) {
-         xSnprintf(buffer, n, "    - ");   
-      } else {
-         xSnprintf(buffer, n, Process_pidFormat, sp->lwpid); break;
-      }
-   }; break;
+   case LWPID: xSnprintf(buffer, n, Process_pidFormat, sp->lwpid); break;
    default:
       Process_writeField(this, str, field);
       return;
