@@ -15,7 +15,6 @@ in the source distribution for its full text.
 
 #include <kstat.h>
 #include <sys/param.h>
-#include <zone.h>
 #include <sys/uio.h>
 #include <sys/resource.h>
 #include <sys/sysconf.h>
@@ -51,7 +50,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
 void ProcessList_delete(ProcessList* this);
 
-void ProcessList_enumerateLWPs(Process* proc, char* name, ProcessList* pl, struct timeval tv);
+void ProcessList_enumerateLWPs(Process* proc, ProcessList* pl, lwpsinfo_t *_lwpsinfo, struct timeval tv);
+
+int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr);
 
 void ProcessList_goThroughEntries(ProcessList* this);
 
