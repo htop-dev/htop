@@ -50,8 +50,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
 void ProcessList_delete(ProcessList* this);
 
-void ProcessList_enumerateLWPs(Process* proc, ProcessList* pl, lwpsinfo_t *_lwpsinfo, struct timeval tv);
-
 int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr);
 
 void ProcessList_goThroughEntries(ProcessList* this);
