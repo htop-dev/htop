@@ -213,5 +213,5 @@ void Platform_setSwapValues(Meter* this) {
 
 char* Platform_getProcessEnv(pid_t pid) {
    (void) pid;
-   return NULL;
+   return "Not (yet) supported on Solaris.  Sorry!";
 }
