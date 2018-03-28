@@ -20,6 +20,8 @@ in the source distribution for its full text.
 /*{
 #include "Settings.h"
 #include <zone.h>
+#include <sys/proc.h>
+#include <libproc.h>
 
 typedef enum SolarisProcessFields {
    // Add platform-specific fields here, with ids >= 100
