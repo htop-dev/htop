@@ -37,11 +37,20 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 #include <signal.h>
 #include <sys/mkdev.h>
+#include <sys/proc.h>
+#include <libproc.h>
 
 #define  kill(pid, signal) kill(pid / 1024, signal)
 
 extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;
+
+typedef struct envAccum_ {
+   size_t capacity;
+   size_t size;
+   size_t bytes; 
+   char *env;
+} envAccum;
 
 }*/
 
@@ -211,7 +220,38 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
+static int Platform_buildenv(void *accum, struct ps_prochandle *Phandle, uintptr_t addr, const char *str) {
+   envAccum *accump = accum;
+   (void) Phandle;
+   (void) addr; 
+   size_t thissz = strlen(str);
+   if ((thissz + 2) > (accump->capacity - accump->size))
+      accump->env = xRealloc(accump->env, accump->capacity *= 2);
+   if ((thissz + 2) > (accump->capacity - accump->size))
+      return 1;
+   strlcpy( accump->env + accump->size, str, (accump->capacity - accump->size));
+   strncpy( accump->env + accump->size + thissz + 1, "\n", 1);
+   accump->size = accump->size + thissz + 1;
+   return 0; 
+}
+
 char* Platform_getProcessEnv(pid_t pid) {
-   (void) pid;
-   return "Not (yet) supported on Solaris.  Sorry!";
+   envAccum envBuilder;
+   pid_t realpid = pid / 1024;
+   int graberr;
+   struct ps_prochandle *Phandle;
+   
+   if ((Phandle = Pgrab(realpid,PGRAB_RDONLY,&graberr)) == NULL)
+      return "Unable to read process environment.";
+
+   envBuilder.capacity = 4096;
+   envBuilder.size     = 0;
+   envBuilder.env      = xMalloc(envBuilder.capacity);
+
+   (void) Penv_iter(Phandle,Platform_buildenv,&envBuilder); 
+
+   Prelease(Phandle, 0);
+
+   strncpy( envBuilder.env + envBuilder.size, "\0", 1);
+   return envBuilder.env;
 }
