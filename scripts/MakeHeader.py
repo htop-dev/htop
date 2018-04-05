@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-import os, sys, string
+import os, sys, string, io
 try:
-   from cStringIO import StringIO
+   from StringIO import StringIO
 except ImportError:
-   try:
-      from StringIO import StringIO
-   except ImportError:
-      from io import StringIO
+   from io import StringIO
 
 ANY=1
 COPY=2
@@ -16,7 +13,7 @@ SKIPONE=4
 state = ANY
 static = 0
 
-file = open(sys.argv[1])
+file = io.open(sys.argv[1], "r", encoding="utf-8")
 name = sys.argv[1][:-2]
 
 out = StringIO()
@@ -94,12 +91,12 @@ out.write( "#endif\n" )
 # This prevents a lot of recompilation during development
 out.seek(0)
 try:
-   with open(name + ".h", "r") as orig:
+   with io.open(name + ".h", "r", encoding="utf-8") as orig:
       origcontents = orig.readlines()
 except:
    origcontents = ""
 if origcontents != out.readlines():
-   with open(name + ".h", "w") as new:
+   with io.open(name + ".h", "w", encoding="utf-8") as new:
       print("Writing "+name+".h")
       new.write(out.getvalue())
 out.close()
