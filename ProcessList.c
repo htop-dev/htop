@@ -228,7 +228,7 @@ void ProcessList_sort(ProcessList* this) {
                ProcessList_buildTree(this, process->pid, 0, 0, direction, false);
                break;
             }
-            pid_t ppid = process->tgid == process->pid ? process->ppid : process->tgid;
+            pid_t ppid = Process_getParentPid(process);
             // Bisect the process vector to find parent
             int l = 0, r = size;
             // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)

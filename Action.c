@@ -155,6 +155,21 @@ static bool expandCollapse(Panel* panel) {
    return true;
 }
 
+static bool collapseIntoParent(Panel* panel) {
+   Process* p = (Process*) Panel_getSelected(panel);
+   if (!p) return false;
+   pid_t ppid = Process_getParentPid(p);
+   for (int i = 0; i < Panel_size(panel); i++) {
+      Process* q = (Process*) Panel_get(panel, i);
+      if (q->pid == ppid) {
+         q->showChildren = false;
+         Panel_setSelected(panel, i);
+         return true;
+      }
+   }
+   return false;
+}
+
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
    settings->sortKey = sortKey;
    settings->direction = 1;
@@ -258,6 +273,14 @@ static Htop_Reaction actionSetSortColumn(State* st) {
 
 static Htop_Reaction actionExpandOrCollapse(State* st) {
    bool changed = expandCollapse(st->panel);
+   return changed ? HTOP_RECALCULATE : HTOP_OK;
+}
+
+static Htop_Reaction actionCollapseIntoParent(State* st) {
+   if (!st->settings->treeView) {
+      return HTOP_OK;
+   }
+   bool changed = collapseIntoParent(st->panel);
    return changed ? HTOP_RECALCULATE : HTOP_OK;
 }
 
@@ -557,6 +580,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['+'] = actionExpandOrCollapse;
    keys['='] = actionExpandOrCollapse;
    keys['-'] = actionExpandOrCollapse;
+   keys['\177'] = actionCollapseIntoParent;
    keys['u'] = actionFilterByUser;
    keys['F'] = Action_follow;
    keys['S'] = actionSetup;
