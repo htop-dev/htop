@@ -42,6 +42,7 @@ static void printHelpFlag() {
          "-d --delay=DELAY            Set the delay between updates, in tenths of seconds\n"
          "-h --help                   Print this help screen\n"
          "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
+         "-t --tree                   Show the tree view by default\n"
          "-u --user=USERNAME          Show only processes of a given user\n"
          "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
          "-v --version                Print version info\n"
@@ -61,6 +62,7 @@ typedef struct CommandLineSettings_ {
    int sortKey;
    int delay;
    bool useColors;
+   bool treeView;
 } CommandLineSettings;
 
 static CommandLineSettings parseArguments(int argc, char** argv) {
@@ -71,6 +73,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .sortKey = 0,
       .delay = -1,
       .useColors = true,
+      .treeView = false,
    };
 
    static struct option long_opts[] =
@@ -82,6 +85,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"user",     required_argument,   0, 'u'},
       {"no-color", no_argument,         0, 'C'},
       {"no-colour",no_argument,         0, 'C'},
+      {"tree",     no_argument,         0, 't'},
       {"pid",      required_argument,   0, 'p'},
       {"io",       no_argument,         0, 'i'},
       {0,0,0,0}
@@ -89,7 +93,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvCs:d:u:p:i", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvCst::d:u:p:i", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -126,6 +130,9 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             break;
          case 'C':
             flags.useColors = false;
+            break;
+         case 't':
+            flags.treeView = true;
             break;
          case 'p': {
             char* argCopy = xStrdup(optarg);
@@ -197,6 +204,8 @@ int main(int argc, char** argv) {
       settings->delay = flags.delay;
    if (!flags.useColors) 
       settings->colorScheme = COLORSCHEME_MONOCHROME;
+   if (flags.treeView)
+      settings->treeView = true;
 
    CRT_init(settings->delay, settings->colorScheme);
    
