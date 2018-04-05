@@ -38,12 +38,17 @@ void GetKernelVersion(struct kern *k) {
     memcpy(k->version, version_, sizeof(version_));
 }
 
+/* compare the given os version with the one installed returns:
+0 if equals the installed version
+positive value if less than the installed version
+negative value if more than the installed version
+*/
 int CompareKernelVersion(short int major, short int minor, short int component) {
     struct kern k;
     GetKernelVersion(&k);
-    if ( k.version[0] !=  major) return major - k.version[0];
-    if ( k.version[1] !=  minor) return minor - k.version[1];
-    if ( k.version[2] !=  component) return component - k.version[2];
+    if ( k.version[0] !=  major) return k.version[0] - major;
+    if ( k.version[1] !=  minor) return k.version[1] - minor;
+    if ( k.version[2] !=  component) return k.version[2] - component;
     return 0;
 }
 
