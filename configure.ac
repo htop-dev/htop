@@ -292,7 +292,9 @@ then
       LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
       AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
    ], [
-     AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
+      pkg_m4_absent=1
+      m4_warning([configure is generated without pkg.m4. 'make dist' target will be disabled.])
+      AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
    ])
 fi
 
