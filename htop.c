@@ -205,7 +205,7 @@ int main(int argc, char** argv) {
    if (!flags.useColors) 
       settings->colorScheme = COLORSCHEME_MONOCHROME;
    if (flags.treeView)
-      settings->treeView = true;
+      settings->screens[0]->treeView = true;
 
    CRT_init(settings->delay, settings->colorScheme);
    

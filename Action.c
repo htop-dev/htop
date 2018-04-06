@@ -280,7 +280,7 @@ static Htop_Reaction actionExpandOrCollapse(State* st) {
 }
 
 static Htop_Reaction actionCollapseIntoParent(State* st) {
-   if (!st->settings->treeView) {
+   if (!st->settings->ss->treeView) {
       return HTOP_OK;
    }
    bool changed = collapseIntoParent(st->panel);
