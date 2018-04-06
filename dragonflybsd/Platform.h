@@ -21,7 +21,9 @@ extern ProcessFieldData Process_fields[];
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
-extern ProcessField Platform_defaultFields[];
+extern ScreenDefaults Platform_defaultScreens[];
+
+extern const unsigned int Platform_numberOfDefaultScreens;
 
 extern int Platform_numberOfFields;
 

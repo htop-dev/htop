@@ -20,11 +20,14 @@ typedef enum DarwinProcessFields {
    LAST_PROCESSFIELD = 100,
 } DarwinProcessField;
 
+
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
-extern ProcessField Platform_defaultFields[];
+extern ScreenDefaults Platform_defaultScreens[];
+
+extern const unsigned int Platform_numberOfDefaultScreens;
 
 extern const SignalItem Platform_signals[];
 

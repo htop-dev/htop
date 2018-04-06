@@ -36,15 +36,12 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "LinuxProcess.h"
 #include "SignalsPanel.h"
+#include "Settings.h"
 }*/
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
-
-ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
-
-//static ProcessField defaultIoFields[] = { PID, IO_PRIORITY, USER, IO_READ_RATE, IO_WRITE_RATE, IO_RATE, COMM, 0 };
 
 int Platform_numberOfFields = LAST_PROCESSFIELD;
 
@@ -84,6 +81,31 @@ const SignalItem Platform_signals[] = {
    { .name = "30 SIGPWR",    .number = 30 },
    { .name = "31 SIGSYS",    .number = 31 },
 };
+
+ScreenDefaults Platform_defaultScreens[] = {
+   {
+      .name = "Default",
+      .columns = "PID USER PRIORITY NICE M_SIZE M_RESIDENT M_SHARE STATE PERCENT_CPU PERCENT_MEM TIME Command",
+      .sortKey = "PERCENT_CPU",
+   },
+   {
+      .name = "I/O",
+      .columns = "PID USER IO_PRIORITY IO_RATE IO_READ_RATE IO_WRITE_RATE PERCENT_SWAP_DELAY PERCENT_IO_DELAY Command",
+      .sortKey = "IO_RATE",
+   },
+   {
+      .name = "Perf Counters",
+      .columns = "PID USER PERCENT_CPU PROCESSOR MCYCLE MINSTR IPC PERCENT_MISS PERCENT_BMISS Command",
+      .sortKey = "MCYCLE",
+   },
+   {
+      .name = "L1 Data Cache",
+      .columns = "PID USER PERCENT_CPU L1DREADS L1DRMISSES L1DWRITES L1DWMISSES Command",
+      .sortKey = "LD1READS",
+   },
+};
+
+const unsigned int Platform_numberOfDefaultScreens = sizeof(Platform_defaultScreens)/sizeof(ScreenDefaults);
 
 const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
 

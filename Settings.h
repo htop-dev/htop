@@ -15,6 +15,12 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 typedef struct {
+   const char* name;
+   const char* columns;
+   const char* sortKey;
+} ScreenDefaults;
+
+typedef struct {
    int len;
    char** names;
    int* modes;
