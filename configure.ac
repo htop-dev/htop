@@ -281,15 +281,19 @@ then
    AC_DEFINE(HAVE_SETUID_ENABLED, 1, [Define if setuid support should be enabled.])
 fi
 
-AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable linux delay accounting])],, enable_delayacct="no")
+AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable Linux delay accounting])],, enable_delayacct="no")
 if test "x$enable_delayacct" = xyes
 then
-   PKG_PROG_PKG_CONFIG()
-   PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
-   PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
-   CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
-   LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
-   AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
+   m4_ifdef([PKG_PROG_PKG_CONFIG], [
+      PKG_PROG_PKG_CONFIG()
+      PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
+      PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
+      CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
+      LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
+      AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
+   ], [
+     AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
+   ])
 fi
 
 
