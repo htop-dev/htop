@@ -3,7 +3,7 @@
 htop \- interactive process viewer
 .SH "SYNOPSIS"
 .LP 
-.B htop [\fI\-dChusv\fR]
+.B htop [\fI\-dChustv\fR]
 .SH "DESCRIPTION"
 .LP 
 Htop is a free (GPL) ncurses-based process viewer for Linux.
@@ -41,6 +41,9 @@ Show only the processes of a given user
 .TP
 \fB\-v \-\-version
 Output version information and exit
+.TP
+\fB\-t \-\-tree
+Show processes in tree view
 .PP
 .br 
 .SH "INTERACTIVE COMMANDS"
