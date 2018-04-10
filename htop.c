@@ -93,7 +93,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvCst::d:u:p:i", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvCs:td:u:p:i", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
