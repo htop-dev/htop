@@ -136,14 +136,14 @@ void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
 long FreeBSDProcess_compare(const void* v1, const void* v2) {
    FreeBSDProcess *p1, *p2;
    Settings *settings = ((Process*)v1)->settings;
-   if (settings->direction == 1) {
+   if (settings->ss->direction == 1) {
       p1 = (FreeBSDProcess*)v1;
       p2 = (FreeBSDProcess*)v2;
    } else {
       p2 = (FreeBSDProcess*)v1;
       p1 = (FreeBSDProcess*)v2;
    }
-   switch ((int) settings->sortKey) {
+   switch ((int) settings->ss->sortKey) {
    // add FreeBSD-specific fields here
    case JID:
       return (p1->jid - p2->jid);
