@@ -35,6 +35,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
+#include "SolarisProcess.h"
 #include <signal.h>
 #include <sys/mkdev.h>
 #include <sys/proc.h>
