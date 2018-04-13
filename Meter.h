@@ -96,6 +96,7 @@ typedef struct GraphData_ {
    double* stack2;
    int* colors;
    unsigned int colorRowSize;
+   int drawOffset;
 } GraphData;
 
 struct Meter_ {

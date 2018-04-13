@@ -69,6 +69,7 @@ typedef struct Settings_ {
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif
+   bool alignGraphMeter;
 
    bool changed;
 } Settings;

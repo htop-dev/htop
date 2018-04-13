@@ -214,6 +214,8 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->updateProcessNames = atoi(option[1]);
       } else if (String_eq(option[0], "account_guest_in_cpu_meter")) {
          this->accountGuestInCPUMeter = atoi(option[1]);
+      } else if (String_eq(option[0], "align_graph_meter")) {
+         this->alignGraphMeter = atoi(option[1]);
       } else if (String_eq(option[0], "delay")) {
          this->delay = CLAMP(atoi(option[1]), 1, 255);
       } else if (String_eq(option[0], "color_scheme")) {
@@ -320,6 +322,7 @@ bool Settings_write(Settings* this) {
    #endif
    fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
    fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
+   fprintf(fd, "align_graph_meter=%d\n", (int) this->alignGraphMeter);
    fprintf(fd, "color_scheme=%d\n", (int) this->colorScheme);
    fprintf(fd, "enable_mouse=%d\n", (int) this->enableMouse);
    fprintf(fd, "delay=%d\n", (int) this->delay);
@@ -370,6 +373,7 @@ Settings* Settings_new(int initialCpuCount) {
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
+   this->alignGraphMeter = true;
    this->fields = xCalloc(LAST_PROCESSFIELD + 1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
