@@ -27,10 +27,7 @@ static void UptimeMeter_updateValues(Meter* this, char* buffer, size_t len) {
    int minutes = (totalseconds / 60) % 60;
    int hours = (totalseconds / 3600) % 24;
    int days = (totalseconds / 86400);
-   this->values[0] = days;
-   if (days > this->total) {
-      this->total = days;
-   }
+   this->values[0] = (double) totalseconds / 86400;
    char daysbuf[32];
    if (days > 100) {
       xSnprintf(daysbuf, sizeof(daysbuf), "%d days(!), ", days);
@@ -52,7 +49,7 @@ const MeterClass UptimeMeter_class = {
    .updateValues = UptimeMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
-   .total = 100.0,
+   .total = -1.0,
    .attributes = UptimeMeter_attributes,
    .name = "Uptime",
    .uiName = "Uptime",
