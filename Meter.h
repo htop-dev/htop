@@ -17,8 +17,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "ProcessList.h"
 
-
-#define METER_BUFFER_LEN 256
+#define GRAPH_NUM_RECORDS 256
 
 #define METER_BUFFER_CHECK(buffer, size, written)          \
    do {                                                    \
@@ -86,7 +85,7 @@ typedef struct MeterClass_ {
 
 typedef struct GraphData_ {
    struct timeval time;
-   double values[METER_BUFFER_LEN];
+   double values[GRAPH_NUM_RECORDS];
 } GraphData;
 
 struct Meter_ {

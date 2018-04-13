@@ -161,7 +161,7 @@ static GraphData* GraphData_new(void) {
 /* ---------- TextMeterMode ---------- */
 
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
-   char buffer[METER_BUFFER_LEN];
+   char buffer[GRAPH_NUM_RECORDS];
    Meter_updateValues(this, buffer, sizeof(buffer));
 
    attrset(CRT_colors[METER_TEXT]);
@@ -185,7 +185,7 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
-   char buffer[METER_BUFFER_LEN];
+   char buffer[GRAPH_NUM_RECORDS];
    Meter_updateValues(this, buffer, sizeof(buffer));
 
    w -= 2;
@@ -299,12 +299,10 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
-
    if (!this->drawData) {
       this->drawData = (void*) GraphData_new();
    }
    GraphData* data = this->drawData;
-   const int nValues = METER_BUFFER_LEN;
 
    const char* const* GraphMeterMode_dots;
    int GraphMeterMode_pixPerRow;
@@ -332,24 +330,24 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay - ((globalDelay / 10) * 10)) * 100000 };
       timeradd(&now, &delay, &(data->time));
 
-      for (int i = 0; i < nValues - 1; i++)
+      for (int i = 0; i < GRAPH_NUM_RECORDS - 1; i++)
          data->values[i] = data->values[i + 1];
 
-      char buffer[METER_BUFFER_LEN];
+      char buffer[GRAPH_NUM_RECORDS];
       Meter_updateValues(this, buffer, sizeof(buffer));
 
       double value = 0.0;
       for (uint8_t i = 0; i < this->curItems; i++)
          value += this->values[i];
-      data->values[nValues - 1] = value;
+      data->values[GRAPH_NUM_RECORDS - 1] = value;
    }
 
-   int i = nValues - (w * 2) + 2, k = 0;
+   int i = GRAPH_NUM_RECORDS - (w * 2) + 2, k = 0;
    if (i < 0) {
       k = -i / 2;
       i = 0;
    }
-   for (; i < nValues - 1; i += 2, k++) {
+   for (; i < GRAPH_NUM_RECORDS - 1; i += 2, k++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
       if (this->total < 1)
          this->total = 1;
@@ -404,7 +402,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
 #endif
       LEDMeterMode_digits = LEDMeterMode_digitsAscii;
 
-   char buffer[METER_BUFFER_LEN];
+   char buffer[GRAPH_NUM_RECORDS];
    Meter_updateValues(this, buffer, sizeof(buffer));
 
    RichString_begin(out);
