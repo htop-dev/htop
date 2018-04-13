@@ -208,16 +208,30 @@ static int GraphData_getColor(GraphData* this, int vIndex, int h, int scaleExp) 
       (void) frexp(MAXIMUM(this->values[vIndex], this->values[vIndex + 1]), &exp);
       int level = MINIMUM((scaleExp - exp), maxLevel);
       assert(level >= 0);
-      if ((h << (level + 1)) + 1 >= this->colorRowSize) {
+      if (((unsigned int) h << (level + 1)) + 1 >= this->colorRowSize) {
          return BAR_SHADOW;
       }
-      for (int j = 1 << level; ; j >>= 1) {
+      unsigned int j, offset;
+   #if IS_POWER_OF_2(GRAPH_HEIGHT)
+      j = 1 << level;
+      offset = (h << (level + 1)) + j;
+      assert(offset < this->colorRowSize);
+      return this->colors[vIndex * this->colorRowSize + offset];
+   #elif HAS_ILOG2
+      // (1 << ilog2(x)) == (greatest power of two that is <= x)
+      j = 1 << MINIMUM(level, ilog2(this->colorRowSize - 1 - (h << (level + 1))));
+      offset = (h << (level + 1)) + j;
+      assert(offset < this->colorRowSize);
+      return this->colors[vIndex * this->colorRowSize + offset];
+   #else
+      for (j = 1 << level; ; j >>= 1) {
          assert(j > 0);
-         size_t offset = (h << (level + 1)) + j;
+         offset = (h << (level + 1)) + j;
          if (offset < this->colorRowSize) {
             return this->colors[vIndex * this->colorRowSize + offset];
          }
       }
+   #endif // !(IS_POWER_OF_2(GRAPH_HEIGHT) || HAS_ILOG2)
    } else if (this->colorRowSize == GRAPH_HEIGHT) {
       return this->colors[vIndex * this->colorRowSize + h];
    } else {
