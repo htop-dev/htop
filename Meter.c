@@ -207,13 +207,16 @@ static int GraphData_getColor(GraphData* this, int vIndex, int h, int scaleExp) 
       (void) frexp(MAXIMUM(this->values[vIndex], this->values[vIndex + 1]), &exp);
       int level = MINIMUM((scaleExp - exp), maxLevel);
       assert(level >= 0);
-      for (int j = 1 << level; j > 0; j >>= 1) {
+      if ((h << (level + 1)) + 1 >= this->colorRowSize) {
+         return BAR_SHADOW;
+      }
+      for (int j = 1 << level; ; j >>= 1) {
+         assert(j > 0);
          size_t offset = (h << (level + 1)) + j;
          if (offset < this->colorRowSize) {
             return this->colors[vIndex * this->colorRowSize + offset];
          }
       }
-      return BAR_SHADOW;
    } else if (this->colorRowSize == GRAPH_HEIGHT) {
       return this->colors[vIndex * this->colorRowSize + h];
    } else {
