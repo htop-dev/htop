@@ -59,6 +59,11 @@ typedef struct MeterClass_ {
    const Meter_Draw draw;
    const Meter_UpdateValues updateValues;
    const int defaultMode;
+   // For "total" variable, sign matters.
+   // >0: Full/maximum value is stable (at least for a short duration). Will
+   //     draw as percent graph. e.g. CPU & swap.
+   // <0: No stable maximum. Will draw with dynamic scale. e.g. loadavg.
+   // (total == 0) will bring weird behavior for now. Avoid.
    const double total;
    const int* const attributes;
    const char* const name;                 /* internal name of the meter, must not contain any space */
@@ -79,13 +84,18 @@ typedef struct MeterClass_ {
 #define Meter_updateValues(this_, buf_, sz_) \
                                        As_Meter(this_)->updateValues((Meter*)(this_), buf_, sz_)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
+#define Meter_getMaxItems(this_)       As_Meter(this_)->maxItems
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
 
 typedef struct GraphData_ {
    struct timeval time;
-   double values[GRAPH_NUM_RECORDS];
+   double* values;
+   double* stack1;
+   double* stack2;
+   int* colors;
+   unsigned int colorRowSize;
 } GraphData;
 
 struct Meter_ {
