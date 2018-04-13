@@ -50,8 +50,10 @@ Meter* Meter_new(const struct ProcessList_* pl, int param, const MeterClass* typ
    return this;
 }
 
+static const char* Meter_prefixes = "KMGTPEZY";
+
 int Meter_humanUnit(char* buffer, unsigned long int value, size_t size) {
-   const char* prefix = "KMGTPEZY";
+   const char* prefix = Meter_prefixes;
    unsigned long int powi = 1;
    unsigned int powj = 1, precision = 2;
 
