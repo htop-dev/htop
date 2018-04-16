@@ -247,7 +247,7 @@ if test "$my_htop_platform" = "solaris"; then
    AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
    AC_CHECK_HEADERS([err.h],[:],[
       missing_headers="$missing_headers err.h"
-      AC_MSG_ERROR([You appear to be on Solaris 10, or very early Solaris Express, which is currently unsupported.])
+      AC_MSG_ERROR([You appear to be on Solaris 10, or very early Solaris Express, which are currently unsupported.])
    ])
 fi
 
