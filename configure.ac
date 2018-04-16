@@ -245,6 +245,10 @@ if test "$my_htop_platform" = "solaris"; then
    AC_CHECK_LIB([kstat], [kstat_open], [], [missing_libraries="$missing_libraries libkstat"])
    AC_CHECK_LIB([proc], [Pgrab_error], [], [missing_libraries="$missing_libraries libproc"])
    AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
+   AC_CHECK_HEADERS([err.h],[:],[
+      missing_headers="$missing_headers err.h"
+      AC_MSG_ERROR([You appear to be on Solaris 10, or very early Solaris Express, which is currently unsupported.])
+   ])
 fi
 
 AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
