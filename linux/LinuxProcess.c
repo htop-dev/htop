@@ -143,7 +143,7 @@ typedef struct LinuxProcess_ {
 } LinuxProcess;
 
 #ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) ((LinuxProcess*)(_process)->isKernelThread)
+#define Process_isKernelThread(_process) (((LinuxProcess*)(_process))->isKernelThread)
 #endif
 
 #ifndef Process_isUserlandThread
