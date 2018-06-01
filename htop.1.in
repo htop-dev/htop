@@ -85,8 +85,13 @@ Tag or untag a process. Commands that can operate on multiple processes,
 like "kill", will then apply over the list of tagged processes, instead
 of the currently highlighted one.
 .TP
+.B c
+Tag the current process and its children. Commands that can operate on multiple
+processes, like "kill", will then apply over the list of tagged processes,
+instead of the currently highlighted one.
+.TP
 .B U
-Untag all processes (remove all tags added with the Space key).
+Untag all processes (remove all tags added with the Space or c keys).
 .TP
 .B s
 Trace process system calls: if strace(1) is installed, pressing this key
