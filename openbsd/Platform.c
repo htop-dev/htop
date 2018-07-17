@@ -220,7 +220,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    percentages(CPUSTATES, diff_v, new_v,
          (int64_t *)old_v[cpu-1], scratch_v);
 
-   for (i = 0; i < CPUSTATES; i++) {
+   for (i = 0; i < CPUSTATES - 1; i++) {
       old_v[cpu-1][i] = new_v[i];
       v[i] = diff_v[i] / 10.;
    }
