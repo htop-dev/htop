@@ -709,7 +709,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    }
    command[lastChar + 1] = '\0';
    process->basenameOffset = tokenEnd;
-   setCommand(process, command, lastChar);
+   setCommand(process, command, lastChar + 1);
 
    return true;
 }
