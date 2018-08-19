@@ -20,6 +20,8 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 
+extern long long btime;
+
 typedef struct CPUData_ {
    unsigned long long int totalTime;
    unsigned long long int userTime;
@@ -84,7 +86,7 @@ typedef struct LinuxProcessList_ {
 #endif
 
 #ifndef PROC_LINE_LENGTH
-#define PROC_LINE_LENGTH 512
+#define PROC_LINE_LENGTH 4096
 #endif
 
 
