@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <string.h>
 #include <sys/syscall.h>
+#include <time.h>
 
 /*{
 
@@ -106,6 +107,7 @@ typedef struct LinuxProcess_ {
    long m_drs;
    long m_lrs;
    long m_dt;
+   unsigned long long starttime;
    #ifdef HAVE_TASKSTATS
    unsigned long long io_rchar;
    unsigned long long io_wchar;
@@ -151,6 +153,8 @@ typedef struct LinuxProcess_ {
 #endif
 
 }*/
+
+long long btime; /* semi-global */
 
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
@@ -344,6 +348,13 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case STIME: Process_printTime(str, lp->stime); return;
    case CUTIME: Process_printTime(str, lp->cutime); return;
    case CSTIME: Process_printTime(str, lp->cstime); return;
+   case STARTTIME: {
+     struct tm date;
+     time_t starttimewall = btime + (lp->starttime / sysconf(_SC_CLK_TCK));
+     (void) localtime_r(&starttimewall, &date);
+     strftime(buffer, n, ((starttimewall > time(NULL) - 86400) ? "%R " : "%b%d "), &date);
+     break;
+   }
    #ifdef HAVE_TASKSTATS
    case RCHAR:  Process_colorNumber(str, lp->io_rchar, coloring); return;
    case WCHAR:  Process_colorNumber(str, lp->io_wchar, coloring); return;
@@ -428,6 +439,12 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    case CUTIME: diff = p2->cutime - p1->cutime; goto test_diff;
    case STIME:  diff = p2->stime - p1->stime; goto test_diff;
    case CSTIME: diff = p2->cstime - p1->cstime; goto test_diff;
+   case STARTTIME: {
+      if (p1->starttime == p2->starttime)
+         return (p1->super.pid - p2->super.pid);
+      else
+         return (p1->starttime - p2->starttime);
+   }
    #ifdef HAVE_TASKSTATS
    case RCHAR:  diff = p2->io_rchar - p1->io_rchar; goto test_diff;
    case WCHAR:  diff = p2->io_wchar - p1->io_wchar; goto test_diff;
