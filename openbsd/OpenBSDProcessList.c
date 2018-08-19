@@ -223,6 +223,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    bool preExisting;
    Process* proc;
    OpenBSDProcess* fp;
+   struct tm date;
+   struct timeval tv;
    int count = 0;
    int i;
 
@@ -231,6 +233,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    // use KERN_PROC_KTHREAD to also include kernel threads
    struct kinfo_proc* kprocs = kvm_getprocs(opl->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
    //struct kinfo_proc* kprocs = getprocs(KERN_PROC_ALL, 0, &count);
+
+   gettimeofday(&tv, NULL);
 
    for (i = 0; i < count; i++) {
       kproc = &kprocs[i];
@@ -254,6 +258,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          ProcessList_add((ProcessList*)this, proc);
          proc->comm = OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->basenameOffset);
+         (void) localtime_r((time_t*) &kproc->p_ustart_sec, &date);
+         strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
       } else {
          if (settings->updateProcessNames) {
             free(proc->comm);
