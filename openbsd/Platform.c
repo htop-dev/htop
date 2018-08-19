@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include <sys/sched.h>
 #include <uvm/uvmexp.h>
 #include <sys/param.h>
+#include <sys/sysctl.h>
 #include <sys/swap.h>
 
 #include <unistd.h>
@@ -34,6 +35,9 @@ in the source distribution for its full text.
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <time.h>
+#include <fcntl.h>
+#include <kvm.h>
+#include <limits.h>
 
 /*{
 #include "Action.h"
@@ -294,6 +298,48 @@ void Platform_setTasksValues(Meter* this) {
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
-   // TODO
-   return NULL;
+   char errbuf[_POSIX2_LINE_MAX];
+   char *env;
+   char **ptr;
+   int count;
+   kvm_t *kt;
+   struct kinfo_proc *kproc;
+   size_t capacity = 4096, size = 0;
+
+   if ((kt = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf)) == NULL)
+      return NULL;
+
+   if ((kproc = kvm_getprocs(kt, KERN_PROC_PID, pid,
+                             sizeof(struct kinfo_proc), &count)) == NULL) {\
+      (void) kvm_close(kt);
+      return NULL;
+   }
+
+   if ((ptr = kvm_getenvv(kt, kproc, 0)) == NULL) {
+      (void) kvm_close(kt);
+      return NULL;
+   }
+
+   env = xMalloc(capacity);
+   for (char **p = ptr; *p; p++) {
+      size_t len = strlen(*p) + 1;
+
+      if (size + len > capacity) {
+         capacity *= 2;
+         env = xRealloc(env, capacity);
+      }
+
+      strlcpy(env + size, *p, len);
+      size += len;
+   }
+
+   if (size < 2 || env[size - 1] || env[size - 2]) {
+       if (size + 2 < capacity)
+           env = xRealloc(env, capacity + 2);
+       env[size] = 0;
+       env[size+1] = 0;
+   }
+
+   (void) kvm_close(kt);
+   return env;
 }
