@@ -216,6 +216,9 @@ static void Settings_defaultMeters(Settings* this) {
 }
 
 static const char* toFieldName(int i) {
+   if (i < 0 || i > LAST_PROCESSFIELD) {
+      return "";
+   }
    return Process_fields[i].name;
 }
 
@@ -275,7 +278,7 @@ static void Settings_defaultScreens(Settings* this) {
    for (unsigned int i = 0; i < Platform_numberOfDefaultScreens; i++) {
       ScreenDefaults* defaults = &Platform_defaultScreens[i];
       Settings_newScreen(this, defaults->name, defaults->columns);
-      this->screens[0]->sortKey = toFieldIndex(defaults->sortKey);
+      this->screens[i]->sortKey = toFieldIndex(defaults->sortKey);
    }
 }
 

@@ -101,7 +101,7 @@ ScreenDefaults Platform_defaultScreens[] = {
    {
       .name = "L1 Data Cache",
       .columns = "PID USER PERCENT_CPU L1DREADS L1DRMISSES L1DWRITES L1DWMISSES Command",
-      .sortKey = "LD1READS",
+      .sortKey = "L1DREADS",
    },
 };
 
