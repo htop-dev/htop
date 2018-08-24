@@ -361,6 +361,7 @@ static bool Settings_read(Settings* this, const char* fileName) {
          didReadMeters = true;
       } else if (strncmp(option[0], "screen:", 7) == 0) {
          Settings_newScreen(this, option[0] + 7, option[1]);
+         didReadFields = true;
       } else if (String_eq(option[0], ".tree_view")) {
          if (this->nScreens > 0) {
             this->screens[this->nScreens - 1]->treeView = atoi(option[1]);
@@ -380,6 +381,7 @@ static bool Settings_read(Settings* this, const char* fileName) {
    if (this->nScreens == 0) {
       Settings_defaultScreens(this);
       if (legacyFieldsRead) {
+         didReadFields = true;
          free(this->screens[0]->fields);
          this->screens[0]->fields = legacyFields;
          this->screens[0]->flags = legacyFlags;
