@@ -245,7 +245,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
-   int cpus = -1;
+   int cpus = 0;
    do {
       char buffer[PROC_LINE_LENGTH + 1];
       if (fgets(buffer, PROC_LINE_LENGTH + 1, file) == NULL) {
