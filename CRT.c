@@ -42,6 +42,7 @@ in the source distribution for its full text.
 #define KEY_WHEELUP KEY_F(20)
 #define KEY_WHEELDOWN KEY_F(21)
 #define KEY_RECLICK KEY_F(22)
+#define KEY_SHIFT_TAB KEY_F(23)
 
 //#link curses
 
@@ -646,11 +647,15 @@ void CRT_init(int delay, int colorScheme) {
       define_key("\033[13~", KEY_F(3));
       define_key("\033[14~", KEY_F(4));
       define_key("\033[17;2~", KEY_F(18));
+      define_key("\033[Z", KEY_SHIFT_TAB);
       char sequence[3] = "\033a";
       for (char c = 'a'; c <= 'z'; c++) {
          sequence[1] = c;
          define_key(sequence, KEY_ALT('A' + (c - 'a')));
       }
+   }
+   if (String_startsWith(CRT_termType, "rxvt")) {
+      define_key("\033[Z", KEY_SHIFT_TAB);
    }
 #ifndef DEBUG
    signal(11, CRT_handleSIGSEGV);

@@ -305,6 +305,16 @@ static Htop_Reaction actionNextScreen(State* st) {
    return HTOP_REFRESH;
 }
 
+static Htop_Reaction actionPrevScreen(State* st) {
+   Settings* settings = st->settings;
+   settings->ssIndex--;
+   if (settings->ssIndex == -1) {
+      settings->ssIndex = settings->nScreens - 1;
+   }
+   settings->ss = settings->screens[settings->ssIndex];
+   return HTOP_REFRESH;
+}
+
 static Htop_Reaction actionSetAffinity(State* st) {
    if (st->pl->cpuCount == 1)
       return HTOP_OK;
@@ -610,5 +620,6 @@ void Action_setBindings(Htop_Action* keys) {
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
    keys['\t'] = actionNextScreen;
+   keys[KEY_SHIFT_TAB] = actionPrevScreen;
 }
 
