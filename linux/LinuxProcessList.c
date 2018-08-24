@@ -377,7 +377,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
 }
 
 
-static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, char* name, time_t curTime) {
+static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, char* name) {
    char filename[MAX_NAME+1];
    filename[MAX_NAME] = '\0';
 
@@ -765,7 +765,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
    struct dirent* entry;
    Settings* settings = pl->settings;
 
-   time_t curTime = tv.tv_sec;
    #ifdef HAVE_TASKSTATS
    unsigned long long now = tv.tv_sec*1000LL+tv.tv_usec/1000LL;
    #endif
@@ -837,7 +836,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       if(!preExisting) {
 
-         if (! LinuxProcessList_statProcessDir(proc, dirname, name, curTime))
+         if (! LinuxProcessList_statProcessDir(proc, dirname, name))
             goto errorReadingProcess;
 
          proc->user = UsersTable_getRef(pl->usersTable, proc->st_uid);
