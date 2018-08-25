@@ -130,6 +130,10 @@ typedef enum ColorElements_ {
    CPU_STEAL,
    CPU_GUEST,
    PANEL_EDIT,
+   SCREENS_OTH_BORDER,
+   SCREENS_OTH_TEXT,
+   SCREENS_CUR_BORDER,
+   SCREENS_CUR_TEXT,
    LAST_COLORELEMENT
 } ColorElements;
 
@@ -235,6 +239,10 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_STEAL] = ColorPair(Cyan,Black),
       [CPU_GUEST] = ColorPair(Cyan,Black),
       [PANEL_EDIT] = ColorPair(White,Blue),
+      [SCREENS_OTH_BORDER] = ColorPair(Blue,Blue),
+      [SCREENS_OTH_TEXT] = ColorPair(Black,Blue),
+      [SCREENS_CUR_BORDER] = ColorPair(Green,Green),
+      [SCREENS_CUR_TEXT] = ColorPair(Black,Green),
    },
    [COLORSCHEME_MONOCHROME] = {
       [RESET_COLOR] = A_NORMAL,
@@ -295,6 +303,10 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_STEAL] = A_REVERSE,
       [CPU_GUEST] = A_REVERSE,
       [PANEL_EDIT] = A_BOLD,
+      [SCREENS_OTH_BORDER] = A_DIM,
+      [SCREENS_OTH_TEXT] = A_DIM,
+      [SCREENS_CUR_BORDER] = A_REVERSE,
+      [SCREENS_CUR_TEXT] = A_REVERSE,
    },
    [COLORSCHEME_BLACKONWHITE] = {
       [RESET_COLOR] = ColorPair(Black,White),
@@ -355,6 +367,10 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_STEAL] = ColorPair(Cyan,White),
       [CPU_GUEST] = ColorPair(Cyan,White),
       [PANEL_EDIT] = ColorPair(White,Blue),
+      [SCREENS_OTH_BORDER] = A_BOLD | ColorPair(Black,White),
+      [SCREENS_OTH_TEXT] = A_BOLD | ColorPair(Black,White),
+      [SCREENS_CUR_BORDER] = ColorPair(Green,Green),
+      [SCREENS_CUR_TEXT] = ColorPair(Black,Green),
    },
    [COLORSCHEME_LIGHTTERMINAL] = {
       [RESET_COLOR] = ColorPair(Black,Black),
@@ -415,6 +431,10 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_STEAL] = ColorPair(Black,Black),
       [CPU_GUEST] = ColorPair(Black,Black),
       [PANEL_EDIT] = ColorPair(White,Blue),
+      [SCREENS_OTH_BORDER] = ColorPair(Blue,Black),
+      [SCREENS_OTH_TEXT] = ColorPair(Blue,Black),
+      [SCREENS_CUR_BORDER] = ColorPair(Green,Green),
+      [SCREENS_CUR_TEXT] = ColorPair(Black,Green),
    },
    [COLORSCHEME_MIDNIGHT] = {
       [RESET_COLOR] = ColorPair(White,Blue),
@@ -475,6 +495,10 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_STEAL] = ColorPair(White,Blue),
       [CPU_GUEST] = ColorPair(White,Blue),
       [PANEL_EDIT] = ColorPair(White,Blue),
+      [SCREENS_OTH_BORDER] = A_BOLD | ColorPair(Yellow,Blue),
+      [SCREENS_OTH_TEXT] = ColorPair(Cyan,Blue),
+      [SCREENS_CUR_BORDER] = ColorPair(Cyan,Cyan),
+      [SCREENS_CUR_TEXT] = ColorPair(Black,Cyan),
    },
    [COLORSCHEME_BLACKNIGHT] = {
       [RESET_COLOR] = ColorPair(Cyan,Black),
@@ -535,6 +559,10 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_STEAL] = ColorPair(Cyan,Black),
       [CPU_GUEST] = ColorPair(Cyan,Black),
       [PANEL_EDIT] = ColorPair(White,Cyan),
+      [SCREENS_OTH_BORDER] = ColorPair(White,Black),
+      [SCREENS_OTH_TEXT] = ColorPair(Cyan,Black),
+      [SCREENS_CUR_BORDER] = A_BOLD | ColorPair(White,Black),
+      [SCREENS_CUR_TEXT] = A_BOLD | ColorPair(Green,Black),
    },
    [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
 };

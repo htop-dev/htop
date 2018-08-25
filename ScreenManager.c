@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <time.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -35,6 +36,7 @@ typedef struct ScreenManager_ {
    int y2;
    Orientation orientation;
    Vector* panels;
+   const char* name;
    int panelCount;
    const Header* header;
    const Settings* settings;
@@ -160,7 +162,50 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    *rescan = false;
 }
 
+static inline bool drawTab(int* y, int* x, int l, const char* name, bool cur) {
+   attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
+   mvaddch(*y, *x, '[');
+   (*x)++;
+   if (*x >= l) return false;
+   int nameLen = strlen(name);
+   int n = MIN(l - *x, nameLen);
+   attrset(CRT_colors[cur ? SCREENS_CUR_TEXT : SCREENS_OTH_TEXT]);
+   mvaddnstr(*y, *x, name, n);
+   *x += n;
+   if (*x >= l) return false;
+   attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
+   mvaddch(*y, *x, ']');
+   *x += 2;
+   if (*x >= l) return false;
+   return true;
+}
+
+static void ScreenManager_drawScreenTabs(ScreenManager* this) {
+   ScreenSettings** screens = this->settings->screens;
+   int cur = this->settings->ssIndex;
+   int l = COLS;
+   Panel* panel = (Panel*) Vector_get(this->panels, 0);
+   int y = panel->y - 1;
+   int x = 2;
+   
+   if (this->name) {
+      drawTab(&y, &x, l, this->name, true);
+      return;
+   }
+   
+   for (int s = 0; screens[s]; s++) {
+      bool ok = drawTab(&y, &x, l, screens[s]->name, s == cur);
+      if (!ok) {
+         break;
+      }
+   }
+   attrset(CRT_colors[RESET_COLOR]);
+}
+
 static void ScreenManager_drawPanels(ScreenManager* this, int focus) {
+   if (this->settings->screenTabs) {
+      ScreenManager_drawScreenTabs(this);
+   }
    int nPanels = this->panelCount;
    for (int i = 0; i < nPanels; i++) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);
@@ -179,7 +224,7 @@ static Panel* setCurrentPanel(ScreenManager* this, int focus) {
    return panel;
 }
 
-void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
+void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, char* name) {
    bool quit = false;
    int focus = 0;
    
@@ -195,6 +240,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool rescan = false;
    int sortTimeout = 0;
    int resetSortTimeout = 5;
+   
+   this->name = name;
 
    while (!quit) {
       if (this->header) {
@@ -223,6 +270,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                      if (mevent.x >= panel->x && mevent.x <= panel->x+panel->w) {
                         if (mevent.y == panel->y) {
                            ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
+                           break;
+                        } else if (this->settings->screenTabs && mevent.y == panel->y - 1) {
+                           ch = EVENT_SCREEN_TAB_CLICK(mevent.x);
                            break;
                         } else if (mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
                            ch = KEY_MOUSE;

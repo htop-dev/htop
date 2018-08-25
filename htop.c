@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
    millisleep(75);
    ProcessList_scan(pl);
 
-   ScreenManager_run(scr, NULL, NULL);   
+   ScreenManager_run(scr, NULL, NULL, NULL);
    
    attron(CRT_colors[RESET_COLOR]);
    mvhline(LINES-1, 0, ' ', COLS);

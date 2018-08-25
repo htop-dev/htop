@@ -41,7 +41,7 @@ extern ProcessFieldData Process_fields[];
 
 ScreenDefaults Platform_defaultScreens[] = {
    {
-      .name = "Default",
+      .name = "Main",
       .columns = "PID USER PRIORITY NICE M_SIZE M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME Command",
       .sortKey = "PERCENT_CPU",
    },

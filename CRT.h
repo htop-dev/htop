@@ -118,6 +118,10 @@ typedef enum ColorElements_ {
    CPU_STEAL,
    CPU_GUEST,
    PANEL_EDIT,
+   SCREENS_OTH_BORDER,
+   SCREENS_OTH_TEXT,
+   SCREENS_CUR_BORDER,
+   SCREENS_CUR_TEXT,
    LAST_COLORELEMENT
 } ColorElements;
 

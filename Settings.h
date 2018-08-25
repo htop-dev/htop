@@ -64,6 +64,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool screenTabs;
 
    bool changed;
 } Settings;

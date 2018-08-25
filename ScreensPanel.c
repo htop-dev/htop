@@ -149,6 +149,7 @@ static void rebuildSettingsArray(Panel* super) {
       ScreenListItem* item = (ScreenListItem*) Panel_get(super, i);
       this->settings->screens[i] = item->ss;
    }
+   this->settings->nScreens = n;
 }
 
 static void addNewScreen(Panel* super) {

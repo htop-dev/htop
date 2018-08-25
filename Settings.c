@@ -73,6 +73,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool screenTabs;
 
    bool changed;
 } Settings;
@@ -267,6 +268,7 @@ ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char*
    ss->direction = 1;
    ss->treeView = 0;
    readFields(ss->fields, &(ss->flags), line);
+   ss->sortKey = ss->fields[0];
    this->screens[this->nScreens] = ss;
    this->nScreens++;
    this->screens = xRealloc(this->screens, sizeof(ScreenSettings*) * (this->nScreens + 1));
@@ -331,6 +333,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->highlightThreads = atoi(option[1]);
       } else if (String_eq(option[0], "header_margin")) {
          this->headerMargin = atoi(option[1]);
+      } else if (String_eq(option[0], "screen_tabs")) {
+         this->screenTabs = atoi(option[1]);
       } else if (String_eq(option[0], "expand_system_time")) {
          // Compatibility option.
          this->detailedCPUTime = atoi(option[1]);
@@ -443,6 +447,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
    fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
+   fprintf(fd, "screen_tabs=%d\n", (int) this->screenTabs);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
    fprintf(fd, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
    fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
@@ -559,6 +564,7 @@ Settings* Settings_new(int cpuCount) {
       this->highlightMegabytes = true;
       this->highlightThreads = true;
       this->headerMargin = true;
+      this->screenTabs = true;
    }
 
    this->ssIndex = 0;

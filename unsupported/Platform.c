@@ -31,7 +31,7 @@ const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(Si
 
 ScreenDefaults Platform_defaultScreens[] = {
    {
-      .name = "Default",
+      .name = "Main",
       .columns = "PID LWPID USER PRIORITY NICE M_SIZE M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME Command",
       .sortKey = "PERCENT_CPU",
    },

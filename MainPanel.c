@@ -88,6 +88,10 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       }
       reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS; 
       result = HANDLED;
+   } else if (EVENT_IS_SCREEN_TAB_CLICK(ch)) {
+      int x = EVENT_SCREEN_TAB_GET_X(ch);
+      reaction |= Action_setScreenTab(settings, x);
+      result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
       if (filterChanged) {

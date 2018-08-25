@@ -145,7 +145,7 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    this->settings = settings;
    this->header = header;
    this->pl = pl;
-   Panel_setHeader(super, "Setup");
+   Panel_setHeader(super, "Categories");
    Panel_add(super, (Object*) ListItem_new("Meters", 0));
    Panel_add(super, (Object*) ListItem_new("Display options", 0));
    Panel_add(super, (Object*) ListItem_new("Colors", 0));

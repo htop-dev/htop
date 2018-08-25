@@ -98,7 +98,7 @@ static int percentages(int cnt, int64_t *out, int64_t *new, int64_t *old, int64_
 
 ScreenDefaults Platform_defaultScreens[] = {
    {
-      .name = "Default",
+      .name = "Main",
       .columns = "PID USER PRIORITY NICE M_SIZE M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME Command",
       .sortKey = "PERCENT_CPU",
    },

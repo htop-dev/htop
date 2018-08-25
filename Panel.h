@@ -29,8 +29,12 @@ typedef enum HandlerResult_ {
 #define EVENT_SET_SELECTED -1
 
 #define EVENT_HEADER_CLICK(x_) (-10000 + x_)
-#define EVENT_IS_HEADER_CLICK(ev_) (ev_ >= -10000 && ev_ <= -9000)
 #define EVENT_HEADER_CLICK_GET_X(ev_) (ev_ + 10000)
+#define EVENT_IS_HEADER_CLICK(ev_) (ev_ >= -10000 && ev_ < -9000)
+
+#define EVENT_SCREEN_TAB_CLICK(x_) (-20000 + x_)
+#define EVENT_SCREEN_TAB_GET_X(ev_) (ev_ + 20000)
+#define EVENT_IS_SCREEN_TAB_CLICK(ev_) (ev_ >= -20000 && ev_ < -10000)
 
 typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
 

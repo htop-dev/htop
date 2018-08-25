@@ -211,6 +211,9 @@ int Header_calculateHeight(Header* this) {
       }
       maxHeight = MAX(maxHeight, height);
    }
+   if (this->settings->screenTabs) {
+      maxHeight++;
+   }
    this->height = maxHeight;
    this->pad = pad;
    return maxHeight;

@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include <math.h>
 #include <pwd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 #include <sys/param.h>
 #include <sys/time.h>
@@ -80,7 +81,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x) {
       header->pl->following = pid;
       unfollow = true;
    }
-   ScreenManager_run(scr, &panelFocus, &ch);
+   ScreenManager_run(scr, &panelFocus, &ch, NULL);
    if (unfollow) {
       header->pl->following = -1;
    }
@@ -106,7 +107,7 @@ static void Action_runSetup(Settings* settings, const Header* header, ProcessLis
    CategoriesPanel_makeMetersPage(panelCategories);
    Panel* panelFocus;
    int ch;
-   ScreenManager_run(scr, &panelFocus, &ch);
+   ScreenManager_run(scr, &panelFocus, &ch, "Setup");
    ScreenManager_delete(scr);
    if (settings->changed) {
       Header_writeBackToSettings(header);
@@ -307,12 +308,31 @@ static Htop_Reaction actionNextScreen(State* st) {
 
 static Htop_Reaction actionPrevScreen(State* st) {
    Settings* settings = st->settings;
-   settings->ssIndex--;
-   if (settings->ssIndex == -1) {
+   if (settings->ssIndex == 0) {
       settings->ssIndex = settings->nScreens - 1;
+   } else {
+      settings->ssIndex--;
    }
    settings->ss = settings->screens[settings->ssIndex];
    return HTOP_REFRESH;
+}
+
+Htop_Reaction Action_setScreenTab(Settings* settings, int x) {
+   int s = 2;
+   for (unsigned int i = 0; i < settings->nScreens; i++) {
+      if (x < s) {
+         return 0;
+      }
+      const char* name = settings->screens[i]->name;
+      int len = strlen(name);
+      if (x <= s + len + 1) {
+         settings->ssIndex = i;
+         settings->ss = settings->screens[i];
+         return HTOP_REFRESH;
+      }
+      s += len + 3;
+   }
+   return 0;
 }
 
 static Htop_Reaction actionSetAffinity(State* st) {
