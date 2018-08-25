@@ -525,6 +525,10 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    }
    long long diff;
    switch ((int)settings->ss->sortKey) {
+   case CMAJFLT:
+      return (p2->cmajflt - p1->cmajflt);
+   case CMINFLT:
+      return (p2->cminflt - p1->cminflt);
    case M_DRS:
       return (p2->m_drs - p1->m_drs);
    case M_DT:
