@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_VSERVER  0x0400
 #define PROCESS_FLAG_LINUX_CGROUP   0x0800
 #define PROCESS_FLAG_LINUX_OOM      0x1000
+#define PROCESS_FLAG_LINUX_SMAPS    0x2000
 
 typedef enum UnsupportedProcessFields {
    FLAGS = 9,
@@ -87,7 +88,10 @@ typedef enum LinuxProcessFields {
    PERCENT_IO_DELAY = 117,
    PERCENT_SWAP_DELAY = 118,
    #endif
-   LAST_PROCESSFIELD = 119,
+   M_PSS = 119,
+   M_SWAP = 120,
+   M_PSSWP = 121,
+   LAST_PROCESSFIELD = 122,
 } LinuxProcessField;
 
 #include "IOPriority.h"
@@ -103,6 +107,9 @@ typedef struct LinuxProcess_ {
    unsigned long long int cutime;
    unsigned long long int cstime;
    long m_share;
+   long m_pss;
+   long m_swap;
+   long m_psswp;
    long m_trs;
    long m_drs;
    long m_lrs;
@@ -239,6 +246,9 @@ ProcessFieldData Process_fields[] = {
    [PERCENT_IO_DELAY] = { .name = "PERCENT_IO_DELAY", .title = "IOD% ", .description = "Block I/O delay %", .flags = 0, },
    [PERCENT_SWAP_DELAY] = { .name = "PERCENT_SWAP_DELAY", .title = "SWAPD% ", .description = "Swapin delay %", .flags = 0, },
 #endif
+   [M_PSS] = { .name = "M_PSS", .title = "  PSS ", .description = "proportional set size, same as M_RESIDENT but each page is divided by the number of processes sharing it.", .flags = PROCESS_FLAG_LINUX_SMAPS, },
+   [M_SWAP] = { .name = "M_SWAP", .title = " SWAP ", .description = "Size of the process's swapped pages", .flags = PROCESS_FLAG_LINUX_SMAPS, },
+   [M_PSSWP] = { .name = "M_PSSWP", .title = " PSSWP ", .description = "shows proportional swap share of this mapping, Unlike \"Swap\", this does not take into account swapped out page of underlying shmem objects.", .flags = PROCESS_FLAG_LINUX_SMAPS, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -344,6 +354,9 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case M_LRS: Process_humanNumber(str, lp->m_lrs * PAGE_SIZE_KB, coloring); return;
    case M_TRS: Process_humanNumber(str, lp->m_trs * PAGE_SIZE_KB, coloring); return;
    case M_SHARE: Process_humanNumber(str, lp->m_share * PAGE_SIZE_KB, coloring); return;
+   case M_PSS: Process_humanNumber(str, lp->m_pss, coloring); return;
+   case M_SWAP: Process_humanNumber(str, lp->m_swap, coloring); return;
+   case M_PSSWP: Process_humanNumber(str, lp->m_psswp, coloring); return;
    case UTIME: Process_printTime(str, lp->utime); return;
    case STIME: Process_printTime(str, lp->stime); return;
    case CUTIME: Process_printTime(str, lp->cutime); return;
@@ -435,6 +448,12 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       return (p2->m_trs - p1->m_trs);
    case M_SHARE:
       return (p2->m_share - p1->m_share);
+   case M_PSS:
+      return (p2->m_pss - p1->m_pss);
+   case M_SWAP:
+      return (p2->m_swap - p1->m_swap);
+   case M_PSSWP:
+      return (p2->m_psswp - p1->m_psswp);
    case UTIME:  diff = p2->utime - p1->utime; goto test_diff;
    case CUTIME: diff = p2->cutime - p1->cutime; goto test_diff;
    case STIME:  diff = p2->stime - p1->stime; goto test_diff;
