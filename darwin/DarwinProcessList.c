@@ -84,9 +84,8 @@ void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p) {
        if(0 != munmap(*p, vm_page_size)) {
            CRT_fatalError("Unable to free old CPU load information\n");
        }
+       *p = NULL;
    }
-
-   *p = NULL;
 }
 
 unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
