@@ -228,7 +228,7 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
    if(number >= (10 * ONE_DECIMAL_M)) {
       #ifdef __LP64__
       if(number >= (100 * ONE_DECIMAL_G)) {
-         len = snprintf(buffer, 10, "%4ldT ", number / ONE_G);
+         len = snprintf(buffer, 10, "%4luT ", number / ONE_G);
          RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       } else if (number >= (1000 * ONE_DECIMAL_M)) {
@@ -238,7 +238,7 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
       }
       #endif
       if(number >= (100 * ONE_DECIMAL_M)) {
-         len = snprintf(buffer, 10, "%4ldG ", number / ONE_M);
+         len = snprintf(buffer, 10, "%4luG ", number / ONE_M);
          RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       }
@@ -246,11 +246,11 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
       RichString_appendn(str, largeNumberColor, buffer, len);
       return;
    } else if (number >= 100000) {
-      len = snprintf(buffer, 10, "%4ldM ", number / ONE_K);
+      len = snprintf(buffer, 10, "%4luM ", number / ONE_K);
       RichString_appendn(str, processMegabytesColor, buffer, len);
       return;
    } else if (number >= 1000) {
-      len = snprintf(buffer, 10, "%2ld", number/1000);
+      len = snprintf(buffer, 10, "%2lu", number/1000);
       RichString_appendn(str, processMegabytesColor, buffer, len);
       number %= 1000;
       len = snprintf(buffer, 10, "%03lu ", number);
@@ -278,7 +278,7 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
       int len = snprintf(buffer, 13, "    no perm ");
       RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
    } else if (number > 10000000000) {
-      xSnprintf(buffer, 13, "%11lld ", number / 1000);
+      xSnprintf(buffer, 13, "%11llu ", number / 1000);
       RichString_appendn(str, largeNumberColor, buffer, 5);
       RichString_appendn(str, processMegabytesColor, buffer+5, 3);
       RichString_appendn(str, processColor, buffer+8, 4);
@@ -380,9 +380,9 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    switch (field) {
    case PERCENT_CPU: {
       if (this->percent_cpu > 999.9) {
-         xSnprintf(buffer, n, "%4d ", (unsigned int)this->percent_cpu); 
+         xSnprintf(buffer, n, "%4u ", (unsigned int)this->percent_cpu); 
       } else if (this->percent_cpu > 99.9) {
-         xSnprintf(buffer, n, "%3d. ", (unsigned int)this->percent_cpu); 
+         xSnprintf(buffer, n, "%3u. ", (unsigned int)this->percent_cpu); 
       } else {
          xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
       }
