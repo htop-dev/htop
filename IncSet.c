@@ -52,6 +52,10 @@ static void IncMode_reset(IncMode* mode) {
    mode->buffer[0] = 0;
 }
 
+void IncSet_reset(IncSet* this, IncType type) {
+   IncMode_reset(&this->modes[type]);
+}
+
 static const char* const searchFunctions[] = {"Next  ", "Cancel ", " Search: ", NULL};
 static const char* const searchKeys[] = {"F3", "Esc", "  "};
 static int searchEvents[] = {KEY_F(3), 27, ERR};
@@ -132,6 +136,30 @@ static bool search(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelVa
    return found;
 }
 
+static bool IncMode_find(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
+   int size = Panel_size(panel);
+   int here = Panel_getSelectedIndex(panel);
+   int i = here;
+   for(;;) {
+      i+=step;
+      if (i == size) i = 0;
+      if (i == -1) i = size - 1;
+      if (i == here) return false;
+      if (String_contains_i(getPanelValue(panel, i), mode->buffer)) {
+         Panel_setSelected(panel, i);
+         return true;
+      }
+   }
+}
+
+bool IncSet_next(IncSet* this, IncType type, Panel* panel, IncMode_GetPanelValue getPanelValue) {
+   return IncMode_find(&this->modes[type], panel, getPanelValue, 1);
+}
+
+bool IncSet_prev(IncSet* this, IncType type, Panel* panel, IncMode_GetPanelValue getPanelValue) {
+   return IncMode_find(&this->modes[type], panel, getPanelValue, -1);
+}
+
 bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines) {
    if (ch == ERR)
       return true;
@@ -141,17 +169,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
    bool doSearch = true;
    if (ch == KEY_F(3)) {
       if (size == 0) return true;
-      int here = Panel_getSelectedIndex(panel);
-      int i = here;
-      for(;;) {
-         i++;
-         if (i == size) i = 0;
-         if (i == here) break;
-         if (String_contains_i(getPanelValue(panel, i), mode->buffer)) {
-            Panel_setSelected(panel, i);
-            break;
-         }
-      }
+      IncMode_find(mode, panel, getPanelValue, 1);
       doSearch = false;
    } else if (ch < 255 && isprint((char)ch)) {
       if (mode->index < INCMODE_MAX) {
@@ -187,7 +205,9 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
             IncMode_reset(mode);
          }
       } else {
-         IncMode_reset(mode);
+         if (ch == 27) {
+            IncMode_reset(mode);
+         }
       }
       this->active = NULL;
       Panel_setDefaultBar(panel);
