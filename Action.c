@@ -62,7 +62,7 @@ typedef struct State_ {
 
 }*/
 
-Object* Action_pickFromVector(State* st, Panel* list, int x) {
+Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    Panel* panel = st->panel;
    Header* header = st->header;
    Settings* settings = st->settings;
@@ -75,8 +75,8 @@ Object* Action_pickFromVector(State* st, Panel* list, int x) {
    Panel* panelFocus;
    int ch;
    bool unfollow = false;
-   int pid = MainPanel_selectedPid((MainPanel*)panel);
-   if (header->pl->following == -1) {
+   int pid = followProcess ? MainPanel_selectedPid((MainPanel*)panel) : -1;
+   if (followProcess && header->pl->following == -1) {
       header->pl->following = pid;
       unfollow = true;
    }
@@ -88,11 +88,16 @@ Object* Action_pickFromVector(State* st, Panel* list, int x) {
    Panel_move(panel, 0, y);
    Panel_resize(panel, COLS, LINES-y-1);
    if (panelFocus == list && ch == 13) {
-      Process* selected = (Process*)Panel_getSelected(panel);
-      if (selected && selected->pid == pid)
+      if (followProcess) {
+         Process* selected = (Process*)Panel_getSelected(panel);
+         if (selected && selected->pid == pid)
+            return Panel_getSelected(list);
+         else
+            beep();
+      } else {
          return Panel_getSelected(list);
-      else
-         beep();
+      }
+
    }
    return NULL;
 }
@@ -189,7 +194,7 @@ static Htop_Reaction sortBy(State* st) {
          Panel_setSelected(sortPanel, i);
       free(name);
    }
-   ListItem* field = (ListItem*) Action_pickFromVector(st, sortPanel, 15);
+   ListItem* field = (ListItem*) Action_pickFromVector(st, sortPanel, 15, false);
    if (field) {
       reaction |= Action_setSortKey(st->settings, field->key);
    }
@@ -305,7 +310,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    Panel* affinityPanel = AffinityPanel_new(st->pl, affinity);
    Affinity_delete(affinity);
 
-   void* set = Action_pickFromVector(st, affinityPanel, 15);
+   void* set = Action_pickFromVector(st, affinityPanel, 15, true);
    if (set) {
       Affinity* affinity = AffinityPanel_getAffinity(affinityPanel, st->pl);
       bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) Affinity_set, (Arg){ .v = affinity }, NULL);
@@ -319,7 +324,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
 
 static Htop_Reaction actionKill(State* st) {
    Panel* signalsPanel = (Panel*) SignalsPanel_new();
-   ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15);
+   ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15, true);
    if (sgn) {
       if (sgn->key != 0) {
          Panel_setHeader(st->panel, "Sending...");
@@ -340,7 +345,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
    Vector_insertionSort(usersPanel->items);
    ListItem* allUsers = ListItem_new("All users", -1);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
-   ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20);
+   ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20, false);
    if (picked) {
       if (picked == allUsers) {
          st->pl->userId = -1;
