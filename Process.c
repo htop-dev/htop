@@ -30,8 +30,7 @@ in the source distribution for its full text.
 #include <math.h>
 #ifdef MAJOR_IN_MKDEV
 #include <sys/mkdev.h>
-#elif defined(MAJOR_IN_SYSMACROS) || \
-   (defined(HAVE_SYS_SYSMACROS_H) && HAVE_SYS_SYSMACROS_H)
+#elif defined(MAJOR_IN_SYSMACROS)
 #include <sys/sysmacros.h>
 #endif
 

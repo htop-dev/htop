@@ -10,8 +10,7 @@ in the source distribution for its full text.
 */
 
 #ifdef MAJOR_IN_MKDEV
-#elif defined(MAJOR_IN_SYSMACROS) || \
-   (defined(HAVE_SYS_SYSMACROS_H) && HAVE_SYS_SYSMACROS_H)
+#elif defined(MAJOR_IN_SYSMACROS)
 #endif
 
 #ifdef HAVE_DELAYACCT
