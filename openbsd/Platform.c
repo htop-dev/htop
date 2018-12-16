@@ -20,8 +20,6 @@ in the source distribution for its full text.
 #include "OpenBSDProcess.h"
 #include "OpenBSDProcessList.h"
 
-#include <sys/sched.h>
-#include <uvm/uvmexp.h>
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #include <sys/swap.h>
@@ -31,7 +29,6 @@ in the source distribution for its full text.
 #include <stdint.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <time.h>
