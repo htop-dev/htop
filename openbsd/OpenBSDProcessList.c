@@ -6,6 +6,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "CRT.h"
 #include "ProcessList.h"
 #include "OpenBSDProcessList.h"
 #include "OpenBSDProcess.h"
@@ -17,6 +18,7 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/resource.h>
+#include <sys/sched.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
 #include <sys/user.h>
@@ -31,7 +33,22 @@ in the source distribution for its full text.
 
 typedef struct CPUData_ {
    unsigned long long int totalTime;
+   unsigned long long int userTime;
+   unsigned long long int niceTime;
+   unsigned long long int sysTime;
+   unsigned long long int sysAllTime;
+   unsigned long long int spinTime;
+   unsigned long long int intrTime;
+   unsigned long long int idleTime;
+
    unsigned long long int totalPeriod;
+   unsigned long long int userPeriod;
+   unsigned long long int nicePeriod;
+   unsigned long long int sysPeriod;
+   unsigned long long int sysAllPeriod;
+   unsigned long long int spinPeriod;
+   unsigned long long int intrPeriod;
+   unsigned long long int idlePeriod;
 } CPUData;
 
 typedef struct OpenBSDProcessList_ {
@@ -79,16 +96,17 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    if (e == -1 || pl->cpuCount < 1) {
       pl->cpuCount = 1;
    }
-   opl->cpus = xRealloc(opl->cpus, pl->cpuCount * sizeof(CPUData));
+   opl->cpus = xCalloc(pl->cpuCount + 1, sizeof(CPUData));
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0) {
       err(1, "fscale sysctl call failed");
    }
 
-   for (i = 0; i < pl->cpuCount; i++) {
-      opl->cpus[i].totalTime = 1;
-      opl->cpus[i].totalPeriod = 1;
+   for (i = 0; i <= pl->cpuCount; i++) {
+      CPUData *d = opl->cpus + i;
+      d->totalTime = 1;
+      d->totalPeriod = 1;
    }
 
    opl->kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
@@ -205,7 +223,7 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
 /*
  * Taken from OpenBSD's ps(1).
  */
-double getpcpu(const struct kinfo_proc *kp) {
+static double getpcpu(const struct kinfo_proc *kp) {
    if (fscale == 0)
       return (0.0);
 
@@ -214,9 +232,8 @@ double getpcpu(const struct kinfo_proc *kp) {
    return (100.0 * fxtofl(kp->p_pctcpu));
 }
 
-void ProcessList_goThroughEntries(ProcessList* this) {
-   OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
-   Settings* settings = this->settings;
+static inline void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
+   Settings* settings = this->super.settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
    struct kinfo_proc* kproc;
@@ -228,10 +245,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    int count = 0;
    int i;
 
-   OpenBSDProcessList_scanMemoryInfo(this);
-
    // use KERN_PROC_KTHREAD to also include kernel threads
-   struct kinfo_proc* kprocs = kvm_getprocs(opl->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
+   struct kinfo_proc* kprocs = kvm_getprocs(this->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
    //struct kinfo_proc* kprocs = getprocs(KERN_PROC_ALL, 0, &count);
 
    gettimeofday(&tv, NULL);
@@ -240,7 +255,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       kproc = &kprocs[i];
 
       preExisting = false;
-      proc = ProcessList_getProcess(this, kproc->p_pid, &preExisting, (Process_New) OpenBSDProcess_new);
+      proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, (Process_New) OpenBSDProcess_new);
       fp = (OpenBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc))
@@ -255,22 +270,22 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->pgrp = kproc->p__pgid;
          proc->st_uid = kproc->p_uid;
          proc->starttime_ctime = kproc->p_ustart_sec;
-         proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
-         ProcessList_add((ProcessList*)this, proc);
-         proc->comm = OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->basenameOffset);
+         proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
+         ProcessList_add(&this->super, proc);
+         proc->comm = OpenBSDProcessList_readProcessName(this->kd, kproc, &proc->basenameOffset);
          (void) localtime_r((time_t*) &kproc->p_ustart_sec, &date);
          strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
       } else {
          if (settings->updateProcessNames) {
             free(proc->comm);
-            proc->comm = OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->basenameOffset);
+            proc->comm = OpenBSDProcessList_readProcessName(this->kd, kproc, &proc->basenameOffset);
          }
       }
 
       proc->m_size = kproc->p_vm_dsize;
       proc->m_resident = kproc->p_vm_rssize;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
-      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->cpuCount*100.0);
+      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->super.totalMem) * 100.0;
+      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.cpuCount*100.0);
       //proc->nlwp = kproc->p_numthreads;
       //proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 10);
       proc->nice = kproc->p_nice - 20;
@@ -290,14 +305,99 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       }
 
       if (Process_isKernelThread(proc)) {
-         this->kernelThreads++;
+         this->super.kernelThreads++;
       }
 
-      this->totalTasks++;
+      this->super.totalTasks++;
       // SRUN ('R') means runnable, not running
       if (proc->state == 'P') {
-         this->runningTasks++;
+         this->super.runningTasks++;
       }
       proc->updated = true;
    }
 }
+
+static unsigned long long saturatingSub(unsigned long long a, unsigned long long b) {
+   return a > b ? a - b : 0;
+}
+
+static void getKernelCPUTimes(int cpuId, u_int64_t* times) {
+   int mib[] = { CTL_KERN, KERN_CPTIME2, cpuId };
+   size_t length = sizeof(u_int64_t) * CPUSTATES;
+   if (sysctl(mib, 3, times, &length, NULL, 0) == -1 ||
+         length != sizeof(u_int64_t) * CPUSTATES) {
+      CRT_fatalError("sysctl kern.cp_time2 failed");
+   }
+}
+
+static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
+   unsigned long long totalTime = 0;
+   for (int i = 0; i < CPUSTATES; i++) {
+      totalTime += times[i];
+   }
+
+   unsigned long long sysAllTime = times[CP_INTR] + times[CP_SYS];
+
+   // XXX Not sure if CP_SPIN should be added to sysAllTime.
+   // See https://github.com/openbsd/src/commit/531d8034253fb82282f0f353c086e9ad827e031c
+   #ifdef CP_SPIN
+   sysAllTime += times[CP_SPIN];
+   #endif
+
+   cpu->totalPeriod = saturatingSub(totalTime, cpu->totalTime);
+   cpu->userPeriod = saturatingSub(times[CP_USER], cpu->userTime);
+   cpu->nicePeriod = saturatingSub(times[CP_NICE], cpu->niceTime);
+   cpu->sysPeriod = saturatingSub(times[CP_SYS], cpu->sysTime);
+   cpu->sysAllPeriod = saturatingSub(sysAllTime, cpu->sysAllTime);
+   #ifdef CP_SPIN
+   cpu->spinPeriod = saturatingSub(times[CP_SPIN], cpu->spinTime);
+   #endif
+   cpu->intrPeriod = saturatingSub(times[CP_INTR], cpu->intrTime);
+   cpu->idlePeriod = saturatingSub(times[CP_IDLE], cpu->idleTime);
+
+   cpu->totalTime = totalTime;
+   cpu->userTime = times[CP_USER];
+   cpu->niceTime = times[CP_NICE];
+   cpu->sysTime = times[CP_SYS];
+   cpu->sysAllTime = sysAllTime;
+   #ifdef CP_SPIN
+   cpu->spinTime = times[CP_SPIN];
+   #endif
+   cpu->intrTime = times[CP_INTR];
+   cpu->idleTime = times[CP_IDLE];
+}
+
+static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
+   u_int64_t kernelTimes[CPUSTATES] = {0};
+   u_int64_t avg[CPUSTATES] = {0};
+
+   for (int i = 0; i < this->super.cpuCount; i++) {
+      getKernelCPUTimes(i, kernelTimes);
+      CPUData* cpu = this->cpus + i + 1;
+      kernelCPUTimesToHtop(kernelTimes, cpu);
+
+      avg[CP_USER] += cpu->userTime;
+      avg[CP_NICE] += cpu->niceTime;
+      avg[CP_SYS] += cpu->sysTime;
+      #ifdef CP_SPIN
+      avg[CP_SPIN] += cpu->spinTime;
+      #endif
+      avg[CP_INTR] += cpu->intrTime;
+      avg[CP_IDLE] += cpu->idleTime;
+   }
+
+   for (int i = 0; i < CPUSTATES; i++) {
+      avg[i] /= this->super.cpuCount;
+   }
+
+   kernelCPUTimesToHtop(avg, this->cpus);
+}
+
+void ProcessList_goThroughEntries(ProcessList* this) {
+   OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
+
+   OpenBSDProcessList_scanMemoryInfo(this);
+   OpenBSDProcessList_scanProcs(opl);
+   OpenBSDProcessList_scanCPUTime(opl);
+}
+

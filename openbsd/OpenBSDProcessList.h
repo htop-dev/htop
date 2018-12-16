@@ -15,7 +15,22 @@ in the source distribution for its full text.
 
 typedef struct CPUData_ {
    unsigned long long int totalTime;
+   unsigned long long int userTime;
+   unsigned long long int niceTime;
+   unsigned long long int sysTime;
+   unsigned long long int sysAllTime;
+   unsigned long long int spinTime;
+   unsigned long long int intrTime;
+   unsigned long long int idleTime;
+
    unsigned long long int totalPeriod;
+   unsigned long long int userPeriod;
+   unsigned long long int nicePeriod;
+   unsigned long long int sysPeriod;
+   unsigned long long int sysAllPeriod;
+   unsigned long long int spinPeriod;
+   unsigned long long int intrPeriod;
+   unsigned long long int idlePeriod;
 } CPUData;
 
 typedef struct OpenBSDProcessList_ {
@@ -51,8 +66,7 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
 /*
  * Taken from OpenBSD's ps(1).
  */
-double getpcpu(const struct kinfo_proc *kp);
-
 void ProcessList_goThroughEntries(ProcessList* this);
+
 
 #endif
