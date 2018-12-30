@@ -8,6 +8,8 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "Settings.h"
 
+#include "config.h"
+
 #include "CRT.h"
 #include "StringUtils.h"
 #include "RichString.h"
