@@ -43,7 +43,7 @@ static void printHelpFlag() {
          "-h --help                   Print this help screen\n"
          "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
          "-t --tree                   Show the tree view by default\n"
-         "-u --user=USERNAME          Show only processes of a given user\n"
+         "-u --user=USERNAME          Show only processes of a given user. If no username is given, it defaults to $USER.\n"
          "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
          "-v --version                Print version info\n"
          "\n"
@@ -82,7 +82,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"version",  no_argument,         0, 'v'},
       {"delay",    required_argument,   0, 'd'},
       {"sort-key", required_argument,   0, 's'},
-      {"user",     required_argument,   0, 'u'},
+      {"user",     optional_argument,   0, 'u'},
       {"no-color", no_argument,         0, 'C'},
       {"no-colour",no_argument,         0, 'C'},
       {"tree",     no_argument,         0, 't'},
@@ -92,7 +92,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvCs:td:u:p:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvCs:td:u::p:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -123,6 +123,15 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             }
             break;
          case 'u':
+            if(!optarg && optind < argc && argv[optind] != NULL && argv[optind][0] != '\0' && argv[optind][0] != '-') {
+               optarg = argv[optind++];
+            }
+
+            if (!optarg) {
+               optarg = getenv("USER");
+               flags.userId = geteuid();
+            }
+
             if (!Action_setUserOnly(optarg, &(flags.userId))) {
                fprintf(stderr, "Error: invalid user \"%s\".\n", optarg);
             }
