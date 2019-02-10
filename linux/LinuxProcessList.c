@@ -927,30 +927,30 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    char buffer[128];
    while (fgets(buffer, 128, file)) {
 
-      #define tryRead(label, variable) (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu kB", variable))
+      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu kB", variable)) { break; } } while(0)
       switch (buffer[0]) {
       case 'M':
-         if (tryRead("MemTotal:", &this->totalMem)) {}
-         else if (tryRead("MemFree:", &this->freeMem)) {}
-         else if (tryRead("MemShared:", &this->sharedMem)) {}
+         tryRead("MemTotal:", &this->totalMem);
+         tryRead("MemFree:", &this->freeMem);
+         tryRead("MemShared:", &this->sharedMem);
          break;
       case 'B':
-         if (tryRead("Buffers:", &this->buffersMem)) {}
+         tryRead("Buffers:", &this->buffersMem);
          break;
       case 'C':
-         if (tryRead("Cached:", &this->cachedMem)) {}
+         tryRead("Cached:", &this->cachedMem);
          break;
       case 'S':
          switch (buffer[1]) {
          case 'w':
-            if (tryRead("SwapTotal:", &this->totalSwap)) {}
-            else if (tryRead("SwapFree:", &swapFree)) {}
+            tryRead("SwapTotal:", &this->totalSwap);
+            tryRead("SwapFree:", &swapFree);
             break;
          case 'h':
-            if (tryRead("Shmem:", &shmem)) {}
+            tryRead("Shmem:", &shmem);
             break;
          case 'R':
-            if (tryRead("SReclaimable:", &sreclaimable)) {}
+            tryRead("SReclaimable:", &sreclaimable);
             break;
          }
          break;
