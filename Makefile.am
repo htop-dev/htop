@@ -48,14 +48,16 @@ linux_platform_headers = \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
 	linux/LinuxCRT.h \
-	linux/Battery.h
+	linux/Battery.h \
+	linux/PressureStallMeter.h
 
 all_platform_headers += $(linux_platform_headers)
 
 if HTOP_LINUX
 AM_CFLAGS += -rdynamic
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
-linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c
+linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c \
+linux/PressureStallMeter.c
 
 myhtopplatheaders = $(linux_platform_headers)
 endif

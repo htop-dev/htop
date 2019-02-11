@@ -45,4 +45,6 @@ void Platform_setSwapValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 
+void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred);
+
 #endif
