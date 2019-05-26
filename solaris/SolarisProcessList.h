@@ -12,6 +12,8 @@ in the source distribution for its full text.
 
 #define MAXCMDLINE 255
 
+#define GZONE	"global    "
+#define UZONE	"unknown   "
 
 #include <kstat.h>
 #include <sys/param.h>

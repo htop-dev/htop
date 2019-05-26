@@ -25,6 +25,8 @@ in the source distribution for its full text.
 
 #define MAXCMDLINE 255
 
+#define GZONE	"global    "
+#define UZONE	"unknown   "
 /*{
 
 #include <kstat.h>
@@ -62,12 +64,12 @@ typedef struct SolarisProcessList_ {
 char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
   char* zname;
   if ( sproc->zoneid == 0 ) {
-     zname = xStrdup("global    ");
+     zname = xStrdup(GZONE);
   } else if ( kd == NULL ) {
-     zname = xStrdup("unknown   ");
+     zname = xStrdup(UZONE);
   } else {
      kstat_t* ks = kstat_lookup( kd, "zones", sproc->zoneid, NULL );
-     zname = xStrdup(ks->ks_name);
+     zname = xStrdup(ks == NULL ? UZONE : ks->ks_name);
   }
   return zname;
 }
