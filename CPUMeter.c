@@ -34,7 +34,7 @@ typedef enum {
 }*/
 
 int CPUMeter_attributes[] = {
-   CPU_NICE, CPU_NORMAL, CPU_KERNEL, CPU_IRQ, CPU_SOFTIRQ, CPU_STEAL, CPU_GUEST, CPU_IOWAIT
+   CPU_NICE, CPU_NORMAL, CPU_KRNL, CPU_IRQ, CPU_SOFTIRQ, CPU_STEAL, CPU_GUEST, CPU_IOWAIT
 };
 
 #ifndef MIN
@@ -80,7 +80,7 @@ static void CPUMeter_display(Object* cast, RichString* out) {
    if (this->pl->settings->detailedCPUTime) {
       xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
       RichString_append(out, CRT_colors[METER_TEXT], "sy:");
-      RichString_append(out, CRT_colors[CPU_KERNEL], buffer);
+      RichString_append(out, CRT_colors[CPU_KRNL], buffer);
       xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
       RichString_append(out, CRT_colors[METER_TEXT], "ni:");
       RichString_append(out, CRT_colors[CPU_NICE_TEXT], buffer);
@@ -106,7 +106,7 @@ static void CPUMeter_display(Object* cast, RichString* out) {
    } else {
       xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
       RichString_append(out, CRT_colors[METER_TEXT], "sys:");
-      RichString_append(out, CRT_colors[CPU_KERNEL], buffer);
+      RichString_append(out, CRT_colors[CPU_KRNL], buffer);
       xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
       RichString_append(out, CRT_colors[METER_TEXT], "low:");
       RichString_append(out, CRT_colors[CPU_NICE_TEXT], buffer);

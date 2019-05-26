@@ -463,7 +463,7 @@ static Htop_Reaction actionHelp(State* st) {
    if (settings->detailedCPUTime) {
       addattrstr(CRT_colors[CPU_NICE_TEXT], "low"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
-      addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
+      addattrstr(CRT_colors[CPU_KRNL], "kernel"); addstr("/");
       addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
       addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq"); addstr("/");
       addattrstr(CRT_colors[CPU_STEAL], "steal"); addstr("/");
@@ -473,7 +473,7 @@ static Htop_Reaction actionHelp(State* st) {
    } else {
       addattrstr(CRT_colors[CPU_NICE_TEXT], "low-priority"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
-      addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
+      addattrstr(CRT_colors[CPU_KRNL], "kernel"); addstr("/");
       addattrstr(CRT_colors[CPU_GUEST], "virtualiz");
       addattrstr(CRT_colors[BAR_SHADOW], "               used%");
    }
