@@ -15,7 +15,7 @@ in the source distribution for its full text.
 }*/
 
 int TasksMeter_attributes[] = {
-   CPU_KERNEL, PROCESS_THREAD, PROCESS, TASKS_RUNNING
+   CPU_KRNL, PROCESS_THREAD, PROCESS, TASKS_RUNNING
 };
 
 static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
