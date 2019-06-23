@@ -124,6 +124,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       item->data[cmd] = xStrdup(line + 1);
       free(line);
    }
+   fclose(fd);
    int wstatus;
    if (waitpid(child, &wstatus, 0) == -1) {
       pdata->error = 1;
