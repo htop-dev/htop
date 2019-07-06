@@ -128,6 +128,11 @@ typedef enum ColorElements_ {
    CPU_SOFTIRQ,
    CPU_STEAL,
    CPU_GUEST,
+   ZFS_MFU,
+   ZFS_MRU,
+   ZFS_ANON,
+   ZFS_HEADER,
+   ZFS_OTHER,
    LAST_COLORELEMENT
 } ColorElements;
 
@@ -232,6 +237,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Magenta,Black),
       [CPU_STEAL] = ColorPair(Cyan,Black),
       [CPU_GUEST] = ColorPair(Cyan,Black),
+      [ZFS_MFU] = ColorPair(Blue,Black),
+      [ZFS_MRU] = ColorPair(Yellow,Black),
+      [ZFS_ANON] = ColorPair(Magenta,Black),
+      [ZFS_HEADER] = ColorPair(Cyan,Black),
+      [ZFS_OTHER] = ColorPair(Magenta,Black),
    },
    [COLORSCHEME_MONOCHROME] = {
       [RESET_COLOR] = A_NORMAL,
@@ -291,6 +301,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = A_BOLD,
       [CPU_STEAL] = A_REVERSE,
       [CPU_GUEST] = A_REVERSE,
+      [ZFS_MFU] = A_NORMAL,
+      [ZFS_MRU] = A_NORMAL,
+      [ZFS_ANON] = A_DIM,
+      [ZFS_HEADER] = A_BOLD,
+      [ZFS_OTHER] = A_DIM,
    },
    [COLORSCHEME_BLACKONWHITE] = {
       [RESET_COLOR] = ColorPair(Black,White),
@@ -350,6 +365,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Blue,White),
       [CPU_STEAL] = ColorPair(Cyan,White),
       [CPU_GUEST] = ColorPair(Cyan,White),
+      [ZFS_MFU] = ColorPair(Cyan,White),
+      [ZFS_MRU] = ColorPair(Yellow,White),
+      [ZFS_ANON] = ColorPair(Magenta,White),
+      [ZFS_HEADER] = ColorPair(Yellow,White),
+      [ZFS_OTHER] = ColorPair(Magenta,White),
    },
    [COLORSCHEME_LIGHTTERMINAL] = {
       [RESET_COLOR] = ColorPair(Black,Black),
@@ -409,6 +429,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Blue,Black),
       [CPU_STEAL] = ColorPair(Black,Black),
       [CPU_GUEST] = ColorPair(Black,Black),
+      [ZFS_MFU] = ColorPair(Cyan,Black),
+      [ZFS_MRU] = ColorPair(Yellow,Black),
+      [ZFS_ANON] = A_BOLD | ColorPair(Magenta,Black),
+      [ZFS_HEADER] = ColorPair(Black,Black),
+      [ZFS_OTHER] = A_BOLD | ColorPair(Magenta,Black),
    },
    [COLORSCHEME_MIDNIGHT] = {
       [RESET_COLOR] = ColorPair(White,Blue),
@@ -468,6 +493,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Black,Blue),
       [CPU_STEAL] = ColorPair(White,Blue),
       [CPU_GUEST] = ColorPair(White,Blue),
+      [ZFS_MFU] = A_BOLD | ColorPair(White,Blue),
+      [ZFS_MRU] = A_BOLD | ColorPair(Yellow,Blue),
+      [ZFS_ANON] = A_BOLD | ColorPair(Magenta,Blue),
+      [ZFS_HEADER] = A_BOLD | ColorPair(Yellow,Blue),
+      [ZFS_OTHER] = A_BOLD | ColorPair(Magenta,Blue),
    },
    [COLORSCHEME_BLACKNIGHT] = {
       [RESET_COLOR] = ColorPair(Cyan,Black),
@@ -527,6 +557,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Blue,Black),
       [CPU_STEAL] = ColorPair(Cyan,Black),
       [CPU_GUEST] = ColorPair(Cyan,Black),
+      [ZFS_MFU] = ColorPair(Blue,Black),
+      [ZFS_MRU] = ColorPair(Yellow,Black),
+      [ZFS_ANON] = ColorPair(Magenta,Black),
+      [ZFS_HEADER] = ColorPair(Yellow,Black),
+      [ZFS_OTHER] = ColorPair(Magenta,Black),
    },
    [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
 };

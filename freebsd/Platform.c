@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
+#include "zfs/ZfsArcMeter.h"
 #include "FreeBSDProcess.h"
 #include "FreeBSDProcessList.h"
 
@@ -104,6 +105,7 @@ MeterClass* Platform_meterTypes[] = {
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
    &BlankMeter_class,
+   &ZfsArcMeter_class,
    NULL
 };
 
@@ -195,6 +197,23 @@ void Platform_setSwapValues(Meter* this) {
    ProcessList* pl = (ProcessList*) this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
+}
+
+void Platform_setZfsArcValues(Meter* this) {
+   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this->pl;
+
+   this->total = fpl->zfsArcMax;
+   this->values[0] = fpl->zfsArcMFU;
+   this->values[1] = fpl->zfsArcMRU;
+   this->values[2] = fpl->zfsArcAnon;
+   this->values[3] = fpl->zfsArcHeader;
+   this->values[4] = fpl->zfsArcOther;
+
+   // "Hide" the last value so it can
+   // only be accessed by index and is not
+   // displayed by the Bar or Graph style
+   Meter_setItems(this, 5);
+   this->values[5] = fpl->memZfsArc;
 }
 
 void Platform_setTasksValues(Meter* this) {

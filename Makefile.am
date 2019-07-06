@@ -36,6 +36,10 @@ TasksMeter.h UptimeMeter.h TraceScreen.h UsersTable.h Vector.h Process.h \
 AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
 EnvScreen.h InfoScreen.h XAlloc.h
 
+zfs_platform_sources = zfs/ZfsArcMeter.c
+
+zfs_platform_headers = zfs/ZfsArcMeter.h
+
 all_platform_headers =
 
 # Linux
@@ -68,13 +72,15 @@ freebsd_platform_headers = \
 	freebsd/FreeBSDProcessList.h \
 	freebsd/FreeBSDProcess.h \
 	freebsd/FreeBSDCRT.h \
-	freebsd/Battery.h
+	freebsd/Battery.h \
+	$(zfs_platform_headers)
 
 all_platform_headers += $(freebsd_platform_headers)
 
 if HTOP_FREEBSD
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
-freebsd/FreeBSDProcess.c freebsd/FreeBSDCRT.c freebsd/Battery.c
+freebsd/FreeBSDProcess.c freebsd/FreeBSDCRT.c freebsd/Battery.c \
+$(zfs_platform_sources)
 
 myhtopplatheaders = $(freebsd_platform_headers)
 endif

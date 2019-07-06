@@ -42,6 +42,12 @@ typedef struct FreeBSDProcessList_ {
    unsigned long long int memFree;
    unsigned long long int memZfsArc;
 
+   unsigned long long int zfsArcMax;
+   unsigned long long int zfsArcMFU;
+   unsigned long long int zfsArcMRU;
+   unsigned long long int zfsArcAnon;
+   unsigned long long int zfsArcHeader;
+   unsigned long long int zfsArcOther;
 
    CPUData* cpus;
 
