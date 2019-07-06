@@ -121,7 +121,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    len = sizeof(fpl->memZfsArc);
    if (sysctlbyname("kstat.zfs.misc.arcstats.size", &fpl->memZfsArc, &len,
 	    NULL, 0) == 0 && fpl->memZfsArc != 0) {
-      sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
+                  len = 5; sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
 		  fpl->zfsArcEnabled = 1;
    } else {
 		  fpl->zfsArcEnabled = 0;
