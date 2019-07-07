@@ -48,6 +48,8 @@ void Platform_setMemoryValues(Meter* mtr);
 
 void Platform_setSwapValues(Meter* mtr);
 
+void Platform_setZfsArcValues(Meter* mtr);
+
 char* Platform_getProcessEnv(pid_t pid);
 
 #endif

@@ -134,14 +134,16 @@ darwin_platform_headers = \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
 	darwin/DarwinCRT.h \
-	darwin/Battery.h
+	darwin/Battery.h \
+	$(zfs_platform_headers)
 
 all_platform_headers += $(darwin_platform_headers)
 
 if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
 myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
-darwin/DarwinProcessList.c darwin/DarwinCRT.c darwin/Battery.c
+darwin/DarwinProcessList.c darwin/DarwinCRT.c darwin/Battery.c \
+$(zfs_platform_sources)
 
 myhtopplatheaders = $(darwin_platform_headers)
 endif
