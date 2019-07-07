@@ -46,6 +46,7 @@ in the source distribution for its full text.
 /*{
 
 #include "ProcessList.h"
+#include "zfs/ZfsArcStats.h"
 
 extern long long btime;
 
@@ -95,14 +96,7 @@ typedef struct LinuxProcessList_ {
    int netlink_family;
    #endif
 
-   int zfsArcEnabled;
-   unsigned long long int memZfsArc;
-   unsigned long long int zfsArcMax;
-   unsigned long long int zfsArcMFU;
-   unsigned long long int zfsArcMRU;
-   unsigned long long int zfsArcAnon;
-   unsigned long long int zfsArcHeader;
-   unsigned long long int zfsArcOther;
+   ZfsArcStats zfs;
 } LinuxProcessList;
 
 #ifndef PROCDIR
@@ -984,7 +978,7 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
 
    FILE* file = fopen(PROCARCSTATSFILE, "r");
    if (file == NULL) {
-      lpl->zfsArcEnabled = 0;
+      lpl->zfs.enabled = 0;
       return;
    }
    char buffer[128];
@@ -992,13 +986,13 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
       #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { break; } } while(0)
       switch (buffer[0]) {
       case 'c':
-         tryRead("c_max", &lpl->zfsArcMax);
+         tryRead("c_max", &lpl->zfs.max);
          break;
       case 's':
-         tryRead("size", &lpl->memZfsArc);
+         tryRead("size", &lpl->zfs.size);
          break;
       case 'h':
-         tryRead("hdr_size", &lpl->zfsArcHeader);
+         tryRead("hdr_size", &lpl->zfs.header);
          break;
       case 'd':
          tryRead("dbuf_size", &dbufSize);
@@ -1008,25 +1002,25 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
          tryRead("bonus_size", &bonusSize);
          break;
       case 'a':
-         tryRead("anon_size", &lpl->zfsArcAnon);
+         tryRead("anon_size", &lpl->zfs.anon);
          break;
       case 'm':
-         tryRead("mfu_size", &lpl->zfsArcMFU);
-         tryRead("mru_size", &lpl->zfsArcMRU);
+         tryRead("mfu_size", &lpl->zfs.MFU);
+         tryRead("mru_size", &lpl->zfs.MRU);
          break;
       }
       #undef tryRead
    }
    fclose(file);
 
-   lpl->zfsArcEnabled = (lpl->memZfsArc > 0 ? 1 : 0);
-   lpl->memZfsArc    /= 1024;
-   lpl->zfsArcMax    /= 1024;
-   lpl->zfsArcMFU    /= 1024;
-   lpl->zfsArcMRU    /= 1024;
-   lpl->zfsArcAnon   /= 1024;
-   lpl->zfsArcHeader /= 1024;
-   lpl->zfsArcOther   = (dbufSize + dnodeSize + bonusSize) / 1024;
+   lpl->zfs.enabled = (lpl->zfs.size > 0 ? 1 : 0);
+   lpl->zfs.size    /= 1024;
+   lpl->zfs.max    /= 1024;
+   lpl->zfs.MFU    /= 1024;
+   lpl->zfs.MRU    /= 1024;
+   lpl->zfs.anon   /= 1024;
+   lpl->zfs.header /= 1024;
+   lpl->zfs.other   = (dbufSize + dnodeSize + bonusSize) / 1024;
 }
 
 static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {

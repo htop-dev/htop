@@ -10,6 +10,8 @@ in the source distribution for its full text.
 */
 
 
+#include "zfs/ZfsArcStats.h"
+
 #include <kvm.h>
 #include <sys/param.h>
 #include <sys/jail.h>
@@ -34,20 +36,12 @@ typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
-   int zfsArcEnabled;
-
    unsigned long long int memWire;
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
-   unsigned long long int memZfsArc;
 
-   unsigned long long int zfsArcMax;
-   unsigned long long int zfsArcMFU;
-   unsigned long long int zfsArcMRU;
-   unsigned long long int zfsArcAnon;
-   unsigned long long int zfsArcHeader;
-   unsigned long long int zfsArcOther;
+   ZfsArcStats zfs;
 
    CPUData* cpus;
 

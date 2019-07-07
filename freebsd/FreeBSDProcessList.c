@@ -8,6 +8,8 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "FreeBSDProcessList.h"
 #include "FreeBSDProcess.h"
+#include "zfs/ZfsArcStats.h"
+#include "zfs/openzfs_sysctl.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -20,6 +22,8 @@ in the source distribution for its full text.
 #include <string.h>
 
 /*{
+
+#include "zfs/ZfsArcStats.h"
 
 #include <kvm.h>
 #include <sys/param.h>
@@ -45,20 +49,12 @@ typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
-   int zfsArcEnabled;
-
    unsigned long long int memWire;
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
-   unsigned long long int memZfsArc;
 
-   unsigned long long int zfsArcMax;
-   unsigned long long int zfsArcMFU;
-   unsigned long long int zfsArcMRU;
-   unsigned long long int zFsArcAnon;
-   unsigned long long int zFsArcHeader;
-   unsigned long long int zFsArcOther;
+   ZfsArcStats zfs;
 
    CPUData* cpus;
 
@@ -85,14 +81,6 @@ static int MIB_vm_stats_vm_v_inactive_count[4];
 static int MIB_vm_stats_vm_v_free_count[4];
 
 static int MIB_vfs_bufspace[2];
-
-static int MIB_kstat_zfs_misc_arcstats_size[5];
-static int MIB_vfs_zfs_arc_max[3];
-static int MIB_kstat_zfs_misc_arcstats_mfu_size[5];
-static int MIB_kstat_zfs_misc_arcstats_mru_size[5];
-static int MIB_kstat_zfs_misc_arcstats_anon_size[5];
-static int MIB_kstat_zfs_misc_arcstats_hdr_size[5];
-static int MIB_kstat_zfs_misc_arcstats_other_size[5];
 
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
@@ -130,25 +118,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
-   len = sizeof(fpl->memZfsArc);
-   if (sysctlbyname("kstat.zfs.misc.arcstats.size", &fpl->memZfsArc, &len,
-	    NULL, 0) == 0 && fpl->memZfsArc != 0) {
-                  len = 5; sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
-		  fpl->zfsArcEnabled = 1;
-
-                  len = 3;
-                  sysctlnametomib("vfs.zfs.arc_max", MIB_vfs_zfs_arc_max, &len);
-
-                  len = 5;
-                  sysctlnametomib("kstat.zfs.misc.arcstats.mfu_size", MIB_kstat_zfs_misc_arcstats_mfu_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.mru_size", MIB_kstat_zfs_misc_arcstats_mru_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.anon_size", MIB_kstat_zfs_misc_arcstats_anon_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.hdr_size", MIB_kstat_zfs_misc_arcstats_hdr_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.other_size", MIB_kstat_zfs_misc_arcstats_other_size, &len);
-   } else {
-		  fpl->zfsArcEnabled = 0;
-   }
-
+   fpl->zfs.enabled = openzfs_sysctl_init();
+   openzfs_sysctl_updateArcStats(&fpl->zfs);
 
    int smp = 0;
    len = sizeof(smp);
@@ -339,36 +310,9 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
    pl->cachedMem *= pageSizeKb;
 
-   if (fpl->zfsArcEnabled) {
-      len = sizeof(fpl->memZfsArc);
-      sysctl(MIB_kstat_zfs_misc_arcstats_size, 5, &(fpl->memZfsArc), &len , NULL, 0);
-      fpl->memZfsArc /= 1024;
-      fpl->memWire -= fpl->memZfsArc;
-      pl->cachedMem += fpl->memZfsArc;
-
-      len = sizeof(fpl->zfsArcMax);
-      sysctl(MIB_vfs_zfs_arc_max, 3, &(fpl->zfsArcMax), &len , NULL, 0);
-      fpl->zfsArcMax /= 1024;
-
-      len = sizeof(fpl->zfsArcMFU);
-      sysctl(MIB_kstat_zfs_misc_arcstats_mfu_size, 5, &(fpl->zfsArcMFU), &len , NULL, 0);
-      fpl->zfsArcMFU /= 1024;
-
-      len = sizeof(fpl->zfsArcMRU);
-      sysctl(MIB_kstat_zfs_misc_arcstats_mru_size, 5, &(fpl->zfsArcMRU), &len , NULL, 0);
-      fpl->zfsArcMRU /= 1024;
-
-      len = sizeof(fpl->zfsArcAnon);
-      sysctl(MIB_kstat_zfs_misc_arcstats_anon_size, 5, &(fpl->zfsArcAnon), &len , NULL, 0);
-      fpl->zfsArcAnon /= 1024;
-
-      len = sizeof(fpl->zfsArcHeader);
-      sysctl(MIB_kstat_zfs_misc_arcstats_hdr_size, 5, &(fpl->zfsArcHeader), &len , NULL, 0);
-      fpl->zfsArcHeader /= 1024;
-
-      len = sizeof(fpl->zfsArcOther);
-      sysctl(MIB_kstat_zfs_misc_arcstats_other_size, 5, &(fpl->zfsArcOther), &len , NULL, 0);
-      fpl->zfsArcOther /= 1024;
+   if (fpl->zfs.enabled) {
+      fpl->memWire -= fpl->zfs.size;
+      pl->cachedMem += fpl->zfs.size;
    }
 
    pl->usedMem = fpl->memActive + fpl->memWire;
@@ -466,6 +410,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
+   openzfs_sysctl_updateArcStats(&fpl->zfs);
    FreeBSDProcessList_scanMemoryInfo(this);
    FreeBSDProcessList_scanCPUTime(this);
 

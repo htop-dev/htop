@@ -9,6 +9,8 @@ in the source distribution for its full text.
 #include "DarwinProcess.h"
 #include "DarwinProcessList.h"
 #include "CRT.h"
+#include "zfs/ZfsArcStats.h"
+#include "zfs/openzfs_sysctl.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -69,26 +71,10 @@ typedef struct DarwinProcessList_ {
    uint64_t user_threads;
    uint64_t global_diff;
 
-   int zfsArcEnabled;
-   unsigned long long int zfsArcMax;
-   unsigned long long int zfsArcSize;
-   unsigned long long int zfsArcMFU;
-   unsigned long long int zfsArcMRU;
-   unsigned long long int zfsArcAnon;
-   unsigned long long int zfsArcHeader;
-   unsigned long long int zfsArcOther;
-
+   ZfsArcStats zfs;
 } DarwinProcessList;
 
 }*/
-
-static int MIB_kstat_zfs_misc_arcstats_c_max[5];
-static int MIB_kstat_zfs_misc_arcstats_size[5];
-static int MIB_kstat_zfs_misc_arcstats_mfu_size[5];
-static int MIB_kstat_zfs_misc_arcstats_mru_size[5];
-static int MIB_kstat_zfs_misc_arcstats_anon_size[5];
-static int MIB_kstat_zfs_misc_arcstats_hdr_size[5];
-static int MIB_kstat_zfs_misc_arcstats_other_size[5];
 
 void ProcessList_getHostInfo(host_basic_info_data_t *p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
@@ -150,48 +136,6 @@ struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
    return processes;
 }
 
-static inline void DarwinProcessList_scanZfsArcstats(DarwinProcessList* dpl) {
-   size_t len;
-
-   if (dpl->zfsArcEnabled) {
-      len = sizeof(dpl->zfsArcSize);
-      sysctl(MIB_kstat_zfs_misc_arcstats_size, 5, &(dpl->zfsArcSize), &len , NULL, 0);
-      /* TODO: adjust reported memory in use to move ARC from wired to inactive
-         Like:
-         // In bytes
-         dpl->vm_stats.wire_count -= dpl->zfsArcSize / vm_page_size;
-         dpl->vm_stats.inactive_count += dpl->zfsArcSize / vm_page_size;
-         // Would purgable_count be more true?
-         // Then convert to KB:
-      */
-      dpl->zfsArcSize /= 1024;
-
-      len = sizeof(dpl->zfsArcMax);
-      sysctl(MIB_kstat_zfs_misc_arcstats_c_max, 5, &(dpl->zfsArcMax), &len , NULL, 0);
-      dpl->zfsArcMax /= 1024;
-
-      len = sizeof(dpl->zfsArcMFU);
-      sysctl(MIB_kstat_zfs_misc_arcstats_mfu_size, 5, &(dpl->zfsArcMFU), &len , NULL, 0);
-      dpl->zfsArcMFU /= 1024;
-
-      len = sizeof(dpl->zfsArcMRU);
-      sysctl(MIB_kstat_zfs_misc_arcstats_mru_size, 5, &(dpl->zfsArcMRU), &len , NULL, 0);
-      dpl->zfsArcMRU /= 1024;
-
-      len = sizeof(dpl->zfsArcAnon);
-      sysctl(MIB_kstat_zfs_misc_arcstats_anon_size, 5, &(dpl->zfsArcAnon), &len , NULL, 0);
-      dpl->zfsArcAnon /= 1024;
-
-      len = sizeof(dpl->zfsArcHeader);
-      sysctl(MIB_kstat_zfs_misc_arcstats_hdr_size, 5, &(dpl->zfsArcHeader), &len , NULL, 0);
-      dpl->zfsArcHeader /= 1024;
-
-      len = sizeof(dpl->zfsArcOther);
-      sysctl(MIB_kstat_zfs_misc_arcstats_other_size, 5, &(dpl->zfsArcOther), &len , NULL, 0);
-      dpl->zfsArcOther /= 1024;
-   }
-}
-
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    size_t len;
    DarwinProcessList* this = xCalloc(1, sizeof(DarwinProcessList));
@@ -207,22 +151,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    ProcessList_getVMStats(&this->vm_stats);
 
    /* Initialize the ZFS kstats, if zfs.kext loaded */
-   len = sizeof(this->zfsArcSize);
-   if (sysctlbyname("kstat.zfs.misc.arcstats.size", &this->zfsArcSize, &len,
-	    NULL, 0) == 0 && this->zfsArcSize != 0) {
-		  this->zfsArcEnabled = 1;
-
-                  len = 5;
-                  sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.c_max", MIB_kstat_zfs_misc_arcstats_c_max, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.mfu_size", MIB_kstat_zfs_misc_arcstats_mfu_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.mru_size", MIB_kstat_zfs_misc_arcstats_mru_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.anon_size", MIB_kstat_zfs_misc_arcstats_anon_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.hdr_size", MIB_kstat_zfs_misc_arcstats_hdr_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.other_size", MIB_kstat_zfs_misc_arcstats_other_size, &len);
-   } else {
-		  this->zfsArcEnabled = 0;
-   }
+   this->zfs.enabled = openzfs_sysctl_init();
+   openzfs_sysctl_updateArcStats(&this->zfs);
 
    this->super.kernelThreads = 0;
    this->super.userlandThreads = 0;
@@ -252,7 +182,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     dpl->prev_load = dpl->curr_load;
     ProcessList_allocateCPULoadInfo(&dpl->curr_load);
     ProcessList_getVMStats(&dpl->vm_stats);
-    DarwinProcessList_scanZfsArcstats(dpl);
+    openzfs_sysctl_updateArcStats(&dpl->zfs);
 
     /* Get the time difference */
     dpl->global_diff = 0;

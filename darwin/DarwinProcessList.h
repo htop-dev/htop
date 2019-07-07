@@ -21,6 +21,7 @@ negative value if more than the installed version
 int CompareKernelVersion(short int major, short int minor, short int component);
 
 #include "ProcessList.h"
+#include "zfs/ZfsArcStats.h"
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
 
@@ -35,15 +36,7 @@ typedef struct DarwinProcessList_ {
    uint64_t user_threads;
    uint64_t global_diff;
 
-   int zfsArcEnabled;
-   unsigned long long int zfsArcMax;
-   unsigned long long int zfsArcSize;
-   unsigned long long int zfsArcMFU;
-   unsigned long long int zfsArcMRU;
-   unsigned long long int zfsArcAnon;
-   unsigned long long int zfsArcHeader;
-   unsigned long long int zfsArcOther;
-
+   ZfsArcStats zfs;
 } DarwinProcessList;
 
 

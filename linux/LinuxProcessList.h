@@ -19,6 +19,7 @@ in the source distribution for its full text.
 
 
 #include "ProcessList.h"
+#include "zfs/ZfsArcStats.h"
 
 extern long long btime;
 
@@ -68,14 +69,7 @@ typedef struct LinuxProcessList_ {
    int netlink_family;
    #endif
 
-   int zfsArcEnabled;
-   unsigned long long int memZfsArc;
-   unsigned long long int zfsArcMax;
-   unsigned long long int zfsArcMFU;
-   unsigned long long int zfsArcMRU;
-   unsigned long long int zfsArcAnon;
-   unsigned long long int zfsArcHeader;
-   unsigned long long int zfsArcOther;
+   ZfsArcStats zfs;
 } LinuxProcessList;
 
 #ifndef PROCDIR
