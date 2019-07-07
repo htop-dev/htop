@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
+#include "zfs/ZfsArcMeter.h"
 #include "LinuxProcess.h"
 
 #include <math.h>
@@ -126,6 +127,7 @@ MeterClass* Platform_meterTypes[] = {
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
    &BlankMeter_class,
+   &ZfsArcMeter_class,
    NULL
 };
 
@@ -211,6 +213,23 @@ void Platform_setSwapValues(Meter* this) {
    ProcessList* pl = (ProcessList*) this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
+}
+
+void Platform_setZfsArcValues(Meter* this) {
+   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+
+   this->total = lpl->zfsArcMax;
+   this->values[0] = lpl->zfsArcMFU;
+   this->values[1] = lpl->zfsArcMRU;
+   this->values[2] = lpl->zfsArcAnon;
+   this->values[3] = lpl->zfsArcHeader;
+   this->values[4] = lpl->zfsArcOther;
+
+   // "Hide" the last value so it can
+   // only be accessed by index and is not
+   // displayed by the Bar or Graph style
+   Meter_setItems(this, 5);
+   this->values[5] = lpl->memZfsArc;
 }
 
 char* Platform_getProcessEnv(pid_t pid) {

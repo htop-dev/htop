@@ -67,6 +67,15 @@ typedef struct LinuxProcessList_ {
    struct nl_sock *netlink_socket;
    int netlink_family;
    #endif
+
+   int zfsArcEnabled;
+   unsigned long long int memZfsArc;
+   unsigned long long int zfsArcMax;
+   unsigned long long int zfsArcMFU;
+   unsigned long long int zfsArcMRU;
+   unsigned long long int zfsArcAnon;
+   unsigned long long int zfsArcHeader;
+   unsigned long long int zfsArcOther;
 } LinuxProcessList;
 
 #ifndef PROCDIR
@@ -79,6 +88,10 @@ typedef struct LinuxProcessList_ {
 
 #ifndef PROCMEMINFOFILE
 #define PROCMEMINFOFILE PROCDIR "/meminfo"
+#endif
+
+#ifndef PROCARCSTATSFILE
+#define PROCARCSTATSFILE PROCDIR "/spl/kstat/zfs/arcstats"
 #endif
 
 #ifndef PROCTTYDRIVERSFILE
