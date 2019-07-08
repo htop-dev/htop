@@ -27,6 +27,8 @@ in the source distribution for its full text.
 
 /*{
 
+#include "zfs/ZfsArcStats.h"
+
 #include <kstat.h>
 #include <sys/param.h>
 #include <sys/uio.h>
@@ -55,6 +57,7 @@ typedef struct SolarisProcessList_ {
    ProcessList super;
    kstat_ctl_t* kd;
    CPUData* cpus;
+   ZfsArcStats zfs;
 } SolarisProcessList;
 
 }*/
@@ -230,6 +233,39 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap  = pl->totalSwap - (totalfree * PAGE_SIZE_KB); 
 }
 
+static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
+   SolarisProcessList* spl = (SolarisProcessList*) pl;
+   kstat_t             *arcstats = NULL;
+   int                 ksrphyserr = -1;
+   kstat_named_t       *cur_kstat = NULL;
+
+   if (spl->kd != NULL)  { arcstats   = kstat_lookup(spl->kd,"zfs",0,"arcstats"); }
+   if (arcstats != NULL) { ksrphyserr = kstat_read(spl->kd,arcstats,NULL); }
+   if (ksrphyserr != -1) {
+      cur_kstat = kstat_data_lookup( arcstats, "size" );
+      spl->zfs.size = cur_kstat->value.ui64 / 1024;
+      spl->zfs.enabled = spl->zfs.size > 0 ? 1 : 0;
+
+      cur_kstat = kstat_data_lookup( arcstats, "c_max" );
+      spl->zfs.max = cur_kstat->value.ui64 / 1024;
+
+      cur_kstat = kstat_data_lookup( arcstats, "mfu_size" );
+      spl->zfs.MFU = cur_kstat->value.ui64 / 1024;
+
+      cur_kstat = kstat_data_lookup( arcstats, "mru_size" );
+      spl->zfs.MRU = cur_kstat->value.ui64 / 1024;
+
+      cur_kstat = kstat_data_lookup( arcstats, "anon_size" );
+      spl->zfs.anon = cur_kstat->value.ui64 / 1024;
+
+      cur_kstat = kstat_data_lookup( arcstats, "hdr_size" );
+      spl->zfs.header = cur_kstat->value.ui64 / 1024;
+
+      cur_kstat = kstat_data_lookup( arcstats, "other_size" );
+      spl->zfs.other = cur_kstat->value.ui64 / 1024;
+   }
+}
+
 void ProcessList_delete(ProcessList* pl) {
    SolarisProcessList* spl = (SolarisProcessList*) pl;
    ProcessList_done(pl);
@@ -367,6 +403,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
 void ProcessList_goThroughEntries(ProcessList* this) {
    SolarisProcessList_scanCPUTime(this);
    SolarisProcessList_scanMemoryInfo(this);
+   SolarisProcessList_scanZfsArcstats(this);
    this->kernelThreads = 1;
    proc_walk(&SolarisProcessList_walkproc, this, PR_WALK_LWP);
 }

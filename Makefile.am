@@ -157,14 +157,17 @@ solaris_platform_headers = \
 	solaris/SolarisProcess.h \
 	solaris/SolarisProcessList.h \
 	solaris/SolarisCRT.h \
-	solaris/Battery.h
+	solaris/Battery.h \
+	zfs/ZfsArcMeter.h \
+	zfs/ZfsArcStats.h
 
 all_platform_headers += $(solaris_platform_headers)
 
 if HTOP_SOLARIS
 myhtopplatsources = solaris/Platform.c \
 solaris/SolarisProcess.c solaris/SolarisProcessList.c \
-solaris/SolarisCRT.c solaris/Battery.c
+solaris/SolarisCRT.c solaris/Battery.c \
+zfs/ZfsArcMeter.c zfs/ZfsArcStats.c
 
 myhtopplatheaders = $(solaris_platform_headers)
 endif
