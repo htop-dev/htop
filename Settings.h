@@ -22,7 +22,7 @@ typedef struct {
 
 typedef struct Settings_ {
    char* filename;
-   
+
    MeterColumnSettings columns[2];
 
    ProcessField* fields;
@@ -49,6 +49,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool enableMouse;
 
    bool changed;
 } Settings;

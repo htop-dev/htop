@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct Settings_ {
    char* filename;
-   
+
    MeterColumnSettings columns[2];
 
    ProcessField* fields;
@@ -58,6 +58,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool enableMouse;
 
    bool changed;
 } Settings;
@@ -114,7 +115,7 @@ static void Settings_defaultMeters(Settings* this) {
       this->columns[i].modes = xCalloc(sizes[i], sizeof(int));
       this->columns[i].len = sizes[i];
    }
-   
+
    int r = 0;
    if (this->cpuCount > 8) {
       this->columns[0].names[0] = xStrdup("LeftCPUs2");
@@ -134,7 +135,7 @@ static void Settings_defaultMeters(Settings* this) {
    this->columns[0].modes[1] = BAR_METERMODE;
    this->columns[0].names[2] = xStrdup("Swap");
    this->columns[0].modes[2] = BAR_METERMODE;
-   
+
    this->columns[1].names[r] = xStrdup("Tasks");
    this->columns[1].modes[r++] = TEXT_METERMODE;
    this->columns[1].names[r] = xStrdup("LoadAverage");
@@ -165,13 +166,13 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
 
 static bool Settings_read(Settings* this, const char* fileName) {
    FILE* fd;
-   
+
    CRT_dropPrivileges();
    fd = fopen(fileName, "r");
    CRT_restorePrivileges();
    if (!fd)
       return false;
-   
+
    bool didReadMeters = false;
    bool didReadFields = false;
    for (;;) {
@@ -232,6 +233,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
       } else if (String_eq(option[0], "color_scheme")) {
          this->colorScheme = atoi(option[1]);
          if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) this->colorScheme = 0;
+     } else if (String_eq(option[0], "enable_mouse")) {
+         this->enableMouse = atoi(option[1]);
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
          didReadMeters = true;
@@ -315,6 +318,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
    fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
    fprintf(fd, "color_scheme=%d\n", (int) this->colorScheme);
+   fprintf(fd, "enable_mouse=%d\n", (int) this->enableMouse);
    fprintf(fd, "delay=%d\n", (int) this->delay);
    fprintf(fd, "left_meters="); writeMeters(this, fd, 0);
    fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
@@ -325,7 +329,7 @@ bool Settings_write(Settings* this) {
 }
 
 Settings* Settings_new(int cpuCount) {
-  
+
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->sortKey = PERCENT_CPU;
@@ -344,7 +348,7 @@ Settings* Settings_new(int cpuCount) {
    this->cpuCount = cpuCount;
    this->showProgramPath = true;
    this->highlightThreads = true;
-   
+
    this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
@@ -375,7 +379,7 @@ Settings* Settings_new(int cpuCount) {
          htopDir = String_cat(home, "/.config/htop");
       }
       legacyDotfile = String_cat(home, "/.htoprc");
-      
+
       CRT_dropPrivileges();
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
@@ -390,6 +394,7 @@ Settings* Settings_new(int cpuCount) {
       CRT_restorePrivileges();
    }
    this->colorScheme = 0;
+   this->enableMouse = true;
    this->changed = false;
    this->delay = DEFAULT_DELAY;
    bool ok = false;
