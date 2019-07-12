@@ -39,7 +39,7 @@ static void DisplayOptionsPanel_delete(Object* object) {
 
 static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) super;
-   
+
    HandlerResult result = IGNORED;
    CheckItem* selected = (CheckItem*) Panel_getSelected(super);
 
@@ -97,5 +97,6 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Count CPUs from 0 instead of 1"), &(settings->countCPUsFromZero)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Update process names on every refresh"), &(settings->updateProcessNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Enable the mouse"), &(settings->enableMouse)));
    return this;
 }
