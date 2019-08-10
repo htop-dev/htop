@@ -45,6 +45,7 @@ typedef struct Settings_ {
 
    bool countCPUsFromZero;
    bool detailedCPUTime;
+   bool showCPUUsage;
    bool showCPUFrequency;
    bool treeView;
    bool showProgramPath;
@@ -224,6 +225,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->detailedCPUTime = atoi(option[1]);
       } else if (String_eq(option[0], "cpu_count_from_zero")) {
          this->countCPUsFromZero = atoi(option[1]);
+      } else if (String_eq(option[0], "show_cpu_usage")) {
+         this->showCPUUsage = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_frequency")) {
          this->showCPUFrequency = atoi(option[1]);
       } else if (String_eq(option[0], "update_process_names")) {
@@ -315,6 +318,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
    fprintf(fd, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
+   fprintf(fd, "show_cpu_usage=%d\n", (int) this->showCPUUsage);
    fprintf(fd, "show_cpu_frequency=%d\n", (int) this->showCPUFrequency);
    fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
    fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
@@ -344,6 +348,7 @@ Settings* Settings_new(int cpuCount) {
    this->highlightMegabytes = false;
    this->detailedCPUTime = false;
    this->countCPUsFromZero = false;
+   this->showCPUUsage = true;
    this->showCPUFrequency = false;
    this->updateProcessNames = false;
    this->cpuCount = cpuCount;
