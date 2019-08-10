@@ -192,6 +192,22 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    }
    percent = CLAMP(percent, 0.0, 100.0);
    if (isnan(percent)) percent = 0.0;
+
+   v[CPU_METER_FREQUENCY] = 0;
+   if (this->pl->settings->showCPUFrequency) {
+      char filename[63+1];
+      xSnprintf(filename, 63, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", cpu - 1);
+      FILE* fd = fopen(filename, "r");
+      if (fd) {
+         unsigned int cpuFrequency;
+         int n = fscanf(fd, "%u", &cpuFrequency);
+         fclose(fd);
+         if (n > 0) {
+            v[CPU_METER_FREQUENCY] = cpuFrequency;
+         }
+      }
+   }
+
    return percent;
 }
 
