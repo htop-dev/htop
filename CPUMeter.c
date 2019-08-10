@@ -80,7 +80,7 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
             cpuFrequency /= 1000;
             unit = 'G';
          }
-         xSnprintf(cpuFrequencyBuffer, 15, "%.3f%cHz", cpuFrequency, unit);
+         xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "%.3f%cHz", cpuFrequency, unit);
       }
       if (this->pl->settings->showCPUUsage) {
          xSnprintf(buffer, size, "%5.1f%% %s", percent, cpuFrequencyBuffer);
