@@ -233,6 +233,8 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
    perc = v[0] + v[1] + v[2] + v[3];
 
+   v[CPU_METER_FREQUENCY] = -1;
+
    if (perc <= 100. && perc >= 0.) {
       return perc;
    } else {

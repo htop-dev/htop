@@ -108,8 +108,11 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-   (void) this;
    (void) cpu;
+
+   double* v = this->values;
+   v[CPU_METER_FREQUENCY] = -1;
+
    return 0.0;
 }
 

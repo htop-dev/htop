@@ -217,6 +217,8 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
    /* Convert to percent and return */
    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
 
+   mtr->values[CPU_METER_FREQUENCY] = -1;
+
    return CLAMP(total, 0.0, 100.0);
 }
 
