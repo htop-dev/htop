@@ -64,18 +64,14 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
    }
    memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
    double percent = Platform_setCPUValues(this, cpu);
-   if (cpu != 0 && this->pl->settings->showCPUFrequency) {
-      /* Initial frequency is in KHz. Divide it by 1000 till it's less than 1000, and emit unit accordingly */
+   if (this->pl->settings->showCPUFrequency) {
+      /* Initial frequency is in MHz. Emit it as GHz if it's larger than 1000MHz */
       double cpuFrequency = this->values[CPU_METER_FREQUENCY];
-      char unit = 'K';
+      char unit = 'M';
       char cpuFrequencyBuffer[16];
       if (cpuFrequency < 0) {
          xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A");
       } else {
-         if (cpuFrequency > 1000) {
-            cpuFrequency /= 1000;
-            unit = 'M';
-         }
          if (cpuFrequency > 1000) {
             cpuFrequency /= 1000;
             unit = 'G';

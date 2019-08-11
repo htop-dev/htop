@@ -75,6 +75,8 @@ typedef struct CPUData_ {
    unsigned long long int softIrqPeriod;
    unsigned long long int stealPeriod;
    unsigned long long int guestPeriod;
+
+   double frequency;
 } CPUData;
 
 typedef struct TtyDriver_ {
@@ -98,6 +100,10 @@ typedef struct LinuxProcessList_ {
 
 #ifndef PROCDIR
 #define PROCDIR "/proc"
+#endif
+
+#ifndef PROCCPUINFOFILE
+#define PROCCPUINFOFILE PROCDIR "/cpuinfo"
 #endif
 
 #ifndef PROCSTATFILE
@@ -1028,9 +1034,75 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       cpuData->stealTime = steal;
       cpuData->guestTime = virtalltime;
       cpuData->totalTime = totaltime;
+
    }
    double period = (double)this->cpus[0].totalPeriod / cpus;
    fclose(file);
+   return period;
+}
+
+static inline double LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
+   ProcessList* pl = (ProcessList*) this;
+   Settings* settings = pl->settings;
+
+   int cpus = this->super.cpuCount;
+   assert(cpus > 0);
+
+   for (int i = 0; i <= cpus; i++) {
+      CPUData* cpuData = &(this->cpus[i]);
+      cpuData->frequency = -1;
+   }
+
+   int numCPUsWithFrequency = 0;
+   double totalFrequency = 0;
+
+   if (settings->showCPUFrequency) {
+      FILE* file = fopen(PROCCPUINFOFILE, "r");
+      if (file == NULL) {
+         CRT_fatalError("Cannot open " PROCCPUINFOFILE);
+      }
+
+      int cpuid = -1;
+      double frequency;
+      while (!feof(file)) {
+         char buffer[PROC_LINE_LENGTH];
+         char *ok = fgets(buffer, PROC_LINE_LENGTH, file);
+         if (!ok) break;
+
+         if (
+            (sscanf(buffer, "processor : %d", &cpuid) == 1) ||
+            (sscanf(buffer, "processor: %d", &cpuid) == 1)
+         ) {
+            if (cpuid < 0 || cpuid > (cpus - 1)) {
+               char buffer[64];
+               xSnprintf(buffer, sizeof(buffer), PROCCPUINFOFILE " contains out-of-range CPU number %d", cpuid);
+               CRT_fatalError(buffer);
+            }
+         } else if (
+            (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
+            (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1)
+         ) {
+            if (cpuid < 0) {
+               CRT_fatalError(PROCCPUINFOFILE " is malformed: cpu MHz line without corresponding processor line");
+            }
+
+            int cpu = cpuid + 1;
+            CPUData* cpuData = &(this->cpus[cpu]);
+            cpuData->frequency = frequency;
+            numCPUsWithFrequency++;
+            totalFrequency += frequency;
+         } else if (buffer[0] == '\n') {
+            cpuid = -1;
+         }
+      }
+      fclose(file);
+
+      if (numCPUsWithFrequency > 0) {
+         this->cpus[0].frequency = totalFrequency / numCPUsWithFrequency;
+      }
+   }
+
+   double period = (double)this->cpus[0].totalPeriod / cpus;
    return period;
 }
 
@@ -1039,6 +1111,8 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
    LinuxProcessList_scanMemoryInfo(super);
    double period = LinuxProcessList_scanCPUTime(this);
+
+   LinuxProcessList_scanCPUFrequency(this);
 
    struct timeval tv;
    gettimeofday(&tv, NULL);
