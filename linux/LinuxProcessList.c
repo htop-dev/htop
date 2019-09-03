@@ -988,10 +988,10 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
       switch (buffer[0]) {
       case 'c':
          tryRead("c_max", &lpl->zfs.max);
-         tryReadFlag("compressed", &lpl->zfs.compressed, &lpl->zfs.isCompressed);
+         tryReadFlag("compressed_size", &lpl->zfs.compressed, lpl->zfs.isCompressed);
          break;
       case 'u':
-         tryRead("uncompressed", &lpl->zfs.uncompressed);
+         tryRead("uncompressed_size", &lpl->zfs.uncompressed);
          break;
       case 's':
          tryRead("size", &lpl->zfs.size);
