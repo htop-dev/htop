@@ -118,7 +118,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
-   fpl->zfs.enabled = openzfs_sysctl_init();
+   openzfs_sysctl_init(&fpl->zfs);
    openzfs_sysctl_updateArcStats(&fpl->zfs);
 
    int smp = 0;

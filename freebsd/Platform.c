@@ -202,18 +202,7 @@ void Platform_setSwapValues(Meter* this) {
 void Platform_setZfsArcValues(Meter* this) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) this->pl;
 
-   this->total = fpl->zfs.max;
-   this->values[0] = fpl->zfs.MFU;
-   this->values[1] = fpl->zfs.MRU;
-   this->values[2] = fpl->zfs.anon;
-   this->values[3] = fpl->zfs.header;
-   this->values[4] = fpl->zfs.other;
-
-   // "Hide" the last value so it can
-   // only be accessed by index and is not
-   // displayed by the Bar or Graph style
-   Meter_setItems(this, 5);
-   this->values[5] = fpl->zfs.size;
+   ZfsArcMeter_readStats(this, &(fpl->zfs));
 }
 
 void Platform_setTasksValues(Meter* this) {

@@ -225,18 +225,7 @@ void Platform_setSwapValues(Meter* this) {
 void Platform_setZfsArcValues(Meter* this) {
    SolarisProcessList* spl = (SolarisProcessList*) this->pl;
 
-   this->total = spl->zfs.max;
-   this->values[0] = spl->zfs.MFU;
-   this->values[1] = spl->zfs.MRU;
-   this->values[2] = spl->zfs.anon;
-   this->values[3] = spl->zfs.header;
-   this->values[4] = spl->zfs.other;
-
-   // "Hide" the last value so it can
-   // only be accessed by index and is not
-   // displayed by the Bar or Graph style
-   Meter_setItems(this, 5);
-   this->values[5] = spl->zfs.size;
+   ZfsArcMeter_readStats(this, &(spl->zfs));
 }
 
 static int Platform_buildenv(void *accum, struct ps_prochandle *Phandle, uintptr_t addr, const char *str) {

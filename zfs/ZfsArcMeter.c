@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "ZfsArcMeter.h"
+#include "ZfsArcStats.h"
 
 #include "CRT.h"
 #include "Platform.h"
@@ -17,12 +18,29 @@ in the source distribution for its full text.
 #include <assert.h>
 
 /*{
+#include "ZfsArcStats.h"
+
 #include "Meter.h"
 }*/
 
 int ZfsArcMeter_attributes[] = {
    ZFS_MFU, ZFS_MRU, ZFS_ANON, ZFS_HEADER, ZFS_OTHER
 };
+
+void ZfsArcMeter_readStats(Meter* this, ZfsArcStats* stats) {
+   this->total = stats->max;
+   this->values[0] = stats->MFU;
+   this->values[1] = stats->MRU;
+   this->values[2] = stats->anon;
+   this->values[3] = stats->header;
+   this->values[4] = stats->other;
+
+   // "Hide" the last value so it can
+   // only be accessed by index and is not
+   // displayed by the Bar or Graph style
+   Meter_setItems(this, 5);
+   this->values[5] = stats->size;
+}
 
 static void ZfsArcMeter_updateValues(Meter* this, char* buffer, int size) {
    int written;

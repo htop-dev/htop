@@ -151,7 +151,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    ProcessList_getVMStats(&this->vm_stats);
 
    /* Initialize the ZFS kstats, if zfs.kext loaded */
-   this->zfs.enabled = openzfs_sysctl_init();
+   openzfs_sysctl_init(&this->zfs);
    openzfs_sysctl_updateArcStats(&this->zfs);
 
    this->super.kernelThreads = 0;

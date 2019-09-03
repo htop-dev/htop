@@ -25,13 +25,14 @@ static int MIB_kstat_zfs_misc_arcstats_other_size[5];
 #include "zfs/ZfsArcStats.h"
 }*/
 
-int openzfs_sysctl_init() {
+void openzfs_sysctl_init(ZfsArcStats *stats) {
    size_t len;
    unsigned long long int arcSize;
 
    len = sizeof(arcSize);
    if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcSize, &len,
 	    NULL, 0) == 0 && arcSize != 0) {
+                  stats->enabled = 1;
                   len = 5; sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
 
                   sysctlnametomib("kstat.zfs.misc.arcstats.c_max", MIB_kstat_zfs_misc_arcstats_c_max, &len);
@@ -40,9 +41,8 @@ int openzfs_sysctl_init() {
                   sysctlnametomib("kstat.zfs.misc.arcstats.anon_size", MIB_kstat_zfs_misc_arcstats_anon_size, &len);
                   sysctlnametomib("kstat.zfs.misc.arcstats.hdr_size", MIB_kstat_zfs_misc_arcstats_hdr_size, &len);
                   sysctlnametomib("kstat.zfs.misc.arcstats.other_size", MIB_kstat_zfs_misc_arcstats_other_size, &len);
-                  return 1;
    } else {
-		  return 0;
+      stats->enabled = 0;
    }
 }
 
