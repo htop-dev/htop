@@ -263,6 +263,16 @@ static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
 
       cur_kstat = kstat_data_lookup( arcstats, "other_size" );
       spl->zfs.other = cur_kstat->value.ui64 / 1024;
+
+      if ((cur_kstat = kstat_data_lookup( arcstats, "compressed_size" )) != NULL) {
+         spl->zfs.compressed = cur_kstat->value.ui64 / 1024;
+         spl->zfs.isCompressed = 1;
+
+         cur_kstat = kstat_data_lookup( arcstats, "uncompressed_size" );
+         spl->zfs.uncompressed = cur_kstat->value.ui64 / 1024;
+      } else {
+         spl->zfs.isCompressed = 0;
+      }
    }
 }
 

@@ -121,6 +121,8 @@ typedef enum ColorElements_ {
    ZFS_ANON,
    ZFS_HEADER,
    ZFS_OTHER,
+   ZFS_COMPRESSED,
+   ZFS_RATIO,
    LAST_COLORELEMENT
 } ColorElements;
 

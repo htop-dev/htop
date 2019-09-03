@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "zfs/ZfsArcMeter.h"
+#include "zfs/ZfsCompressedArcMeter.h"
 #include "FreeBSDProcess.h"
 #include "FreeBSDProcessList.h"
 
@@ -106,6 +107,7 @@ MeterClass* Platform_meterTypes[] = {
    &RightCPUs2Meter_class,
    &BlankMeter_class,
    &ZfsArcMeter_class,
+   &ZfsCompressedArcMeter_class,
    NULL
 };
 
@@ -203,6 +205,12 @@ void Platform_setZfsArcValues(Meter* this) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) this->pl;
 
    ZfsArcMeter_readStats(this, &(fpl->zfs));
+}
+
+void Platform_setZfsCompressedArcValues(Meter* this) {
+   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this->pl;
+
+   ZfsCompressedArcMeter_readStats(this, &(fpl->zfs));
 }
 
 void Platform_setTasksValues(Meter* this) {

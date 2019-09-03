@@ -984,9 +984,14 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    char buffer[128];
    while (fgets(buffer, 128, file)) {
       #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { break; } } while(0)
+      #define tryReadFlag(label, variable, flag) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { flag = 1; break; } else { flag = 0; } } while(0)
       switch (buffer[0]) {
       case 'c':
          tryRead("c_max", &lpl->zfs.max);
+         tryReadFlag("compressed", &lpl->zfs.compressed, &lpl->zfs.isCompressed);
+         break;
+      case 'u':
+         tryRead("uncompressed", &lpl->zfs.uncompressed);
          break;
       case 's':
          tryRead("size", &lpl->zfs.size);
@@ -1010,6 +1015,7 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
          break;
       }
       #undef tryRead
+      #undef tryReadFlag
    }
    fclose(file);
 
@@ -1021,6 +1027,10 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    lpl->zfs.anon   /= 1024;
    lpl->zfs.header /= 1024;
    lpl->zfs.other   = (dbufSize + dnodeSize + bonusSize) / 1024;
+   if ( lpl->zfs.isCompressed ) {
+      lpl->zfs.compressed /= 1024;
+      lpl->zfs.uncompressed /= 1024;
+   }
 }
 
 static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
