@@ -193,7 +193,18 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       char* entryName = (char *) dirEntry->d_name;
       const char filePath[50];
 
-      if (entryName[0] == 'B' && entryName[1] == 'A' && entryName[2] == 'T') {
+      xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
+      int fd = open(filePath, O_RDONLY);
+      if (fd == -1)
+         continue;
+
+      char type[8];
+      ssize_t typelen = xread(fd, type, 7);
+      close(fd);
+      if (typelen < 1)
+         continue;
+
+      if (type[0] == 'B' && type[1] == 'a' && type[2] == 't') {
          
          xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
          int fd = open(filePath, O_RDONLY);
