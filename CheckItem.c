@@ -66,14 +66,14 @@ CheckItem* CheckItem_newByVal(char* text, bool value) {
 }
 
 void CheckItem_set(CheckItem* this, bool value) {
-   if (this->ref) 
+   if (this->ref)
       *(this->ref) = value;
    else
       this->value = value;
 }
 
 bool CheckItem_get(CheckItem* this) {
-   if (this->ref) 
+   if (this->ref)
       return *(this->ref);
    else
       return this->value;

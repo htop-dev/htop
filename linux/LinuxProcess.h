@@ -108,7 +108,7 @@ typedef struct LinuxProcess_ {
    unsigned long long io_write_bytes;
    unsigned long long io_cancelled_write_bytes;
    unsigned long long io_rate_read_time;
-   unsigned long long io_rate_write_time;   
+   unsigned long long io_rate_write_time;
    double io_rate_read_bps;
    double io_rate_write_bps;
    #endif

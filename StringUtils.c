@@ -116,7 +116,7 @@ char* String_getToken(const char* line, const unsigned short int numMatch) {
 
       if (lastState == 0 && inWord == 1)
          count++;
-    
+
       if(inWord == 1){
          if (count == numMatch && line[i] != ' ' && line[i] != '\0' && line[i] != '\n' && line[i] != (char)EOF) {
             match[foundCount] = line[i];

@@ -39,7 +39,7 @@ static void DisplayOptionsPanel_delete(Object* object) {
 
 static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) super;
-   
+
    HandlerResult result = IGNORED;
    CheckItem* selected = (CheckItem*) Panel_getSelected(super);
 

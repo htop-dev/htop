@@ -63,7 +63,7 @@ int Hashtable_count(Hashtable* this) {
 
 static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
    HashtableItem* this;
-   
+
    this = xMalloc(sizeof(HashtableItem));
    this->key = key;
    this->value = value;
@@ -73,7 +73,7 @@ static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
 
 Hashtable* Hashtable_new(int size, bool owner) {
    Hashtable* this;
-   
+
    this = xMalloc(sizeof(Hashtable));
    this->items = 0;
    this->size = size;
@@ -119,10 +119,10 @@ void Hashtable_put(Hashtable* this, unsigned int key, void* value) {
 
 void* Hashtable_remove(Hashtable* this, unsigned int key) {
    unsigned int index = key % this->size;
-   
+
    assert(Hashtable_isConsistent(this));
 
-   HashtableItem** bucket; 
+   HashtableItem** bucket;
    for (bucket = &(this->buckets[index]); *bucket; bucket = &((*bucket)->next) ) {
       if ((*bucket)->key == key) {
          void* value = (*bucket)->value;

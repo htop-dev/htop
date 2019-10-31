@@ -117,7 +117,7 @@ typedef struct LinuxProcess_ {
    unsigned long long io_write_bytes;
    unsigned long long io_cancelled_write_bytes;
    unsigned long long io_rate_read_time;
-   unsigned long long io_rate_write_time;   
+   unsigned long long io_rate_write_time;
    double io_rate_read_bps;
    double io_rate_write_bps;
    #endif
@@ -394,7 +394,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
          attr = CRT_colors[PROCESS_HIGH_PRIORITY];
          xSnprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
       } else if (klass == IOPRIO_CLASS_IDLE) {
-         attr = CRT_colors[PROCESS_LOW_PRIORITY]; 
+         attr = CRT_colors[PROCESS_LOW_PRIORITY];
          xSnprintf(buffer, n, "id ");
       } else {
          xSnprintf(buffer, n, "?? ");

@@ -54,7 +54,7 @@ void ProcessList_delete(ProcessList* pl);
  *       and MUST conform to the appropriate definition in order
  *       to work.  See libproc(3LIB) on a Solaris or Illumos
  *       system for more info.
- */ 
+ */
 
 int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr);
 

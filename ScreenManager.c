@@ -163,7 +163,7 @@ static Panel* setCurrentPanel(Panel* panel) {
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool quit = false;
    int focus = 0;
-   
+
    Panel* panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
 
    double oldTime = 0.0;
@@ -181,7 +181,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       if (this->header) {
          checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut);
       }
-      
+
       if (redraw) {
          ScreenManager_drawPanels(this, focus);
       }
@@ -269,7 +269,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          quit = true;
          continue;
       }
-      
+
       switch (ch) {
       case KEY_RESIZE:
       {

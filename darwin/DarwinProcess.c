@@ -212,7 +212,7 @@ ERROR_B:
 ERROR_A:
    retval = xStrdup(k->kp_proc.p_comm);
    *basenameOffset = strlen(retval);
-   
+
    return retval;
 }
 
@@ -302,11 +302,11 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
 void DarwinProcess_scanThreads(DarwinProcess *dp) {
    Process* proc = (Process*) dp;
    kern_return_t ret;
-   
+
    if (!dp->taskAccess) {
       return;
    }
-   
+
    if (proc->state == 'Z') {
       return;
    }
@@ -317,7 +317,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
       dp->taskAccess = false;
       return;
    }
-   
+
    task_info_data_t tinfo;
    mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
    ret = task_info(port, TASK_BASIC_INFO, (task_info_t) tinfo, &task_info_count);
@@ -325,7 +325,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
       dp->taskAccess = false;
       return;
    }
-   
+
    thread_array_t thread_list;
    mach_msg_type_number_t thread_count;
    ret = task_threads(port, &thread_list, &thread_count);
@@ -334,7 +334,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
       mach_port_deallocate(mach_task_self(), port);
       return;
    }
-   
+
    integer_t run_state = 999;
    for (unsigned int i = 0; i < thread_count; i++) {
       thread_info_data_t thinfo;

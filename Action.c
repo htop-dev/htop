@@ -66,7 +66,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x) {
    Panel* panel = st->panel;
    Header* header = st->header;
    Settings* settings = st->settings;
-   
+
    int y = panel->y;
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, false);
    scr->allowFocusChange = false;
@@ -297,7 +297,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
       return HTOP_OK;
 #if (HAVE_LIBHWLOC || HAVE_LINUX_AFFINITY)
    Panel* panel = st->panel;
-   
+
    Process* p = (Process*) Panel_getSelected(panel);
    if (!p) return HTOP_OK;
    Affinity* affinity = Affinity_get(p, st->pl);

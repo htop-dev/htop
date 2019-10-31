@@ -153,7 +153,7 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
          idlebuf               += cpuData->idlePercent;
       }
    }
-   
+
    if (cpus > 1) {
       CPUData* cpuData          = &(spl->cpus[0]);
       cpuData->userPercent      = userbuf / cpus;
@@ -177,7 +177,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    uint64_t            totalswap = 0;
    uint64_t            totalfree = 0;
    int                 nswap = 0;
-   char                *spath = NULL; 
+   char                *spath = NULL;
    char                *spathbase = NULL;
 
    // Part 1 - physical memory
@@ -191,7 +191,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->totalMem   = totalmem_pgs->value.ui64 * PAGE_SIZE_KB;
       pl->usedMem    = lockedmem_pgs->value.ui64 * PAGE_SIZE_KB;
       // Not sure how to implement this on Solaris - suggestions welcome!
-      pl->cachedMem  = 0;     
+      pl->cachedMem  = 0;
       // Not really "buffers" but the best Solaris analogue that I can find to
       // "memory in use but not by programs or the kernel itself"
       pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * PAGE_SIZE_KB;
@@ -202,12 +202,12 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->cachedMem  = 0;
       pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * PAGE_SIZE);
    }
-   
+
    // Part 2 - swap
    nswap = swapctl(SC_GETNSWP, NULL);
    if (nswap >     0) { sl  = xMalloc((nswap * sizeof(swapent_t)) + sizeof(int)); }
    if (sl    != NULL) { spathbase = xMalloc( nswap * MAXPATHLEN ); }
-   if (spathbase != NULL) { 
+   if (spathbase != NULL) {
       spath = spathbase;
       swapdev = sl->swt_ent;
       for (int i = 0; i < nswap; i++, swapdev++) {
@@ -217,7 +217,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       sl->swt_n = nswap;
    }
    nswap = swapctl(SC_LIST, sl);
-   if (nswap > 0) { 
+   if (nswap > 0) {
       swapdev = sl->swt_ent;
       for (int i = 0; i < nswap; i++, swapdev++) {
          totalswap += swapdev->ste_pages;
@@ -227,7 +227,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    free(spathbase);
    free(sl);
    pl->totalSwap = totalswap * PAGE_SIZE_KB;
-   pl->usedSwap  = pl->totalSwap - (totalfree * PAGE_SIZE_KB); 
+   pl->usedSwap  = pl->totalSwap - (totalfree * PAGE_SIZE_KB);
 }
 
 void ProcessList_delete(ProcessList* pl) {
@@ -242,7 +242,7 @@ void ProcessList_delete(ProcessList* pl) {
  *       and MUST conform to the appropriate definition in order
  *       to work.  See libproc(3LIB) on a Solaris or Illumos
  *       system for more info.
- */ 
+ */
 
 int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr) {
    struct timeval tv;
@@ -262,7 +262,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       getpid = _psinfo->pr_pid * 1024;
    } else {
       getpid = lwpid;
-   } 
+   }
    Process *proc             = ProcessList_getProcess(pl, getpid, &preExisting, (Process_New) SolarisProcess_new);
    SolarisProcess *sproc     = (SolarisProcess*) proc;
 
@@ -293,7 +293,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       sproc->realpid        = _psinfo->pr_pid;
       sproc->lwpid          = lwpid_real;
       sproc->zoneid         = _psinfo->pr_zoneid;
-      sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc); 
+      sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc);
       proc->user            = UsersTable_getRef(pl->usersTable, proc->st_uid);
       proc->comm            = xStrdup(_psinfo->pr_fname);
       proc->commLen         = strnlen(_psinfo->pr_fname,PRFNSZ);
@@ -332,7 +332,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu/(double)32768)*(double)100.0;
       proc->time               = _lwpsinfo->pr_time.tv_sec;
       if (!preExisting) { // Tasks done only for NEW LWPs
-         sproc->is_lwp         = true; 
+         sproc->is_lwp         = true;
          proc->basenameOffset  = -1;
          proc->ppid            = _psinfo->pr_pid * 1024;
          proc->tgid            = _psinfo->pr_pid * 1024;

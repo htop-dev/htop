@@ -93,7 +93,7 @@ static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int 
 
 static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    MetersPanel* this = (MetersPanel*) super;
-   
+
    int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
    bool sideMove = false;

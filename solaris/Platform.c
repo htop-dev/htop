@@ -48,7 +48,7 @@ typedef struct var kvar_t;
 typedef struct envAccum_ {
    size_t capacity;
    size_t size;
-   size_t bytes; 
+   size_t bytes;
    char *env;
 } envAccum;
 
@@ -136,7 +136,7 @@ extern char Process_pidFormat[20];
 
 int Platform_getUptime() {
    int boot_time = 0;
-   int curr_time = time(NULL);   
+   int curr_time = time(NULL);
    struct utmpx * ent;
 
    while (( ent = getutxent() )) {
@@ -170,7 +170,7 @@ int Platform_getMaxPid() {
       vproc = ksvar->v_proc;
    }
    if (kc != NULL) { kstat_close(kc); }
-   return vproc; 
+   return vproc;
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
@@ -223,7 +223,7 @@ void Platform_setSwapValues(Meter* this) {
 static int Platform_buildenv(void *accum, struct ps_prochandle *Phandle, uintptr_t addr, const char *str) {
    envAccum *accump = accum;
    (void) Phandle;
-   (void) addr; 
+   (void) addr;
    size_t thissz = strlen(str);
    if ((thissz + 2) > (accump->capacity - accump->size))
       accump->env = xRealloc(accump->env, accump->capacity *= 2);
@@ -232,7 +232,7 @@ static int Platform_buildenv(void *accum, struct ps_prochandle *Phandle, uintptr
    strlcpy( accump->env + accump->size, str, (accump->capacity - accump->size));
    strncpy( accump->env + accump->size + thissz + 1, "\n", 1);
    accump->size = accump->size + thissz + 1;
-   return 0; 
+   return 0;
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
@@ -240,7 +240,7 @@ char* Platform_getProcessEnv(pid_t pid) {
    pid_t realpid = pid / 1024;
    int graberr;
    struct ps_prochandle *Phandle;
-   
+
    if ((Phandle = Pgrab(realpid,PGRAB_RDONLY,&graberr)) == NULL)
       return "Unable to read process environment.";
 
@@ -248,7 +248,7 @@ char* Platform_getProcessEnv(pid_t pid) {
    envBuilder.size     = 0;
    envBuilder.env      = xMalloc(envBuilder.capacity);
 
-   (void) Penv_iter(Phandle,Platform_buildenv,&envBuilder); 
+   (void) Penv_iter(Phandle,Platform_buildenv,&envBuilder);
 
    Prelease(Phandle, 0);
 

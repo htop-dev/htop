@@ -52,7 +52,7 @@ FunctionBar* FunctionBar_new(const char* const* functions, const char* const* ke
       this->functions[i] = xStrdup(functions[i]);
    }
    if (keys && events) {
-      this->staticData = false; 
+      this->staticData = false;
       this->keys = xCalloc(15, sizeof(char*));
       this->events = xCalloc(15, sizeof(int));
       int i = 0;
