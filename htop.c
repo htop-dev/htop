@@ -87,13 +87,12 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"no-colour",no_argument,         0, 'C'},
       {"tree",     no_argument,         0, 't'},
       {"pid",      required_argument,   0, 'p'},
-      {"io",       no_argument,         0, 'i'},
       {0,0,0,0}
    };
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvCst::d:u:p:i", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvCs:td:u:p:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':

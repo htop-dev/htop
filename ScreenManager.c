@@ -145,14 +145,12 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
 }
 
 static void ScreenManager_drawPanels(ScreenManager* this, int focus) {
-   int nPanels = this->panelCount;
+   const int nPanels = this->panelCount;
    for (int i = 0; i < nPanels; i++) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);
       Panel_draw(panel, i == focus);
-      if (i < nPanels) {
-         if (this->orientation == HORIZONTAL) {
-            mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
-         }
+      if (this->orientation == HORIZONTAL) {
+         mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
       }
    }
 }

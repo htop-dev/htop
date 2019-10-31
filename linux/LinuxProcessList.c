@@ -47,6 +47,8 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 
+extern long long btime;
+
 typedef struct CPUData_ {
    unsigned long long int totalTime;
    unsigned long long int userTime;
@@ -111,7 +113,7 @@ typedef struct LinuxProcessList_ {
 #endif
 
 #ifndef PROC_LINE_LENGTH
-#define PROC_LINE_LENGTH 512
+#define PROC_LINE_LENGTH 4096
 #endif
 
 }*/
@@ -230,8 +232,8 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
+
    ProcessList_init(pl, Class(LinuxProcess), usersTable, pidWhiteList, userId);
-   
    LinuxProcessList_initTtyDrivers(this);
 
    #ifdef HAVE_DELAYACCT
@@ -243,13 +245,19 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
-   char buffer[PROC_LINE_LENGTH + 1];
-   int cpus = -1;
+   int cpus = 0;
    do {
-      cpus++;
-      char * s = fgets(buffer, PROC_LINE_LENGTH, file);
-      (void) s;
-   } while (String_startsWith(buffer, "cpu"));
+      char buffer[PROC_LINE_LENGTH + 1];
+      if (fgets(buffer, PROC_LINE_LENGTH + 1, file) == NULL) {
+         CRT_fatalError("No btime in " PROCSTATFILE);
+      } else if (String_startsWith(buffer, "cpu")) {
+         cpus++;
+      } else if (String_startsWith(buffer, "btime ")) {
+         sscanf(buffer, "btime %lld\n", &btime);
+         break;
+      }
+   } while(true);
+
    fclose(file);
 
    pl->cpuCount = MAX(cpus - 1, 1);
@@ -259,7 +267,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       this->cpus[i].totalTime = 1;
       this->cpus[i].totalPeriod = 1;
    }
-
    return pl;
 }
 
@@ -355,7 +362,10 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    location += 1;
    process->nlwp = strtol(location, &location, 10);
    location += 1;
-   for (int i=0; i<17; i++) location = strchr(location, ' ')+1;
+   location = strchr(location, ' ')+1;
+   lp->starttime = strtoll(location, &location, 10);
+   location += 1;
+   for (int i=0; i<15; i++) location = strchr(location, ' ')+1;
    process->exit_signal = strtol(location, &location, 10);
    location += 1;
    assert(location != NULL);
@@ -367,7 +377,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
 }
 
 
-static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, char* name, time_t curTime) {
+static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, char* name) {
    char filename[MAX_NAME+1];
    filename[MAX_NAME] = '\0';
 
@@ -377,13 +387,6 @@ static bool LinuxProcessList_statProcessDir(Process* process, const char* dirnam
    if (statok == -1)
       return false;
    process->st_uid = sstat.st_uid;
-  
-   struct tm date;
-   time_t ctime = sstat.st_ctime;
-   process->starttime_ctime = ctime;
-   (void) localtime_r((time_t*) &ctime, &date);
-   strftime(process->starttime_show, 7, ((ctime > curTime - 86400) ? "%R " : "%b%d "), &date);
-   
    return true;
 }
 
@@ -709,7 +712,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    }
    command[lastChar + 1] = '\0';
    process->basenameOffset = tokenEnd;
-   setCommand(process, command, lastChar);
+   setCommand(process, command, lastChar + 1);
 
    return true;
 }
@@ -762,7 +765,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
    struct dirent* entry;
    Settings* settings = pl->settings;
 
-   time_t curTime = tv.tv_sec;
    #ifdef HAVE_TASKSTATS
    unsigned long long now = tv.tv_sec*1000LL+tv.tv_usec/1000LL;
    #endif
@@ -834,7 +836,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       if(!preExisting) {
 
-         if (! LinuxProcessList_statProcessDir(proc, dirname, name, curTime))
+         if (! LinuxProcessList_statProcessDir(proc, dirname, name))
             goto errorReadingProcess;
 
          proc->user = UsersTable_getRef(pl->usersTable, proc->st_uid);
@@ -925,30 +927,30 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    char buffer[128];
    while (fgets(buffer, 128, file)) {
 
-      #define tryRead(label, variable) (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu kB", variable))
+      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu kB", variable)) { break; } } while(0)
       switch (buffer[0]) {
       case 'M':
-         if (tryRead("MemTotal:", &this->totalMem)) {}
-         else if (tryRead("MemFree:", &this->freeMem)) {}
-         else if (tryRead("MemShared:", &this->sharedMem)) {}
+         tryRead("MemTotal:", &this->totalMem);
+         tryRead("MemFree:", &this->freeMem);
+         tryRead("MemShared:", &this->sharedMem);
          break;
       case 'B':
-         if (tryRead("Buffers:", &this->buffersMem)) {}
+         tryRead("Buffers:", &this->buffersMem);
          break;
       case 'C':
-         if (tryRead("Cached:", &this->cachedMem)) {}
+         tryRead("Cached:", &this->cachedMem);
          break;
       case 'S':
          switch (buffer[1]) {
          case 'w':
-            if (tryRead("SwapTotal:", &this->totalSwap)) {}
-            else if (tryRead("SwapFree:", &swapFree)) {}
+            tryRead("SwapTotal:", &this->totalSwap);
+            tryRead("SwapFree:", &swapFree);
             break;
          case 'h':
-            if (tryRead("Shmem:", &shmem)) {}
+            tryRead("Shmem:", &shmem);
             break;
          case 'R':
-            if (tryRead("SReclaimable:", &sreclaimable)) {}
+            tryRead("SReclaimable:", &sreclaimable);
             break;
          }
          break;

@@ -474,7 +474,7 @@ static Htop_Reaction actionHelp(State* st) {
       addattrstr(CRT_colors[CPU_NICE_TEXT], "low-priority"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
       addattrstr(CRT_colors[CPU_KERNEL], "kernel"); addstr("/");
-      addattrstr(CRT_colors[CPU_STEAL], "virtualiz");
+      addattrstr(CRT_colors[CPU_GUEST], "virtualiz");
       addattrstr(CRT_colors[BAR_SHADOW], "               used%");
    }
    addattrstr(CRT_colors[BAR_BORDER], "]");

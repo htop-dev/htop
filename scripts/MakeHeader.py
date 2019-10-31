@@ -3,7 +3,7 @@ import os, sys, string, io
 try:
    from StringIO import StringIO
 except ImportError:
-   from io import StringIO
+   StringIO = io.StringIO
 
 ANY=1
 COPY=2

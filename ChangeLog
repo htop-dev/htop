@@ -1,21 +1,38 @@
-What's new in version 2.1.1
+What's new in version 2.2.0
 
+* Solaris/Illumos/OpenIndiana support
+  (thanks to Guy M. Broome)
+* -t/--tree flag for starting in tree-view mode
+  (thanks to Daniel Flanagan)
+* macOS: detects High Sierra version to avoid OS bug
+  (thanks to Pierre Malhaire)
+* OpenBSD: read battery data
+  (thanks to @nerd972)
+* Various automake and build improvements
+  (thanks to Kang-Che Sung)
 * Check for pkg-config when building with --enable-delayacct
   (thanks to @florian2833z for the report)
+* Avoid some bashisms in configure script
+  (thanks to Jesin)
 * Use CFLAGS from ncurses*-config if present
   (thanks to Michael Klein)
-* Fix build failure in Glibc 2.28
-  (thanks to Kang-Che Sung)
+* Header generator supports non-UTF-8 environments
+  (thanks to @volkov-am)
+* Linux: changed detection of kernel threads
+* Collapse current subtree pressing Backspace
 * BUGFIX: fix behavior of SYSCR column
   (thanks to Marc Kleine-Budde)
-* BUGFIX: preserve LDFLAGS when building
-  (thanks to Lance Frederickson for the report)
-* BUGFIX: fix issue with small terminals
-  (thanks to Daniel Elf for the report)
+* BUGFIX: obtain exit code of lsof correctly
+  (thanks to @wangqr)
 * BUGFIX: fix crash with particular keycodes
   (thanks to Wellington Torrejais da Silva for the report)
+* BUGFIX: fix issue with small terminals
+  (thanks to Daniel Elf for the report)
 * BUGFIX: fix terminal color issues
   (thanks to Kang-Che Sung for the report)
+* BUGFIX: preserve LDFLAGS when building
+  (thanks to Lance Frederickson for the report)
+* BUGFIX: fixed overflow for systems with >= 100 signals
 
 What's new in version 2.1.0
 
