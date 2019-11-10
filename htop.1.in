@@ -1,9 +1,10 @@
-.TH "HTOP" "1" "2015" "@PACKAGE_STRING@" "Utils"
+.TH "HTOP" "1" "2019" "@PACKAGE_STRING@" "Utils"
 .SH "NAME"
 htop \- interactive process viewer
 .SH "SYNOPSIS"
 .LP 
-.B htop [\fI\-dChustv\fR]
+.B htop
+.RB [ \-dChpustv ]
 .SH "DESCRIPTION"
 .LP 
 Htop is a free (GPL) ncurses-based process viewer for Linux.
