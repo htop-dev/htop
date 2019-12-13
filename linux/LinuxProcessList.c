@@ -692,7 +692,11 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    int tokenEnd = 0; 
    int lastChar = 0;
    if (amtRead == 0) {
-      ((LinuxProcess*)process)->isKernelThread = true;
+      if (process->state == 'Z') {
+         process->basenameOffset = 0;
+      } else {
+         ((LinuxProcess*)process)->isKernelThread = true;
+      }
       return true;
    } else if (amtRead < 0) {
       return false;
