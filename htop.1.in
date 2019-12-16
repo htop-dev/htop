@@ -22,7 +22,9 @@ Mandatory arguments to long options are mandatory for short options too.
 .LP 
 .TP
 \fB\-d \-\-delay=DELAY\fR
-Delay between updates, in tenths of seconds
+Delay between updates, in tenths of seconds. If the delay value is
+less than 1 it is increased to 1, i.e. 1/10 second. If the delay value
+is greater than 100, it is decreased to 100, i.e. 10 seconds.
 .TP
 \fB\-C \-\-no-color \-\-no-colour\fR
 Start htop in monochrome mode
