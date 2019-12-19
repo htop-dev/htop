@@ -166,8 +166,11 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->detailedCPUTime = atoi(option[1]);
       } else if (String_eq(option[0], "detailed_cpu_time")) {
          this->detailedCPUTime = atoi(option[1]);
+      } else if (String_eq(option[0], "cpu_count_from_one")) {
+         this->countCPUsFromOne = atoi(option[1]);
       } else if (String_eq(option[0], "cpu_count_from_zero")) {
-         this->countCPUsFromZero = atoi(option[1]);
+         // old (inverted) naming also supported for backwards compatibility
+         this->countCPUsFromOne = !atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_usage")) {
          this->showCPUUsage = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_frequency")) {
@@ -266,7 +269,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "tree_view=%d\n", (int) this->treeView);
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
-   fprintf(fd, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
+   fprintf(fd, "cpu_count_from_one=%d\n", (int) this->countCPUsFromOne);
    fprintf(fd, "show_cpu_usage=%d\n", (int) this->showCPUUsage);
    fprintf(fd, "show_cpu_frequency=%d\n", (int) this->showCPUFrequency);
    fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
@@ -299,7 +302,7 @@ Settings* Settings_new(int cpuCount) {
    this->highlightBaseName = false;
    this->highlightMegabytes = false;
    this->detailedCPUTime = false;
-   this->countCPUsFromZero = false;
+   this->countCPUsFromOne = false;
    this->showCPUUsage = true;
    this->showCPUFrequency = false;
    this->updateProcessNames = false;

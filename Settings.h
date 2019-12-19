@@ -31,7 +31,7 @@ typedef struct Settings_ {
    int direction;
    ProcessField sortKey;
 
-   bool countCPUsFromZero;
+   bool countCPUsFromOne;
    bool detailedCPUTime;
    bool showCPUUsage;
    bool showCPUFrequency;
@@ -56,7 +56,7 @@ typedef struct Settings_ {
    bool changed;
 } Settings;
 
-#define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromZero ? (cpu) : (cpu)+1)
+#define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
 
 void Settings_delete(Settings* this);
 
