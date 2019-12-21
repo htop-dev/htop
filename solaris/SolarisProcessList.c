@@ -25,45 +25,6 @@ in the source distribution for its full text.
 
 #define MAXCMDLINE 255
 
-#define GZONE	"global    "
-#define UZONE	"unknown   "
-/*{
-
-#include "zfs/ZfsArcStats.h"
-
-#include <kstat.h>
-#include <sys/param.h>
-#include <sys/uio.h>
-#include <sys/resource.h>
-#include <sys/sysconf.h>
-#include <sys/sysinfo.h>
-#include <sys/swap.h>
-
-#define ZONE_ERRMSGLEN 1024
-char zone_errmsg[ZONE_ERRMSGLEN];
-
-typedef struct CPUData_ {
-   double userPercent;
-   double nicePercent;
-   double systemPercent;
-   double irqPercent;
-   double idlePercent;
-   double systemAllPercent;
-   uint64_t luser;
-   uint64_t lkrnl;
-   uint64_t lintr;
-   uint64_t lidle;
-} CPUData;
-
-typedef struct SolarisProcessList_ {
-   ProcessList super;
-   kstat_ctl_t* kd;
-   CPUData* cpus;
-   ZfsArcStats zfs;
-} SolarisProcessList;
-
-}*/
-
 char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
   char* zname;
   if ( sproc->zoneid == 0 ) {

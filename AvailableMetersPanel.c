@@ -16,23 +16,6 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdlib.h>
 
-/*{
-#include "Settings.h"
-#include "Panel.h"
-#include "ScreenManager.h"
-#include "ProcessList.h"
-
-typedef struct AvailableMetersPanel_ {
-   Panel super;
-   ScreenManager* scr;
-
-   Settings* settings;
-   Header* header;
-   Panel* leftPanel;
-   Panel* rightPanel;
-} AvailableMetersPanel;
-
-}*/
 
 static void AvailableMetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;

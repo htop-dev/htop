@@ -32,13 +32,6 @@ in the source distribution for its full text.
 #include <stdio.h>
 #include <stdlib.h>
 
-/*{
-#include "Action.h"
-#include "MainPanel.h"
-#include "BatteryMeter.h"
-#include "LinuxProcess.h"
-#include "SignalsPanel.h"
-}*/
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))

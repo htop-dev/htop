@@ -17,50 +17,6 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <sys/syscall.h>
 
-/*{
-#include "Settings.h"
-#include <zone.h>
-#include <sys/proc.h>
-#include <libproc.h>
-
-typedef enum SolarisProcessFields {
-   // Add platform-specific fields here, with ids >= 100
-   ZONEID   = 100,
-   ZONE  = 101,
-   PROJID = 102,
-   TASKID = 103,
-   POOLID = 104,
-   CONTID = 105,
-   LWPID = 106,
-   LAST_PROCESSFIELD = 107,
-} SolarisProcessField;
-
-
-typedef struct SolarisProcess_ {
-   Process    super;
-   int        kernel;
-   zoneid_t   zoneid;
-   char*      zname;
-   taskid_t   taskid;
-   projid_t   projid;
-   poolid_t   poolid;
-   ctid_t     contid;
-   bool       is_lwp;
-   pid_t      realpid;
-   pid_t      realppid;
-   pid_t      lwpid;
-} SolarisProcess;
-
-
-#ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->kernel == 1)
-#endif
-
-#ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
-
-}*/
 
 ProcessClass SolarisProcess_class = {
    .super = {

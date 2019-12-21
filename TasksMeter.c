@@ -10,9 +10,6 @@ in the source distribution for its full text.
 #include "Platform.h"
 #include "CRT.h"
 
-/*{
-#include "Meter.h"
-}*/
 
 int TasksMeter_attributes[] = {
    CPU_SYSTEM, PROCESS_THREAD, PROCESS, TASKS_RUNNING

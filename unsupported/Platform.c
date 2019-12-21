@@ -16,12 +16,6 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
 
-/*{
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
-#include "UnsupportedProcess.h"
-}*/
 
 const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },

@@ -16,18 +16,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <ctype.h>
 
-/*{
-#include "Panel.h"
-#include "Settings.h"
-
-typedef struct ColumnsPanel_ {
-   Panel super;
-
-   Settings* settings;
-   bool moving;
-} ColumnsPanel;
-
-}*/
 
 static const char* const ColumnsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 

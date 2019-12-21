@@ -10,9 +10,6 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Platform.h"
 
-/*{
-#include "Meter.h"
-}*/
 
 int LoadAverageMeter_attributes[] = {
    LOAD_AVERAGE_ONE, LOAD_AVERAGE_FIVE, LOAD_AVERAGE_FIFTEEN

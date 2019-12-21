@@ -27,40 +27,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <unistd.h>
 
-/*{
-
-#include <kvm.h>
-
-typedef struct CPUData_ {
-   unsigned long long int totalTime;
-   unsigned long long int userTime;
-   unsigned long long int niceTime;
-   unsigned long long int sysTime;
-   unsigned long long int sysAllTime;
-   unsigned long long int spinTime;
-   unsigned long long int intrTime;
-   unsigned long long int idleTime;
-
-   unsigned long long int totalPeriod;
-   unsigned long long int userPeriod;
-   unsigned long long int nicePeriod;
-   unsigned long long int sysPeriod;
-   unsigned long long int sysAllPeriod;
-   unsigned long long int spinPeriod;
-   unsigned long long int intrPeriod;
-   unsigned long long int idlePeriod;
-} CPUData;
-
-typedef struct OpenBSDProcessList_ {
-   ProcessList super;
-   kvm_t* kd;
-
-   CPUData* cpus;
-
-} OpenBSDProcessList;
-
-}*/
-
 /*
  * avoid relying on or conflicting with MIN() and MAX() in sys/param.h
  */

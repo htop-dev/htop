@@ -14,12 +14,6 @@ in the source distribution for its full text.
 #include <strings.h>
 #include <stdlib.h>
 
-/*{
-#include <stdio.h>
-
-#define String_startsWith(s, match) (strncmp((s),(match),strlen(match)) == 0)
-#define String_contains_i(s1, s2) (strcasestr(s1, s2) != NULL)
-}*/
 
 /*
  * String_startsWith gives better performance if strlen(match) can be computed

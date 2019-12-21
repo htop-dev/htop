@@ -12,17 +12,6 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdlib.h>
 
-/*{
-#include "Object.h"
-
-typedef struct CheckItem_ {
-   Object super;
-   char* text;
-   bool* ref;
-   bool value;
-} CheckItem;
-
-}*/
 
 static void CheckItem_delete(Object* cast) {
    CheckItem* this = (CheckItem*)cast;

@@ -11,13 +11,6 @@
 #include <string.h>
 #include <unistd.h>
 
-/*{
-#include "InfoScreen.h"
-
-typedef struct EnvScreen_ {
-   InfoScreen super;
-} EnvScreen;
-}*/
 
 InfoScreenClass EnvScreen_class = {
    .super = {

@@ -21,60 +21,6 @@ in the source distribution for its full text.
 
 //#link curses
 
-/*{
-#include "Object.h"
-#include "Vector.h"
-#include "FunctionBar.h"
-
-typedef struct Panel_ Panel;
-
-typedef enum HandlerResult_ {
-   HANDLED     = 0x01,
-   IGNORED     = 0x02,
-   BREAK_LOOP  = 0x04,
-   REDRAW      = 0x08,
-   RESCAN      = 0x10,
-   SYNTH_KEY   = 0x20,
-} HandlerResult;
-
-#define EVENT_SET_SELECTED -1
-
-#define EVENT_HEADER_CLICK(x_) (-10000 + x_)
-#define EVENT_IS_HEADER_CLICK(ev_) (ev_ >= -10000 && ev_ <= -9000)
-#define EVENT_HEADER_CLICK_GET_X(ev_) (ev_ + 10000)
-
-typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
-
-typedef struct PanelClass_ {
-   const ObjectClass super;
-   const Panel_EventHandler eventHandler;
-} PanelClass;
-
-#define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
-#define Panel_eventHandlerFn(this_)    As_Panel(this_)->eventHandler
-#define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), ev_)
-
-struct Panel_ {
-   Object super;
-   int x, y, w, h;
-   WINDOW* window;
-   Vector* items;
-   int selected;
-   int oldSelected;
-   int selectedLen;
-   void* eventHandlerState;
-   int scrollV;
-   short scrollH;
-   bool needsRedraw;
-   FunctionBar* currentBar;
-   FunctionBar* defaultBar;
-   RichString header;
-   int selectionColor;
-};
-
-#define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
-
-}*/
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

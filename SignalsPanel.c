@@ -18,14 +18,6 @@ in the source distribution for its full text.
 
 #include <ctype.h>
 
-/*{
-
-typedef struct SignalItem_ {
-   const char* name;
-   int number;
-} SignalItem;
-
-}*/
 
 Panel* SignalsPanel_new() {
    Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem), FunctionBar_newEnterEsc("Send   ", "Cancel "));

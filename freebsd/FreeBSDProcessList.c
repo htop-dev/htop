@@ -22,53 +22,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 
-/*{
-
-#include "zfs/ZfsArcStats.h"
-
-#include <kvm.h>
-#include <sys/param.h>
-#include <sys/jail.h>
-#include <sys/uio.h>
-#include <sys/resource.h>
-
-#define JAIL_ERRMSGLEN	1024
-extern char jail_errmsg[JAIL_ERRMSGLEN];
-
-typedef struct CPUData_ {
-
-   double userPercent;
-   double nicePercent;
-   double systemPercent;
-   double irqPercent;
-   double idlePercent;
-   double systemAllPercent;
-
-} CPUData;
-
-typedef struct FreeBSDProcessList_ {
-   ProcessList super;
-   kvm_t* kd;
-
-   unsigned long long int memWire;
-   unsigned long long int memActive;
-   unsigned long long int memInactive;
-   unsigned long long int memFree;
-
-   ZfsArcStats zfs;
-
-   CPUData* cpus;
-
-   unsigned long   *cp_time_o;
-   unsigned long   *cp_time_n;
-
-   unsigned long  *cp_times_o;
-   unsigned long  *cp_times_n;
-
-} FreeBSDProcessList;
-
-}*/
-
 char jail_errmsg[JAIL_ERRMSGLEN];
 
 static int MIB_hw_physmem[2];

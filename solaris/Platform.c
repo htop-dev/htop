@@ -33,28 +33,6 @@ in the source distribution for its full text.
 #include <math.h>
 #include <sys/var.h>
 
-/*{
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
-#include <signal.h>
-#include <sys/mkdev.h>
-#include <sys/proc.h>
-#include <libproc.h>
-
-#define  kill(pid, signal) kill(pid / 1024, signal)
-
-extern ProcessFieldData Process_fields[];
-typedef struct var kvar_t;
-
-typedef struct envAccum_ {
-   size_t capacity;
-   size_t size;
-   size_t bytes;
-   char *env;
-} envAccum;
-
-}*/
 
 double plat_loadavg[3] = {0};
 

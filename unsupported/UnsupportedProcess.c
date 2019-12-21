@@ -9,12 +9,6 @@ in the source distribution for its full text.
 #include "UnsupportedProcess.h"
 #include <stdlib.h>
 
-/*{
-#include "Settings.h"
-
-#define Process_delete UnsupportedProcess_delete
-
-}*/
 
 Process* UnsupportedProcess_new(Settings* settings) {
    Process* this = xCalloc(1, sizeof(Process));

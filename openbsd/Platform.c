@@ -37,14 +37,6 @@ in the source distribution for its full text.
 #include <limits.h>
 #include <math.h>
 
-/*{
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
-
-extern ProcessFieldData Process_fields[];
-
-}*/
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 

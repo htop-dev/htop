@@ -16,21 +16,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdlib.h>
 
-/*{
-#include "Meter.h"
-#include "Settings.h"
-#include "Vector.h"
-
-typedef struct Header_ {
-   Vector** columns;
-   Settings* settings;
-   struct ProcessList_* pl;
-   int nrColumns;
-   int pad;
-   int height;
-} Header;
-
-}*/
 
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))

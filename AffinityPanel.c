@@ -17,13 +17,6 @@ in the source distribution for its full text.
 #include <hwloc.h>
 #endif
 
-/*{
-#include "Panel.h"
-#include "Affinity.h"
-#include "ProcessList.h"
-
-}*/
-
 typedef struct MaskItem_ {
    Object super;
    const char* text;

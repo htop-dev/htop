@@ -20,19 +20,6 @@ in the source distribution for its full text.
 // * Add a define in CRT.h that matches the order of the array
 // * Add the colors in CRT_setColors
 
-/*{
-#include "Panel.h"
-#include "Settings.h"
-#include "ScreenManager.h"
-
-typedef struct ColorsPanel_ {
-   Panel super;
-
-   Settings* settings;
-   ScreenManager* scr;
-} ColorsPanel;
-
-}*/
 
 static const char* const ColorsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 

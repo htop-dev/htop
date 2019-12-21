@@ -16,26 +16,6 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <sys/syscall.h>
 
-/*{
-
-typedef enum OpenBSDProcessFields {
-   // Add platform-specific fields here, with ids >= 100
-   LAST_PROCESSFIELD = 100,
-} OpenBSDProcessField;
-
-typedef struct OpenBSDProcess_ {
-   Process super;
-} OpenBSDProcess;
-
-#ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->pgrp == 0)
-#endif
-
-#ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
-
-}*/
 
 ProcessClass OpenBSDProcess_class = {
    .super = {
