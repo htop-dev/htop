@@ -69,6 +69,8 @@ typedef struct Settings_ {
    bool showCPUTemperature;
    bool degreeFahrenheit;
    #endif
+   bool showParentsInFilter;
+   bool showChildrenInFilter;
    bool showProgramPath;
    bool shadowOtherUsers;
    bool showThreadNames;

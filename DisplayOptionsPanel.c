@@ -113,6 +113,8 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is collapsed by default", &(settings->ss->allBranchesCollapsed)));
    Panel_add(super, (Object*) TextItem_new("Global options:"));
    Panel_add(super, (Object*) CheckItem_newByRef("Show tabs for screens", &(settings->screenTabs)));
+   Panel_add(super, (Object*) CheckItem_newByRef("Show parent processes during filter", &(settings->showParentsInFilter)));
+   Panel_add(super, (Object*) CheckItem_newByRef("Show children processes during filter", &(settings->showChildrenInFilter)));
    Panel_add(super, (Object*) CheckItem_newByRef("Shadow other users' processes", &(settings->shadowOtherUsers)));
    Panel_add(super, (Object*) CheckItem_newByRef("Hide kernel threads", &(settings->hideKernelThreads)));
    Panel_add(super, (Object*) CheckItem_newByRef("Hide userland process threads", &(settings->hideUserlandThreads)));

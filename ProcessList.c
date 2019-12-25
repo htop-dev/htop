@@ -370,6 +370,16 @@ void ProcessList_collapseAllBranches(ProcessList* this) {
    }
 }
 
+static void ProcessList_filterChildern(ProcessList *this, pid_t pid, Hashtable *processFilter) {
+   for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
+      Process *p = (Process*) (Vector_get(this->processes, i));
+      if (p->pid != pid && Process_isChildOf(p, pid)) {
+         Hashtable_put(processFilter, p->pid, (void*) 1);
+         ProcessList_filterChildern(this, p->pid, processFilter);
+      }
+   }
+}
+
 void ProcessList_rebuildPanel(ProcessList* this) {
    ProcessList_updateDisplayList(this);
 
@@ -392,6 +402,25 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
    const int processCount = Vector_size(this->displayList);
    int idx = 0;
+
+   // Mark Children and Parent for F4-Filter
+   Hashtable* filteredProcesses = Hashtable_new(processCount, false);
+   for (int i = 0; i < processCount; i++) {
+      Process* p = (Process*)Vector_get(this->processes, i);
+      pid_t ppid = Process_getParentPid(p);
+
+      if (incFilter && !(String_contains_i(Process_getCommand(p), incFilter, true)))
+         continue;
+
+      if (this->settings->showChildrenInFilter)
+         ProcessList_filterChildern(this, p->pid, filteredProcesses);
+      do {
+         Hashtable_put(filteredProcesses, p->pid, (void*) 1);
+         ppid = Process_getParentPid(p);
+         p = Hashtable_get(this->processTable, ppid);
+      } while (this->settings->showParentsInFilter && p && p->pid != p->ppid);
+   }
+
    bool foundFollowed = false;
 
    for (int i = 0; i < processCount; i++) {
@@ -399,7 +428,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
-         || (incFilter && !(String_contains_i(Process_getCommand(p), incFilter, true)))
+         || (incFilter && !Hashtable_get(filteredProcesses, p->pid))
          || (this->pidMatchList && !Hashtable_get(this->pidMatchList, p->tgid)) )
          continue;
 
@@ -428,6 +457,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
       this->panel->scrollV = currScrollV;
    }
+   Hashtable_delete(filteredProcesses);
 }
 
 Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor) {

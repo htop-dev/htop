@@ -378,6 +378,10 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          // old (no screen) naming also supported for backwards compatibility
          screen = Settings_defaultScreens(this);
          screen->allBranchesCollapsed = atoi(option[1]);
+      } else if (String_eq(option[0], "show_parents_in_filter")) {
+         this->showParentsInFilter = atoi(option[1]);
+      } else if (String_eq(option[0], "show_children_in_filter")) {
+         this->showChildrenInFilter = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
          this->hideKernelThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_userland_threads")) {
@@ -624,6 +628,8 @@ int Settings_write(const Settings* this, bool onCrash) {
    // Legacy compatibility with older versions of htop
    printSettingInteger("tree_view", this->screens[0]->treeView);
    // This "-1" is for compatibility with the older enum format.
+   printSettingInteger("show_parents_in_filter", this->showParentsInFilter);
+   printSettingInteger("show_children_in_filter", this->showChildrenInFilter);
    printSettingInteger("sort_key", this->screens[0]->sortKey - 1);
    printSettingInteger("tree_sort_key", this->screens[0]->treeSortKey - 1);
    printSettingInteger("sort_direction", this->screens[0]->direction);
@@ -673,6 +679,8 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    this->hideKernelThreads = true;
    this->hideUserlandThreads = false;
    this->hideRunningInContainer = false;
+   this->showParentsInFilter = false;
+   this->showChildrenInFilter = false;
    this->highlightBaseName = false;
    this->highlightDeletedExe = true;
    this->highlightMegabytes = true;
