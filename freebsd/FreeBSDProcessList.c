@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #include <limits.h>
 #include <string.h>
+#include <time.h>
 
 /*{
 
@@ -429,10 +430,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
 
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
       bool isIdleProcess = false;
+      struct tm date;
       Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
@@ -522,6 +527,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if (Process_isKernelThread(fp)) {
          this->kernelThreads++;
       }
+
+      (void) localtime_r((time_t*) &proc->starttime_ctime, &date);
+      strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
 
       this->totalTasks++;
       if (proc->state == 'R')
