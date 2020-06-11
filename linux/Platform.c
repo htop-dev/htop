@@ -121,10 +121,13 @@ MeterClass* Platform_meterTypes[] = {
    &HostnameMeter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
+   &AllCPUs4Meter_class,
    &LeftCPUsMeter_class,
    &RightCPUsMeter_class,
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
+   &LeftCPUs4Meter_class,
+   &RightCPUs4Meter_class,
    &BlankMeter_class,
    NULL
 };
