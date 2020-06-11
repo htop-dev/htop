@@ -112,6 +112,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             flags.sortKey = ColumnsPanel_fieldNameToIndex(optarg);
             if (flags.sortKey == -1) {
                fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
+               exit(1);
             }
             break;
          case 'd':
@@ -120,11 +121,13 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
                if (flags.delay > 100) flags.delay = 100;
             } else {
                fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
+               exit(1);
             }
             break;
          case 'u':
             if (!Action_setUserOnly(optarg, &(flags.userId))) {
                fprintf(stderr, "Error: invalid user \"%s\".\n", optarg);
+               exit(1);
             }
             break;
          case 'C':
