@@ -221,10 +221,11 @@ static void MultiColCPUsMeter_draw(Meter* this, int x, int y, int w){
   int ncol = MapClassnameToColumncount(this);
   int colwidth = (w-ncol)/ncol + 1;
   int diff = (w - (colwidth * ncol));
+  int nrows = (count + ncol - 1) / ncol;
   for (int i = 0; i < count; i++){
-    int d = (i%ncol) > diff ? diff : (i % ncol) ; // dynamic spacer
-    int xpos = x + ((i % ncol) * colwidth) + d;
-    int ypos = y + ((i / ncol) * meters[0]->h);
+    int d = (i/nrows) > diff ? diff : (i / nrows) ; // dynamic spacer
+    int xpos = x + ((i / nrows) * colwidth) + d;
+    int ypos = y + ((i % nrows) * meters[0]->h);
     meters[i]->draw(meters[i], xpos, ypos, colwidth);
   }
 }
