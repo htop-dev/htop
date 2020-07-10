@@ -119,9 +119,9 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
-void CRT_fatalError(const char* note) __attribute__ ((noreturn));
+extern void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 
-void CRT_handleSIGSEGV(int sgn);
+extern void CRT_handleSIGSEGV(int sgn);
 
 #define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 
@@ -140,7 +140,7 @@ extern const char **CRT_treeStr;
 
 extern int CRT_delay;
 
-int* CRT_colors;
+extern int* CRT_colors;
 
 extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
 
@@ -150,21 +150,21 @@ extern int CRT_scrollHAmount;
 
 extern int CRT_scrollWheelVAmount;
 
-char* CRT_termType;
+extern char* CRT_termType;
 
 // TODO move color scheme to Settings, perhaps?
 
 extern int CRT_colorScheme;
 
-void *backtraceArray[128];
+extern void *backtraceArray[128];
 
 #if HAVE_SETUID_ENABLED
 
 #define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
 
-void CRT_dropPrivileges();
+extern void CRT_dropPrivileges();
 
-void CRT_restorePrivileges();
+extern void CRT_restorePrivileges();
 
 #else
 
@@ -179,18 +179,18 @@ void CRT_restorePrivileges();
 
 // TODO: pass an instance of Settings instead.
 
-void CRT_init(int delay, int colorScheme);
+extern void CRT_init(int delay, int colorScheme);
 
-void CRT_done();
+extern void CRT_done();
 
-void CRT_fatalError(const char* note);
+extern void CRT_fatalError(const char* note);
 
-int CRT_readKey();
+extern int CRT_readKey();
 
-void CRT_disableDelay();
+extern void CRT_disableDelay();
 
-void CRT_enableDelay();
+extern void CRT_enableDelay();
 
-void CRT_setColors(int colorScheme);
+extern void CRT_setColors(int colorScheme);
 
 #endif

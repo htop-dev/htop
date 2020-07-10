@@ -131,9 +131,9 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
-void CRT_fatalError(const char* note) __attribute__ ((noreturn));
+extern void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 
-void CRT_handleSIGSEGV(int sgn);
+extern void CRT_handleSIGSEGV(int sgn);
 
 #define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 

@@ -154,7 +154,8 @@ typedef struct LinuxProcess_ {
 
 }*/
 
-long long btime; /* semi-global */
+/* semi-global */
+long long btime;
 
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },

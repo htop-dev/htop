@@ -144,7 +144,8 @@ typedef struct LinuxProcess_ {
 #endif
 
 
-long long btime; /* semi-global */
+/* semi-global */
+extern long long btime;
 
 extern ProcessFieldData Process_fields[];
 
@@ -152,9 +153,9 @@ extern ProcessPidColumn Process_pidColumns[];
 
 extern ProcessClass LinuxProcess_class;
 
-LinuxProcess* LinuxProcess_new(Settings* settings);
+extern LinuxProcess* LinuxProcess_new(Settings* settings);
 
-void Process_delete(Object* cast);
+extern void Process_delete(Object* cast);
 
 /*
 [1] Note that before kernel 2.6.26 a process that has not asked for
@@ -166,19 +167,19 @@ extern io_priority;
 */
 #define LinuxProcess_effectiveIOPriority(p_) (IOPriority_class(p_->ioPriority) == IOPRIO_CLASS_NONE ? IOPriority_tuple(IOPRIO_CLASS_BE, (p_->super.nice + 20) / 5) : p_->ioPriority)
 
-IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
+extern IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
 
-bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio);
+extern bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio);
 
 #ifdef HAVE_DELAYACCT
-void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);
+extern void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);
 #endif
 
-void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field);
+extern void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field);
 
-long LinuxProcess_compare(const void* v1, const void* v2);
+extern long LinuxProcess_compare(const void* v1, const void* v2);
 
-bool Process_isThread(Process* this);
+extern bool Process_isThread(Process* this);
 
 
 #endif

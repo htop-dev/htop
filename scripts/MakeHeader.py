@@ -54,8 +54,10 @@ for line in file.readlines():
          elif line.startswith("typedef struct"):
             state = SKIP
          elif line[-1] == "{":
-            out.write( line[:-2].replace("inline", "extern") + ";\n" )
+            out.write("extern " + line[:-2].replace("inline ", "") + ";\n")
             state = SKIP
+         elif line[-1] == ";":
+            out.write("extern " + line + "\n")
          else:
             out.write( line + "\n")
          is_blank = False
