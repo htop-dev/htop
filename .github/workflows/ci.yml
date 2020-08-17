@@ -7,17 +7,23 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  build-ubuntu-latest:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
-    - name: prepare
-      run: sudo apt-get install libncurses-dev
-    - name: autogen
-      run: ./autogen.sh
-    - name: configure
-      run: ./configure
     - name: make
-      run: make
+      run: |
+        sudo apt-get install libncurses-dev
+        ./autogen.sh
+        ./configure
+        make
+
+  build-macos-latest:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: make
+      run: |
+        ./autogen.sh
+        ./configure
+        make
