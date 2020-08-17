@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: prepare
+      run: sudo apt-get install libncurses-dev
     - name: autogen
       run: ./autogen.sh
     - name: configure
