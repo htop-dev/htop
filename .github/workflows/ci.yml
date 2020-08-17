@@ -11,18 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: make
+    - name: Build
       run: |
         sudo apt-get install libncursesw5-dev
         ./autogen.sh
         ./configure
         make
 
-  build-macos-latest:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: make
-      run: |
-        ./configure
-        make
+#  build-macos-latest:
+#    runs-on: macos-latest
+#    steps:
+#    - uses: actions/checkout@v2
+#    - name: make
+#      run: |
+#        ./autogen.sh
+#        ./configure
+#        make
