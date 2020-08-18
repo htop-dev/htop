@@ -27,22 +27,22 @@ extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
 
-void Platform_setBindings(Htop_Action* keys);
+extern void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
 
-int Platform_getUptime();
+extern int Platform_getUptime();
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen);
+extern void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
-int Platform_getMaxPid();
+extern int Platform_getMaxPid();
 
-double Platform_setCPUValues(Meter* this, int cpu);
+extern double Platform_setCPUValues(Meter* this, int cpu);
 
-void Platform_setMemoryValues(Meter* this);
+extern void Platform_setMemoryValues(Meter* this);
 
-void Platform_setSwapValues(Meter* this);
+extern void Platform_setSwapValues(Meter* this);
 
-char* Platform_getProcessEnv(pid_t pid);
+extern char* Platform_getProcessEnv(pid_t pid);
 
 #endif

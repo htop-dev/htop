@@ -13,9 +13,9 @@ in the source distribution for its full text.
 #include "IOPriority.h"
 #include "ListItem.h"
 
-Panel* IOPriorityPanel_new(IOPriority currPrio);
+extern Panel* IOPriorityPanel_new(IOPriority currPrio);
 
-IOPriority IOPriorityPanel_getIOPriority(Panel* this);
+extern IOPriority IOPriorityPanel_getIOPriority(Panel* this);
 
 
 #endif

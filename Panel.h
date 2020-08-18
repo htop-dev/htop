@@ -75,52 +75,52 @@ struct Panel_ {
 
 extern PanelClass Panel_class;
 
-Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar);
+extern Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar);
 
-void Panel_delete(Object* cast);
+extern void Panel_delete(Object* cast);
 
-void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner, FunctionBar* fuBar);
+extern void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner, FunctionBar* fuBar);
 
-void Panel_done(Panel* this);
+extern void Panel_done(Panel* this);
 
-void Panel_setSelectionColor(Panel* this, int color);
+extern void Panel_setSelectionColor(Panel* this, int color);
 
-RichString* Panel_getHeader(Panel* this);
+extern RichString* Panel_getHeader(Panel* this);
 
 extern void Panel_setHeader(Panel* this, const char* header);
 
-void Panel_move(Panel* this, int x, int y);
+extern void Panel_move(Panel* this, int x, int y);
 
-void Panel_resize(Panel* this, int w, int h);
+extern void Panel_resize(Panel* this, int w, int h);
 
-void Panel_prune(Panel* this);
+extern void Panel_prune(Panel* this);
 
-void Panel_add(Panel* this, Object* o);
+extern void Panel_add(Panel* this, Object* o);
 
-void Panel_insert(Panel* this, int i, Object* o);
+extern void Panel_insert(Panel* this, int i, Object* o);
 
-void Panel_set(Panel* this, int i, Object* o);
+extern void Panel_set(Panel* this, int i, Object* o);
 
-Object* Panel_get(Panel* this, int i);
+extern Object* Panel_get(Panel* this, int i);
 
-Object* Panel_remove(Panel* this, int i);
+extern Object* Panel_remove(Panel* this, int i);
 
-Object* Panel_getSelected(Panel* this);
+extern Object* Panel_getSelected(Panel* this);
 
-void Panel_moveSelectedUp(Panel* this);
+extern void Panel_moveSelectedUp(Panel* this);
 
-void Panel_moveSelectedDown(Panel* this);
+extern void Panel_moveSelectedDown(Panel* this);
 
-int Panel_getSelectedIndex(Panel* this);
+extern int Panel_getSelectedIndex(Panel* this);
 
-int Panel_size(Panel* this);
+extern int Panel_size(Panel* this);
 
-void Panel_setSelected(Panel* this, int selected);
+extern void Panel_setSelected(Panel* this, int selected);
 
-void Panel_draw(Panel* this, bool focus);
+extern void Panel_draw(Panel* this, bool focus);
 
-bool Panel_onKey(Panel* this, int key);
+extern bool Panel_onKey(Panel* this, int key);
 
-HandlerResult Panel_selectByTyping(Panel* this, int ch);
+extern HandlerResult Panel_selectByTyping(Panel* this, int ch);
 
 #endif

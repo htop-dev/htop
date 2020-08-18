@@ -16,6 +16,6 @@ typedef struct SignalItem_ {
 } SignalItem;
 
 
-Panel* SignalsPanel_new();
+extern Panel* SignalsPanel_new();
 
 #endif

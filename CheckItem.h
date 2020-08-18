@@ -21,12 +21,12 @@ typedef struct CheckItem_ {
 
 extern ObjectClass CheckItem_class;
 
-CheckItem* CheckItem_newByRef(char* text, bool* ref);
+extern CheckItem* CheckItem_newByRef(char* text, bool* ref);
 
-CheckItem* CheckItem_newByVal(char* text, bool value);
+extern CheckItem* CheckItem_newByVal(char* text, bool value);
 
-void CheckItem_set(CheckItem* this, bool value);
+extern void CheckItem_set(CheckItem* this, bool value);
 
-bool CheckItem_get(CheckItem* this);
+extern bool CheckItem_get(CheckItem* this);
 
 #endif

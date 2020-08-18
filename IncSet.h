@@ -41,18 +41,18 @@ typedef struct IncSet_ {
 typedef const char* (*IncMode_GetPanelValue)(Panel*, int);
 
 
-IncSet* IncSet_new(FunctionBar* bar);
+extern IncSet* IncSet_new(FunctionBar* bar);
 
-void IncSet_delete(IncSet* this);
+extern void IncSet_delete(IncSet* this);
 
-bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines);
+extern bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines);
 
-const char* IncSet_getListItemValue(Panel* panel, int i);
+extern const char* IncSet_getListItemValue(Panel* panel, int i);
 
-void IncSet_activate(IncSet* this, IncType type, Panel* panel);
+extern void IncSet_activate(IncSet* this, IncType type, Panel* panel);
 
-void IncSet_drawBar(IncSet* this);
+extern void IncSet_drawBar(IncSet* this);
 
-int IncSet_synthesizeEvent(IncSet* this, int x);
+extern int IncSet_synthesizeEvent(IncSet* this, int x);
 
 #endif

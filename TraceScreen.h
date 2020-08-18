@@ -25,16 +25,16 @@ typedef struct TraceScreen_ {
 
 extern InfoScreenClass TraceScreen_class;
 
-TraceScreen* TraceScreen_new(Process* process);
+extern TraceScreen* TraceScreen_new(Process* process);
 
-void TraceScreen_delete(Object* cast);
+extern void TraceScreen_delete(Object* cast);
 
-void TraceScreen_draw(InfoScreen* this);
+extern void TraceScreen_draw(InfoScreen* this);
 
-bool TraceScreen_forkTracer(TraceScreen* this);
+extern bool TraceScreen_forkTracer(TraceScreen* this);
 
-void TraceScreen_updateTrace(InfoScreen* super);
+extern void TraceScreen_updateTrace(InfoScreen* super);
 
-bool TraceScreen_onKey(InfoScreen* super, int ch);
+extern bool TraceScreen_onKey(InfoScreen* super, int ch);
 
 #endif

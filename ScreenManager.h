@@ -35,18 +35,18 @@ typedef struct ScreenManager_ {
 } ScreenManager;
 
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner);
+extern ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner);
 
-void ScreenManager_delete(ScreenManager* this);
+extern void ScreenManager_delete(ScreenManager* this);
 
 extern int ScreenManager_size(ScreenManager* this);
 
-void ScreenManager_add(ScreenManager* this, Panel* item, int size);
+extern void ScreenManager_add(ScreenManager* this, Panel* item, int size);
 
-Panel* ScreenManager_remove(ScreenManager* this, int idx);
+extern Panel* ScreenManager_remove(ScreenManager* this, int idx);
 
-void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2);
+extern void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2);
 
-void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey);
+extern void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey);
 
 #endif

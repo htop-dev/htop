@@ -34,12 +34,12 @@ typedef struct OpenFilesScreen_ {
 
 extern InfoScreenClass OpenFilesScreen_class;
 
-OpenFilesScreen* OpenFilesScreen_new(Process* process);
+extern OpenFilesScreen* OpenFilesScreen_new(Process* process);
 
-void OpenFilesScreen_delete(Object* this);
+extern void OpenFilesScreen_delete(Object* this);
 
-void OpenFilesScreen_draw(InfoScreen* this);
+extern void OpenFilesScreen_draw(InfoScreen* this);
 
-void OpenFilesScreen_scan(InfoScreen* this);
+extern void OpenFilesScreen_scan(InfoScreen* this);
 
 #endif

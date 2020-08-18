@@ -16,8 +16,8 @@ in the source distribution for its full text.
 
 extern PanelClass AffinityPanel_class;
 
-Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity);
+extern Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity);
 
-Affinity* AffinityPanel_getAffinity(Panel* this, ProcessList* pl);
+extern Affinity* AffinityPanel_getAffinity(Panel* this, ProcessList* pl);
 
 #endif

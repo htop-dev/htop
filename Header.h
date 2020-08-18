@@ -31,30 +31,30 @@ typedef struct Header_ {
 #define Header_forEachColumn(this_, i_) for (int (i_)=0; (i_) < (this_)->nrColumns; ++(i_))
 #endif
 
-Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns);
+extern Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns);
 
-void Header_delete(Header* this);
+extern void Header_delete(Header* this);
 
-void Header_populateFromSettings(Header* this);
+extern void Header_populateFromSettings(Header* this);
 
-void Header_writeBackToSettings(const Header* this);
+extern void Header_writeBackToSettings(const Header* this);
 
-MeterModeId Header_addMeterByName(Header* this, char* name, int column);
+extern MeterModeId Header_addMeterByName(Header* this, char* name, int column);
 
-void Header_setMode(Header* this, int i, MeterModeId mode, int column);
+extern void Header_setMode(Header* this, int i, MeterModeId mode, int column);
 
-Meter* Header_addMeterByClass(Header* this, MeterClass* type, int param, int column);
+extern Meter* Header_addMeterByClass(Header* this, MeterClass* type, int param, int column);
 
-int Header_size(Header* this, int column);
+extern int Header_size(Header* this, int column);
 
-char* Header_readMeterName(Header* this, int i, int column);
+extern char* Header_readMeterName(Header* this, int i, int column);
 
-MeterModeId Header_readMeterMode(Header* this, int i, int column);
+extern MeterModeId Header_readMeterMode(Header* this, int i, int column);
 
-void Header_reinit(Header* this);
+extern void Header_reinit(Header* this);
 
-void Header_draw(const Header* this);
+extern void Header_draw(const Header* this);
 
-int Header_calculateHeight(Header* this);
+extern int Header_calculateHeight(Header* this);
 
 #endif

@@ -98,9 +98,9 @@ typedef struct LinuxProcessList_ {
 
 #endif
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
+extern ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
-void ProcessList_delete(ProcessList* pl);
+extern void ProcessList_delete(ProcessList* pl);
 
 
 #ifdef HAVE_TASKSTATS
@@ -123,6 +123,6 @@ void ProcessList_delete(ProcessList* pl);
 
 #endif
 
-void ProcessList_goThroughEntries(ProcessList* super);
+extern void ProcessList_goThroughEntries(ProcessList* super);
 
 #endif

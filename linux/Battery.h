@@ -29,6 +29,6 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 // READ FROM /sys
 // ----------------------------------------
 
-void Battery_getData(double* level, ACPresence* isOnAC);
+extern void Battery_getData(double* level, ACPresence* isOnAC);
 
 #endif

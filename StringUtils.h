@@ -19,18 +19,18 @@ in the source distribution for its full text.
  * at compile time (e.g. when they are immutable string literals). :)
  */
 
-char* String_cat(const char* s1, const char* s2);
+extern char* String_cat(const char* s1, const char* s2);
 
-char* String_trim(const char* in);
+extern char* String_trim(const char* in);
 
 extern int String_eq(const char* s1, const char* s2);
 
-char** String_split(const char* s, char sep, int* n);
+extern char** String_split(const char* s, char sep, int* n);
 
-void String_freeArray(char** s);
+extern void String_freeArray(char** s);
 
-char* String_getToken(const char* line, const unsigned short int numMatch);
+extern char* String_getToken(const char* line, const unsigned short int numMatch);
 
-char* String_readLine(FILE* fd);
+extern char* String_readLine(FILE* fd);
 
 #endif

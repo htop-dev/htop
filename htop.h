@@ -14,6 +14,6 @@ in the source distribution for its full text.
 // ----------------------------------------
 
 
-int main(int argc, char** argv);
+extern int main(int argc, char** argv);
 
 #endif

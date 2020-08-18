@@ -71,32 +71,32 @@ void ProcessList_delete(ProcessList* pl);
 void ProcessList_goThroughEntries(ProcessList* pl);
 
 
-ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
+extern ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
-void ProcessList_done(ProcessList* this);
+extern void ProcessList_done(ProcessList* this);
 
-void ProcessList_setPanel(ProcessList* this, Panel* panel);
+extern void ProcessList_setPanel(ProcessList* this, Panel* panel);
 
-void ProcessList_printHeader(ProcessList* this, RichString* header);
+extern void ProcessList_printHeader(ProcessList* this, RichString* header);
 
-void ProcessList_add(ProcessList* this, Process* p);
+extern void ProcessList_add(ProcessList* this, Process* p);
 
-void ProcessList_remove(ProcessList* this, Process* p);
+extern void ProcessList_remove(ProcessList* this, Process* p);
 
-Process* ProcessList_get(ProcessList* this, int idx);
+extern Process* ProcessList_get(ProcessList* this, int idx);
 
-int ProcessList_size(ProcessList* this);
+extern int ProcessList_size(ProcessList* this);
 
-void ProcessList_sort(ProcessList* this);
+extern void ProcessList_sort(ProcessList* this);
 
-ProcessField ProcessList_keyAt(ProcessList* this, int at);
+extern ProcessField ProcessList_keyAt(ProcessList* this, int at);
 
-void ProcessList_expandTree(ProcessList* this);
+extern void ProcessList_expandTree(ProcessList* this);
 
-void ProcessList_rebuildPanel(ProcessList* this);
+extern void ProcessList_rebuildPanel(ProcessList* this);
 
-Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor);
+extern Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor);
 
-void ProcessList_scan(ProcessList* this);
+extern void ProcessList_scan(ProcessList* this);
 
 #endif

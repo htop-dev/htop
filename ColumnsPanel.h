@@ -22,11 +22,11 @@ typedef struct ColumnsPanel_ {
 
 extern PanelClass ColumnsPanel_class;
 
-ColumnsPanel* ColumnsPanel_new(Settings* settings);
+extern ColumnsPanel* ColumnsPanel_new(Settings* settings);
 
-int ColumnsPanel_fieldNameToIndex(const char* name);
+extern int ColumnsPanel_fieldNameToIndex(const char* name);
 
-void ColumnsPanel_update(Panel* super);
+extern void ColumnsPanel_update(Panel* super);
 
 
 #endif

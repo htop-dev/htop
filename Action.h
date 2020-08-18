@@ -39,20 +39,20 @@ typedef struct State_ {
 } State;
 
 
-Object* Action_pickFromVector(State* st, Panel* list, int x);
+extern Object* Action_pickFromVector(State* st, Panel* list, int x);
 
 // ----------------------------------------
 
-bool Action_setUserOnly(const char* userName, uid_t* userId);
+extern bool Action_setUserOnly(const char* userName, uid_t* userId);
 
-Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
+extern Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
 
 // ----------------------------------------
 
-Htop_Reaction Action_follow(State* st);
+extern Htop_Reaction Action_follow(State* st);
 
 
-void Action_setBindings(Htop_Action* keys);
+extern void Action_setBindings(Htop_Action* keys);
 
 
 #endif

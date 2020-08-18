@@ -21,13 +21,13 @@ typedef struct ListItem_ {
 
 extern ObjectClass ListItem_class;
 
-ListItem* ListItem_new(const char* value, int key);
+extern ListItem* ListItem_new(const char* value, int key);
 
-void ListItem_append(ListItem* this, const char* text);
+extern void ListItem_append(ListItem* this, const char* text);
 
-const char* ListItem_getRef(ListItem* this);
+extern const char* ListItem_getRef(ListItem* this);
 
-long ListItem_compare(const void* cast1, const void* cast2);
+extern long ListItem_compare(const void* cast1, const void* cast2);
 
 
 #endif

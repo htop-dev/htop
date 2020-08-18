@@ -19,6 +19,6 @@ typedef struct AvailableColumnsPanel_ {
 
 extern PanelClass AvailableColumnsPanel_class;
 
-AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns);
+extern AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns);
 
 #endif

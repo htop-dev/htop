@@ -22,18 +22,18 @@ typedef struct FunctionBar_ {
 
 
 
-FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc);
+extern FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc);
 
-FunctionBar* FunctionBar_new(const char* const* functions, const char* const* keys, const int* events);
+extern FunctionBar* FunctionBar_new(const char* const* functions, const char* const* keys, const int* events);
 
-void FunctionBar_delete(FunctionBar* this);
+extern void FunctionBar_delete(FunctionBar* this);
 
-void FunctionBar_setLabel(FunctionBar* this, int event, const char* text);
+extern void FunctionBar_setLabel(FunctionBar* this, int event, const char* text);
 
-void FunctionBar_draw(const FunctionBar* this, char* buffer);
+extern void FunctionBar_draw(const FunctionBar* this, char* buffer);
 
-void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr);
+extern void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr);
 
-int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos);
+extern int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos);
 
 #endif
