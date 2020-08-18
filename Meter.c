@@ -523,6 +523,9 @@ MeterMode* Meter_modes[] = {
 
 static void BlankMeter_updateValues(Meter* this, char* buffer, int size) {
    (void) this; (void) buffer; (void) size;
+   if (size > 0) {
+      *buffer = 0;
+   }
 }
 
 static void BlankMeter_display(Object* cast, RichString* out) {
