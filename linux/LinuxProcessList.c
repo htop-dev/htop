@@ -505,9 +505,9 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    ssize_t nread=0;
    int tmp=0;
    if(haveSmapsRollup) {// only available in Linux 4.14+
-      snprintf(buffer, MAX_NAME, "%s/%s/smaps_rollup", dirname, name);
+      snprintf(buffer, PAGE_SIZE-1, "%s/%s/smaps_rollup", dirname, name);
    } else {
-   snprintf(buffer, MAX_NAME, "%s/%s/smaps", dirname, name);
+      snprintf(buffer, PAGE_SIZE-1, "%s/%s/smaps", dirname, name);
    }
    int fd = open(buffer, O_RDONLY);
    if (fd == -1)
