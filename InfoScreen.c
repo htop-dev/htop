@@ -135,7 +135,7 @@ void InfoScreen_run(InfoScreen* this) {
             if (mevent.y >= panel->y && mevent.y < LINES - 1) {
                Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV);
                ch = 0;
-            } if (mevent.y == LINES - 1)
+            } else if (mevent.y == LINES - 1)
                ch = IncSet_synthesizeEvent(this->inc, mevent.x);
       }
 
