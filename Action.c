@@ -248,7 +248,18 @@ static Htop_Reaction actionIncFilter(State* st) {
 }
 
 static Htop_Reaction actionIncSearch(State* st) {
+   IncSet_reset(((MainPanel*)st->panel)->inc, INC_SEARCH);
    IncSet_activate(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel);
+   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
+}
+
+static Htop_Reaction actionIncNext(State* st) {
+   IncSet_next(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue) MainPanel_getValue);
+   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
+}
+
+static Htop_Reaction actionIncPrev(State* st) {
+   IncSet_prev(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue) MainPanel_getValue);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 
@@ -559,6 +570,8 @@ void Action_setBindings(Htop_Action* keys) {
    keys['\\'] = actionIncFilter;
    keys[KEY_F(3)] = actionIncSearch;
    keys['/'] = actionIncSearch;
+   keys['n'] = actionIncNext;
+   keys['N'] = actionIncPrev;
 
    keys[']'] = actionHigherPriority;
    keys[KEY_F(7)] = actionHigherPriority;
