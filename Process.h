@@ -166,10 +166,12 @@ typedef struct ProcessClass_ {
 #define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
+#define ONE_T ((long long)ONE_G * ONE_K)
 
 #define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
+#define ONE_DECIMAL_T ((long long)ONE_DECIMAL_G * ONE_DECIMAL_K)
 
 extern char Process_pidFormat[20];
 

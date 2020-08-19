@@ -191,10 +191,12 @@ static int Process_getuid = -1;
 #define ONE_K 1024L
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
+#define ONE_T ((long long)ONE_G * ONE_K)
 
 #define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
+#define ONE_DECIMAL_T ((long long)ONE_DECIMAL_G * ONE_DECIMAL_K)
 
 char Process_pidFormat[20] = "%7d ";
 
@@ -277,8 +279,15 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
    if ((long long) number == -1LL) {
       int len = snprintf(buffer, 13, "    no perm ");
       RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
-   } else if (number > 10000000000) {
-      xSnprintf(buffer, 13, "%11llu ", number / 1000);
+   } else if (number >= 100000LL * ONE_DECIMAL_T) {
+      xSnprintf(buffer, 13, "%11llu ", number / ONE_DECIMAL_G);
+      RichString_appendn(str, largeNumberColor, buffer, 12);
+   } else if (number >= 100LL * ONE_DECIMAL_T) {
+      xSnprintf(buffer, 13, "%11llu ", number / ONE_DECIMAL_M);
+      RichString_appendn(str, largeNumberColor, buffer, 8);
+      RichString_appendn(str, processMegabytesColor, buffer+8, 4);
+   } else if (number >= 10LL * ONE_DECIMAL_G) {
+      xSnprintf(buffer, 13, "%11llu ", number / ONE_DECIMAL_K);
       RichString_appendn(str, largeNumberColor, buffer, 5);
       RichString_appendn(str, processMegabytesColor, buffer+5, 3);
       RichString_appendn(str, processColor, buffer+8, 4);
@@ -358,14 +367,17 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
    } else if (rate < ONE_K) {
       int len = snprintf(buffer, n, "%7.2f B/s ", rate);
       RichString_appendn(str, processColor, buffer, len);
-   } else if (rate < ONE_K * ONE_K) {
+   } else if (rate < ONE_M) {
       int len = snprintf(buffer, n, "%7.2f K/s ", rate / ONE_K);
       RichString_appendn(str, processColor, buffer, len);
-   } else if (rate < ONE_K * ONE_K * ONE_K) {
-      int len = snprintf(buffer, n, "%7.2f M/s ", rate / ONE_K / ONE_K);
+   } else if (rate < ONE_G) {
+      int len = snprintf(buffer, n, "%7.2f M/s ", rate / ONE_M);
       RichString_appendn(str, processMegabytesColor, buffer, len);
+   } else if (rate < ONE_T) {
+      int len = snprintf(buffer, n, "%7.2f G/s ", rate / ONE_G);
+      RichString_appendn(str, largeNumberColor, buffer, len);
    } else {
-      int len = snprintf(buffer, n, "%7.2f G/s ", rate / ONE_K / ONE_K / ONE_K);
+      int len = snprintf(buffer, n, "%7.2f T/s ", rate / ONE_T);
       RichString_appendn(str, largeNumberColor, buffer, len);
    }
 }
