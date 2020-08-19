@@ -17,21 +17,6 @@ in the source distribution for its full text.
 extern ProcessFieldData Process_fields[];
 
 
-#define MAXCPU 256
-// XXX: probably should be a struct member
-/*
- * Copyright (c) 1984, 1989, William LeFebvre, Rice University
- * Copyright (c) 1989, 1990, 1992, William LeFebvre, Northwestern University
- *
- * Taken directly from OpenBSD's top(1).
- *
- * percentages(cnt, out, new, old, diffs) - calculate percentage change
- * between array "old" and "new", putting the percentages in "out".
- * "cnt" is size of each array and "diffs" is used for scratch space.
- * The array "old" is updated on each call.
- * The routine assumes modulo arithmetic.  This function is especially
- * useful on BSD machines for calculating cpu state percentages.
- */
 extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;

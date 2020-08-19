@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 #include <sys/sensors.h>
 #include <errno.h>
+#include <string.h>
 
 static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
    for (int devn = 0;; devn++) {
