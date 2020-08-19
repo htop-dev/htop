@@ -120,6 +120,8 @@ MeterModeId Header_addMeterByName(Header* this, char* name, int column) {
          break;
       }
    }
+   if (paren)
+      *paren = '(';
    return mode;
 }
 
