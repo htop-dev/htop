@@ -89,6 +89,7 @@ typedef struct LinuxProcessList_ {
    
    CPUData* cpus;
    TtyDriver* ttyDrivers;
+   bool haveSmapsRollup;
    
    #ifdef HAVE_DELAYACCT
    struct nl_sock *netlink_socket;
@@ -240,8 +241,17 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    LinuxProcessList_initNetlinkSocket(this);
    #endif
 
+   // Check for /proc/*/smaps_rollup availability (improves smaps parsing speed, Linux 4.14+)
+   FILE* file = fopen(PROCDIR "/self/smaps_rollup", "r");
+   if(file != NULL) {
+      this->haveSmapsRollup = true;
+      fclose(file);
+   } else {
+      this->haveSmapsRollup = false;
+   }
+
    // Update CPU count:
-   FILE* file = fopen(PROCSTATFILE, "r");
+   file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
@@ -484,6 +494,62 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
    process->m_drs = strtol(p, &p, 10); if (*p == ' ') p++;
    process->m_dt = strtol(p, &p, 10);
    return (errno == 0);
+}
+
+static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* dirname, const char* name, bool haveSmapsRollup) {
+   //http://elixir.free-electrons.com/linux/v4.10/source/fs/proc/task_mmu.c#L719
+   //kernel will return data in chunks of size PAGE_SIZE or less.
+
+   char buffer[PAGE_SIZE];// 4k
+   char *start,*end;
+   ssize_t nread=0;
+   int tmp=0;
+   if(haveSmapsRollup) {// only available in Linux 4.14+
+      snprintf(buffer, MAX_NAME, "%s/%s/smaps_rollup", dirname, name);
+   } else {
+   snprintf(buffer, MAX_NAME, "%s/%s/smaps", dirname, name);
+   }
+   int fd = open(buffer, O_RDONLY);
+   if (fd == -1)
+      return false;
+
+   process->m_pss   = 0;
+   process->m_swap  = 0;
+   process->m_psswp = 0;
+
+   while ( ( nread =  read(fd,buffer, sizeof(buffer)) ) > 0 ){
+        start = (char *)&buffer;
+        end   = start + nread;
+        do{//parse 4k block
+
+            if( (tmp = (end - start)) > 0 &&
+                (start = memmem(start,tmp,"\nPss:",5)) != NULL )
+            {
+              process->m_pss += strtol(start+5, &start, 10);
+              start += 3;//now we must be at the end of line "Pss:                   0 kB"
+            }else
+              break; //read next 4k block
+
+            if( (tmp = (end - start)) > 0 &&
+                (start = memmem(start,tmp,"\nSwap:",6)) != NULL )
+            {
+              process->m_swap += strtol(start+6, &start, 10);
+              start += 3;
+            }else
+              break;
+
+            if( (tmp = (end - start)) > 0 &&
+                (start = memmem(start,tmp,"\nSwapPss:",9)) != NULL )
+            {
+              process->m_psswp += strtol(start+9, &start, 10);
+              start += 3;
+            }else
+              break;
+
+        }while(1);
+   }//while read
+   close(fd);
+   return true;
 }
 
 #ifdef HAVE_OPENVZ
@@ -814,6 +880,21 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       if (! LinuxProcessList_readStatmFile(lp, dirname, name))
          goto errorReadingProcess;
+
+      if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)){
+         if (!parent){
+            // Read smaps file of each process only every second pass to improve performance
+            static int smaps_flag = 0;
+            if ((pid & 1) == smaps_flag){
+              LinuxProcessList_readSmapsFile(lp, dirname, name, this->haveSmapsRollup);
+            }
+            if (pid == 1) {
+               smaps_flag = !smaps_flag;
+            }
+        } else {
+            lp->m_pss = ((LinuxProcess*)parent)->m_pss;
+        }
+      }
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 

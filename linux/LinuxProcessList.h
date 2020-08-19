@@ -62,6 +62,7 @@ typedef struct LinuxProcessList_ {
    
    CPUData* cpus;
    TtyDriver* ttyDrivers;
+   bool haveSmapsRollup;
    
    #ifdef HAVE_DELAYACCT
    struct nl_sock *netlink_socket;
