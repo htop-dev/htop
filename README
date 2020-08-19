@@ -38,7 +38,8 @@ Compilation instructions
 ------------------------
 
 This program is distributed as a standard autotools-based package.
-See the [INSTALL](/INSTALL) file for detailed instructions.
+For detailed instructions see the [INSTALL](/INSTALL) file, which
+is created after `./autogen.sh` is run.
 
 When compiling from a [release tarball](https://hisham.hm/htop/releases/), run:
 
