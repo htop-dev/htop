@@ -201,7 +201,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 
 int Platform_getMaxPid() {
    // this is hard-coded in sys/sys/proc.h - no sysctl exists
-   return 32766;
+   return 99999;
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
