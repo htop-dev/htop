@@ -1,6 +1,7 @@
 /*
 htop - Affinity.c
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2020 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -79,7 +80,8 @@ Affinity* Affinity_get(Process* proc, ProcessList* pl) {
    return affinity;
 }
 
-bool Affinity_set(Process* proc, Affinity* this) {
+bool Affinity_set(Process* proc, Arg arg) {
+   Affinity *this = arg.v;
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
    for (int i = 0; i < this->used; i++) {
       hwloc_bitmap_set(cpuset, this->cpus[i]);
@@ -103,7 +105,8 @@ Affinity* Affinity_get(Process* proc, ProcessList* pl) {
    return affinity;
 }
 
-bool Affinity_set(Process* proc, Affinity* this) {
+bool Affinity_set(Process* proc, Arg arg) {
+   Affinity *this = arg.v;
    cpu_set_t cpuset;
    CPU_ZERO(&cpuset);
    for (int i = 0; i < this->used; i++) {

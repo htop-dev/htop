@@ -1,6 +1,7 @@
 /*
 htop - Process.c
 (C) 2004-2015 Hisham H. Muhammad
+(C) 2020 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -561,14 +562,15 @@ bool Process_setPriority(Process* this, int priority) {
    return (err == 0);
 }
 
-bool Process_changePriorityBy(Process* this, int delta) {
-   return Process_setPriority(this, this->nice + delta);
+bool Process_changePriorityBy(Process* this, Arg delta) {
+   return Process_setPriority(this, this->nice + delta.i);
 }
 
-void Process_sendSignal(Process* this, int sgn) {
+bool Process_sendSignal(Process* this, Arg sgn) {
    CRT_dropPrivileges();
-   kill(this->pid, (int) sgn);
+   bool ok = (kill(this->pid, sgn.i) == 0);
    CRT_restorePrivileges();
+   return ok;
 }
 
 long Process_pidCompare(const void* v1, const void* v2) {

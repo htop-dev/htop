@@ -1,6 +1,7 @@
 /*
 htop - LinuxProcess.c
 (C) 2014 Hisham H. Muhammad
+(C) 2020 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -314,12 +315,12 @@ IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this) {
    return ioprio;
 }
 
-bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio) {
+bool LinuxProcess_setIOPriority(LinuxProcess* this, Arg ioprio) {
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
 #ifdef SYS_ioprio_set
-   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->super.pid, ioprio);
+   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->super.pid, ioprio.i);
 #endif
-   return (LinuxProcess_updateIOPriority(this) == ioprio);
+   return (LinuxProcess_updateIOPriority(this) == ioprio.i);
 }
 
 #ifdef HAVE_DELAYACCT

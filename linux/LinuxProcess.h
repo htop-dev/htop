@@ -5,6 +5,7 @@
 /*
 htop - LinuxProcess.h
 (C) 2014 Hisham H. Muhammad
+(C) 2020 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -176,7 +177,7 @@ extern io_priority;
 
 extern IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
 
-extern bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio);
+extern bool LinuxProcess_setIOPriority(LinuxProcess* this, Arg ioprio);
 
 #ifdef HAVE_DELAYACCT
 extern void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);

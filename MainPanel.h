@@ -5,6 +5,7 @@
 /*
 htop - ColumnsPanel.h
 (C) 2004-2015 Hisham H. Muhammad
+(C) 2020 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -20,11 +21,6 @@ typedef struct MainPanel_ {
    Htop_Action *keys;
    pid_t pidSearch;
 } MainPanel;
-
-typedef union {
-   int i;
-   void* v;
-} Arg;
 
 typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
 

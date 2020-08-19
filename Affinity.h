@@ -5,6 +5,7 @@
 /*
 htop - Affinity.h
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2020 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -39,13 +40,13 @@ extern void Affinity_add(Affinity* this, int id);
 
 extern Affinity* Affinity_get(Process* proc, ProcessList* pl);
 
-extern bool Affinity_set(Process* proc, Affinity* this);
+extern bool Affinity_set(Process* proc, Arg arg);
 
 #elif HAVE_LINUX_AFFINITY
 
 extern Affinity* Affinity_get(Process* proc, ProcessList* pl);
 
-extern bool Affinity_set(Process* proc, Affinity* this);
+extern bool Affinity_set(Process* proc, Arg arg);
 
 #endif
 

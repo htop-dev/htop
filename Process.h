@@ -5,6 +5,7 @@
 /*
 htop - Process.h
 (C) 2004-2015 Hisham H. Muhammad
+(C) 2020 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -199,9 +200,9 @@ extern void Process_toggleTag(Process* this);
 
 extern bool Process_setPriority(Process* this, int priority);
 
-extern bool Process_changePriorityBy(Process* this, int delta);
+extern bool Process_changePriorityBy(Process* this, Arg delta);
 
-extern void Process_sendSignal(Process* this, int sgn);
+extern bool Process_sendSignal(Process* this, Arg sgn);
 
 extern long Process_pidCompare(const void* v1, const void* v2);
 

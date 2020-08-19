@@ -5,6 +5,7 @@
 /*
 htop - Object.h
 (C) 2004-2012 Hisham H. Muhammad
+(C) 2020 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -40,6 +41,11 @@ typedef struct ObjectClass_ {
 struct Object_ {
    ObjectClass* klass;
 };
+
+typedef union {
+   int i;
+   void* v;
+} Arg;
 
 
 extern ObjectClass Object_class;
