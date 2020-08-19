@@ -39,7 +39,7 @@ typedef struct State_ {
 } State;
 
 
-extern Object* Action_pickFromVector(State* st, Panel* list, int x);
+extern Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess);
 
 // ----------------------------------------
 
