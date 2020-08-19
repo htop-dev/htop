@@ -50,7 +50,7 @@ extern ProcessFieldData Process_fields[];
 
 #define MAXCPU 256
 // XXX: probably should be a struct member
-static int64_t old_v[MAXCPU][5];
+static int64_t old_v[MAXCPU][CPUSTATES];
 
 /*
  * Copyright (c) 1984, 1989, William LeFebvre, Rice University
@@ -229,7 +229,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[i] = diff_v[i] / 10.;
    }
 
-   Meter_setItems(this, 4);
+   Meter_setItems(this, CP_IDLE);
 
    perc = v[0] + v[1] + v[2] + v[3];
 
