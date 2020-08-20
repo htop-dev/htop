@@ -154,7 +154,7 @@ char* Header_readMeterName(Header* this, int i, int column) {
    int nameLen = strlen(Meter_name(meter));
    int len = nameLen + 100;
    char* name = xMalloc(len);
-   strncpy(name, Meter_name(meter), nameLen);
+   memcpy(name, Meter_name(meter), nameLen);
    name[nameLen] = '\0';
    if (meter->param)
       xSnprintf(name + nameLen, len - nameLen, "(%d)", meter->param);
