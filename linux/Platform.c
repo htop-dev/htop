@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
+#include "PressureStallMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "LinuxProcess.h"
@@ -126,6 +127,11 @@ MeterClass* Platform_meterTypes[] = {
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
    &BlankMeter_class,
+   &PressureStallCPUSomeMeter_class,
+   &PressureStallIOSomeMeter_class,
+   &PressureStallIOFullMeter_class,
+   &PressureStallMemorySomeMeter_class,
+   &PressureStallMemoryFullMeter_class,
    NULL
 };
 
@@ -236,4 +242,22 @@ char* Platform_getProcessEnv(pid_t pid) {
       }
    }
    return env;
+}
+
+void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred) {
+   *ten = *sixty = *threehundred = 0;
+   char procname[128+1];
+   xSnprintf(procname, 128, PROCDIR "/pressure/%s", file);
+   FILE *fd = fopen(procname, "r");
+   if (!fd) {
+      *ten = *sixty = *threehundred = NAN;
+      return;
+   }
+   int total = fscanf(fd, "some avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
+   if (!some) {
+      total = fscanf(fd, "full avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
+   }
+   (void) total;
+   assert(total == 3);
+   fclose(fd);
 }
