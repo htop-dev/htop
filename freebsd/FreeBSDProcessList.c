@@ -8,6 +8,8 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "FreeBSDProcessList.h"
 #include "FreeBSDProcess.h"
+#include "zfs/ZfsArcStats.h"
+#include "zfs/openzfs_sysctl.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -21,6 +23,8 @@ in the source distribution for its full text.
 #include <time.h>
 
 /*{
+
+#include "zfs/ZfsArcStats.h"
 
 #include <kvm.h>
 #include <sys/param.h>
@@ -46,14 +50,12 @@ typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
-   int zfsArcEnabled;
-
    unsigned long long int memWire;
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
-   unsigned long long int memZfsArc;
 
+   ZfsArcStats zfs;
 
    CPUData* cpus;
 
@@ -80,8 +82,6 @@ static int MIB_vm_stats_vm_v_inactive_count[4];
 static int MIB_vm_stats_vm_v_free_count[4];
 
 static int MIB_vfs_bufspace[2];
-
-static int MIB_kstat_zfs_misc_arcstats_size[5];
 
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
@@ -119,15 +119,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
-   len = sizeof(fpl->memZfsArc);
-   if (sysctlbyname("kstat.zfs.misc.arcstats.size", &fpl->memZfsArc, &len,
-	    NULL, 0) == 0 && fpl->memZfsArc != 0) {
-      sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
-		  fpl->zfsArcEnabled = 1;
-   } else {
-		  fpl->zfsArcEnabled = 0;
-   }
-
+   openzfs_sysctl_init(&fpl->zfs);
+   openzfs_sysctl_updateArcStats(&fpl->zfs);
 
    int smp = 0;
    len = sizeof(smp);
@@ -341,6 +334,11 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->cachedMem += fpl->memZfsArc;
       // maybe when we learn how to make custom memory meter
       // we could do custom arc breakdown?
+    }
+
+   if (fpl->zfs.enabled) {
+      fpl->memWire -= fpl->zfs.size;
+      pl->cachedMem += fpl->zfs.size;
    }
 
    pl->usedMem = fpl->memActive + fpl->memWire;
@@ -438,6 +436,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
+   openzfs_sysctl_updateArcStats(&fpl->zfs);
    FreeBSDProcessList_scanMemoryInfo(this);
    FreeBSDProcessList_scanCPUTime(this);
 

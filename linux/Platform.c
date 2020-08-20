@@ -22,6 +22,8 @@ in the source distribution for its full text.
 #include "PressureStallMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
+#include "zfs/ZfsArcMeter.h"
+#include "zfs/ZfsCompressedArcMeter.h"
 #include "LinuxProcess.h"
 
 #include <math.h>
@@ -135,6 +137,8 @@ MeterClass* Platform_meterTypes[] = {
    &PressureStallIOFullMeter_class,
    &PressureStallMemorySomeMeter_class,
    &PressureStallMemoryFullMeter_class,
+   &ZfsArcMeter_class,
+   &ZfsCompressedArcMeter_class,
    NULL
 };
 
@@ -225,6 +229,17 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
+void Platform_setZfsArcValues(Meter* this) {
+   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+
+   ZfsArcMeter_readStats(this, &(lpl->zfs));
+}
+
+void Platform_setZfsCompressedArcValues(Meter* this) {
+   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+
+   ZfsCompressedArcMeter_readStats(this, &(lpl->zfs));
+}
 char* Platform_getProcessEnv(pid_t pid) {
    char procname[32+1];
    xSnprintf(procname, 32, "/proc/%d/environ", pid);

@@ -45,6 +45,7 @@ in the source distribution for its full text.
 /*{
 
 #include "ProcessList.h"
+#include "zfs/ZfsArcStats.h"
 
 extern long long btime;
 
@@ -96,6 +97,8 @@ typedef struct LinuxProcessList_ {
    struct nl_sock *netlink_socket;
    int netlink_family;
    #endif
+
+   ZfsArcStats zfs;
 } LinuxProcessList;
 
 #ifndef PROCDIR
@@ -112,6 +115,10 @@ typedef struct LinuxProcessList_ {
 
 #ifndef PROCMEMINFOFILE
 #define PROCMEMINFOFILE PROCDIR "/meminfo"
+#endif
+
+#ifndef PROCARCSTATSFILE
+#define PROCARCSTATSFILE PROCDIR "/spl/kstat/zfs/arcstats"
 #endif
 
 #ifndef PROCTTYDRIVERSFILE
@@ -1054,6 +1061,68 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    fclose(file);
 }
 
+static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
+   unsigned long long int dbufSize;
+   unsigned long long int dnodeSize;
+   unsigned long long int bonusSize;
+
+   FILE* file = fopen(PROCARCSTATSFILE, "r");
+   if (file == NULL) {
+      lpl->zfs.enabled = 0;
+      return;
+   }
+   char buffer[128];
+   while (fgets(buffer, 128, file)) {
+      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { break; } } while(0)
+      #define tryReadFlag(label, variable, flag) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { flag = 1; break; } else { flag = 0; } } while(0)
+      switch (buffer[0]) {
+      case 'c':
+         tryRead("c_max", &lpl->zfs.max);
+         tryReadFlag("compressed_size", &lpl->zfs.compressed, lpl->zfs.isCompressed);
+         break;
+      case 'u':
+         tryRead("uncompressed_size", &lpl->zfs.uncompressed);
+         break;
+      case 's':
+         tryRead("size", &lpl->zfs.size);
+         break;
+      case 'h':
+         tryRead("hdr_size", &lpl->zfs.header);
+         break;
+      case 'd':
+         tryRead("dbuf_size", &dbufSize);
+         tryRead("dnode_size", &dnodeSize);
+         break;
+      case 'b':
+         tryRead("bonus_size", &bonusSize);
+         break;
+      case 'a':
+         tryRead("anon_size", &lpl->zfs.anon);
+         break;
+      case 'm':
+         tryRead("mfu_size", &lpl->zfs.MFU);
+         tryRead("mru_size", &lpl->zfs.MRU);
+         break;
+      }
+      #undef tryRead
+      #undef tryReadFlag
+   }
+   fclose(file);
+
+   lpl->zfs.enabled = (lpl->zfs.size > 0 ? 1 : 0);
+   lpl->zfs.size    /= 1024;
+   lpl->zfs.max    /= 1024;
+   lpl->zfs.MFU    /= 1024;
+   lpl->zfs.MRU    /= 1024;
+   lpl->zfs.anon   /= 1024;
+   lpl->zfs.header /= 1024;
+   lpl->zfs.other   = (dbufSize + dnodeSize + bonusSize) / 1024;
+   if ( lpl->zfs.isCompressed ) {
+      lpl->zfs.compressed /= 1024;
+      lpl->zfs.uncompressed /= 1024;
+   }
+}
+
 static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
 
    FILE* file = fopen(PROCSTATFILE, "r");
@@ -1194,6 +1263,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
    LinuxProcessList* this = (LinuxProcessList*) super;
 
    LinuxProcessList_scanMemoryInfo(super);
+   LinuxProcessList_scanZfsArcstats(this);
    double period = LinuxProcessList_scanCPUTime(this);
 
    LinuxProcessList_scanCPUFrequency(this);

@@ -17,6 +17,8 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
+#include "zfs/ZfsArcMeter.h"
+#include "zfs/ZfsCompressedArcMeter.h"
 #include "SolarisProcess.h"
 #include "SolarisProcessList.h"
 
@@ -122,6 +124,8 @@ MeterClass* Platform_meterTypes[] = {
    &RightCPUsMeter_class,
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
+   &ZfsArcMeter_class,
+   &ZfsCompressedArcMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -221,6 +225,18 @@ void Platform_setSwapValues(Meter* this) {
    ProcessList* pl = (ProcessList*) this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
+}
+
+void Platform_setZfsArcValues(Meter* this) {
+   SolarisProcessList* spl = (SolarisProcessList*) this->pl;
+
+   ZfsArcMeter_readStats(this, &(spl->zfs));
+}
+
+void Platform_setZfsCompressedArcValues(Meter* this) {
+   SolarisProcessList* spl = (SolarisProcessList*) this->pl;
+
+   ZfsCompressedArcMeter_readStats(this, &(spl->zfs));
 }
 
 static int Platform_buildenv(void *accum, struct ps_prochandle *Phandle, uintptr_t addr, const char *str) {

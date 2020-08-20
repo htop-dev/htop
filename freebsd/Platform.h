@@ -44,6 +44,10 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
+void Platform_setZfsArcValues(Meter* this);
+
+void Platform_setZfsCompressedArcValues(Meter* this);
+
 void Platform_setTasksValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);

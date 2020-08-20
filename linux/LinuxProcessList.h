@@ -18,6 +18,7 @@ in the source distribution for its full text.
 
 
 #include "ProcessList.h"
+#include "zfs/ZfsArcStats.h"
 
 extern long long btime;
 
@@ -69,6 +70,8 @@ typedef struct LinuxProcessList_ {
    struct nl_sock *netlink_socket;
    int netlink_family;
    #endif
+
+   ZfsArcStats zfs;
 } LinuxProcessList;
 
 #ifndef PROCDIR
@@ -85,6 +88,10 @@ typedef struct LinuxProcessList_ {
 
 #ifndef PROCMEMINFOFILE
 #define PROCMEMINFOFILE PROCDIR "/meminfo"
+#endif
+
+#ifndef PROCARCSTATSFILE
+#define PROCARCSTATSFILE PROCDIR "/spl/kstat/zfs/arcstats"
 #endif
 
 #ifndef PROCTTYDRIVERSFILE

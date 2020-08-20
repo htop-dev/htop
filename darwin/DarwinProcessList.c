@@ -9,6 +9,8 @@ in the source distribution for its full text.
 #include "DarwinProcess.h"
 #include "DarwinProcessList.h"
 #include "CRT.h"
+#include "zfs/ZfsArcStats.h"
+#include "zfs/openzfs_sysctl.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -54,6 +56,7 @@ int CompareKernelVersion(short int major, short int minor, short int component) 
 
 /*{
 #include "ProcessList.h"
+#include "zfs/ZfsArcStats.h"
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
 
@@ -67,6 +70,8 @@ typedef struct DarwinProcessList_ {
    uint64_t kernel_threads;
    uint64_t user_threads;
    uint64_t global_diff;
+
+   ZfsArcStats zfs;
 } DarwinProcessList;
 
 }*/
@@ -131,8 +136,8 @@ struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
    return processes;
 }
 
-
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+   size_t len;
    DarwinProcessList* this = xCalloc(1, sizeof(DarwinProcessList));
 
    ProcessList_init(&this->super, Class(Process), usersTable, pidWhiteList, userId);
@@ -144,6 +149,10 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    /* Initialize the VM statistics */
    ProcessList_getVMStats(&this->vm_stats);
+
+   /* Initialize the ZFS kstats, if zfs.kext loaded */
+   openzfs_sysctl_init(&this->zfs);
+   openzfs_sysctl_updateArcStats(&this->zfs);
 
    this->super.kernelThreads = 0;
    this->super.userlandThreads = 0;
@@ -173,6 +182,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     dpl->prev_load = dpl->curr_load;
     ProcessList_allocateCPULoadInfo(&dpl->curr_load);
     ProcessList_getVMStats(&dpl->vm_stats);
+    openzfs_sysctl_updateArcStats(&dpl->zfs);
 
     /* Get the time difference */
     dpl->global_diff = 0;
