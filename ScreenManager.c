@@ -191,7 +191,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       ch = getch();
 
       HandlerResult result = IGNORED;
-      if (ch == KEY_MOUSE) {
+      if (ch == KEY_MOUSE && this->settings->enableMouse) {
          ch = ERR;
          MEVENT mevent;
          int ok = getmouse(&mevent);

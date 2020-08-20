@@ -39,6 +39,7 @@ static void printHelpFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
          "Released under the GNU GPL.\n\n"
          "-C --no-color               Use a monochrome color scheme\n"
+         "-m --no-mouse               Disable the mouse\n"
          "-d --delay=DELAY            Set the delay between updates, in tenths of seconds\n"
          "-h --help                   Print this help screen\n"
          "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
@@ -62,6 +63,7 @@ typedef struct CommandLineSettings_ {
    int sortKey;
    int delay;
    bool useColors;
+   bool enableMouse;
    bool treeView;
 } CommandLineSettings;
 
@@ -73,6 +75,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .sortKey = 0,
       .delay = -1,
       .useColors = true,
+      .enableMouse = true,
       .treeView = false,
    };
 
@@ -85,6 +88,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"user",     optional_argument,   0, 'u'},
       {"no-color", no_argument,         0, 'C'},
       {"no-colour",no_argument,         0, 'C'},
+      {"no-mouse", no_argument,         0, 'm'},
       {"tree",     no_argument,         0, 't'},
       {"pid",      required_argument,   0, 'p'},
       {0,0,0,0}
@@ -92,7 +96,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvCs:td:u::p:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvmCs:td:u::p:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -139,6 +143,9 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             break;
          case 'C':
             flags.useColors = false;
+            break;
+         case 'm':
+            flags.enableMouse = false;
             break;
          case 't':
             flags.treeView = true;
@@ -213,6 +220,8 @@ int main(int argc, char** argv) {
       settings->delay = flags.delay;
    if (!flags.useColors)
       settings->colorScheme = COLORSCHEME_MONOCHROME;
+   if (!flags.enableMouse)
+      settings->enableMouse = false;
    if (flags.treeView)
       settings->treeView = true;
 

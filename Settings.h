@@ -49,6 +49,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool enableMouse;
 
    bool changed;
 } Settings;

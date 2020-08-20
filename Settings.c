@@ -58,6 +58,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool enableMouse;
 
    bool changed;
 } Settings;
@@ -232,6 +233,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
       } else if (String_eq(option[0], "color_scheme")) {
          this->colorScheme = atoi(option[1]);
          if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) this->colorScheme = 0;
+     } else if (String_eq(option[0], "enable_mouse")) {
+         this->enableMouse = atoi(option[1]);
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
          didReadMeters = true;
@@ -315,6 +318,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
    fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
    fprintf(fd, "color_scheme=%d\n", (int) this->colorScheme);
+   fprintf(fd, "enable_mouse=%d\n", (int) this->enableMouse);
    fprintf(fd, "delay=%d\n", (int) this->delay);
    fprintf(fd, "left_meters="); writeMeters(this, fd, 0);
    fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
@@ -390,6 +394,7 @@ Settings* Settings_new(int cpuCount) {
       CRT_restorePrivileges();
    }
    this->colorScheme = 0;
+   this->enableMouse = true;
    this->changed = false;
    this->delay = DEFAULT_DELAY;
    bool ok = false;
