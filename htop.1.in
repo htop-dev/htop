@@ -3,7 +3,8 @@
 htop \- interactive process viewer
 .SH "SYNOPSIS"
 .LP 
-.B htop [\fI\-dChustv\fR]
+.B htop
+.RB [ \-dChpustv ]
 .SH "DESCRIPTION"
 .LP 
 .B htop
