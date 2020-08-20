@@ -47,6 +47,8 @@ typedef struct CPUData_ {
    unsigned long long int softIrqPeriod;
    unsigned long long int stealPeriod;
    unsigned long long int guestPeriod;
+
+   double frequency;
 } CPUData;
 
 typedef struct TtyDriver_ {
@@ -71,6 +73,10 @@ typedef struct LinuxProcessList_ {
 
 #ifndef PROCDIR
 #define PROCDIR "/proc"
+#endif
+
+#ifndef PROCCPUINFOFILE
+#define PROCCPUINFOFILE PROCDIR "/cpuinfo"
 #endif
 
 #ifndef PROCSTATFILE

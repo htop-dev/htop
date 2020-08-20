@@ -97,6 +97,8 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Count CPUs from 0 instead of 1"), &(settings->countCPUsFromZero)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Update process names on every refresh"), &(settings->updateProcessNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Also show CPU percentage numerically"), &(settings->showCPUUsage)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Also show CPU frequency"), &(settings->showCPUFrequency)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Enable the mouse"), &(settings->enableMouse)));
    return this;
 }

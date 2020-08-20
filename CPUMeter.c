@@ -28,7 +28,8 @@ typedef enum {
    CPU_METER_STEAL = 5,
    CPU_METER_GUEST = 6,
    CPU_METER_IOWAIT = 7,
-   CPU_METER_ITEMCOUNT = 8, // number of entries in this enum
+   CPU_METER_FREQUENCY = 8,
+   CPU_METER_ITEMCOUNT = 9, // number of entries in this enum
 } CPUMeterValues;
 
 }*/
@@ -63,7 +64,30 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
    }
    memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
    double percent = Platform_setCPUValues(this, cpu);
-   xSnprintf(buffer, size, "%5.1f%%", percent);
+   if (this->pl->settings->showCPUFrequency) {
+      /* Initial frequency is in MHz. Emit it as GHz if it's larger than 1000MHz */
+      double cpuFrequency = this->values[CPU_METER_FREQUENCY];
+      char unit = 'M';
+      char cpuFrequencyBuffer[16];
+      if (cpuFrequency < 0) {
+         xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A");
+      } else {
+         if (cpuFrequency > 1000) {
+            cpuFrequency /= 1000;
+            unit = 'G';
+         }
+         xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "%.3f%cHz", cpuFrequency, unit);
+      }
+      if (this->pl->settings->showCPUUsage) {
+         xSnprintf(buffer, size, "%5.1f%% %s", percent, cpuFrequencyBuffer);
+      } else {
+         xSnprintf(buffer, size, "%s", cpuFrequencyBuffer);
+      }
+   } else if (this->pl->settings->showCPUUsage) {
+      xSnprintf(buffer, size, "%5.1f%%", percent);
+   } else if (size > 0) {
+      buffer[0] = '\0';
+   }
 }
 
 static void CPUMeter_display(Object* cast, RichString* out) {

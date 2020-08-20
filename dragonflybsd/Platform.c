@@ -179,6 +179,9 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
    percent = CLAMP(percent, 0.0, 100.0);
    if (isnan(percent)) percent = 0.0;
+
+   v[CPU_METER_FREQUENCY] = -1;
+
    return percent;
 }
 

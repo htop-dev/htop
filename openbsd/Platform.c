@@ -170,6 +170,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_STEAL]   = 0.0;
       v[CPU_METER_GUEST]   = 0.0;
       v[CPU_METER_IOWAIT]  = 0.0;
+      v[CPU_METER_FREQUENCY] = -1;
       Meter_setItems(this, 8);
       totalPercent = v[0]+v[1]+v[2]+v[3];
    } else {
