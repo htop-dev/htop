@@ -56,7 +56,7 @@ static const char* const InfoScreenKeys[] = {"F3", "F4", "F5", "Esc"};
 
 static int InfoScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(5), 27};
 
-InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar, int height, char* panelHeader) {
+InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar, int height, const char* panelHeader) {
    this->process = process;
    if (!bar) {
       bar = FunctionBar_new(InfoScreenFunctions, InfoScreenKeys, InfoScreenEvents);
@@ -75,7 +75,7 @@ InfoScreen* InfoScreen_done(InfoScreen* this) {
    return this;
 }
 
-void InfoScreen_drawTitled(InfoScreen* this, char* fmt, ...) {
+void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
    va_list ap;
    va_start(ap, fmt);
    attrset(CRT_colors[METER_TEXT]);
