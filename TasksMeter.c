@@ -37,9 +37,9 @@ static void TasksMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
    Settings* settings = this->pl->settings;
    char buffer[20];
-   
+
    int processes = (int) this->values[2];
-   
+
    xSnprintf(buffer, sizeof(buffer), "%d", processes);
    RichString_write(out, CRT_colors[METER_VALUE], buffer);
    int threadValueColor = CRT_colors[METER_VALUE];
@@ -76,7 +76,7 @@ MeterClass TasksMeter_class = {
    .defaultMode = TEXT_METERMODE,
    .maxItems = 4,
    .total = 100.0,
-   .attributes = TasksMeter_attributes, 
+   .attributes = TasksMeter_attributes,
    .name = "Tasks",
    .uiName = "Task counter",
    .caption = "Tasks: "

@@ -56,7 +56,7 @@ static void ColorsPanel_delete(Object* object) {
 
 static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    ColorsPanel* this = (ColorsPanel*) super;
-   
+
    HandlerResult result = IGNORED;
    int mark = Panel_getSelectedIndex(super);
 

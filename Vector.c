@@ -195,7 +195,7 @@ void Vector_insert(Vector* this, int idx, void* data_) {
    if (idx > this->items) {
       idx = this->items;
    }
-   
+
    Vector_checkArraySize(this);
    //assert(this->array[this->items] == NULL);
    for (int i = this->items; i > idx; i--) {
@@ -302,7 +302,7 @@ inline int Vector_size(Vector* this) {
 static void Vector_merge(Vector* this, Vector* v2) {
    int i;
    assert(Vector_isConsistent(this));
-   
+
    for (i = 0; i < v2->items; i++)
       Vector_add(this, v2->array[i]);
    v2->items = 0;

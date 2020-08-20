@@ -52,7 +52,7 @@ static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, M
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
    Header* header = this->header;
-   
+
    ListItem* selected = (ListItem*) Panel_getSelected(super);
    int param = selected->key & 0xff;
    int type = selected->key >> 16;
@@ -104,7 +104,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_newEnterEsc("Add   ", "Done   ");
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
-   
+
    this->settings = settings;
    this->header = header;
    this->leftPanel = leftMeters;

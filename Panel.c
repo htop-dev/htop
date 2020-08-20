@@ -372,7 +372,7 @@ void Panel_draw(Panel* this, bool focus) {
 
 bool Panel_onKey(Panel* this, int key) {
    assert (this != NULL);
-   
+
    int size = Vector_size(this->items);
    switch (key) {
    case KEY_DOWN:
@@ -455,7 +455,7 @@ bool Panel_onKey(Panel* this, int key) {
    if (this->selected < 0 || size == 0) {
       this->selected = 0;
       this->needsRedraw = true;
-   } else if (this->selected >= size) {   
+   } else if (this->selected >= size) {
       this->selected = size - 1;
       this->needsRedraw = true;
    }

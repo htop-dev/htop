@@ -14,3 +14,4 @@ charset = utf-8
 [*.{c,h}]
 indent_style = space
 indent_size = 3
+trim_trailing_whitespace = true

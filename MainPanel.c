@@ -65,7 +65,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    MainPanel* this = (MainPanel*) super;
 
    HandlerResult result = IGNORED;
-   
+
    Htop_Reaction reaction = HTOP_OK;
 
    if (EVENT_IS_HEADER_CLICK(ch)) {
@@ -80,7 +80,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       } else {
          reaction |= Action_setSortKey(settings, field);
       }
-      reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS; 
+      reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS;
       result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
@@ -117,7 +117,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    }
    if (reaction & HTOP_REFRESH) {
       result |= REDRAW;
-   }      
+   }
    if (reaction & HTOP_RECALCULATE) {
       result |= RESCAN;
    }

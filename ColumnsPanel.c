@@ -40,7 +40,7 @@ static void ColumnsPanel_delete(Object* object) {
 
 static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    ColumnsPanel* const this = (ColumnsPanel*) super;
-   
+
    int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
    int size = Panel_size(super);
@@ -87,7 +87,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case ']':
       case '+':
       {
-         if (selected < size - 2) 
+         if (selected < size - 2)
             Panel_moveSelectedDown(super);
          result = HANDLED;
          break;

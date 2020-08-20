@@ -84,10 +84,10 @@ ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable*
    this->usersTable = usersTable;
    this->pidWhiteList = pidWhiteList;
    this->userId = userId;
-   
+
    // tree-view auxiliary buffer
    this->processes2 = Vector_new(klass, true, DEFAULT_SIZE);
-   
+
    // set later by platform-specific code
    this->cpuCount = 0;
 
@@ -138,10 +138,10 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
 void ProcessList_add(ProcessList* this, Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
    assert(Hashtable_get(this->processTable, p->pid) == NULL);
-   
+
    Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
-   
+
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
@@ -353,7 +353,7 @@ void ProcessList_scan(ProcessList* this) {
    this->runningTasks = 0;
 
    ProcessList_goThroughEntries(this);
-   
+
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
       if (p->updated == false)

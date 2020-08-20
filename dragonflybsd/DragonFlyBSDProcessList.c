@@ -565,7 +565,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if (kproc->kp_flags & P_JAILED) {
          proc->state = 'J';
       }
-      
+
       if (Process_isKernelThread(dfp)) {
          this->kernelThreads++;
       }

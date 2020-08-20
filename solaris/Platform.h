@@ -27,7 +27,7 @@ typedef struct var kvar_t;
 typedef struct envAccum_ {
    size_t capacity;
    size_t size;
-   size_t bytes; 
+   size_t bytes;
    char *env;
 } envAccum;
 
