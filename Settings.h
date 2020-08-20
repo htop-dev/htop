@@ -52,6 +52,7 @@ typedef struct Settings_ {
    bool accountGuestInCPUMeter;
    bool headerMargin;
    bool enableMouse;
+   bool vimMode;
 
    bool changed;
 } Settings;
