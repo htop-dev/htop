@@ -1,5 +1,11 @@
 What's new in version 3.0.0
 
+* New maintainers - after a prolonged period of inactivity
+  from Hisham, the creator and original maintainer, a team
+  of community maintainers have volunteered to take over a
+  fork at https://htop.dev and https://github.com/htop-dev
+  to keep the project going.
+
 * Support ZFS ARC statistics
   (thanks to Ross Williams)
 * Support more than 2 smaller CPU meter columns
