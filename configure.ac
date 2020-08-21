@@ -295,6 +295,9 @@ then
    ])
 fi
 
+AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as errors (default: warnings are not errors)])], [enable_werror="$enableval"], [enable_werror=no])
+AS_IF([test "x$enable_werror" = "xyes"], [AM_CFLAGS="$AM_CFLAGS -Werror"])
+AC_SUBST([AM_CFLAGS])
 
 # Bail out on errors.
 # ----------------------------------------------------------------------
