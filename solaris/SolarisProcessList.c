@@ -419,4 +419,3 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    this->kernelThreads = 1;
    proc_walk(&SolarisProcessList_walkproc, this, PR_WALK_LWP);
 }
-

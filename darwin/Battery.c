@@ -72,4 +72,3 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
       CFRelease(power_sources);
    }
 }
-

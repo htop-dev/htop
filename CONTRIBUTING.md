@@ -52,5 +52,4 @@ Donations
 ---------
 
 If you like htop, feel free to [buy the author a
-beer](http://hisham.hm/htop/index.php?page=donate). :-) 
-
+beer](http://hisham.hm/htop/index.php?page=donate). :-)

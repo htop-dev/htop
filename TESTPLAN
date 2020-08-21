@@ -4,47 +4,47 @@ Main screen:
    For all views, all modes:
 
       Mouse click header - nothing happens.
-      
+
       Mouse click on ProcessList title bar - exit Tree view, update FunctionBar, title bar updates, sort by clicked field.
 *** FAILING: wrong FB update depending on mode; does not change sort in wip branch
          click on same entry - invert sort.
             click on another entry - sort another field.
-      
+
       Mouse click on a process - select that process.
-      
+
       for each entry in FunctionBar:
          Mouse click entry - perform action of associated key.
-      
+
    In Normal mode, Sorted view:
-   
+
       <+> or <-> - do nothing.
-      
+
       <F6> - enter SortBy screen.
-   
+
    In Normal mode, Tree view:
 
       select process - update F6 in FunctionBar if subtree is collapsed or expanded.
-      
+
       <F6>, <+> or <-> - expand/collapse subtree.
-   
+
    In Normal mode, either Sorted or Tree view:
 
       <F3>, </> - activate Search mode.
-   
+
       <F4>, <\> - activate Filter mode.
 
       <F7>, <]> - as root only, decrease process NICE value.
-      
+
       <F8>, <[> - increase process NICE value.
 
       <a> - enter Affinity screen.
 
       <b> - do nothing.
-      
+
       <c> - select process and all its children.
-      
+
       <d>, <e>, <f>, <g> - do nothing.
-      
+
       <F1>, <h>, <?> - enter Help screen.
 
       <i> - on Linux, enter IOPriority screen.
@@ -64,67 +64,67 @@ Main screen:
       <s> - enter STrace screen.
 
       <F5>, <t> - toggle between Tree and Sorted view, update F5 in FunctionBar, follow process
-      
+
       <u> - enter User screen.
 
       <v>, <w>, <x>, <y>, <z> - do nothing.
-      
+
       <A>, <B> - do nothing.
-      
+
       <F2>, <C>, <S> - enter Setup screen.
 
       <D>, <E> - do nothing.
-      
+
       <F> - follow process.
 
       <G> - do nothing.
-      
+
       <H> - toggle show/hide userland threads.
-      
+
       <I> - invert sort order.
-      
+
       <J> - do nothing.
-      
+
       <K> - toggle show/hide kernel threads.
 
       <L> - do nothing.
 
       <M> - enter Sorted view, update function bar, sort by MEM%.
-      
+
       <N>, <O> - do nothing.
 
       <P> - enter Sorted view, update function bar, sort by CPU%.
 
       <Q>, <R> - do nothing.
-      
+
       <T> - enter Sorted view, update function bar, sort by TIME.
-      
+
       <U> - untag all processes.
-      
+
       <V>, <W>, <X>, <Y>, <Z> - do nothing.
-      
+
       <<>, <>>, <,>, <.> - enter SortBy screen.
-      
+
       space - tag current process, move down cursor.
 
       numbers - incremental PID search.
-   
+
    In Search mode:
 
       TODO
-  
+
    In Filter mode:
-   
+
       TODO
 
 Setup screen:
 
    TODO
-   
+
 SortBy screen:
 
    TODO
-   
+
 User screen:
 
    TODO
@@ -136,7 +136,7 @@ Kill screen:
 Affinity screen:
 
    TODO
-   
+
 Help screen:
 
    any key - back to Main screen.
@@ -152,4 +152,3 @@ STrace screen:
 LSOF screen:
 
    TODO
-   

@@ -400,4 +400,3 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    OpenBSDProcessList_scanProcs(opl);
    OpenBSDProcessList_scanCPUTime(opl);
 }
-

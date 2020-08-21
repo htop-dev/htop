@@ -30,4 +30,3 @@ void UnsupportedProcess_delete(Object* cast) {
    // free platform-specific fields here
    free(this);
 }
-

@@ -32,4 +32,3 @@ void CRT_handleSIGSEGV(int sgn) {
    #endif
    abort();
 }
-

@@ -223,7 +223,7 @@ else
       HTOP_CHECK_LIB([ncurses],  [refresh], [HAVE_LIBNCURSES],
       missing_libraries="$missing_libraries libncurses"
    ))))
-   
+
    AC_CHECK_HEADERS([curses.h],[:],
       [AC_CHECK_HEADERS([ncurses/curses.h],[:],
          [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
