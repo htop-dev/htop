@@ -822,11 +822,11 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
       struct stat sstat;
       char* fullPath;
       for(;;) {
-         asprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
+         xAsprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
          int err = stat(fullPath, &sstat);
          if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) return fullPath;
          free(fullPath);
-         asprintf(&fullPath, "%s%d", ttyDrivers[i].path, idx);
+         xAsprintf(&fullPath, "%s%d", ttyDrivers[i].path, idx);
          err = stat(fullPath, &sstat);
          if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) return fullPath;
          free(fullPath);
@@ -837,7 +837,7 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
       if (err == 0 && tty_nr == sstat.st_rdev) return strdup(ttyDrivers[i].path);
    }
    char* out;
-   asprintf(&out, "/dev/%u:%u", maj, min);
+   xAsprintf(&out, "/dev/%u:%u", maj, min);
    return out;
 }
 
