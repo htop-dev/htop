@@ -20,3 +20,5 @@ typedef struct ZfsArcStats_ {
    unsigned long long int uncompressed;
 } ZfsArcStats;
 }*/
+
+static int make_iso_compilers_happy __attribute__((unused));
