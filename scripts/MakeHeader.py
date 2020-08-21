@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-import os, sys, string, io
+#!/usr/bin/env python3
+import os, sys, io
 try:
    from StringIO import StringIO
 except ImportError:
