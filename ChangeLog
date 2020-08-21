@@ -1,3 +1,58 @@
+What's new in version 3.0.0
+
+* Support ZFS ARC statistics
+  (thanks to Ross Williams)
+* Support more than 2 smaller CPU meter columns
+  (thanks to Christoph Budziszewski)
+* Support Linux proportional set size metrics
+  (thanks to @linvinus, @ntninja and @himikof)
+* Support Linux pressure stall information metrics
+  (thanks to Ran Benita)
+* New display option to show CPU frequency in CPU meters
+  (thanks to Arnav Singh)
+* Update Linux sysfs battery discovery for recent kernels
+  (thanks to @smattie)
+* Add timestamp reporting to the strace screen
+  (thanks to Mario Harjac)
+* Add simple, optional vim key mapping mode
+  (thanks to Daniel Flanagan)
+* Added an option to disable the mouse
+  (thanks to MartinJM)
+* Add Solaris11 compatibility
+  (thanks to Jan Senolt)
+* Without an argument -u uses $USER value automatically
+  (thanks to @solanav)
+* Support less(1) search navigation shortcuts
+  (thanks to @syrrim)
+* Update the FreeBSD maximum PID to match FreeBSD change
+  (thanks to @multiplexd)
+* Report values larger than 100 terabytes
+  (thanks to @adrien1018)
+* Widen ST_UID (UID) column to allow for UIDs > 9999
+  (thanks to DLange)
+* BUGFIX: fix makefiles for building with clang
+  (thanks to Jorge Pereira)
+* BUGFIX: fix <sys/sysmacros.h> major() usage
+  (thanks to @wataash and Kang-Che Sung)
+* BUGFIX: fix the STARTTIME column on FreeBSD
+  (thanks to Rob Crowston)
+* BUGFIX: truncate overwide jail names on FreeBSD
+  (thanks to Rob Crowston)
+* BUGFIX: fix reported memory values on FreeBSD
+  (thanks to Tobias Kortkamp)
+* BUGFIX: fix reported CPU meter values on OpenBSD
+  (thanks to @motet-a)
+* BUGFIX: correctly identify other types of zombie process
+  (thanks to @joder)
+* BUGFIX: improve follow-process handling in some situations
+  (thanks to @wangqr)
+* BUGFIX: fix custom meters reverting to unexpected setting
+  (thanks to @wangqr)
+* BUGFIX: close pipe after running lsof(1)
+  (thanks to Jesin)
+* BUGFIX: meters honour setting of counting CPUs from 0/1
+  (thanks to @rnsanchez)
+
 What's new in version 2.2.0
 
 * Solaris/Illumos/OpenIndiana support
