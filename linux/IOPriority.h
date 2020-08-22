@@ -39,5 +39,4 @@ typedef int IOPriority;
 #define IOPriority_Idle IOPriority_tuple(IOPRIO_CLASS_IDLE, 7)
 
 
-
 #endif

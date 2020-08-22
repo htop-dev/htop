@@ -28,5 +28,4 @@ extern int ColumnsPanel_fieldNameToIndex(const char* name);
 
 extern void ColumnsPanel_update(Panel* super);
 
-
 #endif

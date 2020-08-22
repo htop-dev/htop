@@ -17,5 +17,4 @@ extern Panel* IOPriorityPanel_new(IOPriority currPrio);
 
 extern IOPriority IOPriorityPanel_getIOPriority(Panel* this);
 
-
 #endif
