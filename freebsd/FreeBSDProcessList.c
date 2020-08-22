@@ -325,17 +325,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    cachedMem *= pageSizeKb;
    pl->cachedMem = cachedMem;
 
-   if (fpl->zfsArcEnabled) {
-      len = sizeof(memZfsArc);
-      sysctl(MIB_kstat_zfs_misc_arcstats_size, 5, &(memZfsArc), &len , NULL, 0);
-      memZfsArc /= 1024;
-      fpl->memZfsArc = memZfsArc;
-      fpl->memWire -= fpl->memZfsArc;
-      pl->cachedMem += fpl->memZfsArc;
-      // maybe when we learn how to make custom memory meter
-      // we could do custom arc breakdown?
-    }
-
    if (fpl->zfs.enabled) {
       fpl->memWire -= fpl->zfs.size;
       pl->cachedMem += fpl->zfs.size;
