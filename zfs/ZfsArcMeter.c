@@ -93,7 +93,7 @@ MeterClass ZfsArcMeter_class = {
       .delete = Meter_delete,
       .display = ZfsArcMeter_display,
    },
-   .updateValues = ZfsArcMeter_updateValues, 
+   .updateValues = ZfsArcMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 6,
    .total = 100.0,

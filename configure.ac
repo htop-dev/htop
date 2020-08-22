@@ -223,7 +223,7 @@ else
       HTOP_CHECK_LIB([ncurses],  [refresh], [HAVE_LIBNCURSES],
       missing_libraries="$missing_libraries libncurses"
    ))))
-   
+
    AC_CHECK_HEADERS([curses.h],[:],
       [AC_CHECK_HEADERS([ncurses/curses.h],[:],
          [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
@@ -295,6 +295,9 @@ then
    ])
 fi
 
+AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as errors (default: warnings are not errors)])], [enable_werror="$enableval"], [enable_werror=no])
+AS_IF([test "x$enable_werror" = "xyes"], [AM_CFLAGS="$AM_CFLAGS -Werror"])
+AC_SUBST([AM_CFLAGS])
 
 # Bail out on errors.
 # ----------------------------------------------------------------------

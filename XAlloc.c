@@ -14,7 +14,7 @@
 #include <stdlib.h>
 }*/
 
-static inline void fail() {
+void fail() {
    curs_set(1);
    endwin();
    err(1, NULL);
@@ -43,6 +43,10 @@ void* xRealloc(void* ptr, size_t size) {
    }
    return data;
 }
+
+#undef xAsprintf
+
+#define xAsprintf(strp, fmt, ...) do { int _r=asprintf(strp, fmt, __VA_ARGS__); if (_r < 0) { fail(); } } while(0)
 
 #define xSnprintf(fmt, len, ...) do { int _l=len; int _n=snprintf(fmt, _l, __VA_ARGS__); if (!(_n > -1 && _n < _l)) { curs_set(1); endwin(); err(1, NULL); } } while(0)
 

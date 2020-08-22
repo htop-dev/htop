@@ -85,4 +85,3 @@ long ListItem_compare(const void* cast1, const void* cast2) {
    ListItem* obj2 = (ListItem*) cast2;
    return strcmp(obj1->value, obj2->value);
 }
-

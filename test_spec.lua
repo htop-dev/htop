@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 local VISUALDELAY = os.getenv("VISUALDELAY")
- 
+
 local visual = VISUALDELAY or false
 local visual_delay = VISUALDELAY and (tonumber(VISUALDELAY)) or 0.1
 local short_delay = 0.3
@@ -70,7 +70,7 @@ local function show(key)
          term_win:mvaddstr(0, 0, tostring(key))
       end
       term_win:refresh()
-      
+
       delay(visual_delay)
    end
 end
@@ -191,7 +191,7 @@ local function set_display_option(n)
 end
 
 describe("htop test suite", function()
-   
+
    running_it("performs incremental filter", function()
       send("\\")
       send("x\127bux\127sted") -- test backspace
@@ -397,13 +397,13 @@ describe("htop test suite", function()
          assert.not_equal(pair[1], pair[2])
       end
    end)
-   
+
    running_it("visits each setup screen", function()
       send("S")
       send(curses.KEY_DOWN, 3)
       send(curses.KEY_F10)
    end)
-   
+
    running_it("adds and removes PPID column", function()
       send("S")
       send(curses.KEY_DOWN, 3)
@@ -423,7 +423,7 @@ describe("htop test suite", function()
       assert.equal(check(ppid))
       assert.not_equal(check(not_ppid))
    end)
-   
+
    running_it("changes CPU affinity for a process", function()
       send("a")
       send(" \n")
@@ -468,7 +468,7 @@ describe("htop test suite", function()
       assert.equal(check(zerocpu))
       assert.not_equal(check(nonzerocpu))
    end)
-   
+
    running_it("changes IO priority for a process", function()
       send("/")
       send("htop")
@@ -502,7 +502,7 @@ describe("htop test suite", function()
       send("\n")
       send(curses.KEY_F10)
    end)
-   
+
    local meters = {
       { name = "clock", down = 0, string = "Time" },
       { name = "load", down = 2, string = "Load" },
@@ -558,7 +558,7 @@ describe("htop test suite", function()
       send("\n")
       send(curses.KEY_F10)
    end)
-   
+
    local display_options = {
       { name = "tree view", down = 0 },
       { name = "shadow other user's process", down = 1 },
@@ -574,7 +574,7 @@ describe("htop test suite", function()
       { name = "update process names", down = 11 },
       { name = "guest time in CPU%", down = 12 },
    }
-   
+
    for _, item in ipairs(display_options) do
       running_it("checks display option to "..item.name, function()
          for _ = 1, 2 do
@@ -641,7 +641,7 @@ describe("htop test suite", function()
          assert.equal(attrs.white_on_black, untaggedattr)
       end
    end)
-   
+
    for i = 1, 62 do
       running_it("show column "..i, function()
          send("S")
@@ -670,7 +670,7 @@ describe("htop test suite", function()
          end
       end)
    end
-   
+
    it("finally quits", function()
       assert(not terminated())
       send("q")
@@ -685,4 +685,3 @@ describe("htop test suite", function()
       os.execute("make lcov && xdg-open lcov/index.html")
    end)
 end)
-

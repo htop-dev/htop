@@ -18,4 +18,3 @@ void CRT_handleSIGSEGV(int sgn) {
    fprintf(stderr, "\nPlease contact your platform package maintainer!\n\n");
    abort();
 }
-

@@ -219,7 +219,7 @@ What's new in version 1.0.2
 What's new in version 1.0.1
 
 * Move .htoprc to XDG-compliant path ~/.config/htop/htoprc,
-  respecting $XDG_CONFIG_HOME 
+  respecting $XDG_CONFIG_HOME
   (thanks to Hadzhimurad Ustarkhan for the suggestion.)
 * Safer behavior on the kill screen, to make it harder to kill the wrong process.
 * Fix for building in FreeBSD 8.2
@@ -607,7 +607,7 @@ What's new in version 0.3.1
 
 What's new in version 0.3
 
-* BUGFIX: no dirt left on screen on horizontal scrolling 
+* BUGFIX: no dirt left on screen on horizontal scrolling
 * Signal selection on "kill" command
 * Color-coding for users, nice and process status
 * "Follow" function

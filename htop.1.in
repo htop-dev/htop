@@ -2,11 +2,11 @@
 .SH "NAME"
 htop \- interactive process viewer
 .SH "SYNOPSIS"
-.LP 
+.LP
 .B htop
 .RB [ \-dChpustv ]
 .SH "DESCRIPTION"
-.LP 
+.LP
 .B htop
 is a cross-platform ncurses-based process viewer.
 .LP
@@ -20,11 +20,11 @@ multiple processes and acting on them all at once.
 .LP
 Tasks related to processes (killing, renicing) can be done without
 entering their PIDs.
-.br 
+.br
 .SH "COMMAND-LINE OPTIONS"
 .LP
 Mandatory arguments to long options are mandatory for short options too.
-.LP 
+.LP
 .TP
 \fB\-d \-\-delay=DELAY\fR
 Delay between updates, in tenths of seconds. If the delay value is
@@ -54,10 +54,10 @@ Output version information and exit
 \fB\-t \-\-tree
 Show processes in tree view
 .SH "INTERACTIVE COMMANDS"
-.LP 
+.LP
 The following commands are supported while in
 .BR htop :
-.LP 
+.LP
 .TP 5
 .B Up, Alt-k
 Select (highlight) the previous process in the process list. Scroll the list
@@ -159,7 +159,7 @@ Quit
 Invert the sort order: if sort order is increasing, switch to decreasing, and
 vice-versa.
 .TP
-.B +, \- 
+.B +, \-
 When in tree view mode, expand or collapse subtree. When a subtree is collapsed
 a "+" sign shows to the left of the process name.
 .TP
@@ -203,7 +203,7 @@ Refresh: redraw screen and recalculate values.
 PID search: type in process ID and the selection highlight will be moved to it.
 .PD
 .SH "COLUMNS"
-.LP 
+.LP
 The following columns can display data about each process. A value of '\-' in
 all the rows indicates that a column is unsupported on your system, or
 currently unimplemented in
@@ -213,11 +213,11 @@ The names below are the ones used in the
 shown in
 .BR htop 's
 main screen, it is shown below in parenthesis.
-.LP 
+.LP
 .TP 5
 .B Command
 The full command line of the process (i.e. program name and arguments).
-.TP 
+.TP
 .B PID
 The process ID.
 .TP
@@ -238,7 +238,7 @@ The process's group ID.
 .TP
 .B SESSION (SID)
 The process's session ID.
-.TP 
+.TP
 .B TTY_NR (TTY)
 The controlling terminal of the process.
 .TP
@@ -401,7 +401,7 @@ The percentage of time spent swapping in pages. Requires CAP_NET_ADMIN.
 .B All other flags
 Currently unsupported (always displays '-').
 .SH "CONFIG FILE"
-.LP 
+.LP
 By default
 .B htop
 reads its configuration from the XDG-compliant path
@@ -437,7 +437,7 @@ space and make memory size representations consistent throughout
 and
 .BR limits.conf (5).
 .SH "AUTHORS"
-.LP 
+.LP
 .B htop
 was originally developed by Hisham Muhammad.
 Nowadays it is maintained by the community at <htop@groups.io>.

@@ -615,4 +615,3 @@ void Action_setBindings(Htop_Action* keys) {
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
 }
-

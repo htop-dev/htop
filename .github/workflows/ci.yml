@@ -1,22 +1,22 @@
 name: CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [ push, pull_request ]
 
 jobs:
   build-ubuntu-latest:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Install Dependencies
+      run: sudo apt-get install libncursesw5-dev
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --enable-werror
     - name: Build
-      run: |
-        sudo apt-get install libncursesw5-dev
-        ./autogen.sh
-        ./configure
-        make
+      run: make
+    - name: Distcheck
+      run: make distcheck
 
 #  build-macos-latest:
 #    runs-on: macos-latest
@@ -27,3 +27,12 @@ jobs:
 #        ./autogen.sh
 #        ./configure
 #        make
+
+  whitespace_check:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: check-whitespaces
+        run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD

@@ -164,4 +164,3 @@ void ColumnsPanel_update(Panel* super) {
    }
    this->settings->fields[size] = 0;
 }
-

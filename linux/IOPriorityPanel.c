@@ -41,4 +41,3 @@ Panel* IOPriorityPanel_new(IOPriority currPrio) {
 IOPriority IOPriorityPanel_getIOPriority(Panel* this) {
    return (IOPriority) ( ((ListItem*) Panel_getSelected(this))->key );
 }
-
