@@ -93,12 +93,19 @@ ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable*
 
 #ifdef HAVE_LIBHWLOC
    this->topologyOk = false;
-   int topoErr = hwloc_topology_init(&this->topology);
-   if (topoErr == 0) {
-      topoErr = hwloc_topology_load(this->topology);
-   }
-   if (topoErr == 0) {
-      this->topologyOk = true;
+   if (hwloc_topology_init(&this->topology) == 0) {
+      this->topologyOk =
+         #if HWLOC_API_VERSION < 0x00020000
+         /* try to ignore the top-level machine object type */
+         0 == hwloc_topology_ignore_type_keep_structure(this->topology, HWLOC_OBJ_MACHINE) &&
+         /* ignore caches, which don't add structure */
+         0 == hwloc_topology_ignore_type_keep_structure(this->topology, HWLOC_OBJ_CORE) &&
+         0 == hwloc_topology_ignore_type_keep_structure(this->topology, HWLOC_OBJ_CACHE) &&
+         0 == hwloc_topology_set_flags(this->topology, HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM) &&
+         #else
+         0 == hwloc_topology_set_all_types_filter(this->topology, HWLOC_TYPE_FILTER_KEEP_STRUCTURE) &&
+         #endif
+         0 == hwloc_topology_load(this->topology);
    }
 #endif
 
