@@ -299,6 +299,9 @@ AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as er
 AS_IF([test "x$enable_werror" = "xyes"], [AM_CFLAGS="$AM_CFLAGS -Werror"])
 AC_SUBST([AM_CFLAGS])
 
+AC_CHECK_PROGS(PYTHON, [python python3 python2])
+AC_SUBST(PYTHON)
+
 # Bail out on errors.
 # ----------------------------------------------------------------------
 if test ! -z "$missing_libraries"; then
@@ -320,7 +323,7 @@ AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
-AC_CONFIG_FILES([Makefile htop.1])
+AC_CONFIG_FILES([Makefile htop.1 scripts/MakeHeader.py], [chmod +x scripts/MakeHeader.py])
 AC_OUTPUT
 
 if test "$my_htop_platform" = "unsupported"
