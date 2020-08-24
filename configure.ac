@@ -323,7 +323,8 @@ AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
-AC_CONFIG_FILES([Makefile htop.1 scripts/MakeHeader.py], [chmod +x scripts/MakeHeader.py])
+AC_CONFIG_FILES([Makefile htop.1])
+AC_CONFIG_FILES([scripts/MakeHeader.py], [chmod +x scripts/MakeHeader.py])
 AC_OUTPUT
 
 if test "$my_htop_platform" = "unsupported"
