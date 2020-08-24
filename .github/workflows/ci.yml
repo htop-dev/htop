@@ -18,20 +18,8 @@ jobs:
     - name: Distcheck
       run: make distcheck
 
-#  build-macos-latest:
-#    runs-on: macos-latest
-#    steps:
-#    - uses: actions/checkout@v2
-#    - name: make
-#      run: |
-#        ./autogen.sh
-#        ./configure
-#        make
-
   whitespace_check:
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: check-whitespaces
