@@ -88,4 +88,6 @@ extern void Vector_add(Vector* this, void* data_);
 
 extern int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
 
+void Vector_splice(Vector* this, Vector* from);
+
 #endif

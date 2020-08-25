@@ -264,6 +264,14 @@ void Panel_setSelected(Panel* this, int selected) {
    }
 }
 
+void Panel_splice(Panel *this, Vector* from) {
+   assert (this != NULL);
+   assert (from != NULL);
+
+   Vector_splice(this->items, from);
+   this->needsRedraw = true;
+}
+
 void Panel_draw(Panel* this, bool focus) {
    assert (this != NULL);
 

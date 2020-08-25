@@ -335,3 +335,15 @@ inline int Vector_indexOf(Vector* this, void* search_, Object_Compare compare) {
    }
    return -1;
 }
+
+void Vector_splice(Vector* this, Vector* from) {
+   assert(Vector_isConsistent(this));
+   assert(Vector_isConsistent(from));
+   assert(!(this->owner && from->owner));
+
+   int olditmes = this->items;
+   this->items += from->items;
+   Vector_checkArraySize(this);
+   for (int j = 0; j < from->items; j++)
+      this->array[olditmes + j] = from->array[j];
+}

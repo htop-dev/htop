@@ -119,6 +119,8 @@ extern void Panel_setSelected(Panel* this, int selected);
 
 extern void Panel_draw(Panel* this, bool focus);
 
+extern void Panel_splice(Panel *this, Vector* from);
+
 extern bool Panel_onKey(Panel* this, int key);
 
 extern HandlerResult Panel_selectByTyping(Panel* this, int ch);
