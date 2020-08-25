@@ -62,6 +62,9 @@ typedef struct Settings_ {
    bool headerMargin;
    bool enableMouse;
    bool vimMode;
+   #ifdef HAVE_LIBHWLOC
+   bool topologyAffinity;
+   #endif
 
    bool changed;
 } Settings;
@@ -256,6 +259,10 @@ static bool Settings_read(Settings* this, const char* fileName) {
          didReadMeters = true;
       } else if (String_eq(option[0], "vim_mode")) {
          this->vimMode = atoi(option[1]);
+      #ifdef HAVE_LIBHWLOC
+      } else if (String_eq(option[0], "topology_affinity")) {
+         this->topologyAffinity = !!atoi(option[1]);
+      #endif
       }
       String_freeArray(option);
    }
@@ -336,6 +343,9 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
    fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
    fprintf(fd, "vim_mode=%d\n", (int) this->vimMode);
+   #ifdef HAVE_LIBHWLOC
+   fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);
+   #endif
    fclose(fd);
    return true;
 }
@@ -362,6 +372,9 @@ Settings* Settings_new(int cpuCount) {
    this->cpuCount = cpuCount;
    this->showProgramPath = true;
    this->highlightThreads = true;
+   #ifdef HAVE_LIBHWLOC
+   this->topologyAffinity = false;
+   #endif
 
    this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,

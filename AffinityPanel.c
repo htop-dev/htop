@@ -345,7 +345,12 @@ Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity, int* width) {
    this->width = 15;
 
    this->cpuids   = Vector_new(Class(MaskItem), true, DEFAULT_SIZE);
+
+   #ifdef HAVE_LIBHWLOC
+   this->topoView = pl->settings->topologyAffinity;
+   #else
    this->topoView = false;
+   #endif
 
    #ifdef HAVE_LIBHWLOC
    this->allCpuset  = hwloc_topology_get_complete_cpuset(pl->topology);
