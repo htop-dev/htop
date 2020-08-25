@@ -292,6 +292,16 @@ static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
    if (parent)
       Vector_add(parent->children, item);
 
+   if (item->sub_tree && parent && parent->sub_tree == 1) {
+      /* if obj is fully included or fully excluded, collapse the item */
+      hwloc_bitmap_t result = hwloc_bitmap_alloc();
+      hwloc_bitmap_and(result, obj->complete_cpuset, this->workCpuset);
+      int weight = hwloc_bitmap_weight(result);
+      hwloc_bitmap_free(result);
+      if (weight == 0 || weight == (hwloc_bitmap_weight(this->workCpuset) + hwloc_bitmap_weight(obj->complete_cpuset)))
+         item->sub_tree = 2;
+   }
+
    /* "[x] " + "|- " * depth + ("[+] ")? + name */
    unsigned width = (CRT_utf8 ? 2 : 4) + 3 * depth + (item->sub_tree ? (CRT_utf8 ? 2 : 4) : 0) + strlen(buf);
    if (width > this->width)
