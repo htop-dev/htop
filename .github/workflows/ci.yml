@@ -16,7 +16,29 @@ jobs:
     - name: Build
       run: make
     - name: Distcheck
-      run: make distcheck
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS=--enable-werror
+
+  build-ubuntu-clang-latest:
+    runs-on: ubuntu-latest
+    env:
+      CC: clang-10
+    steps:
+    - uses: actions/checkout@v2
+    - name: install clang repo
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
+        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main' -y
+        sudo apt-get update -q
+    - name: Install Dependencies
+      run: sudo apt-get install clang-10 libncursesw5-dev
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --enable-werror
+    - name: Build
+      run: make
+    - name: Distcheck
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS=--enable-werror
 
   whitespace_check:
     runs-on: ubuntu-latest
