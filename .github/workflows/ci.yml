@@ -18,6 +18,21 @@ jobs:
     - name: Distcheck
       run: make distcheck
 
+  build-ubuntu-latest-hwloc:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Dependencies
+      run: sudo apt-get install libncursesw5-dev libhwloc-dev
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --enable-werror --enable-hwloc
+    - name: Build
+      run: make
+    - name: Distcheck
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-hwloc'
+
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
