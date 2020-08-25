@@ -1227,9 +1227,9 @@ static inline double LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
             (sscanf(buffer, "processor: %d", &cpuid) == 1)
          ) {
             if (cpuid < 0 || cpuid > (cpus - 1)) {
-               char buffer[64];
-               xSnprintf(buffer, sizeof(buffer), PROCCPUINFOFILE " contains out-of-range CPU number %d", cpuid);
-               CRT_fatalError(buffer);
+               char tmpbuffer[64];
+               xSnprintf(tmpbuffer, sizeof(tmpbuffer), PROCCPUINFOFILE " contains out-of-range CPU number %d", cpuid);
+               CRT_fatalError(tmpbuffer);
             }
          } else if (
             (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||

@@ -94,12 +94,12 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
 
    LinuxProcess* p = (LinuxProcess*) Panel_getSelected(panel);
    if (!p) return HTOP_OK;
-   IOPriority ioprio = p->ioPriority;
-   Panel* ioprioPanel = IOPriorityPanel_new(ioprio);
+   IOPriority ioprio1 = p->ioPriority;
+   Panel* ioprioPanel = IOPriorityPanel_new(ioprio1);
    void* set = Action_pickFromVector(st, ioprioPanel, 21, true);
    if (set) {
-      IOPriority ioprio = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) LinuxProcess_setIOPriority, (Arg){ .i = ioprio }, NULL);
+      IOPriority ioprio2 = IOPriorityPanel_getIOPriority(ioprioPanel);
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) LinuxProcess_setIOPriority, (Arg){ .i = ioprio2 }, NULL);
       if (!ok)
          beep();
    }

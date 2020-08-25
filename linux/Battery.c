@@ -64,7 +64,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       }
 
       char* line = NULL;
-      for (unsigned short int i = 0; i < lineNum; i++) {
+      for (unsigned short int j = 0; j < lineNum; j++) {
          free(line);
          line = String_readLine(file);
          if (!line) break;
@@ -194,26 +194,26 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       const char filePath[50];
 
       xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
-      int fd = open(filePath, O_RDONLY);
-      if (fd == -1)
+      int fd1 = open(filePath, O_RDONLY);
+      if (fd1 == -1)
          continue;
 
       char type[8];
-      ssize_t typelen = xread(fd, type, 7);
-      close(fd);
+      ssize_t typelen = xread(fd1, type, 7);
+      close(fd1);
       if (typelen < 1)
          continue;
 
       if (type[0] == 'B' && type[1] == 'a' && type[2] == 't') {
          xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
-         int fd = open(filePath, O_RDONLY);
-         if (fd == -1) {
+         int fd2 = open(filePath, O_RDONLY);
+         if (fd2 == -1) {
             closedir(dir);
             return;
          }
          char buffer[1024];
-         ssize_t buflen = xread(fd, buffer, 1023);
-         close(fd);
+         ssize_t buflen = xread(fd2, buffer, 1023);
+         close(fd2);
          if (buflen < 1) {
             closedir(dir);
             return;
@@ -259,18 +259,18 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
          }
 
          xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
-         int fd = open(filePath, O_RDONLY);
-         if (fd == -1) {
+         int fd3 = open(filePath, O_RDONLY);
+         if (fd3 == -1) {
             closedir(dir);
             return;
          }
          char buffer[2] = "";
          for(;;) {
-            ssize_t res = read(fd, buffer, 1);
+            ssize_t res = read(fd3, buffer, 1);
             if (res == -1 && errno == EINTR) continue;
             break;
          }
-         close(fd);
+         close(fd3);
          if (buffer[0] == '0') {
             *isOnAC = AC_ABSENT;
          } else if (buffer[0] == '1') {
