@@ -226,7 +226,7 @@ coverage:
 	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" LDFLAGS="-lgcov"
 
 .c.h:
-	./scripts/MakeHeader.py $<
+	$(AM_V_GEN)./scripts/MakeHeader.py $<
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS
