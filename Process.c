@@ -85,7 +85,7 @@ typedef enum ProcessFields {
 
 typedef struct ProcessPidColumn_ {
    int id;
-   char* label;
+   const char* label;
 } ProcessPidColumn;
 
 typedef struct Process_ {

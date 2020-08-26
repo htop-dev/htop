@@ -38,11 +38,11 @@ struct InfoScreen_ {
    Vector* lines;
 };
 
-extern InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar, int height, char* panelHeader);
+extern InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar, int height, const char* panelHeader);
 
 extern InfoScreen* InfoScreen_done(InfoScreen* this);
 
-extern void InfoScreen_drawTitled(InfoScreen* this, char* fmt, ...);
+extern void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...);
 
 extern void InfoScreen_addLine(InfoScreen* this, const char* line);
 

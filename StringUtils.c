@@ -81,10 +81,7 @@ char** String_split(const char* s, char sep, int* n) {
       s += size + 1;
    }
    if (s[0] != '\0') {
-      int size = strlen(s);
-      char* token = xMalloc(size + 1);
-      strncpy(token, s, size + 1);
-      out[ctr] = token;
+      out[ctr] = xStrdup(s);
       ctr++;
    }
    out = xRealloc(out, sizeof(char*) * (ctr + 1));
