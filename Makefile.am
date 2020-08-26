@@ -203,7 +203,8 @@ endif
 SUFFIXES = .h
 
 BUILT_SOURCES = $(myhtopheaders) $(myhtopplatheaders)
-htop_SOURCES  = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources) config.h
+htop_SOURCES  = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
+nodist_htop_SOURCES = config.h
 
 .PHONY: htop-headers clean-htop-headers
 
