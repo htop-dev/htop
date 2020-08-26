@@ -18,6 +18,8 @@ What's new in version 3.0.0
   (thanks to Arnav Singh)
 * Update Linux sysfs battery discovery for recent kernels
   (thanks to @smattie)
+* Add hardware topology information in the affinity panel
+  (thanks to Bert Wesarg)
 * Add timestamp reporting to the strace screen
   (thanks to Mario Harjac)
 * Add simple, optional vim key mapping mode
