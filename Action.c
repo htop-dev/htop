@@ -320,6 +320,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    if (!affinity1) return HTOP_OK;
    int width;
    Panel* affinityPanel = AffinityPanel_new(st->pl, affinity1, &width);
+   width += 1; /* we add a gap between the panels */
    Affinity_delete(affinity1);
 
    void* set = Action_pickFromVector(st, affinityPanel, width, true);
