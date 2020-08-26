@@ -352,7 +352,9 @@ Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity, int* width) {
    Panel_init(super, 1, 1, 1, 1, Class(MaskItem), false, FunctionBar_new(AffinityPanelFunctions, AffinityPanelKeys, AffinityPanelEvents));
 
    this->pl = pl;
-   this->width = 15;
+   /* defaults to 15, this also includes the gap between the panels,
+    * but this will be added by the caller */
+   this->width = 14;
 
    this->cpuids   = Vector_new(Class(MaskItem), true, DEFAULT_SIZE);
 
