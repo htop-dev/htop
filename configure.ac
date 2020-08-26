@@ -275,6 +275,9 @@ fi
 AC_ARG_ENABLE(hwloc, [AS_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
 if test "x$enable_hwloc" = xyes
 then
+   PKG_CHECK_MODULES([LIBHWLOC], [hwloc], [], [missing_libraries="$missing_libraries libhwloc"])
+   CFLAGS="$CFLAGS $LIBHWLOC_CFLAGS"
+   LIBS="$LIBS $LIBHWLOC_LIBS"
    AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
    AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
 fi
