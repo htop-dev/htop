@@ -22,6 +22,14 @@ AM_PROG_CC_C_O
 # Required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
+# Setup pkg-config.
+# ----------------------------------------------------------------------
+m4_ifndef([PKG_PREREQ],
+    [m4_fatal([must install pkg-config 0.29 or later before running ./autogen.sh])])
+PKG_PREREQ([0.29])
+
+PKG_PROG_PKG_CONFIG
+
 # Checks for platform.
 # ----------------------------------------------------------------------
 case "$target_os" in
@@ -273,18 +281,11 @@ fi
 AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable Linux delay accounting])],, enable_delayacct="no")
 if test "x$enable_delayacct" = xyes
 then
-   m4_ifdef([PKG_PROG_PKG_CONFIG], [
-      PKG_PROG_PKG_CONFIG()
-      PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
-      PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
-      CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
-      LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
-      AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
-   ], [
-      pkg_m4_absent=1
-      m4_warning([configure is generated without pkg.m4. 'make dist' target will be disabled.])
-      AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
-   ])
+   PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
+   PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
+   CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
+   LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
+   AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
 fi
 
 AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as errors (default: warnings are not errors)])], [enable_werror="$enableval"], [enable_werror=no])
