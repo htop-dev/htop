@@ -22,6 +22,12 @@ AM_PROG_CC_C_O
 # Required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
+# Setup Libtool.
+# ----------------------------------------------------------------------
+LT_PREREQ([2.4.6])
+LT_INIT
+AC_SUBST([LIBTOOL_DEPS])
+
 # Setup pkg-config.
 # ----------------------------------------------------------------------
 m4_ifndef([PKG_PREREQ],
