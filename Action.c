@@ -318,10 +318,11 @@ static Htop_Reaction actionSetAffinity(State* st) {
    if (!p) return HTOP_OK;
    Affinity* affinity1 = Affinity_get(p, st->pl);
    if (!affinity1) return HTOP_OK;
-   Panel* affinityPanel = AffinityPanel_new(st->pl, affinity1);
+   int width;
+   Panel* affinityPanel = AffinityPanel_new(st->pl, affinity1, &width);
    Affinity_delete(affinity1);
 
-   void* set = Action_pickFromVector(st, affinityPanel, 15, true);
+   void* set = Action_pickFromVector(st, affinityPanel, width, true);
    if (set) {
       Affinity* affinity2 = AffinityPanel_getAffinity(affinityPanel, st->pl);
       bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) Affinity_set, (Arg){ .v = affinity2 }, NULL);

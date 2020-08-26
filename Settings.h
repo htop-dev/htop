@@ -53,6 +53,9 @@ typedef struct Settings_ {
    bool headerMargin;
    bool enableMouse;
    bool vimMode;
+   #ifdef HAVE_LIBHWLOC
+   bool topologyAffinity;
+   #endif
 
    bool changed;
 } Settings;
