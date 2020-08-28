@@ -111,13 +111,6 @@ AC_SUBST(wextra_flag)
 # ----------------------------------------------------------------------
 PROCDIR=/proc
 
-AC_ARG_ENABLE(proc, [AS_HELP_STRING([--enable-proc], [use Linux-compatible proc filesystem])], enable_proc="yes", enable_proc="no")
-if test "x$enable_proc" = xyes; then
-   # An enabled proc assumes we're emulating Linux.
-   my_htop_platform=linux
-   AC_DEFINE(HAVE_PROC, 1, [Define if using a Linux-compatible proc filesystem.])
-fi
-
 AC_ARG_WITH(proc, [AS_HELP_STRING([--with-proc=DIR], [Location of a Linux-compatible proc filesystem (default=/proc).])],
 
 if test -n "$withval"; then
