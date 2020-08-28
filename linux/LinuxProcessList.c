@@ -275,7 +275,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       } else if (String_startsWith(buffer, "cpu")) {
          cpus++;
       } else if (String_startsWith(buffer, "btime ")) {
-         sscanf(buffer, "btime %lld\n", &btime);
+         if (sscanf(buffer, "btime %lld\n", &btime) != 1)
+            CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
          break;
       }
    } while(true);
