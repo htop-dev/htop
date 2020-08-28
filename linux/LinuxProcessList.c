@@ -1062,9 +1062,9 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
 }
 
 static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
-   unsigned long long int dbufSize;
-   unsigned long long int dnodeSize;
-   unsigned long long int bonusSize;
+   unsigned long long int dbufSize = 0;
+   unsigned long long int dnodeSize = 0;
+   unsigned long long int bonusSize = 0;
 
    FILE* file = fopen(PROCARCSTATSFILE, "r");
    if (file == NULL) {
