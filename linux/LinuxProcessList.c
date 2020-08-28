@@ -577,7 +577,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
    FILE* file = fopen(filename, "r");
    if (!file)
       return;
-   (void) fscanf(file,
+   (void)! fscanf(file,
       "%*32u %*32s %*1c %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
       "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
       "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
