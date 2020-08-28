@@ -1235,7 +1235,7 @@ static inline double LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
             (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
             (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1)
          ) {
-            if (cpuid < 0) {
+            if (cpuid < 0 || cpuid > (cpus - 1)) {
                CRT_fatalError(PROCCPUINFOFILE " is malformed: cpu MHz line without corresponding processor line");
             }
 
