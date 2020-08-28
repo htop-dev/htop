@@ -112,12 +112,11 @@ AC_SUBST(wextra_flag)
 PROCDIR=/proc
 
 AC_ARG_WITH(proc, [AS_HELP_STRING([--with-proc=DIR], [Location of a Linux-compatible proc filesystem (default=/proc).])],
-
-if test -n "$withval"; then
-   AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
-   PROCDIR="$withval"
-fi,
-AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
+  if test -n "$withval"; then
+    AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
+    PROCDIR="$withval"
+  fi,
+  AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
 
 if test "x$cross_compiling" = xno; then
    if test "x$enable_proc" = xyes; then
