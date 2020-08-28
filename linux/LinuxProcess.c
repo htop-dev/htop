@@ -241,7 +241,7 @@ ProcessFieldData Process_fields[] = {
 #ifdef HAVE_CGROUP
    [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
 #endif
-   [OOM] = { .name = "OOM", .title = "    OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
+   [OOM] = { .name = "OOM", .title = " OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
    [IO_PRIORITY] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
 #ifdef HAVE_DELAYACCT
    [PERCENT_CPU_DELAY] = { .name = "PERCENT_CPU_DELAY", .title = "CPUD% ", .description = "CPU delay %", .flags = 0, },
@@ -264,7 +264,6 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = TGID, .label = "TGID" },
    { .id = PGRP, .label = "PGRP" },
    { .id = SESSION, .label = "SID" },
-   { .id = OOM, .label = "OOM" },
    { .id = 0, .label = NULL },
 };
 
@@ -397,7 +396,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    #ifdef HAVE_CGROUP
    case CGROUP: xSnprintf(buffer, n, "%-10s ", lp->cgroup); break;
    #endif
-   case OOM: xSnprintf(buffer, n, Process_pidFormat, lp->oom); break;
+   case OOM: xSnprintf(buffer, n, "%4u ", lp->oom); break;
    case IO_PRIORITY: {
       int klass = IOPriority_class(lp->ioPriority);
       if (klass == IOPRIO_CLASS_NONE) {
@@ -493,7 +492,7 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
    #endif
    case OOM:
-      return (p2->oom - p1->oom);
+      return ((long)p2->oom - (long)p1->oom);
    #ifdef HAVE_DELAYACCT
    case PERCENT_CPU_DELAY:
       return (p2->cpu_delay_percent > p1->cpu_delay_percent ? 1 : -1);

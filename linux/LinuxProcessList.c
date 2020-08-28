@@ -670,7 +670,7 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
    char buffer[PROC_LINE_LENGTH + 1];
    if (fgets(buffer, PROC_LINE_LENGTH, file)) {
       unsigned int oom;
-      int ok = sscanf(buffer, "%32u", &oom);
+      int ok = sscanf(buffer, "%u", &oom);
       if (ok >= 1) {
          process->oom = oom;
       }
