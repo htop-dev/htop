@@ -40,20 +40,20 @@ jobs:
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS=--enable-werror
 
-  build-ubuntu-latest-hwloc:
+  build-ubuntu-latest-full-featured:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: sudo apt-get install libncursesw5-dev libhwloc-dev
+      run: sudo apt-get install libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-hwloc
+      run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-linux-affinity --enable-hwloc --enable-setuid --enable-delayacct
     - name: Build
       run: make
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-hwloc'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-linux-affinity --enable-hwloc --enable-setuid --enable-delayacct'
 
   whitespace_check:
     runs-on: ubuntu-latest
