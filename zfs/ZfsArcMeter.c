@@ -60,7 +60,6 @@ static void ZfsArcMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
 
    if (this->values[5] > 0) {
-      RichString_write(out, CRT_colors[METER_TEXT], ":");
       Meter_humanUnit(buffer, this->total, 50);
       RichString_append(out, CRT_colors[METER_VALUE], buffer);
       Meter_humanUnit(buffer, this->values[5], 50);
@@ -100,5 +99,5 @@ MeterClass ZfsArcMeter_class = {
    .attributes = ZfsArcMeter_attributes,
    .name = "ZFSARC",
    .uiName = "ZFS ARC",
-   .caption = "ARC"
+   .caption = "ARC: "
 };
