@@ -107,7 +107,7 @@ static ACPresence procAcpiCheck() {
       if (entryName[0] != 'A')
          continue;
 
-      char statePath[50];
+      char statePath[256];
       xSnprintf((char *) statePath, sizeof statePath, "%s/%s/state", power_supplyPath, entryName);
       FILE* file = fopen(statePath, "r");
       if (!file) {
@@ -191,7 +191,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       if (!dirEntry)
          break;
       char* entryName = (char *) dirEntry->d_name;
-      const char filePath[50];
+      const char filePath[256];
 
       xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
       int fd1 = open(filePath, O_RDONLY);
