@@ -190,7 +190,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       set_escdelay(25);
       ch = getch();
 
-      if (this->settings->vimMode) {
+      if (this->settings->vimMode && panelFocus->currentBar->size != 3) {
          switch (ch) {
             case 'h': ch = KEY_LEFT; break;
             case 'j': ch = KEY_DOWN; break;
