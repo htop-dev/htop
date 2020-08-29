@@ -194,12 +194,6 @@ const char *CRT_treeStrUtf8[TREE_STR_COUNT] = {
    "\xe2\x94\x80", // TREE_STR_SHUT ─
 };
 
-const char *CRT_checkStrUtf8[CHECK_STR_COUNT] = {
-   "\xe2\x98\x90", // CHECK_STR_NONE    ☐
-   "\xe2\x98\x92", // CHECK_STR_PARTIAL ☒
-   "\xe2\x98\x91", // CHECK_STR_FULL    ☑
-};
-
 const char *CRT_collapStrUtf8[COLLAP_STR_COUNT] = {
    "\xe2\x8a\x9f", // COLLAP_STR_OPEN   ⊟
    "\xe2\x8a\x9e", // COLLAP_STR_CLOSED ⊞
@@ -766,7 +760,6 @@ void CRT_init(int delay, int colorScheme) {
    if(strcmp(nl_langinfo(CODESET), "UTF-8") == 0) {
       CRT_utf8 = true;
       CRT_treeStr = CRT_treeStrUtf8;
-      CRT_checkStr = CRT_checkStrUtf8;
       CRT_collapStr = CRT_collapStrUtf8;
    }
 #endif

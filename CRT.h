@@ -158,8 +158,6 @@ extern const char *CRT_collapStrAscii[COLLAP_STR_COUNT];
 
 extern const char *CRT_treeStrUtf8[TREE_STR_COUNT];
 
-extern const char *CRT_checkStrUtf8[CHECK_STR_COUNT];
-
 extern const char *CRT_collapStrUtf8[COLLAP_STR_COUNT];
 
 #endif
