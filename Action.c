@@ -378,12 +378,13 @@ static Htop_Reaction actionStrace(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionGdb(State* st) {
+static Htop_Reaction actionDebugger(State* st) {
+   Settings* settings = st->settings;
    Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
 
    char buf[32];
-   xSnprintf(buf, sizeof(buf), "gdb -p %d", (int) p->pid);
+   xSnprintf(buf, sizeof(buf), "%s -p %d", settings->debuggerTool, (int) p->pid);
 
    endwin();
    int result = system(buf);
@@ -441,7 +442,7 @@ static const struct { const char* key; const char* info; } helpRight[] = {
    { .key = "      i: ", .info = "set IO priority" },
    { .key = "      l: ", .info = "list open files with lsof" },
    { .key = "      s: ", .info = "trace syscalls with strace" },
-   { .key = "      g: ", .info = "debug with gdb" },
+   { .key = "      D: ", .info = "attach debugger" },
    { .key = "         ", .info = "" },
    { .key = " F2 C S: ", .info = "setup" },
    { .key = "   F1 h: ", .info = "show this help screen" },
@@ -595,7 +596,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys[KEY_F(2)] = actionSetup;
    keys['l'] = actionLsof;
    keys['s'] = actionStrace;
-   keys['g'] = actionGdb;
+   keys['D'] = actionDebugger;
    keys[' '] = actionTag;
    keys['\014'] = actionRedraw; // Ctrl+L
    keys[KEY_F(1)] = actionHelp;

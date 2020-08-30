@@ -25,6 +25,7 @@ typedef struct Settings_ {
    ProcessField* fields;
    int flags;
    int colorScheme;
+   char *debuggerTool;
    int delay;
 
    int cpuCount;

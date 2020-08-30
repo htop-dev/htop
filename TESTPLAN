@@ -73,7 +73,9 @@ Main screen:
 
       <F2>, <C>, <S> - enter Setup screen.
 
-      <D>, <E> - do nothing.
+      <D> - attach debugger (must be allowed by ptrace_scope)
+
+      <E> - do nothing.
 
       <F> - follow process.
 
