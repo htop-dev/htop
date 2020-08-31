@@ -70,7 +70,7 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
       if (cpuFrequency < 0) {
          xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A");
       } else {
-         xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "%.0fGHz", cpuFrequency);
+         xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "%.0fMHz", cpuFrequency);
       }
       if (this->pl->settings->showCPUUsage) {
          xSnprintf(buffer, size, "%5.1f%% %s", percent, cpuFrequencyBuffer);
