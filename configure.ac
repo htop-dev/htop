@@ -111,20 +111,12 @@ AC_SUBST(wextra_flag)
 # ----------------------------------------------------------------------
 PROCDIR=/proc
 
-AC_ARG_ENABLE(proc, [AS_HELP_STRING([--enable-proc], [use Linux-compatible proc filesystem])], enable_proc="yes", enable_proc="no")
-if test "x$enable_proc" = xyes; then
-   # An enabled proc assumes we're emulating Linux.
-   my_htop_platform=linux
-   AC_DEFINE(HAVE_PROC, 1, [Define if using a Linux-compatible proc filesystem.])
-fi
-
 AC_ARG_WITH(proc, [AS_HELP_STRING([--with-proc=DIR], [Location of a Linux-compatible proc filesystem (default=/proc).])],
-
-if test -n "$withval"; then
-   AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
-   PROCDIR="$withval"
-fi,
-AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
+  if test -n "$withval"; then
+    AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
+    PROCDIR="$withval"
+  fi,
+  AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
 
 if test "x$cross_compiling" = xno; then
    if test "x$enable_proc" = xyes; then
@@ -340,3 +332,20 @@ then
    echo "****************************************************************"
    echo ""
 fi
+
+AC_MSG_RESULT([
+  ${PACKAGE_NAME} ${VERSION}
+
+  platform:                $my_htop_platform
+  proc directory:          $PROCDIR
+  openvz:                  $enable_openvz
+  cgroup:                  $enable_cgroup
+  vserver:                 $enable_vserver
+  ancient vserver:         $enable_ancient_vserver
+  taskstats:               $enable_taskstats
+  unicode:                 $enable_unicode
+  linux affinity:          $enable_linux_affinity
+  hwlock:                  $enable_hwloc
+  setuid:                  $enable_setuid
+  linux delay accounting:  $enable_delayacct
+])

@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
 
    CommandLineSettings flags = parseArguments(argc, argv); // may exit()
 
-#ifdef HAVE_PROC
+#ifdef HTOP_LINUX
    if (access(PROCDIR, R_OK) != 0) {
       fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
       exit(1);
