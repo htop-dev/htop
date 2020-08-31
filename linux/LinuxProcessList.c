@@ -275,7 +275,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       } else if (String_startsWith(buffer, "cpu")) {
          cpus++;
       } else if (String_startsWith(buffer, "btime ")) {
-         sscanf(buffer, "btime %lld\n", &btime);
+         if (sscanf(buffer, "btime %lld\n", &btime) != 1)
+            CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
          break;
       }
    } while(true);
@@ -1062,9 +1063,9 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
 }
 
 static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
-   unsigned long long int dbufSize;
-   unsigned long long int dnodeSize;
-   unsigned long long int bonusSize;
+   unsigned long long int dbufSize = 0;
+   unsigned long long int dnodeSize = 0;
+   unsigned long long int bonusSize = 0;
 
    FILE* file = fopen(PROCARCSTATSFILE, "r");
    if (file == NULL) {
@@ -1142,10 +1143,10 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
       if (!ok) buffer[0] = '\0';
       if (i == 0)
-         sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         (void) sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
       else {
          int cpuid;
-         sscanf(buffer, "cpu%4d %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         (void) sscanf(buffer, "cpu%4d %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
          assert(cpuid == i - 1);
       }
       // Guest time is already accounted in usertime
@@ -1235,7 +1236,7 @@ static inline double LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
             (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
             (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1)
          ) {
-            if (cpuid < 0) {
+            if (cpuid < 0 || cpuid > (cpus - 1)) {
                CRT_fatalError(PROCCPUINFOFILE " is malformed: cpu MHz line without corresponding processor line");
             }
 

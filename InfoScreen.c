@@ -80,7 +80,7 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
    va_start(ap, fmt);
    attrset(CRT_colors[METER_TEXT]);
    mvhline(0, 0, ' ', COLS);
-   wmove(stdscr, 0, 0);
+   (void) wmove(stdscr, 0, 0);
    vw_printw(stdscr, fmt, ap);
    attrset(CRT_colors[DEFAULT_COLOR]);
    this->display->needsRedraw = true;
