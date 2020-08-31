@@ -260,7 +260,7 @@ static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
 
 static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem *parent) {
    const char* type_name = hwloc_obj_type_string(obj->type);
-   const char* index_prefix = " #";
+   const char* index_prefix = "#";
    unsigned depth = obj->depth;
    unsigned index = obj->logical_index;
    size_t off = 0, left = 10 * depth;
@@ -286,7 +286,7 @@ static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
       off += len, left -= len;
    }
 
-   xSnprintf(buf, 64, "%s%s%u", type_name, index_prefix, index);
+   xSnprintf(buf, 64, "%s %s%u", type_name, index_prefix, index);
 
    MaskItem *item = MaskItem_newMask(buf, indent_buf, obj->complete_cpuset, false);
    if (parent)
