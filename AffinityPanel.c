@@ -55,20 +55,20 @@ static void MaskItem_delete(Object* cast) {
 static void MaskItem_display(Object* cast, RichString* out) {
    MaskItem* this = (MaskItem*)cast;
    assert (this != NULL);
+   RichString_append(out, CRT_colors[CHECK_BOX], "[");
    if (this->value == 2)
-      RichString_append(out, CRT_colors[CHECK_MARK], CRT_checkStr[CHECK_STR_FULL]);
+      RichString_append(out, CRT_colors[CHECK_MARK], "x");
    else if (this->value == 1)
-      RichString_append(out, CRT_colors[CHECK_MARK], CRT_checkStr[CHECK_STR_PARTIAL]);
+      RichString_append(out, CRT_colors[CHECK_MARK], "o");
    else
-      RichString_append(out, CRT_colors[CHECK_MARK], CRT_checkStr[CHECK_STR_NONE]);
+      RichString_append(out, CRT_colors[CHECK_MARK], " ");
+   RichString_append(out, CRT_colors[CHECK_BOX], "]");
    RichString_append(out, CRT_colors[CHECK_TEXT], " ");
    if (this->indent)
       RichString_append(out, CRT_colors[PROCESS_TREE], this->indent);
    if (this->sub_tree) {
-      RichString_append(out, CRT_colors[PROCESS_TREE],
-                        this->sub_tree == 1
-                        ? CRT_collapStr[COLLAP_STR_OPEN]
-                        : CRT_collapStr[COLLAP_STR_CLOSED]);
+      RichString_append(out, CRT_colors[  PROCESS_TREE],
+                        this->sub_tree == 1 ? "[-]" : "[+]");
       RichString_append(out, CRT_colors[CHECK_TEXT], " ");
    }
    RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
@@ -303,7 +303,7 @@ static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
    }
 
    /* "[x] " + "|- " * depth + ("[+] ")? + name */
-   unsigned width = (CRT_utf8 ? 2 : 4) + 3 * depth + (item->sub_tree ? (CRT_utf8 ? 2 : 4) : 0) + strlen(buf);
+   unsigned width = 4 + 3 * depth + (item->sub_tree ? 4 : 0) + strlen(buf);
    if (width > this->width)
       this->width = width;
 

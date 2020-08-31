@@ -59,19 +59,6 @@ typedef enum TreeStr_ {
    TREE_STR_COUNT
 } TreeStr;
 
-typedef enum CheckStr_ {
-   CHECK_STR_NONE,
-   CHECK_STR_PARTIAL,
-   CHECK_STR_FULL,
-   CHECK_STR_COUNT
-} CheckStr;
-
-typedef enum CollapStr_ {
-   COLLAP_STR_OPEN,
-   COLLAP_STR_CLOSED,
-   COLLAP_STR_COUNT
-} CollapStr;
-
 typedef enum ColorSchemes_ {
    COLORSCHEME_DEFAULT = 0,
    COLORSCHEME_MONOCHROME = 1,
@@ -126,6 +113,7 @@ typedef enum ColorElements_ {
    LOAD_AVERAGE_FIFTEEN,
    LOAD_AVERAGE_FIVE,
    LOAD_AVERAGE_ONE,
+   CHECK_BOX,
    CHECK_MARK,
    CHECK_TEXT,
    CLOCK,
@@ -171,17 +159,6 @@ const char *CRT_treeStrAscii[TREE_STR_COUNT] = {
    "-", // TREE_STR_SHUT
 };
 
-const char *CRT_checkStrAscii[CHECK_STR_COUNT] = {
-   "[ ]", // CHECK_STR_NONE
-   "[o]", // CHECK_STR_PARTIAL
-   "[x]", // CHECK_STR_FULL
-};
-
-const char *CRT_collapStrAscii[COLLAP_STR_COUNT] = {
-   "[-]", // COLLAP_STR_OPEN
-   "[+]", // COLLAP_STR_CLOSED
-};
-
 #ifdef HAVE_LIBNCURSESW
 
 const char *CRT_treeStrUtf8[TREE_STR_COUNT] = {
@@ -194,26 +171,11 @@ const char *CRT_treeStrUtf8[TREE_STR_COUNT] = {
    "\xe2\x94\x80", // TREE_STR_SHUT ─
 };
 
-const char *CRT_checkStrUtf8[CHECK_STR_COUNT] = {
-   "\xe2\x98\x90", // CHECK_STR_NONE    ☐
-   "\xe2\x98\x92", // CHECK_STR_PARTIAL ☒
-   "\xe2\x98\x91", // CHECK_STR_FULL    ☑
-};
-
-const char *CRT_collapStrUtf8[COLLAP_STR_COUNT] = {
-   "\xe2\x8a\x9f", // COLLAP_STR_OPEN   ⊟
-   "\xe2\x8a\x9e", // COLLAP_STR_CLOSED ⊞
-};
+bool CRT_utf8 = false;
 
 #endif
 
-bool CRT_utf8 = false;
-
 const char **CRT_treeStr = CRT_treeStrAscii;
-
-const char **CRT_checkStr = CRT_checkStrAscii;
-
-const char **CRT_collapStr = CRT_collapStrAscii;
 
 static bool CRT_hasColors;
 
@@ -267,7 +229,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [LOAD] = A_BOLD,
       [HELP_BOLD] = A_BOLD | ColorPair(Cyan,Black),
       [CLOCK] = A_BOLD,
-      [CHECK_MARK] = A_BOLD | ColorPair(Cyan,Black),
+      [CHECK_BOX] = ColorPair(Cyan,Black),
+      [CHECK_MARK] = A_BOLD,
       [CHECK_TEXT] = A_NORMAL,
       [HOSTNAME] = A_BOLD,
       [CPU_NICE] = ColorPair(Blue,Black),
@@ -335,7 +298,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [LOAD] = A_BOLD,
       [HELP_BOLD] = A_BOLD,
       [CLOCK] = A_BOLD,
-      [CHECK_MARK] = A_BOLD,
+      [CHECK_BOX] = A_BOLD,
+      [CHECK_MARK] = A_NORMAL,
       [CHECK_TEXT] = A_NORMAL,
       [HOSTNAME] = A_BOLD,
       [CPU_NICE] = A_NORMAL,
@@ -403,6 +367,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [LOAD] = ColorPair(Black,White),
       [HELP_BOLD] = ColorPair(Blue,White),
       [CLOCK] = ColorPair(Black,White),
+      [CHECK_BOX] = ColorPair(Blue,White),
       [CHECK_MARK] = ColorPair(Black,White),
       [CHECK_TEXT] = ColorPair(Black,White),
       [HOSTNAME] = ColorPair(Black,White),
@@ -471,6 +436,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [LOAD] = ColorPair(White,Black),
       [HELP_BOLD] = ColorPair(Blue,Black),
       [CLOCK] = ColorPair(White,Black),
+      [CHECK_BOX] = ColorPair(Blue,Black),
       [CHECK_MARK] = ColorPair(Black,Black),
       [CHECK_TEXT] = ColorPair(Black,Black),
       [HOSTNAME] = ColorPair(White,Black),
@@ -539,7 +505,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [LOAD] = A_BOLD | ColorPair(White,Blue),
       [HELP_BOLD] = A_BOLD | ColorPair(Cyan,Blue),
       [CLOCK] = ColorPair(White,Blue),
-      [CHECK_MARK] = A_BOLD | ColorPair(Cyan,Blue),
+      [CHECK_BOX] = ColorPair(Cyan,Blue),
+      [CHECK_MARK] = A_BOLD | ColorPair(White,Blue),
       [CHECK_TEXT] = A_NORMAL | ColorPair(White,Blue),
       [HOSTNAME] = ColorPair(White,Blue),
       [CPU_NICE] = A_BOLD | ColorPair(Cyan,Blue),
@@ -607,6 +574,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [LOAD] = A_BOLD,
       [HELP_BOLD] = A_BOLD | ColorPair(Cyan,Black),
       [CLOCK] = ColorPair(Green,Black),
+      [CHECK_BOX] = ColorPair(Green,Black),
       [CHECK_MARK] = A_BOLD | ColorPair(Green,Black),
       [CHECK_TEXT] = ColorPair(Cyan,Black),
       [HOSTNAME] = ColorPair(Green,Black),
@@ -763,13 +731,17 @@ void CRT_init(int delay, int colorScheme) {
    setlocale(LC_CTYPE, "");
 
 #ifdef HAVE_LIBNCURSESW
-   if(strcmp(nl_langinfo(CODESET), "UTF-8") == 0) {
+   if(strcmp(nl_langinfo(CODESET), "UTF-8") == 0)
       CRT_utf8 = true;
-      CRT_treeStr = CRT_treeStrUtf8;
-      CRT_checkStr = CRT_checkStrUtf8;
-      CRT_collapStr = CRT_collapStrUtf8;
-   }
+   else
+      CRT_utf8 = false;
 #endif
+
+   CRT_treeStr =
+#ifdef HAVE_LIBNCURSESW
+      CRT_utf8 ? CRT_treeStrUtf8 :
+#endif
+      CRT_treeStrAscii;
 
 #if NCURSES_MOUSE_VERSION > 1
    mousemask(BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
