@@ -66,7 +66,6 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
    double percent = Platform_setCPUValues(this, cpu);
    if (this->pl->settings->showCPUFrequency) {
       double cpuFrequency = this->values[CPU_METER_FREQUENCY];
-      char unit = 'M';
       char cpuFrequencyBuffer[16];
       if (cpuFrequency < 0) {
          xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A");
