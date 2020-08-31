@@ -167,7 +167,9 @@ const char *CRT_treeStrUtf8[TREE_STR_COUNT] = {
    "\xe2\x94\x9c", // TREE_STR_RTEE ├
    "\xe2\x94\x94", // TREE_STR_BEND └
    "\xe2\x94\x8c", // TREE_STR_TEND ┌
-   "+",            // TREE_STR_OPEN +
+   "+",            // TREE_STR_OPEN +, TODO use 🮯 'BOX DRAWINGS LIGHT HORIZONTAL
+                   // WITH VERTICAL STROKE' (U+1FBAF, "\xf0\x9f\xae\xaf") when
+                   // Unicode 13 is common
    "\xe2\x94\x80", // TREE_STR_SHUT ─
 };
 
