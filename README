@@ -20,7 +20,7 @@ Build instructions
 ------------------
 
 This program is distributed as a standard autotools-based package.
-For detailed instructions see the [INSTALL](/INSTALL) file, which
+For detailed instructions see the `INSTALL` file, which
 is created after `./autogen.sh` is run.
 
 When compiling from a [release tarball](https://github.com/htop-dev/htop/releases/), run:
