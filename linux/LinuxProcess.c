@@ -492,7 +492,7 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
    #endif
    case OOM:
-      return ((long)p2->oom - (long)p1->oom);
+      return ((int)p2->oom - (int)p1->oom);
    #ifdef HAVE_DELAYACCT
    case PERCENT_CPU_DELAY:
       return (p2->cpu_delay_percent > p1->cpu_delay_percent ? 1 : -1);
