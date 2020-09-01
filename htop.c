@@ -43,6 +43,7 @@ static void printHelpFlag() {
          "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
          "-t --tree                   Show the tree view by default\n"
          "-u --user[=USERNAME]        Show only processes for a given user (or $USER)\n"
+         "-U --no-unicode             Do not use unicode but plain ASCII\n"
          "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
          "-v --version                Print version info\n"
          "\n"
@@ -63,6 +64,7 @@ typedef struct CommandLineSettings_ {
    bool useColors;
    bool enableMouse;
    bool treeView;
+   bool allowUnicode;
 } CommandLineSettings;
 
 static CommandLineSettings parseArguments(int argc, char** argv) {
@@ -75,26 +77,28 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .useColors = true,
       .enableMouse = true,
       .treeView = false,
+      .allowUnicode = true,
    };
 
    static struct option long_opts[] =
    {
-      {"help",     no_argument,         0, 'h'},
-      {"version",  no_argument,         0, 'v'},
-      {"delay",    required_argument,   0, 'd'},
-      {"sort-key", required_argument,   0, 's'},
-      {"user",     optional_argument,   0, 'u'},
-      {"no-color", no_argument,         0, 'C'},
-      {"no-colour",no_argument,         0, 'C'},
-      {"no-mouse", no_argument,         0, 'm'},
-      {"tree",     no_argument,         0, 't'},
-      {"pid",      required_argument,   0, 'p'},
+      {"help",       no_argument,         0, 'h'},
+      {"version",    no_argument,         0, 'v'},
+      {"delay",      required_argument,   0, 'd'},
+      {"sort-key",   required_argument,   0, 's'},
+      {"user",       optional_argument,   0, 'u'},
+      {"no-color",   no_argument,         0, 'C'},
+      {"no-colour",  no_argument,         0, 'C'},
+      {"no-mouse",   no_argument,         0, 'm'},
+      {"no-unicode", no_argument,         0, 'U'},
+      {"tree",       no_argument,         0, 't'},
+      {"pid",        required_argument,   0, 'p'},
       {0,0,0,0}
    };
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvmCs:td:u::p:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvmCs:td:u:Up:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -147,6 +151,9 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             break;
          case 'm':
             flags.enableMouse = false;
+            break;
+         case 'U':
+            flags.allowUnicode = false;
             break;
          case 't':
             flags.treeView = true;
@@ -226,7 +233,7 @@ int main(int argc, char** argv) {
    if (flags.treeView)
       settings->treeView = true;
 
-   CRT_init(settings->delay, settings->colorScheme);
+   CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
 
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);

@@ -48,6 +48,9 @@ Sort by this column (use \-\-sort\-key help for a column list)
 \fB\-u \-\-user=USERNAME\fR
 Show only the processes of a given user
 .TP
+\fB\-U \-\-no-unicode\fR
+Do not use unicode but ASCII characters for graph meters
+.TP
 \fB\-v \-\-version
 Output version information and exit
 .TP
