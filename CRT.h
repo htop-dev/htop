@@ -189,7 +189,7 @@ extern void CRT_restorePrivileges();
 
 // TODO: pass an instance of Settings instead.
 
-extern void CRT_init(int delay, int colorScheme);
+extern void CRT_init(int delay, int colorScheme, bool allowUnicode);
 
 extern void CRT_done();
 
