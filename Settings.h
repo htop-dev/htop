@@ -63,12 +63,12 @@ typedef struct Settings_ {
 #endif
 
 
-extern void Settings_delete(Settings* this);
+void Settings_delete(Settings* this);
 
-extern bool Settings_write(Settings* this);
+bool Settings_write(Settings* this);
 
-extern Settings* Settings_new(int cpuCount);
+Settings* Settings_new(int cpuCount);
 
-extern void Settings_invertSortOrder(Settings* this);
+void Settings_invertSortOrder(Settings* this);
 
 #endif

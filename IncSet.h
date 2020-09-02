@@ -39,24 +39,24 @@ typedef struct IncSet_ {
 typedef const char* (*IncMode_GetPanelValue)(Panel*, int);
 
 
-extern void IncSet_reset(IncSet* this, IncType type);
+void IncSet_reset(IncSet* this, IncType type);
 
-extern IncSet* IncSet_new(FunctionBar* bar);
+IncSet* IncSet_new(FunctionBar* bar);
 
-extern void IncSet_delete(IncSet* this);
+void IncSet_delete(IncSet* this);
 
-extern bool IncSet_next(IncSet* this, IncType type, Panel* panel, IncMode_GetPanelValue getPanelValue);
+bool IncSet_next(IncSet* this, IncType type, Panel* panel, IncMode_GetPanelValue getPanelValue);
 
-extern bool IncSet_prev(IncSet* this, IncType type, Panel* panel, IncMode_GetPanelValue getPanelValue);
+bool IncSet_prev(IncSet* this, IncType type, Panel* panel, IncMode_GetPanelValue getPanelValue);
 
-extern bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines);
+bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines);
 
-extern const char* IncSet_getListItemValue(Panel* panel, int i);
+const char* IncSet_getListItemValue(Panel* panel, int i);
 
-extern void IncSet_activate(IncSet* this, IncType type, Panel* panel);
+void IncSet_activate(IncSet* this, IncType type, Panel* panel);
 
-extern void IncSet_drawBar(IncSet* this);
+void IncSet_drawBar(IncSet* this);
 
-extern int IncSet_synthesizeEvent(IncSet* this, int x);
+int IncSet_synthesizeEvent(IncSet* this, int x);
 
 #endif

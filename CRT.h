@@ -127,9 +127,9 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
-extern void CRT_fatalError(const char* note) __attribute__ ((noreturn));
+void CRT_fatalError(const char* note) __attribute__ ((noreturn));
 
-extern void CRT_handleSIGSEGV(int sgn);
+void CRT_handleSIGSEGV(int sgn);
 
 #define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 
@@ -170,9 +170,9 @@ extern void *backtraceArray[128];
 
 #define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
 
-extern void CRT_dropPrivileges();
+void CRT_dropPrivileges();
 
-extern void CRT_restorePrivileges();
+void CRT_restorePrivileges();
 
 #else
 
@@ -187,18 +187,18 @@ extern void CRT_restorePrivileges();
 
 // TODO: pass an instance of Settings instead.
 
-extern void CRT_init(int delay, int colorScheme, bool allowUnicode);
+void CRT_init(int delay, int colorScheme, bool allowUnicode);
 
-extern void CRT_done();
+void CRT_done();
 
-extern void CRT_fatalError(const char* note);
+void CRT_fatalError(const char* note);
 
-extern int CRT_readKey();
+int CRT_readKey();
 
-extern void CRT_disableDelay();
+void CRT_disableDelay();
 
-extern void CRT_enableDelay();
+void CRT_enableDelay();
 
-extern void CRT_setColors(int colorScheme);
+void CRT_setColors(int colorScheme);
 
 #endif

@@ -28,23 +28,23 @@ typedef struct Affinity_ {
 } Affinity;
 
 
-extern Affinity* Affinity_new(ProcessList* pl);
+Affinity* Affinity_new(ProcessList* pl);
 
-extern void Affinity_delete(Affinity* this);
+void Affinity_delete(Affinity* this);
 
-extern void Affinity_add(Affinity* this, int id);
+void Affinity_add(Affinity* this, int id);
 
 #ifdef HAVE_LIBHWLOC
 
-extern Affinity* Affinity_get(Process* proc, ProcessList* pl);
+Affinity* Affinity_get(Process* proc, ProcessList* pl);
 
-extern bool Affinity_set(Process* proc, Arg arg);
+bool Affinity_set(Process* proc, Arg arg);
 
 #elif HAVE_LINUX_AFFINITY
 
-extern Affinity* Affinity_get(Process* proc, ProcessList* pl);
+Affinity* Affinity_get(Process* proc, ProcessList* pl);
 
-extern bool Affinity_set(Process* proc, Arg arg);
+bool Affinity_set(Process* proc, Arg arg);
 
 #endif
 

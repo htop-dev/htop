@@ -50,7 +50,7 @@ extern ObjectClass Object_class;
 
 #ifdef DEBUG
 
-extern bool Object_isA(Object* o, const ObjectClass* klass);
+bool Object_isA(Object* o, const ObjectClass* klass);
 
 #endif
 

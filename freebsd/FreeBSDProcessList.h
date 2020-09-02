@@ -55,14 +55,14 @@ typedef struct FreeBSDProcessList_ {
 extern char jail_errmsg[JAIL_ERRMSGLEN];
 
 
-extern ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
-extern void ProcessList_delete(ProcessList* this);
+void ProcessList_delete(ProcessList* this);
 
-extern char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
+char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
 
-extern char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
+char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
 
-extern void ProcessList_goThroughEntries(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this);
 
 #endif

@@ -22,10 +22,10 @@ typedef struct CategoriesPanel_ {
 } CategoriesPanel;
 
 
-extern void CategoriesPanel_makeMetersPage(CategoriesPanel* this);
+void CategoriesPanel_makeMetersPage(CategoriesPanel* this);
 
 extern PanelClass CategoriesPanel_class;
 
-extern CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl);
+CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl);
 
 #endif

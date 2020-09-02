@@ -9,12 +9,12 @@ typedef struct EnvScreen_ {
 
 extern InfoScreenClass EnvScreen_class;
 
-extern EnvScreen* EnvScreen_new(Process* process);
+EnvScreen* EnvScreen_new(Process* process);
 
-extern void EnvScreen_delete(Object* this);
+void EnvScreen_delete(Object* this);
 
-extern void EnvScreen_draw(InfoScreen* this);
+void EnvScreen_draw(InfoScreen* this);
 
-extern void EnvScreen_scan(InfoScreen* this);
+void EnvScreen_scan(InfoScreen* this);
 
 #endif

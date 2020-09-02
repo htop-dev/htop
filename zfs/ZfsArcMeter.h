@@ -15,7 +15,7 @@ in the source distribution for its full text.
 
 extern int ZfsArcMeter_attributes[];
 
-extern void ZfsArcMeter_readStats(Meter* this, ZfsArcStats* stats);
+void ZfsArcMeter_readStats(Meter* this, ZfsArcStats* stats);
 
 extern MeterClass ZfsArcMeter_class;
 

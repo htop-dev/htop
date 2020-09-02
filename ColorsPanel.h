@@ -27,6 +27,6 @@ typedef struct ColorsPanel_ {
 
 extern PanelClass ColorsPanel_class;
 
-extern ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr);
+ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr);
 
 #endif

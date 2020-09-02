@@ -10,6 +10,6 @@ in the source distribution for its full text.
 #ifdef HAVE_EXECINFO_H
 #endif
 
-extern void CRT_handleSIGSEGV(int sgn);
+void CRT_handleSIGSEGV(int sgn);
 
 #endif

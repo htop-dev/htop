@@ -107,17 +107,17 @@ typedef struct GraphData_ {
 
 extern MeterClass Meter_class;
 
-extern Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type);
+Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type);
 
-extern int Meter_humanUnit(char* buffer, unsigned long int value, int size);
+int Meter_humanUnit(char* buffer, unsigned long int value, int size);
 
-extern void Meter_delete(Object* cast);
+void Meter_delete(Object* cast);
 
-extern void Meter_setCaption(Meter* this, const char* caption);
+void Meter_setCaption(Meter* this, const char* caption);
 
-extern void Meter_setMode(Meter* this, int modeIndex);
+void Meter_setMode(Meter* this, int modeIndex);
 
-extern ListItem* Meter_toListItem(Meter* this, bool moving);
+ListItem* Meter_toListItem(Meter* this, bool moving);
 
 /* ---------- TextMeterMode ---------- */
 

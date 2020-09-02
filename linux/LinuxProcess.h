@@ -159,9 +159,9 @@ extern ProcessPidColumn Process_pidColumns[];
 
 extern ProcessClass LinuxProcess_class;
 
-extern LinuxProcess* LinuxProcess_new(Settings* settings);
+LinuxProcess* LinuxProcess_new(Settings* settings);
 
-extern void Process_delete(Object* cast);
+void Process_delete(Object* cast);
 
 /*
 [1] Note that before kernel 2.6.26 a process that has not asked for
@@ -173,18 +173,18 @@ extern io_priority;
 */
 #define LinuxProcess_effectiveIOPriority(p_) (IOPriority_class(p_->ioPriority) == IOPRIO_CLASS_NONE ? IOPriority_tuple(IOPRIO_CLASS_BE, (p_->super.nice + 20) / 5) : p_->ioPriority)
 
-extern IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
+IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
 
-extern bool LinuxProcess_setIOPriority(LinuxProcess* this, Arg ioprio);
+bool LinuxProcess_setIOPriority(LinuxProcess* this, Arg ioprio);
 
 #ifdef HAVE_DELAYACCT
-extern void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);
+void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);
 #endif
 
-extern void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field);
+void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field);
 
-extern long LinuxProcess_compare(const void* v1, const void* v2);
+long LinuxProcess_compare(const void* v1, const void* v2);
 
-extern bool Process_isThread(Process* this);
+bool Process_isThread(Process* this);
 
 #endif

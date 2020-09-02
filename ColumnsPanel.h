@@ -20,10 +20,10 @@ typedef struct ColumnsPanel_ {
 
 extern PanelClass ColumnsPanel_class;
 
-extern ColumnsPanel* ColumnsPanel_new(Settings* settings);
+ColumnsPanel* ColumnsPanel_new(Settings* settings);
 
-extern int ColumnsPanel_fieldNameToIndex(const char* name);
+int ColumnsPanel_fieldNameToIndex(const char* name);
 
-extern void ColumnsPanel_update(Panel* super);
+void ColumnsPanel_update(Panel* super);
 
 #endif

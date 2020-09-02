@@ -32,10 +32,10 @@ struct MetersPanel_ {
 // In <http://unicode.org/reports/tr11/>, arrows (U+2019..U+2199) are
 // considered "Ambiguous characters".
 
-extern void MetersPanel_setMoving(MetersPanel* this, bool moving);
+void MetersPanel_setMoving(MetersPanel* this, bool moving);
 
 extern PanelClass MetersPanel_class;
 
-extern MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr);
+MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr);
 
 #endif
