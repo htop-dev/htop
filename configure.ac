@@ -307,6 +307,13 @@ if test "x$enable_setuid" = xyes; then
    AC_DEFINE(HAVE_SETUID_ENABLED, 1, [Define if setuid support should be enabled.])
 fi
 
+AC_ARG_WITH(capabilities, [AS_HELP_STRING([--with-capabilities], [Enable option to drop Linux capabilities via libcap])],, with_capabilities="no")
+if test "x$with_capabilities" = xyes
+then
+  AC_CHECK_LIB([cap], [cap_init], [], [missing_libraries="$missing_libraries libcap"])
+  AC_CHECK_HEADERS([sys/capability.h], [:], [missing_headers="$missing_headers $ac_header"])
+fi
+
 AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable Linux delay accounting])],, enable_delayacct="no")
 if test "x$enable_delayacct" = xyes; then
    m4_ifdef([PKG_PROG_PKG_CONFIG], [
@@ -408,6 +415,7 @@ AC_MSG_RESULT([
   (Linux) affinity:          $enable_linux_affinity
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $with_sensors
+  (Linux) capabilities:      $with_capabilities
   unicode:                   $enable_unicode
   hwloc:                     $enable_hwloc
   setuid:                    $enable_setuid
