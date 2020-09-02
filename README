@@ -1,4 +1,4 @@
-![htop](https://htop.dev)
+# [![htop](htop.png)](https://htop.dev)
 
 [![CI](https://github.com/htop-dev/htop/workflows/CI/badge.svg)](https://github.com/htop-dev/htop/actions)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/21665/badge.svg)](https://scan.coverity.com/projects/21665)
@@ -7,8 +7,7 @@
 [![Github Release](https://img.shields.io/github/release/htop-dev/htop.svg)](https://github.com/htop-dev/htop/releases/latest)
 [![Download](https://api.bintray.com/packages/htop/source/htop/images/download.svg)](https://bintray.com/htop/source/htop/_latestVersion)
 
-Introduction
-------------
+## Introduction
 
 `htop` is a cross-platform interactive process viewer.
 It requires `ncurses`.
@@ -16,8 +15,7 @@ It requires `ncurses`.
 For more information and details on how to contribute to `htop`
 visit [htop.dev](https://htop.dev).
 
-Build instructions
-------------------
+## Build instructions
 
 This program is distributed as a standard autotools-based package.
 For detailed instructions see the `INSTALL` file, which
@@ -25,11 +23,15 @@ is created after `./autogen.sh` is run.
 
 When compiling from a [release tarball](https://github.com/htop-dev/htop/releases/), run:
 
-    ./configure && make
+~~~ shell
+./configure && make
+~~~
 
 For compiling sources downloaded from the Git repository, run:
 
-    ./autogen.sh && ./configure && make
+~~~ shell
+./autogen.sh && ./configure && make
+~~~
 
 By default `make install` will install into `/usr/local`, for changing
 the path use `./configure --prefix=/some/path`.
