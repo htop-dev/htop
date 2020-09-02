@@ -6,6 +6,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+
 #include "Affinity.h"
 
 #include <stdlib.h>
