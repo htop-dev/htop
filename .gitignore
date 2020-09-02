@@ -3,6 +3,7 @@ htop
 
 # all object files
 *.o
+build
 
 # skip all backups
 *.bak
@@ -26,7 +27,6 @@ autom4te.cache/
 compile
 config.guess
 config.h
-config.h.in
 config.log
 config.status
 config.cache

@@ -1,0 +1,16 @@
+# General Options
+option('unicode', type: 'boolean', value: true)
+option('setuid', type: 'boolean', value: true)
+option('hwloc', type: 'feature', value: 'disabled')
+
+# Linux Specific
+option('vserver', type: 'combo', choices: ['no', 'yes', 'ancient'], value: 'no')
+option('linux-affinity', type: 'boolean', value: true,
+	description: 'Enable sched_(get|set)affinity support on Linux. Disables hwloc.')
+option('procdir', type: 'string', value : '/proc',
+	description: 'Location of a Linux-compatible proc filesystem (defaults to "/proc")')
+option('taskstats', type: 'boolean', value: true,
+	description: 'Enable per-task IO Stats.')
+option('cgroups', type: 'boolean', value: false)
+option('delayacct', type: 'feature', value: 'disabled')
+option('openvz', type: 'boolean', value: false)
