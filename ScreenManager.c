@@ -196,12 +196,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             case 'j': ch = KEY_DOWN; break;
             case 'k': ch = KEY_UP; break;
             case 'l': ch = KEY_RIGHT; break;
-            case KEY_LEFT: ch = 'h'; break;
-            case KEY_DOWN: ch = 'j'; break;
-            case KEY_UP: ch = 'k'; break;
-            case KEY_RIGHT: ch = 'l'; break;
+            case 'H': ch = 'h'; break;
+            case 'J': ch = 'j'; break;
             case 'K': ch = 'k'; break;
-            case 'J': ch = 'K'; break;
             case 'L': ch = 'l'; break;
          }
       }
