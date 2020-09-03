@@ -33,7 +33,7 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 
 #define JAIL_ERRMSGLEN	1024
-char jail_errmsg[JAIL_ERRMSGLEN];
+extern char jail_errmsg[JAIL_ERRMSGLEN];
 
 typedef struct CPUData_ {
 
@@ -69,6 +69,7 @@ typedef struct FreeBSDProcessList_ {
 
 }*/
 
+char jail_errmsg[JAIL_ERRMSGLEN];
 
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
