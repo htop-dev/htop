@@ -19,7 +19,7 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 
 #define JAIL_ERRMSGLEN	1024
-char jail_errmsg[JAIL_ERRMSGLEN];
+extern char jail_errmsg[JAIL_ERRMSGLEN];
 
 typedef struct CPUData_ {
 
@@ -54,15 +54,17 @@ typedef struct FreeBSDProcessList_ {
 } FreeBSDProcessList;
 
 
+extern char jail_errmsg[JAIL_ERRMSGLEN];
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
-void ProcessList_delete(ProcessList* this);
+extern ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
-char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
+extern void ProcessList_delete(ProcessList* this);
 
-char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
+extern char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
 
-void ProcessList_goThroughEntries(ProcessList* this);
+extern char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
+
+extern void ProcessList_goThroughEntries(ProcessList* this);
 
 #endif
