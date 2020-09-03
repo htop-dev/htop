@@ -5,6 +5,7 @@ compiler:
   - gcc
 
 os:
+  - freebsd
   - linux
   - osx
 
