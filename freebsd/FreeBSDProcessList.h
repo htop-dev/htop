@@ -52,9 +52,6 @@ typedef struct FreeBSDProcessList_ {
 } FreeBSDProcessList;
 
 
-extern char jail_errmsg[JAIL_ERRMSGLEN];
-
-
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
