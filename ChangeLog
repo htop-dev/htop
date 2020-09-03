@@ -1,3 +1,16 @@
+What's new in version 3.0.1
+
+* Coverity fixes, CI improvements, documentation updates
+* BUGFIX: Fix early exit with longer sysfs battery paths
+* BUGFIX: Improve OOM output, fix sorting
+(thanks to Christian Göttsche)
+* Rework check buttons and tree open/closed
+(thanks to Bert Wesarg)
+* Add -U/--no-unicode option to disable unicode
+(thanks to Christian Hesse)
+* Improvements to the affinity panel
+(thanks to Bert Wesarg)
+
 What's new in version 3.0.0
 
 * New maintainers - after a prolonged period of inactivity
