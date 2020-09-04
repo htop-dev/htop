@@ -106,6 +106,13 @@ AC_ARG_WITH(proc, [AS_HELP_STRING([--with-proc=DIR], [Location of a Linux-compat
   fi,
   AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
 
+AC_ARG_ENABLE(libsensors, [AS_HELP_STRING([--enable-libsensors], [enable libsensors support])], ,enable_libsensors="no")
+if test "x$enable_libsensors" = xyes; then
+   AC_DEFINE(HAVE_LIBSENSORS, 1, [Define if libsensors support enabled.])
+   AC_CHECK_LIB([sensors], [sensors_get_value], [], [missing_libraries="$missing_libraries libsensors"])
+   AC_CHECK_HEADERS([sensors/sensors.h],[:],[missing_headers="$missing_headers $ac_header"])
+fi
+
 AC_ARG_ENABLE(openvz, [AS_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
 if test "x$enable_openvz" = xyes; then
    AC_DEFINE(HAVE_OPENVZ, 1, [Define if openvz support enabled.])
@@ -344,6 +351,7 @@ AM_CONDITIONAL([HTOP_OPENBSD], [test "$my_htop_platform" = openbsd])
 AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
+AM_CONDITIONAL([HAVE_LIBSENSORS], [test "$enable_libsensors" = yes])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
@@ -374,6 +382,7 @@ AC_MSG_RESULT([
   (Linux) taskstats:         $enable_taskstats
   (Linux) affinity:          $enable_linux_affinity
   (Linux) delay accounting:  $enable_delayacct
+  (Linux) libsensors:        $enable_libsensors
   unicode:                   $enable_unicode
   hwlock:                    $enable_hwloc
   setuid:                    $enable_setuid

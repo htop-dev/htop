@@ -117,6 +117,11 @@ myhtopheaders = \
 	Vector.h \
 	XAlloc.h
 
+if HAVE_LIBSENSORS
+myhtopsources += TemperatureMeter.c
+myhtopheaders += TemperatureMeter.h
+endif
+
 # Linux
 # -----
 

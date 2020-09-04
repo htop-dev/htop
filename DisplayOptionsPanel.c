@@ -90,5 +90,8 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    #ifdef HAVE_LIBHWLOC
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show topology when selecting affinity by default"), &(settings->topologyAffinity)));
    #endif
+   #ifdef HAVE_LIBSENSORS
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show temperature in Fahrenheit (°F)"), &(settings->fahrenheitTemperature)));
+   #endif
    return this;
 }

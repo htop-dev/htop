@@ -199,6 +199,10 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
       } else if (String_eq(option[0], "topology_affinity")) {
          this->topologyAffinity = !!atoi(option[1]);
       #endif
+      #ifdef HAVE_LIBSENSORS
+      } else if (String_eq(option[0], "fahrenheit_temperature")) {
+         this->fahrenheitTemperature = atoi(option[1]);
+      #endif
       }
       String_freeArray(option);
    }
@@ -281,6 +285,9 @@ bool Settings_write(Settings* this) {
    #ifdef HAVE_LIBHWLOC
    fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);
    #endif
+   #ifdef HAVE_LIBSENSORS
+   fprintf(fd, "fahrenheit_temperature=%d\n", (int) this->fahrenheitTemperature);
+   #endif
    fclose(fd);
    return true;
 }
@@ -307,6 +314,9 @@ Settings* Settings_new(int initialCpuCount) {
    this->highlightThreads = true;
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
+   #endif
+   #ifdef HAVE_LIBSENSORS
+   this->fahrenheitTemperature = false;
    #endif
    this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,

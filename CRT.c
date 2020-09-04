@@ -101,6 +101,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [METER_VALUE_IOWRITE] = ColorPair(Blue,Black),
       [LED_COLOR] = ColorPair(Green,Black),
       [TASKS_RUNNING] = A_BOLD | ColorPair(Green,Black),
+#ifdef HAVE_LIBSENSORS
+      [TEMPERATURE_COOL] = A_DIM | ColorPair(Green,Black),
+      [TEMPERATURE_MEDIUM] = A_NORMAL | ColorPair(Yellow,Black),
+      [TEMPERATURE_HOT] = A_BOLD | ColorPair(Red,Black),
+#endif
       [PROCESS] = A_NORMAL,
       [PROCESS_SHADOW] = A_BOLD | ColorPairGrayBlack,
       [PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Black),
@@ -177,6 +182,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [METER_VALUE_IOWRITE] = A_NORMAL,
       [LED_COLOR] = A_NORMAL,
       [TASKS_RUNNING] = A_BOLD,
+#ifdef HAVE_LIBSENSORS
+      [TEMPERATURE_COOL] = A_DIM,
+      [TEMPERATURE_MEDIUM] = A_NORMAL,
+      [TEMPERATURE_HOT] = A_BOLD,
+#endif
       [PROCESS] = A_NORMAL,
       [PROCESS_SHADOW] = A_DIM,
       [PROCESS_TAG] = A_BOLD,
@@ -253,6 +263,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [METER_VALUE_IOWRITE] = ColorPair(Yellow,White),
       [LED_COLOR] = ColorPair(Green,White),
       [TASKS_RUNNING] = ColorPair(Green,White),
+#ifdef HAVE_LIBSENSORS
+      [TEMPERATURE_COOL] = ColorPair(Green,White),
+      [TEMPERATURE_MEDIUM] = ColorPair(Yellow,White),
+      [TEMPERATURE_HOT] = ColorPair(Red,White),
+#endif
       [PROCESS] = ColorPair(Black,White),
       [PROCESS_SHADOW] = A_BOLD | ColorPair(Black,White),
       [PROCESS_TAG] = ColorPair(White,Blue),
@@ -330,6 +345,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [LED_COLOR] = ColorPair(Green,Black),
       [TASKS_RUNNING] = ColorPair(Green,Black),
       [PROCESS] = ColorPair(Blue,Black),
+#ifdef HAVE_LIBSENSORS
+      [TEMPERATURE_COOL] = ColorPair(Green,Black),
+      [TEMPERATURE_MEDIUM] = ColorPair(Yellow,Black),
+      [TEMPERATURE_HOT] = ColorPair(Red,Black),
+#endif
       [PROCESS_SHADOW] = A_BOLD | ColorPairGrayBlack,
       [PROCESS_TAG] = ColorPair(Yellow,Blue),
       [PROCESS_MEGABYTES] = ColorPair(Blue,Black),
@@ -405,6 +425,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [METER_VALUE_IOWRITE] = ColorPair(Black,Blue),
       [LED_COLOR] = ColorPair(Green,Blue),
       [TASKS_RUNNING] = A_BOLD | ColorPair(Green,Blue),
+#ifdef HAVE_LIBSENSORS
+      [TEMPERATURE_COOL] = A_DIM | ColorPair(Green,Blue),
+      [TEMPERATURE_MEDIUM] = A_NORMAL | ColorPair(Yellow,Blue),
+      [TEMPERATURE_HOT] = A_BOLD | ColorPair(Red,Blue),
+#endif
       [PROCESS] = ColorPair(White,Blue),
       [PROCESS_SHADOW] = A_BOLD | ColorPair(Black,Blue),
       [PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Blue),
@@ -481,6 +506,11 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [METER_VALUE_IOWRITE] = ColorPair(Blue,Black),
       [LED_COLOR] = ColorPair(Green,Black),
       [TASKS_RUNNING] = A_BOLD | ColorPair(Green,Black),
+#ifdef HAVE_LIBSENSORS
+      [TEMPERATURE_COOL] = A_DIM | ColorPair(Green,Black),
+      [TEMPERATURE_MEDIUM] = A_NORMAL | ColorPair(Yellow,Black),
+      [TEMPERATURE_HOT] = A_BOLD | ColorPair(Red,Black),
+#endif
       [PROCESS] = ColorPair(Cyan,Black),
       [PROCESS_SHADOW] = A_BOLD | ColorPairGrayBlack,
       [PROCESS_TAG] = A_BOLD | ColorPair(Yellow,Black),
@@ -820,4 +850,12 @@ void CRT_handleSIGSEGV(int signal) {
       "!!! Chained handler did not exit. Forcing exit.\n"
    );
    _exit(1);
+}
+
+const char* CRT_degreeSign() {
+   #ifdef HAVE_LIBNCURSESW
+   if (CRT_utf8)
+      return "°";
+   #endif
+   return "";
 }

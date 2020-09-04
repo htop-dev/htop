@@ -45,15 +45,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: sudo apt-get install libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev
+      run: sudo apt-get install libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct
+      run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-libsensors
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-libsensors'
 
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest

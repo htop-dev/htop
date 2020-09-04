@@ -27,6 +27,10 @@ in the source distribution for its full text.
 #include <time.h>
 #include <unistd.h>
 
+#ifdef HAVE_LIBSENSORS
+#include <sensors/sensors.h>
+#endif
+
 //#link m
 
 static void printVersionFlag(void) {
@@ -242,6 +246,10 @@ int main(int argc, char** argv) {
    }
 #endif
 
+#ifdef HAVE_LIBSENSORS
+   sensors_init(NULL);
+#endif
+
    Process_setupColumnWidths();
 
    UsersTable* ut = UsersTable_new();
@@ -320,5 +328,10 @@ int main(int argc, char** argv) {
    if(flags.pidMatchList) {
       Hashtable_delete(flags.pidMatchList);
    }
+
+#ifdef HAVE_LIBSENSORS
+   sensors_cleanup();
+#endif
+
    return 0;
 }

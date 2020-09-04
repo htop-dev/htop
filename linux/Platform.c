@@ -32,6 +32,10 @@ in the source distribution for its full text.
 #include "SELinuxMeter.h"
 #include "StringUtils.h"
 
+#ifdef HAVE_LIBSENSORS
+#include "TemperatureMeter.h"
+#endif
+
 #include <math.h>
 #include <assert.h>
 #include <limits.h>
@@ -117,6 +121,9 @@ const MeterClass* const Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
+#ifdef HAVE_LIBSENSORS
+   &TemperatureMeter_class,
+#endif
    &UptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,

@@ -52,6 +52,9 @@ typedef struct Settings_ {
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif
+   #ifdef HAVE_LIBSENSORS
+   bool fahrenheitTemperature;
+   #endif
 
    bool changed;
 } Settings;

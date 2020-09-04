@@ -55,6 +55,11 @@ typedef enum ColorElements_ {
    UPTIME,
    BATTERY,
    TASKS_RUNNING,
+#ifdef HAVE_LIBSENSORS
+   TEMPERATURE_COOL,
+   TEMPERATURE_MEDIUM,
+   TEMPERATURE_HOT,
+#endif
    SWAP,
    PROCESS,
    PROCESS_SHADOW,
@@ -170,5 +175,7 @@ void CRT_disableDelay(void);
 void CRT_enableDelay(void);
 
 void CRT_setColors(int colorScheme);
+
+const char* CRT_degreeSign(void);
 
 #endif

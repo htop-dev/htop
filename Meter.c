@@ -373,10 +373,13 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    int xx = x + strlen(this->caption);
    int len = RichString_sizeVal(out);
    for (int i = 0; i < len; i++) {
-      char c = RichString_getCharVal(out, i);
+      unsigned char c = RichString_getCharVal(out, i);
       if (c >= '0' && c <= '9') {
          LEDMeterMode_drawDigit(xx, y, c-48);
          xx += 4;
+      } else if (c == 176) {
+         mvaddch(yText, xx, ACS_DEGREE);
+         xx += 1;
       } else {
          mvaddch(yText, xx, c);
          xx += 1;
