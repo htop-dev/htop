@@ -323,7 +323,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    sproc->poolid            = _psinfo->pr_poolid;
    sproc->contid            = _psinfo->pr_contract;
    proc->priority           = _lwpsinfo->pr_pri;
-   proc->nice               = _lwpsinfo->pr_nice;
+   proc->nice               = _lwpsinfo->pr_nice - NZERO;
    proc->processor          = _lwpsinfo->pr_onpro;
    proc->state              = _lwpsinfo->pr_sname;
    // NOTE: This 'percentage' is a 16-bit BINARY FRACTIONS where 1.0 = 0x8000
