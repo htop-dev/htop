@@ -26,7 +26,7 @@ in the source distribution for its full text.
 #include <sys/swap.h>
 
 #define ZONE_ERRMSGLEN 1024
-char zone_errmsg[ZONE_ERRMSGLEN];
+extern char zone_errmsg[ZONE_ERRMSGLEN];
 
 typedef struct CPUData_ {
    double userPercent;
