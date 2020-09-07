@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <sys/syscall.h>
 #include <time.h>
+#include <math.h>
 
 /* semi-global */
 long long btime;
@@ -237,9 +238,15 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case IO_READ_RATE:  Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring); return;
    case IO_WRITE_RATE: Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring); return;
    case IO_RATE: {
-      double totalRate = (lp->io_rate_read_bps != -1)
-                       ? (lp->io_rate_read_bps + lp->io_rate_write_bps)
-                       : -1;
+      double totalRate = NAN;
+      if(!isnan(lp->io_rate_read_bps) && !isnan(lp->io_rate_write_bps))
+         totalRate = lp->io_rate_read_bps + lp->io_rate_write_bps;
+      else if(!isnan(lp->io_rate_read_bps))
+         totalRate = lp->io_rate_read_bps;
+      else if(!isnan(lp->io_rate_write_bps))
+         totalRate = lp->io_rate_write_bps;
+      else
+         totalRate = NAN;
       Process_outputRate(str, buffer, n, totalRate, coloring); return;
    }
    #endif

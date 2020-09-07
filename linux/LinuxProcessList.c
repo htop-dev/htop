@@ -331,8 +331,8 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
    xSnprintf(filename, MAX_NAME, "%s/%s/io", dirname, name);
    int fd = open(filename, O_RDONLY);
    if (fd == -1) {
-      process->io_rate_read_bps = -1;
-      process->io_rate_write_bps = -1;
+      process->io_rate_read_bps = NAN;
+      process->io_rate_write_bps = NAN;
       process->io_rchar = -1LL;
       process->io_wchar = -1LL;
       process->io_syscr = -1LL;
