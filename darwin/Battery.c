@@ -1,6 +1,8 @@
 
 #include "BatteryMeter.h"
 
+#include <math.h>
+
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreFoundation/CFString.h>
 #include <IOKit/ps/IOPowerSources.h>
@@ -9,7 +11,7 @@
 void Battery_getData(double* level, ACPresence* isOnAC) {
    CFTypeRef power_sources = IOPSCopyPowerSourcesInfo();
 
-   *level = -1;
+   *level = NAN;
    *isOnAC = AC_ERROR;
 
    if(NULL == power_sources) {

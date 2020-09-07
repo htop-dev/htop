@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 #include <sys/sensors.h>
 #include <errno.h>
+#include <math.h>
 #include <string.h>
 
 static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
@@ -36,7 +37,7 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
 
    bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
 
-   *level = -1;
+   *level = NAN;
    if (found) {
       /* last full capacity */
       mib[3] = 7;
