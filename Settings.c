@@ -356,11 +356,11 @@ Settings* Settings_new(int cpuCount) {
 
    this->sortKey = PERCENT_CPU;
    this->direction = 1;
-   this->hideThreads = false;
+   this->hideThreads = true;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
    this->hideKernelThreads = false;
-   this->hideUserlandThreads = false;
+   this->hideUserlandThreads = true;
    this->treeView = false;
    this->highlightBaseName = false;
    this->highlightMegabytes = false;
