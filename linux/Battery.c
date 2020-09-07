@@ -17,6 +17,7 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 #include <string.h>
 #include <fcntl.h>
 #include <time.h>
+#include <math.h>
 #include "BatteryMeter.h"
 #include "StringUtils.h"
 
@@ -140,18 +141,18 @@ static ACPresence procAcpiCheck(void) {
 static double Battery_getProcBatData(void) {
    const unsigned long int totalFull = parseBatInfo("info", 3, 4);
    if (totalFull == 0)
-      return 0;
+      return NAN;
 
    const unsigned long int totalRemain = parseBatInfo("state", 5, 3);
    if (totalRemain == 0)
-      return 0;
+      return NAN;
 
    return totalRemain * 100.0 / (double) totalFull;
 }
 
 static void Battery_getProcData(double* level, ACPresence* isOnAC) {
-   *level = Battery_getProcBatData();
    *isOnAC = procAcpiCheck();
+   *level = AC_ERROR != *isOnAC ? Battery_getProcBatData() : NAN;
 }
 
 // ----------------------------------------
@@ -176,7 +177,7 @@ static inline ssize_t xread(int fd, void *buf, size_t count) {
 
 static void Battery_getSysData(double* level, ACPresence* isOnAC) {
 
-   *level = 0;
+   *level = NAN;
    *isOnAC = AC_ERROR;
 
    DIR *dir = opendir(SYS_POWERSUPPLY_DIR);
@@ -279,13 +280,14 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       }
    }
    closedir(dir);
-   *level = totalFull > 0 ? ((double) totalRemain * 100) / (double) totalFull : 0;
+
+   *level = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
 }
 
 static enum { BAT_PROC, BAT_SYS, BAT_ERR } Battery_method = BAT_PROC;
 
 static time_t Battery_cacheTime = 0;
-static double Battery_cacheLevel = 0;
+static double Battery_cacheLevel = NAN;
 static ACPresence Battery_cacheIsOnAC = 0;
 
 void Battery_getData(double* level, ACPresence* isOnAC) {
@@ -299,22 +301,21 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
 
    if (Battery_method == BAT_PROC) {
       Battery_getProcData(level, isOnAC);
-      if (*level == 0) {
+      if (isnan(*level)) {
          Battery_method = BAT_SYS;
       }
    }
    if (Battery_method == BAT_SYS) {
       Battery_getSysData(level, isOnAC);
-      if (*level == 0) {
+      if (isnan(*level)) {
          Battery_method = BAT_ERR;
       }
    }
    if (Battery_method == BAT_ERR) {
-      *level = -1;
+      *level = NAN;
       *isOnAC = AC_ERROR;
-   }
-   if (*level > 100.0) {
-      *level = 100.0;
+   } else {
+      CLAMP(*level, 0.0, 100.0);
    }
    Battery_cacheLevel = *level;
    Battery_cacheIsOnAC = *isOnAC;

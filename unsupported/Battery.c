@@ -1,7 +1,8 @@
+#include <math.h>
 
 #include "BatteryMeter.h"
 
 void Battery_getData(double* level, ACPresence* isOnAC) {
-   *level = -1;
+   *level = NAN;
    *isOnAC = AC_ERROR;
 }
