@@ -42,7 +42,7 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
    if (this->pl->settings->showCPUFrequency) {
       double cpuFrequency = this->values[CPU_METER_FREQUENCY];
       char cpuFrequencyBuffer[16];
-      if (cpuFrequency < 0) {
+      if (isnan(cpuFrequency)) {
          xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A");
       } else {
          xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "%.0fMHz", cpuFrequency);

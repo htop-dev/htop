@@ -6,6 +6,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <math.h>
+
 #include "Platform.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
@@ -105,7 +107,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    (void) cpu;
 
    double* v = this->values;
-   v[CPU_METER_FREQUENCY] = -1;
+   v[CPU_METER_FREQUENCY] = NAN;
 
    return 0.0;
 }
