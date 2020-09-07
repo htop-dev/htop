@@ -1153,7 +1153,7 @@ static inline double LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
 
    for (int i = 0; i <= cpus; i++) {
       CPUData* cpuData = &(this->cpus[i]);
-      cpuData->frequency = -1;
+      cpuData->frequency = NAN;
    }
 
    int numCPUsWithFrequency = 0;

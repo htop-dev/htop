@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "DarwinProcessList.h"
 
+#include <math.h>
 #include <stdlib.h>
 
 
@@ -210,7 +211,7 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
    /* Convert to percent and return */
    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
 
-   mtr->values[CPU_METER_FREQUENCY] = -1;
+   mtr->values[CPU_METER_FREQUENCY] = NAN;
 
    return CLAMP(total, 0.0, 100.0);
 }
