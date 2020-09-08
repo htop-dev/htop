@@ -85,25 +85,12 @@ AC_CHECK_FUNCS([memmove strncasecmp strstr strdup])
 
 save_cflags="${CFLAGS}"
 CFLAGS="${CFLAGS} -std=c99"
-AC_MSG_CHECKING([whether gcc -std=c99 option works])
+AC_MSG_CHECKING([whether cc -std=c99 option works])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
    [AC_INCLUDES_DEFAULT], [[char *a; a = strdup("foo"); int i = 0; i++; // C99]])],
    [AC_MSG_RESULT([yes])],
-   [AC_MSG_ERROR([htop is written in C99. A newer version of gcc is required.])])
+   [AC_MSG_ERROR([htop is written in C99. A newer compiler is required.])])
 CFLAGS="$save_cflags"
-
-save_cflags="${CFLAGS}"
-CFLAGS="$CFLAGS -Wextra"
-AC_MSG_CHECKING([if compiler supports -Wextra])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],[
-   wextra_flag=-Wextra
-   AC_MSG_RESULT([yes])
-],[
-   wextra_flag=
-   AC_MSG_RESULT([no])
-])
-CFLAGS="$save_cflags"
-AC_SUBST(wextra_flag)
 
 # Checks for features and flags.
 # ----------------------------------------------------------------------
@@ -278,6 +265,19 @@ then
       AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
    ])
 fi
+
+AM_CFLAGS="\
+ -Wall\
+ -Wcast-align\
+ -Wextra\
+ -Wmissing-format-attribute\
+ -Wmissing-noreturn\
+ -Wpointer-arith\
+ -Wshadow\
+ -Wstrict-prototypes\
+ -Wundef\
+ -Wunused\
+ -Wwrite-strings"
 
 AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as errors (default: warnings are not errors)])], [enable_werror="$enableval"], [enable_werror=no])
 AS_IF([test "x$enable_werror" = "xyes"], [AM_CFLAGS="$AM_CFLAGS -Werror"])
