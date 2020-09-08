@@ -40,6 +40,7 @@ InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar
 
 InfoScreen* InfoScreen_done(InfoScreen* this);
 
+ATTR_FORMAT(printf, 2, 3)
 void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...);
 
 void InfoScreen_addLine(InfoScreen* this, const char* line);
