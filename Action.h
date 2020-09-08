@@ -24,8 +24,6 @@ typedef enum {
    HTOP_UPDATE_PANELHDR = 0x41, // implies HTOP_REFRESH
 } Htop_Reaction;
 
-typedef Htop_Reaction (*Htop_Action)();
-
 typedef struct State_ {
    Settings* settings;
    UsersTable* ut;
@@ -33,6 +31,8 @@ typedef struct State_ {
    Panel* panel;
    Header* header;
 } State;
+
+typedef Htop_Reaction (*Htop_Action)(State* st);
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess);
 

@@ -272,7 +272,7 @@ static Htop_Reaction actionExpandCollapseOrSortColumn(State* st) {
    return st->settings->treeView ? actionExpandOrCollapse(st) : actionSetSortColumn(st);
 }
 
-static Htop_Reaction actionQuit() {
+static Htop_Reaction actionQuit(ATTR_UNUSED State* st) {
    return HTOP_QUIT;
 }
 
@@ -386,7 +386,7 @@ static Htop_Reaction actionTag(State* st) {
    return HTOP_OK;
 }
 
-static Htop_Reaction actionRedraw() {
+static Htop_Reaction actionRedraw(ATTR_UNUSED State *st) {
    clear();
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }

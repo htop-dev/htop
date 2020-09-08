@@ -28,11 +28,11 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern int Platform_numberOfFields;
 
-int Platform_getUptime();
+int Platform_getUptime(void);
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
-int Platform_getMaxPid();
+int Platform_getMaxPid(void);
 
 extern ProcessPidColumn Process_pidColumns[];
 

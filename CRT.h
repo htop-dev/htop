@@ -149,9 +149,9 @@ extern void *backtraceArray[128];
 
 #if HAVE_SETUID_ENABLED
 
-void CRT_dropPrivileges();
+void CRT_dropPrivileges(void);
 
-void CRT_restorePrivileges();
+void CRT_restorePrivileges(void);
 
 #else
 
@@ -166,15 +166,15 @@ void CRT_restorePrivileges();
 
 void CRT_init(int delay, int colorScheme, bool allowUnicode);
 
-void CRT_done();
+void CRT_done(void);
 
 void CRT_fatalError(const char* note);
 
-int CRT_readKey();
+int CRT_readKey(void);
 
-void CRT_disableDelay();
+void CRT_disableDelay(void);
 
-void CRT_enableDelay();
+void CRT_enableDelay(void);
 
 void CRT_setColors(int colorScheme);
 
