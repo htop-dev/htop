@@ -263,11 +263,11 @@ char* Platform_getProcessEnv(pid_t pid) {
          mib[0] = CTL_KERN;
          mib[1] = KERN_PROCARGS2;
          mib[2] = pid;
-         size_t bufsz = argmax;
+         bufsz = argmax;
          if (sysctl(mib, 3, buf, &bufsz, 0, 0) == 0) {
             if (bufsz > sizeof(int)) {
                char *p = buf, *endp = buf + bufsz;
-               int argc = *(int*)p;
+               int argc = *(int*)(void*)p;
                p += sizeof(int);
 
                // skip exe

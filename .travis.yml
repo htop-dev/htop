@@ -9,4 +9,9 @@ os:
   - linux
   - osx
 
-script: ./autogen.sh && ./configure && make
+script:
+  - ./autogen.sh
+  # clang might warn about C11 generic selections in isnan()
+  - CFLAGS=-Wno-c11-extensions ./configure --enable-werror
+  - make
+  - CFLAGS=-Wno-c11-extensions make distcheck DISTCHECK_CONFIGURE_FLAGS=--enable-werror

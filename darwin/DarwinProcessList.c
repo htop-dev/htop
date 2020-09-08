@@ -115,7 +115,6 @@ struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
 }
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
-   size_t len;
    DarwinProcessList* this = xCalloc(1, sizeof(DarwinProcessList));
 
    ProcessList_init(&this->super, Class(Process), usersTable, pidMatchList, userId);
