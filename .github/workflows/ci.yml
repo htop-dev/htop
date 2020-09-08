@@ -12,11 +12,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror
+      run: ./configure --enable-werror --enable-linux-affinity
     - name: Build
       run: make
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS=--enable-werror
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity"
 
   build-ubuntu-clang-latest:
     runs-on: ubuntu-latest
@@ -34,11 +34,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror
+      run: ./configure --enable-werror --enable-linux-affinity
     - name: Build
       run: make
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS=--enable-werror
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity"
 
   build-ubuntu-latest-full-featured:
     runs-on: ubuntu-latest
@@ -49,11 +49,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-linux-affinity --enable-hwloc --enable-setuid --enable-delayacct
+      run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct
     - name: Build
       run: make
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-linux-affinity --enable-hwloc --enable-setuid --enable-delayacct'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct'
 
   whitespace_check:
     runs-on: ubuntu-latest

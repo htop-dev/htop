@@ -214,33 +214,43 @@ if test "$my_htop_platform" = "solaris"; then
    AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
 fi
 
-AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
-if test "x$enable_linux_affinity" = xyes; then
-   AC_MSG_CHECKING([for usable sched_setaffinity])
-   AC_RUN_IFELSE([
-     AC_LANG_PROGRAM([[
-       #include <sched.h>
-       #include <errno.h>
-       static cpu_set_t cpuset;
-       ]], [[
-       CPU_ZERO(&cpuset);
-       sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-       if (errno == ENOSYS) return 1;
-       ]])],
-     [AC_MSG_RESULT([yes])],
-     [enable_linux_affinity=no
-      AC_MSG_RESULT([no])],
-     [AC_MSG_RESULT([yes (assumed while cross compiling)])])
+AC_ARG_ENABLE(hwloc, [AS_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity, disables Linux affinity])],, enable_hwloc="no")
+if test "x$enable_hwloc" = xyes
+then
+   AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
+   AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
+fi
+
+AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, conflicts with hwloc])], ,enable_linux_affinity="check")
+if test "x$enable_linux_affinity" = xcheck; then
+   if test "x$enable_hwloc" = xyes; then
+      enable_linux_affinity=no
+   else
+      AC_MSG_CHECKING([for usable sched_setaffinity])
+      AC_RUN_IFELSE([
+         AC_LANG_PROGRAM([[
+            #include <sched.h>
+            #include <errno.h>
+            static cpu_set_t cpuset;
+         ]], [[
+            CPU_ZERO(&cpuset);
+            sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+            if (errno == ENOSYS) return 1;
+         ]])],
+      [enable_linux_affinity=yes
+       AC_MSG_RESULT([yes])],
+      [enable_linux_affinity=no
+       AC_MSG_RESULT([no])],
+      [AC_MSG_RESULT([yes (assumed while cross compiling)])])
+   fi
 fi
 if test "x$enable_linux_affinity" = xyes; then
    AC_DEFINE(HAVE_LINUX_AFFINITY, 1, [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
-AC_ARG_ENABLE(hwloc, [AS_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
-if test "x$enable_hwloc" = xyes
+if test "x$enable_linux_affinity" = xyes -a "x$enable_hwloc" = xyes
 then
-   AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
-   AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
+   AC_MSG_ERROR([--enable-hwloc and --enable-linux-affinity are mutual exclusive. Specify at most one of them.])
 fi
 
 AC_ARG_ENABLE(setuid, [AS_HELP_STRING([--enable-setuid], [enable setuid support for platforms that need it])],, enable_setuid="no")
