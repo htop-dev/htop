@@ -14,13 +14,13 @@ in the source distribution for its full text.
 #include <assert.h>
 #ifdef HAVE_NCURSESW_CURSES_H
 #include <ncursesw/curses.h>
-#elif HAVE_NCURSES_NCURSES_H
+#elif defined(HAVE_NCURSES_NCURSES_H)
 #include <ncurses/ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
+#elif defined(HAVE_NCURSES_CURSES_H)
 #include <ncurses/curses.h>
-#elif HAVE_NCURSES_H
+#elif defined(HAVE_NCURSES_H)
 #include <ncurses.h>
-#elif HAVE_CURSES_H
+#elif defined(HAVE_CURSES_H)
 #include <curses.h>
 #endif
 
@@ -63,13 +63,13 @@ void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
 
 int RichString_findChar(RichString* this, char c, int start);
 
-#else
+#else /* HAVE_LIBNCURSESW */
 
 void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
 
 int RichString_findChar(RichString* this, char c, int start);
 
-#endif
+#endif /* HAVE_LIBNCURSESW */
 
 void RichString_prune(RichString* this);
 

@@ -12,12 +12,12 @@ in the source distribution for its full text.
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
-#if __linux__
+#ifdef __linux__
 #define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_THREAD
 #else
 #define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_PROCESS
 #endif
-#elif HAVE_LINUX_AFFINITY
+#elif defined(HAVE_LINUX_AFFINITY)
 #include <sched.h>
 #endif
 
@@ -79,7 +79,7 @@ bool Affinity_set(Process* proc, Arg arg) {
    return ok;
 }
 
-#elif HAVE_LINUX_AFFINITY
+#elif defined(HAVE_LINUX_AFFINITY)
 
 Affinity* Affinity_get(Process* proc, ProcessList* pl) {
    cpu_set_t cpuset;

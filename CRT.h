@@ -147,13 +147,13 @@ extern int CRT_colorScheme;
 
 extern void *backtraceArray[128];
 
-#if HAVE_SETUID_ENABLED
+#ifdef HAVE_SETUID_ENABLED
 
 void CRT_dropPrivileges(void);
 
 void CRT_restorePrivileges(void);
 
-#else
+#else /* HAVE_SETUID_ENABLED */
 
 /* Turn setuid operations into NOPs */
 
@@ -162,7 +162,7 @@ void CRT_restorePrivileges(void);
 #define CRT_restorePrivileges()
 #endif
 
-#endif
+#endif /* HAVE_SETUID_ENABLED */
 
 void CRT_init(int delay, int colorScheme, bool allowUnicode);
 

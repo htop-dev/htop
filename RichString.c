@@ -70,7 +70,7 @@ int RichString_findChar(RichString* this, char c, int start) {
    return -1;
 }
 
-#else
+#else /* HAVE_LIBNCURSESW */
 
 static inline void RichString_writeFrom(RichString* this, int attrs, const char* data_c, int from, int len) {
    int newLen = from + len;
@@ -99,7 +99,7 @@ int RichString_findChar(RichString* this, char c, int start) {
    return -1;
 }
 
-#endif
+#endif /* HAVE_LIBNCURSESW */
 
 void RichString_prune(RichString* this) {
    if (this->chlen > RICHSTRING_MAXLEN)
