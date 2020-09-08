@@ -385,10 +385,12 @@ bool Panel_onKey(Panel* this, int key) {
    switch (key) {
    case KEY_DOWN:
    case KEY_CTRL('N'):
+   case 'j':
       this->selected++;
       break;
    case KEY_UP:
    case KEY_CTRL('P'):
+   case 'k':
       this->selected--;
       break;
    #ifdef KEY_C_DOWN
@@ -403,6 +405,7 @@ bool Panel_onKey(Panel* this, int key) {
    #endif
    case KEY_LEFT:
    case KEY_CTRL('B'):
+   case 'h':
       if (this->scrollH > 0) {
          this->scrollH -= MAX(CRT_scrollHAmount, 0);
          this->needsRedraw = true;
@@ -410,6 +413,7 @@ bool Panel_onKey(Panel* this, int key) {
       break;
    case KEY_RIGHT:
    case KEY_CTRL('F'):
+   case 'l':
       this->scrollH += CRT_scrollHAmount;
       this->needsRedraw = true;
       break;
