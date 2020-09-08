@@ -205,10 +205,12 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
 }
 
 void Platform_setTasksValues(Meter* this) {
+   (void) this;
    // TODO
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
+   (void) pid;
    // TODO
    return NULL;
 }
