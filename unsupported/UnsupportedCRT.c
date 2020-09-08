@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "config.h"
+#include "UnsupportedCRT.h"
 #include "CRT.h"
 #include <stdio.h>
 #include <stdlib.h>

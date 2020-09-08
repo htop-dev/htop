@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "config.h"
+#include "LinuxCRT.h"
 #include "CRT.h"
 
 #include <signal.h>
