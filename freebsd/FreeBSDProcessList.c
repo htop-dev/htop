@@ -247,7 +247,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    u_long totalMem;
    u_int memActive, memWire, cachedMem;
    long buffersMem;
-   uint64_t memZfsArc;
    size_t len;
 
    //disabled for now, as it is always smaller than phycal amount of memory...
@@ -383,7 +382,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    FreeBSDProcessList_scanMemoryInfo(this);
    FreeBSDProcessList_scanCPUTime(this);
 
-   int cpus = this->cpuCount;
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
 
