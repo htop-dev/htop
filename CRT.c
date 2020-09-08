@@ -18,7 +18,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <locale.h>
 #include <langinfo.h>
-#if HAVE_SETUID_ENABLED
+#ifdef HAVE_SETUID_ENABLED
 #include <unistd.h>
 #include <sys/types.h>
 #endif
@@ -519,7 +519,7 @@ static void CRT_handleSIGTERM(int sgn) {
    exit(0);
 }
 
-#if HAVE_SETUID_ENABLED
+#ifdef HAVE_SETUID_ENABLED
 
 static int CRT_euid = -1;
 
@@ -550,11 +550,11 @@ void CRT_restorePrivileges() {
    }
 }
 
-#else
+#else /* HAVE_SETUID_ENABLED */
 
 // In this case, the setuid operations are defined as macros in CRT.h
 
-#endif
+#endif /* HAVE_SETUID_ENABLED */
 
 // TODO: pass an instance of Settings instead.
 

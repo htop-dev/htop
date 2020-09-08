@@ -279,7 +279,7 @@ static Htop_Reaction actionQuit(ATTR_UNUSED State* st) {
 static Htop_Reaction actionSetAffinity(State* st) {
    if (st->pl->cpuCount == 1)
       return HTOP_OK;
-#if (HAVE_LIBHWLOC || HAVE_LINUX_AFFINITY)
+#if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))
    Panel* panel = st->panel;
 
    Process* p = (Process*) Panel_getSelected(panel);
@@ -416,7 +416,7 @@ static const struct { const char* key; const char* info; } helpRight[] = {
    { .key = "   F9 k: ", .info = "kill process/tagged processes" },
    { .key = "   F7 ]: ", .info = "higher priority (root only)" },
    { .key = "   F8 [: ", .info = "lower priority (+ nice)" },
-#if (HAVE_LIBHWLOC || HAVE_LINUX_AFFINITY)
+#if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))
    { .key = "      a: ", .info = "set CPU affinity" },
 #endif
    { .key = "      e: ", .info = "show process environment" },
