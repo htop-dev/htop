@@ -10,7 +10,7 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-AM_CFLAGS += -pedantic -Wall $(wextra_flag) -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
+AM_CFLAGS += -pedantic -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
 AM_LDFLAGS =
 AM_CPPFLAGS = -DNDEBUG
 
