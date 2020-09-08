@@ -513,6 +513,7 @@ int CRT_colorScheme = 0;
 
 void *backtraceArray[128];
 
+ATTR_NORETURN
 static void CRT_handleSIGTERM(int sgn) {
    (void) sgn;
    CRT_done();

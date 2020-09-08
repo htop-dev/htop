@@ -29,11 +29,13 @@ in the source distribution for its full text.
 
 //#link m
 
+ATTR_NORETURN
 static void printVersionFlag(void) {
    fputs("htop " VERSION "\n", stdout);
    exit(0);
 }
 
+ATTR_NORETURN
 static void printHelpFlag(void) {
    fputs("htop " VERSION "\n"
          "Released under the GNU GPL.\n\n"

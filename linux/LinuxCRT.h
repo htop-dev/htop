@@ -7,6 +7,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Macros.h"
+
 void CRT_handleSIGSEGV(int sgn);
 
 #endif

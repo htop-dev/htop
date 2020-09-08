@@ -5,11 +5,13 @@
 #define _GNU_SOURCE
 #endif
 
+#include "Macros.h"
+
 #include <err.h>
 #include <assert.h>
 #include <stdlib.h>
 
-void fail(void);
+void fail(void) ATTR_NORETURN;
 
 void* xMalloc(size_t size);
 
