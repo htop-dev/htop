@@ -11,25 +11,6 @@ in the source distribution for its full text.
 #include <assert.h>
 #include "CRT.h"
 
-/*{
-#include "Panel.h"
-#include "Settings.h"
-#include "ScreenManager.h"
-
-typedef struct MetersPanel_ MetersPanel;
-
-struct MetersPanel_ {
-   Panel super;
-
-   Settings* settings;
-   Vector* meters;
-   ScreenManager* scr;
-   MetersPanel* leftNeighbor;
-   MetersPanel* rightNeighbor;
-   bool moving;
-};
-
-}*/
 
 // Note: In code the meters are known to have bar/text/graph "Modes", but in UI
 // we call them "Styles".

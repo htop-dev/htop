@@ -15,21 +15,6 @@ in the source distribution for its full text.
 
 #include <mach/mach.h>
 
-/*{
-#include "Settings.h"
-#include "DarwinProcessList.h"
-
-#include <sys/sysctl.h>
-
-typedef struct DarwinProcess_ {
-   Process super;
-
-   uint64_t utime;
-   uint64_t stime;
-   bool taskAccess;
-} DarwinProcess;
-
-}*/
 
 ProcessClass DarwinProcess_class = {
    .super = {

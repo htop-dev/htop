@@ -17,22 +17,6 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdlib.h>
 
-/*{
-#include "Panel.h"
-#include "Settings.h"
-#include "ScreenManager.h"
-#include "ProcessList.h"
-
-typedef struct CategoriesPanel_ {
-   Panel super;
-   ScreenManager* scr;
-
-   Settings* settings;
-   Header* header;
-   ProcessList* pl;
-} CategoriesPanel;
-
-}*/
 
 static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 

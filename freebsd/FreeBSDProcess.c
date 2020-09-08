@@ -16,33 +16,6 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <sys/syscall.h>
 
-/*{
-
-typedef enum FreeBSDProcessFields {
-   // Add platform-specific fields here, with ids >= 100
-   JID   = 100,
-   JAIL  = 101,
-   LAST_PROCESSFIELD = 102,
-} FreeBSDProcessField;
-
-
-typedef struct FreeBSDProcess_ {
-   Process super;
-   int   kernel;
-   int   jid;
-   char* jname;
-} FreeBSDProcess;
-
-
-#ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->kernel == 1)
-#endif
-
-#ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
-
-}*/
 
 ProcessClass FreeBSDProcess_class = {
    .super = {

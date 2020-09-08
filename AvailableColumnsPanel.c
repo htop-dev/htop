@@ -16,15 +16,6 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <string.h>
 
-/*{
-#include "Panel.h"
-
-typedef struct AvailableColumnsPanel_ {
-   Panel super;
-   Panel* columns;
-} AvailableColumnsPanel;
-
-}*/
 
 static const char* const AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 

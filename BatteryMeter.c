@@ -18,15 +18,6 @@ This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 #include <string.h>
 #include <stdlib.h>
 
-/*{
-#include "Meter.h"
-
-typedef enum ACPresence_ {
-   AC_ABSENT,
-   AC_PRESENT,
-   AC_ERROR
-} ACPresence;
-}*/
 
 int BatteryMeter_attributes[] = {
    BATTERY

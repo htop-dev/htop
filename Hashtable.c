@@ -11,26 +11,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <assert.h>
 
-/*{
-#include <stdbool.h>
-
-typedef struct Hashtable_ Hashtable;
-
-typedef void(*Hashtable_PairFunction)(int, void*, void*);
-
-typedef struct HashtableItem {
-   unsigned int key;
-   void* value;
-   struct HashtableItem* next;
-} HashtableItem;
-
-struct Hashtable_ {
-   int size;
-   HashtableItem** buckets;
-   int items;
-   bool owner;
-};
-}*/
 
 #ifdef DEBUG
 

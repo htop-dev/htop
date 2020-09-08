@@ -21,18 +21,6 @@ in the source distribution for its full text.
 #include <sched.h>
 #endif
 
-/*{
-#include "Process.h"
-#include "ProcessList.h"
-
-typedef struct Affinity_ {
-   ProcessList* pl;
-   int size;
-   int used;
-   int* cpus;
-} Affinity;
-
-}*/
 
 Affinity* Affinity_new(ProcessList* pl) {
    Affinity* this = xCalloc(1, sizeof(Affinity));

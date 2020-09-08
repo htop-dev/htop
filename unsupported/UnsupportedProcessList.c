@@ -11,9 +11,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 
-/*{
-
-}*/
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));

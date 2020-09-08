@@ -16,33 +16,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <stdbool.h>
 
-/*{
-#include "FunctionBar.h"
-#include "Vector.h"
-#include "Header.h"
-#include "Settings.h"
-#include "Panel.h"
-
-typedef enum Orientation_ {
-   VERTICAL,
-   HORIZONTAL
-} Orientation;
-
-typedef struct ScreenManager_ {
-   int x1;
-   int y1;
-   int x2;
-   int y2;
-   Orientation orientation;
-   Vector* panels;
-   int panelCount;
-   const Header* header;
-   const Settings* settings;
-   bool owner;
-   bool allowFocusChange;
-} ScreenManager;
-
-}*/
 
 ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner) {
    ScreenManager* this;

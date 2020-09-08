@@ -21,54 +21,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <sys/param.h>
 
-/*{
-
-#include <kvm.h>
-#include <sys/param.h>
-#include <osreldate.h>
-#include <sys/kinfo.h>
-#include <kinfo.h>
-#include <sys/jail.h>
-#include <sys/uio.h>
-#include <sys/resource.h>
-#include "Hashtable.h"
-#include "DragonFlyBSDProcess.h"
-
-#define JAIL_ERRMSGLEN	1024
-char jail_errmsg[JAIL_ERRMSGLEN];
-
-typedef struct CPUData_ {
-
-   double userPercent;
-   double nicePercent;
-   double systemPercent;
-   double irqPercent;
-   double idlePercent;
-   double systemAllPercent;
-
-} CPUData;
-
-typedef struct DragonFlyBSDProcessList_ {
-   ProcessList super;
-   kvm_t* kd;
-
-   unsigned long long int memWire;
-   unsigned long long int memActive;
-   unsigned long long int memInactive;
-   unsigned long long int memFree;
-
-   CPUData* cpus;
-
-   unsigned long   *cp_time_o;
-   unsigned long   *cp_time_n;
-
-   unsigned long  *cp_times_o;
-   unsigned long  *cp_times_n;
-
-   Hashtable *jails;
-} DragonFlyBSDProcessList;
-
-}*/
 
 #define _UNUSED_ __attribute__((unused))
 

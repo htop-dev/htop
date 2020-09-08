@@ -14,19 +14,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 
-/*{
-#include "Panel.h"
-#include "Settings.h"
-#include "ScreenManager.h"
-
-typedef struct DisplayOptionsPanel_ {
-   Panel super;
-
-   Settings* settings;
-   ScreenManager* scr;
-} DisplayOptionsPanel;
-
-}*/
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 

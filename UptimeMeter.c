@@ -9,9 +9,6 @@ in the source distribution for its full text.
 #include "Platform.h"
 #include "CRT.h"
 
-/*{
-#include "Meter.h"
-}*/
 
 int UptimeMeter_attributes[] = {
    UPTIME

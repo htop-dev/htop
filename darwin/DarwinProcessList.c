@@ -54,28 +54,6 @@ int CompareKernelVersion(short int major, short int minor, short int component) 
     return 0;
 }
 
-/*{
-#include "ProcessList.h"
-#include "zfs/ZfsArcStats.h"
-#include <mach/mach_host.h>
-#include <sys/sysctl.h>
-
-typedef struct DarwinProcessList_ {
-   ProcessList super;
-
-   host_basic_info_data_t host_info;
-   vm_statistics_data_t vm_stats;
-   processor_cpu_load_info_t prev_load;
-   processor_cpu_load_info_t curr_load;
-   uint64_t kernel_threads;
-   uint64_t user_threads;
-   uint64_t global_diff;
-
-   ZfsArcStats zfs;
-} DarwinProcessList;
-
-}*/
-
 void ProcessList_getHostInfo(host_basic_info_data_t *p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
 

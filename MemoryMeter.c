@@ -16,9 +16,6 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <assert.h>
 
-/*{
-#include "Meter.h"
-}*/
 
 int MemoryMeter_attributes[] = {
    MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE

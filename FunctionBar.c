@@ -14,19 +14,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdlib.h>
 
-/*{
-
-#include <stdbool.h>
-
-typedef struct FunctionBar_ {
-   int size;
-   char** functions;
-   char** keys;
-   int* events;
-   bool staticData;
-} FunctionBar;
-
-}*/
 
 static const char* const FunctionBar_FKeys[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", NULL};
 

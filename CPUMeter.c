@@ -16,24 +16,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <math.h>
 
-/*{
-#include "Meter.h"
-
-typedef enum {
-   CPU_METER_NICE = 0,
-   CPU_METER_NORMAL = 1,
-   CPU_METER_KERNEL = 2,
-   CPU_METER_IRQ = 3,
-   CPU_METER_SOFTIRQ = 4,
-   CPU_METER_STEAL = 5,
-   CPU_METER_GUEST = 6,
-   CPU_METER_IOWAIT = 7,
-   CPU_METER_FREQUENCY = 8,
-   CPU_METER_ITEMCOUNT = 9, // number of entries in this enum
-} CPUMeterValues;
-
-}*/
-
 int CPUMeter_attributes[] = {
    CPU_NICE, CPU_NORMAL, CPU_SYSTEM, CPU_IRQ, CPU_SOFTIRQ, CPU_STEAL, CPU_GUEST, CPU_IOWAIT
 };

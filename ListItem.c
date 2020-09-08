@@ -15,17 +15,6 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdlib.h>
 
-/*{
-#include "Object.h"
-
-typedef struct ListItem_ {
-   Object super;
-   char* value;
-   int key;
-   bool moving;
-} ListItem;
-
-}*/
 
 static void ListItem_delete(Object* cast) {
    ListItem* this = (ListItem*)cast;

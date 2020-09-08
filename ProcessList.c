@@ -14,69 +14,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 
-/*{
-#include "Vector.h"
-#include "Hashtable.h"
-#include "UsersTable.h"
-#include "Panel.h"
-#include "Process.h"
-#include "Settings.h"
-
-#ifdef HAVE_LIBHWLOC
-#include <hwloc.h>
-#endif
-
-#ifndef MAX_NAME
-#define MAX_NAME 128
-#endif
-
-#ifndef MAX_READ
-#define MAX_READ 2048
-#endif
-
-typedef struct ProcessList_ {
-   Settings* settings;
-
-   Vector* processes;
-   Vector* processes2;
-   Hashtable* processTable;
-   UsersTable* usersTable;
-
-   Panel* panel;
-   int following;
-   uid_t userId;
-   const char* incFilter;
-   Hashtable* pidWhiteList;
-
-   #ifdef HAVE_LIBHWLOC
-   hwloc_topology_t topology;
-   bool topologyOk;
-   #endif
-
-   int totalTasks;
-   int runningTasks;
-   int userlandThreads;
-   int kernelThreads;
-
-   unsigned long long int totalMem;
-   unsigned long long int usedMem;
-   unsigned long long int freeMem;
-   unsigned long long int sharedMem;
-   unsigned long long int buffersMem;
-   unsigned long long int cachedMem;
-   unsigned long long int totalSwap;
-   unsigned long long int usedSwap;
-   unsigned long long int freeSwap;
-
-   int cpuCount;
-
-} ProcessList;
-
-ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList, uid_t userId);
-void ProcessList_delete(ProcessList* pl);
-void ProcessList_goThroughEntries(ProcessList* pl);
-
-}*/
 
 ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);

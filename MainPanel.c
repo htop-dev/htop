@@ -13,25 +13,6 @@ in the source distribution for its full text.
 
 #include <stdlib.h>
 
-/*{
-#include "Panel.h"
-#include "Action.h"
-#include "Settings.h"
-
-typedef struct MainPanel_ {
-   Panel super;
-   State* state;
-   IncSet* inc;
-   Htop_Action *keys;
-   pid_t pidSearch;
-} MainPanel;
-
-typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
-
-#define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
-
-}*/
-
 static const char* const MainFunctions[]  = {"Help   ", "Setup  ", "Search ", "Filter ", "Tree   ", "SortBy ", "Nice - ", "Nice + ", "Kill   ", "Quit   ", NULL};
 
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {

@@ -11,9 +11,6 @@ in the source distribution for its full text.
 
 #include <time.h>
 
-/*{
-#include "Meter.h"
-}*/
 
 int ClockMeter_attributes[] = {
    CLOCK

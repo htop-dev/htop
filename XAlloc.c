@@ -8,11 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*{
-#include <err.h>
-#include <assert.h>
-#include <stdlib.h>
-}*/
 
 void fail() {
    curs_set(1);

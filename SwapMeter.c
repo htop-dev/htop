@@ -16,9 +16,6 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <assert.h>
 
-/*{
-#include "Meter.h"
-}*/
 
 int SwapMeter_attributes[] = {
    SWAP

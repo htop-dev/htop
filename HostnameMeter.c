@@ -11,9 +11,6 @@ in the source distribution for its full text.
 
 #include <unistd.h>
 
-/*{
-#include "Meter.h"
-}*/
 
 int HostnameMeter_attributes[] = {
    HOSTNAME

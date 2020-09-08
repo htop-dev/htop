@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 bin_PROGRAMS = htop
 
 dist_man_MANS = htop.1
-EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.py \
+EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png \
 install-sh autogen.sh missing
 applicationsdir = $(datadir)/applications
 applications_DATA = htop.desktop
@@ -36,8 +36,6 @@ TasksMeter.h UptimeMeter.h TraceScreen.h UsersTable.h Vector.h Process.h \
 AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
 EnvScreen.h InfoScreen.h XAlloc.h
 
-all_platform_headers =
-
 # Linux
 # -----
 
@@ -54,11 +52,9 @@ linux_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h \
 	zfs/ZfsArcStats.h
 
-all_platform_headers += $(linux_platform_headers)
-
 if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
-myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
+myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c \
 linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c \
 linux/PressureStallMeter.c \
 zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c
@@ -80,8 +76,6 @@ freebsd_platform_headers = \
 	zfs/ZfsArcStats.h \
 	zfs/openzfs_sysctl.h
 
-all_platform_headers += $(freebsd_platform_headers)
-
 if HTOP_FREEBSD
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
 freebsd/FreeBSDProcess.c freebsd/FreeBSDCRT.c freebsd/Battery.c \
@@ -100,8 +94,6 @@ dragonflybsd_platform_headers = \
 	dragonflybsd/DragonFlyBSDCRT.h \
 	dragonflybsd/Battery.h
 
-all_platform_headers += $(dragonflybsd_platform_headers)
-
 if HTOP_DRAGONFLYBSD
 AM_LDFLAGS += -lkvm -lkinfo -lexecinfo
 myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
@@ -119,8 +111,6 @@ openbsd_platform_headers = \
 	openbsd/OpenBSDProcess.h \
 	openbsd/OpenBSDCRT.h \
 	openbsd/Battery.h
-
-all_platform_headers += $(openbsd_platform_headers)
 
 if HTOP_OPENBSD
 myhtopplatsources = openbsd/Platform.c openbsd/OpenBSDProcessList.c \
@@ -142,8 +132,6 @@ darwin_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/openzfs_sysctl.h
-
-all_platform_headers += $(darwin_platform_headers)
 
 if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
@@ -167,8 +155,6 @@ solaris_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h \
 	zfs/ZfsArcStats.h
 
-all_platform_headers += $(solaris_platform_headers)
-
 if HTOP_SOLARIS
 myhtopplatsources = solaris/Platform.c \
 solaris/SolarisProcess.c solaris/SolarisProcessList.c \
@@ -188,8 +174,6 @@ unsupported_platform_headers = \
 	unsupported/UnsupportedCRT.h \
 	unsupported/Battery.h
 
-all_platform_headers += $(unsupported_platform_headers)
-
 if HTOP_UNSUPPORTED
 myhtopplatsources = unsupported/Platform.c \
 unsupported/UnsupportedProcess.c unsupported/UnsupportedProcessList.c \
@@ -200,18 +184,8 @@ endif
 
 # ----
 
-SUFFIXES = .h
-
-BUILT_SOURCES = $(myhtopheaders) $(myhtopplatheaders)
 htop_SOURCES  = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
 nodist_htop_SOURCES = config.h
-
-.PHONY: htop-headers clean-htop-headers
-
-htop-headers: $(myhtopheaders) $(all_platform_headers)
-
-clean-htop-headers:
-	-rm -f $(myhtopheaders) $(all_platform_headers)
 
 target:
 	echo $(htop_SOURCES)
@@ -224,9 +198,6 @@ debug:
 
 coverage:
 	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" LDFLAGS="-lgcov"
-
-.c.h:
-	./scripts/MakeHeader.py $<
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS

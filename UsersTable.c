@@ -18,13 +18,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <assert.h>
 
-/*{
-#include "Hashtable.h"
-
-typedef struct UsersTable_ {
-   Hashtable* users;
-} UsersTable;
-}*/
 
 UsersTable* UsersTable_new() {
    UsersTable* this;
