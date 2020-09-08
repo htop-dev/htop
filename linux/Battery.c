@@ -89,7 +89,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
    return total;
 }
 
-static ACPresence procAcpiCheck() {
+static ACPresence procAcpiCheck(void) {
    ACPresence isOn = AC_ERROR;
    const char *power_supplyPath = PROCDIR "/acpi/ac_adapter";
    DIR *dir = opendir(power_supplyPath);
@@ -137,7 +137,7 @@ static ACPresence procAcpiCheck() {
    return isOn;
 }
 
-static double Battery_getProcBatData() {
+static double Battery_getProcBatData(void) {
    const unsigned long int totalFull = parseBatInfo("info", 3, 4);
    if (totalFull == 0)
       return 0;

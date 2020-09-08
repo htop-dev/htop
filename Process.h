@@ -169,7 +169,7 @@ typedef struct ProcessClass_ {
 
 extern char Process_pidFormat[20];
 
-void Process_setupColumnWidths();
+void Process_setupColumnWidths(void);
 
 void Process_humanNumber(RichString* str, unsigned long number, bool coloring);
 

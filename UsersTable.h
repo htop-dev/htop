@@ -13,7 +13,7 @@ typedef struct UsersTable_ {
    Hashtable* users;
 } UsersTable;
 
-UsersTable* UsersTable_new();
+UsersTable* UsersTable_new(void);
 
 void UsersTable_delete(UsersTable* this);
 

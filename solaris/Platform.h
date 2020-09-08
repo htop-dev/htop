@@ -45,11 +45,11 @@ extern int Platform_numberOfFields;
 
 extern char Process_pidFormat[20];
 
-int Platform_getUptime();
+int Platform_getUptime(void);
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
-int Platform_getMaxPid();
+int Platform_getMaxPid(void);
 
 double Platform_setCPUValues(Meter* this, int cpu);
 

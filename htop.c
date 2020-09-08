@@ -29,12 +29,12 @@ in the source distribution for its full text.
 
 //#link m
 
-static void printVersionFlag() {
+static void printVersionFlag(void) {
    fputs("htop " VERSION "\n", stdout);
    exit(0);
 }
 
-static void printHelpFlag() {
+static void printHelpFlag(void) {
    fputs("htop " VERSION "\n"
          "Released under the GNU GPL.\n\n"
          "-C --no-color               Use a monochrome color scheme\n"
