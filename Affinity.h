@@ -14,7 +14,6 @@ in the source distribution for its full text.
 #else
 #define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_PROCESS
 #endif
-#elif HAVE_LINUX_AFFINITY
 #endif
 
 #include "Process.h"
@@ -26,7 +25,6 @@ typedef struct Affinity_ {
    int used;
    int* cpus;
 } Affinity;
-
 
 Affinity* Affinity_new(ProcessList* pl);
 

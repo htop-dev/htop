@@ -7,14 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifdef MAJOR_IN_MKDEV
-#elif defined(MAJOR_IN_SYSMACROS)
-#endif
-
-#ifdef HAVE_DELAYACCT
-#endif
-
-
 #include "ProcessList.h"
 #include "zfs/ZfsArcStats.h"
 
@@ -100,39 +92,13 @@ typedef struct LinuxProcessList_ {
 #define PROC_LINE_LENGTH 4096
 #endif
 
-
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
-#endif
-
-#ifdef HAVE_DELAYACCT
-
 #endif
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* pl);
-
-
-#ifdef HAVE_TASKSTATS
-
-#endif
-
-#ifdef HAVE_OPENVZ
-
-#endif
-
-#ifdef HAVE_CGROUP
-
-#endif
-
-#ifdef HAVE_VSERVER
-
-#endif
-
-#ifdef HAVE_DELAYACCT
-
-#endif
 
 void ProcessList_goThroughEntries(ProcessList* super);
 

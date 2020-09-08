@@ -29,7 +29,7 @@ InfoScreen.c XAlloc.c
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
 CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
 CPUMeter.h CRT.h MainPanel.h DisplayOptionsPanel.h FunctionBar.h \
-Hashtable.h Header.h htop.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
+Hashtable.h Header.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
 BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \
 ScreenManager.h Settings.h SignalsPanel.h StringUtils.h SwapMeter.h \
 TasksMeter.h UptimeMeter.h TraceScreen.h UsersTable.h Vector.h Process.h \

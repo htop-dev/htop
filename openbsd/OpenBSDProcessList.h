@@ -8,7 +8,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include <kvm.h>
 
 typedef struct CPUData_ {
@@ -39,7 +38,6 @@ typedef struct OpenBSDProcessList_ {
 
 } OpenBSDProcessList;
 
-
 /*
  * avoid relying on or conflicting with MIN() and MAX() in sys/param.h
  */
@@ -61,10 +59,6 @@ void ProcessList_delete(ProcessList* this);
 
 char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
 
-/*
- * Taken from OpenBSD's ps(1).
- */
 void ProcessList_goThroughEntries(ProcessList* this);
-
 
 #endif

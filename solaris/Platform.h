@@ -29,7 +29,6 @@ typedef struct envAccum_ {
    char *env;
 } envAccum;
 
-
 extern double plat_loadavg[3];
 
 extern const SignalItem Platform_signals[];

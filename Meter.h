@@ -94,7 +94,6 @@ typedef struct GraphData_ {
    double values[METER_BUFFER_LEN];
 } GraphData;
 
-
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
@@ -126,17 +125,12 @@ ListItem* Meter_toListItem(Meter* this, bool moving);
 /* ---------- GraphMeterMode ---------- */
 
 #ifdef HAVE_LIBNCURSESW
-
 #define PIXPERROW_UTF8 4
 #endif
 
 #define PIXPERROW_ASCII 2
 
 /* ---------- LEDMeterMode ---------- */
-
-#ifdef HAVE_LIBNCURSESW
-
-#endif
 
 extern MeterMode* Meter_modes[];
 

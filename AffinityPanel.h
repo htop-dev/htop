@@ -7,27 +7,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifdef HAVE_LIBHWLOC
-#endif
-
 #include "Panel.h"
 #include "Affinity.h"
 #include "ProcessList.h"
-
-
-
-#ifdef HAVE_LIBHWLOC
-
-#endif
-
-
-#ifdef HAVE_LIBHWLOC
-
-#endif
-
-#ifdef HAVE_LIBHWLOC
-
-#endif
 
 extern PanelClass AffinityPanel_class;
 

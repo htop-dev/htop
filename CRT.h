@@ -30,8 +30,6 @@ in the source distribution for its full text.
 #define KEY_WHEELDOWN KEY_F(21)
 #define KEY_RECLICK KEY_F(22)
 
-//#link curses
-
 #include <stdbool.h>
 
 typedef enum TreeStr_ {

@@ -58,10 +58,7 @@ typedef struct Settings_ {
    bool changed;
 } Settings;
 
-#ifndef Settings_cpuId
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromZero ? (cpu) : (cpu)+1)
-#endif
-
 
 void Settings_delete(Settings* this);
 

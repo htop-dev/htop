@@ -24,7 +24,6 @@ typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
 
 #define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
 
-
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode);
 
 void MainPanel_pidSearch(MainPanel* this, int ch);

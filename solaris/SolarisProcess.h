@@ -13,7 +13,7 @@ in the source distribution for its full text.
 #include <sys/proc.h>
 #include <libproc.h>
 
-typedef enum SolarisProcessFields {
+typedef enum SolarisProcessField_ {
    // Add platform-specific fields here, with ids >= 100
    ZONEID   = 100,
    ZONE  = 101,
@@ -24,7 +24,6 @@ typedef enum SolarisProcessFields {
    LWPID = 106,
    LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
-
 
 typedef struct SolarisProcess_ {
    Process    super;
@@ -41,15 +40,9 @@ typedef struct SolarisProcess_ {
    pid_t      lwpid;
 } SolarisProcess;
 
-
-#ifndef Process_isKernelThread
 #define Process_isKernelThread(_process) (_process->kernel == 1)
-#endif
 
-#ifndef Process_isUserlandThread
 #define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
-
 
 extern ProcessClass SolarisProcess_class;
 

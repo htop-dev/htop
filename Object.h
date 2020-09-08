@@ -45,7 +45,6 @@ typedef union {
    void* v;
 } Arg;
 
-
 extern ObjectClass Object_class;
 
 #ifdef DEBUG

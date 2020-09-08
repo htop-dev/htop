@@ -10,5 +10,4 @@ in the source distribution for its full text.
 
 void CRT_handleSIGSEGV(int sgn);
 
-
 #endif

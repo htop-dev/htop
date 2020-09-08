@@ -21,7 +21,6 @@ typedef struct CategoriesPanel_ {
    ProcessList* pl;
 } CategoriesPanel;
 
-
 void CategoriesPanel_makeMetersPage(CategoriesPanel* this);
 
 extern PanelClass CategoriesPanel_class;

@@ -19,9 +19,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <assert.h>
 
-//#link curses
-
-
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif

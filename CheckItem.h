@@ -16,7 +16,6 @@ typedef struct CheckItem_ {
    bool value;
 } CheckItem;
 
-
 extern ObjectClass CheckItem_class;
 
 CheckItem* CheckItem_newByRef(char* text, bool* ref);

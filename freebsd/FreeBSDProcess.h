@@ -7,14 +7,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
-typedef enum FreeBSDProcessFields {
+typedef enum FreeBSDProcessFields_ {
    // Add platform-specific fields here, with ids >= 100
    JID   = 100,
    JAIL  = 101,
    LAST_PROCESSFIELD = 102,
 } FreeBSDProcessField;
-
 
 typedef struct FreeBSDProcess_ {
    Process super;
@@ -23,15 +21,9 @@ typedef struct FreeBSDProcess_ {
    char* jname;
 } FreeBSDProcess;
 
-
-#ifndef Process_isKernelThread
 #define Process_isKernelThread(_process) (_process->kernel == 1)
-#endif
 
-#ifndef Process_isUserlandThread
 #define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
-
 
 extern ProcessClass FreeBSDProcess_class;
 

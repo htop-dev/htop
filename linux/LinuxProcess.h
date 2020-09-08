@@ -8,7 +8,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #define PROCESS_FLAG_LINUX_IOPRIO   0x0100
 #define PROCESS_FLAG_LINUX_OPENVZ   0x0200
 #define PROCESS_FLAG_LINUX_VSERVER  0x0400
@@ -141,16 +140,10 @@ typedef struct LinuxProcess_ {
    #endif
 } LinuxProcess;
 
-#ifndef Process_isKernelThread
 #define Process_isKernelThread(_process) (((LinuxProcess*)(_process))->isKernelThread)
-#endif
 
-#ifndef Process_isUserlandThread
 #define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
 
-
-/* semi-global */
 extern long long btime;
 
 extern ProcessFieldData Process_fields[];

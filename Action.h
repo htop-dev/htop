@@ -7,7 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include "IncSet.h"
 #include "Settings.h"
 #include "Header.h"
@@ -36,7 +35,6 @@ typedef struct State_ {
    Header* header;
 } State;
 
-
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess);
 
 // ----------------------------------------
@@ -48,7 +46,6 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
 // ----------------------------------------
 
 Htop_Reaction Action_follow(State* st);
-
 
 void Action_setBindings(Htop_Action* keys);
 

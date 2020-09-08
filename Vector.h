@@ -24,7 +24,6 @@ typedef struct Vector_ {
    bool owner;
 } Vector;
 
-
 Vector* Vector_new(ObjectClass* type, bool owner, int size);
 
 void Vector_delete(Vector* this);
@@ -36,11 +35,6 @@ int Vector_count(Vector* this);
 #endif
 
 void Vector_prune(Vector* this);
-
-// If I were to use only one sorting algorithm for both cases, it would probably be this one:
-/*
-
-*/
 
 void Vector_quickSort(Vector* this);
 

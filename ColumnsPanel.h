@@ -17,7 +17,6 @@ typedef struct ColumnsPanel_ {
    bool moving;
 } ColumnsPanel;
 
-
 extern PanelClass ColumnsPanel_class;
 
 ColumnsPanel* ColumnsPanel_new(Settings* settings);

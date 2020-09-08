@@ -7,7 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include <stdbool.h>
 
 typedef struct FunctionBar_ {
@@ -17,8 +16,6 @@ typedef struct FunctionBar_ {
    int* events;
    bool staticData;
 } FunctionBar;
-
-
 
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc);
 

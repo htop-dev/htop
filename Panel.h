@@ -7,8 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-//#link curses
-
 #include "Object.h"
 #include "Vector.h"
 #include "FunctionBar.h"
@@ -60,7 +58,6 @@ struct Panel_ {
 };
 
 #define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
-
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

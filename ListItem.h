@@ -16,7 +16,6 @@ typedef struct ListItem_ {
    bool moving;
 } ListItem;
 
-
 extern ObjectClass ListItem_class;
 
 ListItem* ListItem_new(const char* value, int key);

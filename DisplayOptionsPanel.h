@@ -18,7 +18,6 @@ typedef struct DisplayOptionsPanel_ {
    ScreenManager* scr;
 } DisplayOptionsPanel;
 
-
 extern PanelClass DisplayOptionsPanel_class;
 
 DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* scr);

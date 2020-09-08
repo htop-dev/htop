@@ -29,7 +29,6 @@ typedef struct OpenFilesScreen_ {
    pid_t pid;
 } OpenFilesScreen;
 
-
 extern InfoScreenClass OpenFilesScreen_class;
 
 OpenFilesScreen* OpenFilesScreen_new(Process* process);

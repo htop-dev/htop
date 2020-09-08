@@ -8,14 +8,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 typedef enum DragonFlyBSDProcessFields {
    // Add platform-specific fields here, with ids >= 100
    JID   = 100,
    JAIL  = 101,
    LAST_PROCESSFIELD = 102,
 } DragonFlyBSDProcessField;
-
 
 typedef struct DragonFlyBSDProcess_ {
    Process super;
@@ -24,16 +22,10 @@ typedef struct DragonFlyBSDProcess_ {
    char* jname;
 } DragonFlyBSDProcess;
 
-
-#ifndef Process_isKernelThread
 #define Process_isKernelThread(_process) (_process->kernel == 1)
-#endif
 
-#ifndef Process_isUserlandThread
 //#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
 #define Process_isUserlandThread(_process) (_process->nlwp > 1)
-#endif
-
 
 extern ProcessClass DragonFlyBSDProcess_class;
 

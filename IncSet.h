@@ -7,7 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include "FunctionBar.h"
 #include "Panel.h"
 #include <stdbool.h>
@@ -37,7 +36,6 @@ typedef struct IncSet_ {
 } IncSet;
 
 typedef const char* (*IncMode_GetPanelValue)(Panel*, int);
-
 
 void IncSet_reset(IncSet* this, IncType type);
 

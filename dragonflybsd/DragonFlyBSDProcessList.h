@@ -8,7 +8,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include <kvm.h>
 #include <sys/param.h>
 #include <osreldate.h>
@@ -21,17 +20,15 @@ in the source distribution for its full text.
 #include "DragonFlyBSDProcess.h"
 
 #define JAIL_ERRMSGLEN	1024
-char jail_errmsg[JAIL_ERRMSGLEN];
+extern char jail_errmsg[JAIL_ERRMSGLEN];
 
 typedef struct CPUData_ {
-
    double userPercent;
    double nicePercent;
    double systemPercent;
    double irqPercent;
    double idlePercent;
    double systemAllPercent;
-
 } CPUData;
 
 typedef struct DragonFlyBSDProcessList_ {
@@ -54,9 +51,7 @@ typedef struct DragonFlyBSDProcessList_ {
    Hashtable *jails;
 } DragonFlyBSDProcessList;
 
-
 #define _UNUSED_ __attribute__((unused))
-
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 

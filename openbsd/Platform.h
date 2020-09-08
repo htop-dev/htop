@@ -14,14 +14,11 @@ in the source distribution for its full text.
 
 extern ProcessFieldData Process_fields[];
 
-
 extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;
 
-/*
- * See /usr/include/sys/signal.h
- */
+/* see /usr/include/sys/signal.h */
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
@@ -30,7 +27,6 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
 
-// preserved from FreeBSD port
 int Platform_getUptime();
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
@@ -41,12 +37,6 @@ double Platform_setCPUValues(Meter* this, int cpu);
 
 void Platform_setMemoryValues(Meter* this);
 
-/*
- * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
- * All rights reserved.
- *
- * Taken almost directly from OpenBSD's top(1)
- */
 void Platform_setSwapValues(Meter* this);
 
 void Platform_setTasksValues(Meter* this);

@@ -7,7 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include "zfs/ZfsArcStats.h"
 
 #include <kvm.h>
@@ -20,14 +19,12 @@ in the source distribution for its full text.
 extern char jail_errmsg[JAIL_ERRMSGLEN];
 
 typedef struct CPUData_ {
-
    double userPercent;
    double nicePercent;
    double systemPercent;
    double irqPercent;
    double idlePercent;
    double systemAllPercent;
-
 } CPUData;
 
 typedef struct FreeBSDProcessList_ {
@@ -50,7 +47,6 @@ typedef struct FreeBSDProcessList_ {
    unsigned long  *cp_times_n;
 
 } FreeBSDProcessList;
-
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
