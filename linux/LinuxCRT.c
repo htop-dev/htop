@@ -7,6 +7,8 @@ in the source distribution for its full text.
 
 #include "config.h"
 #include "CRT.h"
+
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_EXECINFO_H
@@ -32,5 +34,7 @@ void CRT_handleSIGSEGV(int sgn) {
    fprintf(stderr, "\nUnfortunately, you seem to be using an unsupported platform!");
    fprintf(stderr, "\nPlease contact your platform package maintainer!\n\n");
    #endif
-   abort();
+
+   /* Call old sigsegv handler; may be default exit or third party one (e.g. ASAN) */
+   sigaction (SIGSEGV, &old_sigsegv_handler, NULL);
 }
