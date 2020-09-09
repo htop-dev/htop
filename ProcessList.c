@@ -15,11 +15,11 @@ in the source distribution for its full text.
 #include <string.h>
 
 
-ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
-   this->pidWhiteList = pidWhiteList;
+   this->pidMatchList = pidMatchList;
    this->userId = userId;
 
    // tree-view auxiliary buffer
@@ -254,7 +254,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
          || (incFilter && !(String_contains_i(p->comm, incFilter)))
-         || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->tgid)) )
+         || (this->pidMatchList && !Hashtable_get(this->pidMatchList, p->tgid)) )
          hidden = true;
 
       if (!hidden) {

@@ -57,7 +57,7 @@ static void printHelpFlag() {
 // ----------------------------------------
 
 typedef struct CommandLineSettings_ {
-   Hashtable* pidWhiteList;
+   Hashtable* pidMatchList;
    uid_t userId;
    int sortKey;
    int delay;
@@ -70,7 +70,7 @@ typedef struct CommandLineSettings_ {
 static CommandLineSettings parseArguments(int argc, char** argv) {
 
    CommandLineSettings flags = {
-      .pidWhiteList = NULL,
+      .pidMatchList = NULL,
       .userId = -1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
@@ -163,13 +163,13 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             char* saveptr;
             char* pid = strtok_r(argCopy, ",", &saveptr);
 
-            if(!flags.pidWhiteList) {
-               flags.pidWhiteList = Hashtable_new(8, false);
+            if(!flags.pidMatchList) {
+               flags.pidMatchList = Hashtable_new(8, false);
             }
 
             while(pid) {
                 unsigned int num_pid = atoi(pid);
-                Hashtable_put(flags.pidWhiteList, num_pid, (void *) 1);
+                Hashtable_put(flags.pidMatchList, num_pid, (void *) 1);
                 pid = strtok_r(NULL, ",", &saveptr);
             }
             free(argCopy);
@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
    Process_setupColumnWidths();
 
    UsersTable* ut = UsersTable_new();
-   ProcessList* pl = ProcessList_new(ut, flags.pidWhiteList, flags.userId);
+   ProcessList* pl = ProcessList_new(ut, flags.pidMatchList, flags.userId);
 
    Settings* settings = Settings_new(pl->cpuCount);
    pl->settings = settings;
@@ -281,8 +281,8 @@ int main(int argc, char** argv) {
    UsersTable_delete(ut);
    Settings_delete(settings);
 
-   if(flags.pidWhiteList) {
-      Hashtable_delete(flags.pidWhiteList);
+   if(flags.pidMatchList) {
+      Hashtable_delete(flags.pidMatchList);
    }
    return 0;
 }

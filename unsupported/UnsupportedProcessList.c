@@ -12,9 +12,9 @@ in the source distribution for its full text.
 #include <string.h>
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
-   ProcessList_init(this, Class(Process), usersTable, pidWhiteList, userId);
+   ProcessList_init(this, Class(Process), usersTable, pidMatchList, userId);
 
    return this;
 }

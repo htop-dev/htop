@@ -47,7 +47,7 @@ void ProcessList_getVMStats(vm_statistics_t p);
 
 struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count);
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
 

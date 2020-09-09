@@ -53,7 +53,7 @@ typedef struct DragonFlyBSDProcessList_ {
 
 #define _UNUSED_ __attribute__((unused))
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
 

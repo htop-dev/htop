@@ -149,11 +149,11 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 
 #endif
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
 
-   ProcessList_init(pl, Class(LinuxProcess), usersTable, pidWhiteList, userId);
+   ProcessList_init(pl, Class(LinuxProcess), usersTable, pidMatchList, userId);
    LinuxProcessList_initTtyDrivers(this);
 
    #ifdef HAVE_DELAYACCT
