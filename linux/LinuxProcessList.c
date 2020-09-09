@@ -61,7 +61,7 @@ static ssize_t xread(int fd, void *buf, size_t count) {
 static int sortTtyDrivers(const void* va, const void* vb) {
    TtyDriver* a = (TtyDriver*) va;
    TtyDriver* b = (TtyDriver*) vb;
-   return (a->major == b->major) ? (a->minorFrom - b->minorFrom) : (a->major - b->major);
+   return (a->major == b->major) ? ((int)a->minorFrom - (int)b->minorFrom) : ((int)a->major - (int)b->major);
 }
 
 static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
