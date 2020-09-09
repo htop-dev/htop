@@ -552,6 +552,8 @@ void CRT_restorePrivileges() {
 
 // TODO: pass an instance of Settings instead.
 
+struct sigaction old_sigsegv_handler;
+
 void CRT_init(int delay, int colorScheme, bool allowUnicode) {
    initscr();
    noecho();
@@ -605,7 +607,11 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
       }
    }
 #ifndef DEBUG
-   signal(11, CRT_handleSIGSEGV);
+   struct sigaction act;
+   sigemptyset (&act.sa_mask);
+   act.sa_flags = (int)SA_RESETHAND;
+   act.sa_handler = CRT_handleSIGSEGV;
+   sigaction (SIGSEGV, &act, &old_sigsegv_handler);
 #endif
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
