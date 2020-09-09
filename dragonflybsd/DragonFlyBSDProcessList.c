@@ -22,8 +22,6 @@ in the source distribution for its full text.
 #include <sys/param.h>
 
 
-#define _UNUSED_ __attribute__((unused))
-
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
 static int pageSize;
@@ -377,7 +375,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
-      bool _UNUSED_ isIdleProcess = false;
+      bool ATTR_UNUSED isIdleProcess = false;
 
       // note: dragonflybsd kernel processes all have the same pid, so we misuse the kernel thread address to give them a unique identifier
       Process* proc = ProcessList_getProcess(this, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, (Process_New) DragonFlyBSDProcess_new);

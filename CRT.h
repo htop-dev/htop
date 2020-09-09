@@ -7,6 +7,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Macros.h"
+
 #include <stdbool.h>
 
 #define KEY_WHEELUP   KEY_F(20)
@@ -107,7 +109,7 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
-void CRT_fatalError(const char* note) __attribute__ ((noreturn));
+void CRT_fatalError(const char* note) ATTR_NORETURN;
 
 extern struct sigaction old_sigsegv_handler;
 void CRT_handleSIGSEGV(int sgn);

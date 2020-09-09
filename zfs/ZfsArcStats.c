@@ -21,4 +21,6 @@ typedef struct ZfsArcStats_ {
 } ZfsArcStats;
 }*/
 
-static int make_iso_compilers_happy __attribute__((unused));
+#include "Macros.h"
+
+static int make_iso_compilers_happy ATTR_UNUSED;
