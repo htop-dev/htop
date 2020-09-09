@@ -59,13 +59,6 @@ struct Panel_ {
 
 #define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-
 #define KEY_CTRL(l) ((l)-'A'+1)
 
 extern PanelClass Panel_class;

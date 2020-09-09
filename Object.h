@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "RichString.h"
 #include "XAlloc.h"
+#include "Macros.h"
 
 typedef struct Object_ Object;
 

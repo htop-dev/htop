@@ -19,13 +19,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <assert.h>
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-
 #define KEY_CTRL(l) ((l)-'A'+1)
 
 PanelClass Panel_class = {
@@ -233,7 +226,7 @@ void Panel_draw(Panel* this, bool focus) {
       mvhline(y, x, ' ', this->w);
       if (scrollH < headerLen) {
          RichString_printoffnVal(this->header, y, x, scrollH,
-            MIN(headerLen - scrollH, this->w));
+            MINIMUM(headerLen - scrollH, this->w));
       }
       attrset(CRT_colors[RESET_COLOR]);
       y++;
@@ -244,7 +237,7 @@ void Panel_draw(Panel* this, bool focus) {
       this->scrollV = 0;
       this->needsRedraw = true;
    } else if (this->scrollV >= size) {
-      this->scrollV = MAX(size - 1, 0);
+      this->scrollV = MAXIMUM(size - 1, 0);
       this->needsRedraw = true;
    }
    // ensure selection is on screen
@@ -257,7 +250,7 @@ void Panel_draw(Panel* this, bool focus) {
    }
 
    int first = this->scrollV;
-   int upTo = MIN(first + h, size);
+   int upTo = MINIMUM(first + h, size);
 
    int selectionColor = focus
                  ? this->selectionColor
@@ -271,7 +264,7 @@ void Panel_draw(Panel* this, bool focus) {
          RichString_begin(item);
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
-         int amt = MIN(itemLen - scrollH, this->w);
+         int amt = MINIMUM(itemLen - scrollH, this->w);
          bool selected = (i == this->selected);
          if (selected) {
             attrset(selectionColor);
@@ -306,13 +299,13 @@ void Panel_draw(Panel* this, bool focus) {
       mvhline(y+ this->oldSelected - first, x+0, ' ', this->w);
       if (scrollH < oldLen)
          RichString_printoffnVal(old, y+this->oldSelected - first, x,
-            scrollH, MIN(oldLen - scrollH, this->w));
+            scrollH, MINIMUM(oldLen - scrollH, this->w));
       attrset(selectionColor);
       mvhline(y+this->selected - first, x+0, ' ', this->w);
       RichString_setAttr(&new, selectionColor);
       if (scrollH < newLen)
          RichString_printoffnVal(new, y+this->selected - first, x,
-            scrollH, MIN(newLen - scrollH, this->w));
+            scrollH, MINIMUM(newLen - scrollH, this->w));
       attrset(CRT_colors[RESET_COLOR]);
       RichString_end(new);
       RichString_end(old);
@@ -347,7 +340,7 @@ bool Panel_onKey(Panel* this, int key) {
    case KEY_LEFT:
    case KEY_CTRL('B'):
       if (this->scrollH > 0) {
-         this->scrollH -= MAX(CRT_scrollHAmount, 0);
+         this->scrollH -= MAXIMUM(CRT_scrollHAmount, 0);
          this->needsRedraw = true;
       }
       break;
@@ -358,12 +351,12 @@ bool Panel_onKey(Panel* this, int key) {
       break;
    case KEY_PPAGE:
       this->selected -= (this->h - 1);
-      this->scrollV = MAX(0, this->scrollV - this->h + 1);
+      this->scrollV = MAXIMUM(0, this->scrollV - this->h + 1);
       this->needsRedraw = true;
       break;
    case KEY_NPAGE:
       this->selected += (this->h - 1);
-      this->scrollV = MAX(0, MIN(Vector_size(this->items) - this->h,
+      this->scrollV = MAXIMUM(0, MINIMUM(Vector_size(this->items) - this->h,
                                  this->scrollV + this->h - 1));
       this->needsRedraw = true;
       break;
@@ -395,7 +388,7 @@ bool Panel_onKey(Panel* this, int key) {
       break;
    case KEY_CTRL('E'):
    case '$':
-      this->scrollH = MAX(this->selectedLen - this->w, 0);
+      this->scrollH = MAXIMUM(this->selectedLen - this->w, 0);
       this->needsRedraw = true;
       break;
    default:

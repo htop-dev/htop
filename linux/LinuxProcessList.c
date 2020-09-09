@@ -42,10 +42,6 @@ in the source distribution for its full text.
 #include <linux/taskstats.h>
 #endif
 
-#ifndef CLAMP
-#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
-#endif
-
 static ssize_t xread(int fd, void *buf, size_t count) {
   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
   size_t alreadyRead = 0;
@@ -194,7 +190,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    fclose(file);
 
-   pl->cpuCount = MAX(cpus - 1, 1);
+   pl->cpuCount = MAXIMUM(cpus - 1, 1);
    this->cpus = xCalloc(cpus, sizeof(CPUData));
 
    for (int i = 0; i < cpus; i++) {

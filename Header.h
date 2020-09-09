@@ -20,10 +20,6 @@ typedef struct Header_ {
    int height;
 } Header;
 
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-
 #define Header_forEachColumn(this_, i_) for (int (i_)=0; (i_) < (this_)->nrColumns; ++(i_))
 
 Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns);

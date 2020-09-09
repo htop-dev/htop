@@ -13,10 +13,6 @@ in the source distribution for its full text.
 
 extern ProcessFieldData Process_fields[];
 
-#ifndef CLAMP
-#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
-#endif
-
 extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;

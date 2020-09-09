@@ -24,13 +24,6 @@ typedef enum {
 
 extern int CPUMeter_attributes[];
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-
 extern MeterClass CPUMeter_class;
 
 extern MeterClass AllCPUsMeter_class;

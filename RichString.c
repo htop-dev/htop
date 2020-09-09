@@ -7,16 +7,12 @@ in the source distribution for its full text.
 
 #include "RichString.h"
 #include "XAlloc.h"
+#include "Macros.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 #define RICHSTRING_MAXLEN 350
-
-
-#ifndef CLAMP
-#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
-#endif
 
 #define charBytes(n) (sizeof(CharType) * (n))
 

@@ -27,21 +27,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <unistd.h>
 
-/*
- * avoid relying on or conflicting with MIN() and MAX() in sys/param.h
- */
-#ifndef MINIMUM
-#define MINIMUM(x, y)		((x) > (y) ? (y) : (x))
-#endif
-
-#ifndef MAXIMUM
-#define MAXIMUM(x, y)		((x) > (y) ? (x) : (y))
-#endif
-
-#ifndef CLAMP
-#define CLAMP(x, low, high)	(((x) > (high)) ? (high) : MAXIMUM(x, low))
-#endif
-
 static long fscale;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {

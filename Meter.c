@@ -27,17 +27,6 @@ in the source distribution for its full text.
 
 #define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
-
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-#ifndef CLAMP
-#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
-#endif
-
 MeterClass Meter_class = {
    .super = {
       .extends = Class(Object)

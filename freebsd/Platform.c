@@ -29,10 +29,6 @@ in the source distribution for its full text.
 #include <math.h>
 
 
-#ifndef CLAMP
-#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
-#endif
-
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 int Platform_numberOfFields = LAST_PROCESSFIELD;

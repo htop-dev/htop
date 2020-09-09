@@ -34,7 +34,7 @@ BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h
 ScreenManager.h Settings.h SignalsPanel.h StringUtils.h SwapMeter.h \
 TasksMeter.h UptimeMeter.h TraceScreen.h UsersTable.h Vector.h Process.h \
 AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
-EnvScreen.h InfoScreen.h XAlloc.h
+EnvScreen.h InfoScreen.h XAlloc.h Macros.h
 
 # Linux
 # -----

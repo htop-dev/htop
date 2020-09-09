@@ -20,7 +20,7 @@ static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
    this->values[0] = pl->kernelThreads;
    this->values[1] = pl->userlandThreads;
    this->values[2] = pl->totalTasks - pl->kernelThreads - pl->userlandThreads;
-   this->values[3] = MIN(pl->runningTasks, pl->cpuCount);
+   this->values[3] = MINIMUM(pl->runningTasks, pl->cpuCount);
    if (pl->totalTasks > this->total) {
       this->total = pl->totalTasks;
    }

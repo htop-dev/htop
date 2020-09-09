@@ -37,7 +37,7 @@ void EnvScreen_draw(InfoScreen* this) {
 
 void EnvScreen_scan(InfoScreen* this) {
    Panel* panel = this->display;
-   int idx = MAX(Panel_getSelectedIndex(panel), 0);
+   int idx = MAXIMUM(Panel_getSelectedIndex(panel), 0);
 
    Panel_prune(panel);
 

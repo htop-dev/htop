@@ -16,14 +16,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdlib.h>
 
-
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-
-#ifndef Header_forEachColumn
 #define Header_forEachColumn(this_, i_) for (int (i_)=0; (i_) < (this_)->nrColumns; ++(i_))
-#endif
 
 Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns) {
    Header* this = xCalloc(1, sizeof(Header));
@@ -196,7 +189,7 @@ int Header_calculateHeight(Header* this) {
          Meter* meter = (Meter*) Vector_get(meters, i);
          height += meter->h;
       }
-      maxHeight = MAX(maxHeight, height);
+      maxHeight = MAXIMUM(maxHeight, height);
    }
    this->height = maxHeight;
    this->pad = pad;

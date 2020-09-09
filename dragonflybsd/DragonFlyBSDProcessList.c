@@ -97,7 +97,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_o, &len, NULL, 0);
    }
 
-   pl->cpuCount = MAX(cpus, 1);
+   pl->cpuCount = MAXIMUM(cpus, 1);
 
    if (cpus == 1 ) {
      dfpl->cpus = xRealloc(dfpl->cpus, sizeof(CPUData));

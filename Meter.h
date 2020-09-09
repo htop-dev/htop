@@ -94,16 +94,6 @@ typedef struct GraphData_ {
    double values[METER_BUFFER_LEN];
 } GraphData;
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-#ifndef CLAMP
-#define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
-#endif
-
 extern MeterClass Meter_class;
 
 Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type);
