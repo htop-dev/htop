@@ -36,6 +36,10 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+#ifdef HAVE_LIBSENSORS
+#include <sensors/sensors.h>
+#endif
+
 //#link m
 
 static void printVersionFlag(void) {
@@ -317,6 +321,10 @@ int main(int argc, char** argv) {
 
    CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
 
+#ifdef HAVE_LIBSENSORS
+   sensors_init(NULL);
+#endif
+
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
 
@@ -356,6 +364,10 @@ int main(int argc, char** argv) {
    mvhline(LINES-1, 0, ' ', COLS);
    attroff(CRT_colors[RESET_COLOR]);
    refresh();
+
+#ifdef HAVE_LIBSENSORS
+   sensors_cleanup();
+#endif
 
    CRT_done();
    if (settings->changed)

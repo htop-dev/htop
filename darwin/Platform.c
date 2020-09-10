@@ -224,6 +224,7 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
 
    mtr->values[CPU_METER_FREQUENCY] = NAN;
+   mtr->values[CPU_METER_TEMPERATURE] = NAN;
 
    return CLAMP(total, 0.0, 100.0);
 }
