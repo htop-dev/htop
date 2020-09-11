@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "ColumnsPanel.h"
 #include "CRT.h"
 #include "MainPanel.h"
+#include "MetersPanel.h"
 #include "ProcessList.h"
 #include "ScreenManager.h"
 #include "Settings.h"
@@ -277,6 +278,7 @@ int main(int argc, char** argv) {
    ProcessList_delete(pl);
 
    ScreenManager_delete(scr);
+   MetersPanel_cleanup();
 
    UsersTable_delete(ut);
    Settings_delete(settings);
