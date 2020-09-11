@@ -298,7 +298,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
       if (!ok) beep();
       Affinity_delete(affinity2);
    }
-   Panel_delete((Object*)affinityPanel);
+   Object_delete(affinityPanel);
 #endif
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
