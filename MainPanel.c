@@ -79,7 +79,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    } else if (ch != ERR && ch > 0 && ch < KEY_MAX && this->keys[ch]) {
       reaction |= (this->keys[ch])(this->state);
       result = HANDLED;
-   } else if (isdigit(ch)) {
+   } else if (0 < ch && ch < 255 && isdigit((unsigned char)ch)) {
       MainPanel_pidSearch(this, ch);
    } else {
       if (ch != ERR) {
