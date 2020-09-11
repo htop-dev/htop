@@ -386,6 +386,9 @@ Which cgroup the process is in.
 .B OOM
 OOM killer score.
 .TP
+.B CTXT
+Incremental sum of voluntary and nonvoluntary context switches.
+.TP
 .B IO_PRIORITY (IO)
 The I/O scheduling class followed by the priority if the class supports it:
    \fBR\fR for Realtime

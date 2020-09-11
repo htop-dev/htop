@@ -586,6 +586,32 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
    fclose(file);
 }
 
+static void LinuxProcessList_readCtxtData(LinuxProcess* process, const char* dirname, const char* name) {
+   char filename[MAX_NAME+1];
+   xSnprintf(filename, MAX_NAME, "%s/%s/status", dirname, name);
+   FILE* file = fopen(filename, "r");
+   if (!file)
+      return;
+   char buffer[PROC_LINE_LENGTH + 1];
+   unsigned long ctxt = 0;
+   while (fgets(buffer, PROC_LINE_LENGTH, file)) {
+      if (String_startsWith(buffer, "voluntary_ctxt_switches:")) {
+         unsigned long vctxt;
+         int ok = sscanf(buffer, "voluntary_ctxt_switches:\t%lu", &vctxt);
+         if (ok >= 1)
+            ctxt += vctxt;
+      } else if (String_startsWith(buffer, "nonvoluntary_ctxt_switches:")) {
+         unsigned long nvctxt;
+         int ok = sscanf(buffer, "nonvoluntary_ctxt_switches:\t%lu", &nvctxt);
+         if (ok >= 1)
+            ctxt += nvctxt;
+      }
+   }
+   fclose(file);
+   process->ctxt_diff = (ctxt > process->ctxt_total) ? (ctxt - process->ctxt_total) : 0;
+   process->ctxt_total = ctxt;
+}
+
 #ifdef HAVE_DELAYACCT
 
 static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
@@ -882,6 +908,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       if (settings->flags & PROCESS_FLAG_LINUX_OOM)
          LinuxProcessList_readOomData(lp, dirname, name);
+
+      if (settings->flags & PROCESS_FLAG_LINUX_CTXT)
+         LinuxProcessList_readCtxtData(lp, dirname, name);
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;

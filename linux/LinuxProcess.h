@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_CGROUP   0x0800
 #define PROCESS_FLAG_LINUX_OOM      0x1000
 #define PROCESS_FLAG_LINUX_SMAPS    0x2000
+#define PROCESS_FLAG_LINUX_CTXT     0x4000
 
 typedef enum UnsupportedProcessFields {
    FLAGS = 9,
@@ -80,7 +81,8 @@ typedef enum LinuxProcessFields {
    M_PSS = 119,
    M_SWAP = 120,
    M_PSSWP = 121,
-   LAST_PROCESSFIELD = 122,
+   CTXT = 122,
+   LAST_PROCESSFIELD = 123,
 } LinuxProcessField;
 
 #include "IOPriority.h"
@@ -138,6 +140,8 @@ typedef struct LinuxProcess_ {
    float blkio_delay_percent;
    float swapin_delay_percent;
    #endif
+   unsigned long ctxt_total;
+   unsigned long ctxt_diff;
 } LinuxProcess;
 
 #define Process_isKernelThread(_process) (((LinuxProcess*)(_process))->isKernelThread)
