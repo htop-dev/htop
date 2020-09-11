@@ -24,6 +24,8 @@ struct MetersPanel_ {
    bool moving;
 };
 
+void MetersPanel_cleanup(void);
+
 void MetersPanel_setMoving(MetersPanel* this, bool moving);
 
 extern PanelClass MetersPanel_class;
