@@ -107,6 +107,7 @@ ProcessFieldData Process_fields[] = {
    [M_PSS] = { .name = "M_PSS", .title = "  PSS ", .description = "proportional set size, same as M_RESIDENT but each page is divided by the number of processes sharing it.", .flags = PROCESS_FLAG_LINUX_SMAPS, },
    [M_SWAP] = { .name = "M_SWAP", .title = " SWAP ", .description = "Size of the process's swapped pages", .flags = PROCESS_FLAG_LINUX_SMAPS, },
    [M_PSSWP] = { .name = "M_PSSWP", .title = " PSSWP ", .description = "shows proportional swap share of this mapping, Unlike \"Swap\", this does not take into account swapped out page of underlying shmem objects.", .flags = PROCESS_FLAG_LINUX_SMAPS, },
+   [CTXT] = { .name = "CTXT", .title = " CTXT ", .description = "Context switches (incremental sum of voluntary_ctxt_switches and nonvoluntary_ctxt_switches)", .flags = PROCESS_FLAG_LINUX_CTXT, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -276,6 +277,11 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case PERCENT_IO_DELAY: LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n); break;
    case PERCENT_SWAP_DELAY: LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n); break;
    #endif
+   case CTXT:
+      if (lp->ctxt_diff > 1000)
+         attr |= A_BOLD;
+      xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
+      break;
    default:
       Process_writeField((Process*)this, str, field);
       return;
@@ -359,6 +365,8 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    #endif
    case IO_PRIORITY:
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
+   case CTXT:
+      return ((long)p2->ctxt_diff - (long)p1->ctxt_diff);
    default:
       return Process_compare(v1, v2);
    }
