@@ -9,9 +9,9 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
-#define KEY_WHEELUP KEY_F(20)
+#define KEY_WHEELUP   KEY_F(20)
 #define KEY_WHEELDOWN KEY_F(21)
-#define KEY_RECLICK KEY_F(22)
+#define KEY_RECLICK   KEY_F(22)
 
 typedef enum TreeStr_ {
    TREE_STR_HORZ,
