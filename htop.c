@@ -131,21 +131,21 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             }
             break;
          case 'u':
-            if (!optarg && optind < argc && argv[optind] != NULL &&
+         {
+            const char *username = optarg;
+            if (!username && optind < argc && argv[optind] != NULL &&
                 (argv[optind][0] != '\0' && argv[optind][0] != '-')) {
-               optarg = argv[optind++];
+               username = argv[optind++];
             }
 
-            if (!optarg) {
-               optarg = getenv("USER");
+            if (!username) {
                flags.userId = geteuid();
-            }
-
-            if (!Action_setUserOnly(optarg, &(flags.userId))) {
-               fprintf(stderr, "Error: invalid user \"%s\".\n", optarg);
+            } else if (!Action_setUserOnly(username, &(flags.userId))) {
+               fprintf(stderr, "Error: invalid user \"%s\".\n", username);
                exit(1);
             }
             break;
+         }
          case 'C':
             flags.useColors = false;
             break;
