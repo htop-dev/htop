@@ -24,13 +24,7 @@ void Affinity_delete(Affinity* this);
 
 void Affinity_add(Affinity* this, int id);
 
-#ifdef HAVE_LIBHWLOC
-
-Affinity* Affinity_get(Process* proc, ProcessList* pl);
-
-bool Affinity_set(Process* proc, Arg arg);
-
-#elif HAVE_LINUX_AFFINITY
+#if defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY)
 
 Affinity* Affinity_get(Process* proc, ProcessList* pl);
 
