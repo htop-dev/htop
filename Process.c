@@ -21,7 +21,6 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -37,29 +36,7 @@ in the source distribution for its full text.
 #include <sys/sysmacros.h>
 #endif
 
-#ifdef __ANDROID__
-#define SYS_ioprio_get __NR_ioprio_get
-#define SYS_ioprio_set __NR_ioprio_set
-#endif
-
-// On Linux, this works only with glibc 2.1+. On earlier versions
-// the behavior is similar to have a hardcoded page size.
-#ifndef PAGE_SIZE
-#define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
-#endif
-#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
-
 static int Process_getuid = -1;
-
-#define ONE_K 1024L
-#define ONE_M (ONE_K * ONE_K)
-#define ONE_G (ONE_M * ONE_K)
-#define ONE_T ((long long)ONE_G * ONE_K)
-
-#define ONE_DECIMAL_K 1000L
-#define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
-#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
-#define ONE_DECIMAL_T ((long long)ONE_DECIMAL_G * ONE_DECIMAL_K)
 
 char Process_pidFormat[20] = "%7d ";
 

@@ -16,8 +16,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <stdlib.h>
 
-#define Header_forEachColumn(this_, i_) for (int (i_)=0; (i_) < (this_)->nrColumns; ++(i_))
-
 Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns) {
    Header* this = xCalloc(1, sizeof(Header));
    this->columns = xCalloc(nrColumns, sizeof(Vector*));

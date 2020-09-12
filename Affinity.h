@@ -8,14 +8,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifdef HAVE_LIBHWLOC
-#if __linux__
-#define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_THREAD
-#else
-#define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_PROCESS
-#endif
-#endif
-
 #include "Process.h"
 #include "ProcessList.h"
 

@@ -261,7 +261,7 @@ inline Object* Vector_get(Vector* this, int idx) {
 
 #else
 
-#define Vector_get(v_, idx_) ((v_)->array[idx_])
+// In this case, Vector_get is defined as a macro in vector.h
 
 #endif
 
@@ -274,7 +274,7 @@ inline int Vector_size(Vector* this) {
 
 #else
 
-#define Vector_size(v_) ((v_)->items)
+// In this case, Vector_size is defined as a macro in vector.h
 
 #endif
 

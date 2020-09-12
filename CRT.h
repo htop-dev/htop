@@ -7,30 +7,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#if HAVE_SETUID_ENABLED
-#endif
-
-#define ColorIndex(i,j) ((7-i)*8+j)
-
-#define ColorPair(i,j) COLOR_PAIR(ColorIndex(i,j))
-
-#define Black COLOR_BLACK
-#define Red COLOR_RED
-#define Green COLOR_GREEN
-#define Yellow COLOR_YELLOW
-#define Blue COLOR_BLUE
-#define Magenta COLOR_MAGENTA
-#define Cyan COLOR_CYAN
-#define White COLOR_WHITE
-
-#define ColorPairGrayBlack ColorPair(Magenta,Magenta)
-#define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
+#include <stdbool.h>
 
 #define KEY_WHEELUP KEY_F(20)
 #define KEY_WHEELDOWN KEY_F(21)
 #define KEY_RECLICK KEY_F(22)
-
-#include <stdbool.h>
 
 typedef enum TreeStr_ {
    TREE_STR_HORZ,
@@ -158,15 +139,11 @@ extern int CRT_scrollWheelVAmount;
 
 extern char* CRT_termType;
 
-// TODO move color scheme to Settings, perhaps?
-
 extern int CRT_colorScheme;
 
 extern void *backtraceArray[128];
 
 #if HAVE_SETUID_ENABLED
-
-#define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
 
 void CRT_dropPrivileges();
 
@@ -182,8 +159,6 @@ void CRT_restorePrivileges();
 #endif
 
 #endif
-
-// TODO: pass an instance of Settings instead.
 
 void CRT_init(int delay, int colorScheme, bool allowUnicode);
 

@@ -11,7 +11,6 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "CRT.h"
 #include "StringUtils.h"
-#include "ListItem.h"
 #include "Settings.h"
 
 #include <math.h>
@@ -19,9 +18,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <sys/time.h>
-
-#define METER_BUFFER_LEN 256
 
 #define GRAPH_DELAY (DEFAULT_DELAY/2)
 

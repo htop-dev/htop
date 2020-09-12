@@ -12,8 +12,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 
-#define RICHSTRING_MAXLEN 350
-
 #define charBytes(n) (sizeof(CharType) * (n))
 
 static void RichString_extendLen(RichString* this, int len) {

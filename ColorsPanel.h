@@ -7,12 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-// TO ADD A NEW SCHEME:
-// * Increment the size of bool check in ColorsPanel.h
-// * Add the entry in the ColorSchemeNames array below in the file
-// * Add a define in CRT.h that matches the order of the array
-// * Add the colors in CRT_setColors
-
 #include "Panel.h"
 #include "Settings.h"
 #include "ScreenManager.h"
