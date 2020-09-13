@@ -205,3 +205,8 @@ char* Platform_getProcessEnv(pid_t pid) {
    (void)pid;	// prevent unused warning
    return NULL;
 }
+
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+   // TODO
+   *bytesRead = *bytesWrite = *msTimeSpend = 0;
+}

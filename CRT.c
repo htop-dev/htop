@@ -145,6 +145,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = ColorPair(Magenta,Black),
       [ZFS_COMPRESSED] = ColorPair(Blue,Black),
       [ZFS_RATIO] = ColorPair(Magenta,Black),
+      [DISKIO_UTIL_HIGH] = A_BOLD | ColorPair(White,Black),
+      [DISKIO_READ] = ColorPair(Green,Black),
+      [DISKIO_WRITE] = ColorPair(Blue,Black),
    },
    [COLORSCHEME_MONOCHROME] = {
       [RESET_COLOR] = A_NORMAL,
@@ -215,6 +218,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = A_DIM,
       [ZFS_COMPRESSED] = A_BOLD,
       [ZFS_RATIO] = A_BOLD,
+      [DISKIO_UTIL_HIGH] = A_BOLD,
+      [DISKIO_READ] = A_NORMAL,
+      [DISKIO_WRITE] = A_NORMAL,
    },
    [COLORSCHEME_BLACKONWHITE] = {
       [RESET_COLOR] = ColorPair(Black,White),
@@ -285,6 +291,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = ColorPair(Magenta,White),
       [ZFS_COMPRESSED] = ColorPair(Cyan,White),
       [ZFS_RATIO] = ColorPair(Magenta,White),
+      [DISKIO_UTIL_HIGH] = A_BOLD | ColorPair(Yellow,White),
+      [DISKIO_READ] = ColorPair(Green,White),
+      [DISKIO_WRITE] = ColorPair(Blue,White),
    },
    [COLORSCHEME_LIGHTTERMINAL] = {
       [RESET_COLOR] = ColorPair(Blue,Black),
@@ -355,6 +364,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = A_BOLD | ColorPair(Magenta,Black),
       [ZFS_COMPRESSED] = ColorPair(Cyan,Black),
       [ZFS_RATIO] = A_BOLD | ColorPair(Magenta,Black),
+      [DISKIO_UTIL_HIGH] = A_BOLD | ColorPair(Yellow,Black),
+      [DISKIO_READ] = ColorPair(Green,Black),
+      [DISKIO_WRITE] = ColorPair(Blue,Black),
    },
    [COLORSCHEME_MIDNIGHT] = {
       [RESET_COLOR] = ColorPair(White,Blue),
@@ -425,6 +437,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = A_BOLD | ColorPair(Magenta,Blue),
       [ZFS_COMPRESSED] = A_BOLD | ColorPair(White,Blue),
       [ZFS_RATIO] = A_BOLD | ColorPair(Magenta,Blue),
+      [DISKIO_UTIL_HIGH] = A_BOLD | ColorPair(White,Blue),
+      [DISKIO_READ] = ColorPair(Green,Blue),
+      [DISKIO_WRITE] = ColorPair(Black,Blue),
    },
    [COLORSCHEME_BLACKNIGHT] = {
       [RESET_COLOR] = ColorPair(Cyan,Black),
@@ -495,6 +510,9 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = ColorPair(Magenta,Black),
       [ZFS_COMPRESSED] = ColorPair(Blue,Black),
       [ZFS_RATIO] = ColorPair(Magenta,Black),
+      [DISKIO_UTIL_HIGH] = A_BOLD | ColorPair(Green,Black),
+      [DISKIO_READ] = ColorPair(Green,Black),
+      [DISKIO_WRITE] = ColorPair(Blue,Black),
    },
    [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
 };

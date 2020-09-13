@@ -15,8 +15,8 @@ AM_LDFLAGS =
 AM_CPPFLAGS = -DNDEBUG
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
-ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c MainPanel.c \
-DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
+ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c DiskIOMeter.c DiskIOMeter.h \
+MainPanel.c DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
 LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
 BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
 SignalsPanel.c StringUtils.c SwapMeter.c TasksMeter.c UptimeMeter.c \

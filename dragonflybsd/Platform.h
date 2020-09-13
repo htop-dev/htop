@@ -42,4 +42,6 @@ void Platform_setTasksValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend);
+
 #endif

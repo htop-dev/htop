@@ -135,3 +135,7 @@ char* Platform_getProcessEnv(pid_t pid) {
    (void) pid;
    return NULL;
 }
+
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+   *bytesRead = *bytesWrite = *msTimeSpend = 0;
+}

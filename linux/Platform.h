@@ -44,4 +44,6 @@ char* Platform_getProcessEnv(pid_t pid);
 
 void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred);
 
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend);
+
 #endif

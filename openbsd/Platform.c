@@ -286,3 +286,8 @@ char* Platform_getProcessEnv(pid_t pid) {
    (void) kvm_close(kt);
    return env;
 }
+
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+   // TODO
+   *bytesRead = *bytesWrite = *msTimeSpend = 0;
+}
