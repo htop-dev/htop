@@ -7,7 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "FunctionBar.h"
 #include "Vector.h"
 #include "Header.h"
 #include "Settings.h"

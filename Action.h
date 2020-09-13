@@ -7,12 +7,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "IncSet.h"
-#include "Settings.h"
 #include "Header.h"
-#include "UsersTable.h"
-#include "ProcessList.h"
 #include "Panel.h"
+#include "ProcessList.h"
+#include "Settings.h"
+#include "UsersTable.h"
 
 typedef enum {
    HTOP_OK = 0x00,
