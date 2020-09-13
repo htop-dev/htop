@@ -34,12 +34,23 @@ void UsersTable_delete(UsersTable* this) {
 char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
    char* name = (char*) (Hashtable_get(this->users, uid));
    if (name == NULL) {
-      struct passwd* userData = getpwuid(uid);
-      if (userData != NULL) {
-         name = xStrdup(userData->pw_name);
+      struct passwd userData = { 0 };
+      struct passwd *result = &userData;
+      size_t bufsize = 16384;
+      char *buf = xMalloc(bufsize);
+
+      if (0 != getpwuid_r(uid, &userData, buf, bufsize, &result)) {
+         result = NULL;
+      }
+
+      if (result != NULL) {
+         name = xStrdup(result->pw_name);
          Hashtable_put(this->users, uid, name);
       }
+
+      free(buf);
    }
+
    return name;
 }
 
