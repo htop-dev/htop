@@ -106,6 +106,9 @@ typedef enum ColorElements_ {
    ZFS_OTHER,
    ZFS_COMPRESSED,
    ZFS_RATIO,
+   DISKIO_UTIL_HIGH,
+   DISKIO_READ,
+   DISKIO_WRITE,
    LAST_COLORELEMENT
 } ColorElements;
 

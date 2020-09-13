@@ -14,6 +14,7 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 #include "CPUMeter.h"
+#include "DiskIOMeter.h"
 #include "MemoryMeter.h"
 #include "SwapMeter.h"
 #include "TasksMeter.h"
@@ -25,12 +26,14 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "LinuxProcess.h"
+#include "StringUtils.h"
 
 #include <math.h>
 #include <assert.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
@@ -131,6 +134,7 @@ MeterClass* Platform_meterTypes[] = {
    &PressureStallMemoryFullMeter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &DiskIOMeter_class,
    NULL
 };
 
@@ -280,4 +284,51 @@ void Platform_getPressureStall(const char *file, bool some, double* ten, double*
    (void) total;
    assert(total == 3);
    fclose(fd);
+}
+
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+   FILE *fd = fopen(PROCDIR "/diskstats", "r");
+   if (!fd) {
+      *bytesRead = 0;
+      *bytesWrite = 0;
+      *msTimeSpend = 0;
+      return;
+   }
+   unsigned long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
+   char lineBuffer[256];
+   while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
+      char diskname[32];
+      unsigned long int read_tmp, write_tmp, timeSpend_tmp;
+      if (sscanf(lineBuffer, "%*d %*d %31s %*u %*u %lu %*u %*u %*u %lu %*u %*u %lu", diskname, &read_tmp, &write_tmp, &timeSpend_tmp) == 4) {
+         if (String_startsWith(diskname, "dm-"))
+            continue;
+
+         /* only count root disks, e.g. do not count IO from sda and sda1 twice */
+         if ((diskname[0] == 's' || diskname[0] == 'h')
+             && diskname[1] == 'd'
+             && isalpha((unsigned char)diskname[2])
+             && isdigit((unsigned char)diskname[3]))
+            continue;
+
+         /* only count root disks, e.g. do not count IO from mmcblk0 and mmcblk0p1 twice */
+         if (diskname[0] == 'm'
+             && diskname[1] == 'm'
+             && diskname[2] == 'c'
+             && diskname[3] == 'b'
+             && diskname[4] == 'l'
+             && diskname[5] == 'k'
+             && isdigit((unsigned char)diskname[6])
+             && diskname[7] == 'p')
+            continue;
+
+         read_sum += read_tmp;
+         write_sum += write_tmp;
+         timeSpend_sum += timeSpend_tmp;
+      }
+   }
+   fclose(fd);
+   /* multiply with sector size */
+   *bytesRead = 512 * read_sum;
+   *bytesWrite = 512 * write_sum;
+   *msTimeSpend = timeSpend_sum;
 }
