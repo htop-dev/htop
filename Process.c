@@ -84,46 +84,64 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
 
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
    int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
+   int processGigabytesColor = CRT_colors[PROCESS_GIGABYTES];
    int processColor = CRT_colors[PROCESS];
    if (!coloring) {
       largeNumberColor = CRT_colors[PROCESS];
       processMegabytesColor = CRT_colors[PROCESS];
+      processGigabytesColor = CRT_colors[PROCESS];
    }
 
-   if(number >= (10 * ONE_DECIMAL_M)) {
-      #ifdef __LP64__
-      if(number >= (100 * ONE_DECIMAL_G)) {
-         len = snprintf(buffer, 10, "%4luT ", number / ONE_G);
-         RichString_appendn(str, largeNumberColor, buffer, len);
-         return;
-      } else if (number >= (1000 * ONE_DECIMAL_M)) {
-         len = snprintf(buffer, 10, "%4.1lfT ", (double)number / ONE_G);
-         RichString_appendn(str, largeNumberColor, buffer, len);
-         return;
-      }
-      #endif
-      if(number >= (100 * ONE_DECIMAL_M)) {
-         len = snprintf(buffer, 10, "%4luG ", number / ONE_M);
-         RichString_appendn(str, largeNumberColor, buffer, len);
-         return;
-      }
-      len = snprintf(buffer, 10, "%4.1lfG ", (double)number / ONE_M);
-      RichString_appendn(str, largeNumberColor, buffer, len);
-      return;
-   } else if (number >= 100000) {
-      len = snprintf(buffer, 10, "%4luM ", number / ONE_K);
-      RichString_appendn(str, processMegabytesColor, buffer, len);
-      return;
-   } else if (number >= 1000) {
+   if (number < 1000) {
+      //Plain number, no markings
+      len = snprintf(buffer, 10, "%5lu ", number);
+      RichString_appendn(str, processColor, buffer, len);
+   } else if (number < 100000) {
+      //2 digit MB, 3 digit KB
       len = snprintf(buffer, 10, "%2lu", number/1000);
       RichString_appendn(str, processMegabytesColor, buffer, len);
       number %= 1000;
       len = snprintf(buffer, 10, "%03lu ", number);
       RichString_appendn(str, processColor, buffer, len);
-      return;
+   } else if (number < 1000 * ONE_K) {
+      //3 digit MB
+      number /= ONE_K;
+      len = snprintf(buffer, 10, "%4luM ", number);
+      RichString_appendn(str, processMegabytesColor, buffer, len);
+   } else if (number < 10000 * ONE_K) {
+      //1 digit GB, 3 digit MB
+      number /= ONE_K;
+      len = snprintf(buffer, 10, "%1lu", number/1000);
+      RichString_appendn(str, processGigabytesColor, buffer, len);
+      number %= 1000;
+      len = snprintf(buffer, 10, "%03luM ", number);
+      RichString_appendn(str, processMegabytesColor, buffer, len);
+   } else if (number < 100 * ONE_M) {
+      //2 digit GB, 1 digit MB
+      number /= 100 * ONE_K;
+      len = snprintf(buffer, 10, "%2lu", number/10);
+      RichString_appendn(str, processGigabytesColor, buffer, len);
+      number %= 10;
+      len = snprintf(buffer, 10, ".%1luG ", number);
+      RichString_appendn(str, processMegabytesColor, buffer, len);
+   } else if (number < 1000 * ONE_M) {
+      //3 digit GB
+      number /= ONE_M;
+      len = snprintf(buffer, 10, "%4luG ", number);
+      RichString_appendn(str, processGigabytesColor, buffer, len);
+   } else if (number < 10000 * ONE_M) {
+      //1 digit TB, 3 digit GB
+      number /= ONE_M;
+      len = snprintf(buffer, 10, "%1lu", number/1000);
+      RichString_appendn(str, largeNumberColor, buffer, len);
+      number %= 1000;
+      len = snprintf(buffer, 10, "%03luG ", number);
+      RichString_appendn(str, processGigabytesColor, buffer, len);
+   } else {
+      //2 digit TB and above
+      len = snprintf(buffer, 10, "%4.1lfT ", (double)number/ONE_G);
+      RichString_appendn(str, largeNumberColor, buffer, len);
    }
-   len = snprintf(buffer, 10, "%5lu ", number);
-   RichString_appendn(str, processColor, buffer, len);
 }
 
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring) {
