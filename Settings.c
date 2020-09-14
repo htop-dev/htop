@@ -63,7 +63,6 @@ static void Settings_defaultMeters(Settings* this) {
       this->columns[i].modes = xCalloc(sizes[i], sizeof(int));
       this->columns[i].len = sizes[i];
    }
-
    int r = 0;
    if (this->cpuCount > 8) {
       this->columns[0].names[0] = xStrdup("LeftCPUs2");
@@ -83,7 +82,6 @@ static void Settings_defaultMeters(Settings* this) {
    this->columns[0].modes[1] = BAR_METERMODE;
    this->columns[0].names[2] = xStrdup("Swap");
    this->columns[0].modes[2] = BAR_METERMODE;
-
    this->columns[1].names[r] = xStrdup("Tasks");
    this->columns[1].modes[r++] = TEXT_METERMODE;
    this->columns[1].names[r] = xStrdup("LoadAverage");
@@ -114,13 +112,11 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
 
 static bool Settings_read(Settings* this, const char* fileName) {
    FILE* fd;
-
    CRT_dropPrivileges();
    fd = fopen(fileName, "r");
    CRT_restorePrivileges();
    if (!fd)
       return false;
-
    bool didReadMeters = false;
    bool didReadFields = false;
    for (;;) {
@@ -199,8 +195,6 @@ static bool Settings_read(Settings* this, const char* fileName) {
       } else if (String_eq(option[0], "right_meter_modes")) {
          Settings_readMeterModes(this, option[1], 1);
          didReadMeters = true;
-      } else if (String_eq(option[0], "vim_mode")) {
-         this->vimMode = atoi(option[1]);
       #ifdef HAVE_LIBHWLOC
       } else if (String_eq(option[0], "topology_affinity")) {
          this->topologyAffinity = !!atoi(option[1]);
@@ -284,7 +278,6 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
    fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
    fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
-   fprintf(fd, "vim_mode=%d\n", (int) this->vimMode);
    #ifdef HAVE_LIBHWLOC
    fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);
    #endif
@@ -293,7 +286,6 @@ bool Settings_write(Settings* this) {
 }
 
 Settings* Settings_new(int cpuCount) {
-
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->sortKey = PERCENT_CPU;
@@ -317,7 +309,6 @@ Settings* Settings_new(int cpuCount) {
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
-
    this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
@@ -348,7 +339,6 @@ Settings* Settings_new(int cpuCount) {
          htopDir = String_cat(home, "/.config/htop");
       }
       legacyDotfile = String_cat(home, "/.htoprc");
-
       CRT_dropPrivileges();
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);

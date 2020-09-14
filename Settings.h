@@ -20,7 +20,6 @@ typedef struct {
 
 typedef struct Settings_ {
    char* filename;
-
    MeterColumnSettings columns[2];
 
    ProcessField* fields;
@@ -50,7 +49,6 @@ typedef struct Settings_ {
    bool accountGuestInCPUMeter;
    bool headerMargin;
    bool enableMouse;
-   bool vimMode;
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif
