@@ -1,15 +1,26 @@
+What's new in version 3.0.2
+
+* BUGFIX: Drop 'vim_mode' - several issues, needs rethink
+* BUGFIX: fix regression in -u optional-argument handling
+* Build system rework to remove python, header generation
+  (thanks to Zev Weiss and Hugo Musso Gualandi)
+* BUGFIX: report nice level correctly on Solaris
+  (thanks to Dominik Hassler)
+* CI, code quality improvements
+  (thanks to Tobias Kortkamp, Christian Hesse, Benny Baumann)
+
 What's new in version 3.0.1
 
 * Coverity fixes, CI improvements, documentation updates
 * BUGFIX: Fix early exit with longer sysfs battery paths
 * BUGFIX: Improve OOM output, fix sorting
-(thanks to Christian Göttsche)
+  (thanks to Christian Göttsche)
 * Rework check buttons and tree open/closed
-(thanks to Bert Wesarg)
+  (thanks to Bert Wesarg)
 * Add -U/--no-unicode option to disable unicode
-(thanks to Christian Hesse)
+  (thanks to Christian Hesse)
 * Improvements to the affinity panel
-(thanks to Bert Wesarg)
+  (thanks to Bert Wesarg)
 
 What's new in version 3.0.0
 
@@ -18,7 +29,6 @@ What's new in version 3.0.0
   of community maintainers have volunteered to take over a
   fork at https://htop.dev and https://github.com/htop-dev
   to keep the project going.
-
 * Support ZFS ARC statistics
   (thanks to Ross Williams)
 * Support more than 2 smaller CPU meter columns
