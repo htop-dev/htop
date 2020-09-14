@@ -7,15 +7,10 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define METER_BUFFER_LEN 256
-
-#define GRAPH_DELAY (DEFAULT_DELAY/2)
-
-#define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
-
 #include "ListItem.h"
-
 #include <sys/time.h>
+
+#define METER_BUFFER_LEN 256
 
 typedef struct Meter_ Meter;
 
@@ -108,23 +103,7 @@ void Meter_setMode(Meter* this, int modeIndex);
 
 ListItem* Meter_toListItem(Meter* this, bool moving);
 
-/* ---------- TextMeterMode ---------- */
-
-/* ---------- BarMeterMode ---------- */
-
-/* ---------- GraphMeterMode ---------- */
-
-#ifdef HAVE_LIBNCURSESW
-#define PIXPERROW_UTF8 4
-#endif
-
-#define PIXPERROW_ASCII 2
-
-/* ---------- LEDMeterMode ---------- */
-
 extern MeterMode* Meter_modes[];
-
-/* Blank meter */
 
 extern int BlankMeter_attributes[];
 

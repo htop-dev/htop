@@ -39,10 +39,6 @@ in the source distribution for its full text.
 #define ColorPairGrayBlack ColorPair(Magenta,Magenta)
 #define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
 
-#define KEY_WHEELUP KEY_F(20)
-#define KEY_WHEELDOWN KEY_F(21)
-#define KEY_RECLICK KEY_F(22)
-
 const char *CRT_treeStrAscii[TREE_STR_COUNT] = {
    "-", // TREE_STR_HORZ
    "|", // TREE_STR_VERT
@@ -550,12 +546,7 @@ void CRT_restorePrivileges() {
 
 #else
 
-/* Turn setuid operations into NOPs */
-
-#ifndef CRT_dropPrivileges
-#define CRT_dropPrivileges()
-#define CRT_restorePrivileges()
-#endif
+// In this case, the setuid operations are defined as macros in CRT.h
 
 #endif
 

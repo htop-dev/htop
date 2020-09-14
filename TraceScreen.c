@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "TraceScreen.h"
 
 #include "CRT.h"
-#include "InfoScreen.h"
 #include "ProcessList.h"
 #include "ListItem.h"
 #include "IncSet.h"

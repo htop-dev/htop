@@ -7,12 +7,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "IncSet.h"
-#include "Settings.h"
 #include "Header.h"
-#include "UsersTable.h"
-#include "ProcessList.h"
 #include "Panel.h"
+#include "ProcessList.h"
+#include "Settings.h"
+#include "UsersTable.h"
 
 typedef enum {
    HTOP_OK = 0x00,
@@ -37,13 +36,9 @@ typedef struct State_ {
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess);
 
-// ----------------------------------------
-
 bool Action_setUserOnly(const char* userName, uid_t* userId);
 
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
-
-// ----------------------------------------
 
 Htop_Reaction Action_follow(State* st);
 

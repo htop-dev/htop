@@ -19,8 +19,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <assert.h>
 
-#define KEY_CTRL(l) ((l)-'A'+1)
-
 PanelClass Panel_class = {
    .super = {
       .extends = Class(Object),

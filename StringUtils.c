@@ -14,12 +14,6 @@ in the source distribution for its full text.
 #include <strings.h>
 #include <stdlib.h>
 
-
-/*
- * String_startsWith gives better performance if strlen(match) can be computed
- * at compile time (e.g. when they are immutable string literals). :)
- */
-
 char* String_cat(const char* s1, const char* s2) {
    int l1 = strlen(s1);
    int l2 = strlen(s2);

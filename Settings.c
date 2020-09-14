@@ -17,8 +17,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <unistd.h>
 
-#define DEFAULT_DELAY 15
-
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->fields);

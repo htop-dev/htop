@@ -8,9 +8,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Panel.h"
 #include "Action.h"
-#include "Settings.h"
+#include "IncSet.h"
+#include "Panel.h"
 
 typedef struct MainPanel_ {
    Panel super;

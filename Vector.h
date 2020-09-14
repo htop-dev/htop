@@ -72,10 +72,6 @@ int Vector_size(Vector* this);
 
 #endif
 
-/*
-
-*/
-
 void Vector_add(Vector* this, void* data_);
 
 int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
