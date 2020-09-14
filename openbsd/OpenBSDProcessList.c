@@ -41,7 +41,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    opl = xCalloc(1, sizeof(OpenBSDProcessList));
    pl = (ProcessList*) opl;
    size = sizeof(pl->cpuCount);
-   ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidWhiteList, userId);
+   ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidMatchList, userId);
 
    e = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
    if (e == -1 || pl->cpuCount < 1) {
