@@ -230,8 +230,8 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
    ZfsCompressedArcMeter_readStats(this, &(lpl->zfs));
 }
 char* Platform_getProcessEnv(pid_t pid) {
-   char procname[32+1];
-   xSnprintf(procname, 32, "/proc/%d/environ", pid);
+   char procname[128];
+   xSnprintf(procname, sizeof(procname), PROCDIR "/%d/environ", pid);
    FILE* fd = fopen(procname, "r");
    char *env = NULL;
    if (fd) {

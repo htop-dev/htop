@@ -475,7 +475,7 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
 #ifdef HAVE_OPENVZ
 
 static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* dirname, const char* name) {
-   if ( (access("/proc/vz", R_OK) != 0)) {
+   if ( (access(PROCDIR "/vz", R_OK) != 0)) {
       process->vpid = process->super.pid;
       process->ctid = 0;
       return;
