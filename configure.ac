@@ -7,7 +7,6 @@ AC_INIT([htop],[3.0.2],[htop@groups.io])
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_MACRO_DIR([m4])
 
 # Required by hwloc scripts
 AC_CANONICAL_TARGET
@@ -81,7 +80,6 @@ AC_TYPE_UID_T
 # Checks for library functions and compiler features.
 # ----------------------------------------------------------------------
 AC_FUNC_CLOSEDIR_VOID
-AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([memmove strncasecmp strstr strdup])
 
@@ -117,13 +115,6 @@ AC_ARG_WITH(proc, [AS_HELP_STRING([--with-proc=DIR], [Location of a Linux-compat
     PROCDIR="$withval"
   fi,
   AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
-
-if test "x$cross_compiling" = xno; then
-   if test "x$enable_proc" = xyes; then
-      AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find $PROCDIR/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
-      AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find $PROCDIR/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
-   fi
-fi
 
 AC_ARG_ENABLE(openvz, [AS_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
 if test "x$enable_openvz" = xyes; then
@@ -237,7 +228,7 @@ if test "$my_htop_platform" = "solaris"; then
 fi
 
 AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
-if test "x$enable_linux_affinity" = xyes -a "x$cross_compiling" = xno; then
+if test "x$enable_linux_affinity" = xyes; then
    AC_MSG_CHECKING([for usable sched_setaffinity])
    AC_RUN_IFELSE([
      AC_LANG_PROGRAM([[
@@ -251,7 +242,8 @@ if test "x$enable_linux_affinity" = xyes -a "x$cross_compiling" = xno; then
        ]])],
      [AC_MSG_RESULT([yes])],
      [enable_linux_affinity=no
-      AC_MSG_RESULT([no])])
+      AC_MSG_RESULT([no])],
+     [AC_MSG_RESULT([yes (assumed while cross compiling)])])
 fi
 if test "x$enable_linux_affinity" = xyes; then
    AC_DEFINE(HAVE_LINUX_AFFINITY, 1, [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])

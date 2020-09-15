@@ -1,5 +1,3 @@
-
-ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = htop
