@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
 
    CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
 
-   MainPanel* panel = MainPanel_new();
+   MainPanel* panel = MainPanel_new(settings);
    ProcessList_setPanel(pl, (Panel*) panel);
 
    MainPanel_updateTreeFunctions(panel, settings->treeView);
