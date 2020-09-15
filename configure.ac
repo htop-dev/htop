@@ -291,9 +291,6 @@ AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as er
 AS_IF([test "x$enable_werror" = "xyes"], [AM_CFLAGS="$AM_CFLAGS -Werror"])
 AC_SUBST([AM_CFLAGS])
 
-AC_CHECK_PROGS(PYTHON, [python python3 python2])
-AC_SUBST(PYTHON)
-
 # Bail out on errors.
 # ----------------------------------------------------------------------
 if test ! -z "$missing_libraries"; then
