@@ -1,3 +1,2 @@
 #!/bin/sh
-mkdir -p m4
-autoreconf --install --force
+autoreconf --force --install --verbose -Wall
