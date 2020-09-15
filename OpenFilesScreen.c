@@ -52,8 +52,6 @@ void OpenFilesScreen_draw(InfoScreen* this) {
 }
 
 static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
-   char buffer[1025];
-   xSnprintf(buffer, 1024, "%d", pid);
    OpenFiles_ProcessData* pdata = xCalloc(1, sizeof(OpenFiles_ProcessData));
    OpenFiles_FileData* fdata = NULL;
    OpenFiles_Data* item = &(pdata->data);
@@ -76,6 +74,8 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
          exit(1);
       dup2(fdnull, STDERR_FILENO);
       close(fdnull);
+      char buffer[32] = {0};
+      xSnprintf(buffer, sizeof(buffer), "%d", pid);
       execlp("lsof", "lsof", "-P", "-p", buffer, "-F", NULL);
       exit(127);
    }
