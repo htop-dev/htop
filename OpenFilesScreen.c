@@ -53,18 +53,21 @@ void OpenFilesScreen_draw(InfoScreen* this) {
 
 static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    OpenFiles_ProcessData* pdata = xCalloc(1, sizeof(OpenFiles_ProcessData));
-   OpenFiles_FileData* fdata = NULL;
-   OpenFiles_Data* item = &(pdata->data);
-   int fdpair[2];
+
+   int fdpair[2] = {0, 0};
    if (pipe(fdpair) == -1) {
       pdata->error = 1;
       return pdata;
    }
+
    pid_t child = fork();
    if (child == -1) {
+      close(fdpair[1]);
+      close(fdpair[0]);
       pdata->error = 1;
       return pdata;
    }
+
    if (child == 0) {
       close(fdpair[0]);
       dup2(fdpair[1], STDOUT_FILENO);
@@ -80,12 +83,17 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       exit(127);
    }
    close(fdpair[1]);
+
+   OpenFiles_Data* item = &(pdata->data);
+   OpenFiles_FileData* fdata = NULL;
+
    FILE* fd = fdopen(fdpair[0], "r");
    for (;;) {
       char* line = String_readLine(fd);
       if (!line) {
          break;
       }
+
       unsigned char cmd = line[0];
       if (cmd == 'f') {
          OpenFiles_FileData* nextFile = xCalloc(1, sizeof(OpenFiles_FileData));
@@ -101,15 +109,18 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       free(line);
    }
    fclose(fd);
+
    int wstatus;
    if (waitpid(child, &wstatus, 0) == -1) {
       pdata->error = 1;
       return pdata;
    }
+
    if (!WIFEXITED(wstatus))
       pdata->error = 1;
    else
       pdata->error = WEXITSTATUS(wstatus);
+
    return pdata;
 }
 
