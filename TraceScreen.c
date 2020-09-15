@@ -74,7 +74,6 @@ void TraceScreen_draw(InfoScreen* this) {
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
-   char buffer[1001];
    int error = pipe(this->fdpair);
    if (error == -1) return false;
    this->child = fork();
@@ -84,6 +83,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       dup2(this->fdpair[1], STDERR_FILENO);
       int ok = fcntl(this->fdpair[1], F_SETFL, O_NONBLOCK);
       if (ok != -1) {
+         char buffer[32] = {0};
          xSnprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
          execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, NULL);
       }
