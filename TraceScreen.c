@@ -101,7 +101,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
 
 void TraceScreen_updateTrace(InfoScreen* super) {
    TraceScreen* this = (TraceScreen*) super;
-   char buffer[1001];
+   char buffer[1025];
    fd_set fds;
    FD_ZERO(&fds);
 // FD_SET(STDIN_FILENO, &fds);
@@ -111,7 +111,7 @@ void TraceScreen_updateTrace(InfoScreen* super) {
    int ready = select(this->fd_strace+1, &fds, NULL, NULL, &tv);
    int nread = 0;
    if (ready > 0 && FD_ISSET(this->fd_strace, &fds))
-      nread = fread(buffer, 1, 1000, this->strace);
+      nread = fread(buffer, 1, sizeof(buffer) - 1, this->strace);
    if (nread && this->tracing) {
       char* line = buffer;
       buffer[nread] = '\0';
