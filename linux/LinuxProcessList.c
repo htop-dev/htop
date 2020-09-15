@@ -229,6 +229,8 @@ static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
 
 static bool LinuxProcessList_readStatFile(Process *process, const char* dirname, const char* name, char* command, int* commLen) {
    LinuxProcess* lp = (LinuxProcess*) process;
+   const int commLenIn = *commLen;
+   *commLen = 0;
    char filename[MAX_NAME+1];
    xSnprintf(filename, MAX_NAME, "%s/%s/stat", dirname, name);
    int fd = open(filename, O_RDONLY);
@@ -250,7 +252,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    char *end = strrchr(location, ')');
    if (!end) return false;
 
-   int commsize = end - location;
+   int commsize = MINIMUM(end - location, commLenIn - 1);
    memcpy(command, location, commsize);
    command[commsize] = '\0';
    *commLen = commsize;
@@ -824,7 +826,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       char command[MAX_NAME+1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
-      int commLen = 0;
+      int commLen = sizeof(command);
       unsigned int tty_nr = proc->tty_nr;
       if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen))
          goto errorReadingProcess;
