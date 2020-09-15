@@ -88,6 +88,10 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    OpenFiles_FileData* fdata = NULL;
 
    FILE* fd = fdopen(fdpair[0], "r");
+   if (!fd) {
+      pdata->error = 1;
+      return pdata;
+   }
    for (;;) {
       char* line = String_readLine(fd);
       if (!line) {
