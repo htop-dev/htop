@@ -38,7 +38,7 @@ static void printHelpFlag() {
    fputs("htop " VERSION "\n"
          "Released under the GNU GPL.\n\n"
          "-C --no-color               Use a monochrome color scheme\n"
-         "-m --no-mouse               Disable the mouse\n"
+         "-M --no-mouse               Disable the mouse\n"
          "-d --delay=DELAY            Set the delay between updates, in tenths of seconds\n"
          "-h --help                   Print this help screen\n"
          "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
@@ -90,7 +90,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"user",       optional_argument,   0, 'u'},
       {"no-color",   no_argument,         0, 'C'},
       {"no-colour",  no_argument,         0, 'C'},
-      {"no-mouse",   no_argument,         0, 'm'},
+      {"no-mouse",   no_argument,         0, 'M'},
       {"no-unicode", no_argument,         0, 'U'},
       {"tree",       no_argument,         0, 't'},
       {"pid",        required_argument,   0, 'p'},
@@ -99,7 +99,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvmCs:td:u::Up:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvMCs:td:u::Up:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -150,7 +150,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
          case 'C':
             flags.useColors = false;
             break;
-         case 'm':
+         case 'M':
             flags.enableMouse = false;
             break;
          case 'U':

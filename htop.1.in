@@ -51,6 +51,9 @@ Show only the processes of a given user
 \fB\-U \-\-no-unicode\fR
 Do not use unicode but ASCII characters for graph meters
 .TP
+\fB\-M \-\-no-mouse\fR
+Disable support of mouse control
+.TP
 \fB\-v \-\-version
 Output version information and exit
 .TP
