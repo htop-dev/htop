@@ -293,7 +293,13 @@ AM_CFLAGS="\
 
 AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as errors (default: warnings are not errors)])], [enable_werror="$enableval"], [enable_werror=no])
 AS_IF([test "x$enable_werror" = "xyes"], [AM_CFLAGS="$AM_CFLAGS -Werror"])
+
 AC_SUBST([AM_CFLAGS])
+
+AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [Enable asserts (default: asserts are disabled)])], [enable_debug="$enableval"], [enable_debug=no])
+AS_IF([test "x$enable_debug" = "xyes"], , [AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"])
+
+AC_SUBST([AM_CPPFLAGS])
 
 # Bail out on errors.
 # ----------------------------------------------------------------------
