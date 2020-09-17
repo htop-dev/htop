@@ -320,6 +320,9 @@ The library size of the process.
 .B M_DT (DIRTY)
 The size of the dirty pages of the process.
 .TP
+.B M_SWAP (SWAP)
+Size of the process's swapped pages.
+.TP
 .B ST_UID (UID)
 The user ID of the process owner.
 .TP
