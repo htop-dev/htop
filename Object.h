@@ -48,10 +48,10 @@ typedef union {
 
 extern ObjectClass Object_class;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 bool Object_isA(Object* o, const ObjectClass* klass);
 
-#endif
+#endif /* NDEBUG */
 
 #endif

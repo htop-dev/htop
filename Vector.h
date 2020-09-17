@@ -28,12 +28,6 @@ Vector* Vector_new(ObjectClass* type, bool owner, int size);
 
 void Vector_delete(Vector* this);
 
-#ifdef DEBUG
-
-int Vector_count(Vector* this);
-
-#endif
-
 void Vector_prune(Vector* this);
 
 void Vector_quickSort(Vector* this);
@@ -52,25 +46,18 @@ void Vector_moveDown(Vector* this, int idx);
 
 void Vector_set(Vector* this, int idx, void* data_);
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 Object* Vector_get(Vector* this, int idx);
+int Vector_size(Vector* this);
+int Vector_count(Vector* this);
 
-#else
+#else /* NDEBUG */
 
 #define Vector_get(v_, idx_) ((v_)->array[idx_])
-
-#endif
-
-#ifdef DEBUG
-
-int Vector_size(Vector* this);
-
-#else
-
 #define Vector_size(v_) ((v_)->items)
 
-#endif
+#endif /* NDEBUG */
 
 void Vector_add(Vector* this, void* data_);
 

@@ -670,7 +670,7 @@ static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
 
    if ((nlattr = nlattrs[TASKSTATS_TYPE_AGGR_PID]) || (nlattr = nlattrs[TASKSTATS_TYPE_NULL])) {
       stats = nla_data(nla_next(nla_data(nlattr), &rem));
-      assert(lp->super.pid == stats->ac_pid);
+      assert(lp->super.pid == (pid_t)stats->ac_pid);
       timeDelta = (stats->ac_etime*1000 - lp->delay_read_time);
       #define BOUNDS(x) isnan(x) ? 0.0 : (x > 100) ? 100.0 : x;
       #define DELTAPERC(x,y) BOUNDS((float) (x - y) / timeDelta * 100);

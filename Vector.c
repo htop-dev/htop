@@ -38,9 +38,9 @@ void Vector_delete(Vector* this) {
    free(this);
 }
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
-static inline bool Vector_isConsistent(Vector* this) {
+static bool Vector_isConsistent(Vector* this) {
    assert(this->items <= this->arraySize);
    if (this->owner) {
       for (int i = 0; i < this->items; i++)
@@ -62,7 +62,18 @@ int Vector_count(Vector* this) {
    return items;
 }
 
-#endif
+Object* Vector_get(Vector* this, int idx) {
+   assert(idx < this->items);
+   assert(Vector_isConsistent(this));
+   return this->array[idx];
+}
+
+int Vector_size(Vector* this) {
+   assert(Vector_isConsistent(this));
+   return this->items;
+}
+
+#endif /* NDEBUG */
 
 void Vector_prune(Vector* this) {
    assert(Vector_isConsistent(this));
@@ -251,33 +262,6 @@ void Vector_set(Vector* this, int idx, void* data_) {
    assert(Vector_isConsistent(this));
 }
 
-#ifdef DEBUG
-
-inline Object* Vector_get(Vector* this, int idx) {
-   assert(idx < this->items);
-   assert(Vector_isConsistent(this));
-   return this->array[idx];
-}
-
-#else
-
-// In this case, Vector_get is defined as a macro in vector.h
-
-#endif
-
-#ifdef DEBUG
-
-inline int Vector_size(Vector* this) {
-   assert(Vector_isConsistent(this));
-   return this->items;
-}
-
-#else
-
-// In this case, Vector_size is defined as a macro in vector.h
-
-#endif
-
 /*
 
 static void Vector_merge(Vector* this, Vector* v2) {
@@ -303,7 +287,7 @@ void Vector_add(Vector* this, void* data_) {
    assert(Vector_isConsistent(this));
 }
 
-inline int Vector_indexOf(Vector* this, void* search_, Object_Compare compare) {
+int Vector_indexOf(Vector* this, void* search_, Object_Compare compare) {
    Object* search = search_;
    assert(Object_isA((Object*)search, this->type));
    assert(compare);
