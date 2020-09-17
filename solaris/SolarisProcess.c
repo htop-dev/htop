@@ -105,14 +105,7 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
    case TASKID: xSnprintf(buffer, n, Process_pidFormat, sp->taskid); break;
    case POOLID: xSnprintf(buffer, n, Process_pidFormat, sp->poolid); break;
    case CONTID: xSnprintf(buffer, n, Process_pidFormat, sp->contid); break;
-   case ZONE:{
-      xSnprintf(buffer, n, "%-*s ", ZONENAME_MAX/4, sp->zname); break;
-      if (buffer[ZONENAME_MAX/4] != '\0') {
-         buffer[ZONENAME_MAX/4] = ' ';
-         buffer[(ZONENAME_MAX/4)+1] = '\0';
-      }
-      break;
-   }
+   case ZONE: xSnprintf(buffer, n, "%-*s ", ZONENAME_MAX/4, sp->zname); break;
    case PID: xSnprintf(buffer, n, Process_pidFormat, sp->realpid); break;
    case PPID: xSnprintf(buffer, n, Process_pidFormat, sp->realppid); break;
    case LWPID: xSnprintf(buffer, n, Process_pidFormat, sp->lwpid); break;
