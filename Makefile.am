@@ -12,7 +12,6 @@ pixmap_DATA = htop.png
 
 AM_CFLAGS += -pedantic -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
 AM_LDFLAGS =
-AM_CPPFLAGS = -DNDEBUG
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
 ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c DiskIOMeter.c DiskIOMeter.h \
