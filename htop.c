@@ -46,7 +46,7 @@ static void printHelpFlag() {
          "-u --user[=USERNAME]        Show only processes for a given user (or $USER)\n"
          "-U --no-unicode             Do not use unicode but plain ASCII\n"
          "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
-         "-v --version                Print version info\n"
+         "-V --version                Print version info\n"
          "\n"
          "Long options may be passed with a single dash.\n\n"
          "Press F1 inside htop for online help.\n"
@@ -84,7 +84,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
    static struct option long_opts[] =
    {
       {"help",       no_argument,         0, 'h'},
-      {"version",    no_argument,         0, 'v'},
+      {"version",    no_argument,         0, 'V'},
       {"delay",      required_argument,   0, 'd'},
       {"sort-key",   required_argument,   0, 's'},
       {"user",       optional_argument,   0, 'u'},
@@ -99,13 +99,13 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvMCs:td:u::Up:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
             printHelpFlag();
             break;
-         case 'v':
+         case 'V':
             printVersionFlag();
             break;
          case 's':
