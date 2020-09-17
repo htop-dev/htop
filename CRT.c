@@ -613,13 +613,13 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
          define_key(sequence, KEY_ALT('A' + (c - 'a')));
       }
    }
-#ifndef DEBUG
+
    struct sigaction act;
    sigemptyset (&act.sa_mask);
    act.sa_flags = (int)SA_RESETHAND;
    act.sa_handler = CRT_handleSIGSEGV;
    sigaction (SIGSEGV, &act, &old_sigsegv_handler);
-#endif
+
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
    use_default_colors();

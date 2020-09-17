@@ -12,7 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 static bool Hashtable_isConsistent(Hashtable* this) {
    int items = 0;
@@ -39,7 +39,7 @@ int Hashtable_count(Hashtable* this) {
    return items;
 }
 
-#endif
+#endif /* NDEBUG */
 
 static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
    HashtableItem* this;
@@ -124,7 +124,7 @@ void* Hashtable_remove(Hashtable* this, unsigned int key) {
    return NULL;
 }
 
-inline void* Hashtable_get(Hashtable* this, unsigned int key) {
+void* Hashtable_get(Hashtable* this, unsigned int key) {
    unsigned int index = key % this->size;
    HashtableItem* bucketPtr = this->buckets[index];
    while (true) {

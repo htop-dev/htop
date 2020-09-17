@@ -12,7 +12,7 @@ ObjectClass Object_class = {
    .extends = NULL
 };
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 bool Object_isA(Object* o, const ObjectClass* klass) {
    if (!o)
@@ -26,4 +26,4 @@ bool Object_isA(Object* o, const ObjectClass* klass) {
    return false;
 }
 
-#endif
+#endif /* NDEBUG */
