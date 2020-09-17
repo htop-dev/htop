@@ -11,7 +11,6 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "ListItem.h"
 #include "StringUtils.h"
-#include "KeyBinds.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -313,24 +312,38 @@ void Panel_draw(Panel* this, bool focus) {
    move(0, 0);
 }
 
-bool Panel_onKey(Panel* this, int keybind) {
+bool Panel_onKey(Panel* this, int key) {
    assert (this != NULL);
 
    int size = Vector_size(this->items);
-   switch (keybind) {
-   case BIND_DOWN:
+   switch (key) {
+   case KEY_DOWN:
+   case KEY_CTRL('N'):
       this->selected++;
       break;
-   case BIND_UP:
+   case KEY_UP:
+   case KEY_CTRL('P'):
       this->selected--;
       break;
-   case BIND_LEFT:
+   #ifdef KEY_C_DOWN
+   case KEY_C_DOWN:
+      this->selected++;
+      break;
+   #endif
+   #ifdef KEY_C_UP
+   case KEY_C_UP:
+      this->selected--;
+      break;
+   #endif
+   case KEY_LEFT:
+   case KEY_CTRL('B'):
       if (this->scrollH > 0) {
          this->scrollH -= MAXIMUM(CRT_scrollHAmount, 0);
          this->needsRedraw = true;
       }
       break;
-   case BIND_RIGHT:
+   case KEY_RIGHT:
+   case KEY_CTRL('F'):
       this->scrollH += CRT_scrollHAmount;
       this->needsRedraw = true;
       break;

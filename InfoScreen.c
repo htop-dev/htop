@@ -7,7 +7,6 @@
 #include "ListItem.h"
 #include "Platform.h"
 #include "StringUtils.h"
-#include "KeyBinds.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -111,7 +110,7 @@ void InfoScreen_run(InfoScreen* this) {
          continue;
       }
 
-      switch((ch = KeyBinds_obtainBind(this->process->settings, ch))) {
+      switch(ch) {
       case ERR:
          continue;
       case KEY_F(3):
