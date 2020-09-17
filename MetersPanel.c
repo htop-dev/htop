@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "MetersPanel.h"
+#include "KeyBinds.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -79,7 +80,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    HandlerResult result = IGNORED;
    bool sideMove = false;
 
-   switch(ch) {
+   switch((ch = KeyBinds_obtainBind(this->settings, ch))) {
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
@@ -104,7 +105,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          result = HANDLED;
          break;
       }
-      case KEY_UP:
+      case BIND_UP:
       {
          if (!this->moving) {
             break;
@@ -120,7 +121,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          result = HANDLED;
          break;
       }
-      case KEY_DOWN:
+      case BIND_DOWN:
       {
          if (!this->moving) {
             break;
@@ -136,7 +137,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          result = HANDLED;
          break;
       }
-      case KEY_RIGHT:
+      case BIND_RIGHT:
       {
          sideMove = moveToNeighbor(this, this->rightNeighbor, selected);
          if (this->moving && !sideMove) {
@@ -147,7 +148,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          // let ScreenManager handle focus.
          break;
       }
-      case KEY_LEFT:
+      case BIND_LEFT:
       {
          sideMove = moveToNeighbor(this, this->leftNeighbor, selected);
          if (this->moving && !sideMove) {

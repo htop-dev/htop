@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include "ColumnsPanel.h"
 #include "ColorsPanel.h"
 #include "AvailableColumnsPanel.h"
+#include "KeyBinds.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -61,14 +62,12 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
    HandlerResult result = IGNORED;
 
    int selected = Panel_getSelectedIndex(super);
-   switch (ch) {
+   switch ((ch = KeyBinds_obtainBind(this->settings, ch))) {
       case EVENT_SET_SELECTED:
          result = HANDLED;
          break;
-      case KEY_UP:
-      case KEY_CTRL('P'):
-      case KEY_DOWN:
-      case KEY_CTRL('N'):
+      case BIND_UP:
+      case BIND_DOWN:
       case KEY_NPAGE:
       case KEY_PPAGE:
       case KEY_HOME:

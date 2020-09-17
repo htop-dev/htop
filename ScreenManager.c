@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "Object.h"
 #include "CRT.h"
+#include "KeyBinds.h"
 
 #include <assert.h>
 #include <time.h>
@@ -243,14 +244,13 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          continue;
       }
 
-      switch (ch) {
+      switch ((ch = KeyBinds_obtainBind(this->settings, ch))) {
       case KEY_RESIZE:
       {
          ScreenManager_resize(this, this->x1, this->y1, this->x2, this->y2);
          continue;
       }
-      case KEY_LEFT:
-      case KEY_CTRL('B'):
+	  case BIND_LEFT:
          if (this->panelCount < 2) {
             goto defaultHandler;
          }
@@ -263,9 +263,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          if (Panel_size(panelFocus) == 0 && focus > 0)
             goto tryLeft;
          break;
-      case KEY_RIGHT:
-      case KEY_CTRL('F'):
-      case 9:
+	  case BIND_RIGHT:
          if (this->panelCount < 2) {
             goto defaultHandler;
          }
