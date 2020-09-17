@@ -72,7 +72,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
 
 // ----------------------------------------
 
-static void Action_runSetup(Settings* settings, const Header* header, ProcessList* pl) {
+static void Action_runSetup(Settings* settings, const Header* header, ProcessList* pl, Htop_Action* keys) {
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
    CategoriesPanel* panelCategories = CategoriesPanel_new(scr, settings, (Header*) header, pl);
    ScreenManager_add(scr, (Panel*) panelCategories, 16);
@@ -83,6 +83,7 @@ static void Action_runSetup(Settings* settings, const Header* header, ProcessLis
    ScreenManager_delete(scr);
    if (settings->changed) {
       Header_writeBackToSettings(header);
+      Action_setBindings(settings, keys);
    }
 }
 
@@ -345,7 +346,7 @@ Htop_Reaction Action_follow(State* st) {
 }
 
 static Htop_Reaction actionSetup(State* st) {
-   Action_runSetup(st->settings, st->header, st->pl);
+   Action_runSetup(st->settings, st->header, st->pl, ((MainPanel*)st->panel)->keys);
    // TODO: shouldn't need this, colors should be dynamic
    int headerHeight = Header_calculateHeight(st->header);
    Panel_move(st->panel, 0, headerHeight);
@@ -531,13 +532,27 @@ static Htop_Reaction actionShowEnvScreen(State* st) {
 }
 
 
-void Action_setBindings(Htop_Action* keys) {
+void Action_setBindings(Settings *settings, Htop_Action* keys) {
+   if (settings->vimMode) {
+       keys['H'] = actionHelp;
+       keys['K'] = actionKill;
+       keys['L'] = actionLsof;
+       keys['h'] = NULL;
+       keys['k'] = NULL;
+       keys['l'] = NULL;
+   } else {
+       keys['H'] = actionToggleUserlandThreads;
+       keys['K'] = actionToggleKernelThreads;
+       keys['L'] = NULL;
+       keys['h'] = actionHelp;
+       keys['k'] = actionKill;
+       keys['l'] = actionLsof;
+   }
+
    keys[KEY_RESIZE] = actionResize;
    keys['M'] = actionSortByMemory;
    keys['T'] = actionSortByTime;
    keys['P'] = actionSortByCPU;
-   keys['H'] = actionToggleUserlandThreads;
-   keys['K'] = actionToggleKernelThreads;
    keys['p'] = actionToggleProgramPath;
    keys['t'] = actionToggleTreeView;
    keys[KEY_F(5)] = actionToggleTreeView;
@@ -563,7 +578,6 @@ void Action_setBindings(Htop_Action* keys) {
    keys['q'] = actionQuit;
    keys['a'] = actionSetAffinity;
    keys[KEY_F(9)] = actionKill;
-   keys['k'] = actionKill;
    keys[KEY_RECLICK] = actionExpandOrCollapse;
    keys['+'] = actionExpandOrCollapse;
    keys['='] = actionExpandOrCollapse;
@@ -574,12 +588,10 @@ void Action_setBindings(Htop_Action* keys) {
    keys['S'] = actionSetup;
    keys['C'] = actionSetup;
    keys[KEY_F(2)] = actionSetup;
-   keys['l'] = actionLsof;
    keys['s'] = actionStrace;
    keys[' '] = actionTag;
    keys['\014'] = actionRedraw; // Ctrl+L
    keys[KEY_F(1)] = actionHelp;
-   keys['h'] = actionHelp;
    keys['?'] = actionHelp;
    keys['U'] = actionUntagAll;
    keys['c'] = actionTagAllChildren;

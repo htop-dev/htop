@@ -158,13 +158,13 @@ PanelClass MainPanel_class = {
    .eventHandler = MainPanel_eventHandler
 };
 
-MainPanel* MainPanel_new() {
+MainPanel* MainPanel_new(Settings *settings) {
    MainPanel* this = AllocThis(MainPanel);
    Panel_init((Panel*) this, 1, 1, 1, 1, Class(Process), false, FunctionBar_new(MainFunctions, NULL, NULL));
    this->keys = xCalloc(KEY_MAX, sizeof(Htop_Action));
    this->inc = IncSet_new(MainPanel_getFunctionBar(this));
 
-   Action_setBindings(this->keys);
+   Action_setBindings(settings, this->keys);
    Platform_setBindings(this->keys);
 
    return this;
