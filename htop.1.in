@@ -56,6 +56,9 @@ Output version information and exit
 .TP
 \fB\-t \-\-tree
 Show processes in tree view
+.TP
+\fB\-n \-\-normalize-cpu
+Divide process CPU percent by the number of CPU cores
 .SH "INTERACTIVE COMMANDS"
 .LP
 The following commands are supported while in

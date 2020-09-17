@@ -306,6 +306,7 @@ Settings* Settings_new(int cpuCount) {
    this->cpuCount = cpuCount;
    this->showProgramPath = true;
    this->highlightThreads = true;
+   this->normalizeCPUPercent = false;
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif

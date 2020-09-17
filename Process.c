@@ -231,12 +231,15 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
 
    switch (field) {
    case PERCENT_CPU: {
-      if (this->percent_cpu > 999.9) {
-         xSnprintf(buffer, n, "%4u ", (unsigned int)this->percent_cpu);
-      } else if (this->percent_cpu > 99.9) {
-         xSnprintf(buffer, n, "%3u. ", (unsigned int)this->percent_cpu);
+      float percent_cpu = this->percent_cpu;
+      if (this->settings->normalizeCPUPercent)
+        percent_cpu /= this->settings->cpuCount;
+      if (percent_cpu > 999.9) {
+         xSnprintf(buffer, n, "%4u ", (unsigned int)percent_cpu);
+      } else if (percent_cpu > 99.9) {
+         xSnprintf(buffer, n, "%3u. ", (unsigned int)percent_cpu);
       } else {
-         xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
+         xSnprintf(buffer, n, "%4.1f ", percent_cpu);
       }
       break;
    }

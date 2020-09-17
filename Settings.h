@@ -49,6 +49,7 @@ typedef struct Settings_ {
    bool accountGuestInCPUMeter;
    bool headerMargin;
    bool enableMouse;
+   bool normalizeCPUPercent;
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif

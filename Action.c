@@ -406,6 +406,7 @@ static const struct { const char* key; const char* info; } helpLeft[] = {
    { .key = "  P M T: ", .info = "sort by CPU%, MEM% or TIME" },
    { .key = "      I: ", .info = "invert sort order" },
    { .key = " F6 > .: ", .info = "select sort column" },
+   { .key = "      z: ", .info = "toggle normalize process CPU%" },
    { .key = NULL, .info = NULL }
 };
 
@@ -495,7 +496,7 @@ static Htop_Reaction actionHelp(State* st) {
    attrset(CRT_colors[DEFAULT_COLOR]);
 
    attrset(CRT_colors[HELP_BOLD]);
-   mvaddstr(23,0, "Press any key to return.");
+   mvaddstr(24,0, "Press any key to return.");
    attrset(CRT_colors[DEFAULT_COLOR]);
    refresh();
    CRT_readKey();
@@ -530,6 +531,10 @@ static Htop_Reaction actionShowEnvScreen(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+static Htop_Reaction actionToggleCPUNormalize(State* st) {
+   st->settings->normalizeCPUPercent = ! st->settings->normalizeCPUPercent;
+   return HTOP_REFRESH;
+}
 
 void Action_setBindings(Htop_Action* keys) {
    keys[KEY_RESIZE] = actionResize;
@@ -584,4 +589,5 @@ void Action_setBindings(Htop_Action* keys) {
    keys['U'] = actionUntagAll;
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
+   keys['z'] = actionToggleCPUNormalize;
 }

@@ -45,6 +45,7 @@ static void printHelpFlag() {
          "-u --user[=USERNAME]        Show only processes for a given user (or $USER)\n"
          "-U --no-unicode             Do not use unicode but plain ASCII\n"
          "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
+         "-n --normalize-cpu          Divide process CPU percent by the number of CPU cores\n"
          "-v --version                Print version info\n"
          "\n"
          "Long options may be passed with a single dash.\n\n"
@@ -65,6 +66,7 @@ typedef struct CommandLineSettings_ {
    bool enableMouse;
    bool treeView;
    bool allowUnicode;
+   bool normalizeCPUPercent;
 } CommandLineSettings;
 
 static CommandLineSettings parseArguments(int argc, char** argv) {
@@ -78,27 +80,29 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .enableMouse = true,
       .treeView = false,
       .allowUnicode = true,
+      .normalizeCPUPercent = false
    };
 
    static struct option long_opts[] =
    {
-      {"help",       no_argument,         0, 'h'},
-      {"version",    no_argument,         0, 'v'},
-      {"delay",      required_argument,   0, 'd'},
-      {"sort-key",   required_argument,   0, 's'},
-      {"user",       optional_argument,   0, 'u'},
-      {"no-color",   no_argument,         0, 'C'},
-      {"no-colour",  no_argument,         0, 'C'},
-      {"no-mouse",   no_argument,         0, 'm'},
-      {"no-unicode", no_argument,         0, 'U'},
-      {"tree",       no_argument,         0, 't'},
-      {"pid",        required_argument,   0, 'p'},
+      {"help",          no_argument,         0, 'h'},
+      {"version",       no_argument,         0, 'v'},
+      {"delay",         required_argument,   0, 'd'},
+      {"sort-key",      required_argument,   0, 's'},
+      {"user",          optional_argument,   0, 'u'},
+      {"no-color",      no_argument,         0, 'C'},
+      {"no-colour",     no_argument,         0, 'C'},
+      {"no-mouse",      no_argument,         0, 'm'},
+      {"no-unicode",    no_argument,         0, 'U'},
+      {"tree",          no_argument,         0, 't'},
+      {"pid",           required_argument,   0, 'p'},
+      {"normalize-cpu", no_argument,         0, 'n'},
       {0,0,0,0}
    };
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hvmCs:td:u::Up:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hvmCs:td:u::Up:n", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -176,6 +180,9 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
             break;
          }
+        case 'n':
+            flags.normalizeCPUPercent = true;
+            break;
          default:
             exit(1);
       }
@@ -232,6 +239,8 @@ int main(int argc, char** argv) {
       settings->enableMouse = false;
    if (flags.treeView)
       settings->treeView = true;
+   if (flags.normalizeCPUPercent)
+      settings->normalizeCPUPercent = true;
 
    CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
 
