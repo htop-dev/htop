@@ -321,14 +321,14 @@ The library size of the process.
 The size of the dirty pages of the process.
 .TP
 .B M_SWAP (SWAP)
-Size of the process's swapped pages.
+The size of the process's swapped pages.
 .TP
 .B M_PSS (PSS)
-proportional set size, same as M_RESIDENT but each page is divided by the
+The proportional set size, same as M_RESIDENT but each page is divided by the
 number of processes sharing it.
 .TP
 .B M_M_PSSWP (PSSWP)
-Shows proportional swap share of this mapping, unlike \fBM_SWAP\fR this does not take
+The proportional swap share of this mapping, unlike M_SWAP this does not take
 into account swapped out page of underlying shmem objects.
 .TP
 .B ST_UID (UID)
