@@ -85,6 +85,7 @@ typedef enum ColorElements_ {
    CHECK_MARK,
    CHECK_TEXT,
    CLOCK,
+   DATE,
    HELP_BOLD,
    HOSTNAME,
    CPU_NICE,

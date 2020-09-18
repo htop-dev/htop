@@ -14,7 +14,7 @@ AM_CFLAGS += -pedantic -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(syscon
 AM_LDFLAGS =
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
-ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c DiskIOMeter.c DiskIOMeter.h \
+ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c DateMeter.c  DiskIOMeter.c DiskIOMeter.h \
 MainPanel.c DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
 LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
 BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
@@ -24,7 +24,7 @@ HostnameMeter.c OpenFilesScreen.c Affinity.c IncSet.c Action.c EnvScreen.c \
 InfoScreen.c CommandScreen.c XAlloc.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
-CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
+CategoriesPanel.h CheckItem.h ClockMeter.h DateMeter.h ColorsPanel.h ColumnsPanel.h \
 CPUMeter.h CRT.h MainPanel.h DisplayOptionsPanel.h FunctionBar.h \
 Hashtable.h Header.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
 BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \

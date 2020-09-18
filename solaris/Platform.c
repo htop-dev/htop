@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "ClockMeter.h"
+#include "DateMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
 #include "zfs/ZfsArcMeter.h"
@@ -88,6 +89,7 @@ ProcessField Platform_defaultFields[] = { PID, LWPID, USER, PRIORITY, NICE, M_SI
 MeterClass* Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
+   &DateMeter_class,
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,

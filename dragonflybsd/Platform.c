@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
 #include "ClockMeter.h"
+#include "DateMeter.h"
 #include "HostnameMeter.h"
 #include "DragonFlyBSDProcess.h"
 #include "DragonFlyBSDProcessList.h"
@@ -78,6 +79,7 @@ void Platform_setBindings(Htop_Action* keys) {
 MeterClass* Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
+   &DateMeter_class,
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,
