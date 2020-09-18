@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "ClockMeter.h"
 #include "DateMeter.h"
+#include "DateTimeMeter.h"
 #include "HostnameMeter.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
@@ -81,6 +82,7 @@ MeterClass* Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
    &DateMeter_class,
+   &DateTimeMeter_class,
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,
