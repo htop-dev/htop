@@ -1,10 +1,10 @@
 #ifndef HEADER_InfoScreen
 #define HEADER_InfoScreen
 
-#include "Process.h"
-#include "Panel.h"
 #include "FunctionBar.h"
 #include "IncSet.h"
+#include "Panel.h"
+#include "Process.h"
 
 typedef struct InfoScreen_ InfoScreen;
 

@@ -7,9 +7,10 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+
 #include "FunctionBar.h"
 #include "Panel.h"
-#include <stdbool.h>
 
 #define INCMODE_MAX 40
 

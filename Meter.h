@@ -7,8 +7,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ListItem.h"
 #include <sys/time.h>
+
+#include "ListItem.h"
 
 #define METER_BUFFER_LEN 256
 

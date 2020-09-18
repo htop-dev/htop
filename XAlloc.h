@@ -7,8 +7,8 @@
 
 #include "Macros.h"
 
-#include <err.h>
 #include <assert.h>
+#include <err.h>
 #include <stdlib.h>
 
 void fail(void) ATTR_NORETURN;
