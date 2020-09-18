@@ -103,25 +103,6 @@ typedef struct Process_ {
 
    unsigned long int minflt;
    unsigned long int majflt;
-   #ifdef DEBUG
-   long int itrealvalue;
-   unsigned long int vsize;
-   long int rss;
-   unsigned long int rlim;
-   unsigned long int startcode;
-   unsigned long int endcode;
-   unsigned long int startstack;
-   unsigned long int kstkesp;
-   unsigned long int kstkeip;
-   unsigned long int signal;
-   unsigned long int blocked;
-   unsigned long int sigignore;
-   unsigned long int sigcatch;
-   unsigned long int wchan;
-   unsigned long int nswap;
-   unsigned long int cnswap;
-   #endif
-
 } Process;
 
 typedef struct ProcessFieldData_ {
