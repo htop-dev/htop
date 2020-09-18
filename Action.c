@@ -394,7 +394,7 @@ static Htop_Reaction actionDebugger(State* st) {
    (void) result;
 
    CRT_enableDelay();
-   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
 static Htop_Reaction actionTag(State* st) {
