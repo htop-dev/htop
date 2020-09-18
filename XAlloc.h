@@ -25,14 +25,6 @@ int xAsprintf(char **strp, const char* fmt, ...);
 ATTR_FORMAT(printf, 3, 4)
 int xSnprintf(char *buf, int len, const char* fmt, ...);
 
-#undef xStrdup
-#undef xStrdup_
-#ifdef NDEBUG
-# define xStrdup_ xStrdup
-#else
-# define xStrdup(str_) (assert(str_), xStrdup_(str_))
-#endif
-
-char* xStrdup_(const char* str) ATTR_NONNULL;
+char* xStrdup(const char* str) ATTR_NONNULL;
 
 #endif

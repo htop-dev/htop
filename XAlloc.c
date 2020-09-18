@@ -67,7 +67,7 @@ int xSnprintf(char* buf, int len, const char* fmt, ...) {
    return _n;
 }
 
-char* xStrdup_(const char* str) {
+char* xStrdup(const char* str) {
    char* data = strdup(str);
    if (!data) {
       fail();
