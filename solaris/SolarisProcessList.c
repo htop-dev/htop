@@ -133,10 +133,10 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
 
 static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    SolarisProcessList* spl = (SolarisProcessList*) pl;
-   kstat_t             *meminfo = NULL;
+   static kstat_t      *meminfo = NULL;
    int                 ksrphyserr = -1;
    kstat_named_t       *totalmem_pgs = NULL;
-   kstat_named_t       *lockedmem_pgs = NULL;
+   kstat_named_t       *freemem_pgs = NULL;
    kstat_named_t       *pages = NULL;
    struct swaptable    *sl = NULL;
    struct swapent      *swapdev = NULL;
@@ -147,15 +147,21 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    char                *spathbase = NULL;
 
    // Part 1 - physical memory
-   if (spl->kd != NULL) { meminfo    = kstat_lookup(spl->kd,"unix",0,"system_pages"); }
+   if (spl->kd != NULL && meminfo == NULL) {
+	   // Look up the kstat chain just one, it never changes
+	   meminfo   = kstat_lookup(spl->kd,"unix",0,"system_pages");
+   }
    if (meminfo != NULL) { ksrphyserr = kstat_read(spl->kd,meminfo,NULL); }
    if (ksrphyserr != -1) {
-      totalmem_pgs   = kstat_data_lookup( meminfo, "physmem" );
-      lockedmem_pgs  = kstat_data_lookup( meminfo, "pageslocked" );
-      pages          = kstat_data_lookup( meminfo, "pagestotal" );
+      totalmem_pgs   = kstat_data_lookup(meminfo, "physmem");
+      freemem_pgs    = kstat_data_lookup(meminfo, "freemem");
+      pages          = kstat_data_lookup(meminfo, "pagestotal");
 
       pl->totalMem   = totalmem_pgs->value.ui64 * PAGE_SIZE_KB;
-      pl->usedMem    = lockedmem_pgs->value.ui64 * PAGE_SIZE_KB;
+      if (pl->totalMem > freemem_pgs->value.ui64 * PAGE_SIZE_KB)
+	pl->usedMem  = pl->totalMem - freemem_pgs->value.ui64 * PAGE_SIZE_KB;
+      else
+	pl->usedMem  = 0; // This can happen in non-global zone (in theory)
       // Not sure how to implement this on Solaris - suggestions welcome!
       pl->cachedMem  = 0;
       // Not really "buffers" but the best Solaris analogue that I can find to
