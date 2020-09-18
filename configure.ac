@@ -270,6 +270,7 @@ AM_CFLAGS="\
  -Wall\
  -Wcast-align\
  -Wextra\
+ -Wfloat-equal\
  -Wmissing-format-attribute\
  -Wmissing-noreturn\
  -Wpointer-arith\
