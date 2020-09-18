@@ -681,9 +681,9 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
    }
 
    if (nl_send_sync(this->netlink_socket, msg) < 0) {
-      process->swapin_delay_percent = -1LL;
-      process->blkio_delay_percent = -1LL;
-      process->cpu_delay_percent = -1LL;
+      process->swapin_delay_percent = NAN;
+      process->blkio_delay_percent = NAN;
+      process->cpu_delay_percent = NAN;
       return;
    }
 
