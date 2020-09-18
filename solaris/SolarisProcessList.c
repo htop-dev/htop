@@ -202,8 +202,8 @@ static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
    int                 ksrphyserr = -1;
    kstat_named_t       *cur_kstat = NULL;
 
-   if (spl->kd != NULL)  { arcstats   = kstat_lookup(spl->kd,"zfs",0,"arcstats"); }
-   if (arcstats != NULL) { ksrphyserr = kstat_read(spl->kd,arcstats,NULL); }
+   if (spl->kd != NULL)  { arcstats   = kstat_lookup(spl->kd, "zfs", 0, "arcstats"); }
+   if (arcstats != NULL) { ksrphyserr = kstat_read(spl->kd, arcstats, NULL); }
    if (ksrphyserr != -1) {
       cur_kstat = kstat_data_lookup( arcstats, "size" );
       spl->zfs.size = cur_kstat->value.ui64 / 1024;
@@ -213,19 +213,19 @@ static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
       spl->zfs.max = cur_kstat->value.ui64 / 1024;
 
       cur_kstat = kstat_data_lookup( arcstats, "mfu_size" );
-      spl->zfs.MFU = cur_kstat->value.ui64 / 1024;
+      spl->zfs.MFU = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
       cur_kstat = kstat_data_lookup( arcstats, "mru_size" );
-      spl->zfs.MRU = cur_kstat->value.ui64 / 1024;
+      spl->zfs.MRU = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
       cur_kstat = kstat_data_lookup( arcstats, "anon_size" );
-      spl->zfs.anon = cur_kstat->value.ui64 / 1024;
+      spl->zfs.anon = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
       cur_kstat = kstat_data_lookup( arcstats, "hdr_size" );
-      spl->zfs.header = cur_kstat->value.ui64 / 1024;
+      spl->zfs.header = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
       cur_kstat = kstat_data_lookup( arcstats, "other_size" );
-      spl->zfs.other = cur_kstat->value.ui64 / 1024;
+      spl->zfs.other = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
       if ((cur_kstat = kstat_data_lookup( arcstats, "compressed_size" )) != NULL) {
          spl->zfs.compressed = cur_kstat->value.ui64 / 1024;
