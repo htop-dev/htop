@@ -1,0 +1,10 @@
+[
+    { include: ["<curses.h>", "private", "\"ProvideCurses.h\"", "public"] },
+    { include: ["<ncurses.h>", "private", "\"ProvideCurses.h\"", "public"] },
+    { include: ["<ncurses/curses.h>", "private", "\"ProvideCurses.h\"", "public"] },
+    { include: ["<ncurses/ncurses.h>", "private", "\"ProvideCurses.h\"", "public"] },
+
+    { include: ["<bits/types/struct_tm.h>", "private", "<time.h>", "public"] },
+
+    { include: ["<bits/getopt_core.h>", "private", "<unistd.h>", "public"] },
+]
