@@ -5,11 +5,14 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "HostnameMeter.h"
 
-#include "CRT.h"
-
 #include <unistd.h>
+
+#include "CRT.h"
+#include "Object.h"
 
 
 static const int HostnameMeter_attributes[] = {

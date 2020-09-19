@@ -9,10 +9,10 @@ in the source distribution for its full text.
 */
 
 #include "RichString.h"
-#include "Macros.h"
-#include "XUtils.h"
+#include "XUtils.h" // IWYU pragma: keep
 
 
+struct Object_;
 typedef struct Object_ Object;
 
 typedef void(*Object_Display)(const Object*, RichString*);
@@ -29,7 +29,7 @@ typedef void(*Object_Delete)(Object*);
 
 #define Class(class_)                 ((const ObjectClass*)(&(class_ ## _class)))
 
-#define AllocThis(class_) (class_*) xMalloc(sizeof(class_)); Object_setClass(this, Class(class_));
+#define AllocThis(class_) (class_*)   xMalloc(sizeof(class_)); Object_setClass(this, Class(class_));
 
 typedef struct ObjectClass_ {
    const void* const extends;

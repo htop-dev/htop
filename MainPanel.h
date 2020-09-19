@@ -8,9 +8,15 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+#include <sys/types.h>
+
 #include "Action.h"
 #include "IncSet.h"
+#include "Object.h"
 #include "Panel.h"
+#include "Process.h"
+
 
 typedef struct MainPanel_ {
    Panel super;

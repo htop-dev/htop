@@ -7,16 +7,17 @@ in the source distribution for its full text.
 
 #include "ScreenManager.h"
 
+#include <assert.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <sys/time.h>
+
 #include "CRT.h"
-#include "MainPanel.h"
+#include "FunctionBar.h"
 #include "Object.h"
 #include "ProcessList.h"
-
-
-#include <assert.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, const State* state, bool owner) {

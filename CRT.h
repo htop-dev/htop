@@ -7,9 +7,13 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Macros.h"
+#include "config.h"
 
 #include <stdbool.h>
+
+#include "Macros.h"
+#include "ProvideCurses.h"
+
 
 typedef enum TreeStr_ {
    TREE_STR_HORZ,

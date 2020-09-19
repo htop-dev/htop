@@ -5,39 +5,48 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
+
 #include "Platform.h"
+
+#include <assert.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "BatteryMeter.h"
+#include "ClockMeter.h"
+#include "CPUMeter.h"
+#include "DateMeter.h"
+#include "DateTimeMeter.h"
+#include "DiskIOMeter.h"
+#include "HostnameMeter.h"
 #include "IOPriority.h"
 #include "IOPriorityPanel.h"
 #include "LinuxProcess.h"
 #include "LinuxProcessList.h"
-#include "Battery.h"
-
+#include "LoadAverageMeter.h"
+#include "Macros.h"
+#include "MainPanel.h"
 #include "Meter.h"
-#include "CPUMeter.h"
-#include "DiskIOMeter.h"
 #include "MemoryMeter.h"
+#include "NetworkIOMeter.h"
+#include "Object.h"
+#include "Panel.h"
+#include "PressureStallMeter.h"
+#include "ProcessList.h"
+#include "ProvideCurses.h"
+#include "SELinuxMeter.h"
+#include "Settings.h"
 #include "SwapMeter.h"
 #include "TasksMeter.h"
-#include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
-#include "PressureStallMeter.h"
-#include "ClockMeter.h"
-#include "DateMeter.h"
-#include "DateTimeMeter.h"
-#include "HostnameMeter.h"
-#include "NetworkIOMeter.h"
-#include "zfs/ZfsArcMeter.h"
-#include "zfs/ZfsCompressedArcMeter.h"
-#include "LinuxProcess.h"
-#include "SELinuxMeter.h"
 #include "XUtils.h"
 
-#include <math.h>
-#include <assert.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "zfs/ZfsArcMeter.h"
+#include "zfs/ZfsArcStats.h"
+#include "zfs/ZfsCompressedArcMeter.h"
 
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };

@@ -6,19 +6,19 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Process.h"
-#include "ProcessList.h"
 #include "LinuxProcess.h"
-#include "CRT.h"
-#include "Platform.h"
-#include "XUtils.h"
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/syscall.h>
-#include <time.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <syscall.h>
+#include <unistd.h>
+
+#include "CRT.h"
+#include "Process.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 /* semi-global */

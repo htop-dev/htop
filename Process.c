@@ -6,35 +6,34 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Process.h"
-#include "Settings.h"
+#include "config.h" // IWYU pragma: keep
 
-#include "config.h"
+#include "Process.h"
+
+#include <assert.h>
+#include <limits.h>
+#include <math.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <sys/resource.h>
 
 #include "CRT.h"
-#include "RichString.h"
 #include "Platform.h"
+#include "RichString.h"
+#include "Settings.h"
 #include "XUtils.h"
 
-#include <stdio.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <string.h>
-#include <stdbool.h>
-#include <pwd.h>
-#include <time.h>
-#include <assert.h>
-#include <math.h>
-#ifdef MAJOR_IN_MKDEV
+#if defined(MAJOR_IN_MKDEV)
 #include <sys/mkdev.h>
 #elif defined(MAJOR_IN_SYSMACROS)
 #include <sys/sysmacros.h>
 #endif
+
 
 static int Process_getuid = -1;
 

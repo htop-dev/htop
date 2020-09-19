@@ -7,7 +7,11 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <sys/types.h>
+
 #include "InfoScreen.h"
+#include "Object.h"
+#include "Process.h"
 
 typedef struct OpenFilesScreen_ {
    InfoScreen super;

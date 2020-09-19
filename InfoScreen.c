@@ -1,17 +1,18 @@
+#include "config.h" // IWYU pragma: keep
+
 #include "InfoScreen.h"
 
-#include "config.h"
-#include "Object.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "CRT.h"
 #include "IncSet.h"
 #include "ListItem.h"
-#include "Platform.h"
+#include "Object.h"
+#include "ProvideCurses.h"
 #include "XUtils.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdarg.h>
 
 
 static const char* const InfoScreenFunctions[] = {"Search ", "Filter ", "Refresh", "Done   ", NULL};

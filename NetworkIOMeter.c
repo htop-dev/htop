@@ -1,7 +1,14 @@
 #include "NetworkIOMeter.h"
 
+#include <stddef.h>
+#include <sys/time.h>
+
 #include "CRT.h"
+#include "Macros.h"
+#include "Object.h"
 #include "Platform.h"
+#include "RichString.h"
+#include "XUtils.h"
 
 
 static const int NetworkIOMeter_attributes[] = {

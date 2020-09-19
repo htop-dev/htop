@@ -7,10 +7,14 @@ in the source distribution for its full text.
 
 #include "DiskIOMeter.h"
 
-#include <math.h>
+#include <stdio.h>
+#include <sys/time.h>
 
 #include "CRT.h"
+#include "Macros.h"
+#include "Object.h"
 #include "Platform.h"
+#include "RichString.h"
 #include "XUtils.h"
 
 

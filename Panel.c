@@ -7,17 +7,20 @@ in the source distribution for its full text.
 
 #include "Panel.h"
 
-#include "CRT.h"
-#include "RichString.h"
-#include "ListItem.h"
-#include "XUtils.h"
-
-#include <math.h>
+#include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
-#include <assert.h>
+#include <strings.h>
+
+#include "CRT.h"
+#include "ListItem.h"
+#include "Macros.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
+#include "XUtils.h"
+
 
 const PanelClass Panel_class = {
    .super = {

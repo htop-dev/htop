@@ -7,10 +7,15 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+
 #include "FunctionBar.h"
 #include "Object.h"
+#include "RichString.h"
 #include "Vector.h"
 
+
+struct Panel_;
 typedef struct Panel_ Panel;
 
 typedef enum HandlerResult_ {

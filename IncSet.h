@@ -8,9 +8,11 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "FunctionBar.h"
 #include "Panel.h"
+#include "Vector.h"
 
 #define INCMODE_MAX 40
 

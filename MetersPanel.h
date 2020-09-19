@@ -7,10 +7,15 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+
 #include "Panel.h"
 #include "ScreenManager.h"
 #include "Settings.h"
+#include "Vector.h"
 
+
+struct MetersPanel_;
 typedef struct MetersPanel_ MetersPanel;
 
 struct MetersPanel_ {

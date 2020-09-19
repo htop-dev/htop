@@ -5,43 +5,51 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "LinuxProcessList.h"
-#include "LinuxProcess.h"
+
+#include <assert.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+
+#ifdef HAVE_DELAYACCT
+#include <linux/netlink.h>
+#include <linux/taskstats.h>
+#include <netlink/attr.h>
+#include <netlink/handlers.h>
+#include <netlink/msg.h>
+#include <netlink/netlink.h>
+#include <netlink/socket.h>
+#include <netlink/genl/genl.h>
+#include <netlink/genl/ctrl.h>
+#endif
+
 #include "CRT.h"
+#include "LinuxProcess.h"
+#include "Macros.h"
+#include "Object.h"
+#include "Process.h"
+#include "Settings.h"
 #include "XUtils.h"
 
-#include <errno.h>
-#include <sys/time.h>
-#include <sys/utsname.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <math.h>
-#include <string.h>
-#include <time.h>
-#include <assert.h>
-#include <sys/types.h>
-#include <fcntl.h>
 #ifdef MAJOR_IN_MKDEV
 #include <sys/mkdev.h>
 #elif defined(MAJOR_IN_SYSMACROS)
 #include <sys/sysmacros.h>
 #endif
 
-#ifdef HAVE_DELAYACCT
-#include <netlink/attr.h>
-#include <netlink/netlink.h>
-#include <netlink/genl/genl.h>
-#include <netlink/genl/ctrl.h>
-#include <netlink/socket.h>
-#include <netlink/msg.h>
-#include <linux/taskstats.h>
-#endif
 
 static ssize_t xread(int fd, void *buf, size_t count) {
   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.

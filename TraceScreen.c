@@ -5,26 +5,28 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "TraceScreen.h"
 
-#include "CRT.h"
-#include "ProcessList.h"
-#include "ListItem.h"
-#include "IncSet.h"
-#include "FunctionBar.h"
-#include "XUtils.h"
-
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
+#include <assert.h>
 #include <fcntl.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "IncSet.h"
+#include "Panel.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static const char* const TraceScreenFunctions[] = {"Search ", "Filter ", "AutoScroll ", "Stop Tracing   ", "Done   ", NULL};

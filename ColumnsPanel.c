@@ -6,15 +6,18 @@ in the source distribution for its full text.
 */
 
 #include "ColumnsPanel.h"
-#include "Platform.h"
 
-#include "XUtils.h"
-#include "ListItem.h"
-#include "CRT.h"
-
-#include <assert.h>
-#include <stdlib.h>
 #include <ctype.h>
+#include <stdlib.h>
+
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "ListItem.h"
+#include "Object.h"
+#include "Platform.h"
+#include "Process.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static const char* const ColumnsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};

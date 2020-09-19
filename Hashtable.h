@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
-typedef struct Hashtable_ Hashtable;
 
 typedef void(*Hashtable_PairFunction)(int, void*, void*);
 
@@ -19,12 +18,12 @@ typedef struct HashtableItem {
    struct HashtableItem* next;
 } HashtableItem;
 
-struct Hashtable_ {
+typedef struct Hashtable_ {
    int size;
    HashtableItem** buckets;
    int items;
    bool owner;
-};
+} Hashtable;
 
 #ifndef NDEBUG
 

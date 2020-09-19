@@ -7,10 +7,11 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include <assert.h>
-#include <err.h>
+#include "config.h" // IWYU pragma: keep
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h> // IWYU pragma: keep
+#include <string.h> // IWYU pragma: keep
 
 #include "Macros.h"
 

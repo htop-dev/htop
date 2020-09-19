@@ -6,16 +6,21 @@ in the source distribution for its full text.
 */
 
 #include "AvailableMetersPanel.h"
-#include "MetersPanel.h"
-
-#include "CPUMeter.h"
-#include "Header.h"
-#include "ListItem.h"
-#include "Platform.h"
-#include "XUtils.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
+
+#include "CPUMeter.h"
+#include "FunctionBar.h"
+#include "Header.h"
+#include "ListItem.h"
+#include "Meter.h"
+#include "MetersPanel.h"
+#include "Object.h"
+#include "Platform.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static void AvailableMetersPanel_delete(Object* object) {

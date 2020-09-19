@@ -7,6 +7,12 @@ in the source distribution for its full text.
 
 #include "IOPriorityPanel.h"
 
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "FunctionBar.h"
+#include "ListItem.h"
+#include "Object.h"
 #include "XUtils.h"
 
 

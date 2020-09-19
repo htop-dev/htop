@@ -5,11 +5,14 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "DateTimeMeter.h"
 
-#include "CRT.h"
-
 #include <time.h>
+
+#include "CRT.h"
+#include "Object.h"
 
 
 static const int DateTimeMeter_attributes[] = {

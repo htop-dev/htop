@@ -7,15 +7,18 @@ in the source distribution for its full text.
 
 #include "CPUMeter.h"
 
-#include "CRT.h"
-#include "Settings.h"
-#include "Platform.h"
-#include "XUtils.h"
-
-#include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+
+#include "CRT.h"
+#include "Object.h"
+#include "Platform.h"
+#include "ProcessList.h"
+#include "RichString.h"
+#include "Settings.h"
+#include "XUtils.h"
+
 
 static const int CPUMeter_attributes[] = {
    CPU_NICE,

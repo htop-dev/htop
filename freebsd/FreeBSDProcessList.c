@@ -5,24 +5,27 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Macros.h"
-#include "ProcessList.h"
 #include "FreeBSDProcessList.h"
-#include "FreeBSDProcess.h"
-#include "zfs/ZfsArcStats.h"
-#include "zfs/openzfs_sysctl.h"
-#include "Macros.h"
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <sys/user.h>
+#include <assert.h>
 #include <err.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/user.h>
+
+#include "FreeBSDProcess.h"
+#include "Macros.h"
+#include "ProcessList.h"
+#include "zfs/ZfsArcStats.h"
+#include "zfs/openzfs_sysctl.h"
+#include "XUtils.h"
+
 
 char jail_errmsg[JAIL_ERRMSGLEN];
 

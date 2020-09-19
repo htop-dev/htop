@@ -12,6 +12,8 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "InfoScreen.h"
+#include "Object.h"
+#include "Process.h"
 
 
 typedef struct TraceScreen_ {

@@ -1,15 +1,14 @@
-#include "CommandScreen.h"
+#include "config.h" // IWYU pragma: keep
 
-#include "config.h"
-#include "CRT.h"
-#include "IncSet.h"
-#include "ListItem.h"
-#include "Platform.h"
-#include "XUtils.h"
+#include "CommandScreen.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+
+#include "Macros.h"
+#include "Panel.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static void CommandScreen_scan(InfoScreen* this) {

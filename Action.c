@@ -8,28 +8,32 @@ in the source distribution for its full text.
 #include "config.h"
 
 #include "Action.h"
+
+#include <pwd.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
 #include "Affinity.h"
 #include "AffinityPanel.h"
 #include "CategoriesPanel.h"
+#include "CommandScreen.h"
 #include "CRT.h"
 #include "EnvScreen.h"
-#include "CommandScreen.h"
+#include "FunctionBar.h"
+#include "IncSet.h"
+#include "InfoScreen.h"
+#include "ListItem.h"
+#include "Macros.h"
 #include "MainPanel.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
+#include "ProvideCurses.h"
 #include "ScreenManager.h"
 #include "SignalsPanel.h"
 #include "TraceScreen.h"
-#include "Platform.h"
+#include "Vector.h"
 #include "XUtils.h"
 
-#include <ctype.h>
-#include <math.h>
-#include <pwd.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <sys/param.h>
-#include <sys/time.h>
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    Panel* panel = st->panel;

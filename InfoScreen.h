@@ -1,12 +1,25 @@
 #ifndef HEADER_InfoScreen
 #define HEADER_InfoScreen
 
+#include <stdbool.h>
+
 #include "FunctionBar.h"
 #include "IncSet.h"
+#include "Macros.h"
+#include "Object.h"
 #include "Panel.h"
 #include "Process.h"
+#include "Vector.h"
 
-typedef struct InfoScreen_ InfoScreen;
+
+typedef struct InfoScreen_ {
+   Object super;
+   const Process* process;
+   Panel* display;
+   FunctionBar* bar;
+   IncSet* inc;
+   Vector* lines;
+} InfoScreen;
 
 typedef void(*InfoScreen_Scan)(InfoScreen*);
 typedef void(*InfoScreen_Draw)(InfoScreen*);
@@ -26,15 +39,6 @@ typedef struct InfoScreenClass_ {
 #define InfoScreen_draw(this_)        As_InfoScreen(this_)->draw((InfoScreen*)(this_))
 #define InfoScreen_onErr(this_)       As_InfoScreen(this_)->onErr((InfoScreen*)(this_))
 #define InfoScreen_onKey(this_, ch_)  As_InfoScreen(this_)->onKey((InfoScreen*)(this_), ch_)
-
-struct InfoScreen_ {
-   Object super;
-   const Process* process;
-   Panel* display;
-   FunctionBar* bar;
-   IncSet* inc;
-   Vector* lines;
-};
 
 InfoScreen* InfoScreen_init(InfoScreen* this, const Process* process, FunctionBar* bar, int height, const char* panelHeader);
 

@@ -5,19 +5,23 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "Meter.h"
 
-#include "RichString.h"
-#include "Object.h"
+#include <assert.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
 #include "CRT.h"
-#include "Settings.h"
+#include "Macros.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
 #include "XUtils.h"
 
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <assert.h>
 
 #define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 

@@ -5,17 +5,16 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Panel.h"
 #include "SignalsPanel.h"
 
-#include <assert.h>
-#include <ctype.h>
 #include <signal.h>
-#include <stdlib.h>
+#include <stdbool.h>
 
+#include "FunctionBar.h"
 #include "ListItem.h"
+#include "Object.h"
+#include "Panel.h"
 #include "Platform.h"
-#include "RichString.h"
 #include "XUtils.h"
 
 

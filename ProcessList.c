@@ -7,12 +7,11 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 
-#include "CRT.h"
-#include "Platform.h"
-#include "XUtils.h"
-
-#include <stdlib.h>
+#include <assert.h>
 #include <string.h>
+
+#include "CRT.h"
+#include "XUtils.h"
 
 
 ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {

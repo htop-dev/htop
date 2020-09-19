@@ -7,9 +7,16 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
+#include <stdbool.h>
+#include <sys/types.h>
+
 #include "Hashtable.h"
+#include "Object.h"
 #include "Panel.h"
 #include "Process.h"
+#include "RichString.h"
 #include "Settings.h"
 #include "UsersTable.h"
 #include "Vector.h"
@@ -17,6 +24,7 @@ in the source distribution for its full text.
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
 #endif
+
 
 #ifndef MAX_NAME
 #define MAX_NAME 128

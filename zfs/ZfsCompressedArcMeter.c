@@ -6,23 +6,16 @@ in the source distribution for its full text.
 */
 
 #include "ZfsCompressedArcMeter.h"
-#include "ZfsArcStats.h"
 
 #include "CRT.h"
+#include "Meter.h"
+#include "Object.h"
 #include "Platform.h"
+#include "RichString.h"
 #include "XUtils.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <sys/param.h>
-#include <assert.h>
+#include "zfs/ZfsArcStats.h"
 
-/*{
-#include "ZfsArcStats.h"
-
-#include "Meter.h"
-}*/
 
 static const int ZfsCompressedArcMeter_attributes[] = {
    ZFS_COMPRESSED

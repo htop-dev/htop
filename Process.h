@@ -8,6 +8,14 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+#include "Object.h"
+#include "RichString.h"
+
+
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get
 #define SYS_ioprio_set __NR_ioprio_set
@@ -19,10 +27,6 @@ in the source distribution for its full text.
 #define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
 #endif
 #define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
-
-#include <sys/types.h>
-
-#include "Object.h"
 
 #define PROCESS_FLAG_IO 0x0001
 

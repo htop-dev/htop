@@ -9,15 +9,12 @@ This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 
 #include "BatteryMeter.h"
 
-#include "Battery.h"
-#include "ProcessList.h"
-#include "CRT.h"
-#include "Platform.h"
-#include "XUtils.h"
-
 #include <math.h>
-#include <string.h>
-#include <stdlib.h>
+
+#include "Battery.h"
+#include "CRT.h"
+#include "Object.h"
+#include "XUtils.h"
 
 
 static const int BatteryMeter_attributes[] = {

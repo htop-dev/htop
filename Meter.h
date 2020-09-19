@@ -7,12 +7,17 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
 #include <sys/time.h>
 
 #include "ListItem.h"
+#include "Object.h"
+#include "ProcessList.h"
+
 
 #define METER_BUFFER_LEN 256
 
+struct Meter_;
 typedef struct Meter_ Meter;
 
 typedef void(*Meter_Init)(Meter*);
@@ -67,7 +72,7 @@ struct Meter_ {
    int param;
    GraphData* drawData;
    int h;
-   struct ProcessList_* pl;
+   ProcessList* pl;
    char curItems;
    double* values;
    double total;
@@ -91,7 +96,7 @@ typedef enum {
 
 extern const MeterClass Meter_class;
 
-Meter* Meter_new(struct ProcessList_* pl, int param, const MeterClass* type);
+Meter* Meter_new(ProcessList* pl, int param, const MeterClass* type);
 
 int Meter_humanUnit(char* buffer, unsigned long int value, int size);
 

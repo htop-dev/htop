@@ -8,13 +8,9 @@ in the source distribution for its full text.
 #include "SwapMeter.h"
 
 #include "CRT.h"
+#include "Object.h"
 #include "Platform.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <sys/param.h>
-#include <assert.h>
+#include "RichString.h"
 
 
 static const int SwapMeter_attributes[] = {

@@ -6,13 +6,14 @@ in the source distribution for its full text.
 */
 
 #include "FunctionBar.h"
-#include "CRT.h"
-#include "RichString.h"
-#include "XUtils.h"
 
-#include <assert.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "CRT.h"
+#include "Macros.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static const char* const FunctionBar_FKeys[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", NULL};

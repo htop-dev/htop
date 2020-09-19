@@ -2,6 +2,9 @@
 #define HEADER_CommandScreen
 
 #include "InfoScreen.h"
+#include "Object.h"
+#include "Process.h"
+
 
 typedef struct CommandScreen_ {
    InfoScreen super;

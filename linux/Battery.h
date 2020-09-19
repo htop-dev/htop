@@ -11,6 +11,7 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 
 #include "BatteryMeter.h"
 
+
 void Battery_getData(double* level, ACPresence* isOnAC);
 
 #endif

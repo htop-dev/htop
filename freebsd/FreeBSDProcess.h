@@ -7,6 +7,14 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+
+#include "Object.h"
+#include "Process.h"
+#include "RichString.h"
+#include "Settings.h"
+
+
 typedef enum FreeBSDProcessFields_ {
    // Add platform-specific fields here, with ids >= 100
    JID   = 100,

@@ -2,6 +2,8 @@
 #define HEADER_EnvScreen
 
 #include "InfoScreen.h"
+#include "Object.h"
+#include "Process.h"
 
 typedef struct EnvScreen_ {
    InfoScreen super;

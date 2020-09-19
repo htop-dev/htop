@@ -10,7 +10,8 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+
+#include "XUtils.h"
 
 
 Vector* Vector_new(const ObjectClass* type, bool owner, int size) {

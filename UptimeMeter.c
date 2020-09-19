@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 
 #include "CRT.h"
+#include "Object.h"
 #include "Platform.h"
 #include "XUtils.h"
 

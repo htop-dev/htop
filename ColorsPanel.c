@@ -7,13 +7,19 @@ in the source distribution for its full text.
 
 #include "ColorsPanel.h"
 
-#include "CRT.h"
+#include <stdbool.h>
+#include <stdlib.h>
+
 #include "CheckItem.h"
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "Header.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
+#include "Vector.h"
 #include "XUtils.h"
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
 
 // TO ADD A NEW SCHEME:
 // * Increment the size of bool check in ColorsPanel.h

@@ -7,14 +7,17 @@ in the source distribution for its full text.
 
 #include "AvailableColumnsPanel.h"
 
-#include <assert.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "ColumnsPanel.h"
-#include "Header.h"
+#include "FunctionBar.h"
+#include "ListItem.h"
+#include "Object.h"
 #include "Platform.h"
+#include "Process.h"
+#include "ProvideCurses.h"
 #include "XUtils.h"
 
 

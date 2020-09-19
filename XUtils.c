@@ -5,14 +5,13 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "XUtils.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <unistd.h>
 
 #include "CRT.h"

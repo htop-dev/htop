@@ -5,15 +5,17 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "ListItem.h"
+
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "CRT.h"
 #include "RichString.h"
 #include "XUtils.h"
-
-#include <string.h>
-#include <assert.h>
-#include <stdlib.h>
 
 
 static void ListItem_delete(Object* cast) {

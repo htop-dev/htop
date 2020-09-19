@@ -7,11 +7,19 @@ in the source distribution for its full text.
 */
 
 #include "MainPanel.h"
-#include "Process.h"
-#include "Platform.h"
-#include "CRT.h"
 
+#include <ctype.h>
 #include <stdlib.h>
+
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "Platform.h"
+#include "Process.h"
+#include "ProcessList.h"
+#include "ProvideCurses.h"
+#include "Settings.h"
+#include "XUtils.h"
+
 
 static const char* const MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
 

@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "Panel.h"
 #include "IOPriority.h"
-#include "ListItem.h"
 
 Panel* IOPriorityPanel_new(IOPriority currPrio);
 

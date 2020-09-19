@@ -1,15 +1,17 @@
-#include "EnvScreen.h"
+#include "config.h" // IWYU pragma: keep
 
-#include "config.h"
-#include "CRT.h"
-#include "IncSet.h"
-#include "ListItem.h"
-#include "Platform.h"
-#include "XUtils.h"
+#include "EnvScreen.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+
+#include "CRT.h"
+#include "Macros.h"
+#include "Panel.h"
+#include "Platform.h"
+#include "ProvideCurses.h"
+#include "Vector.h"
+#include "XUtils.h"
 
 
 const InfoScreenClass EnvScreen_class = {

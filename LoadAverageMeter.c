@@ -8,7 +8,9 @@ in the source distribution for its full text.
 #include "LoadAverageMeter.h"
 
 #include "CRT.h"
+#include "Object.h"
 #include "Platform.h"
+#include "RichString.h"
 #include "XUtils.h"
 
 

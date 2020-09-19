@@ -12,8 +12,11 @@ in the source distribution for its full text.
 
 #include <stdlib.h>
 
+#include "XUtils.h"
+
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
+#include <hwloc/bitmap.h>
 #ifdef __linux__
 #define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_THREAD
 #else

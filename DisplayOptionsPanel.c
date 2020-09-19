@@ -5,14 +5,19 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "DisplayOptionsPanel.h"
 
-#include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "CheckItem.h"
 #include "CRT.h"
+#include "FunctionBar.h"
+#include "Header.h"
+#include "Object.h"
+#include "ProvideCurses.h"
 #include "XUtils.h"
 
 

@@ -1,6 +1,8 @@
 #ifndef HEADER_Macros
 #define HEADER_Macros
 
+#include <assert.h> // IWYU pragma: keep
+
 #ifndef MINIMUM
 #define MINIMUM(a, b)		((a) < (b) ? (a) : (b))
 #endif

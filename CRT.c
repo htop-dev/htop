@@ -5,28 +5,26 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
+
 #include "CRT.h"
 
-#include "RichString.h"
-#include "XUtils.h"
-
-#include <stdio.h>
 #include <errno.h>
+#include <langinfo.h>
+#include <locale.h>
 #include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <locale.h>
-#include <langinfo.h>
 #include <unistd.h>
+
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
 
-#ifdef HAVE_SETUID_ENABLED
-#include <sys/types.h>
-#endif
 
 #define ColorIndex(i,j) ((7-(i))*8+(j))
 

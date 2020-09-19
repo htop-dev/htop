@@ -103,6 +103,7 @@ myhtopheaders = \
 	Panel.h \
 	Process.h \
 	ProcessList.h \
+	ProvideCurses.h \
 	RichString.h \
 	ScreenManager.h \
 	Settings.h \

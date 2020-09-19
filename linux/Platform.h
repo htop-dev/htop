@@ -7,10 +7,12 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+#include <sys/types.h>
+
 #include "Action.h"
-#include "MainPanel.h"
-#include "BatteryMeter.h"
-#include "LinuxProcess.h"
+#include "Meter.h"
+#include "Process.h"
 #include "SignalsPanel.h"
 
 extern ProcessField Platform_defaultFields[];

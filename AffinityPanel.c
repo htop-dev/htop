@@ -5,20 +5,29 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "AffinityPanel.h"
 
 #include <assert.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "CRT.h"
+#include "FunctionBar.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
+#include "Settings.h"
 #include "Vector.h"
 #include "XUtils.h"
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
+#include <hwloc/bitmap.h>
 #endif
+
 
 typedef struct MaskItem_ {
    Object super;

@@ -8,8 +8,14 @@ in the source distribution for its full text.
 #include "MetersPanel.h"
 
 #include <stdlib.h>
-#include <assert.h>
+
 #include "CRT.h"
+#include "FunctionBar.h"
+#include "Header.h"
+#include "ListItem.h"
+#include "Meter.h"
+#include "Object.h"
+#include "ProvideCurses.h"
 
 
 // Note: In code the meters are known to have bar/text/graph "Modes", but in UI

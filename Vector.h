@@ -9,6 +9,8 @@ in the source distribution for its full text.
 
 #include "Object.h"
 
+#include <stdbool.h>
+
 
 #ifndef DEFAULT_SIZE
 #define DEFAULT_SIZE (-1)

@@ -10,12 +10,16 @@ in the source distribution for its full text.
 #include "CRT.h"
 
 #include <fcntl.h>
-#include <linux/magic.h>
-#include <sys/stat.h>
-#include <sys/statvfs.h>
-#include <sys/types.h>
-#include <sys/vfs.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <unistd.h>
+#include <linux/magic.h>
+#include <sys/statfs.h>
+#include <sys/statvfs.h>
+
+#include "Macros.h"
+#include "Object.h"
+#include "XUtils.h"
 
 
 static const int SELinuxMeter_attributes[] = {

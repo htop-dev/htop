@@ -5,13 +5,19 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "IncSet.h"
-#include "ListItem.h"
-#include "CRT.h"
-#include "XUtils.h"
+#include "config.h" // IWYU pragma: keep
 
+#include "IncSet.h"
+
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "CRT.h"
+#include "ListItem.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static void IncMode_reset(IncMode* mode) {

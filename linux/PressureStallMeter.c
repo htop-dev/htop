@@ -8,10 +8,14 @@ in the source distribution for its full text.
 
 #include "PressureStallMeter.h"
 
+#include <stdbool.h>
 #include <string.h>
 
 #include "CRT.h"
+#include "Meter.h"
+#include "Object.h"
 #include "Platform.h"
+#include "RichString.h"
 #include "XUtils.h"
 
 

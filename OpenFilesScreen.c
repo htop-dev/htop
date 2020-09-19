@@ -5,23 +5,23 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "OpenFilesScreen.h"
 
-#include "CRT.h"
-#include "ProcessList.h"
-#include "IncSet.h"
-#include "FunctionBar.h"
-#include "XUtils.h"
-
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include "Macros.h"
+#include "Panel.h"
+#include "ProvideCurses.h"
+#include "Vector.h"
+#include "XUtils.h"
 
 
 typedef struct OpenFiles_Data_ {

@@ -7,10 +7,11 @@ in the source distribution for its full text.
 
 #include "CheckItem.h"
 
-#include "CRT.h"
-
 #include <assert.h>
 #include <stdlib.h>
+
+#include "CRT.h"
+#include "RichString.h"
 
 
 static void CheckItem_delete(Object* cast) {

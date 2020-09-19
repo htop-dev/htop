@@ -7,15 +7,17 @@ in the source distribution for its full text.
 
 #include "Settings.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
 #include "CRT.h"
+#include "Macros.h"
+#include "Meter.h"
 #include "Platform.h"
-#include "Vector.h"
 #include "XUtils.h"
 
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 void Settings_delete(Settings* this) {
    free(this->filename);

@@ -5,28 +5,36 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-#include "FunctionBar.h"
-#include "Hashtable.h"
-#include "ColumnsPanel.h"
-#include "CRT.h"
-#include "MainPanel.h"
-#include "MetersPanel.h"
-#include "ProcessList.h"
-#include "ScreenManager.h"
-#include "Settings.h"
-#include "UsersTable.h"
-#include "Platform.h"
-#include "XUtils.h"
-
+#include <assert.h>
 #include <getopt.h>
 #include <locale.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "Action.h"
+#include "ColumnsPanel.h"
+#include "CRT.h"
+#include "Hashtable.h"
+#include "Header.h"
+#include "IncSet.h"
+#include "MainPanel.h"
+#include "MetersPanel.h"
+#include "Panel.h"
+#include "Platform.h"
+#include "Process.h"
+#include "ProcessList.h"
+#include "ProvideCurses.h"
+#include "ScreenManager.h"
+#include "Settings.h"
+#include "UsersTable.h"
+#include "XUtils.h"
+
 
 //#link m
 

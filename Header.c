@@ -7,14 +7,18 @@ in the source distribution for its full text.
 
 #include "Header.h"
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "CRT.h"
+#include "Macros.h"
+#include "Object.h"
 #include "Platform.h"
+#include "ProvideCurses.h"
 #include "XUtils.h"
 
-#include <assert.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
 
 Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns) {
    Header* this = xCalloc(1, sizeof(Header));

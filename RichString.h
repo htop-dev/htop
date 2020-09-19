@@ -7,26 +7,10 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include "config.h"
-#include <ctype.h>
 
-#include <assert.h>
-#ifdef HAVE_NCURSESW_CURSES_H
-#include <ncursesw/curses.h>
-#elif defined(HAVE_NCURSES_NCURSES_H)
-#include <ncurses/ncurses.h>
-#elif defined(HAVE_NCURSES_CURSES_H)
-#include <ncurses/curses.h>
-#elif defined(HAVE_NCURSES_H)
-#include <ncurses.h>
-#elif defined(HAVE_CURSES_H)
-#include <curses.h>
-#endif
+#include "ProvideCurses.h"
 
-#ifdef HAVE_LIBNCURSESW
-#include <wctype.h>
-#endif
 
 #define RichString_size(this) ((this)->chlen)
 #define RichString_sizeVal(this) ((this).chlen)

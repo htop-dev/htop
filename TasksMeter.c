@@ -8,7 +8,11 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 
 #include "CRT.h"
-#include "Platform.h"
+#include "Macros.h"
+#include "Object.h"
+#include "ProcessList.h"
+#include "RichString.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 
