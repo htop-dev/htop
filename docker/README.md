@@ -15,5 +15,15 @@ docker run --rm -it --pid=host htop
 ```sh
 docker run --rm -it --pid=host snpranav/htop
 ```
-
 This  will pull the docker image from [docker hub](https://hub.docker.com/snpranav/htop) and run htop in a docker container.
+
+**That's it!**
+
+---
+If you would like to use certain version of HTOP on pre-built images, visit the [docker hub](https://hub.docker.com/snpranav/htop) repo and you'll find some tags of different versions of htop.
+
+For example, to run version 3.0.2
+```sh
+docker run --rm -it --pid=host snpranav/htop:3.0.2
+```
+

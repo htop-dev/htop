@@ -1,4 +1,4 @@
-FROM alpine:3.12
+FROM alpine:edge
 MAINTAINER Pranav Shikarpur <contact@snpranav.com>
 
 RUN apk --update --no-cache add htop && \
