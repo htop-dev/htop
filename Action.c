@@ -25,10 +25,15 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <math.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <sys/param.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <termios.h>
+#include <unistd.h>
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    Panel* panel = st->panel;
@@ -378,21 +383,119 @@ static Htop_Reaction actionStrace(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+/**
+ * Creates a subprocess with the given argv.
+ *
+ * argv must be a null-terminated array of strings,
+ * and will be passed to execvp.
+ *
+ * The subprocess is launched as a child process,
+ * in its own foreground process group;
+ * this decouples signals like SIGINT from htop.
+ */
+bool launchSubProcess(char *const argv[]) {
+   endwin();
+
+   // backup the current terminal settings
+   struct termios old_attrs;
+   if (tcgetattr(STDIN_FILENO, &old_attrs) < 0)
+   {
+      perror("tcgetattr()");
+      return false;
+   }
+
+   // backup the current foreground process group
+   pid_t old_pgrp = tcgetpgrp(STDIN_FILENO);
+   if (old_pgrp < 0) {
+      perror("tcgetpgrp()");
+      return false;
+   }
+
+   pid_t child_pid = fork();
+   if (child_pid == -1) {
+      perror("fork()");
+      return false;
+   }
+
+   if (child_pid == 0) {
+      // this is the child process. launch the subprocess
+      printf("htop: launching");
+      for (size_t i = 0; argv[i] != NULL; i++) {
+         printf(" %s", argv[i]);
+      }
+      putchar('\n');
+      execvp(argv[0], argv);
+      // we should never reach this line.
+      // most likely cause of error: argv[0] doesn't exist
+      perror("excecvp()");
+      exit(1);
+   }
+
+   // setup a process group for the child
+   setpgid(child_pid, child_pid);
+   tcsetpgrp(STDIN_FILENO, child_pid);
+   // if the child prints to stdout between setpgid and tcsetpgrp,
+   // it is stopped; we need to send SIGCONT to prevent this.
+   kill(child_pid, SIGCONT);
+
+   // wait for the child to terminate.
+   int child_status;
+   while (waitpid(child_pid, &child_status, 0) == child_pid) {}
+
+   // restore the foreground process group
+   // we must ignore SIGTTOU while we do this
+   void (*old_handler)(int) = signal(SIGTTOU, SIG_IGN);
+   tcsetpgrp(STDIN_FILENO, old_pgrp);
+   if (old_handler != SIG_ERR) {
+      signal(SIGTTOU, old_handler);
+   }
+
+   // restore the terminal settings
+   if (tcsetattr(STDIN_FILENO, TCSADRAIN, &old_attrs) < 0) {
+      perror("tcsetattr()");
+      return false;
+   }
+
+   // check the child exit status
+   if (WIFEXITED(child_status)) {
+      if (WEXITSTATUS(child_status) == 0) {
+         // all good!
+         return true;
+      }
+      printf("child exited with %d\n", WEXITSTATUS(child_status));
+      return false;
+   } else if (WIFSIGNALED(child_status)) {
+      printf("child killed (signal %d)\n", WTERMSIG(child_status));
+      return false;
+   } else {
+      printf("unexpected wait() status: 0x%x\n", child_status);
+      return false;
+   }
+}
+
 static Htop_Reaction actionDebugger(State* st) {
    Settings* settings = st->settings;
    Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
 
-   char buf[32];
-   xSnprintf(buf, sizeof(buf), "%s -p %d", settings->debuggerTool, (int) p->pid);
+   // prepare the argv for the debugger subprocess
+   char *arg0 = settings->debuggerTool;
+   char arg1[] = "-p";
+   char arg2[64];
+   xSnprintf(arg2, sizeof(arg2), "%d", (int) p->pid);
+   char *const argv[] = { arg0, arg1, arg2, NULL };
 
-   endwin();
-   int result = system(buf);
+   if (!launchSubProcess(argv)) {
+      // something went wrong
+      // pause to allow the user to read the error message(s)
+      printf("press ENTER to continue");
+      int c = 0;
+      while (c != EOF && c != '\n') {
+         c = getchar();
+      }
+   }
+
    refresh();
-
-   // we don't really care about the invocation result
-   (void) result;
-
    CRT_enableDelay();
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
