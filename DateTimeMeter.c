@@ -13,7 +13,7 @@ in the source distribution for its full text.
 
 
 int DateTimeMeter_attributes[] = {
-   DATE
+   DATETIME
 };
 
 static void DateTimeMeter_updateValues(Meter* this, char* buffer, int size) {
