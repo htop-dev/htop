@@ -24,6 +24,9 @@ static void DateTimeMeter_updateValues(Meter* this, char* buffer, int size) {
    if (((year % 4 == 0) && (year % 100!= 0)) || (year%400 == 0)) {
       this->total = 366;
    }
+   else {
+      this->total = 365;
+   }
    this->values[0] = lt->tm_yday;
    strftime(buffer, size, "%F %H:%M:%S", lt);
 }
