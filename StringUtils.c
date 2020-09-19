@@ -5,14 +5,17 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "StringUtils.h"
-#include "XAlloc.h"
-
 #include "config.h"
 
+#include "StringUtils.h"
+
+#include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <stdlib.h>
+
+#include "XAlloc.h"
+
 
 char* String_cat(const char* s1, const char* s2) {
    int l1 = strlen(s1);
@@ -139,4 +142,38 @@ char* String_readLine(FILE* fd) {
       buffer = xRealloc(buffer, bufSize + 1);
       at = buffer + bufSize - step;
    }
+}
+
+int xAsprintf(char** strp, const char* fmt, ...) {
+   va_list vl;
+   va_start(vl, fmt);
+   int r = vasprintf(strp, fmt, vl);
+   va_end(vl);
+
+   if (r < 0 || !*strp) {
+      fail();
+   }
+
+   return r;
+}
+
+int xSnprintf(char* buf, int len, const char* fmt, ...) {
+   va_list vl;
+   va_start(vl, fmt);
+   int n = vsnprintf(buf, len, fmt, vl);
+   va_end(vl);
+
+   if (n < 0 || n >= len) {
+      fail();
+   }
+
+   return n;
+}
+
+char* xStrdup(const char* str) {
+   char* data = strdup(str);
+   if (!data) {
+      fail();
+   }
+   return data;
 }

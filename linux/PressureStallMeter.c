@@ -7,14 +7,13 @@ in the source distribution for its full text.
 */
 
 #include "PressureStallMeter.h"
-#include "Platform.h"
-#include "CRT.h"
 
 #include <string.h>
 
-/*{
-#include "Meter.h"
-}*/
+#include "CRT.h"
+#include "Platform.h"
+#include "StringUtils.h"
+
 
 static const int PressureStallMeter_attributes[] = {
    PRESSURE_STALL_TEN, PRESSURE_STALL_SIXTY, PRESSURE_STALL_THREEHUNDRED

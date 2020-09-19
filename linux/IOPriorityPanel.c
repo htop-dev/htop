@@ -7,6 +7,8 @@ in the source distribution for its full text.
 
 #include "IOPriorityPanel.h"
 
+#include "StringUtils.h"
+
 
 Panel* IOPriorityPanel_new(IOPriority currPrio) {
    Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem), FunctionBar_newEnterEsc("Set    ", "Cancel "));

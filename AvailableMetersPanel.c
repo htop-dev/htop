@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "Header.h"
 #include "ListItem.h"
 #include "Platform.h"
+#include "StringUtils.h"
 
 #include <assert.h>
 #include <stdlib.h>

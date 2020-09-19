@@ -9,6 +9,9 @@ in the source distribution for its full text.
 
 #include <stdio.h>
 
+#include "Macros.h"
+
+
 #define String_startsWith(s, match) (strncmp((s),(match),strlen(match)) == 0)
 #define String_contains_i(s1, s2) (strcasestr(s1, s2) != NULL)
 
@@ -30,5 +33,13 @@ void String_freeArray(char** s);
 char* String_getToken(const char* line, const unsigned short int numMatch);
 
 char* String_readLine(FILE* fd);
+
+ATTR_FORMAT(printf, 2, 3)
+int xAsprintf(char **strp, const char* fmt, ...);
+
+ATTR_FORMAT(printf, 3, 4)
+int xSnprintf(char *buf, int len, const char* fmt, ...);
+
+char* xStrdup(const char* str) ATTR_NONNULL;
 
 #endif

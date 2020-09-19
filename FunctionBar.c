@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 #include "CRT.h"
 #include "RichString.h"
+#include "StringUtils.h"
 #include "XAlloc.h"
 
 #include <assert.h>

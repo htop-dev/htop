@@ -5,13 +5,16 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "AffinityPanel.h"
-#include "CRT.h"
+#include "config.h"
 
-#include "Vector.h"
+#include "AffinityPanel.h"
 
 #include <assert.h>
 #include <string.h>
+
+#include "CRT.h"
+#include "StringUtils.h"
+#include "Vector.h"
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>

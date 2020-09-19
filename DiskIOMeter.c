@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Platform.h"
+#include "StringUtils.h"
 
 
 static const int DiskIOMeter_attributes[] = {

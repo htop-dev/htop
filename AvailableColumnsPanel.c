@@ -6,15 +6,16 @@ in the source distribution for its full text.
 */
 
 #include "AvailableColumnsPanel.h"
-#include "Platform.h"
-
-#include "Header.h"
-#include "ColumnsPanel.h"
 
 #include <assert.h>
-#include <stdlib.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "ColumnsPanel.h"
+#include "Header.h"
+#include "Platform.h"
+#include "StringUtils.h"
 
 
 static const char* const AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};

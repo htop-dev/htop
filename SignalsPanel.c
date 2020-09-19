@@ -7,16 +7,16 @@ in the source distribution for its full text.
 
 #include "Panel.h"
 #include "SignalsPanel.h"
-#include "Platform.h"
+
+#include <assert.h>
+#include <ctype.h>
+#include <signal.h>
+#include <stdlib.h>
 
 #include "ListItem.h"
+#include "Platform.h"
 #include "RichString.h"
-
-#include <stdlib.h>
-#include <assert.h>
-#include <signal.h>
-
-#include <ctype.h>
+#include "StringUtils.h"
 
 
 Panel* SignalsPanel_new() {

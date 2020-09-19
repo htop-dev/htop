@@ -6,8 +6,10 @@ in the source distribution for its full text.
 */
 
 #include "UptimeMeter.h"
-#include "Platform.h"
+
 #include "CRT.h"
+#include "Platform.h"
+#include "StringUtils.h"
 
 
 static const int UptimeMeter_attributes[] = {

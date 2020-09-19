@@ -9,8 +9,9 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProcessList.h"
 #include "LinuxProcess.h"
-#include "Platform.h"
 #include "CRT.h"
+#include "Platform.h"
+#include "StringUtils.h"
 
 #include <stdlib.h>
 #include <unistd.h>

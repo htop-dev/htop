@@ -40,37 +40,3 @@ void* xRealloc(void* ptr, size_t size) {
    }
    return data;
 }
-
-int xAsprintf(char** strp, const char* fmt, ...) {
-   va_list vl;
-   va_start(vl, fmt);
-   int _r = vasprintf(strp, fmt, vl);
-   va_end(vl);
-
-   if (_r < 0) {
-      fail();
-   }
-
-   return _r;
-}
-
-int xSnprintf(char* buf, int len, const char* fmt, ...) {
-   va_list vl;
-   va_start(vl, fmt);
-   int _n=vsnprintf(buf, len, fmt, vl);
-   va_end(vl);
-
-   if (!(_n > -1 && _n < len)) {
-      fail();
-   }
-
-   return _n;
-}
-
-char* xStrdup(const char* str) {
-   char* data = strdup(str);
-   if (!data) {
-      fail();
-   }
-   return data;
-}

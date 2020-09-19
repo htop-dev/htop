@@ -7,12 +7,13 @@ in the source distribution for its full text.
 
 #include "DisplayOptionsPanel.h"
 
-#include "CheckItem.h"
-#include "CRT.h"
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "CheckItem.h"
+#include "CRT.h"
+#include "StringUtils.h"
 
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};

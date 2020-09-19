@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "ScreenManager.h"
 #include "Settings.h"
+#include "StringUtils.h"
 #include "UsersTable.h"
 #include "Platform.h"
 

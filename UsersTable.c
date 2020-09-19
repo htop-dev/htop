@@ -5,10 +5,9 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "UsersTable.h"
-#include "XAlloc.h"
-
 #include "config.h"
+
+#include "UsersTable.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +16,9 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#include "StringUtils.h"
+#include "XAlloc.h"
 
 
 UsersTable* UsersTable_new() {
