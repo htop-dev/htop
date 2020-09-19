@@ -26,4 +26,3 @@ For example, to run version 3.0.2
 ```sh
 docker run --rm -it --pid=host snpranav/htop:3.0.2
 ```
-
