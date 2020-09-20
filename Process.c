@@ -93,7 +93,7 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
       number %= 1000;
       len = snprintf(buffer, 10, "%03luM ", number);
       RichString_appendn(str, processMegabytesColor, buffer, len);
-   } else if (number < 100 * ONE_M) {
+   } else if (number < 100000 * ONE_K) {
       //2 digit GB, 1 digit MB
       number /= 100 * ONE_K;
       len = snprintf(buffer, 10, "%2lu", number/10);
