@@ -107,6 +107,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             printVersionFlag();
             exit(0);
          case 's':
+            assert(optarg); /* please clang analyzer, cause optarg can be NULL in the 'u' case */
             if (strcmp(optarg, "help") == 0) {
                for (int j = 1; j < Platform_numberOfFields; j++) {
                   const char* name = Process_fields[j].name;
@@ -158,6 +159,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             flags.treeView = true;
             break;
          case 'p': {
+            assert(optarg); /* please clang analyzer, cause optarg can be NULL in the 'u' case */
             char* argCopy = xStrdup(optarg);
             char* saveptr;
             char* pid = strtok_r(argCopy, ",", &saveptr);
