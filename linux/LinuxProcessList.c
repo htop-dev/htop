@@ -644,8 +644,6 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
 
 #endif
 
-#ifdef HAVE_CGROUP
-
 static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* dirname, const char* name) {
    char filename[MAX_NAME + 1];
    xSnprintf(filename, MAX_NAME, "%s/%s/cgroup", dirname, name);
@@ -683,8 +681,6 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
    free(process->cgroup);
    process->cgroup = xStrdup(output);
 }
-
-#endif
 
 #ifdef HAVE_VSERVER
 
@@ -1294,11 +1290,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       LinuxProcessList_readDelayAcctData(this, lp);
       #endif
 
-      #ifdef HAVE_CGROUP
       if (settings->flags & PROCESS_FLAG_LINUX_CGROUP) {
          LinuxProcessList_readCGroupFile(lp, dirname, name);
       }
-      #endif
 
       if (settings->flags & PROCESS_FLAG_LINUX_OOM) {
          LinuxProcessList_readOomData(lp, dirname, name);

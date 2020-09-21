@@ -102,9 +102,7 @@ ProcessFieldData Process_fields[] = {
    [IO_WRITE_RATE] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
    [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, },
 #endif
-#ifdef HAVE_CGROUP
    [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
-#endif
    [OOM] = { .name = "OOM", .title = " OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
    [IO_PRIORITY] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
 #ifdef HAVE_DELAYACCT
@@ -156,9 +154,7 @@ Process* LinuxProcess_new(const Settings* settings) {
 void Process_delete(Object* cast) {
    LinuxProcess* this = (LinuxProcess*) cast;
    Process_done((Process*)cast);
-#ifdef HAVE_CGROUP
    free(this->cgroup);
-#endif
 #ifdef HAVE_OPENVZ
    free(this->ctid);
 #endif
@@ -680,9 +676,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    #ifdef HAVE_VSERVER
    case VXID: xSnprintf(buffer, n, "%5u ", lp->vxid); break;
    #endif
-   #ifdef HAVE_CGROUP
    case CGROUP: xSnprintf(buffer, n, "%-10s ", lp->cgroup ? lp->cgroup : ""); break;
-   #endif
    case OOM: xSnprintf(buffer, n, "%4u ", lp->oom); break;
    case IO_PRIORITY: {
       int klass = IOPriority_class(lp->ioPriority);
@@ -821,10 +815,8 @@ static long LinuxProcess_compare(const void* v1, const void* v2) {
    case VXID:
       return SPACESHIP_NUMBER(p2->vxid, p1->vxid);
    #endif
-   #ifdef HAVE_CGROUP
    case CGROUP:
       return SPACESHIP_NULLSTR(p1->cgroup, p2->cgroup);
-   #endif
    case OOM:
       return SPACESHIP_NUMBER(p2->oom, p1->oom);
    #ifdef HAVE_DELAYACCT
