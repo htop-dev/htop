@@ -90,7 +90,6 @@ ProcessFieldData Process_fields[] = {
 #ifdef HAVE_VSERVER
    [VXID] = { .name = "VXID", .title = " VXID ", .description = "VServer process ID", .flags = PROCESS_FLAG_LINUX_VSERVER, },
 #endif
-#ifdef HAVE_TASKSTATS
    [RCHAR] = { .name = "RCHAR", .title = "    RD_CHAR ", .description = "Number of bytes the process has read", .flags = PROCESS_FLAG_IO, },
    [WCHAR] = { .name = "WCHAR", .title = "    WR_CHAR ", .description = "Number of bytes the process has written", .flags = PROCESS_FLAG_IO, },
    [SYSCR] = { .name = "SYSCR", .title = "    RD_SYSC ", .description = "Number of read(2) syscalls for the process", .flags = PROCESS_FLAG_IO, },
@@ -101,7 +100,6 @@ ProcessFieldData Process_fields[] = {
    [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = "  DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
    [IO_WRITE_RATE] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
    [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, },
-#endif
    [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
    [OOM] = { .name = "OOM", .title = " OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
    [IO_PRIORITY] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
@@ -646,7 +644,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    case STIME: Process_printTime(str, lp->stime); return;
    case CUTIME: Process_printTime(str, lp->cutime); return;
    case CSTIME: Process_printTime(str, lp->cstime); return;
-   #ifdef HAVE_TASKSTATS
    case RCHAR:  Process_colorNumber(str, lp->io_rchar, coloring); return;
    case WCHAR:  Process_colorNumber(str, lp->io_wchar, coloring); return;
    case SYSCR:  Process_colorNumber(str, lp->io_syscr, coloring); return;
@@ -668,7 +665,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          totalRate = NAN;
       Process_outputRate(str, buffer, n, totalRate, coloring); return;
    }
-   #endif
    #ifdef HAVE_OPENVZ
    case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;
    case VPID: xSnprintf(buffer, n, Process_pidFormat, lp->vpid); break;
@@ -783,7 +779,6 @@ static long LinuxProcess_compare(const void* v1, const void* v2) {
       return SPACESHIP_NUMBER(p2->stime, p1->stime);
    case CSTIME:
       return SPACESHIP_NUMBER(p2->cstime, p1->cstime);
-   #ifdef HAVE_TASKSTATS
    case RCHAR:
       return SPACESHIP_NUMBER(p2->io_rchar, p1->io_rchar);
    case WCHAR:
@@ -804,7 +799,6 @@ static long LinuxProcess_compare(const void* v1, const void* v2) {
       return SPACESHIP_NUMBER(p2->io_rate_write_bps, p1->io_rate_write_bps);
    case IO_RATE:
       return SPACESHIP_NUMBER(p2->io_rate_read_bps + p2->io_rate_write_bps, p1->io_rate_read_bps + p1->io_rate_write_bps);
-   #endif
    #ifdef HAVE_OPENVZ
    case CTID:
       return SPACESHIP_NULLSTR(p1->ctid, p2->ctid);

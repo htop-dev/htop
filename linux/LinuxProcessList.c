@@ -410,8 +410,6 @@ static bool LinuxProcessList_statProcessDir(Process* process, const char* dirnam
    return true;
 }
 
-#ifdef HAVE_TASKSTATS
-
 static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirname, const char* name, unsigned long long now) {
    char filename[MAX_NAME + 1];
    filename[MAX_NAME] = '\0';
@@ -480,10 +478,6 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
       }
    }
 }
-
-#endif
-
-
 
 static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* dirname, const char* name) {
    char filename[MAX_NAME + 1];
@@ -1130,14 +1124,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
    const struct dirent* entry;
    const Settings* settings = pl->settings;
 
-   #ifdef HAVE_TASKSTATS
-   unsigned long long now = tv.tv_sec * 1000LL + tv.tv_usec / 1000LL;
-   #endif
-
    dir = opendir(dirname);
    if (!dir)
       return false;
 
+   unsigned long long now = tv.tv_sec * 1000ULL + tv.tv_usec / 1000ULL;
    int cpus = pl->cpuCount;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
@@ -1200,10 +1191,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          continue;
       }
 
-      #ifdef HAVE_TASKSTATS
       if (settings->flags & PROCESS_FLAG_IO)
          LinuxProcessList_readIoFile(lp, dirname, name, now);
-      #endif
 
       if (! LinuxProcessList_readStatmFile(lp, dirname, name))
          goto errorReadingProcess;

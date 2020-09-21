@@ -280,7 +280,7 @@ coverage:
 	$(MAKE) all AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" AM_LDFLAGS="-lgcov"
 
 cppcheck:
-	cppcheck -q -v . --enable=all -DHAVE_OPENVZ -DHAVE_TASKSTATS
+	cppcheck -q -v . --enable=all -DHAVE_OPENVZ
 
 dist-hook: $(top_distdir)/configure
 	@if grep 'pkg_m4_absent' '$(top_distdir)/configure'; then \

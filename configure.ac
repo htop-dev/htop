@@ -134,11 +134,6 @@ if test "x$enable_ancient_vserver" = xyes; then
     AC_DEFINE(HAVE_ANCIENT_VSERVER, 1, [Define if ancient vserver support enabled.])
 fi
 
-AC_ARG_ENABLE(taskstats, [AS_HELP_STRING([--enable-taskstats], [enable per-task IO Stats (taskstats kernel sup required)])], ,enable_taskstats="yes")
-if test "x$enable_taskstats" = xyes; then
-    AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
-fi
-
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
 m4_define([HTOP_CHECK_SCRIPT],
 [
@@ -387,7 +382,6 @@ AC_MSG_RESULT([
   (Linux) openvz:            $enable_openvz
   (Linux) vserver:           $enable_vserver
   (Linux) ancient vserver:   $enable_ancient_vserver
-  (Linux) taskstats:         $enable_taskstats
   (Linux) affinity:          $enable_linux_affinity
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $enable_sensors

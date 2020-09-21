@@ -68,7 +68,6 @@ typedef enum LinuxProcessFields {
    #ifdef HAVE_VSERVER
    VXID = 102,
    #endif
-   #ifdef HAVE_TASKSTATS
    RCHAR = 103,
    WCHAR = 104,
    SYSCR = 105,
@@ -79,7 +78,6 @@ typedef enum LinuxProcessFields {
    IO_READ_RATE = 110,
    IO_WRITE_RATE = 111,
    IO_RATE = 112,
-   #endif
    CGROUP = 113,
    OOM = 114,
    IO_PRIORITY = 115,
@@ -148,7 +146,6 @@ typedef struct LinuxProcess_ {
    long m_drs;
    long m_lrs;
    long m_dt;
-   #ifdef HAVE_TASKSTATS
    unsigned long long io_rchar;
    unsigned long long io_wchar;
    unsigned long long io_syscr;
@@ -160,7 +157,6 @@ typedef struct LinuxProcess_ {
    unsigned long long io_rate_write_time;
    double io_rate_read_bps;
    double io_rate_write_bps;
-   #endif
    #ifdef HAVE_OPENVZ
    char* ctid;
    pid_t vpid;
