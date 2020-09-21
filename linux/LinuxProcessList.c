@@ -509,7 +509,10 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
    xSnprintf(filename, MAX_NAME, "%s/%s/cgroup", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file) {
-      process->cgroup = xStrdup("");
+      if (process->cgroup) {
+         free(process->cgroup);
+         process->cgroup = NULL;
+      }
       return;
    }
    char output[PROC_LINE_LENGTH + 1];

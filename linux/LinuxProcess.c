@@ -251,7 +251,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case VXID: xSnprintf(buffer, n, "%5u ", lp->vxid); break;
    #endif
    #ifdef HAVE_CGROUP
-   case CGROUP: xSnprintf(buffer, n, "%-10s ", lp->cgroup); break;
+   case CGROUP: xSnprintf(buffer, n, "%-10s ", lp->cgroup ? lp->cgroup : ""); break;
    #endif
    case OOM: xSnprintf(buffer, n, "%4u ", lp->oom); break;
    case IO_PRIORITY: {
