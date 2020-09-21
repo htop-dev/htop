@@ -73,7 +73,7 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
    int bufSize = MAX_READ;
    int bufLen = 0;
    for(;;) {
-      buf = realloc(buf, bufSize);
+      buf = xRealloc(buf, bufSize);
       int size = xread(fd, buf + bufLen, MAX_READ);
       if (size <= 0) {
          buf[bufLen] = '\0';
@@ -89,7 +89,7 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
    }
    int numDrivers = 0;
    int allocd = 10;
-   ttyDrivers = malloc(sizeof(TtyDriver) * allocd);
+   ttyDrivers = xMalloc(sizeof(TtyDriver) * allocd);
    char* at = buf;
    while (*at != '\0') {
       at = strchr(at, ' ');    // skip first token
@@ -97,7 +97,7 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
       char* token = at;        // mark beginning of path
       at = strchr(at, ' ');    // find end of path
       *at = '\0'; at++;        // clear and skip
-      ttyDrivers[numDrivers].path = strdup(token); // save
+      ttyDrivers[numDrivers].path = xStrdup(token); // save
       while (*at == ' ') at++; // skip spaces
       token = at;              // mark beginning of major
       at = strchr(at, ' ');    // find end of major
@@ -123,12 +123,12 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
       numDrivers++;
       if (numDrivers == allocd) {
          allocd += 10;
-         ttyDrivers = realloc(ttyDrivers, sizeof(TtyDriver) * allocd);
+         ttyDrivers = xRealloc(ttyDrivers, sizeof(TtyDriver) * allocd);
       }
    }
    free(buf);
    numDrivers++;
-   ttyDrivers = realloc(ttyDrivers, sizeof(TtyDriver) * numDrivers);
+   ttyDrivers = xRealloc(ttyDrivers, sizeof(TtyDriver) * numDrivers);
    ttyDrivers[numDrivers - 1].path = NULL;
    qsort(ttyDrivers, numDrivers - 1, sizeof(TtyDriver), sortTtyDrivers);
    this->ttyDrivers = ttyDrivers;
@@ -773,7 +773,7 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
          idx = min;
       }
       int err = stat(ttyDrivers[i].path, &sstat);
-      if (err == 0 && tty_nr == sstat.st_rdev) return strdup(ttyDrivers[i].path);
+      if (err == 0 && tty_nr == sstat.st_rdev) return xStrdup(ttyDrivers[i].path);
    }
    char* out;
    xAsprintf(&out, "/dev/%u:%u", maj, min);
