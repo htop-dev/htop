@@ -49,11 +49,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors'
 
   build-ubuntu-latest-full-featured-clang:
     runs-on: ubuntu-latest
@@ -71,11 +71,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors'
 
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
@@ -93,7 +93,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: scan-build-11 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors
+      run: scan-build-11 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors
     - name: Build
       run: scan-build-11 -analyze-headers --status-bugs make -j"$(nproc)"
 

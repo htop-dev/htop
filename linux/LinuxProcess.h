@@ -80,9 +80,7 @@ typedef enum LinuxProcessFields {
    IO_WRITE_RATE = 111,
    IO_RATE = 112,
    #endif
-   #ifdef HAVE_CGROUP
    CGROUP = 113,
-   #endif
    OOM = 114,
    IO_PRIORITY = 115,
    #ifdef HAVE_DELAYACCT
@@ -170,9 +168,7 @@ typedef struct LinuxProcess_ {
    #ifdef HAVE_VSERVER
    unsigned int vxid;
    #endif
-   #ifdef HAVE_CGROUP
    char* cgroup;
-   #endif
    unsigned int oom;
    char* ttyDevice;
    #ifdef HAVE_DELAYACCT

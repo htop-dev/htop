@@ -123,11 +123,6 @@ if test "x$enable_openvz" = xyes; then
    AC_DEFINE(HAVE_OPENVZ, 1, [Define if openvz support enabled.])
 fi
 
-AC_ARG_ENABLE(cgroup, [AS_HELP_STRING([--enable-cgroup], [enable cgroups support])], ,enable_cgroup="no")
-if test "x$enable_cgroup" = xyes; then
-   AC_DEFINE(HAVE_CGROUP, 1, [Define if cgroup support enabled.])
-fi
-
 AC_ARG_ENABLE(vserver, [AS_HELP_STRING([--enable-vserver], [enable VServer support])], ,enable_vserver="no")
 if test "x$enable_vserver" = xyes; then
     AC_DEFINE(HAVE_VSERVER, 1, [Define if vserver support enabled.])
@@ -390,7 +385,6 @@ AC_MSG_RESULT([
   platform:                  $my_htop_platform
   (Linux) proc directory:    $PROCDIR
   (Linux) openvz:            $enable_openvz
-  (Linux) cgroup:            $enable_cgroup
   (Linux) vserver:           $enable_vserver
   (Linux) ancient vserver:   $enable_ancient_vserver
   (Linux) taskstats:         $enable_taskstats
