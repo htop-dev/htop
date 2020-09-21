@@ -315,7 +315,7 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
       *level = NAN;
       *isOnAC = AC_ERROR;
    } else {
-      CLAMP(*level, 0.0, 100.0);
+      *level = CLAMP(*level, 0.0, 100.0);
    }
    Battery_cacheLevel = *level;
    Battery_cacheIsOnAC = *isOnAC;
