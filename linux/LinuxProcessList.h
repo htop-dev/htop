@@ -15,7 +15,9 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 #include "ProcessList.h"
 #include "UsersTable.h"
+#include "ZramStats.h"
 #include "zfs/ZfsArcStats.h"
+
 
 typedef struct CPUData_ {
    unsigned long long int totalTime;
@@ -67,6 +69,7 @@ typedef struct LinuxProcessList_ {
    #endif
 
    ZfsArcStats zfs;
+   ZramStats zram;
 } LinuxProcessList;
 
 #ifndef PROCDIR

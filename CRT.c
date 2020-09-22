@@ -153,6 +153,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = ColorPair(Magenta,Black),
       [ZFS_COMPRESSED] = ColorPair(Blue,Black),
       [ZFS_RATIO] = ColorPair(Magenta,Black),
+      [ZRAM] = ColorPair(Yellow,Black),
    },
    [COLORSCHEME_MONOCHROME] = {
       [RESET_COLOR] = A_NORMAL,
@@ -230,6 +231,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = A_DIM,
       [ZFS_COMPRESSED] = A_BOLD,
       [ZFS_RATIO] = A_BOLD,
+      [ZRAM] = A_NORMAL,
    },
    [COLORSCHEME_BLACKONWHITE] = {
       [RESET_COLOR] = ColorPair(Black,White),
@@ -307,6 +309,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = ColorPair(Magenta,White),
       [ZFS_COMPRESSED] = ColorPair(Cyan,White),
       [ZFS_RATIO] = ColorPair(Magenta,White),
+      [ZRAM] = ColorPair(Yellow,White)
    },
    [COLORSCHEME_LIGHTTERMINAL] = {
       [RESET_COLOR] = ColorPair(Blue,Black),
@@ -384,6 +387,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = A_BOLD | ColorPair(Magenta,Black),
       [ZFS_COMPRESSED] = ColorPair(Cyan,Black),
       [ZFS_RATIO] = A_BOLD | ColorPair(Magenta,Black),
+      [ZRAM] = ColorPair(Yellow,Black),
    },
    [COLORSCHEME_MIDNIGHT] = {
       [RESET_COLOR] = ColorPair(White,Blue),
@@ -461,6 +465,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = A_BOLD | ColorPair(Magenta,Blue),
       [ZFS_COMPRESSED] = A_BOLD | ColorPair(White,Blue),
       [ZFS_RATIO] = A_BOLD | ColorPair(Magenta,Blue),
+      [ZRAM] = A_BOLD | ColorPair(Yellow,Blue),
    },
    [COLORSCHEME_BLACKNIGHT] = {
       [RESET_COLOR] = ColorPair(Cyan,Black),
@@ -536,6 +541,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [ZFS_OTHER] = ColorPair(Magenta,Black),
       [ZFS_COMPRESSED] = ColorPair(Blue,Black),
       [ZFS_RATIO] = ColorPair(Magenta,Black),
+      [ZRAM] = ColorPair(Yellow,Black),
    },
    [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
 };
