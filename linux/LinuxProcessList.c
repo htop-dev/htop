@@ -1003,6 +1003,44 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    fclose(file);
 }
 
+static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this){
+   unsigned long long int totalZram = 0;
+   unsigned long long int usedZramComp = 0;
+   unsigned long long int usedZramOrig = 0;
+
+   char mm_stat[32];
+   char disksize[32];
+
+   FILE* file;
+   unsigned int i = 0;
+   snprintf(mm_stat,32,"/sys/block/zram%u/mm_stat",i);
+   snprintf(disksize,32,"/sys/block/zram%u/disksize",i);
+   while((file = fopen(disksize,"r")) != NULL){
+      unsigned long long int size;
+      fscanf(file,"%llu\n",&size);
+      totalZram += size/1024;
+      fclose(file);
+
+      file = fopen(mm_stat,"r");
+      unsigned long long int orig_data_size;
+      unsigned long long int compr_data_size;
+
+      fscanf(file,"    %llu       %llu",&orig_data_size,&compr_data_size);
+      fclose(file);
+      usedZramComp  += compr_data_size/1024;
+      usedZramOrig += orig_data_size/1024;
+
+      i++;
+      snprintf(mm_stat,26,"/sys/block/zram%u/mm_stat",i);
+      snprintf(disksize,27,"/sys/block/zram%u/disksize",i);
+
+   }
+
+   this->zram.totalZram = totalZram;
+   this->zram.usedZramComp = usedZramComp;
+   this->zram.usedZramOrig = usedZramOrig;
+}
+
 static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    unsigned long long int dbufSize = 0;
    unsigned long long int dnodeSize = 0;
@@ -1206,6 +1244,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
    LinuxProcessList_scanMemoryInfo(super);
    LinuxProcessList_scanZfsArcstats(this);
+   LinuxProcessList_scanZramInfo(this);
    double period = LinuxProcessList_scanCPUTime(this);
 
    LinuxProcessList_scanCPUFrequency(this);

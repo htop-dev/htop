@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 #include "zfs/ZfsArcStats.h"
+#include "ZramStats.h"
 
 extern long long btime;
 
@@ -62,6 +63,7 @@ typedef struct LinuxProcessList_ {
    #endif
 
    ZfsArcStats zfs;
+   ZramStats zram;
 } LinuxProcessList;
 
 #ifndef PROCDIR

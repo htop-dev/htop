@@ -48,14 +48,17 @@ linux_platform_headers = \
 	linux/PressureStallMeter.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsCompressedArcMeter.h \
-	zfs/ZfsArcStats.h
+	zfs/ZfsArcStats.h \
+	linux/ZramMeter.h \
+	linux/ZramStats.h
 
 if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c \
 linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c \
 linux/PressureStallMeter.c \
-zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c
+zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c \
+linux/ZramMeter.c
 
 myhtopplatheaders = $(linux_platform_headers)
 endif

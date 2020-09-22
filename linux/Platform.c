@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
+#include "ZramMeter.h"
 #include "LinuxProcess.h"
 
 #include <math.h>
@@ -128,6 +129,7 @@ MeterClass* Platform_meterTypes[] = {
    &PressureStallMemoryFullMeter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &ZramMeter_class,
    NULL
 };
 
@@ -216,6 +218,13 @@ void Platform_setSwapValues(Meter* this) {
    ProcessList* pl = (ProcessList*) this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
+}
+
+void Platform_setZramValues(Meter* this){	
+   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+   this->total = lpl->zram.totalZram;
+   this->values[0] = lpl->zram.usedZramComp;
+   this->values[1] = lpl->zram.usedZramOrig;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
