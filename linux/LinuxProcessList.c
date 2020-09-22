@@ -1145,79 +1145,105 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
    return period;
 }
 
-static inline double LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
-   ProcessList* pl = (ProcessList*) this;
-   Settings* settings = pl->settings;
+static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
+   int cpus = this->super.cpuCount;
+   int numCPUsWithFrequency = 0;
+   unsigned long totalFrequency = 0;
 
+   for (int i = 0; i < cpus; ++i) {
+      char pathBuffer[64];
+      xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", i);
+
+      FILE* file = fopen(pathBuffer, "r");
+      if (!file)
+         return -errno;
+
+      unsigned long frequency;
+      if (fscanf(file, "%lu", &frequency) == 1) {
+         /* convert kHz to MHz */
+         frequency = frequency / 1000;
+         this->cpus[i + 1].frequency = frequency;
+         numCPUsWithFrequency++;
+         totalFrequency += frequency;
+      }
+
+      fclose(file);
+   }
+
+   if (numCPUsWithFrequency > 0)
+      this->cpus[0].frequency = (double)totalFrequency / numCPUsWithFrequency;
+
+   return 0;
+}
+
+static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
+   FILE* file = fopen(PROCCPUINFOFILE, "r");
+   if (file == NULL)
+      return;
+
+   int cpus = this->super.cpuCount;
+   int numCPUsWithFrequency = 0;
+   double totalFrequency = 0;
+   int cpuid = -1;
+
+   while (!feof(file)) {
+      double frequency;
+      char buffer[PROC_LINE_LENGTH];
+
+      if (fgets(buffer, PROC_LINE_LENGTH, file) == NULL)
+         break;
+
+      if (
+         (sscanf(buffer, "processor : %d", &cpuid) == 1) ||
+         (sscanf(buffer, "processor: %d", &cpuid) == 1)
+      ) {
+         continue;
+      } else if (
+         (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
+         (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1)
+      ) {
+         if (cpuid < 0 || cpuid > (cpus - 1))
+            continue;
+
+         CPUData* cpuData = &(this->cpus[cpuid + 1]);
+         /* do not override sysfs data */
+         if (isnan(cpuData->frequency))
+            cpuData->frequency = frequency;
+         numCPUsWithFrequency++;
+         totalFrequency += frequency;
+      } else if (buffer[0] == '\n') {
+         cpuid = -1;
+      }
+   }
+   fclose(file);
+
+   if (numCPUsWithFrequency > 0)
+      this->cpus[0].frequency = totalFrequency / numCPUsWithFrequency;
+}
+
+static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
    int cpus = this->super.cpuCount;
    assert(cpus > 0);
 
-   for (int i = 0; i <= cpus; i++) {
-      CPUData* cpuData = &(this->cpus[i]);
-      cpuData->frequency = NAN;
-   }
+   for (int i = 0; i <= cpus; i++)
+      this->cpus[i].frequency = NAN;
 
-   int numCPUsWithFrequency = 0;
-   double totalFrequency = 0;
+   if (scanCPUFreqencyFromSysCPUFreq(this) == 0)
+      return;
 
-   if (settings->showCPUFrequency) {
-      FILE* file = fopen(PROCCPUINFOFILE, "r");
-      if (file == NULL) {
-         CRT_fatalError("Cannot open " PROCCPUINFOFILE);
-      }
-
-      int cpuid = -1;
-      double frequency;
-      while (!feof(file)) {
-         char buffer[PROC_LINE_LENGTH];
-         char *ok = fgets(buffer, PROC_LINE_LENGTH, file);
-         if (!ok) break;
-
-         if (
-            (sscanf(buffer, "processor : %d", &cpuid) == 1) ||
-            (sscanf(buffer, "processor: %d", &cpuid) == 1)
-         ) {
-            if (cpuid < 0 || cpuid > (cpus - 1)) {
-               char tmpbuffer[64];
-               xSnprintf(tmpbuffer, sizeof(tmpbuffer), PROCCPUINFOFILE " contains out-of-range CPU number %d", cpuid);
-               CRT_fatalError(tmpbuffer);
-            }
-         } else if (
-            (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
-            (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1)
-         ) {
-            if (cpuid < 0 || cpuid > (cpus - 1)) {
-               CRT_fatalError(PROCCPUINFOFILE " is malformed: cpu MHz line without corresponding processor line");
-            }
-
-            int cpu = cpuid + 1;
-            CPUData* cpuData = &(this->cpus[cpu]);
-            cpuData->frequency = frequency;
-            numCPUsWithFrequency++;
-            totalFrequency += frequency;
-         } else if (buffer[0] == '\n') {
-            cpuid = -1;
-         }
-      }
-      fclose(file);
-
-      if (numCPUsWithFrequency > 0) {
-         this->cpus[0].frequency = totalFrequency / numCPUsWithFrequency;
-      }
-   }
-
-   double period = (double)this->cpus[0].totalPeriod / cpus;
-   return period;
+   scanCPUFreqencyFromCPUinfo(this);
 }
 
 void ProcessList_goThroughEntries(ProcessList* super) {
    LinuxProcessList* this = (LinuxProcessList*) super;
+   const Settings* settings = super->settings;
 
    LinuxProcessList_scanMemoryInfo(super);
    LinuxProcessList_scanZfsArcstats(this);
    double period = LinuxProcessList_scanCPUTime(this);
 
-   LinuxProcessList_scanCPUFrequency(this);
+   if (settings->showCPUFrequency)
+      LinuxProcessList_scanCPUFrequency(this);
 
    struct timeval tv;
    gettimeofday(&tv, NULL);
