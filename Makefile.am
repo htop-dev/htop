@@ -130,6 +130,8 @@ linux_platform_headers = \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
 	linux/SELinuxMeter.h \
+	linux/ZramMeter.h \
+	linux/ZramStats.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h
@@ -144,6 +146,7 @@ myhtopplatsources = \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
 	linux/SELinuxMeter.c \
+	linux/ZramMeter.c \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsArcStats.c \
 	zfs/ZfsCompressedArcMeter.c

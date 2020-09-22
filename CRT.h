@@ -113,6 +113,7 @@ typedef enum ColorElements_ {
    ZFS_OTHER,
    ZFS_COMPRESSED,
    ZFS_RATIO,
+   ZRAM,
    LAST_COLORELEMENT
 } ColorElements;
 

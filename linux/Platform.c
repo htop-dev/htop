@@ -42,6 +42,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "ZramMeter.h"
 
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
@@ -148,6 +149,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &PressureStallMemoryFullMeter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &ZramMeter_class,
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
    &SELinuxMeter_class,
@@ -246,6 +248,13 @@ void Platform_setSwapValues(Meter* this) {
    const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
+}
+
+void Platform_setZramValues(Meter* this) {
+   const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
+   this->total = lpl->zram.totalZram;
+   this->values[0] = lpl->zram.usedZramComp;
+   this->values[1] = lpl->zram.usedZramOrig;
 }
 
 void Platform_setZfsArcValues(Meter* this) {

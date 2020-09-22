@@ -1148,6 +1148,54 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    fclose(file);
 }
 
+static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
+   unsigned long long int totalZram = 0;
+   unsigned long long int usedZramComp = 0;
+   unsigned long long int usedZramOrig = 0;
+
+   char mm_stat[34];
+   char disksize[34];
+
+   unsigned int i = 0;
+   for(;;) {
+      xSnprintf(mm_stat, sizeof(mm_stat), "/sys/block/zram%u/mm_stat", i);
+      xSnprintf(disksize, sizeof(disksize), "/sys/block/zram%u/disksize", i);
+      i++;
+      FILE* disksize_file = fopen(disksize, "r");
+      FILE* mm_stat_file = fopen(mm_stat, "r");
+      if (disksize_file == NULL || mm_stat_file == NULL) {
+         if (disksize_file) {
+            fclose(disksize_file);
+         }
+         if (mm_stat_file) {
+            fclose(mm_stat_file);
+         }
+         break;
+      }
+      unsigned long long int size = 0;
+      unsigned long long int orig_data_size = 0;
+      unsigned long long int compr_data_size = 0;
+
+      if (!fscanf(disksize_file, "%llu\n", &size) ||
+          !fscanf(mm_stat_file, "    %llu       %llu", &orig_data_size, &compr_data_size)) {
+         fclose(disksize_file);
+         fclose(mm_stat_file);
+         break;
+      }
+
+      totalZram += size;
+      usedZramComp += compr_data_size;
+      usedZramOrig += orig_data_size;
+
+      fclose(disksize_file);
+      fclose(mm_stat_file);
+   }
+
+   this->zram.totalZram = totalZram / 1024;
+   this->zram.usedZramComp = usedZramComp / 1024;
+   this->zram.usedZramOrig = usedZramOrig / 1024;
+}
+
 static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    unsigned long long int dbufSize = 0;
    unsigned long long int dnodeSize = 0;
@@ -1376,8 +1424,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    LinuxProcessList_scanMemoryInfo(super);
    LinuxProcessList_scanZfsArcstats(this);
-
    LinuxProcessList_updateCPUcount(this);
+   LinuxProcessList_scanZramInfo(this);
 
    double period = LinuxProcessList_scanCPUTime(this);
 
