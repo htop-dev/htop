@@ -149,6 +149,43 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 
 #endif
 
+static int LinuxProcessList_computeCPUcount(void) {
+   FILE* file = fopen(PROCSTATFILE, "r");
+   if (file == NULL)
+      CRT_fatalError("Cannot open " PROCSTATFILE);
+
+   int cpus = 0;
+   char buffer[PROC_LINE_LENGTH + 1];
+   while(fgets(buffer, sizeof(buffer), file)) {
+      if (String_startsWith(buffer, "cpu"))
+         cpus++;
+   }
+
+   fclose(file);
+
+   /* subtract raw cpu entry */
+   if (cpus > 0)
+      cpus--;
+
+   return cpus;
+}
+
+static void LinuxProcessList_updateCPUcount(LinuxProcessList* this) {
+   ProcessList* pl = &(this->super);
+   int cpus = LinuxProcessList_computeCPUcount();
+   if (cpus == 0 || cpus == pl->cpuCount)
+      return;
+
+   pl->cpuCount = cpus;
+   free(this->cpus);
+   this->cpus = xCalloc(cpus + 1, sizeof(CPUData));
+
+   for (int i = 0; i <= cpus; i++) {
+      this->cpus[i].totalTime = 1;
+      this->cpus[i].totalPeriod = 1;
+   }
+}
+
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
@@ -169,34 +206,38 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       this->haveSmapsRollup = false;
    }
 
-   // Update CPU count:
-   file = fopen(PROCSTATFILE, "r");
-   if (file == NULL) {
-      CRT_fatalError("Cannot open " PROCSTATFILE);
-   }
-   int cpus = 0;
-   do {
-      char buffer[PROC_LINE_LENGTH + 1];
-      if (fgets(buffer, PROC_LINE_LENGTH + 1, file) == NULL) {
-         CRT_fatalError("No btime in " PROCSTATFILE);
-      } else if (String_startsWith(buffer, "cpu")) {
-         cpus++;
-      } else if (String_startsWith(buffer, "btime ")) {
-         if (sscanf(buffer, "btime %lld\n", &btime) != 1)
-            CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
-         break;
+   // Read btime
+   {
+      FILE* statfile = fopen(PROCSTATFILE, "r");
+      if (statfile == NULL)
+         CRT_fatalError("Cannot open " PROCSTATFILE);
+
+      while(true) {
+         char buffer[PROC_LINE_LENGTH + 1];
+         if (fgets(buffer, sizeof(buffer), statfile) == NULL) {
+            CRT_fatalError("No btime in " PROCSTATFILE);
+         } else if (String_startsWith(buffer, "btime ")) {
+            if (sscanf(buffer, "btime %lld\n", &btime) != 1)
+               CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
+            break;
+         }
       }
-   } while(true);
 
-   fclose(file);
-
-   pl->cpuCount = MAXIMUM(cpus - 1, 1);
-   this->cpus = xCalloc(cpus, sizeof(CPUData));
-
-   for (int i = 0; i < cpus; i++) {
-      this->cpus[i].totalTime = 1;
-      this->cpus[i].totalPeriod = 1;
+      fclose(statfile);
    }
+
+   // Initialze CPU count
+   {
+      int cpus = LinuxProcessList_computeCPUcount();
+      pl->cpuCount = MAXIMUM(cpus, 1);
+      this->cpus = xCalloc(cpus + 1, sizeof(CPUData));
+
+      for (int i = 0; i <= cpus; i++) {
+         this->cpus[i].totalTime = 1;
+         this->cpus[i].totalPeriod = 1;
+      }
+   }
+
    return pl;
 }
 
@@ -1332,6 +1373,9 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
    LinuxProcessList_scanMemoryInfo(super);
    LinuxProcessList_scanZfsArcstats(this);
+
+   LinuxProcessList_updateCPUcount(this);
+
    double period = LinuxProcessList_scanCPUTime(this);
 
    if (settings->showCPUFrequency)
