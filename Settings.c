@@ -53,9 +53,9 @@ static void Settings_readMeterModes(Settings* this, char* line, int column) {
    this->columns[column].modes = modes;
 }
 
-static void Settings_defaultMeters(Settings* this) {
+static void Settings_defaultMeters(Settings* this, int initialCpuCount) {
    int sizes[] = { 3, 3 };
-   if (this->cpuCount > 4) {
+   if (initialCpuCount > 4) {
       sizes[1]++;
    }
    for (int i = 0; i < 2; i++) {
@@ -64,12 +64,12 @@ static void Settings_defaultMeters(Settings* this) {
       this->columns[i].len = sizes[i];
    }
    int r = 0;
-   if (this->cpuCount > 8) {
+   if (initialCpuCount > 8) {
       this->columns[0].names[0] = xStrdup("LeftCPUs2");
       this->columns[0].modes[0] = BAR_METERMODE;
       this->columns[1].names[r] = xStrdup("RightCPUs2");
       this->columns[1].modes[r++] = BAR_METERMODE;
-   } else if (this->cpuCount > 4) {
+   } else if (initialCpuCount > 4) {
       this->columns[0].names[0] = xStrdup("LeftCPUs");
       this->columns[0].modes[0] = BAR_METERMODE;
       this->columns[1].names[r] = xStrdup("RightCPUs");
@@ -110,7 +110,7 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
    String_freeArray(ids);
 }
 
-static bool Settings_read(Settings* this, const char* fileName) {
+static bool Settings_read(Settings* this, const char* fileName, int initialCpuCount) {
    FILE* fd;
    CRT_dropPrivileges();
    fd = fopen(fileName, "r");
@@ -204,7 +204,7 @@ static bool Settings_read(Settings* this, const char* fileName) {
    }
    fclose(fd);
    if (!didReadMeters) {
-      Settings_defaultMeters(this);
+      Settings_defaultMeters(this, initialCpuCount);
    }
    return didReadFields;
 }
@@ -285,7 +285,7 @@ bool Settings_write(Settings* this) {
    return true;
 }
 
-Settings* Settings_new(int cpuCount) {
+Settings* Settings_new(int initialCpuCount) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->sortKey = PERCENT_CPU;
@@ -303,7 +303,6 @@ Settings* Settings_new(int cpuCount) {
    this->showCPUUsage = true;
    this->showCPUFrequency = false;
    this->updateProcessNames = false;
-   this->cpuCount = cpuCount;
    this->showProgramPath = true;
    this->highlightThreads = true;
    #ifdef HAVE_LIBHWLOC
@@ -358,7 +357,7 @@ Settings* Settings_new(int cpuCount) {
    this->delay = DEFAULT_DELAY;
    bool ok = false;
    if (legacyDotfile) {
-      ok = Settings_read(this, legacyDotfile);
+      ok = Settings_read(this, legacyDotfile, initialCpuCount);
       if (ok) {
          // Transition to new location and delete old configuration file
          if (Settings_write(this))
@@ -367,17 +366,17 @@ Settings* Settings_new(int cpuCount) {
       free(legacyDotfile);
    }
    if (!ok) {
-      ok = Settings_read(this, this->filename);
+      ok = Settings_read(this, this->filename, initialCpuCount);
    }
    if (!ok) {
       this->changed = true;
       // TODO: how to get SYSCONFDIR correctly through Autoconf?
       char* systemSettings = String_cat(SYSCONFDIR, "/htoprc");
-      ok = Settings_read(this, systemSettings);
+      ok = Settings_read(this, systemSettings, initialCpuCount);
       free(systemSettings);
    }
    if (!ok) {
-      Settings_defaultMeters(this);
+      Settings_defaultMeters(this, initialCpuCount);
       this->hideKernelThreads = true;
       this->highlightMegabytes = true;
       this->highlightThreads = true;
