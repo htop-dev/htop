@@ -270,12 +270,14 @@ static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
       for (unsigned i = 1; i < depth; i++) {
          xSnprintf(&indent_buf[off], left, "%s  ", (indent & (1u << i)) ? CRT_treeStr[TREE_STR_VERT] : " ");
          size_t len = strlen(&indent_buf[off]);
-         off += len, left -= len;
+         off += len;
+         left -= len;
       }
       xSnprintf(&indent_buf[off], left, "%s",
              obj->next_sibling ? CRT_treeStr[TREE_STR_RTEE] : CRT_treeStr[TREE_STR_BEND]);
       size_t len = strlen(&indent_buf[off]);
-      off += len, left -= len;
+      off += len;
+      left -= len;
    }
 
    xSnprintf(buf, 64, "%s %s%u", type_name, index_prefix, index);
