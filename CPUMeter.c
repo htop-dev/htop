@@ -27,6 +27,11 @@ static const int CPUMeter_attributes[] = {
    CPU_IOWAIT
 };
 
+typedef struct CPUMeterData_ {
+   int cpus;
+   Meter** meters;
+} CPUMeterData;
+
 static void CPUMeter_init(Meter* this) {
    int cpu = this->param;
    if (this->pl->cpuCount > 1) {
@@ -42,6 +47,9 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
    int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
       xSnprintf(buffer, size, "absent");
+      int items = this->curItems;
+      for (int i = 0; i < items; i++)
+         this->values[i] = 0;
       return;
    }
    memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
@@ -119,7 +127,8 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
 }
 
 static void AllCPUsMeter_getRange(Meter* this, int* start, int* count) {
-   int cpus = this->pl->cpuCount;
+   CPUMeterData* data = this->meterData;
+   int cpus = data->cpus;
    switch(Meter_name(this)[0]) {
       default:
       case 'A': // All
@@ -139,9 +148,13 @@ static void AllCPUsMeter_getRange(Meter* this, int* start, int* count) {
 
 static void CPUMeterCommonInit(Meter *this, int ncol) {
    int cpus = this->pl->cpuCount;
-   if (!this->drawData)
-      this->drawData = xCalloc(cpus, sizeof(Meter*));
-   Meter** meters = (Meter**) this->drawData;
+   CPUMeterData* data = this->meterData;
+   if (!data) {
+      data = this->meterData = xMalloc(sizeof(CPUMeterData));
+      data->cpus = cpus;
+      data->meters = xCalloc(cpus, sizeof(Meter*));
+   }
+   Meter** meters = data->meters;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
    for (int i = 0; i < count; i++) {
@@ -156,7 +169,8 @@ static void CPUMeterCommonInit(Meter *this, int ncol) {
 }
 
 static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
-   Meter** meters = (Meter**) this->drawData;
+   CPUMeterData* data = this->meterData;
+   Meter** meters = data->meters;
    this->mode = mode;
    int h = Meter_modes[mode]->h;
    int start, count;
@@ -168,11 +182,14 @@ static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
 }
 
 static void AllCPUsMeter_done(Meter* this) {
-   Meter** meters = (Meter**) this->drawData;
+   CPUMeterData* data = this->meterData;
+   Meter** meters = data->meters;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
    for (int i = 0; i < count; i++)
       Meter_delete((Object*)meters[i]);
+   free(data->meters);
+   free(data);
 }
 
 static void SingleColCPUsMeter_init(Meter* this) {
@@ -208,18 +225,19 @@ static void OctoColCPUsMeter_updateMode(Meter* this, int mode) {
 }
 
 static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
-  Meter** meters = (Meter**) this->drawData;
-  int start, count;
-  AllCPUsMeter_getRange(this, &start, &count);
-  int colwidth = (w-ncol)/ncol + 1;
-  int diff = (w - (colwidth * ncol));
-  int nrows = (count + ncol - 1) / ncol;
-  for (int i = 0; i < count; i++){
-    int d = (i/nrows) > diff ? diff : (i / nrows) ; // dynamic spacer
-    int xpos = x + ((i / nrows) * colwidth) + d;
-    int ypos = y + ((i % nrows) * meters[0]->h);
-    meters[i]->draw(meters[i], xpos, ypos, colwidth);
-  }
+   CPUMeterData* data = this->meterData;
+   Meter** meters = data->meters;
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   int colwidth = (w-ncol)/ncol + 1;
+   int diff = (w - (colwidth * ncol));
+   int nrows = (count + ncol - 1) / ncol;
+   for (int i = 0; i < count; i++){
+      int d = (i/nrows) > diff ? diff : (i / nrows) ; // dynamic spacer
+      int xpos = x + ((i / nrows) * colwidth) + d;
+      int ypos = y + ((i % nrows) * meters[0]->h);
+      meters[i]->draw(meters[i], xpos, ypos, colwidth);
+   }
 }
 
 static void DualColCPUsMeter_draw(Meter* this, int x, int y, int w) {
@@ -236,7 +254,8 @@ static void OctoColCPUsMeter_draw(Meter* this, int x, int y, int w) {
 
 
 static void SingleColCPUsMeter_draw(Meter* this, int x, int y, int w) {
-   Meter** meters = (Meter**) this->drawData;
+   CPUMeterData* data = this->meterData;
+   Meter** meters = data->meters;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
    for (int i = 0; i < count; i++) {
