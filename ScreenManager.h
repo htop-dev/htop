@@ -25,13 +25,13 @@ typedef struct ScreenManager_ {
    Orientation orientation;
    Vector* panels;
    int panelCount;
-   const Header* header;
+   Header* header;
    const Settings* settings;
    bool owner;
    bool allowFocusChange;
 } ScreenManager;
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner);
+ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, bool owner);
 
 void ScreenManager_delete(ScreenManager* this);
 

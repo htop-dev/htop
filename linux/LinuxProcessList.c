@@ -59,8 +59,8 @@ static ssize_t xread(int fd, void *buf, size_t count) {
 }
 
 static int sortTtyDrivers(const void* va, const void* vb) {
-   TtyDriver* a = (TtyDriver*) va;
-   TtyDriver* b = (TtyDriver*) vb;
+   const TtyDriver* a = (const TtyDriver*) va;
+   const TtyDriver* b = (const TtyDriver*) vb;
    return (a->major == b->major) ? ((int)a->minorFrom - (int)b->minorFrom) : ((int)a->major - (int)b->major);
 }
 

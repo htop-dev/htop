@@ -297,14 +297,14 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
 }
 
 long LinuxProcess_compare(const void* v1, const void* v2) {
-   LinuxProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const LinuxProcess *p1, *p2;
+   const Settings *settings = ((const Process*)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (LinuxProcess*)v1;
-      p2 = (LinuxProcess*)v2;
+      p1 = (const LinuxProcess*)v1;
+      p2 = (const LinuxProcess*)v2;
    } else {
-      p2 = (LinuxProcess*)v1;
-      p1 = (LinuxProcess*)v2;
+      p2 = (const LinuxProcess*)v1;
+      p1 = (const LinuxProcess*)v2;
    }
    long long diff;
    switch ((int)settings->sortKey) {

@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner) {
+ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, bool owner) {
    ScreenManager* this;
    this = xMalloc(sizeof(ScreenManager));
    this->x1 = x1;

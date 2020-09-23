@@ -120,7 +120,7 @@ static ACPresence procAcpiCheck(void) {
       fclose(file);
       if (!line) continue;
 
-      const char *isOnline = String_getToken(line, 2);
+      char *isOnline = String_getToken(line, 2);
       free(line);
 
       if (strcmp(isOnline, "on-line") == 0) {
@@ -128,7 +128,7 @@ static ACPresence procAcpiCheck(void) {
       } else {
          isOn = AC_ABSENT;
       }
-      free((char *) isOnline);
+      free(isOnline);
       if (isOn == AC_PRESENT) {
          break;
       }
@@ -193,9 +193,9 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       if (!dirEntry)
          break;
       char* entryName = (char *) dirEntry->d_name;
-      const char filePath[256];
+      char filePath[256];
 
-      xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
+      xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
       int fd1 = open(filePath, O_RDONLY);
       if (fd1 == -1)
          continue;
@@ -207,7 +207,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
          continue;
 
       if (type[0] == 'B' && type[1] == 'a' && type[2] == 't') {
-         xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
+         xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
          int fd2 = open(filePath, O_RDONLY);
          if (fd2 == -1) {
             closedir(dir);
@@ -260,7 +260,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
             continue;
          }
 
-         xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
+         xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
          int fd3 = open(filePath, O_RDONLY);
          if (fd3 == -1) {
             closedir(dir);

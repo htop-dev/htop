@@ -431,20 +431,20 @@ bool Process_sendSignal(Process* this, Arg sgn) {
 }
 
 long Process_pidCompare(const void* v1, const void* v2) {
-   Process* p1 = (Process*)v1;
-   Process* p2 = (Process*)v2;
+   const Process* p1 = (const Process*)v1;
+   const Process* p2 = (const Process*)v2;
    return (p1->pid - p2->pid);
 }
 
 long Process_compare(const void* v1, const void* v2) {
-   Process *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const Process *p1, *p2;
+   const Settings *settings = ((const Process*)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (Process*)v1;
-      p2 = (Process*)v2;
+      p1 = (const Process*)v1;
+      p2 = (const Process*)v2;
    } else {
-      p2 = (Process*)v1;
-      p1 = (Process*)v2;
+      p2 = (const Process*)v1;
+      p1 = (const Process*)v2;
    }
    switch (settings->sortKey) {
    case PERCENT_CPU:
