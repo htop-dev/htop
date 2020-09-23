@@ -29,13 +29,10 @@ in the source distribution for its full text.
 
 //#link m
 
-ATTR_NORETURN
 static void printVersionFlag(void) {
    fputs("htop " VERSION "\n", stdout);
-   exit(0);
 }
 
-ATTR_NORETURN
 static void printHelpFlag(void) {
    fputs("htop " VERSION "\n"
          "Released under the GNU GPL.\n\n"
@@ -54,7 +51,6 @@ static void printHelpFlag(void) {
          "Press F1 inside htop for online help.\n"
          "See 'man htop' for more information.\n",
          stdout);
-   exit(0);
 }
 
 // ----------------------------------------
@@ -106,10 +102,10 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       switch (opt) {
          case 'h':
             printHelpFlag();
-            break;
+            exit(0);
          case 'V':
             printVersionFlag();
-            break;
+            exit(0);
          case 's':
             if (strcmp(optarg, "help") == 0) {
                for (int j = 1; j < Platform_numberOfFields; j++) {
