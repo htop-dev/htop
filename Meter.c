@@ -19,8 +19,6 @@ in the source distribution for its full text.
 #include <stdarg.h>
 #include <assert.h>
 
-#define GRAPH_DELAY (DEFAULT_DELAY/2)
-
 #define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
 MeterClass Meter_class = {
