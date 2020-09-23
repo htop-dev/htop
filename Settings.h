@@ -28,7 +28,6 @@ typedef struct Settings_ {
    int colorScheme;
    int delay;
 
-   int cpuCount;
    int direction;
    ProcessField sortKey;
 
@@ -63,7 +62,7 @@ void Settings_delete(Settings* this);
 
 bool Settings_write(Settings* this);
 
-Settings* Settings_new(int cpuCount);
+Settings* Settings_new(int initialCpuCount);
 
 void Settings_invertSortOrder(Settings* this);
 
