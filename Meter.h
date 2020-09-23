@@ -71,6 +71,7 @@ struct Meter_ {
    char curItems;
    double* values;
    double total;
+   void* meterData;
 };
 
 typedef struct MeterMode_ {
