@@ -100,11 +100,10 @@ static MaskItem* MaskItem_newSingleton(const char* text, int cpu, bool isSet) {
    this->ownCpuset = true;
    this->cpuset = hwloc_bitmap_alloc();
    hwloc_bitmap_set(this->cpuset, cpu);
-   (void)isSet;
    #else
    this->cpu = cpu;
    #endif
-   this->value = 2 * isSet;
+   this->value = isSet ? 2 : 0;
 
    return this;
 }
@@ -206,7 +205,7 @@ static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
          selected->value = 2;
       }
       #else
-      selected->value = 2 * !selected->value; /* toggle between 0 and 2 */
+      selected->value = selected->value ? 0 : 2; /* toggle between 0 and 2 */
       #endif
 
       result = HANDLED;
