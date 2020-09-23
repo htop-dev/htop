@@ -19,8 +19,8 @@ in the source distribution for its full text.
 
 typedef struct MaskItem_ {
    Object super;
-   const char* text;
-   const char* indent; /* used also as an condition whether this is a tree node */
+   char* text;
+   char* indent; /* used also as an condition whether this is a tree node */
    int value; /* tri-state: 0 - off, 1 - some set, 2 - all set */
    int sub_tree; /* tri-state: 0 - no sub-tree, 1 - open sub-tree, 2 - closed sub-tree */
    Vector *children;
@@ -34,9 +34,8 @@ typedef struct MaskItem_ {
 
 static void MaskItem_delete(Object* cast) {
    MaskItem* this = (MaskItem*) cast;
-   free((void*)this->text);
-   if (this->indent)
-      free((void*)this->indent);
+   free(this->text);
+   free(this->indent);
    Vector_delete(this->children);
    #ifdef HAVE_LIBHWLOC
    if (this->ownCpuset)
