@@ -7,6 +7,8 @@ in the source distribution for its full text.
 Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 */
 
+#include "Battery.h"
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -18,7 +20,6 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 #include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include "BatteryMeter.h"
 #include "StringUtils.h"
 
 #define SYS_POWERSUPPLY_DIR "/sys/class/power_supply"

@@ -9,6 +9,8 @@ in the source distribution for its full text.
 Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 */
 
+#include "BatteryMeter.h"
+
 void Battery_getData(double* level, ACPresence* isOnAC);
 
 #endif
