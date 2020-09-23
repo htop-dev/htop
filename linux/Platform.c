@@ -139,7 +139,7 @@ int Platform_getUptime() {
       fclose(fd);
       if (n <= 0) return 0;
    }
-   return (int) floor(uptime);
+   return floor(uptime);
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
