@@ -130,16 +130,7 @@ static void AllCPUsMeter_getRange(Meter* this, int* start, int* count) {
    }
 }
 
-static int MapClassnameToColumncount(Meter* this){
-   if (strchr(Meter_name(this), '4'))
-      return 4;
-   else if (strchr(Meter_name(this), '2'))
-      return 2;
-   else
-      return 1;
-}
-
-static void AllCPUsMeter_init(Meter* this) {
+static void CPUMeterCommonInit(Meter *this, int ncol) {
    int cpus = this->pl->cpuCount;
    if (!this->drawData)
       this->drawData = xCalloc(cpus, sizeof(Meter*));
@@ -154,7 +145,18 @@ static void AllCPUsMeter_init(Meter* this) {
    if (this->mode == 0)
       this->mode = BAR_METERMODE;
    int h = Meter_modes[this->mode]->h;
-   int ncol = MapClassnameToColumncount(this);
+   this->h = h * ((count + ncol - 1)/ ncol);
+}
+
+static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
+   Meter** meters = (Meter**) this->drawData;
+   this->mode = mode;
+   int h = Meter_modes[mode]->h;
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   for (int i = 0; i < count; i++) {
+      Meter_setMode(meters[i], mode);
+   }
    this->h = h * ((count + ncol - 1)/ ncol);
 }
 
@@ -166,36 +168,53 @@ static void AllCPUsMeter_done(Meter* this) {
       Meter_delete((Object*)meters[i]);
 }
 
-static void AllCPUsMeter_updateMode(Meter* this, int mode) {
-   Meter** meters = (Meter**) this->drawData;
-   this->mode = mode;
-   int h = Meter_modes[mode]->h;
-   int start, count;
-   AllCPUsMeter_getRange(this, &start, &count);
-   for (int i = 0; i < count; i++) {
-      Meter_setMode(meters[i], mode);
-   }
-   int ncol = MapClassnameToColumncount(this);
-   this->h = h * ((count + ncol - 1)/ ncol);
+static void SingleColCPUsMeter_init(Meter* this) {
+   CPUMeterCommonInit(this, 1);
+}
+
+static void SingleColCPUsMeter_updateMode(Meter* this, int mode) {
+   CPUMeterCommonUpdateMode(this, mode, 1);
+}
+
+static void DualColCPUsMeter_init(Meter* this) {
+   CPUMeterCommonInit(this, 2);
+}
+
+static void DualColCPUsMeter_updateMode(Meter* this, int mode) {
+   CPUMeterCommonUpdateMode(this, mode, 2);
+}
+
+static void QuadColCPUsMeter_init(Meter* this) {
+   CPUMeterCommonInit(this, 4);
+}
+
+static void QuadColCPUsMeter_updateMode(Meter* this, int mode) {
+   CPUMeterCommonUpdateMode(this, mode, 4);
+}
+
+static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
+  Meter** meters = (Meter**) this->drawData;
+  int start, count;
+  AllCPUsMeter_getRange(this, &start, &count);
+  int colwidth = (w-ncol)/ncol + 1;
+  int diff = (w - (colwidth * ncol));
+  int nrows = (count + ncol - 1) / ncol;
+  for (int i = 0; i < count; i++){
+    int d = (i/nrows) > diff ? diff : (i / nrows) ; // dynamic spacer
+    int xpos = x + ((i / nrows) * colwidth) + d;
+    int ypos = y + ((i % nrows) * meters[0]->h);
+    meters[i]->draw(meters[i], xpos, ypos, colwidth);
+  }
 }
 
 static void DualColCPUsMeter_draw(Meter* this, int x, int y, int w) {
-   Meter** meters = (Meter**) this->drawData;
-   int start, count;
-   int pad = this->pl->settings->headerMargin ? 2 : 0;
-   AllCPUsMeter_getRange(this, &start, &count);
-   int height = (count+1)/2;
-   int startY = y;
-   for (int i = 0; i < height; i++) {
-      meters[i]->draw(meters[i], x, y, (w-pad)/2);
-      y += meters[i]->h;
-   }
-   y = startY;
-   for (int i = height; i < count; i++) {
-      meters[i]->draw(meters[i], x+(w-1)/2+1+(pad/2), y, (w-pad)/2);
-      y += meters[i]->h;
-   }
+   CPUMeterCommonDraw(this, x, y, w, 2);
 }
+
+static void QuadColCPUsMeter_draw(Meter* this, int x, int y, int w) {
+   CPUMeterCommonDraw(this, x, y, w, 4);
+}
+
 
 static void SingleColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    Meter** meters = (Meter**) this->drawData;
@@ -207,21 +226,6 @@ static void SingleColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    }
 }
 
-static void MultiColCPUsMeter_draw(Meter* this, int x, int y, int w){
-  Meter** meters = (Meter**) this->drawData;
-  int start, count;
-  AllCPUsMeter_getRange(this, &start, &count);
-  int ncol = MapClassnameToColumncount(this);
-  int colwidth = (w-ncol)/ncol + 1;
-  int diff = (w - (colwidth * ncol));
-  int nrows = (count + ncol - 1) / ncol;
-  for (int i = 0; i < count; i++){
-    int d = (i/nrows) > diff ? diff : (i / nrows) ; // dynamic spacer
-    int xpos = x + ((i / nrows) * colwidth) + d;
-    int ypos = y + ((i % nrows) * meters[0]->h);
-    meters[i]->draw(meters[i], xpos, ypos, colwidth);
-  }
-}
 
 MeterClass CPUMeter_class = {
    .super = {
@@ -254,8 +258,8 @@ MeterClass AllCPUsMeter_class = {
    .description = "CPUs (1/1): all CPUs",
    .caption = "CPU",
    .draw = SingleColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .init = SingleColCPUsMeter_init,
+   .updateMode = SingleColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -273,8 +277,8 @@ MeterClass AllCPUs2Meter_class = {
    .description = "CPUs (1&2/2): all CPUs in 2 shorter columns",
    .caption = "CPU",
    .draw = DualColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .init = DualColCPUsMeter_init,
+   .updateMode = DualColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -292,8 +296,8 @@ MeterClass LeftCPUsMeter_class = {
    .description = "CPUs (1/2): first half of list",
    .caption = "CPU",
    .draw = SingleColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .init = SingleColCPUsMeter_init,
+   .updateMode = SingleColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -311,8 +315,8 @@ MeterClass RightCPUsMeter_class = {
    .description = "CPUs (2/2): second half of list",
    .caption = "CPU",
    .draw = SingleColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .init = SingleColCPUsMeter_init,
+   .updateMode = SingleColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -330,8 +334,8 @@ MeterClass LeftCPUs2Meter_class = {
    .description = "CPUs (1&2/4): first half in 2 shorter columns",
    .caption = "CPU",
    .draw = DualColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .init = DualColCPUsMeter_init,
+   .updateMode = DualColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -349,8 +353,8 @@ MeterClass RightCPUs2Meter_class = {
    .description = "CPUs (3&4/4): second half in 2 shorter columns",
    .caption = "CPU",
    .draw = DualColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .init = DualColCPUsMeter_init,
+   .updateMode = DualColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -367,9 +371,9 @@ MeterClass AllCPUs4Meter_class = {
    .uiName = "CPUs (1&2&3&4/4)",
    .description = "CPUs (1&2&3&4/4): all CPUs in 4 shorter columns",
    .caption = "CPU",
-   .draw = MultiColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .draw = QuadColCPUsMeter_draw,
+   .init = QuadColCPUsMeter_init,
+   .updateMode = QuadColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -386,9 +390,9 @@ MeterClass LeftCPUs4Meter_class = {
    .uiName = "CPUs (1-4/8)",
    .description = "CPUs (1-4/8): first half in 4 shorter columns",
    .caption = "CPU",
-   .draw = MultiColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .draw = QuadColCPUsMeter_draw,
+   .init = QuadColCPUsMeter_init,
+   .updateMode = QuadColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -405,8 +409,8 @@ MeterClass RightCPUs4Meter_class = {
    .uiName = "CPUs (5-8/8)",
    .description = "CPUs (5-8/8): second half in 4 shorter columns",
    .caption = "CPU",
-   .draw = MultiColCPUsMeter_draw,
-   .init = AllCPUsMeter_init,
-   .updateMode = AllCPUsMeter_updateMode,
+   .draw = QuadColCPUsMeter_draw,
+   .init = QuadColCPUsMeter_init,
+   .updateMode = QuadColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
