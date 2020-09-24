@@ -261,6 +261,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    if (!end) return false;
 
    int commsize = MINIMUM(end - location, commLenIn - 1);
+   //  deepcode ignore BufferOverflow: commsize is bounded by the allocated length passed in by commLen, saved into commLenIn
    memcpy(command, location, commsize);
    command[commsize] = '\0';
    *commLen = commsize;
