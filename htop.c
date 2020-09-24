@@ -172,6 +172,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
             while(pid) {
                 unsigned int num_pid = atoi(pid);
+                //  deepcode ignore CastIntegerToAddress: we just want a non-NUll pointer here
                 Hashtable_put(flags.pidMatchList, num_pid, (void *) 1);
                 pid = strtok_r(NULL, ",", &saveptr);
             }
