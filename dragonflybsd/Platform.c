@@ -89,12 +89,15 @@ MeterClass* Platform_meterTypes[] = {
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
    &AllCPUs4Meter_class,
+   &AllCPUs8Meter_class,
    &LeftCPUsMeter_class,
    &RightCPUsMeter_class,
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
    &LeftCPUs4Meter_class,
    &RightCPUs4Meter_class,
+   &LeftCPUs8Meter_class,
+   &RightCPUs8Meter_class,
    &BlankMeter_class,
    NULL
 };

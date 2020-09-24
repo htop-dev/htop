@@ -192,6 +192,14 @@ static void QuadColCPUsMeter_updateMode(Meter* this, int mode) {
    CPUMeterCommonUpdateMode(this, mode, 4);
 }
 
+static void OctoColCPUsMeter_init(Meter* this) {
+   CPUMeterCommonInit(this, 8);
+}
+
+static void OctoColCPUsMeter_updateMode(Meter* this, int mode) {
+   CPUMeterCommonUpdateMode(this, mode, 8);
+}
+
 static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
   Meter** meters = (Meter**) this->drawData;
   int start, count;
@@ -213,6 +221,10 @@ static void DualColCPUsMeter_draw(Meter* this, int x, int y, int w) {
 
 static void QuadColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    CPUMeterCommonDraw(this, x, y, w, 4);
+}
+
+static void OctoColCPUsMeter_draw(Meter* this, int x, int y, int w) {
+   CPUMeterCommonDraw(this, x, y, w, 8);
 }
 
 
@@ -412,5 +424,62 @@ MeterClass RightCPUs4Meter_class = {
    .draw = QuadColCPUsMeter_draw,
    .init = QuadColCPUsMeter_init,
    .updateMode = QuadColCPUsMeter_updateMode,
+   .done = AllCPUsMeter_done
+};
+
+MeterClass AllCPUs8Meter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = CPUMeter_display
+   },
+   .defaultMode = CUSTOM_METERMODE,
+   .total = 100.0,
+   .attributes = CPUMeter_attributes,
+   .name = "AllCPUs8",
+   .uiName = "CPUs (1-8/8)",
+   .description = "CPUs (1-8/8): all CPUs in 8 shorter columns",
+   .caption = "CPU",
+   .draw = OctoColCPUsMeter_draw,
+   .init = OctoColCPUsMeter_init,
+   .updateMode = OctoColCPUsMeter_updateMode,
+   .done = AllCPUsMeter_done
+};
+
+MeterClass LeftCPUs8Meter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = CPUMeter_display
+   },
+   .defaultMode = CUSTOM_METERMODE,
+   .total = 100.0,
+   .attributes = CPUMeter_attributes,
+   .name = "LeftCPUs8",
+   .uiName = "CPUs (1-8/16)",
+   .description = "CPUs (1-8/16): first half in 8 shorter columns",
+   .caption = "CPU",
+   .draw = OctoColCPUsMeter_draw,
+   .init = OctoColCPUsMeter_init,
+   .updateMode = OctoColCPUsMeter_updateMode,
+   .done = AllCPUsMeter_done
+};
+
+MeterClass RightCPUs8Meter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = CPUMeter_display
+   },
+   .defaultMode = CUSTOM_METERMODE,
+   .total = 100.0,
+   .attributes = CPUMeter_attributes,
+   .name = "RightCPUs8",
+   .uiName = "CPUs (9-16/16)",
+   .description = "CPUs (9-16/16): second half in 8 shorter columns",
+   .caption = "CPU",
+   .draw = OctoColCPUsMeter_draw,
+   .init = OctoColCPUsMeter_init,
+   .updateMode = OctoColCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
