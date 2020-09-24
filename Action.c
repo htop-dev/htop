@@ -329,7 +329,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
    ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20, false);
    if (picked) {
       if (picked == allUsers) {
-         st->pl->userId = -1;
+         st->pl->userId = (uid_t)-1;
       } else {
          Action_setUserOnly(ListItem_getRef(picked), &(st->pl->userId));
       }
