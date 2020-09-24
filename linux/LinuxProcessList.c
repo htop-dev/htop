@@ -1018,7 +1018,7 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this){
       i++;
       FILE* disksize_file = fopen(disksize,"r");
       FILE* mm_stat_file = fopen(mm_stat,"r");
-      if(disksize == NULL || mm_stat_file == NULL){
+      if(disksize_file == NULL || mm_stat_file == NULL){
          break;
       }
       unsigned long long int size = 0;
