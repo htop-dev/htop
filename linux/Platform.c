@@ -202,6 +202,8 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    ProcessList* pl = (ProcessList*) this->pl;
+   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
@@ -210,6 +212,11 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[0] = usedMem;
    this->values[1] = buffersMem;
    this->values[2] = cachedMem;
+
+   if (lpl->zfs.enabled != 0) {
+      this->values[0] -= lpl->zfs.size;
+      this->values[2] += lpl->zfs.size;
+   }
 }
 
 void Platform_setSwapValues(Meter* this) {
