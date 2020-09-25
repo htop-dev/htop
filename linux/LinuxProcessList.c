@@ -1013,22 +1013,25 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this){
 
    unsigned int i = 0;
    do{
-      snprintf(mm_stat,34,"/sys/block/zram%u/mm_stat",i);
-      snprintf(disksize,34,"/sys/block/zram%u/disksize",i);
+      snprintf(mm_stat,sizeof(mm_stat),"/sys/block/zram%u/mm_stat",i);
+      snprintf(disksize,sizeof(disksize),"/sys/block/zram%u/disksize",i);
       i++;
       FILE* disksize_file = fopen(disksize,"r");
       FILE* mm_stat_file = fopen(mm_stat,"r");
       if(disksize_file == NULL || mm_stat_file == NULL){
+         if(disksize_file){
+            fclose(disksize_file);
+         }
+         if(mm_stat_file){
+            fclose(mm_stat_file);
+         }
          break;
       }
       unsigned long long int size = 0;
       unsigned long long int orig_data_size = 0;
       unsigned long long int compr_data_size = 0;
 
-      if(
-         !fscanf(disksize_file,"%llu\n",&size) || 
-         !fscanf(mm_stat_file,"    %llu       %llu",&orig_data_size,&compr_data_size)){
-         
+      if(!fscanf(disksize_file,"%llu\n",&size) || !fscanf(mm_stat_file,"    %llu       %llu",&orig_data_size,&compr_data_size)){
          fclose(disksize_file);
          fclose(mm_stat_file);         
          break;
