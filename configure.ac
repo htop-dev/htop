@@ -273,6 +273,7 @@ AM_CFLAGS="\
  -Wfloat-equal\
  -Wmissing-format-attribute\
  -Wmissing-noreturn\
+ -Wmissing-prototypes\
  -Wpointer-arith\
  -Wshadow\
  -Wstrict-prototypes\

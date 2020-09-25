@@ -1,5 +1,4 @@
-
-#include "BatteryMeter.h"
+#include "Battery.h"
 
 #include <math.h>
 
