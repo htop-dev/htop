@@ -109,6 +109,7 @@ ProcessFieldData Process_fields[] = {
    [M_SWAP] = { .name = "M_SWAP", .title = " SWAP ", .description = "Size of the process's swapped pages", .flags = PROCESS_FLAG_LINUX_SMAPS, },
    [M_PSSWP] = { .name = "M_PSSWP", .title = " PSSWP ", .description = "shows proportional swap share of this mapping, Unlike \"Swap\", this does not take into account swapped out page of underlying shmem objects.", .flags = PROCESS_FLAG_LINUX_SMAPS, },
    [CTXT] = { .name = "CTXT", .title = " CTXT ", .description = "Context switches (incremental sum of voluntary_ctxt_switches and nonvoluntary_ctxt_switches)", .flags = PROCESS_FLAG_LINUX_CTXT, },
+   [SECATTR] = { .name = "SECATTR", .title = " Security Attribute ", .description = "Security attribute of the process (e.g. SELinux or AppArmor)", .flags = PROCESS_FLAG_LINUX_SECATTR, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -148,6 +149,7 @@ void Process_delete(Object* cast) {
 #ifdef HAVE_CGROUP
    free(this->cgroup);
 #endif
+   free(this->secattr);
    free(this->ttyDevice);
    free(this);
 }
@@ -289,6 +291,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
          attr |= A_BOLD;
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
+   case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -374,6 +377,8 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
    case CTXT:
       return ((long)p2->ctxt_diff - (long)p1->ctxt_diff);
+   case SECATTR:
+      return strcmp(p1->secattr ? p1->secattr : "", p2->secattr ? p2->secattr : "");
    default:
       return Process_compare(v1, v2);
    }

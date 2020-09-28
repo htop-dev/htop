@@ -625,6 +625,32 @@ static void LinuxProcessList_readCtxtData(LinuxProcess* process, const char* dir
    process->ctxt_total = ctxt;
 }
 
+static void LinuxProcessList_readSecattrData(LinuxProcess* process, const char* dirname, const char* name) {
+   char filename[MAX_NAME+1];
+   xSnprintf(filename, sizeof(filename), "%s/%s/attr/current", dirname, name);
+   FILE* file = fopen(filename, "r");
+   if (!file) {
+      free(process->secattr);
+      process->secattr = NULL;
+      return;
+   }
+   char buffer[PROC_LINE_LENGTH + 1];
+   char *res = fgets(buffer, sizeof(buffer), file);
+   fclose(file);
+   if (!res) {
+      free(process->secattr);
+      process->secattr = NULL;
+      return;
+   }
+   char *newline = strchr(buffer, '\n');
+   if (newline)
+      *newline = '\0';
+   if (process->secattr && 0 == strcmp(process->secattr, buffer))
+      return;
+   free(process->secattr);
+   process->secattr = xStrdup(buffer);
+}
+
 #ifdef HAVE_DELAYACCT
 
 static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
@@ -924,6 +950,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       if (settings->flags & PROCESS_FLAG_LINUX_CTXT)
          LinuxProcessList_readCtxtData(lp, dirname, name);
+
+      if (settings->flags & PROCESS_FLAG_LINUX_SECATTR)
+         LinuxProcessList_readSecattrData(lp, dirname, name);
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;
