@@ -13,6 +13,10 @@
 #define CLAMP(x, low, high)	(((x) > (high)) ? (high) : MAXIMUM(x, low))
 #endif
 
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(x)          (sizeof(x) / sizeof((x)[0]))
+#endif
+
 #ifdef  __GNUC__  // defined by GCC and Clang
 
 #define ATTR_FORMAT(type, index, check) __attribute__((format (type, index, check)))

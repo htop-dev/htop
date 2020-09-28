@@ -79,7 +79,7 @@ const SignalItem Platform_signals[] = {
    { .name = "31 SIGSYS",    .number = 31 },
 };
 
-const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
+const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    Panel* panel = st->panel;

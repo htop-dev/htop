@@ -22,7 +22,7 @@ void CRT_handleSIGSEGV(int sgn) {
    #ifdef __linux
    fprintf(stderr, "\n\nhtop " VERSION " aborting. Please report bug at https://htop.dev\n");
    #ifdef HAVE_EXECINFO_H
-   size_t size = backtrace(backtraceArray, sizeof(backtraceArray) / sizeof(void *));
+   size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
    fprintf(stderr, "\n Please include in your report the following backtrace: \n");
    backtrace_symbols_fd(backtraceArray, size, 2);
    fprintf(stderr, "\nAdditionally, in order to make the above backtrace useful,");
