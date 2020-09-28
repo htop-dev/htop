@@ -17,8 +17,6 @@ typedef enum ACPresence_ {
    AC_ERROR
 } ACPresence;
 
-extern int BatteryMeter_attributes[];
-
 extern MeterClass BatteryMeter_class;
 
 #endif

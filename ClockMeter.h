@@ -9,8 +9,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern int ClockMeter_attributes[];
-
 extern MeterClass ClockMeter_class;
 
 #endif

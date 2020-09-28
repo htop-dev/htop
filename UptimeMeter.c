@@ -10,7 +10,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 
 
-int UptimeMeter_attributes[] = {
+static const int UptimeMeter_attributes[] = {
    UPTIME
 };
 
