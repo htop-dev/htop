@@ -11,6 +11,10 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProcessList.h"
 
+#if defined(HAVE_LIBHWLOC) && defined(HAVE_LINUX_AFFINITY)
+#error hwlock and linux affinity are mutual exclusive.
+#endif
+
 typedef struct Affinity_ {
    ProcessList* pl;
    int size;
