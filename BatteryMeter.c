@@ -56,8 +56,6 @@ static void BatteryMeter_updateValues(Meter * this, char *buffer, int len) {
    } else {
       xSnprintf(buffer, len, unknownText, percent);
    }
-
-   return;
 }
 
 MeterClass BatteryMeter_class = {
