@@ -10,8 +10,6 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "zfs/ZfsArcStats.h"
 
-extern long long btime;
-
 typedef struct CPUData_ {
    unsigned long long int totalTime;
    unsigned long long int userTime;
