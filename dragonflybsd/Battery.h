@@ -8,6 +8,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "BatteryMeter.h"
+
 void Battery_getData(double* level, ACPresence* isOnAC);
 
 #endif

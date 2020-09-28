@@ -6,7 +6,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "BatteryMeter.h"
+#include "Battery.h"
+
 #include <math.h>
 #include <sys/sysctl.h>
 
