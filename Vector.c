@@ -309,7 +309,7 @@ inline int Vector_indexOf(Vector* this, void* search_, Object_Compare compare) {
    assert(compare);
    assert(Vector_isConsistent(this));
    for (int i = 0; i < this->items; i++) {
-      Object* o = (Object*)this->array[i];
+      Object* o = this->array[i];
       assert(o);
       if (compare(search, o) == 0)
          return i;

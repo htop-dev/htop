@@ -100,11 +100,11 @@ static ACPresence procAcpiCheck(void) {
    }
 
    for (;;) {
-      struct dirent* dirEntry = readdir((DIR *) dir);
+      struct dirent* dirEntry = readdir(dir);
       if (!dirEntry)
          break;
 
-      char* entryName = (char *) dirEntry->d_name;
+      const char* entryName = dirEntry->d_name;
 
       if (entryName[0] != 'A')
          continue;
@@ -189,10 +189,10 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
    unsigned long int totalRemain = 0;
 
    for (;;) {
-      struct dirent* dirEntry = readdir((DIR *) dir);
+      struct dirent* dirEntry = readdir(dir);
       if (!dirEntry)
          break;
-      char* entryName = (char *) dirEntry->d_name;
+      const char* entryName = dirEntry->d_name;
       char filePath[256];
 
       xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);

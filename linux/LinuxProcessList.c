@@ -232,7 +232,7 @@ static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
       jiffy = sc_jiffy;
    }
    double jiffytime = 1.0 / jiffy;
-   return (unsigned long long) t * jiffytime * 100;
+   return t * jiffytime * 100;
 }
 
 static bool LinuxProcessList_readStatFile(Process *process, const char* dirname, const char* name, char* command, int* commLen) {
