@@ -17,8 +17,10 @@ in the source distribution for its full text.
 #include <assert.h>
 
 
-int MemoryMeter_attributes[] = {
-   MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE
+static const int MemoryMeter_attributes[] = {
+   MEMORY_USED,
+   MEMORY_BUFFERS,
+   MEMORY_CACHE
 };
 
 static void MemoryMeter_updateValues(Meter* this, char* buffer, int size) {

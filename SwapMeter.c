@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include <assert.h>
 
 
-int SwapMeter_attributes[] = {
+static const int SwapMeter_attributes[] = {
    SWAP
 };
 

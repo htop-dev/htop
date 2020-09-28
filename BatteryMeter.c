@@ -20,7 +20,7 @@ This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 #include <stdlib.h>
 
 
-int BatteryMeter_attributes[] = {
+static const int BatteryMeter_attributes[] = {
    BATTERY
 };
 

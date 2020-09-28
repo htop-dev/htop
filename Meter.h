@@ -105,8 +105,6 @@ ListItem* Meter_toListItem(Meter* this, bool moving);
 
 extern MeterMode* Meter_modes[];
 
-extern int BlankMeter_attributes[];
-
 extern MeterClass BlankMeter_class;
 
 #endif

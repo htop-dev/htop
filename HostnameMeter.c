@@ -12,7 +12,7 @@ in the source distribution for its full text.
 #include <unistd.h>
 
 
-int HostnameMeter_attributes[] = {
+static const int HostnameMeter_attributes[] = {
    HOSTNAME
 };
 

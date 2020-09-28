@@ -22,8 +22,6 @@ typedef enum {
    CPU_METER_ITEMCOUNT = 9, // number of entries in this enum
 } CPUMeterValues;
 
-extern int CPUMeter_attributes[];
-
 extern MeterClass CPUMeter_class;
 
 extern MeterClass AllCPUsMeter_class;

@@ -9,8 +9,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern int SwapMeter_attributes[];
-
 extern MeterClass SwapMeter_class;
 
 #endif

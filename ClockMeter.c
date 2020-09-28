@@ -12,7 +12,7 @@ in the source distribution for its full text.
 #include <time.h>
 
 
-int ClockMeter_attributes[] = {
+static const int ClockMeter_attributes[] = {
    CLOCK
 };
 

@@ -433,7 +433,7 @@ static void BlankMeter_display(Object* cast, RichString* out) {
    RichString_prune(out);
 }
 
-int BlankMeter_attributes[] = {
+static const int BlankMeter_attributes[] = {
    DEFAULT_COLOR
 };
 

@@ -9,8 +9,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern int HostnameMeter_attributes[];
-
 extern MeterClass HostnameMeter_class;
 
 #endif

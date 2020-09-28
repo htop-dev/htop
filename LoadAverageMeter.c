@@ -11,11 +11,15 @@ in the source distribution for its full text.
 #include "Platform.h"
 
 
-int LoadAverageMeter_attributes[] = {
-   LOAD_AVERAGE_ONE, LOAD_AVERAGE_FIVE, LOAD_AVERAGE_FIFTEEN
+static const int LoadAverageMeter_attributes[] = {
+   LOAD_AVERAGE_ONE,
+   LOAD_AVERAGE_FIVE,
+   LOAD_AVERAGE_FIFTEEN
 };
 
-int LoadMeter_attributes[] = { LOAD };
+static const int LoadMeter_attributes[] = {
+   LOAD
+};
 
 static void LoadAverageMeter_updateValues(Meter* this, char* buffer, int size) {
    Platform_getLoadAverage(&this->values[0], &this->values[1], &this->values[2]);

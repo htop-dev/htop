@@ -11,8 +11,11 @@ in the source distribution for its full text.
 #include "CRT.h"
 
 
-int TasksMeter_attributes[] = {
-   CPU_SYSTEM, PROCESS_THREAD, PROCESS, TASKS_RUNNING
+static const int TasksMeter_attributes[] = {
+   CPU_SYSTEM,
+   PROCESS_THREAD,
+   PROCESS,
+   TASKS_RUNNING
 };
 
 static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
