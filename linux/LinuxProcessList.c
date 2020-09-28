@@ -406,25 +406,20 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
 
 static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* dirname, const char* name) {
    char filename[MAX_NAME+1];
-   xSnprintf(filename, MAX_NAME, "%s/%s/statm", dirname, name);
-   int fd = open(filename, O_RDONLY);
-   if (fd == -1)
+   xSnprintf(filename, sizeof(filename), "%s/%s/statm", dirname, name);
+   FILE* statmfile = fopen(filename, "r");
+   if (!statmfile)
       return false;
-   char buf[PROC_LINE_LENGTH + 1];
-   ssize_t rres = xread(fd, buf, PROC_LINE_LENGTH);
-   close(fd);
-   if (rres < 1) return false;
-
-   char *p = buf;
-   errno = 0;
-   process->super.m_size = strtol(p, &p, 10); if (*p == ' ') p++;
-   process->super.m_resident = strtol(p, &p, 10); if (*p == ' ') p++;
-   process->m_share = strtol(p, &p, 10); if (*p == ' ') p++;
-   process->m_trs = strtol(p, &p, 10); if (*p == ' ') p++;
-   process->m_lrs = strtol(p, &p, 10); if (*p == ' ') p++;
-   process->m_drs = strtol(p, &p, 10); if (*p == ' ') p++;
-   process->m_dt = strtol(p, &p, 10);
-   return (errno == 0);
+   int r = fscanf(statmfile, "%ld %ld %ld %ld %ld %ld %ld",
+                  &process->super.m_size,
+                  &process->super.m_resident,
+                  &process->m_share,
+                  &process->m_trs,
+                  &process->m_lrs,
+                  &process->m_drs,
+                  &process->m_dt);
+   fclose(statmfile);
+   return r == 7;
 }
 
 static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* dirname, const char* name, bool haveSmapsRollup) {
