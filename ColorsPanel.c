@@ -68,6 +68,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
       clear();
       Panel* menu = (Panel*) Vector_get(this->scr->panels, 0);
       Header_draw(header);
+      FunctionBar_draw(super->currentBar, NULL);
       RichString_setAttr(&(super->header), CRT_colors[PANEL_HEADER_FOCUS]);
       RichString_setAttr(&(menu->header), CRT_colors[PANEL_HEADER_UNFOCUS]);
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);

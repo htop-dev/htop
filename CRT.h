@@ -117,17 +117,13 @@ void CRT_handleSIGSEGV(int sgn);
 #define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 
 
-extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
-
 #ifdef HAVE_LIBNCURSESW
-
-extern const char *CRT_treeStrUtf8[TREE_STR_COUNT];
 
 extern bool CRT_utf8;
 
 #endif
 
-extern const char **CRT_treeStr;
+extern const char *const *CRT_treeStr;
 
 extern int CRT_delay;
 
