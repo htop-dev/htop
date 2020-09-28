@@ -506,7 +506,6 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
       "%*32u %*32u %32u %32u",
       &process->vpid, &process->ctid);
    fclose(file);
-   return;
 }
 
 #endif
