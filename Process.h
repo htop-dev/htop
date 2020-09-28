@@ -148,8 +148,6 @@ typedef struct ProcessClass_ {
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 #define ONE_DECIMAL_T ((long long)ONE_DECIMAL_G * ONE_DECIMAL_K)
 
-extern char Process_pidFormat[20];
-
 void Process_setupColumnWidths(void);
 
 void Process_humanNumber(RichString* str, unsigned long number, bool coloring);
@@ -159,8 +157,6 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
 void Process_printTime(RichString* str, unsigned long long totalHundredths);
 
 void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring);
-
-void Process_writeField(Process* this, RichString* str, ProcessField field);
 
 void Process_display(Object* cast, RichString* out);
 
@@ -179,7 +175,5 @@ bool Process_changePriorityBy(Process* this, Arg delta);
 bool Process_sendSignal(Process* this, Arg sgn);
 
 long Process_pidCompare(const void* v1, const void* v2);
-
-long Process_compare(const void* v1, const void* v2);
 
 #endif

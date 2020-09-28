@@ -168,8 +168,6 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode);
 
 void CRT_done(void);
 
-void CRT_fatalError(const char* note);
-
 int CRT_readKey(void);
 
 void CRT_disableDelay(void);
