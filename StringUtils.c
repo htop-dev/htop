@@ -112,7 +112,7 @@ char* String_getToken(const char* line, const unsigned short int numMatch) {
    }
 
    match[foundCount] = '\0';
-   return((char*)xStrdup(match));
+   return xStrdup(match);
 }
 
 char* String_readLine(FILE* fd) {

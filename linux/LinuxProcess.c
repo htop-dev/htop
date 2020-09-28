@@ -290,7 +290,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
    default:
-      Process_writeField((Process*)this, str, field);
+      Process_writeField(this, str, field);
       return;
    }
    RichString_append(str, attr, buffer);
