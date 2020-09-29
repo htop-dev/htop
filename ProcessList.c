@@ -145,7 +145,7 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
 
 void ProcessList_sort(ProcessList* this) {
    if (!this->settings->treeView) {
-      Vector_insertionSort(this->processes);
+      Vector_testSort(this->processes);
    } else {
       // Save settings
       int direction = this->settings->direction;

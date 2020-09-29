@@ -7,6 +7,8 @@ in the source distribution for its full text.
 
 #include "Vector.h"
 
+#include "Macros.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,7 +81,7 @@ void Vector_prune(Vector* this) {
 static int comparisons = 0;
 
 static int partition(Object** array, int left, int right, int pivotIndex, Object_Compare compare) {
-   void* pivotValue = array[pivotIndex];
+   Object* pivotValue = array[pivotIndex];
    swap(array, pivotIndex, right);
    int storeIndex = left;
    for (int i = left; i < right; i++) {
@@ -102,8 +104,58 @@ static void quickSort(Object** array, int left, int right, Object_Compare compar
    quickSort(array, pivotNewIndex + 1, right, compare);
 }
 
-// If I were to use only one sorting algorithm for both cases, it would probably be this one:
-/*
+static void merge(Object** array, int left, int middle, int right, Object_Compare compare)
+{
+   const int n1 = middle - left + 1;
+   const int n2 = right - middle;
+   Object* L[n1];
+   Object* R[n2];
+
+   for (int i = 0; i < n1; i++)
+      L[i] = array[left + i];
+   for (int i = 0; i < n2; i++)
+      R[i] = array[middle + 1 + i];
+
+   int i = 0;
+   int j = 0;
+   int k = left;
+   while (i < n1 && j < n2) {
+      comparisons++;
+      if (compare(L[i], R[j]) <= 0) {
+         array[k] = L[i];
+         i++;
+      }
+      else {
+         array[k] = R[j];
+         j++;
+      }
+      k++;
+   }
+
+   while (i < n1) {
+      array[k] = L[i];
+      i++;
+      k++;
+   }
+
+   while (j < n2) {
+      array[k] = R[j];
+      j++;
+      k++;
+   }
+}
+
+static void mergeSort(Object** array, int left, int right, Object_Compare compare)
+{
+   if (left < right) {
+      int middle = left + (right - left) / 2;
+
+      mergeSort(array, left, middle, compare);
+      mergeSort(array, middle + 1, right, compare);
+
+      merge(array, left, middle, right, compare);
+   }
+}
 
 static void combSort(Object** array, int left, int right, Object_Compare compare) {
    int gap = right - left;
@@ -123,11 +175,9 @@ static void combSort(Object** array, int left, int right, Object_Compare compare
    }
 }
 
-*/
-
 static void insertionSort(Object** array, int left, int right, Object_Compare compare) {
    for (int i = left+1; i <= right; i++) {
-      void* t = array[i];
+      Object* t = array[i];
       int j = i - 1;
       while (j >= left) {
          comparisons++;
@@ -140,10 +190,54 @@ static void insertionSort(Object** array, int left, int right, Object_Compare co
    }
 }
 
+#define TIM_RUN 32
+
+static void timSort(Object** array, ATTR_UNUSED int unused, int right, Object_Compare compare) {
+   for (int i = 0; i <= right; i += TIM_RUN)
+      insertionSort(array, i, MINIMUM(i + (TIM_RUN - 1), right), compare);
+
+   for (int size = TIM_RUN; size <= right; size = 2 * size) {
+
+      for (int l = 0; l <= right; l += 2 * size) {
+
+         int mid = l + size - 1;
+         int r = MINIMUM(l + 2 * size - 1, right);
+
+         if (mid >= r)
+            continue;
+
+         merge(array, l, mid, r, compare);
+      }
+   }
+}
+
+#include <time.h>
+static long unsigned int now_us(void) {
+   struct timespec ts;
+
+   clock_gettime(CLOCK_MONOTONIC, &ts);
+
+   return (long unsigned int) ts.tv_sec * 1000000 + (long unsigned int) ts.tv_nsec / 1000;
+}
+
 void Vector_quickSort(Vector* this) {
    assert(this->type->compare);
    assert(Vector_isConsistent(this));
    quickSort(this->array, 0, this->items - 1, this->type->compare);
+   assert(Vector_isConsistent(this));
+}
+
+void Vector_mergeSort(Vector* this) {
+   assert(this->type->compare);
+   assert(Vector_isConsistent(this));
+   mergeSort(this->array, 0, this->items - 1, this->type->compare);
+   assert(Vector_isConsistent(this));
+}
+
+void Vector_combSort(Vector* this) {
+   assert(this->type->compare);
+   assert(Vector_isConsistent(this));
+   combSort(this->array, 0, this->items - 1, this->type->compare);
    assert(Vector_isConsistent(this));
 }
 
@@ -153,6 +247,102 @@ void Vector_insertionSort(Vector* this) {
    insertionSort(this->array, 0, this->items - 1, this->type->compare);
    assert(Vector_isConsistent(this));
 }
+
+void Vector_timSort(Vector* this) {
+   assert(this->type->compare);
+   assert(Vector_isConsistent(this));
+   timSort(this->array, 0, this->items - 1, this->type->compare);
+   assert(Vector_isConsistent(this));
+}
+
+void Vector_testSort(Vector* this) {
+   size_t origSize = this->items * sizeof(Object*);
+   Object** origData = xMalloc(origSize);
+   memcpy(origData, this->array, origSize);
+
+
+   const char *winner;
+   long unsigned int timeWinner;
+   long unsigned int startTime, endTime;
+
+   /* insertion sort */
+   comparisons = 0;
+   startTime = now_us();
+   Vector_insertionSort(this);
+   endTime = now_us();
+   int comparisonsIS = comparisons;
+   long unsigned int timeIS = endTime - startTime;
+   winner = "IS";
+   timeWinner = timeIS;
+
+   memcpy(this->array, origData, origSize);
+
+   /* quick sort */
+   comparisons = 0;
+   startTime = now_us();
+   Vector_quickSort(this);
+   endTime = now_us();
+   int comparisonsQS = comparisons;
+   long unsigned int timeQS = endTime - startTime;
+   if (timeQS < timeWinner) {
+      winner = "QS";
+      timeWinner = timeQS;
+   }
+
+   memcpy(this->array, origData, origSize);
+
+   /* merge sort */
+   comparisons = 0;
+   startTime = now_us();
+   Vector_mergeSort(this);
+   endTime = now_us();
+   int comparisonsMS = comparisons;
+   long unsigned int timeMS = endTime - startTime;
+   if (timeMS < timeWinner) {
+      winner = "MS";
+      timeWinner = timeMS;
+   }
+
+   memcpy(this->array, origData, origSize);
+
+   /* comb sort */
+   comparisons = 0;
+   startTime = now_us();
+   Vector_combSort(this);
+   endTime = now_us();
+   int comparisonsCS = comparisons;
+   long unsigned int timeCS = endTime - startTime;
+   if (timeCS < timeWinner) {
+      winner = "CS";
+      timeWinner = timeCS;
+   }
+
+   memcpy(this->array, origData, origSize);
+
+   /* tim sort */
+   comparisons = 0;
+   startTime = now_us();
+   Vector_timSort(this);
+   endTime = now_us();
+   int comparisonsTS = comparisons;
+   long unsigned int timeTS = endTime - startTime;
+   if (timeTS < timeWinner) {
+      winner = "TS";
+      timeWinner = timeTS;
+   }
+
+   free(origData);
+
+   fprintf(stderr, "Vector_testSort(): items=%d IS=%d/%luus QS=%d/%luus MS=%d/%luus CS=%d/%luus TS=%d/%luus   winner=%s\n",
+           this->items,
+           comparisonsIS, timeIS,
+           comparisonsQS, timeQS,
+           comparisonsMS, timeMS,
+           comparisonsCS, timeCS,
+           comparisonsTS, timeTS,
+           winner);
+}
+
 
 static void Vector_checkArraySize(Vector* this) {
    assert(Vector_isConsistent(this));

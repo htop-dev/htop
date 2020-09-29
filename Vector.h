@@ -38,7 +38,15 @@ void Vector_prune(Vector* this);
 
 void Vector_quickSort(Vector* this);
 
+void Vector_mergeSort(Vector* this);
+
+void Vector_combSort(Vector* this);
+
 void Vector_insertionSort(Vector* this);
+
+void Vector_timSort(Vector* this);
+
+void Vector_testSort(Vector* this);
 
 void Vector_insert(Vector* this, int idx, void* data_);
 
