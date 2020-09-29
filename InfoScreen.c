@@ -137,6 +137,7 @@ void InfoScreen_run(InfoScreen* this) {
          break;
       case KEY_RESIZE:
          Panel_resize(panel, COLS, LINES-2);
+         if (As_InfoScreen(this)->scan) InfoScreen_scan(this);
          InfoScreen_draw(this);
          break;
       default:
