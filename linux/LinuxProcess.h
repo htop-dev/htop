@@ -122,8 +122,8 @@ typedef struct LinuxProcess_ {
    double io_rate_write_bps;
    #endif
    #ifdef HAVE_OPENVZ
-   unsigned int ctid;
-   unsigned int vpid;
+   char* ctid;
+   pid_t vpid;
    #endif
    #ifdef HAVE_VSERVER
    unsigned int vxid;
