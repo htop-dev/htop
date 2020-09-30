@@ -487,25 +487,94 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
 
 static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* dirname, const char* name) {
    if ( (access(PROCDIR "/vz", R_OK) != 0)) {
+      free(process->ctid);
+      process->ctid = NULL;
       process->vpid = process->super.pid;
-      process->ctid = 0;
       return;
    }
+
    char filename[MAX_NAME+1];
-   xSnprintf(filename, MAX_NAME, "%s/%s/stat", dirname, name);
+   xSnprintf(filename, sizeof(filename), "%s/%s/status", dirname, name);
    FILE* file = fopen(filename, "r");
-   if (!file)
+   if (!file) {
+      free(process->ctid);
+      process->ctid = NULL;
+      process->vpid = process->super.pid;
       return;
-   (void)! fscanf(file,
-      "%*32u %*32s %*1c %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
-      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
-      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
-      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
-      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u %*32u "
-      "%*32u %*32u %*32u %*32u %*32u %*32u %*32u "
-      "%*32u %*32u %32u %32u",
-      &process->vpid, &process->ctid);
+   }
+
+   bool foundEnvID = false;
+   bool foundVPid = false;
+   char linebuf[256];
+   while(fgets(linebuf, sizeof(linebuf), file) != NULL) {
+      if(strchr(linebuf, '\n') == NULL) {
+         // Partial line, skip to end of this line
+         while(fgets(linebuf, sizeof(linebuf), file) != NULL) {
+            if(strchr(linebuf, '\n') != NULL) {
+               break;
+            }
+         }
+         continue;
+      }
+
+      char* name_value_sep = strchr(linebuf, ':');
+      if(name_value_sep == NULL) {
+         continue;
+      }
+
+      int field;
+      if(0 == strncasecmp(linebuf, "envID", name_value_sep - linebuf)) {
+         field = 1;
+      } else if(0 == strncasecmp(linebuf, "VPid", name_value_sep - linebuf)) {
+         field = 2;
+      } else {
+         continue;
+      }
+
+      do {
+         name_value_sep++;
+      } while(*name_value_sep != '\0' && *name_value_sep <= 32);
+
+      char* value_end = name_value_sep;
+
+      while(*value_end != '\0' && *value_end > 32) {
+         value_end++;
+      }
+
+      if(name_value_sep == value_end) {
+         continue;
+      }
+
+      *value_end = '\0';
+
+      switch(field) {
+      case 1:
+         foundEnvID = true;
+         if(0 != strcmp(name_value_sep, process->ctid ? process->ctid : "")) {
+            free(process->ctid);
+            process->ctid = xStrdup(name_value_sep);
+         }
+         break;
+      case 2:
+         foundVPid = true;
+         process->vpid = strtoul(name_value_sep, NULL, 0);
+         break;
+      default:
+         //Sanity Check: Should never reach here, or the implementation is missing something!
+         assert(false && "OpenVZ handling: Unimplemented case for field handling reached.");
+      }
+   }
+
    fclose(file);
+
+   if(!foundEnvID) {
+      free(process->ctid);
+      process->ctid = NULL;
+   }
+
+   if(!foundVPid) {
+      process->vpid = process->super.pid;
+   }
 }
 
 #endif

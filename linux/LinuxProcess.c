@@ -77,8 +77,8 @@ ProcessFieldData Process_fields[] = {
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
 #ifdef HAVE_OPENVZ
-   [CTID] = { .name = "CTID", .title = "   CTID ", .description = "OpenVZ container ID (a.k.a. virtual environment ID)", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
-   [VPID] = { .name = "VPID", .title = " VPID ", .description = "OpenVZ process ID", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
+   [CTID] = { .name = "CTID", .title = " CTID    ", .description = "OpenVZ container ID (a.k.a. virtual environment ID)", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
+   [VPID] = { .name = "VPID", .title = "    VPID ", .description = "OpenVZ process ID", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
 #endif
 #ifdef HAVE_VSERVER
    [VXID] = { .name = "VXID", .title = " VXID ", .description = "VServer process ID", .flags = PROCESS_FLAG_LINUX_VSERVER, },
@@ -148,6 +148,9 @@ void Process_delete(Object* cast) {
    Process_done((Process*)cast);
 #ifdef HAVE_CGROUP
    free(this->cgroup);
+#endif
+#ifdef HAVE_OPENVZ
+   free(this->ctid);
 #endif
    free(this->secattr);
    free(this->ttyDevice);
@@ -253,7 +256,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    }
    #endif
    #ifdef HAVE_OPENVZ
-   case CTID: xSnprintf(buffer, n, "%7u ", lp->ctid); break;
+   case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;
    case VPID: xSnprintf(buffer, n, Process_pidFormat, lp->vpid); break;
    #endif
    #ifdef HAVE_VSERVER
@@ -351,7 +354,7 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    #endif
    #ifdef HAVE_OPENVZ
    case CTID:
-      return (p2->ctid - p1->ctid);
+      return strcmp(p1->ctid ? p1->ctid : "", p2->ctid ? p2->ctid : "");
    case VPID:
       return (p2->vpid - p1->vpid);
    #endif
