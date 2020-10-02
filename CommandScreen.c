@@ -45,14 +45,7 @@ static void CommandScreen_scan(InfoScreen* this) {
 }
 
 static void CommandScreen_draw(InfoScreen* this) {
-   char* title = xMalloc(COLS + 1);
-   int len = snprintf(title, COLS + 1, "Command of process %d - %s", this->process->pid, this->process->comm);
-   if (len > COLS) {
-      memset(&title[COLS - 3], '.', 3);
-   }
-
-   InfoScreen_drawTitled(this, "%s", title);
-   free(title);
+   InfoScreen_drawTitled(this, "Command of process %d - %s", this->process->pid, this->process->comm);
 }
 
 InfoScreenClass CommandScreen_class = {

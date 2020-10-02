@@ -42,14 +42,21 @@ InfoScreen* InfoScreen_done(InfoScreen* this) {
 void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
    va_list ap;
    va_start(ap, fmt);
+
+   char* title = xMalloc(COLS + 1);
+   int len = vsnprintf(title, COLS + 1, fmt, ap);
+   if (len > COLS) {
+      memset(&title[COLS - 3], '.', 3);
+   }
+
    attrset(CRT_colors[METER_TEXT]);
    mvhline(0, 0, ' ', COLS);
-   (void) wmove(stdscr, 0, 0);
-   vw_printw(stdscr, fmt, ap);
+   mvwprintw(stdscr, 0, 0, title);
    attrset(CRT_colors[DEFAULT_COLOR]);
    this->display->needsRedraw = true;
    Panel_draw(this->display, true);
    IncSet_drawBar(this->inc);
+   free(title);
    va_end(ap);
 }
 
