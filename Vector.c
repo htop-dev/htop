@@ -322,9 +322,9 @@ void Vector_splice(Vector* this, Vector* from) {
    assert(Vector_isConsistent(from));
    assert(!(this->owner && from->owner));
 
-   int olditmes = this->items;
+   int olditems = this->items;
    this->items += from->items;
    Vector_checkArraySize(this);
    for (int j = 0; j < from->items; j++)
-      this->array[olditmes + j] = from->array[j];
+      this->array[olditems + j] = from->array[j];
 }
