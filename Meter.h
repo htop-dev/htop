@@ -53,6 +53,11 @@ typedef struct MeterClass_ {
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
 
+typedef struct GraphData_ {
+   struct timeval time;
+   double values[METER_BUFFER_LEN];
+} GraphData;
+
 struct Meter_ {
    Object super;
    Meter_Draw draw;
@@ -60,7 +65,7 @@ struct Meter_ {
    char* caption;
    int mode;
    int param;
-   void* drawData;
+   GraphData* drawData;
    int h;
    struct ProcessList_* pl;
    char curItems;
@@ -82,11 +87,6 @@ typedef enum {
    LED_METERMODE,
    LAST_METERMODE
 } MeterModeId;
-
-typedef struct GraphData_ {
-   struct timeval time;
-   double values[METER_BUFFER_LEN];
-} GraphData;
 
 extern const MeterClass Meter_class;
 
