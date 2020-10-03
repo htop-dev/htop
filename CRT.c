@@ -18,8 +18,13 @@ in the source distribution for its full text.
 #include <string.h>
 #include <locale.h>
 #include <langinfo.h>
-#ifdef HAVE_SETUID_ENABLED
 #include <unistd.h>
+
+#ifdef HAVE_EXECINFO_H
+#include <execinfo.h>
+#endif
+
+#ifdef HAVE_SETUID_ENABLED
 #include <sys/types.h>
 #endif
 
@@ -545,8 +550,6 @@ char* CRT_termType;
 
 int CRT_colorScheme = 0;
 
-void *backtraceArray[128];
-
 ATTR_NORETURN
 static void CRT_handleSIGTERM(int sgn) {
    (void) sgn;
@@ -591,9 +594,9 @@ void CRT_restorePrivileges() {
 
 #endif /* HAVE_SETUID_ENABLED */
 
-// TODO: pass an instance of Settings instead.
+static struct sigaction old_sig_handler[32];
 
-struct sigaction old_sigsegv_handler;
+// TODO: pass an instance of Settings instead.
 
 void CRT_init(int delay, int colorScheme, bool allowUnicode) {
    initscr();
@@ -650,9 +653,15 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
 
    struct sigaction act;
    sigemptyset (&act.sa_mask);
-   act.sa_flags = (int)SA_RESETHAND;
+   act.sa_flags = (int)SA_RESETHAND|SA_NODEFER;
    act.sa_handler = CRT_handleSIGSEGV;
-   sigaction (SIGSEGV, &act, &old_sigsegv_handler);
+   sigaction (SIGSEGV, &act, &old_sig_handler[SIGSEGV]);
+   sigaction (SIGFPE, &act, &old_sig_handler[SIGFPE]);
+   sigaction (SIGILL, &act, &old_sig_handler[SIGILL]);
+   sigaction (SIGBUS, &act, &old_sig_handler[SIGBUS]);
+   sigaction (SIGPIPE, &act, &old_sig_handler[SIGPIPE]);
+   sigaction (SIGSYS, &act, &old_sig_handler[SIGSYS]);
+   sigaction (SIGABRT, &act, &old_sig_handler[SIGABRT]);
 
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
@@ -739,4 +748,93 @@ void CRT_setColors(int colorScheme) {
    init_pair(ColorIndexGrayBlack, grayBlackFg, grayBlackBg);
 
    CRT_colors = CRT_colorSchemes[colorScheme];
+}
+
+void CRT_handleSIGSEGV(int signal) {
+   CRT_done();
+
+   fprintf(stderr, "\n\n"
+      "FATAL PROGRAM ERROR DETECTED\n"
+      "============================\n"
+      "Please check at https://htop.dev/issues whether this issue has already been reported.\n"
+      "If no similar issue has been reported before, please create a new issue with the following information:\n"
+      "\n"
+      "- Your htop version (htop --version)\n"
+      "- Your OS and kernel version (uname -a)\n"
+      "- Your distribution and release (lsb_release -a)\n"
+      "- Likely steps to reproduce (How did it happened?)\n"
+#ifdef HAVE_EXECINFO_H
+      "- Backtrace of the issue (see below)\n"
+#endif
+      "\n"
+   );
+
+   const char* signal_str = strsignal(signal);
+   if(!signal_str) {
+      signal_str = "unknown reason";
+   }
+   fprintf(stderr,
+      "Error information:\n"
+      "------------------\n"
+      "A signal %d (%s) was received.\n"
+      "\n",
+      signal, signal_str
+   );
+
+#ifdef HAVE_EXECINFO_H
+   fprintf(stderr,
+      "Backtrace information:\n"
+      "----------------------\n"
+      "The following function calls were active when the issue was detected:\n"
+      "---\n"
+   );
+
+   void *backtraceArray[256];
+
+   size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
+   backtrace_symbols_fd(backtraceArray, size, 2);
+   fprintf(stderr,
+      "---\n"
+      "\n"
+      "To make the above information more practical to work with,\n"
+      "you should provide a disassembly of your binary.\n"
+      "This can usually be done by running the following command:\n"
+      "\n"
+#ifdef HTOP_DARWIN
+      "   otool -tvV `which htop` > ~/htop.otool\n"
+#else
+      "   objdump -d -S -w `which htop` > ~/htop.objdump\n"
+#endif
+      "\n"
+      "Please include the generated file in your report.\n"
+      "\n"
+   );
+#endif
+
+   fprintf(stderr,
+      "Running this program with debug symbols or inside a debugger may provide further insights.\n"
+      "\n"
+      "Thank you for helping to improve htop!\n"
+      "\n"
+      "htop " VERSION " aborting.\n"
+      "\n"
+   );
+
+   /* Call old sigsegv handler; may be default exit or third party one (e.g. ASAN) */
+   if(sigaction (signal, &old_sig_handler[signal], NULL) < 0) {
+      /* This avoids an infinite loop in case the handler could not be reset. */
+      fprintf(stderr,
+         "!!! Chained handler could not be restored. Forcing exit.\n"
+      );
+      _exit(1);
+   }
+
+   /* Trigger the previous signal handler. */
+   raise(signal);
+
+   // Always terminate, even if installed handler returns
+   fprintf(stderr,
+      "!!! Chained handler did not exit. Forcing exit.\n"
+   );
+   _exit(1);
 }

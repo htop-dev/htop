@@ -124,7 +124,6 @@ linux_platform_headers = \
 	linux/IOPriority.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
-	linux/LinuxCRT.h \
 	linux/Battery.h \
 	linux/PressureStallMeter.h \
 	zfs/ZfsArcMeter.h \
@@ -134,7 +133,7 @@ linux_platform_headers = \
 if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c \
-linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c \
+linux/LinuxProcess.c linux/LinuxProcessList.c linux/Battery.c \
 linux/PressureStallMeter.c \
 zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c
 
@@ -148,7 +147,6 @@ freebsd_platform_headers = \
 	freebsd/Platform.h \
 	freebsd/FreeBSDProcessList.h \
 	freebsd/FreeBSDProcess.h \
-	freebsd/FreeBSDCRT.h \
 	freebsd/Battery.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsCompressedArcMeter.h \
@@ -156,8 +154,9 @@ freebsd_platform_headers = \
 	zfs/openzfs_sysctl.h
 
 if HTOP_FREEBSD
+AM_LDFLAGS += -lexecinfo
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
-freebsd/FreeBSDProcess.c freebsd/FreeBSDCRT.c freebsd/Battery.c \
+freebsd/FreeBSDProcess.c freebsd/Battery.c \
 zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c zfs/openzfs_sysctl.c
 
 myhtopplatheaders = $(freebsd_platform_headers)
@@ -170,13 +169,12 @@ dragonflybsd_platform_headers = \
 	dragonflybsd/Platform.h \
 	dragonflybsd/DragonFlyBSDProcessList.h \
 	dragonflybsd/DragonFlyBSDProcess.h \
-	dragonflybsd/DragonFlyBSDCRT.h \
 	dragonflybsd/Battery.h
 
 if HTOP_DRAGONFLYBSD
 AM_LDFLAGS += -lkvm -lkinfo -lexecinfo
 myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
-dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/DragonFlyBSDCRT.c dragonflybsd/Battery.c
+dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/Battery.c
 
 myhtopplatheaders = $(dragonflybsd_platform_headers)
 endif
@@ -188,12 +186,11 @@ openbsd_platform_headers = \
 	openbsd/Platform.h \
 	openbsd/OpenBSDProcessList.h \
 	openbsd/OpenBSDProcess.h \
-	openbsd/OpenBSDCRT.h \
 	openbsd/Battery.h
 
 if HTOP_OPENBSD
 myhtopplatsources = openbsd/Platform.c openbsd/OpenBSDProcessList.c \
-openbsd/OpenBSDProcess.c openbsd/OpenBSDCRT.c openbsd/Battery.c
+openbsd/OpenBSDProcess.c openbsd/Battery.c
 
 myhtopplatheaders = $(openbsd_platform_headers)
 endif
@@ -205,7 +202,6 @@ darwin_platform_headers = \
 	darwin/Platform.h \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
-	darwin/DarwinCRT.h \
 	darwin/Battery.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsCompressedArcMeter.h \
@@ -215,7 +211,7 @@ darwin_platform_headers = \
 if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
 myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
-darwin/DarwinProcessList.c darwin/DarwinCRT.c darwin/Battery.c \
+darwin/DarwinProcessList.c darwin/Battery.c \
 zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c zfs/openzfs_sysctl.c
 
 myhtopplatheaders = $(darwin_platform_headers)
@@ -228,7 +224,6 @@ solaris_platform_headers = \
 	solaris/Platform.h \
 	solaris/SolarisProcess.h \
 	solaris/SolarisProcessList.h \
-	solaris/SolarisCRT.h \
 	solaris/Battery.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsCompressedArcMeter.h \
@@ -237,7 +232,7 @@ solaris_platform_headers = \
 if HTOP_SOLARIS
 myhtopplatsources = solaris/Platform.c \
 solaris/SolarisProcess.c solaris/SolarisProcessList.c \
-solaris/SolarisCRT.c solaris/Battery.c \
+solaris/Battery.c \
 zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c
 
 myhtopplatheaders = $(solaris_platform_headers)
@@ -250,13 +245,12 @@ unsupported_platform_headers = \
 	unsupported/Platform.h \
 	unsupported/UnsupportedProcess.h \
 	unsupported/UnsupportedProcessList.h \
-	unsupported/UnsupportedCRT.h \
 	unsupported/Battery.h
 
 if HTOP_UNSUPPORTED
 myhtopplatsources = unsupported/Platform.c \
 unsupported/UnsupportedProcess.c unsupported/UnsupportedProcessList.c \
-unsupported/UnsupportedCRT.c unsupported/Battery.c
+unsupported/Battery.c
 
 myhtopplatheaders = $(unsupported_platform_headers)
 endif

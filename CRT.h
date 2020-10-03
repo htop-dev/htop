@@ -117,8 +117,7 @@ typedef enum ColorElements_ {
 
 void CRT_fatalError(const char* note) ATTR_NORETURN;
 
-extern struct sigaction old_sigsegv_handler;
-void CRT_handleSIGSEGV(int sgn);
+void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 
 #define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 
@@ -146,8 +145,6 @@ extern int CRT_scrollWheelVAmount;
 extern char* CRT_termType;
 
 extern int CRT_colorScheme;
-
-extern void *backtraceArray[128];
 
 #ifdef HAVE_SETUID_ENABLED
 

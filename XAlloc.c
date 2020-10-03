@@ -14,7 +14,7 @@
 void fail() {
    curs_set(1);
    endwin();
-   err(1, NULL);
+   abort();
 }
 
 void* xMalloc(size_t size) {
