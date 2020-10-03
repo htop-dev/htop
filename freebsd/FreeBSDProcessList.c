@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "FreeBSDProcess.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/openzfs_sysctl.h"
+#include "Macros.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -293,7 +294,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //pl->freeMem *= pageSizeKb;
 
    struct kvm_swap swap[16];
-   int nswap = kvm_getswapinfo(fpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
+   int nswap = kvm_getswapinfo(fpl->kd, swap, ARRAYSIZE(swap), 0);
    pl->totalSwap = 0;
    pl->usedSwap = 0;
    for (int i = 0; i < nswap; i++) {

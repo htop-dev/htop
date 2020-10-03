@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "Platform.h"
+#include "Macros.h"
 #include "Meter.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
@@ -72,7 +73,7 @@ const SignalItem Platform_signals[] = {
    { .name = "33 SIGLIBRT",  .number = 33 },
 };
 
-const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
+const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 void Platform_setBindings(Htop_Action* keys) {
    (void) keys;

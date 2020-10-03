@@ -7,6 +7,7 @@ in the source distribution for its full text.
 */
 
 #include "Platform.h"
+#include "Macros.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
 #include "SwapMeter.h"
@@ -63,7 +64,7 @@ const SignalItem Platform_signals[] = {
    { .name = "31 SIGUSR2",   .number = 31 },
 };
 
-const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
+const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },

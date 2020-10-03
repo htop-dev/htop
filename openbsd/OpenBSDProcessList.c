@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "OpenBSDProcessList.h"
 #include "OpenBSDProcess.h"
+#include "Macros.h"
 
 #include <err.h>
 #include <errno.h>
@@ -118,7 +119,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->cachedMem *= PAGE_SIZE_KB;
 
    struct kvm_swap swap[16];
-   int nswap = kvm_getswapinfo(opl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
+   int nswap = kvm_getswapinfo(opl->kd, swap, ARRAYSIZE(swap), 0);
    pl->totalSwap = 0;
    pl->usedSwap = 0;
    for (int i = 0; i < nswap; i++) {

@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include <math.h>
 
 #include "Platform.h"
+#include "Macros.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
 #include "SwapMeter.h"
@@ -25,7 +26,7 @@ const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
 };
 
-const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
+const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
