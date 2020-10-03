@@ -376,7 +376,7 @@ void Platform_getNetworkIO(unsigned long int *bytesReceived,
                      &packetsTransmittedParsed) != 5)
          continue;
 
-      if (0 == strcmp(interfaceName, "lo:"))
+      if (String_eq(interfaceName, "lo:"))
          continue;
 
       bytesReceivedSum += bytesReceivedParsed;
