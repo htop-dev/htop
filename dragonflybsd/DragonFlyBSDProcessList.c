@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "DragonFlyBSDProcessList.h"
 #include "DragonFlyBSDProcess.h"
+#include "Macros.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -253,7 +254,7 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //pl->freeMem *= pageSizeKb;
 
    struct kvm_swap swap[16];
-   int nswap = kvm_getswapinfo(dfpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
+   int nswap = kvm_getswapinfo(dfpl->kd, swap, ARRAYSIZE(swap), 0);
    pl->totalSwap = 0;
    pl->usedSwap = 0;
    for (int i = 0; i < nswap; i++) {
