@@ -35,7 +35,7 @@ typedef struct PanelClass_ {
    const Panel_EventHandler eventHandler;
 } PanelClass;
 
-#define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
+#define As_Panel(this_)                ((const PanelClass*)((this_)->super.klass))
 #define Panel_eventHandlerFn(this_)    As_Panel(this_)->eventHandler
 #define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), ev_)
 
@@ -62,11 +62,11 @@ struct Panel_ {
 
 extern PanelClass Panel_class;
 
-Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar);
+Panel* Panel_new(int x, int y, int w, int h, bool owner, const ObjectClass* type, FunctionBar* fuBar);
 
 void Panel_delete(Object* cast);
 
-void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner, FunctionBar* fuBar);
+void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar);
 
 void Panel_done(Panel* this);
 

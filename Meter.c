@@ -27,13 +27,13 @@ MeterClass Meter_class = {
    }
 };
 
-Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
+Meter* Meter_new(struct ProcessList_* pl, int param, const MeterClass* type) {
    Meter* this = xCalloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
    this->param = param;
    this->pl = pl;
-   type->curItems = type->maxItems;
+   this->curItems = type->maxItems;
    this->values = xCalloc(type->maxItems, sizeof(double));
    this->total = type->total;
    this->caption = xStrdup(type->caption);
@@ -191,7 +191,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
-   int items = Meter_getItems(this);
+   int items = this->curItems;
    for (int i = 0; i < items; i++) {
       double value = this->values[i];
       value = CLAMP(value, 0.0, this->total);
@@ -292,7 +292,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       Meter_updateValues(this, buffer, nValues - 1);
 
       double value = 0.0;
-      int items = Meter_getItems(this);
+      int items = this->curItems;
       for (int i = 0; i < items; i++)
          value += this->values[i];
       value /= this->total;

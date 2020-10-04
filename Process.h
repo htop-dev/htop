@@ -129,7 +129,7 @@ typedef struct ProcessClass_ {
    const Process_WriteField writeField;
 } ProcessClass;
 
-#define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
+#define As_Process(this_)              ((const ProcessClass*)((this_)->super.klass))
 
 #define Process_getParentPid(process_)    (process_->tgid == process_->pid ? process_->ppid : process_->tgid)
 

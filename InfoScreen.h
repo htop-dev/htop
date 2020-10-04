@@ -14,14 +14,14 @@ typedef void(*InfoScreen_OnErr)(InfoScreen*);
 typedef bool(*InfoScreen_OnKey)(InfoScreen*, int);
 
 typedef struct InfoScreenClass_ {
-   ObjectClass super;
+   const ObjectClass super;
    const InfoScreen_Scan scan;
    const InfoScreen_Draw draw;
    const InfoScreen_OnErr onErr;
    const InfoScreen_OnKey onKey;
 } InfoScreenClass;
 
-#define As_InfoScreen(this_)          ((InfoScreenClass*)(((InfoScreen*)(this_))->super.klass))
+#define As_InfoScreen(this_)          ((const InfoScreenClass*)(((InfoScreen*)(this_))->super.klass))
 #define InfoScreen_scan(this_)        As_InfoScreen(this_)->scan((InfoScreen*)(this_))
 #define InfoScreen_draw(this_)        As_InfoScreen(this_)->draw((InfoScreen*)(this_))
 #define InfoScreen_onErr(this_)       As_InfoScreen(this_)->onErr((InfoScreen*)(this_))
