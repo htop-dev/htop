@@ -5,6 +5,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Macros.h"
 #include "ProcessList.h"
 #include "FreeBSDProcessList.h"
 #include "FreeBSDProcess.h"
@@ -338,6 +339,7 @@ char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
 
    if (kproc->ki_jid != 0 ){
       memset(jnamebuf, 0, sizeof(jnamebuf));
+IGNORE_WCASTQUAL_BEGIN
       *(const void **)&jiov[0].iov_base = "jid";
       jiov[0].iov_len = sizeof("jid");
       jiov[1].iov_base = &kproc->ki_jid;
@@ -350,6 +352,7 @@ char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
       jiov[4].iov_len = sizeof("errmsg");
       jiov[5].iov_base = jail_errmsg;
       jiov[5].iov_len = JAIL_ERRMSGLEN;
+IGNORE_WCASTQUAL_END
       jail_errmsg[0] = 0;
       jid = jail_get(jiov, 6, 0);
       if (jid < 0) {

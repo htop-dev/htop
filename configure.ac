@@ -296,6 +296,7 @@ fi
 AM_CFLAGS="\
  -Wall\
  -Wcast-align\
+ -Wcast-qual\
  -Wextra\
  -Wfloat-equal\
  -Wmissing-format-attribute\
