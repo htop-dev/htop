@@ -12,7 +12,10 @@ in the source distribution for its full text.
 typedef struct FunctionBar_ {
    int size;
    char** functions;
-   char** keys;
+   union {
+      char** keys;
+      const char* const* constKeys;
+   } keys;
    int* events;
    bool staticData;
 } FunctionBar;

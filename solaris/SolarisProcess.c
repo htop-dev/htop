@@ -117,14 +117,14 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
 }
 
 long SolarisProcess_compare(const void* v1, const void* v2) {
-   SolarisProcess *p1, *p2;
-   Settings* settings = ((Process*)v1)->settings;
+   const SolarisProcess *p1, *p2;
+   const Settings* settings = ((const Process*)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (SolarisProcess*)v1;
-      p2 = (SolarisProcess*)v2;
+      p1 = (const SolarisProcess*)v1;
+      p2 = (const SolarisProcess*)v2;
    } else {
-      p2 = (SolarisProcess*)v1;
-      p1 = (SolarisProcess*)v2;
+      p2 = (const SolarisProcess*)v1;
+      p1 = (const SolarisProcess*)v2;
    }
    switch ((int) settings->sortKey) {
    case ZONEID:

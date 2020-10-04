@@ -33,4 +33,20 @@
 
 #endif /* __GNUC__ */
 
+// ignore casts discarding const specifier, e.g.
+//     const char []     ->  char * / void *
+//     const char *[2]'  ->  char *const *
+#ifdef __clang__
+#define IGNORE_WCASTQUAL_BEGIN  _Pragma("clang diagnostic push") \
+                                _Pragma("clang diagnostic ignored \"-Wcast-qual\"")
+#define IGNORE_WCASTQUAL_END    _Pragma("clang diagnostic pop")
+#elif defined(__GNUC__)
+#define IGNORE_WCASTQUAL_BEGIN  _Pragma("GCC diagnostic push") \
+                                _Pragma("GCC diagnostic ignored \"-Wcast-qual\"")
+#define IGNORE_WCASTQUAL_END    _Pragma("GCC diagnostic pop")
+#else
+#define IGNORE_WCASTQUAL_BEGIN
+#define IGNORE_WCASTQUAL_END
+#endif
+
 #endif
