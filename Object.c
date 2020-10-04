@@ -8,7 +8,7 @@ in the source distribution for its full text.
 
 #include "Object.h"
 
-ObjectClass Object_class = {
+const ObjectClass Object_class = {
    .extends = NULL
 };
 

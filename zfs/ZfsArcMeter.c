@@ -38,7 +38,7 @@ void ZfsArcMeter_readStats(Meter* this, ZfsArcStats* stats) {
    // "Hide" the last value so it can
    // only be accessed by index and is not
    // displayed by the Bar or Graph style
-   Meter_setItems(this, 5);
+   this->curItems = 5;
    this->values[5] = stats->size;
 }
 

@@ -146,7 +146,7 @@ static void CPUMeterCommonInit(Meter *this, int ncol) {
    AllCPUsMeter_getRange(this, &start, &count);
    for (int i = 0; i < count; i++) {
       if (!meters[i])
-         meters[i] = Meter_new(this->pl, start+i+1, (MeterClass*) Class(CPUMeter));
+         meters[i] = Meter_new(this->pl, start+i+1, (const MeterClass*) Class(CPUMeter));
       Meter_init(meters[i]);
    }
    if (this->mode == 0)

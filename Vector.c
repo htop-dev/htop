@@ -13,7 +13,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 
-Vector* Vector_new(ObjectClass* type, bool owner, int size) {
+Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
    Vector* this;
 
    if (size == DEFAULT_SIZE)

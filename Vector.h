@@ -17,14 +17,14 @@ in the source distribution for its full text.
 
 typedef struct Vector_ {
    Object **array;
-   ObjectClass* type;
+   const ObjectClass* type;
    int arraySize;
    int growthRate;
    int items;
    bool owner;
 } Vector;
 
-Vector* Vector_new(ObjectClass* type, bool owner, int size);
+Vector* Vector_new(const ObjectClass* type, bool owner, int size);
 
 void Vector_delete(Vector* this);
 
