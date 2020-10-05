@@ -20,7 +20,7 @@ in the source distribution for its full text.
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->fields);
-   for (unsigned int i = 0; i < (sizeof(this->columns)/sizeof(MeterColumnSettings)); i++) {
+   for (unsigned int i = 0; i < ARRAYSIZE(this->columns); i++) {
       String_freeArray(this->columns[i].names);
       free(this->columns[i].modes);
    }
