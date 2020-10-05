@@ -14,7 +14,7 @@ ObjectClass Object_class = {
 
 #ifndef NDEBUG
 
-bool Object_isA(Object* o, const ObjectClass* klass) {
+bool Object_isA(const Object* o, const ObjectClass* klass) {
    if (!o)
       return false;
    const ObjectClass* type = o->klass;
