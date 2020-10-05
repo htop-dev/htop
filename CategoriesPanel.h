@@ -8,9 +8,9 @@ in the source distribution for its full text.
 */
 
 #include "Panel.h"
-#include "Settings.h"
-#include "ScreenManager.h"
 #include "ProcessList.h"
+#include "ScreenManager.h"
+#include "Settings.h"
 
 typedef struct CategoriesPanel_ {
    Panel super;

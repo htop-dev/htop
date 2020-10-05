@@ -7,10 +7,10 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Vector.h"
 #include "Header.h"
 #include "Settings.h"
 #include "Panel.h"
+#include "Vector.h"
 
 typedef enum Orientation_ {
    VERTICAL,

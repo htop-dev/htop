@@ -7,10 +7,10 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Settings.h"
 #include "Panel.h"
-#include "ScreenManager.h"
 #include "ProcessList.h"
+#include "ScreenManager.h"
+#include "Settings.h"
 
 typedef struct AvailableMetersPanel_ {
    Panel super;

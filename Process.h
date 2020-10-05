@@ -20,9 +20,9 @@ in the source distribution for its full text.
 #endif
 #define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
 
-#include "Object.h"
-
 #include <sys/types.h>
+
+#include "Object.h"
 
 #define PROCESS_FLAG_IO 0x0001
 

@@ -7,12 +7,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Vector.h"
 #include "Hashtable.h"
-#include "UsersTable.h"
 #include "Panel.h"
 #include "Process.h"
 #include "Settings.h"
+#include "UsersTable.h"
+#include "Vector.h"
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
