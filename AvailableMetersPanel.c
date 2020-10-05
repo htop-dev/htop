@@ -36,7 +36,10 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
    Header* header = this->header;
 
-   ListItem* selected = (ListItem*) Panel_getSelected(super);
+   const ListItem* selected = (ListItem*) Panel_getSelected(super);
+   if (!selected)
+      return IGNORED;
+
    int param = selected->key & 0xff;
    int type = selected->key >> 16;
    HandlerResult result = IGNORED;

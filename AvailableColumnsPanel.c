@@ -28,7 +28,6 @@ static void AvailableColumnsPanel_delete(Object* object) {
 
 static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) super;
-   int key = ((ListItem*) Panel_getSelected(super))->key;
    HandlerResult result = IGNORED;
 
    switch(ch) {
@@ -36,6 +35,11 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_ENTER:
       case KEY_F(5):
       {
+         const ListItem* selected = (ListItem*) Panel_getSelected(super);
+         if (!selected)
+            break;
+
+         int key = selected->key;
          int at = Panel_getSelectedIndex(this->columns);
          Panel_insert(this->columns, at, (Object*) ListItem_new(Process_fields[key].name, key));
          Panel_setSelected(this->columns, at+1);
