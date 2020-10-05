@@ -53,7 +53,7 @@ static void LoadMeter_display(Object* cast, RichString* out) {
    RichString_write(out, CRT_colors[LOAD], buffer);
 }
 
-MeterClass LoadAverageMeter_class = {
+const MeterClass LoadAverageMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -70,7 +70,7 @@ MeterClass LoadAverageMeter_class = {
    .caption = "Load average: "
 };
 
-MeterClass LoadMeter_class = {
+const MeterClass LoadMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

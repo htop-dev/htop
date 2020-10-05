@@ -33,7 +33,7 @@ static const char* const TraceScreenKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
 
 static int TraceScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
 
-InfoScreenClass TraceScreen_class = {
+const InfoScreenClass TraceScreen_class = {
    .super = {
       .extends = Class(Object),
       .delete = TraceScreen_delete

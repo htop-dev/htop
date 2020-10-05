@@ -246,7 +246,7 @@ static void SingleColCPUsMeter_draw(Meter* this, int x, int y, int w) {
 }
 
 
-MeterClass CPUMeter_class = {
+const MeterClass CPUMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -263,7 +263,7 @@ MeterClass CPUMeter_class = {
    .init = CPUMeter_init
 };
 
-MeterClass AllCPUsMeter_class = {
+const MeterClass AllCPUsMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -282,7 +282,7 @@ MeterClass AllCPUsMeter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass AllCPUs2Meter_class = {
+const MeterClass AllCPUs2Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -301,7 +301,7 @@ MeterClass AllCPUs2Meter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass LeftCPUsMeter_class = {
+const MeterClass LeftCPUsMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -320,7 +320,7 @@ MeterClass LeftCPUsMeter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass RightCPUsMeter_class = {
+const MeterClass RightCPUsMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -339,7 +339,7 @@ MeterClass RightCPUsMeter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass LeftCPUs2Meter_class = {
+const MeterClass LeftCPUs2Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -358,7 +358,7 @@ MeterClass LeftCPUs2Meter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass RightCPUs2Meter_class = {
+const MeterClass RightCPUs2Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -377,7 +377,7 @@ MeterClass RightCPUs2Meter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass AllCPUs4Meter_class = {
+const MeterClass AllCPUs4Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -396,7 +396,7 @@ MeterClass AllCPUs4Meter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass LeftCPUs4Meter_class = {
+const MeterClass LeftCPUs4Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -415,7 +415,7 @@ MeterClass LeftCPUs4Meter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass RightCPUs4Meter_class = {
+const MeterClass RightCPUs4Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -434,7 +434,7 @@ MeterClass RightCPUs4Meter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass AllCPUs8Meter_class = {
+const MeterClass AllCPUs8Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -453,7 +453,7 @@ MeterClass AllCPUs8Meter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass LeftCPUs8Meter_class = {
+const MeterClass LeftCPUs8Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -472,7 +472,7 @@ MeterClass LeftCPUs8Meter_class = {
    .done = AllCPUsMeter_done
 };
 
-MeterClass RightCPUs8Meter_class = {
+const MeterClass RightCPUs8Meter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

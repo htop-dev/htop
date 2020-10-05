@@ -42,7 +42,7 @@ static void ListItem_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[DEFAULT_COLOR], this->value/*buffer*/);
 }
 
-ObjectClass ListItem_class = {
+const ObjectClass ListItem_class = {
    .display = ListItem_display,
    .delete = ListItem_delete,
    .compare = ListItem_compare

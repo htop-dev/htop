@@ -41,7 +41,7 @@ static void UptimeMeter_updateValues(Meter* this, char* buffer, int len) {
    xSnprintf(buffer, len, "%s%02d:%02d:%02d", daysbuf, hours, minutes, seconds);
 }
 
-MeterClass UptimeMeter_class = {
+const MeterClass UptimeMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete

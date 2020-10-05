@@ -34,7 +34,7 @@ const char* MainPanel_getValue(MainPanel* this, int i);
 
 bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Arg arg, bool* wasAnyTagged);
 
-extern PanelClass MainPanel_class;
+extern const PanelClass MainPanel_class;
 
 MainPanel* MainPanel_new(void);
 

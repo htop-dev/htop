@@ -31,7 +31,7 @@ static void DateMeter_updateValues(Meter* this, char* buffer, int size) {
    strftime(buffer, size, "%F", lt);
 }
 
-MeterClass DateMeter_class = {
+const MeterClass DateMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete

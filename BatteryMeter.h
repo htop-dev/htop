@@ -17,6 +17,6 @@ typedef enum ACPresence_ {
    AC_ERROR
 } ACPresence;
 
-extern MeterClass BatteryMeter_class;
+extern const MeterClass BatteryMeter_class;
 
 #endif

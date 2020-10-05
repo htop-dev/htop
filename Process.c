@@ -384,7 +384,7 @@ void Process_done(Process* this) {
    free(this->comm);
 }
 
-ProcessClass Process_class = {
+const ProcessClass Process_class = {
    .super = {
       .extends = Class(Object),
       .display = Process_display,

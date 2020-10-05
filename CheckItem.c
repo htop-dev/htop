@@ -33,7 +33,7 @@ static void CheckItem_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
 }
 
-ObjectClass CheckItem_class = {
+const ObjectClass CheckItem_class = {
    .display = CheckItem_display,
    .delete = CheckItem_delete
 };

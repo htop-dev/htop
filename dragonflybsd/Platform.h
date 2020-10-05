@@ -24,7 +24,7 @@ extern const unsigned int Platform_numberOfSignals;
 
 void Platform_setBindings(Htop_Action* keys);
 
-extern MeterClass* Platform_meterTypes[];
+extern const MeterClass* const Platform_meterTypes[];
 
 int Platform_getUptime(void);
 

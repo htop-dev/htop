@@ -48,7 +48,7 @@ static void CommandScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Command of process %d - %s", this->process->pid, this->process->comm);
 }
 
-InfoScreenClass CommandScreen_class = {
+const InfoScreenClass CommandScreen_class = {
    .super = {
       .extends = Class(Object),
       .delete = CommandScreen_delete

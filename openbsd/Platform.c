@@ -90,7 +90,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-MeterClass* Platform_meterTypes[] = {
+const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
    &DateMeter_class,

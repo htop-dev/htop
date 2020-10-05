@@ -37,7 +37,7 @@ extern const unsigned int Platform_numberOfSignals;
 
 extern ProcessField Platform_defaultFields[];
 
-extern MeterClass* Platform_meterTypes[];
+extern const MeterClass* const Platform_meterTypes[];
 
 void Platform_setBindings(Htop_Action* keys);
 

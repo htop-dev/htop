@@ -9,6 +9,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern MeterClass DiskIOMeter_class;
+extern const MeterClass DiskIOMeter_class;
 
 #endif /* HEADER_DiskIOMeter */

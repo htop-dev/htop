@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 
-InfoScreenClass EnvScreen_class = {
+const InfoScreenClass EnvScreen_class = {
    .super = {
       .extends = Class(Object),
       .delete = EnvScreen_delete

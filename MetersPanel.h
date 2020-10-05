@@ -28,7 +28,7 @@ void MetersPanel_cleanup(void);
 
 void MetersPanel_setMoving(MetersPanel* this, bool moving);
 
-extern PanelClass MetersPanel_class;
+extern const PanelClass MetersPanel_class;
 
 MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr);
 

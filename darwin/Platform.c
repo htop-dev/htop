@@ -94,7 +94,7 @@ ProcessFieldData Process_fields[] = {
    [100] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
-MeterClass* Platform_meterTypes[] = {
+const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
    &DateMeter_class,

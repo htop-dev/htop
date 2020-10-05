@@ -88,7 +88,7 @@ typedef struct GraphData_ {
    double values[METER_BUFFER_LEN];
 } GraphData;
 
-extern MeterClass Meter_class;
+extern const MeterClass Meter_class;
 
 Meter* Meter_new(struct ProcessList_* pl, int param, const MeterClass* type);
 
@@ -102,8 +102,8 @@ void Meter_setMode(Meter* this, int modeIndex);
 
 ListItem* Meter_toListItem(Meter* this, bool moving);
 
-extern MeterMode* Meter_modes[];
+extern const MeterMode* const Meter_modes[];
 
-extern MeterClass BlankMeter_class;
+extern const MeterClass BlankMeter_class;
 
 #endif

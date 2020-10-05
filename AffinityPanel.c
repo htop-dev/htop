@@ -319,7 +319,7 @@ static MaskItem *AffinityPanel_buildTopology(AffinityPanel* this, hwloc_obj_t ob
 
 #endif
 
-PanelClass AffinityPanel_class = {
+const PanelClass AffinityPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = AffinityPanel_delete

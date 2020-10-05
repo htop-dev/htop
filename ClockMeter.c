@@ -24,7 +24,7 @@ static void ClockMeter_updateValues(Meter* this, char* buffer, int size) {
    strftime(buffer, size, "%H:%M:%S", lt);
 }
 
-MeterClass ClockMeter_class = {
+const MeterClass ClockMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete

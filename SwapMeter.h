@@ -9,6 +9,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern MeterClass SwapMeter_class;
+extern const MeterClass SwapMeter_class;
 
 #endif

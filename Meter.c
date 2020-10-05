@@ -21,7 +21,7 @@ in the source distribution for its full text.
 
 #define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
-MeterClass Meter_class = {
+const MeterClass Meter_class = {
    .super = {
       .extends = Class(Object)
    }
@@ -115,7 +115,7 @@ void Meter_setMode(Meter* this, int modeIndex) {
       free(this->drawData);
       this->drawData = NULL;
 
-      MeterMode* mode = Meter_modes[modeIndex];
+      const MeterMode* mode = Meter_modes[modeIndex];
       this->draw = mode->draw;
       this->h = mode->h;
    }
@@ -410,7 +410,7 @@ static MeterMode LEDMeterMode = {
    .draw = LEDMeterMode_draw,
 };
 
-MeterMode* Meter_modes[] = {
+const MeterMode* const Meter_modes[] = {
    NULL,
    &BarMeterMode,
    &TextMeterMode,
@@ -437,7 +437,7 @@ static const int BlankMeter_attributes[] = {
    DEFAULT_COLOR
 };
 
-MeterClass BlankMeter_class = {
+const MeterClass BlankMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

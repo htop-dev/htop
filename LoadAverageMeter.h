@@ -9,8 +9,8 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern MeterClass LoadAverageMeter_class;
+extern const MeterClass LoadAverageMeter_class;
 
-extern MeterClass LoadMeter_class;
+extern const MeterClass LoadMeter_class;
 
 #endif

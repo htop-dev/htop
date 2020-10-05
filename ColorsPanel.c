@@ -76,7 +76,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass ColorsPanel_class = {
+const PanelClass ColorsPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = ColorsPanel_delete

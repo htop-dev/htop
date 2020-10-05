@@ -105,7 +105,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass ColumnsPanel_class = {
+const PanelClass ColumnsPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = ColumnsPanel_delete
