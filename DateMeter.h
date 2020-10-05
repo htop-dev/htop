@@ -9,8 +9,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern int DateMeter_attributes[];
-
 extern MeterClass DateMeter_class;
 
 #endif

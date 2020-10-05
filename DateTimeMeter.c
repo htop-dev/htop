@@ -12,7 +12,7 @@ in the source distribution for its full text.
 #include <time.h>
 
 
-int DateTimeMeter_attributes[] = {
+static const int DateTimeMeter_attributes[] = {
    DATETIME
 };
 
