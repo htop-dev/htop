@@ -11,10 +11,6 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
-#define KEY_WHEELUP   KEY_F(20)
-#define KEY_WHEELDOWN KEY_F(21)
-#define KEY_RECLICK   KEY_F(22)
-
 typedef enum TreeStr_ {
    TREE_STR_HORZ,
    TREE_STR_VERT,
@@ -28,13 +24,13 @@ typedef enum TreeStr_ {
 
 typedef enum ColorSchemes_ {
    COLORSCHEME_DEFAULT = 0,
-   COLORSCHEME_MONOCHROME = 1,
-   COLORSCHEME_BLACKONWHITE = 2,
-   COLORSCHEME_LIGHTTERMINAL = 3,
-   COLORSCHEME_MIDNIGHT = 4,
-   COLORSCHEME_BLACKNIGHT = 5,
-   COLORSCHEME_BROKENGRAY = 6,
-   LAST_COLORSCHEME = 7,
+   COLORSCHEME_MONOCHROME,
+   COLORSCHEME_BLACKONWHITE,
+   COLORSCHEME_LIGHTTERMINAL,
+   COLORSCHEME_MIDNIGHT,
+   COLORSCHEME_BLACKNIGHT,
+   COLORSCHEME_BROKENGRAY,
+   LAST_COLORSCHEME,
 } ColorSchemes;
 
 typedef enum ColorElements_ {
@@ -119,7 +115,10 @@ void CRT_fatalError(const char* note) ATTR_NORETURN;
 
 void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 
-#define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
+#define KEY_WHEELUP   KEY_F(20)
+#define KEY_WHEELDOWN KEY_F(21)
+#define KEY_RECLICK   KEY_F(22)
+#define KEY_ALT(x)    (KEY_F(64 - 26) + ((x) - 'A'))
 
 
 #ifdef HAVE_LIBNCURSESW
@@ -132,7 +131,7 @@ extern const char *const *CRT_treeStr;
 
 extern int CRT_delay;
 
-extern int* CRT_colors;
+extern const int* CRT_colors;
 
 extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
 
@@ -142,7 +141,7 @@ extern int CRT_scrollHAmount;
 
 extern int CRT_scrollWheelVAmount;
 
-extern char* CRT_termType;
+extern const char* CRT_termType;
 
 extern int CRT_colorScheme;
 
@@ -155,11 +154,8 @@ void CRT_restorePrivileges(void);
 #else /* HAVE_SETUID_ENABLED */
 
 /* Turn setuid operations into NOPs */
-
-#ifndef CRT_dropPrivileges
-#define CRT_dropPrivileges()
-#define CRT_restorePrivileges()
-#endif
+static inline void CRT_dropPrivileges(void) { }
+static inline void CRT_restorePrivileges(void) { }
 
 #endif /* HAVE_SETUID_ENABLED */
 
