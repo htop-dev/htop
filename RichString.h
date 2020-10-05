@@ -57,19 +57,9 @@ typedef struct RichString_ {
    CharType chstr[RICHSTRING_MAXLEN+1];
 } RichString;
 
-#ifdef HAVE_LIBNCURSESW
-
 void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
 
 int RichString_findChar(RichString* this, char c, int start);
-
-#else /* HAVE_LIBNCURSESW */
-
-void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
-
-int RichString_findChar(RichString* this, char c, int start);
-
-#endif /* HAVE_LIBNCURSESW */
 
 void RichString_prune(RichString* this);
 
