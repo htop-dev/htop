@@ -1,7 +1,7 @@
 /*
 htop - htop.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -35,7 +35,7 @@ static void printVersionFlag(void) {
 
 static void printHelpFlag(void) {
    fputs("htop " VERSION "\n"
-         "Released under the GNU GPL.\n\n"
+         "Released under the GNU GPLv2.\n\n"
          "-C --no-color               Use a monochrome color scheme\n"
          "-d --delay=DELAY            Set the delay between updates, in tenths of seconds\n"
          "-h --help                   Print this help screen\n"

@@ -329,7 +329,7 @@ if test ! -z "$missing_headers"; then
   AC_MSG_ERROR([missing headers: $missing_headers])
 fi
 
-AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-2019 Hisham Muhammad, (C) 2020 htop dev team", [Copyright message.])
+AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-2019 Hisham Muhammad. (C) 2020 htop dev team.", [Copyright message.])
 
 # We're done, let's go!
 # ----------------------------------------------------------------------
