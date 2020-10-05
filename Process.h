@@ -138,19 +138,19 @@ typedef struct ProcessClass_ {
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 
 
-#define ONE_K 1024L
+#define ONE_K 1024UL
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
-#define ONE_T ((long long)ONE_G * ONE_K)
+#define ONE_T (1ULL * ONE_G * ONE_K)
 
-#define ONE_DECIMAL_K 1000L
+#define ONE_DECIMAL_K 1000UL
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
-#define ONE_DECIMAL_T ((long long)ONE_DECIMAL_G * ONE_DECIMAL_K)
+#define ONE_DECIMAL_T (1ULL * ONE_DECIMAL_G * ONE_DECIMAL_K)
 
 void Process_setupColumnWidths(void);
 
-void Process_humanNumber(RichString* str, unsigned long number, bool coloring);
+void Process_humanNumber(RichString* str, unsigned long long number, bool coloring);
 
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring);
 
