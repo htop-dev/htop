@@ -361,16 +361,16 @@ fi
 AC_MSG_RESULT([
   ${PACKAGE_NAME} ${VERSION}
 
-  platform:                $my_htop_platform
-  proc directory:          $PROCDIR
-  openvz:                  $enable_openvz
-  cgroup:                  $enable_cgroup
-  vserver:                 $enable_vserver
-  ancient vserver:         $enable_ancient_vserver
-  taskstats:               $enable_taskstats
-  unicode:                 $enable_unicode
-  linux affinity:          $enable_linux_affinity
-  hwlock:                  $enable_hwloc
-  setuid:                  $enable_setuid
-  linux delay accounting:  $enable_delayacct
+  platform:                  $my_htop_platform
+  (Linux) proc directory:    $PROCDIR
+  (Linux) openvz:            $enable_openvz
+  (Linux) cgroup:            $enable_cgroup
+  (Linux) vserver:           $enable_vserver
+  (Linux) ancient vserver:   $enable_ancient_vserver
+  (Linux) taskstats:         $enable_taskstats
+  (Linux) affinity:          $enable_linux_affinity
+  (Linux) delay accounting:  $enable_delayacct
+  unicode:                   $enable_unicode
+  hwlock:                    $enable_hwloc
+  setuid:                    $enable_setuid
 ])
