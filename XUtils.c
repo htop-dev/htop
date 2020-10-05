@@ -25,26 +25,26 @@ void fail() {
 }
 
 void* xMalloc(size_t size) {
+   assert(size > 0);
    void* data = malloc(size);
-   if (!data && size > 0) {
+   if (!data) {
       fail();
    }
    return data;
 }
 
 void* xCalloc(size_t nmemb, size_t size) {
+   assert(nmemb > 0);
+   assert(size > 0);
    void* data = calloc(nmemb, size);
-   if (!data && nmemb > 0 && size > 0) {
+   if (!data) {
       fail();
    }
    return data;
 }
 
 void* xRealloc(void* ptr, size_t size) {
-   if (!size) {
-      free(ptr);
-      return NULL;
-   }
+   assert(size > 0);
    void* data = realloc(ptr, size); // deepcode ignore MemoryLeakOnRealloc: this goes to fail()
    if (!data) {
       free(ptr);
