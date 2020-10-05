@@ -1,7 +1,7 @@
 /*
 htop - Action.c
 (C) 2015 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -441,7 +441,7 @@ static Htop_Reaction actionHelp(State* st) {
       mvhline(i, 0, ' ', COLS);
 
    mvaddstr(0, 0, "htop " VERSION " - " COPYRIGHT);
-   mvaddstr(1, 0, "Released under the GNU GPL. See 'man' page for more info.");
+   mvaddstr(1, 0, "Released under the GNU GPLv2. See 'man' page for more info.");
 
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(3, 0, "CPU usage bar: ");
