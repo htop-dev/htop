@@ -75,7 +75,7 @@ static void DIskIOMeter_display(ATTR_UNUSED Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[DISKIO_WRITE], buffer);
 }
 
-MeterClass DiskIOMeter_class = {
+const MeterClass DiskIOMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

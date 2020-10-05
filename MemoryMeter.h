@@ -9,6 +9,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern MeterClass MemoryMeter_class;
+extern const MeterClass MemoryMeter_class;
 
 #endif

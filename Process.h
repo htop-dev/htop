@@ -162,7 +162,7 @@ void Process_display(Object* cast, RichString* out);
 
 void Process_done(Process* this);
 
-extern ProcessClass Process_class;
+extern const ProcessClass Process_class;
 
 void Process_init(Process* this, struct Settings_* settings);
 

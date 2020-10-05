@@ -21,7 +21,7 @@ typedef struct TraceScreen_ {
 } TraceScreen;
 
 
-extern InfoScreenClass TraceScreen_class;
+extern const InfoScreenClass TraceScreen_class;
 
 TraceScreen* TraceScreen_new(Process* process);
 

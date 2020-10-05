@@ -88,7 +88,7 @@ MeterModeId Header_addMeterByName(Header* this, char* name, int column) {
       *paren = '\0';
    }
    MeterModeId mode = TEXT_METERMODE;
-   for (MeterClass** type = Platform_meterTypes; *type; type++) {
+   for (const MeterClass* const* type = Platform_meterTypes; *type; type++) {
       if (String_eq(name, (*type)->name)) {
          Meter* meter = Meter_new(this->pl, param, *type);
          Vector_add(meters, meter);
@@ -110,7 +110,7 @@ void Header_setMode(Header* this, int i, MeterModeId mode, int column) {
    Meter_setMode(meter, mode);
 }
 
-Meter* Header_addMeterByClass(Header* this, MeterClass* type, int param, int column) {
+Meter* Header_addMeterByClass(Header* this, const MeterClass* type, int param, int column) {
    Vector* meters = this->columns[column];
 
    Meter* meter = Meter_new(this->pl, param, type);

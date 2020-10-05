@@ -7,7 +7,7 @@ typedef struct CommandScreen_ {
    InfoScreen super;
 } CommandScreen;
 
-extern InfoScreenClass CommandScreen_class;
+extern const InfoScreenClass CommandScreen_class;
 
 CommandScreen* CommandScreen_new(Process* process);
 

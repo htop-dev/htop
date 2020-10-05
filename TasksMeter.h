@@ -9,6 +9,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern MeterClass TasksMeter_class;
+extern const MeterClass TasksMeter_class;
 
 #endif

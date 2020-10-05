@@ -87,7 +87,7 @@ const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(Si
 
 ProcessField Platform_defaultFields[] = { PID, LWPID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
-MeterClass* Platform_meterTypes[] = {
+const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
    &DateMeter_class,

@@ -21,7 +21,7 @@ static void HostnameMeter_updateValues(Meter* this, char* buffer, int size) {
    gethostname(buffer, size-1);
 }
 
-MeterClass HostnameMeter_class = {
+const MeterClass HostnameMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete

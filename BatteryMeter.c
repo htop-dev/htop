@@ -58,7 +58,7 @@ static void BatteryMeter_updateValues(Meter * this, char *buffer, int len) {
    }
 }
 
-MeterClass BatteryMeter_class = {
+const MeterClass BatteryMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete

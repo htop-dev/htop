@@ -24,7 +24,7 @@ static void AvailableMetersPanel_delete(Object* object) {
    free(this);
 }
 
-static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, MeterClass* type, int param, int column) {
+static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, const MeterClass* type, int param, int column) {
    Meter* meter = Header_addMeterByClass(header, type, param, column);
    Panel_add(panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected(panel, Panel_size(panel) - 1);
@@ -77,7 +77,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass AvailableMetersPanel_class = {
+const PanelClass AvailableMetersPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = AvailableMetersPanel_delete
@@ -101,13 +101,13 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    // Platform_meterTypes[0] should be always (&CPUMeter_class), which we will
    // handle separately in the code below.
    for (int i = 1; Platform_meterTypes[i]; i++) {
-      MeterClass* type = Platform_meterTypes[i];
+      const MeterClass* type = Platform_meterTypes[i];
       assert(type != &CPUMeter_class);
       const char* label = type->description ? type->description : type->uiName;
       Panel_add(super, (Object*) ListItem_new(label, i << 16));
    }
    // Handle (&CPUMeter_class)
-   MeterClass* type = &CPUMeter_class;
+   const MeterClass* type = &CPUMeter_class;
    int cpus = pl->cpuCount;
    if (cpus > 1) {
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));

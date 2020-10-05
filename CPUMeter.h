@@ -22,30 +22,30 @@ typedef enum {
    CPU_METER_ITEMCOUNT = 9, // number of entries in this enum
 } CPUMeterValues;
 
-extern MeterClass CPUMeter_class;
+extern const MeterClass CPUMeter_class;
 
-extern MeterClass AllCPUsMeter_class;
+extern const MeterClass AllCPUsMeter_class;
 
-extern MeterClass AllCPUs2Meter_class;
+extern const MeterClass AllCPUs2Meter_class;
 
-extern MeterClass LeftCPUsMeter_class;
+extern const MeterClass LeftCPUsMeter_class;
 
-extern MeterClass RightCPUsMeter_class;
+extern const MeterClass RightCPUsMeter_class;
 
-extern MeterClass LeftCPUs2Meter_class;
+extern const MeterClass LeftCPUs2Meter_class;
 
-extern MeterClass RightCPUs2Meter_class;
+extern const MeterClass RightCPUs2Meter_class;
 
-extern MeterClass AllCPUs4Meter_class;
+extern const MeterClass AllCPUs4Meter_class;
 
-extern MeterClass LeftCPUs4Meter_class;
+extern const MeterClass LeftCPUs4Meter_class;
 
-extern MeterClass RightCPUs4Meter_class;
+extern const MeterClass RightCPUs4Meter_class;
 
-extern MeterClass AllCPUs8Meter_class;
+extern const MeterClass AllCPUs8Meter_class;
 
-extern MeterClass LeftCPUs8Meter_class;
+extern const MeterClass LeftCPUs8Meter_class;
 
-extern MeterClass RightCPUs8Meter_class;
+extern const MeterClass RightCPUs8Meter_class;
 
 #endif

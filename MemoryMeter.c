@@ -53,7 +53,7 @@ static void MemoryMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[MEMORY_CACHE], buffer);
 }
 
-MeterClass MemoryMeter_class = {
+const MeterClass MemoryMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

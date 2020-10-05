@@ -45,7 +45,7 @@ static void SwapMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
 }
 
-MeterClass SwapMeter_class = {
+const MeterClass SwapMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

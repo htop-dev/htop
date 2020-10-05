@@ -19,7 +19,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <assert.h>
 
-PanelClass Panel_class = {
+const PanelClass Panel_class = {
    .super = {
       .extends = Class(Object),
       .delete = Panel_delete

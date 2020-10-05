@@ -60,7 +60,7 @@ struct Panel_ {
 
 #define KEY_CTRL(l) ((l)-'A'+1)
 
-extern PanelClass Panel_class;
+extern const PanelClass Panel_class;
 
 Panel* Panel_new(int x, int y, int w, int h, bool owner, const ObjectClass* type, FunctionBar* fuBar);
 

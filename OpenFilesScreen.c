@@ -24,7 +24,7 @@ in the source distribution for its full text.
 #include <sys/wait.h>
 
 
-InfoScreenClass OpenFilesScreen_class = {
+const InfoScreenClass OpenFilesScreen_class = {
    .super = {
       .extends = Class(Object),
       .delete = OpenFilesScreen_delete

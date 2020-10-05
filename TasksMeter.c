@@ -66,7 +66,7 @@ static void TasksMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[METER_TEXT], " running");
 }
 
-MeterClass TasksMeter_class = {
+const MeterClass TasksMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
