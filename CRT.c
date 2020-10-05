@@ -28,20 +28,20 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #endif
 
-#define ColorIndex(i,j) ((7-i)*8+j)
+#define ColorIndex(i,j) ((7-(i))*8+(j))
 
 #define ColorPair(i,j) COLOR_PAIR(ColorIndex(i,j))
 
-#define Black COLOR_BLACK
-#define Red COLOR_RED
-#define Green COLOR_GREEN
-#define Yellow COLOR_YELLOW
-#define Blue COLOR_BLUE
+#define Black   COLOR_BLACK
+#define Red     COLOR_RED
+#define Green   COLOR_GREEN
+#define Yellow  COLOR_YELLOW
+#define Blue    COLOR_BLUE
 #define Magenta COLOR_MAGENTA
-#define Cyan COLOR_CYAN
-#define White COLOR_WHITE
+#define Cyan    COLOR_CYAN
+#define White   COLOR_WHITE
 
-#define ColorPairGrayBlack ColorPair(Magenta,Magenta)
+#define ColorPairGrayBlack  ColorPair(Magenta,Magenta)
 #define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
 
 static const char *const CRT_treeStrAscii[TREE_STR_COUNT] = {
@@ -74,11 +74,9 @@ bool CRT_utf8 = false;
 
 const char *const *CRT_treeStr = CRT_treeStrAscii;
 
-static bool CRT_hasColors;
+int CRT_delay;
 
-int CRT_delay = 0;
-
-int* CRT_colors;
+const int* CRT_colors;
 
 int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    [COLORSCHEME_DEFAULT] = {
@@ -544,9 +542,7 @@ int CRT_scrollHAmount = 5;
 
 int CRT_scrollWheelVAmount = 10;
 
-char* CRT_termType;
-
-// TODO move color scheme to Settings, perhaps?
+const char* CRT_termType;
 
 int CRT_colorScheme = 0;
 
@@ -563,34 +559,28 @@ static int CRT_euid = -1;
 
 static int CRT_egid = -1;
 
-#define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
-
 void CRT_dropPrivileges() {
    CRT_egid = getegid();
    CRT_euid = geteuid();
    if (setegid(getgid()) == -1) {
-      DIE("Fatal error: failed dropping group privileges.\n");
+      CRT_fatalError("Fatal error: failed dropping group privileges");
    }
    if (seteuid(getuid()) == -1) {
-      DIE("Fatal error: failed dropping user privileges.\n");
+      CRT_fatalError("Fatal error: failed dropping user privileges");
    }
 }
 
 void CRT_restorePrivileges() {
    if (CRT_egid == -1 || CRT_euid == -1) {
-      DIE("Fatal error: internal inconsistency.\n");
+      CRT_fatalError("Fatal error: internal inconsistency");
    }
    if (setegid(CRT_egid) == -1) {
-      DIE("Fatal error: failed restoring group privileges.\n");
+      CRT_fatalError("Fatal error: failed restoring group privileges");
    }
    if (seteuid(CRT_euid) == -1) {
-      DIE("Fatal error: failed restoring user privileges.\n");
+      CRT_fatalError("Fatal error: failed restoring user privileges");
    }
 }
-
-#else /* HAVE_SETUID_ENABLED */
-
-// In this case, the setuid operations are defined as macros in CRT.h
 
 #endif /* HAVE_SETUID_ENABLED */
 
@@ -601,10 +591,7 @@ static struct sigaction old_sig_handler[32];
 void CRT_init(int delay, int colorScheme, bool allowUnicode) {
    initscr();
    noecho();
-   CRT_delay = delay;
-   if (CRT_delay == 0) {
-      CRT_delay = 1;
-   }
+   CRT_delay = CLAMP(delay, 1, 255);
    CRT_colors = CRT_colorSchemes[colorScheme];
    CRT_colorScheme = colorScheme;
 
@@ -619,12 +606,8 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
    keypad(stdscr, true);
    mouseinterval(0);
    curs_set(0);
-   if (has_colors()) {
+   if (has_colors())
       start_color();
-      CRT_hasColors = true;
-   } else {
-      CRT_hasColors = false;
-   }
    CRT_termType = getenv("TERM");
    if (String_eq(CRT_termType, "linux"))
       CRT_scrollHAmount = 20;
