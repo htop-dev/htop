@@ -29,7 +29,7 @@ static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, c
    Panel_add(panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected(panel, Panel_size(panel) - 1);
    MetersPanel_setMoving((MetersPanel*)panel, true);
-   FunctionBar_draw(panel->currentBar, NULL);
+   FunctionBar_draw(panel->currentBar);
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {

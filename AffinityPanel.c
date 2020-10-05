@@ -160,7 +160,7 @@ static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
    Panel* super = (Panel*) this;
 
    FunctionBar_setLabel(super->currentBar, KEY_F(3), this->topoView ? "Collapse/Expand" : "");
-   FunctionBar_draw(super->currentBar, NULL);
+   FunctionBar_draw(super->currentBar);
 
    int oldSelected = Panel_getSelectedIndex(super);
    Panel_prune(super);

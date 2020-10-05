@@ -283,6 +283,7 @@ int main(int argc, char** argv) {
       .pl = pl,
       .panel = (Panel*) panel,
       .header = header,
+      .pauseProcessUpdate = false,
    };
 
    MainPanel_setState(panel, &state);
@@ -290,7 +291,7 @@ int main(int argc, char** argv) {
       setCommFilter(&state, &(flags.commFilter));
    }
 
-   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
+   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, &state, true);
    ScreenManager_add(scr, (Panel*) panel, -1);
 
    ProcessList_scan(pl);

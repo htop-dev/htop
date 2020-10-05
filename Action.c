@@ -37,7 +37,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    Settings* settings = st->settings;
 
    int y = panel->y;
-   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, false);
+   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, st, false);
    scr->allowFocusChange = false;
    ScreenManager_add(scr, list, x - 1);
    ScreenManager_add(scr, panel, -1);
@@ -73,17 +73,17 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
 
 // ----------------------------------------
 
-static void Action_runSetup(Settings* settings, Header* header, ProcessList* pl) {
-   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
-   CategoriesPanel* panelCategories = CategoriesPanel_new(scr, settings, header, pl);
+static void Action_runSetup(State* st) {
+   ScreenManager* scr = ScreenManager_new(0, st->header->height, 0, -1, HORIZONTAL, st->header, st->settings, st, true);
+   CategoriesPanel* panelCategories = CategoriesPanel_new(scr, st->settings, st->header, st->pl);
    ScreenManager_add(scr, (Panel*) panelCategories, 16);
    CategoriesPanel_makeMetersPage(panelCategories);
    Panel* panelFocus;
    int ch;
    ScreenManager_run(scr, &panelFocus, &ch);
    ScreenManager_delete(scr);
-   if (settings->changed) {
-      Header_writeBackToSettings(header);
+   if (st->settings->changed) {
+      Header_writeBackToSettings(st->header);
    }
 }
 
@@ -168,6 +168,8 @@ static Htop_Reaction sortBy(State* st) {
       reaction |= Action_setSortKey(st->settings, field->key);
    }
    Object_delete(sortPanel);
+   if (st->pauseProcessUpdate)
+      ProcessList_sort(st->pl);
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
@@ -346,7 +348,7 @@ Htop_Reaction Action_follow(State* st) {
 }
 
 static Htop_Reaction actionSetup(State* st) {
-   Action_runSetup(st->settings, st->header, st->pl);
+   Action_runSetup(st);
    // TODO: shouldn't need this, colors should be dynamic
    int headerHeight = Header_calculateHeight(st->header);
    Panel_move(st->panel, 0, headerHeight);
@@ -392,6 +394,11 @@ static Htop_Reaction actionRedraw(ATTR_UNUSED State *st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+static Htop_Reaction actionTogglePauseProcessUpdate(State *st) {
+   st->pauseProcessUpdate = !st->pauseProcessUpdate;
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
 static const struct { const char* key; const char* info; } helpLeft[] = {
    { .key = " Arrows: ", .info = "scroll process list" },
    { .key = " Digits: ", .info = "incremental PID search" },
@@ -399,6 +406,7 @@ static const struct { const char* key; const char* info; } helpLeft[] = {
    { .key = "   F4 \\: ",.info = "incremental name filtering" },
    { .key = "   F5 t: ", .info = "tree view" },
    { .key = "      p: ", .info = "toggle program path" },
+   { .key = "      Z: ", .info = "pause/resume process updates" },
    { .key = "      u: ", .info = "show processes of a single user" },
    { .key = "      H: ", .info = "hide/show user process threads" },
    { .key = "      K: ", .info = "hide/show kernel threads" },
@@ -491,12 +499,12 @@ static Htop_Reaction actionHelp(State* st) {
    for (int i = 0; helpLeft[i].key;  i++) { mvaddstr(9+i, 0,  helpLeft[i].key); }
    for (int i = 0; helpRight[i].key; i++) { mvaddstr(9+i, 40, helpRight[i].key); }
    attrset(CRT_colors[PROCESS_THREAD]);
-   mvaddstr(16, 32, "threads");
-   mvaddstr(17, 26, "threads");
+   mvaddstr(17, 32, "threads");
+   mvaddstr(18, 26, "threads");
    attrset(CRT_colors[DEFAULT_COLOR]);
 
    attrset(CRT_colors[HELP_BOLD]);
-   mvaddstr(23,0, "Press any key to return.");
+   mvaddstr(24,0, "Press any key to return.");
    attrset(CRT_colors[DEFAULT_COLOR]);
    refresh();
    CRT_readKey();
@@ -596,4 +604,5 @@ void Action_setBindings(Htop_Action* keys) {
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
    keys['w'] = actionShowCommandScreen;
+   keys['Z'] = actionTogglePauseProcessUpdate;
 }

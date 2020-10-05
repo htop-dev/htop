@@ -209,6 +209,9 @@ userspace processes in the process list. (This is a toggle key.)
 .B p
 Show full paths to running programs, where applicable. (This is a toggle key.)
 .TP
+.B Z
+Pause/resume process updates.
+.TP
 .B Ctrl-L
 Refresh: redraw screen and recalculate values.
 .TP
