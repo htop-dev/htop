@@ -43,7 +43,9 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
          if (selected < size - 1) {
             this->moving = !(this->moving);
             Panel_setSelectionColor(super, this->moving ? CRT_colors[PANEL_SELECTION_FOLLOW] : CRT_colors[PANEL_SELECTION_FOCUS]);
-            ((ListItem*)Panel_getSelected(super))->moving = this->moving;
+            ListItem* selectedItem = (ListItem*) Panel_getSelected(super);
+            if (selectedItem)
+               selectedItem->moving = this->moving;
             result = HANDLED;
          }
          break;
