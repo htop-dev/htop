@@ -13,6 +13,8 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "ClockMeter.h"
+#include "DateMeter.h"
+#include "DateTimeMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
 #include "zfs/ZfsArcMeter.h"
@@ -95,6 +97,8 @@ ProcessFieldData Process_fields[] = {
 MeterClass* Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
+   &DateMeter_class,
+   &DateTimeMeter_class,
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,

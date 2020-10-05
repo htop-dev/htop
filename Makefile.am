@@ -13,25 +13,107 @@ pixmap_DATA = htop.png
 AM_CFLAGS += -pedantic -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
 AM_LDFLAGS =
 
-myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
-ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c DiskIOMeter.c DiskIOMeter.h \
-MainPanel.c DisplayOptionsPanel.c FunctionBar.c Hashtable.c Header.c htop.c ListItem.c \
-LoadAverageMeter.c MemoryMeter.c Meter.c MetersPanel.c Object.c Panel.c \
-BatteryMeter.c Process.c ProcessList.c RichString.c ScreenManager.c Settings.c \
-SignalsPanel.c StringUtils.c SwapMeter.c TasksMeter.c UptimeMeter.c \
-TraceScreen.c UsersTable.c Vector.c AvailableColumnsPanel.c AffinityPanel.c \
-HostnameMeter.c OpenFilesScreen.c Affinity.c IncSet.c Action.c EnvScreen.c \
-InfoScreen.c CommandScreen.c XAlloc.c
+myhtopsources = \
+	Action.c \
+	Affinity.c \
+	AffinityPanel.c \
+	AvailableColumnsPanel.c \
+	AvailableMetersPanel.c \
+	BatteryMeter.c \
+	CategoriesPanel.c \
+	CheckItem.c \
+	ClockMeter.c \
+	ColorsPanel.c \
+	ColumnsPanel.c \
+	CommandScreen.c \
+	CPUMeter.c \
+	CRT.c \
+	DateMeter.c \
+	DateTimeMeter.c \
+	DiskIOMeter.c \
+	DiskIOMeter.h \
+	DisplayOptionsPanel.c \
+	EnvScreen.c \
+	FunctionBar.c \
+	Hashtable.c \
+	Header.c \
+	HostnameMeter.c \
+	htop.c \
+	IncSet.c \
+	InfoScreen.c \
+	ListItem.c \
+	LoadAverageMeter.c \
+	MainPanel.c \
+	MemoryMeter.c \
+	Meter.c \
+	MetersPanel.c \
+	Object.c \
+	OpenFilesScreen.c \
+	Panel.c \
+	Process.c \
+	ProcessList.c \
+	RichString.c \
+	ScreenManager.c \
+	Settings.c \
+	SignalsPanel.c \
+	StringUtils.c \
+	SwapMeter.c \
+	TasksMeter.c \
+	TraceScreen.c \
+	UptimeMeter.c \
+	UsersTable.c \
+	Vector.c \
+	XAlloc.c
 
-myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
-CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
-CPUMeter.h CRT.h MainPanel.h DisplayOptionsPanel.h FunctionBar.h \
-Hashtable.h Header.h ListItem.h LoadAverageMeter.h MemoryMeter.h \
-BatteryMeter.h Meter.h MetersPanel.h Object.h Panel.h ProcessList.h RichString.h \
-ScreenManager.h Settings.h SignalsPanel.h StringUtils.h SwapMeter.h \
-TasksMeter.h UptimeMeter.h TraceScreen.h UsersTable.h Vector.h Process.h \
-AffinityPanel.h HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
-EnvScreen.h InfoScreen.h CommandScreen.h XAlloc.h Macros.h
+myhtopheaders = \
+	Action.h \
+	Affinity.h \
+	AffinityPanel.h \
+	AvailableColumnsPanel.h \
+	AvailableMetersPanel.h \
+	BatteryMeter.h \
+	CPUMeter.h \
+	CRT.h \
+	CategoriesPanel.h \
+	CheckItem.h \
+	ClockMeter.h \
+	ColorsPanel.h \
+	ColumnsPanel.h \
+	CommandScreen.h \
+	DateMeter.h \
+	DateTimeMeter.h \
+	DisplayOptionsPanel.h \
+	EnvScreen.h \
+	FunctionBar.h \
+	Hashtable.h \
+	Header.h \
+	HostnameMeter.h \
+	IncSet.h \
+	InfoScreen.h \
+	ListItem.h \
+	LoadAverageMeter.h \
+	Macros.h \
+	MainPanel.h \
+	MemoryMeter.h \
+	Meter.h \
+	MetersPanel.h \
+	Object.h \
+	OpenFilesScreen.h \
+	Panel.h \
+	Process.h \
+	ProcessList.h \
+	RichString.h \
+	ScreenManager.h \
+	Settings.h \
+	SignalsPanel.h \
+	StringUtils.h \
+	SwapMeter.h \
+	TasksMeter.h \
+	TraceScreen.h \
+	UptimeMeter.h \
+	UsersTable.h \
+	Vector.h \
+	XAlloc.h
 
 # Linux
 # -----
