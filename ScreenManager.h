@@ -7,9 +7,10 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Action.h"
 #include "Header.h"
-#include "Settings.h"
 #include "Panel.h"
+#include "Settings.h"
 #include "Vector.h"
 
 typedef enum Orientation_ {
@@ -27,11 +28,12 @@ typedef struct ScreenManager_ {
    int panelCount;
    Header* header;
    const Settings* settings;
+   const State* state;
    bool owner;
    bool allowFocusChange;
 } ScreenManager;
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, bool owner);
+ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, const State* state, bool owner);
 
 void ScreenManager_delete(ScreenManager* this);
 

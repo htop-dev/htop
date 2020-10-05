@@ -54,7 +54,7 @@ const char* IncSet_getListItemValue(Panel* panel, int i);
 
 void IncSet_activate(IncSet* this, IncType type, Panel* panel);
 
-void IncSet_drawBar(IncSet* this);
+void IncSet_drawBar(const IncSet* this);
 
 int IncSet_synthesizeEvent(IncSet* this, int x);
 

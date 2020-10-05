@@ -6,10 +6,12 @@ in the source distribution for its full text.
 */
 
 #include "ScreenManager.h"
+
+#include "CRT.h"
+#include "MainPanel.h"
+#include "Object.h"
 #include "ProcessList.h"
 
-#include "Object.h"
-#include "CRT.h"
 
 #include <assert.h>
 #include <time.h>
@@ -17,7 +19,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, bool owner) {
+ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, const State* state, bool owner) {
    ScreenManager* this;
    this = xMalloc(sizeof(ScreenManager));
    this->x1 = x1;
@@ -29,6 +31,7 @@ ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation ori
    this->panelCount = 0;
    this->header = header;
    this->settings = settings;
+   this->state = state;
    this->owner = owner;
    this->allowFocusChange = true;
    return this;
@@ -101,7 +104,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    *timedOut = (newTime - *oldTime > this->settings->delay);
    *rescan = *rescan || *timedOut;
    if (newTime < *oldTime) *rescan = true; // clock was adjusted?
-   if (*rescan) {
+   if (*rescan && !this->state->pauseProcessUpdate) {
       *oldTime = newTime;
       ProcessList_scan(pl);
       if (*sortTimeout == 0 || this->settings->treeView) {
@@ -128,8 +131,11 @@ static void ScreenManager_drawPanels(ScreenManager* this, int focus) {
    }
 }
 
-static Panel* setCurrentPanel(Panel* panel) {
-   FunctionBar_draw(panel->currentBar, NULL);
+static Panel* setCurrentPanel(const ScreenManager* this, Panel* panel) {
+   FunctionBar_draw(panel->currentBar);
+   if (panel == this->state->panel && this->state->pauseProcessUpdate)
+      FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
+
    return panel;
 }
 
@@ -137,7 +143,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool quit = false;
    int focus = 0;
 
-   Panel* panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+   Panel* panelFocus = setCurrentPanel(this, (Panel*) Vector_get(this->panels, focus));
 
    double oldTime = 0.0;
 
@@ -183,7 +189,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                            ch = KEY_MOUSE;
                            if (panel == panelFocus || this->allowFocusChange) {
                               focus = i;
-                              panelFocus = setCurrentPanel(panel);
+                              panelFocus = setCurrentPanel(this, panel);
                               Object* oldSelection = Panel_getSelected(panel);
                               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
                               if (Panel_getSelected(panel) == oldSelection) {
@@ -259,7 +265,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          tryLeft:
          if (focus > 0)
             focus--;
-         panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+         panelFocus = setCurrentPanel(this, (Panel*) Vector_get(this->panels, focus));
          if (Panel_size(panelFocus) == 0 && focus > 0)
             goto tryLeft;
          break;
@@ -274,7 +280,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          tryRight:
          if (focus < this->panelCount - 1)
             focus++;
-         panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+         panelFocus = setCurrentPanel(this, (Panel*) Vector_get(this->panels, focus));
          if (Panel_size(panelFocus) == 0 && focus < this->panelCount - 1)
             goto tryRight;
          break;

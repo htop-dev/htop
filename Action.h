@@ -30,6 +30,7 @@ typedef struct State_ {
    ProcessList* pl;
    Panel* panel;
    Header* header;
+   bool pauseProcessUpdate;
 } State;
 
 typedef Htop_Reaction (*Htop_Action)(State* st);

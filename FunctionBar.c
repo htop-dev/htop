@@ -24,6 +24,8 @@ static int FunctionBar_FEvents[] = {KEY_F(1), KEY_F(2), KEY_F(3), KEY_F(4), KEY_
 static const char* const FunctionBar_EnterEscKeys[] = {"Enter", "Esc", NULL};
 static const int FunctionBar_EnterEscEvents[] = {13, 27};
 
+static int currentLen = 0;
+
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
    const char* functions[] = {enter, esc, NULL};
    return FunctionBar_new(functions, FunctionBar_EnterEscKeys, FunctionBar_EnterEscEvents);
@@ -53,7 +55,7 @@ FunctionBar* FunctionBar_new(const char* const* functions, const char* const* ke
       this->staticData = true;
       this->keys.constKeys = FunctionBar_FKeys;
       this->events = FunctionBar_FEvents;
-      this->size = 10;
+      this->size = ARRAYSIZE(FunctionBar_FEvents);
    }
    return this;
 }
@@ -83,11 +85,11 @@ void FunctionBar_setLabel(FunctionBar* this, int event, const char* text) {
    }
 }
 
-void FunctionBar_draw(const FunctionBar* this, char* buffer) {
-   FunctionBar_drawAttr(this, buffer, CRT_colors[FUNCTION_BAR]);
+void FunctionBar_draw(const FunctionBar* this) {
+   FunctionBar_drawExtra(this, NULL, -1, false);
 }
 
-void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr) {
+void FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr, bool setCursor) {
    attrset(CRT_colors[FUNCTION_BAR]);
    mvhline(LINES-1, 0, ' ', COLS);
    int x = 0;
@@ -99,15 +101,36 @@ void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr) {
       mvaddstr(LINES-1, x, this->functions[i]);
       x += strlen(this->functions[i]);
    }
+
    if (buffer) {
-      attrset(attr);
+      if (attr == -1)
+         attrset(CRT_colors[FUNCTION_BAR]);
+      else
+         attrset(attr);
       mvaddstr(LINES-1, x, buffer);
-      CRT_cursorX = x + strlen(buffer);
+      attrset(CRT_colors[RESET_COLOR]);
+      x += strlen(buffer);
+   }
+
+   if (setCursor) {
+      CRT_cursorX = x;
       curs_set(1);
    } else {
       curs_set(0);
    }
+
+   currentLen = x;
+}
+
+void FunctionBar_append(const char* buffer, int attr) {
+   if (attr == -1)
+      attrset(CRT_colors[FUNCTION_BAR]);
+   else
+      attrset(attr);
+   mvaddstr(LINES-1, currentLen, buffer);
    attrset(CRT_colors[RESET_COLOR]);
+
+   currentLen += strlen(buffer);
 }
 
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos) {

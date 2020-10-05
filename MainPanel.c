@@ -92,6 +92,8 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (reaction & HTOP_REDRAW_BAR) {
       MainPanel_updateTreeFunctions(this, this->state->settings->treeView);
       IncSet_drawBar(this->inc);
+      if (this->state->pauseProcessUpdate)
+         FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
    }
    if (reaction & HTOP_UPDATE_PANELHDR) {
       ProcessList_printHeader(this->state->pl, Panel_getHeader(super));
