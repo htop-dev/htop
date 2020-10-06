@@ -10,7 +10,7 @@
 #endif
 
 #ifndef CLAMP
-#define CLAMP(x, low, high)	(assert(low < high), ((x) > (high)) ? (high) : MAXIMUM(x, low))
+#define CLAMP(x, low, high)	(assert((low) < (high)), ((x) > (high)) ? (high) : MAXIMUM(x, low))
 #endif
 
 #ifndef ARRAYSIZE
