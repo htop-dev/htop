@@ -190,8 +190,8 @@ void Vector_insert(Vector* this, int idx, void* data_) {
 
    Vector_checkArraySize(this);
    //assert(this->array[this->items] == NULL);
-   for (int i = this->items; i > idx; i--) {
-      this->array[i] = this->array[i-1];
+   if(idx < this->items) {
+      memmove(&this->array[idx + 1], &this->array[idx], (this->items - idx) * sizeof(this->array[0]));
    }
    this->array[idx] = data;
    this->items++;
