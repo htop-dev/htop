@@ -49,7 +49,7 @@ static void LoadMeter_updateValues(Meter* this, char* buffer, int size) {
 static void LoadMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
    char buffer[20];
-   xSnprintf(buffer, sizeof(buffer), "%.2f ", ((Meter*)this)->values[0]);
+   xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[0]);
    RichString_write(out, CRT_colors[LOAD], buffer);
 }
 
