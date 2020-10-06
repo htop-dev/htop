@@ -97,6 +97,7 @@ ProcessFieldData Process_fields[] = {
 #endif
 #ifdef HAVE_CGROUP
    [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
+   [LXC] = { .name = "LXC", .title = "       LXC ", .description = "Which LXC constainer the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
 #endif
    [OOM] = { .name = "OOM", .title = " OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
    [IO_PRIORITY] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
@@ -148,6 +149,7 @@ void Process_delete(Object* cast) {
    Process_done((Process*)cast);
 #ifdef HAVE_CGROUP
    free(this->cgroup);
+   free(this->lxc);
 #endif
    free(this->secattr);
    free(this->ttyDevice);
@@ -261,6 +263,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    #endif
    #ifdef HAVE_CGROUP
    case CGROUP: xSnprintf(buffer, n, "%-10s ", lp->cgroup ? lp->cgroup : ""); break;
+   case LXC:    xSnprintf(buffer, n, "%-10s ", lp->lxc ? lp->lxc : ""); break;
    #endif
    case OOM: xSnprintf(buffer, n, "%4u ", lp->oom); break;
    case IO_PRIORITY: {
@@ -362,6 +365,8 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    #ifdef HAVE_CGROUP
    case CGROUP:
       return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
+   case LXC:
+      return strcmp(p1->lxc ? p1->lxc : "", p2->lxc ? p2->lxc : "");
    #endif
    case OOM:
       return ((int)p2->oom - (int)p1->oom);
