@@ -204,8 +204,9 @@ Object* Vector_take(Vector* this, int idx) {
    Object* removed = this->array[idx];
    //assert (removed != NULL);
    this->items--;
-   for (int i = idx; i < this->items; i++)
-      this->array[i] = this->array[i+1];
+   if(idx < this->items) {
+      memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx) * sizeof(this->array[0]));
+   }
    //this->array[this->items] = NULL;
    assert(Vector_isConsistent(this));
    return removed;
