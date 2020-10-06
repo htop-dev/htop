@@ -181,9 +181,9 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths) {
    }
 }
 
-static inline void Process_writeCommand(Process* this, int attr, int baseattr, RichString* str) {
+static inline void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
    int start = RichString_size(str), finish = 0;
-   char* comm = this->comm;
+   const char* comm = this->comm;
 
    if (this->settings->highlightBaseName || !this->settings->showProgramPath) {
       int i, basename = 0;
@@ -240,7 +240,7 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
    }
 }
 
-void Process_writeField(Process* this, RichString* str, ProcessField field) {
+void Process_writeField(const Process* this, RichString* str, ProcessField field) {
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int baseattr = CRT_colors[PROCESS_BASENAME];
@@ -366,9 +366,9 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    RichString_append(str, attr, buffer);
 }
 
-void Process_display(Object* cast, RichString* out) {
-   Process* this = (Process*) cast;
-   ProcessField* fields = this->settings->fields;
+void Process_display(const Object* cast, RichString* out) {
+   const Process* this = (const Process*) cast;
+   const ProcessField* fields = this->settings->fields;
    RichString_prune(out);
    for (int i = 0; fields[i]; i++)
       As_Process(this)->writeField(this, out, fields[i]);

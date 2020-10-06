@@ -38,7 +38,7 @@ void ZfsCompressedArcMeter_readStats(Meter* this, ZfsArcStats* stats) {
    }
 }
 
-static void ZfsCompressedArcMeter_printRatioString(Meter* this, char* buffer, int size) {
+static void ZfsCompressedArcMeter_printRatioString(const Meter* this, char* buffer, int size) {
    xSnprintf(buffer, size, "%.2f:1", this->total/this->values[0]);
 }
 
@@ -48,9 +48,9 @@ static void ZfsCompressedArcMeter_updateValues(Meter* this, char* buffer, int si
    ZfsCompressedArcMeter_printRatioString(this, buffer, size);
 }
 
-static void ZfsCompressedArcMeter_display(Object* cast, RichString* out) {
+static void ZfsCompressedArcMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
-   Meter* this = (Meter*)cast;
+   const Meter* this = (const Meter*)cast;
 
    if (this->values[0] > 0) {
       Meter_humanUnit(buffer, this->total, 50);

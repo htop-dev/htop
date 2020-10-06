@@ -55,9 +55,9 @@ static void ZfsArcMeter_updateValues(Meter* this, char* buffer, int size) {
    }
 }
 
-static void ZfsArcMeter_display(Object* cast, RichString* out) {
+static void ZfsArcMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
-   Meter* this = (Meter*)cast;
+   const Meter* this = (const Meter*)cast;
 
    if (this->values[5] > 0) {
       Meter_humanUnit(buffer, this->total, 50);

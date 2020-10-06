@@ -21,8 +21,8 @@ static void CheckItem_delete(Object* cast) {
    free(this);
 }
 
-static void CheckItem_display(Object* cast, RichString* out) {
-   CheckItem* this = (CheckItem*)cast;
+static void CheckItem_display(const Object* cast, RichString* out) {
+   const CheckItem* this = (const CheckItem*)cast;
    assert (this != NULL);
    RichString_write(out, CRT_colors[CHECK_BOX], "[");
    if (CheckItem_get(this))
@@ -61,7 +61,7 @@ void CheckItem_set(CheckItem* this, bool value) {
       this->value = value;
 }
 
-bool CheckItem_get(CheckItem* this) {
+bool CheckItem_get(const CheckItem* this) {
    if (this->ref)
       return *(this->ref);
    else

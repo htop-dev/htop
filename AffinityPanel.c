@@ -44,8 +44,8 @@ static void MaskItem_delete(Object* cast) {
    free(this);
 }
 
-static void MaskItem_display(Object* cast, RichString* out) {
-   MaskItem* this = (MaskItem*)cast;
+static void MaskItem_display(const Object* cast, RichString* out) {
+   const MaskItem* this = (const MaskItem*)cast;
    assert (this != NULL);
    RichString_append(out, CRT_colors[CHECK_BOX], "[");
    if (this->value == 2)

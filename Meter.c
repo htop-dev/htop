@@ -92,7 +92,7 @@ void Meter_setCaption(Meter* this, const char* caption) {
    this->caption = xStrdup(caption);
 }
 
-static inline void Meter_displayBuffer(Meter* this, char* buffer, RichString* out) {
+static inline void Meter_displayBuffer(const Meter* this, const char* buffer, RichString* out) {
    if (Object_displayFn(this)) {
       Object_display(this, out);
    } else {
@@ -428,8 +428,7 @@ static void BlankMeter_updateValues(Meter* this, char* buffer, int size) {
    }
 }
 
-static void BlankMeter_display(Object* cast, RichString* out) {
-   (void) cast;
+static void BlankMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    RichString_prune(out);
 }
 

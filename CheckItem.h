@@ -24,6 +24,6 @@ CheckItem* CheckItem_newByVal(char* text, bool value);
 
 void CheckItem_set(CheckItem* this, bool value);
 
-bool CheckItem_get(CheckItem* this);
+bool CheckItem_get(const CheckItem* this);
 
 #endif

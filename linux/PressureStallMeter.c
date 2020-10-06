@@ -41,8 +41,8 @@ static void PressureStallMeter_updateValues(Meter* this, char* buffer, int len) 
     xSnprintf(buffer, len, "xxxx %.2lf%% %.2lf%% %.2lf%%", this->values[0], this->values[1], this->values[2]);
 }
 
-static void PressureStallMeter_display(Object* cast, RichString* out) {
-   Meter* this = (Meter*)cast;
+static void PressureStallMeter_display(const Object* cast, RichString* out) {
+   const Meter* this = (const Meter*)cast;
    char buffer[20];
    xSnprintf(buffer, sizeof(buffer), "%.2lf%% ", this->values[0]);
    RichString_write(out, CRT_colors[PRESSURE_STALL_TEN], buffer);
