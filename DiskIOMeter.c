@@ -59,7 +59,7 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, int len) {
    snprintf(buffer, len, "%sB %sB %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
 }
 
-static void DIskIOMeter_display(ATTR_UNUSED Object* cast, RichString* out) {
+static void DIskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    char buffer[16];
 
    int color = cached_utilisation_diff > 40.0 ? DISKIO_UTIL_HIGH : METER_VALUE;

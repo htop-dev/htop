@@ -26,8 +26,8 @@ static void LoadAverageMeter_updateValues(Meter* this, char* buffer, int size) {
    xSnprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
 }
 
-static void LoadAverageMeter_display(Object* cast, RichString* out) {
-   Meter* this = (Meter*)cast;
+static void LoadAverageMeter_display(const Object* cast, RichString* out) {
+   const Meter* this = (const Meter*)cast;
    char buffer[20];
    xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[0]);
    RichString_write(out, CRT_colors[LOAD_AVERAGE_ONE], buffer);
@@ -46,8 +46,8 @@ static void LoadMeter_updateValues(Meter* this, char* buffer, int size) {
    xSnprintf(buffer, size, "%.2f", this->values[0]);
 }
 
-static void LoadMeter_display(Object* cast, RichString* out) {
-   Meter* this = (Meter*)cast;
+static void LoadMeter_display(const Object* cast, RichString* out) {
+   const Meter* this = (const Meter*)cast;
    char buffer[20];
    xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[0]);
    RichString_write(out, CRT_colors[LOAD], buffer);

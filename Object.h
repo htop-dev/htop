@@ -14,16 +14,16 @@ in the source distribution for its full text.
 
 typedef struct Object_ Object;
 
-typedef void(*Object_Display)(Object*, RichString*);
+typedef void(*Object_Display)(const Object*, RichString*);
 typedef long(*Object_Compare)(const void*, const void*);
 typedef void(*Object_Delete)(Object*);
 
-#define Object_getClass(obj_)         ((Object*)(obj_))->klass
-#define Object_setClass(obj_, class_) Object_getClass(obj_) = (const ObjectClass*) class_
+#define Object_getClass(obj_)         ((const Object*)(obj_))->klass
+#define Object_setClass(obj_, class_) (((Object*)(obj_))->klass = (const ObjectClass*) class_)
 
 #define Object_delete(obj_)           Object_getClass(obj_)->delete((Object*)(obj_))
 #define Object_displayFn(obj_)        Object_getClass(obj_)->display
-#define Object_display(obj_, str_)    Object_getClass(obj_)->display((Object*)(obj_), str_)
+#define Object_display(obj_, str_)    Object_getClass(obj_)->display((const Object*)(obj_), str_)
 #define Object_compare(obj_, other_)  Object_getClass(obj_)->compare((const void*)(obj_), other_)
 
 #define Class(class_)                 ((const ObjectClass*)(&(class_ ## _class)))

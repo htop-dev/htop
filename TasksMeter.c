@@ -33,9 +33,9 @@ static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
    xSnprintf(buffer, len, "%d/%d", (int) this->values[3], (int) this->total);
 }
 
-static void TasksMeter_display(Object* cast, RichString* out) {
-   Meter* this = (Meter*)cast;
-   Settings* settings = this->pl->settings;
+static void TasksMeter_display(const Object* cast, RichString* out) {
+   const Meter* this = (const Meter*)cast;
+   const Settings* settings = this->pl->settings;
    char buffer[20];
 
    int processes = (int) this->values[2];

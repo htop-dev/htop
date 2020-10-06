@@ -22,8 +22,8 @@ static void ListItem_delete(Object* cast) {
    free(this);
 }
 
-static void ListItem_display(Object* cast, RichString* out) {
-   ListItem* const this = (ListItem*)cast;
+static void ListItem_display(const Object* cast, RichString* out) {
+   const ListItem* const this = (const ListItem*)cast;
    assert (this != NULL);
    /*
    int len = strlen(this->value)+1;
