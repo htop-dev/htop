@@ -31,9 +31,11 @@ static const char* const HugePageMeter_labels[] = {
    " 1G:", " 2G:", " 4G:", " 8G:", " 16G:", " 32G:", " 64G:", " 128G:", " 256G:", " 512G:",
 };
 
-static void HugePageMeter_updateValues(Meter* this, char* buffer, size_t size) {
+static void HugePageMeter_updateValues(Meter* this) {
    assert(ARRAYSIZE(HugePageMeter_labels) == HTOP_HUGEPAGE_COUNT);
 
+   char* buffer = this->txtBuffer;
+   size_t size = sizeof(this->txtBuffer);
    int written;
    memory_t usedTotal = 0;
    unsigned nextUsed = 0;

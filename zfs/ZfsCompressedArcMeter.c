@@ -36,10 +36,10 @@ static void ZfsCompressedArcMeter_printRatioString(const Meter* this, char* buff
    xSnprintf(buffer, size, "%.2f:1", this->total / this->values[0]);
 }
 
-static void ZfsCompressedArcMeter_updateValues(Meter* this, char* buffer, size_t size) {
+static void ZfsCompressedArcMeter_updateValues(Meter* this) {
    Platform_setZfsCompressedArcValues(this);
 
-   ZfsCompressedArcMeter_printRatioString(this, buffer, size);
+   ZfsCompressedArcMeter_printRatioString(this, this->txtBuffer, sizeof(this->txtBuffer));
 }
 
 static void ZfsCompressedArcMeter_display(const Object* cast, RichString* out) {

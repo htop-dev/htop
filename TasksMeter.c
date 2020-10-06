@@ -23,7 +23,7 @@ static const int TasksMeter_attributes[] = {
    TASKS_RUNNING
 };
 
-static void TasksMeter_updateValues(Meter* this, char* buffer, size_t len) {
+static void TasksMeter_updateValues(Meter* this) {
    const ProcessList* pl = this->pl;
    this->values[0] = pl->kernelThreads;
    this->values[1] = pl->userlandThreads;
@@ -35,7 +35,7 @@ static void TasksMeter_updateValues(Meter* this, char* buffer, size_t len) {
    if (pl->settings->hideKernelThreads) {
       this->values[0] = 0;
    }
-   xSnprintf(buffer, len, "%d/%d", (int) this->values[3], (int) this->total);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%d/%d", (int) this->values[3], (int) this->total);
 }
 
 static void TasksMeter_display(const Object* cast, RichString* out) {

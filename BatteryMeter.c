@@ -21,7 +21,7 @@ static const int BatteryMeter_attributes[] = {
    BATTERY
 };
 
-static void BatteryMeter_updateValues(Meter* this, char* buffer, size_t len) {
+static void BatteryMeter_updateValues(Meter* this) {
    ACPresence isOnAC;
    double percent;
 
@@ -29,7 +29,7 @@ static void BatteryMeter_updateValues(Meter* this, char* buffer, size_t len) {
 
    if (isnan(percent)) {
       this->values[0] = NAN;
-      xSnprintf(buffer, len, "N/A");
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "N/A");
       return;
    }
 
@@ -49,7 +49,7 @@ static void BatteryMeter_updateValues(Meter* this, char* buffer, size_t len) {
       break;
    }
 
-   xSnprintf(buffer, len, "%.1f%%%s", percent, text);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.1f%%%s", percent, text);
 }
 
 const MeterClass BatteryMeter_class = {

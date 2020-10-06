@@ -14,13 +14,13 @@ in the source distribution for its full text.
 
 static const int SysArchMeter_attributes[] = {HOSTNAME};
 
-static void SysArchMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
+static void SysArchMeter_updateValues(Meter* this) {
    static char* string;
 
    if (string == NULL)
       Platform_getRelease(&string);
 
-   String_safeStrncpy(buffer, string, size);
+   String_safeStrncpy(this->txtBuffer, string, sizeof(this->txtBuffer));
 }
 
 const MeterClass SysArchMeter_class = {

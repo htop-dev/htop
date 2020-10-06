@@ -18,7 +18,9 @@ static const int SwapMeter_attributes[] = {
    SWAP_CACHE
 };
 
-static void SwapMeter_updateValues(Meter* this, char* buffer, size_t size) {
+static void SwapMeter_updateValues(Meter* this) {
+   char* buffer = this->txtBuffer;
+   size_t size = sizeof(this->txtBuffer);
    int written;
    Platform_setSwapValues(this);
 

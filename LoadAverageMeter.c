@@ -36,7 +36,7 @@ static const int High_attributes[] = {
    METER_VALUE_ERROR
 };
 
-static void LoadAverageMeter_updateValues(Meter* this, char* buffer, size_t size) {
+static void LoadAverageMeter_updateValues(Meter* this) {
    Platform_getLoadAverage(&this->values[0], &this->values[1], &this->values[2]);
 
    // only show bar for 1min value
@@ -54,7 +54,7 @@ static void LoadAverageMeter_updateValues(Meter* this, char* buffer, size_t size
       this->total = 2 * this->pl->cpuCount;
    }
 
-   xSnprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
 }
 
 static void LoadAverageMeter_display(const Object* cast, RichString* out) {
@@ -68,7 +68,7 @@ static void LoadAverageMeter_display(const Object* cast, RichString* out) {
    RichString_appendAscii(out, CRT_colors[LOAD_AVERAGE_FIFTEEN], buffer);
 }
 
-static void LoadMeter_updateValues(Meter* this, char* buffer, size_t size) {
+static void LoadMeter_updateValues(Meter* this) {
    double five, fifteen;
    Platform_getLoadAverage(&this->values[0], &five, &fifteen);
 
@@ -84,7 +84,7 @@ static void LoadMeter_updateValues(Meter* this, char* buffer, size_t size) {
       this->total = 2 * this->pl->cpuCount;
    }
 
-   xSnprintf(buffer, size, "%.2f", this->values[0]);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.2f", this->values[0]);
 }
 
 static void LoadMeter_display(const Object* cast, RichString* out) {

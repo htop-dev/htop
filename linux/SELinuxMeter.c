@@ -69,11 +69,11 @@ static bool isSelinuxEnforcing(void) {
    return !!enforce;
 }
 
-static void SELinuxMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t len) {
+static void SELinuxMeter_updateValues(ATTR_UNUSED Meter* this) {
    enabled = isSelinuxEnabled();
    enforcing = isSelinuxEnforcing();
 
-   xSnprintf(buffer, len, "%s%s", enabled ? "enabled" : "disabled", enabled ? (enforcing ? "; mode: enforcing" : "; mode: permissive") : "");
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s%s", enabled ? "enabled" : "disabled", enabled ? (enforcing ? "; mode: enforcing" : "; mode: permissive") : "");
 }
 
 const MeterClass SELinuxMeter_class = {

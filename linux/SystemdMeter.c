@@ -262,7 +262,7 @@ static void updateViaExec(void) {
    fclose(commandOutput);
 }
 
-static void SystemdMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
+static void SystemdMeter_updateValues(Meter* this) {
    free(systemState);
    systemState = NULL;
    nFailedUnits = nInstalledJobs = nNames = nJobs = INVALID_VALUE;
@@ -274,7 +274,7 @@ static void SystemdMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, siz
    updateViaExec();
 #endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
 
-   xSnprintf(buffer, size, "%s", systemState ? systemState : "???");
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s", systemState ? systemState : "???");
 }
 
 static int zeroDigitColor(unsigned int value) {

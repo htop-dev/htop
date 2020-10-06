@@ -20,8 +20,8 @@ static const int HostnameMeter_attributes[] = {
    HOSTNAME
 };
 
-static void HostnameMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
-   Platform_getHostname(buffer, size);
+static void HostnameMeter_updateValues(Meter* this) {
+   Platform_getHostname(this->txtBuffer, sizeof(this->txtBuffer));
 }
 
 const MeterClass HostnameMeter_class = {
