@@ -39,6 +39,7 @@ static void printHelpFlag(void) {
          "Released under the GNU GPLv2.\n\n"
          "-C --no-color               Use a monochrome color scheme\n"
          "-d --delay=DELAY            Set the delay between updates, in tenths of seconds\n"
+         "-F --filter=FILTER          Show only the commands matching the given filter\n"
          "-h --help                   Print this help screen\n"
          "-M --no-mouse               Disable the mouse\n"
          "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
@@ -58,6 +59,7 @@ static void printHelpFlag(void) {
 
 typedef struct CommandLineSettings_ {
    Hashtable* pidMatchList;
+   char* commFilter;
    uid_t userId;
    int sortKey;
    int delay;
@@ -71,6 +73,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
    CommandLineSettings flags = {
       .pidMatchList = NULL,
+      .commFilter = NULL,
       .userId = -1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
@@ -93,12 +96,13 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"no-unicode", no_argument,         0, 'U'},
       {"tree",       no_argument,         0, 't'},
       {"pid",        required_argument,   0, 'p'},
+      {"filter",     required_argument,   0, 'F'},
       {0,0,0,0}
    };
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -179,6 +183,12 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
             break;
          }
+         case 'F': {
+            assert(optarg);
+            flags.commFilter = xStrdup(optarg);
+
+            break;
+         }
          default:
             exit(1);
       }
@@ -194,6 +204,23 @@ static void millisleep(unsigned long millisec) {
    while(nanosleep(&req,&req)==-1) {
       continue;
    }
+}
+
+static void setCommFilter(State* state, char** commFilter) {
+   MainPanel* panel = (MainPanel*)state->panel;
+   ProcessList* pl = state->pl;
+   IncSet* inc = panel->inc;
+   size_t maxlen = sizeof(inc->modes[INC_FILTER].buffer) - 1;
+   char* buffer = inc->modes[INC_FILTER].buffer;
+
+   strncpy(buffer, *commFilter, maxlen);
+   buffer[maxlen] = 0;
+   inc->modes[INC_FILTER].index = strlen(buffer);
+   inc->filtering = true;
+   pl->incFilter = IncSet_filter(inc);
+
+   free(*commFilter);
+   *commFilter = NULL;
 }
 
 int main(int argc, char** argv) {
@@ -257,7 +284,11 @@ int main(int argc, char** argv) {
       .panel = (Panel*) panel,
       .header = header,
    };
+
    MainPanel_setState(panel, &state);
+   if (flags.commFilter) {
+      setCommFilter(&state, &(flags.commFilter));
+   }
 
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
    ScreenManager_add(scr, (Panel*) panel, -1);

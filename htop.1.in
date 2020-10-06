@@ -4,7 +4,7 @@ htop \- interactive process viewer
 .SH "SYNOPSIS"
 .LP
 .B htop
-.RB [ \-dChpustv ]
+.RB [ \-dCFhpustv ]
 .SH "DESCRIPTION"
 .LP
 .B htop
@@ -35,6 +35,9 @@ is greater than 100, it is decreased to 100, i.e. 10 seconds.
 Start
 .B htop
 in monochrome mode
+.TP
+\fB\-F \-\-filter=FILTER
+Filter processes by command
 .TP
 \fB\-h \-\-help
 Display a help message and exit
