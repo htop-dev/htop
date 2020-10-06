@@ -50,10 +50,10 @@ static void CPUMeter_init(Meter* this) {
       Meter_setCaption(this, "Avg");
 }
 
-static void CPUMeter_updateValues(Meter* this, char* buffer, size_t size) {
+static void CPUMeter_updateValues(Meter* this) {
    int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
-      xSnprintf(buffer, size, "absent");
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "absent");
       for (uint8_t i = 0; i < this->curItems; i++)
          this->values[i] = 0;
       return;
@@ -91,7 +91,7 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, size_t size) {
    }
    #endif
 
-   xSnprintf(buffer, size, "%s%s%s%s%s",
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s%s%s%s%s",
              cpuUsageBuffer,
              (cpuUsageBuffer[0] && (cpuFrequencyBuffer[0] || cpuTemperatureBuffer[0])) ? " " : "",
              cpuFrequencyBuffer,

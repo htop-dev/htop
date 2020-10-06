@@ -24,7 +24,7 @@ static uint32_t cached_rxp_diff;
 static uint32_t cached_txb_diff;
 static uint32_t cached_txp_diff;
 
-static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
+static void NetworkIOMeter_updateValues(Meter* this) {
    static uint64_t cached_last_update = 0;
 
    struct timeval tv;
@@ -45,7 +45,7 @@ static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
       NetworkIOData data;
       hasData = Platform_getNetworkIO(&data);
       if (!hasData) {
-         xSnprintf(buffer, len, "no data");
+         xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
          return;
       }
 
@@ -95,7 +95,7 @@ static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    char bufferBytesReceived[12], bufferBytesTransmitted[12];
    Meter_humanUnit(bufferBytesReceived, cached_rxb_diff, sizeof(bufferBytesReceived));
    Meter_humanUnit(bufferBytesTransmitted, cached_txb_diff, sizeof(bufferBytesTransmitted));
-   xSnprintf(buffer, len, "rx:%siB/s tx:%siB/s", bufferBytesReceived, bufferBytesTransmitted);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s", bufferBytesReceived, bufferBytesTransmitted);
 }
 
 static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {

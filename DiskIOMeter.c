@@ -30,7 +30,7 @@ static uint32_t cached_read_diff;
 static uint32_t cached_write_diff;
 static double cached_utilisation_diff;
 
-static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
+static void DiskIOMeter_updateValues(Meter* this) {
    static uint64_t cached_last_update;
 
    struct timeval tv;
@@ -52,7 +52,7 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
       hasData = Platform_getDiskIO(&data);
       if (!hasData) {
          this->values[0] = 0;
-         xSnprintf(buffer, len, "no data");
+         xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
          return;
       }
 
@@ -89,7 +89,7 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    char bufferRead[12], bufferWrite[12];
    Meter_humanUnit(bufferRead, cached_read_diff, sizeof(bufferRead));
    Meter_humanUnit(bufferWrite, cached_write_diff, sizeof(bufferWrite));
-   snprintf(buffer, len, "%sB %sB %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
+   snprintf(this->txtBuffer, sizeof(this->txtBuffer), "%sB %sB %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
 }
 
 static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {

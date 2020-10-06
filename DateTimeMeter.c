@@ -19,7 +19,7 @@ static const int DateTimeMeter_attributes[] = {
    DATETIME
 };
 
-static void DateTimeMeter_updateValues(Meter* this, char* buffer, size_t size) {
+static void DateTimeMeter_updateValues(Meter* this) {
    time_t t = time(NULL);
    struct tm result;
    const struct tm* lt = localtime_r(&t, &result);
@@ -30,7 +30,7 @@ static void DateTimeMeter_updateValues(Meter* this, char* buffer, size_t size) {
       this->total = 365;
    }
    this->values[0] = lt->tm_yday;
-   strftime(buffer, size, "%F %H:%M:%S", lt);
+   strftime(this->txtBuffer, sizeof(this->txtBuffer), "%F %H:%M:%S", lt);
 }
 
 const MeterClass DateTimeMeter_class = {
