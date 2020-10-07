@@ -9,21 +9,6 @@ in the source distribution for its full text.
 
 #include "InfoScreen.h"
 
-typedef struct OpenFiles_Data_ {
-   char* data[256];
-} OpenFiles_Data;
-
-typedef struct OpenFiles_ProcessData_ {
-   OpenFiles_Data data;
-   int error;
-   struct OpenFiles_FileData_* files;
-} OpenFiles_ProcessData;
-
-typedef struct OpenFiles_FileData_ {
-   OpenFiles_Data data;
-   struct OpenFiles_FileData_* next;
-} OpenFiles_FileData;
-
 typedef struct OpenFilesScreen_ {
    InfoScreen super;
    pid_t pid;
@@ -31,12 +16,8 @@ typedef struct OpenFilesScreen_ {
 
 extern const InfoScreenClass OpenFilesScreen_class;
 
-OpenFilesScreen* OpenFilesScreen_new(Process* process);
+OpenFilesScreen* OpenFilesScreen_new(const Process* process);
 
 void OpenFilesScreen_delete(Object* this);
-
-void OpenFilesScreen_draw(InfoScreen* this);
-
-void OpenFilesScreen_scan(InfoScreen* this);
 
 #endif
