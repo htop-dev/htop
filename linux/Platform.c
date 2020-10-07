@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "LinuxProcess.h"
+#include "SELinuxMeter.h"
 #include "StringUtils.h"
 
 #include <math.h>
@@ -139,6 +140,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
    &DiskIOMeter_class,
+   &SELinuxMeter_class,
    NULL
 };
 
