@@ -119,23 +119,31 @@ myhtopheaders = \
 # -----
 
 linux_platform_headers = \
-	linux/Platform.h \
-	linux/IOPriorityPanel.h \
+	linux/Battery.h \
 	linux/IOPriority.h \
+	linux/IOPriorityPanel.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
-	linux/Battery.h \
+	linux/Platform.h \
 	linux/PressureStallMeter.h \
+	linux/SELinuxMeter.h \
 	zfs/ZfsArcMeter.h \
-	zfs/ZfsCompressedArcMeter.h \
-	zfs/ZfsArcStats.h
+	zfs/ZfsArcStats.h \
+	zfs/ZfsCompressedArcMeter.h
 
 if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
-myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c \
-linux/LinuxProcess.c linux/LinuxProcessList.c linux/Battery.c \
-linux/PressureStallMeter.c \
-zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c
+myhtopplatsources = \
+	linux/Battery.c \
+	linux/IOPriorityPanel.c \
+	linux/LinuxProcess.c \
+	linux/LinuxProcessList.c \
+	linux/Platform.c \
+	linux/PressureStallMeter.c \
+	linux/SELinuxMeter.c \
+	zfs/ZfsArcMeter.c \
+	zfs/ZfsArcStats.c \
+	zfs/ZfsCompressedArcMeter.c
 
 myhtopplatheaders = $(linux_platform_headers)
 endif
