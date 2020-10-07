@@ -26,7 +26,7 @@ DarwinProcess* DarwinProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
 
-bool Process_isThread(Process* this);
+bool Process_isThread(const Process* this);
 
 void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now);
 

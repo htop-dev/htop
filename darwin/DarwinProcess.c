@@ -45,7 +45,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isThread(const Process* this) {
    (void) this;
    return false;
 }
