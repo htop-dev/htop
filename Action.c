@@ -423,8 +423,8 @@ static const struct { const char* key; const char* info; } helpRight[] = {
    { .key = "      e: ", .info = "show process environment" },
    { .key = "      i: ", .info = "set IO priority" },
    { .key = "      l: ", .info = "list open files with lsof" },
-   { .key = "      M: ", .info = "show process command in multiple lines" },
    { .key = "      s: ", .info = "trace syscalls with strace" },
+   { .key = "      w: ", .info = "wrap process command in multiple lines" },
    { .key = " F2 C S: ", .info = "setup" },
    { .key = "   F1 h: ", .info = "show this help screen" },
    { .key = "  F10 q: ", .info = "quit" },
@@ -595,5 +595,5 @@ void Action_setBindings(Htop_Action* keys) {
    keys['U'] = actionUntagAll;
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
-   keys['M'] = actionShowCommandScreen;
+   keys['w'] = actionShowCommandScreen;
 }
