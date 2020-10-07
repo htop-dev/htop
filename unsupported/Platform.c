@@ -130,7 +130,7 @@ void Platform_setSwapValues(Meter* this) {
    (void) this;
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isThread(const Process* this) {
    (void) this;
    return false;
 }

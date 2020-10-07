@@ -147,7 +147,7 @@ typedef struct LinuxProcess_ {
    char *secattr;
 } LinuxProcess;
 
-#define Process_isKernelThread(_process) (((LinuxProcess*)(_process))->isKernelThread)
+#define Process_isKernelThread(_process) (((const LinuxProcess*)(_process))->isKernelThread)
 
 #define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
 
@@ -185,6 +185,6 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
 
 long LinuxProcess_compare(const void* v1, const void* v2);
 
-bool Process_isThread(Process* this);
+bool Process_isThread(const Process* this);
 
 #endif

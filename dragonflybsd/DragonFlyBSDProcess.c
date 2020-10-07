@@ -128,8 +128,8 @@ long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isThread(Process* this) {
-   DragonFlyBSDProcess* fp = (DragonFlyBSDProcess*) this;
+bool Process_isThread(const Process* this) {
+   const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) this;
 
    if (fp->kernel == 1 )
       return 1;

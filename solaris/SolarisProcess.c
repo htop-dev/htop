@@ -150,8 +150,8 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isThread(Process* this) {
-   SolarisProcess* fp = (SolarisProcess*) this;
+bool Process_isThread(const Process* this) {
+   const SolarisProcess* fp = (const SolarisProcess*) this;
 
    if (fp->kernel == 1 ) {
       return 1;

@@ -43,7 +43,7 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
-bool Process_isThread(Process* this);
+bool Process_isThread(const Process* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 

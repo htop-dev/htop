@@ -389,6 +389,6 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isThread(const Process* this) {
    return (Process_isUserlandThread(this) || Process_isKernelThread(this));
 }

@@ -29,14 +29,14 @@ typedef struct InfoScreenClass_ {
 
 struct InfoScreen_ {
    Object super;
-   Process* process;
+   const Process* process;
    Panel* display;
    FunctionBar* bar;
    IncSet* inc;
    Vector* lines;
 };
 
-InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar, int height, const char* panelHeader);
+InfoScreen* InfoScreen_init(InfoScreen* this, const Process* process, FunctionBar* bar, int height, const char* panelHeader);
 
 InfoScreen* InfoScreen_done(InfoScreen* this);
 
