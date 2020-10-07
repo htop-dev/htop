@@ -90,6 +90,8 @@ AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_STAT
 AC_CHECK_FUNCS([fstatat memmove strncasecmp strstr strdup])
 
+AC_SEARCH_LIBS([dlopen], [dl dld])
+
 save_cflags="${CFLAGS}"
 CFLAGS="${CFLAGS} -std=c99"
 AC_MSG_CHECKING([whether cc -std=c99 option works])

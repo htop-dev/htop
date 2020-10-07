@@ -39,6 +39,7 @@ in the source distribution for its full text.
 #include "SELinuxMeter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
+#include "SystemdMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
@@ -153,6 +154,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
    &SELinuxMeter_class,
+   &SystemdMeter_class,
    NULL
 };
 
