@@ -24,30 +24,63 @@ in the source distribution for its full text.
 #include <sys/wait.h>
 
 
-const InfoScreenClass OpenFilesScreen_class = {
-   .super = {
-      .extends = Class(Object),
-      .delete = OpenFilesScreen_delete
-   },
-   .scan = OpenFilesScreen_scan,
-   .draw = OpenFilesScreen_draw
-};
+typedef struct OpenFiles_Data_ {
+   char* data[7];
+} OpenFiles_Data;
 
-OpenFilesScreen* OpenFilesScreen_new(Process* process) {
+typedef struct OpenFiles_ProcessData_ {
+   OpenFiles_Data data;
+   int error;
+   struct OpenFiles_FileData_* files;
+} OpenFiles_ProcessData;
+
+typedef struct OpenFiles_FileData_ {
+   OpenFiles_Data data;
+   struct OpenFiles_FileData_* next;
+} OpenFiles_FileData;
+
+static size_t getIndexForType(char type) {
+   switch (type) {
+   case 'f':
+      return 0;
+   case 'a':
+      return 1;
+   case 'D':
+      return 2;
+   case 'i':
+      return 3;
+   case 'n':
+      return 4;
+   case 's':
+      return 5;
+   case 't':
+      return 6;
+   }
+
+   /* should never reach here */
+   abort();
+}
+
+static const char* getDataForType(const OpenFiles_Data* data, char type) {
+   size_t index = getIndexForType(type);
+   return data->data[index] ? data->data[index] : "";
+}
+
+OpenFilesScreen* OpenFilesScreen_new(const Process* process) {
    OpenFilesScreen* this = xMalloc(sizeof(OpenFilesScreen));
    Object_setClass(this, Class(OpenFilesScreen));
    if (Process_isThread(process))
       this->pid = process->tgid;
    else
       this->pid = process->pid;
-   return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES-3, "   FD TYPE     DEVICE       SIZE       NODE NAME");
+   return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES-3, "   FD TYPE    MODE DEVICE           SIZE       NODE  NAME");
 }
 
 void OpenFilesScreen_delete(Object* this) {
    free(InfoScreen_done((InfoScreen*)this));
 }
 
-void OpenFilesScreen_draw(InfoScreen* this) {
+static void OpenFilesScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Snapshot of files open in process %d - %s", ((OpenFilesScreen*)this)->pid, this->process->comm);
 }
 
@@ -99,7 +132,9 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       }
 
       unsigned char cmd = line[0];
-      if (cmd == 'f') {
+      switch (cmd) {
+      case 'f':  /* file descriptor */
+      {
          OpenFiles_FileData* nextFile = xCalloc(1, sizeof(OpenFiles_FileData));
          if (fdata == NULL) {
             pdata->files = nextFile;
@@ -108,8 +143,35 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
          }
          fdata = nextFile;
          item = &(fdata->data);
+      } /* FALLTHRU */
+      case 'a':  /* file access mode */
+      case 'D':  /* file's major/minor device number */
+      case 'i':  /* file's inode number */
+      case 'n':  /* file name, comment, Internet address */
+      case 's':  /* file's size */
+      case 't':  /* file's type */
+      {
+         size_t index = getIndexForType(cmd);
+         free(item->data[index]);
+         item->data[index] = xStrdup(line + 1);
+         break;
       }
-      item->data[cmd] = xStrdup(line + 1);
+      case 'c':  /* process command name  */
+      case 'd':  /* file's device character code */
+      case 'g':  /* process group ID */
+      case 'G':  /* file flags */
+      case 'k':  /* link count */
+      case 'l':  /* file's lock status */
+      case 'L':  /* process login name */
+      case 'o':  /* file's offset */
+      case 'p':  /* process ID */
+      case 'P':  /* protocol name */
+      case 'R':  /* parent process ID */
+      case 'T':  /* TCP/TPI information, identified by prefixes */
+      case 'u':  /* process user ID */
+         /* ignore */
+         break;
+      }
       free(line);
    }
    fclose(fd);
@@ -128,13 +190,12 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    return pdata;
 }
 
-static inline void OpenFiles_Data_clear(OpenFiles_Data* data) {
-   for (int i = 0; i < 255; i++)
-      if (data->data[i])
-         free(data->data[i]);
+static void OpenFiles_Data_clear(OpenFiles_Data* data) {
+   for (size_t i = 0; i < ARRAYSIZE(data->data); i++)
+      free(data->data[i]);
 }
 
-void OpenFilesScreen_scan(InfoScreen* this) {
+static void OpenFilesScreen_scan(InfoScreen* this) {
    Panel* panel = this->display;
    int idx = Panel_getSelectedIndex(panel);
    Panel_prune(panel);
@@ -146,19 +207,20 @@ void OpenFilesScreen_scan(InfoScreen* this) {
    } else {
       OpenFiles_FileData* fdata = pdata->files;
       while (fdata) {
-         char** data = fdata->data.data;
-         int lenN = data['n'] ? strlen(data['n']) : 0;
-         int sizeEntry = 5 + 7 + 10 + 10 + 10 + lenN + 5 /*spaces*/ + 1 /*null*/;
+         OpenFiles_Data* data = &fdata->data;
+         size_t lenN = strlen(getDataForType(data, 'n'));
+         size_t sizeEntry = 5 + 7 + 4 + 10 + 10 + 10 + lenN + 7 /*spaces*/ + 1 /*null*/;
          char entry[sizeEntry];
-         xSnprintf(entry, sizeEntry, "%5.5s %7.7s %10.10s %10.10s %10.10s %s",
-            data['f'] ? data['f'] : "",
-            data['t'] ? data['t'] : "",
-            data['D'] ? data['D'] : "",
-            data['s'] ? data['s'] : "",
-            data['i'] ? data['i'] : "",
-            data['n'] ? data['n'] : "");
+         xSnprintf(entry, sizeof(entry), "%5.5s %-7.7s %-4.4s %-10.10s %10.10s %10.10s  %s",
+                   getDataForType(data, 'f'),
+                   getDataForType(data, 't'),
+                   getDataForType(data, 'a'),
+                   getDataForType(data, 'D'),
+                   getDataForType(data, 's'),
+                   getDataForType(data, 'i'),
+                   getDataForType(data, 'n'));
          InfoScreen_addLine(this, entry);
-         OpenFiles_Data_clear(&fdata->data);
+         OpenFiles_Data_clear(data);
          OpenFiles_FileData* old = fdata;
          fdata = fdata->next;
          free(old);
@@ -170,3 +232,12 @@ void OpenFilesScreen_scan(InfoScreen* this) {
    Vector_insertionSort(panel->items);
    Panel_setSelected(panel, idx);
 }
+
+const InfoScreenClass OpenFilesScreen_class = {
+   .super = {
+      .extends = Class(Object),
+      .delete = OpenFilesScreen_delete
+   },
+   .scan = OpenFilesScreen_scan,
+   .draw = OpenFilesScreen_draw
+};
