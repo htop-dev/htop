@@ -88,7 +88,7 @@ void Hashtable_put(Hashtable* this, unsigned int key, void* value) {
          this->items++;
          break;
       } else if ((*bucketPtr)->key == key) {
-         if (this->owner)
+         if (this->owner && (*bucketPtr)->value != value)
             free((*bucketPtr)->value);
          (*bucketPtr)->value = value;
          break;
