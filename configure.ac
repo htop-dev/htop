@@ -321,6 +321,36 @@ AS_IF([test "x$enable_debug" = "xyes"], , [AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"])
 
 AC_SUBST([AM_CPPFLAGS])
 
+# Link time optimization feature in newer gcc/g++
+#    based on http://svn.r-project.org/R/trunk/configure.ac
+AC_ARG_ENABLE([lto],
+    [AS_HELP_STRING([--enable-lto],[enable link-time optimization @<:@no@:>@])],
+    [if test "x${enableval}" = xyes -o "x${enableval}" = x; then
+        enable_lto=yes
+     elif test "x${enableval}" = xno; then
+        enable_lto=no
+     else
+        AC_MSG_ERROR([Invalid response to --enable-lto (got ${enableval})])
+     fi],
+    [enable_lto=no])
+if test "x${enable_lto}" = xyes; then
+  AX_CHECK_COMPILE_FLAG([-flto],
+                        [],
+                        [AC_MSG_ERROR([Compiler doesn't support -flto, requested by link-time optimization (--enable-lto)])])
+  LTO=-flto
+fi
+AC_SUBST(LTO)
+AM_CONDITIONAL(BUILD_LTO, [test "x${enable_lto}" != xno])
+
+AM_CFLAGS="${AM_CFLAGS} ${LTO}"
+AM_CPPFLAGS="${AM_CPPFLAGS}"
+AM_CXXFLAGS="${AM_CXXFLAGS} ${LTO}"
+AM_LDFLAGS="${AM_LDFLAGS} ${LTO}"
+AC_SUBST([AM_CFLAGS])
+AC_SUBST([AM_CPPFLAGS])
+AC_SUBST([AM_CXXFLAGS])
+AC_SUBST([AM_LDFLAGS])
+
 # Bail out on errors.
 # ----------------------------------------------------------------------
 if test ! -z "$missing_libraries"; then
@@ -374,4 +404,5 @@ AC_MSG_RESULT([
   unicode:                   $enable_unicode
   hwlock:                    $enable_hwloc
   setuid:                    $enable_setuid
+  lto:                       $enable_lto
 ])
