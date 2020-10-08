@@ -46,6 +46,7 @@ myhtopsources = \
 	MemoryMeter.c \
 	Meter.c \
 	MetersPanel.c \
+	NetworkIOMeter.c \
 	Object.c \
 	OpenFilesScreen.c \
 	Panel.c \
@@ -97,6 +98,7 @@ myhtopheaders = \
 	MemoryMeter.h \
 	Meter.h \
 	MetersPanel.h \
+	NetworkIOMeter.h \
 	Object.h \
 	OpenFilesScreen.h \
 	Panel.h \

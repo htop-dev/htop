@@ -18,11 +18,14 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "HostnameMeter.h"
+#include "NetworkIOMeter.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "FreeBSDProcess.h"
 #include "FreeBSDProcessList.h"
 
+#include <net/if.h>
+#include <net/if_mib.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
@@ -107,6 +110,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &BlankMeter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &NetworkIOMeter_class,
    NULL
 };
 
@@ -229,4 +233,51 @@ char* Platform_getProcessEnv(pid_t pid) {
 void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
    // TODO
    *bytesRead = *bytesWrite = *msTimeSpend = 0;
+}
+
+void Platform_getNetworkIO(unsigned long int *bytesReceived,
+                           unsigned long int *packetsReceived,
+                           unsigned long int *bytesTransmitted,
+                           unsigned long int *packetsTransmitted) {
+   int r;
+
+   // get number of interfaces
+   int count;
+   size_t countLen = sizeof(count);
+   const int countMib[] = { CTL_NET, PF_LINK, NETLINK_GENERIC, IFMIB_SYSTEM, IFMIB_IFCOUNT };
+
+   r = sysctl(countMib, ARRAYSIZE(countMib), &count, &countLen, NULL, 0);
+   if (r < 0) {
+      *bytesReceived = 0;
+      *packetsReceived = 0;
+      *bytesTransmitted = 0;
+      *packetsTransmitted = 0;
+      return;
+   }
+
+   unsigned long int bytesReceivedSum = 0, packetsReceivedSum = 0, bytesTransmittedSum = 0, packetsTransmittedSum = 0;
+
+   for (int i = 1; i <= count; i++) {
+      struct ifmibdata ifmd;
+      size_t ifmdLen = sizeof(ifmd);
+
+      const int dataMib[] = { CTL_NET, PF_LINK, NETLINK_GENERIC, IFMIB_IFDATA, i, IFDATA_GENERAL };
+
+      r = sysctl(dataMib, ARRAYSIZE(dataMib), &ifmd, &ifmdLen, NULL, 0);
+      if (r < 0)
+         continue;
+
+      if (ifmd.ifmd_flags & IFF_LOOPBACK)
+         continue;
+
+      bytesReceivedSum += ifmd.ifmd_data.ifi_ibytes;
+      packetsReceivedSum += ifmd.ifmd_data.ifi_ipackets;
+      bytesTransmittedSum += ifmd.ifmd_data.ifi_obytes;
+      packetsTransmittedSum += ifmd.ifmd_data.ifi_opackets;
+   }
+
+   *bytesReceived = bytesReceivedSum;
+   *packetsReceived = packetsReceivedSum;
+   *bytesTransmitted = bytesTransmittedSum;
+   *packetsTransmitted = packetsTransmittedSum;
 }

@@ -144,3 +144,13 @@ char* Platform_getProcessEnv(pid_t pid) {
 void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
    *bytesRead = *bytesWrite = *msTimeSpend = 0;
 }
+
+void Platform_getNetworkIO(unsigned long int *bytesReceived,
+                           unsigned long int *packetsReceived,
+                           unsigned long int *bytesTransmitted,
+                           unsigned long int *packetsTransmitted) {
+   *bytesReceived = 0;
+   *packetsReceived = 0;
+   *bytesTransmitted = 0;
+   *packetsTransmitted = 0;
+}
