@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "HostnameMeter.h"
+#include "NetworkIOMeter.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "LinuxProcess.h"
@@ -140,6 +141,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
    &DiskIOMeter_class,
+   &NetworkIOMeter_class,
    &SELinuxMeter_class,
    NULL
 };
@@ -337,4 +339,47 @@ void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWr
    *bytesRead = 512 * read_sum;
    *bytesWrite = 512 * write_sum;
    *msTimeSpend = timeSpend_sum;
+}
+
+void Platform_getNetworkIO(unsigned long int *bytesReceived,
+                           unsigned long int *packetsReceived,
+                           unsigned long int *bytesTransmitted,
+                           unsigned long int *packetsTransmitted) {
+   FILE *fd = fopen(PROCDIR "/net/dev", "r");
+   if (!fd) {
+      *bytesReceived = 0;
+      *packetsReceived = 0;
+      *bytesTransmitted = 0;
+      *packetsTransmitted = 0;
+      return;
+   }
+
+   unsigned long int bytesReceivedSum = 0, packetsReceivedSum = 0, bytesTransmittedSum = 0, packetsTransmittedSum = 0;
+   char lineBuffer[512];
+   while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
+      char interfaceName[32];
+      unsigned long int bytesReceivedParsed, packetsReceivedParsed, bytesTransmittedParsed, packetsTransmittedParsed;
+      if (fscanf(fd, "%31s %lu %lu %*u %*u %*u %*u %*u %*u %lu %lu %*u %*u %*u %*u %*u %*u",
+                     interfaceName,
+                     &bytesReceivedParsed,
+                     &packetsReceivedParsed,
+                     &bytesTransmittedParsed,
+                     &packetsTransmittedParsed) != 5)
+         continue;
+
+      if (0 == strcmp(interfaceName, "lo:"))
+         continue;
+
+      bytesReceivedSum += bytesReceivedParsed;
+      packetsReceivedSum += packetsReceivedParsed;
+      bytesTransmittedSum += bytesTransmittedParsed;
+      packetsTransmittedSum += packetsTransmittedParsed;
+   }
+
+   fclose(fd);
+
+   *bytesReceived = bytesReceivedSum;
+   *packetsReceived = packetsReceivedSum;
+   *bytesTransmitted = bytesTransmittedSum;
+   *packetsTransmitted = packetsTransmittedSum;
 }

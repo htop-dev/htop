@@ -315,3 +315,14 @@ void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWr
    // TODO
    *bytesRead = *bytesWrite = *msTimeSpend = 0;
 }
+
+void Platform_getNetworkIO(unsigned long int *bytesReceived,
+                           unsigned long int *packetsReceived,
+                           unsigned long int *bytesTransmitted,
+                           unsigned long int *packetsTransmitted) {
+   // TODO
+   *bytesReceived = 0;
+   *packetsReceived = 0;
+   *bytesTransmitted = 0;
+   *packetsTransmitted = 0;
+}
