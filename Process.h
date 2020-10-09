@@ -9,6 +9,8 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <stdint.h>
+#include <unistd.h>
 #include <sys/types.h>
 
 #include "Object.h"
@@ -113,7 +115,7 @@ typedef struct ProcessFieldData_ {
    const char* name;
    const char* title;
    const char* description;
-   int flags;
+   uint32_t flags;
 } ProcessFieldData;
 
 // Implemented in platform-specific code:

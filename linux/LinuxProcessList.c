@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@ in the source distribution for its full text.
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 
 #ifdef HAVE_DELAYACCT
 #include <linux/netlink.h>
@@ -479,7 +481,74 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
    }
 }
 
-static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* dirname, const char* name) {
+typedef struct LibraryData {
+    uint64_t size;
+    bool exec;
+} LibraryData;
+
+static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED hkey_t key, void* value, void* data) {
+   if (!data)
+      return;
+
+   if (!value)
+      return;
+
+   LibraryData* v = (LibraryData *)value;
+   uint64_t* d = (uint64_t *)data;
+   if (!v->exec)
+      return;
+
+   *d += v->size;
+}
+
+static uint64_t LinuxProcessList_calcLibSize(const char* dirname, const char* name) {
+   char filename[MAX_NAME+1];
+   xSnprintf(filename, sizeof(filename), "%s/%s/maps", dirname, name);
+   FILE* mapsfile = fopen(filename, "r");
+   if (!mapsfile)
+      return 0;
+
+   Hashtable* ht = Hashtable_new(64, true);
+
+   char buffer[1024];
+   while (fgets(buffer, sizeof(buffer), mapsfile)) {
+      uint64_t map_start;
+      uint64_t map_end;
+      char map_perm[16];
+      uint32_t map_dummy;
+      int map_devmaj;
+      int map_devmin;
+      uint64_t map_inode;
+
+      if (7 != sscanf(buffer, "%"PRIx64"-%"PRIx64" %4s %"PRIx32" %d:%d %" PRIu64,
+         &map_start, &map_end, map_perm, &map_dummy,
+         &map_devmaj, &map_devmin, &map_inode))
+         continue;
+
+      if (!map_inode)
+         continue;
+
+      LibraryData * libdata;
+      libdata = Hashtable_get(ht, map_inode);
+      if (!libdata) {
+         libdata = xCalloc(1, sizeof(LibraryData));
+         Hashtable_put(ht, map_inode, libdata);
+      }
+
+      libdata->size += map_end - map_start;
+      libdata->exec |= 'x' == map_perm[2];
+   }
+
+   uint64_t total_size = 0;
+   Hashtable_foreach(ht, LinuxProcessList_calcLibSize_helper, &total_size);
+
+   Hashtable_delete(ht);
+
+   fclose(mapsfile);
+   return total_size / CRT_pageSize;
+}
+
+static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* dirname, const char* name, bool performLookup) {
    char filename[MAX_NAME + 1];
    xSnprintf(filename, sizeof(filename), "%s/%s/statm", dirname, name);
    FILE* statmfile = fopen(filename, "r");
@@ -495,6 +564,9 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
                   &process->m_drs,
                   &process->m_dt);
    fclose(statmfile);
+   if (r == 7 && !process->m_lrs && performLookup) {
+      process->m_lrs = LinuxProcessList_calcLibSize(dirname, name);
+   }
    return r == 7;
 }
 
@@ -1193,7 +1265,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (settings->flags & PROCESS_FLAG_IO)
          LinuxProcessList_readIoFile(lp, dirname, name, now);
 
-      if (! LinuxProcessList_readStatmFile(lp, dirname, name))
+      if (!LinuxProcessList_readStatmFile(lp, dirname, name, !!(settings->flags & PROCESS_FLAG_LINUX_LRS_FIX)))
          goto errorReadingProcess;
 
       if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
