@@ -88,7 +88,7 @@ AC_TYPE_UID_T
 # ----------------------------------------------------------------------
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_STAT
-AC_CHECK_FUNCS([fstatat memmove strncasecmp strstr strdup])
+AC_CHECK_FUNCS([fstatat memmove readlinkat strdup strncasecmp strstr])
 
 save_cflags="${CFLAGS}"
 CFLAGS="${CFLAGS} -std=c99"

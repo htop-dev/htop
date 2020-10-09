@@ -129,6 +129,7 @@ linux_platform_headers = \
 	linux/LinuxProcessList.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
+	linux/ProcessLocksScreen.h \
 	linux/SELinuxMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
@@ -145,6 +146,7 @@ myhtopplatsources = \
 	linux/LinuxProcessList.c \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
+	linux/ProcessLocksScreen.c \
 	linux/SELinuxMeter.c \
 	linux/ZramMeter.c \
 	zfs/ZfsArcMeter.c \

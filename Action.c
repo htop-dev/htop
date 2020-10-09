@@ -34,6 +34,10 @@ in the source distribution for its full text.
 #include "Vector.h"
 #include "XUtils.h"
 
+#ifdef HTOP_LINUX
+#include "linux/ProcessLocksScreen.h"
+#endif
+
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    Panel* panel = st->panel;
@@ -371,6 +375,19 @@ static Htop_Reaction actionLsof(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+#ifdef HTOP_LINUX
+static Htop_Reaction actionShowLocks(State* st) {
+   Process* p = (Process*) Panel_getSelected(st->panel);
+   if (!p) return HTOP_OK;
+   ProcessLocksScreen* pls = ProcessLocksScreen_new(p);
+   InfoScreen_run((InfoScreen*)pls);
+   ProcessLocksScreen_delete((Object*)pls);
+   clear();
+   CRT_enableDelay();
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+#endif
+
 static Htop_Reaction actionStrace(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
@@ -435,6 +452,9 @@ static const struct { const char* key; const char* info; } helpRight[] = {
    { .key = "      e: ", .info = "show process environment" },
    { .key = "      i: ", .info = "set IO priority" },
    { .key = "      l: ", .info = "list open files with lsof" },
+#ifdef HTOP_LINUX
+   { .key = "      x: ", .info = "list file locks of process" },
+#endif
    { .key = "      s: ", .info = "trace syscalls with strace" },
    { .key = "      w: ", .info = "wrap process command in multiple lines" },
    { .key = " F2 C S: ", .info = "setup" },
@@ -620,6 +640,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['S'] = actionSetup;
    keys['C'] = actionSetup;
    keys[KEY_F(2)] = actionSetup;
+#ifdef HTOP_LINUX
+   keys['x'] = actionShowLocks;
+#endif
    keys['l'] = actionLsof;
    keys['s'] = actionStrace;
    keys[' '] = actionTag;
