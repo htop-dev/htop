@@ -90,7 +90,7 @@ static void Settings_defaultMeters(Settings* this, int initialCpuCount) {
    this->columns[1].modes[r++] = TEXT_METERMODE;
 }
 
-static void readFields(ProcessField* fields, int* flags, const char* line) {
+static void readFields(ProcessField* fields, uint32_t* flags, const char* line) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);

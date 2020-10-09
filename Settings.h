@@ -27,7 +27,7 @@ typedef struct Settings_ {
    MeterColumnSettings columns[2];
 
    ProcessField* fields;
-   int flags;
+   uint32_t flags;
    int colorScheme;
    int delay;
 
