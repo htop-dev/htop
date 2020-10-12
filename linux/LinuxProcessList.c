@@ -260,9 +260,8 @@ void ProcessList_delete(ProcessList* pl) {
    free(this);
 }
 
-static double jiffy = NAN;
-
 static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
+   static double jiffy = NAN;
    if(isnan(jiffy)) {
       errno = 0;
       long sc_jiffy = sysconf(_SC_CLK_TCK);
@@ -345,7 +344,11 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    process->nlwp = strtol(location, &location, 10);
    location += 1;
    location = strchr(location, ' ')+1;
-   lp->starttime = strtoll(location, &location, 10);
+   if (process->starttime_ctime == 0) {
+      process->starttime_ctime = btime + LinuxProcess_adjustTime(strtoll(location, &location, 10)) / 100;
+   } else {
+      location = strchr(location, ' ')+1;
+   }
    location += 1;
    for (int i=0; i<15; i++) location = strchr(location, ' ')+1;
    process->exit_signal = strtol(location, &location, 10);
@@ -1031,6 +1034,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
             goto errorReadingProcess;
          }
+
+         struct tm date;
+         (void) localtime_r(&proc->starttime_ctime, &date);
+         strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
 
          ProcessList_add(pl, proc);
       } else {
