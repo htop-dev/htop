@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #include <pwd.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/time.h>
 
@@ -448,11 +449,14 @@ static Htop_Reaction actionHelp(State* st) {
    for (int i = 0; i < LINES-1; i++)
       mvhline(i, 0, ' ', COLS);
 
-   mvaddstr(0, 0, "htop " VERSION " - " COPYRIGHT);
-   mvaddstr(1, 0, "Released under the GNU GPLv2. See 'man' page for more info.");
+   int line = 0;
+
+   mvaddstr(line++, 0, "htop " VERSION " - " COPYRIGHT);
+   mvaddstr(line++, 0, "Released under the GNU GPLv2. See 'man' page for more info.");
 
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(3, 0, "CPU usage bar: ");
+   line++;
+   mvaddstr(line++, 0, "CPU usage bar: ");
    #define addattrstr(a,s) attrset(a);addstr(s)
    addattrstr(CRT_colors[BAR_BORDER], "[");
    if (settings->detailedCPUTime) {
@@ -474,7 +478,7 @@ static Htop_Reaction actionHelp(State* st) {
    }
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(4, 0, "Memory bar:    ");
+   mvaddstr(line++, 0, "Memory bar:    ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[MEMORY_USED], "used"); addstr("/");
    addattrstr(CRT_colors[MEMORY_BUFFERS_TEXT], "buffers"); addstr("/");
@@ -482,29 +486,49 @@ static Htop_Reaction actionHelp(State* st) {
    addattrstr(CRT_colors[BAR_SHADOW], "                            used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(5, 0, "Swap bar:      ");
+   mvaddstr(line++, 0, "Swap bar:      ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[SWAP], "used");
    addattrstr(CRT_colors[BAR_SHADOW], "                                          used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(6,0, "Type and layout of header meters are configurable in the setup screen.");
+   mvaddstr(line++,0, "Type and layout of header meters are configurable in the setup screen.");
    if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
-      mvaddstr(7, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
+      mvaddstr(line, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
    }
-   mvaddstr( 8, 0, " Status: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
-   for (int i = 0; helpLeft[i].info; i++) { mvaddstr(9+i, 9,  helpLeft[i].info); }
-   for (int i = 0; helpRight[i].info; i++) { mvaddstr(9+i, 49, helpRight[i].info); }
-   attrset(CRT_colors[HELP_BOLD]);
-   for (int i = 0; helpLeft[i].key;  i++) { mvaddstr(9+i, 0,  helpLeft[i].key); }
-   for (int i = 0; helpRight[i].key; i++) { mvaddstr(9+i, 40, helpRight[i].key); }
-   attrset(CRT_colors[PROCESS_THREAD]);
-   mvaddstr(17, 32, "threads");
-   mvaddstr(18, 26, "threads");
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   line++;
+
+   mvaddstr(line++, 0, "Process state: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
+
+   line++;
+
+   int item;
+   for (item = 0; helpLeft[item].key; item++) {
+      attrset(CRT_colors[DEFAULT_COLOR]);
+      mvaddstr(line + item, 9,  helpLeft[item].info);
+      attrset(CRT_colors[HELP_BOLD]);
+      mvaddstr(line + item, 0,  helpLeft[item].key);
+      if (0 == strcmp(helpLeft[item].key, "      H: ")) {
+         attrset(CRT_colors[PROCESS_THREAD]);
+         mvaddstr(line + item, 32, "threads");
+      } else if (0 == strcmp(helpLeft[item].key, "      K: ")) {
+         attrset(CRT_colors[PROCESS_THREAD]);
+         mvaddstr(line + item, 26, "threads");
+      }
+   }
+   int leftHelpItems = item;
+
+   for (item = 0; helpRight[item].key; item++) {
+      attrset(CRT_colors[HELP_BOLD]);
+      mvaddstr(line + item, 40, helpRight[item].key);
+      attrset(CRT_colors[DEFAULT_COLOR]);
+      mvaddstr(line + item, 49, helpRight[item].info);
+   }
+   line += MAXIMUM(leftHelpItems, item);
+   line++;
 
    attrset(CRT_colors[HELP_BOLD]);
-   mvaddstr(24,0, "Press any key to return.");
+   mvaddstr(line++, 0, "Press any key to return.");
    attrset(CRT_colors[DEFAULT_COLOR]);
    refresh();
    CRT_readKey();
