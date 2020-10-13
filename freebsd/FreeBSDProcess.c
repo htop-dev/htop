@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 
-ProcessClass FreeBSDProcess_class = {
+const ProcessClass FreeBSDProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,

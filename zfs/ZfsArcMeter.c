@@ -23,7 +23,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-int ZfsArcMeter_attributes[] = {
+static const int ZfsArcMeter_attributes[] = {
    ZFS_MFU, ZFS_MRU, ZFS_ANON, ZFS_HEADER, ZFS_OTHER
 };
 
@@ -86,7 +86,7 @@ static void ZfsArcMeter_display(const Object* cast, RichString* out) {
    }
 }
 
-MeterClass ZfsArcMeter_class = {
+const MeterClass ZfsArcMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

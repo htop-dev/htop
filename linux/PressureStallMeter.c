@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-static int PressureStallMeter_attributes[] = {
+static const int PressureStallMeter_attributes[] = {
    PRESSURE_STALL_TEN, PRESSURE_STALL_SIXTY, PRESSURE_STALL_THREEHUNDRED
 };
 
@@ -52,7 +52,7 @@ static void PressureStallMeter_display(const Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[PRESSURE_STALL_THREEHUNDRED], buffer);
 }
 
-MeterClass PressureStallCPUSomeMeter_class = {
+const MeterClass PressureStallCPUSomeMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -68,7 +68,7 @@ MeterClass PressureStallCPUSomeMeter_class = {
    .caption = "Some CPU pressure: "
 };
 
-MeterClass PressureStallIOSomeMeter_class = {
+const MeterClass PressureStallIOSomeMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -84,7 +84,7 @@ MeterClass PressureStallIOSomeMeter_class = {
    .caption = "Some IO  pressure: "
 };
 
-MeterClass PressureStallIOFullMeter_class = {
+const MeterClass PressureStallIOFullMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -100,7 +100,7 @@ MeterClass PressureStallIOFullMeter_class = {
    .caption = "Full IO  pressure: "
 };
 
-MeterClass PressureStallMemorySomeMeter_class = {
+const MeterClass PressureStallMemorySomeMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -116,7 +116,7 @@ MeterClass PressureStallMemorySomeMeter_class = {
    .caption = "Some Mem pressure: "
 };
 
-MeterClass PressureStallMemoryFullMeter_class = {
+const MeterClass PressureStallMemoryFullMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

@@ -27,7 +27,7 @@ typedef struct DragonFlyBSDProcess_ {
 //#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
 #define Process_isUserlandThread(_process) (_process->nlwp > 1)
 
-extern ProcessClass DragonFlyBSDProcess_class;
+extern const ProcessClass DragonFlyBSDProcess_class;
 
 extern ProcessFieldData Process_fields[];
 

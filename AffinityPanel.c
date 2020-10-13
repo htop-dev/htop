@@ -67,7 +67,7 @@ static void MaskItem_display(const Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
 }
 
-static ObjectClass MaskItem_class = {
+static const ObjectClass MaskItem_class = {
    .display = MaskItem_display,
    .delete  = MaskItem_delete
 };
