@@ -389,14 +389,10 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
 
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
       // TODO: bool isIdleProcess = false;
-      struct tm date;
       Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
@@ -417,6 +413,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->pgrp = kproc->ki_pgid;
          proc->st_uid = kproc->ki_uid;
          proc->starttime_ctime = kproc->ki_start.tv_sec;
+         Process_fillStarttimeBuffer(proc);
          proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          ProcessList_add((ProcessList*)this, proc);
          proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
@@ -489,9 +486,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if (Process_isKernelThread(fp)) {
          this->kernelThreads++;
       }
-
-      (void) localtime_r((time_t*) &proc->starttime_ctime, &date);
-      strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
 
       this->totalTasks++;
       if (proc->state == 'R')

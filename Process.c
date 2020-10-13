@@ -181,6 +181,12 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths) {
    }
 }
 
+void Process_fillStarttimeBuffer(Process* this) {
+   struct tm date;
+   (void) localtime_r(&this->starttime_ctime, &date);
+   strftime(this->starttime_show, sizeof(this->starttime_show) - 1, (this->starttime_ctime > (time(NULL) - 86400)) ? "%R " : "%b%d ", &date);
+}
+
 static inline void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
    int start = RichString_size(str), finish = 0;
    const char* comm = this->comm;

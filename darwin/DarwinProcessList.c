@@ -150,9 +150,6 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 	struct kinfo_proc *ps;
 	size_t count;
     DarwinProcess *proc;
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL); /* Start processing time */
 
     /* Update the global data (CPU times and VM stats) */
     ProcessList_freeCPULoadInfo(&dpl->prev_load);
@@ -187,7 +184,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     for(size_t i = 0; i < count; ++i) {
        proc = (DarwinProcess *)ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
 
-       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], tv.tv_sec, preExisting);
+       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], preExisting);
        DarwinProcess_setFromLibprocPidinfo(proc, dpl);
 
        // Disabled for High Sierra due to bug in macOS High Sierra

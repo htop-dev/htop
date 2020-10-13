@@ -50,14 +50,6 @@ bool Process_isThread(const Process* this) {
    return false;
 }
 
-void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now) {
-   struct tm date;
-
-   proc->starttime_ctime = ep->p_starttime.tv_sec;
-   (void) localtime_r(&proc->starttime_ctime, &date);
-   strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
-}
-
 char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
@@ -201,7 +193,7 @@ ERROR_A:
    return retval;
 }
 
-void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists) {
+void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool exists) {
    struct extern_proc *ep = &ps->kp_proc;
 
    /* UNSET HERE :
@@ -231,7 +223,9 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
       /* e_tdev == -1 for "no device" */
       proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
 
-      DarwinProcess_setStartTime(proc, ep, now);
+      proc->starttime_ctime = ep->p_starttime.tv_sec;
+      Process_fillStarttimeBuffer(proc);
+
       proc->comm = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
    }
 

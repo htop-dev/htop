@@ -156,6 +156,8 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
 
 void Process_printTime(RichString* str, unsigned long long totalHundredths);
 
+void Process_fillStarttimeBuffer(Process* this);
+
 void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring);
 
 void Process_display(const Object* cast, RichString* out);

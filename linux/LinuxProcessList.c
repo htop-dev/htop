@@ -1035,9 +1035,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
             goto errorReadingProcess;
          }
 
-         struct tm date;
-         (void) localtime_r(&proc->starttime_ctime, &date);
-         strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
+         Process_fillStarttimeBuffer(proc);
 
          ProcessList_add(pl, proc);
       } else {
