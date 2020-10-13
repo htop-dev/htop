@@ -18,7 +18,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 
-ProcessClass SolarisProcess_class = {
+const ProcessClass SolarisProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,

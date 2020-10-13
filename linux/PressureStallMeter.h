@@ -12,14 +12,14 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern MeterClass PressureStallCPUSomeMeter_class;
+extern const MeterClass PressureStallCPUSomeMeter_class;
 
-extern MeterClass PressureStallIOSomeMeter_class;
+extern const MeterClass PressureStallIOSomeMeter_class;
 
-extern MeterClass PressureStallIOFullMeter_class;
+extern const MeterClass PressureStallIOFullMeter_class;
 
-extern MeterClass PressureStallMemorySomeMeter_class;
+extern const MeterClass PressureStallMemorySomeMeter_class;
 
-extern MeterClass PressureStallMemoryFullMeter_class;
+extern const MeterClass PressureStallMemoryFullMeter_class;
 
 #endif

@@ -25,7 +25,7 @@ typedef struct FreeBSDProcess_ {
 
 #define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
 
-extern ProcessClass FreeBSDProcess_class;
+extern const ProcessClass FreeBSDProcess_class;
 
 extern ProcessFieldData Process_fields[];
 

@@ -44,7 +44,7 @@ typedef struct SolarisProcess_ {
 
 #define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
 
-extern ProcessClass SolarisProcess_class;
+extern const ProcessClass SolarisProcess_class;
 
 extern ProcessFieldData Process_fields[];
 

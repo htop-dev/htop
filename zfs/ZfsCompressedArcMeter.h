@@ -11,10 +11,8 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern int ZfsCompressedArcMeter_attributes[];
-
 void ZfsCompressedArcMeter_readStats(Meter* this, ZfsArcStats* stats);
 
-extern MeterClass ZfsCompressedArcMeter_class;
+extern const MeterClass ZfsCompressedArcMeter_class;
 
 #endif

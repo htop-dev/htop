@@ -126,7 +126,7 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
 
-ProcessClass LinuxProcess_class = {
+const ProcessClass LinuxProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,

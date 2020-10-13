@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include <mach/mach.h>
 
 
-ProcessClass DarwinProcess_class = {
+const ProcessClass DarwinProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,

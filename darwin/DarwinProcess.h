@@ -20,7 +20,7 @@ typedef struct DarwinProcess_ {
    bool taskAccess;
 } DarwinProcess;
 
-extern ProcessClass DarwinProcess_class;
+extern const ProcessClass DarwinProcess_class;
 
 DarwinProcess* DarwinProcess_new(Settings* settings);
 

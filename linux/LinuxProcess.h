@@ -157,7 +157,7 @@ extern ProcessFieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 
-extern ProcessClass LinuxProcess_class;
+extern const ProcessClass LinuxProcess_class;
 
 LinuxProcess* LinuxProcess_new(Settings* settings);
 

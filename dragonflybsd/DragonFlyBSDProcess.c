@@ -18,7 +18,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 
-ProcessClass DragonFlyBSDProcess_class = {
+const ProcessClass DragonFlyBSDProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,
