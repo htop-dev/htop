@@ -19,7 +19,7 @@ typedef long(*Object_Compare)(const void*, const void*);
 typedef void(*Object_Delete)(Object*);
 
 #define Object_getClass(obj_)         ((const Object*)(obj_))->klass
-#define Object_setClass(obj_, class_) (((Object*)(obj_))->klass = (const ObjectClass*) class_)
+#define Object_setClass(obj_, class_) (((Object*)(obj_))->klass = (const ObjectClass*) (class_))
 
 #define Object_delete(obj_)           Object_getClass(obj_)->delete((Object*)(obj_))
 #define Object_displayFn(obj_)        Object_getClass(obj_)->display
