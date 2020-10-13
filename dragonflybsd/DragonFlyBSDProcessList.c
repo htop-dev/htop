@@ -358,7 +358,7 @@ char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int ja
    return jname;
 }
 
-void ProcessList_goThroughEntries(ProcessList* this) {
+void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
    DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
    Settings* settings = this->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
@@ -367,6 +367,10 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    DragonFlyBSDProcessList_scanMemoryInfo(this);
    DragonFlyBSDProcessList_scanCPUTime(this);
    DragonFlyBSDProcessList_scanJails(dfpl);
+
+   // in pause mode only gather global data for meters (CPU/memory/...)
+   if (pauseProcessUpdate)
+      return;
 
    int count = 0;
 

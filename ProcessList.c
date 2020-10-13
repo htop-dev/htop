@@ -281,7 +281,13 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
    return proc;
 }
 
-void ProcessList_scan(ProcessList* this) {
+void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
+
+   // in pause mode only gather global data for meters (CPU/memory/...)
+   if (pauseProcessUpdate) {
+      ProcessList_goThroughEntries(this, true);
+      return;
+   }
 
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
@@ -295,7 +301,7 @@ void ProcessList_scan(ProcessList* this) {
    this->kernelThreads = 0;
    this->runningTasks = 0;
 
-   ProcessList_goThroughEntries(this);
+   ProcessList_goThroughEntries(this, false);
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);

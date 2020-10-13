@@ -1382,7 +1382,7 @@ static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
    scanCPUFreqencyFromCPUinfo(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    LinuxProcessList* this = (LinuxProcessList*) super;
    const Settings* settings = super->settings;
 
@@ -1395,6 +1395,10 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
    if (settings->showCPUFrequency)
       LinuxProcessList_scanCPUFrequency(this);
+
+   // in pause mode only gather global data for meters (CPU/memory/...)
+   if (pauseProcessUpdate)
+      return;
 
    struct timeval tv;
    gettimeofday(&tv, NULL);

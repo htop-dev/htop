@@ -105,9 +105,9 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    *timedOut = (newTime - *oldTime > this->settings->delay);
    *rescan = *rescan || *timedOut;
    if (newTime < *oldTime) *rescan = true; // clock was adjusted?
-   if (*rescan && !this->state->pauseProcessUpdate) {
+   if (*rescan) {
       *oldTime = newTime;
-      ProcessList_scan(pl);
+      ProcessList_scan(pl, this->state->pauseProcessUpdate);
       if (*sortTimeout == 0 || this->settings->treeView) {
          ProcessList_sort(pl);
          *sortTimeout = 1;
