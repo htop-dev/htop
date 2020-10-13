@@ -260,8 +260,6 @@ void ProcessList_delete(ProcessList* pl) {
  */
 
 int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr) {
-   struct timeval tv;
-   struct tm date;
    bool preExisting;
    pid_t getpid;
 
@@ -280,8 +278,6 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    }
    Process *proc             = ProcessList_getProcess(pl, getpid, &preExisting, (Process_New) SolarisProcess_new);
    SolarisProcess *sproc     = (SolarisProcess*) proc;
-
-   gettimeofday(&tv, NULL);
 
    // Common code pass 1
    proc->show               = false;
@@ -368,8 +364,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       } else {
          sproc->kernel = false;
       }
-      (void) localtime_r((time_t*) &proc->starttime_ctime, &date);
-      strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
+      Process_fillStarttimeBuffer(proc);
       ProcessList_add(pl, proc);
    }
    proc->updated = true;

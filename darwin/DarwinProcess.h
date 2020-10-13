@@ -28,11 +28,9 @@ void Process_delete(Object* cast);
 
 bool Process_isThread(const Process* this);
 
-void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now);
-
 char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset);
 
-void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists);
+void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool exists);
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl);
 
