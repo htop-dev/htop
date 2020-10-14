@@ -61,7 +61,7 @@ int Vector_count(Vector* this);
 
 void Vector_add(Vector* this, void* data_);
 
-int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
+int Vector_indexOf(Vector* this, const void* search_, Object_Compare compare);
 
 void Vector_splice(Vector* this, Vector* from);
 

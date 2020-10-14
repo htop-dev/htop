@@ -288,9 +288,9 @@ void Vector_add(Vector* this, void* data_) {
    assert(Vector_isConsistent(this));
 }
 
-int Vector_indexOf(Vector* this, void* search_, Object_Compare compare) {
-   Object* search = search_;
-   assert(Object_isA((Object*)search, this->type));
+int Vector_indexOf(Vector* this, const void* search_, Object_Compare compare) {
+   const Object* search = search_;
+   assert(Object_isA(search, this->type));
    assert(compare);
    assert(Vector_isConsistent(this));
    for (int i = 0; i < this->items; i++) {
