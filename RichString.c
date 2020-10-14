@@ -6,11 +6,12 @@ in the source distribution for its full text.
 */
 
 #include "RichString.h"
-#include "XAlloc.h"
 #include "Macros.h"
+#include "XUtils.h"
 
 #include <stdlib.h>
 #include <string.h>
+
 
 #define charBytes(n) (sizeof(CharType) * (n))
 

@@ -7,10 +7,21 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <assert.h>
+#include <err.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "Macros.h"
 
+
+void fail(void) ATTR_NORETURN;
+
+void* xMalloc(size_t size);
+
+void* xCalloc(size_t nmemb, size_t size);
+
+void* xRealloc(void* ptr, size_t size);
 
 #define String_startsWith(s, match) (strncmp((s),(match),strlen(match)) == 0)
 #define String_contains_i(s1, s2) (strcasestr(s1, s2) != NULL)

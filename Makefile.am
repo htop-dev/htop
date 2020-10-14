@@ -62,7 +62,6 @@ myhtopsources = \
 	UptimeMeter.c \
 	UsersTable.c \
 	Vector.c \
-	XAlloc.c \
 	XUtils.c
 
 myhtopheaders = \
@@ -114,7 +113,6 @@ myhtopheaders = \
 	UptimeMeter.h \
 	UsersTable.h \
 	Vector.h \
-	XAlloc.h \
 	XUtils.h
 
 # Linux

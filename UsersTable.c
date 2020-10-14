@@ -17,7 +17,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <assert.h>
 
-#include "XAlloc.h"
 #include "XUtils.h"
 
 

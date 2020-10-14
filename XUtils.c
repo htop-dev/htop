@@ -14,8 +14,37 @@ in the source distribution for its full text.
 #include <string.h>
 #include <strings.h>
 
-#include "XAlloc.h"
+#include "CRT.h"
 
+
+void fail() {
+   CRT_done();
+   abort();
+}
+
+void* xMalloc(size_t size) {
+   void* data = malloc(size);
+   if (!data && size > 0) {
+      fail();
+   }
+   return data;
+}
+
+void* xCalloc(size_t nmemb, size_t size) {
+   void* data = calloc(nmemb, size);
+   if (!data && nmemb > 0 && size > 0) {
+      fail();
+   }
+   return data;
+}
+
+void* xRealloc(void* ptr, size_t size) {
+   void* data = realloc(ptr, size);
+   if (!data && size > 0) {
+      fail();
+   }
+   return data;
+}
 
 char* String_cat(const char* s1, const char* s2) {
    int l1 = strlen(s1);

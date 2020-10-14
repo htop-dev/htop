@@ -9,8 +9,9 @@ in the source distribution for its full text.
 */
 
 #include "RichString.h"
-#include "XAlloc.h"
 #include "Macros.h"
+#include "XUtils.h"
+
 
 typedef struct Object_ Object;
 
