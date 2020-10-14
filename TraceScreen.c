@@ -11,8 +11,8 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "ListItem.h"
 #include "IncSet.h"
-#include "StringUtils.h"
 #include "FunctionBar.h"
+#include "XUtils.h"
 
 #include <stdio.h>
 #include <unistd.h>

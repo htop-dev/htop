@@ -17,8 +17,8 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <assert.h>
 
-#include "StringUtils.h"
 #include "XAlloc.h"
+#include "XUtils.h"
 
 
 UsersTable* UsersTable_new() {

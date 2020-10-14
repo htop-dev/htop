@@ -6,11 +6,11 @@ in the source distribution for its full text.
 */
 
 #include "Settings.h"
-#include "Platform.h"
 
-#include "StringUtils.h"
-#include "Vector.h"
 #include "CRT.h"
+#include "Platform.h"
+#include "Vector.h"
+#include "XUtils.h"
 
 #include <sys/stat.h>
 #include <stdlib.h>

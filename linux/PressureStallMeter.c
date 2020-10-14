@@ -12,7 +12,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Platform.h"
-#include "StringUtils.h"
+#include "XUtils.h"
 
 
 static const int PressureStallMeter_attributes[] = {

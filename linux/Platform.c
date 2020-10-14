@@ -30,7 +30,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "LinuxProcess.h"
 #include "SELinuxMeter.h"
-#include "StringUtils.h"
+#include "XUtils.h"
 
 #include <math.h>
 #include <assert.h>

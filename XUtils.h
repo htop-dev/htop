@@ -1,5 +1,5 @@
-#ifndef HEADER_StringUtils
-#define HEADER_StringUtils
+#ifndef HEADER_XUtils
+#define HEADER_XUtils
 /*
 htop - StringUtils.h
 (C) 2004-2011 Hisham H. Muhammad

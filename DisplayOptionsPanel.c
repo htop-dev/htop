@@ -13,7 +13,7 @@ in the source distribution for its full text.
 
 #include "CheckItem.h"
 #include "CRT.h"
-#include "StringUtils.h"
+#include "XUtils.h"
 
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};

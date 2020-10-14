@@ -6,10 +6,10 @@ in the source distribution for its full text.
 */
 
 #include "ProcessList.h"
-#include "Platform.h"
 
 #include "CRT.h"
-#include "StringUtils.h"
+#include "Platform.h"
+#include "XUtils.h"
 
 #include <stdlib.h>
 #include <string.h>

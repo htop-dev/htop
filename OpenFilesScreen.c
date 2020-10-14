@@ -10,8 +10,8 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "ProcessList.h"
 #include "IncSet.h"
-#include "StringUtils.h"
 #include "FunctionBar.h"
+#include "XUtils.h"
 
 #include <string.h>
 #include <stdio.h>

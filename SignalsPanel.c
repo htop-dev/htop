@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "Platform.h"
 #include "RichString.h"
-#include "StringUtils.h"
+#include "XUtils.h"
 
 
 Panel* SignalsPanel_new() {

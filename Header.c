@@ -8,8 +8,8 @@ in the source distribution for its full text.
 #include "Header.h"
 
 #include "CRT.h"
-#include "StringUtils.h"
 #include "Platform.h"
+#include "XUtils.h"
 
 #include <assert.h>
 #include <time.h>

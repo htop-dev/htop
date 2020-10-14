@@ -19,9 +19,9 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ScreenManager.h"
 #include "SignalsPanel.h"
-#include "StringUtils.h"
 #include "TraceScreen.h"
 #include "Platform.h"
+#include "XUtils.h"
 
 #include <ctype.h>
 #include <math.h>

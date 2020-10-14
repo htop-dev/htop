@@ -6,7 +6,7 @@
 #include "IncSet.h"
 #include "ListItem.h"
 #include "Platform.h"
-#include "StringUtils.h"
+#include "XUtils.h"
 
 #include <stdlib.h>
 #include <string.h>

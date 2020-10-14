@@ -8,7 +8,8 @@ in the source distribution for its full text.
 #include "LinuxProcessList.h"
 #include "LinuxProcess.h"
 #include "CRT.h"
-#include "StringUtils.h"
+#include "XUtils.h"
+
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/utsname.h>

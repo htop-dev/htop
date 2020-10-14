@@ -12,9 +12,9 @@ in the source distribution for its full text.
 #include "config.h"
 
 #include "CRT.h"
-#include "StringUtils.h"
 #include "RichString.h"
 #include "Platform.h"
+#include "XUtils.h"
 
 #include <stdio.h>
 #include <sys/time.h>

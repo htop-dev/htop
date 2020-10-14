@@ -7,11 +7,10 @@ in the source distribution for its full text.
 Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "Battery.h"
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
@@ -20,7 +19,9 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 #include <fcntl.h>
 #include <time.h>
 #include <math.h>
-#include "StringUtils.h"
+
+#include "XUtils.h"
+
 
 #define SYS_POWERSUPPLY_DIR "/sys/class/power_supply"
 

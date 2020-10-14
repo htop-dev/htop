@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "IOPriorityPanel.h"
 
-#include "StringUtils.h"
+#include "XUtils.h"
 
 
 Panel* IOPriorityPanel_new(IOPriority currPrio) {

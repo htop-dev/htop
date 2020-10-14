@@ -6,9 +6,10 @@ in the source distribution for its full text.
 */
 
 #include "IncSet.h"
-#include "StringUtils.h"
 #include "ListItem.h"
 #include "CRT.h"
+#include "XUtils.h"
+
 #include <string.h>
 #include <stdlib.h>
 

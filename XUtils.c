@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h"
 
-#include "StringUtils.h"
+#include "XUtils.h"
 
 #include <stdarg.h>
 #include <stdlib.h>

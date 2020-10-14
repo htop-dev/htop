@@ -56,14 +56,14 @@ myhtopsources = \
 	ScreenManager.c \
 	Settings.c \
 	SignalsPanel.c \
-	StringUtils.c \
 	SwapMeter.c \
 	TasksMeter.c \
 	TraceScreen.c \
 	UptimeMeter.c \
 	UsersTable.c \
 	Vector.c \
-	XAlloc.c
+	XAlloc.c \
+	XUtils.c
 
 myhtopheaders = \
 	Action.h \
@@ -108,14 +108,14 @@ myhtopheaders = \
 	ScreenManager.h \
 	Settings.h \
 	SignalsPanel.h \
-	StringUtils.h \
 	SwapMeter.h \
 	TasksMeter.h \
 	TraceScreen.h \
 	UptimeMeter.h \
 	UsersTable.h \
 	Vector.h \
-	XAlloc.h
+	XAlloc.h \
+	XUtils.h
 
 # Linux
 # -----

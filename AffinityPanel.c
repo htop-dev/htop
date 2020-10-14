@@ -13,8 +13,8 @@ in the source distribution for its full text.
 #include <string.h>
 
 #include "CRT.h"
-#include "StringUtils.h"
 #include "Vector.h"
+#include "XUtils.h"
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>

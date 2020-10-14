@@ -15,7 +15,7 @@ in the source distribution for its full text.
 #include "ColumnsPanel.h"
 #include "Header.h"
 #include "Platform.h"
-#include "StringUtils.h"
+#include "XUtils.h"
 
 
 static const char* const AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};

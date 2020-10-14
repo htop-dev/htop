@@ -10,8 +10,8 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "Object.h"
 #include "CRT.h"
-#include "StringUtils.h"
 #include "Settings.h"
+#include "XUtils.h"
 
 #include <math.h>
 #include <string.h>

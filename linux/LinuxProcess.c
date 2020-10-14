@@ -11,7 +11,7 @@ in the source distribution for its full text.
 #include "LinuxProcess.h"
 #include "CRT.h"
 #include "Platform.h"
-#include "StringUtils.h"
+#include "XUtils.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 #include <time.h>
 #include <math.h>
+
 
 /* semi-global */
 long long btime;
