@@ -14,7 +14,7 @@ jobs:
     - name: Configure
       run: ./configure --enable-werror --enable-linux-affinity
     - name: Build
-      run: make
+      run: make -k
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity"
 
@@ -36,7 +36,7 @@ jobs:
     - name: Configure
       run: ./configure --enable-werror --enable-linux-affinity
     - name: Build
-      run: make
+      run: make -k
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity"
 
@@ -51,7 +51,7 @@ jobs:
     - name: Configure
       run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct
     - name: Build
-      run: make
+      run: make -k
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct'
 
