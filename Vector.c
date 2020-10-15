@@ -40,7 +40,7 @@ void Vector_delete(Vector* this) {
 
 #ifndef NDEBUG
 
-static bool Vector_isConsistent(Vector* this) {
+static bool Vector_isConsistent(const Vector* this) {
    assert(this->items <= this->arraySize);
    if (this->owner) {
       for (int i = 0; i < this->items; i++)
@@ -52,7 +52,7 @@ static bool Vector_isConsistent(Vector* this) {
    }
 }
 
-int Vector_count(Vector* this) {
+int Vector_count(const Vector* this) {
    int items = 0;
    for (int i = 0; i < this->items; i++) {
       if (this->array[i])
@@ -68,7 +68,7 @@ Object* Vector_get(Vector* this, int idx) {
    return this->array[idx];
 }
 
-int Vector_size(Vector* this) {
+int Vector_size(const Vector* this) {
    assert(Vector_isConsistent(this));
    return this->items;
 }
@@ -288,13 +288,13 @@ void Vector_add(Vector* this, void* data_) {
    assert(Vector_isConsistent(this));
 }
 
-int Vector_indexOf(Vector* this, const void* search_, Object_Compare compare) {
+int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compare) {
    const Object* search = search_;
    assert(Object_isA(search, this->type));
    assert(compare);
    assert(Vector_isConsistent(this));
    for (int i = 0; i < this->items; i++) {
-      Object* o = this->array[i];
+      const Object* o = this->array[i];
       assert(o);
       if (compare(search, o) == 0)
          return i;
