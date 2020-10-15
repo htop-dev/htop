@@ -154,7 +154,6 @@ freebsd_platform_headers = \
 	zfs/openzfs_sysctl.h
 
 if HTOP_FREEBSD
-AM_LDFLAGS += -lexecinfo
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
 freebsd/FreeBSDProcess.c freebsd/Battery.c \
 zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c zfs/openzfs_sysctl.c
@@ -172,7 +171,7 @@ dragonflybsd_platform_headers = \
 	dragonflybsd/Battery.h
 
 if HTOP_DRAGONFLYBSD
-AM_LDFLAGS += -lkvm -lkinfo -lexecinfo
+AM_LDFLAGS += -lkvm -lkinfo
 myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
 dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/Battery.c
 
