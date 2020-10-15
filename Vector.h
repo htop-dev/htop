@@ -9,10 +9,9 @@ in the source distribution for its full text.
 
 #include "Object.h"
 
-#define swap(a_,x_,y_) do{ void* tmp_ = a_[x_]; a_[x_] = a_[y_]; a_[y_] = tmp_; }while(0)
 
 #ifndef DEFAULT_SIZE
-#define DEFAULT_SIZE -1
+#define DEFAULT_SIZE (-1)
 #endif
 
 typedef struct Vector_ {
@@ -54,8 +53,13 @@ int Vector_count(const Vector* this);
 
 #else /* NDEBUG */
 
-#define Vector_get(v_, idx_) ((v_)->array[idx_])
-#define Vector_size(v_) ((v_)->items)
+static inline Object* Vector_get(Vector* this, int idx) {
+   return this->array[idx];
+}
+
+static inline int Vector_size(const Vector* this) {
+   return this->items;
+}
 
 #endif /* NDEBUG */
 
