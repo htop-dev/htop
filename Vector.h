@@ -49,8 +49,8 @@ void Vector_set(Vector* this, int idx, void* data_);
 #ifndef NDEBUG
 
 Object* Vector_get(Vector* this, int idx);
-int Vector_size(Vector* this);
-int Vector_count(Vector* this);
+int Vector_size(const Vector* this);
+int Vector_count(const Vector* this);
 
 #else /* NDEBUG */
 
@@ -61,7 +61,7 @@ int Vector_count(Vector* this);
 
 void Vector_add(Vector* this, void* data_);
 
-int Vector_indexOf(Vector* this, const void* search_, Object_Compare compare);
+int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compare);
 
 void Vector_splice(Vector* this, Vector* from);
 
