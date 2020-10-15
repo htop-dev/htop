@@ -92,6 +92,9 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
    [AC_MSG_ERROR([htop is written in C99. A newer compiler is required.])])
 CFLAGS="$save_cflags"
 
+# Add -lexecinfo if needed
+AC_SEARCH_LIBS([backtrace], [execinfo])
+
 # Checks for features and flags.
 # ----------------------------------------------------------------------
 PROCDIR=/proc
