@@ -13,5 +13,5 @@ script:
   - ./autogen.sh
   # clang might warn about C11 generic selections in isnan()
   - CFLAGS=-Wno-c11-extensions ./configure --enable-werror
-  - make
+  - make -k
   - CFLAGS=-Wno-c11-extensions make distcheck DISTCHECK_CONFIGURE_FLAGS=--enable-werror
