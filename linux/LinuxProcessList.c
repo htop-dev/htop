@@ -479,14 +479,14 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    //http://elixir.free-electrons.com/linux/v4.10/source/fs/proc/task_mmu.c#L719
    //kernel will return data in chunks of size PAGE_SIZE or less.
 
-   char buffer[PAGE_SIZE];// 4k
+   char buffer[CRT_pageSize];// 4k
    char *start,*end;
    ssize_t nread=0;
    int tmp=0;
    if(haveSmapsRollup) {// only available in Linux 4.14+
-      snprintf(buffer, PAGE_SIZE-1, "%s/%s/smaps_rollup", dirname, name);
+      xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps_rollup", dirname, name);
    } else {
-      snprintf(buffer, PAGE_SIZE-1, "%s/%s/smaps", dirname, name);
+      xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps", dirname, name);
    }
    int fd = open(buffer, O_RDONLY);
    if (fd == -1)
@@ -1020,7 +1020,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;
       proc->percent_cpu = CLAMP(percent_cpu, 0.0, cpus * 100.0);
       if (isnan(proc->percent_cpu)) proc->percent_cpu = 0.0;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(pl->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(pl->totalMem) * 100.0;
 
       if(!preExisting) {
 

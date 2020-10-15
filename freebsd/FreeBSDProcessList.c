@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 #include <sys/user.h>
 
+#include "CRT.h"
 #include "FreeBSDProcess.h"
 #include "Macros.h"
 #include "ProcessList.h"
@@ -60,8 +61,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    len = sizeof(pageSize);
    if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1) {
-      pageSize = PAGE_SIZE;
-      pageSizeKb = PAGE_SIZE_KB;
+      pageSize = CRT_pageSize;
+      pageSizeKb = CRT_pageSize;
    } else {
       pageSizeKb = pageSize / ONE_K;
    }
@@ -446,12 +447,12 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       // from FreeBSD source /src/usr.bin/top/machine.c
       proc->m_size = kproc->ki_size / 1024 / pageSizeKb;
       proc->m_resident = kproc->ki_rssize;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * pageSizeKb) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem);
+      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(this->totalMem);
 
       /*
        * TODO

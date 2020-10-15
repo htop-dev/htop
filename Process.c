@@ -311,8 +311,8 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    }
    case MAJFLT: Process_colorNumber(str, this->majflt, coloring); return;
    case MINFLT: Process_colorNumber(str, this->minflt, coloring); return;
-   case M_RESIDENT: Process_humanNumber(str, this->m_resident * PAGE_SIZE_KB, coloring); return;
-   case M_SIZE: Process_humanNumber(str, this->m_size * PAGE_SIZE_KB, coloring); return;
+   case M_RESIDENT: Process_humanNumber(str, this->m_resident * CRT_pageSizeKB, coloring); return;
+   case M_SIZE: Process_humanNumber(str, this->m_size * CRT_pageSizeKB, coloring); return;
    case NICE: {
       xSnprintf(buffer, n, "%3ld ", this->nice);
       attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
