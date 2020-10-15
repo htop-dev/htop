@@ -74,7 +74,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
    CommandLineSettings flags = {
       .pidMatchList = NULL,
       .commFilter = NULL,
-      .userId = -1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
+      .userId = (uid_t)-1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
       .useColors = true,

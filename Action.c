@@ -107,7 +107,7 @@ bool Action_setUserOnly(const char* userName, uid_t* userId) {
       *userId = user->pw_uid;
       return true;
    }
-   *userId = -1;
+   *userId = (uid_t)-1;
    return false;
 }
 
