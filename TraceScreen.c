@@ -109,13 +109,13 @@ void TraceScreen_updateTrace(InfoScreen* super) {
    struct timeval tv;
    tv.tv_sec = 0; tv.tv_usec = 500;
    int ready = select(this->fd_strace+1, &fds, NULL, NULL, &tv);
-   int nread = 0;
+   size_t nread = 0;
    if (ready > 0 && FD_ISSET(this->fd_strace, &fds))
       nread = fread(buffer, 1, sizeof(buffer) - 1, this->strace);
    if (nread && this->tracing) {
-      char* line = buffer;
+      const char* line = buffer;
       buffer[nread] = '\0';
-      for (int i = 0; i < nread; i++) {
+      for (size_t i = 0; i < nread; i++) {
          if (buffer[i] == '\n') {
             buffer[i] = '\0';
             if (this->contLine) {
