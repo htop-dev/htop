@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <unistd.h>
 
 #include "CRT.h"
 
@@ -20,6 +21,8 @@ in the source distribution for its full text.
 void fail() {
    CRT_done();
    abort();
+
+   _exit(1); // Should never reach here
 }
 
 void* xMalloc(size_t size) {
@@ -39,8 +42,13 @@ void* xCalloc(size_t nmemb, size_t size) {
 }
 
 void* xRealloc(void* ptr, size_t size) {
-   void* data = realloc(ptr, size);
-   if (!data && size > 0) {
+   if (!size) {
+      free(ptr);
+      return NULL;
+   }
+   void* data = realloc(ptr, size); // deepcode ignore MemoryLeakOnRealloc: this goes to fail()
+   if (!data) {
+      free(ptr);
       fail();
    }
    return data;
