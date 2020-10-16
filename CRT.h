@@ -48,6 +48,9 @@ typedef enum ColorElements_ {
    LARGE_NUMBER,
    METER_TEXT,
    METER_VALUE,
+   METER_VALUE_NOTICE,
+   METER_VALUE_IOREAD,
+   METER_VALUE_IOWRITE,
    LED_COLOR,
    UPTIME,
    BATTERY,
@@ -105,9 +108,6 @@ typedef enum ColorElements_ {
    ZFS_OTHER,
    ZFS_COMPRESSED,
    ZFS_RATIO,
-   DISKIO_UTIL_HIGH,
-   DISKIO_READ,
-   DISKIO_WRITE,
    LAST_COLORELEMENT
 } ColorElements;
 

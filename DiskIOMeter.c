@@ -14,9 +14,9 @@ in the source distribution for its full text.
 
 
 static const int DiskIOMeter_attributes[] = {
-   DISKIO_UTIL_HIGH,
-   DISKIO_READ,
-   DISKIO_WRITE,
+   METER_VALUE_NOTICE,
+   METER_VALUE_IOREAD,
+   METER_VALUE_IOWRITE,
 };
 
 static unsigned long int cached_read_diff = 0;
@@ -62,17 +62,17 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, int len) {
 static void DIskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    char buffer[16];
 
-   int color = cached_utilisation_diff > 40.0 ? DISKIO_UTIL_HIGH : METER_VALUE;
+   int color = cached_utilisation_diff > 40.0 ? METER_VALUE_NOTICE : METER_VALUE;
    xSnprintf(buffer, sizeof(buffer), "%.1f%%", cached_utilisation_diff);
    RichString_write(out, CRT_colors[color], buffer);
 
    RichString_append(out, CRT_colors[METER_TEXT], " read: ");
    Meter_humanUnit(buffer, cached_read_diff, sizeof(buffer));
-   RichString_append(out, CRT_colors[DISKIO_READ], buffer);
+   RichString_append(out, CRT_colors[METER_VALUE_IOREAD], buffer);
 
    RichString_append(out, CRT_colors[METER_TEXT], " write: ");
    Meter_humanUnit(buffer, cached_write_diff, sizeof(buffer));
-   RichString_append(out, CRT_colors[DISKIO_WRITE], buffer);
+   RichString_append(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
 }
 
 const MeterClass DiskIOMeter_class = {
