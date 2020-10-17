@@ -224,6 +224,11 @@ static Htop_Reaction actionToggleProgramPath(State* st) {
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
+static Htop_Reaction actionToggleMergedCommand(State* st) {
+   st->settings->showMergedCommand = !st->settings->showMergedCommand;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+}
+
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
    if (st->settings->treeView) {
@@ -450,6 +455,7 @@ static const struct {
    { .key = "   F4 \\: ",.info = "incremental name filtering" },
    { .key = "   F5 t: ", .info = "tree view" },
    { .key = "      p: ", .info = "toggle program path" },
+   { .key = "      m: ", .info = "toggle merged command" },
    { .key = "      Z: ", .info = "pause/resume process updates" },
    { .key = "      u: ", .info = "show processes of a single user" },
    { .key = "      H: ", .info = "hide/show user process threads" },
@@ -640,6 +646,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['H'] = actionToggleUserlandThreads;
    keys['K'] = actionToggleKernelThreads;
    keys['p'] = actionToggleProgramPath;
+   keys['m'] = actionToggleMergedCommand;
    keys['t'] = actionToggleTreeView;
    keys[KEY_F(5)] = actionToggleTreeView;
    keys[KEY_F(4)] = actionIncFilter;

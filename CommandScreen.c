@@ -16,7 +16,7 @@ static void CommandScreen_scan(InfoScreen* this) {
    int idx = MAXIMUM(Panel_getSelectedIndex(panel), 0);
    Panel_prune(panel);
 
-   const char* p = this->process->comm;
+   const char* p = Process_getCommand(this->process);
    char* line = xMalloc(COLS + 1);
    int line_offset = 0, last_spc = -1, len;
    for (; *p != '\0'; p++, line_offset++) {
@@ -46,7 +46,7 @@ static void CommandScreen_scan(InfoScreen* this) {
 }
 
 static void CommandScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Command of process %d - %s", this->process->pid, this->process->comm);
+   InfoScreen_drawTitled(this, "Command of process %d - %s", this->process->pid, Process_getCommand(this->process));
 }
 
 const InfoScreenClass CommandScreen_class = {

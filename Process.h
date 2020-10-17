@@ -67,7 +67,7 @@ typedef struct Process_ {
    pid_t pid;
    pid_t ppid;
    pid_t tgid;
-   char* comm;
+   char* comm;  /* use Process_getCommand() for a decorated command line */
    int commLen;
    int indent;
 
@@ -127,13 +127,17 @@ extern char Process_pidFormat[20];
 
 typedef Process*(*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
+typedef const char* (*Process_GetCommandStr)(const Process*);
 
 typedef struct ProcessClass_ {
    const ObjectClass super;
    const Process_WriteField writeField;
+   const Process_GetCommandStr getCommandStr;
 } ProcessClass;
 
 #define As_Process(this_)              ((const ProcessClass*)((this_)->super.klass))
+
+#define Process_getCommand(this_)      As_Process(this_)->getCommandStr((const Process*)(this_))
 
 static inline pid_t Process_getParentPid(const Process* this) {
    return this->tgid == this->pid ? this->ppid : this->tgid;

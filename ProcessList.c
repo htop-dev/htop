@@ -281,7 +281,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
-         || (incFilter && !(String_contains_i(p->comm, incFilter)))
+         || (incFilter && !(String_contains_i(Process_getCommand(p), incFilter)))
          || (this->pidMatchList && !Hashtable_get(this->pidMatchList, p->tgid)) )
          hidden = true;
 
