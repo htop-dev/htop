@@ -390,6 +390,10 @@ void Process_done(Process* this) {
    free(this->comm);
 }
 
+static const char* Process_getCommandStr(const Process* p) {
+   return p->comm ? p->comm : "";
+}
+
 const ProcessClass Process_class = {
    .super = {
       .extends = Class(Object),
@@ -398,6 +402,7 @@ const ProcessClass Process_class = {
       .compare = Process_compare
    },
    .writeField = Process_writeField,
+   .getCommandStr = Process_getCommandStr,
 };
 
 void Process_init(Process* this, struct Settings_* settings) {
@@ -458,7 +463,7 @@ long Process_compare(const void* v1, const void* v2) {
    case PERCENT_MEM:
       return (p2->m_resident - p1->m_resident);
    case COMM:
-      return strcmp(p1->comm, p2->comm);
+      return strcmp(Process_getCommand(p1), Process_getCommand(p2));
    case MAJFLT:
       return (p2->majflt - p1->majflt);
    case MINFLT:

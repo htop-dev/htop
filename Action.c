@@ -209,6 +209,11 @@ static Htop_Reaction actionToggleProgramPath(State* st) {
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
+static Htop_Reaction actionToggleMergedCommand(State* st) {
+   st->settings->showMergedCommand = !st->settings->showMergedCommand;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+}
+
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
    if (st->settings->treeView) st->settings->direction = 1;
@@ -406,6 +411,7 @@ static const struct { const char* key; const char* info; } helpLeft[] = {
    { .key = "   F4 \\: ",.info = "incremental name filtering" },
    { .key = "   F5 t: ", .info = "tree view" },
    { .key = "      p: ", .info = "toggle program path" },
+   { .key = "      m: ", .info = "toggle merged Command" },
    { .key = "      Z: ", .info = "pause/resume process updates" },
    { .key = "      u: ", .info = "show processes of a single user" },
    { .key = "      H: ", .info = "hide/show user process threads" },
@@ -499,12 +505,12 @@ static Htop_Reaction actionHelp(State* st) {
    for (int i = 0; helpLeft[i].key;  i++) { mvaddstr(9+i, 0,  helpLeft[i].key); }
    for (int i = 0; helpRight[i].key; i++) { mvaddstr(9+i, 40, helpRight[i].key); }
    attrset(CRT_colors[PROCESS_THREAD]);
-   mvaddstr(17, 32, "threads");
-   mvaddstr(18, 26, "threads");
+   mvaddstr(18, 32, "threads");
+   mvaddstr(19, 26, "threads");
    attrset(CRT_colors[DEFAULT_COLOR]);
 
    attrset(CRT_colors[HELP_BOLD]);
-   mvaddstr(24,0, "Press any key to return.");
+   mvaddstr(25,0, "Press any key to return.");
    attrset(CRT_colors[DEFAULT_COLOR]);
    refresh();
    CRT_readKey();
@@ -558,6 +564,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['H'] = actionToggleUserlandThreads;
    keys['K'] = actionToggleKernelThreads;
    keys['p'] = actionToggleProgramPath;
+   keys['m'] = actionToggleMergedCommand;
    keys['t'] = actionToggleTreeView;
    keys[KEY_F(5)] = actionToggleTreeView;
    keys[KEY_F(4)] = actionIncFilter;

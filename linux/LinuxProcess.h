@@ -84,13 +84,44 @@ typedef enum LinuxProcessFields {
    M_PSSWP = 121,
    CTXT = 122,
    SECATTR = 123,
-   LAST_PROCESSFIELD = 124,
+   PROC_COMM = 124,
+   PROC_EXE = 125,
+   LAST_PROCESSFIELD = 126,
 } LinuxProcessField;
 
 #include "IOPriority.h"
 
+/* LinuxProcessMergedCommand is populated by LinuxProcess_makeCommandStr: It
+ * contains the merged Command string, and the information needed by
+ * LinuxProcess_writeCommand to color the string. str will be NULL for kernel
+ * threads and zombies */
+typedef struct LinuxProcessMergedCommand_ {
+   char *str;           /* merged Command string */
+   int maxLen;          /* maximum expected length of Command string */
+   int baseStart;       /* basename's start offset */
+   int baseEnd;         /* basename's end offset */
+   int commStart;       /* comm's start offset */
+   int commEnd;         /* comm's end offset */
+   bool separateComm;   /* whether comm is a separate field */
+   bool unmatchedExe;   /* whether exe matched with cmdline */
+   bool cmdlineChanged; /* whether cmdline changed */
+   bool exeChanged;     /* whether exe changed */
+   bool commChanged;    /* whether comm changed */
+   bool prevMergeSet;   /* whether showMergedCommand was set */
+   bool prevPathSet;    /* whether showProgramPath was set */
+   bool prevCommSet;    /* whether findCommInCmdline was set */
+   bool prevCmdlineSet; /* whether findCommInCmdline was set */
+} LinuxProcessMergedCommand;
+
 typedef struct LinuxProcess_ {
    Process super;
+   char *procComm;
+   char *procExe;
+   int procExeLen;
+   int procExeBasenameOffset;
+   int procCmdlineBasenameOffset;
+   int procCmdlineBasenameEnd;
+   LinuxProcessMergedCommand mergedCommand;
    bool isKernelThread;
    IOPriority ioPriority;
    unsigned long int cminflt;
@@ -181,6 +212,10 @@ void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);
 #endif
 
 void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field);
+
+/* This function constructs the string that is displayed by
+ * LinuxProcess_writeCommand and also returned by LinuxProcess_getCommandStr */
+void LinuxProcess_makeCommandStr(Process *this);
 
 long LinuxProcess_compare(const void* v1, const void* v2);
 

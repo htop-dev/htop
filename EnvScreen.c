@@ -32,7 +32,7 @@ void EnvScreen_delete(Object* this) {
 }
 
 void EnvScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Environment of process %d - %s", this->process->pid, this->process->comm);
+   InfoScreen_drawTitled(this, "Environment of process %d - %s", this->process->pid, Process_getCommand(this->process));
 }
 
 void EnvScreen_scan(InfoScreen* this) {
