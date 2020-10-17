@@ -44,11 +44,10 @@ const InfoScreenClass TraceScreen_class = {
 };
 
 TraceScreen* TraceScreen_new(Process* process) {
-   TraceScreen* this = xMalloc(sizeof(TraceScreen));
+   // This initializes all TraceScreen variables to "false" so only default = true ones need to be set below
+   TraceScreen* this = xCalloc(1, sizeof(TraceScreen));
    Object_setClass(this, Class(TraceScreen));
    this->tracing = true;
-   this->contLine = false;
-   this->follow = false;
    FunctionBar* fuBar = FunctionBar_new(TraceScreenFunctions, TraceScreenKeys, TraceScreenEvents);
    CRT_disableDelay();
    return (TraceScreen*) InfoScreen_init(&this->super, process, fuBar, LINES-2, "");
