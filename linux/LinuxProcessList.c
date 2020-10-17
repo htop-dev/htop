@@ -877,6 +877,7 @@ static void setCommand(Process* process, const char* command, int len) {
 }
 
 static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirname, const char* name) {
+   LinuxProcess *lp = (LinuxProcess *)process;
    char filename[MAX_NAME + 1];
    xSnprintf(filename, MAX_NAME, "%s/%s/cmdline", dirname, name);
    int fd = open(filename, O_RDONLY);
@@ -887,6 +888,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    int amtRead = xread(fd, command, sizeof(command) - 1);
    close(fd);
    int tokenEnd = 0;
+   int tokenStart = 0;
    int lastChar = 0;
    if (amtRead == 0) {
       if (process->state == 'Z') {
@@ -899,12 +901,23 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
       return false;
    }
    for (int i = 0; i < amtRead; i++) {
-      if (command[i] == '\0' || command[i] == '\n') {
+      /* newline used as delimiter - when forming the mergedCommand, newline is
+       * converted to space by LinuxProcess_makeCommandStr */
+      if (command[i] == '\0') {
+         command[i] = '\n';
+      }
+
+      if (command[i] == '\n') {
          if (tokenEnd == 0) {
             tokenEnd = i;
          }
-         command[i] = ' ';
       } else {
+         /* htop considers the next character after the last / that is before
+          * basenameOffset, as the start of the basename in cmdline - see
+          * Process_writeCommand */
+         if (!tokenEnd && command[i] == '/') {
+            tokenStart = i + 1;
+         }
          lastChar = i;
       }
    }
@@ -912,8 +925,55 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
       tokenEnd = amtRead;
    }
    command[lastChar + 1] = '\0';
-   process->basenameOffset = tokenEnd;
-   setCommand(process, command, lastChar + 1);
+   lp->mergedCommand.maxLen = lastChar + 1;  /* accomodate cmdline */
+   if (!process->comm || strcmp(command, process->comm)) {
+      process->basenameOffset = tokenEnd;
+      setCommand(process, command, lastChar + 1);
+      lp->procCmdlineBasenameOffset = tokenStart;
+      lp->procCmdlineBasenameEnd = tokenEnd;
+      lp->mergedCommand.cmdlineChanged = true;
+   }
+
+   /* /proc/[pid]/comm could change, so should be udpated */
+   xSnprintf(filename, MAX_NAME, "%s/%s/comm", dirname, name);
+   if ((fd = open(filename, O_RDONLY)) != -1 &&
+       (amtRead = xread(fd, command, sizeof(command) - 1)) > 0) {
+      close(fd);
+      command[amtRead - 1] = 0;
+      lp->mergedCommand.maxLen += amtRead - 1;  /* accomodate comm */
+      if (!lp->procComm || strcmp(command, lp->procComm)) {
+         free(lp->procComm);
+         lp->procComm = xStrdup(command);
+         lp->mergedCommand.commChanged = true;
+      }
+   } else if (lp->procComm) {
+      free(lp->procComm);
+      lp->procComm = NULL;
+      lp->mergedCommand.commChanged = true;
+   }
+
+   /* execve could change /proc/[pid]/exe, so procExe should be udpated */
+   xSnprintf(command, sizeof(command), "%s/%s/exe", dirname, name);
+   if ((amtRead = readlink(command, filename, sizeof(filename) - 1)) > 0) {
+      filename[amtRead] = 0;
+      lp->mergedCommand.maxLen += amtRead;  /* accomodate exe */
+      if (!lp->procExe || strcmp(filename, lp->procExe)) {
+         free(lp->procExe);
+         lp->procExe = xStrdup(filename);
+         lp->procExeLen = amtRead;
+         /* exe is guaranteed to contain at least one /, but validate anyway */
+         while (amtRead && filename[--amtRead] != '/')
+            ;
+         lp->procExeBasenameOffset = amtRead + 1;
+         lp->mergedCommand.exeChanged = true;
+      }
+   } else if (lp->procExe) {
+      free(lp->procExe);
+      lp->procExe = NULL;
+      lp->procExeLen = 0;
+      lp->procExeBasenameOffset = 0;
+      lp->mergedCommand.exeChanged = true;
+   }
 
    return true;
 }
@@ -1122,6 +1182,15 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
                goto errorReadingProcess;
             }
          }
+      }
+      /* (Re)Generate the Command string, but only if the process is:
+       * - not a kernel thread, and
+       * - not a zombie or it became zombie under htop's watch, and
+       * - not a user thread or if showThreadNames is not set */
+      if (!Process_isKernelThread(proc) &&
+          (proc->state != 'Z' || lp->mergedCommand.str) &&
+          (!Process_isUserlandThread(proc) || !settings->showThreadNames)) {
+         LinuxProcess_makeCommandStr(proc);
       }
 
       #ifdef HAVE_DELAYACCT

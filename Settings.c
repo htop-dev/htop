@@ -161,6 +161,12 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->highlightChanges = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_changes_delay_secs")) {
          this->highlightDelaySecs = atoi(option[1]);
+      } else if (String_eq(option[0], "find_comm_in_cmdline")) {
+         this->findCommInCmdline = atoi(option[1]);
+      } else if (String_eq(option[0], "strip_exe_from_cmdline")) {
+         this->stripExeFromCmdline = atoi(option[1]);
+      } else if (String_eq(option[0], "show_merged_command")) {
+         this->showMergedCommand = atoi(option[1]);
       } else if (String_eq(option[0], "header_margin")) {
          this->headerMargin = atoi(option[1]);
       } else if (String_eq(option[0], "expand_system_time")) {
@@ -277,6 +283,9 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
    fprintf(fd, "highlight_changes=%d\n", (int) this->highlightChanges);
    fprintf(fd, "highlight_changes_delay_secs=%d\n", (int) this->highlightDelaySecs);
+   fprintf(fd, "find_comm_in_cmdline=%d\n", (int) this->findCommInCmdline);
+   fprintf(fd, "strip_exe_from_cmdline=%d\n", (int) this->stripExeFromCmdline);
+   fprintf(fd, "show_merged_command=%d\n", (int) this->showMergedCommand);
    fprintf(fd, "tree_view=%d\n", (int) this->treeView);
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
@@ -328,6 +337,9 @@ Settings* Settings_new(int initialCpuCount) {
    this->highlightThreads = true;
    this->highlightChanges = false;
    this->highlightDelaySecs = DEFAULT_HIGHLIGHT_SECS;
+   this->findCommInCmdline = true;
+   this->stripExeFromCmdline = true;
+   this->showMergedCommand = false;
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
@@ -406,6 +418,9 @@ Settings* Settings_new(int initialCpuCount) {
       this->hideKernelThreads = true;
       this->highlightMegabytes = true;
       this->highlightThreads = true;
+      this->findCommInCmdline = true;
+      this->stripExeFromCmdline = true;
+      this->showMergedCommand = false;
       this->headerMargin = true;
    }
    return this;

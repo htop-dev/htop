@@ -53,6 +53,9 @@ typedef struct Settings_ {
    bool highlightThreads;
    bool highlightChanges;
    int highlightDelaySecs;
+   bool findCommInCmdline;
+   bool stripExeFromCmdline;
+   bool showMergedCommand;
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;

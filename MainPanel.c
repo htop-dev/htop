@@ -136,7 +136,7 @@ int MainPanel_selectedPid(MainPanel* this) {
 
 const char* MainPanel_getValue(MainPanel* this, int i) {
    Process* p = (Process*) Panel_get((Panel*)this, i);
-   return p ? p->comm : "";
+   return Process_getCommand(p);
 }
 
 bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Arg arg, bool* wasAnyTagged) {

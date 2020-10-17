@@ -25,6 +25,9 @@ in the source distribution for its full text.
 /* semi-global */
 long long btime;
 
+/* Used to identify kernel threads in Comm and Exe columns */
+static const char *const kthreadID = "KTHREAD";
+
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
@@ -114,6 +117,8 @@ ProcessFieldData Process_fields[] = {
    [M_PSSWP] = { .name = "M_PSSWP", .title = " PSSWP ", .description = "shows proportional swap share of this mapping, Unlike \"Swap\", this does not take into account swapped out page of underlying shmem objects.", .flags = PROCESS_FLAG_LINUX_SMAPS, },
    [CTXT] = { .name = "CTXT", .title = " CTXT ", .description = "Context switches (incremental sum of voluntary_ctxt_switches and nonvoluntary_ctxt_switches)", .flags = PROCESS_FLAG_LINUX_CTXT, },
    [SECATTR] = { .name = "SECATTR", .title = " Security Attribute ", .description = "Security attribute of the process (e.g. SELinux or AppArmor)", .flags = PROCESS_FLAG_LINUX_SECATTR, },
+   [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process from /proc/[pid]/comm", .flags = 0, },
+   [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -129,6 +134,17 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = SESSION, .label = "SID" },
    { .id = 0, .label = NULL },
 };
+
+/* This function returns the string displayed in Command column, so that sorting
+ * happens on what is displayed - whether comm, full path, basename, etc.. So
+ * this follows LinuxProcess_writeField(COMM) and LinuxProcess_writeCommand */
+static const char* LinuxProcess_getCommandStr(const Process *this) {
+   const LinuxProcess *lp = (const LinuxProcess *)this;
+   if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !lp->mergedCommand.str) {
+      return this->comm;
+   }
+   return lp->mergedCommand.str;
+}
 
 Process* LinuxProcess_new(const Settings* settings) {
    LinuxProcess* this = xCalloc(1, sizeof(LinuxProcess));
@@ -148,6 +164,9 @@ void Process_delete(Object* cast) {
 #endif
    free(this->secattr);
    free(this->ttyDevice);
+   free(this->procExe);
+   free(this->procComm);
+   free(this->mergedCommand.str);
    free(this);
 }
 
@@ -194,6 +213,348 @@ static void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
    }
 }
 #endif
+
+/*
+TASK_COMM_LEN is defined to be 16 for /proc/[pid]/comm in man proc(5), but it is
+not available in an userspace header - so define it. Note: when colorizing a
+basename with the comm prefix, the entire basename (not just the comm prefix) is
+colorized for better readability, and it is implicit that only upto
+(TASK_COMM_LEN - 1) could be comm
+*/
+#define TASK_COMM_LEN 16
+
+static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdlineBasenameOffset, int *pCommStart, int *pCommEnd) {
+   /* Try to find procComm in tokenized cmdline - this might in rare cases
+    * mis-identify a string or fail, if comm or cmdline had been unsuitably
+    * modified by the process */
+   const char *token;
+   const char *tokenBase;
+   size_t tokenLen;
+   const size_t commLen = strlen(comm);
+
+   for (token = cmdline + cmdlineBasenameOffset; *token; ) {
+      for (tokenBase = token; *token && *token != '\n'; ++token) {
+         if (*token == '/') {
+            tokenBase = token + 1;
+         }
+      }
+      tokenLen = token - tokenBase;
+
+      if (((commLen < (TASK_COMM_LEN - 1) && tokenLen == commLen) ||
+           (commLen == (TASK_COMM_LEN - 1) && tokenLen >= commLen)) &&
+          strncmp(tokenBase, comm, commLen) == 0) {
+         *pCommStart = tokenBase - cmdline;
+         *pCommEnd = token - cmdline;
+         return true;
+      }
+      if (*token) {
+         do {
+            ++token;
+         } while ('\n' == *token);
+      }
+   }
+   return false;
+}
+
+static int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseOffset, const char *exe, int exeBaseOffset, int exeBaseLen) {
+   int matchLen;       /* matching length to be returned */
+   char delim;         /* delimiter following basename */
+
+   /* cmdline prefix is an absolute path: it must match whole exe. */
+   if (cmdline[0] == '/') {
+      matchLen = exeBaseLen + exeBaseOffset;
+      if (strncmp(cmdline, exe, matchLen) == 0) {
+         delim = cmdline[matchLen];
+         if (delim == 0 || delim == '\n' || delim == ' ') {
+            return matchLen;
+         }
+      }
+      return 0;
+   }
+
+   /* cmdline prefix is a relative path: We need to first match the basename at
+    * cmdlineBaseOffset and then reverse match the cmdline prefix with the exe
+    * suffix. But there is a catch: Some processes modify their cmdline in ways
+    * that make htop's identification of the basename in cmdline unreliable.
+    * For e.g. /usr/libexec/gdm-session-worker modifies its cmdline to
+    * "gdm-session-worker [pam/gdm-autologin]" and htop ends up with
+    * procCmdlineBasenameOffset at "gdm-autologin]". This issue could arise with
+    * chrome as well as it stores in cmdline its concatenated argument vector,
+    * without NUL delimiter between the arguments (which may contain a '/')
+    *
+    * So if needed, we adjust cmdlineBaseOffset to the previous (if any)
+    * component of the cmdline relative path, and retry the procedure. */
+   bool delimFound;  /* if valid basename delimiter found */
+   do {
+      /* match basename */
+      matchLen = exeBaseLen + cmdlineBaseOffset;
+      if (cmdlineBaseOffset < exeBaseOffset &&
+          strncmp(cmdline + cmdlineBaseOffset, exe + exeBaseOffset, exeBaseLen) == 0) {
+         delim = cmdline[matchLen];
+         if (delim == 0 || delim == '\n' || delim == ' ') {
+            int i, j;
+            /* reverse match the cmdline prefix and exe suffix */
+            for (i = cmdlineBaseOffset - 1, j = exeBaseOffset - 1;
+                 i >= 0 && cmdline[i] == exe[j]; --i, --j)
+               ;
+            /* full match, with exe suffix being a valid relative path */
+            if (i < 0 && exe[j] == '/') {
+               return matchLen;
+            }
+         }
+      }
+      /* Try to find the previous potential cmdlineBaseOffset - it would be
+       * preceded by '/' or nothing, and delimited by ' ' or '\n' */
+      for (delimFound = false, cmdlineBaseOffset -= 2; cmdlineBaseOffset > 0; --cmdlineBaseOffset) {
+         if (delimFound) {
+            if (cmdline[cmdlineBaseOffset - 1] == '/') {
+               break;
+            }
+         } else if (cmdline[cmdlineBaseOffset] == ' ' || cmdline[cmdlineBaseOffset] == '\n') {
+            delimFound = true;
+         }
+      }
+   } while (delimFound);
+
+   return 0;
+}
+
+/* stpcpy, but also converts newlines to spaces */
+static inline char *stpcpyWithNewlineConversion(char *dstStr, const char *srcStr) {
+   for (; *srcStr; ++srcStr) {
+      *dstStr++ = (*srcStr == '\n') ? ' ' : *srcStr;
+   }
+   *dstStr = 0;
+   return dstStr;
+}
+
+/*
+This function makes the merged Command string. It also stores the offsets of the
+basename, comm w.r.t the merged Command string - these offsets will be used by
+LinuxProcess_writeCommand() for coloring. The merged Command string is also
+returned by LinuxProcess_getCommandStr() for searching, sorting and filtering.
+*/
+void LinuxProcess_makeCommandStr(Process* this) {
+   LinuxProcess *lp = (LinuxProcess *)this;
+   bool showMergedCommand = this->settings->showMergedCommand;
+   bool showProgramPath = this->settings->showProgramPath;
+   bool searchCommInCmdline = this->settings->findCommInCmdline;
+   bool stripExeFromCmdline = this->settings->stripExeFromCmdline;
+
+   /* lp->mergedCommand.str needs to be remade only if there is a change in its
+    * state consisting of the relevant settings and the three fields cmdline,
+    * comm and exe */
+   if (showMergedCommand == lp->mergedCommand.prevMergeSet && showProgramPath == lp->mergedCommand.prevPathSet &&
+       searchCommInCmdline == lp->mergedCommand.prevCommSet && stripExeFromCmdline == lp->mergedCommand.prevCmdlineSet &&
+       !lp->mergedCommand.cmdlineChanged && !lp->mergedCommand.commChanged && !lp->mergedCommand.exeChanged) {
+      return;
+   }
+
+   /* The field separtor "│" has been chosen such that it will not match any
+    * valid search string used for sorting or filtering */
+   const char *SEPARATOR = CRT_treeStr[TREE_STR_VERT];
+   const int SEPARATOR_LEN = strlen(SEPARATOR);
+
+   if (lp->mergedCommand.cmdlineChanged || lp->mergedCommand.commChanged || lp->mergedCommand.exeChanged) {
+      free(lp->mergedCommand.str);
+      /* Also accomodate two field separators and a NUL */
+      lp->mergedCommand.str = xMalloc(lp->mergedCommand.maxLen + 2*SEPARATOR_LEN + 1);
+   }
+
+   lp->mergedCommand.prevMergeSet = showMergedCommand;
+   lp->mergedCommand.prevPathSet = showProgramPath;
+   lp->mergedCommand.prevCommSet = searchCommInCmdline;
+   lp->mergedCommand.prevCmdlineSet = stripExeFromCmdline;
+   lp->mergedCommand.cmdlineChanged = false;
+   lp->mergedCommand.commChanged = false;
+   lp->mergedCommand.exeChanged = false;
+
+   char *str;
+   char *strStart = lp->mergedCommand.str;
+   const char *cmdline = this->comm;
+   const char *procExe = lp->procExe;
+   const char *procComm = lp->procComm;
+   int cmdlineBasenameOffset = lp->procCmdlineBasenameOffset;
+
+   if (!showMergedCommand || !procExe || !procComm) {    /* fall back to cmdline */
+      if (showProgramPath) {
+         (void) stpcpyWithNewlineConversion(strStart, cmdline);
+         lp->mergedCommand.baseStart = cmdlineBasenameOffset;
+         lp->mergedCommand.baseEnd = lp->procCmdlineBasenameEnd;
+      } else {
+         (void) stpcpyWithNewlineConversion(strStart, cmdline + cmdlineBasenameOffset);
+         lp->mergedCommand.baseStart = 0;
+         lp->mergedCommand.baseEnd = lp->procCmdlineBasenameEnd - cmdlineBasenameOffset;
+      }
+      lp->mergedCommand.commEnd = 0;
+      return;
+   }
+
+   int commStart = 0;
+   int commEnd = 0;
+   int exeBasenameOffset = lp->procExeBasenameOffset;
+   int exeLen = lp->procExeLen;
+   int exeBaseLen = exeLen - exeBasenameOffset;
+   bool commInCmdline = false;
+
+   /* Start with copying exe */
+   if (showProgramPath) {
+      str = stpcpy(strStart, procExe);
+      lp->mergedCommand.baseStart = exeBasenameOffset;
+      lp->mergedCommand.baseEnd = exeLen;
+   } else {
+      str = stpcpy(strStart, procExe + exeBasenameOffset);
+      lp->mergedCommand.baseStart = 0;
+      lp->mergedCommand.baseEnd = exeBaseLen;
+   }
+
+   /* Try to match procComm with procExe's basename: This is reliable (predictable) */
+   if (strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0) {
+      commStart = lp->mergedCommand.baseStart;
+      commEnd = lp->mergedCommand.baseEnd;
+   } else if (searchCommInCmdline) {
+      /* commStart/commEnd will be adjusted later along with cmdline */
+      commInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameOffset, &commStart, &commEnd);
+   }
+
+   int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameOffset,
+                                                  procExe, exeBasenameOffset, exeBaseLen);
+   /* Note: commStart, commEnd are offsets into RichString. But the multibyte
+    * separator (with size SEPARATOR_LEN) has size 1 in RichString. The offset
+    * adjustments below reflect this. */
+   if (commEnd) {
+      if (matchLen) {   /* strip the matched exe prefix */
+         lp->mergedCommand.unmatchedExe = false;
+         cmdline += matchLen;
+         if (commInCmdline) {
+            commStart += str - strStart - matchLen;
+            commEnd += str - strStart - matchLen;
+         }
+      } else {   /* cmdline will be a separate field */
+         lp->mergedCommand.unmatchedExe = true;
+         str = stpcpy(str, SEPARATOR);
+         if (commInCmdline) {
+            commStart += str - strStart - SEPARATOR_LEN + 1;
+            commEnd += str - strStart - SEPARATOR_LEN + 1;
+         }
+      }
+      lp->mergedCommand.separateComm = false;  /* procComm merged */
+   } else {
+      str = stpcpy(str, SEPARATOR);
+      commStart = str - strStart - SEPARATOR_LEN  + 1;
+      str = stpcpy(str, procComm);
+      commEnd = str - strStart - SEPARATOR_LEN + 1;   /* or commStart + strlen(procComm) */
+      if (matchLen) {
+         lp->mergedCommand.unmatchedExe = false;
+         if (stripExeFromCmdline) {
+            cmdline += matchLen;
+         }
+      } else {
+         lp->mergedCommand.unmatchedExe = true;
+      }
+      if (*cmdline) {
+         str = stpcpy(str, SEPARATOR);
+      }
+      lp->mergedCommand.separateComm = true;  /* procComm a separate field */
+   }
+
+   /* Display cmdline if it hasn't been consumed by procExe */
+   if (*cmdline) {
+      (void) stpcpyWithNewlineConversion(str, cmdline);
+   }
+
+   lp->mergedCommand.commStart = commStart;
+   lp->mergedCommand.commEnd = commEnd;
+   return;
+}
+
+static void LinuxProcess_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
+   const LinuxProcess *lp = (const LinuxProcess *)this;
+   int strStart = RichString_size(str);
+   int baseStart = strStart + lp->mergedCommand.baseStart;
+   int baseEnd = strStart + lp->mergedCommand.baseEnd;
+   bool highlightBaseName = this->settings->highlightBaseName;
+
+   RichString_append(str, attr, lp->mergedCommand.str);
+
+   if (lp->mergedCommand.commEnd) {
+      int commStart = strStart + lp->mergedCommand.commStart;
+      int commEnd = strStart + lp->mergedCommand.commEnd;
+      int commAttr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
+      if (lp->mergedCommand.separateComm) {
+         RichString_setAttrn(str, commAttr, commStart, commEnd - 1);
+         if (lp->mergedCommand.unmatchedExe) {
+            RichString_setAttrn(str, CRT_colors[FAILED_READ], commEnd, commEnd);
+         }
+      } else {
+         /* If it was matched with procExe's basename, make it bold if needed */
+         if (commStart == baseStart && highlightBaseName) {
+            if (commEnd > baseEnd) {
+               RichString_setAttrn(str, A_BOLD | commAttr, commStart, baseEnd - 1);
+               baseStart = baseEnd;
+               RichString_setAttrn(str, commAttr, baseStart, commEnd - 1);
+            } else {
+               RichString_setAttrn(str, A_BOLD | commAttr, commStart, commEnd - 1);
+               baseStart = commEnd;
+            }
+         } else {
+            RichString_setAttrn(str, commAttr, commStart, commEnd - 1);
+         }
+         if (lp->mergedCommand.unmatchedExe) {
+            RichString_setAttrn(str, CRT_colors[FAILED_READ], baseEnd, baseEnd);
+         }
+      }
+   }
+   if (baseStart < baseEnd && highlightBaseName) {
+      RichString_setAttrn(str, baseattr, baseStart, baseEnd - 1);
+   }
+}
+
+static void LinuxProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
+   /* This code is from Process_writeField for COMM, but we invoke
+    * LinuxProcess_writeCommand to display
+    * /proc/pid/exe (or its basename)│/proc/pid/comm│/proc/pid/cmdline */
+   int baseattr = CRT_colors[PROCESS_BASENAME];
+   if (this->settings->highlightThreads && Process_isThread(this)) {
+      attr = CRT_colors[PROCESS_THREAD];
+      baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
+   }
+   if (!this->settings->treeView || this->indent == 0) {
+      LinuxProcess_writeCommand(this, attr, baseattr, str);
+   } else {
+      char* buf = buffer;
+      int maxIndent = 0;
+      bool lastItem = (this->indent < 0);
+      int indent = (this->indent < 0 ? -this->indent : this->indent);
+      int vertLen = strlen(CRT_treeStr[TREE_STR_VERT]);
+
+      for (int i = 0; i < 32; i++) {
+         if (indent & (1U << i)) {
+            maxIndent = i+1;
+         }
+      }
+      for (int i = 0; i < maxIndent - 1; i++) {
+         if (indent & (1 << i)) {
+            if (buf - buffer + (vertLen + 3) > n) {
+               break;
+            }
+            buf = stpcpy(buf, CRT_treeStr[TREE_STR_VERT]);
+            buf = stpcpy(buf, "  ");
+         } else {
+            if (buf - buffer + 4 > n) {
+               break;
+            }
+            buf = stpcpy(buf, "   ");
+         }
+      }
+      n -= (buf - buffer);
+      const char* draw = CRT_treeStr[lastItem ? (this->settings->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
+      xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
+      RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
+      LinuxProcess_writeCommand(this, attr, baseattr, str);
+   }
+   return;
+}
 
 static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const LinuxProcess* lp = (const LinuxProcess*) this;
@@ -289,6 +650,35 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;
+   case COMM: {
+      if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !lp->mergedCommand.str) {
+         Process_writeField(this, str, field);
+      } else {
+         LinuxProcess_writeCommandField(this, str, buffer, n, attr);
+      }
+      return;
+   }
+   case PROC_COMM: {
+      if (lp->procComm) {
+         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
+         /* 15 being (TASK_COMM_LEN - 1) */
+         xSnprintf(buffer, n, "%-15.15s ", lp->procComm);
+      } else {
+         attr = CRT_colors[FAILED_READ];
+         xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "?");
+      }
+      break;
+   }
+   case PROC_EXE: {
+      if (lp->procExe) {
+         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
+         xSnprintf(buffer, n, "%-15.15s ", lp->procExe + lp->procExeBasenameOffset);
+      } else {
+         attr = CRT_colors[FAILED_READ];
+         xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "?");
+      }
+      break;
+   }
    default:
       Process_writeField(this, str, field);
       return;
@@ -385,6 +775,16 @@ static long LinuxProcess_compare(const void* v1, const void* v2) {
       return SPACESHIP_NUMBER(p2->ctxt_diff, p1->ctxt_diff);
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
+   case PROC_COMM: {
+      const char *comm1 = p1->procComm ? p1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char *comm2 = p2->procComm ? p2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
+      return strcmp(comm1, comm2);
+   }
+   case PROC_EXE: {
+      const char *exe1 = p1->procExe ? (p1->procExe + p1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char *exe2 = p2->procExe ? (p2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
+      return strcmp(exe1, exe2);
+   }
    default:
       return Process_compare(v1, v2);
    }
@@ -401,5 +801,6 @@ const ProcessClass LinuxProcess_class = {
       .delete = Process_delete,
       .compare = LinuxProcess_compare
    },
-   .writeField = LinuxProcess_writeField
+   .writeField = LinuxProcess_writeField,
+   .getCommandStr = LinuxProcess_getCommandStr
 };
