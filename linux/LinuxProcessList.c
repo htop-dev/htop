@@ -766,7 +766,7 @@ static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
    struct nlmsghdr *nlhdr;
    struct nlattr *nlattrs[TASKSTATS_TYPE_MAX + 1];
    struct nlattr *nlattr;
-   struct taskstats *stats;
+   struct taskstats stats;
    int rem;
    unsigned long long int timeDelta;
    LinuxProcess* lp = (LinuxProcess*) linuxProcess;
@@ -778,20 +778,21 @@ static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
    }
 
    if ((nlattr = nlattrs[TASKSTATS_TYPE_AGGR_PID]) || (nlattr = nlattrs[TASKSTATS_TYPE_NULL])) {
-      stats = nla_data(nla_next(nla_data(nlattr), &rem));
-      assert(lp->super.pid == (pid_t)stats->ac_pid);
-      timeDelta = (stats->ac_etime*1000 - lp->delay_read_time);
+      memcpy(&stats, nla_data(nla_next(nla_data(nlattr), &rem)), sizeof(stats));
+      assert(lp->super.pid == (pid_t)stats.ac_pid);
+
+      timeDelta = (stats.ac_etime*1000 - lp->delay_read_time);
       #define BOUNDS(x) isnan(x) ? 0.0 : (x > 100) ? 100.0 : x;
       #define DELTAPERC(x,y) BOUNDS((float) (x - y) / timeDelta * 100);
-      lp->cpu_delay_percent = DELTAPERC(stats->cpu_delay_total, lp->cpu_delay_total);
-      lp->blkio_delay_percent = DELTAPERC(stats->blkio_delay_total, lp->blkio_delay_total);
-      lp->swapin_delay_percent = DELTAPERC(stats->swapin_delay_total, lp->swapin_delay_total);
+      lp->cpu_delay_percent = DELTAPERC(stats.cpu_delay_total, lp->cpu_delay_total);
+      lp->blkio_delay_percent = DELTAPERC(stats.blkio_delay_total, lp->blkio_delay_total);
+      lp->swapin_delay_percent = DELTAPERC(stats.swapin_delay_total, lp->swapin_delay_total);
       #undef DELTAPERC
       #undef BOUNDS
-      lp->swapin_delay_total = stats->swapin_delay_total;
-      lp->blkio_delay_total = stats->blkio_delay_total;
-      lp->cpu_delay_total = stats->cpu_delay_total;
-      lp->delay_read_time = stats->ac_etime*1000;
+      lp->swapin_delay_total = stats.swapin_delay_total;
+      lp->blkio_delay_total = stats.blkio_delay_total;
+      lp->cpu_delay_total = stats.cpu_delay_total;
+      lp->delay_read_time = stats.ac_etime*1000;
    }
    return NL_OK;
 }
