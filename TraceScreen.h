@@ -7,15 +7,18 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <sys/types.h>
+
 #include "InfoScreen.h"
+
 
 typedef struct TraceScreen_ {
    InfoScreen super;
    bool tracing;
-   int fdpair[2];
-   int child;
+   pid_t child;
    FILE* strace;
-   int fd_strace;
    bool contLine;
    bool follow;
 } TraceScreen;

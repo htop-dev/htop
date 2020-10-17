@@ -59,10 +59,11 @@ void TraceScreen_delete(Object* cast) {
    if (this->child > 0) {
       kill(this->child, SIGTERM);
       waitpid(this->child, NULL, 0);
-      fclose(this->strace);
    }
+   if (this->strace)
+      fclose(this->strace);
    CRT_enableDelay();
-   free(InfoScreen_done((InfoScreen*)cast));
+   free(InfoScreen_done((InfoScreen*)this));
 }
 
 void TraceScreen_draw(InfoScreen* this) {
@@ -74,43 +75,75 @@ void TraceScreen_draw(InfoScreen* this) {
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
-   int error = pipe(this->fdpair);
-   if (error == -1) return false;
-   this->child = fork();
-   if (this->child == -1) return false;
-   if (this->child == 0) {
+   int fdpair[2] = {0, 0};
+
+   if (pipe(fdpair) == -1)
+      return false;
+
+   if(fcntl(fdpair[0], F_SETFL, O_NONBLOCK) < 0)
+      goto err;
+
+   if(fcntl(fdpair[1], F_SETFL, O_NONBLOCK) < 0)
+      goto err;
+
+   pid_t child = fork();
+   if (child == -1)
+      goto err;
+
+   if (child == 0) {
+      close(fdpair[0]);
+
+      dup2(fdpair[1], STDOUT_FILENO);
+      dup2(fdpair[1], STDERR_FILENO);
+      close(fdpair[1]);
+
       CRT_dropPrivileges();
-      dup2(this->fdpair[1], STDERR_FILENO);
-      int ok = fcntl(this->fdpair[1], F_SETFL, O_NONBLOCK);
-      if (ok != -1) {
-         char buffer[32] = {0};
-         xSnprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
-         execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, NULL);
-      }
+
+      char buffer[32] = {0};
+      xSnprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
+      execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, NULL);
+
+      // Should never reach here, unless execlp fails ...
       const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
-      ssize_t written = write(this->fdpair[1], message, strlen(message));
+      ssize_t written = write(STDERR_FILENO, message, strlen(message));
       (void) written;
-      exit(1);
+
+      exit(127);
    }
-   int ok = fcntl(this->fdpair[0], F_SETFL, O_NONBLOCK);
-   if (ok == -1) return false;
-   this->strace = fdopen(this->fdpair[0], "r");
-   this->fd_strace = fileno(this->strace);
+
+   FILE* fd = fdopen(fdpair[0], "r");
+   if (!fd)
+      goto err;
+
+   close(fdpair[1]);
+
+   this->child = child;
+   this->strace = fd;
    return true;
+
+err:
+   close(fdpair[1]);
+   close(fdpair[0]);
+   return false;
 }
 
 void TraceScreen_updateTrace(InfoScreen* super) {
    TraceScreen* this = (TraceScreen*) super;
    char buffer[1025];
+
+   int fd_strace = fileno(this->strace);
+   assert(fd_strace != -1);
+
    fd_set fds;
    FD_ZERO(&fds);
 // FD_SET(STDIN_FILENO, &fds);
-   FD_SET(this->fd_strace, &fds);
+   FD_SET(fd_strace, &fds);
+
    struct timeval tv;
    tv.tv_sec = 0; tv.tv_usec = 500;
-   int ready = select(this->fd_strace+1, &fds, NULL, NULL, &tv);
+   int ready = select(fd_strace+1, &fds, NULL, NULL, &tv);
    size_t nread = 0;
-   if (ready > 0 && FD_ISSET(this->fd_strace, &fds))
+   if (ready > 0 && FD_ISSET(fd_strace, &fds))
       nread = fread(buffer, 1, sizeof(buffer) - 1, this->strace);
    if (nread && this->tracing) {
       const char* line = buffer;
