@@ -24,8 +24,8 @@ ListItem* ListItem_new(const char* value, int key);
 
 void ListItem_append(ListItem* this, const char* text);
 
-const char* ListItem_getRef(ListItem* this);
-
-long ListItem_compare(const void* cast1, const void* cast2);
+static inline const char* ListItem_getRef(const ListItem* this) {
+   return this->value;
+}
 
 #endif
