@@ -27,11 +27,7 @@ static void ListItem_delete(Object* cast) {
 static void ListItem_display(const Object* cast, RichString* out) {
    const ListItem* const this = (const ListItem*)cast;
    assert (this != NULL);
-   /*
-   int len = strlen(this->value)+1;
-   char buffer[len+1];
-   xSnprintf(buffer, len, "%s", this->value);
-   */
+
    if (this->moving) {
       RichString_write(out, CRT_colors[DEFAULT_COLOR],
 #ifdef HAVE_LIBNCURSESW
@@ -41,14 +37,8 @@ static void ListItem_display(const Object* cast, RichString* out) {
    } else {
       RichString_prune(out);
    }
-   RichString_append(out, CRT_colors[DEFAULT_COLOR], this->value/*buffer*/);
+   RichString_append(out, CRT_colors[DEFAULT_COLOR], this->value);
 }
-
-const ObjectClass ListItem_class = {
-   .display = ListItem_display,
-   .delete = ListItem_delete,
-   .compare = ListItem_compare
-};
 
 ListItem* ListItem_new(const char* value, int key) {
    ListItem* this = AllocThis(ListItem);
@@ -59,20 +49,22 @@ ListItem* ListItem_new(const char* value, int key) {
 }
 
 void ListItem_append(ListItem* this, const char* text) {
-   int oldLen = strlen(this->value);
-   int textLen = strlen(text);
-   int newLen = strlen(this->value) + textLen;
+   size_t oldLen = strlen(this->value);
+   size_t textLen = strlen(text);
+   size_t newLen = oldLen + textLen;
    this->value = xRealloc(this->value, newLen + 1);
    memcpy(this->value + oldLen, text, textLen);
    this->value[newLen] = '\0';
 }
 
-const char* ListItem_getRef(ListItem* this) {
-   return this->value;
-}
-
-long ListItem_compare(const void* cast1, const void* cast2) {
+static long ListItem_compare(const void* cast1, const void* cast2) {
    const ListItem* obj1 = (const ListItem*) cast1;
    const ListItem* obj2 = (const ListItem*) cast2;
    return strcmp(obj1->value, obj2->value);
 }
+
+const ObjectClass ListItem_class = {
+   .display = ListItem_display,
+   .delete = ListItem_delete,
+   .compare = ListItem_compare
+};
