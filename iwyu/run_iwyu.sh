@@ -6,7 +6,9 @@ SOURCEDIR="$SCRIPTDIR/.."
 
 PKG_NL3=$(pkg-config --cflags libnl-3.0)
 
-cd "$SOURCEDIR"
+IWYU=${IWYU:-iwyu}
+
+cd "$SOURCEDIR" || exit
 
 make clean
-make -k CC="iwyu" CFLAGS="-Xiwyu --no_comments -Xiwyu --no_fwd_decl -Xiwyu --mapping_file='$SCRIPTDIR/htop.imp' $PKG_NL3"
+make --keep-going --silent CC="$IWYU" CFLAGS="-Xiwyu --no_comments -Xiwyu --no_fwd_decl -Xiwyu --mapping_file='$SCRIPTDIR/htop.imp' $PKG_NL3"

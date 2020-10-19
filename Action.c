@@ -511,10 +511,10 @@ static Htop_Reaction actionHelp(State* st) {
       mvaddstr(line + item, 9,  helpLeft[item].info);
       attrset(CRT_colors[HELP_BOLD]);
       mvaddstr(line + item, 0,  helpLeft[item].key);
-      if (0 == strcmp(helpLeft[item].key, "      H: ")) {
+      if (String_eq(helpLeft[item].key, "      H: ")) {
          attrset(CRT_colors[PROCESS_THREAD]);
          mvaddstr(line + item, 32, "threads");
-      } else if (0 == strcmp(helpLeft[item].key, "      K: ")) {
+      } else if (String_eq(helpLeft[item].key, "      K: ")) {
          attrset(CRT_colors[PROCESS_THREAD]);
          mvaddstr(line + item, 26, "threads");
       }

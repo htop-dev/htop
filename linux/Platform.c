@@ -13,7 +13,6 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <math.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
