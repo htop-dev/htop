@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "XUtils.h"
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>

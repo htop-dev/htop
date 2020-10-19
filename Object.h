@@ -11,6 +11,10 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "XUtils.h" // IWYU pragma: keep
 
+#ifndef NDEBUG
+#include <stdbool.h>
+#endif
+
 
 struct Object_;
 typedef struct Object_ Object;

@@ -9,7 +9,6 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
-#include <unistd.h>
 #include <sys/types.h>
 
 #include "Object.h"
@@ -54,6 +53,8 @@ typedef struct ProcessPidColumn_ {
    int id;
    const char* label;
 } ProcessPidColumn;
+
+struct Settings_;
 
 typedef struct Process_ {
    Object super;
