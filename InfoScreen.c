@@ -110,7 +110,7 @@ void InfoScreen_run(InfoScreen* this) {
             } else if (mevent.y == LINES - 1) {
                ch = IncSet_synthesizeEvent(this->inc, mevent.x);
             }
-	 }
+         }
       }
 
       if (this->inc->active) {

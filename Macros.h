@@ -4,15 +4,15 @@
 #include <assert.h> // IWYU pragma: keep
 
 #ifndef MINIMUM
-#define MINIMUM(a, b)		((a) < (b) ? (a) : (b))
+#define MINIMUM(a, b)         ((a) < (b) ? (a) : (b))
 #endif
 
 #ifndef MAXIMUM
-#define MAXIMUM(a, b)		((a) > (b) ? (a) : (b))
+#define MAXIMUM(a, b)         ((a) > (b) ? (a) : (b))
 #endif
 
 #ifndef CLAMP
-#define CLAMP(x, low, high)	(assert((low) <= (high)), ((x) > (high)) ? (high) : MAXIMUM(x, low))
+#define CLAMP(x, low, high)   (assert((low) <= (high)), ((x) > (high)) ? (high) : MAXIMUM(x, low))
 #endif
 
 #ifndef ARRAYSIZE

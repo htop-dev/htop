@@ -151,8 +151,8 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
 
    // Part 1 - physical memory
    if (spl->kd != NULL && meminfo == NULL) {
-	   // Look up the kstat chain just one, it never changes
-	   meminfo   = kstat_lookup(spl->kd,"unix",0,"system_pages");
+      // Look up the kstat chain just one, it never changes
+      meminfo   = kstat_lookup(spl->kd,"unix",0,"system_pages");
    }
    if (meminfo != NULL) { ksrphyserr = kstat_read(spl->kd,meminfo,NULL); }
    if (ksrphyserr != -1) {

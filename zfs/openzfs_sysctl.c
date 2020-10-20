@@ -32,8 +32,7 @@ void openzfs_sysctl_init(ZfsArcStats *stats) {
    unsigned long long int arcSize;
 
    len = sizeof(arcSize);
-   if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcSize, &len,
-	    NULL, 0) == 0 && arcSize != 0) {
+   if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcSize, &len, NULL, 0) == 0 && arcSize != 0) {
                   stats->enabled = 1;
                   len = 5; sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
 
