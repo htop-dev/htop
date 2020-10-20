@@ -53,7 +53,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       if (!dirEntry)
          break;
       char* entryName = dirEntry->d_name;
-      if (strncmp(entryName, "BAT", 3))
+      if (String_startsWith(entryName, "BAT"))
          continue;
       batteries[nBatteries] = xStrdup(entryName);
       nBatteries++;
@@ -128,7 +128,7 @@ static ACPresence procAcpiCheck(void) {
       char *isOnline = String_getToken(line, 2);
       free(line);
 
-      if (strcmp(isOnline, "on-line") == 0) {
+      if (String_eq(isOnline, "on-line")) {
          isOn = AC_PRESENT;
       } else {
          isOn = AC_ABSENT;

@@ -31,16 +31,14 @@ void Settings_delete(Settings* this) {
 
 static void Settings_readMeters(Settings* this, char* line, int column) {
    char* trim = String_trim(line);
-   int nIds;
-   char** ids = String_split(trim, ' ', &nIds);
+   char** ids = String_split(trim, ' ', NULL);
    free(trim);
    this->columns[column].names = ids;
 }
 
 static void Settings_readMeterModes(Settings* this, char* line, int column) {
    char* trim = String_trim(line);
-   int nIds;
-   char** ids = String_split(trim, ' ', &nIds);
+   char** ids = String_split(trim, ' ', NULL);
    free(trim);
    int len = 0;
    for (int i = 0; ids[i]; i++) {
@@ -94,8 +92,7 @@ static void Settings_defaultMeters(Settings* this, int initialCpuCount) {
 
 static void readFields(ProcessField* fields, int* flags, const char* line) {
    char* trim = String_trim(line);
-   int nIds;
-   char** ids = String_split(trim, ' ', &nIds);
+   char** ids = String_split(trim, ' ', NULL);
    free(trim);
    int i, j;
    *flags = 0;
@@ -126,7 +123,7 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
       if (!line) {
          break;
       }
-      int nOptions;
+      size_t nOptions;
       char** option = String_split(line, '=', &nOptions);
       free (line);
       if (nOptions < 2) {

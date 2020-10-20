@@ -122,7 +122,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             exit(0);
          case 's':
             assert(optarg); /* please clang analyzer, cause optarg can be NULL in the 'u' case */
-            if (strcmp(optarg, "help") == 0) {
+            if (String_eq(optarg, "help")) {
                for (int j = 1; j < Platform_numberOfFields; j++) {
                   const char* name = Process_fields[j].name;
                   if (name) printf ("%s\n", name);

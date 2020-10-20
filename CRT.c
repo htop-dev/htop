@@ -658,7 +658,7 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
    setlocale(LC_CTYPE, "");
 
 #ifdef HAVE_LIBNCURSESW
-   if (allowUnicode && strcmp(nl_langinfo(CODESET), "UTF-8") == 0)
+   if (allowUnicode && String_eq(nl_langinfo(CODESET), "UTF-8"))
       CRT_utf8 = true;
    else
       CRT_utf8 = false;

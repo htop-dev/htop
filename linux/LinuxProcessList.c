@@ -419,9 +419,9 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
    while ((line = strsep(&buf, "\n")) != NULL) {
       switch (line[0]) {
       case 'r':
-         if (line[1] == 'c' && strncmp(line+2, "har: ", 5) == 0)
+         if (line[1] == 'c' && String_startsWith(line+2, "har: "))
             process->io_rchar = strtoull(line+7, NULL, 10);
-         else if (strncmp(line+1, "ead_bytes: ", 11) == 0) {
+         else if (String_startsWith(line+1, "ead_bytes: ")) {
             process->io_read_bytes = strtoull(line+12, NULL, 10);
             process->io_rate_read_bps =
                ((double)(process->io_read_bytes - last_read))/(((double)(now - process->io_rate_read_time))/1000);
@@ -429,9 +429,9 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
          }
          break;
       case 'w':
-         if (line[1] == 'c' && strncmp(line+2, "har: ", 5) == 0)
+         if (line[1] == 'c' && String_startsWith(line+2, "har: "))
             process->io_wchar = strtoull(line+7, NULL, 10);
-         else if (strncmp(line+1, "rite_bytes: ", 12) == 0) {
+         else if (String_startsWith(line+1, "rite_bytes: ")) {
             process->io_write_bytes = strtoull(line+13, NULL, 10);
             process->io_rate_write_bps =
                ((double)(process->io_write_bytes - last_write))/(((double)(now - process->io_rate_write_time))/1000);
@@ -439,14 +439,14 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
          }
          break;
       case 's':
-         if (line[4] == 'r' && strncmp(line+1, "yscr: ", 6) == 0) {
+         if (line[4] == 'r' && String_startsWith(line+1, "yscr: ")) {
             process->io_syscr = strtoull(line+7, NULL, 10);
-         } else if (strncmp(line+1, "yscw: ", 6) == 0) {
+         } else if (String_startsWith(line+1, "yscw: ")) {
             process->io_syscw = strtoull(line+7, NULL, 10);
          }
          break;
       case 'c':
-         if (strncmp(line+1, "ancelled_write_bytes: ", 22) == 0) {
+         if (String_startsWith(line+1, "ancelled_write_bytes: ")) {
            process->io_cancelled_write_bytes = strtoull(line+23, NULL, 10);
         }
       }
@@ -598,7 +598,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
       switch(field) {
       case 1:
          foundEnvID = true;
-         if(0 != strcmp(name_value_sep, process->ctid ? process->ctid : "")) {
+         if(!String_eq(name_value_sep, process->ctid ? process->ctid : "")) {
             free(process->ctid);
             process->ctid = xStrdup(name_value_sep);
          }
@@ -762,7 +762,7 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, const char* 
    char *newline = strchr(buffer, '\n');
    if (newline)
       *newline = '\0';
-   if (process->secattr && 0 == strcmp(process->secattr, buffer))
+   if (process->secattr && String_eq(process->secattr, buffer))
       return;
    free(process->secattr);
    process->secattr = xStrdup(buffer);
