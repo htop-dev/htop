@@ -1190,7 +1190,7 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this){
 
       if(!fscanf(disksize_file,"%llu\n",&size) || !fscanf(mm_stat_file,"    %llu       %llu",&orig_data_size,&compr_data_size)){
          fclose(disksize_file);
-         fclose(mm_stat_file);         
+         fclose(mm_stat_file);
          break;
       }
 
