@@ -142,7 +142,7 @@ myhtopplatsources = \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
 	linux/SELinuxMeter.c \
-  linux/ZramMeter.c
+  	linux/ZramMeter.c \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsArcStats.c \
 	zfs/ZfsCompressedArcMeter.c
