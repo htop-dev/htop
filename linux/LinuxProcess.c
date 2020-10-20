@@ -2,21 +2,24 @@
 htop - LinuxProcess.c
 (C) 2014 Hisham H. Muhammad
 (C) 2020 Red Hat, Inc.  All Rights Reserved.
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Process.h"
-#include "ProcessList.h"
 #include "LinuxProcess.h"
-#include "Platform.h"
-#include "CRT.h"
 
+#include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <sys/syscall.h>
-#include <time.h>
+#include <syscall.h>
+#include <unistd.h>
+
+#include "CRT.h"
+#include "Process.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
+
 
 /* semi-global */
 long long btime;
@@ -66,8 +69,8 @@ ProcessFieldData Process_fields[] = {
    [M_SHARE] = { .name = "M_SHARE", .title = "  SHR ", .description = "Size of the process's shared pages", .flags = 0, },
    [M_TRS] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, },
    [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, },
-   [M_LRS] = { .name = "M_LRS", .title = " LIB ", .description = "The library size of the process", .flags = 0, },
-   [M_DT] = { .name = "M_DT", .title = " DIRTY ", .description = "Size of the dirty pages of the process", .flags = 0, },
+   [M_LRS] = { .name = "M_LRS", .title = " LIB ", .description = "The library size of the process (unused since Linux 2.6; always 0)", .flags = 0, },
+   [M_DT] = { .name = "M_DT", .title = " DIRTY ", .description = "Size of the dirty pages of the process (unused since Linux 2.6; always 0)", .flags = 0, },
    [ST_UID] = { .name = "ST_UID", .title = "  UID ", .description = "User ID of the process owner", .flags = 0, },
    [PERCENT_CPU] = { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, },
    [PERCENT_MEM] = { .name = "PERCENT_MEM", .title = "MEM% ", .description = "Percentage of the memory the process is using, based on resident memory size", .flags = 0, },
@@ -76,8 +79,8 @@ ProcessFieldData Process_fields[] = {
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
 #ifdef HAVE_OPENVZ
-   [CTID] = { .name = "CTID", .title = "   CTID ", .description = "OpenVZ container ID (a.k.a. virtual environment ID)", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
-   [VPID] = { .name = "VPID", .title = " VPID ", .description = "OpenVZ process ID", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
+   [CTID] = { .name = "CTID", .title = " CTID    ", .description = "OpenVZ container ID (a.k.a. virtual environment ID)", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
+   [VPID] = { .name = "VPID", .title = "    VPID ", .description = "OpenVZ process ID", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
 #endif
 #ifdef HAVE_VSERVER
    [VXID] = { .name = "VXID", .title = " VXID ", .description = "VServer process ID", .flags = PROCESS_FLAG_LINUX_VSERVER, },
@@ -108,6 +111,7 @@ ProcessFieldData Process_fields[] = {
    [M_SWAP] = { .name = "M_SWAP", .title = " SWAP ", .description = "Size of the process's swapped pages", .flags = PROCESS_FLAG_LINUX_SMAPS, },
    [M_PSSWP] = { .name = "M_PSSWP", .title = " PSSWP ", .description = "shows proportional swap share of this mapping, Unlike \"Swap\", this does not take into account swapped out page of underlying shmem objects.", .flags = PROCESS_FLAG_LINUX_SMAPS, },
    [CTXT] = { .name = "CTXT", .title = " CTXT ", .description = "Context switches (incremental sum of voluntary_ctxt_switches and nonvoluntary_ctxt_switches)", .flags = PROCESS_FLAG_LINUX_CTXT, },
+   [SECATTR] = { .name = "SECATTR", .title = " Security Attribute ", .description = "Security attribute of the process (e.g. SELinux or AppArmor)", .flags = PROCESS_FLAG_LINUX_SECATTR, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -124,7 +128,7 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
 
-ProcessClass LinuxProcess_class = {
+const ProcessClass LinuxProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,
@@ -147,6 +151,10 @@ void Process_delete(Object* cast) {
 #ifdef HAVE_CGROUP
    free(this->cgroup);
 #endif
+#ifdef HAVE_OPENVZ
+   free(this->ctid);
+#endif
+   free(this->secattr);
    free(this->ttyDevice);
    free(this);
 }
@@ -181,7 +189,7 @@ bool LinuxProcess_setIOPriority(LinuxProcess* this, Arg ioprio) {
 
 #ifdef HAVE_DELAYACCT
 void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
-  if (delay_percent == -1LL) {
+  if (isnan(delay_percent)) {
     xSnprintf(buffer, n, " N/A  ");
   } else {
     xSnprintf(buffer, n, "%4.1f  ", delay_percent);
@@ -207,11 +215,11 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    }
    case CMINFLT: Process_colorNumber(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
-   case M_DRS: Process_humanNumber(str, lp->m_drs * PAGE_SIZE_KB, coloring); return;
-   case M_DT: Process_humanNumber(str, lp->m_dt * PAGE_SIZE_KB, coloring); return;
-   case M_LRS: Process_humanNumber(str, lp->m_lrs * PAGE_SIZE_KB, coloring); return;
-   case M_TRS: Process_humanNumber(str, lp->m_trs * PAGE_SIZE_KB, coloring); return;
-   case M_SHARE: Process_humanNumber(str, lp->m_share * PAGE_SIZE_KB, coloring); return;
+   case M_DRS: Process_humanNumber(str, lp->m_drs * CRT_pageSizeKB, coloring); return;
+   case M_DT: Process_humanNumber(str, lp->m_dt * CRT_pageSizeKB, coloring); return;
+   case M_LRS: Process_humanNumber(str, lp->m_lrs * CRT_pageSizeKB, coloring); return;
+   case M_TRS: Process_humanNumber(str, lp->m_trs * CRT_pageSizeKB, coloring); return;
+   case M_SHARE: Process_humanNumber(str, lp->m_share * CRT_pageSizeKB, coloring); return;
    case M_PSS: Process_humanNumber(str, lp->m_pss, coloring); return;
    case M_SWAP: Process_humanNumber(str, lp->m_swap, coloring); return;
    case M_PSSWP: Process_humanNumber(str, lp->m_psswp, coloring); return;
@@ -219,13 +227,6 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case STIME: Process_printTime(str, lp->stime); return;
    case CUTIME: Process_printTime(str, lp->cutime); return;
    case CSTIME: Process_printTime(str, lp->cstime); return;
-   case STARTTIME: {
-     struct tm date;
-     time_t starttimewall = btime + (lp->starttime / sysconf(_SC_CLK_TCK));
-     (void) localtime_r(&starttimewall, &date);
-     strftime(buffer, n, ((starttimewall > time(NULL) - 86400) ? "%R " : "%b%d "), &date);
-     break;
-   }
    #ifdef HAVE_TASKSTATS
    case RCHAR:  Process_colorNumber(str, lp->io_rchar, coloring); return;
    case WCHAR:  Process_colorNumber(str, lp->io_wchar, coloring); return;
@@ -237,14 +238,20 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    case IO_READ_RATE:  Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring); return;
    case IO_WRITE_RATE: Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring); return;
    case IO_RATE: {
-      double totalRate = (lp->io_rate_read_bps != -1)
-                       ? (lp->io_rate_read_bps + lp->io_rate_write_bps)
-                       : -1;
+      double totalRate = NAN;
+      if(!isnan(lp->io_rate_read_bps) && !isnan(lp->io_rate_write_bps))
+         totalRate = lp->io_rate_read_bps + lp->io_rate_write_bps;
+      else if(!isnan(lp->io_rate_read_bps))
+         totalRate = lp->io_rate_read_bps;
+      else if(!isnan(lp->io_rate_write_bps))
+         totalRate = lp->io_rate_write_bps;
+      else
+         totalRate = NAN;
       Process_outputRate(str, buffer, n, totalRate, coloring); return;
    }
    #endif
    #ifdef HAVE_OPENVZ
-   case CTID: xSnprintf(buffer, n, "%7u ", lp->ctid); break;
+   case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;
    case VPID: xSnprintf(buffer, n, Process_pidFormat, lp->vpid); break;
    #endif
    #ifdef HAVE_VSERVER
@@ -282,22 +289,23 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
          attr |= A_BOLD;
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
+   case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;
    default:
-      Process_writeField((Process*)this, str, field);
+      Process_writeField(this, str, field);
       return;
    }
    RichString_append(str, attr, buffer);
 }
 
 long LinuxProcess_compare(const void* v1, const void* v2) {
-   LinuxProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const LinuxProcess *p1, *p2;
+   const Settings *settings = ((const Process*)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (LinuxProcess*)v1;
-      p2 = (LinuxProcess*)v2;
+      p1 = (const LinuxProcess*)v1;
+      p2 = (const LinuxProcess*)v2;
    } else {
-      p2 = (LinuxProcess*)v1;
-      p1 = (LinuxProcess*)v2;
+      p2 = (const LinuxProcess*)v1;
+      p1 = (const LinuxProcess*)v2;
    }
    long long diff;
    switch ((int)settings->sortKey) {
@@ -321,12 +329,6 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    case CUTIME: diff = p2->cutime - p1->cutime; goto test_diff;
    case STIME:  diff = p2->stime - p1->stime; goto test_diff;
    case CSTIME: diff = p2->cstime - p1->cstime; goto test_diff;
-   case STARTTIME: {
-      if (p1->starttime == p2->starttime)
-         return (p1->super.pid - p2->super.pid);
-      else
-         return (p1->starttime - p2->starttime);
-   }
    #ifdef HAVE_TASKSTATS
    case RCHAR:  diff = p2->io_rchar - p1->io_rchar; goto test_diff;
    case WCHAR:  diff = p2->io_wchar - p1->io_wchar; goto test_diff;
@@ -341,7 +343,7 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    #endif
    #ifdef HAVE_OPENVZ
    case CTID:
-      return (p2->ctid - p1->ctid);
+      return strcmp(p1->ctid ? p1->ctid : "", p2->ctid ? p2->ctid : "");
    case VPID:
       return (p2->vpid - p1->vpid);
    #endif
@@ -367,6 +369,8 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
    case CTXT:
       return ((long)p2->ctxt_diff - (long)p1->ctxt_diff);
+   case SECATTR:
+      return strcmp(p1->secattr ? p1->secattr : "", p2->secattr ? p2->secattr : "");
    default:
       return Process_compare(v1, v2);
    }
@@ -374,6 +378,6 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isThread(const Process* this) {
    return (Process_isUserlandThread(this) || Process_isKernelThread(this));
 }

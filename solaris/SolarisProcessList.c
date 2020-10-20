@@ -2,7 +2,7 @@
 htop - SolarisProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -22,6 +22,9 @@ in the source distribution for its full text.
 #include <pwd.h>
 #include <math.h>
 #include <time.h>
+
+#include "CRT.h"
+
 
 #define MAXCMDLINE 255
 
@@ -157,22 +160,22 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       freemem_pgs    = kstat_data_lookup(meminfo, "freemem");
       pages          = kstat_data_lookup(meminfo, "pagestotal");
 
-      pl->totalMem   = totalmem_pgs->value.ui64 * PAGE_SIZE_KB;
-      if (pl->totalMem > freemem_pgs->value.ui64 * PAGE_SIZE_KB)
-	pl->usedMem  = pl->totalMem - freemem_pgs->value.ui64 * PAGE_SIZE_KB;
+      pl->totalMem   = totalmem_pgs->value.ui64 * CRT_pageSizeKB;
+      if (pl->totalMem > freemem_pgs->value.ui64 * CRT_pageSizeKB)
+         pl->usedMem  = pl->totalMem - freemem_pgs->value.ui64 * CRT_pageSizeKB;
       else
-	pl->usedMem  = 0; // This can happen in non-global zone (in theory)
+         pl->usedMem  = 0; // This can happen in non-global zone (in theory)
       // Not sure how to implement this on Solaris - suggestions welcome!
       pl->cachedMem  = 0;
       // Not really "buffers" but the best Solaris analogue that I can find to
       // "memory in use but not by programs or the kernel itself"
-      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * PAGE_SIZE_KB;
+      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * CRT_pageSizeKB;
     } else {
       // Fall back to basic sysconf if kstat isn't working
-      pl->totalMem = sysconf(_SC_PHYS_PAGES) * PAGE_SIZE;
+      pl->totalMem = sysconf(_SC_PHYS_PAGES) * CRT_pageSize;
       pl->buffersMem = 0;
       pl->cachedMem  = 0;
-      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * PAGE_SIZE);
+      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * CRT_pageSize);
    }
 
    // Part 2 - swap
@@ -198,8 +201,8 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    free(spathbase);
    free(sl);
-   pl->totalSwap = totalswap * PAGE_SIZE_KB;
-   pl->usedSwap  = pl->totalSwap - (totalfree * PAGE_SIZE_KB);
+   pl->totalSwap = totalswap * CRT_pageSizeKB;
+   pl->usedSwap  = pl->totalSwap - (totalfree * CRT_pageSizeKB);
 }
 
 static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
@@ -260,8 +263,6 @@ void ProcessList_delete(ProcessList* pl) {
  */
 
 int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr) {
-   struct timeval tv;
-   struct tm date;
    bool preExisting;
    pid_t getpid;
 
@@ -281,8 +282,6 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    Process *proc             = ProcessList_getProcess(pl, getpid, &preExisting, (Process_New) SolarisProcess_new);
    SolarisProcess *sproc     = (SolarisProcess*) proc;
 
-   gettimeofday(&tv, NULL);
-
    // Common code pass 1
    proc->show               = false;
    sproc->taskid            = _psinfo->pr_taskid;
@@ -301,8 +300,8 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    proc->pgrp               = _psinfo->pr_pgid;
    proc->nlwp               = _psinfo->pr_nlwp;
    proc->tty_nr             = _psinfo->pr_ttydev;
-   proc->m_resident         = _psinfo->pr_rssize/PAGE_SIZE_KB;
-   proc->m_size             = _psinfo->pr_size/PAGE_SIZE_KB;
+   proc->m_resident         = _psinfo->pr_rssize/CRT_pageSizeKB;
+   proc->m_size             = _psinfo->pr_size/CRT_pageSizeKB;
 
    if (!preExisting) {
       sproc->realpid        = _psinfo->pr_pid;
@@ -368,8 +367,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       } else {
          sproc->kernel = false;
       }
-      (void) localtime_r((time_t*) &proc->starttime_ctime, &date);
-      strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
+      Process_fillStarttimeBuffer(proc);
       ProcessList_add(pl, proc);
    }
    proc->updated = true;
@@ -379,10 +377,15 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    return 0;
 }
 
-void ProcessList_goThroughEntries(ProcessList* this) {
+void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
    SolarisProcessList_scanCPUTime(this);
    SolarisProcessList_scanMemoryInfo(this);
    SolarisProcessList_scanZfsArcstats(this);
+
+   // in pause mode only gather global data for meters (CPU/memory/...)
+   if (pauseProcessUpdate)
+      return;
+
    this->kernelThreads = 1;
    proc_walk(&SolarisProcessList_walkproc, this, PR_WALK_LWP);
 }

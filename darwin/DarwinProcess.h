@@ -3,7 +3,7 @@
 /*
 htop - DarwinProcess.h
 (C) 2015 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -20,19 +20,17 @@ typedef struct DarwinProcess_ {
    bool taskAccess;
 } DarwinProcess;
 
-extern ProcessClass DarwinProcess_class;
+extern const ProcessClass DarwinProcess_class;
 
 DarwinProcess* DarwinProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
 
-bool Process_isThread(Process* this);
-
-void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now);
+bool Process_isThread(const Process* this);
 
 char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset);
 
-void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists);
+void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool exists);
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl);
 

@@ -1,7 +1,7 @@
 /*
 htop - UnsupportedProcessList.c
 (C) 2014 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -24,8 +24,13 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
-	bool preExisting = true;
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
+
+   // in pause mode only gather global data for meters (CPU/memory/...)
+   if (pauseProcessUpdate)
+      return;
+
+    bool preExisting = true;
     Process *proc;
 
     proc = ProcessList_getProcess(super, 1, &preExisting, UnsupportedProcess_new);
@@ -56,8 +61,8 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     proc->priority = 0;
     proc->nice = 0;
     proc->nlwp = 1;
-    strncpy(proc->starttime_show, "Jun 01 ", sizeof(proc->starttime_show));
     proc->starttime_ctime = 1433116800; // Jun 01, 2015
+    Process_fillStarttimeBuffer(proc);
 
     proc->m_size = 100;
     proc->m_resident = 100;

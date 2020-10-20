@@ -3,13 +3,12 @@
 /*
 htop - IOPriorityPanel.h
 (C) 2004-2012 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Panel.h"
 #include "IOPriority.h"
-#include "ListItem.h"
 
 Panel* IOPriorityPanel_new(IOPriority currPrio);
 

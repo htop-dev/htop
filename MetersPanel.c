@@ -1,15 +1,21 @@
 /*
 htop - MetersPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "MetersPanel.h"
 
 #include <stdlib.h>
-#include <assert.h>
+
 #include "CRT.h"
+#include "FunctionBar.h"
+#include "Header.h"
+#include "ListItem.h"
+#include "Meter.h"
+#include "Object.h"
+#include "ProvideCurses.h"
 
 
 // Note: In code the meters are known to have bar/text/graph "Modes", but in UI
@@ -55,7 +61,7 @@ void MetersPanel_setMoving(MetersPanel* this, bool moving) {
       Panel_setSelectionColor(super, CRT_colors[PANEL_SELECTION_FOLLOW]);
       super->currentBar = Meters_movingBar;
    }
-   FunctionBar_draw(this->super.currentBar, NULL);
+   FunctionBar_draw(this->super.currentBar);
 }
 
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
@@ -177,7 +183,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       }
    }
    if (result == HANDLED || sideMove) {
-      Header* header = (Header*) this->scr->header;
+      Header* header = this->scr->header;
       this->settings->changed = true;
       Header_calculateHeight(header);
       Header_draw(header);
@@ -186,7 +192,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass MetersPanel_class = {
+const PanelClass MetersPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = MetersPanel_delete

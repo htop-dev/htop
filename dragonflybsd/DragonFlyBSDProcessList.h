@@ -4,7 +4,7 @@
 htop - DragonFlyBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -59,6 +59,6 @@ char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kpro
 
 char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid);
 
-void ProcessList_goThroughEntries(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this, pauseProcessUpdate);
 
 #endif

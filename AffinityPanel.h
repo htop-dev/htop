@@ -3,7 +3,7 @@
 /*
 htop - AffinityPanel.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -11,7 +11,7 @@ in the source distribution for its full text.
 #include "Affinity.h"
 #include "ProcessList.h"
 
-extern PanelClass AffinityPanel_class;
+extern const PanelClass AffinityPanel_class;
 
 Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity, int* width);
 

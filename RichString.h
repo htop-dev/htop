@@ -3,30 +3,14 @@
 /*
 htop - RichString.h
 (C) 2004,2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include "config.h"
-#include <ctype.h>
 
-#include <assert.h>
-#ifdef HAVE_NCURSESW_CURSES_H
-#include <ncursesw/curses.h>
-#elif defined(HAVE_NCURSES_NCURSES_H)
-#include <ncurses/ncurses.h>
-#elif defined(HAVE_NCURSES_CURSES_H)
-#include <ncurses/curses.h>
-#elif defined(HAVE_NCURSES_H)
-#include <ncurses.h>
-#elif defined(HAVE_CURSES_H)
-#include <curses.h>
-#endif
+#include "ProvideCurses.h"
 
-#ifdef HAVE_LIBNCURSESW
-#include <wctype.h>
-#endif
 
 #define RichString_size(this) ((this)->chlen)
 #define RichString_sizeVal(this) ((this).chlen)
@@ -57,19 +41,9 @@ typedef struct RichString_ {
    CharType chstr[RICHSTRING_MAXLEN+1];
 } RichString;
 
-#ifdef HAVE_LIBNCURSESW
-
 void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
 
 int RichString_findChar(RichString* this, char c, int start);
-
-#else /* HAVE_LIBNCURSESW */
-
-void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
-
-int RichString_findChar(RichString* this, char c, int start);
-
-#endif /* HAVE_LIBNCURSESW */
 
 void RichString_prune(RichString* this);
 

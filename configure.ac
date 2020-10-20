@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-AC_INIT([htop],[3.0.2],[htop@groups.io])
+AC_INIT([htop],[3.0.3-dev],[htop@groups.io])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([.])
@@ -92,6 +92,9 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
    [AC_MSG_ERROR([htop is written in C99. A newer compiler is required.])])
 CFLAGS="$save_cflags"
 
+# Add -lexecinfo if needed
+AC_SEARCH_LIBS([backtrace], [execinfo])
+
 # Checks for features and flags.
 # ----------------------------------------------------------------------
 PROCDIR=/proc
@@ -169,6 +172,23 @@ m4_define([HTOP_CHECK_LIB],
    ], [$4])
 ])
 
+dnl https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
+AC_DEFUN([AX_CHECK_COMPILE_FLAG],
+[AC_PREREQ(2.64)dnl for _AC_LANG_PREFIX and AS_VAR_IF
+AS_VAR_PUSHDEF([CACHEVAR],[ax_cv_check_[]_AC_LANG_ABBREV[]flags_$4_$1])dnl
+AC_CACHE_CHECK([whether _AC_LANG compiler accepts $1], CACHEVAR, [
+  ax_check_save_flags=$[]_AC_LANG_PREFIX[]FLAGS
+  _AC_LANG_PREFIX[]FLAGS="$[]_AC_LANG_PREFIX[]FLAGS $4 $1"
+  AC_COMPILE_IFELSE([m4_default([$5],[AC_LANG_PROGRAM()])],
+    [AS_VAR_SET(CACHEVAR,[yes])],
+    [AS_VAR_SET(CACHEVAR,[no])])
+  _AC_LANG_PREFIX[]FLAGS=$ax_check_save_flags])
+AS_VAR_IF(CACHEVAR,yes,
+  [m4_default([$2], :)],
+  [m4_default([$3], :)])
+AS_VAR_POPDEF([CACHEVAR])dnl
+])dnl AX_CHECK_COMPILE_FLAGS
+
 AC_ARG_ENABLE(unicode, [AS_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
 if test "x$enable_unicode" = xyes; then
    HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
@@ -214,33 +234,43 @@ if test "$my_htop_platform" = "solaris"; then
    AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
 fi
 
-AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
-if test "x$enable_linux_affinity" = xyes; then
-   AC_MSG_CHECKING([for usable sched_setaffinity])
-   AC_RUN_IFELSE([
-     AC_LANG_PROGRAM([[
-       #include <sched.h>
-       #include <errno.h>
-       static cpu_set_t cpuset;
-       ]], [[
-       CPU_ZERO(&cpuset);
-       sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-       if (errno == ENOSYS) return 1;
-       ]])],
-     [AC_MSG_RESULT([yes])],
-     [enable_linux_affinity=no
-      AC_MSG_RESULT([no])],
-     [AC_MSG_RESULT([yes (assumed while cross compiling)])])
+AC_ARG_ENABLE(hwloc, [AS_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity, disables Linux affinity])],, enable_hwloc="no")
+if test "x$enable_hwloc" = xyes
+then
+   AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
+   AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
+fi
+
+AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, conflicts with hwloc])], ,enable_linux_affinity="check")
+if test "x$enable_linux_affinity" = xcheck; then
+   if test "x$enable_hwloc" = xyes; then
+      enable_linux_affinity=no
+   else
+      AC_MSG_CHECKING([for usable sched_setaffinity])
+      AC_RUN_IFELSE([
+         AC_LANG_PROGRAM([[
+            #include <sched.h>
+            #include <errno.h>
+            static cpu_set_t cpuset;
+         ]], [[
+            CPU_ZERO(&cpuset);
+            sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+            if (errno == ENOSYS) return 1;
+         ]])],
+      [enable_linux_affinity=yes
+       AC_MSG_RESULT([yes])],
+      [enable_linux_affinity=no
+       AC_MSG_RESULT([no])],
+      [AC_MSG_RESULT([yes (assumed while cross compiling)])])
+   fi
 fi
 if test "x$enable_linux_affinity" = xyes; then
    AC_DEFINE(HAVE_LINUX_AFFINITY, 1, [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
-AC_ARG_ENABLE(hwloc, [AS_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
-if test "x$enable_hwloc" = xyes
+if test "x$enable_linux_affinity" = xyes -a "x$enable_hwloc" = xyes
 then
-   AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
-   AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
+   AC_MSG_ERROR([--enable-hwloc and --enable-linux-affinity are mutual exclusive. Specify at most one of them.])
 fi
 
 AC_ARG_ENABLE(setuid, [AS_HELP_STRING([--enable-setuid], [enable setuid support for platforms that need it])],, enable_setuid="no")
@@ -269,9 +299,12 @@ fi
 AM_CFLAGS="\
  -Wall\
  -Wcast-align\
+ -Wcast-qual\
  -Wextra\
+ -Wfloat-equal\
  -Wmissing-format-attribute\
  -Wmissing-noreturn\
+ -Wmissing-prototypes\
  -Wpointer-arith\
  -Wshadow\
  -Wstrict-prototypes\
@@ -279,9 +312,17 @@ AM_CFLAGS="\
  -Wunused\
  -Wwrite-strings"
 
+AX_CHECK_COMPILE_FLAG([-Wnull-dereference], [AM_CFLAGS="$AM_CFLAGS -Wnull-dereference"], , [-Werror])
+
 AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as errors (default: warnings are not errors)])], [enable_werror="$enableval"], [enable_werror=no])
 AS_IF([test "x$enable_werror" = "xyes"], [AM_CFLAGS="$AM_CFLAGS -Werror"])
+
 AC_SUBST([AM_CFLAGS])
+
+AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [Enable asserts (default: asserts are disabled)])], [enable_debug="$enableval"], [enable_debug=no])
+AS_IF([test "x$enable_debug" = "xyes"], , [AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"])
+
+AC_SUBST([AM_CPPFLAGS])
 
 # Bail out on errors.
 # ----------------------------------------------------------------------
@@ -292,7 +333,7 @@ if test ! -z "$missing_headers"; then
   AC_MSG_ERROR([missing headers: $missing_headers])
 fi
 
-AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-2018 Hisham Muhammad", [Copyright message.])
+AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-2019 Hisham Muhammad. (C) 2020 htop dev team.", [Copyright message.])
 
 # We're done, let's go!
 # ----------------------------------------------------------------------
@@ -324,16 +365,16 @@ fi
 AC_MSG_RESULT([
   ${PACKAGE_NAME} ${VERSION}
 
-  platform:                $my_htop_platform
-  proc directory:          $PROCDIR
-  openvz:                  $enable_openvz
-  cgroup:                  $enable_cgroup
-  vserver:                 $enable_vserver
-  ancient vserver:         $enable_ancient_vserver
-  taskstats:               $enable_taskstats
-  unicode:                 $enable_unicode
-  linux affinity:          $enable_linux_affinity
-  hwlock:                  $enable_hwloc
-  setuid:                  $enable_setuid
-  linux delay accounting:  $enable_delayacct
+  platform:                  $my_htop_platform
+  (Linux) proc directory:    $PROCDIR
+  (Linux) openvz:            $enable_openvz
+  (Linux) cgroup:            $enable_cgroup
+  (Linux) vserver:           $enable_vserver
+  (Linux) ancient vserver:   $enable_ancient_vserver
+  (Linux) taskstats:         $enable_taskstats
+  (Linux) affinity:          $enable_linux_affinity
+  (Linux) delay accounting:  $enable_delayacct
+  unicode:                   $enable_unicode
+  hwlock:                    $enable_hwloc
+  setuid:                    $enable_setuid
 ])

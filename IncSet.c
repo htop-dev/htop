@@ -1,16 +1,23 @@
 /*
 htop - IncSet.c
 (C) 2005-2012 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "IncSet.h"
-#include "StringUtils.h"
-#include "ListItem.h"
-#include "CRT.h"
+
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "CRT.h"
+#include "ListItem.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static void IncMode_reset(IncMode* mode) {
@@ -95,10 +102,11 @@ static bool search(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelVa
          break;
       }
    }
-   if (found)
-      FunctionBar_draw(mode->bar, mode->buffer);
-   else
-      FunctionBar_drawAttr(mode->bar, mode->buffer, CRT_colors[FAILED_SEARCH]);
+
+   FunctionBar_drawExtra(mode->bar,
+                         mode->buffer,
+                         found ? -1 : CRT_colors[FAILED_SEARCH],
+                         true);
    return found;
 }
 
@@ -177,7 +185,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       }
       this->active = NULL;
       Panel_setDefaultBar(panel);
-      FunctionBar_draw(this->defaultBar, NULL);
+      FunctionBar_draw(this->defaultBar);
       doSearch = false;
    }
    if (doSearch) {
@@ -198,15 +206,15 @@ const char* IncSet_getListItemValue(Panel* panel, int i) {
 
 void IncSet_activate(IncSet* this, IncType type, Panel* panel) {
    this->active = &(this->modes[type]);
-   FunctionBar_draw(this->active->bar, this->active->buffer);
+   FunctionBar_drawExtra(this->active->bar, this->active->buffer, -1, true);
    panel->currentBar = this->active->bar;
 }
 
-void IncSet_drawBar(IncSet* this) {
+void IncSet_drawBar(const IncSet* this) {
    if (this->active) {
-      FunctionBar_draw(this->active->bar, this->active->buffer);
+      FunctionBar_drawExtra(this->active->bar, this->active->buffer, -1, true);
    } else {
-      FunctionBar_draw(this->defaultBar, NULL);
+      FunctionBar_draw(this->defaultBar);
    }
 }
 

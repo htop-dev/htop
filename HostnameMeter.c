@@ -1,18 +1,21 @@
 /*
 htop - HostnameMeter.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "HostnameMeter.h"
+#include "config.h" // IWYU pragma: keep
 
-#include "CRT.h"
+#include "HostnameMeter.h"
 
 #include <unistd.h>
 
+#include "CRT.h"
+#include "Object.h"
 
-int HostnameMeter_attributes[] = {
+
+static const int HostnameMeter_attributes[] = {
    HOSTNAME
 };
 
@@ -21,7 +24,7 @@ static void HostnameMeter_updateValues(Meter* this, char* buffer, int size) {
    gethostname(buffer, size-1);
 }
 
-MeterClass HostnameMeter_class = {
+const MeterClass HostnameMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete

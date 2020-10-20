@@ -2,17 +2,22 @@
 htop - unsupported/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <math.h>
+
 #include "Platform.h"
+#include "Macros.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
 #include "SwapMeter.h"
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
 #include "ClockMeter.h"
+#include "DateMeter.h"
+#include "DateTimeMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
 
@@ -21,7 +26,7 @@ const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
 };
 
-const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
+const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
@@ -54,9 +59,11 @@ ProcessFieldData Process_fields[] = {
    [100] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
-MeterClass* Platform_meterTypes[] = {
+const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
+   &DateMeter_class,
+   &DateTimeMeter_class,
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,
@@ -67,10 +74,16 @@ MeterClass* Platform_meterTypes[] = {
    &UptimeMeter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
+   &AllCPUs4Meter_class,
+   &AllCPUs8Meter_class,
    &LeftCPUsMeter_class,
    &RightCPUsMeter_class,
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
+   &LeftCPUs4Meter_class,
+   &RightCPUs4Meter_class,
+   &LeftCPUs8Meter_class,
+   &RightCPUs8Meter_class,
    &BlankMeter_class,
    NULL
 };
@@ -105,7 +118,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    (void) cpu;
 
    double* v = this->values;
-   v[CPU_METER_FREQUENCY] = -1;
+   v[CPU_METER_FREQUENCY] = NAN;
 
    return 0.0;
 }
@@ -118,7 +131,7 @@ void Platform_setSwapValues(Meter* this) {
    (void) this;
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isThread(const Process* this) {
    (void) this;
    return false;
 }
@@ -126,4 +139,18 @@ bool Process_isThread(Process* this) {
 char* Platform_getProcessEnv(pid_t pid) {
    (void) pid;
    return NULL;
+}
+
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+   *bytesRead = *bytesWrite = *msTimeSpend = 0;
+}
+
+void Platform_getNetworkIO(unsigned long int *bytesReceived,
+                           unsigned long int *packetsReceived,
+                           unsigned long int *bytesTransmitted,
+                           unsigned long int *packetsTransmitted) {
+   *bytesReceived = 0;
+   *packetsReceived = 0;
+   *bytesTransmitted = 0;
+   *packetsTransmitted = 0;
 }

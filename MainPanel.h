@@ -4,13 +4,21 @@
 htop - ColumnsPanel.h
 (C) 2004-2015 Hisham H. Muhammad
 (C) 2020 Red Hat, Inc.  All Rights Reserved.
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
+#include <stdbool.h>
+#include <sys/types.h>
+
 #include "Action.h"
 #include "IncSet.h"
+#include "Object.h"
 #include "Panel.h"
+#include "Process.h"
+
 
 typedef struct MainPanel_ {
    Panel super;
@@ -34,7 +42,7 @@ const char* MainPanel_getValue(MainPanel* this, int i);
 
 bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Arg arg, bool* wasAnyTagged);
 
-extern PanelClass MainPanel_class;
+extern const PanelClass MainPanel_class;
 
 MainPanel* MainPanel_new(void);
 

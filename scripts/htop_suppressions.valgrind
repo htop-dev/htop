@@ -1,0 +1,63 @@
+{
+   <ncurses internal memory allocated at startup>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:CRT_init
+   fun:main
+}
+
+{
+   <ncurses internal memory allocated at startup>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:CRT_init
+}
+
+{
+   <ncurses internal memory>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:wgetch
+   fun:ScreenManager_run
+   fun:Action_runSetup
+   fun:actionSetup
+   fun:MainPanel_eventHandler
+   fun:ScreenManager_run
+   fun:main
+}
+
+{
+   <ncurses internal memory>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:wgetch
+   fun:ScreenManager_run
+   fun:main
+}
+
+{
+   <ncurses internal memory>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:wrefresh
+   fun:main
+}
+
+{
+   <ncurses internal memory>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   fun:_nc_doalloc
+   fun:_nc_tparm_analyze
+   fun:tparm
+   ...
+   fun:doupdate_sp
+   fun:wrefresh
+   obj:*
+}

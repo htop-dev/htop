@@ -1,37 +1,54 @@
 /*
 htop - linux/Platform.c
 (C) 2014 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
+
 #include "Platform.h"
+
+#include <assert.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "BatteryMeter.h"
+#include "ClockMeter.h"
+#include "CPUMeter.h"
+#include "DateMeter.h"
+#include "DateTimeMeter.h"
+#include "DiskIOMeter.h"
+#include "HostnameMeter.h"
 #include "IOPriority.h"
 #include "IOPriorityPanel.h"
 #include "LinuxProcess.h"
 #include "LinuxProcessList.h"
-#include "Battery.h"
-
+#include "LoadAverageMeter.h"
+#include "Macros.h"
+#include "MainPanel.h"
 #include "Meter.h"
-#include "CPUMeter.h"
 #include "MemoryMeter.h"
+#include "NetworkIOMeter.h"
+#include "Object.h"
+#include "Panel.h"
+#include "PressureStallMeter.h"
+#include "ProcessList.h"
+#include "ProvideCurses.h"
+#include "SELinuxMeter.h"
+#include "Settings.h"
 #include "SwapMeter.h"
 #include "TasksMeter.h"
-#include "LoadAverageMeter.h"
 #include "UptimeMeter.h"
-#include "PressureStallMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
+#include "XUtils.h"
+
 #include "zfs/ZfsArcMeter.h"
+#include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "ZramMeter.h"
 #include "LinuxProcess.h"
-
-#include <math.h>
-#include <assert.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
@@ -77,7 +94,7 @@ const SignalItem Platform_signals[] = {
    { .name = "31 SIGSYS",    .number = 31 },
 };
 
-const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
+const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    Panel* panel = st->panel;
@@ -101,9 +118,11 @@ void Platform_setBindings(Htop_Action* keys) {
    keys['i'] = Platform_actionSetIOPriority;
 }
 
-MeterClass* Platform_meterTypes[] = {
+const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
+   &DateMeter_class,
+   &DateTimeMeter_class,
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,
@@ -115,12 +134,15 @@ MeterClass* Platform_meterTypes[] = {
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
    &AllCPUs4Meter_class,
+   &AllCPUs8Meter_class,
    &LeftCPUsMeter_class,
    &RightCPUsMeter_class,
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
    &LeftCPUs4Meter_class,
    &RightCPUs4Meter_class,
+   &LeftCPUs8Meter_class,
+   &RightCPUs8Meter_class,
    &BlankMeter_class,
    &PressureStallCPUSomeMeter_class,
    &PressureStallIOSomeMeter_class,
@@ -130,6 +152,9 @@ MeterClass* Platform_meterTypes[] = {
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
    &ZramMeter_class,
+   &DiskIOMeter_class,
+   &NetworkIOMeter_class,
+   &SELinuxMeter_class,
    NULL
 };
 
@@ -141,7 +166,7 @@ int Platform_getUptime() {
       fclose(fd);
       if (n <= 0) return 0;
    }
-   return (int) floor(uptime);
+   return floor(uptime);
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
@@ -182,7 +207,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_STEAL]   = cpuData->stealPeriod / total * 100.0;
       v[CPU_METER_GUEST]   = cpuData->guestPeriod / total * 100.0;
       v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
-      Meter_setItems(this, 8);
+      this->curItems = 8;
       if (this->pl->settings->accountGuestInCPUMeter) {
          percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];
       } else {
@@ -191,7 +216,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    } else {
       v[2] = cpuData->systemAllPeriod / total * 100.0;
       v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
-      Meter_setItems(this, 4);
+      this->curItems = 4;
       percent = v[0]+v[1]+v[2]+v[3];
    }
    percent = CLAMP(percent, 0.0, 100.0);
@@ -204,6 +229,8 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    ProcessList* pl = (ProcessList*) this->pl;
+   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
@@ -212,6 +239,11 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[0] = usedMem;
    this->values[1] = buffersMem;
    this->values[2] = cachedMem;
+
+   if (lpl->zfs.enabled != 0) {
+      this->values[0] -= lpl->zfs.size;
+      this->values[2] += lpl->zfs.size;
+   }
 }
 
 void Platform_setSwapValues(Meter* this) {
@@ -279,4 +311,94 @@ void Platform_getPressureStall(const char *file, bool some, double* ten, double*
    (void) total;
    assert(total == 3);
    fclose(fd);
+}
+
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+   FILE *fd = fopen(PROCDIR "/diskstats", "r");
+   if (!fd) {
+      *bytesRead = 0;
+      *bytesWrite = 0;
+      *msTimeSpend = 0;
+      return;
+   }
+   unsigned long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
+   char lineBuffer[256];
+   while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
+      char diskname[32];
+      unsigned long int read_tmp, write_tmp, timeSpend_tmp;
+      if (sscanf(lineBuffer, "%*d %*d %31s %*u %*u %lu %*u %*u %*u %lu %*u %*u %lu", diskname, &read_tmp, &write_tmp, &timeSpend_tmp) == 4) {
+         if (String_startsWith(diskname, "dm-"))
+            continue;
+
+         /* only count root disks, e.g. do not count IO from sda and sda1 twice */
+         if ((diskname[0] == 's' || diskname[0] == 'h')
+             && diskname[1] == 'd'
+             && isalpha((unsigned char)diskname[2])
+             && isdigit((unsigned char)diskname[3]))
+            continue;
+
+         /* only count root disks, e.g. do not count IO from mmcblk0 and mmcblk0p1 twice */
+         if (diskname[0] == 'm'
+             && diskname[1] == 'm'
+             && diskname[2] == 'c'
+             && diskname[3] == 'b'
+             && diskname[4] == 'l'
+             && diskname[5] == 'k'
+             && isdigit((unsigned char)diskname[6])
+             && diskname[7] == 'p')
+            continue;
+
+         read_sum += read_tmp;
+         write_sum += write_tmp;
+         timeSpend_sum += timeSpend_tmp;
+      }
+   }
+   fclose(fd);
+   /* multiply with sector size */
+   *bytesRead = 512 * read_sum;
+   *bytesWrite = 512 * write_sum;
+   *msTimeSpend = timeSpend_sum;
+}
+
+void Platform_getNetworkIO(unsigned long int *bytesReceived,
+                           unsigned long int *packetsReceived,
+                           unsigned long int *bytesTransmitted,
+                           unsigned long int *packetsTransmitted) {
+   FILE *fd = fopen(PROCDIR "/net/dev", "r");
+   if (!fd) {
+      *bytesReceived = 0;
+      *packetsReceived = 0;
+      *bytesTransmitted = 0;
+      *packetsTransmitted = 0;
+      return;
+   }
+
+   unsigned long int bytesReceivedSum = 0, packetsReceivedSum = 0, bytesTransmittedSum = 0, packetsTransmittedSum = 0;
+   char lineBuffer[512];
+   while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
+      char interfaceName[32];
+      unsigned long int bytesReceivedParsed, packetsReceivedParsed, bytesTransmittedParsed, packetsTransmittedParsed;
+      if (fscanf(fd, "%31s %lu %lu %*u %*u %*u %*u %*u %*u %lu %lu %*u %*u %*u %*u %*u %*u",
+                     interfaceName,
+                     &bytesReceivedParsed,
+                     &packetsReceivedParsed,
+                     &bytesTransmittedParsed,
+                     &packetsTransmittedParsed) != 5)
+         continue;
+
+      if (String_eq(interfaceName, "lo:"))
+         continue;
+
+      bytesReceivedSum += bytesReceivedParsed;
+      packetsReceivedSum += packetsReceivedParsed;
+      bytesTransmittedSum += bytesTransmittedParsed;
+      packetsTransmittedSum += packetsTransmittedParsed;
+   }
+
+   fclose(fd);
+
+   *bytesReceived = bytesReceivedSum;
+   *packetsReceived = packetsReceivedSum;
+   *bytesTransmitted = bytesTransmittedSum;
+   *packetsTransmitted = packetsTransmittedSum;
 }

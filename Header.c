@@ -1,20 +1,24 @@
 /*
 htop - Header.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Header.h"
 
-#include "CRT.h"
-#include "StringUtils.h"
-#include "Platform.h"
-
-#include <assert.h>
-#include <time.h>
-#include <string.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "CRT.h"
+#include "Macros.h"
+#include "Object.h"
+#include "Platform.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
+
 
 Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns) {
    Header* this = xCalloc(1, sizeof(Header));
@@ -88,7 +92,7 @@ MeterModeId Header_addMeterByName(Header* this, char* name, int column) {
       *paren = '\0';
    }
    MeterModeId mode = TEXT_METERMODE;
-   for (MeterClass** type = Platform_meterTypes; *type; type++) {
+   for (const MeterClass* const* type = Platform_meterTypes; *type; type++) {
       if (String_eq(name, (*type)->name)) {
          Meter* meter = Meter_new(this->pl, param, *type);
          Vector_add(meters, meter);
@@ -110,7 +114,7 @@ void Header_setMode(Header* this, int i, MeterModeId mode, int column) {
    Meter_setMode(meter, mode);
 }
 
-Meter* Header_addMeterByClass(Header* this, MeterClass* type, int param, int column) {
+Meter* Header_addMeterByClass(Header* this, const MeterClass* type, int param, int column) {
    Vector* meters = this->columns[column];
 
    Meter* meter = Meter_new(this->pl, param, type);

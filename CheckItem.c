@@ -1,16 +1,17 @@
 /*
 htop - CheckItem.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "CheckItem.h"
 
-#include "CRT.h"
-
 #include <assert.h>
 #include <stdlib.h>
+
+#include "CRT.h"
+#include "RichString.h"
 
 
 static void CheckItem_delete(Object* cast) {
@@ -21,8 +22,8 @@ static void CheckItem_delete(Object* cast) {
    free(this);
 }
 
-static void CheckItem_display(Object* cast, RichString* out) {
-   CheckItem* this = (CheckItem*)cast;
+static void CheckItem_display(const Object* cast, RichString* out) {
+   const CheckItem* this = (const CheckItem*)cast;
    assert (this != NULL);
    RichString_write(out, CRT_colors[CHECK_BOX], "[");
    if (CheckItem_get(this))
@@ -33,7 +34,7 @@ static void CheckItem_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
 }
 
-ObjectClass CheckItem_class = {
+const ObjectClass CheckItem_class = {
    .display = CheckItem_display,
    .delete = CheckItem_delete
 };
@@ -61,7 +62,7 @@ void CheckItem_set(CheckItem* this, bool value) {
       this->value = value;
 }
 
-bool CheckItem_get(CheckItem* this) {
+bool CheckItem_get(const CheckItem* this) {
    if (this->ref)
       return *(this->ref);
    else

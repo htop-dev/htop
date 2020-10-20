@@ -1,18 +1,18 @@
 /*
 htop - Hashtable.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Hashtable.h"
-#include "XAlloc.h"
+#include "XUtils.h"
 
 #include <stdlib.h>
 #include <assert.h>
 
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 static bool Hashtable_isConsistent(Hashtable* this) {
    int items = 0;
@@ -39,7 +39,7 @@ int Hashtable_count(Hashtable* this) {
    return items;
 }
 
-#endif
+#endif /* NDEBUG */
 
 static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
    HashtableItem* this;
@@ -88,7 +88,7 @@ void Hashtable_put(Hashtable* this, unsigned int key, void* value) {
          this->items++;
          break;
       } else if ((*bucketPtr)->key == key) {
-         if (this->owner)
+         if (this->owner && (*bucketPtr)->value != value)
             free((*bucketPtr)->value);
          (*bucketPtr)->value = value;
          break;
@@ -124,7 +124,7 @@ void* Hashtable_remove(Hashtable* this, unsigned int key) {
    return NULL;
 }
 
-inline void* Hashtable_get(Hashtable* this, unsigned int key) {
+void* Hashtable_get(Hashtable* this, unsigned int key) {
    unsigned int index = key % this->size;
    HashtableItem* bucketPtr = this->buckets[index];
    while (true) {

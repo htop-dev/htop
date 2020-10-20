@@ -3,17 +3,23 @@
 /*
 htop - FreeBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
-
-#include "zfs/ZfsArcStats.h"
 
 #include <kvm.h>
 #include <sys/param.h>
 #include <sys/jail.h>
 #include <sys/uio.h>
 #include <sys/resource.h>
+
+#include "FreeBSDProcess.h"
+#include "Hashtable.h"
+#include "Process.h"
+#include "ProcessList.h"
+#include "UsersTable.h"
+#include "zfs/ZfsArcStats.h"
+
 
 #define JAIL_ERRMSGLEN	1024
 extern char jail_errmsg[JAIL_ERRMSGLEN];
@@ -56,6 +62,6 @@ char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
 
 char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
 
-void ProcessList_goThroughEntries(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate);
 
 #endif

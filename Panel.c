@@ -1,25 +1,28 @@
 /*
 htop - Panel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Panel.h"
 
-#include "CRT.h"
-#include "RichString.h"
-#include "ListItem.h"
-#include "StringUtils.h"
-
-#include <math.h>
+#include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
-#include <assert.h>
+#include <strings.h>
 
-PanelClass Panel_class = {
+#include "CRT.h"
+#include "ListItem.h"
+#include "Macros.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
+#include "XUtils.h"
+
+
+const PanelClass Panel_class = {
    .super = {
       .extends = Class(Object),
       .delete = Panel_delete
@@ -27,7 +30,7 @@ PanelClass Panel_class = {
    .eventHandler = Panel_selectByTyping,
 };
 
-Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar) {
+Panel* Panel_new(int x, int y, int w, int h, bool owner, const ObjectClass* type, FunctionBar* fuBar) {
    Panel* this;
    this = xMalloc(sizeof(Panel));
    Object_setClass(this, Class(Panel));
@@ -41,7 +44,7 @@ void Panel_delete(Object* cast) {
    free(this);
 }
 
-void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner, FunctionBar* fuBar) {
+void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar) {
    this->x = x;
    this->y = y;
    this->w = w;

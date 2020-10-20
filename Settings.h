@@ -3,14 +3,18 @@
 /*
 htop - Settings.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define DEFAULT_DELAY 15
+#include "config.h" // IWYU pragma: keep
+
+#include <stdbool.h>
 
 #include "Process.h"
-#include <stdbool.h>
+
+
+#define DEFAULT_DELAY 15
 
 typedef struct {
    int len;
@@ -27,11 +31,10 @@ typedef struct Settings_ {
    int colorScheme;
    int delay;
 
-   int cpuCount;
    int direction;
    ProcessField sortKey;
 
-   bool countCPUsFromZero;
+   bool countCPUsFromOne;
    bool detailedCPUTime;
    bool showCPUUsage;
    bool showCPUFrequency;
@@ -56,13 +59,13 @@ typedef struct Settings_ {
    bool changed;
 } Settings;
 
-#define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromZero ? (cpu) : (cpu)+1)
+#define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
 
 void Settings_delete(Settings* this);
 
 bool Settings_write(Settings* this);
 
-Settings* Settings_new(int cpuCount);
+Settings* Settings_new(int initialCpuCount);
 
 void Settings_invertSortOrder(Settings* this);
 

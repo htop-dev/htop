@@ -3,14 +3,19 @@
 /*
 htop - Panel.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Object.h"
-#include "Vector.h"
-#include "FunctionBar.h"
+#include <stdbool.h>
 
+#include "FunctionBar.h"
+#include "Object.h"
+#include "RichString.h"
+#include "Vector.h"
+
+
+struct Panel_;
 typedef struct Panel_ Panel;
 
 typedef enum HandlerResult_ {
@@ -35,7 +40,7 @@ typedef struct PanelClass_ {
    const Panel_EventHandler eventHandler;
 } PanelClass;
 
-#define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
+#define As_Panel(this_)                ((const PanelClass*)((this_)->super.klass))
 #define Panel_eventHandlerFn(this_)    As_Panel(this_)->eventHandler
 #define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), ev_)
 
@@ -60,13 +65,13 @@ struct Panel_ {
 
 #define KEY_CTRL(l) ((l)-'A'+1)
 
-extern PanelClass Panel_class;
+extern const PanelClass Panel_class;
 
-Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar);
+Panel* Panel_new(int x, int y, int w, int h, bool owner, const ObjectClass* type, FunctionBar* fuBar);
 
 void Panel_delete(Object* cast);
 
-void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool owner, FunctionBar* fuBar);
+void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar);
 
 void Panel_done(Panel* this);
 

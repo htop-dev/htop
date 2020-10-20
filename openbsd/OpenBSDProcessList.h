@@ -4,7 +4,7 @@
 htop - OpenBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -45,6 +45,6 @@ void ProcessList_delete(ProcessList* this);
 
 char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
 
-void ProcessList_goThroughEntries(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate);
 
 #endif

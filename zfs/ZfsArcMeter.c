@@ -1,7 +1,7 @@
 /*
 htop - ZfsArcMeter.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -9,21 +9,12 @@ in the source distribution for its full text.
 #include "ZfsArcStats.h"
 
 #include "CRT.h"
+#include "Object.h"
 #include "Platform.h"
+#include "RichString.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <sys/param.h>
-#include <assert.h>
 
-/*{
-#include "ZfsArcStats.h"
-
-#include "Meter.h"
-}*/
-
-int ZfsArcMeter_attributes[] = {
+static const int ZfsArcMeter_attributes[] = {
    ZFS_MFU, ZFS_MRU, ZFS_ANON, ZFS_HEADER, ZFS_OTHER
 };
 
@@ -38,7 +29,7 @@ void ZfsArcMeter_readStats(Meter* this, ZfsArcStats* stats) {
    // "Hide" the last value so it can
    // only be accessed by index and is not
    // displayed by the Bar or Graph style
-   Meter_setItems(this, 5);
+   this->curItems = 5;
    this->values[5] = stats->size;
 }
 
@@ -55,9 +46,9 @@ static void ZfsArcMeter_updateValues(Meter* this, char* buffer, int size) {
    }
 }
 
-static void ZfsArcMeter_display(Object* cast, RichString* out) {
+static void ZfsArcMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
-   Meter* this = (Meter*)cast;
+   const Meter* this = (const Meter*)cast;
 
    if (this->values[5] > 0) {
       Meter_humanUnit(buffer, this->total, 50);
@@ -86,7 +77,7 @@ static void ZfsArcMeter_display(Object* cast, RichString* out) {
    }
 }
 
-MeterClass ZfsArcMeter_class = {
+const MeterClass ZfsArcMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

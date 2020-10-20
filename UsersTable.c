@@ -1,22 +1,20 @@
 /*
 htop - UsersTable.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "UsersTable.h"
-#include "XAlloc.h"
 
-#include "config.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
 #include <pwd.h>
-#include <sys/types.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+
+#include "XUtils.h"
 
 
 UsersTable* UsersTable_new() {

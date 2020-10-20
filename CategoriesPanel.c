@@ -1,21 +1,27 @@
 /*
 htop - CategoriesPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "CategoriesPanel.h"
 
-#include "AvailableMetersPanel.h"
-#include "MetersPanel.h"
-#include "DisplayOptionsPanel.h"
-#include "ColumnsPanel.h"
-#include "ColorsPanel.h"
-#include "AvailableColumnsPanel.h"
-
-#include <assert.h>
+#include <ctype.h>
+#include <stdbool.h>
 #include <stdlib.h>
+
+#include "AvailableColumnsPanel.h"
+#include "AvailableMetersPanel.h"
+#include "ColorsPanel.h"
+#include "ColumnsPanel.h"
+#include "DisplayOptionsPanel.h"
+#include "FunctionBar.h"
+#include "ListItem.h"
+#include "MetersPanel.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "Vector.h"
 
 
 static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
@@ -109,7 +115,7 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass CategoriesPanel_class = {
+const PanelClass CategoriesPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = CategoriesPanel_delete

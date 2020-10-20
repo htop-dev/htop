@@ -4,41 +4,42 @@
 htop - Object.h
 (C) 2004-2012 Hisham H. Muhammad
 (C) 2020 Red Hat, Inc.  All Rights Reserved.
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "RichString.h"
-#include "XAlloc.h"
-#include "Macros.h"
+#include "XUtils.h" // IWYU pragma: keep
 
+
+struct Object_;
 typedef struct Object_ Object;
 
-typedef void(*Object_Display)(Object*, RichString*);
+typedef void(*Object_Display)(const Object*, RichString*);
 typedef long(*Object_Compare)(const void*, const void*);
 typedef void(*Object_Delete)(Object*);
 
-#define Object_getClass(obj_)         ((Object*)(obj_))->klass
-#define Object_setClass(obj_, class_) Object_getClass(obj_) = (ObjectClass*) class_
+#define Object_getClass(obj_)         ((const Object*)(obj_))->klass
+#define Object_setClass(obj_, class_) (((Object*)(obj_))->klass = (const ObjectClass*) (class_))
 
 #define Object_delete(obj_)           Object_getClass(obj_)->delete((Object*)(obj_))
 #define Object_displayFn(obj_)        Object_getClass(obj_)->display
-#define Object_display(obj_, str_)    Object_getClass(obj_)->display((Object*)(obj_), str_)
+#define Object_display(obj_, str_)    Object_getClass(obj_)->display((const Object*)(obj_), str_)
 #define Object_compare(obj_, other_)  Object_getClass(obj_)->compare((const void*)(obj_), other_)
 
-#define Class(class_)                 ((ObjectClass*)(&(class_ ## _class)))
+#define Class(class_)                 ((const ObjectClass*)(&(class_ ## _class)))
 
-#define AllocThis(class_) (class_*) xMalloc(sizeof(class_)); Object_setClass(this, Class(class_));
+#define AllocThis(class_) (class_*)   xMalloc(sizeof(class_)); Object_setClass(this, Class(class_));
 
 typedef struct ObjectClass_ {
-   const void* extends;
+   const void* const extends;
    const Object_Display display;
    const Object_Delete delete;
    const Object_Compare compare;
 } ObjectClass;
 
 struct Object_ {
-   ObjectClass* klass;
+   const ObjectClass* klass;
 };
 
 typedef union {
@@ -46,12 +47,12 @@ typedef union {
    void* v;
 } Arg;
 
-extern ObjectClass Object_class;
+extern const ObjectClass Object_class;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
-bool Object_isA(Object* o, const ObjectClass* klass);
+bool Object_isA(const Object* o, const ObjectClass* klass);
 
-#endif
+#endif /* NDEBUG */
 
 #endif

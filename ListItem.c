@@ -1,19 +1,21 @@
 /*
 htop - ListItem.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "ListItem.h"
 
-#include "CRT.h"
-#include "StringUtils.h"
-#include "RichString.h"
-
-#include <string.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "CRT.h"
+#include "RichString.h"
+#include "XUtils.h"
 
 
 static void ListItem_delete(Object* cast) {
@@ -22,8 +24,8 @@ static void ListItem_delete(Object* cast) {
    free(this);
 }
 
-static void ListItem_display(Object* cast, RichString* out) {
-   ListItem* const this = (ListItem*)cast;
+static void ListItem_display(const Object* cast, RichString* out) {
+   const ListItem* const this = (const ListItem*)cast;
    assert (this != NULL);
    /*
    int len = strlen(this->value)+1;
@@ -42,7 +44,7 @@ static void ListItem_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[DEFAULT_COLOR], this->value/*buffer*/);
 }
 
-ObjectClass ListItem_class = {
+const ObjectClass ListItem_class = {
    .display = ListItem_display,
    .delete = ListItem_delete,
    .compare = ListItem_compare
@@ -70,7 +72,7 @@ const char* ListItem_getRef(ListItem* this) {
 }
 
 long ListItem_compare(const void* cast1, const void* cast2) {
-   ListItem* obj1 = (ListItem*) cast1;
-   ListItem* obj2 = (ListItem*) cast2;
+   const ListItem* obj1 = (const ListItem*) cast1;
+   const ListItem* obj2 = (const ListItem*) cast2;
    return strcmp(obj1->value, obj2->value);
 }

@@ -3,40 +3,25 @@
 /*
 htop - OpenFilesScreen.h
 (C) 2005-2006 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <sys/types.h>
+
 #include "InfoScreen.h"
-
-typedef struct OpenFiles_Data_ {
-   char* data[256];
-} OpenFiles_Data;
-
-typedef struct OpenFiles_ProcessData_ {
-   OpenFiles_Data data;
-   int error;
-   struct OpenFiles_FileData_* files;
-} OpenFiles_ProcessData;
-
-typedef struct OpenFiles_FileData_ {
-   OpenFiles_Data data;
-   struct OpenFiles_FileData_* next;
-} OpenFiles_FileData;
+#include "Object.h"
+#include "Process.h"
 
 typedef struct OpenFilesScreen_ {
    InfoScreen super;
    pid_t pid;
 } OpenFilesScreen;
 
-extern InfoScreenClass OpenFilesScreen_class;
+extern const InfoScreenClass OpenFilesScreen_class;
 
-OpenFilesScreen* OpenFilesScreen_new(Process* process);
+OpenFilesScreen* OpenFilesScreen_new(const Process* process);
 
 void OpenFilesScreen_delete(Object* this);
-
-void OpenFilesScreen_draw(InfoScreen* this);
-
-void OpenFilesScreen_scan(InfoScreen* this);
 
 #endif

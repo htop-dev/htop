@@ -2,7 +2,7 @@
 htop - DragonFlyBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -20,6 +20,9 @@ in the source distribution for its full text.
 #include <limits.h>
 #include <string.h>
 #include <sys/param.h>
+
+#include "CRT.h"
+#include "Macros.h"
 
 
 static int MIB_hw_physmem[2];
@@ -53,8 +56,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    len = sizeof(pageSize);
    if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1) {
-      pageSize = PAGE_SIZE;
-      pageSizeKb = PAGE_SIZE_KB;
+      pageSize = CRT_pageSize;
+      pageSizeKb = CRT_pageSizeKB;
    } else {
       pageSizeKb = pageSize / ONE_K;
    }
@@ -253,7 +256,7 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //pl->freeMem *= pageSizeKb;
 
    struct kvm_swap swap[16];
-   int nswap = kvm_getswapinfo(dfpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
+   int nswap = kvm_getswapinfo(dfpl->kd, swap, ARRAYSIZE(swap), 0);
    pl->totalSwap = 0;
    pl->usedSwap = 0;
    for (int i = 0; i < nswap; i++) {
@@ -357,7 +360,7 @@ char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int ja
    return jname;
 }
 
-void ProcessList_goThroughEntries(ProcessList* this) {
+void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
    DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
    Settings* settings = this->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
@@ -366,6 +369,10 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    DragonFlyBSDProcessList_scanMemoryInfo(this);
    DragonFlyBSDProcessList_scanCPUTime(this);
    DragonFlyBSDProcessList_scanJails(dfpl);
+
+   // in pause mode only gather global data for meters (CPU/memory/...)
+   if (pauseProcessUpdate)
+      return;
 
    int count = 0;
 
@@ -430,12 +437,12 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->m_size = kproc->kp_vm_map_size / 1024 / pageSizeKb;
       proc->m_resident = kproc->kp_vm_rssize;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_swtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem);
+      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(this->totalMem);
 
       if (proc->percent_cpu > 0.1) {
          // system idle process should own all CPU time left regardless of CPU count

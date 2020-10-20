@@ -3,17 +3,17 @@
 /*
 htop - CRT.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Macros.h"
+#include "config.h"
 
 #include <stdbool.h>
 
-#define KEY_WHEELUP   KEY_F(20)
-#define KEY_WHEELDOWN KEY_F(21)
-#define KEY_RECLICK   KEY_F(22)
+#include "Macros.h"
+#include "ProvideCurses.h"
+
 
 typedef enum TreeStr_ {
    TREE_STR_HORZ,
@@ -28,13 +28,13 @@ typedef enum TreeStr_ {
 
 typedef enum ColorSchemes_ {
    COLORSCHEME_DEFAULT = 0,
-   COLORSCHEME_MONOCHROME = 1,
-   COLORSCHEME_BLACKONWHITE = 2,
-   COLORSCHEME_LIGHTTERMINAL = 3,
-   COLORSCHEME_MIDNIGHT = 4,
-   COLORSCHEME_BLACKNIGHT = 5,
-   COLORSCHEME_BROKENGRAY = 6,
-   LAST_COLORSCHEME = 7,
+   COLORSCHEME_MONOCHROME,
+   COLORSCHEME_BLACKONWHITE,
+   COLORSCHEME_LIGHTTERMINAL,
+   COLORSCHEME_MIDNIGHT,
+   COLORSCHEME_BLACKNIGHT,
+   COLORSCHEME_BROKENGRAY,
+   LAST_COLORSCHEME,
 } ColorSchemes;
 
 typedef enum ColorElements_ {
@@ -43,6 +43,7 @@ typedef enum ColorElements_ {
    FUNCTION_BAR,
    FUNCTION_KEY,
    FAILED_SEARCH,
+   PAUSED,
    PANEL_HEADER_FOCUS,
    PANEL_HEADER_UNFOCUS,
    PANEL_SELECTION_FOCUS,
@@ -51,6 +52,9 @@ typedef enum ColorElements_ {
    LARGE_NUMBER,
    METER_TEXT,
    METER_VALUE,
+   METER_VALUE_NOTICE,
+   METER_VALUE_IOREAD,
+   METER_VALUE_IOWRITE,
    LED_COLOR,
    UPTIME,
    BATTERY,
@@ -85,6 +89,8 @@ typedef enum ColorElements_ {
    CHECK_MARK,
    CHECK_TEXT,
    CLOCK,
+   DATE,
+   DATETIME,
    HELP_BOLD,
    HOSTNAME,
    CPU_NICE,
@@ -112,27 +118,25 @@ typedef enum ColorElements_ {
 
 void CRT_fatalError(const char* note) ATTR_NORETURN;
 
-extern struct sigaction old_sigsegv_handler;
-void CRT_handleSIGSEGV(int sgn);
+void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 
-#define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
+#define KEY_WHEELUP   KEY_F(20)
+#define KEY_WHEELDOWN KEY_F(21)
+#define KEY_RECLICK   KEY_F(22)
+#define KEY_ALT(x)    (KEY_F(64 - 26) + ((x) - 'A'))
 
-
-extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
 
 #ifdef HAVE_LIBNCURSESW
-
-extern const char *CRT_treeStrUtf8[TREE_STR_COUNT];
 
 extern bool CRT_utf8;
 
 #endif
 
-extern const char **CRT_treeStr;
+extern const char *const *CRT_treeStr;
 
 extern int CRT_delay;
 
-extern int* CRT_colors;
+extern const int* CRT_colors;
 
 extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
 
@@ -142,11 +146,12 @@ extern int CRT_scrollHAmount;
 
 extern int CRT_scrollWheelVAmount;
 
-extern char* CRT_termType;
+extern const char* CRT_termType;
 
 extern int CRT_colorScheme;
 
-extern void *backtraceArray[128];
+extern long CRT_pageSize;
+extern long CRT_pageSizeKB;
 
 #ifdef HAVE_SETUID_ENABLED
 
@@ -157,19 +162,14 @@ void CRT_restorePrivileges(void);
 #else /* HAVE_SETUID_ENABLED */
 
 /* Turn setuid operations into NOPs */
-
-#ifndef CRT_dropPrivileges
-#define CRT_dropPrivileges()
-#define CRT_restorePrivileges()
-#endif
+static inline void CRT_dropPrivileges(void) { }
+static inline void CRT_restorePrivileges(void) { }
 
 #endif /* HAVE_SETUID_ENABLED */
 
 void CRT_init(int delay, int colorScheme, bool allowUnicode);
 
 void CRT_done(void);
-
-void CRT_fatalError(const char* note);
 
 int CRT_readKey(void);
 

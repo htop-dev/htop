@@ -2,12 +2,14 @@
 #define HEADER_EnvScreen
 
 #include "InfoScreen.h"
+#include "Object.h"
+#include "Process.h"
 
 typedef struct EnvScreen_ {
    InfoScreen super;
 } EnvScreen;
 
-extern InfoScreenClass EnvScreen_class;
+extern const InfoScreenClass EnvScreen_class;
 
 EnvScreen* EnvScreen_new(Process* process);
 

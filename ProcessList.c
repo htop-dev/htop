@@ -1,21 +1,20 @@
 /*
 htop - ProcessList.c
 (C) 2004,2005 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "ProcessList.h"
-#include "Platform.h"
 
-#include "CRT.h"
-#include "StringUtils.h"
-
-#include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 
+#include "CRT.h"
+#include "XUtils.h"
 
-ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+
+ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
@@ -127,12 +126,12 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
       Process* process = (Process*) (Vector_get(children, i));
       if (!show)
          process->show = false;
-      int s = this->processes2->items;
+      int s = Vector_size(this->processes2);
       if (direction == 1)
          Vector_add(this->processes2, process);
       else
          Vector_insert(this->processes2, 0, process);
-      assert(this->processes2->items == s+1); (void)s;
+      assert(Vector_size(this->processes2) == s+1); (void)s;
       int nextIndent = indent | (1 << level);
       ProcessList_buildTree(this, process->pid, level+1, (i < size - 1) ? nextIndent : indent, direction, show ? process->showChildren : false);
       if (i == size - 1)
@@ -282,7 +281,13 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
    return proc;
 }
 
-void ProcessList_scan(ProcessList* this) {
+void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
+
+   // in pause mode only gather global data for meters (CPU/memory/...)
+   if (pauseProcessUpdate) {
+      ProcessList_goThroughEntries(this, true);
+      return;
+   }
 
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
@@ -296,7 +301,7 @@ void ProcessList_scan(ProcessList* this) {
    this->kernelThreads = 0;
    this->runningTasks = 0;
 
-   ProcessList_goThroughEntries(this);
+   ProcessList_goThroughEntries(this, false);
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);

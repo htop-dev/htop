@@ -17,6 +17,7 @@ htop
 *.h.gch
 */.dirstamp
 
+# automake/autoconf related files
 .deps/
 Makefile
 Makefile.in
@@ -24,6 +25,7 @@ INSTALL
 aclocal.m4
 autom4te.cache/
 compile
+conf*/
 config.guess
 config.h
 config.h.in
@@ -40,3 +42,6 @@ ltmain.sh
 m4/
 missing
 stamp-h1
+
+# files related to valgrind/callgrind
+callgrind.out.*

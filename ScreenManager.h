@@ -3,14 +3,18 @@
 /*
 htop - ScreenManager.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Vector.h"
+#include <stdbool.h>
+
+#include "Action.h"
 #include "Header.h"
-#include "Settings.h"
 #include "Panel.h"
+#include "Settings.h"
+#include "Vector.h"
+
 
 typedef enum Orientation_ {
    VERTICAL,
@@ -25,13 +29,14 @@ typedef struct ScreenManager_ {
    Orientation orientation;
    Vector* panels;
    int panelCount;
-   const Header* header;
+   Header* header;
    const Settings* settings;
+   const State* state;
    bool owner;
    bool allowFocusChange;
 } ScreenManager;
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner);
+ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, const State* state, bool owner);
 
 void ScreenManager_delete(ScreenManager* this);
 

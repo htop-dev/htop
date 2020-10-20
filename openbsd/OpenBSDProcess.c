@@ -2,7 +2,7 @@
 htop - OpenBSDProcess.c
 (C) 2015 Hisham H. Muhammad
 (C) 2015 Michael McConville
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 
-ProcessClass OpenBSDProcess_class = {
+const ProcessClass OpenBSDProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,
@@ -193,14 +193,14 @@ void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
 }
 
 long OpenBSDProcess_compare(const void* v1, const void* v2) {
-   OpenBSDProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const OpenBSDProcess *p1, *p2;
+   const Settings *settings = ((const Process*)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (OpenBSDProcess*)v1;
-      p2 = (OpenBSDProcess*)v2;
+      p1 = (const OpenBSDProcess*)v1;
+      p2 = (const OpenBSDProcess*)v2;
    } else {
-      p2 = (OpenBSDProcess*)v1;
-      p1 = (OpenBSDProcess*)v2;
+      p2 = (const OpenBSDProcess*)v1;
+      p1 = (const OpenBSDProcess*)v2;
    }
    switch (settings->sortKey) {
    // add OpenBSD-specific fields here
@@ -209,6 +209,6 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isThread(const Process* this) {
    return (Process_isKernelThread(this));
 }

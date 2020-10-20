@@ -3,36 +3,31 @@
 /*
 htop - Vector.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Object.h"
 
-#define swap(a_,x_,y_) do{ void* tmp_ = a_[x_]; a_[x_] = a_[y_]; a_[y_] = tmp_; }while(0)
+#include <stdbool.h>
+
 
 #ifndef DEFAULT_SIZE
-#define DEFAULT_SIZE -1
+#define DEFAULT_SIZE (-1)
 #endif
 
 typedef struct Vector_ {
    Object **array;
-   ObjectClass* type;
+   const ObjectClass* type;
    int arraySize;
    int growthRate;
    int items;
    bool owner;
 } Vector;
 
-Vector* Vector_new(ObjectClass* type, bool owner, int size);
+Vector* Vector_new(const ObjectClass* type, bool owner, int size);
 
 void Vector_delete(Vector* this);
-
-#ifdef DEBUG
-
-int Vector_count(Vector* this);
-
-#endif
 
 void Vector_prune(Vector* this);
 
@@ -52,29 +47,27 @@ void Vector_moveDown(Vector* this, int idx);
 
 void Vector_set(Vector* this, int idx, void* data_);
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 Object* Vector_get(Vector* this, int idx);
+int Vector_size(const Vector* this);
+int Vector_count(const Vector* this);
 
-#else
+#else /* NDEBUG */
 
-#define Vector_get(v_, idx_) ((v_)->array[idx_])
+static inline Object* Vector_get(Vector* this, int idx) {
+   return this->array[idx];
+}
 
-#endif
+static inline int Vector_size(const Vector* this) {
+   return this->items;
+}
 
-#ifdef DEBUG
-
-int Vector_size(Vector* this);
-
-#else
-
-#define Vector_size(v_) ((v_)->items)
-
-#endif
+#endif /* NDEBUG */
 
 void Vector_add(Vector* this, void* data_);
 
-int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
+int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compare);
 
 void Vector_splice(Vector* this, Vector* from);
 

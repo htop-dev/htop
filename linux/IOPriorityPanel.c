@@ -1,11 +1,19 @@
 /*
 htop - IOPriorityPanel.c
 (C) 2004-2012 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "IOPriorityPanel.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "FunctionBar.h"
+#include "ListItem.h"
+#include "Object.h"
+#include "XUtils.h"
 
 
 Panel* IOPriorityPanel_new(IOPriority currPrio) {
@@ -34,5 +42,6 @@ Panel* IOPriorityPanel_new(IOPriority currPrio) {
 }
 
 IOPriority IOPriorityPanel_getIOPriority(Panel* this) {
-   return (IOPriority) ( ((ListItem*) Panel_getSelected(this))->key );
+   const ListItem* selected = (ListItem*) Panel_getSelected(this);
+   return selected ? selected->key : IOPriority_None;
 }

@@ -3,13 +3,12 @@
 /*
 htop - Hashtable.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include <stdbool.h>
 
-typedef struct Hashtable_ Hashtable;
 
 typedef void(*Hashtable_PairFunction)(int, void*, void*);
 
@@ -19,18 +18,18 @@ typedef struct HashtableItem {
    struct HashtableItem* next;
 } HashtableItem;
 
-struct Hashtable_ {
+typedef struct Hashtable_ {
    int size;
    HashtableItem** buckets;
    int items;
    bool owner;
-};
+} Hashtable;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 int Hashtable_count(Hashtable* this);
 
-#endif
+#endif /* NDEBUG */
 
 Hashtable* Hashtable_new(int size, bool owner);
 

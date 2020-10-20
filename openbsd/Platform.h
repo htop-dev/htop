@@ -4,7 +4,7 @@
 htop - openbsd/Platform.h
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -25,7 +25,7 @@ extern const unsigned int Platform_numberOfSignals;
 
 void Platform_setBindings(Htop_Action* keys);
 
-extern MeterClass* Platform_meterTypes[];
+extern const MeterClass* const Platform_meterTypes[];
 
 int Platform_getUptime(void);
 
@@ -42,5 +42,12 @@ void Platform_setSwapValues(Meter* this);
 void Platform_setTasksValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
+
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend);
+
+void Platform_getNetworkIO(unsigned long int *bytesReceived,
+                           unsigned long int *packetsReceived,
+                           unsigned long int *bytesTransmitted,
+                           unsigned long int *packetsTransmitted);
 
 #endif

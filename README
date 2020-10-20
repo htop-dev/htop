@@ -7,6 +7,8 @@
 [![Github Release](https://img.shields.io/github/release/htop-dev/htop.svg)](https://github.com/htop-dev/htop/releases/latest)
 [![Download](https://api.bintray.com/packages/htop/source/htop/images/download.svg)](https://bintray.com/htop/source/htop/_latestVersion)
 
+![Screenshot of htop](docs/images/screenshot.png?raw=true)
+
 ## Introduction
 
 `htop` is a cross-platform interactive process viewer.

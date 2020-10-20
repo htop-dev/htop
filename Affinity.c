@@ -2,16 +2,21 @@
 htop - Affinity.c
 (C) 2004-2011 Hisham H. Muhammad
 (C) 2020 Red Hat, Inc.  All Rights Reserved.
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
+
+#include "config.h"
 
 #include "Affinity.h"
 
 #include <stdlib.h>
 
+#include "XUtils.h"
+
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
+#include <hwloc/bitmap.h>
 #ifdef __linux__
 #define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_THREAD
 #else

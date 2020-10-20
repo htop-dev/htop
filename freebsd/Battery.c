@@ -1,18 +1,20 @@
 /*
 htop - freebsd/Battery.c
 (C) 2015 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "BatteryMeter.h"
+#include "Battery.h"
+
+#include <math.h>
 #include <sys/sysctl.h>
 
 void Battery_getData(double* level, ACPresence* isOnAC) {
    int life;
    size_t life_len = sizeof(life);
    if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) == -1)
-      *level = -1;
+      *level = NAN;
    else
       *level = life;
 

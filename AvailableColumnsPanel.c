@@ -1,20 +1,24 @@
 /*
 htop - AvailableColumnsPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "AvailableColumnsPanel.h"
-#include "Platform.h"
 
-#include "Header.h"
-#include "ColumnsPanel.h"
-
-#include <assert.h>
-#include <stdlib.h>
 #include <ctype.h>
-#include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
+#include "ColumnsPanel.h"
+#include "FunctionBar.h"
+#include "ListItem.h"
+#include "Object.h"
+#include "Platform.h"
+#include "Process.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static const char* const AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
@@ -28,7 +32,6 @@ static void AvailableColumnsPanel_delete(Object* object) {
 
 static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) super;
-   int key = ((ListItem*) Panel_getSelected(super))->key;
    HandlerResult result = IGNORED;
 
    switch(ch) {
@@ -36,6 +39,11 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_ENTER:
       case KEY_F(5):
       {
+         const ListItem* selected = (ListItem*) Panel_getSelected(super);
+         if (!selected)
+            break;
+
+         int key = selected->key;
          int at = Panel_getSelectedIndex(this->columns);
          Panel_insert(this->columns, at, (Object*) ListItem_new(Process_fields[key].name, key));
          Panel_setSelected(this->columns, at+1);
@@ -53,7 +61,7 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass AvailableColumnsPanel_class = {
+const PanelClass AvailableColumnsPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = AvailableColumnsPanel_delete

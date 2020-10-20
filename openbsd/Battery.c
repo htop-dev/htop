@@ -2,14 +2,16 @@
 htop - openbsd/Battery.c
 (C) 2015 Hisham H. Muhammad
 (C) 2015 Michael McConville
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "BatteryMeter.h"
+#include "Battery.h"
+
 #include <sys/sysctl.h>
 #include <sys/sensors.h>
 #include <errno.h>
+#include <math.h>
 #include <string.h>
 
 static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
@@ -36,7 +38,7 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
 
    bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
 
-   *level = -1;
+   *level = NAN;
    if (found) {
       /* last full capacity */
       mib[3] = 7;

@@ -2,21 +2,24 @@
 htop - PressureStallMeter.c
 (C) 2004-2011 Hisham H. Muhammad
 (C) 2019 Ran Benita
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "PressureStallMeter.h"
-#include "Platform.h"
-#include "CRT.h"
 
+#include <stdbool.h>
 #include <string.h>
 
-/*{
+#include "CRT.h"
 #include "Meter.h"
-}*/
+#include "Object.h"
+#include "Platform.h"
+#include "RichString.h"
+#include "XUtils.h"
 
-static int PressureStallMeter_attributes[] = {
+
+static const int PressureStallMeter_attributes[] = {
    PRESSURE_STALL_TEN, PRESSURE_STALL_SIXTY, PRESSURE_STALL_THREEHUNDRED
 };
 
@@ -41,8 +44,8 @@ static void PressureStallMeter_updateValues(Meter* this, char* buffer, int len) 
     xSnprintf(buffer, len, "xxxx %.2lf%% %.2lf%% %.2lf%%", this->values[0], this->values[1], this->values[2]);
 }
 
-static void PressureStallMeter_display(Object* cast, RichString* out) {
-   Meter* this = (Meter*)cast;
+static void PressureStallMeter_display(const Object* cast, RichString* out) {
+   const Meter* this = (const Meter*)cast;
    char buffer[20];
    xSnprintf(buffer, sizeof(buffer), "%.2lf%% ", this->values[0]);
    RichString_write(out, CRT_colors[PRESSURE_STALL_TEN], buffer);
@@ -52,7 +55,7 @@ static void PressureStallMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[PRESSURE_STALL_THREEHUNDRED], buffer);
 }
 
-MeterClass PressureStallCPUSomeMeter_class = {
+const MeterClass PressureStallCPUSomeMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -68,7 +71,7 @@ MeterClass PressureStallCPUSomeMeter_class = {
    .caption = "Some CPU pressure: "
 };
 
-MeterClass PressureStallIOSomeMeter_class = {
+const MeterClass PressureStallIOSomeMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -84,7 +87,7 @@ MeterClass PressureStallIOSomeMeter_class = {
    .caption = "Some IO  pressure: "
 };
 
-MeterClass PressureStallIOFullMeter_class = {
+const MeterClass PressureStallIOFullMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -100,7 +103,7 @@ MeterClass PressureStallIOFullMeter_class = {
    .caption = "Full IO  pressure: "
 };
 
-MeterClass PressureStallMemorySomeMeter_class = {
+const MeterClass PressureStallMemorySomeMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
@@ -116,7 +119,7 @@ MeterClass PressureStallMemorySomeMeter_class = {
    .caption = "Some Mem pressure: "
 };
 
-MeterClass PressureStallMemoryFullMeter_class = {
+const MeterClass PressureStallMemoryFullMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

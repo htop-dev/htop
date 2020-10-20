@@ -4,7 +4,7 @@
 htop - dragonflybsd/DragonFlyBSDProcess.h
 (C) 2015 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -27,7 +27,7 @@ typedef struct DragonFlyBSDProcess_ {
 //#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
 #define Process_isUserlandThread(_process) (_process->nlwp > 1)
 
-extern ProcessClass DragonFlyBSDProcess_class;
+extern const ProcessClass DragonFlyBSDProcess_class;
 
 extern ProcessFieldData Process_fields[];
 
@@ -41,6 +41,6 @@ void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField
 
 long DragonFlyBSDProcess_compare(const void* v1, const void* v2);
 
-bool Process_isThread(Process* this);
+bool Process_isThread(const Process* this);
 
 #endif

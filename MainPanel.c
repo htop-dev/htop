@@ -2,18 +2,26 @@
 htop - ColumnsPanel.c
 (C) 2004-2015 Hisham H. Muhammad
 (C) 2020 Red Hat, Inc.  All Rights Reserved.
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "MainPanel.h"
-#include "Process.h"
-#include "Platform.h"
-#include "CRT.h"
 
+#include <ctype.h>
 #include <stdlib.h>
 
-static const char* const MainFunctions[]  = {"Help   ", "Setup  ", "Search ", "Filter ", "Tree   ", "SortBy ", "Nice - ", "Nice + ", "Kill   ", "Quit   ", NULL};
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "Platform.h"
+#include "Process.h"
+#include "ProcessList.h"
+#include "ProvideCurses.h"
+#include "Settings.h"
+#include "XUtils.h"
+
+
+static const char* const MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
 
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
    FunctionBar* bar = MainPanel_getFunctionBar(this);
@@ -92,6 +100,8 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (reaction & HTOP_REDRAW_BAR) {
       MainPanel_updateTreeFunctions(this, this->state->settings->treeView);
       IncSet_drawBar(this->inc);
+      if (this->state->pauseProcessUpdate)
+         FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
    }
    if (reaction & HTOP_UPDATE_PANELHDR) {
       ProcessList_printHeader(this->state->pl, Panel_getHeader(super));
@@ -150,7 +160,7 @@ bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Ar
    return ok;
 }
 
-PanelClass MainPanel_class = {
+const PanelClass MainPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = MainPanel_delete

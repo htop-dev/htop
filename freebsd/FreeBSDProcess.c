@@ -1,7 +1,7 @@
 /*
 htop - FreeBSDProcess.c
 (C) 2015 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 
-ProcessClass FreeBSDProcess_class = {
+const ProcessClass FreeBSDProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,
@@ -107,14 +107,14 @@ void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
 }
 
 long FreeBSDProcess_compare(const void* v1, const void* v2) {
-   FreeBSDProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const FreeBSDProcess *p1, *p2;
+   const Settings *settings = ((const Process*)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (FreeBSDProcess*)v1;
-      p2 = (FreeBSDProcess*)v2;
+      p1 = (const FreeBSDProcess*)v1;
+      p2 = (const FreeBSDProcess*)v2;
    } else {
-      p2 = (FreeBSDProcess*)v1;
-      p1 = (FreeBSDProcess*)v2;
+      p2 = (const FreeBSDProcess*)v1;
+      p1 = (const FreeBSDProcess*)v2;
    }
    switch ((int) settings->sortKey) {
    // add FreeBSD-specific fields here
@@ -127,8 +127,8 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isThread(Process* this) {
-   FreeBSDProcess* fp = (FreeBSDProcess*) this;
+bool Process_isThread(const Process* this) {
+   const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
 
    if (fp->kernel == 1 )
       return 1;

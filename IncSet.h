@@ -3,13 +3,16 @@
 /*
 htop - IncSet.h
 (C) 2005-2012 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+#include <stddef.h>
+
 #include "FunctionBar.h"
 #include "Panel.h"
-#include <stdbool.h>
+#include "Vector.h"
 
 #define INCMODE_MAX 40
 
@@ -53,7 +56,7 @@ const char* IncSet_getListItemValue(Panel* panel, int i);
 
 void IncSet_activate(IncSet* this, IncType type, Panel* panel);
 
-void IncSet_drawBar(IncSet* this);
+void IncSet_drawBar(const IncSet* this);
 
 int IncSet_synthesizeEvent(IncSet* this, int x);
 

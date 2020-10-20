@@ -1,26 +1,38 @@
 /*
 htop - AffinityPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "AffinityPanel.h"
-#include "CRT.h"
+#include "config.h" // IWYU pragma: keep
 
-#include "Vector.h"
+#include "AffinityPanel.h"
 
 #include <assert.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
+#include "Settings.h"
+#include "Vector.h"
+#include "XUtils.h"
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
+#include <hwloc/bitmap.h>
 #endif
+
 
 typedef struct MaskItem_ {
    Object super;
-   const char* text;
-   const char* indent; /* used also as an condition whether this is a tree node */
+   char* text;
+   char* indent; /* used also as an condition whether this is a tree node */
    int value; /* tri-state: 0 - off, 1 - some set, 2 - all set */
    int sub_tree; /* tri-state: 0 - no sub-tree, 1 - open sub-tree, 2 - closed sub-tree */
    Vector *children;
@@ -34,9 +46,8 @@ typedef struct MaskItem_ {
 
 static void MaskItem_delete(Object* cast) {
    MaskItem* this = (MaskItem*) cast;
-   free((void*)this->text);
-   if (this->indent)
-      free((void*)this->indent);
+   free(this->text);
+   free(this->indent);
    Vector_delete(this->children);
    #ifdef HAVE_LIBHWLOC
    if (this->ownCpuset)
@@ -45,8 +56,8 @@ static void MaskItem_delete(Object* cast) {
    free(this);
 }
 
-static void MaskItem_display(Object* cast, RichString* out) {
-   MaskItem* this = (MaskItem*)cast;
+static void MaskItem_display(const Object* cast, RichString* out) {
+   const MaskItem* this = (const MaskItem*)cast;
    assert (this != NULL);
    RichString_append(out, CRT_colors[CHECK_BOX], "[");
    if (this->value == 2)
@@ -68,7 +79,7 @@ static void MaskItem_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
 }
 
-static ObjectClass MaskItem_class = {
+static const ObjectClass MaskItem_class = {
    .display = MaskItem_display,
    .delete  = MaskItem_delete
 };
@@ -100,11 +111,10 @@ static MaskItem* MaskItem_newSingleton(const char* text, int cpu, bool isSet) {
    this->ownCpuset = true;
    this->cpuset = hwloc_bitmap_alloc();
    hwloc_bitmap_set(this->cpuset, cpu);
-   (void)isSet;
    #else
    this->cpu = cpu;
    #endif
-   this->value = 2 * isSet;
+   this->value = isSet ? 2 : 0;
 
    return this;
 }
@@ -162,7 +172,7 @@ static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
    Panel* super = (Panel*) this;
 
    FunctionBar_setLabel(super->currentBar, KEY_F(3), this->topoView ? "Collapse/Expand" : "");
-   FunctionBar_draw(super->currentBar, NULL);
+   FunctionBar_draw(super->currentBar);
 
    int oldSelected = Panel_getSelectedIndex(super);
    Panel_prune(super);
@@ -206,7 +216,7 @@ static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
          selected->value = 2;
       }
       #else
-      selected->value = 2 * !selected->value; /* toggle between 0 and 2 */
+      selected->value = selected->value ? 0 : 2; /* toggle between 0 and 2 */
       #endif
 
       result = HANDLED;
@@ -271,12 +281,15 @@ static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
       for (unsigned i = 1; i < depth; i++) {
          xSnprintf(&indent_buf[off], left, "%s  ", (indent & (1u << i)) ? CRT_treeStr[TREE_STR_VERT] : " ");
          size_t len = strlen(&indent_buf[off]);
-         off += len, left -= len;
+         off += len;
+         left -= len;
       }
       xSnprintf(&indent_buf[off], left, "%s",
              obj->next_sibling ? CRT_treeStr[TREE_STR_RTEE] : CRT_treeStr[TREE_STR_BEND]);
-      size_t len = strlen(&indent_buf[off]);
-      off += len, left -= len;
+      // Uncomment when further appending to indent_buf
+      //size_t len = strlen(&indent_buf[off]);
+      //off += len;
+      //left -= len;
    }
 
    xSnprintf(buf, 64, "%s %s%u", type_name, index_prefix, index);
@@ -318,7 +331,7 @@ static MaskItem *AffinityPanel_buildTopology(AffinityPanel* this, hwloc_obj_t ob
 
 #endif
 
-PanelClass AffinityPanel_class = {
+const PanelClass AffinityPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = AffinityPanel_delete

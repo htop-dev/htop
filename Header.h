@@ -3,11 +3,12 @@
 /*
 htop - Header.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Meter.h"
+#include "ProcessList.h"
 #include "Settings.h"
 #include "Vector.h"
 
@@ -34,7 +35,7 @@ MeterModeId Header_addMeterByName(Header* this, char* name, int column);
 
 void Header_setMode(Header* this, int i, MeterModeId mode, int column);
 
-Meter* Header_addMeterByClass(Header* this, MeterClass* type, int param, int column);
+Meter* Header_addMeterByClass(Header* this, const MeterClass* type, int param, int column);
 
 int Header_size(Header* this, int column);
 

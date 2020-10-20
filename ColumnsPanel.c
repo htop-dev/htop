@@ -1,20 +1,23 @@
 /*
 htop - ColumnsPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "ColumnsPanel.h"
-#include "Platform.h"
 
-#include "StringUtils.h"
-#include "ListItem.h"
-#include "CRT.h"
-
-#include <assert.h>
-#include <stdlib.h>
 #include <ctype.h>
+#include <stdlib.h>
+
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "ListItem.h"
+#include "Object.h"
+#include "Platform.h"
+#include "Process.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static const char* const ColumnsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
@@ -43,7 +46,9 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
          if (selected < size - 1) {
             this->moving = !(this->moving);
             Panel_setSelectionColor(super, this->moving ? CRT_colors[PANEL_SELECTION_FOLLOW] : CRT_colors[PANEL_SELECTION_FOCUS]);
-            ((ListItem*)Panel_getSelected(super))->moving = this->moving;
+            ListItem* selectedItem = (ListItem*) Panel_getSelected(super);
+            if (selectedItem)
+               selectedItem->moving = this->moving;
             result = HANDLED;
          }
          break;
@@ -103,7 +108,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass ColumnsPanel_class = {
+const PanelClass ColumnsPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = ColumnsPanel_delete

@@ -3,15 +3,20 @@
 /*
 htop - LinuxProcessList.h
 (C) 2014 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
+
+#include <stdbool.h>
+#include <sys/types.h>
+
+#include "Hashtable.h"
 #include "ProcessList.h"
+#include "UsersTable.h"
 #include "zfs/ZfsArcStats.h"
 #include "ZramStats.h"
-
-extern long long btime;
 
 typedef struct CPUData_ {
    unsigned long long int totalTime;
@@ -98,6 +103,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
 void ProcessList_delete(ProcessList* pl);
 
-void ProcessList_goThroughEntries(ProcessList* super);
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
 
 #endif

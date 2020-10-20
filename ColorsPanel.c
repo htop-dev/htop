@@ -1,18 +1,25 @@
 /*
 htop - ColorsPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "ColorsPanel.h"
 
-#include "CRT.h"
-#include "CheckItem.h"
-
-#include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
-#include <string.h>
+
+#include "CheckItem.h"
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "Header.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
+#include "Vector.h"
+#include "XUtils.h"
+
 
 // TO ADD A NEW SCHEME:
 // * Increment the size of bool check in ColorsPanel.h
@@ -68,6 +75,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
       clear();
       Panel* menu = (Panel*) Vector_get(this->scr->panels, 0);
       Header_draw(header);
+      FunctionBar_draw(super->currentBar);
       RichString_setAttr(&(super->header), CRT_colors[PANEL_HEADER_FOCUS]);
       RichString_setAttr(&(menu->header), CRT_colors[PANEL_HEADER_UNFOCUS]);
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
@@ -75,7 +83,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass ColorsPanel_class = {
+const PanelClass ColorsPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = ColorsPanel_delete

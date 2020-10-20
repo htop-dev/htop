@@ -3,15 +3,23 @@
 /*
 htop - Meter.h
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ListItem.h"
+#include "config.h" // IWYU pragma: keep
+
+#include <stdbool.h>
 #include <sys/time.h>
+
+#include "ListItem.h"
+#include "Object.h"
+#include "ProcessList.h"
+
 
 #define METER_BUFFER_LEN 256
 
+struct Meter_;
 typedef struct Meter_ Meter;
 
 typedef void(*Meter_Init)(Meter*);
@@ -21,7 +29,7 @@ typedef void(*Meter_UpdateValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 
 typedef struct MeterClass_ {
-   ObjectClass super;
+   const ObjectClass super;
    const Meter_Init init;
    const Meter_Done done;
    const Meter_UpdateMode updateMode;
@@ -29,16 +37,15 @@ typedef struct MeterClass_ {
    const Meter_UpdateValues updateValues;
    const int defaultMode;
    const double total;
-   const int* attributes;
-   const char* name;
-   const char* uiName;
-   const char* caption;
-   const char* description;
+   const int* const attributes;
+   const char* const name;
+   const char* const uiName;
+   const char* const caption;
+   const char* const description;
    const char maxItems;
-   char curItems;
 } MeterClass;
 
-#define As_Meter(this_)                ((MeterClass*)((this_)->super.klass))
+#define As_Meter(this_)                ((const MeterClass*)((this_)->super.klass))
 #define Meter_initFn(this_)            As_Meter(this_)->init
 #define Meter_init(this_)              As_Meter(this_)->init((Meter*)(this_))
 #define Meter_done(this_)              As_Meter(this_)->done((Meter*)(this_))
@@ -49,11 +56,14 @@ typedef struct MeterClass_ {
 #define Meter_updateValues(this_, buf_, sz_) \
                                        As_Meter(this_)->updateValues((Meter*)(this_), buf_, sz_)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
-#define Meter_getItems(this_)          As_Meter(this_)->curItems
-#define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
+
+typedef struct GraphData_ {
+   struct timeval time;
+   double values[METER_BUFFER_LEN];
+} GraphData;
 
 struct Meter_ {
    Object super;
@@ -62,11 +72,13 @@ struct Meter_ {
    char* caption;
    int mode;
    int param;
-   void* drawData;
+   GraphData* drawData;
    int h;
-   struct ProcessList_* pl;
+   ProcessList* pl;
+   char curItems;
    double* values;
    double total;
+   void* meterData;
 };
 
 typedef struct MeterMode_ {
@@ -84,14 +96,9 @@ typedef enum {
    LAST_METERMODE
 } MeterModeId;
 
-typedef struct GraphData_ {
-   struct timeval time;
-   double values[METER_BUFFER_LEN];
-} GraphData;
+extern const MeterClass Meter_class;
 
-extern MeterClass Meter_class;
-
-Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type);
+Meter* Meter_new(ProcessList* pl, int param, const MeterClass* type);
 
 int Meter_humanUnit(char* buffer, unsigned long int value, int size);
 
@@ -103,10 +110,8 @@ void Meter_setMode(Meter* this, int modeIndex);
 
 ListItem* Meter_toListItem(Meter* this, bool moving);
 
-extern MeterMode* Meter_modes[];
+extern const MeterMode* const Meter_modes[];
 
-extern int BlankMeter_attributes[];
-
-extern MeterClass BlankMeter_class;
+extern const MeterClass BlankMeter_class;
 
 #endif

@@ -4,7 +4,7 @@ htop \- interactive process viewer
 .SH "SYNOPSIS"
 .LP
 .B htop
-.RB [ \-dChpustv ]
+.RB [ \-dCFhpustv ]
 .SH "DESCRIPTION"
 .LP
 .B htop
@@ -35,6 +35,9 @@ is greater than 100, it is decreased to 100, i.e. 10 seconds.
 Start
 .B htop
 in monochrome mode
+.TP
+\fB\-F \-\-filter=FILTER
+Filter processes by command
 .TP
 \fB\-h \-\-help
 Display a help message and exit
@@ -115,6 +118,10 @@ update of system calls issued by the process.
 .B l
 Display open files for a process: if lsof(1) is installed, pressing this key
 will display the list of file descriptors opened by the process.
+.TP
+.B w
+Display the command line of the selected process in a separate screen, wrapped
+onto multiple lines as needed.
 .TP
 .B F1, h, ?
 Go to the help screen
@@ -201,6 +208,9 @@ userspace processes in the process list. (This is a toggle key.)
 .TP
 .B p
 Show full paths to running programs, where applicable. (This is a toggle key.)
+.TP
+.B Z
+Pause/resume process updates.
 .TP
 .B Ctrl-L
 Refresh: redraw screen and recalculate values.
@@ -319,6 +329,17 @@ The library size of the process.
 .TP
 .B M_DT (DIRTY)
 The size of the dirty pages of the process.
+.TP
+.B M_SWAP (SWAP)
+The size of the process's swapped pages.
+.TP
+.B M_PSS (PSS)
+The proportional set size, same as M_RESIDENT but each page is divided by the
+number of processes sharing it.
+.TP
+.B M_M_PSSWP (PSSWP)
+The proportional swap share of this mapping, unlike M_SWAP this does not take
+into account swapped out page of underlying shmem objects.
 .TP
 .B ST_UID (UID)
 The user ID of the process owner.

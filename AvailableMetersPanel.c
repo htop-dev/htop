@@ -1,20 +1,26 @@
 /*
 htop - AvailableMetersPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "AvailableMetersPanel.h"
-#include "MetersPanel.h"
-
-#include "CPUMeter.h"
-#include "Header.h"
-#include "ListItem.h"
-#include "Platform.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
+
+#include "CPUMeter.h"
+#include "FunctionBar.h"
+#include "Header.h"
+#include "ListItem.h"
+#include "Meter.h"
+#include "MetersPanel.h"
+#include "Object.h"
+#include "Platform.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static void AvailableMetersPanel_delete(Object* object) {
@@ -24,19 +30,22 @@ static void AvailableMetersPanel_delete(Object* object) {
    free(this);
 }
 
-static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, MeterClass* type, int param, int column) {
-   Meter* meter = (Meter*) Header_addMeterByClass(header, type, param, column);
+static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, const MeterClass* type, int param, int column) {
+   Meter* meter = Header_addMeterByClass(header, type, param, column);
    Panel_add(panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected(panel, Panel_size(panel) - 1);
    MetersPanel_setMoving((MetersPanel*)panel, true);
-   FunctionBar_draw(panel->currentBar, NULL);
+   FunctionBar_draw(panel->currentBar);
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
    Header* header = this->header;
 
-   ListItem* selected = (ListItem*) Panel_getSelected(super);
+   const ListItem* selected = (ListItem*) Panel_getSelected(super);
+   if (!selected)
+      return IGNORED;
+
    int param = selected->key & 0xff;
    int type = selected->key >> 16;
    HandlerResult result = IGNORED;
@@ -74,7 +83,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
-PanelClass AvailableMetersPanel_class = {
+const PanelClass AvailableMetersPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = AvailableMetersPanel_delete
@@ -98,13 +107,13 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    // Platform_meterTypes[0] should be always (&CPUMeter_class), which we will
    // handle separately in the code below.
    for (int i = 1; Platform_meterTypes[i]; i++) {
-      MeterClass* type = Platform_meterTypes[i];
+      const MeterClass* type = Platform_meterTypes[i];
       assert(type != &CPUMeter_class);
       const char* label = type->description ? type->description : type->uiName;
       Panel_add(super, (Object*) ListItem_new(label, i << 16));
    }
    // Handle (&CPUMeter_class)
-   MeterClass* type = &CPUMeter_class;
+   const MeterClass* type = &CPUMeter_class;
    int cpus = pl->cpuCount;
    if (cpus > 1) {
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));

@@ -1,42 +1,44 @@
 /*
 htop - Meter.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "Meter.h"
 
-#include "RichString.h"
-#include "Object.h"
-#include "CRT.h"
-#include "StringUtils.h"
-#include "Settings.h"
-
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include <assert.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
-#define GRAPH_DELAY (DEFAULT_DELAY/2)
+#include "CRT.h"
+#include "Macros.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
+#include "XUtils.h"
+
 
 #define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
-MeterClass Meter_class = {
+const MeterClass Meter_class = {
    .super = {
       .extends = Class(Object)
    }
 };
 
-Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
+Meter* Meter_new(struct ProcessList_* pl, int param, const MeterClass* type) {
    Meter* this = xCalloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
    this->param = param;
    this->pl = pl;
-   type->curItems = type->maxItems;
-   this->values = xCalloc(type->maxItems, sizeof(double));
+   this->curItems = type->maxItems;
+   this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
    this->total = type->total;
    this->caption = xStrdup(type->caption);
    if (Meter_initFn(this))
@@ -94,7 +96,7 @@ void Meter_setCaption(Meter* this, const char* caption) {
    this->caption = xStrdup(caption);
 }
 
-static inline void Meter_displayBuffer(Meter* this, char* buffer, RichString* out) {
+static inline void Meter_displayBuffer(const Meter* this, const char* buffer, RichString* out) {
    if (Object_displayFn(this)) {
       Object_display(this, out);
    } else {
@@ -117,7 +119,7 @@ void Meter_setMode(Meter* this, int modeIndex) {
       free(this->drawData);
       this->drawData = NULL;
 
-      MeterMode* mode = Meter_modes[modeIndex];
+      const MeterMode* mode = Meter_modes[modeIndex];
       this->draw = mode->draw;
       this->h = mode->h;
    }
@@ -193,7 +195,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
-   int items = Meter_getItems(this);
+   int items = this->curItems;
    for (int i = 0; i < items; i++) {
       double value = this->values[i];
       value = CLAMP(value, 0.0, this->total);
@@ -261,7 +263,7 @@ static int GraphMeterMode_pixPerRow;
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    if (!this->drawData) this->drawData = xCalloc(1, sizeof(GraphData));
-   GraphData* data = (GraphData*) this->drawData;
+   GraphData* data = this->drawData;
    const int nValues = METER_BUFFER_LEN;
 
 #ifdef HAVE_LIBNCURSESW
@@ -284,7 +286,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    struct timeval now;
    gettimeofday(&now, NULL);
    if (!timercmp(&now, &(data->time), <)) {
-      struct timeval delay = { .tv_sec = (int)(CRT_delay/10), .tv_usec = (CRT_delay-((int)(CRT_delay/10)*10)) * 100000 };
+      struct timeval delay = { .tv_sec = CRT_delay/10, .tv_usec = (CRT_delay-((CRT_delay/10)*10)) * 100000 };
       timeradd(&now, &delay, &(data->time));
 
       for (int i = 0; i < nValues - 1; i++)
@@ -294,7 +296,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       Meter_updateValues(this, buffer, nValues - 1);
 
       double value = 0.0;
-      int items = Meter_getItems(this);
+      int items = this->curItems;
       for (int i = 0; i < items; i++)
          value += this->values[i];
       value /= this->total;
@@ -412,7 +414,7 @@ static MeterMode LEDMeterMode = {
    .draw = LEDMeterMode_draw,
 };
 
-MeterMode* Meter_modes[] = {
+const MeterMode* const Meter_modes[] = {
    NULL,
    &BarMeterMode,
    &TextMeterMode,
@@ -430,16 +432,15 @@ static void BlankMeter_updateValues(Meter* this, char* buffer, int size) {
    }
 }
 
-static void BlankMeter_display(Object* cast, RichString* out) {
-   (void) cast;
+static void BlankMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    RichString_prune(out);
 }
 
-int BlankMeter_attributes[] = {
+static const int BlankMeter_attributes[] = {
    DEFAULT_COLOR
 };
 
-MeterClass BlankMeter_class = {
+const MeterClass BlankMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,

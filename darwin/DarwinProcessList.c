@@ -1,7 +1,7 @@
 /*
 htop - DarwinProcessList.c
 (C) 2014 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -144,15 +144,12 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
     DarwinProcessList *dpl = (DarwinProcessList *)super;
 	bool preExisting = true;
 	struct kinfo_proc *ps;
 	size_t count;
     DarwinProcess *proc;
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL); /* Start processing time */
 
     /* Update the global data (CPU times and VM stats) */
     ProcessList_freeCPULoadInfo(&dpl->prev_load);
@@ -160,6 +157,10 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     ProcessList_allocateCPULoadInfo(&dpl->curr_load);
     ProcessList_getVMStats(&dpl->vm_stats);
     openzfs_sysctl_updateArcStats(&dpl->zfs);
+
+    // in pause mode only gather global data for meters (CPU/memory/...)
+    if (pauseProcessUpdate)
+       return;
 
     /* Get the time difference */
     dpl->global_diff = 0;
@@ -187,7 +188,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     for(size_t i = 0; i < count; ++i) {
        proc = (DarwinProcess *)ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
 
-       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], tv.tv_sec, preExisting);
+       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], preExisting);
        DarwinProcess_setFromLibprocPidinfo(proc, dpl);
 
        // Disabled for High Sierra due to bug in macOS High Sierra

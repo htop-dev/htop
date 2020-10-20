@@ -4,7 +4,7 @@
 htop - unsupported/Platform.h
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -21,7 +21,7 @@ extern ProcessField Platform_defaultFields[];
 
 extern ProcessFieldData Process_fields[];
 
-extern MeterClass* Platform_meterTypes[];
+extern const MeterClass* const Platform_meterTypes[];
 
 void Platform_setBindings(Htop_Action* keys);
 
@@ -43,8 +43,15 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
-bool Process_isThread(Process* this);
+bool Process_isThread(const Process* this);
 
 char* Platform_getProcessEnv(pid_t pid);
+
+void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend);
+
+void Platform_getNetworkIO(unsigned long int *bytesReceived,
+                           unsigned long int *packetsReceived,
+                           unsigned long int *bytesTransmitted,
+                           unsigned long int *packetsTransmitted);
 
 #endif

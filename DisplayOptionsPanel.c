@@ -1,18 +1,24 @@
 /*
 htop - DisplayOptionsPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "DisplayOptionsPanel.h"
+
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include "CheckItem.h"
 #include "CRT.h"
-
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+#include "FunctionBar.h"
+#include "Header.h"
+#include "Object.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
@@ -43,16 +49,16 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
 
    if (result == HANDLED) {
       this->settings->changed = true;
-      const Header* header = this->scr->header;
-      Header_calculateHeight((Header*) header);
-      Header_reinit((Header*) header);
+      Header* header = this->scr->header;
+      Header_calculateHeight(header);
+      Header_reinit(header);
       Header_draw(header);
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
    }
    return result;
 }
 
-PanelClass DisplayOptionsPanel_class = {
+const PanelClass DisplayOptionsPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = DisplayOptionsPanel_delete
@@ -81,7 +87,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight large numbers in memory counters"), &(settings->highlightMegabytes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Leave a margin around header"), &(settings->headerMargin)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->detailedCPUTime)));
-   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Count CPUs from 0 instead of 1"), &(settings->countCPUsFromZero)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Count CPUs from 1 instead of 0"), &(settings->countCPUsFromOne)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Update process names on every refresh"), &(settings->updateProcessNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Also show CPU percentage numerically"), &(settings->showCPUUsage)));

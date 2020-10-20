@@ -1,7 +1,7 @@
 /*
 htop - DarwinProcess.c
 (C) 2015 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -15,8 +15,10 @@ in the source distribution for its full text.
 
 #include <mach/mach.h>
 
+#include "CRT.h"
 
-ProcessClass DarwinProcess_class = {
+
+const ProcessClass DarwinProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,
@@ -45,17 +47,9 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isThread(const Process* this) {
    (void) this;
    return false;
-}
-
-void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now) {
-   struct tm date;
-
-   proc->starttime_ctime = ep->p_starttime.tv_sec;
-   (void) localtime_r(&proc->starttime_ctime, &date);
-   strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
 }
 
 char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
@@ -201,7 +195,7 @@ ERROR_A:
    return retval;
 }
 
-void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists) {
+void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool exists) {
    struct extern_proc *ep = &ps->kp_proc;
 
    /* UNSET HERE :
@@ -231,7 +225,9 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
       /* e_tdev == -1 for "no device" */
       proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
 
-      DarwinProcess_setStartTime(proc, ep, now);
+      proc->starttime_ctime = ep->p_starttime.tv_sec;
+      Process_fillStarttimeBuffer(proc);
+
       proc->comm = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
    }
 
@@ -263,8 +259,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
 
       proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
       proc->super.nlwp = pti.pti_threadnum;
-      proc->super.m_size = pti.pti_virtual_size / 1024 / PAGE_SIZE_KB;
-      proc->super.m_resident = pti.pti_resident_size / 1024 / PAGE_SIZE_KB;
+      proc->super.m_size = pti.pti_virtual_size / CRT_pageSize;
+      proc->super.m_resident = pti.pti_resident_size / CRT_pageSize;
       proc->super.majflt = pti.pti_faults;
       proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
               / (double)dpl->host_info.max_mem;

@@ -2,7 +2,7 @@
 htop - dragonflybsd/DragonFlyBSDProcess.c
 (C) 2015 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -18,7 +18,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 
-ProcessClass DragonFlyBSDProcess_class = {
+const ProcessClass DragonFlyBSDProcess_class = {
    .super = {
       .extends = Class(Process),
       .display = Process_display,
@@ -108,14 +108,14 @@ void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField
 }
 
 long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
-   DragonFlyBSDProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const DragonFlyBSDProcess *p1, *p2;
+   const Settings *settings = ((const Process*)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (DragonFlyBSDProcess*)v1;
-      p2 = (DragonFlyBSDProcess*)v2;
+      p1 = (const DragonFlyBSDProcess*)v1;
+      p2 = (const DragonFlyBSDProcess*)v2;
    } else {
-      p2 = (DragonFlyBSDProcess*)v1;
-      p1 = (DragonFlyBSDProcess*)v2;
+      p2 = (const DragonFlyBSDProcess*)v1;
+      p1 = (const DragonFlyBSDProcess*)v2;
    }
    switch ((int) settings->sortKey) {
    // add Platform-specific fields here
@@ -128,8 +128,8 @@ long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isThread(Process* this) {
-   DragonFlyBSDProcess* fp = (DragonFlyBSDProcess*) this;
+bool Process_isThread(const Process* this) {
+   const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) this;
 
    if (fp->kernel == 1 )
       return 1;

@@ -3,9 +3,17 @@
 /*
 htop - FreeBSDProcess.h
 (C) 2015 Hisham H. Muhammad
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
+
+#include <stdbool.h>
+
+#include "Object.h"
+#include "Process.h"
+#include "RichString.h"
+#include "Settings.h"
+
 
 typedef enum FreeBSDProcessFields_ {
    // Add platform-specific fields here, with ids >= 100
@@ -25,7 +33,7 @@ typedef struct FreeBSDProcess_ {
 
 #define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
 
-extern ProcessClass FreeBSDProcess_class;
+extern const ProcessClass FreeBSDProcess_class;
 
 extern ProcessFieldData Process_fields[];
 
@@ -39,6 +47,6 @@ void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
 
 long FreeBSDProcess_compare(const void* v1, const void* v2);
 
-bool Process_isThread(Process* this);
+bool Process_isThread(const Process* this);
 
 #endif
