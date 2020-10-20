@@ -3,7 +3,7 @@ name: CI
 on: [ push, pull_request ]
 
 jobs:
-  build-ubuntu-latest:
+  build-ubuntu-latest-minimal-gcc:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -12,13 +12,13 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-linux-affinity
+      run: ./configure --enable-werror --enable-linux-affinity --disable-taskstats --disable-unicode
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity"
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity --disable-taskstats --disable-unicode"
 
-  build-ubuntu-clang-latest:
+  build-ubuntu-latest-minimal-clang:
     runs-on: ubuntu-latest
     env:
       CC: clang-10
@@ -34,18 +34,40 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-linux-affinity
+      run: ./configure --enable-werror --enable-linux-affinity --disable-taskstats --disable-unicode
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity"
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity --disable-taskstats --disable-unicode"
 
-  build-ubuntu-latest-full-featured:
+  build-ubuntu-latest-full-featured-gcc:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
       run: sudo apt-get install libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct
+    - name: Build
+      run: make -k
+    - name: Distcheck
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-cgroup --enable-vserver --enable-ancient-vserver --enable-taskstats --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct'
+
+  build-ubuntu-latest-full-featured-clang:
+    runs-on: ubuntu-latest
+    env:
+      CC: clang-10
+    steps:
+    - uses: actions/checkout@v2
+    - name: install clang repo
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
+        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main' -y
+        sudo apt-get update -q
+    - name: Install Dependencies
+      run: sudo apt-get install clang-10 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
