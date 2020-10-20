@@ -62,6 +62,6 @@ char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
 
 char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
 
-void ProcessList_goThroughEntries(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate);
 
 #endif

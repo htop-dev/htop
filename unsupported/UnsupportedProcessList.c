@@ -24,8 +24,13 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
-	bool preExisting = true;
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
+
+   // in pause mode only gather global data for meters (CPU/memory/...)
+   if (pauseProcessUpdate)
+      return;
+
+    bool preExisting = true;
     Process *proc;
 
     proc = ProcessList_getProcess(super, 1, &preExisting, UnsupportedProcess_new);
