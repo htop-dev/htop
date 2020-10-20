@@ -53,7 +53,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       if (!dirEntry)
          break;
       char* entryName = dirEntry->d_name;
-      if (String_startsWith(entryName, "BAT"))
+      if (!String_startsWith(entryName, "BAT"))
          continue;
       batteries[nBatteries] = xStrdup(entryName);
       nBatteries++;
