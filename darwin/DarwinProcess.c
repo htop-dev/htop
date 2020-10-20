@@ -15,6 +15,8 @@ in the source distribution for its full text.
 
 #include <mach/mach.h>
 
+#include "CRT.h"
+
 
 const ProcessClass DarwinProcess_class = {
    .super = {
@@ -257,8 +259,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
 
       proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
       proc->super.nlwp = pti.pti_threadnum;
-      proc->super.m_size = pti.pti_virtual_size / 1024 / PAGE_SIZE_KB;
-      proc->super.m_resident = pti.pti_resident_size / 1024 / PAGE_SIZE_KB;
+      proc->super.m_size = pti.pti_virtual_size / CRT_pageSize;
+      proc->super.m_resident = pti.pti_resident_size / CRT_pageSize;
       proc->super.majflt = pti.pti_faults;
       proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
               / (double)dpl->host_info.max_mem;

@@ -21,13 +21,6 @@ in the source distribution for its full text.
 #define SYS_ioprio_set __NR_ioprio_set
 #endif
 
-// On Linux, this works only with glibc 2.1+. On earlier versions
-// the behavior is similar to have a hardcoded page size.
-#ifndef PAGE_SIZE
-#define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
-#endif
-#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
-
 #define PROCESS_FLAG_IO 0x0001
 
 typedef enum ProcessFields {

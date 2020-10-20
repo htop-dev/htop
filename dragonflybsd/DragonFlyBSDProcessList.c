@@ -9,7 +9,6 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "DragonFlyBSDProcessList.h"
 #include "DragonFlyBSDProcess.h"
-#include "Macros.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -21,6 +20,9 @@ in the source distribution for its full text.
 #include <limits.h>
 #include <string.h>
 #include <sys/param.h>
+
+#include "CRT.h"
+#include "Macros.h"
 
 
 static int MIB_hw_physmem[2];
@@ -54,8 +56,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    len = sizeof(pageSize);
    if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1) {
-      pageSize = PAGE_SIZE;
-      pageSizeKb = PAGE_SIZE_KB;
+      pageSize = CRT_pageSize;
+      pageSizeKb = CRT_pageSizeKB;
    } else {
       pageSizeKb = pageSize / ONE_K;
    }
@@ -431,12 +433,12 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->m_size = kproc->kp_vm_map_size / 1024 / pageSizeKb;
       proc->m_resident = kproc->kp_vm_rssize;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_swtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem);
+      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(this->totalMem);
 
       if (proc->percent_cpu > 0.1) {
          // system idle process should own all CPU time left regardless of CPU count
