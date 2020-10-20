@@ -26,9 +26,9 @@ static void ZramMeter_updateValues(Meter* this, char* buffer, int size) {
    }
 }
 
-static void ZramMeter_display(Object* cast, RichString* out) {
+static void ZramMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
-   Meter* this = (Meter*)cast;
+   const Meter* this = (const Meter*)cast;
    RichString_write(out, CRT_colors[METER_TEXT], ":");
    Meter_humanUnit(buffer, this->total, 50);
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
