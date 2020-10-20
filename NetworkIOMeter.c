@@ -63,7 +63,7 @@ static void NetworkIOMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, i
 }
 
 static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
-   char buffer[32];
+   char buffer[64];
 
    RichString_write(out, CRT_colors[METER_TEXT], "rx: ");
    Meter_humanUnit(buffer, cached_rxb_diff, sizeof(buffer));
