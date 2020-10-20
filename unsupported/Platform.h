@@ -47,9 +47,11 @@ bool Process_isThread(const Process* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 
-void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend);
+bool Platform_getDiskIO(unsigned long int *bytesRead,
+                        unsigned long int *bytesWrite,
+                        unsigned long int *msTimeSpend);
 
-void Platform_getNetworkIO(unsigned long int *bytesReceived,
+bool Platform_getNetworkIO(unsigned long int *bytesReceived,
                            unsigned long int *packetsReceived,
                            unsigned long int *bytesTransmitted,
                            unsigned long int *packetsTransmitted);

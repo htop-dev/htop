@@ -302,14 +302,11 @@ void Platform_getPressureStall(const char *file, bool some, double* ten, double*
    fclose(fd);
 }
 
-void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+bool Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
    FILE *fd = fopen(PROCDIR "/diskstats", "r");
-   if (!fd) {
-      *bytesRead = 0;
-      *bytesWrite = 0;
-      *msTimeSpend = 0;
-      return;
-   }
+   if (!fd)
+      return false;
+
    unsigned long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
    char lineBuffer[256];
    while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
@@ -347,32 +344,28 @@ void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWr
    *bytesRead = 512 * read_sum;
    *bytesWrite = 512 * write_sum;
    *msTimeSpend = timeSpend_sum;
+   return true;
 }
 
-void Platform_getNetworkIO(unsigned long int *bytesReceived,
+bool Platform_getNetworkIO(unsigned long int *bytesReceived,
                            unsigned long int *packetsReceived,
                            unsigned long int *bytesTransmitted,
                            unsigned long int *packetsTransmitted) {
    FILE *fd = fopen(PROCDIR "/net/dev", "r");
-   if (!fd) {
-      *bytesReceived = 0;
-      *packetsReceived = 0;
-      *bytesTransmitted = 0;
-      *packetsTransmitted = 0;
-      return;
-   }
+   if (!fd)
+      return false;
 
    unsigned long int bytesReceivedSum = 0, packetsReceivedSum = 0, bytesTransmittedSum = 0, packetsTransmittedSum = 0;
    char lineBuffer[512];
    while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
       char interfaceName[32];
       unsigned long int bytesReceivedParsed, packetsReceivedParsed, bytesTransmittedParsed, packetsTransmittedParsed;
-      if (fscanf(fd, "%31s %lu %lu %*u %*u %*u %*u %*u %*u %lu %lu %*u %*u %*u %*u %*u %*u",
-                     interfaceName,
-                     &bytesReceivedParsed,
-                     &packetsReceivedParsed,
-                     &bytesTransmittedParsed,
-                     &packetsTransmittedParsed) != 5)
+      if (sscanf(lineBuffer, "%31s %lu %lu %*u %*u %*u %*u %*u %*u %lu %lu",
+                             interfaceName,
+                             &bytesReceivedParsed,
+                             &packetsReceivedParsed,
+                             &bytesTransmittedParsed,
+                             &packetsTransmittedParsed) != 5)
          continue;
 
       if (String_eq(interfaceName, "lo:"))
@@ -390,4 +383,5 @@ void Platform_getNetworkIO(unsigned long int *bytesReceived,
    *packetsReceived = packetsReceivedSum;
    *bytesTransmitted = bytesTransmittedSum;
    *packetsTransmitted = packetsTransmittedSum;
+   return true;
 }

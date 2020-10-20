@@ -241,12 +241,15 @@ char* Platform_getProcessEnv(pid_t pid) {
    return env;
 }
 
-void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+bool Platform_getDiskIO(unsigned long int *bytesRead,
+                        unsigned long int *bytesWrite,
+                        unsigned long int *msTimeSpend) {
    // TODO
    *bytesRead = *bytesWrite = *msTimeSpend = 0;
+   return false;
 }
 
-void Platform_getNetworkIO(unsigned long int *bytesReceived,
+bool Platform_getNetworkIO(unsigned long int *bytesReceived,
                            unsigned long int *packetsReceived,
                            unsigned long int *bytesTransmitted,
                            unsigned long int *packetsTransmitted) {
@@ -258,13 +261,9 @@ void Platform_getNetworkIO(unsigned long int *bytesReceived,
    const int countMib[] = { CTL_NET, PF_LINK, NETLINK_GENERIC, IFMIB_SYSTEM, IFMIB_IFCOUNT };
 
    r = sysctl(countMib, ARRAYSIZE(countMib), &count, &countLen, NULL, 0);
-   if (r < 0) {
-      *bytesReceived = 0;
-      *packetsReceived = 0;
-      *bytesTransmitted = 0;
-      *packetsTransmitted = 0;
-      return;
-   }
+   if (r < 0)
+      return false;
+
 
    unsigned long int bytesReceivedSum = 0, packetsReceivedSum = 0, bytesTransmittedSum = 0, packetsTransmittedSum = 0;
 
@@ -291,4 +290,5 @@ void Platform_getNetworkIO(unsigned long int *bytesReceived,
    *packetsReceived = packetsReceivedSum;
    *bytesTransmitted = bytesTransmittedSum;
    *packetsTransmitted = packetsTransmittedSum;
+   return true;
 }
