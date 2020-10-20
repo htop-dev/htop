@@ -224,7 +224,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+   ProcessList* pl = this->pl;
    LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
 
    long int usedMem = pl->usedMem;
