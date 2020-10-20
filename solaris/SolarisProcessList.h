@@ -10,8 +10,8 @@ in the source distribution for its full text.
 
 #define MAXCMDLINE 255
 
-#define GZONE	"global    "
-#define UZONE	"unknown   "
+#define GZONE "global    "
+#define UZONE "unknown   "
 
 #include "zfs/ZfsArcStats.h"
 

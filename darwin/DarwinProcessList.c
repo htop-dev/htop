@@ -146,9 +146,9 @@ void ProcessList_delete(ProcessList* this) {
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
     DarwinProcessList *dpl = (DarwinProcessList *)super;
-	bool preExisting = true;
-	struct kinfo_proc *ps;
-	size_t count;
+    bool preExisting = true;
+    struct kinfo_proc *ps;
+    size_t count;
     DarwinProcess *proc;
 
     /* Update the global data (CPU times and VM stats) */

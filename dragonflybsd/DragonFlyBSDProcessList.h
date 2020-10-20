@@ -19,7 +19,7 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 #include "DragonFlyBSDProcess.h"
 
-#define JAIL_ERRMSGLEN	1024
+#define JAIL_ERRMSGLEN 1024
 extern char jail_errmsg[JAIL_ERRMSGLEN];
 
 typedef struct CPUData_ {
