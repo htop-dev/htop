@@ -19,16 +19,6 @@ in the source distribution for its full text.
 
 const char* const nodevStr = "nodev";
 
-const ProcessClass FreeBSDProcess_class = {
-   .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = FreeBSDProcess_compare
-   },
-   .writeField = FreeBSDProcess_writeField,
-};
-
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
@@ -85,7 +75,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+static void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -118,7 +108,7 @@ void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessFiel
    RichString_append(str, attr, buffer);
 }
 
-long FreeBSDProcess_compare(const void* v1, const void* v2) {
+static long FreeBSDProcess_compare(const void* v1, const void* v2) {
    const FreeBSDProcess *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
    if (settings->direction == 1) {
@@ -147,5 +137,15 @@ bool Process_isThread(const Process* this) {
    if (fp->kernel == 1 )
       return 1;
    else
-      return (Process_isUserlandThread(this));
+      return Process_isUserlandThread(this);
 }
+
+const ProcessClass FreeBSDProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = FreeBSDProcess_compare
+   },
+   .writeField = FreeBSDProcess_writeField,
+};
