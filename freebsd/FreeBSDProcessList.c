@@ -479,7 +479,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       Process* proc = ProcessList_getProcess(super, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(fp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
@@ -567,9 +567,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       if (settings->flags & PROCESS_FLAG_FREEBSD_TTY)
          fp->ttyPath = (kproc->ki_tdev == NODEV) ? nodevStr : Hashtable_get(fpl->ttys, kproc->ki_tdev);
 
-      if (Process_isKernelThread(fp)) {
+      if (Process_isKernelThread(proc))
          super->kernelThreads++;
-      }
 
       super->totalTasks++;
       if (proc->state == 'R')

@@ -34,9 +34,13 @@ typedef struct FreeBSDProcess_ {
    const char* ttyPath;
 } FreeBSDProcess;
 
-#define Process_isKernelThread(_process) (_process->kernel == 1)
+static inline bool Process_isKernelThread(const Process* this) {
+   return ((const FreeBSDProcess*)this)->kernel == 1;
+}
 
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
+static inline bool Process_isUserlandThread(const Process* this) {
+   return this->pid != this->tgid;
+}
 
 extern const ProcessClass FreeBSDProcess_class;
 
@@ -47,10 +51,6 @@ extern ProcessPidColumn Process_pidColumns[];
 Process* FreeBSDProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
-
-void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field);
-
-long FreeBSDProcess_compare(const void* v1, const void* v2);
 
 bool Process_isThread(const Process* this);
 
