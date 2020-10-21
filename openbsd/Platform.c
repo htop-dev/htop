@@ -241,10 +241,6 @@ void Platform_setSwapValues(Meter* this) {
    free(swdev);
 }
 
-void Platform_setTasksValues(Meter* this) {
-   // TODO
-}
-
 char* Platform_getProcessEnv(pid_t pid) {
    char errbuf[_POSIX2_LINE_MAX];
    char *env;
