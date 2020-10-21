@@ -33,7 +33,7 @@ extern ProcessFieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 
-DragonFlyBSDProcess* DragonFlyBSDProcess_new(Settings* settings);
+Process* DragonFlyBSDProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 

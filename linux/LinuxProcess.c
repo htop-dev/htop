@@ -138,11 +138,11 @@ const ProcessClass LinuxProcess_class = {
    .writeField = LinuxProcess_writeField,
 };
 
-LinuxProcess* LinuxProcess_new(Settings* settings) {
+Process* LinuxProcess_new(const Settings* settings) {
    LinuxProcess* this = xCalloc(1, sizeof(LinuxProcess));
    Object_setClass(this, Class(LinuxProcess));
    Process_init(&this->super, settings);
-   return this;
+   return &this->super;
 }
 
 void Process_delete(Object* cast) {

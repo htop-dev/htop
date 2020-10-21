@@ -186,7 +186,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
     ps = ProcessList_getKInfoProcs(&count);
 
     for(size_t i = 0; i < count; ++i) {
-       proc = (DarwinProcess *)ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
+       proc = (DarwinProcess *)ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, DarwinProcess_new);
 
        DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], preExisting);
        DarwinProcess_setFromLibprocPidinfo(proc, dpl);

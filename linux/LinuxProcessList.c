@@ -971,7 +971,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          continue;
 
       bool preExisting = false;
-      Process* proc = ProcessList_getProcess(pl, pid, &preExisting, (Process_New) LinuxProcess_new);
+      Process* proc = ProcessList_getProcess(pl, pid, &preExisting, LinuxProcess_new);
       proc->tgid = parent ? parent->pid : pid;
 
       LinuxProcess* lp = (LinuxProcess*) proc;

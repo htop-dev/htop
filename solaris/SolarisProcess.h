@@ -50,7 +50,7 @@ extern ProcessFieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 
-SolarisProcess* SolarisProcess_new(Settings* settings);
+Process* SolarisProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 

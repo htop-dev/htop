@@ -59,7 +59,7 @@ struct Settings_;
 typedef struct Process_ {
    Object super;
 
-   struct Settings_* settings;
+   const struct Settings_* settings;
 
    unsigned long long int time;
    pid_t pid;
@@ -119,7 +119,7 @@ extern ProcessFieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
 extern char Process_pidFormat[20];
 
-typedef Process*(*Process_New)(struct Settings_*);
+typedef Process*(*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
 
 typedef struct ProcessClass_ {
@@ -164,7 +164,7 @@ void Process_done(Process* this);
 
 extern const ProcessClass Process_class;
 
-void Process_init(Process* this, struct Settings_* settings);
+void Process_init(Process* this, const struct Settings_* settings);
 
 void Process_toggleTag(Process* this);
 

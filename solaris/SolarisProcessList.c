@@ -279,7 +279,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    } else {
       getpid = lwpid;
    }
-   Process *proc             = ProcessList_getProcess(pl, getpid, &preExisting, (Process_New) SolarisProcess_new);
+   Process *proc             = ProcessList_getProcess(pl, getpid, &preExisting, SolarisProcess_new);
    SolarisProcess *sproc     = (SolarisProcess*) proc;
 
    // Common code pass 1

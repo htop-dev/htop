@@ -401,7 +401,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
       // TODO: bool isIdleProcess = false;
-      Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
+      Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(fp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));

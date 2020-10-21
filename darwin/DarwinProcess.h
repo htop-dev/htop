@@ -22,7 +22,7 @@ typedef struct DarwinProcess_ {
 
 extern const ProcessClass DarwinProcess_class;
 
-DarwinProcess* DarwinProcess_new(Settings* settings);
+Process* DarwinProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 

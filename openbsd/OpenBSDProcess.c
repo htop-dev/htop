@@ -165,11 +165,11 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
 
-OpenBSDProcess* OpenBSDProcess_new(Settings* settings) {
+Process* OpenBSDProcess_new(const Settings* settings) {
    OpenBSDProcess* this = xCalloc(sizeof(OpenBSDProcess), 1);
    Object_setClass(this, Class(OpenBSDProcess));
    Process_init(&this->super, settings);
-   return this;
+   return &this->this;
 }
 
 void Process_delete(Object* cast) {

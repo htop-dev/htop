@@ -167,7 +167,7 @@ extern ProcessPidColumn Process_pidColumns[];
 
 extern const ProcessClass LinuxProcess_class;
 
-LinuxProcess* LinuxProcess_new(Settings* settings);
+Process* LinuxProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 

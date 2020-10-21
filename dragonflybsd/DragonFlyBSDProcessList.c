@@ -385,7 +385,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       bool ATTR_UNUSED isIdleProcess = false;
 
       // note: dragonflybsd kernel processes all have the same pid, so we misuse the kernel thread address to give them a unique identifier
-      Process* proc = ProcessList_getProcess(this, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, (Process_New) DragonFlyBSDProcess_new);
+      Process* proc = ProcessList_getProcess(this, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, DragonFlyBSDProcess_new);
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(dfp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));

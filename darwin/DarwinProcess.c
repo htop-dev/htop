@@ -28,7 +28,7 @@ const ProcessClass DarwinProcess_class = {
    .writeField = Process_writeField,
 };
 
-DarwinProcess* DarwinProcess_new(Settings* settings) {
+Process* DarwinProcess_new(const Settings* settings) {
    DarwinProcess* this = xCalloc(1, sizeof(DarwinProcess));
    Object_setClass(this, Class(DarwinProcess));
    Process_init(&this->super, settings);
@@ -37,7 +37,7 @@ DarwinProcess* DarwinProcess_new(Settings* settings) {
    this->stime = 0;
    this->taskAccess = true;
 
-   return this;
+   return &this->super;
 }
 
 void Process_delete(Object* cast) {

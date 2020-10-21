@@ -203,7 +203,7 @@ static inline void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       kproc = &kprocs[i];
 
       preExisting = false;
-      proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, (Process_New) OpenBSDProcess_new);
+      proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, OpenBSDProcess_new);
       fp = (OpenBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc))
