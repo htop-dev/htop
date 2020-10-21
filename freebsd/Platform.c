@@ -219,11 +219,6 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
    ZfsCompressedArcMeter_readStats(this, &(fpl->zfs));
 }
 
-void Platform_setTasksValues(Meter* this) {
-   (void) this;
-   // TODO
-}
-
 char* Platform_getProcessEnv(pid_t pid) {
    (void) pid;
    // TODO
