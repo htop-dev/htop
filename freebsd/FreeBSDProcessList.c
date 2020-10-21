@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "FreeBSDProcessList.h"
 
 #include <assert.h>
+#include <dirent.h>
 #include <err.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -16,8 +17,10 @@ in the source distribution for its full text.
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
+#include <unistd.h>
 
 #include "CRT.h"
 #include "FreeBSDProcess.h"
@@ -138,11 +141,16 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       errx(1, "kvm_open: %s", errbuf);
    }
 
+   fpl->ttys = Hashtable_new(20, true);
+
    return pl;
 }
 
 void ProcessList_delete(ProcessList* this) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
+
+   Hashtable_delete(fpl->ttys);
+
    if (fpl->kd) kvm_close(fpl->kd);
 
    free(fpl->cp_time_o);
@@ -311,6 +319,70 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->sharedMem = 0;  // currently unused
 }
 
+static void FreeBSDProcessList_scanTTYs(ProcessList* pl) {
+   FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
+
+   // scan /dev/tty*
+   {
+      DIR* dirPtr = opendir("/dev");
+      if (!dirPtr)
+         return;
+
+      int dirFd = dirfd(dirPtr);
+      if (dirFd < 0)
+         goto err1;
+
+      const struct dirent* entry;
+      while ((entry = readdir(dirPtr))) {
+         if (!String_startsWith(entry->d_name, "tty"))
+            continue;
+
+         struct stat info;
+         if (fstatat(dirFd, entry->d_name, &info, 0) < 0)
+            continue;
+
+         if (!S_ISCHR(info.st_mode))
+            continue;
+
+         if (!Hashtable_get(fpl->ttys, info.st_rdev))
+            Hashtable_put(fpl->ttys, info.st_rdev, xStrdup(entry->d_name));
+      }
+
+err1:
+      closedir(dirPtr);
+   }
+
+   // scan /dev/pts/*
+   {
+      DIR* dirPtr = opendir("/dev/pts");
+      if (!dirPtr)
+         return;
+
+      int dirFd = dirfd(dirPtr);
+      if (dirFd < 0)
+         goto err2;
+
+      const struct dirent* entry;
+      while ((entry = readdir(dirPtr))) {
+         struct stat info;
+         if (fstatat(dirFd, entry->d_name, &info, 0) < 0)
+            continue;
+
+         if (!S_ISCHR(info.st_mode))
+            continue;
+
+         if (!Hashtable_get(fpl->ttys, info.st_rdev)) {
+            char* path;
+            xAsprintf(&path, "pts/%s", entry->d_name);
+            Hashtable_put(fpl->ttys, info.st_rdev, path);
+         }
+      }
+
+err2:
+      closedir(dirPtr);
+   }
+}
+
 char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
@@ -394,6 +466,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    if (pauseProcessUpdate)
       return;
 
+   if (settings->flags & PROCESS_FLAG_FREEBSD_TTY)
+      FreeBSDProcessList_scanTTYs(super);
+
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
 
@@ -417,7 +492,6 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->tpgid = kproc->ki_tpgid;
          proc->tgid = kproc->ki_pid;
          proc->session = kproc->ki_sid;
-         proc->tty_nr = kproc->ki_tdev;
          proc->pgrp = kproc->ki_pgid;
          proc->st_uid = kproc->ki_uid;
          proc->starttime_ctime = kproc->ki_start.tv_sec;
@@ -489,6 +563,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       case SLOCK:  proc->state = 'L'; break;
       default:     proc->state = '?';
       }
+
+      if (settings->flags & PROCESS_FLAG_FREEBSD_TTY)
+         fp->ttyPath = (kproc->ki_tdev == NODEV) ? nodevStr : Hashtable_get(fpl->ttys, kproc->ki_tdev);
 
       if (Process_isKernelThread(fp)) {
          super->kernelThreads++;

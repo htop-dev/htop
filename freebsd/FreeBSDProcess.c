@@ -17,6 +17,8 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 
+const char* const nodevStr = "nodev";
+
 const ProcessClass FreeBSDProcess_class = {
    .super = {
       .extends = Class(Process),
@@ -35,7 +37,7 @@ ProcessFieldData Process_fields[] = {
    [PPID] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
    [PGRP] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
    [SESSION] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },
-   [TTY_NR] = { .name = "TTY_NR", .title = "    TTY ", .description = "Controlling terminal", .flags = 0, },
+   [TTY_NR] = { .name = "TTY_NR", .title = "    TTY ", .description = "Controlling terminal", .flags = PROCESS_FLAG_FREEBSD_TTY, },
    [TPGID] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
    [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
    [MAJFLT] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
@@ -99,6 +101,16 @@ void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessFiel
       }
       break;
    }
+   case TTY_NR:
+      if (fp->ttyPath) {
+         if (fp->ttyPath == nodevStr)
+            attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "%-8s", fp->ttyPath);
+      } else {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "?        ");
+      }
+      break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -122,6 +134,8 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
       return (p1->jid - p2->jid);
    case JAIL:
       return strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
+   case TTY_NR:
+      return strcmp(p1->ttyPath ? p1->ttyPath : "", p2->ttyPath ? p2->ttyPath : "");
    default:
       return Process_compare(v1, v2);
    }
