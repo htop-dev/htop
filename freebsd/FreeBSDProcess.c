@@ -24,7 +24,7 @@ const ProcessClass FreeBSDProcess_class = {
       .delete = Process_delete,
       .compare = FreeBSDProcess_compare
    },
-   .writeField = (Process_WriteField) FreeBSDProcess_writeField,
+   .writeField = FreeBSDProcess_writeField,
 };
 
 ProcessFieldData Process_fields[] = {
@@ -83,8 +83,8 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField field) {
-   FreeBSDProcess* fp = (FreeBSDProcess*) this;
+void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+   const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;

@@ -54,7 +54,7 @@ SolarisProcess* SolarisProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
 
-void SolarisProcess_writeField(Process* this, RichString* str, ProcessField field);
+void SolarisProcess_writeField(const Process* this, RichString* str, ProcessField field);
 
 long SolarisProcess_compare(const void* v1, const void* v2);
 
