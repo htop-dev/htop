@@ -6,34 +6,34 @@ in the source distribution for its full text.
 */
 
 #include "Platform.h"
-#include "Macros.h"
-#include "Meter.h"
+
+#include <math.h>
+#include <time.h>
+#include <net/if.h>
+#include <net/if_mib.h>
+#include <sys/resource.h>
+#include <sys/sysctl.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <vm/vm_param.h>
+
 #include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
-#include "HostnameMeter.h"
-#include "NetworkIOMeter.h"
-#include "zfs/ZfsArcMeter.h"
-#include "zfs/ZfsCompressedArcMeter.h"
 #include "FreeBSDProcess.h"
 #include "FreeBSDProcessList.h"
-
-#include <net/if.h>
-#include <net/if_mib.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <vm/vm_param.h>
-#include <time.h>
-#include <limits.h>
-#include <math.h>
+#include "HostnameMeter.h"
+#include "LoadAverageMeter.h"
+#include "Macros.h"
+#include "MemoryMeter.h"
+#include "Meter.h"
+#include "NetworkIOMeter.h"
+#include "SwapMeter.h"
+#include "TasksMeter.h"
+#include "UptimeMeter.h"
+#include "zfs/ZfsArcMeter.h"
+#include "zfs/ZfsCompressedArcMeter.h"
 
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
@@ -185,7 +185,6 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    }
 
    percent = CLAMP(percent, 0.0, 100.0);
-   if (isnan(percent)) percent = 0.0;
 
    v[CPU_METER_FREQUENCY] = NAN;
 
