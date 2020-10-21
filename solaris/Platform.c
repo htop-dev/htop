@@ -167,9 +167,9 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-   SolarisProcessList* spl = (SolarisProcessList*) this->pl;
+   const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
    int cpus = this->pl->cpuCount;
-   CPUData* cpuData = NULL;
+   const CPUData* cpuData = NULL;
 
    if (cpus == 1) {
      // single CPU box has everything in spl->cpus[0]
@@ -203,7 +203,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
    this->total = pl->totalMem;
    this->values[0] = pl->usedMem;
    this->values[1] = pl->buffersMem;
@@ -211,19 +211,19 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   SolarisProcessList* spl = (SolarisProcessList*) this->pl;
+   const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
 
    ZfsArcMeter_readStats(this, &(spl->zfs));
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   SolarisProcessList* spl = (SolarisProcessList*) this->pl;
+   const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
 
    ZfsCompressedArcMeter_readStats(this, &(spl->zfs));
 }

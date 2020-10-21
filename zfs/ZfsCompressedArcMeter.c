@@ -21,7 +21,7 @@ static const int ZfsCompressedArcMeter_attributes[] = {
    ZFS_COMPRESSED
 };
 
-void ZfsCompressedArcMeter_readStats(Meter* this, ZfsArcStats* stats) {
+void ZfsCompressedArcMeter_readStats(Meter* this, const ZfsArcStats* stats) {
    if ( stats->isCompressed ) {
       this->total = stats->uncompressed;
       this->values[0] = stats->compressed;

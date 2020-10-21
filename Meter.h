@@ -74,7 +74,7 @@ struct Meter_ {
    int param;
    GraphData* drawData;
    int h;
-   ProcessList* pl;
+   const ProcessList* pl;
    char curItems;
    double* values;
    double total;
@@ -98,7 +98,7 @@ typedef enum {
 
 extern const MeterClass Meter_class;
 
-Meter* Meter_new(ProcessList* pl, int param, const MeterClass* type);
+Meter* Meter_new(const ProcessList* pl, int param, const MeterClass* type);
 
 int Meter_humanUnit(char* buffer, unsigned long int value, int size);
 

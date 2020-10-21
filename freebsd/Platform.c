@@ -157,9 +157,9 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this->pl;
+   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->pl;
    int cpus = this->pl->cpuCount;
-   CPUData* cpuData;
+   const CPUData* cpuData;
 
    if (cpus == 1) {
      // single CPU box has everything in fpl->cpus[0]
@@ -194,7 +194,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    // TODO
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
 
    this->total = pl->totalMem;
    this->values[0] = pl->usedMem;
@@ -203,19 +203,19 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this->pl;
+   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->pl;
 
    ZfsArcMeter_readStats(this, &(fpl->zfs));
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this->pl;
+   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->pl;
 
    ZfsCompressedArcMeter_readStats(this, &(fpl->zfs));
 }

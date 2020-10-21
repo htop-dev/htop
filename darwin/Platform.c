@@ -176,8 +176,8 @@ ProcessPidColumn Process_pidColumns[] = {
 };
 
 static double Platform_setCPUAverageValues(Meter* mtr) {
-   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
-   int cpus = dpl->super.cpuCount;
+   const ProcessList *dpl = mtr->pl;
+   int cpus = dpl->cpuCount;
    double sumNice = 0.0;
    double sumNormal = 0.0;
    double sumKernel = 0.0;
@@ -200,9 +200,9 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
       return Platform_setCPUAverageValues(mtr);
    }
 
-   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
-   processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];
-   processor_cpu_load_info_t curr = &dpl->curr_load[cpu-1];
+   const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
+   const processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];
+   const processor_cpu_load_info_t curr = &dpl->curr_load[cpu-1];
    double total = 0;
 
    /* Take the sums */
@@ -228,8 +228,8 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* mtr) {
-   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
-   vm_statistics_t vm = &dpl->vm_stats;
+   const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
+   const struct vm_statistics* vm = &dpl->vm_stats;
    double page_K = (double)vm_page_size / (double)1024;
 
    mtr->total = dpl->host_info.max_mem / 1024;
@@ -249,13 +249,13 @@ void Platform_setSwapValues(Meter* mtr) {
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   DarwinProcessList* dpl = (DarwinProcessList*) this->pl;
+   const DarwinProcessList* dpl = (const DarwinProcessList*) this->pl;
 
    ZfsArcMeter_readStats(this, &(dpl->zfs));
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   DarwinProcessList* dpl = (DarwinProcessList*) this->pl;
+   const DarwinProcessList* dpl = (const DarwinProcessList*) this->pl;
 
    ZfsCompressedArcMeter_readStats(this, &(dpl->zfs));
 }

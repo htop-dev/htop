@@ -189,8 +189,8 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
-   CPUData* cpuData = &(pl->cpus[cpu]);
+   const LinuxProcessList* pl = (const LinuxProcessList*) this->pl;
+   const CPUData* cpuData = &(pl->cpus[cpu]);
    double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
    double percent;
    double* v = this->values;
@@ -224,8 +224,8 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   ProcessList* pl = this->pl;
-   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
+   const LinuxProcessList* lpl = (const LinuxProcessList*) pl;
 
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
@@ -243,19 +243,19 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+   const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
 
    ZfsArcMeter_readStats(this, &(lpl->zfs));
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
+   const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
 
    ZfsCompressedArcMeter_readStats(this, &(lpl->zfs));
 }
