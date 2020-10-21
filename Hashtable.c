@@ -14,9 +14,9 @@ in the source distribution for its full text.
 
 #ifndef NDEBUG
 
-static bool Hashtable_isConsistent(Hashtable* this) {
-   int items = 0;
-   for (int i = 0; i < this->size; i++) {
+static bool Hashtable_isConsistent(const Hashtable* this) {
+   unsigned int items = 0;
+   for (unsigned int i = 0; i < this->size; i++) {
       HashtableItem* bucket = this->buckets[i];
       while (bucket) {
          items++;
@@ -26,9 +26,9 @@ static bool Hashtable_isConsistent(Hashtable* this) {
    return items == this->items;
 }
 
-int Hashtable_count(Hashtable* this) {
-   int items = 0;
-   for (int i = 0; i < this->size; i++) {
+unsigned int Hashtable_count(const Hashtable* this) {
+   unsigned int items = 0;
+   for (unsigned int i = 0; i < this->size; i++) {
       HashtableItem* bucket = this->buckets[i];
       while (bucket) {
          items++;
@@ -41,7 +41,7 @@ int Hashtable_count(Hashtable* this) {
 
 #endif /* NDEBUG */
 
-static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
+static HashtableItem* HashtableItem_new(hkey_t key, void* value) {
    HashtableItem* this;
 
    this = xMalloc(sizeof(HashtableItem));
@@ -51,7 +51,7 @@ static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
    return this;
 }
 
-Hashtable* Hashtable_new(int size, bool owner) {
+Hashtable* Hashtable_new(unsigned int size, bool owner) {
    Hashtable* this;
 
    this = xMalloc(sizeof(Hashtable));
@@ -65,7 +65,7 @@ Hashtable* Hashtable_new(int size, bool owner) {
 
 void Hashtable_delete(Hashtable* this) {
    assert(Hashtable_isConsistent(this));
-   for (int i = 0; i < this->size; i++) {
+   for (unsigned int i = 0; i < this->size; i++) {
       HashtableItem* walk = this->buckets[i];
       while (walk != NULL) {
          if (this->owner)
@@ -80,7 +80,7 @@ void Hashtable_delete(Hashtable* this) {
    free(this);
 }
 
-void Hashtable_put(Hashtable* this, unsigned int key, void* value) {
+void Hashtable_put(Hashtable* this, hkey_t key, void* value) {
    unsigned int index = key % this->size;
    HashtableItem** bucketPtr = &(this->buckets[index]);
    while (true)
@@ -101,7 +101,7 @@ void Hashtable_put(Hashtable* this, unsigned int key, void* value) {
    assert(Hashtable_isConsistent(this));
 }
 
-void* Hashtable_remove(Hashtable* this, unsigned int key) {
+void* Hashtable_remove(Hashtable* this, hkey_t key) {
    unsigned int index = key % this->size;
 
    assert(Hashtable_isConsistent(this));
@@ -128,7 +128,7 @@ void* Hashtable_remove(Hashtable* this, unsigned int key) {
    return NULL;
 }
 
-void* Hashtable_get(Hashtable* this, unsigned int key) {
+void* Hashtable_get(Hashtable* this, hkey_t key) {
    unsigned int index = key % this->size;
    HashtableItem* bucketPtr = this->buckets[index];
    while (true) {
@@ -146,7 +146,7 @@ void* Hashtable_get(Hashtable* this, unsigned int key) {
 
 void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData) {
    assert(Hashtable_isConsistent(this));
-   for (int i = 0; i < this->size; i++) {
+   for (unsigned int i = 0; i < this->size; i++) {
       HashtableItem* walk = this->buckets[i];
       while (walk != NULL) {
          f(walk->key, walk->value, userData);

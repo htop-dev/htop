@@ -60,14 +60,14 @@ static bool Vector_isConsistent(const Vector* this) {
    }
 }
 
-int Vector_count(const Vector* this) {
-   int items = 0;
+unsigned int Vector_count(const Vector* this) {
+   unsigned int items = 0;
    for (int i = 0; i < this->items; i++) {
       if (this->array[i]) {
          items++;
       }
    }
-   assert(items == this->items);
+   assert(items == (unsigned int)this->items);
    return items;
 }
 
