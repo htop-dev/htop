@@ -31,7 +31,7 @@ OpenBSDProcess* OpenBSDProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
 
-void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField field);
+void OpenBSDProcess_writeField(const Process* this, RichString* str, ProcessField field);
 
 long OpenBSDProcess_compare(const void* v1, const void* v2);
 

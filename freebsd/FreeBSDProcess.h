@@ -43,7 +43,7 @@ FreeBSDProcess* FreeBSDProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
 
-void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField field);
+void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field);
 
 long FreeBSDProcess_compare(const void* v1, const void* v2);
 
