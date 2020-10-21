@@ -54,7 +54,7 @@ void Vector_set(Vector* this, int idx, void* data_);
 
 Object* Vector_get(Vector* this, int idx);
 int Vector_size(const Vector* this);
-int Vector_count(const Vector* this);
+unsigned int Vector_count(const Vector* this);
 
 #else /* NDEBUG */
 
