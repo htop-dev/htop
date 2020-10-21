@@ -189,7 +189,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
@@ -207,7 +207,7 @@ void Platform_setMemoryValues(Meter* this) {
  * Taken almost directly from OpenBSD's top(1)
  */
 void Platform_setSwapValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
    struct swapent *swdev;
    unsigned long long int total, used;
    int nswap, rnswap, i;

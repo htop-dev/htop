@@ -149,9 +149,9 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-   DragonFlyBSDProcessList* fpl = (DragonFlyBSDProcessList*) this->pl;
+   const DragonFlyBSDProcessList* fpl = (const DragonFlyBSDProcessList*) this->pl;
    int cpus = this->pl->cpuCount;
-   CPUData* cpuData;
+   const CPUData* cpuData;
 
    if (cpus == 1) {
      // single CPU box has everything in fpl->cpus[0]
@@ -186,7 +186,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    // TODO
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
 
    this->total = pl->totalMem;
    this->values[0] = pl->usedMem;
@@ -195,7 +195,7 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+   const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
 }

@@ -18,7 +18,7 @@ static const int ZfsArcMeter_attributes[] = {
    ZFS_MFU, ZFS_MRU, ZFS_ANON, ZFS_HEADER, ZFS_OTHER
 };
 
-void ZfsArcMeter_readStats(Meter* this, ZfsArcStats* stats) {
+void ZfsArcMeter_readStats(Meter* this, const ZfsArcStats* stats) {
    this->total = stats->max;
    this->values[0] = stats->MFU;
    this->values[1] = stats->MRU;

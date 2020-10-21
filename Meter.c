@@ -31,7 +31,7 @@ const MeterClass Meter_class = {
    }
 };
 
-Meter* Meter_new(struct ProcessList_* pl, int param, const MeterClass* type) {
+Meter* Meter_new(const struct ProcessList_* pl, int param, const MeterClass* type) {
    Meter* this = xCalloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
