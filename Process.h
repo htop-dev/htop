@@ -86,7 +86,7 @@ typedef struct Process_ {
 
    float percent_cpu;
    float percent_mem;
-   char* user;
+   const char* user;
 
    long int priority;
    long int nice;
