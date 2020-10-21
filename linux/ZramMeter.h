@@ -3,7 +3,6 @@
 
 #include "Meter.h"
 
-extern int ZramMeter_attributes[];
-extern MeterClass ZramMeter_class;
+extern const MeterClass ZramMeter_class;
 
 #endif

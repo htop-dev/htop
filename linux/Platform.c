@@ -48,7 +48,6 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "ZramMeter.h"
-#include "LinuxProcess.h"
 
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
@@ -252,7 +251,7 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-void Platform_setZramValues(Meter* this){	
+void Platform_setZramValues(Meter* this){
    LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
    this->total = lpl->zram.totalZram;
    this->values[0] = lpl->zram.usedZramComp;
