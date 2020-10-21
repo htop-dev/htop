@@ -15,6 +15,10 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 
+#define PROCESS_FLAG_FREEBSD_TTY   0x0100
+
+extern const char* const nodevStr;
+
 typedef enum FreeBSDProcessFields_ {
    // Add platform-specific fields here, with ids >= 100
    JID   = 100,
@@ -27,6 +31,7 @@ typedef struct FreeBSDProcess_ {
    int   kernel;
    int   jid;
    char* jname;
+   const char* ttyPath;
 } FreeBSDProcess;
 
 #define Process_isKernelThread(_process) (_process->kernel == 1)
