@@ -67,7 +67,7 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
 
 void ProcessList_printHeader(ProcessList* this, RichString* header) {
    RichString_prune(header);
-   ProcessField* fields = this->settings->fields;
+   const ProcessField* fields = this->settings->fields;
    for (int i = 0; fields[i]; i++) {
       const char* field = Process_fields[fields[i]].title;
       if (!field) field = "- ";
@@ -142,20 +142,21 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
    Vector_delete(children);
 }
 
+static long ProcessList_treeProcessCompare(const void* v1, const void* v2) {
+   const Process *p1 = (const Process*)v1;
+   const Process *p2 = (const Process*)v2;
+
+   return p1->pid - p2->pid;
+}
+
 void ProcessList_sort(ProcessList* this) {
    if (!this->settings->treeView) {
       Vector_insertionSort(this->processes);
    } else {
       // Save settings
       int direction = this->settings->direction;
-      int sortKey = this->settings->sortKey;
       // Sort by PID
-      this->settings->sortKey = PID;
-      this->settings->direction = 1;
-      Vector_quickSort(this->processes);
-      // Restore settings
-      this->settings->sortKey = sortKey;
-      this->settings->direction = direction;
+      Vector_quickSortCustomCompare(this->processes, ProcessList_treeProcessCompare);
       int vsize = Vector_size(this->processes);
       // Find all processes whose parent is not visible
       int size;
@@ -214,7 +215,7 @@ void ProcessList_sort(ProcessList* this) {
 
 ProcessField ProcessList_keyAt(ProcessList* this, int at) {
    int x = 0;
-   ProcessField* fields = this->settings->fields;
+   const ProcessField* fields = this->settings->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
       const char* title = Process_fields[field].title;

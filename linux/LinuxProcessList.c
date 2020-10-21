@@ -936,7 +936,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
    ProcessList* pl = (ProcessList*) this;
    DIR* dir;
    struct dirent* entry;
-   Settings* settings = pl->settings;
+   const Settings* settings = pl->settings;
 
    #ifdef HAVE_TASKSTATS
    unsigned long long now = tv.tv_sec*1000LL+tv.tv_usec/1000LL;

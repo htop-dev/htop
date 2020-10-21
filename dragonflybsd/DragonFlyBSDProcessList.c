@@ -362,7 +362,7 @@ char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int ja
 
 void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
    DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
-   Settings* settings = this->settings;
+   const Settings* settings = this->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
