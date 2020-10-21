@@ -382,7 +382,7 @@ IGNORE_WCASTQUAL_END
 
 void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
-   Settings* settings = this->settings;
+   const Settings* settings = this->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 

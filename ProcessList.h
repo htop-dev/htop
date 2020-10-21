@@ -35,7 +35,7 @@ in the source distribution for its full text.
 #endif
 
 typedef struct ProcessList_ {
-   Settings* settings;
+   const Settings* settings;
 
    Vector* processes;
    Vector* processes2;

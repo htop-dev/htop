@@ -185,7 +185,7 @@ static double getpcpu(const struct kinfo_proc *kp) {
 }
 
 static inline void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
-   Settings* settings = this->super.settings;
+   const Settings* settings = this->super.settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
    struct kinfo_proc* kproc;
