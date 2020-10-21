@@ -141,10 +141,8 @@ char* Platform_getProcessEnv(pid_t pid) {
    return NULL;
 }
 
-bool Platform_getDiskIO(unsigned long int *bytesRead,
-                        unsigned long int *bytesWrite,
-                        unsigned long int *msTimeSpend) {
-   *bytesRead = *bytesWrite = *msTimeSpend = 0;
+bool Platform_getDiskIO(DiskIOData* data) {
+   (void)data;
    return false;
 }
 

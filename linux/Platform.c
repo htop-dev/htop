@@ -313,7 +313,7 @@ void Platform_getPressureStall(const char *file, bool some, double* ten, double*
    fclose(fd);
 }
 
-bool Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
+bool Platform_getDiskIO(DiskIOData* data) {
    FILE *fd = fopen(PROCDIR "/diskstats", "r");
    if (!fd)
       return false;
@@ -352,9 +352,9 @@ bool Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWr
    }
    fclose(fd);
    /* multiply with sector size */
-   *bytesRead = 512 * read_sum;
-   *bytesWrite = 512 * write_sum;
-   *msTimeSpend = timeSpend_sum;
+   data->totalBytesRead = 512 * read_sum;
+   data->totalBytesWritten = 512 * write_sum;
+   data->totalMsTimeSpend = timeSpend_sum;
    return true;
 }
 

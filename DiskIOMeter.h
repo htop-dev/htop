@@ -9,6 +9,12 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
+typedef struct DiskIOData_ {
+   unsigned long int totalBytesRead;
+   unsigned long int totalBytesWritten;
+   unsigned long int totalMsTimeSpend;
+} DiskIOData;
+
 extern const MeterClass DiskIOMeter_class;
 
 #endif /* HEADER_DiskIOMeter */

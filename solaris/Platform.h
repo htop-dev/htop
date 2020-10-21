@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "DiskIOMeter.h"
 #include "SignalsPanel.h"
 #include <signal.h>
 #include <sys/mkdev.h>
@@ -63,9 +64,7 @@ void Platform_setZfsCompressedArcValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 
-bool Platform_getDiskIO(unsigned long int *bytesRead,
-                        unsigned long int *bytesWrite,
-                        unsigned long int *msTimeSpend);
+bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(unsigned long int *bytesReceived,
                            unsigned long int *packetsReceived,

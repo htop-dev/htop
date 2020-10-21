@@ -7,6 +7,7 @@ in the source distribution for its full text.
 
 #include "Platform.h"
 
+#include <devstat.h>
 #include <math.h>
 #include <time.h>
 #include <net/if.h>
@@ -21,6 +22,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "DiskIOMeter.h"
 #include "FreeBSDProcess.h"
 #include "FreeBSDProcessList.h"
 #include "HostnameMeter.h"
@@ -111,6 +113,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &BlankMeter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &DiskIOMeter_class,
    &NetworkIOMeter_class,
    NULL
 };
@@ -240,12 +243,44 @@ char* Platform_getProcessEnv(pid_t pid) {
    return env;
 }
 
-bool Platform_getDiskIO(unsigned long int *bytesRead,
-                        unsigned long int *bytesWrite,
-                        unsigned long int *msTimeSpend) {
-   // TODO
-   *bytesRead = *bytesWrite = *msTimeSpend = 0;
-   return false;
+bool Platform_getDiskIO(DiskIOData* data) {
+
+   if (devstat_checkversion(NULL) < 0)
+      return false;
+
+   struct devinfo info = { 0 };
+   struct statinfo current = { .dinfo = &info };
+
+   // get number of devices
+   if (devstat_getdevs(NULL, &current) < 0)
+      return false;
+
+   int count = current.dinfo->numdevs;
+
+   unsigned long int bytesReadSum = 0, bytesWriteSum = 0, timeSpendSum = 0;
+
+   // get data
+   for (int i = 0; i < count; i++) {
+      uint64_t bytes_read, bytes_write;
+      long double busy_time;
+
+      devstat_compute_statistics(&current.dinfo->devices[i],
+                                 NULL,
+                                 1.0,
+                                 DSM_TOTAL_BYTES_READ, &bytes_read,
+                                 DSM_TOTAL_BYTES_WRITE, &bytes_write,
+                                 DSM_TOTAL_BUSY_TIME, &busy_time,
+                                 DSM_NONE);
+
+      bytesReadSum += bytes_read;
+      bytesWriteSum += bytes_write;
+      timeSpendSum += 1000 * busy_time;
+   }
+
+   data->totalBytesRead = bytesReadSum;
+   data->totalBytesWritten = bytesWriteSum;
+   data->totalMsTimeSpend = timeSpendSum;
+   return true;
 }
 
 bool Platform_getNetworkIO(unsigned long int *bytesReceived,

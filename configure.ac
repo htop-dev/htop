@@ -102,6 +102,9 @@ CFLAGS="$save_cflags"
 # Add -lexecinfo if needed
 AC_SEARCH_LIBS([backtrace], [execinfo])
 
+# Add -ldevstat if needed
+AC_SEARCH_LIBS([devstat_checkversion], [devstat])
+
 # Checks for features and flags.
 # ----------------------------------------------------------------------
 PROCDIR=/proc
