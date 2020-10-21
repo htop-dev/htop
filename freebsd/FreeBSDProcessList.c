@@ -16,19 +16,19 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/types.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
+#include <sys/types.h>
 #include <sys/user.h>
-#include <unistd.h>
 
 #include "CRT.h"
 #include "FreeBSDProcess.h"
 #include "Macros.h"
 #include "ProcessList.h"
+#include "XUtils.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/openzfs_sysctl.h"
-#include "XUtils.h"
 
 
 char jail_errmsg[JAIL_ERRMSGLEN];
@@ -383,7 +383,7 @@ err2:
    }
 }
 
-char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
+static char* FreeBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
       return xStrdup(kproc->ki_comm);
@@ -408,7 +408,7 @@ char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    return comm;
 }
 
-char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
+static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
    int    jid;
    struct iovec jiov[6];
    char*  jname;
@@ -419,7 +419,7 @@ char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
 IGNORE_WCASTQUAL_BEGIN
       *(const void **)&jiov[0].iov_base = "jid";
       jiov[0].iov_len = sizeof("jid");
-      jiov[1].iov_base = &kproc->ki_jid;
+      jiov[1].iov_base = (void*) &kproc->ki_jid;
       jiov[1].iov_len = sizeof(kproc->ki_jid);
       *(const void **)&jiov[2].iov_base = "name";
       jiov[2].iov_len = sizeof("name");
