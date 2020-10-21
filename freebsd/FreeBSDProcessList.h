@@ -8,10 +8,10 @@ in the source distribution for its full text.
 */
 
 #include <kvm.h>
-#include <sys/param.h>
+#include <sys/param.h> // needs to be included before <sys/jail.h> for MAXPATHLEN
 #include <sys/jail.h>
-#include <sys/uio.h>
 #include <sys/resource.h>
+#include <sys/uio.h>
 
 #include "FreeBSDProcess.h"
 #include "Hashtable.h"
@@ -59,10 +59,6 @@ typedef struct FreeBSDProcessList_ {
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
-
-char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
-
-char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
 
