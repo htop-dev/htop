@@ -27,7 +27,7 @@ extern ProcessFieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 
-OpenBSDProcess* OpenBSDProcess_new(Settings* settings);
+Process* OpenBSDProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 

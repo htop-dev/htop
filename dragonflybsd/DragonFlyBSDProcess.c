@@ -69,11 +69,11 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
 
-DragonFlyBSDProcess* DragonFlyBSDProcess_new(Settings* settings) {
+Process* DragonFlyBSDProcess_new(const Settings* settings) {
    DragonFlyBSDProcess* this = xCalloc(1, sizeof(DragonFlyBSDProcess));
    Object_setClass(this, Class(DragonFlyBSDProcess));
    Process_init(&this->super, settings);
-   return this;
+   return &this->super;
 }
 
 void Process_delete(Object* cast) {

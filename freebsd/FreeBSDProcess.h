@@ -39,7 +39,7 @@ extern ProcessFieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 
-FreeBSDProcess* FreeBSDProcess_new(Settings* settings);
+Process* FreeBSDProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 

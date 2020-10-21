@@ -399,7 +399,7 @@ const ProcessClass Process_class = {
    .writeField = Process_writeField,
 };
 
-void Process_init(Process* this, struct Settings_* settings) {
+void Process_init(Process* this, const struct Settings_* settings) {
    this->settings = settings;
    this->tag = false;
    this->showChildren = true;

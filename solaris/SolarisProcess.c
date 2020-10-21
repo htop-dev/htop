@@ -79,11 +79,11 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
 
-SolarisProcess* SolarisProcess_new(Settings* settings) {
+Process* SolarisProcess_new(const Settings* settings) {
    SolarisProcess* this = xCalloc(1, sizeof(SolarisProcess));
    Object_setClass(this, Class(SolarisProcess));
    Process_init(&this->super, settings);
-   return this;
+   return &this->super;
 }
 
 void Process_delete(Object* cast) {
