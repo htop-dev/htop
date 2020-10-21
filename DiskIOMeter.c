@@ -44,23 +44,24 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, int len) {
    if (passedTimeInMs > 500) {
       cached_last_update = timeInMilliSeconds;
 
-      unsigned long int bytesRead, bytesWrite, msTimeSpend;
+      DiskIOData data;
 
-      hasData = Platform_getDiskIO(&bytesRead, &bytesWrite, &msTimeSpend);
+      hasData = Platform_getDiskIO(&data);
       if (!hasData) {
          this->values[0] = 0;
          xSnprintf(buffer, len, "no data");
          return;
       }
 
-      cached_read_diff = (bytesRead - cached_read_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
-      cached_read_total = bytesRead;
+      cached_read_diff = (data.totalBytesRead - cached_read_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
+      cached_read_total = data.totalBytesRead;
 
-      cached_write_diff = (bytesWrite - cached_write_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
-      cached_write_total = bytesWrite;
+      cached_write_diff = (data.totalBytesWritten - cached_write_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
+      cached_write_total = data.totalBytesWritten;
 
-      cached_utilisation_diff = 100 * (double)(msTimeSpend - cached_msTimeSpend_total) / passedTimeInMs;
-      cached_msTimeSpend_total = msTimeSpend;
+      cached_utilisation_diff = 100 * (double)(data.totalMsTimeSpend - cached_msTimeSpend_total) / passedTimeInMs;
+
+      cached_msTimeSpend_total = data.totalMsTimeSpend;
    }
 
    this->values[0] = cached_utilisation_diff;

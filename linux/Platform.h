@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Action.h"
+#include "DiskIOMeter.h"
 #include "Meter.h"
 #include "Process.h"
 #include "SignalsPanel.h"
@@ -46,9 +47,7 @@ char* Platform_getProcessEnv(pid_t pid);
 
 void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred);
 
-bool Platform_getDiskIO(unsigned long int *bytesRead,
-                        unsigned long int *bytesWrite,
-                        unsigned long int *msTimeSpend);
+bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(unsigned long int *bytesReceived,
                            unsigned long int *packetsReceived,
