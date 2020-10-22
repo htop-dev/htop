@@ -20,7 +20,7 @@ in the source distribution for its full text.
 UsersTable* UsersTable_new() {
    UsersTable* this;
    this = xMalloc(sizeof(UsersTable));
-   this->users = Hashtable_new(20, true);
+   this->users = Hashtable_new(10, true);
    return this;
 }
 
