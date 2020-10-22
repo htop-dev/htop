@@ -16,13 +16,13 @@ typedef void(*Hashtable_PairFunction)(hkey_t key, void* value, void* userdata);
 
 typedef struct HashtableItem_ {
    hkey_t key;
+   unsigned int probe;
    void* value;
-   struct HashtableItem_* next;
 } HashtableItem;
 
 typedef struct Hashtable_ {
    unsigned int size;
-   HashtableItem** buckets;
+   HashtableItem* buckets;
    unsigned int items;
    bool owner;
 } Hashtable;
@@ -36,6 +36,8 @@ unsigned int Hashtable_count(const Hashtable* this);
 Hashtable* Hashtable_new(unsigned int size, bool owner);
 
 void Hashtable_delete(Hashtable* this);
+
+void Hashtable_setSize(Hashtable* this, unsigned int size);
 
 void Hashtable_put(Hashtable* this, hkey_t key, void* value);
 
