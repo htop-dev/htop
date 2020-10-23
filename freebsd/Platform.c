@@ -32,6 +32,7 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 #include <vm/vm_param.h>
 #include <time.h>
+#include <limits.h>
 #include <math.h>
 
 
@@ -220,9 +221,30 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
-   (void) pid;
-   // TODO
-   return NULL;
+   int mib[4];
+   char *env = NULL;
+
+   mib[0] = CTL_KERN;
+   mib[1] = KERN_PROC;
+   mib[2] = KERN_PROC_ENV;
+   mib[3] = pid;
+
+   size_t capacity = ARG_MAX;
+   env = xMalloc(capacity);
+
+   int err = sysctl(mib, 4, env, &capacity, NULL, 0);
+   if (err) {
+      free(env);
+      return NULL;
+   }
+
+   if (env[capacity-1] || env[capacity-2]) {
+      env = xRealloc(env, capacity+2);
+      env[capacity] = 0;
+      env[capacity+1] = 0;
+   }
+
+   return env;
 }
 
 void Platform_getDiskIO(unsigned long int *bytesRead, unsigned long int *bytesWrite, unsigned long int *msTimeSpend) {
