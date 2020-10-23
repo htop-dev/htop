@@ -4,7 +4,7 @@
 #include "Meter.h"
 #include "Platform.h"
 
-static int ZramMeter_attributes[] = {
+const static int ZramMeter_attributes[] = {
    ZRAM
 };
 

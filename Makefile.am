@@ -127,9 +127,9 @@ linux_platform_headers = \
 	linux/LinuxProcessList.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
+	linux/SELinuxMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
-	linux/SELinuxMeter.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h
