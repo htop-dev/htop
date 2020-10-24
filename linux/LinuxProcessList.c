@@ -1160,7 +1160,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    fclose(file);
 }
 
-static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this){
+static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
    unsigned long long int totalZram = 0;
    unsigned long long int usedZramComp = 0;
    unsigned long long int usedZramOrig = 0;
@@ -1169,17 +1169,17 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this){
    char disksize[34];
 
    unsigned int i = 0;
-   do{
-      snprintf(mm_stat,sizeof(mm_stat),"/sys/block/zram%u/mm_stat",i);
-      snprintf(disksize,sizeof(disksize),"/sys/block/zram%u/disksize",i);
+   do {
+      xSnprintf(mm_stat,sizeof(mm_stat),"/sys/block/zram%u/mm_stat",i);
+      xSnprintf(disksize,sizeof(disksize),"/sys/block/zram%u/disksize",i);
       i++;
       FILE* disksize_file = fopen(disksize,"r");
       FILE* mm_stat_file = fopen(mm_stat,"r");
-      if(disksize_file == NULL || mm_stat_file == NULL){
-         if(disksize_file){
+      if(disksize_file == NULL || mm_stat_file == NULL) {
+         if(disksize_file) {
             fclose(disksize_file);
          }
-         if(mm_stat_file){
+         if(mm_stat_file) {
             fclose(mm_stat_file);
          }
          break;
@@ -1188,23 +1188,23 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this){
       unsigned long long int orig_data_size = 0;
       unsigned long long int compr_data_size = 0;
 
-      if(!fscanf(disksize_file,"%llu\n",&size) || !fscanf(mm_stat_file,"    %llu       %llu",&orig_data_size,&compr_data_size)){
+      if(!fscanf(disksize_file,"%llu\n",&size) || !fscanf(mm_stat_file,"    %llu       %llu",&orig_data_size,&compr_data_size)) {
          fclose(disksize_file);
          fclose(mm_stat_file);
          break;
       }
 
-      totalZram += size/1024;
-      usedZramComp += compr_data_size/1024;
-      usedZramOrig += orig_data_size/1024;
+      totalZram += size;
+      usedZramComp += compr_data_size;
+      usedZramOrig += orig_data_size;
 
       fclose(disksize_file);
       fclose(mm_stat_file);
-   }while(1);
+   } while(1);
 
-   this->zram.totalZram = totalZram;
-   this->zram.usedZramComp = usedZramComp;
-   this->zram.usedZramOrig = usedZramOrig;
+   this->zram.totalZram = totalZram / 1024;
+   this->zram.usedZramComp = usedZramComp / 1024;
+   this->zram.usedZramOrig = usedZramOrig / 1024;
 }
 
 static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {

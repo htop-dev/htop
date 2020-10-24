@@ -16,18 +16,18 @@ static void ZramMeter_updateValues(Meter* this, char* buffer, int size) {
 
    buffer += written;
    size -= written;
-   if(size <= 0){
+   if(size <= 0) {
       return;
    }
    *buffer++ = '(';
    size--;
-   if(size <= 0){
+   if(size <= 0) {
       return;
    }
    written = Meter_humanUnit(buffer,this->values[1],size);
    buffer += written;
    size -= written;
-   if(size <= 0){
+   if(size <= 0) {
       return;
    }
    *buffer++ = ')';

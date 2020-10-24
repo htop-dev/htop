@@ -251,7 +251,7 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-void Platform_setZramValues(Meter* this){
+void Platform_setZramValues(Meter* this) {
    const LinuxProcessList* lpl = (LinuxProcessList*) this->pl;
    this->total = lpl->zram.totalZram;
    this->values[0] = lpl->zram.usedZramComp;
