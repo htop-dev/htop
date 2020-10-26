@@ -221,16 +221,10 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
-   int mib[4];
-   char *env = NULL;
-
-   mib[0] = CTL_KERN;
-   mib[1] = KERN_PROC;
-   mib[2] = KERN_PROC_ENV;
-   mib[3] = pid;
+   int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ENV, pid };
 
    size_t capacity = ARG_MAX;
-   env = xMalloc(capacity);
+   char* env = xMalloc(capacity);
 
    int err = sysctl(mib, 4, env, &capacity, NULL, 0);
    if (err) {
