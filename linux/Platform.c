@@ -263,24 +263,35 @@ char* Platform_getProcessEnv(pid_t pid) {
    char procname[128];
    xSnprintf(procname, sizeof(procname), PROCDIR "/%d/environ", pid);
    FILE* fd = fopen(procname, "r");
+   if(!fd)
+      return NULL;
+
    char *env = NULL;
-   if (fd) {
-      size_t capacity = 4096, size = 0, bytes;
-      env = xMalloc(capacity);
-      while ((bytes = fread(env+size, 1, capacity-size, fd)) > 0) {
-         size += bytes;
-         capacity *= 2;
-         env = xRealloc(env, capacity);
-      }
-      fclose(fd);
-      if (size < 2 || env[size-1] || env[size-2]) {
-         if (size + 2 < capacity) {
-            env = xRealloc(env, capacity+2);
-         }
-         env[size] = 0;
-         env[size+1] = 0;
-      }
+
+   size_t capacity = 0;
+   size_t size = 0;
+   ssize_t bytes = 0;
+
+   do {
+      size += bytes;
+      capacity += 4096;
+      env = xRealloc(env, capacity);
+   } while ((bytes = fread(env + size, 1, capacity - size, fd)) > 0);
+
+   fclose(fd);
+
+   if (bytes < 0) {
+      free(env);
+      return NULL;
    }
+
+   size += bytes;
+
+   env = xRealloc(env, size + 2);
+
+   env[size] = '\0';
+   env[size+1] = '\0';
+
    return env;
 }
 
