@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <sys/user.h>
 
+#include "Compat.h"
 #include "CRT.h"
 #include "FreeBSDProcess.h"
 #include "Macros.h"
@@ -338,7 +339,7 @@ static void FreeBSDProcessList_scanTTYs(ProcessList* pl) {
             continue;
 
          struct stat info;
-         if (fstatat(dirFd, entry->d_name, &info, 0) < 0)
+         if (Compat_fstatat(dirFd, "/dev", entry->d_name, &info, 0) < 0)
             continue;
 
          if (!S_ISCHR(info.st_mode))
@@ -365,7 +366,7 @@ err1:
       const struct dirent* entry;
       while ((entry = readdir(dirPtr))) {
          struct stat info;
-         if (fstatat(dirFd, entry->d_name, &info, 0) < 0)
+         if (Compat_fstatat(dirFd, "/dev/pts", entry->d_name, &info, 0) < 0)
             continue;
 
          if (!S_ISCHR(info.st_mode))

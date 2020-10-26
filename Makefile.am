@@ -26,6 +26,7 @@ myhtopsources = \
 	ColorsPanel.c \
 	ColumnsPanel.c \
 	CommandScreen.c \
+	Compat.c \
 	CPUMeter.c \
 	CRT.c \
 	DateMeter.c \
@@ -79,6 +80,7 @@ myhtopheaders = \
 	ColorsPanel.h \
 	ColumnsPanel.h \
 	CommandScreen.h \
+	Compat.h \
 	DateMeter.h \
 	DateTimeMeter.h \
 	DiskIOMeter.h \
