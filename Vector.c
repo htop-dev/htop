@@ -264,9 +264,7 @@ void Vector_set(Vector* this, int idx, void* data_) {
       if (this->owner) {
          Object* removed = this->array[idx];
          assert (removed != NULL);
-         if (this->owner) {
-            Object_delete(removed);
-         }
+         Object_delete(removed);
       }
    }
    this->array[idx] = data;
