@@ -28,7 +28,7 @@ enum {
 
 typedef int IOPriority;
 
-#define IOPriority_tuple(class_, data_) (((class_) << IOPRIO_CLASS_SHIFT) | data_)
+#define IOPriority_tuple(class_, data_) (((class_) << IOPRIO_CLASS_SHIFT) | (data_))
 
 #define IOPriority_error 0xffffffff
 

@@ -1172,7 +1172,7 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    char buffer[128];
    while (fgets(buffer, 128, file)) {
       #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { break; } } while(0)
-      #define tryReadFlag(label, variable, flag) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { flag = 1; break; } else { flag = 0; } } while(0)
+      #define tryReadFlag(label, variable, flag) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { (flag) = 1; break; } else { (flag) = 0; } } while(0)
       switch (buffer[0]) {
       case 'c':
          tryRead("c_max", &lpl->zfs.max);
@@ -1259,7 +1259,7 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       // Since we do a subtraction (usertime - guest) and cputime64_to_clock_t()
       // used in /proc/stat rounds down numbers, it can lead to a case where the
       // integer overflow.
-      #define WRAP_SUBTRACT(a,b) (a > b) ? a - b : 0
+      #define WRAP_SUBTRACT(a,b) (((a) > (b)) ? (a) - (b) : 0)
       cpuData->userPeriod = WRAP_SUBTRACT(usertime, cpuData->userTime);
       cpuData->nicePeriod = WRAP_SUBTRACT(nicetime, cpuData->niceTime);
       cpuData->systemPeriod = WRAP_SUBTRACT(systemtime, cpuData->systemTime);
