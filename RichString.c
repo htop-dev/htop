@@ -36,7 +36,14 @@ static void RichString_extendLen(RichString* this, int len) {
    this->chlen = len;
 }
 
-#define RichString_setLen(this, len) do{ if(len < RICHSTRING_MAXLEN && this->chlen < RICHSTRING_MAXLEN) { RichString_setChar(this,len,0); this->chlen=len; } else RichString_extendLen(this,len); }while(0)
+static void RichString_setLen(RichString* this, int len) {
+   if (len < RICHSTRING_MAXLEN && this->chlen < RICHSTRING_MAXLEN) {
+      RichString_setChar(this, len, 0);
+      this->chlen = len;
+   } else {
+      RichString_extendLen(this, len);
+   }
+}
 
 #ifdef HAVE_LIBNCURSESW
 
