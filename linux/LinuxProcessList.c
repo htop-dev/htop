@@ -482,7 +482,6 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    char buffer[CRT_pageSize];// 4k
    char *start,*end;
    ssize_t nread=0;
-   int tmp=0;
    if(haveSmapsRollup) {// only available in Linux 4.14+
       xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps_rollup", dirname, name);
    } else {
@@ -500,6 +499,7 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
         start = (char *)&buffer;
         end   = start + nread;
         do{//parse 4k block
+            int tmp;
 
             if( (tmp = (end - start)) > 0 &&
                 (start = memmem(start,tmp,"\nPss:",5)) != NULL )
