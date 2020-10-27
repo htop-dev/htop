@@ -380,15 +380,15 @@ IGNORE_WCASTQUAL_END
    return jname;
 }
 
-void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
-   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
-   const Settings* settings = this->settings;
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
+   FreeBSDProcessList* fpl = (FreeBSDProcessList*) super;
+   const Settings* settings = super->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
    openzfs_sysctl_updateArcStats(&fpl->zfs);
-   FreeBSDProcessList_scanMemoryInfo(this);
-   FreeBSDProcessList_scanCPUTime(this);
+   FreeBSDProcessList_scanMemoryInfo(super);
+   FreeBSDProcessList_scanCPUTime(super);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
    if (pauseProcessUpdate)
@@ -401,7 +401,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
       // TODO: bool isIdleProcess = false;
-      Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
+      Process* proc = ProcessList_getProcess(super, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(fp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
@@ -422,8 +422,8 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
          proc->st_uid = kproc->ki_uid;
          proc->starttime_ctime = kproc->ki_start.tv_sec;
          Process_fillStarttimeBuffer(proc);
-         proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
-         ProcessList_add((ProcessList*)this, proc);
+         proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
+         ProcessList_add(super, proc);
          proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
@@ -440,7 +440,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
          if(proc->st_uid != kproc->ki_uid) {
             // some processes change users (eg. to lower privs)
             proc->st_uid = kproc->ki_uid;
-            proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
+            proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
             free(proc->comm);
@@ -455,7 +455,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(this->totalMem);
+      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(super->totalMem);
 
       /*
        * TODO
@@ -491,12 +491,12 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       }
 
       if (Process_isKernelThread(fp)) {
-         this->kernelThreads++;
+         super->kernelThreads++;
       }
 
-      this->totalTasks++;
+      super->totalTasks++;
       if (proc->state == 'R')
-         this->runningTasks++;
+         super->runningTasks++;
       proc->updated = true;
    }
 }

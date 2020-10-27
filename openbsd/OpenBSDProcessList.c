@@ -340,10 +340,10 @@ static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
    kernelCPUTimesToHtop(avg, this->cpus);
 }
 
-void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
-   OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
+   OpenBSDProcessList* opl = (OpenBSDProcessList*) super;
 
-   OpenBSDProcessList_scanMemoryInfo(this);
+   OpenBSDProcessList_scanMemoryInfo(super);
    OpenBSDProcessList_scanCPUTime(opl);
 
    // in pause mode only gather global data for meters (CPU/memory/...)

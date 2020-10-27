@@ -360,14 +360,14 @@ char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int ja
    return jname;
 }
 
-void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
-   DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
-   const Settings* settings = this->settings;
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
+   DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) super;
+   const Settings* settings = super->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
-   DragonFlyBSDProcessList_scanMemoryInfo(this);
-   DragonFlyBSDProcessList_scanCPUTime(this);
+   DragonFlyBSDProcessList_scanMemoryInfo(super);
+   DragonFlyBSDProcessList_scanCPUTime(super);
    DragonFlyBSDProcessList_scanJails(dfpl);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
@@ -385,7 +385,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       bool ATTR_UNUSED isIdleProcess = false;
 
       // note: dragonflybsd kernel processes all have the same pid, so we misuse the kernel thread address to give them a unique identifier
-      Process* proc = ProcessList_getProcess(this, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, DragonFlyBSDProcess_new);
+      Process* proc = ProcessList_getProcess(super, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, DragonFlyBSDProcess_new);
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(dfp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
@@ -410,9 +410,9 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
          proc->st_uid = kproc->kp_uid;		// user ID
          proc->processor = kproc->kp_lwp.kl_origcpu;
          proc->starttime_ctime = kproc->kp_start.tv_sec;
-         proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
+         proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
 
-         ProcessList_add((ProcessList*)this, proc);
+         ProcessList_add(super, proc);
          proc->comm = DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->basenameOffset);
          dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
       } else {
@@ -427,7 +427,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
          }
          if(proc->st_uid != kproc->kp_uid) {	// some processes change users (eg. to lower privs)
             proc->st_uid = kproc->kp_uid;
-            proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
+            proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
             free(proc->comm);
@@ -441,7 +441,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       proc->time = (kproc->kp_swtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(this->totalMem);
+      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(super->totalMem);
 
       if (proc->percent_cpu > 0.1) {
          // system idle process should own all CPU time left regardless of CPU count
@@ -523,12 +523,12 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       }
 
       if (Process_isKernelThread(dfp)) {
-         this->kernelThreads++;
+         super->kernelThreads++;
       }
 
-      this->totalTasks++;
+      super->totalTasks++;
       if (proc->state == 'R')
-         this->runningTasks++;
+         super->runningTasks++;
       proc->updated = true;
    }
 }

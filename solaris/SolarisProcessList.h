@@ -60,6 +60,6 @@ void ProcessList_delete(ProcessList* pl);
 
 int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr);
 
-void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate);
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
 
 #endif
