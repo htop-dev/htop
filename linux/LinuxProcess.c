@@ -167,7 +167,12 @@ effort class. The priority within the best effort class will  be
 dynamically  derived  from  the  cpu  nice level of the process:
 io_priority = (cpu_nice + 20) / 5. -- From ionice(1) man page
 */
-#define LinuxProcess_effectiveIOPriority(p_) (IOPriority_class(p_->ioPriority) == IOPRIO_CLASS_NONE ? IOPriority_tuple(IOPRIO_CLASS_BE, (p_->super.nice + 20) / 5) : p_->ioPriority)
+static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
+   if (IOPriority_class(this->ioPriority) == IOPRIO_CLASS_NONE)
+      return IOPriority_tuple(IOPRIO_CLASS_BE, (this->super.nice + 20) / 5);
+
+   return this->ioPriority;
+}
 
 IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this) {
    IOPriority ioprio = 0;
