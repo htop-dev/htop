@@ -479,54 +479,43 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    //http://elixir.free-electrons.com/linux/v4.10/source/fs/proc/task_mmu.c#L719
    //kernel will return data in chunks of size PAGE_SIZE or less.
 
-   char buffer[CRT_pageSize];// 4k
-   ssize_t nread=0;
+   char buffer[256];
+
    if(haveSmapsRollup) {// only available in Linux 4.14+
       xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps_rollup", dirname, name);
    } else {
       xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps", dirname, name);
    }
-   int fd = open(buffer, O_RDONLY);
-   if (fd == -1)
+
+   FILE* f = fopen(buffer, "r");
+   if (!f)
       return false;
 
    process->m_pss   = 0;
    process->m_swap  = 0;
    process->m_psswp = 0;
 
-   while ( ( nread =  read(fd,buffer, sizeof(buffer)) ) > 0 ){
-        char* start = buffer;
-        char* end   = start + nread;
-        do{//parse 4k block
-            int tmp;
+   while (fgets(buffer, sizeof(buffer), f)) {
+      if(!strchr(buffer, '\n')) {
+         // Partial line, skip to end of this line
+         while(fgets(buffer, sizeof(buffer), f)) {
+            if(strchr(buffer, '\n')) {
+               break;
+            }
+         }
+         continue;
+      }
 
-            if( (tmp = (end - start)) > 0 &&
-                (start = memmem(start,tmp,"\nPss:",5)) != NULL )
-            {
-              process->m_pss += strtol(start+5, &start, 10);
-              start += 3;//now we must be at the end of line "Pss:                   0 kB"
-            }else
-              break; //read next 4k block
+      if (String_startsWith(buffer, "Pss:")) {
+         process->m_pss += strtol(buffer + 4, NULL, 10);
+      } else if (String_startsWith(buffer, "Swap:")) {
+         process->m_swap += strtol(buffer + 5, NULL, 10);
+      } else if (String_startsWith(buffer, "SwapPss:")) {
+         process->m_psswp += strtol(buffer + 8, NULL, 10);
+      }
+   }
 
-            if( (tmp = (end - start)) > 0 &&
-                (start = memmem(start,tmp,"\nSwap:",6)) != NULL )
-            {
-              process->m_swap += strtol(start+6, &start, 10);
-              start += 3;
-            }else
-              break;
-
-            if( (tmp = (end - start)) > 0 &&
-                (start = memmem(start,tmp,"\nSwapPss:",9)) != NULL )
-            {
-              process->m_psswp += strtol(start+9, &start, 10);
-              start += 3;
-            }else
-              break;
-
-        }while(1);
-   }//while read
-   close(fd);
+   fclose(f);
    return true;
 }
 
