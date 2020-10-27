@@ -93,20 +93,20 @@ static void Action_runSetup(State* st) {
 
 static bool changePriority(MainPanel* panel, int delta) {
    bool anyTagged;
-   bool ok = MainPanel_foreachProcess(panel, (MainPanel_ForeachProcessFn) Process_changePriorityBy, (Arg){ .i = delta }, &anyTagged);
+   bool ok = MainPanel_foreachProcess(panel, Process_changePriorityBy, (Arg){ .i = delta }, &anyTagged);
    if (!ok)
       beep();
    return anyTagged;
 }
 
 static void addUserToVector(int key, void* userCast, void* panelCast) {
-   char* user = (char*) userCast;
-   Panel* panel = (Panel*) panelCast;
+   const char* user = userCast;
+   Panel* panel = panelCast;
    Panel_add(panel, (Object*) ListItem_new(user, key));
 }
 
 bool Action_setUserOnly(const char* userName, uid_t* userId) {
-   struct passwd* user = getpwnam(userName);
+   const struct passwd* user = getpwnam(userName);
    if (user) {
       *userId = user->pw_uid;
       return true;
@@ -301,7 +301,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    void* set = Action_pickFromVector(st, affinityPanel, width, true);
    if (set) {
       Affinity* affinity2 = AffinityPanel_getAffinity(affinityPanel, st->pl);
-      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) Affinity_set, (Arg){ .v = affinity2 }, NULL);
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, Affinity_set, (Arg){ .v = affinity2 }, NULL);
       if (!ok) beep();
       Affinity_delete(affinity2);
    }
@@ -318,7 +318,7 @@ static Htop_Reaction actionKill(State* st) {
          Panel_setHeader(st->panel, "Sending...");
          Panel_draw(st->panel, true);
          refresh();
-         MainPanel_foreachProcess((MainPanel*)st->panel, (MainPanel_ForeachProcessFn) Process_sendSignal, (Arg){ .i = sgn->key }, NULL);
+         MainPanel_foreachProcess((MainPanel*)st->panel, Process_sendSignal, (Arg){ .i = sgn->key }, NULL);
          napms(500);
       }
    }
