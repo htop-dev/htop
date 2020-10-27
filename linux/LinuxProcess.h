@@ -157,7 +157,9 @@ typedef struct LinuxProcess_ {
 
 #define Process_isKernelThread(_process) (((const LinuxProcess*)(_process))->isKernelThread)
 
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
+static inline bool Process_isUserlandThread(const Process* this) {
+   return this->pid != this->tgid;
+}
 
 extern long long btime;
 
