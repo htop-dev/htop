@@ -451,7 +451,6 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
       // from FreeBSD source /src/usr.bin/top/machine.c
       proc->m_size = kproc->ki_size / 1024 / pageSizeKb;
       proc->m_resident = kproc->ki_rssize;
-      proc->percent_mem = (proc->m_resident * pageSizeKb) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 

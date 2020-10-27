@@ -437,7 +437,6 @@ void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate) {
 
       proc->m_size = kproc->kp_vm_map_size / 1024 / pageSizeKb;
       proc->m_resident = kproc->kp_vm_rssize;
-      proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_swtime + 5000) / 10000;
 
