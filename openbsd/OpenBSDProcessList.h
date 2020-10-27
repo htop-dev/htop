@@ -45,6 +45,6 @@ void ProcessList_delete(ProcessList* this);
 
 char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
 
-void ProcessList_goThroughEntries(ProcessList* this, bool pauseProcessUpdate);
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
 
 #endif
