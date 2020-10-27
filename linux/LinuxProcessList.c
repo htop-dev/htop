@@ -480,7 +480,6 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    //kernel will return data in chunks of size PAGE_SIZE or less.
 
    char buffer[CRT_pageSize];// 4k
-   char *start,*end;
    ssize_t nread=0;
    if(haveSmapsRollup) {// only available in Linux 4.14+
       xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps_rollup", dirname, name);
@@ -496,8 +495,8 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    process->m_psswp = 0;
 
    while ( ( nread =  read(fd,buffer, sizeof(buffer)) ) > 0 ){
-        start = (char *)&buffer;
-        end   = start + nread;
+        char* start = buffer;
+        char* end   = start + nread;
         do{//parse 4k block
             int tmp;
 

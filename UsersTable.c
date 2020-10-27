@@ -30,9 +30,9 @@ void UsersTable_delete(UsersTable* this) {
 }
 
 char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
-   char* name = (char*) (Hashtable_get(this->users, uid));
+   char* name = Hashtable_get(this->users, uid);
    if (name == NULL) {
-      struct passwd* userData = getpwuid(uid);
+      const struct passwd* userData = getpwuid(uid);
       if (userData != NULL) {
          name = xStrdup(userData->pw_name);
          Hashtable_put(this->users, uid, name);

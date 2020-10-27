@@ -179,12 +179,12 @@ IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this) {
    return ioprio;
 }
 
-bool LinuxProcess_setIOPriority(LinuxProcess* this, Arg ioprio) {
+bool LinuxProcess_setIOPriority(Process* this, Arg ioprio) {
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
 #ifdef SYS_ioprio_set
-   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->super.pid, ioprio.i);
+   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->pid, ioprio.i);
 #endif
-   return (LinuxProcess_updateIOPriority(this) == ioprio.i);
+   return (LinuxProcess_updateIOPriority((LinuxProcess*)this) == ioprio.i);
 }
 
 #ifdef HAVE_DELAYACCT
