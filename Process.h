@@ -129,9 +129,13 @@ typedef struct ProcessClass_ {
 
 #define As_Process(this_)              ((const ProcessClass*)((this_)->super.klass))
 
-#define Process_getParentPid(process_)    (process_->tgid == process_->pid ? process_->ppid : process_->tgid)
+static inline pid_t Process_getParentPid(const Process* this) {
+   return this->tgid == this->pid ? this->ppid : this->tgid;
+}
 
-#define Process_isChildOf(process_, pid_) (process_->tgid == pid_ || (process_->tgid == process_->pid && process_->ppid == pid_))
+static inline bool Process_isChildOf(const Process* this, pid_t pid) {
+   return pid == Process_getParentPid(this);
+}
 
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 
