@@ -15,7 +15,7 @@ in the source distribution for its full text.
 #define RichString_size(this) ((this)->chlen)
 #define RichString_sizeVal(this) ((this).chlen)
 
-#define RichString_begin(this) RichString (this); memset(&(this), 0, sizeof(RichString)); (this).chptr = (this).chstr;
+#define RichString_begin(this) RichString (this); RichString_beginAllocated(this);
 #define RichString_beginAllocated(this) memset(&(this), 0, sizeof(RichString)); (this).chptr = (this).chstr;
 #define RichString_end(this) RichString_prune(&(this));
 
