@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include <sys/wait.h>
 
 #include "CRT.h"
+#include "Compat.h"
 #include "FunctionBar.h"
 #include "IncSet.h"
 #include "ProcessList.h"
@@ -104,26 +105,11 @@ static char *ProcessLocksScreen_getInodeFilename(pid_t pid, ino_t inode) {
       if (!strtoull(de->d_name, (char **) NULL, 10))
          continue;
 
-#if !defined(HAVE_FSTATAT) || !defined(HAVE_READLINKAT)
-      char filepath[PATH_MAX + 1];
-      xSnprintf(filepath, sizeof(filepath), "%s/%s", path, de->d_name);
-#endif
-
-#ifdef HAVE_FSTATAT
-      if (!fstatat(fd, de->d_name, &sb, 0) && inode != sb.st_ino)
+      if (!Compat_fstatat(fd, path, de->d_name, &sb, 0) && inode != sb.st_ino)
          continue;
-#else
-      if (!stat(filepath, &sb)) && inode != sb.st_ino)
-         continue;
-#endif
 
-#ifdef HAVE_READLINKAT
-      if ((len = readlinkat(fd, de->d_name, sym, sizeof(sym) - 1)) < 1)
+      if ((len = Compat_readlinkat(fd, path, de->d_name, sym, sizeof(sym) - 1)) < 1)
          goto out;
-#else
-      if ((len = readlink(filepath, sym, sizeof(sym) - 1)) < 1)
-         goto out;
-#endif
 
       sym[len] = '\0';
 
