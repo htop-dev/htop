@@ -42,7 +42,7 @@ typedef struct MeterClass_ {
    const char* const uiName;
    const char* const caption;
    const char* const description;
-   const char maxItems;
+   const uint8_t maxItems;
 } MeterClass;
 
 #define As_Meter(this_)                ((const MeterClass*)((this_)->super.klass))
@@ -75,7 +75,7 @@ struct Meter_ {
    GraphData* drawData;
    int h;
    const ProcessList* pl;
-   char curItems;
+   uint8_t curItems;
    double* values;
    double total;
    void* meterData;

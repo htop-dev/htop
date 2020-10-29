@@ -195,8 +195,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
-   int items = this->curItems;
-   for (int i = 0; i < items; i++) {
+   for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
       value = CLAMP(value, 0.0, this->total);
       if (value > 0) {
@@ -220,7 +219,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // ...then print the buffer.
    offset = 0;
-   for (int i = 0; i < items; i++) {
+   for (uint8_t i = 0; i < this->curItems; i++) {
       attrset(CRT_colors[Meter_attributes(this)[i]]);
       mvaddnstr(y, x + offset, bar + offset, blockSizes[i]);
       offset += blockSizes[i];
@@ -296,8 +295,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       Meter_updateValues(this, buffer, nValues - 1);
 
       double value = 0.0;
-      int items = this->curItems;
-      for (int i = 0; i < items; i++)
+      for (uint8_t i = 0; i < this->curItems; i++)
          value += this->values[i];
       value /= this->total;
       data->values[nValues - 1] = value;
