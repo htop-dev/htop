@@ -51,8 +51,7 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
    int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
       xSnprintf(buffer, size, "absent");
-      int items = this->curItems;
-      for (int i = 0; i < items; i++)
+      for (uint8_t i = 0; i < this->curItems; i++)
          this->values[i] = 0;
       return;
    }
