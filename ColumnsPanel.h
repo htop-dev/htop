@@ -23,8 +23,6 @@ extern const PanelClass ColumnsPanel_class;
 
 ColumnsPanel* ColumnsPanel_new(Settings* settings);
 
-int ColumnsPanel_fieldNameToIndex(const char* name);
-
 void ColumnsPanel_update(Panel* super);
 
 #endif
