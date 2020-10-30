@@ -135,15 +135,6 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
    return this;
 }
 
-int ColumnsPanel_fieldNameToIndex(const char* name) {
-   for (int j = 1; j <= Platform_numberOfFields; j++) {
-      if (String_eq(name, Process_fields[j].name)) {
-         return j;
-      }
-   }
-   return -1;
-}
-
 void ColumnsPanel_update(Panel* super) {
    ColumnsPanel* this = (ColumnsPanel*) super;
    int size = Panel_size(super);
