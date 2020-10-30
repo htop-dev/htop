@@ -257,13 +257,18 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    bool coloring = this->settings->highlightMegabytes;
 
    switch (field) {
-   case PERCENT_CPU: {
-      if (this->percent_cpu > 999.9) {
-         xSnprintf(buffer, n, "%4u ", (unsigned int)this->percent_cpu);
-      } else if (this->percent_cpu > 99.9) {
-         xSnprintf(buffer, n, "%3u. ", (unsigned int)this->percent_cpu);
+   case PERCENT_CPU:
+   case PERCENT_NORM_CPU: {
+      float cpuPercentage = this->percent_cpu;
+      if (field == PERCENT_NORM_CPU) {
+         cpuPercentage /= this->processList->cpuCount;
+      }
+      if (cpuPercentage > 999.9) {
+         xSnprintf(buffer, n, "%4u ", (unsigned int)cpuPercentage);
+      } else if (cpuPercentage > 99.9) {
+         xSnprintf(buffer, n, "%3u. ", (unsigned int)cpuPercentage);
       } else {
-         xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
+         xSnprintf(buffer, n, "%4.1f ", cpuPercentage);
       }
       break;
    }
@@ -492,6 +497,7 @@ long Process_compare(const void* v1, const void* v2) {
 
    switch (settings->sortKey) {
    case PERCENT_CPU:
+   case PERCENT_NORM_CPU:
       return SPACESHIP_NUMBER(p2->percent_cpu, p1->percent_cpu);
    case PERCENT_MEM:
       return SPACESHIP_NUMBER(p2->m_resident, p1->m_resident);

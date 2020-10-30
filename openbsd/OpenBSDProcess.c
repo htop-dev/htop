@@ -142,6 +142,12 @@ ProcessFieldData Process_fields[] = {
       .description = "Percentage of the CPU time the process used in the last sampling",
       .flags = 0,
    },
+   [PERCENT_NORM_CPU] = {
+      .name = "PERCENT_NORM_CPU",
+      .title = "NCPU%",
+      .description = "Normalized percentage of the CPU time the process used in the last sampling (normalized by cpu count)",
+      .flags = 0,
+   },
    [PERCENT_MEM] = {
       .name = "PERCENT_MEM",
       .title = "MEM% ",
