@@ -131,12 +131,11 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             }
             flags.sortKey = -1;
             for (int j = 1; j <= Platform_numberOfFields; j++) {
-                printf("%s %d\n", Process_fields[j].name, j);
-                if(Process_fields[j].name == NULL) continue;
-                if (String_eq(optarg, Process_fields[j].name)) {
-                    flags.sortKey = j;
-                    break;
-                }
+               if(Process_fields[j].name == NULL) continue;
+               if (String_eq(optarg, Process_fields[j].name)) {
+                  flags.sortKey = j;
+                  break;
+               }
             }
             if (flags.sortKey == -1) {
                fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
