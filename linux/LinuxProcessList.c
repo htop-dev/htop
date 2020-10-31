@@ -165,7 +165,7 @@ static int LinuxProcessList_computeCPUcount(void) {
 
    int cpus = 0;
    char buffer[PROC_LINE_LENGTH + 1];
-   while(fgets(buffer, sizeof(buffer), file)) {
+   while (fgets(buffer, sizeof(buffer), file)) {
       if (String_startsWith(buffer, "cpu"))
          cpus++;
    }
@@ -221,7 +221,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       if (statfile == NULL)
          CRT_fatalError("Cannot open " PROCSTATFILE);
 
-      while(true) {
+      while (true) {
          char buffer[PROC_LINE_LENGTH + 1];
          if (fgets(buffer, sizeof(buffer), statfile) == NULL) {
             CRT_fatalError("No btime in " PROCSTATFILE);
@@ -498,7 +498,7 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    while (fgets(buffer, sizeof(buffer), f)) {
       if(!strchr(buffer, '\n')) {
          // Partial line, skip to end of this line
-         while(fgets(buffer, sizeof(buffer), f)) {
+         while (fgets(buffer, sizeof(buffer), f)) {
             if(strchr(buffer, '\n')) {
                break;
             }
@@ -542,10 +542,10 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
    bool foundEnvID = false;
    bool foundVPid = false;
    char linebuf[256];
-   while(fgets(linebuf, sizeof(linebuf), file) != NULL) {
+   while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
       if(strchr(linebuf, '\n') == NULL) {
          // Partial line, skip to end of this line
-         while(fgets(linebuf, sizeof(linebuf), file) != NULL) {
+         while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
             if(strchr(linebuf, '\n') != NULL) {
                break;
             }
@@ -569,11 +569,11 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
 
       do {
          name_value_sep++;
-      } while(*name_value_sep != '\0' && *name_value_sep <= 32);
+      } while (*name_value_sep != '\0' && *name_value_sep <= 32);
 
       char* value_end = name_value_sep;
 
-      while(*value_end != '\0' && *value_end > 32) {
+      while (*value_end != '\0' && *value_end > 32) {
          value_end++;
       }
 

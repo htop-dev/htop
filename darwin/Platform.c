@@ -286,7 +286,7 @@ char* Platform_getProcessEnv(pid_t pid) {
                p = strchr(p, 0)+1;
 
                // skip padding
-               while(!*p && p < endp)
+               while (!*p && p < endp)
                   ++p;
 
                // skip argv
@@ -294,7 +294,7 @@ char* Platform_getProcessEnv(pid_t pid) {
                   ;
 
                // skip padding
-               while(!*p && p < endp)
+               while (!*p && p < endp)
                   ++p;
 
                size_t size = endp - p;

@@ -190,7 +190,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
                flags.pidMatchList = Hashtable_new(8, false);
             }
 
-            while(pid) {
+            while (pid) {
                 unsigned int num_pid = atoi(pid);
                 //  deepcode ignore CastIntegerToAddress: we just want a non-NUll pointer here
                 Hashtable_put(flags.pidMatchList, num_pid, (void *) 1);
@@ -218,7 +218,7 @@ static void millisleep(unsigned long millisec) {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
    };
-   while(nanosleep(&req,&req)==-1) {
+   while (nanosleep(&req,&req)==-1) {
       continue;
    }
 }
