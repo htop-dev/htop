@@ -443,6 +443,11 @@ static const struct { const char* key; const char* info; } helpRight[] = {
    { .key = NULL, .info = NULL }
 };
 
+static inline void addattrstr( int attr, const char* str) {
+   attrset(attr);
+   addstr(str);
+}
+
 static Htop_Reaction actionHelp(State* st) {
    Settings* settings = st->settings;
 
@@ -460,7 +465,7 @@ static Htop_Reaction actionHelp(State* st) {
    attrset(CRT_colors[DEFAULT_COLOR]);
    line++;
    mvaddstr(line++, 0, "CPU usage bar: ");
-   #define addattrstr(a,s) attrset(a);addstr(s)
+
    addattrstr(CRT_colors[BAR_BORDER], "[");
    if (settings->detailedCPUTime) {
       addattrstr(CRT_colors[CPU_NICE_TEXT], "low"); addstr("/");
