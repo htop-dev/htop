@@ -201,7 +201,7 @@ void Panel_setSelected(Panel* this, int selected) {
    }
 }
 
-void Panel_splice(Panel *this, Vector* from) {
+void Panel_splice(Panel* this, Vector* from) {
    assert (this != NULL);
    assert (from != NULL);
 
@@ -295,15 +295,15 @@ void Panel_draw(Panel* this, bool focus) {
       Object_display(newObj, &new);
       int newLen = RichString_sizeVal(new);
       this->selectedLen = newLen;
-      mvhline(y+ this->oldSelected - first, x+0, ' ', this->w);
+      mvhline(y + this->oldSelected - first, x + 0, ' ', this->w);
       if (scrollH < oldLen)
-         RichString_printoffnVal(old, y+this->oldSelected - first, x,
+         RichString_printoffnVal(old, y + this->oldSelected - first, x,
             scrollH, MINIMUM(oldLen - scrollH, this->w));
       attrset(selectionColor);
-      mvhline(y+this->selected - first, x+0, ' ', this->w);
+      mvhline(y + this->selected - first, x + 0, ' ', this->w);
       RichString_setAttr(&new, selectionColor);
       if (scrollH < newLen)
-         RichString_printoffnVal(new, y+this->selected - first, x,
+         RichString_printoffnVal(new, y + this->selected - first, x,
             scrollH, MINIMUM(newLen - scrollH, this->w));
       attrset(CRT_colors[RESET_COLOR]);
       RichString_end(new);

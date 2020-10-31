@@ -106,10 +106,10 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"tree",       no_argument,         0, 't'},
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
-      {0,0,0,0}
+      {0, 0, 0, 0}
    };
 
-   int opt, opti=0;
+   int opt, opti = 0;
    /* Parse arguments */
    while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:", long_opts, &opti))) {
       if (opt == EOF) break;
@@ -218,7 +218,7 @@ static void millisleep(unsigned long millisec) {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
    };
-   while (nanosleep(&req,&req)==-1) {
+   while (nanosleep(&req, &req) == -1) {
       continue;
    }
 }
@@ -242,7 +242,7 @@ static void setCommFilter(State* state, char** commFilter) {
 
 int main(int argc, char** argv) {
 
-   char *lc_ctype = getenv("LC_CTYPE");
+   char* lc_ctype = getenv("LC_CTYPE");
    if (lc_ctype != NULL)
       setlocale(LC_CTYPE, lc_ctype);
    else if ((lc_ctype = getenv("LC_ALL")))
@@ -318,7 +318,7 @@ int main(int argc, char** argv) {
    ScreenManager_run(scr, NULL, NULL);
 
    attron(CRT_colors[RESET_COLOR]);
-   mvhline(LINES-1, 0, ' ', COLS);
+   mvhline(LINES - 1, 0, ' ', COLS);
    attroff(CRT_colors[RESET_COLOR]);
    refresh();
 

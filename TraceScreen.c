@@ -52,7 +52,7 @@ TraceScreen* TraceScreen_new(Process* process) {
    this->tracing = true;
    FunctionBar* fuBar = FunctionBar_new(TraceScreenFunctions, TraceScreenKeys, TraceScreenEvents);
    CRT_disableDelay();
-   return (TraceScreen*) InfoScreen_init(&this->super, process, fuBar, LINES-2, "");
+   return (TraceScreen*) InfoScreen_init(&this->super, process, fuBar, LINES - 2, "");
 }
 
 void TraceScreen_delete(Object* cast) {
@@ -141,8 +141,9 @@ void TraceScreen_updateTrace(InfoScreen* super) {
    FD_SET(fd_strace, &fds);
 
    struct timeval tv;
-   tv.tv_sec = 0; tv.tv_usec = 500;
-   int ready = select(fd_strace+1, &fds, NULL, NULL, &tv);
+   tv.tv_sec = 0;
+   tv.tv_usec = 500;
+   int ready = select(fd_strace + 1, &fds, NULL, NULL, &tv);
    size_t nread = 0;
    if (ready > 0 && FD_ISSET(fd_strace, &fds))
       nread = fread(buffer, 1, sizeof(buffer) - 1, this->strace);
@@ -158,10 +159,10 @@ void TraceScreen_updateTrace(InfoScreen* super) {
             } else {
                InfoScreen_addLine(&this->super, line);
             }
-            line = buffer+i+1;
+            line = buffer + i + 1;
          }
       }
-      if (line < buffer+nread) {
+      if (line < buffer + nread) {
          InfoScreen_addLine(&this->super, line);
          buffer[nread] = '\0';
          this->contLine = true;

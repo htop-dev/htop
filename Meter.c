@@ -48,7 +48,7 @@ Meter* Meter_new(const struct ProcessList_* pl, int param, const MeterClass* typ
 }
 
 int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
-   const char * prefix = "KMGTPEZY";
+   const char* prefix = "KMGTPEZY";
    unsigned long int powi = 1;
    unsigned int written, powj = 1, precision = 2;
 
@@ -199,7 +199,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       double value = this->values[i];
       value = CLAMP(value, 0.0, this->total);
       if (value > 0) {
-         blockSizes[i] = ceil((value/this->total) * w);
+         blockSizes[i] = ceil((value / this->total) * w);
       } else {
          blockSizes[i] = 0;
       }
@@ -285,11 +285,11 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    struct timeval now;
    gettimeofday(&now, NULL);
    if (!timercmp(&now, &(data->time), <)) {
-      struct timeval delay = { .tv_sec = CRT_delay/10, .tv_usec = (CRT_delay-((CRT_delay/10)*10)) * 100000 };
+      struct timeval delay = { .tv_sec = CRT_delay / 10, .tv_usec = (CRT_delay - ((CRT_delay / 10) * 10)) * 100000 };
       timeradd(&now, &delay, &(data->time));
 
       for (int i = 0; i < nValues - 1; i++)
-         data->values[i] = data->values[i+1];
+         data->values[i] = data->values[i + 1];
 
       char buffer[nValues];
       Meter_updateValues(this, buffer, nValues - 1);
@@ -301,15 +301,15 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       data->values[nValues - 1] = value;
    }
 
-   int i = nValues - (w*2) + 2, k = 0;
+   int i = nValues - (w * 2) + 2, k = 0;
    if (i < 0) {
-      k = -i/2;
+      k = -i / 2;
       i = 0;
    }
-   for (; i < nValues - 1; i+=2, k++) {
+   for (; i < nValues - 1; i += 2, k++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
       int v1 = CLAMP((int) lround(data->values[i] * pix), 1, pix);
-      int v2 = CLAMP((int) lround(data->values[i+1] * pix), 1, pix);
+      int v2 = CLAMP((int) lround(data->values[i + 1] * pix), 1, pix);
 
       int colorIdx = GRAPH_1;
       for (int line = 0; line < GRAPH_HEIGHT; line++) {
@@ -317,7 +317,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
          int line2 = CLAMP(v2 - (GraphMeterMode_pixPerRow * (GRAPH_HEIGHT - 1 - line)), 0, GraphMeterMode_pixPerRow);
 
          attrset(CRT_colors[colorIdx]);
-         mvaddstr(y+line, x+k, GraphMeterMode_dots[line1 * (GraphMeterMode_pixPerRow + 1) + line2]);
+         mvaddstr(y + line, x + k, GraphMeterMode_dots[line1 * (GraphMeterMode_pixPerRow + 1) + line2]);
          colorIdx = GRAPH_2;
       }
    }
@@ -327,17 +327,17 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 /* ---------- LEDMeterMode ---------- */
 
 static const char* const LEDMeterMode_digitsAscii[] = {
-   " __ ","    "," __ "," __ ","    "," __ "," __ "," __ "," __ "," __ ",
-   "|  |","   |"," __|"," __|","|__|","|__ ","|__ ","   |","|__|","|__|",
-   "|__|","   |","|__ "," __|","   |"," __|","|__|","   |","|__|"," __|"
+   " __ ", "    ", " __ ", " __ ", "    ", " __ ", " __ ", " __ ", " __ ", " __ ",
+   "|  |", "   |", " __|", " __|", "|__|", "|__ ", "|__ ", "   |", "|__|", "|__|",
+   "|__|", "   |", "|__ ", " __|", "   |", " __|", "|__|", "   |", "|__|", " __|"
 };
 
 #ifdef HAVE_LIBNCURSESW
 
 static const char* const LEDMeterMode_digitsUtf8[] = {
-   "┌──┐","  ┐ ","╶──┐","╶──┐","╷  ╷","┌──╴","┌──╴","╶──┐","┌──┐","┌──┐",
-   "│  │","  │ ","┌──┘"," ──┤","└──┤","└──┐","├──┐","   │","├──┤","└──┤",
-   "└──┘","  ╵ ","└──╴","╶──┘","   ╵","╶──┘","└──┘","   ╵","└──┘"," ──┘"
+   "┌──┐", "  ┐ ", "╶──┐", "╶──┐", "╷  ╷", "┌──╴", "┌──╴", "╶──┐", "┌──┐", "┌──┐",
+   "│  │", "  │ ", "┌──┘", " ──┤", "└──┤", "└──┐", "├──┐", "   │", "├──┤", "└──┤",
+   "└──┘", "  ╵ ", "└──╴", "╶──┘", "   ╵", "╶──┘", "└──┘", "   ╵", "└──┘", " ──┘"
 };
 
 #endif
@@ -367,9 +367,9 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
 
    int yText =
 #ifdef HAVE_LIBNCURSESW
-      CRT_utf8 ? y+1 :
+      CRT_utf8 ? y + 1 :
 #endif
-      y+2;
+      y + 2;
    attrset(CRT_colors[LED_COLOR]);
    mvaddstr(yText, x, this->caption);
    int xx = x + strlen(this->caption);
@@ -377,7 +377,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    for (int i = 0; i < len; i++) {
       char c = RichString_getCharVal(out, i);
       if (c >= '0' && c <= '9') {
-         LEDMeterMode_drawDigit(xx, y, c-48);
+         LEDMeterMode_drawDigit(xx, y, c - 48);
          xx += 4;
       } else {
          mvaddch(yText, xx, c);

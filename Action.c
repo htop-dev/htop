@@ -59,7 +59,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    }
    ScreenManager_delete(scr);
    Panel_move(panel, 0, y);
-   Panel_resize(panel, COLS, LINES-y-1);
+   Panel_resize(panel, COLS, LINES - y - 1);
    if (panelFocus == list && ch == 13) {
       if (followProcess) {
          Process* selected = (Process*)Panel_getSelected(panel);
@@ -181,7 +181,7 @@ static Htop_Reaction sortBy(State* st) {
 
 static Htop_Reaction actionResize(State* st) {
    clear();
-   Panel_resize(st->panel, COLS, LINES-(st->panel->y)-1);
+   Panel_resize(st->panel, COLS, LINES - (st->panel->y) - 1);
    return HTOP_REDRAW_BAR;
 }
 
@@ -393,12 +393,12 @@ static Htop_Reaction actionTag(State* st) {
    return HTOP_OK;
 }
 
-static Htop_Reaction actionRedraw(ATTR_UNUSED State *st) {
+static Htop_Reaction actionRedraw(ATTR_UNUSED State* st) {
    clear();
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionTogglePauseProcessUpdate(State *st) {
+static Htop_Reaction actionTogglePauseProcessUpdate(State* st) {
    st->pauseProcessUpdate = !st->pauseProcessUpdate;
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
@@ -454,7 +454,7 @@ static Htop_Reaction actionHelp(State* st) {
    clear();
    attrset(CRT_colors[HELP_BOLD]);
 
-   for (int i = 0; i < LINES-1; i++)
+   for (int i = 0; i < LINES - 1; i++)
       mvhline(i, 0, ' ', COLS);
 
    int line = 0;
@@ -500,7 +500,7 @@ static Htop_Reaction actionHelp(State* st) {
    addattrstr(CRT_colors[BAR_SHADOW], "                                          used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(line++,0, "Type and layout of header meters are configurable in the setup screen.");
+   mvaddstr(line++, 0, "Type and layout of header meters are configurable in the setup screen.");
    if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
       mvaddstr(line, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
    }

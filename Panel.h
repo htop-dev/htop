@@ -111,7 +111,7 @@ void Panel_setSelected(Panel* this, int selected);
 
 void Panel_draw(Panel* this, bool focus);
 
-void Panel_splice(Panel *this, Vector* from);
+void Panel_splice(Panel* this, Vector* from);
 
 bool Panel_onKey(Panel* this, int key);
 

@@ -149,8 +149,8 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    size_t sizeof_cp_time_array;
 
-   unsigned long     *cp_time_n; // old clicks state
-   unsigned long     *cp_time_o; // current clicks state
+   unsigned long* cp_time_n; // old clicks state
+   unsigned long* cp_time_o; // current clicks state
 
    unsigned long cp_time_d[CPUSTATES];
    double        cp_time_p[CPUSTATES];
@@ -296,9 +296,9 @@ char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kpro
 
 static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* dfpl) {
    size_t len;
-   char *jls; /* Jail list */
-   char *curpos;
-   char *nextpos;
+   char* jls; /* Jail list */
+   char* curpos;
+   char* nextpos;
 
    if (sysctlbyname("jail.list", NULL, &len, NULL, 0) == -1) {
       fprintf(stderr, "initial sysctlbyname / jail.list failed\n");
@@ -329,7 +329,7 @@ retry:
    curpos = jls;
    while (curpos) {
       int jailid;
-      char *str_hostname;
+      char* str_hostname;
       nextpos = strchr(curpos, '\n');
       if (nextpos)
          *nextpos++ = 0;
@@ -337,7 +337,7 @@ retry:
       jailid = atoi(strtok(curpos, " "));
       str_hostname = strtok(NULL, " ");
 
-      char *jname = (char *) (Hashtable_get(dfpl->jails, jailid));
+      char* jname = (char*) (Hashtable_get(dfpl->jails, jailid));
       if (jname == NULL) {
          jname = xStrdup(str_hostname);
          Hashtable_put(dfpl->jails, jailid, jname);
@@ -353,7 +353,7 @@ char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int ja
    char*  hostname;
    char*  jname;
 
-   if (jailid != 0 && dfpl->jails && (hostname = (char *)Hashtable_get(dfpl->jails, jailid))) {
+   if (jailid != 0 && dfpl->jails && (hostname = (char*)Hashtable_get(dfpl->jails, jailid))) {
       jname = xStrdup(hostname);
    } else {
       jname = xStrdup("-");

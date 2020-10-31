@@ -63,7 +63,7 @@ void Header_writeBackToSettings(const Header* this) {
       Vector* vec = this->columns[col];
       int len = Vector_size(vec);
 
-      colSettings->names = xCalloc(len+1, sizeof(char*));
+      colSettings->names = xCalloc(len + 1, sizeof(char*));
       colSettings->modes = xCalloc(len, sizeof(int));
       colSettings->len = len;
 

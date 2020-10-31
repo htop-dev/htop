@@ -64,7 +64,7 @@ typedef struct LinuxProcessList_ {
    bool haveSmapsRollup;
 
    #ifdef HAVE_DELAYACCT
-   struct nl_sock *netlink_socket;
+   struct nl_sock* netlink_socket;
    int netlink_family;
    #endif
 

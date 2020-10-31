@@ -24,7 +24,7 @@ typedef struct MainPanel_ {
    Panel super;
    State* state;
    IncSet* inc;
-   Htop_Action *keys;
+   Htop_Action* keys;
    pid_t pidSearch;
 } MainPanel;
 

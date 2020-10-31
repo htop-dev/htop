@@ -162,7 +162,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    const CPUData* cpuData = &(pl->cpus[cpu]);
    double total = cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod;
    double totalPercent;
-   double *v = this->values;
+   double* v = this->values;
 
    v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
    v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
@@ -175,11 +175,11 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_IOWAIT]  = 0.0;
       v[CPU_METER_FREQUENCY] = NAN;
       this->curItems = 8;
-      totalPercent = v[0]+v[1]+v[2]+v[3];
+      totalPercent = v[0] + v[1] + v[2] + v[3];
    } else {
       v[2] = cpuData->sysAllPeriod / total * 100.0;
       v[3] = 0.0; // No steal nor guest on OpenBSD
-      totalPercent = v[0]+v[1]+v[2];
+      totalPercent = v[0] + v[1] + v[2];
       this->curItems = 4;
    }
 
@@ -208,7 +208,7 @@ void Platform_setMemoryValues(Meter* this) {
  */
 void Platform_setSwapValues(Meter* this) {
    const ProcessList* pl = this->pl;
-   struct swapent *swdev;
+   struct swapent* swdev;
    unsigned long long int total, used;
    int nswap, rnswap, i;
    nswap = swapctl(SWAP_NSWAP, 0, 0);
@@ -243,11 +243,11 @@ void Platform_setSwapValues(Meter* this) {
 
 char* Platform_getProcessEnv(pid_t pid) {
    char errbuf[_POSIX2_LINE_MAX];
-   char *env;
-   char **ptr;
+   char* env;
+   char** ptr;
    int count;
-   kvm_t *kt;
-   struct kinfo_proc *kproc;
+   kvm_t* kt;
+   struct kinfo_proc* kproc;
    size_t capacity = 4096, size = 0;
 
    if ((kt = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf)) == NULL)
@@ -265,7 +265,7 @@ char* Platform_getProcessEnv(pid_t pid) {
    }
 
    env = xMalloc(capacity);
-   for (char **p = ptr; *p; p++) {
+   for (char** p = ptr; *p; p++) {
       size_t len = strlen(*p) + 1;
 
       if (size + len > capacity) {
@@ -294,10 +294,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted) {
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted) {
    // TODO
    *bytesReceived = 0;
    *packetsReceived = 0;

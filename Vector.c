@@ -118,7 +118,8 @@ static int partition(Object** array, int left, int right, int pivotIndex, Object
 static void quickSort(Object** array, int left, int right, Object_Compare compare) {
    if (left >= right)
       return;
-   int pivotIndex = (left+right) / 2;
+
+   int pivotIndex = (left + right) / 2;
    int pivotNewIndex = partition(array, left, right, pivotIndex, compare);
    quickSort(array, left, pivotNewIndex - 1, compare);
    quickSort(array, pivotNewIndex + 1, right, compare);
@@ -148,17 +149,18 @@ static void combSort(Object** array, int left, int right, Object_Compare compare
 */
 
 static void insertionSort(Object** array, int left, int right, Object_Compare compare) {
-   for (int i = left+1; i <= right; i++) {
+   for (int i = left + 1; i <= right; i++) {
       Object* t = array[i];
       int j = i - 1;
       while (j >= left) {
          //comparisons++;
          if (compare(array[j], t) <= 0)
             break;
-         array[j+1] = array[j];
+
+         array[j + 1] = array[j];
          j--;
       }
-      array[j+1] = t;
+      array[j + 1] = t;
    }
 }
 
@@ -260,7 +262,7 @@ void Vector_set(Vector* this, int idx, void* data_) {
 
    Vector_checkArraySize(this);
    if (idx >= this->items) {
-      this->items = idx+1;
+      this->items = idx + 1;
    } else {
       if (this->owner) {
          Object* removed = this->array[idx];
@@ -293,7 +295,7 @@ void Vector_add(Vector* this, void* data_) {
    assert(Vector_isConsistent(this));
    int i = this->items;
    Vector_set(this, this->items, data);
-   assert(this->items == i+1); (void)(i);
+   assert(this->items == i + 1); (void)(i);
    assert(Vector_isConsistent(this));
 }
 

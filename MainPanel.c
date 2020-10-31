@@ -36,7 +36,7 @@ void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
 
 void MainPanel_pidSearch(MainPanel* this, int ch) {
    Panel* super = (Panel*) this;
-   pid_t pid = ch-48 + this->pidSearch;
+   pid_t pid = ch - 48 + this->pidSearch;
    for (int i = 0; i < Panel_size(super); i++) {
       Process* p = (Process*) Panel_get(super, i);
       if (p && p->pid == pid) {
@@ -153,7 +153,9 @@ bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Ar
    }
    if (!anyTagged) {
       Process* p = (Process*) Panel_getSelected(super);
-      if (p) ok = fn(p, arg) && ok;
+      if (p) {
+         ok &= fn(p, arg);
+      }
    }
    if (wasAnyTagged)
       *wasAnyTagged = anyTagged;

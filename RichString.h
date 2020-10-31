@@ -38,7 +38,7 @@ in the source distribution for its full text.
 typedef struct RichString_ {
    int chlen;
    CharType* chptr;
-   CharType chstr[RICHSTRING_MAXLEN+1];
+   CharType chstr[RICHSTRING_MAXLEN + 1];
 } RichString;
 
 void RichString_setAttrn(RichString* this, int attrs, int start, int finish);

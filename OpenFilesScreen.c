@@ -73,7 +73,7 @@ OpenFilesScreen* OpenFilesScreen_new(const Process* process) {
       this->pid = process->tgid;
    else
       this->pid = process->pid;
-   return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES-3, "   FD TYPE    MODE DEVICE           SIZE       NODE  NAME");
+   return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 3, "   FD TYPE    MODE DEVICE           SIZE       NODE  NAME");
 }
 
 void OpenFilesScreen_delete(Object* this) {

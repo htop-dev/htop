@@ -130,7 +130,7 @@ extern char Process_pidFormat[20];
 int Platform_getUptime() {
    int boot_time = 0;
    int curr_time = time(NULL);
-   struct utmpx * ent;
+   struct utmpx* ent;
 
    while (( ent = getutxent() )) {
       if ( !strcmp("system boot", ent->ut_line )) {
@@ -140,7 +140,7 @@ int Platform_getUptime() {
 
    endutxent();
 
-   return (curr_time-boot_time);
+   return (curr_time - boot_time);
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
@@ -151,9 +151,9 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 int Platform_getMaxPid() {
-   kstat_ctl_t *kc = NULL;
-   kstat_t *kshandle = NULL;
-   kvar_t *ksvar = NULL;
+   kstat_ctl_t* kc = NULL;
+   kstat_t* kshandle = NULL;
+   kvar_t* ksvar = NULL;
    int vproc = 32778; // Reasonable Solaris default
    kc = kstat_open();
    if (kc != NULL) { kshandle = kstat_lookup(kc,"unix",0,"var"); }
@@ -187,11 +187,11 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[0]+v[1]+v[2]+v[3];
+      percent = v[0] + v[1] + v[2] + v[3];
    } else {
       v[2] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[0]+v[1]+v[2];
+      percent = v[0] + v[1] + v[2];
    }
 
    percent = CLAMP(percent, 0.0, 100.0);
@@ -228,8 +228,8 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
    ZfsCompressedArcMeter_readStats(this, &(spl->zfs));
 }
 
-static int Platform_buildenv(void *accum, struct ps_prochandle *Phandle, uintptr_t addr, const char *str) {
-   envAccum *accump = accum;
+static int Platform_buildenv(void* accum, struct ps_prochandle* Phandle, uintptr_t addr, const char* str) {
+   envAccum* accump = accum;
    (void) Phandle;
    (void) addr;
    size_t thissz = strlen(str);
@@ -247,16 +247,16 @@ char* Platform_getProcessEnv(pid_t pid) {
    envAccum envBuilder;
    pid_t realpid = pid / 1024;
    int graberr;
-   struct ps_prochandle *Phandle;
+   struct ps_prochandle* Phandle;
 
-   if ((Phandle = Pgrab(realpid,PGRAB_RDONLY,&graberr)) == NULL)
+   if ((Phandle = Pgrab(realpid, PGRAB_RDONLY, &graberr)) == NULL)
       return "Unable to read process environment.";
 
    envBuilder.capacity = 4096;
    envBuilder.size     = 0;
    envBuilder.env      = xMalloc(envBuilder.capacity);
 
-   (void) Penv_iter(Phandle,Platform_buildenv,&envBuilder);
+   (void) Penv_iter(Phandle, Platform_buildenv, &envBuilder);
 
    Prelease(Phandle, 0);
 
@@ -270,10 +270,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted) {
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted) {
    // TODO
    *bytesReceived = 0;
    *packetsReceived = 0;

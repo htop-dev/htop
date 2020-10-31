@@ -217,7 +217,7 @@ static void writeFields(FILE* fd, ProcessField* fields, const char* name) {
    const char* sep = "";
    for (int i = 0; fields[i]; i++) {
       // This "-1" is for compatibility with the older enum format.
-      fprintf(fd, "%s%d", sep, (int) fields[i]-1);
+      fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
       sep = " ";
    }
    fprintf(fd, "\n");
@@ -255,7 +255,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
    writeFields(fd, this->fields, "fields");
    // This "-1" is for compatibility with the older enum format.
-   fprintf(fd, "sort_key=%d\n", (int) this->sortKey-1);
+   fprintf(fd, "sort_key=%d\n", (int) this->sortKey - 1);
    fprintf(fd, "sort_direction=%d\n", (int) this->direction);
    fprintf(fd, "hide_threads=%d\n", (int) this->hideThreads);
    fprintf(fd, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
@@ -311,7 +311,7 @@ Settings* Settings_new(int initialCpuCount) {
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
-   this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
+   this->fields = xCalloc(Platform_numberOfFields + 1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;

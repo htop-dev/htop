@@ -74,7 +74,7 @@ Affinity* Affinity_get(Process* proc, ProcessList* pl) {
 }
 
 bool Affinity_set(Process* proc, Arg arg) {
-   Affinity *this = arg.v;
+   Affinity* this = arg.v;
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
    for (int i = 0; i < this->used; i++) {
       hwloc_bitmap_set(cpuset, this->cpus[i]);
@@ -99,7 +99,7 @@ Affinity* Affinity_get(Process* proc, ProcessList* pl) {
 }
 
 bool Affinity_set(Process* proc, Arg arg) {
-   Affinity *this = arg.v;
+   Affinity* this = arg.v;
    cpu_set_t cpuset;
    CPU_ZERO(&cpuset);
    for (int i = 0; i < this->used; i++) {

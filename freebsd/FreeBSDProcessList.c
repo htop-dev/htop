@@ -175,8 +175,8 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    size_t sizeof_cp_time_array;
 
-   unsigned long     *cp_time_n; // old clicks state
-   unsigned long     *cp_time_o; // current clicks state
+   unsigned long* cp_time_n; // old clicks state
+   unsigned long* cp_time_o; // current clicks state
 
    unsigned long cp_time_d[CPUSTATES];
    double        cp_time_p[CPUSTATES];
@@ -415,18 +415,18 @@ static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
    char*  jname;
    char   jnamebuf[MAXHOSTNAMELEN];
 
-   if (kproc->ki_jid != 0 ){
+   if (kproc->ki_jid != 0 ) {
       memset(jnamebuf, 0, sizeof(jnamebuf));
 IGNORE_WCASTQUAL_BEGIN
-      *(const void **)&jiov[0].iov_base = "jid";
+      *(const void**)&jiov[0].iov_base = "jid";
       jiov[0].iov_len = sizeof("jid");
       jiov[1].iov_base = (void*) &kproc->ki_jid;
       jiov[1].iov_len = sizeof(kproc->ki_jid);
-      *(const void **)&jiov[2].iov_base = "name";
+      *(const void**)&jiov[2].iov_base = "name";
       jiov[2].iov_len = sizeof("name");
       jiov[3].iov_base = jnamebuf;
       jiov[3].iov_len = sizeof(jnamebuf);
-      *(const void **)&jiov[4].iov_base = "errmsg";
+      *(const void**)&jiov[4].iov_base = "errmsg";
       jiov[4].iov_len = sizeof("errmsg");
       jiov[5].iov_base = jail_errmsg;
       jiov[5].iov_len = JAIL_ERRMSGLEN;
@@ -446,8 +446,8 @@ IGNORE_WCASTQUAL_END
          return NULL;
       }
    } else {
-      jnamebuf[0]='-';
-      jnamebuf[1]='\0';
+      jnamebuf[0] = '-';
+      jnamebuf[1] = '\0';
       jname = xStrdup(jnamebuf);
    }
    return jname;

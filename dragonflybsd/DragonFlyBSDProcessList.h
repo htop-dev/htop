@@ -42,13 +42,13 @@ typedef struct DragonFlyBSDProcessList_ {
 
    CPUData* cpus;
 
-   unsigned long   *cp_time_o;
-   unsigned long   *cp_time_n;
+   unsigned long* cp_time_o;
+   unsigned long* cp_time_n;
 
-   unsigned long  *cp_times_o;
-   unsigned long  *cp_times_n;
+   unsigned long* cp_times_o;
+   unsigned long* cp_times_n;
 
-   Hashtable *jails;
+   Hashtable* jails;
 } DragonFlyBSDProcessList;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);

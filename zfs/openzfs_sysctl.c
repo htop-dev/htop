@@ -27,7 +27,7 @@ static int MIB_kstat_zfs_misc_arcstats_uncompressed_size[5];
 #include "zfs/ZfsArcStats.h"
 }*/
 
-void openzfs_sysctl_init(ZfsArcStats *stats) {
+void openzfs_sysctl_init(ZfsArcStats* stats) {
    size_t len;
    unsigned long long int arcSize;
 
@@ -56,45 +56,45 @@ void openzfs_sysctl_init(ZfsArcStats *stats) {
    }
 }
 
-void openzfs_sysctl_updateArcStats(ZfsArcStats *stats) {
+void openzfs_sysctl_updateArcStats(ZfsArcStats* stats) {
    size_t len;
 
    if (stats->enabled) {
       len = sizeof(stats->size);
-      sysctl(MIB_kstat_zfs_misc_arcstats_size, 5, &(stats->size), &len , NULL, 0);
+      sysctl(MIB_kstat_zfs_misc_arcstats_size, 5, &(stats->size), &len, NULL, 0);
       stats->size /= 1024;
 
       len = sizeof(stats->max);
-      sysctl(MIB_kstat_zfs_misc_arcstats_c_max, 5, &(stats->max), &len , NULL, 0);
+      sysctl(MIB_kstat_zfs_misc_arcstats_c_max, 5, &(stats->max), &len, NULL, 0);
       stats->max /= 1024;
 
       len = sizeof(stats->MFU);
-      sysctl(MIB_kstat_zfs_misc_arcstats_mfu_size, 5, &(stats->MFU), &len , NULL, 0);
+      sysctl(MIB_kstat_zfs_misc_arcstats_mfu_size, 5, &(stats->MFU), &len, NULL, 0);
       stats->MFU /= 1024;
 
       len = sizeof(stats->MRU);
-      sysctl(MIB_kstat_zfs_misc_arcstats_mru_size, 5, &(stats->MRU), &len , NULL, 0);
+      sysctl(MIB_kstat_zfs_misc_arcstats_mru_size, 5, &(stats->MRU), &len, NULL, 0);
       stats->MRU /= 1024;
 
       len = sizeof(stats->anon);
-      sysctl(MIB_kstat_zfs_misc_arcstats_anon_size, 5, &(stats->anon), &len , NULL, 0);
+      sysctl(MIB_kstat_zfs_misc_arcstats_anon_size, 5, &(stats->anon), &len, NULL, 0);
       stats->anon /= 1024;
 
       len = sizeof(stats->header);
-      sysctl(MIB_kstat_zfs_misc_arcstats_hdr_size, 5, &(stats->header), &len , NULL, 0);
+      sysctl(MIB_kstat_zfs_misc_arcstats_hdr_size, 5, &(stats->header), &len, NULL, 0);
       stats->header /= 1024;
 
       len = sizeof(stats->other);
-      sysctl(MIB_kstat_zfs_misc_arcstats_other_size, 5, &(stats->other), &len , NULL, 0);
+      sysctl(MIB_kstat_zfs_misc_arcstats_other_size, 5, &(stats->other), &len, NULL, 0);
       stats->other /= 1024;
 
       if (stats->isCompressed) {
          len = sizeof(stats->compressed);
-         sysctl(MIB_kstat_zfs_misc_arcstats_compressed_size, 5, &(stats->compressed), &len , NULL, 0);
+         sysctl(MIB_kstat_zfs_misc_arcstats_compressed_size, 5, &(stats->compressed), &len, NULL, 0);
          stats->compressed /= 1024;
 
          len = sizeof(stats->uncompressed);
-         sysctl(MIB_kstat_zfs_misc_arcstats_uncompressed_size, 5, &(stats->uncompressed), &len , NULL, 0);
+         sysctl(MIB_kstat_zfs_misc_arcstats_uncompressed_size, 5, &(stats->uncompressed), &len, NULL, 0);
          stats->uncompressed /= 1024;
       }
    }

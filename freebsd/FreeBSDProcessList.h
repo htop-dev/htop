@@ -48,11 +48,11 @@ typedef struct FreeBSDProcessList_ {
 
    Hashtable* ttys;
 
-   unsigned long   *cp_time_o;
-   unsigned long   *cp_time_n;
+   unsigned long* cp_time_o;
+   unsigned long* cp_time_n;
 
-   unsigned long  *cp_times_o;
-   unsigned long  *cp_times_n;
+   unsigned long* cp_times_o;
+   unsigned long* cp_times_n;
 
 } FreeBSDProcessList;
 

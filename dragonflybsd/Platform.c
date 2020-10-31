@@ -169,11 +169,11 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[0]+v[1]+v[2]+v[3];
+      percent = v[0] + v[1] + v[2] + v[3];
    } else {
       v[2] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[0]+v[1]+v[2];
+      percent = v[0] + v[1] + v[2];
    }
 
    percent = CLAMP(percent, 0.0, 100.0);
@@ -212,10 +212,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted) {
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted) {
    // TODO
    *bytesReceived = 0;
    *packetsReceived = 0;

@@ -149,7 +149,7 @@ static void AllCPUsMeter_getRange(Meter* this, int* start, int* count) {
    }
 }
 
-static void CPUMeterCommonInit(Meter *this, int ncol) {
+static void CPUMeterCommonInit(Meter* this, int ncol) {
    int cpus = this->pl->cpuCount;
    CPUMeterData* data = this->meterData;
    if (!data) {
@@ -162,13 +162,13 @@ static void CPUMeterCommonInit(Meter *this, int ncol) {
    AllCPUsMeter_getRange(this, &start, &count);
    for (int i = 0; i < count; i++) {
       if (!meters[i])
-         meters[i] = Meter_new(this->pl, start+i+1, (const MeterClass*) Class(CPUMeter));
+         meters[i] = Meter_new(this->pl, start + i + 1, (const MeterClass*) Class(CPUMeter));
       Meter_init(meters[i]);
    }
    if (this->mode == 0)
       this->mode = BAR_METERMODE;
    int h = Meter_modes[this->mode]->h;
-   this->h = h * ((count + ncol - 1)/ ncol);
+   this->h = h * ((count + ncol - 1) / ncol);
 }
 
 static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
@@ -181,7 +181,7 @@ static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
    for (int i = 0; i < count; i++) {
       Meter_setMode(meters[i], mode);
    }
-   this->h = h * ((count + ncol - 1)/ ncol);
+   this->h = h * ((count + ncol - 1) / ncol);
 }
 
 static void AllCPUsMeter_done(Meter* this) {
@@ -232,11 +232,11 @@ static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
    Meter** meters = data->meters;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
-   int colwidth = (w-ncol)/ncol + 1;
+   int colwidth = (w - ncol) / ncol + 1;
    int diff = (w - (colwidth * ncol));
    int nrows = (count + ncol - 1) / ncol;
-   for (int i = 0; i < count; i++){
-      int d = (i/nrows) > diff ? diff : (i / nrows) ; // dynamic spacer
+   for (int i = 0; i < count; i++) {
+      int d = (i / nrows) > diff ? diff : (i / nrows); // dynamic spacer
       int xpos = x + ((i / nrows) * colwidth) + d;
       int ypos = y + ((i % nrows) * meters[0]->h);
       meters[i]->draw(meters[i], xpos, ypos, colwidth);

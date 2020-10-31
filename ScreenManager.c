@@ -58,7 +58,7 @@ void ScreenManager_add(ScreenManager* this, Panel* item, int size) {
       if (size > 0) {
          Panel_resize(item, size, height);
       } else {
-         Panel_resize(item, COLS-this->x1+this->x2-lastX, height);
+         Panel_resize(item, COLS - this->x1 + this->x2 - lastX, height);
       }
       Panel_move(item, lastX, this->y1);
    }
@@ -85,18 +85,18 @@ void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
       int lastX = 0;
       for (int i = 0; i < panels - 1; i++) {
          Panel* panel = (Panel*) Vector_get(this->panels, i);
-         Panel_resize(panel, panel->w, LINES-y1+y2);
+         Panel_resize(panel, panel->w, LINES - y1 + y2);
          Panel_move(panel, lastX, y1);
          lastX = panel->x + panel->w + 1;
       }
-      Panel* panel = (Panel*) Vector_get(this->panels, panels-1);
-      Panel_resize(panel, COLS-x1+x2-lastX, LINES-y1+y2);
+      Panel* panel = (Panel*) Vector_get(this->panels, panels - 1);
+      Panel_resize(panel, COLS - x1 + x2 - lastX, LINES - y1 + y2);
       Panel_move(panel, lastX, y1);
    }
    // TODO: VERTICAL
 }
 
-static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool *rescan, bool *timedOut) {
+static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut) {
    ProcessList* pl = this->header->pl;
 
    struct timeval tv;
@@ -127,7 +127,7 @@ static void ScreenManager_drawPanels(ScreenManager* this, int focus) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);
       Panel_draw(panel, i == focus);
       if (this->orientation == HORIZONTAL) {
-         mvvline(panel->y, panel->x+panel->w, ' ', panel->h+1);
+         mvvline(panel->y, panel->x + panel->w, ' ', panel->h + 1);
       }
    }
 }
@@ -182,11 +182,11 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                } else {
                   for (int i = 0; i < this->panelCount; i++) {
                      Panel* panel = (Panel*) Vector_get(this->panels, i);
-                     if (mevent.x >= panel->x && mevent.x <= panel->x+panel->w) {
+                     if (mevent.x >= panel->x && mevent.x <= panel->x + panel->w) {
                         if (mevent.y == panel->y) {
                            ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
                            break;
-                        } else if (mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
+                        } else if (mevent.y > panel->y && mevent.y <= panel->y + panel->h) {
                            ch = KEY_MOUSE;
                            if (panel == panelFocus || this->allowFocusChange) {
                               focus = i;

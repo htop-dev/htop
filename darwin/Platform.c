@@ -176,7 +176,7 @@ ProcessPidColumn Process_pidColumns[] = {
 };
 
 static double Platform_setCPUAverageValues(Meter* mtr) {
-   const ProcessList *dpl = mtr->pl;
+   const ProcessList* dpl = mtr->pl;
    int cpus = dpl->cpuCount;
    double sumNice = 0.0;
    double sumNormal = 0.0;
@@ -200,9 +200,9 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
       return Platform_setCPUAverageValues(mtr);
    }
 
-   const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
-   const processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];
-   const processor_cpu_load_info_t curr = &dpl->curr_load[cpu-1];
+   const DarwinProcessList* dpl = (const DarwinProcessList*)mtr->pl;
+   const processor_cpu_load_info_t prev = &dpl->prev_load[cpu - 1];
+   const processor_cpu_load_info_t curr = &dpl->curr_load[cpu - 1];
    double total = 0;
 
    /* Take the sums */
@@ -228,7 +228,7 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* mtr) {
-   const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
+   const DarwinProcessList* dpl = (const DarwinProcessList*)mtr->pl;
    const struct vm_statistics* vm = &dpl->vm_stats;
    double page_K = (double)vm_page_size / (double)1024;
 
@@ -283,14 +283,14 @@ char* Platform_getProcessEnv(pid_t pid) {
                p += sizeof(int);
 
                // skip exe
-               p = strchr(p, 0)+1;
+               p = strchr(p, 0) + 1;
 
                // skip padding
                while (!*p && p < endp)
                   ++p;
 
                // skip argv
-               for (; argc-- && p < endp; p = strrchr(p, 0)+1)
+               for (; argc-- && p < endp; p = strrchr(p, 0) + 1)
                   ;
 
                // skip padding
@@ -298,10 +298,10 @@ char* Platform_getProcessEnv(pid_t pid) {
                   ++p;
 
                size_t size = endp - p;
-               env = xMalloc(size+2);
+               env = xMalloc(size + 2);
                memcpy(env, p, size);
                env[size] = 0;
-               env[size+1] = 0;
+               env[size + 1] = 0;
             }
          }
          free(buf);
@@ -317,10 +317,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted) {
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted) {
    // TODO
    *bytesReceived = 0;
    *packetsReceived = 0;

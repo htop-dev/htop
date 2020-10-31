@@ -92,7 +92,7 @@ void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, Proces
    // add Platform-specific fields here
    case PID: xSnprintf(buffer, n, Process_pidFormat, (fp->kernel ? -1 : this->pid)); break;
    case JID: xSnprintf(buffer, n, Process_pidFormat, fp->jid); break;
-   case JAIL:{
+   case JAIL: {
       xSnprintf(buffer, n, "%-11s ", fp->jname);
       if (buffer[11] != '\0') {
          buffer[11] = ' ';

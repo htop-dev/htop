@@ -22,9 +22,9 @@ static const int DateTimeMeter_attributes[] = {
 static void DateTimeMeter_updateValues(Meter* this, char* buffer, int size) {
    time_t t = time(NULL);
    struct tm result;
-   struct tm *lt = localtime_r(&t, &result);
+   struct tm* lt = localtime_r(&t, &result);
    int year = lt->tm_year + 1900;
-   if (((year % 4 == 0) && (year % 100!= 0)) || (year%400 == 0)) {
+   if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) {
       this->total = 366;
    }
    else {

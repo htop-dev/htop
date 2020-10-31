@@ -21,7 +21,7 @@ static const int HostnameMeter_attributes[] = {
 
 static void HostnameMeter_updateValues(Meter* this, char* buffer, int size) {
    (void) this;
-   gethostname(buffer, size-1);
+   gethostname(buffer, size - 1);
 }
 
 const MeterClass HostnameMeter_class = {

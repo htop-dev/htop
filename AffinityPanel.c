@@ -35,7 +35,7 @@ typedef struct MaskItem_ {
    char* indent; /* used also as an condition whether this is a tree node */
    int value; /* tri-state: 0 - off, 1 - some set, 2 - all set */
    int sub_tree; /* tri-state: 0 - no sub-tree, 1 - open sub-tree, 2 - closed sub-tree */
-   Vector *children;
+   Vector* children;
    #ifdef HAVE_LIBHWLOC
    bool ownCpuset;
    hwloc_bitmap_t cpuset;
@@ -123,11 +123,11 @@ typedef struct AffinityPanel_ {
    Panel super;
    ProcessList* pl;
    bool topoView;
-   Vector *cpuids;
+   Vector* cpuids;
    unsigned width;
 
    #ifdef HAVE_LIBHWLOC
-   MaskItem *topoRoot;
+   MaskItem* topoRoot;
    hwloc_const_cpuset_t allCpuset;
    hwloc_bitmap_t workCpuset;
    #endif
@@ -262,7 +262,7 @@ static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
 
 #ifdef HAVE_LIBHWLOC
 
-static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem *parent) {
+static MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem* parent) {
    const char* type_name = hwloc_obj_type_string(obj->type);
    const char* index_prefix = "#";
    unsigned depth = obj->depth;
@@ -294,7 +294,7 @@ static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
 
    xSnprintf(buf, 64, "%s %s%u", type_name, index_prefix, index);
 
-   MaskItem *item = MaskItem_newMask(buf, indent_buf, obj->complete_cpuset, false);
+   MaskItem* item = MaskItem_newMask(buf, indent_buf, obj->complete_cpuset, false);
    if (parent)
       Vector_add(parent->children, item);
 
@@ -316,8 +316,8 @@ static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
    return item;
 }
 
-static MaskItem *AffinityPanel_buildTopology(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem *parent) {
-   MaskItem *item = AffinityPanel_addObject(this, obj, indent, parent);
+static MaskItem* AffinityPanel_buildTopology(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem* parent) {
+   MaskItem* item = AffinityPanel_addObject(this, obj, indent, parent);
    if (obj->next_sibling) {
       indent |= (1u << obj->depth);
    } else {

@@ -37,7 +37,7 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 // but I think this is on the way out so I did not rewrite it.
 // The /sys implementation below does things the right way.
 
-static unsigned long int parseBatInfo(const char *fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
+static unsigned long int parseBatInfo(const char* fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
    const char batteryPath[] = PROCDIR "/acpi/battery/";
    DIR* batteryDir = opendir(batteryPath);
    if (!batteryDir)
@@ -81,7 +81,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
 
       if (!line) break;
 
-      char *foundNumStr = String_getToken(line, wordNum);
+      char* foundNumStr = String_getToken(line, wordNum);
       const unsigned long int foundNum = atoi(foundNumStr);
       free(foundNumStr);
       free(line);
@@ -98,8 +98,8 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
 
 static ACPresence procAcpiCheck(void) {
    ACPresence isOn = AC_ERROR;
-   const char *power_supplyPath = PROCDIR "/acpi/ac_adapter";
-   DIR *dir = opendir(power_supplyPath);
+   const char* power_supplyPath = PROCDIR "/acpi/ac_adapter";
+   DIR* dir = opendir(power_supplyPath);
    if (!dir) {
       return AC_ERROR;
    }
@@ -115,7 +115,7 @@ static ACPresence procAcpiCheck(void) {
          continue;
 
       char statePath[256];
-      xSnprintf((char *) statePath, sizeof statePath, "%s/%s/state", power_supplyPath, entryName);
+      xSnprintf(statePath, sizeof(statePath), "%s/%s/state", power_supplyPath, entryName);
       FILE* file = fopen(statePath, "r");
       if (!file) {
          isOn = AC_ERROR;
@@ -125,7 +125,7 @@ static ACPresence procAcpiCheck(void) {
       fclose(file);
       if (!line) continue;
 
-      char *isOnline = String_getToken(line, 2);
+      char* isOnline = String_getToken(line, 2);
       free(line);
 
       if (String_eq(isOnline, "on-line")) {
@@ -165,14 +165,14 @@ static void Battery_getProcData(double* level, ACPresence* isOnAC) {
 // READ FROM /sys
 // ----------------------------------------
 
-static inline ssize_t xread(int fd, void *buf, size_t count) {
+static inline ssize_t xread(int fd, void* buf, size_t count) {
    // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
    size_t alreadyRead = 0;
    for (;;) {
       ssize_t res = read(fd, buf, count);
       if (res == -1 && errno == EINTR) continue;
       if (res > 0) {
-         buf = ((char*)buf)+res;
+         buf = ((char*)buf) + res;
          count -= res;
          alreadyRead += res;
       }
@@ -186,7 +186,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
    *level = NAN;
    *isOnAC = AC_ERROR;
 
-   DIR *dir = opendir(SYS_POWERSUPPLY_DIR);
+   DIR* dir = opendir(SYS_POWERSUPPLY_DIR);
    if (!dir)
       return;
 
@@ -226,8 +226,8 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
             return;
          }
          buffer[buflen] = '\0';
-         char *buf = buffer;
-         char *line = NULL;
+         char* buf = buffer;
+         char* line = NULL;
          bool full = false;
          bool now = false;
          int fullSize = 0;

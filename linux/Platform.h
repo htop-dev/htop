@@ -47,13 +47,13 @@ void Platform_setZfsArcValues(Meter* this);
 void Platform_setZfsCompressedArcValues(Meter* this);
 char* Platform_getProcessEnv(pid_t pid);
 
-void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred);
+void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred);
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted);
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted);
 
 #endif
