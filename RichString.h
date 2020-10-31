@@ -27,7 +27,7 @@ in the source distribution for its full text.
 #define CharType cchar_t
 #else
 #define RichString_printVal(this, y, x) mvaddchstr(y, x, (this).chptr)
-#define RichString_printoffnVal(this, y, x, off, n) mvaddchnstr(y, x, (this).chptr + off, n)
+#define RichString_printoffnVal(this, y, x, off, n) mvaddchnstr(y, x, (this).chptr + (off), n)
 #define RichString_getCharVal(this, i) ((this).chptr[i])
 #define RichString_setChar(this, at, ch) do{ (this)->chptr[(at)] = ch; } while(0)
 #define CharType chtype
