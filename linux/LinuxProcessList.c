@@ -52,19 +52,19 @@ in the source distribution for its full text.
 
 
 static ssize_t xread(int fd, void *buf, size_t count) {
-  // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
-  size_t alreadyRead = 0;
-  for (;;) {
-     ssize_t res = read(fd, buf, count);
-     if (res == -1 && errno == EINTR) continue;
-     if (res > 0) {
-       buf = ((char*)buf)+res;
-       count -= res;
-       alreadyRead += res;
-     }
-     if (res == -1) return -1;
-     if (count == 0 || res == 0) return alreadyRead;
-  }
+   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
+   size_t alreadyRead = 0;
+   for (;;) {
+      ssize_t res = read(fd, buf, count);
+      if (res == -1 && errno == EINTR) continue;
+      if (res > 0) {
+         buf = ((char*)buf)+res;
+         count -= res;
+         alreadyRead += res;
+      }
+      if (res == -1) return -1;
+      if (count == 0 || res == 0) return alreadyRead;
+   }
 }
 
 static int sortTtyDrivers(const void* va, const void* vb) {
@@ -448,7 +448,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
       case 'c':
          if (String_startsWith(line+1, "ancelled_write_bytes: ")) {
            process->io_cancelled_write_bytes = strtoull(line+23, NULL, 10);
-        }
+         }
       }
    }
 }
@@ -981,14 +981,14 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
             // Read smaps file of each process only every second pass to improve performance
             static int smaps_flag = 0;
             if ((pid & 1) == smaps_flag){
-              LinuxProcessList_readSmapsFile(lp, dirname, name, this->haveSmapsRollup);
+               LinuxProcessList_readSmapsFile(lp, dirname, name, this->haveSmapsRollup);
             }
             if (pid == 1) {
                smaps_flag = !smaps_flag;
             }
-        } else {
+         } else {
             lp->m_pss = ((LinuxProcess*)parent)->m_pss;
-        }
+         }
       }
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
@@ -1336,8 +1336,8 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       cpuData->stealTime = steal;
       cpuData->guestTime = virtalltime;
       cpuData->totalTime = totaltime;
-
    }
+
    double period = (double)this->cpus[0].totalPeriod / cpus;
    fclose(file);
    return period;
