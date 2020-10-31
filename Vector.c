@@ -65,8 +65,9 @@ int Vector_count(const Vector* this) {
 }
 
 Object* Vector_get(Vector* this, int idx) {
-   assert(idx < this->items);
+   assert(idx >= 0 && idx < this->items);
    assert(Vector_isConsistent(this));
+   assert(this->array[idx]);
    return this->array[idx];
 }
 
