@@ -1111,7 +1111,12 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    char buffer[128];
    while (fgets(buffer, 128, file)) {
 
-      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu kB", variable)) { break; } } while(0)
+      #define tryRead(label, variable)                                         \
+         if (String_startsWith(buffer, label)) {                               \
+            sscanf(buffer + strlen(label), " %32llu kB", variable);            \
+            break;                                                             \
+         }
+
       switch (buffer[0]) {
       case 'M':
          tryRead("MemTotal:", &this->totalMem);
@@ -1208,8 +1213,17 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    }
    char buffer[128];
    while (fgets(buffer, 128, file)) {
-      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { break; } } while(0)
-      #define tryReadFlag(label, variable, flag) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { (flag) = 1; break; } else { (flag) = 0; } } while(0)
+      #define tryRead(label, variable)                                         \
+         if (String_startsWith(buffer, label)) {                               \
+            sscanf(buffer + strlen(label), " %*2u %32llu", variable);          \
+            break;                                                             \
+         }
+      #define tryReadFlag(label, variable, flag)                               \
+         if (String_startsWith(buffer, label)) {                               \
+            (flag) = sscanf(buffer + strlen(label), " %*2u %32llu", variable); \
+            break;                                                             \
+         }
+
       switch (buffer[0]) {
       case 'c':
          tryRead("c_max", &lpl->zfs.max);
