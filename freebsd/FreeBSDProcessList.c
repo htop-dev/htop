@@ -502,7 +502,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
-         if(fp->jid != kproc->ki_jid) {
+         if (fp->jid != kproc->ki_jid) {
             // process can enter jail anytime
             fp->jid = kproc->ki_jid;
             free(fp->jname);
@@ -512,7 +512,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
             // if there are reapers in the system, process can get reparented anytime
             proc->ppid = kproc->ki_ppid;
          }
-         if(proc->st_uid != kproc->ki_uid) {
+         if (proc->st_uid != kproc->ki_uid) {
             // some processes change users (eg. to lower privs)
             proc->st_uid = kproc->ki_uid;
             proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);

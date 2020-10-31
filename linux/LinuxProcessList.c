@@ -208,7 +208,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    // Check for /proc/*/smaps_rollup availability (improves smaps parsing speed, Linux 4.14+)
    FILE* file = fopen(PROCDIR "/self/smaps_rollup", "r");
-   if(file != NULL) {
+   if (file != NULL) {
       this->haveSmapsRollup = true;
       fclose(file);
    } else {
@@ -271,10 +271,10 @@ void ProcessList_delete(ProcessList* pl) {
 
 static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
    static double jiffy = NAN;
-   if(isnan(jiffy)) {
+   if (isnan(jiffy)) {
       errno = 0;
       long sc_jiffy = sysconf(_SC_CLK_TCK);
-      if(errno || -1 == sc_jiffy) {
+      if (errno || -1 == sc_jiffy) {
          jiffy = NAN;
          return t; // Assume 100Hz clock
       }
@@ -481,7 +481,7 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
 
    char buffer[256];
 
-   if(haveSmapsRollup) {// only available in Linux 4.14+
+   if (haveSmapsRollup) {// only available in Linux 4.14+
       xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps_rollup", dirname, name);
    } else {
       xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps", dirname, name);
@@ -496,10 +496,10 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    process->m_psswp = 0;
 
    while (fgets(buffer, sizeof(buffer), f)) {
-      if(!strchr(buffer, '\n')) {
+      if (!strchr(buffer, '\n')) {
          // Partial line, skip to end of this line
          while (fgets(buffer, sizeof(buffer), f)) {
-            if(strchr(buffer, '\n')) {
+            if (strchr(buffer, '\n')) {
                break;
             }
          }
@@ -543,10 +543,10 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
    bool foundVPid = false;
    char linebuf[256];
    while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
-      if(strchr(linebuf, '\n') == NULL) {
+      if (strchr(linebuf, '\n') == NULL) {
          // Partial line, skip to end of this line
          while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
-            if(strchr(linebuf, '\n') != NULL) {
+            if (strchr(linebuf, '\n') != NULL) {
                break;
             }
          }
@@ -554,14 +554,14 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
       }
 
       char* name_value_sep = strchr(linebuf, ':');
-      if(name_value_sep == NULL) {
+      if (name_value_sep == NULL) {
          continue;
       }
 
       int field;
-      if(0 == strncasecmp(linebuf, "envID", name_value_sep - linebuf)) {
+      if (0 == strncasecmp(linebuf, "envID", name_value_sep - linebuf)) {
          field = 1;
-      } else if(0 == strncasecmp(linebuf, "VPid", name_value_sep - linebuf)) {
+      } else if (0 == strncasecmp(linebuf, "VPid", name_value_sep - linebuf)) {
          field = 2;
       } else {
          continue;
@@ -577,7 +577,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
          value_end++;
       }
 
-      if(name_value_sep == value_end) {
+      if (name_value_sep == value_end) {
          continue;
       }
 
@@ -586,7 +586,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
       switch(field) {
       case 1:
          foundEnvID = true;
-         if(!String_eq(name_value_sep, process->ctid ? process->ctid : "")) {
+         if (!String_eq(name_value_sep, process->ctid ? process->ctid : "")) {
             free(process->ctid);
             process->ctid = xStrdup(name_value_sep);
          }
@@ -603,12 +603,12 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
 
    fclose(file);
 
-   if(!foundEnvID) {
+   if (!foundEnvID) {
       free(process->ctid);
       process->ctid = NULL;
    }
 
-   if(!foundVPid) {
+   if (!foundVPid) {
       process->vpid = process->super.pid;
    }
 }
@@ -1010,7 +1010,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (isnan(proc->percent_cpu)) proc->percent_cpu = 0.0;
       proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(pl->totalMem) * 100.0;
 
-      if(!preExisting) {
+      if (!preExisting) {
 
          if (! LinuxProcessList_statProcessDir(proc, dirname, name))
             goto errorReadingProcess;

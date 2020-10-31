@@ -201,7 +201,7 @@ void Vector_insert(Vector* this, int idx, void* data_) {
 
    Vector_checkArraySize(this);
    //assert(this->array[this->items] == NULL);
-   if(idx < this->items) {
+   if (idx < this->items) {
       memmove(&this->array[idx + 1], &this->array[idx], (this->items - idx) * sizeof(this->array[0]));
    }
    this->array[idx] = data;
@@ -215,7 +215,7 @@ Object* Vector_take(Vector* this, int idx) {
    Object* removed = this->array[idx];
    assert(removed);
    this->items--;
-   if(idx < this->items) {
+   if (idx < this->items) {
       memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx) * sizeof(this->array[0]));
    }
    //this->array[this->items] = NULL;

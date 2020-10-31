@@ -186,7 +186,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             char* saveptr;
             char* pid = strtok_r(argCopy, ",", &saveptr);
 
-            if(!flags.pidMatchList) {
+            if (!flags.pidMatchList) {
                flags.pidMatchList = Hashtable_new(8, false);
             }
 
@@ -243,7 +243,7 @@ static void setCommFilter(State* state, char** commFilter) {
 int main(int argc, char** argv) {
 
    char *lc_ctype = getenv("LC_CTYPE");
-   if(lc_ctype != NULL)
+   if (lc_ctype != NULL)
       setlocale(LC_CTYPE, lc_ctype);
    else if ((lc_ctype = getenv("LC_ALL")))
       setlocale(LC_CTYPE, lc_ctype);
@@ -334,7 +334,7 @@ int main(int argc, char** argv) {
    UsersTable_delete(ut);
    Settings_delete(settings);
 
-   if(flags.pidMatchList) {
+   if (flags.pidMatchList) {
       Hashtable_delete(flags.pidMatchList);
    }
    return 0;

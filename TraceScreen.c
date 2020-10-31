@@ -81,10 +81,10 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
    if (pipe(fdpair) == -1)
       return false;
 
-   if(fcntl(fdpair[0], F_SETFL, O_NONBLOCK) < 0)
+   if (fcntl(fdpair[0], F_SETFL, O_NONBLOCK) < 0)
       goto err;
 
-   if(fcntl(fdpair[1], F_SETFL, O_NONBLOCK) < 0)
+   if (fcntl(fdpair[1], F_SETFL, O_NONBLOCK) < 0)
       goto err;
 
    pid_t child = fork();

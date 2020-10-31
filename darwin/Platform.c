@@ -149,7 +149,7 @@ int Platform_getUptime() {
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    double results[3];
 
-   if(3 == getloadavg(results, 3)) {
+   if (3 == getloadavg(results, 3)) {
       *one = results[0];
       *five = results[1];
       *fifteen = results[2];

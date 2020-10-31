@@ -212,7 +212,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool e
     */
 
    /* First, the "immutable" parts */
-   if(!exists) {
+   if (!exists) {
       /* Set the PID/PGID/etc. */
       proc->pid = ep->p_pid;
       proc->ppid = ps->kp_eproc.e_ppid;
@@ -244,8 +244,8 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool e
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl) {
    struct proc_taskinfo pti;
 
-   if(sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-      if(0 != proc->utime || 0 != proc->stime) {
+   if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+      if (0 != proc->utime || 0 != proc->stime) {
          uint64_t diff = (pti.pti_total_system - proc->stime)
                   + (pti.pti_total_user - proc->utime);
 

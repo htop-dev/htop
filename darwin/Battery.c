@@ -13,7 +13,7 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
    *level = NAN;
    *isOnAC = AC_ERROR;
 
-   if(NULL == power_sources) {
+   if (NULL == power_sources) {
       return;
    }
 
@@ -21,7 +21,7 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
    CFDictionaryRef battery = NULL;
    int len;
 
-   if(NULL == list) {
+   if (NULL == list) {
       CFRelease(power_sources);
 
       return;
@@ -35,18 +35,18 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
                                     CFArrayGetValueAtIndex(list, i)); /* GET rule */
       CFStringRef type;
 
-      if(NULL != candidate) {
+      if (NULL != candidate) {
          type = (CFStringRef) CFDictionaryGetValue(candidate,
                   CFSTR(kIOPSTransportTypeKey)); /* GET rule */
 
-         if(kCFCompareEqualTo == CFStringCompare(type, CFSTR(kIOPSInternalType), 0)) {
+         if (kCFCompareEqualTo == CFStringCompare(type, CFSTR(kIOPSInternalType), 0)) {
             CFRetain(candidate);
             battery = candidate;
          }
       }
    }
 
-   if(NULL != battery) {
+   if (NULL != battery) {
       /* Determine the AC state */
       CFStringRef power_state = CFDictionaryGetValue(battery, CFSTR(kIOPSPowerSourceStateKey));
 

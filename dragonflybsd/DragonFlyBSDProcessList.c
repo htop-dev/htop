@@ -417,7 +417,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
       } else {
          proc->processor = kproc->kp_lwp.kl_cpuid;
-         if(dfp->jid != kproc->kp_jailid) {	// process can enter jail anytime
+         if (dfp->jid != kproc->kp_jailid) {	// process can enter jail anytime
             dfp->jid = kproc->kp_jailid;
             free(dfp->jname);
             dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
@@ -425,7 +425,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          if (proc->ppid != kproc->kp_ppid) {	// if there are reapers in the system, process can get reparented anytime
             proc->ppid = kproc->kp_ppid;
          }
-         if(proc->st_uid != kproc->kp_uid) {	// some processes change users (eg. to lower privs)
+         if (proc->st_uid != kproc->kp_uid) {	// some processes change users (eg. to lower privs)
             proc->st_uid = kproc->kp_uid;
             proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          }

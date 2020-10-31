@@ -770,7 +770,7 @@ void CRT_handleSIGSEGV(int signal) {
    );
 
    const char* signal_str = strsignal(signal);
-   if(!signal_str) {
+   if (!signal_str) {
       signal_str = "unknown reason";
    }
    fprintf(stderr,
@@ -821,7 +821,7 @@ void CRT_handleSIGSEGV(int signal) {
    );
 
    /* Call old sigsegv handler; may be default exit or third party one (e.g. ASAN) */
-   if(sigaction (signal, &old_sig_handler[signal], NULL) < 0) {
+   if (sigaction (signal, &old_sig_handler[signal], NULL) < 0) {
       /* This avoids an infinite loop in case the handler could not be reset. */
       fprintf(stderr,
          "!!! Chained handler could not be restored. Forcing exit.\n"

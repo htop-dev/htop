@@ -57,14 +57,14 @@ int CompareKernelVersion(short int major, short int minor, short int component) 
 void ProcessList_getHostInfo(host_basic_info_data_t *p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
 
-   if(0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
+   if (0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
        CRT_fatalError("Unable to retrieve host info\n");
    }
 }
 
 void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p) {
-   if(NULL != p && NULL != *p) {
-       if(0 != munmap(*p, vm_page_size)) {
+   if (NULL != p && NULL != *p) {
+       if (0 != munmap(*p, vm_page_size)) {
            CRT_fatalError("Unable to free old CPU load information\n");
        }
        *p = NULL;
@@ -76,7 +76,7 @@ unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
    unsigned cpu_count;
 
    // TODO Improving the accuracy of the load counts woule help a lot.
-   if(0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size)) {
+   if (0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size)) {
        CRT_fatalError("Unable to retrieve CPU info\n");
    }
 
@@ -200,7 +200,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
        super->totalTasks += 1;
 
-       if(!preExisting) {
+       if (!preExisting) {
            proc->super.user = UsersTable_getRef(super->usersTable, proc->super.st_uid);
 
            ProcessList_add(super, &proc->super);

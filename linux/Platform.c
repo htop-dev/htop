@@ -272,7 +272,7 @@ char* Platform_getProcessEnv(pid_t pid) {
    char procname[128];
    xSnprintf(procname, sizeof(procname), PROCDIR "/%d/environ", pid);
    FILE* fd = fopen(procname, "r");
-   if(!fd)
+   if (!fd)
       return NULL;
 
    char *env = NULL;

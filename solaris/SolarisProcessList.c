@@ -322,7 +322,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       // See note above (in common section) about this BINARY FRACTION
       proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu/(double)32768)*(double)100.0;
       proc->time            = _psinfo->pr_time.tv_sec;
-      if(!preExisting) { // Tasks done only for NEW processes
+      if (!preExisting) { // Tasks done only for NEW processes
          sproc->is_lwp = false;
          proc->starttime_ctime = _psinfo->pr_start.tv_sec;
       }
