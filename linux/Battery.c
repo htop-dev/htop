@@ -232,9 +232,11 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
          bool now = false;
          int fullSize = 0;
          double capacityLevel = NAN;
+
+         #define match(str,prefix) \
+            (String_startsWith(str,prefix) ? (str) + strlen(prefix) : NULL)
+
          while ((line = strsep(&buf, "\n")) != NULL) {
-   #define match(str,prefix) \
-           (String_startsWith(str,prefix) ? (str) + strlen(prefix) : NULL)
             const char* ps = match(line, "POWER_SUPPLY_");
             if (!ps) {
                continue;
@@ -266,7 +268,9 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
                continue;
             }
          }
-   #undef match
+
+         #undef match
+
          if (!now && full && !isnan(capacityLevel)) {
             totalRemain += (capacityLevel * fullSize);
          }
