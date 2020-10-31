@@ -254,7 +254,7 @@ char* Platform_getProcessEnv(pid_t pid) {
       return NULL;
 
    if ((kproc = kvm_getprocs(kt, KERN_PROC_PID, pid,
-                             sizeof(struct kinfo_proc), &count)) == NULL) {\
+                             sizeof(struct kinfo_proc), &count)) == NULL) {
       (void) kvm_close(kt);
       return NULL;
    }
@@ -278,10 +278,10 @@ char* Platform_getProcessEnv(pid_t pid) {
    }
 
    if (size < 2 || env[size - 1] || env[size - 2]) {
-       if (size + 2 < capacity)
-           env = xRealloc(env, capacity + 2);
-       env[size] = 0;
-       env[size+1] = 0;
+      if (size + 2 < capacity)
+         env = xRealloc(env, capacity + 2);
+      env[size] = 0;
+      env[size + 1] = 0;
    }
 
    (void) kvm_close(kt);

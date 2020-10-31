@@ -194,11 +194,11 @@ bool LinuxProcess_setIOPriority(Process* this, Arg ioprio) {
 
 #ifdef HAVE_DELAYACCT
 void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
-  if (isnan(delay_percent)) {
-    xSnprintf(buffer, n, " N/A  ");
-  } else {
-    xSnprintf(buffer, n, "%4.1f  ", delay_percent);
-  }
+   if (isnan(delay_percent)) {
+      xSnprintf(buffer, n, " N/A  ");
+   } else {
+      xSnprintf(buffer, n, "%4.1f  ", delay_percent);
+   }
 }
 #endif
 
@@ -379,7 +379,8 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    default:
       return Process_compare(v1, v2);
    }
-   test_diff:
+
+test_diff:
    return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
 }
 

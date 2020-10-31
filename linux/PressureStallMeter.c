@@ -24,24 +24,24 @@ static const int PressureStallMeter_attributes[] = {
 };
 
 static void PressureStallMeter_updateValues(Meter* this, char* buffer, int len) {
-    const char *file;
-    if (strstr(Meter_name(this), "CPU")) {
-       file = "cpu";
-    } else if (strstr(Meter_name(this), "IO")) {
-       file = "io";
-    } else {
-       file = "memory";
-    }
+   const char* file;
+   if (strstr(Meter_name(this), "CPU")) {
+      file = "cpu";
+   } else if (strstr(Meter_name(this), "IO")) {
+      file = "io";
+   } else {
+      file = "memory";
+   }
 
-    bool some;
-    if (strstr(Meter_name(this), "Some")) {
-       some = true;
-    } else {
-       some = false;
-    }
+   bool some;
+   if (strstr(Meter_name(this), "Some")) {
+      some = true;
+   } else {
+      some = false;
+   }
 
-    Platform_getPressureStall(file, some, &this->values[0], &this->values[1], &this->values[2]);
-    xSnprintf(buffer, len, "xxxx %.2lf%% %.2lf%% %.2lf%%", this->values[0], this->values[1], this->values[2]);
+   Platform_getPressureStall(file, some, &this->values[0], &this->values[1], &this->values[2]);
+   xSnprintf(buffer, len, "xxxx %.2lf%% %.2lf%% %.2lf%%", this->values[0], this->values[1], this->values[2]);
 }
 
 static void PressureStallMeter_display(const Object* cast, RichString* out) {

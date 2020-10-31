@@ -419,20 +419,20 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
    while ((line = strsep(&buf, "\n")) != NULL) {
       switch (line[0]) {
       case 'r':
-         if (line[1] == 'c' && String_startsWith(line+2, "har: "))
-            process->io_rchar = strtoull(line+7, NULL, 10);
-         else if (String_startsWith(line+1, "ead_bytes: ")) {
-            process->io_read_bytes = strtoull(line+12, NULL, 10);
+         if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
+            process->io_rchar = strtoull(line + 7, NULL, 10);
+         } else if (String_startsWith(line + 1, "ead_bytes: ")) {
+            process->io_read_bytes = strtoull(line + 12, NULL, 10);
             process->io_rate_read_bps =
                ((double)(process->io_read_bytes - last_read))/(((double)(now - process->io_rate_read_time))/1000);
             process->io_rate_read_time = now;
          }
          break;
       case 'w':
-         if (line[1] == 'c' && String_startsWith(line+2, "har: "))
-            process->io_wchar = strtoull(line+7, NULL, 10);
-         else if (String_startsWith(line+1, "rite_bytes: ")) {
-            process->io_write_bytes = strtoull(line+13, NULL, 10);
+         if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
+            process->io_wchar = strtoull(line + 7, NULL, 10);
+         } else if (String_startsWith(line + 1, "rite_bytes: ")) {
+            process->io_write_bytes = strtoull(line + 13, NULL, 10);
             process->io_rate_write_bps =
                ((double)(process->io_write_bytes - last_write))/(((double)(now - process->io_rate_write_time))/1000);
             process->io_rate_write_time = now;
@@ -446,8 +446,8 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
          }
          break;
       case 'c':
-         if (String_startsWith(line+1, "ancelled_write_bytes: ")) {
-           process->io_cancelled_write_bytes = strtoull(line+23, NULL, 10);
+         if (String_startsWith(line + 1, "ancelled_write_bytes: ")) {
+            process->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10);
          }
       }
    }
@@ -1087,7 +1087,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       continue;
 
       // Exception handler.
-      errorReadingProcess: {
+
+errorReadingProcess:
+      {
          if (preExisting) {
             ProcessList_remove(pl, proc);
          } else {

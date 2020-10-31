@@ -254,8 +254,8 @@ void Panel_draw(Panel* this, bool focus) {
    int upTo = MINIMUM(first + h, size);
 
    int selectionColor = focus
-                 ? this->selectionColor
-                 : CRT_colors[PANEL_SELECTION_UNFOCUS];
+                      ? this->selectionColor
+                      : CRT_colors[PANEL_SELECTION_UNFOCUS];
 
    if (this->needsRedraw) {
       int line = 0;

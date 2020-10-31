@@ -285,7 +285,7 @@ static MaskItem *AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
          left -= len;
       }
       xSnprintf(&indent_buf[off], left, "%s",
-             obj->next_sibling ? CRT_treeStr[TREE_STR_RTEE] : CRT_treeStr[TREE_STR_BEND]);
+                obj->next_sibling ? CRT_treeStr[TREE_STR_RTEE] : CRT_treeStr[TREE_STR_BEND]);
       // Uncomment when further appending to indent_buf
       //size_t len = strlen(&indent_buf[off]);
       //off += len;
@@ -417,7 +417,7 @@ Affinity* AffinityPanel_getAffinity(Panel* super, ProcessList* pl) {
    #ifdef HAVE_LIBHWLOC
    int i;
    hwloc_bitmap_foreach_begin(i, this->workCpuset)
-      Affinity_add(affinity, i);
+   Affinity_add(affinity, i);
    hwloc_bitmap_foreach_end();
    #else
    for (int i = 0; i < this->pl->cpuCount; i++) {

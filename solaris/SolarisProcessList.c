@@ -29,16 +29,18 @@ in the source distribution for its full text.
 #define MAXCMDLINE 255
 
 char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
-  char* zname;
-  if ( sproc->zoneid == 0 ) {
-     zname = xStrdup(GZONE);
-  } else if ( kd == NULL ) {
-     zname = xStrdup(UZONE);
-  } else {
-     kstat_t* ks = kstat_lookup( kd, "zones", sproc->zoneid, NULL );
-     zname = xStrdup(ks == NULL ? UZONE : ks->ks_name);
-  }
-  return zname;
+   char* zname;
+
+   if ( sproc->zoneid == 0 ) {
+      zname = xStrdup(GZONE);
+   } else if ( kd == NULL ) {
+      zname = xStrdup(UZONE);
+   } else {
+      kstat_t* ks = kstat_lookup( kd, "zones", sproc->zoneid, NULL );
+      zname = xStrdup(ks == NULL ? UZONE : ks->ks_name);
+   }
+
+   return zname;
 }
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
@@ -78,15 +80,19 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    assert(cpus > 0);
 
    if (cpus > 1) {
-       // Store values for the stats loop one extra element up in the array
-       // to leave room for the average to be calculated afterwards
-       arrskip++;
+      // Store values for the stats loop one extra element up in the array
+      // to leave room for the average to be calculated afterwards
+      arrskip++;
    }
 
    // Calculate per-CPU statistics first
    for (int i = 0; i < cpus; i++) {
-      if (spl->kd != NULL) { cpuinfo = kstat_lookup(spl->kd,"cpu",i,"sys"); }
-      if (cpuinfo != NULL) { kchain = kstat_read(spl->kd,cpuinfo,NULL); }
+      if (spl->kd != NULL) {
+         cpuinfo = kstat_lookup(spl->kd, "cpu", i, "sys");
+      }
+      if (cpuinfo != NULL) {
+         kchain = kstat_read(spl->kd, cpuinfo, NULL);
+      }
       if (kchain  != -1  ) {
          idletime = kstat_data_lookup(cpuinfo,"cpu_nsec_idle");
          intrtime = kstat_data_lookup(cpuinfo,"cpu_nsec_intr");
@@ -170,7 +176,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       // Not really "buffers" but the best Solaris analogue that I can find to
       // "memory in use but not by programs or the kernel itself"
       pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * CRT_pageSizeKB;
-    } else {
+   } else {
       // Fall back to basic sysconf if kstat isn't working
       pl->totalMem = sysconf(_SC_PHYS_PAGES) * CRT_pageSize;
       pl->buffersMem = 0;
@@ -180,8 +186,12 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
 
    // Part 2 - swap
    nswap = swapctl(SC_GETNSWP, NULL);
-   if (nswap >     0) { sl  = xMalloc((nswap * sizeof(swapent_t)) + sizeof(int)); }
-   if (sl    != NULL) { spathbase = xMalloc( nswap * MAXPATHLEN ); }
+   if (nswap > 0) {
+      sl = xMalloc((nswap * sizeof(swapent_t)) + sizeof(int));
+   }
+   if (sl != NULL) {
+      spathbase = xMalloc( nswap * MAXPATHLEN );
+   }
    if (spathbase != NULL) {
       spath = spathbase;
       swapdev = sl->swt_ent;
@@ -211,8 +221,12 @@ static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
    int                 ksrphyserr = -1;
    kstat_named_t       *cur_kstat = NULL;
 
-   if (spl->kd != NULL)  { arcstats   = kstat_lookup(spl->kd, "zfs", 0, "arcstats"); }
-   if (arcstats != NULL) { ksrphyserr = kstat_read(spl->kd, arcstats, NULL); }
+   if (spl->kd != NULL) {
+      arcstats = kstat_lookup(spl->kd, "zfs", 0, "arcstats");
+   }
+   if (arcstats != NULL) {
+      ksrphyserr = kstat_read(spl->kd, arcstats, NULL);
+   }
    if (ksrphyserr != -1) {
       cur_kstat = kstat_data_lookup( arcstats, "size" );
       spl->zfs.size = cur_kstat->value.ui64 / 1024;

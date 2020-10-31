@@ -33,21 +33,24 @@ void openzfs_sysctl_init(ZfsArcStats *stats) {
 
    len = sizeof(arcSize);
    if (sysctlbyname("kstat.zfs.misc.arcstats.size", &arcSize, &len, NULL, 0) == 0 && arcSize != 0) {
-                  stats->enabled = 1;
-                  len = 5; sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
+      stats->enabled = 1;
 
-                  sysctlnametomib("kstat.zfs.misc.arcstats.c_max", MIB_kstat_zfs_misc_arcstats_c_max, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.mfu_size", MIB_kstat_zfs_misc_arcstats_mfu_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.mru_size", MIB_kstat_zfs_misc_arcstats_mru_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.anon_size", MIB_kstat_zfs_misc_arcstats_anon_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.hdr_size", MIB_kstat_zfs_misc_arcstats_hdr_size, &len);
-                  sysctlnametomib("kstat.zfs.misc.arcstats.other_size", MIB_kstat_zfs_misc_arcstats_other_size, &len);
-                  if (sysctlnametomib("kstat.zfs.misc.arcstats.compressed_size", MIB_kstat_zfs_misc_arcstats_compressed_size, &len) == 0) {
-                     stats->isCompressed = 1;
-                     sysctlnametomib("kstat.zfs.misc.arcstats.uncompressed_size", MIB_kstat_zfs_misc_arcstats_uncompressed_size, &len);
-                  } else {
-                     stats->isCompressed = 0;
-                  }
+      len = 5;
+      sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
+
+      sysctlnametomib("kstat.zfs.misc.arcstats.c_max", MIB_kstat_zfs_misc_arcstats_c_max, &len);
+      sysctlnametomib("kstat.zfs.misc.arcstats.mfu_size", MIB_kstat_zfs_misc_arcstats_mfu_size, &len);
+      sysctlnametomib("kstat.zfs.misc.arcstats.mru_size", MIB_kstat_zfs_misc_arcstats_mru_size, &len);
+      sysctlnametomib("kstat.zfs.misc.arcstats.anon_size", MIB_kstat_zfs_misc_arcstats_anon_size, &len);
+      sysctlnametomib("kstat.zfs.misc.arcstats.hdr_size", MIB_kstat_zfs_misc_arcstats_hdr_size, &len);
+      sysctlnametomib("kstat.zfs.misc.arcstats.other_size", MIB_kstat_zfs_misc_arcstats_other_size, &len);
+
+      if (sysctlnametomib("kstat.zfs.misc.arcstats.compressed_size", MIB_kstat_zfs_misc_arcstats_compressed_size, &len) == 0) {
+         stats->isCompressed = 1;
+         sysctlnametomib("kstat.zfs.misc.arcstats.uncompressed_size", MIB_kstat_zfs_misc_arcstats_uncompressed_size, &len);
+      } else {
+         stats->isCompressed = 0;
+      }
    } else {
       stats->enabled = 0;
    }

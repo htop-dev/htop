@@ -170,7 +170,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
          doSearch = false;
       }
    } else if (ch == KEY_RESIZE) {
-     Panel_resize(panel, COLS, LINES-panel->y-1);
+      Panel_resize(panel, COLS, LINES - panel->y - 1);
    } else {
       if (mode->isFilter) {
          filterChanged = true;

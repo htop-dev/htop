@@ -154,10 +154,10 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    const CPUData* cpuData;
 
    if (cpus == 1) {
-     // single CPU box has everything in fpl->cpus[0]
-     cpuData = &(fpl->cpus[0]);
+      // single CPU box has everything in fpl->cpus[0]
+      cpuData = &(fpl->cpus[0]);
    } else {
-     cpuData = &(fpl->cpus[cpu]);
+      cpuData = &(fpl->cpus[cpu]);
    }
 
    double  percent;

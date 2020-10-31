@@ -32,12 +32,12 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
    /* Get the battery */
    for (int i = 0; i < len && battery == NULL; ++i) {
       CFDictionaryRef candidate = IOPSGetPowerSourceDescription(power_sources,
-                                    CFArrayGetValueAtIndex(list, i)); /* GET rule */
+                                  CFArrayGetValueAtIndex(list, i)); /* GET rule */
       CFStringRef type;
 
       if (NULL != candidate) {
          type = (CFStringRef) CFDictionaryGetValue(candidate,
-                  CFSTR(kIOPSTransportTypeKey)); /* GET rule */
+                CFSTR(kIOPSTransportTypeKey)); /* GET rule */
 
          if (kCFCompareEqualTo == CFStringCompare(type, CFSTR(kIOPSInternalType), 0)) {
             CFRetain(candidate);
@@ -51,17 +51,17 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
       CFStringRef power_state = CFDictionaryGetValue(battery, CFSTR(kIOPSPowerSourceStateKey));
 
       *isOnAC = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0))
-               ? AC_PRESENT
-               : AC_ABSENT;
+              ? AC_PRESENT
+              : AC_ABSENT;
 
       /* Get the percentage remaining */
       double current;
       double max;
 
       CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSCurrentCapacityKey)),
-               kCFNumberDoubleType, &current);
+                       kCFNumberDoubleType, &current);
       CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSMaxCapacityKey)),
-               kCFNumberDoubleType, &max);
+                       kCFNumberDoubleType, &max);
 
       *level = (current * 100.0) / max;
 

@@ -211,11 +211,11 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
    }
 
    mtr->values[CPU_METER_NICE]
-           = ((double)curr->cpu_ticks[CPU_STATE_NICE] - (double)prev->cpu_ticks[CPU_STATE_NICE])* 100.0 / total;
+      = ((double)curr->cpu_ticks[CPU_STATE_NICE] - (double)prev->cpu_ticks[CPU_STATE_NICE]) * 100.0 / total;
    mtr->values[CPU_METER_NORMAL]
-           = ((double)curr->cpu_ticks[CPU_STATE_USER] - (double)prev->cpu_ticks[CPU_STATE_USER])* 100.0 / total;
+      = ((double)curr->cpu_ticks[CPU_STATE_USER] - (double)prev->cpu_ticks[CPU_STATE_USER]) * 100.0 / total;
    mtr->values[CPU_METER_KERNEL]
-           = ((double)curr->cpu_ticks[CPU_STATE_SYSTEM] - (double)prev->cpu_ticks[CPU_STATE_SYSTEM])* 100.0 / total;
+      = ((double)curr->cpu_ticks[CPU_STATE_SYSTEM] - (double)prev->cpu_ticks[CPU_STATE_SYSTEM]) * 100.0 / total;
 
    mtr->curItems = 3;
 
@@ -239,13 +239,13 @@ void Platform_setMemoryValues(Meter* mtr) {
 }
 
 void Platform_setSwapValues(Meter* mtr) {
-  int mib[2] = {CTL_VM, VM_SWAPUSAGE};
-  struct xsw_usage swapused;
-  size_t swlen = sizeof(swapused);
-  sysctl(mib, 2, &swapused, &swlen, NULL, 0);
+   int mib[2] = {CTL_VM, VM_SWAPUSAGE};
+   struct xsw_usage swapused;
+   size_t swlen = sizeof(swapused);
+   sysctl(mib, 2, &swapused, &swlen, NULL, 0);
 
-  mtr->total = swapused.xsu_total / 1024;
-  mtr->values[0] = swapused.xsu_used / 1024;
+   mtr->total = swapused.xsu_total / 1024;
+   mtr->values[0] = swapused.xsu_used / 1024;
 }
 
 void Platform_setZfsArcValues(Meter* this) {

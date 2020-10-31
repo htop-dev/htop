@@ -124,10 +124,10 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    pl->cpuCount = MAXIMUM(cpus, 1);
 
    if (cpus == 1 ) {
-     fpl->cpus = xRealloc(fpl->cpus, sizeof(CPUData));
+      fpl->cpus = xRealloc(fpl->cpus, sizeof(CPUData));
    } else {
-     // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
-     fpl->cpus = xRealloc(fpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+      // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
+      fpl->cpus = xRealloc(fpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
    }
 
 
@@ -187,12 +187,12 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    // get rest of CPUs
    if (cpus > 1) {
-       // on smp systems FreeBSD kernel concats all CPU states into one long array in
-       // kern.cp_times sysctl OID
-       // we store averages in fpl->cpus[0], and actual cores after that
-       maxcpu = cpus + 1;
-       sizeof_cp_time_array = cpus * sizeof(unsigned long) * CPUSTATES;
-       sysctl(MIB_kern_cp_times, 2, fpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
+      // on smp systems FreeBSD kernel concats all CPU states into one long array in
+      // kern.cp_times sysctl OID
+      // we store averages in fpl->cpus[0], and actual cores after that
+      maxcpu = cpus + 1;
+      sizeof_cp_time_array = cpus * sizeof(unsigned long) * CPUSTATES;
+      sysctl(MIB_kern_cp_times, 2, fpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
    }
 
    for (int i = 0; i < maxcpu; i++) {
@@ -202,14 +202,14 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
          cp_time_o = fpl->cp_time_o;
       } else {
          if (i == 0 ) {
-           // average
-           cp_time_n = fpl->cp_time_n;
-           cp_time_o = fpl->cp_time_o;
+            // average
+            cp_time_n = fpl->cp_time_n;
+            cp_time_o = fpl->cp_time_o;
          } else {
-           // specific smp cores
-           cp_times_offset = i - 1;
-           cp_time_n = fpl->cp_times_n + (cp_times_offset * CPUSTATES);
-           cp_time_o = fpl->cp_times_o + (cp_times_offset * CPUSTATES);
+            // specific smp cores
+            cp_times_offset = i - 1;
+            cp_time_n = fpl->cp_times_n + (cp_times_offset * CPUSTATES);
+            cp_time_o = fpl->cp_times_o + (cp_times_offset * CPUSTATES);
          }
       }
 
@@ -218,9 +218,9 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
       unsigned long long total_n = 0;
       unsigned long long total_d = 0;
       for (int s = 0; s < CPUSTATES; s++) {
-        cp_time_d[s] = cp_time_n[s] - cp_time_o[s];
-        total_o += cp_time_o[s];
-        total_n += cp_time_n[s];
+         cp_time_d[s] = cp_time_n[s] - cp_time_o[s];
+         total_o += cp_time_o[s];
+         total_n += cp_time_n[s];
       }
 
       // totals
@@ -229,8 +229,8 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
 
       // save current state as old and calc percentages
       for (int s = 0; s < CPUSTATES; ++s) {
-        cp_time_o[s] = cp_time_n[s];
-        cp_time_p[s] = ((double)cp_time_d[s]) / ((double)total_d) * 100;
+         cp_time_o[s] = cp_time_n[s];
+         cp_time_p[s] = ((double)cp_time_d[s]) / ((double)total_d) * 100;
       }
 
       CPUData* cpuData = &(fpl->cpus[i]);
