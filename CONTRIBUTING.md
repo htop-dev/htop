@@ -32,3 +32,14 @@ Feature Requests
 Please label Github issues that are feature requests with the [`feature
 request`](https://github.com/htop-dev/htop/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22feature+request%22+)
 label.
+
+Style Guide
+-----------
+
+To make working with the code easier a set of guidelines have evolved in
+the past that new contributions should try to follow. While they are not set
+in stone and always up for changes should the need arise they still provide
+a first orientation to go by when contributing to this repository.
+
+The details of the coding style as well as what to take care about with your
+contributions can be found in our [style guide](docs/styleguide.md).
