@@ -778,8 +778,8 @@ static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
       assert(lp->super.pid == (pid_t)stats.ac_pid);
 
       timeDelta = (stats.ac_etime*1000 - lp->delay_read_time);
-      #define BOUNDS(x) isnan(x) ? 0.0 : ((x) > 100) ? 100.0 : (x);
-      #define DELTAPERC(x,y) BOUNDS((float) ((x) - (y)) / timeDelta * 100);
+      #define BOUNDS(x) isnan(x) ? 0.0 : ((x) > 100) ? 100.0 : (x)
+      #define DELTAPERC(x,y) BOUNDS((float) ((x) - (y)) / timeDelta * 100)
       lp->cpu_delay_percent = DELTAPERC(stats.cpu_delay_total, lp->cpu_delay_total);
       lp->blkio_delay_percent = DELTAPERC(stats.blkio_delay_total, lp->blkio_delay_total);
       lp->swapin_delay_percent = DELTAPERC(stats.swapin_delay_total, lp->swapin_delay_total);

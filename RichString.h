@@ -15,9 +15,9 @@ in the source distribution for its full text.
 #define RichString_size(this) ((this)->chlen)
 #define RichString_sizeVal(this) ((this).chlen)
 
-#define RichString_begin(this) RichString (this); RichString_beginAllocated(this);
-#define RichString_beginAllocated(this) memset(&(this), 0, sizeof(RichString)); (this).chptr = (this).chstr;
-#define RichString_end(this) RichString_prune(&(this));
+#define RichString_begin(this) RichString (this); RichString_beginAllocated(this)
+#define RichString_beginAllocated(this) memset(&(this), 0, sizeof(RichString)); (this).chptr = (this).chstr
+#define RichString_end(this) RichString_prune(&(this))
 
 #ifdef HAVE_LIBNCURSESW
 #define RichString_printVal(this, y, x) mvadd_wchstr(y, x, (this).chptr)
