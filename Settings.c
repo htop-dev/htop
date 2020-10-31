@@ -158,6 +158,10 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->highlightMegabytes = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_threads")) {
          this->highlightThreads = atoi(option[1]);
+      } else if (String_eq(option[0], "highlight_changes")) {
+         this->highlightChanges = atoi(option[1]);
+      } else if (String_eq(option[0], "highlight_changes_delay_secs")) {
+         this->highlightDelaySecs = atoi(option[1]);
       } else if (String_eq(option[0], "header_margin")) {
          this->headerMargin = atoi(option[1]);
       } else if (String_eq(option[0], "expand_system_time")) {
@@ -265,6 +269,8 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "highlight_base_name=%d\n", (int) this->highlightBaseName);
    fprintf(fd, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
    fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
+   fprintf(fd, "highlight_changes=%d\n", (int) this->highlightChanges);
+   fprintf(fd, "highlight_changes_delay_secs=%d\n", (int) this->highlightDelaySecs);
    fprintf(fd, "tree_view=%d\n", (int) this->treeView);
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
@@ -307,6 +313,7 @@ Settings* Settings_new(int initialCpuCount) {
    this->updateProcessNames = false;
    this->showProgramPath = true;
    this->highlightThreads = true;
+   this->highlightDelaySecs = DEFAULT_HIGHLIGHT_SECS;
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif

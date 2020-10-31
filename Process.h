@@ -10,10 +10,10 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 #include <sys/types.h>
+#include <time.h>
 
 #include "Object.h"
 #include "RichString.h"
-
 
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get
@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #endif
 
 #define PROCESS_FLAG_IO 0x0001
+#define DEFAULT_HIGHLIGHT_SECS 5
 
 typedef enum ProcessFields {
    NULL_PROCESSFIELD = 0,
@@ -59,6 +60,7 @@ struct Settings_;
 typedef struct Process_ {
    Object super;
 
+   const struct ProcessList_* processList;
    const struct Settings_* settings;
 
    unsigned long long int time;
@@ -98,6 +100,9 @@ typedef struct Process_ {
    long m_resident;
 
    int exit_signal;
+
+   time_t seenTs;
+   time_t tombTs;
 
    unsigned long int minflt;
    unsigned long int majflt;
@@ -171,6 +176,10 @@ extern const ProcessClass Process_class;
 void Process_init(Process* this, const struct Settings_* settings);
 
 void Process_toggleTag(Process* this);
+
+bool Process_isNew(const Process* this);
+
+bool Process_isTomb(const Process* this);
 
 bool Process_setPriority(Process* this, int priority);
 

@@ -9,10 +9,10 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <string.h>
+#include <time.h>
 
 #include "CRT.h"
 #include "XUtils.h"
-
 
 ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
@@ -26,6 +26,9 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
 
    // set later by platform-specific code
    this->cpuCount = 0;
+
+   this->scanTs = 0;
+   this->firstScanTs = 0;
 
 #ifdef HAVE_LIBHWLOC
    this->topologyOk = false;
@@ -81,6 +84,14 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
 void ProcessList_add(ProcessList* this, Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
    assert(Hashtable_get(this->processTable, p->pid) == NULL);
+   p->processList = this;
+
+   if (this->scanTs == this->firstScanTs) {
+      // prevent highlighting processes found in first scan
+      p->seenTs = this->firstScanTs - this->settings->highlightDelaySecs - 1;
+   } else {
+      p->seenTs = this->scanTs;
+   }
 
    Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
@@ -283,6 +294,7 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
 }
 
 void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
+   struct timespec now;
 
    // in pause mode only gather global data for meters (CPU/memory/...)
    if (pauseProcessUpdate) {
@@ -302,13 +314,35 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
    this->kernelThreads = 0;
    this->runningTasks = 0;
 
+
+   // set scanTs
+   if (clock_gettime(CLOCK_MONOTONIC, &now) == 0) {
+      if (this->firstScanTs == 0) {
+         this->firstScanTs = now.tv_sec;
+      }
+      this->scanTs = now.tv_sec;
+   }
+
    ProcessList_goThroughEntries(this, false);
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
-      if (p->updated == false)
-         ProcessList_remove(this, p);
-      else
+      if (p->tombTs > 0) {
+         // remove tombed process
+         if (this->scanTs >= p->tombTs) {
+            ProcessList_remove(this, p);
+         }
+      } else if (p->updated == false) {
+         // process no longer exists
+         if (this->settings->highlightChanges) {
+            // mark tombed
+            p->tombTs = this->scanTs + this->settings->highlightDelaySecs;
+         } else {
+            // immediately remove
+            ProcessList_remove(this, p);
+         }
+      } else {
          p->updated = false;
+      }
    }
 }

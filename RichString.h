@@ -39,6 +39,7 @@ typedef struct RichString_ {
    int chlen;
    CharType* chptr;
    CharType chstr[RICHSTRING_MAXLEN+1];
+   int highlightAttr;
 } RichString;
 
 void RichString_setAttrn(RichString* this, int attrs, int start, int finish);

@@ -46,17 +46,18 @@ static void printHelpFlag(void) {
    fputs("htop " VERSION "\n"
          COPYRIGHT "\n"
          "Released under the GNU GPLv2.\n\n"
-         "-C --no-color               Use a monochrome color scheme\n"
-         "-d --delay=DELAY            Set the delay between updates, in tenths of seconds\n"
-         "-F --filter=FILTER          Show only the commands matching the given filter\n"
-         "-h --help                   Print this help screen\n"
-         "-M --no-mouse               Disable the mouse\n"
-         "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
-         "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
-         "-t --tree                   Show the tree view by default\n"
-         "-u --user[=USERNAME]        Show only processes for a given user (or $USER)\n"
-         "-U --no-unicode             Do not use unicode but plain ASCII\n"
-         "-V --version                Print version info\n"
+         "-C --no-color                   Use a monochrome color scheme\n"
+         "-d --delay=DELAY                Set the delay between updates, in tenths of seconds\n"
+         "-F --filter=FILTER              Show only the commands matching the given filter\n"
+         "-h --help                       Print this help screen\n"
+         "-M --no-mouse                   Disable the mouse\n"
+         "-p --pid=PID,[,PID,PID...]      Show only the given PIDs\n"
+         "-s --sort-key=COLUMN            Sort by COLUMN (try --sort-key=help for a list)\n"
+         "-t --tree                       Show the tree view by default\n"
+         "-u --user[=USERNAME]            Show only processes for a given user (or $USER)\n"
+         "-U --no-unicode                 Do not use unicode but plain ASCII\n"
+         "-V --version                    Print version info\n"
+         "-H --highlight-changes[=DELAY]  Highlight new and old processes\n"
          "\n"
          "Long options may be passed with a single dash.\n\n"
          "Press F1 inside htop for online help.\n"
@@ -76,6 +77,8 @@ typedef struct CommandLineSettings_ {
    bool enableMouse;
    bool treeView;
    bool allowUnicode;
+   bool highlightChanges;
+   int highlightDelaySecs;
 } CommandLineSettings;
 
 static CommandLineSettings parseArguments(int argc, char** argv) {
@@ -90,28 +93,31 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .enableMouse = true,
       .treeView = false,
       .allowUnicode = true,
+      .highlightChanges = false,
+      .highlightDelaySecs = -1,
    };
 
    static struct option long_opts[] =
    {
-      {"help",       no_argument,         0, 'h'},
-      {"version",    no_argument,         0, 'V'},
-      {"delay",      required_argument,   0, 'd'},
-      {"sort-key",   required_argument,   0, 's'},
-      {"user",       optional_argument,   0, 'u'},
-      {"no-color",   no_argument,         0, 'C'},
-      {"no-colour",  no_argument,         0, 'C'},
-      {"no-mouse",   no_argument,         0, 'M'},
-      {"no-unicode", no_argument,         0, 'U'},
-      {"tree",       no_argument,         0, 't'},
-      {"pid",        required_argument,   0, 'p'},
-      {"filter",     required_argument,   0, 'F'},
+      {"help",              no_argument,       0, 'h'},
+      {"version",           no_argument,       0, 'V'},
+      {"delay",             required_argument, 0, 'd'},
+      {"sort-key",          required_argument, 0, 's'},
+      {"user",              optional_argument, 0, 'u'},
+      {"no-color",          no_argument,       0, 'C'},
+      {"no-colour",         no_argument,       0, 'C'},
+      {"no-mouse",          no_argument,       0, 'M'},
+      {"no-unicode",        no_argument,       0, 'U'},
+      {"tree",              no_argument,       0, 't'},
+      {"pid",               required_argument, 0, 'p'},
+      {"filter",            required_argument, 0, 'F'},
+      {"highlight-changes", optional_argument, 0, 'H'},
       {0,0,0,0}
    };
 
    int opt, opti=0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:H::", long_opts, &opti))) {
       if (opt == EOF) break;
       switch (opt) {
          case 'h':
@@ -198,6 +204,23 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 
             break;
          }
+         case 'H': {
+            const char *delay = optarg;
+            if (!delay && optind < argc && argv[optind] != NULL &&
+                (argv[optind][0] != '\0' && argv[optind][0] != '-')) {
+                delay = argv[optind++];
+            }
+            if (delay) {
+                if (sscanf(delay, "%16d", &(flags.highlightDelaySecs)) == 1) {
+                   if (flags.highlightDelaySecs < 1) flags.highlightDelaySecs = 1;
+                } else {
+                   fprintf(stderr, "Error: invalid highlight delay value \"%s\".\n", delay);
+                   exit(1);
+                }
+            }
+            flags.highlightChanges = true;
+            break;
+         }
          default:
             exit(1);
       }
@@ -271,6 +294,10 @@ int main(int argc, char** argv) {
       settings->enableMouse = false;
    if (flags.treeView)
       settings->treeView = true;
+   if (flags.highlightChanges)
+      settings->highlightChanges = true;
+   if (flags.highlightDelaySecs != -1)
+      settings->highlightDelaySecs = flags.highlightDelaySecs;
 
    CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
 

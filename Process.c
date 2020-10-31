@@ -6,6 +6,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+
 #include "config.h" // IWYU pragma: keep
 
 #include "Process.h"
@@ -381,6 +382,12 @@ void Process_display(const Object* cast, RichString* out) {
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
    if (this->tag == true)
       RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
+   if (this->settings->highlightChanges) {
+      if (Process_isNew(this))
+         out->highlightAttr = CRT_colors[PROCESS_NEW];
+      if (Process_isTomb(this))
+         out->highlightAttr = CRT_colors[PROCESS_TOMB];
+   }
    assert(out->chlen > 0);
 }
 
@@ -411,6 +418,16 @@ void Process_init(Process* this, const struct Settings_* settings) {
 
 void Process_toggleTag(Process* this) {
    this->tag = this->tag == true ? false : true;
+}
+
+bool Process_isNew(const Process* this) {
+   if (this->processList && this->processList->scanTs >= this->seenTs)
+      return (this->processList->scanTs - this->seenTs <= this->processList->settings->highlightDelaySecs);
+   return false;
+}
+
+bool Process_isTomb(const Process* this) {
+    return (this->tombTs > 0);
 }
 
 bool Process_setPriority(Process* this, int priority) {
