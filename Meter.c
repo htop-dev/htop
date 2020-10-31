@@ -52,7 +52,7 @@ int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
    unsigned long int powi = 1;
    unsigned int written, powj = 1, precision = 2;
 
-   for(;;) {
+   for (;;) {
       if (value / 1024 < powi)
          break;
 

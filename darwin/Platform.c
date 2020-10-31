@@ -206,7 +206,7 @@ double Platform_setCPUValues(Meter* mtr, int cpu) {
    double total = 0;
 
    /* Take the sums */
-   for(size_t i = 0; i < CPU_STATE_MAX; ++i) {
+   for (size_t i = 0; i < CPU_STATE_MAX; ++i) {
       total += (double)curr->cpu_ticks[i] - (double)prev->cpu_ticks[i];
    }
 

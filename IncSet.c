@@ -114,7 +114,7 @@ static bool IncMode_find(IncMode* mode, Panel* panel, IncMode_GetPanelValue getP
    int size = Panel_size(panel);
    int here = Panel_getSelectedIndex(panel);
    int i = here;
-   for(;;) {
+   for (;;) {
       i+=step;
       if (i == size) i = 0;
       if (i == -1) i = size - 1;

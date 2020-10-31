@@ -30,7 +30,7 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
    len = CFArrayGetCount(list);
 
    /* Get the battery */
-   for(int i = 0; i < len && battery == NULL; ++i) {
+   for (int i = 0; i < len && battery == NULL; ++i) {
       CFDictionaryRef candidate = IOPSGetPowerSourceDescription(power_sources,
                                     CFArrayGetValueAtIndex(list, i)); /* GET rule */
       CFStringRef type;

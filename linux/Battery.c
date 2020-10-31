@@ -168,7 +168,7 @@ static void Battery_getProcData(double* level, ACPresence* isOnAC) {
 static inline ssize_t xread(int fd, void *buf, size_t count) {
   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
   size_t alreadyRead = 0;
-  for(;;) {
+  for (;;) {
      ssize_t res = read(fd, buf, count);
      if (res == -1 && errno == EINTR) continue;
      if (res > 0) {
@@ -282,7 +282,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
             return;
          }
          char buffer[2] = "";
-         for(;;) {
+         for (;;) {
             ssize_t res = read(fd3, buffer, 1);
             if (res == -1 && errno == EINTR) continue;
             break;

@@ -259,7 +259,7 @@ void Panel_draw(Panel* this, bool focus) {
 
    if (this->needsRedraw) {
       int line = 0;
-      for(int i = first; line < h && i < upTo; i++) {
+      for (int i = first; line < h && i < upTo; i++) {
          Object* itemObj = Vector_get(this->items, i);
          RichString_begin(item);
          Object_display(itemObj, &item);

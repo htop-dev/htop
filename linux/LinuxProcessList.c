@@ -54,7 +54,7 @@ in the source distribution for its full text.
 static ssize_t xread(int fd, void *buf, size_t count) {
   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
   size_t alreadyRead = 0;
-  for(;;) {
+  for (;;) {
      ssize_t res = read(fd, buf, count);
      if (res == -1 && errno == EINTR) continue;
      if (res > 0) {
@@ -81,7 +81,7 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
    char* buf = NULL;
    int bufSize = MAX_READ;
    int bufLen = 0;
-   for(;;) {
+   for (;;) {
       buf = xRealloc(buf, bufSize);
       int size = xread(fd, buf + bufLen, MAX_READ);
       if (size <= 0) {
@@ -255,7 +255,7 @@ void ProcessList_delete(ProcessList* pl) {
    ProcessList_done(pl);
    free(this->cpus);
    if (this->ttyDrivers) {
-      for(int i = 0; this->ttyDrivers[i].path; i++) {
+      for (int i = 0; this->ttyDrivers[i].path; i++) {
          free(this->ttyDrivers[i].path);
       }
       free(this->ttyDrivers);
@@ -900,7 +900,7 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
       unsigned int idx = min - ttyDrivers[i].minorFrom;
       struct stat sstat;
       char* fullPath;
-      for(;;) {
+      for (;;) {
          xAsprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
          int err = stat(fullPath, &sstat);
          if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) return fullPath;
@@ -1162,7 +1162,7 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
    char disksize[34];
 
    unsigned int i = 0;
-   for(;;) {
+   for (;;) {
       xSnprintf(mm_stat, sizeof(mm_stat), "/sys/block/zram%u/mm_stat", i);
       xSnprintf(disksize, sizeof(disksize), "/sys/block/zram%u/disksize", i);
       i++;
