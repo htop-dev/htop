@@ -50,14 +50,14 @@ static void printHelpFlag(void) {
          "-d --delay=DELAY                Set the delay between updates, in tenths of seconds\n"
          "-F --filter=FILTER              Show only the commands matching the given filter\n"
          "-h --help                       Print this help screen\n"
+         "-H --highlight-changes[=DELAY]  Highlight new and old processes\n"
          "-M --no-mouse                   Disable the mouse\n"
-         "-p --pid=PID,[,PID,PID...]      Show only the given PIDs\n"
+         "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
          "-s --sort-key=COLUMN            Sort by COLUMN (try --sort-key=help for a list)\n"
          "-t --tree                       Show the tree view by default\n"
          "-u --user[=USERNAME]            Show only processes for a given user (or $USER)\n"
          "-U --no-unicode                 Do not use unicode but plain ASCII\n"
          "-V --version                    Print version info\n"
-         "-H --highlight-changes[=DELAY]  Highlight new and old processes\n"
          "\n"
          "Long options may be passed with a single dash.\n\n"
          "Press F1 inside htop for online help.\n"
@@ -212,7 +212,8 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             }
             if (delay) {
                 if (sscanf(delay, "%16d", &(flags.highlightDelaySecs)) == 1) {
-                   if (flags.highlightDelaySecs < 1) flags.highlightDelaySecs = 1;
+                   if (flags.highlightDelaySecs < 1)
+                      flags.highlightDelaySecs = 1;
                 } else {
                    fprintf(stderr, "Error: invalid highlight delay value \"%s\".\n", delay);
                    exit(1);

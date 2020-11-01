@@ -9,8 +9,8 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
-#include <sys/types.h>
 #include <time.h>
+#include <sys/types.h>
 
 #include "Object.h"
 #include "RichString.h"
@@ -78,6 +78,7 @@ typedef struct Process_ {
    bool tag;
    bool showChildren;
    bool show;
+   bool wasShown;
    unsigned int pgrp;
    unsigned int session;
    unsigned int tty_nr;

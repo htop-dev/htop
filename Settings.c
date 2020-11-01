@@ -313,6 +313,7 @@ Settings* Settings_new(int initialCpuCount) {
    this->updateProcessNames = false;
    this->showProgramPath = true;
    this->highlightThreads = true;
+   this->highlightChanges = false;
    this->highlightDelaySecs = DEFAULT_HIGHLIGHT_SECS;
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;

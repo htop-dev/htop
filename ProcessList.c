@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "XUtils.h"
 
+
 ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(140, false);
@@ -306,6 +307,7 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
    for (int i = 0; i < Vector_size(this->processes); i++) {
       Process* p = (Process*) Vector_get(this->processes, i);
       p->updated = false;
+      p->wasShown = p->show;
       p->show = true;
    }
 
@@ -334,7 +336,7 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
          }
       } else if (p->updated == false) {
          // process no longer exists
-         if (this->settings->highlightChanges) {
+         if (this->settings->highlightChanges && p->wasShown) {
             // mark tombed
             p->tombTs = this->scanTs + this->settings->highlightDelaySecs;
          } else {
