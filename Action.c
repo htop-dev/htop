@@ -425,7 +425,10 @@ static Htop_Reaction actionTogglePauseProcessUpdate(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static const struct { const char* key; const char* info; } helpLeft[] = {
+static const struct {
+   const char* key;
+   const char* info;
+} helpLeft[] = {
    { .key = " Arrows: ", .info = "scroll process list" },
    { .key = " Digits: ", .info = "incremental PID search" },
    { .key = "   F3 /: ", .info = "incremental name search" },
@@ -444,7 +447,10 @@ static const struct { const char* key; const char* info; } helpLeft[] = {
    { .key = NULL, .info = NULL }
 };
 
-static const struct { const char* key; const char* info; } helpRight[] = {
+static const struct {
+   const char* key;
+   const char* info;
+} helpRight[] = {
    { .key = "  Space: ", .info = "tag process" },
    { .key = "      c: ", .info = "tag process and its children" },
    { .key = "      U: ", .info = "untag all processes" },
