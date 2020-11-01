@@ -134,10 +134,11 @@ static long FreeBSDProcess_compare(const void* v1, const void* v2) {
 bool Process_isThread(const Process* this) {
    const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
 
-   if (fp->kernel == 1 )
+   if (fp->kernel == 1 ) {
       return 1;
-   else
+   } else {
       return Process_isUserlandThread(this);
+   }
 }
 
 const ProcessClass FreeBSDProcess_class = {

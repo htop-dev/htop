@@ -70,6 +70,7 @@ void Hashtable_delete(Hashtable* this) {
       while (walk != NULL) {
          if (this->owner)
             free(walk->value);
+
          HashtableItem* savedWalk = walk;
          walk = savedWalk->next;
          free(savedWalk);
@@ -90,10 +91,13 @@ void Hashtable_put(Hashtable* this, unsigned int key, void* value) {
       } else if ((*bucketPtr)->key == key) {
          if (this->owner && (*bucketPtr)->value != value)
             free((*bucketPtr)->value);
+
          (*bucketPtr)->value = value;
          break;
-      } else
+      } else {
          bucketPtr = &((*bucketPtr)->next);
+      }
+
    assert(Hashtable_isConsistent(this));
 }
 
@@ -134,8 +138,9 @@ void* Hashtable_get(Hashtable* this, unsigned int key) {
       } else if (bucketPtr->key == key) {
          assert(Hashtable_isConsistent(this));
          return bucketPtr->value;
-      } else
+      } else {
          bucketPtr = bucketPtr->next;
+      }
    }
 }
 

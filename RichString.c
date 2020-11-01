@@ -52,6 +52,7 @@ static inline void RichString_writeFrom(RichString* this, int attrs, const char*
    len = mbstowcs(data, data_c, len);
    if (len < 0)
       return;
+
    int newLen = from + len;
    RichString_setLen(this, newLen);
    for (int i = from, j = 0; i < newLen; i++, j++) {
@@ -84,8 +85,9 @@ int RichString_findChar(RichString* this, char c, int start) {
 static inline void RichString_writeFrom(RichString* this, int attrs, const char* data_c, int from, int len) {
    int newLen = from + len;
    RichString_setLen(this, newLen);
-   for (int i = from, j = 0; i < newLen; i++, j++)
+   for (int i = from, j = 0; i < newLen; i++, j++) {
       this->chptr[i] = (data_c[j] >= 32 ? data_c[j] : '?') | attrs;
+   }
    this->chptr[newLen] = 0;
 }
 

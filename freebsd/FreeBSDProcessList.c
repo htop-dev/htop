@@ -98,7 +98,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    if (smp) {
       int err = sysctlbyname("kern.smp.cpus", &cpus, &len, NULL, 0);
-      if (err) cpus = 1;
+      if (err) {
+         cpus = 1;
+      }
    } else {
       cpus = 1;
    }
@@ -152,7 +154,9 @@ void ProcessList_delete(ProcessList* this) {
 
    Hashtable_delete(fpl->ttys);
 
-   if (fpl->kd) kvm_close(fpl->kd);
+   if (fpl->kd) {
+      kvm_close(fpl->kd);
+   }
 
    free(fpl->cp_time_o);
    free(fpl->cp_time_n);
@@ -225,7 +229,9 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
 
       // totals
       total_d = total_n - total_o;
-      if (total_d < 1 ) total_d = 1;
+      if (total_d < 1 ) {
+         total_d = 1;
+      }
 
       // save current state as old and calc percentages
       for (int s = 0; s < CPUSTATES; ++s) {
@@ -434,13 +440,15 @@ IGNORE_WCASTQUAL_END
       jail_errmsg[0] = 0;
       jid = jail_get(jiov, 6, 0);
       if (jid < 0) {
-         if (!jail_errmsg[0])
+         if (!jail_errmsg[0]) {
             xSnprintf(jail_errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
+         }
          return NULL;
       } else if (jid == kproc->ki_jid) {
          jname = xStrdup(jnamebuf);
-         if (jname == NULL)
+         if (jname == NULL) {
             strerror_r(errno, jail_errmsg, JAIL_ERRMSGLEN);
+         }
          return jname;
       } else {
          return NULL;
@@ -464,11 +472,13 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    FreeBSDProcessList_scanCPUTime(super);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate)
+   if (pauseProcessUpdate) {
       return;
+   }
 
-   if (settings->flags & PROCESS_FLAG_FREEBSD_TTY)
+   if (settings->flags & PROCESS_FLAG_FREEBSD_TTY) {
       FreeBSDProcessList_scanTTYs(super);
+   }
 
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
@@ -485,10 +495,11 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
          proc->pid = kproc->ki_pid;
-         if ( ! ((kproc->ki_pid == 0) || (kproc->ki_pid == 1) ) && kproc->ki_flag & P_SYSTEM)
-           fp->kernel = 1;
-         else
-           fp->kernel = 0;
+         if ( ! ((kproc->ki_pid == 0) || (kproc->ki_pid == 1) ) && kproc->ki_flag & P_SYSTEM) {
+            fp->kernel = 1;
+         } else {
+            fp->kernel = 0;
+         }
          proc->ppid = kproc->ki_ppid;
          proc->tpgid = kproc->ki_tpgid;
          proc->tgid = kproc->ki_pid;
@@ -565,8 +576,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       default:     proc->state = '?';
       }
 
-      if (settings->flags & PROCESS_FLAG_FREEBSD_TTY)
+      if (settings->flags & PROCESS_FLAG_FREEBSD_TTY) {
          fp->ttyPath = (kproc->ki_tdev == NODEV) ? nodevStr : Hashtable_get(fpl->ttys, kproc->ki_tdev);
+      }
 
       if (Process_isKernelThread(proc))
          super->kernelThreads++;

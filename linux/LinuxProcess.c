@@ -168,8 +168,9 @@ dynamically  derived  from  the  cpu  nice level of the process:
 io_priority = (cpu_nice + 20) / 5. -- From ionice(1) man page
 */
 static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
-   if (IOPriority_class(this->ioPriority) == IOPRIO_CLASS_NONE)
+   if (IOPriority_class(this->ioPriority) == IOPRIO_CLASS_NONE) {
       return IOPriority_tuple(IOPRIO_CLASS_BE, (this->super.nice + 20) / 5);
+   }
 
    return this->ioPriority;
 }
@@ -290,8 +291,9 @@ void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField 
    case PERCENT_SWAP_DELAY: LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n); break;
    #endif
    case CTXT:
-      if (lp->ctxt_diff > 1000)
+      if (lp->ctxt_diff > 1000) {
          attr |= A_BOLD;
+      }
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;

@@ -64,6 +64,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
       for (int i = 0; ColorSchemeNames[i] != NULL; i++)
          CheckItem_set((CheckItem*)Panel_get(super, i), false);
       CheckItem_set((CheckItem*)Panel_get(super, mark), true);
+
       this->settings->colorScheme = mark;
       result = HANDLED;
    }

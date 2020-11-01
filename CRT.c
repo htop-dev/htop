@@ -619,13 +619,18 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
    keypad(stdscr, true);
    mouseinterval(0);
    curs_set(0);
-   if (has_colors())
+
+   if (has_colors()) {
       start_color();
+   }
+
    CRT_termType = getenv("TERM");
-   if (String_eq(CRT_termType, "linux"))
+   if (String_eq(CRT_termType, "linux")) {
       CRT_scrollHAmount = 20;
-   else
+   } else {
       CRT_scrollHAmount = 5;
+   }
+
    if (String_startsWith(CRT_termType, "xterm") || String_eq(CRT_termType, "vt220")) {
       define_key("\033[H", KEY_HOME);
       define_key("\033[F", KEY_END);
@@ -670,10 +675,11 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
    setlocale(LC_CTYPE, "");
 
 #ifdef HAVE_LIBNCURSESW
-   if (allowUnicode && String_eq(nl_langinfo(CODESET), "UTF-8"))
+   if (allowUnicode && String_eq(nl_langinfo(CODESET), "UTF-8")) {
       CRT_utf8 = true;
-   else
+   } else {
       CRT_utf8 = false;
+   }
 #else
    (void) allowUnicode;
 #endif

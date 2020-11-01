@@ -97,6 +97,7 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
       int size = ScreenManager_size(this->scr);
       for (int i = 1; i < size; i++)
          ScreenManager_remove(this->scr, 1);
+
       switch (selected) {
          case 0:
             CategoriesPanel_makeMetersPage(this);

@@ -97,8 +97,10 @@ void Panel_move(Panel* this, int x, int y) {
 void Panel_resize(Panel* this, int w, int h) {
    assert (this != NULL);
 
-   if (RichString_sizeVal(this->header) > 0)
+   if (RichString_sizeVal(this->header) > 0) {
       h--;
+   }
+
    this->w = w;
    this->h = h;
    this->needsRedraw = true;
@@ -145,33 +147,38 @@ Object* Panel_remove(Panel* this, int i) {
 
    this->needsRedraw = true;
    Object* removed = Vector_remove(this->items, i);
-   if (this->selected > 0 && this->selected >= Vector_size(this->items))
+   if (this->selected > 0 && this->selected >= Vector_size(this->items)) {
       this->selected--;
+   }
+
    return removed;
 }
 
 Object* Panel_getSelected(Panel* this) {
    assert (this != NULL);
-   if (Vector_size(this->items) > 0)
+   if (Vector_size(this->items) > 0) {
       return Vector_get(this->items, this->selected);
-   else
+   } else {
       return NULL;
+   }
 }
 
 void Panel_moveSelectedUp(Panel* this) {
    assert (this != NULL);
 
    Vector_moveUp(this->items, this->selected);
-   if (this->selected > 0)
+   if (this->selected > 0) {
       this->selected--;
+   }
 }
 
 void Panel_moveSelectedDown(Panel* this) {
    assert (this != NULL);
 
    Vector_moveDown(this->items, this->selected);
-   if (this->selected + 1 < Vector_size(this->items))
+   if (this->selected + 1 < Vector_size(this->items)) {
       this->selected++;
+   }
 }
 
 int Panel_getSelectedIndex(Panel* this) {
@@ -193,8 +200,9 @@ void Panel_setSelected(Panel* this, int selected) {
    if (selected >= size) {
       selected = size - 1;
    }
-   if (selected < 0)
+   if (selected < 0) {
       selected = 0;
+   }
    this->selected = selected;
    if (Panel_eventHandlerFn(this)) {
       Panel_eventHandler(this, EVENT_SET_SELECTED);

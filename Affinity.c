@@ -89,11 +89,14 @@ bool Affinity_set(Process* proc, Arg arg) {
 Affinity* Affinity_get(Process* proc, ProcessList* pl) {
    cpu_set_t cpuset;
    bool ok = (sched_getaffinity(proc->pid, sizeof(cpu_set_t), &cpuset) == 0);
-   if (!ok) return NULL;
+   if (!ok)
+      return NULL;
+
    Affinity* affinity = Affinity_new(pl);
    for (int i = 0; i < pl->cpuCount; i++) {
-      if (CPU_ISSET(i, &cpuset))
+      if (CPU_ISSET(i, &cpuset)) {
          Affinity_add(affinity, i);
+      }
    }
    return affinity;
 }

@@ -70,11 +70,15 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
    const ProcessField* fields = this->settings->fields;
    for (int i = 0; fields[i]; i++) {
       const char* field = Process_fields[fields[i]].title;
-      if (!field) field = "- ";
-      if (!this->settings->treeView && this->settings->sortKey == fields[i])
+      if (!field) {
+         field = "- ";
+      }
+
+      if (!this->settings->treeView && this->settings->sortKey == fields[i]) {
          RichString_append(header, CRT_colors[PANEL_SELECTION_FOCUS], field);
-      else
+      } else {
          RichString_append(header, CRT_colors[PANEL_HEADER_FOCUS], field);
+      }
    }
 }
 
@@ -93,12 +97,18 @@ void ProcessList_add(ProcessList* this, Process* p) {
 void ProcessList_remove(ProcessList* this, Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
+
    Process* pp = Hashtable_remove(this->processTable, p->pid);
    assert(pp == p); (void)pp;
+
    unsigned int pid = p->pid;
    int idx = Vector_indexOf(this->processes, p, Process_pidCompare);
    assert(idx != -1);
-   if (idx >= 0) Vector_remove(this->processes, idx);
+
+   if (idx >= 0) {
+      Vector_remove(this->processes, idx);
+   }
+
    assert(Hashtable_get(this->processTable, pid) == NULL); (void)pid;
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
@@ -124,20 +134,27 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
    int size = Vector_size(children);
    for (int i = 0; i < size; i++) {
       Process* process = (Process*) (Vector_get(children, i));
-      if (!show)
+      if (!show) {
          process->show = false;
+      }
+
       int s = Vector_size(this->processes2);
-      if (direction == 1)
+      if (direction == 1) {
          Vector_add(this->processes2, process);
-      else
+      } else {
          Vector_insert(this->processes2, 0, process);
+      }
+
       assert(Vector_size(this->processes2) == s + 1); (void)s;
+
       int nextIndent = indent | (1 << level);
       ProcessList_buildTree(this, process->pid, level + 1, (i < size - 1) ? nextIndent : indent, direction, show ? process->showChildren : false);
-      if (i == size - 1)
+
+      if (i == size - 1) {
          process->indent = -nextIndent;
-      else
+      } else {
          process->indent = nextIndent;
+      }
    }
    Vector_delete(children);
 }
@@ -180,6 +197,7 @@ void ProcessList_sort(ProcessList* this) {
             // root.
             if (process->pid == ppid)
                r = 0;
+
             while (l < r) {
                int c = (l + r) / 2;
                pid_t pid = ((Process*)(Vector_get(this->processes, c)))->pid;
@@ -219,7 +237,10 @@ ProcessField ProcessList_keyAt(ProcessList* this, int at) {
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
       const char* title = Process_fields[field].title;
-      if (!title) title = "- ";
+      if (!title) {
+         title = "- ";
+      }
+
       int len = strlen(title);
       if (at >= x && at <= x + len) {
          return field;
@@ -306,9 +327,10 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
-      if (p->updated == false)
+      if (p->updated == false) {
          ProcessList_remove(this, p);
-      else
+      } else {
          p->updated = false;
+      }
    }
 }

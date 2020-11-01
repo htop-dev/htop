@@ -116,6 +116,7 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
    CRT_restorePrivileges();
    if (!fd)
       return false;
+
    bool didReadMeters = false;
    bool didReadFields = false;
    for (;;) {
@@ -182,8 +183,9 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->delay = atoi(option[1]);
       } else if (String_eq(option[0], "color_scheme")) {
          this->colorScheme = atoi(option[1]);
-         if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME)
+         if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) {
             this->colorScheme = 0;
+         }
       } else if (String_eq(option[0], "enable_mouse")) {
          this->enableMouse = atoi(option[1]);
       } else if (String_eq(option[0], "left_meters")) {
@@ -327,7 +329,9 @@ Settings* Settings_new(int initialCpuCount) {
       this->filename = xStrdup(rcfile);
    } else {
       const char* home = getenv("HOME");
-      if (!home) home = "";
+      if (!home)
+         home = "";
+
       const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
       char* configDir = NULL;
       char* htopDir = NULL;
@@ -363,8 +367,9 @@ Settings* Settings_new(int initialCpuCount) {
       ok = Settings_read(this, legacyDotfile, initialCpuCount);
       if (ok) {
          // Transition to new location and delete old configuration file
-         if (Settings_write(this))
+         if (Settings_write(this)) {
             unlink(legacyDotfile);
+         }
       }
       free(legacyDotfile);
    }
@@ -389,8 +394,9 @@ Settings* Settings_new(int initialCpuCount) {
 }
 
 void Settings_invertSortOrder(Settings* this) {
-   if (this->direction == 1)
+   if (this->direction == 1) {
       this->direction = -1;
-   else
+   } else {
       this->direction = 1;
+   }
 }

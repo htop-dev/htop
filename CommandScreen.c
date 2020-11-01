@@ -21,7 +21,9 @@ static void CommandScreen_scan(InfoScreen* this) {
    int line_offset = 0, last_spc = -1, len;
    for (; *p != '\0'; p++, line_offset++) {
       line[line_offset] = *p;
-      if (*p == ' ') last_spc = line_offset;
+      if (*p == ' ') {
+         last_spc = line_offset;
+      }
 
       if (line_offset == COLS) {
          len = (last_spc == -1) ? line_offset : last_spc;

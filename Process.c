@@ -43,7 +43,9 @@ static char Process_titleBuffer[20][20];
 
 void Process_setupColumnWidths() {
    int maxPid = Platform_getMaxPid();
-   if (maxPid == -1) return;
+   if (maxPid == -1)
+      return;
+
    int digits = ceil(log10(maxPid));
    assert(digits < 20);
    for (int i = 0; Process_pidColumns[i].label; i++) {
@@ -201,10 +203,11 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
          }
       }
       if (!finish) {
-         if (this->settings->showProgramPath)
+         if (this->settings->showProgramPath) {
             start += basename;
-         else
+         } else {
             comm += basename;
+         }
          finish = this->basenameOffset - basename;
       }
       finish += start - 1;
@@ -212,8 +215,9 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
 
    RichString_append(str, attr, comm);
 
-   if (this->settings->highlightBaseName)
+   if (this->settings->highlightBaseName) {
       RichString_setAttrn(str, baseattr, start, finish);
+   }
 }
 
 void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring) {
@@ -285,15 +289,19 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
          bool lastItem = (this->indent < 0);
          int indent = (this->indent < 0 ? -this->indent : this->indent);
 
-         for (int i = 0; i < 32; i++)
-            if (indent & (1U << i))
+         for (int i = 0; i < 32; i++) {
+            if (indent & (1U << i)) {
                maxIndent = i + 1;
+            }
+         }
+
          for (int i = 0; i < maxIndent - 1; i++) {
             int written, ret;
-            if (indent & (1 << i))
+            if (indent & (1 << i)) {
                ret = snprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
-            else
+            } else {
                ret = snprintf(buf, n, "   ");
+            }
             if (ret < 0 || ret >= n) {
                written = n;
             } else {
@@ -377,10 +385,15 @@ void Process_display(const Object* cast, RichString* out) {
    RichString_prune(out);
    for (int i = 0; fields[i]; i++)
       As_Process(this)->writeField(this, out, fields[i]);
-   if (this->settings->shadowOtherUsers && (int)this->st_uid != Process_getuid)
+
+   if (this->settings->shadowOtherUsers && (int)this->st_uid != Process_getuid) {
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
-   if (this->tag == true)
+   }
+
+   if (this->tag == true) {
       RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
+   }
+
    assert(out->chlen > 0);
 }
 
@@ -406,7 +419,10 @@ void Process_init(Process* this, const struct Settings_* settings) {
    this->show = true;
    this->updated = false;
    this->basenameOffset = -1;
-   if (Process_getuid == -1) Process_getuid = getuid();
+
+   if (Process_getuid == -1) {
+      Process_getuid = getuid();
+   }
 }
 
 void Process_toggleTag(Process* this) {
@@ -483,10 +499,11 @@ long Process_compare(const void* v1, const void* v2) {
    case SESSION:
       return (p1->session - p2->session);
    case STARTTIME: {
-      if (p1->starttime_ctime == p2->starttime_ctime)
+      if (p1->starttime_ctime == p2->starttime_ctime) {
          return (p1->pid - p2->pid);
-      else
+      } else {
          return (p1->starttime_ctime - p2->starttime_ctime);
+      }
    }
    case STATE:
       return (Process_sortState(p1->state) - Process_sortState(p2->state));

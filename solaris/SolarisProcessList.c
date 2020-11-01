@@ -169,10 +169,11 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       pages          = kstat_data_lookup(meminfo, "pagestotal");
 
       pl->totalMem   = totalmem_pgs->value.ui64 * CRT_pageSizeKB;
-      if (pl->totalMem > freemem_pgs->value.ui64 * CRT_pageSizeKB)
+      if (pl->totalMem > freemem_pgs->value.ui64 * CRT_pageSizeKB) {
          pl->usedMem  = pl->totalMem - freemem_pgs->value.ui64 * CRT_pageSizeKB;
-      else
-         pl->usedMem  = 0; // This can happen in non-global zone (in theory)
+      } else {
+         pl->usedMem  = 0;   // This can happen in non-global zone (in theory)
+      }
       // Not sure how to implement this on Solaris - suggestions welcome!
       pl->cachedMem  = 0;
       // Not really "buffers" but the best Solaris analogue that I can find to
@@ -268,7 +269,9 @@ void ProcessList_delete(ProcessList* pl) {
    SolarisProcessList* spl = (SolarisProcessList*) pl;
    ProcessList_done(pl);
    free(spl->cpus);
-   if (spl->kd) kstat_close(spl->kd);
+   if (spl->kd) {
+      kstat_close(spl->kd);
+   }
    free(spl);
 }
 
@@ -287,7 +290,10 @@ int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* 
    SolarisProcessList* spl = (SolarisProcessList*) listptr;
 
    id_t lwpid_real = _lwpsinfo->pr_lwpid;
-   if (lwpid_real > 1023) return 0;
+   if (lwpid_real > 1023) {
+      return 0;
+   }
+
    pid_t lwpid   = (_psinfo->pr_pid * 1024) + lwpid_real;
    bool onMasterLWP = (_lwpsinfo->pr_lwpid == _psinfo->pr_lwp.pr_lwpid);
    if (onMasterLWP) {
@@ -347,9 +353,13 @@ int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* 
       if (sproc->kernel && !pl->settings->hideKernelThreads) {
          pl->kernelThreads += proc->nlwp;
          pl->totalTasks += proc->nlwp + 1;
-         if (proc->state == 'O') pl->runningTasks++;
+         if (proc->state == 'O') {
+            pl->runningTasks++;
+         }
       } else if (!sproc->kernel) {
-         if (proc->state == 'O') pl->runningTasks++;
+         if (proc->state == 'O') {
+            pl->runningTasks++;
+         }
          if (pl->settings->hideUserlandThreads) {
             pl->totalTasks++;
          } else {
@@ -403,8 +413,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    SolarisProcessList_scanZfsArcstats(super);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate)
+   if (pauseProcessUpdate) {
       return;
+   }
 
    super->kernelThreads = 1;
    proc_walk(&SolarisProcessList_walkproc, super, PR_WALK_LWP);

@@ -52,9 +52,11 @@ static unsigned long int parseBatInfo(const char* fileName, const unsigned short
       struct dirent* dirEntry = readdir(batteryDir);
       if (!dirEntry)
          break;
+
       char* entryName = dirEntry->d_name;
       if (!String_startsWith(entryName, "BAT"))
          continue;
+
       batteries[nBatteries] = xStrdup(entryName);
       nBatteries++;
    }
@@ -74,12 +76,14 @@ static unsigned long int parseBatInfo(const char* fileName, const unsigned short
       for (unsigned short int j = 0; j < lineNum; j++) {
          free(line);
          line = String_readLine(file);
-         if (!line) break;
+         if (!line)
+            break;
       }
 
       fclose(file);
 
-      if (!line) break;
+      if (!line)
+         break;
 
       char* foundNumStr = String_getToken(line, wordNum);
       const unsigned long int foundNum = atoi(foundNumStr);
@@ -122,8 +126,11 @@ static ACPresence procAcpiCheck(void) {
          continue;
       }
       char* line = String_readLine(file);
+
       fclose(file);
-      if (!line) continue;
+
+      if (!line)
+         continue;
 
       char* isOnline = String_getToken(line, 2);
       free(line);
@@ -139,8 +146,10 @@ static ACPresence procAcpiCheck(void) {
       }
    }
 
-   if (dir)
+   if (dir) {
       closedir(dir);
+   }
+
    return isOn;
 }
 
@@ -170,14 +179,21 @@ static inline ssize_t xread(int fd, void* buf, size_t count) {
    size_t alreadyRead = 0;
    for (;;) {
       ssize_t res = read(fd, buf, count);
-      if (res == -1 && errno == EINTR) continue;
+      if (res == -1) {
+         if (errno == EINTR)
+            continue;
+         return -1;
+      }
+
       if (res > 0) {
          buf = ((char*)buf) + res;
          count -= res;
          alreadyRead += res;
       }
-      if (res == -1) return -1;
-      if (count == 0 || res == 0) return alreadyRead;
+
+      if (count == 0 || res == 0) {
+         return alreadyRead;
+      }
    }
 }
 
@@ -197,6 +213,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       struct dirent* dirEntry = readdir(dir);
       if (!dirEntry)
          break;
+
       const char* entryName = dirEntry->d_name;
       char filePath[256];
 
@@ -257,14 +274,18 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
                fullSize = atoi(value);
                totalFull += fullSize;
                full = true;
-               if (now) break;
+               if (now) {
+                  break;
+               }
                continue;
             }
             value = (!now) ? match(energy, "NOW=") : NULL;
             if (value) {
                totalRemain += atoi(value);
                now = true;
-               if (full) break;
+               if (full) {
+                  break;
+               }
                continue;
             }
          }
@@ -288,7 +309,9 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
          char buffer[2] = "";
          for (;;) {
             ssize_t res = read(fd3, buffer, 1);
-            if (res == -1 && errno == EINTR) continue;
+            if (res == -1 && errno == EINTR) {
+               continue;
+            }
             break;
          }
          close(fd3);

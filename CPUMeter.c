@@ -163,10 +163,13 @@ static void CPUMeterCommonInit(Meter* this, int ncol) {
    for (int i = 0; i < count; i++) {
       if (!meters[i])
          meters[i] = Meter_new(this->pl, start + i + 1, (const MeterClass*) Class(CPUMeter));
+
       Meter_init(meters[i]);
    }
+
    if (this->mode == 0)
       this->mode = BAR_METERMODE;
+
    int h = Meter_modes[this->mode]->h;
    this->h = h * ((count + ncol - 1) / ncol);
 }

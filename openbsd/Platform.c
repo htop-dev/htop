@@ -184,7 +184,9 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    }
 
    totalPercent = CLAMP(totalPercent, 0.0, 100.0);
-   if (isnan(totalPercent)) totalPercent = 0.0;
+   if (isnan(totalPercent)) {
+      totalPercent = 0.0;
+   }
    return totalPercent;
 }
 
@@ -250,8 +252,9 @@ char* Platform_getProcessEnv(pid_t pid) {
    struct kinfo_proc* kproc;
    size_t capacity = 4096, size = 0;
 
-   if ((kt = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf)) == NULL)
+   if ((kt = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf)) == NULL) {
       return NULL;
+   }
 
    if ((kproc = kvm_getprocs(kt, KERN_PROC_PID, pid,
                              sizeof(struct kinfo_proc), &count)) == NULL) {

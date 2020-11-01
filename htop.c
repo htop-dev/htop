@@ -243,12 +243,13 @@ static void setCommFilter(State* state, char** commFilter) {
 int main(int argc, char** argv) {
 
    char* lc_ctype = getenv("LC_CTYPE");
-   if (lc_ctype != NULL)
+   if (lc_ctype != NULL) {
       setlocale(LC_CTYPE, lc_ctype);
-   else if ((lc_ctype = getenv("LC_ALL")))
+   } else if ((lc_ctype = getenv("LC_ALL"))) {
       setlocale(LC_CTYPE, lc_ctype);
-   else
+   } else {
       setlocale(LC_CTYPE, "");
+   }
 
    CommandLineSettings flags = parseArguments(argc, argv); // may exit()
 
@@ -271,14 +272,18 @@ int main(int argc, char** argv) {
 
    Header_populateFromSettings(header);
 
-   if (flags.delay != -1)
+   if (flags.delay != -1) {
       settings->delay = flags.delay;
-   if (!flags.useColors)
+   }
+   if (!flags.useColors) {
       settings->colorScheme = COLORSCHEME_MONOCHROME;
-   if (!flags.enableMouse)
+   }
+   if (!flags.enableMouse) {
       settings->enableMouse = false;
-   if (flags.treeView)
+   }
+   if (flags.treeView) {
       settings->treeView = true;
+   }
 
    CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
 

@@ -27,8 +27,9 @@ void ProcessList_delete(ProcessList* this) {
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate)
+   if (pauseProcessUpdate) {
       return;
+   }
 
    bool preExisting = true;
    Process* proc;

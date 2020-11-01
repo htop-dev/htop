@@ -88,7 +88,8 @@ MeterModeId Header_addMeterByName(Header* this, char* name, int column) {
    int param = 0;
    if (paren) {
       int ok = sscanf(paren, "(%10d)", &param);
-      if (!ok) param = 0;
+      if (!ok)
+         param = 0;
       *paren = '\0';
    }
    MeterModeId mode = TEXT_METERMODE;
@@ -100,8 +101,10 @@ MeterModeId Header_addMeterByName(Header* this, char* name, int column) {
          break;
       }
    }
+
    if (paren)
       *paren = '(';
+
    return mode;
 }
 
@@ -110,6 +113,7 @@ void Header_setMode(Header* this, int i, MeterModeId mode, int column) {
 
    if (i >= Vector_size(meters))
       return;
+
    Meter* meter = (Meter*) Vector_get(meters, i);
    Meter_setMode(meter, mode);
 }
@@ -153,8 +157,9 @@ void Header_reinit(Header* this) {
    Header_forEachColumn(this, col) {
       for (int i = 0; i < Vector_size(this->columns[col]); i++) {
          Meter* meter = (Meter*) Vector_get(this->columns[col], i);
-         if (Meter_initFn(meter))
+         if (Meter_initFn(meter)) {
             Meter_init(meter);
+         }
       }
    }
 }

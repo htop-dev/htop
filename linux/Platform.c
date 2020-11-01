@@ -98,15 +98,18 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    Panel* panel = st->panel;
 
    LinuxProcess* p = (LinuxProcess*) Panel_getSelected(panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    IOPriority ioprio1 = p->ioPriority;
    Panel* ioprioPanel = IOPriorityPanel_new(ioprio1);
    void* set = Action_pickFromVector(st, ioprioPanel, 21, true);
    if (set) {
       IOPriority ioprio2 = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = MainPanel_foreachProcess((MainPanel*)panel, LinuxProcess_setIOPriority, (Arg){ .i = ioprio2 }, NULL);
-      if (!ok)
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, LinuxProcess_setIOPriority, (Arg) { .i = ioprio2 }, NULL);
+      if (!ok) {
          beep();
+      }
    }
    Panel_delete((Object*)ioprioPanel);
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
@@ -162,7 +165,9 @@ int Platform_getUptime() {
    if (fd) {
       int n = fscanf(fd, "%64lf", &uptime);
       fclose(fd);
-      if (n <= 0) return 0;
+      if (n <= 0) {
+         return 0;
+      }
    }
    return floor(uptime);
 }
@@ -185,7 +190,9 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 
 int Platform_getMaxPid() {
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
-   if (!file) return -1;
+   if (!file)
+      return -1;
+
    int maxPid = 4194303;
    int match = fscanf(file, "%32d", &maxPid);
    (void) match;
@@ -221,7 +228,9 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       percent = v[0] + v[1] + v[2] + v[3];
    }
    percent = CLAMP(percent, 0.0, 100.0);
-   if (isnan(percent)) percent = 0.0;
+   if (isnan(percent)) {
+      percent = 0.0;
+   }
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
 

@@ -110,15 +110,18 @@ struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
     * process entry or two.
     */
    *count = 0;
-   if (sysctl(mib, 4, NULL, count, NULL, 0) < 0)
+   if (sysctl(mib, 4, NULL, count, NULL, 0) < 0) {
       CRT_fatalError("Unable to get size of kproc_infos");
+   }
 
    processes = xMalloc(*count);
-   if (processes == NULL)
+   if (processes == NULL) {
       CRT_fatalError("Out of memory for kproc_infos");
+   }
 
-   if (sysctl(mib, 4, processes, count, NULL, 0) < 0)
+   if (sysctl(mib, 4, processes, count, NULL, 0) < 0) {
       CRT_fatalError("Unable to get kinfo_procs");
+   }
 
    *count = *count / sizeof(struct kinfo_proc);
 

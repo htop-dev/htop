@@ -156,13 +156,19 @@ int Platform_getMaxPid() {
    kvar_t* ksvar = NULL;
    int vproc = 32778; // Reasonable Solaris default
    kc = kstat_open();
-   if (kc != NULL) { kshandle = kstat_lookup(kc,"unix",0,"var"); }
-   if (kshandle != NULL) { kstat_read(kc,kshandle,NULL); }
+   if (kc != NULL) {
+      kshandle = kstat_lookup(kc, "unix", 0, "var");
+   }
+   if (kshandle != NULL) {
+      kstat_read(kc, kshandle, NULL);
+   }
    ksvar = kshandle->ks_data;
    if (ksvar->v_proc > 0 ) {
       vproc = ksvar->v_proc;
    }
-   if (kc != NULL) { kstat_close(kc); }
+   if (kc != NULL) {
+      kstat_close(kc);
+   }
    return vproc;
 }
 
@@ -195,7 +201,9 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    }
 
    percent = CLAMP(percent, 0.0, 100.0);
-   if (isnan(percent)) percent = 0.0;
+   if (isnan(percent)) {
+      percent = 0.0;
+   }
 
    v[CPU_METER_FREQUENCY] = NAN;
 
@@ -233,10 +241,12 @@ static int Platform_buildenv(void* accum, struct ps_prochandle* Phandle, uintptr
    (void) Phandle;
    (void) addr;
    size_t thissz = strlen(str);
-   if ((thissz + 2) > (accump->capacity - accump->size))
+   if ((thissz + 2) > (accump->capacity - accump->size)) {
       accump->env = xRealloc(accump->env, accump->capacity *= 2);
-   if ((thissz + 2) > (accump->capacity - accump->size))
+   }
+   if ((thissz + 2) > (accump->capacity - accump->size)) {
       return 1;
+   }
    strlcpy( accump->env + accump->size, str, (accump->capacity - accump->size));
    strncpy( accump->env + accump->size + thissz + 1, "\n", 1);
    accump->size = accump->size + thissz + 1;
@@ -249,8 +259,9 @@ char* Platform_getProcessEnv(pid_t pid) {
    int graberr;
    struct ps_prochandle* Phandle;
 
-   if ((Phandle = Pgrab(realpid, PGRAB_RDONLY, &graberr)) == NULL)
+   if ((Phandle = Pgrab(realpid, PGRAB_RDONLY, &graberr)) == NULL) {
       return "Unable to read process environment.";
+   }
 
    envBuilder.capacity = 4096;
    envBuilder.size     = 0;

@@ -41,8 +41,9 @@ Meter* Meter_new(const struct ProcessList_* pl, int param, const MeterClass* typ
    this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
    this->total = type->total;
    this->caption = xStrdup(type->caption);
-   if (Meter_initFn(this))
+   if (Meter_initFn(this)) {
       Meter_init(this);
+   }
    Meter_setMode(this, type->defaultMode);
    return this;
 }
@@ -81,6 +82,7 @@ int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
 void Meter_delete(Object* cast) {
    if (!cast)
       return;
+
    Meter* this = (Meter*) cast;
    if (Meter_doneFn(this)) {
       Meter_done(this);
@@ -105,15 +107,20 @@ static inline void Meter_displayBuffer(const Meter* this, const char* buffer, Ri
 }
 
 void Meter_setMode(Meter* this, int modeIndex) {
-   if (modeIndex > 0 && modeIndex == this->mode)
+   if (modeIndex > 0 && modeIndex == this->mode) {
       return;
-   if (!modeIndex)
+   }
+
+   if (!modeIndex) {
       modeIndex = 1;
+   }
+
    assert(modeIndex < LAST_METERMODE);
    if (Meter_defaultMode(this) == CUSTOM_METERMODE) {
       this->draw = Meter_drawFn(this);
-      if (Meter_updateModeFn(this))
+      if (Meter_updateModeFn(this)) {
          Meter_updateMode(this, modeIndex);
+      }
    } else {
       assert(modeIndex >= 1);
       free(this->drawData);
@@ -128,15 +135,17 @@ void Meter_setMode(Meter* this, int modeIndex) {
 
 ListItem* Meter_toListItem(Meter* this, bool moving) {
    char mode[21];
-   if (this->mode)
+   if (this->mode) {
       xSnprintf(mode, 20, " [%s]", Meter_modes[this->mode]->uiName);
-   else
+   } else {
       mode[0] = '\0';
+   }
    char number[11];
-   if (this->param > 0)
+   if (this->param > 0) {
       xSnprintf(number, 10, " %d", this->param);
-   else
+   } else {
       number[0] = '\0';
+   }
    char buffer[51];
    xSnprintf(buffer, 50, "%s%s%s", Meter_uiName(this), number, mode);
    ListItem* li = ListItem_new(buffer, 0);
@@ -261,7 +270,9 @@ static int GraphMeterMode_pixPerRow;
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
-   if (!this->drawData) this->drawData = xCalloc(1, sizeof(GraphData));
+   if (!this->drawData) {
+      this->drawData = xCalloc(1, sizeof(GraphData));
+   }
    GraphData* data = this->drawData;
    const int nValues = METER_BUFFER_LEN;
 

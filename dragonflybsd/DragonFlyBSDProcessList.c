@@ -123,7 +123,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
 void ProcessList_delete(ProcessList* this) {
    const DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
-   if (dfpl->kd) kvm_close(dfpl->kd);
+   if (dfpl->kd) {
+      kvm_close(dfpl->kd);
+   }
 
    if (dfpl->jails) {
       Hashtable_delete(dfpl->jails);
@@ -199,7 +201,9 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
 
       // totals
       total_d = total_n - total_o;
-      if (total_d < 1 ) total_d = 1;
+      if (total_d < 1 ) {
+         total_d = 1;
+      }
 
       // save current state as old and calc percentages
       for (int s = 0; s < CPUSTATES; ++s) {
@@ -331,8 +335,9 @@ retry:
       int jailid;
       char* str_hostname;
       nextpos = strchr(curpos, '\n');
-      if (nextpos)
+      if (nextpos) {
          *nextpos++ = 0;
+      }
 
       jailid = atoi(strtok(curpos, " "));
       str_hostname = strtok(NULL, " ");
@@ -372,8 +377,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    DragonFlyBSDProcessList_scanJails(dfpl);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate)
+   if (pauseProcessUpdate) {
       return;
+   }
 
    int count = 0;
 

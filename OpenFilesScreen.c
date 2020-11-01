@@ -69,10 +69,11 @@ static const char* getDataForType(const OpenFiles_Data* data, char type) {
 OpenFilesScreen* OpenFilesScreen_new(const Process* process) {
    OpenFilesScreen* this = xMalloc(sizeof(OpenFilesScreen));
    Object_setClass(this, Class(OpenFilesScreen));
-   if (Process_isThread(process))
+   if (Process_isThread(process)) {
       this->pid = process->tgid;
-   else
+   } else {
       this->pid = process->pid;
+   }
    return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 3, "   FD TYPE    MODE DEVICE           SIZE       NODE  NAME");
 }
 
@@ -106,8 +107,10 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       dup2(fdpair[1], STDOUT_FILENO);
       close(fdpair[1]);
       int fdnull = open("/dev/null", O_WRONLY);
-      if (fdnull < 0)
+      if (fdnull < 0) {
          exit(1);
+      }
+
       dup2(fdnull, STDERR_FILENO);
       close(fdnull);
       char buffer[32] = {0};
@@ -182,10 +185,11 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       return pdata;
    }
 
-   if (!WIFEXITED(wstatus))
+   if (!WIFEXITED(wstatus)) {
       pdata->error = 1;
-   else
+   } else {
       pdata->error = WEXITSTATUS(wstatus);
+   }
 
    return pdata;
 }
