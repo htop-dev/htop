@@ -95,7 +95,10 @@ typedef enum LinuxProcessFields {
    M_PSSWP = 121,
    CTXT = 122,
    SECATTR = 123,
-   LAST_PROCESSFIELD = 124,
+   #ifdef HAVE_CGROUP
+   LXC = 124,
+   #endif
+   LAST_PROCESSFIELD = 125,
 } LinuxProcessField;
 
 typedef struct LinuxProcess_ {
@@ -138,6 +141,7 @@ typedef struct LinuxProcess_ {
    #endif
    #ifdef HAVE_CGROUP
    char* cgroup;
+   char* lxc;
    #endif
    unsigned int oom;
    char* ttyDevice;

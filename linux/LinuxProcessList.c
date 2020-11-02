@@ -638,6 +638,33 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
       if (!ok) break;
       char* group = strchr(buffer, ':');
       if (!group) break;
+
+      if (!process->lxc) {
+         // Each line have 3 columns separated by a ':', the 3rd column contains the pathname
+         char* groupPathname = strchr(group + 1, ':') + 1;
+         if (groupPathname) {
+            if ( String_startsWith(groupPathname, "/lxc.payload/") || String_startsWith(groupPathname, "/lxc.payload.") ) {
+               // The process is inside a LXC container using CGroup V2 (/lxc.payload.) or a modern CGroup V1 terminology (/lxc.payload/), for a better readability, only the container name is kept
+               char *slashpostion = strchr((groupPathname + 13), '/');
+               if (slashpostion) {
+                  // There is a '/' in the CGroup string (after the initial "/lxc.payload"), a '\0' will truncate the string at this position
+                  groupPathname[(slashpostion - groupPathname)] = '\0';
+               }
+               free(process->lxc);
+               process->lxc = String_trim(groupPathname + 13);
+            } else if (String_startsWith(groupPathname, "/lxc/")) {
+               // The process is inside a LXC container using a legacy CGroup V1 (/lxc/), for a better readability, only the container name is kept
+               char *slashpostion = strchr((groupPathname + 5), '/');
+               if (slashpostion) {
+                  // There is a '/' in the CGroup string (after the initial "/lxc/"), a '\0' will truncate the string at this position
+                  groupPathname[(slashpostion - groupPathname)] = '\0';
+               }
+               free(process->lxc);
+               process->lxc = String_trim(groupPathname + 5);
+            }
+         }
+      }
+
       if (at != output) {
          *at = ';';
          at++;
@@ -647,6 +674,12 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
       left -= wrote;
    }
    fclose(file);
+   if (!process->lxc) {
+      // The process is not in a LXC container
+      free(process->lxc);
+      // To show an empty value instead of (null)
+      process->lxc = NULL;
+   }
    free(process->cgroup);
    process->cgroup = xStrdup(output);
 }
