@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #define RichString_sizeVal(this) ((this).chlen)
 
 #define RichString_begin(this) RichString (this); RichString_beginAllocated(this)
-#define RichString_beginAllocated(this) memset(&(this), 0, sizeof(RichString)); (this).chptr = (this).chstr
+#define RichString_beginAllocated(this) do { memset(&(this), 0, sizeof(RichString)); (this).chptr = (this).chstr; } while(0)
 #define RichString_end(this) RichString_prune(&(this))
 
 #ifdef HAVE_LIBNCURSESW
