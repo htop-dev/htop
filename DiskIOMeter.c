@@ -53,14 +53,25 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, int len) {
          return;
       }
 
-      cached_read_diff = (data.totalBytesRead - cached_read_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
+      if (data.totalBytesRead > cached_read_total) {
+         cached_read_diff = (data.totalBytesRead - cached_read_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
+      } else {
+         cached_read_diff = 0;
+      }
       cached_read_total = data.totalBytesRead;
 
-      cached_write_diff = (data.totalBytesWritten - cached_write_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
+      if (data.totalBytesWritten > cached_write_total) {
+         cached_write_diff = (data.totalBytesWritten - cached_write_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
+      } else {
+         cached_write_diff = 0;
+      }
       cached_write_total = data.totalBytesWritten;
 
-      cached_utilisation_diff = 100 * (double)(data.totalMsTimeSpend - cached_msTimeSpend_total) / passedTimeInMs;
-
+      if (data.totalMsTimeSpend > cached_msTimeSpend_total) {
+         cached_utilisation_diff = 100 * (double)(data.totalMsTimeSpend - cached_msTimeSpend_total) / passedTimeInMs;
+      } else {
+         cached_utilisation_diff = 0.0;
+      }
       cached_msTimeSpend_total = data.totalMsTimeSpend;
    }
 
