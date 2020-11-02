@@ -1055,10 +1055,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       }
 
       float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;
-      proc->percent_cpu = CLAMP(percent_cpu, 0.0, cpus * 100.0);
-      if (isnan(proc->percent_cpu))
-         proc->percent_cpu = 0.0;
-
+      proc->percent_cpu = isnan(percent_cpu) ? 0.0 : CLAMP(percent_cpu, 0.0, cpus * 100.0);
       proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(pl->totalMem) * 100.0;
 
       if (!preExisting) {

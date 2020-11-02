@@ -176,10 +176,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       percent = v[0] + v[1] + v[2];
    }
 
-   percent = CLAMP(percent, 0.0, 100.0);
-   if (isnan(percent)) {
-      percent = 0.0;
-   }
+   percent = isnan(percent) ? 0.0 : CLAMP(percent, 0.0, 100.0);
 
    v[CPU_METER_FREQUENCY] = NAN;
 
