@@ -143,9 +143,7 @@ void TraceScreen_updateTrace(InfoScreen* super) {
 // FD_SET(STDIN_FILENO, &fds);
    FD_SET(fd_strace, &fds);
 
-   struct timeval tv;
-   tv.tv_sec = 0;
-   tv.tv_usec = 500;
+   struct timeval tv = { .tv_sec = 0, .tv_usec = 500 };
    int ready = select(fd_strace + 1, &fds, NULL, NULL, &tv);
 
    size_t nread = 0;
