@@ -240,6 +240,11 @@ static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
+static Htop_Reaction actionToggleMergeApplication(State* st) {
+   st->settings->mergeApplications = !st->settings->mergeApplications;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+}
+
 static Htop_Reaction actionIncFilter(State* st) {
    IncSet* inc = (st->mainPanel)->inc;
    IncSet_activate(inc, INC_FILTER, (Panel*)st->mainPanel);
@@ -471,6 +476,7 @@ static const struct {
    { .key = "      x: ", .info = "list file locks of process" },
    { .key = "      s: ", .info = "trace syscalls with strace" },
    { .key = "      w: ", .info = "wrap process command in multiple lines" },
+   { .key = "      A: ", .info = "Merge processes of same application" },
    { .key = " F2 C S: ", .info = "setup" },
    { .key = "   F1 h: ", .info = "show this help screen" },
    { .key = "  F10 q: ", .info = "quit" },
@@ -638,6 +644,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['='] = actionExpandOrCollapse;
    keys['>'] = actionSetSortColumn;
    keys['?'] = actionHelp;
+   keys['A'] = actionToggleMergeApplication;
    keys['C'] = actionSetup;
    keys['F'] = Action_follow;
    keys['H'] = actionToggleUserlandThreads;

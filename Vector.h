@@ -81,4 +81,6 @@ int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compa
 
 void Vector_splice(Vector* this, Vector* from);
 
+void Vector_swap(Vector** a, Vector** b);
+
 #endif

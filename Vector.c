@@ -338,3 +338,14 @@ void Vector_splice(Vector* this, Vector* from) {
       this->array[olditems + j] = from->array[j];
    }
 }
+
+void Vector_swap(Vector** a, Vector** b) {
+   assert(Vector_isConsistent(*a));
+   assert(Vector_isConsistent(*b));
+   assert((*a)->type == (*b)->type);
+   assert((*a)->owner == (*b)->owner);
+
+   Vector* tmp = *a;
+   *a = *b;
+   *b = tmp;
+}

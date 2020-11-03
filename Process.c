@@ -257,6 +257,11 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
          baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
       }
       if (!this->settings->treeView || this->indent == 0) {
+         if (this->merged > 1) {
+            char merged[16];
+            xSnprintf(merged, sizeof(merged), "[%u] ", this->merged);
+            RichString_appendAscii(str, CRT_colors[PROCESS_SHADOW], merged);
+         }
          Process_writeCommand(this, attr, baseattr, str);
          return;
       }
@@ -291,6 +296,11 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       const char* draw = CRT_treeStr[lastItem ? TREE_STR_BEND : TREE_STR_RTEE];
       xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
       RichString_appendWide(str, CRT_colors[PROCESS_TREE], buffer);
+      if (this->merged > 1) {
+         char merged[16];
+         xSnprintf(merged, sizeof(merged), "[%u] ", this->merged);
+         RichString_appendAscii(str, CRT_colors[PROCESS_SHADOW], merged);
+      }
       Process_writeCommand(this, attr, baseattr, str);
       return;
    }
@@ -502,6 +512,33 @@ int Process_pidCompare(const void* v1, const void* v2) {
    return SPACESHIP_NUMBER(p1->pid, p2->pid);
 }
 
+static bool isTransitiveChildOf(const Process* child, const Process* parent) {
+   assert(child->processList == parent->processList);
+
+   for (const Process* tChild = child; tChild; tChild = ProcessList_findProcess(parent->processList, Process_getParentPid(tChild)))
+      if (Process_isChildOf(tChild, parent->pid))
+         return true;
+
+   return false;
+}
+
+int Process_sameApplication(const Process* v1, const Process* v2) {
+   if (v1->session != v2->session)
+      return 0;
+
+   // we can compare pointers since the field user points to a hashtable entry
+   if (v1->user != v2->user)
+      return 0;
+
+   if (isTransitiveChildOf(v1, v2))
+      return 2;
+
+   if (isTransitiveChildOf(v2, v1))
+      return 1;
+
+   return 0;
+}
+
 int Process_compare(const void* v1, const void* v2) {
    const Process *p1 = (const Process*)v1;
    const Process *p2 = (const Process*)v2;
@@ -612,4 +649,34 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    default:
       return SPACESHIP_NUMBER(p1->pid, p2->pid);
    }
+}
+
+void Process_mergeData(Process* p1, const Process* p2) {
+
+   p1->percent_cpu += p2->percent_cpu;
+   p1->percent_mem += p2->percent_mem;
+   // keep COMM
+   p1->majflt += p2->majflt;
+   p1->minflt += p2->minflt;
+   p1->m_resident += p2->m_resident;
+   p1->m_virt += p2->m_virt;
+   // store min NICE
+   p1->nice = MINIMUM(p1->nice, p2->nice);
+   p1->nlwp += p2->nlwp;
+   // keep PGRP
+   // keep PID
+   // keep PPID
+   p1->priority = MAXIMUM(p1->priority, p2->priority);
+   // keep PROCESSOR
+   // keep SESSION
+   p1->starttime_ctime = MINIMUM(p1->starttime_ctime, p2->starttime_ctime);
+   // keep STATE
+   // keep ST_UID
+   p1->time += p2->time;
+   // keep TGID
+   // keep TPGID
+   // keep TTY_NR
+   // keep USER
+
+   p1->merged += p2->merged;
 }
