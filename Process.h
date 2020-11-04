@@ -55,11 +55,13 @@ typedef struct ProcessPidColumn_ {
 } ProcessPidColumn;
 
 struct Settings_;
+struct ProcessList_;
 
 typedef struct Process_ {
    Object super;
 
    const struct Settings_* settings;
+   const struct ProcessList_* pl;
 
    unsigned long long int time;
    pid_t pid;

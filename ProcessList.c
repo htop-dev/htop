@@ -287,10 +287,12 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
    if (proc) {
       assert(Vector_indexOf(this->processes, proc, Process_pidCompare) != -1);
       assert(proc->pid == pid);
+      assert(proc->pl == this);
    } else {
       proc = constructor(this->settings);
       assert(proc->comm == NULL);
       proc->pid = pid;
+      proc->pl = this;
    }
    return proc;
 }
