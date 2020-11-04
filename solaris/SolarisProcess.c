@@ -119,6 +119,7 @@ void SolarisProcess_writeField(const Process* this, RichString* str, ProcessFiel
 long SolarisProcess_compare(const void* v1, const void* v2) {
    const SolarisProcess *p1, *p2;
    const Settings* settings = ((const Process*)v1)->settings;
+
    if (settings->direction == 1) {
       p1 = (const SolarisProcess*)v1;
       p2 = (const SolarisProcess*)v2;
@@ -126,25 +127,26 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
       p2 = (const SolarisProcess*)v1;
       p1 = (const SolarisProcess*)v2;
    }
+
    switch ((int) settings->sortKey) {
    case ZONEID:
-      return (p1->zoneid - p2->zoneid);
+      return SPACESHIP_NUMBER(p1->zoneid, p2->zoneid);
    case PROJID:
-      return (p1->projid - p2->projid);
+      return SPACESHIP_NUMBER(p1->projid, p2->projid);
    case TASKID:
-      return (p1->taskid - p2->taskid);
+      return SPACESHIP_NUMBER(p1->taskid, p2->taskid);
    case POOLID:
-      return (p1->poolid - p2->poolid);
+      return SPACESHIP_NUMBER(p1->poolid, p2->poolid);
    case CONTID:
-      return (p1->contid - p2->contid);
+      return SPACESHIP_NUMBER(p1->contid, p2->contid);
    case ZONE:
       return strcmp(p1->zname ? p1->zname : "global", p2->zname ? p2->zname : "global");
    case PID:
-      return (p1->realpid - p2->realpid);
+      return SPACESHIP_NUMBER(p1->realpid, p2->realpid);
    case PPID:
-      return (p1->realppid - p2->realppid);
+      return SPACESHIP_NUMBER(p1->realppid, p2->realppid);
    case LWPID:
-      return (p1->lwpid - p2->lwpid);
+      return SPACESHIP_NUMBER(p1->lwpid, p2->lwpid);
    default:
       return Process_compare(v1, v2);
    }

@@ -460,6 +460,8 @@ long Process_pidCompare(const void* v1, const void* v2) {
 long Process_compare(const void* v1, const void* v2) {
    const Process *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
+   int r;
+
    if (settings->direction == 1) {
       p1 = (const Process*)v1;
       p2 = (const Process*)v2;
@@ -467,59 +469,56 @@ long Process_compare(const void* v1, const void* v2) {
       p2 = (const Process*)v1;
       p1 = (const Process*)v2;
    }
+
    switch (settings->sortKey) {
    case PERCENT_CPU:
-      return (p2->percent_cpu > p1->percent_cpu ? 1 : -1);
+      return SPACESHIP_NUMBER(p2->percent_cpu, p1->percent_cpu);
    case PERCENT_MEM:
-      return (p2->m_resident - p1->m_resident);
+      return SPACESHIP_NUMBER(p2->m_resident, p1->m_resident);
    case COMM:
-      return strcmp(p1->comm, p2->comm);
+      return SPACESHIP_NULLSTR(p1->comm, p2->comm);
    case MAJFLT:
-      return (p2->majflt - p1->majflt);
+      return SPACESHIP_NUMBER(p2->majflt, p1->majflt);
    case MINFLT:
-      return (p2->minflt - p1->minflt);
+      return SPACESHIP_NUMBER(p2->minflt, p1->minflt);
    case M_RESIDENT:
-      return (p2->m_resident - p1->m_resident);
+      return SPACESHIP_NUMBER(p2->m_resident, p1->m_resident);
    case M_SIZE:
-      return (p2->m_size - p1->m_size);
+      return SPACESHIP_NUMBER(p2->m_size, p1->m_size);
    case NICE:
-      return (p1->nice - p2->nice);
+      return SPACESHIP_NUMBER(p1->nice, p2->nice);
    case NLWP:
-      return (p1->nlwp - p2->nlwp);
+      return SPACESHIP_NUMBER(p1->nlwp, p2->nlwp);
    case PGRP:
-      return (p1->pgrp - p2->pgrp);
+      return SPACESHIP_NUMBER(p1->pgrp, p2->pgrp);
    case PID:
-      return (p1->pid - p2->pid);
+      return SPACESHIP_NUMBER(p1->pid, p2->pid);
    case PPID:
-      return (p1->ppid - p2->ppid);
+      return SPACESHIP_NUMBER(p1->ppid, p2->ppid);
    case PRIORITY:
-      return (p1->priority - p2->priority);
+      return SPACESHIP_NUMBER(p1->priority, p2->priority);
    case PROCESSOR:
-      return (p1->processor - p2->processor);
+      return SPACESHIP_NUMBER(p1->processor, p2->processor);
    case SESSION:
-      return (p1->session - p2->session);
-   case STARTTIME: {
-      if (p1->starttime_ctime == p2->starttime_ctime) {
-         return (p1->pid - p2->pid);
-      } else {
-         return (p1->starttime_ctime - p2->starttime_ctime);
-      }
-   }
+      return SPACESHIP_NUMBER(p1->session, p2->session);
+   case STARTTIME:
+      r = SPACESHIP_NUMBER(p1->starttime_ctime, p2->starttime_ctime);
+      return r != 0 ? r : SPACESHIP_NUMBER(p1->pid, p2->pid);
    case STATE:
-      return (Process_sortState(p1->state) - Process_sortState(p2->state));
+      return SPACESHIP_NUMBER(Process_sortState(p1->state), Process_sortState(p2->state));
    case ST_UID:
-      return (p1->st_uid - p2->st_uid);
+      return SPACESHIP_NUMBER(p1->st_uid, p2->st_uid);
    case TIME:
-      return ((p2->time) - (p1->time));
+      return SPACESHIP_NUMBER(p2->time, p1->time);
    case TGID:
-      return (p1->tgid - p2->tgid);
+      return SPACESHIP_NUMBER(p1->tgid, p2->tgid);
    case TPGID:
-      return (p1->tpgid - p2->tpgid);
+      return SPACESHIP_NUMBER(p1->tpgid, p2->tpgid);
    case TTY_NR:
-      return (p1->tty_nr - p2->tty_nr);
+      return SPACESHIP_NUMBER(p1->tty_nr, p2->tty_nr);
    case USER:
-      return strcmp(p1->user ? p1->user : "", p2->user ? p2->user : "");
+      return SPACESHIP_NULLSTR(p1->user, p2->user);
    default:
-      return (p1->pid - p2->pid);
+      return SPACESHIP_NUMBER(p1->pid, p2->pid);
    }
 }
