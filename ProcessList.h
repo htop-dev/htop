@@ -95,7 +95,7 @@ int ProcessList_size(ProcessList* this);
 
 void ProcessList_sort(ProcessList* this);
 
-ProcessField ProcessList_keyAt(ProcessList* this, int at);
+ProcessField ProcessList_keyAt(const ProcessList* this, int at);
 
 void ProcessList_expandTree(ProcessList* this);
 

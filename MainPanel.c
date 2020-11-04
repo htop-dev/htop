@@ -59,7 +59,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
 
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
-      ProcessList* pl = this->state->pl;
+      const ProcessList* pl = this->state->pl;
       Settings* settings = this->state->settings;
       int hx = super->scrollH + x + 1;
       ProcessField field = ProcessList_keyAt(pl, hx);

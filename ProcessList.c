@@ -231,7 +231,7 @@ void ProcessList_sort(ProcessList* this) {
 }
 
 
-ProcessField ProcessList_keyAt(ProcessList* this, int at) {
+ProcessField ProcessList_keyAt(const ProcessList* this, int at) {
    int x = 0;
    const ProcessField* fields = this->settings->fields;
    ProcessField field;
