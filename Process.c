@@ -35,7 +35,7 @@ in the source distribution for its full text.
 #endif
 
 
-static int Process_getuid = -1;
+static uid_t Process_getuid = (uid_t)-1;
 
 char Process_pidFormat[20] = "%7d ";
 
@@ -360,7 +360,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    case TPGID: xSnprintf(buffer, n, Process_pidFormat, this->tpgid); break;
    case TTY_NR: xSnprintf(buffer, n, "%3u:%3u ", major(this->tty_nr), minor(this->tty_nr)); break;
    case USER: {
-      if (Process_getuid != (int) this->st_uid)
+      if (Process_getuid != this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
       if (this->user) {
          xSnprintf(buffer, n, "%-9s ", this->user);
@@ -386,7 +386,7 @@ void Process_display(const Object* cast, RichString* out) {
    for (int i = 0; fields[i]; i++)
       As_Process(this)->writeField(this, out, fields[i]);
 
-   if (this->settings->shadowOtherUsers && (int)this->st_uid != Process_getuid) {
+   if (this->settings->shadowOtherUsers && this->st_uid != Process_getuid) {
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
    }
 
@@ -420,7 +420,7 @@ void Process_init(Process* this, const struct Settings_* settings) {
    this->updated = false;
    this->basenameOffset = -1;
 
-   if (Process_getuid == -1) {
+   if (Process_getuid == (uid_t)-1) {
       Process_getuid = getuid();
    }
 }
