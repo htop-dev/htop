@@ -36,7 +36,10 @@ static inline void Vector_quickSort(Vector* this) {
    Vector_quickSortCustomCompare(this, this->type->compare);
 }
 
-void Vector_insertionSort(Vector* this);
+void Vector_insertionSortCustomCompare(Vector* this, Object_Compare compare);
+static inline void Vector_insertionSort(Vector* this) {
+   Vector_insertionSortCustomCompare(this, this->type->compare);
+}
 
 void Vector_insert(Vector* this, int idx, void* data_);
 
