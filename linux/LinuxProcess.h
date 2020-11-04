@@ -181,10 +181,6 @@ bool LinuxProcess_setIOPriority(Process* this, Arg ioprio);
 void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);
 #endif
 
-void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field);
-
-long LinuxProcess_compare(const void* v1, const void* v2);
-
 bool Process_isThread(const Process* this);
 
 #endif
