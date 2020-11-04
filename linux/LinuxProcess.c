@@ -128,16 +128,6 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
 
-const ProcessClass LinuxProcess_class = {
-   .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = LinuxProcess_compare
-   },
-   .writeField = LinuxProcess_writeField,
-};
-
 Process* LinuxProcess_new(const Settings* settings) {
    LinuxProcess* this = xCalloc(1, sizeof(LinuxProcess));
    Object_setClass(this, Class(LinuxProcess));
@@ -203,7 +193,7 @@ void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
 }
 #endif
 
-void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const LinuxProcess* lp = (const LinuxProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
@@ -304,7 +294,7 @@ void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField 
    RichString_append(str, attr, buffer);
 }
 
-long LinuxProcess_compare(const void* v1, const void* v2) {
+static long LinuxProcess_compare(const void* v1, const void* v2) {
    const LinuxProcess *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
 
@@ -401,3 +391,13 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
 bool Process_isThread(const Process* this) {
    return (Process_isUserlandThread(this) || Process_isKernelThread(this));
 }
+
+const ProcessClass LinuxProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = LinuxProcess_compare
+   },
+   .writeField = LinuxProcess_writeField
+};
