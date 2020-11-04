@@ -113,14 +113,6 @@ void ProcessList_remove(ProcessList* this, Process* p) {
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
-Process* ProcessList_get(ProcessList* this, int idx) {
-   return (Process*) (Vector_get(this->processes, idx));
-}
-
-int ProcessList_size(ProcessList* this) {
-   return (Vector_size(this->processes));
-}
-
 static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show) {
    Vector* children = Vector_new(Class(Process), false, DEFAULT_SIZE);
 
@@ -266,11 +258,11 @@ void ProcessList_rebuildPanel(ProcessList* this) {
    int currScrollV = this->panel->scrollV;
 
    Panel_prune(this->panel);
-   int size = ProcessList_size(this);
+   int size = Vector_size(this->processes);
    int idx = 0;
    for (int i = 0; i < size; i++) {
       bool hidden = false;
-      Process* p = ProcessList_get(this, i);
+      Process* p = (Process*) Vector_get(this->processes, i);
 
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
