@@ -178,10 +178,10 @@ void Vector_quickSortCustomCompare(Vector* this, Object_Compare compare) {
    assert(Vector_isConsistent(this));
 }
 
-void Vector_insertionSort(Vector* this) {
-   assert(this->type->compare);
+void Vector_insertionSortCustomCompare(Vector* this, Object_Compare compare) {
+   assert(compare);
    assert(Vector_isConsistent(this));
-   insertionSort(this->array, 0, this->items - 1, this->type->compare);
+   insertionSort(this->array, 0, this->items - 1, compare);
    assert(Vector_isConsistent(this));
 }
 
