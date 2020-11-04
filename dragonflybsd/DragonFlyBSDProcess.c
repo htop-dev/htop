@@ -110,6 +110,7 @@ void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, Proces
 long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
    const DragonFlyBSDProcess *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
+
    if (settings->direction == 1) {
       p1 = (const DragonFlyBSDProcess*)v1;
       p2 = (const DragonFlyBSDProcess*)v2;
@@ -117,12 +118,13 @@ long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
       p2 = (const DragonFlyBSDProcess*)v1;
       p1 = (const DragonFlyBSDProcess*)v2;
    }
+
    switch ((int) settings->sortKey) {
    // add Platform-specific fields here
    case JID:
-      return (p1->jid - p2->jid);
+      return SPACESHIP_NUMBER(p1->jid, p2->jid);
    case JAIL:
-      return strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
+      return SPACESHIP_NULLSTR(p1->jname, p2->jname);
    default:
       return Process_compare(v1, v2);
    }

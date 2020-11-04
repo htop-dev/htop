@@ -297,6 +297,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
 static long LinuxProcess_compare(const void* v1, const void* v2) {
    const LinuxProcess *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
+
    if (settings->direction == 1) {
       p1 = (const LinuxProcess*)v1;
       p2 = (const LinuxProcess*)v2;
@@ -304,76 +305,87 @@ static long LinuxProcess_compare(const void* v1, const void* v2) {
       p2 = (const LinuxProcess*)v1;
       p1 = (const LinuxProcess*)v2;
    }
-   long long diff;
+
    switch ((int)settings->sortKey) {
    case M_DRS:
-      return (p2->m_drs - p1->m_drs);
+      return SPACESHIP_NUMBER(p2->m_drs, p1->m_drs);
    case M_DT:
-      return (p2->m_dt - p1->m_dt);
+      return SPACESHIP_NUMBER(p2->m_dt, p1->m_dt);
    case M_LRS:
-      return (p2->m_lrs - p1->m_lrs);
+      return SPACESHIP_NUMBER(p2->m_lrs, p1->m_lrs);
    case M_TRS:
-      return (p2->m_trs - p1->m_trs);
+      return SPACESHIP_NUMBER(p2->m_trs, p1->m_trs);
    case M_SHARE:
-      return (p2->m_share - p1->m_share);
+      return SPACESHIP_NUMBER(p2->m_share, p1->m_share);
    case M_PSS:
-      return (p2->m_pss - p1->m_pss);
+      return SPACESHIP_NUMBER(p2->m_pss, p1->m_pss);
    case M_SWAP:
-      return (p2->m_swap - p1->m_swap);
+      return SPACESHIP_NUMBER(p2->m_swap, p1->m_swap);
    case M_PSSWP:
-      return (p2->m_psswp - p1->m_psswp);
-   case UTIME:  diff = p2->utime - p1->utime; goto test_diff;
-   case CUTIME: diff = p2->cutime - p1->cutime; goto test_diff;
-   case STIME:  diff = p2->stime - p1->stime; goto test_diff;
-   case CSTIME: diff = p2->cstime - p1->cstime; goto test_diff;
+      return SPACESHIP_NUMBER(p2->m_psswp, p1->m_psswp);
+   case UTIME:
+      return SPACESHIP_NUMBER(p2->utime, p1->utime);
+   case CUTIME:
+      return SPACESHIP_NUMBER(p2->cutime, p1->cutime);
+   case STIME:
+      return SPACESHIP_NUMBER(p2->stime, p1->stime);
+   case CSTIME:
+      return SPACESHIP_NUMBER(p2->cstime, p1->cstime);
    #ifdef HAVE_TASKSTATS
-   case RCHAR:  diff = p2->io_rchar - p1->io_rchar; goto test_diff;
-   case WCHAR:  diff = p2->io_wchar - p1->io_wchar; goto test_diff;
-   case SYSCR:  diff = p2->io_syscr - p1->io_syscr; goto test_diff;
-   case SYSCW:  diff = p2->io_syscw - p1->io_syscw; goto test_diff;
-   case RBYTES: diff = p2->io_read_bytes - p1->io_read_bytes; goto test_diff;
-   case WBYTES: diff = p2->io_write_bytes - p1->io_write_bytes; goto test_diff;
-   case CNCLWB: diff = p2->io_cancelled_write_bytes - p1->io_cancelled_write_bytes; goto test_diff;
-   case IO_READ_RATE:  diff = p2->io_rate_read_bps - p1->io_rate_read_bps; goto test_diff;
-   case IO_WRITE_RATE: diff = p2->io_rate_write_bps - p1->io_rate_write_bps; goto test_diff;
-   case IO_RATE: diff = (p2->io_rate_read_bps + p2->io_rate_write_bps) - (p1->io_rate_read_bps + p1->io_rate_write_bps); goto test_diff;
+   case RCHAR:
+      return SPACESHIP_NUMBER(p2->io_rchar, p1->io_rchar);
+   case WCHAR:
+      return SPACESHIP_NUMBER(p2->io_wchar, p1->io_wchar);
+   case SYSCR:
+      return SPACESHIP_NUMBER(p2->io_syscr, p1->io_syscr);
+   case SYSCW:
+      return SPACESHIP_NUMBER(p2->io_syscw, p1->io_syscw);
+   case RBYTES:
+      return SPACESHIP_NUMBER(p2->io_read_bytes, p1->io_read_bytes);
+   case WBYTES:
+      return SPACESHIP_NUMBER(p2->io_write_bytes, p1->io_write_bytes);
+   case CNCLWB:
+      return SPACESHIP_NUMBER(p2->io_cancelled_write_bytes, p1->io_cancelled_write_bytes);
+   case IO_READ_RATE:
+      return SPACESHIP_NUMBER(p2->io_rate_read_bps, p1->io_rate_read_bps);
+   case IO_WRITE_RATE:
+      return SPACESHIP_NUMBER(p2->io_rate_write_bps, p1->io_rate_write_bps);
+   case IO_RATE:
+      return SPACESHIP_NUMBER(p2->io_rate_read_bps + p2->io_rate_write_bps, p1->io_rate_read_bps + p1->io_rate_write_bps);
    #endif
    #ifdef HAVE_OPENVZ
    case CTID:
-      return strcmp(p1->ctid ? p1->ctid : "", p2->ctid ? p2->ctid : "");
+      return SPACESHIP_NULLSTR(p1->ctid, p2->ctid);
    case VPID:
-      return (p2->vpid - p1->vpid);
+      return SPACESHIP_NUMBER(p2->vpid, p1->vpid);
    #endif
    #ifdef HAVE_VSERVER
    case VXID:
-      return (p2->vxid - p1->vxid);
+      return SPACESHIP_NUMBER(p2->vxid, p1->vxid);
    #endif
    #ifdef HAVE_CGROUP
    case CGROUP:
-      return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
+      return SPACESHIP_NULLSTR(p1->cgroup, p2->cgroup);
    #endif
    case OOM:
-      return ((int)p2->oom - (int)p1->oom);
+      return SPACESHIP_NUMBER(p2->oom, p1->oom);
    #ifdef HAVE_DELAYACCT
    case PERCENT_CPU_DELAY:
-      return (p2->cpu_delay_percent > p1->cpu_delay_percent ? 1 : -1);
+      return SPACESHIP_NUMBER(p2->cpu_delay_percent, p1->cpu_delay_percent);
    case PERCENT_IO_DELAY:
-      return (p2->blkio_delay_percent > p1->blkio_delay_percent ? 1 : -1);
+      return SPACESHIP_NUMBER(p2->blkio_delay_percent, p1->blkio_delay_percent);
    case PERCENT_SWAP_DELAY:
-      return (p2->swapin_delay_percent > p1->swapin_delay_percent ? 1 : -1);
+      return SPACESHIP_NUMBER(p2->swapin_delay_percent, p1->swapin_delay_percent);
    #endif
    case IO_PRIORITY:
-      return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
+      return SPACESHIP_NUMBER(LinuxProcess_effectiveIOPriority(p1), LinuxProcess_effectiveIOPriority(p2));
    case CTXT:
-      return ((long)p2->ctxt_diff - (long)p1->ctxt_diff);
+      return SPACESHIP_NUMBER(p2->ctxt_diff, p1->ctxt_diff);
    case SECATTR:
-      return strcmp(p1->secattr ? p1->secattr : "", p2->secattr ? p2->secattr : "");
+      return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
    default:
       return Process_compare(v1, v2);
    }
-
-test_diff:
-   return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
 }
 
 bool Process_isThread(const Process* this) {

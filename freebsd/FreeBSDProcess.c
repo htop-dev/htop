@@ -111,6 +111,7 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
 static long FreeBSDProcess_compare(const void* v1, const void* v2) {
    const FreeBSDProcess *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
+
    if (settings->direction == 1) {
       p1 = (const FreeBSDProcess*)v1;
       p2 = (const FreeBSDProcess*)v2;
@@ -118,14 +119,15 @@ static long FreeBSDProcess_compare(const void* v1, const void* v2) {
       p2 = (const FreeBSDProcess*)v1;
       p1 = (const FreeBSDProcess*)v2;
    }
+
    switch ((int) settings->sortKey) {
    // add FreeBSD-specific fields here
    case JID:
-      return (p1->jid - p2->jid);
+      return SPACESHIP_NUMBER(p1->jid, p2->jid);
    case JAIL:
-      return strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
+      return SPACESHIP_NULLSTR(p1->jname, p2->jname);
    case TTY_NR:
-      return strcmp(p1->ttyPath ? p1->ttyPath : "", p2->ttyPath ? p2->ttyPath : "");
+      return SPACESHIP_NULLSTR(p1->ttyPath, p2->ttyPath);
    default:
       return Process_compare(v1, v2);
    }

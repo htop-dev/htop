@@ -220,6 +220,7 @@ void OpenBSDProcess_writeField(const Process* this, RichString* str, ProcessFiel
 long OpenBSDProcess_compare(const void* v1, const void* v2) {
    const OpenBSDProcess *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
+
    if (settings->direction == 1) {
       p1 = (const OpenBSDProcess*)v1;
       p2 = (const OpenBSDProcess*)v2;
@@ -227,6 +228,7 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
       p2 = (const OpenBSDProcess*)v1;
       p1 = (const OpenBSDProcess*)v2;
    }
+
    switch (settings->sortKey) {
    // add OpenBSD-specific fields here
    default:
