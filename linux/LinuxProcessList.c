@@ -888,9 +888,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    char command[4096 + 1]; // max cmdline length on Linux
    int amtRead = xread(fd, command, sizeof(command) - 1);
    close(fd);
-   int tokenEnd = 0;
-   int tokenStart = 0;
-   int lastChar = 0;
+
    if (amtRead == 0) {
       if (process->state == 'Z') {
          process->basenameOffset = 0;
@@ -901,11 +899,24 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    } else if (amtRead < 0) {
       return false;
    }
+
+   int tokenEnd = 0;
+   int tokenStart = 0;
+   int lastChar = 0;
+   bool argSepNUL = false;
+   bool argSepSpace = false;
+
    for (int i = 0; i < amtRead; i++) {
       /* newline used as delimiter - when forming the mergedCommand, newline is
        * converted to space by LinuxProcess_makeCommandStr */
       if (command[i] == '\0') {
          command[i] = '\n';
+      } else {
+         /* Record some information for the argument parsing heuristic below. */
+         if (tokenEnd)
+            argSepNUL = true;
+         if (command[i] <= ' ')
+            argSepSpace = true;
       }
 
       if (command[i] == '\n') {
@@ -922,10 +933,85 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
          lastChar = i;
       }
    }
-   if (tokenEnd == 0) {
-      tokenEnd = amtRead;
-   }
+
    command[lastChar + 1] = '\0';
+
+   if (!argSepNUL && argSepSpace) {
+      /* Argument parsing heuristic.
+       *
+       * This heuristic is used for processes that rewrite their command line.
+       * Normally the command line is split by using NUL bytes between each argument.
+       * But some programs like chrome flatten this using spaces.
+       *
+       * This heuristic tries its best to undo this loss of information.
+       * To achieve this, we treat every character <= 32 as argument separators
+       * (i.e. all of ASCII control sequences and space).
+       * We then search for the basename of the cmdline in the first argument we found that way.
+       * As path names may contain we try to cross-validate if the path we got that way exists.
+       */
+
+      tokenStart = tokenEnd = 0;
+
+      // From initial scan we know there's at least one space.
+      // Check if that's part of a filename for an existing file.
+      if (Compat_faccessat(AT_FDCWD, command, F_OK, AT_SYMLINK_NOFOLLOW) != 0) {
+         // If we reach here the path does not exist.
+         // Thus begin searching for the part of it that actually is.
+
+         int tokenArg0Start = 0;
+
+         for (int i = 0; i <= lastChar; i++) {
+            /* Any ASCII control or space used as delimiter */
+            char tmpCommandChar = command[i];
+
+            if (command[i] <= ' ') {
+               if (!tokenEnd) {
+                  command[i] = '\0';
+
+                  bool found = Compat_faccessat(AT_FDCWD, command, F_OK, AT_SYMLINK_NOFOLLOW) == 0;
+
+                  // Restore if this wasn't it
+                  command[i] = found ? '\n' : tmpCommandChar;
+
+                  if (found)
+                     tokenEnd = i;
+                  if (!tokenArg0Start)
+                     tokenArg0Start = tokenStart;
+               } else {
+                  // Split on every further separator, regardless of path correctness
+                  command[i] = '\n';
+               }
+            } else if (!tokenEnd) {
+               if (command[i] == '/') {
+                  tokenStart = i + 1;
+               } else if (command[i] == '\\' && (!tokenStart || command[tokenStart - 1] == '\\')) {
+                  tokenStart = i + 1;
+               } else if (command[i] == ':' && (command[i + 1] != '/' && command[i + 1] != '\\')) {
+                  tokenEnd = i;
+               }
+            }
+         }
+
+         if (!tokenEnd) {
+            tokenStart = tokenArg0Start;
+
+            // No token delimiter found, forcibly split
+            for (int i = 0; i <= lastChar; i++) {
+               if (command[i] <= ' ') {
+                  command[i] = '\n';
+                  if (!tokenEnd) {
+                     tokenEnd = i;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   if (tokenEnd == 0) {
+      tokenEnd = lastChar + 1;
+   }
+
    lp->mergedCommand.maxLen = lastChar + 1;  /* accomodate cmdline */
    if (!process->comm || strcmp(command, process->comm)) {
       process->basenameOffset = tokenEnd;
