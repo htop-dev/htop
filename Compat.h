@@ -11,6 +11,11 @@ in the source distribution for its full text.
 #include <sys/stat.h>
 
 
+int Compat_faccessat(int dirfd,
+                     const char* pathname,
+                     int mode,
+                     int flags);
+
 int Compat_fstatat(int dirfd,
                    const char* dirpath,
                    const char* pathname,
