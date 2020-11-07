@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "Compat.h"
 
+#include <errno.h>
 #include <fcntl.h> // IWYU pragma: keep
 #include <unistd.h>
 #include <sys/stat.h>
@@ -16,6 +17,41 @@ in the source distribution for its full text.
 
 #include "XUtils.h" // IWYU pragma: keep
 
+
+int Compat_faccessat(int dirfd,
+                     const char* pathname,
+                     int mode,
+                     int flags) {
+   int ret;
+
+#ifdef HAVE_FACCESSAT
+
+   // Implementation note: AT_SYMLINK_NOFOLLOW unsupported on FreeBSD, fallback to lstat in that case
+
+   errno = 0;
+
+   ret = faccessat(dirfd, pathname, mode, flags);
+   if (!ret || errno != EINVAL)
+      return ret;
+
+#endif
+
+   // Error out on unsupported configurations
+   if (dirfd != AT_FDCWD || mode != F_OK) {
+      errno = EINVAL;
+      return -1;
+   }
+
+   // Fallback to stat(2)/lstat(2) depending on flags
+   struct stat statinfo;
+   if(flags) {
+      ret = lstat(pathname, &statinfo);
+   } else {
+      ret = stat(pathname, &statinfo);
+   }
+
+   return ret;
+}
 
 int Compat_fstatat(int dirfd,
                    const char* dirpath,

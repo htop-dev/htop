@@ -37,6 +37,7 @@ in the source distribution for its full text.
 #endif
 
 #include "CRT.h"
+#include "Compat.h"
 #include "LinuxProcess.h"
 #include "Macros.h"
 #include "Object.h"

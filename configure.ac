@@ -88,7 +88,7 @@ AC_TYPE_UID_T
 # ----------------------------------------------------------------------
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_STAT
-AC_CHECK_FUNCS([fstatat memmove readlinkat strdup strncasecmp strstr])
+AC_CHECK_FUNCS([faccessat fstatat memmove readlinkat strdup strncasecmp strstr])
 
 AC_SEARCH_LIBS([dlopen], [dl dld])
 
