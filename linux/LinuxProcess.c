@@ -240,8 +240,7 @@ static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdline
       }
       tokenLen = token - tokenBase;
 
-      if (((commLen < (TASK_COMM_LEN - 1) && tokenLen == commLen) ||
-           (commLen == (TASK_COMM_LEN - 1) && tokenLen >= commLen)) &&
+      if ((tokenLen == commLen || (tokenLen > commLen && commLen == (TASK_COMM_LEN - 1))) &&
           strncmp(tokenBase, comm, commLen) == 0) {
          *pCommStart = tokenBase - cmdline;
          *pCommEnd = token - cmdline;
