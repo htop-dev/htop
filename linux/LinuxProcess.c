@@ -351,7 +351,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
    }
 
    /* The field separtor "│" has been chosen such that it will not match any
-    * valid search string used for sorting or filtering */
+    * valid string used for searching or filtering */
    const char *SEPARATOR = CRT_treeStr[TREE_STR_VERT];
    const int SEPARATOR_LEN = strlen(SEPARATOR);
 
