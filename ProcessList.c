@@ -77,10 +77,11 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
          field = "- ";
       }
 
-      if (!this->settings->treeView && this->settings->sortKey == fields[i]) {
-         RichString_append(header, CRT_colors[PANEL_SELECTION_FOCUS], field);
-      } else {
-         RichString_append(header, CRT_colors[PANEL_HEADER_FOCUS], field);
+      int color = (!this->settings->treeView && this->settings->sortKey == fields[i]) ?
+         CRT_colors[PANEL_SELECTION_FOCUS] : CRT_colors[PANEL_HEADER_FOCUS];
+      RichString_append(header, color, field);
+      if (COMM == fields[i] && this->settings->showMergedCommand) {
+         RichString_append(header, color, "(merged)");
       }
    }
 }
