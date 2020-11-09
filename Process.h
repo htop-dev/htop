@@ -67,7 +67,7 @@ typedef struct Process_ {
    pid_t pid;
    pid_t ppid;
    pid_t tgid;
-   char* comm;  /* use Process_getCommand() for a decorated command line */
+   char* comm;  /* use Process_getCommand() for Command actually displayed */
    int commLen;
    int indent;
 
