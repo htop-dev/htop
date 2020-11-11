@@ -8,12 +8,17 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+#include <sys/types.h>
+
 #include "Action.h"
-#include "SignalsPanel.h"
-#include "CPUMeter.h"
-#include "DiskIOMeter.h"
 #include "BatteryMeter.h"
+#include "CPUMeter.h"
 #include "DarwinProcess.h"
+#include "DiskIOMeter.h"
+#include "ProcessLocksScreen.h"
+#include "SignalsPanel.h"
+
 
 extern ProcessField Platform_defaultFields[];
 
@@ -48,6 +53,10 @@ void Platform_setZfsArcValues(Meter* this);
 void Platform_setZfsCompressedArcValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
+
+char* Platform_getInodeFilename(pid_t pid, ino_t inode);
+
+FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 bool Platform_getDiskIO(DiskIOData* data);
 

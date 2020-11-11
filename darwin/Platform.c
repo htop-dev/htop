@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "HostnameMeter.h"
+#include "ProcessLocksScreen.h"
 #include "UptimeMeter.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
@@ -309,6 +310,17 @@ char* Platform_getProcessEnv(pid_t pid) {
    }
 
    return env;
+}
+
+char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
+    (void)pid;
+    (void)inode;
+    return NULL;
+}
+
+FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
+    (void)pid;
+    return NULL;
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

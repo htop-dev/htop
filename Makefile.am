@@ -53,6 +53,7 @@ myhtopsources = \
 	Panel.c \
 	Process.c \
 	ProcessList.c \
+	ProcessLocksScreen.c \
 	RichString.c \
 	ScreenManager.c \
 	Settings.c \
@@ -105,6 +106,7 @@ myhtopheaders = \
 	Panel.h \
 	Process.h \
 	ProcessList.h \
+	ProcessLocksScreen.h \
 	ProvideCurses.h \
 	RichString.h \
 	ScreenManager.h \
@@ -129,7 +131,6 @@ linux_platform_headers = \
 	linux/LinuxProcessList.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
-	linux/ProcessLocksScreen.h \
 	linux/SELinuxMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
@@ -146,7 +147,6 @@ myhtopplatsources = \
 	linux/LinuxProcessList.c \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
-	linux/ProcessLocksScreen.c \
 	linux/SELinuxMeter.c \
 	linux/ZramMeter.c \
 	zfs/ZfsArcMeter.c \
