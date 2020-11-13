@@ -401,10 +401,10 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
       FileLocks_LockData* ldata = xCalloc(1, sizeof(FileLocks_LockData));
       FileLocks_Data* data = &ldata->data;
       data->id = lock_id;
-      data->data[0] = xStrdup(lock_type);
-      data->data[1] = xStrdup(lock_excl);
-      data->data[2] = xStrdup(lock_rw);
-      data->data[3] = Platform_getInodeFilename(lock_pid, lock_inode);
+      data->locktype = xStrdup(lock_type);
+      data->exclusive = xStrdup(lock_excl);
+      data->readwrite = xStrdup(lock_rw);
+      data->filename = Platform_getInodeFilename(lock_pid, lock_inode);
       data->dev[0] = lock_dev[0];
       data->dev[1] = lock_dev[1];
       data->inode = lock_inode;

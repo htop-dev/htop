@@ -18,7 +18,10 @@ typedef struct ProcessLocksScreen_ {
 } ProcessLocksScreen;
 
 typedef struct FileLocks_Data_ {
-   char* data[4];
+   char* locktype;
+   char* exclusive;
+   char* readwrite;
+   char* filename;
    int id;
    unsigned int dev[2];
    uint64_t inode;

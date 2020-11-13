@@ -50,8 +50,10 @@ static void ProcessLocksScreen_draw(InfoScreen* this) {
 }
 
 static inline void FileLocks_Data_clear(FileLocks_Data* data) {
-   for (size_t i = 0; i < ARRAYSIZE(data->data); i++)
-      free(data->data[i]);
+   free(data->locktype);
+   free(data->exclusive);
+   free(data->readwrite);
+   free(data->filename);
 }
 
 static void ProcessLocksScreen_scan(InfoScreen* this) {
@@ -75,18 +77,18 @@ static void ProcessLocksScreen_scan(InfoScreen* this) {
          if (ULLONG_MAX == data->end) {
             xSnprintf(entry, sizeof(entry), "%10d  %-10s %-10s %-10s %02x:%02x:%020"PRIu64" %20"PRIu64" %20s  %s",
                data->id,
-               data->data[0], data->data[1], data->data[2],
+               data->locktype, data->exclusive, data->readwrite,
                data->dev[0], data->dev[1], data->inode,
                data->start, "<END OF FILE>",
-               data->data[3] ? data->data[3] : "<N/A>"
+               data->filename ? data->filename : "<N/A>"
             );
          } else {
             xSnprintf(entry, sizeof(entry), "%10d  %-10s %-10s %-10s %02x:%02x:%020"PRIu64" %20"PRIu64" %20"PRIu64"  %s",
                data->id,
-               data->data[0], data->data[1], data->data[2],
+               data->locktype, data->exclusive, data->readwrite,
                data->dev[0], data->dev[1], data->inode,
                data->start, data->end,
-               data->data[3] ? data->data[3] : "<N/A>"
+               data->filename ? data->filename : "<N/A>"
             );
          }
 
