@@ -13,9 +13,7 @@ in the source distribution for its full text.
 #include <sys/stat.h>
 
 #include "Compat.h"
-#ifndef HAVE_FSTATAT
 #include "XUtils.h"
-#endif
 
 
 int Compat_fstatat(int dirfd,
@@ -41,6 +39,30 @@ int Compat_fstatat(int dirfd,
       return lstat(path, statbuf);
 
    return stat(path, statbuf);
+
+#endif
+}
+
+int Compat_readlinkat(int dirfd,
+                      const char* dirpath,
+                      const char* pathname,
+                      char* buf,
+                      size_t bufsize) {
+
+#ifdef HAVE_READLINKAT
+
+   (void)dirpath;
+
+   return readlinkat(dirfd, pathname, buf, bufsize);
+
+#else
+
+   (void)dirfd;
+
+   char path[4096];
+   xSnprintf(path, sizeof(path), "%s/%s", dirpath, pathname);
+
+   return readlink(path, buf, bufsize);
 
 #endif
 }

@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
+#include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
 #include "UnsupportedProcess.h"
 
@@ -47,6 +48,10 @@ void Platform_setSwapValues(Meter* this);
 bool Process_isThread(const Process* this);
 
 char* Platform_getProcessEnv(pid_t pid);
+
+char* Platform_getInodeFilename(pid_t pid, ino_t inode);
+
+FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 bool Platform_getDiskIO(DiskIOData* data);
 

@@ -11,11 +11,16 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <ctype.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
+#include "Compat.h"
 #include "CPUMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
@@ -302,6 +307,120 @@ char* Platform_getProcessEnv(pid_t pid) {
    env[size+1] = '\0';
 
    return env;
+}
+
+/*
+ * Return the absolute path of a file given its pid&inode number
+ *
+ * Based on implementation of lslocks from util-linux:
+ * https://sources.debian.org/src/util-linux/2.36-3/misc-utils/lslocks.c/#L162
+ */
+char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
+   struct stat sb;
+   struct dirent *de;
+   DIR *dirp;
+   size_t len;
+   int fd;
+
+   char path[PATH_MAX];
+   char sym[PATH_MAX];
+   char* ret = NULL;
+
+   memset(path, 0, sizeof(path));
+   memset(sym, 0, sizeof(sym));
+
+   xSnprintf(path, sizeof(path), "%s/%d/fd/", PROCDIR, pid);
+   if (strlen(path) >= (sizeof(path) - 2))
+      return NULL;
+
+   if (!(dirp = opendir(path)))
+      return NULL;
+
+   if ((fd = dirfd(dirp)) < 0 )
+      goto out;
+
+   while ((de = readdir(dirp))) {
+      if (String_eq(de->d_name, ".") || String_eq(de->d_name, ".."))
+         continue;
+
+      /* care only for numerical descriptors */
+      if (!strtoull(de->d_name, (char **) NULL, 10))
+         continue;
+
+      if (!Compat_fstatat(fd, path, de->d_name, &sb, 0) && inode != sb.st_ino)
+         continue;
+
+      if ((len = Compat_readlinkat(fd, path, de->d_name, sym, sizeof(sym) - 1)) < 1)
+         goto out;
+
+      sym[len] = '\0';
+
+      ret = xStrdup(sym);
+      break;
+   }
+
+out:
+   closedir(dirp);
+   return ret;
+}
+
+FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
+   FileLocks_ProcessData* pdata = xCalloc(1, sizeof(FileLocks_ProcessData));
+
+   FILE* f = fopen(PROCDIR "/locks", "r");
+   if (!f) {
+      pdata->error = true;
+      return pdata;
+   }
+
+   char buffer[1024];
+   FileLocks_LockData** data_ref = &pdata->locks;
+   while(fgets(buffer, sizeof(buffer), f)) {
+      if (!strchr(buffer, '\n'))
+         continue;
+
+      int lock_id;
+      char lock_type[16];
+      char lock_excl[16];
+      char lock_rw[16];
+      pid_t lock_pid;
+      unsigned int lock_dev[2];
+      uint64_t lock_inode;
+      char lock_start[25];
+      char lock_end[25];
+
+      if (10 != sscanf(buffer, "%d:  %15s  %15s %15s %d %x:%x:%"PRIu64" %24s %24s",
+         &lock_id, lock_type, lock_excl, lock_rw, &lock_pid,
+         &lock_dev[0], &lock_dev[1], &lock_inode,
+         lock_start, lock_end))
+         continue;
+
+      if (pid != lock_pid)
+         continue;
+
+      FileLocks_LockData* ldata = xCalloc(1, sizeof(FileLocks_LockData));
+      FileLocks_Data* data = &ldata->data;
+      data->id = lock_id;
+      data->locktype = xStrdup(lock_type);
+      data->exclusive = xStrdup(lock_excl);
+      data->readwrite = xStrdup(lock_rw);
+      data->filename = Platform_getInodeFilename(lock_pid, lock_inode);
+      data->dev[0] = lock_dev[0];
+      data->dev[1] = lock_dev[1];
+      data->inode = lock_inode;
+      data->start = strtoull(lock_start, NULL, 10);
+      if (!String_eq(lock_end, "EOF")) {
+         data->end = strtoull(lock_end, NULL, 10);
+      } else {
+         data->end = ULLONG_MAX;
+      }
+
+      *data_ref = ldata;
+      data_ref = &ldata->next;
+   }
+
+   fclose(f);
+   return pdata;
 }
 
 void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred) {

@@ -27,6 +27,7 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
+#include "ProcessLocksScreen.h"
 #include "ProvideCurses.h"
 #include "ScreenManager.h"
 #include "SignalsPanel.h"
@@ -371,6 +372,17 @@ static Htop_Reaction actionLsof(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+static Htop_Reaction actionShowLocks(State* st) {
+   Process* p = (Process*) Panel_getSelected(st->panel);
+   if (!p) return HTOP_OK;
+   ProcessLocksScreen* pls = ProcessLocksScreen_new(p);
+   InfoScreen_run((InfoScreen*)pls);
+   ProcessLocksScreen_delete((Object*)pls);
+   clear();
+   CRT_enableDelay();
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
 static Htop_Reaction actionStrace(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
@@ -435,6 +447,7 @@ static const struct { const char* key; const char* info; } helpRight[] = {
    { .key = "      e: ", .info = "show process environment" },
    { .key = "      i: ", .info = "set IO priority" },
    { .key = "      l: ", .info = "list open files with lsof" },
+   { .key = "      x: ", .info = "list file locks of process" },
    { .key = "      s: ", .info = "trace syscalls with strace" },
    { .key = "      w: ", .info = "wrap process command in multiple lines" },
    { .key = " F2 C S: ", .info = "setup" },
@@ -620,6 +633,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['S'] = actionSetup;
    keys['C'] = actionSetup;
    keys[KEY_F(2)] = actionSetup;
+   keys['x'] = actionShowLocks;
    keys['l'] = actionLsof;
    keys['s'] = actionStrace;
    keys[' '] = actionTag;

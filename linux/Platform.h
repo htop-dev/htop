@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include "DiskIOMeter.h"
 #include "Meter.h"
 #include "Process.h"
+#include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
 
 extern ProcessField Platform_defaultFields[];
@@ -45,7 +46,12 @@ void Platform_setZramValues(Meter* this);
 void Platform_setZfsArcValues(Meter* this);
 
 void Platform_setZfsCompressedArcValues(Meter* this);
+
 char* Platform_getProcessEnv(pid_t pid);
+
+char* Platform_getInodeFilename(pid_t pid, ino_t inode);
+
+FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred);
 

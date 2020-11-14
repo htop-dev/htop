@@ -123,6 +123,9 @@ will display the list of file descriptors opened by the process.
 Display the command line of the selected process in a separate screen, wrapped
 onto multiple lines as needed.
 .TP
+.B x
+Display the active file locks of the selected process in a separate screen.
+.TP
 .B F1, h, ?
 Go to the help screen
 .TP

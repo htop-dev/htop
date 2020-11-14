@@ -53,6 +53,7 @@ myhtopsources = \
 	Panel.c \
 	Process.c \
 	ProcessList.c \
+	ProcessLocksScreen.c \
 	RichString.c \
 	ScreenManager.c \
 	Settings.c \
@@ -105,6 +106,7 @@ myhtopheaders = \
 	Panel.h \
 	Process.h \
 	ProcessList.h \
+	ProcessLocksScreen.h \
 	ProvideCurses.h \
 	RichString.h \
 	ScreenManager.h \
