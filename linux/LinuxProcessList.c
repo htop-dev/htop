@@ -573,7 +573,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
 
       char* value_end = name_value_sep;
 
-      while(*value_end != '\0' && *value_end > 32) {
+      while(*value_end > 32) {
          value_end++;
       }
 
