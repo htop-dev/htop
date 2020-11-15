@@ -389,7 +389,7 @@ static bool LinuxProcessList_readStatFile(Process* process, const char* dirname,
 }
 
 
-static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, char* name) {
+static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, const char* name) {
    char filename[MAX_NAME + 1];
    filename[MAX_NAME] = '\0';
 
@@ -404,7 +404,7 @@ static bool LinuxProcessList_statProcessDir(Process* process, const char* dirnam
 
 #ifdef HAVE_TASKSTATS
 
-static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirname, char* name, unsigned long long now) {
+static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirname, const char* name, unsigned long long now) {
    char filename[MAX_NAME + 1];
    filename[MAX_NAME] = '\0';
 
@@ -966,7 +966,7 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
 static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char* dirname, Process* parent, double period, struct timeval tv) {
    ProcessList* pl = (ProcessList*) this;
    DIR* dir;
-   struct dirent* entry;
+   const struct dirent* entry;
    const Settings* settings = pl->settings;
 
    #ifdef HAVE_TASKSTATS
@@ -981,7 +981,12 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
    while ((entry = readdir(dir)) != NULL) {
-      char* name = entry->d_name;
+      const char* name = entry->d_name;
+
+      // Ignore all non-directories
+      if (entry->d_type != DT_DIR && entry->d_type != DT_UNKNOWN) {
+         continue;
+      }
 
       // The RedHat kernel hides threads with a dot.
       // I believe this is non-standard.
