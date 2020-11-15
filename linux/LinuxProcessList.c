@@ -985,7 +985,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       // The RedHat kernel hides threads with a dot.
       // I believe this is non-standard.
-      if ((!settings->hideThreads) && name[0] == '.') {
+      if (name[0] == '.') {
          name++;
       }
 

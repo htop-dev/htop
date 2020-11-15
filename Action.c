@@ -212,7 +212,6 @@ static Htop_Reaction actionToggleKernelThreads(State* st) {
 
 static Htop_Reaction actionToggleUserlandThreads(State* st) {
    st->settings->hideUserlandThreads = !st->settings->hideUserlandThreads;
-   st->settings->hideThreads = st->settings->hideUserlandThreads;
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
 }
 
