@@ -83,7 +83,7 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    switch ((int) field) {
    // add FreeBSD-specific fields here
    case JID: xSnprintf(buffer, n, Process_pidFormat, fp->jid); break;
-   case JAIL:{
+   case JAIL: {
       xSnprintf(buffer, n, "%-11s ", fp->jname);
       if (buffer[11] != '\0') {
          buffer[11] = ' ';
@@ -134,10 +134,11 @@ static long FreeBSDProcess_compare(const void* v1, const void* v2) {
 bool Process_isThread(const Process* this) {
    const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
 
-   if (fp->kernel == 1 )
+   if (fp->kernel == 1 ) {
       return 1;
-   else
+   } else {
       return Process_isUserlandThread(this);
+   }
 }
 
 const ProcessClass FreeBSDProcess_class = {

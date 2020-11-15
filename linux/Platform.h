@@ -57,9 +57,9 @@ void Platform_getPressureStall(const char *file, bool some, double* ten, double*
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted);
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted);
 
 #endif

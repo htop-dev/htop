@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #endif
 
 typedef struct Vector_ {
-   Object **array;
+   Object** array;
    const ObjectClass* type;
    int arraySize;
    int growthRate;

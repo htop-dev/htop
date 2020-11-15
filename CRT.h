@@ -133,7 +133,7 @@ extern bool CRT_utf8;
 
 #endif
 
-extern const char *const *CRT_treeStr;
+extern const char* const* CRT_treeStr;
 
 extern int CRT_delay;
 

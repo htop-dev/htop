@@ -106,10 +106,10 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"tree",       no_argument,         0, 't'},
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
-      {0,0,0,0}
+      {0, 0, 0, 0}
    };
 
-   int opt, opti=0;
+   int opt, opti = 0;
    /* Parse arguments */
    while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:", long_opts, &opti))) {
       if (opt == EOF) break;
@@ -186,11 +186,11 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             char* saveptr;
             char* pid = strtok_r(argCopy, ",", &saveptr);
 
-            if(!flags.pidMatchList) {
+            if (!flags.pidMatchList) {
                flags.pidMatchList = Hashtable_new(8, false);
             }
 
-            while(pid) {
+            while (pid) {
                 unsigned int num_pid = atoi(pid);
                 //  deepcode ignore CastIntegerToAddress: we just want a non-NUll pointer here
                 Hashtable_put(flags.pidMatchList, num_pid, (void *) 1);
@@ -218,7 +218,7 @@ static void millisleep(unsigned long millisec) {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
    };
-   while(nanosleep(&req,&req)==-1) {
+   while (nanosleep(&req, &req) == -1) {
       continue;
    }
 }
@@ -242,13 +242,14 @@ static void setCommFilter(State* state, char** commFilter) {
 
 int main(int argc, char** argv) {
 
-   char *lc_ctype = getenv("LC_CTYPE");
-   if(lc_ctype != NULL)
+   char* lc_ctype = getenv("LC_CTYPE");
+   if (lc_ctype != NULL) {
       setlocale(LC_CTYPE, lc_ctype);
-   else if ((lc_ctype = getenv("LC_ALL")))
+   } else if ((lc_ctype = getenv("LC_ALL"))) {
       setlocale(LC_CTYPE, lc_ctype);
-   else
+   } else {
       setlocale(LC_CTYPE, "");
+   }
 
    CommandLineSettings flags = parseArguments(argc, argv); // may exit()
 
@@ -271,14 +272,18 @@ int main(int argc, char** argv) {
 
    Header_populateFromSettings(header);
 
-   if (flags.delay != -1)
+   if (flags.delay != -1) {
       settings->delay = flags.delay;
-   if (!flags.useColors)
+   }
+   if (!flags.useColors) {
       settings->colorScheme = COLORSCHEME_MONOCHROME;
-   if (!flags.enableMouse)
+   }
+   if (!flags.enableMouse) {
       settings->enableMouse = false;
-   if (flags.treeView)
+   }
+   if (flags.treeView) {
       settings->treeView = true;
+   }
 
    CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
 
@@ -318,7 +323,7 @@ int main(int argc, char** argv) {
    ScreenManager_run(scr, NULL, NULL);
 
    attron(CRT_colors[RESET_COLOR]);
-   mvhline(LINES-1, 0, ' ', COLS);
+   mvhline(LINES - 1, 0, ' ', COLS);
    attroff(CRT_colors[RESET_COLOR]);
    refresh();
 
@@ -334,7 +339,7 @@ int main(int argc, char** argv) {
    UsersTable_delete(ut);
    Settings_delete(settings);
 
-   if(flags.pidMatchList) {
+   if (flags.pidMatchList) {
       Hashtable_delete(flags.pidMatchList);
    }
    return 0;

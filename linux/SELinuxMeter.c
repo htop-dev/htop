@@ -32,16 +32,19 @@ static bool enforcing = false;
 static bool hasSELinuxMount(void) {
    struct statfs sfbuf;
    int r = statfs("/sys/fs/selinux", &sfbuf);
-   if (r != 0)
+   if (r != 0) {
       return false;
+   }
 
-   if (sfbuf.f_type != SELINUX_MAGIC)
+   if (sfbuf.f_type != SELINUX_MAGIC) {
       return false;
+   }
 
    struct statvfs vfsbuf;
    r = statvfs("/sys/fs/selinux", &vfsbuf);
-   if (r != 0 || (vfsbuf.f_flag & ST_RDONLY))
+   if (r != 0 || (vfsbuf.f_flag & ST_RDONLY)) {
       return false;
+   }
 
    return true;
 }
@@ -51,22 +54,26 @@ static bool isSelinuxEnabled(void) {
 }
 
 static bool isSelinuxEnforcing(void) {
-   if (!enabled)
+   if (!enabled) {
       return false;
+   }
 
    int fd = open("/sys/fs/selinux/enforce", O_RDONLY);
-   if (fd < 0)
+   if (fd < 0) {
       return false;
+   }
 
    char buf[20] = {0};
    int r = read(fd, buf, sizeof(buf) - 1);
    close(fd);
-   if (r < 0)
+   if (r < 0) {
       return false;
+   }
 
    int enforce = 0;
-   if (sscanf(buf, "%d", &enforce) != 1)
+   if (sscanf(buf, "%d", &enforce) != 1) {
       return false;
+   }
 
    return !!enforce;
 }

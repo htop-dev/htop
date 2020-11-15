@@ -36,7 +36,7 @@ void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
 
 void MainPanel_pidSearch(MainPanel* this, int ch) {
    Panel* super = (Panel*) this;
-   pid_t pid = ch-48 + this->pidSearch;
+   pid_t pid = ch - 48 + this->pidSearch;
    for (int i = 0; i < Panel_size(super); i++) {
       Process* p = (Process*) Panel_get(super, i);
       if (p && p->pid == pid) {
@@ -100,8 +100,9 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (reaction & HTOP_REDRAW_BAR) {
       MainPanel_updateTreeFunctions(this, this->state->settings->treeView);
       IncSet_drawBar(this->inc);
-      if (this->state->pauseProcessUpdate)
+      if (this->state->pauseProcessUpdate) {
          FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
+      }
    }
    if (reaction & HTOP_UPDATE_PANELHDR) {
       ProcessList_printHeader(this->state->pl, Panel_getHeader(super));
@@ -135,9 +136,7 @@ int MainPanel_selectedPid(MainPanel* this) {
 
 const char* MainPanel_getValue(MainPanel* this, int i) {
    Process* p = (Process*) Panel_get((Panel*)this, i);
-   if (p)
-      return p->comm;
-   return "";
+   return p ? p->comm : "";
 }
 
 bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Arg arg, bool* wasAnyTagged) {
@@ -153,10 +152,14 @@ bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Ar
    }
    if (!anyTagged) {
       Process* p = (Process*) Panel_getSelected(super);
-      if (p) ok = fn(p, arg) && ok;
+      if (p) {
+         ok &= fn(p, arg);
+      }
    }
+
    if (wasAnyTagged)
       *wasAnyTagged = anyTagged;
+
    return ok;
 }
 

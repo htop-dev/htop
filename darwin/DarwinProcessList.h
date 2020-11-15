@@ -9,7 +9,7 @@ in the source distribution for its full text.
 
 struct kern;
 
-void GetKernelVersion(struct kern *k);
+void GetKernelVersion(struct kern* k);
 
 /* compare the given os version with the one installed returns:
 0 if equals the installed version
@@ -37,15 +37,15 @@ typedef struct DarwinProcessList_ {
    ZfsArcStats zfs;
 } DarwinProcessList;
 
-void ProcessList_getHostInfo(host_basic_info_data_t *p);
+void ProcessList_getHostInfo(host_basic_info_data_t* p);
 
-void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p);
+void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p);
 
-unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p);
+unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p);
 
 void ProcessList_getVMStats(vm_statistics_t p);
 
-struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count);
+struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count);
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
 

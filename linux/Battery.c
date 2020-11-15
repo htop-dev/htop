@@ -37,7 +37,7 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 // but I think this is on the way out so I did not rewrite it.
 // The /sys implementation below does things the right way.
 
-static unsigned long int parseBatInfo(const char *fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
+static unsigned long int parseBatInfo(const char* fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
    const char batteryPath[] = PROCDIR "/acpi/battery/";
    DIR* batteryDir = opendir(batteryPath);
    if (!batteryDir)
@@ -52,9 +52,11 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       struct dirent* dirEntry = readdir(batteryDir);
       if (!dirEntry)
          break;
+
       char* entryName = dirEntry->d_name;
       if (!String_startsWith(entryName, "BAT"))
          continue;
+
       batteries[nBatteries] = xStrdup(entryName);
       nBatteries++;
    }
@@ -74,14 +76,16 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       for (unsigned short int j = 0; j < lineNum; j++) {
          free(line);
          line = String_readLine(file);
-         if (!line) break;
+         if (!line)
+            break;
       }
 
       fclose(file);
 
-      if (!line) break;
+      if (!line)
+         break;
 
-      char *foundNumStr = String_getToken(line, wordNum);
+      char* foundNumStr = String_getToken(line, wordNum);
       const unsigned long int foundNum = atoi(foundNumStr);
       free(foundNumStr);
       free(line);
@@ -98,8 +102,8 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
 
 static ACPresence procAcpiCheck(void) {
    ACPresence isOn = AC_ERROR;
-   const char *power_supplyPath = PROCDIR "/acpi/ac_adapter";
-   DIR *dir = opendir(power_supplyPath);
+   const char* power_supplyPath = PROCDIR "/acpi/ac_adapter";
+   DIR* dir = opendir(power_supplyPath);
    if (!dir) {
       return AC_ERROR;
    }
@@ -115,17 +119,20 @@ static ACPresence procAcpiCheck(void) {
          continue;
 
       char statePath[256];
-      xSnprintf((char *) statePath, sizeof statePath, "%s/%s/state", power_supplyPath, entryName);
+      xSnprintf(statePath, sizeof(statePath), "%s/%s/state", power_supplyPath, entryName);
       FILE* file = fopen(statePath, "r");
       if (!file) {
          isOn = AC_ERROR;
          continue;
       }
       char* line = String_readLine(file);
-      fclose(file);
-      if (!line) continue;
 
-      char *isOnline = String_getToken(line, 2);
+      fclose(file);
+
+      if (!line)
+         continue;
+
+      char* isOnline = String_getToken(line, 2);
       free(line);
 
       if (String_eq(isOnline, "on-line")) {
@@ -139,8 +146,10 @@ static ACPresence procAcpiCheck(void) {
       }
    }
 
-   if (dir)
+   if (dir) {
       closedir(dir);
+   }
+
    return isOn;
 }
 
@@ -165,20 +174,27 @@ static void Battery_getProcData(double* level, ACPresence* isOnAC) {
 // READ FROM /sys
 // ----------------------------------------
 
-static inline ssize_t xread(int fd, void *buf, size_t count) {
-  // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
-  size_t alreadyRead = 0;
-  for(;;) {
-     ssize_t res = read(fd, buf, count);
-     if (res == -1 && errno == EINTR) continue;
-     if (res > 0) {
-       buf = ((char*)buf)+res;
-       count -= res;
-       alreadyRead += res;
-     }
-     if (res == -1) return -1;
-     if (count == 0 || res == 0) return alreadyRead;
-  }
+static inline ssize_t xread(int fd, void* buf, size_t count) {
+   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
+   size_t alreadyRead = 0;
+   for (;;) {
+      ssize_t res = read(fd, buf, count);
+      if (res == -1) {
+         if (errno == EINTR)
+            continue;
+         return -1;
+      }
+
+      if (res > 0) {
+         buf = ((char*)buf) + res;
+         count -= res;
+         alreadyRead += res;
+      }
+
+      if (count == 0 || res == 0) {
+         return alreadyRead;
+      }
+   }
 }
 
 static void Battery_getSysData(double* level, ACPresence* isOnAC) {
@@ -186,7 +202,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
    *level = NAN;
    *isOnAC = AC_ERROR;
 
-   DIR *dir = opendir(SYS_POWERSUPPLY_DIR);
+   DIR* dir = opendir(SYS_POWERSUPPLY_DIR);
    if (!dir)
       return;
 
@@ -197,6 +213,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       struct dirent* dirEntry = readdir(dir);
       if (!dirEntry)
          break;
+
       const char* entryName = dirEntry->d_name;
       char filePath[256];
 
@@ -226,15 +243,17 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
             return;
          }
          buffer[buflen] = '\0';
-         char *buf = buffer;
-         char *line = NULL;
+         char* buf = buffer;
+         char* line = NULL;
          bool full = false;
          bool now = false;
          int fullSize = 0;
          double capacityLevel = NAN;
+
+         #define match(str,prefix) \
+            (String_startsWith(str,prefix) ? (str) + strlen(prefix) : NULL)
+
          while ((line = strsep(&buf, "\n")) != NULL) {
-   #define match(str,prefix) \
-           (String_startsWith(str,prefix) ? (str) + strlen(prefix) : NULL)
             const char* ps = match(line, "POWER_SUPPLY_");
             if (!ps) {
                continue;
@@ -255,18 +274,24 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
                fullSize = atoi(value);
                totalFull += fullSize;
                full = true;
-               if (now) break;
+               if (now) {
+                  break;
+               }
                continue;
             }
             value = (!now) ? match(energy, "NOW=") : NULL;
             if (value) {
                totalRemain += atoi(value);
                now = true;
-               if (full) break;
+               if (full) {
+                  break;
+               }
                continue;
             }
          }
-   #undef match
+
+         #undef match
+
          if (!now && full && !isnan(capacityLevel)) {
             totalRemain += (capacityLevel * fullSize);
          }
@@ -282,9 +307,11 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
             return;
          }
          char buffer[2] = "";
-         for(;;) {
+         for (;;) {
             ssize_t res = read(fd3, buffer, 1);
-            if (res == -1 && errno == EINTR) continue;
+            if (res == -1 && errno == EINTR) {
+               continue;
+            }
             break;
          }
          close(fd3);

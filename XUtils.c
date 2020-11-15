@@ -59,7 +59,7 @@ char* String_cat(const char* s1, const char* s2) {
    const size_t l2 = strlen(s2);
    char* out = xMalloc(l1 + l2 + 1);
    memcpy(out, s1, l1);
-   memcpy(out+l1, s2, l2);
+   memcpy(out + l1, s2, l2);
    out[l1 + l2] = '\0';
    return out;
 }
@@ -70,7 +70,7 @@ char* String_trim(const char* in) {
    }
 
    size_t len = strlen(in);
-   while (len > 0 && (in[len-1] == ' ' || in[len-1] == '\t' || in[len-1] == '\n')) {
+   while (len > 0 && (in[len - 1] == ' ' || in[len - 1] == '\t' || in[len - 1] == '\n')) {
       len--;
    }
 
@@ -126,12 +126,12 @@ char* String_getToken(const char* line, const unsigned short int numMatch) {
 
    for (size_t i = 0; i < len; i++) {
       char lastState = inWord;
-      inWord = line[i] == ' ' ? 0:1;
+      inWord = line[i] == ' ' ? 0 : 1;
 
       if (lastState == 0 && inWord == 1)
          count++;
 
-      if (inWord == 1){
+      if (inWord == 1) {
          if (count == numMatch && line[i] != ' ' && line[i] != '\0' && line[i] != '\n' && line[i] != (char)EOF) {
             match[foundCount] = line[i];
             foundCount++;

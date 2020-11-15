@@ -101,10 +101,10 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    pl->cpuCount = MAXIMUM(cpus, 1);
 
    if (cpus == 1 ) {
-     dfpl->cpus = xRealloc(dfpl->cpus, sizeof(CPUData));
+      dfpl->cpus = xRealloc(dfpl->cpus, sizeof(CPUData));
    } else {
-     // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
-     dfpl->cpus = xRealloc(dfpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+      // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
+      dfpl->cpus = xRealloc(dfpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
    }
 
    len = sizeof(kernelFScale);
@@ -123,7 +123,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
 void ProcessList_delete(ProcessList* this) {
    const DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
-   if (dfpl->kd) kvm_close(dfpl->kd);
+   if (dfpl->kd) {
+      kvm_close(dfpl->kd);
+   }
 
    if (dfpl->jails) {
       Hashtable_delete(dfpl->jails);
@@ -149,8 +151,8 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    size_t sizeof_cp_time_array;
 
-   unsigned long     *cp_time_n; // old clicks state
-   unsigned long     *cp_time_o; // current clicks state
+   unsigned long* cp_time_n; // old clicks state
+   unsigned long* cp_time_o; // current clicks state
 
    unsigned long cp_time_d[CPUSTATES];
    double        cp_time_p[CPUSTATES];
@@ -161,12 +163,12 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    // get rest of CPUs
    if (cpus > 1) {
-       // on smp systems DragonFlyBSD kernel concats all CPU states into one long array in
-       // kern.cp_times sysctl OID
-       // we store averages in dfpl->cpus[0], and actual cores after that
-       maxcpu = cpus + 1;
-       sizeof_cp_time_array = cpus * sizeof(unsigned long) * CPUSTATES;
-       sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
+      // on smp systems DragonFlyBSD kernel concats all CPU states into one long array in
+      // kern.cp_times sysctl OID
+      // we store averages in dfpl->cpus[0], and actual cores after that
+      maxcpu = cpus + 1;
+      sizeof_cp_time_array = cpus * sizeof(unsigned long) * CPUSTATES;
+      sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
    }
 
    for (int i = 0; i < maxcpu; i++) {
@@ -176,14 +178,14 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
          cp_time_o = dfpl->cp_time_o;
       } else {
          if (i == 0 ) {
-           // average
-           cp_time_n = dfpl->cp_time_n;
-           cp_time_o = dfpl->cp_time_o;
+            // average
+            cp_time_n = dfpl->cp_time_n;
+            cp_time_o = dfpl->cp_time_o;
          } else {
-           // specific smp cores
-           cp_times_offset = i - 1;
-           cp_time_n = dfpl->cp_times_n + (cp_times_offset * CPUSTATES);
-           cp_time_o = dfpl->cp_times_o + (cp_times_offset * CPUSTATES);
+            // specific smp cores
+            cp_times_offset = i - 1;
+            cp_time_n = dfpl->cp_times_n + (cp_times_offset * CPUSTATES);
+            cp_time_o = dfpl->cp_times_o + (cp_times_offset * CPUSTATES);
          }
       }
 
@@ -192,19 +194,21 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
       unsigned long long total_n = 0;
       unsigned long long total_d = 0;
       for (int s = 0; s < CPUSTATES; s++) {
-        cp_time_d[s] = cp_time_n[s] - cp_time_o[s];
-        total_o += cp_time_o[s];
-        total_n += cp_time_n[s];
+         cp_time_d[s] = cp_time_n[s] - cp_time_o[s];
+         total_o += cp_time_o[s];
+         total_n += cp_time_n[s];
       }
 
       // totals
       total_d = total_n - total_o;
-      if (total_d < 1 ) total_d = 1;
+      if (total_d < 1 ) {
+         total_d = 1;
+      }
 
       // save current state as old and calc percentages
       for (int s = 0; s < CPUSTATES; ++s) {
-        cp_time_o[s] = cp_time_n[s];
-        cp_time_p[s] = ((double)cp_time_d[s]) / ((double)total_d) * 100;
+         cp_time_o[s] = cp_time_n[s];
+         cp_time_p[s] = ((double)cp_time_d[s]) / ((double)total_d) * 100;
       }
 
       CPUData* cpuData = &(dfpl->cpus[i]);
@@ -296,9 +300,9 @@ char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kpro
 
 static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* dfpl) {
    size_t len;
-   char *jls; /* Jail list */
-   char *curpos;
-   char *nextpos;
+   char* jls; /* Jail list */
+   char* curpos;
+   char* nextpos;
 
    if (sysctlbyname("jail.list", NULL, &len, NULL, 0) == -1) {
       fprintf(stderr, "initial sysctlbyname / jail.list failed\n");
@@ -329,30 +333,32 @@ retry:
    curpos = jls;
    while (curpos) {
       int jailid;
-      char *str_hostname;
+      char* str_hostname;
       nextpos = strchr(curpos, '\n');
-      if (nextpos)
+      if (nextpos) {
          *nextpos++ = 0;
+      }
 
       jailid = atoi(strtok(curpos, " "));
       str_hostname = strtok(NULL, " ");
 
-      char *jname = (char *) (Hashtable_get(dfpl->jails, jailid));
+      char* jname = (char*) (Hashtable_get(dfpl->jails, jailid));
       if (jname == NULL) {
          jname = xStrdup(str_hostname);
          Hashtable_put(dfpl->jails, jailid, jname);
       }
 
       curpos = nextpos;
-  }
-  free(jls);
+   }
+
+   free(jls);
 }
 
 char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid) {
    char*  hostname;
    char*  jname;
 
-   if (jailid != 0 && dfpl->jails && (hostname = (char *)Hashtable_get(dfpl->jails, jailid))) {
+   if (jailid != 0 && dfpl->jails && (hostname = (char*)Hashtable_get(dfpl->jails, jailid))) {
       jname = xStrdup(hostname);
    } else {
       jname = xStrdup("-");
@@ -371,8 +377,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    DragonFlyBSDProcessList_scanJails(dfpl);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate)
+   if (pauseProcessUpdate) {
       return;
+   }
 
    int count = 0;
 
@@ -417,7 +424,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
       } else {
          proc->processor = kproc->kp_lwp.kl_cpuid;
-         if(dfp->jid != kproc->kp_jailid) {	// process can enter jail anytime
+         if (dfp->jid != kproc->kp_jailid) {	// process can enter jail anytime
             dfp->jid = kproc->kp_jailid;
             free(dfp->jname);
             dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
@@ -425,7 +432,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          if (proc->ppid != kproc->kp_ppid) {	// if there are reapers in the system, process can get reparented anytime
             proc->ppid = kproc->kp_ppid;
          }
-         if(proc->st_uid != kproc->kp_uid) {	// some processes change users (eg. to lower privs)
+         if (proc->st_uid != kproc->kp_uid) {	// some processes change users (eg. to lower privs)
             proc->st_uid = kproc->kp_uid;
             proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          }

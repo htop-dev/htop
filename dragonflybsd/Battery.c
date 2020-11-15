@@ -14,15 +14,17 @@ in the source distribution for its full text.
 void Battery_getData(double* level, ACPresence* isOnAC) {
    int life;
    size_t life_len = sizeof(life);
-   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) == -1)
+   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) == -1) {
       *level = NAN;
-   else
+   } else {
       *level = life;
+   }
 
    int acline;
    size_t acline_len = sizeof(acline);
-   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) == -1)
+   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) == -1) {
       *isOnAC = AC_ERROR;
-   else
+   } else {
       *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
+   }
 }

@@ -61,7 +61,7 @@ struct Panel_ {
    int selectionColor;
 };
 
-#define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
+#define Panel_setDefaultBar(this_) do { (this_)->currentBar = (this_)->defaultBar; } while (0)
 
 #define KEY_CTRL(l) ((l)-'A'+1)
 
@@ -111,7 +111,7 @@ void Panel_setSelected(Panel* this, int selected);
 
 void Panel_draw(Panel* this, bool focus);
 
-void Panel_splice(Panel *this, Vector* from);
+void Panel_splice(Panel* this, Vector* from);
 
 bool Panel_onKey(Panel* this, int key);
 

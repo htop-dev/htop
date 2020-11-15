@@ -52,7 +52,7 @@ TraceScreen* TraceScreen_new(Process* process) {
    this->tracing = true;
    FunctionBar* fuBar = FunctionBar_new(TraceScreenFunctions, TraceScreenKeys, TraceScreenEvents);
    CRT_disableDelay();
-   return (TraceScreen*) InfoScreen_init(&this->super, process, fuBar, LINES-2, "");
+   return (TraceScreen*) InfoScreen_init(&this->super, process, fuBar, LINES - 2, "");
 }
 
 void TraceScreen_delete(Object* cast) {
@@ -61,8 +61,11 @@ void TraceScreen_delete(Object* cast) {
       kill(this->child, SIGTERM);
       waitpid(this->child, NULL, 0);
    }
-   if (this->strace)
+
+   if (this->strace) {
       fclose(this->strace);
+   }
+
    CRT_enableDelay();
    free(InfoScreen_done((InfoScreen*)this));
 }
@@ -81,10 +84,10 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
    if (pipe(fdpair) == -1)
       return false;
 
-   if(fcntl(fdpair[0], F_SETFL, O_NONBLOCK) < 0)
+   if (fcntl(fdpair[0], F_SETFL, O_NONBLOCK) < 0)
       goto err;
 
-   if(fcntl(fdpair[1], F_SETFL, O_NONBLOCK) < 0)
+   if (fcntl(fdpair[1], F_SETFL, O_NONBLOCK) < 0)
       goto err;
 
    pid_t child = fork();
@@ -140,12 +143,13 @@ void TraceScreen_updateTrace(InfoScreen* super) {
 // FD_SET(STDIN_FILENO, &fds);
    FD_SET(fd_strace, &fds);
 
-   struct timeval tv;
-   tv.tv_sec = 0; tv.tv_usec = 500;
-   int ready = select(fd_strace+1, &fds, NULL, NULL, &tv);
+   struct timeval tv = { .tv_sec = 0, .tv_usec = 500 };
+   int ready = select(fd_strace + 1, &fds, NULL, NULL, &tv);
+
    size_t nread = 0;
    if (ready > 0 && FD_ISSET(fd_strace, &fds))
       nread = fread(buffer, 1, sizeof(buffer) - 1, this->strace);
+
    if (nread && this->tracing) {
       const char* line = buffer;
       buffer[nread] = '\0';
@@ -158,16 +162,17 @@ void TraceScreen_updateTrace(InfoScreen* super) {
             } else {
                InfoScreen_addLine(&this->super, line);
             }
-            line = buffer+i+1;
+            line = buffer + i + 1;
          }
       }
-      if (line < buffer+nread) {
+      if (line < buffer + nread) {
          InfoScreen_addLine(&this->super, line);
          buffer[nread] = '\0';
          this->contLine = true;
       }
-      if (this->follow)
-         Panel_setSelected(this->super.display, Panel_size(this->super.display)-1);
+      if (this->follow) {
+         Panel_setSelected(this->super.display, Panel_size(this->super.display) - 1);
+      }
    }
 }
 

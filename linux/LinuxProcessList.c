@@ -51,20 +51,27 @@ in the source distribution for its full text.
 #endif
 
 
-static ssize_t xread(int fd, void *buf, size_t count) {
-  // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
-  size_t alreadyRead = 0;
-  for(;;) {
-     ssize_t res = read(fd, buf, count);
-     if (res == -1 && errno == EINTR) continue;
-     if (res > 0) {
-       buf = ((char*)buf)+res;
-       count -= res;
-       alreadyRead += res;
-     }
-     if (res == -1) return -1;
-     if (count == 0 || res == 0) return alreadyRead;
-  }
+static ssize_t xread(int fd, void* buf, size_t count) {
+   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
+   size_t alreadyRead = 0;
+   for (;;) {
+      ssize_t res = read(fd, buf, count);
+      if (res == -1) {
+         if (errno == EINTR)
+            continue;
+         return -1;
+      }
+
+      if (res > 0) {
+         buf = ((char*)buf) + res;
+         count -= res;
+         alreadyRead += res;
+      }
+
+      if (count == 0 || res == 0) {
+         return alreadyRead;
+      }
+   }
 }
 
 static int sortTtyDrivers(const void* va, const void* vb) {
@@ -78,10 +85,11 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
    int fd = open(PROCTTYDRIVERSFILE, O_RDONLY);
    if (fd == -1)
       return;
+
    char* buf = NULL;
    int bufSize = MAX_READ;
    int bufLen = 0;
-   for(;;) {
+   for (;;) {
       buf = xRealloc(buf, bufSize);
       int size = xread(fd, buf + bufLen, MAX_READ);
       if (size <= 0) {
@@ -160,21 +168,24 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 
 static int LinuxProcessList_computeCPUcount(void) {
    FILE* file = fopen(PROCSTATFILE, "r");
-   if (file == NULL)
+   if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
+   }
 
    int cpus = 0;
    char buffer[PROC_LINE_LENGTH + 1];
-   while(fgets(buffer, sizeof(buffer), file)) {
-      if (String_startsWith(buffer, "cpu"))
+   while (fgets(buffer, sizeof(buffer), file)) {
+      if (String_startsWith(buffer, "cpu")) {
          cpus++;
+      }
    }
 
    fclose(file);
 
    /* subtract raw cpu entry */
-   if (cpus > 0)
+   if (cpus > 0) {
       cpus--;
+   }
 
    return cpus;
 }
@@ -208,7 +219,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    // Check for /proc/*/smaps_rollup availability (improves smaps parsing speed, Linux 4.14+)
    FILE* file = fopen(PROCDIR "/self/smaps_rollup", "r");
-   if(file != NULL) {
+   if (file != NULL) {
       this->haveSmapsRollup = true;
       fclose(file);
    } else {
@@ -218,16 +229,18 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    // Read btime
    {
       FILE* statfile = fopen(PROCSTATFILE, "r");
-      if (statfile == NULL)
+      if (statfile == NULL) {
          CRT_fatalError("Cannot open " PROCSTATFILE);
+      }
 
-      while(true) {
+      while (true) {
          char buffer[PROC_LINE_LENGTH + 1];
          if (fgets(buffer, sizeof(buffer), statfile) == NULL) {
             CRT_fatalError("No btime in " PROCSTATFILE);
          } else if (String_startsWith(buffer, "btime ")) {
-            if (sscanf(buffer, "btime %lld\n", &btime) != 1)
+            if (sscanf(buffer, "btime %lld\n", &btime) != 1) {
                CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
+            }
             break;
          }
       }
@@ -255,7 +268,7 @@ void ProcessList_delete(ProcessList* pl) {
    ProcessList_done(pl);
    free(this->cpus);
    if (this->ttyDrivers) {
-      for(int i = 0; this->ttyDrivers[i].path; i++) {
+      for (int i = 0; this->ttyDrivers[i].path; i++) {
          free(this->ttyDrivers[i].path);
       }
       free(this->ttyDrivers);
@@ -271,10 +284,10 @@ void ProcessList_delete(ProcessList* pl) {
 
 static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
    static double jiffy = NAN;
-   if(isnan(jiffy)) {
+   if (isnan(jiffy)) {
       errno = 0;
       long sc_jiffy = sysconf(_SC_CLK_TCK);
-      if(errno || -1 == sc_jiffy) {
+      if (errno || -1 == sc_jiffy) {
          jiffy = NAN;
          return t; // Assume 100Hz clock
       }
@@ -284,30 +297,33 @@ static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
    return t * jiffytime * 100;
 }
 
-static bool LinuxProcessList_readStatFile(Process *process, const char* dirname, const char* name, char* command, int* commLen) {
+static bool LinuxProcessList_readStatFile(Process* process, const char* dirname, const char* name, char* command, int* commLen) {
    LinuxProcess* lp = (LinuxProcess*) process;
    const int commLenIn = *commLen;
    *commLen = 0;
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, MAX_NAME, "%s/%s/stat", dirname, name);
    int fd = open(filename, O_RDONLY);
    if (fd == -1)
       return false;
 
-   static char buf[MAX_READ+1];
+   static char buf[MAX_READ + 1];
 
    int size = xread(fd, buf, MAX_READ);
    close(fd);
-   if (size <= 0) return false;
+   if (size <= 0)
+      return false;
    buf[size] = '\0';
 
    assert(process->pid == atoi(buf));
-   char *location = strchr(buf, ' ');
-   if (!location) return false;
+   char* location = strchr(buf, ' ');
+   if (!location)
+      return false;
 
    location += 2;
-   char *end = strrchr(location, ')');
-   if (!end) return false;
+   char* end = strrchr(location, ')');
+   if (!end)
+      return false;
 
    int commsize = MINIMUM(end - location, commLenIn - 1);
    //  deepcode ignore BufferOverflow: commsize is bounded by the allocated length passed in by commLen, saved into commLenIn
@@ -352,14 +368,16 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    location += 1;
    process->nlwp = strtol(location, &location, 10);
    location += 1;
-   location = strchr(location, ' ')+1;
+   location = strchr(location, ' ') + 1;
    if (process->starttime_ctime == 0) {
       process->starttime_ctime = btime + LinuxProcess_adjustTime(strtoll(location, &location, 10)) / 100;
    } else {
-      location = strchr(location, ' ')+1;
+      location = strchr(location, ' ') + 1;
    }
    location += 1;
-   for (int i=0; i<15; i++) location = strchr(location, ' ')+1;
+   for (int i = 0; i < 15; i++) {
+      location = strchr(location, ' ') + 1;
+   }
    process->exit_signal = strtol(location, &location, 10);
    location += 1;
    assert(location != NULL);
@@ -372,7 +390,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
 
 
 static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, char* name) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    filename[MAX_NAME] = '\0';
 
    xSnprintf(filename, MAX_NAME, "%s/%s", dirname, name);
@@ -387,7 +405,7 @@ static bool LinuxProcessList_statProcessDir(Process* process, const char* dirnam
 #ifdef HAVE_TASKSTATS
 
 static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirname, char* name, unsigned long long now) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    filename[MAX_NAME] = '\0';
 
    xSnprintf(filename, MAX_NAME, "%s/%s/io", dirname, name);
@@ -410,45 +428,47 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
    char buffer[1024];
    ssize_t buflen = xread(fd, buffer, 1023);
    close(fd);
-   if (buflen < 1) return;
+   if (buflen < 1)
+      return;
+
    buffer[buflen] = '\0';
    unsigned long long last_read = process->io_read_bytes;
    unsigned long long last_write = process->io_write_bytes;
-   char *buf = buffer;
-   char *line = NULL;
+   char* buf = buffer;
+   char* line = NULL;
    while ((line = strsep(&buf, "\n")) != NULL) {
       switch (line[0]) {
       case 'r':
-         if (line[1] == 'c' && String_startsWith(line+2, "har: "))
-            process->io_rchar = strtoull(line+7, NULL, 10);
-         else if (String_startsWith(line+1, "ead_bytes: ")) {
-            process->io_read_bytes = strtoull(line+12, NULL, 10);
+         if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
+            process->io_rchar = strtoull(line + 7, NULL, 10);
+         } else if (String_startsWith(line + 1, "ead_bytes: ")) {
+            process->io_read_bytes = strtoull(line + 12, NULL, 10);
             process->io_rate_read_bps =
-               ((double)(process->io_read_bytes - last_read))/(((double)(now - process->io_rate_read_time))/1000);
+               ((double)(process->io_read_bytes - last_read)) / (((double)(now - process->io_rate_read_time)) / 1000);
             process->io_rate_read_time = now;
          }
          break;
       case 'w':
-         if (line[1] == 'c' && String_startsWith(line+2, "har: "))
-            process->io_wchar = strtoull(line+7, NULL, 10);
-         else if (String_startsWith(line+1, "rite_bytes: ")) {
-            process->io_write_bytes = strtoull(line+13, NULL, 10);
+         if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
+            process->io_wchar = strtoull(line + 7, NULL, 10);
+         } else if (String_startsWith(line + 1, "rite_bytes: ")) {
+            process->io_write_bytes = strtoull(line + 13, NULL, 10);
             process->io_rate_write_bps =
-               ((double)(process->io_write_bytes - last_write))/(((double)(now - process->io_rate_write_time))/1000);
+               ((double)(process->io_write_bytes - last_write)) / (((double)(now - process->io_rate_write_time)) / 1000);
             process->io_rate_write_time = now;
          }
          break;
       case 's':
-         if (line[4] == 'r' && String_startsWith(line+1, "yscr: ")) {
-            process->io_syscr = strtoull(line+7, NULL, 10);
-         } else if (String_startsWith(line+1, "yscw: ")) {
-            process->io_syscw = strtoull(line+7, NULL, 10);
+         if (line[4] == 'r' && String_startsWith(line + 1, "yscr: ")) {
+            process->io_syscr = strtoull(line + 7, NULL, 10);
+         } else if (String_startsWith(line + 1, "yscw: ")) {
+            process->io_syscw = strtoull(line + 7, NULL, 10);
          }
          break;
       case 'c':
-         if (String_startsWith(line+1, "ancelled_write_bytes: ")) {
-           process->io_cancelled_write_bytes = strtoull(line+23, NULL, 10);
-        }
+         if (String_startsWith(line + 1, "ancelled_write_bytes: ")) {
+            process->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10);
+         }
       }
    }
 }
@@ -458,11 +478,12 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirna
 
 
 static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, sizeof(filename), "%s/%s/statm", dirname, name);
    FILE* statmfile = fopen(filename, "r");
    if (!statmfile)
       return false;
+
    int r = fscanf(statmfile, "%ld %ld %ld %ld %ld %ld %ld",
                   &process->super.m_size,
                   &process->super.m_resident,
@@ -481,7 +502,7 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
 
    char buffer[256];
 
-   if(haveSmapsRollup) {// only available in Linux 4.14+
+   if (haveSmapsRollup) {// only available in Linux 4.14+
       xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps_rollup", dirname, name);
    } else {
       xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps", dirname, name);
@@ -496,10 +517,10 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    process->m_psswp = 0;
 
    while (fgets(buffer, sizeof(buffer), f)) {
-      if(!strchr(buffer, '\n')) {
+      if (!strchr(buffer, '\n')) {
          // Partial line, skip to end of this line
-         while(fgets(buffer, sizeof(buffer), f)) {
-            if(strchr(buffer, '\n')) {
+         while (fgets(buffer, sizeof(buffer), f)) {
+            if (strchr(buffer, '\n')) {
                break;
             }
          }
@@ -529,7 +550,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
       return;
    }
 
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, sizeof(filename), "%s/%s/status", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file) {
@@ -542,11 +563,11 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
    bool foundEnvID = false;
    bool foundVPid = false;
    char linebuf[256];
-   while(fgets(linebuf, sizeof(linebuf), file) != NULL) {
-      if(strchr(linebuf, '\n') == NULL) {
+   while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
+      if (strchr(linebuf, '\n') == NULL) {
          // Partial line, skip to end of this line
-         while(fgets(linebuf, sizeof(linebuf), file) != NULL) {
-            if(strchr(linebuf, '\n') != NULL) {
+         while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
+            if (strchr(linebuf, '\n') != NULL) {
                break;
             }
          }
@@ -554,14 +575,14 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
       }
 
       char* name_value_sep = strchr(linebuf, ':');
-      if(name_value_sep == NULL) {
+      if (name_value_sep == NULL) {
          continue;
       }
 
       int field;
-      if(0 == strncasecmp(linebuf, "envID", name_value_sep - linebuf)) {
+      if (0 == strncasecmp(linebuf, "envID", name_value_sep - linebuf)) {
          field = 1;
-      } else if(0 == strncasecmp(linebuf, "VPid", name_value_sep - linebuf)) {
+      } else if (0 == strncasecmp(linebuf, "VPid", name_value_sep - linebuf)) {
          field = 2;
       } else {
          continue;
@@ -569,7 +590,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
 
       do {
          name_value_sep++;
-      } while(*name_value_sep != '\0' && *name_value_sep <= 32);
+      } while (*name_value_sep != '\0' && *name_value_sep <= 32);
 
       char* value_end = name_value_sep;
 
@@ -577,7 +598,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
          value_end++;
       }
 
-      if(name_value_sep == value_end) {
+      if (name_value_sep == value_end) {
          continue;
       }
 
@@ -586,7 +607,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
       switch(field) {
       case 1:
          foundEnvID = true;
-         if(!String_eq(name_value_sep, process->ctid ? process->ctid : "")) {
+         if (!String_eq(name_value_sep, process->ctid ? process->ctid : "")) {
             free(process->ctid);
             process->ctid = xStrdup(name_value_sep);
          }
@@ -603,12 +624,12 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
 
    fclose(file);
 
-   if(!foundEnvID) {
+   if (!foundEnvID) {
       free(process->ctid);
       process->ctid = NULL;
    }
 
-   if(!foundVPid) {
+   if (!foundVPid) {
       process->vpid = process->super.pid;
    }
 }
@@ -618,7 +639,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
 #ifdef HAVE_CGROUP
 
 static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, MAX_NAME, "%s/%s/cgroup", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file) {
@@ -634,10 +655,14 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
    int left = PROC_LINE_LENGTH;
    while (!feof(file) && left > 0) {
       char buffer[PROC_LINE_LENGTH + 1];
-      char *ok = fgets(buffer, PROC_LINE_LENGTH, file);
-      if (!ok) break;
+      char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
+      if (!ok)
+         break;
+
       char* group = strchr(buffer, ':');
-      if (!group) break;
+      if (!group)
+         break;
+
       if (at != output) {
          *at = ';';
          at++;
@@ -656,11 +681,12 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
 #ifdef HAVE_VSERVER
 
 static void LinuxProcessList_readVServerData(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, MAX_NAME, "%s/%s/status", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file)
       return;
+
    char buffer[PROC_LINE_LENGTH + 1];
    process->vxid = 0;
    while (fgets(buffer, PROC_LINE_LENGTH, file)) {
@@ -687,7 +713,7 @@ static void LinuxProcessList_readVServerData(LinuxProcess* process, const char* 
 #endif
 
 static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, MAX_NAME, "%s/%s/oom_score", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file) {
@@ -705,24 +731,27 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
 }
 
 static void LinuxProcessList_readCtxtData(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, MAX_NAME, "%s/%s/status", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file)
       return;
+
    char buffer[PROC_LINE_LENGTH + 1];
    unsigned long ctxt = 0;
    while (fgets(buffer, PROC_LINE_LENGTH, file)) {
       if (String_startsWith(buffer, "voluntary_ctxt_switches:")) {
          unsigned long vctxt;
          int ok = sscanf(buffer, "voluntary_ctxt_switches:\t%lu", &vctxt);
-         if (ok >= 1)
+         if (ok >= 1) {
             ctxt += vctxt;
+         }
       } else if (String_startsWith(buffer, "nonvoluntary_ctxt_switches:")) {
          unsigned long nvctxt;
          int ok = sscanf(buffer, "nonvoluntary_ctxt_switches:\t%lu", &nvctxt);
-         if (ok >= 1)
+         if (ok >= 1) {
             ctxt += nvctxt;
+         }
       }
    }
    fclose(file);
@@ -731,7 +760,7 @@ static void LinuxProcessList_readCtxtData(LinuxProcess* process, const char* dir
 }
 
 static void LinuxProcessList_readSecattrData(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, sizeof(filename), "%s/%s/attr/current", dirname, name);
    FILE* file = fopen(filename, "r");
    if (!file) {
@@ -740,28 +769,30 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, const char* 
       return;
    }
    char buffer[PROC_LINE_LENGTH + 1];
-   char *res = fgets(buffer, sizeof(buffer), file);
+   char* res = fgets(buffer, sizeof(buffer), file);
    fclose(file);
    if (!res) {
       free(process->secattr);
       process->secattr = NULL;
       return;
    }
-   char *newline = strchr(buffer, '\n');
-   if (newline)
+   char* newline = strchr(buffer, '\n');
+   if (newline) {
       *newline = '\0';
-   if (process->secattr && String_eq(process->secattr, buffer))
+   }
+   if (process->secattr && String_eq(process->secattr, buffer)) {
       return;
+   }
    free(process->secattr);
    process->secattr = xStrdup(buffer);
 }
 
 #ifdef HAVE_DELAYACCT
 
-static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
-   struct nlmsghdr *nlhdr;
-   struct nlattr *nlattrs[TASKSTATS_TYPE_MAX + 1];
-   struct nlattr *nlattr;
+static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
+   struct nlmsghdr* nlhdr;
+   struct nlattr* nlattrs[TASKSTATS_TYPE_MAX + 1];
+   struct nlattr* nlattr;
    struct taskstats stats;
    int rem;
    unsigned long long int timeDelta;
@@ -777,24 +808,25 @@ static int handleNetlinkMsg(struct nl_msg *nlmsg, void *linuxProcess) {
       memcpy(&stats, nla_data(nla_next(nla_data(nlattr), &rem)), sizeof(stats));
       assert(lp->super.pid == (pid_t)stats.ac_pid);
 
-      timeDelta = (stats.ac_etime*1000 - lp->delay_read_time);
-      #define BOUNDS(x) isnan(x) ? 0.0 : ((x) > 100) ? 100.0 : (x);
-      #define DELTAPERC(x,y) BOUNDS((float) ((x) - (y)) / timeDelta * 100);
+      timeDelta = stats.ac_etime * 1000 - lp->delay_read_time;
+      #define BOUNDS(x) (isnan(x) ? 0.0 : ((x) > 100) ? 100.0 : (x))
+      #define DELTAPERC(x,y) BOUNDS((float) ((x) - (y)) / timeDelta * 100)
       lp->cpu_delay_percent = DELTAPERC(stats.cpu_delay_total, lp->cpu_delay_total);
       lp->blkio_delay_percent = DELTAPERC(stats.blkio_delay_total, lp->blkio_delay_total);
       lp->swapin_delay_percent = DELTAPERC(stats.swapin_delay_total, lp->swapin_delay_total);
       #undef DELTAPERC
       #undef BOUNDS
+
       lp->swapin_delay_total = stats.swapin_delay_total;
       lp->blkio_delay_total = stats.blkio_delay_total;
       lp->cpu_delay_total = stats.cpu_delay_total;
-      lp->delay_read_time = stats.ac_etime*1000;
+      lp->delay_read_time = stats.ac_etime * 1000;
    }
    return NL_OK;
 }
 
 static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProcess* process) {
-   struct nl_msg *msg;
+   struct nl_msg* msg;
 
    if (nl_socket_modify_cb(this->netlink_socket, NL_CB_VALID, NL_CB_CUSTOM, handleNetlinkMsg, process) < 0) {
       return;
@@ -837,13 +869,13 @@ static void setCommand(Process* process, const char* command, int len) {
 }
 
 static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME+1];
+   char filename[MAX_NAME + 1];
    xSnprintf(filename, MAX_NAME, "%s/%s/cmdline", dirname, name);
    int fd = open(filename, O_RDONLY);
    if (fd == -1)
       return false;
 
-   char command[4096+1]; // max cmdline length on Linux
+   char command[4096 + 1]; // max cmdline length on Linux
    int amtRead = xread(fd, command, sizeof(command) - 1);
    close(fd);
    int tokenEnd = 0;
@@ -900,20 +932,31 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
       unsigned int idx = min - ttyDrivers[i].minorFrom;
       struct stat sstat;
       char* fullPath;
-      for(;;) {
+      for (;;) {
          xAsprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
          int err = stat(fullPath, &sstat);
-         if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) return fullPath;
+         if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) {
+            return fullPath;
+         }
          free(fullPath);
+
          xAsprintf(&fullPath, "%s%d", ttyDrivers[i].path, idx);
          err = stat(fullPath, &sstat);
-         if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) return fullPath;
+         if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) {
+            return fullPath;
+         }
          free(fullPath);
-         if (idx == min) break;
+
+         if (idx == min) {
+            break;
+         }
+
          idx = min;
       }
       int err = stat(ttyDrivers[i].path, &sstat);
-      if (err == 0 && tty_nr == sstat.st_rdev) return xStrdup(ttyDrivers[i].path);
+      if (err == 0 && tty_nr == sstat.st_rdev) {
+         return xStrdup(ttyDrivers[i].path);
+      }
    }
    char* out;
    xAsprintf(&out, "/dev/%u:%u", maj, min);
@@ -927,11 +970,13 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
    const Settings* settings = pl->settings;
 
    #ifdef HAVE_TASKSTATS
-   unsigned long long now = tv.tv_sec*1000LL+tv.tv_usec/1000LL;
+   unsigned long long now = tv.tv_sec * 1000LL + tv.tv_usec / 1000LL;
    #endif
 
    dir = opendir(dirname);
-   if (!dir) return false;
+   if (!dir)
+      return false;
+
    int cpus = pl->cpuCount;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
@@ -964,7 +1009,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       LinuxProcess* lp = (LinuxProcess*) proc;
 
-      char subdirname[MAX_NAME+1];
+      char subdirname[MAX_NAME + 1];
       xSnprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
       LinuxProcessList_recurseProcTree(this, subdirname, proc, period, tv);
 
@@ -976,41 +1021,44 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (! LinuxProcessList_readStatmFile(lp, dirname, name))
          goto errorReadingProcess;
 
-      if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)){
-         if (!parent){
+      if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
+         if (!parent) {
             // Read smaps file of each process only every second pass to improve performance
             static int smaps_flag = 0;
-            if ((pid & 1) == smaps_flag){
-              LinuxProcessList_readSmapsFile(lp, dirname, name, this->haveSmapsRollup);
+            if ((pid & 1) == smaps_flag) {
+               LinuxProcessList_readSmapsFile(lp, dirname, name, this->haveSmapsRollup);
             }
             if (pid == 1) {
                smaps_flag = !smaps_flag;
             }
-        } else {
+         } else {
             lp->m_pss = ((LinuxProcess*)parent)->m_pss;
-        }
+         }
       }
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
-      char command[MAX_NAME+1];
+      char command[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       int commLen = sizeof(command);
       unsigned int tty_nr = proc->tty_nr;
       if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen))
          goto errorReadingProcess;
+
       if (tty_nr != proc->tty_nr && this->ttyDrivers) {
          free(lp->ttyDevice);
          lp->ttyDevice = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
       }
-      if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO)
+
+      if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO) {
          LinuxProcess_updateIOPriority(lp);
+      }
+
       float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;
-      proc->percent_cpu = CLAMP(percent_cpu, 0.0, cpus * 100.0);
-      if (isnan(proc->percent_cpu)) proc->percent_cpu = 0.0;
+      proc->percent_cpu = isnan(percent_cpu) ? 0.0 : CLAMP(percent_cpu, 0.0, cpus * 100.0);
       proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(pl->totalMem) * 100.0;
 
-      if(!preExisting) {
+      if (!preExisting) {
 
          if (! LinuxProcessList_statProcessDir(proc, dirname, name))
             goto errorReadingProcess;
@@ -1049,18 +1097,22 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       #endif
 
       #ifdef HAVE_CGROUP
-      if (settings->flags & PROCESS_FLAG_LINUX_CGROUP)
+      if (settings->flags & PROCESS_FLAG_LINUX_CGROUP) {
          LinuxProcessList_readCGroupFile(lp, dirname, name);
+      }
       #endif
 
-      if (settings->flags & PROCESS_FLAG_LINUX_OOM)
+      if (settings->flags & PROCESS_FLAG_LINUX_OOM) {
          LinuxProcessList_readOomData(lp, dirname, name);
+      }
 
-      if (settings->flags & PROCESS_FLAG_LINUX_CTXT)
+      if (settings->flags & PROCESS_FLAG_LINUX_CTXT) {
          LinuxProcessList_readCtxtData(lp, dirname, name);
+      }
 
-      if (settings->flags & PROCESS_FLAG_LINUX_SECATTR)
+      if (settings->flags & PROCESS_FLAG_LINUX_SECATTR) {
          LinuxProcessList_readSecattrData(lp, dirname, name);
+      }
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;
@@ -1070,8 +1122,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
             proc->basenameOffset = -1;
             setCommand(proc, command, commLen);
          } else if (settings->showThreadNames) {
-            if (! LinuxProcessList_readCmdlineFile(proc, dirname, name))
+            if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
                goto errorReadingProcess;
+            }
          }
          if (Process_isKernelThread(proc)) {
             pl->kernelThreads++;
@@ -1087,7 +1140,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       continue;
 
       // Exception handler.
-      errorReadingProcess: {
+
+errorReadingProcess:
+      {
          if (preExisting) {
             ProcessList_remove(pl, proc);
          } else {
@@ -1111,7 +1166,12 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    char buffer[128];
    while (fgets(buffer, 128, file)) {
 
-      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu kB", variable)) { break; } } while(0)
+      #define tryRead(label, variable)                                         \
+         if (String_startsWith(buffer, label)) {                               \
+            sscanf(buffer + strlen(label), " %32llu kB", variable);            \
+            break;                                                             \
+         }
+
       switch (buffer[0]) {
       case 'M':
          tryRead("MemTotal:", &this->totalMem);
@@ -1157,7 +1217,7 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
    char disksize[34];
 
    unsigned int i = 0;
-   for(;;) {
+   for (;;) {
       xSnprintf(mm_stat, sizeof(mm_stat), "/sys/block/zram%u/mm_stat", i);
       xSnprintf(disksize, sizeof(disksize), "/sys/block/zram%u/disksize", i);
       i++;
@@ -1208,8 +1268,17 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    }
    char buffer[128];
    while (fgets(buffer, 128, file)) {
-      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { break; } } while(0)
-      #define tryReadFlag(label, variable, flag) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %*2u %32llu", variable)) { (flag) = 1; break; } else { (flag) = 0; } } while(0)
+      #define tryRead(label, variable)                                         \
+         if (String_startsWith(buffer, label)) {                               \
+            sscanf(buffer + strlen(label), " %*2u %32llu", variable);          \
+            break;                                                             \
+         }
+      #define tryReadFlag(label, variable, flag)                               \
+         if (String_startsWith(buffer, label)) {                               \
+            (flag) = sscanf(buffer + strlen(label), " %*2u %32llu", variable); \
+            break;                                                             \
+         }
+
       switch (buffer[0]) {
       case 'c':
          tryRead("c_max", &lpl->zfs.max);
@@ -1275,10 +1344,13 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       // 5, 7, 8 or 9 of these fields will be set.
       // The rest will remain at zero.
       char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
-      if (!ok) buffer[0] = '\0';
-      if (i == 0)
+      if (!ok) {
+         buffer[0] = '\0';
+      }
+
+      if (i == 0) {
          (void) sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
-      else {
+      } else {
          int cpuid;
          (void) sscanf(buffer, "cpu%4d %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
          assert(cpuid == i - 1);
@@ -1322,8 +1394,8 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       cpuData->stealTime = steal;
       cpuData->guestTime = virtalltime;
       cpuData->totalTime = totaltime;
-
    }
+
    double period = (double)this->cpus[0].totalPeriod / cpus;
    fclose(file);
    return period;
@@ -1386,13 +1458,15 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
          (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
          (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1)
       ) {
-         if (cpuid < 0 || cpuid > (cpus - 1))
+         if (cpuid < 0 || cpuid > (cpus - 1)) {
             continue;
+         }
 
          CPUData* cpuData = &(this->cpus[cpuid + 1]);
          /* do not override sysfs data */
-         if (isnan(cpuData->frequency))
+         if (isnan(cpuData->frequency)) {
             cpuData->frequency = frequency;
+         }
          numCPUsWithFrequency++;
          totalFrequency += frequency;
       } else if (buffer[0] == '\n') {
@@ -1401,19 +1475,22 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
    }
    fclose(file);
 
-   if (numCPUsWithFrequency > 0)
+   if (numCPUsWithFrequency > 0) {
       this->cpus[0].frequency = totalFrequency / numCPUsWithFrequency;
+   }
 }
 
 static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
    int cpus = this->super.cpuCount;
    assert(cpus > 0);
 
-   for (int i = 0; i <= cpus; i++)
+   for (int i = 0; i <= cpus; i++) {
       this->cpus[i].frequency = NAN;
+   }
 
-   if (scanCPUFreqencyFromSysCPUFreq(this) == 0)
+   if (scanCPUFreqencyFromSysCPUFreq(this) == 0) {
       return;
+   }
 
    scanCPUFreqencyFromCPUinfo(this);
 }
@@ -1429,12 +1506,14 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    double period = LinuxProcessList_scanCPUTime(this);
 
-   if (settings->showCPUFrequency)
+   if (settings->showCPUFrequency) {
       LinuxProcessList_scanCPUFrequency(this);
+   }
 
    // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate)
+   if (pauseProcessUpdate) {
       return;
+   }
 
    struct timeval tv;
    gettimeofday(&tv, NULL);

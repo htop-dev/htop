@@ -26,10 +26,11 @@ static void CheckItem_display(const Object* cast, RichString* out) {
    const CheckItem* this = (const CheckItem*)cast;
    assert (this != NULL);
    RichString_write(out, CRT_colors[CHECK_BOX], "[");
-   if (CheckItem_get(this))
+   if (CheckItem_get(this)) {
       RichString_append(out, CRT_colors[CHECK_MARK], "x");
-   else
+   } else {
       RichString_append(out, CRT_colors[CHECK_MARK], " ");
+   }
    RichString_append(out, CRT_colors[CHECK_BOX], "] ");
    RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
 }
@@ -56,15 +57,17 @@ CheckItem* CheckItem_newByVal(char* text, bool value) {
 }
 
 void CheckItem_set(CheckItem* this, bool value) {
-   if (this->ref)
+   if (this->ref) {
       *(this->ref) = value;
-   else
+   } else {
       this->value = value;
+   }
 }
 
 bool CheckItem_get(const CheckItem* this) {
-   if (this->ref)
+   if (this->ref) {
       return *(this->ref);
-   else
+   } else {
       return this->value;
+   }
 }

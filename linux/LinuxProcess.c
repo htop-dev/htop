@@ -168,8 +168,9 @@ dynamically  derived  from  the  cpu  nice level of the process:
 io_priority = (cpu_nice + 20) / 5. -- From ionice(1) man page
 */
 static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
-   if (IOPriority_class(this->ioPriority) == IOPRIO_CLASS_NONE)
+   if (IOPriority_class(this->ioPriority) == IOPRIO_CLASS_NONE) {
       return IOPriority_tuple(IOPRIO_CLASS_BE, (this->super.nice + 20) / 5);
+   }
 
    return this->ioPriority;
 }
@@ -194,11 +195,11 @@ bool LinuxProcess_setIOPriority(Process* this, Arg ioprio) {
 
 #ifdef HAVE_DELAYACCT
 void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
-  if (isnan(delay_percent)) {
-    xSnprintf(buffer, n, " N/A  ");
-  } else {
-    xSnprintf(buffer, n, "%4.1f  ", delay_percent);
-  }
+   if (isnan(delay_percent)) {
+      xSnprintf(buffer, n, " N/A  ");
+   } else {
+      xSnprintf(buffer, n, "%4.1f  ", delay_percent);
+   }
 }
 #endif
 
@@ -244,11 +245,11 @@ void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField 
    case IO_WRITE_RATE: Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring); return;
    case IO_RATE: {
       double totalRate = NAN;
-      if(!isnan(lp->io_rate_read_bps) && !isnan(lp->io_rate_write_bps))
+      if (!isnan(lp->io_rate_read_bps) && !isnan(lp->io_rate_write_bps))
          totalRate = lp->io_rate_read_bps + lp->io_rate_write_bps;
-      else if(!isnan(lp->io_rate_read_bps))
+      else if (!isnan(lp->io_rate_read_bps))
          totalRate = lp->io_rate_read_bps;
-      else if(!isnan(lp->io_rate_write_bps))
+      else if (!isnan(lp->io_rate_write_bps))
          totalRate = lp->io_rate_write_bps;
       else
          totalRate = NAN;
@@ -290,8 +291,9 @@ void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField 
    case PERCENT_SWAP_DELAY: LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n); break;
    #endif
    case CTXT:
-      if (lp->ctxt_diff > 1000)
+      if (lp->ctxt_diff > 1000) {
          attr |= A_BOLD;
+      }
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;
@@ -379,7 +381,8 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    default:
       return Process_compare(v1, v2);
    }
-   test_diff:
+
+test_diff:
    return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
 }
 

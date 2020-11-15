@@ -17,8 +17,10 @@ in the source distribution for its full text.
 Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
    Vector* this;
 
-   if (size == DEFAULT_SIZE)
+   if (size == DEFAULT_SIZE) {
       size = 10;
+   }
+
    assert(size > 0);
    this = xMalloc(sizeof(Vector));
    this->growthRate = size;
@@ -32,9 +34,11 @@ Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
 
 void Vector_delete(Vector* this) {
    if (this->owner) {
-      for (int i = 0; i < this->items; i++)
-         if (this->array[i])
+      for (int i = 0; i < this->items; i++) {
+         if (this->array[i]) {
             Object_delete(this->array[i]);
+         }
+      }
    }
    free(this->array);
    free(this);
@@ -45,9 +49,11 @@ void Vector_delete(Vector* this) {
 static bool Vector_isConsistent(const Vector* this) {
    assert(this->items <= this->arraySize);
    if (this->owner) {
-      for (int i = 0; i < this->items; i++)
-         if (this->array[i] && !Object_isA(this->array[i], this->type))
+      for (int i = 0; i < this->items; i++) {
+         if (this->array[i] && !Object_isA(this->array[i], this->type)) {
             return false;
+         }
+      }
       return true;
    } else {
       return true;
@@ -57,8 +63,9 @@ static bool Vector_isConsistent(const Vector* this) {
 int Vector_count(const Vector* this) {
    int items = 0;
    for (int i = 0; i < this->items; i++) {
-      if (this->array[i])
+      if (this->array[i]) {
          items++;
+      }
    }
    assert(items == this->items);
    return items;
@@ -118,7 +125,8 @@ static int partition(Object** array, int left, int right, int pivotIndex, Object
 static void quickSort(Object** array, int left, int right, Object_Compare compare) {
    if (left >= right)
       return;
-   int pivotIndex = (left+right) / 2;
+
+   int pivotIndex = (left + right) / 2;
    int pivotNewIndex = partition(array, left, right, pivotIndex, compare);
    quickSort(array, left, pivotNewIndex - 1, compare);
    quickSort(array, pivotNewIndex + 1, right, compare);
@@ -148,17 +156,18 @@ static void combSort(Object** array, int left, int right, Object_Compare compare
 */
 
 static void insertionSort(Object** array, int left, int right, Object_Compare compare) {
-   for (int i = left+1; i <= right; i++) {
+   for (int i = left + 1; i <= right; i++) {
       Object* t = array[i];
       int j = i - 1;
       while (j >= left) {
          //comparisons++;
          if (compare(array[j], t) <= 0)
             break;
-         array[j+1] = array[j];
+
+         array[j + 1] = array[j];
          j--;
       }
-      array[j+1] = t;
+      array[j + 1] = t;
    }
 }
 
@@ -201,7 +210,7 @@ void Vector_insert(Vector* this, int idx, void* data_) {
 
    Vector_checkArraySize(this);
    //assert(this->array[this->items] == NULL);
-   if(idx < this->items) {
+   if (idx < this->items) {
       memmove(&this->array[idx + 1], &this->array[idx], (this->items - idx) * sizeof(this->array[0]));
    }
    this->array[idx] = data;
@@ -215,7 +224,7 @@ Object* Vector_take(Vector* this, int idx) {
    Object* removed = this->array[idx];
    assert(removed);
    this->items--;
-   if(idx < this->items) {
+   if (idx < this->items) {
       memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx) * sizeof(this->array[0]));
    }
    //this->array[this->items] = NULL;
@@ -228,15 +237,18 @@ Object* Vector_remove(Vector* this, int idx) {
    if (this->owner) {
       Object_delete(removed);
       return NULL;
-   } else
+   } else {
       return removed;
+   }
 }
 
 void Vector_moveUp(Vector* this, int idx) {
    assert(idx >= 0 && idx < this->items);
    assert(Vector_isConsistent(this));
+
    if (idx == 0)
       return;
+
    Object* temp = this->array[idx];
    this->array[idx] = this->array[idx - 1];
    this->array[idx - 1] = temp;
@@ -245,8 +257,10 @@ void Vector_moveUp(Vector* this, int idx) {
 void Vector_moveDown(Vector* this, int idx) {
    assert(idx >= 0 && idx < this->items);
    assert(Vector_isConsistent(this));
+
    if (idx == this->items - 1)
       return;
+
    Object* temp = this->array[idx];
    this->array[idx] = this->array[idx + 1];
    this->array[idx + 1] = temp;
@@ -260,7 +274,7 @@ void Vector_set(Vector* this, int idx, void* data_) {
 
    Vector_checkArraySize(this);
    if (idx >= this->items) {
-      this->items = idx+1;
+      this->items = idx + 1;
    } else {
       if (this->owner) {
          Object* removed = this->array[idx];
@@ -293,7 +307,7 @@ void Vector_add(Vector* this, void* data_) {
    assert(Vector_isConsistent(this));
    int i = this->items;
    Vector_set(this, this->items, data);
-   assert(this->items == i+1); (void)(i);
+   assert(this->items == i + 1); (void)(i);
    assert(Vector_isConsistent(this));
 }
 
@@ -305,8 +319,9 @@ int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compa
    for (int i = 0; i < this->items; i++) {
       const Object* o = this->array[i];
       assert(o);
-      if (compare(search, o) == 0)
+      if (compare(search, o) == 0) {
          return i;
+      }
    }
    return -1;
 }
@@ -319,6 +334,7 @@ void Vector_splice(Vector* this, Vector* from) {
    int olditems = this->items;
    this->items += from->items;
    Vector_checkArraySize(this);
-   for (int j = 0; j < from->items; j++)
+   for (int j = 0; j < from->items; j++) {
       this->array[olditems + j] = from->array[j];
+   }
 }

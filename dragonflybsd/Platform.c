@@ -154,10 +154,10 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    const CPUData* cpuData;
 
    if (cpus == 1) {
-     // single CPU box has everything in fpl->cpus[0]
-     cpuData = &(fpl->cpus[0]);
+      // single CPU box has everything in fpl->cpus[0]
+      cpuData = &(fpl->cpus[0]);
    } else {
-     cpuData = &(fpl->cpus[cpu]);
+      cpuData = &(fpl->cpus[cpu]);
    }
 
    double  percent;
@@ -169,15 +169,14 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[0]+v[1]+v[2]+v[3];
+      percent = v[0] + v[1] + v[2] + v[3];
    } else {
       v[2] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[0]+v[1]+v[2];
+      percent = v[0] + v[1] + v[2];
    }
 
-   percent = CLAMP(percent, 0.0, 100.0);
-   if (isnan(percent)) percent = 0.0;
+   percent = isnan(percent) ? 0.0 : CLAMP(percent, 0.0, 100.0);
 
    v[CPU_METER_FREQUENCY] = NAN;
 
@@ -223,10 +222,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted) {
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted) {
    // TODO
    *bytesReceived = 0;
    *packetsReceived = 0;

@@ -32,7 +32,7 @@ typedef struct envAccum_ {
    size_t capacity;
    size_t size;
    size_t bytes;
-   char *env;
+   char* env;
 } envAccum;
 
 extern double plat_loadavg[3];
@@ -75,9 +75,9 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted);
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted);
 
 #endif

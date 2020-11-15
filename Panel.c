@@ -97,8 +97,10 @@ void Panel_move(Panel* this, int x, int y) {
 void Panel_resize(Panel* this, int w, int h) {
    assert (this != NULL);
 
-   if (RichString_sizeVal(this->header) > 0)
+   if (RichString_sizeVal(this->header) > 0) {
       h--;
+   }
+
    this->w = w;
    this->h = h;
    this->needsRedraw = true;
@@ -145,33 +147,38 @@ Object* Panel_remove(Panel* this, int i) {
 
    this->needsRedraw = true;
    Object* removed = Vector_remove(this->items, i);
-   if (this->selected > 0 && this->selected >= Vector_size(this->items))
+   if (this->selected > 0 && this->selected >= Vector_size(this->items)) {
       this->selected--;
+   }
+
    return removed;
 }
 
 Object* Panel_getSelected(Panel* this) {
    assert (this != NULL);
-   if (Vector_size(this->items) > 0)
+   if (Vector_size(this->items) > 0) {
       return Vector_get(this->items, this->selected);
-   else
+   } else {
       return NULL;
+   }
 }
 
 void Panel_moveSelectedUp(Panel* this) {
    assert (this != NULL);
 
    Vector_moveUp(this->items, this->selected);
-   if (this->selected > 0)
+   if (this->selected > 0) {
       this->selected--;
+   }
 }
 
 void Panel_moveSelectedDown(Panel* this) {
    assert (this != NULL);
 
    Vector_moveDown(this->items, this->selected);
-   if (this->selected + 1 < Vector_size(this->items))
+   if (this->selected + 1 < Vector_size(this->items)) {
       this->selected++;
+   }
 }
 
 int Panel_getSelectedIndex(Panel* this) {
@@ -193,15 +200,16 @@ void Panel_setSelected(Panel* this, int selected) {
    if (selected >= size) {
       selected = size - 1;
    }
-   if (selected < 0)
+   if (selected < 0) {
       selected = 0;
+   }
    this->selected = selected;
    if (Panel_eventHandlerFn(this)) {
       Panel_eventHandler(this, EVENT_SET_SELECTED);
    }
 }
 
-void Panel_splice(Panel *this, Vector* from) {
+void Panel_splice(Panel* this, Vector* from) {
    assert (this != NULL);
    assert (from != NULL);
 
@@ -254,12 +262,12 @@ void Panel_draw(Panel* this, bool focus) {
    int upTo = MINIMUM(first + h, size);
 
    int selectionColor = focus
-                 ? this->selectionColor
-                 : CRT_colors[PANEL_SELECTION_UNFOCUS];
+                      ? this->selectionColor
+                      : CRT_colors[PANEL_SELECTION_UNFOCUS];
 
    if (this->needsRedraw) {
       int line = 0;
-      for(int i = first; line < h && i < upTo; i++) {
+      for (int i = first; line < h && i < upTo; i++) {
          Object* itemObj = Vector_get(this->items, i);
          RichString_begin(item);
          Object_display(itemObj, &item);
@@ -295,15 +303,15 @@ void Panel_draw(Panel* this, bool focus) {
       Object_display(newObj, &new);
       int newLen = RichString_sizeVal(new);
       this->selectedLen = newLen;
-      mvhline(y+ this->oldSelected - first, x+0, ' ', this->w);
+      mvhline(y + this->oldSelected - first, x + 0, ' ', this->w);
       if (scrollH < oldLen)
-         RichString_printoffnVal(old, y+this->oldSelected - first, x,
+         RichString_printoffnVal(old, y + this->oldSelected - first, x,
             scrollH, MINIMUM(oldLen - scrollH, this->w));
       attrset(selectionColor);
-      mvhline(y+this->selected - first, x+0, ' ', this->w);
+      mvhline(y + this->selected - first, x + 0, ' ', this->w);
       RichString_setAttr(&new, selectionColor);
       if (scrollH < newLen)
-         RichString_printoffnVal(new, y+this->selected - first, x,
+         RichString_printoffnVal(new, y + this->selected - first, x,
             scrollH, MINIMUM(newLen - scrollH, this->w));
       attrset(CRT_colors[RESET_COLOR]);
       RichString_end(new);

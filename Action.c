@@ -60,19 +60,19 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    }
    ScreenManager_delete(scr);
    Panel_move(panel, 0, y);
-   Panel_resize(panel, COLS, LINES-y-1);
+   Panel_resize(panel, COLS, LINES - y - 1);
    if (panelFocus == list && ch == 13) {
       if (followProcess) {
          Process* selected = (Process*)Panel_getSelected(panel);
          if (selected && selected->pid == pid)
             return Panel_getSelected(list);
-         else
-            beep();
+
+         beep();
       } else {
          return Panel_getSelected(list);
       }
-
    }
+
    return NULL;
 }
 
@@ -94,7 +94,7 @@ static void Action_runSetup(State* st) {
 
 static bool changePriority(MainPanel* panel, int delta) {
    bool anyTagged;
-   bool ok = MainPanel_foreachProcess(panel, Process_changePriorityBy, (Arg){ .i = delta }, &anyTagged);
+   bool ok = MainPanel_foreachProcess(panel, Process_changePriorityBy, (Arg) { .i = delta }, &anyTagged);
    if (!ok)
       beep();
    return anyTagged;
@@ -129,14 +129,18 @@ static void tagAllChildren(Panel* panel, Process* parent) {
 
 static bool expandCollapse(Panel* panel) {
    Process* p = (Process*) Panel_getSelected(panel);
-   if (!p) return false;
+   if (!p)
+      return false;
+
    p->showChildren = !p->showChildren;
    return true;
 }
 
 static bool collapseIntoParent(Panel* panel) {
    Process* p = (Process*) Panel_getSelected(panel);
-   if (!p) return false;
+   if (!p)
+      return false;
+
    pid_t ppid = Process_getParentPid(p);
    for (int i = 0; i < Panel_size(panel); i++) {
       Process* q = (Process*) Panel_get(panel, i);
@@ -166,6 +170,7 @@ static Htop_Reaction sortBy(State* st) {
       Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
       if (fields[i] == st->settings->sortKey)
          Panel_setSelected(sortPanel, i);
+
       free(name);
    }
    ListItem* field = (ListItem*) Action_pickFromVector(st, sortPanel, 15, false);
@@ -173,8 +178,10 @@ static Htop_Reaction sortBy(State* st) {
       reaction |= Action_setSortKey(st->settings, field->key);
    }
    Object_delete(sortPanel);
+
    if (st->pauseProcessUpdate)
       ProcessList_sort(st->pl);
+
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
@@ -182,7 +189,7 @@ static Htop_Reaction sortBy(State* st) {
 
 static Htop_Reaction actionResize(State* st) {
    clear();
-   Panel_resize(st->panel, COLS, LINES-(st->panel->y)-1);
+   Panel_resize(st->panel, COLS, LINES - (st->panel->y) - 1);
    return HTOP_REDRAW_BAR;
 }
 
@@ -216,7 +223,10 @@ static Htop_Reaction actionToggleProgramPath(State* st) {
 
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
-   if (st->settings->treeView) st->settings->direction = 1;
+   if (st->settings->treeView) {
+      st->settings->direction = 1;
+   }
+
    ProcessList_expandTree(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
@@ -287,13 +297,18 @@ static Htop_Reaction actionQuit(ATTR_UNUSED State* st) {
 static Htop_Reaction actionSetAffinity(State* st) {
    if (st->pl->cpuCount == 1)
       return HTOP_OK;
+
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))
    Panel* panel = st->panel;
 
    Process* p = (Process*) Panel_getSelected(panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    Affinity* affinity1 = Affinity_get(p, st->pl);
-   if (!affinity1) return HTOP_OK;
+   if (!affinity1)
+      return HTOP_OK;
+
    int width;
    Panel* affinityPanel = AffinityPanel_new(st->pl, affinity1, &width);
    width += 1; /* we add a gap between the panels */
@@ -302,8 +317,9 @@ static Htop_Reaction actionSetAffinity(State* st) {
    void* set = Action_pickFromVector(st, affinityPanel, width, true);
    if (set) {
       Affinity* affinity2 = AffinityPanel_getAffinity(affinityPanel, st->pl);
-      bool ok = MainPanel_foreachProcess((MainPanel*)panel, Affinity_set, (Arg){ .v = affinity2 }, NULL);
-      if (!ok) beep();
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, Affinity_set, (Arg) { .v = affinity2 }, NULL);
+      if (!ok)
+         beep();
       Affinity_delete(affinity2);
    }
    Object_delete(affinityPanel);
@@ -319,7 +335,7 @@ static Htop_Reaction actionKill(State* st) {
          Panel_setHeader(st->panel, "Sending...");
          Panel_draw(st->panel, true);
          refresh();
-         MainPanel_foreachProcess((MainPanel*)st->panel, Process_sendSignal, (Arg){ .i = sgn->key }, NULL);
+         MainPanel_foreachProcess((MainPanel*)st->panel, Process_sendSignal, (Arg) { .i = sgn->key }, NULL);
          napms(500);
       }
    }
@@ -363,7 +379,9 @@ static Htop_Reaction actionSetup(State* st) {
 
 static Htop_Reaction actionLsof(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    OpenFilesScreen* ofs = OpenFilesScreen_new(p);
    InfoScreen_run((InfoScreen*)ofs);
    OpenFilesScreen_delete((Object*)ofs);
@@ -385,7 +403,9 @@ static Htop_Reaction actionShowLocks(State* st) {
 
 static Htop_Reaction actionStrace(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    TraceScreen* ts = TraceScreen_new(p);
    bool ok = TraceScreen_forkTracer(ts);
    if (ok) {
@@ -399,23 +419,28 @@ static Htop_Reaction actionStrace(State* st) {
 
 static Htop_Reaction actionTag(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    Process_toggleTag(p);
    Panel_onKey(st->panel, KEY_DOWN);
    return HTOP_OK;
 }
 
-static Htop_Reaction actionRedraw(ATTR_UNUSED State *st) {
+static Htop_Reaction actionRedraw(ATTR_UNUSED State* st) {
    clear();
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionTogglePauseProcessUpdate(State *st) {
+static Htop_Reaction actionTogglePauseProcessUpdate(State* st) {
    st->pauseProcessUpdate = !st->pauseProcessUpdate;
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static const struct { const char* key; const char* info; } helpLeft[] = {
+static const struct {
+   const char* key;
+   const char* info;
+} helpLeft[] = {
    { .key = " Arrows: ", .info = "scroll process list" },
    { .key = " Digits: ", .info = "incremental PID search" },
    { .key = "   F3 /: ", .info = "incremental name search" },
@@ -434,7 +459,10 @@ static const struct { const char* key; const char* info; } helpLeft[] = {
    { .key = NULL, .info = NULL }
 };
 
-static const struct { const char* key; const char* info; } helpRight[] = {
+static const struct {
+   const char* key;
+   const char* info;
+} helpRight[] = {
    { .key = "  Space: ", .info = "tag process" },
    { .key = "      c: ", .info = "tag process and its children" },
    { .key = "      U: ", .info = "untag all processes" },
@@ -456,13 +484,18 @@ static const struct { const char* key; const char* info; } helpRight[] = {
    { .key = NULL, .info = NULL }
 };
 
+static inline void addattrstr( int attr, const char* str) {
+   attrset(attr);
+   addstr(str);
+}
+
 static Htop_Reaction actionHelp(State* st) {
    Settings* settings = st->settings;
 
    clear();
    attrset(CRT_colors[HELP_BOLD]);
 
-   for (int i = 0; i < LINES-1; i++)
+   for (int i = 0; i < LINES - 1; i++)
       mvhline(i, 0, ' ', COLS);
 
    int line = 0;
@@ -473,7 +506,7 @@ static Htop_Reaction actionHelp(State* st) {
    attrset(CRT_colors[DEFAULT_COLOR]);
    line++;
    mvaddstr(line++, 0, "CPU usage bar: ");
-   #define addattrstr(a,s) attrset(a);addstr(s)
+
    addattrstr(CRT_colors[BAR_BORDER], "[");
    if (settings->detailedCPUTime) {
       addattrstr(CRT_colors[CPU_NICE_TEXT], "low"); addstr("/");
@@ -508,7 +541,7 @@ static Htop_Reaction actionHelp(State* st) {
    addattrstr(CRT_colors[BAR_SHADOW], "                                          used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(line++,0, "Type and layout of header meters are configurable in the setup screen.");
+   mvaddstr(line++, 0, "Type and layout of header meters are configurable in the setup screen.");
    if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
       mvaddstr(line, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
    }
@@ -563,14 +596,18 @@ static Htop_Reaction actionUntagAll(State* st) {
 
 static Htop_Reaction actionTagAllChildren(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    tagAllChildren(st->panel, p);
    return HTOP_OK;
 }
 
 static Htop_Reaction actionShowEnvScreen(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    EnvScreen* es = EnvScreen_new(p);
    InfoScreen_run((InfoScreen*)es);
    EnvScreen_delete((Object*)es);
@@ -581,7 +618,9 @@ static Htop_Reaction actionShowEnvScreen(State* st) {
 
 static Htop_Reaction actionShowCommandScreen(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    CommandScreen* cmdScr = CommandScreen_new(p);
    InfoScreen_run((InfoScreen*)cmdScr);
    CommandScreen_delete((Object*)cmdScr);

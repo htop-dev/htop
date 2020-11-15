@@ -53,7 +53,7 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
          mib[4] = 3;
          if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
             double charge = s.value;
-            *level = 100*(charge / last_full_capacity);
+            *level = 100 * (charge / last_full_capacity);
             if (charge >= last_full_capacity) {
                *level = 100;
             }

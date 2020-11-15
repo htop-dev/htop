@@ -119,7 +119,7 @@ extern ProcessFieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
 extern char Process_pidFormat[20];
 
-typedef Process*(*Process_New)(const struct Settings_*);
+typedef Process* (* Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
 
 typedef struct ProcessClass_ {

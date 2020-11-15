@@ -103,15 +103,18 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    Panel* panel = st->panel;
 
    LinuxProcess* p = (LinuxProcess*) Panel_getSelected(panel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
+
    IOPriority ioprio1 = p->ioPriority;
    Panel* ioprioPanel = IOPriorityPanel_new(ioprio1);
    void* set = Action_pickFromVector(st, ioprioPanel, 21, true);
    if (set) {
       IOPriority ioprio2 = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = MainPanel_foreachProcess((MainPanel*)panel, LinuxProcess_setIOPriority, (Arg){ .i = ioprio2 }, NULL);
-      if (!ok)
+      bool ok = MainPanel_foreachProcess((MainPanel*)panel, LinuxProcess_setIOPriority, (Arg) { .i = ioprio2 }, NULL);
+      if (!ok) {
          beep();
+      }
    }
    Panel_delete((Object*)ioprioPanel);
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
@@ -167,15 +170,20 @@ int Platform_getUptime() {
    if (fd) {
       int n = fscanf(fd, "%64lf", &uptime);
       fclose(fd);
-      if (n <= 0) return 0;
+      if (n <= 0) {
+         return 0;
+      }
    }
    return floor(uptime);
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    int activeProcs, totalProcs, lastProc;
-   *one = 0; *five = 0; *fifteen = 0;
-   FILE *fd = fopen(PROCDIR "/loadavg", "r");
+   *one = 0;
+   *five = 0;
+   *fifteen = 0;
+
+   FILE* fd = fopen(PROCDIR "/loadavg", "r");
    if (fd) {
       int total = fscanf(fd, "%32lf %32lf %32lf %32d/%32d %32d", one, five, fifteen,
          &activeProcs, &totalProcs, &lastProc);
@@ -187,7 +195,9 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 
 int Platform_getMaxPid() {
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
-   if (!file) return -1;
+   if (!file)
+      return -1;
+
    int maxPid = 4194303;
    int match = fscanf(file, "%32d", &maxPid);
    (void) match;
@@ -212,18 +222,20 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
       this->curItems = 8;
       if (this->pl->settings->accountGuestInCPUMeter) {
-         percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];
+         percent = v[0] + v[1] + v[2] + v[3] + v[4] + v[5] + v[6];
       } else {
-         percent = v[0]+v[1]+v[2]+v[3]+v[4];
+         percent = v[0] + v[1] + v[2] + v[3] + v[4];
       }
    } else {
       v[2] = cpuData->systemAllPeriod / total * 100.0;
       v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
       this->curItems = 4;
-      percent = v[0]+v[1]+v[2]+v[3];
+      percent = v[0] + v[1] + v[2] + v[3];
    }
    percent = CLAMP(percent, 0.0, 100.0);
-   if (isnan(percent)) percent = 0.0;
+   if (isnan(percent)) {
+      percent = 0.0;
+   }
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
 
@@ -277,10 +289,10 @@ char* Platform_getProcessEnv(pid_t pid) {
    char procname[128];
    xSnprintf(procname, sizeof(procname), PROCDIR "/%d/environ", pid);
    FILE* fd = fopen(procname, "r");
-   if(!fd)
+   if (!fd)
       return NULL;
 
-   char *env = NULL;
+   char* env = NULL;
 
    size_t capacity = 0;
    size_t size = 0;
@@ -304,7 +316,7 @@ char* Platform_getProcessEnv(pid_t pid) {
    env = xRealloc(env, size + 2);
 
    env[size] = '\0';
-   env[size+1] = '\0';
+   env[size + 1] = '\0';
 
    return env;
 }
@@ -423,11 +435,11 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    return pdata;
 }
 
-void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred) {
+void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred) {
    *ten = *sixty = *threehundred = 0;
-   char procname[128+1];
+   char procname[128 + 1];
    xSnprintf(procname, 128, PROCDIR "/pressure/%s", file);
-   FILE *fd = fopen(procname, "r");
+   FILE* fd = fopen(procname, "r");
    if (!fd) {
       *ten = *sixty = *threehundred = NAN;
       return;
@@ -442,7 +454,7 @@ void Platform_getPressureStall(const char *file, bool some, double* ten, double*
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
-   FILE *fd = fopen(PROCDIR "/diskstats", "r");
+   FILE* fd = fopen(PROCDIR "/diskstats", "r");
    if (!fd)
       return false;
 
@@ -486,11 +498,11 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted) {
-   FILE *fd = fopen(PROCDIR "/net/dev", "r");
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted) {
+   FILE* fd = fopen(PROCDIR "/net/dev", "r");
    if (!fd)
       return false;
 

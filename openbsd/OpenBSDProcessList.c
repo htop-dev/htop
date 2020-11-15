@@ -56,7 +56,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    }
 
    for (i = 0; i <= pl->cpuCount; i++) {
-      CPUData *d = opl->cpus + i;
+      CPUData* d = opl->cpus + i;
       d->totalTime = 1;
       d->totalPeriod = 1;
    }
@@ -134,7 +134,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    */
 }
 
-char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
+char* OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
    char *s, **arg;
    size_t len = 0, n;
    int i;
@@ -163,7 +163,7 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
       n = strlcat(s, arg[i], len);
       if (i == 0) {
          /* TODO: rename all basenameEnd to basenameLen, make size_t */
-         *basenameEnd = MINIMUM(n, len-1);
+         *basenameEnd = MINIMUM(n, len - 1);
       }
       /* the trailing space should get truncated anyway */
       strlcat(s, " ", len);
@@ -175,9 +175,9 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
 /*
  * Taken from OpenBSD's ps(1).
  */
-static double getpcpu(const struct kinfo_proc *kp) {
+static double getpcpu(const struct kinfo_proc* kp) {
    if (fscale == 0)
-      return (0.0);
+      return 0.0;
 
 #define   fxtofl(fixpt)   ((double)(fixpt) / fscale)
 
@@ -232,7 +232,7 @@ static inline void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       proc->m_size = kproc->p_vm_dsize;
       proc->m_resident = kproc->p_vm_rssize;
       proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(this->super.totalMem) * 100.0;
-      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.cpuCount*100.0);
+      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.cpuCount * 100.0);
       //proc->nlwp = kproc->p_numthreads;
       //proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 10);
       proc->nice = kproc->p_nice - 20;
@@ -347,8 +347,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    OpenBSDProcessList_scanCPUTime(opl);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate)
+   if (pauseProcessUpdate) {
       return;
+   }
 
    OpenBSDProcessList_scanProcs(opl);
 }

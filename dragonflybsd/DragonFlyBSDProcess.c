@@ -92,7 +92,7 @@ void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, Proces
    // add Platform-specific fields here
    case PID: xSnprintf(buffer, n, Process_pidFormat, (fp->kernel ? -1 : this->pid)); break;
    case JID: xSnprintf(buffer, n, Process_pidFormat, fp->jid); break;
-   case JAIL:{
+   case JAIL: {
       xSnprintf(buffer, n, "%-11s ", fp->jname);
       if (buffer[11] != '\0') {
          buffer[11] = ' ';
@@ -131,8 +131,9 @@ long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
 bool Process_isThread(const Process* this) {
    const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) this;
 
-   if (fp->kernel == 1 )
+   if (fp->kernel == 1 ) {
       return 1;
-   else
+   } else {
       return (Process_isUserlandThread(this));
+   }
 }

@@ -20,12 +20,16 @@ const ObjectClass Object_class = {
 bool Object_isA(const Object* o, const ObjectClass* klass) {
    if (!o)
       return false;
+
    const ObjectClass* type = o->klass;
    while (type) {
-      if (type == klass)
+      if (type == klass) {
          return true;
+      }
+
       type = type->extends;
    }
+
    return false;
 }
 

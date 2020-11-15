@@ -116,6 +116,7 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
    CRT_restorePrivileges();
    if (!fd)
       return false;
+
    bool didReadMeters = false;
    bool didReadFields = false;
    for (;;) {
@@ -182,8 +183,10 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->delay = atoi(option[1]);
       } else if (String_eq(option[0], "color_scheme")) {
          this->colorScheme = atoi(option[1]);
-         if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) this->colorScheme = 0;
-     } else if (String_eq(option[0], "enable_mouse")) {
+         if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) {
+            this->colorScheme = 0;
+         }
+      } else if (String_eq(option[0], "enable_mouse")) {
          this->enableMouse = atoi(option[1]);
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
@@ -216,7 +219,7 @@ static void writeFields(FILE* fd, ProcessField* fields, const char* name) {
    const char* sep = "";
    for (int i = 0; fields[i]; i++) {
       // This "-1" is for compatibility with the older enum format.
-      fprintf(fd, "%s%d", sep, (int) fields[i]-1);
+      fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
       sep = " ";
    }
    fprintf(fd, "\n");
@@ -254,7 +257,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
    writeFields(fd, this->fields, "fields");
    // This "-1" is for compatibility with the older enum format.
-   fprintf(fd, "sort_key=%d\n", (int) this->sortKey-1);
+   fprintf(fd, "sort_key=%d\n", (int) this->sortKey - 1);
    fprintf(fd, "sort_direction=%d\n", (int) this->direction);
    fprintf(fd, "hide_threads=%d\n", (int) this->hideThreads);
    fprintf(fd, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
@@ -310,7 +313,7 @@ Settings* Settings_new(int initialCpuCount) {
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
-   this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
+   this->fields = xCalloc(Platform_numberOfFields + 1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;
@@ -326,7 +329,9 @@ Settings* Settings_new(int initialCpuCount) {
       this->filename = xStrdup(rcfile);
    } else {
       const char* home = getenv("HOME");
-      if (!home) home = "";
+      if (!home)
+         home = "";
+
       const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
       char* configDir = NULL;
       char* htopDir = NULL;
@@ -362,8 +367,9 @@ Settings* Settings_new(int initialCpuCount) {
       ok = Settings_read(this, legacyDotfile, initialCpuCount);
       if (ok) {
          // Transition to new location and delete old configuration file
-         if (Settings_write(this))
+         if (Settings_write(this)) {
             unlink(legacyDotfile);
+         }
       }
       free(legacyDotfile);
    }
@@ -388,8 +394,9 @@ Settings* Settings_new(int initialCpuCount) {
 }
 
 void Settings_invertSortOrder(Settings* this) {
-   if (this->direction == 1)
+   if (this->direction == 1) {
       this->direction = -1;
-   else
+   } else {
       this->direction = 1;
+   }
 }

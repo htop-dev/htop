@@ -165,10 +165,10 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    const CPUData* cpuData;
 
    if (cpus == 1) {
-     // single CPU box has everything in fpl->cpus[0]
-     cpuData = &(fpl->cpus[0]);
+      // single CPU box has everything in fpl->cpus[0]
+      cpuData = &(fpl->cpus[0]);
    } else {
-     cpuData = &(fpl->cpus[cpu]);
+      cpuData = &(fpl->cpus[cpu]);
    }
 
    double  percent;
@@ -180,11 +180,11 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[0]+v[1]+v[2]+v[3];
+      percent = v[0] + v[1] + v[2] + v[3];
    } else {
       v[2] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[0]+v[1]+v[2];
+      percent = v[0] + v[1] + v[2];
    }
 
    percent = CLAMP(percent, 0.0, 100.0);
@@ -234,10 +234,10 @@ char* Platform_getProcessEnv(pid_t pid) {
       return NULL;
    }
 
-   if (env[capacity-1] || env[capacity-2]) {
-      env = xRealloc(env, capacity+2);
+   if (env[capacity - 1] || env[capacity - 2]) {
+      env = xRealloc(env, capacity + 2);
       env[capacity] = 0;
-      env[capacity+1] = 0;
+      env[capacity + 1] = 0;
    }
 
    return env;
@@ -294,10 +294,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(unsigned long int *bytesReceived,
-                           unsigned long int *packetsReceived,
-                           unsigned long int *bytesTransmitted,
-                           unsigned long int *packetsTransmitted) {
+bool Platform_getNetworkIO(unsigned long int* bytesReceived,
+                           unsigned long int* packetsReceived,
+                           unsigned long int* bytesTransmitted,
+                           unsigned long int* packetsTransmitted) {
    int r;
 
    // get number of interfaces

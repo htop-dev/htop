@@ -52,7 +52,7 @@ bool Process_isThread(const Process* this) {
    return false;
 }
 
-char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
+char* DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;
@@ -68,7 +68,7 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
    }
 
    /* Allocate space for the arguments. */
-   procargs = ( char * ) xMalloc( argmax );
+   procargs = (char*)xMalloc(argmax);
    if ( procargs == NULL ) {
       goto ERROR_A;
    }
@@ -158,12 +158,12 @@ char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
             /* Convert previous '\0'. */
             *np = ' ';
          }
-        /* Note location of current '\0'. */
-        np = cp;
-        if (*basenameOffset == 0) {
-           *basenameOffset = cp - sp;
-        }
-     }
+         /* Note location of current '\0'. */
+         np = cp;
+         if (*basenameOffset == 0) {
+            *basenameOffset = cp - sp;
+         }
+      }
    }
 
    /*
@@ -195,8 +195,8 @@ ERROR_A:
    return retval;
 }
 
-void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool exists) {
-   struct extern_proc *ep = &ps->kp_proc;
+void DarwinProcess_setFromKInfoProc(Process* proc, struct kinfo_proc* ps, bool exists) {
+   struct extern_proc* ep = &ps->kp_proc;
 
    /* UNSET HERE :
     *
@@ -212,7 +212,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool e
     */
 
    /* First, the "immutable" parts */
-   if(!exists) {
+   if (!exists) {
       /* Set the PID/PGID/etc. */
       proc->pid = ep->p_pid;
       proc->ppid = ps->kp_eproc.e_ppid;
@@ -241,16 +241,16 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, bool e
    proc->updated = true;
 }
 
-void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl) {
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl) {
    struct proc_taskinfo pti;
 
-   if(sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-      if(0 != proc->utime || 0 != proc->stime) {
+   if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+      if (0 != proc->utime || 0 != proc->stime) {
          uint64_t diff = (pti.pti_total_system - proc->stime)
-                  + (pti.pti_total_user - proc->utime);
+                       + (pti.pti_total_user - proc->utime);
 
          proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount
-                  / ((double)dpl->global_diff * 100000.0);
+                                 / ((double)dpl->global_diff * 100000.0);
 
 //       fprintf(stderr, "%f %llu %llu %llu %llu %llu\n", proc->super.percent_cpu,
 //               proc->stime, proc->utime, pti.pti_total_system, pti.pti_total_user, dpl->global_diff);
@@ -263,7 +263,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
       proc->super.m_resident = pti.pti_resident_size / CRT_pageSize;
       proc->super.majflt = pti.pti_faults;
       proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
-              / (double)dpl->host_info.max_mem;
+                              / (double)dpl->host_info.max_mem;
 
       proc->stime = pti.pti_total_system;
       proc->utime = pti.pti_total_user;
@@ -280,7 +280,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
  * Based on: http://stackoverflow.com/questions/6788274/ios-mac-cpu-usage-for-thread
  * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
  */
-void DarwinProcess_scanThreads(DarwinProcess *dp) {
+void DarwinProcess_scanThreads(DarwinProcess* dp) {
    Process* proc = (Process*) dp;
    kern_return_t ret;
 
