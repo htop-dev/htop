@@ -40,7 +40,6 @@ typedef struct Settings_ {
    bool showCPUFrequency;
    bool treeView;
    bool showProgramPath;
-   bool hideThreads;
    bool shadowOtherUsers;
    bool showThreadNames;
    bool hideKernelThreads;

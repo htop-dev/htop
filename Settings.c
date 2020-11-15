@@ -141,8 +141,6 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->direction = atoi(option[1]);
       } else if (String_eq(option[0], "tree_view")) {
          this->treeView = atoi(option[1]);
-      } else if (String_eq(option[0], "hide_threads")) {
-         this->hideThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
          this->hideKernelThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_userland_threads")) {
@@ -259,7 +257,6 @@ bool Settings_write(Settings* this) {
    // This "-1" is for compatibility with the older enum format.
    fprintf(fd, "sort_key=%d\n", (int) this->sortKey - 1);
    fprintf(fd, "sort_direction=%d\n", (int) this->direction);
-   fprintf(fd, "hide_threads=%d\n", (int) this->hideThreads);
    fprintf(fd, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
    fprintf(fd, "hide_userland_threads=%d\n", (int) this->hideUserlandThreads);
    fprintf(fd, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
@@ -295,7 +292,6 @@ Settings* Settings_new(int initialCpuCount) {
 
    this->sortKey = PERCENT_CPU;
    this->direction = 1;
-   this->hideThreads = false;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
    this->hideKernelThreads = false;
