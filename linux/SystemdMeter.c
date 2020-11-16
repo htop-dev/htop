@@ -206,8 +206,10 @@ static void updateViaExec(void) {
    while (fgets(lineBuffer, sizeof(lineBuffer), commandOutput)) {
       if (String_startsWith(lineBuffer, "SystemState=")) {
          char* newline = strchr(lineBuffer + strlen("SystemState="), '\n');
-         if (newline)
+         if (newline) {
             *newline = '\0';
+         }
+         free(systemState);
          systemState = xStrdup(lineBuffer + strlen("SystemState="));
       } else if (String_startsWith(lineBuffer, "NFailedUnits=")) {
          nFailedUnits = strtoul(lineBuffer + strlen("NFailedUnits="), NULL, 10);
