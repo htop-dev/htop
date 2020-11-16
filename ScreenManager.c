@@ -102,6 +102,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    struct timeval tv;
    gettimeofday(&tv, NULL);
    double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
+
    *timedOut = (newTime - *oldTime > this->settings->delay);
    *rescan |= *timedOut;
 

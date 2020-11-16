@@ -9,11 +9,11 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <time.h>
 #include <sys/types.h>
 
 #include "Object.h"
 #include "RichString.h"
-
 
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get
@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #endif
 
 #define PROCESS_FLAG_IO 0x0001
+#define DEFAULT_HIGHLIGHT_SECS 5
 
 typedef enum ProcessFields {
    NULL_PROCESSFIELD = 0,
@@ -59,6 +60,7 @@ struct Settings_;
 typedef struct Process_ {
    Object super;
 
+   const struct ProcessList_* processList;
    const struct Settings_* settings;
 
    unsigned long long int time;
@@ -76,6 +78,7 @@ typedef struct Process_ {
    bool tag;
    bool showChildren;
    bool show;
+   bool wasShown;
    unsigned int pgrp;
    unsigned int session;
    unsigned int tty_nr;
@@ -99,6 +102,9 @@ typedef struct Process_ {
 
    int exit_signal;
 
+   time_t seenTs;
+   time_t tombTs;
+
    unsigned long int minflt;
    unsigned long int majflt;
 } Process;
@@ -119,7 +125,7 @@ extern ProcessFieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
 extern char Process_pidFormat[20];
 
-typedef Process* (* Process_New)(const struct Settings_*);
+typedef Process*(*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
 
 typedef struct ProcessClass_ {
@@ -171,6 +177,10 @@ extern const ProcessClass Process_class;
 void Process_init(Process* this, const struct Settings_* settings);
 
 void Process_toggleTag(Process* this);
+
+bool Process_isNew(const Process* this);
+
+bool Process_isTomb(const Process* this);
 
 bool Process_setPriority(Process* this, int priority);
 
