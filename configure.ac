@@ -387,6 +387,6 @@ AC_MSG_RESULT([
   (Linux) affinity:          $enable_linux_affinity
   (Linux) delay accounting:  $enable_delayacct
   unicode:                   $enable_unicode
-  hwlock:                    $enable_hwloc
+  hwloc:                     $enable_hwloc
   setuid:                    $enable_setuid
 ])
