@@ -29,7 +29,6 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
    this->cpuCount = 0;
 
    this->scanTs = 0;
-   this->firstScanTs = 0;
 
 #ifdef HAVE_LIBHWLOC
    this->topologyOk = false;
@@ -91,12 +90,8 @@ void ProcessList_add(ProcessList* this, Process* p) {
    assert(Hashtable_get(this->processTable, p->pid) == NULL);
    p->processList = this;
 
-   if (this->scanTs == this->firstScanTs) {
-      // prevent highlighting processes found in first scan
-      p->seenTs = this->firstScanTs - this->settings->highlightDelaySecs - 1;
-   } else {
-      p->seenTs = this->scanTs;
-   }
+   // highlighting processes found in first scan by first scan marked "far in the past"
+   p->seenTs = this->scanTs;
 
    Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
@@ -339,10 +334,11 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
 
 
    // set scanTs
-   if (clock_gettime(CLOCK_MONOTONIC, &now) == 0) {
-      if (this->firstScanTs == 0) {
-         this->firstScanTs = now.tv_sec;
-      }
+   static bool firstScanDone = false;
+   if (!firstScanDone) {
+      this->scanTs = 0;
+      firstScanDone = true;
+   } else if (clock_gettime(CLOCK_MONOTONIC, &now) == 0) {
       this->scanTs = now.tv_sec;
    }
 

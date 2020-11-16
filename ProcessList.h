@@ -71,7 +71,6 @@ typedef struct ProcessList_ {
    int cpuCount;
 
    time_t scanTs;
-   time_t firstScanTs;
 } ProcessList;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
