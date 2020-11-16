@@ -555,18 +555,36 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
    if (!statmfile)
       return false;
 
+   long tmp_m_lrs = 0;
    int r = fscanf(statmfile, "%ld %ld %ld %ld %ld %ld %ld",
                   &process->super.m_virt,
                   &process->super.m_resident,
                   &process->m_share,
                   &process->m_trs,
-                  &process->m_lrs,
+                  &tmp_m_lrs,
                   &process->m_drs,
                   &process->m_dt);
    fclose(statmfile);
-   if (r == 7 && !process->m_lrs && performLookup) {
-      process->m_lrs = LinuxProcessList_calcLibSize(dirname, name);
+
+   if (r == 7) {
+      if (tmp_m_lrs) {
+         process->m_lrs = tmp_m_lrs;
+      } else if (performLookup) {
+         // Check if we really should recalculate the M_LRS value for this process
+         struct timeval tv;
+         gettimeofday(&tv, NULL);
+         uint64_t timeInMilliSeconds = (uint64_t)tv.tv_sec * 1000ULL + (uint64_t)tv.tv_usec / 1000ULL;
+         uint64_t passedTimeInMs = timeInMilliSeconds - process->last_mlrs_calctime;
+
+         if(passedTimeInMs > 5000) {
+            process->last_mlrs_calctime = timeInMilliSeconds;
+            process->m_lrs = LinuxProcessList_calcLibSize(dirname, name);
+         }
+      } else {
+         // Keep previous value
+      }
    }
+
    return r == 7;
 }
 
