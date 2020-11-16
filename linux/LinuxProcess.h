@@ -180,6 +180,7 @@ typedef struct LinuxProcess_ {
    unsigned long ctxt_total;
    unsigned long ctxt_diff;
    char* secattr;
+   unsigned long long int last_mlrs_calctime;
 } LinuxProcess;
 
 #define Process_isKernelThread(_process) (((const LinuxProcess*)(_process))->isKernelThread)
