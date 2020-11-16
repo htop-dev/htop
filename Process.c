@@ -76,7 +76,7 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
       RichString_appendn(str, processColor, buffer, len);
    } else if (number < 100000) {
       //2 digit MB, 3 digit KB
-      len = snprintf(buffer, 10, "%2llu", number / 1000);
+      len = snprintf(buffer, 10, "%2llu", number/1000);
       RichString_appendn(str, processMegabytesColor, buffer, len);
       number %= 1000;
       len = snprintf(buffer, 10, "%03llu ", number);
@@ -89,7 +89,7 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
    } else if (number < 10000 * ONE_K) {
       //1 digit GB, 3 digit MB
       number /= ONE_K;
-      len = snprintf(buffer, 10, "%1llu", number / 1000);
+      len = snprintf(buffer, 10, "%1llu", number/1000);
       RichString_appendn(str, processGigabytesColor, buffer, len);
       number %= 1000;
       len = snprintf(buffer, 10, "%03lluM ", number);
@@ -97,7 +97,7 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
    } else if (number < 100000 * ONE_K) {
       //2 digit GB, 1 digit MB
       number /= 100 * ONE_K;
-      len = snprintf(buffer, 10, "%2llu", number / 10);
+      len = snprintf(buffer, 10, "%2llu", number/10);
       RichString_appendn(str, processGigabytesColor, buffer, len);
       number %= 10;
       len = snprintf(buffer, 10, ".%1lluG ", number);
@@ -110,14 +110,14 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
    } else if (number < 10000ULL * ONE_M) {
       //1 digit TB, 3 digit GB
       number /= ONE_M;
-      len = snprintf(buffer, 10, "%1llu", number / 1000);
+      len = snprintf(buffer, 10, "%1llu", number/1000);
       RichString_appendn(str, largeNumberColor, buffer, len);
       number %= 1000;
       len = snprintf(buffer, 10, "%03lluG ", number);
       RichString_appendn(str, processGigabytesColor, buffer, len);
    } else {
       //2 digit TB and above
-      len = snprintf(buffer, 10, "%4.1lfT ", (double)number / ONE_G);
+      len = snprintf(buffer, 10, "%4.1lfT ", (double)number/ONE_G);
       RichString_appendn(str, largeNumberColor, buffer, len);
    }
 }
@@ -144,18 +144,18 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
    } else if (number >= 100LL * ONE_DECIMAL_T) {
       xSnprintf(buffer, 13, "%11llu ", number / ONE_DECIMAL_M);
       RichString_appendn(str, largeNumberColor, buffer, 8);
-      RichString_appendn(str, processMegabytesColor, buffer + 8, 4);
+      RichString_appendn(str, processMegabytesColor, buffer+8, 4);
    } else if (number >= 10LL * ONE_DECIMAL_G) {
       xSnprintf(buffer, 13, "%11llu ", number / ONE_DECIMAL_K);
       RichString_appendn(str, largeNumberColor, buffer, 5);
-      RichString_appendn(str, processMegabytesColor, buffer + 5, 3);
-      RichString_appendn(str, processColor, buffer + 8, 4);
+      RichString_appendn(str, processMegabytesColor, buffer+5, 3);
+      RichString_appendn(str, processColor, buffer+8, 4);
    } else {
       xSnprintf(buffer, 13, "%11llu ", number);
       RichString_appendn(str, largeNumberColor, buffer, 2);
-      RichString_appendn(str, processMegabytesColor, buffer + 2, 3);
-      RichString_appendn(str, processColor, buffer + 5, 3);
-      RichString_appendn(str, processShadowColor, buffer + 8, 4);
+      RichString_appendn(str, processMegabytesColor, buffer+2, 3);
+      RichString_appendn(str, processColor, buffer+5, 3);
+      RichString_appendn(str, processShadowColor, buffer+8, 4);
    }
 }
 
@@ -291,11 +291,11 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 
          for (int i = 0; i < 32; i++) {
             if (indent & (1U << i)) {
-               maxIndent = i + 1;
+               maxIndent = i+1;
             }
          }
 
-         for (int i = 0; i < maxIndent - 1; i++) {
+          for (int i = 0; i < maxIndent - 1; i++) {
             int written, ret;
             if (indent & (1 << i)) {
                ret = snprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
@@ -333,7 +333,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    case PID: xSnprintf(buffer, n, Process_pidFormat, this->pid); break;
    case PPID: xSnprintf(buffer, n, Process_pidFormat, this->ppid); break;
    case PRIORITY: {
-      if (this->priority <= -100)
+      if(this->priority <= -100)
          xSnprintf(buffer, n, " RT ");
       else
          xSnprintf(buffer, n, "%3ld ", this->priority);
@@ -394,6 +394,14 @@ void Process_display(const Object* cast, RichString* out) {
       RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
    }
 
+   if (this->settings->highlightChanges) {
+      if (Process_isTomb(this)) {
+         out->highlightAttr = CRT_colors[PROCESS_TOMB];
+      } else if (Process_isNew(this)) {
+         out->highlightAttr = CRT_colors[PROCESS_NEW];
+      }
+   }
+
    assert(out->chlen > 0);
 }
 
@@ -427,6 +435,18 @@ void Process_init(Process* this, const struct Settings_* settings) {
 
 void Process_toggleTag(Process* this) {
    this->tag = this->tag == true ? false : true;
+}
+
+bool Process_isNew(const Process* this) {
+   assert(this->processList);
+   if (this->processList->scanTs >= this->seenTs) {
+      return this->processList->scanTs - this->seenTs <= this->processList->settings->highlightDelaySecs;
+   }
+   return false;
+}
+
+bool Process_isTomb(const Process* this) {
+    return this->tombTs > 0;
 }
 
 bool Process_setPriority(Process* this, int priority) {

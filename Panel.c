@@ -273,16 +273,18 @@ void Panel_draw(Panel* this, bool focus) {
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
          int amt = MINIMUM(itemLen - scrollH, this->w);
-         bool selected = (i == this->selected);
-         if (selected) {
-            attrset(selectionColor);
-            RichString_setAttr(&item, selectionColor);
+         if (i == this->selected) {
+            item.highlightAttr = selectionColor;
+         }
+         if (item.highlightAttr) {
+            attrset(item.highlightAttr);
+            RichString_setAttr(&item, item.highlightAttr);
             this->selectedLen = itemLen;
          }
          mvhline(y + line, x, ' ', this->w);
          if (amt > 0)
             RichString_printoffnVal(item, y + line, x, scrollH, amt);
-         if (selected)
+         if (item.highlightAttr)
             attrset(CRT_colors[RESET_COLOR]);
          RichString_end(item);
          line++;

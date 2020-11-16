@@ -4,7 +4,7 @@ htop \- interactive process viewer
 .SH "SYNOPSIS"
 .LP
 .B htop
-.RB [ \-dCFhpustv ]
+.RB [ \-dCFhpustvH ]
 .SH "DESCRIPTION"
 .LP
 .B htop
@@ -62,6 +62,9 @@ Output version information and exit
 .TP
 \fB\-t \-\-tree
 Show processes in tree view
+.TP
+\fB\-H \-\-highlight-changes=DELAY\fR
+Highlight new and old processes
 .SH "INTERACTIVE COMMANDS"
 .LP
 The following commands are supported while in
