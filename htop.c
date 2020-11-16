@@ -139,7 +139,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
                }
                exit(0);
             }
-            flags.sortKey = -1;
+            flags.sortKey = 0;
             for (int j = 1; j < Platform_numberOfFields; j++) {
                if (Process_fields[j].name == NULL)
                   continue;
@@ -148,7 +148,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
                   break;
                }
             }
-            if (flags.sortKey == -1) {
+            if (flags.sortKey == 0) {
                fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
                exit(1);
             }
