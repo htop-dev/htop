@@ -389,4 +389,5 @@ AC_MSG_RESULT([
   unicode:                   $enable_unicode
   hwloc:                     $enable_hwloc
   setuid:                    $enable_setuid
+  debug:                     $enable_debug
 ])
