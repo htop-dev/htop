@@ -167,3 +167,8 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
    *packetsTransmitted = 0;
    return false;
 }
+
+void Platform_getBattery(double* level, ACPresence* isOnAC) {
+   *level = NAN;
+   *isOnAC = AC_ERROR;
+}

@@ -233,3 +233,19 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
    *packetsTransmitted = 0;
    return false;
 }
+
+void Platform_getBattery(double* level, ACPresence* isOnAC) {
+   int life;
+   size_t life_len = sizeof(life);
+   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) == -1)
+      *level = NAN;
+   else
+      *level = life;
+
+   int acline;
+   size_t acline_len = sizeof(acline);
+   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) == -1)
+      *isOnAC = AC_ERROR;
+   else
+      *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
+}
