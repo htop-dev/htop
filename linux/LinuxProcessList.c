@@ -514,22 +514,62 @@ static uint64_t LinuxProcessList_calcLibSize(const char* dirname, const char* na
    while (fgets(buffer, sizeof(buffer), mapsfile)) {
       uint64_t map_start;
       uint64_t map_end;
-      char map_perm[16];
-      uint32_t map_dummy;
+      char map_perm[5];
       int map_devmaj;
       int map_devmin;
       uint64_t map_inode;
 
-      if (7 != sscanf(buffer, "%"PRIx64"-%"PRIx64" %4s %"PRIx32" %d:%d %" PRIu64,
-         &map_start, &map_end, map_perm, &map_dummy,
-         &map_devmaj, &map_devmin, &map_inode))
+      // Short circuit test: Look for a slash
+      if (!strchr(buffer, '/'))
+         continue;
+
+      // Parse format: "%Lx-%Lx %4s %x %2x:%2x %Ld"
+      char *readptr = buffer;
+
+      errno = 0;
+      map_start = strtoull(readptr, &readptr, 16);
+      if (errno || !readptr || '-' != *readptr++)
+         continue;
+
+      errno = 0;
+      map_end = strtoull(readptr, &readptr, 16);
+      if (errno || !readptr || ' ' != *readptr++)
+         continue;
+
+      memcpy(map_perm, readptr, 4);
+      map_perm[4] = '\0';
+      readptr += 4;
+      if (' ' != *readptr++)
+         continue;
+
+      errno = 0;
+      strtoul(readptr, &readptr, 16);
+      if (errno || !readptr || ' ' != *readptr++)
+         continue;
+
+      errno = 0;
+      map_devmaj = strtol(readptr, &readptr, 16);
+      if (errno || !readptr || ':' != *readptr++)
+         continue;
+
+      errno = 0;
+      map_devmin = strtol(readptr, &readptr, 16);
+      if (errno || !readptr || ' ' != *readptr++)
+         continue;
+
+      //Minor shortcut: Once we know there's no file for this region, we skip
+      if (!map_devmaj && !map_devmin)
+         continue;
+
+      errno = 0;
+      map_inode = strtoull(readptr, &readptr, 10);
+      if (errno || !readptr) // Don't check next character here, because that might be undefined
          continue;
 
       if (!map_inode)
          continue;
 
-      LibraryData * libdata;
-      libdata = Hashtable_get(ht, map_inode);
+      LibraryData* libdata = Hashtable_get(ht, map_inode);
       if (!libdata) {
          libdata = xCalloc(1, sizeof(LibraryData));
          Hashtable_put(ht, map_inode, libdata);
@@ -539,12 +579,13 @@ static uint64_t LinuxProcessList_calcLibSize(const char* dirname, const char* na
       libdata->exec |= 'x' == map_perm[2];
    }
 
+   fclose(mapsfile);
+
    uint64_t total_size = 0;
    Hashtable_foreach(ht, LinuxProcessList_calcLibSize_helper, &total_size);
 
    Hashtable_delete(ht);
 
-   fclose(mapsfile);
    return total_size / CRT_pageSize;
 }
 
