@@ -5,17 +5,16 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Process.h"
 #include "DarwinProcess.h"
 
-#include <stdlib.h>
 #include <libproc.h>
-#include <string.h>
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <string.h>
 #include <mach/mach.h>
 
 #include "CRT.h"
+#include "Process.h"
 
 
 const ProcessClass DarwinProcess_class = {
@@ -52,7 +51,7 @@ bool Process_isThread(const Process* this) {
    return false;
 }
 
-char* DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
+static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* basenameOffset) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;
@@ -195,8 +194,8 @@ ERROR_A:
    return retval;
 }
 
-void DarwinProcess_setFromKInfoProc(Process* proc, struct kinfo_proc* ps, bool exists) {
-   struct extern_proc* ep = &ps->kp_proc;
+void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists) {
+   const struct extern_proc* ep = &ps->kp_proc;
 
    /* UNSET HERE :
     *
