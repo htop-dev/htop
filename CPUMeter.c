@@ -56,25 +56,44 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
       return;
    }
    memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
+
+   char cpuUsageBuffer[8] = { 0 };
+   char cpuFrequencyBuffer[16] = { 0 };
+   char cpuTemperatureBuffer[16] = { 0 };
+
    double percent = Platform_setCPUValues(this, cpu);
+
+   if (this->pl->settings->showCPUUsage) {
+      xSnprintf(cpuUsageBuffer, sizeof(cpuUsageBuffer), "%5.1f%%", percent);
+   }
+
    if (this->pl->settings->showCPUFrequency) {
       double cpuFrequency = this->values[CPU_METER_FREQUENCY];
-      char cpuFrequencyBuffer[16];
       if (isnan(cpuFrequency)) {
          xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A");
       } else {
          xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "%4uMHz", (unsigned)cpuFrequency);
       }
-      if (this->pl->settings->showCPUUsage) {
-         xSnprintf(buffer, size, "%5.1f%% %s", percent, cpuFrequencyBuffer);
-      } else {
-         xSnprintf(buffer, size, "%s", cpuFrequencyBuffer);
-      }
-   } else if (this->pl->settings->showCPUUsage) {
-      xSnprintf(buffer, size, "%5.1f%%", percent);
-   } else if (size > 0) {
-      buffer[0] = '\0';
    }
+
+   #ifdef HAVE_LIBSENSORS
+   if (this->pl->settings->showCPUTemperature) {
+      double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
+      if (isnan(cpuTemperature))
+         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "N/A");
+      else if (this->pl->settings->degreeFahrenheit)
+         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%3d%sF", (int)(cpuTemperature * 9 / 5 + 32), CRT_degreeSign);
+      else
+         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%d%sC", (int)cpuTemperature, CRT_degreeSign);
+   }
+   #endif
+
+   xSnprintf(buffer, size, "%s%s%s%s%s",
+             cpuUsageBuffer,
+             (cpuUsageBuffer[0] && (cpuFrequencyBuffer[0] || cpuTemperatureBuffer[0])) ? " " : "",
+             cpuFrequencyBuffer,
+             (cpuFrequencyBuffer[0] && cpuTemperatureBuffer[0]) ? " " : "",
+             cpuTemperatureBuffer);
 }
 
 static void CPUMeter_display(const Object* cast, RichString* out) {
@@ -127,6 +146,22 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
          RichString_append(out, CRT_colors[CPU_GUEST], buffer);
       }
    }
+
+   #ifdef HAVE_LIBSENSORS
+   if (this->pl->settings->showCPUTemperature) {
+      char cpuTemperatureBuffer[10];
+      double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
+      if (isnan(cpuTemperature)) {
+         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "N/A");
+      } else if (this->pl->settings->degreeFahrenheit) {
+         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%5.1f%sF", cpuTemperature * 9 / 5 + 32, CRT_degreeSign);
+      } else {
+         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%5.1f%sC", cpuTemperature, CRT_degreeSign);
+      }
+      RichString_append(out, CRT_colors[METER_TEXT], "temp:");
+      RichString_append(out, CRT_colors[METER_VALUE], cpuTemperatureBuffer);
+   }
+   #endif
 }
 
 static void AllCPUsMeter_getRange(Meter* this, int* start, int* count) {

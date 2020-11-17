@@ -47,6 +47,10 @@ typedef struct CPUData_ {
    unsigned long long int guestPeriod;
 
    double frequency;
+
+   #ifdef HAVE_LIBSENSORS
+   double temperature;
+   #endif
 } CPUData;
 
 typedef struct TtyDriver_ {

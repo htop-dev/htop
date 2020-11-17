@@ -119,6 +119,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
    double* v = this->values;
    v[CPU_METER_FREQUENCY] = NAN;
+   v[CPU_METER_TEMPERATURE] = NAN;
 
    return 0.0;
 }

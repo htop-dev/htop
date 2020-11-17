@@ -241,6 +241,12 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
 
+#ifdef HAVE_LIBSENSORS
+   v[CPU_METER_TEMPERATURE] = cpuData->temperature;
+#else
+   v[CPU_METER_TEMPERATURE] = NAN;
+#endif
+
    return percent;
 }
 

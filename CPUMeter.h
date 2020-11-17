@@ -19,7 +19,8 @@ typedef enum {
    CPU_METER_GUEST = 6,
    CPU_METER_IOWAIT = 7,
    CPU_METER_FREQUENCY = 8,
-   CPU_METER_ITEMCOUNT = 9, // number of entries in this enum
+   CPU_METER_TEMPERATURE = 9,
+   CPU_METER_ITEMCOUNT = 10, // number of entries in this enum
 } CPUMeterValues;
 
 extern const MeterClass CPUMeter_class;

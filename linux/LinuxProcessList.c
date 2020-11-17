@@ -50,6 +50,10 @@ in the source distribution for its full text.
 #include <sys/sysmacros.h>
 #endif
 
+#ifdef HAVE_LIBSENSORS
+#include <sensors/sensors.h>
+#endif
+
 
 static ssize_t xread(int fd, void* buf, size_t count) {
    // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
@@ -1505,6 +1509,75 @@ static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
    scanCPUFreqencyFromCPUinfo(this);
 }
 
+#ifdef HAVE_LIBSENSORS
+static int getCPUTemperatures(CPUData* cpus, int cpuCount) {
+   int tempCount = 0;
+
+   int n = 0;
+   for (const sensors_chip_name *chip = sensors_get_detected_chips(NULL, &n); chip; chip = sensors_get_detected_chips(NULL, &n)) {
+      char buffer[32];
+      sensors_snprintf_chip_name(buffer, sizeof(buffer), chip);
+      if (!String_startsWith(buffer, "coretemp") && !String_startsWith(buffer, "cpu_thermal"))
+         continue;
+
+      int m = 0;
+      for (const sensors_feature *feature = sensors_get_features(chip, &m); feature; feature = sensors_get_features(chip, &m)) {
+         if (feature->type != SENSORS_FEATURE_TEMP)
+            continue;
+
+         if (feature->number > cpuCount)
+            continue;
+
+         const sensors_subfeature *sub_feature = sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
+         if (sub_feature) {
+            double temp;
+            int r = sensors_get_value(chip, sub_feature->number, &temp);
+            if (r != 0)
+               continue;
+
+            cpus[feature->number].temperature = temp;
+            tempCount++;
+         }
+      }
+   }
+
+   return tempCount;
+}
+
+static void LinuxProcessList_scanCPUTemperature(LinuxProcessList* this) {
+   const int cpuCount = this->super.cpuCount;
+
+   for (int i = 0; i <= cpuCount; i++) {
+      this->cpus[i].temperature = NAN;
+   }
+
+   int r = getCPUTemperatures(this->cpus, cpuCount);
+
+   /* No temperature - nothing to do */
+   if (r == 0)
+      return;
+
+   /* Only package temperature - copy to all cpus */
+   if (r == 1 && !isnan(this->cpus[0].temperature)) {
+      double packageTemp = this->cpus[0].temperature;
+      for (int i = 1; i <= cpuCount; i++) {
+         this->cpus[i].temperature = packageTemp;
+      }
+
+      return;
+   }
+
+   /* Half the temperatures, probably HT/SMT - copy to second half */
+   if (r >= 2 && (r - 1) == (cpuCount / 2)) {
+      for (int i = cpuCount / 2 + 1; i <= cpuCount; i++) {
+         this->cpus[i].temperature = this->cpus[i/2].temperature;
+      }
+
+      return;
+   }
+}
+#endif
+
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    LinuxProcessList* this = (LinuxProcessList*) super;
    const Settings* settings = super->settings;
@@ -1519,6 +1592,11 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    if (settings->showCPUFrequency) {
       LinuxProcessList_scanCPUFrequency(this);
    }
+
+   #ifdef HAVE_LIBSENSORS
+   if (settings->showCPUTemperature)
+      LinuxProcessList_scanCPUTemperature(this);
+   #endif
 
    // in pause mode only gather global data for meters (CPU/memory/...)
    if (pauseProcessUpdate) {

@@ -92,6 +92,10 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Also show CPU percentage numerically"), &(settings->showCPUUsage)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Also show CPU frequency"), &(settings->showCPUFrequency)));
+   #ifdef HAVE_LIBSENSORS
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Also show CPU temperature"), &(settings->showCPUTemperature)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show temperature in degree Fahrenheit"), &(settings->degreeFahrenheit)));
+   #endif
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Enable the mouse"), &(settings->enableMouse)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight new and old processes"), &(settings->highlightChanges)));
    #ifdef HAVE_LIBHWLOC

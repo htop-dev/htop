@@ -74,6 +74,23 @@ const char* const* CRT_treeStr = CRT_treeStrAscii;
 
 int CRT_delay;
 
+const char* CRT_degreeSign;
+
+static const char* initDegreeSign(void) {
+#ifdef HAVE_LIBNCURSESW
+   if (CRT_utf8)
+      return "\xc2\xb0";
+#endif
+
+   static char buffer[4];
+   // this might fail if the current locale does not support wide characters
+   int r = snprintf(buffer, sizeof(buffer), "%lc", 176);
+   if (r > 0)
+      return buffer;
+
+   return "";
+}
+
 const int* CRT_colors;
 
 int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
@@ -718,6 +735,8 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
    if (CRT_pageSize == -1)
       CRT_fatalError("Fatal error: Can not get PAGE_SIZE by sysconf(_SC_PAGESIZE)");
    CRT_pageSizeKB = CRT_pageSize / 1024;
+
+   CRT_degreeSign = initDegreeSign();
 }
 
 void CRT_done() {

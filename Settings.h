@@ -38,6 +38,10 @@ typedef struct Settings_ {
    bool detailedCPUTime;
    bool showCPUUsage;
    bool showCPUFrequency;
+   #ifdef HAVE_LIBSENSORS
+   bool showCPUTemperature;
+   bool degreeFahrenheit;
+   #endif
    bool treeView;
    bool showProgramPath;
    bool shadowOtherUsers;

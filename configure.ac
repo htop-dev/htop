@@ -308,6 +308,16 @@ then
    ])
 fi
 
+AC_ARG_ENABLE(sensors, [AS_HELP_STRING([--enable-sensors], [enable libsensors support for reading temperature data.])],, enable_sensors="check")
+if test "x$enable_sensors" = xyes; then
+   AC_CHECK_LIB([sensors], [sensors_get_value], [], [missing_libraries="$missing_libraries libsensors"])
+   AC_CHECK_HEADERS([sensors/sensors.h], [], [missing_headers="$missing_headers $ac_header"])
+elif test "x$enable_sensors" = xcheck; then
+   enable_sensors=yes
+   AC_CHECK_LIB([sensors], [sensors_get_value], [], [enable_sensors=no])
+   AC_CHECK_HEADERS([sensors/sensors.h], [], [enable_sensors=no])
+fi
+
 AM_CFLAGS="\
  -Wall\
  -Wcast-align\
@@ -386,6 +396,7 @@ AC_MSG_RESULT([
   (Linux) taskstats:         $enable_taskstats
   (Linux) affinity:          $enable_linux_affinity
   (Linux) delay accounting:  $enable_delayacct
+  (Linux) sensors:           $enable_sensors
   unicode:                   $enable_unicode
   hwloc:                     $enable_hwloc
   setuid:                    $enable_setuid

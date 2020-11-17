@@ -187,6 +187,9 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    if (isnan(totalPercent)) {
       totalPercent = 0.0;
    }
+
+   v[CPU_METER_TEMPERATURE] = NAN;
+
    return totalPercent;
 }
 
