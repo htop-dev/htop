@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "DarwinProcessList.h"
 
 #include <err.h>
+#include <errno.h>
 #include <libproc.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -107,27 +108,24 @@ static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
    struct kinfo_proc* processes = NULL;
 
-   /* Note the two calls to sysctl(). One to get length and one to get the
-    * data. This -does- mean that the second call could end up with a missing
-    * process entry or two.
-    */
-   *count = 0;
-   if (sysctl(mib, 4, NULL, count, NULL, 0) < 0) {
-      CRT_fatalError("Unable to get size of kproc_infos");
+   for (int retry = 3; retry > 0; retry--) {
+      size_t size = 0;
+      if (sysctl(mib, 4, NULL, &size, NULL, 0) < 0 || size == 0) {
+         CRT_fatalError("Unable to get size of kproc_infos");
+      }
+
+      processes = xRealloc(processes, size);
+
+      if (sysctl(mib, 4, processes, &size, NULL, 0) == 0) {
+         *count = size / sizeof(struct kinfo_proc);
+         return processes;
+      }
+
+      if (errno != ENOMEM)
+         break;
    }
 
-   processes = xMalloc(*count);
-   if (processes == NULL) {
-      CRT_fatalError("Out of memory for kproc_infos");
-   }
-
-   if (sysctl(mib, 4, processes, count, NULL, 0) < 0) {
-      CRT_fatalError("Unable to get kinfo_procs");
-   }
-
-   *count = *count / sizeof(struct kinfo_proc);
-
-   return processes;
+   CRT_fatalError("Unable to get kinfo_procs");
 }
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
