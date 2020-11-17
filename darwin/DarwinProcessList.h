@@ -7,21 +7,12 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-struct kern;
-
-void GetKernelVersion(struct kern* k);
-
-/* compare the given os version with the one installed returns:
-0 if equals the installed version
-positive value if less than the installed version
-negative value if more than the installed version
-*/
-int CompareKernelVersion(short int major, short int minor, short int component);
+#include <mach/mach_host.h>
+#include <sys/sysctl.h>
 
 #include "ProcessList.h"
 #include "zfs/ZfsArcStats.h"
-#include <mach/mach_host.h>
-#include <sys/sysctl.h>
+
 
 typedef struct DarwinProcessList_ {
    ProcessList super;
@@ -36,16 +27,6 @@ typedef struct DarwinProcessList_ {
 
    ZfsArcStats zfs;
 } DarwinProcessList;
-
-void ProcessList_getHostInfo(host_basic_info_data_t* p);
-
-void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p);
-
-unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p);
-
-void ProcessList_getVMStats(vm_statistics_t p);
-
-struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count);
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
 

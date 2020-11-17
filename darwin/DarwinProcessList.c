@@ -5,29 +5,31 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
-#include "DarwinProcess.h"
 #include "DarwinProcessList.h"
-#include "CRT.h"
-#include "zfs/ZfsArcStats.h"
-#include "zfs/openzfs_sysctl.h"
 
+#include <err.h>
+#include <libproc.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <libproc.h>
-#include <sys/mman.h>
 #include <utmpx.h>
-#include <err.h>
+#include <sys/mman.h>
 #include <sys/sysctl.h>
-#include <stdbool.h>
+
+#include "CRT.h"
+#include "DarwinProcess.h"
+#include "ProcessList.h"
+#include "zfs/openzfs_sysctl.h"
+#include "zfs/ZfsArcStats.h"
+
 
 struct kern {
    short int version[3];
 };
 
-void GetKernelVersion(struct kern* k) {
+static void GetKernelVersion(struct kern* k) {
    static short int version_[3] = {0};
    if (!version_[0]) {
       // just in case it fails someday
@@ -47,7 +49,7 @@ void GetKernelVersion(struct kern* k) {
 positive value if less than the installed version
 negative value if more than the installed version
 */
-int CompareKernelVersion(short int major, short int minor, short int component) {
+static int CompareKernelVersion(short int major, short int minor, short int component) {
    struct kern k;
    GetKernelVersion(&k);
 
@@ -64,7 +66,7 @@ int CompareKernelVersion(short int major, short int minor, short int component) 
    return 0;
 }
 
-void ProcessList_getHostInfo(host_basic_info_data_t* p) {
+static void ProcessList_getHostInfo(host_basic_info_data_t* p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
 
    if (0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
@@ -72,7 +74,7 @@ void ProcessList_getHostInfo(host_basic_info_data_t* p) {
    }
 }
 
-void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p) {
+static void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p) {
    if (NULL != p && NULL != *p) {
       if (0 != munmap(*p, vm_page_size)) {
          CRT_fatalError("Unable to free old CPU load information\n");
@@ -81,7 +83,7 @@ void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p) {
    }
 }
 
-unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
+static unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
    mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
    unsigned cpu_count;
 
@@ -93,7 +95,7 @@ unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
    return cpu_count;
 }
 
-void ProcessList_getVMStats(vm_statistics_t p) {
+static void ProcessList_getVMStats(vm_statistics_t p) {
    mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
 
    if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)p, &info_size) != 0) {
@@ -101,7 +103,7 @@ void ProcessList_getVMStats(vm_statistics_t p) {
    }
 }
 
-struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
+static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
    struct kinfo_proc* processes = NULL;
 
