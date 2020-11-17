@@ -11,9 +11,9 @@ This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 
 #include <math.h>
 
-#include "Platform.h"
 #include "CRT.h"
 #include "Object.h"
+#include "Platform.h"
 #include "XUtils.h"
 
 
