@@ -52,7 +52,7 @@ void Vector_set(Vector* this, int idx, void* data_);
 
 #ifndef NDEBUG
 
-Object* Vector_get(Vector* this, int idx);
+Object* Vector_get(const Vector* this, int idx);
 int Vector_size(const Vector* this);
 int Vector_count(const Vector* this);
 

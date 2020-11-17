@@ -21,13 +21,10 @@ bool Object_isA(const Object* o, const ObjectClass* klass) {
    if (!o)
       return false;
 
-   const ObjectClass* type = o->klass;
-   while (type) {
+   for (const ObjectClass* type = o->klass; type; type = type->extends) {
       if (type == klass) {
          return true;
       }
-
-      type = type->extends;
    }
 
    return false;

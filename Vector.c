@@ -48,16 +48,16 @@ void Vector_delete(Vector* this) {
 
 static bool Vector_isConsistent(const Vector* this) {
    assert(this->items <= this->arraySize);
+
    if (this->owner) {
       for (int i = 0; i < this->items; i++) {
-         if (this->array[i] && !Object_isA(this->array[i], this->type)) {
+         if (!this->array[i]) {
             return false;
          }
       }
-      return true;
-   } else {
-      return true;
    }
+
+   return true;
 }
 
 int Vector_count(const Vector* this) {
@@ -71,10 +71,10 @@ int Vector_count(const Vector* this) {
    return items;
 }
 
-Object* Vector_get(Vector* this, int idx) {
+Object* Vector_get(const Vector* this, int idx) {
    assert(idx >= 0 && idx < this->items);
-   assert(Vector_isConsistent(this));
    assert(this->array[idx]);
+   assert(Object_isA(this->array[idx], this->type));
    return this->array[idx];
 }
 
