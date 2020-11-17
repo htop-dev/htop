@@ -102,6 +102,11 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_PROC;
+static time_t Platform_Battery_cacheTime;
+static double Platform_Battery_cacheLevel = NAN;
+static ACPresence Platform_Battery_cacheIsOnAC;
+
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    Panel* panel = st->panel;
 
@@ -825,12 +830,6 @@ static void Platform_Battery_getSysData(double* level, ACPresence* isOnAC) {
 
    *level = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
 }
-
-static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_PROC;
-
-static time_t Platform_Battery_cacheTime;
-static double Platform_Battery_cacheLevel = NAN;
-static ACPresence Platform_Battery_cacheIsOnAC;
 
 void Platform_getBattery(double* level, ACPresence* isOnAC) {
    time_t now = time(NULL);
