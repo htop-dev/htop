@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Action.h"
+#include "BatteryMeter.h"
 #include "DiskIOMeter.h"
 #include "Meter.h"
 #include "Process.h"
@@ -61,5 +62,7 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
                            unsigned long int* packetsReceived,
                            unsigned long int* bytesTransmitted,
                            unsigned long int* packetsTransmitted);
+
+void Platform_getBattery(double *percent, ACPresence *isOnAC);
 
 #endif

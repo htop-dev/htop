@@ -11,7 +11,7 @@ This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 
 #include <math.h>
 
-#include "Battery.h"
+#include "Platform.h"
 #include "CRT.h"
 #include "Object.h"
 #include "XUtils.h"
@@ -25,7 +25,7 @@ static void BatteryMeter_updateValues(Meter* this, char* buffer, int len) {
    ACPresence isOnAC;
    double percent;
 
-   Battery_getData(&percent, &isOnAC);
+   Platform_getBattery(&percent, &isOnAC);
 
    if (isnan(percent)) {
       this->values[0] = NAN;

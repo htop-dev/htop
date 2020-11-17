@@ -65,4 +65,6 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
                            unsigned long int* bytesTransmitted,
                            unsigned long int* packetsTransmitted);
 
+void Platform_getBattery(double *percent, ACPresence *isOnAC);
+
 #endif
