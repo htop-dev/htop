@@ -81,6 +81,20 @@ static ssize_t xread(int fd, void* buf, size_t count) {
    }
 }
 
+static FILE* fopenat(int dirfd, const char* pathname, const char* mode) {
+   assert(String_eq(mode, "r")); /* only currently supported mode */
+
+   int fd = openat(dirfd, pathname, O_RDONLY);
+   if (fd < 0)
+      return NULL;
+
+   FILE* stream = fdopen(fd, mode);
+   if (!stream)
+      close(fd);
+
+   return stream;
+}
+
 static int sortTtyDrivers(const void* va, const void* vb) {
    const TtyDriver* a = (const TtyDriver*) va;
    const TtyDriver* b = (const TtyDriver*) vb;
@@ -307,13 +321,11 @@ static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
    return t * 100 / jiffy;
 }
 
-static bool LinuxProcessList_readStatFile(Process* process, const char* dirname, const char* name, char* command, int* commLen) {
+static bool LinuxProcessList_readStatFile(Process* process, int procFd, char* command, int* commLen) {
    LinuxProcess* lp = (LinuxProcess*) process;
    const int commLenIn = *commLen;
    *commLen = 0;
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, MAX_NAME, "%s/%s/stat", dirname, name);
-   int fd = open(filename, O_RDONLY);
+   int fd = openat(procFd, "stat", O_RDONLY);
    if (fd == -1)
       return false;
 
@@ -399,25 +411,17 @@ static bool LinuxProcessList_readStatFile(Process* process, const char* dirname,
 }
 
 
-static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME + 1];
-   filename[MAX_NAME] = '\0';
-
-   xSnprintf(filename, MAX_NAME, "%s/%s", dirname, name);
+static bool LinuxProcessList_statProcessDir(Process* process, int procFd) {
    struct stat sstat;
-   int statok = stat(filename, &sstat);
+   int statok = fstat(procFd, &sstat);
    if (statok == -1)
       return false;
    process->st_uid = sstat.st_uid;
    return true;
 }
 
-static void LinuxProcessList_readIoFile(LinuxProcess* process, const char* dirname, const char* name, unsigned long long now) {
-   char filename[MAX_NAME + 1];
-   filename[MAX_NAME] = '\0';
-
-   xSnprintf(filename, MAX_NAME, "%s/%s/io", dirname, name);
-   int fd = open(filename, O_RDONLY);
+static void LinuxProcessList_readIoFile(LinuxProcess* process, int procFd, unsigned long long now) {
+   int fd = openat(procFd, "io", O_RDONLY);
    if (fd == -1) {
       process->io_rate_read_bps = NAN;
       process->io_rate_write_bps = NAN;
@@ -543,10 +547,8 @@ static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED hkey_t key, void* va
    *d += v->size;
 }
 
-static uint64_t LinuxProcessList_calcLibSize(const char* dirname, const char* name) {
-   char filename[MAX_NAME+1];
-   xSnprintf(filename, sizeof(filename), "%s/%s/maps", dirname, name);
-   FILE* mapsfile = fopen(filename, "r");
+static uint64_t LinuxProcessList_calcLibSize(int procFd) {
+   FILE* mapsfile = fopenat(procFd, "maps", "r");
    if (!mapsfile)
       return 0;
 
@@ -623,10 +625,8 @@ static uint64_t LinuxProcessList_calcLibSize(const char* dirname, const char* na
    return total_size / CRT_pageSize;
 }
 
-static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* dirname, const char* name, bool performLookup, unsigned long long now) {
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, sizeof(filename), "%s/%s/statm", dirname, name);
-   FILE* statmfile = fopen(filename, "r");
+static bool LinuxProcessList_readStatmFile(LinuxProcess* process, int procFd, bool performLookup, unsigned long long now) {
+   FILE* statmfile = fopenat(procFd, "statm", "r");
    if (!statmfile)
       return false;
 
@@ -652,7 +652,7 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
 
          if(passedTimeInMs > 2000 || passedTimeInMs > recheck) {
             process->last_mlrs_calctime = now;
-            process->m_lrs = LinuxProcessList_calcLibSize(dirname, name);
+            process->m_lrs = LinuxProcessList_calcLibSize(procFd);
          }
       } else {
          // Keep previous value
@@ -662,19 +662,10 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
    return r == 7;
 }
 
-static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* dirname, const char* name, bool haveSmapsRollup) {
+static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, int procFd, bool haveSmapsRollup) {
    //http://elixir.free-electrons.com/linux/v4.10/source/fs/proc/task_mmu.c#L719
    //kernel will return data in chunks of size PAGE_SIZE or less.
-
-   char buffer[256];
-
-   if (haveSmapsRollup) {// only available in Linux 4.14+
-      xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps_rollup", dirname, name);
-   } else {
-      xSnprintf(buffer, sizeof(buffer), "%s/%s/smaps", dirname, name);
-   }
-
-   FILE* f = fopen(buffer, "r");
+   FILE* f = fopenat(procFd, haveSmapsRollup ? "smaps_rollup" : "smaps", "r");
    if (!f)
       return false;
 
@@ -682,6 +673,7 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
    process->m_swap  = 0;
    process->m_psswp = 0;
 
+   char buffer[256];
    while (fgets(buffer, sizeof(buffer), f)) {
       if (!strchr(buffer, '\n')) {
          // Partial line, skip to end of this line
@@ -708,7 +700,7 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, const char* di
 
 #ifdef HAVE_OPENVZ
 
-static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* dirname, const char* name) {
+static void LinuxProcessList_readOpenVZData(LinuxProcess* process, int procFd) {
    if ( (access(PROCDIR "/vz", R_OK) != 0)) {
       free(process->ctid);
       process->ctid = NULL;
@@ -716,9 +708,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
       return;
    }
 
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, sizeof(filename), "%s/%s/status", dirname, name);
-   FILE* file = fopen(filename, "r");
+   FILE* file = fopenat(procFd, "status", "r");
    if (!file) {
       free(process->ctid);
       process->ctid = NULL;
@@ -802,10 +792,8 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, const char* d
 
 #endif
 
-static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, MAX_NAME, "%s/%s/cgroup", dirname, name);
-   FILE* file = fopen(filename, "r");
+static void LinuxProcessList_readCGroupFile(LinuxProcess* process, int procFd) {
+   FILE* file = fopenat(procFd, "cgroup", "r");
    if (!file) {
       if (process->cgroup) {
          free(process->cgroup);
@@ -842,10 +830,8 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, const char* d
 
 #ifdef HAVE_VSERVER
 
-static void LinuxProcessList_readVServerData(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, MAX_NAME, "%s/%s/status", dirname, name);
-   FILE* file = fopen(filename, "r");
+static void LinuxProcessList_readVServerData(LinuxProcess* process, int procFd) {
+   FILE* file = fopenat(procFd, "status", "r");
    if (!file)
       return;
 
@@ -874,13 +860,11 @@ static void LinuxProcessList_readVServerData(LinuxProcess* process, const char* 
 
 #endif
 
-static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, MAX_NAME, "%s/%s/oom_score", dirname, name);
-   FILE* file = fopen(filename, "r");
-   if (!file) {
+static void LinuxProcessList_readOomData(LinuxProcess* process, int procFd) {
+   FILE* file = fopenat(procFd, "oom_score", "r");
+   if (!file)
       return;
-   }
+
    char buffer[PROC_LINE_LENGTH + 1];
    if (fgets(buffer, PROC_LINE_LENGTH, file)) {
       unsigned int oom;
@@ -892,10 +876,8 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, const char* dirn
    fclose(file);
 }
 
-static void LinuxProcessList_readCtxtData(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, MAX_NAME, "%s/%s/status", dirname, name);
-   FILE* file = fopen(filename, "r");
+static void LinuxProcessList_readCtxtData(LinuxProcess* process, int procFd) {
+   FILE* file = fopenat(procFd, "status", "r");
    if (!file)
       return;
 
@@ -921,15 +903,14 @@ static void LinuxProcessList_readCtxtData(LinuxProcess* process, const char* dir
    process->ctxt_total = ctxt;
 }
 
-static void LinuxProcessList_readSecattrData(LinuxProcess* process, const char* dirname, const char* name) {
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, sizeof(filename), "%s/%s/attr/current", dirname, name);
-   FILE* file = fopen(filename, "r");
+static void LinuxProcessList_readSecattrData(LinuxProcess* process, int procFd) {
+   FILE* file = fopenat(procFd, "attr/current", "r");
    if (!file) {
       free(process->secattr);
       process->secattr = NULL;
       return;
    }
+
    char buffer[PROC_LINE_LENGTH + 1];
    char* res = fgets(buffer, sizeof(buffer), file);
    fclose(file);
@@ -1029,11 +1010,9 @@ static void setCommand(Process* process, const char* command, int len) {
    process->commLen = len;
 }
 
-static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirname, const char* name) {
+static bool LinuxProcessList_readCmdlineFile(Process* process, int procFd) {
    LinuxProcess *lp = (LinuxProcess *)process;
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, MAX_NAME, "%s/%s/cmdline", dirname, name);
-   int fd = open(filename, O_RDONLY);
+   int fd = openat(procFd, "cmdline", O_RDONLY);
    if (fd == -1)
       return false;
 
@@ -1174,8 +1153,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    }
 
    /* /proc/[pid]/comm could change, so should be updated */
-   xSnprintf(filename, MAX_NAME, "%s/%s/comm", dirname, name);
-   if ((fd = open(filename, O_RDONLY)) != -1 &&
+   if ((fd = openat(procFd, "comm", O_RDONLY)) != -1 &&
        (amtRead = xread(fd, command, sizeof(command) - 1)) > 0) {
       command[amtRead - 1] = 0;
       lp->mergedCommand.maxLen += amtRead - 1;  /* accommodate comm */
@@ -1193,9 +1171,10 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    if (fd != -1)
       close(fd);
 
+   char filename[MAX_NAME + 1];
+
    /* execve could change /proc/[pid]/exe, so procExe should be updated */
-   xSnprintf(command, sizeof(command), "%s/%s/exe", dirname, name);
-   if ((amtRead = readlink(command, filename, sizeof(filename) - 1)) > 0) {
+   if ((amtRead = readlinkat(procFd, "exe", filename, sizeof(filename) - 1)) > 0) {
       filename[amtRead] = 0;
       lp->mergedCommand.maxLen += amtRead;  /* accommodate exe */
       if (!lp->procExe || strcmp(filename, lp->procExe)) {
@@ -1282,21 +1261,23 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
    return out;
 }
 
-static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char* dirname, const Process* parent, double period, unsigned long long now) {
+static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, int dirFd, const Process* parent, double period, unsigned long long now) {
    ProcessList* pl = (ProcessList*) this;
-   DIR* dir;
    const struct dirent* entry;
    const Settings* settings = pl->settings;
 
-   dir = opendir(dirname);
-   if (!dir)
+   DIR* dir = fdopendir(dirFd);
+   if (!dir) {
+      close(dirFd);
       return false;
+   }
 
    int cpus = pl->cpuCount;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
    while ((entry = readdir(dir)) != NULL) {
       const char* name = entry->d_name;
+      int procFd = -1;
 
       // Ignore all non-directories
       if (entry->d_type != DT_DIR && entry->d_type != DT_UNKNOWN) {
@@ -1317,21 +1298,27 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       // filename is a number: process directory
       int pid = atoi(name);
 
-      if (parent && pid == parent->pid)
-         continue;
-
       if (pid <= 0)
          continue;
 
-      bool preExisting = false;
-      Process* proc = ProcessList_getProcess(pl, pid, &preExisting, LinuxProcess_new);
-      proc->tgid = parent ? parent->pid : pid;
+      if (parent && pid == parent->pid)
+         continue;
 
+      bool preExisting;
+      Process* proc = ProcessList_getProcess(pl, pid, &preExisting, LinuxProcess_new);
       LinuxProcess* lp = (LinuxProcess*) proc;
 
-      char subdirname[MAX_NAME + 1];
-      xSnprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
-      LinuxProcessList_recurseProcTree(this, subdirname, proc, period, now);
+      proc->tgid = parent ? parent->pid : pid;
+
+      procFd = openat(dirFd, name, O_PATH | O_DIRECTORY | O_NOFOLLOW);
+      if (procFd < 0)
+         goto errorReadingProcess;
+
+      int taskDirFd = openat(procFd, "task", O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+      if (taskDirFd >= 0) {
+         /* LinuxProcessList_recurseProcTree() closes taskDirFd */
+         LinuxProcessList_recurseProcTree(this, taskDirFd, proc, period, now);
+      }
 
       /*
        * These conditions will not trigger on first occurrence, cause we need to
@@ -1344,6 +1331,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          proc->show = false;
          pl->kernelThreads++;
          pl->totalTasks++;
+         close(procFd);
          continue;
       }
       if (preExisting && hideUserlandThreads && Process_isUserlandThread(proc)) {
@@ -1351,13 +1339,14 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          proc->show = false;
          pl->userlandThreads++;
          pl->totalTasks++;
+         close(procFd);
          continue;
       }
 
       if (settings->flags & PROCESS_FLAG_IO)
-         LinuxProcessList_readIoFile(lp, dirname, name, now);
+         LinuxProcessList_readIoFile(lp, procFd, now);
 
-      if (!LinuxProcessList_readStatmFile(lp, dirname, name, !!(settings->flags & PROCESS_FLAG_LINUX_LRS_FIX), now))
+      if (!LinuxProcessList_readStatmFile(lp, procFd, !!(settings->flags & PROCESS_FLAG_LINUX_LRS_FIX), now))
          goto errorReadingProcess;
 
       if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
@@ -1365,7 +1354,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
             // Read smaps file of each process only every second pass to improve performance
             static int smaps_flag = 0;
             if ((pid & 1) == smaps_flag) {
-               LinuxProcessList_readSmapsFile(lp, dirname, name, this->haveSmapsRollup);
+               LinuxProcessList_readSmapsFile(lp, procFd, this->haveSmapsRollup);
             }
             if (pid == 1) {
                smaps_flag = !smaps_flag;
@@ -1379,7 +1368,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       int commLen = sizeof(command);
       unsigned int tty_nr = proc->tty_nr;
-      if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen))
+      if (! LinuxProcessList_readStatFile(proc, procFd, command, &commLen))
          goto errorReadingProcess;
 
       if (tty_nr != proc->tty_nr && this->ttyDrivers) {
@@ -1397,24 +1386,24 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       if (!preExisting) {
 
-         if (! LinuxProcessList_statProcessDir(proc, dirname, name))
+         if (! LinuxProcessList_statProcessDir(proc, procFd))
             goto errorReadingProcess;
 
          proc->user = UsersTable_getRef(pl->usersTable, proc->st_uid);
 
          #ifdef HAVE_OPENVZ
          if (settings->flags & PROCESS_FLAG_LINUX_OPENVZ) {
-            LinuxProcessList_readOpenVZData(lp, dirname, name);
+            LinuxProcessList_readOpenVZData(lp, procFd);
          }
          #endif
 
          #ifdef HAVE_VSERVER
          if (settings->flags & PROCESS_FLAG_LINUX_VSERVER) {
-            LinuxProcessList_readVServerData(lp, dirname, name);
+            LinuxProcessList_readVServerData(lp, procFd);
          }
          #endif
 
-         if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
+         if (! LinuxProcessList_readCmdlineFile(proc, procFd)) {
             goto errorReadingProcess;
          }
 
@@ -1423,7 +1412,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          ProcessList_add(pl, proc);
       } else {
          if (settings->updateProcessNames && proc->state != 'Z') {
-            if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
+            if (! LinuxProcessList_readCmdlineFile(proc, procFd)) {
                goto errorReadingProcess;
             }
          }
@@ -1443,19 +1432,19 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       #endif
 
       if (settings->flags & PROCESS_FLAG_LINUX_CGROUP) {
-         LinuxProcessList_readCGroupFile(lp, dirname, name);
+         LinuxProcessList_readCGroupFile(lp, procFd);
       }
 
       if (settings->flags & PROCESS_FLAG_LINUX_OOM) {
-         LinuxProcessList_readOomData(lp, dirname, name);
+         LinuxProcessList_readOomData(lp, procFd);
       }
 
       if (settings->flags & PROCESS_FLAG_LINUX_CTXT) {
-         LinuxProcessList_readCtxtData(lp, dirname, name);
+         LinuxProcessList_readCtxtData(lp, procFd);
       }
 
       if (settings->flags & PROCESS_FLAG_LINUX_SECATTR) {
-         LinuxProcessList_readSecattrData(lp, dirname, name);
+         LinuxProcessList_readSecattrData(lp, procFd);
       }
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
@@ -1466,7 +1455,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
             proc->basenameOffset = -1;
             setCommand(proc, command, commLen);
          } else if (settings->showThreadNames) {
-            if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
+            if (! LinuxProcessList_readCmdlineFile(proc, procFd)) {
                goto errorReadingProcess;
             }
          }
@@ -1484,12 +1473,18 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (proc->state == 'R')
          pl->runningTasks++;
       proc->updated = true;
+
+      close(procFd);
+
       continue;
 
       // Exception handler.
 
 errorReadingProcess:
       {
+         if (procFd >= 0)
+            close(procFd);
+
          if (preExisting) {
             ProcessList_remove(pl, proc);
          } else {
@@ -1940,5 +1935,11 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    gettimeofday(&tv, NULL);
    unsigned long long now = tv.tv_sec * 1000ULL + tv.tv_usec / 1000ULL;
 
-   LinuxProcessList_recurseProcTree(this, PROCDIR, NULL, period, now);
+   int procDirfd = open(PROCDIR, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+   if (procDirfd < 0) {
+      CRT_fatalError("Can not open the root process directory " PROCDIR);
+   }
+
+   /* LinuxProcessList_recurseProcTree() closes procDirfd */
+   LinuxProcessList_recurseProcTree(this, procDirfd, NULL, period, now);
 }
