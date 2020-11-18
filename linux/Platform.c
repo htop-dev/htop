@@ -12,12 +12,16 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "BatteryMeter.h"
@@ -51,6 +55,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "XUtils.h"
 #include "ZramMeter.h"
+#include "ZramStats.h"
 
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"

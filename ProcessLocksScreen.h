@@ -7,9 +7,13 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "InfoScreen.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <sys/types.h>
 
-#include <stdlib.h>
+#include "InfoScreen.h"
+#include "Object.h"
+#include "Process.h"
 
 
 typedef struct ProcessLocksScreen_ {

@@ -18,7 +18,6 @@ in the source distribution for its full text.
 #include <unistd.h>
 
 #include "Action.h"
-#include "ColumnsPanel.h"
 #include "CRT.h"
 #include "Hashtable.h"
 #include "Header.h"

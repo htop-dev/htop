@@ -7,6 +7,7 @@ in the source distribution for its full text.
 
 #include "DiskIOMeter.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/time.h>
 

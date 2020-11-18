@@ -5,7 +5,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "Action.h"
 
@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "EnvScreen.h"
 #include "FunctionBar.h"
+#include "Hashtable.h"
 #include "IncSet.h"
 #include "InfoScreen.h"
 #include "ListItem.h"

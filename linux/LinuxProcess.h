@@ -16,8 +16,8 @@ in the source distribution for its full text.
 #include "IOPriority.h"
 #include "Object.h"
 #include "Process.h"
-#include "RichString.h"
 #include "Settings.h"
+
 
 #define PROCESS_FLAG_LINUX_IOPRIO   0x0100
 #define PROCESS_FLAG_LINUX_OPENVZ   0x0200
