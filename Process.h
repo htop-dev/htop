@@ -109,6 +109,11 @@ typedef struct Process_ {
 
    unsigned long int minflt;
    unsigned long int majflt;
+
+   unsigned int tree_left;
+   unsigned int tree_right;
+   unsigned int tree_depth;
+   unsigned int tree_index;
 } Process;
 
 typedef struct ProcessFieldData_ {

@@ -160,7 +160,6 @@ static bool collapseIntoParent(Panel* panel) {
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
    settings->sortKey = sortKey;
    settings->direction = 1;
-   settings->treeView = false;
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR | HTOP_KEEP_FOLLOWING;
 }
 
@@ -661,7 +660,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['['] = actionLowerPriority;
    keys[KEY_F(8)] = actionLowerPriority;
    keys['I'] = actionInvertSortOrder;
-   keys[KEY_F(6)] = actionExpandCollapseOrSortColumn;
+   keys[KEY_F(6)] = actionSetSortColumn;
    keys[KEY_F(18)] = actionExpandCollapseOrSortColumn;
    keys['<'] = actionSetSortColumn;
    keys[','] = actionSetSortColumn;
