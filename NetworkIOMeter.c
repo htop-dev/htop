@@ -1,5 +1,6 @@
 #include "NetworkIOMeter.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <sys/time.h>
 

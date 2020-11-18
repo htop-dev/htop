@@ -17,13 +17,14 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/resource.h>
 
 #include "CRT.h"
+#include "Macros.h"
 #include "Platform.h"
+#include "ProcessList.h"
 #include "RichString.h"
 #include "Settings.h"
 #include "XUtils.h"

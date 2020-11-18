@@ -7,13 +7,14 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include "Compat.h"
-#include "XUtils.h"
+
+#include <fcntl.h> // IWYU pragma: keep
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h> // IWYU pragma: keep
+
+#include "XUtils.h" // IWYU pragma: keep
 
 
 int Compat_fstatat(int dirfd,

@@ -9,7 +9,6 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
-#include <time.h>
 #include <sys/types.h>
 
 #include "Object.h"
