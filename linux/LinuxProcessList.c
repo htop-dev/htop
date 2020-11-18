@@ -257,7 +257,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       fclose(statfile);
    }
 
-   // Initialze CPU count
+   // Initialize CPU count
    {
       int cpus = LinuxProcessList_computeCPUcount();
       pl->cpuCount = MAXIMUM(cpus, 1);

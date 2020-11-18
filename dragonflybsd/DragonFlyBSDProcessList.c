@@ -483,18 +483,18 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       case SACTIVE:
          switch (kproc->kp_lwp.kl_stat) {
             case LSSLEEP:
-               if (kproc->kp_lwp.kl_flags & LWP_SINTR)					// interruptable wait short/long
+               if (kproc->kp_lwp.kl_flags & LWP_SINTR)					// interruptible wait short/long
                   if (kproc->kp_lwp.kl_slptime >= MAXSLP) {
                      proc->state = 'I';
                      isIdleProcess = true;
                   } else {
                      proc->state = 'S';
                   }
-               else if (kproc->kp_lwp.kl_tdflags & TDF_SINTR)				// interruptable lwkt wait
+               else if (kproc->kp_lwp.kl_tdflags & TDF_SINTR)				// interruptible lwkt wait
                   proc->state = 'S';
-               else if (kproc->kp_paddr)						// uninterruptable wait
+               else if (kproc->kp_paddr)						// uninterruptible wait
                   proc->state = 'D';
-               else									// uninterruptable lwkt wait
+               else									// uninterruptible lwkt wait
                   proc->state = 'B';
                break;
             case LSRUN:
