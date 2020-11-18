@@ -13,8 +13,6 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "Affinity.h"
-#include "AffinityPanel.h"
 #include "CategoriesPanel.h"
 #include "CommandScreen.h"
 #include "CRT.h"
@@ -35,6 +33,11 @@ in the source distribution for its full text.
 #include "TraceScreen.h"
 #include "Vector.h"
 #include "XUtils.h"
+
+#if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))
+#include "Affinity.h"
+#include "AffinityPanel.h"
+#endif
 
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {

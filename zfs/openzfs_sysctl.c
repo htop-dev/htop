@@ -6,12 +6,13 @@ in the source distribution for its full text.
 */
 
 #include "zfs/openzfs_sysctl.h"
+
+#include <stdlib.h>
+#include <sys/types.h> // IWYU pragma: keep
+#include <sys/sysctl.h> // needs <sys/types.h> for u_int with gcc
+
 #include "zfs/ZfsArcStats.h"
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
 
 static int MIB_kstat_zfs_misc_arcstats_size[5];
 static int MIB_kstat_zfs_misc_arcstats_c_max[5];
@@ -22,10 +23,6 @@ static int MIB_kstat_zfs_misc_arcstats_hdr_size[5];
 static int MIB_kstat_zfs_misc_arcstats_other_size[5];
 static int MIB_kstat_zfs_misc_arcstats_compressed_size[5];
 static int MIB_kstat_zfs_misc_arcstats_uncompressed_size[5];
-
-/*{
-#include "zfs/ZfsArcStats.h"
-}*/
 
 void openzfs_sysctl_init(ZfsArcStats* stats) {
    size_t len;

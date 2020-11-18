@@ -5,16 +5,15 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Process.h"
-#include "ProcessList.h"
 #include "FreeBSDProcess.h"
-#include "Platform.h"
-#include "CRT.h"
 
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/syscall.h>
+
+#include "CRT.h"
+#include "Macros.h"
+#include "Process.h"
+#include "RichString.h"
+#include "XUtils.h"
 
 
 const char* const nodevStr = "nodev";

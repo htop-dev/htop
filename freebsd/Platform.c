@@ -9,10 +9,16 @@ in the source distribution for its full text.
 
 #include <devstat.h>
 #include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <time.h>
 #include <net/if.h>
 #include <net/if_mib.h>
+#include <sys/_types.h>
+#include <sys/devicestat.h>
+#include <sys/param.h>
 #include <sys/resource.h>
+#include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -31,9 +37,12 @@ in the source distribution for its full text.
 #include "MemoryMeter.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
+#include "ProcessList.h"
+#include "Settings.h"
 #include "SwapMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "XUtils.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 

@@ -10,23 +10,31 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <dirent.h>
 #include <err.h>
-#include <fcntl.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <unistd.h>
+#include <sys/_iovec.h>
+#include <sys/dirent.h>
+#include <sys/errno.h>
+#include <sys/param.h> // needs to be included before <sys/jail.h> for MAXPATHLEN
+#include <sys/jail.h>
+#include <sys/priority.h>
+#include <sys/proc.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/user.h>
 
-#include "Compat.h"
 #include "CRT.h"
+#include "Compat.h"
 #include "FreeBSDProcess.h"
 #include "Macros.h"
+#include "Object.h"
+#include "Process.h"
 #include "ProcessList.h"
+#include "Settings.h"
 #include "XUtils.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/openzfs_sysctl.h"
