@@ -7,4 +7,12 @@
     { include: ["<bits/types/struct_tm.h>", "private", "<time.h>", "public"] },
 
     { include: ["<bits/getopt_core.h>", "private", "<unistd.h>", "public"] },
+
+    { include: ["<sys/signal.h>", "private", "<signal.h>", "public"] },
+
+    { include: ["<sys/_stdarg.h>", "private", "<stdarg.h>", "public"] },
+
+    { include: ["<sys/limits.h>", "private", "<limits.h>", "public"] },
+
+    { include: ["<x86/_inttypes.h>", "private", "<inttypes.h>", "public"] },
 ]

@@ -11,7 +11,6 @@ in the source distribution for its full text.
 
 #include "Object.h"
 #include "Process.h"
-#include "RichString.h"
 #include "Settings.h"
 
 

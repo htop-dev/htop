@@ -11,4 +11,4 @@ IWYU=${IWYU:-iwyu}
 cd "$SOURCEDIR" || exit
 
 make clean
-make --keep-going --silent CC="$IWYU" CFLAGS="-Xiwyu --no_comments -Xiwyu --no_fwd_decl -Xiwyu --mapping_file='$SCRIPTDIR/htop.imp' $PKG_NL3"
+make -k -s CC="$IWYU" CFLAGS="-Xiwyu --no_comments -Xiwyu --no_fwd_decl -Xiwyu --mapping_file='$SCRIPTDIR/htop.imp' $PKG_NL3"
