@@ -486,6 +486,48 @@ typedef struct LibraryData {
     bool exec;
 } LibraryData;
 
+static inline uint64_t fast_strtoull_dec(char **str, int maxlen) {
+   register uint64_t result = 0;
+
+   if (!maxlen)
+      --maxlen;
+
+   while (maxlen-- && **str >= '0' && **str <= '9') {
+      result *= 10;
+      result += **str - '0';
+      (*str)++;
+   }
+
+   return result;
+}
+
+static inline uint64_t fast_strtoull_hex(char **str, int maxlen) {
+   register uint64_t result = 0;
+   register int nibble, letter;
+   const long valid_mask = 0x03FF007E;
+
+   if (!maxlen)
+      --maxlen;
+
+   while (maxlen--) {
+      nibble = **str;
+      if (!(valid_mask & (1 << (nibble & 0x1F))))
+         break;
+      if ((nibble < '0') || (nibble & ~0x20) > 'F')
+         break;
+      letter = (nibble & 0x40) ? 'A' - '9' - 1 : 0;
+      nibble &=~0x20; // to upper
+      nibble ^= 0x10; // switch letters and digits
+      nibble -= letter;
+      nibble &= 0x0f;
+      result <<= 4;
+      result += (uint64_t)nibble;
+      (*str)++;
+   }
+
+   return result;
+}
+
 static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED hkey_t key, void* value, void* data) {
    if (!data)
       return;
@@ -526,14 +568,12 @@ static uint64_t LinuxProcessList_calcLibSize(const char* dirname, const char* na
       // Parse format: "%Lx-%Lx %4s %x %2x:%2x %Ld"
       char *readptr = buffer;
 
-      errno = 0;
-      map_start = strtoull(readptr, &readptr, 16);
-      if (errno || !readptr || '-' != *readptr++)
+      map_start = fast_strtoull_hex(&readptr, 16);
+      if ('-' != *readptr++)
          continue;
 
-      errno = 0;
-      map_end = strtoull(readptr, &readptr, 16);
-      if (errno || !readptr || ' ' != *readptr++)
+      map_end = fast_strtoull_hex(&readptr, 16);
+      if (' ' != *readptr++)
          continue;
 
       memcpy(map_perm, readptr, 4);
@@ -542,30 +582,24 @@ static uint64_t LinuxProcessList_calcLibSize(const char* dirname, const char* na
       if (' ' != *readptr++)
          continue;
 
-      errno = 0;
-      strtoul(readptr, &readptr, 16);
-      if (errno || !readptr || ' ' != *readptr++)
+      while(*readptr > ' ')
+         readptr++; // Skip parsing this hex value
+      if (' ' != *readptr++)
          continue;
 
-      errno = 0;
-      map_devmaj = strtol(readptr, &readptr, 16);
-      if (errno || !readptr || ':' != *readptr++)
+      map_devmaj = fast_strtoull_hex(&readptr, 2);
+      if (':' != *readptr++)
          continue;
 
-      errno = 0;
-      map_devmin = strtol(readptr, &readptr, 16);
-      if (errno || !readptr || ' ' != *readptr++)
+      map_devmin = fast_strtoull_hex(&readptr, 2);
+      if (' ' != *readptr++)
          continue;
 
       //Minor shortcut: Once we know there's no file for this region, we skip
       if (!map_devmaj && !map_devmin)
          continue;
 
-      errno = 0;
-      map_inode = strtoull(readptr, &readptr, 10);
-      if (errno || !readptr) // Don't check next character here, because that might be undefined
-         continue;
-
+      map_inode = fast_strtoull_dec(&readptr, 20);
       if (!map_inode)
          continue;
 
