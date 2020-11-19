@@ -56,10 +56,11 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
+#ifdef HAVE_LIBSENSORS
+#include <sensors/sensors.h>
+#endif
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
-
-//static ProcessField defaultIoFields[] = { PID, IO_PRIORITY, USER, IO_READ_RATE, IO_WRITE_RATE, IO_RATE, COMM, 0 };
 
 int Platform_numberOfFields = LAST_PROCESSFIELD;
 
@@ -106,6 +107,22 @@ static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_PROC;
 static time_t Platform_Battery_cacheTime;
 static double Platform_Battery_cacheLevel = NAN;
 static ACPresence Platform_Battery_cacheIsOnAC;
+
+void Platform_init(void) {
+   if (access(PROCDIR, R_OK) != 0) {
+      fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
+      exit(1);
+   }
+#ifdef HAVE_LIBSENSORS
+   sensors_init(NULL);
+#endif
+}
+
+void Platform_done(void) {
+#ifdef HAVE_LIBSENSORS
+   sensors_cleanup();
+#endif
+}
 
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    Panel* panel = st->panel;

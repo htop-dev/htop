@@ -88,17 +88,24 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-void Platform_setBindings(Htop_Action* keys) {
-   (void) keys;
-}
-
 int Platform_numberOfFields = 100;
-
-extern char Process_pidFormat[20];
 
 ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
+
+void Platform_init(void) {
+   /* no platform-specific setup needed */
+}
+
+void Platform_done(void) {
+   /* no platform-specific cleanup needed */
+}
+
+void Platform_setBindings(Htop_Action* keys) {
+   /* no platform-specific key bindings */
+   (void) keys;
+}
 
 int Platform_getUptime() {
    return 0;
