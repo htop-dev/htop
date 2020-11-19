@@ -1026,6 +1026,29 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       xSnprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
       LinuxProcessList_recurseProcTree(this, subdirname, proc, period, tv);
 
+      /*
+       * These conditions will not trigger on first occurence, cause we need to
+       * add the process to the ProcessList and do all one time scans
+       * (e.g. parsing the cmdline to detect a kernel thread)
+       * But it will short-circuit subsequent scans.
+       */
+      if (preExisting && hideKernelThreads && Process_isKernelThread(proc)) {
+         proc->updated = true;
+         proc->show = false;
+         pl->kernelThreads++;
+         pl->totalTasks++;
+         continue;
+      }
+      if (preExisting && hideUserlandThreads && Process_isUserlandThread(proc)) {
+         proc->updated = true;
+         proc->show = false;
+         pl->userlandThreads++;
+         pl->totalTasks++;
+         continue;
+      }
+
+      proc->show = true;
+
       #ifdef HAVE_TASKSTATS
       if (settings->flags & PROCESS_FLAG_IO)
          LinuxProcessList_readIoFile(lp, dirname, name, now);
@@ -1048,8 +1071,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
             lp->m_pss = ((LinuxProcess*)parent)->m_pss;
          }
       }
-
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       char command[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
