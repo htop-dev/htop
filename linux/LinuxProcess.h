@@ -177,10 +177,6 @@ IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
 
 bool LinuxProcess_setIOPriority(Process* this, Arg ioprio);
 
-#ifdef HAVE_DELAYACCT
-void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);
-#endif
-
 bool Process_isThread(const Process* this);
 
 #endif
