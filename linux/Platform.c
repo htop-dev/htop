@@ -113,6 +113,7 @@ void Platform_init(void) {
       fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
       exit(1);
    }
+
 #ifdef HAVE_LIBSENSORS
    sensors_init(NULL);
 #endif
