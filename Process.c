@@ -326,7 +326,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    case MAJFLT: Process_colorNumber(str, this->majflt, coloring); return;
    case MINFLT: Process_colorNumber(str, this->minflt, coloring); return;
    case M_RESIDENT: Process_humanNumber(str, this->m_resident * CRT_pageSizeKB, coloring); return;
-   case M_SIZE: Process_humanNumber(str, this->m_size * CRT_pageSizeKB, coloring); return;
+   case M_VIRT: Process_humanNumber(str, this->m_virt * CRT_pageSizeKB, coloring); return;
    case NICE: {
       xSnprintf(buffer, n, "%3ld ", this->nice);
       attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
@@ -510,8 +510,8 @@ long Process_compare(const void* v1, const void* v2) {
       return SPACESHIP_NUMBER(p2->minflt, p1->minflt);
    case M_RESIDENT:
       return SPACESHIP_NUMBER(p2->m_resident, p1->m_resident);
-   case M_SIZE:
-      return SPACESHIP_NUMBER(p2->m_size, p1->m_size);
+   case M_VIRT:
+      return SPACESHIP_NUMBER(p2->m_virt, p1->m_virt);
    case NICE:
       return SPACESHIP_NUMBER(p1->nice, p2->nice);
    case NLWP:

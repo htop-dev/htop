@@ -65,7 +65,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->starttime_ctime = 1433116800; // Jun 01, 2015
    Process_fillStarttimeBuffer(proc);
 
-   proc->m_size = 100;
+   proc->m_virt = 100;
    proc->m_resident = 100;
 
    proc->minflt = 20;

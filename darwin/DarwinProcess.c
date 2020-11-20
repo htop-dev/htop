@@ -204,7 +204,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
     * nlwp
     * percent_cpu
     * percent_mem
-    * m_size
+    * m_virt
     * m_resident
     * minflt
     * majflt
@@ -258,7 +258,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
 
       proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
       proc->super.nlwp = pti.pti_threadnum;
-      proc->super.m_size = pti.pti_virtual_size / CRT_pageSize;
+      proc->super.m_virt = pti.pti_virtual_size / CRT_pageSize;
       proc->super.m_resident = pti.pti_resident_size / CRT_pageSize;
       proc->super.majflt = pti.pti_faults;
       proc->super.percent_mem = (double)pti.pti_resident_size * 100.0

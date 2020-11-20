@@ -38,7 +38,7 @@ typedef enum ProcessFields {
    NICE = 19,
    STARTTIME = 21,
    PROCESSOR = 38,
-   M_SIZE = 39,
+   M_VIRT = 39,
    M_RESIDENT = 40,
    ST_UID = 46,
    PERCENT_CPU = 47,
@@ -97,7 +97,7 @@ typedef struct Process_ {
    char starttime_show[8];
    time_t starttime_ctime;
 
-   long m_size;
+   long m_virt;
    long m_resident;
 
    int exit_signal;

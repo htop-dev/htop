@@ -118,8 +118,8 @@ ProcessFieldData Process_fields[] = {
       .description = "Id of the CPU the process last executed on",
       .flags = 0,
    },
-   [M_SIZE] = {
-      .name = "M_SIZE",
+   [M_VIRT] = {
+      .name = "M_VIRT",
       .title = " VIRT ",
       .description = "Total program size in virtual memory",
       .flags = 0,

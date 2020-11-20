@@ -494,7 +494,7 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
       return false;
 
    int r = fscanf(statmfile, "%ld %ld %ld %ld %ld %ld %ld",
-                  &process->super.m_size,
+                  &process->super.m_virt,
                   &process->super.m_resident,
                   &process->m_share,
                   &process->m_trs,

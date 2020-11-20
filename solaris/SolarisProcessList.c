@@ -323,7 +323,7 @@ int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* 
    proc->nlwp               = _psinfo->pr_nlwp;
    proc->tty_nr             = _psinfo->pr_ttydev;
    proc->m_resident         = _psinfo->pr_rssize / CRT_pageSizeKB;
-   proc->m_size             = _psinfo->pr_size / CRT_pageSizeKB;
+   proc->m_virt             = _psinfo->pr_size / CRT_pageSizeKB;
 
    if (!preExisting) {
       sproc->realpid        = _psinfo->pr_pid;
