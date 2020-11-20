@@ -33,6 +33,9 @@
 #define ATTR_NONNULL                    __attribute__((nonnull))
 #define ATTR_NORETURN                   __attribute__((noreturn))
 #define ATTR_UNUSED                     __attribute__((unused))
+#define ATTR_ALLOC_SIZE1(a)             __attribute__((alloc_size (a)))
+#define ATTR_ALLOC_SIZE2(a, b)          __attribute__((alloc_size (a, b)))
+#define ATTR_MALLOC                     __attribute__((malloc))
 
 #else /* __GNUC__ */
 
@@ -40,6 +43,9 @@
 #define ATTR_NONNULL
 #define ATTR_NORETURN
 #define ATTR_UNUSED
+#define ATTR_ALLOC_SIZE1(a)
+#define ATTR_ALLOC_SIZE2(a, b)
+#define ATTR_MALLOC
 
 #endif /* __GNUC__ */
 

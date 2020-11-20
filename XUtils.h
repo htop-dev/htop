@@ -21,15 +21,15 @@ in the source distribution for its full text.
 
 void fail(void) ATTR_NORETURN;
 
-void* xMalloc(size_t size);
+void* xMalloc(size_t size) ATTR_ALLOC_SIZE1(1) ATTR_MALLOC;
 
-void* xMallocArray(size_t nmemb, size_t size);
+void* xMallocArray(size_t nmemb, size_t size) ATTR_ALLOC_SIZE2(1, 2) ATTR_MALLOC;
 
-void* xCalloc(size_t nmemb, size_t size);
+void* xCalloc(size_t nmemb, size_t size) ATTR_ALLOC_SIZE2(1, 2) ATTR_MALLOC;
 
-void* xRealloc(void* ptr, size_t size);
+void* xRealloc(void* ptr, size_t size) ATTR_ALLOC_SIZE1(2);
 
-void* xReallocArray(void* ptr, size_t nmemb, size_t size);
+void* xReallocArray(void* ptr, size_t nmemb, size_t size) ATTR_ALLOC_SIZE2(2, 3);
 
 /*
  * String_startsWith gives better performance if strlen(match) can be computed
@@ -47,17 +47,17 @@ static inline bool String_eq(const char* s1, const char* s2) {
    return strcmp(s1, s2) == 0;
 }
 
-char* String_cat(const char* s1, const char* s2);
+char* String_cat(const char* s1, const char* s2) ATTR_MALLOC;
 
-char* String_trim(const char* in);
+char* String_trim(const char* in) ATTR_MALLOC;
 
 char** String_split(const char* s, char sep, size_t* n);
 
 void String_freeArray(char** s);
 
-char* String_getToken(const char* line, unsigned short int numMatch);
+char* String_getToken(const char* line, unsigned short int numMatch) ATTR_MALLOC;
 
-char* String_readLine(FILE* fd);
+char* String_readLine(FILE* fd) ATTR_MALLOC;
 
 /* Always null-terminates dest. Caller must pass a strictly positive size. */
 size_t String_safeStrncpy(char *restrict dest, const char *restrict src, size_t size);
@@ -68,10 +68,10 @@ int xAsprintf(char** strp, const char* fmt, ...);
 ATTR_FORMAT(printf, 3, 4)
 int xSnprintf(char* buf, size_t len, const char* fmt, ...);
 
-char* xStrdup(const char* str) ATTR_NONNULL;
+char* xStrdup(const char* str) ATTR_NONNULL ATTR_MALLOC;
 void free_and_xStrdup(char** ptr, const char* str);
 
-char* xStrndup(const char* str, size_t len) ATTR_NONNULL;
+char* xStrndup(const char* str, size_t len) ATTR_NONNULL ATTR_MALLOC;
 
 ssize_t xReadfile(const char* pathname, void* buffer, size_t count);
 ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
