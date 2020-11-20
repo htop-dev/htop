@@ -467,7 +467,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
    return;
 }
 
-static void LinuxProcess_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
+static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
    const LinuxProcess *lp = (const LinuxProcess *)this;
    int strStart = RichString_size(str);
    int baseStart = strStart + lp->mergedCommand.baseStart;
@@ -489,11 +489,16 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseatt
          /* If it was matched with procExe's basename, make it bold if needed */
          if (commStart == baseStart && highlightBaseName) {
             if (commEnd > baseEnd) {
-               RichString_setAttrn(str, A_BOLD | commAttr, commStart, baseEnd - 1);
+               RichString_setAttrn(str, A_BOLD | baseAttr, commStart, baseEnd - 1);
                baseStart = baseEnd;
                RichString_setAttrn(str, commAttr, baseStart, commEnd - 1);
-            } else {
+            } else if (commEnd < baseEnd) {
                RichString_setAttrn(str, A_BOLD | commAttr, commStart, commEnd - 1);
+               baseStart = commEnd;
+               // Remainder marked baseAttr at end of function
+            } else {
+               // Actually should be highlighted commAttr, but marked baseAttr to reduce visual noise
+               RichString_setAttrn(str, A_BOLD | baseAttr, commStart, commEnd - 1);
                baseStart = commEnd;
             }
          } else {
@@ -505,7 +510,7 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseatt
       }
    }
    if (baseStart < baseEnd && highlightBaseName) {
-      RichString_setAttrn(str, baseattr, baseStart, baseEnd - 1);
+      RichString_setAttrn(str, baseAttr, baseStart, baseEnd - 1);
    }
 }
 
