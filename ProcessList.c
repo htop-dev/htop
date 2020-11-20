@@ -349,7 +349,7 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
       if (p->tombTs > 0) {
          // remove tombed process
          if (this->scanTs >= p->tombTs) {
-         ProcessList_remove(this, p);
+            ProcessList_remove(this, p);
          }
       } else if (p->updated == false) {
          // process no longer exists
