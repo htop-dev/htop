@@ -229,7 +229,7 @@ static inline void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          }
       }
 
-      proc->m_size = kproc->p_vm_dsize;
+      proc->m_virt = kproc->p_vm_dsize;
       proc->m_resident = kproc->p_vm_rssize;
       proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(this->super.totalMem) * 100.0;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.cpuCount * 100.0);

@@ -86,7 +86,7 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
-ProcessField Platform_defaultFields[] = { PID, LWPID, USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
+ProcessField Platform_defaultFields[] = { PID, LWPID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,

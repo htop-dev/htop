@@ -312,7 +312,7 @@ The time the process was started.
 .B PROCESSOR (CPU)
 The ID of the CPU the process last executed on.
 .TP
-.B M_SIZE (VIRT)
+.B M_VIRT (VIRT)
 The size of the virtual memory of the process.
 .TP
 .B M_RESIDENT (RES)
