@@ -111,6 +111,8 @@ typedef struct LinuxProcessMergedCommand_ {
    int baseEnd;         /* basename's end offset */
    int commStart;       /* comm's start offset */
    int commEnd;         /* comm's end offset */
+   int sep1;            /* first field separator, used if non-zero */
+   int sep2;            /* second field separator, used if non-zero */
    bool separateComm;   /* whether comm is a separate field */
    bool unmatchedExe;   /* whether exe matched with cmdline */
    bool cmdlineChanged; /* whether cmdline changed */

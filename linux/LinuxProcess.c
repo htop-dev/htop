@@ -335,17 +335,24 @@ returned by LinuxProcess_getCommandStr() for searching, sorting and filtering.
 */
 void LinuxProcess_makeCommandStr(Process* this) {
    LinuxProcess *lp = (LinuxProcess *)this;
+   LinuxProcessMergedCommand *mc = &lp->mergedCommand;
+
    bool showMergedCommand = this->settings->showMergedCommand;
    bool showProgramPath = this->settings->showProgramPath;
    bool searchCommInCmdline = this->settings->findCommInCmdline;
    bool stripExeFromCmdline = this->settings->stripExeFromCmdline;
 
-   /* lp->mergedCommand.str needs to be remade only if there is a change in its
-    * state consisting of the relevant settings and the three fields cmdline,
-    * comm and exe */
-   if (showMergedCommand == lp->mergedCommand.prevMergeSet && showProgramPath == lp->mergedCommand.prevPathSet &&
-       searchCommInCmdline == lp->mergedCommand.prevCommSet && stripExeFromCmdline == lp->mergedCommand.prevCmdlineSet &&
-       !lp->mergedCommand.cmdlineChanged && !lp->mergedCommand.commChanged && !lp->mergedCommand.exeChanged) {
+   /* lp->mergedCommand.str needs updating only if its state or contents changed.
+    * Its content is based on the fields cmdline, comm, and exe. */
+   if (
+      mc->prevMergeSet == showMergedCommand &&
+      mc->prevPathSet == showProgramPath &&
+      mc->prevCommSet == searchCommInCmdline &&
+      mc->prevCmdlineSet == stripExeFromCmdline &&
+      !mc->cmdlineChanged &&
+      !mc->commChanged &&
+      !mc->exeChanged
+   ) {
       return;
    }
 
@@ -354,107 +361,138 @@ void LinuxProcess_makeCommandStr(Process* this) {
    const char *SEPARATOR = CRT_treeStr[TREE_STR_VERT];
    const int SEPARATOR_LEN = strlen(SEPARATOR);
 
-   if (lp->mergedCommand.cmdlineChanged || lp->mergedCommand.commChanged || lp->mergedCommand.exeChanged) {
-      free(lp->mergedCommand.str);
-      /* Also accomodate two field separators and a NUL */
-      lp->mergedCommand.str = xMalloc(lp->mergedCommand.maxLen + 2*SEPARATOR_LEN + 1);
+   /* Check for any changed fields since we last built this string */
+   if (mc->cmdlineChanged || mc->commChanged || mc->exeChanged) {
+      free(mc->str);
+      /* Accomodate the column text, two field separators and terminating NUL */
+      mc->str = xCalloc(1, mc->maxLen + 2*SEPARATOR_LEN + 1);
    }
 
-   lp->mergedCommand.prevMergeSet = showMergedCommand;
-   lp->mergedCommand.prevPathSet = showProgramPath;
-   lp->mergedCommand.prevCommSet = searchCommInCmdline;
-   lp->mergedCommand.prevCmdlineSet = stripExeFromCmdline;
-   lp->mergedCommand.cmdlineChanged = false;
-   lp->mergedCommand.commChanged = false;
-   lp->mergedCommand.exeChanged = false;
+   /* Preserve the settings used in this run */
+   mc->prevMergeSet = showMergedCommand;
+   mc->prevPathSet = showProgramPath;
+   mc->prevCommSet = searchCommInCmdline;
+   mc->prevCmdlineSet = stripExeFromCmdline;
 
-   char *str;
-   char *strStart = lp->mergedCommand.str;
+   /* Mark everything as unchanged */
+   mc->cmdlineChanged = false;
+   mc->commChanged = false;
+   mc->exeChanged = false;
+
+   /* Clear any separators */
+   mc->sep1 = 0;
+   mc->sep2 = 0;
+
+   /* Clear any highlighting locations */
+   mc->baseStart = 0;
+   mc->baseEnd = 0;
+   mc->commStart = 0;
+   mc->commEnd = 0;
+
    const char *cmdline = this->comm;
    const char *procExe = lp->procExe;
    const char *procComm = lp->procComm;
+
+   char *strStart = mc->str;
+   char *str = strStart;
+
    int cmdlineBasenameOffset = lp->procCmdlineBasenameOffset;
 
    if (!showMergedCommand || !procExe || !procComm) {    /* fall back to cmdline */
       if (showProgramPath) {
          (void) stpcpyWithNewlineConversion(strStart, cmdline);
-         lp->mergedCommand.baseStart = cmdlineBasenameOffset;
-         lp->mergedCommand.baseEnd = lp->procCmdlineBasenameEnd;
+         mc->baseStart = cmdlineBasenameOffset;
+         mc->baseEnd = lp->procCmdlineBasenameEnd;
       } else {
          (void) stpcpyWithNewlineConversion(strStart, cmdline + cmdlineBasenameOffset);
-         lp->mergedCommand.baseStart = 0;
-         lp->mergedCommand.baseEnd = lp->procCmdlineBasenameEnd - cmdlineBasenameOffset;
+         mc->baseStart = 0;
+         mc->baseEnd = lp->procCmdlineBasenameEnd - cmdlineBasenameOffset;
       }
-      lp->mergedCommand.commEnd = 0;
+
       return;
    }
 
-   int commStart = 0;
-   int commEnd = 0;
-   int exeBasenameOffset = lp->procExeBasenameOffset;
    int exeLen = lp->procExeLen;
-   int exeBaseLen = exeLen - exeBasenameOffset;
-   bool commInCmdline = false;
+   int exeBasenameOffset = lp->procExeBasenameOffset;
+   int exeBasenameLen = exeLen - exeBasenameOffset;
 
    /* Start with copying exe */
    if (showProgramPath) {
-      str = stpcpy(strStart, procExe);
-      lp->mergedCommand.baseStart = exeBasenameOffset;
-      lp->mergedCommand.baseEnd = exeLen;
+      str = stpcpy(str, procExe);
+      mc->baseStart = exeBasenameOffset;
+      mc->baseEnd = exeLen;
    } else {
-      str = stpcpy(strStart, procExe + exeBasenameOffset);
-      lp->mergedCommand.baseStart = 0;
-      lp->mergedCommand.baseEnd = exeBaseLen;
+      str = stpcpy(str, procExe + exeBasenameOffset);
+      mc->baseStart = 0;
+      mc->baseEnd = exeBasenameLen;
    }
+
+   mc->sep1 = 0;
+   mc->sep2 = 0;
+
+   int commStart = 0;
+   int commEnd = 0;
+   bool commInCmdline = false;
 
    /* Try to match procComm with procExe's basename: This is reliable (predictable) */
    if (strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0) {
-      commStart = lp->mergedCommand.baseStart;
-      commEnd = lp->mergedCommand.baseEnd;
+      commStart = mc->baseStart;
+      commEnd = mc->baseEnd;
    } else if (searchCommInCmdline) {
       /* commStart/commEnd will be adjusted later along with cmdline */
       commInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameOffset, &commStart, &commEnd);
    }
 
-   int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameOffset,
-                                                  procExe, exeBasenameOffset, exeBaseLen);
+   int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameOffset, procExe, exeBasenameOffset, exeBasenameLen);
+
    /* Note: commStart, commEnd are offsets into RichString. But the multibyte
     * separator (with size SEPARATOR_LEN) has size 1 in RichString. The offset
     * adjustments below reflect this. */
    if (commEnd) {
-      if (matchLen) {   /* strip the matched exe prefix */
-         lp->mergedCommand.unmatchedExe = false;
+      mc->unmatchedExe = !matchLen;
+
+      if (matchLen) {
+         /* strip the matched exe prefix */
          cmdline += matchLen;
+
          if (commInCmdline) {
             commStart += str - strStart - matchLen;
             commEnd += str - strStart - matchLen;
          }
-      } else {   /* cmdline will be a separate field */
-         lp->mergedCommand.unmatchedExe = true;
+      } else {
+         /* cmdline will be a separate field */
+         mc->sep1 = str - strStart;
          str = stpcpy(str, SEPARATOR);
+
          if (commInCmdline) {
             commStart += str - strStart - SEPARATOR_LEN + 1;
             commEnd += str - strStart - SEPARATOR_LEN + 1;
          }
       }
-      lp->mergedCommand.separateComm = false;  /* procComm merged */
+
+      mc->separateComm = false;  /* procComm merged */
    } else {
+      mc->sep1 = str - strStart;
       str = stpcpy(str, SEPARATOR);
-      commStart = str - strStart - SEPARATOR_LEN  + 1;
+
+      commStart = str - strStart - SEPARATOR_LEN + 1;
       str = stpcpy(str, procComm);
       commEnd = str - strStart - SEPARATOR_LEN + 1;   /* or commStart + strlen(procComm) */
+
+      mc->unmatchedExe = !matchLen;
+
       if (matchLen) {
-         lp->mergedCommand.unmatchedExe = false;
          if (stripExeFromCmdline) {
             cmdline += matchLen;
          }
-      } else {
-         lp->mergedCommand.unmatchedExe = true;
       }
+
       if (*cmdline) {
+         mc->sep2 = str - strStart - SEPARATOR_LEN + 1;
          str = stpcpy(str, SEPARATOR);
       }
-      lp->mergedCommand.separateComm = true;  /* procComm a separate field */
+
+      mc->separateComm = true;  /* procComm a separate field */
    }
 
    /* Display cmdline if it hasn't been consumed by procExe */
@@ -462,56 +500,58 @@ void LinuxProcess_makeCommandStr(Process* this) {
       (void) stpcpyWithNewlineConversion(str, cmdline);
    }
 
-   lp->mergedCommand.commStart = commStart;
-   lp->mergedCommand.commEnd = commEnd;
+   mc->commStart = commStart;
+   mc->commEnd = commEnd;
    return;
 }
 
 static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
    const LinuxProcess *lp = (const LinuxProcess *)this;
+   const LinuxProcessMergedCommand *mc = &lp->mergedCommand;
+
    int strStart = RichString_size(str);
+
    int baseStart = strStart + lp->mergedCommand.baseStart;
    int baseEnd = strStart + lp->mergedCommand.baseEnd;
+   int commStart = strStart + lp->mergedCommand.commStart;
+   int commEnd = strStart + lp->mergedCommand.commEnd;
+
+   int commAttr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
+
    bool highlightBaseName = this->settings->highlightBaseName;
 
    RichString_append(str, attr, lp->mergedCommand.str);
 
    if (lp->mergedCommand.commEnd) {
-      int commStart = strStart + lp->mergedCommand.commStart;
-      int commEnd = strStart + lp->mergedCommand.commEnd;
-      int commAttr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
       if (lp->mergedCommand.separateComm) {
          RichString_setAttrn(str, commAttr, commStart, commEnd - 1);
-         if (lp->mergedCommand.unmatchedExe) {
-            RichString_setAttrn(str, CRT_colors[FAILED_READ], commEnd, commEnd);
-         }
-      } else {
+      } else if (commStart == baseStart && highlightBaseName) {
          /* If it was matched with procExe's basename, make it bold if needed */
-         if (commStart == baseStart && highlightBaseName) {
-            if (commEnd > baseEnd) {
-               RichString_setAttrn(str, A_BOLD | baseAttr, commStart, baseEnd - 1);
-               baseStart = baseEnd;
-               RichString_setAttrn(str, commAttr, baseStart, commEnd - 1);
-            } else if (commEnd < baseEnd) {
-               RichString_setAttrn(str, A_BOLD | commAttr, commStart, commEnd - 1);
-               baseStart = commEnd;
-               // Remainder marked baseAttr at end of function
-            } else {
-               // Actually should be highlighted commAttr, but marked baseAttr to reduce visual noise
-               RichString_setAttrn(str, A_BOLD | baseAttr, commStart, commEnd - 1);
-               baseStart = commEnd;
-            }
+         if (commEnd > baseEnd) {
+            RichString_setAttrn(str, A_BOLD | baseAttr, baseStart, baseEnd - 1);
+            RichString_setAttrn(str, A_BOLD | commAttr, baseEnd, commEnd - 1);
+         } else if (commEnd < baseEnd) {
+            RichString_setAttrn(str, A_BOLD | commAttr, commStart, commEnd - 1);
+            RichString_setAttrn(str, A_BOLD | baseAttr, commEnd, baseEnd - 1);
          } else {
-            RichString_setAttrn(str, commAttr, commStart, commEnd - 1);
+            // Actually should be highlighted commAttr, but marked baseAttr to reduce visual noise
+            RichString_setAttrn(str, A_BOLD | baseAttr, commStart, commEnd - 1);
          }
-         if (lp->mergedCommand.unmatchedExe) {
-            RichString_setAttrn(str, CRT_colors[FAILED_READ], baseEnd, baseEnd);
-         }
+
+         baseStart = baseEnd;
+      } else {
+         RichString_setAttrn(str, commAttr, commStart, commEnd - 1);
       }
    }
+
    if (baseStart < baseEnd && highlightBaseName) {
       RichString_setAttrn(str, baseAttr, baseStart, baseEnd - 1);
    }
+
+   if (mc->sep1)
+      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep1, strStart + mc->sep1);
+   if (mc->sep2)
+      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep2, strStart + mc->sep2);
 }
 
 static void LinuxProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
