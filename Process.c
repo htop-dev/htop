@@ -301,7 +301,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
             }
          }
 
-          for (int i = 0; i < maxIndent - 1; i++) {
+         for (int i = 0; i < maxIndent - 1; i++) {
             int written, ret;
             if (indent & (1 << i)) {
                ret = snprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
