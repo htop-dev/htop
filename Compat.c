@@ -80,6 +80,20 @@ int Compat_fstatat(int dirfd,
 #endif
 }
 
+#ifndef HAVE_OPENAT
+
+int Compat_openat(const char* dirpath,
+                  const char* pathname,
+                  int flags) {
+
+   char path[4096];
+   xSnprintf(path, sizeof(path), "%s/%s", dirpath, pathname);
+
+   return open(path, flags);
+}
+
+#endif /* !HAVE_OPENAT */
+
 int Compat_readlinkat(int dirfd,
                       const char* dirpath,
                       const char* pathname,
