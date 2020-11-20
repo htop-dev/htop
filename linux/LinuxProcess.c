@@ -668,8 +668,8 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          /* 15 being (TASK_COMM_LEN - 1) */
          xSnprintf(buffer, n, "%-15.15s ", lp->procComm);
       } else {
-         attr = CRT_colors[FAILED_READ];
-         xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "?");
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "no perm");
       }
       break;
    }
@@ -678,8 +678,8 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
          xSnprintf(buffer, n, "%-15.15s ", lp->procExe + lp->procExeBasenameOffset);
       } else {
-         attr = CRT_colors[FAILED_READ];
-         xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "?");
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "no perm");
       }
       break;
    }
