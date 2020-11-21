@@ -31,9 +31,6 @@ static unsigned long int cached_write_diff = 0;
 static double cached_utilisation_diff = 0.0;
 
 static void DiskIOMeter_updateValues(Meter* this, char* buffer, int len) {
-   static unsigned long int cached_read_total = 0;
-   static unsigned long int cached_write_total = 0;
-   static unsigned long int cached_msTimeSpend_total = 0;
    static unsigned long long int cached_last_update = 0;
 
    struct timeval tv;
@@ -43,6 +40,10 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, int len) {
 
    /* update only every 500ms */
    if (passedTimeInMs > 500) {
+      static unsigned long int cached_read_total = 0;
+      static unsigned long int cached_write_total = 0;
+      static unsigned long int cached_msTimeSpend_total = 0;
+
       cached_last_update = timeInMilliSeconds;
 
       DiskIOData data;
