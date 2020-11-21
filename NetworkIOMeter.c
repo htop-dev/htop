@@ -18,16 +18,13 @@ static const int NetworkIOMeter_attributes[] = {
 };
 
 static bool hasData = false;
+
 static unsigned long int cached_rxb_diff = 0;
 static unsigned long int cached_rxp_diff = 0;
 static unsigned long int cached_txb_diff = 0;
 static unsigned long int cached_txp_diff = 0;
 
 static void NetworkIOMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, int len) {
-   static unsigned long int cached_rxb_total = 0;
-   static unsigned long int cached_rxp_total = 0;
-   static unsigned long int cached_txb_total = 0;
-   static unsigned long int cached_txp_total = 0;
    static unsigned long long int cached_last_update = 0;
 
    struct timeval tv;
@@ -37,6 +34,11 @@ static void NetworkIOMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, i
 
    /* update only every 500ms */
    if (passedTimeInMs > 500) {
+      static unsigned long int cached_rxb_total = 0;
+      static unsigned long int cached_rxp_total = 0;
+      static unsigned long int cached_txb_total = 0;
+      static unsigned long int cached_txp_total = 0;
+
       cached_last_update = timeInMilliSeconds;
 
       unsigned long int bytesReceived, packetsReceived, bytesTransmitted, packetsTransmitted;
