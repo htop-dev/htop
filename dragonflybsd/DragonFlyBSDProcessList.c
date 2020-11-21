@@ -442,7 +442,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          }
       }
 
-      proc->m_virt = kproc->kp_vm_map_size / 1024 / pageSizeKb;
+      proc->m_virt = kproc->kp_vm_map_size / pageSize;
       proc->m_resident = kproc->kp_vm_rssize;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_swtime + 5000) / 10000;
