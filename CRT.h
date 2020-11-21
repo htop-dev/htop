@@ -142,8 +142,6 @@ extern bool CRT_utf8;
 
 extern const char* const* CRT_treeStr;
 
-extern int CRT_delay;
-
 extern const int* CRT_colors;
 
 extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
@@ -175,7 +173,7 @@ static inline void CRT_restorePrivileges(void) { }
 
 #endif /* HAVE_SETUID_ENABLED */
 
-void CRT_init(int delay, int colorScheme, bool allowUnicode);
+void CRT_init(const int* delay, int colorScheme, bool allowUnicode);
 
 void CRT_done(void);
 

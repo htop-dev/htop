@@ -160,7 +160,7 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
       } else if (String_eq(option[0], "highlight_changes")) {
          this->highlightChanges = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_changes_delay_secs")) {
-         this->highlightDelaySecs = atoi(option[1]);
+         this->highlightDelaySecs = CLAMP(atoi(option[1]), 1, 24*60*60);
       } else if (String_eq(option[0], "find_comm_in_cmdline")) {
          this->findCommInCmdline = atoi(option[1]);
       } else if (String_eq(option[0], "strip_exe_from_cmdline")) {
@@ -194,7 +194,7 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
       } else if (String_eq(option[0], "account_guest_in_cpu_meter")) {
          this->accountGuestInCPUMeter = atoi(option[1]);
       } else if (String_eq(option[0], "delay")) {
-         this->delay = atoi(option[1]);
+         this->delay = CLAMP(atoi(option[1]), 1, 255);
       } else if (String_eq(option[0], "color_scheme")) {
          this->colorScheme = atoi(option[1]);
          if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) {

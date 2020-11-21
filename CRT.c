@@ -72,7 +72,7 @@ bool CRT_utf8 = false;
 
 const char* const* CRT_treeStr = CRT_treeStrAscii;
 
-int CRT_delay;
+static const int* CRT_delay;
 
 const char* CRT_degreeSign;
 
@@ -654,10 +654,10 @@ static struct sigaction old_sig_handler[32];
 
 // TODO: pass an instance of Settings instead.
 
-void CRT_init(int delay, int colorScheme, bool allowUnicode) {
+void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
    initscr();
    noecho();
-   CRT_delay = CLAMP(delay, 1, 255);
+   CRT_delay = delay;
    CRT_colors = CRT_colorSchemes[colorScheme];
    CRT_colorScheme = colorScheme;
 
@@ -666,7 +666,7 @@ void CRT_init(int delay, int colorScheme, bool allowUnicode) {
       CRT_colorSchemes[COLORSCHEME_BROKENGRAY][i] = color == (A_BOLD | ColorPairGrayBlack) ? ColorPair(White, Black) : color;
    }
 
-   halfdelay(CRT_delay);
+   halfdelay(*CRT_delay);
    nonl();
    intrflush(stdscr, false);
    keypad(stdscr, true);
@@ -774,7 +774,7 @@ int CRT_readKey() {
    cbreak();
    nodelay(stdscr, FALSE);
    int ret = getch();
-   halfdelay(CRT_delay);
+   halfdelay(*CRT_delay);
    return ret;
 }
 
@@ -785,7 +785,7 @@ void CRT_disableDelay() {
 }
 
 void CRT_enableDelay() {
-   halfdelay(CRT_delay);
+   halfdelay(*CRT_delay);
 }
 
 void CRT_setColors(int colorScheme) {

@@ -21,7 +21,6 @@ myhtopsources = \
 	AvailableMetersPanel.c \
 	BatteryMeter.c \
 	CategoriesPanel.c \
-	CheckItem.c \
 	ClockMeter.c \
 	ColorsPanel.c \
 	ColumnsPanel.c \
@@ -50,6 +49,7 @@ myhtopsources = \
 	NetworkIOMeter.c \
 	Object.c \
 	OpenFilesScreen.c \
+	OptionItem.c \
 	Panel.c \
 	Process.c \
 	ProcessList.c \
@@ -76,7 +76,6 @@ myhtopheaders = \
 	CPUMeter.h \
 	CRT.h \
 	CategoriesPanel.h \
-	CheckItem.h \
 	ClockMeter.h \
 	ColorsPanel.h \
 	ColumnsPanel.h \
@@ -103,6 +102,7 @@ myhtopheaders = \
 	NetworkIOMeter.h \
 	Object.h \
 	OpenFilesScreen.h \
+	OptionItem.h \
 	Panel.h \
 	Process.h \
 	ProcessList.h \

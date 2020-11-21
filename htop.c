@@ -304,7 +304,7 @@ int main(int argc, char** argv) {
       settings->direction = 1;
    }
 
-   CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
+   CRT_init(&(settings->delay), settings->colorScheme, flags.allowUnicode);
 
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
