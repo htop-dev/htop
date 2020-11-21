@@ -271,13 +271,13 @@ target:
 	echo $(htop_SOURCES)
 
 profile:
-	$(MAKE) all CFLAGS="-pg" AM_CPPFLAGS="-pg -O2 -DNDEBUG"
+	$(MAKE) all AM_CPPFLAGS="-pg -O2 -DNDEBUG"
 
 debug:
-	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-ggdb -DDEBUG"
+	$(MAKE) all AM_CPPFLAGS="-ggdb -DDEBUG"
 
 coverage:
-	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" LDFLAGS="-lgcov"
+	$(MAKE) all AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" AM_LDFLAGS="-lgcov"
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS
