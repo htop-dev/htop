@@ -355,39 +355,45 @@ bool Panel_onKey(Panel* this, int key) {
          this->needsRedraw = true;
       }
       break;
+
    case KEY_RIGHT:
    case KEY_CTRL('F'):
       this->scrollH += CRT_scrollHAmount;
       this->needsRedraw = true;
       break;
+
    case KEY_PPAGE:
       this->selected -= (this->h - 1);
       this->scrollV = CLAMP_INDEX(this->scrollV, -(this->h - 1), 0, size - this->h);
       this->needsRedraw = true;
       break;
+
    case KEY_NPAGE:
       this->selected += (this->h - 1);
       this->scrollV = CLAMP_INDEX(this->scrollV, +(this->h - 1), 0, size - this->h);
       this->needsRedraw = true;
       break;
+
    case KEY_WHEELUP:
       this->selected -= CRT_scrollWheelVAmount;
       this->scrollV = CLAMP_INDEX(this->scrollV, -CRT_scrollWheelVAmount, 0, size - this->h);
       this->needsRedraw = true;
       break;
+
    case KEY_WHEELDOWN:
-   {
       this->selected += CRT_scrollWheelVAmount;
       this->scrollV = CLAMP_INDEX(this->scrollV, +CRT_scrollWheelVAmount, 0, size - this->h);
       this->needsRedraw = true;
       break;
-   }
+
    case KEY_HOME:
       this->selected = 0;
       break;
+
    case KEY_END:
       this->selected = size - 1;
       break;
+
    case KEY_CTRL('A'):
    case '^':
       this->scrollH = 0;
@@ -412,12 +418,14 @@ bool Panel_onKey(Panel* this, int key) {
       this->selected = size - 1;
       this->needsRedraw = true;
    }
+
    return true;
 }
 
 
 HandlerResult Panel_selectByTyping(Panel* this, int ch) {
    int size = Panel_size(this);
+
    if (!this->eventHandlerState)
       this->eventHandlerState = xCalloc(100, sizeof(char));
    char* buffer = this->eventHandlerState;
@@ -438,17 +446,21 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
                return HANDLED;
             }
          }
+
          // if current word did not match,
          // retry considering the character the start of a new word.
          buffer[0] = ch;
          buffer[1] = '\0';
       }
+
       return HANDLED;
    } else if (ch != ERR) {
       buffer[0] = '\0';
    }
+
    if (ch == 13) {
       return BREAK_LOOP;
    }
+
    return IGNORED;
 }
