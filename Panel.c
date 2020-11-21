@@ -330,22 +330,20 @@ bool Panel_onKey(Panel* this, int key) {
    switch (key) {
    case KEY_DOWN:
    case KEY_CTRL('N'):
-      this->selected++;
-      break;
-   case KEY_UP:
-   case KEY_CTRL('P'):
-      this->selected--;
-      break;
    #ifdef KEY_C_DOWN
    case KEY_C_DOWN:
+   #endif
       this->selected++;
       break;
-   #endif
+
+   case KEY_UP:
+   case KEY_CTRL('P'):
    #ifdef KEY_C_UP
    case KEY_C_UP:
+   #endif
       this->selected--;
       break;
-   #endif
+
    case KEY_LEFT:
    case KEY_CTRL('B'):
       if (this->scrollH > 0) {
