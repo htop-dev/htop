@@ -804,7 +804,6 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
    struct nlattr* nlattr;
    struct taskstats stats;
    int rem;
-   unsigned long long int timeDelta;
    LinuxProcess* lp = (LinuxProcess*) linuxProcess;
 
    nlhdr = nlmsg_hdr(nlmsg);
@@ -817,7 +816,7 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
       memcpy(&stats, nla_data(nla_next(nla_data(nlattr), &rem)), sizeof(stats));
       assert(lp->super.pid == (pid_t)stats.ac_pid);
 
-      timeDelta = stats.ac_etime * 1000 - lp->delay_read_time;
+      unsigned long long int timeDelta = stats.ac_etime * 1000 - lp->delay_read_time;
       #define BOUNDS(x) (isnan(x) ? 0.0 : ((x) > 100) ? 100.0 : (x))
       #define DELTAPERC(x,y) BOUNDS((float) ((x) - (y)) / timeDelta * 100)
       lp->cpu_delay_percent = DELTAPERC(stats.cpu_delay_total, lp->cpu_delay_total);

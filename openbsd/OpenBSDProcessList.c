@@ -136,7 +136,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
 char* OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
    char *s, **arg;
-   size_t len = 0, n;
+   size_t len = 0;
    int i;
 
    /*
@@ -160,7 +160,7 @@ char* OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    *s = '\0';
 
    for (i = 0; arg[i] != NULL; i++) {
-      n = strlcat(s, arg[i], len);
+      size_t n = strlcat(s, arg[i], len);
       if (i == 0) {
          /* TODO: rename all basenameEnd to basenameLen, make size_t */
          *basenameEnd = MINIMUM(n, len - 1);
@@ -188,23 +188,18 @@ static inline void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    const Settings* settings = this->super.settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
-   struct kinfo_proc* kproc;
-   bool preExisting;
-   Process* proc;
-   OpenBSDProcess* fp;
    int count = 0;
-   int i;
 
    // use KERN_PROC_KTHREAD to also include kernel threads
    struct kinfo_proc* kprocs = kvm_getprocs(this->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
    //struct kinfo_proc* kprocs = getprocs(KERN_PROC_ALL, 0, &count);
 
-   for (i = 0; i < count; i++) {
-      kproc = &kprocs[i];
+   for (int i = 0; i < count; i++) {
+      struct kinfo_proc* kproc = &kprocs[i];
 
-      preExisting = false;
-      proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, OpenBSDProcess_new);
-      fp = (OpenBSDProcess*) proc;
+      bool preExisting = false;
+      Process* proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, OpenBSDProcess_new);
+      OpenBSDProcess* fp = (OpenBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc))
                   || (hideUserlandThreads && Process_isUserlandThread(proc)));

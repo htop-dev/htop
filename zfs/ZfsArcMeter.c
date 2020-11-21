@@ -47,10 +47,10 @@ static void ZfsArcMeter_updateValues(Meter* this, char* buffer, int size) {
 }
 
 static void ZfsArcMeter_display(const Object* cast, RichString* out) {
-   char buffer[50];
    const Meter* this = (const Meter*)cast;
 
    if (this->values[5] > 0) {
+      char buffer[50];
       Meter_humanUnit(buffer, this->total, 50);
       RichString_append(out, CRT_colors[METER_VALUE], buffer);
       Meter_humanUnit(buffer, this->values[5], 50);
