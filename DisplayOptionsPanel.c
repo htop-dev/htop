@@ -84,9 +84,9 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show custom thread names"), &(settings->showThreadNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show program path"), &(settings->showProgramPath)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight program \"basename\""), &(settings->highlightBaseName)));
-   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Try to find comm in cmdline, in merged Command"), &(settings->findCommInCmdline)));
-   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Try to strip exe from cmdline, in merged Command"), &(settings->stripExeFromCmdline)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Merge exe, comm and cmdline in Command"), &(settings->showMergedCommand)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("- Try to find comm in cmdline (when Command is merged)"), &(settings->findCommInCmdline)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("- Try to strip exe from cmdline (when Command is merged)"), &(settings->stripExeFromCmdline)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight large numbers in memory counters"), &(settings->highlightMegabytes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Leave a margin around header"), &(settings->headerMargin)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->detailedCPUTime)));
