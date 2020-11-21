@@ -74,7 +74,6 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    double intrbuf = 0;
    double krnlbuf = 0;
    double userbuf = 0;
-   uint64_t totaltime = 0;
    int arrskip = 0;
 
    assert(cpus > 0);
@@ -104,10 +103,12 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
            && (krnltime != NULL) && (usertime != NULL) );
 
       CPUData* cpuData = &(spl->cpus[i + arrskip]);
-      totaltime = (idletime->value.ui64 - cpuData->lidle)
-                + (intrtime->value.ui64 - cpuData->lintr)
-                + (krnltime->value.ui64 - cpuData->lkrnl)
-                + (usertime->value.ui64 - cpuData->luser);
+
+      uint64_t totaltime = (idletime->value.ui64 - cpuData->lidle)
+                         + (intrtime->value.ui64 - cpuData->lintr)
+                         + (krnltime->value.ui64 - cpuData->lkrnl)
+                         + (usertime->value.ui64 - cpuData->luser);
+
       // Calculate percentages of deltas since last reading
       cpuData->userPercent      = ((usertime->value.ui64 - cpuData->luser) / (double)totaltime) * 100.0;
       cpuData->nicePercent      = (double)0.0; // Not implemented on Solaris
