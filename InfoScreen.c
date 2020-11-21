@@ -144,8 +144,8 @@ void InfoScreen_run(InfoScreen* this) {
          clear();
          InfoScreen_draw(this);
          break;
-      case 'q':
       case 27:
+      case 'q':
       case KEY_F(10):
          looping = false;
          break;

@@ -296,9 +296,9 @@ tryRight:
          }
 
          break;
-      case KEY_F(10):
-      case 'q':
       case 27:
+      case 'q':
+      case KEY_F(10):
          quit = true;
          continue;
       default:
