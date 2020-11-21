@@ -327,6 +327,10 @@ bool Panel_onKey(Panel* this, int key) {
    assert (this != NULL);
 
    int size = Vector_size(this->items);
+
+   #define CLAMP_INDEX(var, delta, min, max) \
+      CLAMP((var) + (delta), (min), MAXIMUM(0, (max)))
+
    switch (key) {
    case KEY_DOWN:
    case KEY_CTRL('N'):
@@ -358,27 +362,23 @@ bool Panel_onKey(Panel* this, int key) {
       break;
    case KEY_PPAGE:
       this->selected -= (this->h - 1);
-      this->scrollV = MAXIMUM(0, this->scrollV - this->h + 1);
+      this->scrollV = CLAMP_INDEX(this->scrollV, -(this->h - 1), 0, size - this->h);
       this->needsRedraw = true;
       break;
    case KEY_NPAGE:
       this->selected += (this->h - 1);
-      this->scrollV = MAXIMUM(0, MINIMUM(Vector_size(this->items) - this->h,
-                                 this->scrollV + this->h - 1));
+      this->scrollV = CLAMP_INDEX(this->scrollV, +(this->h - 1), 0, size - this->h);
       this->needsRedraw = true;
       break;
    case KEY_WHEELUP:
       this->selected -= CRT_scrollWheelVAmount;
-      this->scrollV -= CRT_scrollWheelVAmount;
+      this->scrollV = CLAMP_INDEX(this->scrollV, -CRT_scrollWheelVAmount, 0, size - this->h);
       this->needsRedraw = true;
       break;
    case KEY_WHEELDOWN:
    {
       this->selected += CRT_scrollWheelVAmount;
-      this->scrollV += CRT_scrollWheelVAmount;
-      if (this->scrollV > Vector_size(this->items) - this->h) {
-         this->scrollV = Vector_size(this->items) - this->h;
-      }
+      this->scrollV = CLAMP_INDEX(this->scrollV, +CRT_scrollWheelVAmount, 0, size - this->h);
       this->needsRedraw = true;
       break;
    }
@@ -401,6 +401,8 @@ bool Panel_onKey(Panel* this, int key) {
    default:
       return false;
    }
+
+   #undef CLAMP_INDEX
 
    // ensure selection within bounds
    if (this->selected < 0 || size == 0) {
