@@ -95,7 +95,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       }
       default:
       {
-         if (0 < ch && ch < 255 && isalpha((unsigned char)ch))
+         if (0 < ch && ch < 255 && isgraph((unsigned char)ch))
             result = Panel_selectByTyping(super, ch);
          if (result == BREAK_LOOP)
             result = IGNORED;
