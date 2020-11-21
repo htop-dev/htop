@@ -432,10 +432,21 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
 
    if (0 < ch && ch < 255 && isalnum((unsigned char)ch)) {
       int len = strlen(buffer);
+      if (!len) {
+         if ('/' == ch) {
+            ch = '\001';
+         } else if ('q' == ch) {
+            return BREAK_LOOP;
+         }
+      } else if (1 == len && '\001' == buffer[0]) {
+         len--;
+      }
+
       if (len < 99) {
          buffer[len] = ch;
          buffer[len+1] = '\0';
       }
+
       for (int try = 0; try < 2; try++) {
          len = strlen(buffer);
          for (int i = 0; i < size; i++) {
