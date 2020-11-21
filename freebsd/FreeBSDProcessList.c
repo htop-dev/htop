@@ -424,12 +424,12 @@ static char* FreeBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_pr
 }
 
 static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
-   int    jid;
-   struct iovec jiov[6];
-   char*  jname;
+   char*  jname = NULL;
    char   jnamebuf[MAXHOSTNAMELEN];
 
    if (kproc->ki_jid != 0 ) {
+      struct iovec jiov[6];
+
       memset(jnamebuf, 0, sizeof(jnamebuf));
 IGNORE_WCASTQUAL_BEGIN
       *(const void**)&jiov[0].iov_base = "jid";
@@ -446,26 +446,19 @@ IGNORE_WCASTQUAL_BEGIN
       jiov[5].iov_len = JAIL_ERRMSGLEN;
 IGNORE_WCASTQUAL_END
       jail_errmsg[0] = 0;
-      jid = jail_get(jiov, 6, 0);
+
+      int jid = jail_get(jiov, 6, 0);
       if (jid < 0) {
          if (!jail_errmsg[0]) {
             xSnprintf(jail_errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
          }
-         return NULL;
       } else if (jid == kproc->ki_jid) {
          jname = xStrdup(jnamebuf);
-         if (jname == NULL) {
-            strerror_r(errno, jail_errmsg, JAIL_ERRMSGLEN);
-         }
-         return jname;
-      } else {
-         return NULL;
       }
    } else {
-      jnamebuf[0] = '-';
-      jnamebuf[1] = '\0';
-      jname = xStrdup(jnamebuf);
+      jname = xStrdup("-");
    }
+
    return jname;
 }
 
