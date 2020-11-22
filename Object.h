@@ -8,6 +8,10 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
+#include <assert.h>
+
 #include "RichString.h"
 #include "XUtils.h" // IWYU pragma: keep
 
@@ -26,10 +30,10 @@ typedef void(*Object_Delete)(Object*);
 #define Object_getClass(obj_)         ((const Object*)(obj_))->klass
 #define Object_setClass(obj_, class_) (((Object*)(obj_))->klass = (const ObjectClass*) (class_))
 
-#define Object_delete(obj_)           Object_getClass(obj_)->delete((Object*)(obj_))
+#define Object_delete(obj_)           (assert(Object_getClass(obj_)->delete), Object_getClass(obj_)->delete((Object*)(obj_)))
 #define Object_displayFn(obj_)        Object_getClass(obj_)->display
-#define Object_display(obj_, str_)    Object_getClass(obj_)->display((const Object*)(obj_), str_)
-#define Object_compare(obj_, other_)  Object_getClass(obj_)->compare((const void*)(obj_), other_)
+#define Object_display(obj_, str_)    (assert(Object_getClass(obj_)->display), Object_getClass(obj_)->display((const Object*)(obj_), str_))
+#define Object_compare(obj_, other_)  (assert(Object_getClass(obj_)->compare), Object_getClass(obj_)->compare((const void*)(obj_), other_))
 
 #define Class(class_)                 ((const ObjectClass*)(&(class_ ## _class)))
 
