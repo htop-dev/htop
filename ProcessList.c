@@ -241,6 +241,10 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
       }
 
       Hashtable_put(this->draftingTreeSet, proc->tree_index, proc);
+
+      // It's not strictly necessary to do this, but doing so anyways
+      // allows for checking the correctness of the inner workings.
+      Hashtable_remove(this->displayTreeSet, newLeftBound);
    }
 
    Vector_delete(layer);
@@ -249,15 +253,20 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
 static void ProcessList_updateTreeSet(ProcessList* this) {
    unsigned int index = 0;
    unsigned int tree_index = 1;
-   int vsize = Vector_size(this->processes);
 
-   ProcessList_updateTreeSetLayer(this, 0, vsize, 0, 0, vsize*2+1, &index, &tree_index, -1);
-   assert((int)Hashtable_count(this->draftingTreeSet) == vsize);
+   const int vsize = Vector_size(this->processes);
 
-   for(int i = 0; i < vsize; i++) {
-      Process* proc = (Process*)Hashtable_remove(this->draftingTreeSet, i);
-      Hashtable_put(this->displayTreeSet, i, proc);
-   }
+   assert(Hashtable_count(this->draftingTreeSet) == 0);
+   assert((int)Hashtable_count(this->displayTreeSet) == vsize);
+
+   ProcessList_updateTreeSetLayer(this, 0, vsize, 0, 0, vsize * 2 + 1, &index, &tree_index, -1);
+
+   Hashtable* tmp = this->draftingTreeSet;
+   this->draftingTreeSet = this->displayTreeSet;
+   this->displayTreeSet = tmp;
+
+   assert(Hashtable_count(this->draftingTreeSet) == 0);
+   assert((int)Hashtable_count(this->displayTreeSet) == vsize);
 }
 
 static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show, int* node_counter, int* node_index) {
@@ -529,6 +538,12 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
          p->updated = false;
       }
    }
+
+   // Clear out the hashtable to avoid any left-over processes from previous build
+   //
+   // The sorting algorithm relies on the fact that
+   // len(this->displayTreeSet) == len(this->processes)
+   Hashtable_clear(this->displayTreeSet);
 
    ProcessList_buildTree(this);
 }
