@@ -78,7 +78,7 @@ Symbol Exports
 
 Exports of symbols should be used sparingly.
 Thus unless a function you write is intended to become public API of a module you should mark it as `static`.
-If a function should be public API an appropriate declaration for that function has to be placed in the accompaying header file.
+If a function should be public API an appropriate declaration for that function has to be placed in the accompanying header file.
 
 Please avoid function-like macros, in particular when exporting them in a header file.
 They have several downsides (re-evaluation of arguments, syntactic escapes, weak typing) for which usually a better alternative like an actual function exists.
@@ -107,7 +107,7 @@ Styling the code
 ----------------
 
 Now for the style details that can mostly be automated: Indentation, spacing and bracing.
-While there is no definitve code style we use, a set of rules loosely enforced has evolved.
+While there is no definitive code style we use, a set of rules loosely enforced has evolved.
 
 Indentation in the code is done by three (3) spaces. No tabs are used. Ever.
 
@@ -128,41 +128,80 @@ if (very_long_condition &&
 }
 ```
 
-While braces around single code statements are strongly encouraged, they are usually left out for single statements when only redirecting code flow:
+Braces around simple single code statements (return, break, continue, goto, trivial assignments) are usually left out.
 
 ```c
-if (termination condition)
+if (answer)
    return 42;
 ```
 
-Control flow statements and the instruction making up their body should not be put on a single line, i.e. after the condition of an if statement a new line should be inserted and the body indented accordingly.
-When an if statement uses more than just the true branch it should use braces for all statements that follow:
+If it helps readability (with several unrelated if statements in a row) or to avoid dangling-else situations braces can be added.
+
+Control flow statements and the instruction making up their body should not be put on a single line,
+i.e. after the condition of an if statement a new line should be inserted and the body indented accordingly.
 
 ```c
-if (condition1) {
-   // Some code
-} else if (condition2) {
-   // Some more code
-} else {
-   // something else
-}
+if (answer)
+   return 42;
+else if (again)
+   continue;
+else
+   goto bowl_of_petunias;
 ```
 
-While this code style isn't fully consistent in the existing code base it is strongly recommended that new code follows these rules.
+When the statements that form control flow constructs are complex (e.g. more than just a simple assignment or jump) or need explanatory comments you should use braces.
+If any block of such a statement uses braces then all blocks of that statement must have braces too.
+
+```c
+if ((fd = open(filename, O_RDONLY)) >= 0 &&
+   (amtRead = read(buffer, sizeof(buffer))) > 0) {
+   // Parse the information further ...
+   metric = handleBufferContent(buffer, amtRead);
+} else {
+   metric = -1;
+}
+
+if (fd >= 0)
+   close(fd);
+```
+
+While the existing code base isn't fully consistent with this code style isn't fully consistent yet it is strongly recommended that new code follows these rules.
 Adapting surrounding code near places you need to touch is encouraged.
 Try to separate such changes into a single, clean-up only commit to reduce noise while reviewing your changes.
+
+When writing your code consistency with the surrounding codebase is favoured.
+
+Don't shy away from leaving (sinlge) blank lines to separate different groups of related statements.
+They can be a great asset to structure the flow of a method.
+
+```c
+   int stuff = 0;
+
+   // If asked for gives only half the answer ...
+   if (param)
+      stuff = 21;
+
+   // Compute the answer
+   stuff %= 2;
+   stuff *= 4;
+   stuff *= 5;
+   stuff += !!stuff;
+   stuff *= 2;
+
+   return stuff;
+```
 
 If you want to automate formatting your code, the following command gives you a good baseline of how it should look:
 
 ```bash
-astyle -r -j -xb -s3 -p -xg -c -k1 -W1 \*.c \*.h
+astyle -r -xb -s3 -p -xg -c -k1 -W1 \*.c \*.h
 ```
 
 Working with System APIs
 ------------------------
 
 Please try to be considerate when using modern platform features.
-While they usually provide quite a performance gain or make your life easier, it is benefitial if `htop` runs on rather ancient systems.
+While they usually provide quite a performance gain or make your life easier, it is beneficial if `htop` runs on rather ancient systems.
 Thus when you want to use such features you should try to have an alternative available that works as a fallback.
 
 An example for this are functions like `fstatat` on Linux that extend the kernel API on modern systems.
