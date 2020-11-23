@@ -1051,12 +1051,22 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
             ;
          lp->procExeBasenameOffset = amtRead + 1;
          lp->mergedCommand.exeChanged = true;
+
+         const char* deletedMarker = " (deleted)";
+         if (strlen(lp->procExe) > strlen(deletedMarker)) {
+            lp->procExeDeleted = String_eq(lp->procExe + strlen(lp->procExe) - strlen(deletedMarker), deletedMarker);
+
+            if (lp->procExeDeleted && strlen(lp->procExe) - strlen(deletedMarker) == 1 && lp->procExe[0] == '/') {
+               lp->procExeBasenameOffset = 0;
+            }
+         }
       }
    } else if (lp->procExe) {
       free(lp->procExe);
       lp->procExe = NULL;
       lp->procExeLen = 0;
       lp->procExeBasenameOffset = 0;
+      lp->procExeDeleted = false;
       lp->mergedCommand.exeChanged = true;
    }
 

@@ -399,14 +399,31 @@ void LinuxProcess_makeCommandStr(Process* this) {
    int cmdlineBasenameOffset = lp->procCmdlineBasenameOffset;
 
    if (!showMergedCommand || !procExe || !procComm) {    /* fall back to cmdline */
+      if (showMergedCommand && !procExe && procComm && strlen(procComm)) {   /* Prefix column with comm */
+         if (strncmp(cmdline + cmdlineBasenameOffset, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
+            mc->commStart = 0;
+            mc->commEnd = strlen(procComm);
+
+            str = stpcpy(str, procComm);
+
+            mc->sep1 = str - strStart;
+            str = stpcpy(str, SEPARATOR);
+         }
+      }
+
       if (showProgramPath) {
-         (void) stpcpyWithNewlineConversion(strStart, cmdline);
+         (void) stpcpyWithNewlineConversion(str, cmdline);
          mc->baseStart = cmdlineBasenameOffset;
          mc->baseEnd = lp->procCmdlineBasenameEnd;
       } else {
-         (void) stpcpyWithNewlineConversion(strStart, cmdline + cmdlineBasenameOffset);
+         (void) stpcpyWithNewlineConversion(str, cmdline + cmdlineBasenameOffset);
          mc->baseStart = 0;
          mc->baseEnd = lp->procCmdlineBasenameEnd - cmdlineBasenameOffset;
+      }
+
+      if (mc->sep1) {
+         mc->baseStart += str - strStart - SEPARATOR_LEN + 1;
+         mc->baseEnd += str - strStart - SEPARATOR_LEN + 1;
       }
 
       return;
@@ -519,6 +536,9 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAtt
    int commAttr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
 
    bool highlightBaseName = this->settings->highlightBaseName;
+
+   if(lp->procExeDeleted)
+      baseAttr = CRT_colors[FAILED_READ];
 
    RichString_append(str, attr, lp->mergedCommand.str);
 
@@ -716,6 +736,8 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    case PROC_EXE: {
       if (lp->procExe) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
+         if (lp->procExeDeleted)
+            attr = CRT_colors[FAILED_READ];
          xSnprintf(buffer, n, "%-15.15s ", lp->procExe + lp->procExeBasenameOffset);
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
