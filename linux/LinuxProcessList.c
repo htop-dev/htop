@@ -1047,8 +1047,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          continue;
       }
 
-      proc->show = true;
-
       #ifdef HAVE_TASKSTATS
       if (settings->flags & PROCESS_FLAG_IO)
          LinuxProcessList_readIoFile(lp, dirname, name, now);
@@ -1166,6 +1164,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
             pl->userlandThreads++;
          }
       }
+
+      /* Set at the end when we know if a new entry is a thread */
+      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       pl->totalTasks++;
       if (proc->state == 'R')
