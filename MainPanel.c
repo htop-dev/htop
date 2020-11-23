@@ -57,6 +57,9 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
 
    Htop_Reaction reaction = HTOP_OK;
 
+   if (ch != ERR)
+      this->state->hideProcessSelection = false;
+
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
       const ProcessList* pl = this->state->pl;
@@ -83,6 +86,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       }
       result = HANDLED;
    } else if (ch == 27) {
+      this->state->hideProcessSelection = true;
       return HANDLED;
    } else if (ch != ERR && ch > 0 && ch < KEY_MAX && this->keys[ch]) {
       reaction |= (this->keys[ch])(this->state);

@@ -320,6 +320,7 @@ int main(int argc, char** argv) {
       .panel = (Panel*) panel,
       .header = header,
       .pauseProcessUpdate = false,
+      .hideProcessSelection = false,
    };
 
    MainPanel_setState(panel, &state);

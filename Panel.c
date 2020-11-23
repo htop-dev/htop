@@ -217,7 +217,7 @@ void Panel_splice(Panel* this, Vector* from) {
    this->needsRedraw = true;
 }
 
-void Panel_draw(Panel* this, bool focus) {
+void Panel_draw(Panel* this, bool focus, bool highlightSelected) {
    assert (this != NULL);
 
    int size = Vector_size(this->items);
@@ -273,7 +273,7 @@ void Panel_draw(Panel* this, bool focus) {
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
          int amt = MINIMUM(itemLen - scrollH, this->w);
-         if (i == this->selected) {
+         if (highlightSelected && i == this->selected) {
             item.highlightAttr = selectionColor;
          }
          if (item.highlightAttr) {
