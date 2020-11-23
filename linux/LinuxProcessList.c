@@ -292,18 +292,16 @@ void ProcessList_delete(ProcessList* pl) {
 }
 
 static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
-   static double jiffy = NAN;
-   if (isnan(jiffy)) {
+   static long jiffy = -1;
+   if (jiffy == -1) {
       errno = 0;
-      long sc_jiffy = sysconf(_SC_CLK_TCK);
-      if (errno || -1 == sc_jiffy) {
-         jiffy = NAN;
+      jiffy = sysconf(_SC_CLK_TCK);
+      if (errno || -1 == jiffy) {
+         jiffy = -1;
          return t; // Assume 100Hz clock
       }
-      jiffy = sc_jiffy;
    }
-   double jiffytime = 1.0 / jiffy;
-   return t * jiffytime * 100;
+   return t * 100 / jiffy;
 }
 
 static bool LinuxProcessList_readStatFile(Process* process, const char* dirname, const char* name, char* command, int* commLen) {
