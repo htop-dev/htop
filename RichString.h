@@ -50,6 +50,8 @@ void RichString_prune(RichString* this);
 
 void RichString_setAttr(RichString* this, int attrs);
 
+void RichString_appendChr(RichString* this, char c, int count);
+
 void RichString_append(RichString* this, int attrs, const char* data);
 
 void RichString_appendn(RichString* this, int attrs, const char* data, int len);
