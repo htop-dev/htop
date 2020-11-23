@@ -25,13 +25,17 @@ extern ProcessFieldData Process_fields[];
 
 extern const MeterClass* const Platform_meterTypes[];
 
-void Platform_setBindings(Htop_Action* keys);
-
 extern int Platform_numberOfFields;
 
 extern char Process_pidFormat[20];
 
 extern ProcessPidColumn Process_pidColumns[];
+
+void Platform_init(void);
+
+void Platform_done(void);
+
+void Platform_setBindings(Htop_Action* keys);
 
 int Platform_getUptime(void);
 

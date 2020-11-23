@@ -34,18 +34,12 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 #include "XUtils.h"
 
-
-#ifdef HAVE_LIBSENSORS
-#include <sensors/sensors.h>
-#endif
-
-
 static void printVersionFlag(void) {
-   fputs("htop " VERSION "\n", stdout);
+   fputs(PACKAGE " " VERSION "\n", stdout);
 }
 
 static void printHelpFlag(void) {
-   fputs("htop " VERSION "\n"
+   fputs(PACKAGE " " VERSION "\n"
          COPYRIGHT "\n"
          "Released under the GNU GPLv2.\n\n"
          "-C --no-color                   Use a monochrome color scheme\n"
@@ -62,8 +56,8 @@ static void printHelpFlag(void) {
          "-V --version                    Print version info\n"
          "\n"
          "Long options may be passed with a single dash.\n\n"
-         "Press F1 inside htop for online help.\n"
-         "See 'man htop' for more information.\n",
+         "Press F1 inside " PACKAGE " for online help.\n"
+         "See 'man " PACKAGE "' for more information.\n",
          stdout);
 }
 
@@ -269,22 +263,16 @@ static void setCommFilter(State* state, char** commFilter) {
 int main(int argc, char** argv) {
 
    char *lc_ctype = getenv("LC_CTYPE");
-   if (lc_ctype != NULL) {
+   if (lc_ctype != NULL)
       setlocale(LC_CTYPE, lc_ctype);
-   } else if ((lc_ctype = getenv("LC_ALL"))) {
+   else if ((lc_ctype = getenv("LC_ALL")))
       setlocale(LC_CTYPE, lc_ctype);
-   } else {
+   else
       setlocale(LC_CTYPE, "");
-   }
 
-   CommandLineSettings flags = parseArguments(argc, argv); // may exit()
+   CommandLineSettings flags = parseArguments(argc, argv);
 
-#ifdef HTOP_LINUX
-   if (access(PROCDIR, R_OK) != 0) {
-      fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
-      exit(1);
-   }
-#endif
+   Platform_init();
 
    Process_setupColumnWidths();
 
@@ -298,30 +286,20 @@ int main(int argc, char** argv) {
 
    Header_populateFromSettings(header);
 
-   if (flags.delay != -1) {
+   if (flags.delay != -1)
       settings->delay = flags.delay;
-   }
-   if (!flags.useColors) {
+   if (!flags.useColors)
       settings->colorScheme = COLORSCHEME_MONOCHROME;
-   }
-   if (!flags.enableMouse) {
+   if (!flags.enableMouse)
       settings->enableMouse = false;
-   }
-   if (flags.treeView) {
+   if (flags.treeView)
       settings->treeView = true;
-   }
-   if (flags.highlightChanges) {
+   if (flags.highlightChanges)
       settings->highlightChanges = true;
-   }
-   if (flags.highlightDelaySecs != -1) {
+   if (flags.highlightDelaySecs != -1)
       settings->highlightDelaySecs = flags.highlightDelaySecs;
-   }
 
    CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
-
-#ifdef HAVE_LIBSENSORS
-   sensors_init(NULL);
-#endif
 
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
@@ -345,9 +323,8 @@ int main(int argc, char** argv) {
    };
 
    MainPanel_setState(panel, &state);
-   if (flags.commFilter) {
+   if (flags.commFilter)
       setCommFilter(&state, &(flags.commFilter));
-   }
 
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, &state, true);
    ScreenManager_add(scr, (Panel*) panel, -1);
@@ -363,9 +340,7 @@ int main(int argc, char** argv) {
    attroff(CRT_colors[RESET_COLOR]);
    refresh();
 
-#ifdef HAVE_LIBSENSORS
-   sensors_cleanup();
-#endif
+   Platform_done();
 
    CRT_done();
    if (settings->changed)
@@ -379,8 +354,8 @@ int main(int argc, char** argv) {
    UsersTable_delete(ut);
    Settings_delete(settings);
 
-   if(flags.pidMatchList) {
+   if (flags.pidMatchList)
       Hashtable_delete(flags.pidMatchList);
-   }
+
    return 0;
 }

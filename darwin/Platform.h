@@ -19,20 +19,23 @@ in the source distribution for its full text.
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
 
+extern ProcessFieldData Process_fields[];
 
 extern ProcessField Platform_defaultFields[];
+
+extern int Platform_numberOfFields;
 
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
 
-extern ProcessFieldData Process_fields[];
-
 extern const MeterClass* const Platform_meterTypes[];
 
-void Platform_setBindings(Htop_Action* keys);
+void Platform_init(void);
 
-extern int Platform_numberOfFields;
+void Platform_done(void);
+
+void Platform_setBindings(Htop_Action* keys);
 
 int Platform_getUptime(void);
 

@@ -90,10 +90,6 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
-void Platform_setBindings(Htop_Action* keys) {
-   (void) keys;
-}
-
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -126,6 +122,19 @@ const MeterClass* const Platform_meterTypes[] = {
    &NetworkIOMeter_class,
    NULL
 };
+
+void Platform_init(void) {
+   /* no platform-specific setup needed */
+}
+
+void Platform_done(void) {
+   /* no platform-specific cleanup needed */
+}
+
+void Platform_setBindings(Htop_Action* keys) {
+   /* no platform-specific key bindings */
+   (void) keys;
+}
 
 int Platform_getUptime() {
    struct timeval bootTime, currTime;

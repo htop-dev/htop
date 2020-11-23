@@ -26,9 +26,13 @@ extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
 
-void Platform_setBindings(Htop_Action* keys);
-
 extern const MeterClass* const Platform_meterTypes[];
+
+void Platform_init(void);
+
+void Platform_done(void);
+
+void Platform_setBindings(Htop_Action* keys);
 
 int Platform_getUptime(void);
 
