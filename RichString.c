@@ -119,6 +119,15 @@ void RichString_prune(RichString* this) {
    this->chptr = this->chstr;
 }
 
+void RichString_appendChr(RichString* this, char c, int count) {
+   int from = this->chlen;
+   int newLen = from + count;
+   RichString_setLen(this, newLen);
+   for (int i = from; i < newLen; i++) {
+      RichString_setChar(this, i, c);
+   }
+}
+
 void RichString_setAttr(RichString* this, int attrs) {
    RichString_setAttrn(this, attrs, 0, this->chlen - 1);
 }

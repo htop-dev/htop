@@ -196,11 +196,18 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       attrset(CRT_colors[RESET_COLOR]);
       return;
    }
-   char bar[w + 1];
+
+   // The text in the bar is right aligned;
+   // calculate needed padding and generate leading spaces
+   const int textLen = mbstowcs(NULL, buffer, 0);
+   const int padding = MAXIMUM(w - textLen, 0);
+
+   RichString_begin(bar);
+   RichString_appendChr(&bar, ' ', padding);
+   RichString_append(&bar, 0, buffer);
+   assert(RichString_sizeVal(bar) >= w);
 
    int blockSizes[10];
-
-   xSnprintf(bar, w + 1, "%*.*s", w, w, buffer);
 
    // First draw in the bar[] buffer...
    int offset = 0;
@@ -216,11 +223,11 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
       for (int j = offset; j < nextOffset; j++)
-         if (bar[j] == ' ') {
+         if (RichString_getCharVal(bar, j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
-               bar[j] = BarMeterMode_characters[i];
+               RichString_setChar(&bar, j, BarMeterMode_characters[i]);
             } else {
-               bar[j] = '|';
+               RichString_setChar(&bar, j, '|');
             }
          }
       offset = nextOffset;
@@ -230,14 +237,16 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       attrset(CRT_colors[Meter_attributes(this)[i]]);
-      mvaddnstr(y, x + offset, bar + offset, blockSizes[i]);
+      RichString_printoffnVal(bar, y, x + offset, offset, blockSizes[i]);
       offset += blockSizes[i];
       offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
       attrset(CRT_colors[BAR_SHADOW]);
-      mvaddnstr(y, x + offset, bar + offset, w - offset);
+      RichString_printoffnVal(bar, y, x + offset, offset, w - offset);
    }
+
+   RichString_end(bar);
 
    move(y, x + w + 1);
    attrset(CRT_colors[RESET_COLOR]);
