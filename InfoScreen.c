@@ -55,7 +55,7 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
    mvwprintw(stdscr, 0, 0, title);
    attrset(CRT_colors[DEFAULT_COLOR]);
    this->display->needsRedraw = true;
-   Panel_draw(this->display, true);
+   Panel_draw(this->display, true, true);
    IncSet_drawBar(this->inc);
    free(title);
    va_end(ap);
@@ -89,7 +89,7 @@ void InfoScreen_run(InfoScreen* this) {
    bool looping = true;
    while (looping) {
 
-      Panel_draw(panel, true);
+      Panel_draw(panel, true, true);
 
       if (this->inc->active) {
          (void) move(LINES - 1, CRT_cursorX);

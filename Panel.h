@@ -109,7 +109,7 @@ int Panel_size(Panel* this);
 
 void Panel_setSelected(Panel* this, int selected);
 
-void Panel_draw(Panel* this, bool focus);
+void Panel_draw(Panel* this, bool focus, bool highlightSelected);
 
 void Panel_splice(Panel* this, Vector* from);
 

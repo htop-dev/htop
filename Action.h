@@ -38,6 +38,7 @@ typedef struct State_ {
    Panel* panel;
    Header* header;
    bool pauseProcessUpdate;
+   bool hideProcessSelection;
 } State;
 
 typedef Htop_Reaction (*Htop_Action)(State* st);
