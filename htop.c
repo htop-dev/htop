@@ -298,6 +298,11 @@ int main(int argc, char** argv) {
       settings->highlightChanges = true;
    if (flags.highlightDelaySecs != -1)
       settings->highlightDelaySecs = flags.highlightDelaySecs;
+   if (flags.sortKey > 0) {
+      settings->sortKey = flags.sortKey;
+      settings->treeView = false;
+      settings->direction = 1;
+   }
 
    CRT_init(settings->delay, settings->colorScheme, flags.allowUnicode);
 
@@ -306,11 +311,6 @@ int main(int argc, char** argv) {
 
    MainPanel_updateTreeFunctions(panel, settings->treeView);
 
-   if (flags.sortKey > 0) {
-      settings->sortKey = flags.sortKey;
-      settings->treeView = false;
-      settings->direction = 1;
-   }
    ProcessList_printHeader(pl, Panel_getHeader((Panel*)panel));
 
    State state = {
