@@ -1027,7 +1027,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       LinuxProcessList_recurseProcTree(this, subdirname, proc, period, tv);
 
       /*
-       * These conditions will not trigger on first occurence, cause we need to
+       * These conditions will not trigger on first occurrence, cause we need to
        * add the process to the ProcessList and do all one time scans
        * (e.g. parsing the cmdline to detect a kernel thread)
        * But it will short-circuit subsequent scans.
