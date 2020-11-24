@@ -94,11 +94,11 @@ int Compat_openat(const char* dirpath,
 
 #endif /* !HAVE_OPENAT */
 
-int Compat_readlinkat(int dirfd,
-                      const char* dirpath,
-                      const char* pathname,
-                      char* buf,
-                      size_t bufsize) {
+ssize_t Compat_readlinkat(int dirfd,
+                          const char* dirpath,
+                          const char* pathname,
+                          char* buf,
+                          size_t bufsize) {
 
 #ifdef HAVE_READLINKAT
 
