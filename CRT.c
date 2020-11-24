@@ -789,10 +789,10 @@ void CRT_enableDelay() {
 void CRT_setColors(int colorScheme) {
    CRT_colorScheme = colorScheme;
 
-   for (int i = 0; i < 8; i++) {
-      for (int j = 0; j < 8; j++) {
+   for (short int i = 0; i < 8; i++) {
+      for (short int j = 0; j < 8; j++) {
          if (ColorIndex(i, j) != ColorIndexGrayBlack) {
-            int bg = (colorScheme != COLORSCHEME_BLACKNIGHT)
+            short int bg = (colorScheme != COLORSCHEME_BLACKNIGHT)
                      ? (j == 0 ? -1 : j)
                      : j;
             init_pair(ColorIndex(i, j), i, bg);
@@ -800,10 +800,8 @@ void CRT_setColors(int colorScheme) {
       }
    }
 
-   int grayBlackFg = COLORS > 8 ? 8 : 0;
-   int grayBlackBg = (colorScheme != COLORSCHEME_BLACKNIGHT)
-                     ? -1
-                     : 0;
+   short int grayBlackFg = COLORS > 8 ? 8 : 0;
+   short int grayBlackBg = (colorScheme != COLORSCHEME_BLACKNIGHT) ? -1 : 0;
    init_pair(ColorIndexGrayBlack, grayBlackFg, grayBlackBg);
 
    CRT_colors = CRT_colorSchemes[colorScheme];
