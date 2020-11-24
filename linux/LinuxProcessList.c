@@ -1023,7 +1023,6 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    xSnprintf(filename, MAX_NAME, "%s/%s/comm", dirname, name);
    if ((fd = open(filename, O_RDONLY)) != -1 &&
        (amtRead = xread(fd, command, sizeof(command) - 1)) > 0) {
-      close(fd);
       command[amtRead - 1] = 0;
       lp->mergedCommand.maxLen += amtRead - 1;  /* accomodate comm */
       if (!lp->procComm || strcmp(command, lp->procComm)) {
@@ -1036,6 +1035,9 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
       lp->procComm = NULL;
       lp->mergedCommand.commChanged = true;
    }
+
+   if (fd != -1)
+      close(fd);
 
    /* execve could change /proc/[pid]/exe, so procExe should be udpated */
    xSnprintf(command, sizeof(command), "%s/%s/exe", dirname, name);
