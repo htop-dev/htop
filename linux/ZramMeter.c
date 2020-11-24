@@ -11,7 +11,7 @@ static const int ZramMeter_attributes[] = {
    ZRAM
 };
 
-static void ZramMeter_updateValues(Meter* this, char* buffer, int size) {
+static void ZramMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int written;
 
    Platform_setZramValues(this);
@@ -38,11 +38,15 @@ static void ZramMeter_updateValues(Meter* this, char* buffer, int size) {
    }
    *buffer++ = ')';
    size--;
-   if ((size -= written) > 0) {
-      *buffer++ = '/';
-      size--;
-      Meter_humanUnit(buffer, this->total, size);
+   if (size <= 0) {
+      return;
    }
+   *buffer++ = '/';
+   size--;
+   if (size <= 0) {
+      return;
+   }
+   Meter_humanUnit(buffer, this->total, size);
 }
 
 static void ZramMeter_display(const Object* cast, RichString* out) {

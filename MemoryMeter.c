@@ -19,7 +19,7 @@ static const int MemoryMeter_attributes[] = {
    MEMORY_CACHE
 };
 
-static void MemoryMeter_updateValues(Meter* this, char* buffer, int size) {
+static void MemoryMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int written;
    Platform_setMemoryValues(this);
 

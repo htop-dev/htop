@@ -229,7 +229,7 @@ static void updateViaExec(void) {
    fclose(commandOutput);
 }
 
-static void SystemdMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, int size) {
+static void SystemdMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
    free(systemState);
    systemState = NULL;
    nFailedUnits = nInstalledJobs = nNames = nJobs = INVALID_VALUE;

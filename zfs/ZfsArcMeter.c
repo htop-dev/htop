@@ -33,7 +33,7 @@ void ZfsArcMeter_readStats(Meter* this, const ZfsArcStats* stats) {
    this->values[5] = stats->size;
 }
 
-static void ZfsArcMeter_updateValues(Meter* this, char* buffer, int size) {
+static void ZfsArcMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int written;
    Platform_setZfsArcValues(this);
 

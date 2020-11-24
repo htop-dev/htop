@@ -24,7 +24,7 @@ static unsigned long int cached_rxp_diff = 0;
 static unsigned long int cached_txb_diff = 0;
 static unsigned long int cached_txp_diff = 0;
 
-static void NetworkIOMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, int len) {
+static void NetworkIOMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t len) {
    static unsigned long long int cached_last_update = 0;
 
    struct timeval tv;

@@ -26,7 +26,7 @@ typedef struct Meter_ Meter;
 typedef void(*Meter_Init)(Meter*);
 typedef void(*Meter_Done)(Meter*);
 typedef void(*Meter_UpdateMode)(Meter*, int);
-typedef void(*Meter_UpdateValues)(Meter*, char*, int);
+typedef void(*Meter_UpdateValues)(Meter*, char*, size_t);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 
 typedef struct MeterClass_ {
@@ -101,7 +101,7 @@ extern const MeterClass Meter_class;
 
 Meter* Meter_new(const ProcessList* pl, int param, const MeterClass* type);
 
-int Meter_humanUnit(char* buffer, unsigned long int value, int size);
+int Meter_humanUnit(char* buffer, unsigned long int value, size_t size);
 
 void Meter_delete(Object* cast);
 

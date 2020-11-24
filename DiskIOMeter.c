@@ -30,7 +30,7 @@ static unsigned long int cached_read_diff = 0;
 static unsigned long int cached_write_diff = 0;
 static double cached_utilisation_diff = 0.0;
 
-static void DiskIOMeter_updateValues(Meter* this, char* buffer, int len) {
+static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    static unsigned long long int cached_last_update = 0;
 
    struct timeval tv;

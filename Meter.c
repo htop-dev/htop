@@ -49,7 +49,7 @@ Meter* Meter_new(const struct ProcessList_* pl, int param, const MeterClass* typ
    return this;
 }
 
-int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
+int Meter_humanUnit(char* buffer, unsigned long int value, size_t size) {
    const char* prefix = "KMGTPEZY";
    unsigned long int powi = 1;
    unsigned int powj = 1, precision = 2;
@@ -441,8 +441,7 @@ const MeterMode* const Meter_modes[] = {
 
 /* Blank meter */
 
-static void BlankMeter_updateValues(Meter* this, char* buffer, int size) {
-   (void) this; (void) buffer; (void) size;
+static void BlankMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
    if (size > 0) {
       *buffer = 0;
    }
