@@ -371,7 +371,7 @@ char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
    struct stat sb;
    struct dirent *de;
    DIR *dirp;
-   size_t len;
+   ssize_t len;
    int fd;
 
    char path[PATH_MAX];
