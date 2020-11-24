@@ -51,7 +51,7 @@ Meter* Meter_new(const struct ProcessList_* pl, int param, const MeterClass* typ
 int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
    const char* prefix = "KMGTPEZY";
    unsigned long int powi = 1;
-   unsigned int written, powj = 1, precision = 2;
+   unsigned int powj = 1, precision = 2;
 
    for (;;) {
       if (value / 1024 < powi)
@@ -73,10 +73,7 @@ int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
          break;
    }
 
-   written = snprintf(buffer, size, "%.*f%c",
-      precision, (double) value / powi, *prefix);
-
-   return written;
+   return snprintf(buffer, size, "%.*f%c", precision, (double) value / powi, *prefix);
 }
 
 void Meter_delete(Object* cast) {
