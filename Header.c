@@ -131,21 +131,6 @@ int Header_size(Header* this, int column) {
    return Vector_size(meters);
 }
 
-char* Header_readMeterName(Header* this, int i, int column) {
-   Vector* meters = this->columns[column];
-   Meter* meter = (Meter*) Vector_get(meters, i);
-
-   int nameLen = strlen(Meter_name(meter));
-   int len = nameLen + 100;
-   char* name = xMalloc(len);
-   memcpy(name, Meter_name(meter), nameLen);
-   name[nameLen] = '\0';
-   if (meter->param)
-      xSnprintf(name + nameLen, len - nameLen, "(%d)", meter->param);
-
-   return name;
-}
-
 MeterModeId Header_readMeterMode(Header* this, int i, int column) {
    Vector* meters = this->columns[column];
 
