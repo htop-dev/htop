@@ -20,6 +20,29 @@ in the source distribution for its full text.
 
 #define METER_BUFFER_LEN 256
 
+#define METER_BUFFER_CHECK(buffer, size, written)          \
+   do {                                                    \
+      if ((written) < 0 || (size_t)(written) >= (size)) {  \
+         return;                                           \
+      }                                                    \
+      (buffer) += (written);                               \
+      (size) -= (size_t)(written);                         \
+   } while (0)
+
+#define METER_BUFFER_APPEND_CHR(buffer, size, c)           \
+   do {                                                    \
+      if ((size) < 2) {                                    \
+         return;                                           \
+      }                                                    \
+      *(buffer)++ = c;                                     \
+      *(buffer) = '\0';                                    \
+      (size)--;                                            \
+      if ((size) == 0) {                                   \
+         return;                                           \
+      }                                                    \
+   } while (0)
+
+
 struct Meter_;
 typedef struct Meter_ Meter;
 

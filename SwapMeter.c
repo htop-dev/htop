@@ -22,12 +22,11 @@ static void SwapMeter_updateValues(Meter* this, char* buffer, size_t size) {
    Platform_setSwapValues(this);
 
    written = Meter_humanUnit(buffer, this->values[0], size);
-   buffer += written;
-   if ((size -= written) > 0) {
-      *buffer++ = '/';
-      size--;
-      Meter_humanUnit(buffer, this->total, size);
-   }
+   METER_BUFFER_CHECK(buffer, size, written);
+
+   METER_BUFFER_APPEND_CHR(buffer, size, '/');
+
+   Meter_humanUnit(buffer, this->total, size);
 }
 
 static void SwapMeter_display(const Object* cast, RichString* out) {
