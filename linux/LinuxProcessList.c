@@ -1118,7 +1118,7 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
    return out;
 }
 
-static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char* dirname, Process* parent, double period, struct timeval tv) {
+static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char* dirname, const Process* parent, double period, unsigned long long now) {
    ProcessList* pl = (ProcessList*) this;
    DIR* dir;
    const struct dirent* entry;
@@ -1128,7 +1128,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
    if (!dir)
       return false;
 
-   unsigned long long now = tv.tv_sec * 1000ULL + tv.tv_usec / 1000ULL;
    int cpus = pl->cpuCount;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
@@ -1168,7 +1167,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       char subdirname[MAX_NAME + 1];
       xSnprintf(subdirname, MAX_NAME, "%s/%s/task", dirname, name);
-      LinuxProcessList_recurseProcTree(this, subdirname, proc, period, tv);
+      LinuxProcessList_recurseProcTree(this, subdirname, proc, period, now);
 
       /*
        * These conditions will not trigger on first occurrence, cause we need to
@@ -1208,7 +1207,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
                smaps_flag = !smaps_flag;
             }
          } else {
-            lp->m_pss = ((LinuxProcess*)parent)->m_pss;
+            lp->m_pss = ((const LinuxProcess*)parent)->m_pss;
          }
       }
 
@@ -1775,5 +1774,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    struct timeval tv;
    gettimeofday(&tv, NULL);
-   LinuxProcessList_recurseProcTree(this, PROCDIR, NULL, period, tv);
+   unsigned long long now = tv.tv_sec * 1000ULL + tv.tv_usec / 1000ULL;
+
+   LinuxProcessList_recurseProcTree(this, PROCDIR, NULL, period, now);
 }
