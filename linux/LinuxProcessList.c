@@ -1010,7 +1010,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
       tokenEnd = lastChar + 1;
    }
 
-   lp->mergedCommand.maxLen = lastChar + 1;  /* accomodate cmdline */
+   lp->mergedCommand.maxLen = lastChar + 1;  /* accommodate cmdline */
    if (!process->comm || strcmp(command, process->comm)) {
       process->basenameOffset = tokenEnd;
       setCommand(process, command, lastChar + 1);
@@ -1019,12 +1019,12 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
       lp->mergedCommand.cmdlineChanged = true;
    }
 
-   /* /proc/[pid]/comm could change, so should be udpated */
+   /* /proc/[pid]/comm could change, so should be updated */
    xSnprintf(filename, MAX_NAME, "%s/%s/comm", dirname, name);
    if ((fd = open(filename, O_RDONLY)) != -1 &&
        (amtRead = xread(fd, command, sizeof(command) - 1)) > 0) {
       command[amtRead - 1] = 0;
-      lp->mergedCommand.maxLen += amtRead - 1;  /* accomodate comm */
+      lp->mergedCommand.maxLen += amtRead - 1;  /* accommodate comm */
       if (!lp->procComm || strcmp(command, lp->procComm)) {
          free(lp->procComm);
          lp->procComm = xStrdup(command);
@@ -1039,11 +1039,11 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    if (fd != -1)
       close(fd);
 
-   /* execve could change /proc/[pid]/exe, so procExe should be udpated */
+   /* execve could change /proc/[pid]/exe, so procExe should be updated */
    xSnprintf(command, sizeof(command), "%s/%s/exe", dirname, name);
    if ((amtRead = readlink(command, filename, sizeof(filename) - 1)) > 0) {
       filename[amtRead] = 0;
-      lp->mergedCommand.maxLen += amtRead;  /* accomodate exe */
+      lp->mergedCommand.maxLen += amtRead;  /* accommodate exe */
       if (!lp->procExe || strcmp(filename, lp->procExe)) {
          free(lp->procExe);
          lp->procExe = xStrdup(filename);
