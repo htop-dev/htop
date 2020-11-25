@@ -35,7 +35,7 @@ void ProcessLocksScreen_delete(Object* this) {
 }
 
 static void ProcessLocksScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Snapshot of file locks of process %d - %s", ((ProcessLocksScreen*)this)->pid, this->process->comm);
+   InfoScreen_drawTitled(this, "Snapshot of file locks of process %d - %s", ((ProcessLocksScreen*)this)->pid, Process_getCommand(this->process));
 }
 
 static inline void FileLocks_Data_clear(FileLocks_Data* data) {
