@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -209,4 +210,53 @@ char* xStrndup(const char* str, size_t len) {
       fail();
    }
    return data;
+}
+
+static ssize_t readfd_internal(int fd, void* buffer, size_t count) {
+   if (!count) {
+      close(fd);
+      return -EINVAL;
+   }
+
+   ssize_t alreadyRead = 0;
+   count--; // reserve one for null-terminator
+
+   for (;;) {
+      ssize_t res = read(fd, buffer, count);
+      if (res == -1) {
+         if (errno == EINTR)
+            continue;
+
+         close(fd);
+         return -errno;
+      }
+
+      if (res > 0) {
+         buffer = ((char*)buffer) + res;
+         count -= (size_t)res;
+         alreadyRead += res;
+      }
+
+      if (count == 0 || res == 0) {
+         close(fd);
+         *((char*)buffer) = '\0';
+         return alreadyRead;
+      }
+   }
+}
+
+ssize_t xReadfile(const char* pathname, void* buffer, size_t count) {
+   int fd = open(pathname, O_RDONLY);
+   if (fd < 0)
+      return -errno;
+
+   return readfd_internal(fd, buffer, count);
+}
+
+ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count) {
+   int fd = Compat_openat(dirfd, pathname, O_RDONLY);
+   if (fd < 0)
+      return -errno;
+
+   return readfd_internal(fd, buffer, count);
 }

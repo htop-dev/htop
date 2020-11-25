@@ -717,28 +717,6 @@ static void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
 // READ FROM /sys
 // ----------------------------------------
 
-static inline ssize_t xread(int fd, void* buf, size_t count) {
-   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
-   size_t alreadyRead = 0;
-   for (;;) {
-      ssize_t res = read(fd, buf, count);
-      if (res == -1) {
-         if (errno == EINTR)
-            continue;
-         return -1;
-      }
-
-      if (res > 0) {
-         buf = ((char*)buf) + res;
-         count -= res;
-         alreadyRead += res;
-      }
-
-      if (count == 0 || res == 0)
-         return alreadyRead;
-   }
-}
-
 static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
 
    *percent = NAN;
@@ -760,31 +738,22 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
       char filePath[256];
 
       xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
-      int fd1 = open(filePath, O_RDONLY);
-      if (fd1 == -1)
-         continue;
 
       char type[8];
-      ssize_t typelen = xread(fd1, type, 7);
-      close(fd1);
-      if (typelen < 1)
+      ssize_t r = xReadfile(filePath, type, sizeof(type));
+      if (r < 3)
          continue;
 
       if (type[0] == 'B' && type[1] == 'a' && type[2] == 't') {
          xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
-         int fd2 = open(filePath, O_RDONLY);
-         if (fd2 == -1) {
-            closedir(dir);
-            return;
-         }
+
          char buffer[1024];
-         ssize_t buflen = xread(fd2, buffer, 1023);
-         close(fd2);
-         if (buflen < 1) {
+         r = xReadfile(filePath, buffer, sizeof(buffer));
+         if (r < 0) {
             closedir(dir);
             return;
          }
-         buffer[buflen] = '\0';
+
          char* buf = buffer;
          char* line = NULL;
          bool full = false;
@@ -836,19 +805,15 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
             continue;
 
          xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
-         int fd3 = open(filePath, O_RDONLY);
-         if (fd3 == -1) {
+
+         char buffer[2];
+
+         r = xReadfile(filePath, buffer, sizeof(buffer));
+         if (r < 1) {
             closedir(dir);
             return;
          }
-         char buffer[2] = "";
-         for (;;) {
-            ssize_t res = read(fd3, buffer, 1);
-            if (res == -1 && errno == EINTR)
-               continue;
-            break;
-         }
-         close(fd3);
+
          if (buffer[0] == '0')
             *isOnAC = AC_ABSENT;
          else if (buffer[0] == '1')

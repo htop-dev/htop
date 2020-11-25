@@ -58,29 +58,6 @@ in the source distribution for its full text.
 #endif
 
 
-static ssize_t xread(int fd, void* buf, size_t count) {
-   // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
-   size_t alreadyRead = 0;
-   for (;;) {
-      ssize_t res = read(fd, buf, count);
-      if (res == -1) {
-         if (errno == EINTR)
-            continue;
-         return -1;
-      }
-
-      if (res > 0) {
-         buf = ((char*)buf) + res;
-         count -= res;
-         alreadyRead += res;
-      }
-
-      if (count == 0 || res == 0) {
-         return alreadyRead;
-      }
-   }
-}
-
 static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* mode) {
    assert(String_eq(mode, "r")); /* only currently supported mode */
 
@@ -108,28 +85,12 @@ static int sortTtyDrivers(const void* va, const void* vb) {
 
 static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
    TtyDriver* ttyDrivers;
-   int fd = open(PROCTTYDRIVERSFILE, O_RDONLY);
-   if (fd == -1)
+
+   char buf[16384];
+   ssize_t r = xReadfile(PROCTTYDRIVERSFILE, buf, sizeof(buf));
+   if (r < 0)
       return;
 
-   char* buf = NULL;
-   int bufSize = MAX_READ;
-   int bufLen = 0;
-   for (;;) {
-      buf = xRealloc(buf, bufSize);
-      int size = xread(fd, buf + bufLen, MAX_READ);
-      if (size <= 0) {
-         buf[bufLen] = '\0';
-         close(fd);
-         break;
-      }
-      bufLen += size;
-      bufSize += MAX_READ;
-   }
-   if (bufLen == 0) {
-      free(buf);
-      return;
-   }
    int numDrivers = 0;
    int allocd = 10;
    ttyDrivers = xMalloc(sizeof(TtyDriver) * allocd);
@@ -169,7 +130,6 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
          ttyDrivers = xRealloc(ttyDrivers, sizeof(TtyDriver) * allocd);
       }
    }
-   free(buf);
    numDrivers++;
    ttyDrivers = xRealloc(ttyDrivers, sizeof(TtyDriver) * numDrivers);
    ttyDrivers[numDrivers - 1].path = NULL;
@@ -325,17 +285,11 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    LinuxProcess* lp = (LinuxProcess*) process;
    const int commLenIn = *commLen;
    *commLen = 0;
-   int fd = Compat_openat(procFd, "stat", O_RDONLY);
-   if (fd == -1)
-      return false;
 
-   static char buf[MAX_READ + 1];
-
-   int size = xread(fd, buf, MAX_READ);
-   close(fd);
-   if (size <= 0)
+   char buf[MAX_READ + 1];
+   ssize_t r = xReadfileat(procFd, "stat", buf, sizeof(buf));
+   if (r < 0)
       return false;
-   buf[size] = '\0';
 
    assert(process->pid == atoi(buf));
    char* location = strchr(buf, ' ');
@@ -425,8 +379,9 @@ static bool LinuxProcessList_statProcessDir(Process* process, openat_arg_t procF
 }
 
 static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t procFd, unsigned long long now) {
-   int fd = Compat_openat(procFd, "io", O_RDONLY);
-   if (fd == -1) {
+   char buffer[1024];
+   ssize_t r = xReadfileat(procFd, "io", buffer, sizeof(buffer));
+   if (r < 0) {
       process->io_rate_read_bps = NAN;
       process->io_rate_write_bps = NAN;
       process->io_rchar = -1LL;
@@ -441,13 +396,6 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
       return;
    }
 
-   char buffer[1024];
-   ssize_t buflen = xread(fd, buffer, 1023);
-   close(fd);
-   if (buflen < 1)
-      return;
-
-   buffer[buflen] = '\0';
    unsigned long long last_read = process->io_read_bytes;
    unsigned long long last_write = process->io_write_bytes;
    char* buf = buffer;
@@ -1015,14 +963,10 @@ static void setCommand(Process* process, const char* command, int len) {
 }
 
 static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t procFd) {
-   LinuxProcess *lp = (LinuxProcess *)process;
-   int fd = Compat_openat(procFd, "cmdline", O_RDONLY);
-   if (fd == -1)
-      return false;
-
    char command[4096 + 1]; // max cmdline length on Linux
-   int amtRead = xread(fd, command, sizeof(command) - 1);
-   close(fd);
+   ssize_t amtRead = xReadfileat(procFd, "cmdline", command, sizeof(command));
+   if (amtRead < 0)
+      return false;
 
    if (amtRead == 0) {
       if (process->state == 'Z') {
@@ -1031,8 +975,6 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
          ((LinuxProcess*)process)->isKernelThread = true;
       }
       return true;
-   } else if (amtRead < 0) {
-      return false;
    }
 
    int tokenEnd = 0;
@@ -1145,6 +1087,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       tokenEnd = lastChar + 1;
    }
 
+   LinuxProcess *lp = (LinuxProcess *)process;
    lp->mergedCommand.maxLen = lastChar + 1;  /* accommodate cmdline */
    if (!process->comm || !String_eq(command, process->comm)) {
       process->basenameOffset = tokenEnd;
@@ -1155,9 +1098,8 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    }
 
    /* /proc/[pid]/comm could change, so should be updated */
-   if ((fd = Compat_openat(procFd, "comm", O_RDONLY)) != -1 &&
-       (amtRead = xread(fd, command, sizeof(command) - 1)) > 0) {
-      command[amtRead - 1] = 0;
+   if ((amtRead = xReadfileat(procFd, "comm", command, sizeof(command))) > 0) {
+      command[amtRead - 1] = '\0';
       lp->mergedCommand.maxLen += amtRead - 1;  /* accommodate comm */
       if (!lp->procComm || !String_eq(command, lp->procComm)) {
          free(lp->procComm);
@@ -1169,9 +1111,6 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       lp->procComm = NULL;
       lp->mergedCommand.commChanged = true;
    }
-
-   if (fd != -1)
-      close(fd);
 
    char filename[MAX_NAME + 1];
 

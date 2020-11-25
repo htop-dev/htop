@@ -58,17 +58,10 @@ static bool isSelinuxEnforcing(void) {
       return false;
    }
 
-   int fd = open("/sys/fs/selinux/enforce", O_RDONLY);
-   if (fd < 0) {
+   char buf[20];
+   ssize_t r = xReadfile("/sys/fs/selinux/enforce", buf, sizeof(buf));
+   if (r < 0)
       return false;
-   }
-
-   char buf[20] = {0};
-   int r = read(fd, buf, sizeof(buf) - 1);
-   close(fd);
-   if (r < 0) {
-      return false;
-   }
 
    int enforce = 0;
    if (sscanf(buf, "%d", &enforce) != 1) {

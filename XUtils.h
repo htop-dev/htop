@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include <stdlib.h> // IWYU pragma: keep
 #include <string.h> // IWYU pragma: keep
 
+#include "Compat.h"
 #include "Macros.h"
 
 
@@ -62,5 +63,8 @@ int xSnprintf(char* buf, int len, const char* fmt, ...);
 char* xStrdup(const char* str) ATTR_NONNULL;
 
 char* xStrndup(const char* str, size_t len) ATTR_NONNULL;
+
+ssize_t xReadfile(const char* pathname, void* buffer, size_t count);
+ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
 
 #endif
