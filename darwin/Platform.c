@@ -355,10 +355,10 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
    return false;
 }
 
-void Platform_getBattery(double* level, ACPresence* isOnAC) {
+void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    CFTypeRef power_sources = IOPSCopyPowerSourcesInfo();
 
-   *level = NAN;
+   *percent = NAN;
    *isOnAC = AC_ERROR;
 
    if (NULL == power_sources)
@@ -410,7 +410,7 @@ void Platform_getBattery(double* level, ACPresence* isOnAC) {
       CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSMaxCapacityKey)),
                        kCFNumberDoubleType, &max);
 
-      *level = (current * 100.0) / max;
+      *percent = (current * 100.0) / max;
 
       CFRelease(battery);
    }

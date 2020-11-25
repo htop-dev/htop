@@ -176,7 +176,7 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
    return false;
 }
 
-void Platform_getBattery(double* level, ACPresence* isOnAC) {
-   *level = NAN;
+void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+   *percent = NAN;
    *isOnAC = AC_ERROR;
 }

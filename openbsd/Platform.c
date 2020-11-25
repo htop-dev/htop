@@ -349,7 +349,7 @@ static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, si
    }
 }
 
-void Platform_getBattery(double* level, ACPresence* isOnAC) {
+void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    static int mib[] = {CTL_HW, HW_SENSORS, 0, 0, 0};
    struct sensor s;
    size_t slen = sizeof(struct sensor);
@@ -358,7 +358,7 @@ void Platform_getBattery(double* level, ACPresence* isOnAC) {
 
    bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
 
-   *level = NAN;
+   *percent = NAN;
    if (found) {
       /* last full capacity */
       mib[3] = 7;
@@ -372,9 +372,9 @@ void Platform_getBattery(double* level, ACPresence* isOnAC) {
          mib[4] = 3;
          if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
             double charge = s.value;
-            *level = 100 * (charge / last_full_capacity);
+            *percent = 100 * (charge / last_full_capacity);
             if (charge >= last_full_capacity) {
-               *level = 100;
+               *percent = 100;
             }
          }
       }

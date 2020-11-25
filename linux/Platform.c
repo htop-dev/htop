@@ -110,7 +110,7 @@ const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_PROC;
 static time_t Platform_Battery_cacheTime;
-static double Platform_Battery_cacheLevel = NAN;
+static double Platform_Battery_cachePercent = NAN;
 static ACPresence Platform_Battery_cacheIsOnAC;
 
 void Platform_init(void) {
@@ -708,9 +708,9 @@ static double Platform_Battery_getProcBatInfo(void) {
    return totalRemain * 100.0 / (double) totalFull;
 }
 
-static void Platform_Battery_getProcData(double* level, ACPresence* isOnAC) {
+static void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
    *isOnAC = procAcpiCheck();
-   *level = AC_ERROR != *isOnAC ? Platform_Battery_getProcBatInfo() : NAN;
+   *percent = AC_ERROR != *isOnAC ? Platform_Battery_getProcBatInfo() : NAN;
 }
 
 // ----------------------------------------
@@ -739,9 +739,9 @@ static inline ssize_t xread(int fd, void* buf, size_t count) {
    }
 }
 
-static void Platform_Battery_getSysData(double* level, ACPresence* isOnAC) {
+static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
 
-   *level = NAN;
+   *percent = NAN;
    *isOnAC = AC_ERROR;
 
    DIR* dir = opendir(SYS_POWERSUPPLY_DIR);
@@ -857,35 +857,35 @@ static void Platform_Battery_getSysData(double* level, ACPresence* isOnAC) {
    }
    closedir(dir);
 
-   *level = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
+   *percent = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
 }
 
-void Platform_getBattery(double* level, ACPresence* isOnAC) {
+void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    time_t now = time(NULL);
    // update battery reading is slow. Update it each 10 seconds only.
    if (now < Platform_Battery_cacheTime + 10) {
-      *level = Platform_Battery_cacheLevel;
+      *percent = Platform_Battery_cachePercent;
       *isOnAC = Platform_Battery_cacheIsOnAC;
       return;
    }
 
    if (Platform_Battery_method == BAT_PROC) {
-      Platform_Battery_getProcData(level, isOnAC);
-      if (isnan(*level))
+      Platform_Battery_getProcData(percent, isOnAC);
+      if (isnan(*percent))
          Platform_Battery_method = BAT_SYS;
    }
    if (Platform_Battery_method == BAT_SYS) {
-      Platform_Battery_getSysData(level, isOnAC);
-      if (isnan(*level))
+      Platform_Battery_getSysData(percent, isOnAC);
+      if (isnan(*percent))
          Platform_Battery_method = BAT_ERR;
    }
    if (Platform_Battery_method == BAT_ERR) {
-      *level = NAN;
+      *percent = NAN;
       *isOnAC = AC_ERROR;
    } else {
-      *level = CLAMP(*level, 0.0, 100.0);
+      *percent = CLAMP(*percent, 0.0, 100.0);
    }
-   Platform_Battery_cacheLevel = *level;
+   Platform_Battery_cachePercent = *percent;
    Platform_Battery_cacheIsOnAC = *isOnAC;
    Platform_Battery_cacheTime = now;
 }
