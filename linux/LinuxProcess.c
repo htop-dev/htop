@@ -115,6 +115,7 @@ ProcessFieldData Process_fields[] = {
    [SECATTR] = { .name = "SECATTR", .title = " Security Attribute ", .description = "Security attribute of the process (e.g. SELinux or AppArmor)", .flags = PROCESS_FLAG_LINUX_SECATTR, },
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process from /proc/[pid]/comm", .flags = 0, },
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
+   [CWD] = { .name ="CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_LINUX_CWD, },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -156,6 +157,7 @@ void Process_delete(Object* cast) {
 #ifdef HAVE_OPENVZ
    free(this->ctid);
 #endif
+   free(this->cwd);
    free(this->secattr);
    free(this->ttyDevice);
    free(this->procExe);
@@ -739,6 +741,17 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       }
       break;
    }
+   case CWD:
+      if (!lp->cwd) {
+         xSnprintf(buffer, n, "%-25s ", "N/A");
+         attr = CRT_colors[PROCESS_SHADOW];
+      } else if (String_startsWith(lp->cwd, "/proc/") && strstr(lp->cwd, " (deleted)") != NULL) {
+         xSnprintf(buffer, n, "%-25s ", "main thread terminated");
+         attr = CRT_colors[PROCESS_SHADOW];
+      } else {
+         xSnprintf(buffer, n, "%-25.25s ", lp->cwd);
+      }
+      break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -841,6 +854,8 @@ static long LinuxProcess_compare(const void* v1, const void* v2) {
       const char *exe2 = p2->procExe ? (p2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
       return strcmp(exe1, exe2);
    }
+   case CWD:
+      return SPACESHIP_NULLSTR(p1->cwd, p2->cwd);
    default:
       return Process_compare(v1, v2);
    }
