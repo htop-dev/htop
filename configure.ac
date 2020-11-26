@@ -83,6 +83,10 @@ AC_HEADER_STDBOOL
 AC_C_CONST
 AC_TYPE_PID_T
 AC_TYPE_UID_T
+AC_TYPE_UINT8_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
 
 # Checks for library functions and compiler features.
 # ----------------------------------------------------------------------
