@@ -29,7 +29,7 @@ static void BatteryMeter_updateValues(Meter* this, char* buffer, int len) {
 
    if (isnan(percent)) {
       this->values[0] = NAN;
-      xSnprintf(buffer, len, "n/a");
+      xSnprintf(buffer, len, "N/A");
       return;
    }
 
