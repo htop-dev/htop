@@ -137,7 +137,7 @@ typedef struct ProcessClass_ {
 
 #define As_Process(this_)              ((const ProcessClass*)((this_)->super.klass))
 
-#define Process_getCommand(this_)      As_Process(this_)->getCommandStr((const Process*)(this_))
+#define Process_getCommand(this_)      (As_Process(this_)->getCommandStr ? As_Process(this_)->getCommandStr((const Process*)(this_)) : ((const Process*)(this_))->comm)
 
 static inline pid_t Process_getParentPid(const Process* this) {
    return this->tgid == this->pid ? this->ppid : this->tgid;
