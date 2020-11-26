@@ -326,7 +326,7 @@ int main(int argc, char** argv) {
    if (flags.commFilter)
       setCommFilter(&state, &(flags.commFilter));
 
-   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, &state, true);
+   ScreenManager* scr = ScreenManager_new(header, settings, &state, true);
    ScreenManager_add(scr, (Panel*) panel, -1);
 
    ProcessList_scan(pl, false);

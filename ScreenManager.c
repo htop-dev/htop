@@ -20,14 +20,13 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, const State* state, bool owner) {
+ScreenManager* ScreenManager_new(Header* header, const Settings* settings, const State* state, bool owner) {
    ScreenManager* this;
    this = xMalloc(sizeof(ScreenManager));
-   this->x1 = x1;
-   this->y1 = y1;
-   this->x2 = x2;
-   this->y2 = y2;
-   this->orientation = orientation;
+   this->x1 = 0;
+   this->y1 = header->height;
+   this->x2 = 0;
+   this->y2 = -1;
    this->panels = Vector_new(Class(Panel), owner, DEFAULT_SIZE);
    this->panelCount = 0;
    this->header = header;
@@ -48,21 +47,18 @@ inline int ScreenManager_size(ScreenManager* this) {
 }
 
 void ScreenManager_add(ScreenManager* this, Panel* item, int size) {
-   if (this->orientation == HORIZONTAL) {
-      int lastX = 0;
-      if (this->panelCount > 0) {
-         Panel* last = (Panel*) Vector_get(this->panels, this->panelCount - 1);
-         lastX = last->x + last->w + 1;
-      }
-      int height = LINES - this->y1 + this->y2;
-      if (size > 0) {
-         Panel_resize(item, size, height);
-      } else {
-         Panel_resize(item, COLS - this->x1 + this->x2 - lastX, height);
-      }
-      Panel_move(item, lastX, this->y1);
+   int lastX = 0;
+   if (this->panelCount > 0) {
+      Panel* last = (Panel*) Vector_get(this->panels, this->panelCount - 1);
+      lastX = last->x + last->w + 1;
    }
-   // TODO: VERTICAL
+   int height = LINES - this->y1 + this->y2;
+   if (size > 0) {
+      Panel_resize(item, size, height);
+   } else {
+      Panel_resize(item, COLS - this->x1 + this->x2 - lastX, height);
+   }
+   Panel_move(item, lastX, this->y1);
    Vector_add(this->panels, item);
    item->needsRedraw = true;
    this->panelCount++;
@@ -81,19 +77,16 @@ void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
    this->x2 = x2;
    this->y2 = y2;
    int panels = this->panelCount;
-   if (this->orientation == HORIZONTAL) {
-      int lastX = 0;
-      for (int i = 0; i < panels - 1; i++) {
-         Panel* panel = (Panel*) Vector_get(this->panels, i);
-         Panel_resize(panel, panel->w, LINES - y1 + y2);
-         Panel_move(panel, lastX, y1);
-         lastX = panel->x + panel->w + 1;
-      }
-      Panel* panel = (Panel*) Vector_get(this->panels, panels - 1);
-      Panel_resize(panel, COLS - x1 + x2 - lastX, LINES - y1 + y2);
+   int lastX = 0;
+   for (int i = 0; i < panels - 1; i++) {
+      Panel* panel = (Panel*) Vector_get(this->panels, i);
+      Panel_resize(panel, panel->w, LINES - y1 + y2);
       Panel_move(panel, lastX, y1);
+      lastX = panel->x + panel->w + 1;
    }
-   // TODO: VERTICAL
+   Panel* panel = (Panel*) Vector_get(this->panels, panels - 1);
+   Panel_resize(panel, COLS - x1 + x2 - lastX, LINES - y1 + y2);
+   Panel_move(panel, lastX, y1);
 }
 
 static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut) {
@@ -131,9 +124,7 @@ static void ScreenManager_drawPanels(ScreenManager* this, int focus) {
    for (int i = 0; i < nPanels; i++) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);
       Panel_draw(panel, i == focus);
-      if (this->orientation == HORIZONTAL) {
-         mvvline(panel->y, panel->x + panel->w, ' ', panel->h + 1);
-      }
+      mvvline(panel->y, panel->x + panel->w, ' ', panel->h + 1);
    }
 }
 

@@ -16,17 +16,11 @@ in the source distribution for its full text.
 #include "Vector.h"
 
 
-typedef enum Orientation_ {
-   VERTICAL,
-   HORIZONTAL
-} Orientation;
-
 typedef struct ScreenManager_ {
    int x1;
    int y1;
    int x2;
    int y2;
-   Orientation orientation;
    Vector* panels;
    int panelCount;
    Header* header;
@@ -36,7 +30,7 @@ typedef struct ScreenManager_ {
    bool allowFocusChange;
 } ScreenManager;
 
-ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, Header* header, const Settings* settings, const State* state, bool owner);
+ScreenManager* ScreenManager_new(Header* header, const Settings* settings, const State* state, bool owner);
 
 void ScreenManager_delete(ScreenManager* this);
 
