@@ -634,7 +634,15 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
    case M_DRS: Process_humanNumber(str, lp->m_drs * CRT_pageSizeKB, coloring); return;
    case M_DT: Process_humanNumber(str, lp->m_dt * CRT_pageSizeKB, coloring); return;
-   case M_LRS: Process_humanNumber(str, lp->m_lrs * CRT_pageSizeKB, coloring); return;
+   case M_LRS:
+      if (lp->m_lrs) {
+         Process_humanNumber(str, lp->m_lrs * CRT_pageSizeKB, coloring);
+         return;
+      }
+
+      attr = CRT_colors[PROCESS_SHADOW];
+      xSnprintf(buffer, n, "  N/A ");
+      break;
    case M_TRS: Process_humanNumber(str, lp->m_trs * CRT_pageSizeKB, coloring); return;
    case M_SHARE: Process_humanNumber(str, lp->m_share * CRT_pageSizeKB, coloring); return;
    case M_PSS: Process_humanNumber(str, lp->m_pss, coloring); return;
