@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_CTXT     0x00004000
 #define PROCESS_FLAG_LINUX_SECATTR  0x00008000
 #define PROCESS_FLAG_LINUX_LRS_FIX  0x00010000
+#define PROCESS_FLAG_LINUX_CWD      0x00020000
 
 typedef enum UnsupportedProcessFields {
    FLAGS = 9,
@@ -94,7 +95,8 @@ typedef enum LinuxProcessFields {
    SECATTR = 123,
    PROC_COMM = 124,
    PROC_EXE = 125,
-   LAST_PROCESSFIELD = 126,
+   CWD = 126,
+   LAST_PROCESSFIELD = 127,
 } LinuxProcessField;
 
 /* LinuxProcessMergedCommand is populated by LinuxProcess_makeCommandStr: It
@@ -181,6 +183,7 @@ typedef struct LinuxProcess_ {
    unsigned long ctxt_diff;
    char* secattr;
    unsigned long long int last_mlrs_calctime;
+   char* cwd;
 } LinuxProcess;
 
 #define Process_isKernelThread(_process) (((const LinuxProcess*)(_process))->isKernelThread)

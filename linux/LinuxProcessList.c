@@ -934,6 +934,31 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t
    process->secattr = xStrdup(buffer);
 }
 
+static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd) {
+   char pathBuffer[PATH_MAX + 1];
+
+#if defined(HAVE_READLINKAT) && defined(HAVE_OPENAT)
+   ssize_t r = readlinkat(procFd, "cwd", pathBuffer, sizeof(pathBuffer) - 1);
+#else
+   char filename[MAX_NAME + 1];
+   xSnprintf(filename, sizeof(filename), "%s/cwd", procFd);
+   ssize_t r = readlink(filename, pathBuffer, sizeof(pathBuffer) - 1);
+#endif
+   if (r < 0) {
+      free(process->cwd);
+      process->cwd = NULL;
+      return;
+   }
+
+   pathBuffer[r] = '\0';
+
+   if (process->cwd && String_eq(process->cwd, pathBuffer))
+      return;
+
+   free(process->cwd);
+   process->cwd = xStrdup(pathBuffer);
+}
+
 #ifdef HAVE_DELAYACCT
 
 static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
@@ -1463,6 +1488,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       if (settings->flags & PROCESS_FLAG_LINUX_SECATTR) {
          LinuxProcessList_readSecattrData(lp, procFd);
+      }
+
+      if (settings->flags & PROCESS_FLAG_LINUX_CWD) {
+         LinuxProcessList_readCwd(lp, procFd);
       }
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
