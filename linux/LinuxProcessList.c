@@ -623,7 +623,7 @@ static uint64_t LinuxProcessList_calcLibSize(const char* dirname, const char* na
    return total_size / CRT_pageSize;
 }
 
-static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* dirname, const char* name, bool performLookup) {
+static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* dirname, const char* name, bool performLookup, unsigned long long now) {
    char filename[MAX_NAME + 1];
    xSnprintf(filename, sizeof(filename), "%s/%s/statm", dirname, name);
    FILE* statmfile = fopen(filename, "r");
@@ -646,13 +646,12 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, const char* di
          process->m_lrs = tmp_m_lrs;
       } else if (performLookup) {
          // Check if we really should recalculate the M_LRS value for this process
-         struct timeval tv;
-         gettimeofday(&tv, NULL);
-         uint64_t timeInMilliSeconds = (uint64_t)tv.tv_sec * 1000ULL + (uint64_t)tv.tv_usec / 1000ULL;
-         uint64_t passedTimeInMs = timeInMilliSeconds - process->last_mlrs_calctime;
+         uint64_t passedTimeInMs = now - process->last_mlrs_calctime;
 
-         if(passedTimeInMs > 5000) {
-            process->last_mlrs_calctime = timeInMilliSeconds;
+         uint64_t recheck = ((uint64_t)rand()) % 2048;
+
+         if(passedTimeInMs > 2000 || passedTimeInMs > recheck) {
+            process->last_mlrs_calctime = now;
             process->m_lrs = LinuxProcessList_calcLibSize(dirname, name);
          }
       } else {
@@ -1358,7 +1357,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (settings->flags & PROCESS_FLAG_IO)
          LinuxProcessList_readIoFile(lp, dirname, name, now);
 
-      if (!LinuxProcessList_readStatmFile(lp, dirname, name, !!(settings->flags & PROCESS_FLAG_LINUX_LRS_FIX)))
+      if (!LinuxProcessList_readStatmFile(lp, dirname, name, !!(settings->flags & PROCESS_FLAG_LINUX_LRS_FIX), now))
          goto errorReadingProcess;
 
       if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
