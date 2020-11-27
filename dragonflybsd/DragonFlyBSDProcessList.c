@@ -253,12 +253,6 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->cachedMem *= pageSizeKb;
    pl->usedMem = dfpl->memActive + dfpl->memWire;
 
-   //currently unused, same as with arc, custom meter perhaps
-   //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &(dfpl->memInactive), &len, NULL, 0);
-   //sysctl(MIB_vm_stats_vm_v_free_count, 4, &(dfpl->memFree), &len, NULL, 0);
-   //pl->freeMem  = dfpl->memInactive + dfpl->memFree;
-   //pl->freeMem *= pageSizeKb;
-
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(dfpl->kd, swap, ARRAYSIZE(swap), 0);
    pl->totalSwap = 0;
@@ -269,8 +263,6 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    pl->totalSwap *= pageSizeKb;
    pl->usedSwap *= pageSizeKb;
-
-   pl->sharedMem = 0;  // currently unused
 }
 
 char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {

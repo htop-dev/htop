@@ -314,12 +314,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    pl->usedMem = fpl->memActive + fpl->memWire;
 
-   //currently unused, same as with arc, custom meter perhaps
-   //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &(fpl->memInactive), &len, NULL, 0);
-   //sysctl(MIB_vm_stats_vm_v_free_count, 4, &(fpl->memFree), &len, NULL, 0);
-   //pl->freeMem  = fpl->memInactive + fpl->memFree;
-   //pl->freeMem *= pageSizeKb;
-
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(fpl->kd, swap, ARRAYSIZE(swap), 0);
    pl->totalSwap = 0;
@@ -330,8 +324,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    pl->totalSwap *= pageSizeKb;
    pl->usedSwap *= pageSizeKb;
-
-   pl->sharedMem = 0;  // currently unused
 }
 
 static void FreeBSDProcessList_scanTTYs(ProcessList* pl) {

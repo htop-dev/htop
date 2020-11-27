@@ -1502,6 +1502,7 @@ errorReadingProcess:
 }
 
 static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
+   unsigned long long int freeMem = 0;
    unsigned long long int swapFree = 0;
    unsigned long long int shmem = 0;
    unsigned long long int sreclaimable = 0;
@@ -1522,8 +1523,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
       switch (buffer[0]) {
       case 'M':
          tryRead("MemTotal:", &this->totalMem);
-         tryRead("MemFree:", &this->freeMem);
-         tryRead("MemShared:", &this->sharedMem);
+         tryRead("MemFree:", &freeMem);
          break;
       case 'B':
          tryRead("Buffers:", &this->buffersMem);
@@ -1549,7 +1549,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
       #undef tryRead
    }
 
-   this->usedMem = this->totalMem - this->freeMem;
+   this->usedMem = this->totalMem - freeMem;
    this->cachedMem = this->cachedMem + sreclaimable - shmem;
    this->usedSwap = this->totalSwap - swapFree;
    fclose(file);

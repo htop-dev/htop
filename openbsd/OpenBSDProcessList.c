@@ -103,7 +103,6 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
 
    pl->cachedMem = bcstats.numbufpages * CRT_pageSizeKB;
-   pl->freeMem = uvmexp.free * CRT_pageSizeKB;
    pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * CRT_pageSizeKB;
 
    /*
@@ -114,7 +113,6 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->totalMem /= 1024;
    sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(pl->usedMem), &len, NULL, 0);
    pl->usedMem *= CRT_pageSizeKB;
-   pl->freeMem = pl->totalMem - pl->usedMem;
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
    pl->cachedMem *= CRT_pageSizeKB;
 
@@ -129,7 +127,6 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->totalSwap *= CRT_pageSizeKB;
    pl->usedSwap *= CRT_pageSizeKB;
 
-   pl->sharedMem = 0;  // currently unused
    pl->buffersMem = 0; // not exposed to userspace
    */
 }
