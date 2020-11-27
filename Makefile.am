@@ -7,8 +7,8 @@ EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png \
 install-sh autogen.sh missing
 applicationsdir = $(datadir)/applications
 applications_DATA = htop.desktop
-pixmapdir = $(datadir)/pixmaps
-pixmap_DATA = htop.png
+icon128dir = $(datadir)/icons/hicolor/128x128/apps
+icon128_DATA = htop.png
 
 AM_CFLAGS += -pedantic -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
 AM_LDFLAGS =
