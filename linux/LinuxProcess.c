@@ -358,7 +358,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
    /* Check for any changed fields since we last built this string */
    if (mc->cmdlineChanged || mc->commChanged || mc->exeChanged) {
       free(mc->str);
-      /* Accomodate the column text, two field separators and terminating NUL */
+      /* Accommodate the column text, two field separators and terminating NUL */
       mc->str = xCalloc(1, mc->maxLen + 2*SEPARATOR_LEN + 1);
    }
 
