@@ -294,7 +294,7 @@ static MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
       //left -= len;
    }
 
-   xSnprintf(buf, 64, "%s %s%u", type_name, index_prefix, index);
+   xSnprintf(buf, sizeof(buf), "%s %s%u", type_name, index_prefix, index);
 
    MaskItem* item = MaskItem_newMask(buf, indent_buf, obj->complete_cpuset, false);
    if (parent)

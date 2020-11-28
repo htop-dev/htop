@@ -476,8 +476,8 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
 
 void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred) {
    *ten = *sixty = *threehundred = 0;
-   char procname[128 + 1];
-   xSnprintf(procname, 128, PROCDIR "/pressure/%s", file);
+   char procname[128];
+   xSnprintf(procname, sizeof(procname), PROCDIR "/pressure/%s", file);
    FILE* fd = fopen(procname, "r");
    if (!fd) {
       *ten = *sixty = *threehundred = NAN;

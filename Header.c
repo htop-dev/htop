@@ -69,11 +69,11 @@ void Header_writeBackToSettings(const Header* this) {
 
       for (int i = 0; i < len; i++) {
          Meter* meter = (Meter*) Vector_get(vec, i);
-         char* name = xCalloc(64, sizeof(char));
+         char* name;
          if (meter->param) {
-            xSnprintf(name, 63, "%s(%d)", As_Meter(meter)->name, meter->param);
+            xAsprintf(&name, "%s(%d)", As_Meter(meter)->name, meter->param);
          } else {
-            xSnprintf(name, 63, "%s", As_Meter(meter)->name);
+            xAsprintf(&name, "%s", As_Meter(meter)->name);
          }
          colSettings->names[i] = name;
          colSettings->modes[i] = meter->mode;

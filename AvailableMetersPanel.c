@@ -119,7 +119,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));
       for (int i = 1; i <= cpus; i++) {
          char buffer[50];
-         xSnprintf(buffer, 50, "%s %d", type->uiName, Settings_cpuId(this->settings, i - 1));
+         xSnprintf(buffer, sizeof(buffer), "%s %d", type->uiName, Settings_cpuId(this->settings, i - 1));
          Panel_add(super, (Object*) ListItem_new(buffer, i));
       }
    } else {

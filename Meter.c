@@ -134,20 +134,20 @@ void Meter_setMode(Meter* this, int modeIndex) {
 }
 
 ListItem* Meter_toListItem(Meter* this, bool moving) {
-   char mode[21];
+   char mode[20];
    if (this->mode) {
-      xSnprintf(mode, 20, " [%s]", Meter_modes[this->mode]->uiName);
+      xSnprintf(mode, sizeof(mode), " [%s]", Meter_modes[this->mode]->uiName);
    } else {
       mode[0] = '\0';
    }
-   char number[11];
+   char number[10];
    if (this->param > 0) {
-      xSnprintf(number, 10, " %d", this->param);
+      xSnprintf(number, sizeof(number), " %d", this->param);
    } else {
       number[0] = '\0';
    }
-   char buffer[51];
-   xSnprintf(buffer, 50, "%s%s%s", Meter_uiName(this), number, mode);
+   char buffer[50];
+   xSnprintf(buffer, sizeof(buffer), "%s%s%s", Meter_uiName(this), number, mode);
    ListItem* li = ListItem_new(buffer, 0);
    li->moving = moving;
    return li;
