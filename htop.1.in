@@ -141,6 +141,10 @@ select which columns are displayed, in which order.
 Incrementally search the command lines of all the displayed processes. The
 currently selected (highlighted) command will update as you type. While in
 search mode, pressing F3 will cycle through matching occurrences.
+
+Alternatively the search can be started by simply typing the command
+you are looking for, although for the first character normal key
+bindings take precedence.
 .TP
 .B F4, \\\\
 Incremental process filtering: type in part of a process command line and
