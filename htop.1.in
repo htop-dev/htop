@@ -448,6 +448,12 @@ The percentage of time spent waiting for the completion of synchronous block I/O
 .B PERCENT_SWAP_DELAY (SWAPD%)
 The percentage of time spent swapping in pages. Requires CAP_NET_ADMIN.
 .TP
+.B COMM
+The command name for the process. Requires Linux kernel 2.6.33 or newer.
+.TP
+.B EXE
+The executable file of the process as reported by the kernel. Requries CAP_SYS_PTRACE and PTRACE_MODE_READ_FSCRED.
+.TP
 .B All other flags
 Currently unsupported (always displays '-').
 .SH "CONFIG FILE"
