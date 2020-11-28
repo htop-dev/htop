@@ -58,7 +58,7 @@ void Process_setupColumnWidths() {
 }
 
 void Process_humanNumber(RichString* str, unsigned long long number, bool coloring) {
-   char buffer[11];
+   char buffer[10];
    int len;
 
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
@@ -73,58 +73,58 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
 
    if (number < 1000) {
       //Plain number, no markings
-      len = snprintf(buffer, 10, "%5llu ", number);
+      len = xSnprintf(buffer, sizeof(buffer), "%5llu ", number);
       RichString_appendn(str, processColor, buffer, len);
    } else if (number < 100000) {
       //2 digit MB, 3 digit KB
-      len = snprintf(buffer, 10, "%2llu", number/1000);
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number/1000);
       RichString_appendn(str, processMegabytesColor, buffer, len);
       number %= 1000;
-      len = snprintf(buffer, 10, "%03llu ", number);
+      len = xSnprintf(buffer, sizeof(buffer), "%03llu ", number);
       RichString_appendn(str, processColor, buffer, len);
    } else if (number < 1000 * ONE_K) {
       //3 digit MB
       number /= ONE_K;
-      len = snprintf(buffer, 10, "%4lluM ", number);
+      len = xSnprintf(buffer, sizeof(buffer), "%4lluM ", number);
       RichString_appendn(str, processMegabytesColor, buffer, len);
    } else if (number < 10000 * ONE_K) {
       //1 digit GB, 3 digit MB
       number /= ONE_K;
-      len = snprintf(buffer, 10, "%1llu", number/1000);
+      len = xSnprintf(buffer, sizeof(buffer), "%1llu", number/1000);
       RichString_appendn(str, processGigabytesColor, buffer, len);
       number %= 1000;
-      len = snprintf(buffer, 10, "%03lluM ", number);
+      len = xSnprintf(buffer, sizeof(buffer), "%03lluM ", number);
       RichString_appendn(str, processMegabytesColor, buffer, len);
    } else if (number < 100000 * ONE_K) {
       //2 digit GB, 1 digit MB
       number /= 100 * ONE_K;
-      len = snprintf(buffer, 10, "%2llu", number/10);
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number/10);
       RichString_appendn(str, processGigabytesColor, buffer, len);
       number %= 10;
-      len = snprintf(buffer, 10, ".%1lluG ", number);
+      len = xSnprintf(buffer, sizeof(buffer), ".%1lluG ", number);
       RichString_appendn(str, processMegabytesColor, buffer, len);
    } else if (number < 1000 * ONE_M) {
       //3 digit GB
       number /= ONE_M;
-      len = snprintf(buffer, 10, "%4lluG ", number);
+      len = xSnprintf(buffer, sizeof(buffer), "%4lluG ", number);
       RichString_appendn(str, processGigabytesColor, buffer, len);
    } else if (number < 10000ULL * ONE_M) {
       //1 digit TB, 3 digit GB
       number /= ONE_M;
-      len = snprintf(buffer, 10, "%1llu", number/1000);
+      len = xSnprintf(buffer, sizeof(buffer), "%1llu", number/1000);
       RichString_appendn(str, largeNumberColor, buffer, len);
       number %= 1000;
-      len = snprintf(buffer, 10, "%03lluG ", number);
+      len = xSnprintf(buffer, sizeof(buffer), "%03lluG ", number);
       RichString_appendn(str, processGigabytesColor, buffer, len);
    } else {
       //2 digit TB and above
-      len = snprintf(buffer, 10, "%4.1lfT ", (double)number/ONE_G);
+      len = xSnprintf(buffer, sizeof(buffer), "%4.1lfT ", (double)number/ONE_G);
       RichString_appendn(str, largeNumberColor, buffer, len);
    }
 }
 
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring) {
-   char buffer[14];
+   char buffer[13];
 
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
    int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
@@ -168,17 +168,17 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths) {
    int minutes = (totalSeconds / 60) % 60;
    int seconds = totalSeconds % 60;
    int hundredths = totalHundredths - (totalSeconds * 100);
-   char buffer[11];
+   char buffer[10];
    if (hours >= 100) {
-      xSnprintf(buffer, 10, "%7lluh ", hours);
+      xSnprintf(buffer, sizeof(buffer), "%7lluh ", hours);
       RichString_append(str, CRT_colors[LARGE_NUMBER], buffer);
    } else {
       if (hours) {
-         xSnprintf(buffer, 10, "%2lluh", hours);
+         xSnprintf(buffer, sizeof(buffer), "%2lluh", hours);
          RichString_append(str, CRT_colors[LARGE_NUMBER], buffer);
-         xSnprintf(buffer, 10, "%02d:%02d ", minutes, seconds);
+         xSnprintf(buffer, sizeof(buffer), "%02d:%02d ", minutes, seconds);
       } else {
-         xSnprintf(buffer, 10, "%2d:%02d.%02d ", minutes, seconds, hundredths);
+         xSnprintf(buffer, sizeof(buffer), "%2d:%02d.%02d ", minutes, seconds, hundredths);
       }
       RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
    }
