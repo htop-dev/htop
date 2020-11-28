@@ -130,6 +130,7 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
    int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
    int processColor = CRT_colors[PROCESS];
    int processShadowColor = CRT_colors[PROCESS_SHADOW];
+
    if (!coloring) {
       largeNumberColor = CRT_colors[PROCESS];
       processMegabytesColor = CRT_colors[PROCESS];
@@ -137,22 +138,22 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
    }
 
    if (number == ULLONG_MAX) {
-      int len = snprintf(buffer, 13, "    no perm ");
+      int len = xSnprintf(buffer, sizeof(buffer), "        N/A ");
       RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
    } else if (number >= 100000LL * ONE_DECIMAL_T) {
-      xSnprintf(buffer, 13, "%11llu ", number / ONE_DECIMAL_G);
+      xSnprintf(buffer, sizeof(buffer), "%11llu ", number / ONE_DECIMAL_G);
       RichString_appendn(str, largeNumberColor, buffer, 12);
    } else if (number >= 100LL * ONE_DECIMAL_T) {
-      xSnprintf(buffer, 13, "%11llu ", number / ONE_DECIMAL_M);
+      xSnprintf(buffer, sizeof(buffer), "%11llu ", number / ONE_DECIMAL_M);
       RichString_appendn(str, largeNumberColor, buffer, 8);
       RichString_appendn(str, processMegabytesColor, buffer+8, 4);
    } else if (number >= 10LL * ONE_DECIMAL_G) {
-      xSnprintf(buffer, 13, "%11llu ", number / ONE_DECIMAL_K);
+      xSnprintf(buffer, sizeof(buffer), "%11llu ", number / ONE_DECIMAL_K);
       RichString_appendn(str, largeNumberColor, buffer, 5);
       RichString_appendn(str, processMegabytesColor, buffer+5, 3);
       RichString_appendn(str, processColor, buffer+8, 4);
    } else {
-      xSnprintf(buffer, 13, "%11llu ", number);
+      xSnprintf(buffer, sizeof(buffer), "%11llu ", number);
       RichString_appendn(str, largeNumberColor, buffer, 2);
       RichString_appendn(str, processMegabytesColor, buffer+2, 3);
       RichString_appendn(str, processColor, buffer+5, 3);
@@ -225,12 +226,14 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
    int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
    int processColor = CRT_colors[PROCESS];
+
    if (!coloring) {
       largeNumberColor = CRT_colors[PROCESS];
       processMegabytesColor = CRT_colors[PROCESS];
    }
+
    if (isnan(rate)) {
-      int len = snprintf(buffer, n, "    no perm ");
+      int len = xSnprintf(buffer, n, "        N/A ");
       RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
    } else if (rate < ONE_K) {
       int len = snprintf(buffer, n, "%7.2f B/s ", rate);
