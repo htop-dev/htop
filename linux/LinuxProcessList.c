@@ -563,8 +563,8 @@ static uint64_t LinuxProcessList_calcLibSize(openat_arg_t procFd) {
       uint64_t map_start;
       uint64_t map_end;
       char map_perm[5];
-      int map_devmaj;
-      int map_devmin;
+      unsigned int map_devmaj;
+      unsigned int map_devmin;
       uint64_t map_inode;
 
       // Short circuit test: Look for a slash
@@ -593,11 +593,11 @@ static uint64_t LinuxProcessList_calcLibSize(openat_arg_t procFd) {
       if (' ' != *readptr++)
          continue;
 
-      map_devmaj = fast_strtoull_hex(&readptr, 2);
+      map_devmaj = fast_strtoull_hex(&readptr, 4);
       if (':' != *readptr++)
          continue;
 
-      map_devmin = fast_strtoull_hex(&readptr, 2);
+      map_devmin = fast_strtoull_hex(&readptr, 4);
       if (' ' != *readptr++)
          continue;
 
