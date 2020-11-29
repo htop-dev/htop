@@ -101,8 +101,9 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
       len = xSnprintf(buffer, sizeof(buffer), "%2llu", number/10);
       RichString_appendn(str, processGigabytesColor, buffer, len);
       number %= 10;
-      len = xSnprintf(buffer, sizeof(buffer), ".%1lluG ", number);
+      len = xSnprintf(buffer, sizeof(buffer), ".%1llu", number);
       RichString_appendn(str, processMegabytesColor, buffer, len);
+      RichString_append(str, processGigabytesColor, "G ");
    } else if (number < 1000 * ONE_M) {
       //3 digit GB
       number /= ONE_M;
