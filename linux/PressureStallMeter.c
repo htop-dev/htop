@@ -20,7 +20,9 @@ in the source distribution for its full text.
 
 
 static const int PressureStallMeter_attributes[] = {
-   PRESSURE_STALL_TEN, PRESSURE_STALL_SIXTY, PRESSURE_STALL_THREEHUNDRED
+   PRESSURE_STALL_TEN,
+   PRESSURE_STALL_SIXTY,
+   PRESSURE_STALL_THREEHUNDRED
 };
 
 static void PressureStallMeter_updateValues(Meter* this, char* buffer, int len) {
@@ -41,7 +43,7 @@ static void PressureStallMeter_updateValues(Meter* this, char* buffer, int len) 
    }
 
    Platform_getPressureStall(file, some, &this->values[0], &this->values[1], &this->values[2]);
-   xSnprintf(buffer, len, "xxxx %.2lf%% %.2lf%% %.2lf%%", this->values[0], this->values[1], this->values[2]);
+   xSnprintf(buffer, len, "%s %s %.2lf%% %.2lf%% %.2lf%%", some ? "some" : "full", file, this->values[0], this->values[1], this->values[2]);
 }
 
 static void PressureStallMeter_display(const Object* cast, RichString* out) {
@@ -67,8 +69,9 @@ const MeterClass PressureStallCPUSomeMeter_class = {
    .total = 100.0,
    .attributes = PressureStallMeter_attributes,
    .name = "PressureStallCPUSome",
-   .uiName = "Pressure Stall Information, some CPU",
-   .caption = "Some CPU pressure: "
+   .uiName = "PSI some CPU",
+   .caption = "PSI some CPU:    ",
+   .description = "Pressure Stall Information, some cpu"
 };
 
 const MeterClass PressureStallIOSomeMeter_class = {
@@ -83,8 +86,9 @@ const MeterClass PressureStallIOSomeMeter_class = {
    .total = 100.0,
    .attributes = PressureStallMeter_attributes,
    .name = "PressureStallIOSome",
-   .uiName = "Pressure Stall Information, some IO",
-   .caption = "Some IO  pressure: "
+   .uiName = "PSI some IO",
+   .caption = "PSI some IO:     ",
+   .description = "Pressure Stall Information, some io"
 };
 
 const MeterClass PressureStallIOFullMeter_class = {
@@ -99,8 +103,9 @@ const MeterClass PressureStallIOFullMeter_class = {
    .total = 100.0,
    .attributes = PressureStallMeter_attributes,
    .name = "PressureStallIOFull",
-   .uiName = "Pressure Stall Information, full IO",
-   .caption = "Full IO  pressure: "
+   .uiName = "PSI full IO",
+   .caption = "PSI full IO:     ",
+   .description = "Pressure Stall Information, full io"
 };
 
 const MeterClass PressureStallMemorySomeMeter_class = {
@@ -115,8 +120,9 @@ const MeterClass PressureStallMemorySomeMeter_class = {
    .total = 100.0,
    .attributes = PressureStallMeter_attributes,
    .name = "PressureStallMemorySome",
-   .uiName = "Pressure Stall Information, some memory",
-   .caption = "Some Mem pressure: "
+   .uiName = "PSI some memory",
+   .caption = "PSI some memory: ",
+   .description = "Pressure Stall Information, some memory"
 };
 
 const MeterClass PressureStallMemoryFullMeter_class = {
@@ -131,6 +137,7 @@ const MeterClass PressureStallMemoryFullMeter_class = {
    .total = 100.0,
    .attributes = PressureStallMeter_attributes,
    .name = "PressureStallMemoryFull",
-   .uiName = "Pressure Stall Information, full memory",
-   .caption = "Full Mem pressure: "
+   .uiName = "PSI full memory",
+   .caption = "PSI full memory: ",
+   .description = "Pressure Stall Information, full memory"
 };
