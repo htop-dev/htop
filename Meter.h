@@ -39,10 +39,10 @@ typedef struct MeterClass_ {
    const int defaultMode;
    const double total;
    const int* const attributes;
-   const char* const name;
-   const char* const uiName;
-   const char* const caption;
-   const char* const description;
+   const char* const name;                 /* internal name of the meter, must not contain any space */
+   const char* const uiName;               /* display name in header setup menu */
+   const char* const caption;              /* prefix in the actual header */
+   const char* const description;          /* optional meter description in header setup menu */
    const uint8_t maxItems;
 } MeterClass;
 
