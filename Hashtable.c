@@ -98,21 +98,29 @@ Hashtable* Hashtable_new(unsigned int size, bool owner) {
    this->size = size ? nextPrime(size) : 13;
    this->buckets = (HashtableItem*) xCalloc(this->size, sizeof(HashtableItem));
    this->owner = owner;
+
    assert(Hashtable_isConsistent(this));
    return this;
 }
 
 void Hashtable_delete(Hashtable* this) {
-
-   assert(Hashtable_isConsistent(this));
-
-   if (this->owner) {
-      for (unsigned int i = 0; i < this->size; i++)
-         free(this->buckets[i].value);
-   }
+   Hashtable_clear(this);
 
    free(this->buckets);
    free(this);
+}
+
+void Hashtable_clear(Hashtable* this) {
+   assert(Hashtable_isConsistent(this));
+
+   if (this->owner)
+      for (unsigned int i = 0; i < this->size; i++)
+         free(this->buckets[i].value);
+
+   memset(this->buckets, 0, this->size * sizeof(HashtableItem));
+   this->items = 0;
+
+   assert(Hashtable_isConsistent(this));
 }
 
 static void insert(Hashtable* this, hkey_t key, void* value) {

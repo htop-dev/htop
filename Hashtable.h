@@ -37,6 +37,8 @@ Hashtable* Hashtable_new(unsigned int size, bool owner);
 
 void Hashtable_delete(Hashtable* this);
 
+void Hashtable_clear(Hashtable* this);
+
 void Hashtable_setSize(Hashtable* this, unsigned int size);
 
 void Hashtable_put(Hashtable* this, hkey_t key, void* value);
