@@ -20,7 +20,7 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
-   this->processTable = Hashtable_new(140, false);
+   this->processTable = Hashtable_new(200, false);
    this->usersTable = usersTable;
    this->pidMatchList = pidMatchList;
    this->userId = userId;
@@ -28,8 +28,8 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
    // tree-view auxiliary buffer
    this->processes2 = Vector_new(klass, true, DEFAULT_SIZE);
 
-   this->displayTreeSet = Hashtable_new(4096, false);
-   this->draftingTreeSet = Hashtable_new(4096, false);
+   this->displayTreeSet = Hashtable_new(200, false);
+   this->draftingTreeSet = Hashtable_new(200, false);
 
    // set later by platform-specific code
    this->cpuCount = 0;
