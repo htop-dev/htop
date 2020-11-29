@@ -1362,8 +1362,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          LinuxProcess_updateIOPriority(lp);
       }
 
-      float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;
-      proc->percent_cpu = isnan(percent_cpu) ? 0.0 : CLAMP(percent_cpu, 0.0, cpus * 100.0);
+      /* period might be 0 after system sleep */
+      float percent_cpu = (period < 1e-6) ? 0.0f : ((lp->utime + lp->stime - lasttimes) / period * 100.0);
+      proc->percent_cpu = CLAMP(percent_cpu, 0.0f, cpus * 100.0f);
       proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(pl->totalMem) * 100.0;
 
       if (!preExisting) {
