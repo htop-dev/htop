@@ -38,7 +38,7 @@ typedef struct Settings_ {
    bool detailedCPUTime;
    bool showCPUUsage;
    bool showCPUFrequency;
-   #ifdef HAVE_LIBSENSORS
+   #ifdef HAVE_SENSORS_SENSORS_H
    bool showCPUTemperature;
    bool degreeFahrenheit;
    #endif

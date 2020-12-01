@@ -307,13 +307,11 @@ then
    ])
 fi
 
-AC_ARG_ENABLE(sensors, [AS_HELP_STRING([--enable-sensors], [enable libsensors support for reading temperature data.])],, enable_sensors="check")
+AC_ARG_ENABLE(sensors, [AS_HELP_STRING([--with-sensors], [Compile with libsensors support for reading temperature data. Only requires libsensors headers at compile time, at runtime libsensors is loaded via dlopen.])],, enable_sensors="check")
 if test "x$enable_sensors" = xyes; then
-   AC_CHECK_LIB([sensors], [sensors_get_value], [], [missing_libraries="$missing_libraries libsensors"])
    AC_CHECK_HEADERS([sensors/sensors.h], [], [missing_headers="$missing_headers $ac_header"])
 elif test "x$enable_sensors" = xcheck; then
    enable_sensors=yes
-   AC_CHECK_LIB([sensors], [sensors_get_value], [], [enable_sensors=no])
    AC_CHECK_HEADERS([sensors/sensors.h], [], [enable_sensors=no])
 fi
 

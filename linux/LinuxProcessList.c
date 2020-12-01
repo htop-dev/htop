@@ -53,8 +53,8 @@ in the source distribution for its full text.
 #include <sys/sysmacros.h>
 #endif
 
-#ifdef HAVE_LIBSENSORS
-#include <sensors/sensors.h>
+#ifdef HAVE_SENSORS_SENSORS_H
+#include "LibSensors.h"
 #endif
 
 
@@ -1794,41 +1794,7 @@ static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
    scanCPUFreqencyFromCPUinfo(this);
 }
 
-#ifdef HAVE_LIBSENSORS
-static int getCPUTemperatures(CPUData* cpus, int cpuCount) {
-   int tempCount = 0;
-
-   int n = 0;
-   for (const sensors_chip_name *chip = sensors_get_detected_chips(NULL, &n); chip; chip = sensors_get_detected_chips(NULL, &n)) {
-      char buffer[32];
-      sensors_snprintf_chip_name(buffer, sizeof(buffer), chip);
-      if (!String_startsWith(buffer, "coretemp") && !String_startsWith(buffer, "cpu_thermal"))
-         continue;
-
-      int m = 0;
-      for (const sensors_feature *feature = sensors_get_features(chip, &m); feature; feature = sensors_get_features(chip, &m)) {
-         if (feature->type != SENSORS_FEATURE_TEMP)
-            continue;
-
-         if (feature->number > cpuCount)
-            continue;
-
-         const sensors_subfeature *sub_feature = sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
-         if (sub_feature) {
-            double temp;
-            int r = sensors_get_value(chip, sub_feature->number, &temp);
-            if (r != 0)
-               continue;
-
-            cpus[feature->number].temperature = temp;
-            tempCount++;
-         }
-      }
-   }
-
-   return tempCount;
-}
-
+#ifdef HAVE_SENSORS_SENSORS_H
 static void LinuxProcessList_scanCPUTemperature(LinuxProcessList* this) {
    const int cpuCount = this->super.cpuCount;
 
@@ -1836,10 +1802,10 @@ static void LinuxProcessList_scanCPUTemperature(LinuxProcessList* this) {
       this->cpus[i].temperature = NAN;
    }
 
-   int r = getCPUTemperatures(this->cpus, cpuCount);
+   int r = LibSensors_getCPUTemperatures(this->cpus, cpuCount);
 
    /* No temperature - nothing to do */
-   if (r == 0)
+   if (r <= 0)
       return;
 
    /* Only package temperature - copy to all cpus */
@@ -1878,7 +1844,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       LinuxProcessList_scanCPUFrequency(this);
    }
 
-   #ifdef HAVE_LIBSENSORS
+   #ifdef HAVE_SENSORS_SENSORS_H
    if (settings->showCPUTemperature)
       LinuxProcessList_scanCPUTemperature(this);
    #endif
