@@ -382,6 +382,11 @@ static void ProcessList_buildTree(ProcessList* this) {
          if (process->pid == ppid)
             r = 0;
 
+         // On Linux both the init process (pid 1) and the root UMH kernel thread (pid 2)
+         // use a ppid of 0. As that PID can't exist, we can skip searching for it.
+         if (!ppid)
+            r = 0;
+
          while (l < r) {
             int c = (l + r) / 2;
             pid_t pid = ((Process*)Vector_get(this->processes, c))->pid;
