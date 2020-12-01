@@ -20,16 +20,16 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
+   this->processes2 = Vector_new(klass, true, DEFAULT_SIZE); // tree-view auxiliary buffer
+
    this->processTable = Hashtable_new(200, false);
-   this->usersTable = usersTable;
-   this->pidMatchList = pidMatchList;
-   this->userId = userId;
-
-   // tree-view auxiliary buffer
-   this->processes2 = Vector_new(klass, true, DEFAULT_SIZE);
-
    this->displayTreeSet = Hashtable_new(200, false);
    this->draftingTreeSet = Hashtable_new(200, false);
+
+   this->usersTable = usersTable;
+   this->pidMatchList = pidMatchList;
+
+   this->userId = userId;
 
    // set later by platform-specific code
    this->cpuCount = 0;
@@ -65,11 +65,13 @@ void ProcessList_done(ProcessList* this) {
       hwloc_topology_destroy(this->topology);
    }
 #endif
-   Hashtable_delete(this->displayTreeSet);
+
    Hashtable_delete(this->draftingTreeSet);
+   Hashtable_delete(this->displayTreeSet);
    Hashtable_delete(this->processTable);
-   Vector_delete(this->processes);
+
    Vector_delete(this->processes2);
+   Vector_delete(this->processes);
 }
 
 void ProcessList_setPanel(ProcessList* this, Panel* panel) {
