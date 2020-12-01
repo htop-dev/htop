@@ -564,11 +564,13 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
       }
    }
 
-   // Clear out the hashtable to avoid any left-over processes from previous build
-   //
-   // The sorting algorithm relies on the fact that
-   // len(this->displayTreeSet) == len(this->processes)
-   Hashtable_clear(this->displayTreeSet);
+   if (this->settings->treeView) {
+      // Clear out the hashtable to avoid any left-over processes from previous build
+      //
+      // The sorting algorithm relies on the fact that
+      // len(this->displayTreeSet) == len(this->processes)
+      Hashtable_clear(this->displayTreeSet);
 
-   ProcessList_buildTree(this);
+      ProcessList_buildTree(this);
+   }
 }
