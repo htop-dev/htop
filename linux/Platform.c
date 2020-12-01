@@ -61,9 +61,10 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
-#ifdef HAVE_LIBSENSORS
-#include <sensors/sensors.h>
+#ifdef HAVE_SENSORS_SENSORS_H
+#include "LibSensors.h"
 #endif
+
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
@@ -119,14 +120,14 @@ void Platform_init(void) {
       exit(1);
    }
 
-#ifdef HAVE_LIBSENSORS
-   sensors_init(NULL);
+#ifdef HAVE_SENSORS_SENSORS_H
+   LibSensors_init(NULL);
 #endif
 }
 
 void Platform_done(void) {
-#ifdef HAVE_LIBSENSORS
-   sensors_cleanup();
+#ifdef HAVE_SENSORS_SENSORS_H
+   LibSensors_cleanup();
 #endif
 }
 
@@ -271,7 +272,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
 
-#ifdef HAVE_LIBSENSORS
+#ifdef HAVE_SENSORS_SENSORS_H
    v[CPU_METER_TEMPERATURE] = cpuData->temperature;
 #else
    v[CPU_METER_TEMPERATURE] = NAN;
