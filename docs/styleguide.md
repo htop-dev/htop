@@ -146,7 +146,7 @@ if (answer)
 else if (again)
    continue;
 else
-   goto bowl_of_petunias;
+   break;
 ```
 
 When the statements that form control flow constructs are complex (e.g. more than just a simple assignment or jump) or need explanatory comments you should use braces.
@@ -171,7 +171,7 @@ Try to separate such changes into a single, clean-up only commit to reduce noise
 
 When writing your code consistency with the surrounding codebase is favoured.
 
-Don't shy away from leaving (sinlge) blank lines to separate different groups of related statements.
+Don't shy away from leaving (single) blank lines to separate different groups of related statements.
 They can be a great asset to structure the flow of a method.
 
 ```c
