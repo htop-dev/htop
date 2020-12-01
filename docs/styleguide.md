@@ -165,7 +165,7 @@ if (fd >= 0)
    close(fd);
 ```
 
-While the existing code base isn't fully consistent with this code style isn't fully consistent yet it is strongly recommended that new code follows these rules.
+While the existing code base isn't fully consistent with this code style yet it is strongly recommended that new code follows these rules.
 Adapting surrounding code near places you need to touch is encouraged.
 Try to separate such changes into a single, clean-up only commit to reduce noise while reviewing your changes.
 
