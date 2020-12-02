@@ -513,7 +513,6 @@ void LinuxProcess_makeCommandStr(Process* this) {
 
    mc->commStart = commStart;
    mc->commEnd = commEnd;
-   return;
 }
 
 static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
@@ -611,7 +610,6 @@ static void LinuxProcess_writeCommandField(const Process *this, RichString *str,
       RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
       LinuxProcess_writeCommand(this, attr, baseattr, str);
    }
-   return;
 }
 
 static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
