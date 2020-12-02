@@ -719,9 +719,10 @@ void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
 
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
+
    use_default_colors();
    if (!has_colors())
-      CRT_colorScheme = 1;
+      CRT_colorScheme = COLORSCHEME_MONOCHROME;
    CRT_setColors(CRT_colorScheme);
 
    /* initialize locale */
