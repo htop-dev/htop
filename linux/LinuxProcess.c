@@ -536,9 +536,7 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAtt
    RichString_append(str, attr, lp->mergedCommand.str);
 
    if (lp->mergedCommand.commEnd) {
-      if (lp->mergedCommand.separateComm) {
-         RichString_setAttrn(str, commAttr, commStart, commEnd - 1);
-      } else if (commStart == baseStart && highlightBaseName) {
+      if (!lp->mergedCommand.separateComm && commStart == baseStart && highlightBaseName) {
          /* If it was matched with procExe's basename, make it bold if needed */
          if (commEnd > baseEnd) {
             RichString_setAttrn(str, A_BOLD | baseAttr, baseStart, baseEnd - 1);
