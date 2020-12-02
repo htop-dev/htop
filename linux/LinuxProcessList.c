@@ -1146,7 +1146,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    }
 
    lp->mergedCommand.maxLen = lastChar + 1;  /* accommodate cmdline */
-   if (!process->comm || strcmp(command, process->comm)) {
+   if (!process->comm || !String_eq(command, process->comm)) {
       process->basenameOffset = tokenEnd;
       setCommand(process, command, lastChar + 1);
       lp->procCmdlineBasenameOffset = tokenStart;
@@ -1159,7 +1159,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
        (amtRead = xread(fd, command, sizeof(command) - 1)) > 0) {
       command[amtRead - 1] = 0;
       lp->mergedCommand.maxLen += amtRead - 1;  /* accommodate comm */
-      if (!lp->procComm || strcmp(command, lp->procComm)) {
+      if (!lp->procComm || !String_eq(command, lp->procComm)) {
          free(lp->procComm);
          lp->procComm = xStrdup(command);
          lp->mergedCommand.commChanged = true;
@@ -1186,7 +1186,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    if (amtRead > 0) {
       filename[amtRead] = 0;
       lp->mergedCommand.maxLen += amtRead;  /* accommodate exe */
-      if (!lp->procExe || strcmp(filename, lp->procExe)) {
+      if (!lp->procExe || !String_eq(filename, lp->procExe)) {
          free(lp->procExe);
          lp->procExe = xStrdup(filename);
          lp->procExeLen = amtRead;
