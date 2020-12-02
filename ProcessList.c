@@ -148,8 +148,8 @@ int ProcessList_size(ProcessList* this) {
 //
 // The algorithm is based on `depth-first search`,
 // even though `breadth-first search` approach may be more efficient on first glance,
-// after comparision it may be not, as it's not save to go deeper without first updating the tree structure.
-// If it would be save that approach would likely bring an advantage in performance.
+// after comparision it may be not, as it's not safe to go deeper without first updating the tree structure.
+// If it would be safe that approach would likely bring an advantage in performance.
 //
 // Each call of the function looks for a 'layer'. A 'layer' is a list of processes with the same depth.
 // First it sorts a list. Then it runs the function recursively for each element of the sorted list.
@@ -157,26 +157,28 @@ int ProcessList_size(ProcessList* this) {
 //
 // It relies on `leftBound` and `rightBound` as an optimization to cut the list size at the time it builds a 'layer'.
 //
-// It uses a temporary Hashtable `draftingTreeSet` because it's not save to traverse a tree
+// It uses a temporary Hashtable `draftingTreeSet` because it's not safe to traverse a tree
 // and at the same time make changes in it.
+//
 static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftBound, unsigned int rightBound, unsigned int deep, unsigned int left, unsigned int right, unsigned int* index, unsigned int* treeIndex, int indent) {
-   // It's guaranted that layer_size is enough space
+
+   // It's guaranteed that layer_size is enough space
    // but most likely it needs less. Specifically on first iteration.
    int layerSize = (right - left) / 2;
 
-   // check if we reach `children` of `leafes`
+   // check if we reach `children` of `leaves`
    if (layerSize == 0)
       return;
 
    Vector* layer = Vector_new(this->processes->type, false, layerSize);
 
    // Find all processes on the same layer (process with the same `deep` value
-   // and included in a range from `leftBound` to `rightBound`.
+   // and included in a range from `leftBound` to `rightBound`).
    //
    // This loop also keeps track of left_bound and right_bound of these processes
    // in order not to lose this information once the list is sorted.
    //
-   // The variables left_bound and right_bound are different from what the values lhs and rhs represent,
+   // The variables left_bound and right_bound are different from what the values lhs and rhs represent.
    // While left_bound and right_bound define a range of processes to look at, the values given by lhs and rhs are indices into an array
    //
    // In the below example note how filtering a range of indices i is different from filtering for processes in the bounds left_bound < x < right_bound …
@@ -197,7 +199,7 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
             // Make a 'right_bound' of previous_process in a layer the current process's index.
             //
             // Use 'tree_depth' as a temporal variable.
-            // it is save to do as later 'tree_depth' will be renovated.
+            // It's safe to do as later 'tree_depth' will be renovated.
             previous_process->tree_depth = proc->tree_index;
          }
 
@@ -205,8 +207,8 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
       }
    }
 
-   // The loop above changes process-1 so the last process on the layer
-   // isn't updated by the that loop.
+   // The loop above changes just up to process-1.
+   // So the last process of the layer isn't updated by the above code.
    //
    // Thus, if present, set the `rightBound` to the last process on the layer
    if (Vector_size(layer) > 0) {
