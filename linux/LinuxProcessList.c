@@ -1117,9 +1117,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
                   command[i] = '\n';
                }
             } else if (!tokenEnd) {
-               if (command[i] == '/') {
-                  tokenStart = i + 1;
-               } else if (command[i] == '\\' && (!tokenStart || command[tokenStart - 1] == '\\')) {
+               if (command[i] == '/' || (command[i] == '\\' && (!tokenStart || command[tokenStart - 1] == '\\'))) {
                   tokenStart = i + 1;
                } else if (command[i] == ':' && (command[i + 1] != '/' && command[i + 1] != '\\')) {
                   tokenEnd = i;
