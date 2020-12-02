@@ -262,10 +262,9 @@ static void setCommFilter(State* state, char** commFilter) {
 
 int main(int argc, char** argv) {
 
-   char *lc_ctype = getenv("LC_CTYPE");
-   if (lc_ctype != NULL)
-      setlocale(LC_CTYPE, lc_ctype);
-   else if ((lc_ctype = getenv("LC_ALL")))
+   /* initialize locale */
+   const char* lc_ctype;
+   if ((lc_ctype = getenv("LC_CTYPE")) || (lc_ctype = getenv("LC_ALL")))
       setlocale(LC_CTYPE, lc_ctype);
    else
       setlocale(LC_CTYPE, "");

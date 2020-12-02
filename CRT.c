@@ -725,9 +725,6 @@ void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
       CRT_colorScheme = COLORSCHEME_MONOCHROME;
    CRT_setColors(CRT_colorScheme);
 
-   /* initialize locale */
-   setlocale(LC_CTYPE, "");
-
 #ifdef HAVE_LIBNCURSESW
    if (allowUnicode && String_eq(nl_langinfo(CODESET), "UTF-8")) {
       CRT_utf8 = true;
