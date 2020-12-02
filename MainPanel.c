@@ -25,11 +25,7 @@ static const char* const MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filt
 
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
    FunctionBar* bar = MainPanel_getFunctionBar(this);
-   if (mode) {
-      FunctionBar_setLabel(bar, KEY_F(5), "Sorted");
-   } else {
-      FunctionBar_setLabel(bar, KEY_F(5), "Tree  ");
-   }
+   FunctionBar_setLabel(bar, KEY_F(5), mode ? "Sorted" : "Tree  ");
 }
 
 void MainPanel_pidSearch(MainPanel* this, int ch) {
