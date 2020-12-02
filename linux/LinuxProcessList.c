@@ -518,7 +518,7 @@ static inline uint64_t fast_strtoull_hex(char **str, int maxlen) {
       --maxlen;
 
    while (maxlen--) {
-      nibble = **str;
+      nibble = (unsigned char)**str;
       if (!(valid_mask & (1 << (nibble & 0x1F))))
          break;
       if ((nibble < '0') || (nibble & ~0x20) > 'F')
