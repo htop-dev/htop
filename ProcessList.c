@@ -431,11 +431,11 @@ static void ProcessList_buildTree(ProcessList* this) {
 }
 
 void ProcessList_sort(ProcessList* this) {
-   if (!this->settings->treeView) {
-      Vector_insertionSort(this->processes);
-   } else {
+   if (this->settings->treeView) {
       ProcessList_updateTreeSet(this);
       Vector_quickSortCustomCompare(this->processes, ProcessList_treeProcessCompare);
+   } else {
+      Vector_insertionSort(this->processes);
    }
 }
 
