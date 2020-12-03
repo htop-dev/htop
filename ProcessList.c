@@ -192,7 +192,8 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
    // 4 | 6 | 7
    for (unsigned int i = leftBound; i < rightBound; i++) {
       Process* proc = (Process*)Hashtable_get(this->displayTreeSet, i);
-      if (proc->tree_depth == deep && proc->tree_left > left && proc->tree_right < right) {
+      assert(proc);
+      if (proc && proc->tree_depth == deep && proc->tree_left > left && proc->tree_right < right) {
          if (Vector_size(layer) > 0) {
             Process* previous_process = (Process*)Vector_get(layer, Vector_size(layer) - 1);
 
