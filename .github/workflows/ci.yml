@@ -26,16 +26,16 @@ jobs:
   build-ubuntu-latest-minimal-clang:
     runs-on: ubuntu-latest
     env:
-      CC: clang-10
+      CC: clang-11
     steps:
     - uses: actions/checkout@v2
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install clang-10 libncursesw5-dev
+      run: sudo apt-get install clang-11 libncursesw5-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -63,16 +63,16 @@ jobs:
   build-ubuntu-latest-full-featured-clang:
     runs-on: ubuntu-latest
     env:
-      CC: clang-10
+      CC: clang-11
     steps:
     - uses: actions/checkout@v2
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install clang-10 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev
+      run: sudo apt-get install clang-11 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
