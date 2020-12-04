@@ -114,7 +114,7 @@ void SolarisProcess_writeField(const Process* this, RichString* str, ProcessFiel
       Process_writeField(this, str, field);
       return;
    }
-   RichString_append(str, attr, buffer);
+   RichString_appendWide(str, attr, buffer);
 }
 
 long SolarisProcess_compare(const void* v1, const void* v2) {

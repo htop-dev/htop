@@ -209,7 +209,7 @@ static void OpenBSDProcess_writeField(const Process* this, RichString* str, Proc
       Process_writeField(this, str, field);
       return;
    }
-   RichString_append(str, attr, buffer);
+   RichString_appendWide(str, attr, buffer);
 }
 
 static long OpenBSDProcess_compare(const void* v1, const void* v2) {

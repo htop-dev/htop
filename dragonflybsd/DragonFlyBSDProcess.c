@@ -105,7 +105,7 @@ void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, Proces
       Process_writeField(this, str, field);
       return;
    }
-   RichString_append(str, attr, buffer);
+   RichString_appendWide(str, attr, buffer);
 }
 
 long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {

@@ -92,9 +92,9 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
 
       int color = (this->settings->sortKey == fields[i]) ?
          CRT_colors[PANEL_SELECTION_FOCUS] : CRT_colors[PANEL_HEADER_FOCUS];
-      RichString_append(header, color, field);
+      RichString_appendWide(header, color, field);
       if (COMM == fields[i] && this->settings->showMergedCommand) {
-         RichString_append(header, color, "(merged)");
+         RichString_appendAscii(header, color, "(merged)");
       }
    }
 }
