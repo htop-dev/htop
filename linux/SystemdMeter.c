@@ -1,6 +1,6 @@
 /*
 htop - SystemdMeter.c
-(C) 2020 Christian Göttsche
+(C) 2020 htop dev team
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
