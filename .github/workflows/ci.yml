@@ -102,6 +102,23 @@ jobs:
     - name: Build
       run: scan-build-11 -analyze-headers --status-bugs make -j"$(nproc)"
 
+  build-macos-latest-clang:
+    runs-on: macOS-latest
+    env:
+      CC: clang
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Dependencies
+      run: brew install automake
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --enable-werror
+    - name: Build
+      run: make -k
+    - name: Distcheck
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror"
+
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
