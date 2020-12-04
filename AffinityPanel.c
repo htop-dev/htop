@@ -59,25 +59,25 @@ static void MaskItem_delete(Object* cast) {
 static void MaskItem_display(const Object* cast, RichString* out) {
    const MaskItem* this = (const MaskItem*)cast;
    assert (this != NULL);
-   RichString_append(out, CRT_colors[CHECK_BOX], "[");
+   RichString_appendAscii(out, CRT_colors[CHECK_BOX], "[");
    if (this->value == 2) {
-      RichString_append(out, CRT_colors[CHECK_MARK], "x");
+      RichString_appendAscii(out, CRT_colors[CHECK_MARK], "x");
    } else if (this->value == 1) {
-      RichString_append(out, CRT_colors[CHECK_MARK], "o");
+      RichString_appendAscii(out, CRT_colors[CHECK_MARK], "o");
    } else {
-      RichString_append(out, CRT_colors[CHECK_MARK], " ");
+      RichString_appendAscii(out, CRT_colors[CHECK_MARK], " ");
    }
-   RichString_append(out, CRT_colors[CHECK_BOX], "]");
-   RichString_append(out, CRT_colors[CHECK_TEXT], " ");
+   RichString_appendAscii(out, CRT_colors[CHECK_BOX], "]");
+   RichString_appendAscii(out, CRT_colors[CHECK_TEXT], " ");
    if (this->indent) {
-      RichString_append(out, CRT_colors[PROCESS_TREE], this->indent);
-      RichString_append(out, CRT_colors[PROCESS_TREE],
-                        this->sub_tree == 2
-                        ? CRT_treeStr[TREE_STR_OPEN]
-                        : CRT_treeStr[TREE_STR_SHUT]);
-      RichString_append(out, CRT_colors[CHECK_TEXT], " ");
+      RichString_appendWide(out, CRT_colors[PROCESS_TREE], this->indent);
+      RichString_appendWide(out, CRT_colors[PROCESS_TREE],
+                            this->sub_tree == 2
+                            ? CRT_treeStr[TREE_STR_OPEN]
+                            : CRT_treeStr[TREE_STR_SHUT]);
+      RichString_appendAscii(out, CRT_colors[CHECK_TEXT], " ");
    }
-   RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
+   RichString_appendWide(out, CRT_colors[CHECK_TEXT], this->text);
 }
 
 static const ObjectClass MaskItem_class = {

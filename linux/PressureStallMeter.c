@@ -50,11 +50,11 @@ static void PressureStallMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
    char buffer[20];
    xSnprintf(buffer, sizeof(buffer), "%.2lf%% ", this->values[0]);
-   RichString_write(out, CRT_colors[PRESSURE_STALL_TEN], buffer);
+   RichString_writeAscii(out, CRT_colors[PRESSURE_STALL_TEN], buffer);
    xSnprintf(buffer, sizeof(buffer), "%.2lf%% ", this->values[1]);
-   RichString_append(out, CRT_colors[PRESSURE_STALL_SIXTY], buffer);
+   RichString_appendAscii(out, CRT_colors[PRESSURE_STALL_SIXTY], buffer);
    xSnprintf(buffer, sizeof(buffer), "%.2lf%% ", this->values[2]);
-   RichString_append(out, CRT_colors[PRESSURE_STALL_THREEHUNDRED], buffer);
+   RichString_appendAscii(out, CRT_colors[PRESSURE_STALL_THREEHUNDRED], buffer);
 }
 
 const MeterClass PressureStallCPUSomeMeter_class = {

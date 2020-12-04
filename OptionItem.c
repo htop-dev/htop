@@ -29,14 +29,14 @@ static void CheckItem_display(const Object* cast, RichString* out) {
    const CheckItem* this = (const CheckItem*)cast;
    assert (this != NULL);
 
-   RichString_write(out, CRT_colors[CHECK_BOX], "[");
+   RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
    if (CheckItem_get(this)) {
-      RichString_append(out, CRT_colors[CHECK_MARK], "x");
+      RichString_appendAscii(out, CRT_colors[CHECK_MARK], "x");
    } else {
-      RichString_append(out, CRT_colors[CHECK_MARK], " ");
+      RichString_appendAscii(out, CRT_colors[CHECK_MARK], " ");
    }
-   RichString_append(out, CRT_colors[CHECK_BOX], "]    ");
-   RichString_append(out, CRT_colors[CHECK_TEXT], this->super.text);
+   RichString_appendAscii(out, CRT_colors[CHECK_BOX], "]    ");
+   RichString_appendWide(out, CRT_colors[CHECK_TEXT], this->super.text);
 }
 
 static void NumberItem_display(const Object* cast, RichString* out) {
@@ -44,7 +44,7 @@ static void NumberItem_display(const Object* cast, RichString* out) {
    assert (this != NULL);
 
    char buffer[12];
-   RichString_write(out, CRT_colors[CHECK_BOX], "[");
+   RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
    int written;
    if (this->scale < 0) {
       written = xSnprintf(buffer, sizeof(buffer), "%.*f", -this->scale, pow(10, this->scale) * NumberItem_get(this));
@@ -53,12 +53,12 @@ static void NumberItem_display(const Object* cast, RichString* out) {
    } else {
       written = xSnprintf(buffer, sizeof(buffer), "%d", NumberItem_get(this));
    }
-   RichString_append(out, CRT_colors[CHECK_MARK], buffer);
-   RichString_append(out, CRT_colors[CHECK_BOX], "]");
+   RichString_appendAscii(out, CRT_colors[CHECK_MARK], buffer);
+   RichString_appendAscii(out, CRT_colors[CHECK_BOX], "]");
    for (int i = written; i < 5; i++) {
-      RichString_append(out, CRT_colors[CHECK_BOX], " ");
+      RichString_appendAscii(out, CRT_colors[CHECK_BOX], " ");
    }
-   RichString_append(out, CRT_colors[CHECK_TEXT], this->super.text);
+   RichString_appendWide(out, CRT_colors[CHECK_TEXT], this->super.text);
 }
 
 const OptionItemClass OptionItem_class = {

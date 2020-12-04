@@ -100,7 +100,7 @@ static inline void Meter_displayBuffer(const Meter* this, const char* buffer, Ri
    if (Object_displayFn(this)) {
       Object_display(this, out);
    } else {
-      RichString_write(out, CRT_colors[Meter_attributes(this)[0]], buffer);
+      RichString_writeWide(out, CRT_colors[Meter_attributes(this)[0]], buffer);
    }
 }
 
@@ -201,7 +201,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    RichString_begin(bar);
    RichString_appendChr(&bar, ' ', padding);
-   RichString_append(&bar, 0, buffer);
+   RichString_appendWide(&bar, 0, buffer);
    assert(RichString_sizeVal(bar) >= w);
 
    int blockSizes[10];

@@ -536,7 +536,7 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAtt
    if(lp->procExeDeleted)
       baseAttr = CRT_colors[FAILED_READ];
 
-   RichString_append(str, attr, lp->mergedCommand.str);
+   RichString_appendWide(str, attr, lp->mergedCommand.str);
 
    if (lp->mergedCommand.commEnd) {
       if (!lp->mergedCommand.separateComm && commStart == baseStart && highlightBaseName) {
@@ -608,7 +608,7 @@ static void LinuxProcess_writeCommandField(const Process *this, RichString *str,
       n -= (buf - buffer);
       const char* draw = CRT_treeStr[lastItem ? (this->settings->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
       xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
-      RichString_append(str, CRT_colors[PROCESS_TREE], buffer);
+      RichString_appendWide(str, CRT_colors[PROCESS_TREE], buffer);
       LinuxProcess_writeCommand(this, attr, baseattr, str);
    }
 }
@@ -757,7 +757,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       Process_writeField(this, str, field);
       return;
    }
-   RichString_append(str, attr, buffer);
+   RichString_appendWide(str, attr, buffer);
 }
 
 static long LinuxProcess_compare(const void* v1, const void* v2) {

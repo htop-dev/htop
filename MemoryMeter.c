@@ -34,18 +34,18 @@ static void MemoryMeter_updateValues(Meter* this, char* buffer, size_t size) {
 static void MemoryMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
-   RichString_write(out, CRT_colors[METER_TEXT], ":");
+   RichString_writeAscii(out, CRT_colors[METER_TEXT], ":");
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
-   RichString_append(out, CRT_colors[METER_VALUE], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
    Meter_humanUnit(buffer, this->values[0], sizeof(buffer));
-   RichString_append(out, CRT_colors[METER_TEXT], " used:");
-   RichString_append(out, CRT_colors[MEMORY_USED], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " used:");
+   RichString_appendAscii(out, CRT_colors[MEMORY_USED], buffer);
    Meter_humanUnit(buffer, this->values[1], sizeof(buffer));
-   RichString_append(out, CRT_colors[METER_TEXT], " buffers:");
-   RichString_append(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " buffers:");
+   RichString_appendAscii(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
    Meter_humanUnit(buffer, this->values[2], sizeof(buffer));
-   RichString_append(out, CRT_colors[METER_TEXT], " cache:");
-   RichString_append(out, CRT_colors[MEMORY_CACHE], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
+   RichString_appendAscii(out, CRT_colors[MEMORY_CACHE], buffer);
 }
 
 const MeterClass MemoryMeter_class = {

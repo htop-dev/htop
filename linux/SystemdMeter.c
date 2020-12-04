@@ -267,9 +267,9 @@ static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out
    char buffer[16];
 
    int color = (systemState && 0 == strcmp(systemState, "running")) ? METER_VALUE_OK : METER_VALUE_ERROR;
-   RichString_write(out, CRT_colors[color], systemState ? systemState : "???");
+   RichString_writeAscii(out, CRT_colors[color], systemState ? systemState : "N/A");
 
-   RichString_append(out, CRT_colors[METER_TEXT], " (");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " (");
 
    if (nFailedUnits == INVALID_VALUE) {
       buffer[0] = '?';
@@ -277,9 +277,9 @@ static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out
    } else {
       xSnprintf(buffer, sizeof(buffer), "%u", nFailedUnits);
    }
-   RichString_append(out, zeroDigitColor(nFailedUnits), buffer);
+   RichString_appendAscii(out, zeroDigitColor(nFailedUnits), buffer);
 
-   RichString_append(out, CRT_colors[METER_TEXT], "/");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], "/");
 
    if (nNames == INVALID_VALUE) {
       buffer[0] = '?';
@@ -287,9 +287,9 @@ static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out
    } else {
       xSnprintf(buffer, sizeof(buffer), "%u", nNames);
    }
-   RichString_append(out, valueDigitColor(nNames), buffer);
+   RichString_appendAscii(out, valueDigitColor(nNames), buffer);
 
-   RichString_append(out, CRT_colors[METER_TEXT], " failed) (");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " failed) (");
 
    if (nJobs == INVALID_VALUE) {
       buffer[0] = '?';
@@ -297,9 +297,9 @@ static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out
    } else {
       xSnprintf(buffer, sizeof(buffer), "%u", nJobs);
    }
-   RichString_append(out, zeroDigitColor(nJobs), buffer);
+   RichString_appendAscii(out, zeroDigitColor(nJobs), buffer);
 
-   RichString_append(out, CRT_colors[METER_TEXT], "/");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], "/");
 
    if (nInstalledJobs == INVALID_VALUE) {
       buffer[0] = '?';
@@ -307,9 +307,9 @@ static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out
    } else {
       xSnprintf(buffer, sizeof(buffer), "%u", nInstalledJobs);
    }
-   RichString_append(out, valueDigitColor(nInstalledJobs), buffer);
+   RichString_appendAscii(out, valueDigitColor(nInstalledJobs), buffer);
 
-   RichString_append(out, CRT_colors[METER_TEXT], " jobs)");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " jobs)");
 }
 
 static const int SystemdMeter_attributes[] = {

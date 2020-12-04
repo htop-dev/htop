@@ -82,7 +82,7 @@ RichString* Panel_getHeader(Panel* this) {
 }
 
 inline void Panel_setHeader(Panel* this, const char* header) {
-   RichString_write(&(this->header), CRT_colors[PANEL_HEADER_FOCUS], header);
+   RichString_writeWide(&(this->header), CRT_colors[PANEL_HEADER_FOCUS], header);
    this->needsRedraw = true;
 }
 

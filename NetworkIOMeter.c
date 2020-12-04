@@ -88,24 +88,24 @@ static void NetworkIOMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, s
 
 static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    if (!hasData) {
-      RichString_write(out, CRT_colors[METER_VALUE_ERROR], "no data");
+      RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
       return;
    }
 
    char buffer[64];
 
-   RichString_write(out, CRT_colors[METER_TEXT], "rx: ");
+   RichString_writeAscii(out, CRT_colors[METER_TEXT], "rx: ");
    Meter_humanUnit(buffer, cached_rxb_diff, sizeof(buffer));
-   RichString_append(out, CRT_colors[METER_VALUE_IOREAD], buffer);
-   RichString_append(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
 
-   RichString_append(out, CRT_colors[METER_TEXT], " tx: ");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " tx: ");
    Meter_humanUnit(buffer, cached_txb_diff, sizeof(buffer));
-   RichString_append(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
-   RichString_append(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 
    xSnprintf(buffer, sizeof(buffer), " (%lu/%lu packets) ", cached_rxp_diff, cached_txp_diff);
-   RichString_append(out, CRT_colors[METER_TEXT], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], buffer);
 }
 
 const MeterClass NetworkIOMeter_class = {
