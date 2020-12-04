@@ -6,17 +6,6 @@ compiler:
 
 os:
   - freebsd
-  - linux
-  - osx
-
-arch:
-  - amd64
-  - s390x
-
-before_script:
-  if [[ ${TRAVIS_CPU_ARCH} == 's390x' ]]; then
-      sudo apt-get update && sudo apt-get install -y libncursesw5-dev ;
-  fi
 
 script:
   - ./autogen.sh
