@@ -5,8 +5,9 @@ What's new in version 3.0.3
 * Improved command display/sort functionality
   (thanks to Narendran Gopalakrishnan)
 * Add screen for active file locks
+  (thanks to Fynn J. Wulf)
 * Calculate library size (M_LRS column) from maps file
-  (thanks to Fynn Wulf)
+  (thanks to Fynn J. Wulf)
 * Add a Zram meter
   (thanks to Murloc Knight)
 * Add Linux cwd process column
@@ -49,8 +50,10 @@ What's new in version 3.0.3
 * Avoid expensive build of process tree when not using it
 * Include documentation for COMM and EXE
 * Distinguish display of no permissions for reading M_LRS
-* Only calculate M_LRS size every 5 seconds
+* Only calculate M_LRS size every 2 seconds
 * Improvements to comm / cmdline display functionality
+* Merged view for COMM, EXE and cmdline
+  (thanks to Narendran Gopalakrishnan and Benny Baumann)
 * Consistent kernel thread display for COMM/EXE columns
 * Central fault handling for all platforms
 * Handle parsing envID & VPid from process status file
