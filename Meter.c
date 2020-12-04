@@ -185,19 +185,18 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[BAR_BORDER]);
    mvaddch(y, x, '[');
    mvaddch(y, x + w, ']');
+   attrset(CRT_colors[RESET_COLOR]);
 
    w--;
    x++;
 
-   if (w < 1) {
-      attrset(CRT_colors[RESET_COLOR]);
+   if (w < 1)
       return;
-   }
 
    // The text in the bar is right aligned;
    // calculate needed padding and generate leading spaces
    const int textLen = mbstowcs(NULL, buffer, 0);
-   const int padding = MAXIMUM(w - textLen, 0);
+   const int padding = CLAMP(w - textLen, 0, w);
 
    RichString_begin(bar);
    RichString_appendChr(&bar, ' ', padding);
@@ -233,13 +232,13 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // ...then print the buffer.
    offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
-      attrset(CRT_colors[Meter_attributes(this)[i]]);
+      RichString_setAttrn(&bar, CRT_colors[Meter_attributes(this)[i]], offset, offset + blockSizes[i] - 1);
       RichString_printoffnVal(bar, y, x + offset, offset, blockSizes[i]);
       offset += blockSizes[i];
       offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
-      attrset(CRT_colors[BAR_SHADOW]);
+      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], offset, w - 1);
       RichString_printoffnVal(bar, y, x + offset, offset, w - offset);
    }
 
