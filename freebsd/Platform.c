@@ -248,7 +248,7 @@ char* Platform_getProcessEnv(pid_t pid) {
    char* env = xMalloc(capacity);
 
    int err = sysctl(mib, 4, env, &capacity, NULL, 0);
-   if (err) {
+   if (err || capacity == 0) {
       free(env);
       return NULL;
    }
