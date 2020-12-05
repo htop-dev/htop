@@ -6,46 +6,49 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "CRT.h"
-#include "ProcessList.h"
 #include "OpenBSDProcessList.h"
-#include "OpenBSDProcess.h"
-#include "Macros.h"
 
 #include <err.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/mount.h>
-#include <sys/param.h>
-#include <sys/proc.h>
-#include <sys/resource.h>
-#include <sys/sched.h>
-#include <sys/sysctl.h>
-#include <sys/types.h>
-#include <sys/user.h>
+#include <kvm.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/mount.h>
+#include <sys/param.h>
+#include <sys/proc.h>
+#include <sys/sched.h>
+#include <sys/swap.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#include <uvm/uvmexp.h>
+
+#include "CRT.h"
+#include "Macros.h"
+#include "Object.h"
+#include "OpenBSDProcess.h"
+#include "Process.h"
+#include "ProcessList.h"
+#include "Settings.h"
+#include "XUtils.h"
+
 
 static long fscale;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
-   int mib[] = { CTL_HW, HW_NCPU };
-   int fmib[] = { CTL_KERN, KERN_FSCALE };
-   int i, e;
-   OpenBSDProcessList* opl;
-   ProcessList* pl;
+   const int mib[] = { CTL_HW, HW_NCPU };
+   const int fmib[] = { CTL_KERN, KERN_FSCALE };
+   int r;
    size_t size;
    char errbuf[_POSIX2_LINE_MAX];
 
-   opl = xCalloc(1, sizeof(OpenBSDProcessList));
-   pl = (ProcessList*) opl;
-   size = sizeof(pl->cpuCount);
+   OpenBSDProcessList* opl = xCalloc(1, sizeof(OpenBSDProcessList));
+   ProcessList* pl = (ProcessList*) opl;
    ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidMatchList, userId);
 
-   e = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
-   if (e == -1 || pl->cpuCount < 1) {
+   size = sizeof(pl->cpuCount);
+   r = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
+   if (r < 0 || pl->cpuCount < 1) {
       pl->cpuCount = 1;
    }
    opl->cpus = xCalloc(pl->cpuCount + 1, sizeof(CPUData));
@@ -55,7 +58,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       err(1, "fscale sysctl call failed");
    }
 
-   for (i = 0; i <= pl->cpuCount; i++) {
+   for (int i = 0; i <= pl->cpuCount; i++) {
       CPUData* d = opl->cpus + i;
       d->totalTime = 1;
       d->totalPeriod = 1;
@@ -70,7 +73,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 }
 
 void ProcessList_delete(ProcessList* this) {
-   const OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
+   OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
 
    if (opl->kd) {
       kvm_close(opl->kd);
@@ -82,8 +85,8 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
-   static int uvmexp_mib[] = {CTL_VM, VM_UVMEXP};
+static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
+   const int uvmexp_mib[] = { CTL_VM, VM_UVMEXP };
    struct uvmexp uvmexp;
    size_t size_uvmexp = sizeof(uvmexp);
 
@@ -92,9 +95,10 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
 
    pl->totalMem = uvmexp.npages * CRT_pageSizeKB;
+   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * CRT_pageSizeKB;
 
    // Taken from OpenBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
-   static int bcache_mib[] = {CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT};
+   const int bcache_mib[] = { CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT };
    struct bcachestats bcstats;
    size_t size_bcstats = sizeof(bcstats);
 
@@ -103,52 +107,55 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
 
    pl->cachedMem = bcstats.numbufpages * CRT_pageSizeKB;
-   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * CRT_pageSizeKB;
 
    /*
-   const OpenBSDProcessList* opl = (OpenBSDProcessList*) pl;
+    * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
+    * All rights reserved.
+    *
+    * Taken almost directly from OpenBSD's top(1)
+    *
+    * Originally released under a BSD-3 license
+    * Modified through htop developers applying GPL-2
+    */
+   int nswap = swapctl(SWAP_NSWAP, 0, 0);
+   if (nswap > 0) {
+      struct swapent swdev[nswap];
+      int rnswap = swapctl(SWAP_STATS, swdev, nswap);
 
-   size_t len = sizeof(pl->totalMem);
-   sysctl(MIB_hw_physmem, 2, &(pl->totalMem), &len, NULL, 0);
-   pl->totalMem /= 1024;
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(pl->usedMem), &len, NULL, 0);
-   pl->usedMem *= CRT_pageSizeKB;
-   sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
-   pl->cachedMem *= CRT_pageSizeKB;
+      /* Total things up */
+      unsigned long long int total = 0, used = 0;
+      for (int i = 0; i < rnswap; i++) {
+         if (swdev[i].se_flags & SWF_ENABLE) {
+            used += (swdev[i].se_inuse / (1024 / DEV_BSIZE));
+            total += (swdev[i].se_nblks / (1024 / DEV_BSIZE));
+         }
+      }
 
-   struct kvm_swap swap[16];
-   int nswap = kvm_getswapinfo(opl->kd, swap, ARRAYSIZE(swap), 0);
-   pl->totalSwap = 0;
-   pl->usedSwap = 0;
-   for (int i = 0; i < nswap; i++) {
-      pl->totalSwap += swap[i].ksw_total;
-      pl->usedSwap += swap[i].ksw_used;
+      pl->totalSwap = total;
+      pl->usedSwap = used;
+   } else {
+      pl->totalSwap = pl->usedSwap = 0;
    }
-   pl->totalSwap *= CRT_pageSizeKB;
-   pl->usedSwap *= CRT_pageSizeKB;
-
-   pl->buffersMem = 0; // not exposed to userspace
-   */
 }
 
-char* OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
-   char *s, **arg;
-   size_t len = 0;
-   int i;
-
+static char* OpenBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
    /*
     * Like OpenBSD's top(1), we try to fall back to the command name
     * (argv[0]) if we fail to construct the full command.
     */
-   arg = kvm_getargv(kd, kproc, 500);
+   char** arg = kvm_getargv(kd, kproc, 500);
    if (arg == NULL || *arg == NULL) {
       *basenameEnd = strlen(kproc->p_comm);
       return xStrdup(kproc->p_comm);
    }
-   for (i = 0; arg[i] != NULL; i++) {
+
+   size_t len = 0;
+   for (int i = 0; arg[i] != NULL; i++) {
       len += strlen(arg[i]) + 1;   /* room for arg and trailing space or NUL */
    }
+
    /* don't use xMalloc here - we want to handle huge argv's gracefully */
+   char* s;
    if ((s = malloc(len)) == NULL) {
       *basenameEnd = strlen(kproc->p_comm);
       return xStrdup(kproc->p_comm);
@@ -156,10 +163,9 @@ char* OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
 
    *s = '\0';
 
-   for (i = 0; arg[i] != NULL; i++) {
+   for (int i = 0; arg[i] != NULL; i++) {
       size_t n = strlcat(s, arg[i], len);
       if (i == 0) {
-         /* TODO: rename all basenameEnd to basenameLen, make size_t */
          *basenameEnd = MINIMUM(n, len - 1);
       }
       /* the trailing space should get truncated anyway */
@@ -176,30 +182,25 @@ static double getpcpu(const struct kinfo_proc* kp) {
    if (fscale == 0)
       return 0.0;
 
-#define   fxtofl(fixpt)   ((double)(fixpt) / fscale)
-
-   return (100.0 * fxtofl(kp->p_pctcpu));
+   return 100.0 * (double)kp->p_pctcpu / fscale;
 }
 
-static inline void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
+static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    const Settings* settings = this->super.settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
    int count = 0;
 
-   // use KERN_PROC_KTHREAD to also include kernel threads
-   struct kinfo_proc* kprocs = kvm_getprocs(this->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
-   //struct kinfo_proc* kprocs = getprocs(KERN_PROC_ALL, 0, &count);
+   const struct kinfo_proc* kprocs = kvm_getprocs(this->kd, KERN_PROC_KTHREAD, 0, sizeof(struct kinfo_proc), &count);
 
    for (int i = 0; i < count; i++) {
-      struct kinfo_proc* kproc = &kprocs[i];
+      const struct kinfo_proc* kproc = &kprocs[i];
 
       bool preExisting = false;
       Process* proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, OpenBSDProcess_new);
-      OpenBSDProcess* fp = (OpenBSDProcess*) proc;
+      //OpenBSDProcess* fp = (OpenBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc))
-                  || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       if (!preExisting) {
          proc->ppid = kproc->p_ppid;
@@ -226,10 +227,8 @@ static inline void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(this->super.totalMem) * 100.0;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.cpuCount * 100.0);
       //proc->nlwp = kproc->p_numthreads;
-      //proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 10);
       proc->nice = kproc->p_nice - 20;
-      proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000);
-      proc->time *= 100;
+      proc->time = 100 * (kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000));
       proc->priority = kproc->p_priority - PZERO;
 
       switch (kproc->p_stat) {
@@ -261,10 +260,9 @@ static unsigned long long saturatingSub(unsigned long long a, unsigned long long
 }
 
 static void getKernelCPUTimes(int cpuId, u_int64_t* times) {
-   int mib[] = { CTL_KERN, KERN_CPTIME2, cpuId };
-   size_t length = sizeof(u_int64_t) * CPUSTATES;
-   if (sysctl(mib, 3, times, &length, NULL, 0) == -1 ||
-         length != sizeof(u_int64_t) * CPUSTATES) {
+   const int mib[] = { CTL_KERN, KERN_CPTIME2, cpuId };
+   size_t length = sizeof(*times) * CPUSTATES;
+   if (sysctl(mib, 3, times, &length, NULL, 0) == -1 || length != sizeof(*times) * CPUSTATES) {
       CRT_fatalError("sysctl kern.cp_time2 failed");
    }
 }

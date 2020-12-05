@@ -14,8 +14,11 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
+#include "Meter.h"
+#include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+
 
 extern ProcessFieldData Process_fields[];
 
