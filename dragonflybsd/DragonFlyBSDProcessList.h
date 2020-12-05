@@ -59,6 +59,6 @@ char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kpro
 
 char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid);
 
-void ProcessList_goThroughEntries(ProcessList* super, pauseProcessUpdate);
+void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
 
 #endif
