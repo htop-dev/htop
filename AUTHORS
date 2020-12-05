@@ -1,1 +1,11 @@
-Hisham H. Muhammad
+Originally authored by:
+ Hisham H. Muhammad
+
+Currently maintained by the htop dev team:
+ Benny Baumann
+ Christian Göttsche
+ Daniel Lange
+ Nathan Scott
+
+For the full list of contributors see:
+ git log --format="%aN" | sort -u
