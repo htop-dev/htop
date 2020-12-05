@@ -437,7 +437,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
    }
 }
 
-typedef struct LibraryData {
+typedef struct LibraryData_ {
     uint64_t size;
     bool exec;
 } LibraryData;
