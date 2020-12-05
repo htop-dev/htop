@@ -6,26 +6,15 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Process.h"
-#include "ProcessList.h"
 #include "OpenBSDProcess.h"
-#include "Platform.h"
-#include "CRT.h"
 
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/syscall.h>
 
+#include "CRT.h"
+#include "Process.h"
+#include "RichString.h"
+#include "XUtils.h"
 
-const ProcessClass OpenBSDProcess_class = {
-   .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = OpenBSDProcess_compare
-   },
-   .writeField = OpenBSDProcess_writeField,
-};
 
 ProcessFieldData Process_fields[] = {
    [0] = {
@@ -200,7 +189,7 @@ Process* OpenBSDProcess_new(const Settings* settings) {
    OpenBSDProcess* this = xCalloc(sizeof(OpenBSDProcess), 1);
    Object_setClass(this, Class(OpenBSDProcess));
    Process_init(&this->super, settings);
-   return &this->this;
+   return &this->super;
 }
 
 void Process_delete(Object* cast) {
@@ -209,8 +198,8 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-void OpenBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
-   //OpenBSDProcess* fp = (OpenBSDProcess*) this;
+static void OpenBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+   //const OpenBSDProcess* op = (const OpenBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    //int n = sizeof(buffer) - 1;
@@ -223,7 +212,7 @@ void OpenBSDProcess_writeField(const Process* this, RichString* str, ProcessFiel
    RichString_append(str, attr, buffer);
 }
 
-long OpenBSDProcess_compare(const void* v1, const void* v2) {
+static long OpenBSDProcess_compare(const void* v1, const void* v2) {
    const OpenBSDProcess *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
 
@@ -235,6 +224,9 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
       p1 = (const OpenBSDProcess*)v2;
    }
 
+   // remove if actually used
+   (void)p1; (void)p2;
+
    switch (settings->sortKey) {
    // add OpenBSD-specific fields here
    default:
@@ -242,6 +234,16 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
    }
 }
 
+const ProcessClass OpenBSDProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = OpenBSDProcess_compare
+   },
+   .writeField = OpenBSDProcess_writeField,
+};
+
 bool Process_isThread(const Process* this) {
-   return (Process_isKernelThread(this));
+   return Process_isKernelThread(this) || Process_isUserlandThread(this);
 }

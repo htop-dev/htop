@@ -8,6 +8,13 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+
+#include "Object.h"
+#include "Process.h"
+#include "Settings.h"
+
+
 typedef enum OpenBSDProcessFields_ {
    // Add platform-specific fields here, with ids >= 100
    LAST_PROCESSFIELD = 100,
@@ -30,10 +37,6 @@ extern ProcessPidColumn Process_pidColumns[];
 Process* OpenBSDProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
-
-void OpenBSDProcess_writeField(const Process* this, RichString* str, ProcessField field);
-
-long OpenBSDProcess_compare(const void* v1, const void* v2);
 
 bool Process_isThread(const Process* this);
 
