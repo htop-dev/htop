@@ -883,7 +883,7 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t
 }
 
 static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd) {
-   char pathBuffer[PATH_MAX + 1];
+   char pathBuffer[PATH_MAX + 1] = {0};
 
 #if defined(HAVE_READLINKAT) && defined(HAVE_OPENAT)
    ssize_t r = readlinkat(procFd, "cwd", pathBuffer, sizeof(pathBuffer) - 1);
@@ -892,6 +892,7 @@ static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd)
    xSnprintf(filename, sizeof(filename), "%s/cwd", procFd);
    ssize_t r = readlink(filename, pathBuffer, sizeof(pathBuffer) - 1);
 #endif
+
    if (r < 0) {
       free(process->cwd);
       process->cwd = NULL;
