@@ -4,7 +4,6 @@
 
 #include <dlfcn.h>
 #include <errno.h>
-#include <limits.h>
 #include <sensors/sensors.h>
 
 #include "XUtils.h"

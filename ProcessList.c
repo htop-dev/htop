@@ -14,6 +14,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Hashtable.h"
+#include "Macros.h"
 #include "Vector.h"
 #include "XUtils.h"
 

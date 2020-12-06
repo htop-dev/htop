@@ -12,7 +12,7 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #include <stddef.h>
 #include <unistd.h>
-#include <sys/stat.h>
+#include <sys/stat.h> // IWYU pragma: keep
 
 
 int Compat_faccessat(int dirfd,

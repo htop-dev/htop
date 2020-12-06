@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 

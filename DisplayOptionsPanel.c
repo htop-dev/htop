@@ -18,7 +18,6 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "OptionItem.h"
 #include "ProvideCurses.h"
-#include "XUtils.h"
 
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};

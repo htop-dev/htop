@@ -18,7 +18,6 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "RichString.h"
 #include "Vector.h"
-#include "XUtils.h"
 
 
 // TO ADD A NEW SCHEME:

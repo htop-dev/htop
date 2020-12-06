@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "Macros.h"
 #include "XUtils.h"
