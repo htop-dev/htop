@@ -12,7 +12,9 @@ in the source distribution for its full text.
 #include <stdlib.h>
 
 #include "CRT.h"
+#include "Macros.h"
 #include "RichString.h"
+#include "XUtils.h"
 
 
 static void OptionItem_delete(Object* cast) {

@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 
-#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>

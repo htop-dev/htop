@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <stdio.h>
 #include <stdlib.h> // IWYU pragma: keep
 #include <string.h> // IWYU pragma: keep
+#include <sys/types.h>
 
 #include "Compat.h"
 #include "Macros.h"
