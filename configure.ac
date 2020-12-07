@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-AC_INIT([htop],[3.0.3-dev],[htop@groups.io])
+AC_INIT([htop],[3.0.4-dev],[htop@groups.io])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([.])
