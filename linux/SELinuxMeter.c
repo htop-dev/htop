@@ -35,7 +35,7 @@ static bool hasSELinuxMount(void) {
       return false;
    }
 
-   if (sfbuf.f_type != SELINUX_MAGIC) {
+   if ((uint32_t)sfbuf.f_type != (uint32_t)SELINUX_MAGIC) {
       return false;
    }
 
