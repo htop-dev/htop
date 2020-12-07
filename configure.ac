@@ -217,6 +217,10 @@ if test "x$enable_unicode" = xyes; then
       [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
          [AC_CHECK_HEADERS([ncurses/curses.h],[:],
             [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
+
+   # check if additional linker flags are needed for keypad(3)
+   # (at this point we already link against a working ncurses library with wide character support)
+   AC_SEARCH_LIBS([keypad], [tinfow tinfo])
 else
    HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], "ncurses6-config",
     HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], "ncurses5-config",
@@ -229,6 +233,10 @@ else
       [AC_CHECK_HEADERS([ncurses/curses.h],[:],
          [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
             [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
+
+   # check if additional linker flags are needed for keypad(3)
+   # (at this point we already link against a working ncurses library)
+   AC_SEARCH_LIBS([keypad], [tinfo])
 fi
 
 if test "$my_htop_platform" = "freebsd"; then
