@@ -70,7 +70,7 @@ static bool isSelinuxEnforcing(void) {
    return !!enforce;
 }
 
-static void SELinuxMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, int len) {
+static void SELinuxMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t len) {
    enabled = isSelinuxEnabled();
    enforcing = isSelinuxEnforcing();
 

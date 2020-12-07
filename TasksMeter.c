@@ -23,7 +23,7 @@ static const int TasksMeter_attributes[] = {
    TASKS_RUNNING
 };
 
-static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
+static void TasksMeter_updateValues(Meter* this, char* buffer, size_t len) {
    const ProcessList* pl = this->pl;
    this->values[0] = pl->kernelThreads;
    this->values[1] = pl->userlandThreads;

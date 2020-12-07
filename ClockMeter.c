@@ -19,7 +19,7 @@ static const int ClockMeter_attributes[] = {
    CLOCK
 };
 
-static void ClockMeter_updateValues(Meter* this, char* buffer, int size) {
+static void ClockMeter_updateValues(Meter* this, char* buffer, size_t size) {
    time_t t = time(NULL);
    struct tm result;
    struct tm* lt = localtime_r(&t, &result);

@@ -223,7 +223,7 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
    }
 }
 
-void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring) {
+void Process_outputRate(RichString* str, char* buffer, size_t n, double rate, int coloring) {
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
    int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
    int processColor = CRT_colors[PROCESS];
@@ -258,7 +258,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int baseattr = CRT_colors[PROCESS_BASENAME];
-   int n = sizeof(buffer) - 1;
+   size_t n = sizeof(buffer) - 1;
    bool coloring = this->settings->highlightMegabytes;
 
    switch (field) {
@@ -312,7 +312,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
             } else {
                ret = snprintf(buf, n, "   ");
             }
-            if (ret < 0 || ret >= n) {
+            if (ret < 0 || (size_t)ret >= n) {
                written = n;
             } else {
                written = ret;

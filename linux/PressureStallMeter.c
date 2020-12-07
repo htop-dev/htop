@@ -25,7 +25,7 @@ static const int PressureStallMeter_attributes[] = {
    PRESSURE_STALL_THREEHUNDRED
 };
 
-static void PressureStallMeter_updateValues(Meter* this, char* buffer, int len) {
+static void PressureStallMeter_updateValues(Meter* this, char* buffer, size_t len) {
    const char* file;
    if (strstr(Meter_name(this), "CPU")) {
       file = "cpu";

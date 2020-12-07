@@ -24,7 +24,7 @@ static const int LoadMeter_attributes[] = {
    LOAD
 };
 
-static void LoadAverageMeter_updateValues(Meter* this, char* buffer, int size) {
+static void LoadAverageMeter_updateValues(Meter* this, char* buffer, size_t size) {
    Platform_getLoadAverage(&this->values[0], &this->values[1], &this->values[2]);
    xSnprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
 }
@@ -40,7 +40,7 @@ static void LoadAverageMeter_display(const Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[LOAD_AVERAGE_FIFTEEN], buffer);
 }
 
-static void LoadMeter_updateValues(Meter* this, char* buffer, int size) {
+static void LoadMeter_updateValues(Meter* this, char* buffer, size_t size) {
    double five, fifteen;
    Platform_getLoadAverage(&this->values[0], &five, &fifteen);
    if (this->values[0] > this->total) {

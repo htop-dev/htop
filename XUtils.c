@@ -184,13 +184,13 @@ int xAsprintf(char** strp, const char* fmt, ...) {
    return r;
 }
 
-int xSnprintf(char* buf, int len, const char* fmt, ...) {
+int xSnprintf(char* buf, size_t len, const char* fmt, ...) {
    va_list vl;
    va_start(vl, fmt);
    int n = vsnprintf(buf, len, fmt, vl);
    va_end(vl);
 
-   if (n < 0 || n >= len) {
+   if (n < 0 || (size_t)n >= len) {
       fail();
    }
 

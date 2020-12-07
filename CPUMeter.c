@@ -50,7 +50,7 @@ static void CPUMeter_init(Meter* this) {
       Meter_setCaption(this, "Avg");
 }
 
-static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
+static void CPUMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
       xSnprintf(buffer, size, "absent");

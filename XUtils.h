@@ -59,7 +59,7 @@ ATTR_FORMAT(printf, 2, 3)
 int xAsprintf(char** strp, const char* fmt, ...);
 
 ATTR_FORMAT(printf, 3, 4)
-int xSnprintf(char* buf, int len, const char* fmt, ...);
+int xSnprintf(char* buf, size_t len, const char* fmt, ...);
 
 char* xStrdup(const char* str) ATTR_NONNULL;
 
