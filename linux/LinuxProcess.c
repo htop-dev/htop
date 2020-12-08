@@ -605,8 +605,9 @@ static void LinuxProcess_writeCommandField(const Process *this, RichString *str,
             buf = stpcpy(buf, "   ");
          }
       }
+
       n -= (buf - buffer);
-      const char* draw = CRT_treeStr[lastItem ? (this->settings->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
+      const char* draw = CRT_treeStr[lastItem ? TREE_STR_BEND : TREE_STR_RTEE];
       xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
       RichString_appendWide(str, CRT_colors[PROCESS_TREE], buffer);
       LinuxProcess_writeCommand(this, attr, baseattr, str);

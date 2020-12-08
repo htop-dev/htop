@@ -479,23 +479,20 @@ void ProcessList_rebuildPanel(ProcessList* this) {
    int size = ProcessList_size(this);
    int idx = 0;
    for (int i = 0; i < size; i++) {
-      bool hidden = false;
       Process* p = ProcessList_get(this, i);
 
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
          || (incFilter && !(String_contains_i(Process_getCommand(p), incFilter)))
          || (this->pidMatchList && !Hashtable_get(this->pidMatchList, p->tgid)) )
-         hidden = true;
+         continue;
 
-      if (!hidden) {
-         Panel_set(this->panel, idx, (Object*)p);
-         if ((this->following == -1 && idx == currPos) || (this->following != -1 && p->pid == currPid)) {
-            Panel_setSelected(this->panel, idx);
-            this->panel->scrollV = currScrollV;
-         }
-         idx++;
+      Panel_set(this->panel, idx, (Object*)p);
+      if ((this->following == -1 && idx == currPos) || (this->following != -1 && p->pid == currPid)) {
+         Panel_setSelected(this->panel, idx);
+         this->panel->scrollV = currScrollV;
       }
+      idx++;
    }
 }
 
