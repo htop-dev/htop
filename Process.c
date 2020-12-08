@@ -448,7 +448,7 @@ void Process_init(Process* this, const struct Settings_* settings) {
 }
 
 void Process_toggleTag(Process* this) {
-   this->tag = this->tag == true ? false : true;
+   this->tag = !this->tag;
 }
 
 bool Process_isNew(const Process* this) {
@@ -488,7 +488,8 @@ bool Process_sendSignal(Process* this, Arg sgn) {
 long Process_pidCompare(const void* v1, const void* v2) {
    const Process* p1 = (const Process*)v1;
    const Process* p2 = (const Process*)v2;
-   return (p1->pid - p2->pid);
+
+   return SPACESHIP_NUMBER(p1->pid, p2->pid);
 }
 
 long Process_compare(const void* v1, const void* v2) {
