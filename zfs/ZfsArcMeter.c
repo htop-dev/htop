@@ -50,24 +50,24 @@ static void ZfsArcMeter_display(const Object* cast, RichString* out) {
 
    if (this->values[5] > 0) {
       char buffer[50];
-      Meter_humanUnit(buffer, this->total, 50);
+      Meter_humanUnit(buffer, this->total, sizeof(buffer));
       RichString_append(out, CRT_colors[METER_VALUE], buffer);
-      Meter_humanUnit(buffer, this->values[5], 50);
+      Meter_humanUnit(buffer, this->values[5], sizeof(buffer));
       RichString_append(out, CRT_colors[METER_TEXT], " Used:");
       RichString_append(out, CRT_colors[METER_VALUE], buffer);
-      Meter_humanUnit(buffer, this->values[0], 50);
+      Meter_humanUnit(buffer, this->values[0], sizeof(buffer));
       RichString_append(out, CRT_colors[METER_TEXT], " MFU:");
       RichString_append(out, CRT_colors[ZFS_MFU], buffer);
-      Meter_humanUnit(buffer, this->values[1], 50);
+      Meter_humanUnit(buffer, this->values[1], sizeof(buffer));
       RichString_append(out, CRT_colors[METER_TEXT], " MRU:");
       RichString_append(out, CRT_colors[ZFS_MRU], buffer);
-      Meter_humanUnit(buffer, this->values[2], 50);
+      Meter_humanUnit(buffer, this->values[2], sizeof(buffer));
       RichString_append(out, CRT_colors[METER_TEXT], " Anon:");
       RichString_append(out, CRT_colors[ZFS_ANON], buffer);
-      Meter_humanUnit(buffer, this->values[3], 50);
+      Meter_humanUnit(buffer, this->values[3], sizeof(buffer));
       RichString_append(out, CRT_colors[METER_TEXT], " Hdr:");
       RichString_append(out, CRT_colors[ZFS_HEADER], buffer);
-      Meter_humanUnit(buffer, this->values[4], 50);
+      Meter_humanUnit(buffer, this->values[4], sizeof(buffer));
       RichString_append(out, CRT_colors[METER_TEXT], " Oth:");
       RichString_append(out, CRT_colors[ZFS_OTHER], buffer);
    } else {

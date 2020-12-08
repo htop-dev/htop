@@ -33,9 +33,9 @@ static void SwapMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
    RichString_write(out, CRT_colors[METER_TEXT], ":");
-   Meter_humanUnit(buffer, this->total, 50);
+   Meter_humanUnit(buffer, this->total, sizeof(buffer));
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
-   Meter_humanUnit(buffer, this->values[0], 50);
+   Meter_humanUnit(buffer, this->values[0], sizeof(buffer));
    RichString_append(out, CRT_colors[METER_TEXT], " used:");
    RichString_append(out, CRT_colors[METER_VALUE], buffer);
 }

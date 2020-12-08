@@ -47,13 +47,13 @@ static void ZfsCompressedArcMeter_display(const Object* cast, RichString* out) {
 
    if (this->values[0] > 0) {
       char buffer[50];
-      Meter_humanUnit(buffer, this->total, 50);
+      Meter_humanUnit(buffer, this->total, sizeof(buffer));
       RichString_append(out, CRT_colors[METER_VALUE], buffer);
       RichString_append(out, CRT_colors[METER_TEXT], " Uncompressed, ");
-      Meter_humanUnit(buffer, this->values[0], 50);
+      Meter_humanUnit(buffer, this->values[0], sizeof(buffer));
       RichString_append(out, CRT_colors[METER_VALUE], buffer);
       RichString_append(out, CRT_colors[METER_TEXT], " Compressed, ");
-      ZfsCompressedArcMeter_printRatioString(this, buffer, 50);
+      ZfsCompressedArcMeter_printRatioString(this, buffer, sizeof(buffer));
       RichString_append(out, CRT_colors[METER_VALUE], buffer);
       RichString_append(out, CRT_colors[METER_TEXT], " Ratio");
    } else {
