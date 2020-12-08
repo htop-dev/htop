@@ -43,17 +43,21 @@ static void PressureStallMeter_updateValues(Meter* this, char* buffer, size_t le
    }
 
    Platform_getPressureStall(file, some, &this->values[0], &this->values[1], &this->values[2]);
-   xSnprintf(buffer, len, "%s %s %.2lf%% %.2lf%% %.2lf%%", some ? "some" : "full", file, this->values[0], this->values[1], this->values[2]);
+
+   /* only print bar for ten (not sixty and threehundred), cause the sum is meaningless */
+   this->curItems = 1;
+
+   xSnprintf(buffer, len, "%s %s %5.2lf%% %5.2lf%% %5.2lf%%", some ? "some" : "full", file, this->values[0], this->values[1], this->values[2]);
 }
 
 static void PressureStallMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
    char buffer[20];
-   xSnprintf(buffer, sizeof(buffer), "%.2lf%% ", this->values[0]);
+   xSnprintf(buffer, sizeof(buffer), "%5.2lf%% ", this->values[0]);
    RichString_writeAscii(out, CRT_colors[PRESSURE_STALL_TEN], buffer);
-   xSnprintf(buffer, sizeof(buffer), "%.2lf%% ", this->values[1]);
+   xSnprintf(buffer, sizeof(buffer), "%5.2lf%% ", this->values[1]);
    RichString_appendAscii(out, CRT_colors[PRESSURE_STALL_SIXTY], buffer);
-   xSnprintf(buffer, sizeof(buffer), "%.2lf%% ", this->values[2]);
+   xSnprintf(buffer, sizeof(buffer), "%5.2lf%% ", this->values[2]);
    RichString_appendAscii(out, CRT_colors[PRESSURE_STALL_THREEHUNDRED], buffer);
 }
 
