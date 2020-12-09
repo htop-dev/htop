@@ -21,6 +21,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "DarwinProcess.h"
+#include "Platform.h"
 #include "ProcessList.h"
 #include "zfs/openzfs_sysctl.h"
 #include "zfs/ZfsArcStats.h"
@@ -158,6 +159,11 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
+static double ticksToNanoseconds(const double ticks) {
+   const double nanos_per_sec = 1e9;
+   return ticks / (double) Platform_clockTicksPerSec * Platform_timebaseToNS * nanos_per_sec;
+}
+
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    DarwinProcessList* dpl = (DarwinProcessList*)super;
    bool preExisting = true;
@@ -185,6 +191,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       }
    }
 
+   const double time_interval = ticksToNanoseconds(dpl->global_diff) / (double) dpl->super.cpuCount;
+
    /* Clear the thread counts */
    super->kernelThreads = 0;
    super->userlandThreads = 0;
@@ -204,7 +212,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       proc = (DarwinProcess*)ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, DarwinProcess_new);
 
       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], preExisting);
-      DarwinProcess_setFromLibprocPidinfo(proc, dpl);
+      DarwinProcess_setFromLibprocPidinfo(proc, dpl, time_interval);
 
       // Disabled for High Sierra due to bug in macOS High Sierra
       bool isScanThreadSupported  = ! ( CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);

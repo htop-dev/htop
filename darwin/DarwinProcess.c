@@ -292,23 +292,21 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    proc->updated = true;
 }
 
-void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl) {
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double time_interval) {
    struct proc_taskinfo pti;
 
    if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-      if (0 != proc->utime || 0 != proc->stime) {
-         uint64_t diff = (pti.pti_total_system - proc->stime)
-                       + (pti.pti_total_user - proc->utime);
+      uint64_t total_existing_time = proc->stime + proc->utime;
+      uint64_t total_current_time = pti.pti_total_system + pti.pti_total_user;
 
-         proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount * Platform_timebaseToNS
-                                 / ((double)dpl->global_diff * 100000.0);
-
-//       fprintf(stderr, "%f %llu %llu %llu %llu %llu\n", proc->super.percent_cpu,
-//               proc->stime, proc->utime, pti.pti_total_system, pti.pti_total_user, dpl->global_diff);
-//       exit(7);
+      if (total_existing_time && 1e-6 < time_interval) {
+         uint64_t total_time_diff = total_current_time - total_existing_time;
+         proc->super.percent_cpu = ((double)total_time_diff / time_interval) * 100.0;
+      } else {
+         proc->super.percent_cpu = 0.0;
       }
 
-      proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
+      proc->super.time = total_current_time / 10000000;
       proc->super.nlwp = pti.pti_threadnum;
       proc->super.m_virt = pti.pti_virtual_size / ONE_K;
       proc->super.m_resident = pti.pti_resident_size / ONE_K;
