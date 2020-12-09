@@ -273,6 +273,8 @@ static Htop_Reaction actionLowerPriority(State* st) {
 
 static Htop_Reaction actionInvertSortOrder(State* st) {
    Settings_invertSortOrder(st->settings);
+   if (st->pauseProcessUpdate)
+      ProcessList_sort(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
