@@ -106,7 +106,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    if (*rescan) {
       *oldTime = newTime;
       ProcessList_scan(pl, this->state->pauseProcessUpdate);
-      if (*sortTimeout == 0 || this->settings->treeView) {
+      if (!this->state->pauseProcessUpdate && (*sortTimeout == 0 || this->settings->treeView)) {
          ProcessList_sort(pl);
          *sortTimeout = 1;
       }
