@@ -10,16 +10,18 @@ in the source distribution for its full text.
 
 #include "Platform.h"
 
+#include <errno.h>
 #include <math.h>
 #include <stdlib.h>
-
-#include <CoreFoundation/CoreFoundation.h>
+#include <unistd.h>
 #include <CoreFoundation/CFString.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/ps/IOPowerSources.h>
 #include <IOKit/ps/IOPSKeys.h>
 
 #include "ClockMeter.h"
 #include "CPUMeter.h"
+#include "CRT.h"
 #include "DarwinProcessList.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
@@ -114,6 +116,8 @@ int Platform_numberOfFields = LAST_PROCESSFIELD;
 
 double Platform_timebaseToNS = 1.0;
 
+long Platform_clockTicksPerSec = -1;
+
 void Platform_init(void) {
    // Check if we can determine the timebase used on this system.
    // If the API is unavailable assume we get our timebase in nanoseconds.
@@ -124,6 +128,14 @@ void Platform_init(void) {
 #else
    Platform_timebaseToNS = 1.0;
 #endif
+
+   // Determine the number of clock ticks per second
+   errno = 0;
+   Platform_clockTicksPerSec = sysconf(_SC_CLK_TCK);
+
+   if (errno || Platform_clockTicksPerSec < 1) {
+      CRT_fatalError("Unable to retrieve clock tick rate.\n");
+   }
 }
 
 void Platform_done(void) {
