@@ -24,6 +24,8 @@ extern const ProcessField Platform_defaultFields[];
 
 extern double Platform_timebaseToNS;
 
+extern long Platform_clockTicksPerSec;
+
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
