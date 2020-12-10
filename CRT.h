@@ -156,9 +156,6 @@ extern const char* CRT_termType;
 
 extern int CRT_colorScheme;
 
-extern long CRT_pageSize;
-extern long CRT_pageSizeKB;
-
 #ifdef HAVE_SETUID_ENABLED
 
 void CRT_dropPrivileges(void);

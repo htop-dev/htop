@@ -202,6 +202,12 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    LinuxProcessList_initNetlinkSocket(this);
    #endif
 
+   // Initialize page size
+   pageSize = sysconf(_SC_PAGESIZE);
+   if (pageSize == -1)
+      CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
+   pageSizeKB = pageSize / ONE_K;
+
    // Check for /proc/*/smaps_rollup availability (improves smaps parsing speed, Linux 4.14+)
    FILE* file = fopen(PROCDIR "/self/smaps_rollup", "r");
    if (file != NULL) {
@@ -573,7 +579,7 @@ static uint64_t LinuxProcessList_calcLibSize(openat_arg_t procFd) {
 
    Hashtable_delete(ht);
 
-   return total_size / CRT_pageSize;
+   return total_size / pageSize;
 }
 
 static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t procFd, bool performLookup, unsigned long long now) {
@@ -593,6 +599,9 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
    fclose(statmfile);
 
    if (r == 7) {
+      process->super.m_virt *= pageSizeKB;
+      process->super.m_resident *= pageSizeKB;
+
       if (tmp_m_lrs) {
          process->m_lrs = tmp_m_lrs;
       } else if (performLookup) {
@@ -1365,7 +1374,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       /* period might be 0 after system sleep */
       float percent_cpu = (period < 1e-6) ? 0.0f : ((lp->utime + lp->stime - lasttimes) / period * 100.0);
       proc->percent_cpu = CLAMP(percent_cpu, 0.0f, cpus * 100.0f);
-      proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(pl->totalMem) * 100.0;
+      proc->percent_mem = proc->m_resident / (double)(pl->totalMem) * 100.0;
 
       if (!preExisting) {
 

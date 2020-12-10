@@ -193,6 +193,10 @@ static inline bool Process_isUserlandThread(const Process* this) {
 
 extern long long btime;
 
+extern int pageSize;
+
+extern int pageSizeKB;
+
 extern ProcessFieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];

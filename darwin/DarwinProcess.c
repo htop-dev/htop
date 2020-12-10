@@ -258,8 +258,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
 
       proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
       proc->super.nlwp = pti.pti_threadnum;
-      proc->super.m_virt = pti.pti_virtual_size / CRT_pageSize;
-      proc->super.m_resident = pti.pti_resident_size / CRT_pageSize;
+      proc->super.m_virt = pti.pti_virtual_size / ONE_K;
+      proc->super.m_resident = pti.pti_resident_size / ONE_K;
       proc->super.majflt = pti.pti_faults;
       proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
                               / (double)dpl->host_info.max_mem;

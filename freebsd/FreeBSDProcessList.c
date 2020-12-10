@@ -72,12 +72,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    len = 2; sysctlnametomib("hw.physmem", MIB_hw_physmem, &len);
 
    len = sizeof(pageSize);
-   if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1) {
-      pageSize = CRT_pageSize;
-      pageSizeKb = CRT_pageSize;
-   } else {
-      pageSizeKb = pageSize / ONE_K;
-   }
+   if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1)
+      CRT_fatalError("Cannot get pagesize by sysctl");
+   pageSizeKb = pageSize / ONE_K;
 
    // usable page count vm.stats.vm.v_page_count
    // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
@@ -526,13 +523,13 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       }
 
       // from FreeBSD source /src/usr.bin/top/machine.c
-      proc->m_virt = kproc->ki_size / pageSize;
-      proc->m_resident = kproc->ki_rssize;
+      proc->m_virt = kproc->ki_size / ONE_K;
+      proc->m_resident = kproc->ki_rssize * pageSizeKb;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(super->totalMem);
+      proc->percent_mem = 100.0 * proc->m_resident / (double)(super->totalMem);
 
       /*
        * TODO
