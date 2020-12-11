@@ -61,6 +61,9 @@ typedef struct Settings_ {
    bool accountGuestInCPUMeter;
    bool headerMargin;
    bool enableMouse;
+   #ifdef HTOP_LINUX
+   bool simpleUsedMemForm;
+   #endif
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif

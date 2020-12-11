@@ -74,6 +74,8 @@ typedef struct LinuxProcessList_ {
 
    ZfsArcStats zfs;
    ZramStats zram;
+
+   unsigned long long int availableMem;
 } LinuxProcessList;
 
 #ifndef PROCDIR
