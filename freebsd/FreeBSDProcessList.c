@@ -14,7 +14,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <sys/_iovec.h>
-#include <sys/dirent.h>
 #include <sys/errno.h>
 #include <sys/param.h> // needs to be included before <sys/jail.h> for MAXPATHLEN
 #include <sys/jail.h>
