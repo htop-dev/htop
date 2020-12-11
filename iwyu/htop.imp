@@ -8,6 +8,8 @@
 
     { include: ["<bits/getopt_core.h>", "private", "<unistd.h>", "public"] },
 
+    { include: ["<sys/dirent.h>", "private", "<dirent.h>", "public"] },
+
     { include: ["<sys/signal.h>", "private", "<signal.h>", "public"] },
 
     { include: ["<sys/_stdarg.h>", "private", "<stdarg.h>", "public"] },
