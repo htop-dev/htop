@@ -55,12 +55,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    len = 2; sysctlnametomib("hw.physmem", MIB_hw_physmem, &len);
 
    len = sizeof(pageSize);
-   if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1) {
-      pageSize = CRT_pageSize;
-      pageSizeKb = CRT_pageSizeKB;
-   } else {
-      pageSizeKb = pageSize / ONE_K;
-   }
+   if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1)
+      CRT_fatalError("Cannot get pagesize by sysctl");
+   pageSizeKb = pageSize / ONE_K;
 
    // usable page count vm.stats.vm.v_page_count
    // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
@@ -433,13 +430,13 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          }
       }
 
-      proc->m_virt = kproc->kp_vm_map_size / pageSize;
-      proc->m_resident = kproc->kp_vm_rssize;
+      proc->m_virt = kproc->kp_vm_map_size / ONE_K;
+      proc->m_resident = kproc->kp_vm_rssize * pageSizeKB;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_swtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * pageSizeKb) / (double)(super->totalMem);
+      proc->percent_mem = 100.0 * proc->m_resident / (double)(super->totalMem);
 
       if (proc->percent_cpu > 0.1) {
          // system idle process should own all CPU time left regardless of CPU count

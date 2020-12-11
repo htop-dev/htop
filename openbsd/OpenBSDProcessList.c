@@ -34,6 +34,8 @@ in the source distribution for its full text.
 
 
 static long fscale;
+static int pageSize;
+static int pageSizeKB;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    const int mib[] = { CTL_HW, HW_NCPU };
@@ -57,6 +59,10 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0) {
       err(1, "fscale sysctl call failed");
    }
+
+   if ((pageSize = sysconf(_SC_PAGESIZE)) == -1)
+      err(1, "pagesize sysconf call failed");
+   pageSizeKB = pageSize / ONE_K;
 
    for (int i = 0; i <= pl->cpuCount; i++) {
       CPUData* d = opl->cpus + i;
@@ -94,8 +100,8 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       err(1, "uvmexp sysctl call failed");
    }
 
-   pl->totalMem = uvmexp.npages * CRT_pageSizeKB;
-   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * CRT_pageSizeKB;
+   pl->totalMem = uvmexp.npages * pageSizeKB;
+   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * pageSizeKB;
 
    // Taken from OpenBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
    const int bcache_mib[] = { CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT };
@@ -106,7 +112,7 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       err(1, "cannot get vfs.bcachestat");
    }
 
-   pl->cachedMem = bcstats.numbufpages * CRT_pageSizeKB;
+   pl->cachedMem = bcstats.numbufpages * pageSizeKB;
 
    /*
     * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
@@ -222,9 +228,9 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          }
       }
 
-      proc->m_virt = kproc->p_vm_dsize;
-      proc->m_resident = kproc->p_vm_rssize;
-      proc->percent_mem = (proc->m_resident * CRT_pageSizeKB) / (double)(this->super.totalMem) * 100.0;
+      proc->m_virt = kproc->p_vm_dsize * pageSizeKB;
+      proc->m_resident = kproc->p_vm_rssize * pageSizeKB;
+      proc->percent_mem = proc->m_resident / (double)(this->super.totalMem) * 100.0;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.cpuCount * 100.0);
       //proc->nlwp = kproc->p_numthreads;
       proc->nice = kproc->p_nice - 20;

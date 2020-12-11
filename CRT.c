@@ -608,9 +608,6 @@ const char* CRT_termType;
 
 int CRT_colorScheme = 0;
 
-long CRT_pageSize = -1;
-long CRT_pageSizeKB = -1;
-
 ATTR_NORETURN
 static void CRT_handleSIGTERM(int sgn) {
    (void) sgn;
@@ -745,11 +742,6 @@ void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
 #else
    mousemask(BUTTON1_RELEASED, NULL);
 #endif
-
-   CRT_pageSize = sysconf(_SC_PAGESIZE);
-   if (CRT_pageSize == -1)
-      CRT_fatalError("Fatal error: Can not get PAGE_SIZE by sysconf(_SC_PAGESIZE)");
-   CRT_pageSizeKB = CRT_pageSize / 1024;
 
    CRT_degreeSign = initDegreeSign();
 }

@@ -25,8 +25,10 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 
-
 #define MAXCMDLINE 255
+
+static int pageSize;
+static int pageSizeKB;
 
 char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
    char* zname;
@@ -50,13 +52,18 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    spl->kd = kstat_open();
 
-   pl->cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
+   pageSize = sysconf(_SC_PAGESIZE);
+   if (pageSize == -1)
+      CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
+   pageSizeKB = pageSize / 1024;
 
-   if (pl->cpuCount == 1 ) {
+   pl->cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
+   if (pl->cpuCount == -1)
+      CRT_fatalError("Cannot get CPU count by sysconf(_SC_NPROCESSORS_ONLN)");
+   else if (pl->cpuCount == 1)
       spl->cpus = xRealloc(spl->cpus, sizeof(CPUData));
-   } else {
+   else
       spl->cpus = xRealloc(spl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
-   }
 
    return pl;
 }
@@ -169,9 +176,9 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       freemem_pgs    = kstat_data_lookup(meminfo, "freemem");
       pages          = kstat_data_lookup(meminfo, "pagestotal");
 
-      pl->totalMem   = totalmem_pgs->value.ui64 * CRT_pageSizeKB;
-      if (pl->totalMem > freemem_pgs->value.ui64 * CRT_pageSizeKB) {
-         pl->usedMem  = pl->totalMem - freemem_pgs->value.ui64 * CRT_pageSizeKB;
+      pl->totalMem   = totalmem_pgs->value.ui64 * pageSizeKB;
+      if (pl->totalMem > freemem_pgs->value.ui64 * pageSizeKB) {
+         pl->usedMem  = pl->totalMem - freemem_pgs->value.ui64 * pageSizeKB;
       } else {
          pl->usedMem  = 0;   // This can happen in non-global zone (in theory)
       }
@@ -179,13 +186,13 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->cachedMem  = 0;
       // Not really "buffers" but the best Solaris analogue that I can find to
       // "memory in use but not by programs or the kernel itself"
-      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * CRT_pageSizeKB;
+      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * pageSizeKB;
    } else {
       // Fall back to basic sysconf if kstat isn't working
-      pl->totalMem = sysconf(_SC_PHYS_PAGES) * CRT_pageSize;
+      pl->totalMem = sysconf(_SC_PHYS_PAGES) * pageSize;
       pl->buffersMem = 0;
       pl->cachedMem  = 0;
-      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * CRT_pageSize);
+      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * pageSize);
    }
 
    // Part 2 - swap
@@ -215,8 +222,8 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    free(spathbase);
    free(sl);
-   pl->totalSwap = totalswap * CRT_pageSizeKB;
-   pl->usedSwap  = pl->totalSwap - (totalfree * CRT_pageSizeKB);
+   pl->totalSwap = totalswap * pageSizeKB;
+   pl->usedSwap  = pl->totalSwap - (totalfree * pageSizeKB);
 }
 
 static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
@@ -323,8 +330,8 @@ int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* 
    proc->pgrp               = _psinfo->pr_pgid;
    proc->nlwp               = _psinfo->pr_nlwp;
    proc->tty_nr             = _psinfo->pr_ttydev;
-   proc->m_resident         = _psinfo->pr_rssize / CRT_pageSizeKB;
-   proc->m_virt             = _psinfo->pr_size / CRT_pageSizeKB;
+   proc->m_resident         = _psinfo->pr_rssize;	// KB
+   proc->m_virt             = _psinfo->pr_size;		// KB
 
    if (!preExisting) {
       sproc->realpid        = _psinfo->pr_pid;
