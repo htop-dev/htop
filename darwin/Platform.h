@@ -19,11 +19,14 @@ in the source distribution for its full text.
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
 
+
 extern ProcessFieldData Process_fields[];
 
 extern ProcessField Platform_defaultFields[];
 
 extern int Platform_numberOfFields;
+
+extern double Platform_timebaseToNS;
 
 extern const SignalItem Platform_signals[];
 

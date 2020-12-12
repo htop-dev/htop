@@ -6,6 +6,8 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "Platform.h"
 
 #include <math.h>
@@ -31,6 +33,10 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
+
+#ifdef HAVE_MACH_MACH_TIME_H
+#include <mach/mach_time.h>
+#endif
 
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
@@ -135,8 +141,18 @@ const MeterClass* const Platform_meterTypes[] = {
 
 int Platform_numberOfFields = 100;
 
+double Platform_timebaseToNS = 1.0;
+
 void Platform_init(void) {
-   /* no platform-specific setup needed */
+   // Check if we can determine the timebase used on this system.
+   // If the API is unavailable assume we get our timebase in nanoseconds.
+#ifdef HAVE_MACH_TIMEBASE_INFO
+   mach_timebase_info_data_t info;
+   mach_timebase_info(&info);
+   Platform_timebaseToNS = (double)info.numer / (double)info.denom;
+#else
+   Platform_timebaseToNS = 1.0;
+#endif
 }
 
 void Platform_done(void) {
