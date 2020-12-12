@@ -223,7 +223,7 @@ static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdline
       if (*token) {
          do {
             ++token;
-         } while ('\n' == *token);
+         } while (*token && '\n' == *token);
       }
    }
    return false;
@@ -268,14 +268,15 @@ static int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseO
             int i, j;
             /* reverse match the cmdline prefix and exe suffix */
             for (i = cmdlineBaseOffset - 1, j = exeBaseOffset - 1;
-                 i >= 0 && cmdline[i] == exe[j]; --i, --j)
+                 i >= 0 && j >= 0 && cmdline[i] == exe[j]; --i, --j)
                ;
             /* full match, with exe suffix being a valid relative path */
-            if (i < 0 && exe[j] == '/') {
+            if (i < 0 && j >= 0 && exe[j] == '/') {
                return matchLen;
             }
          }
       }
+
       /* Try to find the previous potential cmdlineBaseOffset - it would be
        * preceded by '/' or nothing, and delimited by ' ' or '\n' */
       for (delimFound = false, cmdlineBaseOffset -= 2; cmdlineBaseOffset > 0; --cmdlineBaseOffset) {
@@ -310,11 +311,12 @@ returned by LinuxProcess_getCommandStr() for searching, sorting and filtering.
 void LinuxProcess_makeCommandStr(Process* this) {
    LinuxProcess *lp = (LinuxProcess *)this;
    LinuxProcessMergedCommand *mc = &lp->mergedCommand;
+   const Settings* settings = this->settings;
 
-   bool showMergedCommand = this->settings->showMergedCommand;
-   bool showProgramPath = this->settings->showProgramPath;
-   bool searchCommInCmdline = this->settings->findCommInCmdline;
-   bool stripExeFromCmdline = this->settings->stripExeFromCmdline;
+   bool showMergedCommand = settings->showMergedCommand;
+   bool showProgramPath = settings->showProgramPath;
+   bool searchCommInCmdline = settings->findCommInCmdline;
+   bool stripExeFromCmdline = settings->stripExeFromCmdline;
 
    /* lp->mergedCommand.str needs updating only if its state or contents changed.
     * Its content is based on the fields cmdline, comm, and exe. */
@@ -353,16 +355,37 @@ void LinuxProcess_makeCommandStr(Process* this) {
    mc->commChanged = false;
    mc->exeChanged = false;
 
-   /* Clear any separators */
-   mc->sep1 = 0;
-   mc->sep2 = 0;
+   /* Reset all locations that need extra handling when actually displaying */
+   mc->highlightCount = 0;
+   memset(mc->highlights, 0, sizeof(mc->highlights));
 
-   /* Clear any highlighting locations */
-   mc->baseStart = 0;
-   mc->baseEnd = 0;
-   mc->commStart = 0;
-   mc->commEnd = 0;
+   size_t mbMismatch = 0;
+   #define WRITE_HIGHLIGHT(_offset, _length, _attr, _flags)                                 \
+      do {                                                                                  \
+         /* Check if we still have capacity */                                              \
+         assert(mc->highlightCount < ARRAYSIZE(mc->highlights));                            \
+         if (mc->highlightCount >= ARRAYSIZE(mc->highlights))                               \
+            continue;                                                                       \
+                                                                                          \
+         mc->highlights[mc->highlightCount].offset = str - strStart + _offset - mbMismatch; \
+         mc->highlights[mc->highlightCount].length = _length;                               \
+         mc->highlights[mc->highlightCount].attr = _attr;                                   \
+         mc->highlights[mc->highlightCount].flags = _flags;                                 \
+         mc->highlightCount++;                                                              \
+      } while (0)
 
+   #define WRITE_SEPARATOR                                                                 \
+      do {                                                                                 \
+         WRITE_HIGHLIGHT(0, 1, CRT_colors[FAILED_READ], CMDLINE_HIGHLIGHT_FLAG_SEPARATOR); \
+         mbMismatch += SEPARATOR_LEN - 1;                                                  \
+         str = stpcpy(str, SEPARATOR);                                                     \
+      } while (0)
+
+   const int baseAttr = Process_isThread(this) ? CRT_colors[PROCESS_THREAD_BASENAME] : CRT_colors[PROCESS_BASENAME];
+   const int commAttr = Process_isThread(this) ? CRT_colors[PROCESS_THREAD_COMM] : CRT_colors[PROCESS_COMM];
+   const int delAttr = CRT_colors[FAILED_READ];
+
+   /* Establish some shortcuts to data we need */
    const char *cmdline = this->comm;
    const char *procExe = lp->procExe;
    const char *procComm = lp->procComm;
@@ -382,32 +405,22 @@ void LinuxProcess_makeCommandStr(Process* this) {
    assert(cmdlineBasenameOffset >= 0);
    assert(cmdlineBasenameOffset <= (int)strlen(cmdline));
 
-   if (!showMergedCommand || !procExe || !procComm) {    /* fall back to cmdline */
-      if (showMergedCommand && !procExe && procComm && strlen(procComm)) {   /* Prefix column with comm */
+   if (!showMergedCommand || !procExe || !procComm) { /* fall back to cmdline */
+      if (showMergedCommand && !procExe && procComm && strlen(procComm)) { /* Prefix column with comm */
          if (strncmp(cmdline + cmdlineBasenameOffset, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
-            mc->commStart = 0;
-            mc->commEnd = strlen(procComm);
-
+            WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
             str = stpcpy(str, procComm);
 
-            mc->sep1 = str - strStart;
-            str = stpcpy(str, SEPARATOR);
+            WRITE_SEPARATOR;
          }
       }
 
       if (showProgramPath) {
-         (void) stpcpyWithNewlineConversion(str, cmdline);
-         mc->baseStart = cmdlineBasenameOffset;
-         mc->baseEnd = cmdlineBasenameEnd;
+         WRITE_HIGHLIGHT(cmdlineBasenameOffset, cmdlineBasenameEnd - cmdlineBasenameOffset, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+         (void)stpcpyWithNewlineConversion(str, cmdline);
       } else {
-         (void) stpcpyWithNewlineConversion(str, cmdline + cmdlineBasenameOffset);
-         mc->baseStart = 0;
-         mc->baseEnd = cmdlineBasenameEnd - cmdlineBasenameOffset;
-      }
-
-      if (mc->sep1) {
-         mc->baseStart += str - strStart - SEPARATOR_LEN + 1;
-         mc->baseEnd += str - strStart - SEPARATOR_LEN + 1;
+         WRITE_HIGHLIGHT(0, cmdlineBasenameEnd - cmdlineBasenameOffset, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+         (void)stpcpyWithNewlineConversion(str, cmdline + cmdlineBasenameOffset);
       }
 
       return;
@@ -420,142 +433,111 @@ void LinuxProcess_makeCommandStr(Process* this) {
    assert(exeBasenameOffset >= 0);
    assert(exeBasenameOffset <= (int)strlen(procExe));
 
-   /* Start with copying exe */
-   if (showProgramPath) {
-      str = stpcpy(str, procExe);
-      mc->baseStart = exeBasenameOffset;
-      mc->baseEnd = exeLen;
-   } else {
-      str = stpcpy(str, procExe + exeBasenameOffset);
-      mc->baseStart = 0;
-      mc->baseEnd = exeBasenameLen;
+   bool haveCommInExe = false;
+   if (procExe && procComm) {
+      haveCommInExe = strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0;
    }
 
-   mc->sep1 = 0;
-   mc->sep2 = 0;
+   /* Start with copying exe */
+   if (showProgramPath) {
+      if (haveCommInExe)
+         WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+      WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+      if (lp->procExeDeleted)
+         WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, delAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+      str = stpcpy(str, procExe);
+   } else {
+      if (haveCommInExe)
+         WRITE_HIGHLIGHT(0, exeBasenameLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+      WRITE_HIGHLIGHT(0, exeBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+      if (lp->procExeDeleted)
+         WRITE_HIGHLIGHT(0, exeBasenameLen, delAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+      str = stpcpy(str, procExe + exeBasenameOffset);
+   }
 
+   bool haveCommInCmdline = false;
    int commStart = 0;
    int commEnd = 0;
-   bool commInCmdline = false;
 
    /* Try to match procComm with procExe's basename: This is reliable (predictable) */
-   if (strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0) {
-      commStart = mc->baseStart;
-      commEnd = mc->baseEnd;
-   } else if (searchCommInCmdline) {
+   if (searchCommInCmdline) {
       /* commStart/commEnd will be adjusted later along with cmdline */
-      commInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameOffset, &commStart, &commEnd);
+      haveCommInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameOffset, &commStart, &commEnd);
    }
 
    int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameOffset, procExe, exeBasenameOffset, exeBasenameLen);
 
-   /* Note: commStart, commEnd are offsets into RichString. But the multibyte
-    * separator (with size SEPARATOR_LEN) has size 1 in RichString. The offset
-    * adjustments below reflect this. */
-   if (commEnd) {
-      mc->unmatchedExe = !matchLen;
+   bool haveCommField = false;
 
-      if (matchLen) {
-         /* strip the matched exe prefix */
-         cmdline += matchLen;
-
-         if (commInCmdline) {
-            commStart += str - strStart - matchLen;
-            commEnd += str - strStart - matchLen;
-         }
-      } else {
-         /* cmdline will be a separate field */
-         mc->sep1 = str - strStart;
-         str = stpcpy(str, SEPARATOR);
-
-         if (commInCmdline) {
-            commStart += str - strStart - SEPARATOR_LEN + 1;
-            commEnd += str - strStart - SEPARATOR_LEN + 1;
-         }
-      }
-
-      mc->separateComm = false;  /* procComm merged */
-   } else {
-      mc->sep1 = str - strStart;
-      str = stpcpy(str, SEPARATOR);
-
-      commStart = str - strStart - SEPARATOR_LEN + 1;
+   if (!haveCommInExe && !haveCommInCmdline && procComm) {
+      WRITE_SEPARATOR;
+      WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       str = stpcpy(str, procComm);
-      commEnd = str - strStart - SEPARATOR_LEN + 1;   /* or commStart + strlen(procComm) */
-
-      mc->unmatchedExe = !matchLen;
-
-      if (matchLen) {
-         if (stripExeFromCmdline) {
-            cmdline += matchLen;
-         }
-      }
-
-      if (*cmdline) {
-         mc->sep2 = str - strStart - SEPARATOR_LEN + 1;
-         str = stpcpy(str, SEPARATOR);
-      }
-
-      mc->separateComm = true;  /* procComm a separate field */
+      haveCommField = true;
    }
+
+   if (matchLen) {
+      /* strip the matched exe prefix */
+      cmdline += matchLen;
+
+      commStart -= matchLen;
+      commEnd -= matchLen;
+   }
+
+   if (!matchLen || (haveCommField && *cmdline)) {
+      /* cmdline will be a separate field */
+      WRITE_SEPARATOR;
+   }
+
+   if (!haveCommInExe && haveCommInCmdline && !haveCommField)
+      WRITE_HIGHLIGHT(commStart, commEnd - commStart, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
 
    /* Display cmdline if it hasn't been consumed by procExe */
    if (*cmdline) {
       (void) stpcpyWithNewlineConversion(str, cmdline);
    }
 
-   mc->commStart = commStart;
-   mc->commEnd = commEnd;
+   #undef WRITE_SEPARATOR
+   #undef WRITE_HIGHLIGHT
 }
 
 static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
+   (void)baseAttr;
+
    const LinuxProcess *lp = (const LinuxProcess *)this;
    const LinuxProcessMergedCommand *mc = &lp->mergedCommand;
 
    int strStart = RichString_size(str);
 
-   int baseStart = strStart + lp->mergedCommand.baseStart;
-   int baseEnd = strStart + lp->mergedCommand.baseEnd;
-   int commStart = strStart + lp->mergedCommand.commStart;
-   int commEnd = strStart + lp->mergedCommand.commEnd;
+//   int commAttr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
 
-   int commAttr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
-
-   bool highlightBaseName = this->settings->highlightBaseName;
-
-   if(lp->procExeDeleted)
-      baseAttr = CRT_colors[FAILED_READ];
+   const bool highlightBaseName = this->settings->highlightBaseName;
+   const bool highlightSeparator = true;
+   const bool highlightDeleted = true;
 
    RichString_appendWide(str, attr, lp->mergedCommand.str);
 
-   if (lp->mergedCommand.commEnd) {
-      if (!lp->mergedCommand.separateComm && commStart == baseStart && highlightBaseName) {
-         /* If it was matched with procExe's basename, make it bold if needed */
-         if (commEnd > baseEnd) {
-            RichString_setAttrn(str, A_BOLD | baseAttr, baseStart, baseEnd - baseStart);
-            RichString_setAttrn(str, A_BOLD | commAttr, baseEnd, commEnd - baseEnd);
-         } else if (commEnd < baseEnd) {
-            RichString_setAttrn(str, A_BOLD | commAttr, commStart, commEnd - commStart);
-            RichString_setAttrn(str, A_BOLD | baseAttr, commEnd, baseEnd - commEnd);
-         } else {
-            // Actually should be highlighted commAttr, but marked baseAttr to reduce visual noise
-            RichString_setAttrn(str, A_BOLD | baseAttr, commStart, commEnd - commStart);
-         }
+   for (size_t i = 0, hlCount = CLAMP(mc->highlightCount, 0, ARRAYSIZE(mc->highlights)); i < hlCount; i++)
+   {
+      const LinuxProcessCmdlineHighlight* hl = &mc->highlights[i];
 
-         baseStart = baseEnd;
-      } else {
-         RichString_setAttrn(str, commAttr, commStart, commEnd - commStart);
-      }
+      if (!hl->length)
+         continue;
+
+      if (hl->flags & CMDLINE_HIGHLIGHT_FLAG_SEPARATOR)
+         if (!highlightSeparator)
+            continue;
+
+      if (hl->flags & CMDLINE_HIGHLIGHT_FLAG_BASENAME)
+         if (!highlightBaseName)
+            continue;
+
+      if (hl->flags & CMDLINE_HIGHLIGHT_FLAG_DELETED)
+         if (!highlightDeleted)
+            continue;
+
+      RichString_setAttrn(str, hl->attr, strStart + hl->offset, hl->length);
    }
-
-   if (baseStart < baseEnd && highlightBaseName) {
-      RichString_setAttrn(str, baseAttr, baseStart, baseEnd - baseStart);
-   }
-
-   if (mc->sep1)
-      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep1, 1);
-   if (mc->sep2)
-      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep2, 1);
 }
 
 static void LinuxProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
