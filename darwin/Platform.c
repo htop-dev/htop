@@ -7,21 +7,6 @@ in the source distribution for its full text.
 */
 
 #include "Platform.h"
-#include "Macros.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "ClockMeter.h"
-#include "DateMeter.h"
-#include "DateTimeMeter.h"
-#include "HostnameMeter.h"
-#include "ProcessLocksScreen.h"
-#include "UptimeMeter.h"
-#include "zfs/ZfsArcMeter.h"
-#include "zfs/ZfsCompressedArcMeter.h"
-#include "DarwinProcessList.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -30,6 +15,23 @@ in the source distribution for its full text.
 #include <CoreFoundation/CFString.h>
 #include <IOKit/ps/IOPowerSources.h>
 #include <IOKit/ps/IOPSKeys.h>
+
+#include "ClockMeter.h"
+#include "CPUMeter.h"
+#include "DarwinProcessList.h"
+#include "DateMeter.h"
+#include "DateTimeMeter.h"
+#include "HostnameMeter.h"
+#include "LoadAverageMeter.h"
+#include "Macros.h"
+#include "MemoryMeter.h"
+#include "ProcessLocksScreen.h"
+#include "SwapMeter.h"
+#include "TasksMeter.h"
+#include "UptimeMeter.h"
+#include "zfs/ZfsArcMeter.h"
+#include "zfs/ZfsCompressedArcMeter.h"
+
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
