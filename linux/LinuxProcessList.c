@@ -57,6 +57,7 @@ in the source distribution for its full text.
 #endif
 
 // CentOS 6's kernel doesn't provide a definition of O_PATH
+// based on definition taken from uapi/asm-generic/fcnth.h in Linux kernel tree
 #ifndef O_PATH
 # define O_PATH 010000000
 #endif
