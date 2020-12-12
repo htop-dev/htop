@@ -142,7 +142,7 @@ linux_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 if HTOP_LINUX
-AM_LDFLAGS += -rdynamic -lrt
+AM_LDFLAGS += -rdynamic
 myhtopplatsources = \
 	linux/IOPriorityPanel.c \
 	linux/LibSensors.c \
