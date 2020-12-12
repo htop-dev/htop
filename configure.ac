@@ -100,6 +100,7 @@ AC_CHECK_FUNCS([\
 ])
 
 AC_SEARCH_LIBS([dlopen], [dl dld])
+AC_SEARCH_LIBS([clock_gettime], [rt])
 
 save_cflags="${CFLAGS}"
 CFLAGS="${CFLAGS} -std=c99"
