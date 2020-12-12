@@ -56,6 +56,11 @@ in the source distribution for its full text.
 #include "LibSensors.h"
 #endif
 
+// CentOS 6's kernel doesn't provide a definition of O_PATH
+#ifndef O_PATH
+# define O_PATH 010000000
+#endif
+
 
 static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* mode) {
    assert(String_eq(mode, "r")); /* only currently supported mode */
