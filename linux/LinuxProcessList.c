@@ -1832,41 +1832,6 @@ static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
    scanCPUFreqencyFromCPUinfo(this);
 }
 
-#ifdef HAVE_SENSORS_SENSORS_H
-static void LinuxProcessList_scanCPUTemperature(LinuxProcessList* this) {
-   const int cpuCount = this->super.cpuCount;
-
-   for (int i = 0; i <= cpuCount; i++) {
-      this->cpus[i].temperature = NAN;
-   }
-
-   int r = LibSensors_getCPUTemperatures(this->cpus, cpuCount);
-
-   /* No temperature - nothing to do */
-   if (r <= 0)
-      return;
-
-   /* Only package temperature - copy to all cpus */
-   if (r == 1 && !isnan(this->cpus[0].temperature)) {
-      double packageTemp = this->cpus[0].temperature;
-      for (int i = 1; i <= cpuCount; i++) {
-         this->cpus[i].temperature = packageTemp;
-      }
-
-      return;
-   }
-
-   /* Half the temperatures, probably HT/SMT - copy to second half */
-   if (r >= 2 && (r - 1) == (cpuCount / 2)) {
-      for (int i = cpuCount / 2 + 1; i <= cpuCount; i++) {
-         this->cpus[i].temperature = this->cpus[i/2].temperature;
-      }
-
-      return;
-   }
-}
-#endif
-
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    LinuxProcessList* this = (LinuxProcessList*) super;
    const Settings* settings = super->settings;
@@ -1884,7 +1849,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    #ifdef HAVE_SENSORS_SENSORS_H
    if (settings->showCPUTemperature)
-      LinuxProcessList_scanCPUTemperature(this);
+      LibSensors_getCPUTemperatures(this->cpus, this->super.cpuCount);
    #endif
 
    // in pause mode only gather global data for meters (CPU/memory/...)

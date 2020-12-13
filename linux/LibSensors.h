@@ -11,6 +11,6 @@
 int LibSensors_init(FILE* input);
 void LibSensors_cleanup(void);
 
-int LibSensors_getCPUTemperatures(CPUData* cpus, int cpuCount);
+void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount);
 
 #endif /* HEADER_LibSensors */
