@@ -23,6 +23,8 @@ typedef struct DarwinProcess_ {
 
 extern const ProcessClass DarwinProcess_class;
 
+extern ProcessFieldData Process_fields[];
+
 Process* DarwinProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
