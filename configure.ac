@@ -93,8 +93,10 @@ AC_TYPE_UINT64_T
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_STAT
 AC_CHECK_FUNCS([\
+   clock_gettime\
    faccessat\
    fstatat\
+   host_get_clock_service\
    openat\
    readlinkat\
 ])

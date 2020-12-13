@@ -56,4 +56,6 @@ ssize_t Compat_readlinkat(int dirfd,
                           char* buf,
                           size_t bufsize);
 
+int Compat_clock_monotonic_gettime(struct timespec *tp);
+
 #endif /* HEADER_Compat */
