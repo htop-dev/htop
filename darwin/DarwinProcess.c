@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include <mach/mach.h>
 
 #include "CRT.h"
+#include "Platform.h"
 #include "Process.h"
 
 
@@ -308,7 +309,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
          uint64_t diff = (pti.pti_total_system - proc->stime)
                        + (pti.pti_total_user - proc->utime);
 
-         proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount
+         proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount * Platform_timebaseToNS
                                  / ((double)dpl->global_diff * 100000.0);
 
 //       fprintf(stderr, "%f %llu %llu %llu %llu %llu\n", proc->super.percent_cpu,

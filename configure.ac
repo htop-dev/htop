@@ -240,6 +240,11 @@ else
    AC_SEARCH_LIBS([keypad], [tinfo])
 fi
 
+if test "$my_htop_platform" = "darwin"; then
+   AC_CHECK_HEADERS([mach/mach_time.h])
+   AC_CHECK_FUNCS([mach_timebase_info])
+fi
+
 if test "$my_htop_platform" = "freebsd"; then
    AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
 fi
