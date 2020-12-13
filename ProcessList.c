@@ -10,8 +10,8 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
+#include "Compat.h"
 #include "CRT.h"
 #include "Hashtable.h"
 #include "Macros.h"
@@ -538,8 +538,8 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
    if (!firstScanDone) {
       this->scanTs = 0;
       firstScanDone = true;
-   } else if (clock_gettime(CLOCK_MONOTONIC, &now) == 0) {
-      this->scanTs = now.tv_sec;
+   } else if (Compat_clock_monotonic_gettime(&now) == 0) {
+      this->scanTs = now.tv_sec + now.tv_nsec / 1000000000;
    }
 
    ProcessList_goThroughEntries(this, false);
