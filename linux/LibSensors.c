@@ -4,6 +4,7 @@
 
 #include <dlfcn.h>
 #include <errno.h>
+#include <math.h>
 #include <sensors/sensors.h>
 
 #include "XUtils.h"
@@ -16,6 +17,7 @@ static int (*sym_sensors_snprintf_chip_name)(char*, size_t, const sensors_chip_n
 static const sensors_feature* (*sym_sensors_get_features)(const sensors_chip_name*, int*);
 static const sensors_subfeature* (*sym_sensors_get_subfeature)(const sensors_chip_name*, const sensors_feature*, sensors_subfeature_type);
 static int (*sym_sensors_get_value)(const sensors_chip_name*, int, double*);
+static char* (*sym_sensors_get_label)(const sensors_chip_name*, const sensors_feature*);
 
 static void* dlopenHandle = NULL;
 
@@ -41,6 +43,7 @@ int LibSensors_init(FILE* input) {
       resolve(sensors_get_features);
       resolve(sensors_get_subfeature);
       resolve(sensors_get_value);
+      resolve(sensors_get_label);
 
       #undef resolve
    }
@@ -64,11 +67,14 @@ void LibSensors_cleanup(void) {
    }
 }
 
-int LibSensors_getCPUTemperatures(CPUData* cpus, int cpuCount) {
-   if (!dlopenHandle)
-      return -ENOTSUP;
+void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
+   for (unsigned int i = 0; i <= cpuCount; i++)
+      cpus[i].temperature = NAN;
 
-   int tempCount = 0;
+   if (!dlopenHandle)
+      return;
+
+   unsigned int coreTempCount = 0;
 
    int n = 0;
    for (const sensors_chip_name *chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
@@ -82,7 +88,22 @@ int LibSensors_getCPUTemperatures(CPUData* cpus, int cpuCount) {
          if (feature->type != SENSORS_FEATURE_TEMP)
             continue;
 
-         if (feature->number > cpuCount)
+         char* label = sym_sensors_get_label(chip, feature);
+         if (!label)
+            continue;
+
+         unsigned int tempId;
+         if (String_startsWith(label, "Package ")) {
+            tempId = 0;
+         } else if (String_startsWith(label, "Core ")) {
+            tempId = 1 + atoi(label + strlen("Core "));
+         } else {
+            tempId = UINT_MAX;
+         }
+
+         free(label);
+
+         if (tempId > cpuCount)
             continue;
 
          const sensors_subfeature *sub_feature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
@@ -92,13 +113,43 @@ int LibSensors_getCPUTemperatures(CPUData* cpus, int cpuCount) {
             if (r != 0)
                continue;
 
-            cpus[feature->number].temperature = temp;
-            tempCount++;
+            cpus[tempId].temperature = temp;
+            if (tempId > 0)
+               coreTempCount++;
          }
       }
    }
 
-   return tempCount;
+   const double packageTemp = cpus[0].temperature;
+
+   /* Only package temperature - copy to all cpus */
+   if (coreTempCount == 0 && !isnan(packageTemp)) {
+      for (unsigned int i = 1; i <= cpuCount; i++)
+         cpus[i].temperature = packageTemp;
+
+      return;
+   }
+
+   /* No package temperature - set to max core temperature */
+   if (isnan(packageTemp) && coreTempCount != 0) {
+      double maxTemp = NAN;
+      for (unsigned int i = 1; i <= cpuCount; i++) {
+         const double coreTemp = cpus[i].temperature;
+         if (isnan(coreTemp))
+            continue;
+
+         maxTemp = MAXIMUM(maxTemp, coreTemp);
+      }
+
+      cpus[0].temperature = maxTemp;
+   }
+
+   /* Half the temperatures, probably HT/SMT - copy to second half */
+   const unsigned int delta = cpuCount / 2;
+   if (coreTempCount == delta) {
+      for (unsigned int i = 1; i <= delta; i++)
+         cpus[i + delta].temperature = cpus[i].temperature;
+   }
 }
 
 #endif /* HAVE_SENSORS_SENSORS_H */
