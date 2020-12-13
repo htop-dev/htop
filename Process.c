@@ -454,7 +454,7 @@ void Process_toggleTag(Process* this) {
 bool Process_isNew(const Process* this) {
    assert(this->processList);
    if (this->processList->scanTs >= this->seenTs) {
-      return this->processList->scanTs - this->seenTs <= this->processList->settings->highlightDelaySecs;
+      return this->processList->scanTs - this->seenTs <= 1000 * this->processList->settings->highlightDelaySecs;
    }
    return false;
 }

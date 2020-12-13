@@ -539,7 +539,9 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
       this->scanTs = 0;
       firstScanDone = true;
    } else if (Compat_clock_monotonic_gettime(&now) == 0) {
-      this->scanTs = now.tv_sec + now.tv_nsec / 1000000000;
+      // save time in millisecond, so with a delay in deciseconds
+      // there are no irregularities
+      this->scanTs = 1000 * now.tv_sec + now.tv_nsec / 1000000;
    }
 
    ProcessList_goThroughEntries(this, false);
@@ -555,7 +557,7 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
          // process no longer exists
          if (this->settings->highlightChanges && p->wasShown) {
             // mark tombed
-            p->tombTs = this->scanTs + this->settings->highlightDelaySecs;
+            p->tombTs = this->scanTs + 1000 * this->settings->highlightDelaySecs;
          } else {
             // immediately remove
             ProcessList_remove(this, p);
