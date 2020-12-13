@@ -17,16 +17,6 @@ in the source distribution for its full text.
 #include "Process.h"
 
 
-const ProcessClass DarwinProcess_class = {
-   .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
-   },
-   .writeField = Process_writeField,
-};
-
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
@@ -53,7 +43,8 @@ ProcessFieldData Process_fields[] = {
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
-   [100] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
+   [TRANSLATED] = { .name = "TRANSLATED", .title = "T ", .description = "Translation info (T translated, N native)", .flags = 0, },
+   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 Process* DarwinProcess_new(const Settings* settings) {
@@ -64,6 +55,7 @@ Process* DarwinProcess_new(const Settings* settings) {
    this->utime = 0;
    this->stime = 0;
    this->taskAccess = true;
+   this->translated = false;
 
    return &this->super;
 }
@@ -73,6 +65,42 @@ void Process_delete(Object* cast) {
    Process_done(&this->super);
    // free platform-specific fields here
    free(this);
+}
+
+static void DarwinProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+   const DarwinProcess* dp = (const DarwinProcess*) this;
+   char buffer[256]; buffer[255] = '\0';
+   int attr = CRT_colors[DEFAULT_COLOR];
+   int n = sizeof(buffer) - 1;
+   switch ((int) field) {
+   // add Platform-specific fields here
+   case TRANSLATED: xSnprintf(buffer, n, "%c ", dp->translated ? 'T' : 'N'); break;
+   default:
+      Process_writeField(this, str, field);
+      return;
+   }
+   RichString_appendWide(str, attr, buffer);
+}
+
+static long DarwinProcess_compare(const void* v1, const void* v2) {
+   const DarwinProcess *p1, *p2;
+   const Settings *settings = ((const Process*)v1)->settings;
+
+   if (settings->direction == 1) {
+      p1 = (const DarwinProcess*)v1;
+      p2 = (const DarwinProcess*)v2;
+   } else {
+      p2 = (const DarwinProcess*)v1;
+      p1 = (const DarwinProcess*)v2;
+   }
+
+   switch ((int) settings->sortKey) {
+   // add Platform-specific fields here
+   case TRANSLATED:
+      return SPACESHIP_NUMBER(p1->translated, p2->translated);
+   default:
+      return Process_compare(v1, v2);
+   }
 }
 
 bool Process_isThread(const Process* this) {
@@ -224,6 +252,8 @@ ERROR_A:
 }
 
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists) {
+   DarwinProcess* dp = (DarwinProcess*)proc;
+
    const struct extern_proc* ep = &ps->kp_proc;
 
    /* UNSET HERE :
@@ -252,6 +282,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       /* e_tdev = (major << 24) | (minor & 0xffffff) */
       /* e_tdev == -1 for "no device" */
       proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
+      dp->translated = ps->kp_proc.p_flag & P_TRANSLATED;
 
       proc->starttime_ctime = ep->p_starttime.tv_sec;
       Process_fillStarttimeBuffer(proc);
@@ -370,3 +401,14 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
    }
    proc->state = state;
 }
+
+
+const ProcessClass DarwinProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = DarwinProcess_compare
+   },
+   .writeField = DarwinProcess_writeField,
+};

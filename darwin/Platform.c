@@ -102,7 +102,7 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-int Platform_numberOfFields = 100;
+int Platform_numberOfFields = LAST_PROCESSFIELD;
 
 void Platform_init(void) {
    /* no platform-specific setup needed */
