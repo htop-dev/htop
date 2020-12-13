@@ -11,6 +11,8 @@ in the source distribution for its full text.
 
 #define Process_delete UnsupportedProcess_delete
 
+extern ProcessFieldData Process_fields[];
+
 Process* UnsupportedProcess_new(Settings* settings);
 
 void UnsupportedProcess_delete(Object* cast);

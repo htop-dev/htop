@@ -21,8 +21,6 @@ extern const unsigned int Platform_numberOfSignals;
 
 extern ProcessField Platform_defaultFields[];
 
-extern ProcessFieldData Process_fields[];
-
 extern const MeterClass* const Platform_meterTypes[];
 
 extern int Platform_numberOfFields;
