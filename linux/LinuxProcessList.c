@@ -214,14 +214,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
    pageSizeKB = pageSize / ONE_K;
 
-   // Check for /proc/*/smaps_rollup availability (improves smaps parsing speed, Linux 4.14+)
-   FILE* file = fopen(PROCDIR "/self/smaps_rollup", "r");
-   if (file != NULL) {
-      this->haveSmapsRollup = true;
-      fclose(file);
-   } else {
-      this->haveSmapsRollup = false;
-   }
+   // Test /proc/PID/smaps_rollup availability (faster to parse, Linux 4.14+)
+   this->haveSmapsRollup = (access(PROCDIR "/self/smaps_rollup", R_OK) == 0);
 
    // Read btime
    {
