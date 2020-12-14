@@ -226,26 +226,25 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    // Test /proc/PID/smaps_rollup availability (faster to parse, Linux 4.14+)
    this->haveSmapsRollup = (access(PROCDIR "/self/smaps_rollup", R_OK) == 0);
 
-   // Read btime
+   // Read btime (the kernel boot time, as number of seconds since the epoch)
    {
       FILE* statfile = fopen(PROCSTATFILE, "r");
-      if (statfile == NULL) {
+      if (statfile == NULL)
          CRT_fatalError("Cannot open " PROCSTATFILE);
-      }
-
       while (true) {
          char buffer[PROC_LINE_LENGTH + 1];
-         if (fgets(buffer, sizeof(buffer), statfile) == NULL) {
-            CRT_fatalError("No btime in " PROCSTATFILE);
-         } else if (String_startsWith(buffer, "btime ")) {
-            if (sscanf(buffer, "btime %lld\n", &btime) != 1) {
-               CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
-            }
+         if (fgets(buffer, sizeof(buffer), statfile) == NULL)
             break;
-         }
+         if (String_startsWith(buffer, "btime ") == false)
+            continue;
+         if (sscanf(buffer, "btime %lld\n", &btime) == 1)
+            break;
+         CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
       }
-
       fclose(statfile);
+
+      if (!btime)
+         CRT_fatalError("No btime in " PROCSTATFILE);
    }
 
    // Initialize CPU count
