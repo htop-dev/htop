@@ -41,28 +41,26 @@ in the source distribution for its full text.
 #define ColorPairGrayBlack  ColorPair(Magenta,Magenta)
 #define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
 
-static const char* const CRT_treeStrAscii[TREE_STR_COUNT] = {
-   "-", // TREE_STR_HORZ
-   "|", // TREE_STR_VERT
-   "`", // TREE_STR_RTEE
-   "`", // TREE_STR_BEND
-   ",", // TREE_STR_TEND
-   "+", // TREE_STR_OPEN
-   "-", // TREE_STR_SHUT
+static const char* const CRT_treeStrAscii[LAST_TREE_STR] = {
+   [TREE_STR_VERT] = "|",
+   [TREE_STR_RTEE] = "`",
+   [TREE_STR_BEND] = "`",
+   [TREE_STR_TEND] = ",",
+   [TREE_STR_OPEN] = "+",
+   [TREE_STR_SHUT] = "-",
 };
 
 #ifdef HAVE_LIBNCURSESW
 
-static const char* const CRT_treeStrUtf8[TREE_STR_COUNT] = {
-   "\xe2\x94\x80", // TREE_STR_HORZ ─
-   "\xe2\x94\x82", // TREE_STR_VERT │
-   "\xe2\x94\x9c", // TREE_STR_RTEE ├
-   "\xe2\x94\x94", // TREE_STR_BEND └
-   "\xe2\x94\x8c", // TREE_STR_TEND ┌
-   "+",            // TREE_STR_OPEN +, TODO use 🮯 'BOX DRAWINGS LIGHT HORIZONTAL
-                   // WITH VERTICAL STROKE' (U+1FBAF, "\xf0\x9f\xae\xaf") when
-                   // Unicode 13 is common
-   "\xe2\x94\x80", // TREE_STR_SHUT ─
+static const char* const CRT_treeStrUtf8[LAST_TREE_STR] = {
+   [TREE_STR_VERT] = "\xe2\x94\x82", // │
+   [TREE_STR_RTEE] = "\xe2\x94\x9c", // ├
+   [TREE_STR_BEND] = "\xe2\x94\x94", // └
+   [TREE_STR_TEND] = "\xe2\x94\x8c", // ┌
+   [TREE_STR_OPEN] = "+",            // +, TODO use 🮯 'BOX DRAWINGS LIGHT HORIZONTAL
+                                     // WITH VERTICAL STROKE' (U+1FBAF, "\xf0\x9f\xae\xaf") when
+                                     // Unicode 13 is common
+   [TREE_STR_SHUT] = "\xe2\x94\x80", // ─
 };
 
 bool CRT_utf8 = false;
@@ -92,7 +90,7 @@ static const char* initDegreeSign(void) {
 
 const int* CRT_colors;
 
-int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
+static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    [COLORSCHEME_DEFAULT] = {
       [RESET_COLOR] = ColorPair(White, Black),
       [DEFAULT_COLOR] = ColorPair(White, Black),
@@ -604,9 +602,7 @@ int CRT_scrollHAmount = 5;
 
 int CRT_scrollWheelVAmount = 10;
 
-const char* CRT_termType;
-
-int CRT_colorScheme = 0;
+ColorScheme CRT_colorScheme = COLORSCHEME_DEFAULT;
 
 ATTR_NORETURN
 static void CRT_handleSIGTERM(int sgn) {
@@ -673,14 +669,14 @@ void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
       start_color();
    }
 
-   CRT_termType = getenv("TERM");
-   if (String_eq(CRT_termType, "linux")) {
+   const char* termType = getenv("TERM");
+   if (termType && String_eq(termType, "linux")) {
       CRT_scrollHAmount = 20;
    } else {
       CRT_scrollHAmount = 5;
    }
 
-   if (String_startsWith(CRT_termType, "xterm") || String_eq(CRT_termType, "vt220")) {
+   if (termType && (String_startsWith(termType, "xterm") || String_eq(termType, "vt220"))) {
       define_key("\033[H", KEY_HOME);
       define_key("\033[F", KEY_END);
       define_key("\033[7~", KEY_HOME);
@@ -752,7 +748,7 @@ void CRT_done() {
 }
 
 void CRT_fatalError(const char* note) {
-   char* sysMsg = strerror(errno);
+   const char* sysMsg = strerror(errno);
    CRT_done();
    fprintf(stderr, "%s: %s\n", note, sysMsg);
    exit(2);
