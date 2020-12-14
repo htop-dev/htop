@@ -2,11 +2,9 @@
 .SH "NAME"
 htop \- interactive process viewer
 .SH "SYNOPSIS"
-.LP
 .B htop
 .RB [ \-dCFhpustvH ]
 .SH "DESCRIPTION"
-.LP
 .B htop
 is a cross-platform ncurses-based process viewer.
 .LP
@@ -22,9 +20,7 @@ Tasks related to processes (killing, renicing) can be done without
 entering their PIDs.
 .br
 .SH "COMMAND-LINE OPTIONS"
-.LP
 Mandatory arguments to long options are mandatory for short options too.
-.LP
 .TP
 \fB\-d \-\-delay=DELAY\fR
 Delay between updates, in tenths of seconds. If the delay value is
@@ -66,10 +62,8 @@ Show processes in tree view
 \fB\-H \-\-highlight-changes=DELAY\fR
 Highlight new and old processes
 .SH "INTERACTIVE COMMANDS"
-.LP
 The following commands are supported while in
 .BR htop :
-.LP
 .TP 5
 .B Up, Alt-k
 Select (highlight) the previous process in the process list. Scroll the list
@@ -232,7 +226,6 @@ Refresh: redraw screen and recalculate values.
 PID search: type in process ID and the selection highlight will be moved to it.
 .PD
 .SH "COLUMNS"
-.LP
 The following columns can display data about each process. A value of '\-' in
 all the rows indicates that a column is unsupported on your system, or
 currently unimplemented in
@@ -242,7 +235,6 @@ The names below are the ones used in the
 shown in
 .BR htop 's
 main screen, it is shown below in parenthesis.
-.LP
 .TP 5
 .B Command
 The full command line of the process (i.e. program name and arguments). If the
@@ -461,7 +453,6 @@ The executable file of the process as reported by the kernel. Requires CAP_SYS_P
 .B All other flags
 Currently unsupported (always displays '-').
 .SH "CONFIG FILE"
-.LP
 By default
 .B htop
 reads its configuration from the XDG-compliant path
@@ -479,7 +470,6 @@ You may override the location of the configuration file using the $HTOPRC
 environment variable (so you can have multiple configurations for different
 machines that share the same home directory, for example).
 .SH "MEMORY SIZES"
-.LP
 Memory sizes in
 .B htop
 are displayed in a human-readable form.
@@ -497,7 +487,6 @@ space and make memory size representations consistent throughout
 and
 .BR limits.conf (5).
 .SH "AUTHORS"
-.LP
 .B htop
 was originally developed by Hisham Muhammad.
 Nowadays it is maintained by the community at <htop@groups.io>.
