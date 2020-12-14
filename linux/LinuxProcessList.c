@@ -63,6 +63,10 @@ in the source distribution for its full text.
 # define O_PATH 010000000
 #endif
 
+static long long btime;
+
+static long jiffy;
+
 static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* mode) {
    assert(String_eq(mode, "r")); /* only currently supported mode */
 
@@ -214,6 +218,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
    pageSizeKB = pageSize / ONE_K;
 
+   // Initialize clock ticks
+   jiffy = sysconf(_SC_CLK_TCK);
+   if (jiffy == -1)
+      CRT_fatalError("Cannot get clock ticks by sysconf(_SC_CLK_TCK)");
+
    // Test /proc/PID/smaps_rollup availability (faster to parse, Linux 4.14+)
    this->haveSmapsRollup = (access(PROCDIR "/self/smaps_rollup", R_OK) == 0);
 
@@ -273,16 +282,7 @@ void ProcessList_delete(ProcessList* pl) {
    free(this);
 }
 
-static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
-   static long jiffy = -1;
-   if (jiffy == -1) {
-      errno = 0;
-      jiffy = sysconf(_SC_CLK_TCK);
-      if (errno || -1 == jiffy) {
-         jiffy = -1;
-         return t; // Assume 100Hz clock
-      }
-   }
+static inline unsigned long long LinuxProcessList_adjustTime(unsigned long long t) {
    return t * 100 / jiffy;
 }
 
@@ -335,13 +335,13 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    location += 1;
    lp->cmajflt = strtoull(location, &location, 10);
    location += 1;
-   lp->utime = LinuxProcess_adjustTime(strtoull(location, &location, 10));
+   lp->utime = LinuxProcessList_adjustTime(strtoull(location, &location, 10));
    location += 1;
-   lp->stime = LinuxProcess_adjustTime(strtoull(location, &location, 10));
+   lp->stime = LinuxProcessList_adjustTime(strtoull(location, &location, 10));
    location += 1;
-   lp->cutime = LinuxProcess_adjustTime(strtoull(location, &location, 10));
+   lp->cutime = LinuxProcessList_adjustTime(strtoull(location, &location, 10));
    location += 1;
-   lp->cstime = LinuxProcess_adjustTime(strtoull(location, &location, 10));
+   lp->cstime = LinuxProcessList_adjustTime(strtoull(location, &location, 10));
    location += 1;
    process->priority = strtol(location, &location, 10);
    location += 1;
@@ -351,7 +351,7 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    location += 1;
    location = strchr(location, ' ') + 1;
    if (process->starttime_ctime == 0) {
-      process->starttime_ctime = btime + LinuxProcess_adjustTime(strtoll(location, &location, 10)) / 100;
+      process->starttime_ctime = btime + LinuxProcessList_adjustTime(strtoll(location, &location, 10)) / 100;
    } else {
       location = strchr(location, ' ') + 1;
    }

@@ -24,7 +24,6 @@ in the source distribution for its full text.
 
 
 /* semi-global */
-long long btime;
 int pageSize;
 int pageSizeKB;
 

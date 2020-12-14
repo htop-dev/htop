@@ -191,8 +191,6 @@ static inline bool Process_isUserlandThread(const Process* this) {
    return this->pid != this->tgid;
 }
 
-extern long long btime;
-
 extern int pageSize;
 
 extern int pageSizeKB;
