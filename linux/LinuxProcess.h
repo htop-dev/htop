@@ -127,9 +127,7 @@ extern int pageSize;
 
 extern int pageSizeKB;
 
-extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
-
-extern ProcessPidColumn Process_pidColumns[];
+extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 extern const ProcessClass LinuxProcess_class;
 

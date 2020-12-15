@@ -42,8 +42,6 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid(void);
 
-extern ProcessPidColumn Process_pidColumns[];
-
 double Platform_setCPUValues(Meter* mtr, int cpu);
 
 void Platform_setMemoryValues(Meter* mtr);

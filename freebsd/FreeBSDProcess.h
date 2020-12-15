@@ -36,9 +36,7 @@ static inline bool Process_isUserlandThread(const Process* this) {
 
 extern const ProcessClass FreeBSDProcess_class;
 
-extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
-
-extern ProcessPidColumn Process_pidColumns[];
+extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 Process* FreeBSDProcess_new(const Settings* settings);
 

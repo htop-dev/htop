@@ -11,7 +11,7 @@ in the source distribution for its full text.
 
 #define Process_delete UnsupportedProcess_delete
 
-extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 Process* UnsupportedProcess_new(Settings* settings);
 
