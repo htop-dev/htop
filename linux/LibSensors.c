@@ -99,6 +99,9 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
          unsigned int tempId;
          if (String_startsWith(label, "Package ")) {
             tempId = 0;
+         } else if (String_startsWith(label, "temp")) {
+            /* Raspberry Pi has only temp1 */
+            tempId = 0;
          } else if (String_startsWith(label, "Core ")) {
             tempId = 1 + atoi(label + strlen("Core "));
          } else {
