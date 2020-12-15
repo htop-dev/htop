@@ -156,16 +156,20 @@ ListItem* Meter_toListItem(Meter* this, bool moving) {
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    char buffer[METER_BUFFER_LEN];
    Meter_updateValues(this, buffer, sizeof(buffer));
-   (void) w;
 
    attrset(CRT_colors[METER_TEXT]);
-   mvaddstr(y, x, this->caption);
+   mvaddnstr(y, x, this->caption, w - 1);
+   attrset(CRT_colors[RESET_COLOR]);
+
    int captionLen = strlen(this->caption);
    x += captionLen;
-   attrset(CRT_colors[RESET_COLOR]);
+   w -= captionLen;
+   if (w <= 0)
+      return;
+
    RichString_begin(out);
    Meter_displayBuffer(this, buffer, &out);
-   RichString_printVal(out, y, x);
+   RichString_printoffnVal(out, y, x, 0, w - 1);
    RichString_end(out);
 }
 
@@ -185,7 +189,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    w -= captionLen;
    attrset(CRT_colors[BAR_BORDER]);
    mvaddch(y, x, '[');
-   mvaddch(y, x + w, ']');
+   mvaddch(y, x + MAXIMUM(w, 0), ']');
    attrset(CRT_colors[RESET_COLOR]);
 
    w--;
@@ -238,7 +242,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       RichString_setAttrn(&bar, CRT_colors[Meter_attributes(this)[i]], offset, offset + blockSizes[i] - 1);
-      RichString_printoffnVal(bar, y, x + offset, offset, blockSizes[i]);
+      RichString_printoffnVal(bar, y, x + offset, offset, MINIMUM(blockSizes[i], w - offset));
       offset += blockSizes[i];
       offset = CLAMP(offset, 0, w);
    }
