@@ -29,7 +29,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_LRS_FIX  0x00010000
 #define PROCESS_FLAG_LINUX_CWD      0x00020000
 
-typedef enum UnsupportedProcessFields {
+typedef enum UnsupportedProcessField_ {
    FLAGS = 9,
    ITREALVALUE = 20,
    VSIZE = 22,
@@ -50,7 +50,7 @@ typedef enum UnsupportedProcessFields {
    EXIT_SIGNAL = 37,
 } UnsupportedProcessField;
 
-typedef enum LinuxProcessFields {
+typedef enum LinuxProcessField_ {
    CMINFLT = 11,
    CMAJFLT = 13,
    UTIME = 14,

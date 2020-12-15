@@ -23,7 +23,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_IO 0x0001
 #define DEFAULT_HIGHLIGHT_SECS 5
 
-typedef enum ProcessFields {
+typedef enum ProcessField_ {
    NULL_PROCESSFIELD = 0,
    PID = 1,
    COMM = 2,
