@@ -184,6 +184,11 @@ static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
    return this->ioPriority;
 }
 
+#ifdef __ANDROID__
+#define SYS_ioprio_get __NR_ioprio_get
+#define SYS_ioprio_set __NR_ioprio_set
+#endif
+
 IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this) {
    IOPriority ioprio = 0;
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall

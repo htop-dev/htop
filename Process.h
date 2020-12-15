@@ -15,10 +15,6 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "RichString.h"
 
-#ifdef __ANDROID__
-#define SYS_ioprio_get __NR_ioprio_get
-#define SYS_ioprio_set __NR_ioprio_set
-#endif
 
 #define PROCESS_FLAG_IO 0x0001
 #define DEFAULT_HIGHLIGHT_SECS 5
