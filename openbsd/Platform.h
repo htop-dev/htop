@@ -20,11 +20,7 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 
 
-extern ProcessFieldData Process_fields[];
-
 extern ProcessField Platform_defaultFields[];
-
-extern int Platform_numberOfFields;
 
 /* see /usr/include/sys/signal.h */
 extern const SignalItem Platform_signals[];

@@ -23,8 +23,6 @@ extern ProcessField Platform_defaultFields[];
 
 extern const MeterClass* const Platform_meterTypes[];
 
-extern int Platform_numberOfFields;
-
 extern char Process_pidFormat[20];
 
 extern ProcessPidColumn Process_pidColumns[];

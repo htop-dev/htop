@@ -133,6 +133,7 @@ linux_platform_headers = \
 	linux/LinuxProcessList.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
+	linux/ProcessField.h \
 	linux/SELinuxMeter.h \
 	linux/SystemdMeter.h \
 	linux/ZramMeter.h \
@@ -164,9 +165,10 @@ endif
 # -------
 
 freebsd_platform_headers = \
-	freebsd/Platform.h \
 	freebsd/FreeBSDProcessList.h \
 	freebsd/FreeBSDProcess.h \
+	freebsd/Platform.h \
+	freebsd/ProcessField.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsCompressedArcMeter.h \
 	zfs/ZfsArcStats.h \
@@ -184,9 +186,10 @@ endif
 # ------------
 
 dragonflybsd_platform_headers = \
-	dragonflybsd/Platform.h \
 	dragonflybsd/DragonFlyBSDProcessList.h \
-	dragonflybsd/DragonFlyBSDProcess.h
+	dragonflybsd/DragonFlyBSDProcess.h \
+	dragonflybsd/Platform.h \
+	dragonflybsd/ProcessField.h
 
 if HTOP_DRAGONFLYBSD
 AM_LDFLAGS += -lkvm -lkinfo
@@ -200,9 +203,10 @@ endif
 # -------
 
 openbsd_platform_headers = \
-	openbsd/Platform.h \
 	openbsd/OpenBSDProcessList.h \
-	openbsd/OpenBSDProcess.h
+	openbsd/OpenBSDProcess.h \
+	openbsd/Platform.h \
+	openbsd/ProcessField.h
 
 if HTOP_OPENBSD
 myhtopplatsources = openbsd/Platform.c openbsd/OpenBSDProcessList.c \
@@ -215,9 +219,10 @@ endif
 # ------
 
 darwin_platform_headers = \
-	darwin/Platform.h \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
+	darwin/Platform.h \
+	darwin/ProcessField.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsCompressedArcMeter.h \
 	zfs/ZfsArcStats.h \
@@ -237,6 +242,7 @@ endif
 
 solaris_platform_headers = \
 	solaris/Platform.h \
+	solaris/ProcessField.h \
 	solaris/SolarisProcess.h \
 	solaris/SolarisProcessList.h \
 	zfs/ZfsArcMeter.h \
@@ -256,6 +262,7 @@ endif
 
 unsupported_platform_headers = \
 	unsupported/Platform.h \
+	unsupported/ProcessField.h \
 	unsupported/UnsupportedProcess.h \
 	unsupported/UnsupportedProcessList.h
 

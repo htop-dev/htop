@@ -25,7 +25,6 @@ in the source distribution for its full text.
 
 #define  kill(pid, signal) kill(pid / 1024, signal)
 
-extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;
 
 typedef struct envAccum_ {
@@ -44,10 +43,6 @@ extern const unsigned int Platform_numberOfSignals;
 extern ProcessField Platform_defaultFields[];
 
 extern const MeterClass* const Platform_meterTypes[];
-
-extern int Platform_numberOfFields;
-
-extern char Process_pidFormat[20];
 
 void Platform_init(void);
 

@@ -30,7 +30,7 @@ int pageSizeKB;
 /* Used to identify kernel threads in Comm and Exe columns */
 static const char *const kthreadID = "KTHREAD";
 
-ProcessFieldData Process_fields[] = {
+ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
@@ -100,7 +100,6 @@ ProcessFieldData Process_fields[] = {
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process from /proc/[pid]/comm", .flags = 0, },
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
    [CWD] = { .name ="CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_LINUX_CWD, },
-   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 ProcessPidColumn Process_pidColumns[] = {
@@ -608,7 +607,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
-   switch ((int)field) {
+   switch (field) {
    case TTY_NR: {
       if (lp->ttyDevice) {
          xSnprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
@@ -753,7 +752,7 @@ static long LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proc
    const LinuxProcess* p1 = (const LinuxProcess*)v1;
    const LinuxProcess* p2 = (const LinuxProcess*)v2;
 
-   switch ((int) key) {
+   switch (key) {
    case M_DRS:
       return SPACESHIP_NUMBER(p2->m_drs, p1->m_drs);
    case M_DT:

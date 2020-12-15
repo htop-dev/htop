@@ -20,8 +20,6 @@ in the source distribution for its full text.
 
 extern ProcessField Platform_defaultFields[];
 
-extern int Platform_numberOfFields;
-
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;

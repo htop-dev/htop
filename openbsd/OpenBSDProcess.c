@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ProcessFieldData Process_fields[] = {
+ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = {
       .name = "",
       .title = NULL,
@@ -167,12 +167,6 @@ ProcessFieldData Process_fields[] = {
       .description = "Thread group ID (i.e. process ID)",
       .flags = 0,
    },
-   [LAST_PROCESSFIELD] = {
-      .name = "*** report bug! ***",
-      .title = NULL,
-      .description = NULL,
-      .flags = 0,
-   },
 };
 
 ProcessPidColumn Process_pidColumns[] = {
@@ -219,7 +213,7 @@ static long OpenBSDProcess_compareByKey(const Process* v1, const Process* v2, Pr
    // remove if actually used
    (void)p1; (void)p2;
 
-   switch ((int) key) {
+   switch (key) {
    // add OpenBSD-specific fields here
    default:
       return Process_compareByKey_Base(v1, v2, key);

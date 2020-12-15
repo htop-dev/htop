@@ -44,8 +44,6 @@ in the source distribution for its full text.
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
-int Platform_numberOfFields = LAST_PROCESSFIELD;
-
 /*
  * See /usr/include/sys/signal.h
  */

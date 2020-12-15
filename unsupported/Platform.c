@@ -59,8 +59,6 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-int Platform_numberOfFields = 100;
-
 ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };

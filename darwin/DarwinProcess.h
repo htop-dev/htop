@@ -12,11 +12,6 @@ in the source distribution for its full text.
 #include "DarwinProcessList.h"
 #include "Settings.h"
 
-typedef enum DarwinProcessFields_ {
-   // Add platform-specific fields here, with ids >= 100
-   TRANSLATED = 100,
-   LAST_PROCESSFIELD = 101,
-} DarwinProcessField;
 
 typedef struct DarwinProcess_ {
    Process super;
@@ -29,7 +24,7 @@ typedef struct DarwinProcess_ {
 
 extern const ProcessClass DarwinProcess_class;
 
-extern ProcessFieldData Process_fields[];
+extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 Process* DarwinProcess_new(const Settings* settings);
 

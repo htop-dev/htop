@@ -33,8 +33,6 @@ in the source distribution for its full text.
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
-int Platform_numberOfFields = LAST_PROCESSFIELD;
-
 const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
    { .name = " 1 SIGHUP",    .number =  1 },

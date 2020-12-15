@@ -15,11 +15,6 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 
-typedef enum OpenBSDProcessFields_ {
-   // Add platform-specific fields here, with ids >= 100
-   LAST_PROCESSFIELD = 100,
-} OpenBSDProcessField;
-
 typedef struct OpenBSDProcess_ {
    Process super;
 } OpenBSDProcess;
@@ -30,7 +25,7 @@ typedef struct OpenBSDProcess_ {
 
 extern const ProcessClass OpenBSDProcess_class;
 
-extern ProcessFieldData Process_fields[];
+extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 extern ProcessPidColumn Process_pidColumns[];
 

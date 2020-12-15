@@ -110,8 +110,6 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-int Platform_numberOfFields = LAST_PROCESSFIELD;
-
 double Platform_timebaseToNS = 1.0;
 
 void Platform_init(void) {

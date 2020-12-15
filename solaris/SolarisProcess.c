@@ -29,7 +29,7 @@ const ProcessClass SolarisProcess_class = {
    .compareByKey = SolarisProcess_compareByKey
 };
 
-ProcessFieldData Process_fields[] = {
+ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID    ", .description = "Process/thread ID", .flags = 0, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
@@ -62,7 +62,6 @@ ProcessFieldData Process_fields[] = {
    [POOLID] = { .name = "POOLID", .title = " POLID ", .description = "Pool ID", .flags = 0, },
    [CONTID] = { .name = "CONTID", .title = " CNTID ", .description = "Contract ID", .flags = 0, },
    [LWPID] = { .name = "LWPID", .title = " LWPID ", .description = "LWP ID", .flags = 0, },
-   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 ProcessPidColumn Process_pidColumns[] = {
@@ -100,7 +99,7 @@ void SolarisProcess_writeField(const Process* this, RichString* str, ProcessFiel
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
-   switch ((int) field) {
+   switch (field) {
    // add Solaris-specific fields here
    case ZONEID: xSnprintf(buffer, n, Process_pidFormat, sp->zoneid); break;
    case PROJID: xSnprintf(buffer, n, Process_pidFormat, sp->projid); break;
@@ -122,7 +121,7 @@ long SolarisProcess_compareByKey(const void* v1, const void* v2, ProcessField ke
    const SolarisProcess* p1 = (const SolarisProcess*)v1;
    const SolarisProcess* p2 = (const SolarisProcess*)v2;
 
-   switch ((int) key) {
+   switch (key) {
    case ZONEID:
       return SPACESHIP_NUMBER(p1->zoneid, p2->zoneid);
    case PROJID:
