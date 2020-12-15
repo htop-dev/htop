@@ -196,7 +196,11 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // The text in the bar is right aligned;
    // calculate needed padding and generate leading spaces
+#ifdef HAVE_LIBNCURSESW
    const int textLen = mbstowcs(NULL, buffer, 0);
+#else
+   const int textLen = strlen(buffer);
+#endif
    const int padding = CLAMP(w - textLen, 0, w);
 
    RichString_begin(bar);
