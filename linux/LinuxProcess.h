@@ -29,26 +29,6 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_LRS_FIX  0x00010000
 #define PROCESS_FLAG_LINUX_CWD      0x00020000
 
-typedef enum UnsupportedProcessField_ {
-   FLAGS = 9,
-   ITREALVALUE = 20,
-   VSIZE = 22,
-   RSS = 23,
-   RLIM = 24,
-   STARTCODE = 25,
-   ENDCODE = 26,
-   STARTSTACK = 27,
-   KSTKESP = 28,
-   KSTKEIP = 29,
-   SIGNAL = 30,
-   BLOCKED = 31,
-   SSIGIGNORE = 32,
-   SIGCATCH = 33,
-   WCHAN = 34,
-   NSWAP = 35,
-   CNSWAP = 36,
-   EXIT_SIGNAL = 37,
-} UnsupportedProcessField;
 
 typedef enum LinuxProcessField_ {
    CMINFLT = 11,
