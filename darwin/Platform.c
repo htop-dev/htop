@@ -166,16 +166,6 @@ int Platform_getMaxPid() {
    return 99999;
 }
 
-ProcessPidColumn Process_pidColumns[] = {
-   { .id = PID, .label = "PID" },
-   { .id = PPID, .label = "PPID" },
-   { .id = TPGID, .label = "TPGID" },
-   { .id = TGID, .label = "TGID" },
-   { .id = PGRP, .label = "PGRP" },
-   { .id = SESSION, .label = "SID" },
-   { .id = 0, .label = NULL },
-};
-
 static double Platform_setCPUAverageValues(Meter* mtr) {
    const ProcessList* dpl = mtr->pl;
    int cpus = dpl->cpuCount;

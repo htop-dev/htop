@@ -53,11 +53,6 @@ typedef enum ProcessField_ {
    LAST_PROCESSFIELD
 } ProcessField;
 
-typedef struct ProcessPidColumn_ {
-   int id;
-   const char* label;
-} ProcessPidColumn;
-
 struct Settings_;
 
 typedef struct Process_ {
@@ -122,6 +117,7 @@ typedef struct ProcessFieldData_ {
    const char* title;
    const char* description;
    uint32_t flags;
+   bool pidColumn;
 } ProcessFieldData;
 
 // Implemented in platform-specific code:
@@ -129,9 +125,9 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 long Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
 bool Process_isThread(const Process* this);
-extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
-extern ProcessPidColumn Process_pidColumns[];
-extern char Process_pidFormat[20];
+extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+#define PROCESS_MAX_PID_DIGITS 19
+extern int Process_pidDigits;
 
 typedef Process*(*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);

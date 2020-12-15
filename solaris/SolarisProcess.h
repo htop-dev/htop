@@ -34,9 +34,7 @@ typedef struct SolarisProcess_ {
 
 extern const ProcessClass SolarisProcess_class;
 
-extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
-
-extern ProcessPidColumn Process_pidColumns[];
+extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 Process* SolarisProcess_new(const Settings* settings);
 

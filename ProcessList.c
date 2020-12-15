@@ -79,6 +79,20 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
    this->panel = panel;
 }
 
+static const char* alignedProcessFieldTitle(ProcessField field) {
+   const char* title = Process_fields[field].title;
+   if (!title)
+      return "- ";
+
+   if (!Process_fields[field].pidColumn)
+      return title;
+
+   static char titleBuffer[PROCESS_MAX_PID_DIGITS + /* space */ 1 + /* null-terminator */ + 1];
+   xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_pidDigits, title);
+
+   return titleBuffer;
+}
+
 void ProcessList_printHeader(ProcessList* this, RichString* header) {
    RichString_prune(header);
 
@@ -88,11 +102,6 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
    ProcessField key = Settings_getActiveSortKey(settings);
 
    for (int i = 0; fields[i]; i++) {
-      const char* field = Process_fields[fields[i]].title;
-      if (!field) {
-         field = "- ";
-      }
-
       int color;
       if (settings->treeView && settings->treeViewAlwaysByPID) {
          color = CRT_colors[PANEL_HEADER_FOCUS];
@@ -102,7 +111,7 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
          color = CRT_colors[PANEL_HEADER_FOCUS];
       }
 
-      RichString_appendWide(header, color, field);
+      RichString_appendWide(header, color, alignedProcessFieldTitle(fields[i]));
       if (COMM == fields[i] && settings->showMergedCommand) {
          RichString_appendAscii(header, color, "(merged)");
       }
@@ -456,12 +465,7 @@ ProcessField ProcessList_keyAt(const ProcessList* this, int at) {
    const ProcessField* fields = this->settings->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
-      const char* title = Process_fields[field].title;
-      if (!title) {
-         title = "- ";
-      }
-
-      int len = strlen(title);
+      int len = strlen(alignedProcessFieldTitle(field));
       if (at >= x && at <= x + len) {
          return field;
       }

@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
+const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = {
       .name = "",
       .title = NULL,
@@ -25,9 +25,10 @@ ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    },
    [PID] = {
       .name = "PID",
-      .title = "    PID ",
+      .title = "PID",
       .description = "Process/thread ID",
       .flags = 0,
+      .pidColumn = true,
    },
    [COMM] = {
       .name = "Command",
@@ -43,21 +44,24 @@ ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    },
    [PPID] = {
       .name = "PPID",
-      .title = "   PPID ",
+      .title = "PPID",
       .description = "Parent process ID",
       .flags = 0,
+      .pidColumn = true,
    },
    [PGRP] = {
       .name = "PGRP",
-      .title = "   PGRP ",
+      .title = "PGRP",
       .description = "Process group ID",
       .flags = 0,
+      .pidColumn = true,
    },
    [SESSION] = {
       .name = "SESSION",
-      .title = "   SESN ",
+      .title = "SESN",
       .description = "Process's session ID",
       .flags = 0,
+      .pidColumn = true,
    },
    [TTY_NR] = {
       .name = "TTY_NR",
@@ -67,9 +71,10 @@ ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    },
    [TPGID] = {
       .name = "TPGID",
-      .title = "  TPGID ",
+      .title = "TPGID",
       .description = "Process ID of the fg process group of the controlling terminal",
       .flags = 0,
+      .pidColumn = true,
    },
    [MINFLT] = {
       .name = "MINFLT",
@@ -163,20 +168,11 @@ ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    },
    [TGID] = {
       .name = "TGID",
-      .title = "   TGID ",
+      .title = "TGID",
       .description = "Thread group ID (i.e. process ID)",
       .flags = 0,
+      .pidColumn = true,
    },
-};
-
-ProcessPidColumn Process_pidColumns[] = {
-   { .id = PID, .label = "PID" },
-   { .id = PPID, .label = "PPID" },
-   { .id = TPGID, .label = "TPGID" },
-   { .id = TGID, .label = "TGID" },
-   { .id = PGRP, .label = "PGRP" },
-   { .id = SESSION, .label = "SESN" },
-   { .id = 0, .label = NULL },
 };
 
 Process* OpenBSDProcess_new(const Settings* settings) {

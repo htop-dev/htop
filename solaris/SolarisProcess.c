@@ -29,16 +29,16 @@ const ProcessClass SolarisProcess_class = {
    .compareByKey = SolarisProcess_compareByKey
 };
 
-ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
+const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
-   [PID] = { .name = "PID", .title = "    PID    ", .description = "Process/thread ID", .flags = 0, },
+   [PID] = { .name = "PID", .title = "PID", .description = "Process/thread ID", .flags = 0, .pidColumn = true, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
    [STATE] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping, R running, O onproc, Z zombie, T stopped, W waiting)", .flags = 0, },
-   [PPID] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
-   [PGRP] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
-   [SESSION] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },
+   [PPID] = { .name = "PPID", .title = "PPID", .description = "Parent process ID", .flags = 0, .pidColumn = true, },
+   [PGRP] = { .name = "PGRP", .title = "PGRP", .description = "Process group ID", .flags = 0, .pidColumn = true, },
+   [SESSION] = { .name = "SESSION", .title = "SID", .description = "Process's session ID", .flags = 0, .pidColumn = true, },
    [TTY_NR] = { .name = "TTY_NR", .title = "    TTY ", .description = "Controlling terminal", .flags = 0, },
-   [TPGID] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
+   [TPGID] = { .name = "TPGID", .title = "TPGID", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, .pidColumn = true, },
    [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
    [MAJFLT] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
    [PRIORITY] = { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = 0, },
@@ -54,30 +54,14 @@ ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [USER] = { .name = "USER", .title = "USER      ", .description = "Username of the process owner (or user ID if name cannot be determined)", .flags = 0, },
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
-   [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
-   [ZONEID] = { .name = "ZONEID", .title = " ZONEID ", .description = "Zone ID", .flags = 0, },
+   [TGID] = { .name = "TGID", .title = "TGID", .description = "Thread group ID (i.e. process ID)", .flags = 0, .pidColumn = true, },
+   [ZONEID] = { .name = "ZONEID", .title = "ZONEID", .description = "Zone ID", .flags = 0, .pidColumn = true, },
    [ZONE] = { .name = "ZONE", .title = "ZONE             ", .description = "Zone name", .flags = 0, },
-   [PROJID] = { .name = "PROJID", .title = " PRJID ", .description = "Project ID", .flags = 0, },
-   [TASKID] = { .name = "TASKID", .title = " TSKID ", .description = "Task ID", .flags = 0, },
-   [POOLID] = { .name = "POOLID", .title = " POLID ", .description = "Pool ID", .flags = 0, },
-   [CONTID] = { .name = "CONTID", .title = " CNTID ", .description = "Contract ID", .flags = 0, },
-   [LWPID] = { .name = "LWPID", .title = " LWPID ", .description = "LWP ID", .flags = 0, },
-};
-
-ProcessPidColumn Process_pidColumns[] = {
-   { .id = ZONEID, .label = "ZONEID" },
-   { .id = TASKID, .label = "TSKID" },
-   { .id = PROJID, .label = "PRJID" },
-   { .id = POOLID, .label = "POLID" },
-   { .id = CONTID, .label = "CNTID" },
-   { .id = PID, .label = "PID" },
-   { .id = PPID, .label = "PPID" },
-   { .id = LWPID, .label = "LWPID" },
-   { .id = TPGID, .label = "TPGID" },
-   { .id = TGID, .label = "TGID" },
-   { .id = PGRP, .label = "PGRP" },
-   { .id = SESSION, .label = "SID" },
-   { .id = 0, .label = NULL },
+   [PROJID] = { .name = "PROJID", .title = "PRJID", .description = "Project ID", .flags = 0, .pidColumn = true, },
+   [TASKID] = { .name = "TASKID", .title = "TSKID", .description = "Task ID", .flags = 0, .pidColumn = true, },
+   [POOLID] = { .name = "POOLID", .title = "POLID", .description = "Pool ID", .flags = 0, .pidColumn = true, },
+   [CONTID] = { .name = "CONTID", .title = "CNTID", .description = "Contract ID", .flags = 0, .pidColumn = true, },
+   [LWPID] = { .name = "LWPID", .title = "LWPID", .description = "LWP ID", .flags = 0, .pidColumn = true, },
 };
 
 Process* SolarisProcess_new(const Settings* settings) {
@@ -101,15 +85,15 @@ void SolarisProcess_writeField(const Process* this, RichString* str, ProcessFiel
    int n = sizeof(buffer) - 1;
    switch (field) {
    // add Solaris-specific fields here
-   case ZONEID: xSnprintf(buffer, n, Process_pidFormat, sp->zoneid); break;
-   case PROJID: xSnprintf(buffer, n, Process_pidFormat, sp->projid); break;
-   case TASKID: xSnprintf(buffer, n, Process_pidFormat, sp->taskid); break;
-   case POOLID: xSnprintf(buffer, n, Process_pidFormat, sp->poolid); break;
-   case CONTID: xSnprintf(buffer, n, Process_pidFormat, sp->contid); break;
+   case ZONEID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->zoneid); break;
+   case PROJID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->projid); break;
+   case TASKID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->taskid); break;
+   case POOLID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->poolid); break;
+   case CONTID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->contid); break;
    case ZONE: xSnprintf(buffer, n, "%-*s ", ZONENAME_MAX/4, sp->zname); break;
-   case PID: xSnprintf(buffer, n, Process_pidFormat, sp->realpid); break;
-   case PPID: xSnprintf(buffer, n, Process_pidFormat, sp->realppid); break;
-   case LWPID: xSnprintf(buffer, n, Process_pidFormat, sp->lwpid); break;
+   case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->realpid); break;
+   case PPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->realppid); break;
+   case LWPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->lwpid); break;
    default:
       Process_writeField(this, str, field);
       return;
