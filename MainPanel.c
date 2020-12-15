@@ -51,7 +51,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
 
    Htop_Reaction reaction = HTOP_OK;
 
-   if (ch != ERR)
+   if (ch != ERR && ch != /* KEY_SHUFFLE */ 0x19a)
       this->state->hideProcessSelection = false;
 
    if (EVENT_IS_HEADER_CLICK(ch)) {
