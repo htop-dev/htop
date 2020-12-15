@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Object.h"
+#include "ProcessField.h"
 #include "RichString.h"
 
 
@@ -45,6 +46,11 @@ typedef enum ProcessField_ {
    NLWP = 51,
    TGID = 52,
    PERCENT_NORM_CPU = 53,
+
+   /* Platform specific fields, defined in ${platform}/ProcessField.h */
+   PLATFORM_PROCESS_FIELDS
+
+   LAST_PROCESSFIELD
 } ProcessField;
 
 typedef struct ProcessPidColumn_ {
@@ -123,7 +129,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 long Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
 bool Process_isThread(const Process* this);
-extern ProcessFieldData Process_fields[];
+extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 extern ProcessPidColumn Process_pidColumns[];
 extern char Process_pidFormat[20];
 

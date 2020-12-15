@@ -18,7 +18,7 @@ in the source distribution for its full text.
 
 const char* const nodevStr = "nodev";
 
-ProcessFieldData Process_fields[] = {
+ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
@@ -47,7 +47,6 @@ ProcessFieldData Process_fields[] = {
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
    [JID] = { .name = "JID", .title = "    JID ", .description = "Jail prison ID", .flags = 0, },
    [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
-   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 ProcessPidColumn Process_pidColumns[] = {
@@ -80,7 +79,7 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
-   switch ((int) field) {
+   switch (field) {
    // add FreeBSD-specific fields here
    case JID: xSnprintf(buffer, n, Process_pidFormat, fp->jid); break;
    case JAIL: {
@@ -112,7 +111,7 @@ static long FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, Pr
    const FreeBSDProcess* p1 = (const FreeBSDProcess*)v1;
    const FreeBSDProcess* p2 = (const FreeBSDProcess*)v2;
 
-   switch ((int) key) {
+   switch (key) {
    // add FreeBSD-specific fields here
    case JID:
       return SPACESHIP_NUMBER(p1->jid, p2->jid);

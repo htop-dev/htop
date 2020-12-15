@@ -30,54 +30,6 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_CWD      0x00020000
 
 
-typedef enum LinuxProcessField_ {
-   CMINFLT = 11,
-   CMAJFLT = 13,
-   UTIME = 14,
-   STIME = 15,
-   CUTIME = 16,
-   CSTIME = 17,
-   M_SHARE = 41,
-   M_TRS = 42,
-   M_DRS = 43,
-   M_LRS = 44,
-   M_DT = 45,
-   #ifdef HAVE_OPENVZ
-   CTID = 100,
-   VPID = 101,
-   #endif
-   #ifdef HAVE_VSERVER
-   VXID = 102,
-   #endif
-   RCHAR = 103,
-   WCHAR = 104,
-   SYSCR = 105,
-   SYSCW = 106,
-   RBYTES = 107,
-   WBYTES = 108,
-   CNCLWB = 109,
-   IO_READ_RATE = 110,
-   IO_WRITE_RATE = 111,
-   IO_RATE = 112,
-   CGROUP = 113,
-   OOM = 114,
-   IO_PRIORITY = 115,
-   #ifdef HAVE_DELAYACCT
-   PERCENT_CPU_DELAY = 116,
-   PERCENT_IO_DELAY = 117,
-   PERCENT_SWAP_DELAY = 118,
-   #endif
-   M_PSS = 119,
-   M_SWAP = 120,
-   M_PSSWP = 121,
-   CTXT = 122,
-   SECATTR = 123,
-   PROC_COMM = 124,
-   PROC_EXE = 125,
-   CWD = 126,
-   LAST_PROCESSFIELD = 127,
-} LinuxProcessField;
-
 /* LinuxProcessMergedCommand is populated by LinuxProcess_makeCommandStr: It
  * contains the merged Command string, and the information needed by
  * LinuxProcess_writeCommand to color the string. str will be NULL for kernel
@@ -175,7 +127,7 @@ extern int pageSize;
 
 extern int pageSizeKB;
 
-extern ProcessFieldData Process_fields[];
+extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 extern ProcessPidColumn Process_pidColumns[];
 

@@ -29,7 +29,7 @@ const ProcessClass DragonFlyBSDProcess_class = {
    .compareByKey = DragonFlyBSDProcess_compareByKey
 };
 
-ProcessFieldData Process_fields[] = {
+ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
@@ -57,7 +57,6 @@ ProcessFieldData Process_fields[] = {
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
    [JID] = { .name = "JID", .title = "    JID ", .description = "Jail prison ID", .flags = 0, },
    [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
-   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 ProcessPidColumn Process_pidColumns[] = {
@@ -90,7 +89,7 @@ void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, Proces
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
-   switch ((int) field) {
+   switch (field) {
    // add Platform-specific fields here
    case PID: xSnprintf(buffer, n, Process_pidFormat, (fp->kernel ? -1 : this->pid)); break;
    case JID: xSnprintf(buffer, n, Process_pidFormat, fp->jid); break;
@@ -113,7 +112,7 @@ long DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, Proc
    const DragonFlyBSDProcess* p1 = (const DragonFlyBSDProcess*)v1;
    const DragonFlyBSDProcess* p2 = (const DragonFlyBSDProcess*)v2;
 
-   switch ((int) key) {
+   switch (key) {
    // add Platform-specific fields here
    case JID:
       return SPACESHIP_NUMBER(p1->jid, p2->jid);

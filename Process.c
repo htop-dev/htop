@@ -518,7 +518,7 @@ long Process_compare(const void* v1, const void* v2) {
 long Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
    int r;
 
-   switch ((int) key) {
+   switch (key) {
    case PERCENT_CPU:
    case PERCENT_NORM_CPU:
       return SPACESHIP_NUMBER(p2->percent_cpu, p1->percent_cpu);

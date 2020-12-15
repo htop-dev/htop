@@ -8,13 +8,6 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-typedef enum DragonFlyBSDProcessFields {
-   // Add platform-specific fields here, with ids >= 100
-   JID   = 100,
-   JAIL  = 101,
-   LAST_PROCESSFIELD = 102,
-} DragonFlyBSDProcessField;
-
 typedef struct DragonFlyBSDProcess_ {
    Process super;
    int   kernel;
@@ -29,7 +22,7 @@ typedef struct DragonFlyBSDProcess_ {
 
 extern const ProcessClass DragonFlyBSDProcess_class;
 
-extern ProcessFieldData Process_fields[];
+extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 extern ProcessPidColumn Process_pidColumns[];
 

@@ -119,10 +119,6 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-int Platform_numberOfFields = LAST_PROCESSFIELD;
-
-extern char Process_pidFormat[20];
-
 void Platform_init(void) {
    /* no platform-specific setup needed */
 }

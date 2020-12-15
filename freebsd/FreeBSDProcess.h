@@ -18,13 +18,6 @@ in the source distribution for its full text.
 
 extern const char* const nodevStr;
 
-typedef enum FreeBSDProcessFields_ {
-   // Add platform-specific fields here, with ids >= 100
-   JID   = 100,
-   JAIL  = 101,
-   LAST_PROCESSFIELD = 102,
-} FreeBSDProcessField;
-
 typedef struct FreeBSDProcess_ {
    Process super;
    int   kernel;
@@ -43,7 +36,7 @@ static inline bool Process_isUserlandThread(const Process* this) {
 
 extern const ProcessClass FreeBSDProcess_class;
 
-extern ProcessFieldData Process_fields[];
+extern ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 extern ProcessPidColumn Process_pidColumns[];
 

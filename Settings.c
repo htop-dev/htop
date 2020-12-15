@@ -96,10 +96,10 @@ static void readFields(ProcessField* fields, uint32_t* flags, const char* line) 
    free(trim);
    int i, j;
    *flags = 0;
-   for (j = 0, i = 0; i < Platform_numberOfFields && ids[i]; i++) {
+   for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i]; i++) {
       // This "+1" is for compatibility with the older enum format.
       int id = atoi(ids[i]) + 1;
-      if (id > 0 && id < Platform_numberOfFields && Process_fields[id].name) {
+      if (id > 0 && id < LAST_PROCESSFIELD && Process_fields[id].name) {
          fields[j] = id;
          *flags |= Process_fields[id].flags;
          j++;
@@ -355,7 +355,7 @@ Settings* Settings_new(int initialCpuCount) {
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
-   this->fields = xCalloc(Platform_numberOfFields + 1, sizeof(ProcessField));
+   this->fields = xCalloc(LAST_PROCESSFIELD + 1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;

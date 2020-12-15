@@ -18,7 +18,7 @@ in the source distribution for its full text.
 #include "Process.h"
 
 
-ProcessFieldData Process_fields[] = {
+ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
@@ -45,7 +45,6 @@ ProcessFieldData Process_fields[] = {
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
    [TRANSLATED] = { .name = "TRANSLATED", .title = "T ", .description = "Translation info (T translated, N native)", .flags = 0, },
-   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 Process* DarwinProcess_new(const Settings* settings) {
@@ -73,7 +72,7 @@ static void DarwinProcess_writeField(const Process* this, RichString* str, Proce
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
-   switch ((int) field) {
+   switch (field) {
    // add Platform-specific fields here
    case TRANSLATED: xSnprintf(buffer, n, "%c ", dp->translated ? 'T' : 'N'); break;
    default:
@@ -87,7 +86,7 @@ static long DarwinProcess_compareByKey(const Process* v1, const Process* v2, Pro
    const DarwinProcess* p1 = (const DarwinProcess*)v1;
    const DarwinProcess* p2 = (const DarwinProcess*)v2;
 
-   switch ((int) key) {
+   switch (key) {
    // add Platform-specific fields here
    case TRANSLATED:
       return SPACESHIP_NUMBER(p1->translated, p2->translated);

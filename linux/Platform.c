@@ -65,9 +65,7 @@ in the source distribution for its full text.
 #endif
 
 
-ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
-
-int Platform_numberOfFields = LAST_PROCESSFIELD;
+ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
 const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number = 0 },
