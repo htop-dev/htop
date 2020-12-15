@@ -23,9 +23,9 @@ static void* dlopenHandle = NULL;
 
 int LibSensors_init(FILE* input) {
    if (!dlopenHandle) {
-      dlopenHandle = dlopen("libsensors.so.", RTLD_LAZY);
+      dlopenHandle = dlopen("libsensors.so", RTLD_LAZY);
       if (!dlopenHandle) {
-      /* Debian contains no unversioned .so in libsensors5, only in the -dev package, so work around that: */
+         /* Debian contains no unversioned .so in libsensors5, only in the -dev package, so work around that: */
          dlopenHandle = dlopen("libsensors.so.5", RTLD_LAZY);
          if (!dlopenHandle)
             goto dlfailure;
