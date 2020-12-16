@@ -44,8 +44,10 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
    va_list ap;
    va_start(ap, fmt);
 
-   char* title = xMalloc(COLS + 1);
-   int len = vsnprintf(title, COLS + 1, fmt, ap);
+   char title[COLS + 1];
+   int len = vsnprintf(title, sizeof(title), fmt, ap);
+   va_end(ap);
+
    if (len > COLS) {
       memset(&title[COLS - 3], '.', 3);
    }
@@ -54,11 +56,9 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
    mvhline(0, 0, ' ', COLS);
    mvwprintw(stdscr, 0, 0, title);
    attrset(CRT_colors[DEFAULT_COLOR]);
-   this->display->needsRedraw = true;
-   Panel_draw(this->display, true, true);
+   Panel_draw(this->display, true, true, true);
+
    IncSet_drawBar(this->inc);
-   free(title);
-   va_end(ap);
 }
 
 void InfoScreen_addLine(InfoScreen* this, const char* line) {
@@ -89,7 +89,8 @@ void InfoScreen_run(InfoScreen* this) {
    bool looping = true;
    while (looping) {
 
-      Panel_draw(panel, true, true);
+      Panel_draw(panel, false, true, true);
+      IncSet_drawBar(this->inc);
 
       if (this->inc->active) {
          (void) move(LINES - 1, CRT_cursorX);

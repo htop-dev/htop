@@ -119,29 +119,20 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    *rescan = false;
 }
 
-static void ScreenManager_drawPanels(ScreenManager* this, int focus) {
+static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_redraw) {
    const int nPanels = this->panelCount;
    for (int i = 0; i < nPanels; i++) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);
-      Panel_draw(panel, i == focus, !((panel == this->state->panel) && this->state->hideProcessSelection));
+      Panel_draw(panel, force_redraw, i == focus, !((panel == this->state->panel) && this->state->hideProcessSelection));
       mvvline(panel->y, panel->x + panel->w, ' ', panel->h + 1);
    }
-}
-
-static Panel* setCurrentPanel(const ScreenManager* this, Panel* panel) {
-   FunctionBar_draw(panel->currentBar);
-   if (panel == this->state->panel && this->state->pauseProcessUpdate) {
-      FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
-   }
-
-   return panel;
 }
 
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool quit = false;
    int focus = 0;
 
-   Panel* panelFocus = setCurrentPanel(this, (Panel*) Vector_get(this->panels, focus));
+   Panel* panelFocus = (Panel*) Vector_get(this->panels, focus);
 
    double oldTime = 0.0;
 
@@ -150,6 +141,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
 
    bool timedOut = true;
    bool redraw = true;
+   bool force_redraw = false;
    bool rescan = false;
    int sortTimeout = 0;
    int resetSortTimeout = 5;
@@ -159,8 +151,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut);
       }
 
-      if (redraw) {
-         ScreenManager_drawPanels(this, focus);
+      if (redraw || force_redraw) {
+         ScreenManager_drawPanels(this, focus, force_redraw);
+         force_redraw = false;
       }
 
       int prevCh = ch;
@@ -187,7 +180,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                            ch = KEY_MOUSE;
                            if (panel == panelFocus || this->allowFocusChange) {
                               focus = i;
-                              panelFocus = setCurrentPanel(this, panel);
+                              panelFocus = panel;
                               Object* oldSelection = Panel_getSelected(panel);
                               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
                               if (Panel_getSelected(panel) == oldSelection) {
@@ -234,8 +227,11 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       if (result & SYNTH_KEY) {
          ch = result >> 16;
       }
-      if (result & REDRAW) {
+      if (result & REFRESH) {
          sortTimeout = 0;
+      }
+      if (result & REDRAW) {
+         force_redraw = true;
       }
       if (result & RESCAN) {
          rescan = true;
@@ -269,7 +265,7 @@ tryLeft:
             focus--;
          }
 
-         panelFocus = setCurrentPanel(this, (Panel*) Vector_get(this->panels, focus));
+         panelFocus = (Panel*) Vector_get(this->panels, focus);
          if (Panel_size(panelFocus) == 0 && focus > 0) {
             goto tryLeft;
          }
@@ -290,7 +286,7 @@ tryRight:
             focus++;
          }
 
-         panelFocus = setCurrentPanel(this, (Panel*) Vector_get(this->panels, focus));
+         panelFocus = (Panel*) Vector_get(this->panels, focus);
          if (Panel_size(panelFocus) == 0 && focus < this->panelCount - 1) {
             goto tryRight;
          }

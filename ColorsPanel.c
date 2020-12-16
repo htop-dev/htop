@@ -60,26 +60,21 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    case KEY_MOUSE:
    case KEY_RECLICK:
    case ' ':
+      assert(mark >= 0);
+      assert(mark < LAST_COLORSCHEME);
       for (int i = 0; ColorSchemeNames[i] != NULL; i++)
          CheckItem_set((CheckItem*)Panel_get(super, i), false);
       CheckItem_set((CheckItem*)Panel_get(super, mark), true);
 
       this->settings->colorScheme = mark;
-      result = HANDLED;
-   }
-
-   if (result == HANDLED) {
       this->settings->changed = true;
-      const Header* header = this->scr->header;
+
       CRT_setColors(mark);
       clear();
-      Panel* menu = (Panel*) Vector_get(this->scr->panels, 0);
-      Header_draw(header);
-      FunctionBar_draw(super->currentBar);
-      RichString_setAttr(&(super->header), CRT_colors[PANEL_HEADER_FOCUS]);
-      RichString_setAttr(&(menu->header), CRT_colors[PANEL_HEADER_UNFOCUS]);
-      ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
+
+      result = HANDLED | REDRAW;
    }
+
    return result;
 }
 
@@ -99,6 +94,8 @@ ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
 
    this->settings = settings;
    this->scr = scr;
+
+   assert(ARRAYSIZE(ColorSchemeNames) == LAST_COLORSCHEME + 1);
 
    Panel_setHeader(super, "Colors");
    for (int i = 0; ColorSchemeNames[i] != NULL; i++) {

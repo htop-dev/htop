@@ -54,12 +54,13 @@ static inline void IncMode_done(IncMode* mode) {
 }
 
 IncSet* IncSet_new(FunctionBar* bar) {
-   IncSet* this = xCalloc(1, sizeof(IncSet));
+   IncSet* this = xMalloc(sizeof(IncSet));
    IncMode_initSearch(&(this->modes[INC_SEARCH]));
    IncMode_initFilter(&(this->modes[INC_FILTER]));
    this->active = NULL;
-   this->filtering = false;
    this->defaultBar = bar;
+   this->filtering = false;
+   this->found = false;
    return this;
 }
 
@@ -99,20 +100,14 @@ static void updateWeakPanel(IncSet* this, Panel* panel, Vector* lines) {
 
 static bool search(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue) {
    int size = Panel_size(panel);
-   bool found = false;
    for (int i = 0; i < size; i++) {
       if (String_contains_i(getPanelValue(panel, i), mode->buffer)) {
          Panel_setSelected(panel, i);
-         found = true;
-         break;
+         return true;
       }
    }
 
-   FunctionBar_drawExtra(mode->bar,
-                         mode->buffer,
-                         found ? -1 : CRT_colors[FAILED_SEARCH],
-                         true);
-   return found;
+   return false;
 }
 
 static bool IncMode_find(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
@@ -202,7 +197,6 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       }
       this->active = NULL;
       Panel_setDefaultBar(panel);
-      FunctionBar_draw(this->defaultBar);
       doSearch = false;
    }
    if (doSearch) {
@@ -221,13 +215,12 @@ const char* IncSet_getListItemValue(Panel* panel, int i) {
 
 void IncSet_activate(IncSet* this, IncType type, Panel* panel) {
    this->active = &(this->modes[type]);
-   FunctionBar_drawExtra(this->active->bar, this->active->buffer, -1, true);
    panel->currentBar = this->active->bar;
 }
 
 void IncSet_drawBar(const IncSet* this) {
    if (this->active) {
-      FunctionBar_drawExtra(this->active->bar, this->active->buffer, -1, true);
+      FunctionBar_drawExtra(this->active->bar, this->active->buffer, (this->active->isFilter || this->found) ? -1 : CRT_colors[FAILED_SEARCH], true);
    } else {
       FunctionBar_draw(this->defaultBar);
    }

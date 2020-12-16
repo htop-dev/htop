@@ -341,7 +341,7 @@ static Htop_Reaction actionKill(State* st) {
    if (sgn) {
       if (sgn->key != 0) {
          Panel_setHeader(st->panel, "Sending...");
-         Panel_draw(st->panel, true, true);
+         Panel_draw(st->panel, false, true, true);
          refresh();
          MainPanel_foreachProcess((MainPanel*)st->panel, Process_sendSignal, (Arg) { .i = sgn->key }, NULL);
          napms(500);
@@ -372,7 +372,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
 
 Htop_Reaction Action_follow(State* st) {
    st->pl->following = MainPanel_selectedPid((MainPanel*)st->panel);
-   Panel_setSelectionColor(st->panel, CRT_colors[PANEL_SELECTION_FOLLOW]);
+   Panel_setSelectionColor(st->panel, PANEL_SELECTION_FOLLOW);
    return HTOP_KEEP_FOLLOWING;
 }
 

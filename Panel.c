@@ -56,10 +56,11 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
    this->selected = 0;
    this->oldSelected = 0;
    this->needsRedraw = true;
+   this->wasFocus = false;
    RichString_beginAllocated(this->header);
    this->defaultBar = fuBar;
    this->currentBar = fuBar;
-   this->selectionColor = CRT_colors[PANEL_SELECTION_FOCUS];
+   this->selectionColorId = PANEL_SELECTION_FOCUS;
 }
 
 void Panel_done(Panel* this) {
@@ -70,8 +71,8 @@ void Panel_done(Panel* this) {
    RichString_end(this->header);
 }
 
-void Panel_setSelectionColor(Panel* this, int color) {
-   this->selectionColor = color;
+void Panel_setSelectionColor(Panel* this, ColorElements colorId) {
+   this->selectionColorId = colorId;
 }
 
 RichString* Panel_getHeader(Panel* this) {
@@ -217,7 +218,7 @@ void Panel_splice(Panel* this, Vector* from) {
    this->needsRedraw = true;
 }
 
-void Panel_draw(Panel* this, bool focus, bool highlightSelected) {
+void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected) {
    assert (this != NULL);
 
    int size = Vector_size(this->items);
@@ -234,6 +235,7 @@ void Panel_draw(Panel* this, bool focus, bool highlightSelected) {
       attrset(attr);
       mvhline(y, x, ' ', this->w);
       if (scrollH < headerLen) {
+         RichString_setAttr(&this->header, attr);
          RichString_printoffnVal(this->header, y, x, scrollH,
             MINIMUM(headerLen - scrollH, this->w));
       }
@@ -262,10 +264,10 @@ void Panel_draw(Panel* this, bool focus, bool highlightSelected) {
    int upTo = MINIMUM(first + h, size);
 
    int selectionColor = focus
-                      ? this->selectionColor
+                      ? CRT_colors[this->selectionColorId]
                       : CRT_colors[PANEL_SELECTION_UNFOCUS];
 
-   if (this->needsRedraw) {
+   if (this->needsRedraw || force_redraw) {
       int line = 0;
       for (int i = first; line < h && i < upTo; i++) {
          Object* itemObj = Vector_get(this->items, i);
@@ -293,7 +295,6 @@ void Panel_draw(Panel* this, bool focus, bool highlightSelected) {
          mvhline(y + line, x, ' ', this->w);
          line++;
       }
-      this->needsRedraw = false;
 
    } else {
       Object* oldObj = Vector_get(this->items, this->oldSelected);
@@ -319,7 +320,17 @@ void Panel_draw(Panel* this, bool focus, bool highlightSelected) {
       RichString_end(new);
       RichString_end(old);
    }
+
+   if (focus && (this->needsRedraw || force_redraw || !this->wasFocus)) {
+      if (Panel_drawFunctionBarFn(this))
+         Panel_drawFunctionBar(this);
+      else
+         FunctionBar_draw(this->currentBar);
+   }
+
    this->oldSelected = this->selected;
+   this->wasFocus = focus;
+   this->needsRedraw = false;
    move(0, 0);
 }
 

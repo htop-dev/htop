@@ -112,9 +112,10 @@ void FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr
          attrset(attr);
       }
       mvaddstr(LINES - 1, x, buffer);
-      attrset(CRT_colors[RESET_COLOR]);
       x += strlen(buffer);
    }
+
+   attrset(CRT_colors[RESET_COLOR]);
 
    if (setCursor) {
       CRT_cursorX = x;
@@ -132,10 +133,10 @@ void FunctionBar_append(const char* buffer, int attr) {
    } else {
       attrset(attr);
    }
-   mvaddstr(LINES - 1, currentLen, buffer);
+   mvaddstr(LINES - 1, currentLen + 1, buffer);
    attrset(CRT_colors[RESET_COLOR]);
 
-   currentLen += strlen(buffer);
+   currentLen += strlen(buffer) + 1;
 }
 
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos) {
