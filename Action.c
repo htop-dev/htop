@@ -160,6 +160,9 @@ static bool collapseIntoParent(Panel* panel) {
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
    settings->sortKey = sortKey;
    settings->direction = 1;
+   if (settings->treeViewAlwaysByPID) {
+      settings->treeView = false;
+   }
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR | HTOP_KEEP_FOLLOWING;
 }
 

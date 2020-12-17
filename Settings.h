@@ -44,6 +44,7 @@ typedef struct Settings_ {
    bool degreeFahrenheit;
    #endif
    bool treeView;
+   bool treeViewAlwaysByPID;
    bool showProgramPath;
    bool shadowOtherUsers;
    bool showThreadNames;
