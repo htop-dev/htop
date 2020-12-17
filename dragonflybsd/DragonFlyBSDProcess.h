@@ -39,7 +39,7 @@ void Process_delete(Object* cast);
 
 void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, ProcessField field);
 
-long DragonFlyBSDProcess_compare(const void* v1, const void* v2);
+long DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key);
 
 bool Process_isThread(const Process* this);
 

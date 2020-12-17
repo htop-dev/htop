@@ -23,9 +23,10 @@ const ProcessClass SolarisProcess_class = {
       .extends = Class(Process),
       .display = Process_display,
       .delete = Process_delete,
-      .compare = SolarisProcess_compare
+      .compare = Process_compare
    },
    .writeField = SolarisProcess_writeField,
+   .compareByKey = SolarisProcess_compareByKey
 };
 
 ProcessFieldData Process_fields[] = {
@@ -117,19 +118,11 @@ void SolarisProcess_writeField(const Process* this, RichString* str, ProcessFiel
    RichString_appendWide(str, attr, buffer);
 }
 
-long SolarisProcess_compare(const void* v1, const void* v2) {
-   const SolarisProcess *p1, *p2;
-   const Settings* settings = ((const Process*)v1)->settings;
+long SolarisProcess_compareByKey(const void* v1, const void* v2, ProcessField key) {
+   const SolarisProcess* p1 = (const SolarisProcess*)v1;
+   const SolarisProcess* p2 = (const SolarisProcess*)v2;
 
-   if (settings->direction == 1) {
-      p1 = (const SolarisProcess*)v1;
-      p2 = (const SolarisProcess*)v2;
-   } else {
-      p2 = (const SolarisProcess*)v1;
-      p1 = (const SolarisProcess*)v2;
-   }
-
-   switch ((int) settings->sortKey) {
+   switch ((int) key) {
    case ZONEID:
       return SPACESHIP_NUMBER(p1->zoneid, p2->zoneid);
    case PROJID:
@@ -149,7 +142,7 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
    case LWPID:
       return SPACESHIP_NUMBER(p1->lwpid, p2->lwpid);
    default:
-      return Process_compare(v1, v2);
+      return SPACESHIP_NUMBER(v1->pid, v2->pid);
    }
 }
 
