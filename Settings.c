@@ -141,6 +141,8 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->direction = atoi(option[1]);
       } else if (String_eq(option[0], "tree_view")) {
          this->treeView = atoi(option[1]);
+      } else if (String_eq(option[0], "tree_view_always_by_pid")) {
+         this->treeViewAlwaysByPID = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
          this->hideKernelThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_userland_threads")) {
@@ -287,6 +289,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "strip_exe_from_cmdline=%d\n", (int) this->stripExeFromCmdline);
    fprintf(fd, "show_merged_command=%d\n", (int) this->showMergedCommand);
    fprintf(fd, "tree_view=%d\n", (int) this->treeView);
+   fprintf(fd, "tree_view_always_by_pid=%d\n", (int) this->treeViewAlwaysByPID);
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
    fprintf(fd, "cpu_count_from_one=%d\n", (int) this->countCPUsFromOne);

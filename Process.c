@@ -505,7 +505,12 @@ long Process_compare(const void* v1, const void* v2) {
       p1 = (const Process*)v2;
    }
 
-   switch (settings->sortKey) {
+   ProcessField key = settings->sortKey;
+   if (settings->treeView && settings->treeViewAlwaysByPID) {
+      key = PID;
+   }
+
+   switch (key) {
    case PERCENT_CPU:
    case PERCENT_NORM_CPU:
       return SPACESHIP_NUMBER(p2->percent_cpu, p1->percent_cpu);

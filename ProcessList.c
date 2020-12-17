@@ -82,7 +82,8 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
 void ProcessList_printHeader(ProcessList* this, RichString* header) {
    RichString_prune(header);
 
-   const ProcessField* fields = this->settings->fields;
+   const Settings* settings = this->settings;
+   const ProcessField* fields = settings->fields;
 
    for (int i = 0; fields[i]; i++) {
       const char* field = Process_fields[fields[i]].title;
@@ -90,10 +91,17 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
          field = "- ";
       }
 
-      int color = (this->settings->sortKey == fields[i]) ?
-         CRT_colors[PANEL_SELECTION_FOCUS] : CRT_colors[PANEL_HEADER_FOCUS];
+      int color;
+      if (settings->treeView && settings->treeViewAlwaysByPID) {
+         color = CRT_colors[PANEL_HEADER_FOCUS];
+      } else if (settings->sortKey == fields[i]) {
+         color = CRT_colors[PANEL_SELECTION_FOCUS];
+      } else {
+         color = CRT_colors[PANEL_HEADER_FOCUS];
+      }
+
       RichString_appendWide(header, color, field);
-      if (COMM == fields[i] && this->settings->showMergedCommand) {
+      if (COMM == fields[i] && settings->showMergedCommand) {
          RichString_appendAscii(header, color, "(merged)");
       }
    }

@@ -25,7 +25,7 @@ static const char* const MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filt
 
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
    FunctionBar* bar = MainPanel_getFunctionBar(this);
-   FunctionBar_setLabel(bar, KEY_F(5), mode ? "Sorted" : "Tree  ");
+   FunctionBar_setLabel(bar, KEY_F(5), mode ? "List  " : "Tree  ");
 }
 
 void MainPanel_pidSearch(MainPanel* this, int ch) {
@@ -64,6 +64,9 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
          Settings_invertSortOrder(settings);
       } else {
          reaction |= Action_setSortKey(settings, field);
+      }
+      if (settings->treeViewAlwaysByPID) {
+         settings->treeView = false;
       }
       reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS;
       result = HANDLED;
