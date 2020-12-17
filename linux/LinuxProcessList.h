@@ -48,7 +48,7 @@ typedef struct CPUData_ {
 
    double frequency;
 
-   #ifdef HAVE_SENSORS_SENSORS_H
+   #ifdef BUILD_WITH_SENSORS
    double temperature;
    #endif
 } CPUData;

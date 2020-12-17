@@ -60,7 +60,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
-#ifdef HAVE_SENSORS_SENSORS_H
+#ifdef BUILD_WITH_SENSORS
 #include "LibSensors.h"
 #endif
 
@@ -117,13 +117,13 @@ void Platform_init(void) {
       exit(1);
    }
 
-#ifdef HAVE_SENSORS_SENSORS_H
+#ifdef BUILD_WITH_SENSORS
    LibSensors_init(NULL);
 #endif
 }
 
 void Platform_done(void) {
-#ifdef HAVE_SENSORS_SENSORS_H
+#ifdef BUILD_WITH_SENSORS
    LibSensors_cleanup();
 #endif
 }
@@ -269,7 +269,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
 
-#ifdef HAVE_SENSORS_SENSORS_H
+#ifdef BUILD_WITH_SENSORS
    v[CPU_METER_TEMPERATURE] = cpuData->temperature;
 #else
    v[CPU_METER_TEMPERATURE] = NAN;

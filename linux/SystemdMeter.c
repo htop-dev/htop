@@ -21,9 +21,19 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "XUtils.h"
 
+#if defined(BUILD_STATIC) && defined(HAVE_LIBSYSTEMD)
+#include <systemd/sd-bus.h>
+#endif
+
 
 #define INVALID_VALUE ((unsigned int)-1)
 
+#ifdef BUILD_STATIC
+#define sym_sd_bus_open_system           sd_bus_open_system
+#define sym_sd_bus_get_property_string   sd_bus_get_property_string
+#define sym_sd_bus_get_property_trivial  sd_bus_get_property_trivial
+#define sym_sd_bus_unref                 sd_bus_unref
+#else /* BUILD_STATIC */
 typedef void sd_bus;
 typedef void sd_bus_error;
 static int (*sym_sd_bus_open_system)(sd_bus**);
@@ -31,18 +41,31 @@ static int (*sym_sd_bus_get_property_string)(sd_bus*, const char*, const char*, 
 static int (*sym_sd_bus_get_property_trivial)(sd_bus*, const char*, const char*, const char*, const char*, sd_bus_error*, char, void*);
 static sd_bus* (*sym_sd_bus_unref)(sd_bus*);
 
+static void* dlopenHandle = NULL;
+#endif /* BUILD_STATIC */
+
 static char* systemState = NULL;
 static unsigned int nFailedUnits = INVALID_VALUE;
 static unsigned int nInstalledJobs = INVALID_VALUE;
 static unsigned int nNames = INVALID_VALUE;
 static unsigned int nJobs = INVALID_VALUE;
-static void* dlopenHandle = NULL;
+
+#if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
 static sd_bus* bus = NULL;
+#endif
 
 static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
    free(systemState);
    systemState = NULL;
 
+#ifdef BUILD_STATIC
+#  ifdef HAVE_LIBSYSTEMD
+   if (bus) {
+      sym_sd_bus_unref(bus);
+      bus = NULL;
+   }
+#  endif /* HAVE_LIBSYSTEMD */
+#else /* BUILD_STATIC */
    if (bus && dlopenHandle) {
       sym_sd_bus_unref(bus);
    }
@@ -52,9 +75,13 @@ static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
       dlclose(dlopenHandle);
       dlopenHandle = NULL;
    }
+#endif /* BUILD_STATIC */
 }
 
+#if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
 static int updateViaLib(void) {
+
+#ifndef BUILD_STATIC
    if (!dlopenHandle) {
       dlopenHandle = dlopen("libsystemd.so.0", RTLD_LAZY);
       if (!dlopenHandle)
@@ -76,6 +103,7 @@ static int updateViaLib(void) {
 
       #undef resolve
    }
+#endif /* !BUILD_STATIC */
 
    int r;
 
@@ -152,13 +180,16 @@ busfailure:
    bus = NULL;
    return -2;
 
+#ifndef BUILD_STATIC
 dlfailure:
    if (dlopenHandle) {
       dlclose(dlopenHandle);
       dlopenHandle = NULL;
    }
    return -1;
+#endif /* ! BUILD_STATIC */
 }
+#endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
 
 static void updateViaExec(void) {
    int fdpair[2];
@@ -234,7 +265,9 @@ static void SystemdMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, siz
    systemState = NULL;
    nFailedUnits = nInstalledJobs = nNames = nJobs = INVALID_VALUE;
 
+#if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
    if (updateViaLib() < 0)
+#endif
       updateViaExec();
 
    xSnprintf(buffer, size, "%s", systemState ? systemState : "???");

@@ -73,6 +73,28 @@ AS_IF([test "x$ac_cv_prog_cc_c99" = xno], [AC_MSG_ERROR([htop is written in C99.
 
 
 # ----------------------------------------------------------------------
+# Checks for static build.
+# ----------------------------------------------------------------------
+
+AC_ARG_ENABLE([static],
+              [AS_HELP_STRING([--enable-static],
+                              [build a static htop binary (default: build dynamic binary)])],
+              [],
+              [enable_static=no])
+case "$enable_static" in
+   no) ;;
+   yes)
+      AC_DEFINE([BUILD_STATIC], [1], [Define if building static binary.])
+      CFLAGS="$CFLAGS -static"
+      LDFLAGS="$LDFLAGS -static"
+      ;;
+   *) AC_MSG_ERROR([bad value $enable_static for --enable-static option]) ;;
+esac
+
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
 # Checks for header files.
 # ----------------------------------------------------------------------
 
@@ -129,7 +151,10 @@ AC_TYPE_UINT64_T
 AC_FUNC_STAT
 
 AC_SEARCH_LIBS([ceil], [m], [], [AC_MSG_ERROR([Can not find required function ceil()])])
-AC_SEARCH_LIBS([dlopen], [dl dld], [], [AC_MSG_ERROR([Can not find required function dlopen()])])
+
+if test "$enable_static" != yes; then
+   AC_SEARCH_LIBS([dlopen], [dl dld], [], [AC_MSG_ERROR([Can not find required function dlopen()])])
+fi
 
 if test "$my_htop_platform" = dragonflybsd; then
    AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([Can not find required function kvm_open()])])
@@ -165,6 +190,10 @@ AC_SEARCH_LIBS([clock_gettime], [rt])
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([mach_timebase_info])
+fi
+
+if test "$my_htop_platform" = linux && test "x$enable_static" = xyes; then
+   AC_CHECK_LIB([systemd], [sd_bus_open_system])
 fi
 
 # ----------------------------------------------------------------------
@@ -338,11 +367,23 @@ case "$with_sensors" in
    no) ;;
    check)
       with_sensors=yes
-      AC_CHECK_HEADERS([sensors/sensors.h], [], [with_sensors=no])
+      if test "$enable_static" = yes; then
+         AC_CHECK_LIB([sensors], [sensors_init], [], [with_sensors=no])
+      else
+         AC_CHECK_HEADERS([sensors/sensors.h], [], [with_sensors=no])
+      fi
       ;;
-   yes) AC_CHECK_HEADERS([sensors/sensors.h], [], [AC_MSG_ERROR([Can not find require header sensors/sensors.h])]) ;;
+   yes)
+      if test "$enable_static" = yes; then
+         AC_CHECK_LIB([sensors], [sensors_init], [], [AC_MSG_ERROR([Can not find required library sensors])])
+
+      else
+         AC_CHECK_HEADERS([sensors/sensors.h], [], [AC_MSG_ERROR([Can not find required header sensors/sensors.h])])
+      fi
+      ;;
    *) AC_MSG_ERROR([bad value $with_sensors for --with-sensors]) ;;
 esac
+AS_IF([test "$with_sensors" = yes], [AC_DEFINE([BUILD_WITH_SENSORS], 1, [Define if building with libsensors (either dynamic or static).])])
 
 # ----------------------------------------------------------------------
 

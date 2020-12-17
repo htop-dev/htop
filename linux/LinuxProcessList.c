@@ -52,7 +52,7 @@ in the source distribution for its full text.
 #include <sys/sysmacros.h>
 #endif
 
-#ifdef HAVE_SENSORS_SENSORS_H
+#ifdef BUILD_WITH_SENSORS
 #include "LibSensors.h"
 #endif
 
@@ -1858,7 +1858,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       LinuxProcessList_scanCPUFrequency(this);
    }
 
-   #ifdef HAVE_SENSORS_SENSORS_H
+   #ifdef BUILD_WITH_SENSORS
    if (settings->showCPUTemperature)
       LibSensors_getCPUTemperatures(this->cpus, this->super.cpuCount);
    #endif
