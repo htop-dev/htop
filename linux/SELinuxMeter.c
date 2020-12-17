@@ -12,7 +12,6 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <linux/magic.h>
 #include <sys/statfs.h>
 #include <sys/statvfs.h>
 
@@ -35,7 +34,7 @@ static bool hasSELinuxMount(void) {
       return false;
    }
 
-   if ((uint32_t)sfbuf.f_type != (uint32_t)SELINUX_MAGIC) {
+   if ((uint32_t)sfbuf.f_type != /* SELINUX_MAGIC */ 0xf97cff8cU) {
       return false;
    }
 
