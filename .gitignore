@@ -39,3 +39,6 @@ stamp-h1
 
 # files related to valgrind/callgrind
 callgrind.out.*
+
+# files related to musl build
+scripts/musl_static_builddir/

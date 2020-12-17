@@ -384,6 +384,7 @@ case "$with_sensors" in
    *) AC_MSG_ERROR([bad value $with_sensors for --with-sensors]) ;;
 esac
 AS_IF([test "$with_sensors" = yes], [AC_DEFINE([BUILD_WITH_SENSORS], 1, [Define if building with libsensors (either dynamic or static).])])
+AM_CONDITIONAL([BUILD_WITH_SENSORS], [test "$with_sensors" = yes])
 
 # ----------------------------------------------------------------------
 

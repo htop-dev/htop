@@ -137,7 +137,6 @@ myhtopheaders = \
 linux_platform_headers = \
 	linux/IOPriority.h \
 	linux/IOPriorityPanel.h \
-	linux/LibSensors.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
 	linux/Platform.h \
@@ -155,7 +154,6 @@ if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
 myhtopplatsources = \
 	linux/IOPriorityPanel.c \
-	linux/LibSensors.c \
 	linux/LinuxProcess.c \
 	linux/LinuxProcessList.c \
 	linux/Platform.c \
@@ -166,6 +164,11 @@ myhtopplatsources = \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsArcStats.c \
 	zfs/ZfsCompressedArcMeter.c
+
+if BUILD_WITH_SENSORS
+linux_platform_headers += linux/LibSensors.h
+myhtopplatsources += linux/LibSensors.c
+endif
 
 myhtopplatheaders = $(linux_platform_headers)
 endif
