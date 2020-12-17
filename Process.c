@@ -555,6 +555,6 @@ long Process_compare(const void* v1, const void* v2) {
    case USER:
       return SPACESHIP_NULLSTR(p1->user, p2->user);
    default:
-      return SPACESHIP_NUMBER(p1->pid, p2->pid);
+      return Process_compareByKey(p1, p2, key);
    }
 }

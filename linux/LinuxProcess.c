@@ -767,19 +767,11 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    RichString_appendWide(str, attr, buffer);
 }
 
-static long LinuxProcess_compare(const void* v1, const void* v2) {
-   const LinuxProcess *p1, *p2;
-   const Settings *settings = ((const Process*)v1)->settings;
+static long LinuxProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+   const LinuxProcess* p1 = (const LinuxProcess*)v1;
+   const LinuxProcess* p2 = (const LinuxProcess*)v2;
 
-   if (settings->direction == 1) {
-      p1 = (const LinuxProcess*)v1;
-      p2 = (const LinuxProcess*)v2;
-   } else {
-      p2 = (const LinuxProcess*)v1;
-      p1 = (const LinuxProcess*)v2;
-   }
-
-   switch ((int)settings->sortKey) {
+   switch ((int) key) {
    case M_DRS:
       return SPACESHIP_NUMBER(p2->m_drs, p1->m_drs);
    case M_DT:
@@ -865,7 +857,7 @@ static long LinuxProcess_compare(const void* v1, const void* v2) {
    case CWD:
       return SPACESHIP_NULLSTR(p1->cwd, p2->cwd);
    default:
-      return Process_compare(v1, v2);
+      return SPACESHIP_NUMBER(v1->pid, v2->pid);
    }
 }
 
@@ -878,8 +870,9 @@ const ProcessClass LinuxProcess_class = {
       .extends = Class(Process),
       .display = Process_display,
       .delete = Process_delete,
-      .compare = LinuxProcess_compare
+      .compare = Process_compare
    },
    .writeField = LinuxProcess_writeField,
-   .getCommandStr = LinuxProcess_getCommandStr
+   .getCommandStr = LinuxProcess_getCommandStr,
+   .compareByKey = LinuxProcess_compareByKey
 };

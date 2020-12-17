@@ -83,24 +83,16 @@ static void DarwinProcess_writeField(const Process* this, RichString* str, Proce
    RichString_appendWide(str, attr, buffer);
 }
 
-static long DarwinProcess_compare(const void* v1, const void* v2) {
-   const DarwinProcess *p1, *p2;
-   const Settings *settings = ((const Process*)v1)->settings;
+static long DarwinProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+   const DarwinProcess* p1 = (const DarwinProcess*)v1;
+   const DarwinProcess* p2 = (const DarwinProcess*)v2;
 
-   if (settings->direction == 1) {
-      p1 = (const DarwinProcess*)v1;
-      p2 = (const DarwinProcess*)v2;
-   } else {
-      p2 = (const DarwinProcess*)v1;
-      p1 = (const DarwinProcess*)v2;
-   }
-
-   switch ((int) settings->sortKey) {
+   switch ((int) key) {
    // add Platform-specific fields here
    case TRANSLATED:
       return SPACESHIP_NUMBER(p1->translated, p2->translated);
    default:
-      return Process_compare(v1, v2);
+      return SPACESHIP_NUMBER(v1->pid, v2->pid);
    }
 }
 
@@ -409,7 +401,8 @@ const ProcessClass DarwinProcess_class = {
       .extends = Class(Process),
       .display = Process_display,
       .delete = Process_delete,
-      .compare = DarwinProcess_compare
+      .compare = Process_compare
    },
    .writeField = DarwinProcess_writeField,
+   .compareByKey = DarwinProcess_compareByKey,
 };

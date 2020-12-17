@@ -56,7 +56,7 @@ void Process_delete(Object* cast);
 
 void SolarisProcess_writeField(const Process* this, RichString* str, ProcessField field);
 
-long SolarisProcess_compare(const void* v1, const void* v2);
+long SolarisProcess_compareByKey(const Process* v1, const Process* v2, ProcessField field);
 
 bool Process_isThread(const Process* this);
 

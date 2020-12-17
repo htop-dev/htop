@@ -212,25 +212,17 @@ static void OpenBSDProcess_writeField(const Process* this, RichString* str, Proc
    RichString_appendWide(str, attr, buffer);
 }
 
-static long OpenBSDProcess_compare(const void* v1, const void* v2) {
-   const OpenBSDProcess *p1, *p2;
-   const Settings *settings = ((const Process*)v1)->settings;
-
-   if (settings->direction == 1) {
-      p1 = (const OpenBSDProcess*)v1;
-      p2 = (const OpenBSDProcess*)v2;
-   } else {
-      p2 = (const OpenBSDProcess*)v1;
-      p1 = (const OpenBSDProcess*)v2;
-   }
+static long OpenBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+   const OpenBSDProcess* p1 = (const OpenBSDProcess*)v1;
+   const OpenBSDProcess* p2 = (const OpenBSDProcess*)v2;
 
    // remove if actually used
    (void)p1; (void)p2;
 
-   switch (settings->sortKey) {
+   switch ((int) key) {
    // add OpenBSD-specific fields here
    default:
-      return Process_compare(v1, v2);
+      return SPACESHIP_NUMBER(v1->pid, v2->pid);
    }
 }
 
@@ -239,9 +231,10 @@ const ProcessClass OpenBSDProcess_class = {
       .extends = Class(Process),
       .display = Process_display,
       .delete = Process_delete,
-      .compare = OpenBSDProcess_compare
+      .compare = Process_compare
    },
    .writeField = OpenBSDProcess_writeField,
+   .compareByKey = OpenBSDProcess_compareByKey
 };
 
 bool Process_isThread(const Process* this) {

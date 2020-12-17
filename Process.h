@@ -129,17 +129,20 @@ extern char Process_pidFormat[20];
 
 typedef Process*(*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
+typedef long (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
 typedef const char* (*Process_GetCommandStr)(const Process*);
 
 typedef struct ProcessClass_ {
    const ObjectClass super;
    const Process_WriteField writeField;
+   const Process_CompareByKey compareByKey;
    const Process_GetCommandStr getCommandStr;
 } ProcessClass;
 
-#define As_Process(this_)              ((const ProcessClass*)((this_)->super.klass))
+#define As_Process(this_)                              ((const ProcessClass*)((this_)->super.klass))
 
-#define Process_getCommand(this_)      (As_Process(this_)->getCommandStr ? As_Process(this_)->getCommandStr((const Process*)(this_)) : ((const Process*)(this_))->comm)
+#define Process_getCommand(this_)                      (As_Process(this_)->getCommandStr ? As_Process(this_)->getCommandStr((const Process*)(this_)) : ((const Process*)(this_))->comm)
+#define Process_compareByKey(p1_, p2_, key_)           (As_Process(p1_)->compareByKey ? (As_Process(p1_)->compareByKey(p1_, p2_, key_)) : SPACESHIP_NUMBER(p1->pid, p2->pid))
 
 static inline pid_t Process_getParentPid(const Process* this) {
    return this->tgid == this->pid ? this->ppid : this->tgid;

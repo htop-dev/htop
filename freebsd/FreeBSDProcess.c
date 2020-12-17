@@ -108,19 +108,11 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    RichString_appendWide(str, attr, buffer);
 }
 
-static long FreeBSDProcess_compare(const void* v1, const void* v2) {
-   const FreeBSDProcess *p1, *p2;
-   const Settings *settings = ((const Process*)v1)->settings;
+static long FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+   const FreeBSDProcess* p1 = (const FreeBSDProcess*)v1;
+   const FreeBSDProcess* p2 = (const FreeBSDProcess*)v2;
 
-   if (settings->direction == 1) {
-      p1 = (const FreeBSDProcess*)v1;
-      p2 = (const FreeBSDProcess*)v2;
-   } else {
-      p2 = (const FreeBSDProcess*)v1;
-      p1 = (const FreeBSDProcess*)v2;
-   }
-
-   switch ((int) settings->sortKey) {
+   switch ((int) key) {
    // add FreeBSD-specific fields here
    case JID:
       return SPACESHIP_NUMBER(p1->jid, p2->jid);
@@ -129,7 +121,7 @@ static long FreeBSDProcess_compare(const void* v1, const void* v2) {
    case TTY_NR:
       return SPACESHIP_NULLSTR(p1->ttyPath, p2->ttyPath);
    default:
-      return Process_compare(v1, v2);
+      return SPACESHIP_NUMBER(v1->pid, v2->pid);
    }
 }
 
@@ -148,7 +140,8 @@ const ProcessClass FreeBSDProcess_class = {
       .extends = Class(Process),
       .display = Process_display,
       .delete = Process_delete,
-      .compare = FreeBSDProcess_compare
+      .compare = Process_compare
    },
    .writeField = FreeBSDProcess_writeField,
+   .compareByKey = FreeBSDProcess_compareByKey
 };
