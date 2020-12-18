@@ -857,7 +857,7 @@ static long LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proc
    case CWD:
       return SPACESHIP_NULLSTR(p1->cwd, p2->cwd);
    default:
-      return SPACESHIP_NUMBER(v1->pid, v2->pid);
+      return Process_compareByKey_Base(v1, v2, key);
    }
 }
 
