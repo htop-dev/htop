@@ -33,7 +33,9 @@ typedef struct Settings_ {
    int delay;
 
    int direction;
+   int treeDirection;
    ProcessField sortKey;
+   ProcessField treeSortKey;
 
    bool countCPUsFromOne;
    bool detailedCPUTime;
@@ -71,6 +73,16 @@ typedef struct Settings_ {
 
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
 
+static inline ProcessField Settings_getActiveSortKey(const Settings* this) {
+   return (this->treeView)
+          ? (this->treeViewAlwaysByPID ? PID : this->treeSortKey)
+          : this->sortKey;
+}
+
+static inline int Settings_getActiveDirection(const Settings* this) {
+   return this->treeView ? this->treeDirection : this->direction;
+}
+
 void Settings_delete(Settings* this);
 
 bool Settings_write(Settings* this);
@@ -78,5 +90,7 @@ bool Settings_write(Settings* this);
 Settings* Settings_new(int initialCpuCount);
 
 void Settings_invertSortOrder(Settings* this);
+
+void Settings_setSortKey(Settings* this, ProcessField sortKey);
 
 #endif

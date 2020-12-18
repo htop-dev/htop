@@ -497,7 +497,7 @@ long Process_compare(const void* v1, const void* v2) {
    const Settings *settings = ((const Process*)v1)->settings;
    int r;
 
-   if (settings->direction == 1) {
+   if (Settings_getActiveDirection(settings) == 1) {
       p1 = (const Process*)v1;
       p2 = (const Process*)v2;
    } else {
@@ -505,10 +505,7 @@ long Process_compare(const void* v1, const void* v2) {
       p1 = (const Process*)v2;
    }
 
-   ProcessField key = settings->sortKey;
-   if (settings->treeView && settings->treeViewAlwaysByPID) {
-      key = PID;
-   }
+   ProcessField key = Settings_getActiveSortKey(settings);
 
    switch (key) {
    case PERCENT_CPU:

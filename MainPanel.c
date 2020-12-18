@@ -60,13 +60,14 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       Settings* settings = this->state->settings;
       int hx = super->scrollH + x + 1;
       ProcessField field = ProcessList_keyAt(pl, hx);
-      if (field == settings->sortKey) {
+      if (settings->treeView && settings->treeViewAlwaysByPID) {
+         settings->treeView = false;
+         settings->direction = 1;
+         reaction |= Action_setSortKey(settings, field);
+      } else if (field == Settings_getActiveSortKey(settings)) {
          Settings_invertSortOrder(settings);
       } else {
          reaction |= Action_setSortKey(settings, field);
-      }
-      if (settings->treeViewAlwaysByPID) {
-         settings->treeView = false;
       }
       reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS;
       result = HANDLED;

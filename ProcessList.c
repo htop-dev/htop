@@ -85,6 +85,8 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
    const Settings* settings = this->settings;
    const ProcessField* fields = settings->fields;
 
+   ProcessField key = Settings_getActiveSortKey(settings);
+
    for (int i = 0; fields[i]; i++) {
       const char* field = Process_fields[fields[i]].title;
       if (!field) {
@@ -94,7 +96,7 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
       int color;
       if (settings->treeView && settings->treeViewAlwaysByPID) {
          color = CRT_colors[PANEL_HEADER_FOCUS];
-      } else if (settings->sortKey == fields[i]) {
+      } else if (key == fields[i]) {
          color = CRT_colors[PANEL_SELECTION_FOCUS];
       } else {
          color = CRT_colors[PANEL_HEADER_FOCUS];
@@ -355,7 +357,7 @@ static long ProcessList_treeProcessCompareByPID(const void* v1, const void* v2) 
 static void ProcessList_buildTree(ProcessList* this) {
    int node_counter = 1;
    int node_index = 0;
-   int direction = this->settings->direction;
+   int direction = Settings_getActiveDirection(this->settings);
 
    // Sort by PID
    Vector_quickSortCustomCompare(this->processes, ProcessList_treeProcessCompareByPID);
