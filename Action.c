@@ -462,7 +462,7 @@ static const struct {
    { .key = "      H: ", .info = "hide/show user process threads" },
    { .key = "      K: ", .info = "hide/show kernel threads" },
    { .key = "      F: ", .info = "cursor follows process" },
-   { .key = " F6 + -: ", .info = "expand/collapse tree" },
+   { .key = "    + -: ", .info = "expand/collapse tree" },
    { .key = "  P M T: ", .info = "sort by CPU%, MEM% or TIME" },
    { .key = "      I: ", .info = "invert sort order" },
    { .key = " F6 > .: ", .info = "select sort column" },
