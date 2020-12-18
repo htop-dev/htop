@@ -35,24 +35,21 @@ static void BatteryMeter_updateValues(Meter* this, char* buffer, size_t len) {
 
    this->values[0] = percent;
 
-   const char *onAcText, *onBatteryText, *unknownText;
-
-   unknownText = "%.1f%%";
-   if (this->mode == TEXT_METERMODE) {
-      onAcText = "%.1f%% (Running on A/C)";
-      onBatteryText = "%.1f%% (Running on battery)";
-   } else {
-      onAcText = "%.1f%%(A/C)";
-      onBatteryText = "%.1f%%(bat)";
+   const char* text;
+   switch (isOnAC) {
+   case AC_PRESENT:
+      text = this->mode == TEXT_METERMODE ? " (Running on A/C)" : "(A/C)";
+      break;
+   case AC_ABSENT:
+      text = this->mode == TEXT_METERMODE ? " (Running on battery)" : "(bat)";
+      break;
+   case AC_ERROR:
+   default:
+      text = "";
+      break;
    }
 
-   if (isOnAC == AC_PRESENT) {
-      xSnprintf(buffer, len, onAcText, percent);
-   } else if (isOnAC == AC_ABSENT) {
-      xSnprintf(buffer, len, onBatteryText, percent);
-   } else {
-      xSnprintf(buffer, len, unknownText, percent);
-   }
+   xSnprintf(buffer, len, "%.1f%%%s", percent, text);
 }
 
 const MeterClass BatteryMeter_class = {
