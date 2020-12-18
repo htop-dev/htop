@@ -298,9 +298,12 @@ int main(int argc, char** argv) {
    if (flags.highlightDelaySecs != -1)
       settings->highlightDelaySecs = flags.highlightDelaySecs;
    if (flags.sortKey > 0) {
-      settings->sortKey = flags.sortKey;
-      settings->treeView = false;
-      settings->direction = 1;
+      // -t -s <key> means "tree sorted by key"
+      // -s <key> means "list sorted by key" (previous existing behavior)
+      if (!flags.treeView) {
+         settings->treeView = false;
+      }
+      Settings_setSortKey(settings, flags.sortKey);
    }
 
    CRT_init(&(settings->delay), settings->colorScheme, flags.allowUnicode);

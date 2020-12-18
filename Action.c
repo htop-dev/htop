@@ -158,11 +158,7 @@ static bool collapseIntoParent(Panel* panel) {
 }
 
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
-   settings->sortKey = sortKey;
-   settings->direction = 1;
-   if (settings->treeViewAlwaysByPID) {
-      settings->treeView = false;
-   }
+   Settings_setSortKey(settings, sortKey);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR | HTOP_KEEP_FOLLOWING;
 }
 
@@ -174,7 +170,7 @@ static Htop_Reaction sortBy(State* st) {
    for (int i = 0; fields[i]; i++) {
       char* name = String_trim(Process_fields[fields[i]].name);
       Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
-      if (fields[i] == st->settings->sortKey)
+      if (fields[i] == Settings_getActiveSortKey(st->settings))
          Panel_setSelected(sortPanel, i);
 
       free(name);
@@ -234,7 +230,7 @@ static Htop_Reaction actionToggleMergedCommand(State* st) {
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
    if (st->settings->treeView) {
-      st->settings->direction = 1;
+      st->settings->treeDirection = 1;
    }
 
    ProcessList_expandTree(st->pl);
