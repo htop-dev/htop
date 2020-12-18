@@ -149,7 +149,7 @@ int ProcessList_size(ProcessList* this) {
 //
 // The algorithm is based on `depth-first search`,
 // even though `breadth-first search` approach may be more efficient on first glance,
-// after comparision it may be not, as it's not safe to go deeper without first updating the tree structure.
+// after comparison it may be not, as it's not safe to go deeper without first updating the tree structure.
 // If it would be safe that approach would likely bring an advantage in performance.
 //
 // Each call of the function looks for a 'layer'. A 'layer' is a list of processes with the same depth.
