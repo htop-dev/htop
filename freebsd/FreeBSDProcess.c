@@ -121,7 +121,7 @@ static long FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, Pr
    case TTY_NR:
       return SPACESHIP_NULLSTR(p1->ttyPath, p2->ttyPath);
    default:
-      return SPACESHIP_NUMBER(v1->pid, v2->pid);
+      return Process_compareByKey_Base(v1, v2, key);
    }
 }
 

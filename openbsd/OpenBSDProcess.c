@@ -222,7 +222,7 @@ static long OpenBSDProcess_compareByKey(const Process* v1, const Process* v2, Pr
    switch ((int) key) {
    // add OpenBSD-specific fields here
    default:
-      return SPACESHIP_NUMBER(v1->pid, v2->pid);
+      return Process_compareByKey_Base(v1, v2, key);
    }
 }
 

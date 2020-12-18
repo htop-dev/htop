@@ -142,7 +142,7 @@ long SolarisProcess_compareByKey(const void* v1, const void* v2, ProcessField ke
    case LWPID:
       return SPACESHIP_NUMBER(p1->lwpid, p2->lwpid);
    default:
-      return SPACESHIP_NUMBER(v1->pid, v2->pid);
+      return Process_compareByKey_Base(v1, v2, key);
    }
 }
 

@@ -495,7 +495,6 @@ long Process_pidCompare(const void* v1, const void* v2) {
 long Process_compare(const void* v1, const void* v2) {
    const Process *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
-   int r;
 
    if (Settings_getActiveDirection(settings) == 1) {
       p1 = (const Process*)v1;
@@ -507,7 +506,19 @@ long Process_compare(const void* v1, const void* v2) {
 
    ProcessField key = Settings_getActiveSortKey(settings);
 
-   switch (key) {
+   long result = Process_compareByKey(p1, p2, key);
+
+   // Implement tie-breaker (needed to make tree mode more stable)
+   if (!result)
+      result = SPACESHIP_NUMBER(p1->pid, p2->pid);
+
+   return result;
+}
+
+long Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
+   int r;
+
+   switch ((int) key) {
    case PERCENT_CPU:
    case PERCENT_NORM_CPU:
       return SPACESHIP_NUMBER(p2->percent_cpu, p1->percent_cpu);
@@ -557,6 +568,6 @@ long Process_compare(const void* v1, const void* v2) {
    case USER:
       return SPACESHIP_NULLSTR(p1->user, p2->user);
    default:
-      return Process_compareByKey(p1, p2, key);
+      return SPACESHIP_NUMBER(p1->pid, p2->pid);
    }
 }

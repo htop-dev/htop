@@ -92,7 +92,7 @@ static long DarwinProcess_compareByKey(const Process* v1, const Process* v2, Pro
    case TRANSLATED:
       return SPACESHIP_NUMBER(p1->translated, p2->translated);
    default:
-      return SPACESHIP_NUMBER(v1->pid, v2->pid);
+      return Process_compareByKey_Base(v1, v2, key);
    }
 }
 

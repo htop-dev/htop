@@ -120,7 +120,7 @@ long DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, Proc
    case JAIL:
       return SPACESHIP_NULLSTR(p1->jname, p2->jname);
    default:
-      return SPACESHIP_NULLSTR(v1->pid, v2->pid);
+      return Process_compareByKey_Base(v1, v2, key);
    }
 }
 
