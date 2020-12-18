@@ -19,7 +19,7 @@ in the source distribution for its full text.
 #define RichString_beginAllocated(this) do { memset(&(this), 0, sizeof(RichString)); (this).chptr = (this).chstr; } while(0)
 #define RichString_end(this) RichString_prune(&(this))
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
 #define RichString_printVal(this, y, x) mvadd_wchstr(y, x, (this).chptr)
 #define RichString_printoffnVal(this, y, x, off, n) mvadd_wchnstr(y, x, (this).chptr + (off), n)
 #define RichString_getCharVal(this, i) ((this).chptr[i].chars[0] & 255)

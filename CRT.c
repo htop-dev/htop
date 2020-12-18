@@ -50,7 +50,7 @@ static const char* const CRT_treeStrAscii[LAST_TREE_STR] = {
    [TREE_STR_SHUT] = "-",
 };
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
 
 static const char* const CRT_treeStrUtf8[LAST_TREE_STR] = {
    [TREE_STR_VERT] = "\xe2\x94\x82", // │
@@ -74,7 +74,7 @@ static const int* CRT_delay;
 const char* CRT_degreeSign;
 
 static const char* initDegreeSign(void) {
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
    if (CRT_utf8)
       return "\xc2\xb0";
 
@@ -724,7 +724,7 @@ void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
       CRT_colorScheme = COLORSCHEME_MONOCHROME;
    CRT_setColors(CRT_colorScheme);
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
    if (allowUnicode && String_eq(nl_langinfo(CODESET), "UTF-8")) {
       CRT_utf8 = true;
    } else {
@@ -735,7 +735,7 @@ void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
 #endif
 
    CRT_treeStr =
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
       CRT_utf8 ? CRT_treeStrUtf8 :
 #endif
       CRT_treeStrAscii;

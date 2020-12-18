@@ -1,2 +1,2 @@
 #!/bin/sh
-autoreconf --force --install --verbose -Wall
+autoreconf --include m4/ --force --install --verbose -Wall

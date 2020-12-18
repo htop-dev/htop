@@ -30,7 +30,7 @@ static void ListItem_display(const Object* cast, RichString* out) {
 
    if (this->moving) {
       RichString_writeWide(out, CRT_colors[DEFAULT_COLOR],
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
                        CRT_utf8 ? "↕ " :
 #endif
                        "+ ");

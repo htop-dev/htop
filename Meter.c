@@ -272,7 +272,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- GraphMeterMode ---------- */
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
 
 #define PIXPERROW_UTF8 4
 static const char* const GraphMeterMode_dotsUtf8[] = {
@@ -303,7 +303,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    GraphData* data = this->drawData;
    const int nValues = METER_BUFFER_LEN;
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
    if (CRT_utf8) {
       GraphMeterMode_dots = GraphMeterMode_dotsUtf8;
       GraphMeterMode_pixPerRow = PIXPERROW_UTF8;
@@ -371,7 +371,7 @@ static const char* const LEDMeterMode_digitsAscii[] = {
    "|__|", "   |", "|__ ", " __|", "   |", " __|", "|__|", "   |", "|__|", " __|"
 };
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
 
 static const char* const LEDMeterMode_digitsUtf8[] = {
    "┌──┐", "  ┐ ", "╶──┐", "╶──┐", "╷  ╷", "┌──╴", "┌──╴", "╶──┐", "┌──┐", "┌──┐",
@@ -391,7 +391,7 @@ static void LEDMeterMode_drawDigit(int x, int y, int n) {
 static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    (void) w;
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
    if (CRT_utf8)
       LEDMeterMode_digits = LEDMeterMode_digitsUtf8;
    else
@@ -405,7 +405,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    Meter_displayBuffer(this, buffer, &out);
 
    int yText =
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
       CRT_utf8 ? y + 1 :
 #endif
       y + 2;

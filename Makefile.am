@@ -3,8 +3,14 @@ AUTOMAKE_OPTIONS = subdir-objects
 bin_PROGRAMS = htop
 
 dist_man_MANS = htop.1
-EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png htop.svg \
-install-sh autogen.sh missing
+EXTRA_DIST = \
+	$(dist_man_MANS) \
+	htop.desktop \
+	htop.png \
+	htop.svg \
+	autogen.sh \
+	build-aux/install-sh \
+	build-aux/missing
 applicationsdir = $(datadir)/applications
 applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
@@ -14,6 +20,9 @@ appicon_DATA = htop.svg
 
 AM_CFLAGS += -pedantic -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
 AM_LDFLAGS =
+
+AM_CPPFLAGS += @CURSES_CFLAGS@
+LDADD = @CURSES_LIBS@
 
 myhtopsources = \
 	Action.c \

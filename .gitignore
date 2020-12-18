@@ -19,28 +19,22 @@ htop
 
 # automake/autoconf related files
 .deps/
+/build-aux/
 Makefile
 Makefile.in
 INSTALL
 aclocal.m4
 autom4te.cache/
-compile
 conf*/
-config.guess
 config.h
 config.h.in
 config.log
 config.status
 config.cache
-config.sub
 configure
-depcomp
 htop.1
-install-sh
 libtool
 ltmain.sh
-m4/
-missing
 stamp-h1
 
 # files related to valgrind/callgrind

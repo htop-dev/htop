@@ -134,7 +134,7 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 
 extern const char* CRT_degreeSign;
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
 
 extern bool CRT_utf8;
 

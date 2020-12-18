@@ -46,7 +46,7 @@ static void RichString_setLen(RichString* this, int len) {
    }
 }
 
-#ifdef HAVE_LIBNCURSESW
+#ifdef HAVE_NCURSESW
 
 static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
    wchar_t data[len + 1];
@@ -93,7 +93,7 @@ int RichString_findChar(RichString* this, char c, int start) {
    return -1;
 }
 
-#else /* HAVE_LIBNCURSESW */
+#else /* HAVE_NCURSESW */
 
 static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
    int newLen = from + len;
@@ -129,7 +129,7 @@ int RichString_findChar(RichString* this, char c, int start) {
    return -1;
 }
 
-#endif /* HAVE_LIBNCURSESW */
+#endif /* HAVE_NCURSESW */
 
 void RichString_prune(RichString* this) {
    if (this->chlen > RICHSTRING_MAXLEN)
