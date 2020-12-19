@@ -17,9 +17,10 @@ static void CommandScreen_scan(InfoScreen* this) {
    Panel_prune(panel);
 
    const char* p = Process_getCommand(this->process);
-   char* line = xMalloc(COLS + 1);
+   char line[COLS + 1];
    int line_offset = 0, last_spc = -1, len;
    for (; *p != '\0'; p++, line_offset++) {
+      assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
       line[line_offset] = *p;
       if (*p == ' ') {
          last_spc = line_offset;
@@ -41,7 +42,6 @@ static void CommandScreen_scan(InfoScreen* this) {
       InfoScreen_addLine(this, line);
    }
 
-   free(line);
    Panel_setSelected(panel, idx);
 }
 
