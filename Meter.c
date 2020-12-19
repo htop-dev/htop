@@ -199,18 +199,29 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       return;
 
    // The text in the bar is right aligned;
-   // calculate needed padding and generate leading spaces
-#ifdef HAVE_LIBNCURSESW
-   const int textLen = mbstowcs(NULL, buffer, 0);
-#else
-   const int textLen = strlen(buffer);
-#endif
-   const int padding = CLAMP(w - textLen, 0, w);
-
+   // Pad with maximal spaces and then calculate needed staring position offset
    RichString_begin(bar);
-   RichString_appendChr(&bar, ' ', padding);
+   RichString_appendChr(&bar, ' ', w);
    RichString_appendWide(&bar, 0, buffer);
-   assert(RichString_sizeVal(bar) >= w);
+   int startPos = RichString_sizeVal(bar) - w;
+   if (startPos > w) {
+      // Text is too large for bar
+      // Truncate too long bar meter text at a space character
+      for (int pos = 2 * w; pos > w; pos--) {
+         if (RichString_getCharVal(bar, pos) == ' ') {
+            while (pos > w && RichString_getCharVal(bar, pos - 1) == ' ')
+               pos--;
+            startPos = pos - w;
+            break;
+         }
+      }
+
+      // If still to large, print the start not the end
+      startPos = MINIMUM(startPos, w);
+   }
+   assert(startPos >= 0);
+   assert(startPos <= w);
+   assert(startPos + w <= RichString_sizeVal(bar));
 
    int blockSizes[10];
 
@@ -228,11 +239,11 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
       for (int j = offset; j < nextOffset; j++)
-         if (RichString_getCharVal(bar, j) == ' ') {
+         if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
-               RichString_setChar(&bar, j, BarMeterMode_characters[i]);
+               RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
             } else {
-               RichString_setChar(&bar, j, '|');
+               RichString_setChar(&bar, startPos + j, '|');
             }
          }
       offset = nextOffset;
@@ -241,14 +252,14 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // ...then print the buffer.
    offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
-      RichString_setAttrn(&bar, CRT_colors[Meter_attributes(this)[i]], offset, offset + blockSizes[i] - 1);
-      RichString_printoffnVal(bar, y, x + offset, offset, MINIMUM(blockSizes[i], w - offset));
+      RichString_setAttrn(&bar, CRT_colors[Meter_attributes(this)[i]], startPos + offset, startPos + offset + blockSizes[i] - 1);
+      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSizes[i], w - offset));
       offset += blockSizes[i];
       offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
-      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], offset, w - 1);
-      RichString_printoffnVal(bar, y, x + offset, offset, w - offset);
+      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, startPos + w - 1);
+      RichString_printoffnVal(bar, y, x + offset, startPos + offset, w - offset);
    }
 
    RichString_end(bar);
