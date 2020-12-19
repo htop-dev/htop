@@ -72,14 +72,14 @@ static void ProcessList_getHostInfo(host_basic_info_data_t* p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
 
    if (0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
-      CRT_fatalError("Unable to retrieve host info\n");
+      CRT_fatalError("Unable to retrieve host info");
    }
 }
 
 static void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p) {
    if (NULL != p && NULL != *p) {
       if (0 != munmap(*p, vm_page_size)) {
-         CRT_fatalError("Unable to free old CPU load information\n");
+         CRT_fatalError("Unable to free old CPU load information");
       }
       *p = NULL;
    }
@@ -91,7 +91,7 @@ static unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
 
    // TODO Improving the accuracy of the load counts woule help a lot.
    if (0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t*)p, &info_size)) {
-      CRT_fatalError("Unable to retrieve CPU info\n");
+      CRT_fatalError("Unable to retrieve CPU info");
    }
 
    return cpu_count;
@@ -101,7 +101,7 @@ static void ProcessList_getVMStats(vm_statistics_t p) {
    mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
 
    if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)p, &info_size) != 0) {
-      CRT_fatalError("Unable to retrieve VM statistics\n");
+      CRT_fatalError("Unable to retrieve VM statistics");
    }
 }
 
