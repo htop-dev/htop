@@ -19,7 +19,7 @@ extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
 
-extern ProcessField Platform_defaultFields[];
+extern const ProcessField Platform_defaultFields[];
 
 extern const MeterClass* const Platform_meterTypes[];
 
