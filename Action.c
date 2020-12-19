@@ -563,24 +563,24 @@ static Htop_Reaction actionHelp(State* st) {
    int item;
    for (item = 0; helpLeft[item].key; item++) {
       attrset(CRT_colors[DEFAULT_COLOR]);
-      mvaddstr(line + item, 9,  helpLeft[item].info);
+      mvaddstr(line + item, 10, helpLeft[item].info);
       attrset(CRT_colors[HELP_BOLD]);
-      mvaddstr(line + item, 0,  helpLeft[item].key);
+      mvaddstr(line + item, 1,  helpLeft[item].key);
       if (String_eq(helpLeft[item].key, "      H: ")) {
          attrset(CRT_colors[PROCESS_THREAD]);
-         mvaddstr(line + item, 32, "threads");
+         mvaddstr(line + item, 33, "threads");
       } else if (String_eq(helpLeft[item].key, "      K: ")) {
          attrset(CRT_colors[PROCESS_THREAD]);
-         mvaddstr(line + item, 26, "threads");
+         mvaddstr(line + item, 27, "threads");
       }
    }
    int leftHelpItems = item;
 
    for (item = 0; helpRight[item].key; item++) {
       attrset(CRT_colors[HELP_BOLD]);
-      mvaddstr(line + item, 40, helpRight[item].key);
+      mvaddstr(line + item, 41, helpRight[item].key);
       attrset(CRT_colors[DEFAULT_COLOR]);
-      mvaddstr(line + item, 49, helpRight[item].info);
+      mvaddstr(line + item, 50, helpRight[item].info);
    }
    line += MAXIMUM(leftHelpItems, item);
    line++;
