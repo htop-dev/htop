@@ -67,7 +67,7 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, size_t size) {
    double percent = Platform_setCPUValues(this, cpu);
 
    if (this->pl->settings->showCPUUsage) {
-      xSnprintf(cpuUsageBuffer, sizeof(cpuUsageBuffer), "%5.1f%%", percent);
+      xSnprintf(cpuUsageBuffer, sizeof(cpuUsageBuffer), "%.1f%%", percent);
    }
 
    if (this->pl->settings->showCPUFrequency) {
