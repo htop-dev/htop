@@ -195,6 +195,10 @@ static Htop_Reaction actionResize(State* st) {
    return HTOP_REDRAW_BAR;
 }
 
+static Htop_Reaction actionSortByPID(State* st) {
+   return Action_setSortKey(st->settings, PID);
+}
+
 static Htop_Reaction actionSortByMemory(State* st) {
    return Action_setSortKey(st->settings, PERCENT_MEM);
 }
@@ -452,7 +456,7 @@ static const struct {
    { .key = "      K: ", .info = "hide/show kernel threads" },
    { .key = "      F: ", .info = "cursor follows process" },
    { .key = "    + -: ", .info = "expand/collapse tree" },
-   { .key = "  P M T: ", .info = "sort by CPU%, MEM% or TIME" },
+   { .key = "N P M T: ", .info = "sort by PID, CPU%, MEM% or TIME" },
    { .key = "      I: ", .info = "invert sort order" },
    { .key = " F6 > .: ", .info = "select sort column" },
    { .key = NULL, .info = NULL }
@@ -645,6 +649,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['I'] = actionInvertSortOrder;
    keys['K'] = actionToggleKernelThreads;
    keys['M'] = actionSortByMemory;
+   keys['N'] = actionSortByPID;
    keys['P'] = actionSortByCPU;
    keys['S'] = actionSetup;
    keys['T'] = actionSortByTime;
