@@ -594,7 +594,7 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
 
    const bool highlightBaseName = this->settings->highlightBaseName;
    const bool highlightSeparator = true;
-   const bool highlightDeleted = true;
+   const bool highlightDeleted = this->settings->highlightDeletedExe;
 
    if (!this->mergedCommand.str) {
       int len = 0;
@@ -766,7 +766,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       const char* procExe;
       if (this->procExe) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
-         if (this->procExeDeleted)
+         if (this->procExeDeleted && this->settings->highlightDeletedExe)
             attr = CRT_colors[FAILED_READ];
          procExe = this->procExe + this->procExeBasenameOffset;
       } else {
