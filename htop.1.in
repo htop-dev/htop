@@ -254,10 +254,14 @@ shown in
 main screen, it is shown below in parenthesis.
 .TP 5
 .B Command
-The full command line of the process (i.e. program name and arguments). If the
-option 'Merge exe, comm and cmdline in Command' (toggled by the 'm' key) is set,
-and if readable, the executable path (/proc/[pid]/exe) and the command name
-(/proc/[pid]/comm) are also shown merged with the command line.
+The full command line of the process (i.e. program name and arguments).
+
+If the option 'Merge exe, comm and cmdline in Command' (toggled by the 'm' key)
+is active, the executable path (/proc/[pid]/exe) and the command name
+(/proc/[pid]/comm) are also shown merged with the command line, if available.
+
+The program basename is highlighted if set in the configuration. Additional
+highlighting can be configured for stale executables (cf. Exe column below).
 .TP
 .B Comm
 The command name of the process obtained from /proc/[pid]/comm, if readable.
@@ -266,6 +270,10 @@ The command name of the process obtained from /proc/[pid]/comm, if readable.
 The abbreviated basename of the executable of the process, obtained from
 /proc/[pid]/exe, if readable. htop is able to read this file on linux for ALL
 the processes only if it has the capability CAP_SYS_PTRACE or root privileges.
+
+The basename is marked in red if the executable used to run the process has
+been replaced or deleted on disk since the process started. This additional
+markup can be configured.
 .TP
 .B PID
 The process ID.
