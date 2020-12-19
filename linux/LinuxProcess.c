@@ -110,7 +110,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 static const char* LinuxProcess_getCommandStr(const Process *this) {
    const LinuxProcess *lp = (const LinuxProcess *)this;
    if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !lp->mergedCommand.str) {
-      return this->comm;
+      return this->cmdline;
    }
    return lp->mergedCommand.str;
 }
@@ -386,7 +386,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
    const int delAttr = CRT_colors[FAILED_READ];
 
    /* Establish some shortcuts to data we need */
-   const char *cmdline = this->comm;
+   const char *cmdline = this->cmdline;
    const char *procExe = lp->procExe;
    const char *procComm = lp->procComm;
 

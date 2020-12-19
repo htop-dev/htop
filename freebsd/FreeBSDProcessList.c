@@ -467,7 +467,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          Process_fillStarttimeBuffer(proc);
          proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          ProcessList_add(super, proc);
-         proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
+         proc->cmdline = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
 
          proc->tty_nr = kproc->ki_tdev;
@@ -493,8 +493,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
             proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
-            free(proc->comm);
-            proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
+            free(proc->cmdline);
+            proc->cmdline = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
          }
       }
 
