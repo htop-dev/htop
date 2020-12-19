@@ -450,6 +450,47 @@ The executable file of the process as reported by the kernel. Requires CAP_SYS_P
 .TP
 .B All other flags
 Currently unsupported (always displays '-').
+.SH "EXTERNAL LIBRARIES"
+While
+.B htop
+depends on most of the libraries it uses at build time there are two
+noteworthy exceptions to this rule. These exceptions both relate to
+data displayed in meters displayed in the header of
+.B htop
+and were intentionally created as optional runtime dependencies instead.
+These exceptions are described below:
+.TP
+.B libsystemd
+The bindings for libsystemd are used in the SystemD meter to determine
+the number of active services and the overall system state. Looking for
+the functions to determine these information at runtime allows for
+builds to support these meters without forcing the package manager
+to install these libraries on systems that otherwise don't use systemd.
+
+Summary: no build time dependency, optional runtime dependency on
+.B libsystemd
+via dynamic loading, with
+.B systemctl(1)
+fallback.
+.TP
+.B libsensors
+The bindings for libsensors are used for the CPU temperature readings
+in the CPU usage meters if displaying the temperature is enabled through
+the setup screen. In order for
+.B htop
+to show these temperatures correctly though, a proper configuration
+of libsensors through its usual configuration files is assumed and that
+all CPU cores correspond to temperature sensors from the
+.B coretemp
+driver with core 0 corresponding to a sensor labelled "Core 0". The
+package temperature may be given as "Package id 0". If missing it is
+inferred as the maximum value from the available per-core readings.
+
+Summary: build time dependency on
+.B libsensors(3)
+C header files, optional runtime dependency on
+.B libsensors(3)
+via dynamic loading.
 .SH "CONFIG FILE"
 By default
 .B htop
