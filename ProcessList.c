@@ -569,7 +569,7 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
       assert(proc->pid == pid);
    } else {
       proc = constructor(this->settings);
-      assert(proc->comm == NULL);
+      assert(proc->cmdline == NULL);
       proc->pid = pid;
    }
    return proc;

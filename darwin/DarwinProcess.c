@@ -286,7 +286,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       proc->starttime_ctime = ep->p_starttime.tv_sec;
       Process_fillStarttimeBuffer(proc);
 
-      proc->comm = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
+      proc->cmdline = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
    }
 
    /* Mutable information */

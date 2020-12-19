@@ -255,14 +255,14 @@ void Process_fillStarttimeBuffer(Process* this) {
 static inline void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
    int start = RichString_size(str);
    int len = 0;
-   const char* comm = this->comm;
+   const char* cmdline = this->cmdline;
 
    if (this->settings->highlightBaseName || !this->settings->showProgramPath) {
       int basename = 0;
       for (int i = 0; i < this->basenameOffset; i++) {
-         if (comm[i] == '/') {
+         if (cmdline[i] == '/') {
             basename = i + 1;
-         } else if (comm[i] == ':') {
+         } else if (cmdline[i] == ':') {
             len = i + 1;
             break;
          }
@@ -271,13 +271,13 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
          if (this->settings->showProgramPath) {
             start += basename;
          } else {
-            comm += basename;
+            cmdline += basename;
          }
          len = this->basenameOffset - basename;
       }
    }
 
-   RichString_appendWide(str, attr, comm);
+   RichString_appendWide(str, attr, cmdline);
 
    if (this->settings->highlightBaseName) {
       RichString_setAttrn(str, baseattr, start, len);
@@ -514,12 +514,12 @@ void Process_display(const Object* cast, RichString* out) {
 
 void Process_done(Process* this) {
    assert (this != NULL);
-   free(this->comm);
+   free(this->cmdline);
    free(this->tty_name);
 }
 
 static const char* Process_getCommandStr(const Process* p) {
-   return p->comm ? p->comm : "";
+   return p->cmdline ? p->cmdline : "";
 }
 
 const ProcessClass Process_class = {
