@@ -184,6 +184,9 @@ Set CPU affinity: mark which CPUs a process is allowed to use.
 .B u
 Show only processes owned by a specified user.
 .TP
+.B N
+Sort by PID (top compatibility key).
+.TP
 .B M
 Sort by memory usage (top compatibility key).
 .TP
