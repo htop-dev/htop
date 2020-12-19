@@ -359,7 +359,7 @@ Settings* Settings_new(int initialCpuCount) {
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;
-   ProcessField* defaults = Platform_defaultFields;
+   const ProcessField* defaults = Platform_defaultFields;
    for (int i = 0; defaults[i]; i++) {
       this->fields[i] = defaults[i];
       this->flags |= Process_fields[defaults[i]].flags;
