@@ -281,7 +281,7 @@ static MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
    indent_buf[0] = '\0';
    if (depth > 0) {
       for (unsigned i = 1; i < depth; i++) {
-         xSnprintf(&indent_buf[off], left, "%s  ", (indent & (1u << i)) ? CRT_treeStr[TREE_STR_VERT] : " ");
+         xSnprintf(&indent_buf[off], left, "%s  ", (indent & (1U << i)) ? CRT_treeStr[TREE_STR_VERT] : " ");
          size_t len = strlen(&indent_buf[off]);
          off += len;
          left -= len;
@@ -323,9 +323,9 @@ static MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
 static MaskItem* AffinityPanel_buildTopology(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem* parent) {
    MaskItem* item = AffinityPanel_addObject(this, obj, indent, parent);
    if (obj->next_sibling) {
-      indent |= (1u << obj->depth);
+      indent |= (1U << obj->depth);
    } else {
-      indent &= ~(1u << obj->depth);
+      indent &= ~(1U << obj->depth);
    }
 
    for (unsigned i = 0; i < obj->arity; i++) {
