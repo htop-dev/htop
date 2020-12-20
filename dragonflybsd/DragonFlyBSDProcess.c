@@ -18,17 +18,6 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 
-const ProcessClass DragonFlyBSDProcess_class = {
-   .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
-   },
-   .writeField = DragonFlyBSDProcess_writeField,
-   .compareByKey = DragonFlyBSDProcess_compareByKey
-};
-
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "PID", .description = "Process/thread ID", .flags = 0, .pidColumn = true, },
@@ -73,11 +62,11 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+static void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   size_t n = sizeof(buffer) - 1;
    switch (field) {
    // add Platform-specific fields here
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, (fp->kernel ? -1 : this->pid)); break;
@@ -97,7 +86,7 @@ void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, Proces
    RichString_appendWide(str, attr, buffer);
 }
 
-long DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static long DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const DragonFlyBSDProcess* p1 = (const DragonFlyBSDProcess*)v1;
    const DragonFlyBSDProcess* p2 = (const DragonFlyBSDProcess*)v2;
 
@@ -121,3 +110,14 @@ bool Process_isThread(const Process* this) {
       return (Process_isUserlandThread(this));
    }
 }
+
+const ProcessClass DragonFlyBSDProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = Process_compare
+   },
+   .writeField = DragonFlyBSDProcess_writeField,
+   .compareByKey = DragonFlyBSDProcess_compareByKey
+};

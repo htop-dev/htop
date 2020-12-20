@@ -262,7 +262,7 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap *= pageSizeKb;
 }
 
-char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
+static char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
       return xStrdup(kproc->kp_comm);
@@ -343,7 +343,7 @@ retry:
    free(jls);
 }
 
-char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid) {
+static char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid) {
    char*  hostname;
    char*  jname;
 
@@ -373,10 +373,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    int count = 0;
 
    // TODO Kernel Threads seem to be skipped, need to figure out the correct flag
-   struct kinfo_proc* kprocs = kvm_getprocs(dfpl->kd, KERN_PROC_ALL | (!hideUserlandThreads ? KERN_PROC_FLAG_LWP : 0), 0, &count);
+   const struct kinfo_proc* kprocs = kvm_getprocs(dfpl->kd, KERN_PROC_ALL | (!hideUserlandThreads ? KERN_PROC_FLAG_LWP : 0), 0, &count);
 
    for (int i = 0; i < count; i++) {
-      struct kinfo_proc* kproc = &kprocs[i];
+      const struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
       bool ATTR_UNUSED isIdleProcess = false;
 

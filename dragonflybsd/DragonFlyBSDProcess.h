@@ -28,10 +28,6 @@ Process* DragonFlyBSDProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 
-void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, ProcessField field);
-
-long DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key);
-
 bool Process_isThread(const Process* this);
 
 #endif
