@@ -299,7 +299,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
       uint64_t total_existing_time = proc->stime + proc->utime;
       uint64_t total_current_time = pti.pti_total_system + pti.pti_total_user;
 
-      if (total_existing_time && 1e-6 < time_interval) {
+      if (total_existing_time && 1E-6 < time_interval) {
          uint64_t total_time_diff = total_current_time - total_existing_time;
          proc->super.percent_cpu = ((double)total_time_diff / time_interval) * 100.0;
       } else {
