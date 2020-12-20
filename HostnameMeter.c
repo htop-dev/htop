@@ -19,8 +19,7 @@ static const int HostnameMeter_attributes[] = {
    HOSTNAME
 };
 
-static void HostnameMeter_updateValues(Meter* this, char* buffer, size_t size) {
-   (void) this;
+static void HostnameMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
    gethostname(buffer, size - 1);
 }
 

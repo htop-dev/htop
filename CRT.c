@@ -652,8 +652,7 @@ int CRT_scrollWheelVAmount = 10;
 ColorScheme CRT_colorScheme = COLORSCHEME_DEFAULT;
 
 ATTR_NORETURN
-static void CRT_handleSIGTERM(int sgn) {
-   (void) sgn;
+static void CRT_handleSIGTERM(ATTR_UNUSED int sgn) {
    CRT_done();
    _exit(0);
 }
