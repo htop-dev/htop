@@ -199,14 +199,14 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       return;
 
    // The text in the bar is right aligned;
-   // Pad with maximal spaces and then calculate needed staring position offset
+   // Pad with maximal spaces and then calculate needed starting position offset
    RichString_begin(bar);
    RichString_appendChr(&bar, ' ', w);
    RichString_appendWide(&bar, 0, buffer);
    int startPos = RichString_sizeVal(bar) - w;
    if (startPos > w) {
       // Text is too large for bar
-      // Truncate too long bar meter text at a space character
+      // Truncate meter text at a space character
       for (int pos = 2 * w; pos > w; pos--) {
          if (RichString_getCharVal(bar, pos) == ' ') {
             while (pos > w && RichString_getCharVal(bar, pos - 1) == ' ')
