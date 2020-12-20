@@ -31,7 +31,7 @@ void IncSet_reset(IncSet* this, IncType type) {
 
 static const char* const searchFunctions[] = {"Next  ", "Cancel ", " Search: ", NULL};
 static const char* const searchKeys[] = {"F3", "Esc", "  "};
-static int searchEvents[] = {KEY_F(3), 27, ERR};
+static const int searchEvents[] = {KEY_F(3), 27, ERR};
 
 static inline void IncMode_initSearch(IncMode* search) {
    memset(search, 0, sizeof(IncMode));
@@ -41,7 +41,7 @@ static inline void IncMode_initSearch(IncMode* search) {
 
 static const char* const filterFunctions[] = {"Done  ", "Clear ", " Filter: ", NULL};
 static const char* const filterKeys[] = {"Enter", "Esc", "  "};
-static int filterEvents[] = {13, 27, ERR};
+static const int filterEvents[] = {13, 27, ERR};
 
 static inline void IncMode_initFilter(IncMode* filter) {
    memset(filter, 0, sizeof(IncMode));

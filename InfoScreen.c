@@ -19,7 +19,7 @@ static const char* const InfoScreenFunctions[] = {"Search ", "Filter ", "Refresh
 
 static const char* const InfoScreenKeys[] = {"F3", "F4", "F5", "Esc"};
 
-static int InfoScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(5), 27};
+static const int InfoScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(5), 27};
 
 InfoScreen* InfoScreen_init(InfoScreen* this, const Process* process, FunctionBar* bar, int height, const char* panelHeader) {
    this->process = process;
