@@ -247,6 +247,10 @@ if test "$my_htop_platform" = "darwin"; then
    AC_CHECK_FUNCS([mach_timebase_info])
 fi
 
+if test "$my_htop_platform" = "dragonflybsd"; then
+   AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
+fi
+
 if test "$my_htop_platform" = "freebsd"; then
    AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
 fi

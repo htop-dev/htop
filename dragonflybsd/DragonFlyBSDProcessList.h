@@ -11,8 +11,6 @@ in the source distribution for its full text.
 #include <kvm.h>
 #include <sys/param.h>
 #include <osreldate.h>
-#include <sys/kinfo.h>
-#include <kinfo.h>
 #include <sys/jail.h>
 #include <sys/uio.h>
 #include <sys/resource.h>

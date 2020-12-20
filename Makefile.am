@@ -192,9 +192,10 @@ dragonflybsd_platform_headers = \
 	dragonflybsd/ProcessField.h
 
 if HTOP_DRAGONFLYBSD
-AM_LDFLAGS += -lkvm -lkinfo
-myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
-dragonflybsd/DragonFlyBSDProcess.c
+myhtopplatsources = \
+	dragonflybsd/Platform.c \
+	dragonflybsd/DragonFlyBSDProcessList.c \
+	dragonflybsd/DragonFlyBSDProcess.c
 
 myhtopplatheaders = $(dragonflybsd_platform_headers)
 endif
