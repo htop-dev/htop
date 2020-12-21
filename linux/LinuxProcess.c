@@ -376,6 +376,9 @@ void LinuxProcess_makeCommandStr(Process* this) {
       cmdline = "(zombie)";
    }
 
+   assert(cmdlineBasenameOffset >= 0);
+   assert(cmdlineBasenameOffset <= strlen(cmdline));
+
    if (!showMergedCommand || !procExe || !procComm) {    /* fall back to cmdline */
       if (showMergedCommand && !procExe && procComm && strlen(procComm)) {   /* Prefix column with comm */
          if (strncmp(cmdline + cmdlineBasenameOffset, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
@@ -410,6 +413,9 @@ void LinuxProcess_makeCommandStr(Process* this) {
    int exeLen = lp->procExeLen;
    int exeBasenameOffset = lp->procExeBasenameOffset;
    int exeBasenameLen = exeLen - exeBasenameOffset;
+
+   assert(exeBasenameOffset >= 0);
+   assert(exeBasenameOffset <= strlen(procExe));
 
    /* Start with copying exe */
    if (showProgramPath) {
