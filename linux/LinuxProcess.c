@@ -368,6 +368,13 @@ void LinuxProcess_makeCommandStr(Process* this) {
    char *str = strStart;
 
    int cmdlineBasenameOffset = lp->procCmdlineBasenameOffset;
+   int cmdlineBasenameEnd = lp->procCmdlineBasenameEnd;
+
+   if (!cmdline) {
+      cmdlineBasenameOffset = 0;
+      cmdlineBasenameEnd = 0;
+      cmdline = "(zombie)";
+   }
 
    if (!showMergedCommand || !procExe || !procComm) {    /* fall back to cmdline */
       if (showMergedCommand && !procExe && procComm && strlen(procComm)) {   /* Prefix column with comm */
@@ -385,11 +392,11 @@ void LinuxProcess_makeCommandStr(Process* this) {
       if (showProgramPath) {
          (void) stpcpyWithNewlineConversion(str, cmdline);
          mc->baseStart = cmdlineBasenameOffset;
-         mc->baseEnd = lp->procCmdlineBasenameEnd;
+         mc->baseEnd = cmdlineBasenameEnd;
       } else {
          (void) stpcpyWithNewlineConversion(str, cmdline + cmdlineBasenameOffset);
          mc->baseStart = 0;
-         mc->baseEnd = lp->procCmdlineBasenameEnd - cmdlineBasenameOffset;
+         mc->baseEnd = cmdlineBasenameEnd - cmdlineBasenameOffset;
       }
 
       if (mc->sep1) {
