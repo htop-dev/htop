@@ -682,8 +682,6 @@ void Action_setBindings(Htop_Action* keys) {
    keys['w'] = actionShowCommandScreen;
    keys['x'] = actionShowLocks;
    keys[KEY_F(1)] = actionHelp;
-   keys[KEY_F(10)] = actionQuit;
-   keys[KEY_F(18)] = actionExpandCollapseOrSortColumn;
    keys[KEY_F(2)] = actionSetup;
    keys[KEY_F(3)] = actionIncSearch;
    keys[KEY_F(4)] = actionIncFilter;
@@ -692,6 +690,8 @@ void Action_setBindings(Htop_Action* keys) {
    keys[KEY_F(7)] = actionHigherPriority;
    keys[KEY_F(8)] = actionLowerPriority;
    keys[KEY_F(9)] = actionKill;
+   keys[KEY_F(10)] = actionQuit;
+   keys[KEY_F(18)] = actionExpandCollapseOrSortColumn;
    keys[KEY_RECLICK] = actionExpandOrCollapse;
    keys[KEY_RESIZE] = actionResize;
 }
