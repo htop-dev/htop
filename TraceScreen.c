@@ -35,16 +35,6 @@ static const char* const TraceScreenKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
 
 static const int TraceScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
 
-const InfoScreenClass TraceScreen_class = {
-   .super = {
-      .extends = Class(Object),
-      .delete = TraceScreen_delete
-   },
-   .draw = TraceScreen_draw,
-   .onErr = TraceScreen_updateTrace,
-   .onKey = TraceScreen_onKey,
-};
-
 TraceScreen* TraceScreen_new(Process* process) {
    // This initializes all TraceScreen variables to "false" so only default = true ones need to be set below
    TraceScreen* this = xCalloc(1, sizeof(TraceScreen));
@@ -70,7 +60,7 @@ void TraceScreen_delete(Object* cast) {
    free(InfoScreen_done((InfoScreen*)this));
 }
 
-void TraceScreen_draw(InfoScreen* this) {
+static void TraceScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Trace of process %d - %s", this->process->pid, Process_getCommand(this->process));
 }
 
@@ -127,7 +117,7 @@ err:
    return false;
 }
 
-void TraceScreen_updateTrace(InfoScreen* super) {
+static void TraceScreen_updateTrace(InfoScreen* super) {
    TraceScreen* this = (TraceScreen*) super;
    char buffer[1025];
 
@@ -172,7 +162,7 @@ void TraceScreen_updateTrace(InfoScreen* super) {
    }
 }
 
-bool TraceScreen_onKey(InfoScreen* super, int ch) {
+static bool TraceScreen_onKey(InfoScreen* super, int ch) {
    TraceScreen* this = (TraceScreen*) super;
    switch(ch) {
       case 'f':
@@ -191,3 +181,13 @@ bool TraceScreen_onKey(InfoScreen* super, int ch) {
    this->follow = false;
    return false;
 }
+
+const InfoScreenClass TraceScreen_class = {
+   .super = {
+      .extends = Class(Object),
+      .delete = TraceScreen_delete
+   },
+   .draw = TraceScreen_draw,
+   .onErr = TraceScreen_updateTrace,
+   .onKey = TraceScreen_onKey,
+};

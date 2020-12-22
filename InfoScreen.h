@@ -16,7 +16,6 @@ typedef struct InfoScreen_ {
    Object super;
    const Process* process;
    Panel* display;
-   FunctionBar* bar;
    IncSet* inc;
    Vector* lines;
 } InfoScreen;

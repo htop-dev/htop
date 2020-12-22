@@ -55,6 +55,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
    this->scrollH = 0;
    this->selected = 0;
    this->oldSelected = 0;
+   this->selectedLen = 0;
    this->needsRedraw = true;
    this->wasFocus = false;
    RichString_beginAllocated(this->header);

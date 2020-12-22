@@ -32,12 +32,6 @@ TraceScreen* TraceScreen_new(Process* process);
 
 void TraceScreen_delete(Object* cast);
 
-void TraceScreen_draw(InfoScreen* this);
-
 bool TraceScreen_forkTracer(TraceScreen* this);
-
-void TraceScreen_updateTrace(InfoScreen* super);
-
-bool TraceScreen_onKey(InfoScreen* super, int ch);
 
 #endif
