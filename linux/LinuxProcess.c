@@ -377,7 +377,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
    }
 
    assert(cmdlineBasenameOffset >= 0);
-   assert(cmdlineBasenameOffset <= strlen(cmdline));
+   assert(cmdlineBasenameOffset <= (int)strlen(cmdline));
 
    if (!showMergedCommand || !procExe || !procComm) {    /* fall back to cmdline */
       if (showMergedCommand && !procExe && procComm && strlen(procComm)) {   /* Prefix column with comm */
@@ -415,7 +415,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
    int exeBasenameLen = exeLen - exeBasenameOffset;
 
    assert(exeBasenameOffset >= 0);
-   assert(exeBasenameOffset <= strlen(procExe));
+   assert(exeBasenameOffset <= (int)strlen(procExe));
 
    /* Start with copying exe */
    if (showProgramPath) {
