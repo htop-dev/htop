@@ -1,3 +1,34 @@
+What's new in version 3.0.4
+
+* Separate tree and list sort orders
+* Invert Process_compare so that superclass matches run first
+(thanks to Hisham Muhammad)
+* Unhardcode Mac OS tick-to-milliseconds conversion
+(thanks to Alexander Momchilov)
+* Check if clock_gettime needs linking of librt
+* Define O_PATH if not already defined
+(thanks to Chris Burr)
+* Add column on Mac for processes running under translation
+(thanks to Dániel Bakai)
+* Configure check for additional linker flags for keypad(3)
+* PSI Meter: constant width and only print ten-duration as bar
+* Sort in paused mode after inverting sort order
+* Handle absence of package CPU temperature
+* Meter: restore non-wide-character build
+* LibSensors: restore temperature for Raspberry Pi
+* MainPanel: do not reset hideProcessSelection on KEY_SHUFFLE
+* BarMeter: rework text padding
+* Panel: rework drawing of FunctionBar
+* Meter: fix artifacts with very tiny width
+* DragonFlyBSD updates
+* BUGFIX: Fix dlopen issue for libsensors5 for some platforms
+* BUGFIX: Fix broken tree display on inverted sort order
+* BUGFIX: Fix pause mode ("Z") in tree view
+* BUGFIX: Correct timebase for non-x86 CPUs on Darwin
+* BUGFIX: Avoid NULL dereference on zombie processes
+* Document dynamic bindings and assumed external configuration
+* Update key mapping documentation for sorting
+
 What's new in version 3.0.3
 
 * Process sorting in 'tree' mode
