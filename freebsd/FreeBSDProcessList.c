@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <dirent.h>
 #include <limits.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/_iovec.h>
@@ -171,7 +172,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
+static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
 
    int cpus   = pl->cpuCount;   // actual CPU count
@@ -250,6 +251,67 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
       cpuData->systemAllPercent = cp_time_p[CP_SYS] + cp_time_p[CP_INTR];
       // this one is not really used
       //cpuData->idlePercent      = cp_time_p[CP_IDLE];
+
+      cpuData->temperature = NAN;
+      cpuData->frequency = NAN;
+
+      const int coreId = (cpus == 1) ? 0 : (i - 1);
+      if (coreId < 0)
+         continue;
+
+      // TODO: test with hyperthreading and multi-cpu systems
+      if (pl->settings->showCPUTemperature) {
+         int temperature;
+         size_t len = sizeof(temperature);
+         char mibBuffer[32];
+         xSnprintf(mibBuffer, sizeof(mibBuffer), "dev.cpu.%d.temperature", coreId);
+         int r = sysctlbyname(mibBuffer, &temperature, &len, NULL, 0);
+         if (r == 0)
+            cpuData->temperature = (double)(temperature - 2732) / 10.0; // convert from deci-Kelvin to Celsius
+      }
+
+      // TODO: test with hyperthreading and multi-cpu systems
+      if (pl->settings->showCPUFrequency) {
+         int frequency;
+         size_t len = sizeof(frequency);
+         char mibBuffer[32];
+         xSnprintf(mibBuffer, sizeof(mibBuffer), "dev.cpu.%d.freq", coreId);
+         int r = sysctlbyname(mibBuffer, &frequency, &len, NULL, 0);
+         if (r == 0)
+            cpuData->frequency = frequency; // keep in MHz
+      }
+   }
+
+   // calculate max temperature and avg frequency for average meter and
+   // propagate frequency to all cores if only supplied for CPU 0
+   if (cpus > 1) {
+      if (pl->settings->showCPUTemperature) {
+         double maxTemp = NAN;
+         for (int i = 1; i < maxcpu; i++) {
+            const double coreTemp = fpl->cpus[i].temperature;
+            if (isnan(coreTemp))
+               continue;
+
+            maxTemp = MAXIMUM(maxTemp, coreTemp);
+         }
+
+         fpl->cpus[0].temperature = maxTemp;
+      }
+
+      if (pl->settings->showCPUFrequency) {
+         const double coreZeroFreq = fpl->cpus[1].frequency;
+         double freqSum = coreZeroFreq;
+         if (!isnan(coreZeroFreq)) {
+            for (int i = 2; i < maxcpu; i++) {
+               if (isnan(fpl->cpus[i].frequency))
+                  fpl->cpus[i].frequency = coreZeroFreq;
+
+               freqSum += fpl->cpus[i].frequency;
+            }
+
+            fpl->cpus[0].frequency = freqSum / (maxcpu - 1);
+         }
+      }
    }
 }
 
@@ -443,7 +505,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    openzfs_sysctl_updateArcStats(&fpl->zfs);
    FreeBSDProcessList_scanMemoryInfo(super);
-   FreeBSDProcessList_scanCPUTime(super);
+   FreeBSDProcessList_scanCPU(super);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
    if (pauseProcessUpdate) {

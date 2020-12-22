@@ -41,7 +41,7 @@ typedef struct Settings_ {
    bool detailedCPUTime;
    bool showCPUUsage;
    bool showCPUFrequency;
-   #ifdef HAVE_SENSORS_SENSORS_H
+   #ifdef BUILD_WITH_CPU_TEMP
    bool showCPUTemperature;
    bool degreeFahrenheit;
    #endif

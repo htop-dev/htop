@@ -209,8 +209,8 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
    percent = CLAMP(percent, 0.0, 100.0);
 
-   v[CPU_METER_FREQUENCY] = NAN;
-   v[CPU_METER_TEMPERATURE] = NAN;
+   v[CPU_METER_FREQUENCY] = cpuData->frequency;
+   v[CPU_METER_TEMPERATURE] = cpuData->temperature;
 
    return percent;
 }
