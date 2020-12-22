@@ -313,8 +313,6 @@ int main(int argc, char** argv) {
 
    MainPanel_updateTreeFunctions(panel, settings->treeView);
 
-   ProcessList_printHeader(pl, Panel_getHeader((Panel*)panel));
-
    State state = {
       .settings = settings,
       .ut = ut,

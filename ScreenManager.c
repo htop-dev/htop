@@ -141,7 +141,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
 
    bool timedOut = true;
    bool redraw = true;
-   bool force_redraw = false;
+   bool force_redraw = true;
    bool rescan = false;
    int sortTimeout = 0;
    int resetSortTimeout = 5;

@@ -102,7 +102,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       MainPanel_updateTreeFunctions(this, this->state->settings->treeView);
    }
    if (reaction & HTOP_UPDATE_PANELHDR) {
-      ProcessList_printHeader(this->state->pl, Panel_getHeader(super));
+      result |= REDRAW;
    }
    if (reaction & HTOP_REFRESH) {
       result |= REFRESH;
@@ -168,13 +168,19 @@ static void MainPanel_drawFunctionBar(Panel* super) {
    }
 }
 
+static void MainPanel_printHeader(Panel* super) {
+   MainPanel* this = (MainPanel*) super;
+   ProcessList_printHeader(this->state->pl, &super->header);
+}
+
 const PanelClass MainPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = MainPanel_delete
    },
    .eventHandler = MainPanel_eventHandler,
-   .drawFunctionBar = MainPanel_drawFunctionBar
+   .drawFunctionBar = MainPanel_drawFunctionBar,
+   .printHeader = MainPanel_printHeader
 };
 
 MainPanel* MainPanel_new() {

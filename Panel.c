@@ -76,13 +76,6 @@ void Panel_setSelectionColor(Panel* this, ColorElements colorId) {
    this->selectionColorId = colorId;
 }
 
-RichString* Panel_getHeader(Panel* this) {
-   assert (this != NULL);
-
-   this->needsRedraw = true;
-   return &(this->header);
-}
-
 inline void Panel_setHeader(Panel* this, const char* header) {
    RichString_writeWide(&(this->header), CRT_colors[PANEL_HEADER_FOCUS], header);
    this->needsRedraw = true;
@@ -228,15 +221,20 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    int x = this->x;
    int h = this->h;
 
+   const int header_attr = focus
+                         ? CRT_colors[PANEL_HEADER_FOCUS]
+                         : CRT_colors[PANEL_HEADER_UNFOCUS];
+   if (force_redraw) {
+      if (Panel_printHeaderFn(this))
+         Panel_printHeader(this);
+      else
+         RichString_setAttr(&this->header, header_attr);
+   }
    int headerLen = RichString_sizeVal(this->header);
    if (headerLen > 0) {
-      int attr = focus
-               ? CRT_colors[PANEL_HEADER_FOCUS]
-               : CRT_colors[PANEL_HEADER_UNFOCUS];
-      attrset(attr);
+      attrset(header_attr);
       mvhline(y, x, ' ', this->w);
       if (scrollH < headerLen) {
-         RichString_setAttr(&this->header, attr);
          RichString_printoffnVal(this->header, y, x, scrollH,
             MINIMUM(headerLen - scrollH, this->w));
       }
