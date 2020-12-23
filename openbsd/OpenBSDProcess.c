@@ -202,7 +202,7 @@ static void OpenBSDProcess_writeField(const Process* this, RichString* str, Proc
    RichString_appendWide(str, attr, buffer);
 }
 
-static long OpenBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int OpenBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const OpenBSDProcess* p1 = (const OpenBSDProcess*)v1;
    const OpenBSDProcess* p2 = (const OpenBSDProcess*)v2;
 

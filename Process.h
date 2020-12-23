@@ -122,7 +122,7 @@ typedef struct ProcessFieldData_ {
 
 // Implemented in platform-specific code:
 void Process_writeField(const Process* this, RichString* str, ProcessField field);
-long Process_compare(const void* v1, const void* v2);
+int Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
 bool Process_isThread(const Process* this);
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
@@ -131,7 +131,7 @@ extern int Process_pidDigits;
 
 typedef Process*(*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
-typedef long (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
+typedef int (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
 typedef const char* (*Process_GetCommandStr)(const Process*);
 
 typedef struct ProcessClass_ {
@@ -199,8 +199,8 @@ bool Process_changePriorityBy(Process* this, Arg delta);
 
 bool Process_sendSignal(Process* this, Arg sgn);
 
-long Process_pidCompare(const void* v1, const void* v2);
+int Process_pidCompare(const void* v1, const void* v2);
 
-long Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key);
+int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key);
 
 #endif

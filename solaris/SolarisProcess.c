@@ -101,7 +101,7 @@ void SolarisProcess_writeField(const Process* this, RichString* str, ProcessFiel
    RichString_appendWide(str, attr, buffer);
 }
 
-long SolarisProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+int SolarisProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const SolarisProcess* p1 = (const SolarisProcess*)v1;
    const SolarisProcess* p2 = (const SolarisProcess*)v2;
 

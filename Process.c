@@ -476,14 +476,14 @@ bool Process_sendSignal(Process* this, Arg sgn) {
    return ok;
 }
 
-long Process_pidCompare(const void* v1, const void* v2) {
+int Process_pidCompare(const void* v1, const void* v2) {
    const Process* p1 = (const Process*)v1;
    const Process* p2 = (const Process*)v2;
 
    return SPACESHIP_NUMBER(p1->pid, p2->pid);
 }
 
-long Process_compare(const void* v1, const void* v2) {
+int Process_compare(const void* v1, const void* v2) {
    const Process *p1, *p2;
    const Settings *settings = ((const Process*)v1)->settings;
 
@@ -497,7 +497,7 @@ long Process_compare(const void* v1, const void* v2) {
 
    ProcessField key = Settings_getActiveSortKey(settings);
 
-   long result = Process_compareByKey(p1, p2, key);
+   int result = Process_compareByKey(p1, p2, key);
 
    // Implement tie-breaker (needed to make tree mode more stable)
    if (!result)
@@ -506,7 +506,7 @@ long Process_compare(const void* v1, const void* v2) {
    return result;
 }
 
-long Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
+int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
    int r;
 
    switch (key) {

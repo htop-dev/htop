@@ -96,7 +96,7 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    RichString_appendWide(str, attr, buffer);
 }
 
-static long FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const FreeBSDProcess* p1 = (const FreeBSDProcess*)v1;
    const FreeBSDProcess* p2 = (const FreeBSDProcess*)v2;
 
