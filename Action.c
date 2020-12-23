@@ -250,16 +250,6 @@ static Htop_Reaction actionIncSearch(State* st) {
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 
-static Htop_Reaction actionIncNext(State* st) {
-   IncSet_next(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue) MainPanel_getValue);
-   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
-}
-
-static Htop_Reaction actionIncPrev(State* st) {
-   IncSet_prev(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue) MainPanel_getValue);
-   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
-}
-
 static Htop_Reaction actionHigherPriority(State* st) {
    bool changed = changePriority((MainPanel*)st->panel, -1);
    return changed ? HTOP_REFRESH : HTOP_OK;
@@ -655,7 +645,6 @@ void Action_setBindings(Htop_Action* keys) {
    keys['I'] = actionInvertSortOrder;
    keys['K'] = actionToggleKernelThreads;
    keys['M'] = actionSortByMemory;
-   keys['N'] = actionIncPrev;
    keys['P'] = actionSortByCPU;
    keys['S'] = actionSetup;
    keys['T'] = actionSortByTime;
@@ -673,7 +662,6 @@ void Action_setBindings(Htop_Action* keys) {
    keys['k'] = actionKill;
    keys['l'] = actionLsof;
    keys['m'] = actionToggleMergedCommand;
-   keys['n'] = actionIncNext;
    keys['p'] = actionToggleProgramPath;
    keys['q'] = actionQuit;
    keys['s'] = actionStrace;
