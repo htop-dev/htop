@@ -133,14 +133,6 @@ static bool IncMode_find(IncMode* mode, Panel* panel, IncMode_GetPanelValue getP
    }
 }
 
-bool IncSet_next(IncSet* this, IncType type, Panel* panel, IncMode_GetPanelValue getPanelValue) {
-   return IncMode_find(&this->modes[type], panel, getPanelValue, 1);
-}
-
-bool IncSet_prev(IncSet* this, IncType type, Panel* panel, IncMode_GetPanelValue getPanelValue) {
-   return IncMode_find(&this->modes[type], panel, getPanelValue, -1);
-}
-
 bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines) {
    if (ch == ERR)
       return true;
