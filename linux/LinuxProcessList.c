@@ -1793,7 +1793,9 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
          continue;
       } else if (
          (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
-         (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1)
+         (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1) ||
+         (sscanf(buffer, "clock : %lfMHz", &frequency) == 1) ||
+         (sscanf(buffer, "clock: %lfMHz", &frequency) == 1)
       ) {
          if (cpuid < 0 || cpuid > (cpus - 1)) {
             continue;
