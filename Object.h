@@ -24,7 +24,7 @@ struct Object_;
 typedef struct Object_ Object;
 
 typedef void(*Object_Display)(const Object*, RichString*);
-typedef long(*Object_Compare)(const void*, const void*);
+typedef int(*Object_Compare)(const void*, const void*);
 typedef void(*Object_Delete)(Object*);
 
 #define Object_getClass(obj_)         ((const Object*)(obj_))->klass

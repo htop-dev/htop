@@ -82,7 +82,7 @@ static void DarwinProcess_writeField(const Process* this, RichString* str, Proce
    RichString_appendWide(str, attr, buffer);
 }
 
-static long DarwinProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const DarwinProcess* p1 = (const DarwinProcess*)v1;
    const DarwinProcess* p2 = (const DarwinProcess*)v2;
 
