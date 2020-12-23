@@ -100,6 +100,7 @@ struct Meter_ {
    int h;
    const ProcessList* pl;
    uint8_t curItems;
+   const int* curAttributes;
    double* values;
    double total;
    void* meterData;

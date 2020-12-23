@@ -39,6 +39,7 @@ Meter* Meter_new(const struct ProcessList_* pl, int param, const MeterClass* typ
    this->param = param;
    this->pl = pl;
    this->curItems = type->maxItems;
+   this->curAttributes = NULL;
    this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
    this->total = type->total;
    this->caption = xStrdup(type->caption);
@@ -252,7 +253,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // ...then print the buffer.
    offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
-      RichString_setAttrn(&bar, CRT_colors[Meter_attributes(this)[i]], startPos + offset, startPos + offset + blockSizes[i] - 1);
+      int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
+      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, startPos + offset + blockSizes[i] - 1);
       RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSizes[i], w - offset));
       offset += blockSizes[i];
       offset = CLAMP(offset, 0, w);
