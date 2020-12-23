@@ -23,9 +23,13 @@ void fail(void) ATTR_NORETURN;
 
 void* xMalloc(size_t size);
 
+void* xMallocArray(size_t nmemb, size_t size);
+
 void* xCalloc(size_t nmemb, size_t size);
 
 void* xRealloc(void* ptr, size_t size);
+
+void* xReallocArray(void* ptr, size_t nmemb, size_t size);
 
 /*
  * String_startsWith gives better performance if strlen(match) can be computed

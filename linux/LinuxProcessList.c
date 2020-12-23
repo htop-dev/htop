@@ -102,7 +102,7 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
 
    int numDrivers = 0;
    int allocd = 10;
-   ttyDrivers = xMalloc(sizeof(TtyDriver) * allocd);
+   ttyDrivers = xMallocArray(allocd, sizeof(TtyDriver));
    char* at = buf;
    while (*at != '\0') {
       at = strchr(at, ' ');    // skip first token
@@ -136,7 +136,7 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
       numDrivers++;
       if (numDrivers == allocd) {
          allocd += 10;
-         ttyDrivers = xRealloc(ttyDrivers, sizeof(TtyDriver) * allocd);
+         ttyDrivers = xReallocArray(ttyDrivers, allocd, sizeof(TtyDriver));
       }
    }
    numDrivers++;

@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -36,9 +37,21 @@ void* xMalloc(size_t size) {
    return data;
 }
 
+void* xMallocArray(size_t nmemb, size_t size) {
+   assert(nmemb > 0);
+   assert(size > 0);
+   if (SIZE_MAX / nmemb < size) {
+      fail();
+   }
+   return xMalloc(nmemb * size);
+}
+
 void* xCalloc(size_t nmemb, size_t size) {
    assert(nmemb > 0);
    assert(size > 0);
+   if (SIZE_MAX / nmemb < size) {
+      fail();
+   }
    void* data = calloc(nmemb, size);
    if (!data) {
       fail();
@@ -54,6 +67,15 @@ void* xRealloc(void* ptr, size_t size) {
       fail();
    }
    return data;
+}
+
+void* xReallocArray(void* ptr, size_t nmemb, size_t size) {
+   assert(nmemb > 0);
+   assert(size > 0);
+   if (SIZE_MAX / nmemb < size) {
+      fail();
+   }
+   return xRealloc(ptr, nmemb * size);
 }
 
 char* String_cat(const char* s1, const char* s2) {
