@@ -689,6 +689,7 @@ void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
       define_key("\033[12~", KEY_F(2));
       define_key("\033[13~", KEY_F(3));
       define_key("\033[14~", KEY_F(4));
+      define_key("\033[14;2~", KEY_F(15));
       define_key("\033[17;2~", KEY_F(18));
       char sequence[3] = "\033a";
       for (char c = 'a'; c <= 'z'; c++) {
