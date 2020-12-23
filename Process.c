@@ -363,15 +363,14 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    case USER: {
       if (Process_getuid != this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
+
       if (this->user) {
-         xSnprintf(buffer, n, "%-9s ", this->user);
-      } else {
-         xSnprintf(buffer, n, "%-9d ", this->st_uid);
+         int c = RichString_appendnWide(str, attr, this->user, MINIMUM(9, strlen(this->user)));
+         RichString_appendChr(str, ' ', 10 - c);
+         return;
       }
-      if (buffer[9] != '\0') {
-         buffer[9] = ' ';
-         buffer[10] = '\0';
-      }
+
+      xSnprintf(buffer, n, "%-9d ", this->st_uid);
       break;
    }
    default:

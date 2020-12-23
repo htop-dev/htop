@@ -52,16 +52,16 @@ void RichString_setAttr(RichString* this, int attrs);
 
 void RichString_appendChr(RichString* this, char c, int count);
 
-void RichString_appendWide(RichString* this, int attrs, const char* data);
+int RichString_appendWide(RichString* this, int attrs, const char* data);
 
-void RichString_appendnWide(RichString* this, int attrs, const char* data, int len);
+int RichString_appendnWide(RichString* this, int attrs, const char* data, int len);
 
-void RichString_writeWide(RichString* this, int attrs, const char* data);
+int RichString_writeWide(RichString* this, int attrs, const char* data);
 
-void RichString_appendAscii(RichString* this, int attrs, const char* data);
+int RichString_appendAscii(RichString* this, int attrs, const char* data);
 
-void RichString_appendnAscii(RichString* this, int attrs, const char* data, int len);
+int RichString_appendnAscii(RichString* this, int attrs, const char* data, int len);
 
-void RichString_writeAscii(RichString* this, int attrs, const char* data);
+int RichString_writeAscii(RichString* this, int attrs, const char* data);
 
 #endif
