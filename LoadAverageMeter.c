@@ -24,8 +24,36 @@ static const int LoadMeter_attributes[] = {
    LOAD
 };
 
+static const int OK_attributes[] = {
+   METER_VALUE_OK
+};
+
+static const int Medium_attributes[] = {
+   METER_VALUE_WARN
+};
+
+static const int High_attributes[] = {
+   METER_VALUE_ERROR
+};
+
 static void LoadAverageMeter_updateValues(Meter* this, char* buffer, size_t size) {
    Platform_getLoadAverage(&this->values[0], &this->values[1], &this->values[2]);
+
+   // only show bar for 1min value
+   this->curItems = 1;
+
+   // change bar color and total based on value
+   if (this->values[0] < 1.0) {
+      this->curAttributes = OK_attributes;
+      this->total = 1.0;
+   } else if (this->values[0] < this->pl->cpuCount) {
+      this->curAttributes = Medium_attributes;
+      this->total = this->pl->cpuCount;
+   } else {
+      this->curAttributes = High_attributes;
+      this->total = 2 * this->pl->cpuCount;
+   }
+
    xSnprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
 }
 
@@ -43,9 +71,19 @@ static void LoadAverageMeter_display(const Object* cast, RichString* out) {
 static void LoadMeter_updateValues(Meter* this, char* buffer, size_t size) {
    double five, fifteen;
    Platform_getLoadAverage(&this->values[0], &five, &fifteen);
-   if (this->values[0] > this->total) {
-      this->total = this->values[0];
+
+   // change bar color and total based on value
+   if (this->values[0] < 1.0) {
+      this->curAttributes = OK_attributes;
+      this->total = 1.0;
+   } else if (this->values[0] < this->pl->cpuCount) {
+      this->curAttributes = Medium_attributes;
+      this->total = this->pl->cpuCount;
+   } else {
+      this->curAttributes = High_attributes;
+      this->total = 2 * this->pl->cpuCount;
    }
+
    xSnprintf(buffer, size, "%.2f", this->values[0]);
 }
 
