@@ -644,7 +644,7 @@ static Htop_Reaction actionShowCommandScreen(State* st) {
 
 void Action_setBindings(Htop_Action* keys) {
    keys[KEY_RESIZE] = actionResize;
-   keys['N'] = actionSortByPID;
+   keys['D'] = actionSortByPID;
    keys['M'] = actionSortByMemory;
    keys['T'] = actionSortByTime;
    keys['P'] = actionSortByCPU;
