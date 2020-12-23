@@ -57,6 +57,7 @@ typedef enum ColorElements_ {
    METER_VALUE_IOWRITE,
    METER_VALUE_NOTICE,
    METER_VALUE_OK,
+   METER_VALUE_WARN,
    LED_COLOR,
    UPTIME,
    BATTERY,
