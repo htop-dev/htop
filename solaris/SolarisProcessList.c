@@ -72,11 +72,11 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    const SolarisProcessList* spl = (SolarisProcessList*) pl;
    int cpus = pl->cpuCount;
    kstat_t* cpuinfo = NULL;
-   int kchain = 0;
    kstat_named_t* idletime = NULL;
    kstat_named_t* intrtime = NULL;
    kstat_named_t* krnltime = NULL;
    kstat_named_t* usertime = NULL;
+   kstat_named_t* cpu_freq = NULL;
    double idlebuf = 0;
    double intrbuf = 0;
    double krnlbuf = 0;
@@ -94,20 +94,30 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    // Calculate per-CPU statistics first
    for (int i = 0; i < cpus; i++) {
       if (spl->kd != NULL) {
-         cpuinfo = kstat_lookup(spl->kd, "cpu", i, "sys");
-      }
-      if (cpuinfo != NULL) {
-         kchain = kstat_read(spl->kd, cpuinfo, NULL);
-      }
-      if (kchain  != -1  ) {
-         idletime = kstat_data_lookup(cpuinfo, "cpu_nsec_idle");
-         intrtime = kstat_data_lookup(cpuinfo, "cpu_nsec_intr");
-         krnltime = kstat_data_lookup(cpuinfo, "cpu_nsec_kernel");
-         usertime = kstat_data_lookup(cpuinfo, "cpu_nsec_user");
+         if ((cpuinfo = kstat_lookup(spl->kd, "cpu", i, "sys")) != NULL) {
+            if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {
+               idletime = kstat_data_lookup(cpuinfo, "cpu_nsec_idle");
+               intrtime = kstat_data_lookup(cpuinfo, "cpu_nsec_intr");
+               krnltime = kstat_data_lookup(cpuinfo, "cpu_nsec_kernel");
+               usertime = kstat_data_lookup(cpuinfo, "cpu_nsec_user");
+            }
+         }
       }
 
       assert( (idletime != NULL) && (intrtime != NULL)
            && (krnltime != NULL) && (usertime != NULL) );
+
+      if (pl->settings->showCPUFrequency) {
+         if (spl->kd != NULL) {
+            if ((cpuinfo = kstat_lookup(spl->kd, "cpu_info", i, NULL)) != NULL) {
+               if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {
+                  cpu_freq = kstat_data_lookup(cpuinfo, "current_clock_Hz");
+               }
+            }
+         }
+
+         assert( cpu_freq != NULL );
+      }
 
       CPUData* cpuData = &(spl->cpus[i + arrskip]);
 
@@ -128,6 +138,8 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
       cpuData->lkrnl            = krnltime->value.ui64;
       cpuData->lintr            = intrtime->value.ui64;
       cpuData->lidle            = idletime->value.ui64;
+      // Add frequency in MHz
+      cpuData->frequency        = pl->settings->showCPUFrequency ? (double)cpu_freq->value.ui64 / 1E6 : NAN;
       // Accumulate the current percentages into buffers for later average calculation
       if (cpus > 1) {
          userbuf               += cpuData->userPercent;
@@ -165,8 +177,8 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
 
    // Part 1 - physical memory
    if (spl->kd != NULL && meminfo == NULL) {
-      // Look up the kstat chain just one, it never changes
-      meminfo   = kstat_lookup(spl->kd, "unix", 0, "system_pages");
+      // Look up the kstat chain just once, it never changes
+      meminfo = kstat_lookup(spl->kd, "unix", 0, "system_pages");
    }
    if (meminfo != NULL) {
       ksrphyserr = kstat_read(spl->kd, meminfo, NULL);
