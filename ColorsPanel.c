@@ -49,7 +49,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    ColorsPanel* this = (ColorsPanel*) super;
 
    HandlerResult result = IGNORED;
-   int mark = Panel_getSelectedIndex(super);
+   int mark;
 
    switch(ch) {
    case 0x0a:
@@ -58,6 +58,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    case KEY_MOUSE:
    case KEY_RECLICK:
    case ' ':
+      mark = Panel_getSelectedIndex(super);
       assert(mark >= 0);
       assert(mark < LAST_COLORSCHEME);
       for (int i = 0; ColorSchemeNames[i] != NULL; i++)
@@ -84,14 +85,13 @@ const PanelClass ColorsPanel_class = {
    .eventHandler = ColorsPanel_eventHandler
 };
 
-ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
+ColorsPanel* ColorsPanel_new(Settings* settings) {
    ColorsPanel* this = AllocThis(ColorsPanel);
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(ColorsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true, fuBar);
 
    this->settings = settings;
-   this->scr = scr;
 
    assert(ARRAYSIZE(ColorSchemeNames) == LAST_COLORSCHEME + 1);
 

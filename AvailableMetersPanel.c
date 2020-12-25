@@ -27,14 +27,15 @@ static void AvailableMetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    AvailableMetersPanel* this = (AvailableMetersPanel*) object;
    Panel_done(super);
+   free(this->meterPanels);
    free(this);
 }
 
-static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, const MeterClass* type, unsigned int param, int column) {
+static inline void AvailableMetersPanel_addMeter(Header* header, MetersPanel* panel, const MeterClass* type, unsigned int param, size_t column) {
    const Meter* meter = Header_addMeterByClass(header, type, param, column);
-   Panel_add(panel, (Object*) Meter_toListItem(meter, false));
-   Panel_setSelected(panel, Panel_size(panel) - 1);
-   MetersPanel_setMoving((MetersPanel*)panel, true);
+   Panel_add((Panel*)panel, (Object*) Meter_toListItem(meter, false));
+   Panel_setSelected((Panel*)panel, Panel_size((Panel*)panel) - 1);
+   MetersPanel_setMoving(panel, true);
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
@@ -55,7 +56,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case 'l':
       case 'L':
       {
-         AvailableMetersPanel_addMeter(header, this->leftPanel, Platform_meterTypes[type], param, 0);
+         AvailableMetersPanel_addMeter(header, this->meterPanels[0], Platform_meterTypes[type], param, 0);
          result = HANDLED;
          update = true;
          break;
@@ -67,7 +68,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case 'r':
       case 'R':
       {
-         AvailableMetersPanel_addMeter(header, this->rightPanel, Platform_meterTypes[type], param, 1);
+         AvailableMetersPanel_addMeter(header, this->meterPanels[this->columns - 1], Platform_meterTypes[type], param, this->columns - 1);
          result = (KEY_LEFT << 16) | SYNTH_KEY;
          update = true;
          break;
@@ -91,7 +92,7 @@ const PanelClass AvailableMetersPanel_class = {
    .eventHandler = AvailableMetersPanel_eventHandler
 };
 
-AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr, const ProcessList* pl) {
+AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, size_t columns, MetersPanel** meterPanels, ScreenManager* scr, const ProcessList* pl) {
    AvailableMetersPanel* this = AllocThis(AvailableMetersPanel);
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_newEnterEsc("Add   ", "Done   ");
@@ -99,8 +100,8 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
 
    this->settings = settings;
    this->header = header;
-   this->leftPanel = leftMeters;
-   this->rightPanel = rightMeters;
+   this->columns = columns;
+   this->meterPanels = meterPanels;
    this->scr = scr;
 
    Panel_setHeader(super, "Available meters");
