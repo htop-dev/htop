@@ -17,6 +17,8 @@ in the source distribution for its full text.
 #include "ColumnsPanel.h"
 #include "DisplayOptionsPanel.h"
 #include "FunctionBar.h"
+#include "Header.h"
+#include "HeaderOptionsPanel.h"
 #include "ListItem.h"
 #include "MetersPanel.h"
 #include "Object.h"
@@ -34,13 +36,23 @@ static void CategoriesPanel_delete(Object* object) {
 }
 
 void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
-   MetersPanel* leftMeters = MetersPanel_new(this->settings, "Left column", this->header->columns[0], this->scr);
-   MetersPanel* rightMeters = MetersPanel_new(this->settings, "Right column", this->header->columns[1], this->scr);
-   leftMeters->rightNeighbor = rightMeters;
-   rightMeters->leftNeighbor = leftMeters;
-   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, (Panel*) leftMeters, (Panel*) rightMeters, this->scr, this->pl);
-   ScreenManager_add(this->scr, (Panel*) leftMeters, 20);
-   ScreenManager_add(this->scr, (Panel*) rightMeters, 20);
+   size_t columns = HeaderLayout_getColumns(this->scr->header->headerLayout);
+   MetersPanel** meterPanels = xMallocArray(columns, sizeof(MetersPanel));
+
+   for (size_t i = 0; i < columns; i++) {
+      char titleBuffer[32];
+      xSnprintf(titleBuffer, sizeof(titleBuffer), "Column %zu", i + 1);
+      meterPanels[i] = MetersPanel_new(this->settings, titleBuffer, this->header->columns[i], this->scr);
+
+      if (i != 0) {
+         meterPanels[i]->leftNeighbor = meterPanels[i - 1];
+         meterPanels[i - 1]->rightNeighbor = meterPanels[i];
+      }
+
+      ScreenManager_add(this->scr, (Panel*) meterPanels[i], 20);
+   }
+
+   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, columns, meterPanels, this->scr, this->pl);
    ScreenManager_add(this->scr, availableMeters, -1);
 }
 
@@ -59,6 +71,11 @@ static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns, this->settings->dynamicColumns);
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
+}
+
+static void CategoriesPanel_makeHeaderOptionsPage(CategoriesPanel* this) {
+   Panel* colors = (Panel*) HeaderOptionsPanel_new(this->settings, this->scr);
+   ScreenManager_add(this->scr, colors, -1);
 }
 
 static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
@@ -111,6 +128,9 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
          case 3:
             CategoriesPanel_makeColumnsPage(this);
             break;
+         case 4:
+            CategoriesPanel_makeHeaderOptionsPage(this);
+            break;
       }
    }
    return result;
@@ -139,5 +159,6 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    Panel_add(super, (Object*) ListItem_new("Display options", 0));
    Panel_add(super, (Object*) ListItem_new("Colors", 0));
    Panel_add(super, (Object*) ListItem_new("Columns", 0));
+   Panel_add(super, (Object*) ListItem_new("Header layout", 0));
    return this;
 }

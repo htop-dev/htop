@@ -8,6 +8,7 @@ in the source distribution for its full text.
 */
 
 #include "Header.h"
+#include "MetersPanel.h"
 #include "Panel.h"
 #include "ProcessList.h"
 #include "ScreenManager.h"
@@ -20,12 +21,12 @@ typedef struct AvailableMetersPanel_ {
 
    Settings* settings;
    Header* header;
-   Panel* leftPanel;
-   Panel* rightPanel;
+   size_t columns;
+   MetersPanel** meterPanels;
 } AvailableMetersPanel;
 
 extern const PanelClass AvailableMetersPanel_class;
 
-AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, Panel* leftMeters, Panel* rightMeters, ScreenManager* scr, const ProcessList* pl);
+AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, size_t columns, MetersPanel **meterPanels, ScreenManager* scr, const ProcessList* pl);
 
 #endif

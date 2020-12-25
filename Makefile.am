@@ -45,6 +45,7 @@ myhtopsources = \
 	FunctionBar.c \
 	Hashtable.c \
 	Header.c \
+	HeaderOptionsPanel.c \
 	HostnameMeter.c \
 	IncSet.c \
 	InfoScreen.c \
@@ -102,6 +103,8 @@ myhtopheaders = \
 	FunctionBar.h \
 	Hashtable.h \
 	Header.h \
+	HeaderLayout.h \
+	HeaderOptionsPanel.h \
 	HostnameMeter.h \
 	IncSet.h \
 	InfoScreen.h \
