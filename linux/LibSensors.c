@@ -23,13 +23,15 @@ static void* dlopenHandle = NULL;
 
 int LibSensors_init(FILE* input) {
    if (!dlopenHandle) {
+      /* Find the unversioned libsensors.so (symlink) and prefer that, but Debian has .so.5 and Fedora .so.4 without
+         matching symlinks (unless people install the -dev packages) */
       dlopenHandle = dlopen("libsensors.so", RTLD_LAZY);
-      if (!dlopenHandle) {
-         /* Debian contains no unversioned .so in libsensors5, only in the -dev package, so work around that: */
+      if (!dlopenHandle)
          dlopenHandle = dlopen("libsensors.so.5", RTLD_LAZY);
-         if (!dlopenHandle)
-            goto dlfailure;
-      }
+      if (!dlopenHandle)
+         dlopenHandle = dlopen("libsensors.so.4", RTLD_LAZY);
+      if (!dlopenHandle)
+         goto dlfailure;
 
       /* Clear any errors */
       dlerror();
