@@ -208,10 +208,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    ProcessList_init(pl, Class(LinuxProcess), usersTable, pidMatchList, userId);
    LinuxProcessList_initTtyDrivers(this);
 
-   #ifdef HAVE_DELAYACCT
-   LinuxProcessList_initNetlinkSocket(this);
-   #endif
-
    // Initialize page size
    pageSize = sysconf(_SC_PAGESIZE);
    if (pageSize == -1)
@@ -955,12 +951,19 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
 static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProcess* process) {
    struct nl_msg* msg;
 
+   if (!this->netlink_socket) {
+       LinuxProcessList_initNetlinkSocket(this);
+       if (!this->netlink_socket) {
+          goto delayacct_failure;
+       }
+   }
+
    if (nl_socket_modify_cb(this->netlink_socket, NL_CB_VALID, NL_CB_CUSTOM, handleNetlinkMsg, process) < 0) {
-      return;
+      goto delayacct_failure;
    }
 
    if (! (msg = nlmsg_alloc())) {
-      return;
+      goto delayacct_failure;
    }
 
    if (! genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, this->netlink_family, 0, NLM_F_REQUEST, TASKSTATS_CMD_GET, TASKSTATS_VERSION)) {
@@ -972,15 +975,19 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
    }
 
    if (nl_send_sync(this->netlink_socket, msg) < 0) {
-      process->swapin_delay_percent = NAN;
-      process->blkio_delay_percent = NAN;
-      process->cpu_delay_percent = NAN;
-      return;
+      goto delayacct_failure;
    }
 
    if (nl_recvmsgs_default(this->netlink_socket) < 0) {
-      return;
+      goto delayacct_failure;
    }
+
+   return;
+
+delayacct_failure:
+   process->swapin_delay_percent = NAN;
+   process->blkio_delay_percent = NAN;
+   process->cpu_delay_percent = NAN;
 }
 
 #endif
@@ -1419,7 +1426,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       #ifdef HAVE_DELAYACCT
-      LinuxProcessList_readDelayAcctData(this, lp);
+      if (settings->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
+         LinuxProcessList_readDelayAcctData(this, lp);
+      }
       #endif
 
       if (settings->flags & PROCESS_FLAG_LINUX_CGROUP) {
