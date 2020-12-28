@@ -112,6 +112,13 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
       }
 
       RichString_appendWide(header, color, alignedProcessFieldTitle(fields[i]));
+      if (key == fields[i] && RichString_getCharVal(*header, RichString_size(header) - 1) == ' ') {
+         header->chlen--;  // rewind to override space
+         RichString_appendnWide(header,
+                                CRT_colors[PANEL_SELECTION_FOCUS],
+                                CRT_treeStr[Settings_getActiveDirection(this->settings) == 1 ? TREE_STR_DESC : TREE_STR_ASC],
+                                1);
+      }
       if (COMM == fields[i] && settings->showMergedCommand) {
          RichString_appendAscii(header, color, "(merged)");
       }

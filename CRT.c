@@ -48,6 +48,8 @@ static const char* const CRT_treeStrAscii[LAST_TREE_STR] = {
    [TREE_STR_TEND] = ",",
    [TREE_STR_OPEN] = "+",
    [TREE_STR_SHUT] = "-",
+   [TREE_STR_ASC]  = "+",
+   [TREE_STR_DESC] = "-",
 };
 
 #ifdef HAVE_LIBNCURSESW
@@ -61,6 +63,8 @@ static const char* const CRT_treeStrUtf8[LAST_TREE_STR] = {
                                      // WITH VERTICAL STROKE' (U+1FBAF, "\xf0\x9f\xae\xaf") when
                                      // Unicode 13 is common
    [TREE_STR_SHUT] = "\xe2\x94\x80", // ─
+   [TREE_STR_ASC]  = "\xe2\x96\xb3", // △
+   [TREE_STR_DESC] = "\xe2\x96\xbd", // ▽
 };
 
 bool CRT_utf8 = false;
