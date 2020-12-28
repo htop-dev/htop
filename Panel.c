@@ -208,7 +208,7 @@ void Panel_splice(Panel* this, Vector* from) {
    this->needsRedraw = true;
 }
 
-void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected) {
+void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar) {
    assert (this != NULL);
 
    int size = Vector_size(this->items);
@@ -216,6 +216,9 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    int y = this->y;
    int x = this->x;
    int h = this->h;
+
+   if (hideFunctionBar)
+      h++;
 
    const int header_attr = focus
                          ? CRT_colors[PANEL_HEADER_FOCUS]
@@ -319,8 +322,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
 
    if (focus && (this->needsRedraw || force_redraw || !this->wasFocus)) {
       if (Panel_drawFunctionBarFn(this))
-         Panel_drawFunctionBar(this);
-      else
+         Panel_drawFunctionBar(this, hideFunctionBar);
+      else if (!hideFunctionBar)
          FunctionBar_draw(this->currentBar);
    }
 
