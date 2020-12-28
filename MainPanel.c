@@ -51,6 +51,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
 
    Htop_Reaction reaction = HTOP_OK;
 
+   /* reset on every normal key */
    if (ch != ERR && ch != KEY_RESIZE)
       this->state->hideProcessSelection = false;
 
@@ -160,8 +161,13 @@ bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Ar
    return ok;
 }
 
-static void MainPanel_drawFunctionBar(Panel* super) {
+static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
    MainPanel* this = (MainPanel*) super;
+
+   // Do not hide active search and filter bar.
+   if (hideFunctionBar && !this->inc->active)
+      return;
+
    IncSet_drawBar(this->inc);
    if (this->state->pauseProcessUpdate) {
       FunctionBar_append("PAUSED", CRT_colors[PAUSED]);

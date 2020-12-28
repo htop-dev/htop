@@ -41,6 +41,10 @@ typedef struct State_ {
    bool hideProcessSelection;
 } State;
 
+static inline bool State_hideFunctionBar(const State* st) {
+   return st->settings->hideFunctionBar == 2 || (st->settings->hideFunctionBar == 1 && st->hideProcessSelection);
+}
+
 typedef Htop_Reaction (*Htop_Action)(State* st);
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess);

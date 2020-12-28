@@ -64,6 +64,7 @@ typedef struct Settings_ {
    bool accountGuestInCPUMeter;
    bool headerMargin;
    bool enableMouse;
+   int hideFunctionBar;  // 0 - off, 1 - on ESC until next input, 2 - permanently
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif

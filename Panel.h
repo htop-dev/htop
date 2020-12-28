@@ -36,7 +36,7 @@ typedef enum HandlerResult_ {
 #define EVENT_HEADER_CLICK_GET_X(ev_) ((ev_) + 10000)
 
 typedef HandlerResult (*Panel_EventHandler)(Panel*, int);
-typedef void (*Panel_DrawFunctionBar)(Panel*);
+typedef void (*Panel_DrawFunctionBar)(Panel*, bool);
 typedef void (*Panel_PrintHeader)(Panel*);
 
 typedef struct PanelClass_ {
@@ -46,13 +46,13 @@ typedef struct PanelClass_ {
    const Panel_PrintHeader printHeader;
 } PanelClass;
 
-#define As_Panel(this_)                 ((const PanelClass*)((this_)->super.klass))
-#define Panel_eventHandlerFn(this_)     As_Panel(this_)->eventHandler
-#define Panel_eventHandler(this_, ev_)  (assert(As_Panel(this_)->eventHandler), As_Panel(this_)->eventHandler((Panel*)(this_), ev_))
-#define Panel_drawFunctionBarFn(this_)  As_Panel(this_)->drawFunctionBar
-#define Panel_drawFunctionBar(this_)    (assert(As_Panel(this_)->drawFunctionBar), As_Panel(this_)->drawFunctionBar((Panel*)(this_)))
-#define Panel_printHeaderFn(this_)      As_Panel(this_)->printHeader
-#define Panel_printHeader(this_)        (assert(As_Panel(this_)->printHeader), As_Panel(this_)->printHeader((Panel*)(this_)))
+#define As_Panel(this_)                        ((const PanelClass*)((this_)->super.klass))
+#define Panel_eventHandlerFn(this_)            As_Panel(this_)->eventHandler
+#define Panel_eventHandler(this_, ev_)         (assert(As_Panel(this_)->eventHandler), As_Panel(this_)->eventHandler((Panel*)(this_), ev_))
+#define Panel_drawFunctionBarFn(this_)         As_Panel(this_)->drawFunctionBar
+#define Panel_drawFunctionBar(this_, hideFB_)  (assert(As_Panel(this_)->drawFunctionBar), As_Panel(this_)->drawFunctionBar((Panel*)(this_), hideFB_))
+#define Panel_printHeaderFn(this_)             As_Panel(this_)->printHeader
+#define Panel_printHeader(this_)               (assert(As_Panel(this_)->printHeader), As_Panel(this_)->printHeader((Panel*)(this_)))
 
 struct Panel_ {
    Object super;
@@ -118,7 +118,7 @@ int Panel_size(Panel* this);
 
 void Panel_setSelected(Panel* this, int selected);
 
-void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected);
+void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar);
 
 void Panel_splice(Panel* this, Vector* from);
 
