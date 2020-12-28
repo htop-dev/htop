@@ -22,6 +22,8 @@ typedef enum TreeStr_ {
    TREE_STR_TEND,
    TREE_STR_OPEN,
    TREE_STR_SHUT,
+   TREE_STR_ASC,
+   TREE_STR_DESC,
    LAST_TREE_STR
 } TreeStr;
 
