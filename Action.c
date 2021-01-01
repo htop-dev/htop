@@ -189,12 +189,6 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
-static Htop_Reaction actionResize(State* st) {
-   clear();
-   Panel_resize(st->panel, COLS, LINES - (st->panel->y) - 1);
-   return HTOP_REDRAW_BAR;
-}
-
 static Htop_Reaction actionSortByPID(State* st) {
    return Action_setSortKey(st->settings, PID);
 }
@@ -682,5 +676,4 @@ void Action_setBindings(Htop_Action* keys) {
    keys[KEY_F(10)] = actionQuit;
    keys[KEY_F(18)] = actionExpandCollapseOrSortColumn;
    keys[KEY_RECLICK] = actionExpandOrCollapse;
-   keys[KEY_RESIZE] = actionResize;
 }
