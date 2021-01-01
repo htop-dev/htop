@@ -162,7 +162,9 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR | HTOP_KEEP_FOLLOWING;
 }
 
-static Htop_Reaction sortBy(State* st) {
+// ----------------------------------------
+
+static Htop_Reaction actionSetSortColumn(State* st) {
    Htop_Reaction reaction = HTOP_OK;
    Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
@@ -186,8 +188,6 @@ static Htop_Reaction sortBy(State* st) {
 
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
-
-// ----------------------------------------
 
 static Htop_Reaction actionResize(State* st) {
    clear();
@@ -269,10 +269,6 @@ static Htop_Reaction actionInvertSortOrder(State* st) {
    if (st->pauseProcessUpdate)
       ProcessList_sort(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
-}
-
-static Htop_Reaction actionSetSortColumn(State* st) {
-   return sortBy(st);
 }
 
 static Htop_Reaction actionExpandOrCollapse(State* st) {
