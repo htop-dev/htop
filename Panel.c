@@ -92,10 +92,6 @@ void Panel_move(Panel* this, int x, int y) {
 void Panel_resize(Panel* this, int w, int h) {
    assert (this != NULL);
 
-   if (RichString_sizeVal(this->header) > 0) {
-      h--;
-   }
-
    this->w = w;
    this->h = h;
    this->needsRedraw = true;
@@ -240,6 +236,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       }
       attrset(CRT_colors[RESET_COLOR]);
       y++;
+      h--;
    }
 
    // ensure scroll area is on screen
@@ -333,13 +330,21 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    move(0, 0);
 }
 
+static int Panel_headerHeight(const Panel* this) {
+   return RichString_sizeVal(this->header) > 0 ? 1 : 0;
+}
+
 bool Panel_onKey(Panel* this, int key) {
    assert (this != NULL);
 
-   int size = Vector_size(this->items);
+   const int size = Vector_size(this->items);
 
-   #define CLAMP_INDEX(var, delta, min, max) \
-      CLAMP((var) + (delta), (min), MAXIMUM(0, (max)))
+   #define PANEL_SCROLL(amount)                                                                                     \
+   do {                                                                                                             \
+      this->selected += (amount);                                                                                   \
+      this->scrollV = CLAMP(this->scrollV + (amount), 0, MAXIMUM(0, (size - this->h - Panel_headerHeight(this))));  \
+      this->needsRedraw = true;                                                                                     \
+   } while (0)
 
    switch (key) {
    case KEY_DOWN:
@@ -373,27 +378,19 @@ bool Panel_onKey(Panel* this, int key) {
       break;
 
    case KEY_PPAGE:
-      this->selected -= (this->h - 1);
-      this->scrollV = CLAMP_INDEX(this->scrollV, -(this->h - 1), 0, size - this->h);
-      this->needsRedraw = true;
+      PANEL_SCROLL(-(this->h - Panel_headerHeight(this)));
       break;
 
    case KEY_NPAGE:
-      this->selected += (this->h - 1);
-      this->scrollV = CLAMP_INDEX(this->scrollV, +(this->h - 1), 0, size - this->h);
-      this->needsRedraw = true;
+      PANEL_SCROLL(+(this->h - Panel_headerHeight(this)));
       break;
 
    case KEY_WHEELUP:
-      this->selected -= CRT_scrollWheelVAmount;
-      this->scrollV = CLAMP_INDEX(this->scrollV, -CRT_scrollWheelVAmount, 0, size - this->h);
-      this->needsRedraw = true;
+      PANEL_SCROLL(-CRT_scrollWheelVAmount);
       break;
 
    case KEY_WHEELDOWN:
-      this->selected += CRT_scrollWheelVAmount;
-      this->scrollV = CLAMP_INDEX(this->scrollV, +CRT_scrollWheelVAmount, 0, size - this->h);
-      this->needsRedraw = true;
+      PANEL_SCROLL(+CRT_scrollWheelVAmount);
       break;
 
    case KEY_HOME:
@@ -418,7 +415,7 @@ bool Panel_onKey(Panel* this, int key) {
       return false;
    }
 
-   #undef CLAMP_INDEX
+   #undef PANEL_SCROLL
 
    // ensure selection within bounds
    if (this->selected < 0 || size == 0) {
