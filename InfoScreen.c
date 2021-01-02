@@ -26,7 +26,7 @@ InfoScreen* InfoScreen_init(InfoScreen* this, const Process* process, FunctionBa
    if (!bar) {
       bar = FunctionBar_new(InfoScreenFunctions, InfoScreenKeys, InfoScreenEvents);
    }
-   this->display = Panel_new(0, 1, COLS, height, false, Class(ListItem), bar);
+   this->display = Panel_new(0, 1, COLS, height, Class(ListItem), false, bar);
    this->inc = IncSet_new(bar);
    this->lines = Vector_new(this->display->items->type, true, DEFAULT_SIZE);
    Panel_setHeader(this->display, panelHeader);

@@ -166,7 +166,7 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
 
 static Htop_Reaction actionSetSortColumn(State* st) {
    Htop_Reaction reaction = HTOP_OK;
-   Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_newEnterEsc("Sort   ", "Cancel "));
+   Panel* sortPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
    ProcessField* fields = st->settings->fields;
    for (int i = 0; fields[i]; i++) {
@@ -336,7 +336,7 @@ static Htop_Reaction actionKill(State* st) {
 }
 
 static Htop_Reaction actionFilterByUser(State* st) {
-   Panel* usersPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_newEnterEsc("Show   ", "Cancel "));
+   Panel* usersPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Show   ", "Cancel "));
    Panel_setHeader(usersPanel, "Show processes of:");
    UsersTable_foreach(st->ut, addUserToVector, usersPanel);
    Vector_insertionSort(usersPanel->items);

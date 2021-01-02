@@ -30,7 +30,7 @@ const PanelClass Panel_class = {
    .eventHandler = Panel_selectByTyping,
 };
 
-Panel* Panel_new(int x, int y, int w, int h, bool owner, const ObjectClass* type, FunctionBar* fuBar) {
+Panel* Panel_new(int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar) {
    Panel* this;
    this = xMalloc(sizeof(Panel));
    Object_setClass(this, Class(Panel));
