@@ -161,7 +161,7 @@ void ProcessList_delete(ProcessList* this) {
 
 static double ticksToNanoseconds(const double ticks) {
    const double nanos_per_sec = 1e9;
-   return ticks / (double) Platform_clockTicksPerSec * Platform_timebaseToNS * nanos_per_sec;
+   return (ticks / Platform_timebaseToNS) * (nanos_per_sec / (double) Platform_clockTicksPerSec);
 }
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
