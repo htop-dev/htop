@@ -51,8 +51,12 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
 
    Htop_Reaction reaction = HTOP_OK;
 
+   /* Let supervising ScreenManager handle resize */
+   if (ch == KEY_RESIZE)
+      return IGNORED;
+
    /* reset on every normal key */
-   if (ch != ERR && ch != KEY_RESIZE)
+   if (ch != ERR)
       this->state->hideProcessSelection = false;
 
    if (EVENT_IS_HEADER_CLICK(ch)) {
