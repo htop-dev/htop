@@ -78,7 +78,7 @@ struct Panel_ {
 
 extern const PanelClass Panel_class;
 
-Panel* Panel_new(int x, int y, int w, int h, bool owner, const ObjectClass* type, FunctionBar* fuBar);
+Panel* Panel_new(int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar);
 
 void Panel_delete(Object* cast);
 

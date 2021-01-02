@@ -17,7 +17,7 @@ in the source distribution for its full text.
 
 
 Panel* IOPriorityPanel_new(IOPriority currPrio) {
-   Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem), FunctionBar_newEnterEsc("Set    ", "Cancel "));
+   Panel* this = Panel_new(1, 1, 1, 1, Class(ListItem), true, FunctionBar_newEnterEsc("Set    ", "Cancel "));
 
    Panel_setHeader(this, "IO Priority:");
    Panel_add(this, (Object*) ListItem_new("None (based on nice)", IOPriority_None));
