@@ -14,18 +14,7 @@ typedef unsigned int ht_key_t;
 
 typedef void(*Hashtable_PairFunction)(ht_key_t key, void* value, void* userdata);
 
-typedef struct HashtableItem_ {
-   ht_key_t key;
-   unsigned int probe;
-   void* value;
-} HashtableItem;
-
-typedef struct Hashtable_ {
-   unsigned int size;
-   HashtableItem* buckets;
-   unsigned int items;
-   bool owner;
-} Hashtable;
+typedef struct Hashtable_ Hashtable;
 
 #ifndef NDEBUG
 
