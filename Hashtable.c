@@ -21,14 +21,14 @@ in the source distribution for its full text.
 
 typedef struct HashtableItem_ {
    ht_key_t key;
-   unsigned int probe;
+   size_t probe;
    void* value;
 } HashtableItem;
 
 struct Hashtable_ {
-   unsigned int size;
+   size_t size;
    HashtableItem* buckets;
-   unsigned int items;
+   size_t items;
    bool owner;
 };
 
@@ -36,15 +36,15 @@ struct Hashtable_ {
 #ifndef NDEBUG
 
 static void Hashtable_dump(const Hashtable* this) {
-   fprintf(stderr, "Hashtable %p: size=%u items=%u owner=%s\n",
+   fprintf(stderr, "Hashtable %p: size=%zu items=%zu owner=%s\n",
            (const void*)this,
            this->size,
            this->items,
            this->owner ? "yes" : "no");
 
-   unsigned int items = 0;
-   for (unsigned int i = 0; i < this->size; i++) {
-      fprintf(stderr, "  item %5u: key = %5u probe = %2u value = %p\n",
+   size_t items = 0;
+   for (size_t i = 0; i < this->size; i++) {
+      fprintf(stderr, "  item %5zu: key = %5u probe = %2zu value = %p\n",
               i,
               this->buckets[i].key,
               this->buckets[i].probe,
@@ -54,15 +54,15 @@ static void Hashtable_dump(const Hashtable* this) {
          items++;
    }
 
-   fprintf(stderr, "Hashtable %p: items=%u counted=%u\n",
+   fprintf(stderr, "Hashtable %p: items=%zu counted=%zu\n",
            (const void*)this,
            this->items,
            items);
 }
 
 static bool Hashtable_isConsistent(const Hashtable* this) {
-   unsigned int items = 0;
-   for (unsigned int i = 0; i < this->size; i++) {
+   size_t items = 0;
+   for (size_t i = 0; i < this->size; i++) {
       if (this->buckets[i].value)
          items++;
    }
@@ -72,9 +72,9 @@ static bool Hashtable_isConsistent(const Hashtable* this) {
    return res;
 }
 
-unsigned int Hashtable_count(const Hashtable* this) {
-   unsigned int items = 0;
-   for (unsigned int i = 0; i < this->size; i++) {
+size_t Hashtable_count(const Hashtable* this) {
+   size_t items = 0;
+   for (size_t i = 0; i < this->size; i++) {
       if (this->buckets[i].value)
          items++;
    }
@@ -94,10 +94,10 @@ static const uint64_t OEISprimes[] = {
    34359738337, 68719476731, 137438953447
 };
 
-static uint64_t nextPrime(unsigned int n) {
+static uint64_t nextPrime(size_t n) {
    assert(n <= OEISprimes[ARRAYSIZE(OEISprimes) - 1]);
 
-   for (unsigned int i = 0; i < ARRAYSIZE(OEISprimes); i++) {
+   for (size_t i = 0; i < ARRAYSIZE(OEISprimes); i++) {
       if (n <= OEISprimes[i])
          return OEISprimes[i];
    }
@@ -105,7 +105,7 @@ static uint64_t nextPrime(unsigned int n) {
    return OEISprimes[ARRAYSIZE(OEISprimes) - 1];
 }
 
-Hashtable* Hashtable_new(unsigned int size, bool owner) {
+Hashtable* Hashtable_new(size_t size, bool owner) {
    Hashtable* this;
 
    this = xMalloc(sizeof(Hashtable));
@@ -129,7 +129,7 @@ void Hashtable_clear(Hashtable* this) {
    assert(Hashtable_isConsistent(this));
 
    if (this->owner)
-      for (unsigned int i = 0; i < this->size; i++)
+      for (size_t i = 0; i < this->size; i++)
          free(this->buckets[i].value);
 
    memset(this->buckets, 0, this->size * sizeof(HashtableItem));
@@ -139,10 +139,10 @@ void Hashtable_clear(Hashtable* this) {
 }
 
 static void insert(Hashtable* this, ht_key_t key, void* value) {
-   unsigned int index = key % this->size;
-   unsigned int probe = 0;
+   size_t index = key % this->size;
+   size_t probe = 0;
 #ifndef NDEBUG
-   unsigned int origIndex = index;
+   size_t origIndex = index;
 #endif
 
    for (;;) {
@@ -181,7 +181,7 @@ static void insert(Hashtable* this, ht_key_t key, void* value) {
    }
 }
 
-void Hashtable_setSize(Hashtable* this, unsigned int size) {
+void Hashtable_setSize(Hashtable* this, size_t size) {
 
    assert(Hashtable_isConsistent(this));
 
@@ -189,14 +189,14 @@ void Hashtable_setSize(Hashtable* this, unsigned int size) {
       return;
 
    HashtableItem* oldBuckets = this->buckets;
-   unsigned int oldSize = this->size;
+   size_t oldSize = this->size;
 
    this->size = nextPrime(size);
    this->buckets = (HashtableItem*) xCalloc(this->size, sizeof(HashtableItem));
    this->items = 0;
 
    /* rehash */
-   for (unsigned int i = 0; i < oldSize; i++) {
+   for (size_t i = 0; i < oldSize; i++) {
       if (!oldBuckets[i].value)
          continue;
 
@@ -226,10 +226,10 @@ void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
 }
 
 void* Hashtable_remove(Hashtable* this, ht_key_t key) {
-   unsigned int index = key % this->size;
-   unsigned int probe = 0;
+   size_t index = key % this->size;
+   size_t probe = 0;
 #ifndef NDEBUG
-   unsigned int origIndex = index;
+   size_t origIndex = index;
 #endif
 
    assert(Hashtable_isConsistent(this));
@@ -244,7 +244,7 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
             res = this->buckets[index].value;
          }
 
-         unsigned int next = (index + 1) % this->size;
+         size_t next = (index + 1) % this->size;
 
          while (this->buckets[next].value && this->buckets[next].probe > 0) {
             this->buckets[index] = this->buckets[next];
@@ -281,11 +281,11 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
 }
 
 void* Hashtable_get(Hashtable* this, ht_key_t key) {
-   unsigned int index = key % this->size;
-   unsigned int probe = 0;
+   size_t index = key % this->size;
+   size_t probe = 0;
    void* res = NULL;
 #ifndef NDEBUG
-   unsigned int origIndex = index;
+   size_t origIndex = index;
 #endif
 
    assert(Hashtable_isConsistent(this));
@@ -310,7 +310,7 @@ void* Hashtable_get(Hashtable* this, ht_key_t key) {
 
 void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData) {
    assert(Hashtable_isConsistent(this));
-   for (unsigned int i = 0; i < this->size; i++) {
+   for (size_t i = 0; i < this->size; i++) {
       HashtableItem* walk = &this->buckets[i];
       if (walk->value)
          f(walk->key, walk->value, userData);

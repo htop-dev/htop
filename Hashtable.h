@@ -8,6 +8,7 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <stddef.h>
 
 
 typedef unsigned int ht_key_t;
@@ -18,17 +19,17 @@ typedef struct Hashtable_ Hashtable;
 
 #ifndef NDEBUG
 
-unsigned int Hashtable_count(const Hashtable* this);
+size_t Hashtable_count(const Hashtable* this);
 
 #endif /* NDEBUG */
 
-Hashtable* Hashtable_new(unsigned int size, bool owner);
+Hashtable* Hashtable_new(size_t size, bool owner);
 
 void Hashtable_delete(Hashtable* this);
 
 void Hashtable_clear(Hashtable* this);
 
-void Hashtable_setSize(Hashtable* this, unsigned int size);
+void Hashtable_setSize(Hashtable* this, size_t size);
 
 void Hashtable_put(Hashtable* this, ht_key_t key, void* value);
 
