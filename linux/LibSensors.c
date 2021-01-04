@@ -86,7 +86,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
    for (const sensors_chip_name *chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
       char buffer[32];
       sym_sensors_snprintf_chip_name(buffer, sizeof(buffer), chip);
-      if (!String_startsWith(buffer, "coretemp") && !String_startsWith(buffer, "cpu_thermal"))
+      if (!String_startsWith(buffer, "coretemp") && !String_startsWith(buffer, "cpu_thermal") && !String_startsWith(buffer, "k10temp") && !String_startsWith(buffer, "zenpower"))
          continue;
 
       int m = 0;
@@ -103,6 +103,8 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
             tempId = 0;
          } else if (String_startsWith(label, "temp")) {
             /* Raspberry Pi has only temp1 */
+            tempId = 0;
+         } else if (String_startsWith(label, "Tdie")) {
             tempId = 0;
          } else if (String_startsWith(label, "Core ")) {
             tempId = 1 + atoi(label + strlen("Core "));
