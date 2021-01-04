@@ -104,7 +104,7 @@ static bool changePriority(MainPanel* panel, int delta) {
    return anyTagged;
 }
 
-static void addUserToVector(hkey_t key, void* userCast, void* panelCast) {
+static void addUserToVector(ht_key_t key, void* userCast, void* panelCast) {
    const char* user = userCast;
    Panel* panel = panelCast;
    Panel_add(panel, (Object*) ListItem_new(user, key));
