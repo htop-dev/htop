@@ -484,7 +484,7 @@ static inline uint64_t fast_strtoull_hex(char **str, int maxlen) {
    return result;
 }
 
-static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED hkey_t key, void* value, void* data) {
+static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void* value, void* data) {
    if (!data)
       return;
 

@@ -124,7 +124,7 @@ void Hashtable_clear(Hashtable* this) {
    assert(Hashtable_isConsistent(this));
 }
 
-static void insert(Hashtable* this, hkey_t key, void* value) {
+static void insert(Hashtable* this, ht_key_t key, void* value) {
    unsigned int index = key % this->size;
    unsigned int probe = 0;
 #ifndef NDEBUG
@@ -194,7 +194,7 @@ void Hashtable_setSize(Hashtable* this, unsigned int size) {
    assert(Hashtable_isConsistent(this));
 }
 
-void Hashtable_put(Hashtable* this, hkey_t key, void* value) {
+void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
 
    assert(Hashtable_isConsistent(this));
    assert(this->size > 0);
@@ -211,7 +211,7 @@ void Hashtable_put(Hashtable* this, hkey_t key, void* value) {
    assert(this->size > this->items);
 }
 
-void* Hashtable_remove(Hashtable* this, hkey_t key) {
+void* Hashtable_remove(Hashtable* this, ht_key_t key) {
    unsigned int index = key % this->size;
    unsigned int probe = 0;
 #ifndef NDEBUG
@@ -266,7 +266,7 @@ void* Hashtable_remove(Hashtable* this, hkey_t key) {
    return res;
 }
 
-void* Hashtable_get(Hashtable* this, hkey_t key) {
+void* Hashtable_get(Hashtable* this, ht_key_t key) {
    unsigned int index = key % this->size;
    unsigned int probe = 0;
    void* res = NULL;

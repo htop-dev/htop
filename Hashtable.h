@@ -10,12 +10,12 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 
-typedef unsigned int hkey_t;
+typedef unsigned int ht_key_t;
 
-typedef void(*Hashtable_PairFunction)(hkey_t key, void* value, void* userdata);
+typedef void(*Hashtable_PairFunction)(ht_key_t key, void* value, void* userdata);
 
 typedef struct HashtableItem_ {
-   hkey_t key;
+   ht_key_t key;
    unsigned int probe;
    void* value;
 } HashtableItem;
@@ -41,11 +41,11 @@ void Hashtable_clear(Hashtable* this);
 
 void Hashtable_setSize(Hashtable* this, unsigned int size);
 
-void Hashtable_put(Hashtable* this, hkey_t key, void* value);
+void Hashtable_put(Hashtable* this, ht_key_t key, void* value);
 
-void* Hashtable_remove(Hashtable* this, hkey_t key);
+void* Hashtable_remove(Hashtable* this, ht_key_t key);
 
-void* Hashtable_get(Hashtable* this, hkey_t key);
+void* Hashtable_get(Hashtable* this, ht_key_t key);
 
 void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData);
 
