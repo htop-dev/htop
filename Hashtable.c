@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 
+#include "CRT.h"
 #include "Macros.h"
 #include "XUtils.h"
 
@@ -95,14 +96,13 @@ static const uint64_t OEISprimes[] = {
 };
 
 static uint64_t nextPrime(size_t n) {
-   assert(n <= OEISprimes[ARRAYSIZE(OEISprimes) - 1]);
-
-   for (size_t i = 0; i < ARRAYSIZE(OEISprimes); i++) {
+   /* on 32-bit make sure we do not return primes not fitting in size_t */
+   for (size_t i = 0; i < ARRAYSIZE(OEISprimes) && OEISprimes[i] < SIZE_MAX; i++) {
       if (n <= OEISprimes[i])
          return OEISprimes[i];
    }
 
-   return OEISprimes[ARRAYSIZE(OEISprimes) - 1];
+   CRT_fatalError("Hashtable: no prime found");
 }
 
 Hashtable* Hashtable_new(size_t size, bool owner) {
@@ -215,8 +215,12 @@ void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
    assert(value);
 
    /* grow on load-factor > 0.7 */
-   if (10 * this->items > 7 * this->size)
+   if (10 * this->items > 7 * this->size) {
+      if (SIZE_MAX / 2 < this->size)
+         CRT_fatalError("Hashtable: size overflow");
+
       Hashtable_setSize(this, 2 * this->size);
+   }
 
    insert(this, key, value);
 
