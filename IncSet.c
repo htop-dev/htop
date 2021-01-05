@@ -29,6 +29,13 @@ void IncSet_reset(IncSet* this, IncType type) {
    IncMode_reset(&this->modes[type]);
 }
 
+void IncSet_setFilter(IncSet* this, const char* filter) {
+   IncMode* mode = &this->modes[INC_FILTER];
+   size_t len = String_safeStrncpy(mode->buffer, filter, sizeof(mode->buffer));
+   mode->index = len;
+   this->filtering = true;
+}
+
 static const char* const searchFunctions[] = {"Next  ", "Prev   ", "Cancel ", " Search: ", NULL};
 static const char* const searchKeys[] = {"F3", "S-F3", "Esc", "  "};
 static const int searchEvents[] = {KEY_F(3), KEY_F(15), 27, ERR};

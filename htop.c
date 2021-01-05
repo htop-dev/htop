@@ -248,13 +248,8 @@ static void setCommFilter(State* state, char** commFilter) {
    MainPanel* panel = (MainPanel*)state->panel;
    ProcessList* pl = state->pl;
    IncSet* inc = panel->inc;
-   size_t maxlen = sizeof(inc->modes[INC_FILTER].buffer) - 1;
-   char* buffer = inc->modes[INC_FILTER].buffer;
 
-   strncpy(buffer, *commFilter, maxlen);
-   buffer[maxlen] = 0;
-   inc->modes[INC_FILTER].index = strlen(buffer);
-   inc->filtering = true;
+   IncSet_setFilter(inc, *commFilter);
    pl->incFilter = IncSet_filter(inc);
 
    free(*commFilter);
