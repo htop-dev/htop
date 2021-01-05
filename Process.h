@@ -66,7 +66,6 @@ typedef struct Process_ {
    pid_t ppid;
    pid_t tgid;
    char* comm;  /* use Process_getCommand() for Command actually displayed */
-   int commLen;
    int indent;
 
    int basenameOffset;
