@@ -1548,6 +1548,33 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
       #undef tryRead
    }
 
+   DIR* hugePagesDir = opendir("/sys/kernel/mm/hugepages");
+   if (hugePagesDir != NULL) {
+      struct dirent *entry;
+
+      while ((entry = readdir(hugePagesDir))) {
+         unsigned long long hugePageSize = 0;
+         unsigned long long hugePageCount = 0;
+
+         if (sscanf(entry->d_name, "hugepages-%llukB", &hugePageSize) != 1) {
+            continue;
+         }
+
+         char pathBuffer[PATH_MAX + 1] = {0};
+         xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/kernel/mm/hugepages/%s/free_hugepages", entry->d_name);
+         FILE* freeHugePagesFile = fopen(pathBuffer, "r");
+         if (freeHugePagesFile == NULL) {
+            CRT_fatalError("Cannot open free_hugepages file");
+         }
+         if (fscanf(freeHugePagesFile, "%llu", &hugePageCount) == 1) {
+            freeMem += hugePageSize * hugePageCount;
+         }
+         fclose(freeHugePagesFile);
+      }
+
+      closedir(hugePagesDir);
+   }
+
    this->usedMem = this->totalMem - freeMem;
    this->cachedMem = this->cachedMem + sreclaimable - shmem;
    this->usedSwap = this->totalSwap - swapFree;
