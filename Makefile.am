@@ -126,6 +126,7 @@ myhtopheaders = \
 # -----
 
 linux_platform_headers = \
+	linux/HugePageMeter.h \
 	linux/IOPriority.h \
 	linux/IOPriorityPanel.h \
 	linux/LibSensors.h \
@@ -145,6 +146,7 @@ linux_platform_headers = \
 if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
 myhtopplatsources = \
+	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \
 	linux/LibSensors.c \
 	linux/LinuxProcess.c \
