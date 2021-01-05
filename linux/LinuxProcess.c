@@ -198,12 +198,11 @@ static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdline
    /* Try to find procComm in tokenized cmdline - this might in rare cases
     * mis-identify a string or fail, if comm or cmdline had been unsuitably
     * modified by the process */
-   const char *token;
    const char *tokenBase;
    size_t tokenLen;
    const size_t commLen = strlen(comm);
 
-   for (token = cmdline + cmdlineBasenameOffset; *token; ) {
+   for (const char *token = cmdline + cmdlineBasenameOffset; *token; ) {
       for (tokenBase = token; *token && *token != '\n'; ++token) {
          if (*token == '/') {
             tokenBase = token + 1;

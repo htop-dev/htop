@@ -187,8 +187,8 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
    const char* comm = this->comm;
 
    if (this->settings->highlightBaseName || !this->settings->showProgramPath) {
-      int i, basename = 0;
-      for (i = 0; i < this->basenameOffset; i++) {
+      int basename = 0;
+      for (int i = 0; i < this->basenameOffset; i++) {
          if (comm[i] == '/') {
             basename = i + 1;
          } else if (comm[i] == ':') {
