@@ -69,6 +69,7 @@ ATTR_FORMAT(printf, 3, 4)
 int xSnprintf(char* buf, size_t len, const char* fmt, ...);
 
 char* xStrdup(const char* str) ATTR_NONNULL;
+void free_and_xStrdup(char** ptr, const char* str);
 
 char* xStrndup(const char* str, size_t len) ATTR_NONNULL;
 

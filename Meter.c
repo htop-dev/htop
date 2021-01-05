@@ -93,8 +93,7 @@ void Meter_delete(Object* cast) {
 }
 
 void Meter_setCaption(Meter* this, const char* caption) {
-   free(this->caption);
-   this->caption = xStrdup(caption);
+   free_and_xStrdup(&this->caption, caption);
 }
 
 static inline void Meter_displayBuffer(const Meter* this, const char* buffer, RichString* out) {

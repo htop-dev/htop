@@ -213,8 +213,7 @@ static void updateViaExec(void) {
          if (newline) {
             *newline = '\0';
          }
-         free(systemState);
-         systemState = xStrdup(lineBuffer + strlen("SystemState="));
+         free_and_xStrdup(&systemState, lineBuffer + strlen("SystemState="));
       } else if (String_startsWith(lineBuffer, "NFailedUnits=")) {
          nFailedUnits = strtoul(lineBuffer + strlen("NFailedUnits="), NULL, 10);
       } else if (String_startsWith(lineBuffer, "NNames=")) {

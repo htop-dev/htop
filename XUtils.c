@@ -239,6 +239,14 @@ char* xStrdup(const char* str) {
    return data;
 }
 
+void free_and_xStrdup(char** ptr, const char* str) {
+   if (*ptr && String_eq(*ptr, str))
+      return;
+
+   free(*ptr);
+   *ptr = xStrdup(str);
+}
+
 char* xStrndup(const char* str, size_t len) {
    char* data = strndup(str, len);
    if (!data) {
