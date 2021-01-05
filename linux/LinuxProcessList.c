@@ -718,10 +718,8 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
       switch(field) {
       case 1:
          foundEnvID = true;
-         if (!String_eq(name_value_sep, process->ctid ? process->ctid : "")) {
-            free(process->ctid);
-            process->ctid = xStrdup(name_value_sep);
-         }
+         if (!String_eq(name_value_sep, process->ctid ? process->ctid : ""))
+            free_and_xStrdup(&process->ctid, name_value_sep);
          break;
       case 2:
          foundVPid = true;
@@ -779,8 +777,7 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
       left -= wrote;
    }
    fclose(file);
-   free(process->cgroup);
-   process->cgroup = xStrdup(output);
+   free_and_xStrdup(&process->cgroup, output);
 }
 
 #ifdef HAVE_VSERVER
@@ -881,8 +878,7 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t
    if (process->secattr && String_eq(process->secattr, buffer)) {
       return;
    }
-   free(process->secattr);
-   process->secattr = xStrdup(buffer);
+   free_and_xStrdup(&process->secattr, buffer);
 }
 
 static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd) {
@@ -907,8 +903,7 @@ static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd)
    if (process->cwd && String_eq(process->cwd, pathBuffer))
       return;
 
-   free(process->cwd);
-   process->cwd = xStrdup(pathBuffer);
+   free_and_xStrdup(&process->cwd, pathBuffer);
 }
 
 #ifdef HAVE_DELAYACCT
@@ -1142,8 +1137,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       command[amtRead - 1] = '\0';
       lp->mergedCommand.maxLen += amtRead - 1;  /* accommodate comm */
       if (!lp->procComm || !String_eq(command, lp->procComm)) {
-         free(lp->procComm);
-         lp->procComm = xStrdup(command);
+         free_and_xStrdup(&lp->procComm, command);
          lp->mergedCommand.commChanged = true;
       }
    } else if (lp->procComm) {
@@ -1166,8 +1160,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       filename[amtRead] = 0;
       lp->mergedCommand.maxLen += amtRead;  /* accommodate exe */
       if (!lp->procExe || !String_eq(filename, lp->procExe)) {
-         free(lp->procExe);
-         lp->procExe = xStrdup(filename);
+         free_and_xStrdup(&lp->procExe, filename);
          lp->procExeLen = amtRead;
          /* exe is guaranteed to contain at least one /, but validate anyway */
          while (amtRead && filename[--amtRead] != '/')
