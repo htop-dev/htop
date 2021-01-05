@@ -59,6 +59,9 @@ char* String_getToken(const char* line, unsigned short int numMatch);
 
 char* String_readLine(FILE* fd);
 
+/* Always null-terminates dest. Caller must pass a strictly positive size. */
+size_t String_safeStrncpy(char *restrict dest, const char *restrict src, size_t size);
+
 ATTR_FORMAT(printf, 2, 3)
 int xAsprintf(char** strp, const char* fmt, ...);
 
