@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
 #include "HostnameMeter.h"
+#include "HugePageMeter.h"
 #include "IOPriority.h"
 #include "IOPriorityPanel.h"
 #include "LinuxProcess.h"
@@ -161,6 +162,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &LoadMeter_class,
    &MemoryMeter_class,
    &SwapMeter_class,
+   &HugePageMeter_class,
    &TasksMeter_class,
    &UptimeMeter_class,
    &BatteryMeter_class,
@@ -284,8 +286,8 @@ void Platform_setMemoryValues(Meter* this) {
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
-   usedMem -= buffersMem + cachedMem;
-   this->total = pl->totalMem;
+   usedMem -= buffersMem + cachedMem + lpl->totalHugePageMem;
+   this->total = pl->totalMem - lpl->totalHugePageMem;
    this->values[0] = usedMem;
    this->values[1] = buffersMem;
    this->values[2] = cachedMem;

@@ -1531,6 +1531,57 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    fclose(file);
 }
 
+static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
+   this->totalHugePageMem = 0;
+   this->freeHugePageMem = 0;
+
+   DIR* dir = opendir("/sys/kernel/mm/hugepages");
+   if (!dir)
+      return;
+
+   const struct dirent* entry;
+   while ((entry = readdir(dir)) != NULL) {
+      const char* name = entry->d_name;
+
+      /* Ignore all non-directories */
+      if (entry->d_type != DT_DIR && entry->d_type != DT_UNKNOWN)
+         continue;
+
+      if (!String_startsWith(name, "hugepages-"))
+         continue;
+
+      char* endptr;
+      unsigned long int hugePageSize = strtoul(name + strlen("hugepages-"), &endptr, 10);
+      if (!endptr || *endptr != 'k')
+         continue;
+
+      char content[64];
+      char hugePagePath[128];
+      ssize_t r;
+
+      xSnprintf(hugePagePath, sizeof(hugePagePath), "/sys/kernel/mm/hugepages/%s/nr_hugepages", name);
+      r = xReadfile(hugePagePath, content, sizeof(content));
+      if (r <= 0)
+         continue;
+
+      unsigned long long int total = strtoull(content, NULL, 10);
+      if (total == 0)
+         continue;
+
+      xSnprintf(hugePagePath, sizeof(hugePagePath), "/sys/kernel/mm/hugepages/%s/free_hugepages", name);
+      r = xReadfile(hugePagePath, content, sizeof(content));
+      if (r <= 0)
+         continue;
+
+      unsigned long long int free = strtoull(content, NULL, 10);
+
+      this->totalHugePageMem += total * hugePageSize;
+      this->freeHugePageMem += free * hugePageSize;
+   }
+
+   closedir(dir);
+}
+
 static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
    unsigned long long int totalZram = 0;
    unsigned long long int usedZramComp = 0;
@@ -1854,6 +1905,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    const Settings* settings = super->settings;
 
    LinuxProcessList_scanMemoryInfo(super);
+   LinuxProcessList_scanHugePages(this);
    LinuxProcessList_scanZfsArcstats(this);
    LinuxProcessList_updateCPUcount(this);
    LinuxProcessList_scanZramInfo(this);
