@@ -1455,7 +1455,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          proc->basenameOffset = -1;
          setCommand(proc, command, commLen);
       } else if (Process_isThread(proc)) {
-         if (settings->showThreadNames || Process_isKernelThread(proc) || (proc->state == 'Z' && proc->basenameOffset == 0)) {
+         if (settings->showThreadNames || Process_isKernelThread(proc)) {
             proc->basenameOffset = -1;
             setCommand(proc, command, commLen);
          } else if (settings->showThreadNames) {
