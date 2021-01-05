@@ -32,7 +32,7 @@ void MainPanel_pidSearch(MainPanel* this, int ch) {
    Panel* super = (Panel*) this;
    pid_t pid = ch - 48 + this->pidSearch;
    for (int i = 0; i < Panel_size(super); i++) {
-      Process* p = (Process*) Panel_get(super, i);
+      const Process* p = (const Process*) Panel_get(super, i);
       if (p && p->pid == pid) {
          Panel_setSelected(super, i);
          break;
@@ -134,7 +134,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
 }
 
 int MainPanel_selectedPid(MainPanel* this) {
-   Process* p = (Process*) Panel_getSelected((Panel*)this);
+   const Process* p = (const Process*) Panel_getSelected((Panel*)this);
    if (p) {
       return p->pid;
    }

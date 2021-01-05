@@ -93,7 +93,7 @@ static const char* alignedProcessFieldTitle(ProcessField field) {
    return titleBuffer;
 }
 
-void ProcessList_printHeader(ProcessList* this, RichString* header) {
+void ProcessList_printHeader(const ProcessList* this, RichString* header) {
    RichString_prune(header);
 
    const Settings* settings = this->settings;
@@ -141,11 +141,11 @@ void ProcessList_add(ProcessList* this, Process* p) {
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
-void ProcessList_remove(ProcessList* this, Process* p) {
+void ProcessList_remove(ProcessList* this, const Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
 
-   Process* pp = Hashtable_remove(this->processTable, p->pid);
+   const Process* pp = Hashtable_remove(this->processTable, p->pid);
    assert(pp == p); (void)pp;
 
    unsigned int pid = p->pid;
@@ -164,7 +164,7 @@ Process* ProcessList_get(ProcessList* this, int idx) {
    return (Process*)Vector_get(this->processes, idx);
 }
 
-int ProcessList_size(ProcessList* this) {
+int ProcessList_size(const ProcessList* this) {
    return Vector_size(this->processes);
 }
 

@@ -85,15 +85,15 @@ void ProcessList_done(ProcessList* this);
 
 void ProcessList_setPanel(ProcessList* this, Panel* panel);
 
-void ProcessList_printHeader(ProcessList* this, RichString* header);
+void ProcessList_printHeader(const ProcessList* this, RichString* header);
 
 void ProcessList_add(ProcessList* this, Process* p);
 
-void ProcessList_remove(ProcessList* this, Process* p);
+void ProcessList_remove(ProcessList* this, const Process* p);
 
 Process* ProcessList_get(ProcessList* this, int idx);
 
-int ProcessList_size(ProcessList* this);
+int ProcessList_size(const ProcessList* this);
 
 void ProcessList_sort(ProcessList* this);
 

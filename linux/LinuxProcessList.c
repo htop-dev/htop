@@ -107,7 +107,7 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
    while (*at != '\0') {
       at = strchr(at, ' ');    // skip first token
       while (*at == ' ') at++; // skip spaces
-      char* token = at;        // mark beginning of path
+      const char* token = at;  // mark beginning of path
       at = strchr(at, ' ');    // find end of path
       *at = '\0'; at++;        // clear and skip
       ttyDrivers[numDrivers].path = xStrdup(token); // save
@@ -394,7 +394,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
    unsigned long long last_read = process->io_read_bytes;
    unsigned long long last_write = process->io_write_bytes;
    char* buf = buffer;
-   char* line = NULL;
+   const char* line;
    while ((line = strsep(&buf, "\n")) != NULL) {
       switch (line[0]) {
       case 'r':
@@ -486,7 +486,7 @@ static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void* 
    if (!value)
       return;
 
-   LibraryData* v = (LibraryData *)value;
+   const LibraryData* v = (const LibraryData *)value;
    uint64_t* d = (uint64_t *)data;
    if (!v->exec)
       return;
@@ -755,7 +755,7 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
    int left = PROC_LINE_LENGTH;
    while (!feof(file) && left > 0) {
       char buffer[PROC_LINE_LENGTH + 1];
-      char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
+      const char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
       if (!ok)
          break;
 
@@ -859,7 +859,7 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t
    }
 
    char buffer[PROC_LINE_LENGTH + 1];
-   char* res = fgets(buffer, sizeof(buffer), file);
+   const char* res = fgets(buffer, sizeof(buffer), file);
    fclose(file);
    if (!res) {
       free(process->secattr);
@@ -906,7 +906,7 @@ static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd)
 static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
    struct nlmsghdr* nlhdr;
    struct nlattr* nlattrs[TASKSTATS_TYPE_MAX + 1];
-   struct nlattr* nlattr;
+   const struct nlattr* nlattr;
    struct taskstats stats;
    int rem;
    LinuxProcess* lp = (LinuxProcess*) linuxProcess;
@@ -1663,7 +1663,7 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       // Depending on your kernel version,
       // 5, 7, 8 or 9 of these fields will be set.
       // The rest will remain at zero.
-      char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
+      const char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
       if (!ok) {
          buffer[0] = '\0';
       }

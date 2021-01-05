@@ -172,13 +172,13 @@ void Panel_moveSelectedDown(Panel* this) {
    }
 }
 
-int Panel_getSelectedIndex(Panel* this) {
+int Panel_getSelectedIndex(const Panel* this) {
    assert (this != NULL);
 
    return this->selected;
 }
 
-int Panel_size(Panel* this) {
+int Panel_size(const Panel* this) {
    assert (this != NULL);
 
    return Vector_size(this->items);
@@ -269,7 +269,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    if (this->needsRedraw || force_redraw) {
       int line = 0;
       for (int i = first; line < h && i < upTo; i++) {
-         Object* itemObj = Vector_get(this->items, i);
+         const Object* itemObj = Vector_get(this->items, i);
          RichString_begin(item);
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
@@ -296,11 +296,11 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       }
 
    } else {
-      Object* oldObj = Vector_get(this->items, this->oldSelected);
+      const Object* oldObj = Vector_get(this->items, this->oldSelected);
       RichString_begin(old);
       Object_display(oldObj, &old);
       int oldLen = RichString_sizeVal(old);
-      Object* newObj = Vector_get(this->items, this->selected);
+      const Object* newObj = Vector_get(this->items, this->selected);
       RichString_begin(new);
       Object_display(newObj, &new);
       int newLen = RichString_sizeVal(new);

@@ -29,14 +29,14 @@ void Settings_delete(Settings* this) {
    free(this);
 }
 
-static void Settings_readMeters(Settings* this, char* line, int column) {
+static void Settings_readMeters(Settings* this, const char* line, int column) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
    this->columns[column].names = ids;
 }
 
-static void Settings_readMeterModes(Settings* this, char* line, int column) {
+static void Settings_readMeterModes(Settings* this, const char* line, int column) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
@@ -237,7 +237,7 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
    return didReadFields;
 }
 
-static void writeFields(FILE* fd, ProcessField* fields, const char* name) {
+static void writeFields(FILE* fd, const ProcessField* fields, const char* name) {
    fprintf(fd, "%s=", name);
    const char* sep = "";
    for (int i = 0; fields[i]; i++) {
@@ -370,7 +370,7 @@ Settings* Settings_new(int initialCpuCount) {
    }
 
    char* legacyDotfile = NULL;
-   char* rcfile = getenv("HTOPRC");
+   const char* rcfile = getenv("HTOPRC");
    if (rcfile) {
       this->filename = xStrdup(rcfile);
    } else {

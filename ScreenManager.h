@@ -34,7 +34,7 @@ ScreenManager* ScreenManager_new(Header* header, const Settings* settings, const
 
 void ScreenManager_delete(ScreenManager* this);
 
-int ScreenManager_size(ScreenManager* this);
+int ScreenManager_size(const ScreenManager* this);
 
 void ScreenManager_add(ScreenManager* this, Panel* item, int size);
 

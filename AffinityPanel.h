@@ -13,7 +13,7 @@ in the source distribution for its full text.
 
 extern const PanelClass AffinityPanel_class;
 
-Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity, int* width);
+Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width);
 
 Affinity* AffinityPanel_getAffinity(Panel* super, ProcessList* pl);
 

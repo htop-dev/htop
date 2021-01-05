@@ -31,15 +31,15 @@ void Header_populateFromSettings(Header* this);
 
 void Header_writeBackToSettings(const Header* this);
 
-MeterModeId Header_addMeterByName(Header* this, char* name, int column);
+MeterModeId Header_addMeterByName(Header* this, const char* name, int column);
 
 void Header_setMode(Header* this, int i, MeterModeId mode, int column);
 
 Meter* Header_addMeterByClass(Header* this, const MeterClass* type, int param, int column);
 
-int Header_size(Header* this, int column);
+int Header_size(const Header* this, int column);
 
-MeterModeId Header_readMeterMode(Header* this, int i, int column);
+MeterModeId Header_readMeterMode(const Header* this, int i, int column);
 
 void Header_reinit(Header* this);
 
