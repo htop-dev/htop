@@ -1435,11 +1435,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          if (settings->showThreadNames || Process_isKernelThread(proc)) {
             proc->basenameOffset = -1;
             free_and_xStrdup(&proc->comm, command);
-         } else if (settings->showThreadNames) {
-            if (! LinuxProcessList_readCmdlineFile(proc, procFd)) {
-               goto errorReadingProcess;
-            }
          }
+
          if (Process_isKernelThread(proc)) {
             pl->kernelThreads++;
          } else {
