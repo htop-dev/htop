@@ -133,7 +133,7 @@ void Meter_setCaption(Meter* this, const char* caption);
 
 void Meter_setMode(Meter* this, int modeIndex);
 
-ListItem* Meter_toListItem(Meter* this, bool moving);
+ListItem* Meter_toListItem(const Meter* this, bool moving);
 
 extern const MeterMode* const Meter_modes[];
 

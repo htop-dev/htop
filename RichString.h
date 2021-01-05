@@ -44,7 +44,7 @@ typedef struct RichString_ {
 
 void RichString_setAttrn(RichString* this, int attrs, int start, int charcount);
 
-int RichString_findChar(RichString* this, char c, int start);
+int RichString_findChar(const RichString* this, char c, int start);
 
 void RichString_prune(RichString* this);
 

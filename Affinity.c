@@ -52,7 +52,7 @@ void Affinity_add(Affinity* this, int id) {
 
 #ifdef HAVE_LIBHWLOC
 
-Affinity* Affinity_get(Process* proc, ProcessList* pl) {
+Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
    bool ok = (hwloc_get_proc_cpubind(pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
    Affinity* affinity = NULL;
@@ -86,7 +86,7 @@ bool Affinity_set(Process* proc, Arg arg) {
 
 #elif defined(HAVE_LINUX_AFFINITY)
 
-Affinity* Affinity_get(Process* proc, ProcessList* pl) {
+Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
    cpu_set_t cpuset;
    bool ok = (sched_getaffinity(proc->pid, sizeof(cpu_set_t), &cpuset) == 0);
    if (!ok)

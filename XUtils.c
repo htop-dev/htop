@@ -173,7 +173,7 @@ char* String_readLine(FILE* fd) {
    char* buffer = xMalloc(step + 1);
    char* at = buffer;
    for (;;) {
-      char* ok = fgets(at, step + 1, fd);
+      const char* ok = fgets(at, step + 1, fd);
       if (!ok) {
          free(buffer);
          return NULL;

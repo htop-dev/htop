@@ -131,13 +131,13 @@ void Platform_done(void) {
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    Panel* panel = st->panel;
 
-   LinuxProcess* p = (LinuxProcess*) Panel_getSelected(panel);
+   const LinuxProcess* p = (const LinuxProcess*) Panel_getSelected(panel);
    if (!p)
       return HTOP_OK;
 
    IOPriority ioprio1 = p->ioPriority;
    Panel* ioprioPanel = IOPriorityPanel_new(ioprio1);
-   void* set = Action_pickFromVector(st, ioprioPanel, 21, true);
+   const void* set = Action_pickFromVector(st, ioprioPanel, 21, true);
    if (set) {
       IOPriority ioprio2 = IOPriorityPanel_getIOPriority(ioprioPanel);
       bool ok = MainPanel_foreachProcess((MainPanel*)panel, LinuxProcess_setIOPriority, (Arg) { .i = ioprio2 }, NULL);
@@ -366,7 +366,7 @@ char* Platform_getProcessEnv(pid_t pid) {
  */
 char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
    struct stat sb;
-   struct dirent *de;
+   const struct dirent *de;
    DIR *dirp;
    ssize_t len;
    int fd;
@@ -596,11 +596,11 @@ static unsigned long int parseBatInfo(const char* fileName, const unsigned short
    memset(batteries, 0, MAX_BATTERIES * sizeof(char*));
 
    while (nBatteries < MAX_BATTERIES) {
-      struct dirent* dirEntry = readdir(batteryDir);
+      const struct dirent* dirEntry = readdir(batteryDir);
       if (!dirEntry)
          break;
 
-      char* entryName = dirEntry->d_name;
+      const char* entryName = dirEntry->d_name;
       if (!String_startsWith(entryName, "BAT"))
          continue;
 
@@ -653,7 +653,7 @@ static ACPresence procAcpiCheck(void) {
       return AC_ERROR;
 
    for (;;) {
-      struct dirent* dirEntry = readdir(dir);
+      const struct dirent* dirEntry = readdir(dir);
       if (!dirEntry)
          break;
 
@@ -728,7 +728,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
    unsigned long int totalRemain = 0;
 
    for (;;) {
-      struct dirent* dirEntry = readdir(dir);
+      const struct dirent* dirEntry = readdir(dir);
       if (!dirEntry)
          break;
 

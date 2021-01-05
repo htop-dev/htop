@@ -40,7 +40,7 @@ void Affinity_add(Affinity* this, int id);
 
 #if defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY)
 
-Affinity* Affinity_get(Process* proc, ProcessList* pl);
+Affinity* Affinity_get(const Process* proc, ProcessList* pl);
 
 bool Affinity_set(Process* proc, Arg arg);
 

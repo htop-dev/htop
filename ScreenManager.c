@@ -42,14 +42,14 @@ void ScreenManager_delete(ScreenManager* this) {
    free(this);
 }
 
-inline int ScreenManager_size(ScreenManager* this) {
+inline int ScreenManager_size(const ScreenManager* this) {
    return this->panelCount;
 }
 
 void ScreenManager_add(ScreenManager* this, Panel* item, int size) {
    int lastX = 0;
    if (this->panelCount > 0) {
-      Panel* last = (Panel*) Vector_get(this->panels, this->panelCount - 1);
+      const Panel* last = (const Panel*) Vector_get(this->panels, this->panelCount - 1);
       lastX = last->x + last->w + 1;
    }
    int height = LINES - this->y1 + this->y2;
@@ -181,7 +181,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                            if (panel == panelFocus || this->allowFocusChange) {
                               focus = i;
                               panelFocus = panel;
-                              Object* oldSelection = Panel_getSelected(panel);
+                              const Object* oldSelection = Panel_getSelected(panel);
                               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
                               if (Panel_getSelected(panel) == oldSelection) {
                                  ch = KEY_RECLICK;

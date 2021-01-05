@@ -112,9 +112,9 @@ void Panel_moveSelectedUp(Panel* this);
 
 void Panel_moveSelectedDown(Panel* this);
 
-int Panel_getSelectedIndex(Panel* this);
+int Panel_getSelectedIndex(const Panel* this);
 
-int Panel_size(Panel* this);
+int Panel_size(const Panel* this);
 
 void Panel_setSelected(Panel* this, int selected);
 

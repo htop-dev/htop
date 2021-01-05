@@ -357,7 +357,7 @@ static const char* const AffinityPanelFunctions[] = {
 static const char* const AffinityPanelKeys[] = {"Enter", "Esc", "F1", "F2", "F3"};
 static const int AffinityPanelEvents[] = {13, 27, KEY_F(1), KEY_F(2), KEY_F(3)};
 
-Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity, int* width) {
+Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width) {
    AffinityPanel* this = AllocThis(AffinityPanel);
    Panel* super = (Panel*) this;
    Panel_init(super, 1, 1, 1, 1, Class(MaskItem), false, FunctionBar_new(AffinityPanelFunctions, AffinityPanelKeys, AffinityPanelEvents));
@@ -418,7 +418,7 @@ Panel* AffinityPanel_new(ProcessList* pl, Affinity* affinity, int* width) {
 }
 
 Affinity* AffinityPanel_getAffinity(Panel* super, ProcessList* pl) {
-   AffinityPanel* this = (AffinityPanel*) super;
+   const AffinityPanel* this = (AffinityPanel*) super;
    Affinity* affinity = Affinity_new(pl);
 
    #ifdef HAVE_LIBHWLOC
@@ -428,7 +428,7 @@ Affinity* AffinityPanel_getAffinity(Panel* super, ProcessList* pl) {
    hwloc_bitmap_foreach_end();
    #else
    for (int i = 0; i < this->pl->cpuCount; i++) {
-      MaskItem* item = (MaskItem*)Vector_get(this->cpuids, i);
+      const MaskItem* item = (const MaskItem*)Vector_get(this->cpuids, i);
       if (item->value) {
          Affinity_add(affinity, item->cpu);
       }

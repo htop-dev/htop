@@ -43,10 +43,9 @@ in the source distribution for its full text.
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    Panel* panel = st->panel;
    Header* header = st->header;
-   Settings* settings = st->settings;
 
    int y = panel->y;
-   ScreenManager* scr = ScreenManager_new(header, settings, st, false);
+   ScreenManager* scr = ScreenManager_new(header, st->settings, st, false);
    scr->allowFocusChange = false;
    ScreenManager_add(scr, list, x - 1);
    ScreenManager_add(scr, panel, -1);
@@ -67,7 +66,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    Panel_resize(panel, COLS, LINES - y - 1);
    if (panelFocus == list && ch == 13) {
       if (followProcess) {
-         Process* selected = (Process*)Panel_getSelected(panel);
+         const Process* selected = (const Process*)Panel_getSelected(panel);
          if (selected && selected->pid == pid)
             return Panel_getSelected(list);
 
@@ -141,7 +140,7 @@ static bool expandCollapse(Panel* panel) {
 }
 
 static bool collapseIntoParent(Panel* panel) {
-   Process* p = (Process*) Panel_getSelected(panel);
+   const Process* p = (Process*) Panel_getSelected(panel);
    if (!p)
       return false;
 
@@ -168,7 +167,7 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    Htop_Reaction reaction = HTOP_OK;
    Panel* sortPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
-   ProcessField* fields = st->settings->fields;
+   const ProcessField* fields = st->settings->fields;
    for (int i = 0; fields[i]; i++) {
       char* name = String_trim(Process_fields[fields[i]].name);
       Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
@@ -177,7 +176,7 @@ static Htop_Reaction actionSetSortColumn(State* st) {
 
       free(name);
    }
-   ListItem* field = (ListItem*) Action_pickFromVector(st, sortPanel, 15, false);
+   const ListItem* field = (const ListItem*) Action_pickFromVector(st, sortPanel, 15, false);
    if (field) {
       reaction |= Action_setSortKey(st->settings, field->key);
    }
@@ -293,7 +292,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))
    Panel* panel = st->panel;
 
-   Process* p = (Process*) Panel_getSelected(panel);
+   const Process* p = (const Process*) Panel_getSelected(panel);
    if (!p)
       return HTOP_OK;
 
@@ -306,7 +305,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    width += 1; /* we add a gap between the panels */
    Affinity_delete(affinity1);
 
-   void* set = Action_pickFromVector(st, affinityPanel, width, true);
+   const void* set = Action_pickFromVector(st, affinityPanel, width, true);
    if (set) {
       Affinity* affinity2 = AffinityPanel_getAffinity(affinityPanel, st->pl);
       bool ok = MainPanel_foreachProcess((MainPanel*)panel, Affinity_set, (Arg) { .v = affinity2 }, NULL);
@@ -321,7 +320,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
 
 static Htop_Reaction actionKill(State* st) {
    Panel* signalsPanel = SignalsPanel_new();
-   ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15, true);
+   const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15, true);
    if (sgn) {
       if (sgn->key != 0) {
          Panel_setHeader(st->panel, "Sending...");
@@ -342,7 +341,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
    Vector_insertionSort(usersPanel->items);
    ListItem* allUsers = ListItem_new("All users", -1);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
-   ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20, false);
+   const ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20, false);
    if (picked) {
       if (picked == allUsers) {
          st->pl->userId = (uid_t)-1;
@@ -370,7 +369,7 @@ static Htop_Reaction actionSetup(State* st) {
 }
 
 static Htop_Reaction actionLsof(State* st) {
-   Process* p = (Process*) Panel_getSelected(st->panel);
+   const Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p)
       return HTOP_OK;
 
@@ -383,7 +382,7 @@ static Htop_Reaction actionLsof(State* st) {
 }
 
 static Htop_Reaction actionShowLocks(State* st) {
-   Process* p = (Process*) Panel_getSelected(st->panel);
+   const Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
    ProcessLocksScreen* pls = ProcessLocksScreen_new(p);
    InfoScreen_run((InfoScreen*)pls);
@@ -394,7 +393,7 @@ static Htop_Reaction actionShowLocks(State* st) {
 }
 
 static Htop_Reaction actionStrace(State* st) {
-   Process* p = (Process*) Panel_getSelected(st->panel);
+   const Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p)
       return HTOP_OK;
 
@@ -483,8 +482,6 @@ static inline void addattrstr( int attr, const char* str) {
 }
 
 static Htop_Reaction actionHelp(State* st) {
-   Settings* settings = st->settings;
-
    clear();
    attrset(CRT_colors[HELP_BOLD]);
 
@@ -501,7 +498,7 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddstr(line++, 0, "CPU usage bar: ");
 
    addattrstr(CRT_colors[BAR_BORDER], "[");
-   if (settings->detailedCPUTime) {
+   if (st->settings->detailedCPUTime) {
       addattrstr(CRT_colors[CPU_NICE_TEXT], "low"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
       addattrstr(CRT_colors[CPU_SYSTEM], "kernel"); addstr("/");

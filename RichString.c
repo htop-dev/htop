@@ -80,9 +80,9 @@ inline void RichString_setAttrn(RichString* this, int attrs, int start, int char
    }
 }
 
-int RichString_findChar(RichString* this, char c, int start) {
-   wchar_t wc = btowc(c);
-   cchar_t* ch = this->chptr + start;
+int RichString_findChar(const RichString* this, char c, int start) {
+   const wchar_t wc = btowc(c);
+   const cchar_t* ch = this->chptr + start;
    for (int i = start; i < this->chlen; i++) {
       if (ch->chars[0] == wc)
          return i;
@@ -115,8 +115,8 @@ void RichString_setAttrn(RichString* this, int attrs, int start, int charcount) 
    }
 }
 
-int RichString_findChar(RichString* this, char c, int start) {
-   chtype* ch = this->chptr + start;
+int RichString_findChar(const RichString* this, char c, int start) {
+   const chtype* ch = this->chptr + start;
    for (int i = start; i < this->chlen; i++) {
       if ((*ch & 0xff) == (chtype) c)
          return i;

@@ -131,7 +131,7 @@ void Meter_setMode(Meter* this, int modeIndex) {
    this->mode = modeIndex;
 }
 
-ListItem* Meter_toListItem(Meter* this, bool moving) {
+ListItem* Meter_toListItem(const Meter* this, bool moving) {
    char mode[20];
    if (this->mode) {
       xSnprintf(mode, sizeof(mode), " [%s]", Meter_modes[this->mode]->uiName);

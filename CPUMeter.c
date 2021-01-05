@@ -167,8 +167,8 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
    #endif
 }
 
-static void AllCPUsMeter_getRange(Meter* this, int* start, int* count) {
-   CPUMeterData* data = this->meterData;
+static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
+   const CPUMeterData* data = this->meterData;
    int cpus = data->cpus;
    switch(Meter_name(this)[0]) {
       default:
