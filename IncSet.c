@@ -159,7 +159,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
             }
          }
       }
-   } else if ((ch == KEY_BACKSPACE || ch == 127)) {
+   } else if (ch == KEY_BACKSPACE || ch == 127) {
       if (mode->index > 0) {
          mode->index--;
          mode->buffer[mode->index] = 0;
