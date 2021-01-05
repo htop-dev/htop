@@ -44,6 +44,11 @@ void MainPanel_pidSearch(MainPanel* this, int ch) {
    }
 }
 
+static const char* MainPanel_getValue(Panel* this, int i) {
+   const Process* p = (const Process*) Panel_get(this, i);
+   return Process_getCommand(p);
+}
+
 static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    MainPanel* this = (MainPanel*) super;
 
@@ -77,7 +82,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS;
       result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
-      bool filterChanged = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
+      bool filterChanged = IncSet_handleKey(this->inc, ch, super, MainPanel_getValue, NULL);
       if (filterChanged) {
          this->state->pl->incFilter = IncSet_filter(this->inc);
          reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
@@ -134,11 +139,6 @@ int MainPanel_selectedPid(MainPanel* this) {
       return p->pid;
    }
    return -1;
-}
-
-const char* MainPanel_getValue(MainPanel* this, int i) {
-   Process* p = (Process*) Panel_get((Panel*)this, i);
-   return Process_getCommand(p);
 }
 
 bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Arg arg, bool* wasAnyTagged) {
