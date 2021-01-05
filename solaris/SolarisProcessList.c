@@ -351,7 +351,6 @@ int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* 
       sproc->zname          = SolarisProcessList_readZoneName(spl->kd, sproc);
       proc->user            = UsersTable_getRef(pl->usersTable, proc->st_uid);
       proc->comm            = xStrdup(_psinfo->pr_fname);
-      proc->commLen         = strnlen(_psinfo->pr_fname, PRFNSZ);
    }
 
    // End common code pass 1

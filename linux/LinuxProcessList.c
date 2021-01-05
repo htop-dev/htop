@@ -281,10 +281,8 @@ static inline unsigned long long LinuxProcessList_adjustTime(unsigned long long 
    return t * 100 / jiffy;
 }
 
-static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd, char* command, int* commLen) {
+static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd, char* command, size_t commLen) {
    LinuxProcess* lp = (LinuxProcess*) process;
-   const int commLenIn = *commLen;
-   *commLen = 0;
 
    char buf[MAX_READ + 1];
    ssize_t r = xReadfileat(procFd, "stat", buf, sizeof(buf));
@@ -301,11 +299,8 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    if (!end)
       return false;
 
-   int commsize = MINIMUM(end - location, commLenIn - 1);
-   //  deepcode ignore BufferOverflow: commsize is bounded by the allocated length passed in by commLen, saved into commLenIn
-   memcpy(command, location, commsize);
-   command[commsize] = '\0';
-   *commLen = commsize;
+   String_safeStrncpy(command, location, MINIMUM((size_t)(end - location + 1), commLen));
+
    location = end + 2;
 
    process->state = location[0];
@@ -987,16 +982,6 @@ delayacct_failure:
 
 #endif
 
-static void setCommand(Process* process, const char* command, int len) {
-   if (process->comm && process->commLen >= len) {
-      strncpy(process->comm, command, len + 1);
-   } else {
-      free(process->comm);
-      process->comm = xStrdup(command);
-   }
-   process->commLen = len;
-}
-
 static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t procFd) {
    char command[4096 + 1]; // max cmdline length on Linux
    ssize_t amtRead = xReadfileat(procFd, "cmdline", command, sizeof(command));
@@ -1126,7 +1111,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    lp->mergedCommand.maxLen = lastChar + 1;  /* accommodate cmdline */
    if (!process->comm || !String_eq(command, process->comm)) {
       process->basenameOffset = tokenEnd;
-      setCommand(process, command, lastChar + 1);
+      free_and_xStrdup(&process->comm, command);
       lp->procCmdlineBasenameOffset = tokenStart;
       lp->procCmdlineBasenameEnd = tokenEnd;
       lp->mergedCommand.cmdlineChanged = true;
@@ -1356,9 +1341,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       char command[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
-      int commLen = sizeof(command);
       unsigned int tty_nr = proc->tty_nr;
-      if (! LinuxProcessList_readStatFile(proc, procFd, command, &commLen))
+      if (! LinuxProcessList_readStatFile(proc, procFd, command, sizeof(command)))
          goto errorReadingProcess;
 
       if (tty_nr != proc->tty_nr && this->ttyDrivers) {
@@ -1446,11 +1430,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;
-         setCommand(proc, command, commLen);
+         free_and_xStrdup(&proc->comm, command);
       } else if (Process_isThread(proc)) {
          if (settings->showThreadNames || Process_isKernelThread(proc)) {
             proc->basenameOffset = -1;
-            setCommand(proc, command, commLen);
+            free_and_xStrdup(&proc->comm, command);
          } else if (settings->showThreadNames) {
             if (! LinuxProcessList_readCmdlineFile(proc, procFd)) {
                goto errorReadingProcess;
