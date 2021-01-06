@@ -1525,64 +1525,82 @@ errorReadingProcess:
 }
 
 static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
-   unsigned long long int freeMem = 0;
-   unsigned long long int swapFree = 0;
-   unsigned long long int shmem = 0;
-   unsigned long long int sreclaimable = 0;
+   memory_t availableMem = 0;
+   memory_t freeMem = 0;
+   memory_t totalMem = 0;
+   memory_t buffersMem = 0;
+   memory_t cachedMem = 0;
+   memory_t swapTotalMem = 0;
+   memory_t swapCacheMem = 0;
+   memory_t swapFreeMem = 0;
+   memory_t sreclaimableMem = 0;
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
-   if (file == NULL) {
+   if (!file)
       CRT_fatalError("Cannot open " PROCMEMINFOFILE);
-   }
-   char buffer[128];
-   while (fgets(buffer, 128, file)) {
 
-      #define tryRead(label, variable)                                         \
-         if (String_startsWith(buffer, label)) {                               \
-            sscanf(buffer + strlen(label), " %32llu kB", variable);            \
-            break;                                                             \
+   char buffer[128];
+   while (fgets(buffer, sizeof(buffer), file)) {
+
+      #define tryRead(label, variable)                                       \
+         if (String_startsWith(buffer, label)) {                             \
+            memory_t parsed_;                                                \
+            if (sscanf(buffer + strlen(label), "%llu kB", &parsed_) == 1) {  \
+               variable = parsed_;                                           \
+            }                                                                \
+            break;                                                           \
          }
 
       switch (buffer[0]) {
       case 'M':
-         tryRead("MemTotal:", &this->totalMem);
-         tryRead("MemFree:", &freeMem);
+         tryRead("MemAvailable:", availableMem);
+         tryRead("MemFree:", freeMem);
+         tryRead("MemTotal:", totalMem);
          break;
       case 'B':
-         tryRead("Buffers:", &this->buffersMem);
+         tryRead("Buffers:", buffersMem);
          break;
       case 'C':
-         tryRead("Cached:", &this->cachedMem);
+         tryRead("Cached:", cachedMem);
          break;
       case 'S':
          switch (buffer[1]) {
          case 'w':
-            tryRead("SwapTotal:", &this->totalSwap);
-            tryRead("SwapCached:", &this->cachedSwap);
-            tryRead("SwapFree:", &swapFree);
-            break;
-         case 'h':
-            tryRead("Shmem:", &shmem);
+            tryRead("SwapTotal:", swapTotalMem);
+            tryRead("SwapCached:", swapCacheMem);
+            tryRead("SwapFree:", swapFreeMem);
             break;
          case 'R':
-            tryRead("SReclaimable:", &sreclaimable);
+            tryRead("SReclaimable:", sreclaimableMem);
             break;
          }
          break;
       }
+
       #undef tryRead
    }
 
-   this->usedMem = this->totalMem - freeMem;
-   this->cachedMem = this->cachedMem + sreclaimable - shmem;
-   this->usedSwap = this->totalSwap - swapFree - this->cachedSwap;
    fclose(file);
+
+   /*
+    * Compute memory partition like procps(free)
+    *  https://gitlab.com/procps-ng/procps/-/blob/master/proc/sysinfo.c
+    */
+   this->totalMem = totalMem;
+   this->cachedMem = cachedMem + sreclaimableMem;
+   const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem;
+   this->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
+   this->buffersMem = buffersMem;
+   this->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
+   this->totalSwap = swapTotalMem;
+   this->usedSwap = swapTotalMem - swapFreeMem - swapCacheMem;
+   this->cachedSwap = swapCacheMem;
 }
 
 static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
    this->totalHugePageMem = 0;
    for (unsigned i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
-      this->usedHugePageMem[i] = ULLONG_MAX;
+      this->usedHugePageMem[i] = MEMORY_MAX;
    }
 
    DIR* dir = opendir("/sys/kernel/mm/hugepages");
@@ -1614,7 +1632,7 @@ static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
       if (r <= 0)
          continue;
 
-      unsigned long long int total = strtoull(content, NULL, 10);
+      memory_t total = strtoull(content, NULL, 10);
       if (total == 0)
          continue;
 
@@ -1623,7 +1641,7 @@ static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
       if (r <= 0)
          continue;
 
-      unsigned long long int free = strtoull(content, NULL, 10);
+      memory_t free = strtoull(content, NULL, 10);
 
       int shift = ffsl(hugePageSize) - 1 - (HTOP_HUGEPAGE_BASE_SHIFT - 10);
       assert(shift >= 0 && shift < HTOP_HUGEPAGE_COUNT);
@@ -1636,9 +1654,9 @@ static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
 }
 
 static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
-   unsigned long long int totalZram = 0;
-   unsigned long long int usedZramComp = 0;
-   unsigned long long int usedZramOrig = 0;
+   memory_t totalZram = 0;
+   memory_t usedZramComp = 0;
+   memory_t usedZramOrig = 0;
 
    char mm_stat[34];
    char disksize[34];
@@ -1659,9 +1677,9 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
          }
          break;
       }
-      unsigned long long int size = 0;
-      unsigned long long int orig_data_size = 0;
-      unsigned long long int compr_data_size = 0;
+      memory_t size = 0;
+      memory_t orig_data_size = 0;
+      memory_t compr_data_size = 0;
 
       if (!fscanf(disksize_file, "%llu\n", &size) ||
           !fscanf(mm_stat_file, "    %llu       %llu", &orig_data_size, &compr_data_size)) {
@@ -1684,9 +1702,9 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
 }
 
 static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
-   unsigned long long int dbufSize = 0;
-   unsigned long long int dnodeSize = 0;
-   unsigned long long int bonusSize = 0;
+   memory_t dbufSize = 0;
+   memory_t dnodeSize = 0;
+   memory_t bonusSize = 0;
 
    FILE* file = fopen(PROCARCSTATSFILE, "r");
    if (file == NULL) {

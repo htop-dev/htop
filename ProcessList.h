@@ -34,6 +34,9 @@ in the source distribution for its full text.
 #define MAX_READ 2048
 #endif
 
+typedef unsigned long long int memory_t;
+#define MEMORY_MAX ULLONG_MAX
+
 typedef struct ProcessList_ {
    const Settings* settings;
 
@@ -61,14 +64,15 @@ typedef struct ProcessList_ {
    int userlandThreads;
    int kernelThreads;
 
-   unsigned long long int totalMem;
-   unsigned long long int usedMem;
-   unsigned long long int buffersMem;
-   unsigned long long int cachedMem;
+   memory_t totalMem;
+   memory_t usedMem;
+   memory_t buffersMem;
+   memory_t cachedMem;
+   memory_t availableMem;
 
-   unsigned long long int totalSwap;
-   unsigned long long int usedSwap;
-   unsigned long long int cachedSwap;
+   memory_t totalSwap;
+   memory_t usedSwap;
+   memory_t cachedSwap;
 
    int cpuCount;
 

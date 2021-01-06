@@ -2,9 +2,9 @@
 #define HEADER_ZramStats
 
 typedef struct ZramStats_ {
-   unsigned long long int totalZram;
-   unsigned long long int usedZramComp;
-   unsigned long long int usedZramOrig;
+   memory_t totalZram;
+   memory_t usedZramComp;
+   memory_t usedZramOrig;
 } ZramStats;
 
 #endif
