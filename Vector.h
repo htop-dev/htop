@@ -58,7 +58,7 @@ unsigned int Vector_count(const Vector* this);
 
 #else /* NDEBUG */
 
-static inline Object* Vector_get(Vector* this, int idx) {
+static inline Object* Vector_get(const Vector* this, int idx) {
    return this->array[idx];
 }
 
