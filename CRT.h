@@ -65,6 +65,7 @@ typedef enum ColorElements_ {
    BATTERY,
    TASKS_RUNNING,
    SWAP,
+   SWAP_CACHE,
    PROCESS,
    PROCESS_SHADOW,
    PROCESS_TAG,

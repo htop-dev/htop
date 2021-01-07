@@ -1508,6 +1508,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
          switch (buffer[1]) {
          case 'w':
             tryRead("SwapTotal:", &this->totalSwap);
+            tryRead("SwapCached:", &this->cachedSwap);
             tryRead("SwapFree:", &swapFree);
             break;
          case 'h':
@@ -1524,7 +1525,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
 
    this->usedMem = this->totalMem - freeMem;
    this->cachedMem = this->cachedMem + sreclaimable - shmem;
-   this->usedSwap = this->totalSwap - swapFree;
+   this->usedSwap = this->totalSwap - swapFree - this->cachedSwap;
    fclose(file);
 }
 
