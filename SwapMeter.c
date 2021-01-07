@@ -14,7 +14,8 @@ in the source distribution for its full text.
 
 
 static const int SwapMeter_attributes[] = {
-   SWAP
+   SWAP,
+   SWAP_CACHE
 };
 
 static void SwapMeter_updateValues(Meter* this, char* buffer, size_t size) {
@@ -38,6 +39,12 @@ static void SwapMeter_display(const Object* cast, RichString* out) {
    Meter_humanUnit(buffer, this->values[0], sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " used:");
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
+
+#ifdef HTOP_LINUX
+   Meter_humanUnit(buffer, this->values[1], sizeof(buffer));
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
+   RichString_appendAscii(out, CRT_colors[SWAP_CACHE], buffer);
+#endif
 }
 
 const MeterClass SwapMeter_class = {
@@ -48,7 +55,7 @@ const MeterClass SwapMeter_class = {
    },
    .updateValues = SwapMeter_updateValues,
    .defaultMode = BAR_METERMODE,
-   .maxItems = 1,
+   .maxItems = 2,
    .total = 100.0,
    .attributes = SwapMeter_attributes,
    .name = "Swap",

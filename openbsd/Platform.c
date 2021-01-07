@@ -213,6 +213,7 @@ void Platform_setSwapValues(Meter* this) {
    const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
    this->values[0] = pl->usedSwap;
+   this->values[1] = NAN;
 }
 
 char* Platform_getProcessEnv(pid_t pid) {

@@ -531,7 +531,13 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddstr(line++, 0, "Swap bar:      ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[SWAP], "used");
+#ifdef HTOP_LINUX
+   addattrstr(CRT_colors[BAR_SHADOW], "/");
+   addattrstr(CRT_colors[SWAP_CACHE], "cache");
+   addattrstr(CRT_colors[BAR_SHADOW], "                                    used/total");
+#else
    addattrstr(CRT_colors[BAR_SHADOW], "                                          used/total");
+#endif
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(line++, 0, "Type and layout of header meters are configurable in the setup screen.");
