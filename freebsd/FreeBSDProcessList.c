@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <dirent.h>
-#include <err.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -145,7 +144,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    fpl->kd = kvm_openfiles(NULL, "/dev/null", NULL, 0, errbuf);
    if (fpl->kd == NULL) {
-      errx(1, "kvm_open: %s", errbuf);
+      CRT_fatalError("kvm_openfiles() failed");
    }
 
    fpl->ttys = Hashtable_new(20, true);
