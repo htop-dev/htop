@@ -54,7 +54,7 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
 
    attrset(CRT_colors[METER_TEXT]);
    mvhline(0, 0, ' ', COLS);
-   mvwprintw(stdscr, 0, 0, title);
+   mvaddstr(0, 0, title);
    attrset(CRT_colors[DEFAULT_COLOR]);
    Panel_draw(this->display, true, true, true, false);
 
