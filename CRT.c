@@ -818,9 +818,13 @@ void CRT_handleSIGSEGV(int signal) {
       "- Your OS and kernel version (uname -a)\n"
       "- Your distribution and release (lsb_release -a)\n"
       "- Likely steps to reproduce (How did it happened?)\n"
+   );
+
 #ifdef HAVE_EXECINFO_H
-      "- Backtrace of the issue (see below)\n"
+   fprintf(stderr, "- Backtrace of the issue (see below)\n");
 #endif
+
+   fprintf(stderr,
       "\n"
    );
 
@@ -855,11 +859,15 @@ void CRT_handleSIGSEGV(int signal) {
       "you should provide a disassembly of your binary.\n"
       "This can usually be done by running the following command:\n"
       "\n"
+   );
+
 #ifdef HTOP_DARWIN
-      "   otool -tvV `which htop` > ~/htop.otool\n"
+   fprintf(stderr, "   otool -tvV `which htop` > ~/htop.otool\n");
 #else
-      "   objdump -d -S -w `which htop` > ~/htop.objdump\n"
+   fprintf(stderr, "   objdump -d -S -w `which htop` > ~/htop.objdump\n");
 #endif
+
+   fprintf(stderr,
       "\n"
       "Please include the generated file in your report.\n"
       "\n"
