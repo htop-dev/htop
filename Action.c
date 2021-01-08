@@ -486,7 +486,7 @@ static Htop_Reaction actionHelp(State* st) {
    Settings* settings = st->settings;
 
    clear();
-   attrset(CRT_colors[HELP_BOLD]);
+   attrset(CRT_getAttrs(HELP_BOLD));
 
    for (int i = 0; i < LINES - 1; i++)
       mvhline(i, 0, ' ', COLS);
@@ -496,44 +496,44 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddstr(line++, 0, "htop " VERSION " - " COPYRIGHT);
    mvaddstr(line++, 0, "Released under the GNU GPLv2. See 'man' page for more info.");
 
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   attrset(CRT_getAttrs(DEFAULT_COLOR));
    line++;
    mvaddstr(line++, 0, "CPU usage bar: ");
 
-   addattrstr(CRT_colors[BAR_BORDER], "[");
+   addattrstr(CRT_getAttrs(BAR_BORDER), "[");
    if (settings->detailedCPUTime) {
-      addattrstr(CRT_colors[CPU_NICE_TEXT], "low"); addstr("/");
-      addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
-      addattrstr(CRT_colors[CPU_SYSTEM], "kernel"); addstr("/");
-      addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
-      addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq"); addstr("/");
-      addattrstr(CRT_colors[CPU_STEAL], "steal"); addstr("/");
-      addattrstr(CRT_colors[CPU_GUEST], "guest"); addstr("/");
-      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait");
-      addattrstr(CRT_colors[BAR_SHADOW], " used%");
+      addattrstr(CRT_getAttrs(CPU_NICE_TEXT), "low"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_NORMAL), "normal"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_SYSTEM), "kernel"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_IRQ), "irq"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_SOFTIRQ), "soft-irq"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_STEAL), "steal"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_GUEST), "guest"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_IOWAIT), "io-wait");
+      addattrstr(CRT_getAttrs(BAR_SHADOW), " used%");
    } else {
-      addattrstr(CRT_colors[CPU_NICE_TEXT], "low-priority"); addstr("/");
-      addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
-      addattrstr(CRT_colors[CPU_SYSTEM], "kernel"); addstr("/");
-      addattrstr(CRT_colors[CPU_GUEST], "virtualiz");
-      addattrstr(CRT_colors[BAR_SHADOW], "               used%");
+      addattrstr(CRT_getAttrs(CPU_NICE_TEXT), "low-priority"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_NORMAL), "normal"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_SYSTEM), "kernel"); addstr("/");
+      addattrstr(CRT_getAttrs(CPU_GUEST), "virtualiz");
+      addattrstr(CRT_getAttrs(BAR_SHADOW), "               used%");
    }
-   addattrstr(CRT_colors[BAR_BORDER], "]");
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   addattrstr(CRT_getAttrs(BAR_BORDER), "]");
+   attrset(CRT_getAttrs(DEFAULT_COLOR));
    mvaddstr(line++, 0, "Memory bar:    ");
-   addattrstr(CRT_colors[BAR_BORDER], "[");
-   addattrstr(CRT_colors[MEMORY_USED], "used"); addstr("/");
-   addattrstr(CRT_colors[MEMORY_BUFFERS_TEXT], "buffers"); addstr("/");
-   addattrstr(CRT_colors[MEMORY_CACHE], "cache");
-   addattrstr(CRT_colors[BAR_SHADOW], "                            used/total");
-   addattrstr(CRT_colors[BAR_BORDER], "]");
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   addattrstr(CRT_getAttrs(BAR_BORDER), "[");
+   addattrstr(CRT_getAttrs(MEMORY_USED), "used"); addstr("/");
+   addattrstr(CRT_getAttrs(MEMORY_BUFFERS_TEXT), "buffers"); addstr("/");
+   addattrstr(CRT_getAttrs(MEMORY_CACHE), "cache");
+   addattrstr(CRT_getAttrs(BAR_SHADOW), "                            used/total");
+   addattrstr(CRT_getAttrs(BAR_BORDER), "]");
+   attrset(CRT_getAttrs(DEFAULT_COLOR));
    mvaddstr(line++, 0, "Swap bar:      ");
-   addattrstr(CRT_colors[BAR_BORDER], "[");
-   addattrstr(CRT_colors[SWAP], "used");
-   addattrstr(CRT_colors[BAR_SHADOW], "                                          used/total");
-   addattrstr(CRT_colors[BAR_BORDER], "]");
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   addattrstr(CRT_getAttrs(BAR_BORDER), "[");
+   addattrstr(CRT_getAttrs(SWAP), "used");
+   addattrstr(CRT_getAttrs(BAR_SHADOW), "                                          used/total");
+   addattrstr(CRT_getAttrs(BAR_BORDER), "]");
+   attrset(CRT_getAttrs(DEFAULT_COLOR));
    mvaddstr(line++, 0, "Type and layout of header meters are configurable in the setup screen.");
    if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
       mvaddstr(line, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
@@ -546,32 +546,32 @@ static Htop_Reaction actionHelp(State* st) {
 
    int item;
    for (item = 0; helpLeft[item].key; item++) {
-      attrset(CRT_colors[DEFAULT_COLOR]);
+      attrset(CRT_getAttrs(DEFAULT_COLOR));
       mvaddstr(line + item, 10, helpLeft[item].info);
-      attrset(CRT_colors[HELP_BOLD]);
+      attrset(CRT_getAttrs(HELP_BOLD));
       mvaddstr(line + item, 1,  helpLeft[item].key);
       if (String_eq(helpLeft[item].key, "      H: ")) {
-         attrset(CRT_colors[PROCESS_THREAD]);
+         attrset(CRT_getAttrs(PROCESS_THREAD));
          mvaddstr(line + item, 33, "threads");
       } else if (String_eq(helpLeft[item].key, "      K: ")) {
-         attrset(CRT_colors[PROCESS_THREAD]);
+         attrset(CRT_getAttrs(PROCESS_THREAD));
          mvaddstr(line + item, 27, "threads");
       }
    }
    int leftHelpItems = item;
 
    for (item = 0; helpRight[item].key; item++) {
-      attrset(CRT_colors[HELP_BOLD]);
+      attrset(CRT_getAttrs(HELP_BOLD));
       mvaddstr(line + item, 41, helpRight[item].key);
-      attrset(CRT_colors[DEFAULT_COLOR]);
+      attrset(CRT_getAttrs(DEFAULT_COLOR));
       mvaddstr(line + item, 50, helpRight[item].info);
    }
    line += MAXIMUM(leftHelpItems, item);
    line++;
 
-   attrset(CRT_colors[HELP_BOLD]);
+   attrset(CRT_getAttrs(HELP_BOLD));
    mvaddstr(line++, 0, "Press any key to return.");
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   attrset(CRT_getAttrs(DEFAULT_COLOR));
    refresh();
    CRT_readKey();
    clear();

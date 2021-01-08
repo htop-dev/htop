@@ -46,29 +46,29 @@ static void TasksMeter_display(const Object* cast, RichString* out) {
    int processes = (int) this->values[2];
 
    xSnprintf(buffer, sizeof(buffer), "%d", processes);
-   RichString_writeAscii(out, CRT_colors[METER_VALUE], buffer);
-   int threadValueColor = CRT_colors[METER_VALUE];
-   int threadCaptionColor = CRT_colors[METER_TEXT];
+   RichString_writeAscii(out, CRT_getAttrs(METER_VALUE), buffer);
+   int threadValueColor = CRT_getAttrs(METER_VALUE);
+   int threadCaptionColor = CRT_getAttrs(METER_TEXT);
    if (settings->highlightThreads) {
-      threadValueColor = CRT_colors[PROCESS_THREAD_BASENAME];
-      threadCaptionColor = CRT_colors[PROCESS_THREAD];
+      threadValueColor = CRT_getAttrs(PROCESS_THREAD_BASENAME);
+      threadCaptionColor = CRT_getAttrs(PROCESS_THREAD);
    }
    if (!settings->hideUserlandThreads) {
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], ", ");
+      RichString_appendAscii(out, CRT_getAttrs(METER_TEXT), ", ");
       xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[1]);
       RichString_appendAscii(out, threadValueColor, buffer);
       RichString_appendAscii(out, threadCaptionColor, " thr");
    }
    if (!settings->hideKernelThreads) {
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], ", ");
+      RichString_appendAscii(out, CRT_getAttrs(METER_TEXT), ", ");
       xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[0]);
       RichString_appendAscii(out, threadValueColor, buffer);
       RichString_appendAscii(out, threadCaptionColor, " kthr");
    }
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], "; ");
+   RichString_appendAscii(out, CRT_getAttrs(METER_TEXT), "; ");
    xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[3]);
-   RichString_appendAscii(out, CRT_colors[TASKS_RUNNING], buffer);
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " running");
+   RichString_appendAscii(out, CRT_getAttrs(TASKS_RUNNING), buffer);
+   RichString_appendAscii(out, CRT_getAttrs(METER_TEXT), " running");
 }
 
 const MeterClass TasksMeter_class = {

@@ -144,8 +144,6 @@ extern bool CRT_utf8;
 
 extern const char* const* CRT_treeStr;
 
-extern const int* CRT_colors;
-
 extern int CRT_cursorX;
 
 extern int CRT_scrollHAmount;
@@ -179,5 +177,7 @@ void CRT_disableDelay(void);
 void CRT_enableDelay(void);
 
 void CRT_setColors(int colorScheme);
+
+int CRT_getAttrs(int colorId);
 
 #endif

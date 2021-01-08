@@ -93,21 +93,21 @@ void FunctionBar_draw(const FunctionBar* this) {
 }
 
 void FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr, bool setCursor) {
-   attrset(CRT_colors[FUNCTION_BAR]);
+   attrset(CRT_getAttrs(FUNCTION_BAR));
    mvhline(LINES - 1, 0, ' ', COLS);
    int x = 0;
    for (int i = 0; i < this->size; i++) {
-      attrset(CRT_colors[FUNCTION_KEY]);
+      attrset(CRT_getAttrs(FUNCTION_KEY));
       mvaddstr(LINES - 1, x, this->keys.constKeys[i]);
       x += strlen(this->keys.constKeys[i]);
-      attrset(CRT_colors[FUNCTION_BAR]);
+      attrset(CRT_getAttrs(FUNCTION_BAR));
       mvaddstr(LINES - 1, x, this->functions[i]);
       x += strlen(this->functions[i]);
    }
 
    if (buffer) {
       if (attr == -1) {
-         attrset(CRT_colors[FUNCTION_BAR]);
+         attrset(CRT_getAttrs(FUNCTION_BAR));
       } else {
          attrset(attr);
       }
@@ -115,7 +115,7 @@ void FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr
       x += strlen(buffer);
    }
 
-   attrset(CRT_colors[RESET_COLOR]);
+   attrset(CRT_getAttrs(RESET_COLOR));
 
    if (setCursor) {
       CRT_cursorX = x;
@@ -129,12 +129,12 @@ void FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr
 
 void FunctionBar_append(const char* buffer, int attr) {
    if (attr == -1) {
-      attrset(CRT_colors[FUNCTION_BAR]);
+      attrset(CRT_getAttrs(FUNCTION_BAR));
    } else {
       attrset(attr);
    }
    mvaddstr(LINES - 1, currentLen + 1, buffer);
-   attrset(CRT_colors[RESET_COLOR]);
+   attrset(CRT_getAttrs(RESET_COLOR));
 
    currentLen += strlen(buffer) + 1;
 }

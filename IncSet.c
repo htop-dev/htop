@@ -212,7 +212,7 @@ void IncSet_activate(IncSet* this, IncType type, Panel* panel) {
 
 void IncSet_drawBar(const IncSet* this) {
    if (this->active) {
-      FunctionBar_drawExtra(this->active->bar, this->active->buffer, (this->active->isFilter || this->found) ? -1 : CRT_colors[FAILED_SEARCH], true);
+      FunctionBar_drawExtra(this->active->bar, this->active->buffer, (this->active->isFilter || this->found) ? -1 : CRT_getAttrs(FAILED_SEARCH), true);
    } else {
       FunctionBar_draw(this->defaultBar);
    }

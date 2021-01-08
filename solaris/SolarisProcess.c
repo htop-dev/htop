@@ -70,7 +70,7 @@ void Process_delete(Object* cast) {
 static void SolarisProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const SolarisProcess* sp = (const SolarisProcess*) this;
    char buffer[256]; buffer[255] = '\0';
-   int attr = CRT_colors[DEFAULT_COLOR];
+   int attr = CRT_getAttrs(DEFAULT_COLOR);
    int n = sizeof(buffer) - 1;
    switch (field) {
    // add Solaris-specific fields here

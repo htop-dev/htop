@@ -38,18 +38,18 @@ static void ZramMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
 
-   RichString_writeAscii(out, CRT_colors[METER_TEXT], ":");
+   RichString_writeAscii(out, CRT_getAttrs(METER_TEXT), ":");
 
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
+   RichString_appendAscii(out, CRT_getAttrs(METER_VALUE), buffer);
 
    Meter_humanUnit(buffer, this->values[0], sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " used:");
-   RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
+   RichString_appendAscii(out, CRT_getAttrs(METER_TEXT), " used:");
+   RichString_appendAscii(out, CRT_getAttrs(METER_VALUE), buffer);
 
    Meter_humanUnit(buffer, this->values[1], sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " uncompressed:");
-   RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
+   RichString_appendAscii(out, CRT_getAttrs(METER_TEXT), " uncompressed:");
+   RichString_appendAscii(out, CRT_getAttrs(METER_VALUE), buffer);
 }
 
 const MeterClass ZramMeter_class = {

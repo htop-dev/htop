@@ -52,10 +52,10 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
       memset(&title[COLS - 3], '.', 3);
    }
 
-   attrset(CRT_colors[METER_TEXT]);
+   attrset(CRT_getAttrs(METER_TEXT));
    mvhline(0, 0, ' ', COLS);
    mvaddstr(0, 0, title);
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   attrset(CRT_getAttrs(DEFAULT_COLOR));
    Panel_draw(this->display, true, true, true, false);
 
    IncSet_drawBar(this->inc);

@@ -104,18 +104,18 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
    for (int i = 0; fields[i]; i++) {
       int color;
       if (settings->treeView && settings->treeViewAlwaysByPID) {
-         color = CRT_colors[PANEL_HEADER_FOCUS];
+         color = CRT_getAttrs(PANEL_HEADER_FOCUS);
       } else if (key == fields[i]) {
-         color = CRT_colors[PANEL_SELECTION_FOCUS];
+         color = CRT_getAttrs(PANEL_SELECTION_FOCUS);
       } else {
-         color = CRT_colors[PANEL_HEADER_FOCUS];
+         color = CRT_getAttrs(PANEL_HEADER_FOCUS);
       }
 
       RichString_appendWide(header, color, alignedProcessFieldTitle(fields[i]));
       if (key == fields[i] && RichString_getCharVal(*header, RichString_size(header) - 1) == ' ') {
          header->chlen--;  // rewind to override space
          RichString_appendnWide(header,
-                                CRT_colors[PANEL_SELECTION_FOCUS],
+                                CRT_getAttrs(PANEL_SELECTION_FOCUS),
                                 CRT_treeStr[Settings_getActiveDirection(this->settings) == 1 ? TREE_STR_DESC : TREE_STR_ASC],
                                 1);
       }

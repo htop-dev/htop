@@ -805,6 +805,10 @@ void CRT_setColors(int colorScheme) {
    CRT_colors = CRT_colorSchemes[colorScheme];
 }
 
+int CRT_getAttrs(int colorId) {
+   return CRT_colors[colorId];
+}
+
 void CRT_handleSIGSEGV(int signal) {
    CRT_done();
 

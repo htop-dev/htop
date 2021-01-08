@@ -77,7 +77,7 @@ void Panel_setSelectionColor(Panel* this, ColorElements colorId) {
 }
 
 inline void Panel_setHeader(Panel* this, const char* header) {
-   RichString_writeWide(&(this->header), CRT_colors[PANEL_HEADER_FOCUS], header);
+   RichString_writeWide(&(this->header), CRT_getAttrs(PANEL_HEADER_FOCUS), header);
    this->needsRedraw = true;
 }
 
@@ -221,8 +221,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       h++;
 
    const int header_attr = focus
-                         ? CRT_colors[PANEL_HEADER_FOCUS]
-                         : CRT_colors[PANEL_HEADER_UNFOCUS];
+                         ? CRT_getAttrs(PANEL_HEADER_FOCUS)
+                         : CRT_getAttrs(PANEL_HEADER_UNFOCUS);
    if (force_redraw) {
       if (Panel_printHeaderFn(this))
          Panel_printHeader(this);
@@ -237,7 +237,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          RichString_printoffnVal(this->header, y, x, scrollH,
             MINIMUM(headerLen - scrollH, this->w));
       }
-      attrset(CRT_colors[RESET_COLOR]);
+      attrset(CRT_getAttrs(RESET_COLOR));
       y++;
       h--;
    }
@@ -263,8 +263,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    int upTo = MINIMUM(first + h, size);
 
    int selectionColor = focus
-                      ? CRT_colors[this->selectionColorId]
-                      : CRT_colors[PANEL_SELECTION_UNFOCUS];
+                      ? CRT_getAttrs(this->selectionColorId)
+                      : CRT_getAttrs(PANEL_SELECTION_UNFOCUS);
 
    if (this->needsRedraw || force_redraw) {
       int line = 0;
@@ -286,7 +286,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          if (amt > 0)
             RichString_printoffnVal(item, y + line, x, scrollH, amt);
          if (item.highlightAttr)
-            attrset(CRT_colors[RESET_COLOR]);
+            attrset(CRT_getAttrs(RESET_COLOR));
          RichString_end(item);
          line++;
       }
@@ -315,7 +315,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       if (scrollH < newLen)
          RichString_printoffnVal(new, y + this->selected - first, x,
             scrollH, MINIMUM(newLen - scrollH, this->w));
-      attrset(CRT_colors[RESET_COLOR]);
+      attrset(CRT_getAttrs(RESET_COLOR));
       RichString_end(new);
       RichString_end(old);
    }

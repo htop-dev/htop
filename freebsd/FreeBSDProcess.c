@@ -66,7 +66,7 @@ void Process_delete(Object* cast) {
 static void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
-   int attr = CRT_colors[DEFAULT_COLOR];
+   int attr = CRT_getAttrs(DEFAULT_COLOR);
    int n = sizeof(buffer) - 1;
    switch (field) {
    // add FreeBSD-specific fields here
@@ -82,10 +82,10 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    case TTY_NR:
       if (fp->ttyPath) {
          if (fp->ttyPath == nodevStr)
-            attr = CRT_colors[PROCESS_SHADOW];
+            attr = CRT_getAttrs(PROCESS_SHADOW);
          xSnprintf(buffer, n, "%-8s", fp->ttyPath);
       } else {
-         attr = CRT_colors[PROCESS_SHADOW];
+         attr = CRT_getAttrs(PROCESS_SHADOW);
          xSnprintf(buffer, n, "?        ");
       }
       break;

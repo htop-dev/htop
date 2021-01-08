@@ -515,12 +515,12 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAtt
    int commStart = strStart + lp->mergedCommand.commStart;
    int commEnd = strStart + lp->mergedCommand.commEnd;
 
-   int commAttr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
+   int commAttr = CRT_getAttrs(Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM);
 
    bool highlightBaseName = this->settings->highlightBaseName;
 
    if(lp->procExeDeleted)
-      baseAttr = CRT_colors[FAILED_READ];
+      baseAttr = CRT_getAttrs(FAILED_READ);
 
    RichString_appendWide(str, attr, lp->mergedCommand.str);
 
@@ -549,19 +549,19 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAtt
    }
 
    if (mc->sep1)
-      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep1, 1);
+      RichString_setAttrn(str, CRT_getAttrs(FAILED_READ), strStart + mc->sep1, 1);
    if (mc->sep2)
-      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep2, 1);
+      RichString_setAttrn(str, CRT_getAttrs(FAILED_READ), strStart + mc->sep2, 1);
 }
 
 static void LinuxProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
    /* This code is from Process_writeField for COMM, but we invoke
     * LinuxProcess_writeCommand to display
     * /proc/pid/exe (or its basename)│/proc/pid/comm│/proc/pid/cmdline */
-   int baseattr = CRT_colors[PROCESS_BASENAME];
+   int baseattr = CRT_getAttrs(PROCESS_BASENAME);
    if (this->settings->highlightThreads && Process_isThread(this)) {
-      attr = CRT_colors[PROCESS_THREAD];
-      baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
+      attr = CRT_getAttrs(PROCESS_THREAD);
+      baseattr = CRT_getAttrs(PROCESS_THREAD_BASENAME);
    }
    if (!this->settings->treeView || this->indent == 0) {
       LinuxProcess_writeCommand(this, attr, baseattr, str);
@@ -595,7 +595,7 @@ static void LinuxProcess_writeCommandField(const Process *this, RichString *str,
       n -= (buf - buffer);
       const char* draw = CRT_treeStr[lastItem ? TREE_STR_BEND : TREE_STR_RTEE];
       xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
-      RichString_appendWide(str, CRT_colors[PROCESS_TREE], buffer);
+      RichString_appendWide(str, CRT_getAttrs(PROCESS_TREE), buffer);
       LinuxProcess_writeCommand(this, attr, baseattr, str);
    }
 }
@@ -604,14 +604,14 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    const LinuxProcess* lp = (const LinuxProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
-   int attr = CRT_colors[DEFAULT_COLOR];
+   int attr = CRT_getAttrs(DEFAULT_COLOR);
    size_t n = sizeof(buffer) - 1;
    switch (field) {
    case TTY_NR: {
       if (lp->ttyDevice) {
          xSnprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
       } else {
-         attr = CRT_colors[PROCESS_SHADOW];
+         attr = CRT_getAttrs(PROCESS_SHADOW);
          xSnprintf(buffer, n, "?        ");
       }
       break;
@@ -626,7 +626,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          return;
       }
 
-      attr = CRT_colors[PROCESS_SHADOW];
+      attr = CRT_getAttrs(PROCESS_SHADOW);
       xSnprintf(buffer, n, "  N/A ");
       break;
    case M_TRS: Process_humanNumber(str, lp->m_trs * pageSizeKB, coloring); return;
@@ -676,10 +676,10 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       } else if (klass == IOPRIO_CLASS_BE) {
          xSnprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
       } else if (klass == IOPRIO_CLASS_RT) {
-         attr = CRT_colors[PROCESS_HIGH_PRIORITY];
+         attr = CRT_getAttrs(PROCESS_HIGH_PRIORITY);
          xSnprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
       } else if (klass == IOPRIO_CLASS_IDLE) {
-         attr = CRT_colors[PROCESS_LOW_PRIORITY];
+         attr = CRT_getAttrs(PROCESS_LOW_PRIORITY);
          xSnprintf(buffer, n, "id ");
       } else {
          xSnprintf(buffer, n, "?? ");
@@ -708,23 +708,23 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    }
    case PROC_COMM: {
       if (lp->procComm) {
-         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
+         attr = CRT_getAttrs(Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM);
          /* 15 being (TASK_COMM_LEN - 1) */
          xSnprintf(buffer, n, "%-15.15s ", lp->procComm);
       } else {
-         attr = CRT_colors[PROCESS_SHADOW];
+         attr = CRT_getAttrs(PROCESS_SHADOW);
          xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "N/A");
       }
       break;
    }
    case PROC_EXE: {
       if (lp->procExe) {
-         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
+         attr = CRT_getAttrs(Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME);
          if (lp->procExeDeleted)
-            attr = CRT_colors[FAILED_READ];
+            attr = CRT_getAttrs(FAILED_READ);
          xSnprintf(buffer, n, "%-15.15s ", lp->procExe + lp->procExeBasenameOffset);
       } else {
-         attr = CRT_colors[PROCESS_SHADOW];
+         attr = CRT_getAttrs(PROCESS_SHADOW);
          xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "N/A");
       }
       break;
@@ -732,10 +732,10 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    case CWD:
       if (!lp->cwd) {
          xSnprintf(buffer, n, "%-25s ", "N/A");
-         attr = CRT_colors[PROCESS_SHADOW];
+         attr = CRT_getAttrs(PROCESS_SHADOW);
       } else if (String_startsWith(lp->cwd, "/proc/") && strstr(lp->cwd, " (deleted)") != NULL) {
          xSnprintf(buffer, n, "%-25s ", "main thread terminated");
-         attr = CRT_colors[PROCESS_SHADOW];
+         attr = CRT_getAttrs(PROCESS_SHADOW);
       } else {
          xSnprintf(buffer, n, "%-25.25s ", lp->cwd);
       }
