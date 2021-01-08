@@ -204,6 +204,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
          }
          case 'F': {
             assert(optarg);
+            free(flags.commFilter);
             flags.commFilter = xStrdup(optarg);
 
             break;
