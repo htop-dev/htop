@@ -356,7 +356,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
 
 Htop_Reaction Action_follow(State* st) {
    st->pl->following = MainPanel_selectedPid((MainPanel*)st->panel);
-   Panel_setSelectionColor(st->panel, PANEL_SELECTION_FOLLOW);
+   Panel_setSelectionStyle(st->panel, PANEL_SELECTION_FOLLOW);
    return HTOP_KEEP_FOLLOWING;
 }
 

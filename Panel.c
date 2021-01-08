@@ -61,7 +61,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
    RichString_beginAllocated(this->header);
    this->defaultBar = fuBar;
    this->currentBar = fuBar;
-   this->selectionColorId = PANEL_SELECTION_FOCUS;
+   this->selectionStyleId = PANEL_SELECTION_FOCUS;
 }
 
 void Panel_done(Panel* this) {
@@ -72,8 +72,8 @@ void Panel_done(Panel* this) {
    RichString_end(this->header);
 }
 
-void Panel_setSelectionColor(Panel* this, ColorElements colorId) {
-   this->selectionColorId = colorId;
+void Panel_setSelectionStyle(Panel* this, StyleId styleId) {
+   this->selectionStyleId = styleId;
 }
 
 inline void Panel_setHeader(Panel* this, const char* header) {
@@ -262,8 +262,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    int first = this->scrollV;
    int upTo = MINIMUM(first + h, size);
 
-   int selectionColor = focus
-                      ? CRT_getAttrs(this->selectionColorId)
+   int selectionAttrs = focus
+                      ? CRT_getAttrs(this->selectionStyleId)
                       : CRT_getAttrs(PANEL_SELECTION_UNFOCUS);
 
    if (this->needsRedraw || force_redraw) {
@@ -275,7 +275,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          int itemLen = RichString_sizeVal(item);
          int amt = MINIMUM(itemLen - scrollH, this->w);
          if (highlightSelected && i == this->selected) {
-            item.highlightAttr = selectionColor;
+            item.highlightAttr = selectionAttrs;
          }
          if (item.highlightAttr) {
             attrset(item.highlightAttr);
@@ -309,9 +309,9 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       if (scrollH < oldLen)
          RichString_printoffnVal(old, y + this->oldSelected - first, x,
             scrollH, MINIMUM(oldLen - scrollH, this->w));
-      attrset(selectionColor);
+      attrset(selectionAttrs);
       mvhline(y + this->selected - first, x + 0, ' ', this->w);
-      RichString_setAttr(&new, selectionColor);
+      RichString_setAttr(&new, selectionAttrs);
       if (scrollH < newLen)
          RichString_printoffnVal(new, y + this->selected - first, x,
             scrollH, MINIMUM(newLen - scrollH, this->w));

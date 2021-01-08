@@ -69,7 +69,7 @@ struct Panel_ {
    FunctionBar* currentBar;
    FunctionBar* defaultBar;
    RichString header;
-   ColorElements selectionColorId;
+   StyleId selectionStyleId;
 };
 
 #define Panel_setDefaultBar(this_) do { (this_)->currentBar = (this_)->defaultBar; } while (0)
@@ -86,7 +86,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
 
 void Panel_done(Panel* this);
 
-void Panel_setSelectionColor(Panel* this, ColorElements colorId);
+void Panel_setSelectionStyle(Panel* this, StyleId styleId);
 
 void Panel_setHeader(Panel* this, const char* header);
 

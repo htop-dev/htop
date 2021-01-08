@@ -38,7 +38,7 @@ typedef enum ColorScheme_ {
    LAST_COLORSCHEME
 } ColorScheme;
 
-typedef enum ColorElements_ {
+typedef enum StyleId_ {
    RESET_COLOR,
    DEFAULT_COLOR,
    FUNCTION_BAR,
@@ -122,8 +122,8 @@ typedef enum ColorElements_ {
    ZFS_COMPRESSED,
    ZFS_RATIO,
    ZRAM,
-   LAST_COLORELEMENT
-} ColorElements;
+   LAST_STYLE
+} StyleId;
 
 void CRT_fatalError(const char* note) ATTR_NORETURN;
 
@@ -178,6 +178,6 @@ void CRT_enableDelay(void);
 
 void CRT_setColors(int colorScheme);
 
-int CRT_getAttrs(int colorId);
+int CRT_getAttrs(StyleId styleId);
 
 #endif

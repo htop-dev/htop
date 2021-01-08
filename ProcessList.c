@@ -158,7 +158,7 @@ void ProcessList_remove(ProcessList* this, Process* p) {
 
    if (this->following != -1 && this->following == pid) {
       this->following = -1;
-      Panel_setSelectionColor(this->panel, PANEL_SELECTION_FOCUS);
+      Panel_setSelectionStyle(this->panel, PANEL_SELECTION_FOCUS);
    }
 
    assert(Hashtable_get(this->processTable, pid) == NULL);

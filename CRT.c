@@ -94,7 +94,7 @@ static const char* initDegreeSign(void) {
 
 const int* CRT_colors;
 
-static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
+static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_STYLE] = {
    [COLORSCHEME_DEFAULT] = {
       [RESET_COLOR] = ColorPair(White, Black),
       [DEFAULT_COLOR] = ColorPair(White, Black),
@@ -663,7 +663,7 @@ void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
    CRT_colors = CRT_colorSchemes[colorScheme];
    CRT_colorScheme = colorScheme;
 
-   for (int i = 0; i < LAST_COLORELEMENT; i++) {
+   for (int i = 0; i < LAST_STYLE; i++) {
       unsigned int color = CRT_colorSchemes[COLORSCHEME_DEFAULT][i];
       CRT_colorSchemes[COLORSCHEME_BROKENGRAY][i] = color == (A_BOLD | ColorPairGrayBlack) ? ColorPair(White, Black) : color;
    }
@@ -805,8 +805,8 @@ void CRT_setColors(int colorScheme) {
    CRT_colors = CRT_colorSchemes[colorScheme];
 }
 
-int CRT_getAttrs(int colorId) {
-   return CRT_colors[colorId];
+int CRT_getAttrs(StyleId styleId) {
+   return CRT_colors[styleId];
 }
 
 void CRT_handleSIGSEGV(int signal) {

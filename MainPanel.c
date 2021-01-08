@@ -128,7 +128,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    }
    if (!(reaction & HTOP_KEEP_FOLLOWING)) {
       this->state->pl->following = -1;
-      Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+      Panel_setSelectionStyle(super, PANEL_SELECTION_FOCUS);
    }
    return result;
 }
