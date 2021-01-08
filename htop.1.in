@@ -42,7 +42,8 @@ Display a help message and exit
 Show only the given PIDs
 .TP
 \fB\-s \-\-sort\-key COLUMN\fR
-Sort by this column (use \-\-sort\-key help for a column list)
+Sort by this column (use \-\-sort\-key help for a column list).
+This will force a list view unless you specify -t at the same time.
 .TP
 \fB\-u \-\-user=USERNAME\fR
 Show only the processes of a given user
@@ -57,7 +58,8 @@ Disable support of mouse control
 Output version information and exit
 .TP
 \fB\-t \-\-tree
-Show processes in tree view
+Show processes in tree view. This can be used to force a tree view when
+requesting a sort order with -s.
 .TP
 \fB\-H \-\-highlight-changes=DELAY\fR
 Highlight new and old processes
