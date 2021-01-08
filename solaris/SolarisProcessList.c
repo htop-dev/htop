@@ -14,7 +14,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/user.h>
-#include <err.h>
 #include <limits.h>
 #include <string.h>
 #include <procfs.h>

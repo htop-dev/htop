@@ -7,7 +7,6 @@ in the source distribution for its full text.
 
 #include "DarwinProcessList.h"
 
-#include <err.h>
 #include <errno.h>
 #include <libproc.h>
 #include <stdbool.h>

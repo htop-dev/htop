@@ -15,7 +15,6 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
-#include <err.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <string.h>
@@ -112,7 +111,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    dfpl->kd = kvm_openfiles(NULL, "/dev/null", NULL, 0, errbuf);
    if (dfpl->kd == NULL) {
-      errx(1, "kvm_open: %s", errbuf);
+      CRT_fatalError("kvm_openfiles() failed");
    }
 
    return pl;
@@ -294,25 +293,20 @@ static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* df
    char* nextpos;
 
    if (sysctlbyname("jail.list", NULL, &len, NULL, 0) == -1) {
-      fprintf(stderr, "initial sysctlbyname / jail.list failed\n");
-      exit(3);
+      CRT_fatalError("initial sysctlbyname / jail.list failed");
    }
 retry:
    if (len == 0)
       return;
 
    jls = xMalloc(len);
-   if (jls == NULL) {
-      fprintf(stderr, "xMalloc failed\n");
-      exit(4);
-   }
+
    if (sysctlbyname("jail.list", jls, &len, NULL, 0) == -1) {
       if (errno == ENOMEM) {
          free(jls);
          goto retry;
       }
-      fprintf(stderr, "sysctlbyname / jail.list failed\n");
-      exit(5);
+      CRT_fatalError("sysctlbyname / jail.list failed");
    }
 
    if (dfpl->jails) {

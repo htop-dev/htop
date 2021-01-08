@@ -8,7 +8,6 @@ in the source distribution for its full text.
 
 #include "OpenBSDProcessList.h"
 
-#include <err.h>
 #include <kvm.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -57,11 +56,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0) {
-      err(1, "fscale sysctl call failed");
+      CRT_fatalError("fscale sysctl call failed");
    }
 
    if ((pageSize = sysconf(_SC_PAGESIZE)) == -1)
-      err(1, "pagesize sysconf call failed");
+      CRT_fatalError("pagesize sysconf call failed");
    pageSizeKB = pageSize / ONE_K;
 
    for (int i = 0; i <= pl->cpuCount; i++) {
@@ -72,7 +71,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    opl->kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
    if (opl->kd == NULL) {
-      errx(1, "kvm_open: %s", errbuf);
+      CRT_fatalError("kvm_openfiles() failed");
    }
 
    return pl;
@@ -97,7 +96,7 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    size_t size_uvmexp = sizeof(uvmexp);
 
    if (sysctl(uvmexp_mib, 2, &uvmexp, &size_uvmexp, NULL, 0) < 0) {
-      err(1, "uvmexp sysctl call failed");
+      CRT_fatalError("uvmexp sysctl call failed");
    }
 
    pl->totalMem = uvmexp.npages * pageSizeKB;
@@ -109,7 +108,7 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    size_t size_bcstats = sizeof(bcstats);
 
    if (sysctl(bcache_mib, 3, &bcstats, &size_bcstats, NULL, 0) < 0) {
-      err(1, "cannot get vfs.bcachestat");
+      CRT_fatalError("cannot get vfs.bcachestat");
    }
 
    pl->cachedMem = bcstats.numbufpages * pageSizeKB;
