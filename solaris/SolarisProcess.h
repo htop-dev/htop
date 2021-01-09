@@ -40,10 +40,6 @@ Process* SolarisProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 
-void SolarisProcess_writeField(const Process* this, RichString* str, ProcessField field);
-
-long SolarisProcess_compareByKey(const Process* v1, const Process* v2, ProcessField field);
-
 bool Process_isThread(const Process* this);
 
 #endif
