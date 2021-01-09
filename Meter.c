@@ -292,9 +292,6 @@ static const char* const GraphMeterMode_dotsAscii[] = {
    /*20*/":", /*21*/":", /*22*/":"
 };
 
-static const char* const* GraphMeterMode_dots;
-static int GraphMeterMode_pixPerRow;
-
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    if (!this->drawData) {
@@ -303,6 +300,8 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    GraphData* data = this->drawData;
    const int nValues = METER_BUFFER_LEN;
 
+   const char* const* GraphMeterMode_dots;
+   int GraphMeterMode_pixPerRow;
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8) {
       GraphMeterMode_dots = GraphMeterMode_dotsUtf8;

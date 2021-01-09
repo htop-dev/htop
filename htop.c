@@ -93,7 +93,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .highlightDelaySecs = -1,
    };
 
-   static struct option long_opts[] =
+   const struct option long_opts[] =
    {
       {"help",       no_argument,         0, 'h'},
       {"version",    no_argument,         0, 'V'},
