@@ -42,7 +42,7 @@ typedef struct RichString_ {
    int highlightAttr;
 } RichString;
 
-void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
+void RichString_setAttrn(RichString* this, int attrs, int start, int charcount);
 
 int RichString_findChar(RichString* this, char c, int start);
 

@@ -254,13 +254,13 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
-      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, startPos + offset + blockSizes[i] - 1);
+      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
       RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSizes[i], w - offset));
       offset += blockSizes[i];
       offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
-      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, startPos + w - 1);
+      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, w - offset);
       RichString_printoffnVal(bar, y, x + offset, startPos + offset, w - offset);
    }
 

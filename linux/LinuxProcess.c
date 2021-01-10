@@ -528,30 +528,30 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAtt
       if (!lp->mergedCommand.separateComm && commStart == baseStart && highlightBaseName) {
          /* If it was matched with procExe's basename, make it bold if needed */
          if (commEnd > baseEnd) {
-            RichString_setAttrn(str, A_BOLD | baseAttr, baseStart, baseEnd - 1);
-            RichString_setAttrn(str, A_BOLD | commAttr, baseEnd, commEnd - 1);
+            RichString_setAttrn(str, A_BOLD | baseAttr, baseStart, baseEnd - baseStart);
+            RichString_setAttrn(str, A_BOLD | commAttr, baseEnd, commEnd - baseEnd);
          } else if (commEnd < baseEnd) {
-            RichString_setAttrn(str, A_BOLD | commAttr, commStart, commEnd - 1);
-            RichString_setAttrn(str, A_BOLD | baseAttr, commEnd, baseEnd - 1);
+            RichString_setAttrn(str, A_BOLD | commAttr, commStart, commEnd - commStart);
+            RichString_setAttrn(str, A_BOLD | baseAttr, commEnd, baseEnd - commEnd);
          } else {
             // Actually should be highlighted commAttr, but marked baseAttr to reduce visual noise
-            RichString_setAttrn(str, A_BOLD | baseAttr, commStart, commEnd - 1);
+            RichString_setAttrn(str, A_BOLD | baseAttr, commStart, commEnd - commStart);
          }
 
          baseStart = baseEnd;
       } else {
-         RichString_setAttrn(str, commAttr, commStart, commEnd - 1);
+         RichString_setAttrn(str, commAttr, commStart, commEnd - commStart);
       }
    }
 
    if (baseStart < baseEnd && highlightBaseName) {
-      RichString_setAttrn(str, baseAttr, baseStart, baseEnd - 1);
+      RichString_setAttrn(str, baseAttr, baseStart, baseEnd - baseStart);
    }
 
    if (mc->sep1)
-      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep1, strStart + mc->sep1);
+      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep1, 1);
    if (mc->sep2)
-      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep2, strStart + mc->sep2);
+      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep2, 1);
 }
 
 static void LinuxProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
