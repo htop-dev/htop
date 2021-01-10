@@ -707,39 +707,46 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       return;
    }
    case PROC_COMM: {
+      const char* procComm;
       if (lp->procComm) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
-         /* 15 being (TASK_COMM_LEN - 1) */
-         xSnprintf(buffer, n, "%-15.15s ", lp->procComm);
+         procComm = lp->procComm;
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
-         xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "N/A");
+         procComm = Process_isKernelThread(lp) ? kthreadID : "N/A";
       }
-      break;
+      /* 15 being (TASK_COMM_LEN - 1) */
+      Process_printLeftAlignedField(str, attr, procComm, 15);
+      return;
    }
    case PROC_EXE: {
+      const char* procExe;
       if (lp->procExe) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
          if (lp->procExeDeleted)
             attr = CRT_colors[FAILED_READ];
-         xSnprintf(buffer, n, "%-15.15s ", lp->procExe + lp->procExeBasenameOffset);
+         procExe = lp->procExe + lp->procExeBasenameOffset;
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
-         xSnprintf(buffer, n, "%-15.15s ", Process_isKernelThread(lp) ? kthreadID : "N/A");
+         procExe = Process_isKernelThread(lp) ? kthreadID : "N/A";
       }
-      break;
+      Process_printLeftAlignedField(str, attr, procExe, 15);
+      return;
    }
-   case CWD:
+   case CWD: {
+      const char* cwd;
       if (!lp->cwd) {
-         xSnprintf(buffer, n, "%-25s ", "N/A");
          attr = CRT_colors[PROCESS_SHADOW];
+         cwd = "N/A";
       } else if (String_startsWith(lp->cwd, "/proc/") && strstr(lp->cwd, " (deleted)") != NULL) {
-         xSnprintf(buffer, n, "%-25s ", "main thread terminated");
          attr = CRT_colors[PROCESS_SHADOW];
+         cwd = "main thread terminated";
       } else {
-         xSnprintf(buffer, n, "%-25.25s ", lp->cwd);
+         cwd = lp->cwd;
       }
-      break;
+      Process_printLeftAlignedField(str, attr, cwd, 25);
+      return;
+   }
    default:
       Process_writeField(this, str, field);
       return;

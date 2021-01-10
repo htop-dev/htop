@@ -244,6 +244,11 @@ void Process_outputRate(RichString* str, char* buffer, size_t n, double rate, in
    }
 }
 
+void Process_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width) {
+   int c = RichString_appendnWide(str, attr, content, MINIMUM(width, strlen(content)));
+   RichString_appendChr(str, ' ', width + 1 - c);
+}
+
 void Process_writeField(const Process* this, RichString* str, ProcessField field) {
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -365,8 +370,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
          attr = CRT_colors[PROCESS_SHADOW];
 
       if (this->user) {
-         int c = RichString_appendnWide(str, attr, this->user, MINIMUM(9, strlen(this->user)));
-         RichString_appendChr(str, ' ', 10 - c);
+         Process_printLeftAlignedField(str, attr, this->user, 9);
          return;
       }
 

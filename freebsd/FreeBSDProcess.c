@@ -71,14 +71,9 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    switch (field) {
    // add FreeBSD-specific fields here
    case JID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, fp->jid); break;
-   case JAIL: {
-      xSnprintf(buffer, n, "%-11s ", fp->jname);
-      if (buffer[11] != '\0') {
-         buffer[11] = ' ';
-         buffer[12] = '\0';
-      }
-      break;
-   }
+   case JAIL:
+      Process_printLeftAlignedField(str, attr, fp->jname ? fp->jname : "N/A", 11);
+      return;
    case TTY_NR:
       if (fp->ttyPath) {
          if (fp->ttyPath == nodevStr)
