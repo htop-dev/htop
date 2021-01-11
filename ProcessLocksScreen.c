@@ -27,7 +27,7 @@ ProcessLocksScreen* ProcessLocksScreen_new(const Process* process) {
       this->pid = process->tgid;
    else
       this->pid = process->pid;
-   return (ProcessLocksScreen*) InfoScreen_init(&this->super, process, NULL, LINES-3, "        ID  TYPE       EXCLUSION  READ/WRITE DEVICE:INODE                              START                  END  FILENAME");
+   return (ProcessLocksScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 2, "        ID  TYPE       EXCLUSION  READ/WRITE DEVICE:INODE                              START                  END  FILENAME");
 }
 
 void ProcessLocksScreen_delete(Object* this) {

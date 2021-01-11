@@ -60,7 +60,7 @@ const InfoScreenClass CommandScreen_class = {
 
 CommandScreen* CommandScreen_new(Process* process) {
    CommandScreen* this = AllocThis(CommandScreen);
-   return (CommandScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 3, " ");
+   return (CommandScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 2, " ");
 }
 
 void CommandScreen_delete(Object* this) {

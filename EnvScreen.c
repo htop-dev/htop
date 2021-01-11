@@ -17,7 +17,7 @@
 EnvScreen* EnvScreen_new(Process* process) {
    EnvScreen* this = xMalloc(sizeof(EnvScreen));
    Object_setClass(this, Class(EnvScreen));
-   return (EnvScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 3, " ");
+   return (EnvScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 2, " ");
 }
 
 void EnvScreen_delete(Object* this) {
