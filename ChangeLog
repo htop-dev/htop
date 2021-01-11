@@ -1,15 +1,40 @@
+What's new in version 3.0.5
+
+* BUGFIX / SECURITY: InfoScreen: fix uncontrolled format string
+* BUGFIX: Improve white text in the Light Terminal colour scheme
+  (both of the above thanks to V)
+* Enable the function bar on the main screen to be hidden (see Setup -> Display options)
+* BUGFIX: Reduce layout issues esp. around printing wide characters (not complete yet)
+* BUGFIX: Make the follow function exit cleanly after followed process died
+* Solaris: make Process callbacks static
+* Update help and man page for improved -t / -s options
+* Drop usage of formatted error messages from <err.h>
+* Show arrow indicating order of sorted process column
+* Lots of plumbing around the internal Hashtable, hardening and code cleanups
+* LibSensors: add support for Ryzen CPUs (vor 5 Tagen)
+  (thanks to Matej Dian)
+* BUGFIX: Fix CPU percentage on M1 silicon Macs
+  (thanks to Luke Groeninger)
+* LoadMeter: dynamically adjust color and total of bar
+* Find libsensors.so.4 for Fedora and friends
+* Add support to display CPU frequencies on Solarish platforms
+  (thanks to Dominik Hassler)
+* Enable going back to previous search matches (Shift-F3)
+* Added keybind 'N' for sorting by PID (drops 'n'/'N' as not used before much)
+  (thanks to Jake Mannens)
+
 What's new in version 3.0.4
 
 * Separate tree and list sort orders
 * Invert Process_compare so that superclass matches run first
-(thanks to Hisham Muhammad)
+  (thanks to Hisham Muhammad)
 * Unhardcode Mac OS tick-to-milliseconds conversion
-(thanks to Alexander Momchilov)
+  (thanks to Alexander Momchilov)
 * Check if clock_gettime needs linking of librt
 * Define O_PATH if not already defined
-(thanks to Chris Burr)
+  (thanks to Chris Burr)
 * Add column on Mac for processes running under translation
-(thanks to Dániel Bakai)
+  (thanks to Dániel Bakai)
 * Configure check for additional linker flags for keypad(3)
 * PSI Meter: constant width and only print ten-duration as bar
 * Sort in paused mode after inverting sort order
