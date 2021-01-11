@@ -216,7 +216,7 @@ MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* met
    this->leftNeighbor = NULL;
    Panel_setHeader(super, header);
    for (int i = 0; i < Vector_size(meters); i++) {
-      Meter* meter = (Meter*) Vector_get(meters, i);
+      const Meter* meter = (const Meter*) Vector_get(meters, i);
       Panel_add(super, (Object*) Meter_toListItem(meter, false));
    }
    return this;

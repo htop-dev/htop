@@ -215,7 +215,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             assert(optarg); /* please clang analyzer, cause optarg can be NULL in the 'u' case */
             char* argCopy = xStrdup(optarg);
             char* saveptr;
-            char* pid = strtok_r(argCopy, ",", &saveptr);
+            const char* pid = strtok_r(argCopy, ",", &saveptr);
 
             if(!flags.pidMatchList) {
                flags.pidMatchList = Hashtable_new(8, false);

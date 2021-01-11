@@ -754,7 +754,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
          }
 
          char* buf = buffer;
-         char* line = NULL;
+         const char* line;
          bool full = false;
          bool now = false;
          int fullSize = 0;
