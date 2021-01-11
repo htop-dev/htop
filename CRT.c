@@ -41,6 +41,9 @@ in the source distribution for its full text.
 #define ColorPairGrayBlack  ColorPair(Magenta,Magenta)
 #define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
 
+#define ColorPairWhiteDefault  ColorPair(Red, Red)
+#define ColorIndexWhiteDefault ColorIndex(Red, Red)
+
 static const char* const CRT_treeStrAscii[LAST_TREE_STR] = {
    [TREE_STR_VERT] = "|",
    [TREE_STR_RTEE] = "`",
@@ -371,7 +374,7 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [METER_VALUE_ERROR] = A_BOLD | ColorPair(Red, Black),
       [METER_VALUE_IOREAD] = ColorPair(Green, Black),
       [METER_VALUE_IOWRITE] = ColorPair(Yellow, Black),
-      [METER_VALUE_NOTICE] = A_BOLD | ColorPair(White, Black),
+      [METER_VALUE_NOTICE] = A_BOLD | ColorPairWhiteDefault,
       [METER_VALUE_OK] = ColorPair(Green, Black),
       [METER_VALUE_WARN] = A_BOLD | ColorPair(Yellow, Black),
       [LED_COLOR] = ColorPair(Green, Black),
@@ -405,15 +408,15 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [LOAD_AVERAGE_FIFTEEN] = ColorPair(Black, Black),
       [LOAD_AVERAGE_FIVE] = ColorPair(Black, Black),
       [LOAD_AVERAGE_ONE] = ColorPair(Black, Black),
-      [LOAD] = ColorPair(White, Black),
+      [LOAD] = ColorPairWhiteDefault,
       [HELP_BOLD] = ColorPair(Blue, Black),
-      [CLOCK] = ColorPair(White, Black),
-      [DATE] = ColorPair(White, Black),
-      [DATETIME] = ColorPair(White, Black),
+      [CLOCK] = ColorPairWhiteDefault,
+      [DATE] = ColorPairWhiteDefault,
+      [DATETIME] = ColorPairWhiteDefault,
       [CHECK_BOX] = ColorPair(Blue, Black),
       [CHECK_MARK] = ColorPair(Black, Black),
       [CHECK_TEXT] = ColorPair(Black, Black),
-      [HOSTNAME] = ColorPair(White, Black),
+      [HOSTNAME] = ColorPairWhiteDefault,
       [CPU_NICE] = ColorPair(Cyan, Black),
       [CPU_NICE_TEXT] = ColorPair(Cyan, Black),
       [CPU_NORMAL] = ColorPair(Green, Black),
@@ -789,7 +792,7 @@ void CRT_setColors(int colorScheme) {
 
    for (short int i = 0; i < 8; i++) {
       for (short int j = 0; j < 8; j++) {
-         if (ColorIndex(i, j) != ColorIndexGrayBlack) {
+         if (ColorIndex(i, j) != ColorIndexGrayBlack && ColorIndex(i, j) != ColorIndexWhiteDefault) {
             short int bg = (colorScheme != COLORSCHEME_BLACKNIGHT)
                      ? (j == 0 ? -1 : j)
                      : j;
@@ -801,6 +804,8 @@ void CRT_setColors(int colorScheme) {
    short int grayBlackFg = COLORS > 8 ? 8 : 0;
    short int grayBlackBg = (colorScheme != COLORSCHEME_BLACKNIGHT) ? -1 : 0;
    init_pair(ColorIndexGrayBlack, grayBlackFg, grayBlackBg);
+
+   init_pair(ColorIndexWhiteDefault, White, -1);
 
    CRT_colors = CRT_colorSchemes[colorScheme];
 }
