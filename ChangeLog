@@ -11,7 +11,7 @@ What's new in version 3.0.5
 * Drop usage of formatted error messages from <err.h>
 * Show arrow indicating order of sorted process column
 * Lots of plumbing around the internal Hashtable, hardening and code cleanups
-* LibSensors: add support for Ryzen CPUs (vor 5 Tagen)
+* LibSensors: add support for Ryzen CPUs
   (thanks to Matej Dian)
 * BUGFIX: Fix CPU percentage on M1 silicon Macs
   (thanks to Luke Groeninger)
