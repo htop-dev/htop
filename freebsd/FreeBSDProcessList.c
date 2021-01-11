@@ -414,7 +414,7 @@ static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
    char*  jname = NULL;
    char   jnamebuf[MAXHOSTNAMELEN];
 
-   if (kproc->ki_jid != 0 ) {
+   if (kproc->ki_jid != 0) {
       struct iovec jiov[6];
 
       memset(jnamebuf, 0, sizeof(jnamebuf));

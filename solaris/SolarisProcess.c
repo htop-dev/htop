@@ -79,7 +79,7 @@ static void SolarisProcess_writeField(const Process* this, RichString* str, Proc
    case TASKID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->taskid); break;
    case POOLID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->poolid); break;
    case CONTID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->contid); break;
-   case ZONE: xSnprintf(buffer, n, "%-*s ", ZONENAME_MAX/4, sp->zname); break;
+   case ZONE: Process_printLeftAlignedField(str, attr, sp->zname ? sp->zname : "global", ZONENAME_MAX/4); return;
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->realpid); break;
    case PPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->realppid); break;
    case LWPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->lwpid); break;

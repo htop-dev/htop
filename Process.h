@@ -179,6 +179,8 @@ void Process_fillStarttimeBuffer(Process* this);
 
 void Process_outputRate(RichString* str, char* buffer, size_t n, double rate, int coloring);
 
+void Process_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width);
+
 void Process_display(const Object* cast, RichString* out);
 
 void Process_done(Process* this);

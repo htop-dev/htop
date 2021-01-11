@@ -60,7 +60,7 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
       this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (iswprint(data[j]) ? data[j] : '?') } };
    }
 
-   return len;
+   return wcswidth(data, len);
 }
 
 static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data, int from, int len) {
