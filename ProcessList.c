@@ -148,7 +148,7 @@ void ProcessList_remove(ProcessList* this, Process* p) {
    Process* pp = Hashtable_remove(this->processTable, p->pid);
    assert(pp == p); (void)pp;
 
-   unsigned int pid = p->pid;
+   pid_t pid = p->pid;
    int idx = Vector_indexOf(this->processes, p, Process_pidCompare);
    assert(idx != -1);
 
@@ -156,7 +156,12 @@ void ProcessList_remove(ProcessList* this, Process* p) {
       Vector_remove(this->processes, idx);
    }
 
-   assert(Hashtable_get(this->processTable, pid) == NULL); (void)pid;
+   if (this->following != -1 && this->following == pid) {
+      this->following = -1;
+      Panel_setSelectionColor(this->panel, PANEL_SELECTION_FOCUS);
+   }
+
+   assert(Hashtable_get(this->processTable, pid) == NULL);
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
@@ -493,7 +498,6 @@ void ProcessList_rebuildPanel(ProcessList* this) {
    const char* incFilter = this->incFilter;
 
    int currPos = Panel_getSelectedIndex(this->panel);
-   pid_t currPid = this->following != -1 ? this->following : 0;
    int currScrollV = this->panel->scrollV;
 
    Panel_prune(this->panel);
@@ -509,7 +513,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
          continue;
 
       Panel_set(this->panel, idx, (Object*)p);
-      if ((this->following == -1 && idx == currPos) || (this->following != -1 && p->pid == currPid)) {
+      if ((this->following == -1 && idx == currPos) || (this->following != -1 && p->pid == this->following)) {
          Panel_setSelected(this->panel, idx);
          this->panel->scrollV = currScrollV;
       }
