@@ -73,12 +73,10 @@ static inline int RichString_writeFromAscii(RichString* this, int attrs, const c
    return len;
 }
 
-inline void RichString_setAttrn(RichString* this, int attrs, int start, int finish) {
-   cchar_t* ch = this->chptr + start;
-   finish = CLAMP(finish, 0, this->chlen - 1);
-   for (int i = start; i <= finish; i++) {
-      ch->attr = attrs;
-      ch++;
+inline void RichString_setAttrn(RichString* this, int attrs, int start, int charcount) {
+   int end = CLAMP(start + charcount, 0, this->chlen);
+   for (int i = start; i < end; i++) {
+      this->chptr[i].attr = attrs;
    }
 }
 
@@ -110,12 +108,10 @@ static inline int RichString_writeFromAscii(RichString* this, int attrs, const c
    return RichString_writeFromWide(this, attrs, data_c, from, len);
 }
 
-void RichString_setAttrn(RichString* this, int attrs, int start, int finish) {
-   chtype* ch = this->chptr + start;
-   finish = CLAMP(finish, 0, this->chlen - 1);
-   for (int i = start; i <= finish; i++) {
-      *ch = (*ch & 0xff) | attrs;
-      ch++;
+void RichString_setAttrn(RichString* this, int attrs, int start, int charcount) {
+   int end = CLAMP(start + charcount, 0, this->chlen);
+   for (int i = start; i < end; i++) {
+      this->chptr[i] = (this->chptr[i] & 0xff) | attrs;
    }
 }
 
@@ -148,7 +144,7 @@ void RichString_appendChr(RichString* this, char c, int count) {
 }
 
 void RichString_setAttr(RichString* this, int attrs) {
-   RichString_setAttrn(this, attrs, 0, this->chlen - 1);
+   RichString_setAttrn(this, attrs, 0, this->chlen);
 }
 
 int RichString_appendWide(RichString* this, int attrs, const char* data) {

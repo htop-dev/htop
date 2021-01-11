@@ -183,7 +183,8 @@ void Process_fillStarttimeBuffer(Process* this) {
 }
 
 static inline void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
-   int start = RichString_size(str), finish = 0;
+   int start = RichString_size(str);
+   int len = 0;
    const char* comm = this->comm;
 
    if (this->settings->highlightBaseName || !this->settings->showProgramPath) {
@@ -192,25 +193,24 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
          if (comm[i] == '/') {
             basename = i + 1;
          } else if (comm[i] == ':') {
-            finish = i + 1;
+            len = i + 1;
             break;
          }
       }
-      if (!finish) {
+      if (len == 0) {
          if (this->settings->showProgramPath) {
             start += basename;
          } else {
             comm += basename;
          }
-         finish = this->basenameOffset - basename;
+         len = this->basenameOffset - basename;
       }
-      finish += start - 1;
    }
 
    RichString_appendWide(str, attr, comm);
 
    if (this->settings->highlightBaseName) {
-      RichString_setAttrn(str, baseattr, start, finish);
+      RichString_setAttrn(str, baseattr, start, len);
    }
 }
 
