@@ -48,11 +48,11 @@ typedef struct PanelClass_ {
 
 #define As_Panel(this_)                        ((const PanelClass*)((this_)->super.klass))
 #define Panel_eventHandlerFn(this_)            As_Panel(this_)->eventHandler
-#define Panel_eventHandler(this_, ev_)         (assert(As_Panel(this_)->eventHandler), As_Panel(this_)->eventHandler((Panel*)(this_), ev_))
+#define Panel_eventHandler(this_, ev_)         (HTOP_ASSERT(As_Panel(this_)->eventHandler), As_Panel(this_)->eventHandler((Panel*)(this_), ev_))
 #define Panel_drawFunctionBarFn(this_)         As_Panel(this_)->drawFunctionBar
-#define Panel_drawFunctionBar(this_, hideFB_)  (assert(As_Panel(this_)->drawFunctionBar), As_Panel(this_)->drawFunctionBar((Panel*)(this_), hideFB_))
+#define Panel_drawFunctionBar(this_, hideFB_)  (HTOP_ASSERT(As_Panel(this_)->drawFunctionBar), As_Panel(this_)->drawFunctionBar((Panel*)(this_), hideFB_))
 #define Panel_printHeaderFn(this_)             As_Panel(this_)->printHeader
-#define Panel_printHeader(this_)               (assert(As_Panel(this_)->printHeader), As_Panel(this_)->printHeader((Panel*)(this_)))
+#define Panel_printHeader(this_)               (HTOP_ASSERT(As_Panel(this_)->printHeader), As_Panel(this_)->printHeader((Panel*)(this_)))
 
 struct Panel_ {
    Object super;

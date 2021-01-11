@@ -60,8 +60,8 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    case KEY_MOUSE:
    case KEY_RECLICK:
    case ' ':
-      assert(mark >= 0);
-      assert(mark < LAST_COLORSCHEME);
+      HTOP_ASSERT(mark >= 0);
+      HTOP_ASSERT(mark < LAST_COLORSCHEME);
       for (int i = 0; ColorSchemeNames[i] != NULL; i++)
          CheckItem_set((CheckItem*)Panel_get(super, i), false);
       CheckItem_set((CheckItem*)Panel_get(super, mark), true);
@@ -95,7 +95,7 @@ ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
    this->settings = settings;
    this->scr = scr;
 
-   assert(ARRAYSIZE(ColorSchemeNames) == LAST_COLORSCHEME + 1);
+   HTOP_ASSERT(ARRAYSIZE(ColorSchemeNames) == LAST_COLORSCHEME + 1);
 
    Panel_setHeader(super, "Colors");
    for (int i = 0; ColorSchemeNames[i] != NULL; i++) {

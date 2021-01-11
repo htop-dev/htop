@@ -180,7 +180,7 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
    int maxcpu = cpus;           // max iteration (in case we have average + smp)
    int cp_times_offset;
 
-   assert(cpus > 0);
+   HTOP_ASSERT(cpus > 0);
 
    size_t sizeof_cp_time_array;
 

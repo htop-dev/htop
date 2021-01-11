@@ -107,7 +107,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    // handle separately in the code below.
    for (int i = 1; Platform_meterTypes[i]; i++) {
       const MeterClass* type = Platform_meterTypes[i];
-      assert(type != &CPUMeter_class);
+      HTOP_ASSERT(type != &CPUMeter_class);
       const char* label = type->description ? type->description : type->uiName;
       Panel_add(super, (Object*) ListItem_new(label, i << 16));
    }

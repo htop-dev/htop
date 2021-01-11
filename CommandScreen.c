@@ -20,7 +20,7 @@ static void CommandScreen_scan(InfoScreen* this) {
    char line[COLS + 1];
    int line_offset = 0, last_spc = -1, len;
    for (; *p != '\0'; p++, line_offset++) {
-      assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
+      HTOP_ASSERT(line_offset >= 0 && (size_t)line_offset < sizeof(line));
       line[line_offset] = *p;
       if (*p == ' ') {
          last_spc = line_offset;

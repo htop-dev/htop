@@ -19,7 +19,7 @@ in the source distribution for its full text.
 
 static void OptionItem_delete(Object* cast) {
    OptionItem* this = (OptionItem*)cast;
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    free(this->text);
    free(this);
@@ -27,7 +27,7 @@ static void OptionItem_delete(Object* cast) {
 
 static void CheckItem_display(const Object* cast, RichString* out) {
    const CheckItem* this = (const CheckItem*)cast;
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
    if (CheckItem_get(this)) {
@@ -41,7 +41,7 @@ static void CheckItem_display(const Object* cast, RichString* out) {
 
 static void NumberItem_display(const Object* cast, RichString* out) {
    const NumberItem* this = (const NumberItem*)cast;
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    char buffer[12];
    RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
@@ -127,7 +127,7 @@ void CheckItem_toggle(CheckItem* this) {
 }
 
 NumberItem* NumberItem_newByRef(const char* text, int* ref, int scale, int min, int max) {
-   assert(min <= max);
+   HTOP_ASSERT(min <= max);
 
    NumberItem* this = AllocThis(NumberItem);
    this->super.text = xStrdup(text);
@@ -140,7 +140,7 @@ NumberItem* NumberItem_newByRef(const char* text, int* ref, int scale, int min, 
 }
 
 NumberItem* NumberItem_newByVal(const char* text, int value, int scale, int min, int max) {
-   assert(min <= max);
+   HTOP_ASSERT(min <= max);
 
    NumberItem* this = AllocThis(NumberItem);
    this->super.text = xStrdup(text);

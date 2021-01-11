@@ -126,8 +126,8 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header) {
 }
 
 void ProcessList_add(ProcessList* this, Process* p) {
-   assert(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
-   assert(Hashtable_get(this->processTable, p->pid) == NULL);
+   HTOP_ASSERT(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
+   HTOP_ASSERT(Hashtable_get(this->processTable, p->pid) == NULL);
    p->processList = this;
 
    // highlighting processes found in first scan by first scan marked "far in the past"
@@ -136,21 +136,21 @@ void ProcessList_add(ProcessList* this, Process* p) {
    Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
 
-   assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
-   assert(Hashtable_get(this->processTable, p->pid) != NULL);
-   assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
+   HTOP_ASSERT(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
+   HTOP_ASSERT(Hashtable_get(this->processTable, p->pid) != NULL);
+   HTOP_ASSERT(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
 void ProcessList_remove(ProcessList* this, const Process* p) {
-   assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
-   assert(Hashtable_get(this->processTable, p->pid) != NULL);
+   HTOP_ASSERT(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
+   HTOP_ASSERT(Hashtable_get(this->processTable, p->pid) != NULL);
 
    const Process* pp = Hashtable_remove(this->processTable, p->pid);
-   assert(pp == p); (void)pp;
+   HTOP_ASSERT(pp == p); (void)pp;
 
    pid_t pid = p->pid;
    int idx = Vector_indexOf(this->processes, p, Process_pidCompare);
-   assert(idx != -1);
+   HTOP_ASSERT(idx != -1);
 
    if (idx >= 0) {
       Vector_remove(this->processes, idx);
@@ -161,8 +161,8 @@ void ProcessList_remove(ProcessList* this, const Process* p) {
       Panel_setSelectionColor(this->panel, PANEL_SELECTION_FOCUS);
    }
 
-   assert(Hashtable_get(this->processTable, pid) == NULL);
-   assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
+   HTOP_ASSERT(Hashtable_get(this->processTable, pid) == NULL);
+   HTOP_ASSERT(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
 Process* ProcessList_get(ProcessList* this, int idx) {
@@ -224,7 +224,7 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
    // 4 | 6 | 7
    for (unsigned int i = leftBound; i < rightBound; i++) {
       Process* proc = (Process*)Hashtable_get(this->displayTreeSet, i);
-      assert(proc);
+      HTOP_ASSERT(proc);
       if (proc && proc->tree_depth == deep && proc->tree_left > left && proc->tree_right < right) {
          if (Vector_size(layer) > 0) {
             Process* previous_process = (Process*)Vector_get(layer, Vector_size(layer) - 1);
@@ -297,8 +297,8 @@ static void ProcessList_updateTreeSet(ProcessList* this) {
 
    const int vsize = Vector_size(this->processes);
 
-   assert(Hashtable_count(this->draftingTreeSet) == 0);
-   assert((int)Hashtable_count(this->displayTreeSet) == vsize);
+   HTOP_ASSERT(Hashtable_count(this->draftingTreeSet) == 0);
+   HTOP_ASSERT((int)Hashtable_count(this->displayTreeSet) == vsize);
 
    ProcessList_updateTreeSetLayer(this, 0, vsize, 0, 0, vsize * 2 + 1, &index, &tree_index, -1);
 
@@ -306,8 +306,8 @@ static void ProcessList_updateTreeSet(ProcessList* this) {
    this->draftingTreeSet = this->displayTreeSet;
    this->displayTreeSet = tmp;
 
-   assert(Hashtable_count(this->draftingTreeSet) == 0);
-   assert((int)Hashtable_count(this->displayTreeSet) == vsize);
+   HTOP_ASSERT(Hashtable_count(this->draftingTreeSet) == 0);
+   HTOP_ASSERT((int)Hashtable_count(this->displayTreeSet) == vsize);
 }
 
 static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show, int* node_counter, int* node_index) {
@@ -339,7 +339,7 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
          Vector_insert(this->processes2, 0, process);
       }
 
-      assert(Vector_size(this->processes2) == s + 1); (void)s;
+      HTOP_ASSERT(Vector_size(this->processes2) == s + 1); (void)s;
 
       int nextIndent = indent | (1 << level);
       ProcessList_buildTreeBranch(this, process->pid, level + 1, (i < size - 1) ? nextIndent : indent, direction, show ? process->showChildren : false, node_counter, node_index);
@@ -450,7 +450,7 @@ static void ProcessList_buildTree(ProcessList* this) {
       }
 
       // There should be no loop in the process tree
-      assert(i < size);
+      HTOP_ASSERT(i < size);
    }
 
    // Swap listings around
@@ -459,8 +459,8 @@ static void ProcessList_buildTree(ProcessList* this) {
    this->processes2 = t;
 
    // Check consistency of the built structures
-   assert(Vector_size(this->processes) == vsize); (void)vsize;
-   assert(Vector_size(this->processes2) == 0);
+   HTOP_ASSERT(Vector_size(this->processes) == vsize); (void)vsize;
+   HTOP_ASSERT(Vector_size(this->processes2) == 0);
 }
 
 void ProcessList_sort(ProcessList* this) {
@@ -525,11 +525,11 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
    Process* proc = (Process*) Hashtable_get(this->processTable, pid);
    *preExisting = proc;
    if (proc) {
-      assert(Vector_indexOf(this->processes, proc, Process_pidCompare) != -1);
-      assert(proc->pid == pid);
+      HTOP_ASSERT(Vector_indexOf(this->processes, proc, Process_pidCompare) != -1);
+      HTOP_ASSERT(proc->pid == pid);
    } else {
       proc = constructor(this->settings);
-      assert(proc->comm == NULL);
+      HTOP_ASSERT(proc->comm == NULL);
       proc->pid = pid;
    }
    return proc;

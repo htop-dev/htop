@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 
+#include "CRT.h"
 #include "Macros.h"
 #include "XUtils.h"
 

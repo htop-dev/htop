@@ -113,14 +113,14 @@ void Meter_setMode(Meter* this, int modeIndex) {
       modeIndex = 1;
    }
 
-   assert(modeIndex < LAST_METERMODE);
+   HTOP_ASSERT(modeIndex < LAST_METERMODE);
    if (Meter_defaultMode(this) == CUSTOM_METERMODE) {
       this->draw = Meter_drawFn(this);
       if (Meter_updateModeFn(this)) {
          Meter_updateMode(this, modeIndex);
       }
    } else {
-      assert(modeIndex >= 1);
+      HTOP_ASSERT(modeIndex >= 1);
       free(this->drawData);
       this->drawData = NULL;
 
@@ -219,9 +219,9 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       // If still to large, print the start not the end
       startPos = MINIMUM(startPos, w);
    }
-   assert(startPos >= 0);
-   assert(startPos <= w);
-   assert(startPos + w <= RichString_sizeVal(bar));
+   HTOP_ASSERT(startPos >= 0);
+   HTOP_ASSERT(startPos <= w);
+   HTOP_ASSERT(startPos + w <= RichString_sizeVal(bar));
 
    int blockSizes[10];
 

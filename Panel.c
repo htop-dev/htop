@@ -65,7 +65,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
 }
 
 void Panel_done(Panel* this) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
    free(this->eventHandlerState);
    Vector_delete(this->items);
    FunctionBar_delete(this->defaultBar);
@@ -82,7 +82,7 @@ inline void Panel_setHeader(Panel* this, const char* header) {
 }
 
 void Panel_move(Panel* this, int x, int y) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    this->x = x;
    this->y = y;
@@ -90,7 +90,7 @@ void Panel_move(Panel* this, int x, int y) {
 }
 
 void Panel_resize(Panel* this, int w, int h) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    this->w = w;
    this->h = h;
@@ -98,7 +98,7 @@ void Panel_resize(Panel* this, int w, int h) {
 }
 
 void Panel_prune(Panel* this) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    Vector_prune(this->items);
    this->scrollV = 0;
@@ -108,33 +108,33 @@ void Panel_prune(Panel* this) {
 }
 
 void Panel_add(Panel* this, Object* o) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    Vector_add(this->items, o);
    this->needsRedraw = true;
 }
 
 void Panel_insert(Panel* this, int i, Object* o) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    Vector_insert(this->items, i, o);
    this->needsRedraw = true;
 }
 
 void Panel_set(Panel* this, int i, Object* o) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    Vector_set(this->items, i, o);
 }
 
 Object* Panel_get(Panel* this, int i) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    return Vector_get(this->items, i);
 }
 
 Object* Panel_remove(Panel* this, int i) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    this->needsRedraw = true;
    Object* removed = Vector_remove(this->items, i);
@@ -146,7 +146,7 @@ Object* Panel_remove(Panel* this, int i) {
 }
 
 Object* Panel_getSelected(Panel* this) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
    if (Vector_size(this->items) > 0) {
       return Vector_get(this->items, this->selected);
    } else {
@@ -155,7 +155,7 @@ Object* Panel_getSelected(Panel* this) {
 }
 
 void Panel_moveSelectedUp(Panel* this) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    Vector_moveUp(this->items, this->selected);
    if (this->selected > 0) {
@@ -164,7 +164,7 @@ void Panel_moveSelectedUp(Panel* this) {
 }
 
 void Panel_moveSelectedDown(Panel* this) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    Vector_moveDown(this->items, this->selected);
    if (this->selected + 1 < Vector_size(this->items)) {
@@ -173,19 +173,19 @@ void Panel_moveSelectedDown(Panel* this) {
 }
 
 int Panel_getSelectedIndex(const Panel* this) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    return this->selected;
 }
 
 int Panel_size(const Panel* this) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    return Vector_size(this->items);
 }
 
 void Panel_setSelected(Panel* this, int selected) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    int size = Vector_size(this->items);
    if (selected >= size) {
@@ -201,15 +201,15 @@ void Panel_setSelected(Panel* this, int selected) {
 }
 
 void Panel_splice(Panel* this, Vector* from) {
-   assert (this != NULL);
-   assert (from != NULL);
+   HTOP_ASSERT(this != NULL);
+   HTOP_ASSERT(from != NULL);
 
    Vector_splice(this->items, from);
    this->needsRedraw = true;
 }
 
 void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    int size = Vector_size(this->items);
    int scrollH = this->scrollH;
@@ -338,7 +338,7 @@ static int Panel_headerHeight(const Panel* this) {
 }
 
 bool Panel_onKey(Panel* this, int key) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
 
    const int size = Vector_size(this->items);
 

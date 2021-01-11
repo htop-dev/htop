@@ -65,7 +65,7 @@ void ScreenManager_add(ScreenManager* this, Panel* item, int size) {
 }
 
 Panel* ScreenManager_remove(ScreenManager* this, int idx) {
-   assert(this->panelCount > idx);
+   HTOP_ASSERT(this->panelCount > idx);
    Panel* panel = (Panel*) Vector_remove(this->panels, idx);
    this->panelCount--;
    return panel;

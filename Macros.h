@@ -3,6 +3,7 @@
 
 #include <assert.h> // IWYU pragma: keep
 
+
 #ifndef MINIMUM
 #define MINIMUM(a, b)             ((a) < (b) ? (a) : (b))
 #endif
@@ -12,7 +13,7 @@
 #endif
 
 #ifndef CLAMP
-#define CLAMP(x, low, high)       (assert((low) <= (high)), ((x) > (high)) ? (high) : MAXIMUM(x, low))
+#define CLAMP(x, low, high)       (HTOP_ASSERT((low) <= (high)), ((x) > (high)) ? (high) : MAXIMUM(x, low))
 #endif
 
 #ifndef ARRAYSIZE
@@ -25,6 +26,14 @@
 
 #ifndef SPACESHIP_NULLSTR
 #define SPACESHIP_NULLSTR(a, b)   strcmp((a) ? (a) : "", (b) ? (b) : "")
+#endif
+
+#ifndef HTOP_ASSERT
+#ifndef NDEBUG
+#define HTOP_ASSERT(expr)         ((expr) ? ((void)0) : (CRT_done(), assert(expr)))
+#else
+#define HTOP_ASSERT(expr)         ((void)0)
+#endif
 #endif
 
 #ifdef  __GNUC__  // defined by GCC and Clang

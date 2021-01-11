@@ -122,7 +122,7 @@ static void TraceScreen_updateTrace(InfoScreen* super) {
    char buffer[1025];
 
    int fd_strace = fileno(this->strace);
-   assert(fd_strace != -1);
+   HTOP_ASSERT(fd_strace != -1);
 
    fd_set fds;
    FD_ZERO(&fds);

@@ -46,7 +46,7 @@ void Process_setupColumnWidths() {
       return;
 
    Process_pidDigits = ceil(log10(maxPid));
-   assert(Process_pidDigits <= PROCESS_MAX_PID_DIGITS);
+   HTOP_ASSERT(Process_pidDigits <= PROCESS_MAX_PID_DIGITS);
 }
 
 void Process_humanNumber(RichString* str, unsigned long long number, bool coloring) {
@@ -407,11 +407,11 @@ void Process_display(const Object* cast, RichString* out) {
       }
    }
 
-   assert(out->chlen > 0);
+   HTOP_ASSERT(out->chlen > 0);
 }
 
 void Process_done(Process* this) {
-   assert (this != NULL);
+   HTOP_ASSERT(this != NULL);
    free(this->comm);
 }
 
@@ -448,7 +448,7 @@ void Process_toggleTag(Process* this) {
 }
 
 bool Process_isNew(const Process* this) {
-   assert(this->processList);
+   HTOP_ASSERT(this->processList);
    if (this->processList->scanTs >= this->seenTs) {
       return this->processList->scanTs - this->seenTs <= 1000 * this->processList->settings->highlightDelaySecs;
    }

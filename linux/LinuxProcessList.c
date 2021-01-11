@@ -70,7 +70,7 @@ static long long btime;
 static long jiffy;
 
 static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* mode) {
-   assert(String_eq(mode, "r")); /* only currently supported mode */
+   HTOP_ASSERT(String_eq(mode, "r")); /* only currently supported mode */
 
    int fd = Compat_openat(openatArg, pathname, O_RDONLY);
    if (fd < 0)
@@ -291,7 +291,7 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    if (r < 0)
       return false;
 
-   assert(process->pid == atoi(buf));
+   HTOP_ASSERT(process->pid == atoi(buf));
    char* location = strchr(buf, ' ');
    if (!location)
       return false;
@@ -353,7 +353,7 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    }
    process->exit_signal = strtol(location, &location, 10);
    location += 1;
-   assert(location != NULL);
+   HTOP_ASSERT(location != NULL);
    process->processor = strtol(location, &location, 10);
 
    process->time = lp->utime + lp->stime;
@@ -724,7 +724,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
          break;
       default:
          //Sanity Check: Should never reach here, or the implementation is missing something!
-         assert(false && "OpenVZ handling: Unimplemented case for field handling reached.");
+         HTOP_ASSERT(false && "OpenVZ handling: Unimplemented case for field handling reached.");
       }
    }
 
@@ -921,7 +921,7 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
 
    if ((nlattr = nlattrs[TASKSTATS_TYPE_AGGR_PID]) || (nlattr = nlattrs[TASKSTATS_TYPE_NULL])) {
       memcpy(&stats, nla_data(nla_next(nla_data(nlattr), &rem)), sizeof(stats));
-      assert(lp->super.pid == (pid_t)stats.ac_pid);
+      HTOP_ASSERT(lp->super.pid == (pid_t)stats.ac_pid);
 
       unsigned long long int timeDelta = stats.ac_etime * 1000 - lp->delay_read_time;
       #define BOUNDS(x) (isnan(x) ? 0.0 : ((x) > 100) ? 100.0 : (x))
@@ -1578,7 +1578,7 @@ static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
       unsigned long long int free = strtoull(content, NULL, 10);
 
       int shift = ffsl(hugePageSize) - 1 - (HTOP_HUGEPAGE_BASE_SHIFT - 10);
-      assert(shift >= 0 && shift < HTOP_HUGEPAGE_COUNT);
+      HTOP_ASSERT(shift >= 0 && shift < HTOP_HUGEPAGE_COUNT);
 
       this->totalHugePageMem += total * hugePageSize;
       this->usedHugePageMem[shift] = (total - free) * hugePageSize;
@@ -1713,7 +1713,7 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
    int cpus = this->super.cpuCount;
-   assert(cpus > 0);
+   HTOP_ASSERT(cpus > 0);
    for (int i = 0; i <= cpus; i++) {
       char buffer[PROC_LINE_LENGTH + 1];
       unsigned long long int usertime, nicetime, systemtime, idletime;
@@ -1732,7 +1732,7 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       } else {
          int cpuid;
          (void) sscanf(buffer, "cpu%4d %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
-         assert(cpuid == i - 1);
+         HTOP_ASSERT(cpuid == i - 1);
       }
       // Guest time is already accounted in usertime
       usertime = usertime - guest;
@@ -1892,7 +1892,7 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
 
 static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
    int cpus = this->super.cpuCount;
-   assert(cpus > 0);
+   HTOP_ASSERT(cpus > 0);
 
    for (int i = 0; i <= cpus; i++) {
       this->cpus[i].frequency = NAN;
@@ -1936,7 +1936,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    unsigned long long now = tv.tv_sec * 1000ULL + tv.tv_usec / 1000ULL;
 
    /* PROCDIR is an absolute path */
-   assert(PROCDIR[0] == '/');
+   HTOP_ASSERT(PROCDIR[0] == '/');
 #ifdef HAVE_OPENAT
    openat_arg_t rootFd = AT_FDCWD;
 #else

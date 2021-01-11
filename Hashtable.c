@@ -79,7 +79,7 @@ size_t Hashtable_count(const Hashtable* this) {
       if (this->buckets[i].value)
          items++;
    }
-   assert(items == this->items);
+   HTOP_ASSERT(items == this->items);
    return items;
 }
 
@@ -114,7 +114,7 @@ Hashtable* Hashtable_new(size_t size, bool owner) {
    this->buckets = (HashtableItem*) xCalloc(this->size, sizeof(HashtableItem));
    this->owner = owner;
 
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
    return this;
 }
 
@@ -126,7 +126,7 @@ void Hashtable_delete(Hashtable* this) {
 }
 
 void Hashtable_clear(Hashtable* this) {
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
 
    if (this->owner)
       for (size_t i = 0; i < this->size; i++)
@@ -135,7 +135,7 @@ void Hashtable_clear(Hashtable* this) {
    memset(this->buckets, 0, this->size * sizeof(HashtableItem));
    this->items = 0;
 
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
 }
 
 static void insert(Hashtable* this, ht_key_t key, void* value) {
@@ -177,13 +177,13 @@ static void insert(Hashtable* this, ht_key_t key, void* value) {
       index = (index + 1) % this->size;
       probe++;
 
-      assert(index != origIndex);
+      HTOP_ASSERT(index != origIndex);
    }
 }
 
 void Hashtable_setSize(Hashtable* this, size_t size) {
 
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
 
    if (size <= this->items)
       return;
@@ -205,14 +205,14 @@ void Hashtable_setSize(Hashtable* this, size_t size) {
 
    free(oldBuckets);
 
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
 }
 
 void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
 
-   assert(Hashtable_isConsistent(this));
-   assert(this->size > 0);
-   assert(value);
+   HTOP_ASSERT(Hashtable_isConsistent(this));
+   HTOP_ASSERT(this->size > 0);
+   HTOP_ASSERT(value);
 
    /* grow on load-factor > 0.7 */
    if (10 * this->items > 7 * this->size) {
@@ -224,9 +224,9 @@ void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
 
    insert(this, key, value);
 
-   assert(Hashtable_isConsistent(this));
-   assert(Hashtable_get(this, key) != NULL);
-   assert(this->size > this->items);
+   HTOP_ASSERT(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_get(this, key) != NULL);
+   HTOP_ASSERT(this->size > this->items);
 }
 
 void* Hashtable_remove(Hashtable* this, ht_key_t key) {
@@ -236,7 +236,7 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
    size_t origIndex = index;
 #endif
 
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
 
    void* res = NULL;
 
@@ -271,11 +271,11 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
       index = (index + 1) % this->size;
       probe++;
 
-      assert(index != origIndex);
+      HTOP_ASSERT(index != origIndex);
    }
 
-   assert(Hashtable_isConsistent(this));
-   assert(Hashtable_get(this, key) == NULL);
+   HTOP_ASSERT(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_get(this, key) == NULL);
 
    /* shrink on load-factor < 0.125 */
    if (8 * this->items < this->size)
@@ -292,7 +292,7 @@ void* Hashtable_get(Hashtable* this, ht_key_t key) {
    size_t origIndex = index;
 #endif
 
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
 
    while (this->buckets[index].value) {
       if (this->buckets[index].key == key) {
@@ -306,18 +306,18 @@ void* Hashtable_get(Hashtable* this, ht_key_t key) {
       index = (index + 1) != this->size ? (index + 1) : 0;
       probe++;
 
-      assert(index != origIndex);
+      HTOP_ASSERT(index != origIndex);
    }
 
    return res;
 }
 
 void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData) {
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
    for (size_t i = 0; i < this->size; i++) {
       HashtableItem* walk = &this->buckets[i];
       if (walk->value)
          f(walk->key, walk->value, userData);
    }
-   assert(Hashtable_isConsistent(this));
+   HTOP_ASSERT(Hashtable_isConsistent(this));
 }

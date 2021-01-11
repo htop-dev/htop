@@ -219,7 +219,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
       int total = fscanf(fd, "%32lf %32lf %32lf %32d/%32d %32d", one, five, fifteen,
          &activeProcs, &totalProcs, &lastProc);
       (void) total;
-      assert(total == 6);
+      HTOP_ASSERT(total == 6);
       fclose(fd);
    }
 }
@@ -488,7 +488,7 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
       total = fscanf(fd, "full avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
    }
    (void) total;
-   assert(total == 3);
+   HTOP_ASSERT(total == 3);
    fclose(fd);
 }
 

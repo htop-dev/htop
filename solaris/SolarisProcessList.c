@@ -82,7 +82,7 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    double userbuf = 0;
    int arrskip = 0;
 
-   assert(cpus > 0);
+   HTOP_ASSERT(cpus > 0);
 
    if (cpus > 1) {
       // Store values for the stats loop one extra element up in the array
@@ -103,7 +103,7 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
          }
       }
 
-      assert( (idletime != NULL) && (intrtime != NULL)
+      HTOP_ASSERT( (idletime != NULL) && (intrtime != NULL)
            && (krnltime != NULL) && (usertime != NULL) );
 
       if (pl->settings->showCPUFrequency) {
@@ -115,7 +115,7 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
             }
          }
 
-         assert( cpu_freq != NULL );
+         HTOP_ASSERT( cpu_freq != NULL );
       }
 
       CPUData* cpuData = &(spl->cpus[i + arrskip]);

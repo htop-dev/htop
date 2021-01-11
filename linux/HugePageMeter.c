@@ -32,7 +32,7 @@ static const char* const HugePageMeter_labels[] = {
 };
 
 static void HugePageMeter_updateValues(Meter* this, char* buffer, size_t size) {
-   assert(ARRAYSIZE(HugePageMeter_labels) == HTOP_HUGEPAGE_COUNT);
+   HTOP_ASSERT(ARRAYSIZE(HugePageMeter_labels) == HTOP_HUGEPAGE_COUNT);
 
    int written;
    unsigned long long int usedTotal = 0;

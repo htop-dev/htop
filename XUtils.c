@@ -29,7 +29,7 @@ void fail() {
 }
 
 void* xMalloc(size_t size) {
-   assert(size > 0);
+   HTOP_ASSERT(size > 0);
    void* data = malloc(size);
    if (!data) {
       fail();
@@ -38,8 +38,8 @@ void* xMalloc(size_t size) {
 }
 
 void* xMallocArray(size_t nmemb, size_t size) {
-   assert(nmemb > 0);
-   assert(size > 0);
+   HTOP_ASSERT(nmemb > 0);
+   HTOP_ASSERT(size > 0);
    if (SIZE_MAX / nmemb < size) {
       fail();
    }
@@ -47,8 +47,8 @@ void* xMallocArray(size_t nmemb, size_t size) {
 }
 
 void* xCalloc(size_t nmemb, size_t size) {
-   assert(nmemb > 0);
-   assert(size > 0);
+   HTOP_ASSERT(nmemb > 0);
+   HTOP_ASSERT(size > 0);
    if (SIZE_MAX / nmemb < size) {
       fail();
    }
@@ -60,7 +60,7 @@ void* xCalloc(size_t nmemb, size_t size) {
 }
 
 void* xRealloc(void* ptr, size_t size) {
-   assert(size > 0);
+   HTOP_ASSERT(size > 0);
    void* data = realloc(ptr, size); // deepcode ignore MemoryLeakOnRealloc: this goes to fail()
    if (!data) {
       free(ptr);
@@ -70,8 +70,8 @@ void* xRealloc(void* ptr, size_t size) {
 }
 
 void* xReallocArray(void* ptr, size_t nmemb, size_t size) {
-   assert(nmemb > 0);
-   assert(size > 0);
+   HTOP_ASSERT(nmemb > 0);
+   HTOP_ASSERT(size > 0);
    if (SIZE_MAX / nmemb < size) {
       fail();
    }
@@ -194,7 +194,7 @@ char* String_readLine(FILE* fd) {
 }
 
 size_t String_safeStrncpy(char *restrict dest, const char *restrict src, size_t size) {
-   assert(size > 0);
+   HTOP_ASSERT(size > 0);
 
    size_t i = 0;
    for (; i < size - 1 && src[i]; i++)
