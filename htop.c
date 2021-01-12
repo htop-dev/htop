@@ -115,7 +115,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .highlightChanges = false,
       .highlightDelaySecs = -1,
 #ifdef HAVE_LIBCAP
-      .capabilitiesMode = (geteuid() == 0) ? CAP_MODE_BASIC : CAP_MODE_NONE,
+      .capabilitiesMode = CAP_MODE_BASIC,
 #endif
    };
 
@@ -325,7 +325,7 @@ static int dropCapabilities(enum CapMode mode) {
 #endif
    };
    const cap_value_t* const keepcaps = (mode == CAP_MODE_BASIC) ? keepcapsBasic : keepcapsStrict;
-   const int ncap = (mode == CAP_MODE_BASIC) ? ARRAYSIZE(keepcapsBasic) : ARRAYSIZE(keepcapsStrict);
+   const size_t ncap = (mode == CAP_MODE_BASIC) ? ARRAYSIZE(keepcapsBasic) : ARRAYSIZE(keepcapsStrict);
 
    cap_t caps = cap_init();
    if (caps == NULL) {
@@ -339,24 +339,51 @@ static int dropCapabilities(enum CapMode mode) {
       return -1;
    }
 
-   if (cap_set_flag(caps, CAP_PERMITTED, ncap, keepcaps, CAP_SET) < 0) {
-      fprintf(stderr, "Error: can not set permitted capabilities: %s\n", strerror(errno));
+   cap_t currCaps = cap_get_proc();
+   if (currCaps == NULL) {
+      fprintf(stderr, "Error: can not get current process capabilities: %s\n", strerror(errno));
       cap_free(caps);
       return -1;
    }
 
-   if (cap_set_flag(caps, CAP_EFFECTIVE, ncap, keepcaps, CAP_SET) < 0) {
-      fprintf(stderr, "Error: can not set effective capabilities: %s\n", strerror(errno));
-      cap_free(caps);
-      return -1;
+   for (size_t i = 0; i < ncap; i++) {
+      if (!CAP_IS_SUPPORTED(keepcaps[i]))
+         continue;
+
+      cap_flag_value_t current;
+      if (cap_get_flag(currCaps, keepcaps[i], CAP_PERMITTED, &current) < 0) {
+         fprintf(stderr, "Error: can not get current value of capability %d: %s\n", keepcaps[i], strerror(errno));
+         cap_free(currCaps);
+         cap_free(caps);
+         return -1;
+      }
+
+      if (current != CAP_SET)
+         continue;
+
+      if (cap_set_flag(caps, CAP_PERMITTED, 1, &keepcaps[i], CAP_SET) < 0) {
+         fprintf(stderr, "Error: can not set permitted capability %d: %s\n", keepcaps[i], strerror(errno));
+         cap_free(currCaps);
+         cap_free(caps);
+         return -1;
+      }
+
+      if (cap_set_flag(caps, CAP_EFFECTIVE, 1, &keepcaps[i], CAP_SET) < 0) {
+         fprintf(stderr, "Error: can not set effective capability %d: %s\n", keepcaps[i], strerror(errno));
+         cap_free(currCaps);
+         cap_free(caps);
+         return -1;
+      }
    }
 
    if (cap_set_proc(caps) < 0) {
       fprintf(stderr, "Error: can not set process capabilities: %s\n", strerror(errno));
+      cap_free(currCaps);
       cap_free(caps);
       return -1;
    }
 
+   cap_free(currCaps);
    cap_free(caps);
 
    return 0;
