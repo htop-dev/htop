@@ -95,7 +95,7 @@ static const uint64_t OEISprimes[] = {
    34359738337, 68719476731, 137438953447
 };
 
-static uint64_t nextPrime(size_t n) {
+static size_t nextPrime(size_t n) {
    /* on 32-bit make sure we do not return primes not fitting in size_t */
    for (size_t i = 0; i < ARRAYSIZE(OEISprimes) && OEISprimes[i] < SIZE_MAX; i++) {
       if (n <= OEISprimes[i])
