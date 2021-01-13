@@ -80,6 +80,15 @@ inline void RichString_setAttrn(RichString* this, int attrs, int start, int char
    }
 }
 
+void RichString_appendChr(RichString* this, int attrs, char c, int count) {
+   int from = this->chlen;
+   int newLen = from + count;
+   RichString_setLen(this, newLen);
+   for (int i = from; i < newLen; i++) {
+      this->chptr[i] = (CharType) { .attr = attrs, .chars = { c, 0 } };
+   }
+}
+
 int RichString_findChar(const RichString* this, char c, int start) {
    const wchar_t wc = btowc(c);
    const cchar_t* ch = this->chptr + start;
@@ -115,6 +124,15 @@ void RichString_setAttrn(RichString* this, int attrs, int start, int charcount) 
    }
 }
 
+void RichString_appendChr(RichString* this, int attrs, char c, int count) {
+   int from = this->chlen;
+   int newLen = from + count;
+   RichString_setLen(this, newLen);
+   for (int i = from; i < newLen; i++) {
+      this->chptr[i] = c | attrs;
+   }
+}
+
 int RichString_findChar(const RichString* this, char c, int start) {
    const chtype* ch = this->chptr + start;
    for (int i = start; i < this->chlen; i++) {
@@ -132,15 +150,6 @@ void RichString_prune(RichString* this) {
       free(this->chptr);
    memset(this, 0, sizeof(RichString));
    this->chptr = this->chstr;
-}
-
-void RichString_appendChr(RichString* this, char c, int count) {
-   int from = this->chlen;
-   int newLen = from + count;
-   RichString_setLen(this, newLen);
-   for (int i = from; i < newLen; i++) {
-      RichString_setChar(this, i, c);
-   }
 }
 
 void RichString_setAttr(RichString* this, int attrs) {

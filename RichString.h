@@ -50,7 +50,7 @@ void RichString_prune(RichString* this);
 
 void RichString_setAttr(RichString* this, int attrs);
 
-void RichString_appendChr(RichString* this, char c, int count);
+void RichString_appendChr(RichString* this, int attrs, char c, int count);
 
 int RichString_appendWide(RichString* this, int attrs, const char* data);
 

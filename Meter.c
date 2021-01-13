@@ -201,7 +201,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // The text in the bar is right aligned;
    // Pad with maximal spaces and then calculate needed starting position offset
    RichString_begin(bar);
-   RichString_appendChr(&bar, ' ', w);
+   RichString_appendChr(&bar, 0, ' ', w);
    RichString_appendWide(&bar, 0, buffer);
    int startPos = RichString_sizeVal(bar) - w;
    if (startPos > w) {
