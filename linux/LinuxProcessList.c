@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -1727,9 +1728,27 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
    int numCPUsWithFrequency = 0;
    unsigned long totalFrequency = 0;
 
+   /*
+    * On some AMD and Intel CPUs read()ing scaling_cur_freq is quite slow (> 1ms). This delay
+    * accumulates for every core. For details see issue#471.
+    * If the read on CPU 0 takes longer than 500us bail out and fall back to reading the
+    * frequencies from /proc/cpuinfo.
+    * Once the condition has been met, bail out early for the next couple of scans.
+    */
+   static int timeout = 0;
+
+   if (timeout > 0) {
+      timeout--;
+      return -1;
+   }
+
    for (int i = 0; i < cpus; ++i) {
       char pathBuffer[64];
       xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", i);
+
+      struct timespec start;
+      if (i == 0)
+         clock_gettime(CLOCK_MONOTONIC, &start);
 
       FILE* file = fopen(pathBuffer, "r");
       if (!file)
@@ -1745,6 +1764,17 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
       }
 
       fclose(file);
+
+      if (i == 0) {
+         struct timespec end;
+         clock_gettime(CLOCK_MONOTONIC, &end);
+         const time_t timeTakenUs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+         if (timeTakenUs > 500) {
+            timeout = 30;
+            return -1;
+         }
+      }
+
    }
 
    if (numCPUsWithFrequency > 0)
