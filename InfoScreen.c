@@ -110,7 +110,7 @@ void InfoScreen_run(InfoScreen* this) {
          int ok = getmouse(&mevent);
          if (ok == OK) {
             if (mevent.y >= panel->y && mevent.y < LINES - 1) {
-               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV);
+               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
                ch = 0;
             } else if (mevent.y == LINES - 1) {
                ch = IncSet_synthesizeEvent(this->inc, mevent.x);
