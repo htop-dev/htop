@@ -1533,7 +1533,9 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
 
 static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
    this->totalHugePageMem = 0;
-   this->freeHugePageMem = 0;
+   for (unsigned i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
+      this->usedHugePageMem[i] = ULLONG_MAX;
+   }
 
    DIR* dir = opendir("/sys/kernel/mm/hugepages");
    if (!dir)
@@ -1575,8 +1577,11 @@ static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
 
       unsigned long long int free = strtoull(content, NULL, 10);
 
+      int shift = ffsl(hugePageSize) - 1 - (HTOP_HUGEPAGE_BASE_SHIFT - 10);
+      assert(shift >= 0 && shift < HTOP_HUGEPAGE_COUNT);
+
       this->totalHugePageMem += total * hugePageSize;
-      this->freeHugePageMem += free * hugePageSize;
+      this->usedHugePageMem[shift] = (total - free) * hugePageSize;
    }
 
    closedir(dir);
