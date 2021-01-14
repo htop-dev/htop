@@ -46,6 +46,10 @@ static void RichString_setLen(RichString* this, int len) {
    }
 }
 
+void RichString_rewind(RichString* this, int count) {
+   RichString_setLen(this, this->chlen - count);
+}
+
 #ifdef HAVE_LIBNCURSESW
 
 static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {

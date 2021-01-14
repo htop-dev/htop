@@ -42,6 +42,8 @@ typedef struct RichString_ {
    int highlightAttr;
 } RichString;
 
+void RichString_rewind(RichString* this, int count);
+
 void RichString_setAttrn(RichString* this, int attrs, int start, int charcount);
 
 int RichString_findChar(const RichString* this, char c, int start);
