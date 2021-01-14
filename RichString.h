@@ -52,9 +52,14 @@ void RichString_setAttr(RichString* this, int attrs);
 
 void RichString_appendChr(RichString* this, int attrs, char c, int count);
 
+/* All appending and writing functions return the number of written characters (not columns). */
+
 int RichString_appendWide(RichString* this, int attrs, const char* data);
 
 int RichString_appendnWide(RichString* this, int attrs, const char* data, int len);
+
+/* columns takes the maximum number of columns to write and contains on return the number of columns written. */
+int RichString_appendnWideColumns(RichString* this, int attrs, const char* data, int len, int* columns);
 
 int RichString_writeWide(RichString* this, int attrs, const char* data);
 

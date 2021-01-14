@@ -60,7 +60,37 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
       this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (iswprint(data[j]) ? data[j] : '?') } };
    }
 
-   return wcswidth(data, len);
+   return len;
+}
+
+int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, int len, int* columns) {
+   wchar_t data[len + 1];
+   len = mbstowcs(data, data_c, len);
+   if (len <= 0)
+      return 0;
+
+   int from = this->chlen;
+   int newLen = from + len;
+   RichString_setLen(this, newLen);
+   int columnsWritten = 0;
+   int pos = from;
+   for (int j = 0; j < len; j++) {
+      wchar_t c = iswprint(data[j]) ? data[j] : '?';
+      int cwidth = wcwidth(c);
+      if (cwidth > *columns)
+         break;
+
+      *columns -= cwidth;
+      columnsWritten += cwidth;
+
+      this->chptr[pos] = (CharType) { .attr = attrs & 0xffffff, .chars = { c, '\0' } };
+      pos++;
+   }
+
+   RichString_setLen(this, pos);
+   *columns = columnsWritten;
+
+   return pos - from;
 }
 
 static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data, int from, int len) {
@@ -111,6 +141,12 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
    this->chptr[newLen] = 0;
 
    return len;
+}
+
+int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, int len, int* columns) {
+   int written = RichString_writeFromWide(this, attrs, data_c, this->chlen, MINIMUM(len, *columns));
+   *columns = written;
+   return written;
 }
 
 static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data_c, int from, int len) {
