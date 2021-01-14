@@ -116,13 +116,14 @@ void InfoScreen_run(InfoScreen* this) {
                } else if (mevent.y == LINES - 1) {
                   ch = IncSet_synthesizeEvent(this->inc, mevent.x);
                }
+            }
             #if NCURSES_MOUSE_VERSION > 1
-            } else if (mevent.bstate & BUTTON4_PRESSED) {
+            else if (mevent.bstate & BUTTON4_PRESSED) {
                ch = KEY_WHEELUP;
             } else if (mevent.bstate & BUTTON5_PRESSED) {
                ch = KEY_WHEELDOWN;
-            #endif
             }
+            #endif
          }
       }
 
