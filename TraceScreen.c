@@ -42,7 +42,7 @@ TraceScreen* TraceScreen_new(const Process* process) {
    this->tracing = true;
    FunctionBar* fuBar = FunctionBar_new(TraceScreenFunctions, TraceScreenKeys, TraceScreenEvents);
    CRT_disableDelay();
-   return (TraceScreen*) InfoScreen_init(&this->super, process, fuBar, LINES - 2, "");
+   return (TraceScreen*) InfoScreen_init(&this->super, process, fuBar, LINES - 2, " ");
 }
 
 void TraceScreen_delete(Object* cast) {
