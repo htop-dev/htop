@@ -7,6 +7,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <limits.h>
 #include <stdbool.h>
 #include <sys/types.h>
 
@@ -17,6 +18,12 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+
+/* GNU/Hurd does not have PATH_MAX in limits.h */
+#ifndef PATH_MAX
+   #define PATH_MAX 4096
+#endif
+
 
 extern const ProcessField Platform_defaultFields[];
 

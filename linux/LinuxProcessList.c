@@ -42,6 +42,7 @@ in the source distribution for its full text.
 #include "LinuxProcess.h"
 #include "Macros.h"
 #include "Object.h"
+#include "Platform.h" // needed for GNU/hurd to get PATH_MAX
 #include "Process.h"
 #include "Settings.h"
 #include "XUtils.h"
