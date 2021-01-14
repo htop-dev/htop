@@ -245,8 +245,9 @@ void Process_outputRate(RichString* str, char* buffer, size_t n, double rate, in
 }
 
 void Process_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width) {
-   int c = RichString_appendnWide(str, attr, content, MINIMUM(width, strlen(content)));
-   RichString_appendChr(str, attr, ' ', width + 1 - c);
+   int columns = width;
+   RichString_appendnWideColumns(str, attr, content, strlen(content), &columns);
+   RichString_appendChr(str, attr, ' ', width + 1 - columns);
 }
 
 void Process_writeField(const Process* this, RichString* str, ProcessField field) {
