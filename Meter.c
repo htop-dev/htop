@@ -414,10 +414,15 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    for (int i = 0; i < len; i++) {
       int c = RichString_getCharVal(out, i);
       if (c >= '0' && c <= '9') {
-         LEDMeterMode_drawDigit(xx, y, c - 48);
+         LEDMeterMode_drawDigit(xx, y, c - '0');
          xx += 4;
       } else {
+#ifdef HAVE_LIBNCURSESW
+         out.chptr[i].attr = 0; /* use LED_COLOR from attrset() */
+         mvadd_wch(yText, xx, &out.chptr[i]);
+#else
          mvaddch(yText, xx, c);
+#endif
          xx += 1;
       }
    }
