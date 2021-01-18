@@ -57,10 +57,6 @@ typedef union {
 
 extern const ObjectClass Object_class;
 
-#ifndef NDEBUG
-
 bool Object_isA(const Object* o, const ObjectClass* klass);
-
-#endif /* NDEBUG */
 
 #endif
