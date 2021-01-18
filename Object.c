@@ -15,8 +15,6 @@ const ObjectClass Object_class = {
    .extends = NULL
 };
 
-#ifndef NDEBUG
-
 bool Object_isA(const Object* o, const ObjectClass* klass) {
    if (!o)
       return false;
@@ -29,5 +27,3 @@ bool Object_isA(const Object* o, const ObjectClass* klass) {
 
    return false;
 }
-
-#endif /* NDEBUG */

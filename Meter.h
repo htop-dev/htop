@@ -98,6 +98,7 @@ struct Meter_ {
    int param;
    GraphData* drawData;
    int h;
+   int columnWidthCount;      /*<< only used internally by the Header */
    const ProcessList* pl;
    uint8_t curItems;
    const int* curAttributes;
