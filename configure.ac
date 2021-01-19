@@ -92,6 +92,10 @@ AC_TYPE_UINT64_T
 # ----------------------------------------------------------------------
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_STAT
+
+AC_SEARCH_LIBS([dlopen], [dl dld])
+AC_SEARCH_LIBS([clock_gettime], [rt])
+
 AC_CHECK_FUNCS([\
    clock_gettime\
    faccessat\
@@ -100,9 +104,6 @@ AC_CHECK_FUNCS([\
    openat\
    readlinkat\
 ])
-
-AC_SEARCH_LIBS([dlopen], [dl dld])
-AC_SEARCH_LIBS([clock_gettime], [rt])
 
 save_cflags="${CFLAGS}"
 CFLAGS="${CFLAGS} -std=c99"
