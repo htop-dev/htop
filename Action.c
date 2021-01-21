@@ -227,7 +227,7 @@ static Htop_Reaction actionToggleMergedCommand(State* st) {
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
    if (st->settings->treeView) {
-      st->settings->treeDirection = 1;
+      st->settings->treeDirection = -1;
    }
 
    ProcessList_expandTree(st->pl);

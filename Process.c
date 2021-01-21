@@ -537,9 +537,9 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    case PGRP:
       return SPACESHIP_NUMBER(p1->pgrp, p2->pgrp);
    case PID:
-      return SPACESHIP_NUMBER(p1->pid, p2->pid);
+      return SPACESHIP_NUMBER(p2->pid, p1->pid);
    case PPID:
-      return SPACESHIP_NUMBER(p1->ppid, p2->ppid);
+      return SPACESHIP_NUMBER(p2->ppid, p1->ppid);
    case PRIORITY:
       return SPACESHIP_NUMBER(p1->priority, p2->priority);
    case PROCESSOR:

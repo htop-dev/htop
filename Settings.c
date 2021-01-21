@@ -331,7 +331,7 @@ Settings* Settings_new(int initialCpuCount) {
    this->sortKey = PERCENT_CPU;
    this->treeSortKey = PID;
    this->direction = 1;
-   this->treeDirection = 1;
+   this->treeDirection = -1;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
    this->hideKernelThreads = false;
@@ -450,10 +450,10 @@ void Settings_invertSortOrder(Settings* this) {
 void Settings_setSortKey(Settings* this, ProcessField sortKey) {
    if (this->treeViewAlwaysByPID || !this->treeView) {
       this->sortKey = sortKey;
-      this->direction = 1;
+      this->direction = (sortKey == PID) ? -1 :1;
       this->treeView = false;
    } else {
       this->treeSortKey = sortKey;
-      this->treeDirection = 1;
+      this->treeDirection = (sortKey == PID) ? -1 :1;
    }
 }
