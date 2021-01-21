@@ -489,24 +489,21 @@ int Process_pidCompare(const void* v1, const void* v2) {
 }
 
 int Process_compare(const void* v1, const void* v2) {
-   const Process *p1, *p2;
-   const Settings *settings = ((const Process*)v1)->settings;
+   const Process *p1 = (const Process*)v1;
+   const Process *p2 = (const Process*)v2;
 
-   if (Settings_getActiveDirection(settings) == 1) {
-      p1 = (const Process*)v1;
-      p2 = (const Process*)v2;
-   } else {
-      p2 = (const Process*)v1;
-      p1 = (const Process*)v2;
-   }
+   const Settings *settings = p1->settings;
 
    ProcessField key = Settings_getActiveSortKey(settings);
 
    int result = Process_compareByKey(p1, p2, key);
 
+   if (Settings_getActiveDirection(settings) != 1)
+      result = -result;
+
    // Implement tie-breaker (needed to make tree mode more stable)
    if (!result)
-      result = SPACESHIP_NUMBER(p1->pid, p2->pid);
+      return SPACESHIP_NUMBER(p1->pid, p2->pid);
 
    return result;
 }
