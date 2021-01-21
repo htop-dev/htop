@@ -248,11 +248,17 @@ static Htop_Reaction actionIncSearch(State* st) {
 }
 
 static Htop_Reaction actionHigherPriority(State* st) {
+   if (Settings_lockdown())
+      return HTOP_OK;
+
    bool changed = changePriority((MainPanel*)st->panel, -1);
    return changed ? HTOP_REFRESH : HTOP_OK;
 }
 
 static Htop_Reaction actionLowerPriority(State* st) {
+   if (Settings_lockdown())
+      return HTOP_OK;
+
    bool changed = changePriority((MainPanel*)st->panel, 1);
    return changed ? HTOP_REFRESH : HTOP_OK;
 }
@@ -286,6 +292,9 @@ static Htop_Reaction actionQuit(ATTR_UNUSED State* st) {
 }
 
 static Htop_Reaction actionSetAffinity(State* st) {
+   if (Settings_lockdown())
+      return HTOP_OK;
+
    if (st->pl->cpuCount == 1)
       return HTOP_OK;
 
@@ -319,6 +328,9 @@ static Htop_Reaction actionSetAffinity(State* st) {
 }
 
 static Htop_Reaction actionKill(State* st) {
+   if (Settings_lockdown())
+      return HTOP_OK;
+
    Panel* signalsPanel = SignalsPanel_new();
    const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15, true);
    if (sgn) {
@@ -369,6 +381,9 @@ static Htop_Reaction actionSetup(State* st) {
 }
 
 static Htop_Reaction actionLsof(State* st) {
+   if (Settings_lockdown())
+      return HTOP_OK;
+
    const Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p)
       return HTOP_OK;
@@ -393,6 +408,9 @@ static Htop_Reaction actionShowLocks(State* st) {
 }
 
 static Htop_Reaction actionStrace(State* st) {
+   if (Settings_lockdown())
+      return HTOP_OK;
+
    const Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p)
       return HTOP_OK;

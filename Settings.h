@@ -94,4 +94,8 @@ void Settings_invertSortOrder(Settings* this);
 
 void Settings_setSortKey(Settings* this, ProcessField sortKey);
 
+void Settings_enableLockdown(void);
+
+bool Settings_lockdown(void);
+
 #endif

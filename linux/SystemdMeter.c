@@ -161,6 +161,9 @@ dlfailure:
 }
 
 static void updateViaExec(void) {
+   if (Settings_lockdown())
+      return;
+
    int fdpair[2];
    if (pipe(fdpair) < 0)
       return;

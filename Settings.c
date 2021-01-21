@@ -457,3 +457,13 @@ void Settings_setSortKey(Settings* this, ProcessField sortKey) {
       this->treeDirection = 1;
    }
 }
+
+static bool lockdown = false;
+
+void Settings_enableLockdown(void) {
+   lockdown = true;
+}
+
+bool Settings_lockdown(void) {
+   return lockdown;
+}

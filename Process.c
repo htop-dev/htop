@@ -460,6 +460,9 @@ bool Process_isTomb(const Process* this) {
 }
 
 bool Process_setPriority(Process* this, int priority) {
+   if (Settings_lockdown())
+      return false;
+
    CRT_dropPrivileges();
    int old_prio = getpriority(PRIO_PROCESS, this->pid);
    int err = setpriority(PRIO_PROCESS, this->pid, priority);

@@ -129,6 +129,9 @@ void Platform_done(void) {
 }
 
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
+   if (Settings_lockdown())
+      return HTOP_OK;
+
    Panel* panel = st->panel;
 
    const LinuxProcess* p = (const LinuxProcess*) Panel_getSelected(panel);

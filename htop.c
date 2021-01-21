@@ -67,6 +67,7 @@ static void printHelpFlag(void) {
          "                                strict - drop all capabilities except those needed for core functionality\n"
 #endif
          "-H --highlight-changes[=DELAY]  Highlight new and old processes\n"
+         "   --lockdown                   Disable all system and process changing features\n"
          "-M --no-mouse                   Disable the mouse\n"
          "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
          "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
@@ -95,6 +96,7 @@ typedef struct CommandLineSettings_ {
    bool allowUnicode;
    bool highlightChanges;
    int highlightDelaySecs;
+   bool lockdown;
 #ifdef HAVE_LIBCAP
    enum CapMode capabilitiesMode;
 #endif
@@ -114,6 +116,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .allowUnicode = true,
       .highlightChanges = false,
       .highlightDelaySecs = -1,
+      .lockdown = false,
 #ifdef HAVE_LIBCAP
       .capabilitiesMode = CAP_MODE_BASIC,
 #endif
@@ -134,6 +137,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
       {"highlight-changes", optional_argument, 0, 'H'},
+      {"lockdown",   no_argument,         0, 129},
 #ifdef HAVE_LIBCAP
       {"drop-capabilities", optional_argument, 0, 128},
 #endif
@@ -254,6 +258,9 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             flags.highlightChanges = true;
             break;
          }
+         case 129:
+            flags.lockdown = true;
+            break;
 #ifdef HAVE_LIBCAP
          case 128: {
             const char* mode = optarg;
@@ -400,6 +407,9 @@ int main(int argc, char** argv) {
       setlocale(LC_CTYPE, "");
 
    CommandLineSettings flags = parseArguments(argc, argv);
+
+   if (flags.lockdown)
+      Settings_enableLockdown();
 
 #ifdef HAVE_LIBCAP
    if (dropCapabilities(flags.capabilitiesMode) < 0)
