@@ -108,6 +108,7 @@ typedef enum ColorElements_ {
    DATE,
    DATETIME,
    HELP_BOLD,
+   HELP_SHADOW,
    HOSTNAME,
    CPU_NICE,
    CPU_NICE_TEXT,

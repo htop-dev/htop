@@ -95,4 +95,8 @@ void Settings_invertSortOrder(Settings* this);
 
 void Settings_setSortKey(Settings* this, ProcessField sortKey);
 
+void Settings_enableReadonly(void);
+
+bool Settings_isReadonly(void);
+
 #endif

@@ -130,6 +130,9 @@ static enum CapMode Platform_capabilitiesMode = CAP_MODE_BASIC;
 #endif
 
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
+   if (Settings_isReadonly())
+      return HTOP_OK;
+
    const LinuxProcess* p = (const LinuxProcess*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
@@ -867,7 +870,7 @@ bool Platform_getLongOption(int opt, int argc, char** argv) {
 
    switch (opt) {
 #ifdef HAVE_LIBCAP
-      case 128: {
+      case 160: {
          const char* mode = optarg;
          if (!mode && optind < argc && argv[optind] != NULL &&
             (argv[optind][0] != '\0' && argv[optind][0] != '-')) {

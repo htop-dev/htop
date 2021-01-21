@@ -195,6 +195,9 @@ dlfailure:
 #endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
 
 static void updateViaExec(void) {
+   if (Settings_isReadonly())
+      return;
+
    int fdpair[2];
    if (pipe(fdpair) < 0)
       return;
