@@ -346,6 +346,7 @@ AM_CFLAGS="\
  -Wextra\
  -Wfloat-equal\
  -Wformat=2\
+ -Winit-self\
  -Wmissing-format-attribute\
  -Wmissing-noreturn\
  -Wmissing-prototypes\
