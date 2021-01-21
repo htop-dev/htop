@@ -40,8 +40,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [SESSION] = { .name = "SESSION", .title = "SID", .description = "Process's session ID", .flags = 0, .pidColumn = true, },
    [TTY_NR] = { .name = "TTY_NR", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
    [TPGID] = { .name = "TPGID", .title = "TPGID", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, .pidColumn = true, },
-   [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
-   [CMINFLT] = { .name = "CMINFLT", .title = "    CMINFLT ", .description = "Children processes' minor faults", .flags = 0, },
+   [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, .defaultSortDesc = true, },
+   [CMINFLT] = { .name = "CMINFLT", .title = "    CMINFLT ", .description = "Children processes' minor faults", .flags = 0, .defaultSortDesc = true, },
    [MAJFLT] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
    [CMAJFLT] = { .name = "CMAJFLT", .title = "    CMAJFLT ", .description = "Children processes' major faults", .flags = 0, },
    [UTIME] = { .name = "UTIME", .title = " UTIME+  ", .description = "User CPU time - time the process spent executing in user mode", .flags = 0, },
@@ -52,20 +52,20 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [NICE] = { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = 0, },
    [STARTTIME] = { .name = "STARTTIME", .title = "START ", .description = "Time the process was started", .flags = 0, },
    [PROCESSOR] = { .name = "PROCESSOR", .title = "CPU ", .description = "Id of the CPU the process last executed on", .flags = 0, },
-   [M_VIRT] = { .name = "M_VIRT", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, },
-   [M_RESIDENT] = { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, },
-   [M_SHARE] = { .name = "M_SHARE", .title = "  SHR ", .description = "Size of the process's shared pages", .flags = 0, },
-   [M_TRS] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, },
-   [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, },
-   [M_LRS] = { .name = "M_LRS", .title = "  LIB ", .description = "The library size of the process (calculated from memory maps)", .flags = PROCESS_FLAG_LINUX_LRS_FIX, },
-   [M_DT] = { .name = "M_DT", .title = " DIRTY ", .description = "Size of the dirty pages of the process (unused since Linux 2.6; always 0)", .flags = 0, },
+   [M_VIRT] = { .name = "M_VIRT", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, .defaultSortDesc = true, },
+   [M_RESIDENT] = { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, .defaultSortDesc = true, },
+   [M_SHARE] = { .name = "M_SHARE", .title = "  SHR ", .description = "Size of the process's shared pages", .flags = 0, .defaultSortDesc = true, },
+   [M_TRS] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, .defaultSortDesc = true, },
+   [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, .defaultSortDesc = true, },
+   [M_LRS] = { .name = "M_LRS", .title = "  LIB ", .description = "The library size of the process (calculated from memory maps)", .flags = PROCESS_FLAG_LINUX_LRS_FIX, .defaultSortDesc = true, },
+   [M_DT] = { .name = "M_DT", .title = " DIRTY ", .description = "Size of the dirty pages of the process (unused since Linux 2.6; always 0)", .flags = 0, .defaultSortDesc = true, },
    [ST_UID] = { .name = "ST_UID", .title = "  UID ", .description = "User ID of the process owner", .flags = 0, },
-   [PERCENT_CPU] = { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, },
-   [PERCENT_NORM_CPU] = { .name = "PERCENT_NORM_CPU", .title = "NCPU%", .description = "Normalized percentage of the CPU time the process used in the last sampling (normalized by cpu count)", .flags = 0, },
-   [PERCENT_MEM] = { .name = "PERCENT_MEM", .title = "MEM% ", .description = "Percentage of the memory the process is using, based on resident memory size", .flags = 0, },
+   [PERCENT_CPU] = { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, .defaultSortDesc = true, },
+   [PERCENT_NORM_CPU] = { .name = "PERCENT_NORM_CPU", .title = "NCPU%", .description = "Normalized percentage of the CPU time the process used in the last sampling (normalized by cpu count)", .flags = 0, .defaultSortDesc = true, },
+   [PERCENT_MEM] = { .name = "PERCENT_MEM", .title = "MEM% ", .description = "Percentage of the memory the process is using, based on resident memory size", .flags = 0, .defaultSortDesc = true, },
    [USER] = { .name = "USER", .title = "USER      ", .description = "Username of the process owner (or user ID if name cannot be determined)", .flags = 0, },
-   [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
-   [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
+   [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, .defaultSortDesc = true, },
+   [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, .defaultSortDesc = true, },
    [TGID] = { .name = "TGID", .title = "TGID", .description = "Thread group ID (i.e. process ID)", .flags = 0, .pidColumn = true, },
 #ifdef HAVE_OPENVZ
    [CTID] = { .name = "CTID", .title = " CTID    ", .description = "OpenVZ container ID (a.k.a. virtual environment ID)", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
@@ -760,75 +760,75 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
 
    switch (key) {
    case M_DRS:
-      return SPACESHIP_NUMBER(p2->m_drs, p1->m_drs);
+      return SPACESHIP_NUMBER(p1->m_drs, p2->m_drs);
    case M_DT:
-      return SPACESHIP_NUMBER(p2->m_dt, p1->m_dt);
+      return SPACESHIP_NUMBER(p1->m_dt, p2->m_dt);
    case M_LRS:
-      return SPACESHIP_NUMBER(p2->m_lrs, p1->m_lrs);
+      return SPACESHIP_NUMBER(p1->m_lrs, p2->m_lrs);
    case M_TRS:
-      return SPACESHIP_NUMBER(p2->m_trs, p1->m_trs);
+      return SPACESHIP_NUMBER(p1->m_trs, p2->m_trs);
    case M_SHARE:
-      return SPACESHIP_NUMBER(p2->m_share, p1->m_share);
+      return SPACESHIP_NUMBER(p1->m_share, p2->m_share);
    case M_PSS:
-      return SPACESHIP_NUMBER(p2->m_pss, p1->m_pss);
+      return SPACESHIP_NUMBER(p1->m_pss, p2->m_pss);
    case M_SWAP:
-      return SPACESHIP_NUMBER(p2->m_swap, p1->m_swap);
+      return SPACESHIP_NUMBER(p1->m_swap, p2->m_swap);
    case M_PSSWP:
-      return SPACESHIP_NUMBER(p2->m_psswp, p1->m_psswp);
+      return SPACESHIP_NUMBER(p1->m_psswp, p2->m_psswp);
    case UTIME:
-      return SPACESHIP_NUMBER(p2->utime, p1->utime);
+      return SPACESHIP_NUMBER(p1->utime, p2->utime);
    case CUTIME:
-      return SPACESHIP_NUMBER(p2->cutime, p1->cutime);
+      return SPACESHIP_NUMBER(p1->cutime, p2->cutime);
    case STIME:
-      return SPACESHIP_NUMBER(p2->stime, p1->stime);
+      return SPACESHIP_NUMBER(p1->stime, p2->stime);
    case CSTIME:
-      return SPACESHIP_NUMBER(p2->cstime, p1->cstime);
+      return SPACESHIP_NUMBER(p1->cstime, p2->cstime);
    case RCHAR:
-      return SPACESHIP_NUMBER(p2->io_rchar, p1->io_rchar);
+      return SPACESHIP_NUMBER(p1->io_rchar, p2->io_rchar);
    case WCHAR:
-      return SPACESHIP_NUMBER(p2->io_wchar, p1->io_wchar);
+      return SPACESHIP_NUMBER(p1->io_wchar, p2->io_wchar);
    case SYSCR:
-      return SPACESHIP_NUMBER(p2->io_syscr, p1->io_syscr);
+      return SPACESHIP_NUMBER(p1->io_syscr, p2->io_syscr);
    case SYSCW:
-      return SPACESHIP_NUMBER(p2->io_syscw, p1->io_syscw);
+      return SPACESHIP_NUMBER(p1->io_syscw, p2->io_syscw);
    case RBYTES:
-      return SPACESHIP_NUMBER(p2->io_read_bytes, p1->io_read_bytes);
+      return SPACESHIP_NUMBER(p1->io_read_bytes, p2->io_read_bytes);
    case WBYTES:
-      return SPACESHIP_NUMBER(p2->io_write_bytes, p1->io_write_bytes);
+      return SPACESHIP_NUMBER(p1->io_write_bytes, p2->io_write_bytes);
    case CNCLWB:
-      return SPACESHIP_NUMBER(p2->io_cancelled_write_bytes, p1->io_cancelled_write_bytes);
+      return SPACESHIP_NUMBER(p1->io_cancelled_write_bytes, p2->io_cancelled_write_bytes);
    case IO_READ_RATE:
-      return SPACESHIP_NUMBER(p2->io_rate_read_bps, p1->io_rate_read_bps);
+      return SPACESHIP_NUMBER(p1->io_rate_read_bps, p2->io_rate_read_bps);
    case IO_WRITE_RATE:
-      return SPACESHIP_NUMBER(p2->io_rate_write_bps, p1->io_rate_write_bps);
+      return SPACESHIP_NUMBER(p1->io_rate_write_bps, p2->io_rate_write_bps);
    case IO_RATE:
-      return SPACESHIP_NUMBER(p2->io_rate_read_bps + p2->io_rate_write_bps, p1->io_rate_read_bps + p1->io_rate_write_bps);
+      return SPACESHIP_NUMBER(p1->io_rate_read_bps + p1->io_rate_write_bps, p2->io_rate_read_bps + p2->io_rate_write_bps);
    #ifdef HAVE_OPENVZ
    case CTID:
       return SPACESHIP_NULLSTR(p1->ctid, p2->ctid);
    case VPID:
-      return SPACESHIP_NUMBER(p2->vpid, p1->vpid);
+      return SPACESHIP_NUMBER(p1->vpid, p2->vpid);
    #endif
    #ifdef HAVE_VSERVER
    case VXID:
-      return SPACESHIP_NUMBER(p2->vxid, p1->vxid);
+      return SPACESHIP_NUMBER(p1->vxid, p2->vxid);
    #endif
    case CGROUP:
       return SPACESHIP_NULLSTR(p1->cgroup, p2->cgroup);
    case OOM:
-      return SPACESHIP_NUMBER(p2->oom, p1->oom);
+      return SPACESHIP_NUMBER(p1->oom, p2->oom);
    #ifdef HAVE_DELAYACCT
    case PERCENT_CPU_DELAY:
-      return SPACESHIP_NUMBER(p2->cpu_delay_percent, p1->cpu_delay_percent);
+      return SPACESHIP_NUMBER(p1->cpu_delay_percent, p2->cpu_delay_percent);
    case PERCENT_IO_DELAY:
-      return SPACESHIP_NUMBER(p2->blkio_delay_percent, p1->blkio_delay_percent);
+      return SPACESHIP_NUMBER(p1->blkio_delay_percent, p2->blkio_delay_percent);
    case PERCENT_SWAP_DELAY:
-      return SPACESHIP_NUMBER(p2->swapin_delay_percent, p1->swapin_delay_percent);
+      return SPACESHIP_NUMBER(p1->swapin_delay_percent, p2->swapin_delay_percent);
    #endif
    case IO_PRIORITY:
       return SPACESHIP_NUMBER(LinuxProcess_effectiveIOPriority(p1), LinuxProcess_effectiveIOPriority(p2));
    case CTXT:
-      return SPACESHIP_NUMBER(p2->ctxt_diff, p1->ctxt_diff);
+      return SPACESHIP_NUMBER(p1->ctxt_diff, p2->ctxt_diff);
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
    case PROC_COMM: {

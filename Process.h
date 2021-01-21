@@ -117,6 +117,7 @@ typedef struct ProcessFieldData_ {
    const char* description;
    uint32_t flags;
    bool pidColumn;
+   bool defaultSortDesc;
 } ProcessFieldData;
 
 // Implemented in platform-specific code:

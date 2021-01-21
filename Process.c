@@ -517,19 +517,19 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    switch (key) {
    case PERCENT_CPU:
    case PERCENT_NORM_CPU:
-      return SPACESHIP_NUMBER(p2->percent_cpu, p1->percent_cpu);
+      return SPACESHIP_NUMBER(p1->percent_cpu, p2->percent_cpu);
    case PERCENT_MEM:
-      return SPACESHIP_NUMBER(p2->m_resident, p1->m_resident);
+      return SPACESHIP_NUMBER(p1->m_resident, p2->m_resident);
    case COMM:
       return SPACESHIP_NULLSTR(Process_getCommand(p1), Process_getCommand(p2));
    case MAJFLT:
-      return SPACESHIP_NUMBER(p2->majflt, p1->majflt);
+      return SPACESHIP_NUMBER(p1->majflt, p2->majflt);
    case MINFLT:
-      return SPACESHIP_NUMBER(p2->minflt, p1->minflt);
+      return SPACESHIP_NUMBER(p1->minflt, p2->minflt);
    case M_RESIDENT:
-      return SPACESHIP_NUMBER(p2->m_resident, p1->m_resident);
+      return SPACESHIP_NUMBER(p1->m_resident, p2->m_resident);
    case M_VIRT:
-      return SPACESHIP_NUMBER(p2->m_virt, p1->m_virt);
+      return SPACESHIP_NUMBER(p1->m_virt, p2->m_virt);
    case NICE:
       return SPACESHIP_NUMBER(p1->nice, p2->nice);
    case NLWP:
@@ -554,7 +554,7 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    case ST_UID:
       return SPACESHIP_NUMBER(p1->st_uid, p2->st_uid);
    case TIME:
-      return SPACESHIP_NUMBER(p2->time, p1->time);
+      return SPACESHIP_NUMBER(p1->time, p2->time);
    case TGID:
       return SPACESHIP_NUMBER(p1->tgid, p2->tgid);
    case TPGID:
