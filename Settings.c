@@ -472,3 +472,13 @@ void Settings_setSortKey(Settings* this, ProcessField sortKey) {
       this->treeDirection = (Process_fields[sortKey].defaultSortDesc) ? -1 : 1;
    }
 }
+
+static bool readonly = false;
+
+void Settings_enableReadonly(void) {
+   readonly = true;
+}
+
+bool Settings_isReadonly(void) {
+   return readonly;
+}

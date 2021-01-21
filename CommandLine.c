@@ -53,6 +53,7 @@ static void printHelpFlag(const char* name) {
          "-H --highlight-changes[=DELAY]  Highlight new and old processes\n"
          "-M --no-mouse                   Disable the mouse\n"
          "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
+         "   --readonly                   Disable all system and process changing features\n"
          "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
          "-t --tree                       Show the tree view (can be combined with -s)\n"
          "-u --user[=USERNAME]            Show only processes for a given user (or $USER)\n"
@@ -79,6 +80,7 @@ typedef struct CommandLineSettings_ {
    bool allowUnicode;
    bool highlightChanges;
    int highlightDelaySecs;
+   bool readonly;
 } CommandLineSettings;
 
 static CommandLineSettings parseArguments(const char* program, int argc, char** argv) {
@@ -95,6 +97,7 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
       .allowUnicode = true,
       .highlightChanges = false,
       .highlightDelaySecs = -1,
+      .readonly = false,
    };
 
    const struct option long_opts[] =
@@ -112,6 +115,7 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
       {"highlight-changes", optional_argument, 0, 'H'},
+      {"readonly",   no_argument,         0, 128},
       PLATFORM_LONG_OPTIONS
       {0,0,0,0}
    };
@@ -231,6 +235,9 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
             flags.highlightChanges = true;
             break;
          }
+         case 128:
+            flags.readonly = true;
+            break;
 
          default:
            if (Platform_getLongOption(opt, argc, argv) == false)
@@ -272,6 +279,9 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       setlocale(LC_CTYPE, "");
 
    CommandLineSettings flags = parseArguments(name, argc, argv);
+
+   if (flags.readonly)
+      Settings_enableReadonly();
 
    Platform_init();
 

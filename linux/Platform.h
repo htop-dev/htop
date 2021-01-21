@@ -85,7 +85,7 @@ static inline void Platform_getRelease(char** string) {
 
 #ifdef HAVE_LIBCAP
    #define PLATFORM_LONG_OPTIONS \
-      {"drop-capabilities", optional_argument, 0, 128},
+      {"drop-capabilities", optional_argument, 0, 160},
 #else
    #define PLATFORM_LONG_OPTIONS
 #endif
