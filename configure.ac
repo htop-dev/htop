@@ -1,8 +1,12 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.65)
-AC_INIT([htop],[3.0.6-dev],[htop@groups.io])
+# ----------------------------------------------------------------------
+# Autoconf initialization.
+# ----------------------------------------------------------------------
+
+AC_PREREQ([2.65])
+AC_INIT([htop], [3.0.6-dev], [htop@groups.io])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([.])
@@ -13,97 +17,56 @@ AC_CANONICAL_TARGET
 
 AM_INIT_AUTOMAKE([1.11])
 
-# Checks for programs.
 # ----------------------------------------------------------------------
-AC_PROG_CC
-AM_PROG_CC_C_O
+
+
+# ----------------------------------------------------------------------
+# Checks for platform.
+# ----------------------------------------------------------------------
+
+case "$target_os" in
+linux*|gnu*)
+   my_htop_platform=linux
+   AC_DEFINE([HTOP_LINUX], [], [Building for Linux.])
+   ;;
+freebsd*|kfreebsd*)
+   my_htop_platform=freebsd
+   AC_DEFINE([HTOP_FREEBSD], [], [Building for FreeBSD.])
+   ;;
+openbsd*)
+   my_htop_platform=openbsd
+   AC_DEFINE([HTOP_OPENBSD], [], [Building for OpenBSD.])
+   ;;
+dragonfly*)
+   my_htop_platform=dragonflybsd
+   AC_DEFINE([HTOP_DRAGONFLYBSD], [], [Building for DragonFlyBSD.])
+   ;;
+darwin*)
+   my_htop_platform=darwin
+   AC_DEFINE([HTOP_DARWIN], [], [Building for Darwin.])
+   ;;
+solaris*)
+   my_htop_platform=solaris
+   AC_DEFINE([HTOP_SOLARIS], [], [Building for Solaris.])
+   ;;
+*)
+   my_htop_platform=unsupported
+   AC_DEFINE([HTOP_UNSUPPORTED], [], [Building for an unsupported platform.])
+   ;;
+esac
 
 # Required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
-# Checks for platform.
 # ----------------------------------------------------------------------
-case "$target_os" in
-linux*|gnu*)
-   my_htop_platform=linux
-   AC_DEFINE([HTOP_LINUX], [], [Building for Linux])
-   ;;
-freebsd*|kfreebsd*)
-   my_htop_platform=freebsd
-   AC_DEFINE([HTOP_FREEBSD], [], [Building for FreeBSD])
-   ;;
-openbsd*)
-   my_htop_platform=openbsd
-   AC_DEFINE([HTOP_OPENBSD], [], [Building for OpenBSD])
-   ;;
-dragonfly*)
-   my_htop_platform=dragonflybsd
-   AC_DEFINE([HTOP_DRAGONFLYBSD], [], [Building for DragonFlyBSD])
-   ;;
-darwin*)
-   my_htop_platform=darwin
-   AC_DEFINE([HTOP_DARWIN], [], [Building for Darwin])
-   ;;
-solaris*)
-   my_htop_platform=solaris
-   AC_DEFINE([HTOP_SOLARIS], [], [Building for Solaris])
-   ;;
-*)
-   my_htop_platform=unsupported
-   AC_DEFINE([HTOP_UNSUPPORTED], [], [Building for an unsupported platform])
-   ;;
-esac
 
-# Checks for libraries.
+
 # ----------------------------------------------------------------------
-AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
-
-# Checks for header files.
+# Checks for compiler.
 # ----------------------------------------------------------------------
-AC_HEADER_DIRENT
-AC_HEADER_STDC
-AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/param.h sys/time.h unistd.h],[:],[
-  missing_headers="$missing_headers $ac_header"
-])
-AC_CHECK_HEADERS([execinfo.h],[:],[:])
 
-AC_HEADER_MAJOR
-dnl glibc 2.25 deprecates 'major' and 'minor' in <sys/types.h> and requires to
-dnl include <sys/sysmacros.h>. However the logic in AC_HEADER_MAJOR has not yet
-dnl been updated in Autoconf 2.69, so use a workaround:
-m4_version_prereq([2.70], [],
-[if test "x$ac_cv_header_sys_mkdev_h" != xyes; then
-   AC_CHECK_HEADER(sys/sysmacros.h, [AC_DEFINE(MAJOR_IN_SYSMACROS, 1,
-      [Define to 1 if `major', `minor', and `makedev' are declared in <sys/sysmacros.h>.])])
-fi])
-
-# Checks for typedefs, structures, and compiler characteristics.
-# ----------------------------------------------------------------------
-AC_HEADER_STDBOOL
-AC_C_CONST
-AC_TYPE_PID_T
-AC_TYPE_UID_T
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-# Checks for library functions and compiler features.
-# ----------------------------------------------------------------------
-AC_FUNC_CLOSEDIR_VOID
-AC_FUNC_STAT
-
-AC_SEARCH_LIBS([dlopen], [dl dld])
-AC_SEARCH_LIBS([clock_gettime], [rt])
-
-AC_CHECK_FUNCS([\
-   clock_gettime\
-   faccessat\
-   fstatat\
-   host_get_clock_service\
-   openat\
-   readlinkat\
-])
+AC_PROG_CC
+AM_PROG_CC_C_O
 
 save_cflags="${CFLAGS}"
 CFLAGS="${CFLAGS} -std=c99"
@@ -114,52 +77,119 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
    [AC_MSG_ERROR([htop is written in C99. A newer compiler is required.])])
 CFLAGS="$save_cflags"
 
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Checks for generic header files.
+# ----------------------------------------------------------------------
+
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_CHECK_HEADERS([ \
+    stdlib.h \
+    string.h \
+    strings.h \
+    sys/param.h \
+    sys/time.h \
+    unistd.h
+   ], [], [missing_headers="$missing_headers $ac_header"])
+
+AC_HEADER_MAJOR
+dnl glibc 2.25 deprecates 'major' and 'minor' in <sys/types.h> and requires to
+dnl include <sys/sysmacros.h>. However the logic in AC_HEADER_MAJOR has not yet
+dnl been updated in Autoconf 2.69, so use a workaround:
+m4_version_prereq([2.70], [],
+[if test "x$ac_cv_header_sys_mkdev_h" != xyes; then
+   AC_CHECK_HEADER([sys/sysmacros.h], [AC_DEFINE([MAJOR_IN_SYSMACROS], [1],
+      [Define to 1 if `major', `minor', and `makedev' are declared in <sys/sysmacros.h>.])])
+fi])
+
+# Optional Section
+
+AC_CHECK_HEADERS([execinfo.h])
+
+if test "$my_htop_platform" = darwin; then
+   AC_CHECK_HEADERS([mach/mach_time.h])
+fi
+
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Checks for typedefs, structures, and compiler characteristics.
+# ----------------------------------------------------------------------
+
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_TYPE_PID_T
+AC_TYPE_UID_T
+AC_TYPE_UINT8_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Checks for generic library functions.
+# ----------------------------------------------------------------------
+
+AC_FUNC_CLOSEDIR_VOID
+AC_FUNC_STAT
+
+AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
+
+if test "$my_htop_platform" = dragonflybsd; then
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [missing_libraries="$missing_libraries libkvm"])
+fi
+
+if test "$my_htop_platform" = freebsd; then
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [missing_libraries="$missing_libraries libkvm"])
+   AC_SEARCH_LIBS([devstat_checkversion], [devstat], [], [missing_libraries="$missing_libraries libdevstat"])
+fi
+
+if test "$my_htop_platform" = linux; then
+   AC_SEARCH_LIBS([dlopen], [dl dld], [], [missing_libraries="$missing_libraries libdl/libdld"])
+fi
+
+if test "$my_htop_platform" = openbsd; then
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [missing_libraries="$missing_libraries libkvm"])
+fi
+
+if test "$my_htop_platform" = solaris; then
+   AC_SEARCH_LIBS([kstat_open], [kstat], [], [missing_libraries="$missing_libraries libkstat"])
+   AC_SEARCH_LIBS([Pgrab_error], [proc], [], [missing_libraries="$missing_libraries libproc"])
+   AC_SEARCH_LIBS([free], [malloc], [], [missing_libraries="$missing_libraries libmalloc"])
+fi
+
+# Optional Section
+
+AC_SEARCH_LIBS([clock_gettime], [rt])
+
+AC_CHECK_FUNCS([ \
+    clock_gettime \
+    faccessat \
+    fstatat \
+    host_get_clock_service \
+    openat \
+    readlinkat \
+   ])
+
 # Add -lexecinfo if needed
 AC_SEARCH_LIBS([backtrace], [execinfo])
 
-# Add -ldevstat if needed
-AC_SEARCH_LIBS([devstat_checkversion], [devstat])
+if test "$my_htop_platform" = darwin; then
+   AC_CHECK_FUNCS([mach_timebase_info])
+fi
 
-# Checks for features and flags.
 # ----------------------------------------------------------------------
 
-AC_ARG_WITH([proc],
-            [AS_HELP_STRING([--with-proc=DIR],
-                            [location of a Linux-compatible proc filesystem @<:@default=/proc@:>@])],
-            [],
-            [with_proc=/proc])
-if test -z "$with_proc"; then
-   AC_MSG_ERROR([bad empty value for --with-proc option])
-fi
-AC_DEFINE_UNQUOTED([PROCDIR], ["$with_proc"], [Path of proc filesystem.])
 
-AC_ARG_ENABLE([openvz],
-              [AS_HELP_STRING([--enable-openvz],
-                              [enable OpenVZ support @<:@default=no@:>@])],
-              [],
-              [enable_openvz=no])
-if test "x$enable_openvz" = xyes; then
-   AC_DEFINE([HAVE_OPENVZ], [1], [Define if openvz support enabled.])
-fi
-
-AC_ARG_ENABLE([vserver],
-              [AS_HELP_STRING([--enable-vserver],
-                              [enable VServer support @<:@default=no@:>@])],
-              [],
-              [enable_vserver=no])
-if test "x$enable_vserver" = xyes; then
-    AC_DEFINE([HAVE_VSERVER], [1], [Define if vserver support enabled.])
-fi
-
-AC_ARG_ENABLE([ancient_vserver],
-              [AS_HELP_STRING([--enable-ancient-vserver],
-                              [enable ancient VServer support (implies --enable-vserver) @<:@default=no@:>@])],
-              [],
-              [enable_ancient_vserver=no])
-if test "x$enable_ancient_vserver" = xyes; then
-    AC_DEFINE([HAVE_VSERVER], [1], [Define if vserver support enabled.])
-    AC_DEFINE([HAVE_ANCIENT_VSERVER], [1], [Define if ancient vserver support enabled.])
-fi
+# ----------------------------------------------------------------------
+# Checks for cross-platform features and flags.
+# ----------------------------------------------------------------------
 
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
 m4_define([HTOP_CHECK_SCRIPT],
@@ -200,23 +230,6 @@ m4_define([HTOP_CHECK_LIB],
       LIBS="-l[$1] $LIBS "
    ], [$4])
 ])
-
-dnl https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
-AC_DEFUN([AX_CHECK_COMPILE_FLAG],
-[AC_PREREQ(2.64)dnl for _AC_LANG_PREFIX and AS_VAR_IF
-AS_VAR_PUSHDEF([CACHEVAR],[ax_cv_check_[]_AC_LANG_ABBREV[]flags_$4_$1])dnl
-AC_CACHE_CHECK([whether _AC_LANG compiler accepts $1], CACHEVAR, [
-   ax_check_save_flags=$[]_AC_LANG_PREFIX[]FLAGS
-   _AC_LANG_PREFIX[]FLAGS="$[]_AC_LANG_PREFIX[]FLAGS $4 $1"
-   AC_COMPILE_IFELSE([m4_default([$5],[AC_LANG_PROGRAM()])],
-      [AS_VAR_SET(CACHEVAR,[yes])],
-      [AS_VAR_SET(CACHEVAR,[no])])
-   _AC_LANG_PREFIX[]FLAGS=$ax_check_save_flags])
-AS_VAR_IF(CACHEVAR,yes,
-   [m4_default([$2], :)],
-   [m4_default([$3], :)])
-AS_VAR_POPDEF([CACHEVAR])dnl
-])dnl AX_CHECK_COMPILE_FLAGS
 
 AC_ARG_ENABLE([unicode],
               [AS_HELP_STRING([--enable-unicode],
@@ -261,28 +274,6 @@ else
    AC_SEARCH_LIBS([keypad], [tinfo])
 fi
 
-if test "$my_htop_platform" = "darwin"; then
-   AC_CHECK_HEADERS([mach/mach_time.h])
-   AC_CHECK_FUNCS([mach_timebase_info])
-fi
-
-if test "$my_htop_platform" = "dragonflybsd"; then
-   AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
-fi
-
-if test "$my_htop_platform" = "freebsd"; then
-   AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
-fi
-
-if test "$my_htop_platform" = "openbsd"; then
-   AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
-fi
-
-if test "$my_htop_platform" = "solaris"; then
-   AC_CHECK_LIB([kstat], [kstat_open], [], [missing_libraries="$missing_libraries libkstat"])
-   AC_CHECK_LIB([proc], [Pgrab_error], [], [missing_libraries="$missing_libraries libproc"])
-   AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
-fi
 
 AC_ARG_ENABLE([hwloc],
               [AS_HELP_STRING([--enable-hwloc],
@@ -300,6 +291,65 @@ case "$enable_hwloc" in
       AC_MSG_ERROR([bad value '$enable_hwloc' for --enable-hwloc])
       ;;
 esac
+
+
+AC_ARG_ENABLE([setuid],
+              [AS_HELP_STRING([--enable-setuid],
+                              [enable setuid support for privilege dropping @<:@default=no@:>@])],
+              [],
+              [enable_setuid=no])
+if test "x$enable_setuid" = xyes; then
+   AC_DEFINE([HAVE_SETUID_ENABLED], [1], [Define if setuid support should be enabled.])
+fi
+
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Checks for Linux features and flags.
+# ----------------------------------------------------------------------
+
+AC_ARG_WITH([proc],
+            [AS_HELP_STRING([--with-proc=DIR],
+                            [location of a Linux-compatible proc filesystem @<:@default=/proc@:>@])],
+            [],
+            [with_proc=/proc])
+if test -z "$with_proc"; then
+   AC_MSG_ERROR([bad empty value for --with-proc option])
+fi
+AC_DEFINE_UNQUOTED([PROCDIR], ["$with_proc"], [Path of proc filesystem.])
+
+
+AC_ARG_ENABLE([openvz],
+              [AS_HELP_STRING([--enable-openvz],
+                              [enable OpenVZ support @<:@default=no@:>@])],
+              [],
+              [enable_openvz=no])
+if test "x$enable_openvz" = xyes; then
+   AC_DEFINE([HAVE_OPENVZ], [1], [Define if openvz support enabled.])
+fi
+
+
+AC_ARG_ENABLE([vserver],
+              [AS_HELP_STRING([--enable-vserver],
+                              [enable VServer support @<:@default=no@:>@])],
+              [],
+              [enable_vserver=no])
+if test "x$enable_vserver" = xyes; then
+    AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
+fi
+
+
+AC_ARG_ENABLE([ancient_vserver],
+              [AS_HELP_STRING([--enable-ancient-vserver],
+                              [enable ancient VServer support (implies --enable-vserver) @<:@default=no@:>@])],
+              [],
+              [enable_ancient_vserver=no])
+if test "x$enable_ancient_vserver" = xyes; then
+    AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
+    AC_DEFINE([HAVE_ANCIENT_VSERVER], [1], [Define if ancient vserver support enabled.])
+fi
+
 
 AC_ARG_ENABLE([linux_affinity],
               [AS_HELP_STRING([--enable-linux-affinity],
@@ -335,14 +385,6 @@ if test "x$enable_linux_affinity" = xyes; then
    AC_DEFINE([HAVE_LINUX_AFFINITY], [1], [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
-AC_ARG_ENABLE([setuid],
-              [AS_HELP_STRING([--enable-setuid],
-                              [enable setuid support for privilege dropping @<:@default=no@:>@])],
-              [],
-              [enable_setuid=no])
-if test "x$enable_setuid" = xyes; then
-   AC_DEFINE([HAVE_SETUID_ENABLED], [1], [Define if setuid support should be enabled.])
-fi
 
 AC_ARG_ENABLE([capabilities],
               [AS_HELP_STRING([--enable-capabilities],
@@ -365,6 +407,7 @@ case "$enable_capabilities" in
       AC_MSG_ERROR([bad value '$enable_capabilities' for --enable-capabilities])
       ;;
 esac
+
 
 AC_ARG_ENABLE([delayacct],
               [AS_HELP_STRING([--enable-delayacct],
@@ -409,6 +452,7 @@ case "$enable_delayacct" in
       ;;
 esac
 
+
 AC_ARG_ENABLE([sensors],
               [AS_HELP_STRING([--enable-sensors],
                               [enable libsensors support for reading temperature data; requires only libsensors headers at compile time, at runtime libsensors is loaded via dlopen @<:@default=check@:>@])],
@@ -429,6 +473,12 @@ case "$enable_sensors" in
       ;;
 esac
 
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Checks for compiler warnings.
+# ----------------------------------------------------------------------
 
 AM_CFLAGS="\
  -Wall\
@@ -447,6 +497,23 @@ AM_CFLAGS="\
  -Wundef\
  -Wunused\
  -Wwrite-strings"
+
+dnl https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
+AC_DEFUN([AX_CHECK_COMPILE_FLAG],
+[AC_PREREQ(2.64)dnl for _AC_LANG_PREFIX and AS_VAR_IF
+AS_VAR_PUSHDEF([CACHEVAR],[ax_cv_check_[]_AC_LANG_ABBREV[]flags_$4_$1])dnl
+AC_CACHE_CHECK([whether _AC_LANG compiler accepts $1], CACHEVAR, [
+   ax_check_save_flags=$[]_AC_LANG_PREFIX[]FLAGS
+   _AC_LANG_PREFIX[]FLAGS="$[]_AC_LANG_PREFIX[]FLAGS $4 $1"
+   AC_COMPILE_IFELSE([m4_default([$5],[AC_LANG_PROGRAM()])],
+      [AS_VAR_SET(CACHEVAR,[yes])],
+      [AS_VAR_SET(CACHEVAR,[no])])
+   _AC_LANG_PREFIX[]FLAGS=$ax_check_save_flags])
+AS_VAR_IF(CACHEVAR,yes,
+   [m4_default([$2], :)],
+   [m4_default([$3], :)])
+AS_VAR_POPDEF([CACHEVAR])dnl
+])dnl AX_CHECK_COMPILE_FLAGS
 
 AX_CHECK_COMPILE_FLAG([-Wnull-dereference], [AM_CFLAGS="$AM_CFLAGS -Wnull-dereference"], , [-Werror])
 
@@ -468,12 +535,17 @@ if test "x$enable_debug" != xyes; then
    AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"
 fi
 
+
 AC_SUBST([AM_CFLAGS])
 AC_SUBST([AM_CPPFLAGS])
 
+# ----------------------------------------------------------------------
 
+
+# ----------------------------------------------------------------------
 # Bail out on errors.
 # ----------------------------------------------------------------------
+
 if test ! -z "$missing_libraries"; then
    AC_MSG_ERROR([missing libraries: $missing_libraries])
 fi
@@ -481,10 +553,15 @@ if test ! -z "$missing_headers"; then
    AC_MSG_ERROR([missing headers: $missing_headers])
 fi
 
-AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-2019 Hisham Muhammad. (C) 2020-2021 htop dev team.", [Copyright message.])
+# ----------------------------------------------------------------------
 
+
+# ----------------------------------------------------------------------
 # We're done, let's go!
 # ----------------------------------------------------------------------
+
+AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2021 htop dev team."], [Copyright message.])
+
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
 AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])
 AM_CONDITIONAL([HTOP_DRAGONFLYBSD], [test "$my_htop_platform" = dragonflybsd])
@@ -496,7 +573,7 @@ AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
 
-if test "$my_htop_platform" = "unsupported"; then
+if test "$my_htop_platform" = unsupported; then
    echo ""
    echo "****************************************************************"
    echo "WARNING! This platform is not currently supported by htop."
