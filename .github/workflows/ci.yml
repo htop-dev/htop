@@ -91,6 +91,25 @@ jobs:
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors --enable-capabilities'
 
+  build-ubuntu-latest-gcc-static:
+    runs-on: ubuntu-latest
+    # Enable LTO, might trigger additional warnings on advanced inlining
+    env:
+      CFLAGS: -O3 -g -flto
+      LDFLAGS: -O3 -g -flto
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Dependencies
+      run: sudo apt-get install libncursesw5-dev libtinfo-dev libgpm-dev libsensors4-dev libcap-dev
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --enable-setuid --disable-delayacct --enable-sensors --enable-capabilities
+    - name: Build
+      run: make -k
+    - name: Distcheck
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --enable-setuid --disable-delayacct --enable-sensors --enable-capabilities'
+
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
     env:

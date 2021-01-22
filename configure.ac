@@ -72,6 +72,31 @@ AS_IF([test "x$ac_cv_prog_cc_c99" = xno], [AC_MSG_ERROR([htop is written in C99.
 
 
 # ----------------------------------------------------------------------
+# Checks for static build.
+# ----------------------------------------------------------------------
+
+AC_ARG_ENABLE([static],
+              [AS_HELP_STRING([--enable-static],
+                              [build a static htop binary @<:@default=no@:>@])],
+              [],
+              [enable_static=no])
+case "$enable_static" in
+   no)
+      ;;
+   yes)
+      AC_DEFINE([BUILD_STATIC], [1], [Define if building static binary.])
+      CFLAGS="$CFLAGS -static"
+      LDFLAGS="$LDFLAGS -static"
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_static' for --enable-static option])
+      ;;
+esac
+
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
 # Checks for generic header files.
 # ----------------------------------------------------------------------
 
@@ -137,7 +162,9 @@ if test "$my_htop_platform" = freebsd; then
 fi
 
 if test "$my_htop_platform" = linux; then
-   AC_SEARCH_LIBS([dlopen], [dl dld], [], [AC_MSG_ERROR([can not find required function dlopen()])])
+   if test "$enable_static" != yes; then
+      AC_SEARCH_LIBS([dlopen], [dl dld], [], [AC_MSG_ERROR([can not find required function dlopen()])])
+   fi
 fi
 
 if test "$my_htop_platform" = openbsd; then
@@ -170,6 +197,10 @@ if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([mach_timebase_info])
 fi
 
+if test "$my_htop_platform" = linux && test "x$enable_static" = xyes; then
+   AC_CHECK_LIB([systemd], [sd_bus_open_system])
+fi
+
 # ----------------------------------------------------------------------
 
 
@@ -189,10 +220,8 @@ m4_define([HTOP_CHECK_SCRIPT],
       htop_config_script_cflags=$([$4] --cflags 2> /dev/null)
    fi
    htop_script_success=no
-   htop_save_LDFLAGS="$LDFLAGS"
    htop_save_CFLAGS="$CFLAGS"
    if test ! "x$htop_config_script_libs" = x; then
-      LDFLAGS="$htop_config_script_libs $LDFLAGS"
       CFLAGS="$htop_config_script_cflags $CFLAGS"
       AC_CHECK_LIB([$1], [$2], [
          AC_DEFINE([$3], 1, [The library is present.])
@@ -200,8 +229,9 @@ m4_define([HTOP_CHECK_SCRIPT],
          htop_script_success=yes
       ], [
          CFLAGS="$htop_save_CFLAGS"
+      ], [
+         $htop_config_script_libs
       ])
-      LDFLAGS="$htop_save_LDFLAGS"
    fi
    if test "x$htop_script_success" = xno; then
       [$5]
@@ -212,7 +242,7 @@ m4_define([HTOP_CHECK_SCRIPT],
 m4_define([HTOP_CHECK_LIB],
 [
    AC_CHECK_LIB([$1], [$2], [
-      AC_DEFINE([$3], 1, [The library is present.])
+      AC_DEFINE([$3], [1], [The library is present.])
       LIBS="-l[$1] $LIBS "
    ], [$4])
 ])
@@ -223,13 +253,13 @@ AC_ARG_ENABLE([unicode],
               [],
               [enable_unicode=yes])
 if test "x$enable_unicode" = xyes; then
-   HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-    HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-     HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config",
-      HTOP_CHECK_SCRIPT([ncurses], [addnwstr], [HAVE_LIBNCURSESW], "ncurses5-config",
-       HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
-        HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
-         HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
+   HTOP_CHECK_SCRIPT([ncursesw6], [waddnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
+    HTOP_CHECK_SCRIPT([ncursesw], [waddnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
+     HTOP_CHECK_SCRIPT([ncursesw], [waddnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config",
+      HTOP_CHECK_SCRIPT([ncurses], [waddnwstr], [HAVE_LIBNCURSESW], "ncurses5-config",
+       HTOP_CHECK_LIB([ncursesw6], [waddnwstr], [HAVE_LIBNCURSESW],
+        HTOP_CHECK_LIB([ncursesw], [waddnwstr], [HAVE_LIBNCURSESW],
+         HTOP_CHECK_LIB([ncurses], [waddnwstr], [HAVE_LIBNCURSESW],
           AC_MSG_ERROR([can not find required library libncursesw; you may want to use --disable-unicode])
    )))))))
 
@@ -243,10 +273,10 @@ if test "x$enable_unicode" = xyes; then
    # (at this point we already link against a working ncurses library with wide character support)
    AC_SEARCH_LIBS([keypad], [tinfow tinfo])
 else
-   HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], [ncurses6-config],
-    HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], [ncurses5-config],
-     HTOP_CHECK_LIB([ncurses6],  [refresh], [HAVE_LIBNCURSES],
-      HTOP_CHECK_LIB([ncurses],  [refresh], [HAVE_LIBNCURSES],
+   HTOP_CHECK_SCRIPT([ncurses6], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses6-config],
+    HTOP_CHECK_SCRIPT([ncurses], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses5-config],
+     HTOP_CHECK_LIB([ncurses6],  [wnoutrefresh], [HAVE_LIBNCURSES],
+      HTOP_CHECK_LIB([ncurses],  [wnoutrefresh], [HAVE_LIBNCURSES],
        AC_MSG_ERROR([can not find required library libncurses])
    ))))
 
@@ -259,6 +289,9 @@ else
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library)
    AC_SEARCH_LIBS([keypad], [tinfo])
+fi
+if test "$enable_static" = yes; then
+   AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
 fi
 
 
@@ -405,20 +438,24 @@ case "$enable_delayacct" in
    no)
       ;;
    check)
-      m4_ifdef([PKG_PROG_PKG_CONFIG], [
-         enable_delayacct=yes
-         PKG_PROG_PKG_CONFIG()
-         PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [enable_delayacct=no])
-         PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [enable_delayacct=no])
-         if test "$enable_delayacct" = yes; then
-            CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
-            LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
-            AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
-         fi
-      ], [
+      if test "$enable_static" = yes; then
          enable_delayacct=no
-         AC_MSG_NOTICE([Linux delay accounting support can not be enabled, cause pkg-config is required for checking its availability])
-      ])
+      else
+         m4_ifdef([PKG_PROG_PKG_CONFIG], [
+            enable_delayacct=yes
+            PKG_PROG_PKG_CONFIG()
+            PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [enable_delayacct=no])
+            PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [enable_delayacct=no])
+            if test "$enable_delayacct" = yes; then
+               CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
+               LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
+               AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
+            fi
+         ], [
+            enable_delayacct=no
+            AC_MSG_NOTICE([Linux delay accounting support can not be enabled, cause pkg-config is required for checking its availability])
+         ])
+      fi
       ;;
    yes)
       m4_ifdef([PKG_PROG_PKG_CONFIG], [
@@ -450,10 +487,16 @@ case "$enable_sensors" in
       ;;
    check)
       enable_sensors=yes
+      if test "$enable_static" = yes; then
+         AC_CHECK_LIB([sensors], [sensors_init], [], [enable_sensors=no])
+      fi
       AC_CHECK_HEADERS([sensors/sensors.h], [], [enable_sensors=no])
       ;;
    yes)
-      AC_CHECK_HEADERS([sensors/sensors.h], [], [AC_MSG_ERROR([can not find required header file ensors/sensors.h])])
+      if test "$enable_static" = yes; then
+         AC_CHECK_LIB([sensors], [sensors_init], [], [AC_MSG_ERROR([can not find required library libsensors])])
+      fi
+      AC_CHECK_HEADERS([sensors/sensors.h], [], [AC_MSG_ERROR([can not find required header file sensors/sensors.h])])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_sensors' for --enable-sensors])
@@ -576,4 +619,5 @@ AC_MSG_RESULT([
   hwloc:                     $enable_hwloc
   setuid:                    $enable_setuid
   debug:                     $enable_debug
+  static:                    $enable_static
 ])
