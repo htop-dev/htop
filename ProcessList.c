@@ -116,7 +116,7 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header) {
          RichString_rewind(header, 1);  // rewind to override space
          RichString_appendnWide(header,
                                 CRT_colors[PANEL_SELECTION_FOCUS],
-                                CRT_treeStr[Settings_getActiveDirection(this->settings) == 1 ? TREE_STR_DESC : TREE_STR_ASC],
+                                CRT_treeStr[Settings_getActiveDirection(this->settings) == 1 ? TREE_STR_ASC : TREE_STR_DESC],
                                 1);
       }
       if (COMM == fields[i] && settings->showMergedCommand) {

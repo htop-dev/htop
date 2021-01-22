@@ -1,3 +1,12 @@
+What's new in version 3.0.6 (not released yet)
+
+* Improved default sort ordering
+  Note for users: This may lead to an inverted sort order on startup of
+  htop 3.0.6 compared to previous versions. This is due to what is stored
+  in your htoprc file. Solution: Press I (to invert sort order).
+  This changed setting will be saved by htop on exit as long as it can
+  write to your htoprc file.
+
 What's new in version 3.0.5
 
 * BUGFIX / SECURITY: InfoScreen: fix uncontrolled format string
