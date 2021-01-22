@@ -44,6 +44,59 @@ install the header files for `ncurses` (libncursesw*-dev) and other required dev
 
 By default `make install` will install into `/usr/local`, for changing the path use `./configure --prefix=/some/path`.
 
+### Build Options
+
+`htop` has several build-time options to enable/disable additional features.
+
+#### Generic
+
+  * `--enable-unicode`:
+    enable Unicode support
+    dependency: *libncursesw*
+    default: *yes*
+  * `--enable-hwloc`:
+    enable hwloc support for CPU affinity; disables Linux affinity
+    dependency: *libhwloc*
+    default: *no*
+  * `--enable-setuid`:
+    enable setuid support for privilege dropping
+    default: *no*
+  * `--enable-debug`:
+    Enable asserts and internal sanity checks; implies a performance penalty
+    default: *no*
+
+#### Linux
+
+  * `--enable-sensors`:
+    enable libsensors(3) support for reading temperature data
+    dependencies: *libsensors-dev*(build-time), at runtime *libsensors* is loaded via `dlopen(3)` if available
+    default: *check*
+  * `--enable-capabilities`:
+    enable Linux capabilities support
+    dependency: *libcap*
+    default: *check*
+  * `--with-proc`:
+    location of a Linux-compatible proc filesystem
+    default: */proc*
+  * `--enable-openvz`:
+    enable OpenVZ support
+    default: *no*
+  * `--enable-vserver`:
+    enable VServer support
+    default: *no*
+  * `--enable-ancient-vserver`:
+    enable ancient VServer support (implies `--enable-vserver`)
+    default: *no*
+   * `--enable-linux-affinity`:
+    enable Linux `sched_setaffinity(2)` and `sched_getaffinity(2)` for affinity support; conflicts with hwloc
+    default: *check*
+  * `--enable-delayacct`:
+    enable Linux delay accounting support
+    dependencies: *pkg-config*(build-time), *libnl-3* and *libnl-genl-3*
+    default: *check*
+
+## Usage
+
 See the manual page (`man htop`) or the on-line help ('F1' or 'h' inside `htop`) for a list of supported key commands.
 
 ## Support

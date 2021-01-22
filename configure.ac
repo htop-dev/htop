@@ -122,29 +122,43 @@ AC_SEARCH_LIBS([devstat_checkversion], [devstat])
 
 # Checks for features and flags.
 # ----------------------------------------------------------------------
-PROCDIR=/proc
 
-AC_ARG_WITH(proc, [AS_HELP_STRING([--with-proc=DIR], [Location of a Linux-compatible proc filesystem (default=/proc).])],
-  if test -n "$withval"; then
-    AC_DEFINE_UNQUOTED(PROCDIR, "$withval", [Path of proc filesystem])
-    PROCDIR="$withval"
-  fi,
-  AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
+AC_ARG_WITH([proc],
+            [AS_HELP_STRING([--with-proc=DIR],
+                            [location of a Linux-compatible proc filesystem @<:@default=/proc@:>@])],
+            [],
+            [with_proc=/proc])
+if test -z "$with_proc"; then
+   AC_MSG_ERROR([bad empty value for --with-proc option])
+fi
+AC_DEFINE_UNQUOTED([PROCDIR], ["$with_proc"], [Path of proc filesystem.])
 
-AC_ARG_ENABLE(openvz, [AS_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
+AC_ARG_ENABLE([openvz],
+              [AS_HELP_STRING([--enable-openvz],
+                              [enable OpenVZ support @<:@default=no@:>@])],
+              [],
+              [enable_openvz=no])
 if test "x$enable_openvz" = xyes; then
-   AC_DEFINE(HAVE_OPENVZ, 1, [Define if openvz support enabled.])
+   AC_DEFINE([HAVE_OPENVZ], [1], [Define if openvz support enabled.])
 fi
 
-AC_ARG_ENABLE(vserver, [AS_HELP_STRING([--enable-vserver], [enable VServer support])], ,enable_vserver="no")
+AC_ARG_ENABLE([vserver],
+              [AS_HELP_STRING([--enable-vserver],
+                              [enable VServer support @<:@default=no@:>@])],
+              [],
+              [enable_vserver=no])
 if test "x$enable_vserver" = xyes; then
-    AC_DEFINE(HAVE_VSERVER, 1, [Define if vserver support enabled.])
+    AC_DEFINE([HAVE_VSERVER], [1], [Define if vserver support enabled.])
 fi
 
-AC_ARG_ENABLE(ancient_vserver, [AS_HELP_STRING([--enable-ancient-vserver], [enable ancient VServer support (implies --enable-vserver)])], ,enable_ancient_vserver="no")
+AC_ARG_ENABLE([ancient_vserver],
+              [AS_HELP_STRING([--enable-ancient-vserver],
+                              [enable ancient VServer support (implies --enable-vserver) @<:@default=no@:>@])],
+              [],
+              [enable_ancient_vserver=no])
 if test "x$enable_ancient_vserver" = xyes; then
-    AC_DEFINE(HAVE_VSERVER, 1, [Define if vserver support enabled.])
-    AC_DEFINE(HAVE_ANCIENT_VSERVER, 1, [Define if ancient vserver support enabled.])
+    AC_DEFINE([HAVE_VSERVER], [1], [Define if vserver support enabled.])
+    AC_DEFINE([HAVE_ANCIENT_VSERVER], [1], [Define if ancient vserver support enabled.])
 fi
 
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
@@ -204,7 +218,11 @@ AS_VAR_IF(CACHEVAR,yes,
 AS_VAR_POPDEF([CACHEVAR])dnl
 ])dnl AX_CHECK_COMPILE_FLAGS
 
-AC_ARG_ENABLE(unicode, [AS_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
+AC_ARG_ENABLE([unicode],
+              [AS_HELP_STRING([--enable-unicode],
+                              [enable Unicode support @<:@default=yes@:>@])],
+              [],
+              [enable_unicode=yes])
 if test "x$enable_unicode" = xyes; then
    HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
     HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
@@ -266,13 +284,28 @@ if test "$my_htop_platform" = "solaris"; then
    AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
 fi
 
-AC_ARG_ENABLE(hwloc, [AS_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity, disables Linux affinity])],, enable_hwloc="no")
-if test "x$enable_hwloc" = xyes; then
-   AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
-   AC_CHECK_HEADERS([hwloc.h],[:], [missing_headers="$missing_headers $ac_header"])
-fi
+AC_ARG_ENABLE([hwloc],
+              [AS_HELP_STRING([--enable-hwloc],
+              [enable hwloc support for CPU affinity; disables Linux affinity; requires libhwloc @<:@default=no@:>@])],
+              [],
+              [enable_hwloc=no])
+case "$enable_hwloc" in
+   no)
+      ;;
+   yes)
+      AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
+      AC_CHECK_HEADERS([hwloc.h], [], [missing_headers="$missing_headers $ac_header"])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_hwloc' for --enable-hwloc])
+      ;;
+esac
 
-AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, conflicts with hwloc])], ,enable_linux_affinity="check")
+AC_ARG_ENABLE([linux_affinity],
+              [AS_HELP_STRING([--enable-linux-affinity],
+                              [enable Linux sched_setaffinity and sched_getaffinity for affinity support, conflicts with hwloc @<:@default=check@:>@])],
+              [],
+              [enable_linux_affinity=check])
 if test "x$enable_linux_affinity" = xcheck; then
    if test "x$enable_hwloc" = xyes; then
       enable_linux_affinity=no
@@ -296,48 +329,106 @@ if test "x$enable_linux_affinity" = xcheck; then
    fi
 fi
 if test "x$enable_linux_affinity" = xyes; then
-   AC_DEFINE(HAVE_LINUX_AFFINITY, 1, [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
+   if test "x$enable_hwloc" = xyes; then
+      AC_MSG_ERROR([--enable-hwloc and --enable-linux-affinity are mutual exclusive. Specify at most one of them.])
+   fi
+   AC_DEFINE([HAVE_LINUX_AFFINITY], [1], [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
-if test "x$enable_linux_affinity" = xyes -a "x$enable_hwloc" = xyes; then
-   AC_MSG_ERROR([--enable-hwloc and --enable-linux-affinity are mutual exclusive. Specify at most one of them.])
-fi
-
-AC_ARG_ENABLE(setuid, [AS_HELP_STRING([--enable-setuid], [enable setuid support for platforms that need it])],, enable_setuid="no")
+AC_ARG_ENABLE([setuid],
+              [AS_HELP_STRING([--enable-setuid],
+                              [enable setuid support for privilege dropping @<:@default=no@:>@])],
+              [],
+              [enable_setuid=no])
 if test "x$enable_setuid" = xyes; then
-   AC_DEFINE(HAVE_SETUID_ENABLED, 1, [Define if setuid support should be enabled.])
+   AC_DEFINE([HAVE_SETUID_ENABLED], [1], [Define if setuid support should be enabled.])
 fi
 
-AC_ARG_WITH(capabilities, [AS_HELP_STRING([--with-capabilities], [Enable option to drop Linux capabilities via libcap])],, with_capabilities="no")
-if test "x$with_capabilities" = xyes
-then
-  AC_CHECK_LIB([cap], [cap_init], [], [missing_libraries="$missing_libraries libcap"])
-  AC_CHECK_HEADERS([sys/capability.h], [:], [missing_headers="$missing_headers $ac_header"])
-fi
+AC_ARG_ENABLE([capabilities],
+              [AS_HELP_STRING([--enable-capabilities],
+                              [enable Linux capabilities support; requires libcap @<:@default=check@:>@])],
+              [],
+              [enable_capabilities=check])
+case "$enable_capabilities" in
+   no)
+      ;;
+   check)
+      enable_capabilities=yes
+      AC_CHECK_LIB([cap], [cap_init], [], [enable_capabilities=no])
+      AC_CHECK_HEADERS([sys/capability.h], [], [enable_capabilities=no])
+      ;;
+   yes)
+      AC_CHECK_LIB([cap], [cap_init], [], [missing_libraries="$missing_libraries libcap"])
+      AC_CHECK_HEADERS([sys/capability.h], [], [missing_headers="$missing_headers $ac_header"])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_capabilities' for --enable-capabilities])
+      ;;
+esac
 
-AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable Linux delay accounting])],, enable_delayacct="no")
-if test "x$enable_delayacct" = xyes; then
-   m4_ifdef([PKG_PROG_PKG_CONFIG], [
-      PKG_PROG_PKG_CONFIG()
-      PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
-      PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
-      CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
-      LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
-      AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
-   ], [
-      pkg_m4_absent=1
-      m4_warning([configure is generated without pkg.m4. 'make dist' target will be disabled.])
-      AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
-   ])
-fi
+AC_ARG_ENABLE([delayacct],
+              [AS_HELP_STRING([--enable-delayacct],
+                              [enable Linux delay accounting support; requires pkg-config, libnl-3 and libnl-genl-3 @<:@default=check@:>@])],
+              [],
+              [enable_delayacct=check])
+case "$enable_delayacct" in
+   no)
+      ;;
+   check)
+      m4_ifdef([PKG_PROG_PKG_CONFIG], [
+         enable_delayacct=yes
+         PKG_PROG_PKG_CONFIG()
+         PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [enable_delayacct=no])
+         PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [enable_delayacct=no])
+         if test "$enable_delayacct" = yes; then
+            CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
+            LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
+            AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
+         fi
+      ], [
+         enable_delayacct=no
+         AC_MSG_NOTICE([Linux delay accounting support can not be enabled, cause pkg-config is required for checking its availability])
+      ])
+      ;;
+   yes)
+      m4_ifdef([PKG_PROG_PKG_CONFIG], [
+         PKG_PROG_PKG_CONFIG()
+         PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
+         PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
+         CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
+         LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
+         AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
+      ], [
+         pkg_m4_absent=1
+         m4_warning([configure is generated without pkg.m4. 'make dist' target will be disabled.])
+         AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
+      ])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_delayacct' for --enable-delayacct])
+      ;;
+esac
 
-AC_ARG_WITH(sensors, [AS_HELP_STRING([--with-sensors], [Compile with libsensors support for reading temperature data. Only requires libsensors headers at compile time, at runtime libsensors is loaded via dlopen.])],, with_sensors="check")
-if test "x$with_sensors" = xyes; then
-   AC_CHECK_HEADERS([sensors/sensors.h], [], [missing_headers="$missing_headers $ac_header"])
-elif test "x$with_sensors" = xcheck; then
-   with_sensors=yes
-   AC_CHECK_HEADERS([sensors/sensors.h], [], [with_sensors=no])
-fi
+AC_ARG_ENABLE([sensors],
+              [AS_HELP_STRING([--enable-sensors],
+                              [enable libsensors support for reading temperature data; requires only libsensors headers at compile time, at runtime libsensors is loaded via dlopen @<:@default=check@:>@])],
+              [],
+              [enable_sensors=check])
+case "$enable_sensors" in
+   no)
+      ;;
+   check)
+      enable_sensors=yes
+      AC_CHECK_HEADERS([sensors/sensors.h], [], [enable_sensors=no])
+      ;;
+   yes)
+      AC_CHECK_HEADERS([sensors/sensors.h], [], [missing_headers="$missing_headers $ac_header"])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_sensors' for --enable-sensors])
+      ;;
+esac
+
 
 AM_CFLAGS="\
  -Wall\
@@ -359,15 +450,27 @@ AM_CFLAGS="\
 
 AX_CHECK_COMPILE_FLAG([-Wnull-dereference], [AM_CFLAGS="$AM_CFLAGS -Wnull-dereference"], , [-Werror])
 
-AC_ARG_ENABLE([werror], [AS_HELP_STRING([--enable-werror], [Treat warnings as errors (default: warnings are not errors)])], [enable_werror="$enableval"], [enable_werror=no])
-AS_IF([test "x$enable_werror" = "xyes"], [AM_CFLAGS="$AM_CFLAGS -Werror"])
+AC_ARG_ENABLE([werror],
+              [AS_HELP_STRING([--enable-werror],
+                              [Treat warnings as errors @<:@default=no@:>@])],
+              [],
+              [enable_werror=no])
+if test "x$enable_werror" = xyes; then
+   AM_CFLAGS="$AM_CFLAGS -Werror"
+fi
+
+AC_ARG_ENABLE([debug],
+              [AS_HELP_STRING([--enable-debug],
+                              [Enable asserts and internal sanity checks @<:@default=no@:>@])],
+              [],
+              [enable_debug=no])
+if test "x$enable_debug" != xyes; then
+   AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"
+fi
 
 AC_SUBST([AM_CFLAGS])
-
-AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [Enable asserts (default: asserts are disabled)])], [enable_debug="$enableval"], [enable_debug=no])
-AS_IF([test "x$enable_debug" = "xyes"], , [AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"])
-
 AC_SUBST([AM_CPPFLAGS])
+
 
 # Bail out on errors.
 # ----------------------------------------------------------------------
@@ -410,14 +513,14 @@ AC_MSG_RESULT([
   ${PACKAGE_NAME} ${VERSION}
 
   platform:                  $my_htop_platform
-  (Linux) proc directory:    $PROCDIR
+  (Linux) proc directory:    $with_proc
   (Linux) openvz:            $enable_openvz
   (Linux) vserver:           $enable_vserver
   (Linux) ancient vserver:   $enable_ancient_vserver
   (Linux) affinity:          $enable_linux_affinity
   (Linux) delay accounting:  $enable_delayacct
-  (Linux) sensors:           $with_sensors
-  (Linux) capabilities:      $with_capabilities
+  (Linux) sensors:           $enable_sensors
+  (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode
   hwloc:                     $enable_hwloc
   setuid:                    $enable_setuid
