@@ -84,7 +84,7 @@ AC_CHECK_HEADERS([ \
     sys/param.h \
     sys/time.h \
     unistd.h
-   ], [], [missing_headers="$missing_headers $ac_header"])
+   ], [], [AC_MSG_ERROR([can not find required generic header files])])
 
 AC_HEADER_MAJOR
 dnl glibc 2.25 deprecates 'major' and 'minor' in <sys/types.h> and requires to
@@ -125,29 +125,29 @@ AC_TYPE_UINT64_T
 # Checks for generic library functions.
 # ----------------------------------------------------------------------
 
-AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
+AC_CHECK_LIB([m], [ceil], [], [AC_MSG_ERROR([can not find required function ceil()])])
 
 if test "$my_htop_platform" = dragonflybsd; then
-   AC_SEARCH_LIBS([kvm_open], [kvm], [], [missing_libraries="$missing_libraries libkvm"])
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
 fi
 
 if test "$my_htop_platform" = freebsd; then
-   AC_SEARCH_LIBS([kvm_open], [kvm], [], [missing_libraries="$missing_libraries libkvm"])
-   AC_SEARCH_LIBS([devstat_checkversion], [devstat], [], [missing_libraries="$missing_libraries libdevstat"])
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
+   AC_SEARCH_LIBS([devstat_checkversion], [devstat], [], [AC_MSG_ERROR([can not find required function devstat_checkversion()])])
 fi
 
 if test "$my_htop_platform" = linux; then
-   AC_SEARCH_LIBS([dlopen], [dl dld], [], [missing_libraries="$missing_libraries libdl/libdld"])
+   AC_SEARCH_LIBS([dlopen], [dl dld], [], [AC_MSG_ERROR([can not find required function dlopen()])])
 fi
 
 if test "$my_htop_platform" = openbsd; then
-   AC_SEARCH_LIBS([kvm_open], [kvm], [], [missing_libraries="$missing_libraries libkvm"])
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
 fi
 
 if test "$my_htop_platform" = solaris; then
-   AC_SEARCH_LIBS([kstat_open], [kstat], [], [missing_libraries="$missing_libraries libkstat"])
-   AC_SEARCH_LIBS([Pgrab_error], [proc], [], [missing_libraries="$missing_libraries libproc"])
-   AC_SEARCH_LIBS([free], [malloc], [], [missing_libraries="$missing_libraries libmalloc"])
+   AC_SEARCH_LIBS([kstat_open], [kstat], [], [AC_MSG_ERROR([can not find required function kstat_open()])])
+   AC_SEARCH_LIBS([Pgrab_error], [proc], [], [AC_MSG_ERROR([can not find required function Pgrab_error()])])
+   AC_SEARCH_LIBS([free], [malloc], [], [AC_MSG_ERROR([can not find required function free()])])
 fi
 
 # Optional Section
@@ -230,30 +230,31 @@ if test "x$enable_unicode" = xyes; then
        HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
         HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
          HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
-      missing_libraries="$missing_libraries libncursesw"
-      AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
+          AC_MSG_ERROR([can not find required library libncursesw; you may want to use --disable-unicode])
    )))))))
 
-   AC_CHECK_HEADERS([ncursesw/curses.h],[:],
-      [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
-         [AC_CHECK_HEADERS([ncurses/curses.h],[:],
-            [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
+   AC_CHECK_HEADERS([ncursesw/curses.h], [],
+      [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
+         [AC_CHECK_HEADERS([ncurses/curses.h], [],
+            [AC_CHECK_HEADERS([ncurses.h], [],
+               [AC_MSG_ERROR([can not find required ncurses header file])])])])])
 
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library with wide character support)
    AC_SEARCH_LIBS([keypad], [tinfow tinfo])
 else
-   HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], "ncurses6-config",
-    HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], "ncurses5-config",
+   HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], [ncurses6-config],
+    HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], [ncurses5-config],
      HTOP_CHECK_LIB([ncurses6],  [refresh], [HAVE_LIBNCURSES],
       HTOP_CHECK_LIB([ncurses],  [refresh], [HAVE_LIBNCURSES],
-      missing_libraries="$missing_libraries libncurses"
+       AC_MSG_ERROR([can not find required library libncurses])
    ))))
 
-   AC_CHECK_HEADERS([curses.h],[:],
-      [AC_CHECK_HEADERS([ncurses/curses.h],[:],
-         [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
-            [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
+   AC_CHECK_HEADERS([curses.h], [],
+      [AC_CHECK_HEADERS([ncurses/curses.h], [],
+         [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
+            [AC_CHECK_HEADERS([ncurses.h] ,[],
+               [AC_MSG_ERROR([can not find required ncurses header file])])])])])
 
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library)
@@ -270,8 +271,8 @@ case "$enable_hwloc" in
    no)
       ;;
    yes)
-      AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [missing_libraries="$missing_libraries libhwloc"])
-      AC_CHECK_HEADERS([hwloc.h], [], [missing_headers="$missing_headers $ac_header"])
+      AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
+      AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_hwloc' for --enable-hwloc])
@@ -386,8 +387,8 @@ case "$enable_capabilities" in
       AC_CHECK_HEADERS([sys/capability.h], [], [enable_capabilities=no])
       ;;
    yes)
-      AC_CHECK_LIB([cap], [cap_init], [], [missing_libraries="$missing_libraries libcap"])
-      AC_CHECK_HEADERS([sys/capability.h], [], [missing_headers="$missing_headers $ac_header"])
+      AC_CHECK_LIB([cap], [cap_init], [], [AC_MSG_ERROR([can not find required library libcap])])
+      AC_CHECK_HEADERS([sys/capability.h], [], [AC_MSG_ERROR([can not find required header file sys/capability.h])])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_capabilities' for --enable-capabilities])
@@ -422,8 +423,8 @@ case "$enable_delayacct" in
    yes)
       m4_ifdef([PKG_PROG_PKG_CONFIG], [
          PKG_PROG_PKG_CONFIG()
-         PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
-         PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
+         PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [AC_MSG_ERROR([can not find required library libnl3])])
+         PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [AC_MSG_ERROR([can not find required library libnl3genl])])
          CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
          LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
          AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
@@ -452,7 +453,7 @@ case "$enable_sensors" in
       AC_CHECK_HEADERS([sensors/sensors.h], [], [enable_sensors=no])
       ;;
    yes)
-      AC_CHECK_HEADERS([sensors/sensors.h], [], [missing_headers="$missing_headers $ac_header"])
+      AC_CHECK_HEADERS([sensors/sensors.h], [], [AC_MSG_ERROR([can not find required header file ensors/sensors.h])])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_sensors' for --enable-sensors])
@@ -524,20 +525,6 @@ fi
 
 AC_SUBST([AM_CFLAGS])
 AC_SUBST([AM_CPPFLAGS])
-
-# ----------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------
-# Bail out on errors.
-# ----------------------------------------------------------------------
-
-if test ! -z "$missing_libraries"; then
-   AC_MSG_ERROR([missing libraries: $missing_libraries])
-fi
-if test ! -z "$missing_headers"; then
-   AC_MSG_ERROR([missing headers: $missing_headers])
-fi
 
 # ----------------------------------------------------------------------
 
