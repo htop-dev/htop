@@ -5,17 +5,15 @@
 # Autoconf initialization.
 # ----------------------------------------------------------------------
 
-AC_PREREQ([2.65])
-AC_INIT([htop], [3.0.6-dev], [htop@groups.io])
+AC_PREREQ([2.69])
+AC_INIT([htop], [3.0.6-dev], [htop@groups.io], [], [https://htop.dev/])
 
 AC_CONFIG_SRCDIR([htop.c])
-AC_CONFIG_AUX_DIR([.])
+AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([config.h])
 
-# Required by hwloc scripts
 AC_CANONICAL_TARGET
-
-AM_INIT_AUTOMAKE([1.11])
+AM_INIT_AUTOMAKE([-Wall std-options subdir-objects])
 
 # ----------------------------------------------------------------------
 
@@ -55,7 +53,7 @@ solaris*)
    ;;
 esac
 
-# Required by hwloc scripts
+# Enable extensions, required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
 # ----------------------------------------------------------------------
@@ -67,15 +65,8 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_PROG_CC
 AM_PROG_CC_C_O
-
-save_cflags="${CFLAGS}"
-CFLAGS="${CFLAGS} -std=c99"
-AC_MSG_CHECKING([whether cc -std=c99 option works])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-   [AC_INCLUDES_DEFAULT], [[char *a; a = strdup("foo"); int i = 0; i++; // C99]])],
-   [AC_MSG_RESULT([yes])],
-   [AC_MSG_ERROR([htop is written in C99. A newer compiler is required.])])
-CFLAGS="$save_cflags"
+AC_PROG_CC_C99
+AS_IF([test "x$ac_cv_prog_cc_c99" = xno], [AC_MSG_ERROR([htop is written in C99. A newer compiler is required.])])
 
 # ----------------------------------------------------------------------
 
@@ -120,8 +111,6 @@ fi
 # Checks for typedefs, structures, and compiler characteristics.
 # ----------------------------------------------------------------------
 
-AC_HEADER_STDBOOL
-AC_C_CONST
 AC_TYPE_PID_T
 AC_TYPE_UID_T
 AC_TYPE_UINT8_T
@@ -135,9 +124,6 @@ AC_TYPE_UINT64_T
 # ----------------------------------------------------------------------
 # Checks for generic library functions.
 # ----------------------------------------------------------------------
-
-AC_FUNC_CLOSEDIR_VOID
-AC_FUNC_STAT
 
 AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
 
@@ -500,7 +486,7 @@ AM_CFLAGS="\
 
 dnl https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
 AC_DEFUN([AX_CHECK_COMPILE_FLAG],
-[AC_PREREQ(2.64)dnl for _AC_LANG_PREFIX and AS_VAR_IF
+[
 AS_VAR_PUSHDEF([CACHEVAR],[ax_cv_check_[]_AC_LANG_ABBREV[]flags_$4_$1])dnl
 AC_CACHE_CHECK([whether _AC_LANG compiler accepts $1], CACHEVAR, [
    ax_check_save_flags=$[]_AC_LANG_PREFIX[]FLAGS
@@ -569,6 +555,7 @@ AM_CONDITIONAL([HTOP_OPENBSD], [test "$my_htop_platform" = openbsd])
 AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
+
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
