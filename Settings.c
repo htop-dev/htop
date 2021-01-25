@@ -45,7 +45,7 @@ static void Settings_readMeterModes(Settings* this, const char* line, int column
       len++;
    }
    this->columns[column].len = len;
-   int* modes = xCalloc(len, sizeof(int));
+   int* modes = len ? xCalloc(len, sizeof(int)) : NULL;
    for (int i = 0; i < len; i++) {
       modes[i] = atoi(ids[i]);
    }
