@@ -430,7 +430,7 @@ const ProcessClass Process_class = {
    .getCommandStr = Process_getCommandStr,
 };
 
-void Process_init(Process* this, const struct Settings_* settings) {
+void Process_init(Process* this, const Settings* settings) {
    this->settings = settings;
    this->tag = false;
    this->showChildren = true;
