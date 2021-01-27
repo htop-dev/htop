@@ -250,8 +250,8 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
       cpuData->systemPercent    = cp_time_p[CP_SYS];
       cpuData->irqPercent       = cp_time_p[CP_INTR];
       cpuData->systemAllPercent = cp_time_p[CP_SYS] + cp_time_p[CP_INTR];
-      // this one is not really used, but we store it anyway
-      cpuData->idlePercent      = cp_time_p[CP_IDLE];
+      // this one is not really used
+      //cpuData->idlePercent      = cp_time_p[CP_IDLE];
    }
 }
 
