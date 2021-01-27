@@ -460,7 +460,6 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    for (int i = 0; i < count; i++) {
       const struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
-      // TODO: bool isIdleProcess = false;
       Process* proc = ProcessList_getProcess(super, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
@@ -510,16 +509,6 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
       proc->percent_mem = 100.0 * proc->m_resident / (double)(super->totalMem);
-
-      /*
-       * TODO
-       * if (proc->percent_cpu > 0.1) {
-       *     // system idle process should own all CPU time left regardless of CPU count
-       *     if ( strcmp("idle", kproc->ki_comm) == 0 ) {
-       *         isIdleProcess = true;
-       *     }
-       * }
-       */
 
       proc->processor = kproc->ki_lastcpu;
 
