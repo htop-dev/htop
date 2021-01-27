@@ -25,7 +25,6 @@ typedef struct CPUData_ {
    double nicePercent;
    double systemPercent;
    double irqPercent;
-   double idlePercent;
    double systemAllPercent;
 } CPUData;
 
@@ -35,8 +34,6 @@ typedef struct FreeBSDProcessList_ {
 
    unsigned long long int memWire;
    unsigned long long int memActive;
-   unsigned long long int memInactive;
-   unsigned long long int memFree;
 
    ZfsArcStats zfs;
 
