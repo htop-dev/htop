@@ -119,16 +119,10 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring) {
    char buffer[13];
 
-   int largeNumberColor = CRT_colors[LARGE_NUMBER];
-   int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
+   int largeNumberColor = coloring ? CRT_colors[LARGE_NUMBER] : CRT_colors[PROCESS];
+   int processMegabytesColor = coloring ? CRT_colors[PROCESS_MEGABYTES] : CRT_colors[PROCESS];
    int processColor = CRT_colors[PROCESS];
-   int processShadowColor = CRT_colors[PROCESS_SHADOW];
-
-   if (!coloring) {
-      largeNumberColor = CRT_colors[PROCESS];
-      processMegabytesColor = CRT_colors[PROCESS];
-      processShadowColor = CRT_colors[PROCESS];
-   }
+   int processShadowColor = coloring ? CRT_colors[PROCESS_SHADOW] : CRT_colors[PROCESS];
 
    if (number == ULLONG_MAX) {
       RichString_appendAscii(str, CRT_colors[PROCESS_SHADOW], "        N/A ");
@@ -251,37 +245,14 @@ void Process_printLeftAlignedField(RichString* str, int attr, const char* conten
 }
 
 void Process_writeField(const Process* this, RichString* str, ProcessField field) {
-   char buffer[256]; buffer[255] = '\0';
+   char buffer[256];
+   size_t n = sizeof(buffer);
    int attr = CRT_colors[DEFAULT_COLOR];
-   int baseattr = CRT_colors[PROCESS_BASENAME];
-   size_t n = sizeof(buffer) - 1;
    bool coloring = this->settings->highlightMegabytes;
 
    switch (field) {
-   case PERCENT_CPU:
-   case PERCENT_NORM_CPU: {
-      float cpuPercentage = this->percent_cpu;
-      if (field == PERCENT_NORM_CPU) {
-         cpuPercentage /= this->processList->cpuCount;
-      }
-      if (cpuPercentage > 999.9) {
-         xSnprintf(buffer, n, "%4u ", (unsigned int)cpuPercentage);
-      } else if (cpuPercentage > 99.9) {
-         xSnprintf(buffer, n, "%3u. ", (unsigned int)cpuPercentage);
-      } else {
-         xSnprintf(buffer, n, "%4.1f ", cpuPercentage);
-      }
-      break;
-   }
-   case PERCENT_MEM: {
-      if (this->percent_mem > 99.9) {
-         xSnprintf(buffer, n, "100. ");
-      } else {
-         xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
-      }
-      break;
-   }
    case COMM: {
+      int baseattr = CRT_colors[PROCESS_BASENAME];
       if (this->settings->highlightThreads && Process_isThread(this)) {
          attr = CRT_colors[PROCESS_THREAD];
          baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
@@ -289,81 +260,120 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       if (!this->settings->treeView || this->indent == 0) {
          Process_writeCommand(this, attr, baseattr, str);
          return;
-      } else {
-         char* buf = buffer;
-         int maxIndent = 0;
-         bool lastItem = (this->indent < 0);
-         int indent = (this->indent < 0 ? -this->indent : this->indent);
-
-         for (int i = 0; i < 32; i++) {
-            if (indent & (1U << i)) {
-               maxIndent = i+1;
-            }
-         }
-
-         for (int i = 0; i < maxIndent - 1; i++) {
-            int written, ret;
-            if (indent & (1 << i)) {
-               ret = snprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
-            } else {
-               ret = snprintf(buf, n, "   ");
-            }
-            if (ret < 0 || (size_t)ret >= n) {
-               written = n;
-            } else {
-               written = ret;
-            }
-            buf += written;
-            n -= written;
-         }
-
-         const char* draw = CRT_treeStr[lastItem ? TREE_STR_BEND : TREE_STR_RTEE];
-         xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
-         RichString_appendWide(str, CRT_colors[PROCESS_TREE], buffer);
-         Process_writeCommand(this, attr, baseattr, str);
-         return;
       }
+
+      char* buf = buffer;
+      int maxIndent = 0;
+      bool lastItem = (this->indent < 0);
+      int indent = (this->indent < 0 ? -this->indent : this->indent);
+
+      for (int i = 0; i < 32; i++) {
+         if (indent & (1U << i)) {
+            maxIndent = i+1;
+         }
+      }
+
+      for (int i = 0; i < maxIndent - 1; i++) {
+         int written, ret;
+         if (indent & (1 << i)) {
+            ret = xSnprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
+         } else {
+            ret = xSnprintf(buf, n, "   ");
+         }
+         if (ret < 0 || (size_t)ret >= n) {
+            written = n;
+         } else {
+            written = ret;
+         }
+         buf += written;
+         n -= written;
+      }
+
+      const char* draw = CRT_treeStr[lastItem ? TREE_STR_BEND : TREE_STR_RTEE];
+      xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
+      RichString_appendWide(str, CRT_colors[PROCESS_TREE], buffer);
+      Process_writeCommand(this, attr, baseattr, str);
+      return;
    }
    case MAJFLT: Process_colorNumber(str, this->majflt, coloring); return;
    case MINFLT: Process_colorNumber(str, this->minflt, coloring); return;
    case M_RESIDENT: Process_humanNumber(str, this->m_resident, coloring); return;
    case M_VIRT: Process_humanNumber(str, this->m_virt, coloring); return;
-   case NICE: {
+   case NICE:
       xSnprintf(buffer, n, "%3ld ", this->nice);
       attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
            : this->nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
-           : attr;
+           : CRT_colors[PROCESS_SHADOW];
+      break;
+   case NLWP:
+      if (this->nlwp == 1)
+         attr = CRT_colors[PROCESS_SHADOW];
+
+      xSnprintf(buffer, n, "%4ld ", this->nlwp);
+      break;
+   case PERCENT_CPU:
+   case PERCENT_NORM_CPU: {
+      float cpuPercentage = this->percent_cpu;
+      if (field == PERCENT_NORM_CPU) {
+         cpuPercentage /= this->processList->cpuCount;
+      }
+      if (cpuPercentage > 999.9f) {
+         xSnprintf(buffer, n, "%4u ", (unsigned int)cpuPercentage);
+      } else if (cpuPercentage > 99.9f) {
+         xSnprintf(buffer, n, "%3u. ", (unsigned int)cpuPercentage);
+      } else {
+         if (cpuPercentage < 0.05f)
+            attr = CRT_colors[PROCESS_SHADOW];
+
+         xSnprintf(buffer, n, "%4.1f ", cpuPercentage);
+      }
       break;
    }
-   case NLWP: xSnprintf(buffer, n, "%4ld ", this->nlwp); break;
+   case PERCENT_MEM:
+      if (this->percent_mem > 99.9f) {
+         xSnprintf(buffer, n, "100. ");
+      } else {
+         if (this->percent_mem < 0.05f)
+            attr = CRT_colors[PROCESS_SHADOW];
+
+         xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
+      }
+      break;
    case PGRP: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pgrp); break;
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pid); break;
    case PPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->ppid); break;
-   case PRIORITY: {
-      if(this->priority <= -100)
+   case PRIORITY:
+      if (this->priority <= -100)
          xSnprintf(buffer, n, " RT ");
       else
          xSnprintf(buffer, n, "%3ld ", this->priority);
       break;
-   }
    case PROCESSOR: xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor)); break;
    case SESSION: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->session); break;
    case STARTTIME: xSnprintf(buffer, n, "%s", this->starttime_show); break;
-   case STATE: {
+   case STATE:
       xSnprintf(buffer, n, "%c ", this->state);
-      switch(this->state) {
-          case 'R':
-              attr = CRT_colors[PROCESS_R_STATE];
-              break;
-          case 'D':
-              attr = CRT_colors[PROCESS_D_STATE];
-              break;
+      switch (this->state) {
+         case 'R':
+            attr = CRT_colors[PROCESS_R_STATE];
+            break;
+         case 'D':
+            attr = CRT_colors[PROCESS_D_STATE];
+            break;
+         case 'I':
+         case 'S':
+            attr = CRT_colors[PROCESS_SHADOW];
+            break;
       }
       break;
-   }
    case ST_UID: xSnprintf(buffer, n, "%5d ", this->st_uid); break;
    case TIME: Process_printTime(str, this->time); return;
-   case TGID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->tgid); break;
+   case TGID:
+      if (this->tgid == this->pid)
+         attr = CRT_colors[PROCESS_SHADOW];
+
+      xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->tgid);
+      break;
    case TPGID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->tpgid); break;
    case TTY_NR: {
       unsigned int major = major(this->tty_nr);
@@ -376,7 +386,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       }
       break;
    }
-   case USER: {
+   case USER:
       if (Process_getuid != this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
 
@@ -387,8 +397,8 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 
       xSnprintf(buffer, n, "%-9d ", this->st_uid);
       break;
-   }
    default:
+      assert(0); /* should never be reached */
       xSnprintf(buffer, n, "- ");
    }
    RichString_appendWide(str, attr, buffer);
