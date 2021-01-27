@@ -471,10 +471,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    }
 
    int count = 0;
-   struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
+   const struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
 
    for (int i = 0; i < count; i++) {
-      struct kinfo_proc* kproc = &kprocs[i];
+      const struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
       // TODO: bool isIdleProcess = false;
       Process* proc = ProcessList_getProcess(super, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
@@ -543,7 +543,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
       proc->priority = kproc->ki_pri.pri_level - PZERO;
 
-      if (strcmp("intr", kproc->ki_comm) == 0 && kproc->ki_flag & P_SYSTEM) {
+      if (String_eq("intr", kproc->ki_comm) && (kproc->ki_flag & P_SYSTEM)) {
          proc->nice = 0; //@etosan: intr kernel process (not thread) has weird nice value
       } else if (kproc->ki_pri.pri_class == PRI_TIMESHARE) {
          proc->nice = kproc->ki_nice - NZERO;

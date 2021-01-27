@@ -65,9 +65,10 @@ void Process_delete(Object* cast) {
 
 static void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
-   char buffer[256]; buffer[255] = '\0';
+   char buffer[256];
+   size_t n = sizeof(buffer);
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+
    switch (field) {
    // add FreeBSD-specific fields here
    case JID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, fp->jid); break;
