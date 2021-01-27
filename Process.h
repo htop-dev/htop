@@ -76,10 +76,10 @@ typedef struct Process_ {
    pid_t tgid;
 
    /* Process group identifier */
-   unsigned int pgrp;
+   int pgrp;
 
    /* Session identifier */
-   unsigned int session;
+   int session;
 
    /* Foreground group identifier of the controlling terminal */
    int tpgid;
