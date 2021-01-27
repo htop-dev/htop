@@ -40,8 +40,6 @@ in the source distribution for its full text.
 #include "zfs/openzfs_sysctl.h"
 
 
-char jail_errmsg[JAIL_ERRMSGLEN];
-
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
 static int pageSize;
@@ -413,42 +411,28 @@ static char* FreeBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_pr
 }
 
 static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
-   char*  jname = NULL;
-   char   jnamebuf[MAXHOSTNAMELEN];
+   if (kproc->ki_jid == 0)
+      return xStrdup("-");
 
-   if (kproc->ki_jid != 0) {
-      struct iovec jiov[6];
+   char jnamebuf[MAXHOSTNAMELEN] = {0};
+   struct iovec jiov[4];
 
-      memset(jnamebuf, 0, sizeof(jnamebuf));
 IGNORE_WCASTQUAL_BEGIN
-      *(const void**)&jiov[0].iov_base = "jid";
-      jiov[0].iov_len = sizeof("jid");
-      jiov[1].iov_base = (void*) &kproc->ki_jid;
-      jiov[1].iov_len = sizeof(kproc->ki_jid);
-      *(const void**)&jiov[2].iov_base = "name";
-      jiov[2].iov_len = sizeof("name");
-      jiov[3].iov_base = jnamebuf;
-      jiov[3].iov_len = sizeof(jnamebuf);
-      *(const void**)&jiov[4].iov_base = "errmsg";
-      jiov[4].iov_len = sizeof("errmsg");
-      jiov[5].iov_base = jail_errmsg;
-      jiov[5].iov_len = JAIL_ERRMSGLEN;
+   *(const void**)&jiov[0].iov_base = "jid";
+   jiov[0].iov_len = sizeof("jid");
+   jiov[1].iov_base = (void*) &kproc->ki_jid;
+   jiov[1].iov_len = sizeof(kproc->ki_jid);
+   *(const void**)&jiov[2].iov_base = "name";
+   jiov[2].iov_len = sizeof("name");
+   jiov[3].iov_base = jnamebuf;
+   jiov[3].iov_len = sizeof(jnamebuf);
 IGNORE_WCASTQUAL_END
-      jail_errmsg[0] = 0;
 
-      int jid = jail_get(jiov, 6, 0);
-      if (jid < 0) {
-         if (!jail_errmsg[0]) {
-            xSnprintf(jail_errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
-         }
-      } else if (jid == kproc->ki_jid) {
-         jname = xStrdup(jnamebuf);
-      }
-   } else {
-      jname = xStrdup("-");
-   }
+   int jid = jail_get(jiov, 4, 0);
+   if (jid == kproc->ki_jid)
+      return xStrdup(jnamebuf);
 
-   return jname;
+   return NULL;
 }
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
