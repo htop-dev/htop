@@ -253,14 +253,18 @@ static inline bool Process_isChildOf(const Process* this, pid_t pid) {
 
 void Process_setupColumnWidths(void);
 
+/* Takes number in kilo units (base 1024) */
 void Process_humanNumber(RichString* str, unsigned long long number, bool coloring);
 
+/* Takes number in bare units (base 1000) */
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring);
 
+/* Takes number in hundredths of a seconds */
 void Process_printTime(RichString* str, unsigned long long totalHundredths);
 
 void Process_fillStarttimeBuffer(Process* this);
 
+/* Takes number in bare units (base 1024) */
 void Process_outputRate(RichString* str, char* buffer, size_t n, double rate, int coloring);
 
 void Process_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width);

@@ -81,15 +81,31 @@ typedef struct LinuxProcess_ {
    long m_drs;
    long m_lrs;
    long m_dt;
+
+   /* Data read (in kilobytes) */
    unsigned long long io_rchar;
+
+   /* Data written (in kilobytes) */
    unsigned long long io_wchar;
+
+   /* Number of read(2) syscalls */
    unsigned long long io_syscr;
+
+   /* Number of write(2) syscalls */
    unsigned long long io_syscw;
+
+   /* Storage data read (in kilobytes) */
    unsigned long long io_read_bytes;
+
+   /* Storage data written (in kilobytes) */
    unsigned long long io_write_bytes;
+
+   /* Storgae data cancelled (in kilobytes) */
    unsigned long long io_cancelled_write_bytes;
-   unsigned long long io_rate_read_time;
-   unsigned long long io_rate_write_time;
+
+   /* Point in time of last io scan (in seconds elapsed since the Epoch) */
+   unsigned long long io_last_scan_time;
+
    double io_rate_read_bps;
    double io_rate_write_bps;
    #ifdef HAVE_OPENVZ

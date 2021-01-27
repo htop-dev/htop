@@ -74,14 +74,14 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 #ifdef HAVE_VSERVER
    [VXID] = { .name = "VXID", .title = " VXID ", .description = "VServer process ID", .flags = PROCESS_FLAG_LINUX_VSERVER, },
 #endif
-   [RCHAR] = { .name = "RCHAR", .title = "    RD_CHAR ", .description = "Number of bytes the process has read", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [WCHAR] = { .name = "WCHAR", .title = "    WR_CHAR ", .description = "Number of bytes the process has written", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [SYSCR] = { .name = "SYSCR", .title = "    RD_SYSC ", .description = "Number of read(2) syscalls for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [SYSCW] = { .name = "SYSCW", .title = "    WR_SYSC ", .description = "Number of write(2) syscalls for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [RBYTES] = { .name = "RBYTES", .title = "  IO_RBYTES ", .description = "Bytes of read(2) I/O for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [WBYTES] = { .name = "WBYTES", .title = "  IO_WBYTES ", .description = "Bytes of write(2) I/O for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [CNCLWB] = { .name = "CNCLWB", .title = "  IO_CANCEL ", .description = "Bytes of cancelled write(2) I/O", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = "  DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [RCHAR] = { .name = "RCHAR", .title = "RCHAR ", .description = "Number of bytes the process has read", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [WCHAR] = { .name = "WCHAR", .title = "WCHAR ", .description = "Number of bytes the process has written", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [SYSCR] = { .name = "SYSCR", .title = "  READ_SYSC ", .description = "Number of read(2) syscalls for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [SYSCW] = { .name = "SYSCW", .title = " WRITE_SYSC ", .description = "Number of write(2) syscalls for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [RBYTES] = { .name = "RBYTES", .title = " IO_R ", .description = "Bytes of read(2) I/O for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [WBYTES] = { .name = "WBYTES", .title = " IO_W ", .description = "Bytes of write(2) I/O for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [CNCLWB] = { .name = "CNCLWB", .title = " IO_C ", .description = "Bytes of cancelled write(2) I/O", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = " DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_WRITE_RATE] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
@@ -637,13 +637,13 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    case STIME: Process_printTime(str, lp->stime); return;
    case CUTIME: Process_printTime(str, lp->cutime); return;
    case CSTIME: Process_printTime(str, lp->cstime); return;
-   case RCHAR:  Process_colorNumber(str, lp->io_rchar, coloring); return;
-   case WCHAR:  Process_colorNumber(str, lp->io_wchar, coloring); return;
+   case RCHAR:  Process_humanNumber(str, lp->io_rchar, coloring); return;
+   case WCHAR:  Process_humanNumber(str, lp->io_wchar, coloring); return;
    case SYSCR:  Process_colorNumber(str, lp->io_syscr, coloring); return;
    case SYSCW:  Process_colorNumber(str, lp->io_syscw, coloring); return;
-   case RBYTES: Process_colorNumber(str, lp->io_read_bytes, coloring); return;
-   case WBYTES: Process_colorNumber(str, lp->io_write_bytes, coloring); return;
-   case CNCLWB: Process_colorNumber(str, lp->io_cancelled_write_bytes, coloring); return;
+   case RBYTES: Process_humanNumber(str, lp->io_read_bytes, coloring); return;
+   case WBYTES: Process_humanNumber(str, lp->io_write_bytes, coloring); return;
+   case CNCLWB: Process_humanNumber(str, lp->io_cancelled_write_bytes, coloring); return;
    case IO_READ_RATE:  Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring); return;
    case IO_WRITE_RATE: Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring); return;
    case IO_RATE: {
@@ -753,6 +753,13 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    RichString_appendWide(str, attr, buffer);
 }
 
+static double adjustNaN(double num) {
+   if (isnan(num))
+      return -0.0005;
+
+   return num;
+}
+
 static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const LinuxProcess* p1 = (const LinuxProcess*)v1;
    const LinuxProcess* p2 = (const LinuxProcess*)v2;
@@ -797,11 +804,11 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    case CNCLWB:
       return SPACESHIP_NUMBER(p1->io_cancelled_write_bytes, p2->io_cancelled_write_bytes);
    case IO_READ_RATE:
-      return SPACESHIP_NUMBER(p1->io_rate_read_bps, p2->io_rate_read_bps);
+      return SPACESHIP_NUMBER(adjustNaN(p1->io_rate_read_bps), adjustNaN(p2->io_rate_read_bps));
    case IO_WRITE_RATE:
-      return SPACESHIP_NUMBER(p1->io_rate_write_bps, p2->io_rate_write_bps);
+      return SPACESHIP_NUMBER(adjustNaN(p1->io_rate_write_bps), adjustNaN(p2->io_rate_write_bps));
    case IO_RATE:
-      return SPACESHIP_NUMBER(p1->io_rate_read_bps + p1->io_rate_write_bps, p2->io_rate_read_bps + p2->io_rate_write_bps);
+      return SPACESHIP_NUMBER(adjustNaN(p1->io_rate_read_bps) + adjustNaN(p1->io_rate_write_bps), adjustNaN(p2->io_rate_read_bps) + adjustNaN(p2->io_rate_write_bps));
    #ifdef HAVE_OPENVZ
    case CTID:
       return SPACESHIP_NULLSTR(p1->ctid, p2->ctid);
