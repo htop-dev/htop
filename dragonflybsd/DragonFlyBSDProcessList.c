@@ -434,7 +434,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
       if (proc->percent_cpu > 0.1) {
          // system idle process should own all CPU time left regardless of CPU count
-         if ( strcmp("idle", kproc->kp_comm) == 0 ) {
+         if (String_eq("idle", kproc->kp_comm)) {
             isIdleProcess = true;
          }
       }

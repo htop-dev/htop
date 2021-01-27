@@ -265,7 +265,7 @@ static int valueDigitColor(unsigned int value) {
 static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    char buffer[16];
 
-   int color = (systemState && 0 == strcmp(systemState, "running")) ? METER_VALUE_OK : METER_VALUE_ERROR;
+   int color = (systemState && String_eq(systemState, "running")) ? METER_VALUE_OK : METER_VALUE_ERROR;
    RichString_writeAscii(out, CRT_colors[color], systemState ? systemState : "N/A");
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " (");
