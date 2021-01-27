@@ -518,6 +518,44 @@ int Process_compare(const void* v1, const void* v2) {
    return result;
 }
 
+static uint8_t stateCompareValue(char state) {
+   switch (state) {
+
+   case 'S':
+      return 10;
+
+   case 'I':
+      return 9;
+
+   case 'X':
+      return 8;
+
+   case 'Z':
+      return 7;
+
+   case 't':
+      return 6;
+
+   case 'T':
+      return 5;
+
+   case 'L':
+      return 4;
+
+   case 'D':
+      return 3;
+
+   case 'R':
+      return 2;
+
+   case '?':
+      return 1;
+
+   default:
+      return 0;
+   }
+}
+
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
    int r;
 
@@ -557,7 +595,7 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       r = SPACESHIP_NUMBER(p1->starttime_ctime, p2->starttime_ctime);
       return r != 0 ? r : SPACESHIP_NUMBER(p1->pid, p2->pid);
    case STATE:
-      return SPACESHIP_NUMBER(Process_sortState(p1->state), Process_sortState(p2->state));
+      return SPACESHIP_NUMBER(stateCompareValue(p1->state), stateCompareValue(p2->state));
    case ST_UID:
       return SPACESHIP_NUMBER(p1->st_uid, p2->st_uid);
    case TIME:
