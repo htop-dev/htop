@@ -385,15 +385,14 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
    if (r < 0) {
       process->io_rate_read_bps = NAN;
       process->io_rate_write_bps = NAN;
-      process->io_rchar = -1LL;
-      process->io_wchar = -1LL;
-      process->io_syscr = -1LL;
-      process->io_syscw = -1LL;
-      process->io_read_bytes = -1LL;
-      process->io_write_bytes = -1LL;
-      process->io_cancelled_write_bytes = -1LL;
-      process->io_rate_read_time = -1LL;
-      process->io_rate_write_time = -1LL;
+      process->io_rchar = ULLONG_MAX;
+      process->io_wchar = ULLONG_MAX;
+      process->io_syscr = ULLONG_MAX;
+      process->io_syscw = ULLONG_MAX;
+      process->io_read_bytes = ULLONG_MAX;
+      process->io_write_bytes = ULLONG_MAX;
+      process->io_cancelled_write_bytes = ULLONG_MAX;
+      process->io_last_scan_time = now;
       return;
    }
 
@@ -405,22 +404,18 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
       switch (line[0]) {
       case 'r':
          if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-            process->io_rchar = strtoull(line + 7, NULL, 10);
+            process->io_rchar = strtoull(line + 7, NULL, 10) / ONE_K;
          } else if (String_startsWith(line + 1, "ead_bytes: ")) {
-            process->io_read_bytes = strtoull(line + 12, NULL, 10);
-            process->io_rate_read_bps =
-               ((double)(process->io_read_bytes - last_read)) / (((double)(now - process->io_rate_read_time)) / 1000);
-            process->io_rate_read_time = now;
+            process->io_read_bytes = strtoull(line + 12, NULL, 10) / ONE_K;
+            process->io_rate_read_bps = ONE_K * (process->io_read_bytes - last_read) / (now - process->io_last_scan_time);
          }
          break;
       case 'w':
          if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-            process->io_wchar = strtoull(line + 7, NULL, 10);
+            process->io_wchar = strtoull(line + 7, NULL, 10) / ONE_K;
          } else if (String_startsWith(line + 1, "rite_bytes: ")) {
-            process->io_write_bytes = strtoull(line + 13, NULL, 10);
-            process->io_rate_write_bps =
-               ((double)(process->io_write_bytes - last_write)) / (((double)(now - process->io_rate_write_time)) / 1000);
-            process->io_rate_write_time = now;
+            process->io_write_bytes = strtoull(line + 13, NULL, 10) / ONE_K;
+            process->io_rate_write_bps = ONE_K * (process->io_write_bytes - last_write) / (now - process->io_last_scan_time);
          }
          break;
       case 's':
@@ -432,10 +427,12 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
          break;
       case 'c':
          if (String_startsWith(line + 1, "ancelled_write_bytes: ")) {
-            process->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10);
+            process->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10) / ONE_K;
          }
       }
    }
+
+   process->io_last_scan_time = now;
 }
 
 typedef struct LibraryData_ {

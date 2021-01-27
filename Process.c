@@ -53,17 +53,16 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
    char buffer[10];
    int len;
 
-   int largeNumberColor = CRT_colors[LARGE_NUMBER];
-   int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
-   int processGigabytesColor = CRT_colors[PROCESS_GIGABYTES];
+   int largeNumberColor = coloring ? CRT_colors[LARGE_NUMBER] : CRT_colors[PROCESS];
+   int processMegabytesColor = coloring ? CRT_colors[PROCESS_MEGABYTES] : CRT_colors[PROCESS];
+   int processGigabytesColor = coloring ? CRT_colors[PROCESS_GIGABYTES] : CRT_colors[PROCESS];
+   int shadowColor = coloring ? CRT_colors[PROCESS_SHADOW] : CRT_colors[PROCESS];
    int processColor = CRT_colors[PROCESS];
-   if (!coloring) {
-      largeNumberColor = CRT_colors[PROCESS];
-      processMegabytesColor = CRT_colors[PROCESS];
-      processGigabytesColor = CRT_colors[PROCESS];
-   }
 
-   if (number < 1000) {
+   if (number == ULLONG_MAX) {
+      //Invalid number
+      RichString_appendAscii(str, shadowColor, "  N/A ");
+   } else if (number < 1000) {
       //Plain number, no markings
       len = xSnprintf(buffer, sizeof(buffer), "%5llu ", number);
       RichString_appendnAscii(str, processColor, buffer, len);
