@@ -49,6 +49,7 @@ in the source distribution for its full text.
 #include "SELinuxMeter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
+#include "SysArchMeter.h"
 #include "SystemdMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
@@ -162,6 +163,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &LoadMeter_class,
    &MemoryMeter_class,
    &SwapMeter_class,
+   &SysArchMeter_class,
    &HugePageMeter_class,
    &TasksMeter_class,
    &UptimeMeter_class,
