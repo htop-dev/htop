@@ -317,8 +317,10 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    location += 1;
    process->tpgid = strtol(location, &location, 10);
    location += 1;
-   process->flags = strtoul(location, &location, 10);
-   location += 1;
+
+   /* Skip flags */
+   location = strchr(location, ' ') + 1;
+
    process->minflt = strtoull(location, &location, 10);
    location += 1;
    lp->cminflt = strtoull(location, &location, 10);
@@ -351,8 +353,10 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    for (int i = 0; i < 15; i++) {
       location = strchr(location, ' ') + 1;
    }
-   process->exit_signal = strtol(location, &location, 10);
-   location += 1;
+
+   /* Skip exit_signal */
+   location = strchr(location, ' ') + 1;
+
    assert(location != NULL);
    process->processor = strtol(location, &location, 10);
 
