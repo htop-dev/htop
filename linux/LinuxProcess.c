@@ -607,15 +607,14 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
    switch (field) {
-   case TTY_NR: {
+   case TTY_NR:
       if (lp->ttyDevice) {
-         xSnprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
-      } else {
-         attr = CRT_colors[PROCESS_SHADOW];
-         xSnprintf(buffer, n, "?        ");
+         xSnprintf(buffer, n, "%-8s ", lp->ttyDevice + 5 /* skip "/dev/" */);
+         break;
       }
-      break;
-   }
+
+      Process_writeField(this, str, field);
+      return;
    case CMINFLT: Process_colorNumber(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
    case M_DRS: Process_humanNumber(str, lp->m_drs * pageSizeKB, coloring); return;
