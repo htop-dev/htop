@@ -687,14 +687,12 @@ void CRT_restorePrivileges() {
 
 static struct sigaction old_sig_handler[32];
 
-// TODO: pass an instance of Settings instead.
-
-void CRT_init(const int* delay, int colorScheme, bool allowUnicode) {
+void CRT_init(const Settings* settings, bool allowUnicode) {
    initscr();
    noecho();
-   CRT_delay = delay;
-   CRT_colors = CRT_colorSchemes[colorScheme];
-   CRT_colorScheme = colorScheme;
+   CRT_delay = &(settings->delay);
+   CRT_colors = CRT_colorSchemes[settings->colorScheme];
+   CRT_colorScheme = settings->colorScheme;
 
    for (int i = 0; i < LAST_COLORELEMENT; i++) {
       unsigned int color = CRT_colorSchemes[COLORSCHEME_DEFAULT][i];

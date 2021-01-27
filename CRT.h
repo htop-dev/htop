@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #include "Macros.h"
 #include "ProvideCurses.h"
+#include "Settings.h"
 
 
 typedef enum TreeStr_ {
@@ -173,7 +174,7 @@ static inline void CRT_restorePrivileges(void) { }
 
 #endif /* HAVE_SETUID_ENABLED */
 
-void CRT_init(const int* delay, int colorScheme, bool allowUnicode);
+void CRT_init(const Settings* settings, bool allowUnicode);
 
 void CRT_done(void);
 
