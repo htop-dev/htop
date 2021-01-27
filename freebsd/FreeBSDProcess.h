@@ -20,14 +20,14 @@ extern const char* const nodevStr;
 
 typedef struct FreeBSDProcess_ {
    Process super;
-   int   kernel;
+   bool  isKernelThread;
    int   jid;
    char* jname;
    const char* ttyPath;
 } FreeBSDProcess;
 
 static inline bool Process_isKernelThread(const Process* this) {
-   return ((const FreeBSDProcess*)this)->kernel == 1;
+   return ((const FreeBSDProcess*)this)->isKernelThread;
 }
 
 static inline bool Process_isUserlandThread(const Process* this) {
