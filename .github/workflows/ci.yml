@@ -55,7 +55,7 @@ jobs:
     # Enable LTO, might trigger additional warnings on advanced inlining
     env:
       CFLAGS: -O3 -g -flto
-      LDFLAGS: -O3 -g -flto
+      LDFLAGS: -O3 -g -flto -Wl,--as-needed
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
