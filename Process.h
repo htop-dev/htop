@@ -241,9 +241,6 @@ static inline bool Process_isChildOf(const Process* this, pid_t pid) {
    return pid == Process_getParentPid(this);
 }
 
-#define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
-
-
 #define ONE_K 1024UL
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
