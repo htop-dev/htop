@@ -37,6 +37,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "SignalsPanel.h"
 #include "SwapMeter.h"
+#include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
@@ -99,6 +100,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &UptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
+   &SysArchMeter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
    &AllCPUs4Meter_class,

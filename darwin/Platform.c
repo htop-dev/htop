@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include "MemoryMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SwapMeter.h"
+#include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "zfs/ZfsArcMeter.h"
@@ -93,6 +94,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &TasksMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
+   &SysArchMeter_class,
    &UptimeMeter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
