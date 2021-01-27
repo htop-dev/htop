@@ -316,11 +316,11 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    location += 1;
 
    /* (5) pgrp  -  %d */
-   process->pgrp = strtoul(location, &location, 10);
+   process->pgrp = strtol(location, &location, 10);
    location += 1;
 
    /* (6) session  -  %d */
-   process->session = strtoul(location, &location, 10);
+   process->session = strtol(location, &location, 10);
    location += 1;
 
    /* (7) tty_nr  -  %d */
