@@ -512,6 +512,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
       proc->processor = kproc->ki_lastcpu;
 
+      proc->majflt = kproc->ki_cow;
+
       proc->priority = kproc->ki_pri.pri_level - PZERO;
 
       if (String_eq("intr", kproc->ki_comm) && (kproc->ki_flag & P_SYSTEM)) {
