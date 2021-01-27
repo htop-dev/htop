@@ -365,7 +365,17 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    case TIME: Process_printTime(str, this->time); return;
    case TGID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->tgid); break;
    case TPGID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->tpgid); break;
-   case TTY_NR: xSnprintf(buffer, n, "%3u:%3u ", major(this->tty_nr), minor(this->tty_nr)); break;
+   case TTY_NR: {
+      unsigned int major = major(this->tty_nr);
+      unsigned int minor = minor(this->tty_nr);
+      if (major == 0 && minor == 0) {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "(none)   ");
+      } else {
+         xSnprintf(buffer, n, "%3u:%3u  ", major, minor);
+      }
+      break;
+   }
    case USER: {
       if (Process_getuid != this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
