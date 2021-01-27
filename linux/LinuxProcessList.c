@@ -291,11 +291,13 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    if (r < 0)
       return false;
 
+   /* (1) pid   -  %d */
    assert(process->pid == atoi(buf));
    char* location = strchr(buf, ' ');
    if (!location)
       return false;
 
+   /* (2) comm  -  (%s) */
    location += 2;
    char* end = strrchr(location, ')');
    if (!end)
@@ -305,60 +307,99 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
 
    location = end + 2;
 
+   /* (3) state  -  %c */
    process->state = location[0];
    location += 2;
+
+   /* (4) ppid  -  %d */
    process->ppid = strtol(location, &location, 10);
    location += 1;
+
+   /* (5) pgrp  -  %d */
    process->pgrp = strtoul(location, &location, 10);
    location += 1;
+
+   /* (6) session  -  %d */
    process->session = strtoul(location, &location, 10);
    location += 1;
+
+   /* (7) tty_nr  -  %d */
    process->tty_nr = strtoul(location, &location, 10);
    location += 1;
+
+   /* (8) tpgid  -  %d */
    process->tpgid = strtol(location, &location, 10);
    location += 1;
 
-   /* Skip flags */
+   /* Skip (9) flags  -  %u */
    location = strchr(location, ' ') + 1;
 
+   /* (10) minflt  -  %lu */
    process->minflt = strtoull(location, &location, 10);
    location += 1;
+
+   /* (11) cminflt  -  %lu */
    lp->cminflt = strtoull(location, &location, 10);
    location += 1;
+
+   /* (12) majflt  -  %lu */
    process->majflt = strtoull(location, &location, 10);
    location += 1;
+
+   /* (13) cmajflt  -  %lu */
    lp->cmajflt = strtoull(location, &location, 10);
    location += 1;
+
+   /* (14) utime  -  %lu */
    lp->utime = LinuxProcessList_adjustTime(strtoull(location, &location, 10));
    location += 1;
+
+   /* (15) stime  -  %lu */
    lp->stime = LinuxProcessList_adjustTime(strtoull(location, &location, 10));
    location += 1;
+
+   /* (16) cutime  -  %ld */
    lp->cutime = LinuxProcessList_adjustTime(strtoull(location, &location, 10));
    location += 1;
+
+   /* (17) cstime  -  %ld */
    lp->cstime = LinuxProcessList_adjustTime(strtoull(location, &location, 10));
    location += 1;
+
+   /* (18) priority  -  %ld */
    process->priority = strtol(location, &location, 10);
    location += 1;
+
+   /* (19) nice  -  %ld */
    process->nice = strtol(location, &location, 10);
    location += 1;
+
+   /* (20) num_threads  -  %ld */
    process->nlwp = strtol(location, &location, 10);
    location += 1;
+
+   /* Skip (21) itrealvalue  -  %ld */
    location = strchr(location, ' ') + 1;
+
+   /* (22) starttime  -  %llu */
    if (process->starttime_ctime == 0) {
       process->starttime_ctime = btime + LinuxProcessList_adjustTime(strtoll(location, &location, 10)) / 100;
    } else {
-      location = strchr(location, ' ') + 1;
+      location = strchr(location, ' ');
    }
    location += 1;
-   for (int i = 0; i < 15; i++) {
+
+   /* Skip (23) - (38) */
+   for (int i = 0; i < 16; i++) {
       location = strchr(location, ' ') + 1;
    }
 
-   /* Skip exit_signal */
-   location = strchr(location, ' ') + 1;
-
    assert(location != NULL);
+
+   /* (39) processor  -  %d */
    process->processor = strtol(location, &location, 10);
+
+   /* Ignore further fields */
 
    process->time = lp->utime + lp->stime;
 
