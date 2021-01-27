@@ -138,7 +138,7 @@ int Platform_getUptime() {
    struct utmpx* ent;
 
    while (( ent = getutxent() )) {
-      if ( !strcmp("system boot", ent->ut_line )) {
+      if ( String_eq("system boot", ent->ut_line )) {
          boot_time = ent->ut_tv.tv_sec;
       }
    }

@@ -302,7 +302,7 @@ static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, si
          if (errno == ENOENT)
             return false;
       }
-      if (strcmp(name, snsrdev->xname) == 0) {
+      if (String_eq(name, snsrdev->xname)) {
          return true;
       }
    }
