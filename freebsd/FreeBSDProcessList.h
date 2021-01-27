@@ -17,9 +17,6 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcStats.h"
 
 
-#define JAIL_ERRMSGLEN 1024
-extern char jail_errmsg[JAIL_ERRMSGLEN];
-
 typedef struct CPUData_ {
    double userPercent;
    double nicePercent;
