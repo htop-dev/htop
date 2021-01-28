@@ -253,13 +253,13 @@ AC_ARG_ENABLE([unicode],
               [],
               [enable_unicode=yes])
 if test "x$enable_unicode" = xyes; then
-   HTOP_CHECK_SCRIPT([ncursesw6], [waddnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-    HTOP_CHECK_SCRIPT([ncursesw], [waddnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-     HTOP_CHECK_SCRIPT([ncursesw], [waddnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config",
-      HTOP_CHECK_SCRIPT([ncurses], [waddnwstr], [HAVE_LIBNCURSESW], "ncurses5-config",
-       HTOP_CHECK_LIB([ncursesw6], [waddnwstr], [HAVE_LIBNCURSESW],
-        HTOP_CHECK_LIB([ncursesw], [waddnwstr], [HAVE_LIBNCURSESW],
-         HTOP_CHECK_LIB([ncurses], [waddnwstr], [HAVE_LIBNCURSESW],
+   HTOP_CHECK_SCRIPT([ncursesw6], [waddwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
+    HTOP_CHECK_SCRIPT([ncursesw], [waddwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
+     HTOP_CHECK_SCRIPT([ncursesw], [wadd_wch], [HAVE_LIBNCURSESW], "ncursesw5-config",
+      HTOP_CHECK_SCRIPT([ncurses], [wadd_wch], [HAVE_LIBNCURSESW], "ncurses5-config",
+       HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
+        HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
+         HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
           AC_MSG_ERROR([can not find required library libncursesw; you may want to use --disable-unicode])
    )))))))
 
@@ -275,8 +275,8 @@ if test "x$enable_unicode" = xyes; then
 else
    HTOP_CHECK_SCRIPT([ncurses6], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses6-config],
     HTOP_CHECK_SCRIPT([ncurses], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses5-config],
-     HTOP_CHECK_LIB([ncurses6],  [wnoutrefresh], [HAVE_LIBNCURSES],
-      HTOP_CHECK_LIB([ncurses],  [wnoutrefresh], [HAVE_LIBNCURSES],
+     HTOP_CHECK_LIB([ncurses6],  [doupdate], [HAVE_LIBNCURSES],
+      HTOP_CHECK_LIB([ncurses],  [doupdate], [HAVE_LIBNCURSES],
        AC_MSG_ERROR([can not find required library libncurses])
    ))))
 
