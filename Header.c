@@ -156,7 +156,7 @@ void Header_draw(const Header* this) {
    for (int y = 0; y < height; y++) {
       mvhline(y, 0, ' ', COLS);
    }
-   const int width = COLS / this->nrColumns - (pad * this->nrColumns - 1) - 1;
+   const int width = COLS / this->nrColumns - pad;
    int x = pad;
 
    Header_forEachColumn(this, col) {
