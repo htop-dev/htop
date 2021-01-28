@@ -5,16 +5,20 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
-#include "UnsupportedProcess.h"
+#include "UnsupportedProcessList.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+#include "ProcessList.h"
+#include "UnsupportedProcess.h"
 
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
    ProcessList_init(this, Class(Process), usersTable, pidMatchList, userId);
+
+   this->cpuCount = 1;
 
    return this;
 }
@@ -41,7 +45,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->pid  = 1;
    proc->ppid = 1;
    proc->tgid = 0;
-   proc->comm = "<unsupported architecture>";
+   free_and_xStrdup(&proc->comm, "<unsupported architecture>");
    proc->basenameOffset = 0;
    proc->updated = true;
 
@@ -70,4 +74,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    proc->minflt = 20;
    proc->majflt = 20;
+
+   if (!preExisting)
+      ProcessList_add(super, proc);
 }

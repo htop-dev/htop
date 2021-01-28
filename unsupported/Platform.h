@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 #include "UnsupportedProcess.h"
 
+
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
