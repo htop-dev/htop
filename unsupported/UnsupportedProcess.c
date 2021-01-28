@@ -5,9 +5,15 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Process.h"
+#include "config.h" // IWYU pragma: keep
+
 #include "UnsupportedProcess.h"
+
 #include <stdlib.h>
+
+#include "CRT.h"
+#include "Process.h"
+
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
@@ -37,17 +43,62 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [TGID] = { .name = "TGID", .title = "TGID", .description = "Thread group ID (i.e. process ID)", .flags = 0, .pidColumn = true, },
 };
 
-Process* UnsupportedProcess_new(Settings* settings) {
-   Process* this = xCalloc(1, sizeof(Process));
-   Object_setClass(this, Class(Process));
+Process* UnsupportedProcess_new(const Settings* settings) {
+   Process* this = xCalloc(1, sizeof(UnsupportedProcess));
+   Object_setClass(this, Class(UnsupportedProcess));
    Process_init(this, settings);
    return this;
 }
 
-void UnsupportedProcess_delete(Object* cast) {
-   Process* this = (Process*) cast;
-   Object_setClass(this, Class(Process));
-   Process_done((Process*)cast);
+void Process_delete(Object* cast) {
+   Process* super = (Process*) cast;
+   Process_done(super);
    // free platform-specific fields here
-   free(this);
+   free(cast);
 }
+
+static void UnsupportedProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+   const UnsupportedProcess* up = (const UnsupportedProcess*) this;
+   bool coloring = this->settings->highlightMegabytes;
+   char buffer[256]; buffer[255] = '\0';
+   int attr = CRT_colors[DEFAULT_COLOR];
+   size_t n = sizeof(buffer) - 1;
+
+   (void) up;
+   (void) coloring;
+   (void) n;
+
+   switch (field) {
+   /* Add platform specific fields */
+   default:
+      Process_writeField(this, str, field);
+      return;
+   }
+   RichString_appendWide(str, attr, buffer);
+}
+
+static int UnsupportedProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+   const UnsupportedProcess* p1 = (const UnsupportedProcess*)v1;
+   const UnsupportedProcess* p2 = (const UnsupportedProcess*)v2;
+
+   (void) p1;
+   (void) p2;
+
+   switch (key) {
+   /* Add platform specific fields */
+   default:
+      return Process_compareByKey_Base(v1, v2, key);
+   }
+}
+
+const ProcessClass UnsupportedProcess_class = {
+   .super = {
+      .extends = Class(Process),
+      .display = Process_display,
+      .delete = Process_delete,
+      .compare = Process_compare
+   },
+   .writeField = UnsupportedProcess_writeField,
+   .getCommandStr = NULL,
+   .compareByKey = UnsupportedProcess_compareByKey
+};
