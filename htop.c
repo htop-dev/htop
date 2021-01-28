@@ -441,7 +441,7 @@ int main(int argc, char** argv) {
       Settings_setSortKey(settings, flags.sortKey);
    }
 
-   CRT_init(&(settings->delay), settings->colorScheme, flags.allowUnicode);
+   CRT_init(settings, flags.allowUnicode);
 
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
