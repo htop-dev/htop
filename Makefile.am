@@ -1,5 +1,3 @@
-AUTOMAKE_OPTIONS = subdir-objects
-
 bin_PROGRAMS = htop
 
 dist_man_MANS = htop.1
