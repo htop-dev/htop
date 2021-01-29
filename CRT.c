@@ -651,7 +651,7 @@ ATTR_NORETURN
 static void CRT_handleSIGTERM(int sgn) {
    (void) sgn;
    CRT_done();
-   exit(0);
+   _exit(0);
 }
 
 #ifdef HAVE_SETUID_ENABLED
