@@ -63,9 +63,6 @@ typedef struct Process_ {
    const struct ProcessList_* processList;
    const struct Settings_* settings;
 
-   /* Process runtime (in hundredth of a second) */
-   unsigned long long int time;
-
    /* Process identifier */
    pid_t pid;
 
@@ -95,6 +92,9 @@ typedef struct Process_ {
 
    /* User name */
    const char* user;
+
+   /* Process runtime (in hundredth of a second) */
+   unsigned long long int time;
 
    /*
     * Process name including arguments.
