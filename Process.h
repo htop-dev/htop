@@ -102,6 +102,12 @@ typedef struct Process_ {
     */
    char* cmdline;
 
+   /* The process' "command" name */
+   char *procComm;
+
+   /* The main process executable */
+   char *procExe;
+
    /* Offset in comm of the process basename */
    int basenameOffset;
 

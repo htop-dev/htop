@@ -1144,13 +1144,13 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    if ((amtRead = xReadfileat(procFd, "comm", command, sizeof(command))) > 0) {
       command[amtRead - 1] = '\0';
       lp->mergedCommand.maxLen += amtRead - 1;  /* accommodate comm */
-      if (!lp->procComm || !String_eq(command, lp->procComm)) {
-         free_and_xStrdup(&lp->procComm, command);
+      if (!process->procComm || !String_eq(command, process->procComm)) {
+         free_and_xStrdup(&process->procComm, command);
          lp->mergedCommand.commChanged = true;
       }
-   } else if (lp->procComm) {
-      free(lp->procComm);
-      lp->procComm = NULL;
+   } else if (process->procComm) {
+      free(process->procComm);
+      process->procComm = NULL;
       lp->mergedCommand.commChanged = true;
    }
 
@@ -1167,8 +1167,8 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    if (amtRead > 0) {
       filename[amtRead] = 0;
       lp->mergedCommand.maxLen += amtRead;  /* accommodate exe */
-      if (!lp->procExe || !String_eq(filename, lp->procExe)) {
-         free_and_xStrdup(&lp->procExe, filename);
+      if (!process->procExe || !String_eq(filename, process->procExe)) {
+         free_and_xStrdup(&process->procExe, filename);
          lp->procExeLen = amtRead;
          /* exe is guaranteed to contain at least one /, but validate anyway */
          while (amtRead && filename[--amtRead] != '/')
@@ -1177,17 +1177,17 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
          lp->mergedCommand.exeChanged = true;
 
          const char* deletedMarker = " (deleted)";
-         if (strlen(lp->procExe) > strlen(deletedMarker)) {
-            lp->procExeDeleted = String_eq(lp->procExe + strlen(lp->procExe) - strlen(deletedMarker), deletedMarker);
+         if (strlen(process->procExe) > strlen(deletedMarker)) {
+            lp->procExeDeleted = String_eq(process->procExe + strlen(process->procExe) - strlen(deletedMarker), deletedMarker);
 
-            if (lp->procExeDeleted && strlen(lp->procExe) - strlen(deletedMarker) == 1 && lp->procExe[0] == '/') {
+            if (lp->procExeDeleted && strlen(process->procExe) - strlen(deletedMarker) == 1 && process->procExe[0] == '/') {
                lp->procExeBasenameOffset = 0;
             }
          }
       }
-   } else if (lp->procExe) {
-      free(lp->procExe);
-      lp->procExe = NULL;
+   } else if (process->procExe) {
+      free(process->procExe);
+      process->procExe = NULL;
       lp->procExeLen = 0;
       lp->procExeBasenameOffset = 0;
       lp->procExeDeleted = false;

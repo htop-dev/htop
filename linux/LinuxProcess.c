@@ -131,8 +131,6 @@ void Process_delete(Object* cast) {
 #endif
    free(this->cwd);
    free(this->secattr);
-   free(this->procExe);
-   free(this->procComm);
    free(this->mergedCommand.str);
    free(this);
 }
@@ -387,8 +385,8 @@ void LinuxProcess_makeCommandStr(Process* this) {
 
    /* Establish some shortcuts to data we need */
    const char *cmdline = this->cmdline;
-   const char *procExe = lp->procExe;
-   const char *procComm = lp->procComm;
+   const char *procComm = this->procComm;
+   const char *procExe = this->procExe;
 
    char *strStart = mc->str;
    char *str = strStart;
@@ -685,9 +683,9 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    }
    case PROC_COMM: {
       const char* procComm;
-      if (lp->procComm) {
+      if (this->procComm) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
-         procComm = lp->procComm;
+         procComm = this->procComm;
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
          procComm = Process_isKernelThread(lp) ? kthreadID : "N/A";
@@ -698,11 +696,11 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    }
    case PROC_EXE: {
       const char* procExe;
-      if (lp->procExe) {
+      if (this->procExe) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
          if (lp->procExeDeleted)
             attr = CRT_colors[FAILED_READ];
-         procExe = lp->procExe + lp->procExeBasenameOffset;
+         procExe = this->procExe + lp->procExeBasenameOffset;
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
          procExe = Process_isKernelThread(lp) ? kthreadID : "N/A";
@@ -816,13 +814,13 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
    case PROC_COMM: {
-      const char *comm1 = p1->procComm ? p1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
-      const char *comm2 = p2->procComm ? p2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
+      const char *comm1 = v1->procComm ? v1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char *comm2 = v2->procComm ? v2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
       return strcmp(comm1, comm2);
    }
    case PROC_EXE: {
-      const char *exe1 = p1->procExe ? (p1->procExe + p1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
-      const char *exe2 = p2->procExe ? (p2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
+      const char *exe1 = v1->procExe ? (v1->procExe + p1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char *exe2 = v2->procExe ? (v2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
       return strcmp(exe1, exe2);
    }
    case CWD:
