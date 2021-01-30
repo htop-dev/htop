@@ -246,8 +246,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    if (this->scrollV < 0) {
       this->scrollV = 0;
       this->needsRedraw = true;
-   } else if (this->scrollV >= size) {
-      this->scrollV = MAXIMUM(size - 1, 0);
+   } else if (this->scrollV > size - h) {
+      this->scrollV = MAXIMUM(size - h, 0);
       this->needsRedraw = true;
    }
    // ensure selection is on screen
