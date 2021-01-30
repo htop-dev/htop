@@ -499,10 +499,12 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
    int currPos = Panel_getSelectedIndex(this->panel);
    int currScrollV = this->panel->scrollV;
+   int currSize = Panel_size(this->panel);
 
    Panel_prune(this->panel);
    int size = ProcessList_size(this);
    int idx = 0;
+
    for (int i = 0; i < size; i++) {
       Process* p = ProcessList_get(this, i);
 
@@ -513,11 +515,22 @@ void ProcessList_rebuildPanel(ProcessList* this) {
          continue;
 
       Panel_set(this->panel, idx, (Object*)p);
-      if ((this->following == -1 && idx == currPos) || (this->following != -1 && p->pid == this->following)) {
+
+      if (this->following != -1 && p->pid == this->following) {
          Panel_setSelected(this->panel, idx);
          this->panel->scrollV = currScrollV;
       }
       idx++;
+   }
+
+   if (this->following == -1) {
+      /* If the last item was selected, keep the new last item selected */
+      if (currPos == currSize - 1)
+         Panel_setSelected(this->panel, Panel_size(this->panel) - 1);
+      else
+         Panel_setSelected(this->panel, currPos);
+
+      this->panel->scrollV = currScrollV;
    }
 }
 
