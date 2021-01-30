@@ -40,6 +40,9 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    case '\r':
    case KEY_ENTER:
    case KEY_MOUSE:
+      if (!this->settings->enableMouse)
+         break;
+      /* else fallthrough */
    case KEY_RECLICK:
    case ' ':
       switch (OptionItem_kind(selected)) {
