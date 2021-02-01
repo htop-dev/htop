@@ -726,6 +726,10 @@ void CRT_init(const Settings* settings, bool allowUnicode) {
       define_key("\033OQ", KEY_F(2));
       define_key("\033OR", KEY_F(3));
       define_key("\033OS", KEY_F(4));
+      define_key("\033O2P", KEY_F(13));
+      define_key("\033O2Q", KEY_F(14));
+      define_key("\033O2R", KEY_F(15));
+      define_key("\033O2S", KEY_F(16));
       define_key("\033[11~", KEY_F(1));
       define_key("\033[12~", KEY_F(2));
       define_key("\033[13~", KEY_F(3));
