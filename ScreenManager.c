@@ -202,7 +202,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          }
       }
       if (ch == ERR) {
-         sortTimeout--;
+         if (sortTimeout > 0)
+            sortTimeout--;
          if (prevCh == ch && !timedOut) {
             closeTimeout++;
             if (closeTimeout == 100) {
