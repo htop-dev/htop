@@ -424,8 +424,8 @@ void LinuxProcess_makeCommandStr(Process* this) {
       return;
    }
 
-   int exeLen = lp->procExeLen;
-   int exeBasenameOffset = lp->procExeBasenameOffset;
+   int exeLen = strlen(this->procExe);
+   int exeBasenameOffset = this->procExeBasenameOffset;
    int exeBasenameLen = exeLen - exeBasenameOffset;
 
    assert(exeBasenameOffset >= 0);
@@ -700,7 +700,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
          if (this->procExeDeleted)
             attr = CRT_colors[FAILED_READ];
-         procExe = this->procExe + lp->procExeBasenameOffset;
+         procExe = this->procExe + this->procExeBasenameOffset;
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
          procExe = Process_isKernelThread(lp) ? kthreadID : "N/A";
@@ -819,8 +819,8 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return strcmp(comm1, comm2);
    }
    case PROC_EXE: {
-      const char *exe1 = v1->procExe ? (v1->procExe + p1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
-      const char *exe2 = v2->procExe ? (v2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
+      const char *exe1 = v1->procExe ? (v1->procExe + v1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char *exe2 = v2->procExe ? (v2->procExe + v2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
       return strcmp(exe1, exe2);
    }
    case CWD:

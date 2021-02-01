@@ -63,8 +63,6 @@ typedef struct LinuxProcessMergedCommand_ {
 
 typedef struct LinuxProcess_ {
    Process super;
-   int procExeLen;
-   int procExeBasenameOffset;
    int procCmdlineBasenameOffset;
    int procCmdlineBasenameEnd;
    LinuxProcessMergedCommand mergedCommand;
