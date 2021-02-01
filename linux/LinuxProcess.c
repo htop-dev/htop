@@ -202,6 +202,9 @@ static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdline
    size_t tokenLen;
    const size_t commLen = strlen(comm);
 
+   if (cmdlineBasenameOffset < 0)
+      return false;
+
    for (const char *token = cmdline + cmdlineBasenameOffset; *token; ) {
       for (tokenBase = token; *token && *token != '\n'; ++token) {
          if (*token == '/') {
