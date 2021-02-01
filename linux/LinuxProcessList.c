@@ -1167,29 +1167,34 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    if (amtRead > 0) {
       filename[amtRead] = 0;
       lp->mergedCommand.maxLen += amtRead;  /* accommodate exe */
-      if (!process->procExe || !String_eq(filename, process->procExe)) {
+      if (!process->procExe ||
+         (!process->procExeDeleted && !String_eq(filename, process->procExe)) ||
+         (process->procExeDeleted && !String_startsWith(filename, process->procExe))) {
          free_and_xStrdup(&process->procExe, filename);
-         lp->procExeLen = amtRead;
+
          /* exe is guaranteed to contain at least one /, but validate anyway */
          while (amtRead && filename[--amtRead] != '/')
             ;
-         lp->procExeBasenameOffset = amtRead + 1;
+
+         process->procExeBasenameOffset = amtRead + 1;
          lp->mergedCommand.exeChanged = true;
 
          const char* deletedMarker = " (deleted)";
          if (strlen(process->procExe) > strlen(deletedMarker)) {
             process->procExeDeleted = String_eq(process->procExe + strlen(process->procExe) - strlen(deletedMarker), deletedMarker);
 
-            if (process->procExeDeleted && strlen(process->procExe) - strlen(deletedMarker) == 1 && process->procExe[0] == '/') {
-               lp->procExeBasenameOffset = 0;
+            if (process->procExeDeleted) {
+               process->procExe[strlen(process->procExe) - strlen(deletedMarker)] = '\0';
+
+               if (String_eq(process->procExe, "/"))
+                  process->procExeBasenameOffset = 0;
             }
          }
       }
    } else if (process->procExe) {
       free(process->procExe);
       process->procExe = NULL;
-      lp->procExeLen = 0;
-      lp->procExeBasenameOffset = 0;
+      process->procExeBasenameOffset = 0;
       process->procExeDeleted = false;
       lp->mergedCommand.exeChanged = true;
    }
