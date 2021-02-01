@@ -111,6 +111,9 @@ typedef struct Process_ {
    /* The main process executable */
    char *procExe;
 
+   /* Tells if the executable has been replaced in the filesystem since start */
+   bool procExeDeleted;
+
    /* CPU number last executed on */
    int processor;
 
