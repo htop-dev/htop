@@ -441,14 +441,14 @@ void LinuxProcess_makeCommandStr(Process* this) {
       if (haveCommInExe)
          WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
-      if (lp->procExeDeleted)
+      if (this->procExeDeleted)
          WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, delAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
       str = stpcpy(str, procExe);
    } else {
       if (haveCommInExe)
          WRITE_HIGHLIGHT(0, exeBasenameLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       WRITE_HIGHLIGHT(0, exeBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
-      if (lp->procExeDeleted)
+      if (this->procExeDeleted)
          WRITE_HIGHLIGHT(0, exeBasenameLen, delAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
       str = stpcpy(str, procExe + exeBasenameOffset);
    }
@@ -698,7 +698,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       const char* procExe;
       if (this->procExe) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
-         if (lp->procExeDeleted)
+         if (this->procExeDeleted)
             attr = CRT_colors[FAILED_READ];
          procExe = this->procExe + lp->procExeBasenameOffset;
       } else {

@@ -1178,9 +1178,9 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
 
          const char* deletedMarker = " (deleted)";
          if (strlen(process->procExe) > strlen(deletedMarker)) {
-            lp->procExeDeleted = String_eq(process->procExe + strlen(process->procExe) - strlen(deletedMarker), deletedMarker);
+            process->procExeDeleted = String_eq(process->procExe + strlen(process->procExe) - strlen(deletedMarker), deletedMarker);
 
-            if (lp->procExeDeleted && strlen(process->procExe) - strlen(deletedMarker) == 1 && process->procExe[0] == '/') {
+            if (process->procExeDeleted && strlen(process->procExe) - strlen(deletedMarker) == 1 && process->procExe[0] == '/') {
                lp->procExeBasenameOffset = 0;
             }
          }
@@ -1190,7 +1190,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       process->procExe = NULL;
       lp->procExeLen = 0;
       lp->procExeBasenameOffset = 0;
-      lp->procExeDeleted = false;
+      process->procExeDeleted = false;
       lp->mergedCommand.exeChanged = true;
    }
 
