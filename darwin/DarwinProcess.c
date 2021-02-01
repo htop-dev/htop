@@ -101,7 +101,7 @@ bool Process_isThread(const Process* this) {
    return false;
 }
 
-static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* basenameOffset) {
+static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* cmdlineBasenameOffset) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;
@@ -199,7 +199,7 @@ static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* basenameO
    /* Save where the argv[0] string starts. */
    sp = cp;
 
-   *basenameOffset = 0;
+   *cmdlineBasenameOffset = 0;
    for ( np = NULL; c < nargs && cp < &procargs[size]; cp++ ) {
       if ( *cp == '\0' ) {
          c++;
@@ -209,8 +209,8 @@ static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* basenameO
          }
          /* Note location of current '\0'. */
          np = cp;
-         if (*basenameOffset == 0) {
-            *basenameOffset = cp - sp;
+         if (*cmdlineBasenameOffset == 0) {
+            *cmdlineBasenameOffset = cp - sp;
          }
       }
    }
@@ -223,8 +223,8 @@ static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* basenameO
       /* Empty or unterminated string. */
       goto ERROR_B;
    }
-   if (*basenameOffset == 0) {
-      *basenameOffset = np - sp;
+   if (*cmdlineBasenameOffset == 0) {
+      *cmdlineBasenameOffset = np - sp;
    }
 
    /* Make a copy of the string. */
@@ -237,10 +237,11 @@ static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* basenameO
 
 ERROR_B:
    free( procargs );
-ERROR_A:
-   retval = xStrdup(k->kp_proc.p_comm);
-   *basenameOffset = strlen(retval);
 
+ERROR_A:
+   *cmdlineBasenameOffset = -1;
+
+   retval = xStrdup(k->kp_proc.p_comm);
    return retval;
 }
 
@@ -286,7 +287,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       proc->starttime_ctime = ep->p_starttime.tv_sec;
       Process_fillStarttimeBuffer(proc);
 
-      proc->cmdline = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
+      proc->cmdline = DarwinProcess_getCmdLine(ps, &proc->cmdlineBasenameOffset);
    }
 
    /* Mutable information */
