@@ -55,7 +55,7 @@ static void Settings_readMeterModes(Settings* this, const char* line, int column
 
 static void Settings_defaultMeters(Settings* this, int initialCpuCount) {
    int sizes[] = { 3, 3 };
-   if (initialCpuCount > 4) {
+   if (initialCpuCount > 4 && initialCpuCount <= 128) {
       sizes[1]++;
    }
    for (int i = 0; i < 2; i++) {
@@ -64,7 +64,22 @@ static void Settings_defaultMeters(Settings* this, int initialCpuCount) {
       this->columns[i].len = sizes[i];
    }
    int r = 0;
-   if (initialCpuCount > 8) {
+
+   if (initialCpuCount > 128) {
+      // Just show the average, ricers need to config for impressive screenshots
+      this->columns[0].names[0] = xStrdup("CPU");
+      this->columns[0].modes[0] = BAR_METERMODE;
+   } else if (initialCpuCount > 32) {
+      this->columns[0].names[0] = xStrdup("LeftCPUs8");
+      this->columns[0].modes[0] = BAR_METERMODE;
+      this->columns[1].names[r] = xStrdup("RightCPUs8");
+      this->columns[1].modes[r++] = BAR_METERMODE;
+   } else if (initialCpuCount > 16) {
+      this->columns[0].names[0] = xStrdup("LeftCPUs4");
+      this->columns[0].modes[0] = BAR_METERMODE;
+      this->columns[1].names[r] = xStrdup("RightCPUs4");
+      this->columns[1].modes[r++] = BAR_METERMODE;
+   } else if (initialCpuCount > 8) {
       this->columns[0].names[0] = xStrdup("LeftCPUs2");
       this->columns[0].modes[0] = BAR_METERMODE;
       this->columns[1].names[r] = xStrdup("RightCPUs2");
