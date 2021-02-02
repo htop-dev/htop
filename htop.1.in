@@ -388,7 +388,7 @@ The time, measured in clock ticks that the process has spent in user and system
 time (see UTIME, STIME above).
 .TP
 .B NLWP
-The number of threads in the process.
+The number of Light-Weight Processes (=threads) in the process.
 .TP
 .B TGID
 The thread group ID.
