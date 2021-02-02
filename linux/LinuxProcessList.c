@@ -1475,10 +1475,16 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;
          free_and_xStrdup(&proc->comm, command);
+         lp->procCmdlineBasenameOffset = 0;
+         lp->procCmdlineBasenameEnd = 0;
+         lp->mergedCommand.commChanged = true;
       } else if (Process_isThread(proc)) {
          if (settings->showThreadNames || Process_isKernelThread(proc)) {
             proc->basenameOffset = -1;
             free_and_xStrdup(&proc->comm, command);
+            lp->procCmdlineBasenameOffset = 0;
+            lp->procCmdlineBasenameEnd = 0;
+            lp->mergedCommand.commChanged = true;
          }
 
          if (Process_isKernelThread(proc)) {
