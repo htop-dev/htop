@@ -38,6 +38,11 @@ static void SysArchMeter_updateValues(Meter* this, char* buffer, size_t size) {
                char* value = String_trim(&line[n + 1]);
                line[n] = '\0';
 
+               if(String_eq(value, "n/a")) {
+                  free(value);
+                  continue;
+               }
+
                if(String_eq(line, "Distributor ID"))
                   snprintf(distro[0], sizeof(distro[0]), "%s", value);
                else if(String_eq(line, "Release"))
