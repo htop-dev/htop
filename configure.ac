@@ -157,6 +157,9 @@ if test "$my_htop_platform" = dragonflybsd; then
 fi
 
 if test "$my_htop_platform" = freebsd; then
+   if test "$enable_static" = yes; then
+      AC_SEARCH_LIBS([elf_version], [elf], [], [AC_MSG_ERROR([can not find required function elf_version()])])
+   fi
    AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
    AC_SEARCH_LIBS([devstat_checkversion], [devstat], [], [AC_MSG_ERROR([can not find required function devstat_checkversion()])])
 fi
