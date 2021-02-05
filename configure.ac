@@ -531,6 +531,11 @@ AM_CFLAGS="\
  -Wunused\
  -Wwrite-strings"
 
+# FreeBSD uses C11 _Generic in its isnan implementation, even with -std=c99
+if test "$my_htop_platform" = freebsd; then
+   AM_CFLAGS="$AM_CFLAGS -Wno-c11-extensions"
+fi
+
 dnl https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
 AC_DEFUN([AX_CHECK_COMPILE_FLAG],
 [
