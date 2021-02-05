@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "UsersTable.h"
 
+
 typedef enum {
    HTOP_OK = 0x00,
    HTOP_REFRESH = 0x01,
@@ -31,11 +32,13 @@ typedef enum {
    HTOP_UPDATE_PANELHDR = 0x41, // implies HTOP_REFRESH
 } Htop_Reaction;
 
+struct MainPanel_;
+
 typedef struct State_ {
    Settings* settings;
    UsersTable* ut;
    ProcessList* pl;
-   Panel* panel;
+   struct MainPanel_* mainPanel;
    Header* header;
    bool pauseProcessUpdate;
    bool hideProcessSelection;

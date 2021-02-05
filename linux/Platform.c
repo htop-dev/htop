@@ -130,9 +130,7 @@ void Platform_done(void) {
 }
 
 static Htop_Reaction Platform_actionSetIOPriority(State* st) {
-   Panel* panel = st->panel;
-
-   const LinuxProcess* p = (const LinuxProcess*) Panel_getSelected(panel);
+   const LinuxProcess* p = (const LinuxProcess*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
 
@@ -141,7 +139,7 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    const void* set = Action_pickFromVector(st, ioprioPanel, 21, true);
    if (set) {
       IOPriority ioprio2 = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = MainPanel_foreachProcess((MainPanel*)panel, LinuxProcess_setIOPriority, (Arg) { .i = ioprio2 }, NULL);
+      bool ok = MainPanel_foreachProcess(st->mainPanel, LinuxProcess_setIOPriority, (Arg) { .i = ioprio2 }, NULL);
       if (!ok) {
          beep();
       }
