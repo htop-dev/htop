@@ -208,17 +208,25 @@ void Panel_splice(Panel* this, Vector* from) {
    this->needsRedraw = true;
 }
 
-void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar) {
+void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar, bool showScrollBar) {
    assert (this != NULL);
 
-   int size = Vector_size(this->items);
-   int scrollH = this->scrollH;
+   const int size = Vector_size(this->items);
+   const int scrollH = this->scrollH;
    int y = this->y;
-   int x = this->x;
+   const int x = this->x;
    int h = this->h;
+   int xOffset = 0;
 
    if (hideFunctionBar)
       h++;
+
+   /* Do not show scroll bar if all items fit on screen */
+   if (size <= h)
+      showScrollBar = false;
+
+   if (showScrollBar)
+      xOffset++;
 
    const int header_attr = focus
                          ? CRT_colors[PANEL_HEADER_FOCUS]
@@ -234,8 +242,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       attrset(header_attr);
       mvhline(y, x, ' ', this->w);
       if (scrollH < headerLen) {
-         RichString_printoffnVal(this->header, y, x, scrollH,
-            MINIMUM(headerLen - scrollH, this->w));
+         RichString_printoffnVal(this->header, y, x + xOffset, scrollH,
+            MINIMUM(headerLen - scrollH, this->w - xOffset));
       }
       attrset(CRT_colors[RESET_COLOR]);
       y++;
@@ -259,12 +267,12 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       this->needsRedraw = true;
    }
 
-   int first = this->scrollV;
-   int upTo = MINIMUM(first + h, size);
+   const int first = this->scrollV;
+   const int upTo = MINIMUM(first + h, size);
 
-   int selectionColor = focus
-                      ? CRT_colors[this->selectionColorId]
-                      : CRT_colors[PANEL_SELECTION_UNFOCUS];
+   const int selectionColor = focus
+                            ? CRT_colors[this->selectionColorId]
+                            : CRT_colors[PANEL_SELECTION_UNFOCUS];
 
    if (this->needsRedraw || force_redraw) {
       int line = 0;
@@ -273,7 +281,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          RichString_begin(item);
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
-         int amt = MINIMUM(itemLen - scrollH, this->w);
+         int amt = MINIMUM(itemLen - scrollH, this->w - xOffset);
          if (highlightSelected && i == this->selected) {
             item.highlightAttr = selectionColor;
          }
@@ -284,7 +292,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          }
          mvhline(y + line, x, ' ', this->w);
          if (amt > 0)
-            RichString_printoffnVal(item, y + line, x, scrollH, amt);
+            RichString_printoffnVal(item, y + line, x + xOffset, scrollH, amt);
          if (item.highlightAttr)
             attrset(CRT_colors[RESET_COLOR]);
          RichString_end(item);
@@ -305,21 +313,43 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       Object_display(newObj, &new);
       int newLen = RichString_sizeVal(new);
       this->selectedLen = newLen;
-      mvhline(y + this->oldSelected - first, x + 0, ' ', this->w);
+      mvhline(y + this->oldSelected - first, x, ' ', this->w);
       if (scrollH < oldLen)
-         RichString_printoffnVal(old, y + this->oldSelected - first, x,
-            scrollH, MINIMUM(oldLen - scrollH, this->w));
+         RichString_printoffnVal(old, y + this->oldSelected - first, x + xOffset,
+            scrollH, MINIMUM(oldLen - scrollH, this->w - xOffset));
       attrset(selectionColor);
-      mvhline(y + this->selected - first, x + 0, ' ', this->w);
+      mvhline(y + this->selected - first, x, ' ', this->w);
       RichString_setAttr(&new, selectionColor);
       if (scrollH < newLen)
-         RichString_printoffnVal(new, y + this->selected - first, x,
-            scrollH, MINIMUM(newLen - scrollH, this->w));
+         RichString_printoffnVal(new, y + this->selected - first, x + xOffset,
+            scrollH, MINIMUM(newLen - scrollH, this->w - xOffset));
       attrset(CRT_colors[RESET_COLOR]);
       RichString_end(new);
       RichString_end(old);
    }
 
+   /* Draw scroll indicator */
+   if (showScrollBar) {
+      const int barHight = (h - 2) * h / size + 1;
+      const int barStart = y + 1 + first * (h - 2) / size;
+#ifdef HAVE_LIBNCURSESW
+      if (CRT_utf8) {
+         const cchar_t up = { .attr = 0, .chars = { L'\uFFEA', 0 } };
+         const cchar_t down = { .attr = 0, .chars = { L'\uFFEC', 0 } };
+         const cchar_t marker = { .attr = 0, .chars = { L'\uFFE8', 0 } };
+         mvadd_wch(y, x, &up);
+         mvadd_wch(y + h - 1, x, &down);
+         mvvline_set(barStart, x, &marker, barHight);
+      } else
+#endif
+      {
+         mvaddch(y, x, '^');
+         mvaddch(y + h - 1, x, 'v');
+         mvvline(barStart, x, '|', barHight);
+      }
+   }
+
+   /* Draw function bar */
    if (focus && (this->needsRedraw || force_redraw || !this->wasFocus)) {
       if (Panel_drawFunctionBarFn(this))
          Panel_drawFunctionBar(this, hideFunctionBar);

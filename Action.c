@@ -322,7 +322,7 @@ static Htop_Reaction actionKill(State* st) {
    if (sgn) {
       if (sgn->key != 0) {
          Panel_setHeader((Panel*)st->mainPanel, "Sending...");
-         Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
+         Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st), true);
          refresh();
          MainPanel_foreachProcess(st->mainPanel, Process_sendSignal, (Arg) { .i = sgn->key }, NULL);
          napms(500);

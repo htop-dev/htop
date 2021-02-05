@@ -127,7 +127,8 @@ static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_
                  force_redraw,
                  i == focus,
                  panel != (Panel*)this->state->mainPanel || !this->state->hideProcessSelection,
-                 State_hideFunctionBar(this->state));
+                 State_hideFunctionBar(this->state),
+                 panel != (Panel*)this->state->mainPanel || !this->state->hideProcessSelection);
       mvvline(panel->y, panel->x + panel->w, ' ', panel->h + (State_hideFunctionBar(this->state) ? 1 : 0));
    }
 }

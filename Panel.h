@@ -118,7 +118,7 @@ int Panel_size(const Panel* this);
 
 void Panel_setSelected(Panel* this, int selected);
 
-void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar);
+void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar, bool showScrollBar);
 
 void Panel_splice(Panel* this, Vector* from);
 
