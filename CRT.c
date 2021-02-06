@@ -24,6 +24,10 @@ in the source distribution for its full text.
 #include <execinfo.h>
 #endif
 
+#if !defined(NDEBUG) && defined(HAVE_MEMFD_CREATE)
+#include <sys/mman.h>
+#endif
+
 
 #define ColorIndex(i,j) ((7-(i))*8+(j))
 
@@ -685,9 +689,96 @@ void CRT_restorePrivileges() {
 
 #endif /* HAVE_SETUID_ENABLED */
 
+#ifndef NDEBUG
+
+static int stderrRedirectNewFd = -1;
+static int stderrRedirectBackupFd = -1;
+
+static int createStderrCacheFile(void) {
+#ifdef HAVE_MEMFD_CREATE
+   return memfd_create("htop.stderr-redirect", 0);
+#elif defined(O_TMPFILE)
+   return open("/tmp", O_TMPFILE | O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
+#else
+   char tmpName[] = "htop.stderr-redirectXXXXXX";
+   mode_t curUmask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
+   int r = mkstemp(tmpName);
+   umask(curUmask);
+   if (r < 0)
+      return r;
+
+   (void) unlink(tmpName);
+
+   return r;
+#endif /* HAVE_MEMFD_CREATE */
+}
+
+static void redirectStderr(void) {
+   stderrRedirectNewFd = createStderrCacheFile();
+   if (stderrRedirectNewFd < 0) {
+      /* ignore failure */
+      return;
+   }
+
+   stderrRedirectBackupFd = dup(STDERR_FILENO);
+   dup2(stderrRedirectNewFd, STDERR_FILENO);
+}
+
+static void dumpStderr(void) {
+   if (stderrRedirectNewFd < 0)
+      return;
+
+   fsync(STDERR_FILENO);
+   dup2(stderrRedirectBackupFd, STDERR_FILENO);
+   lseek(stderrRedirectNewFd, 0, SEEK_SET);
+
+   bool header = false;
+   char buffer[8192];
+   for (;;) {
+      errno = 0;
+      ssize_t res = read(stderrRedirectNewFd, buffer, sizeof(buffer));
+      if (res < 0) {
+         if (errno == EINTR)
+            continue;
+
+         break;
+      }
+
+      if (res == 0) {
+         break;
+      }
+
+      if (res > 0) {
+         if (!header) {
+            fprintf(stderr, ">>>>>>>>>> stderr output >>>>>>>>>>\n\n");
+            header = true;
+         }
+         (void)! write(STDERR_FILENO, buffer, res);
+      }
+   }
+
+   if (header)
+      fprintf(stderr, "\n<<<<<<<<<< stderr output <<<<<<<<<<\n");
+
+   close(stderrRedirectNewFd);
+   stderrRedirectNewFd = -1;
+}
+
+#else /* !NDEBUG */
+
+static void redirectStderr(void) {
+}
+
+static void dumpStderr(void) {
+}
+
+#endif /* !NDEBUG */
+
 static struct sigaction old_sig_handler[32];
 
 void CRT_init(const Settings* settings, bool allowUnicode) {
+   redirectStderr();
+
    initscr();
    noecho();
    CRT_delay = &(settings->delay);
@@ -788,6 +879,8 @@ void CRT_init(const Settings* settings, bool allowUnicode) {
 void CRT_done() {
    curs_set(1);
    endwin();
+
+   dumpStderr();
 }
 
 void CRT_fatalError(const char* note) {

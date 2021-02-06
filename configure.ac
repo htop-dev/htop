@@ -189,6 +189,7 @@ AC_CHECK_FUNCS([ \
     faccessat \
     fstatat \
     host_get_clock_service \
+    memfd_create\
     openat \
     readlinkat \
    ])
