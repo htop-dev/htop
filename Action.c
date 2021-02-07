@@ -226,9 +226,6 @@ static Htop_Reaction actionToggleMergedCommand(State* st) {
 
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
-   if (st->settings->treeView) {
-      st->settings->treeDirection = 1;
-   }
 
    ProcessList_expandTree(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
