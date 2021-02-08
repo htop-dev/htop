@@ -105,6 +105,8 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
 
    if (*rescan) {
       *oldTime = newTime;
+      // always update header, especially to avoid gaps in graph meters
+      Header_updateData(this->header);
       ProcessList_scan(pl, this->state->pauseProcessUpdate);
       if (!this->state->pauseProcessUpdate && (*sortTimeout == 0 || this->settings->treeView)) {
          ProcessList_sort(pl);

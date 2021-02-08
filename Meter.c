@@ -154,8 +154,6 @@ ListItem* Meter_toListItem(const Meter* this, bool moving) {
 /* ---------- TextMeterMode ---------- */
 
 static void TextMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {
-   Meter_updateValues(this);
-
    attrset(CRT_colors[METER_TEXT]);
    mvaddnstr(y, x, this->caption, w - 1);
    attrset(CRT_colors[RESET_COLOR]);
@@ -177,8 +175,6 @@ static void TextMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
-   Meter_updateValues(this);
-
    w -= 2;
    attrset(CRT_colors[METER_TEXT]);
    int captionLen = 3;
@@ -326,8 +322,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       for (int i = 0; i < nValues - 1; i++)
          data->values[i] = data->values[i + 1];
 
-      Meter_updateValues(this);
-
       double value = 0.0;
       for (uint8_t i = 0; i < this->curItems; i++)
          value += this->values[i];
@@ -393,8 +387,6 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    else
 #endif
       LEDMeterMode_digits = LEDMeterMode_digitsAscii;
-
-   Meter_updateValues(this);
 
    RichString_begin(out);
    Meter_displayBuffer(this, &out);

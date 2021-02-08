@@ -45,6 +45,8 @@ void Header_reinit(Header* this);
 
 void Header_draw(const Header* this);
 
+void Header_updateData(Header* this);
+
 int Header_calculateHeight(Header* this);
 
 #endif
