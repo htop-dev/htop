@@ -72,6 +72,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
       Header* header = this->scr->header;
       Header_calculateHeight(header);
       Header_reinit(header);
+      Header_updateData(header);
       Header_draw(header);
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
    }

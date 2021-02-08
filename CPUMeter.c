@@ -187,6 +187,15 @@ static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
    }
 }
 
+static void AllCPUsMeter_updateValues(Meter* this) {
+   CPUMeterData* data = this->meterData;
+   Meter** meters = data->meters;
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   for (int i = 0; i < count; i++)
+      Meter_updateValues(meters[i]);
+}
+
 static void CPUMeterCommonInit(Meter* this, int ncol) {
    int cpus = this->pl->cpuCount;
    CPUMeterData* data = this->meterData;
@@ -332,6 +341,7 @@ const MeterClass AllCPUsMeter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -351,6 +361,7 @@ const MeterClass AllCPUs2Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -370,6 +381,7 @@ const MeterClass LeftCPUsMeter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -389,6 +401,7 @@ const MeterClass RightCPUsMeter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -408,6 +421,7 @@ const MeterClass LeftCPUs2Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -427,6 +441,7 @@ const MeterClass RightCPUs2Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -446,6 +461,7 @@ const MeterClass AllCPUs4Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -465,6 +481,7 @@ const MeterClass LeftCPUs4Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -484,6 +501,7 @@ const MeterClass RightCPUs4Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -503,6 +521,7 @@ const MeterClass AllCPUs8Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -522,6 +541,7 @@ const MeterClass LeftCPUs8Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
@@ -541,6 +561,7 @@ const MeterClass RightCPUs8Meter_class = {
       .delete = Meter_delete,
       .display = CPUMeter_display
    },
+   .updateValues = AllCPUsMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .attributes = CPUMeter_attributes,

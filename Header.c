@@ -177,6 +177,17 @@ void Header_draw(const Header* this) {
    }
 }
 
+void Header_updateData(Header* this) {
+   Header_forEachColumn(this, col) {
+      Vector* meters = this->columns[col];
+      int items = Vector_size(meters);
+      for (int i = 0; i < items; i++) {
+         Meter* meter = (Meter*) Vector_get(meters, i);
+         Meter_updateValues(meter);
+      }
+   }
+}
+
 /*
  * Calculate how many columns the current meter is allowed to span,
  * by counting how many columns to the right are empty or contain a BlankMeter.
