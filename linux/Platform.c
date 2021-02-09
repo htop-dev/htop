@@ -297,8 +297,10 @@ void Platform_setMemoryValues(Meter* this) {
 
 void Platform_setSwapValues(Meter* this) {
    const ProcessList* pl = this->pl;
-   this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
+   const LinuxProcessList* lpl = (const LinuxProcessList*) pl;
+
+   this->total     = pl->totalSwap - lpl->zram.totalZram;
+   this->values[0] = pl->usedSwap - lpl->zram.usedZramComp;
    this->values[1] = pl->cachedSwap;
 }
 
