@@ -35,7 +35,7 @@ static void HugePageMeter_updateValues(Meter* this, char* buffer, size_t size) {
    assert(ARRAYSIZE(HugePageMeter_labels) == HTOP_HUGEPAGE_COUNT);
 
    int written;
-   unsigned long long int usedTotal = 0;
+   memory_t usedTotal = 0;
    unsigned nextUsed = 0;
 
    const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
@@ -47,8 +47,8 @@ static void HugePageMeter_updateValues(Meter* this, char* buffer, size_t size) {
       HugePageMeter_active_labels[i] = NULL;
    }
    for (unsigned i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
-      unsigned long long int value = lpl->usedHugePageMem[i];
-      if (value != ULLONG_MAX) {
+      memory_t value = lpl->usedHugePageMem[i];
+      if (value != MEMORY_MAX) {
          this->values[nextUsed] = value;
          usedTotal += value;
          HugePageMeter_active_labels[nextUsed] = HugePageMeter_labels[i];

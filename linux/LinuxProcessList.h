@@ -74,8 +74,10 @@ typedef struct LinuxProcessList_ {
    int netlink_family;
    #endif
 
-   unsigned long long int totalHugePageMem;
-   unsigned long long int usedHugePageMem[HTOP_HUGEPAGE_COUNT];
+   memory_t totalHugePageMem;
+   memory_t usedHugePageMem[HTOP_HUGEPAGE_COUNT];
+
+   memory_t availableMem;
 
    ZfsArcStats zfs;
    ZramStats zram;
