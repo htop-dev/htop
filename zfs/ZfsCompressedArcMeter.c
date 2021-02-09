@@ -58,7 +58,7 @@ static void ZfsCompressedArcMeter_display(const Object* cast, RichString* out) {
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " Ratio");
    } else {
       RichString_writeAscii(out, CRT_colors[METER_TEXT], " ");
-      RichString_appendAscii(out, CRT_colors[FAILED_SEARCH], "Compression Unavailable");
+      RichString_appendAscii(out, CRT_colors[FAILED_READ], "Compression Unavailable");
    }
 }
 

@@ -72,7 +72,7 @@ static void ZfsArcMeter_display(const Object* cast, RichString* out) {
       RichString_appendAscii(out, CRT_colors[ZFS_OTHER], buffer);
    } else {
       RichString_writeAscii(out, CRT_colors[METER_TEXT], " ");
-      RichString_appendAscii(out, CRT_colors[FAILED_SEARCH], "Unavailable");
+      RichString_appendAscii(out, CRT_colors[FAILED_READ], "Unavailable");
    }
 }
 
