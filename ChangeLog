@@ -1,5 +1,7 @@
 What's new in version 3.0.6 (not released yet)
 
+* Change available / used memory reporting on Linux to be based on
+  MemAvailable (Kernel 3.14+) (thanks to Chris Cheney and Tomas Wido)
 * Improved default sort ordering
   Note for users: This may lead to an inverted sort order on startup of
   htop 3.0.6 compared to previous versions. This is due to what is stored
