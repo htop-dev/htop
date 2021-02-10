@@ -29,6 +29,9 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_LRS_FIX   0x00010000
 #define PROCESS_FLAG_LINUX_DELAYACCT 0x00040000
 #define PROCESS_FLAG_LINUX_AUTOGROUP 0x00080000
+#define PROCESS_FLAG_LINUX_ELF       0x00100000
+
+typedef uint16_t elf_state_t;
 
 typedef struct LinuxProcess_ {
    Process super;
@@ -104,6 +107,11 @@ typedef struct LinuxProcess_ {
    /* Autogroup scheduling (CFS) information */
    long int autogroup_id;
    int autogroup_nice;
+
+   #ifdef HAVE_LIBELF
+   elf_state_t elfState;
+   char* elfRunpath;
+   #endif
 } LinuxProcess;
 
 extern int pageSize;

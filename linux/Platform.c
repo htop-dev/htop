@@ -69,6 +69,10 @@ in the source distribution for its full text.
 #include "LibSensors.h"
 #endif
 
+#ifdef HAVE_LIBELF
+#include "ELF.h"
+#endif
+
 
 #ifdef HAVE_LIBCAP
 enum CapMode {
@@ -1043,9 +1047,17 @@ void Platform_init(void) {
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_init();
 #endif
+
+#ifdef HAVE_LIBELF
+   ELF_init();
+#endif
 }
 
 void Platform_done(void) {
+#ifdef HAVE_LIBELF
+   ELF_cleanup();
+#endif
+
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_cleanup();
 #endif
