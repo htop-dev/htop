@@ -58,6 +58,10 @@ in the source distribution for its full text.
 #include "LibSensors.h"
 #endif
 
+#ifdef HAVE_LIBELF
+#include "ELF.h"
+#endif
+
 
 // CentOS 6's kernel doesn't provide a definition of O_PATH
 // based on definition taken from uapi/asm-generic/fcnth.h in Linux kernel tree
@@ -1419,6 +1423,13 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
             }
          }
       }
+
+      #ifdef HAVE_LIBELF
+      if ((settings->flags & PROCESS_FLAG_LINUX_ELF) && (lp->elfState == 0 || lp->mergedCommand.exeChanged)) {
+         ELF_readData(lp, procFd);
+      }
+      #endif
+
       /* (Re)Generate the Command string, but only if the process is:
        * - not a kernel thread, and
        * - not a zombie or it became zombie under htop's watch, and

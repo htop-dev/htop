@@ -94,6 +94,10 @@ By default `make install` will install into `/usr/local`, for changing the path 
     enable Linux delay accounting support
     dependencies: *pkg-config*(build-time), *libnl-3* and *libnl-genl-3*
     default: *check*
+  * `--enable-elf`:
+    enable elf binary inspection, e.g. hardening options
+    dependencies: *libelf*
+    default: *check*
 
 ## Usage
 
