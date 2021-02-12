@@ -185,9 +185,11 @@ Quit
 Invert the sort order: if sort order is increasing, switch to decreasing, and
 vice-versa.
 .TP
-.B +, \-
+.B +, \-, *
 When in tree view mode, expand or collapse subtree. When a subtree is collapsed
 a "+" sign shows to the left of the process name.
+Pressing "*" will expand or collapse all children of PIDs without parents, so
+typically PID 1 (init) and PID 2 (kthreadd on Linux, if kernel threads are shown).
 .TP
 .B a (on multiprocessor machines)
 Set CPU affinity: mark which CPUs a process is allowed to use.

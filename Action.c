@@ -227,8 +227,17 @@ static Htop_Reaction actionToggleMergedCommand(State* st) {
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
 
-   ProcessList_expandTree(st->pl);
+   if (!st->settings->allBranchesCollapsed) ProcessList_expandTree(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
+   st->settings->allBranchesCollapsed = !st->settings->allBranchesCollapsed;
+   if (st->settings->allBranchesCollapsed)
+      ProcessList_collapseAllBranches(st->pl);
+   else
+      ProcessList_expandTree(st->pl);
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
 static Htop_Reaction actionIncFilter(State* st) {
@@ -438,7 +447,7 @@ static const struct {
    { .key = "      H: ", .info = "hide/show user process threads" },
    { .key = "      K: ", .info = "hide/show kernel threads" },
    { .key = "      F: ", .info = "cursor follows process" },
-   { .key = "    + -: ", .info = "expand/collapse tree" },
+   { .key = "  + - *: ", .info = "expand/collapse tree (* = toggle all)" },
    { .key = "N P M T: ", .info = "sort by PID, CPU%, MEM% or TIME" },
    { .key = "      I: ", .info = "invert sort order" },
    { .key = " F6 > .: ", .info = "select sort column" },
@@ -621,6 +630,7 @@ static Htop_Reaction actionShowCommandScreen(State* st) {
 
 void Action_setBindings(Htop_Action* keys) {
    keys[' '] = actionTag;
+   keys['*'] = actionExpandOrCollapseAllBranches;
    keys['+'] = actionExpandOrCollapse;
    keys[','] = actionSetSortColumn;
    keys['-'] = actionExpandOrCollapse;

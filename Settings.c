@@ -163,6 +163,8 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->treeView = atoi(option[1]);
       } else if (String_eq(option[0], "tree_view_always_by_pid")) {
          this->treeViewAlwaysByPID = atoi(option[1]);
+      } else if (String_eq(option[0], "all_branches_collapsed")) {
+         this->allBranchesCollapsed = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
          this->hideKernelThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_userland_threads")) {
@@ -314,6 +316,7 @@ bool Settings_write(Settings* this) {
    fprintf(fd, "show_merged_command=%d\n", (int) this->showMergedCommand);
    fprintf(fd, "tree_view=%d\n", (int) this->treeView);
    fprintf(fd, "tree_view_always_by_pid=%d\n", (int) this->treeViewAlwaysByPID);
+   fprintf(fd, "all_branches_collapsed=%d\n", (int) this->allBranchesCollapsed);
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
    fprintf(fd, "cpu_count_from_one=%d\n", (int) this->countCPUsFromOne);
@@ -352,6 +355,7 @@ Settings* Settings_new(int initialCpuCount) {
    this->hideKernelThreads = false;
    this->hideUserlandThreads = false;
    this->treeView = false;
+   this->allBranchesCollapsed = false;
    this->highlightBaseName = false;
    this->highlightMegabytes = false;
    this->detailedCPUTime = false;
