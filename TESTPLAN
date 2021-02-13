@@ -55,7 +55,9 @@ Main screen:
 
       <l> - enter LSOF screen.
 
-      <m>, <n>, <o>, <p> - do nothing.
+      <m>, <n>, <o> - do nothing.
+
+      <p> - hide/show program path.
 
       <F10>, <q> - quit program.
 
