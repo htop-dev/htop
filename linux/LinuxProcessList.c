@@ -65,7 +65,7 @@ in the source distribution for its full text.
 # define O_PATH 010000000
 #endif
 
-static long long btime;
+static long long btime = -1;
 
 static long jiffy;
 
@@ -241,7 +241,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       }
       fclose(statfile);
 
-      if (!btime)
+      if (btime == -1)
          CRT_fatalError("No btime in " PROCSTATFILE);
    }
 
