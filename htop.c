@@ -469,6 +469,9 @@ int main(int argc, char** argv) {
    millisleep(75);
    ProcessList_scan(pl, false);
 
+   if (settings->allBranchesCollapsed)
+      ProcessList_collapseAllBranches(pl);
+
    ScreenManager_run(scr, NULL, NULL);
 
    attron(CRT_colors[RESET_COLOR]);

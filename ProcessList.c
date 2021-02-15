@@ -494,6 +494,16 @@ void ProcessList_expandTree(ProcessList* this) {
    }
 }
 
+void ProcessList_collapseAllBranches(ProcessList* this) {
+   int size = Vector_size(this->processes);
+   for (int i = 0; i < size; i++) {
+      Process* process = (Process*) Vector_get(this->processes, i);
+      // FreeBSD has pid 0 = kernel and pid 1 = init, so init has tree_depth = 1
+      if (process->tree_depth > 0 && process->pid > 1)
+         process->showChildren = false;
+   }
+}
+
 void ProcessList_rebuildPanel(ProcessList* this) {
    const char* incFilter = this->incFilter;
 
