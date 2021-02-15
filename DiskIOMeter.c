@@ -86,7 +86,7 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    snprintf(buffer, len, "%sB %sB %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
 }
 
-static void DIskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    if (!hasData) {
       RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
       return;
@@ -111,7 +111,7 @@ const MeterClass DiskIOMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
-      .display = DIskIOMeter_display
+      .display = DiskIOMeter_display
    },
    .updateValues = DiskIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
