@@ -216,7 +216,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
          }
       }
 
-      // If still to large, print the start not the end
+      // If still too large, print the start not the end
       startPos = MINIMUM(startPos, w);
    }
    assert(startPos >= 0);

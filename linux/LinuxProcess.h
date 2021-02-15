@@ -100,7 +100,7 @@ typedef struct LinuxProcess_ {
    /* Storage data written (in kilobytes) */
    unsigned long long io_write_bytes;
 
-   /* Storgae data cancelled (in kilobytes) */
+   /* Storage data cancelled (in kilobytes) */
    unsigned long long io_cancelled_write_bytes;
 
    /* Point in time of last io scan (in seconds elapsed since the Epoch) */
