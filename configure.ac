@@ -567,11 +567,13 @@ fi
 
 AC_ARG_ENABLE([debug],
               [AS_HELP_STRING([--enable-debug],
-                              [Enable asserts and internal sanity checks @<:@default=no@:>@])],
+                              [Enable compiling with maximum debug info, asserts and internal sanity checks @<:@default=no@:>@])],
               [],
               [enable_debug=no])
 if test "x$enable_debug" != xyes; then
    AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"
+else
+   AM_CPPFLAGS="$AM_CPPFLAGS -ggdb3"
 fi
 
 
