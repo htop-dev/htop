@@ -165,7 +165,6 @@ myhtopplatsources = \
 	linux/SystemdMeter.c \
 	linux/ZramMeter.c \
 	zfs/ZfsArcMeter.c \
-	zfs/ZfsArcStats.c \
 	zfs/ZfsCompressedArcMeter.c
 
 myhtopplatheaders = $(linux_platform_headers)
@@ -187,7 +186,7 @@ freebsd_platform_headers = \
 if HTOP_FREEBSD
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
 freebsd/FreeBSDProcess.c \
-zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c zfs/openzfs_sysctl.c
+zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/openzfs_sysctl.c
 
 myhtopplatheaders = $(freebsd_platform_headers)
 endif
@@ -243,7 +242,7 @@ if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
 myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
 darwin/DarwinProcessList.c \
-zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c zfs/openzfs_sysctl.c
+zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/openzfs_sysctl.c
 
 myhtopplatheaders = $(darwin_platform_headers)
 endif
@@ -263,7 +262,7 @@ solaris_platform_headers = \
 if HTOP_SOLARIS
 myhtopplatsources = solaris/Platform.c \
 solaris/SolarisProcess.c solaris/SolarisProcessList.c \
-zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c zfs/ZfsArcStats.c
+zfs/ZfsArcMeter.c zfs/ZfsCompressedArcMeter.c
 
 myhtopplatheaders = $(solaris_platform_headers)
 endif
