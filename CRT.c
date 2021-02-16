@@ -658,37 +658,6 @@ static void CRT_handleSIGTERM(int sgn) {
    _exit(0);
 }
 
-#ifdef HAVE_SETUID_ENABLED
-
-static int CRT_euid = -1;
-
-static int CRT_egid = -1;
-
-void CRT_dropPrivileges() {
-   CRT_egid = getegid();
-   CRT_euid = geteuid();
-   if (setegid(getgid()) == -1) {
-      CRT_fatalError("Fatal error: failed dropping group privileges");
-   }
-   if (seteuid(getuid()) == -1) {
-      CRT_fatalError("Fatal error: failed dropping user privileges");
-   }
-}
-
-void CRT_restorePrivileges() {
-   if (CRT_egid == -1 || CRT_euid == -1) {
-      CRT_fatalError("Fatal error: internal inconsistency");
-   }
-   if (setegid(CRT_egid) == -1) {
-      CRT_fatalError("Fatal error: failed restoring group privileges");
-   }
-   if (seteuid(CRT_euid) == -1) {
-      CRT_fatalError("Fatal error: failed restoring user privileges");
-   }
-}
-
-#endif /* HAVE_SETUID_ENABLED */
-
 #ifndef NDEBUG
 
 static int stderrRedirectNewFd = -1;

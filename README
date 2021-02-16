@@ -58,9 +58,6 @@ By default `make install` will install into `/usr/local`, for changing the path 
     enable hwloc support for CPU affinity; disables Linux affinity
     dependency: *libhwloc*
     default: *no*
-  * `--enable-setuid`:
-    enable setuid support for privilege dropping
-    default: *no*
   * `--enable-static`:
     build a static htop binary; hwloc and delay accounting are not supported
     default: *no*
