@@ -296,10 +296,10 @@ profile:
 	$(MAKE) all AM_CPPFLAGS="-pg -O2 -DNDEBUG"
 
 debug:
-	$(MAKE) all AM_CPPFLAGS="-ggdb -DDEBUG"
+	$(MAKE) all AM_CPPFLAGS="-ggdb3 -Og" CFLAGS="$(patsubst -O%,,$(CFLAGS))"
 
 coverage:
-	$(MAKE) all AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" AM_LDFLAGS="-lgcov"
+	$(MAKE) all AM_CPPFLAGS="-fprofile-arcs -ftest-coverage" AM_LDFLAGS="-lgcov"
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_OPENVZ
