@@ -479,10 +479,9 @@ bool Process_isTomb(const Process* this) {
 }
 
 bool Process_setPriority(Process* this, int priority) {
-   CRT_dropPrivileges();
    int old_prio = getpriority(PRIO_PROCESS, this->pid);
    int err = setpriority(PRIO_PROCESS, this->pid, priority);
-   CRT_restorePrivileges();
+
    if (err == 0 && old_prio != getpriority(PRIO_PROCESS, this->pid)) {
       this->nice = priority;
    }
@@ -494,10 +493,7 @@ bool Process_changePriorityBy(Process* this, Arg delta) {
 }
 
 bool Process_sendSignal(Process* this, Arg sgn) {
-   CRT_dropPrivileges();
-   bool ok = (kill(this->pid, sgn.i) == 0);
-   CRT_restorePrivileges();
-   return ok;
+   return kill(this->pid, sgn.i) == 0;
 }
 
 int Process_pidCompare(const void* v1, const void* v2) {

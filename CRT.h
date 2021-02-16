@@ -160,9 +160,6 @@ extern int CRT_scrollWheelVAmount;
 
 extern ColorScheme CRT_colorScheme;
 
-static inline void CRT_dropPrivileges(void) { }
-static inline void CRT_restorePrivileges(void) { }
-
 void CRT_init(const Settings* settings, bool allowUnicode);
 
 void CRT_done(void);
