@@ -110,6 +110,24 @@ jobs:
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --disable-delayacct --enable-sensors --enable-capabilities'
 
+  build-ubuntu-latest-pcp:
+    # Turns out 'ubuntu-latest' can be older than 20.04, we want PCP v5+
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Dependencies
+      run: sudo apt-get install libpcp3-dev libncursesw5-dev libtinfo-dev libgpm-dev
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      # Until Ubuntu catches up with pcp-5.2.3+, cannot use -werror due to:
+      # passing argument 2 of ‘pmLookupName’ from incompatible pointer type
+      run: ./configure --enable-pcp --enable-unicode
+    - name: Build
+      run: make -k
+    - name: Distcheck
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-pcp --enable-unicode"
+
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
     env:
