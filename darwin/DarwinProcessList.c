@@ -184,7 +184,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    /* Get the time difference */
    dpl->global_diff = 0;
-   for (int i = 0; i < dpl->super.cpuCount; ++i) {
+   for (unsigned int i = 0; i < dpl->super.cpuCount; ++i) {
       for (size_t j = 0; j < CPU_STATE_MAX; ++j) {
          dpl->global_diff += dpl->curr_load[i].cpu_ticks[j] - dpl->prev_load[i].cpu_ticks[j];
       }

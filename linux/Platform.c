@@ -236,7 +236,7 @@ int Platform_getMaxPid() {
    return maxPid;
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
+double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const LinuxProcessList* pl = (const LinuxProcessList*) this->pl;
    const CPUData* cpuData = &(pl->cpus[cpu]);
    double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);

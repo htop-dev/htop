@@ -157,9 +157,9 @@ int Platform_getMaxPid() {
    return maxPid;
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
+double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const DragonFlyBSDProcessList* fpl = (const DragonFlyBSDProcessList*) this->pl;
-   int cpus = this->pl->cpuCount;
+   unsigned int cpus = this->pl->cpuCount;
    const CPUData* cpuData;
 
    if (cpus == 1) {

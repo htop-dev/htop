@@ -69,7 +69,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
 static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    const SolarisProcessList* spl = (SolarisProcessList*) pl;
-   int cpus = pl->cpuCount;
+   unsigned int cpus = pl->cpuCount;
    kstat_t* cpuinfo = NULL;
    kstat_named_t* idletime = NULL;
    kstat_named_t* intrtime = NULL;
@@ -91,7 +91,7 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    }
 
    // Calculate per-CPU statistics first
-   for (int i = 0; i < cpus; i++) {
+   for (unsigned int i = 0; i < cpus; i++) {
       if (spl->kd != NULL) {
          if ((cpuinfo = kstat_lookup(spl->kd, "cpu", i, "sys")) != NULL) {
             if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {

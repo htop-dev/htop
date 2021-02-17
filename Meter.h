@@ -95,7 +95,7 @@ struct Meter_ {
 
    char* caption;
    int mode;
-   int param;
+   unsigned int param;
    GraphData* drawData;
    int h;
    int columnWidthCount;      /*<< only used internally by the Header */
@@ -125,7 +125,7 @@ typedef enum {
 
 extern const MeterClass Meter_class;
 
-Meter* Meter_new(const ProcessList* pl, int param, const MeterClass* type);
+Meter* Meter_new(const ProcessList* pl, unsigned int param, const MeterClass* type);
 
 int Meter_humanUnit(char* buffer, unsigned long int value, size_t size);
 

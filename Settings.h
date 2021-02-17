@@ -89,7 +89,7 @@ void Settings_delete(Settings* this);
 
 int Settings_write(const Settings* this);
 
-Settings* Settings_new(int initialCpuCount);
+Settings* Settings_new(unsigned int initialCpuCount);
 
 void Settings_invertSortOrder(Settings* this);
 

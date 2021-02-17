@@ -35,23 +35,23 @@ static const int CPUMeter_attributes[] = {
 };
 
 typedef struct CPUMeterData_ {
-   int cpus;
+   unsigned int cpus;
    Meter** meters;
 } CPUMeterData;
 
 static void CPUMeter_init(Meter* this) {
-   int cpu = this->param;
+   unsigned int cpu = this->param;
    if (cpu == 0) {
       Meter_setCaption(this, "Avg");
    } else if (this->pl->cpuCount > 1) {
       char caption[10];
-      xSnprintf(caption, sizeof(caption), "%3d", Settings_cpuId(this->pl->settings, cpu - 1));
+      xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(this->pl->settings, cpu - 1));
       Meter_setCaption(this, caption);
    }
 }
 
 static void CPUMeter_updateValues(Meter* this) {
-   int cpu = this->param;
+   unsigned int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "absent");
       for (uint8_t i = 0; i < this->curItems; i++)
@@ -168,7 +168,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
 
 static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
    const CPUMeterData* data = this->meterData;
-   int cpus = data->cpus;
+   unsigned int cpus = data->cpus;
    switch(Meter_name(this)[0]) {
       default:
       case 'A': // All
@@ -196,7 +196,7 @@ static void AllCPUsMeter_updateValues(Meter* this) {
 }
 
 static void CPUMeterCommonInit(Meter* this, int ncol) {
-   int cpus = this->pl->cpuCount;
+   unsigned int cpus = this->pl->cpuCount;
    CPUMeterData* data = this->meterData;
    if (!data) {
       data = this->meterData = xMalloc(sizeof(CPUMeterData));

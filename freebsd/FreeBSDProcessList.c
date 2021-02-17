@@ -175,8 +175,8 @@ void ProcessList_delete(ProcessList* this) {
 static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
 
-   int cpus   = pl->cpuCount;   // actual CPU count
-   int maxcpu = cpus;           // max iteration (in case we have average + smp)
+   unsigned int cpus   = pl->cpuCount;   // actual CPU count
+   unsigned int maxcpu = cpus;           // max iteration (in case we have average + smp)
    int cp_times_offset;
 
    assert(cpus > 0);
@@ -203,7 +203,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
       sysctl(MIB_kern_cp_times, 2, fpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
    }
 
-   for (int i = 0; i < maxcpu; i++) {
+   for (unsigned int i = 0; i < maxcpu; i++) {
       if (cpus == 1) {
          // single CPU box
          cp_time_n = fpl->cp_time_n;
@@ -287,7 +287,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
    if (cpus > 1) {
       if (pl->settings->showCPUTemperature) {
          double maxTemp = NAN;
-         for (int i = 1; i < maxcpu; i++) {
+         for (unsigned int i = 1; i < maxcpu; i++) {
             const double coreTemp = fpl->cpus[i].temperature;
             if (isnan(coreTemp))
                continue;
@@ -302,7 +302,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
          const double coreZeroFreq = fpl->cpus[1].frequency;
          double freqSum = coreZeroFreq;
          if (!isnan(coreZeroFreq)) {
-            for (int i = 2; i < maxcpu; i++) {
+            for (unsigned int i = 2; i < maxcpu; i++) {
                if (isnan(fpl->cpus[i].frequency))
                   fpl->cpus[i].frequency = coreZeroFreq;
 
