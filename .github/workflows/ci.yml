@@ -63,11 +63,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors --enable-capabilities
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors --enable-capabilities'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities'
 
   build-ubuntu-latest-full-featured-clang:
     runs-on: ubuntu-latest
@@ -85,11 +85,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors --enable-capabilities
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors --enable-capabilities'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities'
 
   build-ubuntu-latest-gcc-static:
     runs-on: ubuntu-latest
@@ -104,11 +104,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --enable-setuid --disable-delayacct --enable-sensors --enable-capabilities
+      run: ./configure --enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --disable-delayacct --enable-sensors --enable-capabilities
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --enable-setuid --disable-delayacct --enable-sensors --enable-capabilities'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --disable-delayacct --enable-sensors --enable-capabilities'
 
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
@@ -126,7 +126,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: scan-build-11 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-setuid --enable-delayacct --enable-sensors --enable-capabilities
+      run: scan-build-11 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities
     - name: Build
       run: scan-build-11 -analyze-headers --status-bugs make -j"$(nproc)"
 

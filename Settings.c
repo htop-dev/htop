@@ -125,10 +125,7 @@ static void readFields(ProcessField* fields, uint32_t* flags, const char* line) 
 }
 
 static bool Settings_read(Settings* this, const char* fileName, int initialCpuCount) {
-   FILE* fd;
-   CRT_dropPrivileges();
-   fd = fopen(fileName, "r");
-   CRT_restorePrivileges();
+   FILE* fd = fopen(fileName, "r");
    if (!fd)
       return false;
 
@@ -284,15 +281,10 @@ static void writeMeterModes(Settings* this, FILE* fd, int column) {
 }
 
 bool Settings_write(Settings* this) {
-   FILE* fd;
-
-   CRT_dropPrivileges();
-   fd = fopen(this->filename, "w");
-   CRT_restorePrivileges();
-
-   if (fd == NULL) {
+   FILE* fd = fopen(this->filename, "w");
+   if (fd == NULL)
       return false;
-   }
+
    fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
    fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
    writeFields(fd, this->fields, "fields");
@@ -410,7 +402,6 @@ Settings* Settings_new(int initialCpuCount) {
          htopDir = String_cat(home, "/.config/htop");
       }
       legacyDotfile = String_cat(home, "/.htoprc");
-      CRT_dropPrivileges();
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
       free(htopDir);
@@ -421,7 +412,6 @@ Settings* Settings_new(int initialCpuCount) {
          free(legacyDotfile);
          legacyDotfile = NULL;
       }
-      CRT_restorePrivileges();
    }
    this->colorScheme = 0;
    this->enableMouse = true;

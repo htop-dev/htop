@@ -34,9 +34,7 @@ static void EnvScreen_scan(InfoScreen* this) {
 
    Panel_prune(panel);
 
-   CRT_dropPrivileges();
    char* env = Platform_getProcessEnv(this->process->pid);
-   CRT_restorePrivileges();
    if (env) {
       for (const char* p = env; *p; p = strrchr(p, 0) + 1)
          InfoScreen_addLine(this, p);

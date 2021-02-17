@@ -160,20 +160,6 @@ extern int CRT_scrollWheelVAmount;
 
 extern ColorScheme CRT_colorScheme;
 
-#ifdef HAVE_SETUID_ENABLED
-
-void CRT_dropPrivileges(void);
-
-void CRT_restorePrivileges(void);
-
-#else /* HAVE_SETUID_ENABLED */
-
-/* Turn setuid operations into NOPs */
-static inline void CRT_dropPrivileges(void) { }
-static inline void CRT_restorePrivileges(void) { }
-
-#endif /* HAVE_SETUID_ENABLED */
-
 void CRT_init(const Settings* settings, bool allowUnicode);
 
 void CRT_done(void);

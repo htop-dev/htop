@@ -8,6 +8,8 @@ What's new in version 3.0.6 (not released yet)
   in your htoprc file. Solution: Press I (to invert sort order).
   This changed setting will be saved by htop on exit as long as it can
   write to your htoprc file.
+* The compile-time option to cater specifically for running htop as
+  setuid has been removed.
 
 What's new in version 3.0.5
 
