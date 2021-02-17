@@ -328,6 +328,29 @@ myhtopplatheaders = $(solaris_platform_headers)
 myhtopplatsources = $(solaris_platform_sources)
 endif
 
+# Performance Co-Pilot (PCP)
+# --------------------------
+
+pcp_platform_headers = \
+	pcp/PCPProcess.h \
+	pcp/PCPProcessList.h \
+	pcp/Platform.h \
+	pcp/ProcessField.h \
+	linux/PressureStallMeter.h \
+	linux/ZramMeter.h \
+	linux/ZramStats.h
+
+if HTOP_PCP
+myhtopplatsources = \
+	pcp/PCPProcess.c \
+	pcp/PCPProcessList.c \
+	pcp/Platform.c \
+	linux/PressureStallMeter.c \
+	linux/ZramMeter.c
+
+myhtopplatheaders = $(pcp_platform_headers)
+endif
+
 # Unsupported
 # -----------
 

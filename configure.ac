@@ -95,6 +95,31 @@ esac
 
 # ----------------------------------------------------------------------
 
+# ----------------------------------------------------------------------
+# Checks for a PCP-based htop build.  (https://pcp.io)
+# ----------------------------------------------------------------------
+
+AC_ARG_ENABLE([pcp],
+              [AS_HELP_STRING([--enable-pcp],
+                              [build a pcp htop binary @<:@default=no@:>@])],
+              [],
+              [enable_pcp=no])
+case "$enable_pcp" in
+   no)
+      ;;
+   yes)
+      AC_CHECK_HEADERS([pcp/pmapi.h], [my_htop_platform=pcp],
+		       [AC_MSG_ERROR([can not find PCP header file])])
+      AC_SEARCH_LIBS([pmNewContext], [pcp], [], [AC_MSG_ERROR([can not find pcp library])])
+      AC_DEFINE([HTOP_PCP], [1], [Define if building pcp htop binary.])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_static' for --enable-static option])
+      ;;
+esac
+
+# ----------------------------------------------------------------------
+
 
 # ----------------------------------------------------------------------
 # Checks for generic header files.
@@ -608,6 +633,7 @@ AM_CONDITIONAL([HTOP_DRAGONFLYBSD], [test "$my_htop_platform" = dragonflybsd])
 AM_CONDITIONAL([HTOP_OPENBSD], [test "$my_htop_platform" = openbsd])
 AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
+AM_CONDITIONAL([HTOP_PCP], [test "$my_htop_platform" = pcp])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 
 AC_SUBST(my_htop_platform)
