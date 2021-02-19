@@ -114,7 +114,7 @@ case "$enable_pcp" in
       AC_DEFINE([HTOP_PCP], [1], [Define if building pcp htop binary.])
       ;;
    *)
-      AC_MSG_ERROR([bad value '$enable_static' for --enable-static option])
+      AC_MSG_ERROR([bad value '$enable_pcp' for --enable-pcp option])
       ;;
 esac
 
