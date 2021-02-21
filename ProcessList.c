@@ -535,7 +535,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
    if (this->following == -1) {
       /* If the last item was selected, keep the new last item selected */
-      if (currPos == currSize - 1)
+      if (currPos > 0 && currPos == currSize - 1)
          Panel_setSelected(this->panel, Panel_size(this->panel) - 1);
       else
          Panel_setSelected(this->panel, currPos);
