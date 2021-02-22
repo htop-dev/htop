@@ -38,10 +38,12 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
-
 #include "linux/PressureStallMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
+#include "zfs/ZfsArcMeter.h"
+#include "zfs/ZfsArcStats.h"
+#include "zfs/ZfsCompressedArcMeter.h"
 
 typedef struct Platform_ {
    int context;			/* PMAPI(3) context identifier */
@@ -100,6 +102,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &PressureStallIOFullMeter_class,
    &PressureStallMemorySomeMeter_class,
    &PressureStallMemoryFullMeter_class,
+   &ZfsArcMeter_class,
+   &ZfsCompressedArcMeter_class,
    &ZramMeter_class,
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
@@ -160,6 +164,18 @@ static const char *Platform_metricNames[] = {
    [PCP_PSI_IOFULL] = "kernel.all.pressure.io.full.avg",
    [PCP_PSI_MEMSOME] = "kernel.all.pressure.memory.some.avg",
    [PCP_PSI_MEMFULL] = "kernel.all.pressure.memory.full.avg",
+
+   [PCP_ZFS_ARC_ANON_SIZE] = "zfs.arc.anon_size",
+   [PCP_ZFS_ARC_BONUS_SIZE] = "zfs.arc.bonus_size",
+   [PCP_ZFS_ARC_COMPRESSED_SIZE] = "zfs.arc.compressed_size",
+   [PCP_ZFS_ARC_UNCOMPRESSED_SIZE] = "zfs.arc.uncompressed_size",
+   [PCP_ZFS_ARC_C_MAX] = "zfs.arc.c_max",
+   [PCP_ZFS_ARC_DBUF_SIZE] = "zfs.arc.dbuf_size",
+   [PCP_ZFS_ARC_DNODE_SIZE] = "zfs.arc.dnode_size",
+   [PCP_ZFS_ARC_HDR_SIZE] = "zfs.arc.hdr_size",
+   [PCP_ZFS_ARC_MFU_SIZE] = "zfs.arc.mfu.size",
+   [PCP_ZFS_ARC_MRU_SIZE] = "zfs.arc.mru.size",
+   [PCP_ZFS_ARC_SIZE] = "zfs.arc.size",
 
    [PCP_ZRAM_CAPACITY] = "zram.capacity",
    [PCP_ZRAM_ORIGINAL] = "zram.mm_stat.data_size.original",
@@ -562,6 +578,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    const ProcessList* pl = this->pl;
+   const PCPProcessList* ppl = (const PCPProcessList*) pl;
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
@@ -570,6 +587,11 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[0] = usedMem;
    this->values[1] = buffersMem;
    this->values[2] = cachedMem;
+
+   if (ppl->zfs.enabled != 0) {
+      this->values[0] -= ppl->zfs.size;
+      this->values[2] += ppl->zfs.size;
+   }
 }
 
 void Platform_setSwapValues(Meter* this) {
@@ -604,6 +626,18 @@ void Platform_setZramValues(Meter* this) {
    this->total = stats.totalZram;
    this->values[0] = stats.usedZramComp;
    this->values[1] = stats.usedZramOrig;
+}
+
+void Platform_setZfsArcValues(Meter* this) {
+   const PCPProcessList* ppl = (const PCPProcessList*) this->pl;
+
+   ZfsArcMeter_readStats(this, &(ppl->zfs));
+}
+
+void Platform_setZfsCompressedArcValues(Meter* this) {
+   const PCPProcessList* ppl = (const PCPProcessList*) this->pl;
+
+   ZfsCompressedArcMeter_readStats(this, &(ppl->zfs));
 }
 
 char* Platform_getProcessEnv(pid_t pid) {

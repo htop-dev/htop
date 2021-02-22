@@ -62,6 +62,10 @@ void Platform_setSwapValues(Meter* this);
 
 void Platform_setZramValues(Meter* this);
 
+void Platform_setZfsArcValues(Meter* this);
+
+void Platform_setZfsCompressedArcValues(Meter* this);
+
 char* Platform_getProcessEnv(pid_t pid);
 
 char* Platform_getInodeFilename(pid_t pid, ino_t inode);
@@ -132,6 +136,17 @@ typedef enum Metric_ {
    PCP_PSI_IOFULL,		/* kernel.all.pressure.io.full.avg */
    PCP_PSI_MEMSOME,		/* kernel.all.pressure.memory.some.avg */
    PCP_PSI_MEMFULL,		/* kernel.all.pressure.memory.full.avg */
+   PCP_ZFS_ARC_ANON_SIZE,        /* zfs.arc.anon_size */
+   PCP_ZFS_ARC_BONUS_SIZE,       /* zfs.arc.bonus_size */
+   PCP_ZFS_ARC_COMPRESSED_SIZE,  /* zfs.arc.compressed_size */
+   PCP_ZFS_ARC_UNCOMPRESSED_SIZE,  /* zfs.arc.uncompressed_size */
+   PCP_ZFS_ARC_C_MAX,            /* zfs.arc.c_max */
+   PCP_ZFS_ARC_DBUF_SIZE,        /* zfs.arc.dbuf_size */
+   PCP_ZFS_ARC_DNODE_SIZE,       /* zfs.arc.dnode_size */
+   PCP_ZFS_ARC_HDR_SIZE,         /* zfs.arc.hdr_size */
+   PCP_ZFS_ARC_MFU_SIZE,         /* zfs.arc.mfu_size */
+   PCP_ZFS_ARC_MRU_SIZE,         /* zfs.arc.mru_size */
+   PCP_ZFS_ARC_SIZE,             /* zfs.arc.size */
    PCP_ZRAM_CAPACITY,		/* zram.capacity */
    PCP_ZRAM_ORIGINAL,		/* zram.mm_stat.data_size.original */
    PCP_ZRAM_COMPRESSED,		/* zram.mm_stat.data_size.compressed */
