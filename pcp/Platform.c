@@ -602,11 +602,13 @@ void Platform_setSwapValues(Meter* this) {
 }
 
 void Platform_setZramValues(Meter* this) {
-   (void)this;
-
    int i, count = Metric_instanceCount(PCP_ZRAM_CAPACITY);
-   if(!count)
+   if (!count) {
+      this->total = 0;
+      this->values[0] = 0;
+      this->values[1] = 0;
       return;
+   }
 
    pmAtomValue *values = xCalloc(count, sizeof(pmAtomValue));
    ZramStats stats = {0};
