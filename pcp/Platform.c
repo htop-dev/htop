@@ -605,6 +605,9 @@ void Platform_setZramValues(Meter* this) {
    (void)this;
 
    int i, count = Metric_instanceCount(PCP_ZRAM_CAPACITY);
+   if(!count)
+      return;
+
    pmAtomValue *values = xCalloc(count, sizeof(pmAtomValue));
    ZramStats stats = {0};
 
