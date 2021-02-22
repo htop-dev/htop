@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "pcp/Platform.h"
 #include "UsersTable.h"
+#include "zfs/ZfsArcStats.h"
 
 typedef enum CPUMetric_ {
    CPU_TOTAL_TIME,
@@ -57,6 +58,7 @@ typedef struct PCPProcessList_ {
    pmAtomValue* cpu;		/* aggregate values for each metric */
    pmAtomValue** percpu;	/* per-processor values for each metric */
    pmAtomValue* values;		/* per-processor buffer for just one metric */
+   ZfsArcStats zfs;
 } PCPProcessList;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);

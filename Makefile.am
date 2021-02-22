@@ -338,7 +338,10 @@ pcp_platform_headers = \
 	pcp/ProcessField.h \
 	linux/PressureStallMeter.h \
 	linux/ZramMeter.h \
-	linux/ZramStats.h
+	linux/ZramStats.h \
+	zfs/ZfsArcMeter.h \
+	zfs/ZfsArcStats.h \
+	zfs/ZfsCompressedArcMeter.h
 
 if HTOP_PCP
 myhtopplatsources = \
@@ -346,7 +349,9 @@ myhtopplatsources = \
 	pcp/PCPProcessList.c \
 	pcp/Platform.c \
 	linux/PressureStallMeter.c \
-	linux/ZramMeter.c
+	linux/ZramMeter.c \
+	zfs/ZfsArcMeter.c \
+	zfs/ZfsCompressedArcMeter.c
 
 myhtopplatheaders = $(pcp_platform_headers)
 endif
