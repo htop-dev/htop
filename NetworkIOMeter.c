@@ -24,7 +24,7 @@ static unsigned long int cached_rxp_diff = 0;
 static unsigned long int cached_txb_diff = 0;
 static unsigned long int cached_txp_diff = 0;
 
-static void NetworkIOMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t len) {
+static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    static unsigned long long int cached_last_update = 0;
 
    struct timeval tv;
@@ -80,6 +80,12 @@ static void NetworkIOMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, s
       cached_txp_total = packetsTransmitted;
    }
 
+   this->values[0] = cached_rxb_diff;
+   this->values[1] = cached_txb_diff;
+   if (cached_rxb_diff + cached_txb_diff > this->total) {
+      this->total = cached_rxb_diff + cached_txb_diff;
+   }
+
    char bufferBytesReceived[12], bufferBytesTransmitted[12];
    Meter_humanUnit(bufferBytesReceived, cached_rxb_diff, sizeof(bufferBytesReceived));
    Meter_humanUnit(bufferBytesTransmitted, cached_txb_diff, sizeof(bufferBytesTransmitted));
@@ -116,7 +122,7 @@ const MeterClass NetworkIOMeter_class = {
    },
    .updateValues = NetworkIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
-   .maxItems = 0,
+   .maxItems = 2,
    .total = 100.0,
    .attributes = NetworkIOMeter_attributes,
    .name = "NetworkIO",
