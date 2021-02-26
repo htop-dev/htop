@@ -30,7 +30,7 @@ static void AvailableMetersPanel_delete(Object* object) {
    free(this);
 }
 
-static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, const MeterClass* type, int param, int column) {
+SYM_INLINE void AvailableMetersPanel_addMeter(Header* header, Panel* panel, const MeterClass* type, int param, int column) {
    const Meter* meter = Header_addMeterByClass(header, type, param, column);
    Panel_add(panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected(panel, Panel_size(panel) - 1);

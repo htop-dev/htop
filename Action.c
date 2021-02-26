@@ -479,7 +479,7 @@ static const struct {
    { .key = NULL, .info = NULL }
 };
 
-static inline void addattrstr( int attr, const char* str) {
+SYM_INLINE void addattrstr( int attr, const char* str) {
    attrset(attr);
    addstr(str);
 }

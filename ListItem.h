@@ -24,7 +24,7 @@ ListItem* ListItem_new(const char* value, int key);
 
 void ListItem_append(ListItem* this, const char* text);
 
-static inline const char* ListItem_getRef(const ListItem* this) {
+SYM_INLINE const char* ListItem_getRef(const ListItem* this) {
    return this->value;
 }
 

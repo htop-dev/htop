@@ -63,7 +63,7 @@ void MetersPanel_setMoving(MetersPanel* this, bool moving) {
    }
 }
 
-static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
+SYM_INLINE bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
    Panel* super = (Panel*) this;
    if (this->moving) {
       if (neighbor) {

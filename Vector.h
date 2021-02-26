@@ -32,7 +32,7 @@ void Vector_delete(Vector* this);
 void Vector_prune(Vector* this);
 
 void Vector_quickSortCustomCompare(Vector* this, Object_Compare compare);
-static inline void Vector_quickSort(Vector* this) {
+SYM_INLINE void Vector_quickSort(Vector* this) {
    Vector_quickSortCustomCompare(this, this->type->compare);
 }
 
@@ -58,11 +58,11 @@ unsigned int Vector_count(const Vector* this);
 
 #else /* NDEBUG */
 
-static inline Object* Vector_get(const Vector* this, int idx) {
+SYM_INLINE Object* Vector_get(const Vector* this, int idx) {
    return this->array[idx];
 }
 
-static inline int Vector_size(const Vector* this) {
+SYM_INLINE int Vector_size(const Vector* this) {
    return this->items;
 }
 

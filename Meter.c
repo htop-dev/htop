@@ -96,7 +96,7 @@ void Meter_setCaption(Meter* this, const char* caption) {
    free_and_xStrdup(&this->caption, caption);
 }
 
-static inline void Meter_displayBuffer(const Meter* this, const char* buffer, RichString* out) {
+SYM_INLINE void Meter_displayBuffer(const Meter* this, const char* buffer, RichString* out) {
    if (Object_displayFn(this)) {
       Object_display(this, out);
    } else {

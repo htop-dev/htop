@@ -40,7 +40,7 @@ static const char* const searchFunctions[] = {"Next  ", "Prev   ", "Cancel ", " 
 static const char* const searchKeys[] = {"F3", "S-F3", "Esc", "  "};
 static const int searchEvents[] = {KEY_F(3), KEY_F(15), 27, ERR};
 
-static inline void IncMode_initSearch(IncMode* search) {
+SYM_INLINE void IncMode_initSearch(IncMode* search) {
    memset(search, 0, sizeof(IncMode));
    search->bar = FunctionBar_new(searchFunctions, searchKeys, searchEvents);
    search->isFilter = false;
@@ -50,13 +50,13 @@ static const char* const filterFunctions[] = {"Done  ", "Clear ", " Filter: ", N
 static const char* const filterKeys[] = {"Enter", "Esc", "  "};
 static const int filterEvents[] = {13, 27, ERR};
 
-static inline void IncMode_initFilter(IncMode* filter) {
+SYM_INLINE void IncMode_initFilter(IncMode* filter) {
    memset(filter, 0, sizeof(IncMode));
    filter->bar = FunctionBar_new(filterFunctions, filterKeys, filterEvents);
    filter->isFilter = true;
 }
 
-static inline void IncMode_done(IncMode* mode) {
+SYM_INLINE void IncMode_done(IncMode* mode) {
    FunctionBar_delete(mode->bar);
 }
 

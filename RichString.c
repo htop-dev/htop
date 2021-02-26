@@ -52,7 +52,7 @@ void RichString_rewind(RichString* this, int count) {
 
 #ifdef HAVE_LIBNCURSESW
 
-static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
+SYM_INLINE int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
    wchar_t data[len + 1];
    len = mbstowcs(data, data_c, len);
    if (len <= 0)
@@ -97,7 +97,7 @@ int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_
    return pos - from;
 }
 
-static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data, int from, int len) {
+SYM_INLINE int RichString_writeFromAscii(RichString* this, int attrs, const char* data, int from, int len) {
    int newLen = from + len;
    RichString_setLen(this, newLen);
    for (int i = from, j = 0; i < newLen; i++, j++) {
@@ -136,7 +136,7 @@ int RichString_findChar(const RichString* this, char c, int start) {
 
 #else /* HAVE_LIBNCURSESW */
 
-static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
+SYM_INLINE int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
    int newLen = from + len;
    RichString_setLen(this, newLen);
    for (int i = from, j = 0; i < newLen; i++, j++) {
@@ -153,7 +153,7 @@ int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_
    return written;
 }
 
-static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data_c, int from, int len) {
+SYM_INLINE int RichString_writeFromAscii(RichString* this, int attrs, const char* data_c, int from, int len) {
    return RichString_writeFromWide(this, attrs, data_c, from, len);
 }
 

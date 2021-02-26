@@ -292,7 +292,7 @@ static int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseO
 }
 
 /* stpcpy, but also converts newlines to spaces */
-static inline char *stpcpyWithNewlineConversion(char *dstStr, const char *srcStr) {
+SYM_INLINE char *stpcpyWithNewlineConversion(char *dstStr, const char *srcStr) {
    for (; *srcStr; ++srcStr) {
       *dstStr++ = (*srcStr == '\n') ? ' ' : *srcStr;
    }

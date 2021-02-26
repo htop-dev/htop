@@ -279,7 +279,7 @@ void ProcessList_delete(ProcessList* pl) {
    free(this);
 }
 
-static inline unsigned long long LinuxProcessList_adjustTime(unsigned long long t) {
+SYM_INLINE unsigned long long LinuxProcessList_adjustTime(unsigned long long t) {
    return t * 100 / jiffy;
 }
 
@@ -481,7 +481,7 @@ typedef struct LibraryData_ {
     bool exec;
 } LibraryData;
 
-static inline uint64_t fast_strtoull_dec(char **str, int maxlen) {
+SYM_INLINE uint64_t fast_strtoull_dec(char **str, int maxlen) {
    register uint64_t result = 0;
 
    if (!maxlen)
@@ -496,7 +496,7 @@ static inline uint64_t fast_strtoull_dec(char **str, int maxlen) {
    return result;
 }
 
-static inline uint64_t fast_strtoull_hex(char **str, int maxlen) {
+SYM_INLINE uint64_t fast_strtoull_hex(char **str, int maxlen) {
    register uint64_t result = 0;
    register int nibble, letter;
    const long valid_mask = 0x03FF007E;
@@ -1524,7 +1524,7 @@ errorReadingProcess:
    return true;
 }
 
-static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
+SYM_INLINE void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    memory_t availableMem = 0;
    memory_t freeMem = 0;
    memory_t totalMem = 0;
@@ -1653,7 +1653,7 @@ static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
    closedir(dir);
 }
 
-static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
+SYM_INLINE void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
    memory_t totalZram = 0;
    memory_t usedZramComp = 0;
    memory_t usedZramOrig = 0;
@@ -1701,7 +1701,7 @@ static inline void LinuxProcessList_scanZramInfo(LinuxProcessList* this) {
    this->zram.usedZramOrig = usedZramOrig / 1024;
 }
 
-static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
+SYM_INLINE void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    memory_t dbufSize = 0;
    memory_t dnodeSize = 0;
    memory_t bonusSize = 0;
@@ -1772,7 +1772,7 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
    }
 }
 
-static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
+SYM_INLINE double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
 
    FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {

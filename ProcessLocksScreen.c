@@ -38,7 +38,7 @@ static void ProcessLocksScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Snapshot of file locks of process %d - %s", ((ProcessLocksScreen*)this)->pid, Process_getCommand(this->process));
 }
 
-static inline void FileLocks_Data_clear(FileLocks_Data* data) {
+SYM_INLINE void FileLocks_Data_clear(FileLocks_Data* data) {
    free(data->locktype);
    free(data->exclusive);
    free(data->readwrite);

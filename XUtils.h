@@ -35,15 +35,15 @@ void* xReallocArray(void* ptr, size_t nmemb, size_t size) ATTR_ALLOC_SIZE2(2, 3)
  * String_startsWith gives better performance if strlen(match) can be computed
  * at compile time (e.g. when they are immutable string literals). :)
  */
-static inline bool String_startsWith(const char* s, const char* match) {
+SYM_INLINE bool String_startsWith(const char* s, const char* match) {
    return strncmp(s, match, strlen(match)) == 0;
 }
 
-static inline bool String_contains_i(const char* s1, const char* s2) {
+SYM_INLINE bool String_contains_i(const char* s1, const char* s2) {
    return strcasestr(s1, s2) != NULL;
 }
 
-static inline bool String_eq(const char* s1, const char* s2) {
+SYM_INLINE bool String_eq(const char* s1, const char* s2) {
    return strcmp(s1, s2) == 0;
 }
 

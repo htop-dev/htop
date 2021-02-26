@@ -175,7 +175,7 @@ void Process_fillStarttimeBuffer(Process* this) {
    strftime(this->starttime_show, sizeof(this->starttime_show) - 1, (this->starttime_ctime > (time(NULL) - 86400)) ? "%R " : "%b%d ", &date);
 }
 
-static inline void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
+SYM_INLINE void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
    int start = RichString_size(str);
    int len = 0;
    const char* comm = this->comm;

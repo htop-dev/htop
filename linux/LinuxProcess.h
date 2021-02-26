@@ -136,7 +136,7 @@ typedef struct LinuxProcess_ {
 
 #define Process_isKernelThread(_process) (((const LinuxProcess*)(_process))->isKernelThread)
 
-static inline bool Process_isUserlandThread(const Process* this) {
+SYM_INLINE bool Process_isUserlandThread(const Process* this) {
    return this->pid != this->tgid;
 }
 

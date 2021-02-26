@@ -75,13 +75,13 @@ typedef struct Settings_ {
 
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
 
-static inline ProcessField Settings_getActiveSortKey(const Settings* this) {
+SYM_INLINE ProcessField Settings_getActiveSortKey(const Settings* this) {
    return (this->treeView)
           ? (this->treeViewAlwaysByPID ? PID : this->treeSortKey)
           : this->sortKey;
 }
 
-static inline int Settings_getActiveDirection(const Settings* this) {
+SYM_INLINE int Settings_getActiveDirection(const Settings* this) {
    return this->treeView ? this->treeDirection : this->direction;
 }
 

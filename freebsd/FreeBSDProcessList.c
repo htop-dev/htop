@@ -171,7 +171,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
+SYM_INLINE void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
 
    int cpus   = pl->cpuCount;   // actual CPU count
@@ -253,7 +253,7 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
    }
 }
 
-static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
+SYM_INLINE void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
 
    // @etosan:
