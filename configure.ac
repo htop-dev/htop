@@ -566,6 +566,8 @@ if test "x$enable_debug" != xyes; then
 else
    AM_CPPFLAGS="$AM_CPPFLAGS -ggdb3"
    AC_DEFINE([SYM_PRIVATE], [], [Control visibility of symbols to be used only inside a compilation unit.])
+   AX_CHECK_COMPILE_FLAG([-Wno-error=missing-prototypes], [AM_CFLAGS="$AM_CFLAGS -Wno-error=missing-prototypes"], , [-Werror])
+   AX_CHECK_COMPILE_FLAG([-Wno-missing-prototypes], [AM_CFLAGS="$AM_CFLAGS -Wno-missing-prototypes"], , [-Werror])
 fi
 AC_DEFINE([SYM_INLINE], [static inline], [Control inlining of symbols (caution: used in headers too).])
 
