@@ -334,7 +334,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       double value = 0.0;
       for (uint8_t i = 0; i < this->curItems; i++)
          value += this->values[i];
-      value /= this->total;
       data->values[nValues - 1] = value;
    }
 
@@ -345,8 +344,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    }
    for (; i < nValues - 1; i += 2, k++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
-      int v1 = CLAMP((int) lround(data->values[i] * pix), 1, pix);
-      int v2 = CLAMP((int) lround(data->values[i + 1] * pix), 1, pix);
+      if (this->total < 1)
+         this->total = 1;
+      int v1 = CLAMP((int) lround(data->values[i] / this->total * pix), 1, pix);
+      int v2 = CLAMP((int) lround(data->values[i + 1] / this->total * pix), 1, pix);
 
       int colorIdx = GRAPH_1;
       for (int line = 0; line < GRAPH_HEIGHT; line++) {
