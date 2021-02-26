@@ -562,9 +562,12 @@ AC_ARG_ENABLE([debug],
               [enable_debug=no])
 if test "x$enable_debug" != xyes; then
    AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"
+   AC_DEFINE([SYM_PRIVATE], [static], [Control visibility of symbols to be used only inside a compilation unit.])
 else
    AM_CPPFLAGS="$AM_CPPFLAGS -ggdb3"
+   AC_DEFINE([SYM_PRIVATE], [], [Control visibility of symbols to be used only inside a compilation unit.])
 fi
+AC_DEFINE([SYM_INLINE], [static inline], [Control inlining of symbols (caution: used in headers too).])
 
 
 AC_SUBST([AM_CFLAGS])
