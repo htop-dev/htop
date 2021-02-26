@@ -255,7 +255,7 @@ char* xStrndup(const char* str, size_t len) {
    return data;
 }
 
-static ssize_t readfd_internal(int fd, void* buffer, size_t count) {
+SYM_PRIVATE ssize_t readfd_internal(int fd, void* buffer, size_t count) {
    if (!count) {
       close(fd);
       return -EINVAL;

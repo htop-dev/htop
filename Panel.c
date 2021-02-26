@@ -333,7 +333,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    move(0, 0);
 }
 
-static int Panel_headerHeight(const Panel* this) {
+SYM_PRIVATE int Panel_headerHeight(const Panel* this) {
    return RichString_sizeVal(this->header) > 0 ? 1 : 0;
 }
 

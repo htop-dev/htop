@@ -30,7 +30,7 @@ static unsigned long int cached_read_diff = 0;
 static unsigned long int cached_write_diff = 0;
 static double cached_utilisation_diff = 0.0;
 
-static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
+SYM_PRIVATE void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    static unsigned long long int cached_last_update = 0;
 
    struct timeval tv;
@@ -86,7 +86,7 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    snprintf(buffer, len, "%sB %sB %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
 }
 
-static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+SYM_PRIVATE void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    if (!hasData) {
       RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
       return;

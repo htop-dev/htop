@@ -321,7 +321,7 @@ SYM_INLINE void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap *= pageSizeKb;
 }
 
-static void FreeBSDProcessList_scanTTYs(ProcessList* pl) {
+SYM_PRIVATE void FreeBSDProcessList_scanTTYs(ProcessList* pl) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
 
    // scan /dev/tty*
@@ -385,7 +385,7 @@ err2:
    }
 }
 
-static char* FreeBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
+SYM_PRIVATE char* FreeBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
       return xStrdup(kproc->ki_comm);
@@ -410,7 +410,7 @@ static char* FreeBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_pr
    return comm;
 }
 
-static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
+SYM_PRIVATE char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
    if (kproc->ki_jid == 0)
       return xStrdup("-");
 

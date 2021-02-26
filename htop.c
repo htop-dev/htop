@@ -48,11 +48,11 @@ enum CapMode {
 };
 #endif
 
-static void printVersionFlag(void) {
+SYM_PRIVATE void printVersionFlag(void) {
    fputs(PACKAGE " " VERSION "\n", stdout);
 }
 
-static void printHelpFlag(void) {
+SYM_PRIVATE void printHelpFlag(void) {
    fputs(PACKAGE " " VERSION "\n"
          COPYRIGHT "\n"
          "Released under the GNU GPLv2.\n\n"
@@ -100,7 +100,7 @@ typedef struct CommandLineSettings_ {
 #endif
 } CommandLineSettings;
 
-static CommandLineSettings parseArguments(int argc, char** argv) {
+SYM_PRIVATE CommandLineSettings parseArguments(int argc, char** argv) {
 
    CommandLineSettings flags = {
       .pidMatchList = NULL,
@@ -283,7 +283,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
    return flags;
 }
 
-static void millisleep(unsigned long millisec) {
+SYM_PRIVATE void millisleep(unsigned long millisec) {
    struct timespec req = {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
@@ -293,7 +293,7 @@ static void millisleep(unsigned long millisec) {
    }
 }
 
-static void setCommFilter(State* state, char** commFilter) {
+SYM_PRIVATE void setCommFilter(State* state, char** commFilter) {
    ProcessList* pl = state->pl;
    IncSet* inc = state->mainPanel->inc;
 
@@ -305,7 +305,7 @@ static void setCommFilter(State* state, char** commFilter) {
 }
 
 #ifdef HAVE_LIBCAP
-static int dropCapabilities(enum CapMode mode) {
+SYM_PRIVATE int dropCapabilities(enum CapMode mode) {
 
    if (mode == CAP_MODE_NONE)
       return 0;

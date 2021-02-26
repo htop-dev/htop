@@ -44,12 +44,12 @@ void MainPanel_pidSearch(MainPanel* this, int ch) {
    }
 }
 
-static const char* MainPanel_getValue(Panel* this, int i) {
+SYM_PRIVATE const char* MainPanel_getValue(Panel* this, int i) {
    const Process* p = (const Process*) Panel_get(this, i);
    return Process_getCommand(p);
 }
 
-static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    MainPanel* this = (MainPanel*) super;
 
    HandlerResult result = IGNORED;
@@ -165,7 +165,7 @@ bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Ar
    return ok;
 }
 
-static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
+SYM_PRIVATE void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
    MainPanel* this = (MainPanel*) super;
 
    // Do not hide active search and filter bar.
@@ -178,7 +178,7 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
    }
 }
 
-static void MainPanel_printHeader(Panel* super) {
+SYM_PRIVATE void MainPanel_printHeader(Panel* super) {
    MainPanel* this = (MainPanel*) super;
    ProcessList_printHeader(this->state->pl, &super->header);
 }

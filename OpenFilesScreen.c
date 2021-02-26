@@ -39,7 +39,7 @@ typedef struct OpenFiles_FileData_ {
    struct OpenFiles_FileData_* next;
 } OpenFiles_FileData;
 
-static size_t getIndexForType(char type) {
+SYM_PRIVATE size_t getIndexForType(char type) {
    switch (type) {
    case 'f':
       return 0;
@@ -61,7 +61,7 @@ static size_t getIndexForType(char type) {
    abort();
 }
 
-static const char* getDataForType(const OpenFiles_Data* data, char type) {
+SYM_PRIVATE const char* getDataForType(const OpenFiles_Data* data, char type) {
    size_t index = getIndexForType(type);
    return data->data[index] ? data->data[index] : "";
 }
@@ -81,11 +81,11 @@ void OpenFilesScreen_delete(Object* this) {
    free(InfoScreen_done((InfoScreen*)this));
 }
 
-static void OpenFilesScreen_draw(InfoScreen* this) {
+SYM_PRIVATE void OpenFilesScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Snapshot of files open in process %d - %s", ((OpenFilesScreen*)this)->pid, Process_getCommand(this->process));
 }
 
-static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
+SYM_PRIVATE OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    OpenFiles_ProcessData* pdata = xCalloc(1, sizeof(OpenFiles_ProcessData));
 
    int fdpair[2] = {0, 0};
@@ -194,12 +194,12 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    return pdata;
 }
 
-static void OpenFiles_Data_clear(OpenFiles_Data* data) {
+SYM_PRIVATE void OpenFiles_Data_clear(OpenFiles_Data* data) {
    for (size_t i = 0; i < ARRAYSIZE(data->data); i++)
       free(data->data[i]);
 }
 
-static void OpenFilesScreen_scan(InfoScreen* this) {
+SYM_PRIVATE void OpenFilesScreen_scan(InfoScreen* this) {
    Panel* panel = this->display;
    int idx = Panel_getSelectedIndex(panel);
    Panel_prune(panel);

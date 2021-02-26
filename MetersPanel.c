@@ -40,7 +40,7 @@ void MetersPanel_cleanup() {
    }
 }
 
-static void MetersPanel_delete(Object* object) {
+SYM_PRIVATE void MetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    MetersPanel* this = (MetersPanel*) object;
    Panel_done(super);
@@ -84,7 +84,7 @@ SYM_INLINE bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int sel
    return false;
 }
 
-static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    MetersPanel* this = (MetersPanel*) super;
 
    int selected = Panel_getSelectedIndex(super);

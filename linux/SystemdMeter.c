@@ -58,7 +58,7 @@ static unsigned int nInstalledJobs = INVALID_VALUE;
 static unsigned int nNames = INVALID_VALUE;
 static unsigned int nJobs = INVALID_VALUE;
 
-static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
+SYM_PRIVATE void SystemdMeter_done(ATTR_UNUSED Meter* this) {
    free(systemState);
    systemState = NULL;
 
@@ -83,7 +83,7 @@ static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
 }
 
 #if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
-static int updateViaLib(void) {
+SYM_PRIVATE int updateViaLib(void) {
 #ifndef BUILD_STATIC
    if (!dlopenHandle) {
       dlopenHandle = dlopen("libsystemd.so.0", RTLD_LAZY);
@@ -194,7 +194,7 @@ dlfailure:
 }
 #endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
 
-static void updateViaExec(void) {
+SYM_PRIVATE void updateViaExec(void) {
    int fdpair[2];
    if (pipe(fdpair) < 0)
       return;
@@ -262,7 +262,7 @@ static void updateViaExec(void) {
    fclose(commandOutput);
 }
 
-static void SystemdMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void SystemdMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
    free(systemState);
    systemState = NULL;
    nFailedUnits = nInstalledJobs = nNames = nJobs = INVALID_VALUE;
@@ -277,7 +277,7 @@ static void SystemdMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, siz
    xSnprintf(buffer, size, "%s", systemState ? systemState : "???");
 }
 
-static int zeroDigitColor(unsigned int value) {
+SYM_PRIVATE int zeroDigitColor(unsigned int value) {
    switch (value) {
    case 0:
       return CRT_colors[METER_VALUE];
@@ -288,7 +288,7 @@ static int zeroDigitColor(unsigned int value) {
    }
 }
 
-static int valueDigitColor(unsigned int value) {
+SYM_PRIVATE int valueDigitColor(unsigned int value) {
    switch (value) {
       case 0:
          return CRT_colors[METER_VALUE_NOTICE];
@@ -300,7 +300,7 @@ static int valueDigitColor(unsigned int value) {
 }
 
 
-static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+SYM_PRIVATE void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    char buffer[16];
 
    int color = (systemState && String_eq(systemState, "running")) ? METER_VALUE_OK : METER_VALUE_ERROR;

@@ -30,7 +30,7 @@ struct kern {
    short int version[3];
 };
 
-static void GetKernelVersion(struct kern* k) {
+SYM_PRIVATE void GetKernelVersion(struct kern* k) {
    static short int version_[3] = {0};
    if (!version_[0]) {
       // just in case it fails someday
@@ -50,7 +50,7 @@ static void GetKernelVersion(struct kern* k) {
 positive value if less than the installed version
 negative value if more than the installed version
 */
-static int CompareKernelVersion(short int major, short int minor, short int component) {
+SYM_PRIVATE int CompareKernelVersion(short int major, short int minor, short int component) {
    struct kern k;
    GetKernelVersion(&k);
 
@@ -67,7 +67,7 @@ static int CompareKernelVersion(short int major, short int minor, short int comp
    return 0;
 }
 
-static void ProcessList_getHostInfo(host_basic_info_data_t* p) {
+SYM_PRIVATE void ProcessList_getHostInfo(host_basic_info_data_t* p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
 
    if (0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
@@ -75,7 +75,7 @@ static void ProcessList_getHostInfo(host_basic_info_data_t* p) {
    }
 }
 
-static void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p) {
+SYM_PRIVATE void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p) {
    if (NULL != p && NULL != *p) {
       if (0 != munmap(*p, vm_page_size)) {
          CRT_fatalError("Unable to free old CPU load information");
@@ -84,7 +84,7 @@ static void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p) {
    }
 }
 
-static unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
+SYM_PRIVATE unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
    mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
    unsigned cpu_count;
 
@@ -96,7 +96,7 @@ static unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
    return cpu_count;
 }
 
-static void ProcessList_getVMStats(vm_statistics_t p) {
+SYM_PRIVATE void ProcessList_getVMStats(vm_statistics_t p) {
    mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
 
    if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)p, &info_size) != 0) {
@@ -104,7 +104,7 @@ static void ProcessList_getVMStats(vm_statistics_t p) {
    }
 }
 
-static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
+SYM_PRIVATE struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
    struct kinfo_proc* processes = NULL;
 
@@ -158,7 +158,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-static double ticksToNanoseconds(const double ticks) {
+SYM_PRIVATE double ticksToNanoseconds(const double ticks) {
    const double nanos_per_sec = 1e9;
    return (ticks / Platform_timebaseToNS) * (nanos_per_sec / (double) Platform_clockTicksPerSec);
 }

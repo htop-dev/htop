@@ -196,7 +196,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void OpenBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+SYM_PRIVATE void OpenBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    //const OpenBSDProcess* op = (const OpenBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -210,7 +210,7 @@ static void OpenBSDProcess_writeField(const Process* this, RichString* str, Proc
    RichString_appendWide(str, attr, buffer);
 }
 
-static int OpenBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+SYM_PRIVATE int OpenBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const OpenBSDProcess* p1 = (const OpenBSDProcess*)v1;
    const OpenBSDProcess* p2 = (const OpenBSDProcess*)v2;
 

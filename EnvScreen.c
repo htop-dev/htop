@@ -24,11 +24,11 @@ void EnvScreen_delete(Object* this) {
    free(InfoScreen_done((InfoScreen*)this));
 }
 
-static void EnvScreen_draw(InfoScreen* this) {
+SYM_PRIVATE void EnvScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Environment of process %d - %s", this->process->pid, Process_getCommand(this->process));
 }
 
-static void EnvScreen_scan(InfoScreen* this) {
+SYM_PRIVATE void EnvScreen_scan(InfoScreen* this) {
    Panel* panel = this->display;
    int idx = MAXIMUM(Panel_getSelectedIndex(panel), 0);
 

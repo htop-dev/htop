@@ -295,7 +295,7 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
    return false;
 }
 
-static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
+SYM_PRIVATE bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
    for (int devn = 0;; devn++) {
       mib[2] = devn;
       if (sysctl(mib, 3, snsrdev, sdlen, NULL, 0) == -1) {

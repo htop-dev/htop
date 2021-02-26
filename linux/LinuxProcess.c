@@ -105,7 +105,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 /* This function returns the string displayed in Command column, so that sorting
  * happens on what is displayed - whether comm, full path, basename, etc.. So
  * this follows LinuxProcess_writeField(COMM) and LinuxProcess_writeCommand */
-static const char* LinuxProcess_getCommandStr(const Process *this) {
+SYM_PRIVATE const char* LinuxProcess_getCommandStr(const Process *this) {
    const LinuxProcess *lp = (const LinuxProcess *)this;
    if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !lp->mergedCommand.str) {
       return this->comm;
@@ -144,7 +144,7 @@ effort class. The priority within the best effort class will  be
 dynamically  derived  from  the  cpu  nice level of the process:
 io_priority = (cpu_nice + 20) / 5. -- From ionice(1) man page
 */
-static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
+SYM_PRIVATE int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
    if (IOPriority_class(this->ioPriority) == IOPRIO_CLASS_NONE) {
       return IOPriority_tuple(IOPRIO_CLASS_BE, (this->super.nice + 20) / 5);
    }
@@ -176,7 +176,7 @@ bool LinuxProcess_setIOPriority(Process* this, Arg ioprio) {
 }
 
 #ifdef HAVE_DELAYACCT
-static void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
+SYM_PRIVATE void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
    if (isnan(delay_percent)) {
       xSnprintf(buffer, n, " N/A  ");
    } else {
@@ -194,7 +194,7 @@ colorized for better readability, and it is implicit that only upto
 */
 #define TASK_COMM_LEN 16
 
-static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdlineBasenameOffset, int *pCommStart, int *pCommEnd) {
+SYM_PRIVATE bool findCommInCmdline(const char *comm, const char *cmdline, int cmdlineBasenameOffset, int *pCommStart, int *pCommEnd) {
    /* Try to find procComm in tokenized cmdline - this might in rare cases
     * mis-identify a string or fail, if comm or cmdline had been unsuitably
     * modified by the process */
@@ -228,7 +228,7 @@ static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdline
    return false;
 }
 
-static int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseOffset, const char *exe, int exeBaseOffset, int exeBaseLen) {
+SYM_PRIVATE int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseOffset, const char *exe, int exeBaseOffset, int exeBaseLen) {
    int matchLen;       /* matching length to be returned */
    char delim;         /* delimiter following basename */
 
@@ -507,7 +507,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
    mc->commEnd = commEnd;
 }
 
-static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
+SYM_PRIVATE void LinuxProcess_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
    const LinuxProcess *lp = (const LinuxProcess *)this;
    const LinuxProcessMergedCommand *mc = &lp->mergedCommand;
 
@@ -557,7 +557,7 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAtt
       RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep2, 1);
 }
 
-static void LinuxProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
+SYM_PRIVATE void LinuxProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
    /* This code is from Process_writeField for COMM, but we invoke
     * LinuxProcess_writeCommand to display
     * /proc/pid/exe (or its basename)│/proc/pid/comm│/proc/pid/cmdline */
@@ -603,7 +603,7 @@ static void LinuxProcess_writeCommandField(const Process *this, RichString *str,
    }
 }
 
-static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+SYM_PRIVATE void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const LinuxProcess* lp = (const LinuxProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
@@ -756,14 +756,14 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    RichString_appendWide(str, attr, buffer);
 }
 
-static double adjustNaN(double num) {
+SYM_PRIVATE double adjustNaN(double num) {
    if (isnan(num))
       return -0.0005;
 
    return num;
 }
 
-static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+SYM_PRIVATE int LinuxProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const LinuxProcess* p1 = (const LinuxProcess*)v1;
    const LinuxProcess* p2 = (const LinuxProcess*)v2;
 

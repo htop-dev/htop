@@ -57,7 +57,7 @@ void Process_delete(Object* cast) {
    free(cast);
 }
 
-static void UnsupportedProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+SYM_PRIVATE void UnsupportedProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const UnsupportedProcess* up = (const UnsupportedProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
@@ -77,7 +77,7 @@ static void UnsupportedProcess_writeField(const Process* this, RichString* str, 
    RichString_appendWide(str, attr, buffer);
 }
 
-static int UnsupportedProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+SYM_PRIVATE int UnsupportedProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const UnsupportedProcess* p1 = (const UnsupportedProcess*)v1;
    const UnsupportedProcess* p2 = (const UnsupportedProcess*)v2;
 

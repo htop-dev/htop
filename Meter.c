@@ -153,7 +153,7 @@ ListItem* Meter_toListItem(const Meter* this, bool moving) {
 
 /* ---------- TextMeterMode ---------- */
 
-static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
+SYM_PRIVATE void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    char buffer[METER_BUFFER_LEN];
    Meter_updateValues(this, buffer, sizeof(buffer));
 
@@ -177,7 +177,7 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
-static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
+SYM_PRIVATE void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    char buffer[METER_BUFFER_LEN];
    Meter_updateValues(this, buffer, sizeof(buffer));
 
@@ -291,7 +291,7 @@ static const char* const GraphMeterMode_dotsAscii[] = {
    /*20*/":", /*21*/":", /*22*/":"
 };
 
-static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+SYM_PRIVATE void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    if (!this->drawData) {
       this->drawData = xCalloc(1, sizeof(GraphData));
@@ -382,12 +382,12 @@ static const char* const LEDMeterMode_digitsUtf8[] = {
 
 static const char* const* LEDMeterMode_digits;
 
-static void LEDMeterMode_drawDigit(int x, int y, int n) {
+SYM_PRIVATE void LEDMeterMode_drawDigit(int x, int y, int n) {
    for (int i = 0; i < 3; i++)
       mvaddstr(y+i, x, LEDMeterMode_digits[i * 10 + n]);
 }
 
-static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
+SYM_PRIVATE void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    (void) w;
 
 #ifdef HAVE_LIBNCURSESW
@@ -466,13 +466,13 @@ const MeterMode* const Meter_modes[] = {
 
 /* Blank meter */
 
-static void BlankMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void BlankMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
    if (size > 0) {
       *buffer = 0;
    }
 }
 
-static void BlankMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+SYM_PRIVATE void BlankMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    RichString_prune(out);
 }
 

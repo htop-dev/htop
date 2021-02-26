@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static void IncMode_reset(IncMode* mode) {
+SYM_PRIVATE void IncMode_reset(IncMode* mode) {
    mode->index = 0;
    mode->buffer[0] = 0;
 }
@@ -77,7 +77,7 @@ void IncSet_delete(IncSet* this) {
    free(this);
 }
 
-static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
+SYM_PRIVATE void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
    const Object* selected = Panel_getSelected(panel);
    Panel_prune(panel);
    if (this->filtering) {
@@ -105,7 +105,7 @@ static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
    }
 }
 
-static bool search(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue) {
+SYM_PRIVATE bool search(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue) {
    int size = Panel_size(panel);
    for (int i = 0; i < size; i++) {
       if (String_contains_i(getPanelValue(panel, i), mode->buffer)) {
@@ -117,7 +117,7 @@ static bool search(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getP
    return false;
 }
 
-static bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
+SYM_PRIVATE bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
    int size = Panel_size(panel);
    int here = Panel_getSelectedIndex(panel);
    int i = here;

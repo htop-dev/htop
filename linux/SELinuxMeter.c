@@ -27,7 +27,7 @@ static const int SELinuxMeter_attributes[] = {
 static bool enabled = false;
 static bool enforcing = false;
 
-static bool hasSELinuxMount(void) {
+SYM_PRIVATE bool hasSELinuxMount(void) {
    struct statfs sfbuf;
    int r = statfs("/sys/fs/selinux", &sfbuf);
    if (r != 0) {
@@ -47,11 +47,11 @@ static bool hasSELinuxMount(void) {
    return true;
 }
 
-static bool isSelinuxEnabled(void) {
+SYM_PRIVATE bool isSelinuxEnabled(void) {
    return hasSELinuxMount() && (0 == access("/etc/selinux/config", F_OK));
 }
 
-static bool isSelinuxEnforcing(void) {
+SYM_PRIVATE bool isSelinuxEnforcing(void) {
    if (!enabled) {
       return false;
    }
@@ -69,7 +69,7 @@ static bool isSelinuxEnforcing(void) {
    return !!enforce;
 }
 
-static void SELinuxMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t len) {
+SYM_PRIVATE void SELinuxMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t len) {
    enabled = isSelinuxEnabled();
    enforcing = isSelinuxEnforcing();
 

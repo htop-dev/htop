@@ -81,7 +81,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
 
 // ----------------------------------------
 
-static void Action_runSetup(State* st) {
+SYM_PRIVATE void Action_runSetup(State* st) {
    ScreenManager* scr = ScreenManager_new(st->header, st->settings, st, true);
    CategoriesPanel* panelCategories = CategoriesPanel_new(scr, st->settings, st->header, st->pl);
    ScreenManager_add(scr, (Panel*) panelCategories, 16);
@@ -95,7 +95,7 @@ static void Action_runSetup(State* st) {
    }
 }
 
-static bool changePriority(MainPanel* panel, int delta) {
+SYM_PRIVATE bool changePriority(MainPanel* panel, int delta) {
    bool anyTagged;
    bool ok = MainPanel_foreachProcess(panel, Process_changePriorityBy, (Arg) { .i = delta }, &anyTagged);
    if (!ok)
@@ -103,7 +103,7 @@ static bool changePriority(MainPanel* panel, int delta) {
    return anyTagged;
 }
 
-static void addUserToVector(ht_key_t key, void* userCast, void* panelCast) {
+SYM_PRIVATE void addUserToVector(ht_key_t key, void* userCast, void* panelCast) {
    const char* user = userCast;
    Panel* panel = panelCast;
    Panel_add(panel, (Object*) ListItem_new(user, key));
@@ -119,7 +119,7 @@ bool Action_setUserOnly(const char* userName, uid_t* userId) {
    return false;
 }
 
-static void tagAllChildren(Panel* panel, Process* parent) {
+SYM_PRIVATE void tagAllChildren(Panel* panel, Process* parent) {
    parent->tag = true;
    pid_t ppid = parent->pid;
    for (int i = 0; i < Panel_size(panel); i++) {
@@ -130,7 +130,7 @@ static void tagAllChildren(Panel* panel, Process* parent) {
    }
 }
 
-static bool expandCollapse(Panel* panel) {
+SYM_PRIVATE bool expandCollapse(Panel* panel) {
    Process* p = (Process*) Panel_getSelected(panel);
    if (!p)
       return false;
@@ -139,7 +139,7 @@ static bool expandCollapse(Panel* panel) {
    return true;
 }
 
-static bool collapseIntoParent(Panel* panel) {
+SYM_PRIVATE bool collapseIntoParent(Panel* panel) {
    const Process* p = (Process*) Panel_getSelected(panel);
    if (!p)
       return false;
@@ -163,7 +163,7 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
 
 // ----------------------------------------
 
-static Htop_Reaction actionSetSortColumn(State* st) {
+SYM_PRIVATE Htop_Reaction actionSetSortColumn(State* st) {
    Htop_Reaction reaction = HTOP_OK;
    Panel* sortPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
@@ -188,50 +188,50 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
-static Htop_Reaction actionSortByPID(State* st) {
+SYM_PRIVATE Htop_Reaction actionSortByPID(State* st) {
    return Action_setSortKey(st->settings, PID);
 }
 
-static Htop_Reaction actionSortByMemory(State* st) {
+SYM_PRIVATE Htop_Reaction actionSortByMemory(State* st) {
    return Action_setSortKey(st->settings, PERCENT_MEM);
 }
 
-static Htop_Reaction actionSortByCPU(State* st) {
+SYM_PRIVATE Htop_Reaction actionSortByCPU(State* st) {
    return Action_setSortKey(st->settings, PERCENT_CPU);
 }
 
-static Htop_Reaction actionSortByTime(State* st) {
+SYM_PRIVATE Htop_Reaction actionSortByTime(State* st) {
    return Action_setSortKey(st->settings, TIME);
 }
 
-static Htop_Reaction actionToggleKernelThreads(State* st) {
+SYM_PRIVATE Htop_Reaction actionToggleKernelThreads(State* st) {
    st->settings->hideKernelThreads = !st->settings->hideKernelThreads;
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
 }
 
-static Htop_Reaction actionToggleUserlandThreads(State* st) {
+SYM_PRIVATE Htop_Reaction actionToggleUserlandThreads(State* st) {
    st->settings->hideUserlandThreads = !st->settings->hideUserlandThreads;
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
 }
 
-static Htop_Reaction actionToggleProgramPath(State* st) {
+SYM_PRIVATE Htop_Reaction actionToggleProgramPath(State* st) {
    st->settings->showProgramPath = !st->settings->showProgramPath;
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
-static Htop_Reaction actionToggleMergedCommand(State* st) {
+SYM_PRIVATE Htop_Reaction actionToggleMergedCommand(State* st) {
    st->settings->showMergedCommand = !st->settings->showMergedCommand;
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
-static Htop_Reaction actionToggleTreeView(State* st) {
+SYM_PRIVATE Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
 
    if (!st->settings->allBranchesCollapsed) ProcessList_expandTree(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
-static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
+SYM_PRIVATE Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
    st->settings->allBranchesCollapsed = !st->settings->allBranchesCollapsed;
    if (st->settings->allBranchesCollapsed)
       ProcessList_collapseAllBranches(st->pl);
@@ -240,42 +240,42 @@ static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
-static Htop_Reaction actionIncFilter(State* st) {
+SYM_PRIVATE Htop_Reaction actionIncFilter(State* st) {
    IncSet* inc = (st->mainPanel)->inc;
    IncSet_activate(inc, INC_FILTER, (Panel*)st->mainPanel);
    st->pl->incFilter = IncSet_filter(inc);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 
-static Htop_Reaction actionIncSearch(State* st) {
+SYM_PRIVATE Htop_Reaction actionIncSearch(State* st) {
    IncSet_reset(st->mainPanel->inc, INC_SEARCH);
    IncSet_activate(st->mainPanel->inc, INC_SEARCH, (Panel*)st->mainPanel);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 
-static Htop_Reaction actionHigherPriority(State* st) {
+SYM_PRIVATE Htop_Reaction actionHigherPriority(State* st) {
    bool changed = changePriority(st->mainPanel, -1);
    return changed ? HTOP_REFRESH : HTOP_OK;
 }
 
-static Htop_Reaction actionLowerPriority(State* st) {
+SYM_PRIVATE Htop_Reaction actionLowerPriority(State* st) {
    bool changed = changePriority(st->mainPanel, 1);
    return changed ? HTOP_REFRESH : HTOP_OK;
 }
 
-static Htop_Reaction actionInvertSortOrder(State* st) {
+SYM_PRIVATE Htop_Reaction actionInvertSortOrder(State* st) {
    Settings_invertSortOrder(st->settings);
    if (st->pauseProcessUpdate)
       ProcessList_sort(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
-static Htop_Reaction actionExpandOrCollapse(State* st) {
+SYM_PRIVATE Htop_Reaction actionExpandOrCollapse(State* st) {
    bool changed = expandCollapse((Panel*)st->mainPanel);
    return changed ? HTOP_RECALCULATE : HTOP_OK;
 }
 
-static Htop_Reaction actionCollapseIntoParent(State* st) {
+SYM_PRIVATE Htop_Reaction actionCollapseIntoParent(State* st) {
    if (!st->settings->treeView) {
       return HTOP_OK;
    }
@@ -283,15 +283,15 @@ static Htop_Reaction actionCollapseIntoParent(State* st) {
    return changed ? HTOP_RECALCULATE : HTOP_OK;
 }
 
-static Htop_Reaction actionExpandCollapseOrSortColumn(State* st) {
+SYM_PRIVATE Htop_Reaction actionExpandCollapseOrSortColumn(State* st) {
    return st->settings->treeView ? actionExpandOrCollapse(st) : actionSetSortColumn(st);
 }
 
-static Htop_Reaction actionQuit(ATTR_UNUSED State* st) {
+SYM_PRIVATE Htop_Reaction actionQuit(ATTR_UNUSED State* st) {
    return HTOP_QUIT;
 }
 
-static Htop_Reaction actionSetAffinity(State* st) {
+SYM_PRIVATE Htop_Reaction actionSetAffinity(State* st) {
    if (st->pl->cpuCount == 1)
       return HTOP_OK;
 
@@ -322,7 +322,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
-static Htop_Reaction actionKill(State* st) {
+SYM_PRIVATE Htop_Reaction actionKill(State* st) {
    Panel* signalsPanel = SignalsPanel_new();
    const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15, true);
    if (sgn) {
@@ -338,7 +338,7 @@ static Htop_Reaction actionKill(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
-static Htop_Reaction actionFilterByUser(State* st) {
+SYM_PRIVATE Htop_Reaction actionFilterByUser(State* st) {
    Panel* usersPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Show   ", "Cancel "));
    Panel_setHeader(usersPanel, "Show processes of:");
    UsersTable_foreach(st->ut, addUserToVector, usersPanel);
@@ -363,7 +363,7 @@ Htop_Reaction Action_follow(State* st) {
    return HTOP_KEEP_FOLLOWING;
 }
 
-static Htop_Reaction actionSetup(State* st) {
+SYM_PRIVATE Htop_Reaction actionSetup(State* st) {
    Action_runSetup(st);
    int headerHeight = Header_calculateHeight(st->header);
    Panel_move((Panel*)st->mainPanel, 0, headerHeight);
@@ -371,7 +371,7 @@ static Htop_Reaction actionSetup(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
-static Htop_Reaction actionLsof(State* st) {
+SYM_PRIVATE Htop_Reaction actionLsof(State* st) {
    const Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
@@ -384,7 +384,7 @@ static Htop_Reaction actionLsof(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionShowLocks(State* st) {
+SYM_PRIVATE Htop_Reaction actionShowLocks(State* st) {
    const Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p) return HTOP_OK;
    ProcessLocksScreen* pls = ProcessLocksScreen_new(p);
@@ -395,7 +395,7 @@ static Htop_Reaction actionShowLocks(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionStrace(State* st) {
+SYM_PRIVATE Htop_Reaction actionStrace(State* st) {
    const Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
@@ -411,7 +411,7 @@ static Htop_Reaction actionStrace(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionTag(State* st) {
+SYM_PRIVATE Htop_Reaction actionTag(State* st) {
    Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
@@ -421,12 +421,12 @@ static Htop_Reaction actionTag(State* st) {
    return HTOP_OK;
 }
 
-static Htop_Reaction actionRedraw(ATTR_UNUSED State* st) {
+SYM_PRIVATE Htop_Reaction actionRedraw(ATTR_UNUSED State* st) {
    clear();
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionTogglePauseProcessUpdate(State* st) {
+SYM_PRIVATE Htop_Reaction actionTogglePauseProcessUpdate(State* st) {
    st->pauseProcessUpdate = !st->pauseProcessUpdate;
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
@@ -484,7 +484,7 @@ SYM_INLINE void addattrstr( int attr, const char* str) {
    addstr(str);
 }
 
-static Htop_Reaction actionHelp(State* st) {
+SYM_PRIVATE Htop_Reaction actionHelp(State* st) {
    clear();
    attrset(CRT_colors[HELP_BOLD]);
 
@@ -585,7 +585,7 @@ static Htop_Reaction actionHelp(State* st) {
    return HTOP_RECALCULATE | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionUntagAll(State* st) {
+SYM_PRIVATE Htop_Reaction actionUntagAll(State* st) {
    for (int i = 0; i < Panel_size((Panel*)st->mainPanel); i++) {
       Process* p = (Process*) Panel_get((Panel*)st->mainPanel, i);
       p->tag = false;
@@ -593,7 +593,7 @@ static Htop_Reaction actionUntagAll(State* st) {
    return HTOP_REFRESH;
 }
 
-static Htop_Reaction actionTagAllChildren(State* st) {
+SYM_PRIVATE Htop_Reaction actionTagAllChildren(State* st) {
    Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
@@ -602,7 +602,7 @@ static Htop_Reaction actionTagAllChildren(State* st) {
    return HTOP_OK;
 }
 
-static Htop_Reaction actionShowEnvScreen(State* st) {
+SYM_PRIVATE Htop_Reaction actionShowEnvScreen(State* st) {
    Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
@@ -615,7 +615,7 @@ static Htop_Reaction actionShowEnvScreen(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionShowCommandScreen(State* st) {
+SYM_PRIVATE Htop_Reaction actionShowCommandScreen(State* st) {
    Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;

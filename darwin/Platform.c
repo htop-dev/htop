@@ -180,7 +180,7 @@ int Platform_getMaxPid() {
    return 99999;
 }
 
-static double Platform_setCPUAverageValues(Meter* mtr) {
+SYM_PRIVATE double Platform_setCPUAverageValues(Meter* mtr) {
    const ProcessList* dpl = mtr->pl;
    int cpus = dpl->cpuCount;
    double sumNice = 0.0;

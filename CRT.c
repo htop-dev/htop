@@ -84,7 +84,7 @@ static const int* CRT_delay;
 
 const char* CRT_degreeSign;
 
-static const char* initDegreeSign(void) {
+SYM_PRIVATE const char* initDegreeSign(void) {
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8)
       return "\xc2\xb0";
@@ -652,7 +652,7 @@ int CRT_scrollWheelVAmount = 10;
 ColorScheme CRT_colorScheme = COLORSCHEME_DEFAULT;
 
 ATTR_NORETURN
-static void CRT_handleSIGTERM(int sgn) {
+SYM_PRIVATE void CRT_handleSIGTERM(int sgn) {
    (void) sgn;
    CRT_done();
    _exit(0);
@@ -663,7 +663,7 @@ static void CRT_handleSIGTERM(int sgn) {
 static int stderrRedirectNewFd = -1;
 static int stderrRedirectBackupFd = -1;
 
-static int createStderrCacheFile(void) {
+SYM_PRIVATE int createStderrCacheFile(void) {
 #ifdef HAVE_MEMFD_CREATE
    return memfd_create("htop.stderr-redirect", 0);
 #elif defined(O_TMPFILE)
@@ -682,7 +682,7 @@ static int createStderrCacheFile(void) {
 #endif /* HAVE_MEMFD_CREATE */
 }
 
-static void redirectStderr(void) {
+SYM_PRIVATE void redirectStderr(void) {
    stderrRedirectNewFd = createStderrCacheFile();
    if (stderrRedirectNewFd < 0) {
       /* ignore failure */
@@ -693,7 +693,7 @@ static void redirectStderr(void) {
    dup2(stderrRedirectNewFd, STDERR_FILENO);
 }
 
-static void dumpStderr(void) {
+SYM_PRIVATE void dumpStderr(void) {
    if (stderrRedirectNewFd < 0)
       return;
 
@@ -735,10 +735,10 @@ static void dumpStderr(void) {
 
 #else /* !NDEBUG */
 
-static void redirectStderr(void) {
+SYM_PRIVATE void redirectStderr(void) {
 }
 
-static void dumpStderr(void) {
+SYM_PRIVATE void dumpStderr(void) {
 }
 
 #endif /* !NDEBUG */

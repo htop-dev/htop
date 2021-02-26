@@ -21,14 +21,14 @@ in the source distribution for its full text.
 
 static const char* const ColumnsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 
-static void ColumnsPanel_delete(Object* object) {
+SYM_PRIVATE void ColumnsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    ColumnsPanel* this = (ColumnsPanel*) object;
    Panel_done(super);
    free(this);
 }
 
-static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    ColumnsPanel* const this = (ColumnsPanel*) super;
 
    int selected = Panel_getSelectedIndex(super);

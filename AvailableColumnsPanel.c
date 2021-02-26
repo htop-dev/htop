@@ -23,14 +23,14 @@ in the source distribution for its full text.
 
 static const char* const AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static void AvailableColumnsPanel_delete(Object* object) {
+SYM_PRIVATE void AvailableColumnsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) object;
    Panel_done(super);
    free(this);
 }
 
-static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) super;
    HandlerResult result = IGNORED;
 

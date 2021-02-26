@@ -23,7 +23,7 @@ static const int TasksMeter_attributes[] = {
    TASKS_RUNNING
 };
 
-static void TasksMeter_updateValues(Meter* this, char* buffer, size_t len) {
+SYM_PRIVATE void TasksMeter_updateValues(Meter* this, char* buffer, size_t len) {
    const ProcessList* pl = this->pl;
    this->values[0] = pl->kernelThreads;
    this->values[1] = pl->userlandThreads;
@@ -38,7 +38,7 @@ static void TasksMeter_updateValues(Meter* this, char* buffer, size_t len) {
    xSnprintf(buffer, len, "%d/%d", (int) this->values[3], (int) this->total);
 }
 
-static void TasksMeter_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void TasksMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
    const Settings* settings = this->pl->settings;
    char buffer[20];

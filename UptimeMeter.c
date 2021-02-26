@@ -17,7 +17,7 @@ static const int UptimeMeter_attributes[] = {
    UPTIME
 };
 
-static void UptimeMeter_updateValues(Meter* this, char* buffer, size_t len) {
+SYM_PRIVATE void UptimeMeter_updateValues(Meter* this, char* buffer, size_t len) {
    int totalseconds = Platform_getUptime();
    if (totalseconds == -1) {
       xSnprintf(buffer, len, "(unknown)");

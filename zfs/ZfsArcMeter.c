@@ -33,7 +33,7 @@ void ZfsArcMeter_readStats(Meter* this, const ZfsArcStats* stats) {
    this->values[5] = stats->size;
 }
 
-static void ZfsArcMeter_updateValues(Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void ZfsArcMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int written;
    Platform_setZfsArcValues(this);
 
@@ -45,7 +45,7 @@ static void ZfsArcMeter_updateValues(Meter* this, char* buffer, size_t size) {
    Meter_humanUnit(buffer, this->total, size);
 }
 
-static void ZfsArcMeter_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void ZfsArcMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
 
    if (this->values[5] > 0) {

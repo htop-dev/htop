@@ -21,7 +21,7 @@ static const int MemoryMeter_attributes[] = {
    MEMORY_CACHE
 };
 
-static void MemoryMeter_updateValues(Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void MemoryMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int written;
 
    /* available memory is not supported on all platforms */
@@ -39,7 +39,7 @@ static void MemoryMeter_updateValues(Meter* this, char* buffer, size_t size) {
    Meter_humanUnit(buffer, this->total, size);
 }
 
-static void MemoryMeter_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void MemoryMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
 

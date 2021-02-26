@@ -22,14 +22,14 @@ in the source distribution for its full text.
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static void DisplayOptionsPanel_delete(Object* object) {
+SYM_PRIVATE void DisplayOptionsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
    Panel_done(super);
    free(this);
 }
 
-static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) super;
 
    HandlerResult result = IGNORED;

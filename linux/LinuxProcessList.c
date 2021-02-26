@@ -69,7 +69,7 @@ static long long btime = -1;
 
 static long jiffy;
 
-static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* mode) {
+SYM_PRIVATE FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* mode) {
    assert(String_eq(mode, "r")); /* only currently supported mode */
 
    int fd = Compat_openat(openatArg, pathname, O_RDONLY);
@@ -83,7 +83,7 @@ static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* m
    return stream;
 }
 
-static int sortTtyDrivers(const void* va, const void* vb) {
+SYM_PRIVATE int sortTtyDrivers(const void* va, const void* vb) {
    const TtyDriver* a = (const TtyDriver*) va;
    const TtyDriver* b = (const TtyDriver*) vb;
 
@@ -94,7 +94,7 @@ static int sortTtyDrivers(const void* va, const void* vb) {
    return SPACESHIP_NUMBER(a->minorFrom, b->minorFrom);
 }
 
-static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
+SYM_PRIVATE void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
    TtyDriver* ttyDrivers;
 
    char buf[16384];
@@ -150,7 +150,7 @@ static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
 
 #ifdef HAVE_DELAYACCT
 
-static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
+SYM_PRIVATE void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
    this->netlink_socket = nl_socket_alloc();
    if (this->netlink_socket == NULL) {
       return;
@@ -163,7 +163,7 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 
 #endif
 
-static int LinuxProcessList_computeCPUcount(void) {
+SYM_PRIVATE int LinuxProcessList_computeCPUcount(void) {
    FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
@@ -187,7 +187,7 @@ static int LinuxProcessList_computeCPUcount(void) {
    return cpus;
 }
 
-static void LinuxProcessList_updateCPUcount(LinuxProcessList* this) {
+SYM_PRIVATE void LinuxProcessList_updateCPUcount(LinuxProcessList* this) {
    ProcessList* pl = &(this->super);
    int cpus = LinuxProcessList_computeCPUcount();
    if (cpus == 0 || cpus == pl->cpuCount)
@@ -283,7 +283,7 @@ SYM_INLINE unsigned long long LinuxProcessList_adjustTime(unsigned long long t) 
    return t * 100 / jiffy;
 }
 
-static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd, char* command, size_t commLen) {
+SYM_PRIVATE bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd, char* command, size_t commLen) {
    LinuxProcess* lp = (LinuxProcess*) process;
 
    char buf[MAX_READ + 1];
@@ -407,7 +407,7 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
 }
 
 
-static bool LinuxProcessList_statProcessDir(Process* process, openat_arg_t procFd) {
+SYM_PRIVATE bool LinuxProcessList_statProcessDir(Process* process, openat_arg_t procFd) {
    struct stat sstat;
 #ifdef HAVE_OPENAT
    int statok = fstat(procFd, &sstat);
@@ -420,7 +420,7 @@ static bool LinuxProcessList_statProcessDir(Process* process, openat_arg_t procF
    return true;
 }
 
-static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t procFd, unsigned long long now) {
+SYM_PRIVATE void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t procFd, unsigned long long now) {
    char buffer[1024];
    ssize_t r = xReadfileat(procFd, "io", buffer, sizeof(buffer));
    if (r < 0) {
@@ -523,7 +523,7 @@ SYM_INLINE uint64_t fast_strtoull_hex(char **str, int maxlen) {
    return result;
 }
 
-static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void* value, void* data) {
+SYM_PRIVATE void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void* value, void* data) {
    if (!data)
       return;
 
@@ -538,7 +538,7 @@ static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void* 
    *d += v->size;
 }
 
-static uint64_t LinuxProcessList_calcLibSize(openat_arg_t procFd) {
+SYM_PRIVATE uint64_t LinuxProcessList_calcLibSize(openat_arg_t procFd) {
    FILE* mapsfile = fopenat(procFd, "maps", "r");
    if (!mapsfile)
       return 0;
@@ -616,7 +616,7 @@ static uint64_t LinuxProcessList_calcLibSize(openat_arg_t procFd) {
    return total_size / pageSize;
 }
 
-static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t procFd, bool performLookup, unsigned long long now) {
+SYM_PRIVATE bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t procFd, bool performLookup, unsigned long long now) {
    FILE* statmfile = fopenat(procFd, "statm", "r");
    if (!statmfile)
       return false;
@@ -656,7 +656,7 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
    return r == 7;
 }
 
-static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, openat_arg_t procFd, bool haveSmapsRollup) {
+SYM_PRIVATE bool LinuxProcessList_readSmapsFile(LinuxProcess* process, openat_arg_t procFd, bool haveSmapsRollup) {
    //http://elixir.free-electrons.com/linux/v4.10/source/fs/proc/task_mmu.c#L719
    //kernel will return data in chunks of size PAGE_SIZE or less.
    FILE* f = fopenat(procFd, haveSmapsRollup ? "smaps_rollup" : "smaps", "r");
@@ -694,7 +694,7 @@ static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, openat_arg_t p
 
 #ifdef HAVE_OPENVZ
 
-static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t procFd) {
+SYM_PRIVATE void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t procFd) {
    if ( (access(PROCDIR "/vz", R_OK) != 0)) {
       free(process->ctid);
       process->ctid = NULL;
@@ -784,7 +784,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
 
 #endif
 
-static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t procFd) {
+SYM_PRIVATE void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "cgroup", "r");
    if (!file) {
       if (process->cgroup) {
@@ -821,7 +821,7 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
 
 #ifdef HAVE_VSERVER
 
-static void LinuxProcessList_readVServerData(LinuxProcess* process, openat_arg_t procFd) {
+SYM_PRIVATE void LinuxProcessList_readVServerData(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "status", "r");
    if (!file)
       return;
@@ -851,7 +851,7 @@ static void LinuxProcessList_readVServerData(LinuxProcess* process, openat_arg_t
 
 #endif
 
-static void LinuxProcessList_readOomData(LinuxProcess* process, openat_arg_t procFd) {
+SYM_PRIVATE void LinuxProcessList_readOomData(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "oom_score", "r");
    if (!file)
       return;
@@ -867,7 +867,7 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, openat_arg_t pro
    fclose(file);
 }
 
-static void LinuxProcessList_readCtxtData(LinuxProcess* process, openat_arg_t procFd) {
+SYM_PRIVATE void LinuxProcessList_readCtxtData(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "status", "r");
    if (!file)
       return;
@@ -894,7 +894,7 @@ static void LinuxProcessList_readCtxtData(LinuxProcess* process, openat_arg_t pr
    process->ctxt_total = ctxt;
 }
 
-static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t procFd) {
+SYM_PRIVATE void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "attr/current", "r");
    if (!file) {
       free(process->secattr);
@@ -920,7 +920,7 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t
    free_and_xStrdup(&process->secattr, buffer);
 }
 
-static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd) {
+SYM_PRIVATE void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd) {
    char pathBuffer[PATH_MAX + 1] = {0};
 
 #if defined(HAVE_READLINKAT) && defined(HAVE_OPENAT)
@@ -947,7 +947,7 @@ static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd)
 
 #ifdef HAVE_DELAYACCT
 
-static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
+SYM_PRIVATE int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
    struct nlmsghdr* nlhdr;
    struct nlattr* nlattrs[TASKSTATS_TYPE_MAX + 1];
    const struct nlattr* nlattr;
@@ -982,7 +982,7 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
    return NL_OK;
 }
 
-static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProcess* process) {
+SYM_PRIVATE void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProcess* process) {
    struct nl_msg* msg;
 
    if (!this->netlink_socket) {
@@ -1026,7 +1026,7 @@ delayacct_failure:
 
 #endif
 
-static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t procFd) {
+SYM_PRIVATE bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t procFd) {
    char command[4096 + 1]; // max cmdline length on Linux
    ssize_t amtRead = xReadfileat(procFd, "cmdline", command, sizeof(command));
    if (amtRead < 0)
@@ -1218,7 +1218,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    return true;
 }
 
-static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned int tty_nr) {
+SYM_PRIVATE char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned int tty_nr) {
    unsigned int maj = major(tty_nr);
    unsigned int min = minor(tty_nr);
 
@@ -1271,7 +1271,7 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
    return out;
 }
 
-static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_t parentFd, const char* dirname, const Process* parent, double period, unsigned long long now) {
+SYM_PRIVATE bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_t parentFd, const char* dirname, const Process* parent, double period, unsigned long long now) {
    ProcessList* pl = (ProcessList*) this;
    const struct dirent* entry;
    const Settings* settings = pl->settings;
@@ -1597,7 +1597,7 @@ SYM_INLINE void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    this->cachedSwap = swapCacheMem;
 }
 
-static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
+SYM_PRIVATE void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
    this->totalHugePageMem = 0;
    for (unsigned i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
       this->usedHugePageMem[i] = MEMORY_MAX;
@@ -1846,7 +1846,7 @@ SYM_INLINE double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
    return period;
 }
 
-static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
+SYM_PRIVATE int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
    int cpus = this->super.cpuCount;
    int numCPUsWithFrequency = 0;
    unsigned long totalFrequency = 0;
@@ -1906,7 +1906,7 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
    return 0;
 }
 
-static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
+SYM_PRIVATE void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
    FILE* file = fopen(PROCCPUINFOFILE, "r");
    if (file == NULL)
       return;
@@ -1956,7 +1956,7 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
    }
 }
 
-static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
+SYM_PRIVATE void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
    int cpus = this->super.cpuCount;
    assert(cpus > 0);
 

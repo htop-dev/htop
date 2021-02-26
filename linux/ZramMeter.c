@@ -11,7 +11,7 @@ static const int ZramMeter_attributes[] = {
    ZRAM
 };
 
-static void ZramMeter_updateValues(Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void ZramMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int written;
 
    Platform_setZramValues(this);
@@ -34,7 +34,7 @@ static void ZramMeter_updateValues(Meter* this, char* buffer, size_t size) {
    Meter_humanUnit(buffer, this->total, size);
 }
 
-static void ZramMeter_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void ZramMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
 

@@ -23,7 +23,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static void AvailableMetersPanel_delete(Object* object) {
+SYM_PRIVATE void AvailableMetersPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    AvailableMetersPanel* this = (AvailableMetersPanel*) object;
    Panel_done(super);
@@ -37,7 +37,7 @@ SYM_INLINE void AvailableMetersPanel_addMeter(Header* header, Panel* panel, cons
    MetersPanel_setMoving((MetersPanel*)panel, true);
 }
 
-static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
    Header* header = this->header;
 
