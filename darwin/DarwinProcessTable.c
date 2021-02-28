@@ -112,7 +112,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       bool isScanThreadSupported = !Platform_KernelVersionIsBetween((KernelVersion) {17, 0, 0}, (KernelVersion) {17, 5, 0});
 
       if (isScanThreadSupported) {
-         DarwinProcess_scanThreads(proc);
+         DarwinProcess_scanThreads(proc, dpt);
       }
 
       super->totalTasks += 1;
