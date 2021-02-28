@@ -27,8 +27,7 @@ static void DateMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int year = lt->tm_year + 1900;
    if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) {
       this->total = 366;
-   }
-   else {
+   } else {
       this->total = 365;
    }
    strftime(buffer, size, "%F", lt);
