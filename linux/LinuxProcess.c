@@ -650,7 +650,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    case IO_READ_RATE:  Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring); return;
    case IO_WRITE_RATE: Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring); return;
    case IO_RATE: {
-      double totalRate = NAN;
+      double totalRate;
       if (!isnan(lp->io_rate_read_bps) && !isnan(lp->io_rate_write_bps))
          totalRate = lp->io_rate_read_bps + lp->io_rate_write_bps;
       else if (!isnan(lp->io_rate_read_bps))
