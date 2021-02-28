@@ -338,12 +338,28 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
    }
 }
 
+static char stateToChar(int run_state) {
+   switch (run_state) {
+   case TH_STATE_RUNNING:
+      return 'R';
+   case TH_STATE_STOPPED:
+      return 'S';
+   case TH_STATE_WAITING:
+      return 'W';
+   case TH_STATE_UNINTERRUPTIBLE:
+      return 'U';
+   case TH_STATE_HALTED:
+      return 'H';
+   }
+   return '?';
+}
+
 /*
  * Scan threads for process state information.
  * Based on: http://stackoverflow.com/questions/6788274/ios-mac-cpu-usage-for-thread
  * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
  */
-void DarwinProcess_scanThreads(DarwinProcess* dp) {
+void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessList *dpl) {
    Process* proc = (Process*) dp;
    kern_return_t ret;
 
@@ -382,30 +398,54 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
    integer_t run_state = 999;
    for (unsigned int i = 0; i < thread_count; i++) {
       thread_info_data_t thinfo;
-      mach_msg_type_number_t thread_info_count = THREAD_BASIC_INFO_COUNT;
-      ret = thread_info(thread_list[i], THREAD_BASIC_INFO, (thread_info_t)thinfo, &thread_info_count);
+      mach_msg_type_number_t thread_info_count = THREAD_EXTENDED_INFO_COUNT;
+      ret = thread_info(thread_list[i], THREAD_EXTENDED_INFO_COUNT, (thread_info_t)thinfo, &thread_info_count);
       if (ret == KERN_SUCCESS) {
-         thread_basic_info_t basic_info_th = (thread_basic_info_t) thinfo;
-         if (basic_info_th->run_state < run_state) {
-            run_state = basic_info_th->run_state;
+         uint64_t tid = 0 - thread_list[i];
+         thread_extended_info_t eti = (thread_extended_info_t) thinfo;
+
+         if (eti->pth_run_state < run_state) {
+            run_state = eti->pth_run_state;
          }
+
+         if (dpl->super.settings->hideUserlandThreads) {
+            mach_port_deallocate(mach_task_self(), thread_list[i]);
+            continue;
+         }
+
+         bool preExisting;
+         Process *tprocess = ProcessList_getProcess((ProcessList*)dpl, tid, &preExisting, DarwinProcess_new);
+         tprocess->updated = true;
+
+         DarwinProcess* tproc = (DarwinProcess*)tprocess;
+         Process_updateComm(&tproc->super, strlen(eti->pth_name) ? eti->pth_name : dp->super.procComm);
+
+         tproc->super.pid = tid;
+         tproc->super.ppid = dp->super.pid;
+         tproc->super.tgid = tid;
+         tproc->super.isUserlandThread = true;
+         tproc->super.state = stateToChar(eti->pth_run_state);
+         tproc->super.st_uid = dp->super.st_uid;
+         tproc->super.user = dp->super.user;
+
+         tproc->super.percent_cpu = eti->pth_cpu_usage / 10.0;
+         tproc->stime = eti->pth_system_time;
+         tproc->utime = eti->pth_user_time;
+         tproc->super.time = (eti->pth_system_time + eti->pth_user_time) / 10000000;
+         tproc->super.priority = eti->pth_curpri;
+
+         if (!preExisting) {
+            ProcessList_add((ProcessList*)dpl, (Process*)tproc);
+         }
+
          mach_port_deallocate(mach_task_self(), thread_list[i]);
       }
    }
    vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
    mach_port_deallocate(mach_task_self(), port);
 
-   char state = '?';
-   switch (run_state) {
-      case TH_STATE_RUNNING: state = 'R'; break;
-      case TH_STATE_STOPPED: state = 'S'; break;
-      case TH_STATE_WAITING: state = 'W'; break;
-      case TH_STATE_UNINTERRUPTIBLE: state = 'U'; break;
-      case TH_STATE_HALTED: state = 'H'; break;
-   }
-   proc->state = state;
+   proc->state = stateToChar(run_state);
 }
-
 
 const ProcessClass DarwinProcess_class = {
    .super = {
