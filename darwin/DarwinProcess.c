@@ -404,12 +404,28 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
    }
 }
 
+static ProcessState stateToChar(int run_state) {
+   switch (run_state) {
+   case TH_STATE_RUNNING:
+      return RUNNING;
+   case TH_STATE_STOPPED:
+      return STOPPED;
+   case TH_STATE_WAITING:
+      return WAITING;
+   case TH_STATE_UNINTERRUPTIBLE:
+      return UNINTERRUPTIBLE_WAIT;
+   case TH_STATE_HALTED:
+      return BLOCKED;
+   }
+   return UNKNOWN;
+}
+
 /*
  * Scan threads for process state information.
  * Based on: http://stackoverflow.com/questions/6788274/ios-mac-cpu-usage-for-thread
  * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
  */
-void DarwinProcess_scanThreads(DarwinProcess* dp) {
+void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
    Process* proc = (Process*) dp;
    kern_return_t ret;
 
@@ -421,55 +437,105 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
       return;
    }
 
-   task_t port;
-   ret = task_for_pid(mach_task_self(), Process_getPid(proc), &port);
+   pid_t pid = Process_getPid(proc);
+
+   task_t task;
+   ret = task_for_pid(mach_task_self(), pid, &task);
    if (ret != KERN_SUCCESS) {
+      // TODO: workaround for modern MacOS limits on task_for_pid()
+      if (ret != KERN_FAILURE)
+         CRT_debug("task_for_pid(%d) failed: %s", pid, mach_error_string(ret));
       dp->taskAccess = false;
       return;
    }
 
-   task_info_data_t tinfo;
-   mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
-   ret = task_info(port, TASK_BASIC_INFO, (task_info_t) tinfo, &task_info_count);
-   if (ret != KERN_SUCCESS) {
-      dp->taskAccess = false;
-      return;
+   {
+      task_info_data_t tinfo;
+      mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
+      ret = task_info(task, TASK_BASIC_INFO, (task_info_t) &tinfo, &task_info_count);
+      if (ret != KERN_SUCCESS) {
+         CRT_debug("task_info(%d) failed: %s", pid, mach_error_string(ret));
+         dp->taskAccess = false;
+         mach_port_deallocate(mach_task_self(), task);
+         return;
+      }
    }
 
    thread_array_t thread_list;
    mach_msg_type_number_t thread_count;
-   ret = task_threads(port, &thread_list, &thread_count);
+   ret = task_threads(task, &thread_list, &thread_count);
    if (ret != KERN_SUCCESS) {
+      CRT_debug("task_threads(%d) failed: %s", pid, mach_error_string(ret));
       dp->taskAccess = false;
-      mach_port_deallocate(mach_task_self(), port);
+      mach_port_deallocate(mach_task_self(), task);
       return;
    }
 
-   integer_t run_state = 999;
-   for (unsigned int i = 0; i < thread_count; i++) {
-      thread_info_data_t thinfo;
-      mach_msg_type_number_t thread_info_count = THREAD_BASIC_INFO_COUNT;
-      ret = thread_info(thread_list[i], THREAD_BASIC_INFO, (thread_info_t)thinfo, &thread_info_count);
-      if (ret == KERN_SUCCESS) {
-         thread_basic_info_t basic_info_th = (thread_basic_info_t) thinfo;
-         if (basic_info_th->run_state < run_state) {
-            run_state = basic_info_th->run_state;
-         }
-         mach_port_deallocate(mach_task_self(), thread_list[i]);
-      }
-   }
-   vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
-   mach_port_deallocate(mach_task_self(), port);
+   const bool hideUserlandThreads = dpt->super.super.host->settings->hideUserlandThreads;
 
-   /* Taken from: https://github.com/apple/darwin-xnu/blob/2ff845c2e033bd0ff64b5b6aa6063a1f8f65aa32/osfmk/mach/thread_info.h#L129 */
-   switch (run_state) {
-      case TH_STATE_RUNNING: proc->state = RUNNING; break;
-      case TH_STATE_STOPPED: proc->state = STOPPED; break;
-      case TH_STATE_WAITING: proc->state = WAITING; break;
-      case TH_STATE_UNINTERRUPTIBLE: proc->state = UNINTERRUPTIBLE_WAIT; break;
-      case TH_STATE_HALTED: proc->state = BLOCKED; break;
-      default: proc->state = UNKNOWN;
+   integer_t run_state = 999;
+   for (mach_msg_type_number_t i = 0; i < thread_count; i++) {
+
+      thread_identifier_info_data_t identifer_info;
+      mach_msg_type_number_t identifer_info_count = THREAD_IDENTIFIER_INFO_COUNT;
+      ret = thread_info(thread_list[i], THREAD_IDENTIFIER_INFO, (thread_info_t) &identifer_info, &identifer_info_count);
+      if (ret != KERN_SUCCESS) {
+         CRT_debug("thread_info(%d:%d) for identifier failed: %s", pid, i, mach_error_string(ret));
+         continue;
+      }
+
+      uint64_t tid = identifer_info.thread_id;
+
+      bool preExisting;
+      Process *tprocess = ProcessTable_getProcess(&dpt->super, tid, &preExisting, DarwinProcess_new);
+      tprocess->super.updated = true;
+      dpt->super.totalTasks++;
+
+      if (hideUserlandThreads) {
+         tprocess->super.show = false;
+         continue;
+      }
+
+      assert(Process_getPid(tprocess) == tid);
+      Process_setParent(tprocess, pid);
+      Process_setThreadGroup(tprocess, pid);
+      tprocess->super.show       = true;
+      tprocess->isUserlandThread = true;
+      tprocess->st_uid           = proc->st_uid;
+      tprocess->user             = proc->user;
+
+      thread_extended_info_data_t extended_info;
+      mach_msg_type_number_t extended_info_count = THREAD_EXTENDED_INFO_COUNT;
+      ret = thread_info(thread_list[i], THREAD_EXTENDED_INFO, (thread_info_t) &extended_info, &extended_info_count);
+      if (ret != KERN_SUCCESS) {
+         CRT_debug("thread_info(%d:%d) for extended failed: %s", pid, i, mach_error_string(ret));
+         continue;
+      }
+
+      DarwinProcess* tdproc     = (DarwinProcess*)tprocess;
+      tdproc->super.state       = stateToChar(extended_info.pth_run_state);
+      tdproc->super.percent_cpu = extended_info.pth_cpu_usage / 10.0;
+      tdproc->stime             = extended_info.pth_system_time;
+      tdproc->utime             = extended_info.pth_user_time;
+      tdproc->super.time        = (extended_info.pth_system_time + extended_info.pth_user_time) / 10000000;
+      tdproc->super.priority    = extended_info.pth_curpri;
+
+      if (extended_info.pth_run_state < run_state)
+         run_state = extended_info.pth_run_state;
+
+      // TODO: depend on setting
+      const char* name = extended_info.pth_name[0] != '\0' ? extended_info.pth_name : proc->procComm;
+      Process_updateCmdline(tprocess, name, 0, strlen(name));
+
+      if (!preExisting)
+         ProcessTable_add(&dpt->super, tprocess);
    }
+
+   vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
+   mach_port_deallocate(mach_task_self(), task);
+
+   if (run_state != 999)
+      proc->state = stateToChar(run_state);
 }
 
 
