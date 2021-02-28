@@ -46,7 +46,7 @@ void Vector_delete(Vector* this) {
 
 #ifndef NDEBUG
 
-static bool Vector_isConsistent(const Vector* this) {
+SYM_PRIVATE bool Vector_isConsistent(const Vector* this) {
    assert(this->items <= this->arraySize);
 
    if (this->owner) {
@@ -99,7 +99,7 @@ void Vector_prune(Vector* this) {
 
 //static int comparisons = 0;
 
-static void swap(Object** array, int indexA, int indexB) {
+SYM_PRIVATE void swap(Object** array, int indexA, int indexB) {
    assert(indexA >= 0);
    assert(indexB >= 0);
    Object* tmp = array[indexA];
@@ -107,7 +107,7 @@ static void swap(Object** array, int indexA, int indexB) {
    array[indexB] = tmp;
 }
 
-static int partition(Object** array, int left, int right, int pivotIndex, Object_Compare compare) {
+SYM_PRIVATE int partition(Object** array, int left, int right, int pivotIndex, Object_Compare compare) {
    const Object* pivotValue = array[pivotIndex];
    swap(array, pivotIndex, right);
    int storeIndex = left;
@@ -122,7 +122,7 @@ static int partition(Object** array, int left, int right, int pivotIndex, Object
    return storeIndex;
 }
 
-static void quickSort(Object** array, int left, int right, Object_Compare compare) {
+SYM_PRIVATE void quickSort(Object** array, int left, int right, Object_Compare compare) {
    if (left >= right)
       return;
 
@@ -135,7 +135,7 @@ static void quickSort(Object** array, int left, int right, Object_Compare compar
 // If I were to use only one sorting algorithm for both cases, it would probably be this one:
 /*
 
-static void combSort(Object** array, int left, int right, Object_Compare compare) {
+SYM_PRIVATE void combSort(Object** array, int left, int right, Object_Compare compare) {
    int gap = right - left;
    bool swapped = true;
    while ((gap > 1) || swapped) {
@@ -155,7 +155,7 @@ static void combSort(Object** array, int left, int right, Object_Compare compare
 
 */
 
-static void insertionSort(Object** array, int left, int right, Object_Compare compare) {
+SYM_PRIVATE void insertionSort(Object** array, int left, int right, Object_Compare compare) {
    for (int i = left + 1; i <= right; i++) {
       Object* t = array[i];
       int j = i - 1;
@@ -185,7 +185,7 @@ void Vector_insertionSort(Vector* this) {
    assert(Vector_isConsistent(this));
 }
 
-static void Vector_checkArraySize(Vector* this) {
+SYM_PRIVATE void Vector_checkArraySize(Vector* this) {
    assert(Vector_isConsistent(this));
    if (this->items >= this->arraySize) {
       //int i;
@@ -288,7 +288,7 @@ void Vector_set(Vector* this, int idx, void* data_) {
 
 /*
 
-static void Vector_merge(Vector* this, Vector* v2) {
+SYM_PRIVATE void Vector_merge(Vector* this, Vector* v2) {
    int i;
    assert(Vector_isConsistent(this));
 

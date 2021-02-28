@@ -90,7 +90,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
+SYM_PRIVATE void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    const int uvmexp_mib[] = { CTL_VM, VM_UVMEXP };
    struct uvmexp uvmexp;
    size_t size_uvmexp = sizeof(uvmexp);
@@ -143,7 +143,7 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
 }
 
-static char* OpenBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
+SYM_PRIVATE char* OpenBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
    /*
     * Like OpenBSD's top(1), we try to fall back to the command name
     * (argv[0]) if we fail to construct the full command.
@@ -183,14 +183,14 @@ static char* OpenBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_pr
 /*
  * Taken from OpenBSD's ps(1).
  */
-static double getpcpu(const struct kinfo_proc* kp) {
+SYM_PRIVATE double getpcpu(const struct kinfo_proc* kp) {
    if (fscale == 0)
       return 0.0;
 
    return 100.0 * (double)kp->p_pctcpu / fscale;
 }
 
-static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
+SYM_PRIVATE void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    const Settings* settings = this->super.settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
@@ -260,11 +260,11 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    }
 }
 
-static unsigned long long saturatingSub(unsigned long long a, unsigned long long b) {
+SYM_PRIVATE unsigned long long saturatingSub(unsigned long long a, unsigned long long b) {
    return a > b ? a - b : 0;
 }
 
-static void getKernelCPUTimes(int cpuId, u_int64_t* times) {
+SYM_PRIVATE void getKernelCPUTimes(int cpuId, u_int64_t* times) {
    const int mib[] = { CTL_KERN, KERN_CPTIME2, cpuId };
    size_t length = sizeof(*times) * CPUSTATES;
    if (sysctl(mib, 3, times, &length, NULL, 0) == -1 || length != sizeof(*times) * CPUSTATES) {
@@ -272,7 +272,7 @@ static void getKernelCPUTimes(int cpuId, u_int64_t* times) {
    }
 }
 
-static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
+SYM_PRIVATE void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
    unsigned long long totalTime = 0;
    for (int i = 0; i < CPUSTATES; i++) {
       totalTime += times[i];
@@ -309,7 +309,7 @@ static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
    cpu->idleTime = times[CP_IDLE];
 }
 
-static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
+SYM_PRIVATE void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
    u_int64_t kernelTimes[CPUSTATES] = {0};
    u_int64_t avg[CPUSTATES] = {0};
 

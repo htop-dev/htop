@@ -39,7 +39,7 @@ typedef struct CPUMeterData_ {
    Meter** meters;
 } CPUMeterData;
 
-static void CPUMeter_init(Meter* this) {
+SYM_PRIVATE void CPUMeter_init(Meter* this) {
    int cpu = this->param;
    if (this->pl->cpuCount > 1) {
       char caption[10];
@@ -50,7 +50,7 @@ static void CPUMeter_init(Meter* this) {
       Meter_setCaption(this, "Avg");
 }
 
-static void CPUMeter_updateValues(Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void CPUMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
       xSnprintf(buffer, size, "absent");
@@ -99,7 +99,7 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, size_t size) {
              cpuTemperatureBuffer);
 }
 
-static void CPUMeter_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void CPUMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
    RichString_prune(out);
@@ -167,7 +167,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
    #endif
 }
 
-static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
+SYM_PRIVATE void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
    const CPUMeterData* data = this->meterData;
    int cpus = data->cpus;
    switch(Meter_name(this)[0]) {
@@ -187,7 +187,7 @@ static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
    }
 }
 
-static void CPUMeterCommonInit(Meter* this, int ncol) {
+SYM_PRIVATE void CPUMeterCommonInit(Meter* this, int ncol) {
    int cpus = this->pl->cpuCount;
    CPUMeterData* data = this->meterData;
    if (!data) {
@@ -212,7 +212,7 @@ static void CPUMeterCommonInit(Meter* this, int ncol) {
    this->h = h * ((count + ncol - 1) / ncol);
 }
 
-static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
+SYM_PRIVATE void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    this->mode = mode;
@@ -225,7 +225,7 @@ static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
    this->h = h * ((count + ncol - 1) / ncol);
 }
 
-static void AllCPUsMeter_done(Meter* this) {
+SYM_PRIVATE void AllCPUsMeter_done(Meter* this) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    int start, count;
@@ -236,39 +236,39 @@ static void AllCPUsMeter_done(Meter* this) {
    free(data);
 }
 
-static void SingleColCPUsMeter_init(Meter* this) {
+SYM_PRIVATE void SingleColCPUsMeter_init(Meter* this) {
    CPUMeterCommonInit(this, 1);
 }
 
-static void SingleColCPUsMeter_updateMode(Meter* this, int mode) {
+SYM_PRIVATE void SingleColCPUsMeter_updateMode(Meter* this, int mode) {
    CPUMeterCommonUpdateMode(this, mode, 1);
 }
 
-static void DualColCPUsMeter_init(Meter* this) {
+SYM_PRIVATE void DualColCPUsMeter_init(Meter* this) {
    CPUMeterCommonInit(this, 2);
 }
 
-static void DualColCPUsMeter_updateMode(Meter* this, int mode) {
+SYM_PRIVATE void DualColCPUsMeter_updateMode(Meter* this, int mode) {
    CPUMeterCommonUpdateMode(this, mode, 2);
 }
 
-static void QuadColCPUsMeter_init(Meter* this) {
+SYM_PRIVATE void QuadColCPUsMeter_init(Meter* this) {
    CPUMeterCommonInit(this, 4);
 }
 
-static void QuadColCPUsMeter_updateMode(Meter* this, int mode) {
+SYM_PRIVATE void QuadColCPUsMeter_updateMode(Meter* this, int mode) {
    CPUMeterCommonUpdateMode(this, mode, 4);
 }
 
-static void OctoColCPUsMeter_init(Meter* this) {
+SYM_PRIVATE void OctoColCPUsMeter_init(Meter* this) {
    CPUMeterCommonInit(this, 8);
 }
 
-static void OctoColCPUsMeter_updateMode(Meter* this, int mode) {
+SYM_PRIVATE void OctoColCPUsMeter_updateMode(Meter* this, int mode) {
    CPUMeterCommonUpdateMode(this, mode, 8);
 }
 
-static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
+SYM_PRIVATE void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    int start, count;
@@ -284,20 +284,20 @@ static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
    }
 }
 
-static void DualColCPUsMeter_draw(Meter* this, int x, int y, int w) {
+SYM_PRIVATE void DualColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    CPUMeterCommonDraw(this, x, y, w, 2);
 }
 
-static void QuadColCPUsMeter_draw(Meter* this, int x, int y, int w) {
+SYM_PRIVATE void QuadColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    CPUMeterCommonDraw(this, x, y, w, 4);
 }
 
-static void OctoColCPUsMeter_draw(Meter* this, int x, int y, int w) {
+SYM_PRIVATE void OctoColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    CPUMeterCommonDraw(this, x, y, w, 8);
 }
 
 
-static void SingleColCPUsMeter_draw(Meter* this, int x, int y, int w) {
+SYM_PRIVATE void SingleColCPUsMeter_draw(Meter* this, int x, int y, int w) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    int start, count;

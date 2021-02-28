@@ -24,7 +24,7 @@ static unsigned long int cached_rxp_diff = 0;
 static unsigned long int cached_txb_diff = 0;
 static unsigned long int cached_txp_diff = 0;
 
-static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
+SYM_PRIVATE void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    static unsigned long long int cached_last_update = 0;
 
    struct timeval tv;
@@ -92,7 +92,7 @@ static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    xSnprintf(buffer, len, "rx:%siB/s tx:%siB/s", bufferBytesReceived, bufferBytesTransmitted);
 }
 
-static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+SYM_PRIVATE void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    if (!hasData) {
       RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
       return;

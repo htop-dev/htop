@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static void IncMode_reset(IncMode* mode) {
+SYM_PRIVATE void IncMode_reset(IncMode* mode) {
    mode->index = 0;
    mode->buffer[0] = 0;
 }
@@ -40,7 +40,7 @@ static const char* const searchFunctions[] = {"Next  ", "Prev   ", "Cancel ", " 
 static const char* const searchKeys[] = {"F3", "S-F3", "Esc", "  "};
 static const int searchEvents[] = {KEY_F(3), KEY_F(15), 27, ERR};
 
-static inline void IncMode_initSearch(IncMode* search) {
+SYM_INLINE void IncMode_initSearch(IncMode* search) {
    memset(search, 0, sizeof(IncMode));
    search->bar = FunctionBar_new(searchFunctions, searchKeys, searchEvents);
    search->isFilter = false;
@@ -50,13 +50,13 @@ static const char* const filterFunctions[] = {"Done  ", "Clear ", " Filter: ", N
 static const char* const filterKeys[] = {"Enter", "Esc", "  "};
 static const int filterEvents[] = {13, 27, ERR};
 
-static inline void IncMode_initFilter(IncMode* filter) {
+SYM_INLINE void IncMode_initFilter(IncMode* filter) {
    memset(filter, 0, sizeof(IncMode));
    filter->bar = FunctionBar_new(filterFunctions, filterKeys, filterEvents);
    filter->isFilter = true;
 }
 
-static inline void IncMode_done(IncMode* mode) {
+SYM_INLINE void IncMode_done(IncMode* mode) {
    FunctionBar_delete(mode->bar);
 }
 
@@ -77,7 +77,7 @@ void IncSet_delete(IncSet* this) {
    free(this);
 }
 
-static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
+SYM_PRIVATE void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
    const Object* selected = Panel_getSelected(panel);
    Panel_prune(panel);
    if (this->filtering) {
@@ -105,7 +105,7 @@ static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
    }
 }
 
-static bool search(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue) {
+SYM_PRIVATE bool search(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue) {
    int size = Panel_size(panel);
    for (int i = 0; i < size; i++) {
       if (String_contains_i(getPanelValue(panel, i), mode->buffer)) {
@@ -117,7 +117,7 @@ static bool search(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getP
    return false;
 }
 
-static bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
+SYM_PRIVATE bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
    int size = Panel_size(panel);
    int here = Panel_getSelectedIndex(panel);
    int i = here;

@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static void OptionItem_delete(Object* cast) {
+SYM_PRIVATE void OptionItem_delete(Object* cast) {
    OptionItem* this = (OptionItem*)cast;
    assert (this != NULL);
 
@@ -25,7 +25,7 @@ static void OptionItem_delete(Object* cast) {
    free(this);
 }
 
-static void CheckItem_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void CheckItem_display(const Object* cast, RichString* out) {
    const CheckItem* this = (const CheckItem*)cast;
    assert (this != NULL);
 
@@ -39,7 +39,7 @@ static void CheckItem_display(const Object* cast, RichString* out) {
    RichString_appendWide(out, CRT_colors[CHECK_TEXT], this->super.text);
 }
 
-static void NumberItem_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void NumberItem_display(const Object* cast, RichString* out) {
    const NumberItem* this = (const NumberItem*)cast;
    assert (this != NULL);
 

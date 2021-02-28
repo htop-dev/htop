@@ -21,7 +21,7 @@ static const int BatteryMeter_attributes[] = {
    BATTERY
 };
 
-static void BatteryMeter_updateValues(Meter* this, char* buffer, size_t len) {
+SYM_PRIVATE void BatteryMeter_updateValues(Meter* this, char* buffer, size_t len) {
    ACPresence isOnAC;
    double percent;
 

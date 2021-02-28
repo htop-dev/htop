@@ -25,7 +25,7 @@ static const int PressureStallMeter_attributes[] = {
    PRESSURE_STALL_THREEHUNDRED
 };
 
-static void PressureStallMeter_updateValues(Meter* this, char* buffer, size_t len) {
+SYM_PRIVATE void PressureStallMeter_updateValues(Meter* this, char* buffer, size_t len) {
    const char* file;
    if (strstr(Meter_name(this), "CPU")) {
       file = "cpu";
@@ -50,7 +50,7 @@ static void PressureStallMeter_updateValues(Meter* this, char* buffer, size_t le
    xSnprintf(buffer, len, "%s %s %5.2lf%% %5.2lf%% %5.2lf%%", some ? "some" : "full", file, this->values[0], this->values[1], this->values[2]);
 }
 
-static void PressureStallMeter_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void PressureStallMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
    char buffer[20];
    xSnprintf(buffer, sizeof(buffer), "%5.2lf%% ", this->values[0]);

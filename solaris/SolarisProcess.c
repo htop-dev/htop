@@ -67,7 +67,7 @@ void Process_delete(Object* cast) {
    free(sp);
 }
 
-static void SolarisProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+SYM_PRIVATE void SolarisProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const SolarisProcess* sp = (const SolarisProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -90,7 +90,7 @@ static void SolarisProcess_writeField(const Process* this, RichString* str, Proc
    RichString_appendWide(str, attr, buffer);
 }
 
-static int SolarisProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+SYM_PRIVATE int SolarisProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const SolarisProcess* p1 = (const SolarisProcess*)v1;
    const SolarisProcess* p2 = (const SolarisProcess*)v2;
 

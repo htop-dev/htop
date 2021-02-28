@@ -18,13 +18,13 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static void ListItem_delete(Object* cast) {
+SYM_PRIVATE void ListItem_delete(Object* cast) {
    ListItem* this = (ListItem*)cast;
    free(this->value);
    free(this);
 }
 
-static void ListItem_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void ListItem_display(const Object* cast, RichString* out) {
    const ListItem* const this = (const ListItem*)cast;
    assert (this != NULL);
 
@@ -57,7 +57,7 @@ void ListItem_append(ListItem* this, const char* text) {
    this->value[newLen] = '\0';
 }
 
-static int ListItem_compare(const void* cast1, const void* cast2) {
+SYM_PRIVATE int ListItem_compare(const void* cast1, const void* cast2) {
    const ListItem* obj1 = (const ListItem*) cast1;
    const ListItem* obj2 = (const ListItem*) cast2;
    return strcmp(obj1->value, obj2->value);

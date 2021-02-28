@@ -36,7 +36,7 @@ typedef struct IncSet_ {
    bool found;
 } IncSet;
 
-static inline const char* IncSet_filter(const IncSet* this) {
+SYM_INLINE const char* IncSet_filter(const IncSet* this) {
    return this->filtering ? this->modes[INC_FILTER].buffer : NULL;
 }
 

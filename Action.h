@@ -44,7 +44,7 @@ typedef struct State_ {
    bool hideProcessSelection;
 } State;
 
-static inline bool State_hideFunctionBar(const State* st) {
+SYM_INLINE bool State_hideFunctionBar(const State* st) {
    return st->settings->hideFunctionBar == 2 || (st->settings->hideFunctionBar == 1 && st->hideProcessSelection);
 }
 

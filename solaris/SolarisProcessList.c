@@ -67,7 +67,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    return pl;
 }
 
-static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
+SYM_INLINE void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    const SolarisProcessList* spl = (SolarisProcessList*) pl;
    int cpus = pl->cpuCount;
    kstat_t* cpuinfo = NULL;
@@ -159,7 +159,7 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    }
 }
 
-static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
+SYM_INLINE void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    SolarisProcessList* spl = (SolarisProcessList*) pl;
    static kstat_t      *meminfo = NULL;
    int                 ksrphyserr = -1;
@@ -237,7 +237,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap  = pl->totalSwap - (totalfree * pageSizeKB);
 }
 
-static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
+SYM_INLINE void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
    SolarisProcessList* spl = (SolarisProcessList*) pl;
    kstat_t             *arcstats = NULL;
    int                 ksrphyserr = -1;

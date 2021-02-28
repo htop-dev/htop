@@ -17,7 +17,7 @@ in the source distribution for its full text.
 
 static const int SysArchMeter_attributes[] = {HOSTNAME};
 
-static void SysArchMeter_updateValues(Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void SysArchMeter_updateValues(Meter* this, char* buffer, size_t size) {
    static struct utsname uname_info;
    static int uname_result;
    static char distro[3][64] = { {'\0'}, {'\0'}, {'\0'} };

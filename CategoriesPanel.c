@@ -26,7 +26,7 @@ in the source distribution for its full text.
 
 static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static void CategoriesPanel_delete(Object* object) {
+SYM_PRIVATE void CategoriesPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    CategoriesPanel* this = (CategoriesPanel*) object;
    Panel_done(super);
@@ -44,24 +44,24 @@ void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
    ScreenManager_add(this->scr, availableMeters, -1);
 }
 
-static void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {
+SYM_PRIVATE void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {
    Panel* displayOptions = (Panel*) DisplayOptionsPanel_new(this->settings, this->scr);
    ScreenManager_add(this->scr, displayOptions, -1);
 }
 
-static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
+SYM_PRIVATE void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
    Panel* colors = (Panel*) ColorsPanel_new(this->settings, this->scr);
    ScreenManager_add(this->scr, colors, -1);
 }
 
-static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
+SYM_PRIVATE void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    Panel* columns = (Panel*) ColumnsPanel_new(this->settings);
    Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns);
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
 }
 
-static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
    CategoriesPanel* this = (CategoriesPanel*) super;
 
    HandlerResult result = IGNORED;

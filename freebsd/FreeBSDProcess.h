@@ -26,11 +26,11 @@ typedef struct FreeBSDProcess_ {
    const char* ttyPath;
 } FreeBSDProcess;
 
-static inline bool Process_isKernelThread(const Process* this) {
+SYM_INLINE bool Process_isKernelThread(const Process* this) {
    return ((const FreeBSDProcess*)this)->isKernelThread;
 }
 
-static inline bool Process_isUserlandThread(const Process* this) {
+SYM_INLINE bool Process_isUserlandThread(const Process* this) {
    return this->pid != this->tgid;
 }
 

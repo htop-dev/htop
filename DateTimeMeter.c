@@ -19,7 +19,7 @@ static const int DateTimeMeter_attributes[] = {
    DATETIME
 };
 
-static void DateTimeMeter_updateValues(Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void DateTimeMeter_updateValues(Meter* this, char* buffer, size_t size) {
    time_t t = time(NULL);
    struct tm result;
    const struct tm* lt = localtime_r(&t, &result);

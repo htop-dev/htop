@@ -233,11 +233,11 @@ typedef struct ProcessClass_ {
 #define Process_getCommand(this_)                      (As_Process(this_)->getCommandStr ? As_Process(this_)->getCommandStr((const Process*)(this_)) : ((const Process*)(this_))->comm)
 #define Process_compareByKey(p1_, p2_, key_)           (As_Process(p1_)->compareByKey ? (As_Process(p1_)->compareByKey(p1_, p2_, key_)) : Process_compareByKey_Base(p1_, p2_, key_))
 
-static inline pid_t Process_getParentPid(const Process* this) {
+SYM_INLINE pid_t Process_getParentPid(const Process* this) {
    return this->tgid == this->pid ? this->ppid : this->tgid;
 }
 
-static inline bool Process_isChildOf(const Process* this, pid_t pid) {
+SYM_INLINE bool Process_isChildOf(const Process* this, pid_t pid) {
    return pid == Process_getParentPid(this);
 }
 

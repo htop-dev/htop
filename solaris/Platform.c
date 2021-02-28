@@ -240,7 +240,7 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
    ZfsCompressedArcMeter_readStats(this, &(spl->zfs));
 }
 
-static int Platform_buildenv(void* accum, struct ps_prochandle* Phandle, uintptr_t addr, const char* str) {
+SYM_PRIVATE int Platform_buildenv(void* accum, struct ps_prochandle* Phandle, uintptr_t addr, const char* str) {
    envAccum* accump = accum;
    (void) Phandle;
    (void) addr;

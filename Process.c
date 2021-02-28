@@ -175,7 +175,7 @@ void Process_fillStarttimeBuffer(Process* this) {
    strftime(this->starttime_show, sizeof(this->starttime_show) - 1, (this->starttime_ctime > (time(NULL) - 86400)) ? "%R " : "%b%d ", &date);
 }
 
-static inline void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
+SYM_INLINE void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
    int start = RichString_size(str);
    int len = 0;
    const char* comm = this->comm;
@@ -434,7 +434,7 @@ void Process_done(Process* this) {
    free(this->comm);
 }
 
-static const char* Process_getCommandStr(const Process* p) {
+SYM_PRIVATE const char* Process_getCommandStr(const Process* p) {
    return p->comm ? p->comm : "";
 }
 
@@ -523,7 +523,7 @@ int Process_compare(const void* v1, const void* v2) {
    return result;
 }
 
-static uint8_t stateCompareValue(char state) {
+SYM_PRIVATE uint8_t stateCompareValue(char state) {
    switch (state) {
 
    case 'S':

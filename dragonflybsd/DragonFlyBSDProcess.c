@@ -62,7 +62,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+SYM_PRIVATE void DragonFlyBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -79,7 +79,7 @@ static void DragonFlyBSDProcess_writeField(const Process* this, RichString* str,
    RichString_appendWide(str, attr, buffer);
 }
 
-static int DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+SYM_PRIVATE int DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const DragonFlyBSDProcess* p1 = (const DragonFlyBSDProcess*)v1;
    const DragonFlyBSDProcess* p2 = (const DragonFlyBSDProcess*)v2;
 

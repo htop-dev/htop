@@ -44,7 +44,7 @@ typedef struct MaskItem_ {
    #endif
 } MaskItem;
 
-static void MaskItem_delete(Object* cast) {
+SYM_PRIVATE void MaskItem_delete(Object* cast) {
    MaskItem* this = (MaskItem*) cast;
    free(this->text);
    free(this->indent);
@@ -56,7 +56,7 @@ static void MaskItem_delete(Object* cast) {
    free(this);
 }
 
-static void MaskItem_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void MaskItem_display(const Object* cast, RichString* out) {
    const MaskItem* this = (const MaskItem*)cast;
    assert (this != NULL);
    RichString_appendAscii(out, CRT_colors[CHECK_BOX], "[");
@@ -87,7 +87,7 @@ static const ObjectClass MaskItem_class = {
 
 #ifdef HAVE_LIBHWLOC
 
-static MaskItem* MaskItem_newMask(const char* text, const char* indent, hwloc_bitmap_t cpuset, bool owner) {
+SYM_PRIVATE MaskItem* MaskItem_newMask(const char* text, const char* indent, hwloc_bitmap_t cpuset, bool owner) {
    MaskItem* this = AllocThis(MaskItem);
    this->text = xStrdup(text);
    this->indent = xStrdup(indent); /* nonnull for tree node */
@@ -101,7 +101,7 @@ static MaskItem* MaskItem_newMask(const char* text, const char* indent, hwloc_bi
 
 #endif
 
-static MaskItem* MaskItem_newSingleton(const char* text, int cpu, bool isSet) {
+SYM_PRIVATE MaskItem* MaskItem_newSingleton(const char* text, int cpu, bool isSet) {
    MaskItem* this = AllocThis(MaskItem);
    this->text = xStrdup(text);
    this->indent = NULL; /* not a tree node */
@@ -134,7 +134,7 @@ typedef struct AffinityPanel_ {
    #endif
 } AffinityPanel;
 
-static void AffinityPanel_delete(Object* cast) {
+SYM_PRIVATE void AffinityPanel_delete(Object* cast) {
    AffinityPanel* this = (AffinityPanel*) cast;
    Panel* super = (Panel*) this;
    Panel_done(super);
@@ -148,7 +148,7 @@ static void AffinityPanel_delete(Object* cast) {
 
 #ifdef HAVE_LIBHWLOC
 
-static void AffinityPanel_updateItem(AffinityPanel* this, MaskItem* item) {
+SYM_PRIVATE void AffinityPanel_updateItem(AffinityPanel* this, MaskItem* item) {
    Panel* super = (Panel*) this;
 
    item->value = hwloc_bitmap_isincluded(item->cpuset, this->workCpuset) ? 2 :
@@ -157,7 +157,7 @@ static void AffinityPanel_updateItem(AffinityPanel* this, MaskItem* item) {
    Panel_add(super, (Object*) item);
 }
 
-static void AffinityPanel_updateTopo(AffinityPanel* this, MaskItem* item) {
+SYM_PRIVATE void AffinityPanel_updateTopo(AffinityPanel* this, MaskItem* item) {
    AffinityPanel_updateItem(this, item);
 
    if (item->sub_tree == 2)
@@ -169,7 +169,7 @@ static void AffinityPanel_updateTopo(AffinityPanel* this, MaskItem* item) {
 
 #endif
 
-static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
+SYM_PRIVATE void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
    Panel* super = (Panel*) this;
 
    FunctionBar_setLabel(super->currentBar, KEY_F(3), this->topoView ? "Collapse/Expand" : "");
@@ -195,7 +195,7 @@ static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
    super->needsRedraw = true;
 }
 
-static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
    AffinityPanel* this = (AffinityPanel*) super;
    HandlerResult result = IGNORED;
    MaskItem* selected = (MaskItem*) Panel_getSelected(super);
@@ -263,7 +263,7 @@ static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
 
 #ifdef HAVE_LIBHWLOC
 
-static MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem* parent) {
+SYM_PRIVATE MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem* parent) {
    const char* type_name = hwloc_obj_type_string(obj->type);
    const char* index_prefix = "#";
    unsigned depth = obj->depth;
@@ -319,7 +319,7 @@ static MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
    return item;
 }
 
-static MaskItem* AffinityPanel_buildTopology(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem* parent) {
+SYM_PRIVATE MaskItem* AffinityPanel_buildTopology(AffinityPanel* this, hwloc_obj_t obj, unsigned indent, MaskItem* parent) {
    MaskItem* item = AffinityPanel_addObject(this, obj, indent, parent);
    if (obj->next_sibling) {
       indent |= (1U << obj->depth);

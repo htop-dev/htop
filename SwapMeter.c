@@ -18,7 +18,7 @@ static const int SwapMeter_attributes[] = {
    SWAP_CACHE
 };
 
-static void SwapMeter_updateValues(Meter* this, char* buffer, size_t size) {
+SYM_PRIVATE void SwapMeter_updateValues(Meter* this, char* buffer, size_t size) {
    int written;
    Platform_setSwapValues(this);
 
@@ -30,7 +30,7 @@ static void SwapMeter_updateValues(Meter* this, char* buffer, size_t size) {
    Meter_humanUnit(buffer, this->total, size);
 }
 
-static void SwapMeter_display(const Object* cast, RichString* out) {
+SYM_PRIVATE void SwapMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
    RichString_writeAscii(out, CRT_colors[METER_TEXT], ":");

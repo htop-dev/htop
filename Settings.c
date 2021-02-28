@@ -29,14 +29,14 @@ void Settings_delete(Settings* this) {
    free(this);
 }
 
-static void Settings_readMeters(Settings* this, const char* line, int column) {
+SYM_PRIVATE void Settings_readMeters(Settings* this, const char* line, int column) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
    this->columns[column].names = ids;
 }
 
-static void Settings_readMeterModes(Settings* this, const char* line, int column) {
+SYM_PRIVATE void Settings_readMeterModes(Settings* this, const char* line, int column) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
@@ -53,7 +53,7 @@ static void Settings_readMeterModes(Settings* this, const char* line, int column
    this->columns[column].modes = modes;
 }
 
-static void Settings_defaultMeters(Settings* this, int initialCpuCount) {
+SYM_PRIVATE void Settings_defaultMeters(Settings* this, int initialCpuCount) {
    int sizes[] = { 3, 3 };
    if (initialCpuCount > 4 && initialCpuCount <= 128) {
       sizes[1]++;
@@ -105,7 +105,7 @@ static void Settings_defaultMeters(Settings* this, int initialCpuCount) {
    this->columns[1].modes[r++] = TEXT_METERMODE;
 }
 
-static void readFields(ProcessField* fields, uint32_t* flags, const char* line) {
+SYM_PRIVATE void readFields(ProcessField* fields, uint32_t* flags, const char* line) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
@@ -124,7 +124,7 @@ static void readFields(ProcessField* fields, uint32_t* flags, const char* line) 
    String_freeArray(ids);
 }
 
-static bool Settings_read(Settings* this, const char* fileName, int initialCpuCount) {
+SYM_PRIVATE bool Settings_read(Settings* this, const char* fileName, int initialCpuCount) {
    FILE* fd = fopen(fileName, "r");
    if (!fd)
       return false;
@@ -251,7 +251,7 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
    return didReadFields;
 }
 
-static void writeFields(FILE* fd, const ProcessField* fields, const char* name) {
+SYM_PRIVATE void writeFields(FILE* fd, const ProcessField* fields, const char* name) {
    fprintf(fd, "%s=", name);
    const char* sep = "";
    for (int i = 0; fields[i]; i++) {
@@ -262,7 +262,7 @@ static void writeFields(FILE* fd, const ProcessField* fields, const char* name) 
    fprintf(fd, "\n");
 }
 
-static void writeMeters(Settings* this, FILE* fd, int column) {
+SYM_PRIVATE void writeMeters(Settings* this, FILE* fd, int column) {
    const char* sep = "";
    for (int i = 0; i < this->columns[column].len; i++) {
       fprintf(fd, "%s%s", sep, this->columns[column].names[i]);
@@ -271,7 +271,7 @@ static void writeMeters(Settings* this, FILE* fd, int column) {
    fprintf(fd, "\n");
 }
 
-static void writeMeterModes(Settings* this, FILE* fd, int column) {
+SYM_PRIVATE void writeMeterModes(Settings* this, FILE* fd, int column) {
    const char* sep = "";
    for (int i = 0; i < this->columns[column].len; i++) {
       fprintf(fd, "%s%d", sep, this->columns[column].modes[i]);

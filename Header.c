@@ -182,7 +182,7 @@ void Header_draw(const Header* this) {
  * by counting how many columns to the right are empty or contain a BlankMeter.
  * Returns the number of columns to span, i.e. if the direct neighbor is occupied 1.
  */
-static int calcColumnWidthCount(const Header* this, const Meter* curMeter, const int pad, const int curColumn, const int curHeight) {
+SYM_PRIVATE int calcColumnWidthCount(const Header* this, const Meter* curMeter, const int pad, const int curColumn, const int curHeight) {
    for (int i = curColumn + 1; i < this->nrColumns; i++) {
       const Vector* meters = this->columns[i];
 

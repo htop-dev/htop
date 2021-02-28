@@ -11,7 +11,7 @@
 #include "XUtils.h"
 
 
-static void CommandScreen_scan(InfoScreen* this) {
+SYM_PRIVATE void CommandScreen_scan(InfoScreen* this) {
    Panel* panel = this->display;
    int idx = MAXIMUM(Panel_getSelectedIndex(panel), 0);
    Panel_prune(panel);
@@ -45,7 +45,7 @@ static void CommandScreen_scan(InfoScreen* this) {
    Panel_setSelected(panel, idx);
 }
 
-static void CommandScreen_draw(InfoScreen* this) {
+SYM_PRIVATE void CommandScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Command of process %d - %s", this->process->pid, Process_getCommand(this->process));
 }
 

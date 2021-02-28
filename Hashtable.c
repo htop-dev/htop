@@ -36,7 +36,7 @@ struct Hashtable_ {
 
 #ifndef NDEBUG
 
-static void Hashtable_dump(const Hashtable* this) {
+SYM_PRIVATE void Hashtable_dump(const Hashtable* this) {
    fprintf(stderr, "Hashtable %p: size=%zu items=%zu owner=%s\n",
            (const void*)this,
            this->size,
@@ -61,7 +61,7 @@ static void Hashtable_dump(const Hashtable* this) {
            items);
 }
 
-static bool Hashtable_isConsistent(const Hashtable* this) {
+SYM_PRIVATE bool Hashtable_isConsistent(const Hashtable* this) {
    size_t items = 0;
    for (size_t i = 0; i < this->size; i++) {
       if (this->buckets[i].value)
@@ -95,7 +95,7 @@ static const uint64_t OEISprimes[] = {
    34359738337, 68719476731, 137438953447
 };
 
-static size_t nextPrime(size_t n) {
+SYM_PRIVATE size_t nextPrime(size_t n) {
    /* on 32-bit make sure we do not return primes not fitting in size_t */
    for (size_t i = 0; i < ARRAYSIZE(OEISprimes) && OEISprimes[i] < SIZE_MAX; i++) {
       if (n <= OEISprimes[i])
@@ -138,7 +138,7 @@ void Hashtable_clear(Hashtable* this) {
    assert(Hashtable_isConsistent(this));
 }
 
-static void insert(Hashtable* this, ht_key_t key, void* value) {
+SYM_PRIVATE void insert(Hashtable* this, ht_key_t key, void* value) {
    size_t index = key % this->size;
    size_t probe = 0;
 #ifndef NDEBUG

@@ -62,7 +62,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+SYM_PRIVATE void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
    char buffer[256];
    size_t n = sizeof(buffer);
@@ -91,7 +91,7 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    RichString_appendWide(str, attr, buffer);
 }
 
-static int FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+SYM_PRIVATE int FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const FreeBSDProcess* p1 = (const FreeBSDProcess*)v1;
    const FreeBSDProcess* p2 = (const FreeBSDProcess*)v2;
 

@@ -89,7 +89,7 @@ void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
    Panel_move(panel, lastX, y1);
 }
 
-static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut) {
+SYM_PRIVATE void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut) {
    ProcessList* pl = this->header->pl;
 
    struct timeval tv;
@@ -119,7 +119,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    *rescan = false;
 }
 
-static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_redraw) {
+SYM_PRIVATE void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_redraw) {
    const int nPanels = this->panelCount;
    for (int i = 0; i < nPanels; i++) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);

@@ -40,14 +40,14 @@ static const char* const ColorSchemeNames[] = {
    NULL
 };
 
-static void ColorsPanel_delete(Object* object) {
+SYM_PRIVATE void ColorsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    ColorsPanel* this = (ColorsPanel*) object;
    Panel_done(super);
    free(this);
 }
 
-static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
+SYM_PRIVATE HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    ColorsPanel* this = (ColorsPanel*) super;
 
    HandlerResult result = IGNORED;

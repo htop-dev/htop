@@ -30,11 +30,11 @@ int Compat_fstatat(int dirfd,
 
 typedef int openat_arg_t;
 
-static inline void Compat_openatArgClose(openat_arg_t dirfd) {
+SYM_INLINE void Compat_openatArgClose(openat_arg_t dirfd) {
    close(dirfd);
 }
 
-static inline int Compat_openat(openat_arg_t dirfd, const char* pathname, int flags) {
+SYM_INLINE int Compat_openat(openat_arg_t dirfd, const char* pathname, int flags) {
    return openat(dirfd, pathname, flags);
 }
 
@@ -42,7 +42,7 @@ static inline int Compat_openat(openat_arg_t dirfd, const char* pathname, int fl
 
 typedef const char* openat_arg_t;
 
-static inline void Compat_openatArgClose(openat_arg_t dirpath) {
+SYM_INLINE void Compat_openatArgClose(openat_arg_t dirpath) {
    (void)dirpath;
 }
 

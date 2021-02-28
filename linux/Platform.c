@@ -129,7 +129,7 @@ void Platform_done(void) {
 #endif
 }
 
-static Htop_Reaction Platform_actionSetIOPriority(State* st) {
+SYM_PRIVATE Htop_Reaction Platform_actionSetIOPriority(State* st) {
    const LinuxProcess* p = (const LinuxProcess*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
@@ -584,7 +584,7 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
 // READ FROM /proc
 // ----------------------------------------
 
-static unsigned long int parseBatInfo(const char* fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
+SYM_PRIVATE unsigned long int parseBatInfo(const char* fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
    const char batteryPath[] = PROC_BATTERY_DIR;
    DIR* batteryDir = opendir(batteryPath);
    if (!batteryDir)
@@ -644,7 +644,7 @@ static unsigned long int parseBatInfo(const char* fileName, const unsigned short
    return total;
 }
 
-static ACPresence procAcpiCheck(void) {
+SYM_PRIVATE ACPresence procAcpiCheck(void) {
    ACPresence isOn = AC_ERROR;
    const char* power_supplyPath = PROC_POWERSUPPLY_DIR;
    DIR* dir = opendir(power_supplyPath);
@@ -693,7 +693,7 @@ static ACPresence procAcpiCheck(void) {
    return isOn;
 }
 
-static double Platform_Battery_getProcBatInfo(void) {
+SYM_PRIVATE double Platform_Battery_getProcBatInfo(void) {
    const unsigned long int totalFull = parseBatInfo("info", 3, 4);
    if (totalFull == 0)
       return NAN;
@@ -705,7 +705,7 @@ static double Platform_Battery_getProcBatInfo(void) {
    return totalRemain * 100.0 / (double) totalFull;
 }
 
-static void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
+SYM_PRIVATE void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
    *isOnAC = procAcpiCheck();
    *percent = AC_ERROR != *isOnAC ? Platform_Battery_getProcBatInfo() : NAN;
 }
@@ -714,7 +714,7 @@ static void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
 // READ FROM /sys
 // ----------------------------------------
 
-static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
+SYM_PRIVATE void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
 
    *percent = NAN;
    *isOnAC = AC_ERROR;

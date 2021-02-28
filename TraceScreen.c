@@ -60,7 +60,7 @@ void TraceScreen_delete(Object* cast) {
    free(InfoScreen_done((InfoScreen*)this));
 }
 
-static void TraceScreen_draw(InfoScreen* this) {
+SYM_PRIVATE void TraceScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Trace of process %d - %s", this->process->pid, Process_getCommand(this->process));
 }
 
@@ -115,7 +115,7 @@ err:
    return false;
 }
 
-static void TraceScreen_updateTrace(InfoScreen* super) {
+SYM_PRIVATE void TraceScreen_updateTrace(InfoScreen* super) {
    TraceScreen* this = (TraceScreen*) super;
    char buffer[1025];
 
@@ -160,7 +160,7 @@ static void TraceScreen_updateTrace(InfoScreen* super) {
    }
 }
 
-static bool TraceScreen_onKey(InfoScreen* super, int ch) {
+SYM_PRIVATE bool TraceScreen_onKey(InfoScreen* super, int ch) {
    TraceScreen* this = (TraceScreen*) super;
    switch(ch) {
       case 'f':

@@ -79,7 +79,7 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
    this->panel = panel;
 }
 
-static const char* alignedProcessFieldTitle(ProcessField field) {
+SYM_PRIVATE const char* alignedProcessFieldTitle(ProcessField field) {
    const char* title = Process_fields[field].title;
    if (!title)
       return "- ";
@@ -192,7 +192,7 @@ int ProcessList_size(const ProcessList* this) {
 // It uses a temporary Hashtable `draftingTreeSet` because it's not safe to traverse a tree
 // and at the same time make changes in it.
 //
-static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftBound, unsigned int rightBound, unsigned int deep, unsigned int left, unsigned int right, unsigned int* index, unsigned int* treeIndex, int indent) {
+SYM_PRIVATE void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftBound, unsigned int rightBound, unsigned int deep, unsigned int left, unsigned int right, unsigned int* index, unsigned int* treeIndex, int indent) {
 
    // It's guaranteed that layer_size is enough space
    // but most likely it needs less. Specifically on first iteration.
@@ -291,7 +291,7 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
    Vector_delete(layer);
 }
 
-static void ProcessList_updateTreeSet(ProcessList* this) {
+SYM_PRIVATE void ProcessList_updateTreeSet(ProcessList* this) {
    unsigned int index = 0;
    unsigned int tree_index = 1;
 
@@ -310,7 +310,7 @@ static void ProcessList_updateTreeSet(ProcessList* this) {
    assert((int)Hashtable_count(this->displayTreeSet) == vsize);
 }
 
-static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show, int* node_counter, int* node_index) {
+SYM_PRIVATE void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show, int* node_counter, int* node_index) {
    Vector* children = Vector_new(Class(Process), false, DEFAULT_SIZE);
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
@@ -360,14 +360,14 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
    Vector_delete(children);
 }
 
-static int ProcessList_treeProcessCompare(const void* v1, const void* v2) {
+SYM_PRIVATE int ProcessList_treeProcessCompare(const void* v1, const void* v2) {
    const Process *p1 = (const Process*)v1;
    const Process *p2 = (const Process*)v2;
 
    return SPACESHIP_NUMBER(p1->tree_left, p2->tree_left);
 }
 
-static int ProcessList_treeProcessCompareByPID(const void* v1, const void* v2) {
+SYM_PRIVATE int ProcessList_treeProcessCompareByPID(const void* v1, const void* v2) {
    const Process *p1 = (const Process*)v1;
    const Process *p2 = (const Process*)v2;
 
@@ -375,7 +375,7 @@ static int ProcessList_treeProcessCompareByPID(const void* v1, const void* v2) {
 }
 
 // Builds a sorted tree from scratch, without relying on previously gathered information
-static void ProcessList_buildTree(ProcessList* this) {
+SYM_PRIVATE void ProcessList_buildTree(ProcessList* this) {
    int node_counter = 1;
    int node_index = 0;
    int direction = Settings_getActiveDirection(this->settings);

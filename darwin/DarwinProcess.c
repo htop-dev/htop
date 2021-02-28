@@ -67,7 +67,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void DarwinProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+SYM_PRIVATE void DarwinProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const DarwinProcess* dp = (const DarwinProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -82,7 +82,7 @@ static void DarwinProcess_writeField(const Process* this, RichString* str, Proce
    RichString_appendWide(str, attr, buffer);
 }
 
-static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+SYM_PRIVATE int DarwinProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const DarwinProcess* p1 = (const DarwinProcess*)v1;
    const DarwinProcess* p2 = (const DarwinProcess*)v2;
 
@@ -100,7 +100,7 @@ bool Process_isThread(const Process* this) {
    return false;
 }
 
-static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* basenameOffset) {
+SYM_PRIVATE char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* basenameOffset) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;

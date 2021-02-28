@@ -136,7 +136,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
+SYM_INLINE void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
    const DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) pl;
 
    int cpus   = pl->cpuCount;   // actual CPU count
@@ -218,7 +218,7 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
    }
 }
 
-static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
+SYM_INLINE void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) pl;
 
    // @etosan:
@@ -261,7 +261,7 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap *= pageSizeKb;
 }
 
-static char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
+SYM_PRIVATE char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
       return xStrdup(kproc->kp_comm);
@@ -286,7 +286,7 @@ static char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, const struct kin
    return comm;
 }
 
-static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* dfpl) {
+SYM_INLINE void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* dfpl) {
    size_t len;
    char* jls; /* Jail list */
    char* curpos;
@@ -337,7 +337,7 @@ retry:
    free(jls);
 }
 
-static char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid) {
+SYM_PRIVATE char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid) {
    char*  hostname;
    char*  jname;
 

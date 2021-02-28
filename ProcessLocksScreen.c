@@ -34,18 +34,18 @@ void ProcessLocksScreen_delete(Object* this) {
    free(InfoScreen_done((InfoScreen*)this));
 }
 
-static void ProcessLocksScreen_draw(InfoScreen* this) {
+SYM_PRIVATE void ProcessLocksScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Snapshot of file locks of process %d - %s", ((ProcessLocksScreen*)this)->pid, Process_getCommand(this->process));
 }
 
-static inline void FileLocks_Data_clear(FileLocks_Data* data) {
+SYM_INLINE void FileLocks_Data_clear(FileLocks_Data* data) {
    free(data->locktype);
    free(data->exclusive);
    free(data->readwrite);
    free(data->filename);
 }
 
-static void ProcessLocksScreen_scan(InfoScreen* this) {
+SYM_PRIVATE void ProcessLocksScreen_scan(InfoScreen* this) {
    Panel* panel = this->display;
    int idx = Panel_getSelectedIndex(panel);
    Panel_prune(panel);
