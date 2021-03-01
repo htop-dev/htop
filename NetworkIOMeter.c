@@ -19,10 +19,10 @@ static const int NetworkIOMeter_attributes[] = {
 
 static bool hasData = false;
 
-static unsigned long int cached_rxb_diff = 0;
-static unsigned long int cached_rxp_diff = 0;
-static unsigned long int cached_txb_diff = 0;
-static unsigned long int cached_txp_diff = 0;
+static unsigned long int cached_rxb_diff;
+static unsigned long int cached_rxp_diff;
+static unsigned long int cached_txb_diff;
+static unsigned long int cached_txp_diff;
 
 static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
    static unsigned long long int cached_last_update = 0;
@@ -34,50 +34,56 @@ static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
 
    /* update only every 500ms */
    if (passedTimeInMs > 500) {
-      static unsigned long int cached_rxb_total = 0;
-      static unsigned long int cached_rxp_total = 0;
-      static unsigned long int cached_txb_total = 0;
-      static unsigned long int cached_txp_total = 0;
+      static unsigned long long int cached_rxb_total;
+      static unsigned long long int cached_rxp_total;
+      static unsigned long long int cached_txb_total;
+      static unsigned long long int cached_txp_total;
+      unsigned long long diff;
 
       cached_last_update = timeInMilliSeconds;
 
-      unsigned long int bytesReceived, packetsReceived, bytesTransmitted, packetsTransmitted;
-
-      hasData = Platform_getNetworkIO(&bytesReceived, &packetsReceived, &bytesTransmitted, &packetsTransmitted);
+      NetworkIOData data;
+      hasData = Platform_getNetworkIO(&data);
       if (!hasData) {
          xSnprintf(buffer, len, "no data");
          return;
       }
 
-      if (bytesReceived > cached_rxb_total) {
-         cached_rxb_diff = (bytesReceived - cached_rxb_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
-         cached_rxb_diff = 1000.0 * cached_rxb_diff / passedTimeInMs; /* convert to per second */
+      if (data.bytesReceived > cached_rxb_total) {
+         diff = data.bytesReceived - cached_rxb_total;
+         diff /= ONE_K; /* Meter_humanUnit() expects unit in kilo */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to per second */
+         cached_rxb_diff = (unsigned long)diff;
       } else {
-         cached_rxb_diff = 0;
+         cached_rxb_diff = 0UL;
       }
-      cached_rxb_total = bytesReceived;
+      cached_rxb_total = data.bytesReceived;
 
-      if (packetsReceived > cached_rxp_total) {
-         cached_rxp_diff = packetsReceived - cached_rxp_total;
+      if (data.packetsReceived > cached_rxp_total) {
+         diff = data.packetsReceived - cached_rxp_total;
+         cached_rxp_diff = (unsigned long)diff;
       } else {
-         cached_rxp_diff = 0;
+         cached_rxp_diff = 0UL;
       }
-      cached_rxp_total = packetsReceived;
+      cached_rxp_total = data.packetsReceived;
 
-      if (bytesTransmitted > cached_txb_total) {
-         cached_txb_diff = (bytesTransmitted - cached_txb_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
-         cached_txb_diff = 1000.0 * cached_txb_diff / passedTimeInMs; /* convert to per second */
+      if (data.bytesTransmitted > cached_txb_total) {
+         diff = data.bytesTransmitted - cached_txb_total;
+         diff /= ONE_K; /* Meter_humanUnit() expects unit in kilo */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to per second */
+         cached_txb_diff = (unsigned long)diff;
       } else {
-         cached_txb_diff = 0;
+         cached_txb_diff = 0UL;
       }
-      cached_txb_total = bytesTransmitted;
+      cached_txb_total = data.bytesTransmitted;
 
-      if (packetsTransmitted > cached_txp_total) {
-         cached_txp_diff = packetsTransmitted - cached_txp_total;
+      if (data.packetsTransmitted > cached_txp_total) {
+         diff = data.packetsTransmitted - cached_txp_total;
+         cached_txp_diff = (unsigned long)diff;
       } else {
-         cached_txp_diff = 0;
+         cached_txp_diff = 0UL;
       }
-      cached_txp_total = packetsTransmitted;
+      cached_txp_total = data.packetsTransmitted;
    }
 
    this->values[0] = cached_rxb_diff;

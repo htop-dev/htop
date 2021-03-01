@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
 #include "Meter.h"
+#include "NetworkIOMeter.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
@@ -67,10 +68,7 @@ void Platform_getPressureStall(const char *file, bool some, double* ten, double*
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(unsigned long int* bytesReceived,
-                           unsigned long int* packetsReceived,
-                           unsigned long int* bytesTransmitted,
-                           unsigned long int* packetsTransmitted);
+bool Platform_getNetworkIO(NetworkIOData* data);
 
 void Platform_getBattery(double *percent, ACPresence *isOnAC);
 
