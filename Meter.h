@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/time.h>
@@ -17,8 +18,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "ProcessList.h"
 
-
-#define METER_BUFFER_LEN 256
+#define GRAPH_NUM_RECORDS 256
 
 #define METER_BUFFER_CHECK(buffer, size, written)          \
    do {                                                    \
@@ -60,6 +60,11 @@ typedef struct MeterClass_ {
    const Meter_Draw draw;
    const Meter_UpdateValues updateValues;
    const int defaultMode;
+   // For "total" variable, sign matters.
+   // >0: Full/maximum value is stable (at least for a short duration). Will
+   //     draw as percent graph. e.g. CPU & swap.
+   // <0: No stable maximum. Will draw with dynamic scale. e.g. loadavg.
+   // (total == 0) will bring weird behavior for now. Avoid.
    const double total;
    const int* const attributes;
    const char* const name;                 /* internal name of the meter, must not contain any space */
@@ -80,13 +85,19 @@ typedef struct MeterClass_ {
 #define Meter_updateValues(this_, buf_, sz_) \
                                        As_Meter(this_)->updateValues((Meter*)(this_), buf_, sz_)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
+#define Meter_getMaxItems(this_)       As_Meter(this_)->maxItems
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
 
 typedef struct GraphData_ {
    struct timeval time;
-   double values[METER_BUFFER_LEN];
+   double* values;
+   double* stack1;
+   double* stack2;
+   int* colors;
+   unsigned int colorRowSize;
+   int drawOffset;
 } GraphData;
 
 struct Meter_ {
@@ -121,6 +132,27 @@ typedef enum {
    LED_METERMODE,
    LAST_METERMODE
 } MeterModeId;
+
+#define IS_POWER_OF_2(x) ((x) > 0 && !((x) & ((x) - 1)))
+
+#ifndef __has_builtin
+# define __has_builtin(x) 0
+#endif
+#if (__has_builtin(__builtin_clz) || \
+    ((__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)))
+# define HAS_BUILTIN_CLZ 1
+# define HAS_ILOG2 1
+/*
+ * ilog2(x): base-2 logarithm of an unsigned integer x, rounded down, but
+ *           ilog2(0U) yields undefined behavior.
+ * (You may use ilog2(x | 1) to define the (x == 0) behavior.)
+ */
+# define ilog2(x) ((sizeof(x) <= sizeof(unsigned int)) ? \
+     (CHAR_BIT*sizeof(unsigned int)-1-__builtin_clz(x)) : \
+     (sizeof(x) <= sizeof(unsigned long)) ? \
+     (CHAR_BIT*sizeof(unsigned long)-1-__builtin_clzl(x)) : \
+     (CHAR_BIT*sizeof(unsigned long long)-1-__builtin_clzll(x)))
+#endif // __has_builtin(__builtin_clz) || GNU C 3.4 or later
 
 extern const MeterClass Meter_class;
 

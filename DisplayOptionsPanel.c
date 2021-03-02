@@ -129,5 +129,6 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    #ifdef HAVE_LIBHWLOC
    Panel_add(super, (Object*) CheckItem_newByRef("Show topology when selecting affinity by default", &(settings->topologyAffinity)));
    #endif
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Align graph meter bars to reducing color blinking"), &(settings->alignGraphMeter)));
    return this;
 }
