@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "DarwinProcess.h"
 #include "DiskIOMeter.h"
+#include "Generic.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
@@ -66,5 +67,13 @@ bool Platform_getDiskIO(DiskIOData* data);
 bool Platform_getNetworkIO(NetworkIOData* data);
 
 void Platform_getBattery(double *percent, ACPresence *isOnAC);
+
+static inline void Platform_getHostname(char* buffer, size_t size) {
+   Generic_Hostname(buffer, size);
+}
+
+static inline void Platform_getRelease(char** string) {
+   *string = Generic_OSRelease();
+}
 
 #endif

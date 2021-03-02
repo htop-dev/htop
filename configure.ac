@@ -108,6 +108,7 @@ AC_CHECK_HEADERS([ \
     strings.h \
     sys/param.h \
     sys/time.h \
+    sys/utsname.h \
     unistd.h
    ], [], [AC_MSG_ERROR([can not find required generic header files])])
 
@@ -315,6 +316,18 @@ case "$enable_hwloc" in
       AC_MSG_ERROR([bad value '$enable_hwloc' for --enable-hwloc])
       ;;
 esac
+
+AC_ARG_WITH([os-release],
+            [AS_HELP_STRING([--with-os-release=FILE],
+			    [location of an os-release file @<:@default=/etc/os-release@:>@])],
+            [],
+            [with_os_release=/etc/os-release])
+if test -n "$with_os_release" -a ! -f "$with_os_release"; then
+   if test -f "/usr/lib/os-release"; then
+      with_os_release="/usr/lib/os-release"
+   fi
+fi
+AC_DEFINE_UNQUOTED([OSRELEASEFILE], ["$with_os_release"], [File with OS release details.])
 
 # ----------------------------------------------------------------------
 
@@ -608,6 +621,7 @@ AC_MSG_RESULT([
   ${PACKAGE_NAME} ${VERSION}
 
   platform:                  $my_htop_platform
+  os-release file:           $with_os_release
   (Linux) proc directory:    $with_proc
   (Linux) openvz:            $enable_openvz
   (Linux) vserver:           $enable_vserver
