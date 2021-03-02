@@ -56,7 +56,6 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->tty_nr = 0;
    proc->tpgid = 0;
    proc->st_uid = 0;
-   proc->flags = 0;
    proc->processor = 0;
 
    proc->percent_cpu = 2.5;

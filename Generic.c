@@ -69,18 +69,17 @@ static void parseOSRelease(char* buffer, size_t bufferLen) {
 }
 
 char* Generic_OSRelease(void) {
-   static struct utsname uname_info;
-
    static char savedString[
       /* uname structure fields - manpages recommend sizeof */
-      sizeof(uname_info.sysname) +
-      sizeof(uname_info.release) +
-      sizeof(uname_info.machine) +
+      sizeof(((struct utsname*)0)->sysname) +
+      sizeof(((struct utsname*)0)->release) +
+      sizeof(((struct utsname*)0)->machine) +
       16/*markup*/ +
       128/*distro*/] = {'\0'};
    static bool loaded_data = false;
 
    if (!loaded_data) {
+      struct utsname uname_info;
       int uname_result = uname(&uname_info);
 
       char distro[128];
