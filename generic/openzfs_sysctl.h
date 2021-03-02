@@ -1,7 +1,7 @@
 #ifndef HEADER_openzfs_sysctl
 #define HEADER_openzfs_sysctl
 /*
-htop - zfs/openzfs_sysctl.h
+htop - generic/openzfs_sysctl.h
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.

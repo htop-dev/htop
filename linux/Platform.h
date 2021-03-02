@@ -14,7 +14,8 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
-#include "Generic.h"
+#include "generic/hostname.h"
+#include "generic/uname.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
 #include "Process.h"
@@ -74,11 +75,11 @@ bool Platform_getNetworkIO(NetworkIOData* data);
 void Platform_getBattery(double *percent, ACPresence *isOnAC);
 
 static inline void Platform_getHostname(char* buffer, size_t size) {
-   Generic_Hostname(buffer, size);
+   Generic_hostname(buffer, size);
 }
 
 static inline void Platform_getRelease(char** string) {
-   *string = Generic_OSRelease();
+   *string = Generic_uname();
 }
 
 #endif
