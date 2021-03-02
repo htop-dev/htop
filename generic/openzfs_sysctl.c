@@ -1,11 +1,11 @@
 /*
-htop - zfs/openzfs_sysctl.c
+htop - generic/openzfs_sysctl.c
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "zfs/openzfs_sysctl.h"
+#include "generic/openzfs_sysctl.h"
 
 #include <stdlib.h>
 #include <sys/types.h> // IWYU pragma: keep

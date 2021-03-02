@@ -1,7 +1,7 @@
-#ifndef HEADER_Generic
-#define HEADER_Generic
+#ifndef HEADER_hostname
+#define HEADER_hostname
 /*
-htop - Generic.h
+htop - generic/hostname.h
 (C) 2021 htop dev team
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
@@ -9,8 +9,6 @@ in the source distribution for its full text.
 
 #include <stddef.h>
 
-void Generic_Hostname(char* buffer, size_t size);
-
-char* Generic_OSRelease(void);
+void Generic_hostname(char* buffer, size_t size);
 
 #endif

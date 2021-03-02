@@ -1,26 +1,20 @@
 /*
-htop - Generic.c
+htop - generic/uname.c
 (C) 2021 htop dev team
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 #include "config.h"  // IWYU pragma: keep
 
-#include "Generic.h"
+#include "generic/uname.h"
 
 #include <stdio.h>
 #ifdef HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
 #endif
-#include <unistd.h>
 
 #include "XUtils.h"
 
-void Generic_Hostname(char* buffer, size_t size) {
-   gethostname(buffer, size - 1);
-}
-
-#ifdef HAVE_SYS_UTSNAME_H
 
 #ifndef OSRELEASEFILE
 #define OSRELEASEFILE "/etc/os-release"
@@ -68,9 +62,7 @@ static void parseOSRelease(char* buffer, size_t bufferLen) {
    snprintf(buffer, bufferLen, "%s%s%s", name[0] ? name : "", name[0] && version[0] ? " " : "", version);
 }
 
-char* Generic_OSRelease(void) {
-   static struct utsname uname_info;
-
+char* Generic_uname(void) {
    static char savedString[
       /* uname structure fields - manpages recommend sizeof */
       sizeof(uname_info.sysname) +
@@ -99,4 +91,3 @@ char* Generic_OSRelease(void) {
 
    return savedString;
 }
-#endif

@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Compat.h"
 #include "FreeBSDProcess.h"
+#include "generic/openzfs_sysctl.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"
@@ -37,7 +38,6 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 #include "zfs/ZfsArcStats.h"
-#include "zfs/openzfs_sysctl.h"
 
 
 static int MIB_hw_physmem[2];
