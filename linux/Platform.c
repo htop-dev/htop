@@ -534,42 +534,35 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(unsigned long int* bytesReceived,
-                           unsigned long int* packetsReceived,
-                           unsigned long int* bytesTransmitted,
-                           unsigned long int* packetsTransmitted) {
+bool Platform_getNetworkIO(NetworkIOData* data) {
    FILE* fd = fopen(PROCDIR "/net/dev", "r");
    if (!fd)
       return false;
 
-   unsigned long int bytesReceivedSum = 0, packetsReceivedSum = 0, bytesTransmittedSum = 0, packetsTransmittedSum = 0;
+   memset(data, 0, sizeof(NetworkIOData));
    char lineBuffer[512];
    while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
       char interfaceName[32];
-      unsigned long int bytesReceivedParsed, packetsReceivedParsed, bytesTransmittedParsed, packetsTransmittedParsed;
-      if (sscanf(lineBuffer, "%31s %lu %lu %*u %*u %*u %*u %*u %*u %lu %lu",
+      unsigned long long int bytesReceived, packetsReceived, bytesTransmitted, packetsTransmitted;
+      if (sscanf(lineBuffer, "%31s %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu",
                              interfaceName,
-                             &bytesReceivedParsed,
-                             &packetsReceivedParsed,
-                             &bytesTransmittedParsed,
-                             &packetsTransmittedParsed) != 5)
+                             &bytesReceived,
+                             &packetsReceived,
+                             &bytesTransmitted,
+                             &packetsTransmitted) != 5)
          continue;
 
       if (String_eq(interfaceName, "lo:"))
          continue;
 
-      bytesReceivedSum += bytesReceivedParsed;
-      packetsReceivedSum += packetsReceivedParsed;
-      bytesTransmittedSum += bytesTransmittedParsed;
-      packetsTransmittedSum += packetsTransmittedParsed;
+      data->bytesReceived += bytesReceived;
+      data->packetsReceived += packetsReceived;
+      data->bytesTransmitted += bytesTransmitted;
+      data->packetsTransmitted += packetsTransmitted;
    }
 
    fclose(fd);
 
-   *bytesReceived = bytesReceivedSum;
-   *packetsReceived = packetsReceivedSum;
-   *bytesTransmitted = bytesTransmittedSum;
-   *packetsTransmitted = packetsTransmittedSum;
    return true;
 }
 

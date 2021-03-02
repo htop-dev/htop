@@ -283,15 +283,9 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(unsigned long int* bytesReceived,
-                           unsigned long int* packetsReceived,
-                           unsigned long int* bytesTransmitted,
-                           unsigned long int* packetsTransmitted) {
+bool Platform_getNetworkIO(NetworkIOData* data) {
    // TODO
-   *bytesReceived = 0;
-   *packetsReceived = 0;
-   *bytesTransmitted = 0;
-   *packetsTransmitted = 0;
+   (void)data;
    return false;
 }
 

@@ -315,24 +315,17 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(unsigned long int* bytesReceived,
-                           unsigned long int* packetsReceived,
-                           unsigned long int* bytesTransmitted,
-                           unsigned long int* packetsTransmitted) {
-   int r;
-
+bool Platform_getNetworkIO(NetworkIOData* data) {
    // get number of interfaces
    int count;
    size_t countLen = sizeof(count);
    const int countMib[] = { CTL_NET, PF_LINK, NETLINK_GENERIC, IFMIB_SYSTEM, IFMIB_IFCOUNT };
 
-   r = sysctl(countMib, ARRAYSIZE(countMib), &count, &countLen, NULL, 0);
+   int r = sysctl(countMib, ARRAYSIZE(countMib), &count, &countLen, NULL, 0);
    if (r < 0)
       return false;
 
-
-   unsigned long int bytesReceivedSum = 0, packetsReceivedSum = 0, bytesTransmittedSum = 0, packetsTransmittedSum = 0;
-
+   memset(data, 0, sizeof(NetworkIOData));
    for (int i = 1; i <= count; i++) {
       struct ifmibdata ifmd;
       size_t ifmdLen = sizeof(ifmd);
@@ -346,16 +339,12 @@ bool Platform_getNetworkIO(unsigned long int* bytesReceived,
       if (ifmd.ifmd_flags & IFF_LOOPBACK)
          continue;
 
-      bytesReceivedSum += ifmd.ifmd_data.ifi_ibytes;
-      packetsReceivedSum += ifmd.ifmd_data.ifi_ipackets;
-      bytesTransmittedSum += ifmd.ifmd_data.ifi_obytes;
-      packetsTransmittedSum += ifmd.ifmd_data.ifi_opackets;
+      data->bytesReceived += ifmd.ifmd_data.ifi_ibytes;
+      data->packetsReceived += ifmd.ifmd_data.ifi_ipackets;
+      data->bytesTransmitted += ifmd.ifmd_data.ifi_obytes;
+      data->packetsTransmitted += ifmd.ifmd_data.ifi_opackets;
    }
 
-   *bytesReceived = bytesReceivedSum;
-   *packetsReceived = packetsReceivedSum;
-   *bytesTransmitted = bytesTransmittedSum;
-   *packetsTransmitted = packetsTransmittedSum;
    return true;
 }
 

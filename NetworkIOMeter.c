@@ -19,65 +19,71 @@ static const int NetworkIOMeter_attributes[] = {
 
 static bool hasData = false;
 
-static unsigned long int cached_rxb_diff = 0;
-static unsigned long int cached_rxp_diff = 0;
-static unsigned long int cached_txb_diff = 0;
-static unsigned long int cached_txp_diff = 0;
+static uint32_t cached_rxb_diff;
+static uint32_t cached_rxp_diff;
+static uint32_t cached_txb_diff;
+static uint32_t cached_txp_diff;
 
 static void NetworkIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
-   static unsigned long long int cached_last_update = 0;
+   static uint64_t cached_last_update = 0;
 
    struct timeval tv;
    gettimeofday(&tv, NULL);
-   unsigned long long int timeInMilliSeconds = (unsigned long long int)tv.tv_sec * 1000 + (unsigned long long int)tv.tv_usec / 1000;
-   unsigned long long int passedTimeInMs = timeInMilliSeconds - cached_last_update;
+   uint64_t timeInMilliSeconds = (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
+   uint64_t passedTimeInMs = timeInMilliSeconds - cached_last_update;
 
    /* update only every 500ms */
    if (passedTimeInMs > 500) {
-      static unsigned long int cached_rxb_total = 0;
-      static unsigned long int cached_rxp_total = 0;
-      static unsigned long int cached_txb_total = 0;
-      static unsigned long int cached_txp_total = 0;
+      static uint64_t cached_rxb_total;
+      static uint64_t cached_rxp_total;
+      static uint64_t cached_txb_total;
+      static uint64_t cached_txp_total;
+      uint64_t diff;
 
       cached_last_update = timeInMilliSeconds;
 
-      unsigned long int bytesReceived, packetsReceived, bytesTransmitted, packetsTransmitted;
-
-      hasData = Platform_getNetworkIO(&bytesReceived, &packetsReceived, &bytesTransmitted, &packetsTransmitted);
+      NetworkIOData data;
+      hasData = Platform_getNetworkIO(&data);
       if (!hasData) {
          xSnprintf(buffer, len, "no data");
          return;
       }
 
-      if (bytesReceived > cached_rxb_total) {
-         cached_rxb_diff = (bytesReceived - cached_rxb_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
-         cached_rxb_diff = 1000.0 * cached_rxb_diff / passedTimeInMs; /* convert to per second */
+      if (data.bytesReceived > cached_rxb_total) {
+         diff = data.bytesReceived - cached_rxb_total;
+         diff /= ONE_K; /* Meter_humanUnit() expects unit in kilo */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to per second */
+         cached_rxb_diff = (uint32_t)diff;
       } else {
          cached_rxb_diff = 0;
       }
-      cached_rxb_total = bytesReceived;
+      cached_rxb_total = data.bytesReceived;
 
-      if (packetsReceived > cached_rxp_total) {
-         cached_rxp_diff = packetsReceived - cached_rxp_total;
+      if (data.packetsReceived > cached_rxp_total) {
+         diff = data.packetsReceived - cached_rxp_total;
+         cached_rxp_diff = (uint32_t)diff;
       } else {
          cached_rxp_diff = 0;
       }
-      cached_rxp_total = packetsReceived;
+      cached_rxp_total = data.packetsReceived;
 
-      if (bytesTransmitted > cached_txb_total) {
-         cached_txb_diff = (bytesTransmitted - cached_txb_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
-         cached_txb_diff = 1000.0 * cached_txb_diff / passedTimeInMs; /* convert to per second */
+      if (data.bytesTransmitted > cached_txb_total) {
+         diff = data.bytesTransmitted - cached_txb_total;
+         diff /= ONE_K; /* Meter_humanUnit() expects unit in kilo */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to per second */
+         cached_txb_diff = (uint32_t)diff;
       } else {
          cached_txb_diff = 0;
       }
-      cached_txb_total = bytesTransmitted;
+      cached_txb_total = data.bytesTransmitted;
 
-      if (packetsTransmitted > cached_txp_total) {
-         cached_txp_diff = packetsTransmitted - cached_txp_total;
+      if (data.packetsTransmitted > cached_txp_total) {
+         diff = data.packetsTransmitted - cached_txp_total;
+         cached_txp_diff = (uint32_t)diff;
       } else {
          cached_txp_diff = 0;
       }
-      cached_txp_total = packetsTransmitted;
+      cached_txp_total = data.packetsTransmitted;
    }
 
    this->values[0] = cached_rxb_diff;
@@ -110,7 +116,7 @@ static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* o
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 
-   xSnprintf(buffer, sizeof(buffer), " (%lu/%lu packets) ", cached_rxp_diff, cached_txp_diff);
+   xSnprintf(buffer, sizeof(buffer), " (%u/%u packets) ", cached_rxp_diff, cached_txp_diff);
    RichString_appendAscii(out, CRT_colors[METER_TEXT], buffer);
 }
 
