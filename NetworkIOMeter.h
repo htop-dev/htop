@@ -4,10 +4,10 @@
 #include "Meter.h"
 
 typedef struct NetworkIOData_ {
-   unsigned long long int bytesReceived;
-   unsigned long long int packetsReceived;
-   unsigned long long int bytesTransmitted;
-   unsigned long long int packetsTransmitted;
+   uint64_t bytesReceived;
+   uint64_t packetsReceived;
+   uint64_t bytesTransmitted;
+   uint64_t packetsTransmitted;
 } NetworkIOData;
 
 extern const MeterClass NetworkIOMeter_class;

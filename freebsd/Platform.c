@@ -321,8 +321,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    size_t countLen = sizeof(count);
    const int countMib[] = { CTL_NET, PF_LINK, NETLINK_GENERIC, IFMIB_SYSTEM, IFMIB_IFCOUNT };
 
-   int r;
-   r = sysctl(countMib, ARRAYSIZE(countMib), &count, &countLen, NULL, 0);
+   int r = sysctl(countMib, ARRAYSIZE(countMib), &count, &countLen, NULL, 0);
    if (r < 0)
       return false;
 
