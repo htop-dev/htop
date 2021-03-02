@@ -42,6 +42,7 @@ myhtopsources = \
 	DisplayOptionsPanel.c \
 	EnvScreen.c \
 	FunctionBar.c \
+	Generic.c \
 	Hashtable.c \
 	Header.c \
 	HostnameMeter.c \
@@ -96,6 +97,7 @@ myhtopheaders = \
 	DisplayOptionsPanel.h \
 	EnvScreen.h \
 	FunctionBar.h \
+	Generic.h \
 	Hashtable.h \
 	Header.h \
 	HostnameMeter.h \

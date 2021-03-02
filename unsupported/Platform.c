@@ -64,6 +64,8 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
+static const char Platform_unsupported[] = "unsupported";
+
 void Platform_init(void) {
    /* no platform-specific setup needed */
 }
@@ -145,4 +147,12 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    *percent = NAN;
    *isOnAC = AC_ERROR;
+}
+
+void Platform_getHostname(char* buffer, size_t size) {
+   String_safeStrncpy(buffer, Platform_unsupported, size);
+}
+
+void Platform_getRelease(char** string) {
+    *string = xStrdup(Platform_unsupported);
 }

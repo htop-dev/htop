@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include "HostnameMeter.h"
+#include "Platform.h"
 
 #include <unistd.h>
 
@@ -19,9 +20,8 @@ static const int HostnameMeter_attributes[] = {
    HOSTNAME
 };
 
-static void HostnameMeter_updateValues(Meter* this, char* buffer, size_t size) {
-   (void) this;
-   gethostname(buffer, size - 1);
+static void HostnameMeter_updateValues(ATTR_UNUSED Meter* this, char* buffer, size_t size) {
+   Platform_getHostname(buffer, size);
 }
 
 const MeterClass HostnameMeter_class = {
