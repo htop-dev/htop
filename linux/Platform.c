@@ -494,12 +494,12 @@ bool Platform_getDiskIO(DiskIOData* data) {
    if (!fd)
       return false;
 
-   unsigned long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
+   unsigned long long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
    char lineBuffer[256];
    while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
       char diskname[32];
-      unsigned long int read_tmp, write_tmp, timeSpend_tmp;
-      if (sscanf(lineBuffer, "%*d %*d %31s %*u %*u %lu %*u %*u %*u %lu %*u %*u %lu", diskname, &read_tmp, &write_tmp, &timeSpend_tmp) == 4) {
+      unsigned long long int read_tmp, write_tmp, timeSpend_tmp;
+      if (sscanf(lineBuffer, "%*d %*d %31s %*u %*u %llu %*u %*u %*u %llu %*u %*u %llu", diskname, &read_tmp, &write_tmp, &timeSpend_tmp) == 4) {
          if (String_startsWith(diskname, "dm-"))
             continue;
 

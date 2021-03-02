@@ -289,7 +289,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
 
    int count = current.dinfo->numdevs;
 
-   unsigned long int bytesReadSum = 0, bytesWriteSum = 0, timeSpendSum = 0;
+   unsigned long long int bytesReadSum = 0, bytesWriteSum = 0, timeSpendSum = 0;
 
    // get data
    for (int i = 0; i < count; i++) {

@@ -26,23 +26,24 @@ static const int DiskIOMeter_attributes[] = {
 };
 
 static bool hasData = false;
-static unsigned long int cached_read_diff = 0;
-static unsigned long int cached_write_diff = 0;
-static double cached_utilisation_diff = 0.0;
+static uint32_t cached_read_diff;
+static uint32_t cached_write_diff;
+static double cached_utilisation_diff;
 
 static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
-   static unsigned long long int cached_last_update = 0;
+   static uint64_t cached_last_update;
 
    struct timeval tv;
    gettimeofday(&tv, NULL);
-   unsigned long long int timeInMilliSeconds = (unsigned long long int)tv.tv_sec * 1000 + (unsigned long long int)tv.tv_usec / 1000;
-   unsigned long long int passedTimeInMs = timeInMilliSeconds - cached_last_update;
+   uint64_t timeInMilliSeconds = (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
+   uint64_t passedTimeInMs = timeInMilliSeconds - cached_last_update;
 
    /* update only every 500ms */
    if (passedTimeInMs > 500) {
-      static unsigned long int cached_read_total = 0;
-      static unsigned long int cached_write_total = 0;
-      static unsigned long int cached_msTimeSpend_total = 0;
+      static uint64_t cached_read_total;
+      static uint64_t cached_write_total;
+      static uint64_t cached_msTimeSpend_total;
+      uint64_t diff;
 
       cached_last_update = timeInMilliSeconds;
 
@@ -56,21 +57,26 @@ static void DiskIOMeter_updateValues(Meter* this, char* buffer, size_t len) {
       }
 
       if (data.totalBytesRead > cached_read_total) {
-         cached_read_diff = (data.totalBytesRead - cached_read_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
+         diff = data.totalBytesRead - cached_read_total;
+         diff /= 1024; /* Meter_humanUnit() expects unit in kilo */
+         cached_read_diff = (uint32_t)diff;
       } else {
          cached_read_diff = 0;
       }
       cached_read_total = data.totalBytesRead;
 
       if (data.totalBytesWritten > cached_write_total) {
-         cached_write_diff = (data.totalBytesWritten - cached_write_total) / 1024; /* Meter_humanUnit() expects unit in kilo */
+         diff = data.totalBytesWritten - cached_write_total;
+         diff /= 1024; /* Meter_humanUnit() expects unit in kilo */
+         cached_write_diff = (uint32_t)diff;
       } else {
          cached_write_diff = 0;
       }
       cached_write_total = data.totalBytesWritten;
 
       if (data.totalMsTimeSpend > cached_msTimeSpend_total) {
-         cached_utilisation_diff = 100 * (double)(data.totalMsTimeSpend - cached_msTimeSpend_total) / passedTimeInMs;
+         diff = data.totalMsTimeSpend - cached_msTimeSpend_total;
+         cached_utilisation_diff = 100.0 * (double)diff / passedTimeInMs;
       } else {
          cached_utilisation_diff = 0.0;
       }
