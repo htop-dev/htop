@@ -30,13 +30,13 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Compat.h"
 #include "FreeBSDProcess.h"
-#include "generic/openzfs_sysctl.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"
 #include "ProcessList.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "generic/openzfs_sysctl.h"
 #include "zfs/ZfsArcStats.h"
 
 

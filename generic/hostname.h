@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <stddef.h>
 
+
 void Generic_hostname(char* buffer, size_t size);
 
 #endif
