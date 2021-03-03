@@ -68,6 +68,7 @@ typedef struct ProcessList_ {
    memory_t usedMem;
    memory_t buffersMem;
    memory_t cachedMem;
+   memory_t sharedMem;
    memory_t availableMem;
 
    memory_t totalSwap;
