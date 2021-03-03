@@ -1530,6 +1530,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    memory_t totalMem = 0;
    memory_t buffersMem = 0;
    memory_t cachedMem = 0;
+   memory_t sharedMem = 0;
    memory_t swapTotalMem = 0;
    memory_t swapCacheMem = 0;
    memory_t swapFreeMem = 0;
@@ -1565,6 +1566,9 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
          break;
       case 'S':
          switch (buffer[1]) {
+         case 'h':
+            tryRead("Shmem:", sharedMem);
+            break;
          case 'w':
             tryRead("SwapTotal:", swapTotalMem);
             tryRead("SwapCached:", swapCacheMem);
@@ -1588,7 +1592,8 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
     */
    this->totalMem = totalMem;
    this->cachedMem = cachedMem + sreclaimableMem;
-   const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem;
+   this->sharedMem = sharedMem;
+   const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem + sharedMem;
    this->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
    this->buffersMem = buffersMem;
    this->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;

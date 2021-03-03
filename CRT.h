@@ -92,6 +92,7 @@ typedef enum ColorElements_ {
    MEMORY_BUFFERS,
    MEMORY_BUFFERS_TEXT,
    MEMORY_CACHE,
+   MEMORY_SHARED,
    HUGEPAGE_1,
    HUGEPAGE_2,
    HUGEPAGE_3,
