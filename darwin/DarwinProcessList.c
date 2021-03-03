@@ -20,9 +20,9 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "DarwinProcess.h"
-#include "generic/openzfs_sysctl.h"
 #include "Platform.h"
 #include "ProcessList.h"
+#include "generic/openzfs_sysctl.h"
 #include "zfs/ZfsArcStats.h"
 
 

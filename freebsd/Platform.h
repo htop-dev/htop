@@ -13,13 +13,13 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
-#include "generic/hostname.h"
-#include "generic/uname.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+#include "generic/hostname.h"
+#include "generic/uname.h"
 
 
 extern const ProcessField Platform_defaultFields[];

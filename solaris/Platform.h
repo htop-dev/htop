@@ -19,11 +19,11 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
-#include "generic/hostname.h"
-#include "generic/uname.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+#include "generic/hostname.h"
+#include "generic/uname.h"
 
 
 #define  kill(pid, signal) kill(pid / 1024, signal)
