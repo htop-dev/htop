@@ -61,7 +61,7 @@ static void parseOSRelease(char* buffer, size_t bufferLen) {
 
    snprintf(buffer, bufferLen, "%s%s%s", name[0] ? name : "", name[0] && version[0] ? " " : "", version);
 }
- 
+
 char* Generic_uname(void) {
    static char savedString[
       /* uname structure fields - manpages recommend sizeof */
