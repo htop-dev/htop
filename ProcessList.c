@@ -514,6 +514,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
    Panel_prune(this->panel);
    int size = ProcessList_size(this);
    int idx = 0;
+   bool foundFollowed = false;
 
    for (int i = 0; i < size; i++) {
       Process* p = ProcessList_get(this, i);
@@ -527,10 +528,17 @@ void ProcessList_rebuildPanel(ProcessList* this) {
       Panel_set(this->panel, idx, (Object*)p);
 
       if (this->following != -1 && p->pid == this->following) {
+         foundFollowed = true;
          Panel_setSelected(this->panel, idx);
          this->panel->scrollV = currScrollV;
       }
       idx++;
+   }
+
+   if (this->following != -1 && !foundFollowed) {
+      /* Reset if current followed pid not found */
+      this->following = -1;
+      Panel_setSelectionColor(this->panel, PANEL_SELECTION_FOCUS);
    }
 
    if (this->following == -1) {
