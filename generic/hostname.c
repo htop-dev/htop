@@ -13,4 +13,5 @@ in the source distribution for its full text.
 
 void Generic_hostname(char* buffer, size_t size) {
    gethostname(buffer, size - 1);
+   buffer[size - 1] = '\0';
 }
