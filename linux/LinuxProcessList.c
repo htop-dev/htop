@@ -1546,7 +1546,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
          if (String_startsWith(buffer, label)) {                             \
             memory_t parsed_;                                                \
             if (sscanf(buffer + strlen(label), "%llu kB", &parsed_) == 1) {  \
-               variable = parsed_;                                           \
+               (variable) = parsed_;                                         \
             }                                                                \
             break;                                                           \
          }

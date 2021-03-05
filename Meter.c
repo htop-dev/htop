@@ -378,9 +378,7 @@ static void LEDMeterMode_drawDigit(int x, int y, int n) {
       mvaddstr(y+i, x, LEDMeterMode_digits[i * 10 + n]);
 }
 
-static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
-   (void) w;
-
+static void LEDMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8)
       LEDMeterMode_digits = LEDMeterMode_digitsUtf8;

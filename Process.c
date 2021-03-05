@@ -316,12 +316,12 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       if (field == PERCENT_NORM_CPU) {
          cpuPercentage /= this->processList->cpuCount;
       }
-      if (cpuPercentage > 999.9f) {
+      if (cpuPercentage > 999.9F) {
          xSnprintf(buffer, n, "%4u ", (unsigned int)cpuPercentage);
-      } else if (cpuPercentage > 99.9f) {
+      } else if (cpuPercentage > 99.9F) {
          xSnprintf(buffer, n, "%3u. ", (unsigned int)cpuPercentage);
       } else {
-         if (cpuPercentage < 0.05f)
+         if (cpuPercentage < 0.05F)
             attr = CRT_colors[PROCESS_SHADOW];
 
          xSnprintf(buffer, n, "%4.1f ", cpuPercentage);
@@ -329,10 +329,10 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       break;
    }
    case PERCENT_MEM:
-      if (this->percent_mem > 99.9f) {
+      if (this->percent_mem > 99.9F) {
          xSnprintf(buffer, n, "100. ");
       } else {
-         if (this->percent_mem < 0.05f)
+         if (this->percent_mem < 0.05F)
             attr = CRT_colors[PROCESS_SHADOW];
 
          xSnprintf(buffer, n, "%4.1f ", this->percent_mem);

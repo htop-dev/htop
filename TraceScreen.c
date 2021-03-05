@@ -93,8 +93,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
 
       // Should never reach here, unless execlp fails ...
       const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
-      ssize_t written = write(STDERR_FILENO, message, strlen(message));
-      (void) written;
+      (void)! write(STDERR_FILENO, message, strlen(message));
 
       exit(127);
    }
