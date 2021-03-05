@@ -35,6 +35,7 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "Settings.h"
 #include "SwapMeter.h"
+#include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
@@ -44,6 +45,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
+
 
 typedef struct Platform_ {
    int context;			/* PMAPI(3) context identifier */
@@ -55,6 +57,7 @@ typedef struct Platform_ {
    pmResult* result;		/* sample values result indexed by Metric */
 
    long long btime;		/* boottime in seconds since the epoch */
+   char *release;		/* uname and distro from this context */
    int pidmax;			/* maximum platform process identifier */
    int ncpu;			/* maximum processor count configured */
 } Platform;
@@ -107,6 +110,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZramMeter_class,
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
+   &SysArchMeter_class,
    NULL
 };
 
@@ -118,6 +122,7 @@ static const char *Platform_metricNames[] = {
    [PCP_UNAME_SYSNAME] = "kernel.uname.sysname",
    [PCP_UNAME_RELEASE] = "kernel.uname.release",
    [PCP_UNAME_MACHINE] = "kernel.uname.machine",
+   [PCP_UNAME_DISTRO] = "kernel.uname.distro",
    [PCP_LOAD_AVERAGE] = "kernel.all.load",
    [PCP_PID_MAX] = "kernel.all.pid_max",
    [PCP_UPTIME] = "kernel.all.uptime",
@@ -449,6 +454,7 @@ void Platform_init(void) {
    Metric_enable(PCP_UNAME_SYSNAME, true);
    Metric_enable(PCP_UNAME_RELEASE, true);
    Metric_enable(PCP_UNAME_MACHINE, true);
+   Metric_enable(PCP_UNAME_DISTRO, true);
 
    Metric_fetch(NULL);
 
@@ -459,9 +465,11 @@ void Platform_init(void) {
    Metric_enable(PCP_UNAME_SYSNAME, false);
    Metric_enable(PCP_UNAME_RELEASE, false);
    Metric_enable(PCP_UNAME_MACHINE, false);
+   Metric_enable(PCP_UNAME_DISTRO, false);
 
    /* first sample (fetch) performed above, save constants */
    Platform_getBootTime();
+   Platform_getRelease(0);
    Platform_getMaxCPU();
    Platform_getMaxPid();
 }
@@ -645,6 +653,76 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
    ZfsCompressedArcMeter_readStats(this, &(ppl->zfs));
 }
 
+void Platform_getHostname(char* buffer, size_t size) {
+    pmGetHostName(pcp->context, buffer, size);
+}
+
+void Platform_getRelease(char** string) {
+   /* fast-path - previously-formatted string */
+   if (string) {
+      *string = pcp->release;
+      return;
+   }
+
+   /* first call, extract just-sampled values */
+   pmAtomValue value;
+
+   char* name = NULL;
+   if (Metric_values(PCP_UNAME_SYSNAME, &value, 1, PM_TYPE_STRING))
+      name = value.cp;
+   char* release = NULL;
+   if (Metric_values(PCP_UNAME_RELEASE, &value, 1, PM_TYPE_STRING))
+      release = value.cp;
+   char* machine = NULL;
+   if (Metric_values(PCP_UNAME_MACHINE, &value, 1, PM_TYPE_STRING))
+      machine = value.cp;
+   char* distro = NULL;
+   if (Metric_values(PCP_UNAME_DISTRO, &value, 1, PM_TYPE_STRING))
+      distro = value.cp;
+
+   size_t length = 16; /* padded for formatting characters */
+   if (name)
+      length += strlen(name);
+   if (release)
+      length += strlen(release);
+   if (machine)
+      length += strlen(machine);
+   if (distro)
+      length += strlen(distro);
+   pcp->release = xCalloc(1, length);
+
+   if (name) {
+      strcat(pcp->release, name);
+      strcat(pcp->release, " ");
+   }
+   if (release) {
+      strcat(pcp->release, release);
+      strcat(pcp->release, " ");
+   }
+   if (machine) {
+      strcat(pcp->release, "[");
+      strcat(pcp->release, machine);
+      strcat(pcp->release, "] ");
+   }
+   if (distro) {
+      if (pcp->release[0] != '\0') {
+         strcat(pcp->release, "@ ");
+         strcat(pcp->release, distro);
+      } else {
+         strcat(pcp->release, distro);
+      }
+      strcat(pcp->release, " ");
+   }
+
+   if (pcp->release) /* cull trailing space */
+      pcp->release[strlen(pcp->release)] = '\0';
+
+   free(distro);
+   free(machine);
+   free(release);
+   free(name);
+}
+
 char* Platform_getProcessEnv(pid_t pid) {
    pmAtomValue value;
    if (!Metric_instance(PCP_PROC_ENVIRON, pid, 0, &value, PM_TYPE_STRING))
@@ -685,9 +763,7 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
-   data->totalBytesRead = 0;
-   data->totalBytesWritten = 0;
-   data->totalMsTimeSpend = 0;
+   memset(data, 0, sizeof(*data));
 
    pmAtomValue value;
    if (Metric_values(PCP_DISK_READB, &value, 1, PM_TYPE_U64) != NULL)
@@ -699,24 +775,18 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(unsigned long int* bytesReceived,
-                           unsigned long int* packetsReceived,
-                           unsigned long int* bytesTransmitted,
-                           unsigned long int* packetsTransmitted) {
-   *bytesReceived = 0;
-   *packetsReceived = 0;
-   *bytesTransmitted = 0;
-   *packetsTransmitted = 0;
+bool Platform_getNetworkIO(NetworkIOData* data) {
+   memset(data, 0, sizeof(*data));
 
    pmAtomValue value;
    if (Metric_values(PCP_NET_RECVB, &value, 1, PM_TYPE_U64) != NULL)
-      *bytesReceived = value.ull;
+      data->bytesReceived = value.ull;
    if (Metric_values(PCP_NET_SENDB, &value, 1, PM_TYPE_U64) != NULL)
-      *bytesTransmitted = value.ull;
+      data->bytesTransmitted = value.ull;
    if (Metric_values(PCP_NET_RECVP, &value, 1, PM_TYPE_U64) != NULL)
-      *packetsReceived = value.ull;
+      data->packetsReceived = value.ull;
    if (Metric_values(PCP_NET_SENDP, &value, 1, PM_TYPE_U64) != NULL)
-      *packetsTransmitted = value.ull;
+      data->packetsTransmitted = value.ull;
    return true;
 }
 

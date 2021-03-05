@@ -24,9 +24,12 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
 #include "Meter.h"
+#include "NetworkIOMeter.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+#include "SysArchMeter.h"
+
 
 extern ProcessField Platform_defaultFields[];
 
@@ -76,12 +79,14 @@ void Platform_getPressureStall(const char *file, bool some, double* ten, double*
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(unsigned long int* bytesReceived,
-                           unsigned long int* packetsReceived,
-                           unsigned long int* bytesTransmitted,
-                           unsigned long int* packetsTransmitted);
+bool Platform_getNetworkIO(NetworkIOData* data);
 
 void Platform_getBattery(double *percent, ACPresence *isOnAC);
+
+void Platform_getHostname(char* buffer, size_t size);
+
+void Platform_getRelease(char** string);
+
 
 typedef enum Metric_ {
    PCP_CONTROL_THREADS,		/* proc.control.perclient.threads */
@@ -91,6 +96,7 @@ typedef enum Metric_ {
    PCP_UNAME_SYSNAME,		/* kernel.uname.sysname */
    PCP_UNAME_RELEASE,		/* kernel.uname.release */
    PCP_UNAME_MACHINE,		/* kernel.uname.machine */
+   PCP_UNAME_DISTRO,		/* kernel.uname.distro */
    PCP_LOAD_AVERAGE, 		/* kernel.all.load */
    PCP_PID_MAX,			/* kernel.all.pid_max */
    PCP_UPTIME,			/* kernel.all.uptime */
