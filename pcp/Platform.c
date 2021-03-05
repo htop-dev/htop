@@ -654,7 +654,8 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
 }
 
 void Platform_getHostname(char* buffer, size_t size) {
-    pmGetHostName(pcp->context, buffer, size);
+    const char* hostname = pmGetContextHostName(pcp->context);
+    String_safeStrncpy(buffer, hostname, size);
 }
 
 void Platform_getRelease(char** string) {
