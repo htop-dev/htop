@@ -185,11 +185,11 @@ int RichString_findChar(const RichString* this, char c, int start) {
 
 #endif /* HAVE_LIBNCURSESW */
 
-void RichString_prune(RichString* this) {
-   if (this->chlen > RICHSTRING_MAXLEN)
+void RichString_delete(RichString* this) {
+   if (this->chlen > RICHSTRING_MAXLEN) {
       free(this->chptr);
-   memset(this, 0, sizeof(RichString));
-   this->chptr = this->chstr;
+      this->chptr = this->chstr;
+   }
 }
 
 void RichString_setAttr(RichString* this, int attrs) {

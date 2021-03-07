@@ -167,7 +167,7 @@ static void TextMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {
    RichString_begin(out);
    Meter_displayBuffer(this, &out);
    RichString_printoffnVal(out, y, x, 0, w - 1);
-   RichString_end(out);
+   RichString_delete(&out);
 }
 
 /* ---------- BarMeterMode ---------- */
@@ -257,7 +257,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       RichString_printoffnVal(bar, y, x + offset, startPos + offset, w - offset);
    }
 
-   RichString_end(bar);
+   RichString_delete(&bar);
 
    move(y, x + w + 1);
    attrset(CRT_colors[RESET_COLOR]);
@@ -414,7 +414,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {
       }
    }
    attrset(CRT_colors[RESET_COLOR]);
-   RichString_end(out);
+   RichString_delete(&out);
 }
 
 static MeterMode BarMeterMode = {
@@ -456,8 +456,7 @@ static void BlankMeter_updateValues(Meter* this) {
    this->txtBuffer[0] = '\0';
 }
 
-static void BlankMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
-   RichString_prune(out);
+static void BlankMeter_display(ATTR_UNUSED const Object* cast, ATTR_UNUSED RichString* out) {
 }
 
 static const int BlankMeter_attributes[] = {

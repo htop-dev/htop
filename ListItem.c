@@ -34,8 +34,6 @@ static void ListItem_display(const Object* cast, RichString* out) {
                        CRT_utf8 ? "↕ " :
 #endif
                        "+ ");
-   } else {
-      RichString_prune(out);
    }
    RichString_appendWide(out, CRT_colors[DEFAULT_COLOR], this->value);
 }

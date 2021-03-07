@@ -102,7 +102,6 @@ static void CPUMeter_updateValues(Meter* this) {
 static void CPUMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
-   RichString_prune(out);
    if (this->param > this->pl->cpuCount) {
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "absent");
       return;

@@ -16,8 +16,13 @@ in the source distribution for its full text.
 #define RichString_sizeVal(this) ((this).chlen)
 
 #define RichString_begin(this) RichString (this); RichString_beginAllocated(this)
-#define RichString_beginAllocated(this) do { memset(&(this), 0, sizeof(RichString)); (this).chptr = (this).chstr; } while(0)
-#define RichString_end(this) RichString_prune(&(this))
+#define RichString_beginAllocated(this) \
+   do {                                 \
+      (this).chlen = 0,                 \
+      (this).chptr = (this).chstr;      \
+      RichString_setChar(&this, 0, 0);  \
+      (this).highlightAttr = 0;         \
+   } while(0)
 
 #ifdef HAVE_LIBNCURSESW
 #define RichString_printVal(this, y, x) mvadd_wchstr(y, x, (this).chptr)
@@ -42,13 +47,13 @@ typedef struct RichString_ {
    int highlightAttr;
 } RichString;
 
+void RichString_delete(RichString* this);
+
 void RichString_rewind(RichString* this, int count);
 
 void RichString_setAttrn(RichString* this, int attrs, int start, int charcount);
 
 int RichString_findChar(const RichString* this, char c, int start);
-
-void RichString_prune(RichString* this);
 
 void RichString_setAttr(RichString* this, int attrs);
 
