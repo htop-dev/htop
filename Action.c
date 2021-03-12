@@ -267,7 +267,7 @@ static Htop_Reaction actionInvertSortOrder(State* st) {
    Settings_invertSortOrder(st->settings);
    if (st->pauseProcessUpdate)
       ProcessList_sort(st->pl);
-   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionExpandOrCollapse(State* st) {
@@ -582,7 +582,7 @@ static Htop_Reaction actionHelp(State* st) {
    CRT_readKey();
    clear();
 
-   return HTOP_RECALCULATE | HTOP_REDRAW_BAR;
+   return HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionUntagAll(State* st) {

@@ -507,16 +507,26 @@ void ProcessList_collapseAllBranches(ProcessList* this) {
 void ProcessList_rebuildPanel(ProcessList* this) {
    const char* incFilter = this->incFilter;
 
-   int currPos = Panel_getSelectedIndex(this->panel);
-   int currScrollV = this->panel->scrollV;
-   int currSize = Panel_size(this->panel);
+   const int currPos = Panel_getSelectedIndex(this->panel);
+   const int currScrollV = this->panel->scrollV;
+   const int currSize = Panel_size(this->panel);
 
    Panel_prune(this->panel);
-   int size = ProcessList_size(this);
+
+   /* Follow main process if followed a userland thread and threads are now hidden */
+   const Settings* settings = this->settings;
+   if (this->following != -1 && settings->hideUserlandThreads) {
+      const Process* followedProcess = (const Process*) Hashtable_get(this->processTable, this->following);
+      if (followedProcess && Process_isThread(followedProcess) && Hashtable_get(this->processTable, followedProcess->tgid) != NULL) {
+         this->following = followedProcess->tgid;
+      }
+   }
+
+   const int processCount = ProcessList_size(this);
    int idx = 0;
    bool foundFollowed = false;
 
-   for (int i = 0; i < size; i++) {
+   for (int i = 0; i < processCount; i++) {
       Process* p = ProcessList_get(this, i);
 
       if ( (!p->show)
