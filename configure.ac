@@ -319,10 +319,10 @@ esac
 
 AC_ARG_WITH([os-release],
             [AS_HELP_STRING([--with-os-release=FILE],
-			    [location of an os-release file @<:@default=/etc/os-release@:>@])],
+                            [location of an os-release file @<:@default=/etc/os-release@:>@])],
             [],
             [with_os_release=/etc/os-release])
-if test -n "$with_os_release" -a ! -f "$with_os_release"; then
+if test -n "$with_os_release" && test ! -f "$with_os_release"; then
    if test -f "/usr/lib/os-release"; then
       with_os_release="/usr/lib/os-release"
    fi
