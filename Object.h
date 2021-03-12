@@ -11,13 +11,10 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include <assert.h>
+#include <stdbool.h>
 
 #include "RichString.h"
 #include "XUtils.h" // IWYU pragma: keep
-
-#ifndef NDEBUG
-#include <stdbool.h>
-#endif
 
 
 struct Object_;
