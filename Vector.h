@@ -68,6 +68,10 @@ static inline int Vector_size(const Vector* this) {
 
 #endif /* NDEBUG */
 
+static inline const ObjectClass* Vector_type(const Vector* this) {
+    return this->type;
+}
+
 void Vector_add(Vector* this, void* data_);
 
 int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compare);

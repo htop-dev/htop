@@ -202,7 +202,7 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
    if (layerSize == 0)
       return;
 
-   Vector* layer = Vector_new(this->processes->type, false, layerSize);
+   Vector* layer = Vector_new(Vector_type(this->processes), false, layerSize);
 
    // Find all processes on the same layer (process with the same `deep` value
    // and included in a range from `leftBound` to `rightBound`).
