@@ -41,13 +41,13 @@ typedef struct CPUMeterData_ {
 
 static void CPUMeter_init(Meter* this) {
    int cpu = this->param;
-   if (this->pl->cpuCount > 1) {
+   if (cpu == 0) {
+      Meter_setCaption(this, "Avg");
+   } else if (this->pl->cpuCount > 1) {
       char caption[10];
       xSnprintf(caption, sizeof(caption), "%3d", Settings_cpuId(this->pl->settings, cpu - 1));
       Meter_setCaption(this, caption);
    }
-   if (this->param == 0)
-      Meter_setCaption(this, "Avg");
 }
 
 static void CPUMeter_updateValues(Meter* this) {
