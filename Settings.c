@@ -262,7 +262,7 @@ static void writeFields(FILE* fd, const ProcessField* fields, const char* name) 
    fprintf(fd, "\n");
 }
 
-static void writeMeters(Settings* this, FILE* fd, int column) {
+static void writeMeters(const Settings* this, FILE* fd, int column) {
    const char* sep = "";
    for (int i = 0; i < this->columns[column].len; i++) {
       fprintf(fd, "%s%s", sep, this->columns[column].names[i]);
@@ -271,7 +271,7 @@ static void writeMeters(Settings* this, FILE* fd, int column) {
    fprintf(fd, "\n");
 }
 
-static void writeMeterModes(Settings* this, FILE* fd, int column) {
+static void writeMeterModes(const Settings* this, FILE* fd, int column) {
    const char* sep = "";
    for (int i = 0; i < this->columns[column].len; i++) {
       fprintf(fd, "%s%d", sep, this->columns[column].modes[i]);
@@ -280,7 +280,7 @@ static void writeMeterModes(Settings* this, FILE* fd, int column) {
    fprintf(fd, "\n");
 }
 
-bool Settings_write(Settings* this) {
+bool Settings_write(const Settings* this) {
    FILE* fd = fopen(this->filename, "w");
    if (fd == NULL)
       return false;
