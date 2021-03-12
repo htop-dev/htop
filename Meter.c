@@ -405,8 +405,8 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {
          xx += 4;
       } else {
 #ifdef HAVE_LIBNCURSESW
-         out.chptr[i].attr = 0; /* use LED_COLOR from attrset() */
-         mvadd_wch(yText, xx, &out.chptr[i]);
+         const cchar_t wc = { .chars = { c, '\0' }, .attr = 0 }; /* use LED_COLOR from attrset() */
+         mvadd_wch(yText, xx, &wc);
 #else
          mvaddch(yText, xx, c);
 #endif
