@@ -426,7 +426,7 @@ void Process_display(const Object* cast, RichString* out) {
       }
    }
 
-   assert(out->chlen > 0);
+   assert(RichString_size(out) > 0);
 }
 
 void Process_done(Process* this) {
