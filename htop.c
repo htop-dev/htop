@@ -482,8 +482,13 @@ int main(int argc, char** argv) {
    Platform_done();
 
    CRT_done();
-   if (settings->changed)
-      Settings_write(settings);
+
+   if (settings->changed) {
+      int r = Settings_write(settings);
+      if (r < 0)
+         fprintf(stderr, "Can not save configuration to %s: %s\n", settings->filename, strerror(-r));
+   }
+
    Header_delete(header);
    ProcessList_delete(pl);
 

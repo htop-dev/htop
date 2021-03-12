@@ -87,7 +87,7 @@ static inline int Settings_getActiveDirection(const Settings* this) {
 
 void Settings_delete(Settings* this);
 
-bool Settings_write(const Settings* this);
+int Settings_write(const Settings* this);
 
 Settings* Settings_new(int initialCpuCount);
 

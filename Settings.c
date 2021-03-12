@@ -7,6 +7,7 @@ in the source distribution for its full text.
 
 #include "Settings.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -280,10 +281,10 @@ static void writeMeterModes(const Settings* this, FILE* fd, int column) {
    fprintf(fd, "\n");
 }
 
-bool Settings_write(const Settings* this) {
+int Settings_write(const Settings* this) {
    FILE* fd = fopen(this->filename, "w");
    if (fd == NULL)
-      return false;
+      return -errno;
 
    fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
    fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
@@ -331,8 +332,10 @@ bool Settings_write(const Settings* this) {
    #ifdef HAVE_LIBHWLOC
    fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);
    #endif
-   fclose(fd);
-   return true;
+
+   int r1 = ferror(fd);
+   int r2 = fclose(fd);
+   return r1 ? r1 : r2;
 }
 
 Settings* Settings_new(int initialCpuCount) {
@@ -422,7 +425,7 @@ Settings* Settings_new(int initialCpuCount) {
       ok = Settings_read(this, legacyDotfile, initialCpuCount);
       if (ok) {
          // Transition to new location and delete old configuration file
-         if (Settings_write(this)) {
+         if (Settings_write(this) == 0) {
             unlink(legacyDotfile);
          }
       }
