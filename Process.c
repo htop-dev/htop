@@ -513,14 +513,11 @@ int Process_compare(const void* v1, const void* v2) {
 
    int result = Process_compareByKey(p1, p2, key);
 
-   if (Settings_getActiveDirection(settings) != 1)
-      result = -result;
-
    // Implement tie-breaker (needed to make tree mode more stable)
    if (!result)
       return SPACESHIP_NUMBER(p1->pid, p2->pid);
 
-   return result;
+   return (Settings_getActiveDirection(settings) == 1) ? result : -result;
 }
 
 static uint8_t stateCompareValue(char state) {
