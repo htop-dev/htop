@@ -333,9 +333,15 @@ int Settings_write(const Settings* this) {
    fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);
    #endif
 
-   int r1 = ferror(fd);
-   int r2 = fclose(fd);
-   return r1 ? r1 : r2;
+   int r = 0;
+
+   if (ferror(fd) != 0)
+      r = (errno != 0) ? -errno : -EBADF;
+
+   if (fclose(fd) != 0)
+      r = r ? r : -errno;
+
+   return r;
 }
 
 Settings* Settings_new(int initialCpuCount) {
