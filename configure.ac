@@ -31,6 +31,10 @@ freebsd*|kfreebsd*)
    my_htop_platform=freebsd
    AC_DEFINE([HTOP_FREEBSD], [], [Building for FreeBSD.])
    ;;
+netbsd*)
+   my_htop_platform=netbsd
+   AC_DEFINE([HTOP_NETBSD], [], [Building for NetBSD.])
+   ;;
 openbsd*)
    my_htop_platform=openbsd
    AC_DEFINE([HTOP_OPENBSD], [], [Building for OpenBSD.])
@@ -194,6 +198,10 @@ if test "$my_htop_platform" = linux; then
    if test "$enable_static" != yes; then
       AC_SEARCH_LIBS([dlopen], [dl dld], [], [AC_MSG_ERROR([can not find required function dlopen()])])
    fi
+fi
+
+if test "$my_htop_platform" = netbsd; then
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
 fi
 
 if test "$my_htop_platform" = openbsd; then
@@ -630,6 +638,7 @@ AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2021 h
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
 AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])
 AM_CONDITIONAL([HTOP_DRAGONFLYBSD], [test "$my_htop_platform" = dragonflybsd])
+AM_CONDITIONAL([HTOP_NETBSD], [test "$my_htop_platform" = netbsd])
 AM_CONDITIONAL([HTOP_OPENBSD], [test "$my_htop_platform" = openbsd])
 AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
