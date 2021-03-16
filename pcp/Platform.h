@@ -3,7 +3,7 @@
 /*
 htop - pcp/Platform.h
 (C) 2014 Hisham H. Muhammad
-(C) 2020 htop dev team
+(C) 2020-2021 htop dev team
 (C) 2020-2021 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
@@ -125,6 +125,7 @@ typedef enum Metric_ {
    PCP_MEM_FREE,		/* mem.util.free */
    PCP_MEM_BUFFERS,		/* mem.util.bufmem */
    PCP_MEM_CACHED,		/* mem.util.cached */
+   PCP_MEM_SHARED,		/* mem.util.shared */
    PCP_MEM_AVAILABLE,		/* mem.util.available */
    PCP_MEM_SRECLAIM,		/* mem.util.slabReclaimable */
    PCP_MEM_SWAPCACHED,		/* mem.util.swapCached */

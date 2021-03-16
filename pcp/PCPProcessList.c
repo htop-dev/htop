@@ -1,7 +1,7 @@
 /*
 htop - PCPProcessList.c
 (C) 2014 Hisham H. Muhammad
-(C) 2020 htop dev team
+(C) 2020-2021 htop dev team
 (C) 2020-2021 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
@@ -584,12 +584,13 @@ static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
       super->buffersMem = value.ull;
    if (Metric_values(PCP_MEM_SRECLAIM, &value, 1, PM_TYPE_U64) != NULL)
       sreclaimableMem = value.ull;
+   if (Metric_values(PCP_MEM_SHARED, &value, 1, PM_TYPE_U64) != NULL)
+      super->sharedMem = value.ull;
    if (Metric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL) {
       super->cachedMem = value.ull;
       super->cachedMem += sreclaimableMem;
    }
-   unsigned long long int usedDiff;
-   usedDiff = freeMem + super->cachedMem + super->buffersMem;
+   const memory_t usedDiff = freeMem + super->cachedMem + sreclaimableMem + super->buffersMem + super->sharedMem;
    super->usedMem = (super->totalMem >= usedDiff) ?
            super->totalMem - usedDiff : super->totalMem - freeMem;
    if (Metric_values(PCP_MEM_AVAILABLE, &value, 1, PM_TYPE_U64) != NULL)
