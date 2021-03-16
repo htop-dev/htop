@@ -1,7 +1,7 @@
 /*
 htop - linux/Platform.c
 (C) 2014 Hisham H. Muhammad
-(C) 2020 htop dev team
+(C) 2020-2021 htop dev team
 (C) 2020-2021 Red Hat, Inc.  All Rights Reserved.
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
@@ -152,6 +152,7 @@ static const char *Platform_metricNames[] = {
    [PCP_MEM_AVAILABLE] = "mem.util.available",
    [PCP_MEM_BUFFERS] = "mem.util.bufmem",
    [PCP_MEM_CACHED] = "mem.util.cached",
+   [PCP_MEM_SHARED] = "mem.util.shared",
    [PCP_MEM_SRECLAIM] = "mem.util.slabReclaimable",
    [PCP_MEM_SWAPCACHED] = "mem.util.swapCached",
    [PCP_MEM_SWAPTOTAL] = "mem.util.swapTotal",
@@ -587,18 +588,17 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 void Platform_setMemoryValues(Meter* this) {
    const ProcessList* pl = this->pl;
    const PCPProcessList* ppl = (const PCPProcessList*) pl;
-   long int usedMem = pl->usedMem;
-   long int buffersMem = pl->buffersMem;
-   long int cachedMem = pl->cachedMem;
-   usedMem -= buffersMem + cachedMem;
-   this->total = pl->totalMem;
-   this->values[0] = usedMem;
-   this->values[1] = buffersMem;
-   this->values[2] = cachedMem;
+
+   this->total     = pl->totalMem;
+   this->values[0] = pl->usedMem;
+   this->values[1] = pl->buffersMem;
+   this->values[2] = pl->sharedMem;
+   this->values[3] = pl->cachedMem;
+   this->values[4] = pl->availableMem;
 
    if (ppl->zfs.enabled != 0) {
       this->values[0] -= ppl->zfs.size;
-      this->values[2] += ppl->zfs.size;
+      this->values[3] += ppl->zfs.size;
    }
 }
 
