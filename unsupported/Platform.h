@@ -17,6 +17,9 @@ in the source distribution for its full text.
 #include "UnsupportedProcess.h"
 
 
+#define PLATFORM_LONG_OPTIONS
+#define PLATFORM_LONG_OPTIONS_USAGE
+
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
@@ -61,7 +64,7 @@ void Platform_getHostname(char* buffer, size_t size);
 
 void Platform_getRelease(char** string);
 
-static bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
+static inline bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
    return false;
 }
 

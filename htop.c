@@ -36,20 +36,12 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-#ifndef PLATFORM_LONG_OPTIONS
-#define PLATFORM_LONG_OPTIONS
-#endif
-
-#ifndef PLATFORM_LONG_OPTIONS_USAGE
-#define PLATFORM_LONG_OPTIONS_USAGE
-#endif
-
 static void printVersionFlag(const char* name) {
-   fprintf(stdout, "%s " VERSION "\n", name);
+   printf("%s " VERSION "\n", name);
 }
 
 static void printHelpFlag(const char* name) {
-   fprintf(stdout, "%s " VERSION "\n"
+   printf("%s " VERSION "\n"
          COPYRIGHT "\n"
          "Released under the GNU GPLv2.\n\n"
          "-C --no-color                   Use a monochrome color scheme\n"
