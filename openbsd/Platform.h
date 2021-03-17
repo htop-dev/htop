@@ -70,4 +70,8 @@ static inline void Platform_getRelease(char** string) {
    *string = Generic_uname();
 }
 
+static bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
+   return false;
+}
+
 #endif

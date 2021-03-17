@@ -27,6 +27,19 @@ in the source distribution for its full text.
    #define PATH_MAX 4096
 #endif
 
+#ifdef HAVE_LIBCAP
+   #define PLATFORM_LONG_OPTIONS \
+      {"drop-capabilities", optional_argument, 0, 128},
+   #define PLATFORM_LONG_OPTIONS_USAGE \
+         "   --drop-capabilities[=none|basic|strict] Drop Linux capabilities when running as root\n" \
+         "                                none - do not drop any capabilities\n" \
+         "                                basic (default) - drop all capabilities not needed by htop\n" \
+         "                                strict - drop all capabilities except those needed for core functionality\n"
+#else
+   #define PLATFORM_LONG_OPTIONS
+   #define PLATFORM_LONG_OPTIONS_USAGE
+#endif
+
 
 extern const ProcessField Platform_defaultFields[];
 
@@ -81,5 +94,7 @@ static inline void Platform_getHostname(char* buffer, size_t size) {
 static inline void Platform_getRelease(char** string) {
    *string = Generic_uname();
 }
+
+bool Platform_getLongOption(int opt, int argc, char** argv);
 
 #endif
