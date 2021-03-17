@@ -18,8 +18,8 @@ in the source distribution for its full text.
 static const int MemoryMeter_attributes[] = {
    MEMORY_USED,
    MEMORY_BUFFERS,
-   MEMORY_CACHE,
-   MEMORY_SHARED
+   MEMORY_SHARED,
+   MEMORY_CACHE
 };
 
 static void MemoryMeter_updateValues(Meter* this) {
@@ -28,7 +28,7 @@ static void MemoryMeter_updateValues(Meter* this) {
    int written;
 
    /* shared and available memory are not supported on all platforms */
-   this->values[3] = NAN;
+   this->values[2] = NAN;
    this->values[4] = NAN;
    Platform_setMemoryValues(this);
 
@@ -59,16 +59,16 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " buffers:");
    RichString_appendAscii(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
 
-   Meter_humanUnit(buffer, this->values[2], sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
-   RichString_appendAscii(out, CRT_colors[MEMORY_CACHE], buffer);
-
    /* shared memory is not supported on all platforms */
-   if (!isnan(this->values[3])) {
-      Meter_humanUnit(buffer, this->values[3], sizeof(buffer));
+   if (!isnan(this->values[2])) {
+      Meter_humanUnit(buffer, this->values[2], sizeof(buffer));
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " shared:");
       RichString_appendAscii(out, CRT_colors[MEMORY_SHARED], buffer);
    }
+
+   Meter_humanUnit(buffer, this->values[3], sizeof(buffer));
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
+   RichString_appendAscii(out, CRT_colors[MEMORY_CACHE], buffer);
 
    /* available memory is not supported on all platforms */
    if (!isnan(this->values[4])) {
