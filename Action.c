@@ -325,14 +325,12 @@ static Htop_Reaction actionSetAffinity(State* st) {
 static Htop_Reaction actionKill(State* st) {
    Panel* signalsPanel = SignalsPanel_new();
    const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15, true);
-   if (sgn) {
-      if (sgn->key != 0) {
-         Panel_setHeader((Panel*)st->mainPanel, "Sending...");
-         Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
-         refresh();
-         MainPanel_foreachProcess(st->mainPanel, Process_sendSignal, (Arg) { .i = sgn->key }, NULL);
-         napms(500);
-      }
+   if (sgn && sgn->key != 0) {
+      Panel_setHeader((Panel*)st->mainPanel, "Sending...");
+      Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
+      refresh();
+      MainPanel_foreachProcess(st->mainPanel, Process_sendSignal, (Arg) { .i = sgn->key }, NULL);
+      napms(500);
    }
    Panel_delete((Object*)signalsPanel);
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
