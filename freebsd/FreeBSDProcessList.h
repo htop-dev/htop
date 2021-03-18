@@ -23,6 +23,9 @@ typedef struct CPUData_ {
    double systemPercent;
    double irqPercent;
    double systemAllPercent;
+
+   double frequency;
+   double temperature;
 } CPUData;
 
 typedef struct FreeBSDProcessList_ {

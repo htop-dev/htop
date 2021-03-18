@@ -79,7 +79,7 @@ static void CPUMeter_updateValues(Meter* this) {
       }
    }
 
-   #ifdef HAVE_SENSORS_SENSORS_H
+   #ifdef BUILD_WITH_CPU_TEMP
    if (this->pl->settings->showCPUTemperature) {
       double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
       if (isnan(cpuTemperature))
@@ -150,7 +150,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
       }
    }
 
-   #ifdef HAVE_SENSORS_SENSORS_H
+   #ifdef BUILD_WITH_CPU_TEMP
    if (this->pl->settings->showCPUTemperature) {
       char cpuTemperatureBuffer[10];
       double cpuTemperature = this->values[CPU_METER_TEMPERATURE];

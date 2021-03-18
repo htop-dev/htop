@@ -205,7 +205,7 @@ static bool Settings_read(Settings* this, const char* fileName, int initialCpuCo
          this->showCPUUsage = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_frequency")) {
          this->showCPUFrequency = atoi(option[1]);
-      #ifdef HAVE_SENSORS_SENSORS_H
+      #ifdef BUILD_WITH_CPU_TEMP
       } else if (String_eq(option[0], "show_cpu_temperature")) {
          this->showCPUTemperature = atoi(option[1]);
       } else if (String_eq(option[0], "degree_fahrenheit")) {
@@ -315,7 +315,7 @@ int Settings_write(const Settings* this) {
    fprintf(fd, "cpu_count_from_one=%d\n", (int) this->countCPUsFromOne);
    fprintf(fd, "show_cpu_usage=%d\n", (int) this->showCPUUsage);
    fprintf(fd, "show_cpu_frequency=%d\n", (int) this->showCPUFrequency);
-   #ifdef HAVE_SENSORS_SENSORS_H
+   #ifdef BUILD_WITH_CPU_TEMP
    fprintf(fd, "show_cpu_temperature=%d\n", (int) this->showCPUTemperature);
    fprintf(fd, "degree_fahrenheit=%d\n", (int) this->degreeFahrenheit);
    #endif
@@ -363,7 +363,7 @@ Settings* Settings_new(int initialCpuCount) {
    this->countCPUsFromOne = false;
    this->showCPUUsage = true;
    this->showCPUFrequency = false;
-   #ifdef HAVE_SENSORS_SENSORS_H
+   #ifdef BUILD_WITH_CPU_TEMP
    this->showCPUTemperature = false;
    this->degreeFahrenheit = false;
    #endif
