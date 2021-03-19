@@ -286,13 +286,13 @@ void Platform_setMemoryValues(Meter* this) {
    this->total     = pl->totalMem > lpl->totalHugePageMem ? pl->totalMem - lpl->totalHugePageMem : pl->totalMem;
    this->values[0] = pl->usedMem > lpl->totalHugePageMem ? pl->usedMem - lpl->totalHugePageMem : pl->usedMem;
    this->values[1] = pl->buffersMem;
-   this->values[2] = pl->cachedMem;
-   this->values[3] = pl->sharedMem;
+   this->values[2] = pl->sharedMem;
+   this->values[3] = pl->cachedMem;
    this->values[4] = pl->availableMem;
 
    if (lpl->zfs.enabled != 0) {
       this->values[0] -= lpl->zfs.size;
-      this->values[2] += lpl->zfs.size;
+      this->values[3] += lpl->zfs.size;
    }
 }
 

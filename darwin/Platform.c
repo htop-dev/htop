@@ -241,7 +241,9 @@ void Platform_setMemoryValues(Meter* mtr) {
    mtr->total = dpl->host_info.max_mem / 1024;
    mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_K;
    mtr->values[1] = (double)vm->purgeable_count * page_K;
-   mtr->values[2] = (double)vm->inactive_count * page_K;
+   // mtr->values[2] = "shared memory, like tmpfs and shm"
+   mtr->values[3] = (double)vm->inactive_count * page_K;
+   // mtr->values[4] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* mtr) {
