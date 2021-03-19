@@ -12,7 +12,7 @@ in the source distribution for its full text.
 
 // IWYU pragma: begin_exports
 
-#ifdef HAVE_NCURSESW_CURSES_H
+#if defined(HAVE_NCURSESW_CURSES_H)
 #include <ncursesw/curses.h>
 #elif defined(HAVE_NCURSES_NCURSES_H)
 #include <ncurses/ncurses.h>
