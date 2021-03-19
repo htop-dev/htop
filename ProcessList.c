@@ -94,7 +94,7 @@ static const char* alignedProcessFieldTitle(ProcessField field) {
 }
 
 void ProcessList_printHeader(const ProcessList* this, RichString* header) {
-   RichString_prune(header);
+   RichString_rewind(header, RichString_size(header));
 
    const Settings* settings = this->settings;
    const ProcessField* fields = settings->fields;

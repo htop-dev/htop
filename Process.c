@@ -406,7 +406,6 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 void Process_display(const Object* cast, RichString* out) {
    const Process* this = (const Process*) cast;
    const ProcessField* fields = this->settings->fields;
-   RichString_prune(out);
    for (int i = 0; fields[i]; i++)
       As_Process(this)->writeField(this, out, fields[i]);
 

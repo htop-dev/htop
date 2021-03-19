@@ -69,7 +69,7 @@ void Panel_done(Panel* this) {
    free(this->eventHandlerState);
    Vector_delete(this->items);
    FunctionBar_delete(this->defaultBar);
-   RichString_end(this->header);
+   RichString_delete(&this->header);
 }
 
 void Panel_setSelectionColor(Panel* this, ColorElements colorId) {
@@ -287,7 +287,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
             RichString_printoffnVal(item, y + line, x, scrollH, amt);
          if (item.highlightAttr)
             attrset(CRT_colors[RESET_COLOR]);
-         RichString_end(item);
+         RichString_delete(&item);
          line++;
       }
       while (line < h) {
@@ -316,8 +316,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          RichString_printoffnVal(new, y + this->selected - first, x,
             scrollH, MINIMUM(newLen - scrollH, this->w));
       attrset(CRT_colors[RESET_COLOR]);
-      RichString_end(new);
-      RichString_end(old);
+      RichString_delete(&new);
+      RichString_delete(&old);
    }
 
    if (focus && (this->needsRedraw || force_redraw || !this->wasFocus)) {
