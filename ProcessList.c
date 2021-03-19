@@ -311,6 +311,11 @@ static void ProcessList_updateTreeSet(ProcessList* this) {
 }
 
 static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show, int* node_counter, int* node_index) {
+   // On OpenBSD the kernel thread 'swapper' has pid 0.
+   // Do not treat it as root of any tree.
+   if (pid == 0)
+      return;
+
    Vector* children = Vector_new(Class(Process), false, DEFAULT_SIZE);
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
