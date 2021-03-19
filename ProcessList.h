@@ -115,4 +115,8 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
 
 void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate);
 
+static inline Process* ProcessList_findProcess(ProcessList* this, pid_t pid) {
+   return (Process*) Hashtable_get(this->processTable, pid);
+}
+
 #endif

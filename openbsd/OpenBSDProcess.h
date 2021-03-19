@@ -17,11 +17,18 @@ in the source distribution for its full text.
 
 typedef struct OpenBSDProcess_ {
    Process super;
+
+   /* 'Kernel virtual addr of u-area' to detect main threads */
+   uint64_t addr;
 } OpenBSDProcess;
 
-#define Process_isKernelThread(_process) (_process->pgrp == 0)
+static inline bool Process_isKernelThread(const Process* this) {
+   return this->pgrp == 0;
+}
 
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
+static inline bool Process_isUserlandThread(const Process* this) {
+   return this->pid != this->tgid;
+}
 
 extern const ProcessClass OpenBSDProcess_class;
 

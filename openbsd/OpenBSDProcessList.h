@@ -42,6 +42,7 @@ typedef struct OpenBSDProcessList_ {
    kvm_t* kd;
 
    CPUData* cpus;
+   int cpuSpeed;
 
 } OpenBSDProcessList;
 
