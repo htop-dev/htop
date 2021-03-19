@@ -37,7 +37,7 @@ jobs:
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-12 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install clang-12 libncursesw5-dev
@@ -78,7 +78,7 @@ jobs:
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-12 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install clang-12 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
@@ -119,7 +119,7 @@ jobs:
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-12 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install clang-12 clang-tools-12 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
