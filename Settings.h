@@ -48,6 +48,7 @@ typedef struct Settings_ {
    bool treeView;
    bool treeViewAlwaysByPID;
    bool allBranchesCollapsed;
+   bool mergeApplications;
    bool showProgramPath;
    bool shadowOtherUsers;
    bool showThreadNames;

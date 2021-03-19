@@ -100,6 +100,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Tree view", &(settings->treeView)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is always sorted by PID (htop 2 behavior)", &(settings->treeViewAlwaysByPID)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is collapsed by default", &(settings->allBranchesCollapsed)));
+   Panel_add(super, (Object*) CheckItem_newByRef("Merge processes of same applications", &(settings->mergeApplications)));
    Panel_add(super, (Object*) CheckItem_newByRef("Shadow other users' processes", &(settings->shadowOtherUsers)));
    Panel_add(super, (Object*) CheckItem_newByRef("Hide kernel threads", &(settings->hideKernelThreads)));
    Panel_add(super, (Object*) CheckItem_newByRef("Hide userland process threads", &(settings->hideUserlandThreads)));
