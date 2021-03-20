@@ -52,7 +52,7 @@
 // ignore casts discarding const specifier, e.g.
 //     const char []     ->  char * / void *
 //     const char *[2]'  ->  char *const *
-#ifdef __clang__
+#if defined(__clang__)
 #define IGNORE_WCASTQUAL_BEGIN  _Pragma("clang diagnostic push") \
                                 _Pragma("clang diagnostic ignored \"-Wcast-qual\"")
 #define IGNORE_WCASTQUAL_END    _Pragma("clang diagnostic pop")

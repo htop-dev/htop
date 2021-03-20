@@ -120,7 +120,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Also show CPU frequency", &(settings->showCPUFrequency)));
    #ifdef BUILD_WITH_CPU_TEMP
    Panel_add(super, (Object*) CheckItem_newByRef(
-   #ifdef HTOP_LINUX
+   #if defined(HTOP_LINUX)
                                                  "Also show CPU temperature (requires libsensors)",
    #elif defined(HTOP_FREEBSD)
                                                  "Also show CPU temperature",

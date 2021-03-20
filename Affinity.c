@@ -14,7 +14,7 @@ in the source distribution for its full text.
 
 #include "XUtils.h"
 
-#ifdef HAVE_LIBHWLOC
+#if defined(HAVE_LIBHWLOC)
 #include <hwloc.h>
 #include <hwloc/bitmap.h>
 #ifdef __linux__
@@ -50,7 +50,7 @@ void Affinity_add(Affinity* this, int id) {
 }
 
 
-#ifdef HAVE_LIBHWLOC
+#if defined(HAVE_LIBHWLOC)
 
 Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
