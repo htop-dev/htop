@@ -48,7 +48,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 
-#ifdef MAJOR_IN_MKDEV
+#if defined(MAJOR_IN_MKDEV)
 #include <sys/mkdev.h>
 #elif defined(MAJOR_IN_SYSMACROS)
 #include <sys/sysmacros.h>

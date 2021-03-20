@@ -669,7 +669,7 @@ static int stderrRedirectNewFd = -1;
 static int stderrRedirectBackupFd = -1;
 
 static int createStderrCacheFile(void) {
-#ifdef HAVE_MEMFD_CREATE
+#if defined(HAVE_MEMFD_CREATE)
    return memfd_create("htop.stderr-redirect", 0);
 #elif defined(O_TMPFILE)
    return open("/tmp", O_TMPFILE | O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
