@@ -1196,7 +1196,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    return true;
 }
 
-static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned int tty_nr) {
+static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned long int tty_nr) {
    unsigned int maj = major(tty_nr);
    unsigned int min = minor(tty_nr);
 
@@ -1363,13 +1363,13 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       char command[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
-      unsigned int tty_nr = proc->tty_nr;
+      unsigned long int tty_nr = proc->tty_nr;
       if (! LinuxProcessList_readStatFile(proc, procFd, command, sizeof(command)))
          goto errorReadingProcess;
 
       if (tty_nr != proc->tty_nr && this->ttyDrivers) {
-         free(lp->ttyDevice);
-         lp->ttyDevice = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
+         free(proc->tty_name);
+         proc->tty_name = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
       }
 
       if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO) {

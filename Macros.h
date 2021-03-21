@@ -4,27 +4,31 @@
 #include <assert.h> // IWYU pragma: keep
 
 #ifndef MINIMUM
-#define MINIMUM(a, b)             ((a) < (b) ? (a) : (b))
+#define MINIMUM(a, b)                  ((a) < (b) ? (a) : (b))
 #endif
 
 #ifndef MAXIMUM
-#define MAXIMUM(a, b)             ((a) > (b) ? (a) : (b))
+#define MAXIMUM(a, b)                  ((a) > (b) ? (a) : (b))
 #endif
 
 #ifndef CLAMP
-#define CLAMP(x, low, high)       (assert((low) <= (high)), ((x) > (high)) ? (high) : MAXIMUM(x, low))
+#define CLAMP(x, low, high)            (assert((low) <= (high)), ((x) > (high)) ? (high) : MAXIMUM(x, low))
 #endif
 
 #ifndef ARRAYSIZE
-#define ARRAYSIZE(x)              (sizeof(x) / sizeof((x)[0]))
+#define ARRAYSIZE(x)                   (sizeof(x) / sizeof((x)[0]))
 #endif
 
 #ifndef SPACESHIP_NUMBER
-#define SPACESHIP_NUMBER(a, b)    (((a) > (b)) - ((a) < (b)))
+#define SPACESHIP_NUMBER(a, b)         (((a) > (b)) - ((a) < (b)))
 #endif
 
 #ifndef SPACESHIP_NULLSTR
-#define SPACESHIP_NULLSTR(a, b)   strcmp((a) ? (a) : "", (b) ? (b) : "")
+#define SPACESHIP_NULLSTR(a, b)        strcmp((a) ? (a) : "", (b) ? (b) : "")
+#endif
+
+#ifndef SPACESHIP_DEFAULTSTR
+#define SPACESHIP_DEFAULTSTR(a, b, s)  strcmp((a) ? (a) : (s), (b) ? (b) : (s))
 #endif
 
 #ifdef  __GNUC__  // defined by GCC and Clang

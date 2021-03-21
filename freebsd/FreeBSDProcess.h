@@ -14,16 +14,11 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 
-#define PROCESS_FLAG_FREEBSD_TTY   0x0100
-
-extern const char* const nodevStr;
-
 typedef struct FreeBSDProcess_ {
    Process super;
    bool  isKernelThread;
    int   jid;
    char* jname;
-   const char* ttyPath;
 } FreeBSDProcess;
 
 static inline bool Process_isKernelThread(const Process* this) {

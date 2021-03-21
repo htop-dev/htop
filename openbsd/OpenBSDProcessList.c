@@ -225,7 +225,6 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          proc->tpgid = kproc->p_tpgid;
          proc->tgid = kproc->p_pid;
          proc->session = kproc->p_sid;
-         proc->tty_nr = kproc->p_tdev;
          proc->pgrp = kproc->p__pgid;
          proc->st_uid = kproc->p_uid;
          proc->starttime_ctime = kproc->p_ustart_sec;
@@ -233,6 +232,15 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
          ProcessList_add(&this->super, proc);
          proc->comm = OpenBSDProcessList_readProcessName(this->kd, kproc, &proc->basenameOffset);
+
+         proc->tty_nr = kproc->p_tdev;
+         const char* name = ((dev_t)kproc->p_tdev != NODEV) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
+         if (!name || String_eq(name, "??")) {
+            free(proc->tty_name);
+            proc->tty_name = NULL;
+         } else {
+            free_and_xStrdup(&proc->tty_name, name);
+         }
       } else {
          if (settings->updateProcessNames) {
             free(proc->comm);

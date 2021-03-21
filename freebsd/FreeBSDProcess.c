@@ -26,7 +26,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PPID] = { .name = "PPID", .title = "PPID", .description = "Parent process ID", .flags = 0, .pidColumn = true, },
    [PGRP] = { .name = "PGRP", .title = "PGRP", .description = "Process group ID", .flags = 0, .pidColumn = true, },
    [SESSION] = { .name = "SESSION", .title = "SID", .description = "Process's session ID", .flags = 0, .pidColumn = true, },
-   [TTY_NR] = { .name = "TTY_NR", .title = "    TTY ", .description = "Controlling terminal", .flags = PROCESS_FLAG_FREEBSD_TTY, },
+   [TTY] = { .name = "TTY", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
    [TPGID] = { .name = "TPGID", .title = "TPGID", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, .pidColumn = true, },
    [MAJFLT] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of copy-on-write faults", .flags = 0, .defaultSortDesc = true, },
    [PRIORITY] = { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = 0, },
@@ -74,16 +74,6 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    case JAIL:
       Process_printLeftAlignedField(str, attr, fp->jname ? fp->jname : "N/A", 11);
       return;
-   case TTY_NR:
-      if (fp->ttyPath) {
-         if (fp->ttyPath == nodevStr)
-            attr = CRT_colors[PROCESS_SHADOW];
-         xSnprintf(buffer, n, "%-8s", fp->ttyPath);
-      } else {
-         attr = CRT_colors[PROCESS_SHADOW];
-         xSnprintf(buffer, n, "?        ");
-      }
-      break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -101,8 +91,6 @@ static int FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, Pro
       return SPACESHIP_NUMBER(p1->jid, p2->jid);
    case JAIL:
       return SPACESHIP_NULLSTR(p1->jname, p2->jname);
-   case TTY_NR:
-      return SPACESHIP_NULLSTR(p1->ttyPath, p2->ttyPath);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

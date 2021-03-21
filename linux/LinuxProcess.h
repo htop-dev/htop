@@ -117,7 +117,6 @@ typedef struct LinuxProcess_ {
    #endif
    char* cgroup;
    unsigned int oom;
-   char* ttyDevice;
    #ifdef HAVE_DELAYACCT
    unsigned long long int delay_read_time;
    unsigned long long cpu_delay_total;

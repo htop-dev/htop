@@ -26,7 +26,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PPID] = { .name = "PPID", .title = "PPID", .description = "Parent process ID", .flags = 0, .pidColumn = true, },
    [PGRP] = { .name = "PGRP", .title = "PGRP", .description = "Process group ID", .flags = 0, .pidColumn = true, },
    [SESSION] = { .name = "SESSION", .title = "SID", .description = "Process's session ID", .flags = 0, .pidColumn = true, },
-   [TTY_NR] = { .name = "TTY_NR", .title = "    TTY ", .description = "Controlling terminal", .flags = 0, },
+   [TTY] = { .name = "TTY", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
    [TPGID] = { .name = "TPGID", .title = "TPGID", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, .pidColumn = true, },
    [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, .defaultSortDesc = true, },
    [MAJFLT] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, .defaultSortDesc = true, },
@@ -272,10 +272,16 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       proc->tpgid = ps->kp_eproc.e_tpgid;
       proc->tgid = proc->pid;
       proc->st_uid = ps->kp_eproc.e_ucred.cr_uid;
-      /* e_tdev = (major << 24) | (minor & 0xffffff) */
-      /* e_tdev == -1 for "no device" */
-      proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
       dp->translated = ps->kp_proc.p_flag & P_TRANSLATED;
+
+      proc->tty_nr = ps->kp_eproc.e_tdev;
+      const char* name = (ps->kp_eproc.e_tdev != NODEV) ? devname(ps->kp_eproc.e_tdev, S_IFCHR) : NULL;
+      if (!name) {
+         free(proc->tty_name);
+         proc->tty_name = NULL;
+      } else {
+         free_and_xStrdup(&proc->tty_name, name);
+      }
 
       proc->starttime_ctime = ep->p_starttime.tv_sec;
       Process_fillStarttimeBuffer(proc);

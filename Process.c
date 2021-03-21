@@ -378,17 +378,15 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->tgid);
       break;
    case TPGID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->tpgid); break;
-   case TTY_NR: {
-      unsigned int major = major(this->tty_nr);
-      unsigned int minor = minor(this->tty_nr);
-      if (major == 0 && minor == 0) {
+   case TTY:
+      if (!this->tty_name) {
          attr = CRT_colors[PROCESS_SHADOW];
-         xSnprintf(buffer, n, "(none)   ");
+         xSnprintf(buffer, n, "(no tty) ");
       } else {
-         xSnprintf(buffer, n, "%3u:%3u  ", major, minor);
+         const char* name = String_startsWith(this->tty_name, "/dev/") ? (this->tty_name + strlen("/dev/")) : this->tty_name;
+         xSnprintf(buffer, n, "%-8s ", name);
       }
       break;
-   }
    case USER:
       if (Process_getuid != this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
@@ -435,6 +433,7 @@ void Process_display(const Object* cast, RichString* out) {
 void Process_done(Process* this) {
    assert (this != NULL);
    free(this->comm);
+   free(this->tty_name);
 }
 
 static const char* Process_getCommandStr(const Process* p) {
@@ -612,8 +611,9 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       return SPACESHIP_NUMBER(p1->tgid, p2->tgid);
    case TPGID:
       return SPACESHIP_NUMBER(p1->tpgid, p2->tpgid);
-   case TTY_NR:
-      return SPACESHIP_NUMBER(p1->tty_nr, p2->tty_nr);
+   case TTY:
+      /* Order no tty last */
+      return SPACESHIP_DEFAULTSTR(p1->tty_name, p2->tty_name, "\x7F");
    case USER:
       return SPACESHIP_NULLSTR(p1->user, p2->user);
    default:

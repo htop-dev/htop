@@ -28,7 +28,7 @@ typedef enum ProcessField_ {
    PPID = 4,
    PGRP = 5,
    SESSION = 6,
-   TTY_NR = 7,
+   TTY = 7,
    TPGID = 8,
    MINFLT = 10,
    MAJFLT = 12,
@@ -84,11 +84,11 @@ typedef struct Process_ {
    /* Foreground group identifier of the controlling terminal */
    int tpgid;
 
-   /*
-    * Controlling terminal of the process.
-    * The minor device number is contained in the combination of bits 31 to 20 and 7 to 0; the major device number is in bits 15 to 8.
-    * */
-   unsigned int tty_nr;
+   /* Controlling terminal identifier of the process */
+   unsigned long int tty_nr;
+
+   /* Controlling terminal name of the process */
+   char* tty_name;
 
    /* User identifier */
    uid_t st_uid;
