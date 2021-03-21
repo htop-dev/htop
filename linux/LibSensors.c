@@ -15,22 +15,18 @@
 #define sym_sensors_init sensors_init
 #define sym_sensors_cleanup sensors_cleanup
 #define sym_sensors_get_detected_chips sensors_get_detected_chips
-#define sym_sensors_snprintf_chip_name sensors_snprintf_chip_name
 #define sym_sensors_get_features sensors_get_features
 #define sym_sensors_get_subfeature sensors_get_subfeature
 #define sym_sensors_get_value sensors_get_value
-#define sym_sensors_get_label sensors_get_label
 
 #else
 
 static int (*sym_sensors_init)(FILE*);
 static void (*sym_sensors_cleanup)(void);
 static const sensors_chip_name* (*sym_sensors_get_detected_chips)(const sensors_chip_name*, int*);
-static int (*sym_sensors_snprintf_chip_name)(char*, size_t, const sensors_chip_name*);
 static const sensors_feature* (*sym_sensors_get_features)(const sensors_chip_name*, int*);
 static const sensors_subfeature* (*sym_sensors_get_subfeature)(const sensors_chip_name*, const sensors_feature*, sensors_subfeature_type);
 static int (*sym_sensors_get_value)(const sensors_chip_name*, int, double*);
-static char* (*sym_sensors_get_label)(const sensors_chip_name*, const sensors_feature*);
 
 static void* dlopenHandle = NULL;
 
@@ -66,11 +62,9 @@ int LibSensors_init(FILE* input) {
       resolve(sensors_init);
       resolve(sensors_cleanup);
       resolve(sensors_get_detected_chips);
-      resolve(sensors_snprintf_chip_name);
       resolve(sensors_get_features);
       resolve(sensors_get_subfeature);
       resolve(sensors_get_value);
-      resolve(sensors_get_label);
 
       #undef resolve
    }
@@ -105,99 +99,150 @@ void LibSensors_cleanup(void) {
 #endif /* BUILD_STATIC */
 }
 
+static int tempDriverPriority(const sensors_chip_name* chip) {
+   static const struct TempDriverDefs {
+      const char* prefix;
+      int priority;
+   } tempDrivers[] =  {
+      { "coretemp",    0 },
+      { "via_cputemp", 0 },
+      { "cpu_thermal", 0 },
+      { "k10temp",     0 },
+      { "zenpower",    0 },
+      /* Low priority drivers */
+      { "acpitz",      1 },
+   };
+
+   for (size_t i = 0; i < ARRAYSIZE(tempDrivers); i++)
+      if (String_eq(chip->prefix, tempDrivers[i].prefix))
+         return tempDrivers[i].priority;
+
+   return -1;
+}
+
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
-   for (unsigned int i = 0; i <= cpuCount; i++)
-      cpus[i].temperature = NAN;
+   assert(cpuCount > 0 && cpuCount < 16384);
+   double data[cpuCount + 1];
+   for (size_t i = 0; i < cpuCount + 1; i++)
+      data[i] = NAN;
 
 #ifndef BUILD_STATIC
    if (!dlopenHandle)
-      return;
+      goto out;
 #endif /* !BUILD_STATIC */
 
    unsigned int coreTempCount = 0;
+   int topPriority = 99;
 
    int n = 0;
-   for (const sensors_chip_name *chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
-      char buffer[32];
-      sym_sensors_snprintf_chip_name(buffer, sizeof(buffer), chip);
-      if (!String_startsWith(buffer, "coretemp") &&
-          !String_startsWith(buffer, "cpu_thermal") &&
-          !String_startsWith(buffer, "k10temp") &&
-          !String_startsWith(buffer, "zenpower"))
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+      const int priority = tempDriverPriority(chip);
+      if (priority < 0)
          continue;
 
+      if (priority > topPriority)
+         continue;
+
+      if (priority < topPriority) {
+         /* Clear data from lower priority sensor */
+         for (size_t i = 0; i < cpuCount + 1; i++)
+            data[i] = NAN;
+      }
+
+      topPriority = priority;
+
       int m = 0;
-      for (const sensors_feature *feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
+      for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
          if (feature->type != SENSORS_FEATURE_TEMP)
             continue;
 
-         char* label = sym_sensors_get_label(chip, feature);
-         if (!label)
+         if (!feature->name || !String_startsWith(feature->name, "temp"))
             continue;
 
-         unsigned int tempId;
-         if (String_startsWith(label, "Package ")) {
-            tempId = 0;
-         } else if (String_startsWith(label, "temp")) {
-            /* Raspberry Pi has only temp1 */
-            tempId = 0;
-         } else if (String_startsWith(label, "Tdie")) {
-            tempId = 0;
-         } else if (String_startsWith(label, "Core ")) {
-            tempId = 1 + atoi(label + strlen("Core "));
-         } else {
-            tempId = UINT_MAX;
-         }
-
-         free(label);
-
-         if (tempId > cpuCount)
+         unsigned long int tempID = strtoul(feature->name + strlen("temp"), NULL, 10);
+         if (tempID == 0 || tempID == ULONG_MAX)
             continue;
 
-         const sensors_subfeature *sub_feature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
-         if (sub_feature) {
-            double temp;
-            int r = sym_sensors_get_value(chip, sub_feature->number, &temp);
-            if (r != 0)
-               continue;
+         /* Feature name IDs start at 1, adjust to start at 0 to match data indicies */
+         tempID--;
 
-            cpus[tempId].temperature = temp;
-            if (tempId > 0)
+         if (tempID > cpuCount)
+            continue;
+
+         const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
+         if (!subFeature)
+            continue;
+
+         double temp;
+         int r = sym_sensors_get_value(chip, subFeature->number, &temp);
+         if (r != 0)
+            continue;
+
+         /* If already set, e.g. Ryzen reporting platform temperature for each die, use the bigger one */
+         if (isnan(data[tempID])) {
+            data[tempID] = temp;
+            if (tempID > 0)
                coreTempCount++;
+         } else {
+            data[tempID] = MAXIMUM(data[tempID], temp);
          }
       }
    }
 
-   const double packageTemp = cpus[0].temperature;
+   /* Adjust data for chips not providing a platform temperature */
+   if (coreTempCount + 1 == cpuCount || coreTempCount + 1 == cpuCount / 2) {
+      memmove(&data[1], &data[0], cpuCount * sizeof(*data));
+      data[0] = NAN;
+      coreTempCount++;
 
-   /* Only package temperature - copy to all cpus */
-   if (coreTempCount == 0 && !isnan(packageTemp)) {
+      /* Check for further adjustments */
+   }
+
+   /* Only package temperature - copy to all cores */
+   if (coreTempCount == 0 && !isnan(data[0])) {
       for (unsigned int i = 1; i <= cpuCount; i++)
-         cpus[i].temperature = packageTemp;
+         data[i] = data[0];
 
-      return;
+      /* No further adjustments */
+      goto out;
    }
 
    /* No package temperature - set to max core temperature */
-   if (isnan(packageTemp) && coreTempCount != 0) {
+   if (isnan(data[0]) && coreTempCount != 0) {
       double maxTemp = NAN;
       for (unsigned int i = 1; i <= cpuCount; i++) {
-         const double coreTemp = cpus[i].temperature;
-         if (isnan(coreTemp))
+         if (isnan(data[i]))
             continue;
 
-         maxTemp = MAXIMUM(maxTemp, coreTemp);
+         maxTemp = MAXIMUM(maxTemp, data[i]);
       }
 
-      cpus[0].temperature = maxTemp;
+      data[0] = maxTemp;
+
+      /* Check for further adjustments */
+   }
+
+   /* Only temperature for core 0, maybe Ryzen - copy to all other cores */
+   if (coreTempCount == 1 && !isnan(data[1])) {
+      for (unsigned int i = 2; i <= cpuCount; i++)
+         data[i] = data[1];
+
+      /* No further adjustments */
+      goto out;
    }
 
    /* Half the temperatures, probably HT/SMT - copy to second half */
    const unsigned int delta = cpuCount / 2;
    if (coreTempCount == delta) {
-      for (unsigned int i = 1; i <= delta; i++)
-         cpus[i + delta].temperature = cpus[i].temperature;
+      memcpy(&data[delta + 1], &data[1], delta * sizeof(*data));
+
+      /* No further adjustments */
+      goto out;
    }
+
+out:
+   for (unsigned int i = 0; i <= cpuCount; i++)
+      cpus[i].temperature = data[i];
 }
 
 #endif /* HAVE_SENSORS_SENSORS_H */
