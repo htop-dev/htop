@@ -63,9 +63,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .flags = 0,
       .pidColumn = true,
    },
-   [TTY_NR] = {
-      .name = "TTY_NR",
-      .title = "    TTY ",
+   [TTY] = {
+      .name = "TTY",
+      .title = "TTY      ",
       .description = "Controlling terminal",
       .flags = 0,
    },

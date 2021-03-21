@@ -396,11 +396,19 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->tgid = kproc->kp_pid;		// thread group id
          proc->pgrp = kproc->kp_pgid;		// process group id
          proc->session = kproc->kp_sid;
-         proc->tty_nr = kproc->kp_tdev;		// control terminal device number
          proc->st_uid = kproc->kp_uid;		// user ID
          proc->processor = kproc->kp_lwp.kl_origcpu;
          proc->starttime_ctime = kproc->kp_start.tv_sec;
          proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
+
+         proc->tty_nr = kproc->kp_tdev; // control terminal device number
+         const char* name = (kproc->kp_tdev != NODEV) ? devname(kproc->kp_tdev, S_IFCHR) : NULL;
+         if (!name) {
+            free(proc->tty_name);
+            proc->tty_name = NULL;
+         } else {
+            free_and_xStrdup(&proc->tty_name, name);
+         }
 
          ProcessList_add(super, proc);
          proc->comm = DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->basenameOffset);

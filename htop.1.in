@@ -285,7 +285,7 @@ The process's group ID.
 .B SESSION (SID)
 The process's session ID.
 .TP
-.B TTY_NR (TTY)
+.B TTY
 The controlling terminal of the process.
 .TP
 .B TPGID

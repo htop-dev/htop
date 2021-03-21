@@ -54,6 +54,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->pgrp = 0;
    proc->session = 0;
    proc->tty_nr = 0;
+   proc->tty_name = NULL;
    proc->tpgid = 0;
    proc->st_uid = 0;
    proc->processor = 0;

@@ -38,7 +38,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PPID] = { .name = "PPID", .title = "PPID", .description = "Parent process ID", .flags = 0, .pidColumn = true, },
    [PGRP] = { .name = "PGRP", .title = "PGRP", .description = "Process group ID", .flags = 0, .pidColumn = true, },
    [SESSION] = { .name = "SESSION", .title = "SID", .description = "Process's session ID", .flags = 0, .pidColumn = true, },
-   [TTY_NR] = { .name = "TTY_NR", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
+   [TTY] = { .name = "TTY", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
    [TPGID] = { .name = "TPGID", .title = "TPGID", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, .pidColumn = true, },
    [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, .defaultSortDesc = true, },
    [CMINFLT] = { .name = "CMINFLT", .title = "    CMINFLT ", .description = "Children processes' minor faults", .flags = 0, .defaultSortDesc = true, },
@@ -129,7 +129,6 @@ void Process_delete(Object* cast) {
 #endif
    free(this->cwd);
    free(this->secattr);
-   free(this->ttyDevice);
    free(this->procExe);
    free(this->procComm);
    free(this->mergedCommand.str);
@@ -610,14 +609,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
    switch (field) {
-   case TTY_NR:
-      if (lp->ttyDevice) {
-         xSnprintf(buffer, n, "%-8s ", lp->ttyDevice + 5 /* skip "/dev/" */);
-         break;
-      }
-
-      Process_writeField(this, str, field);
-      return;
    case CMINFLT: Process_colorNumber(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
    case M_DRS: Process_humanNumber(str, lp->m_drs * pageSizeKB, coloring); return;
