@@ -249,7 +249,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
       cpuData->temperature = NAN;
       cpuData->frequency = NAN;
 
-      const int coreId = (cpus == 1) ? 0 : (i - 1);
+      const int coreId = (cpus == 1) ? 0 : ((int)i - 1);
       if (coreId < 0)
          continue;
 
