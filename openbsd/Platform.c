@@ -15,6 +15,8 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/signal.h>  // needs to be included before <sys/proc.h> for 'struct sigaltstack'
+#include <sys/proc.h>
 #include <sys/resource.h>
 #include <sys/sensors.h>
 #include <sys/sysctl.h>
@@ -162,8 +164,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 int Platform_getMaxPid() {
-   // this is hard-coded in sys/proc.h - no sysctl exists
-   return 99999;
+   return 2 * THREAD_PID_OFFSET;
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
@@ -195,6 +196,8 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    totalPercent = CLAMP(totalPercent, 0.0, 100.0);
 
    v[CPU_METER_TEMPERATURE] = NAN;
+
+   v[CPU_METER_FREQUENCY] = (pl->cpuSpeed != -1) ? pl->cpuSpeed : NAN;
 
    return totalPercent;
 }

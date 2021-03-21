@@ -74,6 +74,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       CRT_fatalError("kvm_openfiles() failed");
    }
 
+   opl->cpuSpeed = -1;
+
    return pl;
 }
 
@@ -192,18 +194,29 @@ static double getpcpu(const struct kinfo_proc* kp) {
 
 static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    const Settings* settings = this->super.settings;
-   bool hideKernelThreads = settings->hideKernelThreads;
-   bool hideUserlandThreads = settings->hideUserlandThreads;
+   const bool hideKernelThreads = settings->hideKernelThreads;
+   const bool hideUserlandThreads = settings->hideUserlandThreads;
    int count = 0;
 
-   const struct kinfo_proc* kprocs = kvm_getprocs(this->kd, KERN_PROC_KTHREAD, 0, sizeof(struct kinfo_proc), &count);
+   const struct kinfo_proc* kprocs = kvm_getprocs(this->kd, KERN_PROC_KTHREAD | KERN_PROC_SHOW_THREADS, 0, sizeof(struct kinfo_proc), &count);
 
    for (int i = 0; i < count; i++) {
       const struct kinfo_proc* kproc = &kprocs[i];
 
+      /* Ignore main threads */
+      if (kproc->p_tid != -1) {
+         Process* containingProcess = ProcessList_findProcess(&this->super, kproc->p_pid);
+         if (containingProcess) {
+            if (((OpenBSDProcess*)containingProcess)->addr == kproc->p_addr)
+               continue;
+
+            containingProcess->nlwp++;
+         }
+      }
+
       bool preExisting = false;
-      Process* proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, OpenBSDProcess_new);
-      //OpenBSDProcess* fp = (OpenBSDProcess*) proc;
+      Process* proc = ProcessList_getProcess(&this->super, (kproc->p_tid == -1) ? kproc->p_pid : kproc->p_tid, &preExisting, OpenBSDProcess_new);
+      OpenBSDProcess* fp = (OpenBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
@@ -227,33 +240,38 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          }
       }
 
+      fp->addr = kproc->p_addr;
       proc->m_virt = kproc->p_vm_dsize * pageSizeKB;
       proc->m_resident = kproc->p_vm_rssize * pageSizeKB;
-      proc->percent_mem = proc->m_resident / (double)(this->super.totalMem) * 100.0;
-      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.cpuCount * 100.0);
-      //proc->nlwp = kproc->p_numthreads;
+      proc->percent_mem = proc->m_resident / (float)this->super.totalMem * 100.0F;
+      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0F, this->super.cpuCount * 100.0F);
       proc->nice = kproc->p_nice - 20;
       proc->time = 100 * (kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000));
       proc->priority = kproc->p_priority - PZERO;
+      proc->processor = kproc->p_cpuid;
+      proc->minflt = kproc->p_uru_minflt;
+      proc->majflt = kproc->p_uru_majflt;
+      proc->nlwp = 1;
 
       switch (kproc->p_stat) {
          case SIDL:    proc->state = 'I'; break;
-         case SRUN:    proc->state = 'R'; break;
+         case SRUN:    proc->state = 'P'; break;
          case SSLEEP:  proc->state = 'S'; break;
          case SSTOP:   proc->state = 'T'; break;
          case SZOMB:   proc->state = 'Z'; break;
          case SDEAD:   proc->state = 'D'; break;
-         case SONPROC: proc->state = 'P'; break;
+         case SONPROC: proc->state = 'R'; break;
          default:      proc->state = '?';
       }
 
       if (Process_isKernelThread(proc)) {
          this->super.kernelThreads++;
+      } else if (Process_isUserlandThread(proc)) {
+         this->super.userlandThreads++;
       }
 
       this->super.totalTasks++;
-      // SRUN ('R') means runnable, not running
-      if (proc->state == 'P') {
+      if (proc->state == 'R') {
          this->super.runningTasks++;
       }
       proc->updated = true;
@@ -333,6 +351,17 @@ static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
    }
 
    kernelCPUTimesToHtop(avg, this->cpus);
+
+   {
+      const int mib[] = { CTL_HW, HW_CPUSPEED };
+      int cpuSpeed;
+      size_t size = sizeof(cpuSpeed);
+      if (sysctl(mib, 2, &cpuSpeed, &size, NULL, 0) == -1) {
+         this->cpuSpeed = -1;
+      } else {
+         this->cpuSpeed = cpuSpeed;
+      }
+   }
 }
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
