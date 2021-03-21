@@ -27,16 +27,16 @@ in the source distribution for its full text.
 
 typedef struct Affinity_ {
    ProcessList* pl;
-   int size;
-   int used;
-   int* cpus;
+   unsigned int size;
+   unsigned int used;
+   unsigned int* cpus;
 } Affinity;
 
 Affinity* Affinity_new(ProcessList* pl);
 
 void Affinity_delete(Affinity* this);
 
-void Affinity_add(Affinity* this, int id);
+void Affinity_add(Affinity* this, unsigned int id);
 
 #if defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY)
 

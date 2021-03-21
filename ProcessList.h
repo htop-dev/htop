@@ -59,10 +59,10 @@ typedef struct ProcessList_ {
    bool topologyOk;
    #endif
 
-   int totalTasks;
-   int runningTasks;
-   int userlandThreads;
-   int kernelThreads;
+   unsigned int totalTasks;
+   unsigned int runningTasks;
+   unsigned int userlandThreads;
+   unsigned int kernelThreads;
 
    memory_t totalMem;
    memory_t usedMem;
@@ -75,7 +75,7 @@ typedef struct ProcessList_ {
    memory_t usedSwap;
    memory_t cachedSwap;
 
-   int cpuCount;
+   unsigned int cpuCount;
 
    time_t scanTs;
 } ProcessList;

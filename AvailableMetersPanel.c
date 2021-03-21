@@ -30,7 +30,7 @@ static void AvailableMetersPanel_delete(Object* object) {
    free(this);
 }
 
-static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, const MeterClass* type, int param, int column) {
+static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, const MeterClass* type, unsigned int param, int column) {
    const Meter* meter = Header_addMeterByClass(header, type, param, column);
    Panel_add(panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected(panel, Panel_size(panel) - 1);
@@ -45,7 +45,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    if (!selected)
       return IGNORED;
 
-   int param = selected->key & 0xff;
+   unsigned int param = selected->key & 0xff;
    int type = selected->key >> 16;
    HandlerResult result = IGNORED;
    bool update = false;
@@ -114,10 +114,10 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    }
    // Handle (&CPUMeter_class)
    const MeterClass* type = &CPUMeter_class;
-   int cpus = pl->cpuCount;
+   unsigned int cpus = pl->cpuCount;
    if (cpus > 1) {
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));
-      for (int i = 1; i <= cpus; i++) {
+      for (unsigned int i = 1; i <= cpus; i++) {
          char buffer[50];
          xSnprintf(buffer, sizeof(buffer), "%s %d", type->uiName, Settings_cpuId(this->settings, i - 1));
          Panel_add(super, (Object*) ListItem_new(buffer, i));

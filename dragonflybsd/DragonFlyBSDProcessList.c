@@ -139,8 +139,8 @@ void ProcessList_delete(ProcessList* this) {
 static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
    const DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) pl;
 
-   int cpus   = pl->cpuCount;   // actual CPU count
-   int maxcpu = cpus;           // max iteration (in case we have average + smp)
+   unsigned int cpus   = pl->cpuCount;   // actual CPU count
+   unsigned int maxcpu = cpus;           // max iteration (in case we have average + smp)
    int cp_times_offset;
 
    assert(cpus > 0);
@@ -167,7 +167,7 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
       sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
    }
 
-   for (int i = 0; i < maxcpu; i++) {
+   for (unsigned int i = 0; i < maxcpu; i++) {
       if (cpus == 1) {
          // single CPU box
          cp_time_n = dfpl->cp_time_n;

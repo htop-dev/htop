@@ -93,7 +93,7 @@ int Platform_getMaxPid() {
    return 1;
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
+double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    (void) cpu;
 
    double* v = this->values;

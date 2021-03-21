@@ -32,7 +32,7 @@ const MeterClass Meter_class = {
    }
 };
 
-Meter* Meter_new(const struct ProcessList_* pl, int param, const MeterClass* type) {
+Meter* Meter_new(const struct ProcessList_* pl, unsigned int param, const MeterClass* type) {
    Meter* this = xCalloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
@@ -140,7 +140,7 @@ ListItem* Meter_toListItem(const Meter* this, bool moving) {
    }
    char number[10];
    if (this->param > 0) {
-      xSnprintf(number, sizeof(number), " %d", this->param);
+      xSnprintf(number, sizeof(number), " %u", this->param);
    } else {
       number[0] = '\0';
    }

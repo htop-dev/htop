@@ -30,7 +30,7 @@ in the source distribution for its full text.
 Affinity* Affinity_new(ProcessList* pl) {
    Affinity* this = xCalloc(1, sizeof(Affinity));
    this->size = 8;
-   this->cpus = xCalloc(this->size, sizeof(int));
+   this->cpus = xCalloc(this->size, sizeof(unsigned int));
    this->pl = pl;
    return this;
 }
@@ -40,10 +40,10 @@ void Affinity_delete(Affinity* this) {
    free(this);
 }
 
-void Affinity_add(Affinity* this, int id) {
+void Affinity_add(Affinity* this, unsigned int id) {
    if (this->used == this->size) {
       this->size *= 2;
-      this->cpus = xRealloc(this->cpus, sizeof(int) * this->size);
+      this->cpus = xRealloc(this->cpus, sizeof(unsigned int) * this->size);
    }
    this->cpus[this->used] = id;
    this->used++;
@@ -59,7 +59,7 @@ Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
    if (ok) {
       affinity = Affinity_new(pl);
       if (hwloc_bitmap_last(cpuset) == -1) {
-         for (int i = 0; i < pl->cpuCount; i++) {
+         for (unsigned int i = 0; i < pl->cpuCount; i++) {
             Affinity_add(affinity, i);
          }
       } else {
@@ -76,7 +76,7 @@ Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
 bool Affinity_set(Process* proc, Arg arg) {
    Affinity* this = arg.v;
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
-   for (int i = 0; i < this->used; i++) {
+   for (unsigned int i = 0; i < this->used; i++) {
       hwloc_bitmap_set(cpuset, this->cpus[i]);
    }
    bool ok = (hwloc_set_proc_cpubind(this->pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
@@ -93,7 +93,7 @@ Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
       return NULL;
 
    Affinity* affinity = Affinity_new(pl);
-   for (int i = 0; i < pl->cpuCount; i++) {
+   for (unsigned int i = 0; i < pl->cpuCount; i++) {
       if (CPU_ISSET(i, &cpuset)) {
          Affinity_add(affinity, i);
       }
@@ -105,7 +105,7 @@ bool Affinity_set(Process* proc, Arg arg) {
    Affinity* this = arg.v;
    cpu_set_t cpuset;
    CPU_ZERO(&cpuset);
-   for (int i = 0; i < this->used; i++) {
+   for (unsigned int i = 0; i < this->used; i++) {
       CPU_SET(this->cpus[i], &cpuset);
    }
    bool ok = (sched_setaffinity(proc->pid, sizeof(unsigned long), &cpuset) == 0);

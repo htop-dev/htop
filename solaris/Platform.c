@@ -177,9 +177,9 @@ int Platform_getMaxPid() {
    return vproc;
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
+double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
-   int cpus = this->pl->cpuCount;
+   unsigned int cpus = this->pl->cpuCount;
    const CPUData* cpuData = NULL;
 
    if (cpus == 1) {

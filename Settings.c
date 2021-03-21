@@ -54,7 +54,7 @@ static void Settings_readMeterModes(Settings* this, const char* line, int column
    this->columns[column].modes = modes;
 }
 
-static void Settings_defaultMeters(Settings* this, int initialCpuCount) {
+static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount) {
    int sizes[] = { 3, 3 };
    if (initialCpuCount > 4 && initialCpuCount <= 128) {
       sizes[1]++;
@@ -125,7 +125,7 @@ static void readFields(ProcessField* fields, uint32_t* flags, const char* line) 
    String_freeArray(ids);
 }
 
-static bool Settings_read(Settings* this, const char* fileName, int initialCpuCount) {
+static bool Settings_read(Settings* this, const char* fileName, unsigned int initialCpuCount) {
    FILE* fd = fopen(fileName, "r");
    if (!fd)
       return false;
@@ -344,7 +344,7 @@ int Settings_write(const Settings* this) {
    return r;
 }
 
-Settings* Settings_new(int initialCpuCount) {
+Settings* Settings_new(unsigned int initialCpuCount) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->sortKey = PERCENT_CPU;

@@ -166,7 +166,7 @@ int Platform_getMaxPid() {
    return 99999;
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
+double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const OpenBSDProcessList* pl = (const OpenBSDProcessList*) this->pl;
    const CPUData* cpuData = &(pl->cpus[cpu]);
    double total = cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod;

@@ -71,7 +71,7 @@ void Header_writeBackToSettings(const Header* this) {
          const Meter* meter = (Meter*) Vector_get(vec, i);
          char* name;
          if (meter->param) {
-            xAsprintf(&name, "%s(%d)", As_Meter(meter)->name, meter->param);
+            xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
          } else {
             xAsprintf(&name, "%s", As_Meter(meter)->name);
          }
@@ -85,9 +85,9 @@ MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
    Vector* meters = this->columns[column];
 
    char* paren = strchr(name, '(');
-   int param = 0;
+   unsigned int param = 0;
    if (paren) {
-      int ok = sscanf(paren, "(%10d)", &param);
+      int ok = sscanf(paren, "(%10u)", &param);
       if (!ok)
          param = 0;
       *paren = '\0';
@@ -118,7 +118,7 @@ void Header_setMode(Header* this, int i, MeterModeId mode, int column) {
    Meter_setMode(meter, mode);
 }
 
-Meter* Header_addMeterByClass(Header* this, const MeterClass* type, int param, int column) {
+Meter* Header_addMeterByClass(Header* this, const MeterClass* type, unsigned int param, int column) {
    Vector* meters = this->columns[column];
 
    Meter* meter = Meter_new(this->pl, param, type);

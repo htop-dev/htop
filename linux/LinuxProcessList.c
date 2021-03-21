@@ -166,7 +166,7 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 static void LinuxProcessList_updateCPUcount(ProcessList* super, FILE* stream) {
    LinuxProcessList* this = (LinuxProcessList*) super;
 
-   int cpus = 0;
+   unsigned int cpus = 0;
    char buffer[PROC_LINE_LENGTH + 1];
    while (fgets(buffer, sizeof(buffer), stream)) {
       if (String_startsWith(buffer, "cpu")) {
@@ -1269,7 +1269,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       return false;
    }
 
-   int cpus = pl->cpuCount;
+   unsigned int cpus = pl->cpuCount;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
    while ((entry = readdir(dir)) != NULL) {
@@ -1765,8 +1765,8 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
 
    rewind(file);
 
-   int cpus = super->cpuCount;
-   for (int i = 0; i <= cpus; i++) {
+   unsigned int cpus = super->cpuCount;
+   for (unsigned int i = 0; i <= cpus; i++) {
       char buffer[PROC_LINE_LENGTH + 1];
       unsigned long long int usertime, nicetime, systemtime, idletime;
       unsigned long long int ioWait = 0, irq = 0, softIrq = 0, steal = 0, guest = 0, guestnice = 0;
@@ -1780,8 +1780,8 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
       if (i == 0) {
          (void) sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
       } else {
-         int cpuid;
-         (void) sscanf(buffer, "cpu%4d %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         unsigned int cpuid;
+         (void) sscanf(buffer, "cpu%4u %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
          assert(cpuid == i - 1);
       }
       // Guest time is already accounted in usertime
@@ -1841,7 +1841,7 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
 }
 
 static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
-   int cpus = this->super.cpuCount;
+   unsigned int cpus = this->super.cpuCount;
    int numCPUsWithFrequency = 0;
    unsigned long totalFrequency = 0;
 
@@ -1859,9 +1859,9 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
       return -1;
    }
 
-   for (int i = 0; i < cpus; ++i) {
+   for (unsigned int i = 0; i < cpus; ++i) {
       char pathBuffer[64];
-      xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", i);
+      xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_cur_freq", i);
 
       struct timespec start;
       if (i == 0)
@@ -1905,7 +1905,7 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
    if (file == NULL)
       return;
 
-   int cpus = this->super.cpuCount;
+   unsigned int cpus = this->super.cpuCount;
    int numCPUsWithFrequency = 0;
    double totalFrequency = 0;
    int cpuid = -1;
@@ -1928,7 +1928,7 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
          (sscanf(buffer, "clock : %lfMHz", &frequency) == 1) ||
          (sscanf(buffer, "clock: %lfMHz", &frequency) == 1)
       ) {
-         if (cpuid < 0 || cpuid > (cpus - 1)) {
+         if (cpuid < 0 || (unsigned int)cpuid > (cpus - 1)) {
             continue;
          }
 
@@ -1951,10 +1951,9 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
 }
 
 static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
-   int cpus = this->super.cpuCount;
-   assert(cpus > 0);
+   unsigned int cpus = this->super.cpuCount;
 
-   for (int i = 0; i <= cpus; i++) {
+   for (unsigned int i = 0; i <= cpus; i++) {
       this->cpus[i].frequency = NAN;
    }
 
