@@ -43,7 +43,7 @@ int Compat_faccessat(int dirfd,
 #endif
 
    // Error out on unsupported configurations
-   if (dirfd != AT_FDCWD || mode != F_OK) {
+   if (dirfd != (int)AT_FDCWD || mode != F_OK) {
       errno = EINVAL;
       return -1;
    }
