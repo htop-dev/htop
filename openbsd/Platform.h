@@ -70,4 +70,12 @@ static inline void Platform_getRelease(char** string) {
    *string = Generic_uname();
 }
 
+#define PLATFORM_LONG_OPTIONS
+
+static inline void Platform_longOptionsUsage(ATTR_UNUSED const char* name) { }
+
+static inline bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
+   return false;
+}
+
 #endif

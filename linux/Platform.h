@@ -82,4 +82,15 @@ static inline void Platform_getRelease(char** string) {
    *string = Generic_uname();
 }
 
+#ifdef HAVE_LIBCAP
+   #define PLATFORM_LONG_OPTIONS \
+      {"drop-capabilities", optional_argument, 0, 128},
+#else
+   #define PLATFORM_LONG_OPTIONS
+#endif
+
+void Platform_longOptionsUsage(const char* name);
+
+bool Platform_getLongOption(int opt, int argc, char** argv);
+
 #endif
