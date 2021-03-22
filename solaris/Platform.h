@@ -26,9 +26,6 @@ in the source distribution for its full text.
 #include "generic/uname.h"
 
 
-#define PLATFORM_LONG_OPTIONS
-#define PLATFORM_LONG_OPTIONS_USAGE
-
 #define  kill(pid, signal) kill(pid / 1024, signal)
 
 typedef struct var kvar_t;
@@ -91,6 +88,10 @@ static inline void Platform_getHostname(char* buffer, size_t size) {
 static inline void Platform_getRelease(char** string) {
    *string = Generic_uname();
 }
+
+#define PLATFORM_LONG_OPTIONS
+
+static inline void Platform_longOptionsUsage(ATTR_UNUSED const char* name) { }
 
 static inline bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
    return false;

@@ -846,6 +846,20 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    Platform_Battery_cacheTime = now;
 }
 
+void Platform_longOptionsUsage(const char* name)
+{
+#ifdef HAVE_LIBCAP
+   printf(
+"   --drop-capabilities[=none|basic|strict] Drop Linux capabilities when running as root\n"
+"                                none - do not drop any capabilities\n"
+"                                basic (default) - drop all capabilities not needed by %s\n"
+"                                strict - drop all capabilities except those needed for\n"
+"                                         core functionality\n", name);
+#else
+   (void) name;
+#endif
+}
+
 bool Platform_getLongOption(int opt, int argc, char** argv) {
 #ifndef HAVE_LIBCAP
    (void) argc;
