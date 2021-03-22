@@ -885,7 +885,7 @@ bool Platform_getLongOption(int opt, int argc, char** argv) {
             fprintf(stderr, "Error: invalid capabilities mode \"%s\".\n", mode);
             exit(1);
          }
-         break;
+         return true;
       }
 #endif
 
