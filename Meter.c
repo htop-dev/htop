@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
+#include "Platform.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
 #include "Settings.h"
@@ -286,6 +287,7 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+   const ProcessList* pl = this->pl;
 
    if (!this->drawData) {
       this->drawData = xCalloc(1, sizeof(GraphData));
@@ -312,12 +314,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    x += captionLen;
    w -= captionLen;
 
-   struct timeval now;
-   gettimeofday(&now, NULL);
-   if (!timercmp(&now, &(data->time), <)) {
+   if (!timercmp(&pl->timestamp, &(data->time), <)) {
       int globalDelay = this->pl->settings->delay;
       struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay - ((globalDelay / 10) * 10)) * 100000 };
-      timeradd(&now, &delay, &(data->time));
+      timeradd(&pl->timestamp, &delay, &(data->time));
 
       for (int i = 0; i < nValues - 1; i++)
          data->values[i] = data->values[i + 1];

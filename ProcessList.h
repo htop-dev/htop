@@ -48,6 +48,9 @@ typedef struct ProcessList_ {
    Hashtable* displayTreeSet;
    Hashtable* draftingTreeSet;
 
+   struct timeval timestamp;  /* time of the current sample */
+   uint64_t timestampMs;      /* current time in milliseconds */
+
    Panel* panel;
    int following;
    uid_t userId;

@@ -25,12 +25,10 @@ static uint32_t cached_txb_diff;
 static uint32_t cached_txp_diff;
 
 static void NetworkIOMeter_updateValues(Meter* this) {
+   const ProcessList* pl = this->pl;
    static uint64_t cached_last_update = 0;
 
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   uint64_t timeInMilliSeconds = (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
-   uint64_t passedTimeInMs = timeInMilliSeconds - cached_last_update;
+   uint64_t passedTimeInMs = pl->timestampMs - cached_last_update;
 
    /* update only every 500ms */
    if (passedTimeInMs > 500) {
@@ -40,7 +38,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       static uint64_t cached_txp_total;
       uint64_t diff;
 
-      cached_last_update = timeInMilliSeconds;
+      cached_last_update = pl->timestampMs;
 
       NetworkIOData data;
       hasData = Platform_getNetworkIO(&data);

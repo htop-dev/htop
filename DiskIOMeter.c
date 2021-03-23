@@ -31,12 +31,10 @@ static uint32_t cached_write_diff;
 static double cached_utilisation_diff;
 
 static void DiskIOMeter_updateValues(Meter* this) {
-   static uint64_t cached_last_update;
+   const ProcessList* pl = this->pl;
 
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   uint64_t timeInMilliSeconds = (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
-   uint64_t passedTimeInMs = timeInMilliSeconds - cached_last_update;
+   static uint64_t cached_last_update;
+   uint64_t passedTimeInMs = pl->timestampMs - cached_last_update;
 
    /* update only every 500ms */
    if (passedTimeInMs > 500) {
@@ -45,7 +43,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
       static uint64_t cached_msTimeSpend_total;
       uint64_t diff;
 
-      cached_last_update = timeInMilliSeconds;
+      cached_last_update = pl->timestampMs;
 
       DiskIOData data;
 
