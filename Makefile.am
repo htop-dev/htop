@@ -1,5 +1,3 @@
-bin_PROGRAMS = htop
-
 dist_man_MANS = htop.1
 EXTRA_DIST = \
 	$(dist_man_MANS) \
@@ -32,6 +30,7 @@ myhtopsources = \
 	ClockMeter.c \
 	ColorsPanel.c \
 	ColumnsPanel.c \
+	CommandLine.c \
 	CommandScreen.c \
 	Compat.c \
 	CPUMeter.c \
@@ -88,6 +87,7 @@ myhtopheaders = \
 	ClockMeter.h \
 	ColorsPanel.h \
 	ColumnsPanel.h \
+	CommandLine.h \
 	CommandScreen.h \
 	Compat.h \
 	DateMeter.h \
@@ -171,6 +171,7 @@ linux_platform_sources = \
 
 if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
+myhtopplatprogram = htop
 myhtopplatheaders = $(linux_platform_headers)
 myhtopplatsources = $(linux_platform_sources)
 endif
@@ -201,6 +202,7 @@ freebsd_platform_sources = \
 	zfs/ZfsCompressedArcMeter.c
 
 if HTOP_FREEBSD
+myhtopplatprogram = htop
 myhtopplatheaders = $(freebsd_platform_headers)
 myhtopplatsources = $(freebsd_platform_sources)
 endif
@@ -224,6 +226,7 @@ dragonflybsd_platform_sources = \
 	generic/uname.c
 
 if HTOP_DRAGONFLYBSD
+myhtopplatprogram = htop
 myhtopplatheaders = $(dragonflybsd_platform_headers)
 myhtopplatsources = $(dragonflybsd_platform_sources)
 endif
@@ -247,6 +250,7 @@ openbsd_platform_sources = \
 	openbsd/Platform.c
 
 if HTOP_OPENBSD
+myhtopplatprogram = htop
 myhtopplatheaders = $(openbsd_platform_headers)
 myhtopplatsources = $(openbsd_platform_sources)
 endif
@@ -278,6 +282,7 @@ darwin_platform_sources = \
 
 if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
+myhtopplatprogram = htop
 myhtopplatheaders = $(darwin_platform_headers)
 myhtopplatsources = $(darwin_platform_sources)
 endif
@@ -306,6 +311,7 @@ solaris_platform_sources = \
 	zfs/ZfsCompressedArcMeter.c
 
 if HTOP_SOLARIS
+myhtopplatprogram = htop
 myhtopplatheaders = $(solaris_platform_headers)
 myhtopplatsources = $(solaris_platform_sources)
 endif
@@ -325,13 +331,15 @@ unsupported_platform_sources = \
 	unsupported/UnsupportedProcessList.c
 
 if HTOP_UNSUPPORTED
+myhtopplatprogram = htop
 myhtopplatsources = $(unsupported_platform_sources)
 myhtopplatheaders = $(unsupported_platform_headers)
 endif
 
 # ----
 
-htop_SOURCES  = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
+bin_PROGRAMS = $(myhtopplatprogram)
+htop_SOURCES = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
 nodist_htop_SOURCES = config.h
 
 target:
