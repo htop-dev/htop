@@ -153,7 +153,7 @@ ListItem* Meter_toListItem(const Meter* this, bool moving) {
 
 /* ---------- TextMeterMode ---------- */
 
-static void TextMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {
+static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[METER_TEXT]);
    mvaddnstr(y, x, this->caption, w - 1);
    attrset(CRT_colors[RESET_COLOR]);

@@ -69,7 +69,7 @@ static bool isSelinuxEnforcing(void) {
    return !!enforce;
 }
 
-static void SELinuxMeter_updateValues(ATTR_UNUSED Meter* this) {
+static void SELinuxMeter_updateValues(Meter* this) {
    enabled = isSelinuxEnabled();
    enforcing = isSelinuxEnforcing();
 
