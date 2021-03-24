@@ -681,8 +681,7 @@ static ACPresence procAcpiCheck(void) {
          break;
    }
 
-   if (dir)
-      closedir(dir);
+   closedir(dir);
 
    return isOn;
 }
