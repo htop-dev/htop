@@ -522,8 +522,9 @@ static Htop_Reaction actionHelp(State* st) {
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[MEMORY_USED], "used"); addstr("/");
    addattrstr(CRT_colors[MEMORY_BUFFERS_TEXT], "buffers"); addstr("/");
+   addattrstr(CRT_colors[MEMORY_SHARED], "shared"); addstr("/");
    addattrstr(CRT_colors[MEMORY_CACHE], "cache");
-   addattrstr(CRT_colors[BAR_SHADOW], "                            used/total");
+   addattrstr(CRT_colors[BAR_SHADOW], "                     used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(line++, 0, "Swap bar:      ");
