@@ -64,7 +64,7 @@ requesting a sort order with -s.
 \fB\-H \-\-highlight-changes=DELAY\fR
 Highlight new and old processes
 .TP
-\fB   \-\-drop-capabilities[=none|basic|strict]\fR
+\fB   \-\-drop-capabilities[=off|basic|strict]\fR
 Linux only; requires libcap support.
 .br
 Drop unneeded Linux capabilities.
