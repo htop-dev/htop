@@ -73,7 +73,7 @@ in the source distribution for its full text.
 
 #ifdef HAVE_LIBCAP
 enum CapMode {
-   CAP_MODE_NONE,
+   CAP_MODE_OFF,
    CAP_MODE_BASIC,
    CAP_MODE_STRICT
 };
@@ -849,8 +849,8 @@ void Platform_longOptionsUsage(const char* name)
 {
 #ifdef HAVE_LIBCAP
    printf(
-"   --drop-capabilities[=none|basic|strict] Drop Linux capabilities when running as root\n"
-"                                none - do not drop any capabilities\n"
+"   --drop-capabilities[=off|basic|strict] Drop Linux capabilities when running as root\n"
+"                                off - do not drop any capabilities\n"
 "                                basic (default) - drop all capabilities not needed by %s\n"
 "                                strict - drop all capabilities except those needed for\n"
 "                                         core functionality\n", name);
@@ -876,8 +876,8 @@ bool Platform_getLongOption(int opt, int argc, char** argv) {
 
          if (!mode || String_eq(mode, "basic")) {
             Platform_capabilitiesMode = CAP_MODE_BASIC;
-         } else if (String_eq(mode, "none")) {
-            Platform_capabilitiesMode = CAP_MODE_NONE;
+         } else if (String_eq(mode, "off")) {
+            Platform_capabilitiesMode = CAP_MODE_OFF;
          } else if (String_eq(mode, "strict")) {
             Platform_capabilitiesMode = CAP_MODE_STRICT;
          } else {
@@ -897,7 +897,7 @@ bool Platform_getLongOption(int opt, int argc, char** argv) {
 #ifdef HAVE_LIBCAP
 static int dropCapabilities(enum CapMode mode) {
 
-   if (mode == CAP_MODE_NONE)
+   if (mode == CAP_MODE_OFF)
       return 0;
 
    /* capabilities we keep to operate */
