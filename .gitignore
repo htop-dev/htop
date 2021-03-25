@@ -1,5 +1,6 @@
-# the binary:
+# the binaries:
 htop
+pcp-htop
 
 # all object files
 *.o

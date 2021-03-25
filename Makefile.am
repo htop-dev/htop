@@ -343,8 +343,7 @@ pcp_platform_headers = \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h
 
-if HTOP_PCP
-myhtopplatsources = \
+pcp_platform_sources = \
 	pcp/PCPProcess.c \
 	pcp/PCPProcessList.c \
 	pcp/Platform.c \
@@ -353,7 +352,11 @@ myhtopplatsources = \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 
+if HTOP_PCP
+myhtopplatprogram = pcp-htop
 myhtopplatheaders = $(pcp_platform_headers)
+myhtopplatsources = $(pcp_platform_sources)
+pcp_htop_SOURCES  = $(htop_SOURCES)
 endif
 
 # Unsupported

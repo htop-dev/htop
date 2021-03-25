@@ -87,6 +87,23 @@ void Platform_getHostname(char* buffer, size_t size);
 
 void Platform_getRelease(char** string);
 
+enum {
+   PLATFORM_LONGOPT_HOST = 128,
+   PLATFORM_LONGOPT_TIMEZONE,
+   PLATFORM_LONGOPT_HOSTZONE,
+};
+
+#define PLATFORM_LONG_OPTIONS \
+      {PMLONGOPT_HOST, optional_argument, 0, PLATFORM_LONGOPT_HOST}, \
+      {PMLONGOPT_TIMEZONE, optional_argument, 0, PLATFORM_LONGOPT_TIMEZONE}, \
+      {PMLONGOPT_HOSTZONE, optional_argument, 0, PLATFORM_LONGOPT_HOSTZONE}, \
+
+void Platform_longOptionsUsage(const char* name);
+
+bool Platform_getLongOption(int opt, int argc, char** argv);
+
+extern pmOptions opts;
+
 
 typedef enum Metric_ {
    PCP_CONTROL_THREADS,		/* proc.control.perclient.threads */
