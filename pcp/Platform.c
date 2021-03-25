@@ -57,7 +57,7 @@ typedef struct Platform_ {
    pmResult* result;		/* sample values result indexed by Metric */
 
    long long btime;		/* boottime in seconds since the epoch */
-   char *release;		/* uname and distro from this context */
+   char* release;		/* uname and distro from this context */
    int pidmax;			/* maximum platform process identifier */
    int ncpu;			/* maximum processor count configured */
 } Platform;
@@ -403,14 +403,28 @@ static int Platform_addMetric(Metric id, const char *name) {
    return ++pcp->total;
 }
 
+/* global state from the environment and command line arguments */
+pmOptions opts;
+
 void Platform_init(void) {
-   int sts = pmNewContext(PM_CONTEXT_HOST, "local:");
-   if (sts < 0)
+   const char* host = opts.nhosts > 0 ? opts.hosts[0] : "local:";
+
+   int sts;
+   sts = pmNewContext(PM_CONTEXT_HOST, host);
+   /* with no host requested, fallback to PM_CONTEXT_LOCAL shared libraries */
+   if (sts < 0 && opts.nhosts == 0)
       sts = pmNewContext(PM_CONTEXT_LOCAL, NULL);
    if (sts < 0) {
       fprintf(stderr, "Cannot setup PCP metric source: %s\n", pmErrStr(sts));
       exit(1);
    }
+   /* setup timezones and other general startup preparation completion */
+   pmGetContextOptions(sts, &opts);
+   if (opts.errors) {
+      pmflush();
+      exit(1);
+   }
+
    pcp = xCalloc(1, sizeof(Platform));
    pcp->context = sts;
    pcp->fetch = xCalloc(PCP_METRIC_COUNT, sizeof(pmID));
@@ -794,4 +808,48 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
 void Platform_getBattery(double* level, ACPresence* isOnAC) {
    *level = NAN;
    *isOnAC = AC_ERROR;
+}
+
+void Platform_longOptionsUsage(ATTR_UNUSED const char* name) {
+   printf(
+"   --host=HOSTSPEC              metrics source is PMCD at HOSTSPEC [see PCPIntro(1)]\n"
+"   --hostzone                   set reporting timezone to local time of metrics source\n"
+"   --timezone=TZ                set reporting timezone\n");
+}
+
+bool Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** argv) {
+   /* libpcp export without a header definition */
+   extern void __pmAddOptHost(pmOptions *, char *);
+
+   switch (opt) {
+      case PLATFORM_LONGOPT_HOST:  /* --host=HOSTSPEC */
+         if (argv[optind][0] == '\0')
+            return false;
+	 __pmAddOptHost(&opts, optarg);
+         return true;
+
+      case PLATFORM_LONGOPT_HOSTZONE:  /* --hostzone */
+         if (opts.timezone) {
+            pmprintf("%s: at most one of -Z and -z allowed\n", pmGetProgname());
+            opts.errors++;
+         } else {
+            opts.tzflag = 1;
+         }
+         return true;
+
+      case PLATFORM_LONGOPT_TIMEZONE:  /* --timezone=TZ */
+         if (argv[optind][0] == '\0')
+            return false;
+         if (opts.tzflag) {
+            pmprintf("%s: at most one of -Z and -z allowed\n", pmGetProgname());
+            opts.errors++;
+	 } else {
+            opts.timezone = optarg;
+	 }
+         return true;
+
+      default:
+         break;
+   }
+   return false;
 }

@@ -31,7 +31,7 @@ static int PCPProcessList_computeCPUcount(void) {
 
 static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
    ProcessList* pl = &(this->super);
-   int cpus = PCPProcessList_computeCPUcount();
+   unsigned int cpus = PCPProcessList_computeCPUcount();
    if (cpus == pl->cpuCount)
       return;
 
@@ -40,7 +40,7 @@ static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
    free(this->values);
 
    this->percpu = xCalloc(cpus, sizeof(pmAtomValue *));
-   for (int i = 0; i < cpus; i++)
+   for (unsigned int i = 0; i < cpus; i++)
       this->percpu[i] = xCalloc(CPU_METRIC_COUNT, sizeof(pmAtomValue));
    this->values = xCalloc(cpus, sizeof(pmAtomValue));
 }
@@ -78,7 +78,7 @@ void ProcessList_delete(ProcessList* pl) {
    PCPProcessList* this = (PCPProcessList*) pl;
    ProcessList_done(pl);
    free(this->values);
-   for (int i = 0; i < pl->cpuCount; i++)
+   for (unsigned int i = 0; i < pl->cpuCount; i++)
       free(this->percpu[i]);
    free(this->percpu);
    free(this->cpu);
@@ -716,7 +716,7 @@ static void PCPProcessList_updateHeader(ProcessList* super, const Settings* sett
    PCPProcessList_updateAllCPUTime(this, PCP_CPU_GUEST, CPU_GUEST_TIME);
    PCPProcessList_deriveCPUTime(this->cpu);
 
-   for (int i = 0; i < super->cpuCount; i++)
+   for (unsigned int i = 0; i < super->cpuCount; i++)
       PCPProcessList_backupCPUTime(this->percpu[i]);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_USER, CPU_USER_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_NICE, CPU_NICE_TIME);
@@ -727,7 +727,7 @@ static void PCPProcessList_updateHeader(ProcessList* super, const Settings* sett
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_SOFTIRQ, CPU_SOFTIRQ_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_STEAL, CPU_STEAL_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_GUEST, CPU_GUEST_TIME);
-   for (int i = 0; i < super->cpuCount; i++)
+   for (unsigned int i = 0; i < super->cpuCount; i++)
       PCPProcessList_deriveCPUTime(this->percpu[i]);
 
    if (settings->showCPUFrequency)
