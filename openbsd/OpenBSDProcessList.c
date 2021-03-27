@@ -37,11 +37,15 @@ static int pageSize;
 static int pageSizeKB;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
-   const int mib[] = { CTL_HW, HW_NCPU };
+   const int nmib[] = { CTL_HW, HW_NCPU };
+   const int mib[] = { CTL_HW, HW_NCPUONLINE };
    const int fmib[] = { CTL_KERN, KERN_FSCALE };
+   int ncmib[] = { CTL_KERN, KERN_CPUSTATS, 0 };
    int r;
+   unsigned int cpu_index_c = 0, ncpu;
    size_t size;
    char errbuf[_POSIX2_LINE_MAX];
+   struct cpustats cpu_stats;
 
    OpenBSDProcessList* opl = xCalloc(1, sizeof(OpenBSDProcessList));
    ProcessList* pl = (ProcessList*) opl;
@@ -53,6 +57,12 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       pl->cpuCount = 1;
    }
    opl->cpus = xCalloc(pl->cpuCount + 1, sizeof(CPUData));
+
+   size = sizeof(int);
+   r = sysctl(nmib, 2, &ncpu, &size, NULL, 0);
+   if (r < 0) {
+      ncpu = pl->cpuCount;
+   }
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0) {
@@ -75,6 +85,21 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    }
 
    opl->cpuSpeed = -1;
+
+   size = sizeof(cpu_stats);
+   for (unsigned int i = 0; i < ncpu; i++) {
+      ncmib[2] = i;
+      if (sysctl(ncmib, 3, &cpu_stats, &size, NULL, 0) < 0) {
+         CRT_fatalError("ncmib sysctl call failed");
+      }
+      if (cpu_stats.cs_flags & CPUSTATS_ONLINE) {
+         opl->cpus[cpu_index_c].cpuIndex = i;
+         cpu_index_c++;
+      }
+
+      if (cpu_index_c == pl->cpuCount)
+         break;
+   }
 
    return pl;
 }
@@ -340,7 +365,7 @@ static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
    u_int64_t avg[CPUSTATES] = {0};
 
    for (unsigned int i = 0; i < this->super.cpuCount; i++) {
-      getKernelCPUTimes(i, kernelTimes);
+      getKernelCPUTimes(this->cpus[i].cpuIndex, kernelTimes);
       CPUData* cpu = this->cpus + i + 1;
       kernelCPUTimesToHtop(kernelTimes, cpu);
 
