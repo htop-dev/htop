@@ -134,6 +134,7 @@ myhtopheaders = \
 # -----
 
 linux_platform_headers = \
+	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
 	linux/HugePageMeter.h \
@@ -154,6 +155,7 @@ linux_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 linux_platform_sources = \
+	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
 	linux/HugePageMeter.c \
@@ -184,6 +186,7 @@ freebsd_platform_headers = \
 	freebsd/FreeBSDProcess.h \
 	freebsd/Platform.h \
 	freebsd/ProcessField.h \
+	generic/gettime.h \
 	generic/hostname.h \
 	generic/openzfs_sysctl.h \
 	generic/uname.h \
@@ -195,6 +198,7 @@ freebsd_platform_sources = \
 	freebsd/Platform.c \
 	freebsd/FreeBSDProcessList.c \
 	freebsd/FreeBSDProcess.c \
+	generic/gettime.c \
 	generic/hostname.c \
 	generic/openzfs_sysctl.c \
 	generic/uname.c \
@@ -215,6 +219,7 @@ dragonflybsd_platform_headers = \
 	dragonflybsd/DragonFlyBSDProcess.h \
 	dragonflybsd/Platform.h \
 	dragonflybsd/ProcessField.h \
+	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h
 
@@ -222,6 +227,7 @@ dragonflybsd_platform_sources = \
 	dragonflybsd/DragonFlyBSDProcessList.c \
 	dragonflybsd/DragonFlyBSDProcess.c \
 	dragonflybsd/Platform.c \
+	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c
 
@@ -235,6 +241,7 @@ endif
 # -------
 
 openbsd_platform_headers = \
+	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
 	openbsd/OpenBSDProcessList.h \
@@ -243,6 +250,7 @@ openbsd_platform_headers = \
 	openbsd/ProcessField.h
 
 openbsd_platform_sources = \
+	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
 	openbsd/OpenBSDProcessList.c \
@@ -263,6 +271,7 @@ darwin_platform_headers = \
 	darwin/DarwinProcessList.h \
 	darwin/Platform.h \
 	darwin/ProcessField.h \
+	generic/gettime.h \
 	generic/hostname.h \
 	generic/openzfs_sysctl.h \
 	generic/uname.h \
@@ -274,6 +283,7 @@ darwin_platform_sources = \
 	darwin/Platform.c \
 	darwin/DarwinProcess.c \
 	darwin/DarwinProcessList.c \
+	generic/gettime.c \
 	generic/hostname.c \
 	generic/openzfs_sysctl.c \
 	generic/uname.c \
@@ -291,6 +301,7 @@ endif
 # -------
 
 solaris_platform_headers = \
+	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
 	solaris/ProcessField.h \
@@ -302,6 +313,7 @@ solaris_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 solaris_platform_sources = \
+	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
 	solaris/Platform.c \
@@ -320,12 +332,14 @@ endif
 # -----------
 
 unsupported_platform_headers = \
+	generic/gettime.h \
 	unsupported/Platform.h \
 	unsupported/ProcessField.h \
 	unsupported/UnsupportedProcess.h \
 	unsupported/UnsupportedProcessList.h
 
 unsupported_platform_sources = \
+	generic/gettime.c \
 	unsupported/Platform.c \
 	unsupported/UnsupportedProcess.c \
 	unsupported/UnsupportedProcessList.c

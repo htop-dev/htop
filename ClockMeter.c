@@ -23,7 +23,7 @@ static void ClockMeter_updateValues(Meter* this) {
    const ProcessList* pl = this->pl;
 
    struct tm result;
-   const struct tm* lt = localtime_r(&pl->timestamp.tv_sec, &result);
+   const struct tm* lt = localtime_r(&pl->realtime.tv_sec, &result);
    this->values[0] = lt->tm_hour * 60 + lt->tm_min;
    strftime(this->txtBuffer, sizeof(this->txtBuffer), "%H:%M:%S", lt);
 }

@@ -34,7 +34,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
    const ProcessList* pl = this->pl;
 
    static uint64_t cached_last_update;
-   uint64_t passedTimeInMs = pl->timestampMs - cached_last_update;
+   uint64_t passedTimeInMs = pl->realtimeMs - cached_last_update;
 
    /* update only every 500ms */
    if (passedTimeInMs > 500) {
@@ -43,7 +43,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
       static uint64_t cached_msTimeSpend_total;
       uint64_t diff;
 
-      cached_last_update = pl->timestampMs;
+      cached_last_update = pl->realtimeMs;
 
       DiskIOData data;
 

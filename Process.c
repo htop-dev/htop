@@ -467,14 +467,14 @@ void Process_toggleTag(Process* this) {
 
 bool Process_isNew(const Process* this) {
    assert(this->processList);
-   if (this->processList->scanTs >= this->seenTs) {
-      return this->processList->scanTs - this->seenTs <= 1000 * this->processList->settings->highlightDelaySecs;
+   if (this->processList->monotonicMs >= this->seenStampMs) {
+      return this->processList->monotonicMs - this->seenStampMs <= 1000 * (uint64_t)this->processList->settings->highlightDelaySecs;
    }
    return false;
 }
 
 bool Process_isTomb(const Process* this) {
-    return this->tombTs > 0;
+    return this->tombStampMs > 0;
 }
 
 bool Process_setPriority(Process* this, int priority) {

@@ -20,9 +20,10 @@ static const int DateTimeMeter_attributes[] = {
 };
 
 static void DateTimeMeter_updateValues(Meter* this) {
-   time_t t = time(NULL);
+   const ProcessList* pl = this->pl;
+
    struct tm result;
-   const struct tm* lt = localtime_r(&t, &result);
+   const struct tm* lt = localtime_r(&pl->realtime.tv_sec, &result);
    int year = lt->tm_year + 1900;
    if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) {
       this->total = 366;

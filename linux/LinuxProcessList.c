@@ -189,13 +189,6 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super, FILE* stream) {
    }
 }
 
-static void LinuxProcessList_updateTime(LinuxProcessList* this) {
-   ProcessList* pl = &(this->super);
-
-   gettimeofday(&pl->timestamp, NULL);
-   pl->timestampMs = (uint64_t)&pl->timestamp.tv_sec * 1000 + (uint64_t)pl->timestamp.tv_usec / 1000;
-}
-
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
@@ -1975,7 +1968,6 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    LinuxProcessList* this = (LinuxProcessList*) super;
    const Settings* settings = super->settings;
 
-   LinuxProcessList_updateTime(this);
    LinuxProcessList_scanMemoryInfo(super);
    LinuxProcessList_scanHugePages(this);
    LinuxProcessList_scanZfsArcstats(this);
@@ -2005,5 +1997,5 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    openat_arg_t rootFd = "";
 #endif
 
-   LinuxProcessList_recurseProcTree(this, rootFd, PROCDIR, NULL, period, super->timestampMs);
+   LinuxProcessList_recurseProcTree(this, rootFd, PROCDIR, NULL, period, super->realtimeMs);
 }

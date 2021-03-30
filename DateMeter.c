@@ -23,7 +23,7 @@ static void DateMeter_updateValues(Meter* this) {
    const ProcessList* pl = this->pl;
 
    struct tm result;
-   const struct tm* lt = localtime_r(&pl->timestamp.tv_sec, &result);
+   const struct tm* lt = localtime_r(&pl->realtime.tv_sec, &result);
    this->values[0] = lt->tm_yday;
    int year = lt->tm_year + 1900;
    if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) {

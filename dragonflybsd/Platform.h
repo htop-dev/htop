@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+#include "generic/gettime.h"
 #include "generic/hostname.h"
 #include "generic/uname.h"
 
@@ -73,6 +74,14 @@ static inline void Platform_longOptionsUsage(ATTR_UNUSED const char* name) { }
 
 static inline bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
    return false;
+}
+
+static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
+    Generic_gettime_realtime(tv, msec);
+}
+
+static inline void Platform_gettime_monotonic(uint64_t* msec) {
+    Generic_gettime_monotonic(msec);
 }
 
 #endif
