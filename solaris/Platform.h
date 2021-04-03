@@ -9,9 +9,12 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include <libproc.h>
 #include <signal.h>
 #include <stdbool.h>
+
 #include <sys/mkdev.h>
 #include <sys/proc.h>
 #include <sys/types.h>
@@ -22,6 +25,7 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+
 #include "generic/hostname.h"
 #include "generic/uname.h"
 

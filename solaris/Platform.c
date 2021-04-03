@@ -7,7 +7,19 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Platform.h"
+#include "solaris/Platform.h"
+
+#include <kstat.h>
+#include <math.h>
+#include <string.h>
+#include <time.h>
+#include <utmpx.h>
+#include <sys/loadavg.h>
+#include <sys/resource.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/var.h>
+
 #include "Macros.h"
 #include "Meter.h"
 #include "CPUMeter.h"
@@ -25,17 +37,6 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 #include "SolarisProcess.h"
 #include "SolarisProcessList.h"
-
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <utmpx.h>
-#include <sys/loadavg.h>
-#include <string.h>
-#include <kstat.h>
-#include <time.h>
-#include <math.h>
-#include <sys/var.h>
 
 
 double plat_loadavg[3] = {0};
