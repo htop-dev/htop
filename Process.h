@@ -163,6 +163,9 @@ typedef struct Process_ {
    /* Tells if the executable has been replaced in the filesystem since start */
    bool procExeDeleted;
 
+   /* Tells if the process uses replaced shared libraries since start */
+   bool usesDeletedLib;
+
    /* CPU number last executed on */
    int processor;
 
