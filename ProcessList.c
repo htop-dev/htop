@@ -35,8 +35,10 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
 
    // set later by platform-specific code
    this->cpuCount = 0;
-
    this->monotonicMs = 0;
+
+   // always maintain valid realtime timestamps
+   Platform_gettime_realtime(&this->realtime, &this->realtimeMs);
 
 #ifdef HAVE_LIBHWLOC
    this->topologyOk = false;

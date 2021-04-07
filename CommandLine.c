@@ -241,14 +241,14 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
    return flags;
 }
 
-static void millisleep(unsigned long millisec) {
+static void CommandLine_delay(ProcessList* pl, unsigned long millisec) {
    struct timespec req = {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
    };
-   while(nanosleep(&req,&req)==-1) {
+   while (nanosleep(&req, &req) == -1)
       continue;
-   }
+   Platform_gettime_realtime(&pl->realtime, &pl->realtimeMs);
 }
 
 static void setCommFilter(State* state, char** commFilter) {
@@ -333,7 +333,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    ScreenManager_add(scr, (Panel*) panel, -1);
 
    ProcessList_scan(pl, false);
-   millisleep(75);
+   CommandLine_delay(pl, 75);
    ProcessList_scan(pl, false);
 
    if (settings->allBranchesCollapsed)
