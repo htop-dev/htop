@@ -48,6 +48,10 @@ typedef struct ProcessList_ {
    Hashtable* displayTreeSet;
    Hashtable* draftingTreeSet;
 
+   struct timeval realtime;   /* time of the current sample */
+   uint64_t realtimeMs;       /* current time in milliseconds */
+   uint64_t monotonicMs;      /* same, but from monotonic clock */
+
    Panel* panel;
    int following;
    uid_t userId;
@@ -76,8 +80,6 @@ typedef struct ProcessList_ {
    memory_t cachedSwap;
 
    unsigned int cpuCount;
-
-   time_t scanTs;
 } ProcessList;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);

@@ -1989,10 +1989,6 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       return;
    }
 
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   unsigned long long now = tv.tv_sec * 1000ULL + tv.tv_usec / 1000ULL;
-
    /* PROCDIR is an absolute path */
    assert(PROCDIR[0] == '/');
 #ifdef HAVE_OPENAT
@@ -2001,5 +1997,5 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    openat_arg_t rootFd = "";
 #endif
 
-   LinuxProcessList_recurseProcTree(this, rootFd, PROCDIR, NULL, period, now);
+   LinuxProcessList_recurseProcTree(this, rootFd, PROCDIR, NULL, period, super->realtimeMs);
 }

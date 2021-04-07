@@ -174,8 +174,8 @@ typedef struct Process_ {
    /*
     * Internal time counts for showing new and exited processes.
     */
-   time_t seenTs;
-   time_t tombTs;
+   uint64_t seenStampMs;
+   uint64_t tombStampMs;
 
    /*
     * Internal state for tree-mode.
