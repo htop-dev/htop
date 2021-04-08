@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 
    /* extract environment variables */
    opts.flags |= PM_OPTFLAG_ENV_ONLY;
-   pmGetOptions(argc, argv, &opts);
+   (void)pmGetOptions(argc, argv, &opts);
 
    return CommandLine_run(name, argc, argv);
 }
