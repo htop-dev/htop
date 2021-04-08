@@ -422,8 +422,7 @@ void Platform_init(void) {
       exit(1);
    }
    /* setup timezones and other general startup preparation completion */
-   pmGetContextOptions(sts, &opts);
-   if (opts.errors) {
+   if (pmGetContextOptions(sts, &opts) < 0 || opts.errors) {
       pmflush();
       exit(1);
    }
@@ -688,51 +687,46 @@ void Platform_getRelease(char** string) {
    }
 
    /* first call, extract just-sampled values */
-   pmAtomValue value;
-
-   char* name = NULL;
-   if (Metric_values(PCP_UNAME_SYSNAME, &value, 1, PM_TYPE_STRING))
-      name = value.cp;
-   char* release = NULL;
-   if (Metric_values(PCP_UNAME_RELEASE, &value, 1, PM_TYPE_STRING))
-      release = value.cp;
-   char* machine = NULL;
-   if (Metric_values(PCP_UNAME_MACHINE, &value, 1, PM_TYPE_STRING))
-      machine = value.cp;
-   char* distro = NULL;
-   if (Metric_values(PCP_UNAME_DISTRO, &value, 1, PM_TYPE_STRING))
-      distro = value.cp;
+   pmAtomValue sysname, release, machine, distro;
+   if (!Metric_values(PCP_UNAME_SYSNAME, &sysname, 1, PM_TYPE_STRING))
+      sysname.cp = NULL;
+   if (!Metric_values(PCP_UNAME_RELEASE, &release, 1, PM_TYPE_STRING))
+      release.cp = NULL;
+   if (!Metric_values(PCP_UNAME_MACHINE, &machine, 1, PM_TYPE_STRING))
+      machine.cp = NULL;
+   if (!Metric_values(PCP_UNAME_DISTRO, &distro, 1, PM_TYPE_STRING))
+      distro.cp = NULL;
 
    size_t length = 16; /* padded for formatting characters */
-   if (name)
-      length += strlen(name);
-   if (release)
-      length += strlen(release);
-   if (machine)
-      length += strlen(machine);
-   if (distro)
-      length += strlen(distro);
+   if (sysname.cp)
+      length += strlen(sysname.cp);
+   if (release.cp)
+      length += strlen(release.cp);
+   if (machine.cp)
+      length += strlen(machine.cp);
+   if (distro.cp)
+      length += strlen(distro.cp);
    pcp->release = xCalloc(1, length);
 
-   if (name) {
-      strcat(pcp->release, name);
+   if (sysname.cp) {
+      strcat(pcp->release, sysname.cp);
       strcat(pcp->release, " ");
    }
-   if (release) {
-      strcat(pcp->release, release);
+   if (release.cp) {
+      strcat(pcp->release, release.cp);
       strcat(pcp->release, " ");
    }
-   if (machine) {
+   if (machine.cp) {
       strcat(pcp->release, "[");
-      strcat(pcp->release, machine);
+      strcat(pcp->release, machine.cp);
       strcat(pcp->release, "] ");
    }
-   if (distro) {
+   if (distro.cp) {
       if (pcp->release[0] != '\0') {
          strcat(pcp->release, "@ ");
-         strcat(pcp->release, distro);
+         strcat(pcp->release, distro.cp);
       } else {
-         strcat(pcp->release, distro);
+         strcat(pcp->release, distro.cp);
       }
       strcat(pcp->release, " ");
    }
@@ -740,10 +734,10 @@ void Platform_getRelease(char** string) {
    if (pcp->release) /* cull trailing space */
       pcp->release[strlen(pcp->release)] = '\0';
 
-   free(distro);
-   free(machine);
-   free(release);
-   free(name);
+   free(distro.cp);
+   free(machine.cp);
+   free(release.cp);
+   free(sysname.cp);
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
