@@ -44,7 +44,6 @@ myhtopsources = \
 	Hashtable.c \
 	Header.c \
 	HostnameMeter.c \
-	htop.c \
 	IncSet.c \
 	InfoScreen.c \
 	ListItem.c \
@@ -356,7 +355,7 @@ if HTOP_PCP
 myhtopplatprogram = pcp-htop
 myhtopplatheaders = $(pcp_platform_headers)
 myhtopplatsources = $(pcp_platform_sources)
-pcp_htop_SOURCES  = $(htop_SOURCES)
+pcp_htop_SOURCES  = $(myhtopplatprogram).c $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
 endif
 
 # Unsupported
@@ -384,7 +383,7 @@ endif
 # ----
 
 bin_PROGRAMS = $(myhtopplatprogram)
-htop_SOURCES = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
+htop_SOURCES = $(myhtopplatprogram).c $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
 nodist_htop_SOURCES = config.h
 
 target:
