@@ -9,8 +9,6 @@ in the source distribution for its full text.
 
 #include "config.h"
 
-#include "Platform.h"
-
 #include <math.h>
 
 #include "BatteryMeter.h"
@@ -31,6 +29,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "PCPProcess.h"
 #include "PCPProcessList.h"
+#include "Platform.h"
 #include "ProcessList.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
@@ -55,6 +54,7 @@ typedef struct Platform_ {
    pmID* fetch;			/* enabled identifiers for sampling */
    pmDesc* descs;		/* metric desc array indexed by Metric */
    pmResult* result;		/* sample values result indexed by Metric */
+   struct timeval offset;	/* time offset used in archive mode only */
 
    long long btime;		/* boottime in seconds since the epoch */
    char* release;		/* uname and distro from this context */
@@ -381,7 +381,7 @@ bool Metric_fetch(struct timeval *timestamp) {
       return false;
    }
    if (timestamp)
-	*timestamp = pcp->result->timestamp;
+      *timestamp = pcp->result->timestamp;
    return true;
 }
 
@@ -407,13 +407,23 @@ static int Platform_addMetric(Metric id, const char *name) {
 pmOptions opts;
 
 void Platform_init(void) {
-   const char* host = opts.nhosts > 0 ? opts.hosts[0] : "local:";
+   const char* source;
+   if (opts.context == PM_CONTEXT_ARCHIVE) {
+      source = opts.archives[0];
+   } else if (opts.context == PM_CONTEXT_HOST) {
+      source = opts.nhosts > 0 ? opts.hosts[0] : "local:";
+   } else {
+      opts.context = PM_CONTEXT_HOST;
+      source = "local:";
+   }
 
    int sts;
-   sts = pmNewContext(PM_CONTEXT_HOST, host);
+   sts = pmNewContext(opts.context, source);
    /* with no host requested, fallback to PM_CONTEXT_LOCAL shared libraries */
-   if (sts < 0 && opts.nhosts == 0)
-      sts = pmNewContext(PM_CONTEXT_LOCAL, NULL);
+   if (sts < 0 && opts.context == PM_CONTEXT_HOST && opts.nhosts == 0) {
+      opts.context = PM_CONTEXT_LOCAL;
+      sts = pmNewContext(opts.context, NULL);
+   }
    if (sts < 0) {
       fprintf(stderr, "Cannot setup PCP metric source: %s\n", pmErrStr(sts));
       exit(1);
@@ -431,6 +441,11 @@ void Platform_init(void) {
    pcp->pmids = xCalloc(PCP_METRIC_COUNT, sizeof(pmID));
    pcp->names = xCalloc(PCP_METRIC_COUNT, sizeof(char*));
    pcp->descs = xCalloc(PCP_METRIC_COUNT, sizeof(pmDesc));
+
+   if (opts.context == PM_CONTEXT_ARCHIVE) {
+      gettimeofday(&pcp->offset, NULL);
+      pmtimevalDec(&pcp->offset, &opts.start);
+   }
 
    for (unsigned int i = 0; i < PCP_METRIC_COUNT; i++)
       Platform_addMetric(i, Platform_metricNames[i]);
@@ -825,7 +840,7 @@ bool Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** argv) {
       case PLATFORM_LONGOPT_HOST:  /* --host=HOSTSPEC */
          if (argv[optind][0] == '\0')
             return false;
-	 __pmAddOptHost(&opts, optarg);
+          __pmAddOptHost(&opts, optarg);
          return true;
 
       case PLATFORM_LONGOPT_HOSTZONE:  /* --hostzone */
@@ -843,13 +858,30 @@ bool Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** argv) {
          if (opts.tzflag) {
             pmprintf("%s: at most one of -Z and -z allowed\n", pmGetProgname());
             opts.errors++;
-	 } else {
+         } else {
             opts.timezone = optarg;
-	 }
+         }
          return true;
 
       default:
          break;
    }
    return false;
+}
+
+void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
+   if (gettimeofday(tv, NULL) == 0) {
+      /* shift by start offset to stay in lock-step with realtime (archives) */
+      if (pcp->offset.tv_sec || pcp->offset.tv_usec)
+         pmtimevalDec(tv, &pcp->offset);
+      *msec = ((uint64_t)tv->tv_sec * 1000) + ((uint64_t)tv->tv_usec / 1000);
+   } else {
+      memset(tv, 0, sizeof(struct timeval));
+      *msec = 0;
+   }
+}
+
+void Platform_gettime_monotonic(uint64_t* msec) {
+   struct timeval* tv = &pcp->result->timestamp;
+   *msec = ((uint64_t)tv->tv_sec * 1000) + ((uint64_t)tv->tv_usec / 1000);
 }

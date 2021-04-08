@@ -250,4 +250,8 @@ int Metric_instanceOffset(Metric metric, int inst);
 
 pmAtomValue *Metric_instance(Metric metric, int inst, int offset, pmAtomValue *atom, int type);
 
+void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
+
+void Platform_gettime_monotonic(uint64_t* msec);
+
 #endif
