@@ -125,8 +125,6 @@ jobs:
       run: ./configure --enable-pcp --enable-unicode
     - name: Build
       run: make -k
-    - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-pcp --enable-unicode"
 
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
