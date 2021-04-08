@@ -246,13 +246,6 @@ pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type
    if (!vset || vset->numval <= 0)
       return NULL;
 
-   /* allocate space for atom if needed */
-   if (!atom || !count) {
-      if (!count)
-         count = vset->numval;
-      atom = xCalloc(count, sizeof(pmAtomValue));
-   }
-
    /* extract requested number of values as requested type */
    const pmDesc* desc = &pcp->descs[metric];
    for (int i = 0; i < vset->numval; i++) {
