@@ -1,5 +1,5 @@
 /*
-htop - openbsd/Platform.c
+htop - netbsd/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2021 Santhosh Raju
 Released under the GNU GPLv2, see the COPYING file
@@ -16,11 +16,9 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <sys/resource.h>
-//#include <sys/sensors.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
-//#include <uvm/uvmexp.h>
 
 #include "CPUMeter.h"
 #include "ClockMeter.h"
@@ -319,62 +317,8 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return false;
 }
 
-//static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
-//   for (int devn = 0;; devn++) {
-//      mib[2] = devn;
-//      if (sysctl(mib, 3, snsrdev, sdlen, NULL, 0) == -1) {
-//         if (errno == ENXIO)
-//            continue;
-//         if (errno == ENOENT)
-//            return false;
-//      }
-//      if (String_eq(name, snsrdev->xname)) {
-//         return true;
-//      }
-//   }
-//}
-
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    // TODO
    (void)percent;
    (void)isOnAC;
-//   int mib[] = {CTL_HW, HW_SENSORS, 0, 0, 0};
-//   struct sensor s;
-//   size_t slen = sizeof(struct sensor);
-//   struct sensordev snsrdev;
-//   size_t sdlen = sizeof(struct sensordev);
-//
-//   bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
-//
-//   *percent = NAN;
-//   if (found) {
-//      /* last full capacity */
-//      mib[3] = 7;
-//      mib[4] = 0;
-//      double last_full_capacity = 0;
-//      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
-//         last_full_capacity = s.value;
-//      if (last_full_capacity > 0) {
-//         /*  remaining capacity */
-//         mib[3] = 7;
-//         mib[4] = 3;
-//         if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
-//            double charge = s.value;
-//            *percent = 100 * (charge / last_full_capacity);
-//            if (charge >= last_full_capacity) {
-//               *percent = 100;
-//            }
-//         }
-//      }
-//   }
-//
-//   found = findDevice("acpiac0", mib, &snsrdev, &sdlen);
-//
-//   *isOnAC = AC_ERROR;
-//   if (found) {
-//      mib[3] = 9;
-//      mib[4] = 0;
-//      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
-//         *isOnAC = s.value;
-//   }
 }
