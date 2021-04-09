@@ -19,9 +19,14 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+#include "generic/gettime.h"
 #include "generic/hostname.h"
 #include "generic/uname.h"
 
+
+/* There are no Long Options for NetBSD as of now. */
+#define PLATFORM_LONG_OPTIONS \
+   // End of list
 
 extern const ProcessField Platform_defaultFields[];
 
@@ -68,6 +73,20 @@ static inline void Platform_getHostname(char* buffer, size_t size) {
 
 static inline void Platform_getRelease(char** string) {
    *string = Generic_uname();
+}
+
+static inline void Platform_longOptionsUsage(ATTR_UNUSED const char* name) { }
+
+static inline bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
+   return false;
+}
+
+static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
+    Generic_gettime_realtime(tv, msec);
+}
+
+static inline void Platform_gettime_monotonic(uint64_t* msec) {
+    Generic_gettime_monotonic(msec);
 }
 
 #endif

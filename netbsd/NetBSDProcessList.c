@@ -62,7 +62,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       CRT_fatalError("pagesize sysconf call failed");
    pageSizeKB = pageSize / ONE_K;
 
-   for (int i = 0; i <= pl->cpuCount; i++) {
+   for (unsigned int i = 0; i <= pl->cpuCount; i++) {
       CPUData* d = opl->cpus + i;
       d->totalTime = 1;
       d->totalPeriod = 1;
@@ -361,7 +361,7 @@ static void NetBSDProcessList_scanCPUTime(NetBSDProcessList* this) {
    u_int64_t kernelTimes[CPUSTATES] = {0};
    u_int64_t avg[CPUSTATES] = {0};
 
-   for (int i = 0; i < this->super.cpuCount; i++) {
+   for (unsigned int i = 0; i < this->super.cpuCount; i++) {
       getKernelCPUTimes(i, kernelTimes);
       CPUData* cpu = this->cpus + i + 1;
       kernelCPUTimesToHtop(kernelTimes, cpu);

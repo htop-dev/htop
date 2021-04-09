@@ -240,22 +240,24 @@ endif
 # -------
 
 netbsd_platform_headers = \
+	generic/gettime.h \
+	generic/hostname.h \
+	generic/uname.h \
 	netbsd/Platform.h \
 	netbsd/ProcessField.h \
-	netbsd/NetBSDProcessList.h \
 	netbsd/NetBSDProcess.h \
-	generic/hostname.h \
-	generic/uname.h
+	netbsd/NetBSDProcessList.h
 
 netbsd_platform_sources = \
-	netbsd/Platform.c \
-	netbsd/NetBSDProcessList.c \
-	netbsd/NetBSDProcess.c \
+	generic/gettime.c \
 	generic/hostname.c \
-	generic/uname.c
+	generic/uname.c \
+	netbsd/Platform.c \
+	netbsd/NetBSDProcess.c \
+	netbsd/NetBSDProcessList.c
 
 if HTOP_NETBSD
-AM_LDFLAGS += -lkvm
+myhtopplatprogram = htop
 myhtopplatheaders = $(netbsd_platform_headers)
 myhtopplatsources = $(netbsd_platform_sources)
 endif
