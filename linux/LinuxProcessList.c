@@ -1249,7 +1249,7 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
    return out;
 }
 
-static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_t parentFd, const char* dirname, const Process* parent, double period, unsigned long long now) {
+static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_t parentFd, const char* dirname, const Process* parent, double period) {
    ProcessList* pl = (ProcessList*) this;
    const struct dirent* entry;
    const Settings* settings = pl->settings;
@@ -1315,7 +1315,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       xSnprintf(procFd, sizeof(procFd), "%s/%s", dirFd, entry->d_name);
 #endif
 
-      LinuxProcessList_recurseProcTree(this, procFd, "task", proc, period, now);
+      LinuxProcessList_recurseProcTree(this, procFd, "task", proc, period);
 
       /*
        * These conditions will not trigger on first occurrence, cause we need to
@@ -1341,9 +1341,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       if (settings->flags & PROCESS_FLAG_IO)
-         LinuxProcessList_readIoFile(lp, procFd, now);
+         LinuxProcessList_readIoFile(lp, procFd, pl->realtimeMs);
 
-      if (!LinuxProcessList_readStatmFile(lp, procFd, !!(settings->flags & PROCESS_FLAG_LINUX_LRS_FIX), now))
+      if (!LinuxProcessList_readStatmFile(lp, procFd, !!(settings->flags & PROCESS_FLAG_LINUX_LRS_FIX), pl->realtimeMs))
          goto errorReadingProcess;
 
       if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
@@ -1997,5 +1997,5 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    openat_arg_t rootFd = "";
 #endif
 
-   LinuxProcessList_recurseProcTree(this, rootFd, PROCDIR, NULL, period, super->realtimeMs);
+   LinuxProcessList_recurseProcTree(this, rootFd, PROCDIR, NULL, period);
 }
