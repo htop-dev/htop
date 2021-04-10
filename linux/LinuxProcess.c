@@ -391,7 +391,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
    char *strStart = mc->str;
    char *str = strStart;
 
-   int cmdlineBasenameOffset = lp->procCmdlineBasenameOffset;
+   int cmdlineBasenameOffset = this->cmdlineBasenameStart;
    int cmdlineBasenameEnd = this->cmdlineBasenameOffset;
 
    if (!cmdline) {

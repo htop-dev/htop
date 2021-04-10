@@ -1134,7 +1134,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    lp->mergedCommand.maxLen = lastChar + 1;  /* accommodate cmdline */
    if (!process->cmdline || !String_eq(command, process->cmdline)) {
       free_and_xStrdup(&process->cmdline, command);
-      lp->procCmdlineBasenameOffset = tokenStart;
+      process->cmdlineBasenameStart = tokenStart;
       process->cmdlineBasenameOffset = tokenEnd;
       lp->mergedCommand.cmdlineChanged = true;
    }
@@ -1463,13 +1463,13 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if (proc->state == 'Z' && (proc->cmdlineBasenameOffset == 0)) {
          proc->cmdlineBasenameOffset = -1;
          free_and_xStrdup(&proc->cmdline, command);
-         lp->procCmdlineBasenameOffset = 0;
+         proc->cmdlineBasenameStart = 0;
          lp->mergedCommand.commChanged = true;
       } else if (Process_isThread(proc)) {
          if (settings->showThreadNames || Process_isKernelThread(proc)) {
             proc->cmdlineBasenameOffset = -1;
             free_and_xStrdup(&proc->cmdline, command);
-            lp->procCmdlineBasenameOffset = 0;
+            proc->cmdlineBasenameStart = 0;
             lp->mergedCommand.commChanged = true;
          }
 
