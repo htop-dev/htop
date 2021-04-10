@@ -96,10 +96,6 @@ static int FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, Pro
    }
 }
 
-bool Process_isThread(const Process* this) {
-   return Process_isKernelThread(this) || Process_isUserlandThread(this);
-}
-
 const ProcessClass FreeBSDProcess_class = {
    .super = {
       .extends = Class(Process),

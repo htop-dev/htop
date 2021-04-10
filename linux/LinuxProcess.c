@@ -685,7 +685,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          procComm = this->procComm;
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
-         procComm = Process_isKernelThread(lp) ? kthreadID : "N/A";
+         procComm = Process_isKernelThread(this) ? kthreadID : "N/A";
       }
       /* 15 being (TASK_COMM_LEN - 1) */
       Process_printLeftAlignedField(str, attr, procComm, 15);
@@ -700,7 +700,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          procExe = this->procExe + this->procExeBasenameOffset;
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
-         procExe = Process_isKernelThread(lp) ? kthreadID : "N/A";
+         procExe = Process_isKernelThread(this) ? kthreadID : "N/A";
       }
       Process_printLeftAlignedField(str, attr, procExe, 15);
       return;
@@ -811,13 +811,13 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
    case PROC_COMM: {
-      const char *comm1 = v1->procComm ? v1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
-      const char *comm2 = v2->procComm ? v2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
+      const char *comm1 = v1->procComm ? v1->procComm : (Process_isKernelThread(v1) ? kthreadID : "");
+      const char *comm2 = v2->procComm ? v2->procComm : (Process_isKernelThread(v2) ? kthreadID : "");
       return strcmp(comm1, comm2);
    }
    case PROC_EXE: {
-      const char *exe1 = v1->procExe ? (v1->procExe + v1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
-      const char *exe2 = v2->procExe ? (v2->procExe + v2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
+      const char *exe1 = v1->procExe ? (v1->procExe + v1->procExeBasenameOffset) : (Process_isKernelThread(v1) ? kthreadID : "");
+      const char *exe2 = v2->procExe ? (v2->procExe + v2->procExeBasenameOffset) : (Process_isKernelThread(v2) ? kthreadID : "");
       return strcmp(exe1, exe2);
    }
    case CWD:
@@ -825,10 +825,6 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }
-}
-
-bool Process_isThread(const Process* this) {
-   return (Process_isUserlandThread(this) || Process_isKernelThread(this));
 }
 
 const ProcessClass LinuxProcess_class = {

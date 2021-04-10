@@ -234,7 +234,3 @@ const ProcessClass OpenBSDProcess_class = {
    .writeField = OpenBSDProcess_writeField,
    .compareByKey = OpenBSDProcess_compareByKey
 };
-
-bool Process_isThread(const Process* this) {
-   return Process_isKernelThread(this) || Process_isUserlandThread(this);
-}

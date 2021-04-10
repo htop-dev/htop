@@ -390,12 +390,13 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          if (kproc->kp_ktaddr && kproc->kp_flags & P_SYSTEM) {
             // dfb kernel threads all have the same pid, so we misuse the kernel thread address to give them a unique identifier
             proc->pid = (pid_t)kproc->kp_ktaddr;
-            dfp->kernel = 1;
+            proc->isKernelThread = true;
          } else {
             proc->pid = kproc->kp_pid;		// process ID
-            dfp->kernel = 0;
+            proc->isKernelThread = false;
          }
-         proc->ppid = kproc->kp_ppid;		// parent process id
+         proc->isUserlandThread = kproc->kp_nthreads > 1;
+         proc->ppid = kproc->kp_ppid; // parent process id
          proc->tpgid = kproc->kp_tpgid;		// tty process group id
          //proc->tgid = kproc->kp_lwp.kl_tid;	// thread group id
          proc->tgid = kproc->kp_pid;		// thread group id

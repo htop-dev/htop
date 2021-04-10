@@ -96,11 +96,6 @@ static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, Proc
    }
 }
 
-bool Process_isThread(const Process* this) {
-   (void) this;
-   return false;
-}
-
 static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* cmdlineBasenameEnd) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
@@ -272,6 +267,8 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       proc->session = 0; /* TODO Get the session id */
       proc->tpgid = ps->kp_eproc.e_tpgid;
       proc->tgid = proc->pid;
+      proc->isKernelThread = false;
+      proc->isUserlandThread = false;
       proc->st_uid = ps->kp_eproc.e_ucred.cr_uid;
       dp->translated = ps->kp_proc.p_flag & P_TRANSLATED;
 

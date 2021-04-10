@@ -121,18 +121,6 @@ static int SolarisProcess_compareByKey(const Process* v1, const Process* v2, Pro
    }
 }
 
-bool Process_isThread(const Process* this) {
-   const SolarisProcess* fp = (const SolarisProcess*) this;
-
-   if (fp->kernel == 1 ) {
-      return 1;
-   } else if (fp->is_lwp) {
-      return 1;
-   } else {
-      return 0;
-   }
-}
-
 const ProcessClass SolarisProcess_class = {
    .super = {
       .extends = Class(Process),
