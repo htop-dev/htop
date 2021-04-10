@@ -102,8 +102,8 @@ typedef struct Process_ {
     */
    char* cmdline;
 
-   /* Offset in cmdline of the process basename */
-   int cmdlineBasenameOffset;
+   /* End Offset in cmdline of the process basename */
+   int cmdlineBasenameEnd;
 
    /* Start Offset in cmdline of the process basename */
    int cmdlineBasenameStart;

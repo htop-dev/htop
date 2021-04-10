@@ -193,7 +193,7 @@ colorized for better readability, and it is implicit that only upto
 */
 #define TASK_COMM_LEN 16
 
-static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdlineBasenameOffset, int *pCommStart, int *pCommEnd) {
+static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdlineBasenameStart, int *pCommStart, int *pCommEnd) {
    /* Try to find procComm in tokenized cmdline - this might in rare cases
     * mis-identify a string or fail, if comm or cmdline had been unsuitably
     * modified by the process */
@@ -201,10 +201,10 @@ static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdline
    size_t tokenLen;
    const size_t commLen = strlen(comm);
 
-   if (cmdlineBasenameOffset < 0)
+   if (cmdlineBasenameStart < 0)
       return false;
 
-   for (const char *token = cmdline + cmdlineBasenameOffset; *token; ) {
+   for (const char *token = cmdline + cmdlineBasenameStart; *token;) {
       for (tokenBase = token; *token && *token != '\n'; ++token) {
          if (*token == '/') {
             tokenBase = token + 1;
@@ -249,7 +249,7 @@ static int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseO
     * that make htop's identification of the basename in cmdline unreliable.
     * For e.g. /usr/libexec/gdm-session-worker modifies its cmdline to
     * "gdm-session-worker [pam/gdm-autologin]" and htop ends up with
-    * procCmdlineBasenameOffset at "gdm-autologin]". This issue could arise with
+    * proccmdlineBasenameEnd at "gdm-autologin]". This issue could arise with
     * chrome as well as it stores in cmdline its concatenated argument vector,
     * without NUL delimiter between the arguments (which may contain a '/')
     *
@@ -391,21 +391,21 @@ void LinuxProcess_makeCommandStr(Process* this) {
    char *strStart = mc->str;
    char *str = strStart;
 
-   int cmdlineBasenameOffset = this->cmdlineBasenameStart;
-   int cmdlineBasenameEnd = this->cmdlineBasenameOffset;
+   int cmdlineBasenameStart = this->cmdlineBasenameStart;
+   int cmdlineBasenameEnd = this->cmdlineBasenameEnd;
 
    if (!cmdline) {
-      cmdlineBasenameOffset = 0;
+      cmdlineBasenameStart = 0;
       cmdlineBasenameEnd = 0;
       cmdline = "(zombie)";
    }
 
-   assert(cmdlineBasenameOffset >= 0);
-   assert(cmdlineBasenameOffset <= (int)strlen(cmdline));
+   assert(cmdlineBasenameStart >= 0);
+   assert(cmdlineBasenameStart <= (int)strlen(cmdline));
 
    if (!showMergedCommand || !procExe || !procComm) { /* fall back to cmdline */
       if (showMergedCommand && !procExe && procComm && strlen(procComm)) { /* Prefix column with comm */
-         if (strncmp(cmdline + cmdlineBasenameOffset, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
+         if (strncmp(cmdline + cmdlineBasenameStart, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
             WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
             str = stpcpy(str, procComm);
 
@@ -414,11 +414,11 @@ void LinuxProcess_makeCommandStr(Process* this) {
       }
 
       if (showProgramPath) {
-         WRITE_HIGHLIGHT(cmdlineBasenameOffset, cmdlineBasenameEnd - cmdlineBasenameOffset, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+         WRITE_HIGHLIGHT(cmdlineBasenameStart, cmdlineBasenameEnd - cmdlineBasenameStart, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
          (void)stpcpyWithNewlineConversion(str, cmdline);
       } else {
-         WRITE_HIGHLIGHT(0, cmdlineBasenameEnd - cmdlineBasenameOffset, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
-         (void)stpcpyWithNewlineConversion(str, cmdline + cmdlineBasenameOffset);
+         WRITE_HIGHLIGHT(0, cmdlineBasenameEnd - cmdlineBasenameStart, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+         (void)stpcpyWithNewlineConversion(str, cmdline + cmdlineBasenameStart);
       }
 
       return;
@@ -460,10 +460,10 @@ void LinuxProcess_makeCommandStr(Process* this) {
    /* Try to match procComm with procExe's basename: This is reliable (predictable) */
    if (searchCommInCmdline) {
       /* commStart/commEnd will be adjusted later along with cmdline */
-      haveCommInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameOffset, &commStart, &commEnd);
+      haveCommInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commEnd);
    }
 
-   int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameOffset, procExe, exeBasenameOffset, exeBasenameLen);
+   int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
 
    bool haveCommField = false;
 
