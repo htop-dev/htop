@@ -33,6 +33,7 @@ in the source distribution for its full text.
 typedef struct LinuxProcess_ {
    Process super;
    bool isKernelThread;
+   bool isUserlandThread;
    IOPriority ioPriority;
    unsigned long int cminflt;
    unsigned long int cmajflt;
@@ -106,9 +107,7 @@ typedef struct LinuxProcess_ {
 
 #define Process_isKernelThread(_process) (((const LinuxProcess*)(_process))->isKernelThread)
 
-static inline bool Process_isUserlandThread(const Process* this) {
-   return this->pid != this->tgid;
-}
+#define Process_isUserlandThread(_process) (((const LinuxProcess *)(_process))->isUserlandThread)
 
 extern int pageSize;
 

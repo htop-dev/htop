@@ -1315,6 +1315,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       LinuxProcess* lp = (LinuxProcess*) proc;
 
       proc->tgid = parent ? parent->pid : pid;
+      lp->isUserlandThread = proc->pid != proc->tgid;
 
 #ifdef HAVE_OPENAT
       int procFd = openat(dirFd, entry->d_name, O_PATH | O_DIRECTORY | O_NOFOLLOW);
