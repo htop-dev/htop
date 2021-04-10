@@ -259,7 +259,7 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
 
    if (this->settings->highlightBaseName || !this->settings->showProgramPath) {
       int basename = 0;
-      for (int i = 0; i < this->cmdlineBasenameOffset; i++) {
+      for (int i = 0; i < this->cmdlineBasenameEnd; i++) {
          if (cmdline[i] == '/') {
             basename = i + 1;
          } else if (cmdline[i] == ':') {
@@ -273,7 +273,7 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
          } else {
             cmdline += basename;
          }
-         len = this->cmdlineBasenameOffset - basename;
+         len = this->cmdlineBasenameEnd - basename;
       }
    }
 
@@ -541,7 +541,7 @@ void Process_init(Process* this, const Settings* settings) {
    this->showChildren = true;
    this->show = true;
    this->updated = false;
-   this->cmdlineBasenameOffset = -1;
+   this->cmdlineBasenameEnd = -1;
 
    if (Process_getuid == (uid_t)-1) {
       Process_getuid = getuid();
