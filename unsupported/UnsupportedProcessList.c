@@ -50,6 +50,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->updated = true;
 
    proc->state = 'R';
+   proc->isKernelThread = false;
+   proc->isUserlandThread = false;
    proc->show = true; /* Reflected in proc->settings-> "hideXXX" really */
    proc->pgrp = 0;
    proc->session = 0;

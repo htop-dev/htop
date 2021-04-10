@@ -16,18 +16,9 @@ in the source distribution for its full text.
 
 typedef struct FreeBSDProcess_ {
    Process super;
-   bool  isKernelThread;
    int   jid;
    char* jname;
 } FreeBSDProcess;
-
-static inline bool Process_isKernelThread(const Process* this) {
-   return ((const FreeBSDProcess*)this)->isKernelThread;
-}
-
-static inline bool Process_isUserlandThread(const Process* this) {
-   return this->pid != this->tgid;
-}
 
 extern const ProcessClass FreeBSDProcess_class;
 
@@ -36,7 +27,5 @@ extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 Process* FreeBSDProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
-
-bool Process_isThread(const Process* this);
 
 #endif

@@ -322,6 +322,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    } else {
       getpid = lwpid;
    }
+
    Process* proc             = ProcessList_getProcess(pl, getpid, &preExisting, SolarisProcess_new);
    SolarisProcess* sproc     = (SolarisProcess*) proc;
 
@@ -376,18 +377,18 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu / (double)32768) * (double)100.0;
       proc->time            = _psinfo->pr_time.tv_sec;
       if (!preExisting) { // Tasks done only for NEW processes
-         sproc->is_lwp = false;
+         proc->isUserlandThread = false;
          proc->starttime_ctime = _psinfo->pr_start.tv_sec;
       }
 
       // Update proc and thread counts based on settings
-      if (sproc->kernel && !pl->settings->hideKernelThreads) {
+      if (proc->isKernelThread && !pl->settings->hideKernelThreads) {
          pl->kernelThreads += proc->nlwp;
          pl->totalTasks += proc->nlwp + 1;
          if (proc->state == 'O') {
             pl->runningTasks++;
          }
-      } else if (!sproc->kernel) {
+      } else if (!proc->isKernelThread) {
          if (proc->state == 'O') {
             pl->runningTasks++;
          }
@@ -398,12 +399,12 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
             pl->totalTasks += proc->nlwp + 1;
          }
       }
-      proc->show = !(pl->settings->hideKernelThreads && sproc->kernel);
+      proc->show = !(pl->settings->hideKernelThreads && proc->isKernelThread);
    } else { // We are not in the master LWP, so jump to the LWP handling code
       proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu / (double)32768) * (double)100.0;
       proc->time               = _lwpsinfo->pr_time.tv_sec;
       if (!preExisting) { // Tasks done only for NEW LWPs
-         sproc->is_lwp         = true;
+         proc->isUserlandThread    = true;
          proc->cmdlineBasenameEnd = -1;
          proc->ppid            = _psinfo->pr_pid * 1024;
          proc->tgid            = _psinfo->pr_pid * 1024;
@@ -413,10 +414,10 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       }
 
       // Top-level process only gets this for the representative LWP
-      if (sproc->kernel && !pl->settings->hideKernelThreads) {
+      if (proc->isKernelThread && !pl->settings->hideKernelThreads) {
          proc->show = true;
       }
-      if (!sproc->kernel && !pl->settings->hideUserlandThreads) {
+      if (!proc->isKernelThread && !pl->settings->hideUserlandThreads) {
          proc->show = true;
       }
    } // Top-level LWP or subordinate LWP
@@ -425,10 +426,11 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
 
    if (!preExisting) {
       if ((sproc->realppid <= 0) && !(sproc->realpid <= 1)) {
-         sproc->kernel = true;
+         proc->isKernelThread = true;
       } else {
-         sproc->kernel = false;
+         proc->isKernelThread = false;
       }
+
       Process_fillStarttimeBuffer(proc);
       ProcessList_add(pl, proc);
    }

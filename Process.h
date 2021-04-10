@@ -110,6 +110,12 @@ typedef struct Process_ {
    /* Foreground group identifier of the controlling terminal */
    int tpgid;
 
+   /* This is a kernel (helper) task */
+   bool isKernelThread;
+
+   /* This is a userland thread / LWP */
+   bool isUserlandThread;
+
    /* Controlling terminal identifier of the process */
    unsigned long int tty_nr;
 
@@ -260,7 +266,6 @@ typedef struct ProcessFieldData_ {
 void Process_writeField(const Process* this, RichString* str, ProcessField field);
 int Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
-bool Process_isThread(const Process* this);
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 #define PROCESS_MAX_PID_DIGITS 19
 extern int Process_pidDigits;
@@ -288,6 +293,18 @@ static inline pid_t Process_getParentPid(const Process* this) {
 
 static inline bool Process_isChildOf(const Process* this, pid_t pid) {
    return pid == Process_getParentPid(this);
+}
+
+static inline bool Process_isKernelThread(const Process *this) {
+   return this->isKernelThread;
+}
+
+static inline bool Process_isUserlandThread(const Process *this) {
+   return this->isUserlandThread;
+}
+
+static inline bool Process_isThread(const Process *this) {
+   return Process_isUserlandThread(this) || Process_isKernelThread(this);
 }
 
 #define CMDLINE_HIGHLIGHT_FLAG_SEPARATOR  0x00000001

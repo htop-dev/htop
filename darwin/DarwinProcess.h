@@ -29,8 +29,6 @@ Process* DarwinProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
 
-bool Process_isThread(const Process* this);
-
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists);
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double time_interval);

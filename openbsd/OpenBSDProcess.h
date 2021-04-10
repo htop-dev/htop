@@ -22,14 +22,6 @@ typedef struct OpenBSDProcess_ {
    uint64_t addr;
 } OpenBSDProcess;
 
-static inline bool Process_isKernelThread(const Process* this) {
-   return this->pgrp == 0;
-}
-
-static inline bool Process_isUserlandThread(const Process* this) {
-   return this->pid != this->tgid;
-}
-
 extern const ProcessClass OpenBSDProcess_class;
 
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
@@ -37,7 +29,5 @@ extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 Process* OpenBSDProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
-
-bool Process_isThread(const Process* this);
 
 #endif

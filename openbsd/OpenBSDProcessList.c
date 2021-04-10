@@ -252,6 +252,8 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          proc->tgid = kproc->p_pid;
          proc->session = kproc->p_sid;
          proc->pgrp = kproc->p__pgid;
+         proc->isKernelThread = proc->pgrp == 0;
+         proc->isUserlandThread = kproc->p_tid != -1;
          proc->st_uid = kproc->p_uid;
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);

@@ -32,8 +32,6 @@ in the source distribution for its full text.
 
 typedef struct LinuxProcess_ {
    Process super;
-   bool isKernelThread;
-   bool isUserlandThread;
    IOPriority ioPriority;
    unsigned long int cminflt;
    unsigned long int cmajflt;
@@ -104,10 +102,6 @@ typedef struct LinuxProcess_ {
    unsigned long long int last_mlrs_calctime;
    char* cwd;
 } LinuxProcess;
-
-#define Process_isKernelThread(_process) (((const LinuxProcess*)(_process))->isKernelThread)
-
-#define Process_isUserlandThread(_process) (((const LinuxProcess *)(_process))->isUserlandThread)
 
 extern int pageSize;
 

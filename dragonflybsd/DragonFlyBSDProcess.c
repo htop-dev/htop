@@ -94,16 +94,6 @@ static int DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2
    }
 }
 
-bool Process_isThread(const Process* this) {
-   const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) this;
-
-   if (fp->kernel == 1 ) {
-      return 1;
-   } else {
-      return (Process_isUserlandThread(this));
-   }
-}
-
 const ProcessClass DragonFlyBSDProcess_class = {
    .super = {
       .extends = Class(Process),
