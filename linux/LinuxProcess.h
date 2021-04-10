@@ -119,10 +119,6 @@ IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
 
 bool LinuxProcess_setIOPriority(Process* this, Arg ioprio);
 
-/* This function constructs the string that is displayed by
- * LinuxProcess_writeCommand and also returned by LinuxProcess_getCommandStr */
-void LinuxProcess_makeCommandStr(Process *this);
-
 bool Process_isThread(const Process* this);
 
 #endif

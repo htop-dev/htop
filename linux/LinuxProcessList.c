@@ -1028,7 +1028,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
 
    for (int i = 0; i < amtRead; i++) {
       /* newline used as delimiter - when forming the mergedCommand, newline is
-       * converted to space by LinuxProcess_makeCommandStr */
+       * converted to space by Process_makeCommandStr */
       if (command[i] == '\0') {
          command[i] = '\n';
       } else {
@@ -1432,7 +1432,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if (!Process_isKernelThread(proc) &&
           (proc->state != 'Z' || proc->mergedCommand.str) &&
           (!Process_isUserlandThread(proc) || !settings->showThreadNames)) {
-         LinuxProcess_makeCommandStr(proc);
+         Process_makeCommandStr(proc);
       }
 
       #ifdef HAVE_DELAYACCT

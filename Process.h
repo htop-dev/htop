@@ -372,4 +372,10 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
 // Avoid direct calls, use Process_getCommand instead
 const char *Process_getCommandStr(const Process *this);
 
+/* This function constructs the string that is displayed by
+ * Process_writeCommand and also returned by Process_getCommandStr */
+void Process_makeCommandStr(Process *this);
+
+void Process_writeCommand(const Process *this, int attr, int baseAttr, RichString *str);
+
 #endif
