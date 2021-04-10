@@ -30,40 +30,8 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_CWD       0x00020000
 #define PROCESS_FLAG_LINUX_DELAYACCT 0x00040000
 
-
-/* Holds information about regions of the cmdline that should be
- * highlighted (e.g. program basename, delimiter, comm). */
-typedef struct LinuxProcessCmdlineHighlight_
-{
-   size_t offset;    /* first character to highlight */
-   size_t length;    /* How many characters to highlight, zero if unused */
-   int attr;         /* The attributes used to highlight */
-   int flags;        /* Special flags used for selective highlighting, zero for always */
-} LinuxProcessCmdlineHighlight;
-
-/* LinuxProcessMergedCommand is populated by LinuxProcess_makeCommandStr: It
- * contains the merged Command string, and the information needed by
- * LinuxProcess_writeCommand to color the string. str will be NULL for kernel
- * threads and zombies */
-typedef struct LinuxProcessMergedCommand_ {
-   char *str;               /* merged Command string */
-   size_t maxLen;              /* maximum expected length of Command string */
-   size_t highlightCount;   /* how many portions of cmdline to highlight */
-   LinuxProcessCmdlineHighlight highlights[8]; /* which portions of cmdline to highlight */
-   bool separateComm : 1;   /* whether comm is a separate field */
-   bool unmatchedExe : 1;   /* whether exe matched with cmdline */
-   bool cmdlineChanged : 1; /* whether cmdline changed */
-   bool exeChanged : 1;     /* whether exe changed */
-   bool commChanged : 1;    /* whether comm changed */
-   bool prevMergeSet : 1;   /* whether showMergedCommand was set */
-   bool prevPathSet : 1;    /* whether showProgramPath was set */
-   bool prevCommSet : 1;    /* whether findCommInCmdline was set */
-   bool prevCmdlineSet : 1; /* whether stripExeFromCmdline was set */
-} LinuxProcessMergedCommand;
-
 typedef struct LinuxProcess_ {
    Process super;
-   LinuxProcessMergedCommand mergedCommand;
    bool isKernelThread;
    IOPriority ioPriority;
    unsigned long int cminflt;
