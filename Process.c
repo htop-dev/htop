@@ -252,35 +252,389 @@ void Process_fillStarttimeBuffer(Process* this) {
    strftime(this->starttime_show, sizeof(this->starttime_show) - 1, (this->starttime_ctime > (time(NULL) - 86400)) ? "%R " : "%b%d ", &date);
 }
 
-static inline void Process_writeCommand(const Process* this, int attr, int baseattr, RichString* str) {
-   int start = RichString_size(str);
-   int len = 0;
-   const char* cmdline = this->cmdline;
+/*
+ * TASK_COMM_LEN is defined to be 16 for /proc/[pid]/comm in man proc(5), but it is
+ * not available in an userspace header - so define it.
+ *
+ * Note: This is taken from LINUX headers, but implicitly taken for other platforms
+ * for sake of brevity.
+ *
+ * Note: when colorizing a basename with the comm prefix, the entire basename
+ * (not just the comm prefix) is colorized for better readability, and it is
+ * implicit that only upto (TASK_COMM_LEN - 1) could be comm.
+ */
+#define TASK_COMM_LEN 16
 
-   if (this->settings->highlightBaseName || !this->settings->showProgramPath) {
-      int basename = 0;
-      for (int i = 0; i < this->cmdlineBasenameEnd; i++) {
-         if (cmdline[i] == '/') {
-            basename = i + 1;
-         } else if (cmdline[i] == ':') {
-            len = i + 1;
-            break;
+static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdlineBasenameStart, int *pCommStart, int *pCommEnd) {
+   /* Try to find procComm in tokenized cmdline - this might in rare cases
+    * mis-identify a string or fail, if comm or cmdline had been unsuitably
+    * modified by the process */
+   const char *tokenBase;
+   size_t tokenLen;
+   const size_t commLen = strlen(comm);
+
+   if (cmdlineBasenameStart < 0)
+      return false;
+
+   for (const char *token = cmdline + cmdlineBasenameStart; *token;) {
+      for (tokenBase = token; *token && *token != '\n'; ++token) {
+         if (*token == '/') {
+            tokenBase = token + 1;
          }
       }
-      if (len == 0) {
-         if (this->settings->showProgramPath) {
-            start += basename;
-         } else {
-            cmdline += basename;
-         }
-         len = this->cmdlineBasenameEnd - basename;
+      tokenLen = token - tokenBase;
+
+      if ((tokenLen == commLen || (tokenLen > commLen && commLen == (TASK_COMM_LEN - 1))) &&
+          strncmp(tokenBase, comm, commLen) == 0) {
+         *pCommStart = tokenBase - cmdline;
+         *pCommEnd = token - cmdline;
+         return true;
+      }
+
+      if (*token) {
+         do {
+            ++token;
+         } while (*token && '\n' == *token);
       }
    }
+   return false;
+}
 
-   RichString_appendWide(str, attr, cmdline);
+static int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseOffset, const char *exe, int exeBaseOffset, int exeBaseLen) {
+   int matchLen; /* matching length to be returned */
+   char delim;   /* delimiter following basename */
 
-   if (this->settings->highlightBaseName) {
-      RichString_setAttrn(str, baseattr, start, len);
+   /* cmdline prefix is an absolute path: it must match whole exe. */
+   if (cmdline[0] == '/') {
+      matchLen = exeBaseLen + exeBaseOffset;
+      if (strncmp(cmdline, exe, matchLen) == 0) {
+         delim = cmdline[matchLen];
+         if (delim == 0 || delim == '\n' || delim == ' ') {
+            return matchLen;
+         }
+      }
+      return 0;
+   }
+
+   /* cmdline prefix is a relative path: We need to first match the basename at
+    * cmdlineBaseOffset and then reverse match the cmdline prefix with the exe
+    * suffix. But there is a catch: Some processes modify their cmdline in ways
+    * that make htop's identification of the basename in cmdline unreliable.
+    * For e.g. /usr/libexec/gdm-session-worker modifies its cmdline to
+    * "gdm-session-worker [pam/gdm-autologin]" and htop ends up with
+    * proccmdlineBasenameEnd at "gdm-autologin]". This issue could arise with
+    * chrome as well as it stores in cmdline its concatenated argument vector,
+    * without NUL delimiter between the arguments (which may contain a '/')
+    *
+    * So if needed, we adjust cmdlineBaseOffset to the previous (if any)
+    * component of the cmdline relative path, and retry the procedure. */
+   bool delimFound; /* if valid basename delimiter found */
+   do {
+      /* match basename */
+      matchLen = exeBaseLen + cmdlineBaseOffset;
+      if (cmdlineBaseOffset < exeBaseOffset &&
+          strncmp(cmdline + cmdlineBaseOffset, exe + exeBaseOffset, exeBaseLen) == 0) {
+         delim = cmdline[matchLen];
+         if (delim == 0 || delim == '\n' || delim == ' ') {
+            int i, j;
+            /* reverse match the cmdline prefix and exe suffix */
+            for (i = cmdlineBaseOffset - 1, j = exeBaseOffset - 1;
+                 i >= 0 && j >= 0 && cmdline[i] == exe[j]; --i, --j)
+               ;
+
+            /* full match, with exe suffix being a valid relative path */
+            if (i < 0 && j >= 0 && exe[j] == '/')
+               return matchLen;
+         }
+      }
+
+      /* Try to find the previous potential cmdlineBaseOffset - it would be
+       * preceded by '/' or nothing, and delimited by ' ' or '\n' */
+      for (delimFound = false, cmdlineBaseOffset -= 2; cmdlineBaseOffset > 0; --cmdlineBaseOffset) {
+         if (delimFound) {
+            if (cmdline[cmdlineBaseOffset - 1] == '/') {
+               break;
+            }
+         } else if (cmdline[cmdlineBaseOffset] == ' ' || cmdline[cmdlineBaseOffset] == '\n') {
+            delimFound = true;
+         }
+      }
+   } while (delimFound);
+
+   return 0;
+}
+
+/* stpcpy, but also converts newlines to spaces */
+static inline char *stpcpyWithNewlineConversion(char *dstStr, const char *srcStr) {
+   for (; *srcStr; ++srcStr) {
+      *dstStr++ = (*srcStr == '\n') ? ' ' : *srcStr;
+   }
+   *dstStr = 0;
+   return dstStr;
+}
+
+/*
+ * This function makes the merged Command string. It also stores the offsets of the
+ * basename, comm w.r.t the merged Command string - these offsets will be used by
+ * Process_writeCommand() for coloring. The merged Command string is also
+ * returned by Process_getCommandStr() for searching, sorting and filtering.
+ */
+void Process_makeCommandStr(Process *this) {
+   ProcessMergedCommand *mc = &this->mergedCommand;
+   const Settings *settings = this->settings;
+
+   bool showMergedCommand = settings->showMergedCommand;
+   bool showProgramPath = settings->showProgramPath;
+   bool searchCommInCmdline = settings->findCommInCmdline;
+   bool stripExeFromCmdline = settings->stripExeFromCmdline;
+
+   /* this->mergedCommand.str needs updating only if its state or contents changed.
+    * Its content is based on the fields cmdline, comm, and exe. */
+   if (
+       mc->prevMergeSet == showMergedCommand &&
+       mc->prevPathSet == showProgramPath &&
+       mc->prevCommSet == searchCommInCmdline &&
+       mc->prevCmdlineSet == stripExeFromCmdline &&
+       !mc->cmdlineChanged &&
+       !mc->commChanged &&
+       !mc->exeChanged
+   ) {
+      return;
+   }
+
+   /* The field separtor "│" has been chosen such that it will not match any
+    * valid string used for searching or filtering */
+   const char *SEPARATOR = CRT_treeStr[TREE_STR_VERT];
+   const int SEPARATOR_LEN = strlen(SEPARATOR);
+
+   /* Check for any changed fields since we last built this string */
+   if (mc->cmdlineChanged || mc->commChanged || mc->exeChanged) {
+      free(mc->str);
+      /* Accommodate the column text, two field separators and terminating NUL */
+      mc->str = xCalloc(1, mc->maxLen + 2 * SEPARATOR_LEN + 1);
+   }
+
+   /* Preserve the settings used in this run */
+   mc->prevMergeSet = showMergedCommand;
+   mc->prevPathSet = showProgramPath;
+   mc->prevCommSet = searchCommInCmdline;
+   mc->prevCmdlineSet = stripExeFromCmdline;
+
+   /* Mark everything as unchanged */
+   mc->cmdlineChanged = false;
+   mc->commChanged = false;
+   mc->exeChanged = false;
+
+   /* Reset all locations that need extra handling when actually displaying */
+   mc->highlightCount = 0;
+   memset(mc->highlights, 0, sizeof(mc->highlights));
+
+   size_t mbMismatch = 0;
+   #define WRITE_HIGHLIGHT(_offset, _length, _attr, _flags)                                 \
+      do {                                                                                  \
+         /* Check if we still have capacity */                                              \
+         assert(mc->highlightCount < ARRAYSIZE(mc->highlights));                            \
+         if (mc->highlightCount >= ARRAYSIZE(mc->highlights))                               \
+            continue;                                                                       \
+                                                                                            \
+         mc->highlights[mc->highlightCount].offset = str - strStart + _offset - mbMismatch; \
+         mc->highlights[mc->highlightCount].length = _length;                               \
+         mc->highlights[mc->highlightCount].attr = _attr;                                   \
+         mc->highlights[mc->highlightCount].flags = _flags;                                 \
+         mc->highlightCount++;                                                              \
+      } while (0)
+
+   #define WRITE_SEPARATOR                                                                  \
+      do {                                                                                  \
+         WRITE_HIGHLIGHT(0, 1, CRT_colors[FAILED_READ], CMDLINE_HIGHLIGHT_FLAG_SEPARATOR);  \
+         mbMismatch += SEPARATOR_LEN - 1;                                                   \
+         str = stpcpy(str, SEPARATOR);                                                      \
+      } while (0)
+
+   const int baseAttr = Process_isThread(this) ? CRT_colors[PROCESS_THREAD_BASENAME] : CRT_colors[PROCESS_BASENAME];
+   const int commAttr = Process_isThread(this) ? CRT_colors[PROCESS_THREAD_COMM] : CRT_colors[PROCESS_COMM];
+   const int delAttr = CRT_colors[FAILED_READ];
+
+   /* Establish some shortcuts to data we need */
+   const char *cmdline = this->cmdline;
+   const char *procComm = this->procComm;
+   const char *procExe = this->procExe;
+
+   char *strStart = mc->str;
+   char *str = strStart;
+
+   int cmdlineBasenameStart = this->cmdlineBasenameStart;
+   int cmdlineBasenameEnd = this->cmdlineBasenameEnd;
+
+   if (!cmdline) {
+      cmdlineBasenameStart = 0;
+      cmdlineBasenameEnd = 0;
+      cmdline = "(zombie)";
+   }
+
+   assert(cmdlineBasenameStart >= 0);
+   assert(cmdlineBasenameStart <= (int)strlen(cmdline));
+
+   if (!showMergedCommand || !procExe || !procComm) { /* fall back to cmdline */
+      if (showMergedCommand && !procExe && procComm && strlen(procComm)) { /* Prefix column with comm */
+         if (strncmp(cmdline + cmdlineBasenameStart, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
+            WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+            str = stpcpy(str, procComm);
+
+            WRITE_SEPARATOR;
+         }
+      }
+
+      if (showProgramPath) {
+         WRITE_HIGHLIGHT(cmdlineBasenameStart, cmdlineBasenameEnd - cmdlineBasenameStart, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+         (void)stpcpyWithNewlineConversion(str, cmdline);
+      } else {
+         WRITE_HIGHLIGHT(0, cmdlineBasenameEnd - cmdlineBasenameStart, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+         (void)stpcpyWithNewlineConversion(str, cmdline + cmdlineBasenameStart);
+      }
+
+      return;
+   }
+
+   int exeLen = strlen(this->procExe);
+   int exeBasenameOffset = this->procExeBasenameOffset;
+   int exeBasenameLen = exeLen - exeBasenameOffset;
+
+   assert(exeBasenameOffset >= 0);
+   assert(exeBasenameOffset <= (int)strlen(procExe));
+
+   bool haveCommInExe = false;
+   if (procExe && procComm) {
+      haveCommInExe = strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0;
+   }
+
+   /* Start with copying exe */
+   if (showProgramPath) {
+      if (haveCommInExe)
+         WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+      WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+      if (this->procExeDeleted)
+         WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, delAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+      str = stpcpy(str, procExe);
+   } else {
+      if (haveCommInExe)
+         WRITE_HIGHLIGHT(0, exeBasenameLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+      WRITE_HIGHLIGHT(0, exeBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+      if (this->procExeDeleted)
+         WRITE_HIGHLIGHT(0, exeBasenameLen, delAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+      str = stpcpy(str, procExe + exeBasenameOffset);
+   }
+
+   bool haveCommInCmdline = false;
+   int commStart = 0;
+   int commEnd = 0;
+
+   /* Try to match procComm with procExe's basename: This is reliable (predictable) */
+   if (searchCommInCmdline) {
+      /* commStart/commEnd will be adjusted later along with cmdline */
+      haveCommInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commEnd);
+   }
+
+   int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
+
+   bool haveCommField = false;
+
+   if (!haveCommInExe && !haveCommInCmdline && procComm) {
+      WRITE_SEPARATOR;
+      WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+      str = stpcpy(str, procComm);
+      haveCommField = true;
+   }
+
+   if (matchLen) {
+      /* strip the matched exe prefix */
+      cmdline += matchLen;
+
+      commStart -= matchLen;
+      commEnd -= matchLen;
+   }
+
+   if (!matchLen || (haveCommField && *cmdline)) {
+      /* cmdline will be a separate field */
+      WRITE_SEPARATOR;
+   }
+
+   if (!haveCommInExe && haveCommInCmdline && !haveCommField)
+      WRITE_HIGHLIGHT(commStart, commEnd - commStart, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+
+   /* Display cmdline if it hasn't been consumed by procExe */
+   if (*cmdline)
+      (void)stpcpyWithNewlineConversion(str, cmdline);
+
+   #undef WRITE_SEPARATOR
+   #undef WRITE_HIGHLIGHT
+}
+
+void Process_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
+   (void)baseAttr;
+
+   const ProcessMergedCommand *mc = &this->mergedCommand;
+
+   int strStart = RichString_size(str);
+
+   const bool highlightBaseName = this->settings->highlightBaseName;
+   const bool highlightSeparator = true;
+   const bool highlightDeleted = true;
+
+   if (!this->mergedCommand.str) {
+      int len = 0;
+      const char* cmdline = this->cmdline;
+
+      if (highlightBaseName || !this->settings->showProgramPath) {
+         int basename = 0;
+         for (int i = 0; i < this->cmdlineBasenameEnd; i++) {
+            if (cmdline[i] == '/') {
+               basename = i + 1;
+            } else if (cmdline[i] == ':') {
+               len = i + 1;
+               break;
+            }
+         }
+         if (len == 0) {
+            if (this->settings->showProgramPath) {
+               strStart += basename;
+            } else {
+               cmdline += basename;
+            }
+            len = this->cmdlineBasenameEnd - basename;
+         }
+      }
+
+      RichString_appendWide(str, attr, cmdline);
+
+      if (this->settings->highlightBaseName) {
+         RichString_setAttrn(str, baseAttr, strStart, len);
+      }
+
+      return;
+   }
+
+   RichString_appendWide(str, attr, this->mergedCommand.str);
+
+   for (size_t i = 0, hlCount = CLAMP(mc->highlightCount, 0, ARRAYSIZE(mc->highlights)); i < hlCount; i++) {
+      const ProcessCmdlineHighlight *hl = &mc->highlights[i];
+
+      if (!hl->length)
+         continue;
+
+      if (hl->flags & CMDLINE_HIGHLIGHT_FLAG_SEPARATOR)
+         if (!highlightSeparator)
+            continue;
+
+      if (hl->flags & CMDLINE_HIGHLIGHT_FLAG_BASENAME)
+         if (!highlightBaseName)
+            continue;
+
+      if (hl->flags & CMDLINE_HIGHLIGHT_FLAG_DELETED)
+         if (!highlightDeleted)
+            continue;
+
+      RichString_setAttrn(str, hl->attr, strStart + hl->offset, hl->length);
    }
 }
 
