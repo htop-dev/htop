@@ -150,11 +150,15 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths) {
    unsigned long long totalSeconds = totalHundredths / 100;
 
    unsigned long long hours = totalSeconds / 3600;
+   unsigned long long days = totalSeconds / 86400;
    int minutes = (totalSeconds / 60) % 60;
    int seconds = totalSeconds % 60;
    int hundredths = totalHundredths - (totalSeconds * 100);
    char buffer[10];
-   if (hours >= 100) {
+   if (days >= 100) {
+      xSnprintf(buffer, sizeof(buffer), "%7llud ", days);
+      RichString_appendAscii(str, CRT_colors[LARGE_NUMBER], buffer);
+   } else if (hours >= 100) {
       xSnprintf(buffer, sizeof(buffer), "%7lluh ", hours);
       RichString_appendAscii(str, CRT_colors[LARGE_NUMBER], buffer);
    } else {
