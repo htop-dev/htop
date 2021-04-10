@@ -517,6 +517,7 @@ void Process_done(Process* this) {
    free(this->cmdline);
    free(this->procComm);
    free(this->procExe);
+   free(this->mergedCommand.str);
    free(this->tty_name);
 }
 

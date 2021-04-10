@@ -108,11 +108,11 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
  * happens on what is displayed - whether comm, full path, basename, etc.. So
  * this follows LinuxProcess_writeField(COMM) and LinuxProcess_writeCommand */
 static const char* LinuxProcess_getCommandStr(const Process *this) {
-   const LinuxProcess *lp = (const LinuxProcess *)this;
-   if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !lp->mergedCommand.str) {
+   if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !this->mergedCommand.str) {
       return this->cmdline;
    }
-   return lp->mergedCommand.str;
+
+   return this->mergedCommand.str;
 }
 
 Process* LinuxProcess_new(const Settings* settings) {
@@ -131,7 +131,6 @@ void Process_delete(Object* cast) {
 #endif
    free(this->cwd);
    free(this->secattr);
-   free(this->mergedCommand.str);
    free(this);
 }
 
@@ -307,8 +306,7 @@ LinuxProcess_writeCommand() for coloring. The merged Command string is also
 returned by LinuxProcess_getCommandStr() for searching, sorting and filtering.
 */
 void LinuxProcess_makeCommandStr(Process* this) {
-   LinuxProcess *lp = (LinuxProcess *)this;
-   LinuxProcessMergedCommand *mc = &lp->mergedCommand;
+   ProcessMergedCommand *mc = &this->mergedCommand;
    const Settings* settings = this->settings;
 
    bool showMergedCommand = settings->showMergedCommand;
@@ -502,8 +500,7 @@ void LinuxProcess_makeCommandStr(Process* this) {
 static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
    (void)baseAttr;
 
-   const LinuxProcess *lp = (const LinuxProcess *)this;
-   const LinuxProcessMergedCommand *mc = &lp->mergedCommand;
+   const ProcessMergedCommand *mc = &this->mergedCommand;
 
    int strStart = RichString_size(str);
 
@@ -513,11 +510,11 @@ static void LinuxProcess_writeCommand(const Process* this, int attr, int baseAtt
    const bool highlightSeparator = true;
    const bool highlightDeleted = true;
 
-   RichString_appendWide(str, attr, lp->mergedCommand.str);
+   RichString_appendWide(str, attr, this->mergedCommand.str);
 
    for (size_t i = 0, hlCount = CLAMP(mc->highlightCount, 0, ARRAYSIZE(mc->highlights)); i < hlCount; i++)
    {
-      const LinuxProcessCmdlineHighlight* hl = &mc->highlights[i];
+      const ProcessCmdlineHighlight* hl = &mc->highlights[i];
 
       if (!hl->length)
          continue;
@@ -674,7 +671,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;
    case COMM: {
-      if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !lp->mergedCommand.str) {
+      if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !this->mergedCommand.str) {
          Process_writeField(this, str, field);
       } else {
          LinuxProcess_writeCommandField(this, str, buffer, n, attr);
