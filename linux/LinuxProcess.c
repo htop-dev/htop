@@ -609,37 +609,37 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
    switch (field) {
-   case CMINFLT: Process_colorNumber(str, lp->cminflt, coloring); return;
-   case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
-   case M_DRS: Process_humanNumber(str, lp->m_drs * pageSizeKB, coloring); return;
-   case M_DT: Process_humanNumber(str, lp->m_dt * pageSizeKB, coloring); return;
+   case CMINFLT: Process_printCount(str, lp->cminflt, coloring); return;
+   case CMAJFLT: Process_printCount(str, lp->cmajflt, coloring); return;
+   case M_DRS: Process_printKBytes(str, lp->m_drs * pageSizeKB, coloring); return;
+   case M_DT: Process_printKBytes(str, lp->m_dt * pageSizeKB, coloring); return;
    case M_LRS:
       if (lp->m_lrs) {
-         Process_humanNumber(str, lp->m_lrs * pageSizeKB, coloring);
+         Process_printKBytes(str, lp->m_lrs * pageSizeKB, coloring);
          return;
       }
 
       attr = CRT_colors[PROCESS_SHADOW];
       xSnprintf(buffer, n, "  N/A ");
       break;
-   case M_TRS: Process_humanNumber(str, lp->m_trs * pageSizeKB, coloring); return;
-   case M_SHARE: Process_humanNumber(str, lp->m_share * pageSizeKB, coloring); return;
-   case M_PSS: Process_humanNumber(str, lp->m_pss, coloring); return;
-   case M_SWAP: Process_humanNumber(str, lp->m_swap, coloring); return;
-   case M_PSSWP: Process_humanNumber(str, lp->m_psswp, coloring); return;
-   case UTIME: Process_printTime(str, lp->utime); return;
-   case STIME: Process_printTime(str, lp->stime); return;
-   case CUTIME: Process_printTime(str, lp->cutime); return;
-   case CSTIME: Process_printTime(str, lp->cstime); return;
-   case RCHAR:  Process_humanNumber(str, lp->io_rchar, coloring); return;
-   case WCHAR:  Process_humanNumber(str, lp->io_wchar, coloring); return;
-   case SYSCR:  Process_colorNumber(str, lp->io_syscr, coloring); return;
-   case SYSCW:  Process_colorNumber(str, lp->io_syscw, coloring); return;
-   case RBYTES: Process_humanNumber(str, lp->io_read_bytes, coloring); return;
-   case WBYTES: Process_humanNumber(str, lp->io_write_bytes, coloring); return;
-   case CNCLWB: Process_humanNumber(str, lp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring); return;
+   case M_TRS: Process_printKBytes(str, lp->m_trs * pageSizeKB, coloring); return;
+   case M_SHARE: Process_printKBytes(str, lp->m_share * pageSizeKB, coloring); return;
+   case M_PSS: Process_printKBytes(str, lp->m_pss, coloring); return;
+   case M_SWAP: Process_printKBytes(str, lp->m_swap, coloring); return;
+   case M_PSSWP: Process_printKBytes(str, lp->m_psswp, coloring); return;
+   case UTIME: Process_printTime(str, lp->utime, coloring); return;
+   case STIME: Process_printTime(str, lp->stime, coloring); return;
+   case CUTIME: Process_printTime(str, lp->cutime, coloring); return;
+   case CSTIME: Process_printTime(str, lp->cstime, coloring); return;
+   case RCHAR:  Process_printKBytes(str, lp->io_rchar, coloring); return;
+   case WCHAR:  Process_printKBytes(str, lp->io_wchar, coloring); return;
+   case SYSCR:  Process_printCount(str, lp->io_syscr, coloring); return;
+   case SYSCW:  Process_printCount(str, lp->io_syscw, coloring); return;
+   case RBYTES: Process_printKBytes(str, lp->io_read_bytes, coloring); return;
+   case WBYTES: Process_printKBytes(str, lp->io_write_bytes, coloring); return;
+   case CNCLWB: Process_printKBytes(str, lp->io_cancelled_write_bytes, coloring); return;
+   case IO_READ_RATE:  Process_printRate(str, lp->io_rate_read_bps, coloring); return;
+   case IO_WRITE_RATE: Process_printRate(str, lp->io_rate_write_bps, coloring); return;
    case IO_RATE: {
       double totalRate;
       if (!isnan(lp->io_rate_read_bps) && !isnan(lp->io_rate_write_bps))
@@ -650,7 +650,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          totalRate = lp->io_rate_write_bps;
       else
          totalRate = NAN;
-      Process_outputRate(str, buffer, n, totalRate, coloring); return;
+      Process_printRate(str, totalRate, coloring); return;
    }
    #ifdef HAVE_OPENVZ
    case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;

@@ -245,27 +245,32 @@ static inline bool Process_isChildOf(const Process* this, pid_t pid) {
 #define ONE_M (ONE_K * ONE_K)
 #define ONE_G (ONE_M * ONE_K)
 #define ONE_T (1ULL * ONE_G * ONE_K)
+#define ONE_P (1ULL * ONE_T * ONE_K)
 
 #define ONE_DECIMAL_K 1000UL
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
 #define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 #define ONE_DECIMAL_T (1ULL * ONE_DECIMAL_G * ONE_DECIMAL_K)
+#define ONE_DECIMAL_P (1ULL * ONE_DECIMAL_T * ONE_DECIMAL_K)
 
 void Process_setupColumnWidths(void);
 
-/* Takes number in kilo units (base 1024) */
-void Process_humanNumber(RichString* str, unsigned long long number, bool coloring);
+/* Takes number in bytes (base 1024). Prints 6 columns. */
+void Process_printBytes(RichString* str, unsigned long long number, bool coloring);
 
-/* Takes number in bare units (base 1000) */
-void Process_colorNumber(RichString* str, unsigned long long number, bool coloring);
+/* Takes number in kilo bytes (base 1024). Prints 6 columns. */
+void Process_printKBytes(RichString* str, unsigned long long number, bool coloring);
 
-/* Takes number in hundredths of a seconds */
-void Process_printTime(RichString* str, unsigned long long totalHundredths);
+/* Takes number as count (base 1000). Prints 12 columns. */
+void Process_printCount(RichString* str, unsigned long long number, bool coloring);
+
+/* Takes time in hundredths of a seconds. Prints 9 columns. */
+void Process_printTime(RichString* str, unsigned long long totalHundredths, bool coloring);
+
+/* Takes rate in bare unit (base 1024) per second. Prints 12 columns. */
+void Process_printRate(RichString* str, double rate, bool coloring);
 
 void Process_fillStarttimeBuffer(Process* this);
-
-/* Takes number in bare units (base 1024) */
-void Process_outputRate(RichString* str, char* buffer, size_t n, double rate, int coloring);
 
 void Process_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width);
 

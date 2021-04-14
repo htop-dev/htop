@@ -49,8 +49,8 @@ void Process_setupColumnWidths() {
    assert(Process_pidDigits <= PROCESS_MAX_PID_DIGITS);
 }
 
-void Process_humanNumber(RichString* str, unsigned long long number, bool coloring) {
-   char buffer[10];
+void Process_printBytes(RichString* str, unsigned long long number, bool coloring) {
+   char buffer[16];
    int len;
 
    int largeNumberColor = coloring ? CRT_colors[LARGE_NUMBER] : CRT_colors[PROCESS];
@@ -62,7 +62,12 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
    if (number == ULLONG_MAX) {
       //Invalid number
       RichString_appendAscii(str, shadowColor, "  N/A ");
-   } else if (number < 1000) {
+      return;
+   }
+
+   number /= ONE_K;
+
+   if (number < 1000) {
       //Plain number, no markings
       len = xSnprintf(buffer, sizeof(buffer), "%5llu ", number);
       RichString_appendnAscii(str, processColor, buffer, len);
@@ -108,14 +113,35 @@ void Process_humanNumber(RichString* str, unsigned long long number, bool colori
       number %= 1000;
       len = xSnprintf(buffer, sizeof(buffer), "%03lluG ", number);
       RichString_appendnAscii(str, processGigabytesColor, buffer, len);
+   } else if (number < 100000 * ONE_M) {
+      //2 digit TB, 1 digit GB
+      number /= 100 * ONE_M;
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number/10);
+      RichString_appendnAscii(str, largeNumberColor, buffer, len);
+      number %= 10;
+      len = xSnprintf(buffer, sizeof(buffer), ".%1llu", number);
+      RichString_appendnAscii(str, processGigabytesColor, buffer, len);
+      RichString_appendAscii(str, largeNumberColor, "T ");
+   } else if (number < 10000ULL * ONE_G) {
+      //3 digit TB or 1 digit PB, 3 digit TB
+      number /= ONE_G;
+      len = xSnprintf(buffer, sizeof(buffer), "%4lluT ", number);
+      RichString_appendnAscii(str, largeNumberColor, buffer, len);
    } else {
-      //2 digit TB and above
-      len = xSnprintf(buffer, sizeof(buffer), "%4.1lfT ", (double)number/ONE_G);
+      //2 digit PB and above
+      len = xSnprintf(buffer, sizeof(buffer), "%4.1lfP ", (double)number/ONE_T);
       RichString_appendnAscii(str, largeNumberColor, buffer, len);
    }
 }
 
-void Process_colorNumber(RichString* str, unsigned long long number, bool coloring) {
+void Process_printKBytes(RichString* str, unsigned long long number, bool coloring) {
+   if (number == ULLONG_MAX)
+      Process_printBytes(str, ULLONG_MAX, coloring);
+   else
+      Process_printBytes(str, number * ONE_K, coloring);
+}
+
+void Process_printCount(RichString* str, unsigned long long number, bool coloring) {
    char buffer[13];
 
    int largeNumberColor = coloring ? CRT_colors[LARGE_NUMBER] : CRT_colors[PROCESS];
@@ -146,30 +172,78 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
    }
 }
 
-void Process_printTime(RichString* str, unsigned long long totalHundredths) {
-   unsigned long long totalSeconds = totalHundredths / 100;
+void Process_printTime(RichString* str, unsigned long long totalHundredths, bool coloring) {
+   char buffer[10];
+   int len;
 
+   unsigned long long totalSeconds = totalHundredths / 100;
    unsigned long long hours = totalSeconds / 3600;
    unsigned long long days = totalSeconds / 86400;
    int minutes = (totalSeconds / 60) % 60;
    int seconds = totalSeconds % 60;
    int hundredths = totalHundredths - (totalSeconds * 100);
-   char buffer[10];
-   if (days >= 100) {
-      xSnprintf(buffer, sizeof(buffer), "%7llud ", days);
-      RichString_appendAscii(str, CRT_colors[LARGE_NUMBER], buffer);
-   } else if (hours >= 100) {
-      xSnprintf(buffer, sizeof(buffer), "%7lluh ", hours);
-      RichString_appendAscii(str, CRT_colors[LARGE_NUMBER], buffer);
-   } else {
-      if (hours) {
-         xSnprintf(buffer, sizeof(buffer), "%2lluh", hours);
-         RichString_appendAscii(str, CRT_colors[LARGE_NUMBER], buffer);
-         xSnprintf(buffer, sizeof(buffer), "%02d:%02d ", minutes, seconds);
+
+   int yearColor = coloring ? CRT_colors[LARGE_NUMBER]      : CRT_colors[PROCESS];
+   int dayColor  = coloring ? CRT_colors[PROCESS_GIGABYTES] : CRT_colors[PROCESS];
+   int hourColor = coloring ? CRT_colors[PROCESS_MEGABYTES] : CRT_colors[PROCESS];
+   int defColor  = CRT_colors[PROCESS];
+
+   if (days >= /* Ignore leapyears */365) {
+      int years = days / 365;
+      int daysLeft = days - 365 * years;
+
+      if (daysLeft >= 100) {
+         len = xSnprintf(buffer, sizeof(buffer), "%3dy", years);
+         RichString_appendnAscii(str, yearColor, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), "%3dd ", daysLeft);
+         RichString_appendnAscii(str, dayColor, buffer, len);
+      } else if (daysLeft >= 10) {
+         len = xSnprintf(buffer, sizeof(buffer), "%4dy", years);
+         RichString_appendnAscii(str, yearColor, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), "%2dd ", daysLeft);
+         RichString_appendnAscii(str, dayColor, buffer, len);
       } else {
-         xSnprintf(buffer, sizeof(buffer), "%2d:%02d.%02d ", minutes, seconds, hundredths);
+         len = xSnprintf(buffer, sizeof(buffer), "%5dy", years);
+         RichString_appendnAscii(str, yearColor, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), "%1dd ", daysLeft);
+         RichString_appendnAscii(str, dayColor, buffer, len);
       }
-      RichString_appendAscii(str, CRT_colors[DEFAULT_COLOR], buffer);
+   } else if (days >= 100) {
+      int hoursLeft = hours - days * 24;
+
+      if (hoursLeft >= 10) {
+         len = xSnprintf(buffer, sizeof(buffer), "%4llud", days);
+         RichString_appendnAscii(str, dayColor, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), "%2dh ", hoursLeft);
+         RichString_appendnAscii(str, hourColor, buffer, len);
+      } else {
+         len = xSnprintf(buffer, sizeof(buffer), "%5llud", days);
+         RichString_appendnAscii(str, dayColor, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), "%1dh ", hoursLeft);
+         RichString_appendnAscii(str, hourColor, buffer, len);
+      }
+   } else if (hours >= 100) {
+      int minutesLeft = totalSeconds / 60 - hours * 60;
+
+      if (minutesLeft >= 10) {
+         len = xSnprintf(buffer, sizeof(buffer), "%4lluh", hours);
+         RichString_appendnAscii(str, hourColor, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), "%2dm ", minutesLeft);
+         RichString_appendnAscii(str, defColor, buffer, len);
+      } else {
+         len = xSnprintf(buffer, sizeof(buffer), "%5lluh", hours);
+         RichString_appendnAscii(str, hourColor, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), "%1dm ", minutesLeft);
+         RichString_appendnAscii(str, defColor, buffer, len);
+      }
+   } else if (hours > 0) {
+      len = xSnprintf(buffer, sizeof(buffer), "%2lluh", hours);
+      RichString_appendnAscii(str, hourColor, buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%02d:%02d ", minutes, seconds);
+      RichString_appendnAscii(str, defColor, buffer, len);
+   } else {
+      len = xSnprintf(buffer, sizeof(buffer), "%2d:%02d.%02d ", minutes, seconds, hundredths);
+      RichString_appendnAscii(str, defColor, buffer, len);
    }
 }
 
@@ -211,10 +285,13 @@ static inline void Process_writeCommand(const Process* this, int attr, int basea
    }
 }
 
-void Process_outputRate(RichString* str, char* buffer, size_t n, double rate, int coloring) {
+void Process_printRate(RichString* str, double rate, bool coloring) {
+   char buffer[16];
+
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
    int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
    int processColor = CRT_colors[PROCESS];
+   int shadowColor = CRT_colors[PROCESS_SHADOW];
 
    if (!coloring) {
       largeNumberColor = CRT_colors[PROCESS];
@@ -222,21 +299,27 @@ void Process_outputRate(RichString* str, char* buffer, size_t n, double rate, in
    }
 
    if (isnan(rate)) {
-      RichString_appendAscii(str, CRT_colors[PROCESS_SHADOW], "        N/A ");
+      RichString_appendAscii(str, shadowColor, "        N/A ");
+   } else if (rate < 0.005) {
+      int len = snprintf(buffer, sizeof(buffer), "%7.2f B/s ", rate);
+      RichString_appendnAscii(str, shadowColor, buffer, len);
    } else if (rate < ONE_K) {
-      int len = snprintf(buffer, n, "%7.2f B/s ", rate);
+      int len = snprintf(buffer, sizeof(buffer), "%7.2f B/s ", rate);
       RichString_appendnAscii(str, processColor, buffer, len);
    } else if (rate < ONE_M) {
-      int len = snprintf(buffer, n, "%7.2f K/s ", rate / ONE_K);
+      int len = snprintf(buffer, sizeof(buffer), "%7.2f K/s ", rate / ONE_K);
       RichString_appendnAscii(str, processColor, buffer, len);
    } else if (rate < ONE_G) {
-      int len = snprintf(buffer, n, "%7.2f M/s ", rate / ONE_M);
+      int len = snprintf(buffer, sizeof(buffer), "%7.2f M/s ", rate / ONE_M);
       RichString_appendnAscii(str, processMegabytesColor, buffer, len);
    } else if (rate < ONE_T) {
-      int len = snprintf(buffer, n, "%7.2f G/s ", rate / ONE_G);
+      int len = snprintf(buffer, sizeof(buffer), "%7.2f G/s ", rate / ONE_G);
+      RichString_appendnAscii(str, largeNumberColor, buffer, len);
+   } else if (rate < ONE_P) {
+      int len = snprintf(buffer, sizeof(buffer), "%7.2f T/s ", rate / ONE_T);
       RichString_appendnAscii(str, largeNumberColor, buffer, len);
    } else {
-      int len = snprintf(buffer, n, "%7.2f T/s ", rate / ONE_T);
+      int len = snprintf(buffer, sizeof(buffer), "%7.2f P/s ", rate / ONE_P);
       RichString_appendnAscii(str, largeNumberColor, buffer, len);
    }
 }
@@ -298,10 +381,10 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       Process_writeCommand(this, attr, baseattr, str);
       return;
    }
-   case MAJFLT: Process_colorNumber(str, this->majflt, coloring); return;
-   case MINFLT: Process_colorNumber(str, this->minflt, coloring); return;
-   case M_RESIDENT: Process_humanNumber(str, this->m_resident, coloring); return;
-   case M_VIRT: Process_humanNumber(str, this->m_virt, coloring); return;
+   case MAJFLT: Process_printCount(str, this->majflt, coloring); return;
+   case MINFLT: Process_printCount(str, this->minflt, coloring); return;
+   case M_RESIDENT: Process_printKBytes(str, this->m_resident, coloring); return;
+   case M_VIRT: Process_printKBytes(str, this->m_virt, coloring); return;
    case NICE:
       xSnprintf(buffer, n, "%3ld ", this->nice);
       attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
@@ -370,7 +453,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       }
       break;
    case ST_UID: xSnprintf(buffer, n, "%5d ", this->st_uid); break;
-   case TIME: Process_printTime(str, this->time); return;
+   case TIME: Process_printTime(str, this->time, coloring); return;
    case TGID:
       if (this->tgid == this->pid)
          attr = CRT_colors[PROCESS_SHADOW];
