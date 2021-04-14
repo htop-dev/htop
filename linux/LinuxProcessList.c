@@ -1571,11 +1571,15 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    /*
     * Compute memory partition like procps(free)
     *  https://gitlab.com/procps-ng/procps/-/blob/master/proc/sysinfo.c
+    *
+    * Adjustments:
+    *  - Shmem in part of Cached (see https://lore.kernel.org/patchwork/patch/648763/),
+    *    do not show twice by subtracting from Cached and do not subtract twice from used.
     */
    this->totalMem = totalMem;
-   this->cachedMem = cachedMem + sreclaimableMem;
+   this->cachedMem = cachedMem + sreclaimableMem - sharedMem;
    this->sharedMem = sharedMem;
-   const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem + sharedMem;
+   const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem;
    this->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
    this->buffersMem = buffersMem;
    this->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
