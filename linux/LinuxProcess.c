@@ -744,7 +744,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       Process_writeField(this, str, field);
       return;
    }
-   RichString_appendWide(str, attr, buffer);
+   RichString_appendAscii(str, attr, buffer);
 }
 
 static double adjustNaN(double num) {
