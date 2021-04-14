@@ -402,7 +402,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       assert(0 && "Process_writeField: default key reached"); /* should never be reached */
       xSnprintf(buffer, n, "- ");
    }
-   RichString_appendWide(str, attr, buffer);
+   RichString_appendAscii(str, attr, buffer);
 }
 
 void Process_display(const Object* cast, RichString* out) {
