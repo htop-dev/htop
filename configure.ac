@@ -101,7 +101,7 @@ esac
 
 AC_ARG_ENABLE([pcp],
               [AS_HELP_STRING([--enable-pcp],
-                              [build a pcp htop binary @<:@default=no@:>@])],
+                              [build a pcp-htop binary @<:@default=no@:>@])],
               [],
               [enable_pcp=no])
 case "$enable_pcp" in

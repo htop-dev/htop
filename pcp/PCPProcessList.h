@@ -7,16 +7,18 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include <stdbool.h>
 #include <sys/types.h>
 
 #include "Hashtable.h"
 #include "ProcessList.h"
-#include "pcp/Platform.h"
 #include "UsersTable.h"
+
+#include "pcp/Platform.h"
 #include "zfs/ZfsArcStats.h"
+
 
 typedef enum CPUMetric_ {
    CPU_TOTAL_TIME,

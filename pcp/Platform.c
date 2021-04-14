@@ -7,7 +7,9 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
+
+#include "Platform.h"
 
 #include <math.h>
 
@@ -29,7 +31,6 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "PCPProcess.h"
 #include "PCPProcessList.h"
-#include "Platform.h"
 #include "ProcessList.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
@@ -38,6 +39,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+
 #include "linux/PressureStallMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
