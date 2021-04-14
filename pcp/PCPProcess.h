@@ -9,7 +9,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include <stdbool.h>
 #include <sys/types.h>
@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "RichString.h"
 #include "Settings.h"
+
 
 #define PROCESS_FLAG_LINUX_CGROUP   0x0800
 #define PROCESS_FLAG_LINUX_OOM      0x1000
