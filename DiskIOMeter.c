@@ -97,10 +97,11 @@ static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out)
    }
 
    char buffer[16];
+   int len;
 
    int color = cached_utilisation_diff > 40.0 ? METER_VALUE_NOTICE : METER_VALUE;
-   xSnprintf(buffer, sizeof(buffer), "%.1f%%", cached_utilisation_diff);
-   RichString_writeAscii(out, CRT_colors[color], buffer);
+   len = xSnprintf(buffer, sizeof(buffer), "%.1f%%", cached_utilisation_diff);
+   RichString_appendnAscii(out, CRT_colors[color], buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " read: ");
    Meter_humanUnit(buffer, cached_read_diff, sizeof(buffer));

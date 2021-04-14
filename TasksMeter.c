@@ -38,23 +38,24 @@ static void TasksMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
    const Settings* settings = this->pl->settings;
    char buffer[20];
+   int len;
 
-   xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[2]);
-   RichString_writeAscii(out, CRT_colors[METER_VALUE], buffer);
+   len = xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[2]);
+   RichString_appendnAscii(out, CRT_colors[METER_VALUE], buffer, len);
 
    RichString_appendAscii(out, settings->hideUserlandThreads ? CRT_colors[METER_SHADOW] : CRT_colors[METER_TEXT], ", ");
-   xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[1]);
-   RichString_appendAscii(out, settings->hideUserlandThreads ? CRT_colors[METER_SHADOW] : CRT_colors[TASKS_RUNNING], buffer);
+   len = xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[1]);
+   RichString_appendnAscii(out, settings->hideUserlandThreads ? CRT_colors[METER_SHADOW] : CRT_colors[TASKS_RUNNING], buffer, len);
    RichString_appendAscii(out, settings->hideUserlandThreads ? CRT_colors[METER_SHADOW] : CRT_colors[METER_TEXT], " thr");
 
    RichString_appendAscii(out, settings->hideKernelThreads ? CRT_colors[METER_SHADOW] : CRT_colors[METER_TEXT], ", ");
-   xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[0]);
-   RichString_appendAscii(out, settings->hideKernelThreads ? CRT_colors[METER_SHADOW] : CRT_colors[TASKS_RUNNING], buffer);
+   len = xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[0]);
+   RichString_appendnAscii(out, settings->hideKernelThreads ? CRT_colors[METER_SHADOW] : CRT_colors[TASKS_RUNNING], buffer, len);
    RichString_appendAscii(out, settings->hideKernelThreads ? CRT_colors[METER_SHADOW] : CRT_colors[METER_TEXT], " kthr");
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], "; ");
-   xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[3]);
-   RichString_appendAscii(out, CRT_colors[TASKS_RUNNING], buffer);
+   len = xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[3]);
+   RichString_appendnAscii(out, CRT_colors[TASKS_RUNNING], buffer, len);
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " running");
 }
 
