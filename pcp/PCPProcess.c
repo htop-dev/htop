@@ -32,7 +32,7 @@ const ProcessFieldData Process_fields[] = {
    [PPID] = { .name = "PPID", .title = "PPID", .description = "Parent process ID", .flags = 0, },
    [PGRP] = { .name = "PGRP", .title = "PGRP", .description = "Process group ID", .flags = 0, },
    [SESSION] = { .name = "SESSION", .title = "SID", .description = "Process's session ID", .flags = 0, },
-   [TTY_NR] = { .name = "TTY_NR", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
+   [TTY] = { .name = "TTY", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
    [TPGID] = { .name = "TPGID", .title = "TPGID", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
    [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, .defaultSortDesc = true, },
    [CMINFLT] = { .name = "CMINFLT", .title = "    CMINFLT ", .description = "Children processes' minor faults", .flags = 0, .defaultSortDesc = true, },
@@ -107,7 +107,6 @@ void Process_delete(Object* cast) {
    Process_done((Process*)cast);
    free(this->cgroup);
    free(this->secattr);
-   free(this->ttyDevice);
    free(this->procComm);
    free(this->mergedCommand.str);
    free(this);
@@ -332,13 +331,6 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
    switch ((int)field) {
-   case TTY_NR:
-      if (pp->ttyDevice) {
-         xSnprintf(buffer, n, "%-8s", pp->ttyDevice + 5 /* skip "/dev/" */);
-	 break;
-      }
-      Process_writeField(this, str, field);
-      break;
    case CMINFLT: Process_colorNumber(str, pp->cminflt, coloring); return;
    case CMAJFLT: Process_colorNumber(str, pp->cmajflt, coloring); return;
    case M_DRS: Process_humanNumber(str, pp->m_drs, coloring); return;

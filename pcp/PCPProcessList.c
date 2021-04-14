@@ -352,8 +352,8 @@ static char* setString(Metric metric, int pid, int offset, char* string) {
    return string;
 }
 
-static void PCPProcessList_updateTTY(PCPProcess* process, int pid, int offset) {
-   process->ttyDevice = setString(PCP_PROC_TTYNAME, pid, offset, process->ttyDevice);
+static void PCPProcessList_updateTTY(Process* process, int pid, int offset) {
+   process->tty_name = setString(PCP_PROC_TTYNAME, pid, offset, process->tty_name);
 }
 
 static void PCPProcessList_readCGroups(PCPProcess* process, int pid, int offset) {
@@ -495,7 +495,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       PCPProcessList_updateInfo(proc, pid, offset, command, sizeof(command));
       proc->starttime_ctime += Platform_getBootTime();
       if (tty_nr != proc->tty_nr)
-         PCPProcessList_updateTTY(pp, pid, offset);
+         PCPProcessList_updateTTY(proc, pid, offset);
 
       float percent_cpu = (pp->utime + pp->stime - lasttimes) / period * 100.0;
       proc->percent_cpu = isnan(percent_cpu) ?
