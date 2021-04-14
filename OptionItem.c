@@ -53,7 +53,7 @@ static void NumberItem_display(const Object* cast, RichString* out) {
    } else {
       written = xSnprintf(buffer, sizeof(buffer), "%d", NumberItem_get(this));
    }
-   RichString_appendAscii(out, CRT_colors[CHECK_MARK], buffer);
+   RichString_appendnAscii(out, CRT_colors[CHECK_MARK], buffer, written);
    RichString_appendAscii(out, CRT_colors[CHECK_BOX], "]");
    for (int i = written; i < 5; i++) {
       RichString_appendAscii(out, CRT_colors[CHECK_BOX], " ");

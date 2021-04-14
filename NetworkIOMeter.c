@@ -103,6 +103,7 @@ static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* o
    }
 
    char buffer[64];
+   int len;
 
    RichString_writeAscii(out, CRT_colors[METER_TEXT], "rx: ");
    Meter_humanUnit(buffer, cached_rxb_diff, sizeof(buffer));
@@ -114,8 +115,8 @@ static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* o
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 
-   xSnprintf(buffer, sizeof(buffer), " (%u/%u packets) ", cached_rxp_diff, cached_txp_diff);
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], buffer);
+   len = xSnprintf(buffer, sizeof(buffer), " (%u/%u packets) ", cached_rxp_diff, cached_txp_diff);
+   RichString_appendnAscii(out, CRT_colors[METER_TEXT], buffer, len);
 }
 
 const MeterClass NetworkIOMeter_class = {

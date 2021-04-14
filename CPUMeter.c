@@ -101,51 +101,53 @@ static void CPUMeter_updateValues(Meter* this) {
 
 static void CPUMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
+   int len;
    const Meter* this = (const Meter*)cast;
+
    if (this->param > this->pl->cpuCount) {
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "absent");
       return;
    }
-   xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NORMAL]);
+   len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NORMAL]);
    RichString_appendAscii(out, CRT_colors[METER_TEXT], ":");
-   RichString_appendAscii(out, CRT_colors[CPU_NORMAL], buffer);
+   RichString_appendnAscii(out, CRT_colors[CPU_NORMAL], buffer, len);
    if (this->pl->settings->detailedCPUTime) {
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
+      len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "sy:");
-      RichString_appendAscii(out, CRT_colors[CPU_SYSTEM], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
+      RichString_appendnAscii(out, CRT_colors[CPU_SYSTEM], buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "ni:");
-      RichString_appendAscii(out, CRT_colors[CPU_NICE_TEXT], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IRQ]);
+      RichString_appendnAscii(out, CRT_colors[CPU_NICE_TEXT], buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IRQ]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "hi:");
-      RichString_appendAscii(out, CRT_colors[CPU_IRQ], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_SOFTIRQ]);
+      RichString_appendnAscii(out, CRT_colors[CPU_IRQ], buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_SOFTIRQ]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "si:");
-      RichString_appendAscii(out, CRT_colors[CPU_SOFTIRQ], buffer);
+      RichString_appendnAscii(out, CRT_colors[CPU_SOFTIRQ], buffer, len);
       if (!isnan(this->values[CPU_METER_STEAL])) {
-         xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_STEAL]);
+         len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_STEAL]);
          RichString_appendAscii(out, CRT_colors[METER_TEXT], "st:");
-         RichString_appendAscii(out, CRT_colors[CPU_STEAL], buffer);
+         RichString_appendnAscii(out, CRT_colors[CPU_STEAL], buffer, len);
       }
       if (!isnan(this->values[CPU_METER_GUEST])) {
-         xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_GUEST]);
+         len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_GUEST]);
          RichString_appendAscii(out, CRT_colors[METER_TEXT], "gu:");
-         RichString_appendAscii(out, CRT_colors[CPU_GUEST], buffer);
+         RichString_appendnAscii(out, CRT_colors[CPU_GUEST], buffer, len);
       }
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IOWAIT]);
+      len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IOWAIT]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "wa:");
-      RichString_appendAscii(out, CRT_colors[CPU_IOWAIT], buffer);
+      RichString_appendnAscii(out, CRT_colors[CPU_IOWAIT], buffer, len);
    } else {
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
+      len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "sys:");
-      RichString_appendAscii(out, CRT_colors[CPU_SYSTEM], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
+      RichString_appendnAscii(out, CRT_colors[CPU_SYSTEM], buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "low:");
-      RichString_appendAscii(out, CRT_colors[CPU_NICE_TEXT], buffer);
+      RichString_appendnAscii(out, CRT_colors[CPU_NICE_TEXT], buffer, len);
       if (!isnan(this->values[CPU_METER_IRQ])) {
-         xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IRQ]);
+         len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IRQ]);
          RichString_appendAscii(out, CRT_colors[METER_TEXT], "vir:");
-         RichString_appendAscii(out, CRT_colors[CPU_GUEST], buffer);
+         RichString_appendnAscii(out, CRT_colors[CPU_GUEST], buffer, len);
       }
    }
 
@@ -154,14 +156,14 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
       char cpuTemperatureBuffer[10];
       double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
       if (isnan(cpuTemperature)) {
-         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "N/A");
+         len = xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "N/A");
       } else if (this->pl->settings->degreeFahrenheit) {
-         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%5.1f%sF", cpuTemperature * 9 / 5 + 32, CRT_degreeSign);
+         len = xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%5.1f%sF", cpuTemperature * 9 / 5 + 32, CRT_degreeSign);
       } else {
-         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%5.1f%sC", cpuTemperature, CRT_degreeSign);
+         len = xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%5.1f%sC", cpuTemperature, CRT_degreeSign);
       }
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "temp:");
-      RichString_appendWide(out, CRT_colors[METER_VALUE], cpuTemperatureBuffer);
+      RichString_appendnWide(out, CRT_colors[METER_VALUE], cpuTemperatureBuffer, len);
    }
    #endif
 }
