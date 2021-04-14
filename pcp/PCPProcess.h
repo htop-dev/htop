@@ -98,7 +98,6 @@ typedef struct PCPProcess_ {
    double io_rate_write_bps;
    char* cgroup;
    unsigned int oom;
-   char* ttyDevice;
    unsigned long long int delay_read_time;
    unsigned long long cpu_delay_total;
    unsigned long long blkio_delay_total;
