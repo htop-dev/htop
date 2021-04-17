@@ -102,7 +102,7 @@ static void NetBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    pl->totalMem = uvmexp.npages * pageSizeKB;
 
-   // These calculations have been taken from sys/miscfs/procfs
+   // These calculations have been taken from NetBSD's top(1)
    // They need review for testing the correctness
    //pl->freeMem = uvmexp.free * pageSizeKB;
    pl->buffersMem = uvmexp.filepages * pageSizeKB;
@@ -111,62 +111,11 @@ static void NetBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    pl->totalSwap = uvmexp.swpages * pageSizeKB;
    pl->usedSwap = uvmexp.swpginuse * pageSizeKB;
-	
-//   const int uvmexp_mib[] = { CTL_VM, VM_UVMEXP };
-//   struct uvmexp uvmexp;
-//   size_t size_uvmexp = sizeof(uvmexp);
-//
-//   if (sysctl(uvmexp_mib, 2, &uvmexp, &size_uvmexp, NULL, 0) < 0) {
-//      CRT_fatalError("uvmexp sysctl call failed");
-//   }
-//
-//   pl->totalMem = uvmexp.npages * pageSizeKB;
-//   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * pageSizeKB;
-//
-//   // Taken from NetBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
-//   const int bcache_mib[] = { CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT };
-//   struct bcachestats bcstats;
-//   size_t size_bcstats = sizeof(bcstats);
-//
-//   if (sysctl(bcache_mib, 3, &bcstats, &size_bcstats, NULL, 0) < 0) {
-//      CRT_fatalError("cannot get vfs.bcachestat");
-//   }
-//
-//   pl->cachedMem = bcstats.numbufpages * pageSizeKB;
-//
-//   /*
-//    * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
-//    * All rights reserved.
-//    *
-//    * Taken almost directly from OpenBSD's top(1)
-//    *
-//    * Originally released under a BSD-3 license
-//    * Modified through htop developers applying GPL-2
-//    */
-//   int nswap = swapctl(SWAP_NSWAP, 0, 0);
-//   if (nswap > 0) {
-//      struct swapent swdev[nswap];
-//      int rnswap = swapctl(SWAP_STATS, swdev, nswap);
-//
-//      /* Total things up */
-//      unsigned long long int total = 0, used = 0;
-//      for (int i = 0; i < rnswap; i++) {
-//         if (swdev[i].se_flags & SWF_ENABLE) {
-//            used += (swdev[i].se_inuse / (1024 / DEV_BSIZE));
-//            total += (swdev[i].se_nblks / (1024 / DEV_BSIZE));
-//         }
-//      }
-//
-//      pl->totalSwap = total;
-//      pl->usedSwap = used;
-//   } else {
-//      pl->totalSwap = pl->usedSwap = 0;
-//   }
 }
 
 static char* NetBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc2* kproc, int* basenameEnd) {
    /*
-    * Like OpenBSD's top(1), we try to fall back to the command name
+    * Like NetBSD's top(1), we try to fall back to the command name
     * (argv[0]) if we fail to construct the full command.
     */
    char** arg = kvm_getargv2(kd, kproc, 500);
@@ -202,7 +151,7 @@ static char* NetBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_pro
 }
 
 /*
- * Taken from OpenBSD's ps(1).
+ * Borrowed with modifications from NetBSD's top(1).
  */
 static double getpcpu(const struct kinfo_proc2* kp) {
    if (fscale == 0)
@@ -217,7 +166,7 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
    bool hideUserlandThreads = settings->hideUserlandThreads;
    int count = 0;
    int nlwps = 0;
-       
+
    const struct kinfo_proc2* kprocs = kvm_getproc2(this->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc2), &count);
 
    for (int i = 0; i < count; i++) {
@@ -225,7 +174,6 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
 
       bool preExisting = false;
       Process* proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, NetBSDProcess_new);
-      //NetBSDProcess* fp = (NetBSDProcess*) proc;
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
@@ -248,20 +196,18 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
             proc->comm = NetBSDProcessList_readProcessName(this->kd, kproc, &proc->basenameOffset);
          }
       }
- 
+
       proc->m_virt = kproc->p_vm_vsize;
       proc->m_resident = kproc->p_vm_rssize;
       proc->percent_mem = (proc->m_resident * pageSizeKB) / (double)(this->super.totalMem) * 100.0;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.cpuCount * 100.0);
-      //proc->nlwp = kproc->p_numthreads;
+      proc->nlwp = kproc->p_nlwps;
       proc->nice = kproc->p_nice - 20;
       proc->time = 100 * (kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000));
       proc->priority = kproc->p_priority - PZERO;
 
       struct kinfo_lwp* klwps = kvm_getlwps(this->kd, kproc->p_pid, kproc->p_paddr, sizeof(struct kinfo_lwp), &nlwps);
 
-      proc->nlwp = nlwps;
-      
       switch (kproc->p_realstat) {
       case SIDL:     proc->state = 'I'; break;
       case SACTIVE:
@@ -285,21 +231,6 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
       case SDEAD:    proc->state = 'D'; break;
       default:       proc->state = '?';
       }
-      
-//      switch (kproc->p_stat) {
-//         case SIDL:    proc->state = 'I'; break;
-//         case SRUN:    proc->state = 'R'; break;
-//         case SSLEEP:  proc->state = 'S'; break;
-//         case SSTOP:   proc->state = 'T'; break;
-//         case SZOMB:   proc->state = 'Z'; break;
-//         case SDEAD:   proc->state = 'D'; break;
-//         case SONPROC: proc->state = 'P'; break;
-//         default:      proc->state = '?';
-//      }
-//
-//      if (Process_isKernelThread(proc)) {
-//         this->super.kernelThreads++;
-//      }
 
       this->super.totalTasks++;
       // SRUN ('R') means runnable, not running
@@ -330,20 +261,11 @@ static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
 
    unsigned long long sysAllTime = times[CP_INTR] + times[CP_SYS];
 
-   // XXX Not sure if CP_SPIN should be added to sysAllTime.
-   // See https://github.com/openbsd/src/commit/531d8034253fb82282f0f353c086e9ad827e031c
-   #ifdef CP_SPIN
-   sysAllTime += times[CP_SPIN];
-   #endif
-
    cpu->totalPeriod = saturatingSub(totalTime, cpu->totalTime);
    cpu->userPeriod = saturatingSub(times[CP_USER], cpu->userTime);
    cpu->nicePeriod = saturatingSub(times[CP_NICE], cpu->niceTime);
    cpu->sysPeriod = saturatingSub(times[CP_SYS], cpu->sysTime);
    cpu->sysAllPeriod = saturatingSub(sysAllTime, cpu->sysAllTime);
-   #ifdef CP_SPIN
-   cpu->spinPeriod = saturatingSub(times[CP_SPIN], cpu->spinTime);
-   #endif
    cpu->intrPeriod = saturatingSub(times[CP_INTR], cpu->intrTime);
    cpu->idlePeriod = saturatingSub(times[CP_IDLE], cpu->idleTime);
 
@@ -352,9 +274,6 @@ static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
    cpu->niceTime = times[CP_NICE];
    cpu->sysTime = times[CP_SYS];
    cpu->sysAllTime = sysAllTime;
-   #ifdef CP_SPIN
-   cpu->spinTime = times[CP_SPIN];
-   #endif
    cpu->intrTime = times[CP_INTR];
    cpu->idleTime = times[CP_IDLE];
 }
@@ -371,9 +290,6 @@ static void NetBSDProcessList_scanCPUTime(NetBSDProcessList* this) {
       avg[CP_USER] += cpu->userTime;
       avg[CP_NICE] += cpu->niceTime;
       avg[CP_SYS] += cpu->sysTime;
-      #ifdef CP_SPIN
-      avg[CP_SPIN] += cpu->spinTime;
-      #endif
       avg[CP_INTR] += cpu->intrTime;
       avg[CP_IDLE] += cpu->idleTime;
    }

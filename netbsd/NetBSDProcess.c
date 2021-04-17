@@ -199,10 +199,9 @@ void Process_delete(Object* cast) {
 }
 
 static void NetBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
-   //const NetBSDProcess* op = (const NetBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   //int n = sizeof(buffer) - 1;
+
    switch (field) {
    // add NetBSD-specific fields here
    default:
