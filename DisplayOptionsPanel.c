@@ -117,11 +117,17 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Update process names on every refresh", &(settings->updateProcessNames)));
    Panel_add(super, (Object*) CheckItem_newByRef("Add guest time in CPU meter percentage", &(settings->accountGuestInCPUMeter)));
    Panel_add(super, (Object*) CheckItem_newByRef("Also show CPU percentage numerically", &(settings->showCPUUsage)));
+   #if !defined(HTOP_DARWIN)
    Panel_add(super, (Object*) CheckItem_newByRef("Also show CPU frequency", &(settings->showCPUFrequency)));
+   #elif defined(HAVE_POWER_GADGET)
+   Panel_add(super, (Object*) CheckItem_newByRef("Also show CPU frequency (requires Intel Power Gadget)", &(settings->showCPUFrequency)));
+   #endif
    #ifdef BUILD_WITH_CPU_TEMP
    Panel_add(super, (Object*) CheckItem_newByRef(
    #if defined(HTOP_LINUX)
                                                  "Also show CPU temperature (requires libsensors)",
+   #elif defined(HTOP_DARWIN) && defined(HAVE_POWER_GADGET)
+                                                 "Also show CPU temperature (requires Intel Power Gadget)",
    #elif defined(HTOP_FREEBSD)
                                                  "Also show CPU temperature",
    #else

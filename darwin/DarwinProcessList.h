@@ -25,6 +25,14 @@ typedef struct DarwinProcessList_ {
    uint64_t user_threads;
    uint64_t global_diff;
 
+#ifdef HAVE_POWER_GADGET
+   bool initialized_power_gadget;
+   int cpu_count;
+   double *cpu_freqs;
+   double *cpu_temps;
+   uint64_t *cpu_samples;
+#endif
+
    ZfsArcStats zfs;
 } DarwinProcessList;
 

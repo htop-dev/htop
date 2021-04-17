@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <errno.h>
 #include <libproc.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +25,10 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "generic/openzfs_sysctl.h"
 #include "zfs/ZfsArcStats.h"
+
+#ifdef HAVE_POWER_GADGET
+#include "IntelPowerGadget/PowerGadgetLib.h"
+#endif
 
 
 struct kern {
@@ -128,6 +133,77 @@ static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
    CRT_fatalError("Unable to get kinfo_procs");
 }
 
+#ifdef HAVE_POWER_GADGET
+// in order to enable separate distribution, we link weakly with the
+// framework — overriding the initialization function allows us to
+// easily check for its presence
+extern bool PG_Initialize(void) __attribute__((weak_import));
+
+static void DarwinProcessList_sampleCPU(DarwinProcessList* this) {
+   const bool show_freq = this->super.settings->showCPUFrequency;
+   const bool show_temp = this->super.settings->showCPUTemperature;
+
+   // htop numbers "cpus" consecutively, but power gadget itemizes
+   // them per core; in order to work around this, we use a separate
+   // index, and just increment it whenever we see a core
+   const int cpu_count = this->super.cpuCount;
+   int cpu_idx = 0;
+   int package_count = 0;
+
+   for (int i = 0; i < cpu_count; i++)
+      this->cpu_freqs[i] = this->cpu_temps[i] = NAN;
+
+   if (!show_freq && !show_freq)
+      return;
+
+   // PG_Initialize will be NULL when the framework is unavailable
+   if (!this->initialized_power_gadget && PG_Initialize != NULL)
+      this->initialized_power_gadget = PG_Initialize();
+
+   if (!this->initialized_power_gadget)
+      return;
+
+   if (!PG_GetNumPackages(&package_count))
+      return;
+
+   // note the check for cpu_count below; we definitely don't want to
+   // corrupt memory should the package/cpu count be inconsistent
+   for (int p = 0; p < package_count && p < cpu_count; p++) {
+      PGSampleID old_sample = this->cpu_samples[p];
+      PGSampleID new_sample = 0;
+      int core_count = 0;
+
+      if (!PG_GetNumCores(p, &core_count))
+         continue;
+
+      if (!PG_ReadSample(p, &new_sample)) {
+         cpu_idx += core_count;
+         continue;
+      }
+
+      // as above, concerning cpu_count
+      for (int c = 0; c < core_count && cpu_idx < cpu_count; c++) {
+         double mean, min, max;
+
+         if (show_freq && old_sample)
+            if (PGSample_GetIACoreFrequency(old_sample, new_sample, c, &mean, &min, &max))
+               this->cpu_freqs[cpu_idx] = mean;
+
+         if (show_temp)
+            if (PGSample_GetIACoreTemperature(new_sample, c, &mean, &min, &max))
+               this->cpu_temps[cpu_idx] = mean;
+
+         cpu_idx += 1;
+      }
+
+      if (old_sample)
+         PGSample_Release(old_sample);
+
+      this->cpu_samples[p] = new_sample;
+   }
+}
+#endif
+
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    DarwinProcessList* this = xCalloc(1, sizeof(DarwinProcessList));
 
@@ -135,6 +211,16 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    /* Initialize the CPU information */
    this->super.cpuCount = ProcessList_allocateCPULoadInfo(&this->prev_load);
+
+#ifdef HAVE_POWER_GADGET
+   this->cpu_freqs = xCalloc(this->super.cpuCount, sizeof(*this->cpu_freqs));
+   this->cpu_temps = xCalloc(this->super.cpuCount, sizeof(*this->cpu_temps));
+
+   // we only use one sample per package, but we don't know the amount
+   // of packages yet. we do know that "cpus" outnumber them, though
+   this->cpu_samples = xCalloc(this->super.cpuCount, sizeof(*this->cpu_samples));
+#endif
+
    ProcessList_getHostInfo(&this->host_info);
    ProcessList_allocateCPULoadInfo(&this->curr_load);
 
@@ -153,8 +239,25 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    return &this->super;
 }
 
-void ProcessList_delete(ProcessList* this) {
-   ProcessList_done(this);
+void ProcessList_delete(ProcessList* super) {
+   DarwinProcessList* this = (DarwinProcessList*) super;
+
+#ifdef HAVE_POWER_GADGET
+   if (this->initialized_power_gadget) {
+      for (int i = 0; i < this->cpu_count; i++)
+         if (this->cpu_samples[i])
+            PGSample_Release(this->cpu_samples[i]);
+
+      PG_Shutdown();
+   }
+
+   free(this->cpu_freqs);
+   free(this->cpu_temps);
+   free(this->cpu_samples);
+#endif
+
+   ProcessList_done(super);
+
    free(this);
 }
 
@@ -181,6 +284,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    if (pauseProcessUpdate) {
       return;
    }
+
+#ifdef HAVE_POWER_GADGET
+   DarwinProcessList_sampleCPU(dpl);
+#endif
 
    /* Get the time difference */
    dpl->global_diff = 0;

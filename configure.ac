@@ -299,6 +299,33 @@ if test "$enable_static" = yes; then
    AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
 fi
 
+AC_ARG_ENABLE([power-gadget],
+              [AS_HELP_STRING([--enable-power-gadget],
+                              [enable Intel Power Gadget support for obtaining CPU frequencies @<:@default=no@:>@])],
+              [],
+              [enable_power_gadget=no])
+case "$enable_power_gadget" in
+   no)
+      ;;
+   yes)
+      if test "$my_htop_platform" != darwin; then
+         AC_MSG_ERROR([the Intel Power Gadget is only supported on macOS])
+      fi
+
+      AC_COMPILE_IFELSE([
+         AC_LANG_PROGRAM(
+         [[#include <IntelPowerGadget/PowerGadgetLib.h>]],
+         [[PG_Initialize();]])],
+         [
+         AC_DEFINE([HAVE_POWER_GADGET], [1], [Using Intel Power Gadget for CPU frequencies])
+         LIBS="$LIBS -weak_framework IntelPowerGadget"
+         ],
+         [AC_MSG_ERROR([can not use IntelPowerGadget])], [-framework IntelPowerGadget])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_power_gadget' for --enable-power-gadget])
+      ;;
+esac
 
 AC_ARG_ENABLE([hwloc],
               [AS_HELP_STRING([--enable-hwloc],
@@ -509,7 +536,7 @@ case "$enable_sensors" in
       AC_MSG_ERROR([bad value '$enable_sensors' for --enable-sensors])
       ;;
 esac
-if test "$enable_sensors" = yes || test "$my_htop_platform" = freebsd; then
+if test "$enable_sensors" = yes || test "$my_htop_platform" = freebsd || test "$enable_power_gadget" = yes; then
    AC_DEFINE([BUILD_WITH_CPU_TEMP], [1], [Define if CPU temperature option should be enabled.])
 fi
 

@@ -231,8 +231,14 @@ double Platform_setCPUValues(Meter* mtr, unsigned int cpu) {
    /* Convert to percent and return */
    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
 
+#ifdef HAVE_POWER_GADGET
+   // cpu is indexed from 1, but the array from 0
+   mtr->values[CPU_METER_FREQUENCY] = dpl->cpu_freqs[cpu - 1];
+   mtr->values[CPU_METER_TEMPERATURE] = dpl->cpu_temps[cpu - 1];
+#else
    mtr->values[CPU_METER_FREQUENCY] = NAN;
    mtr->values[CPU_METER_TEMPERATURE] = NAN;
+#endif
 
    return CLAMP(total, 0.0, 100.0);
 }
