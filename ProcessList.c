@@ -609,6 +609,8 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
 
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
+      Process_makeCommandStr(p);
+
       if (p->tombStampMs > 0) {
          // remove tombed process
          if (this->monotonicMs >= p->tombStampMs) {
@@ -623,8 +625,6 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
             // immediately remove
             ProcessList_remove(this, p);
          }
-      } else {
-         p->updated = false;
       }
    }
 

@@ -285,6 +285,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       Process_fillStarttimeBuffer(proc);
 
       proc->cmdline = DarwinProcess_getCmdLine(ps, &proc->cmdlineBasenameEnd);
+      proc->mergedCommand.cmdlineChanged = true;
    }
 
    /* Mutable information */

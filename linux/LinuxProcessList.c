@@ -1425,15 +1425,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
             }
          }
       }
-      /* (Re)Generate the Command string, but only if the process is:
-       * - not a kernel thread, and
-       * - not a zombie or it became zombie under htop's watch, and
-       * - not a user thread or if showThreadNames is not set */
-      if (!Process_isKernelThread(proc) &&
-          (proc->state != 'Z' || proc->mergedCommand.str) &&
-          (!Process_isUserlandThread(proc) || !settings->showThreadNames)) {
-         Process_makeCommandStr(proc);
-      }
 
       #ifdef HAVE_DELAYACCT
       if (settings->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
