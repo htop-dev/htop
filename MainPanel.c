@@ -29,7 +29,7 @@ void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
    FunctionBar_setLabel(bar, KEY_F(5), mode ? "List  " : "Tree  ");
 }
 
-void MainPanel_pidSearch(MainPanel* this, int ch) {
+static void MainPanel_pidSearch(MainPanel* this, int ch) {
    Panel* super = (Panel*) this;
    pid_t pid = ch - 48 + this->pidSearch;
    for (int i = 0; i < Panel_size(super); i++) {
