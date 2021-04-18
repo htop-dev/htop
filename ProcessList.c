@@ -168,14 +168,6 @@ void ProcessList_remove(ProcessList* this, const Process* p) {
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));
 }
 
-Process* ProcessList_get(ProcessList* this, int idx) {
-   return (Process*)Vector_get(this->processes, idx);
-}
-
-int ProcessList_size(const ProcessList* this) {
-   return Vector_size(this->processes);
-}
-
 // ProcessList_updateTreeSetLayer sorts this->displayTreeSet,
 // relying only on itself.
 //
@@ -530,12 +522,12 @@ void ProcessList_rebuildPanel(ProcessList* this) {
       }
    }
 
-   const int processCount = ProcessList_size(this);
+   const int processCount = Vector_size(this->processes);
    int idx = 0;
    bool foundFollowed = false;
 
    for (int i = 0; i < processCount; i++) {
-      Process* p = ProcessList_get(this, i);
+      Process* p = (Process*) Vector_get(this->processes, i);
 
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
