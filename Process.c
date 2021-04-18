@@ -399,7 +399,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       xSnprintf(buffer, n, "%-9d ", this->st_uid);
       break;
    default:
-      assert(0); /* should never be reached */
+      assert(0 && "Process_writeField: default key reached"); /* should never be reached */
       xSnprintf(buffer, n, "- ");
    }
    RichString_appendWide(str, attr, buffer);
@@ -617,6 +617,7 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    case USER:
       return SPACESHIP_NULLSTR(p1->user, p2->user);
    default:
+      assert(0 && "Process_compareByKey_Base: default key reached"); /* should never be reached */
       return SPACESHIP_NUMBER(p1->pid, p2->pid);
    }
 }
