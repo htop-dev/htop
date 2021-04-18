@@ -388,6 +388,17 @@ void Process_makeCommandStr(Process *this) {
    bool searchCommInCmdline = settings->findCommInCmdline;
    bool stripExeFromCmdline = settings->stripExeFromCmdline;
 
+   /* Nothing to do to (Re)Generate the Command string, if the process is:
+    * - a kernel thread, or
+    * - a zombie from before being under htop's watch, or
+    * - a user thread and showThreadNames is not set */
+   if (Process_isKernelThread(this))
+      return;
+   if (this->state == 'Z' && !this->mergedCommand.str)
+      return;
+   if (Process_isUserlandThread(this) && settings->showThreadNames)
+      return;
+
    /* this->mergedCommand.str needs updating only if its state or contents changed.
     * Its content is based on the fields cmdline, comm, and exe. */
    if (

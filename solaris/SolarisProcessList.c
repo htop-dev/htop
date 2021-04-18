@@ -364,6 +364,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       sproc->zname          = SolarisProcessList_readZoneName(spl->kd, sproc);
       proc->user            = UsersTable_getRef(pl->usersTable, proc->st_uid);
       proc->cmdline         = xStrdup(_psinfo->pr_fname);
+      proc->mergedCommand.cmdlineChanged = true;
    }
 
    // End common code pass 1
@@ -411,6 +412,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
          sproc->realppid       = _psinfo->pr_pid;
          sproc->realtgid       = _psinfo->pr_pid;
          proc->starttime_ctime = _lwpsinfo->pr_start.tv_sec;
+         proc->mergedCommand.cmdlineChanged = true;
       }
 
       // Top-level process only gets this for the representative LWP
@@ -434,6 +436,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       Process_fillStarttimeBuffer(proc);
       ProcessList_add(pl, proc);
    }
+
    proc->updated = true;
 
    // End common code pass 2

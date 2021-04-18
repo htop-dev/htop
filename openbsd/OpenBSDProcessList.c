@@ -259,7 +259,9 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          Process_fillStarttimeBuffer(proc);
          proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
          ProcessList_add(&this->super, proc);
+
          proc->cmdline = OpenBSDProcessList_readProcessName(this->kd, kproc, &proc->cmdlineBasenameEnd);
+         proc->mergedCommand.cmdlineChanged = true;
 
          proc->tty_nr = kproc->p_tdev;
          const char* name = ((dev_t)kproc->p_tdev != NODEV) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
@@ -273,6 +275,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          if (settings->updateProcessNames) {
             free(proc->cmdline);
             proc->cmdline = OpenBSDProcessList_readProcessName(this->kd, kproc, &proc->cmdlineBasenameEnd);
+            proc->mergedCommand.cmdlineChanged = true;
          }
       }
 
