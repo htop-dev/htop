@@ -29,9 +29,6 @@ in the source distribution for its full text.
 int pageSize;
 int pageSizeKB;
 
-/* Used to identify kernel threads in Comm and Exe columns */
-static const char *const kthreadID = "KTHREAD";
-
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "PID", .description = "Process/thread ID", .flags = 0, .pidColumn = true, },
@@ -315,33 +312,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       }
       return;
    }
-   case PROC_COMM: {
-      const char* procComm;
-      if (this->procComm) {
-         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
-         procComm = this->procComm;
-      } else {
-         attr = CRT_colors[PROCESS_SHADOW];
-         procComm = Process_isKernelThread(this) ? kthreadID : "N/A";
-      }
-      /* 15 being (TASK_COMM_LEN - 1) */
-      Process_printLeftAlignedField(str, attr, procComm, 15);
-      return;
-   }
-   case PROC_EXE: {
-      const char* procExe;
-      if (this->procExe) {
-         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
-         if (this->procExeDeleted)
-            attr = CRT_colors[FAILED_READ];
-         procExe = this->procExe + this->procExeBasenameOffset;
-      } else {
-         attr = CRT_colors[PROCESS_SHADOW];
-         procExe = Process_isKernelThread(this) ? kthreadID : "N/A";
-      }
-      Process_printLeftAlignedField(str, attr, procExe, 15);
-      return;
-   }
    case CWD: {
       const char* cwd;
       if (!lp->cwd) {
@@ -447,16 +417,6 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->ctxt_diff, p2->ctxt_diff);
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
-   case PROC_COMM: {
-      const char *comm1 = v1->procComm ? v1->procComm : (Process_isKernelThread(v1) ? kthreadID : "");
-      const char *comm2 = v2->procComm ? v2->procComm : (Process_isKernelThread(v2) ? kthreadID : "");
-      return strcmp(comm1, comm2);
-   }
-   case PROC_EXE: {
-      const char *exe1 = v1->procExe ? (v1->procExe + v1->procExeBasenameOffset) : (Process_isKernelThread(v1) ? kthreadID : "");
-      const char *exe2 = v2->procExe ? (v2->procExe + v2->procExeBasenameOffset) : (Process_isKernelThread(v2) ? kthreadID : "");
-      return strcmp(exe1, exe2);
-   }
    case CWD:
       return SPACESHIP_NULLSTR(p1->cwd, p2->cwd);
    default:

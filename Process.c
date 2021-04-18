@@ -35,6 +35,9 @@ in the source distribution for its full text.
 #endif
 
 
+/* Used to identify kernel threads in Comm and Exe columns */
+static const char *const kthreadID = "KTHREAD";
+
 static uid_t Process_getuid = (uid_t)-1;
 
 int Process_pidDigits = 7;
@@ -745,6 +748,34 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       Process_writeCommand(this, attr, baseattr, str);
       return;
    }
+   case PROC_COMM: {
+      const char* procComm;
+      if (this->procComm) {
+         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
+         procComm = this->procComm;
+      } else {
+         attr = CRT_colors[PROCESS_SHADOW];
+         procComm = Process_isKernelThread(this) ? kthreadID : "N/A";
+      }
+
+      Process_printLeftAlignedField(str, attr, procComm, TASK_COMM_LEN - 1);
+      return;
+   }
+   case PROC_EXE: {
+      const char* procExe;
+      if (this->procExe) {
+         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
+         if (this->procExeDeleted)
+            attr = CRT_colors[FAILED_READ];
+         procExe = this->procExe + this->procExeBasenameOffset;
+      } else {
+         attr = CRT_colors[PROCESS_SHADOW];
+         procExe = Process_isKernelThread(this) ? kthreadID : "N/A";
+      }
+
+      Process_printLeftAlignedField(str, attr, procExe, TASK_COMM_LEN - 1);
+      return;
+   }
    case MAJFLT: Process_printCount(str, this->majflt, coloring); return;
    case MINFLT: Process_printCount(str, this->minflt, coloring); return;
    case M_RESIDENT: Process_printKBytes(str, this->m_resident, coloring); return;
@@ -1031,6 +1062,16 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       return SPACESHIP_NUMBER(p1->m_resident, p2->m_resident);
    case COMM:
       return SPACESHIP_NULLSTR(Process_getCommand(p1), Process_getCommand(p2));
+   case PROC_COMM: {
+      const char *comm1 = p1->procComm ? p1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char *comm2 = p2->procComm ? p2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
+      return SPACESHIP_NULLSTR(comm1, comm2);
+   }
+   case PROC_EXE: {
+      const char *exe1 = p1->procExe ? (p1->procExe + p1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char *exe2 = p2->procExe ? (p2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
+      return SPACESHIP_NULLSTR(exe1, exe2);
+   }
    case MAJFLT:
       return SPACESHIP_NUMBER(p1->majflt, p2->majflt);
    case MINFLT:
