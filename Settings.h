@@ -62,7 +62,6 @@ typedef struct Settings_ {
    bool stripExeFromCmdline;
    bool showMergedCommand;
    bool updateProcessNames;
-   bool accountGuestInCPUMeter;
    bool headerMargin;
    bool enableMouse;
    int hideFunctionBar;  // 0 - off, 1 - on ESC until next input, 2 - permanently
