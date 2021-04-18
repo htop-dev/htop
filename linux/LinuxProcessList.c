@@ -1292,11 +1292,16 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       // filename is a number: process directory
-      int pid = atoi(name);
+      int pid;
+      {
+         char* endptr;
+         unsigned long parsedPid = strtoul(name, &endptr, 10);
+         if (parsedPid == 0 || parsedPid == ULONG_MAX || *endptr != '\0')
+            continue;
+         pid = parsedPid;
+      }
 
-      if (pid <= 0)
-         continue;
-
+      // Skip task directory of main thread
       if (parent && pid == parent->pid)
          continue;
 
