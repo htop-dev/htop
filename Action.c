@@ -492,7 +492,7 @@ static const struct {
    { .key = "      s: ", .roInactive = true,  .info = "trace syscalls with strace" },
    { .key = "      w: ", .roInactive = false, .info = "wrap process command in multiple lines" },
    { .key = " F2 C S: ", .roInactive = false, .info = "setup" },
-   { .key = "   F1 h: ", .roInactive = false, .info = "show this help screen" },
+   { .key = " F1 h ?: ", .roInactive = false, .info = "show this help screen" },
    { .key = "  F10 q: ", .roInactive = false, .info = "quit" },
    { .key = NULL, .info = NULL }
 };
