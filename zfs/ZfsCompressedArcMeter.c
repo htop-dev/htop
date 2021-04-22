@@ -33,7 +33,11 @@ void ZfsCompressedArcMeter_readStats(Meter* this, const ZfsArcStats* stats) {
 }
 
 static void ZfsCompressedArcMeter_printRatioString(const Meter* this, char* buffer, size_t size) {
-   xSnprintf(buffer, size, "%.2f:1", this->total / this->values[0]);
+   if (this->values[0] > 0) {
+      xSnprintf(buffer, size, "%.2f:1", this->total / this->values[0]);
+   } else {
+      xSnprintf(buffer, size, "N/A");
+   }
 }
 
 static void ZfsCompressedArcMeter_updateValues(Meter* this) {
