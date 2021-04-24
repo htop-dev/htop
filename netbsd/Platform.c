@@ -193,8 +193,9 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 int Platform_getMaxPid() {
-   // this is hard-coded in sys/sys/proc.h - no sysctl exists
-   return 30000;
+   // https://nxr.netbsd.org/xref/src/sys/sys/ansi.h#__pid_t
+   // pid is assigned as a 32bit Integer.
+   return INT32_MAX;
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
