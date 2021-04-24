@@ -282,7 +282,7 @@ char* Platform_getProcessEnv(pid_t pid) {
          env = xRealloc(env, capacity);
       }
 
-      strlcpy(env + size, *p, len);
+      String_safeStrncpy(env + size, *p, len);
       size += len;
    }
 
