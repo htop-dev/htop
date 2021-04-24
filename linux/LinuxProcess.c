@@ -104,17 +104,6 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [CWD] = { .name ="CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_LINUX_CWD, },
 };
 
-/* This function returns the string displayed in Command column, so that sorting
- * happens on what is displayed - whether comm, full path, basename, etc.. So
- * this follows LinuxProcess_writeField(COMM) and LinuxProcess_writeCommand */
-static const char* LinuxProcess_getCommandStr(const Process *this) {
-   if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !this->mergedCommand.str) {
-      return this->cmdline;
-   }
-
-   return this->mergedCommand.str;
-}
-
 Process* LinuxProcess_new(const Settings* settings) {
    LinuxProcess* this = xCalloc(1, sizeof(LinuxProcess));
    Object_setClass(this, Class(LinuxProcess));
@@ -835,6 +824,5 @@ const ProcessClass LinuxProcess_class = {
       .compare = Process_compare
    },
    .writeField = LinuxProcess_writeField,
-   .getCommandStr = LinuxProcess_getCommandStr,
    .compareByKey = LinuxProcess_compareByKey
 };
