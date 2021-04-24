@@ -284,7 +284,7 @@ typedef struct ProcessClass_ {
 
 #define As_Process(this_)                              ((const ProcessClass*)((this_)->super.klass))
 
-#define Process_getCommand(this_)                      (As_Process(this_)->getCommandStr ? As_Process(this_)->getCommandStr((const Process*)(this_)) : ((const Process*)(this_))->cmdline)
+#define Process_getCommand(this_)                      (As_Process(this_)->getCommandStr ? As_Process(this_)->getCommandStr((const Process*)(this_)) : Process_getCommandStr((const Process*)(this_)))
 #define Process_compareByKey(p1_, p2_, key_)           (As_Process(p1_)->compareByKey ? (As_Process(p1_)->compareByKey(p1_, p2_, key_)) : Process_compareByKey_Base(p1_, p2_, key_))
 
 static inline pid_t Process_getParentPid(const Process* this) {
@@ -368,5 +368,8 @@ bool Process_sendSignal(Process* this, Arg sgn);
 int Process_pidCompare(const void* v1, const void* v2);
 
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key);
+
+// Avoid direct calls, use Process_getCommand instead
+const char *Process_getCommandStr(const Process *this);
 
 #endif

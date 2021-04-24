@@ -521,8 +521,15 @@ void Process_done(Process* this) {
    free(this->tty_name);
 }
 
-static const char* Process_getCommandStr(const Process* p) {
-   return p->cmdline ? p->cmdline : "";
+/* This function returns the string displayed in Command column, so that sorting
+ * happens on what is displayed - whether comm, full path, basename, etc.. So
+ * this follows Process_writeField(COMM) and Process_writeCommand */
+const char *Process_getCommandStr(const Process *this) {
+   if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !this->mergedCommand.str) {
+      return this->cmdline;
+   }
+
+   return this->mergedCommand.str;
 }
 
 const ProcessClass Process_class = {
