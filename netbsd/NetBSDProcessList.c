@@ -8,7 +8,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "NetBSDProcessList.h"
+#include "netbsd/NetBSDProcessList.h"
 
 #include <kvm.h>
 #include <limits.h>
@@ -27,11 +27,12 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
-#include "NetBSDProcess.h"
+#include "netbsd/NetBSDProcess.h"
 #include "Process.h"
 #include "ProcessList.h"
 #include "Settings.h"
 #include "XUtils.h"
+
 
 static long fscale;
 static int pageSize;
