@@ -45,8 +45,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    size_t size;
    char errbuf[_POSIX2_LINE_MAX];
 
-   NetBSDProcessList* opl = xCalloc(1, sizeof(NetBSDProcessList));
-   ProcessList* pl = (ProcessList*) opl;
+   NetBSDProcessList* npl = xCalloc(1, sizeof(NetBSDProcessList));
+   ProcessList* pl = (ProcessList*) npl;
    ProcessList_init(pl, Class(NetBSDProcess), usersTable, pidMatchList, userId);
 
    size = sizeof(pl->cpuCount);
@@ -54,7 +54,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    if (r < 0 || pl->cpuCount < 1) {
       pl->cpuCount = 1;
    }
-   opl->cpus = xCalloc(pl->cpuCount + 1, sizeof(CPUData));
+   npl->cpus = xCalloc(pl->cpuCount + 1, sizeof(CPUData));
 
    size = sizeof(fscale);
    if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0) {
@@ -66,13 +66,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    pageSizeKB = pageSize / ONE_K;
 
    for (unsigned int i = 0; i <= pl->cpuCount; i++) {
-      CPUData* d = opl->cpus + i;
+      CPUData* d = npl->cpus + i;
       d->totalTime = 1;
       d->totalPeriod = 1;
    }
 
-   opl->kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
-   if (opl->kd == NULL) {
+   npl->kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
+   if (npl->kd == NULL) {
       CRT_fatalError("kvm_openfiles() failed");
    }
 
@@ -80,13 +80,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 }
 
 void ProcessList_delete(ProcessList* this) {
-   NetBSDProcessList* opl = (NetBSDProcessList*) this;
+   NetBSDProcessList* npl = (NetBSDProcessList*) this;
 
-   if (opl->kd) {
-      kvm_close(opl->kd);
+   if (npl->kd) {
+      kvm_close(npl->kd);
    }
 
-   free(opl->cpus);
+   free(npl->cpus);
 
    ProcessList_done(this);
    free(this);
@@ -303,15 +303,15 @@ static void NetBSDProcessList_scanCPUTime(NetBSDProcessList* this) {
 }
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
-   NetBSDProcessList* opl = (NetBSDProcessList*) super;
+   NetBSDProcessList* npl = (NetBSDProcessList*) super;
 
    NetBSDProcessList_scanMemoryInfo(super);
-   NetBSDProcessList_scanCPUTime(opl);
+   NetBSDProcessList_scanCPUTime(npl);
 
    // in pause mode only gather global data for meters (CPU/memory/...)
    if (pauseProcessUpdate) {
       return;
    }
 
-   NetBSDProcessList_scanProcs(opl);
+   NetBSDProcessList_scanProcs(npl);
 }
