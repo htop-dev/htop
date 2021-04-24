@@ -8,7 +8,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Platform.h"
+#include "netbsd/Platform.h"
 
 #include <errno.h>
 #include <kvm.h>
@@ -31,8 +31,8 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "MemoryMeter.h"
 #include "Meter.h"
-#include "NetBSDProcess.h"
-#include "NetBSDProcessList.h"
+#include "netbsd/NetBSDProcess.h"
+#include "netbsd/NetBSDProcessList.h"
 #include "ProcessList.h"
 #include "Settings.h"
 #include "SignalsPanel.h"

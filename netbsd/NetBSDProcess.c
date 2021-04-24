@@ -8,7 +8,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "NetBSDProcess.h"
+#include "netbsd/NetBSDProcess.h"
 
 #include <stdlib.h>
 
