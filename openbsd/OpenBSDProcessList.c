@@ -351,10 +351,6 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    }
 }
 
-static unsigned long long saturatingSub(unsigned long long a, unsigned long long b) {
-   return a > b ? a - b : 0;
-}
-
 static void getKernelCPUTimes(int cpuId, u_int64_t* times) {
    const int mib[] = { CTL_KERN, KERN_CPTIME2, cpuId };
    size_t length = sizeof(*times) * CPUSTATES;
