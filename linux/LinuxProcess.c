@@ -81,7 +81,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [RBYTES] = { .name = "RBYTES", .title = " IO_R ", .description = "Bytes of read(2) I/O for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [WBYTES] = { .name = "WBYTES", .title = " IO_W ", .description = "Bytes of write(2) I/O for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [CNCLWB] = { .name = "CNCLWB", .title = " IO_C ", .description = "Bytes of cancelled write(2) I/O", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = " DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = " DISK READ  ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_WRITE_RATE] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
@@ -611,19 +611,19 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    switch (field) {
    case CMINFLT: Process_printCount(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_printCount(str, lp->cmajflt, coloring); return;
-   case M_DRS: Process_printKBytes(str, lp->m_drs * pageSizeKB, coloring); return;
-   case M_DT: Process_printKBytes(str, lp->m_dt * pageSizeKB, coloring); return;
+   case M_DRS: Process_printBytes(str, lp->m_drs * pageSize, coloring); return;
+   case M_DT: Process_printBytes(str, lp->m_dt * pageSize, coloring); return;
    case M_LRS:
       if (lp->m_lrs) {
-         Process_printKBytes(str, lp->m_lrs * pageSizeKB, coloring);
+         Process_printBytes(str, lp->m_lrs * pageSize, coloring);
          return;
       }
 
       attr = CRT_colors[PROCESS_SHADOW];
       xSnprintf(buffer, n, "  N/A ");
       break;
-   case M_TRS: Process_printKBytes(str, lp->m_trs * pageSizeKB, coloring); return;
-   case M_SHARE: Process_printKBytes(str, lp->m_share * pageSizeKB, coloring); return;
+   case M_TRS: Process_printBytes(str, lp->m_trs * pageSize, coloring); return;
+   case M_SHARE: Process_printBytes(str, lp->m_share * pageSize, coloring); return;
    case M_PSS: Process_printKBytes(str, lp->m_pss, coloring); return;
    case M_SWAP: Process_printKBytes(str, lp->m_swap, coloring); return;
    case M_PSSWP: Process_printKBytes(str, lp->m_psswp, coloring); return;
@@ -631,13 +631,13 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    case STIME: Process_printTime(str, lp->stime, coloring); return;
    case CUTIME: Process_printTime(str, lp->cutime, coloring); return;
    case CSTIME: Process_printTime(str, lp->cstime, coloring); return;
-   case RCHAR:  Process_printKBytes(str, lp->io_rchar, coloring); return;
-   case WCHAR:  Process_printKBytes(str, lp->io_wchar, coloring); return;
+   case RCHAR:  Process_printBytes(str, lp->io_rchar, coloring); return;
+   case WCHAR:  Process_printBytes(str, lp->io_wchar, coloring); return;
    case SYSCR:  Process_printCount(str, lp->io_syscr, coloring); return;
    case SYSCW:  Process_printCount(str, lp->io_syscw, coloring); return;
-   case RBYTES: Process_printKBytes(str, lp->io_read_bytes, coloring); return;
-   case WBYTES: Process_printKBytes(str, lp->io_write_bytes, coloring); return;
-   case CNCLWB: Process_printKBytes(str, lp->io_cancelled_write_bytes, coloring); return;
+   case RBYTES: Process_printBytes(str, lp->io_read_bytes, coloring); return;
+   case WBYTES: Process_printBytes(str, lp->io_write_bytes, coloring); return;
+   case CNCLWB: Process_printBytes(str, lp->io_cancelled_write_bytes, coloring); return;
    case IO_READ_RATE:  Process_printRate(str, lp->io_rate_read_bps, coloring); return;
    case IO_WRITE_RATE: Process_printRate(str, lp->io_rate_write_bps, coloring); return;
    case IO_RATE: {

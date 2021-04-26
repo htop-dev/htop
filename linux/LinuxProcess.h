@@ -82,10 +82,10 @@ typedef struct LinuxProcess_ {
    long m_lrs;
    long m_dt;
 
-   /* Data read (in kilobytes) */
+   /* Data read (in bytes) */
    unsigned long long io_rchar;
 
-   /* Data written (in kilobytes) */
+   /* Data written (in bytes) */
    unsigned long long io_wchar;
 
    /* Number of read(2) syscalls */
@@ -94,20 +94,24 @@ typedef struct LinuxProcess_ {
    /* Number of write(2) syscalls */
    unsigned long long io_syscw;
 
-   /* Storage data read (in kilobytes) */
+   /* Storage data read (in bytes) */
    unsigned long long io_read_bytes;
 
-   /* Storage data written (in kilobytes) */
+   /* Storage data written (in bytes) */
    unsigned long long io_write_bytes;
 
-   /* Storage data cancelled (in kilobytes) */
+   /* Storage data cancelled (in bytes) */
    unsigned long long io_cancelled_write_bytes;
 
-   /* Point in time of last io scan (in seconds elapsed since the Epoch) */
-   unsigned long long io_last_scan_time;
+   /* Point in time of last io scan (in milliseconds elapsed since the Epoch) */
+   unsigned long long io_last_scan_time_ms;
 
+   /* Storage data read (in bytes per second) */
    double io_rate_read_bps;
+
+   /* Storage data written (in bytes per second) */
    double io_rate_write_bps;
+
    #ifdef HAVE_OPENVZ
    char* ctid;
    pid_t vpid;
