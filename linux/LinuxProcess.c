@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include <unistd.h>
 
 #include "CRT.h"
+#include "ELF.h"
 #include "Macros.h"
 #include "Process.h"
 #include "ProvideCurses.h"
@@ -99,7 +100,12 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [SECATTR] = { .name = "SECATTR", .title = " Security Attribute ", .description = "Security attribute of the process (e.g. SELinux or AppArmor)", .flags = PROCESS_FLAG_LINUX_SECATTR, },
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process from /proc/[pid]/comm", .flags = 0, },
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
-   [CWD] = { .name ="CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_LINUX_CWD, },
+   [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_LINUX_CWD, },
+#ifdef HAVE_LIBELF
+   [ELF_TYPE] = { .name = "ELF_TYPE", .title = "ELF TYPE ", .description = "Elf binary type", .flags = PROCESS_FLAG_LINUX_ELF, },
+   [ELF_HARDENING] = { .name = "ELF_HARDENING", .title = "Hardening            ", .description = "Elf binary hardening options", .flags = PROCESS_FLAG_LINUX_ELF, .defaultSortDesc = true, },
+   [ELF_RUNPATH] = { .name = "ELF_RUNPATH", .title = "Runpath                        ", .description = "Elf binary runpath", .flags = PROCESS_FLAG_LINUX_ELF, },
+#endif
 };
 
 /* This function returns the string displayed in Command column, so that sorting
@@ -126,6 +132,9 @@ void Process_delete(Object* cast) {
    free(this->cgroup);
 #ifdef HAVE_OPENVZ
    free(this->ctid);
+#endif
+#ifdef HAVE_LIBELF
+   free(this->elfRunpath);
 #endif
    free(this->cwd);
    free(this->secattr);
@@ -740,6 +749,21 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       Process_printLeftAlignedField(str, attr, cwd, 25);
       return;
    }
+#ifdef HAVE_LIBELF
+   case ELF_TYPE:
+      xSnprintf(buffer, n, "%-8s ", (lp->elfState & ELF_32_BIT) ? "32 bit" : ((lp->elfState & ELF_64_BIT) ? "64 bit" : "N/A"));
+      if (lp->elfState & ELF_FLAG_NO_ACCESS)
+         attr = CRT_colors[PROCESS_SHADOW];
+      break;
+   case ELF_HARDENING:
+      ELF_writeHardeningField(str, lp->elfState);
+      return;
+   case ELF_RUNPATH:
+      snprintf(buffer, n, "%-30.30s ", lp->elfRunpath ? lp->elfRunpath : "(none)");
+      if (!lp->elfRunpath)
+         attr = CRT_colors[PROCESS_SHADOW];
+      break;
+#endif
    default:
       Process_writeField(this, str, field);
       return;
@@ -753,6 +777,18 @@ static double adjustNaN(double num) {
 
    return num;
 }
+
+#ifdef HAVE_LIBELF
+static int sortElfType(elf_state_t es) {
+   if (es & ELF_32_BIT)
+      return 2;
+
+   if (es & ELF_64_BIT)
+      return 1;
+
+   return 0;
+}
+#endif
 
 static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const LinuxProcess* p1 = (const LinuxProcess*)v1;
@@ -843,6 +879,14 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    }
    case CWD:
       return SPACESHIP_NULLSTR(p1->cwd, p2->cwd);
+#ifdef HAVE_LIBELF
+   case ELF_TYPE:
+      return SPACESHIP_NUMBER(sortElfType(p1->elfState), sortElfType(p2->elfState));
+   case ELF_HARDENING:
+      return SPACESHIP_NUMBER(p1->elfState, p2->elfState);
+   case ELF_RUNPATH:
+      return SPACESHIP_NULLSTR(p1->elfRunpath, p2->elfRunpath);
+#endif
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

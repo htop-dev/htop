@@ -29,6 +29,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_LRS_FIX   0x00010000
 #define PROCESS_FLAG_LINUX_CWD       0x00020000
 #define PROCESS_FLAG_LINUX_DELAYACCT 0x00040000
+#define PROCESS_FLAG_LINUX_ELF       0x00080000
 
 
 /* LinuxProcessMergedCommand is populated by LinuxProcess_makeCommandStr: It
@@ -54,6 +55,8 @@ typedef struct LinuxProcessMergedCommand_ {
    bool prevCommSet;    /* whether findCommInCmdline was set */
    bool prevCmdlineSet; /* whether findCommInCmdline was set */
 } LinuxProcessMergedCommand;
+
+typedef uint16_t elf_state_t;
 
 typedef struct LinuxProcess_ {
    Process super;
@@ -135,6 +138,10 @@ typedef struct LinuxProcess_ {
    char* secattr;
    unsigned long long int last_mlrs_calctime;
    char* cwd;
+   #ifdef HAVE_LIBELF
+   elf_state_t elfState;
+   char* elfRunpath;
+   #endif
 } LinuxProcess;
 
 #define Process_isKernelThread(_process) (((const LinuxProcess*)(_process))->isKernelThread)

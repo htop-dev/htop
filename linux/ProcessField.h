@@ -46,7 +46,10 @@ in the source distribution for its full text.
    SECATTR = 123,                \
    PROC_COMM = 124,              \
    PROC_EXE = 125,               \
-   CWD = 126,                    \
+   ELF_TYPE = 126,               \
+   ELF_HARDENING = 127,          \
+   ELF_RUNPATH = 128,            \
+   CWD = 129,                    \
    // End of list
 
 
