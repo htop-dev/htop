@@ -398,7 +398,7 @@ static bool LinuxProcessList_statProcessDir(Process* process, openat_arg_t procF
    return true;
 }
 
-static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t procFd, unsigned long long now) {
+static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t procFd, unsigned long long realtimeMs) {
    char buffer[1024];
    ssize_t r = xReadfileat(procFd, "io", buffer, sizeof(buffer));
    if (r < 0) {
@@ -411,7 +411,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
       process->io_read_bytes = ULLONG_MAX;
       process->io_write_bytes = ULLONG_MAX;
       process->io_cancelled_write_bytes = ULLONG_MAX;
-      process->io_last_scan_time = now;
+      process->io_last_scan_time_ms = realtimeMs;
       return;
    }
 
@@ -423,18 +423,18 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
       switch (line[0]) {
       case 'r':
          if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-            process->io_rchar = strtoull(line + 7, NULL, 10) / ONE_K;
+            process->io_rchar = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "ead_bytes: ")) {
-            process->io_read_bytes = strtoull(line + 12, NULL, 10) / ONE_K;
-            process->io_rate_read_bps = ONE_K * (process->io_read_bytes - last_read) / (now - process->io_last_scan_time);
+            process->io_read_bytes = strtoull(line + 12, NULL, 10);
+            process->io_rate_read_bps = (process->io_read_bytes - last_read) * /*ms to s*/1000 / (realtimeMs - process->io_last_scan_time_ms);
          }
          break;
       case 'w':
          if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-            process->io_wchar = strtoull(line + 7, NULL, 10) / ONE_K;
+            process->io_wchar = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "rite_bytes: ")) {
-            process->io_write_bytes = strtoull(line + 13, NULL, 10) / ONE_K;
-            process->io_rate_write_bps = ONE_K * (process->io_write_bytes - last_write) / (now - process->io_last_scan_time);
+            process->io_write_bytes = strtoull(line + 13, NULL, 10);
+            process->io_rate_write_bps = (process->io_write_bytes - last_write) * /*ms to s*/1000 / (realtimeMs - process->io_last_scan_time_ms);
          }
          break;
       case 's':
@@ -446,12 +446,12 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
          break;
       case 'c':
          if (String_startsWith(line + 1, "ancelled_write_bytes: ")) {
-            process->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10) / ONE_K;
+            process->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10);
          }
       }
    }
 
-   process->io_last_scan_time = now;
+   process->io_last_scan_time_ms = realtimeMs;
 }
 
 typedef struct LibraryData_ {
@@ -594,7 +594,7 @@ static uint64_t LinuxProcessList_calcLibSize(openat_arg_t procFd) {
    return total_size / pageSize;
 }
 
-static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t procFd, bool performLookup, unsigned long long now) {
+static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t procFd, bool performLookup, unsigned long long realtimeMs) {
    FILE* statmfile = fopenat(procFd, "statm", "r");
    if (!statmfile)
       return false;
@@ -618,12 +618,12 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
          process->m_lrs = tmp_m_lrs;
       } else if (performLookup) {
          // Check if we really should recalculate the M_LRS value for this process
-         uint64_t passedTimeInMs = now - process->last_mlrs_calctime;
+         uint64_t passedTimeInMs = realtimeMs - process->last_mlrs_calctime;
 
          uint64_t recheck = ((uint64_t)rand()) % 2048;
 
          if(passedTimeInMs > 2000 || passedTimeInMs > recheck) {
-            process->last_mlrs_calctime = now;
+            process->last_mlrs_calctime = realtimeMs;
             process->m_lrs = LinuxProcessList_calcLibSize(procFd);
          }
       } else {
