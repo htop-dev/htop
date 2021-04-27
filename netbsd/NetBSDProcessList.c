@@ -212,21 +212,24 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
       switch (kproc->p_realstat) {
       case SIDL:     proc->state = 'I'; break;
       case SACTIVE:
-	// We only consider the first LWP with a one of the below states.
-        for (int j = 0; j < nlwps; j++) {
-          if (klwps) {
-            switch (klwps[j].l_stat) {
-            case LSONPROC: proc->state = 'P'; break;
-            case LSRUN:    proc->state = 'R'; break;
-            case LSSLEEP:  proc->state = 'S'; break;
-            case LSSTOP:   proc->state = 'T'; break;
-            default:       proc->state = '?';
+         // We only consider the first LWP with a one of the below states.
+         for (int j = 0; j < nlwps; j++) {
+            if (klwps) {
+               switch (klwps[j].l_stat) {
+               case LSONPROC: proc->state = 'P'; break;
+               case LSRUN:    proc->state = 'R'; break;
+               case LSSLEEP:  proc->state = 'S'; break;
+               case LSSTOP:   proc->state = 'T'; break;
+               default:       proc->state = '?';
+               }
+               if (proc->state != '?')
+                  break;
+            } else {
+               proc->state = '?';
+               break;
             }
-            if (proc->state != '?')
-            break;
-	  }
-	}
-        break;
+         }
+         break;
       case SSTOP:    proc->state = 'T'; break;
       case SZOMB:    proc->state = 'Z'; break;
       case SDEAD:    proc->state = 'D'; break;
