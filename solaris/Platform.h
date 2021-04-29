@@ -25,7 +25,6 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
-
 #include "generic/gettime.h"
 #include "generic/hostname.h"
 #include "generic/uname.h"

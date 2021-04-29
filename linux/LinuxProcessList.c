@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "LinuxProcessList.h"
+#include "linux/LinuxProcessList.h"
 
 #include <assert.h>
 #include <dirent.h>
@@ -41,13 +41,13 @@ in the source distribution for its full text.
 
 #include "Compat.h"
 #include "CRT.h"
-#include "LinuxProcess.h"
 #include "Macros.h"
 #include "Object.h"
-#include "Platform.h" // needed for GNU/hurd to get PATH_MAX
 #include "Process.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "linux/LinuxProcess.h"
+#include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX
 
 #if defined(MAJOR_IN_MKDEV)
 #include <sys/mkdev.h>

@@ -6,30 +6,31 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Platform.h"
-#include "Macros.h"
-#include "Meter.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
+#include "dragonflybsd/Platform.h"
+
+#include <math.h>
+#include <time.h>
+#include <sys/resource.h>
+#include <sys/sysctl.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <vm/vm_param.h>
+
 #include "ClockMeter.h"
+#include "CPUMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "HostnameMeter.h"
+#include "LoadAverageMeter.h"
+#include "Macros.h"
+#include "MemoryMeter.h"
+#include "Meter.h"
+#include "SwapMeter.h"
 #include "SysArchMeter.h"
-#include "DragonFlyBSDProcess.h"
-#include "DragonFlyBSDProcessList.h"
-
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <vm/vm_param.h>
-#include <time.h>
-#include <math.h>
+#include "TasksMeter.h"
+#include "UptimeMeter.h"
+#include "dragonflybsd/DragonFlyBSDProcess.h"
+#include "dragonflybsd/DragonFlyBSDProcessList.h"
 
 
 const ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };

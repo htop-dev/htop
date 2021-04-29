@@ -6,7 +6,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "OpenBSDProcessList.h"
+#include "openbsd/OpenBSDProcessList.h"
 
 #include <kvm.h>
 #include <limits.h>
@@ -25,11 +25,11 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
-#include "OpenBSDProcess.h"
 #include "Process.h"
 #include "ProcessList.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "openbsd/OpenBSDProcess.h"
 
 
 static long fscale;

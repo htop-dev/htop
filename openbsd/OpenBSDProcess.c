@@ -6,7 +6,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "OpenBSDProcess.h"
+#include "openbsd/OpenBSDProcess.h"
 
 #include <stdlib.h>
 

@@ -6,17 +6,17 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Process.h"
-#include "ProcessList.h"
-#include "DragonFlyBSDProcess.h"
-#include "Platform.h"
-#include "CRT.h"
+#include "dragonflybsd/DragonFlyBSDProcess.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 
+#include "Process.h"
+#include "ProcessList.h"
+#include "dragonflybsd/Platform.h"
+#include "CRT.h"
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },

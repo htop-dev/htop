@@ -12,7 +12,7 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
-#include "IOPriority.h"
+#include "linux/IOPriority.h"
 #include "Object.h"
 #include "Process.h"
 #include "Settings.h"

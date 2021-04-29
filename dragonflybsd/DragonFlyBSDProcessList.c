@@ -6,9 +6,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
-#include "DragonFlyBSDProcessList.h"
-#include "DragonFlyBSDProcess.h"
+#include "dragonflybsd/DragonFlyBSDProcessList.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -22,6 +20,8 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Macros.h"
+#include "ProcessList.h"
+#include "dragonflybsd/DragonFlyBSDProcess.h"
 
 
 static int MIB_hw_physmem[2];

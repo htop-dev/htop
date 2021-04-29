@@ -6,10 +6,10 @@ in the source distribution for its full text.
 */
 #include "config.h"  // IWYU pragma: keep
 
+#include "generic/gettime.h"
+
 #include <string.h>
 #include <time.h>
-
-#include "generic/gettime.h"
 
 
 void Generic_gettime_realtime(struct timeval* tvp, uint64_t* msec) {

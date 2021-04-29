@@ -8,7 +8,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "Platform.h"
+#include "darwin/Platform.h"
 
 #include <errno.h>
 #include <math.h>
@@ -22,7 +22,6 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "CPUMeter.h"
 #include "CRT.h"
-#include "DarwinProcessList.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "HostnameMeter.h"
@@ -34,6 +33,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "darwin/DarwinProcessList.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 

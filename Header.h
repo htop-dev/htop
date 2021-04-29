@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "Vector.h"
 
+
 typedef struct Header_ {
    Vector** columns;
    Settings* settings;

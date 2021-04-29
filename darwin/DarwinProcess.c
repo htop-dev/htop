@@ -5,7 +5,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "DarwinProcess.h"
+#include "darwin/DarwinProcess.h"
 
 #include <libproc.h>
 #include <stdio.h>
@@ -14,8 +14,8 @@ in the source distribution for its full text.
 #include <mach/mach.h>
 
 #include "CRT.h"
-#include "Platform.h"
 #include "Process.h"
+#include "darwin/Platform.h"
 
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {

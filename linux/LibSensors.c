@@ -1,4 +1,4 @@
-#include "LibSensors.h"
+#include "linux/LibSensors.h"
 
 #ifdef HAVE_SENSORS_SENSORS_H
 

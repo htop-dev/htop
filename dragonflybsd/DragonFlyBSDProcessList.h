@@ -15,7 +15,8 @@ in the source distribution for its full text.
 #include <sys/uio.h>
 #include <sys/resource.h>
 #include "Hashtable.h"
-#include "DragonFlyBSDProcess.h"
+
+#include "dragonflybsd/DragonFlyBSDProcess.h"
 
 
 typedef struct CPUData_ {

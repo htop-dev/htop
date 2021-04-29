@@ -6,7 +6,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "LinuxProcess.h"
+#include "linux/LinuxProcess.h"
 
 #include <assert.h>
 #include <math.h>
@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "RichString.h"
 #include "XUtils.h"
+#include "linux/IOPriority.h"
 
 
 /* semi-global */

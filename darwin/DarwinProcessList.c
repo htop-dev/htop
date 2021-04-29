@@ -5,7 +5,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "DarwinProcessList.h"
+#include "darwin/DarwinProcessList.h"
 
 #include <errno.h>
 #include <libproc.h>
@@ -19,9 +19,9 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 
 #include "CRT.h"
-#include "DarwinProcess.h"
-#include "Platform.h"
 #include "ProcessList.h"
+#include "darwin/DarwinProcess.h"
+#include "darwin/Platform.h"
 #include "generic/openzfs_sysctl.h"
 #include "zfs/ZfsArcStats.h"
 

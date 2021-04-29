@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h"
 
-#include "Platform.h"
+#include "linux/Platform.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -31,10 +31,6 @@ in the source distribution for its full text.
 #include "DiskIOMeter.h"
 #include "HostnameMeter.h"
 #include "HugePageMeter.h"
-#include "IOPriority.h"
-#include "IOPriorityPanel.h"
-#include "LinuxProcess.h"
-#include "LinuxProcessList.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
 #include "MainPanel.h"
@@ -46,17 +42,20 @@ in the source distribution for its full text.
 #include "PressureStallMeter.h"
 #include "ProcessList.h"
 #include "ProvideCurses.h"
-#include "SELinuxMeter.h"
+#include "linux/SELinuxMeter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
-#include "SystemdMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
-#include "ZramMeter.h"
-#include "ZramStats.h"
-
+#include "linux/IOPriority.h"
+#include "linux/IOPriorityPanel.h"
+#include "linux/LinuxProcess.h"
+#include "linux/LinuxProcessList.h"
+#include "linux/SystemdMeter.h"
+#include "linux/ZramMeter.h"
+#include "linux/ZramStats.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
