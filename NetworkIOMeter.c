@@ -1,13 +1,14 @@
 #include "NetworkIOMeter.h"
 
 #include <stdbool.h>
-#include <stddef.h>
-#include <sys/time.h>
+#include <stdint.h>
 
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
+#include "Process.h"
+#include "ProcessList.h"
 #include "RichString.h"
 #include "XUtils.h"
 

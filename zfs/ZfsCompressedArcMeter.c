@@ -7,13 +7,14 @@ in the source distribution for its full text.
 
 #include "ZfsCompressedArcMeter.h"
 
+#include <stddef.h>
+
 #include "CRT.h"
 #include "Meter.h"
 #include "Object.h"
 #include "Platform.h"
 #include "RichString.h"
 #include "XUtils.h"
-
 #include "zfs/ZfsArcStats.h"
 
 

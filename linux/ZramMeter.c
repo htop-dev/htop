@@ -1,5 +1,7 @@
 #include "ZramMeter.h"
 
+#include <stddef.h>
+
 #include "CRT.h"
 #include "Meter.h"
 #include "Object.h"

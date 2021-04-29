@@ -10,9 +10,11 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 
 #include <time.h>
+#include <sys/time.h>
 
 #include "CRT.h"
 #include "Object.h"
+#include "ProcessList.h"
 
 
 static const int ClockMeter_attributes[] = {

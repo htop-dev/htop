@@ -9,12 +9,12 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <sys/time.h>
 
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
+#include "ProcessList.h"
 #include "RichString.h"
 #include "XUtils.h"
 

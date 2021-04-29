@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Object.h"
 #include "RichString.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 #if defined(BUILD_STATIC) && defined(HAVE_LIBSYSTEMD)

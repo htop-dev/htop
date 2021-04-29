@@ -23,7 +23,6 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "FunctionBar.h"
-#include "IncSet.h"
 #include "Panel.h"
 #include "ProvideCurses.h"
 #include "XUtils.h"

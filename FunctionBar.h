@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
+
 typedef struct FunctionBar_ {
    int size;
    char** functions;

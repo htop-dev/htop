@@ -15,7 +15,6 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 #include "ListItem.h"
 #include "Object.h"
-#include "Platform.h"
 #include "Process.h"
 #include "ProvideCurses.h"
 #include "XUtils.h"

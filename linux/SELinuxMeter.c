@@ -10,12 +10,12 @@ in the source distribution for its full text.
 #include "CRT.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/statfs.h>
 #include <sys/statvfs.h>
 
-#include "Macros.h"
 #include "Object.h"
 #include "XUtils.h"
 
