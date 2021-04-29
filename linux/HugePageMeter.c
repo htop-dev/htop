@@ -7,14 +7,18 @@ in the source distribution for its full text.
 
 #include "HugePageMeter.h"
 
-#include "LinuxProcessList.h"
-
+#include <assert.h>
 #include <limits.h>
 #include <math.h>
+#include <stddef.h>
 
 #include "CRT.h"
+#include "LinuxProcessList.h"
+#include "Macros.h"
 #include "Object.h"
+#include "ProcessList.h"
 #include "RichString.h"
+
 
 static const char *HugePageMeter_active_labels[4] = { NULL, NULL, NULL, NULL };
 

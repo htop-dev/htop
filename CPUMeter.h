@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
+
 typedef enum {
    CPU_METER_NICE = 0,
    CPU_METER_NORMAL = 1,

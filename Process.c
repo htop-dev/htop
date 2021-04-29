@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/resource.h>
@@ -31,8 +32,6 @@ in the source distribution for its full text.
 
 #if defined(MAJOR_IN_MKDEV)
 #include <sys/mkdev.h>
-#elif defined(MAJOR_IN_SYSMACROS)
-#include <sys/sysmacros.h>
 #endif
 
 

@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 
+
 typedef struct UsersTable_ {
    Hashtable* users;
 } UsersTable;

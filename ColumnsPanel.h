@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Settings.h"
 
+
 typedef struct ColumnsPanel_ {
    Panel super;
 

@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include <stdint.h>
 #include <sys/time.h>
-#include <sys/types.h>
 
 
 void Generic_gettime_realtime(struct timeval* tvp, uint64_t* msec);

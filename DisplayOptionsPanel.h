@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "ScreenManager.h"
 #include "Settings.h"
 
+
 typedef struct DisplayOptionsPanel_ {
    Panel super;
 

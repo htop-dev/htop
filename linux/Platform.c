@@ -12,7 +12,6 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
@@ -63,6 +62,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 
 #ifdef HAVE_LIBCAP
+#include <errno.h>
 #include <sys/capability.h>
 #endif
 

@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "MemoryMeter.h"
 
 #include <math.h>
+#include <stddef.h>
 
 #include "CRT.h"
 #include "Object.h"

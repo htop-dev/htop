@@ -4,11 +4,16 @@ htop - SysArchMeter.c
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
+
 #include "config.h"  // IWYU pragma: keep
 
-#include "Platform.h"
 #include "SysArchMeter.h"
 
+#include <stddef.h>
+
+#include "CRT.h"
+#include "Object.h"
+#include "Platform.h"
 #include "XUtils.h"
 
 

@@ -8,6 +8,8 @@ in the source distribution for its full text.
 #include "ZfsArcMeter.h"
 #include "ZfsArcStats.h"
 
+#include <stddef.h>
+
 #include "CRT.h"
 #include "Object.h"
 #include "Platform.h"

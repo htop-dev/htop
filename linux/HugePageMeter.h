@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
+
 extern const MeterClass HugePageMeter_class;
 
 #endif /* HEADER_HugePageMeter */

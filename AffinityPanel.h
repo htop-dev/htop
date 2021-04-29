@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "ProcessList.h"
 
+
 extern const PanelClass AffinityPanel_class;
 
 Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width);

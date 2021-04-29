@@ -2,13 +2,13 @@
 
 #include "CommandScreen.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "Macros.h"
 #include "Panel.h"
 #include "ProvideCurses.h"
-#include "XUtils.h"
 
 
 static void CommandScreen_scan(InfoScreen* this) {

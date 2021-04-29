@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "Process.h"
 
+
 typedef struct OpenFilesScreen_ {
    InfoScreen super;
    pid_t pid;

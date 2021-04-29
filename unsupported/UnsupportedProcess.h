@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "Settings.h"
 
+
 typedef struct UnsupportedProcess_ {
    Process super;
 

@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "CRT.h"
 #include "Macros.h"
 #include "Panel.h"
 #include "Platform.h"

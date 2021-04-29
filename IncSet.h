@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Vector.h"
 
+
 #define INCMODE_MAX 40
 
 typedef enum {

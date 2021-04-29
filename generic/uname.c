@@ -6,14 +6,17 @@ in the source distribution for its full text.
 */
 #include "config.h"  // IWYU pragma: keep
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "Macros.h"
+#include "XUtils.h"
 #include "generic/uname.h"
 
-#include <stdio.h>
 #ifdef HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
 #endif
-
-#include "XUtils.h"
 
 
 #ifndef OSRELEASEFILE
