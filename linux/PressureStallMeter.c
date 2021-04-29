@@ -6,7 +6,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "PressureStallMeter.h"
+#include "linux/PressureStallMeter.h"
 
 #include <stdbool.h>
 #include <string.h>

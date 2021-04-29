@@ -8,7 +8,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "Platform.h"
+#include "unsupported/Platform.h"
 
 #include <math.h>
 

@@ -6,7 +6,7 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Platform.h"
+#include "openbsd/Platform.h"
 
 #include <errno.h>
 #include <kvm.h>
@@ -33,8 +33,6 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "MemoryMeter.h"
 #include "Meter.h"
-#include "OpenBSDProcess.h"
-#include "OpenBSDProcessList.h"
 #include "ProcessList.h"
 #include "Settings.h"
 #include "SignalsPanel.h"
@@ -43,6 +41,8 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "openbsd/OpenBSDProcess.h"
+#include "openbsd/OpenBSDProcessList.h"
 
 
 const ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };

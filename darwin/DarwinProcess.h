@@ -9,9 +9,8 @@ in the source distribution for its full text.
 
 #include <sys/sysctl.h>
 
-#include "DarwinProcessList.h"
 #include "Settings.h"
-
+#include "darwin/DarwinProcessList.h"
 
 typedef struct DarwinProcess_ {
    Process super;

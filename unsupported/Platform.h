@@ -14,8 +14,8 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
-#include "UnsupportedProcess.h"
 #include "generic/gettime.h"
+#include "unsupported/UnsupportedProcess.h"
 
 
 extern const SignalItem Platform_signals[];

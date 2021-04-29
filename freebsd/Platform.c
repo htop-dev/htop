@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "Platform.h"
+#include "freebsd/Platform.h"
 
 #include <devstat.h>
 #include <math.h>
@@ -31,8 +31,6 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
-#include "FreeBSDProcess.h"
-#include "FreeBSDProcessList.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -46,6 +44,8 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "freebsd/FreeBSDProcess.h"
+#include "freebsd/FreeBSDProcessList.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 

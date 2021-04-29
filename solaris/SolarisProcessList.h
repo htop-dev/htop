@@ -13,8 +13,6 @@ in the source distribution for its full text.
 #define GZONE "global    "
 #define UZONE "unknown   "
 
-#include "zfs/ZfsArcStats.h"
-
 #include <kstat.h>
 #include <sys/param.h>
 #include <sys/uio.h>
@@ -22,6 +20,9 @@ in the source distribution for its full text.
 #include <sys/sysconf.h>
 #include <sys/sysinfo.h>
 #include <sys/swap.h>
+
+#include "zfs/ZfsArcStats.h"
+
 
 #define ZONE_ERRMSGLEN 1024
 extern char zone_errmsg[ZONE_ERRMSGLEN];

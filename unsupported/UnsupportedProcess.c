@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "UnsupportedProcess.h"
+#include "unsupported/UnsupportedProcess.h"
 
 #include <stdlib.h>
 

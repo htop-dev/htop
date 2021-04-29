@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#include "LinuxProcessList.h"
+#include "linux/LinuxProcessList.h"
 
 
 int LibSensors_init(FILE* input);

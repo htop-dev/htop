@@ -6,9 +6,8 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
-#include "SolarisProcess.h"
-#include "SolarisProcessList.h"
+
+#include "solaris/SolarisProcessList.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -23,6 +22,8 @@ in the source distribution for its full text.
 #include <time.h>
 
 #include "CRT.h"
+#include "solaris/ProcessList.h"
+#include "solaris/SolarisProcess.h"
 
 
 #define MAXCMDLINE 255
