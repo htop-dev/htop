@@ -53,7 +53,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       mdata->last_update = pl->realtimeMs;
 
       NetworkIOData data;
-      mdata->hasData = Platform_getNetworkIO(&data);
+      mdata->hasData = Platform_getNetworkIO(this->curChoice, &data);
       if (!mdata->hasData) {
          xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
          return;
@@ -103,22 +103,31 @@ static void NetworkIOMeter_updateValues(Meter* this) {
    char bufferBytesReceived[12], bufferBytesTransmitted[12];
    Meter_humanUnit(bufferBytesReceived, mdata->rxb_diff, sizeof(bufferBytesReceived));
    Meter_humanUnit(bufferBytesTransmitted, mdata->txb_diff, sizeof(bufferBytesTransmitted));
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s", bufferBytesReceived, bufferBytesTransmitted);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s%srx:%siB/s tx:%siB/s",
+             this->curChoice ? this->curChoice : "",
+             this->curChoice ? " " : "",
+             bufferBytesReceived,
+             bufferBytesTransmitted);
 }
 
 static void NetworkIOMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter *)cast;
    const NetworkIOMeterData* mdata = this->meterData;
 
+   if (this->curChoice) {
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], this->curChoice);
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], " ");
+   }
+
    if (!mdata->hasData) {
-      RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
+      RichString_appendAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
       return;
    }
 
    char buffer[64];
    int len;
 
-   RichString_writeAscii(out, CRT_colors[METER_TEXT], "rx: ");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], "rx: ");
    Meter_humanUnit(buffer, mdata->rxb_diff, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], buffer);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
@@ -148,4 +157,24 @@ const MeterClass NetworkIOMeter_class = {
    .caption = "Network: ",
    .init = NetworkIOMeter_init,
    .done = NetworkIOMeter_done,
+};
+
+const MeterClass NetworkInterfaceIOMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = NetworkIOMeter_display
+   },
+   .updateValues = NetworkIOMeter_updateValues,
+   .defaultMode = TEXT_METERMODE,
+   .maxItems = 2,
+   .total = 100.0,
+   .attributes = NetworkIOMeter_attributes,
+   .name = "NetworkInterfaceIO",
+   .uiName = "Network IF IO",
+   .description = "Network IO usage of single interface",
+   .caption = "Network IF: ",
+   .init = NetworkIOMeter_init,
+   .done = NetworkIOMeter_done,
+   .getChoices = Platform_getLocalIPv4addressChoices,
 };

@@ -317,7 +317,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
+   // TODO: choice support
+   assert(!choice); (void) choice;
+
    // get number of interfaces
    int count;
    size_t countLen = sizeof(count);

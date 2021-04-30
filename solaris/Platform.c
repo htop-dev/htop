@@ -303,9 +303,9 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
    // TODO
-   (void)data;
+   (void) choice; (void)data;
    return false;
 }
 
