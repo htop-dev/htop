@@ -139,6 +139,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskIOMeter_class,
    &DiskUsageMeter_class,
    &NetworkIOMeter_class,
+   &NetworkInterfaceIOMeter_class,
    NULL
 };
 
@@ -347,7 +348,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
    // get number of interfaces
    int count;
    size_t countLen = sizeof(count);
@@ -356,6 +357,8 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    int r = sysctl(countMib, ARRAYSIZE(countMib), &count, &countLen, NULL, 0);
    if (r < 0)
       return false;
+
+   bool foundInterface = false;
 
    memset(data, 0, sizeof(NetworkIOData));
    for (int i = 1; i <= count; i++) {
@@ -368,6 +371,15 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       if (r < 0)
          continue;
 
+      if (choice && String_eq(choice, ifmd.ifmd_name)) {
+         data->bytesReceived += ifmd.ifmd_data.ifi_ibytes;
+         data->packetsReceived += ifmd.ifmd_data.ifi_ipackets;
+         data->bytesTransmitted += ifmd.ifmd_data.ifi_obytes;
+         data->packetsTransmitted += ifmd.ifmd_data.ifi_opackets;
+         foundInterface = true;
+         break;
+      }
+
       if (ifmd.ifmd_flags & IFF_LOOPBACK)
          continue;
 
@@ -377,7 +389,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       data->packetsTransmitted += ifmd.ifmd_data.ifi_opackets;
    }
 
-   return true;
+   return !choice || foundInterface;
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {

@@ -400,8 +400,12 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
    struct ifaddrs* ifaddrs = NULL;
+
+   // TODO: choice support
+   assert(!choice);
+   (void) choice;
 
    if (getifaddrs(&ifaddrs) != 0)
       return false;
