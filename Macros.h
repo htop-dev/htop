@@ -82,4 +82,16 @@ static inline unsigned long long saturatingSub(unsigned long long a, unsigned lo
    return a > b ? a - b : 0;
 }
 
+#define ONE_K 1024UL
+#define ONE_M (ONE_K * ONE_K)
+#define ONE_G (ONE_M * ONE_K)
+#define ONE_T (1ULL * ONE_G * ONE_K)
+#define ONE_P (1ULL * ONE_T * ONE_K)
+
+#define ONE_DECIMAL_K 1000UL
+#define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
+#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
+#define ONE_DECIMAL_T (1ULL * ONE_DECIMAL_G * ONE_DECIMAL_K)
+#define ONE_DECIMAL_P (1ULL * ONE_DECIMAL_T * ONE_DECIMAL_K)
+
 #endif

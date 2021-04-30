@@ -46,6 +46,7 @@ myhtopsources = \
 	DateMeter.c \
 	DateTimeMeter.c \
 	DiskIOMeter.c \
+	DiskUsageMeter.c \
 	DisplayOptionsPanel.c \
 	DynamicColumn.c \
 	DynamicMeter.c \
@@ -105,6 +106,7 @@ myhtopheaders = \
 	DateMeter.h \
 	DateTimeMeter.h \
 	DiskIOMeter.h \
+	DiskUsageMeter.h \
 	DisplayOptionsPanel.h \
 	DynamicColumn.h \
 	DynamicMeter.h \

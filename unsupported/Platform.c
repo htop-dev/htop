@@ -184,3 +184,12 @@ void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size)
    (void) size;
    return;
 }
+
+char **Platform_getDiskUsageChoices() {
+   return NULL;
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   (void) choice;
+   (void) data;
+}

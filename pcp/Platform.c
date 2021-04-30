@@ -732,6 +732,16 @@ void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size)
    return;
 }
 
+char **Platform_getDiskUsageChoices() {
+   // TODO
+   return NULL;
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   // TODO
+   (void) choice; (void) data;
+}
+
 void Platform_longOptionsUsage(ATTR_UNUSED const char* name) {
    printf(
 "   --host=HOSTSPEC              metrics source is PMCD at HOSTSPEC [see PCPIntro(1)]\n"
