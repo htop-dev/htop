@@ -21,11 +21,13 @@ in the source distribution for its full text.
 #include <netinet/in.h>
 #include <sys/_types.h>
 #include <sys/devicestat.h>
+#include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
+#include <sys/ucred.h>
 #include <sys/types.h>
 #include <vm/vm_param.h>
 
@@ -135,6 +137,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
    &DiskIOMeter_class,
+   &DiskUsageMeter_class,
    &NetworkIOMeter_class,
    NULL
 };
@@ -513,4 +516,48 @@ void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size)
    xSnprintf(buffer, size, "N/A");
 
    return;
+}
+
+char **Platform_getDiskUsageChoices(void) {
+   unsigned int count = 0;
+   struct statfs* mntbufp;
+   int r = getmntinfo(&mntbufp, MNT_WAIT);
+   if (r <= 0)
+      return NULL;
+
+   char** ret = xMalloc(sizeof(char*));
+   for (int i = 0; i < r; i++) {
+      const struct statfs* sfs = &mntbufp[i];
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t j = 0; j < count; j++)
+            free(ret[j]);
+         free(ret);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(sfs->f_mntonname);
+      count++;
+   }
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   assert(choice);
+   assert(data);
+
+   *data = invalidDiskUsageData;
+
+   struct statfs info;
+
+   if (statfs(choice, &info) < 0)
+      return;
+
+   data->total = (double)info.f_blocks * info.f_bsize;
+   double available = (double)info.f_bfree * info.f_bsize;
+   data->used = data->total - available;
+   data->usedPercentage = 100.0 * (data->used / data->total);
 }

@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
+#include "DiskUsageMeter.h"
 #include "Hashtable.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
@@ -154,5 +155,8 @@ char** Platform_getLocalIPv4addressChoices(void);
 char** Platform_getLocalIPv6addressChoices(void);
 void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size);
 void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size);
+
+char **Platform_getDiskUsageChoices(void);
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data);
 
 #endif

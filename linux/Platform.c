@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
+#include <mntent.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +25,7 @@ in the source distribution for its full text.
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <sys/statvfs.h>
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
@@ -32,6 +34,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "DiskUsageMeter.h"
 #include "HostnameMeter.h"
 #include "HugePageMeter.h"
 #include "LoadAverageMeter.h"
@@ -249,6 +252,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsCompressedArcMeter_class,
    &ZramMeter_class,
    &DiskIOMeter_class,
+   &DiskUsageMeter_class,
    &NetworkIOMeter_class,
    &SELinuxMeter_class,
    &SystemdMeter_class,
@@ -1204,4 +1208,65 @@ void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size)
    fclose(file);
 
    xSnprintf(buffer, size, "N/A");
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   assert(choice);
+   assert(data);
+
+   *data = invalidDiskUsageData;
+
+   struct statvfs info;
+
+   if (statvfs(choice, &info) < 0)
+      return;
+
+   data->total = (double)info.f_blocks * info.f_frsize;
+   double available = (double)info.f_bfree * info.f_frsize;
+   data->used = data->total - available;
+   data->usedPercentage = 100.0 * (data->used / data->total);
+}
+
+static bool isFilesystemOfInterest(const char* fsname) {
+   // TODO: improve detection logic
+
+   if (fsname[0] == '/')
+      return true;
+
+   if (String_eq(fsname, "tmpfs"))
+      return true;
+
+   return false;
+}
+
+char **Platform_getDiskUsageChoices(void) {
+   FILE* mntFile = setmntent(PROCDIR "/mounts", "r");
+   if (!mntFile)
+      return NULL;
+
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+   const struct mntent* ent;
+   while (NULL != (ent = getmntent(mntFile))) {
+      if (!isFilesystemOfInterest(ent->mnt_fsname))
+         continue;
+
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t i = 0; i < count; i++)
+            free(ret[i]);
+         free(ret);
+         endmntent(mntFile);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(ent->mnt_dir);
+      count++;
+   }
+
+   endmntent(mntFile);
+
+   ret[count] = NULL;
+
+   return ret;
 }
