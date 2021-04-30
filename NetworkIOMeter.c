@@ -52,7 +52,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       uint64_t diff;
 
       NetworkIOData data;
-      if (!Platform_getNetworkIO(&data)) {
+      if (!Platform_getNetworkIO(this->curChoice, &data)) {
          mdata->status = RATESTATUS_NODATA;
       } else if (mdata->last_update == 0) {
          mdata->status = RATESTATUS_INIT;
@@ -124,22 +124,31 @@ static void NetworkIOMeter_updateValues(Meter* this) {
    char bufferBytesReceived[12], bufferBytesTransmitted[12];
    Meter_humanUnit(bufferBytesReceived, mdata->rxb_diff, sizeof(bufferBytesReceived));
    Meter_humanUnit(bufferBytesTransmitted, mdata->txb_diff, sizeof(bufferBytesTransmitted));
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s", bufferBytesReceived, bufferBytesTransmitted);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s%srx:%siB/s tx:%siB/s",
+             this->curChoice ? this->curChoice : "",
+             this->curChoice ? " " : "",
+             bufferBytesReceived,
+             bufferBytesTransmitted);
 }
 
 static void NetworkIOMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter *)cast;
    const NetworkIOMeterData* mdata = this->meterData;
 
+   if (this->curChoice) {
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], this->curChoice);
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], " ");
+   }
+
    switch (mdata->status) {
    case RATESTATUS_NODATA:
-      RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
+      RichString_appendAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
       return;
    case RATESTATUS_INIT:
-      RichString_writeAscii(out, CRT_colors[METER_VALUE], "initializing...");
+      RichString_appendAscii(out, CRT_colors[METER_VALUE], "initializing...");
       return;
    case RATESTATUS_STALE:
-      RichString_writeAscii(out, CRT_colors[METER_VALUE_WARN], "stale data");
+      RichString_appendAscii(out, CRT_colors[METER_VALUE_WARN], "stale data");
       return;
    case RATESTATUS_DATA:
       break;
@@ -148,7 +157,7 @@ static void NetworkIOMeter_display(const Object* cast, RichString* out) {
    char buffer[64];
    int len;
 
-   RichString_writeAscii(out, CRT_colors[METER_TEXT], "rx: ");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], "rx: ");
    Meter_humanUnit(buffer, mdata->rxb_diff, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], buffer);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
@@ -178,4 +187,24 @@ const MeterClass NetworkIOMeter_class = {
    .caption = "Network: ",
    .init = NetworkIOMeter_init,
    .done = NetworkIOMeter_done,
+};
+
+const MeterClass NetworkInterfaceIOMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = NetworkIOMeter_display
+   },
+   .updateValues = NetworkIOMeter_updateValues,
+   .defaultMode = TEXT_METERMODE,
+   .maxItems = 2,
+   .total = 100.0,
+   .attributes = NetworkIOMeter_attributes,
+   .name = "NetworkInterfaceIO",
+   .uiName = "Network IF IO",
+   .description = "Network IO usage of single interface",
+   .caption = "Network IF: ",
+   .init = NetworkIOMeter_init,
+   .done = NetworkIOMeter_done,
+   .getChoices = Platform_getLocalIPv4addressChoices,
 };

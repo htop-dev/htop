@@ -254,6 +254,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskIOMeter_class,
    &DiskUsageMeter_class,
    &NetworkIOMeter_class,
+   &NetworkInterfaceIOMeter_class,
    &SELinuxMeter_class,
    &SystemdMeter_class,
    NULL
@@ -610,11 +611,12 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
    FILE* fd = fopen(PROCDIR "/net/dev", "r");
    if (!fd)
       return false;
 
+   bool foundInterface = false;
    memset(data, 0, sizeof(NetworkIOData));
    char lineBuffer[512];
    while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
@@ -628,18 +630,31 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
                              &packetsTransmitted) != 5)
          continue;
 
-      if (String_eq(interfaceName, "lo:"))
+      size_t interfaceNameLen = strlen(interfaceName);
+      if (interfaceNameLen > 0 && interfaceName[interfaceNameLen - 1] == ':')
+         interfaceName[interfaceNameLen - 1] = '\0';
+
+      if (choice && String_eq(choice, interfaceName)) {
+         data->bytesReceived      = bytesReceived;
+         data->packetsReceived    = packetsReceived;
+         data->bytesTransmitted   = bytesTransmitted;
+         data->packetsTransmitted = packetsTransmitted;
+         foundInterface = true;
+         break;
+      }
+
+      if (String_eq(interfaceName, "lo"))
          continue;
 
-      data->bytesReceived += bytesReceived;
-      data->packetsReceived += packetsReceived;
-      data->bytesTransmitted += bytesTransmitted;
+      data->bytesReceived      += bytesReceived;
+      data->packetsReceived    += packetsReceived;
+      data->bytesTransmitted   += bytesTransmitted;
       data->packetsTransmitted += packetsTransmitted;
    }
 
    fclose(fd);
 
-   return true;
+   return !choice || foundInterface;
 }
 
 // Linux battery reading by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).

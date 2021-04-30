@@ -690,7 +690,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
+   // TODO: choice support
+   assert(!choice); (void) choice;
+
    memset(data, 0, sizeof(*data));
 
    pmAtomValue value;
