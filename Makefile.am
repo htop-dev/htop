@@ -38,6 +38,7 @@ myhtopsources = \
 	DateMeter.c \
 	DateTimeMeter.c \
 	DiskIOMeter.c \
+	DiskUsageMeter.c \
 	DisplayOptionsPanel.c \
 	EnvScreen.c \
 	FunctionBar.c \
@@ -93,6 +94,7 @@ myhtopheaders = \
 	DateMeter.h \
 	DateTimeMeter.h \
 	DiskIOMeter.h \
+	DiskUsageMeter.h \
 	DisplayOptionsPanel.h \
 	EnvScreen.h \
 	FunctionBar.h \

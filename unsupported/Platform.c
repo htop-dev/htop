@@ -178,3 +178,13 @@ void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size)
    (void) choice; (void) buffer; (void) size;
    return;
 }
+
+char **Platform_getDiskUsageChoices() {
+   // TODO
+   return NULL;
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   // TODO
+   (void) choice; (void) data;
+}
