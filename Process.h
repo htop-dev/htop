@@ -46,6 +46,7 @@ typedef enum ProcessField_ {
    NLWP = 51,
    TGID = 52,
    PERCENT_NORM_CPU = 53,
+   ELAPSED = 54,
    PROC_COMM = 124,
    PROC_EXE = 125,
 
