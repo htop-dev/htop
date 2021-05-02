@@ -73,7 +73,8 @@ in the source distribution for its full text.
 #endif
 
 #ifdef HAVE_SENSORS_SENSORS_H
-#include "LibSensors.h"
+#include "linux/LibSensors.h"
+#include "linux/LibSensorsTempMeter.h"
 #endif
 
 #ifndef O_PATH
@@ -255,6 +256,9 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskUsageMeter_class,
    &NetworkIOMeter_class,
    &NetworkInterfaceIOMeter_class,
+#ifdef HAVE_SENSORS_SENSORS_H
+   &LibSensorsTempMeter_class,
+#endif
    &SELinuxMeter_class,
    &SystemdMeter_class,
    NULL
