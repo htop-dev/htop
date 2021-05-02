@@ -777,6 +777,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       Process_printLeftAlignedField(str, attr, procExe, TASK_COMM_LEN - 1);
       return;
    }
+   case ELAPSED: Process_printTime(str, /* convert to hundreds of a second */ this->processList->realtimeMs / 10 - 100 * this->starttime_ctime, coloring); return;
    case MAJFLT: Process_printCount(str, this->majflt, coloring); return;
    case MINFLT: Process_printCount(str, this->minflt, coloring); return;
    case M_RESIDENT: Process_printKBytes(str, this->m_resident, coloring); return;
@@ -1073,6 +1074,9 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       const char *exe2 = p2->procExe ? (p2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
       return SPACESHIP_NULLSTR(exe1, exe2);
    }
+   case ELAPSED:
+      r = -SPACESHIP_NUMBER(p1->starttime_ctime, p2->starttime_ctime);
+      return r != 0 ? r : SPACESHIP_NUMBER(p1->pid, p2->pid);
    case MAJFLT:
       return SPACESHIP_NUMBER(p1->majflt, p2->majflt);
    case MINFLT:
