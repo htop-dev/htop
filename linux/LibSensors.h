@@ -13,4 +13,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 char** LibSensors_getTempChoices(void);
 void LibSensors_getTemp(const char* choice, double* currTemp, double* maxTemp);
 
+char** LibSensors_getFanChoices(void);
+void LibSensors_getFan(const char* choice, double* curr, double* min, double* max);
+
 #endif /* HEADER_LibSensors */
