@@ -74,6 +74,7 @@ in the source distribution for its full text.
 
 #ifdef HAVE_SENSORS_SENSORS_H
 #include "linux/LibSensors.h"
+#include "linux/LibSensorsFanMeter.h"
 #include "linux/LibSensorsTempMeter.h"
 #endif
 
@@ -257,6 +258,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &NetworkIOMeter_class,
    &NetworkInterfaceIOMeter_class,
 #ifdef HAVE_SENSORS_SENSORS_H
+   &LibSensorsFanMeter_class,
    &LibSensorsTempMeter_class,
 #endif
    &SELinuxMeter_class,

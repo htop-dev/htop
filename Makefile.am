@@ -162,6 +162,7 @@ linux_platform_headers = \
 	linux/IOPriority.h \
 	linux/IOPriorityPanel.h \
 	linux/LibSensors.h \
+	linux/LibSensorsFanMeter.h \
 	linux/LibSensorsTempMeter.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
@@ -184,6 +185,7 @@ linux_platform_sources = \
 	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \
 	linux/LibSensors.c \
+	linux/LibSensorsFanMeter.c \
 	linux/LibSensorsTempMeter.c \
 	linux/LinuxProcess.c \
 	linux/LinuxProcessList.c \
