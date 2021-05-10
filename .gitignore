@@ -45,3 +45,7 @@ stamp-h1
 
 # files related to valgrind/callgrind
 callgrind.out.*
+
+# IDE workspace configurations
+/.idea/
+/.vscode/
