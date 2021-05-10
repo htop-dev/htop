@@ -12,7 +12,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 
-void Generic_gettime_realtime(struct timeval* ts, uint64_t* msec);
+void Generic_gettime_realtime(struct timeval* tvp, uint64_t* msec);
 
 void Generic_gettime_monotonic(uint64_t* msec);
 
