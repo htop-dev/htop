@@ -29,9 +29,8 @@ are always included, please send those in!
 Feature Requests
 ----------------
 
-Please label Github issues that are feature requests with the [`feature
-request`](https://github.com/htop-dev/htop/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22feature+request%22+)
-label. If you can't do this yourself, don't worry. The friendly folks from the
+Please label Github issues that are feature requests with one of the `feature request`
+labels. If you can't do this yourself, don't worry. The friendly folks from the
 core team will distribute and fixup Github labels as part of the regular reviews.
 
 Style Guide
