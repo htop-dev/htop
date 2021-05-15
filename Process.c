@@ -444,25 +444,25 @@ void Process_makeCommandStr(Process *this) {
    memset(mc->highlights, 0, sizeof(mc->highlights));
 
    size_t mbMismatch = 0;
-   #define WRITE_HIGHLIGHT(_offset, _length, _attr, _flags)                                 \
-      do {                                                                                  \
-         /* Check if we still have capacity */                                              \
-         assert(mc->highlightCount < ARRAYSIZE(mc->highlights));                            \
-         if (mc->highlightCount >= ARRAYSIZE(mc->highlights))                               \
-            continue;                                                                       \
-                                                                                            \
-         mc->highlights[mc->highlightCount].offset = str - strStart + _offset - mbMismatch; \
-         mc->highlights[mc->highlightCount].length = _length;                               \
-         mc->highlights[mc->highlightCount].attr = _attr;                                   \
-         mc->highlights[mc->highlightCount].flags = _flags;                                 \
-         mc->highlightCount++;                                                              \
+   #define WRITE_HIGHLIGHT(_offset, _length, _attr, _flags)                                   \
+      do {                                                                                    \
+         /* Check if we still have capacity */                                                \
+         assert(mc->highlightCount < ARRAYSIZE(mc->highlights));                              \
+         if (mc->highlightCount >= ARRAYSIZE(mc->highlights))                                 \
+            continue;                                                                         \
+                                                                                              \
+         mc->highlights[mc->highlightCount].offset = str - strStart + (_offset) - mbMismatch; \
+         mc->highlights[mc->highlightCount].length = _length;                                 \
+         mc->highlights[mc->highlightCount].attr = _attr;                                     \
+         mc->highlights[mc->highlightCount].flags = _flags;                                   \
+         mc->highlightCount++;                                                                \
       } while (0)
 
-   #define WRITE_SEPARATOR                                                                  \
-      do {                                                                                  \
-         WRITE_HIGHLIGHT(0, 1, CRT_colors[FAILED_READ], CMDLINE_HIGHLIGHT_FLAG_SEPARATOR);  \
-         mbMismatch += SEPARATOR_LEN - 1;                                                   \
-         str = stpcpy(str, SEPARATOR);                                                      \
+   #define WRITE_SEPARATOR                                                                    \
+      do {                                                                                    \
+         WRITE_HIGHLIGHT(0, 1, CRT_colors[FAILED_READ], CMDLINE_HIGHLIGHT_FLAG_SEPARATOR);    \
+         mbMismatch += SEPARATOR_LEN - 1;                                                     \
+         str = stpcpy(str, SEPARATOR);                                                        \
       } while (0)
 
    const int baseAttr = Process_isThread(this) ? CRT_colors[PROCESS_THREAD_BASENAME] : CRT_colors[PROCESS_BASENAME];
