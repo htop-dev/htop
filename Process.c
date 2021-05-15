@@ -499,13 +499,9 @@ void Process_makeCommandStr(Process *this) {
          }
       }
 
-      if (showProgramPath) {
-         WRITE_HIGHLIGHT(cmdlineBasenameStart, cmdlineBasenameEnd - cmdlineBasenameStart, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
-         (void)stpcpyWithNewlineConversion(str, cmdline);
-      } else {
-         WRITE_HIGHLIGHT(0, cmdlineBasenameEnd - cmdlineBasenameStart, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
-         (void)stpcpyWithNewlineConversion(str, cmdline + cmdlineBasenameStart);
-      }
+      if (cmdlineBasenameEnd > cmdlineBasenameStart)
+         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameEnd - cmdlineBasenameStart, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+      (void)stpcpyWithNewlineConversion(str, cmdline + (showProgramPath ? 0 : cmdlineBasenameStart));
 
       return;
    }
