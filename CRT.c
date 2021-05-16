@@ -20,12 +20,13 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "XUtils.h"
 
-#ifdef HAVE_EXECINFO_H
-#include <execinfo.h>
-#endif
-
 #if !defined(NDEBUG) && defined(HAVE_MEMFD_CREATE)
 #include <sys/mman.h>
+#endif
+
+#if defined(HAVE_LIBUNWIND_H) && defined(HAVE_LIBUNWIND)
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
 #endif
 
 
@@ -961,38 +962,58 @@ void CRT_handleSIGSEGV(int signal) {
    Settings_write(CRT_crashSettings, true);
    fprintf(stderr, "\n");
 
-#ifdef HAVE_EXECINFO_H
-   fprintf(stderr,
-      "Backtrace information:\n"
-      "----------------------\n"
-      "The following function calls were active when the issue was detected:\n"
-      "---\n"
-   );
+#if defined(HAVE_LIBUNWIND_H) && defined(HAVE_LIBUNWIND)
+   {
+      fprintf(stderr,
+              "Backtrace information:\n"
+              "----------------------\n"
+              "The following function calls were active when the issue was detected:\n"
+              "---\n"
+      );
 
-   void *backtraceArray[256];
+      unw_context_t context;
+      unw_getcontext(&context);
 
-   size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
-   backtrace_symbols_fd(backtraceArray, size, STDERR_FILENO);
-   fprintf(stderr,
-      "---\n"
-      "\n"
-      "To make the above information more practical to work with,\n"
-      "you should provide a disassembly of your binary.\n"
-      "This can usually be done by running the following command:\n"
-      "\n"
-   );
+      unw_cursor_t cursor;
+      unw_init_local(&cursor, &context);
 
-#ifdef HTOP_DARWIN
-   fprintf(stderr, "   otool -tvV `which htop` > ~/htop.otool\n");
-#else
-   fprintf(stderr, "   objdump -d -S -w `which htop` > ~/htop.objdump\n");
-#endif
+      while (unw_step(&cursor) > 0) {
+         unw_word_t pc;
+         unw_get_reg(&cursor, UNW_REG_IP, &pc);
+         if (pc == 0)
+            break;
 
-   fprintf(stderr,
-      "\n"
-      "Please include the generated file in your report.\n"
-      "\n"
-   );
+         printf("%#14lx:", pc);
+
+         char symbolName[256];
+         unw_word_t offset;
+         if (unw_get_proc_name(&cursor, symbolName, sizeof(symbolName), &offset) == 0)
+            printf(" (%s+%#lx)\n", symbolName, offset);
+         else
+            printf(" -- unable to obtain symbol name\n");
+      }
+
+      fprintf(stderr,
+              "---\n"
+              "\n"
+              "To make the above information more practical to work with,\n"
+              "you should provide a disassembly of your binary.\n"
+              "This can usually be done by running the following command:\n"
+              "\n"
+      );
+
+      #ifdef HTOP_DARWIN
+      fprintf(stderr, "   otool -tvV `which htop` > ~/htop.otool\n");
+      #else
+      fprintf(stderr, "   objdump -d -S -w `which htop` > ~/htop.objdump\n");
+      #endif
+
+      fprintf(stderr,
+              "\n"
+              "Please include the generated file in your report.\n"
+              "\n"
+      );
+   }
 #endif
 
    fprintf(stderr,

@@ -195,9 +195,6 @@ AC_CHECK_FUNCS([ \
     readlinkat \
    ])
 
-# Add -lexecinfo if needed
-AC_SEARCH_LIBS([backtrace], [execinfo])
-
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([mach_timebase_info])
 fi
@@ -298,6 +295,29 @@ fi
 if test "$enable_static" = yes; then
    AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
 fi
+
+
+AC_ARG_ENABLE([unwind],
+              [AS_HELP_STRING([--enable-unwind],
+              [enable unwind support for printing backtraces; requires libunwind @<:@default=check@:>@])],
+              [],
+              [enable_unwind=check])
+case "$enable_unwind" in
+   check)
+      enable_unwind=yes
+      AC_CHECK_LIB([unwind], [backtrace], [], [enable_unwind=no])
+      AC_CHECK_HEADERS([libunwind.h], [], [enable_unwind=no])
+      ;;
+   no)
+      ;;
+   yes)
+      AC_CHECK_LIB([unwind], [backtrace], [], [AC_MSG_ERROR([can not find required library libunwind])])
+      AC_CHECK_HEADERS([libunwind.h], [], [AC_MSG_ERROR([can not find require header file libunwind.h])])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
+      ;;
+esac
 
 
 AC_ARG_ENABLE([hwloc],
@@ -636,6 +656,7 @@ AC_MSG_RESULT([
   (Linux) sensors:           $enable_sensors
   (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode
+  unwind:                    $enable_unwind
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
