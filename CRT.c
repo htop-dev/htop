@@ -972,7 +972,7 @@ void CRT_handleSIGSEGV(int signal) {
    void *backtraceArray[256];
 
    size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
-   backtrace_symbols_fd(backtraceArray, size, 2);
+   backtrace_symbols_fd(backtraceArray, size, STDERR_FILENO);
    fprintf(stderr,
       "---\n"
       "\n"
