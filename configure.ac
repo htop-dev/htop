@@ -445,7 +445,9 @@ case "$enable_delayacct" in
    no)
       ;;
    check)
-      if test "$enable_static" = yes; then
+      if test "$my_htop_platform" != linux; then
+         enable_delayacct=no
+      elif test "$enable_static" = yes; then
          enable_delayacct=no
       else
          m4_ifdef([PKG_PROG_PKG_CONFIG], [
