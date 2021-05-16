@@ -80,6 +80,7 @@ bool CRT_utf8 = false;
 
 const char* const* CRT_treeStr = CRT_treeStrAscii;
 
+static const Settings* CRT_crashSettings;
 static const int* CRT_delay;
 
 const char* CRT_degreeSign;
@@ -767,6 +768,7 @@ void CRT_init(const Settings* settings, bool allowUnicode) {
 
    initscr();
    noecho();
+   CRT_crashSettings = settings;
    CRT_delay = &(settings->delay);
    CRT_colors = CRT_colorSchemes[settings->colorScheme];
    CRT_colorScheme = settings->colorScheme;
@@ -953,6 +955,12 @@ void CRT_handleSIGSEGV(int signal) {
       signal, signal_str
    );
 
+   fprintf(stderr,
+      "Setting information:\n"
+      "--------------------\n");
+   Settings_write(CRT_crashSettings, true);
+   fprintf(stderr, "\n");
+
 #ifdef HAVE_EXECINFO_H
    fprintf(stderr,
       "Backtrace information:\n"
@@ -964,7 +972,7 @@ void CRT_handleSIGSEGV(int signal) {
    void *backtraceArray[256];
 
    size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
-   backtrace_symbols_fd(backtraceArray, size, 2);
+   backtrace_symbols_fd(backtraceArray, size, STDERR_FILENO);
    fprintf(stderr,
       "---\n"
       "\n"
