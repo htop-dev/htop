@@ -21,12 +21,20 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "XUtils.h"
 
-#ifdef HAVE_EXECINFO_H
-#include <execinfo.h>
-#endif
-
 #if !defined(NDEBUG) && defined(HAVE_MEMFD_CREATE)
 #include <sys/mman.h>
+#endif
+
+#if defined(HAVE_LIBUNWIND_H) && defined(HAVE_LIBUNWIND)
+# define PRINT_BACKTRACE
+# define UNW_LOCAL_ONLY
+# include <libunwind.h>
+# if defined(HAVE_DLADDR)
+#  include <dlfcn.h>
+# endif
+#elif defined(HAVE_EXECINFO_H)
+# define PRINT_BACKTRACE
+# include <execinfo.h>
 #endif
 
 
@@ -1008,6 +1016,59 @@ void CRT_setColors(int colorScheme) {
    CRT_colors = CRT_colorSchemes[colorScheme];
 }
 
+#ifdef PRINT_BACKTRACE
+static void print_backtrace(void) {
+#if defined(HAVE_LIBUNWIND_H) && defined(HAVE_LIBUNWIND)
+   unw_context_t context;
+   unw_getcontext(&context);
+
+   unw_cursor_t cursor;
+   unw_init_local(&cursor, &context);
+
+   unsigned int item = 0;
+
+   while (unw_step(&cursor) > 0) {
+      unw_word_t pc;
+      unw_get_reg(&cursor, UNW_REG_IP, &pc);
+      if (pc == 0)
+         break;
+
+      char symbolName[256] = "?";
+      unw_word_t offset = 0;
+      unw_get_proc_name(&cursor, symbolName, sizeof(symbolName), &offset);
+
+      unw_proc_info_t pip;
+      pip.unwind_info = NULL;
+
+      const char* fname = "?";
+      const void* ptr = 0;
+      if (unw_get_proc_info(&cursor, &pip) == 0) {
+         ptr = (const void*)(pip.start_ip + offset);
+
+         #ifdef HAVE_DLADDR
+         Dl_info dlinfo;
+         if (dladdr(ptr, &dlinfo) && dlinfo.dli_fname && *dlinfo.dli_fname)
+            fname = dlinfo.dli_fname;
+         #endif
+      }
+
+      const char* frame = "";
+      if (unw_is_signal_frame(&cursor) > 0)
+         frame = "{signal frame}";
+
+      fprintf(stderr, "%2u: %#14lx  %s  (%s+%#lx)  [%p]%s%s\n", item++, pc, fname, symbolName, offset, ptr, frame ? "  " : "", frame);
+   }
+#elif defined(HAVE_EXECINFO_H)
+   void* backtraceArray[256];
+
+   size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
+   backtrace_symbols_fd(backtraceArray, size, STDERR_FILENO);
+#else
+#error No implementation for print_backtrace()!
+#endif
+}
+#endif
+
 void CRT_handleSIGSEGV(int signal) {
    CRT_done();
 
@@ -1022,7 +1083,7 @@ void CRT_handleSIGSEGV(int signal) {
       "  - Likely steps to reproduce (How did it happen?)\n"
    );
 
-#ifdef HAVE_EXECINFO_H
+#ifdef PRINT_BACKTRACE
    fprintf(stderr, "  - Backtrace of the issue (see below)\n");
 #endif
 
@@ -1048,16 +1109,14 @@ void CRT_handleSIGSEGV(int signal) {
    Settings_write(CRT_crashSettings, true);
    fprintf(stderr, "\n\n");
 
-#ifdef HAVE_EXECINFO_H
+#ifdef PRINT_BACKTRACE
    fprintf(stderr,
       "Backtrace information:\n"
       "----------------------\n"
    );
 
-   void* backtraceArray[256];
+   print_backtrace();
 
-   size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
-   backtrace_symbols_fd(backtraceArray, size, STDERR_FILENO);
    fprintf(stderr,
       "\n"
       "To make the above information more practical to work with, "
