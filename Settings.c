@@ -281,13 +281,20 @@ static void writeMeterModes(const Settings* this, FILE* fd, int column) {
    fprintf(fd, "\n");
 }
 
-int Settings_write(const Settings* this) {
-   FILE* fd = fopen(this->filename, "w");
-   if (fd == NULL)
-      return -errno;
+int Settings_write(const Settings* this, bool onCrash) {
+   FILE* fd;
+   if (onCrash) {
+      fd = stderr;
+   } else {
+      fd = fopen(this->filename, "w");
+      if (fd == NULL)
+         return -errno;
+   }
 
-   fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
-   fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
+   if (!onCrash) {
+      fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
+      fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
+   }
    writeFields(fd, this->fields, "fields");
    // This "-1" is for compatibility with the older enum format.
    fprintf(fd, "sort_key=%d\n", (int) this->sortKey - 1);
@@ -332,6 +339,9 @@ int Settings_write(const Settings* this) {
    #ifdef HAVE_LIBHWLOC
    fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);
    #endif
+
+   if (onCrash)
+      return 0;
 
    int r = 0;
 
@@ -431,7 +441,7 @@ Settings* Settings_new(unsigned int initialCpuCount) {
       ok = Settings_read(this, legacyDotfile, initialCpuCount);
       if (ok) {
          // Transition to new location and delete old configuration file
-         if (Settings_write(this) == 0) {
+         if (Settings_write(this, false) == 0) {
             unlink(legacyDotfile);
          }
       }

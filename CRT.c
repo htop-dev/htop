@@ -80,6 +80,7 @@ bool CRT_utf8 = false;
 
 const char* const* CRT_treeStr = CRT_treeStrAscii;
 
+static const Settings* CRT_crashSettings;
 static const int* CRT_delay;
 
 const char* CRT_degreeSign;
@@ -767,6 +768,7 @@ void CRT_init(const Settings* settings, bool allowUnicode) {
 
    initscr();
    noecho();
+   CRT_crashSettings = settings;
    CRT_delay = &(settings->delay);
    CRT_colors = CRT_colorSchemes[settings->colorScheme];
    CRT_colorScheme = settings->colorScheme;
@@ -952,6 +954,12 @@ void CRT_handleSIGSEGV(int signal) {
       "\n",
       signal, signal_str
    );
+
+   fprintf(stderr,
+      "Setting information:\n"
+      "--------------------\n");
+   Settings_write(CRT_crashSettings, true);
+   fprintf(stderr, "\n");
 
 #ifdef HAVE_EXECINFO_H
    fprintf(stderr,

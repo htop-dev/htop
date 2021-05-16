@@ -361,7 +361,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    CRT_done();
 
    if (settings->changed) {
-      int r = Settings_write(settings);
+      int r = Settings_write(settings, false);
       if (r < 0)
          fprintf(stderr, "Can not save configuration to %s: %s\n", settings->filename, strerror(-r));
    }
@@ -373,10 +373,12 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    MetersPanel_cleanup();
 
    UsersTable_delete(ut);
-   Settings_delete(settings);
 
    if (flags.pidMatchList)
       Hashtable_delete(flags.pidMatchList);
+
+   /* Delete Settings last, since it can get accessed in the crash handler */
+   Settings_delete(settings);
 
    return 0;
 }
