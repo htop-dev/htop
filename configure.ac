@@ -253,6 +253,7 @@ AC_SEARCH_LIBS([clock_gettime], [rt])
 
 AC_CHECK_FUNCS([ \
     clock_gettime \
+    dladdr \
     faccessat \
     fstatat \
     host_get_clock_service \
@@ -260,9 +261,6 @@ AC_CHECK_FUNCS([ \
     openat \
     readlinkat \
    ])
-
-# Add -lexecinfo if needed
-AC_SEARCH_LIBS([backtrace], [execinfo])
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([mach_timebase_info])
@@ -409,6 +407,36 @@ if test "x$enable_affinity" = xyes; then
 fi
 
 
+AC_ARG_ENABLE([unwind],
+              [AS_HELP_STRING([--enable-unwind],
+              [enable unwind support for printing backtraces; requires libunwind @<:@default=check@:>@])],
+              [],
+              [enable_unwind=check])
+case "$enable_unwind" in
+   check)
+      enable_unwind=yes
+      if test "$enable_static" = yes; then
+         AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
+      fi
+      AC_CHECK_LIB([unwind], [backtrace], [], [enable_unwind=no])
+      AC_CHECK_HEADERS([libunwind.h], [], [enable_unwind=no])
+      ;;
+   no)
+      ;;
+   yes)
+      AC_CHECK_LIB([unwind], [backtrace], [], [AC_MSG_ERROR([can not find required library libunwind])])
+      AC_CHECK_HEADERS([libunwind.h], [], [AC_MSG_ERROR([can not find require header file libunwind.h])])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
+      ;;
+esac
+if test "x$enable_unwind" = xno; then
+   # Fall back to backtrace(3) and add -lexecinfo if needed
+   AC_SEARCH_LIBS([backtrace], [execinfo])
+fi
+
+
 AC_ARG_ENABLE([hwloc],
               [AS_HELP_STRING([--enable-hwloc],
               [enable hwloc support for CPU affinity; disables affinity support; requires libhwloc @<:@default=no@:>@])],
@@ -425,6 +453,7 @@ case "$enable_hwloc" in
       AC_MSG_ERROR([bad value '$enable_hwloc' for --enable-hwloc])
       ;;
 esac
+
 
 AC_ARG_WITH([os-release],
             [AS_HELP_STRING([--with-os-release=FILE],
@@ -715,6 +744,7 @@ AC_MSG_RESULT([
   (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
+  unwind:                    $enable_unwind
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
