@@ -1131,7 +1131,6 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    }
 
    ProcessMergedCommand *mc = &process->mergedCommand;
-   mc->maxLen = lastChar + 1;  /* accommodate cmdline */
    if (!process->cmdline || !String_eq(command, process->cmdline)) {
       free_and_xStrdup(&process->cmdline, command);
       process->cmdlineBasenameStart = tokenStart;
@@ -1142,7 +1141,6 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    /* /proc/[pid]/comm could change, so should be updated */
    if ((amtRead = xReadfileat(procFd, "comm", command, sizeof(command))) > 0) {
       command[amtRead - 1] = '\0';
-      mc->maxLen += amtRead - 1; /* accommodate comm */
       if (!process->procComm || !String_eq(command, process->procComm)) {
          free_and_xStrdup(&process->procComm, command);
          mc->commChanged = true;
@@ -1165,7 +1163,6 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
 #endif
    if (amtRead > 0) {
       filename[amtRead] = 0;
-      mc->maxLen += amtRead; /* accommodate exe */
       if (!process->procExe ||
          (!process->procExeDeleted && !String_eq(filename, process->procExe)) ||
          (process->procExeDeleted && !String_startsWith(filename, process->procExe))) {
