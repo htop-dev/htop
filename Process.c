@@ -425,7 +425,12 @@ void Process_makeCommandStr(Process *this) {
    if (mc->cmdlineChanged || mc->commChanged || mc->exeChanged) {
       free(mc->str);
       /* Accommodate the column text, two field separators and terminating NUL */
-      mc->str = xCalloc(1, mc->maxLen + 2 * SEPARATOR_LEN + 1);
+      size_t maxLen = 2 * SEPARATOR_LEN + 1;
+      maxLen += this->cmdline ? strlen(this->cmdline) : strlen("(zombie)");
+      maxLen += this->procComm ? strlen(this->procComm) : 0;
+      maxLen += this->procExe ? strlen(this->procExe) : 0;
+
+      mc->str = xCalloc(1, maxLen);
    }
 
    /* Preserve the settings used in this run */

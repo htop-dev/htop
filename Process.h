@@ -72,7 +72,6 @@ typedef struct ProcessCmdlineHighlight_ {
  * threads and zombies */
 typedef struct ProcessMergedCommand_ {
    char *str;                                  /* merged Command string */
-   size_t maxLen;                              /* maximum expected length of Command string */
    size_t highlightCount;                      /* how many portions of cmdline to highlight */
    ProcessCmdlineHighlight highlights[8];      /* which portions of cmdline to highlight */
    bool separateComm : 1;                      /* whether comm is a separate field */
