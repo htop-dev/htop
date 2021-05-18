@@ -171,15 +171,17 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
 }
 
-static char* OpenBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
+static void OpenBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
+   Process_updateComm(proc, kproc->p_comm);
+
    /*
     * Like OpenBSD's top(1), we try to fall back to the command name
     * (argv[0]) if we fail to construct the full command.
     */
    char** arg = kvm_getargv(kd, kproc, 500);
    if (arg == NULL || *arg == NULL) {
-      *basenameEnd = strlen(kproc->p_comm);
-      return xStrdup(kproc->p_comm);
+      Process_updateCmdline(proc, kproc->p_comm, 0, strlen(kproc->p_comm));
+      return;
    }
 
    size_t len = 0;
@@ -190,22 +192,30 @@ static char* OpenBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_pr
    /* don't use xMalloc here - we want to handle huge argv's gracefully */
    char* s;
    if ((s = malloc(len)) == NULL) {
-      *basenameEnd = strlen(kproc->p_comm);
-      return xStrdup(kproc->p_comm);
+      Process_updateCmdline(proc, kproc->p_comm, 0, strlen(kproc->p_comm));
+      return;
    }
 
    *s = '\0';
 
+   int start = 0;
+   int end = 0;
    for (int i = 0; arg[i] != NULL; i++) {
       size_t n = strlcat(s, arg[i], len);
       if (i == 0) {
-         *basenameEnd = MINIMUM(n, len - 1);
+         end = MINIMUM(n, len - 1);
+         /* check if cmdline ended earlier, e.g 'kdeinit5: Running...' */
+         for (int j = end; j > 0; j--) {
+            if (arg[0][j] == ' ' && arg[0][j-1] != '\\') {
+               end = (arg[0][j-1] == ':') ? (j-1) : j;
+            }
+         }
       }
       /* the trailing space should get truncated anyway */
       strlcat(s, " ", len);
    }
 
-   return s;
+   Process_updateCmdline(proc, s, start, end);
 }
 
 /*
@@ -260,8 +270,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
          ProcessList_add(&this->super, proc);
 
-         proc->cmdline = OpenBSDProcessList_readProcessName(this->kd, kproc, &proc->cmdlineBasenameEnd);
-         proc->mergedCommand.cmdlineChanged = true;
+         OpenBSDProcessList_updateProcessName(this->kd, kproc, proc);
 
          proc->tty_nr = kproc->p_tdev;
          const char* name = ((dev_t)kproc->p_tdev != NODEV) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
@@ -273,9 +282,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          }
       } else {
          if (settings->updateProcessNames) {
-            free(proc->cmdline);
-            proc->cmdline = OpenBSDProcessList_readProcessName(this->kd, kproc, &proc->cmdlineBasenameEnd);
-            proc->mergedCommand.cmdlineChanged = true;
+            OpenBSDProcessList_updateProcessName(this->kd, kproc, proc);
          }
       }
 
