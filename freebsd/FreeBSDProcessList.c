@@ -377,29 +377,52 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap *= pageSizeKb;
 }
 
-static char* FreeBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc* kproc, int* basenameEnd) {
-   char** argv = kvm_getargv(kd, kproc, 0);
-   if (!argv) {
-      return xStrdup(kproc->ki_comm);
+static void FreeBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process* proc) {
+   const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, kproc->ki_pid };
+   char buffer[2048];
+   size_t size = sizeof(buffer);
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
+      Process_updateExe(proc, NULL);
+      return;
    }
-   int len = 0;
+
+   /* Kernel threads return an empty buffer */
+   if (buffer[0] == '\0') {
+      Process_updateExe(proc, NULL);
+      return;
+   }
+
+   Process_updateExe(proc, buffer);
+}
+
+static void FreeBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
+   Process_updateComm(proc, kproc->ki_comm);
+
+   char** argv = kvm_getargv(kd, kproc, 0);
+   if (!argv || !argv[0]) {
+      Process_updateCmdline(proc, kproc->ki_comm, 0, strlen(kproc->ki_comm));
+      return;
+   }
+
+   size_t len = 0;
    for (int i = 0; argv[i]; i++) {
       len += strlen(argv[i]) + 1;
    }
-   char* comm = xMalloc(len);
-   char* at = comm;
-   *basenameEnd = 0;
+
+   char* cmdline = xMalloc(len);
+   char* at = cmdline;
+   int end = 0;
    for (int i = 0; argv[i]; i++) {
       at = stpcpy(at, argv[i]);
-      if (!*basenameEnd) {
-         *basenameEnd = at - comm;
+      if (end == 0) {
+         end = at - cmdline;
       }
-      *at = ' ';
-      at++;
+      *at++ = ' ';
    }
    at--;
    *at = '\0';
-   return comm;
+
+   Process_updateCmdline(proc, cmdline, 0, end);
 }
 
 static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
@@ -469,8 +492,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          ProcessList_add(super, proc);
 
-         proc->cmdline = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->cmdlineBasenameEnd);
-         proc->mergedCommand.cmdlineChanged = true;
+         FreeBSDProcessList_updateExe(kproc, proc);
+         FreeBSDProcessList_updateProcessName(fpl->kd, kproc, proc);
 
          fp->jname = FreeBSDProcessList_readJailName(kproc);
 
@@ -497,9 +520,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
             proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
-            free(proc->cmdline);
-            proc->cmdline = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->cmdlineBasenameEnd);
-            proc->mergedCommand.cmdlineChanged = true;
+            FreeBSDProcessList_updateProcessName(fpl->kd, kproc, proc);
          }
       }
 

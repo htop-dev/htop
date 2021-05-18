@@ -11,6 +11,8 @@ in the source distribution for its full text.
 #define PLATFORM_PROCESS_FIELDS  \
    JID   = 100,                  \
    JAIL  = 101,                  \
+                                 \
+   DUMMY_BUMP_FIELD = PROC_EXE,  \
    // End of list
 
 
