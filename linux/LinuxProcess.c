@@ -169,52 +169,6 @@ static void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
 }
 #endif
 
-static void LinuxProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
-   /* This code is from Process_writeField for COMM, but we invoke
-    * LinuxProcess_writeCommand to display
-    * /proc/pid/exe (or its basename)│/proc/pid/comm│/proc/pid/cmdline */
-   int baseattr = CRT_colors[PROCESS_BASENAME];
-   if (this->settings->highlightThreads && Process_isThread(this)) {
-      attr = CRT_colors[PROCESS_THREAD];
-      baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
-   }
-   if (!this->settings->treeView || this->indent == 0) {
-      Process_writeCommand(this, attr, baseattr, str);
-   } else {
-      char* buf = buffer;
-      int maxIndent = 0;
-      bool lastItem = (this->indent < 0);
-      int indent = (this->indent < 0 ? -this->indent : this->indent);
-      int vertLen = strlen(CRT_treeStr[TREE_STR_VERT]);
-
-      for (int i = 0; i < 32; i++) {
-         if (indent & (1U << i)) {
-            maxIndent = i+1;
-         }
-      }
-      for (int i = 0; i < maxIndent - 1; i++) {
-         if (indent & (1 << i)) {
-            if (buf - buffer + (vertLen + 3) > n) {
-               break;
-            }
-            buf = stpcpy(buf, CRT_treeStr[TREE_STR_VERT]);
-            buf = stpcpy(buf, "  ");
-         } else {
-            if (buf - buffer + 4 > n) {
-               break;
-            }
-            buf = stpcpy(buf, "   ");
-         }
-      }
-
-      n -= (buf - buffer);
-      const char* draw = CRT_treeStr[lastItem ? TREE_STR_BEND : TREE_STR_RTEE];
-      xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
-      RichString_appendWide(str, CRT_colors[PROCESS_TREE], buffer);
-      Process_writeCommand(this, attr, baseattr, str);
-   }
-}
-
 static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const LinuxProcess* lp = (const LinuxProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
@@ -304,14 +258,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;
-   case COMM: {
-      if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !this->mergedCommand.str) {
-         Process_writeField(this, str, field);
-      } else {
-         LinuxProcess_writeCommandField(this, str, buffer, n, attr);
-      }
-      return;
-   }
    case CWD: {
       const char* cwd;
       if (!lp->cwd) {
