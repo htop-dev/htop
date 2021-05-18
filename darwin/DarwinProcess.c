@@ -96,11 +96,23 @@ static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, Proc
    }
 }
 
-static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* cmdlineBasenameEnd) {
+static void DarwinProcess_updateExe(pid_t pid, Process* proc) {
+   char path[PROC_PIDPATHINFO_MAXSIZE];
+
+   int r = proc_pidpath(pid, path, sizeof(path));
+   if (r <= 0)
+      return;
+
+   Process_updateExe(proc, path);
+}
+
+static void DarwinProcess_updateCmdLine(const struct kinfo_proc* k, Process* proc) {
+   Process_updateComm(proc, k->kp_proc.p_comm);
+
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;
-   char *procargs, *sp, *np, *cp, *retval;
+   char *procargs, *sp, *np, *cp;
 
    /* Get the maximum process arguments size. */
    mib[0] = CTL_KERN;
@@ -194,7 +206,7 @@ static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* cmdlineBa
    /* Save where the argv[0] string starts. */
    sp = cp;
 
-   *cmdlineBasenameEnd = 0;
+   int end = 0;
    for ( np = NULL; c < nargs && cp < &procargs[size]; cp++ ) {
       if ( *cp == '\0' ) {
          c++;
@@ -204,8 +216,8 @@ static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* cmdlineBa
          }
          /* Note location of current '\0'. */
          np = cp;
-         if (*cmdlineBasenameEnd == 0) {
-            *cmdlineBasenameEnd = cp - sp;
+         if (end == 0) {
+            end = cp - sp;
          }
       }
    }
@@ -218,26 +230,22 @@ static char* DarwinProcess_getCmdLine(const struct kinfo_proc* k, int* cmdlineBa
       /* Empty or unterminated string. */
       goto ERROR_B;
    }
-   if (*cmdlineBasenameEnd == 0) {
-      *cmdlineBasenameEnd = np - sp;
+   if (end == 0) {
+      end = np - sp;
    }
 
-   /* Make a copy of the string. */
-   retval = xStrdup(sp);
+   Process_updateCmdline(proc, sp, 0, end);
 
    /* Clean up. */
    free( procargs );
 
-   return retval;
+   return;
 
 ERROR_B:
    free( procargs );
 
 ERROR_A:
-   *cmdlineBasenameEnd = -1;
-
-   retval = xStrdup(k->kp_proc.p_comm);
-   return retval;
+   Process_updateCmdline(proc, k->kp_proc.p_comm, 0, strlen(k->kp_proc.p_comm));
 }
 
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists) {
@@ -284,8 +292,8 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       proc->starttime_ctime = ep->p_starttime.tv_sec;
       Process_fillStarttimeBuffer(proc);
 
-      proc->cmdline = DarwinProcess_getCmdLine(ps, &proc->cmdlineBasenameEnd);
-      proc->mergedCommand.cmdlineChanged = true;
+      DarwinProcess_updateExe(ep->p_pid, proc);
+      DarwinProcess_updateCmdLine(ps, proc);
    }
 
    /* Mutable information */
