@@ -1120,3 +1120,74 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       return SPACESHIP_NUMBER(p1->pid, p2->pid);
    }
 }
+
+void Process_updateComm(Process* this, const char* comm) {
+   if (!this->procComm && !comm)
+      return;
+
+   if (this->procComm && comm && String_eq(this->procComm, comm))
+      return;
+
+   free(this->procComm);
+   this->procComm = comm ? xStrdup(comm) : NULL;
+   this->mergedCommand.commChanged = true;
+}
+
+static int skipPotentialPath(const char* cmdline, int end) {
+   if (cmdline[0] != '/')
+      return 0;
+
+   int slash = 0;
+   for (int i = 1; i < end; i++) {
+      if (cmdline[i] == '/' && cmdline[i+1] != '\0') {
+         slash = i + 1;
+         continue;
+      }
+
+      if (cmdline[i] == ' ' && cmdline[i-1] != '\\')
+         return slash;
+
+      if (cmdline[i] == ':' && cmdline[i+1] == ' ')
+         return slash;
+   }
+
+   return slash;
+}
+
+void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart, int basenameEnd) {
+   assert(basenameStart >= 0);
+   assert((cmdline && basenameStart < (int)strlen(cmdline)) || (!cmdline && basenameStart == 0));
+   assert(basenameEnd >= 0);
+   assert((cmdline && basenameEnd <= (int)strlen(cmdline)) || (!cmdline && basenameEnd == 0));
+
+   if (!this->cmdline && !cmdline)
+      return;
+
+   if (this->cmdline && cmdline && String_eq(this->cmdline, cmdline))
+      return;
+
+   free(this->cmdline);
+   this->cmdline = cmdline ? xStrdup(cmdline) : NULL;
+   this->cmdlineBasenameStart = (basenameStart || !cmdline) ? basenameStart : skipPotentialPath(cmdline, basenameEnd);
+   this->cmdlineBasenameEnd = basenameEnd;
+   this->mergedCommand.cmdlineChanged = true;
+}
+
+void Process_updateExe(Process* this, const char* exe) {
+   if (!this->procExe && !exe)
+      return;
+
+   if (this->procExe && exe && String_eq(this->procExe, exe))
+      return;
+
+   free(this->procExe);
+   if (exe) {
+      this->procExe = xStrdup(exe);
+      const char* lastSlash = strrchr(exe, '/');
+      this->procExeBasenameOffset = (lastSlash && *(lastSlash + 1) != '\0' && lastSlash != exe) ? (lastSlash - exe + 1) : 0;
+   } else {
+      this->procExe = NULL;
+      this->procExeBasenameOffset = 0;
+   }
+   this->mergedCommand.exeChanged = true;
+}
