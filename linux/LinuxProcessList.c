@@ -1012,11 +1012,10 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       return false;
 
    if (amtRead == 0) {
-      if (process->state == 'Z') {
-         process->cmdlineBasenameEnd = 0;
-      } else {
+      if (process->state != 'Z') {
          process->isKernelThread = true;
       }
+      Process_updateCmdline(process, NULL, 0, 0);
       return true;
    }
 
@@ -1130,25 +1129,14 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       tokenEnd = lastChar + 1;
    }
 
-   ProcessMergedCommand *mc = &process->mergedCommand;
-   if (!process->cmdline || !String_eq(command, process->cmdline)) {
-      free_and_xStrdup(&process->cmdline, command);
-      process->cmdlineBasenameStart = tokenStart;
-      process->cmdlineBasenameEnd = tokenEnd;
-      mc->cmdlineChanged = true;
-   }
+   Process_updateCmdline(process, command, tokenStart, tokenEnd);
 
    /* /proc/[pid]/comm could change, so should be updated */
    if ((amtRead = xReadfileat(procFd, "comm", command, sizeof(command))) > 0) {
       command[amtRead - 1] = '\0';
-      if (!process->procComm || !String_eq(command, process->procComm)) {
-         free_and_xStrdup(&process->procComm, command);
-         mc->commChanged = true;
-      }
+      Process_updateComm(process, command);
    } else if (process->procComm) {
-      free(process->procComm);
-      process->procComm = NULL;
-      mc->commChanged = true;
+      Process_updateComm(process, NULL);
    }
 
    char filename[MAX_NAME + 1];
@@ -1166,33 +1154,23 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       if (!process->procExe ||
          (!process->procExeDeleted && !String_eq(filename, process->procExe)) ||
          (process->procExeDeleted && !String_startsWith(filename, process->procExe))) {
-         free_and_xStrdup(&process->procExe, filename);
-
-         /* exe is guaranteed to contain at least one /, but validate anyway */
-         while (amtRead && filename[--amtRead] != '/')
-            ;
-
-         process->procExeBasenameOffset = amtRead + 1;
-         mc->exeChanged = true;
 
          const char* deletedMarker = " (deleted)";
-         if (strlen(process->procExe) > strlen(deletedMarker)) {
-            process->procExeDeleted = String_eq(process->procExe + strlen(process->procExe) - strlen(deletedMarker), deletedMarker);
+         const size_t markerLen = strlen(deletedMarker);
+         const size_t filenameLen = strlen(filename);
 
-            if (process->procExeDeleted) {
-               process->procExe[strlen(process->procExe) - strlen(deletedMarker)] = '\0';
+         if (filenameLen > markerLen) {
+            process->procExeDeleted = String_eq(filename + filenameLen - markerLen, deletedMarker);
 
-               if (String_eq(process->procExe, "/"))
-                  process->procExeBasenameOffset = 0;
-            }
+            if (process->procExeDeleted)
+               filename[filenameLen - markerLen] = '\0';
          }
+
+         Process_updateExe(process, filename);
       }
    } else if (process->procExe) {
-      free(process->procExe);
-      process->procExe = NULL;
-      process->procExeBasenameOffset = 0;
+      Process_updateExe(process, NULL);
       process->procExeDeleted = false;
-      mc->exeChanged = true;
    }
 
    return true;
@@ -1449,17 +1427,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          LinuxProcessList_readCwd(lp, procFd);
       }
 
-      if (proc->state == 'Z' && (proc->cmdlineBasenameEnd == 0)) {
-         proc->cmdlineBasenameEnd = -1;
-         free_and_xStrdup(&proc->cmdline, command);
-         proc->cmdlineBasenameStart = 0;
-         proc->mergedCommand.commChanged = true;
+      if (proc->state == 'Z' && !proc->cmdline) {
+         Process_updateCmdline(proc, command, 0, 0);
       } else if (Process_isThread(proc)) {
          if (settings->showThreadNames || Process_isKernelThread(proc)) {
-            proc->cmdlineBasenameEnd = -1;
-            free_and_xStrdup(&proc->cmdline, command);
-            proc->cmdlineBasenameStart = 0;
-            proc->mergedCommand.commChanged = true;
+            Process_updateCmdline(proc, command, 0, 0);
          }
 
          if (Process_isKernelThread(proc)) {
