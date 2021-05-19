@@ -31,7 +31,7 @@ in the source distribution for its full text.
 static int pageSize;
 static int pageSizeKB;
 
-char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
+static char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
    char* zname;
 
    if ( sproc->zoneid == 0 ) {
@@ -302,7 +302,7 @@ void ProcessList_delete(ProcessList* pl) {
  *       system for more info.
  */
 
-int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* listptr) {
+static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* listptr) {
    bool preExisting;
    pid_t getpid;
 
