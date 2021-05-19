@@ -22,7 +22,7 @@ in the source distribution for its full text.
 #include <time.h>
 
 #include "CRT.h"
-#include "solaris/ProcessList.h"
+#include "solaris/Platform.h"
 #include "solaris/SolarisProcess.h"
 
 
