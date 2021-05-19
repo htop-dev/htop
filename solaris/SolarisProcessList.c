@@ -296,6 +296,19 @@ void ProcessList_delete(ProcessList* pl) {
    free(spl);
 }
 
+static void SolarisProcessList_updateExe(pid_t pid, Process* proc) {
+   char path[32];
+   xSnprintf(path, sizeof(path), "/proc/%d/path/a.out", pid);
+
+   char target[PATH_MAX];
+   ssize_t ret = readlink(path, target, sizeof(target) - 1);
+   if (ret <= 0)
+      return;
+
+   target[ret] = '\0';
+   Process_updateExe(proc, target);
+}
+
 /* NOTE: the following is a callback function of type proc_walk_f
  *       and MUST conform to the appropriate definition in order
  *       to work.  See libproc(3LIB) on a Solaris or Illumos
@@ -363,8 +376,9 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       sproc->zoneid         = _psinfo->pr_zoneid;
       sproc->zname          = SolarisProcessList_readZoneName(spl->kd, sproc);
       proc->user            = UsersTable_getRef(pl->usersTable, proc->st_uid);
-      proc->cmdline         = xStrdup(_psinfo->pr_fname);
-      proc->mergedCommand.cmdlineChanged = true;
+      SolarisProcessList_updateExe(_psinfo->pr_pid, proc);
+      Process_updateComm(proc, _psinfo->pr_fname);
+      Process_updateCmdline(proc, _psinfo->pr_psargs, 0, 0);
    }
 
    // End common code pass 1
@@ -406,13 +420,11 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       proc->time               = _lwpsinfo->pr_time.tv_sec;
       if (!preExisting) { // Tasks done only for NEW LWPs
          proc->isUserlandThread    = true;
-         proc->cmdlineBasenameEnd = -1;
          proc->ppid            = _psinfo->pr_pid * 1024;
          proc->tgid            = _psinfo->pr_pid * 1024;
          sproc->realppid       = _psinfo->pr_pid;
          sproc->realtgid       = _psinfo->pr_pid;
          proc->starttime_ctime = _lwpsinfo->pr_start.tv_sec;
-         proc->mergedCommand.cmdlineChanged = true;
       }
 
       // Top-level process only gets this for the representative LWP

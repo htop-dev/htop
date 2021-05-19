@@ -16,6 +16,8 @@ in the source distribution for its full text.
    POOLID = 104,                 \
    CONTID = 105,                 \
    LWPID = 106,                  \
+                                 \
+   DUMMY_BUMP_FIELD = PROC_EXE,  \
    // End of list
 
 
