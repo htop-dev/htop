@@ -399,6 +399,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->st_uid = kproc->kp_uid;		// user ID
          proc->processor = kproc->kp_lwp.kl_origcpu;
          proc->starttime_ctime = kproc->kp_start.tv_sec;
+         Process_fillStarttimeBuffer(proc);
          proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
 
          proc->tty_nr = kproc->kp_tdev; // control terminal device number
