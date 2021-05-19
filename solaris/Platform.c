@@ -259,7 +259,7 @@ static int Platform_buildenv(void* accum, struct ps_prochandle* Phandle, uintptr
       return 1;
    }
    strlcpy( accump->env + accump->size, str, (accump->capacity - accump->size));
-   strncpy( accump->env + accump->size + thissz + 1, "\n", 1);
+   strncpy( accump->env + accump->size + thissz + 1, "\n", 2);
    accump->size = accump->size + thissz + 1;
    return 0;
 }
@@ -271,7 +271,7 @@ char* Platform_getProcessEnv(pid_t pid) {
    struct ps_prochandle* Phandle;
 
    if ((Phandle = Pgrab(realpid, PGRAB_RDONLY, &graberr)) == NULL) {
-      return "Unable to read process environment.";
+      return NULL;
    }
 
    envBuilder.capacity = 4096;
