@@ -44,6 +44,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, .defaultSortDesc = true, },
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "TGID", .description = "Thread group ID (i.e. process ID)", .flags = 0, .pidColumn = true, },
+   [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process", .flags = 0, },
+   [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process", .flags = 0, },
    [JID] = { .name = "JID", .title = "JID", .description = "Jail prison ID", .flags = 0, .pidColumn = true, },
    [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
 };
@@ -69,7 +71,7 @@ static void DragonFlyBSDProcess_writeField(const Process* this, RichString* str,
    size_t n = sizeof(buffer) - 1;
    switch (field) {
    // add Platform-specific fields here
-   case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, (fp->kernel ? -1 : this->pid)); break;
+   case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, Process_isKernelThread(this) ? -1 : this->pid); break;
    case JID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, fp->jid); break;
    case JAIL: Process_printLeftAlignedField(str, attr, fp->jname, 11); return;
    default:
