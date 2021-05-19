@@ -45,9 +45,11 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->pid  = 1;
    proc->ppid = 1;
    proc->tgid = 0;
-   free_and_xStrdup(&proc->cmdline, "<unsupported architecture>");
-   proc->cmdlineBasenameEnd = -1;
-   proc->mergedCommand.cmdlineChanged = true;
+
+   Process_updateComm(proc, "commof16char");
+   Process_updateCmdline(proc, "<unsupported architecture>", 0, 0);
+   Process_updateExe(proc, "/path/to/executable");
+
    proc->updated = true;
 
    proc->state = 'R';
