@@ -163,7 +163,7 @@ int Platform_getMaxPid() {
 
    kstat_ctl_t* kc = kstat_open();
    if (kc != NULL) {
-      kstat_t* kshandle = kstat_lookup(kc, "unix", 0, "var");
+      kstat_t* kshandle = kstat_lookup_wrapper(kc, "unix", 0, "var");
       if (kshandle != NULL) {
          kstat_read(kc, kshandle, NULL);
 

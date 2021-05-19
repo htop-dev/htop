@@ -39,7 +39,7 @@ char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
    } else if ( kd == NULL ) {
       zname = xStrdup(UZONE);
    } else {
-      kstat_t* ks = kstat_lookup( kd, "zones", sproc->zoneid, NULL );
+      kstat_t* ks = kstat_lookup_wrapper( kd, "zones", sproc->zoneid, NULL );
       zname = xStrdup(ks == NULL ? UZONE : ks->ks_name);
    }
 
@@ -95,12 +95,12 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    // Calculate per-CPU statistics first
    for (unsigned int i = 0; i < cpus; i++) {
       if (spl->kd != NULL) {
-         if ((cpuinfo = kstat_lookup(spl->kd, "cpu", i, "sys")) != NULL) {
+         if ((cpuinfo = kstat_lookup_wrapper(spl->kd, "cpu", i, "sys")) != NULL) {
             if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {
-               idletime = kstat_data_lookup(cpuinfo, "cpu_nsec_idle");
-               intrtime = kstat_data_lookup(cpuinfo, "cpu_nsec_intr");
-               krnltime = kstat_data_lookup(cpuinfo, "cpu_nsec_kernel");
-               usertime = kstat_data_lookup(cpuinfo, "cpu_nsec_user");
+               idletime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_idle");
+               intrtime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_intr");
+               krnltime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_kernel");
+               usertime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_user");
             }
          }
       }
@@ -110,9 +110,9 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
 
       if (pl->settings->showCPUFrequency) {
          if (spl->kd != NULL) {
-            if ((cpuinfo = kstat_lookup(spl->kd, "cpu_info", i, NULL)) != NULL) {
+            if ((cpuinfo = kstat_lookup_wrapper(spl->kd, "cpu_info", i, NULL)) != NULL) {
                if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {
-                  cpu_freq = kstat_data_lookup(cpuinfo, "current_clock_Hz");
+                  cpu_freq = kstat_data_lookup_wrapper(cpuinfo, "current_clock_Hz");
                }
             }
          }
@@ -179,15 +179,15 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    // Part 1 - physical memory
    if (spl->kd != NULL && meminfo == NULL) {
       // Look up the kstat chain just once, it never changes
-      meminfo = kstat_lookup(spl->kd, "unix", 0, "system_pages");
+      meminfo = kstat_lookup_wrapper(spl->kd, "unix", 0, "system_pages");
    }
    if (meminfo != NULL) {
       ksrphyserr = kstat_read(spl->kd, meminfo, NULL);
    }
    if (ksrphyserr != -1) {
-      totalmem_pgs   = kstat_data_lookup(meminfo, "physmem");
-      freemem_pgs    = kstat_data_lookup(meminfo, "freemem");
-      pages          = kstat_data_lookup(meminfo, "pagestotal");
+      totalmem_pgs   = kstat_data_lookup_wrapper(meminfo, "physmem");
+      freemem_pgs    = kstat_data_lookup_wrapper(meminfo, "freemem");
+      pages          = kstat_data_lookup_wrapper(meminfo, "pagestotal");
 
       pl->totalMem   = totalmem_pgs->value.ui64 * pageSizeKB;
       if (pl->totalMem > freemem_pgs->value.ui64 * pageSizeKB) {
@@ -246,39 +246,39 @@ static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
    kstat_named_t       *cur_kstat = NULL;
 
    if (spl->kd != NULL) {
-      arcstats = kstat_lookup(spl->kd, "zfs", 0, "arcstats");
+      arcstats = kstat_lookup_wrapper(spl->kd, "zfs", 0, "arcstats");
    }
    if (arcstats != NULL) {
       ksrphyserr = kstat_read(spl->kd, arcstats, NULL);
    }
    if (ksrphyserr != -1) {
-      cur_kstat = kstat_data_lookup( arcstats, "size" );
+      cur_kstat = kstat_data_lookup_wrapper( arcstats, "size" );
       spl->zfs.size = cur_kstat->value.ui64 / 1024;
       spl->zfs.enabled = spl->zfs.size > 0 ? 1 : 0;
 
-      cur_kstat = kstat_data_lookup( arcstats, "c_max" );
+      cur_kstat = kstat_data_lookup_wrapper( arcstats, "c_max" );
       spl->zfs.max = cur_kstat->value.ui64 / 1024;
 
-      cur_kstat = kstat_data_lookup( arcstats, "mfu_size" );
+      cur_kstat = kstat_data_lookup_wrapper( arcstats, "mfu_size" );
       spl->zfs.MFU = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
-      cur_kstat = kstat_data_lookup( arcstats, "mru_size" );
+      cur_kstat = kstat_data_lookup_wrapper( arcstats, "mru_size" );
       spl->zfs.MRU = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
-      cur_kstat = kstat_data_lookup( arcstats, "anon_size" );
+      cur_kstat = kstat_data_lookup_wrapper( arcstats, "anon_size" );
       spl->zfs.anon = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
-      cur_kstat = kstat_data_lookup( arcstats, "hdr_size" );
+      cur_kstat = kstat_data_lookup_wrapper( arcstats, "hdr_size" );
       spl->zfs.header = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
-      cur_kstat = kstat_data_lookup( arcstats, "other_size" );
+      cur_kstat = kstat_data_lookup_wrapper( arcstats, "other_size" );
       spl->zfs.other = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
-      if ((cur_kstat = kstat_data_lookup( arcstats, "compressed_size" )) != NULL) {
+      if ((cur_kstat = kstat_data_lookup_wrapper( arcstats, "compressed_size" )) != NULL) {
          spl->zfs.compressed = cur_kstat->value.ui64 / 1024;
          spl->zfs.isCompressed = 1;
 
-         cur_kstat = kstat_data_lookup( arcstats, "uncompressed_size" );
+         cur_kstat = kstat_data_lookup_wrapper( arcstats, "uncompressed_size" );
          spl->zfs.uncompressed = cur_kstat->value.ui64 / 1024;
       } else {
          spl->zfs.isCompressed = 0;
