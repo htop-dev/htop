@@ -13,13 +13,24 @@ in the source distribution for its full text.
 #define GZONE "global    "
 #define UZONE "unknown   "
 
+
+#include "config.h" // IWYU pragma: keep
+
 #include <kstat.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/resource.h>
 #include <sys/sysconf.h>
 #include <sys/sysinfo.h>
 #include <sys/swap.h>
+
+#include "Hashtable.h"
+#include "ProcessList.h"
+#include "UsersTable.h"
+
+#include "solaris/SolarisProcess.h"
 
 #include "zfs/ZfsArcStats.h"
 
