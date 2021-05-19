@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
+#include <kstat.h>
 #include <libproc.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -107,6 +108,18 @@ static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec)
 
 static inline void Platform_gettime_monotonic(uint64_t* msec) {
     Generic_gettime_monotonic(msec);
+}
+
+static inline void* kstat_data_lookup_wrapper(kstat_t* ksp, const char* name) {
+IGNORE_WCASTQUAL_BEGIN
+   return kstat_data_lookup(ksp, (char*)name);
+IGNORE_WCASTQUAL_END
+}
+
+static inline kstat_t* kstat_lookup_wrapper(kstat_ctl_t* kc, const char* ks_module, int ks_instance, const char* ks_name) {
+IGNORE_WCASTQUAL_BEGIN
+   return kstat_lookup(kc, (char*)ks_module, ks_instance, (char*)ks_name);
+IGNORE_WCASTQUAL_END
 }
 
 #endif
