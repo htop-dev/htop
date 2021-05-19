@@ -59,7 +59,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
    pageSizeKB = pageSize / 1024;
 
    pl->cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
-   if (pl->cpuCount == -1)
+   if (pl->cpuCount == (unsigned int)-1)
       CRT_fatalError("Cannot get CPU count by sysconf(_SC_NPROCESSORS_ONLN)");
    else if (pl->cpuCount == 1)
       spl->cpus = xRealloc(spl->cpus, sizeof(CPUData));
