@@ -39,8 +39,6 @@ in the source distribution for its full text.
 #include "SolarisProcessList.h"
 
 
-double plat_loadavg[3] = {0};
-
 const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",      .number =  0 },
    { .name = " 1 SIGHUP",      .number =  1 },
@@ -152,7 +150,13 @@ int Platform_getUptime() {
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   getloadavg( plat_loadavg, 3 );
+   double plat_loadavg[3];
+   if (getloadavg( plat_loadavg, 3 ) < 0) {
+      *one = NAN;
+      *five = NAN;
+      *fifteen = NAN;
+      return;
+   }
    *one = plat_loadavg[LOADAVG_1MIN];
    *five = plat_loadavg[LOADAVG_5MIN];
    *fifteen = plat_loadavg[LOADAVG_15MIN];
