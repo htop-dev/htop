@@ -29,6 +29,7 @@ typedef struct SolarisProcess_ {
    bool       is_lwp;
    pid_t      realpid;
    pid_t      realppid;
+   pid_t      realtgid;
    pid_t      lwpid;
 } SolarisProcess;
 

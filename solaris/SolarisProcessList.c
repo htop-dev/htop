@@ -342,7 +342,17 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    proc->st_uid             = _psinfo->pr_euid;
    proc->pgrp               = _psinfo->pr_pgid;
    proc->nlwp               = _psinfo->pr_nlwp;
+   proc->session            = _psinfo->pr_sid;
+
    proc->tty_nr             = _psinfo->pr_ttydev;
+   const char* name = (_psinfo->pr_ttydev != PRNODEV) ? ttyname(_psinfo->pr_ttydev) : NULL;
+   if (!name) {
+      free(proc->tty_name);
+      proc->tty_name = NULL;
+   } else {
+      free_and_xStrdup(&proc->tty_name, name);
+   }
+
    proc->m_resident         = _psinfo->pr_rssize;	// KB
    proc->m_virt             = _psinfo->pr_size;		// KB
 
@@ -361,6 +371,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       proc->ppid            = (_psinfo->pr_ppid * 1024);
       proc->tgid            = (_psinfo->pr_ppid * 1024);
       sproc->realppid       = _psinfo->pr_ppid;
+      sproc->realtgid       = _psinfo->pr_ppid;
       // See note above (in common section) about this BINARY FRACTION
       proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu / (double)32768) * (double)100.0;
       proc->time            = _psinfo->pr_time.tv_sec;
@@ -397,6 +408,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
          proc->ppid            = _psinfo->pr_pid * 1024;
          proc->tgid            = _psinfo->pr_pid * 1024;
          sproc->realppid       = _psinfo->pr_pid;
+         sproc->realtgid       = _psinfo->pr_pid;
          proc->starttime_ctime = _lwpsinfo->pr_start.tv_sec;
       }
 
