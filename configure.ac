@@ -298,6 +298,11 @@ fi
 if test "$enable_static" = yes; then
    AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
 fi
+if test "$my_htop_platform" = "solaris"; then
+   # On OmniOS /usr/include/sys/regset.h redefines ERR to 13 - \r, breaking the Enter key.
+   # Since ncruses macros use the ERR macro, we can not use another name.
+   AC_DEFINE([ERR], [(-1)], [Predefine ncurses macro.])
+fi
 
 
 AC_ARG_ENABLE([hwloc],
