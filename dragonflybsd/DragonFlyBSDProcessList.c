@@ -295,6 +295,7 @@ static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* df
    if (sysctlbyname("jail.list", NULL, &len, NULL, 0) == -1) {
       CRT_fatalError("initial sysctlbyname / jail.list failed");
    }
+
 retry:
    if (len == 0)
       return;
@@ -312,11 +313,13 @@ retry:
    if (dfpl->jails) {
       Hashtable_delete(dfpl->jails);
    }
+
    dfpl->jails = Hashtable_new(20, true);
    curpos = jls;
    while (curpos) {
       int jailid;
       char* str_hostname;
+
       nextpos = strchr(curpos, '\n');
       if (nextpos) {
          *nextpos++ = 0;
@@ -346,6 +349,7 @@ static char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl,
    } else {
       jname = xStrdup("-");
    }
+
    return jname;
 }
 
@@ -454,18 +458,18 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->priority = -kproc->kp_lwp.kl_tdprio;
 
       switch(kproc->kp_lwp.kl_rtprio.type) {
-        case RTP_PRIO_REALTIME:
-                proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX + kproc->kp_lwp.kl_rtprio.prio;
-                break;
-        case RTP_PRIO_IDLE:
-                proc->nice = PRIO_MAX + 1 + kproc->kp_lwp.kl_rtprio.prio;
-                break;
-        case RTP_PRIO_THREAD:
-                proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX - kproc->kp_lwp.kl_rtprio.prio;
-                break;
-        default:
-                proc->nice = kproc->kp_nice;
-                break;
+         case RTP_PRIO_REALTIME:
+            proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX + kproc->kp_lwp.kl_rtprio.prio;
+            break;
+         case RTP_PRIO_IDLE:
+            proc->nice = PRIO_MAX + 1 + kproc->kp_lwp.kl_rtprio.prio;
+            break;
+         case RTP_PRIO_THREAD:
+            proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX - kproc->kp_lwp.kl_rtprio.prio;
+            break;
+         default:
+            proc->nice = kproc->kp_nice;
+            break;
       }
 
       // would be nice if we could store multiple states in proc->state (as enum) and have writeField render them
@@ -510,23 +514,21 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       default:     proc->state = '?';
       }
 
-      if (kproc->kp_flags & P_SWAPPEDOUT) {
+      if (kproc->kp_flags & P_SWAPPEDOUT)
          proc->state = 'W';
-      }
-      if (kproc->kp_flags & P_TRACED) {
+      if (kproc->kp_flags & P_TRACED)
          proc->state = 'T';
-      }
-      if (kproc->kp_flags & P_JAILED) {
+      if (kproc->kp_flags & P_JAILED)
          proc->state = 'J';
-      }
 
-      if (Process_isKernelThread(dfp)) {
+      if (Process_isKernelThread(dfp))
          super->kernelThreads++;
-      }
 
       super->totalTasks++;
+
       if (proc->state == 'R')
          super->runningTasks++;
+
       proc->updated = true;
    }
 }
