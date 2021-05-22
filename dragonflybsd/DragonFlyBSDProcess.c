@@ -13,10 +13,10 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <sys/syscall.h>
 
-#include "Process.h"
-#include "ProcessList.h"
-#include "dragonflybsd/Platform.h"
 #include "CRT.h"
+
+#include "dragonflybsd/Platform.h"
+
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
