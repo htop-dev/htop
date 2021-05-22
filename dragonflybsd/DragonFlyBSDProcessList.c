@@ -8,19 +8,20 @@ in the source distribution for its full text.
 
 #include "dragonflybsd/DragonFlyBSDProcessList.h"
 
-#include <unistd.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <string.h>
 #include <sys/param.h>
 
 #include "CRT.h"
 #include "Macros.h"
-#include "ProcessList.h"
+
 #include "dragonflybsd/DragonFlyBSDProcess.h"
 
 

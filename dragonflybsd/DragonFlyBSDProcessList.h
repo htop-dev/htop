@@ -8,13 +8,18 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <sys/types.h>  // required for kvm.h
 #include <kvm.h>
-#include <sys/param.h>
 #include <osreldate.h>
+#include <stdbool.h>
 #include <sys/jail.h>
-#include <sys/uio.h>
+#include <sys/param.h>
 #include <sys/resource.h>
+#include <sys/uio.h>
+
 #include "Hashtable.h"
+#include "ProcessList.h"
+#include "UsersTable.h"
 
 #include "dragonflybsd/DragonFlyBSDProcess.h"
 

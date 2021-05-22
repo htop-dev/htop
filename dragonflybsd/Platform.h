@@ -9,12 +9,17 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
+#include "Macros.h"
+#include "Meter.h"
 #include "NetworkIOMeter.h"
+#include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
 #include "generic/gettime.h"
