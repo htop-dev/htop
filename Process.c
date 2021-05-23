@@ -594,6 +594,7 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
    (void)baseAttr;
 
    const ProcessMergedCommand *mc = &this->mergedCommand;
+   const char* mergedCommand = mc->str;
 
    int strStart = RichString_size(str);
 
@@ -601,7 +602,7 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
    const bool highlightSeparator = true;
    const bool highlightDeleted = this->settings->highlightDeletedExe;
 
-   if (!this->mergedCommand.str) {
+   if (!mergedCommand) {
       int len = 0;
       const char* cmdline = this->cmdline;
 
@@ -634,7 +635,7 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
       return;
    }
 
-   RichString_appendWide(str, attr, this->mergedCommand.str);
+   RichString_appendWide(str, attr, mergedCommand);
 
    for (size_t i = 0, hlCount = CLAMP(mc->highlightCount, 0, ARRAYSIZE(mc->highlights)); i < hlCount; i++) {
       const ProcessCmdlineHighlight *hl = &mc->highlights[i];
@@ -655,6 +656,44 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
             continue;
 
       RichString_setAttrn(str, hl->attr, strStart + hl->offset, hl->length);
+   }
+
+   if (this->settings->shadowDistPathPrefix && mergedCommand[0] == '/') {
+      #define CHECK_AND_MARK(prefix_)                                                         \
+         if (String_startsWith(mergedCommand, prefix_)) {                                     \
+            RichString_setAttrn(str, CRT_colors[PROCESS_SHADOW], strStart, strlen(prefix_));  \
+            break;                                                                            \
+         } else (void)0
+
+      switch (mergedCommand[1]) {
+         case 'b':
+            CHECK_AND_MARK("/bin/");
+            break;
+         case 'l':
+            CHECK_AND_MARK("/lib/");
+            break;
+         case 's':
+            CHECK_AND_MARK("/sbin/");
+            break;
+         case 'u':
+            if (String_startsWith(mergedCommand, "/usr/")) {
+               switch (mergedCommand[5]) {
+                  case 'b':
+                     CHECK_AND_MARK("/usr/bin/");
+                     break;
+                  case 'l':
+                     CHECK_AND_MARK("/usr/libexec/");
+                     CHECK_AND_MARK("/usr/lib/");
+                     break;
+                  case 's':
+                     CHECK_AND_MARK("/usr/sbin/");
+                     break;
+               }
+            }
+            break;
+      }
+
+      #undef CHECK_AND_MARK
    }
 }
 

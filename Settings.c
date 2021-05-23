@@ -177,6 +177,8 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          this->highlightBaseName = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_deleted_exe")) {
          this->highlightDeletedExe = atoi(option[1]);
+      } else if (String_eq(option[0], "shadow_distribution_path_prefix")) {
+         this->shadowDistPathPrefix = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_megabytes")) {
          this->highlightMegabytes = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_threads")) {
@@ -310,6 +312,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    fprintf(fd, "show_program_path=%d\n", (int) this->showProgramPath);
    fprintf(fd, "highlight_base_name=%d\n", (int) this->highlightBaseName);
    fprintf(fd, "highlight_deleted_exe=%d\n", (int) this->highlightDeletedExe);
+   fprintf(fd, "shadow_distribution_path_prefix=%d\n", (int) this->shadowDistPathPrefix);
    fprintf(fd, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
    fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
    fprintf(fd, "highlight_changes=%d\n", (int) this->highlightChanges);
@@ -372,6 +375,7 @@ Settings* Settings_new(unsigned int initialCpuCount) {
    this->allBranchesCollapsed = false;
    this->highlightBaseName = false;
    this->highlightDeletedExe = true;
+   this->shadowDistPathPrefix = false;
    this->highlightMegabytes = false;
    this->detailedCPUTime = false;
    this->countCPUsFromOne = false;
