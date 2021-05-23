@@ -1351,10 +1351,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          }
       }
 
-      char command[MAX_NAME + 1];
+      char statCommand[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       unsigned long int tty_nr = proc->tty_nr;
-      if (! LinuxProcessList_readStatFile(proc, procFd, command, sizeof(command)))
+      if (! LinuxProcessList_readStatFile(proc, procFd, statCommand, sizeof(statCommand)))
          goto errorReadingProcess;
 
       if (tty_nr != proc->tty_nr && this->ttyDrivers) {
@@ -1431,11 +1431,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          LinuxProcessList_readCwd(lp, procFd);
       }
 
-      if (proc->state == 'Z' && !proc->cmdline) {
-         Process_updateCmdline(proc, command, 0, 0);
+      if (proc->state == 'Z' && !proc->cmdline && statCommand[0]) {
+         Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
       } else if (Process_isThread(proc)) {
-         if (settings->showThreadNames || Process_isKernelThread(proc)) {
-            Process_updateCmdline(proc, command, 0, 0);
+         if ((settings->showThreadNames || Process_isKernelThread(proc)) && statCommand[0]) {
+            Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
          }
 
          if (Process_isKernelThread(proc)) {
