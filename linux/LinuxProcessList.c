@@ -1160,10 +1160,14 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
          const size_t filenameLen = strlen(filename);
 
          if (filenameLen > markerLen) {
+            bool oldExeDeleted = process->procExeDeleted;
+
             process->procExeDeleted = String_eq(filename + filenameLen - markerLen, deletedMarker);
 
             if (process->procExeDeleted)
                filename[filenameLen - markerLen] = '\0';
+
+            process->mergedCommand.exeChanged |= oldExeDeleted ^ process->procExeDeleted;
          }
 
          Process_updateExe(process, filename);
