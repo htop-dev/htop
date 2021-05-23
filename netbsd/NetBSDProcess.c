@@ -183,6 +183,12 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .flags = 0,
       .pidColumn = true,
    },
+   [PROC_COMM] = {
+      .name = "COMM",
+      .title = "COMM            ",
+      .description = "comm string of the process",
+      .flags = 0,
+   },
 };
 
 Process* NetBSDProcess_new(const Settings* settings) {
@@ -235,7 +241,3 @@ const ProcessClass NetBSDProcess_class = {
    .writeField = NetBSDProcess_writeField,
    .compareByKey = NetBSDProcess_compareByKey
 };
-
-bool Process_isThread(const Process* this) {
-   return Process_isKernelThread(this) || Process_isUserlandThread(this);
-}

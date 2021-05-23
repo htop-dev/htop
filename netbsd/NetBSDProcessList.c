@@ -114,15 +114,17 @@ static void NetBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap = uvmexp.swpginuse * pageSizeKB;
 }
 
-static char* NetBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_proc2* kproc, int* basenameEnd) {
+static void NetBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc2* kproc, Process* proc) {
+   Process_updateComm(proc, kproc->p_comm);
+
    /*
     * Like NetBSD's top(1), we try to fall back to the command name
     * (argv[0]) if we fail to construct the full command.
     */
    char** arg = kvm_getargv2(kd, kproc, 500);
    if (arg == NULL || *arg == NULL) {
-      *basenameEnd = strlen(kproc->p_comm);
-      return xStrdup(kproc->p_comm);
+      Process_updateCmdline(proc, kproc->p_comm, 0, strlen(kproc->p_comm));
+      return;
    }
 
    size_t len = 0;
@@ -133,22 +135,30 @@ static char* NetBSDProcessList_readProcessName(kvm_t* kd, const struct kinfo_pro
    /* don't use xMalloc here - we want to handle huge argv's gracefully */
    char* s;
    if ((s = malloc(len)) == NULL) {
-      *basenameEnd = strlen(kproc->p_comm);
-      return xStrdup(kproc->p_comm);
+      Process_updateCmdline(proc, kproc->p_comm, 0, strlen(kproc->p_comm));
+      return;
    }
 
    *s = '\0';
 
+   int start = 0;
+   int end = 0;
    for (int i = 0; arg[i] != NULL; i++) {
       size_t n = strlcat(s, arg[i], len);
       if (i == 0) {
-         *basenameEnd = MINIMUM(n, len - 1);
+         end = MINIMUM(n, len - 1);
+         /* check if cmdline ended earlier, e.g 'kdeinit5: Running...' */
+         for (int j = end; j > 0; j--) {
+            if (arg[0][j] == ' ' && arg[0][j-1] != '\\') {
+               end = (arg[0][j-1] == ':') ? (j-1) : j;
+            }
+         }
       }
       /* the trailing space should get truncated anyway */
       strlcat(s, " ", len);
    }
 
-   return s;
+   Process_updateCmdline(proc, s, start, end);
 }
 
 /*
@@ -185,16 +195,18 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
          proc->session = kproc->p_sid;
          proc->tty_nr = kproc->p_tdev;
          proc->pgrp = kproc->p__pgid;
+         proc->isKernelThread = proc->pgrp == 0;
+         proc->isUserlandThread = proc->pid != proc->tgid;
          proc->st_uid = kproc->p_uid;
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
          proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
          ProcessList_add(&this->super, proc);
-         proc->comm = NetBSDProcessList_readProcessName(this->kd, kproc, &proc->basenameOffset);
+
+         NetBSDProcessList_updateProcessName(this->kd, kproc, proc);
       } else {
          if (settings->updateProcessNames) {
-            free(proc->comm);
-            proc->comm = NetBSDProcessList_readProcessName(this->kd, kproc, &proc->basenameOffset);
+            NetBSDProcessList_updateProcessName(this->kd, kproc, proc);
          }
       }
 
