@@ -1123,6 +1123,13 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
             }
          }
       }
+
+      /* Some command lines are hard to parse, like
+       *   file.so [kdeinit5] file local:/run/user/1000/klauncherdqbouY.1.slave-socket local:/run/user/1000/kded5TwsDAx.1.slave-socket
+       * Reset if start is behind end.
+       */
+      if (tokenStart >= tokenEnd)
+         tokenStart = tokenEnd = 0;
    }
 
    if (tokenEnd == 0) {

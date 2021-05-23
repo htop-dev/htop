@@ -1161,7 +1161,7 @@ static int skipPotentialPath(const char* cmdline, int end) {
 void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart, int basenameEnd) {
    assert(basenameStart >= 0);
    assert((cmdline && basenameStart < (int)strlen(cmdline)) || (!cmdline && basenameStart == 0));
-   assert(basenameEnd >= 0);
+   assert((basenameEnd > basenameStart) || (basenameEnd == 0 && basenameStart == 0));
    assert((cmdline && basenameEnd <= (int)strlen(cmdline)) || (!cmdline && basenameEnd == 0));
 
    if (!this->cmdline && !cmdline)
