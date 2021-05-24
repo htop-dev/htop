@@ -31,8 +31,6 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "MemoryMeter.h"
 #include "Meter.h"
-#include "netbsd/NetBSDProcess.h"
-#include "netbsd/NetBSDProcessList.h"
 #include "ProcessList.h"
 #include "Settings.h"
 #include "SignalsPanel.h"
@@ -41,6 +39,8 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "netbsd/NetBSDProcess.h"
+#include "netbsd/NetBSDProcessList.h"
 
 
 const ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
