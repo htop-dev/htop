@@ -27,11 +27,11 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
-#include "netbsd/NetBSDProcess.h"
 #include "Process.h"
 #include "ProcessList.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "netbsd/NetBSDProcess.h"
 
 
 static long fscale;
