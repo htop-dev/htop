@@ -110,6 +110,12 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .description = "Time the process was started",
       .flags = 0,
    },
+   [ELAPSED] = {
+      .name = "ELAPSED",
+      .title = "ELAPSED  ",
+      .description = "Time since the process was started",
+      .flags = 0,
+   },
    [PROCESSOR] = {
       .name = "PROCESSOR",
       .title = "CPU ",
