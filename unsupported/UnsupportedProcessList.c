@@ -50,6 +50,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    Process_updateCmdline(proc, "<unsupported architecture>", 0, 0);
    Process_updateExe(proc, "/path/to/executable");
 
+   if (proc->settings->flags & PROCESS_FLAG_CWD) {
+      proc->procCwd = "/current/working/directory";
+   }
+
    proc->updated = true;
 
    proc->state = 'R';
