@@ -911,17 +911,17 @@ static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd)
 #endif
 
    if (r < 0) {
-      free(process->cwd);
-      process->cwd = NULL;
+      free(process->super.procCwd);
+      process->super.procCwd = NULL;
       return;
    }
 
    pathBuffer[r] = '\0';
 
-   if (process->cwd && String_eq(process->cwd, pathBuffer))
+   if (process->super.procCwd && String_eq(process->super.procCwd, pathBuffer))
       return;
 
-   free_and_xStrdup(&process->cwd, pathBuffer);
+   free_and_xStrdup(&process->super.procCwd, pathBuffer);
 }
 
 #ifdef HAVE_DELAYACCT
@@ -1434,7 +1434,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          LinuxProcessList_readSecattrData(lp, procFd);
       }
 
-      if (settings->flags & PROCESS_FLAG_LINUX_CWD) {
+      if (settings->flags & PROCESS_FLAG_CWD) {
          LinuxProcessList_readCwd(lp, procFd);
       }
 

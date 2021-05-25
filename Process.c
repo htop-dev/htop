@@ -777,6 +777,20 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       Process_printLeftAlignedField(str, attr, procExe, TASK_COMM_LEN - 1);
       return;
    }
+   case CWD: {
+      const char* cwd;
+      if (!this->procCwd) {
+         attr = CRT_colors[PROCESS_SHADOW];
+         cwd = "N/A";
+      } else if (String_startsWith(this->procCwd, "/proc/") && strstr(this->procCwd, " (deleted)") != NULL) {
+         attr = CRT_colors[PROCESS_SHADOW];
+         cwd = "main thread terminated";
+      } else {
+         cwd = this->procCwd;
+      }
+      Process_printLeftAlignedField(str, attr, cwd, 25);
+      return;
+   }
    case ELAPSED: Process_printTime(str, /* convert to hundreds of a second */ this->processList->realtimeMs / 10 - 100 * this->starttime_ctime, coloring); return;
    case MAJFLT: Process_printCount(str, this->majflt, coloring); return;
    case MINFLT: Process_printCount(str, this->minflt, coloring); return;
@@ -915,6 +929,7 @@ void Process_done(Process* this) {
    free(this->cmdline);
    free(this->procComm);
    free(this->procExe);
+   free(this->procCwd);
    free(this->mergedCommand.str);
    free(this->tty_name);
 }
@@ -1074,6 +1089,8 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       const char *exe2 = p2->procExe ? (p2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
       return SPACESHIP_NULLSTR(exe1, exe2);
    }
+   case CWD:
+      return SPACESHIP_NULLSTR(p1->procCwd, p2->procCwd);
    case ELAPSED:
       r = -SPACESHIP_NUMBER(p1->starttime_ctime, p2->starttime_ctime);
       return r != 0 ? r : SPACESHIP_NUMBER(p1->pid, p2->pid);

@@ -17,7 +17,9 @@ in the source distribution for its full text.
 #include "RichString.h"
 
 
-#define PROCESS_FLAG_IO 0x0001
+#define PROCESS_FLAG_IO              0x00000001
+#define PROCESS_FLAG_CWD             0x00000002
+
 #define DEFAULT_HIGHLIGHT_SECS 5
 
 typedef enum ProcessField_ {
@@ -49,6 +51,7 @@ typedef enum ProcessField_ {
    ELAPSED = 54,
    PROC_COMM = 124,
    PROC_EXE = 125,
+   CWD = 126,
 
    /* Platform specific fields, defined in ${platform}/ProcessField.h */
    PLATFORM_PROCESS_FIELDS
@@ -150,6 +153,9 @@ typedef struct Process_ {
 
    /* The main process executable */
    char *procExe;
+
+   /* The process/thread working directory */
+   char *procCwd;
 
    /* Offset in procExe of the process basename */
    int procExeBasenameOffset;

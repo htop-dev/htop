@@ -99,7 +99,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [SECATTR] = { .name = "SECATTR", .title = " Security Attribute ", .description = "Security attribute of the process (e.g. SELinux or AppArmor)", .flags = PROCESS_FLAG_LINUX_SECATTR, },
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process from /proc/[pid]/comm", .flags = 0, },
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
-   [CWD] = { .name ="CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_LINUX_CWD, },
+   [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
 };
 
 Process* LinuxProcess_new(const Settings* settings) {
@@ -116,7 +116,6 @@ void Process_delete(Object* cast) {
 #ifdef HAVE_OPENVZ
    free(this->ctid);
 #endif
-   free(this->cwd);
    free(this->secattr);
    free(this);
 }
@@ -259,20 +258,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;
-   case CWD: {
-      const char* cwd;
-      if (!lp->cwd) {
-         attr = CRT_colors[PROCESS_SHADOW];
-         cwd = "N/A";
-      } else if (String_startsWith(lp->cwd, "/proc/") && strstr(lp->cwd, " (deleted)") != NULL) {
-         attr = CRT_colors[PROCESS_SHADOW];
-         cwd = "main thread terminated";
-      } else {
-         cwd = lp->cwd;
-      }
-      Process_printLeftAlignedField(str, attr, cwd, 25);
-      return;
-   }
    default:
       Process_writeField(this, str, field);
       return;
@@ -364,8 +349,6 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->ctxt_diff, p2->ctxt_diff);
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
-   case CWD:
-      return SPACESHIP_NULLSTR(p1->cwd, p2->cwd);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }
