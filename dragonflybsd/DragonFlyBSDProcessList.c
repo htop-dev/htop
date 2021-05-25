@@ -296,6 +296,26 @@ static void DragonFlyBSDProcessList_updateExe(const struct kinfo_proc* kproc, Pr
    Process_updateExe(proc, target);
 }
 
+static void DragonFlyBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
+   const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_CWD, kproc->kp_pid };
+   char buffer[2048];
+   size_t size = sizeof(buffer);
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   /* Kernel threads return an empty buffer */
+   if (buffer[0] == '\0') {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   free_and_xStrdup(&proc->procCwd, buffer);
+}
+
 static void DragonFlyBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
    Process_updateComm(proc, kproc->kp_comm);
 
@@ -458,6 +478,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
          DragonFlyBSDProcessList_updateExe(kproc, proc);
          DragonFlyBSDProcessList_updateProcessName(dfpl->kd, kproc, proc);
+
+         if (settings->flags & PROCESS_FLAG_CWD) {
+            DragonFlyBSDProcessList_updateCwd(kproc, proc);
+         }
 
          ProcessList_add(super, proc);
 
