@@ -45,6 +45,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, .defaultSortDesc = true, },
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "TGID", .description = "Thread group ID (i.e. process ID)", .flags = 0, .pidColumn = true, },
+   [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
+   [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [TRANSLATED] = { .name = "TRANSLATED", .title = "T ", .description = "Translation info (T translated, N native)", .flags = 0, },
 };
 
@@ -104,6 +106,25 @@ static void DarwinProcess_updateExe(pid_t pid, Process* proc) {
       return;
 
    Process_updateExe(proc, path);
+}
+
+static void DarwinProcess_updateCwd(pid_t pid, Process* proc) {
+   struct proc_vnodepathinfo vpi;
+
+   int r = proc_pidinfo(pid, PROC_PIDVNODEPATHINFO, 0, &vpi, sizeof(vpi));
+   if (r <= 0) {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   if (!vpi.pvi_cdir.vip_path[0]) {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   free_and_xStrdup(&proc->procCwd, vpi.pvi_cdir.vip_path);
 }
 
 static void DarwinProcess_updateCmdLine(const struct kinfo_proc* k, Process* proc) {
@@ -294,6 +315,10 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
 
       DarwinProcess_updateExe(ep->p_pid, proc);
       DarwinProcess_updateCmdLine(ps, proc);
+
+      if (proc->settings->flags & PROCESS_FLAG_CWD) {
+         DarwinProcess_updateCwd(ep->p_pid, proc);
+      }
    }
 
    /* Mutable information */

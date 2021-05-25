@@ -10,6 +10,8 @@ in the source distribution for its full text.
 
 #define PLATFORM_PROCESS_FIELDS  \
    TRANSLATED = 100,             \
+                                 \
+   DUMMY_BUMP_FIELD = CWD,       \
    // End of list
 
 
