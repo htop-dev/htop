@@ -395,6 +395,26 @@ static void FreeBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process
    Process_updateExe(proc, buffer);
 }
 
+static void FreeBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
+   const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_CWD, kproc->ki_pid };
+   char buffer[2048];
+   size_t size = sizeof(buffer);
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   /* Kernel threads return an empty buffer */
+   if (buffer[0] == '\0') {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   free_and_xStrdup(&proc->procCwd, buffer);
+}
+
 static void FreeBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
    Process_updateComm(proc, kproc->ki_comm);
 
@@ -494,6 +514,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
          FreeBSDProcessList_updateExe(kproc, proc);
          FreeBSDProcessList_updateProcessName(fpl->kd, kproc, proc);
+
+         if (settings->flags & PROCESS_FLAG_CWD) {
+            FreeBSDProcessList_updateCwd(kproc, proc);
+         }
 
          fp->jname = FreeBSDProcessList_readJailName(kproc);
 
