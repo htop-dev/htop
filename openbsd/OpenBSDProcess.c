@@ -193,6 +193,12 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .description = "comm string of the process",
       .flags = 0,
    },
+   [CWD] = {
+      .name = "CWD",
+      .title = "CWD                       ",
+      .description = "The current working directory of the process",
+      .flags = PROCESS_FLAG_CWD,
+   },
 
 };
 

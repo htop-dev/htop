@@ -171,6 +171,26 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
 }
 
+static void OpenBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
+   const int mib[] = { CTL_KERN, KERN_PROC_CWD, kproc->ki_pid };
+   char buffer[2048];
+   size_t size = sizeof(buffer);
+   if (sysctl(mib, 3, buffer, &size, NULL, 0) != 0) {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   /* Kernel threads return an empty buffer */
+   if (buffer[0] == '\0') {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   free_and_xStrdup(&proc->procCwd, buffer);
+}
+
 static void OpenBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
    Process_updateComm(proc, kproc->p_comm);
 
@@ -271,6 +291,10 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          ProcessList_add(&this->super, proc);
 
          OpenBSDProcessList_updateProcessName(this->kd, kproc, proc);
+
+         if (settings->flags & PROCESS_FLAG_CWD) {
+            OpenBSDProcessList_updateCwd(kproc, proc);
+         }
 
          proc->tty_nr = kproc->p_tdev;
          const char* name = ((dev_t)kproc->p_tdev != NODEV) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
