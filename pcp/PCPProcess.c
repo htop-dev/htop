@@ -21,9 +21,6 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "XUtils.h"
 
-/* Used to identify kernel threads in Comm column */
-static const char *const kthreadID = "KTHREAD";
-
 const ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "PID", .description = "Process/thread ID", .flags = 0, .pidColumn = true, },
@@ -45,6 +42,7 @@ const ProcessFieldData Process_fields[] = {
    [PRIORITY] = { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = 0, },
    [NICE] = { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = 0, },
    [STARTTIME] = { .name = "STARTTIME", .title = "START ", .description = "Time the process was started", .flags = 0, },
+   [ELAPSED] = { .name = "ELAPSED", .title = "ELAPSED  ", .description = "Time since the process was started", .flags = 0, },
    [PROCESSOR] = { .name = "PROCESSOR", .title = "CPU ", .description = "If of the CPU the process last executed on", .flags = 0, },
    [M_VIRT] = { .name = "M_VIRT", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, .defaultSortDesc = true, },
    [M_RESIDENT] = { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, .defaultSortDesc = true, },
@@ -81,19 +79,10 @@ const ProcessFieldData Process_fields[] = {
    [M_PSSWP] = { .name = "M_PSSWP", .title = " PSSWP ", .description = "shows proportional swap share of this mapping, Unlike \"Swap\", this does not take into account swapped out page of underlying shmem objects.", .flags = PROCESS_FLAG_LINUX_SMAPS, .defaultSortDesc = true, },
    [CTXT] = { .name = "CTXT", .title = " CTXT ", .description = "Context switches (incremental sum of voluntary_ctxt_switches and nonvoluntary_ctxt_switches)", .flags = PROCESS_FLAG_LINUX_CTXT, .defaultSortDesc = true, },
    [SECATTR] = { .name = "SECATTR", .title = " Security Attribute ", .description = "Security attribute of the process (e.g. SELinux or AppArmor)", .flags = PROCESS_FLAG_LINUX_SECATTR, },
-   [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process from /proc/[pid]/comm", .flags = 0, },
+   [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process", .flags = 0, },
+   [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process", .flags = 0, },
+   [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
 };
-
-/* This function returns the string displayed in Command column, so that sorting
- * happens on what is displayed - whether comm, full path, basename, etc.. So
- * this follows PCPProcess_writeField(COMM) and PCPProcess_writeCommand */
-static const char* PCPProcess_getCommandStr(const Process *this) {
-   const PCPProcess *pp = (const PCPProcess *)this;
-   if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !pp->mergedCommand.str) {
-      return this->comm;
-   }
-   return pp->mergedCommand.str;
-}
 
 Process* PCPProcess_new(const Settings* settings) {
    PCPProcess* this = xCalloc(1, sizeof(PCPProcess));
@@ -107,8 +96,6 @@ void Process_delete(Object* cast) {
    Process_done((Process*)cast);
    free(this->cgroup);
    free(this->secattr);
-   free(this->procComm);
-   free(this->mergedCommand.str);
    free(this);
 }
 
@@ -120,210 +107,6 @@ static void PCPProcess_printDelay(float delay_percent, char* buffer, int n) {
    }
 }
 
-/*
-TASK_COMM_LEN is defined to be 16 for /proc/[pid]/comm in man proc(5), but is
-not available in an userspace header - so define it. Note: when colorizing a
-basename with the comm prefix, the entire basename (not just the comm prefix)
-is colorized for better readability, and it is implicit that only up to
-(TASK_COMM_LEN - 1) could be comm.
-*/
-#define TASK_COMM_LEN 16
-
-/*
-This function makes the merged Command string. It also stores the offsets of
-the basename, comm w.r.t the merged Command string - these offsets will be used
-by PCPProcess_writeCommand() for coloring. The merged Command string is also
-returned by PCPProcess_getCommandStr() for searching, sorting and filtering.
-*/
-void PCPProcess_makeCommandStr(Process* this) {
-   PCPProcess *pp = (PCPProcess *)this;
-   PCPProcessMergedCommand *mc = &pp->mergedCommand;
-
-   bool showMergedCommand = this->settings->showMergedCommand;
-   bool showProgramPath = this->settings->showProgramPath;
-   bool searchCommInCmdline = this->settings->findCommInCmdline;
-
-   /* pp->mergedCommand.str needs updating only if its state or contents
-    * changed.  Its content is based on the fields cmdline and comm. */
-   if (
-      mc->prevMergeSet == showMergedCommand &&
-      mc->prevPathSet == showProgramPath &&
-      mc->prevCommSet == searchCommInCmdline &&
-      !mc->cmdlineChanged &&
-      !mc->commChanged
-   ) {
-      return;
-   }
-
-   /* The field separtor "│" has been chosen such that it will not match any
-    * valid string used for searching or filtering */
-   const char *SEPARATOR = CRT_treeStr[TREE_STR_VERT];
-   const int SEPARATOR_LEN = strlen(SEPARATOR);
-
-   /* Check for any changed fields since we last built this string */
-   if (mc->cmdlineChanged || mc->commChanged) {
-      free(mc->str);
-      /* Accommodate the column text, two field separators and terminating NUL */
-      mc->str = xCalloc(1, mc->maxLen + 2*SEPARATOR_LEN + 1);
-   }
-
-   /* Preserve the settings used in this run */
-   mc->prevMergeSet = showMergedCommand;
-   mc->prevPathSet = showProgramPath;
-   mc->prevCommSet = searchCommInCmdline;
-
-   /* Mark everything as unchanged */
-   mc->cmdlineChanged = false;
-   mc->commChanged = false;
-
-   /* Clear any separators */
-   mc->sep1 = 0;
-   mc->sep2 = 0;
-   /* Clear any highlighting locations */
-   mc->baseStart = 0;
-   mc->baseEnd = 0;
-   mc->commStart = 0;
-   mc->commEnd = 0;
-
-   const char *cmdline = this->comm;
-   const char *procComm = pp->procComm;
-
-   char *strStart = mc->str;
-   char *str = strStart;
-
-   int cmdlineBasenameOffset = pp->procCmdlineBasenameOffset;
-   int cmdlineBasenameEnd = pp->procCmdlineBasenameEnd;
-
-   if (!cmdline) {
-      cmdlineBasenameOffset = 0;
-      cmdlineBasenameEnd = 0;
-      cmdline = "(zombie)";
-   }
-
-   assert(cmdlineBasenameOffset >= 0);
-   assert(cmdlineBasenameOffset <= (int)strlen(cmdline));
-
-   if (showMergedCommand && procComm && strlen(procComm)) {   /* Prefix column with comm */
-      if (strncmp(cmdline + cmdlineBasenameOffset, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
-         mc->commStart = 0;
-         mc->commEnd = strlen(procComm);
-
-         str = stpcpy(str, procComm);
-
-         mc->sep1 = str - strStart;
-         str = stpcpy(str, SEPARATOR);
-      }
-   }
-
-   if (showProgramPath) {
-      (void) stpcpy(str, cmdline);
-      mc->baseStart = cmdlineBasenameOffset;
-      mc->baseEnd = cmdlineBasenameEnd;
-   } else {
-      (void) stpcpy(str, cmdline + cmdlineBasenameOffset);
-      mc->baseStart = 0;
-      mc->baseEnd = cmdlineBasenameEnd - cmdlineBasenameOffset;
-   }
-
-   if (mc->sep1) {
-      mc->baseStart += str - strStart - SEPARATOR_LEN + 1;
-      mc->baseEnd += str - strStart - SEPARATOR_LEN + 1;
-   }
-}
-
-static void PCPProcess_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
-   const PCPProcess *pp = (const PCPProcess *)this;
-   const PCPProcessMergedCommand *mc = &pp->mergedCommand;
-
-   int strStart = RichString_size(str);
-
-   int baseStart = strStart + pp->mergedCommand.baseStart;
-   int baseEnd = strStart + pp->mergedCommand.baseEnd;
-   int commStart = strStart + pp->mergedCommand.commStart;
-   int commEnd = strStart + pp->mergedCommand.commEnd;
-
-   int commAttr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
-
-   bool highlightBaseName = this->settings->highlightBaseName;
-
-   RichString_appendWide(str, attr, pp->mergedCommand.str);
-
-   if (pp->mergedCommand.commEnd) {
-      if (!pp->mergedCommand.separateComm && commStart == baseStart && highlightBaseName) {
-         /* If it was matched with binaries basename, make it bold if needed */
-         if (commEnd > baseEnd) {
-            RichString_setAttrn(str, A_BOLD | baseAttr, baseStart, baseEnd - baseStart);
-            RichString_setAttrn(str, A_BOLD | commAttr, baseEnd, commEnd - baseEnd);
-         } else if (commEnd < baseEnd) {
-            RichString_setAttrn(str, A_BOLD | commAttr, commStart, commEnd - commStart);
-            RichString_setAttrn(str, A_BOLD | baseAttr, commEnd, baseEnd - commEnd);
-         } else {
-            // Actually should be highlighted commAttr, but marked baseAttr to reduce visual noise
-            RichString_setAttrn(str, A_BOLD | baseAttr, commStart, commEnd - commStart);
-         }
-
-         baseStart = baseEnd;
-      } else {
-         RichString_setAttrn(str, commAttr, commStart, commEnd - commStart);
-      }
-   }
-
-   if (baseStart < baseEnd && highlightBaseName) {
-      RichString_setAttrn(str, baseAttr, baseStart, baseEnd - baseStart);
-   }
-
-   if (mc->sep1)
-      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep1, 1);
-   if (mc->sep2)
-      RichString_setAttrn(str, CRT_colors[FAILED_READ], strStart + mc->sep2, 1);
-}
-
-static void PCPProcess_writeCommandField(const Process *this, RichString *str, char *buffer, int n, int attr) {
-   /* This code is from Process_writeField for COMM, but we invoke
-    * PCPProcess_writeCommand to display the full binary path
-    * (or its basename)│/proc/pid/comm│/proc/pid/cmdline */
-   int baseattr = CRT_colors[PROCESS_BASENAME];
-   if (this->settings->highlightThreads && Process_isThread(this)) {
-      attr = CRT_colors[PROCESS_THREAD];
-      baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
-   }
-   if (!this->settings->treeView || this->indent == 0) {
-      PCPProcess_writeCommand(this, attr, baseattr, str);
-   } else {
-      char* buf = buffer;
-      int maxIndent = 0;
-      bool lastItem = (this->indent < 0);
-      int indent = (this->indent < 0 ? -this->indent : this->indent);
-      int vertLen = strlen(CRT_treeStr[TREE_STR_VERT]);
-
-      for (int i = 0; i < 32; i++) {
-         if (indent & (1U << i)) {
-            maxIndent = i+1;
-         }
-      }
-      for (int i = 0; i < maxIndent - 1; i++) {
-         if (indent & (1 << i)) {
-            if (buf - buffer + (vertLen + 3) > n) {
-               break;
-            }
-            buf = stpcpy(buf, CRT_treeStr[TREE_STR_VERT]);
-            buf = stpcpy(buf, "  ");
-         } else {
-            if (buf - buffer + 4 > n) {
-               break;
-            }
-            buf = stpcpy(buf, "   ");
-         }
-      }
-
-      n -= (buf - buffer);
-      const char* draw = CRT_treeStr[lastItem ? TREE_STR_BEND : TREE_STR_RTEE];
-      xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
-      RichString_appendWide(str, CRT_colors[PROCESS_TREE], buffer);
-      PCPProcess_writeCommand(this, attr, baseattr, str);
-   }
-}
-
 static void PCPProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const PCPProcess* pp = (const PCPProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
@@ -331,29 +114,29 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
    switch ((int)field) {
-   case CMINFLT: Process_colorNumber(str, pp->cminflt, coloring); return;
-   case CMAJFLT: Process_colorNumber(str, pp->cmajflt, coloring); return;
-   case M_DRS: Process_humanNumber(str, pp->m_drs, coloring); return;
-   case M_DT: Process_humanNumber(str, pp->m_dt, coloring); return;
-   case M_LRS: Process_humanNumber(str, pp->m_lrs, coloring); return;
-   case M_TRS: Process_humanNumber(str, pp->m_trs, coloring); return;
-   case M_SHARE: Process_humanNumber(str, pp->m_share, coloring); return;
-   case M_PSS: Process_humanNumber(str, pp->m_pss, coloring); return;
-   case M_SWAP: Process_humanNumber(str, pp->m_swap, coloring); return;
-   case M_PSSWP: Process_humanNumber(str, pp->m_psswp, coloring); return;
-   case UTIME: Process_printTime(str, pp->utime); return;
-   case STIME: Process_printTime(str, pp->stime); return;
-   case CUTIME: Process_printTime(str, pp->cutime); return;
-   case CSTIME: Process_printTime(str, pp->cstime); return;
-   case RCHAR:  Process_humanNumber(str, pp->io_rchar, coloring); return;
-   case WCHAR:  Process_humanNumber(str, pp->io_wchar, coloring); return;
-   case SYSCR:  Process_colorNumber(str, pp->io_syscr, coloring); return;
-   case SYSCW:  Process_colorNumber(str, pp->io_syscw, coloring); return;
-   case RBYTES: Process_humanNumber(str, pp->io_read_bytes, coloring); return;
-   case WBYTES: Process_humanNumber(str, pp->io_write_bytes, coloring); return;
-   case CNCLWB: Process_humanNumber(str, pp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Process_outputRate(str, buffer, n, pp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Process_outputRate(str, buffer, n, pp->io_rate_write_bps, coloring); return;
+   case CMINFLT: Process_printCount(str, pp->cminflt, coloring); return;
+   case CMAJFLT: Process_printCount(str, pp->cmajflt, coloring); return;
+   case M_DRS: Process_printBytes(str, pp->m_drs, coloring); return;
+   case M_DT: Process_printBytes(str, pp->m_dt, coloring); return;
+   case M_LRS: Process_printBytes(str, pp->m_lrs, coloring); return;
+   case M_TRS: Process_printBytes(str, pp->m_trs, coloring); return;
+   case M_SHARE: Process_printBytes(str, pp->m_share, coloring); return;
+   case M_PSS: Process_printKBytes(str, pp->m_pss, coloring); return;
+   case M_SWAP: Process_printKBytes(str, pp->m_swap, coloring); return;
+   case M_PSSWP: Process_printKBytes(str, pp->m_psswp, coloring); return;
+   case UTIME: Process_printTime(str, pp->utime, coloring); return;
+   case STIME: Process_printTime(str, pp->stime, coloring); return;
+   case CUTIME: Process_printTime(str, pp->cutime, coloring); return;
+   case CSTIME: Process_printTime(str, pp->cstime, coloring); return;
+   case RCHAR:  Process_printBytes(str, pp->io_rchar, coloring); return;
+   case WCHAR:  Process_printBytes(str, pp->io_wchar, coloring); return;
+   case SYSCR:  Process_printCount(str, pp->io_syscr, coloring); return;
+   case SYSCW:  Process_printCount(str, pp->io_syscw, coloring); return;
+   case RBYTES: Process_printBytes(str, pp->io_read_bytes, coloring); return;
+   case WBYTES: Process_printBytes(str, pp->io_write_bytes, coloring); return;
+   case CNCLWB: Process_printBytes(str, pp->io_cancelled_write_bytes, coloring); return;
+   case IO_READ_RATE:  Process_printRate(str, pp->io_rate_read_bps, coloring); return;
+   case IO_WRITE_RATE: Process_printRate(str, pp->io_rate_write_bps, coloring); return;
    case IO_RATE: {
       double totalRate = NAN;
       if (!isnan(pp->io_rate_read_bps) && !isnan(pp->io_rate_write_bps))
@@ -364,7 +147,7 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
          totalRate = pp->io_rate_write_bps;
       else
          totalRate = NAN;
-      Process_outputRate(str, buffer, n, totalRate, coloring); return;
+      Process_printRate(str, totalRate, coloring); return;
    }
    case CGROUP: xSnprintf(buffer, n, "%-10s ", pp->cgroup ? pp->cgroup : ""); break;
    case OOM: xSnprintf(buffer, n, "%4u ", pp->oom); break;
@@ -384,27 +167,6 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
       xSnprintf(buffer, n, "%5lu ", pp->ctxt_diff);
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", pp->secattr ? pp->secattr : "?"); break;
-   case COMM: {
-      if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !pp->mergedCommand.str) {
-         Process_writeField(this, str, field);
-      } else {
-         PCPProcess_writeCommandField(this, str, buffer, n, attr);
-      }
-      return;
-   }
-   case PROC_COMM: {
-      const char* procComm;
-      if (pp->procComm) {
-         attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
-         procComm = pp->procComm;
-      } else {
-         attr = CRT_colors[PROCESS_SHADOW];
-         procComm = Process_isKernelThread(this) ? kthreadID : "N/A";
-      }
-      /* 15 being (TASK_COMM_LEN - 1) */
-      Process_printLeftAlignedField(str, attr, procComm, 15);
-      return;
-   }
    default:
       Process_writeField(this, str, field);
       return;
@@ -482,18 +244,9 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
       return SPACESHIP_NUMBER(p1->ctxt_diff, p1->ctxt_diff);
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
-   case PROC_COMM: {
-      const char *comm1 = p1->procComm ? p1->procComm : (Process_isKernelThread(v1) ? kthreadID : "");
-      const char *comm2 = p2->procComm ? p2->procComm : (Process_isKernelThread(v2) ? kthreadID : "");
-      return strcmp(comm1, comm2);
-   }
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }
-}
-
-bool Process_isThread(const Process* this) {
-   return (Process_isUserlandThread(this) || Process_isKernelThread(this));
 }
 
 const ProcessClass PCPProcess_class = {
@@ -504,6 +257,5 @@ const ProcessClass PCPProcess_class = {
       .compare = Process_compare
    },
    .writeField = PCPProcess_writeField,
-   .getCommandStr = PCPProcess_getCommandStr,
    .compareByKey = PCPProcess_compareByKey
 };

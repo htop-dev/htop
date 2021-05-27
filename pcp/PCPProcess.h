@@ -26,35 +26,8 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_CTXT     0x4000
 #define PROCESS_FLAG_LINUX_SECATTR  0x8000
 
-/* PCPProcessMergedCommand is populated by PCPProcess_makeCommandStr: It
- * contains the merged Command string, and the information needed by
- * PCPProcess_writeCommand to color the string. str will be NULL for kernel
- * threads and zombies */
-typedef struct PCPProcessMergedCommand_ {
-   char *str;           /* merged Command string */
-   int maxLen;          /* maximum expected length of Command string */
-   int baseStart;       /* basename's start offset */
-   int baseEnd;         /* basename's end offset */
-   int commStart;       /* comm's start offset */
-   int commEnd;         /* comm's end offset */
-   int sep1;            /* first field separator, used if non-zero */
-   int sep2;            /* second field separator, used if non-zero */
-   bool separateComm;   /* whether comm is a separate field */
-   bool cmdlineChanged; /* whether cmdline changed */
-   bool commChanged;    /* whether comm changed */
-   bool prevMergeSet;   /* whether showMergedCommand was set */
-   bool prevPathSet;    /* whether showProgramPath was set */
-   bool prevCommSet;    /* whether findCommInCmdline was set */
-   bool prevCmdlineSet; /* whether findCommInCmdline was set */
-} PCPProcessMergedCommand;
-
 typedef struct PCPProcess_ {
    Process super;
-   char *procComm;
-   int procCmdlineBasenameOffset;
-   int procCmdlineBasenameEnd;
-   PCPProcessMergedCommand mergedCommand;
-   bool isKernelThread;
    unsigned long int cminflt;
    unsigned long int cmajflt;
    unsigned long long int utime;
@@ -111,18 +84,6 @@ typedef struct PCPProcess_ {
    unsigned long long int last_mlrs_calctime;
 } PCPProcess;
 
-static inline void Process_setKernelThread(Process* this, bool truth) {
-   ((PCPProcess*)this)->isKernelThread = truth;
-}
-
-static inline bool Process_isKernelThread(const Process* this) {
-   return ((const PCPProcess*)this)->isKernelThread;
-}
-
-static inline bool Process_isUserlandThread(const Process* this) {
-   return this->pid != this->tgid;
-}
-
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 extern const ProcessClass PCPProcess_class;
@@ -130,10 +91,6 @@ extern const ProcessClass PCPProcess_class;
 Process* PCPProcess_new(const Settings* settings);
 
 void Process_delete(Object* cast);
-
-/* This function constructs the string that is displayed by
- * PCPProcess_writeCommand and also returned by PCPProcess_getCommandStr */
-void PCPProcess_makeCommandStr(Process *this);
 
 bool Process_isThread(const Process* this);
 
