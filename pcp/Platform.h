@@ -206,6 +206,8 @@ typedef enum Metric_ {
    PCP_PROC_LABELS,             /* proc.psinfo.labels */
    PCP_PROC_ENVIRON,            /* proc.psinfo.environ */
    PCP_PROC_TTYNAME,            /* proc.psinfo.ttyname */
+   PCP_PROC_EXE,                /* proc.psinfo.exe */
+   PCP_PROC_CWD,                /* proc.psinfo.cwd */
 
    PCP_PROC_ID_UID,             /* proc.id.uid */
    PCP_PROC_ID_USER,            /* proc.id.uid_nm */

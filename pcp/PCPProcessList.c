@@ -364,6 +364,10 @@ static void PCPProcessList_readSecattrData(PCPProcess* process, int pid, int off
    process->secattr = setString(PCP_PROC_LABELS, pid, offset, process->secattr);
 }
 
+static void PCPProcessList_readCwd(PCPProcess* process, int pid, int offset) {
+   process->super.procCwd = setString(PCP_PROC_CWD, pid, offset, process->super.procCwd);
+}
+
 static void PCPProcessList_updateUsername(Process* process, int pid, int offset, UsersTable* users) {
    unsigned int uid = 0;
    pmAtomValue value;
@@ -377,61 +381,42 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
    pmAtomValue value;
    if (!Metric_instance(PCP_PROC_PSARGS, pid, offset, &value, PM_TYPE_STRING)) {
       if (process->state != 'Z')
-         Process_setKernelThread(process, true);
-      else
-         process->basenameOffset = 0;
+         process->isKernelThread = true;
+      Process_updateCmdline(process, NULL, 0, 0);
       return;
    }
 
    char *command = value.cp;
    int length = strlen(command);
    if (command[0] != '(') {
-      Process_setKernelThread(process, false);
+      process->isKernelThread = false;
    } else {
       ++command;
       --length;
       if (command[length-1] == ')')
          command[length-1] = '\0';
-      Process_setKernelThread(process, true);
+      process->isKernelThread = true;
    }
 
-   int tokenEnd = 0;
    int tokenStart = 0;
-   int lastChar = 0;
    for (int i = 0; i < length; i++) {
       /* htop considers the next character after the last / that is before
        * basenameOffset, as the start of the basename in cmdline - see
        * Process_writeCommand */
       if (command[i] == '/')
          tokenStart = i + 1;
-      lastChar = i;
    }
-   tokenEnd = length;
+   int tokenEnd = length;
 
-   PCPProcess *pp = (PCPProcess *)process;
-   pp->mergedCommand.maxLen = lastChar + 1;  /* accommodate cmdline */
-   if (!process->comm || !String_eq(command, process->comm)) {
-      process->basenameOffset = tokenEnd;
-      free_and_xStrdup(&process->comm, command);
-      pp->procCmdlineBasenameOffset = tokenStart;
-      pp->procCmdlineBasenameEnd = tokenEnd;
-      pp->mergedCommand.cmdlineChanged = true;
-   }
-
-   /* comm could change, so should be updated */
-   if ((length = strlen(comm)) > 0) {
-      pp->mergedCommand.maxLen += length;
-      if (!pp->procComm || !String_eq(command, pp->procComm)) {
-         free_and_xStrdup(&pp->procComm, command);
-         pp->mergedCommand.commChanged = true;
-      }
-   } else if (pp->procComm) {
-      free(pp->procComm);
-      pp->procComm = NULL;
-      pp->mergedCommand.commChanged = true;
-   }
-
+   Process_updateCmdline(process, command, tokenStart, tokenEnd);
    free(value.cp);
+
+   Process_updateComm(process, comm);
+
+   if (Metric_instance(PCP_PROC_EXE, pid, offset, &value, PM_TYPE_STRING)) {
+      Process_updateExe(process, value.cp);
+      free(value.cp);
+   }
 }
 
 static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, struct timeval* tv) {
@@ -511,16 +496,6 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
          PCPProcessList_updateCmdline(proc, pid, offset, command);
       }
 
-      /* (Re)Generate the Command string, but only if the process is:
-       * - not a kernel thread, and
-       * - not a zombie or it became zombie under htop's watch, and
-       * - not a user thread or if showThreadNames is not set */
-      if (!Process_isKernelThread(proc) &&
-          (proc->state != 'Z' || pp->mergedCommand.str) &&
-          (!Process_isUserlandThread(proc) || !settings->showThreadNames)) {
-         PCPProcess_makeCommandStr(proc);
-      }
-
       if (settings->flags & PROCESS_FLAG_LINUX_CGROUP)
          PCPProcessList_readCGroups(pp, pid, offset);
 
@@ -533,20 +508,16 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       if (settings->flags & PROCESS_FLAG_LINUX_SECATTR)
          PCPProcessList_readSecattrData(pp, pid, offset);
 
-      if (proc->state == 'Z' && proc->basenameOffset == 0) {
-         proc->basenameOffset = -1;
-         free_and_xStrdup(&proc->comm, command);
-         pp->procCmdlineBasenameOffset = 0;
-         pp->procCmdlineBasenameEnd = 0;
-         pp->mergedCommand.commChanged = true;
+      if (settings->flags & PROCESS_FLAG_CWD)
+         PCPProcessList_readCwd(pp, pid, offset);
+
+      if (proc->state == 'Z' && !proc->cmdline && command[0]) {
+         Process_updateCmdline(proc, command, 0, strlen(command));
       } else if (Process_isThread(proc)) {
-         if (settings->showThreadNames || Process_isKernelThread(proc)) {
-            proc->basenameOffset = -1;
-            free_and_xStrdup(&proc->comm, command);
-            pp->procCmdlineBasenameOffset = 0;
-            pp->procCmdlineBasenameEnd = 0;
-            pp->mergedCommand.commChanged = true;
+         if ((settings->showThreadNames || Process_isKernelThread(proc)) && command[0]) {
+            Process_updateCmdline(proc, command, 0, strlen(command));
          }
+
          if (Process_isKernelThread(proc)) {
             pl->kernelThreads++;
          } else {
@@ -557,14 +528,12 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       /* Set at the end when we know if a new entry is a thread */
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) ||
                       (hideUserlandThreads && Process_isUserlandThread(proc)));
-//fprintf(stderr, "Updated PID %d [%s] show=%d user=%d[%d] kern=%d[%d]\n", pid, command, proc->show, Process_isUserlandThread(proc), hideUserlandThreads, Process_isKernelThread(proc), hideKernelThreads);
 
       pl->totalTasks++;
       if (proc->state == 'R')
          pl->runningTasks++;
       proc->updated = true;
    }
-//fprintf(stderr, "Total tasks %d, running=%d\n", pl->totalTasks, pl->runningTasks);
    return true;
 }
 
