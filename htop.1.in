@@ -14,7 +14,7 @@ but allows you to scroll vertically and horizontally, and interact using
 a pointing device (mouse).
 You can observe all processes running on the system, along with their
 command line arguments, as well as view them in a tree format, select
-multiple processes and acting on them all at once.
+multiple processes and act on them all at once.
 .LP
 Tasks related to processes (killing, renicing) can be done without
 entering their PIDs.
