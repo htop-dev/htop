@@ -128,4 +128,9 @@ IGNORE_WCASTQUAL_BEGIN
 IGNORE_WCASTQUAL_END
 }
 
+char** Platform_getLocalIPv4addressChoices(void);
+char** Platform_getLocalIPv6addressChoices(void);
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size);
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size);
+
 #endif

@@ -78,4 +78,9 @@ static inline void Platform_gettime_monotonic(uint64_t* msec) {
     Generic_gettime_monotonic(msec);
 }
 
+char** Platform_getLocalIPv4addressChoices(void);
+char** Platform_getLocalIPv6addressChoices(void);
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size);
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size);
+
 #endif
