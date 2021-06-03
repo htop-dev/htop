@@ -162,3 +162,25 @@ void Platform_getHostname(char* buffer, size_t size) {
 void Platform_getRelease(char** string) {
    *string = xStrdup(Platform_unsupported);
 }
+
+char** Platform_getLocalIPv4addressChoices(void) {
+   return NULL;
+}
+
+char** Platform_getLocalIPv6addressChoices(void) {
+   return NULL;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   (void) choice;
+   (void) buffer; (void)
+   size;
+   return;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   (void) choice;
+   (void) buffer;
+   (void) size;
+   return;
+}

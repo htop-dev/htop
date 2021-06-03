@@ -118,4 +118,9 @@ static inline const char* Platform_dynamicColumnInit(ATTR_UNUSED unsigned int ke
 
 static inline bool Platform_dynamicColumnWriteField(ATTR_UNUSED const Process* proc, ATTR_UNUSED RichString* str, ATTR_UNUSED unsigned int key) { return false; }
 
+char** Platform_getLocalIPv4addressChoices(void);
+char** Platform_getLocalIPv6addressChoices(void);
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size);
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size);
+
 #endif

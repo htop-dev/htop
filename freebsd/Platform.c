@@ -9,13 +9,16 @@ in the source distribution for its full text.
 
 #include "freebsd/Platform.h"
 
+#include <arpa/inet.h>
 #include <devstat.h>
+#include <ifaddrs.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 #include <net/if.h>
 #include <net/if_mib.h>
+#include <netinet/in.h>
 #include <sys/_types.h>
 #include <sys/devicestat.h>
 #include <sys/param.h>
@@ -113,6 +116,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &UptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
+   &HostnameIPv4Meter_class,
+   &HostnameIPv6Meter_class,
    &SysArchMeter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
@@ -386,4 +391,126 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       *isOnAC = AC_ERROR;
    else
       *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
+}
+
+char** Platform_getLocalIPv4addressChoices(void) {
+   struct ifaddrs* ifp;
+   int r = getifaddrs(&ifp);
+   if (r < 0)
+      return NULL;
+
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+
+   for (const struct ifaddrs* ifa = ifp; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
+         continue;
+
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t i = 0; i < count; i++)
+            free(ret[i]);
+         free(ret);
+         freeifaddrs(ifp);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(ifa->ifa_name);
+      count++;
+   }
+
+   freeifaddrs(ifp);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+char** Platform_getLocalIPv6addressChoices(void) {
+   struct ifaddrs* ifp;
+   int r = getifaddrs(&ifp);
+   if (r < 0)
+      return NULL;
+
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+
+   for (const struct ifaddrs* ifa = ifp; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET6)
+         continue;
+
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t i = 0; i < count; i++)
+            free(ret[i]);
+         free(ret);
+         freeifaddrs(ifp);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(ifa->ifa_name);
+      count++;
+   }
+
+   freeifaddrs(ifp);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   struct ifaddrs* ifp;
+   int r = getifaddrs(&ifp);
+   if (r < 0) {
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   for (const struct ifaddrs* ifa = ifp; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
+         continue;
+
+      if (!String_eq(choice, ifa->ifa_name))
+         continue;
+
+      const struct in_addr* ip_addr = &((const struct sockaddr_in*)/*align-cast*/(const void *)(ifa->ifa_addr))->sin_addr;
+
+      if (!inet_ntop(AF_INET, ip_addr, buffer, size))
+         xSnprintf(buffer, size, "N/A");
+
+      return;
+   }
+
+   xSnprintf(buffer, size, "N/A");
+
+   return;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   struct ifaddrs* ifp;
+   int r = getifaddrs(&ifp);
+   if (r < 0) {
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   for (const struct ifaddrs* ifa = ifp; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET6)
+         continue;
+
+      if (!String_eq(choice, ifa->ifa_name))
+         continue;
+
+      const struct in6_addr* ip_addr = &((const struct sockaddr_in6*)/*align-cast*/(const void *)(ifa->ifa_addr))->sin6_addr;
+
+      if (!inet_ntop(AF_INET6, ip_addr, buffer, size))
+         xSnprintf(buffer, size, "N/A");
+
+      return;
+   }
+
+   xSnprintf(buffer, size, "N/A");
+
+   return;
 }

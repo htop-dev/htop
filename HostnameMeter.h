@@ -12,4 +12,8 @@ in the source distribution for its full text.
 
 extern const MeterClass HostnameMeter_class;
 
+extern const MeterClass HostnameIPv4Meter_class;
+
+extern const MeterClass HostnameIPv6Meter_class;
+
 #endif
