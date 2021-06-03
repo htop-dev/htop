@@ -513,3 +513,29 @@ error:
    if (fd != -1)
       close(fd);
 }
+
+char** Platform_getLocalIPv4addressChoices(void) {
+   // TODO
+   return NULL;
+}
+
+char** Platform_getLocalIPv6addressChoices(void) {
+   // TODO
+   return NULL;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   // TODO
+   (void) choice;
+   (void) buffer;
+   (void) size;
+   return;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   // TODO
+   (void) choice;
+   (void) buffer;
+   (void) size;
+   return;
+}

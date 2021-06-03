@@ -710,6 +710,28 @@ void Platform_getBattery(double* level, ACPresence* isOnAC) {
    *isOnAC = AC_ERROR;
 }
 
+char** Platform_getLocalIPv4addressChoices() {
+   // TODO
+   return NULL;
+}
+
+char** Platform_getLocalIPv6addressChoices() {
+   // TODO
+   return NULL;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   // TODO
+   (void) choice; (void) buffer; (void) size;
+   return;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   // TODO
+   (void) choice; (void) buffer; (void) size;
+   return;
+}
+
 void Platform_longOptionsUsage(ATTR_UNUSED const char* name) {
    printf(
 "   --host=HOSTSPEC              metrics source is PMCD at HOSTSPEC [see PCPIntro(1)]\n"

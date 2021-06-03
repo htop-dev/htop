@@ -21,6 +21,9 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
@@ -222,6 +225,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &UptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
+   &HostnameIPv4Meter_class,
+   &HostnameIPv6Meter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
    &AllCPUs4Meter_class,
@@ -1055,4 +1060,148 @@ void Platform_done(void) {
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_cleanup();
 #endif
+}
+
+char** Platform_getLocalIPv4addressChoices(void) {
+   int s = socket(AF_INET, SOCK_STREAM, 0);
+   if (s < 0)
+      return NULL;
+
+   struct ifconf ifconf;
+   char ifBuffer[8192];
+   ifconf.ifc_buf = ifBuffer;
+   ifconf.ifc_len = sizeof(ifBuffer);
+
+   if (ioctl(s, SIOCGIFCONF, &ifconf) < 0) {
+      close(s);
+      return NULL;
+   }
+
+   close(s);
+
+   const struct ifreq* ifr = (const struct ifreq *)ifBuffer;
+   unsigned int count = ifconf.ifc_len / sizeof(*ifr);
+   size_t size = (count + 1) * sizeof(char*);
+   if (size / (count + 1) != sizeof(char*))
+      return NULL;
+
+   char** ret = xMalloc(size);
+
+   for (unsigned int i = 0; i < count; i++)
+      ret[i] = xStrdup(ifr[i].ifr_name);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   assert(choice);
+   assert(size > 0);
+
+   int s = socket(AF_INET, SOCK_STREAM, 0);
+   if (s < 0) {
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   struct ifconf ifconf;
+   char ifBuffer[8192];
+   ifconf.ifc_buf = ifBuffer;
+   ifconf.ifc_len = sizeof(ifBuffer);
+
+   if (ioctl(s, SIOCGIFCONF, &ifconf) < 0) {
+      close(s);
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   close(s);
+
+   const struct ifreq* ifr = (const struct ifreq *)ifBuffer;
+   unsigned int ifs = ifconf.ifc_len / sizeof(*ifr);
+   for (unsigned int i = 0; i < ifs; i++) {
+      if (!String_eq(ifr[i].ifr_name, choice))
+         continue;
+
+      const struct in_addr* ip_addr = &(((const struct sockaddr_in *)/*align-cast*/(const void *)&(ifr[i].ifr_addr))->sin_addr);
+
+      if (!inet_ntop(AF_INET, ip_addr, buffer, size))
+         xSnprintf(buffer, size, "N/A");
+
+      return;
+   }
+
+   xSnprintf(buffer, size, "N/A");
+}
+
+char** Platform_getLocalIPv6addressChoices(void) {
+   FILE* file = fopen(PROCDIR "/net/if_inet6", "r");
+   if (!file)
+      return NULL;
+
+   struct in6_addr s6;
+   char ifName[16];
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+
+   while (fscanf(file, "%4hx%4hx%4hx%4hx%4hx%4hx%4hx%4hx %*02x %*02x %*02x %*02x %15s\n",
+                 &s6.s6_addr16[0], &s6.s6_addr16[1], &s6.s6_addr16[2], &s6.s6_addr16[3],
+                 &s6.s6_addr16[4], &s6.s6_addr16[5], &s6.s6_addr16[6], &s6.s6_addr16[7],
+                 ifName) == 9) {
+
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t i = 0; i < count; i++)
+            free(ret[i]);
+         free(ret);
+         fclose(file);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(ifName);
+      count++;
+   }
+
+   fclose(file);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   assert(choice);
+   assert(size > 0);
+
+   FILE* file = fopen(PROCDIR "/net/if_inet6", "r");
+   if (!file) {
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   struct in6_addr s6;
+   char ifName[16];
+
+   while (fscanf(file, "%4hx%4hx%4hx%4hx%4hx%4hx%4hx%4hx %*02x %*02x %*02x %*02x %15s\n",
+                 &s6.s6_addr16[0], &s6.s6_addr16[1], &s6.s6_addr16[2], &s6.s6_addr16[3],
+                 &s6.s6_addr16[4], &s6.s6_addr16[5], &s6.s6_addr16[6], &s6.s6_addr16[7],
+                 ifName) == 9) {
+      if (!String_eq(ifName, choice))
+         continue;
+
+      fclose(file);
+
+      for (int i = 0; i < 8; i++)
+         s6.s6_addr16[i] = htons(s6.s6_addr16[i]);
+
+      if (!inet_ntop(AF_INET6, &s6, buffer, size))
+         xSnprintf(buffer, size, "N/A");
+
+      return;
+   }
+
+   fclose(file);
+
+   xSnprintf(buffer, size, "N/A");
 }
