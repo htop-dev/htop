@@ -56,6 +56,7 @@ typedef void(*Meter_UpdateValues)(Meter*);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 typedef const char* (*Meter_GetCaption)(const Meter*);
 typedef void(*Meter_GetUiName)(const Meter*, char*, size_t);
+typedef char**(*Meter_GetChoices)(void);
 
 typedef struct MeterClass_ {
    const ObjectClass super;
@@ -66,6 +67,7 @@ typedef struct MeterClass_ {
    const Meter_Draw draw;
    const Meter_GetCaption getCaption;
    const Meter_GetUiName getUiName;
+   const Meter_GetChoices getChoices;
    const int defaultMode;
    const double total;
    const int* const attributes;
@@ -95,6 +97,8 @@ typedef struct MeterClass_ {
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
 #define Meter_isMultiColumn(this_)     As_Meter(this_)->isMultiColumn
+#define Meter_getChoicesFn(this_)      As_Meter(this_)->getChoices
+#define Meter_getChoices(this_)        (assert(As_Meter(this_)->getChoices), As_Meter(this_)->getChoices())
 
 typedef struct GraphData_ {
    struct timeval time;
@@ -117,6 +121,7 @@ struct Meter_ {
    char txtBuffer[METER_TXTBUFFER_LEN];
    double* values;
    double total;
+   char* curChoice;           /*<< selected choice, can be NULL on invalid choice */
    void* meterData;
 };
 
@@ -153,6 +158,10 @@ void Meter_delete(Object* cast);
 void Meter_setCaption(Meter* this, const char* caption);
 
 void Meter_setMode(Meter* this, int modeIndex);
+
+void Meter_setChoice(Meter* this, const char* choice);
+
+void Meter_nextChoice(Meter* this);
 
 ListItem* Meter_toListItem(const Meter* this, bool moving);
 

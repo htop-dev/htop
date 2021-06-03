@@ -31,6 +31,7 @@ typedef struct {
    size_t len;
    char** names;
    int* modes;
+   char** choices;
 } MeterColumnSetting;
 
 typedef struct {

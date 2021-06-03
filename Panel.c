@@ -71,7 +71,8 @@ void Panel_done(Panel* this) {
    assert (this != NULL);
    free(this->eventHandlerState);
    Vector_delete(this->items);
-   FunctionBar_delete(this->defaultBar);
+   if (this->defaultBar)
+      FunctionBar_delete(this->defaultBar);
    RichString_delete(&this->header);
 }
 

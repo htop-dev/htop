@@ -75,7 +75,7 @@ void Header_setLayout(Header* this, HeaderLayout hLayout) {
    Header_calculateHeight(this);
 }
 
-static void Header_addMeterByName(Header* this, const char* name, MeterModeId mode, unsigned int column) {
+static void Header_addMeterByName(Header* this, const char* name, MeterModeId mode, const char* choice, unsigned int column) {
    assert(column < HeaderLayout_getColumns(this->headerLayout));
 
    Vector* meters = this->columns[column];
@@ -109,6 +109,9 @@ static void Header_addMeterByName(Header* this, const char* name, MeterModeId mo
          if (mode != 0) {
             Meter_setMode(meter, mode);
          }
+         if (choice) {
+            Meter_setChoice(meter, choice);
+         }
          Vector_add(meters, meter);
          break;
       }
@@ -122,7 +125,7 @@ void Header_populateFromSettings(Header* this) {
       const MeterColumnSetting* colSettings = &this->settings->hColumns[col];
       Vector_prune(this->columns[col]);
       for (size_t i = 0; i < colSettings->len; i++) {
-         Header_addMeterByName(this, colSettings->names[i], colSettings->modes[i], col);
+         Header_addMeterByName(this, colSettings->names[i], colSettings->modes[i], colSettings->choices[i], col);
       }
    }
 
@@ -141,12 +144,16 @@ void Header_writeBackToSettings(const Header* this) {
          free(colSettings->names);
       }
       free(colSettings->modes);
+      for (size_t j = 0; j < colSettings->len; j++)
+         free(colSettings->choices[j]);
+      free(colSettings->choices);
 
       const Vector* vec = this->columns[col];
       int len = Vector_size(vec);
 
       colSettings->names = len ? xCalloc(len + 1, sizeof(char*)) : NULL;
       colSettings->modes = len ? xCalloc(len, sizeof(int)) : NULL;
+      colSettings->choices = len ? xCalloc(len, sizeof(char*)) : NULL;
       colSettings->len = len;
 
       for (int i = 0; i < len; i++) {
@@ -162,6 +169,7 @@ void Header_writeBackToSettings(const Header* this) {
          }
          colSettings->names[i] = name;
          colSettings->modes[i] = meter->mode;
+         colSettings->choices[i] = meter->curChoice ? xStrdup(meter->curChoice) : NULL;
       }
    }
 }
