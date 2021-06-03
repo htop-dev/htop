@@ -20,38 +20,54 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+#define INVALID_CHOICE "_"
+
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->fields);
    for (unsigned int i = 0; i < ARRAYSIZE(this->columns); i++) {
       String_freeArray(this->columns[i].names);
       free(this->columns[i].modes);
+      for (size_t j = 0; j < this->columns[i].len; j++)
+         free(this->columns[i].choices[j]);
+      free(this->columns[i].choices);
    }
    free(this);
 }
 
 static void Settings_readMeters(Settings* this, const char* line, int column) {
    char* trim = String_trim(line);
-   char** ids = String_split(trim, ' ', NULL);
+   size_t nIds;
+   char** ids = String_split(trim, ' ', &nIds);
    free(trim);
+   this->columns[column].len = nIds;
    this->columns[column].names = ids;
+   this->columns[column].modes = xCalloc(nIds, sizeof(int));
+   this->columns[column].choices = xCalloc(nIds, sizeof(char*));
 }
 
 static void Settings_readMeterModes(Settings* this, const char* line, int column) {
    char* trim = String_trim(line);
-   char** ids = String_split(trim, ' ', NULL);
+   size_t nIds;
+   char** ids = String_split(trim, ' ', &nIds);
    free(trim);
-   int len = 0;
-   for (int i = 0; ids[i]; i++) {
-      len++;
-   }
-   this->columns[column].len = len;
-   int* modes = len ? xCalloc(len, sizeof(int)) : NULL;
-   for (int i = 0; i < len; i++) {
-      modes[i] = atoi(ids[i]);
+   nIds = MINIMUM(nIds, this->columns[column].len);
+   for (size_t i = 0; i < nIds; i++) {
+      this->columns[column].modes[i] = atoi(ids[i]);
    }
    String_freeArray(ids);
-   this->columns[column].modes = modes;
+}
+
+static void Settings_readMeterChoices(Settings* this, const char* line, int column) {
+   char* trim = String_trim(line);
+   size_t nIds;
+   char** ids = String_split(trim, ' ', &nIds);
+   free(trim);
+   nIds = MINIMUM(nIds, this->columns[column].len);
+   for (size_t i = 0; i < nIds; i++) {
+      this->columns[column].choices[i] = String_eq(ids[i], INVALID_CHOICE) ? NULL : xStrdup(ids[i]);
+   }
+   String_freeArray(ids);
 }
 
 static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount) {
@@ -62,6 +78,7 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
    for (int i = 0; i < 2; i++) {
       this->columns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
       this->columns[i].modes = xCalloc(sizes[i], sizeof(int));
+      this->columns[i].choices = xCalloc(sizes[i], sizeof(char*));
       this->columns[i].len = sizes[i];
    }
    int r = 0;
@@ -238,6 +255,12 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (String_eq(option[0], "right_meter_modes")) {
          Settings_readMeterModes(this, option[1], 1);
          didReadMeters = true;
+      } else if (String_eq(option[0], "left_meter_choices")) {
+         Settings_readMeterChoices(this, option[1], 0);
+         didReadMeters = true;
+      } else if (String_eq(option[0], "right_meter_choices")) {
+         Settings_readMeterChoices(this, option[1], 1);
+         didReadMeters = true;
       } else if (String_eq(option[0], "hide_function_bar")) {
          this->hideFunctionBar = atoi(option[1]);
       #ifdef HAVE_LIBHWLOC
@@ -267,7 +290,7 @@ static void writeFields(FILE* fd, const ProcessField* fields, const char* name) 
 
 static void writeMeters(const Settings* this, FILE* fd, int column) {
    const char* sep = "";
-   for (int i = 0; i < this->columns[column].len; i++) {
+   for (size_t i = 0; i < this->columns[column].len; i++) {
       fprintf(fd, "%s%s", sep, this->columns[column].names[i]);
       sep = " ";
    }
@@ -276,8 +299,17 @@ static void writeMeters(const Settings* this, FILE* fd, int column) {
 
 static void writeMeterModes(const Settings* this, FILE* fd, int column) {
    const char* sep = "";
-   for (int i = 0; i < this->columns[column].len; i++) {
+   for (size_t i = 0; i < this->columns[column].len; i++) {
       fprintf(fd, "%s%d", sep, this->columns[column].modes[i]);
+      sep = " ";
+   }
+   fprintf(fd, "\n");
+}
+
+static void writeMeterChoices(const Settings* this, FILE* fd, int column) {
+   const char* sep = "";
+   for (size_t i = 0; i < this->columns[column].len; i++) {
+      fprintf(fd, "%s%s", sep, this->columns[column].choices[i] ? this->columns[column].choices[i] : INVALID_CHOICE);
       sep = " ";
    }
    fprintf(fd, "\n");
@@ -336,8 +368,10 @@ int Settings_write(const Settings* this, bool onCrash) {
    fprintf(fd, "delay=%d\n", (int) this->delay);
    fprintf(fd, "left_meters="); writeMeters(this, fd, 0);
    fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
+   fprintf(fd, "left_meter_choices="); writeMeterChoices(this, fd, 0);
    fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
    fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
+   fprintf(fd, "right_meter_choices="); writeMeterChoices(this, fd, 1);
    fprintf(fd, "hide_function_bar=%d\n", (int) this->hideFunctionBar);
    #ifdef HAVE_LIBHWLOC
    fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);

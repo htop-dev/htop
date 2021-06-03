@@ -20,6 +20,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+static void Header_setChoice(Header* this, int i, const char* choice, int column);
+
 Header* Header_new(ProcessList* pl, Settings* settings, int nrColumns) {
    Header* this = xCalloc(1, sizeof(Header));
    this->columns = xCalloc(nrColumns, sizeof(Vector*));
@@ -43,10 +45,13 @@ void Header_delete(Header* this) {
 void Header_populateFromSettings(Header* this) {
    Header_forEachColumn(this, col) {
       const MeterColumnSettings* colSettings = &this->settings->columns[col];
-      for (int i = 0; i < colSettings->len; i++) {
+      for (size_t i = 0; i < colSettings->len; i++) {
          Header_addMeterByName(this, colSettings->names[i], col);
          if (colSettings->modes[i] != 0) {
             Header_setMode(this, i, colSettings->modes[i], col);
+         }
+         if (colSettings->choices[i]) {
+            Header_setChoice(this, i, colSettings->choices[i], col);
          }
       }
    }
@@ -60,11 +65,16 @@ void Header_writeBackToSettings(const Header* this) {
       String_freeArray(colSettings->names);
       free(colSettings->modes);
 
+      for (size_t i = 0; i < colSettings->len; i++)
+         free(colSettings->choices[i]);
+      free(colSettings->choices);
+
       const Vector* vec = this->columns[col];
       int len = Vector_size(vec);
 
       colSettings->names = xCalloc(len + 1, sizeof(char*));
       colSettings->modes = xCalloc(len, sizeof(int));
+      colSettings->choices = xCalloc(len, sizeof(char*));
       colSettings->len = len;
 
       for (int i = 0; i < len; i++) {
@@ -77,6 +87,7 @@ void Header_writeBackToSettings(const Header* this) {
          }
          colSettings->names[i] = name;
          colSettings->modes[i] = meter->mode;
+         colSettings->choices[i] = meter->curChoice ? xStrdup(meter->curChoice) : NULL;
       }
    }
 }
@@ -116,6 +127,16 @@ void Header_setMode(Header* this, int i, MeterModeId mode, int column) {
 
    Meter* meter = (Meter*) Vector_get(meters, i);
    Meter_setMode(meter, mode);
+}
+
+static void Header_setChoice(Header* this, int i, const char* choice, int column) {
+   Vector* meters = this->columns[column];
+
+   if (i >= Vector_size(meters))
+      return;
+
+   Meter* meter = (Meter*) Vector_get(meters, i);
+   Meter_setChoice(meter, choice);
 }
 
 Meter* Header_addMeterByClass(Header* this, const MeterClass* type, unsigned int param, int column) {

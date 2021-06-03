@@ -18,9 +18,10 @@ in the source distribution for its full text.
 #define DEFAULT_DELAY 15
 
 typedef struct {
-   int len;
+   size_t len;
    char** names;
    int* modes;
+   char** choices;
 } MeterColumnSettings;
 
 typedef struct Settings_ {
