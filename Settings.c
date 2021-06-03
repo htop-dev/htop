@@ -24,6 +24,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+#define INVALID_CHOICE "_"
+
 /*
 
 static char** readQuotedList(char* line) {
@@ -71,6 +73,9 @@ void Settings_delete(Settings* this) {
    for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       String_freeArray(this->hColumns[i].names);
       free(this->hColumns[i].modes);
+      for (size_t j = 0; j < this->hColumns[i].len; j++)
+         free(this->hColumns[i].choices[j]);
+      free(this->hColumns[i].choices);
    }
    free(this->hColumns);
    if (this->screens) {
@@ -101,11 +106,28 @@ static void Settings_readMeterModes(Settings* this, const char* line, unsigned i
    column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
    this->hColumns[column].len = len;
    int* modes = len ? xCalloc(len, sizeof(int)) : NULL;
+   char** choices = len ? xCalloc(len, sizeof(char*)) : NULL;
    for (int i = 0; i < len; i++) {
       modes[i] = atoi(ids[i]);
    }
    String_freeArray(ids);
    this->hColumns[column].modes = modes;
+   this->hColumns[column].choices = choices;
+}
+
+static void Settings_readMeterChoices(Settings* this, const char* line, unsigned int column) {
+   char* trim = String_trim(line);
+   char** ids = String_split(trim, ' ', NULL);
+   free(trim);
+   column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
+   const size_t len = this->hColumns[column].len;
+   if (!this->hColumns[column].choices) {
+      this->hColumns[column].choices = len ? xCalloc(len, sizeof(char*)) : NULL;
+   }
+   for (size_t i = 0; i < len; i++) {
+      this->hColumns[column].choices[i] = String_eq(ids[i], INVALID_CHOICE) ? NULL : xStrdup(ids[i]);
+   }
+   String_freeArray(ids);
 }
 
 static bool Settings_validateMeters(Settings* this) {
@@ -157,6 +179,7 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
    for (size_t i = 0; i < 2; i++) {
       this->hColumns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
       this->hColumns[i].modes = xCalloc(sizes[i], sizeof(int));
+      this->hColumns[i].choices = xCalloc(sizes[i], sizeof(char*));
       this->hColumns[i].len = sizes[i];
    }
 
@@ -468,6 +491,9 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (String_startsWith(option[0], "column_meter_modes_")) {
          Settings_readMeterModes(this, option[1], atoi(option[0] + strlen("column_meter_modes_")));
          didReadMeters = true;
+      } else if (String_startsWith(option[0], "column_meter_choices_")) {
+         Settings_readMeterChoices(this, option[1], atoi(option[0] + strlen("column_meter_choices_")));
+         didReadMeters = true;
       } else if (String_eq(option[0], "hide_function_bar")) {
          this->hideFunctionBar = atoi(option[1]);
       #ifdef HAVE_LIBHWLOC
@@ -526,9 +552,9 @@ static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns
    fputc(separator, fd);
 }
 
-static void writeList(FILE* fd, char** list, int len, char separator) {
+static void writeList(FILE* fd, char** list, size_t len, char separator) {
    const char* sep = "";
-   for (int i = 0; i < len; i++) {
+   for (size_t i = 0; i < len; i++) {
       fprintf(fd, "%s%s", sep, list[i]);
       sep = " ";
    }
@@ -543,6 +569,15 @@ static void writeMeterModes(const Settings* this, FILE* fd, char separator, unsi
    const char* sep = "";
    for (size_t i = 0; i < this->hColumns[column].len; i++) {
       fprintf(fd, "%s%d", sep, this->hColumns[column].modes[i]);
+      sep = " ";
+   }
+   fputc(separator, fd);
+}
+
+static void writeMeterChoices(const Settings* this, FILE* fd, char separator, unsigned int column) {
+   const char* sep = "";
+   for (size_t i = 0; i < this->hColumns[column].len; i++) {
+      fprintf(fd, "%s%s", sep, this->hColumns[column].choices[i] ? this->hColumns[column].choices[i] : INVALID_CHOICE);
       sep = " ";
    }
    fputc(separator, fd);
@@ -615,6 +650,8 @@ int Settings_write(const Settings* this, bool onCrash) {
       writeMeters(this, fd, separator, i);
       fprintf(fd, "column_meter_modes_%u=", i);
       writeMeterModes(this, fd, separator, i);
+      fprintf(fd, "column_meter_choices_%u=", i);
+      writeMeterChoices(this, fd, separator, i);
    }
 
    // Legacy compatibility with older versions of htop

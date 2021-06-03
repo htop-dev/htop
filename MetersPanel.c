@@ -23,6 +23,12 @@ in the source distribution for its full text.
 static const char* const MetersFunctions[] = {"Style ", "Move  ", "                                         ", "Delete", "Done  ", NULL};
 static const char* const MetersKeys[] = {"Space", "Enter", "", "Del", "F10"};
 static const int MetersEvents[] = {' ', 13, ERR, KEY_DC, KEY_F(10)};
+static FunctionBar* Meters_Bar = NULL;
+
+static const char* const MetersChoiceFunctions[] = {"Style ", "Choice", "Move  ", "                                         ", "Delete", "Done  ", NULL};
+static const char* const MetersChoiceKeys[] = {"Space", "'c'", "Enter", "", "Del", "F10"};
+static const int MetersChoiceEvents[] = {' ', 'c', 13, ERR, KEY_DC, KEY_F(10)};
+static FunctionBar* Meters_choiceBar = NULL;
 
 // We avoid UTF-8 arrows ← → here as they might display full-width on Chinese
 // terminals, breaking our aligning.
@@ -32,11 +38,27 @@ static const char* const MetersMovingFunctions[] = {"Style ", "Lock  ", "Up    "
 static const char* const MetersMovingKeys[] = {"Space", "Enter", "Up", "Dn", "<-", "->", "  ", "Del", "F10"};
 static const int MetersMovingEvents[] = {' ', 13, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ERR, KEY_DC, KEY_F(10)};
 static FunctionBar* Meters_movingBar = NULL;
+static const char* const MetersMovingChoiceFunctions[] = {"Style ", "Lock  ", "Up    ", "Down  ", "Left  ", "Right ", "Choice", "       ", "Delete", "Done  ", NULL};
+static const char* const MetersMovingChoiceKeys[] = {"Space", "Enter", "Up", "Dn", "<-", "->", "'c'", "  ", "Del", "F10"};
+static const int MetersMovingChoiceEvents[] = {' ', 13, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 'c', ERR, KEY_DC, KEY_F(10)};
+static FunctionBar* Meters_movingChoiceBar = NULL;
 
 void MetersPanel_cleanup(void) {
+   if (Meters_Bar) {
+      FunctionBar_delete(Meters_Bar);
+      Meters_Bar = NULL;
+   }
+   if (Meters_choiceBar) {
+      FunctionBar_delete(Meters_choiceBar);
+      Meters_choiceBar = NULL;
+   }
    if (Meters_movingBar) {
       FunctionBar_delete(Meters_movingBar);
       Meters_movingBar = NULL;
+   }
+   if (Meters_movingChoiceBar) {
+      FunctionBar_delete(Meters_movingChoiceBar);
+      Meters_movingChoiceBar = NULL;
    }
 }
 
@@ -54,13 +76,7 @@ void MetersPanel_setMoving(MetersPanel* this, bool moving) {
    if (selected) {
       selected->moving = moving;
    }
-   if (!moving) {
-      Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
-      Panel_setDefaultBar(super);
-   } else {
-      Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
-      super->currentBar = Meters_movingBar;
-   }
+   Panel_setSelectionColor(super, this->moving ? PANEL_SELECTION_FOLLOW : PANEL_SELECTION_FOCUS);
 }
 
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
@@ -112,6 +128,19 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          int mode = meter->mode + 1;
          if (mode == LAST_METERMODE) mode = 1;
          Meter_setMode(meter, mode);
+         Panel_set(super, selected, (Object*) Meter_toListItem(meter, this->moving));
+         result = HANDLED;
+         break;
+      }
+      case 'c':
+      {
+         if (!Vector_size(this->meters))
+            break;
+         Meter* meter = (Meter*) Vector_get(this->meters, selected);
+         if (!Meter_getChoicesFn(meter))
+            break;
+         Meter_nextChoice(meter);
+         Meter_updateValues(meter);
          Panel_set(super, selected, (Object*) Meter_toListItem(meter, this->moving));
          result = HANDLED;
          break;
@@ -191,22 +220,49 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    return result;
 }
 
+static void MetersPanel_drawFunctionBar(Panel* super, ATTR_UNUSED bool hideFunctionBar) {
+   const MetersPanel* this = (const MetersPanel*) super;
+
+   int selected = Panel_getSelectedIndex(super);
+   const Meter* meter = (const Meter*) Vector_get(this->meters, selected);
+   const FunctionBar* active;
+
+   if (this->moving) {
+      active = Meter_getChoicesFn(meter) ? Meters_movingChoiceBar : Meters_movingBar;
+   } else {
+      active = Meter_getChoicesFn(meter) ? Meters_choiceBar : Meters_Bar;
+   }
+
+   FunctionBar_draw(active);
+}
+
 const PanelClass MetersPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = MetersPanel_delete
    },
-   .eventHandler = MetersPanel_eventHandler
+   .eventHandler = MetersPanel_eventHandler,
+   .drawFunctionBar = MetersPanel_drawFunctionBar
 };
 
 MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr) {
    MetersPanel* this = AllocThis(MetersPanel);
    Panel* super = (Panel*) this;
-   FunctionBar* fuBar = FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents);
+
+   if (!Meters_Bar) {
+      Meters_Bar = FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents);
+   }
+   if (!Meters_choiceBar) {
+      Meters_choiceBar = FunctionBar_new(MetersChoiceFunctions, MetersChoiceKeys, MetersChoiceEvents);
+   }
    if (!Meters_movingBar) {
       Meters_movingBar = FunctionBar_new(MetersMovingFunctions, MetersMovingKeys, MetersMovingEvents);
    }
-   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
+   if (!Meters_movingChoiceBar) {
+      Meters_movingChoiceBar = FunctionBar_new(MetersMovingChoiceFunctions, MetersMovingChoiceKeys, MetersMovingChoiceEvents);
+   }
+
+   Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, NULL);
 
    this->settings = settings;
    this->meters = meters;
