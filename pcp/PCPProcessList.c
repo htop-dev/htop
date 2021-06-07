@@ -86,29 +86,55 @@ void ProcessList_delete(ProcessList* pl) {
    free(this);
 }
 
-static inline unsigned long long PCPProcessList_adjustTime(unsigned long long t) {
-   return t / 10;
+static inline unsigned long Metric_instance_s32(int metric, int pid, int offset, unsigned long fallback) {
+   pmAtomValue value;
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_32))
+      return value.l;
+   return fallback;
+}
+
+static inline unsigned long Metric_instance_u32(int metric, int pid, int offset, unsigned long fallback) {
+   pmAtomValue value;
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U32))
+      return value.ul;
+   return fallback;
+}
+
+static inline unsigned long long Metric_instance_u64(int metric, int pid, int offset, unsigned long long fallback) {
+   pmAtomValue value;
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+      return value.ull;
+   return fallback;
+}
+
+static inline unsigned long long Metric_instance_time(int metric, int pid, int offset) {
+   pmAtomValue value;
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+      return value.ull / 10;
+   return 0;
+}
+
+static inline unsigned long long Metric_instance_ONE_K(int metric, int pid, int offset) {
+   pmAtomValue value;
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+      return value.ull / ONE_K;
+   return ULLONG_MAX;
+}
+
+static inline char Metric_instance_char(int metric, int pid, int offset, char fallback) {
+   pmAtomValue value;
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_STRING)) {
+      char uchar = value.cp[0];
+      free(value.cp);
+      return uchar;
+   }
+   return fallback;
 }
 
 static void PCPProcessList_updateID(Process* process, int pid, int offset) {
-   pmAtomValue value;
-
-   if (Metric_instance(PCP_PROC_TGID, pid, offset, &value, PM_TYPE_U32))
-      process->tgid = value.ul;
-   else
-      process->tgid = 1;
-
-   if (Metric_instance(PCP_PROC_PPID, pid, offset, &value, PM_TYPE_U32))
-      process->ppid = value.ul;
-   else
-      process->ppid = 1;
-
-   if (Metric_instance(PCP_PROC_STATE, pid, offset, &value, PM_TYPE_STRING)) {
-      process->state = value.cp[0];
-      free(value.cp);
-   } else {
-      process->state = 'X';
-   }
+   process->tgid = Metric_instance_u32(PCP_PROC_TGID, pid, offset, 1);
+   process->ppid = Metric_instance_u32(PCP_PROC_PPID, pid, offset, 1);
+   process->state = Metric_instance_char(PCP_PROC_STATE, pid, offset, '?');
 }
 
 static void PCPProcessList_updateInfo(Process* process, int pid, int offset, char* command, size_t commLen) {
@@ -120,214 +146,80 @@ static void PCPProcessList_updateInfo(Process* process, int pid, int offset, cha
    String_safeStrncpy(command, value.cp, commLen);
    free(value.cp);
 
-   if (Metric_instance(PCP_PROC_PGRP, pid, offset, &value, PM_TYPE_U32))
-      process->pgrp = value.ul;
-   else
-      process->pgrp = 0;
-
-   if (Metric_instance(PCP_PROC_SESSION, pid, offset, &value, PM_TYPE_U32))
-      process->session = value.ul;
-   else
-      process->session = 0;
-
-   if (Metric_instance(PCP_PROC_TTY, pid, offset, &value, PM_TYPE_U32))
-      process->tty_nr = value.ul;
-   else
-      process->tty_nr = 0;
-
-   if (Metric_instance(PCP_PROC_TTYPGRP, pid, offset, &value, PM_TYPE_U32))
-      process->tpgid = value.ul;
-   else
-      process->tpgid = 0;
-
-   if (Metric_instance(PCP_PROC_MINFLT, pid, offset, &value, PM_TYPE_U32))
-      process->minflt = value.ul;
-   else
-      process->minflt = 0;
-
-   if (Metric_instance(PCP_PROC_CMINFLT, pid, offset, &value, PM_TYPE_U32))
-      pp->cminflt = value.ul;
-   else
-      pp->cminflt = 0;
-
-   if (Metric_instance(PCP_PROC_MAJFLT, pid, offset, &value, PM_TYPE_U32))
-      process->majflt = value.ul;
-   else
-      process->majflt = 0;
-
-   if (Metric_instance(PCP_PROC_CMAJFLT, pid, offset, &value, PM_TYPE_U32))
-      pp->cmajflt = value.ul;
-   else
-      pp->cmajflt = 0;
-
-   if (Metric_instance(PCP_PROC_UTIME, pid, offset, &value, PM_TYPE_U64))
-      pp->utime = PCPProcessList_adjustTime(value.ull);
-   else
-      pp->utime = 0;
-
-   if (Metric_instance(PCP_PROC_STIME, pid, offset, &value, PM_TYPE_U64))
-      pp->stime = PCPProcessList_adjustTime(value.ull);
-   else
-      pp->stime = 0;
-
-   if (Metric_instance(PCP_PROC_CUTIME, pid, offset, &value, PM_TYPE_U64))
-      pp->cutime = PCPProcessList_adjustTime(value.ull);
-   else
-      pp->cutime = 0;
-
-   if (Metric_instance(PCP_PROC_CSTIME, pid, offset, &value, PM_TYPE_U64))
-      pp->cstime = PCPProcessList_adjustTime(value.ull);
-   else
-      pp->cstime = 0;
-
-   if (Metric_instance(PCP_PROC_PRIORITY, pid, offset, &value, PM_TYPE_U32))
-      process->priority = value.ul;
-   else
-      process->priority = 0;
-
-   if (Metric_instance(PCP_PROC_NICE, pid, offset, &value, PM_TYPE_32))
-      process->nice = value.l;
-   else
-      process->nice = 0;
-
-   if (Metric_instance(PCP_PROC_THREADS, pid, offset, &value, PM_TYPE_U32))
-      process->nlwp = value.ul;
-   else
-      process->nlwp = 0;
-
-   if (Metric_instance(PCP_PROC_STARTTIME, pid, offset, &value, PM_TYPE_U64))
-      process->starttime_ctime = PCPProcessList_adjustTime(value.ull);
-   else
-      process->starttime_ctime = 0;
-
-   if (Metric_instance(PCP_PROC_PROCESSOR, pid, offset, &value, PM_TYPE_U32))
-      process->processor = value.ul;
-   else
-      process->processor = 0;
+   process->pgrp = Metric_instance_u32(PCP_PROC_PGRP, pid, offset, 0);
+   process->session = Metric_instance_u32(PCP_PROC_SESSION, pid, offset, 0);
+   process->tty_nr = Metric_instance_u32(PCP_PROC_TTY, pid, offset, 0);
+   process->tpgid = Metric_instance_u32(PCP_PROC_TTYPGRP, pid, offset, 0);
+   process->minflt = Metric_instance_u32(PCP_PROC_MINFLT, pid, offset, 0);
+   pp->cminflt = Metric_instance_u32(PCP_PROC_CMINFLT, pid, offset, 0);
+   process->majflt = Metric_instance_u32(PCP_PROC_MAJFLT, pid, offset, 0);
+   pp->cmajflt = Metric_instance_u32(PCP_PROC_CMAJFLT, pid, offset, 0);
+   pp->utime = Metric_instance_u64(PCP_PROC_UTIME, pid, offset, 0);
+   pp->stime = Metric_instance_u64(PCP_PROC_STIME, pid, offset, 0);
+   pp->cutime = Metric_instance_time(PCP_PROC_CUTIME, pid, offset);
+   pp->cstime = Metric_instance_time(PCP_PROC_CSTIME, pid, offset);
+   process->priority = Metric_instance_u32(PCP_PROC_PRIORITY, pid, offset, 0);
+   process->nice = Metric_instance_s32(PCP_PROC_NICE, pid, offset, 0);
+   process->nlwp = Metric_instance_u32(PCP_PROC_THREADS, pid, offset, 0);
+   process->starttime_ctime = Metric_instance_time(PCP_PROC_STARTTIME, pid, offset);
+   process->processor = Metric_instance_u32(PCP_PROC_PROCESSOR, pid, offset, 0);
 
    process->time = pp->utime + pp->stime;
 }
 
-static void PCPProcessList_updateIO(PCPProcess* process, int pid, int offset, unsigned long long now) {
+static void PCPProcessList_updateIO(PCPProcess* pp, int pid, int offset, unsigned long long now) {
    pmAtomValue value;
 
-   if (Metric_instance(PCP_PROC_IO_RCHAR, pid, offset, &value, PM_TYPE_U64))
-      process->io_rchar = value.ull / ONE_K;
-   else
-      process->io_rchar = ULLONG_MAX;
-
-   if (Metric_instance(PCP_PROC_IO_WCHAR, pid, offset, &value, PM_TYPE_U64))
-      process->io_wchar = value.ull / ONE_K;
-   else
-      process->io_wchar = ULLONG_MAX;
-
-   if (Metric_instance(PCP_PROC_IO_SYSCR, pid, offset, &value, PM_TYPE_U64))
-      process->io_syscr = value.ull;
-   else
-      process->io_syscr = ULLONG_MAX;
-
-   if (Metric_instance(PCP_PROC_IO_SYSCW, pid, offset, &value, PM_TYPE_U64))
-      process->io_syscw = value.ull;
-   else
-      process->io_syscw = ULLONG_MAX;
-
-   if (Metric_instance(PCP_PROC_IO_CANCELLED, pid, offset, &value, PM_TYPE_U64))
-      process->io_cancelled_write_bytes = value.ull / ONE_K;
-   else
-      process->io_cancelled_write_bytes = ULLONG_MAX;
+   pp->io_rchar = Metric_instance_ONE_K(PCP_PROC_IO_RCHAR, pid, offset);
+   pp->io_wchar = Metric_instance_ONE_K(PCP_PROC_IO_WCHAR, pid, offset);
+   pp->io_syscr = Metric_instance_u64(PCP_PROC_IO_SYSCR, pid, offset, ULLONG_MAX);
+   pp->io_syscw = Metric_instance_u64(PCP_PROC_IO_SYSCW, pid, offset, ULLONG_MAX);
+   pp->io_cancelled_write_bytes = Metric_instance_ONE_K(PCP_PROC_IO_CANCELLED, pid, offset);
 
    if (Metric_instance(PCP_PROC_IO_READB, pid, offset, &value, PM_TYPE_U64)) {
-      unsigned long long last_read = process->io_read_bytes;
-      process->io_read_bytes = value.ull / ONE_K;
-      process->io_rate_read_bps =
-            ONE_K * (process->io_read_bytes - last_read) /
-            (now - process->io_last_scan_time);
+      unsigned long long last_read = pp->io_read_bytes;
+      pp->io_read_bytes = value.ull / ONE_K;
+      pp->io_rate_read_bps = ONE_K * (pp->io_read_bytes - last_read) /
+                                     (now - pp->io_last_scan_time);
    } else {
-      process->io_read_bytes = ULLONG_MAX;
-      process->io_rate_read_bps = NAN;
+      pp->io_read_bytes = ULLONG_MAX;
+      pp->io_rate_read_bps = NAN;
    }
 
    if (Metric_instance(PCP_PROC_IO_WRITEB, pid, offset, &value, PM_TYPE_U64)) {
-      unsigned long long last_write = process->io_write_bytes;
-      process->io_write_bytes = value.ull;
-      process->io_rate_write_bps =
-            ONE_K * (process->io_write_bytes - last_write) /
-            (now - process->io_last_scan_time);
+      unsigned long long last_write = pp->io_write_bytes;
+      pp->io_write_bytes = value.ull;
+      pp->io_rate_write_bps = ONE_K * (pp->io_write_bytes - last_write) /
+                                      (now - pp->io_last_scan_time);
    } else {
-      process->io_write_bytes = ULLONG_MAX;
-      process->io_rate_write_bps = NAN;
+      pp->io_write_bytes = ULLONG_MAX;
+      pp->io_rate_write_bps = NAN;
    }
 
-   process->io_last_scan_time = now;
+   pp->io_last_scan_time = now;
 }
 
-static void PCPProcessList_updateMemory(PCPProcess* process, int pid, int offset) {
-   pmAtomValue value;
-
-   if (Metric_instance(PCP_PROC_MEM_SIZE, pid, offset, &value, PM_TYPE_U32))
-      process->super.m_virt = value.ul;
-   else
-      process->super.m_virt = 0;
-
-   if (Metric_instance(PCP_PROC_MEM_RSS, pid, offset, &value, PM_TYPE_U32))
-      process->super.m_resident = value.ul;
-   else
-      process->super.m_resident = 0;
-
-   if (Metric_instance(PCP_PROC_MEM_SHARE, pid, offset, &value, PM_TYPE_U32))
-      process->m_share = value.ul;
-   else
-      process->m_share = 0;
-
-   if (Metric_instance(PCP_PROC_MEM_TEXTRS, pid, offset, &value, PM_TYPE_U32))
-      process->m_trs = value.ul;
-   else
-      process->m_trs = 0;
-
-   if (Metric_instance(PCP_PROC_MEM_LIBRS, pid, offset, &value, PM_TYPE_U32))
-      process->m_lrs = value.ul;
-   else
-      process->m_lrs = 0;
-
-   if (Metric_instance(PCP_PROC_MEM_DATRS, pid, offset, &value, PM_TYPE_U32))
-      process->m_drs = value.ul;
-   else
-      process->m_drs = 0;
-
-   if (Metric_instance(PCP_PROC_MEM_DIRTY, pid, offset, &value, PM_TYPE_U32))
-      process->m_dt = value.ul;
-   else
-      process->m_dt = 0;
+static void PCPProcessList_updateMemory(PCPProcess* pp, int pid, int offset) {
+   pp->super.m_virt = Metric_instance_u32(PCP_PROC_MEM_SIZE, pid, offset, 0);
+   pp->super.m_resident = Metric_instance_u32(PCP_PROC_MEM_RSS, pid, offset, 0);
+   pp->m_share = Metric_instance_u32(PCP_PROC_MEM_SHARE, pid, offset, 0);
+   pp->m_trs = Metric_instance_u32(PCP_PROC_MEM_TEXTRS, pid, offset, 0);
+   pp->m_lrs = Metric_instance_u32(PCP_PROC_MEM_LIBRS, pid, offset, 0);
+   pp->m_drs = Metric_instance_u32(PCP_PROC_MEM_DATRS, pid, offset, 0);
+   pp->m_dt = Metric_instance_u32(PCP_PROC_MEM_DIRTY, pid, offset, 0);
 }
 
-static void PCPProcessList_updateSmaps(PCPProcess* process, pid_t pid, int offset) {
-   pmAtomValue value;
-
-   if (Metric_instance(PCP_PROC_SMAPS_PSS, pid, offset, &value, PM_TYPE_U64))
-      process->m_pss = value.ull;
-   else
-      process->m_pss = 0LL;
-
-   if (Metric_instance(PCP_PROC_SMAPS_SWAP, pid, offset, &value, PM_TYPE_U64))
-      process->m_swap = value.ull;
-   else
-      process->m_swap = 0LL;
-
-   if (Metric_instance(PCP_PROC_SMAPS_SWAPPSS, pid, offset, &value, PM_TYPE_U64))
-      process->m_psswp = value.ull;
-   else
-      process->m_psswp = 0LL;
+static void PCPProcessList_updateSmaps(PCPProcess* pp, pid_t pid, int offset) {
+   pp->m_pss = Metric_instance_u64(PCP_PROC_SMAPS_PSS, pid, offset, 0);
+   pp->m_swap = Metric_instance_u64(PCP_PROC_SMAPS_SWAP, pid, offset, 0);
+   pp->m_psswp = Metric_instance_u64(PCP_PROC_SMAPS_SWAPPSS, pid, offset, 0);
 }
 
-static void PCPProcessList_readOomData(PCPProcess* process, int pid, int offset) {
-   pmAtomValue value;
-   if (Metric_instance(PCP_PROC_OOMSCORE, pid, offset, &value, PM_TYPE_U32))
-      process->oom = value.ul;
-   else
-      process->oom = 0;
+static void PCPProcessList_readOomData(PCPProcess* pp, int pid, int offset) {
+   pp->oom = Metric_instance_u32(PCP_PROC_OOMSCORE, pid, offset, 0);
 }
 
-static void PCPProcessList_readCtxtData(PCPProcess* process, int pid, int offset) {
+static void PCPProcessList_readCtxtData(PCPProcess* pp, int pid, int offset) {
    pmAtomValue value;
    unsigned long ctxt = 0;
 
@@ -335,11 +227,9 @@ static void PCPProcessList_readCtxtData(PCPProcess* process, int pid, int offset
       ctxt += value.ul;
    if (Metric_instance(PCP_PROC_NVCTXSW, pid, offset, &value, PM_TYPE_U32))
       ctxt += value.ul;
-   if (ctxt > process->ctxt_total)
-      process->ctxt_diff = ctxt - process->ctxt_total;
-   else
-      process->ctxt_diff = 0;
-   process->ctxt_total = ctxt;
+
+   pp->ctxt_diff = ctxt > pp->ctxt_total ? ctxt - pp->ctxt_total : 0;
+   pp->ctxt_total = ctxt;
 }
 
 static char* setString(Metric metric, int pid, int offset, char* string) {
@@ -357,25 +247,21 @@ static void PCPProcessList_updateTTY(Process* process, int pid, int offset) {
    process->tty_name = setString(PCP_PROC_TTYNAME, pid, offset, process->tty_name);
 }
 
-static void PCPProcessList_readCGroups(PCPProcess* process, int pid, int offset) {
-   process->cgroup = setString(PCP_PROC_CGROUPS, pid, offset, process->cgroup);
+static void PCPProcessList_readCGroups(PCPProcess* pp, int pid, int offset) {
+   pp->cgroup = setString(PCP_PROC_CGROUPS, pid, offset, pp->cgroup);
 }
 
-static void PCPProcessList_readSecattrData(PCPProcess* process, int pid, int offset) {
-   process->secattr = setString(PCP_PROC_LABELS, pid, offset, process->secattr);
+static void PCPProcessList_readSecattrData(PCPProcess* pp, int pid, int offset) {
+   pp->secattr = setString(PCP_PROC_LABELS, pid, offset, pp->secattr);
 }
 
-static void PCPProcessList_readCwd(PCPProcess* process, int pid, int offset) {
-   process->super.procCwd = setString(PCP_PROC_CWD, pid, offset, process->super.procCwd);
+static void PCPProcessList_readCwd(PCPProcess* pp, int pid, int offset) {
+   pp->super.procCwd = setString(PCP_PROC_CWD, pid, offset, pp->super.procCwd);
 }
 
 static void PCPProcessList_updateUsername(Process* process, int pid, int offset, UsersTable* users) {
-   unsigned int uid = 0;
-   pmAtomValue value;
-   if (Metric_instance(PCP_PROC_ID_UID, pid, offset, &value, PM_TYPE_U32))
-      uid = value.ul;
-   process->st_uid = uid;
-   process->user = setUser(users, uid, pid, offset);
+   process->st_uid = Metric_instance_u32(PCP_PROC_ID_UID, pid, offset, 0);
+   process->user = setUser(users, process->st_uid, pid, offset);
 }
 
 static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, const char* comm) {
