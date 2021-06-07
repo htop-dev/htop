@@ -9,7 +9,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "Platform.h"
+#include "pcp/Platform.h"
 
 #include <math.h>
 
@@ -29,8 +29,6 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "Object.h"
 #include "Panel.h"
-#include "PCPProcess.h"
-#include "PCPProcessList.h"
 #include "ProcessList.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
@@ -43,6 +41,8 @@ in the source distribution for its full text.
 #include "linux/PressureStallMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
+#include "pcp/PCPProcess.h"
+#include "pcp/PCPProcessList.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"

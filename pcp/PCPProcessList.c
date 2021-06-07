@@ -9,17 +9,18 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "PCPProcessList.h"
+#include "pcp/PCPProcessList.h"
 
 #include <math.h>
 
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
-#include "PCPProcess.h"
 #include "Process.h"
 #include "Settings.h"
 #include "XUtils.h"
+
+#include "pcp/PCPProcess.h"
 
 
 static int PCPProcessList_computeCPUcount(void) {
