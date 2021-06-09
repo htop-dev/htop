@@ -60,12 +60,6 @@ in the source distribution for its full text.
 #endif
 
 
-// CentOS 6's kernel doesn't provide a definition of O_PATH
-// based on definition taken from uapi/asm-generic/fcnth.h in Linux kernel tree
-#ifndef O_PATH
-# define O_PATH 010000000
-#endif
-
 static long long btime = -1;
 
 static long jiffy;
@@ -1313,7 +1307,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       proc->isUserlandThread = proc->pid != proc->tgid;
 
 #ifdef HAVE_OPENAT
-      int procFd = openat(dirFd, entry->d_name, O_PATH | O_DIRECTORY | O_NOFOLLOW);
+      int procFd = openat(dirFd, entry->d_name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
       if (procFd < 0)
          goto errorReadingProcess;
 #else
