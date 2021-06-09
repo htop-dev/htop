@@ -963,6 +963,7 @@ void Process_init(Process* this, const Settings* settings) {
    this->show = true;
    this->updated = false;
    this->cmdlineBasenameEnd = -1;
+   this->st_uid = (uid_t)-1;
 
    if (Process_getuid == (uid_t)-1) {
       Process_getuid = getuid();
