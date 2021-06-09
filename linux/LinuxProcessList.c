@@ -380,7 +380,7 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
 }
 
 
-static bool LinuxProcessList_statProcessDir(Process* process, openat_arg_t procFd) {
+static bool LinuxProcessList_updateUser(ProcessList* processList, Process* process, openat_arg_t procFd) {
    struct stat sstat;
 #ifdef HAVE_OPENAT
    int statok = fstat(procFd, &sstat);
@@ -389,7 +389,12 @@ static bool LinuxProcessList_statProcessDir(Process* process, openat_arg_t procF
 #endif
    if (statok == -1)
       return false;
-   process->st_uid = sstat.st_uid;
+
+   if (process->st_uid != sstat.st_uid) {
+      process->st_uid = sstat.st_uid;
+      process->user = UsersTable_getRef(processList->usersTable, sstat.st_uid);
+   }
+
    return true;
 }
 
@@ -1402,12 +1407,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       proc->percent_cpu = CLAMP(percent_cpu, 0.0F, cpus * 100.0F);
       proc->percent_mem = proc->m_resident / (double)(pl->totalMem) * 100.0;
 
+      if (! LinuxProcessList_updateUser(pl, proc, procFd))
+         goto errorReadingProcess;
+
       if (!preExisting) {
-
-         if (! LinuxProcessList_statProcessDir(proc, procFd))
-            goto errorReadingProcess;
-
-         proc->user = UsersTable_getRef(pl->usersTable, proc->st_uid);
 
          #ifdef HAVE_OPENVZ
          if (settings->flags & PROCESS_FLAG_LINUX_OPENVZ) {
