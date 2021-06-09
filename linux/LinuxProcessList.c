@@ -1829,7 +1829,7 @@ static bool cpuIsOnline(unsigned int cpuId) {
        * the CPU is probably online, so assume online by default
        */
       bool online = 1;
-      char pathBuffer[64];
+      char pathBuffer[48];
 
       xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%u/online", cpuId);
 
