@@ -1825,24 +1825,24 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
 }
 
 static bool cpuIsOnline(unsigned int cpuId) {
-      /* if there's no sysfs file for the CPU node indicating online/offline status,
-       * the CPU is probably online, so assume online by default
-       */
-      bool online = 1;
-      char pathBuffer[48];
+   /* if there's no sysfs file for the CPU node indicating online/offline status,
+    * the CPU is probably online, so assume online by default
+    */
+   bool online = 1;
+   char pathBuffer[48];
 
-      xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%u/online", cpuId);
+   xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%u/online", cpuId);
 
-      FILE* file = fopen(pathBuffer, "r");
-      unsigned int readval;
-      if (file) {
-         if (fscanf(file, "%u", &readval) == 1) {
-            online = readval;
-         }
-         fclose(file);
+   FILE* file = fopen(pathBuffer, "r");
+   unsigned int readval;
+   if (file) {
+      if (fscanf(file, "%u", &readval) == 1) {
+         online = readval;
       }
+      fclose(file);
+   }
 
-      return online;
+   return online;
 }
 
 static int getConfiguredCPUCount(void) {
