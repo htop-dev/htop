@@ -929,7 +929,7 @@ void CRT_handleSIGSEGV(int signal) {
       "Please check at https://htop.dev/issues whether this issue has already been reported.\n"
       "If no similar issue has been reported before, please create a new issue with the following information:\n"
       "\n"
-      "- Your htop version (htop --version)\n"
+      "- Your "PACKAGE" version ("PACKAGE" --version)\n"
       "- Your OS and kernel version (uname -a)\n"
       "- Your distribution and release (lsb_release -a)\n"
       "- Likely steps to reproduce (How did it happened?)\n"
@@ -977,15 +977,15 @@ void CRT_handleSIGSEGV(int signal) {
       "---\n"
       "\n"
       "To make the above information more practical to work with,\n"
-      "you should provide a disassembly of your binary.\n"
+      "please also provide a disassembly of your "PACKAGE" binary.\n"
       "This can usually be done by running the following command:\n"
       "\n"
    );
 
 #ifdef HTOP_DARWIN
-   fprintf(stderr, "   otool -tvV `which htop` > ~/htop.otool\n");
+   fprintf(stderr, "   otool -tvV `which "PACKAGE"` > ~/htop.otool\n");
 #else
-   fprintf(stderr, "   objdump -d -S -w `which htop` > ~/htop.objdump\n");
+   fprintf(stderr, "   objdump -d -S -w `which "PACKAGE"` > ~/htop.objdump\n");
 #endif
 
    fprintf(stderr,
@@ -998,9 +998,9 @@ void CRT_handleSIGSEGV(int signal) {
    fprintf(stderr,
       "Running this program with debug symbols or inside a debugger may provide further insights.\n"
       "\n"
-      "Thank you for helping to improve htop!\n"
+      "Thank you for helping to improve "PACKAGE"!\n"
       "\n"
-      "htop " VERSION " aborting.\n"
+      PACKAGE " " VERSION " aborting.\n"
       "\n"
    );
 
