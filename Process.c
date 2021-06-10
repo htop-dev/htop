@@ -771,8 +771,12 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       const char* procExe;
       if (this->procExe) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_BASENAME : PROCESS_BASENAME];
-         if (this->procExeDeleted && this->settings->highlightDeletedExe)
-            attr = CRT_colors[FAILED_READ];
+         if (this->settings->highlightDeletedExe) {
+            if (this->procExeDeleted)
+               attr = CRT_colors[FAILED_READ];
+            else if (this->usesDeletedLib)
+               attr = CRT_colors[PROCESS_TAG];
+         }
          procExe = this->procExe + this->procExeBasenameOffset;
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
