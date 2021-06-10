@@ -370,6 +370,10 @@ void Metric_enableThreads(void) {
 }
 
 bool Metric_fetch(struct timeval *timestamp) {
+   if (pcp->result) {
+      pmFreeResult(pcp->result);
+      pcp->result = NULL;
+   }
    int sts = pmFetch(pcp->total, pcp->fetch, &pcp->result);
    if (sts < 0) {
       if (pmDebugOptions.appl0)
@@ -502,6 +506,8 @@ void Platform_init(void) {
 
 void Platform_done(void) {
    pmDestroyContext(pcp->context);
+   pmFreeResult(pcp->result);
+   free(pcp->release);
    free(pcp->fetch);
    free(pcp->pmids);
    free(pcp->names);
