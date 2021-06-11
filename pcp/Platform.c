@@ -377,7 +377,7 @@ bool Metric_fetch(struct timeval *timestamp) {
    int sts = pmFetch(pcp->total, pcp->fetch, &pcp->result);
    if (sts < 0) {
       if (pmDebugOptions.appl0)
-         fprintf(stderr, "Error: cannot fetch metric values): %s\n",
+         fprintf(stderr, "Error: cannot fetch metric values: %s\n",
                  pmErrStr(sts));
       return false;
    }
@@ -506,7 +506,8 @@ void Platform_init(void) {
 
 void Platform_done(void) {
    pmDestroyContext(pcp->context);
-   pmFreeResult(pcp->result);
+   if (pcp->result)
+      pmFreeResult(pcp->result);
    free(pcp->release);
    free(pcp->fetch);
    free(pcp->pmids);
