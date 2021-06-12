@@ -302,7 +302,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    if (Settings_isReadonly())
       return HTOP_OK;
 
-   if (st->pl->cpuCount == 1)
+   if (st->pl->activeCPUs == 1)
       return HTOP_OK;
 
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))

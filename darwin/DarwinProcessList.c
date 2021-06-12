@@ -134,7 +134,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
    ProcessList_init(&this->super, Class(DarwinProcess), usersTable, dynamicMeters, pidMatchList, userId);
 
    /* Initialize the CPU information */
-   this->super.cpuCount = ProcessList_allocateCPULoadInfo(&this->prev_load);
+   this->super.activeCPUs = ProcessList_allocateCPULoadInfo(&this->prev_load);
+   // TODO: support offline CPUs and hot swapping
+   this->super.existingCPUs = this->super.activeCPUs;
    ProcessList_getHostInfo(&this->host_info);
    ProcessList_allocateCPULoadInfo(&this->curr_load);
 
@@ -184,13 +186,13 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    /* Get the time difference */
    dpl->global_diff = 0;
-   for (unsigned int i = 0; i < dpl->super.cpuCount; ++i) {
+   for (unsigned int i = 0; i < dpl->super.existingCPUs; ++i) {
       for (size_t j = 0; j < CPU_STATE_MAX; ++j) {
          dpl->global_diff += dpl->curr_load[i].cpu_ticks[j] - dpl->prev_load[i].cpu_ticks[j];
       }
    }
 
-   const double time_interval = ticksToNanoseconds(dpl->global_diff) / (double) dpl->super.cpuCount;
+   const double time_interval = ticksToNanoseconds(dpl->global_diff) / (double) dpl->super.activeCPUs;
 
    /* Clear the thread counts */
    super->kernelThreads = 0;

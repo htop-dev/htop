@@ -42,7 +42,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
    const int fmib[] = { CTL_KERN, KERN_FSCALE };
    int r;
    unsigned int cpu_index_c = 0;
-   unsigned int ncpu;
    size_t size;
    char errbuf[_POSIX2_LINE_MAX];
 
@@ -50,17 +49,19 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
    ProcessList* pl = (ProcessList*) opl;
    ProcessList_init(pl, Class(OpenBSDProcess), usersTable, dynamicMeters, pidMatchList, userId);
 
-   size = sizeof(pl->cpuCount);
-   r = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
-   if (r < 0 || pl->cpuCount < 1) {
-      pl->cpuCount = 1;
+   // TODO: test offline CPUs and hot swapping
+
+   size = sizeof(pl->activeCPUs);
+   r = sysctl(mib, 2, &pl->activeCPUs, &size, NULL, 0);
+   if (r < 0 || pl->activeCPUs < 1) {
+      pl->activeCPUs = 1;
    }
-   opl->cpus = xCalloc(pl->cpuCount + 1, sizeof(CPUData));
+   opl->cpus = xCalloc(pl->activeCPUs + 1, sizeof(CPUData));
 
    size = sizeof(int);
-   r = sysctl(nmib, 2, &ncpu, &size, NULL, 0);
+   r = sysctl(nmib, 2, &pl->existingCPUs, &size, NULL, 0);
    if (r < 0) {
-      ncpu = pl->cpuCount;
+      pl->existingCPUs = pl->activeCPUs;
    }
 
    size = sizeof(fscale);
@@ -72,7 +73,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
       CRT_fatalError("pagesize sysconf call failed");
    pageSizeKB = pageSize / ONE_K;
 
-   for (unsigned int i = 0; i <= pl->cpuCount; i++) {
+   for (unsigned int i = 0; i <= pl->activeCPUs; i++) {
       CPUData* d = opl->cpus + i;
       d->totalTime = 1;
       d->totalPeriod = 1;
@@ -85,7 +86,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
 
    opl->cpuSpeed = -1;
 
-   for (unsigned int i = 0; i < ncpu; i++) {
+   for (unsigned int i = 0; i < pl->existingCPUs; i++) {
       const int ncmib[] = { CTL_KERN, KERN_CPUSTATS, i };
       struct cpustats cpu_stats;
 
@@ -98,7 +99,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
          cpu_index_c++;
       }
 
-      if (cpu_index_c == pl->cpuCount)
+      if (cpu_index_c == pl->activeCPUs)
          break;
    }
 
@@ -312,7 +313,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       proc->m_virt = kproc->p_vm_dsize * pageSizeKB;
       proc->m_resident = kproc->p_vm_rssize * pageSizeKB;
       proc->percent_mem = proc->m_resident / (float)this->super.totalMem * 100.0F;
-      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0F, this->super.cpuCount * 100.0F);
+      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0F, this->super.activeCPUs * 100.0F);
       proc->nice = kproc->p_nice - 20;
       proc->time = 100 * (kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000));
       proc->priority = kproc->p_priority - PZERO;
@@ -400,7 +401,7 @@ static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
    u_int64_t kernelTimes[CPUSTATES] = {0};
    u_int64_t avg[CPUSTATES] = {0};
 
-   for (unsigned int i = 0; i < this->super.cpuCount; i++) {
+   for (unsigned int i = 0; i < this->super.activeCPUs; i++) {
       getKernelCPUTimes(this->cpus[i].cpuIndex, kernelTimes);
       CPUData* cpu = this->cpus + i + 1;
       kernelCPUTimesToHtop(kernelTimes, cpu);
@@ -416,7 +417,7 @@ static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
    }
 
    for (int i = 0; i < CPUSTATES; i++) {
-      avg[i] /= this->super.cpuCount;
+      avg[i] /= this->super.activeCPUs;
    }
 
    kernelCPUTimesToHtop(avg, this->cpus);

@@ -32,10 +32,10 @@ static void* dlopenHandle = NULL;
 
 #endif /* BUILD_STATIC */
 
-int LibSensors_init(FILE* input) {
+int LibSensors_init(void) {
 #ifdef BUILD_STATIC
 
-   return sym_sensors_init(input);
+   return sym_sensors_init(NULL);
 
 #else
 
@@ -69,7 +69,7 @@ int LibSensors_init(FILE* input) {
       #undef resolve
    }
 
-   return sym_sensors_init(input);
+   return sym_sensors_init(NULL);
 
 
 dlfailure:
@@ -99,6 +99,18 @@ void LibSensors_cleanup(void) {
 #endif /* BUILD_STATIC */
 }
 
+int LibSensors_reload(void) {
+#ifndef BUILD_STATIC
+   if (!dlopenHandle) {
+      errno = ENOTSUP;
+      return -1;
+   }
+#endif /* !BUILD_STATIC */
+
+   sym_sensors_cleanup();
+   return sym_sensors_init(NULL);
+}
+
 static int tempDriverPriority(const sensors_chip_name* chip) {
    static const struct TempDriverDefs {
       const char* prefix;
@@ -120,10 +132,10 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
    return -1;
 }
 
-void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
-   assert(cpuCount > 0 && cpuCount < 16384);
-   double data[cpuCount + 1];
-   for (size_t i = 0; i < cpuCount + 1; i++)
+void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
+   assert(existingCPUs > 0 && existingCPUs < 16384);
+   double data[existingCPUs + 1];
+   for (size_t i = 0; i < existingCPUs + 1; i++)
       data[i] = NAN;
 
 #ifndef BUILD_STATIC
@@ -145,7 +157,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
 
       if (priority < topPriority) {
          /* Clear data from lower priority sensor */
-         for (size_t i = 0; i < cpuCount + 1; i++)
+         for (size_t i = 0; i < existingCPUs + 1; i++)
             data[i] = NAN;
       }
 
@@ -166,7 +178,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
          /* Feature name IDs start at 1, adjust to start at 0 to match data indices */
          tempID--;
 
-         if (tempID > cpuCount)
+         if (tempID > existingCPUs)
             continue;
 
          const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
@@ -190,8 +202,8 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
    }
 
    /* Adjust data for chips not providing a platform temperature */
-   if (coreTempCount + 1 == cpuCount || coreTempCount + 1 == cpuCount / 2) {
-      memmove(&data[1], &data[0], cpuCount * sizeof(*data));
+   if (coreTempCount + 1 == activeCPUs || coreTempCount + 1 == activeCPUs / 2) {
+      memmove(&data[1], &data[0], existingCPUs * sizeof(*data));
       data[0] = NAN;
       coreTempCount++;
 
@@ -200,7 +212,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
 
    /* Only package temperature - copy to all cores */
    if (coreTempCount == 0 && !isnan(data[0])) {
-      for (unsigned int i = 1; i <= cpuCount; i++)
+      for (unsigned int i = 1; i <= existingCPUs; i++)
          data[i] = data[0];
 
       /* No further adjustments */
@@ -210,7 +222,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
    /* No package temperature - set to max core temperature */
    if (isnan(data[0]) && coreTempCount != 0) {
       double maxTemp = NAN;
-      for (unsigned int i = 1; i <= cpuCount; i++) {
+      for (unsigned int i = 1; i <= existingCPUs; i++) {
          if (isnan(data[i]))
             continue;
 
@@ -224,7 +236,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
 
    /* Only temperature for core 0, maybe Ryzen - copy to all other cores */
    if (coreTempCount == 1 && !isnan(data[1])) {
-      for (unsigned int i = 2; i <= cpuCount; i++)
+      for (unsigned int i = 2; i <= existingCPUs; i++)
          data[i] = data[1];
 
       /* No further adjustments */
@@ -232,7 +244,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
    }
 
    /* Half the temperatures, probably HT/SMT - copy to second half */
-   const unsigned int delta = cpuCount / 2;
+   const unsigned int delta = activeCPUs / 2;
    if (coreTempCount == delta) {
       memcpy(&data[delta + 1], &data[1], delta * sizeof(*data));
 
@@ -241,7 +253,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int cpuCount) {
    }
 
 out:
-   for (unsigned int i = 0; i <= cpuCount; i++)
+   for (unsigned int i = 0; i <= existingCPUs; i++)
       cpus[i].temperature = data[i];
 }
 

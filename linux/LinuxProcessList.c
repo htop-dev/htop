@@ -158,30 +158,85 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 
 #endif
 
-static void LinuxProcessList_updateCPUcount(ProcessList* super, FILE* stream) {
+static void LinuxProcessList_updateCPUcount(ProcessList* super) {
+   /* Similiar to get_nprocs_conf(3) / _SC_NPROCESSORS_CONF
+    * https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/getsysstats.c;hb=HEAD
+    */
+
    LinuxProcessList* this = (LinuxProcessList*) super;
+   unsigned int existing = 0, active = 0;
 
-   unsigned int cpus = 0;
-   char buffer[PROC_LINE_LENGTH + 1];
-   while (fgets(buffer, sizeof(buffer), stream)) {
-      if (String_startsWith(buffer, "cpu")) {
-         cpus++;
+   DIR* dir = opendir("/sys/devices/system/cpu");
+   if (!dir) {
+      super->activeCPUs = 1;
+      super->existingCPUs = 1;
+      this->cpuData = xReallocArray(this->cpuData, 2, sizeof(CPUData));
+      this->cpuData[0].online = true;
+      this->cpuData[1].online = true;
+      return;
+   }
+
+   unsigned int currExisting = super->existingCPUs;
+
+   const struct dirent* entry;
+   while ((entry = readdir(dir)) != NULL) {
+      if (entry->d_type != DT_DIR)
+         continue;
+
+      if (!String_startsWith(entry->d_name, "cpu"))
+         continue;
+
+      char *endp;
+      unsigned long int id = strtoul(entry->d_name + 3, &endp, 10);
+      if (id == ULONG_MAX || endp == entry->d_name + 3 || *endp != '\0')
+         continue;
+
+#ifdef HAVE_OPENAT
+      int cpuDirFd = openat(dirfd(dir), entry->d_name, O_DIRECTORY | O_PATH | O_NOFOLLOW);
+      if (cpuDirFd < 0)
+         continue;
+#else
+      char cpuDirFd[4096];
+      xSnprintf(cpuDirFd, sizeof(cpuDirFd), "/sys/devices/system/cpu/%s", entry->d_name);
+#endif
+
+      existing++;
+
+      /* readdir() iterates with no specific order */
+      unsigned int max = MAXIMUM(existing, id + 1);
+      if (max > currExisting) {
+         this->cpuData = xReallocArray(this->cpuData, max + /* aggregate */ 1, sizeof(CPUData));
+         for (unsigned int j = currExisting; j < max; j++) {
+            this->cpuData[j].online = false;
+         }
+         currExisting = max;
       }
+
+      char buffer[8];
+      ssize_t res = xReadfileat(cpuDirFd, "online", buffer, sizeof(buffer));
+      /* If the file "online" does not exist or on failure count as active */
+      if (res < 1 || buffer[0] != '0') {
+         active++;
+         this->cpuData[id + 1].online = true;
+      } else {
+         this->cpuData[id + 1].online = false;
+      }
+
+      Compat_openatArgClose(cpuDirFd);
    }
 
-   if (cpus == 0)
-      CRT_fatalError("No cpu entry in " PROCSTATFILE);
-   if (cpus == 1)
-      CRT_fatalError("No cpu aggregate or cpuN entry in " PROCSTATFILE);
+   closedir(dir);
 
-   /* Subtract aggregate cpu entry */
-   cpus--;
+#ifdef HAVE_SENSORS_SENSORS_H
+   /* When started with offline CPUs, libsensors does not monitor those,
+    * even when they become online. */
+   if (super->existingCPUs != 0 && (active > super->activeCPUs || currExisting > super->existingCPUs))
+      LibSensors_reload();
+#endif
 
-   if (cpus != super->cpuCount || !this->cpus) {
-      super->cpuCount = MAXIMUM(cpus, 1);
-      free(this->cpus);
-      this->cpus = xCalloc(cpus + 1, sizeof(CPUData));
-   }
+   super->activeCPUs = active;
+   assert(existing == currExisting);
+   super->existingCPUs = currExisting;
 }
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
@@ -220,15 +275,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
       CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
    }
 
+   fclose(statfile);
+
    if (btime == -1)
       CRT_fatalError("No btime in " PROCSTATFILE);
 
-   rewind(statfile);
-
    // Initialize CPU count
-   LinuxProcessList_updateCPUcount(pl, statfile);
-
-   fclose(statfile);
+   LinuxProcessList_updateCPUcount(pl);
 
    return pl;
 }
@@ -236,7 +289,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
 void ProcessList_delete(ProcessList* pl) {
    LinuxProcessList* this = (LinuxProcessList*) pl;
    ProcessList_done(pl);
-   free(this->cpus);
+   free(this->cpuData);
    if (this->ttyDrivers) {
       for (int i = 0; this->ttyDrivers[i].path; i++) {
          free(this->ttyDrivers[i].path);
@@ -1270,9 +1323,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       return false;
    }
 
-   unsigned int cpus = pl->cpuCount;
-   bool hideKernelThreads = settings->hideKernelThreads;
-   bool hideUserlandThreads = settings->hideUserlandThreads;
+   const unsigned int activeCPUs = pl->activeCPUs;
+   const bool hideKernelThreads = settings->hideKernelThreads;
+   const bool hideUserlandThreads = settings->hideUserlandThreads;
    while ((entry = readdir(dir)) != NULL) {
       const char* name = entry->d_name;
 
@@ -1407,7 +1460,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       /* period might be 0 after system sleep */
       float percent_cpu = (period < 1E-6) ? 0.0F : ((lp->utime + lp->stime - lasttimes) / period * 100.0);
-      proc->percent_cpu = CLAMP(percent_cpu, 0.0F, cpus * 100.0F);
+      proc->percent_cpu = CLAMP(percent_cpu, 0.0F, activeCPUs * 100.0F);
       proc->percent_mem = proc->m_resident / (double)(pl->totalMem) * 100.0;
 
       if (! LinuxProcessList_updateUser(pl, proc, procFd))
@@ -1771,33 +1824,50 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
 static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
    LinuxProcessList* this = (LinuxProcessList*) super;
 
+   LinuxProcessList_updateCPUcount(super);
+
    FILE* file = fopen(PROCSTATFILE, "r");
    if (!file)
       CRT_fatalError("Cannot open " PROCSTATFILE);
 
-   LinuxProcessList_updateCPUcount(super, file);
+   unsigned int existingCPUs = super->existingCPUs;
+   unsigned int lastAdjCpuId = 0;
 
-   rewind(file);
-
-   unsigned int cpus = super->cpuCount;
-   for (unsigned int i = 0; i <= cpus; i++) {
+   for (unsigned int i = 0; i <= existingCPUs; i++) {
       char buffer[PROC_LINE_LENGTH + 1];
       unsigned long long int usertime, nicetime, systemtime, idletime;
       unsigned long long int ioWait = 0, irq = 0, softIrq = 0, steal = 0, guest = 0, guestnice = 0;
-      // Depending on your kernel version,
-      // 5, 7, 8 or 9 of these fields will be set.
-      // The rest will remain at zero.
+
       const char* ok = fgets(buffer, sizeof(buffer), file);
       if (!ok)
          break;
 
+      // cpu fields are sorted first
+      if (!String_startsWith(buffer, "cpu"))
+         break;
+
+      // Depending on your kernel version,
+      // 5, 7, 8 or 9 of these fields will be set.
+      // The rest will remain at zero.
+      unsigned int adjCpuId;
       if (i == 0) {
          (void) sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         adjCpuId = 0;
       } else {
          unsigned int cpuid;
          (void) sscanf(buffer, "cpu%4u %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
-         assert(cpuid == i - 1);
+         adjCpuId = cpuid + 1;
       }
+
+      if (adjCpuId > super->existingCPUs)
+         break;
+
+      for (unsigned int j = lastAdjCpuId + 1; j < adjCpuId; j++) {
+         // Skipped an ID, but /proc/stat is ordered => got offline CPU
+         memset(&(this->cpuData[j]), '\0', sizeof(CPUData));
+      }
+      lastAdjCpuId = adjCpuId;
+
       // Guest time is already accounted in usertime
       usertime -= guest;
       nicetime -= guestnice;
@@ -1807,7 +1877,7 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
       unsigned long long int systemalltime = systemtime + irq + softIrq;
       unsigned long long int virtalltime = guest + guestnice;
       unsigned long long int totaltime = usertime + nicetime + systemalltime + idlealltime + steal + virtalltime;
-      CPUData* cpuData = &(this->cpus[i]);
+      CPUData* cpuData = &(this->cpuData[adjCpuId]);
       // Since we do a subtraction (usertime - guest) and cputime64_to_clock_t()
       // used in /proc/stat rounds down numbers, it can lead to a case where the
       // integer overflow.
@@ -1837,7 +1907,7 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
       cpuData->totalTime = totaltime;
    }
 
-   double period = (double)this->cpus[0].totalPeriod / cpus;
+   double period = (double)this->cpuData[0].totalPeriod / super->activeCPUs;
 
    char buffer[PROC_LINE_LENGTH + 1];
    while (fgets(buffer, sizeof(buffer), file)) {
@@ -1853,7 +1923,7 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
 }
 
 static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
-   unsigned int cpus = this->super.cpuCount;
+   unsigned int existingCPUs = this->super.existingCPUs;
    int numCPUsWithFrequency = 0;
    unsigned long totalFrequency = 0;
 
@@ -1871,7 +1941,7 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
       return -1;
    }
 
-   for (unsigned int i = 0; i < cpus; ++i) {
+   for (unsigned int i = 0; i < existingCPUs; ++i) {
       char pathBuffer[64];
       xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_cur_freq", i);
 
@@ -1887,7 +1957,7 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
       if (fscanf(file, "%lu", &frequency) == 1) {
          /* convert kHz to MHz */
          frequency = frequency / 1000;
-         this->cpus[i + 1].frequency = frequency;
+         this->cpuData[i + 1].frequency = frequency;
          numCPUsWithFrequency++;
          totalFrequency += frequency;
       }
@@ -1907,7 +1977,7 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
    }
 
    if (numCPUsWithFrequency > 0)
-      this->cpus[0].frequency = (double)totalFrequency / numCPUsWithFrequency;
+      this->cpuData[0].frequency = (double)totalFrequency / numCPUsWithFrequency;
 
    return 0;
 }
@@ -1917,7 +1987,7 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
    if (file == NULL)
       return;
 
-   unsigned int cpus = this->super.cpuCount;
+   unsigned int existingCPUs = this->super.existingCPUs;
    int numCPUsWithFrequency = 0;
    double totalFrequency = 0;
    int cpuid = -1;
@@ -1940,11 +2010,11 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
          (sscanf(buffer, "clock : %lfMHz", &frequency) == 1) ||
          (sscanf(buffer, "clock: %lfMHz", &frequency) == 1)
       ) {
-         if (cpuid < 0 || (unsigned int)cpuid > (cpus - 1)) {
+         if (cpuid < 0 || (unsigned int)cpuid > (existingCPUs - 1)) {
             continue;
          }
 
-         CPUData* cpuData = &(this->cpus[cpuid + 1]);
+         CPUData* cpuData = &(this->cpuData[cpuid + 1]);
          /* do not override sysfs data */
          if (isnan(cpuData->frequency)) {
             cpuData->frequency = frequency;
@@ -1958,15 +2028,15 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
    fclose(file);
 
    if (numCPUsWithFrequency > 0) {
-      this->cpus[0].frequency = totalFrequency / numCPUsWithFrequency;
+      this->cpuData[0].frequency = totalFrequency / numCPUsWithFrequency;
    }
 }
 
 static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
-   unsigned int cpus = this->super.cpuCount;
+   unsigned int existingCPUs = this->super.existingCPUs;
 
-   for (unsigned int i = 0; i <= cpus; i++) {
-      this->cpus[i].frequency = NAN;
+   for (unsigned int i = 0; i <= existingCPUs; i++) {
+      this->cpuData[i].frequency = NAN;
    }
 
    if (scanCPUFreqencyFromSysCPUFreq(this) == 0) {
@@ -1993,7 +2063,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    #ifdef HAVE_SENSORS_SENSORS_H
    if (settings->showCPUTemperature)
-      LibSensors_getCPUTemperatures(this->cpus, this->super.cpuCount);
+      LibSensors_getCPUTemperatures(this->cpuData, this->super.existingCPUs, this->super.activeCPUs);
    #endif
 
    // in pause mode only gather global data for meters (CPU/memory/...)

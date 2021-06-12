@@ -83,7 +83,8 @@ typedef struct ProcessList_ {
    memory_t usedSwap;
    memory_t cachedSwap;
 
-   unsigned int cpuCount;
+   unsigned int activeCPUs;
+   unsigned int existingCPUs;
 } ProcessList;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId);

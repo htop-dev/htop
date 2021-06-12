@@ -34,7 +34,8 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
    this->userId = userId;
 
    // set later by platform-specific code
-   this->cpuCount = 0;
+   this->activeCPUs = 0;
+   this->existingCPUs = 0;
    this->monotonicMs = 0;
 
    // always maintain valid realtime timestamps

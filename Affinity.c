@@ -59,7 +59,7 @@ Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
    if (ok) {
       affinity = Affinity_new(pl);
       if (hwloc_bitmap_last(cpuset) == -1) {
-         for (unsigned int i = 0; i < pl->cpuCount; i++) {
+         for (unsigned int i = 0; i < pl->existingCPUs; i++) {
             Affinity_add(affinity, i);
          }
       } else {
@@ -93,7 +93,7 @@ Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
       return NULL;
 
    Affinity* affinity = Affinity_new(pl);
-   for (unsigned int i = 0; i < pl->cpuCount; i++) {
+   for (unsigned int i = 0; i < pl->existingCPUs; i++) {
       if (CPU_ISSET(i, &cpuset)) {
          Affinity_add(affinity, i);
       }

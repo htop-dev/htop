@@ -295,7 +295,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    Hashtable* dm = DynamicMeters_new();
    ProcessList* pl = ProcessList_new(ut, dm, flags.pidMatchList, flags.userId);
 
-   Settings* settings = Settings_new(pl->cpuCount);
+   Settings* settings = Settings_new(pl->activeCPUs);
    pl->settings = settings;
 
    Header* header = Header_new(pl, settings, 2);

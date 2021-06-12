@@ -59,20 +59,24 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
       CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
    pageSizeKB = pageSize / 1024;
 
-   pl->cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
-   if (pl->cpuCount == (unsigned int)-1)
+   pl->activeCPUs = sysconf(_SC_NPROCESSORS_ONLN);
+   if (pl->activeCPUs == (unsigned int)-1)
       CRT_fatalError("Cannot get CPU count by sysconf(_SC_NPROCESSORS_ONLN)");
-   else if (pl->cpuCount == 1)
+   else if (pl->activeCPUs == 1)
       spl->cpus = xRealloc(spl->cpus, sizeof(CPUData));
    else
-      spl->cpus = xRealloc(spl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+      spl->cpus = xRealloc(spl->cpus, (pl->activeCPUs + 1) * sizeof(CPUData));
+
+   /* TODO: support offline CPUs and hot swapping
+    * pl->existingCPUs = sysconf(_SC_NPROCESSORS_CONF) */
+   pl->existingCPUs = pl->activeCPUs;
 
    return pl;
 }
 
 static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    const SolarisProcessList* spl = (SolarisProcessList*) pl;
-   unsigned int cpus = pl->cpuCount;
+   unsigned int cpus = pl->existingCPUs;
    kstat_t* cpuinfo = NULL;
    kstat_named_t* idletime = NULL;
    kstat_named_t* intrtime = NULL;

@@ -181,7 +181,7 @@ int Platform_getMaxPid() {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->pl;
-   unsigned int cpus = this->pl->cpuCount;
+   unsigned int cpus = this->pl->activeCPUs;
    const CPUData* cpuData;
 
    if (cpus == 1) {

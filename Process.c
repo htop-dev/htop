@@ -821,7 +821,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    case PERCENT_NORM_CPU: {
       float cpuPercentage = this->percent_cpu;
       if (field == PERCENT_NORM_CPU) {
-         cpuPercentage /= this->processList->cpuCount;
+         cpuPercentage /= this->processList->activeCPUs;
       }
       if (cpuPercentage > 999.9F) {
          xSnprintf(buffer, n, "%4u ", (unsigned int)cpuPercentage);

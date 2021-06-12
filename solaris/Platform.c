@@ -184,7 +184,7 @@ int Platform_getMaxPid() {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
-   unsigned int cpus = this->pl->cpuCount;
+   unsigned int cpus = this->pl->activeCPUs;
    const CPUData* cpuData = NULL;
 
    if (cpus == 1) {

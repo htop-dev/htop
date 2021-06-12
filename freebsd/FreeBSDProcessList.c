@@ -125,13 +125,15 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
       sysctl(MIB_kern_cp_times, 2, fpl->cp_times_o, &len, NULL, 0);
    }
 
-   pl->cpuCount = MAXIMUM(cpus, 1);
+   pl->existingCPUs = MAXIMUM(cpus, 1);
+   // TODO: support offline CPUs and hot swapping
+   pl->activeCPUs = pl->existingCPUs;
 
    if (cpus == 1 ) {
       fpl->cpus = xRealloc(fpl->cpus, sizeof(CPUData));
    } else {
       // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
-      fpl->cpus = xRealloc(fpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+      fpl->cpus = xRealloc(fpl->cpus, (pl->existingCPUs + 1) * sizeof(CPUData));
    }
 
 
@@ -169,8 +171,8 @@ void ProcessList_delete(ProcessList* this) {
 static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
 
-   unsigned int cpus   = pl->cpuCount;   // actual CPU count
-   unsigned int maxcpu = cpus;           // max iteration (in case we have average + smp)
+   unsigned int cpus   = pl->existingCPUs; // actual CPU count
+   unsigned int maxcpu = cpus;             // max iteration (in case we have average + smp)
    int cp_times_offset;
 
    assert(cpus > 0);

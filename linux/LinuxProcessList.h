@@ -53,6 +53,8 @@ typedef struct CPUData_ {
    #ifdef HAVE_SENSORS_SENSORS_H
    double temperature;
    #endif
+
+   bool online;
 } CPUData;
 
 typedef struct TtyDriver_ {
@@ -65,7 +67,8 @@ typedef struct TtyDriver_ {
 typedef struct LinuxProcessList_ {
    ProcessList super;
 
-   CPUData* cpus;
+   CPUData* cpuData;
+
    TtyDriver* ttyDrivers;
    bool haveSmapsRollup;
 
