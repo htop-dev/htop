@@ -625,12 +625,14 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
    if (!statmfile)
       return false;
 
+   long int dummy;
+
    int r = fscanf(statmfile, "%ld %ld %ld %ld %ld %ld %ld",
                   &process->super.m_virt,
                   &process->super.m_resident,
                   &process->m_share,
                   &process->m_trs,
-                  &process->m_lrs,
+                  &dummy, /* unused since Linux 2.6; always 0 */
                   &process->m_drs,
                   &process->m_dt);
    fclose(statmfile);
