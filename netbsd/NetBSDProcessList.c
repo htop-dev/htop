@@ -114,6 +114,44 @@ static void NetBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedSwap = uvmexp.swpginuse * pageSizeKB;
 }
 
+static void NetBSDProcessList_updateExe(const struct kinfo_proc2* kproc, Process* proc) {
+   const int mib[] = { CTL_KERN, KERN_PROC_ARGS, kproc->p_pid, KERN_PROC_PATHNAME };
+   char buffer[2048];
+   size_t size = sizeof(buffer);
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
+      Process_updateExe(proc, NULL);
+      return;
+   }
+   printf("%s\n", buffer);
+   /* Kernel threads return an empty buffer */
+   if (buffer[0] == '\0') {
+      Process_updateExe(proc, NULL);
+      return;
+   }
+
+   Process_updateExe(proc, buffer);
+}
+
+static void NetBSDProcessList_updateCwd(const struct kinfo_proc2* kproc, Process* proc) {
+   const int mib[] = { CTL_KERN, KERN_PROC_ARGS, kproc->p_pid, KERN_PROC_CWD };
+   char buffer[2048];
+   size_t size = sizeof(buffer);
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   /* Kernel threads return an empty buffer */
+   if (buffer[0] == '\0') {
+      free(proc->procCwd);
+      proc->procCwd = NULL;
+      return;
+   }
+
+   free_and_xStrdup(&proc->procCwd, buffer);
+}
+
 static void NetBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc2* kproc, Process* proc) {
    Process_updateComm(proc, kproc->p_comm);
 
@@ -203,11 +241,16 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
          proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
          ProcessList_add(&this->super, proc);
 
+         NetBSDProcessList_updateExe(kproc, proc);
          NetBSDProcessList_updateProcessName(this->kd, kproc, proc);
       } else {
          if (settings->updateProcessNames) {
             NetBSDProcessList_updateProcessName(this->kd, kproc, proc);
          }
+      }
+
+      if (settings->flags & PROCESS_FLAG_CWD) {
+         NetBSDProcessList_updateCwd(kproc, proc);
       }
 
       proc->m_virt = kproc->p_vm_vsize;
