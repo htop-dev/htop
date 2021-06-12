@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: sudo apt-get install libncursesw5-dev
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -40,7 +40,7 @@ jobs:
         sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install clang-12 libncursesw5-dev
+      run: sudo apt-get install --no-install-recommends clang-12 libncursesw5-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -59,7 +59,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: sudo apt-get install libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -81,7 +81,7 @@ jobs:
         sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install clang-12 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-12 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -100,7 +100,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: sudo apt-get install libncursesw5-dev libtinfo-dev libgpm-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev libsensors4-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -116,7 +116,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
-      run: sudo apt-get install libpcp3-dev libncursesw5-dev libtinfo-dev libgpm-dev
+      run: sudo apt-get install --no-install-recommends libpcp3-dev libncursesw5-dev libtinfo-dev libgpm-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -138,7 +138,7 @@ jobs:
         sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install clang-12 clang-tools-12 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-12 clang-tools-12 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
