@@ -2081,3 +2081,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    LinuxProcessList_recurseProcTree(this, rootFd, PROCDIR, NULL, period);
 }
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   const LinuxProcessList* this = (const LinuxProcessList*) super;
+   return this->cpuData[id + 1].online;
+}

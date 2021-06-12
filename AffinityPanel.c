@@ -384,7 +384,9 @@ Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width) 
 
    unsigned int curCpu = 0;
    for (unsigned int i = 0; i < pl->existingCPUs; i++) {
-      /* TODO: skip offline CPUs */
+      if (!ProcessList_isCPUonline(this->pl, i))
+         continue;
+
       char number[16];
       xSnprintf(number, 9, "CPU %d", Settings_cpuId(pl->settings, i));
       unsigned cpu_width = 4 + strlen(number);
@@ -428,8 +430,7 @@ Affinity* AffinityPanel_getAffinity(Panel* super, ProcessList* pl) {
    Affinity_add(affinity, i);
    hwloc_bitmap_foreach_end();
    #else
-   for (unsigned int i = 0; i < this->pl->existingCPUs; i++) {
-      /* TODO: skip offline CPUs */
+   for (int i = 0; i < Vector_size(this->cpuids); i++) {
       const MaskItem* item = (const MaskItem*)Vector_get(this->cpuids, i);
       if (item->value) {
          Affinity_add(affinity, item->cpu);

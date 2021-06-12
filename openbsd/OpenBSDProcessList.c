@@ -447,3 +447,16 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    OpenBSDProcessList_scanProcs(opl);
 }
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   const OpenBSDProcessList* opl = (const OpenBSDProcessList*) super;
+
+   for (unsigned int i = 0; i < super->activeCPUs; i++) {
+      if (opl->cpus[i].cpuIndex == id)
+         return true;
+   }
+
+   return false;
+}

@@ -87,9 +87,11 @@ typedef struct ProcessList_ {
    unsigned int existingCPUs;
 } ProcessList;
 
+/* Implemented by platforms */
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId);
 void ProcessList_delete(ProcessList* pl);
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id);
 
 
 ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId);

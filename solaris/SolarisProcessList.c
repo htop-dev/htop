@@ -495,3 +495,12 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    super->kernelThreads = 1;
    proc_walk(&SolarisProcessList_walkproc, super, PR_WALK_LWP);
 }
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   // TODO: support offline CPUs and hot swapping
+   (void) super; (void) id;
+
+   return true;
+}

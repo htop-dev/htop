@@ -89,3 +89,11 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    if (!preExisting)
       ProcessList_add(super, proc);
 }
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   (void) super; (void) id;
+
+   return true;
+}

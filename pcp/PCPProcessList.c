@@ -675,3 +675,12 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    double period = (this->timestamp - sample) * 100;
    PCPProcessList_updateProcesses(this, period, &timestamp);
 }
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   // TODO: support offline CPUs and hot swapping
+   (void) super; (void) id;
+
+   return true;
+}
