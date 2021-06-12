@@ -69,7 +69,7 @@
 #define IGNORE_WCASTQUAL_END
 #endif
 
-/* This subtraction is used by NetBSD / OpenBSD for calculation of CPU usage items. */
+/* This subtraction is used by Linux / NetBSD / OpenBSD for calculation of CPU usage items. */
 static inline unsigned long long saturatingSub(unsigned long long a, unsigned long long b) {
    return a > b ? a - b : 0;
 }
