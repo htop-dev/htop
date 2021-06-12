@@ -222,3 +222,20 @@ It does only insert a paragraph if you insert a blank line into the source file.
 This way git can better diff and present the changes when documentation is altered.
 
 Documentation files reside in the `docs/` directory and have a `.md` extension.
+
+Writing pull-requests (PRs)
+---------------------------
+
+When writing your PR or patch, the set of patches should contain the minimal changes required.
+Each patch in itself should ideally be self-contained and runable.
+
+A PR should not contain any merge commits.
+To follow the uptream branch of your PR rebase your work instead.
+
+Avoid small commits that just fix typos that another of your commits introduced.
+Instead squash those changes in the appropriate commit that introduced that mistake.
+Git offers `git commit --fixup=<commit>` and `git rebase -i --autosquash` to help you with this.
+
+Your final PR should contain a minimal set of reasonably sized commits that by themselves are easy to review.
+
+Rebase early. Rebase often.
