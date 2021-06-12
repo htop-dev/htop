@@ -122,7 +122,7 @@ static void NetBSDProcessList_updateExe(const struct kinfo_proc2* kproc, Process
       Process_updateExe(proc, NULL);
       return;
    }
-   printf("%s\n", buffer);
+
    /* Kernel threads return an empty buffer */
    if (buffer[0] == '\0') {
       Process_updateExe(proc, NULL);
@@ -227,6 +227,7 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       if (!preExisting) {
+         proc->pid = kproc->p_pid;
          proc->ppid = kproc->p_ppid;
          proc->tpgid = kproc->p_tpgid;
          proc->tgid = kproc->p_pid;
@@ -289,6 +290,12 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
       case SZOMB:    proc->state = 'Z'; break;
       case SDEAD:    proc->state = 'D'; break;
       default:       proc->state = '?';
+      }
+
+      if (Process_isKernelThread(proc)) {
+         this->super.kernelThreads++;
+      } else if (Process_isUserlandThread(proc)) {
+         this->super.userlandThreads++;
       }
 
       this->super.totalTasks++;
