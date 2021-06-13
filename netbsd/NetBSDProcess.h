@@ -4,6 +4,8 @@
 htop - NetBSDProcess.h
 (C) 2015 Hisham H. Muhammad
 (C) 2015 Michael McConville
+(C) 2021 Santhosh Raju
+(C) 2021 htop dev team
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
