@@ -109,7 +109,7 @@ case "$enable_pcp" in
       ;;
    yes)
       AC_CHECK_HEADERS([pcp/pmapi.h], [my_htop_platform=pcp],
-		       [AC_MSG_ERROR([can not find PCP header file])])
+                       [AC_MSG_ERROR([can not find PCP header file])])
       AC_SEARCH_LIBS([pmNewContext], [pcp], [], [AC_MSG_ERROR([can not find PCP library])])
       AC_DEFINE([HTOP_PCP], [1], [Define if building pcp-htop binary.])
       ;;
