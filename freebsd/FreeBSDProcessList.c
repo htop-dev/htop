@@ -380,16 +380,15 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 }
 
 static void FreeBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process* proc) {
-   const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, kproc->ki_pid };
-   char buffer[2048];
-   size_t size = sizeof(buffer);
-   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
+   if (Process_isKernelThread(proc)) {
       Process_updateExe(proc, NULL);
       return;
    }
 
-   /* Kernel threads return an empty buffer */
-   if (buffer[0] == '\0') {
+   const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, kproc->ki_pid };
+   char buffer[2048];
+   size_t size = sizeof(buffer);
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
       Process_updateExe(proc, NULL);
       return;
    }
