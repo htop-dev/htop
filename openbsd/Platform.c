@@ -169,19 +169,12 @@ int Platform_getMaxPid() {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const OpenBSDProcessList* pl = (const OpenBSDProcessList*) this->pl;
-   const CPUData* cpuData = NULL;
+   const CPUData* cpuData = &(pl->cpuData[cpu]);
    double total;
    double totalPercent;
    double* v = this->values;
 
-   for (unsigned int i = 0; i < pl->super.activeCPUs; i++) {
-      if (pl->cpus[i].cpuIndex == cpu) {
-         cpuData = &(pl->cpus[i]);
-         break;
-      }
-   }
-
-   if (!cpuData) {
+   if (!cpuData->online) {
       this->curItems = 0;
       return NAN;
    }

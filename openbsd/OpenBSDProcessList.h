@@ -36,14 +36,14 @@ typedef struct CPUData_ {
    unsigned long long int intrPeriod;
    unsigned long long int idlePeriod;
 
-   unsigned int cpuIndex;
+   bool online;
 } CPUData;
 
 typedef struct OpenBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
-   CPUData* cpus;
+   CPUData* cpuData;
    int cpuSpeed;
 
 } OpenBSDProcessList;
