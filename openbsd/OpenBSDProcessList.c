@@ -173,7 +173,7 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 }
 
 static void OpenBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
-   const int mib[] = { CTL_KERN, KERN_PROC_CWD, kproc->ki_pid };
+   const int mib[] = { CTL_KERN, KERN_PROC_CWD, kproc->p_pid };
    char buffer[2048];
    size_t size = sizeof(buffer);
    if (sysctl(mib, 3, buffer, &size, NULL, 0) != 0) {

@@ -36,7 +36,7 @@ typedef struct CPUData_ {
    unsigned long long int intrPeriod;
    unsigned long long int idlePeriod;
 
-   int cpuIndex;
+   unsigned int cpuIndex;
 } CPUData;
 
 typedef struct OpenBSDProcessList_ {
