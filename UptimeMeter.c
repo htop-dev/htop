@@ -19,7 +19,7 @@ static const int UptimeMeter_attributes[] = {
 
 static void UptimeMeter_updateValues(Meter* this) {
    int totalseconds = Platform_getUptime();
-   if (totalseconds == -1) {
+   if (totalseconds <= 0) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "(unknown)");
       return;
    }
