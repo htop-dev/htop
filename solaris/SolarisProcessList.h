@@ -44,6 +44,7 @@ typedef struct CPUData_ {
    uint64_t lkrnl;
    uint64_t lintr;
    uint64_t lidle;
+   bool online;
 } CPUData;
 
 typedef struct SolarisProcessList_ {
