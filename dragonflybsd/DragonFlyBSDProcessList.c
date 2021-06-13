@@ -443,8 +443,6 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       Process* proc = ProcessList_getProcess(super, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, DragonFlyBSDProcess_new);
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
-
       if (!preExisting) {
          dfp->jid = kproc->kp_jailid;
          if (kproc->kp_ktaddr && kproc->kp_flags & P_SYSTEM) {
@@ -597,6 +595,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       if (proc->state == 'R')
          super->runningTasks++;
 
+      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
       proc->updated = true;
    }
 }
