@@ -498,7 +498,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
          proc->pid = kproc->ki_pid;
-         proc->isKernelThread = kproc->ki_pid != 0 && kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
+         proc->isKernelThread = kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
          proc->isUserlandThread = false;
          proc->ppid = kproc->ki_ppid;
          proc->tpgid = kproc->ki_tpgid;
