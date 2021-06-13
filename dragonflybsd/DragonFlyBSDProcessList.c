@@ -432,7 +432,6 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    int count = 0;
 
-   // TODO Kernel Threads seem to be skipped, need to figure out the correct flag
    const struct kinfo_proc* kprocs = kvm_getprocs(dfpl->kd, KERN_PROC_ALL | (!hideUserlandThreads ? KERN_PROC_FLAG_LWP : 0), 0, &count);
 
    for (int i = 0; i < count; i++) {
