@@ -34,7 +34,7 @@ in the source distribution for its full text.
 #include "Vector.h"
 #include "XUtils.h"
 
-#if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))
+#if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
 #include "Affinity.h"
 #include "AffinityPanel.h"
 #endif
@@ -305,7 +305,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    if (st->pl->activeCPUs == 1)
       return HTOP_OK;
 
-#if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))
+#if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
    const Process* p = (const Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
@@ -328,8 +328,11 @@ static Htop_Reaction actionSetAffinity(State* st) {
       Affinity_delete(affinity2);
    }
    Object_delete(affinityPanel);
-#endif
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+#else
+   return HTOP_OK;
+#endif
+
 }
 
 static Htop_Reaction actionKill(State* st) {
@@ -484,7 +487,7 @@ static const struct {
    { .key = "   F9 k: ", .roInactive = true,  .info = "kill process/tagged processes" },
    { .key = "   F7 ]: ", .roInactive = true,  .info = "higher priority (root only)" },
    { .key = "   F8 [: ", .roInactive = false, .info = "lower priority (+ nice)" },
-#if (defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY))
+#if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
    { .key = "      a: ", .roInactive = true, .info = "set CPU affinity" },
 #endif
    { .key = "      e: ", .roInactive = false, .info = "show process environment" },

@@ -22,7 +22,7 @@ in the source distribution for its full text.
 #else
 #define HTOP_HWLOC_CPUBIND_FLAG HWLOC_CPUBIND_PROCESS
 #endif
-#elif defined(HAVE_LINUX_AFFINITY)
+#elif defined(HAVE_AFFINITY)
 #include <sched.h>
 #endif
 
@@ -84,7 +84,7 @@ bool Affinity_set(Process* proc, Arg arg) {
    return ok;
 }
 
-#elif defined(HAVE_LINUX_AFFINITY)
+#elif defined(HAVE_AFFINITY)
 
 Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
    cpu_set_t cpuset;

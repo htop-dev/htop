@@ -355,9 +355,44 @@ AC_CHECK_FUNCS( [set_escdelay] )
 AC_CHECK_FUNCS( [getmouse] )
 
 
+AC_ARG_ENABLE([affinity],
+              [AS_HELP_STRING([--enable-affinity],
+                              [enable sched_setaffinity and sched_getaffinity for affinity support, conflicts with hwloc @<:@default=check@:>@])],
+              [],
+              [enable_affinity=check])
+if test "x$enable_affinity" = xcheck; then
+   if test "x$enable_hwloc" = xyes; then
+      enable_affinity=no
+   else
+      AC_MSG_CHECKING([for usable sched_setaffinity])
+      AC_RUN_IFELSE([
+         AC_LANG_PROGRAM([[
+            #include <sched.h>
+            #include <errno.h>
+            static cpu_set_t cpuset;
+         ]], [[
+            CPU_ZERO(&cpuset);
+            sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+            if (errno == ENOSYS) return 1;
+         ]])],
+      [enable_affinity=yes
+         AC_MSG_RESULT([yes])],
+      [enable_affinity=no
+         AC_MSG_RESULT([no])],
+      [AC_MSG_RESULT([yes (assumed while cross compiling)])])
+   fi
+fi
+if test "x$enable_affinity" = xyes; then
+   if test "x$enable_hwloc" = xyes; then
+      AC_MSG_ERROR([--enable-hwloc and --enable-affinity are mutual exclusive. Specify at most one of them.])
+   fi
+   AC_DEFINE([HAVE_AFFINITY], [1], [Define if sched_setaffinity and sched_getaffinity are to be used.])
+fi
+
+
 AC_ARG_ENABLE([hwloc],
               [AS_HELP_STRING([--enable-hwloc],
-              [enable hwloc support for CPU affinity; disables Linux affinity; requires libhwloc @<:@default=no@:>@])],
+              [enable hwloc support for CPU affinity; disables affinity support; requires libhwloc @<:@default=no@:>@])],
               [],
               [enable_hwloc=no])
 case "$enable_hwloc" in
@@ -430,41 +465,6 @@ AC_ARG_ENABLE([ancient_vserver],
 if test "x$enable_ancient_vserver" = xyes; then
     AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
     AC_DEFINE([HAVE_ANCIENT_VSERVER], [1], [Define if ancient vserver support enabled.])
-fi
-
-
-AC_ARG_ENABLE([linux_affinity],
-              [AS_HELP_STRING([--enable-linux-affinity],
-                              [enable Linux sched_setaffinity and sched_getaffinity for affinity support, conflicts with hwloc @<:@default=check@:>@])],
-              [],
-              [enable_linux_affinity=check])
-if test "x$enable_linux_affinity" = xcheck; then
-   if test "x$enable_hwloc" = xyes; then
-      enable_linux_affinity=no
-   else
-      AC_MSG_CHECKING([for usable sched_setaffinity])
-      AC_RUN_IFELSE([
-         AC_LANG_PROGRAM([[
-            #include <sched.h>
-            #include <errno.h>
-            static cpu_set_t cpuset;
-         ]], [[
-            CPU_ZERO(&cpuset);
-            sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-            if (errno == ENOSYS) return 1;
-         ]])],
-      [enable_linux_affinity=yes
-         AC_MSG_RESULT([yes])],
-      [enable_linux_affinity=no
-         AC_MSG_RESULT([no])],
-      [AC_MSG_RESULT([yes (assumed while cross compiling)])])
-   fi
-fi
-if test "x$enable_linux_affinity" = xyes; then
-   if test "x$enable_hwloc" = xyes; then
-      AC_MSG_ERROR([--enable-hwloc and --enable-linux-affinity are mutual exclusive. Specify at most one of them.])
-   fi
-   AC_DEFINE([HAVE_LINUX_AFFINITY], [1], [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
 
@@ -688,11 +688,11 @@ AC_MSG_RESULT([
   (Linux) openvz:            $enable_openvz
   (Linux) vserver:           $enable_vserver
   (Linux) ancient vserver:   $enable_ancient_vserver
-  (Linux) affinity:          $enable_linux_affinity
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $enable_sensors
   (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode
+  affinity:                  $enable_affinity
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
