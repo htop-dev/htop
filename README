@@ -107,7 +107,7 @@ If you have trouble running `htop` please consult your Operating System / Linux 
 
 We have a [development mailing list](https://htop.dev/mailinglist.html). Feel free to subscribe for release announcements or asking questions on the development of htop.
 
-You can also join our IRC channel #htop on freenode and talk to the developers there.
+You can also join our IRC channel #htop on Libera.Chat and talk to the developers there.
 
 If you have found an issue with the source of htop, please check whether this has already been reported in our [Github issue tracker](https://github.com/htop-dev/htop/issues).
 If not, please file a new issue describing the problem you have found, the location in the source code you are referring to and a possible fix.
