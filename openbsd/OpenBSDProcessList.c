@@ -284,10 +284,8 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          proc->pgrp = kproc->p__pgid;
          proc->isKernelThread = proc->pgrp == 0;
          proc->isUserlandThread = kproc->p_tid != -1;
-         proc->st_uid = kproc->p_uid;
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
-         proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
          ProcessList_add(&this->super, proc);
 
          OpenBSDProcessList_updateProcessName(this->kd, kproc, proc);
@@ -322,6 +320,11 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       proc->minflt = kproc->p_uru_minflt;
       proc->majflt = kproc->p_uru_majflt;
       proc->nlwp = 1;
+
+      if (proc->st_uid != kproc->p_uid) {
+         proc->st_uid = kproc->p_uid;
+         proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
+      }
 
       switch (kproc->p_stat) {
          case SIDL:    proc->state = 'I'; break;
