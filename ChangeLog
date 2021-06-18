@@ -1,4 +1,4 @@
-What's new in version 3.0.6 (not released yet)
+What's new in version 3.1.0 (not released yet)
 
 * Change available / used memory reporting on Linux to be based on
   MemAvailable (Kernel 3.14+) (thanks to Chris Cheney and Tomas Wido)
