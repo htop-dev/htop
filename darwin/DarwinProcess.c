@@ -298,7 +298,6 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       proc->tgid = proc->pid;
       proc->isKernelThread = false;
       proc->isUserlandThread = false;
-      proc->st_uid = ps->kp_eproc.e_ucred.cr_uid;
       dp->translated = ps->kp_proc.p_flag & P_TRANSLATED;
 
       proc->tty_nr = ps->kp_eproc.e_tdev;
