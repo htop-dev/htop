@@ -366,7 +366,6 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
    // (accessed on 18 November 2017)
    proc->percent_mem        = ((uint16_t)_psinfo->pr_pctmem / (double)32768) * (double)100.0;
-   proc->st_uid             = _psinfo->pr_euid;
    proc->pgrp               = _psinfo->pr_pgid;
    proc->nlwp               = _psinfo->pr_nlwp;
    proc->session            = _psinfo->pr_sid;
@@ -383,12 +382,16 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    proc->m_resident         = _psinfo->pr_rssize;	// KB
    proc->m_virt             = _psinfo->pr_size;		// KB
 
+   if (proc->st_uid != _psinfo->pr_euid) {
+      proc->st_uid          = _psinfo->pr_euid;
+      proc->user            = UsersTable_getRef(pl->usersTable, proc->st_uid);
+   }
+
    if (!preExisting) {
       sproc->realpid        = _psinfo->pr_pid;
       sproc->lwpid          = lwpid_real;
       sproc->zoneid         = _psinfo->pr_zoneid;
       sproc->zname          = SolarisProcessList_readZoneName(spl->kd, sproc);
-      proc->user            = UsersTable_getRef(pl->usersTable, proc->st_uid);
       SolarisProcessList_updateExe(_psinfo->pr_pid, proc);
 
       Process_updateComm(proc, _psinfo->pr_fname);
