@@ -374,8 +374,9 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
                           0.0 : CLAMP(percent_cpu, 0.0, pl->cpuCount * 100.0);
       proc->percent_mem = proc->m_resident / (double)pl->totalMem * 100.0;
 
+      PCPProcessList_updateUsername(proc, pid, offset, pl->usersTable);
+
       if (!preExisting) {
-         PCPProcessList_updateUsername(proc, pid, offset, pl->usersTable);
          PCPProcessList_updateCmdline(proc, pid, offset, command);
          Process_fillStarttimeBuffer(proc);
          ProcessList_add(pl, proc);
