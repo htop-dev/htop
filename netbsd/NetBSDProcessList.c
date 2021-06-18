@@ -236,10 +236,8 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
          proc->pgrp = kproc->p__pgid;
          proc->isKernelThread = proc->pgrp == 0;
          proc->isUserlandThread = proc->pid != proc->tgid;
-         proc->st_uid = kproc->p_uid;
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
-         proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
          ProcessList_add(&this->super, proc);
 
          NetBSDProcessList_updateExe(kproc, proc);
@@ -252,6 +250,11 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
 
       if (settings->flags & PROCESS_FLAG_CWD) {
          NetBSDProcessList_updateCwd(kproc, proc);
+      }
+
+      if (proc->st_uid != kproc->p_uid) {
+         proc->st_uid = kproc->p_uid;
+         proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
       }
 
       proc->m_virt = kproc->p_vm_vsize;
