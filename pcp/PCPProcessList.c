@@ -281,7 +281,7 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
       ++command;
       --length;
       if (command[length-1] == ')')
-         command[length-1] = '\0';
+         command[--length] = '\0';
       process->isKernelThread = true;
    }
 
