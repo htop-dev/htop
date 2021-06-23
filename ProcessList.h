@@ -50,6 +50,8 @@ typedef struct ProcessList_ {
    Hashtable* displayTreeSet;
    Hashtable* draftingTreeSet;
 
+   Hashtable* dynamicMeters;  /* runtime-discovered meters */
+
    struct timeval realtime;   /* time of the current sample */
    uint64_t realtimeMs;       /* current time in milliseconds */
    uint64_t monotonicMs;      /* same, but from monotonic clock */
@@ -84,12 +86,12 @@ typedef struct ProcessList_ {
    unsigned int cpuCount;
 } ProcessList;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId);
 void ProcessList_delete(ProcessList* pl);
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
 
 
-ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
+ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId);
 
 void ProcessList_done(ProcessList* this);
 

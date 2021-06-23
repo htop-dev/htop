@@ -1,0 +1,21 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[postfix]
+caption = Postfix
+incoming.metric = sum(postfix.queues.incoming)
+incoming.color = green
+incoming.label = in
+active.metric = sum(postfix.queues.active)
+active.color = blue
+active.label = act
+deferred.metric = sum(postfix.queues.deferred)
+deferred.color = cyan
+deferred.label = dfr
+bounce.metric = sum(postfix.queues.maildrop)
+bounce.color = red
+bounce.label = bnc
+hold.metric = sum(postfix.queues.hold)
+hold.color = yellow
+hold.label = hold

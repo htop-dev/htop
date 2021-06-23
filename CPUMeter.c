@@ -50,6 +50,14 @@ static void CPUMeter_init(Meter* this) {
    }
 }
 
+// Custom uiName runtime logic to include the param (processor)
+static void CPUMeter_getUiName(const Meter* this, char* buffer, size_t length) {
+   if (this->param > 0)
+      xSnprintf(buffer, sizeof(length), "%s %u", Meter_uiName(this), this->param);
+   else
+      xSnprintf(buffer, sizeof(length), "%s", Meter_uiName(this));
+}
+
 static void CPUMeter_updateValues(Meter* this) {
    unsigned int cpu = this->param;
    if (cpu > this->pl->cpuCount) {
@@ -326,6 +334,7 @@ const MeterClass CPUMeter_class = {
       .display = CPUMeter_display
    },
    .updateValues = CPUMeter_updateValues,
+   .getUiName = CPUMeter_getUiName,
    .defaultMode = BAR_METERMODE,
    .maxItems = CPU_METER_ITEMCOUNT,
    .total = 100.0,

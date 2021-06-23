@@ -1,0 +1,15 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[locks]
+caption = File locks
+description = VFS file locks
+posix.metric = vfs.locks.posix.count
+posix.color = blue
+flock.metric = vfs.locks.flock.count
+flock.color = green
+readlock.metric = vfs.locks.posix.read + vfs.locks.flock.read
+readlock.color = red
+writelock.metric = vfs.locks.posix.write + vfs.locks.flock.write
+writelock.color = yellow

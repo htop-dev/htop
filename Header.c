@@ -13,6 +13,8 @@ in the source distribution for its full text.
 #include <string.h>
 
 #include "CRT.h"
+#include "CPUMeter.h"
+#include "DynamicMeter.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
@@ -70,7 +72,10 @@ void Header_writeBackToSettings(const Header* this) {
       for (int i = 0; i < len; i++) {
          const Meter* meter = (Meter*) Vector_get(vec, i);
          char* name;
-         if (meter->param) {
+         if (meter->param && As_Meter(meter) == &DynamicMeter_class) {
+            const char* dynamic = DynamicMeter_lookup(this->pl, meter->param);
+            xAsprintf(&name, "%s(%s)", As_Meter(meter)->name, dynamic);
+         } else if (meter->param && As_Meter(meter) == &CPUMeter_class) {
             xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
          } else {
             xAsprintf(&name, "%s", As_Meter(meter)->name);
@@ -87,9 +92,13 @@ MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
    char* paren = strchr(name, '(');
    unsigned int param = 0;
    if (paren) {
-      int ok = sscanf(paren, "(%10u)", &param);
-      if (!ok)
-         param = 0;
+      char* end, dynamic[32] = {0};
+      int ok = sscanf(paren, "(%10u)", &param); // CPUMeter
+      if (!ok) {
+         ok = sscanf(paren, "(%30s)", dynamic); // DynamicMeter
+         if (ok && (end = strrchr(dynamic, ')'))) *end = '\0';
+         param = ok ? DynamicMeter_search(this->pl, dynamic) : 0;
+      }
       *paren = '\0';
    }
    MeterModeId mode = TEXT_METERMODE;

@@ -92,4 +92,12 @@ static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec)
 
 void Platform_gettime_monotonic(uint64_t* msec);
 
+static inline Hashtable* Platform_dynamicMeters(void) { return NULL; }
+
+static inline void Platform_dynamicMeterInit(ATTR_UNUSED Meter* meter) { }
+
+static inline void Platform_dynamicMeterUpdateValues(ATTR_UNUSED Meter* meter) { }
+
+static inline void Platform_dynamicMeterDisplay(ATTR_UNUSED const Meter* meter, ATTR_UNUSED RichString* out) { }
+
 #endif

@@ -22,6 +22,7 @@ in the source distribution for its full text.
 
 #include "Action.h"
 #include "CRT.h"
+#include "DynamicMeter.h"
 #include "Hashtable.h"
 #include "Header.h"
 #include "IncSet.h"
@@ -288,7 +289,8 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    Process_setupColumnWidths();
 
    UsersTable* ut = UsersTable_new();
-   ProcessList* pl = ProcessList_new(ut, flags.pidMatchList, flags.userId);
+   Hashtable* dm = DynamicMeters_new();
+   ProcessList* pl = ProcessList_new(ut, dm, flags.pidMatchList, flags.userId);
 
    Settings* settings = Settings_new(pl->cpuCount);
    pl->settings = settings;

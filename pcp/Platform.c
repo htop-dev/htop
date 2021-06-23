@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "DynamicMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -41,6 +42,7 @@ in the source distribution for its full text.
 #include "linux/PressureStallMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
+#include "pcp/PCPDynamicMeter.h"
 #include "pcp/PCPProcess.h"
 #include "pcp/PCPProcessList.h"
 #include "zfs/ZfsArcMeter.h"
@@ -50,14 +52,14 @@ in the source distribution for its full text.
 
 typedef struct Platform_ {
    int context;			/* PMAPI(3) context identifier */
-   unsigned int total;		/* total number of all metrics */
+   unsigned int totalMetrics;	/* total number of all metrics */
    const char** names;		/* name array indexed by Metric */
    pmID* pmids;			/* all known metric identifiers */
    pmID* fetch;			/* enabled identifiers for sampling */
    pmDesc* descs;		/* metric desc array indexed by Metric */
    pmResult* result;		/* sample values result indexed by Metric */
+   PCPDynamicMeters meters;	/* dynamic meters via configuration files */
    struct timeval offset;	/* time offset used in archive mode only */
-
    long long btime;		/* boottime in seconds since the epoch */
    char* release;		/* uname and distro from this context */
    int pidmax;			/* maximum platform process identifier */
@@ -78,6 +80,7 @@ const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
+   &DynamicMeter_class,
    &ClockMeter_class,
    &DateMeter_class,
    &DateTimeMeter_class,
@@ -244,7 +247,13 @@ static const char *Platform_metricNames[] = {
    [PCP_METRIC_COUNT] = NULL
 };
 
+const pmDesc* Metric_desc(Metric metric) {
+   return &pcp->descs[metric];
+}
+
 pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type) {
+   if (pcp->result == NULL)
+      return NULL;
 
    pmValueSet* vset = pcp->result->vset[metric];
    if (!vset || vset->numval <= 0)
@@ -374,7 +383,7 @@ bool Metric_fetch(struct timeval *timestamp) {
       pmFreeResult(pcp->result);
       pcp->result = NULL;
    }
-   int sts = pmFetch(pcp->total, pcp->fetch, &pcp->result);
+   int sts = pmFetch(pcp->totalMetrics, pcp->fetch, &pcp->result);
    if (sts < 0) {
       if (pmDebugOptions.appl0)
          fprintf(stderr, "Error: cannot fetch metric values: %s\n",
@@ -386,12 +395,12 @@ bool Metric_fetch(struct timeval *timestamp) {
    return true;
 }
 
-static int Platform_addMetric(Metric id, const char *name) {
+int Platform_addMetric(Metric id, const char *name) {
    unsigned int i = (unsigned int)id;
 
-   if (i >= PCP_METRIC_COUNT && i >= pcp->total) {
+   if (i >= PCP_METRIC_COUNT && i >= pcp->totalMetrics) {
       /* added via configuration files */
-      unsigned int j = pcp->total + 1;
+      unsigned int j = pcp->totalMetrics + 1;
       pcp->fetch = xRealloc(pcp->fetch, j * sizeof(pmID));
       pcp->pmids = xRealloc(pcp->pmids, j * sizeof(pmID));
       pcp->names = xRealloc(pcp->names, j * sizeof(char*));
@@ -401,7 +410,7 @@ static int Platform_addMetric(Metric id, const char *name) {
 
    pcp->pmids[i] = pcp->fetch[i] = PM_ID_NULL;
    pcp->names[i] = name;
-   return ++pcp->total;
+   return ++pcp->totalMetrics;
 }
 
 /* global state from the environment and command line arguments */
@@ -449,14 +458,17 @@ void Platform_init(void) {
 
    for (unsigned int i = 0; i < PCP_METRIC_COUNT; i++)
       Platform_addMetric(i, Platform_metricNames[i]);
+   pcp->meters.offset = PCP_METRIC_COUNT;
 
-   sts = pmLookupName(pcp->total, pcp->names, pcp->pmids);
+   PCPDynamicMeters_init(&pcp->meters);
+
+   sts = pmLookupName(pcp->totalMetrics, pcp->names, pcp->pmids);
    if (sts < 0) {
       fprintf(stderr, "Error: cannot lookup metric names: %s\n", pmErrStr(sts));
       exit(1);
    }
 
-   for (unsigned int i = 0; i < pcp->total; i++) {
+   for (unsigned int i = 0; i < pcp->totalMetrics; i++) {
       pcp->fetch[i] = PM_ID_NULL;	/* default is to not sample */
 
       /* expect some metrics to be missing - e.g. PMDA not available */
@@ -882,4 +894,26 @@ void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
 void Platform_gettime_monotonic(uint64_t* msec) {
    struct timeval* tv = &pcp->result->timestamp;
    *msec = ((uint64_t)tv->tv_sec * 1000) + ((uint64_t)tv->tv_usec / 1000);
+}
+
+Hashtable* Platform_dynamicMeters(void) {
+   return pcp->meters.table;
+}
+
+void Platform_dynamicMeterInit(Meter* meter) {
+   PCPDynamicMeter* this = Hashtable_get(pcp->meters.table, meter->param);
+   if (this)
+      PCPDynamicMeter_enable(this);
+}
+
+void Platform_dynamicMeterUpdateValues(Meter* meter) {
+   PCPDynamicMeter* this = Hashtable_get(pcp->meters.table, meter->param);
+   if (this)
+      PCPDynamicMeter_updateValues(this, meter);
+}
+
+void Platform_dynamicMeterDisplay(const Meter* meter, RichString* out) {
+   PCPDynamicMeter* this = Hashtable_get(pcp->meters.table, meter->param);
+   if (this)
+      PCPDynamicMeter_display(this, meter, out);
 }

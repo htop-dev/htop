@@ -1,0 +1,11 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[freespace]
+caption = Freespace
+description = Filesystem space
+used.metric = sum(filesys.used)
+used.color = blue
+free.metric = sum(filesys.free)
+free.color = green

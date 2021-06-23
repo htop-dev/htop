@@ -1,0 +1,9 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[entropy]
+caption = Entropy
+avail.metric = kernel.all.entropy.avail / kernel.all.entropy.poolsize * 100
+avail.label = avail
+avail.suffix = %

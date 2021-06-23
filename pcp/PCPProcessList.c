@@ -59,11 +59,11 @@ static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
    return name;
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
    PCPProcessList* this = xCalloc(1, sizeof(PCPProcessList));
    ProcessList* super = &(this->super);
 
-   ProcessList_init(super, Class(PCPProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(super, Class(PCPProcess), usersTable, dynamicMeters, pidMatchList, userId);
 
    struct timeval timestamp;
    gettimeofday(&timestamp, NULL);

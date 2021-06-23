@@ -47,10 +47,10 @@ static char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sp
    return zname;
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
    SolarisProcessList* spl = xCalloc(1, sizeof(SolarisProcessList));
    ProcessList* pl = (ProcessList*) spl;
-   ProcessList_init(pl, Class(SolarisProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(SolarisProcess), usersTable, dynamicMeters, pidMatchList, userId);
 
    spl->kd = kstat_open();
 

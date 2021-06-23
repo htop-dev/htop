@@ -14,9 +14,9 @@ in the source distribution for its full text.
 #include "UnsupportedProcess.h"
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
-   ProcessList_init(this, Class(Process), usersTable, pidMatchList, userId);
+   ProcessList_init(this, Class(Process), usersTable, dynamicMeters, pidMatchList, userId);
 
    this->cpuCount = 1;
 

@@ -1,0 +1,13 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[ipc]
+caption = SysV IPC
+description = SysV IPC counts
+msg.metric = ipc.msg.used_queues
+msg.color = blue
+sem.metric = ipc.sem.used_sem
+sem.color = green
+shm.metric = ipc.shm.used_ids
+shm.color = cyan

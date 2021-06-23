@@ -138,14 +138,13 @@ ListItem* Meter_toListItem(const Meter* this, bool moving) {
    } else {
       mode[0] = '\0';
    }
-   char number[10];
-   if (this->param > 0) {
-      xSnprintf(number, sizeof(number), " %u", this->param);
-   } else {
-      number[0] = '\0';
-   }
+   char name[32];
+   if (Meter_getUiNameFn(this))
+      Meter_getUiName(this, name, sizeof(name));
+   else
+      xSnprintf(name, sizeof(name), "%s", Meter_uiName(this));
    char buffer[50];
-   xSnprintf(buffer, sizeof(buffer), "%s%s%s", Meter_uiName(this), number, mode);
+   xSnprintf(buffer, sizeof(buffer), "%s%s", name, mode);
    ListItem* li = ListItem_new(buffer, 0);
    li->moving = moving;
    return li;

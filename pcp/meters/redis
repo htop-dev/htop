@@ -1,0 +1,41 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[redisxact]
+caption = Redis xact
+description = Redis transactions
+tps.metric = redis.instantaneous_ops_per_sec
+tps.color = green
+
+[redismem]
+caption = Redis mem
+description = Redis memory
+lua.metric = redis.used_memory_lua
+lua.color = magenta
+lua.label = lua:
+used.metric = redis.used_memory
+used.color = blue
+used.label = used:
+
+[redisclient]
+caption = Redis clients
+description = Redis clients
+type = bar
+blocked.metric = redis.blocked_clients
+blocked.color = blue
+blocked.label = blk
+clients.metric = redis.connected_clients
+clients.color = green
+clients.label = conn
+
+[redisconn]
+caption = Redis conn
+description = Redis connections
+type = bar
+reject.metric = redis.rejected_connections
+reject.color = magenta
+reject.label = fail/s
+total.metric = redis.total_connections_received
+total.color = blue
+total.label = conn/s

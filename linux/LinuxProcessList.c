@@ -184,11 +184,11 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super, FILE* stream) {
    }
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
 
-   ProcessList_init(pl, Class(LinuxProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(LinuxProcess), usersTable, dynamicMeters, pidMatchList, userId);
    LinuxProcessList_initTtyDrivers(this);
 
    // Initialize page size

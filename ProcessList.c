@@ -19,7 +19,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->processes2 = Vector_new(klass, true, DEFAULT_SIZE); // tree-view auxiliary buffer
 
@@ -29,6 +29,7 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
 
    this->usersTable = usersTable;
    this->pidMatchList = pidMatchList;
+   this->dynamicMeters = dynamicMeters;
 
    this->userId = userId;
 

@@ -39,6 +39,7 @@ myhtopsources = \
 	DateTimeMeter.c \
 	DiskIOMeter.c \
 	DisplayOptionsPanel.c \
+	DynamicMeter.c \
 	EnvScreen.c \
 	FunctionBar.c \
 	Hashtable.c \
@@ -93,6 +94,7 @@ myhtopheaders = \
 	DateTimeMeter.h \
 	DiskIOMeter.h \
 	DisplayOptionsPanel.h \
+	DynamicMeter.h \
 	EnvScreen.h \
 	FunctionBar.h \
 	Hashtable.h \
@@ -357,6 +359,7 @@ endif
 # --------------------------
 
 pcp_platform_headers = \
+	pcp/PCPDynamicMeter.h \
 	pcp/PCPProcess.h \
 	pcp/PCPProcessList.h \
 	pcp/Platform.h \
@@ -369,6 +372,7 @@ pcp_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 pcp_platform_sources = \
+	pcp/PCPDynamicMeter.c \
 	pcp/PCPProcess.c \
 	pcp/PCPProcessList.c \
 	pcp/Platform.c \

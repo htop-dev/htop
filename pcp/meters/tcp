@@ -1,0 +1,22 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[tcp]
+caption = TCP
+description = TCP sockets
+listen.metric = network.tcpconn.listen
+listen.color = green
+listen.label = lis
+active.metric = network.tcpconn.established
+active.color = blue
+active.label = act
+syn.metric = network.tcpconn.syn_sent + network.tcpconn.syn_recv + network.tcpconn.last_ack
+syn.color = cyan
+syn.label = syn
+wait.metric = network.tcpconn.time_wait
+wait.color = red
+wait.label = tim
+close.metric = network.tcpconn.fin_wait1 + network.tcpconn.fin_wait2 + network.tcpconn.close + network.tcpconn.close_wait + network.tcpconn.closing
+close.color = yellow
+close.label = clo
