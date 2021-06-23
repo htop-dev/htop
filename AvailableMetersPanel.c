@@ -45,7 +45,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    if (!selected)
       return IGNORED;
 
-   unsigned int param = selected->key & 0xff;
+   unsigned int param = selected->key & 0xffff;
    int type = selected->key >> 16;
    HandlerResult result = IGNORED;
    bool update = false;
