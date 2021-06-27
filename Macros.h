@@ -37,8 +37,6 @@
 #define ATTR_NONNULL                    __attribute__((nonnull))
 #define ATTR_NORETURN                   __attribute__((noreturn))
 #define ATTR_UNUSED                     __attribute__((unused))
-#define ATTR_ALLOC_SIZE1(a)             __attribute__((alloc_size (a)))
-#define ATTR_ALLOC_SIZE2(a, b)          __attribute__((alloc_size (a, b)))
 #define ATTR_MALLOC                     __attribute__((malloc))
 
 #else /* __GNUC__ */
@@ -47,11 +45,21 @@
 #define ATTR_NONNULL
 #define ATTR_NORETURN
 #define ATTR_UNUSED
-#define ATTR_ALLOC_SIZE1(a)
-#define ATTR_ALLOC_SIZE2(a, b)
 #define ATTR_MALLOC
 
 #endif /* __GNUC__ */
+
+#ifdef HAVE_ATTR_ALLOC_SIZE
+
+#define ATTR_ALLOC_SIZE1(a)             __attribute__((alloc_size (a)))
+#define ATTR_ALLOC_SIZE2(a, b)          __attribute__((alloc_size (a, b)))
+
+#else
+
+#define ATTR_ALLOC_SIZE1(a)
+#define ATTR_ALLOC_SIZE2(a, b)
+
+#endif /* HAVE_ATTR_ALLOC_SIZE */
 
 // ignore casts discarding const specifier, e.g.
 //     const char []     ->  char * / void *
