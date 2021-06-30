@@ -233,15 +233,15 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
    case CGROUP:
       return SPACESHIP_NULLSTR(p1->cgroup, p2->cgroup);
    case OOM:
-      return SPACESHIP_NUMBER(p1->oom, p1->oom);
+      return SPACESHIP_NUMBER(p1->oom, p2->oom);
    case PERCENT_CPU_DELAY:
-      return SPACESHIP_NUMBER(p1->cpu_delay_percent, p1->cpu_delay_percent);
+      return SPACESHIP_NUMBER(p1->cpu_delay_percent, p2->cpu_delay_percent);
    case PERCENT_IO_DELAY:
-      return SPACESHIP_NUMBER(p1->blkio_delay_percent, p1->blkio_delay_percent);
+      return SPACESHIP_NUMBER(p1->blkio_delay_percent, p2->blkio_delay_percent);
    case PERCENT_SWAP_DELAY:
-      return SPACESHIP_NUMBER(p1->swapin_delay_percent, p1->swapin_delay_percent);
+      return SPACESHIP_NUMBER(p1->swapin_delay_percent, p2->swapin_delay_percent);
    case CTXT:
-      return SPACESHIP_NUMBER(p1->ctxt_diff, p1->ctxt_diff);
+      return SPACESHIP_NUMBER(p1->ctxt_diff, p2->ctxt_diff);
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
    default:
