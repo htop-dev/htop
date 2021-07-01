@@ -30,7 +30,7 @@ void Generic_gettime_realtime(struct timeval* tvp, uint64_t* msec) {
 
    struct timeval tv;
    if (gettimeofday(&tv, NULL) == 0) {
-      *tsp = tv; /* struct copy */
+      *tvp = tv; /* struct copy */
       *msec = ((uint64_t)tv.tv_sec * 1000) + ((uint64_t)tv.tv_usec / 1000);
    } else {
       memset(tvp, 0, sizeof(struct timeval));
