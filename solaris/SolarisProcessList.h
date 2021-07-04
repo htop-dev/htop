@@ -8,8 +8,6 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define MAXCMDLINE 255
-
 #define GZONE "global    "
 #define UZONE "unknown   "
 
