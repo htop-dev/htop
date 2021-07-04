@@ -336,6 +336,7 @@ if test "$my_htop_platform" = "solaris"; then
    # Since ncruses macros use the ERR macro, we can not use another name.
    AC_DEFINE([ERR], [(-1)], [Predefine ncurses macro.])
 fi
+AC_CHECK_FUNCS( [set_escdelay] )
 
 
 AC_ARG_ENABLE([hwloc],
