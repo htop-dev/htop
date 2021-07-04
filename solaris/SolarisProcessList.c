@@ -26,6 +26,9 @@ in the source distribution for its full text.
 #include "solaris/SolarisProcess.h"
 
 
+#define GZONE "global    "
+#define UZONE "unknown   "
+
 static int pageSize;
 static int pageSizeKB;
 
