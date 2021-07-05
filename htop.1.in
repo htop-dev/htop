@@ -67,6 +67,11 @@ requesting a sort order with -s.
 \fB\-H \-\-highlight-changes=DELAY\fR
 Highlight new and old processes
 .TP
+\fB   \-\-kiosk\fR
+Start in kiosk-mode.
+Hide process selection and function bar.
+Implies \-\-readonly.
+.TP
 \fB   \-\-drop-capabilities[=off|basic|strict]\fR
 Linux only; requires libcap support.
 .br
