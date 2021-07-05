@@ -26,7 +26,8 @@ in the source distribution for its full text.
 #include "solaris/SolarisProcess.h"
 
 
-#define MAXCMDLINE 255
+#define GZONE "global    "
+#define UZONE "unknown   "
 
 static int pageSize;
 static int pageSizeKB;
