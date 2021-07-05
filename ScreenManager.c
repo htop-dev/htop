@@ -5,6 +5,8 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "ScreenManager.h"
 
 #include <assert.h>
@@ -164,7 +166,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
 
       int prevCh = ch;
+#ifdef HAVE_SET_ESCDELAY
       set_escdelay(25);
+#endif
       ch = getch();
 
       HandlerResult result = IGNORED;
