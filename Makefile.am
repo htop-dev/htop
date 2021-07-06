@@ -38,6 +38,7 @@ myhtopsources = \
 	DateMeter.c \
 	DateTimeMeter.c \
 	DiskIOMeter.c \
+	DiskUsageMeter.c \
 	DisplayOptionsPanel.c \
 	EnvScreen.c \
 	FunctionBar.c \
@@ -92,6 +93,7 @@ myhtopheaders = \
 	DateMeter.h \
 	DateTimeMeter.h \
 	DiskIOMeter.h \
+	DiskUsageMeter.h \
 	DisplayOptionsPanel.h \
 	EnvScreen.h \
 	FunctionBar.h \
@@ -140,6 +142,8 @@ linux_platform_headers = \
 	linux/IOPriority.h \
 	linux/IOPriorityPanel.h \
 	linux/LibSensors.h \
+	linux/LibSensorsFanMeter.h \
+	linux/LibSensorsTempMeter.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
 	linux/Platform.h \
@@ -160,6 +164,8 @@ linux_platform_sources = \
 	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \
 	linux/LibSensors.c \
+	linux/LibSensorsFanMeter.c \
+	linux/LibSensorsTempMeter.c \
 	linux/LinuxProcess.c \
 	linux/LinuxProcessList.c \
 	linux/Platform.c \

@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "CPUMeter.h"
 #include "DiskIOMeter.h"
+#include "DiskUsageMeter.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
@@ -66,7 +67,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(NetworkIOData* data);
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data);
 
 void Platform_getBattery(double *percent, ACPresence *isOnAC);
 
@@ -91,5 +92,13 @@ static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec)
 }
 
 void Platform_gettime_monotonic(uint64_t* msec);
+
+char** Platform_getLocalIPv4addressChoices(void);
+char** Platform_getLocalIPv6addressChoices(void);
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size);
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size);
+
+char **Platform_getDiskUsageChoices(void);
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data);
 
 #endif

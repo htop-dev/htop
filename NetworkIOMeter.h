@@ -12,5 +12,6 @@ typedef struct NetworkIOData_ {
 } NetworkIOData;
 
 extern const MeterClass NetworkIOMeter_class;
+extern const MeterClass NetworkInterfaceIOMeter_class;
 
 #endif /* HEADER_NetworkIOMeter */
