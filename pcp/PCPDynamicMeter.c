@@ -329,7 +329,7 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
 
       if (metric->label) {
          len = xSnprintf(buffer, sizeof(buffer), "%s ", metric->label);
-         RichString_appendnAscii(out, CRT_colors[metric->color], buffer, len);
+         RichString_appendnAscii(out, CRT_colors[METER_TEXT], buffer, len);
       }
 
       /* TODO: pretty-print the values - pmConvScale, etc */
