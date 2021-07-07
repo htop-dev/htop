@@ -336,6 +336,9 @@ pmAtomValue *Metric_instance(Metric metric, int inst, int offset, pmAtomValue *a
  * Start it off by passing offset -1 into the routine.
  */
 bool Metric_iterate(Metric metric, int* instp, int* offsetp) {
+   if (!pcp->result)
+      return false;
+
    pmValueSet* vset = pcp->result->vset[metric];
    if (!vset || vset->numval <= 0)
       return false;
@@ -892,8 +895,12 @@ void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
 }
 
 void Platform_gettime_monotonic(uint64_t* msec) {
-   struct timeval* tv = &pcp->result->timestamp;
-   *msec = ((uint64_t)tv->tv_sec * 1000) + ((uint64_t)tv->tv_usec / 1000);
+   if (pcp->result) {
+      struct timeval* tv = &pcp->result->timestamp;
+      *msec = ((uint64_t)tv->tv_sec * 1000) + ((uint64_t)tv->tv_usec / 1000);
+   } else {
+      *msec = 0;
+   }
 }
 
 Hashtable* Platform_dynamicMeters(void) {
