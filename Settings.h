@@ -12,20 +12,22 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "HeaderLayout.h"
 #include "Process.h"
 
 
 #define DEFAULT_DELAY 15
 
 typedef struct {
-   int len;
+   uint8_t len;
    char** names;
    int* modes;
-} MeterColumnSettings;
+} MeterColumnSetting;
 
 typedef struct Settings_ {
    char* filename;
-   MeterColumnSettings columns[2];
+   HeaderLayout hLayout;
+   MeterColumnSetting* hColumns;
 
    ProcessField* fields;
    uint32_t flags;
@@ -99,5 +101,7 @@ void Settings_setSortKey(Settings* this, ProcessField sortKey);
 void Settings_enableReadonly(void);
 
 bool Settings_isReadonly(void);
+
+void Settings_setHeaderLayout(Settings* this, HeaderLayout hLayout);
 
 #endif

@@ -185,7 +185,6 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       Header* header = this->scr->header;
       this->settings->changed = true;
       Header_calculateHeight(header);
-      Header_draw(header);
       ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
    }
    return result;
