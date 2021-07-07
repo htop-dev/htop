@@ -219,15 +219,15 @@ static void updateViaExec(void) {
          exit(1);
       dup2(fdnull, STDERR_FILENO);
       close(fdnull);
-      execl("/bin/systemctl",
-            "/bin/systemctl",
-            "show",
-            "--property=SystemState",
-            "--property=NFailedUnits",
-            "--property=NNames",
-            "--property=NJobs",
-            "--property=NInstalledJobs",
-            NULL);
+      execlp("systemctl",
+             "systemctl",
+             "show",
+             "--property=SystemState",
+             "--property=NFailedUnits",
+             "--property=NNames",
+             "--property=NJobs",
+             "--property=NInstalledJobs",
+             NULL);
       exit(127);
    }
    close(fdpair[1]);
