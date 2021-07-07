@@ -70,12 +70,27 @@ static void DynamicMeter_display(const Object* cast, RichString* out) {
    Platform_dynamicMeterDisplay(meter, out);
 }
 
+static const char* DynamicMeter_getCaption(const Meter* this) {
+   const ProcessList* pl = this->pl;
+   const DynamicMeter* meter = Hashtable_get(pl->dynamicMeters, this->param);
+   if (meter)
+      return meter->caption ? meter->caption : meter->name;
+   return this->caption;
+}
+
 static void DynamicMeter_getUiName(const Meter* this, char* name, size_t length) {
    const ProcessList* pl = this->pl;
    const DynamicMeter* meter = Hashtable_get(pl->dynamicMeters, this->param);
    if (meter) {
-      const char* uiName = meter->caption ? meter->caption : meter->name;
-      xSnprintf(name, length, "%s", uiName);
+      const char* uiName = meter->caption;
+      if (uiName) {
+         int len = strlen(uiName);
+         if (len > 2 && uiName[len-2] == ':')
+            len -= 2;
+         xSnprintf(name, length, "%.*s", len, uiName);
+      } else {
+         xSnprintf(name, length, "%s", meter->name);
+      }
    }
 }
 
@@ -87,6 +102,7 @@ const MeterClass DynamicMeter_class = {
    },
    .init = DynamicMeter_init,
    .updateValues = DynamicMeter_updateValues,
+   .getCaption = DynamicMeter_getCaption,
    .getUiName = DynamicMeter_getUiName,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 0,

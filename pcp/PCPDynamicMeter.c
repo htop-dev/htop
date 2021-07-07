@@ -42,6 +42,7 @@ static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, 
    metric = &meter->metrics[n-1];
    memset(metric, 0, sizeof(PCPDynamicMetric));
    metric->name = metricName;
+   metric->label = String_cat(name, ": ");
    metric->id = meters->offset + meters->cursor;
    meters->cursor++;
 
@@ -65,13 +66,14 @@ static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMete
       /* use derived metrics in dynamic meters for simplicity */
       char* error;
       if (pmRegisterDerivedMetric(metric->name, value, &error) < 0) {
-         char note[1024];
-         xSnprintf(note, sizeof(note),
-                   "failed to parse expression in %s at line %u\n%s\n%s",
-                   path, line, error, pmGetProgname());
+         char* note;
+         xAsprintf(&note,
+                   "%s: failed to parse expression in %s at line %u\n%s\n",
+                   pmGetProgname(), path, line, error);
          free(error);
          errno = EINVAL;
          CRT_fatalError(note);
+         free(note);
       }
    } else {
       /* this is a property of a dynamic metric - the metric expression */
@@ -97,7 +99,9 @@ static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMete
          else if (String_eq(value, "white"))
              metric->color = DYNAMIC_WHITE;
       } else if (String_eq(p, "label")) {
-         free_and_xStrdup(&metric->label, value);
+         char* label = String_cat(value, ": ");
+         free_and_xStrdup(&metric->label, label);
+         free(label);
       } else if (String_eq(p, "suffix")) {
          free_and_xStrdup(&metric->suffix, value);
       }
@@ -112,12 +116,13 @@ static void PCPDynamicMeter_validateMeterName(char* key, const char *path, unsig
    if (end) {
       *end = '\0';
    } else {
-      char note[1024];
-      xSnprintf(note, sizeof(note),
-                "No closing brace on meter name at %s line %u\n\"%s\"",
-                path, line, key);
+      char* note;
+      xAsprintf(&note,
+                "%s: no closing brace on meter name at %s line %u\n\"%s\"",
+                pmGetProgname(), path, line, key);
       errno = EINVAL;
       CRT_fatalError(note);
+      free(note);
    }
 
    while (*p) {
@@ -131,12 +136,13 @@ static void PCPDynamicMeter_validateMeterName(char* key, const char *path, unsig
       p++;
    }
    if (*p != '\0') { /* badness */
-      char note[1024];
-      xSnprintf(note, sizeof(note),
-                "Invalid meter name at %s line %u\n\"%s\"",
-                path, line, key);
+      char* note;
+      xAsprintf(&note,
+                "%s: invalid meter name at %s line %u\n\"%s\"",
+                pmGetProgname(), path, line, key);
       errno = EINVAL;
       CRT_fatalError(note);
+      free(note);
    } else { /* overwrite closing brace */
       *p = '\0';
    }
@@ -182,7 +188,9 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
          PCPDynamicMeter_validateMeterName(key+1, path, lineno);
          meter = PCPDynamicMeter_new(meters, key+1);
       } else if (value && String_eq(key, "caption")) {
-         free_and_xStrdup(&meter->super.caption, value);
+         char* caption = String_cat(value, ": ");
+         free_and_xStrdup(&meter->super.caption, caption);
+         free(caption);
       } else if (value && String_eq(key, "description")) {
          free_and_xStrdup(&meter->super.description, value);
       } else if (value && String_eq(key, "type")) {
@@ -272,39 +280,66 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
 
       PCPDynamicMetric* metric = &this->metrics[i];
       const pmDesc* desc = Metric_desc(metric->id);
-      pmAtomValue atom;
+      pmAtomValue atom, raw;
 
-      if (!Metric_values(metric->id, &atom, 1, desc->type)) {
+      if (!Metric_values(metric->id, &raw, 1, desc->type)) {
          bytes--; /* clear the separator */
          continue;
       }
-      /* TODO: pretty-print the values - pmConvScale, etc */
+
+      pmUnits conv = desc->units;  /* convert to canonical units */
+      if (conv.dimSpace)
+         conv.scaleSpace = PM_SPACE_KBYTE;
+      if (conv.dimTime)
+         conv.scaleTime = PM_TIME_SEC;
+      if (desc->type == PM_TYPE_STRING)
+         atom = raw;
+      else if (pmConvScale(desc->type, &raw, &desc->units, &atom, &conv) < 0) {
+         bytes--; /* clear the separator */
+         continue;
+      }
+
+      size_t saved = bytes;
       switch (desc->type) {
          case PM_TYPE_STRING:
             bytes += xSnprintf(buffer + bytes, size - bytes, "%s", atom.cp);
             free(atom.cp);
             break;
          case PM_TYPE_32:
-            bytes += xSnprintf(buffer + bytes, size - bytes, "%d", atom.l);
+            bytes += conv.dimSpace ?
+               Meter_humanUnit(buffer + bytes, atom.l, size - bytes) :
+               xSnprintf(buffer + bytes, size - bytes, "%d", atom.l);
             break;
          case PM_TYPE_U32:
-            bytes += xSnprintf(buffer + bytes, size - bytes, "%u", atom.ul);
+            bytes += conv.dimSpace ?
+               Meter_humanUnit(buffer + bytes, atom.ul, size - bytes) :
+               xSnprintf(buffer + bytes, size - bytes, "%u", atom.ul);
             break;
          case PM_TYPE_64:
-            bytes += xSnprintf(buffer + bytes, size - bytes, "%lld", (long long) atom.ll);
+            bytes += conv.dimSpace ?
+               Meter_humanUnit(buffer + bytes, atom.ll, size - bytes) :
+               xSnprintf(buffer + bytes, size - bytes, "%lld", (long long) atom.ll);
             break;
          case PM_TYPE_U64:
-            bytes += xSnprintf(buffer + bytes, size - bytes, "%llu", (unsigned long long) atom.ull);
+            bytes += conv.dimSpace ?
+               Meter_humanUnit(buffer + bytes, atom.ull, size - bytes) :
+               xSnprintf(buffer + bytes, size - bytes, "%llu", (unsigned long long) atom.ull);
             break;
          case PM_TYPE_FLOAT:
-            bytes += xSnprintf(buffer + bytes, size - bytes, "%f", (double) atom.f);
+            bytes += conv.dimSpace ?
+               Meter_humanUnit(buffer + bytes, atom.f, size - bytes) :
+               xSnprintf(buffer + bytes, size - bytes, "%.2f", (double) atom.f);
             break;
          case PM_TYPE_DOUBLE:
-            bytes += xSnprintf(buffer + bytes, size - bytes, "%f", atom.d);
+            bytes += conv.dimSpace ?
+               Meter_humanUnit(buffer + bytes, atom.d, size - bytes) :
+               xSnprintf(buffer + bytes, size - bytes, "%.2f", atom.d);
             break;
          default:
             break;
       }
+      if (saved != bytes && metric->suffix)
+         bytes += xSnprintf(buffer + bytes, size - bytes, "%s", metric->suffix);
    }
    if (!bytes)
       xSnprintf(buffer, size, "no data");
@@ -316,52 +351,74 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
    for (unsigned int i = 0; i < this->totalMetrics; i++) {
       PCPDynamicMetric* metric = &this->metrics[i];
       const pmDesc* desc = Metric_desc(metric->id);
-      pmAtomValue atom;
+      pmAtomValue atom, raw;
       char buffer[64];
-      int len;
 
-      if (!Metric_values(metric->id, &atom, 1, desc->type))
+      if (!Metric_values(metric->id, &raw, 1, desc->type))
          continue;
-      nodata = 0;
+
+      pmUnits conv = desc->units;  /* convert to canonical units */
+      if (conv.dimSpace)
+         conv.scaleSpace = PM_SPACE_KBYTE;
+      if (conv.dimTime)
+         conv.scaleTime = PM_TIME_SEC;
+      if (desc->type == PM_TYPE_STRING)
+         atom = raw;
+      else if (pmConvScale(desc->type, &raw, &desc->units, &atom, &conv) < 0)
+         continue;
+
+      nodata = 0;  /* we will use this metric so *some* data will be added */
 
       if (i > 0)
          RichString_appendnAscii(out, CRT_colors[metric->color], " ", 1);
 
-      if (metric->label) {
-         len = xSnprintf(buffer, sizeof(buffer), "%s ", metric->label);
-         RichString_appendnAscii(out, CRT_colors[METER_TEXT], buffer, len);
-      }
+      if (metric->label)
+         RichString_appendAscii(out, CRT_colors[METER_TEXT], metric->label);
 
-      /* TODO: pretty-print the values - pmConvScale, etc */
-      len = 0;
+      int len = 0;
       switch (desc->type) {
          case PM_TYPE_STRING:
             len = xSnprintf(buffer, sizeof(buffer), "%s", atom.cp);
             free(atom.cp);
             break;
          case PM_TYPE_32:
-            len = xSnprintf(buffer, sizeof(buffer), "%d", atom.l);
+            len = conv.dimSpace ?
+               Meter_humanUnit(buffer, atom.l, sizeof(buffer)) :
+               xSnprintf(buffer, sizeof(buffer), "%d", atom.l);
             break;
          case PM_TYPE_U32:
-            len = xSnprintf(buffer, sizeof(buffer), "%u", atom.ul);
+            len = conv.dimSpace ?
+               Meter_humanUnit(buffer, atom.ul, sizeof(buffer)) :
+               xSnprintf(buffer, sizeof(buffer), "%u", atom.ul);
             break;
          case PM_TYPE_64:
-            len = xSnprintf(buffer, sizeof(buffer), "%lld", (long long) atom.ll);
+            len = conv.dimSpace ?
+               Meter_humanUnit(buffer, atom.ll, sizeof(buffer)) :
+               xSnprintf(buffer, sizeof(buffer), "%lld", (long long) atom.ll);
             break;
          case PM_TYPE_U64:
-            len = xSnprintf(buffer, sizeof(buffer), "%llu", (unsigned long long) atom.ull);
+            len = conv.dimSpace ?
+               Meter_humanUnit(buffer, atom.ull, sizeof(buffer)) :
+               xSnprintf(buffer, sizeof(buffer), "%llu", (unsigned long long) atom.ull);
             break;
          case PM_TYPE_FLOAT:
-            len = xSnprintf(buffer, sizeof(buffer), "%f", (double)atom.f);
+            len = conv.dimSpace ?
+               Meter_humanUnit(buffer, atom.f, sizeof(buffer)) :
+               xSnprintf(buffer, sizeof(buffer), "%.2f", (double) atom.f);
             break;
          case PM_TYPE_DOUBLE:
-            len = xSnprintf(buffer, sizeof(buffer), "%f", atom.d);
+            len = conv.dimSpace ?
+               Meter_humanUnit(buffer, atom.d, sizeof(buffer)) :
+               xSnprintf(buffer, sizeof(buffer), "%.2f", atom.d);
             break;
          default:
             break;
       }
-      if (len)
+      if (len) {
          RichString_appendnAscii(out, CRT_colors[metric->color], buffer, len);
+         if (metric->suffix)
+            RichString_appendAscii(out, CRT_colors[METER_TEXT], metric->suffix);
+      }
    }
    if (nodata)
       RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");

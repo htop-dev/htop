@@ -13,7 +13,6 @@ active.color = blue
 active.label = act
 syn.metric = network.tcpconn.syn_sent + network.tcpconn.syn_recv + network.tcpconn.last_ack
 syn.color = cyan
-syn.label = syn
 wait.metric = network.tcpconn.time_wait
 wait.color = red
 wait.label = tim

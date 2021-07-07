@@ -18,4 +18,3 @@ bounce.color = red
 bounce.label = bnc
 hold.metric = sum(postfix.queues.hold)
 hold.color = yellow
-hold.label = hold

@@ -153,11 +153,12 @@ ListItem* Meter_toListItem(const Meter* this, bool moving) {
 /* ---------- TextMeterMode ---------- */
 
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
+   const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
-   mvaddnstr(y, x, this->caption, w - 1);
+   mvaddnstr(y, x, caption, w - 1);
    attrset(CRT_colors[RESET_COLOR]);
 
-   int captionLen = strlen(this->caption);
+   int captionLen = strlen(caption);
    x += captionLen;
    w -= captionLen;
    if (w <= 0)
@@ -174,10 +175,11 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
+   const char* caption = Meter_getCaption(this);
    w -= 2;
    attrset(CRT_colors[METER_TEXT]);
    int captionLen = 3;
-   mvaddnstr(y, x, this->caption, captionLen);
+   mvaddnstr(y, x, caption, captionLen);
    x += captionLen;
    w -= captionLen;
    attrset(CRT_colors[BAR_BORDER]);
@@ -306,9 +308,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
    }
 
+   const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
    int captionLen = 3;
-   mvaddnstr(y, x, this->caption, captionLen);
+   mvaddnstr(y, x, caption, captionLen);
    x += captionLen;
    w -= captionLen;
 
@@ -393,8 +396,9 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {
 #endif
       y + 2;
    attrset(CRT_colors[LED_COLOR]);
-   mvaddstr(yText, x, this->caption);
-   int xx = x + strlen(this->caption);
+   const char* caption = Meter_getCaption(this);
+   mvaddstr(yText, x, caption);
+   int xx = x + strlen(caption);
    int len = RichString_sizeVal(out);
    for (int i = 0; i < len; i++) {
       int c = RichString_getCharVal(out, i);

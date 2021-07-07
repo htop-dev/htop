@@ -53,6 +53,7 @@ typedef void(*Meter_Done)(Meter*);
 typedef void(*Meter_UpdateMode)(Meter*, int);
 typedef void(*Meter_UpdateValues)(Meter*);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
+typedef const char*(*Meter_GetCaption)(const Meter*);
 typedef void(*Meter_GetUiName)(const Meter*, char*, size_t);
 
 typedef struct MeterClass_ {
@@ -62,6 +63,7 @@ typedef struct MeterClass_ {
    const Meter_UpdateMode updateMode;
    const Meter_UpdateValues updateValues;
    const Meter_Draw draw;
+   const Meter_GetCaption getCaption;
    const Meter_GetUiName getUiName;
    const int defaultMode;
    const double total;
@@ -84,6 +86,8 @@ typedef struct MeterClass_ {
 #define Meter_updateValues(this_)      As_Meter(this_)->updateValues((Meter*)(this_))
 #define Meter_getUiNameFn(this_)       As_Meter(this_)->getUiName
 #define Meter_getUiName(this_,n_,l_)   As_Meter(this_)->getUiName((const Meter*)(this_),n_,l_)
+#define Meter_getCaptionFn(this_)      As_Meter(this_)->getCaption
+#define Meter_getCaption(this_)        (Meter_getCaptionFn(this_) ? As_Meter(this_)->getCaption((const Meter*)(this_)) : (this_)->caption)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name

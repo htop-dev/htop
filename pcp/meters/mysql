@@ -6,10 +6,8 @@
 caption = MySQL I/O
 recv.metric = mysql.status.bytes_received
 recv.color = green
-recv.label = recv
 sent.metric = mysql.status.bytes_sent
 sent.color = blue
-sent.label = sent
 
 [mysql_keys]
 caption = MySQL keys

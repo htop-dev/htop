@@ -13,10 +13,8 @@ caption = Redis mem
 description = Redis memory
 lua.metric = redis.used_memory_lua
 lua.color = magenta
-lua.label = lua:
 used.metric = redis.used_memory
 used.color = blue
-used.label = used:
 
 [redisclient]
 caption = Redis clients
