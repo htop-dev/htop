@@ -24,18 +24,11 @@ For more information and details on how to contribute to `htop` visit [htop.dev]
 
 ## Build instructions
 
-This program is distributed as a standard GNU autotools-based package.
+This program is distributed as a GNU autotools-based package.
 
-Compiling `htop` requires the header files for `ncurses` (libncursesw*-dev). Install these and other required packages for C development from your package manager.
+Compiling `htop` requires the header files for `ncurses` (libncursesw*-dev). Install these and other required packages for C development (including autotools) from your package manager.
 
 Then, when compiling from a [release tarball](https://github.com/htop-dev/htop/releases), run:
-
-~~~ shell
-./configure && make
-~~~
-
-Alternatively, for compiling sources downloaded from the Git repository (`git clone` or downloads from [Github releases](https://github.com/htop-dev/htop/releases/)),
-install the header files for `ncurses` (libncursesw*-dev) and other required development packages from your distribution's package manager. Then run:
 
 ~~~ shell
 ./autogen.sh && ./configure && make
