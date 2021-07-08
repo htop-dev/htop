@@ -5,7 +5,6 @@
 [![Mailing List](https://img.shields.io/badge/Mailing%20List-htop-blue.svg)](https://groups.io/g/htop)
 [![IRC #htop](https://img.shields.io/badge/IRC-htop-blue.svg)](https://web.libera.chat/#htop)
 [![Github Release](https://img.shields.io/github/release/htop-dev/htop.svg)](https://github.com/htop-dev/htop/releases/latest)
-[![Download](https://api.bintray.com/packages/htop/source/htop/images/download.svg)](https://bintray.com/htop/source/htop/_latestVersion)
 
 ![Screenshot of htop](docs/images/screenshot.png?raw=true)
 
@@ -29,7 +28,7 @@ This program is distributed as a standard GNU autotools-based package.
 
 Compiling `htop` requires the header files for `ncurses` (libncursesw*-dev). Install these and other required packages for C development from your package manager.
 
-Then, when compiling from a [release tarball](https://bintray.com/htop/source/htop), run:
+Then, when compiling from a [release tarball](https://github.com/htop-dev/htop/releases), run:
 
 ~~~ shell
 ./configure && make
