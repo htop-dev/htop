@@ -46,6 +46,16 @@ void Header_populateFromSettings(Header* this) {
    Header_forEachColumn(this, col) {
       const MeterColumnSettings* colSettings = &this->settings->columns[col];
       for (int i = 0; i < colSettings->len; i++) {
+         char* end, dynamic[32];
+         unsigned int param = 0;
+         if(String_startsWith(colSettings->names[i], "Dynamic")) {
+            char* paren = strchr(colSettings->names[i], '(');
+            int ok = sscanf(paren, "(%30s)", dynamic); // DynamicMeter
+            if (ok && (end = strrchr(dynamic, ')'))) *end = '\0';
+            param = ok ? DynamicMeter_search(this->pl, dynamic) : 0;
+            if(!param)
+               continue;
+         }
          Header_addMeterByName(this, colSettings->names[i], col);
          if (colSettings->modes[i] != 0) {
             Header_setMode(this, i, colSettings->modes[i], col);
