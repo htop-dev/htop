@@ -14,7 +14,7 @@ typedef struct {
 
 typedef struct {
    DynamicMeter super;
-   PCPDynamicMetric *metrics;
+   PCPDynamicMetric* metrics;
    unsigned int totalMetrics;
 } PCPDynamicMeter;
 

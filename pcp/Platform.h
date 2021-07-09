@@ -77,13 +77,13 @@ char* Platform_getInodeFilename(pid_t pid, ino_t inode);
 
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
-void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred);
+void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred);
 
 bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(NetworkIOData* data);
 
-void Platform_getBattery(double *percent, ACPresence *isOnAC);
+void Platform_getBattery(double* percent, ACPresence* isOnAC);
 
 void Platform_getHostname(char* buffer, size_t size);
 
@@ -242,11 +242,11 @@ bool Metric_enabled(Metric metric);
 
 void Metric_enableThreads(void);
 
-bool Metric_fetch(struct timeval *timestamp);
+bool Metric_fetch(struct timeval* timestamp);
 
 bool Metric_iterate(Metric metric, int* instp, int* offsetp);
 
-pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type);
+pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type);
 
 const pmDesc* Metric_desc(Metric metric);
 
@@ -254,9 +254,9 @@ int Metric_instanceCount(Metric metric);
 
 int Metric_instanceOffset(Metric metric, int inst);
 
-pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue *atom, int type);
+pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type);
 
-int Platform_addMetric(Metric id, const char *name);
+int Platform_addMetric(Metric id, const char* name);
 
 void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
 

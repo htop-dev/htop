@@ -119,7 +119,7 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-static const char *Platform_metricNames[] = {
+static const char* Platform_metricNames[] = {
    [PCP_CONTROL_THREADS] = "proc.control.perclient.threads",
 
    [PCP_HINV_NCPU] = "hinv.ncpu",
@@ -251,7 +251,7 @@ const pmDesc* Metric_desc(Metric metric) {
    return &pcp->descs[metric];
 }
 
-pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type) {
+pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type) {
    if (pcp->result == NULL)
       return NULL;
 
@@ -264,7 +264,7 @@ pmAtomValue* Metric_values(Metric metric, pmAtomValue *atom, int count, int type
    for (int i = 0; i < vset->numval; i++) {
       if (i == count)
          break;
-      const pmValue *value = &vset->vlist[i];
+      const pmValue* value = &vset->vlist[i];
       int sts = pmExtractValue(vset->valfmt, value, desc->type, &atom[i], type);
       if (sts < 0) {
          if (pmDebugOptions.appl0)
@@ -296,11 +296,11 @@ int Metric_instanceOffset(Metric metric, int inst) {
    return 0;
 }
 
-static pmAtomValue *Metric_extract(Metric metric, int inst, int offset, pmValueSet *vset, pmAtomValue *atom, int type) {
+static pmAtomValue* Metric_extract(Metric metric, int inst, int offset, pmValueSet* vset, pmAtomValue* atom, int type) {
 
    /* extract value (using requested type) of given metric instance */
    const pmDesc* desc = &pcp->descs[metric];
-   const pmValue *value = &vset->vlist[offset];
+   const pmValue* value = &vset->vlist[offset];
    int sts = pmExtractValue(vset->valfmt, value, desc->type, atom, type);
    if (sts < 0) {
       if (pmDebugOptions.appl0)
@@ -311,7 +311,7 @@ static pmAtomValue *Metric_extract(Metric metric, int inst, int offset, pmValueS
    return atom;
 }
 
-pmAtomValue *Metric_instance(Metric metric, int inst, int offset, pmAtomValue *atom, int type) {
+pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type) {
 
    pmValueSet* vset = pcp->result->vset[metric];
    if (!vset || vset->numval <= 0)
@@ -381,7 +381,7 @@ void Metric_enableThreads(void) {
    pmFreeResult(result);
 }
 
-bool Metric_fetch(struct timeval *timestamp) {
+bool Metric_fetch(struct timeval* timestamp) {
    if (pcp->result) {
       pmFreeResult(pcp->result);
       pcp->result = NULL;
@@ -398,7 +398,7 @@ bool Metric_fetch(struct timeval *timestamp) {
    return true;
 }
 
-int Platform_addMetric(Metric id, const char *name) {
+int Platform_addMetric(Metric id, const char* name) {
    unsigned int i = (unsigned int)id;
 
    if (i >= PCP_METRIC_COUNT && i >= pcp->totalMetrics) {
@@ -665,7 +665,7 @@ void Platform_setZramValues(Meter* this) {
       return;
    }
 
-   pmAtomValue *values = xCalloc(count, sizeof(pmAtomValue));
+   pmAtomValue* values = xCalloc(count, sizeof(pmAtomValue));
    ZramStats stats = {0};
 
    if (Metric_values(PCP_ZRAM_CAPACITY, values, count, PM_TYPE_U64)) {
@@ -847,7 +847,7 @@ void Platform_longOptionsUsage(ATTR_UNUSED const char* name) {
 
 bool Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** argv) {
    /* libpcp export without a header definition */
-   extern void __pmAddOptHost(pmOptions *, char *);
+   extern void __pmAddOptHost(pmOptions*, char*);
 
    switch (opt) {
       case PLATFORM_LONGOPT_HOST:  /* --host=HOSTSPEC */

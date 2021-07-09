@@ -10,9 +10,6 @@ in the source distribution for its full text.
 #include "pcp/PCPDynamicMeter.h"
 
 #include <math.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "Object.h"
 #include "Platform.h"
@@ -51,8 +48,8 @@ static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, 
    return metric;
 }
 
-static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMeter* meter, const char *path, unsigned int line, char* key, char* value) {
-   PCPDynamicMetric *metric;
+static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMeter* meter, const char* path, unsigned int line, char* key, char* value) {
+   PCPDynamicMetric* metric;
    char* p;
 
    if ((p = strchr(key, '.')) == NULL)
@@ -109,7 +106,7 @@ static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMete
 }
 
 // Ensure a valid name for use in a PCP metric name and in htoprc
-static void PCPDynamicMeter_validateMeterName(char* key, const char *path, unsigned int line) {
+static void PCPDynamicMeter_validateMeterName(char* key, const char* path, unsigned int line) {
    char* p = key;
    char* end = strrchr(key, ']');
 
@@ -219,12 +216,12 @@ static void PCPDynamicMeter_scanDir(PCPDynamicMeters* meters, char* path) {
    if (!dir)
       return;
 
-   struct dirent *dirent;
+   struct dirent* dirent;
    while ((dirent = readdir(dir)) != NULL) {
       if (dirent->d_name[0] == '.')
          continue;
 
-      char *file = String_cat(path, dirent->d_name);
+      char* file = String_cat(path, dirent->d_name);
       PCPDynamicMeter_parseFile(meters, file);
       free(file);
    }
