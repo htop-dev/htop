@@ -56,7 +56,7 @@ static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
 
 static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    Panel* columns = (Panel*) ColumnsPanel_new(this->settings);
-   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns);
+   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns, this->settings->dynamicColumns);
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
 }

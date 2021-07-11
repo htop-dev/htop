@@ -12,12 +12,12 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include <stdbool.h>
-#include <sys/types.h>
 
 #include "Object.h"
 #include "Process.h"
-#include "RichString.h"
 #include "Settings.h"
+
+#include "pcp/Platform.h"
 
 
 #define PROCESS_FLAG_LINUX_CGROUP   0x0800
@@ -28,6 +28,10 @@ in the source distribution for its full text.
 
 typedef struct PCPProcess_ {
    Process super;
+
+   /* default result offset to use for searching proc metrics */
+   unsigned int offset;
+
    unsigned long int cminflt;
    unsigned long int cmajflt;
    unsigned long long int utime;

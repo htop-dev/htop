@@ -8,12 +8,14 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
 #include "CRT.h"
+#include "DynamicColumn.h"
 #include "Macros.h"
 #include "Meter.h"
 #include "Platform.h"
@@ -106,22 +108,42 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
    this->columns[1].modes[r++] = TEXT_METERMODE;
 }
 
-static void readFields(ProcessField* fields, uint32_t* flags, const char* line) {
+static void Settings_readFields(Settings* settings, const char* line) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
-   int i, j;
-   *flags = 0;
-   for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i]; i++) {
+
+   settings->flags = 0;
+
+   unsigned int i, j;
+   for (j = 0, i = 0; ids[i]; i++) {
+      if (j >= UINT_MAX / sizeof(ProcessField))
+         continue;
+      if (j >= LAST_PROCESSFIELD) {
+         settings->fields = xRealloc(settings->fields, j * sizeof(ProcessField));
+         memset(&settings->fields[j], 0, sizeof(ProcessField));
+      }
+
+      // Dynamically-defined columns are always stored by-name.
+      char* end, dynamic[32] = {0};
+      if (sscanf(ids[i], "Dynamic(%30s)", dynamic)) {
+         if ((end = strrchr(dynamic, ')')) == NULL)
+            continue;
+         *end = '\0';
+         unsigned int key;
+         if (!DynamicColumn_search(settings->dynamicColumns, dynamic, &key))
+            continue;
+         settings->fields[j++] = key;
+         continue;
+      }
       // This "+1" is for compatibility with the older enum format.
       int id = atoi(ids[i]) + 1;
       if (id > 0 && id < LAST_PROCESSFIELD && Process_fields[id].name) {
-         fields[j] = id;
-         *flags |= Process_fields[id].flags;
-         j++;
+         settings->flags |= Process_fields[id].flags;
+         settings->fields[j++] = id;
       }
    }
-   fields[j] = NULL_PROCESSFIELD;
+   settings->fields[j] = NULL_PROCESSFIELD;
    String_freeArray(ids);
 }
 
@@ -145,7 +167,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          continue;
       }
       if (String_eq(option[0], "fields")) {
-         readFields(this->fields, &(this->flags), option[1]);
+         Settings_readFields(this, option[1]);
          didReadFields = true;
       } else if (String_eq(option[0], "sort_key")) {
          // This "+1" is for compatibility with the older enum format.
@@ -256,12 +278,17 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
    return didReadFields;
 }
 
-static void writeFields(FILE* fd, const ProcessField* fields, const char* name) {
+static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns, const char* name) {
    fprintf(fd, "%s=", name);
    const char* sep = "";
-   for (int i = 0; fields[i]; i++) {
-      // This "-1" is for compatibility with the older enum format.
-      fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
+   for (unsigned int i = 0; fields[i]; i++) {
+      if (fields[i] >= LAST_PROCESSFIELD) {
+         const DynamicColumn* column = DynamicColumn_lookup(columns, fields[i]);
+         fprintf(fd, "%sDynamic(%s)", sep, column->name);
+      } else {
+         // This "-1" is for compatibility with the older enum format.
+         fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
+      }
       sep = " ";
    }
    fprintf(fd, "\n");
@@ -299,7 +326,7 @@ int Settings_write(const Settings* this, bool onCrash) {
       fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
       fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
    }
-   writeFields(fd, this->fields, "fields");
+   writeFields(fd, this->fields, this->dynamicColumns, "fields");
    // This "-1" is for compatibility with the older enum format.
    fprintf(fd, "sort_key=%d\n", (int) this->sortKey - 1);
    fprintf(fd, "sort_direction=%d\n", (int) this->direction);
@@ -361,9 +388,10 @@ int Settings_write(const Settings* this, bool onCrash) {
    return r;
 }
 
-Settings* Settings_new(unsigned int initialCpuCount) {
+Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
+   this->dynamicColumns = dynamicColumns;
    this->sortKey = PERCENT_CPU;
    this->treeSortKey = PID;
    this->direction = -1;

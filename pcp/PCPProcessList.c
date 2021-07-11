@@ -2,7 +2,7 @@
 htop - PCPProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2020-2021 htop dev team
-(C) 2020-2021 Red Hat, Inc.  All Rights Reserved.
+(C) 2020-2021 Red Hat, Inc.
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
@@ -11,11 +11,15 @@ in the source distribution for its full text.
 
 #include "pcp/PCPProcessList.h"
 
+#include <limits.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
 
-#include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
+#include "Platform.h"
 #include "Process.h"
 #include "Settings.h"
 #include "XUtils.h"
@@ -62,11 +66,11 @@ static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
    return name;
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
    PCPProcessList* this = xCalloc(1, sizeof(PCPProcessList));
    ProcessList* super = &(this->super);
 
-   ProcessList_init(super, Class(PCPProcess), usersTable, dynamicMeters, pidMatchList, userId);
+   ProcessList_init(super, Class(PCPProcess), usersTable, dynamicMeters, dynamicColumns, pidMatchList, userId);
 
    struct timeval timestamp;
    gettimeofday(&timestamp, NULL);
@@ -327,6 +331,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       PCPProcess* pp = (PCPProcess*) proc;
       PCPProcessList_updateID(proc, pid, offset);
       proc->isUserlandThread = proc->pid != proc->tgid;
+      pp->offset = offset >= 0 ? offset : 0;
 
       /*
        * These conditions will not trigger on first occurrence, cause we need to

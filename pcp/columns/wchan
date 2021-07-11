@@ -1,0 +1,17 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[wchan]
+heading = WCHAN
+caption = WCHAN_ADDRESS
+width = 8
+metric = proc.psinfo.wchan
+description = Wait channel, kernel address process is blocked or sleeping on
+
+[wchans]
+heading = WCHANS
+caption = WCHAN_SYMBOL
+width = -12
+metric = proc.psinfo.wchan_s
+description = Wait channel, kernel symbol process is blocked or sleeping on

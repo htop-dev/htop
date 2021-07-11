@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
+#include "Hashtable.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
@@ -128,14 +129,18 @@ IGNORE_WCASTQUAL_BEGIN
 IGNORE_WCASTQUAL_END
 }
 
-static inline Hashtable* Platform_dynamicMeters(void) {
-   return NULL;
-}
+static inline Hashtable* Platform_dynamicMeters(void) { return NULL; }
 
 static inline void Platform_dynamicMeterInit(ATTR_UNUSED Meter* meter) { }
 
 static inline void Platform_dynamicMeterUpdateValues(ATTR_UNUSED Meter* meter) { }
 
 static inline void Platform_dynamicMeterDisplay(ATTR_UNUSED const Meter* meter, ATTR_UNUSED RichString* out) { }
+
+static inline Hashtable* Platform_dynamicColumns(void) { return NULL; }
+
+static inline const char* Platform_dynamicColumnInit(ATTR_UNUSED unsigned int key) { return NULL; }
+
+static inline bool Platform_dynamicColumnWriteField(ATTR_UNUSED const Process* proc, ATTR_UNUSED RichString* str, ATTR_UNUSED unsigned int key) { return false; }
 
 #endif

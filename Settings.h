@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "Hashtable.h"
 #include "Process.h"
 
 
@@ -26,6 +27,7 @@ typedef struct {
 typedef struct Settings_ {
    char* filename;
    MeterColumnSettings columns[2];
+   Hashtable* dynamicColumns;
 
    ProcessField* fields;
    uint32_t flags;
@@ -92,7 +94,7 @@ void Settings_delete(Settings* this);
 
 int Settings_write(const Settings* this, bool onCrash);
 
-Settings* Settings_new(unsigned int initialCpuCount);
+Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns);
 
 void Settings_invertSortOrder(Settings* this);
 

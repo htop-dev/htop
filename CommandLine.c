@@ -22,6 +22,7 @@ in the source distribution for its full text.
 
 #include "Action.h"
 #include "CRT.h"
+#include "DynamicColumn.h"
 #include "DynamicMeter.h"
 #include "Hashtable.h"
 #include "Header.h"
@@ -292,10 +293,14 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    Process_setupColumnWidths();
 
    UsersTable* ut = UsersTable_new();
+   Hashtable* dc = DynamicColumns_new();
    Hashtable* dm = DynamicMeters_new();
-   ProcessList* pl = ProcessList_new(ut, dm, flags.pidMatchList, flags.userId);
+   if (!dc)
+      dc = Hashtable_new(0, true);
 
-   Settings* settings = Settings_new(pl->activeCPUs);
+   ProcessList* pl = ProcessList_new(ut, dm, dc, flags.pidMatchList, flags.userId);
+
+   Settings* settings = Settings_new(pl->activeCPUs, dc);
    pl->settings = settings;
 
    Header* header = Header_new(pl, settings, 2);
@@ -384,8 +389,12 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    if (flags.pidMatchList)
       Hashtable_delete(flags.pidMatchList);
 
-   /* Delete Settings last, since it can get accessed in the crash handler */
+   /* Delete these last, since they can get accessed in the crash handler */
    Settings_delete(settings);
+   if (dc)
+      Hashtable_delete(dc);
+   if (dm)
+      Hashtable_delete(dm);
 
    return 0;
 }

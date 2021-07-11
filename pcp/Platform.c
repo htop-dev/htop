@@ -2,7 +2,7 @@
 htop - linux/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2020-2021 htop dev team
-(C) 2020-2021 Red Hat, Inc.  All Rights Reserved.
+(C) 2020-2021 Red Hat, Inc.
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
@@ -42,6 +42,7 @@ in the source distribution for its full text.
 #include "linux/PressureStallMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
+#include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
 #include "pcp/PCPProcess.h"
 #include "pcp/PCPProcessList.h"
@@ -51,19 +52,20 @@ in the source distribution for its full text.
 
 
 typedef struct Platform_ {
-   int context;			/* PMAPI(3) context identifier */
-   unsigned int totalMetrics;	/* total number of all metrics */
-   const char** names;		/* name array indexed by Metric */
-   pmID* pmids;			/* all known metric identifiers */
-   pmID* fetch;			/* enabled identifiers for sampling */
-   pmDesc* descs;		/* metric desc array indexed by Metric */
-   pmResult* result;		/* sample values result indexed by Metric */
-   PCPDynamicMeters meters;	/* dynamic meters via configuration files */
-   struct timeval offset;	/* time offset used in archive mode only */
-   long long btime;		/* boottime in seconds since the epoch */
-   char* release;		/* uname and distro from this context */
-   int pidmax;			/* maximum platform process identifier */
-   int ncpu;			/* maximum processor count configured */
+   int context;               /* PMAPI(3) context identifier */
+   size_t totalMetrics;       /* total number of all metrics */
+   const char** names;        /* name array indexed by Metric */
+   pmID* pmids;               /* all known metric identifiers */
+   pmID* fetch;               /* enabled identifiers for sampling */
+   pmDesc* descs;             /* metric desc array indexed by Metric */
+   pmResult* result;          /* sample values result indexed by Metric */
+   PCPDynamicMeters meters;   /* dynamic meters via configuration files */
+   PCPDynamicColumns columns; /* dynamic columns via configuration files */
+   struct timeval offset;     /* time offset used in archive mode only */
+   long long btime;           /* boottime in seconds since the epoch */
+   char* release;             /* uname and distro from this context */
+   int pidmax;                /* maximum platform process identifier */
+   int ncpu;                  /* maximum processor count configured */
 } Platform;
 
 Platform* pcp;
@@ -251,6 +253,10 @@ const pmDesc* Metric_desc(Metric metric) {
    return &pcp->descs[metric];
 }
 
+int Metric_type(Metric metric) {
+   return pcp->descs[metric].type;
+}
+
 pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type) {
    if (pcp->result == NULL)
       return NULL;
@@ -398,12 +404,12 @@ bool Metric_fetch(struct timeval* timestamp) {
    return true;
 }
 
-int Platform_addMetric(Metric id, const char* name) {
+size_t Platform_addMetric(Metric id, const char* name) {
    unsigned int i = (unsigned int)id;
 
    if (i >= PCP_METRIC_COUNT && i >= pcp->totalMetrics) {
       /* added via configuration files */
-      unsigned int j = pcp->totalMetrics + 1;
+      size_t j = pcp->totalMetrics + 1;
       pcp->fetch = xRealloc(pcp->fetch, j * sizeof(pmID));
       pcp->pmids = xRealloc(pcp->pmids, j * sizeof(pmID));
       pcp->names = xRealloc(pcp->names, j * sizeof(char*));
@@ -465,14 +471,17 @@ void Platform_init(void) {
 
    PCPDynamicMeters_init(&pcp->meters);
 
+   pcp->columns.offset = PCP_METRIC_COUNT + pcp->meters.cursor;
+   PCPDynamicColumns_init(&pcp->columns);
+
    sts = pmLookupName(pcp->totalMetrics, pcp->names, pcp->pmids);
    if (sts < 0) {
       fprintf(stderr, "Error: cannot lookup metric names: %s\n", pmErrStr(sts));
       exit(1);
    }
 
-   for (unsigned int i = 0; i < pcp->totalMetrics; i++) {
-      pcp->fetch[i] = PM_ID_NULL;	/* default is to not sample */
+   for (size_t i = 0; i < pcp->totalMetrics; i++) {
+      pcp->fetch[i] = PM_ID_NULL; /* default is to not sample */
 
       /* expect some metrics to be missing - e.g. PMDA not available */
       if (pcp->pmids[i] == PM_ID_NULL)
@@ -501,11 +510,14 @@ void Platform_init(void) {
    Metric_enable(PCP_UNAME_MACHINE, true);
    Metric_enable(PCP_UNAME_DISTRO, true);
 
+   for (size_t i = pcp->columns.offset; i < pcp->columns.offset + pcp->columns.count; i++)
+      Metric_enable(i, true);
+
    Metric_fetch(NULL);
 
    for (Metric metric = 0; metric < PCP_PROC_PID; metric++)
       Metric_enable(metric, true);
-   Metric_enable(PCP_PID_MAX, false);	/* needed one time only */
+   Metric_enable(PCP_PID_MAX, false); /* needed one time only */
    Metric_enable(PCP_BOOTTIME, false);
    Metric_enable(PCP_UNAME_SYSNAME, false);
    Metric_enable(PCP_UNAME_RELEASE, false);
@@ -627,7 +639,7 @@ static double Platform_setOneCPUValues(Meter* this, pmAtomValue* values) {
 
 double Platform_setCPUValues(Meter* this, int cpu) {
    const PCPProcessList* pl = (const PCPProcessList*) this->pl;
-   if (cpu <= 0)	/* use aggregate values */
+   if (cpu <= 0) /* use aggregate values */
       return Platform_setOneCPUValues(this, pl->cpu);
    return Platform_setOneCPUValues(this, pl->percpu[cpu - 1]);
 }
@@ -923,4 +935,30 @@ void Platform_dynamicMeterDisplay(const Meter* meter, RichString* out) {
    PCPDynamicMeter* this = Hashtable_get(pcp->meters.table, meter->param);
    if (this)
       PCPDynamicMeter_display(this, meter, out);
+}
+
+Hashtable* Platform_dynamicColumns(void) {
+   return pcp->columns.table;
+}
+
+const char* Platform_dynamicColumnInit(unsigned int key) {
+   PCPDynamicColumn* this = Hashtable_get(pcp->columns.table, key);
+   if (this) {
+      Metric_enable(this->id, true);
+      if (this->super.caption)
+         return this->super.caption;
+      if (this->super.heading)
+         return this->super.heading;
+      return this->super.name;
+   }
+   return NULL;
+}
+
+bool Platform_dynamicColumnWriteField(const Process* proc, RichString* str, unsigned int key) {
+   PCPDynamicColumn* this = Hashtable_get(pcp->columns.table, key);
+   if (this) {
+      PCPDynamicColumn_writeField(this, proc, str);
+      return true;
+   }
+   return false;
 }

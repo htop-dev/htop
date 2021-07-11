@@ -1,8 +1,8 @@
 /*
 htop - PCPProcess.c
 (C) 2014 Hisham H. Muhammad
-(C) 2020 htop dev team
-(C) 2020-2021 Red Hat, Inc.  All Rights Reserved.
+(C) 2020-2021 htop dev team
+(C) 2020-2021 Red Hat, Inc.
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
@@ -12,14 +12,17 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <syscall.h>
-#include <unistd.h>
 
 #include "CRT.h"
+#include "Macros.h"
+#include "Platform.h"
 #include "Process.h"
 #include "ProvideCurses.h"
+#include "RichString.h"
 #include "XUtils.h"
+
+#include "pcp/PCPDynamicColumn.h"
+
 
 const ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
@@ -246,7 +249,9 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
    default:
-      return Process_compareByKey_Base(v1, v2, key);
+      if (key < LAST_PROCESSFIELD)
+         return Process_compareByKey_Base(v1, v2, key);
+      return PCPDynamicColumn_compareByKey(p1, p2, key);
    }
 }
 

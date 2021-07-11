@@ -56,6 +56,7 @@ typedef enum ProcessField_ {
    /* Platform specific fields, defined in ${platform}/ProcessField.h */
    PLATFORM_PROCESS_FIELDS
 
+   /* Do not add new fields after this entry (dynamic entries follow) */
    LAST_PROCESSFIELD
 } ProcessField;
 
@@ -267,7 +268,7 @@ typedef struct ProcessFieldData_ {
    /* Scan flag to enable scan-method otherwise not run */
    uint32_t flags;
 
-   /* Whether the values are process identifies; adjusts the width of title and values if true */
+   /* Whether the values are process identifiers; adjusts the width of title and values if true */
    bool pidColumn;
 
    /* Whether the column should be sorted in descending order by default */
