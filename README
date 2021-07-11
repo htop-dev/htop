@@ -24,24 +24,42 @@ For more information and details on how to contribute to `htop` visit [htop.dev]
 
 ## Build instructions
 
-This program is distributed as a standard GNU autotools-based package.
+### Prerequisite
+List of build-time dependencies:
+*  `build-essential` standard GNU autotools-based
+*  `autoconf`
+*  `autotools`
+*  `ncurses` (libncursesw*-dev)
 
-Compiling `htop` requires the header files for `ncurses` (libncursesw*-dev). Install these and other required packages for C development from your package manager.
+**Note about `ncurses`:**
+> htop requires ncurses 6.0, the appropriate package is often enough still called libncurses5 (+-dev for headers). Also ncurses usually comes in two flavours:
+>* With Unicode support.
+>* Without Unicode support.
+>
+> This is also something that is usually reflected in the package name (the additional w).
 
-Then, when compiling from a [release tarball](https://github.com/htop-dev/htop/releases), run:
+List of additional build-time dependencies (based on feature flags):
+*  `sensors`
+*  `hwloc`
+*  `libcap`
 
+Compiling `htop` requires the header files for `ncurses` . Install these and other required packages for C development from your package manager.
+
+**Debian/Ubuntu**
 ~~~ shell
-./configure && make
+sudo apt install libncursesw5-dev autotools-dev autoconf
 ~~~
 
-Alternatively, for compiling sources downloaded from the Git repository (`git clone` or downloads from [Github releases](https://github.com/htop-dev/htop/releases/)),
-install the header files for `ncurses` (libncursesw*-dev) and other required development packages from your distribution's package manager. Then run:
-
+### Compiling from source:
+To compiling from sources downloaded from the Git repository (`git clone` or downloads from [Github releases](https://github.com/htop-dev/htop/releases/)), then run:
 ~~~ shell
 ./autogen.sh && ./configure && make
 ~~~
 
 By default `make install` will install into `/usr/local`, for changing the path use `./configure --prefix=/some/path`.
+
+### Install
+To install to system run `make install`. By default `make install` installs into `/usr/local`. To change this path use `./configure --prefix=/some/path`.
 
 ### Build Options
 
@@ -94,8 +112,26 @@ By default `make install` will install into `/usr/local`, for changing the path 
     dependencies: *pkg-config*(build-time), *libnl-3* and *libnl-genl-3*
     default: *check*
 
-## Usage
 
+## Runtime dependencies:
+`htop` has a set of fixed minimum runtime dependencies, which is kept as minimal as possible:
+* `ncurses` libraries for terminal handling (wide character support).
+
+### Runtime optional dependencies:
+`htop` has a set of fixed optional dependencies, depending on build/configure option used:
+* `libdl`, if not building static and support for some of the optional libraries is enabled, is always required when support for to optionally load dependencies (i.e. `libsensors`, `systemd`) is present.
+* `libcap`, user-space interfaces to the POSIX 1003.1e, is always required when `--enable-capabilities` was used to configure `htop`.
+* `libsensors`, readout of temperatures and CPU speeds, is optional even when `--enable-sensors` was used to configure `htop`.
+* `systemd` is optional when `--enable-static` was not used to configure `htop` (Linux only). If building statically and `libsystemd` is not found by `configure` support for the SystemD meter is disabled entirely.
+
+`htop` checks for the availability of the actual runtime lib as `htop` runs.
+
+**BSD**
+On most *BSD systems you also have `kvm` as a static requirement to read all the kernel information.
+
+More information on required and optional dependencies can be found in [configure.ac](configure.ac).
+
+## Usage
 See the manual page (`man htop`) or the on-line help ('F1' or 'h' inside `htop`) for a list of supported key commands.
 
 ## Support
