@@ -1,0 +1,11 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[wchan]
+caption = WCHAN
+width = 8
+description = PCP wchan description
+pid.metric = proc.psinfo.wchan
+pid.color = yellow
+pid.label = sys

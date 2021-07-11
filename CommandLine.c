@@ -22,6 +22,7 @@ in the source distribution for its full text.
 
 #include "Action.h"
 #include "CRT.h"
+#include "DynamicColumn.h"
 #include "DynamicMeter.h"
 #include "Hashtable.h"
 #include "Header.h"
@@ -136,18 +137,18 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
          case 's':
             assert(optarg); /* please clang analyzer, cause optarg can be NULL in the 'u' case */
             if (String_eq(optarg, "help")) {
-               for (int j = 1; j < LAST_PROCESSFIELD; j++) {
-                  const char* name = Process_fields[j].name;
-                  const char* description = Process_fields[j].description;
+               for (int j = 1; j < LAST_STATIC_PROCESSFIELD; j++) {
+                  const char* name = Process_fields[j].name; // FIXME
+                  const char* description = Process_fields[j].description; // FIXME
                   if (name) printf("%19s %s\n", name, description);
                }
                exit(0);
             }
             flags.sortKey = 0;
-            for (int j = 1; j < LAST_PROCESSFIELD; j++) {
-               if (Process_fields[j].name == NULL)
+            for (int j = 1; j < LAST_STATIC_PROCESSFIELD; j++) {
+               if (Process_fields[j].name == NULL) // FIXME
                   continue;
-               if (String_eq(optarg, Process_fields[j].name)) {
+               if (String_eq(optarg, Process_fields[j].name)) { // FIXME
                   flags.sortKey = j;
                   break;
                }
@@ -292,8 +293,9 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    Process_setupColumnWidths();
 
    UsersTable* ut = UsersTable_new();
+   Hashtable* dc = DynamicColumns_new();
    Hashtable* dm = DynamicMeters_new();
-   ProcessList* pl = ProcessList_new(ut, dm, flags.pidMatchList, flags.userId);
+   ProcessList* pl = ProcessList_new(ut, dm, dc, flags.pidMatchList, flags.userId);
 
    Settings* settings = Settings_new(pl->cpuCount);
    pl->settings = settings;

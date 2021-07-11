@@ -17,7 +17,7 @@ typedef struct UnsupportedProcess_ {
 } UnsupportedProcess;
 
 
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 
 Process* UnsupportedProcess_new(const Settings* settings);
 

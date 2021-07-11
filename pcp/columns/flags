@@ -1,0 +1,11 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[psflags]
+caption = Flags
+width = 12
+description = PCP flags description
+pid.metric = proc.psinfo.flags
+pid.color = blue
+pid.label = sys

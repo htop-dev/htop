@@ -23,7 +23,7 @@ typedef struct NetBSDProcess_ {
 
 extern const ProcessClass NetBSDProcess_class;
 
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 
 Process* NetBSDProcess_new(const Settings* settings);
 

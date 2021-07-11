@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
+#include "Platform.h"
 #include "Process.h"
 #include "Settings.h"
 #include "XUtils.h"
@@ -59,11 +60,11 @@ static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
    return name;
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
    PCPProcessList* this = xCalloc(1, sizeof(PCPProcessList));
    ProcessList* super = &(this->super);
 
-   ProcessList_init(super, Class(PCPProcess), usersTable, dynamicMeters, pidMatchList, userId);
+   ProcessList_init(super, Class(PCPProcess), usersTable, dynamicMeters, dynamicColumns, pidMatchList, userId);
 
    struct timeval timestamp;
    gettimeofday(&timestamp, NULL);
@@ -306,6 +307,10 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
    }
 }
 
+static void PCPProcessList_updateDynamicColumns(PCPProcess* pp, int pid, int offset) {
+   Platform_updateDynamicColumns(pp, pid, offset);
+}
+
 static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, struct timeval* tv) {
    ProcessList* pl = (ProcessList*) this;
    const Settings* settings = pl->settings;
@@ -316,7 +321,6 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
    unsigned long long now = tv->tv_sec * 1000LL + tv->tv_usec / 1000LL;
    int pid = -1, offset = -1;
 
-   /* for every process ... */
    while (Metric_iterate(PCP_PROC_PID, &pid, &offset)) {
 
       bool preExisting;
@@ -422,6 +426,9 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       if (proc->state == 'R')
          pl->runningTasks++;
       proc->updated = true;
+
+      /* dynamic columns */
+      PCPProcessList_updateDynamicColumns(pp, pid, offset);
    }
    return true;
 }

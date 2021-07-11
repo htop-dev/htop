@@ -24,7 +24,7 @@ typedef struct OpenBSDProcess_ {
 
 extern const ProcessClass OpenBSDProcess_class;
 
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 
 Process* OpenBSDProcess_new(const Settings* settings);
 

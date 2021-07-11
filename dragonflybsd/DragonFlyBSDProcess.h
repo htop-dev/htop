@@ -23,7 +23,7 @@ typedef struct DragonFlyBSDProcess_ {
 
 extern const ProcessClass DragonFlyBSDProcess_class;
 
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 
 Process* DragonFlyBSDProcess_new(const Settings* settings);
 

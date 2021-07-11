@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 #include "Panel.h"
+#include "ProcessList.h"
 #include "Settings.h"
 
 
@@ -22,7 +23,7 @@ typedef struct ColumnsPanel_ {
 
 extern const PanelClass ColumnsPanel_class;
 
-ColumnsPanel* ColumnsPanel_new(Settings* settings);
+ColumnsPanel* ColumnsPanel_new(Settings* settings, const ProcessList* pl);
 
 void ColumnsPanel_update(Panel* super);
 

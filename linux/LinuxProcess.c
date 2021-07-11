@@ -29,7 +29,7 @@ in the source distribution for its full text.
 int pageSize;
 int pageSizeKB;
 
-const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
+const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [PID] = { .name = "PID", .title = "PID", .description = "Process/thread ID", .flags = 0, .pidColumn = true, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },

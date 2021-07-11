@@ -42,6 +42,7 @@ in the source distribution for its full text.
 #include "linux/PressureStallMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
+#include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
 #include "pcp/PCPProcess.h"
 #include "pcp/PCPProcessList.h"
@@ -49,6 +50,10 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
+typedef struct {
+   unsigned int key;
+   const char* name;
+} DynamicIterator;
 
 typedef struct Platform_ {
    int context;			/* PMAPI(3) context identifier */
@@ -59,6 +64,7 @@ typedef struct Platform_ {
    pmDesc* descs;		/* metric desc array indexed by Metric */
    pmResult* result;		/* sample values result indexed by Metric */
    PCPDynamicMeters meters;	/* dynamic meters via configuration files */
+   PCPDynamicColumns columns;
    struct timeval offset;	/* time offset used in archive mode only */
    long long btime;		/* boottime in seconds since the epoch */
    char* release;		/* uname and distro from this context */
@@ -70,7 +76,7 @@ Platform* pcp;
 
 ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
-int Platform_numberOfFields = LAST_PROCESSFIELD;
+int Platform_numberOfFields = LAST_STATIC_PROCESSFIELD;
 
 const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number = 0 },
@@ -247,8 +253,13 @@ static const char* Platform_metricNames[] = {
    [PCP_METRIC_COUNT] = NULL
 };
 
+
 const pmDesc* Metric_desc(Metric metric) {
    return &pcp->descs[metric];
+}
+
+int Metric_type(Metric metric) {
+   return pcp->descs[metric].type;
 }
 
 pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type) {
@@ -350,6 +361,7 @@ bool Metric_iterate(Metric metric, int* instp, int* offsetp) {
 
    *offsetp = offset;
    *instp = vset->vlist[offset].inst;
+   //fprintf(stderr, "offset %d PID %d\n", *offsetp, *instp);
    return true;
 }
 
@@ -461,9 +473,12 @@ void Platform_init(void) {
 
    for (unsigned int i = 0; i < PCP_METRIC_COUNT; i++)
       Platform_addMetric(i, Platform_metricNames[i]);
-   pcp->meters.offset = PCP_METRIC_COUNT;
 
+   pcp->meters.offset = PCP_METRIC_COUNT;
    PCPDynamicMeters_init(&pcp->meters);
+
+   pcp->columns.offset = pcp->meters.cursor + PCP_METRIC_COUNT;
+   PCPDynamicColumns_init(&pcp->columns);
 
    sts = pmLookupName(pcp->totalMetrics, pcp->names, pcp->pmids);
    if (sts < 0) {
@@ -500,6 +515,11 @@ void Platform_init(void) {
    Metric_enable(PCP_UNAME_RELEASE, true);
    Metric_enable(PCP_UNAME_MACHINE, true);
    Metric_enable(PCP_UNAME_DISTRO, true);
+
+   // FIXME move next two line to PCPDynamicColumn_enable
+   // and think that is the optimal place to invoke it..
+   for(unsigned int i = pcp->columns.offset; i < pcp->columns.offset + pcp->columns.count; i++)
+      Metric_enable(i, true);
 
    Metric_fetch(NULL);
 
@@ -923,4 +943,32 @@ void Platform_dynamicMeterDisplay(const Meter* meter, RichString* out) {
    PCPDynamicMeter* this = Hashtable_get(pcp->meters.table, meter->param);
    if (this)
       PCPDynamicMeter_display(this, meter, out);
+}
+
+Hashtable* Platform_dynamicColumns(void) {
+   return pcp->columns.table;
+}
+
+void Platform_dynamicColumnWriteField(const Process* proc, RichString* str, int field) {
+   int key = abs(field-LAST_STATIC_PROCESSFIELD);
+   PCPDynamicColumn* this = Hashtable_get(pcp->columns.table, key);
+   if (this)
+      PCPDynamicColumn_writeField(this, proc, str, field);
+}
+
+int Platform_getNumberOfColumns() {
+   return pcp->columns.count;
+}
+
+void Platform_updateDynamicColumns(PCPProcess* proc, int pid, int offset) {
+   pmAtomValue value;
+   for(unsigned int i = 0; i < pcp->columns.count; ++i) {
+      Metric_instance(pcp->columns.offset+i, pid, offset, &value,
+            Metric_type(pcp->columns.offset+i));
+   proc->dc[i] = value;
+   }
+}
+
+int Platform_getColumnOffset() {
+   return pcp->columns.offset;
 }

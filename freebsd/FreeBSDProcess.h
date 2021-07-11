@@ -22,7 +22,7 @@ typedef struct FreeBSDProcess_ {
 
 extern const ProcessClass FreeBSDProcess_class;
 
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 
 Process* FreeBSDProcess_new(const Settings* settings);
 

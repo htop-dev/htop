@@ -112,12 +112,18 @@ static void readFields(ProcessField* fields, uint32_t* flags, const char* line) 
    free(trim);
    int i, j;
    *flags = 0;
-   for (j = 0, i = 0; i < LAST_PROCESSFIELD && ids[i]; i++) {
+   for (j = 0, i = 0; i < MAX_PROCESSFIELD && ids[i]; i++) {
       // This "+1" is for compatibility with the older enum format.
       int id = atoi(ids[i]) + 1;
-      if (id > 0 && id < LAST_PROCESSFIELD && Process_fields[id].name) {
+      // FIXME set back Process_fields[id].name
+      //if (id > 0 && id < MAX_PROCESSFIELD && Process_fields[id].name) {
+      if (id > 0 && id < LAST_STATIC_PROCESSFIELD ) { // FIXME make sure this logic is vaild
          fields[j] = id;
          *flags |= Process_fields[id].flags;
+         j++;
+      } else {
+         fields[j] = id;
+         // handle flags here
          j++;
       }
    }
@@ -397,14 +403,14 @@ Settings* Settings_new(unsigned int initialCpuCount) {
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
-   this->fields = xCalloc(LAST_PROCESSFIELD + 1, sizeof(ProcessField));
+   this->fields = xCalloc(LAST_STATIC_PROCESSFIELD + 1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
    this->flags = 0;
    const ProcessField* defaults = Platform_defaultFields;
    for (int i = 0; defaults[i]; i++) {
       this->fields[i] = defaults[i];
-      this->flags |= Process_fields[defaults[i]].flags;
+      this->flags |= Process_fields[defaults[i]].flags; // change this ?!
    }
 
    char* legacyDotfile = NULL;

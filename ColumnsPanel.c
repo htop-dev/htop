@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 
 #include "CRT.h"
+#include "DynamicColumn.h"
 #include "FunctionBar.h"
 #include "ListItem.h"
 #include "Object.h"
@@ -115,7 +116,20 @@ const PanelClass ColumnsPanel_class = {
    .eventHandler = ColumnsPanel_eventHandler
 };
 
-ColumnsPanel* ColumnsPanel_new(Settings* settings) {
+typedef struct {
+   Panel* super;
+   unsigned int id;
+   unsigned int offset;
+} DynamicIterator;
+
+static void ColumnsPanel_addDynamicColumnCaption(Panel* super, int param, const ProcessList* pl) {
+   int field = abs(param - LAST_STATIC_PROCESSFIELD);
+   const DynamicColumn* column = Hashtable_get(pl->dynamicColumns, field);
+   if(column)
+      Panel_add(super, (Object*) ListItem_new(column->caption, param));
+}
+
+ColumnsPanel* ColumnsPanel_new(Settings* settings, const ProcessList* pl) {
    ColumnsPanel* this = AllocThis(ColumnsPanel);
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(ColumnsFunctions, NULL, NULL);
@@ -127,8 +141,10 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
 
    const ProcessField* fields = this->settings->fields;
    for (; *fields; fields++) {
-      if (Process_fields[*fields].name) {
+      if (*fields < LAST_STATIC_PROCESSFIELD) {
          Panel_add(super, (Object*) ListItem_new(Process_fields[*fields].name, *fields));
+      } else {
+         ColumnsPanel_addDynamicColumnCaption(super, *fields, pl);
       }
    }
    return this;
@@ -143,7 +159,11 @@ void ColumnsPanel_update(Panel* super) {
    for (int i = 0; i < size; i++) {
       int key = ((ListItem*) Panel_get(super, i))->key;
       this->settings->fields[i] = key;
-      this->settings->flags |= Process_fields[key].flags;
+      if (key < LAST_STATIC_PROCESSFIELD) {
+         this->settings->flags |= Process_fields[key].flags;
+      } else {
+         // FIXME handle dynamic columns flags here
+      }
    }
    this->settings->fields[size] = 0;
 }

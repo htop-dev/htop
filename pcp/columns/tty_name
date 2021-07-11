@@ -1,0 +1,11 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[myttyname]
+caption = TTYName
+width = 5
+description = PCP TTY description
+tty.metric = proc.psinfo.ttyname
+tty.color = green
+tty.label = sys

@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "MetersPanel.h"
 #include "Object.h"
+#include "ProcessList.h"
 #include "ProvideCurses.h"
 #include "Vector.h"
 
@@ -55,8 +56,8 @@ static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
 }
 
 static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
-   Panel* columns = (Panel*) ColumnsPanel_new(this->settings);
-   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns);
+   Panel* columns = (Panel*) ColumnsPanel_new(this->settings, this->pl);
+   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns, this->pl);
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
 }

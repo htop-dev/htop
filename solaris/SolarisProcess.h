@@ -40,7 +40,7 @@ typedef struct SolarisProcess_ {
 
 extern const ProcessClass SolarisProcess_class;
 
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 
 Process* SolarisProcess_new(const Settings* settings);
 

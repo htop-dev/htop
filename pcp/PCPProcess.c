@@ -18,8 +18,10 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Process.h"
+#include "Platform.h"
 #include "ProvideCurses.h"
 #include "XUtils.h"
+#include "PCPDynamicColumn.h"
 
 const ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
@@ -86,6 +88,9 @@ const ProcessFieldData Process_fields[] = {
 
 Process* PCPProcess_new(const Settings* settings) {
    PCPProcess* this = xCalloc(1, sizeof(PCPProcess));
+   int dcCount = Platform_getNumberOfColumns();
+   pmAtomValue* dc = xCalloc(dcCount, sizeof(pmAtomValue));
+   this->dc = dc;
    Object_setClass(this, Class(PCPProcess));
    Process_init(&this->super, settings);
    return &this->super;
@@ -96,6 +101,7 @@ void Process_delete(Object* cast) {
    Process_done((Process*)cast);
    free(this->cgroup);
    free(this->secattr);
+   free(this->dc);
    free(this);
 }
 
@@ -186,6 +192,7 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
    const PCPProcess* p1 = (const PCPProcess*)v1;
    const PCPProcess* p2 = (const PCPProcess*)v2;
 
+   if(key < LAST_STATIC_PROCESSFIELD) {
    switch (key) {
    case M_DRS:
       return SPACESHIP_NUMBER(p1->m_drs, p2->m_drs);
@@ -248,6 +255,8 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }
+   } else
+      return PCPDynamicColumn_compareByKey(p1, p2, key);
 }
 
 const ProcessClass PCPProcess_class = {

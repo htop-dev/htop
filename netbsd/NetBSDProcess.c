@@ -18,7 +18,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
+const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD] = {
    [0] = {
       .name = "",
       .title = NULL,

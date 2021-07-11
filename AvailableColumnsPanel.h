@@ -8,6 +8,7 @@ in the source distribution for its full text.
 */
 
 #include "Panel.h"
+#include "ProcessList.h"
 
 
 typedef struct AvailableColumnsPanel_ {
@@ -17,6 +18,6 @@ typedef struct AvailableColumnsPanel_ {
 
 extern const PanelClass AvailableColumnsPanel_class;
 
-AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns);
+AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns, const ProcessList* pl);
 
 #endif

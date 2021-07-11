@@ -58,7 +58,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
 
    NetBSDProcessList* npl = xCalloc(1, sizeof(NetBSDProcessList));
    ProcessList* pl = (ProcessList*) npl;
-   ProcessList_init(pl, Class(NetBSDProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(NetBSDProcess), usersTable, dynamicMeters, pidMatchList, userId);
 
    size = sizeof(pl->cpuCount);
    r = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);

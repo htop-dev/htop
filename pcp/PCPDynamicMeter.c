@@ -18,12 +18,12 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 
-static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, PCPDynamicMeter* meter, const char* name) {
+static PCPDynamicMeterMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, PCPDynamicMeter* meter, const char* name) {
    size_t bytes = 8 + strlen(meter->super.name) + strlen(name);
    char* metricName = xMalloc(bytes);
    xSnprintf(metricName, bytes, "htop.%s.%s", meter->super.name, name);
 
-   PCPDynamicMetric* metric;
+   PCPDynamicMeterMetric* metric;
    for (unsigned int i = 0; i < meter->totalMetrics; i++) {
       metric = &meter->metrics[i];
       if (String_eq(metric->name, metricName)) {
@@ -34,10 +34,10 @@ static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, 
 
    /* not an existing metric in this meter - add it */
    unsigned int n = meter->totalMetrics + 1;
-   meter->metrics = xReallocArray(meter->metrics, n, sizeof(PCPDynamicMetric));
+   meter->metrics = xReallocArray(meter->metrics, n, sizeof(PCPDynamicMeterMetric));
    meter->totalMetrics = n;
    metric = &meter->metrics[n-1];
-   memset(metric, 0, sizeof(PCPDynamicMetric));
+   memset(metric, 0, sizeof(PCPDynamicMeterMetric));
    metric->name = metricName;
    metric->label = String_cat(name, ": ");
    metric->id = meters->offset + meters->cursor;
@@ -49,7 +49,7 @@ static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, 
 }
 
 static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMeter* meter, const char* path, unsigned int line, char* key, char* value) {
-   PCPDynamicMetric* metric;
+   PCPDynamicMeterMetric* metric;
    char* p;
 
    if ((p = strchr(key, '.')) == NULL)
@@ -287,7 +287,7 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
       if (i > 0 && bytes < size - 1)
          buffer[bytes++] = '/';  /* separator */
 
-      PCPDynamicMetric* metric = &this->metrics[i];
+      PCPDynamicMeterMetric* metric = &this->metrics[i];
       const pmDesc* desc = Metric_desc(metric->id);
       pmAtomValue atom, raw;
 
@@ -358,7 +358,7 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
    int nodata = 1;
 
    for (unsigned int i = 0; i < this->totalMetrics; i++) {
-      PCPDynamicMetric* metric = &this->metrics[i];
+      PCPDynamicMeterMetric* metric = &this->metrics[i];
       const pmDesc* desc = Metric_desc(metric->id);
       pmAtomValue atom, raw;
       char buffer[64];

@@ -13,9 +13,10 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "CRT.h"
 #include "CategoriesPanel.h"
 #include "CommandScreen.h"
-#include "CRT.h"
+#include "DynamicColumn.h"
 #include "EnvScreen.h"
 #include "FunctionBar.h"
 #include "Hashtable.h"
@@ -163,14 +164,29 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
 
 // ----------------------------------------
 
+static inline bool has_dynamicColumns(int key) {
+   return key > LAST_STATIC_PROCESSFIELD;
+}
+
 static Htop_Reaction actionSetSortColumn(State* st) {
    Htop_Reaction reaction = HTOP_OK;
    Panel* sortPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
    const ProcessField* fields = st->settings->fields;
    for (int i = 0; fields[i]; i++) {
-      char* name = String_trim(Process_fields[fields[i]].name);
-      Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
+      char* name = NULL;
+      if(has_dynamicColumns(fields[i])) {
+         char buffer[20];
+         int index = fields[i]-LAST_STATIC_PROCESSFIELD;
+         const DynamicColumn* column = Hashtable_get(st->pl->dynamicColumns, index);
+         if(column) {
+            xSnprintf(buffer, sizeof(buffer), "%s", column->caption);
+            Panel_add(sortPanel, (Object*) ListItem_new(buffer, fields[i]));
+         }
+      } else {
+         name = String_trim(Process_fields[fields[i]].name);
+         Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
+      }
       if (fields[i] == Settings_getActiveSortKey(st->settings))
          Panel_setSelected(sortPanel, i);
 

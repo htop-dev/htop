@@ -10,11 +10,11 @@ typedef struct {
    char* name; /* derived metric name */
    char* label;
    char* suffix;
-} PCPDynamicMetric;
+} PCPDynamicMeterMetric;
 
 typedef struct {
    DynamicMeter super;
-   PCPDynamicMetric* metrics;
+   PCPDynamicMeterMetric* metrics;
    unsigned int totalMetrics;
 } PCPDynamicMeter;
 

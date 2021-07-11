@@ -105,7 +105,7 @@ extern int pageSize;
 
 extern int pageSizeKB;
 
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 
 extern const ProcessClass LinuxProcess_class;
 

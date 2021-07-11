@@ -56,7 +56,8 @@ typedef enum ProcessField_ {
    /* Platform specific fields, defined in ${platform}/ProcessField.h */
    PLATFORM_PROCESS_FIELDS
 
-   LAST_PROCESSFIELD
+   LAST_STATIC_PROCESSFIELD,
+   MAX_PROCESSFIELD = 10000
 } ProcessField;
 
 struct Settings_;
@@ -278,7 +279,7 @@ typedef struct ProcessFieldData_ {
 void Process_writeField(const Process* this, RichString* str, ProcessField field);
 int Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 #define PROCESS_MAX_PID_DIGITS 19
 extern int Process_pidDigits;
 

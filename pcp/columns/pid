@@ -1,0 +1,11 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[unamesys]
+caption = myPID
+width = 10
+description = PCP PID description
+pid.metric = proc.psinfo.pid
+pid.color = red
+pid.label = sys

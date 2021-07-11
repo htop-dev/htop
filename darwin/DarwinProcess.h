@@ -23,7 +23,7 @@ typedef struct DarwinProcess_ {
 
 extern const ProcessClass DarwinProcess_class;
 
-extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern const ProcessFieldData Process_fields[LAST_STATIC_PROCESSFIELD];
 
 Process* DarwinProcess_new(const Settings* settings);
 

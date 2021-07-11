@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "CPUMeter.h"
 #include "DiskIOMeter.h"
+#include "Hashtable.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
@@ -101,5 +102,9 @@ static inline void Platform_dynamicMeterInit(ATTR_UNUSED Meter* meter) { }
 static inline void Platform_dynamicMeterUpdateValues(ATTR_UNUSED Meter* meter) { }
 
 static inline void Platform_dynamicMeterDisplay(ATTR_UNUSED const Meter* meter, ATTR_UNUSED RichString* out) { }
+
+static inline Hashtable* Platform_dynamicColumns(void) { return NULL; }
+
+static inline void Platform_dynamicColumnWriteField(ATTR_UNUSED const Process* proc, ATTR_UNUSED RichString* str, ATTR_UNUSED int param) { }
 
 #endif

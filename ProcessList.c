@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <string.h>
 
 #include "CRT.h"
+#include "DynamicColumn.h"
 #include "Hashtable.h"
 #include "Macros.h"
 #include "Platform.h"
@@ -19,17 +20,18 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->processes2 = Vector_new(klass, true, DEFAULT_SIZE); // tree-view auxiliary buffer
 
-   this->processTable = Hashtable_new(200, false);
-   this->displayTreeSet = Hashtable_new(200, false);
-   this->draftingTreeSet = Hashtable_new(200, false);
+   this->processTable = Hashtable_new(200, false); // FIXME limit ?
+   this->displayTreeSet = Hashtable_new(200, false); // FIXME limit ?
+   this->draftingTreeSet = Hashtable_new(200, false); // FIXME limit ?
 
    this->usersTable = usersTable;
    this->pidMatchList = pidMatchList;
    this->dynamicMeters = dynamicMeters;
+   this->dynamicColumns = dynamicColumns;
 
    this->userId = userId;
 
@@ -82,13 +84,26 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
    this->panel = panel;
 }
 
-static const char* alignedProcessFieldTitle(ProcessField field) {
-   const char* title = Process_fields[field].title;
-   if (!title)
-      return "- ";
+// FIXME titles need to align well
+static const char* alignedProcessFieldTitle(const ProcessList* this, ProcessField field) {
+   const char* title;
+   if(field > LAST_STATIC_PROCESSFIELD) { // DynamicColumns
+      int key = abs((int)field-LAST_STATIC_PROCESSFIELD);
+      const DynamicColumn* column = Hashtable_get(this->dynamicColumns, key);
+      if(column == NULL)
+         return "- ";
+      title = column->caption;
+      static char dynamicColumnBuffer[20];
+      xSnprintf(dynamicColumnBuffer, sizeof(dynamicColumnBuffer), "%*s", column->width, title);
+      return dynamicColumnBuffer;
+   } else {
+      title = Process_fields[field].title;
+      if (!title)
+         return "- ";
 
-   if (!Process_fields[field].pidColumn)
-      return title;
+      if (!Process_fields[field].pidColumn)
+         return title;
+   }
 
    static char titleBuffer[PROCESS_MAX_PID_DIGITS + /* space */ 1 + /* null-terminator */ + 1];
    xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_pidDigits, title);
@@ -114,7 +129,7 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header) {
          color = CRT_colors[PANEL_HEADER_FOCUS];
       }
 
-      RichString_appendWide(header, color, alignedProcessFieldTitle(fields[i]));
+      RichString_appendWide(header, color, alignedProcessFieldTitle(this, fields[i]));
       if (key == fields[i] && RichString_getCharVal(*header, RichString_size(header) - 1) == ' ') {
          RichString_rewind(header, 1);  // rewind to override space
          RichString_appendnWide(header,
@@ -477,7 +492,7 @@ ProcessField ProcessList_keyAt(const ProcessList* this, int at) {
    const ProcessField* fields = this->settings->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
-      int len = strlen(alignedProcessFieldTitle(field));
+      int len = strlen(alignedProcessFieldTitle(this, field));
       if (at >= x && at <= x + len) {
          return field;
       }
@@ -562,7 +577,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
    }
 }
 
-Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor) {
+Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor) { // LOOKATME
    Process* proc = (Process*) Hashtable_get(this->processTable, pid);
    *preExisting = proc != NULL;
    if (proc) {
@@ -576,6 +591,7 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
    return proc;
 }
 
+// LOOKATME
 void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
    // in pause mode only gather global data for meters (CPU/memory/...)
    if (pauseProcessUpdate) {
