@@ -16,9 +16,9 @@ typedef struct DynamicMeter_ {
 
 Hashtable* DynamicMeters_new(void);
 
-const char* DynamicMeter_lookup(const ProcessList* pl, unsigned int param);
+const char* DynamicMeter_lookup(Hashtable* dynamics, unsigned int param);
 
-bool DynamicMeter_search(const ProcessList* pl, const char* name, unsigned int* key);
+bool DynamicMeter_search(Hashtable* dynamics, const char* name, unsigned int* key);
 
 extern const MeterClass DynamicMeter_class;
 

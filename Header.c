@@ -75,7 +75,7 @@ void Header_writeBackToSettings(const Header* this) {
          const Meter* meter = (Meter*) Vector_get(vec, i);
          char* name;
          if (meter->param && As_Meter(meter) == &DynamicMeter_class) {
-            const char* dynamic = DynamicMeter_lookup(this->pl, meter->param);
+            const char* dynamic = DynamicMeter_lookup(this->pl->dynamicMeters, meter->param);
             xAsprintf(&name, "%s(%s)", As_Meter(meter)->name, dynamic);
          } else if (meter->param && As_Meter(meter) == &CPUMeter_class) {
             xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
@@ -101,7 +101,7 @@ bool Header_addMeterByName(Header* this, const char* name, int column) {
             if ((end = strrchr(dynamic, ')')) == NULL)
                return false;    // indicate htoprc parse failure
             *end = '\0';
-            if (!DynamicMeter_search(this->pl, dynamic, &param))
+            if (!DynamicMeter_search(this->pl->dynamicMeters, dynamic, &param))
                return false;    // indicates name lookup failure
          }
       }
