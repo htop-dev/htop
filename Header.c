@@ -46,7 +46,9 @@ void Header_populateFromSettings(Header* this) {
    Header_forEachColumn(this, col) {
       const MeterColumnSettings* colSettings = &this->settings->columns[col];
       for (int i = 0; i < colSettings->len; i++) {
-         Header_addMeterByName(this, colSettings->names[i], col);
+         if (!Header_addMeterByName(this, colSettings->names[i], col)) {
+            continue;
+         }
          if (colSettings->modes[i] != 0) {
             Header_setMode(this, i, colSettings->modes[i], col);
          }
@@ -86,7 +88,7 @@ void Header_writeBackToSettings(const Header* this) {
    }
 }
 
-MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
+bool Header_addMeterByName(Header* this, const char* name, int column) {
    Vector* meters = this->columns[column];
 
    char* paren = strchr(name, '(');
@@ -95,18 +97,20 @@ MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
       char* end, dynamic[32] = {0};
       int ok = sscanf(paren, "(%10u)", &param); // CPUMeter
       if (!ok) {
-         ok = sscanf(paren, "(%30s)", dynamic); // DynamicMeter
-         if (ok && (end = strrchr(dynamic, ')'))) *end = '\0';
-         param = ok ? DynamicMeter_search(this->pl, dynamic) : 0;
+         if (sscanf(paren, "(%30s)", dynamic)) { // DynamicMeter
+            if ((end = strrchr(dynamic, ')')) == NULL)
+               return false;    // indicate htoprc parse failure
+            *end = '\0';
+            if (!DynamicMeter_search(this->pl, dynamic, &param))
+               return false;    // indicates name lookup failure
+         }
       }
       *paren = '\0';
    }
-   MeterModeId mode = TEXT_METERMODE;
    for (const MeterClass* const* type = Platform_meterTypes; *type; type++) {
       if (String_eq(name, (*type)->name)) {
          Meter* meter = Meter_new(this->pl, param, *type);
          Vector_add(meters, meter);
-         mode = meter->mode;
          break;
       }
    }
@@ -114,7 +118,7 @@ MeterModeId Header_addMeterByName(Header* this, const char* name, int column) {
    if (paren)
       *paren = '(';
 
-   return mode;
+   return true;
 }
 
 void Header_setMode(Header* this, int i, MeterModeId mode, int column) {

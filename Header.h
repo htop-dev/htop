@@ -32,7 +32,7 @@ void Header_populateFromSettings(Header* this);
 
 void Header_writeBackToSettings(const Header* this);
 
-MeterModeId Header_addMeterByName(Header* this, const char* name, int column);
+bool Header_addMeterByName(Header* this, const char* name, int column);
 
 void Header_setMode(Header* this, int i, MeterModeId mode, int column);
 
