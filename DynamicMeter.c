@@ -52,7 +52,8 @@ bool DynamicMeter_search(Hashtable* dynamics, const char* name, unsigned int* ke
    DynamicIterator iter = { .key = 0, .name = name, .found = false };
    if (dynamics)
       Hashtable_foreach(dynamics, DynamicMeter_compare, &iter);
-   *key = iter.key;
+   if (key)
+      *key = iter.key;
    return iter.found;
 }
 
