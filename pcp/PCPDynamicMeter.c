@@ -194,13 +194,15 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
             meter = PCPDynamicMeter_new(meters, key+1);
       } else if (!ok) {
          ;  /* skip this one, we're looking for a new header */
-      } else if (value && String_eq(key, "caption")) {
+      } else if (value && meter && String_eq(key, "caption")) {
          char* caption = String_cat(value, ": ");
-         free_and_xStrdup(&meter->super.caption, caption);
-         free(caption);
-      } else if (value && String_eq(key, "description")) {
+         if (caption) {
+            free_and_xStrdup(&meter->super.caption, caption);
+            free(caption);
+         }
+      } else if (value && meter && String_eq(key, "description")) {
          free_and_xStrdup(&meter->super.description, value);
-      } else if (value && String_eq(key, "type")) {
+      } else if (value && meter && String_eq(key, "type")) {
          if (String_eq(config[1], "bar"))
              meter->super.type = BAR_METERMODE;
          else if (String_eq(config[1], "text"))
@@ -209,9 +211,9 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
              meter->super.type = GRAPH_METERMODE;
          else if (String_eq(config[1], "led"))
              meter->super.type = LED_METERMODE;
-      } else if (value && String_eq(key, "maximum")) {
+      } else if (value && meter && String_eq(key, "maximum")) {
          meter->super.maximum = strtod(value, NULL);
-      } else if (value) {
+      } else if (value && meter) {
          PCPDynamicMeter_parseMetric(meters, meter, path, lineno, key, value);
       }
       String_freeArray(config);
