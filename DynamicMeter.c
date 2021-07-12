@@ -48,16 +48,16 @@ static void DynamicMeter_compare(ht_key_t key, void* value, void* data) {
    }
 }
 
-bool DynamicMeter_search(const ProcessList* pl, const char* name, unsigned int* key) {
+bool DynamicMeter_search(Hashtable* dynamics, const char* name, unsigned int* key) {
    DynamicIterator iter = { .key = 0, .name = name, .found = false };
-   if (pl->dynamicMeters)
-      Hashtable_foreach(pl->dynamicMeters, DynamicMeter_compare, &iter);
+   if (dynamics)
+      Hashtable_foreach(dynamics, DynamicMeter_compare, &iter);
    *key = iter.key;
    return iter.found;
 }
 
-const char* DynamicMeter_lookup(const ProcessList* pl, unsigned int key) {
-   const DynamicMeter* meter = Hashtable_get(pl->dynamicMeters, key);
+const char* DynamicMeter_lookup(Hashtable* dynamics, unsigned int key) {
+   const DynamicMeter* meter = Hashtable_get(dynamics, key);
    return meter ? meter->name : NULL;
 }
 
