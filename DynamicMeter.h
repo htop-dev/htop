@@ -18,7 +18,7 @@ Hashtable* DynamicMeters_new(void);
 
 const char* DynamicMeter_lookup(const ProcessList* pl, unsigned int param);
 
-unsigned int DynamicMeter_search(const ProcessList* pl, const char* name);
+bool DynamicMeter_search(const ProcessList* pl, const char* name, unsigned int* key);
 
 extern const MeterClass DynamicMeter_class;
 
