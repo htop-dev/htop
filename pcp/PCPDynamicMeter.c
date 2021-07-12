@@ -140,8 +140,7 @@ static bool PCPDynamicMeter_validateMeterName(char* key, const char* path, unsig
 
 // Ensure a meter name has not been defined previously
 static bool PCPDynamicMeter_uniqueName(char* key, const char* path, unsigned int line, PCPDynamicMeters* meters) {
-   unsigned int param = 0;
-   if (DynamicMeter_search(meters->table, key, &param) == false)
+   if (DynamicMeter_search(meters->table, key, NULL) == false)
       return true;
 
    fprintf(stderr, "%s: duplicate name at %s line %u: \"%s\", ignored\n",
@@ -199,6 +198,7 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
          if (caption) {
             free_and_xStrdup(&meter->super.caption, caption);
             free(caption);
+	    caption = NULL;
          }
       } else if (value && meter && String_eq(key, "description")) {
          free_and_xStrdup(&meter->super.description, value);
