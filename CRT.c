@@ -885,6 +885,7 @@ void CRT_init(const Settings* settings, bool allowUnicode) {
    sigaction (SIGSYS, &act, &old_sig_handler[SIGSYS]);
    sigaction (SIGABRT, &act, &old_sig_handler[SIGABRT]);
 
+   signal(SIGINT, CRT_handleSIGTERM);
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
 
