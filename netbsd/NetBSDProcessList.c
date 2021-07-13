@@ -38,7 +38,7 @@ static long fscale;
 static int pageSize;
 static int pageSizeKB;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
    const int mib[] = { CTL_HW, HW_NCPU };
    const int fmib[] = { CTL_KERN, KERN_FSCALE };
    int r;
@@ -47,7 +47,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
    NetBSDProcessList* npl = xCalloc(1, sizeof(NetBSDProcessList));
    ProcessList* pl = (ProcessList*) npl;
-   ProcessList_init(pl, Class(NetBSDProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(NetBSDProcess), usersTable, dynamicMeters, pidMatchList, userId);
 
    size = sizeof(pl->cpuCount);
    r = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
