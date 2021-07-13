@@ -329,8 +329,9 @@ else
     HTOP_CHECK_SCRIPT([ncurses], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses5-config],
      HTOP_CHECK_LIB([ncurses6],  [doupdate], [HAVE_LIBNCURSES],
       HTOP_CHECK_LIB([ncurses],  [doupdate], [HAVE_LIBNCURSES],
-       AC_MSG_ERROR([can not find required library libncurses])
-   ))))
+       HTOP_CHECK_LIB([curses],  [doupdate], [HAVE_LIBNCURSES],
+        AC_MSG_ERROR([can not find required curses/ncurses library])
+   )))))
 
    AC_CHECK_HEADERS([curses.h], [],
       [AC_CHECK_HEADERS([ncurses/curses.h], [],
