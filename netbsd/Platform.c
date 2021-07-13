@@ -236,7 +236,6 @@ void Platform_setMemoryValues(Meter* this) {
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
-   usedMem -= buffersMem + cachedMem;
    this->total = pl->totalMem;
    this->values[0] = usedMem;
    this->values[1] = buffersMem;

@@ -102,14 +102,9 @@ static void NetBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
 
    pl->totalMem = uvmexp.npages * pageSizeKB;
-
-   // These calculations have been taken from NetBSD's top(1)
-   // They need review for testing the correctness
-   //pl->freeMem = uvmexp.free * pageSizeKB;
-   pl->buffersMem = uvmexp.filepages * pageSizeKB;
-   pl->cachedMem = (uvmexp.anonpages + uvmexp.filepages + uvmexp.execpages) * pageSizeKB;
-   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * pageSizeKB + pl->buffersMem + pl->cachedMem;
-
+   pl->buffersMem = 0;
+   pl->cachedMem = (uvmexp.filepages + uvmexp.execpages) * pageSizeKB;
+   pl->usedMem = (uvmexp.active + uvmexp.wired) * pageSizeKB;
    pl->totalSwap = uvmexp.swpages * pageSizeKB;
    pl->usedSwap = uvmexp.swpginuse * pageSizeKB;
 }
