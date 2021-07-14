@@ -184,7 +184,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (String_eq(option[0], "highlight_changes")) {
          this->highlightChanges = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_changes_delay_secs")) {
-         this->highlightDelaySecs = CLAMP(atoi(option[1]), 1, 24*60*60);
+         this->highlightDelaySecs = CLAMP(atoi(option[1]), 1, 24 * 60 * 60);
       } else if (String_eq(option[0], "find_comm_in_cmdline")) {
          this->findCommInCmdline = atoi(option[1]);
       } else if (String_eq(option[0], "strip_exe_from_cmdline")) {

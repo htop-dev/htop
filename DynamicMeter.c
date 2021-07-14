@@ -90,7 +90,7 @@ static void DynamicMeter_getUiName(const Meter* this, char* name, size_t length)
       const char* uiName = meter->caption;
       if (uiName) {
          int len = strlen(uiName);
-         if (len > 2 && uiName[len-2] == ':')
+         if (len > 2 && uiName[len - 2] == ':')
             len -= 2;
          xSnprintf(name, length, "%.*s", len, uiName);
       } else {

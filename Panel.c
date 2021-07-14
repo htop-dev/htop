@@ -454,7 +454,7 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
 
       if (len < 99) {
          buffer[len] = ch;
-         buffer[len+1] = '\0';
+         buffer[len + 1] = '\0';
       }
 
       for (int try = 0; try < 2; try++) {

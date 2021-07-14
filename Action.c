@@ -378,7 +378,7 @@ static Htop_Reaction actionSetup(State* st) {
    Action_runSetup(st);
    int headerHeight = Header_calculateHeight(st->header);
    Panel_move((Panel*)st->mainPanel, 0, headerHeight);
-   Panel_resize((Panel*)st->mainPanel, COLS, LINES-headerHeight-1);
+   Panel_resize((Panel*)st->mainPanel, COLS, LINES - headerHeight - 1);
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
