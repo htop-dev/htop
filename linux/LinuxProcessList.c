@@ -459,7 +459,7 @@ typedef struct LibraryData_ {
    bool exec;
 } LibraryData;
 
-static inline uint64_t fast_strtoull_dec(char **str, int maxlen) {
+static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
    register uint64_t result = 0;
 
    if (!maxlen)
@@ -474,7 +474,7 @@ static inline uint64_t fast_strtoull_dec(char **str, int maxlen) {
    return result;
 }
 
-static inline uint64_t fast_strtoull_hex(char **str, int maxlen) {
+static inline uint64_t fast_strtoull_hex(char** str, int maxlen) {
    register uint64_t result = 0;
    register int nibble, letter;
    const long valid_mask = 0x03FF007E;
@@ -508,8 +508,8 @@ static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void* 
    if (!value)
       return;
 
-   const LibraryData* v = (const LibraryData *)value;
-   uint64_t* d = (uint64_t *)data;
+   const LibraryData* v = (const LibraryData*)value;
+   uint64_t* d = (uint64_t*)data;
    if (!v->exec)
       return;
 
@@ -543,7 +543,7 @@ static void LinuxProcessList_readMaps(LinuxProcess* process, openat_arg_t procFd
          continue;
 
       // Parse format: "%Lx-%Lx %4s %x %2x:%2x %Ld"
-      char *readptr = buffer;
+      char* readptr = buffer;
 
       map_start = fast_strtoull_hex(&readptr, 16);
       if ('-' != *readptr++)

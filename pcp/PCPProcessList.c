@@ -273,7 +273,7 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
       return;
    }
 
-   char *command = value.cp;
+   char* command = value.cp;
    int length = strlen(command);
    if (command[0] != '(') {
       process->isKernelThread = false;
@@ -472,7 +472,7 @@ static inline void PCPProcessList_backupCPUTime(pmAtomValue* values) {
 }
 
 static inline void PCPProcessList_saveCPUTimePeriod(pmAtomValue* values, CPUMetric previous, pmAtomValue* latest) {
-   pmAtomValue *value;
+   pmAtomValue* value;
 
    /* new value for period */
    value = &values[previous];

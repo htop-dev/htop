@@ -60,7 +60,7 @@ char* String_getToken(const char* line, unsigned short int numMatch) ATTR_MALLOC
 char* String_readLine(FILE* fd) ATTR_MALLOC;
 
 /* Always null-terminates dest. Caller must pass a strictly positive size. */
-size_t String_safeStrncpy(char *restrict dest, const char *restrict src, size_t size);
+size_t String_safeStrncpy(char* restrict dest, const char* restrict src, size_t size);
 
 ATTR_FORMAT(printf, 2, 3)
 int xAsprintf(char** strp, const char* fmt, ...);
