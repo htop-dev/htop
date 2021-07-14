@@ -147,7 +147,8 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
          totalRate = pp->io_rate_write_bps;
       else
          totalRate = NAN;
-      Process_printRate(str, totalRate, coloring); return;
+      Process_printRate(str, totalRate, coloring);
+      return;
    }
    case CGROUP: xSnprintf(buffer, n, "%-10s ", pp->cgroup ? pp->cgroup : ""); break;
    case OOM: xSnprintf(buffer, n, "%4u ", pp->oom); break;

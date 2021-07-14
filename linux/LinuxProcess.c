@@ -217,7 +217,8 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          totalRate = lp->io_rate_write_bps;
       else
          totalRate = NAN;
-      Process_printRate(str, totalRate, coloring); return;
+      Process_printRate(str, totalRate, coloring);
+      return;
    }
    #ifdef HAVE_OPENVZ
    case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;
