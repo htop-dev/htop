@@ -224,8 +224,10 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) {
             this->colorScheme = 0;
          }
+      #ifdef HAVE_GETMOUSE
       } else if (String_eq(option[0], "enable_mouse")) {
          this->enableMouse = atoi(option[1]);
+      #endif
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
          didReadMeters = true;
@@ -332,7 +334,9 @@ int Settings_write(const Settings* this, bool onCrash) {
    fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
    fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
    fprintf(fd, "color_scheme=%d\n", (int) this->colorScheme);
+   #ifdef HAVE_GETMOUSE
    fprintf(fd, "enable_mouse=%d\n", (int) this->enableMouse);
+   #endif
    fprintf(fd, "delay=%d\n", (int) this->delay);
    fprintf(fd, "left_meters="); writeMeters(this, fd, 0);
    fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
@@ -437,7 +441,9 @@ Settings* Settings_new(unsigned int initialCpuCount) {
       }
    }
    this->colorScheme = 0;
+#ifdef HAVE_GETMOUSE
    this->enableMouse = true;
+#endif
    this->changed = false;
    this->delay = DEFAULT_DELAY;
    bool ok = false;
