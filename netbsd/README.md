@@ -29,5 +29,5 @@ What needs improvement
   maybe look at NetBSD top(1).
 * Battery display - use envsys(4).
 * Support for compiling using libcurses's Unicode support.
-* Support for fstat(1) (view open files, like lsof(1) on Linux).
+* Support for fstat(1) (view open files, like lsof(8) on Linux).
 * Support for ktrace(1) (like strace(1) on Linux).
