@@ -198,7 +198,7 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
          if (caption) {
             free_and_xStrdup(&meter->super.caption, caption);
             free(caption);
-	    caption = NULL;
+            caption = NULL;
          }
       } else if (value && meter && String_eq(key, "description")) {
          free_and_xStrdup(&meter->super.description, value);
