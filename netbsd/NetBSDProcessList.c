@@ -385,7 +385,7 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
 
    /* newer hardware supports per-core frequency, for e.g. ARM big.LITTLE */
    for (unsigned int i = 0; i <= cpus; i++) {
-      snprintf(name, sizeof(name), "machdep.cpufreq.cpu%u.current", i);
+      xSnprintf(name, sizeof(name), "machdep.cpufreq.cpu%u.current", i);
       freqSize = sizeof(freq);
       if (sysctlbyname(name, &freq, &freqSize, NULL, 0) != -1) {
          this->cpus[i].frequency = freq;
