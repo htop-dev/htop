@@ -87,7 +87,7 @@ static inline bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int a
 }
 
 static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
-    Generic_gettime_realtime(tv, msec);
+   Generic_gettime_realtime(tv, msec);
 }
 
 void Platform_gettime_monotonic(uint64_t* msec);
