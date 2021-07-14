@@ -106,6 +106,7 @@ void InfoScreen_run(InfoScreen* this) {
          }
       }
 
+#ifdef HAVE_GETMOUSE
       if (ch == KEY_MOUSE) {
          MEVENT mevent;
          int ok = getmouse(&mevent);
@@ -127,6 +128,7 @@ void InfoScreen_run(InfoScreen* this) {
             #endif
          }
       }
+#endif
 
       if (this->inc->active) {
          IncSet_handleKey(this->inc, ch, panel, IncSet_getListItemValue, this->lines);
