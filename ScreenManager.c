@@ -172,6 +172,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       ch = getch();
 
       HandlerResult result = IGNORED;
+#ifdef HAVE_GETMOUSE
       if (ch == KEY_MOUSE && this->settings->enableMouse) {
          ch = ERR;
          MEVENT mevent;
@@ -212,6 +213,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             }
          }
       }
+#endif
       if (ch == ERR) {
          if (sortTimeout > 0)
             sortTimeout--;

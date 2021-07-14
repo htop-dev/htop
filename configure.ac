@@ -352,6 +352,7 @@ if test "$my_htop_platform" = "solaris"; then
    AC_DEFINE([ERR], [(-1)], [Predefine ncurses macro.])
 fi
 AC_CHECK_FUNCS( [set_escdelay] )
+AC_CHECK_FUNCS( [getmouse] )
 
 
 AC_ARG_ENABLE([hwloc],
