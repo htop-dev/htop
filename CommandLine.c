@@ -186,7 +186,9 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
             flags.useColors = false;
             break;
          case 'M':
+#ifdef HAVE_GETMOUSE
             flags.enableMouse = false;
+#endif
             break;
          case 'U':
             flags.allowUnicode = false;
@@ -304,8 +306,10 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       settings->delay = flags.delay;
    if (!flags.useColors)
       settings->colorScheme = COLORSCHEME_MONOCHROME;
+#ifdef HAVE_GETMOUSE
    if (!flags.enableMouse)
       settings->enableMouse = false;
+#endif
    if (flags.treeView)
       settings->treeView = true;
    if (flags.highlightChanges)
