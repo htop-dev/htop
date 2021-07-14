@@ -26,7 +26,7 @@ void Generic_gettime_realtime(struct timeval* tvp, uint64_t* msec) {
       *msec = 0;
    }
 
-#else	/* lower resolution gettimeofday(2) is always available */
+#else /* lower resolution gettimeofday(2) is always available */
 
    struct timeval tv;
    if (gettimeofday(&tv, NULL) == 0) {
