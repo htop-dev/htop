@@ -226,7 +226,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = scanFifteen;
    return;
 
-  err:
+err:
    *one = NAN;
    *five = NAN;
    *fifteen = NAN;
