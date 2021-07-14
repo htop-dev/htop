@@ -75,7 +75,7 @@ void Process_printBytes(RichString* str, unsigned long long number, bool colorin
       RichString_appendnAscii(str, processColor, buffer, len);
    } else if (number < 100000) {
       //2 digit MB, 3 digit KB
-      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number/1000);
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / 1000);
       RichString_appendnAscii(str, processMegabytesColor, buffer, len);
       number %= 1000;
       len = xSnprintf(buffer, sizeof(buffer), "%03llu ", number);
@@ -88,7 +88,7 @@ void Process_printBytes(RichString* str, unsigned long long number, bool colorin
    } else if (number < 10000 * ONE_K) {
       //1 digit GB, 3 digit MB
       number /= ONE_K;
-      len = xSnprintf(buffer, sizeof(buffer), "%1llu", number/1000);
+      len = xSnprintf(buffer, sizeof(buffer), "%1llu", number / 1000);
       RichString_appendnAscii(str, processGigabytesColor, buffer, len);
       number %= 1000;
       len = xSnprintf(buffer, sizeof(buffer), "%03lluM ", number);
@@ -96,7 +96,7 @@ void Process_printBytes(RichString* str, unsigned long long number, bool colorin
    } else if (number < 100000 * ONE_K) {
       //2 digit GB, 1 digit MB
       number /= 100 * ONE_K;
-      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number/10);
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / 10);
       RichString_appendnAscii(str, processGigabytesColor, buffer, len);
       number %= 10;
       len = xSnprintf(buffer, sizeof(buffer), ".%1llu", number);
@@ -110,7 +110,7 @@ void Process_printBytes(RichString* str, unsigned long long number, bool colorin
    } else if (number < 10000ULL * ONE_M) {
       //1 digit TB, 3 digit GB
       number /= ONE_M;
-      len = xSnprintf(buffer, sizeof(buffer), "%1llu", number/1000);
+      len = xSnprintf(buffer, sizeof(buffer), "%1llu", number / 1000);
       RichString_appendnAscii(str, largeNumberColor, buffer, len);
       number %= 1000;
       len = xSnprintf(buffer, sizeof(buffer), "%03lluG ", number);
@@ -118,7 +118,7 @@ void Process_printBytes(RichString* str, unsigned long long number, bool colorin
    } else if (number < 100000 * ONE_M) {
       //2 digit TB, 1 digit GB
       number /= 100 * ONE_M;
-      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number/10);
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / 10);
       RichString_appendnAscii(str, largeNumberColor, buffer, len);
       number %= 10;
       len = xSnprintf(buffer, sizeof(buffer), ".%1llu", number);
@@ -131,7 +131,7 @@ void Process_printBytes(RichString* str, unsigned long long number, bool colorin
       RichString_appendnAscii(str, largeNumberColor, buffer, len);
    } else {
       //2 digit PB and above
-      len = xSnprintf(buffer, sizeof(buffer), "%4.1lfP ", (double)number/ONE_T);
+      len = xSnprintf(buffer, sizeof(buffer), "%4.1lfP ", (double)number / ONE_T);
       RichString_appendnAscii(str, largeNumberColor, buffer, len);
    }
 }
@@ -159,18 +159,18 @@ void Process_printCount(RichString* str, unsigned long long number, bool colorin
    } else if (number >= 100LL * ONE_DECIMAL_T) {
       xSnprintf(buffer, sizeof(buffer), "%11llu ", number / ONE_DECIMAL_M);
       RichString_appendnAscii(str, largeNumberColor, buffer, 8);
-      RichString_appendnAscii(str, processMegabytesColor, buffer+8, 4);
+      RichString_appendnAscii(str, processMegabytesColor, buffer + 8, 4);
    } else if (number >= 10LL * ONE_DECIMAL_G) {
       xSnprintf(buffer, sizeof(buffer), "%11llu ", number / ONE_DECIMAL_K);
       RichString_appendnAscii(str, largeNumberColor, buffer, 5);
-      RichString_appendnAscii(str, processMegabytesColor, buffer+5, 3);
-      RichString_appendnAscii(str, processColor, buffer+8, 4);
+      RichString_appendnAscii(str, processMegabytesColor, buffer + 5, 3);
+      RichString_appendnAscii(str, processColor, buffer + 8, 4);
    } else {
       xSnprintf(buffer, sizeof(buffer), "%11llu ", number);
       RichString_appendnAscii(str, largeNumberColor, buffer, 2);
-      RichString_appendnAscii(str, processMegabytesColor, buffer+2, 3);
-      RichString_appendnAscii(str, processColor, buffer+5, 3);
-      RichString_appendnAscii(str, processShadowColor, buffer+8, 4);
+      RichString_appendnAscii(str, processMegabytesColor, buffer + 2, 3);
+      RichString_appendnAscii(str, processColor, buffer + 5, 3);
+      RichString_appendnAscii(str, processShadowColor, buffer + 8, 4);
    }
 }
 
@@ -728,7 +728,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 
       for (int i = 0; i < 32; i++) {
          if (indent & (1U << i)) {
-            maxIndent = i+1;
+            maxIndent = i + 1;
          }
       }
 
@@ -1170,15 +1170,15 @@ static int skipPotentialPath(const char* cmdline, int end) {
 
    int slash = 0;
    for (int i = 1; i < end; i++) {
-      if (cmdline[i] == '/' && cmdline[i+1] != '\0') {
+      if (cmdline[i] == '/' && cmdline[i + 1] != '\0') {
          slash = i + 1;
          continue;
       }
 
-      if (cmdline[i] == ' ' && cmdline[i-1] != '\\')
+      if (cmdline[i] == ' ' && cmdline[i - 1] != '\\')
          return slash;
 
-      if (cmdline[i] == ':' && cmdline[i+1] == ' ')
+      if (cmdline[i] == ':' && cmdline[i + 1] == ' ')
          return slash;
    }
 

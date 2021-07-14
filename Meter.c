@@ -376,7 +376,7 @@ static const char* const* LEDMeterMode_digits;
 
 static void LEDMeterMode_drawDigit(int x, int y, int n) {
    for (int i = 0; i < 3; i++)
-      mvaddstr(y+i, x, LEDMeterMode_digits[i * 10 + n]);
+      mvaddstr(y + i, x, LEDMeterMode_digits[i * 10 + n]);
 }
 
 static void LEDMeterMode_draw(Meter* this, int x, int y, ATTR_UNUSED int w) {

@@ -36,7 +36,7 @@ static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, 
    unsigned int n = meter->totalMetrics + 1;
    meter->metrics = xReallocArray(meter->metrics, n, sizeof(PCPDynamicMetric));
    meter->totalMetrics = n;
-   metric = &meter->metrics[n-1];
+   metric = &meter->metrics[n - 1];
    memset(metric, 0, sizeof(PCPDynamicMetric));
    metric->name = metricName;
    metric->label = String_cat(name, ": ");
@@ -186,11 +186,11 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
       char* key = String_trim(config[0]);
       char* value = n > 1 ? String_trim(config[1]) : NULL;
       if (key[0] == '[') {  /* new section heading - i.e. new meter */
-         ok = PCPDynamicMeter_validateMeterName(key+1, path, lineno);
+         ok = PCPDynamicMeter_validateMeterName(key + 1, path, lineno);
          if (ok)
-            ok = PCPDynamicMeter_uniqueName(key+1, path, lineno, meters);
+            ok = PCPDynamicMeter_uniqueName(key + 1, path, lineno, meters);
          if (ok)
-            meter = PCPDynamicMeter_new(meters, key+1);
+            meter = PCPDynamicMeter_new(meters, key + 1);
       } else if (!ok) {
          ;  /* skip this one, we're looking for a new header */
       } else if (value && meter && String_eq(key, "caption")) {
