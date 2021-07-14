@@ -380,8 +380,8 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       free_and_xStrdup(&proc->tty_name, name);
    }
 
-   proc->m_resident         = _psinfo->pr_rssize;	// KB
-   proc->m_virt             = _psinfo->pr_size;		// KB
+   proc->m_resident         = _psinfo->pr_rssize;  // KB
+   proc->m_virt             = _psinfo->pr_size;    // KB
 
    if (proc->st_uid != _psinfo->pr_euid) {
       proc->st_uid          = _psinfo->pr_euid;
