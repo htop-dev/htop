@@ -455,8 +455,8 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
 }
 
 typedef struct LibraryData_ {
-    uint64_t size;
-    bool exec;
+   uint64_t size;
+   bool exec;
 } LibraryData;
 
 static inline uint64_t fast_strtoull_dec(char **str, int maxlen) {
@@ -975,10 +975,10 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
    struct nl_msg* msg;
 
    if (!this->netlink_socket) {
-       LinuxProcessList_initNetlinkSocket(this);
-       if (!this->netlink_socket) {
-          goto delayacct_failure;
-       }
+      LinuxProcessList_initNetlinkSocket(this);
+      if (!this->netlink_socket) {
+         goto delayacct_failure;
+      }
    }
 
    if (nl_socket_modify_cb(this->netlink_socket, NL_CB_VALID, NL_CB_CUSTOM, handleNetlinkMsg, process) < 0) {

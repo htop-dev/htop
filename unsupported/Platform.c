@@ -124,14 +124,14 @@ char* Platform_getProcessEnv(pid_t pid) {
 }
 
 char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-    (void)pid;
-    (void)inode;
-    return NULL;
+   (void)pid;
+   (void)inode;
+   return NULL;
 }
 
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
-    (void)pid;
-    return NULL;
+   (void)pid;
+   return NULL;
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
@@ -154,5 +154,5 @@ void Platform_getHostname(char* buffer, size_t size) {
 }
 
 void Platform_getRelease(char** string) {
-    *string = xStrdup(Platform_unsupported);
+   *string = xStrdup(Platform_unsupported);
 }

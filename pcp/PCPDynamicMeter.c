@@ -78,23 +78,23 @@ static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMete
       metric = PCPDynamicMeter_lookupMetric(meters, meter, key);
       if (String_eq(p, "color")) {
          if (String_eq(value, "gray"))
-             metric->color = DYNAMIC_GRAY;
+            metric->color = DYNAMIC_GRAY;
          else if (String_eq(value, "darkgray"))
-             metric->color = DYNAMIC_DARKGRAY;
+            metric->color = DYNAMIC_DARKGRAY;
          else if (String_eq(value, "red"))
-             metric->color = DYNAMIC_RED;
+            metric->color = DYNAMIC_RED;
          else if (String_eq(value, "green"))
-             metric->color = DYNAMIC_GREEN;
+            metric->color = DYNAMIC_GREEN;
          else if (String_eq(value, "blue"))
-             metric->color = DYNAMIC_BLUE;
+            metric->color = DYNAMIC_BLUE;
          else if (String_eq(value, "cyan"))
-             metric->color = DYNAMIC_CYAN;
+            metric->color = DYNAMIC_CYAN;
          else if (String_eq(value, "magenta"))
-             metric->color = DYNAMIC_MAGENTA;
+            metric->color = DYNAMIC_MAGENTA;
          else if (String_eq(value, "yellow"))
-             metric->color = DYNAMIC_YELLOW;
+            metric->color = DYNAMIC_YELLOW;
          else if (String_eq(value, "white"))
-             metric->color = DYNAMIC_WHITE;
+            metric->color = DYNAMIC_WHITE;
       } else if (String_eq(p, "label")) {
          char* label = String_cat(value, ": ");
          free_and_xStrdup(&metric->label, label);
@@ -204,13 +204,13 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
          free_and_xStrdup(&meter->super.description, value);
       } else if (value && meter && String_eq(key, "type")) {
          if (String_eq(config[1], "bar"))
-             meter->super.type = BAR_METERMODE;
+            meter->super.type = BAR_METERMODE;
          else if (String_eq(config[1], "text"))
-             meter->super.type = TEXT_METERMODE;
+            meter->super.type = TEXT_METERMODE;
          else if (String_eq(config[1], "graph"))
-             meter->super.type = GRAPH_METERMODE;
+            meter->super.type = GRAPH_METERMODE;
          else if (String_eq(config[1], "led"))
-             meter->super.type = LED_METERMODE;
+            meter->super.type = LED_METERMODE;
       } else if (value && meter && String_eq(key, "maximum")) {
          meter->super.maximum = strtod(value, NULL);
       } else if (value && meter) {

@@ -405,13 +405,13 @@ void Process_makeCommandStr(Process *this) {
    /* this->mergedCommand.str needs updating only if its state or contents changed.
     * Its content is based on the fields cmdline, comm, and exe. */
    if (
-       mc->prevMergeSet == showMergedCommand &&
-       mc->prevPathSet == showProgramPath &&
-       mc->prevCommSet == searchCommInCmdline &&
-       mc->prevCmdlineSet == stripExeFromCmdline &&
-       !mc->cmdlineChanged &&
-       !mc->commChanged &&
-       !mc->exeChanged
+      mc->prevMergeSet == showMergedCommand &&
+      mc->prevPathSet == showProgramPath &&
+      mc->prevCommSet == searchCommInCmdline &&
+      mc->prevCmdlineSet == stripExeFromCmdline &&
+      !mc->cmdlineChanged &&
+      !mc->commChanged &&
+      !mc->exeChanged
    ) {
       return;
    }
@@ -992,7 +992,7 @@ bool Process_isNew(const Process* this) {
 }
 
 bool Process_isTomb(const Process* this) {
-    return this->tombStampMs > 0;
+   return this->tombStampMs > 0;
 }
 
 bool Process_setPriority(Process* this, int priority) {
