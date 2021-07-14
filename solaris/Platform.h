@@ -128,7 +128,9 @@ IGNORE_WCASTQUAL_BEGIN
 IGNORE_WCASTQUAL_END
 }
 
-static inline Hashtable* Platform_dynamicMeters(void) { return NULL; }
+static inline Hashtable* Platform_dynamicMeters(void) {
+   return NULL;
+}
 
 static inline void Platform_dynamicMeterInit(ATTR_UNUSED Meter* meter) { }
 

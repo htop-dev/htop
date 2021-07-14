@@ -124,7 +124,8 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
    int opt, opti=0;
    /* Parse arguments */
    while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:H::", long_opts, &opti))) {
-      if (opt == EOF) break;
+      if (opt == EOF)
+         break;
       switch (opt) {
          case 'h':
             printHelpFlag(program);
