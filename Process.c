@@ -36,7 +36,7 @@ in the source distribution for its full text.
 
 
 /* Used to identify kernel threads in Comm and Exe columns */
-static const char *const kthreadID = "KTHREAD";
+static const char* const kthreadID = "KTHREAD";
 
 static uid_t Process_getuid = (uid_t)-1;
 
@@ -268,18 +268,18 @@ void Process_fillStarttimeBuffer(Process* this) {
  */
 #define TASK_COMM_LEN 16
 
-static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdlineBasenameStart, int *pCommStart, int *pCommEnd) {
+static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdlineBasenameStart, int* pCommStart, int* pCommEnd) {
    /* Try to find procComm in tokenized cmdline - this might in rare cases
     * mis-identify a string or fail, if comm or cmdline had been unsuitably
     * modified by the process */
-   const char *tokenBase;
+   const char* tokenBase;
    size_t tokenLen;
    const size_t commLen = strlen(comm);
 
    if (cmdlineBasenameStart < 0)
       return false;
 
-   for (const char *token = cmdline + cmdlineBasenameStart; *token;) {
+   for (const char* token = cmdline + cmdlineBasenameStart; *token;) {
       for (tokenBase = token; *token && *token != '\n'; ++token) {
          if (*token == '/') {
             tokenBase = token + 1;
@@ -303,7 +303,7 @@ static bool findCommInCmdline(const char *comm, const char *cmdline, int cmdline
    return false;
 }
 
-static int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseOffset, const char *exe, int exeBaseOffset, int exeBaseLen) {
+static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseOffset, const char* exe, int exeBaseOffset, int exeBaseLen) {
    int matchLen; /* matching length to be returned */
    char delim;   /* delimiter following basename */
 
@@ -368,7 +368,7 @@ static int matchCmdlinePrefixWithExeSuffix(const char *cmdline, int cmdlineBaseO
 }
 
 /* stpcpy, but also converts newlines to spaces */
-static inline char *stpcpyWithNewlineConversion(char *dstStr, const char *srcStr) {
+static inline char* stpcpyWithNewlineConversion(char* dstStr, const char* srcStr) {
    for (; *srcStr; ++srcStr) {
       *dstStr++ = (*srcStr == '\n') ? ' ' : *srcStr;
    }
@@ -382,9 +382,9 @@ static inline char *stpcpyWithNewlineConversion(char *dstStr, const char *srcStr
  * Process_writeCommand() for coloring. The merged Command string is also
  * returned by Process_getCommandStr() for searching, sorting and filtering.
  */
-void Process_makeCommandStr(Process *this) {
-   ProcessMergedCommand *mc = &this->mergedCommand;
-   const Settings *settings = this->settings;
+void Process_makeCommandStr(Process* this) {
+   ProcessMergedCommand* mc = &this->mergedCommand;
+   const Settings* settings = this->settings;
 
    bool showMergedCommand = settings->showMergedCommand;
    bool showProgramPath = settings->showProgramPath;
@@ -418,7 +418,7 @@ void Process_makeCommandStr(Process *this) {
 
    /* The field separtor "│" has been chosen such that it will not match any
     * valid string used for searching or filtering */
-   const char *SEPARATOR = CRT_treeStr[TREE_STR_VERT];
+   const char* SEPARATOR = CRT_treeStr[TREE_STR_VERT];
    const int SEPARATOR_LEN = strlen(SEPARATOR);
 
    /* Check for any changed fields since we last built this string */
@@ -476,12 +476,12 @@ void Process_makeCommandStr(Process *this) {
    const int delLibAttr = CRT_colors[PROCESS_TAG];
 
    /* Establish some shortcuts to data we need */
-   const char *cmdline = this->cmdline;
-   const char *procComm = this->procComm;
-   const char *procExe = this->procExe;
+   const char* cmdline = this->cmdline;
+   const char* procComm = this->procComm;
+   const char* procExe = this->procExe;
 
-   char *strStart = mc->str;
-   char *str = strStart;
+   char* strStart = mc->str;
+   char* str = strStart;
 
    int cmdlineBasenameStart = this->cmdlineBasenameStart;
    int cmdlineBasenameEnd = this->cmdlineBasenameEnd;
@@ -593,7 +593,7 @@ void Process_makeCommandStr(Process *this) {
 void Process_writeCommand(const Process* this, int attr, int baseAttr, RichString* str) {
    (void)baseAttr;
 
-   const ProcessMergedCommand *mc = &this->mergedCommand;
+   const ProcessMergedCommand* mc = &this->mergedCommand;
 
    int strStart = RichString_size(str);
 
@@ -637,7 +637,7 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
    RichString_appendWide(str, attr, this->mergedCommand.str);
 
    for (size_t i = 0, hlCount = CLAMP(mc->highlightCount, 0, ARRAYSIZE(mc->highlights)); i < hlCount; i++) {
-      const ProcessCmdlineHighlight *hl = &mc->highlights[i];
+      const ProcessCmdlineHighlight* hl = &mc->highlights[i];
 
       if (!hl->length)
          continue;
@@ -946,7 +946,7 @@ void Process_done(Process* this) {
 /* This function returns the string displayed in Command column, so that sorting
  * happens on what is displayed - whether comm, full path, basename, etc.. So
  * this follows Process_writeField(COMM) and Process_writeCommand */
-const char *Process_getCommandStr(const Process *this) {
+const char* Process_getCommandStr(const Process* this) {
    if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !this->mergedCommand.str) {
       return this->cmdline;
    }
@@ -1024,10 +1024,10 @@ int Process_pidCompare(const void* v1, const void* v2) {
 }
 
 int Process_compare(const void* v1, const void* v2) {
-   const Process *p1 = (const Process*)v1;
-   const Process *p2 = (const Process*)v2;
+   const Process* p1 = (const Process*)v1;
+   const Process* p2 = (const Process*)v2;
 
-   const Settings *settings = p1->settings;
+   const Settings* settings = p1->settings;
 
    ProcessField key = Settings_getActiveSortKey(settings);
 
@@ -1090,13 +1090,13 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    case COMM:
       return SPACESHIP_NULLSTR(Process_getCommand(p1), Process_getCommand(p2));
    case PROC_COMM: {
-      const char *comm1 = p1->procComm ? p1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
-      const char *comm2 = p2->procComm ? p2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
+      const char* comm1 = p1->procComm ? p1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char* comm2 = p2->procComm ? p2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
       return SPACESHIP_NULLSTR(comm1, comm2);
    }
    case PROC_EXE: {
-      const char *exe1 = p1->procExe ? (p1->procExe + p1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
-      const char *exe2 = p2->procExe ? (p2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
+      const char* exe1 = p1->procExe ? (p1->procExe + p1->procExeBasenameOffset) : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char* exe2 = p2->procExe ? (p2->procExe + p2->procExeBasenameOffset) : (Process_isKernelThread(p2) ? kthreadID : "");
       return SPACESHIP_NULLSTR(exe1, exe2);
    }
    case CWD:

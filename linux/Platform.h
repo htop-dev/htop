@@ -70,13 +70,13 @@ char* Platform_getInodeFilename(pid_t pid, ino_t inode);
 
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
-void Platform_getPressureStall(const char *file, bool some, double* ten, double* sixty, double* threehundred);
+void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred);
 
 bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(NetworkIOData* data);
 
-void Platform_getBattery(double *percent, ACPresence *isOnAC);
+void Platform_getBattery(double* percent, ACPresence* isOnAC);
 
 static inline void Platform_getHostname(char* buffer, size_t size) {
    Generic_hostname(buffer, size);

@@ -53,7 +53,7 @@ typedef void(*Meter_Done)(Meter*);
 typedef void(*Meter_UpdateMode)(Meter*, int);
 typedef void(*Meter_UpdateValues)(Meter*);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
-typedef const char*(*Meter_GetCaption)(const Meter*);
+typedef const char* (*Meter_GetCaption)(const Meter*);
 typedef void(*Meter_GetUiName)(const Meter*, char*, size_t);
 
 typedef struct MeterClass_ {

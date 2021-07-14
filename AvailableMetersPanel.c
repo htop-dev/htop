@@ -124,7 +124,7 @@ static void AvailableMetersPanel_addDynamicMeter(ATTR_UNUSED ht_key_t key, void*
 }
 
 // Handle (&DynamicMeter_class) entries in the AvailableMetersPanel
-static void AvailableMetersPanel_addDynamicMeters(Panel* super, const ProcessList *pl, unsigned int offset) {
+static void AvailableMetersPanel_addDynamicMeters(Panel* super, const ProcessList* pl, unsigned int offset) {
    DynamicIterator iter = { .super = super, .id = 1, .offset = offset };
    assert(pl->dynamicMeters != NULL);
    Hashtable_foreach(pl->dynamicMeters, AvailableMetersPanel_addDynamicMeter, &iter);

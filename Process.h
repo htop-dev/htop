@@ -75,7 +75,7 @@ typedef struct ProcessCmdlineHighlight_ {
  * Process_writeCommand to color the string. str will be NULL for kernel
  * threads and zombies */
 typedef struct ProcessMergedCommand_ {
-   char *str;                                  /* merged Command string */
+   char* str;                                  /* merged Command string */
    size_t highlightCount;                      /* how many portions of cmdline to highlight */
    ProcessCmdlineHighlight highlights[8];      /* which portions of cmdline to highlight */
    bool separateComm : 1;                      /* whether comm is a separate field */
@@ -149,13 +149,13 @@ typedef struct Process_ {
    int cmdlineBasenameStart;
 
    /* The process' "command" name */
-   char *procComm;
+   char* procComm;
 
    /* The main process executable */
-   char *procExe;
+   char* procExe;
 
    /* The process/thread working directory */
-   char *procCwd;
+   char* procCwd;
 
    /* Offset in procExe of the process basename */
    int procExeBasenameOffset;
@@ -281,7 +281,7 @@ extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 #define PROCESS_MAX_PID_DIGITS 19
 extern int Process_pidDigits;
 
-typedef Process*(*Process_New)(const struct Settings_*);
+typedef Process* (*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
 typedef int (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
 typedef const char* (*Process_GetCommandStr)(const Process*);
@@ -306,15 +306,15 @@ static inline bool Process_isChildOf(const Process* this, pid_t pid) {
    return pid == Process_getParentPid(this);
 }
 
-static inline bool Process_isKernelThread(const Process *this) {
+static inline bool Process_isKernelThread(const Process* this) {
    return this->isKernelThread;
 }
 
-static inline bool Process_isUserlandThread(const Process *this) {
+static inline bool Process_isUserlandThread(const Process* this) {
    return this->isUserlandThread;
 }
 
-static inline bool Process_isThread(const Process *this) {
+static inline bool Process_isThread(const Process* this) {
    return Process_isUserlandThread(this) || Process_isKernelThread(this);
 }
 
@@ -381,7 +381,7 @@ int Process_pidCompare(const void* v1, const void* v2);
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key);
 
 // Avoid direct calls, use Process_getCommand instead
-const char *Process_getCommandStr(const Process *this);
+const char* Process_getCommandStr(const Process* this);
 
 void Process_updateComm(Process* this, const char* comm);
 void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart, int basenameEnd);
@@ -389,8 +389,8 @@ void Process_updateExe(Process* this, const char* exe);
 
 /* This function constructs the string that is displayed by
  * Process_writeCommand and also returned by Process_getCommandStr */
-void Process_makeCommandStr(Process *this);
+void Process_makeCommandStr(Process* this);
 
-void Process_writeCommand(const Process *this, int attr, int baseAttr, RichString *str);
+void Process_writeCommand(const Process* this, int attr, int baseAttr, RichString* str);
 
 #endif

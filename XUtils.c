@@ -193,7 +193,7 @@ char* String_readLine(FILE* fd) {
    }
 }
 
-size_t String_safeStrncpy(char *restrict dest, const char *restrict src, size_t size) {
+size_t String_safeStrncpy(char* restrict dest, const char* restrict src, size_t size) {
    assert(size > 0);
 
    size_t i = 0;

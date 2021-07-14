@@ -361,15 +361,15 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
 }
 
 static int ProcessList_treeProcessCompare(const void* v1, const void* v2) {
-   const Process *p1 = (const Process*)v1;
-   const Process *p2 = (const Process*)v2;
+   const Process* p1 = (const Process*)v1;
+   const Process* p2 = (const Process*)v2;
 
    return SPACESHIP_NUMBER(p1->tree_left, p2->tree_left);
 }
 
 static int ProcessList_treeProcessCompareByPID(const void* v1, const void* v2) {
-   const Process *p1 = (const Process*)v1;
-   const Process *p2 = (const Process*)v2;
+   const Process* p1 = (const Process*)v1;
+   const Process* p2 = (const Process*)v2;
 
    return SPACESHIP_NUMBER(p1->pid, p2->pid);
 }
