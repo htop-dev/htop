@@ -460,7 +460,7 @@ static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
       super->totalSwap = value.ull;
    if (Metric_values(PCP_MEM_SWAPCACHED, &value, 1, PM_TYPE_U64) != NULL)
       super->cachedSwap = value.ull;
-    super->usedSwap = super->totalSwap - swapFreeMem - super->cachedSwap;
+   super->usedSwap = super->totalSwap - swapFreeMem - super->cachedSwap;
 }
 
 /* make copies of previously sampled values to avoid overwrite */

@@ -558,9 +558,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       proc->percent_mem = 100.0 * proc->m_resident / (double)(super->totalMem);
 
       if (kproc->ki_stat == SRUN && kproc->ki_oncpu != NOCPU) {
-            proc->processor = kproc->ki_oncpu;
+         proc->processor = kproc->ki_oncpu;
       } else {
-            proc->processor = kproc->ki_lastcpu;
+         proc->processor = kproc->ki_lastcpu;
       }
 
       proc->majflt = kproc->ki_cow;
