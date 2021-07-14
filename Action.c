@@ -227,7 +227,8 @@ static Htop_Reaction actionToggleMergedCommand(State* st) {
 static Htop_Reaction actionToggleTreeView(State* st) {
    st->settings->treeView = !st->settings->treeView;
 
-   if (!st->settings->allBranchesCollapsed) ProcessList_expandTree(st->pl);
+   if (!st->settings->allBranchesCollapsed)
+      ProcessList_expandTree(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
@@ -399,7 +400,8 @@ static Htop_Reaction actionLsof(State* st) {
 
 static Htop_Reaction actionShowLocks(State* st) {
    const Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p) return HTOP_OK;
+   if (!p)
+      return HTOP_OK;
    ProcessLocksScreen* pls = ProcessLocksScreen_new(p);
    InfoScreen_run((InfoScreen*)pls);
    ProcessLocksScreen_delete((Object*)pls);
