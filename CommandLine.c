@@ -118,10 +118,10 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
       {"highlight-changes", optional_argument, 0, 'H'},
       {"readonly",   no_argument,         0, 128},
       PLATFORM_LONG_OPTIONS
-      {0,0,0,0}
+      {0, 0, 0, 0}
    };
 
-   int opt, opti=0;
+   int opt, opti = 0;
    /* Parse arguments */
    while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:H::", long_opts, &opti))) {
       if (opt == EOF)
@@ -355,7 +355,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    ScreenManager_run(scr, NULL, NULL);
 
    attron(CRT_colors[RESET_COLOR]);
-   mvhline(LINES-1, 0, ' ', COLS);
+   mvhline(LINES - 1, 0, ' ', COLS);
    attroff(CRT_colors[RESET_COLOR]);
    refresh();
 

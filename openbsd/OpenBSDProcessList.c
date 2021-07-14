@@ -226,8 +226,8 @@ static void OpenBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_p
          end = MINIMUM(n, len - 1);
          /* check if cmdline ended earlier, e.g 'kdeinit5: Running...' */
          for (int j = end; j > 0; j--) {
-            if (arg[0][j] == ' ' && arg[0][j-1] != '\\') {
-               end = (arg[0][j-1] == ':') ? (j-1) : j;
+            if (arg[0][j] == ' ' && arg[0][j - 1] != '\\') {
+               end = (arg[0][j - 1] == ':') ? (j - 1) : j;
             }
          }
       }
