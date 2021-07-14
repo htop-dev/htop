@@ -377,7 +377,7 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
    bool match = false;
    char name[64];
    int freq = 0;
-   size_t freqSize = sizeof(freq);
+   size_t freqSize;
 
    for (unsigned int i = 0; i <= cpus; i++) {
          this->cpus[i].frequency = NAN;
@@ -386,6 +386,7 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
    /* newer hardware supports per-core frequency, for e.g. ARM big.LITTLE */
    for (unsigned int i = 0; i <= cpus; i++) {
       snprintf(name, sizeof(name), "machdep.cpufreq.cpu%u.current", i);
+      freqSize = sizeof(freq);
       if (sysctlbyname(name, &freq, &freqSize, NULL, 0) != -1) {
          this->cpus[i].frequency = freq;
          match = true;
@@ -401,6 +402,7 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
     * we find a match...
     */
    for (const char** s = freqSysctls; *s != NULL; ++s) {
+      freqSize = sizeof(freq);
       if (sysctlbyname(*s, &freq, &freqSize, NULL, 0) != -1) {
          match = true;
          break;
