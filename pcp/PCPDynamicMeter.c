@@ -114,8 +114,8 @@ static bool PCPDynamicMeter_validateMeterName(char* key, const char* path, unsig
       *end = '\0';
    } else {
       fprintf(stderr,
-                "%s: no closing brace on meter name at %s line %u\n\"%s\"\n",
-                pmGetProgname(), path, line, key);
+              "%s: no closing brace on meter name at %s line %u\n\"%s\"\n",
+              pmGetProgname(), path, line, key);
       return false;
    }
 
@@ -131,8 +131,8 @@ static bool PCPDynamicMeter_validateMeterName(char* key, const char* path, unsig
    }
    if (*p != '\0') { /* badness */
       fprintf(stderr,
-                "%s: invalid meter name at %s line %u\n\"%s\"\n",
-                pmGetProgname(), path, line, key);
+              "%s: invalid meter name at %s line %u\n\"%s\"\n",
+              pmGetProgname(), path, line, key);
       return false;
    }
    return true;
