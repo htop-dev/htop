@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "linux/LinuxProcessList.h"
 
 
-static const char *HugePageMeter_active_labels[4] = { NULL, NULL, NULL, NULL };
+static const char* HugePageMeter_active_labels[4] = { NULL, NULL, NULL, NULL };
 
 static const int HugePageMeter_attributes[] = {
    HUGEPAGE_1,
