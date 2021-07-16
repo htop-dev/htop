@@ -37,6 +37,8 @@ typedef struct CPUData_ {
    unsigned long long int spinPeriod;
    unsigned long long int intrPeriod;
    unsigned long long int idlePeriod;
+
+   double frequency;
 } CPUData;
 
 typedef struct NetBSDProcessList_ {

@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "netbsd/NetBSDProcessList.h"
 
 #include <kvm.h>
+#include <math.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +38,16 @@ in the source distribution for its full text.
 static long fscale;
 static int pageSize;
 static int pageSizeKB;
+
+static char const *freqSysctls[] = {
+   "machdep.est.frequency.current",
+   "machdep.powernow.frequency.current",
+   "machdep.intrepid.frequency.current",
+   "machdep.loongson.frequency.current",
+   "machdep.cpu.frequency.current",
+   "machdep.frequency.current",
+   NULL
+};
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
    const int mib[] = { CTL_HW, HW_NCPU };
@@ -361,11 +372,59 @@ static void NetBSDProcessList_scanCPUTime(NetBSDProcessList* this) {
    kernelCPUTimesToHtop(avg, this->cpus);
 }
 
+static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
+   unsigned int cpus = this->super.cpuCount;
+   bool match = false;
+   char name[64];
+   int freq = 0;
+   size_t freqSize;
+
+   for (unsigned int i = 0; i <= cpus; i++) {
+      this->cpus[i].frequency = NAN;
+   }
+
+   /* newer hardware supports per-core frequency, for e.g. ARM big.LITTLE */
+   for (unsigned int i = 0; i <= cpus; i++) {
+      xSnprintf(name, sizeof(name), "machdep.cpufreq.cpu%u.current", i);
+      freqSize = sizeof(freq);
+      if (sysctlbyname(name, &freq, &freqSize, NULL, 0) != -1) {
+         this->cpus[i].frequency = freq;
+         match = true;
+      }
+   }
+
+   if (match) {
+      return;
+   }
+
+   /*
+    * Iterate through legacy sysctl nodes for single-core frequency until
+    * we find a match...
+    */
+   for (const char** s = freqSysctls; *s != NULL; ++s) {
+      freqSize = sizeof(freq);
+      if (sysctlbyname(*s, &freq, &freqSize, NULL, 0) != -1) {
+         match = true;
+         break;
+      }
+   }
+
+   if (match) {
+      for (unsigned int i = 0; i <= cpus; i++) {
+         this->cpus[i].frequency = freq;
+      }
+   }
+}
+
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    NetBSDProcessList* npl = (NetBSDProcessList*) super;
 
    NetBSDProcessList_scanMemoryInfo(super);
    NetBSDProcessList_scanCPUTime(npl);
+
+   if (super->settings->showCPUFrequency) {
+      NetBSDProcessList_scanCPUFrequency(npl);
+   }
 
    // in pause mode only gather global data for meters (CPU/memory/...)
    if (pauseProcessUpdate) {
