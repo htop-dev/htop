@@ -380,7 +380,7 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
    size_t freqSize;
 
    for (unsigned int i = 0; i <= cpus; i++) {
-         this->cpus[i].frequency = NAN;
+      this->cpus[i].frequency = NAN;
    }
 
    /* newer hardware supports per-core frequency, for e.g. ARM big.LITTLE */
