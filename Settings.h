@@ -18,6 +18,8 @@ in the source distribution for its full text.
 
 #define DEFAULT_DELAY 15
 
+#define CONFIG_READER_MIN_VERSION 2
+
 typedef struct {
    int len;
    char** names;
@@ -26,6 +28,7 @@ typedef struct {
 
 typedef struct Settings_ {
    char* filename;
+   int config_version;
    MeterColumnSettings columns[2];
    Hashtable* dynamicColumns;
 
