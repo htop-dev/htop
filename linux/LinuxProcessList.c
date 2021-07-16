@@ -1852,8 +1852,33 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
    return period;
 }
 
+static bool cpuIsOnline(unsigned int cpuId) {
+   /* if there's no sysfs file for the CPU node indicating online/offline status,
+    * the CPU is probably online, so assume online by default
+    */
+   bool online = 1;
+   char pathBuffer[48];
+
+   xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%u/online", cpuId);
+
+   FILE* file = fopen(pathBuffer, "r");
+   unsigned int readval;
+   if (file) {
+      if (fscanf(file, "%u", &readval) == 1) {
+         online = readval;
+      }
+      fclose(file);
+   }
+
+   return online;
+}
+
+static int getConfiguredCPUCount(void) {
+   return (int) sysconf(_SC_NPROCESSORS_CONF);
+}
+
 static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
-   unsigned int cpus = this->super.cpuCount;
+   int configuredCPUs = getConfiguredCPUCount();
    int numCPUsWithFrequency = 0;
    unsigned long totalFrequency = 0;
 
@@ -1871,12 +1896,25 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
       return -1;
    }
 
-   for (unsigned int i = 0; i < cpus; ++i) {
+   if (configuredCPUs < 0) {
+      /* may be -1 if getting the number of CPUs from sysconf failed */
+      return -1;
+   }
+
+   unsigned int cpus = (unsigned int) configuredCPUs;
+   unsigned int onlineCPUIndex = 0;
+
+   for (unsigned int i = 0; i < cpus && onlineCPUIndex <= this->super.cpuCount - 1; ++i) {
       char pathBuffer[64];
+
+      /* omit CPUs that have been hotplugged off */
+      if (!cpuIsOnline(i))
+         continue;
+
       xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_cur_freq", i);
 
       struct timespec start;
-      if (i == 0)
+      if (onlineCPUIndex == 0)
          clock_gettime(CLOCK_MONOTONIC, &start);
 
       FILE* file = fopen(pathBuffer, "r");
@@ -1887,14 +1925,14 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
       if (fscanf(file, "%lu", &frequency) == 1) {
          /* convert kHz to MHz */
          frequency = frequency / 1000;
-         this->cpus[i + 1].frequency = frequency;
+         this->cpus[onlineCPUIndex + 1].frequency = frequency;
          numCPUsWithFrequency++;
          totalFrequency += frequency;
       }
 
       fclose(file);
 
-      if (i == 0) {
+      if (onlineCPUIndex == 0) {
          struct timespec end;
          clock_gettime(CLOCK_MONOTONIC, &end);
          const time_t timeTakenUs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
@@ -1904,6 +1942,7 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
          }
       }
 
+      onlineCPUIndex++;
    }
 
    if (numCPUsWithFrequency > 0)
@@ -1917,9 +1956,9 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
    if (file == NULL)
       return;
 
-   unsigned int cpus = this->super.cpuCount;
    int numCPUsWithFrequency = 0;
    double totalFrequency = 0;
+   int cpuIndex = -1;
    int cpuid = -1;
 
    while (!feof(file)) {
@@ -1933,6 +1972,7 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
          (sscanf(buffer, "processor : %d", &cpuid) == 1) ||
          (sscanf(buffer, "processor: %d", &cpuid) == 1)
       ) {
+         cpuIndex++;
          continue;
       } else if (
          (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
@@ -1940,11 +1980,11 @@ static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
          (sscanf(buffer, "clock : %lfMHz", &frequency) == 1) ||
          (sscanf(buffer, "clock: %lfMHz", &frequency) == 1)
       ) {
-         if (cpuid < 0 || (unsigned int)cpuid > (cpus - 1)) {
+         if (cpuid < 0 || cpuIndex < 0 || (unsigned int)cpuIndex > (this->super.cpuCount - 1)) {
             continue;
          }
 
-         CPUData* cpuData = &(this->cpus[cpuid + 1]);
+         CPUData* cpuData = &(this->cpus[cpuIndex + 1]);
          /* do not override sysfs data */
          if (isnan(cpuData->frequency)) {
             cpuData->frequency = frequency;
