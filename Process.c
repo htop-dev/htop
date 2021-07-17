@@ -390,6 +390,7 @@ void Process_makeCommandStr(Process* this) {
    bool showProgramPath = settings->showProgramPath;
    bool searchCommInCmdline = settings->findCommInCmdline;
    bool stripExeFromCmdline = settings->stripExeFromCmdline;
+   bool showThreadNames = settings->showThreadNames;
 
    /* Nothing to do to (Re)Generate the Command string, if the process is:
     * - a kernel thread, or
@@ -409,6 +410,7 @@ void Process_makeCommandStr(Process* this) {
       mc->prevPathSet == showProgramPath &&
       mc->prevCommSet == searchCommInCmdline &&
       mc->prevCmdlineSet == stripExeFromCmdline &&
+      mc->prevShowThreadNames == showThreadNames &&
       !mc->cmdlineChanged &&
       !mc->commChanged &&
       !mc->exeChanged
@@ -438,6 +440,7 @@ void Process_makeCommandStr(Process* this) {
    mc->prevPathSet = showProgramPath;
    mc->prevCommSet = searchCommInCmdline;
    mc->prevCmdlineSet = stripExeFromCmdline;
+   mc->prevShowThreadNames = showThreadNames;
 
    /* Mark everything as unchanged */
    mc->cmdlineChanged = false;
@@ -496,7 +499,7 @@ void Process_makeCommandStr(Process* this) {
    assert(cmdlineBasenameStart <= (int)strlen(cmdline));
 
    if (!showMergedCommand || !procExe || !procComm) { /* fall back to cmdline */
-      if (showMergedCommand && !procExe && procComm && strlen(procComm)) { /* Prefix column with comm */
+      if (showMergedCommand && showThreadNames && !procExe && procComm && strlen(procComm)) { /* Prefix column with comm */
          if (strncmp(cmdline + cmdlineBasenameStart, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
             WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
             str = stpcpy(str, procComm);
@@ -520,7 +523,7 @@ void Process_makeCommandStr(Process* this) {
    assert(exeBasenameOffset <= (int)strlen(procExe));
 
    bool haveCommInExe = false;
-   if (procExe && procComm) {
+   if (procExe && procComm && showThreadNames) {
       haveCommInExe = strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0;
    }
 
@@ -552,14 +555,14 @@ void Process_makeCommandStr(Process* this) {
    /* Try to match procComm with procExe's basename: This is reliable (predictable) */
    if (searchCommInCmdline) {
       /* commStart/commEnd will be adjusted later along with cmdline */
-      haveCommInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commEnd);
+      haveCommInCmdline = showThreadNames && findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commEnd);
    }
 
    int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
 
    bool haveCommField = false;
 
-   if (!haveCommInExe && !haveCommInCmdline && procComm) {
+   if (!haveCommInExe && !haveCommInCmdline && procComm && showThreadNames) {
       WRITE_SEPARATOR;
       WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       str = stpcpy(str, procComm);
@@ -579,7 +582,7 @@ void Process_makeCommandStr(Process* this) {
       WRITE_SEPARATOR;
    }
 
-   if (!haveCommInExe && haveCommInCmdline && !haveCommField)
+   if (!haveCommInExe && haveCommInCmdline && !haveCommField && showThreadNames)
       WRITE_HIGHLIGHT(commStart, commEnd - commStart, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
 
    /* Display cmdline if it hasn't been consumed by procExe */
