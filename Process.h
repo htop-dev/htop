@@ -87,6 +87,7 @@ typedef struct ProcessMergedCommand_ {
    bool prevPathSet : 1;                       /* whether showProgramPath was set */
    bool prevCommSet : 1;                       /* whether findCommInCmdline was set */
    bool prevCmdlineSet : 1;                    /* whether stripExeFromCmdline was set */
+   bool prevShowThreadNames : 1;               /* whether showThreadNames was set */
 } ProcessMergedCommand;
 
 typedef struct Process_ {
