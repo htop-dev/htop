@@ -323,6 +323,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       Process* proc = ProcessList_getProcess(pl, pid, &preExisting, PCPProcess_new);
       PCPProcess* pp = (PCPProcess*) proc;
       PCPProcessList_updateID(proc, pid, offset);
+      proc->isUserlandThread = proc->pid != proc->tgid;
 
       /*
        * These conditions will not trigger on first occurrence, cause we need to
