@@ -5,9 +5,13 @@ htop - DynamicMeter.c
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
+
 #include "config.h" // IWYU pragma: keep
 
 #include "DynamicMeter.h"
+
+#include <stdbool.h>
+#include <stddef.h>
 
 #include "CRT.h"
 #include "Object.h"
