@@ -80,8 +80,11 @@ To install on the local system run `make install`. By default `make install` ins
     enable Performance Co-Pilot support via a new pcp-htop utility
     dependency: *libpcp*
     default: *no*
+  * `--enable-affinity`:
+    enable `sched_setaffinity(2)` and `sched_getaffinity(2)` for affinity support; conflicts with hwloc
+    default: *check*
   * `--enable-hwloc`:
-    enable hwloc support for CPU affinity; disables Linux affinity
+    enable hwloc support for CPU affinity; disables affinity support
     dependency: *libhwloc*
     default: *no*
   * `--enable-static`:
@@ -113,9 +116,6 @@ To install on the local system run `make install`. By default `make install` ins
   * `--enable-ancient-vserver`:
     enable ancient VServer support (implies `--enable-vserver`)
     default: *no*
-   * `--enable-linux-affinity`:
-    enable Linux `sched_setaffinity(2)` and `sched_getaffinity(2)` for affinity support; conflicts with hwloc
-    default: *check*
   * `--enable-delayacct`:
     enable Linux delay accounting support
     dependencies: *pkg-config*(build-time), *libnl-3* and *libnl-genl-3*

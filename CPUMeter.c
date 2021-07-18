@@ -43,7 +43,7 @@ static void CPUMeter_init(Meter* this) {
    unsigned int cpu = this->param;
    if (cpu == 0) {
       Meter_setCaption(this, "Avg");
-   } else if (this->pl->cpuCount > 1) {
+   } else if (this->pl->activeCPUs > 1) {
       char caption[10];
       xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(this->pl->settings, cpu - 1));
       Meter_setCaption(this, caption);
@@ -59,20 +59,23 @@ static void CPUMeter_getUiName(const Meter* this, char* buffer, size_t length) {
 }
 
 static void CPUMeter_updateValues(Meter* this) {
+   memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
+
    unsigned int cpu = this->param;
-   if (cpu > this->pl->cpuCount) {
+   if (cpu > this->pl->existingCPUs) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "absent");
-      for (uint8_t i = 0; i < this->curItems; i++)
-         this->values[i] = 0;
       return;
    }
-   memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
+
+   double percent = Platform_setCPUValues(this, cpu);
+   if (isnan(percent)) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "offline");
+      return;
+   }
 
    char cpuUsageBuffer[8] = { 0 };
    char cpuFrequencyBuffer[16] = { 0 };
    char cpuTemperatureBuffer[16] = { 0 };
-
-   double percent = Platform_setCPUValues(this, cpu);
 
    if (this->pl->settings->showCPUUsage) {
       xSnprintf(cpuUsageBuffer, sizeof(cpuUsageBuffer), "%.1f%%", percent);
@@ -112,7 +115,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
    int len;
    const Meter* this = (const Meter*)cast;
 
-   if (this->param > this->pl->cpuCount) {
+   if (this->param > this->pl->existingCPUs) {
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "absent");
       return;
    }
@@ -206,7 +209,7 @@ static void AllCPUsMeter_updateValues(Meter* this) {
 }
 
 static void CPUMeterCommonInit(Meter* this, int ncol) {
-   unsigned int cpus = this->pl->cpuCount;
+   unsigned int cpus = this->pl->existingCPUs;
    CPUMeterData* data = this->meterData;
    if (!data) {
       data = this->meterData = xMalloc(sizeof(CPUMeterData));

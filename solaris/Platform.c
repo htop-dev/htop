@@ -184,7 +184,7 @@ int Platform_getMaxPid() {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
-   unsigned int cpus = this->pl->cpuCount;
+   unsigned int cpus = this->pl->existingCPUs;
    const CPUData* cpuData = NULL;
 
    if (cpus == 1) {
@@ -192,6 +192,11 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       cpuData = &(spl->cpus[0]);
    } else {
       cpuData = &(spl->cpus[cpu]);
+   }
+
+   if (!cpuData->online) {
+      this->curItems = 0;
+      return NAN;
    }
 
    double percent;

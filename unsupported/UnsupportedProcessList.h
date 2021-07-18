@@ -16,4 +16,6 @@ void ProcessList_delete(ProcessList* this);
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
 
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id);
+
 #endif

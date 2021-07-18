@@ -17,7 +17,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-linux-affinity --disable-unicode --disable-sensors
+      run: ./configure --enable-werror --enable-affinity --disable-unicode --disable-sensors
     - name: Enable compatibility modes
       run: |
         sed -i 's/#define HAVE_FSTATAT 1/#undef HAVE_FSTATAT/g' config.h
@@ -26,7 +26,7 @@ jobs:
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity --disable-unicode --disable-sensors"
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-affinity --disable-unicode --disable-sensors"
 
   build-ubuntu-latest-minimal-clang:
     runs-on: ubuntu-latest
@@ -44,11 +44,11 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-linux-affinity --disable-unicode --disable-sensors
+      run: ./configure --enable-werror --enable-affinity --disable-unicode --disable-sensors
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-linux-affinity --disable-unicode --disable-sensors"
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-affinity --disable-unicode --disable-sensors"
 
   build-ubuntu-latest-full-featured-gcc:
     runs-on: ubuntu-latest

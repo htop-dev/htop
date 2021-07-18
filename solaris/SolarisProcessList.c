@@ -47,32 +47,70 @@ static char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sp
    return zname;
 }
 
+static void SolarisProcessList_updateCPUcount(ProcessList* super) {
+   SolarisProcessList* spl = (SolarisProcessList*) super;
+   long int s;
+   bool change = false;
+
+   s = sysconf(_SC_NPROCESSORS_CONF);
+   if (s < 1)
+      CRT_fatalError("Cannot get exisitng CPU count by sysconf(_SC_NPROCESSORS_CONF)");
+
+   if (s != super->existingCPUs) {
+      if (s == 1) {
+         spl->cpus = xRealloc(spl->cpus, sizeof(CPUData));
+         spl->cpus[0].online = true;
+      } else {
+         spl->cpus = xReallocArray(spl->cpus, s + 1, sizeof(CPUData));
+         for (int i = 0; i < s + 1; i++) {
+            spl->cpus[i].online = false;
+         }
+      }
+
+      change = true;
+      super->existingCPUs = s;
+   }
+
+   s = sysconf(_SC_NPROCESSORS_ONLN);
+   if (s < 1)
+      CRT_fatalError("Cannot get active CPU count by sysconf(_SC_NPROCESSORS_ONLN)");
+
+   if (s != super->activeCPUs) {
+      change = true;
+      super->activeCPUs = s;
+   }
+
+   if (change) {
+      kstat_close(spl->kd);
+      spl->kd = kstat_open();
+      if (!spl->kd)
+         CRT_fatalError("Cannot open kstat handle");
+   }
+}
+
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
    SolarisProcessList* spl = xCalloc(1, sizeof(SolarisProcessList));
    ProcessList* pl = (ProcessList*) spl;
    ProcessList_init(pl, Class(SolarisProcess), usersTable, dynamicMeters, pidMatchList, userId);
 
    spl->kd = kstat_open();
+   if (!spl->kd)
+      CRT_fatalError("Cannot open kstat handle");
 
    pageSize = sysconf(_SC_PAGESIZE);
    if (pageSize == -1)
       CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
    pageSizeKB = pageSize / 1024;
 
-   pl->cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
-   if (pl->cpuCount == (unsigned int)-1)
-      CRT_fatalError("Cannot get CPU count by sysconf(_SC_NPROCESSORS_ONLN)");
-   else if (pl->cpuCount == 1)
-      spl->cpus = xRealloc(spl->cpus, sizeof(CPUData));
-   else
-      spl->cpus = xRealloc(spl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+   SolarisProcessList_updateCPUcount(pl);
 
    return pl;
 }
 
 static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    const SolarisProcessList* spl = (SolarisProcessList*) pl;
-   unsigned int cpus = pl->cpuCount;
+   unsigned int activeCPUs = pl->activeCPUs;
+   unsigned int existingCPUs = pl->existingCPUs;
    kstat_t* cpuinfo = NULL;
    kstat_named_t* idletime = NULL;
    kstat_named_t* intrtime = NULL;
@@ -85,43 +123,44 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    double userbuf = 0;
    int arrskip = 0;
 
-   assert(cpus > 0);
+   assert(existingCPUs > 0);
+   assert(spl->kd);
 
-   if (cpus > 1) {
+   if (existingCPUs > 1) {
       // Store values for the stats loop one extra element up in the array
       // to leave room for the average to be calculated afterwards
       arrskip++;
    }
 
    // Calculate per-CPU statistics first
-   for (unsigned int i = 0; i < cpus; i++) {
-      if (spl->kd != NULL) {
-         if ((cpuinfo = kstat_lookup_wrapper(spl->kd, "cpu", i, "sys")) != NULL) {
-            if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {
-               idletime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_idle");
-               intrtime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_intr");
-               krnltime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_kernel");
-               usertime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_user");
-            }
+   for (unsigned int i = 0; i < existingCPUs; i++) {
+      CPUData* cpuData = &(spl->cpus[i + arrskip]);
+
+      if ((cpuinfo = kstat_lookup_wrapper(spl->kd, "cpu", i, "sys")) != NULL) {
+         cpuData->online = true;
+         if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {
+            idletime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_idle");
+            intrtime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_intr");
+            krnltime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_kernel");
+            usertime = kstat_data_lookup_wrapper(cpuinfo, "cpu_nsec_user");
          }
+      } else {
+         cpuData->online = false;
+         continue;
       }
 
       assert( (idletime != NULL) && (intrtime != NULL)
            && (krnltime != NULL) && (usertime != NULL) );
 
       if (pl->settings->showCPUFrequency) {
-         if (spl->kd != NULL) {
-            if ((cpuinfo = kstat_lookup_wrapper(spl->kd, "cpu_info", i, NULL)) != NULL) {
-               if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {
-                  cpu_freq = kstat_data_lookup_wrapper(cpuinfo, "current_clock_Hz");
-               }
+         if ((cpuinfo = kstat_lookup_wrapper(spl->kd, "cpu_info", i, NULL)) != NULL) {
+            if (kstat_read(spl->kd, cpuinfo, NULL) != -1) {
+               cpu_freq = kstat_data_lookup_wrapper(cpuinfo, "current_clock_Hz");
             }
          }
 
          assert( cpu_freq != NULL );
       }
-
-      CPUData* cpuData = &(spl->cpus[i + arrskip]);
 
       uint64_t totaltime = (idletime->value.ui64 - cpuData->lidle)
                          + (intrtime->value.ui64 - cpuData->lintr)
@@ -143,7 +182,7 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
       // Add frequency in MHz
       cpuData->frequency        = pl->settings->showCPUFrequency ? (double)cpu_freq->value.ui64 / 1E6 : NAN;
       // Accumulate the current percentages into buffers for later average calculation
-      if (cpus > 1) {
+      if (existingCPUs > 1) {
          userbuf               += cpuData->userPercent;
          krnlbuf               += cpuData->systemPercent;
          intrbuf               += cpuData->irqPercent;
@@ -151,14 +190,14 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
       }
    }
 
-   if (cpus > 1) {
+   if (existingCPUs > 1) {
       CPUData* cpuData          = &(spl->cpus[0]);
-      cpuData->userPercent      = userbuf / cpus;
+      cpuData->userPercent      = userbuf / activeCPUs;
       cpuData->nicePercent      = (double)0.0; // Not implemented on Solaris
-      cpuData->systemPercent    = krnlbuf / cpus;
-      cpuData->irqPercent       = intrbuf / cpus;
+      cpuData->systemPercent    = krnlbuf / activeCPUs;
+      cpuData->irqPercent       = intrbuf / activeCPUs;
       cpuData->systemAllPercent = cpuData->systemPercent + cpuData->irqPercent;
-      cpuData->idlePercent      = idlebuf / cpus;
+      cpuData->idlePercent      = idlebuf / activeCPUs;
    }
 }
 
@@ -479,6 +518,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
 }
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
+   SolarisProcessList_updateCPUcount(super);
    SolarisProcessList_scanCPUTime(super);
    SolarisProcessList_scanMemoryInfo(super);
    SolarisProcessList_scanZfsArcstats(super);
@@ -490,4 +530,12 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    super->kernelThreads = 1;
    proc_walk(&SolarisProcessList_walkproc, super, PR_WALK_LWP);
+}
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   const SolarisProcessList* spl = (const SolarisProcessList*) super;
+
+   return (super->existingCPUs == 1) ? true : spl->cpus[id + 1].online;
 }

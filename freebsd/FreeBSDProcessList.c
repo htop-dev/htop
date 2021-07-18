@@ -125,13 +125,15 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
       sysctl(MIB_kern_cp_times, 2, fpl->cp_times_o, &len, NULL, 0);
    }
 
-   pl->cpuCount = MAXIMUM(cpus, 1);
+   pl->existingCPUs = MAXIMUM(cpus, 1);
+   // TODO: support offline CPUs and hot swapping
+   pl->activeCPUs = pl->existingCPUs;
 
    if (cpus == 1 ) {
       fpl->cpus = xRealloc(fpl->cpus, sizeof(CPUData));
    } else {
       // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
-      fpl->cpus = xRealloc(fpl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+      fpl->cpus = xRealloc(fpl->cpus, (pl->existingCPUs + 1) * sizeof(CPUData));
    }
 
 
@@ -169,8 +171,8 @@ void ProcessList_delete(ProcessList* this) {
 static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
 
-   unsigned int cpus   = pl->cpuCount;   // actual CPU count
-   unsigned int maxcpu = cpus;           // max iteration (in case we have average + smp)
+   unsigned int cpus   = pl->existingCPUs; // actual CPU count
+   unsigned int maxcpu = cpus;             // max iteration (in case we have average + smp)
    int cp_times_offset;
 
    assert(cpus > 0);
@@ -378,16 +380,15 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 }
 
 static void FreeBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process* proc) {
-   const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, kproc->ki_pid };
-   char buffer[2048];
-   size_t size = sizeof(buffer);
-   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
+   if (Process_isKernelThread(proc)) {
       Process_updateExe(proc, NULL);
       return;
    }
 
-   /* Kernel threads return an empty buffer */
-   if (buffer[0] == '\0') {
+   const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, kproc->ki_pid };
+   char buffer[2048];
+   size_t size = sizeof(buffer);
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
       Process_updateExe(proc, NULL);
       return;
    }
@@ -494,12 +495,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       Process* proc = ProcessList_getProcess(super, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
-
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
          proc->pid = kproc->ki_pid;
-         proc->isKernelThread = kproc->ki_pid != 0 && kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
+         proc->isKernelThread = kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
          proc->isUserlandThread = false;
          proc->ppid = kproc->ki_ppid;
          proc->tpgid = kproc->ki_tpgid;
@@ -591,9 +590,20 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       if (Process_isKernelThread(proc))
          super->kernelThreads++;
 
+      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+
       super->totalTasks++;
       if (proc->state == 'R')
          super->runningTasks++;
       proc->updated = true;
    }
+}
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   // TODO: support offline CPUs and hot swapping
+   (void) super; (void) id;
+
+   return true;
 }
