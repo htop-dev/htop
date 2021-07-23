@@ -37,6 +37,7 @@ config.sub
 configure
 depcomp
 htop.1
+pcp-htop.5
 install-sh
 libtool
 ltmain.sh
