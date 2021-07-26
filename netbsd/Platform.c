@@ -3,6 +3,7 @@ htop - netbsd/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
 (C) 2021 Santhosh Raju
+(C) 2021 Nia Alarie
 (C) 2021 htop dev team
 Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
@@ -11,12 +12,18 @@ in the source distribution for its full text.
 #include "netbsd/Platform.h"
 
 #include <errno.h>
+#include <fcntl.h>
+#include <paths.h>
+#include <unistd.h>
 #include <kvm.h>
 #include <limits.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <prop/proplib.h>
+#include <sys/envsys.h>
 #include <sys/resource.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
@@ -323,7 +330,100 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
-   // TODO
-   (void)percent;
-   (void)isOnAC;
+   int fd;
+   bool isACAD, isBattery;
+   int64_t isPresent, isConnected;
+   int64_t curCharge, maxCharge;
+   int64_t totalCharge, totalCapacity;
+   prop_dictionary_t dict, fields, props;
+   prop_object_iterator_t devIter, fieldsIter;
+   prop_object_t device, class, fieldsArray, curValue, maxValue, descField;
+
+   totalCharge = 0;
+   totalCapacity = 0;
+
+   *percent = NAN;
+   *isOnAC = AC_ERROR;
+
+   fd = open(_PATH_SYSMON, O_RDONLY);
+   if (fd == -1)
+      goto error;
+
+   if (prop_dictionary_recv_ioctl(fd, ENVSYS_GETDICTIONARY, &dict) != 0)
+      goto error;
+
+   devIter = prop_dictionary_iterator(dict);
+   if (devIter == NULL)
+      goto error;
+
+   while ((device = prop_object_iterator_next(devIter)) != NULL) {
+      fieldsArray = prop_dictionary_get_keysym(dict, device);
+      if (fieldsArray == NULL)
+         goto error;
+
+      fieldsIter = prop_array_iterator(fieldsArray);
+      if (fieldsIter == NULL)
+         goto error;
+
+      isACAD = false;
+      isBattery = false;
+
+      /* only assume battery is not present if explicitly stated */
+      isPresent = 1;
+      isConnected = 0;
+      curCharge = 0;
+      maxCharge = 0;
+
+      while ((fields = prop_object_iterator_next(fieldsIter)) != NULL) {
+         props = prop_dictionary_get(fields, "device-properties");
+         if (props != NULL) {
+            class = prop_dictionary_get(props, "device-class");
+
+            /*
+             * After NetBSD 11's release NetBSD 9 will no longer be supported
+             * and these should be converted to prop_string_equals_string.
+             */
+
+            if (prop_string_equals_cstring(class, "ac-adapter")) {
+               isACAD = true;
+            } else if (prop_string_equals_cstring(class, "battery")) {
+               isBattery = true;
+            }
+            continue;
+         }
+
+         curValue = prop_dictionary_get(fields, "cur-value");
+         maxValue = prop_dictionary_get(fields, "max-value");
+         descField = prop_dictionary_get(fields, "description");
+
+         if (descField == NULL || curValue == NULL)
+            continue;
+
+         if (prop_string_equals_cstring(descField, "connected")) {
+            isConnected = prop_number_integer_value(curValue);
+         } else if (prop_string_equals_cstring(descField, "present")) {
+            isPresent = prop_number_integer_value(curValue);
+         } else if (prop_string_equals_cstring(descField, "charge")) {
+            if (maxValue == NULL)
+               continue;
+            curCharge = prop_number_integer_value(curValue);
+            maxCharge = prop_number_integer_value(maxValue);
+         }
+      }
+
+      if (isBattery && isPresent) {
+         totalCharge += curCharge;
+         totalCapacity += maxCharge;
+      }
+
+      if (isACAD) {
+         *isOnAC = isConnected ? AC_PRESENT : AC_ABSENT;
+      }
+   }
+
+   *percent = ((double)totalCharge / (double)totalCapacity) * 100.0;
+
+error:
+   if (fd != -1)
+      close(fd);
 }

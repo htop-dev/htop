@@ -216,6 +216,7 @@ fi
 
 if test "$my_htop_platform" = netbsd; then
    AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
+   AC_SEARCH_LIBS([prop_dictionary_get], [prop], [], [AC_MSG_ERROR([can not find required function prop_dictionary_get()])])
 fi
 
 if test "$my_htop_platform" = openbsd; then
