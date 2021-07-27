@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include <time.h>
 #include <prop/proplib.h>
 #include <sys/envsys.h>
+#include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
@@ -49,6 +50,16 @@ in the source distribution for its full text.
 #include "netbsd/NetBSDProcess.h"
 #include "netbsd/NetBSDProcessList.h"
 
+/*
+ * The older proplib APIs will be deprecated in NetBSD 10, but we still
+ * want to support the 9.x stable branch.
+ *
+ * Create aliases for the newer functions that are missing from 9.x.
+ */
+#if !__NetBSD_Prereq__(9,99,65)
+#define prop_string_equals_string prop_string_equals_cstring
+#define prop_number_signed_value prop_number_integer_value
+#endif
 
 const ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
@@ -333,8 +344,8 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    prop_dictionary_t dict, fields, props;
    prop_object_t device, class;
 
-   int64_t totalCharge = 0;
-   int64_t totalCapacity = 0;
+   intmax_t totalCharge = 0;
+   intmax_t totalCapacity = 0;
 
    *percent = NAN;
    *isOnAC = AC_ERROR;
@@ -363,24 +374,19 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       bool isBattery = false;
 
       /* only assume battery is not present if explicitly stated */
-      int64_t isPresent = 1;
-      int64_t isConnected = 0;
-      int64_t curCharge = 0;
-      int64_t maxCharge = 0;
+      intmax_t isPresent = 1;
+      intmax_t isConnected = 0;
+      intmax_t curCharge = 0;
+      intmax_t maxCharge = 0;
 
       while ((fields = prop_object_iterator_next(fieldsIter)) != NULL) {
          props = prop_dictionary_get(fields, "device-properties");
          if (props != NULL) {
             class = prop_dictionary_get(props, "device-class");
 
-            /*
-             * After NetBSD 11's release NetBSD 9 will no longer be supported
-             * and these should be converted to prop_string_equals_string.
-             */
-
-            if (prop_string_equals_cstring(class, "ac-adapter")) {
+            if (prop_string_equals_string(class, "ac-adapter")) {
                isACAdapter = true;
-            } else if (prop_string_equals_cstring(class, "battery")) {
+            } else if (prop_string_equals_string(class, "battery")) {
                isBattery = true;
             }
             continue;
@@ -393,15 +399,15 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
          if (descField == NULL || curValue == NULL)
             continue;
 
-         if (prop_string_equals_cstring(descField, "connected")) {
-            isConnected = prop_number_integer_value(curValue);
-         } else if (prop_string_equals_cstring(descField, "present")) {
-            isPresent = prop_number_integer_value(curValue);
-         } else if (prop_string_equals_cstring(descField, "charge")) {
+         if (prop_string_equals_string(descField, "connected")) {
+            isConnected = prop_number_signed_value(curValue);
+         } else if (prop_string_equals_string(descField, "present")) {
+            isPresent = prop_number_signed_value(curValue);
+         } else if (prop_string_equals_string(descField, "charge")) {
             if (maxValue == NULL)
                continue;
-            curCharge = prop_number_integer_value(curValue);
-            maxCharge = prop_number_integer_value(maxValue);
+            curCharge = prop_number_signed_value(curValue);
+            maxCharge = prop_number_signed_value(maxValue);
          }
       }
 
