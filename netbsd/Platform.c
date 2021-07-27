@@ -410,7 +410,7 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
          totalCapacity += maxCharge;
       }
 
-      if (isACAdapter) {
+      if (isACAdapter && *isOnAC != AC_PRESENT) {
          *isOnAC = isConnected ? AC_PRESENT : AC_ABSENT;
       }
    }
