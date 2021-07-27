@@ -330,49 +330,43 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
-   int fd;
-   bool isACAD, isBattery;
-   int64_t isPresent, isConnected;
-   int64_t curCharge, maxCharge;
-   int64_t totalCharge, totalCapacity;
    prop_dictionary_t dict, fields, props;
-   prop_object_iterator_t devIter, fieldsIter;
-   prop_object_t device, class, fieldsArray, curValue, maxValue, descField;
+   prop_object_t device, class;
 
-   totalCharge = 0;
-   totalCapacity = 0;
+   int64_t totalCharge = 0;
+   int64_t totalCapacity = 0;
 
    *percent = NAN;
    *isOnAC = AC_ERROR;
 
-   fd = open(_PATH_SYSMON, O_RDONLY);
+   int fd = open(_PATH_SYSMON, O_RDONLY);
    if (fd == -1)
       goto error;
 
    if (prop_dictionary_recv_ioctl(fd, ENVSYS_GETDICTIONARY, &dict) != 0)
       goto error;
 
-   devIter = prop_dictionary_iterator(dict);
+   prop_object_iterator_t devIter = prop_dictionary_iterator(dict);
    if (devIter == NULL)
       goto error;
 
    while ((device = prop_object_iterator_next(devIter)) != NULL) {
-      fieldsArray = prop_dictionary_get_keysym(dict, device);
+      prop_object_t fieldsArray = prop_dictionary_get_keysym(dict, device);
       if (fieldsArray == NULL)
          goto error;
 
-      fieldsIter = prop_array_iterator(fieldsArray);
+      prop_object_iterator_t fieldsIter = prop_array_iterator(fieldsArray);
       if (fieldsIter == NULL)
          goto error;
 
-      isACAD = false;
-      isBattery = false;
+      bool isACAdapter = false;
+      bool isBattery = false;
 
       /* only assume battery is not present if explicitly stated */
-      isPresent = 1;
-      isConnected = 0;
-      curCharge = 0;
-      maxCharge = 0;
+      int64_t isPresent = 1;
+      int64_t isConnected = 0;
+      int64_t curCharge = 0;
+      int64_t maxCharge = 0;
 
       while ((fields = prop_object_iterator_next(fieldsIter)) != NULL) {
          props = prop_dictionary_get(fields, "device-properties");
@@ -385,16 +379,16 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
              */
 
             if (prop_string_equals_cstring(class, "ac-adapter")) {
-               isACAD = true;
+               isACAdapter = true;
             } else if (prop_string_equals_cstring(class, "battery")) {
                isBattery = true;
             }
             continue;
          }
 
-         curValue = prop_dictionary_get(fields, "cur-value");
-         maxValue = prop_dictionary_get(fields, "max-value");
-         descField = prop_dictionary_get(fields, "description");
+         prop_object_t curValue = prop_dictionary_get(fields, "cur-value");
+         prop_object_t maxValue = prop_dictionary_get(fields, "max-value");
+         prop_object_t descField = prop_dictionary_get(fields, "description");
 
          if (descField == NULL || curValue == NULL)
             continue;
@@ -416,7 +410,7 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
          totalCapacity += maxCharge;
       }
 
-      if (isACAD) {
+      if (isACAdapter) {
          *isOnAC = isConnected ? AC_PRESENT : AC_ABSENT;
       }
    }
