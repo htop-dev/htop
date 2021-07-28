@@ -431,7 +431,7 @@ static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
    unsigned long long int swapFreeMem = 0;
    unsigned long long int sreclaimableMem = 0;
    super->totalMem = super->usedMem = super->cachedMem = 0;
-   super->usedSwap = super->totalSwap = 0;
+   super->usedSwap = super->totalSwap = super->sharedMem = 0;
 
    pmAtomValue value;
    if (Metric_values(PCP_MEM_TOTAL, &value, 1, PM_TYPE_U64) != NULL)
@@ -444,11 +444,9 @@ static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
       sreclaimableMem = value.ull;
    if (Metric_values(PCP_MEM_SHARED, &value, 1, PM_TYPE_U64) != NULL)
       super->sharedMem = value.ull;
-   if (Metric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL) {
-      super->cachedMem = value.ull;
-      super->cachedMem += sreclaimableMem;
-   }
-   const memory_t usedDiff = freeMem + super->cachedMem + sreclaimableMem + super->buffersMem + super->sharedMem;
+   if (Metric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL)
+      super->cachedMem = value.ull + sreclaimableMem - super->sharedMem;
+   const memory_t usedDiff = freeMem + super->cachedMem + sreclaimableMem + super->buffersMem;
    super->usedMem = (super->totalMem >= usedDiff) ?
            super->totalMem - usedDiff : super->totalMem - freeMem;
    if (Metric_values(PCP_MEM_AVAILABLE, &value, 1, PM_TYPE_U64) != NULL)
