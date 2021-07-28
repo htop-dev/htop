@@ -154,8 +154,8 @@ static void PCPProcessList_updateInfo(Process* process, int pid, int offset, cha
    pp->cminflt = Metric_instance_u32(PCP_PROC_CMINFLT, pid, offset, 0);
    process->majflt = Metric_instance_u32(PCP_PROC_MAJFLT, pid, offset, 0);
    pp->cmajflt = Metric_instance_u32(PCP_PROC_CMAJFLT, pid, offset, 0);
-   pp->utime = Metric_instance_u64(PCP_PROC_UTIME, pid, offset, 0);
-   pp->stime = Metric_instance_u64(PCP_PROC_STIME, pid, offset, 0);
+   pp->utime = Metric_instance_time(PCP_PROC_UTIME, pid, offset);
+   pp->stime = Metric_instance_time(PCP_PROC_STIME, pid, offset);
    pp->cutime = Metric_instance_time(PCP_PROC_CUTIME, pid, offset);
    pp->cstime = Metric_instance_time(PCP_PROC_CSTIME, pid, offset);
    process->priority = Metric_instance_u32(PCP_PROC_PRIORITY, pid, offset, 0);
