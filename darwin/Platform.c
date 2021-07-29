@@ -347,67 +347,57 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
-   CFTypeRef power_sources = IOPSCopyPowerSourcesInfo();
-
    *percent = NAN;
    *isOnAC = AC_ERROR;
 
-   if (NULL == power_sources)
-      return;
+   CFArrayRef list = NULL;
 
-   CFArrayRef list = IOPSCopyPowerSourcesList(power_sources);
-   CFDictionaryRef battery = NULL;
-   int len;
+   CFTypeRef power_sources = IOPSCopyPowerSourcesInfo();
+   if (!power_sources)
+      goto cleanup;
 
-   if (NULL == list) {
-      CFRelease(power_sources);
+   list = IOPSCopyPowerSourcesList(power_sources);
+   if (!list)
+      goto cleanup;
 
-      return;
-   }
-
-   len = CFArrayGetCount(list);
+   double cap_current = 0.0;
+   double cap_max = 0.0;
 
    /* Get the battery */
-   for (int i = 0; i < len && battery == NULL; ++i) {
-      CFDictionaryRef candidate = IOPSGetPowerSourceDescription(power_sources,
-                                  CFArrayGetValueAtIndex(list, i)); /* GET rule */
-      CFStringRef type;
+   for (int i = 0, len = CFArrayGetCount(list); i < len; ++i) {
+      CFDictionaryRef power_source = IOPSGetPowerSourceDescription(power_sources, CFArrayGetValueAtIndex(list, i)); /* GET rule */
 
-      if (NULL != candidate) {
-         type = (CFStringRef) CFDictionaryGetValue(candidate,
-                CFSTR(kIOPSTransportTypeKey)); /* GET rule */
+      if (!power_source)
+         continue;
 
-         if (kCFCompareEqualTo == CFStringCompare(type, CFSTR(kIOPSInternalType), 0)) {
-            CFRetain(candidate);
-            battery = candidate;
-         }
-      }
-   }
+      CFStringRef power_type = CFDictionaryGetValue(power_source, CFSTR(kIOPSTransportTypeKey)); /* GET rule */
 
-   if (NULL != battery) {
+      if (kCFCompareEqualTo != CFStringCompare(power_type, CFSTR(kIOPSInternalType), 0))
+         continue;
+
       /* Determine the AC state */
-      CFStringRef power_state = CFDictionaryGetValue(battery, CFSTR(kIOPSPowerSourceStateKey));
+      CFStringRef power_state = CFDictionaryGetValue(power_source, CFSTR(kIOPSPowerSourceStateKey));
 
-      *isOnAC = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0))
-              ? AC_PRESENT
-              : AC_ABSENT;
+      if (*isOnAC != AC_PRESENT)
+         *isOnAC = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
 
       /* Get the percentage remaining */
-      double current;
-      double max;
-
-      CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSCurrentCapacityKey)),
-                       kCFNumberDoubleType, &current);
-      CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSMaxCapacityKey)),
-                       kCFNumberDoubleType, &max);
-
-      *percent = (current * 100.0) / max;
-
-      CFRelease(battery);
+      double tmp;
+      CFNumberGetValue(CFDictionaryGetValue(power_source, CFSTR(kIOPSCurrentCapacityKey)), kCFNumberDoubleType, &tmp);
+      cap_current += tmp;
+      CFNumberGetValue(CFDictionaryGetValue(power_source, CFSTR(kIOPSMaxCapacityKey)), kCFNumberDoubleType, &tmp);
+      cap_max += tmp;
    }
 
-   CFRelease(list);
-   CFRelease(power_sources);
+   if (cap_max > 0.0)
+      *percent = 100.0 * cap_current / cap_max;
+
+cleanup:
+   if (list)
+      CFRelease(list);
+
+   if (power_sources)
+      CFRelease(power_sources);
 }
 
 void Platform_gettime_monotonic(uint64_t* msec) {
