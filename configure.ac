@@ -13,7 +13,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([config.h])
 
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([-Wall std-options subdir-objects])
+AM_INIT_AUTOMAKE([-Wall -Wno-portability std-options subdir-objects])
 
 # ----------------------------------------------------------------------
 
