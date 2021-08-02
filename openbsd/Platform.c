@@ -169,10 +169,17 @@ int Platform_getMaxPid() {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const OpenBSDProcessList* pl = (const OpenBSDProcessList*) this->pl;
-   const CPUData* cpuData = &(pl->cpus[cpu]);
-   double total = cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod;
+   const CPUData* cpuData = &(pl->cpuData[cpu]);
+   double total;
    double totalPercent;
    double* v = this->values;
+
+   if (!cpuData->online) {
+      this->curItems = 0;
+      return NAN;
+   }
+
+   total = cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod;
 
    v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
    v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;

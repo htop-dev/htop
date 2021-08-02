@@ -18,7 +18,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
    ProcessList_init(this, Class(Process), usersTable, dynamicMeters, pidMatchList, userId);
 
-   this->cpuCount = 1;
+   this->existingCPUs = 1;
+   this->activeCPUs = 1;
 
    return this;
 }
@@ -87,4 +88,12 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    if (!preExisting)
       ProcessList_add(super, proc);
+}
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   (void) super; (void) id;
+
+   return true;
 }

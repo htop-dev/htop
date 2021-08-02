@@ -12,7 +12,7 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 
-#if defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY)
+#if defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY)
 #include <stdbool.h>
 
 #include "Object.h"
@@ -20,8 +20,8 @@ in the source distribution for its full text.
 #endif
 
 
-#if defined(HAVE_LIBHWLOC) && defined(HAVE_LINUX_AFFINITY)
-#error hwloc and linux affinity are mutual exclusive.
+#if defined(HAVE_LIBHWLOC) && defined(HAVE_AFFINITY)
+#error hwloc and affinity support are mutual exclusive.
 #endif
 
 
@@ -38,12 +38,12 @@ void Affinity_delete(Affinity* this);
 
 void Affinity_add(Affinity* this, unsigned int id);
 
-#if defined(HAVE_LIBHWLOC) || defined(HAVE_LINUX_AFFINITY)
+#if defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY)
 
 Affinity* Affinity_get(const Process* proc, ProcessList* pl);
 
 bool Affinity_set(Process* proc, Arg arg);
 
-#endif /* HAVE_LIBHWLOC || HAVE_LINUX_AFFINITY */
+#endif /* HAVE_LIBHWLOC || HAVE_AFFINITY */
 
 #endif

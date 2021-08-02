@@ -33,10 +33,13 @@ static int PCPProcessList_computeCPUcount(void) {
 static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
    ProcessList* pl = &(this->super);
    unsigned int cpus = PCPProcessList_computeCPUcount();
-   if (cpus == pl->cpuCount)
+   if (cpus == pl->existingCPUs)
       return;
 
-   pl->cpuCount = cpus;
+   pl->existingCPUs = cpus;
+   // TODO: support offline CPUs and hot swapping
+   pl->activeCPUs = pl->existingCPUs;
+
    free(this->percpu);
    free(this->values);
 
@@ -79,7 +82,7 @@ void ProcessList_delete(ProcessList* pl) {
    PCPProcessList* this = (PCPProcessList*) pl;
    ProcessList_done(pl);
    free(this->values);
-   for (unsigned int i = 0; i < pl->cpuCount; i++)
+   for (unsigned int i = 0; i < pl->existingCPUs; i++)
       free(this->percpu[i]);
    free(this->percpu);
    free(this->cpu);
@@ -372,7 +375,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
 
       float percent_cpu = (pp->utime + pp->stime - lasttimes) / period * 100.0;
       proc->percent_cpu = isnan(percent_cpu) ?
-                          0.0 : CLAMP(percent_cpu, 0.0, pl->cpuCount * 100.0);
+                          0.0 : CLAMP(percent_cpu, 0.0, pl->activeCPUs * 100.0);
       proc->percent_mem = proc->m_resident / (double)pl->totalMem * 100.0;
 
       PCPProcessList_updateUsername(proc, pid, offset, pl->usersTable);
@@ -538,7 +541,7 @@ static void PCPProcessList_updateAllCPUTime(PCPProcessList* this, Metric metric,
 
 static void PCPProcessList_updatePerCPUTime(PCPProcessList* this, Metric metric, CPUMetric cpumetric)
 {
-   int cpus = this->super.cpuCount;
+   int cpus = this->super.existingCPUs;
    if (Metric_values(metric, this->values, cpus, PM_TYPE_U64) == NULL)
       memset(this->values, 0, cpus * sizeof(pmAtomValue));
    for (int i = 0; i < cpus; i++)
@@ -547,7 +550,7 @@ static void PCPProcessList_updatePerCPUTime(PCPProcessList* this, Metric metric,
 
 static void PCPProcessList_updatePerCPUReal(PCPProcessList* this, Metric metric, CPUMetric cpumetric)
 {
-   int cpus = this->super.cpuCount;
+   int cpus = this->super.existingCPUs;
    if (Metric_values(metric, this->values, cpus, PM_TYPE_DOUBLE) == NULL)
       memset(this->values, 0, cpus * sizeof(pmAtomValue));
    for (int i = 0; i < cpus; i++)
@@ -607,7 +610,7 @@ static void PCPProcessList_updateHeader(ProcessList* super, const Settings* sett
    PCPProcessList_updateAllCPUTime(this, PCP_CPU_GUEST, CPU_GUEST_TIME);
    PCPProcessList_deriveCPUTime(this->cpu);
 
-   for (unsigned int i = 0; i < super->cpuCount; i++)
+   for (unsigned int i = 0; i < super->existingCPUs; i++)
       PCPProcessList_backupCPUTime(this->percpu[i]);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_USER, CPU_USER_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_NICE, CPU_NICE_TIME);
@@ -618,7 +621,7 @@ static void PCPProcessList_updateHeader(ProcessList* super, const Settings* sett
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_SOFTIRQ, CPU_SOFTIRQ_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_STEAL, CPU_STEAL_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_GUEST, CPU_GUEST_TIME);
-   for (unsigned int i = 0; i < super->cpuCount; i++)
+   for (unsigned int i = 0; i < super->existingCPUs; i++)
       PCPProcessList_deriveCPUTime(this->percpu[i]);
 
    if (settings->showCPUFrequency)
@@ -670,4 +673,13 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    double period = (this->timestamp - sample) * 100;
    PCPProcessList_updateProcesses(this, period, &timestamp);
+}
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
+   assert(id < super->existingCPUs);
+
+   // TODO: support offline CPUs and hot swapping
+   (void) super; (void) id;
+
+   return true;
 }

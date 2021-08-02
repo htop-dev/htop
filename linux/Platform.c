@@ -246,10 +246,16 @@ int Platform_getMaxPid() {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const LinuxProcessList* pl = (const LinuxProcessList*) this->pl;
-   const CPUData* cpuData = &(pl->cpus[cpu]);
+   const CPUData* cpuData = &(pl->cpuData[cpu]);
    double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
    double percent;
    double* v = this->values;
+
+   if (!cpuData->online) {
+      this->curItems = 0;
+      return NAN;
+   }
+
    v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
    v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
    if (this->pl->settings->detailedCPUTime) {
@@ -1000,7 +1006,7 @@ void Platform_init(void) {
    }
 
 #ifdef HAVE_SENSORS_SENSORS_H
-   LibSensors_init(NULL);
+   LibSensors_init();
 #endif
 }
 

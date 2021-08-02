@@ -44,6 +44,7 @@ typedef struct CPUData_ {
    uint64_t lkrnl;
    uint64_t lintr;
    uint64_t lidle;
+   bool online;
 } CPUData;
 
 typedef struct SolarisProcessList_ {
@@ -58,5 +59,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
 void ProcessList_delete(ProcessList* pl);
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
+
+bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id);
 
 #endif

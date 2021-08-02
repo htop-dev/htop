@@ -186,21 +186,21 @@ int Platform_getMaxPid() {
 
 static double Platform_setCPUAverageValues(Meter* mtr) {
    const ProcessList* dpl = mtr->pl;
-   unsigned int cpus = dpl->cpuCount;
+   unsigned int activeCPUs = dpl->activeCPUs;
    double sumNice = 0.0;
    double sumNormal = 0.0;
    double sumKernel = 0.0;
    double sumPercent = 0.0;
-   for (unsigned int i = 1; i <= cpus; i++) {
+   for (unsigned int i = 1; i <= dpl->existingCPUs; i++) {
       sumPercent += Platform_setCPUValues(mtr, i);
       sumNice    += mtr->values[CPU_METER_NICE];
       sumNormal  += mtr->values[CPU_METER_NORMAL];
       sumKernel  += mtr->values[CPU_METER_KERNEL];
    }
-   mtr->values[CPU_METER_NICE]   = sumNice   / cpus;
-   mtr->values[CPU_METER_NORMAL] = sumNormal / cpus;
-   mtr->values[CPU_METER_KERNEL] = sumKernel / cpus;
-   return sumPercent / cpus;
+   mtr->values[CPU_METER_NICE]   = sumNice   / activeCPUs;
+   mtr->values[CPU_METER_NORMAL] = sumNormal / activeCPUs;
+   mtr->values[CPU_METER_KERNEL] = sumKernel / activeCPUs;
+   return sumPercent / activeCPUs;
 }
 
 double Platform_setCPUValues(Meter* mtr, unsigned int cpu) {
