@@ -200,7 +200,7 @@ int Platform_getMaxPid() {
 
 double Platform_setCPUValues(Meter* this, int cpu) {
    const NetBSDProcessList* npl = (const NetBSDProcessList*) this->pl;
-   const CPUData* cpuData = &npl->cpus[cpu];
+   const CPUData* cpuData = &npl->cpuData[cpu];
    double total = cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod;
    double totalPercent;
    double* v = this->values;

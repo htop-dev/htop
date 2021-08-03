@@ -45,7 +45,7 @@ typedef struct NetBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
-   CPUData* cpus;
+   CPUData* cpuData;
 } NetBSDProcessList;
 
 
