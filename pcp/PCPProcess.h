@@ -20,11 +20,12 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 
-#define PROCESS_FLAG_LINUX_CGROUP   0x0800
-#define PROCESS_FLAG_LINUX_OOM      0x1000
-#define PROCESS_FLAG_LINUX_SMAPS    0x2000
-#define PROCESS_FLAG_LINUX_CTXT     0x4000
-#define PROCESS_FLAG_LINUX_SECATTR  0x8000
+#define PROCESS_FLAG_LINUX_CGROUP    0x00000800
+#define PROCESS_FLAG_LINUX_OOM       0x00001000
+#define PROCESS_FLAG_LINUX_SMAPS     0x00002000
+#define PROCESS_FLAG_LINUX_CTXT      0x00004000
+#define PROCESS_FLAG_LINUX_SECATTR   0x00008000
+#define PROCESS_FLAG_LINUX_AUTOGROUP 0x00080000
 
 typedef struct PCPProcess_ {
    Process super;
@@ -70,6 +71,8 @@ typedef struct PCPProcess_ {
    double io_rate_read_bps;
    double io_rate_write_bps;
    char* cgroup;
+   long int autogroup_id;
+   int autogroup_nice;
    unsigned int oom;
    unsigned long long int delay_read_time;
    unsigned long long cpu_delay_total;

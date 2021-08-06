@@ -89,9 +89,16 @@ void ProcessList_delete(ProcessList* pl) {
    free(this);
 }
 
-static inline unsigned long Metric_instance_s32(int metric, int pid, int offset, unsigned long fallback) {
+static inline long Metric_instance_s32(int metric, int pid, int offset, long fallback) {
    pmAtomValue value;
    if (Metric_instance(metric, pid, offset, &value, PM_TYPE_32))
+      return value.l;
+   return fallback;
+}
+
+static inline long long Metric_instance_s64(int metric, int pid, int offset, long long fallback) {
+   pmAtomValue value;
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_64))
       return value.l;
    return fallback;
 }
@@ -220,6 +227,11 @@ static void PCPProcessList_updateSmaps(PCPProcess* pp, pid_t pid, int offset) {
 
 static void PCPProcessList_readOomData(PCPProcess* pp, int pid, int offset) {
    pp->oom = Metric_instance_u32(PCP_PROC_OOMSCORE, pid, offset, 0);
+}
+
+static void PCPProcessList_readAutogroup(PCPProcess* pp, int pid, int offset) {
+   pp->autogroup_id = Metric_instance_s64(PCP_PROC_AUTOGROUP_ID, pid, offset, -1);
+   pp->autogroup_nice = Metric_instance_s32(PCP_PROC_AUTOGROUP_NICE, pid, offset, 0);
 }
 
 static void PCPProcessList_readCtxtData(PCPProcess* pp, int pid, int offset) {
@@ -402,6 +414,9 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
 
       if (settings->flags & PROCESS_FLAG_CWD)
          PCPProcessList_readCwd(pp, pid, offset);
+
+      if (settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP)
+         PCPProcessList_readAutogroup(pp, pid, offset);
 
       if (proc->state == 'Z' && !proc->cmdline && command[0]) {
          Process_updateCmdline(proc, command, 0, strlen(command));
@@ -651,6 +666,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    Metric_enable(PCP_PROC_NVCTXSW, flagged && enabled);
    flagged = settings->flags & PROCESS_FLAG_LINUX_SECATTR;
    Metric_enable(PCP_PROC_LABELS, flagged && enabled);
+   flagged = settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP;
+   Metric_enable(PCP_PROC_AUTOGROUP_ID, flagged && enabled);
+   Metric_enable(PCP_PROC_AUTOGROUP_NICE, flagged && enabled);
 
    /* Sample smaps metrics on every second pass to improve performance */
    static int smaps_flag;

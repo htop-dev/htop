@@ -909,6 +909,23 @@ static void LinuxProcessList_readOomData(LinuxProcess* process, openat_arg_t pro
    fclose(file);
 }
 
+static void LinuxProcessList_readAutogroup(LinuxProcess* process, openat_arg_t procFd) {
+   process->autogroup_id = -1;
+
+   char autogroup[64]; // space for two numeric values and fixed length strings
+   ssize_t amtRead = xReadfileat(procFd, "autogroup", autogroup, sizeof(autogroup));
+   if (amtRead < 0)
+      return;
+
+   long int identity;
+   int nice;
+   int ok = sscanf(autogroup, "/autogroup-%ld nice %d", &identity, &nice);
+   if (ok == 2) {
+      process->autogroup_id = identity;
+      process->autogroup_nice = nice;
+   }
+}
+
 static void LinuxProcessList_readCtxtData(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "status", "r");
    if (!file)
@@ -1521,6 +1538,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          LinuxProcessList_readCwd(lp, procFd);
       }
 
+      if ((settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP) && this->haveAutogroup) {
+         LinuxProcessList_readAutogroup(lp, procFd);
+      }
+
       if (proc->state == 'Z' && !proc->cmdline && statCommand[0]) {
          Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
       } else if (Process_isThread(proc)) {
@@ -2069,6 +2090,16 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    // in pause mode only gather global data for meters (CPU/memory/...)
    if (pauseProcessUpdate) {
       return;
+   }
+
+   if (settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP) {
+      // Refer to sched(7) 'autogroup feature' section
+      // The kernel feature can be enabled/disabled through procfs at
+      // any time, so check for it at the start of each sample - only
+      // read from per-process procfs files if it's globally enabled.
+      this->haveAutogroup = LinuxProcess_isAutogroupEnabled();
+   } else {
+      this->haveAutogroup = false;
    }
 
    /* PROCDIR is an absolute path */

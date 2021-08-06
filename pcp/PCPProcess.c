@@ -82,6 +82,8 @@ const ProcessFieldData Process_fields[] = {
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process", .flags = 0, },
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process", .flags = 0, },
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
+   [AUTOGROUP_ID] = { .name = "AUTOGROUP_ID", .title = "AGRP", .description = "The autogroup identifier of the process", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
+   [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
 };
 
 Process* PCPProcess_new(const Settings* settings) {
@@ -168,6 +170,25 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
       xSnprintf(buffer, n, "%5lu ", pp->ctxt_diff);
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", pp->secattr ? pp->secattr : "?"); break;
+   case AUTOGROUP_ID:
+      if (pp->autogroup_id != -1) {
+         xSnprintf(buffer, n, "%4ld ", pp->autogroup_id);
+      } else {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, " N/A ");
+      }
+      break;
+   case AUTOGROUP_NICE:
+      if (pp->autogroup_id != -1) {
+         xSnprintf(buffer, n, "%3d ", pp->autogroup_nice);
+         attr = pp->autogroup_nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
+              : pp->autogroup_nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
+              : CRT_colors[PROCESS_SHADOW];
+      } else {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "N/A ");
+      }
+      break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -245,6 +266,10 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
       return SPACESHIP_NUMBER(p1->ctxt_diff, p2->ctxt_diff);
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
+   case AUTOGROUP_ID:
+      return SPACESHIP_NUMBER(p1->autogroup_id, p2->autogroup_id);
+   case AUTOGROUP_NICE:
+      return SPACESHIP_NUMBER(p1->autogroup_nice, p2->autogroup_nice);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

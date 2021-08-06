@@ -71,6 +71,7 @@ typedef struct LinuxProcessList_ {
 
    TtyDriver* ttyDrivers;
    bool haveSmapsRollup;
+   bool haveAutogroup;
 
    #ifdef HAVE_DELAYACCT
    struct nl_sock* netlink_socket;
