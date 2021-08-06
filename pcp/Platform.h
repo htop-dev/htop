@@ -210,6 +210,9 @@ typedef enum Metric_ {
    PCP_PROC_EXE,                /* proc.psinfo.exe */
    PCP_PROC_CWD,                /* proc.psinfo.cwd */
 
+   PCP_PROC_AUTOGROUP_ID,       /* proc.autogroup.id */
+   PCP_PROC_AUTOGROUP_NICE,     /* proc.autogroup.nice */
+
    PCP_PROC_ID_UID,             /* proc.id.uid */
    PCP_PROC_ID_USER,            /* proc.id.uid_nm */
 

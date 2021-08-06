@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_SECATTR   0x00008000
 #define PROCESS_FLAG_LINUX_LRS_FIX   0x00010000
 #define PROCESS_FLAG_LINUX_DELAYACCT 0x00040000
+#define PROCESS_FLAG_LINUX_AUTOGROUP 0x00080000
 
 typedef struct LinuxProcess_ {
    Process super;
@@ -99,6 +100,10 @@ typedef struct LinuxProcess_ {
    unsigned long ctxt_diff;
    char* secattr;
    unsigned long long int last_mlrs_calctime;
+
+   /* Autogroup scheduling (CFS) information */
+   long int autogroup_id;
+   int autogroup_nice;
 } LinuxProcess;
 
 extern int pageSize;
@@ -116,6 +121,10 @@ void Process_delete(Object* cast);
 IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
 
 bool LinuxProcess_setIOPriority(Process* this, Arg ioprio);
+
+bool LinuxProcess_isAutogroupEnabled(void);
+
+bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta);
 
 bool Process_isThread(const Process* this);
 

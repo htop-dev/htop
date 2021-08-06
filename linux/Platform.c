@@ -150,8 +150,38 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
+static bool Platform_changeAutogroupPriority(MainPanel* panel, int delta) {
+   if (LinuxProcess_isAutogroupEnabled() == false) {
+      beep();
+      return false;
+   }
+   bool anyTagged;
+   bool ok = MainPanel_foreachProcess(panel, LinuxProcess_changeAutogroupPriorityBy, (Arg) { .i = delta }, &anyTagged);
+   if (!ok)
+      beep();
+   return anyTagged;
+}
+
+static Htop_Reaction Platform_actionHigherAutogroupPriority(State* st) {
+   if (Settings_isReadonly())
+      return HTOP_OK;
+
+   bool changed = Platform_changeAutogroupPriority(st->mainPanel, -1);
+   return changed ? HTOP_REFRESH : HTOP_OK;
+}
+
+static Htop_Reaction Platform_actionLowerAutogroupPriority(State* st) {
+   if (Settings_isReadonly())
+      return HTOP_OK;
+
+   bool changed = Platform_changeAutogroupPriority(st->mainPanel, 1);
+   return changed ? HTOP_REFRESH : HTOP_OK;
+}
+
 void Platform_setBindings(Htop_Action* keys) {
    keys['i'] = Platform_actionSetIOPriority;
+   keys['{'] = Platform_actionLowerAutogroupPriority;
+   keys['}'] = Platform_actionHigherAutogroupPriority;
 }
 
 const MeterClass* const Platform_meterTypes[] = {

@@ -176,6 +176,13 @@ This can only be done by the superuser.
 .B F8, [
 Decrease the selected process's priority (add to 'nice' value)
 .TP
+.B }
+Increase the selected process's autogroup priority (subtract from autogroup 'nice' value).
+This can only be done by the superuser.
+.TP
+.B {
+Decrease the selected process's autogroup priority (add to autogroup 'nice' value)
+.TP
 .B F9, k
 "Kill" process: sends a signal which is selected in a menu, to one or a group
 of processes. If processes were tagged, sends the signal to all tagged processes.
@@ -483,6 +490,12 @@ The command name for the process. Requires Linux kernel 2.6.33 or newer.
 .TP
 .B EXE
 The executable file of the process as reported by the kernel. Requires CAP_SYS_PTRACE and PTRACE_MODE_READ_FSCRED.
+.TP
+.B AGRP
+The autogroup identifier for the process. Requires Linux CFS to be enabled.
+.TP
+.B ANI
+The autogroup nice value for the process autogroup. Requires Linux CFS to be enabled.
 .TP
 .B All other flags
 Currently unsupported (always displays '-').

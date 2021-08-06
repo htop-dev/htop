@@ -100,6 +100,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process from /proc/[pid]/comm", .flags = 0, },
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
+   [AUTOGROUP_ID] = { .name = "AUTOGROUP_ID", .title = "AGRP", .description = "The autogroup identifier of the process", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
+   [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
 };
 
 Process* LinuxProcess_new(const Settings* settings) {
@@ -157,6 +159,37 @@ bool LinuxProcess_setIOPriority(Process* this, Arg ioprio) {
    syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->pid, ioprio.i);
 #endif
    return (LinuxProcess_updateIOPriority((LinuxProcess*)this) == ioprio.i);
+}
+
+bool LinuxProcess_isAutogroupEnabled(void) {
+   char buf[16];
+   if (xReadfile(PROCDIR "/sys/kernel/sched_autogroup_enabled", buf, sizeof(buf)) < 0)
+      return false;
+   return buf[0] == '1';
+}
+
+bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
+   char buffer[256];
+   xSnprintf(buffer, sizeof(buffer), PROCDIR "/%d/autogroup", this->pid);
+
+   FILE* file = fopen(buffer, "r+");
+   if (!file)
+      return false;
+
+   long int identity;
+   int nice;
+   int ok = fscanf(file, "/autogroup-%ld nice %d", &identity, &nice);
+   bool success;
+   if (ok == 2) {
+      rewind(file);
+      xSnprintf(buffer, sizeof(buffer), "%d", nice + delta.i);
+      success = fputs(buffer, file) > 0;
+   } else {
+      success = false;
+   }
+
+   fclose(file);
+   return success;
 }
 
 #ifdef HAVE_DELAYACCT
@@ -259,6 +292,25 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
    case SECATTR: snprintf(buffer, n, "%-30s   ", lp->secattr ? lp->secattr : "?"); break;
+   case AUTOGROUP_ID:
+      if (lp->autogroup_id != -1) {
+         xSnprintf(buffer, n, "%4ld ", lp->autogroup_id);
+      } else {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, " N/A ");
+      }
+      break;
+   case AUTOGROUP_NICE:
+      if (lp->autogroup_id != -1) {
+         xSnprintf(buffer, n, "%3d ", lp->autogroup_nice);
+         attr = lp->autogroup_nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
+              : lp->autogroup_nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
+              : CRT_colors[PROCESS_SHADOW];
+      } else {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "N/A ");
+      }
+      break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -350,6 +402,10 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->ctxt_diff, p2->ctxt_diff);
    case SECATTR:
       return SPACESHIP_NULLSTR(p1->secattr, p2->secattr);
+   case AUTOGROUP_ID:
+      return SPACESHIP_NUMBER(p1->autogroup_id, p2->autogroup_id);
+   case AUTOGROUP_NICE:
+      return SPACESHIP_NUMBER(p1->autogroup_nice, p2->autogroup_nice);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }
