@@ -792,7 +792,7 @@ static void dumpStderr(void) {
 
       if (res > 0) {
          if (!header) {
-            fprintf(stderr, ">>>>>>>>>> stderr output >>>>>>>>>>\n\n");
+            fprintf(stderr, ">>>>>>>>>> stderr output >>>>>>>>>>\n");
             header = true;
          }
          (void)! write(STDERR_FILENO, buffer, res);
@@ -1006,15 +1006,14 @@ void CRT_handleSIGSEGV(int signal) {
       "============================\n"
       "Please check at https://htop.dev/issues whether this issue has already been reported.\n"
       "If no similar issue has been reported before, please create a new issue with the following information:\n"
-      "\n"
-      "- Your "PACKAGE" version ("PACKAGE" --version)\n"
-      "- Your OS and kernel version (uname -a)\n"
-      "- Your distribution and release (lsb_release -a)\n"
-      "- Likely steps to reproduce (How did it happen?)\n"
+      "  - Your "PACKAGE" version: '"VERSION"'\n"
+      "  - Your OS and kernel version (uname -a)\n"
+      "  - Your distribution and release (lsb_release -a)\n"
+      "  - Likely steps to reproduce (How did it happen?)\n"
    );
 
 #ifdef HAVE_EXECINFO_H
-   fprintf(stderr, "- Backtrace of the issue (see below)\n");
+   fprintf(stderr, "  - Backtrace of the issue (see below)\n");
 #endif
 
    fprintf(stderr,
@@ -1037,14 +1036,12 @@ void CRT_handleSIGSEGV(int signal) {
       "Setting information:\n"
       "--------------------\n");
    Settings_write(CRT_crashSettings, true);
-   fprintf(stderr, "\n");
+   fprintf(stderr, "\n\n");
 
 #ifdef HAVE_EXECINFO_H
    fprintf(stderr,
       "Backtrace information:\n"
       "----------------------\n"
-      "The following function calls were active when the issue was detected:\n"
-      "---\n"
    );
 
    void* backtraceArray[256];
@@ -1052,10 +1049,9 @@ void CRT_handleSIGSEGV(int signal) {
    size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
    backtrace_symbols_fd(backtraceArray, size, STDERR_FILENO);
    fprintf(stderr,
-      "---\n"
       "\n"
-      "To make the above information more practical to work with,\n"
-      "please also provide a disassembly of your "PACKAGE" binary.\n"
+      "To make the above information more practical to work with, "
+      "please also provide a disassembly of your "PACKAGE" binary. "
       "This can usually be done by running the following command:\n"
       "\n"
    );
@@ -1069,7 +1065,6 @@ void CRT_handleSIGSEGV(int signal) {
    fprintf(stderr,
       "\n"
       "Please include the generated file in your report.\n"
-      "\n"
    );
 #endif
 
@@ -1077,8 +1072,6 @@ void CRT_handleSIGSEGV(int signal) {
       "Running this program with debug symbols or inside a debugger may provide further insights.\n"
       "\n"
       "Thank you for helping to improve "PACKAGE"!\n"
-      "\n"
-      PACKAGE " " VERSION " aborting.\n"
       "\n"
    );
 
