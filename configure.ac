@@ -187,6 +187,23 @@ AC_COMPILE_IFELSE([
    AC_MSG_RESULT(no))
 CFLAGS="$old_CFLAGS"
 
+AC_MSG_CHECKING(for NaN support)
+AC_RUN_IFELSE([
+   AC_LANG_PROGRAM(
+      [[
+       #include <math.h>
+      ]],
+      [[
+       double x = NAN; return !isnan(x);
+      ]]
+   )],
+   [AC_MSG_RESULT(yes)],
+   [
+      AC_MSG_RESULT(no)
+      AC_MSG_WARN([Compiler does not respect NaN, some functionality might break; consider using '-fno-finite-math-only'])
+   ],
+   [AC_MSG_RESULT(skipped)])
+
 # ----------------------------------------------------------------------
 
 
