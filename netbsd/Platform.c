@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include <time.h>
 #include <prop/proplib.h>
 #include <sys/envsys.h>
+#include <sys/iostat.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/sysctl.h>
@@ -163,6 +164,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
    &BlankMeter_class,
+   &DiskIOMeter_class,
    NULL
 };
 
@@ -329,9 +331,41 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
-   // TODO
-   (void)data;
-   return false;
+   const int mib[] = { CTL_HW, HW_IOSTATS, sizeof(struct io_sysctl) };
+   struct io_sysctl *iostats = NULL;
+   size_t size = 0;
+
+   /* get the size of the IO statistic array */
+   (void)sysctl(mib, __arraycount(mib), iostats, &size, NULL, 0);
+   if (size == 0)
+      return false;
+
+   iostats = xMalloc(size);
+   if (sysctl(mib, __arraycount(mib), iostats, &size, NULL, 0) < 0) {
+      free(iostats);
+      return false;
+   }
+
+   uint64_t bytesReadSum = 0;
+   uint64_t bytesWriteSum = 0;
+   uint64_t busyTimeSum = 0;
+
+   for (size_t i = 0, count = size / sizeof(struct io_sysctl); i < count; i++) {
+      /* ignore NFS activity */
+      if (iostats[i].type != IOSTAT_DISK)
+         continue;
+
+      bytesReadSum += iostats[i].rbytes;
+      bytesWriteSum += iostats[i].wbytes;
+      busyTimeSum += iostats[i].busysum_usec;
+   }
+
+   data->totalBytesRead = bytesReadSum;
+   data->totalBytesWritten = bytesWriteSum;
+   data->totalMsTimeSpend = busyTimeSum / 1000;
+
+   free(iostats);
+   return true;
 }
 
 bool Platform_getNetworkIO(NetworkIOData* data) {
