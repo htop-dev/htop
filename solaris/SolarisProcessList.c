@@ -54,7 +54,7 @@ static void SolarisProcessList_updateCPUcount(ProcessList* super) {
 
    s = sysconf(_SC_NPROCESSORS_CONF);
    if (s < 1)
-      CRT_fatalError("Cannot get exisitng CPU count by sysconf(_SC_NPROCESSORS_CONF)");
+      CRT_fatalError("Cannot get existing CPU count by sysconf(_SC_NPROCESSORS_CONF)");
 
    if (s != super->existingCPUs) {
       if (s == 1) {

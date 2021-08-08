@@ -159,7 +159,7 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 #endif
 
 static void LinuxProcessList_updateCPUcount(ProcessList* super) {
-   /* Similiar to get_nprocs_conf(3) / _SC_NPROCESSORS_CONF
+   /* Similar to get_nprocs_conf(3) / _SC_NPROCESSORS_CONF
     * https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/getsysstats.c;hb=HEAD
     */
 

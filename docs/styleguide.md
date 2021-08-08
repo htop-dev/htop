@@ -230,7 +230,7 @@ When writing your PR or patch, the set of patches should contain the minimal cha
 Each patch in itself should ideally be self-contained and runable.
 
 A PR should not contain any merge commits.
-To follow the uptream branch of your PR rebase your work instead.
+To follow the upstream branch of your PR rebase your work instead.
 
 Avoid small commits that just fix typos that another of your commits introduced.
 Instead squash those changes in the appropriate commit that introduced that mistake.
