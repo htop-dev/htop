@@ -401,7 +401,7 @@ void Process_makeCommandStr(Process* this) {
       return;
    if (this->state == 'Z' && !this->mergedCommand.str)
       return;
-   if (Process_isUserlandThread(this) && settings->showThreadNames)
+   if (Process_isUserlandThread(this) && settings->showThreadNames && (showThreadNames == mc->prevShowThreadNames))
       return;
 
    /* this->mergedCommand.str needs updating only if its state or contents changed.
@@ -500,7 +500,7 @@ void Process_makeCommandStr(Process* this) {
    assert(cmdlineBasenameStart <= (int)strlen(cmdline));
 
    if (!showMergedCommand || !procExe || !procComm) { /* fall back to cmdline */
-      if (showMergedCommand && showThreadNames && !procExe && procComm && strlen(procComm)) { /* Prefix column with comm */
+      if (showMergedCommand && (!Process_isUserlandThread(this) || showThreadNames) && !procExe && procComm && strlen(procComm)) { /* Prefix column with comm */
          if (strncmp(cmdline + cmdlineBasenameStart, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
             WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
             str = stpcpy(str, procComm);
@@ -524,7 +524,7 @@ void Process_makeCommandStr(Process* this) {
    assert(exeBasenameOffset <= (int)strlen(procExe));
 
    bool haveCommInExe = false;
-   if (procExe && procComm && showThreadNames) {
+   if (procExe && procComm && (!Process_isUserlandThread(this) || showThreadNames)) {
       haveCommInExe = strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0;
    }
 
@@ -556,14 +556,14 @@ void Process_makeCommandStr(Process* this) {
    /* Try to match procComm with procExe's basename: This is reliable (predictable) */
    if (searchCommInCmdline) {
       /* commStart/commEnd will be adjusted later along with cmdline */
-      haveCommInCmdline = showThreadNames && findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commEnd);
+      haveCommInCmdline = (!Process_isUserlandThread(this) || showThreadNames) && findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commEnd);
    }
 
    int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
 
    bool haveCommField = false;
 
-   if (!haveCommInExe && !haveCommInCmdline && procComm && showThreadNames) {
+   if (!haveCommInExe && !haveCommInCmdline && procComm && (!Process_isUserlandThread(this) || showThreadNames)) {
       WRITE_SEPARATOR;
       WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       str = stpcpy(str, procComm);
@@ -583,7 +583,7 @@ void Process_makeCommandStr(Process* this) {
       WRITE_SEPARATOR;
    }
 
-   if (!haveCommInExe && haveCommInCmdline && !haveCommField && showThreadNames)
+   if (!haveCommInExe && haveCommInCmdline && !haveCommField && (!Process_isUserlandThread(this) || showThreadNames))
       WRITE_HIGHLIGHT(commStart, commEnd - commStart, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
 
    /* Display cmdline if it hasn't been consumed by procExe */

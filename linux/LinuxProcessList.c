@@ -1223,7 +1223,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    if ((amtRead = xReadfileat(procFd, "comm", command, sizeof(command))) > 0) {
       command[amtRead - 1] = '\0';
       Process_updateComm(process, command);
-   } else if (process->procComm) {
+   } else {
       Process_updateComm(process, NULL);
    }
 
@@ -1543,18 +1543,15 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          LinuxProcessList_readAutogroup(lp, procFd);
       }
 
-      if (proc->state == 'Z' && !proc->cmdline && statCommand[0]) {
+      if (!proc->cmdline && statCommand[0] &&
+          (proc->state == 'Z' || Process_isKernelThread(proc) || settings->showThreadNames)) {
          Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
-      } else if (Process_isThread(proc)) {
-         if ((settings->showThreadNames || Process_isKernelThread(proc)) && statCommand[0]) {
-            Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
-         }
+      }
 
-         if (Process_isKernelThread(proc)) {
-            pl->kernelThreads++;
-         } else {
-            pl->userlandThreads++;
-         }
+      if (Process_isKernelThread(proc)) {
+         pl->kernelThreads++;
+      } else if (Process_isUserlandThread(proc)) {
+         pl->userlandThreads++;
       }
 
       /* Set at the end when we know if a new entry is a thread */
