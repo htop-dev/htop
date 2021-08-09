@@ -6,30 +6,58 @@
 #include <gelf.h>
 
 #include "CRT.h"
-#include "Hashtable.h"
+#include "GenericHashtable.h"
 
 
-static Hashtable* resultCache = NULL;
+static GenericHashtable* resultCache = NULL;
+
+struct CEntry {
+   dev_t dev;
+   ino_t ino;
+   off_t size;
+   time_t mtime;
+   elf_state_t data;
+   char* runpath;
+};
+
+static size_t CEntry_Hash(ght_data_t data) {
+   const struct CEntry* ce = (struct CEntry*) data;
+   return ce->ino;
+}
+
+static int CEntry_Compare(ght_data_t a, ght_data_t b) {
+   const struct CEntry* ceA = (const struct CEntry*) a;
+   const struct CEntry* ceB = (const struct CEntry*) b;
+   int r;
+
+   r = SPACESHIP_NUMBER(ceA->dev, ceB->dev);
+   if (r)
+      return r;
+
+   r = SPACESHIP_NUMBER(ceA->ino, ceB->ino);
+   if (r)
+      return r;
+
+   return 0;
+}
+
+static void CEntry_Destroy(ght_data_t data) {
+   struct CEntry* ce = (struct CEntry*) data;
+   free(ce->runpath);
+   free(ce);
+}
 
 void ELF_init() {
    if (!resultCache)
-      resultCache = Hashtable_new(100, true);
+      resultCache = GenericHashtable_new(100, true, CEntry_Hash, CEntry_Compare, CEntry_Destroy);
 }
 
 void ELF_cleanup() {
    if (resultCache) {
-      Hashtable_delete(resultCache);
+      GenericHashtable_delete(resultCache);
       resultCache = NULL;
    }
 }
-
-struct CacheEntry {
-   ino_t st_ino;
-   dev_t st_dev;
-   off_t st_size;
-   elf_state_t data;
-   char runpath[256];
-};
 
 static bool isStackProtectorFuncName(const char* func) {
    static const char* const protectorNames[] = {
@@ -242,7 +270,7 @@ static bool isFortifyableFuncName(const char* func) {
    return binarySearch(fortifyableNames, ARRAYSIZE(fortifyableNames), func);
 }
 
-static elf_state_t scanBinary(int fd, char* runpath, size_t runpathSize) {
+static elf_state_t scanBinary(int fd, char** runpath) {
    Elf* e = NULL;
    int rc = -1;
    elf_state_t result = 0;
@@ -360,7 +388,8 @@ static elf_state_t scanBinary(int fd, char* runpath, size_t runpathSize) {
 
                if (dyn.d_tag == DT_RUNPATH) {
                   result |= ELF_HARDEN_RUNPATH;
-                  String_safeStrncpy(runpath, elf_strptr(e, shdr.sh_link, dyn.d_un.d_ptr), runpathSize);
+                  if (runpath)
+                     free_and_xStrdup(runpath, elf_strptr(e, shdr.sh_link, dyn.d_un.d_ptr));
                }
             }
          }
@@ -398,6 +427,12 @@ void ELF_writeHardeningField(RichString* str, elf_state_t es) {
    if (es & ELF_FLAG_NO_ELF) {
       RichString_appendAscii(str, CRT_colors[PROCESS_HIGH_PRIORITY], "(no elf)");
       RichString_appendChr(str, 0, ' ', 13);
+      return;
+   }
+
+   if (!(es & ELF_FLAG_SCANNED)) {
+      RichString_appendAscii(str, CRT_colors[PROCESS], "(not scanned)");
+      RichString_appendChr(str, 0, ' ', 8);
       return;
    }
 
@@ -466,42 +501,46 @@ void ELF_readData(LinuxProcess* lp, openat_arg_t procFd) {
       lp->elfState = ELF_FLAG_IO_ERROR;
       free(lp->elfRunpath);
       lp->elfRunpath = NULL;
+      close(fd);
       return;
    }
 
-   struct CacheEntry* centry = Hashtable_get(resultCache, statbuf.st_ino);
+   bool newEntry = false;
+   struct CEntry* centry = GenericHashtable_get(resultCache, &((struct CEntry) { .dev = statbuf.st_dev, .ino = statbuf.st_ino, }));
    if (centry) {
-      if (statbuf.st_ino == centry->st_ino &&
-          statbuf.st_dev == centry->st_dev &&
-          statbuf.st_size == centry->st_size) {
+      if (statbuf.st_size == centry->size &&
+          statbuf.st_mtime == centry->mtime) {
          lp->elfState = centry->data;
-         if (centry->runpath[0]) {
+         if (centry->runpath) {
             free_and_xStrdup(&lp->elfRunpath, centry->runpath);
          } else {
             free(lp->elfRunpath);
             lp->elfRunpath = NULL;
          }
+         close(fd);
          return;
       }
-
-      /* Found entry with same indoe number, but no the same file */
-      Hashtable_remove(resultCache, statbuf.st_ino);
+   } else {
+      centry = xCalloc(1, sizeof(struct CEntry));
+      newEntry = true;
    }
 
-   struct CacheEntry* newEntry = xMalloc(sizeof(struct CacheEntry));
-   newEntry->runpath[0] = '\0';
+   elf_state_t data = scanBinary(fd, &centry->runpath) | ELF_FLAG_SCANNED;
 
-   elf_state_t data = scanBinary(fd, newEntry->runpath, sizeof(newEntry->runpath)) | ELF_FLAG_SCANNED;
+   close(fd);
 
-   newEntry->st_ino = statbuf.st_ino;
-   newEntry->st_dev = statbuf.st_dev;
-   newEntry->st_size = statbuf.st_size;
-   newEntry->data = data;
-   Hashtable_put(resultCache, statbuf.st_ino, newEntry);
+   centry->ino = statbuf.st_ino;
+   centry->dev = statbuf.st_dev;
+   centry->size = statbuf.st_size;
+   centry->mtime = statbuf.st_mtime;
+   centry->data = data;
+
+   if (newEntry)
+      GenericHashtable_put(resultCache, centry);
 
    lp->elfState = data;
-   if (newEntry->runpath[0]) {
-      free_and_xStrdup(&lp->elfRunpath, newEntry->runpath);
+   if (centry->runpath) {
+      free_and_xStrdup(&lp->elfRunpath, centry->runpath);
    } else {
       free(lp->elfRunpath);
       lp->elfRunpath = NULL;

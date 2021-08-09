@@ -43,6 +43,7 @@ myhtopsources = \
 	DynamicMeter.c \
 	EnvScreen.c \
 	FunctionBar.c \
+	GenericHashtable.c \
 	Hashtable.c \
 	Header.c \
 	HostnameMeter.c \
@@ -99,6 +100,7 @@ myhtopheaders = \
 	DynamicMeter.h \
 	EnvScreen.h \
 	FunctionBar.h \
+	GenericHashtable.h \
 	Hashtable.h \
 	Header.h \
 	HostnameMeter.h \
