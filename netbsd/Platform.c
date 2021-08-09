@@ -335,15 +335,23 @@ bool Platform_getDiskIO(DiskIOData* data) {
    struct io_sysctl *iostats = NULL;
    size_t size = 0;
 
-   /* get the size of the IO statistic array */
-   (void)sysctl(mib, __arraycount(mib), iostats, &size, NULL, 0);
-   if (size == 0)
-      return false;
+   for (int retry = 3; retry > 0; retry--) {
+      /* get the size of the IO statistic array */
+      if (sysctl(mib, __arraycount(mib), iostats, &size, NULL, 0) < 0)
+         CRT_fatalError("Unable to get size of io_sysctl");
 
-   iostats = xMalloc(size);
-   if (sysctl(mib, __arraycount(mib), iostats, &size, NULL, 0) < 0) {
-      free(iostats);
-      return false;
+      if (size == 0) {
+         free(iostats);
+         return false;
+      }
+
+      iostats = xRealloc(iostats, size);
+
+      if (sysctl(mib, __arraycount(mib), iostats, &size, NULL, 0) == 0)
+         break;
+
+      if (errno != ENOMEM)
+         CRT_fatalError("Unable to get disk IO statistics");
    }
 
    uint64_t bytesReadSum = 0;
