@@ -347,12 +347,17 @@ bool Platform_getDiskIO(DiskIOData* data) {
 
       iostats = xRealloc(iostats, size);
 
+      errno = 0;
+
       if (sysctl(mib, __arraycount(mib), iostats, &size, NULL, 0) == 0)
          break;
 
       if (errno != ENOMEM)
          CRT_fatalError("Unable to get disk IO statistics");
    }
+
+   if (errno == ENOMEM)
+      CRT_fatalError("Unable to get disk IO statistics");
 
    uint64_t bytesReadSum = 0;
    uint64_t bytesWriteSum = 0;
