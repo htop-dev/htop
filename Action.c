@@ -48,7 +48,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    int y = ((Panel*)mainPanel)->y;
    ScreenManager* scr = ScreenManager_new(header, st->settings, st, false);
    scr->allowFocusChange = false;
-   ScreenManager_add(scr, list, x - 1);
+   ScreenManager_add(scr, list, x);
    ScreenManager_add(scr, (Panel*)mainPanel, -1);
    Panel* panelFocus;
    int ch;
@@ -185,7 +185,7 @@ static Htop_Reaction actionSetSortColumn(State* st) {
 
       free(name);
    }
-   const ListItem* field = (const ListItem*) Action_pickFromVector(st, sortPanel, 15, false);
+   const ListItem* field = (const ListItem*) Action_pickFromVector(st, sortPanel, 14, false);
    if (field) {
       reaction |= Action_setSortKey(st->settings, field->key);
    }
@@ -325,7 +325,6 @@ static Htop_Reaction actionSetAffinity(State* st) {
 
    int width;
    Panel* affinityPanel = AffinityPanel_new(st->pl, affinity1, &width);
-   width += 1; /* we add a gap between the panels */
    Affinity_delete(affinity1);
 
    const void* set = Action_pickFromVector(st, affinityPanel, width, true);
@@ -349,7 +348,7 @@ static Htop_Reaction actionKill(State* st) {
       return HTOP_OK;
 
    Panel* signalsPanel = SignalsPanel_new();
-   const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15, true);
+   const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 14, true);
    if (sgn && sgn->key != 0) {
       Panel_setHeader((Panel*)st->mainPanel, "Sending...");
       Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
@@ -368,7 +367,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
    Vector_insertionSort(usersPanel->items);
    ListItem* allUsers = ListItem_new("All users", -1);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
-   const ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20, false);
+   const ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 19, false);
    if (picked) {
       if (picked == allUsers) {
          st->pl->userId = (uid_t)-1;
