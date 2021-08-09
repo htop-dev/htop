@@ -176,11 +176,11 @@ This can only be done by the superuser.
 .B F8, [
 Decrease the selected process's priority (add to 'nice' value)
 .TP
-.B }
+.B Shift-F7, }
 Increase the selected process's autogroup priority (subtract from autogroup 'nice' value).
 This can only be done by the superuser.
 .TP
-.B {
+.B Shift-F8, {
 Decrease the selected process's autogroup priority (add to autogroup 'nice' value)
 .TP
 .B F9, k

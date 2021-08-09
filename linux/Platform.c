@@ -182,6 +182,8 @@ void Platform_setBindings(Htop_Action* keys) {
    keys['i'] = Platform_actionSetIOPriority;
    keys['{'] = Platform_actionLowerAutogroupPriority;
    keys['}'] = Platform_actionHigherAutogroupPriority;
+   keys[KEY_F(19)] = Platform_actionLowerAutogroupPriority;  // Shift-F7
+   keys[KEY_F(20)] = Platform_actionHigherAutogroupPriority; // Shift-F8
 }
 
 const MeterClass* const Platform_meterTypes[] = {
