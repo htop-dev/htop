@@ -23,22 +23,17 @@ in the source distribution for its full text.
 #include "pcp/PCPProcess.h"
 
 
-static int PCPProcessList_computeCPUcount(void) {
-   int cpus;
-   if ((cpus = Platform_getMaxCPU()) <= 0)
-      cpus = Metric_instanceCount(PCP_PERCPU_SYSTEM);
-   return cpus > 1 ? cpus : 1;
-}
-
 static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
    ProcessList* pl = &(this->super);
-   unsigned int cpus = PCPProcessList_computeCPUcount();
+   pl->activeCPUs = Metric_instanceCount(PCP_PERCPU_SYSTEM);
+   unsigned int cpus = Platform_getMaxCPU();
    if (cpus == pl->existingCPUs)
       return;
-
+   if (cpus <= 0)
+      cpus = pl->activeCPUs;
+   if (cpus <= 1)
+      cpus = pl->activeCPUs = 1;
    pl->existingCPUs = cpus;
-   // TODO: support offline CPUs and hot swapping
-   pl->activeCPUs = pl->existingCPUs;
 
    free(this->percpu);
    free(this->values);
@@ -677,9 +672,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
 bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
    assert(id < super->existingCPUs);
+   (void) super;
 
-   // TODO: support offline CPUs and hot swapping
-   (void) super; (void) id;
-
-   return true;
+   pmAtomValue value;
+   if (Metric_instance(PCP_PERCPU_SYSTEM, id, id, &value, PM_TYPE_U32))
+      return true;
+   return false;
 }
