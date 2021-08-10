@@ -550,6 +550,9 @@ bool Platform_getDiskIO(DiskIOData* data) {
          if (String_startsWith(diskname, "dm-"))
             continue;
 
+         if (String_startsWith(diskname, "zram"))
+            continue;
+
          /* only count root disks, e.g. do not count IO from sda and sda1 twice */
          if ((diskname[0] == 's' || diskname[0] == 'h')
              && diskname[1] == 'd'
