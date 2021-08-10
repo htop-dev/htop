@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
+#include "MemorySwapMeter.h"
 #include "SwapMeter.h"
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
@@ -97,6 +98,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &LoadMeter_class,
    &MemoryMeter_class,
    &SwapMeter_class,
+   &MemorySwapMeter_class,
    &TasksMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
