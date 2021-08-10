@@ -171,7 +171,7 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
       super->activeCPUs = 1;
       super->existingCPUs = 1;
       this->cpuData = xReallocArray(this->cpuData, 2, sizeof(CPUData));
-      this->cpuData[0].online = true;
+      this->cpuData[0].online = true; /* average is always "online" */
       this->cpuData[1].online = true;
       return;
    }
@@ -209,6 +209,7 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
          for (unsigned int j = currExisting; j < max; j++) {
             this->cpuData[j].online = false;
          }
+         this->cpuData[0].online = true; /* average is always "online" */
          currExisting = max;
       }
 
