@@ -116,9 +116,15 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
 
    if (this->param > this->pl->existingCPUs) {
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], "absent");
+      RichString_appendAscii(out, CRT_colors[METER_SHADOW], " absent");
       return;
    }
+
+   if (this->curItems == 0) {
+      RichString_appendAscii(out, CRT_colors[METER_SHADOW], " offline");
+      return;
+   }
+
    len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NORMAL]);
    RichString_appendAscii(out, CRT_colors[METER_TEXT], ":");
    RichString_appendnAscii(out, CRT_colors[CPU_NORMAL], buffer, len);
