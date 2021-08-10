@@ -35,7 +35,6 @@ ScreenManager* ScreenManager_new(Header* header, const Settings* settings, const
    this->header = header;
    this->settings = settings;
    this->state = state;
-   this->owner = owner;
    this->allowFocusChange = true;
    return this;
 }

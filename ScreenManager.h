@@ -26,7 +26,6 @@ typedef struct ScreenManager_ {
    Header* header;
    const Settings* settings;
    const State* state;
-   bool owner;
    bool allowFocusChange;
 } ScreenManager;
 
