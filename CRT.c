@@ -991,7 +991,7 @@ void CRT_handleSIGSEGV(int signal) {
       "- Your "PACKAGE" version ("PACKAGE" --version)\n"
       "- Your OS and kernel version (uname -a)\n"
       "- Your distribution and release (lsb_release -a)\n"
-      "- Likely steps to reproduce (How did it happened?)\n"
+      "- Likely steps to reproduce (How did it happen?)\n"
    );
 
 #ifdef HAVE_EXECINFO_H
