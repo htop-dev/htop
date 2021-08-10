@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "MemoryMeter.h"
+#include "MemorySwapMeter.h"
 #include "ProcessList.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
@@ -81,6 +82,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &LoadAverageMeter_class,
    &LoadMeter_class,
    &MemoryMeter_class,
+   &MemorySwapMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
    &UptimeMeter_class,

@@ -52,6 +52,7 @@ myhtopsources = \
 	LoadAverageMeter.c \
 	MainPanel.c \
 	MemoryMeter.c \
+	MemorySwapMeter.c \
 	Meter.c \
 	MetersPanel.c \
 	NetworkIOMeter.c \
@@ -109,6 +110,7 @@ myhtopheaders = \
 	Macros.h \
 	MainPanel.h \
 	MemoryMeter.h \
+	MemorySwapMeter.h \
 	Meter.h \
 	MetersPanel.h \
 	NetworkIOMeter.h \
