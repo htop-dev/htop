@@ -62,7 +62,8 @@ static void SolarisProcessList_updateCPUcount(ProcessList* super) {
          spl->cpus[0].online = true;
       } else {
          spl->cpus = xReallocArray(spl->cpus, s + 1, sizeof(CPUData));
-         for (int i = 0; i < s + 1; i++) {
+         spl->cpus[0].online = true; /* average is always "online" */
+         for (int i = 1; i < s + 1; i++) {
             spl->cpus[i].online = false;
          }
       }
