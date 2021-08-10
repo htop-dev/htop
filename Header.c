@@ -183,6 +183,7 @@ void Header_draw(const Header* this) {
          else
             actualWidth = width;
 
+         assert(meter->draw);
          meter->draw(meter, x, y, actualWidth);
          y += meter->h;
       }
