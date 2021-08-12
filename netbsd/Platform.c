@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #include <errno.h>
 #include <fcntl.h>
+#include <ifaddrs.h>
 #include <paths.h>
 #include <unistd.h>
 #include <kvm.h>
@@ -22,11 +23,13 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <net/if.h>
 #include <prop/proplib.h>
 #include <sys/envsys.h>
 #include <sys/iostat.h>
 #include <sys/param.h>
 #include <sys/resource.h>
+#include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -165,6 +168,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs8Meter_class,
    &BlankMeter_class,
    &DiskIOMeter_class,
+   &NetworkIOMeter_class,
    NULL
 };
 
@@ -382,9 +386,29 @@ bool Platform_getDiskIO(DiskIOData* data) {
 }
 
 bool Platform_getNetworkIO(NetworkIOData* data) {
-   // TODO
-   (void)data;
-   return false;
+   struct ifaddrs* ifaddrs = NULL;
+
+   if (getifaddrs(&ifaddrs) != 0)
+      return false;
+
+   for (struct ifaddrs* ifa = ifaddrs; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr)
+         continue;
+      if (ifa->ifa_addr->sa_family != AF_LINK)
+         continue;
+      if (ifa->ifa_flags & IFF_LOOPBACK)
+         continue;
+
+      struct if_data* ifd = (struct if_data *)ifa->ifa_data;
+
+      data->bytesReceived += ifd->ifi_ibytes;
+      data->packetsReceived += ifd->ifi_ipackets;
+      data->bytesTransmitted += ifd->ifi_obytes;
+      data->packetsTransmitted += ifd->ifi_opackets;
+   }
+
+   freeifaddrs(ifaddrs);
+   return true;
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
