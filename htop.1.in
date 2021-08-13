@@ -1,9 +1,13 @@
 .TH "HTOP" "1" "2020" "@PACKAGE_STRING@" "User Commands"
 .SH "NAME"
-htop \- interactive process viewer
+htop, pcp-htop \- interactive process viewer
 .SH "SYNOPSIS"
 .B htop
 .RB [ \-dCFhpustvH ]
+.br
+.B pcp\ htop
+.RB [ \-dCFhpustvH ]
+.RB [ \-\-host/-h\ host ]
 .SH "DESCRIPTION"
 .B htop
 is a cross-platform ncurses-based process viewer.
@@ -18,6 +22,19 @@ multiple processes and act on them all at once.
 .LP
 Tasks related to processes (killing, renicing) can be done without
 entering their PIDs.
+.LP
+.B pcp-htop
+is a version of
+.B htop
+built using the Performance Co-Pilot (PCP) Metrics API (see \c
+.BR PCPIntro (1),
+.BR PMAPI (3)),
+allowing to extend
+.B htop
+to display values from arbitrary metrics.
+See the section below titled
+.B "CONFIG FILES"
+for further details.
 .br
 .SH "COMMAND-LINE OPTIONS"
 Mandatory arguments to long options are mandatory for short options too.
@@ -540,7 +557,7 @@ Summary: build time dependency on
 C header files, optional runtime dependency on
 .B libsensors(3)
 via dynamic loading.
-.SH "CONFIG FILE"
+.SH "CONFIG FILES"
 By default
 .B htop
 reads its configuration from the XDG-compliant path
@@ -557,6 +574,36 @@ and as a last resort, falls back to its hard coded defaults.
 You may override the location of the configuration file using the $HTOPRC
 environment variable (so you can have multiple configurations for different
 machines that share the same home directory, for example).
+.LP
+The
+.B pcp-htop
+utility makes use of
+.I htoprc
+in exactly the same way.
+In addition, it supports additional configuration files allowing
+new meters and columns to be added to the display via the usual
+Setup function, which will display additional Available Meters
+and Available Column entries for each runtime configured meter
+or column.
+.LP
+These
+.B pcp-htop
+configuration files are read once at startup.
+The format of these files is described in detail in the
+.BR pcp-htop (5)
+manual page.
+.LP
+This functionality makes available many thousands of Performance
+Co-Pilot metrics for display by
+.BR pcp-htop ,
+as well as the ability to display custom metrics added at individual sites.
+Applications and services instrumented using the OpenMetrics format
+.B https://openmetrics.io
+can also be displayed by
+.B pcp-htop
+if the
+.BR pmdaopenmetrics (1)
+component is configured.
 .SH "MEMORY SIZES"
 Memory sizes in
 .B htop
@@ -574,7 +621,17 @@ space and make memory size representations consistent throughout
 .BR uptime (1)
 and
 .BR limits.conf (5).
+.SH "SEE ALSO FOR PCP"
+.BR pmdaopenmetrics (1),
+.BR PCPIntro (1),
+.BR PMAPI (3),
+and
+.BR pcp-htop (5).
 .SH "AUTHORS"
 .B htop
 was originally developed by Hisham Muhammad.
 Nowadays it is maintained by the community at <htop@groups.io>.
+.LP
+.B pcp-htop
+is maintained as a collaboration between the <htop@groups.io> and <pcp@groups.io>
+communities, and forms part of the Performance Co-Pilot suite of tools.

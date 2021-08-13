@@ -1,0 +1,237 @@
+.TH "PCP-HTOP" "5" "2021" "@PACKAGE_STRING@" "File Formats"
+.SH "NAME"
+\f3pcp-htop\f1 \- pcp-htop configuration file
+.SH "DESCRIPTION"
+.B pcp-htop
+is a customizable performance metrics reporting tool.
+It has a dynamic architecture, where a set of configuration files
+provide additional, optional meters and columns to extend the fixed
+set of display options provided by regular
+.BR htop .
+.LP
+These configuration files can be provided from both system-wide
+locations (first
+.I @sysconfdir@/pcp/htop
+then
+.IR @datarootdir@/pcp/htop )
+and below the user's home directory (usually
+.IR ~/.config/htop ).
+Within these locations the
+.I meters
+and
+.I columns
+are scanned for dynamic Meter and Column specifications.
+.LP
+Meters are displayed in the top part of the
+.B pcp-htop
+window, and columns are displayed in the lower part.
+Meters tend to display system-wide metrics, and Columns
+display metrics about individual processes.
+.LP
+The formats are similar but have slightly different requirements.
+Both formats follow the common ini-style. Blank lines are ignored.
+Lines starting with the "#" character are treated as comments.
+.SH "METERS"
+The following is an example configuration for a new Redis meter:
+.LP
+.ft CW
+.nf
+.in +0.5i
+[redisclient]
+caption = Redis clients
+type = bar
+blocked.metric = redis.blocked_clients
+blocked.color = blue
+blocked.label = blk
+clients.metric = redis.connected_clients
+clients.color = green
+clients.label = conn
+.in
+.fi
+.ft 1
+.LP
+A configuration file can contain multiple meter definitions.
+Each definition begins with a identifying name enclosed by
+square brackets \-
+.I redisclient
+in this example.
+The name is used internally within
+.B pcp-htop
+and must be unique, must begin with an alphabetic character,
+and may subsequently only contain alphanumeric characters or
+the underscore character.
+No whitespace or other characters are allowed.
+.LP
+There are several parameters that define the way the meter
+will be displayed to the user.
+.TP 5
+.B caption
+This value is displayed on the Setup screen once the meter
+has been selected.
+A truncated version of the
+.I caption
+will also be displayed (followed by a colon) on the primary
+display while the meter is updating.
+.TP
+.B description
+This can be used to provide more detail during the meter
+selection process on the Setup screen, and if present it is
+displayed in the "Available Meters" column.
+If not present, the
+.B caption
+will be used for this.
+If neither is present, the internal (mandatory)
+.B name
+will be used.
+.TP
+.B type
+This setting allows a preferred default meter type to be specified.
+The associated value must be one of
+.IR bar ,
+.IR text ,
+.IR graph ,
+or
+.IR led .
+If no value is provided for a dynamic meter, the default value of
+.IR text
+will be used.
+.TP
+.B maximum
+A numeric value can also be set to size the meter, such that
+values (e.g. for a
+.I bar
+type meter display) will be scaled within range zero to
+.IR maximum .
+.LP
+The remaining definition syntax describes the individual
+metric(s) which will be used to animate the meter.
+One or more metrics must be specified for each meter and
+there are several properties associated with each.
+Once again, these metrics must be named (the same rules
+described above for meters apply here) and the following
+properties can be configured:
+.TP 5
+.B name.metric
+This is the only mandatory field and associates a PCP metric
+with the meter.
+Values sampled for each metric at runtime provide the
+animation visible in the
+.B pcp-htop
+display.
+The metric specification can be either a PCP metric name as
+listed by
+.BR pminfo (1)
+or a "derived" metric expression.
+The format for derived metric expressions is described on the
+.BR pmRegisterDerived (3)
+manual page.
+.TP
+.B name.color
+Setting color to be used when rendering metric values.
+Possible values are
+.IR red ,
+.IR green ,
+.IR blue ,
+.IR cyan ,
+.IR magenta ,
+.IR yellow ,
+.IR gray ,
+.I darkgray
+or
+.IR white .
+.TP
+.B name.label
+An optional, short label to display before the metric value.
+The ":" character will be appended to the
+.I label
+before the metric value part of the display.
+.TP
+.B name.suffix
+An optional, short suffix to display after the metric value.
+Commonly used to indicate values as a percentage using a "%"
+.I suffix
+value and to provide the base unit of measurement.
+Note that since PCP maintains units for metrics, for those
+metrics that have dimension in "space" (bytes, kilobytes,
+megabytes, etc), a suffix will be automatically appended.
+.SH "COLUMNS"
+The following is an example configuration for a new column
+showing open file descriptors for each process:
+.LP
+.ft CW
+.nf
+.in +0.5i
+[openfds]
+heading = FDS
+caption = FDCOUNT
+description = Open file descriptors
+metric = proc.fd.count
+width = 3
+.in
+.fi
+.ft 1
+.LP
+A configuration file can contain multiple column definitions.
+Each definition begins with a identifying name enclosed
+by square brackets \-
+.I openfds
+in this example, and the same rules apply as described above
+for meter names.
+.LP
+Each column must specify a metric.
+Optional parameters can also be set.
+.TP 5
+.B metric
+As with meters, the metric value must be either a PCP metric
+name as listed by
+.BR pminfo (1)
+or a derived metric.
+The metric must have an instance domain (set of values) and
+that instance domain must map to the set of processes with
+the instance identifier being PIDs (process identifiers).
+Typically this will be metrics from the
+.I proc
+or
+.I hotproc
+namespace (\c
+.BR pmdaproc (1)),
+but metrics from other domains (\c
+.BR pmdabcc (1),
+.BR pmdabpf (1),
+etc) that have per-process values are equally applicable.
+.TP
+.B width
+Column width to use when displaying values for the metric.
+A negative value can be used to specify left alignment.
+An upper column limit of 28 characters is enforced.
+The default column width is 5 characters.
+.TP
+.B heading
+The short title that will be displayed at the head of the
+column \- usually a short, cryptic, all uppercase string.
+.TP
+.B caption
+A short identifying word presented to users on the Setup
+screen under both the Available and Active Columns lists.
+.TP
+.B description
+Text that assists users to understand the meaning of this
+column when it is being presented via the Setup screen in
+the Available Columns list.
+.SH "SEE ALSO"
+.BR pcp-htop (1),
+.BR pminfo (1),
+.BR pmcd (1),
+.BR pmdaproc (1),
+.BR pmdabcc (1),
+.BR pmdabpf (1)
+and
+.BR pmRegisterDerived (3).
+.SH "AUTHORS"
+.B htop
+was originally developed by Hisham Muhammad.
+Nowadays it is maintained by the community at <htop@groups.io>.
+.LP
+.B pcp-htop
+is maintained as a collaboration between the <htop@groups.io> and <pcp@groups.io>
+communities, and forms part of the Performance Co-Pilot suite of tools.
