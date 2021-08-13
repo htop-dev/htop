@@ -14,7 +14,7 @@ locations (first
 .I @sysconfdir@/pcp/htop
 then
 .IR @datarootdir@/pcp/htop )
-and below the users home directory (usually
+and below the user's home directory (usually
 .IR ~/.config/htop ).
 Within these locations the
 .I meters
@@ -24,13 +24,13 @@ are scanned for dynamic Meter and Column specifications.
 .LP
 Meters are displayed in the top part of the
 .B pcp-htop
-window, and columns are display in the lower part.
+window, and columns are displayed in the lower part.
 Meters tend to display system-wide metrics, and Columns
 display metrics about individual processes.
 .LP
 The formats are similar but have slightly different requirements.
-Both formats follow the common ini-style, also allowing both empty
-lines and comment lines starting with the "#" character.
+Both formats follow the common ini-style. Blank lines are ignored.
+Lines starting with the "#" character are treated as comments.
 .SH "METERS"
 The following is an example configuration for a new Redis meter:
 .LP

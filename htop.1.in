@@ -29,9 +29,9 @@ is a version of
 built using the Performance Co-Pilot (PCP) Metrics API (see \c
 .BR PCPIntro (1),
 .BR PMAPI (3)),
-allowing values not built into
+allowing to extend
 .B htop
-to be displayed from arbitrary metrics.
+to display values from arbitrary metrics.
 See the section below titled
 .B "CONFIG FILES"
 for further details.
