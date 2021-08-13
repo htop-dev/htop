@@ -13,9 +13,10 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "CRT.h"
 #include "CategoriesPanel.h"
 #include "CommandScreen.h"
-#include "CRT.h"
+#include "DynamicColumn.h"
 #include "EnvScreen.h"
 #include "FunctionBar.h"
 #include "Hashtable.h"
@@ -168,8 +169,16 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    Panel* sortPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
    const ProcessField* fields = st->settings->fields;
+   Hashtable* dynamicColumns = st->settings->dynamicColumns;
    for (int i = 0; fields[i]; i++) {
-      char* name = String_trim(Process_fields[fields[i]].name);
+      char* name = NULL;
+      if (fields[i] >= LAST_PROCESSFIELD) {
+         DynamicColumn* column = Hashtable_get(dynamicColumns, fields[i]);
+         if (column)
+            name = xStrdup(column->caption ? column->caption : column->name);
+      } else {
+         name = String_trim(Process_fields[fields[i]].name);
+      }
       Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
       if (fields[i] == Settings_getActiveSortKey(st->settings))
          Panel_setSelected(sortPanel, i);

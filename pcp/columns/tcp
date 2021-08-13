@@ -1,0 +1,31 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[tcp_send_calls]
+heading = TCPS
+caption = TCP_SEND
+width = 6
+metric = bcc.proc.net.tcp.send.calls
+description = Count of TCP send calls
+
+[tcp_send_bytes]
+heading = TCPSB
+caption = TCP_SEND_BYTES
+width = 6
+metric = bcc.proc.net.tcp.send.bytes
+description = Cumulative bytes sent via TCP
+
+[tcp_recv_calls]
+heading = TCPR
+caption = TCP_RECV
+width = 6
+metric = bcc.proc.net.tcp.recv.calls
+description = Count of TCP recv calls
+
+[tcp_recv_bytes]
+heading = TCPRB
+caption = TCP_RECV_BYTES
+width = 6
+metric = bcc.proc.net.tcp.recv.bytes
+description = Cumulative bytes received via TCP

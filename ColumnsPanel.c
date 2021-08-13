@@ -11,7 +11,9 @@ in the source distribution for its full text.
 #include <stdlib.h>
 
 #include "CRT.h"
+#include "DynamicColumn.h"
 #include "FunctionBar.h"
+#include "Hashtable.h"
 #include "ListItem.h"
 #include "Object.h"
 #include "Process.h"
@@ -115,6 +117,32 @@ const PanelClass ColumnsPanel_class = {
    .eventHandler = ColumnsPanel_eventHandler
 };
 
+typedef struct {
+   Panel* super;
+   unsigned int id;
+   unsigned int offset;
+} DynamicIterator;
+
+static void ColumnsPanel_add(Panel* super, unsigned int key, Hashtable* columns) {
+   const char* name;
+   if (key < LAST_PROCESSFIELD) {
+      name = Process_fields[key].name;
+   } else {
+      const DynamicColumn* column = Hashtable_get(columns, key);
+      assert(column);
+      if (!column) {
+         name = NULL;
+      } else {
+         name = column->caption ? column->caption : column->heading;
+         if (!name)
+            name = column->name; /* name is a mandatory field */
+      }
+   }
+   if (name == NULL)
+      name = "- ";
+   Panel_add(super, (Object*) ListItem_new(name, key));
+}
+
 ColumnsPanel* ColumnsPanel_new(Settings* settings) {
    ColumnsPanel* this = AllocThis(ColumnsPanel);
    Panel* super = (Panel*) this;
@@ -125,12 +153,11 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
    this->moving = false;
    Panel_setHeader(super, "Active Columns");
 
-   const ProcessField* fields = this->settings->fields;
-   for (; *fields; fields++) {
-      if (Process_fields[*fields].name) {
-         Panel_add(super, (Object*) ListItem_new(Process_fields[*fields].name, *fields));
-      }
-   }
+   Hashtable* dynamicColumns = settings->dynamicColumns;
+   const ProcessField* fields = settings->fields;
+   for (; *fields; fields++)
+      ColumnsPanel_add(super, *fields, dynamicColumns);
+
    return this;
 }
 
@@ -143,7 +170,8 @@ void ColumnsPanel_update(Panel* super) {
    for (int i = 0; i < size; i++) {
       int key = ((ListItem*) Panel_get(super, i))->key;
       this->settings->fields[i] = key;
-      this->settings->flags |= Process_fields[key].flags;
+      if (key < LAST_PROCESSFIELD)
+         this->settings->flags |= Process_fields[key].flags;
    }
    this->settings->fields[size] = 0;
 }

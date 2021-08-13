@@ -1,0 +1,15 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[swap]
+heading = SWAP
+width = 5
+metric = proc.psinfo.nswap
+description = Count of swap operations for the process
+
+[cswap]
+heading = CSWAP
+width = 5
+metric = proc.psinfo.nswap + proc.psinfo.cnswap
+description = Cumulative swap operations for the process and its children

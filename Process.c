@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Platform.h"
 #include "ProcessList.h"
+#include "DynamicColumn.h"
 #include "RichString.h"
 #include "Settings.h"
 #include "XUtils.h"
@@ -905,8 +906,11 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       xSnprintf(buffer, n, "%-9d ", this->st_uid);
       break;
    default:
+      if (DynamicColumn_writeField(this, str, field))
+         return;
       assert(0 && "Process_writeField: default key reached"); /* should never be reached */
       xSnprintf(buffer, n, "- ");
+      break;
    }
    RichString_appendAscii(str, attr, buffer);
 }

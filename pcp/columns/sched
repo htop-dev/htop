@@ -1,0 +1,10 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[rundelay]
+heading = RUNQ
+caption = RUN_DELAY
+width = 4
+metric = proc.schedstat.run_delay
+description = Run queue time

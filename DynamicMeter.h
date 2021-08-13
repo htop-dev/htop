@@ -1,6 +1,8 @@
 #ifndef HEADER_DynamicMeter
 #define HEADER_DynamicMeter
 
+#include <stdbool.h>
+
 #include "Hashtable.h"
 #include "Meter.h"
 
@@ -11,8 +13,6 @@ typedef struct DynamicMeter_ {
    char* description;
    unsigned int type;
    double maximum;
-
-   void* dynamicData;  /* platform-specific meter data */
 } DynamicMeter;
 
 Hashtable* DynamicMeters_new(void);

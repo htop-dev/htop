@@ -39,6 +39,7 @@ myhtopsources = \
 	DateTimeMeter.c \
 	DiskIOMeter.c \
 	DisplayOptionsPanel.c \
+	DynamicColumn.c \
 	DynamicMeter.c \
 	EnvScreen.c \
 	FunctionBar.c \
@@ -94,6 +95,7 @@ myhtopheaders = \
 	DateTimeMeter.h \
 	DiskIOMeter.h \
 	DisplayOptionsPanel.h \
+	DynamicColumn.h \
 	DynamicMeter.h \
 	EnvScreen.h \
 	FunctionBar.h \
@@ -359,25 +361,27 @@ endif
 # --------------------------
 
 pcp_platform_headers = \
+	linux/PressureStallMeter.h \
+	linux/ZramMeter.h \
+	linux/ZramStats.h \
+	pcp/PCPDynamicColumn.h \
 	pcp/PCPDynamicMeter.h \
 	pcp/PCPProcess.h \
 	pcp/PCPProcessList.h \
 	pcp/Platform.h \
 	pcp/ProcessField.h \
-	linux/PressureStallMeter.h \
-	linux/ZramMeter.h \
-	linux/ZramStats.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h
 
 pcp_platform_sources = \
+	linux/PressureStallMeter.c \
+	linux/ZramMeter.c \
+	pcp/PCPDynamicColumn.c \
 	pcp/PCPDynamicMeter.c \
 	pcp/PCPProcess.c \
 	pcp/PCPProcessList.c \
 	pcp/Platform.c \
-	linux/PressureStallMeter.c \
-	linux/ZramMeter.c \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 

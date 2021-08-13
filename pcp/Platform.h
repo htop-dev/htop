@@ -11,6 +11,8 @@ in the source distribution for its full text.
 
 #include <ctype.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <pcp/pmapi.h>
 
 /* use htop config.h values for these macros, not pcp values */
@@ -29,6 +31,7 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
+#include "RichString.h"
 #include "SignalsPanel.h"
 #include "SysArchMeter.h"
 
@@ -253,13 +256,15 @@ pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type
 
 const pmDesc* Metric_desc(Metric metric);
 
+int Metric_type(Metric metric);
+
 int Metric_instanceCount(Metric metric);
 
 int Metric_instanceOffset(Metric metric, int inst);
 
 pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type);
 
-int Platform_addMetric(Metric id, const char* name);
+size_t Platform_addMetric(Metric id, const char* name);
 
 void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
 
@@ -272,5 +277,11 @@ void Platform_dynamicMeterInit(Meter* meter);
 void Platform_dynamicMeterUpdateValues(Meter* meter);
 
 void Platform_dynamicMeterDisplay(const Meter* meter, RichString* out);
+
+Hashtable* Platform_dynamicColumns(void);
+
+const char* Platform_dynamicColumnInit(unsigned int key);
+
+bool Platform_dynamicColumnWriteField(const Process* proc, RichString* str, unsigned int key);
 
 #endif

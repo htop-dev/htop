@@ -1,0 +1,39 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[vmdata]
+heading = VDATA
+width = 6
+metric = proc.memory.vmdata
+description = Virtual memory used for data
+
+[vmstack]
+heading = VSTACK
+width = -6
+metric = proc.memory.vmstack
+description = Virtual memory used for stack
+
+[vmexe]
+heading = VEXEC
+width = 6
+metric = proc.memory.vmexe
+description = Virtual memory used for non-library executable code
+
+[vmlib]
+heading = VLIBS
+width = 6
+metric = proc.memory.vmlib
+description = Virtual memory used for libraries
+
+[vmswap]
+heading = VSWAP
+width = 6
+metric = proc.memory.vmswap
+description = Virtual memory size currently swapped out
+
+[vmlock]
+heading = VLOCK
+width = 6
+metric = proc.memory.vmlock
+description = Locked virtual memory

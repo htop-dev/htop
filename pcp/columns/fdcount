@@ -1,0 +1,10 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[fds]
+heading = FDS
+caption = FDCOUNT
+width = 4
+metric = proc.fd.count
+description = Open file descriptors

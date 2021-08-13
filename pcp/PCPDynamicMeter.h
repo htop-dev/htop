@@ -4,25 +4,26 @@
 #include "CRT.h"
 #include "DynamicMeter.h"
 
-typedef struct {
-   unsigned int id; /* index into metric array */
+
+typedef struct PCPDynamicMetric_ {
+   size_t id; /* index into metric array */
    ColorElements color;
    char* name; /* derived metric name */
    char* label;
    char* suffix;
 } PCPDynamicMetric;
 
-typedef struct {
+typedef struct PCPDynamicMeter_ {
    DynamicMeter super;
    PCPDynamicMetric* metrics;
-   unsigned int totalMetrics;
+   size_t totalMetrics;
 } PCPDynamicMeter;
 
-typedef struct {
+typedef struct PCPDynamicMeters_ {
    Hashtable* table;
-   unsigned int count; /* count of dynamic meters discovered by scan */
-   unsigned int offset; /* start offset into the Platform metric array */
-   unsigned int cursor; /* identifier allocator for each new metric used */
+   size_t count;  /* count of dynamic meters discovered by scan */
+   size_t offset; /* start offset into the Platform metric array */
+   size_t cursor; /* identifier allocator for each new metric used */
 } PCPDynamicMeters;
 
 void PCPDynamicMeters_init(PCPDynamicMeters* meters);

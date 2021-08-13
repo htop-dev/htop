@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <string.h>
 
 #include "CRT.h"
+#include "DynamicColumn.h"
 #include "Hashtable.h"
 #include "Macros.h"
 #include "Platform.h"
@@ -19,7 +20,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->processes2 = Vector_new(klass, true, DEFAULT_SIZE); // tree-view auxiliary buffer
 
@@ -30,6 +31,7 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
    this->usersTable = usersTable;
    this->pidMatchList = pidMatchList;
    this->dynamicMeters = dynamicMeters;
+   this->dynamicColumns = dynamicColumns;
 
    this->userId = userId;
 
@@ -83,7 +85,22 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
    this->panel = panel;
 }
 
-static const char* alignedProcessFieldTitle(ProcessField field) {
+static const char* alignedDynamicColumnTitle(const ProcessList* this, int key) {
+   const DynamicColumn* column = Hashtable_get(this->dynamicColumns, key);
+   if (column == NULL)
+      return "- ";
+   static char titleBuffer[DYNAMIC_MAX_COLUMN_WIDTH + /* space */ 1 + /* null terminator */ + 1];
+   int width = column->width;
+   if (!width || abs(width) > DYNAMIC_MAX_COLUMN_WIDTH)
+      width = DYNAMIC_DEFAULT_COLUMN_WIDTH;
+   xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s", width, column->heading);
+   return titleBuffer;
+}
+
+static const char* alignedProcessFieldTitle(const ProcessList* this, ProcessField field) {
+   if (field >= LAST_PROCESSFIELD)
+      return alignedDynamicColumnTitle(this, field);
+
    const char* title = Process_fields[field].title;
    if (!title)
       return "- ";
@@ -115,7 +132,7 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header) {
          color = CRT_colors[PANEL_HEADER_FOCUS];
       }
 
-      RichString_appendWide(header, color, alignedProcessFieldTitle(fields[i]));
+      RichString_appendWide(header, color, alignedProcessFieldTitle(this, fields[i]));
       if (key == fields[i] && RichString_getCharVal(*header, RichString_size(header) - 1) == ' ') {
          RichString_rewind(header, 1);  // rewind to override space
          RichString_appendnWide(header,
@@ -478,7 +495,7 @@ ProcessField ProcessList_keyAt(const ProcessList* this, int at) {
    const ProcessField* fields = this->settings->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
-      int len = strlen(alignedProcessFieldTitle(field));
+      int len = strlen(alignedProcessFieldTitle(this, field));
       if (at >= x && at <= x + len) {
          return field;
       }
