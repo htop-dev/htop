@@ -817,6 +817,38 @@ static void dumpStderr(void) {
 
 static struct sigaction old_sig_handler[32];
 
+static void CRT_installSignalHandlers(void) {
+   struct sigaction act;
+   sigemptyset (&act.sa_mask);
+   act.sa_flags = (int)SA_RESETHAND | SA_NODEFER;
+   act.sa_handler = CRT_handleSIGSEGV;
+   sigaction (SIGSEGV, &act, &old_sig_handler[SIGSEGV]);
+   sigaction (SIGFPE, &act, &old_sig_handler[SIGFPE]);
+   sigaction (SIGILL, &act, &old_sig_handler[SIGILL]);
+   sigaction (SIGBUS, &act, &old_sig_handler[SIGBUS]);
+   sigaction (SIGPIPE, &act, &old_sig_handler[SIGPIPE]);
+   sigaction (SIGSYS, &act, &old_sig_handler[SIGSYS]);
+   sigaction (SIGABRT, &act, &old_sig_handler[SIGABRT]);
+
+   signal(SIGINT, CRT_handleSIGTERM);
+   signal(SIGTERM, CRT_handleSIGTERM);
+   signal(SIGQUIT, CRT_handleSIGTERM);
+}
+
+void CRT_resetSignalHandlers(void) {
+   sigaction (SIGSEGV, &old_sig_handler[SIGSEGV], NULL);
+   sigaction (SIGFPE, &old_sig_handler[SIGFPE], NULL);
+   sigaction (SIGILL, &old_sig_handler[SIGILL], NULL);
+   sigaction (SIGBUS, &old_sig_handler[SIGBUS], NULL);
+   sigaction (SIGPIPE, &old_sig_handler[SIGPIPE], NULL);
+   sigaction (SIGSYS, &old_sig_handler[SIGSYS], NULL);
+   sigaction (SIGABRT, &old_sig_handler[SIGABRT], NULL);
+
+   signal(SIGINT, SIG_DFL);
+   signal(SIGTERM, SIG_DFL);
+   signal(SIGQUIT, SIG_DFL);
+}
+
 void CRT_init(const Settings* settings, bool allowUnicode) {
    redirectStderr();
 
@@ -875,21 +907,7 @@ void CRT_init(const Settings* settings, bool allowUnicode) {
       }
    }
 
-   struct sigaction act;
-   sigemptyset (&act.sa_mask);
-   act.sa_flags = (int)SA_RESETHAND | SA_NODEFER;
-   act.sa_handler = CRT_handleSIGSEGV;
-   sigaction (SIGSEGV, &act, &old_sig_handler[SIGSEGV]);
-   sigaction (SIGFPE, &act, &old_sig_handler[SIGFPE]);
-   sigaction (SIGILL, &act, &old_sig_handler[SIGILL]);
-   sigaction (SIGBUS, &act, &old_sig_handler[SIGBUS]);
-   sigaction (SIGPIPE, &act, &old_sig_handler[SIGPIPE]);
-   sigaction (SIGSYS, &act, &old_sig_handler[SIGSYS]);
-   sigaction (SIGABRT, &act, &old_sig_handler[SIGABRT]);
-
-   signal(SIGINT, CRT_handleSIGTERM);
-   signal(SIGTERM, CRT_handleSIGTERM);
-   signal(SIGQUIT, CRT_handleSIGTERM);
+   CRT_installSignalHandlers();
 
    use_default_colors();
    if (!has_colors())

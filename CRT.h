@@ -176,6 +176,8 @@ void CRT_init(const Settings* settings, bool allowUnicode);
 
 void CRT_done(void);
 
+void CRT_resetSignalHandlers(void);
+
 int CRT_readKey(void);
 
 void CRT_disableDelay(void);
