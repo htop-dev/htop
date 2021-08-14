@@ -1609,7 +1609,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
                (variable) = parsed_;                                         \
             }                                                                \
             break;                                                           \
-         }
+         } else (void) 0 /* Require a ";" after the macro use. */
 
       switch (buffer[0]) {
       case 'M':
@@ -1785,12 +1785,12 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
          if (String_startsWith(buffer, label)) {                               \
             sscanf(buffer + strlen(label), " %*2u %32llu", variable);          \
             break;                                                             \
-         }
+         } else (void) 0 /* Require a ";" after the macro use. */
       #define tryReadFlag(label, variable, flag)                               \
          if (String_startsWith(buffer, label)) {                               \
             (flag) = sscanf(buffer + strlen(label), " %*2u %32llu", variable); \
             break;                                                             \
-         }
+         } else (void) 0 /* Require a ";" after the macro use. */
 
       switch (buffer[0]) {
       case 'c':
