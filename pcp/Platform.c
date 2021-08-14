@@ -12,26 +12,26 @@ in the source distribution for its full text.
 #include "pcp/Platform.h"
 
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "BatteryMeter.h"
-#include "ClockMeter.h"
-#include "Compat.h"
 #include "CPUMeter.h"
+#include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "DynamicColumn.h"
 #include "DynamicMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
-#include "MainPanel.h"
 #include "MemoryMeter.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
-#include "Object.h"
-#include "Panel.h"
 #include "ProcessList.h"
-#include "ProvideCurses.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
@@ -44,29 +44,12 @@ in the source distribution for its full text.
 #include "linux/ZramStats.h"
 #include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
-#include "pcp/PCPProcess.h"
+#include "pcp/PCPMetric.h"
 #include "pcp/PCPProcessList.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
-
-typedef struct Platform_ {
-   int context;               /* PMAPI(3) context identifier */
-   size_t totalMetrics;       /* total number of all metrics */
-   const char** names;        /* name array indexed by Metric */
-   pmID* pmids;               /* all known metric identifiers */
-   pmID* fetch;               /* enabled identifiers for sampling */
-   pmDesc* descs;             /* metric desc array indexed by Metric */
-   pmResult* result;          /* sample values result indexed by Metric */
-   PCPDynamicMeters meters;   /* dynamic meters via configuration files */
-   PCPDynamicColumns columns; /* dynamic columns via configuration files */
-   struct timeval offset;     /* time offset used in archive mode only */
-   long long btime;           /* boottime in seconds since the epoch */
-   char* release;             /* uname and distro from this context */
-   int pidmax;                /* maximum platform process identifier */
-   int ncpu;                  /* maximum processor count configured */
-} Platform;
 
 Platform* pcp;
 
@@ -251,162 +234,7 @@ static const char* Platform_metricNames[] = {
    [PCP_METRIC_COUNT] = NULL
 };
 
-const pmDesc* Metric_desc(Metric metric) {
-   return &pcp->descs[metric];
-}
-
-int Metric_type(Metric metric) {
-   return pcp->descs[metric].type;
-}
-
-pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type) {
-   if (pcp->result == NULL)
-      return NULL;
-
-   pmValueSet* vset = pcp->result->vset[metric];
-   if (!vset || vset->numval <= 0)
-      return NULL;
-
-   /* extract requested number of values as requested type */
-   const pmDesc* desc = &pcp->descs[metric];
-   for (int i = 0; i < vset->numval; i++) {
-      if (i == count)
-         break;
-      const pmValue* value = &vset->vlist[i];
-      int sts = pmExtractValue(vset->valfmt, value, desc->type, &atom[i], type);
-      if (sts < 0) {
-         if (pmDebugOptions.appl0)
-            fprintf(stderr, "Error: cannot extract metric value: %s\n",
-                            pmErrStr(sts));
-         memset(&atom[i], 0, sizeof(pmAtomValue));
-      }
-   }
-   return atom;
-}
-
-int Metric_instanceCount(Metric metric) {
-   pmValueSet* vset = pcp->result->vset[metric];
-   if (vset)
-      return vset->numval;
-   return 0;
-}
-
-int Metric_instanceOffset(Metric metric, int inst) {
-   pmValueSet* vset = pcp->result->vset[metric];
-   if (!vset || vset->numval <= 0)
-      return 0;
-
-   /* search for optimal offset for subsequent inst lookups to begin */
-   for (int i = 0; i < vset->numval; i++) {
-      if (inst == vset->vlist[i].inst)
-         return i;
-   }
-   return 0;
-}
-
-static pmAtomValue* Metric_extract(Metric metric, int inst, int offset, pmValueSet* vset, pmAtomValue* atom, int type) {
-
-   /* extract value (using requested type) of given metric instance */
-   const pmDesc* desc = &pcp->descs[metric];
-   const pmValue* value = &vset->vlist[offset];
-   int sts = pmExtractValue(vset->valfmt, value, desc->type, atom, type);
-   if (sts < 0) {
-      if (pmDebugOptions.appl0)
-         fprintf(stderr, "Error: cannot extract %s instance %d value: %s\n",
-                         pcp->names[metric], inst, pmErrStr(sts));
-      memset(atom, 0, sizeof(pmAtomValue));
-   }
-   return atom;
-}
-
-pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type) {
-
-   pmValueSet* vset = pcp->result->vset[metric];
-   if (!vset || vset->numval <= 0)
-      return NULL;
-
-   /* fast-path using heuristic offset based on expected location */
-   if (offset >= 0 && offset < vset->numval && inst == vset->vlist[offset].inst)
-      return Metric_extract(metric, inst, offset, vset, atom, type);
-
-   /* slow-path using a linear search for the requested instance */
-   for (int i = 0; i < vset->numval; i++) {
-      if (inst == vset->vlist[i].inst)
-         return Metric_extract(metric, inst, i, vset, atom, type);
-   }
-   return NULL;
-}
-
-/*
- * Iterate over a set of instances (incl PM_IN_NULL)
- * returning the next instance identifier and offset.
- *
- * Start it off by passing offset -1 into the routine.
- */
-bool Metric_iterate(Metric metric, int* instp, int* offsetp) {
-   if (!pcp->result)
-      return false;
-
-   pmValueSet* vset = pcp->result->vset[metric];
-   if (!vset || vset->numval <= 0)
-      return false;
-
-   int offset = *offsetp;
-   offset = (offset < 0) ? 0 : offset + 1;
-   if (offset > vset->numval - 1)
-      return false;
-
-   *offsetp = offset;
-   *instp = vset->vlist[offset].inst;
-   return true;
-}
-
-/* Switch on/off a metric for value fetching (sampling) */
-void Metric_enable(Metric metric, bool enable) {
-   pcp->fetch[metric] = enable ? pcp->pmids[metric] : PM_ID_NULL;
-}
-
-bool Metric_enabled(Metric metric) {
-   return pcp->fetch[metric] != PM_ID_NULL;
-}
-
-void Metric_enableThreads(void) {
-   pmValueSet* vset = xCalloc(1, sizeof(pmValueSet));
-   vset->vlist[0].inst = PM_IN_NULL;
-   vset->vlist[0].value.lval = 1;
-   vset->valfmt = PM_VAL_INSITU;
-   vset->numval = 1;
-   vset->pmid = pcp->pmids[PCP_CONTROL_THREADS];
-
-   pmResult* result = xCalloc(1, sizeof(pmResult));
-   result->vset[0] = vset;
-   result->numpmid = 1;
-
-   int sts = pmStore(result);
-   if (sts < 0 && pmDebugOptions.appl0)
-      fprintf(stderr, "Error: cannot enable threads: %s\n", pmErrStr(sts));
-
-   pmFreeResult(result);
-}
-
-bool Metric_fetch(struct timeval* timestamp) {
-   if (pcp->result) {
-      pmFreeResult(pcp->result);
-      pcp->result = NULL;
-   }
-   int sts = pmFetch(pcp->totalMetrics, pcp->fetch, &pcp->result);
-   if (sts < 0) {
-      if (pmDebugOptions.appl0)
-         fprintf(stderr, "Error: cannot fetch metric values: %s\n",
-                 pmErrStr(sts));
-      return false;
-   }
-   if (timestamp)
-      *timestamp = pcp->result->timestamp;
-   return true;
-}
-
-size_t Platform_addMetric(Metric id, const char* name) {
+size_t Platform_addMetric(PCPMetric id, const char* name) {
    unsigned int i = (unsigned int)id;
 
    if (i >= PCP_METRIC_COUNT && i >= pcp->totalMetrics) {
@@ -500,31 +328,31 @@ void Platform_init(void) {
    }
 
    /* set proc.control.perclient.threads to 1 for live contexts */
-   Metric_enableThreads();
+   PCPMetric_enableThreads();
 
    /* extract values needed for setup - e.g. cpu count, pid_max */
-   Metric_enable(PCP_PID_MAX, true);
-   Metric_enable(PCP_BOOTTIME, true);
-   Metric_enable(PCP_HINV_NCPU, true);
-   Metric_enable(PCP_PERCPU_SYSTEM, true);
-   Metric_enable(PCP_UNAME_SYSNAME, true);
-   Metric_enable(PCP_UNAME_RELEASE, true);
-   Metric_enable(PCP_UNAME_MACHINE, true);
-   Metric_enable(PCP_UNAME_DISTRO, true);
+   PCPMetric_enable(PCP_PID_MAX, true);
+   PCPMetric_enable(PCP_BOOTTIME, true);
+   PCPMetric_enable(PCP_HINV_NCPU, true);
+   PCPMetric_enable(PCP_PERCPU_SYSTEM, true);
+   PCPMetric_enable(PCP_UNAME_SYSNAME, true);
+   PCPMetric_enable(PCP_UNAME_RELEASE, true);
+   PCPMetric_enable(PCP_UNAME_MACHINE, true);
+   PCPMetric_enable(PCP_UNAME_DISTRO, true);
 
    for (size_t i = pcp->columns.offset; i < pcp->columns.offset + pcp->columns.count; i++)
-      Metric_enable(i, true);
+      PCPMetric_enable(i, true);
 
-   Metric_fetch(NULL);
+   PCPMetric_fetch(NULL);
 
-   for (Metric metric = 0; metric < PCP_PROC_PID; metric++)
-      Metric_enable(metric, true);
-   Metric_enable(PCP_PID_MAX, false); /* needed one time only */
-   Metric_enable(PCP_BOOTTIME, false);
-   Metric_enable(PCP_UNAME_SYSNAME, false);
-   Metric_enable(PCP_UNAME_RELEASE, false);
-   Metric_enable(PCP_UNAME_MACHINE, false);
-   Metric_enable(PCP_UNAME_DISTRO, false);
+   for (PCPMetric metric = 0; metric < PCP_PROC_PID; metric++)
+      PCPMetric_enable(metric, true);
+   PCPMetric_enable(PCP_PID_MAX, false); /* needed one time only */
+   PCPMetric_enable(PCP_BOOTTIME, false);
+   PCPMetric_enable(PCP_UNAME_SYSNAME, false);
+   PCPMetric_enable(PCP_UNAME_RELEASE, false);
+   PCPMetric_enable(PCP_UNAME_MACHINE, false);
+   PCPMetric_enable(PCP_UNAME_DISTRO, false);
 
    /* first sample (fetch) performed above, save constants */
    Platform_getBootTime();
@@ -552,7 +380,7 @@ void Platform_setBindings(Htop_Action* keys) {
 
 int Platform_getUptime(void) {
    pmAtomValue value;
-   if (Metric_values(PCP_UPTIME, &value, 1, PM_TYPE_32) == NULL)
+   if (PCPMetric_values(PCP_UPTIME, &value, 1, PM_TYPE_32) == NULL)
       return 0;
    return value.l;
 }
@@ -561,7 +389,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *one = *five = *fifteen = 0.0;
 
    pmAtomValue values[3] = {0};
-   if (Metric_values(PCP_LOAD_AVERAGE, values, 3, PM_TYPE_DOUBLE) != NULL) {
+   if (PCPMetric_values(PCP_LOAD_AVERAGE, values, 3, PM_TYPE_DOUBLE) != NULL) {
       *one = values[0].d;
       *five = values[1].d;
       *fifteen = values[2].d;
@@ -573,7 +401,7 @@ int Platform_getMaxCPU(void) {
       return pcp->ncpu;
 
    pmAtomValue value;
-   if (Metric_values(PCP_HINV_NCPU, &value, 1, PM_TYPE_32) != NULL)
+   if (PCPMetric_values(PCP_HINV_NCPU, &value, 1, PM_TYPE_32) != NULL)
       pcp->ncpu = value.l;
    else
       pcp->ncpu = -1;
@@ -585,7 +413,7 @@ int Platform_getMaxPid(void) {
       return pcp->pidmax;
 
    pmAtomValue value;
-   if (Metric_values(PCP_PID_MAX, &value, 1, PM_TYPE_32) == NULL)
+   if (PCPMetric_values(PCP_PID_MAX, &value, 1, PM_TYPE_32) == NULL)
       return -1;
    pcp->pidmax = value.l;
    return pcp->pidmax;
@@ -596,7 +424,7 @@ long long Platform_getBootTime(void) {
       return pcp->btime;
 
    pmAtomValue value;
-   if (Metric_values(PCP_BOOTTIME, &value, 1, PM_TYPE_64) != NULL)
+   if (PCPMetric_values(PCP_BOOTTIME, &value, 1, PM_TYPE_64) != NULL)
       pcp->btime = value.ll;
    return pcp->btime;
 }
@@ -671,7 +499,7 @@ void Platform_setSwapValues(Meter* this) {
 }
 
 void Platform_setZramValues(Meter* this) {
-   int i, count = Metric_instanceCount(PCP_ZRAM_CAPACITY);
+   int i, count = PCPMetric_instanceCount(PCP_ZRAM_CAPACITY);
    if (!count) {
       this->total = 0;
       this->values[0] = 0;
@@ -682,15 +510,15 @@ void Platform_setZramValues(Meter* this) {
    pmAtomValue* values = xCalloc(count, sizeof(pmAtomValue));
    ZramStats stats = {0};
 
-   if (Metric_values(PCP_ZRAM_CAPACITY, values, count, PM_TYPE_U64)) {
+   if (PCPMetric_values(PCP_ZRAM_CAPACITY, values, count, PM_TYPE_U64)) {
       for (i = 0; i < count; i++)
          stats.totalZram += values[i].ull;
    }
-   if (Metric_values(PCP_ZRAM_ORIGINAL, values, count, PM_TYPE_U64)) {
+   if (PCPMetric_values(PCP_ZRAM_ORIGINAL, values, count, PM_TYPE_U64)) {
       for (i = 0; i < count; i++)
          stats.usedZramOrig += values[i].ull;
    }
-   if (Metric_values(PCP_ZRAM_COMPRESSED, values, count, PM_TYPE_U64)) {
+   if (PCPMetric_values(PCP_ZRAM_COMPRESSED, values, count, PM_TYPE_U64)) {
       for (i = 0; i < count; i++)
          stats.usedZramComp += values[i].ull;
    }
@@ -728,13 +556,13 @@ void Platform_getRelease(char** string) {
 
    /* first call, extract just-sampled values */
    pmAtomValue sysname, release, machine, distro;
-   if (!Metric_values(PCP_UNAME_SYSNAME, &sysname, 1, PM_TYPE_STRING))
+   if (!PCPMetric_values(PCP_UNAME_SYSNAME, &sysname, 1, PM_TYPE_STRING))
       sysname.cp = NULL;
-   if (!Metric_values(PCP_UNAME_RELEASE, &release, 1, PM_TYPE_STRING))
+   if (!PCPMetric_values(PCP_UNAME_RELEASE, &release, 1, PM_TYPE_STRING))
       release.cp = NULL;
-   if (!Metric_values(PCP_UNAME_MACHINE, &machine, 1, PM_TYPE_STRING))
+   if (!PCPMetric_values(PCP_UNAME_MACHINE, &machine, 1, PM_TYPE_STRING))
       machine.cp = NULL;
-   if (!Metric_values(PCP_UNAME_DISTRO, &distro, 1, PM_TYPE_STRING))
+   if (!PCPMetric_values(PCP_UNAME_DISTRO, &distro, 1, PM_TYPE_STRING))
       distro.cp = NULL;
 
    size_t length = 16; /* padded for formatting characters */
@@ -782,7 +610,7 @@ void Platform_getRelease(char** string) {
 
 char* Platform_getProcessEnv(pid_t pid) {
    pmAtomValue value;
-   if (!Metric_instance(PCP_PROC_ENVIRON, pid, 0, &value, PM_TYPE_STRING))
+   if (!PCPMetric_instance(PCP_PROC_ENVIRON, pid, 0, &value, PM_TYPE_STRING))
       return NULL;
    return value.cp;
 }
@@ -801,7 +629,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
 void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred) {
    *ten = *sixty = *threehundred = 0;
 
-   Metric metric;
+   PCPMetric metric;
    if (String_eq(file, "cpu"))
       metric = PCP_PSI_CPUSOME;
    else if (String_eq(file, "io"))
@@ -812,7 +640,7 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
       return;
 
    pmAtomValue values[3] = {0};
-   if (Metric_values(metric, values, 3, PM_TYPE_DOUBLE) != NULL) {
+   if (PCPMetric_values(metric, values, 3, PM_TYPE_DOUBLE) != NULL) {
       *ten = values[0].d;
       *sixty = values[1].d;
       *threehundred = values[2].d;
@@ -823,11 +651,11 @@ bool Platform_getDiskIO(DiskIOData* data) {
    memset(data, 0, sizeof(*data));
 
    pmAtomValue value;
-   if (Metric_values(PCP_DISK_READB, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_DISK_READB, &value, 1, PM_TYPE_U64) != NULL)
       data->totalBytesRead = value.ull;
-   if (Metric_values(PCP_DISK_WRITEB, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_DISK_WRITEB, &value, 1, PM_TYPE_U64) != NULL)
       data->totalBytesWritten = value.ull;
-   if (Metric_values(PCP_DISK_ACTIVE, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_DISK_ACTIVE, &value, 1, PM_TYPE_U64) != NULL)
       data->totalMsTimeSpend = value.ull;
    return true;
 }
@@ -836,13 +664,13 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    memset(data, 0, sizeof(*data));
 
    pmAtomValue value;
-   if (Metric_values(PCP_NET_RECVB, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_NET_RECVB, &value, 1, PM_TYPE_U64) != NULL)
       data->bytesReceived = value.ull;
-   if (Metric_values(PCP_NET_SENDB, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_NET_SENDB, &value, 1, PM_TYPE_U64) != NULL)
       data->bytesTransmitted = value.ull;
-   if (Metric_values(PCP_NET_RECVP, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_NET_RECVP, &value, 1, PM_TYPE_U64) != NULL)
       data->packetsReceived = value.ull;
-   if (Metric_values(PCP_NET_SENDP, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_NET_SENDP, &value, 1, PM_TYPE_U64) != NULL)
       data->packetsTransmitted = value.ull;
    return true;
 }
@@ -946,7 +774,7 @@ Hashtable* Platform_dynamicColumns(void) {
 const char* Platform_dynamicColumnInit(unsigned int key) {
    PCPDynamicColumn* this = Hashtable_get(pcp->columns.table, key);
    if (this) {
-      Metric_enable(this->id, true);
+      PCPMetric_enable(this->id, true);
       if (this->super.caption)
          return this->super.caption;
       if (this->super.heading)

@@ -1,7 +1,8 @@
 #ifndef HEADER_PCPDynamicColumn
 #define HEADER_PCPDynamicColumn
 
-#include "CRT.h"
+#include <stddef.h>
+
 #include "DynamicColumn.h"
 #include "Hashtable.h"
 #include "Process.h"

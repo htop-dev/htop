@@ -9,14 +9,21 @@ in the source distribution for its full text.
 
 #include "pcp/PCPDynamicMeter.h"
 
-#include <math.h>
+#include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <pcp/pmapi.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "Object.h"
+#include "Macros.h"
 #include "Platform.h"
-#include "ProcessList.h"
 #include "RichString.h"
-#include "Settings.h"
 #include "XUtils.h"
+
+#include "pcp/PCPMetric.h"
 
 
 static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, PCPDynamicMeter* meter, const char* name) {
@@ -278,7 +285,7 @@ void PCPDynamicMeters_init(PCPDynamicMeters* meters) {
 
 void PCPDynamicMeter_enable(PCPDynamicMeter* this) {
    for (size_t i = 0; i < this->totalMetrics; i++)
-      Metric_enable(this->metrics[i].id, true);
+      PCPMetric_enable(this->metrics[i].id, true);
 }
 
 void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
@@ -291,10 +298,10 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
          buffer[bytes++] = '/';  /* separator */
 
       PCPDynamicMetric* metric = &this->metrics[i];
-      const pmDesc* desc = Metric_desc(metric->id);
+      const pmDesc* desc = PCPMetric_desc(metric->id);
       pmAtomValue atom, raw;
 
-      if (!Metric_values(metric->id, &raw, 1, desc->type)) {
+      if (!PCPMetric_values(metric->id, &raw, 1, desc->type)) {
          bytes--; /* clear the separator */
          continue;
       }
@@ -362,11 +369,11 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
 
    for (size_t i = 0; i < this->totalMetrics; i++) {
       PCPDynamicMetric* metric = &this->metrics[i];
-      const pmDesc* desc = Metric_desc(metric->id);
+      const pmDesc* desc = PCPMetric_desc(metric->id);
       pmAtomValue atom, raw;
       char buffer[64];
 
-      if (!Metric_values(metric->id, &raw, 1, desc->type))
+      if (!PCPMetric_values(metric->id, &raw, 1, desc->type))
          continue;
 
       pmUnits conv = desc->units;  /* convert to canonical units */

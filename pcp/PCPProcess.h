@@ -17,8 +17,6 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "Settings.h"
 
-#include "pcp/Platform.h"
-
 
 #define PROCESS_FLAG_LINUX_CGROUP    0x00000800
 #define PROCESS_FLAG_LINUX_OOM       0x00001000
