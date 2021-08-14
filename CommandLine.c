@@ -389,6 +389,8 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    if (flags.pidMatchList)
       Hashtable_delete(flags.pidMatchList);
 
+   CRT_resetSignalHandlers();
+
    /* Delete these last, since they can get accessed in the crash handler */
    Settings_delete(settings);
    if (dc)
