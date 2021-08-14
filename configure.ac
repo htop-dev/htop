@@ -116,6 +116,7 @@ case "$enable_pcp" in
                        [AC_MSG_ERROR([can not find PCP header file])])
       AC_SEARCH_LIBS([pmNewContext], [pcp], [], [AC_MSG_ERROR([can not find PCP library])])
       AC_DEFINE([HTOP_PCP], [1], [Define if building pcp-htop binary.])
+      AC_CONFIG_FILES([pcp-htop.5])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_pcp' for --enable-pcp option])
@@ -681,7 +682,7 @@ AM_CONDITIONAL([HTOP_PCP], [test "$my_htop_platform" = pcp])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 
 AC_SUBST(my_htop_platform)
-AC_CONFIG_FILES([Makefile htop.1 pcp-htop.5])
+AC_CONFIG_FILES([Makefile htop.1])
 AC_OUTPUT
 
 if test "$my_htop_platform" = unsupported; then
