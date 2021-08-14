@@ -17,7 +17,6 @@ in the source distribution for its full text.
 #include <unistd.h>
 
 #include "CRT.h"
-#include "ELF.h"
 #include "Macros.h"
 #include "Process.h"
 #include "ProvideCurses.h"
@@ -104,9 +103,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [AUTOGROUP_ID] = { .name = "AUTOGROUP_ID", .title = "AGRP", .description = "The autogroup identifier of the process", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
    [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
 #ifdef HAVE_LIBELF
-   [ELF_TYPE] = { .name = "ELF_TYPE", .title = "ELF TYPE ", .description = "Elf binary type", .flags = PROCESS_FLAG_LINUX_ELF, },
-   [ELF_HARDENING] = { .name = "ELF_HARDENING", .title = "Hardening            ", .description = "Elf binary hardening options", .flags = PROCESS_FLAG_LINUX_ELF, .defaultSortDesc = true, },
-   [ELF_RUNPATH] = { .name = "ELF_RUNPATH", .title = "Runpath                        ", .description = "Elf binary runpath", .flags = PROCESS_FLAG_LINUX_ELF, },
+   [ELF_TYPE] = { .name = "ELF_TYPE", .title = "ELF TYPE ", .description = "Elf binary type", .flags = PROCESS_FLAG_ELF, },
+   [ELF_HARDENING] = { .name = "ELF_HARDENING", .title = "Hardening            ", .description = "Elf binary hardening options", .flags = PROCESS_FLAG_ELF, .defaultSortDesc = true, },
+   [ELF_RUNPATH] = { .name = "ELF_RUNPATH", .title = "Runpath                        ", .description = "Elf binary runpath", .flags = PROCESS_FLAG_ELF, },
 #endif
 };
 
@@ -123,9 +122,6 @@ void Process_delete(Object* cast) {
    free(this->cgroup);
 #ifdef HAVE_OPENVZ
    free(this->ctid);
-#endif
-#ifdef HAVE_LIBELF
-   free(this->elfRunpath);
 #endif
    free(this->secattr);
    free(this);
@@ -320,23 +316,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
          xSnprintf(buffer, n, "N/A ");
       }
       break;
-#ifdef HAVE_LIBELF
-   case ELF_TYPE:
-      xSnprintf(buffer, n, "%-8s ", (lp->elfState & ELF_32_BIT) ? "32 bit" : ((lp->elfState & ELF_64_BIT) ? "64 bit" : "N/A"));
-      if (lp->elfState & ELF_FLAG_NO_ACCESS)
-         attr = CRT_colors[PROCESS_SHADOW];
-      break;
-   case ELF_HARDENING:
-      ELF_writeHardeningField(str, lp->elfState);
-      return;
-   case ELF_RUNPATH:
-      snprintf(buffer, n, "%-30.30s ", lp->elfRunpath ? lp->elfRunpath : "(none)");
-      if (!lp->elfRunpath)
-         attr = CRT_colors[PROCESS_SHADOW];
-      else if (this->procExe && !String_startsWith(this->procExe, lp->elfRunpath))
-         attr = CRT_colors[FAILED_READ];
-      break;
-#endif
    default:
       Process_writeField(this, str, field);
       return;
@@ -350,18 +329,6 @@ static double adjustNaN(double num) {
 
    return num;
 }
-
-#ifdef HAVE_LIBELF
-static int sortElfType(elf_state_t es) {
-   if (es & ELF_32_BIT)
-      return 2;
-
-   if (es & ELF_64_BIT)
-      return 1;
-
-   return 0;
-}
-#endif
 
 static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const LinuxProcess* p1 = (const LinuxProcess*)v1;
@@ -444,14 +411,6 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->autogroup_id, p2->autogroup_id);
    case AUTOGROUP_NICE:
       return SPACESHIP_NUMBER(p1->autogroup_nice, p2->autogroup_nice);
-#ifdef HAVE_LIBELF
-   case ELF_TYPE:
-      return SPACESHIP_NUMBER(sortElfType(p1->elfState), sortElfType(p2->elfState));
-   case ELF_HARDENING:
-      return SPACESHIP_NUMBER(p1->elfState, p2->elfState);
-   case ELF_RUNPATH:
-      return SPACESHIP_NULLSTR(p1->elfRunpath, p2->elfRunpath);
-#endif
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

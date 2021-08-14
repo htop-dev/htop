@@ -1518,8 +1518,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       #ifdef HAVE_LIBELF
-      if ((settings->flags & PROCESS_FLAG_LINUX_ELF) && (!(lp->elfState & ELF_FLAG_SCANNED) || proc->mergedCommand.exeChanged)) {
-         ELF_readData(lp, procFd);
+      if ((settings->flags & PROCESS_FLAG_ELF) && (!(proc->elfState & ELF_FLAG_SCANNED) || proc->mergedCommand.exeChanged)) {
+         ELF_readData(proc, procFd);
       }
       #endif
 

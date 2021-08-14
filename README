@@ -87,6 +87,10 @@ To install on the local system run `make install`. By default `make install` ins
     enable hwloc support for CPU affinity; disables affinity support
     dependency: *libhwloc*
     default: *no*
+  * `--enable-elf`:
+    enable elf binary inspection, e.g. hardening options
+    dependencies: *libelf*
+    default: *check*
   * `--enable-static`:
     build a static htop binary; hwloc and delay accounting are not supported
     default: *no*
@@ -119,10 +123,6 @@ To install on the local system run `make install`. By default `make install` ins
   * `--enable-delayacct`:
     enable Linux delay accounting support
     dependencies: *pkg-config*(build-time), *libnl-3* and *libnl-genl-3*
-    default: *check*
-  * `--enable-elf`:
-    enable elf binary inspection, e.g. hardening options
-    dependencies: *libelf*
     default: *check*
 
 

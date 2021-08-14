@@ -41,6 +41,7 @@ myhtopsources = \
 	DisplayOptionsPanel.c \
 	DynamicColumn.c \
 	DynamicMeter.c \
+	ELF.c \
 	EnvScreen.c \
 	FunctionBar.c \
 	GenericHashtable.c \
@@ -98,6 +99,7 @@ myhtopheaders = \
 	DisplayOptionsPanel.h \
 	DynamicColumn.h \
 	DynamicMeter.h \
+	ELF.h \
 	EnvScreen.h \
 	FunctionBar.h \
 	GenericHashtable.h \
@@ -142,7 +144,6 @@ linux_platform_headers = \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
-	linux/ELF.h \
 	linux/HugePageMeter.h \
 	linux/IOPriority.h \
 	linux/IOPriorityPanel.h \
@@ -164,7 +165,6 @@ linux_platform_sources = \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
-	linux/ELF.c \
 	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \
 	linux/LibSensors.c \

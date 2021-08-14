@@ -484,23 +484,23 @@ void ELF_writeHardeningField(RichString* str, elf_state_t es) {
       RichString_appendChr(str, 0, ' ', 21 - written);
 }
 
-void ELF_readData(LinuxProcess* lp, openat_arg_t procFd) {
+void ELF_readData(Process* proc, openat_arg_t procFd) {
    int r;
 
    int fd = Compat_openat(procFd, "exe", O_RDONLY);
    if (fd < 0) {
-      lp->elfState = (errno == EACCES || errno == ENOENT) ? ELF_FLAG_NO_ACCESS : ELF_FLAG_IO_ERROR;
-      free(lp->elfRunpath);
-      lp->elfRunpath = NULL;
+      proc->elfState = (errno == EACCES || errno == ENOENT) ? ELF_FLAG_NO_ACCESS : ELF_FLAG_IO_ERROR;
+      free(proc->elfRunpath);
+      proc->elfRunpath = NULL;
       return;
    }
 
    struct stat statbuf;
    r = fstat(fd, &statbuf);
    if (r < 0) {
-      lp->elfState = ELF_FLAG_IO_ERROR;
-      free(lp->elfRunpath);
-      lp->elfRunpath = NULL;
+      proc->elfState = ELF_FLAG_IO_ERROR;
+      free(proc->elfRunpath);
+      proc->elfRunpath = NULL;
       close(fd);
       return;
    }
@@ -510,12 +510,12 @@ void ELF_readData(LinuxProcess* lp, openat_arg_t procFd) {
    if (centry) {
       if (statbuf.st_size == centry->size &&
           statbuf.st_mtime == centry->mtime) {
-         lp->elfState = centry->data;
+         proc->elfState = centry->data;
          if (centry->runpath) {
-            free_and_xStrdup(&lp->elfRunpath, centry->runpath);
+            free_and_xStrdup(&proc->elfRunpath, centry->runpath);
          } else {
-            free(lp->elfRunpath);
-            lp->elfRunpath = NULL;
+            free(proc->elfRunpath);
+            proc->elfRunpath = NULL;
          }
          close(fd);
          return;
@@ -538,12 +538,12 @@ void ELF_readData(LinuxProcess* lp, openat_arg_t procFd) {
    if (newEntry)
       GenericHashtable_put(resultCache, centry);
 
-   lp->elfState = data;
+   proc->elfState = data;
    if (centry->runpath) {
-      free_and_xStrdup(&lp->elfRunpath, centry->runpath);
+      free_and_xStrdup(&proc->elfRunpath, centry->runpath);
    } else {
-      free(lp->elfRunpath);
-      lp->elfRunpath = NULL;
+      free(proc->elfRunpath);
+      proc->elfRunpath = NULL;
    }
 }
 

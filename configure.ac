@@ -426,6 +426,7 @@ case "$enable_hwloc" in
       ;;
 esac
 
+
 AC_ARG_WITH([os-release],
             [AS_HELP_STRING([--with-os-release=FILE],
                             [location of an os-release file @<:@default=/etc/os-release@:>@])],
@@ -437,6 +438,32 @@ if test -n "$with_os_release" && test ! -f "$with_os_release"; then
    fi
 fi
 AC_DEFINE_UNQUOTED([OSRELEASEFILE], ["$with_os_release"], [File with OS release details.])
+
+
+AC_ARG_ENABLE([elf],
+              [AS_HELP_STRING([--enable-elf],
+                              [enable Elf support to inspect binaries; requires libelf @<:@default=check@:>@])],
+              [],
+              [enable_elf=check])
+case "$enable_elf" in
+   no)
+      ;;
+   check)
+      enable_elf=yes
+      AC_CHECK_LIB([elf], [elf_version], [], [enable_elf=no])
+      AC_CHECK_HEADERS([libelf.h], [], [enable_elf=no])
+      ;;
+   yes)
+      if test "$enable_static" = yes; then
+         AC_CHECK_LIB([z], [inflate], [], [AC_MSG_ERROR([can not find required library zlib])])
+      fi
+      AC_CHECK_LIB([elf], [elf_version], [], [AC_MSG_ERROR([can not find required library libelf])])
+      AC_CHECK_HEADERS([libelf.h], [], [AC_MSG_ERROR([can not find required header file libelf.h])])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_elf' for --enable-elf])
+      ;;
+esac
 
 # ----------------------------------------------------------------------
 
@@ -589,32 +616,6 @@ if test "$enable_sensors" = yes || test "$my_htop_platform" = freebsd; then
    AC_DEFINE([BUILD_WITH_CPU_TEMP], [1], [Define if CPU temperature option should be enabled.])
 fi
 
-
-AC_ARG_ENABLE([elf],
-              [AS_HELP_STRING([--enable-elf],
-                              [enable Elf support to inspect binaries; requires libelf @<:@default=check@:>@])],
-              [],
-              [enable_elf=check])
-case "$enable_elf" in
-   no)
-      ;;
-   check)
-      enable_elf=yes
-      AC_CHECK_LIB([elf], [elf_version], [], [enable_elf=no])
-      AC_CHECK_HEADERS([libelf.h], [], [enable_elf=no])
-      ;;
-   yes)
-      if test "$enable_static" = yes; then
-         AC_CHECK_LIB([z], [inflate], [], [AC_MSG_ERROR([can not find required library zlib])])
-      fi
-      AC_CHECK_LIB([elf], [elf_version], [], [AC_MSG_ERROR([can not find required library libelf])])
-      AC_CHECK_HEADERS([libelf.h], [], [AC_MSG_ERROR([can not find required header file libelf.h])])
-      ;;
-   *)
-      AC_MSG_ERROR([bad value '$enable_elf' for --enable-elf])
-      ;;
-esac
-
 # ----------------------------------------------------------------------
 
 
@@ -736,10 +737,10 @@ AC_MSG_RESULT([
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $enable_sensors
   (Linux) capabilities:      $enable_capabilities
-  (Linux) elf:               $enable_elf
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   hwloc:                     $enable_hwloc
+  elf:                       $enable_elf
   debug:                     $enable_debug
   static:                    $enable_static
 ])

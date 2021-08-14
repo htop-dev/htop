@@ -4,7 +4,7 @@
 #include "config.h" // IWYU pragma: keep
 
 #include "Compat.h"
-#include "LinuxProcess.h"
+#include "Process.h"
 
 
 #define ELF_HARDEN_BINDNOW         (1U <<  0)
@@ -28,7 +28,7 @@
 void ELF_init(void);
 void ELF_cleanup(void);
 
-void ELF_readData(LinuxProcess* lp, openat_arg_t procFd);
+void ELF_readData(Process* proc, openat_arg_t procFd);
 
 void ELF_writeHardeningField(RichString* str, elf_state_t es);
 

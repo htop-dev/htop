@@ -19,8 +19,11 @@ in the source distribution for its full text.
 
 #define PROCESS_FLAG_IO              0x00000001
 #define PROCESS_FLAG_CWD             0x00000002
+#define PROCESS_FLAG_ELF             0x00000004
 
 #define DEFAULT_HIGHLIGHT_SECS 5
+
+typedef uint16_t elf_state_t;
 
 typedef enum ProcessField_ {
    NULL_PROCESSFIELD = 0,
@@ -52,6 +55,9 @@ typedef enum ProcessField_ {
    PROC_COMM = 124,
    PROC_EXE = 125,
    CWD = 126,
+   ELF_TYPE = 129,
+   ELF_HARDENING = 130,
+   ELF_RUNPATH = 131,
 
    /* Platform specific fields, defined in ${platform}/ProcessField.h */
    PLATFORM_PROCESS_FIELDS
@@ -233,6 +239,13 @@ typedef struct Process_ {
 
    /* Whether to show children of this process in tree-mode */
    bool showChildren;
+
+#ifdef HAVE_LIBELF
+   /* Bitfield of ELF binary properties */
+   elf_state_t elfState;
+   /* Optional Runpath */
+   char* elfRunpath;
+#endif
 
    /*
     * Internal time counts for showing new and exited processes.

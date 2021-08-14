@@ -46,9 +46,8 @@ in the source distribution for its full text.
    SECATTR = 123,                \
    AUTOGROUP_ID = 127,           \
    AUTOGROUP_NICE = 128,         \
-   ELF_TYPE = 129,               \
-   ELF_HARDENING = 130,          \
-   ELF_RUNPATH = 131,            \
+                                 \
+   DUMMY_BUMP_FIELD = ELF_RUNPATH, \
    // End of list
 
 
