@@ -14,21 +14,21 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
-#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "CRT.h"
 #include "Macros.h"
 #include "Platform.h"
 #include "Process.h"
+#include "ProcessList.h"
 #include "RichString.h"
 #include "XUtils.h"
 
 #include "pcp/PCPProcess.h"
+#include "pcp/PCPMetric.h"
 
 
 static bool PCPDynamicColumn_addMetric(PCPDynamicColumns* columns, PCPDynamicColumn* column) {
@@ -228,10 +228,10 @@ void PCPDynamicColumns_init(PCPDynamicColumns* columns) {
 
 void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, RichString* str) {
    const PCPProcess* pp = (const PCPProcess*) proc;
-   unsigned int type = Metric_type(this->id);
+   unsigned int type = PCPMetric_type(this->id);
 
    pmAtomValue atom;
-   if (!Metric_instance(this->id, proc->pid, pp->offset, &atom, type)) {
+   if (!PCPMetric_instance(this->id, proc->pid, pp->offset, &atom, type)) {
       RichString_appendAscii(str, CRT_colors[METER_VALUE_ERROR], "no data");
       return;
    }
@@ -288,11 +288,11 @@ int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, Pr
    const PCPDynamicColumn* column = Hashtable_get(p1->super.processList->dynamicColumns, key);
 
    size_t metric = column->id;
-   unsigned int type = Metric_type(metric);
+   unsigned int type = PCPMetric_type(metric);
 
    pmAtomValue atom1 = {0}, atom2 = {0};
-   if (!Metric_instance(metric, p1->super.pid, p1->offset, &atom1, type) ||
-       !Metric_instance(metric, p2->super.pid, p2->offset, &atom2, type)) {
+   if (!PCPMetric_instance(metric, p1->super.pid, p1->offset, &atom1, type) ||
+       !PCPMetric_instance(metric, p2->super.pid, p2->offset, &atom2, type)) {
       if (type == PM_TYPE_STRING) {
          free(atom1.cp);
          free(atom2.cp);

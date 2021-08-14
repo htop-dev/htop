@@ -1,8 +1,13 @@
 #ifndef HEADER_PCPDynamicMeter
 #define HEADER_PCPDynamicMeter
 
+#include <stddef.h>
+
 #include "CRT.h"
 #include "DynamicMeter.h"
+#include "Hashtable.h"
+#include "Meter.h"
+#include "RichString.h"
 
 
 typedef struct PCPDynamicMetric_ {

@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include "pcp/PCPProcessList.h"
 
+#include <assert.h>
 #include <limits.h>
 #include <math.h>
 #include <stdlib.h>
@@ -24,12 +25,13 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 
+#include "pcp/PCPMetric.h"
 #include "pcp/PCPProcess.h"
 
 
 static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
    ProcessList* pl = &(this->super);
-   pl->activeCPUs = Metric_instanceCount(PCP_PERCPU_SYSTEM);
+   pl->activeCPUs = PCPMetric_instanceCount(PCP_PERCPU_SYSTEM);
    unsigned int cpus = Platform_getMaxCPU();
    if (cpus == pl->existingCPUs)
       return;
@@ -54,7 +56,7 @@ static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
       return name;
 
    pmAtomValue value;
-   if (Metric_instance(PCP_PROC_ID_USER, pid, offset, &value, PM_TYPE_STRING)) {
+   if (PCPMetric_instance(PCP_PROC_ID_USER, pid, offset, &value, PM_TYPE_STRING)) {
       Hashtable_put(this->users, uid, value.cp);
       name = value.cp;
    }
@@ -90,49 +92,49 @@ void ProcessList_delete(ProcessList* pl) {
 
 static inline long Metric_instance_s32(int metric, int pid, int offset, long fallback) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_32))
+   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_32))
       return value.l;
    return fallback;
 }
 
 static inline long long Metric_instance_s64(int metric, int pid, int offset, long long fallback) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_64))
+   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_64))
       return value.l;
    return fallback;
 }
 
 static inline unsigned long Metric_instance_u32(int metric, int pid, int offset, unsigned long fallback) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U32))
+   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_U32))
       return value.ul;
    return fallback;
 }
 
 static inline unsigned long long Metric_instance_u64(int metric, int pid, int offset, unsigned long long fallback) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_U64))
       return value.ull;
    return fallback;
 }
 
 static inline unsigned long long Metric_instance_time(int metric, int pid, int offset) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_U64))
       return value.ull / 10;
    return 0;
 }
 
 static inline unsigned long long Metric_instance_ONE_K(int metric, int pid, int offset) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_U64))
       return value.ull / ONE_K;
    return ULLONG_MAX;
 }
 
 static inline char Metric_instance_char(int metric, int pid, int offset, char fallback) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_STRING)) {
+   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_STRING)) {
       char uchar = value.cp[0];
       free(value.cp);
       return uchar;
@@ -150,7 +152,7 @@ static void PCPProcessList_updateInfo(Process* process, int pid, int offset, cha
    PCPProcess* pp = (PCPProcess*) process;
    pmAtomValue value;
 
-   if (!Metric_instance(PCP_PROC_CMD, pid, offset, &value, PM_TYPE_STRING))
+   if (!PCPMetric_instance(PCP_PROC_CMD, pid, offset, &value, PM_TYPE_STRING))
       value.cp = xStrdup("<unknown>");
    String_safeStrncpy(command, value.cp, commLen);
    free(value.cp);
@@ -185,7 +187,7 @@ static void PCPProcessList_updateIO(PCPProcess* pp, int pid, int offset, unsigne
    pp->io_syscw = Metric_instance_u64(PCP_PROC_IO_SYSCW, pid, offset, ULLONG_MAX);
    pp->io_cancelled_write_bytes = Metric_instance_ONE_K(PCP_PROC_IO_CANCELLED, pid, offset);
 
-   if (Metric_instance(PCP_PROC_IO_READB, pid, offset, &value, PM_TYPE_U64)) {
+   if (PCPMetric_instance(PCP_PROC_IO_READB, pid, offset, &value, PM_TYPE_U64)) {
       unsigned long long last_read = pp->io_read_bytes;
       pp->io_read_bytes = value.ull / ONE_K;
       pp->io_rate_read_bps = ONE_K * (pp->io_read_bytes - last_read) /
@@ -195,7 +197,7 @@ static void PCPProcessList_updateIO(PCPProcess* pp, int pid, int offset, unsigne
       pp->io_rate_read_bps = NAN;
    }
 
-   if (Metric_instance(PCP_PROC_IO_WRITEB, pid, offset, &value, PM_TYPE_U64)) {
+   if (PCPMetric_instance(PCP_PROC_IO_WRITEB, pid, offset, &value, PM_TYPE_U64)) {
       unsigned long long last_write = pp->io_write_bytes;
       pp->io_write_bytes = value.ull;
       pp->io_rate_write_bps = ONE_K * (pp->io_write_bytes - last_write) /
@@ -237,20 +239,20 @@ static void PCPProcessList_readCtxtData(PCPProcess* pp, int pid, int offset) {
    pmAtomValue value;
    unsigned long ctxt = 0;
 
-   if (Metric_instance(PCP_PROC_VCTXSW, pid, offset, &value, PM_TYPE_U32))
+   if (PCPMetric_instance(PCP_PROC_VCTXSW, pid, offset, &value, PM_TYPE_U32))
       ctxt += value.ul;
-   if (Metric_instance(PCP_PROC_NVCTXSW, pid, offset, &value, PM_TYPE_U32))
+   if (PCPMetric_instance(PCP_PROC_NVCTXSW, pid, offset, &value, PM_TYPE_U32))
       ctxt += value.ul;
 
    pp->ctxt_diff = ctxt > pp->ctxt_total ? ctxt - pp->ctxt_total : 0;
    pp->ctxt_total = ctxt;
 }
 
-static char* setString(Metric metric, int pid, int offset, char* string) {
+static char* setString(PCPMetric metric, int pid, int offset, char* string) {
    if (string)
       free(string);
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_STRING))
+   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_STRING))
       string = value.cp;
    else
       string = NULL;
@@ -280,7 +282,7 @@ static void PCPProcessList_updateUsername(Process* process, int pid, int offset,
 
 static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, const char* comm) {
    pmAtomValue value;
-   if (!Metric_instance(PCP_PROC_PSARGS, pid, offset, &value, PM_TYPE_STRING)) {
+   if (!PCPMetric_instance(PCP_PROC_PSARGS, pid, offset, &value, PM_TYPE_STRING)) {
       if (process->state != 'Z')
          process->isKernelThread = true;
       Process_updateCmdline(process, NULL, 0, 0);
@@ -314,7 +316,7 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
 
    Process_updateComm(process, comm);
 
-   if (Metric_instance(PCP_PROC_EXE, pid, offset, &value, PM_TYPE_STRING)) {
+   if (PCPMetric_instance(PCP_PROC_EXE, pid, offset, &value, PM_TYPE_STRING)) {
       Process_updateExe(process, value.cp);
       free(value.cp);
    }
@@ -331,7 +333,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
    int pid = -1, offset = -1;
 
    /* for every process ... */
-   while (Metric_iterate(PCP_PROC_PID, &pid, &offset)) {
+   while (PCPMetric_iterate(PCP_PROC_PID, &pid, &offset)) {
 
       bool preExisting;
       Process* proc = ProcessList_getProcess(pl, pid, &preExisting, PCPProcess_new);
@@ -372,7 +374,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
 
       if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) &&
           (Process_isKernelThread(proc) == false)) {
-         if (Metric_enabled(PCP_PROC_SMAPS_PSS))
+         if (PCPMetric_enabled(PCP_PROC_SMAPS_PSS))
             PCPProcessList_updateSmaps(pp, pid, offset);
       }
 
@@ -452,30 +454,30 @@ static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
    super->usedSwap = super->totalSwap = super->sharedMem = 0;
 
    pmAtomValue value;
-   if (Metric_values(PCP_MEM_TOTAL, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_TOTAL, &value, 1, PM_TYPE_U64) != NULL)
       super->totalMem = value.ull;
-   if (Metric_values(PCP_MEM_FREE, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_FREE, &value, 1, PM_TYPE_U64) != NULL)
       freeMem = value.ull;
-   if (Metric_values(PCP_MEM_BUFFERS, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_BUFFERS, &value, 1, PM_TYPE_U64) != NULL)
       super->buffersMem = value.ull;
-   if (Metric_values(PCP_MEM_SRECLAIM, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_SRECLAIM, &value, 1, PM_TYPE_U64) != NULL)
       sreclaimableMem = value.ull;
-   if (Metric_values(PCP_MEM_SHARED, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_SHARED, &value, 1, PM_TYPE_U64) != NULL)
       super->sharedMem = value.ull;
-   if (Metric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL)
       super->cachedMem = value.ull + sreclaimableMem - super->sharedMem;
    const memory_t usedDiff = freeMem + super->cachedMem + sreclaimableMem + super->buffersMem;
    super->usedMem = (super->totalMem >= usedDiff) ?
            super->totalMem - usedDiff : super->totalMem - freeMem;
-   if (Metric_values(PCP_MEM_AVAILABLE, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_AVAILABLE, &value, 1, PM_TYPE_U64) != NULL)
       super->availableMem = MINIMUM(value.ull, super->totalMem);
    else
       super->availableMem = freeMem;
-   if (Metric_values(PCP_MEM_SWAPFREE, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_SWAPFREE, &value, 1, PM_TYPE_U64) != NULL)
       swapFreeMem = value.ull;
-   if (Metric_values(PCP_MEM_SWAPTOTAL, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_SWAPTOTAL, &value, 1, PM_TYPE_U64) != NULL)
       super->totalSwap = value.ull;
-   if (Metric_values(PCP_MEM_SWAPCACHED, &value, 1, PM_TYPE_U64) != NULL)
+   if (PCPMetric_values(PCP_MEM_SWAPCACHED, &value, 1, PM_TYPE_U64) != NULL)
       super->cachedSwap = value.ull;
    super->usedSwap = super->totalSwap - swapFreeMem - super->cachedSwap;
 }
@@ -547,26 +549,26 @@ static void PCPProcessList_deriveCPUTime(pmAtomValue* values) {
    PCPProcessList_saveCPUTimePeriod(values, CPU_TOTAL_PERIOD, totaltime);
 }
 
-static void PCPProcessList_updateAllCPUTime(PCPProcessList* this, Metric metric, CPUMetric cpumetric)
+static void PCPProcessList_updateAllCPUTime(PCPProcessList* this, PCPMetric metric, CPUMetric cpumetric)
 {
    pmAtomValue* value = &this->cpu[cpumetric];
-   if (Metric_values(metric, value, 1, PM_TYPE_U64) == NULL)
+   if (PCPMetric_values(metric, value, 1, PM_TYPE_U64) == NULL)
       memset(&value, 0, sizeof(pmAtomValue));
 }
 
-static void PCPProcessList_updatePerCPUTime(PCPProcessList* this, Metric metric, CPUMetric cpumetric)
+static void PCPProcessList_updatePerCPUTime(PCPProcessList* this, PCPMetric metric, CPUMetric cpumetric)
 {
    int cpus = this->super.existingCPUs;
-   if (Metric_values(metric, this->values, cpus, PM_TYPE_U64) == NULL)
+   if (PCPMetric_values(metric, this->values, cpus, PM_TYPE_U64) == NULL)
       memset(this->values, 0, cpus * sizeof(pmAtomValue));
    for (int i = 0; i < cpus; i++)
       this->percpu[i][cpumetric].ull = this->values[i].ull;
 }
 
-static void PCPProcessList_updatePerCPUReal(PCPProcessList* this, Metric metric, CPUMetric cpumetric)
+static void PCPProcessList_updatePerCPUReal(PCPProcessList* this, PCPMetric metric, CPUMetric cpumetric)
 {
    int cpus = this->super.existingCPUs;
-   if (Metric_values(metric, this->values, cpus, PM_TYPE_DOUBLE) == NULL)
+   if (PCPMetric_values(metric, this->values, cpus, PM_TYPE_DOUBLE) == NULL)
       memset(this->values, 0, cpus * sizeof(pmAtomValue));
    for (int i = 0; i < cpus; i++)
       this->percpu[i][cpumetric].d = this->values[i].d;
@@ -579,27 +581,27 @@ static inline void PCPProcessList_scanZfsArcstats(PCPProcessList* this) {
    pmAtomValue value;
 
    memset(&this->zfs, 0, sizeof(ZfsArcStats));
-   if (Metric_values(PCP_ZFS_ARC_ANON_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_ANON_SIZE, &value, 1, PM_TYPE_U64))
       this->zfs.anon = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_C_MAX, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_C_MAX, &value, 1, PM_TYPE_U64))
       this->zfs.max = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_BONUS_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_BONUS_SIZE, &value, 1, PM_TYPE_U64))
       bonusSize = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_DBUF_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_DBUF_SIZE, &value, 1, PM_TYPE_U64))
       dbufSize = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_DNODE_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_DNODE_SIZE, &value, 1, PM_TYPE_U64))
       dnodeSize = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_COMPRESSED_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_COMPRESSED_SIZE, &value, 1, PM_TYPE_U64))
       this->zfs.compressed = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_UNCOMPRESSED_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_UNCOMPRESSED_SIZE, &value, 1, PM_TYPE_U64))
       this->zfs.uncompressed = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_HDR_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_HDR_SIZE, &value, 1, PM_TYPE_U64))
       this->zfs.header = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_MFU_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_MFU_SIZE, &value, 1, PM_TYPE_U64))
       this->zfs.MFU = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_MRU_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_MRU_SIZE, &value, 1, PM_TYPE_U64))
       this->zfs.MRU = value.ull / ONE_K;
-   if (Metric_values(PCP_ZFS_ARC_SIZE, &value, 1, PM_TYPE_U64))
+   if (PCPMetric_values(PCP_ZFS_ARC_SIZE, &value, 1, PM_TYPE_U64))
       this->zfs.size = value.ull / ONE_K;
 
    this->zfs.other = (dbufSize + dnodeSize + bonusSize) / ONE_K;
@@ -651,34 +653,34 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    bool enabled = !pauseProcessUpdate;
 
    bool flagged = settings->showCPUFrequency;
-   Metric_enable(PCP_HINV_CPUCLOCK, flagged);
+   PCPMetric_enable(PCP_HINV_CPUCLOCK, flagged);
 
    /* In pause mode do not sample per-process metric values at all */
    for (int metric = PCP_PROC_PID; metric < PCP_METRIC_COUNT; metric++)
-      Metric_enable(metric, enabled);
+      PCPMetric_enable(metric, enabled);
 
    flagged = settings->flags & PROCESS_FLAG_LINUX_CGROUP;
-   Metric_enable(PCP_PROC_CGROUPS, flagged && enabled);
+   PCPMetric_enable(PCP_PROC_CGROUPS, flagged && enabled);
    flagged = settings->flags & PROCESS_FLAG_LINUX_OOM;
-   Metric_enable(PCP_PROC_OOMSCORE, flagged && enabled);
+   PCPMetric_enable(PCP_PROC_OOMSCORE, flagged && enabled);
    flagged = settings->flags & PROCESS_FLAG_LINUX_CTXT;
-   Metric_enable(PCP_PROC_VCTXSW, flagged && enabled);
-   Metric_enable(PCP_PROC_NVCTXSW, flagged && enabled);
+   PCPMetric_enable(PCP_PROC_VCTXSW, flagged && enabled);
+   PCPMetric_enable(PCP_PROC_NVCTXSW, flagged && enabled);
    flagged = settings->flags & PROCESS_FLAG_LINUX_SECATTR;
-   Metric_enable(PCP_PROC_LABELS, flagged && enabled);
+   PCPMetric_enable(PCP_PROC_LABELS, flagged && enabled);
    flagged = settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP;
-   Metric_enable(PCP_PROC_AUTOGROUP_ID, flagged && enabled);
-   Metric_enable(PCP_PROC_AUTOGROUP_NICE, flagged && enabled);
+   PCPMetric_enable(PCP_PROC_AUTOGROUP_ID, flagged && enabled);
+   PCPMetric_enable(PCP_PROC_AUTOGROUP_NICE, flagged && enabled);
 
    /* Sample smaps metrics on every second pass to improve performance */
    static int smaps_flag;
    smaps_flag = !!smaps_flag;
-   Metric_enable(PCP_PROC_SMAPS_PSS, smaps_flag && enabled);
-   Metric_enable(PCP_PROC_SMAPS_SWAP, smaps_flag && enabled);
-   Metric_enable(PCP_PROC_SMAPS_SWAPPSS, smaps_flag && enabled);
+   PCPMetric_enable(PCP_PROC_SMAPS_PSS, smaps_flag && enabled);
+   PCPMetric_enable(PCP_PROC_SMAPS_SWAP, smaps_flag && enabled);
+   PCPMetric_enable(PCP_PROC_SMAPS_SWAPPSS, smaps_flag && enabled);
 
    struct timeval timestamp;
-   Metric_fetch(&timestamp);
+   PCPMetric_fetch(&timestamp);
 
    double sample = this->timestamp;
    this->timestamp = pmtimevalToReal(&timestamp);
@@ -698,7 +700,7 @@ bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
    (void) super;
 
    pmAtomValue value;
-   if (Metric_instance(PCP_PERCPU_SYSTEM, id, id, &value, PM_TYPE_U32))
+   if (PCPMetric_instance(PCP_PERCPU_SYSTEM, id, id, &value, PM_TYPE_U32))
       return true;
    return false;
 }

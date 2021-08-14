@@ -366,6 +366,7 @@ pcp_platform_headers = \
 	linux/ZramStats.h \
 	pcp/PCPDynamicColumn.h \
 	pcp/PCPDynamicMeter.h \
+	pcp/PCPMetric.h \
 	pcp/PCPProcess.h \
 	pcp/PCPProcessList.h \
 	pcp/Platform.h \
@@ -379,6 +380,7 @@ pcp_platform_sources = \
 	linux/ZramMeter.c \
 	pcp/PCPDynamicColumn.c \
 	pcp/PCPDynamicMeter.c \
+	pcp/PCPMetric.c \
 	pcp/PCPProcess.c \
 	pcp/PCPProcessList.c \
 	pcp/Platform.c \

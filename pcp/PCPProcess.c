@@ -15,7 +15,6 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Macros.h"
-#include "Platform.h"
 #include "Process.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
