@@ -59,6 +59,10 @@ in the source distribution for its full text.
 #include "LibSensors.h"
 #endif
 
+#ifdef HAVE_LIBELF
+#include "ELF.h"
+#endif
+
 
 static long long btime = -1;
 
@@ -1512,6 +1516,12 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
             }
          }
       }
+
+      #ifdef HAVE_LIBELF
+      if ((settings->flags & PROCESS_FLAG_ELF) && (!(proc->elfState & ELF_FLAG_SCANNED) || proc->mergedCommand.exeChanged)) {
+         ELF_readData(proc, procFd);
+      }
+      #endif
 
       #ifdef HAVE_DELAYACCT
       if (settings->flags & PROCESS_FLAG_LINUX_DELAYACCT) {

@@ -102,6 +102,11 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [AUTOGROUP_ID] = { .name = "AUTOGROUP_ID", .title = "AGRP", .description = "The autogroup identifier of the process", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
    [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
+#ifdef HAVE_LIBELF
+   [ELF_TYPE] = { .name = "ELF_TYPE", .title = "ELF TYPE ", .description = "Elf binary type", .flags = PROCESS_FLAG_ELF, },
+   [ELF_HARDENING] = { .name = "ELF_HARDENING", .title = "Hardening            ", .description = "Elf binary hardening options", .flags = PROCESS_FLAG_ELF, .defaultSortDesc = true, },
+   [ELF_RUNPATH] = { .name = "ELF_RUNPATH", .title = "Runpath                        ", .description = "Elf binary runpath", .flags = PROCESS_FLAG_ELF, },
+#endif
 };
 
 Process* LinuxProcess_new(const Settings* settings) {

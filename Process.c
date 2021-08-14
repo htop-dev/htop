@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 
 #include "CRT.h"
+#include "ELF.h"
 #include "Macros.h"
 #include "Platform.h"
 #include "ProcessList.h"
@@ -905,6 +906,23 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 
       xSnprintf(buffer, n, "%-9d ", this->st_uid);
       break;
+#ifdef HAVE_LIBELF
+   case ELF_TYPE:
+      xSnprintf(buffer, n, "%-8s ", (this->elfState & ELF_32_BIT) ? "32 bit" : ((this->elfState & ELF_64_BIT) ? "64 bit" : "N/A"));
+      if (this->elfState & ELF_FLAG_NO_ACCESS)
+         attr = CRT_colors[PROCESS_SHADOW];
+      break;
+   case ELF_HARDENING:
+      ELF_writeHardeningField(str, this->elfState);
+      return;
+   case ELF_RUNPATH:
+      snprintf(buffer, n, "%-30.30s ", this->elfRunpath ? this->elfRunpath : "(none)");
+      if (!this->elfRunpath)
+         attr = CRT_colors[PROCESS_SHADOW];
+      else if (this->procExe && !String_startsWith(this->procExe, this->elfRunpath))
+         attr = CRT_colors[FAILED_READ];
+      break;
+#endif
    default:
       if (DynamicColumn_writeField(this, str, field))
          return;
@@ -948,6 +966,9 @@ void Process_done(Process* this) {
    free(this->procCwd);
    free(this->mergedCommand.str);
    free(this->tty_name);
+#ifdef HAVE_LIBELF
+   free(this->elfRunpath);
+#endif
 }
 
 /* This function returns the string displayed in Command column, so that sorting
@@ -1085,6 +1106,18 @@ static uint8_t stateCompareValue(char state) {
    }
 }
 
+#ifdef HAVE_LIBELF
+static int sortElfType(elf_state_t es) {
+   if (es & ELF_32_BIT)
+      return 2;
+
+   if (es & ELF_64_BIT)
+      return 1;
+
+   return 0;
+}
+#endif
+
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
    int r;
 
@@ -1153,6 +1186,14 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       return SPACESHIP_DEFAULTSTR(p1->tty_name, p2->tty_name, "\x7F");
    case USER:
       return SPACESHIP_NULLSTR(p1->user, p2->user);
+#ifdef HAVE_LIBELF
+   case ELF_TYPE:
+      return SPACESHIP_NUMBER(sortElfType(p1->elfState), sortElfType(p2->elfState));
+   case ELF_HARDENING:
+      return SPACESHIP_NUMBER(p1->elfState, p2->elfState);
+   case ELF_RUNPATH:
+      return SPACESHIP_NULLSTR(p1->elfRunpath, p2->elfRunpath);
+#endif
    default:
       assert(0 && "Process_compareByKey_Base: default key reached"); /* should never be reached */
       return SPACESHIP_NUMBER(p1->pid, p2->pid);

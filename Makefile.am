@@ -41,8 +41,10 @@ myhtopsources = \
 	DisplayOptionsPanel.c \
 	DynamicColumn.c \
 	DynamicMeter.c \
+	ELF.c \
 	EnvScreen.c \
 	FunctionBar.c \
+	GenericHashtable.c \
 	Hashtable.c \
 	Header.c \
 	HostnameMeter.c \
@@ -97,8 +99,10 @@ myhtopheaders = \
 	DisplayOptionsPanel.h \
 	DynamicColumn.h \
 	DynamicMeter.h \
+	ELF.h \
 	EnvScreen.h \
 	FunctionBar.h \
+	GenericHashtable.h \
 	Hashtable.h \
 	Header.h \
 	HostnameMeter.h \
