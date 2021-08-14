@@ -67,7 +67,7 @@ struct Panel_ {
    int selectedLen;
    void* eventHandlerState;
    int scrollV;
-   short scrollH;
+   int scrollH;
    bool needsRedraw;
    bool wasFocus;
    FunctionBar* currentBar;
