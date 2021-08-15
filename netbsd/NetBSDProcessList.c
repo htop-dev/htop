@@ -281,7 +281,7 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
          proc->session = kproc->p_sid;
          proc->tty_nr = kproc->p_tdev;
          proc->pgrp = kproc->p__pgid;
-         proc->isKernelThread = proc->pgrp == 0;
+         proc->isKernelThread = !!(kproc->p_flag & P_SYSTEM);
          proc->isUserlandThread = proc->pid != proc->tgid;
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
