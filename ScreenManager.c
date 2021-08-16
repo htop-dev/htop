@@ -88,7 +88,7 @@ void ScreenManager_resize(ScreenManager* this) {
    Panel_move(panel, lastX, y1_header);
 }
 
-static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut) {
+static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut, bool *force_redraw) {
    ProcessList* pl = this->header->pl;
 
    Platform_gettime_realtime(&pl->realtime, &pl->realtimeMs);
@@ -103,6 +103,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
 
    if (*rescan) {
       *oldTime = newTime;
+      int oldUidDigits = Process_uidDigits;
       // scan processes first - some header values are calculated there
       ProcessList_scan(pl, this->state->pauseProcessUpdate);
       // always update header, especially to avoid gaps in graph meters
@@ -110,6 +111,10 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       if (!this->state->pauseProcessUpdate && (*sortTimeout == 0 || this->settings->treeView)) {
          ProcessList_sort(pl);
          *sortTimeout = 1;
+      }
+      // force redraw if the number of UID digits was changed
+      if (Process_uidDigits != oldUidDigits) {
+         *force_redraw = true;
       }
       *redraw = true;
    }
@@ -153,7 +158,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
 
    while (!quit) {
       if (this->header) {
-         checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut);
+         checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut, &force_redraw);
       }
 
       if (redraw || force_redraw) {

@@ -105,13 +105,19 @@ static const char* alignedProcessFieldTitle(const ProcessList* this, ProcessFiel
    if (!title)
       return "- ";
 
-   if (!Process_fields[field].pidColumn)
-      return title;
+   if (Process_fields[field].pidColumn) {
+      static char titleBuffer[PROCESS_MAX_PID_DIGITS + sizeof(" ")];
+      xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_pidDigits, title);
+      return titleBuffer;
+   }
 
-   static char titleBuffer[PROCESS_MAX_PID_DIGITS + /* space */ 1 + /* null-terminator */ + 1];
-   xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_pidDigits, title);
+   if (field == ST_UID) {
+      static char titleBuffer[PROCESS_MAX_UID_DIGITS + sizeof(" ")];
+      xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_uidDigits, title);
+      return titleBuffer;
+   }
 
-   return titleBuffer;
+   return title;
 }
 
 void ProcessList_printHeader(const ProcessList* this, RichString* header) {
@@ -626,9 +632,14 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
 
    ProcessList_goThroughEntries(this, false);
 
+   uid_t maxUid = 0;
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
       Process_makeCommandStr(p);
+
+      // keep track of the highest UID for column scaling
+      if (p->st_uid > maxUid)
+         maxUid = p->st_uid;
 
       if (p->tombStampMs > 0) {
          // remove tombed process
@@ -646,6 +657,9 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
          }
       }
    }
+
+   // Set UID column width based on max UID.
+   Process_setUidColumnWidth(maxUid);
 
    if (this->settings->treeView) {
       // Clear out the hashtable to avoid any left-over processes from previous build
