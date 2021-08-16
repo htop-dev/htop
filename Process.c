@@ -41,15 +41,31 @@ static const char* const kthreadID = "KTHREAD";
 
 static uid_t Process_getuid = (uid_t)-1;
 
-int Process_pidDigits = 7;
+int Process_pidDigits = PROCESS_MIN_PID_DIGITS;
+int Process_uidDigits = PROCESS_MIN_UID_DIGITS;
 
 void Process_setupColumnWidths() {
    int maxPid = Platform_getMaxPid();
    if (maxPid == -1)
       return;
 
+   if (maxPid < (int)pow(10, PROCESS_MIN_PID_DIGITS)) {
+      Process_pidDigits = PROCESS_MIN_PID_DIGITS;
+      return;
+   }
+
    Process_pidDigits = ceil(log10(maxPid));
    assert(Process_pidDigits <= PROCESS_MAX_PID_DIGITS);
+}
+
+void Process_setUidColumnWidth(uid_t maxUid) {
+   if (maxUid < (uid_t)pow(10, PROCESS_MIN_UID_DIGITS)) {
+      Process_uidDigits = PROCESS_MIN_UID_DIGITS;
+      return;
+   }
+
+   Process_uidDigits = ceil(log10(maxUid));
+   assert(Process_uidDigits <= PROCESS_MAX_UID_DIGITS);
 }
 
 void Process_printBytes(RichString* str, unsigned long long number, bool coloring) {
@@ -885,7 +901,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
             break;
       }
       break;
-   case ST_UID: xSnprintf(buffer, n, "%5d ", this->st_uid); break;
+   case ST_UID: xSnprintf(buffer, n, "%*d ", Process_uidDigits, this->st_uid); break;
    case TIME: Process_printTime(str, this->time, coloring); return;
    case TGID:
       if (this->tgid == this->pid)
@@ -908,11 +924,11 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
          attr = CRT_colors[PROCESS_SHADOW];
 
       if (this->user) {
-         Process_printLeftAlignedField(str, attr, this->user, 9);
+         Process_printLeftAlignedField(str, attr, this->user, 10);
          return;
       }
 
-      xSnprintf(buffer, n, "%-9d ", this->st_uid);
+      xSnprintf(buffer, n, "%-10d ", this->st_uid);
       break;
    default:
       if (DynamicColumn_writeField(this, str, field))
