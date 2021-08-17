@@ -396,15 +396,15 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    }
 }
 
-int Platform_getMaxCPU(void) {
+unsigned int Platform_getMaxCPU(void) {
    if (pcp->ncpu)
       return pcp->ncpu;
 
    pmAtomValue value;
-   if (PCPMetric_values(PCP_HINV_NCPU, &value, 1, PM_TYPE_32) != NULL)
-      pcp->ncpu = value.l;
+   if (PCPMetric_values(PCP_HINV_NCPU, &value, 1, PM_TYPE_U32) != NULL)
+      pcp->ncpu = value.ul;
    else
-      pcp->ncpu = -1;
+      pcp->ncpu = 1;
    return pcp->ncpu;
 }
 
