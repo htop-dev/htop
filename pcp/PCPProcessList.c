@@ -35,7 +35,7 @@ static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
    unsigned int cpus = Platform_getMaxCPU();
    if (cpus == pl->existingCPUs)
       return;
-   if (cpus <= 0)
+   if (cpus == 0)
       cpus = pl->activeCPUs;
    if (cpus <= 1)
       cpus = pl->activeCPUs = 1;

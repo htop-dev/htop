@@ -174,8 +174,9 @@ static Htop_Reaction actionSetSortColumn(State* st) {
       char* name = NULL;
       if (fields[i] >= LAST_PROCESSFIELD) {
          DynamicColumn* column = Hashtable_get(dynamicColumns, fields[i]);
-         if (column)
-            name = xStrdup(column->caption ? column->caption : column->name);
+         if (!column)
+            continue;
+         name = xStrdup(column->caption ? column->caption : column->name);
       } else {
          name = String_trim(Process_fields[fields[i]].name);
       }

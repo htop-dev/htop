@@ -54,7 +54,7 @@ typedef struct Platform_ {
    long long btime;           /* boottime in seconds since the epoch */
    char* release;             /* uname and distro from this context */
    int pidmax;                /* maximum platform process identifier */
-   int ncpu;                  /* maximum processor count configured */
+   unsigned int ncpu;         /* maximum processor count configured */
 } Platform;
 
 extern ProcessField Platform_defaultFields[];
@@ -79,7 +79,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 long long Platform_getBootTime(void);
 
-int Platform_getMaxCPU(void);
+unsigned int Platform_getMaxCPU(void);
 
 int Platform_getMaxPid(void);
 
