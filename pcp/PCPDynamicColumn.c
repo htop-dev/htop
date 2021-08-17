@@ -287,6 +287,9 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
 int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, ProcessField key) {
    const PCPDynamicColumn* column = Hashtable_get(p1->super.processList->dynamicColumns, key);
 
+   if (column == NULL)
+      return -1;
+
    size_t metric = column->id;
    unsigned int type = PCPMetric_type(metric);
 
