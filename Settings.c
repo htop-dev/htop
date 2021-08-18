@@ -153,12 +153,13 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       return false;
 
    bool didReadMeters = false;
-   bool didReadFields = false;
+   bool didReadAny = false;
    for (;;) {
       char* line = String_readLine(fd);
       if (!line) {
          break;
       }
+      didReadAny = true;
       size_t nOptions;
       char** option = String_split(line, '=', &nOptions);
       free (line);
@@ -168,7 +169,6 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       }
       if (String_eq(option[0], "fields")) {
          Settings_readFields(this, option[1]);
-         didReadFields = true;
       } else if (String_eq(option[0], "sort_key")) {
          // This "+1" is for compatibility with the older enum format.
          this->sortKey = atoi(option[1]) + 1;
@@ -275,7 +275,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
    if (!didReadMeters) {
       Settings_defaultMeters(this, initialCpuCount);
    }
-   return didReadFields;
+   return didReadAny;
 }
 
 static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns, const char* name) {
@@ -398,13 +398,13 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    this->treeDirection = 1;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
-   this->hideKernelThreads = false;
+   this->hideKernelThreads = true;
    this->hideUserlandThreads = false;
    this->treeView = false;
    this->allBranchesCollapsed = false;
    this->highlightBaseName = false;
    this->highlightDeletedExe = true;
-   this->highlightMegabytes = false;
+   this->highlightMegabytes = true;
    this->detailedCPUTime = false;
    this->countCPUsFromOne = false;
    this->showCPUUsage = true;
@@ -422,6 +422,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    this->stripExeFromCmdline = true;
    this->showMergedCommand = false;
    this->hideFunctionBar = 0;
+   this->headerMargin = true;
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
@@ -490,17 +491,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    }
    if (!ok) {
       this->changed = true;
-      ok = Settings_read(this, SYSCONFDIR "/htoprc", initialCpuCount);
-   }
-   if (!ok) {
-      Settings_defaultMeters(this, initialCpuCount);
-      this->hideKernelThreads = true;
-      this->highlightMegabytes = true;
-      this->highlightThreads = true;
-      this->findCommInCmdline = true;
-      this->stripExeFromCmdline = true;
-      this->showMergedCommand = false;
-      this->headerMargin = true;
+      Settings_read(this, SYSCONFDIR "/htoprc", initialCpuCount);
    }
    return this;
 }
