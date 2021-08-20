@@ -269,6 +269,20 @@ ERROR_A:
    Process_updateCmdline(proc, k->kp_proc.p_comm, 0, strlen(k->kp_proc.p_comm));
 }
 
+// Converts ticks in the Mach "timebase" to nanoseconds.
+// See `mach_timebase_info`, as used to define the `Platform_timebaseToNS` constant.
+static uint64_t machTicksToNanoseconds(uint64_t schedulerTicks) {
+   double nanoseconds_per_mach_tick = Platform_timebaseToNS;
+   return (uint64_t) (nanoseconds_per_mach_tick * (double) schedulerTicks);
+}
+
+// Converts nanoseconds to hundreths of a second (centiseconds) as needed by the "time" field of the Process struct.
+static long long int nanosecondsToCentiseconds(uint64_t nanoseconds) {
+   uint64_t centiseconds_per_second = 100;
+   uint64_t nanoseconds_per_second = 1e9;
+   return nanoseconds / nanoseconds_per_second * centiseconds_per_second;
+}
+
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists) {
    DarwinProcess* dp = (DarwinProcess*)proc;
 
@@ -330,21 +344,25 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    proc->updated = true;
 }
 
-void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double time_interval) {
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double time_interval_ns) {
    struct proc_taskinfo pti;
 
    if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-      uint64_t total_existing_time = proc->stime + proc->utime;
-      uint64_t total_current_time = pti.pti_total_system + pti.pti_total_user;
+      uint64_t total_existing_time_ns = proc->stime + proc->utime;
 
-      if (total_existing_time && 1E-6 < time_interval) {
-         uint64_t total_time_diff = total_current_time - total_existing_time;
-         proc->super.percent_cpu = ((double)total_time_diff / time_interval) * 100.0;
+      uint64_t user_time_ns = machTicksToNanoseconds(pti.pti_total_user);
+      uint64_t system_time_ns = machTicksToNanoseconds(pti.pti_total_system);
+
+      uint64_t total_current_time_ns = user_time_ns + system_time_ns;
+
+      if (total_existing_time_ns && 1E-6 < time_interval_ns) {
+         uint64_t total_time_diff_ns = total_current_time_ns - total_existing_time_ns;
+         proc->super.percent_cpu = ((double)total_time_diff_ns / time_interval_ns) * 100.0;
       } else {
          proc->super.percent_cpu = 0.0;
       }
 
-      proc->super.time = total_current_time / 10000000;
+      proc->super.time = nanosecondsToCentiseconds(total_current_time_ns);
       proc->super.nlwp = pti.pti_threadnum;
       proc->super.m_virt = pti.pti_virtual_size / ONE_K;
       proc->super.m_resident = pti.pti_resident_size / ONE_K;
@@ -352,8 +370,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
       proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
                               / (double)dpl->host_info.max_mem;
 
-      proc->stime = pti.pti_total_system;
-      proc->utime = pti.pti_total_user;
+      proc->stime = system_time_ns;
+      proc->utime = user_time_ns;
 
       dpl->super.kernelThreads += 0; /*pti.pti_threads_system;*/
       dpl->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
