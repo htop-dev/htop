@@ -84,14 +84,13 @@ const PanelClass ColorsPanel_class = {
    .eventHandler = ColorsPanel_eventHandler
 };
 
-ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
+ColorsPanel* ColorsPanel_new(Settings* settings) {
    ColorsPanel* this = AllocThis(ColorsPanel);
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(ColorsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true, fuBar);
 
    this->settings = settings;
-   this->scr = scr;
 
    assert(ARRAYSIZE(ColorSchemeNames) == LAST_COLORSCHEME + 1);
 

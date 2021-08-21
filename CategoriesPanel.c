@@ -50,7 +50,7 @@ static void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {
 }
 
 static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
-   Panel* colors = (Panel*) ColorsPanel_new(this->settings, this->scr);
+   Panel* colors = (Panel*) ColorsPanel_new(this->settings);
    ScreenManager_add(this->scr, colors, -1);
 }
 

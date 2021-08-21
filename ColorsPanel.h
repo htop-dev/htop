@@ -16,11 +16,10 @@ typedef struct ColorsPanel_ {
    Panel super;
 
    Settings* settings;
-   ScreenManager* scr;
 } ColorsPanel;
 
 extern const PanelClass ColorsPanel_class;
 
-ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr);
+ColorsPanel* ColorsPanel_new(Settings* settings);
 
 #endif
