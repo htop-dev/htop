@@ -39,7 +39,7 @@ void ScreenManager_add(ScreenManager* this, Panel* item, int size);
 
 Panel* ScreenManager_remove(ScreenManager* this, int idx);
 
-void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2);
+void ScreenManager_resize(ScreenManager* this);
 
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey);
 
