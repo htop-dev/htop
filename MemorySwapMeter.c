@@ -33,12 +33,10 @@ static void MemorySwapMeter_updateValues(Meter* this) {
 static void MemorySwapMeter_draw(Meter* this, int x, int y, int w) {
    MemorySwapMeterData* data = this->meterData;
 
-   int colwidth = (w - 2) / 2 + 1;
-
    assert(data->memoryMeter->draw);
-   data->memoryMeter->draw(data->memoryMeter, x, y, colwidth);
+   data->memoryMeter->draw(data->memoryMeter, x, y, w / 2);
    assert(data->swapMeter->draw);
-   data->swapMeter->draw(data->swapMeter, x + w / 2, y, colwidth);
+   data->swapMeter->draw(data->swapMeter, x + w / 2, y, w - w / 2);
 }
 
 static void MemorySwapMeter_init(Meter* this) {
