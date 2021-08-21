@@ -49,7 +49,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    ColorsPanel* this = (ColorsPanel*) super;
 
    HandlerResult result = IGNORED;
-   int mark = Panel_getSelectedIndex(super);
+   int mark;
 
    switch(ch) {
    case 0x0a:
@@ -58,6 +58,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    case KEY_MOUSE:
    case KEY_RECLICK:
    case ' ':
+      mark = Panel_getSelectedIndex(super);
       assert(mark >= 0);
       assert(mark < LAST_COLORSCHEME);
       for (int i = 0; ColorSchemeNames[i] != NULL; i++)
