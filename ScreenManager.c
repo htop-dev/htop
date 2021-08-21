@@ -27,7 +27,7 @@ ScreenManager* ScreenManager_new(Header* header, const Settings* settings, const
    ScreenManager* this;
    this = xMalloc(sizeof(ScreenManager));
    this->x1 = 0;
-   this->y1 = header->height;
+   this->y1 = 0;
    this->x2 = 0;
    this->y2 = -1;
    this->panels = Vector_new(Class(Panel), owner, DEFAULT_SIZE);
@@ -54,13 +54,13 @@ void ScreenManager_add(ScreenManager* this, Panel* item, int size) {
       const Panel* last = (const Panel*) Vector_get(this->panels, this->panelCount - 1);
       lastX = last->x + last->w + 1;
    }
-   int height = LINES - this->y1 + this->y2;
+   int height = LINES - this->y1 - (this->header ? this->header->height : 0) + this->y2;
    if (size > 0) {
       Panel_resize(item, size, height);
    } else {
       Panel_resize(item, COLS - this->x1 + this->x2 - lastX, height);
    }
-   Panel_move(item, lastX, this->y1);
+   Panel_move(item, lastX, this->y1 + (this->header ? this->header->height : 0));
    Vector_add(this->panels, item);
    item->needsRedraw = true;
    this->panelCount++;
@@ -73,22 +73,19 @@ Panel* ScreenManager_remove(ScreenManager* this, int idx) {
    return panel;
 }
 
-void ScreenManager_resize(ScreenManager* this, int x1, int y1, int x2, int y2) {
-   this->x1 = x1;
-   this->y1 = y1;
-   this->x2 = x2;
-   this->y2 = y2;
+void ScreenManager_resize(ScreenManager* this) {
+   int y1_header = this->y1 + (this->header ? this->header->height : 0);
    int panels = this->panelCount;
    int lastX = 0;
    for (int i = 0; i < panels - 1; i++) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);
-      Panel_resize(panel, panel->w, LINES - y1 + y2);
-      Panel_move(panel, lastX, y1);
+      Panel_resize(panel, panel->w, LINES - y1_header + this->y2);
+      Panel_move(panel, lastX, y1_header);
       lastX = panel->x + panel->w + 1;
    }
    Panel* panel = (Panel*) Vector_get(this->panels, panels - 1);
-   Panel_resize(panel, COLS - x1 + x2 - lastX, LINES - y1 + y2);
-   Panel_move(panel, lastX, y1);
+   Panel_resize(panel, COLS - this->x1 + this->x2 - lastX, LINES - y1_header + this->y2);
+   Panel_move(panel, lastX, y1_header);
 }
 
 static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut) {
@@ -260,7 +257,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       switch (ch) {
       case KEY_RESIZE:
       {
-         ScreenManager_resize(this, this->x1, this->y1, this->x2, this->y2);
+         ScreenManager_resize(this);
          continue;
       }
       case KEY_LEFT:
