@@ -30,6 +30,7 @@ typedef enum {
    HTOP_QUIT            = 0x10,
    HTOP_REDRAW_BAR      = 0x20,
    HTOP_UPDATE_PANELHDR = 0x40 | HTOP_REFRESH,
+   HTOP_RESIZE          = 0x80 | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR,
 } Htop_Reaction;
 
 struct MainPanel_;

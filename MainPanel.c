@@ -112,6 +112,9 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (reaction & HTOP_REDRAW_BAR) {
       MainPanel_updateTreeFunctions(this, this->state->settings->treeView);
    }
+   if (reaction & HTOP_RESIZE) {
+      result |= RESIZE;
+   }
    if (reaction & HTOP_UPDATE_PANELHDR) {
       result |= REDRAW;
    }

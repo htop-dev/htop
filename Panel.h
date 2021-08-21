@@ -26,7 +26,8 @@ typedef enum HandlerResult_ {
    REFRESH     = 0x08,
    REDRAW      = 0x10,
    RESCAN      = 0x20,
-   SYNTH_KEY   = 0x40,
+   RESIZE      = 0x40,
+   SYNTH_KEY   = 0x80,
 } HandlerResult;
 
 #define EVENT_SET_SELECTED (-1)

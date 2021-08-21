@@ -243,6 +243,10 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       if (result & REDRAW) {
          force_redraw = true;
       }
+      if (result & RESIZE) {
+         ScreenManager_resize(this);
+         force_redraw = true;
+      }
       if (result & RESCAN) {
          rescan = true;
          sortTimeout = 0;
