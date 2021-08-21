@@ -1961,6 +1961,9 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
    }
 
    for (unsigned int i = 0; i < existingCPUs; ++i) {
+      if (!ProcessList_isCPUonline(&this->super, i))
+         continue;
+
       char pathBuffer[64];
       xSnprintf(pathBuffer, sizeof(pathBuffer), "/sys/devices/system/cpu/cpu%u/cpufreq/scaling_cur_freq", i);
 
