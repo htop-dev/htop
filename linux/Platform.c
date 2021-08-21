@@ -543,6 +543,8 @@ bool Platform_getDiskIO(DiskIOData* data) {
    if (!fd)
       return false;
 
+   char lastTopDisk[32] = { '\0' };
+
    unsigned long long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
    char lineBuffer[256];
    while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
@@ -556,22 +558,11 @@ bool Platform_getDiskIO(DiskIOData* data) {
             continue;
 
          /* only count root disks, e.g. do not count IO from sda and sda1 twice */
-         if ((diskname[0] == 's' || diskname[0] == 'h')
-             && diskname[1] == 'd'
-             && isalpha((unsigned char)diskname[2])
-             && isdigit((unsigned char)diskname[3]))
+         if (lastTopDisk[0] && String_startsWith(diskname, lastTopDisk))
             continue;
 
-         /* only count root disks, e.g. do not count IO from mmcblk0 and mmcblk0p1 twice */
-         if (diskname[0] == 'm'
-             && diskname[1] == 'm'
-             && diskname[2] == 'c'
-             && diskname[3] == 'b'
-             && diskname[4] == 'l'
-             && diskname[5] == 'k'
-             && isdigit((unsigned char)diskname[6])
-             && diskname[7] == 'p')
-            continue;
+         /* This assumes disks are listed directly before any of their partitions */
+         String_safeStrncpy(lastTopDisk, diskname, sizeof(lastTopDisk));
 
          read_sum += read_tmp;
          write_sum += write_tmp;
