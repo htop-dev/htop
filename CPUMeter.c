@@ -215,7 +215,7 @@ static void AllCPUsMeter_updateValues(Meter* this) {
 }
 
 static void CPUMeterCommonInit(Meter* this, int ncol) {
-   unsigned int cpus = this->pl->existingCPUs;
+   unsigned int cpus = this->pl->settings->showOnlyActiveCPUs ? this->pl->activeCPUs : this->pl->existingCPUs;
    CPUMeterData* data = this->meterData;
    if (!data) {
       data = this->meterData = xMalloc(sizeof(CPUMeterData));

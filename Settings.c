@@ -225,6 +225,8 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (String_eq(option[0], "cpu_count_from_zero")) {
          // old (inverted) naming also supported for backwards compatibility
          this->countCPUsFromOne = !atoi(option[1]);
+      } else if (String_eq(option[0], "show_only_active_cpu")) {
+         this->showOnlyActiveCPUs = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_usage")) {
          this->showCPUUsage = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_frequency")) {
@@ -352,6 +354,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
    fprintf(fd, "cpu_count_from_one=%d\n", (int) this->countCPUsFromOne);
+   fprintf(fd, "show_only_active_cpu=%d\n", (int) this->showOnlyActiveCPUs);
    fprintf(fd, "show_cpu_usage=%d\n", (int) this->showCPUUsage);
    fprintf(fd, "show_cpu_frequency=%d\n", (int) this->showCPUFrequency);
    #ifdef BUILD_WITH_CPU_TEMP
@@ -407,6 +410,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    this->highlightMegabytes = true;
    this->detailedCPUTime = false;
    this->countCPUsFromOne = false;
+   this->showOnlyActiveCPUs = false;
    this->showCPUUsage = true;
    this->showCPUFrequency = false;
    #ifdef BUILD_WITH_CPU_TEMP

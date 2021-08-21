@@ -40,6 +40,7 @@ typedef struct Settings_ {
    ProcessField treeSortKey;
 
    bool countCPUsFromOne;
+   bool showOnlyActiveCPUs;
    bool detailedCPUTime;
    bool showCPUUsage;
    bool showCPUFrequency;
