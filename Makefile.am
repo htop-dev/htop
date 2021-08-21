@@ -151,6 +151,7 @@ linux_platform_headers = \
 	linux/LibSensors.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
+	linux/MemorySwapZramMeter.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
 	linux/ProcessField.h \
@@ -171,6 +172,7 @@ linux_platform_sources = \
 	linux/LibSensors.c \
 	linux/LinuxProcess.c \
 	linux/LinuxProcessList.c \
+	linux/MemorySwapZramMeter.c \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
 	linux/SELinuxMeter.c \

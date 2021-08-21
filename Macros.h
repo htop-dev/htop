@@ -11,6 +11,10 @@
 #define MAXIMUM(a, b)                  ((a) > (b) ? (a) : (b))
 #endif
 
+#ifndef MAXIMUM3
+#define MAXIMUM3(a, b, c)              MAXIMUM(a, MAXIMUM(b, c))
+#endif
+
 #ifndef CLAMP
 #define CLAMP(x, low, high)            (assert((low) <= (high)), ((x) > (high)) ? (high) : MAXIMUM(x, low))
 #endif
