@@ -84,12 +84,8 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
 
 static void Action_runSetup(State* st) {
    ScreenManager* scr = ScreenManager_new(st->header, st->settings, st, true);
-   CategoriesPanel* panelCategories = CategoriesPanel_new(scr, st->settings, st->header, st->pl);
-   ScreenManager_add(scr, (Panel*) panelCategories, 16);
-   CategoriesPanel_makeMetersPage(panelCategories);
-   Panel* panelFocus;
-   int ch;
-   ScreenManager_run(scr, &panelFocus, &ch);
+   CategoriesPanel_new(scr, st->settings, st->header, st->pl);
+   ScreenManager_run(scr, NULL, NULL);
    ScreenManager_delete(scr);
    if (st->settings->changed) {
       Header_writeBackToSettings(st->header);

@@ -35,7 +35,7 @@ static void CategoriesPanel_delete(Object* object) {
    free(this);
 }
 
-void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
+static void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
    size_t columns = HeaderLayout_getColumns(this->scr->header->headerLayout);
    MetersPanel** meterPanels = xMallocArray(columns, sizeof(MetersPanel));
 
@@ -78,6 +78,20 @@ static void CategoriesPanel_makeHeaderOptionsPage(CategoriesPanel* this) {
    ScreenManager_add(this->scr, colors, -1);
 }
 
+typedef void (* CategoriesPanel_makePageFunc)(CategoriesPanel* ref);
+typedef struct CategoriesPanelPage_ {
+   const char* name;
+   CategoriesPanel_makePageFunc ctor;
+} CategoriesPanelPage;
+
+static const CategoriesPanelPage categoriesPanelPages[] = {
+   { .name = "Display options", .ctor = CategoriesPanel_makeDisplayOptionsPage },
+   { .name = "Header layout", .ctor = CategoriesPanel_makeHeaderOptionsPage },
+   { .name = "Meters", .ctor = CategoriesPanel_makeMetersPage },
+   { .name = "Columns", .ctor = CategoriesPanel_makeColumnsPage },
+   { .name = "Colors", .ctor = CategoriesPanel_makeColorsPage },
+};
+
 static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
    CategoriesPanel* this = (CategoriesPanel*) super;
 
@@ -115,22 +129,8 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
       for (int i = 1; i < size; i++)
          ScreenManager_remove(this->scr, 1);
 
-      switch (selected) {
-         case 0:
-            CategoriesPanel_makeMetersPage(this);
-            break;
-         case 1:
-            CategoriesPanel_makeDisplayOptionsPage(this);
-            break;
-         case 2:
-            CategoriesPanel_makeColorsPage(this);
-            break;
-         case 3:
-            CategoriesPanel_makeColumnsPage(this);
-            break;
-         case 4:
-            CategoriesPanel_makeHeaderOptionsPage(this);
-            break;
+      if (selected >= 0 && (size_t)selected < ARRAYSIZE(categoriesPanelPages)) {
+         categoriesPanelPages[selected].ctor(this);
       }
    }
    return result;
@@ -155,10 +155,10 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    this->header = header;
    this->pl = pl;
    Panel_setHeader(super, "Setup");
-   Panel_add(super, (Object*) ListItem_new("Meters", 0));
-   Panel_add(super, (Object*) ListItem_new("Display options", 0));
-   Panel_add(super, (Object*) ListItem_new("Colors", 0));
-   Panel_add(super, (Object*) ListItem_new("Columns", 0));
-   Panel_add(super, (Object*) ListItem_new("Header layout", 0));
+   for (size_t i = 0; i < ARRAYSIZE(categoriesPanelPages); i++)
+      Panel_add(super, (Object*) ListItem_new(categoriesPanelPages[i].name, 0));
+
+   ScreenManager_add(scr, super, 16);
+   categoriesPanelPages[0].ctor(this);
    return this;
 }
