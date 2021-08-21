@@ -22,14 +22,14 @@ in the source distribution for its full text.
 
 
 typedef enum {
-   HTOP_OK = 0x00,
-   HTOP_REFRESH = 0x01,
-   HTOP_RECALCULATE = 0x03, // implies HTOP_REFRESH
-   HTOP_SAVE_SETTINGS = 0x04,
-   HTOP_KEEP_FOLLOWING = 0x08,
-   HTOP_QUIT = 0x10,
-   HTOP_REDRAW_BAR = 0x20,
-   HTOP_UPDATE_PANELHDR = 0x41, // implies HTOP_REFRESH
+   HTOP_OK              = 0x00,
+   HTOP_REFRESH         = 0x01,
+   HTOP_RECALCULATE     = 0x02 | HTOP_REFRESH,
+   HTOP_SAVE_SETTINGS   = 0x04,
+   HTOP_KEEP_FOLLOWING  = 0x08,
+   HTOP_QUIT            = 0x10,
+   HTOP_REDRAW_BAR      = 0x20,
+   HTOP_UPDATE_PANELHDR = 0x40 | HTOP_REFRESH,
 } Htop_Reaction;
 
 struct MainPanel_;
