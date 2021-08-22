@@ -27,10 +27,6 @@ in the source distribution for its full text.
 
 extern const ProcessField Platform_defaultFields[];
 
-extern double Platform_timebaseToNS;
-
-extern long Platform_clockTicksPerSec;
-
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
@@ -38,6 +34,14 @@ extern const unsigned int Platform_numberOfSignals;
 extern const MeterClass* const Platform_meterTypes[];
 
 void Platform_init(void);
+
+// Converts ticks in the Mach "timebase" to nanoseconds.
+// See `mach_timebase_info`, as used to define the `Platform_nanosecondsPerMachTick` constant.
+uint64_t Platform_machTicksToNanoseconds(uint64_t mach_ticks);
+
+// Converts "scheduler ticks" to nanoseconds.
+// See `sysconf(_SC_CLK_TCK)`, as used to define the `Platform_schedulerTicksPerNS` constant.
+double Platform_schedulerTicksToNanoseconds(const double scheduler_ticks);
 
 void Platform_done(void);
 
