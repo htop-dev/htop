@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "darwin/DarwinProcessList.h"
 
+
 typedef struct DarwinProcess_ {
    Process super;
 
