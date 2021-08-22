@@ -317,7 +317,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    if (!timercmp(&pl->realtime, &(data->time), <)) {
       int globalDelay = this->pl->settings->delay;
-      struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay - ((globalDelay / 10) * 10)) * 100000 };
+      struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay - ((globalDelay / 10) * 10)) * 100000L };
       timeradd(&pl->realtime, &delay, &(data->time));
 
       for (int i = 0; i < nValues - 1; i++)
