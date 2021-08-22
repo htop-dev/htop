@@ -458,7 +458,7 @@ void Process_makeCommandStr(Process* this) {
          /* Check if we still have capacity */                                                \
          assert(mc->highlightCount < ARRAYSIZE(mc->highlights));                              \
          if (mc->highlightCount >= ARRAYSIZE(mc->highlights))                                 \
-            continue;                                                                         \
+            break;                                                                            \
                                                                                               \
          mc->highlights[mc->highlightCount].offset = str - strStart + (_offset) - mbMismatch; \
          mc->highlights[mc->highlightCount].length = _length;                                 \
