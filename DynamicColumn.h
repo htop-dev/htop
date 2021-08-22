@@ -24,7 +24,7 @@ const char* DynamicColumn_init(unsigned int key);
 
 const DynamicColumn* DynamicColumn_lookup(Hashtable* dynamics, unsigned int key);
 
-const DynamicColumn* DynamicColumn_search(Hashtable* dynamics, const char* name, unsigned int* field);
+const DynamicColumn* DynamicColumn_search(Hashtable* dynamics, const char* name, unsigned int* key);
 
 bool DynamicColumn_writeField(const Process* proc, RichString* str, unsigned int key);
 
