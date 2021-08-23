@@ -278,8 +278,8 @@ static uint64_t machTicksToNanoseconds(uint64_t schedulerTicks) {
 
 // Converts nanoseconds to hundreths of a second (centiseconds) as needed by the "time" field of the Process struct.
 static long long int nanosecondsToCentiseconds(uint64_t nanoseconds) {
-   uint64_t centiseconds_per_second = 100;
-   uint64_t nanoseconds_per_second = 1e9;
+   const uint64_t centiseconds_per_second = 100;
+   const uint64_t nanoseconds_per_second = 1e9;
    return nanoseconds / nanoseconds_per_second * centiseconds_per_second;
 }
 
@@ -344,7 +344,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    proc->updated = true;
 }
 
-void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double time_interval_ns) {
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double timeIntervalNS) {
    struct proc_taskinfo pti;
 
    if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
@@ -355,9 +355,9 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
 
       uint64_t total_current_time_ns = user_time_ns + system_time_ns;
 
-      if (total_existing_time_ns && 1E-6 < time_interval_ns) {
+      if (total_existing_time_ns && 1E-6 < timeIntervalNS) {
          uint64_t total_time_diff_ns = total_current_time_ns - total_existing_time_ns;
-         proc->super.percent_cpu = ((double)total_time_diff_ns / time_interval_ns) * 100.0;
+         proc->super.percent_cpu = ((double)total_time_diff_ns / timeIntervalNS) * 100.0;
       } else {
          proc->super.percent_cpu = 0.0;
       }
