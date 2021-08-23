@@ -169,10 +169,10 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       if (String_eq(option[0], "config_reader_min_version")) {
          this->config_version = atoi(option[1]);
          if (this->config_version > CONFIG_READER_MIN_VERSION) {
-             // the version of the config file on disk is newer than what we can read
-             fprintf(stderr, "WARNING: The config file %s requires support for a newer format (v%d) than what this version of htop can read (v%d).\n", fileName, this->config_version, CONFIG_READER_MIN_VERSION);
-             fprintf(stderr, "         It will be overwritten when this version of htop exits.\n");
-             return false;
+            // the version of the config file on disk is newer than what we can read
+            fprintf(stderr, "WARNING: %s specifies configuration format version v%d, but this %s binary supports up to v%d.", fileName, this->config_version, PACKAGE, CONFIG_READER_MIN_VERSION);
+            fprintf(stderr, "         The configuration version will be downgraded to v%d when %s exits.\n", CONFIG_READER_MIN_VERSION, PACKAGE);
+            return false;
          }
       } else if (String_eq(option[0], "fields")) {
          Settings_readFields(this, option[1]);
