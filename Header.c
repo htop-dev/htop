@@ -87,10 +87,10 @@ static void Header_addMeterByName(Header* this, const char* name, MeterModeId mo
          char* end, dynamic[32] = {0};
          if (sscanf(paren, "(%30s)", dynamic)) { // DynamicMeter
             if ((end = strrchr(dynamic, ')')) == NULL)
-               return;    // indicate htoprc parse failure
+               return;    // htoprc parse failure
             *end = '\0';
             if (!DynamicMeter_search(this->pl->dynamicMeters, dynamic, &param))
-               return;    // indicates name lookup failure
+               return;    // name lookup failure
          } else {
             param = 0;
          }
