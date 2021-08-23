@@ -167,7 +167,15 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          String_freeArray(option);
          continue;
       }
-      if (String_eq(option[0], "fields")) {
+      if (String_eq(option[0], "config_reader_min_version")) {
+         this->config_version = atoi(option[1]);
+         if (this->config_version > CONFIG_READER_MIN_VERSION) {
+            // the version of the config file on disk is newer than what we can read
+            fprintf(stderr, "WARNING: %s specifies configuration format version v%d, but this %s binary supports up to v%d.", fileName, this->config_version, PACKAGE, CONFIG_READER_MIN_VERSION);
+            fprintf(stderr, "         The configuration version will be downgraded to v%d when %s exits.\n", CONFIG_READER_MIN_VERSION, PACKAGE);
+            return false;
+         }
+      } else if (String_eq(option[0], "fields")) {
          Settings_readFields(this, option[1]);
       } else if (String_eq(option[0], "sort_key")) {
          // This "+1" is for compatibility with the older enum format.
@@ -326,6 +334,8 @@ int Settings_write(const Settings* this, bool onCrash) {
       fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
       fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
    }
+   fprintf(fd, "htop_version=%s\n", VERSION);
+   fprintf(fd, "config_reader_min_version=%d\n", CONFIG_READER_MIN_VERSION);
    writeFields(fd, this->fields, this->dynamicColumns, "fields");
    // This "-1" is for compatibility with the older enum format.
    fprintf(fd, "sort_key=%d\n", (int) this->sortKey - 1);
