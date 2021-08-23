@@ -25,21 +25,27 @@ in the source distribution for its full text.
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->fields);
-   for (unsigned int i = 0; i < ARRAYSIZE(this->columns); i++) {
-      String_freeArray(this->columns[i].names);
-      free(this->columns[i].modes);
+   for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
+      if (this->hColumns[i].names) {
+         for (uint8_t j = 0; j < this->hColumns[i].len; j++)
+            free(this->hColumns[i].names[j]);
+         free(this->hColumns[i].names);
+      }
+      free(this->hColumns[i].modes);
    }
+   free(this->hColumns);
    free(this);
 }
 
-static void Settings_readMeters(Settings* this, const char* line, int column) {
+static void Settings_readMeters(Settings* this, const char* line, unsigned int column) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
-   this->columns[column].names = ids;
+   column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
+   this->hColumns[column].names = ids;
 }
 
-static void Settings_readMeterModes(Settings* this, const char* line, int column) {
+static void Settings_readMeterModes(Settings* this, const char* line, unsigned int column) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
@@ -47,13 +53,14 @@ static void Settings_readMeterModes(Settings* this, const char* line, int column
    for (int i = 0; ids[i]; i++) {
       len++;
    }
-   this->columns[column].len = len;
+   column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
+   this->hColumns[column].len = len;
    int* modes = len ? xCalloc(len, sizeof(int)) : NULL;
    for (int i = 0; i < len; i++) {
       modes[i] = atoi(ids[i]);
    }
    String_freeArray(ids);
-   this->columns[column].modes = modes;
+   this->hColumns[column].modes = modes;
 }
 
 static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount) {
@@ -62,50 +69,50 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
       sizes[1]++;
    }
    for (int i = 0; i < 2; i++) {
-      this->columns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
-      this->columns[i].modes = xCalloc(sizes[i], sizeof(int));
-      this->columns[i].len = sizes[i];
+      this->hColumns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
+      this->hColumns[i].modes = xCalloc(sizes[i], sizeof(int));
+      this->hColumns[i].len = sizes[i];
    }
    int r = 0;
 
    if (initialCpuCount > 128) {
       // Just show the average, ricers need to config for impressive screenshots
-      this->columns[0].names[0] = xStrdup("CPU");
-      this->columns[0].modes[0] = BAR_METERMODE;
+      this->hColumns[0].names[0] = xStrdup("CPU");
+      this->hColumns[0].modes[0] = BAR_METERMODE;
    } else if (initialCpuCount > 32) {
-      this->columns[0].names[0] = xStrdup("LeftCPUs8");
-      this->columns[0].modes[0] = BAR_METERMODE;
-      this->columns[1].names[r] = xStrdup("RightCPUs8");
-      this->columns[1].modes[r++] = BAR_METERMODE;
+      this->hColumns[0].names[0] = xStrdup("LeftCPUs8");
+      this->hColumns[0].modes[0] = BAR_METERMODE;
+      this->hColumns[1].names[r] = xStrdup("RightCPUs8");
+      this->hColumns[1].modes[r++] = BAR_METERMODE;
    } else if (initialCpuCount > 16) {
-      this->columns[0].names[0] = xStrdup("LeftCPUs4");
-      this->columns[0].modes[0] = BAR_METERMODE;
-      this->columns[1].names[r] = xStrdup("RightCPUs4");
-      this->columns[1].modes[r++] = BAR_METERMODE;
+      this->hColumns[0].names[0] = xStrdup("LeftCPUs4");
+      this->hColumns[0].modes[0] = BAR_METERMODE;
+      this->hColumns[1].names[r] = xStrdup("RightCPUs4");
+      this->hColumns[1].modes[r++] = BAR_METERMODE;
    } else if (initialCpuCount > 8) {
-      this->columns[0].names[0] = xStrdup("LeftCPUs2");
-      this->columns[0].modes[0] = BAR_METERMODE;
-      this->columns[1].names[r] = xStrdup("RightCPUs2");
-      this->columns[1].modes[r++] = BAR_METERMODE;
+      this->hColumns[0].names[0] = xStrdup("LeftCPUs2");
+      this->hColumns[0].modes[0] = BAR_METERMODE;
+      this->hColumns[1].names[r] = xStrdup("RightCPUs2");
+      this->hColumns[1].modes[r++] = BAR_METERMODE;
    } else if (initialCpuCount > 4) {
-      this->columns[0].names[0] = xStrdup("LeftCPUs");
-      this->columns[0].modes[0] = BAR_METERMODE;
-      this->columns[1].names[r] = xStrdup("RightCPUs");
-      this->columns[1].modes[r++] = BAR_METERMODE;
+      this->hColumns[0].names[0] = xStrdup("LeftCPUs");
+      this->hColumns[0].modes[0] = BAR_METERMODE;
+      this->hColumns[1].names[r] = xStrdup("RightCPUs");
+      this->hColumns[1].modes[r++] = BAR_METERMODE;
    } else {
-      this->columns[0].names[0] = xStrdup("AllCPUs");
-      this->columns[0].modes[0] = BAR_METERMODE;
+      this->hColumns[0].names[0] = xStrdup("AllCPUs");
+      this->hColumns[0].modes[0] = BAR_METERMODE;
    }
-   this->columns[0].names[1] = xStrdup("Memory");
-   this->columns[0].modes[1] = BAR_METERMODE;
-   this->columns[0].names[2] = xStrdup("Swap");
-   this->columns[0].modes[2] = BAR_METERMODE;
-   this->columns[1].names[r] = xStrdup("Tasks");
-   this->columns[1].modes[r++] = TEXT_METERMODE;
-   this->columns[1].names[r] = xStrdup("LoadAverage");
-   this->columns[1].modes[r++] = TEXT_METERMODE;
-   this->columns[1].names[r] = xStrdup("Uptime");
-   this->columns[1].modes[r++] = TEXT_METERMODE;
+   this->hColumns[0].names[1] = xStrdup("Memory");
+   this->hColumns[0].modes[1] = BAR_METERMODE;
+   this->hColumns[0].names[2] = xStrdup("Swap");
+   this->hColumns[0].modes[2] = BAR_METERMODE;
+   this->hColumns[1].names[r] = xStrdup("Tasks");
+   this->hColumns[1].modes[r++] = TEXT_METERMODE;
+   this->hColumns[1].names[r] = xStrdup("LoadAverage");
+   this->hColumns[1].modes[r++] = TEXT_METERMODE;
+   this->hColumns[1].names[r] = xStrdup("Uptime");
+   this->hColumns[1].modes[r++] = TEXT_METERMODE;
 }
 
 static void Settings_readFields(Settings* settings, const char* line) {
@@ -258,6 +265,12 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (String_eq(option[0], "enable_mouse")) {
          this->enableMouse = atoi(option[1]);
       #endif
+      } else if (String_eq(option[0], "header_layout")) {
+         this->hLayout = atoi(option[1]);
+         if (this->hLayout < 0 || this->hLayout >= LAST_HEADER_LAYOUT)
+            this->hLayout = HF_TWO_50_50;
+         free(this->hColumns);
+         this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
          didReadMeters = true;
@@ -269,6 +282,12 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          didReadMeters = true;
       } else if (String_eq(option[0], "right_meter_modes")) {
          Settings_readMeterModes(this, option[1], 1);
+         didReadMeters = true;
+      } else if (String_startsWith(option[0], "column_meters_")) {
+         Settings_readMeters(this, option[1], atoi(option[0] + strlen("column_meters_")));
+         didReadMeters = true;
+      } else if (String_startsWith(option[0], "column_meter_modes_")) {
+         Settings_readMeterModes(this, option[1], atoi(option[0] + strlen("column_meter_modes_")));
          didReadMeters = true;
       } else if (String_eq(option[0], "hide_function_bar")) {
          this->hideFunctionBar = atoi(option[1]);
@@ -302,19 +321,19 @@ static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns
    fprintf(fd, "\n");
 }
 
-static void writeMeters(const Settings* this, FILE* fd, int column) {
+static void writeMeters(const Settings* this, FILE* fd, unsigned int column) {
    const char* sep = "";
-   for (int i = 0; i < this->columns[column].len; i++) {
-      fprintf(fd, "%s%s", sep, this->columns[column].names[i]);
+   for (uint8_t i = 0; i < this->hColumns[column].len; i++) {
+      fprintf(fd, "%s%s", sep, this->hColumns[column].names[i]);
       sep = " ";
    }
    fprintf(fd, "\n");
 }
 
-static void writeMeterModes(const Settings* this, FILE* fd, int column) {
+static void writeMeterModes(const Settings* this, FILE* fd, unsigned int column) {
    const char* sep = "";
-   for (int i = 0; i < this->columns[column].len; i++) {
-      fprintf(fd, "%s%d", sep, this->columns[column].modes[i]);
+   for (uint8_t i = 0; i < this->hColumns[column].len; i++) {
+      fprintf(fd, "%s%d", sep, this->hColumns[column].modes[i]);
       sep = " ";
    }
    fprintf(fd, "\n");
@@ -375,10 +394,13 @@ int Settings_write(const Settings* this, bool onCrash) {
    fprintf(fd, "enable_mouse=%d\n", (int) this->enableMouse);
    #endif
    fprintf(fd, "delay=%d\n", (int) this->delay);
-   fprintf(fd, "left_meters="); writeMeters(this, fd, 0);
-   fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
-   fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
-   fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
+   fprintf(fd, "header_layout=%d\n", (int) this->hLayout);
+   for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
+      fprintf(fd, "column_meters_%u=", i);
+      writeMeters(this, fd, i);
+      fprintf(fd, "column_meter_modes_%u=", i);
+      writeMeterModes(this, fd, i);
+   }
    fprintf(fd, "hide_function_bar=%d\n", (int) this->hideFunctionBar);
    #ifdef HAVE_LIBHWLOC
    fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);
@@ -402,6 +424,8 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->dynamicColumns = dynamicColumns;
+   this->hLayout = HF_TWO_50_50;
+   this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
    this->sortKey = PERCENT_CPU;
    this->treeSortKey = PID;
    this->direction = -1;
@@ -530,4 +554,27 @@ void Settings_enableReadonly(void) {
 
 bool Settings_isReadonly(void) {
    return readonly;
+}
+
+void Settings_setHeaderLayout(Settings* this, HeaderLayout hLayout) {
+   unsigned int oldColumns = HeaderLayout_getColumns(this->hLayout);
+   unsigned int newColumns = HeaderLayout_getColumns(hLayout);
+
+   if (newColumns > oldColumns) {
+      this->hColumns = xReallocArray(this->hColumns, newColumns, sizeof(MeterColumnSetting));
+      memset(this->hColumns + oldColumns, 0, (newColumns - oldColumns) * sizeof(MeterColumnSetting));
+   } else if (newColumns < oldColumns) {
+      for (unsigned int i = newColumns; i < oldColumns; i++) {
+         if (this->hColumns[i].names) {
+            for (uint8_t j = 0; j < this->hColumns[i].len; j++)
+               free(this->hColumns[i].names[j]);
+            free(this->hColumns[i].names);
+         }
+         free(this->hColumns[i].modes);
+      }
+      this->hColumns = xReallocArray(this->hColumns, newColumns, sizeof(MeterColumnSetting));
+   }
+
+   this->hLayout = hLayout;
+   this->changed = true;
 }

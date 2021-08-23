@@ -17,6 +17,8 @@ in the source distribution for its full text.
 #include "ColumnsPanel.h"
 #include "DisplayOptionsPanel.h"
 #include "FunctionBar.h"
+#include "Header.h"
+#include "HeaderOptionsPanel.h"
 #include "ListItem.h"
 #include "MetersPanel.h"
 #include "Object.h"
@@ -33,14 +35,24 @@ static void CategoriesPanel_delete(Object* object) {
    free(this);
 }
 
-void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
-   MetersPanel* leftMeters = MetersPanel_new(this->settings, "Left column", this->header->columns[0], this->scr);
-   MetersPanel* rightMeters = MetersPanel_new(this->settings, "Right column", this->header->columns[1], this->scr);
-   leftMeters->rightNeighbor = rightMeters;
-   rightMeters->leftNeighbor = leftMeters;
-   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, (Panel*) leftMeters, (Panel*) rightMeters, this->scr, this->pl);
-   ScreenManager_add(this->scr, (Panel*) leftMeters, 20);
-   ScreenManager_add(this->scr, (Panel*) rightMeters, 20);
+static void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
+   size_t columns = HeaderLayout_getColumns(this->scr->header->headerLayout);
+   MetersPanel** meterPanels = xMallocArray(columns, sizeof(MetersPanel));
+
+   for (size_t i = 0; i < columns; i++) {
+      char titleBuffer[32];
+      xSnprintf(titleBuffer, sizeof(titleBuffer), "Column %zu", i + 1);
+      meterPanels[i] = MetersPanel_new(this->settings, titleBuffer, this->header->columns[i], this->scr);
+
+      if (i != 0) {
+         meterPanels[i]->leftNeighbor = meterPanels[i - 1];
+         meterPanels[i - 1]->rightNeighbor = meterPanels[i];
+      }
+
+      ScreenManager_add(this->scr, (Panel*) meterPanels[i], 20);
+   }
+
+   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, columns, meterPanels, this->scr, this->pl);
    ScreenManager_add(this->scr, availableMeters, -1);
 }
 
@@ -60,6 +72,25 @@ static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
 }
+
+static void CategoriesPanel_makeHeaderOptionsPage(CategoriesPanel* this) {
+   Panel* colors = (Panel*) HeaderOptionsPanel_new(this->settings, this->scr);
+   ScreenManager_add(this->scr, colors, -1);
+}
+
+typedef void (* CategoriesPanel_makePageFunc)(CategoriesPanel* ref);
+typedef struct CategoriesPanelPage_ {
+   const char* name;
+   CategoriesPanel_makePageFunc ctor;
+} CategoriesPanelPage;
+
+static const CategoriesPanelPage categoriesPanelPages[] = {
+   { .name = "Display options", .ctor = CategoriesPanel_makeDisplayOptionsPage },
+   { .name = "Header layout", .ctor = CategoriesPanel_makeHeaderOptionsPage },
+   { .name = "Meters", .ctor = CategoriesPanel_makeMetersPage },
+   { .name = "Columns", .ctor = CategoriesPanel_makeColumnsPage },
+   { .name = "Colors", .ctor = CategoriesPanel_makeColorsPage },
+};
 
 static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
    CategoriesPanel* this = (CategoriesPanel*) super;
@@ -98,19 +129,8 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
       for (int i = 1; i < size; i++)
          ScreenManager_remove(this->scr, 1);
 
-      switch (selected) {
-         case 0:
-            CategoriesPanel_makeMetersPage(this);
-            break;
-         case 1:
-            CategoriesPanel_makeDisplayOptionsPage(this);
-            break;
-         case 2:
-            CategoriesPanel_makeColorsPage(this);
-            break;
-         case 3:
-            CategoriesPanel_makeColumnsPage(this);
-            break;
+      if (selected >= 0 && (size_t)selected < ARRAYSIZE(categoriesPanelPages)) {
+         categoriesPanelPages[selected].ctor(this);
       }
    }
    return result;
@@ -135,9 +155,10 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    this->header = header;
    this->pl = pl;
    Panel_setHeader(super, "Setup");
-   Panel_add(super, (Object*) ListItem_new("Meters", 0));
-   Panel_add(super, (Object*) ListItem_new("Display options", 0));
-   Panel_add(super, (Object*) ListItem_new("Colors", 0));
-   Panel_add(super, (Object*) ListItem_new("Columns", 0));
+   for (size_t i = 0; i < ARRAYSIZE(categoriesPanelPages); i++)
+      Panel_add(super, (Object*) ListItem_new(categoriesPanelPages[i].name, 0));
+
+   ScreenManager_add(scr, super, 16);
+   categoriesPanelPages[0].ctor(this);
    return this;
 }
