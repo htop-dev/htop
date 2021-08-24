@@ -7,6 +7,7 @@ in the source distribution for its full text.
 
 #include "Settings.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -266,7 +267,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          this->enableMouse = atoi(option[1]);
       #endif
       } else if (String_eq(option[0], "header_layout")) {
-         this->hLayout = atoi(option[1]);
+         this->hLayout = isdigit((unsigned char)option[1][0]) ? ((HeaderLayout) atoi(option[1])) : HeaderLayout_fromName(option[1]);
          if (this->hLayout < 0 || this->hLayout >= LAST_HEADER_LAYOUT)
             this->hLayout = HF_TWO_50_50;
          free(this->hColumns);
@@ -394,7 +395,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    fprintf(fd, "enable_mouse=%d\n", (int) this->enableMouse);
    #endif
    fprintf(fd, "delay=%d\n", (int) this->delay);
-   fprintf(fd, "header_layout=%d\n", (int) this->hLayout);
+   fprintf(fd, "header_layout=%s\n", HeaderLayout_getName(this->hLayout));
    for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       fprintf(fd, "column_meters_%u=", i);
       writeMeters(this, fd, i);
