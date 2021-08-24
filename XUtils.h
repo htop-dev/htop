@@ -13,7 +13,6 @@ in the source distribution for its full text.
 #include <stdio.h>
 #include <stdlib.h> // IWYU pragma: keep
 #include <string.h> // IWYU pragma: keep
-#include <sys/types.h>
 
 #include "Compat.h"
 #include "Macros.h"
@@ -39,9 +38,7 @@ static inline bool String_startsWith(const char* s, const char* match) {
    return strncmp(s, match, strlen(match)) == 0;
 }
 
-static inline bool String_contains_i(const char* s1, const char* s2) {
-   return strcasestr(s1, s2) != NULL;
-}
+bool String_contains_i(const char* s1, const char* s2);
 
 static inline bool String_eq(const char* s1, const char* s2) {
    return strcmp(s1, s2) == 0;
