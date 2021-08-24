@@ -17,10 +17,8 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 #include "Hashtable.h"
 #include "ListItem.h"
-#include "Macros.h"
 #include "Object.h"
 #include "Process.h"
-#include "ProcessList.h"
 #include "ProvideCurses.h"
 #include "XUtils.h"
 

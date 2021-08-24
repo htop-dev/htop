@@ -14,7 +14,6 @@ in the source distribution for its full text.
 #include <stddef.h>
 
 #include "Platform.h"
-#include "ProcessList.h"
 #include "RichString.h"
 #include "XUtils.h"
 

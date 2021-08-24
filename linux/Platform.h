@@ -7,6 +7,8 @@ Released under the GNU GPLv2, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
+
 #include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -18,10 +20,12 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
 #include "Hashtable.h"
+#include "Macros.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
+#include "RichString.h"
 #include "SignalsPanel.h"
 #include "generic/gettime.h"
 #include "generic/hostname.h"

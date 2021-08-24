@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 #include "Panel.h"
-#include "ProcessList.h"
 
 
 typedef struct AvailableColumnsPanel_ {

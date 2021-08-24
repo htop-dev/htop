@@ -12,6 +12,7 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "CRT.h"
 #include "Object.h"

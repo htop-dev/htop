@@ -7,8 +7,10 @@ in the source distribution for its full text.
 
 #include "Header.h"
 
+#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

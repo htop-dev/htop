@@ -1,10 +1,6 @@
 #ifndef HEADER_LibSensors
 #define HEADER_LibSensors
 
-#include "config.h" // IWYU pragma: keep
-
-#include <stdio.h>
-
 #include "linux/LinuxProcessList.h"
 
 

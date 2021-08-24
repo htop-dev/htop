@@ -8,7 +8,6 @@ in the source distribution for its full text.
 #include "linux/HugePageMeter.h"
 
 #include <assert.h>
-#include <limits.h>
 #include <math.h>
 #include <stddef.h>
 

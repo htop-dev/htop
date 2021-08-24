@@ -18,6 +18,10 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "XUtils.h"
 
+#ifndef NDEBUG
+#include <stdio.h>
+#endif
+
 
 typedef struct HashtableItem_ {
    ht_key_t key;

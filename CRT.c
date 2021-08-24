@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <langinfo.h>
 #include <signal.h>
 #include <stdio.h>

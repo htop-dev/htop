@@ -18,12 +18,15 @@ in the source distribution for its full text.
 #include "DisplayOptionsPanel.h"
 #include "FunctionBar.h"
 #include "Header.h"
+#include "HeaderLayout.h"
 #include "HeaderOptionsPanel.h"
 #include "ListItem.h"
+#include "Macros.h"
 #include "MetersPanel.h"
 #include "Object.h"
 #include "ProvideCurses.h"
 #include "Vector.h"
+#include "XUtils.h"
 
 
 static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
