@@ -17,4 +17,8 @@
     { include: ["<sys/limits.h>", "private", "<limits.h>", "public"] },
 
     { include: ["<x86/_inttypes.h>", "private", "<inttypes.h>", "public"] },
+
+    { include: ["<linux/capability.h>", "private", "<sys/capability.h>", "public"] },
+
+    { include: ["<bits/mman-shared.h>", "private", "<sys/mman.h>", "public"] },
 ]
