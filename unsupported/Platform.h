@@ -45,8 +45,6 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
-bool Process_isThread(const Process* this);
-
 char* Platform_getProcessEnv(pid_t pid);
 
 char* Platform_getInodeFilename(pid_t pid, ino_t inode);
