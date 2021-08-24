@@ -78,6 +78,10 @@ void* xReallocArray(void* ptr, size_t nmemb, size_t size) {
    return xRealloc(ptr, nmemb * size);
 }
 
+inline bool String_contains_i(const char* s1, const char* s2) {
+   return strcasestr(s1, s2) != NULL;
+}
+
 char* String_cat(const char* s1, const char* s2) {
    const size_t l1 = strlen(s1);
    const size_t l2 = strlen(s2);
