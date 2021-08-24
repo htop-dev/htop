@@ -1,13 +1,22 @@
 #include "linux/LibSensors.h"
 
+#include "config.h"
+
 #ifdef HAVE_SENSORS_SENSORS_H
 
+#include <assert.h>
 #include <dlfcn.h>
 #include <errno.h>
+#include <limits.h>
 #include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <sensors/sensors.h>
 
+#include "Macros.h"
 #include "XUtils.h"
+#include "linux/LinuxProcessList.h"
 
 
 #ifdef BUILD_STATIC

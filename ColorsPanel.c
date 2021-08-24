@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "FunctionBar.h"
+#include "Macros.h"
 #include "Object.h"
 #include "OptionItem.h"
 #include "ProvideCurses.h"

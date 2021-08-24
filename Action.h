@@ -33,7 +33,7 @@ typedef enum {
    HTOP_RESIZE          = 0x80 | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR,
 } Htop_Reaction;
 
-struct MainPanel_;
+struct MainPanel_; // IWYU pragma: keep
 
 typedef struct State_ {
    Settings* settings;

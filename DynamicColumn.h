@@ -1,9 +1,10 @@
 #ifndef HEADER_DynamicColumn
 #define HEADER_DynamicColumn
 
+#include <stdbool.h>
+
 #include "Hashtable.h"
 #include "Process.h"
-#include "ProcessList.h"
 #include "RichString.h"
 
 

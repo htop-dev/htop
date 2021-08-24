@@ -7,6 +7,7 @@ in the source distribution for its full text.
 
 #include "ColumnsPanel.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
 

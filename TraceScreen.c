@@ -18,7 +18,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <unistd.h>
 #include <sys/select.h>
-#include <sys/time.h>
 #include <sys/wait.h>
 
 #include "CRT.h"

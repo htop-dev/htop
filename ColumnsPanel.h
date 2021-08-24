@@ -10,7 +10,6 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 #include "Panel.h"
-#include "ProcessList.h"
 #include "Settings.h"
 
 

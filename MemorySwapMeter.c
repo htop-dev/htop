@@ -7,15 +7,15 @@ in the source distribution for its full text.
 
 #include "MemorySwapMeter.h"
 
-#include <math.h>
+#include <assert.h>
 #include <stddef.h>
+#include <stdlib.h>
 
-#include "CRT.h"
+#include "Macros.h"
 #include "MemoryMeter.h"
 #include "Object.h"
-#include "Platform.h"
-#include "RichString.h"
 #include "SwapMeter.h"
+#include "XUtils.h"
 
 
 typedef struct MemorySwapMeterData_ {

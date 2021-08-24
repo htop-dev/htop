@@ -7,17 +7,17 @@ in the source distribution for its full text.
 
 #include "HeaderOptionsPanel.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
 #include "CRT.h"
 #include "FunctionBar.h"
 #include "Header.h"
+#include "HeaderLayout.h"
 #include "Object.h"
 #include "OptionItem.h"
 #include "ProvideCurses.h"
-#include "RichString.h"
-#include "Vector.h"
 
 
 static const char* const HeaderOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};

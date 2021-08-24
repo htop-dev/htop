@@ -10,7 +10,6 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 
 #include <math.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
