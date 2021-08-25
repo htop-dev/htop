@@ -160,13 +160,6 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-// Converts "scheduler ticks" to nanoseconds.
-// See `sysconf(_SC_CLK_TCK)`, as used to define the `Platform_clockTicksPerSec` constant.
-static double schedulerTicksToNanoseconds(const double ticks) {
-   const double nanos_per_sec = 1e9;
-   return ticks * (nanos_per_sec / (double) Platform_clockTicksPerSec);
-}
-
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    DarwinProcessList* dpl = (DarwinProcessList*)super;
    bool preExisting = true;
@@ -194,7 +187,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       }
    }
 
-   const double time_interval_ns = schedulerTicksToNanoseconds(dpl->global_diff) / (double) dpl->super.activeCPUs;
+   const double time_interval_ns = Platform_schedulerTicksToNanoseconds(dpl->global_diff) / (double) dpl->super.activeCPUs;
 
    /* Clear the thread counts */
    super->kernelThreads = 0;

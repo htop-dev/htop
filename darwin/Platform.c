@@ -120,9 +120,9 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-double Platform_timebaseToNS = 1.0;
+static double Platform_nanosecondsPerMachTick = 1.0;
 
-long Platform_clockTicksPerSec = -1;
+static double Platform_schedulerTicksPerNS = -1;
 
 void Platform_init(void) {
    // Check if we can determine the timebase used on this system.
@@ -130,18 +130,33 @@ void Platform_init(void) {
 #ifdef HAVE_MACH_TIMEBASE_INFO
    mach_timebase_info_data_t info;
    mach_timebase_info(&info);
-   Platform_timebaseToNS = (double)info.numer / (double)info.denom;
+   Platform_nanosecondsPerMachTick = (double)info.numer / (double)info.denom;
 #else
-   Platform_timebaseToNS = 1.0;
+   Platform_nanosecondsPerMachTick = 1.0;
 #endif
 
-   // Determine the number of clock ticks per second
+   // Determine the number of scheduler clock ticks per second
    errno = 0;
-   Platform_clockTicksPerSec = sysconf(_SC_CLK_TCK);
+   long scheduler_ticks_per_sec = sysconf(_SC_CLK_TCK);
 
-   if (errno || Platform_clockTicksPerSec < 1) {
+   if (errno || scheduler_ticks_per_sec < 1) {
       CRT_fatalError("Unable to retrieve clock tick rate");
    }
+
+   const double nanos_per_sec = 1e9;
+   Platform_schedulerTicksPerNS = nanos_per_sec / scheduler_ticks_per_sec;
+}
+
+// Converts ticks in the Mach "timebase" to nanoseconds.
+// See `mach_timebase_info`, as used to define the `Platform_nanosecondsPerMachTick` constant.
+uint64_t Platform_machTicksToNanoseconds(uint64_t mach_ticks) {
+   return (uint64_t) ((double) mach_ticks * Platform_nanosecondsPerMachTick);
+}
+
+// Converts "scheduler ticks" to nanoseconds.
+// See `sysconf(_SC_CLK_TCK)`, as used to define the `Platform_schedulerTicksPerNS` constant.
+double Platform_schedulerTicksToNanoseconds(const double scheduler_ticks) {
+   return scheduler_ticks * Platform_schedulerTicksPerNS;
 }
 
 void Platform_done(void) {

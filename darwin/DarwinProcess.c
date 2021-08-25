@@ -269,13 +269,6 @@ ERROR_A:
    Process_updateCmdline(proc, k->kp_proc.p_comm, 0, strlen(k->kp_proc.p_comm));
 }
 
-// Converts ticks in the Mach "timebase" to nanoseconds.
-// See `mach_timebase_info`, as used to define the `Platform_timebaseToNS` constant.
-static uint64_t machTicksToNanoseconds(uint64_t schedulerTicks) {
-   double nanoseconds_per_mach_tick = Platform_timebaseToNS;
-   return (uint64_t) (nanoseconds_per_mach_tick * (double) schedulerTicks);
-}
-
 // Converts nanoseconds to hundreths of a second (centiseconds) as needed by the "time" field of the Process struct.
 static long long int nanosecondsToCentiseconds(uint64_t nanoseconds) {
    const uint64_t centiseconds_per_second = 100;
@@ -350,8 +343,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
    if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
       uint64_t total_existing_time_ns = proc->stime + proc->utime;
 
-      uint64_t user_time_ns = machTicksToNanoseconds(pti.pti_total_user);
-      uint64_t system_time_ns = machTicksToNanoseconds(pti.pti_total_system);
+      uint64_t user_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_user);
+      uint64_t system_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_system);
 
       uint64_t total_current_time_ns = user_time_ns + system_time_ns;
 
