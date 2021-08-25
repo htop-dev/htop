@@ -31,7 +31,7 @@ void Process_delete(Object* cast);
 
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists);
 
-void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double time_interval);
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double timeIntervalNS);
 
 /*
  * Scan threads for process state information.
