@@ -122,7 +122,7 @@ const MeterClass* const Platform_meterTypes[] = {
 
 static double Platform_nanosecondsPerMachTick = 1.0;
 
-static double Platform_schedulerTicksPerNS = -1;
+static double Platform_nanosecondsPerSchedulerTick = -1;
 
 void Platform_init(void) {
    // Check if we can determine the timebase used on this system.
@@ -144,7 +144,7 @@ void Platform_init(void) {
    }
 
    const double nanos_per_sec = 1e9;
-   Platform_schedulerTicksPerNS = nanos_per_sec / scheduler_ticks_per_sec;
+   Platform_nanosecondsPerSchedulerTick = nanos_per_sec / scheduler_ticks_per_sec;
 }
 
 // Converts ticks in the Mach "timebase" to nanoseconds.
@@ -154,9 +154,9 @@ uint64_t Platform_machTicksToNanoseconds(uint64_t mach_ticks) {
 }
 
 // Converts "scheduler ticks" to nanoseconds.
-// See `sysconf(_SC_CLK_TCK)`, as used to define the `Platform_schedulerTicksPerNS` constant.
+// See `sysconf(_SC_CLK_TCK)`, as used to define the `Platform_nanosecondsPerSchedulerTick` constant.
 double Platform_schedulerTicksToNanoseconds(const double scheduler_ticks) {
-   return scheduler_ticks * Platform_schedulerTicksPerNS;
+   return scheduler_ticks * Platform_nanosecondsPerSchedulerTick;
 }
 
 void Platform_done(void) {

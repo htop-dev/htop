@@ -40,7 +40,7 @@ void Platform_init(void);
 uint64_t Platform_machTicksToNanoseconds(uint64_t mach_ticks);
 
 // Converts "scheduler ticks" to nanoseconds.
-// See `sysconf(_SC_CLK_TCK)`, as used to define the `Platform_schedulerTicksPerNS` constant.
+// See `sysconf(_SC_CLK_TCK)`, as used to define the `Platform_nanosecondsPerSchedulerTick` constant.
 double Platform_schedulerTicksToNanoseconds(const double scheduler_ticks);
 
 void Platform_done(void);
