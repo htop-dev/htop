@@ -307,7 +307,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
    return didReadAny;
 }
 
-static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns, const char* name) {
+static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns, const char* name, char separator) {
    fprintf(fd, "%s=", name);
    const char* sep = "";
    for (unsigned int i = 0; fields[i]; i++) {
@@ -320,93 +320,105 @@ static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns
       }
       sep = " ";
    }
-   fprintf(fd, "\n");
+   fputc(separator, fd);
 }
 
-static void writeMeters(const Settings* this, FILE* fd, unsigned int column) {
+static void writeMeters(const Settings* this, FILE* fd, char separator, unsigned int column) {
    const char* sep = "";
    for (uint8_t i = 0; i < this->hColumns[column].len; i++) {
       fprintf(fd, "%s%s", sep, this->hColumns[column].names[i]);
       sep = " ";
    }
-   fprintf(fd, "\n");
+   fputc(separator, fd);
 }
 
-static void writeMeterModes(const Settings* this, FILE* fd, unsigned int column) {
+static void writeMeterModes(const Settings* this, FILE* fd, char separator, unsigned int column) {
    const char* sep = "";
    for (uint8_t i = 0; i < this->hColumns[column].len; i++) {
       fprintf(fd, "%s%d", sep, this->hColumns[column].modes[i]);
       sep = " ";
    }
-   fprintf(fd, "\n");
+   fputc(separator, fd);
 }
 
 int Settings_write(const Settings* this, bool onCrash) {
    FILE* fd;
+   char separator;
    if (onCrash) {
       fd = stderr;
+      separator = ';';
    } else {
       fd = fopen(this->filename, "w");
       if (fd == NULL)
          return -errno;
+      separator = '\n';
    }
+
+   #define printSettingInteger(setting_, value_) \
+      fprintf(fd, setting_ "=%d%c", (int) value_, separator);
+   #define printSettingString(setting_, value_) \
+      fprintf(fd, setting_ "=%s%c", value_, separator);
 
    if (!onCrash) {
       fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
       fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
    }
-   fprintf(fd, "htop_version=%s\n", VERSION);
-   fprintf(fd, "config_reader_min_version=%d\n", CONFIG_READER_MIN_VERSION);
-   writeFields(fd, this->fields, this->dynamicColumns, "fields");
+   printSettingString("htop_version", VERSION);
+   printSettingInteger("config_reader_min_version", CONFIG_READER_MIN_VERSION);
+   writeFields(fd, this->fields, this->dynamicColumns, "fields", separator);
    // This "-1" is for compatibility with the older enum format.
-   fprintf(fd, "sort_key=%d\n", (int) this->sortKey - 1);
-   fprintf(fd, "sort_direction=%d\n", (int) this->direction);
-   fprintf(fd, "tree_sort_key=%d\n", (int) this->treeSortKey - 1);
-   fprintf(fd, "tree_sort_direction=%d\n", (int) this->treeDirection);
-   fprintf(fd, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
-   fprintf(fd, "hide_userland_threads=%d\n", (int) this->hideUserlandThreads);
-   fprintf(fd, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
-   fprintf(fd, "show_thread_names=%d\n", (int) this->showThreadNames);
-   fprintf(fd, "show_program_path=%d\n", (int) this->showProgramPath);
-   fprintf(fd, "highlight_base_name=%d\n", (int) this->highlightBaseName);
-   fprintf(fd, "highlight_deleted_exe=%d\n", (int) this->highlightDeletedExe);
-   fprintf(fd, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
-   fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
-   fprintf(fd, "highlight_changes=%d\n", (int) this->highlightChanges);
-   fprintf(fd, "highlight_changes_delay_secs=%d\n", (int) this->highlightDelaySecs);
-   fprintf(fd, "find_comm_in_cmdline=%d\n", (int) this->findCommInCmdline);
-   fprintf(fd, "strip_exe_from_cmdline=%d\n", (int) this->stripExeFromCmdline);
-   fprintf(fd, "show_merged_command=%d\n", (int) this->showMergedCommand);
-   fprintf(fd, "tree_view=%d\n", (int) this->treeView);
-   fprintf(fd, "tree_view_always_by_pid=%d\n", (int) this->treeViewAlwaysByPID);
-   fprintf(fd, "all_branches_collapsed=%d\n", (int) this->allBranchesCollapsed);
-   fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
-   fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
-   fprintf(fd, "cpu_count_from_one=%d\n", (int) this->countCPUsFromOne);
-   fprintf(fd, "show_cpu_usage=%d\n", (int) this->showCPUUsage);
-   fprintf(fd, "show_cpu_frequency=%d\n", (int) this->showCPUFrequency);
+   printSettingInteger("sort_key", this->sortKey - 1);
+   printSettingInteger("sort_direction", this->direction);
+   printSettingInteger("tree_sort_key", this->treeSortKey - 1);
+   printSettingInteger("tree_sort_direction", this->treeDirection);
+   printSettingInteger("hide_kernel_threads", this->hideKernelThreads);
+   printSettingInteger("hide_userland_threads", this->hideUserlandThreads);
+   printSettingInteger("shadow_other_users", this->shadowOtherUsers);
+   printSettingInteger("show_thread_names", this->showThreadNames);
+   printSettingInteger("show_program_path", this->showProgramPath);
+   printSettingInteger("highlight_base_name", this->highlightBaseName);
+   printSettingInteger("highlight_deleted_exe", this->highlightDeletedExe);
+   printSettingInteger("highlight_megabytes", this->highlightMegabytes);
+   printSettingInteger("highlight_threads", this->highlightThreads);
+   printSettingInteger("highlight_changes", this->highlightChanges);
+   printSettingInteger("highlight_changes_delay_secs", this->highlightDelaySecs);
+   printSettingInteger("find_comm_in_cmdline", this->findCommInCmdline);
+   printSettingInteger("strip_exe_from_cmdline", this->stripExeFromCmdline);
+   printSettingInteger("show_merged_command", this->showMergedCommand);
+   printSettingInteger("tree_view", this->treeView);
+   printSettingInteger("tree_view_always_by_pid", this->treeViewAlwaysByPID);
+   printSettingInteger("all_branches_collapsed", this->allBranchesCollapsed);
+   printSettingInteger("header_margin", this->headerMargin);
+   printSettingInteger("detailed_cpu_time", this->detailedCPUTime);
+   printSettingInteger("cpu_count_from_one", this->countCPUsFromOne);
+   printSettingInteger("show_cpu_usage", this->showCPUUsage);
+   printSettingInteger("show_cpu_frequency", this->showCPUFrequency);
    #ifdef BUILD_WITH_CPU_TEMP
-   fprintf(fd, "show_cpu_temperature=%d\n", (int) this->showCPUTemperature);
-   fprintf(fd, "degree_fahrenheit=%d\n", (int) this->degreeFahrenheit);
+   printSettingInteger("show_cpu_temperature", this->showCPUTemperature);
+   printSettingInteger("degree_fahrenheit", this->degreeFahrenheit);
    #endif
-   fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
-   fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
-   fprintf(fd, "color_scheme=%d\n", (int) this->colorScheme);
+   printSettingInteger("update_process_names", this->updateProcessNames);
+   printSettingInteger("account_guest_in_cpu_meter", this->accountGuestInCPUMeter);
+   printSettingInteger("color_scheme", this->colorScheme);
    #ifdef HAVE_GETMOUSE
-   fprintf(fd, "enable_mouse=%d\n", (int) this->enableMouse);
+   printSettingInteger("enable_mouse", this->enableMouse);
    #endif
-   fprintf(fd, "delay=%d\n", (int) this->delay);
-   fprintf(fd, "header_layout=%s\n", HeaderLayout_getName(this->hLayout));
+   printSettingInteger("delay", (int) this->delay);
+   printSettingInteger("hide_function_bar", (int) this->hideFunctionBar);
+   #ifdef HAVE_LIBHWLOC
+   printSettingInteger("topology_affinity", this->topologyAffinity);
+   #endif
+
+   printSettingString("header_layout", HeaderLayout_getName(this->hLayout));
    for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       fprintf(fd, "column_meters_%u=", i);
-      writeMeters(this, fd, i);
+      writeMeters(this, fd, separator, i);
       fprintf(fd, "column_meter_modes_%u=", i);
-      writeMeterModes(this, fd, i);
+      writeMeterModes(this, fd, separator, i);
    }
-   fprintf(fd, "hide_function_bar=%d\n", (int) this->hideFunctionBar);
-   #ifdef HAVE_LIBHWLOC
-   fprintf(fd, "topology_affinity=%d\n", (int) this->topologyAffinity);
-   #endif
+
+   #undef printSettingString
+   #undef printSettingInteger
 
    if (onCrash)
       return 0;
