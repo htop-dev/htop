@@ -33,12 +33,12 @@ What's new in version 3.1.0
 * Make the configuration parser friendlier to users (thanks to Bart Bakker)
   With this change only settings that cannot be parsed properly are
   reset to their defaults.
-* Improve default display for systems with many CPUs 
-* Add the process ELAPSED time column 
-* Improve the process STATE column sorting 
+* Improve default display for systems with many CPUs
+* Add the process ELAPSED time column
+* Improve the process STATE column sorting
 * Reworked handling resize and redrawing of the UI
 * Fixed an issue where the LED meter mode could overflow allotted space
-* Allow text mode Meters to span empty neighbors to the right 
+* Allow text mode Meters to span empty neighbors to the right
 * Rescale graph meters when value of total changes
   (thanks to Michael Schönitzer)
 * Update generic process field display
@@ -60,8 +60,8 @@ What's new in version 3.1.0
 * Disable mouse option when support is unavailable
 * Support curses libraries without ncurses mouse support
   (thanks to Santhosh Raju)
-* Support offline and hot-swapping of CPUs on all platforms 
-* Fix the CPU Meter for machines with more than 256 CPUs 
+* Support offline and hot-swapping of CPUs on all platforms
+* Fix the CPU Meter for machines with more than 256 CPUs
 * Supplemented the "show updated/deleted executables" feature (red basename)
   to indicate when linked libraries were updated (yellow basename)
 * Apply the stale binary highlighting for the EXE column in addition to
@@ -94,15 +94,15 @@ What's new in version 3.1.0
   (thanks to Santhosh Raju and Nia Alarie)
 * Add NetworkIO, DiskIO, CPU frequency, and battery meter support on NetBSD
   (thanks to Nia Alarie)
-* Fix NetBSD display of in-use and cached memory (thanks to Nia Alarie) 
-* Rework NetBSD CPU and memory accounting (thanks to Santhosh Raju) 
-* Fix NetBSD accounting of user and kernel threads (thanks to Santhosh Raju) 
+* Fix NetBSD display of in-use and cached memory (thanks to Nia Alarie)
+* Rework NetBSD CPU and memory accounting (thanks to Santhosh Raju)
+* Fix NetBSD accounting of user and kernel threads (thanks to Santhosh Raju)
 * Initial work to allow building with default libcurses on NetBSD
   (thanks to Santhosh Raju)
-* FreeBSD updates - implement process majflt and processor column values 
-* Add FreeBSD support for CPU frequency and temperature 
+* FreeBSD updates - implement process majflt and processor column values
+* Add FreeBSD support for CPU frequency and temperature
 * Fixes and cleanups for ZFS Meters and metrics
-* Correctly color the ZFS ARC ratio (thanks to Ross Williams) 
+* Correctly color the ZFS ARC ratio (thanks to Ross Williams)
 * Bugfixes related to CPU time display/calculations for darwin on M1 systems
   (thanks to Alexander Momchilov)
 * Harmonize the handling of multiple batteries across different platforms
@@ -113,36 +113,36 @@ What's new in version 3.1.0
   system after the first AC adapter where sometimes ignored.
 * Correctly handle multiple batteries on Darwin
   Resolves a possible memory leak on systems with multiple batteries
-* Handle Linux Shmem being part of Cached in the MemoryMeter 
+* Handle Linux Shmem being part of Cached in the MemoryMeter
 * Add SwapCached to the Linux swap meter (thanks to David Zarzycki)
 * Convert process time to days if applicable (thanks to David Zarzycki)
 * Always show the number of threads in the TaskMeter, even when threads
   are not shown in the process list
 * Fix Linux --drop-capabilities option handling
-* Correctly detect failure to initialize Linux boottime 
+* Correctly detect failure to initialize Linux boottime
 * Overhaul the Linux memory fields to partition them like free(1) now does
 * Improve the Linux process I/O column values
 * Rework the libsensors parsing on Linux
-* Update the MemoryMeter to display shared memory 
+* Update the MemoryMeter to display shared memory
 * Update OpenBSD platform - implement additional columns, scan LWP,
   proper markup for STATE, show CPU frequency
-* Fix the tree view on OpenBSD when hiding kernel threads 
-* Remove old InfoScreen lines before re-scanning (thanks to Øystein Hiåsen) 
-* Document historic naming of Light-Weight Processes column aka threads 
-* Improve user interaction when the last process entry is selected 
-* Draw the panel header on the TraceScreen (thanks to Youngjae Lee) 
+* Fix the tree view on OpenBSD when hiding kernel threads
+* Remove old InfoScreen lines before re-scanning (thanks to Øystein Hiåsen)
+* Document historic naming of Light-Weight Processes column aka threads
+* Improve user interaction when the last process entry is selected
+* Draw the panel header on the TraceScreen (thanks to Youngjae Lee)
 * Add mouse wheel scroll and fix mouse selection on the InfoScreen
-  (thanks to Youngjae Lee) 
-* Add a HugepageMeter and subtract hugepages from normal memory 
-* Display wide characters in LED meters and restore non-wide ncurses support 
+  (thanks to Youngjae Lee)
+* Add a HugepageMeter and subtract hugepages from normal memory
+* Display wide characters in LED meters and restore non-wide ncurses support
 * Add command line option to drop Linux capabilities
-* Support scheduler affinity on platforms beyond Linux 
-* Report on any failure to write the configuration file 
+* Support scheduler affinity on platforms beyond Linux
+* Report on any failure to write the configuration file
 * Cache stderr to be able to print assert messages
   These messages are shown in case htop terminates unexpectedly.
 * Print current settings on crash
 * Reset signal handlers on program exit
-* Add configure script option to create a static htop binary 
+* Add configure script option to create a static htop binary
 * Resolved longer-standing compilation issues on Solaris/Illumos
 * Check for availability of set_escdelay in configure
   (thanks to Stefan Polluks)
