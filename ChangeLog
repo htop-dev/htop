@@ -1,15 +1,152 @@
-What's new in version 3.1.0 (not released yet)
+What's new in version 3.1.0
 
-* Change available / used memory reporting on Linux to be based on
-  MemAvailable (Kernel 3.14+) (thanks to Chris Cheney and Tomas Wido)
+
+* Updated COPYING file to remove the PLPA exemption (appendix 2)
+  With this change the license is now GPLv2 without any additional wording.
 * Improved default sort ordering
   Note for users: This may lead to an inverted sort order on startup of
-  htop 3.0.6 compared to previous versions. This is due to what is stored
-  in your htoprc file. Solution: Press I (to invert sort order).
+  htop 3.1.0 compared to previous versions.
+  This is due to what is stored in your htoprc file. Solution: Press I
+  (to invert sort order).
   This changed setting will be saved by htop on exit as long as it can
   write to your htoprc file.
 * The compile-time option to cater specifically for running htop as
-  setuid has been removed.
+  setuid has been removed
+* Add read-only option
+  This allows htop to be run in an non-intrusive fashion where it acts only
+  as a process viewer disabling all functions to manipulate system state.
+  Note: This is not a security feature!
+* Move the code for handling the command line formatting related tasks
+  to be shared across all platforms
+  This means important features like stale binary/library highlighting
+  can now be available on all supported platforms.
+* Make the EXE and COMM columns available on all platforms
+  All supported platforms have the name of the executable (EXE) and a
+  self-chosen thread/command name (COMM) available one way or the other.
+  Moving this column to be handled as a platform-independently available
+  information simplifies the markup of the command line.
+* Introduce configuration file versioning and config_reader_min_version
+  Starting with this version the configuration file contains an version
+  identifying the minimum version of the configuration parser needed to
+  fully understand the configuration file format.
+  Old configuration file formats are automatically upgraded on startup.
+* Make the configuration parser friendlier to users (thanks to Bart Bakker)
+  With this change only settings that cannot be parsed properly are
+  reset to their defaults.
+* Improve default display for systems with many CPUs 
+* Add the process ELAPSED time column 
+* Improve the process STATE column sorting 
+* Reworked handling resize and redrawing of the UI
+* Fixed an issue where the LED meter mode could overflow allotted space
+* Allow text mode Meters to span empty neighbors to the right 
+* Rescale graph meters when value of total changes
+  (thanks to Michael Schönitzer)
+* Update generic process field display
+  Usually "uninteresting" values in columns like 1 thread, nice value
+  of 0, CPU and memory of 0%, idle/sleeping state, etc. are shown with
+  reduced intensity (dark grey)
+* Option and key ("*") to collapse / expand all branches under PID 1
+  (and PID 2 if kernel threads are shown) (thanks to Krishna Chaitanya)
+* Keep following a process when inverting the sort order, displaying
+  the help screen or hiding/unhiding userland threads
+  If a thread is currently selected the selection is updated to point
+  to the thread's parent process. (thanks to Gonzalo, et.al.)
+* Reorder process scanning to be performed before updating the display
+  of the meters in the header
+* Always check the user for a process for any changes
+  This affects multiple platforms that previously didn't correctly handle
+  the user field for a process to change at runtime (e.g. due to seteuid
+  or similar syscalls).
+* Disable mouse option when support is unavailable
+* Support curses libraries without ncurses mouse support
+  (thanks to Santhosh Raju)
+* Support offline and hot-swapping of CPUs on all platforms 
+* Fix the CPU Meter for machines with more than 256 CPUs 
+* Supplemented the "show updated/deleted executables" feature (red basename)
+  to indicate when linked libraries were updated (yellow basename)
+* Apply the stale binary highlighting for the EXE column in addition to
+  the command line field
+* Add new combined Memory and Swap meter
+* Implement bar and graph mode for NetworkIO Meter
+  (thanks to Michael F. Schönitzer)
+* Rework TTY column to be more consistent across platforms
+* Make the CWD column generally available on all platforms
+  (thanks to Santhosh Raju et. al.)
+* Add Performance Co-Pilot (PCP) platform support
+  This is added via a separate pcp-htop(1) binary which provides remote host
+  analysis, new Meters for any PCP metric and new Columns for any PCP process
+  metric - see the pcp-htop(5) man page for further details.
+  (thanks to Sohaib Mohamed)
+* Add Linux columns and key bindings for process autogroup identifier
+  and nice value
+* Change available and used memory reporting on Linux to be based on
+  MemAvailable (Kernel 3.14+) (thanks to Chris Cheney and Tomas Wido)
+* Add a new SysArchMeter showing kernel and platform information
+  (thanks to ahgamut)
+* Linux memory usage explicitly treats tmpfs memory usage as shared memory
+  This is to make memory used by tmpfs visible as this cannot be freed
+  unlike normal filesystem cache data.
+* Exclude zram devices when calculating DiskIO on Linux
+* Use PATH lookup for systemctl in systemd meter (thanks to Scott Olson)
+* Add native platform support for NetBSD
+  This allows htop to run on NetBSD without the need for active Linux
+  emulation of the procfs filesystem.
+  (thanks to Santhosh Raju and Nia Alarie)
+* Add NetworkIO, DiskIO, CPU frequency, and battery meter support on NetBSD
+  (thanks to Nia Alarie)
+* Fix NetBSD display of in-use and cached memory (thanks to Nia Alarie) 
+* Rework NetBSD CPU and memory accounting (thanks to Santhosh Raju) 
+* Fix NetBSD accounting of user and kernel threads (thanks to Santhosh Raju) 
+* Initial work to allow building with default libcurses on NetBSD
+  (thanks to Santhosh Raju)
+* FreeBSD updates - implement process majflt and processor column values 
+* Add FreeBSD support for CPU frequency and temperature 
+* Fixes and cleanups for ZFS Meters and metrics
+* Correctly color the ZFS ARC ratio (thanks to Ross Williams) 
+* Bugfixes related to CPU time display/calculations for darwin on M1 systems
+  (thanks to Alexander Momchilov)
+* Harmonize the handling of multiple batteries across different platforms
+  The system is now considered to run on AC if at least one power supply
+  marked as AC is found in the system.
+  Battery capacity is summed up over all batteries found.
+  This also changes the old behavior that batteries reported by the
+  system after the first AC adapter where sometimes ignored.
+* Correctly handle multiple batteries on Darwin
+  Resolves a possible memory leak on systems with multiple batteries
+* Handle Linux Shmem being part of Cached in the MemoryMeter 
+* Add SwapCached to the Linux swap meter (thanks to David Zarzycki)
+* Convert process time to days if applicable (thanks to David Zarzycki)
+* Always show the number of threads in the TaskMeter, even when threads
+  are not shown in the process list
+* Fix Linux --drop-capabilities option handling
+* Correctly detect failure to initialize Linux boottime 
+* Overhaul the Linux memory fields to partition them like free(1) now does
+* Improve the Linux process I/O column values
+* Rework the libsensors parsing on Linux
+* Update the MemoryMeter to display shared memory 
+* Update OpenBSD platform - implement additional columns, scan LWP,
+  proper markup for STATE, show CPU frequency
+* Fix the tree view on OpenBSD when hiding kernel threads 
+* Remove old InfoScreen lines before re-scanning (thanks to Øystein Hiåsen) 
+* Document historic naming of Light-Weight Processes column aka threads 
+* Improve user interaction when the last process entry is selected 
+* Draw the panel header on the TraceScreen (thanks to Youngjae Lee) 
+* Add mouse wheel scroll and fix mouse selection on the InfoScreen
+  (thanks to Youngjae Lee) 
+* Add a HugepageMeter and subtract hugepages from normal memory 
+* Display wide characters in LED meters and restore non-wide ncurses support 
+* Add command line option to drop Linux capabilities
+* Support scheduler affinity on platforms beyond Linux 
+* Report on any failure to write the configuration file 
+* Cache stderr to be able to print assert messages
+  These messages are shown in case htop terminates unexpectedly.
+* Print current settings on crash
+* Reset signal handlers on program exit
+* Add configure script option to create a static htop binary 
+* Resolved longer-standing compilation issues on Solaris/Illumos
+* Check for availability of set_escdelay in configure
+  (thanks to Stefan Polluks)
+* Build system updates for autotools 2.70
 
 What's new in version 3.0.5
 
