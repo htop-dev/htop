@@ -1,6 +1,5 @@
 What's new in version 3.1.0
 
-
 * Updated COPYING file to remove the PLPA exemption (appendix 2)
   With this change the license is now GPLv2 without any additional wording.
 * Improved default sort ordering
@@ -26,10 +25,11 @@ What's new in version 3.1.0
   Moving this column to be handled as a platform-independently available
   information simplifies the markup of the command line.
 * Introduce configuration file versioning and config_reader_min_version
-  Starting with this version the configuration file contains an version
+  Starting with this version the configuration file contains a version
   identifying the minimum version of the configuration parser needed to
   fully understand the configuration file format.
-  Old configuration file formats are automatically upgraded on startup.
+  Old configuration file formats are automatically upgraded when
+  saving the config file (htoprc).
 * Make the configuration parser friendlier to users (thanks to Bart Bakker)
   With this change only settings that cannot be parsed properly are
   reset to their defaults.
@@ -48,12 +48,12 @@ What's new in version 3.1.0
 * Option and key ("*") to collapse / expand all branches under PID 1
   (and PID 2 if kernel threads are shown) (thanks to Krishna Chaitanya)
 * Keep following a process when inverting the sort order, displaying
-  the help screen or hiding/unhiding userland threads
+  the help screen or hiding/unhiding userland threads.
   If a thread is currently selected the selection is updated to point
   to the thread's parent process. (thanks to Gonzalo, et.al.)
 * Reorder process scanning to be performed before updating the display
   of the meters in the header
-* Always check the user for a process for any changes
+* Always check the user for a process for any changes.
   This affects multiple platforms that previously didn't correctly handle
   the user field for a process to change at runtime (e.g. due to seteuid
   or similar syscalls).
@@ -105,14 +105,14 @@ What's new in version 3.1.0
 * Correctly color the ZFS ARC ratio (thanks to Ross Williams)
 * Bugfixes related to CPU time display/calculations for darwin on M1 systems
   (thanks to Alexander Momchilov)
-* Harmonize the handling of multiple batteries across different platforms
+* Harmonize the handling of multiple batteries across different platforms.
   The system is now considered to run on AC if at least one power supply
   marked as AC is found in the system.
   Battery capacity is summed up over all batteries found.
   This also changes the old behavior that batteries reported by the
   system after the first AC adapter where sometimes ignored.
-* Correctly handle multiple batteries on Darwin
-  Resolves a possible memory leak on systems with multiple batteries
+* Correctly handle multiple batteries on Darwin.
+  Resolves a possible memory leak on systems with multiple batteries.
 * Handle Linux Shmem being part of Cached in the MemoryMeter
 * Add SwapCached to the Linux swap meter (thanks to David Zarzycki)
 * Convert process time to days if applicable (thanks to David Zarzycki)
@@ -138,7 +138,7 @@ What's new in version 3.1.0
 * Add command line option to drop Linux capabilities
 * Support scheduler affinity on platforms beyond Linux
 * Report on any failure to write the configuration file
-* Cache stderr to be able to print assert messages
+* Cache stderr to be able to print assert messages.
   These messages are shown in case htop terminates unexpectedly.
 * Print current settings on crash
 * Reset signal handlers on program exit
