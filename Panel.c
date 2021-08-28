@@ -324,7 +324,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       if (Panel_drawFunctionBarFn(this))
          Panel_drawFunctionBar(this, hideFunctionBar);
       else if (!hideFunctionBar)
-         FunctionBar_draw(this->currentBar);
+         FunctionBar_draw(this->currentBar ? this->currentBar : this->defaultBar);
    }
 
    this->oldSelected = this->selected;
