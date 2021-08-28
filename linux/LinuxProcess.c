@@ -190,11 +190,15 @@ bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
 }
 
 #ifdef HAVE_DELAYACCT
-static void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
+static void LinuxProcess_printDelay(float delay_percent, char* buffer, int n, int* attr) {
    if (isnan(delay_percent)) {
       xSnprintf(buffer, n, " N/A  ");
+      *attr = CRT_colors[PROCESS_SHADOW];
    } else {
       xSnprintf(buffer, n, "%4.1f  ", delay_percent);
+      if (delay_percent < 0.05) {
+         *attr = CRT_colors[PROCESS_SHADOW];
+      }
    }
 }
 #endif
@@ -277,9 +281,9 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       break;
    }
    #ifdef HAVE_DELAYACCT
-   case PERCENT_CPU_DELAY: LinuxProcess_printDelay(lp->cpu_delay_percent, buffer, n); break;
-   case PERCENT_IO_DELAY: LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n); break;
-   case PERCENT_SWAP_DELAY: LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n); break;
+   case PERCENT_CPU_DELAY: LinuxProcess_printDelay(lp->cpu_delay_percent, buffer, n, &attr); break;
+   case PERCENT_IO_DELAY: LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n, &attr); break;
+   case PERCENT_SWAP_DELAY: LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n, &attr); break;
    #endif
    case CTXT:
       if (lp->ctxt_diff > 1000) {
