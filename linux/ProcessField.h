@@ -19,7 +19,6 @@ in the source distribution for its full text.
    M_TRS = 42,                   \
    M_DRS = 43,                   \
    M_LRS = 44,                   \
-   M_DT = 45,                    \
    CTID = 100,                   \
    VPID = 101,                   \
    VXID = 102,                   \
