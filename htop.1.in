@@ -392,9 +392,6 @@ except the process's executable instructions).
 .B M_LRS (LIB)
 The library size of the process.
 .TP
-.B M_DT (DIRTY)
-The size of the dirty pages of the process.
-.TP
 .B M_SWAP (SWAP)
 The size of the process's swapped pages.
 .TP

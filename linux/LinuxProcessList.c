@@ -678,7 +678,7 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
    if (!statmfile)
       return false;
 
-   long int dummy;
+   long int dummy, dummy2;
 
    int r = fscanf(statmfile, "%ld %ld %ld %ld %ld %ld %ld",
                   &process->super.m_virt,
@@ -687,7 +687,7 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
                   &process->m_trs,
                   &dummy, /* unused since Linux 2.6; always 0 */
                   &process->m_drs,
-                  &process->m_dt);
+                  &dummy2); /* unused since Linux 2.6; always 0 */
    fclose(statmfile);
 
    if (r == 7) {

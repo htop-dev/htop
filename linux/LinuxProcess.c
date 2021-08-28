@@ -56,7 +56,6 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [M_TRS] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, .defaultSortDesc = true, },
    [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, .defaultSortDesc = true, },
    [M_LRS] = { .name = "M_LRS", .title = "  LIB ", .description = "The library size of the process (calculated from memory maps)", .flags = PROCESS_FLAG_LINUX_LRS_FIX, .defaultSortDesc = true, },
-   [M_DT] = { .name = "M_DT", .title = " DIRTY ", .description = "Size of the dirty pages of the process (unused since Linux 2.6; always 0)", .flags = 0, .defaultSortDesc = true, },
    [ST_UID] = { .name = "ST_UID", .title = "  UID ", .description = "User ID of the process owner", .flags = 0, },
    [PERCENT_CPU] = { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, .defaultSortDesc = true, },
    [PERCENT_NORM_CPU] = { .name = "PERCENT_NORM_CPU", .title = "NCPU%", .description = "Normalized percentage of the CPU time the process used in the last sampling (normalized by cpu count)", .flags = 0, .defaultSortDesc = true, },
@@ -210,7 +209,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    case CMINFLT: Process_printCount(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_printCount(str, lp->cmajflt, coloring); return;
    case M_DRS: Process_printBytes(str, lp->m_drs * pageSize, coloring); return;
-   case M_DT: Process_printBytes(str, lp->m_dt * pageSize, coloring); return;
    case M_LRS:
       if (lp->m_lrs) {
          Process_printBytes(str, lp->m_lrs * pageSize, coloring);
@@ -330,8 +328,6 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    switch (key) {
    case M_DRS:
       return SPACESHIP_NUMBER(p1->m_drs, p2->m_drs);
-   case M_DT:
-      return SPACESHIP_NUMBER(p1->m_dt, p2->m_dt);
    case M_LRS:
       return SPACESHIP_NUMBER(p1->m_lrs, p2->m_lrs);
    case M_TRS:
