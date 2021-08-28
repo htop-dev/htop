@@ -30,8 +30,6 @@ typedef int IOPriority;
 
 #define IOPriority_tuple(class_, data_) (((class_) << IOPRIO_CLASS_SHIFT) | (data_))
 
-#define IOPriority_error 0xffffffff
-
 #define IOPriority_None IOPriority_tuple(IOPRIO_CLASS_NONE, 0)
 #define IOPriority_Idle IOPriority_tuple(IOPRIO_CLASS_IDLE, 7)
 
