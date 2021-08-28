@@ -52,9 +52,9 @@ static void CPUMeter_init(Meter* this) {
 // Custom uiName runtime logic to include the param (processor)
 static void CPUMeter_getUiName(const Meter* this, char* buffer, size_t length) {
    if (this->param > 0)
-      xSnprintf(buffer, sizeof(length), "%s %u", Meter_uiName(this), this->param);
+      xSnprintf(buffer, length, "%s %u", Meter_uiName(this), this->param);
    else
-      xSnprintf(buffer, sizeof(length), "%s", Meter_uiName(this));
+      xSnprintf(buffer, length, "%s", Meter_uiName(this));
 }
 
 static void CPUMeter_updateValues(Meter* this) {
