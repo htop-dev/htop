@@ -1433,7 +1433,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
             uint64_t recheck = ((uint64_t)rand()) % 2048;
 
-            if (passedTimeInMs > 2000 || passedTimeInMs > recheck) {
+            if (passedTimeInMs > recheck) {
                lp->last_mlrs_calctime = pl->realtimeMs;
                LinuxProcessList_readMaps(lp, procFd, settings->flags & PROCESS_FLAG_LINUX_LRS_FIX, settings->highlightDeletedExe);
             }
