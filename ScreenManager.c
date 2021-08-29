@@ -176,7 +176,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          if (ok == OK) {
             if (mevent.bstate & BUTTON1_RELEASED) {
                if (mevent.y == LINES - 1) {
-                  ch = FunctionBar_synthesizeEvent(panelFocus->currentBar, mevent.x);
+                  ch = FunctionBar_synthesizeEvent(panelFocus->currentBar ? panelFocus->currentBar : panelFocus->defaultBar, mevent.x);
                } else {
                   for (int i = 0; i < this->panelCount; i++) {
                      Panel* panel = (Panel*) Vector_get(this->panels, i);

@@ -60,7 +60,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
    this->wasFocus = false;
    RichString_beginAllocated(this->header);
    this->defaultBar = fuBar;
-   this->currentBar = fuBar;
+   this->currentBar = NULL;
    this->selectionColorId = PANEL_SELECTION_FOCUS;
 }
 

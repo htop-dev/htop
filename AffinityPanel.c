@@ -172,7 +172,7 @@ static void AffinityPanel_updateTopo(AffinityPanel* this, MaskItem* item) {
 static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
    Panel* super = (Panel*) this;
 
-   FunctionBar_setLabel(super->currentBar, KEY_F(3), this->topoView ? "Collapse/Expand" : "");
+   FunctionBar_setLabel(super->defaultBar, KEY_F(3), this->topoView ? "Collapse/Expand" : "");
 
    int oldSelected = Panel_getSelectedIndex(super);
    Panel_prune(super);

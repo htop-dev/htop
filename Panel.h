@@ -76,7 +76,7 @@ struct Panel_ {
    ColorElements selectionColorId;
 };
 
-#define Panel_setDefaultBar(this_) do { (this_)->currentBar = (this_)->defaultBar; } while (0)
+#define Panel_setDefaultBar(this_) do { (this_)->defaultBar = NULL; } while (0)
 
 #define KEY_CTRL(l) ((l)-'A'+1)
 

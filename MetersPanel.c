@@ -54,13 +54,9 @@ void MetersPanel_setMoving(MetersPanel* this, bool moving) {
    if (selected) {
       selected->moving = moving;
    }
-   if (!moving) {
-      Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
-      Panel_setDefaultBar(super);
-   } else {
-      Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
-      super->currentBar = Meters_movingBar;
-   }
+
+   Panel_setSelectionColor(super, moving ? PANEL_SELECTION_FOLLOW : PANEL_SELECTION_FOCUS);
+   super->currentBar = moving ? Meters_movingBar : NULL;
 }
 
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
