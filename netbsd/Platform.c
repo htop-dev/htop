@@ -260,14 +260,11 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    const ProcessList* pl = this->pl;
-   long int usedMem = pl->usedMem;
-   long int buffersMem = pl->buffersMem;
-   long int cachedMem = pl->cachedMem;
    this->total = pl->totalMem;
-   this->values[0] = usedMem;
-   this->values[1] = buffersMem;
+   this->values[0] = pl->usedMem;
+   this->values[1] = pl->buffersMem;
    // this->values[2] = "shared memory, like tmpfs and shm"
-   this->values[3] = cachedMem;
+   this->values[3] = pl->cachedMem;
    // this->values[4] = "available memory"
 }
 
