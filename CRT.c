@@ -886,6 +886,10 @@ void CRT_init(const Settings* settings, bool allowUnicode) {
    }
 
    if (termType && (String_startsWith(termType, "xterm") || String_eq(termType, "vt220"))) {
+#ifdef HTOP_NETBSD
+#define define_key(s_, k_) define_key((char*)s_, k_)
+IGNORE_WCASTQUAL_BEGIN
+#endif
       define_key("\033[H", KEY_HOME);
       define_key("\033[F", KEY_END);
       define_key("\033[7~", KEY_HOME);
@@ -906,6 +910,10 @@ void CRT_init(const Settings* settings, bool allowUnicode) {
          sequence[1] = c;
          define_key(sequence, KEY_ALT('A' + (c - 'a')));
       }
+#ifdef HTOP_NETBSD
+IGNORE_WCASTQUAL_END
+#undef define_key
+#endif
    }
 
    CRT_installSignalHandlers();
