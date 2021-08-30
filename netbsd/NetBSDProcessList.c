@@ -39,14 +39,17 @@ static long fscale;
 static int pageSize;
 static int pageSizeKB;
 
-static char const *freqSysctls[] = {
-   "machdep.est.frequency.current",
-   "machdep.powernow.frequency.current",
-   "machdep.intrepid.frequency.current",
-   "machdep.loongson.frequency.current",
-   "machdep.cpu.frequency.current",
-   "machdep.frequency.current",
-   NULL
+static const struct {
+   const char* name;
+   long int scale;
+} freqSysctls[] = {
+   { "machdep.est.frequency.current",            1 },
+   { "machdep.powernow.frequency.current",       1 },
+   { "machdep.intrepid.frequency.current",       1 },
+   { "machdep.loongson.frequency.current",       1 },
+   { "machdep.cpu.frequency.current",            1 },
+   { "machdep.frequency.current",                1 },
+   { "machdep.tsc_freq",                   1000000 },
 };
 
 static void NetBSDProcessList_updateCPUcount(ProcessList* super) {
@@ -428,7 +431,7 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
    unsigned int cpus = this->super.existingCPUs;
    bool match = false;
    char name[64];
-   int freq = 0;
+   long int freq = 0;
    size_t freqSize;
 
    for (unsigned int i = 0; i < cpus; i++) {
@@ -440,7 +443,7 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
       xSnprintf(name, sizeof(name), "machdep.cpufreq.cpu%u.current", i);
       freqSize = sizeof(freq);
       if (sysctlbyname(name, &freq, &freqSize, NULL, 0) != -1) {
-         this->cpuData[i + 1].frequency = freq;
+         this->cpuData[i + 1].frequency = freq; /* already in MHz */
          match = true;
       }
    }
@@ -453,9 +456,10 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
     * Iterate through legacy sysctl nodes for single-core frequency until
     * we find a match...
     */
-   for (const char** s = freqSysctls; *s != NULL; ++s) {
+   for (size_t i = 0; i < ARRAYSIZE(freqSysctls); i++) {
       freqSize = sizeof(freq);
-      if (sysctlbyname(*s, &freq, &freqSize, NULL, 0) != -1) {
+      if (sysctlbyname(freqSysctls[i].name, &freq, &freqSize, NULL, 0) != -1) {
+         freq /= freqSysctls[i].scale; /* scale to MHz */
          match = true;
          break;
       }
