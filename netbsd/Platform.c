@@ -281,19 +281,19 @@ char* Platform_getProcessEnv(pid_t pid) {
    char** ptr;
    int count;
    kvm_t* kt;
-   struct kinfo_proc* kproc;
+   const struct kinfo_proc2* kproc;
    size_t capacity = 4096, size = 0;
 
    if ((kt = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf)) == NULL) {
       return NULL;
    }
 
-   if ((kproc = kvm_getprocs(kt, KERN_PROC_PID, pid, &count)) == NULL) {
+   if ((kproc = kvm_getproc2(kt, KERN_PROC_PID, pid, sizeof(struct kinfo_proc2), &count)) == NULL) {
       (void) kvm_close(kt);
       return NULL;
    }
 
-   if ((ptr = kvm_getenvv(kt, kproc, 0)) == NULL) {
+   if ((ptr = kvm_getenvv2(kt, kproc, 0)) == NULL) {
       (void) kvm_close(kt);
       return NULL;
    }
