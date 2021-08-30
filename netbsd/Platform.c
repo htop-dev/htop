@@ -390,7 +390,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    if (getifaddrs(&ifaddrs) != 0)
       return false;
 
-   for (struct ifaddrs* ifa = ifaddrs; ifa; ifa = ifa->ifa_next) {
+   for (const struct ifaddrs* ifa = ifaddrs; ifa; ifa = ifa->ifa_next) {
       if (!ifa->ifa_addr)
          continue;
       if (ifa->ifa_addr->sa_family != AF_LINK)
@@ -398,7 +398,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       if (ifa->ifa_flags & IFF_LOOPBACK)
          continue;
 
-      struct if_data* ifd = (struct if_data *)ifa->ifa_data;
+      const struct if_data* ifd = (const struct if_data *)ifa->ifa_data;
 
       data->bytesReceived += ifd->ifi_ibytes;
       data->packetsReceived += ifd->ifi_ipackets;
