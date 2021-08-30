@@ -261,7 +261,6 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
    int count = 0;
-   int nlwps = 0;
 
    const struct kinfo_proc2* kprocs = kvm_getproc2(this->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc2), &count);
 
@@ -279,13 +278,21 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
          proc->tpgid = kproc->p_tpgid;
          proc->tgid = kproc->p_pid;
          proc->session = kproc->p_sid;
-         proc->tty_nr = kproc->p_tdev;
          proc->pgrp = kproc->p__pgid;
          proc->isKernelThread = !!(kproc->p_flag & P_SYSTEM);
          proc->isUserlandThread = proc->pid != proc->tgid;
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
          ProcessList_add(&this->super, proc);
+
+         proc->tty_nr = kproc->p_tdev;
+         const char* name = ((dev_t)kproc->p_tdev != KERN_PROC_TTY_NODEV) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
+         if (!name) {
+            free(proc->tty_name);
+            proc->tty_name = NULL;
+         } else {
+            free_and_xStrdup(&proc->tty_name, name);
+         }
 
          NetBSDProcessList_updateExe(kproc, proc);
          NetBSDProcessList_updateProcessName(this->kd, kproc, proc);
@@ -312,8 +319,12 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
       proc->nice = kproc->p_nice - 20;
       proc->time = 100 * (kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000));
       proc->priority = kproc->p_priority - PZERO;
+      proc->processor = kproc->p_cpuid;
+      proc->minflt = kproc->p_uru_minflt;
+      proc->majflt = kproc->p_uru_majflt;
 
-      struct kinfo_lwp* klwps = kvm_getlwps(this->kd, kproc->p_pid, kproc->p_paddr, sizeof(struct kinfo_lwp), &nlwps);
+      int nlwps = 0;
+      const struct kinfo_lwp* klwps = kvm_getlwps(this->kd, kproc->p_pid, kproc->p_paddr, sizeof(struct kinfo_lwp), &nlwps);
 
       switch (kproc->p_realstat) {
       case SIDL:     proc->state = 'I'; break;
