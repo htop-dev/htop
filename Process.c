@@ -864,8 +864,12 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    case STATE:
       xSnprintf(buffer, n, "%c ", this->state);
       switch (this->state) {
+#ifdef HTOP_NETBSD
+         case 'P':
+#else
          case 'R':
-            attr = CRT_colors[PROCESS_R_STATE];
+#endif
+            attr = CRT_colors[PROCESS_RUN_STATE];
             break;
          case 'D':
             attr = CRT_colors[PROCESS_D_STATE];
