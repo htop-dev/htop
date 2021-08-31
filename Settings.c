@@ -182,6 +182,8 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
             // the version of the config file on disk is newer than what we can read
             fprintf(stderr, "WARNING: %s specifies configuration format version v%d, but this %s binary supports up to v%d.", fileName, this->config_version, PACKAGE, CONFIG_READER_MIN_VERSION);
             fprintf(stderr, "         The configuration version will be downgraded to v%d when %s exits.\n", CONFIG_READER_MIN_VERSION, PACKAGE);
+            String_freeArray(option);
+            fclose(fd);
             return false;
          }
       } else if (String_eq(option[0], "fields")) {
