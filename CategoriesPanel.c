@@ -40,7 +40,7 @@ static void CategoriesPanel_delete(Object* object) {
 
 static void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
    size_t columns = HeaderLayout_getColumns(this->scr->header->headerLayout);
-   MetersPanel** meterPanels = xMallocArray(columns, sizeof(MetersPanel));
+   MetersPanel** meterPanels = xMallocArray(columns, sizeof(MetersPanel*));
 
    for (size_t i = 0; i < columns; i++) {
       char titleBuffer[32];
