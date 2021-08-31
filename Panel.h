@@ -39,6 +39,10 @@ typedef enum HandlerResult_ {
 #define EVENT_IS_HEADER_CLICK(ev_) ((ev_) >= -10000 && (ev_) <= -9000)
 #define EVENT_HEADER_CLICK_GET_X(ev_) ((ev_) + 10000)
 
+#define EVENT_SCREEN_TAB_CLICK(x_) (-20000 + (x_))
+#define EVENT_IS_SCREEN_TAB_CLICK(ev_) ((ev_) >= -20000 && (ev_) < -10000)
+#define EVENT_SCREEN_TAB_GET_X(ev_) ((ev_) + 20000)
+
 typedef HandlerResult (*Panel_EventHandler)(Panel*, int);
 typedef void (*Panel_DrawFunctionBar)(Panel*, bool);
 typedef void (*Panel_PrintHeader)(Panel*);
@@ -61,6 +65,7 @@ typedef struct PanelClass_ {
 struct Panel_ {
    Object super;
    int x, y, w, h;
+   int cursorX, cursorY;
    Vector* items;
    int selected;
    int oldSelected;
@@ -69,6 +74,7 @@ struct Panel_ {
    int scrollV;
    int scrollH;
    bool needsRedraw;
+   bool cursorOn;
    bool wasFocus;
    FunctionBar* currentBar;
    FunctionBar* defaultBar;
@@ -89,6 +95,8 @@ void Panel_delete(Object* cast);
 void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar);
 
 void Panel_done(Panel* this);
+
+void Panel_setCursorToSelection(Panel* this);
 
 void Panel_setSelectionColor(Panel* this, ColorElements colorId);
 
@@ -129,5 +137,7 @@ void Panel_splice(Panel* this, Vector* from);
 bool Panel_onKey(Panel* this, int key);
 
 HandlerResult Panel_selectByTyping(Panel* this, int ch);
+
+int Panel_getCh(Panel* this);
 
 #endif

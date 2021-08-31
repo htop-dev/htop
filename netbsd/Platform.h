@@ -36,6 +36,10 @@ in the source distribution for its full text.
 
 extern const ProcessField Platform_defaultFields[];
 
+extern ScreenDefaults Platform_defaultScreens[];
+
+extern const unsigned int Platform_numberOfDefaultScreens;
+
 /* see /usr/include/sys/signal.h */
 extern const SignalItem Platform_signals[];
 

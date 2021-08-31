@@ -138,20 +138,26 @@ static void ColumnsPanel_add(Panel* super, unsigned int key, Hashtable* columns)
    Panel_add(super, (Object*) ListItem_new(name, key));
 }
 
-ColumnsPanel* ColumnsPanel_new(Settings* settings) {
+void ColumnsPanel_fill(ColumnsPanel* this, ScreenSettings* ss, Hashtable* columns) {
+   Panel* super = (Panel*) this;
+   Panel_prune(super);
+   for (const ProcessField* fields = ss->fields; *fields; fields++)
+      ColumnsPanel_add(super, *fields, columns);
+   this->ss = ss;
+}
+
+ColumnsPanel* ColumnsPanel_new(ScreenSettings* ss, Hashtable* columns, bool* changed) {
    ColumnsPanel* this = AllocThis(ColumnsPanel);
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(ColumnsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
-   this->settings = settings;
+   this->ss = ss;
+   this->changed = changed;
    this->moving = false;
    Panel_setHeader(super, "Active Columns");
 
-   Hashtable* dynamicColumns = settings->dynamicColumns;
-   const ProcessField* fields = settings->fields;
-   for (; *fields; fields++)
-      ColumnsPanel_add(super, *fields, dynamicColumns);
+   ColumnsPanel_fill(this, ss, columns);
 
    return this;
 }
@@ -159,14 +165,14 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
 void ColumnsPanel_update(Panel* super) {
    ColumnsPanel* this = (ColumnsPanel*) super;
    int size = Panel_size(super);
-   this->settings->changed = true;
-   this->settings->fields = xRealloc(this->settings->fields, sizeof(ProcessField) * (size + 1));
-   this->settings->flags = 0;
+   *(this->changed) = true;
+   this->ss->fields = xRealloc(this->ss->fields, sizeof(ProcessField) * (size + 1));
+   this->ss->flags = 0;
    for (int i = 0; i < size; i++) {
       int key = ((ListItem*) Panel_get(super, i))->key;
-      this->settings->fields[i] = key;
+      this->ss->fields[i] = key;
       if (key < LAST_PROCESSFIELD)
-         this->settings->flags |= Process_fields[key].flags;
+         this->ss->flags |= Process_fields[key].flags;
    }
-   this->settings->fields[size] = 0;
+   this->ss->fields[size] = 0;
 }

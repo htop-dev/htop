@@ -26,7 +26,9 @@ in the source distribution for its full text.
 #include "generic/uname.h"
 
 
-extern const ProcessField Platform_defaultFields[];
+extern ScreenDefaults Platform_defaultScreens[];
+
+extern const unsigned int Platform_numberOfDefaultScreens;
 
 /* see /usr/include/sys/signal.h */
 extern const SignalItem Platform_signals[];

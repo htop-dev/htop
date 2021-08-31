@@ -105,16 +105,31 @@ static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
    }
 }
 
-static bool search(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue) {
+static bool search(const IncSet* this, Panel* panel, IncMode_GetPanelValue getPanelValue) {
    int size = Panel_size(panel);
    for (int i = 0; i < size; i++) {
-      if (String_contains_i(getPanelValue(panel, i), mode->buffer)) {
+      if (String_contains_i(getPanelValue(panel, i), this->active->buffer)) {
          Panel_setSelected(panel, i);
          return true;
       }
    }
 
    return false;
+}
+
+void IncSet_activate(IncSet* this, IncType type, Panel* panel) {
+   this->active = &(this->modes[type]);
+   panel->currentBar = this->active->bar;
+   panel->cursorOn = true;
+   this->panel = panel;
+   IncSet_drawBar(this, CRT_colors[FUNCTION_BAR]);
+}
+
+static void IncSet_deactivate(IncSet* this, Panel* panel) {
+   this->active = NULL;
+   Panel_setDefaultBar(panel);
+   panel->cursorOn = false;
+   FunctionBar_draw(this->defaultBar);
 }
 
 static bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
@@ -194,12 +209,11 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
             IncMode_reset(mode);
          }
       }
-      this->active = NULL;
-      Panel_setDefaultBar(panel);
+      IncSet_deactivate(this, panel);
       doSearch = false;
    }
    if (doSearch) {
-      this->found = search(mode, panel, getPanelValue);
+      this->found = search(this, panel, getPanelValue);
    }
    if (filterChanged && lines) {
       updateWeakPanel(this, panel, lines);
@@ -212,14 +226,13 @@ const char* IncSet_getListItemValue(Panel* panel, int i) {
    return l ? l->value : "";
 }
 
-void IncSet_activate(IncSet* this, IncType type, Panel* panel) {
-   this->active = &(this->modes[type]);
-   panel->currentBar = this->active->bar;
-}
-
-void IncSet_drawBar(const IncSet* this) {
+void IncSet_drawBar(const IncSet* this, int attr) {
    if (this->active) {
-      FunctionBar_drawExtra(this->active->bar, this->active->buffer, (this->active->isFilter || this->found) ? -1 : CRT_colors[FAILED_SEARCH], true);
+      if (!this->active->isFilter && !this->found)
+         attr = CRT_colors[FAILED_SEARCH];
+      int cursorX = FunctionBar_drawExtra(this->active->bar, this->active->buffer, attr, true);
+      this->panel->cursorY = LINES - 1;
+      this->panel->cursorX = cursorX;
    } else {
       FunctionBar_draw(this->defaultBar);
    }

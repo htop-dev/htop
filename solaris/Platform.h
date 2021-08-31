@@ -52,11 +52,13 @@ typedef struct envAccum_ {
    char* env;
 } envAccum;
 
+extern ScreenDefaults Platform_defaultScreens[];
+
+extern const unsigned int Platform_numberOfDefaultScreens;
+
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
-
-extern const ProcessField Platform_defaultFields[];
 
 extern const MeterClass* const Platform_meterTypes[];
 

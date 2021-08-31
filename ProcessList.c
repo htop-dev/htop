@@ -124,13 +124,14 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header) {
    RichString_rewind(header, RichString_size(header));
 
    const Settings* settings = this->settings;
-   const ProcessField* fields = settings->fields;
+   const ScreenSettings* ss = settings->ss;
+   const ProcessField* fields = ss->fields;
 
-   ProcessField key = Settings_getActiveSortKey(settings);
+   ProcessField key = ScreenSettings_getActiveSortKey(ss);
 
    for (int i = 0; fields[i]; i++) {
       int color;
-      if (settings->treeView && settings->treeViewAlwaysByPID) {
+      if (ss->treeView && ss->treeViewAlwaysByPID) {
          color = CRT_colors[PANEL_HEADER_FOCUS];
       } else if (key == fields[i]) {
          color = CRT_colors[PANEL_SELECTION_FOCUS];
@@ -140,10 +141,11 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header) {
 
       RichString_appendWide(header, color, alignedProcessFieldTitle(this, fields[i]));
       if (key == fields[i] && RichString_getCharVal(*header, RichString_size(header) - 1) == ' ') {
+         bool ascending = ScreenSettings_getActiveDirection(ss) == 1;
          RichString_rewind(header, 1);  // rewind to override space
          RichString_appendnWide(header,
                                 CRT_colors[PANEL_SELECTION_FOCUS],
-                                CRT_treeStr[Settings_getActiveDirection(this->settings) == 1 ? TREE_STR_ASC : TREE_STR_DESC],
+                                CRT_treeStr[ascending ? TREE_STR_ASC : TREE_STR_DESC],
                                 1);
       }
       if (COMM == fields[i] && settings->showMergedCommand) {
@@ -402,7 +404,7 @@ static int ProcessList_treeProcessCompareByPID(const void* v1, const void* v2) {
 static void ProcessList_buildTree(ProcessList* this) {
    int node_counter = 1;
    int node_index = 0;
-   int direction = Settings_getActiveDirection(this->settings);
+   int direction = ScreenSettings_getActiveDirection(this->settings->ss);
 
    // Sort by PID
    Vector_quickSortCustomCompare(this->processes, ProcessList_treeProcessCompareByPID);
@@ -488,7 +490,7 @@ static void ProcessList_buildTree(ProcessList* this) {
 }
 
 void ProcessList_sort(ProcessList* this) {
-   if (this->settings->treeView) {
+   if (this->settings->ss->treeView) {
       ProcessList_updateTreeSet(this);
       Vector_quickSortCustomCompare(this->processes, ProcessList_treeProcessCompare);
    } else {
@@ -498,7 +500,7 @@ void ProcessList_sort(ProcessList* this) {
 
 ProcessField ProcessList_keyAt(const ProcessList* this, int at) {
    int x = 0;
-   const ProcessField* fields = this->settings->fields;
+   const ProcessField* fields = this->settings->ss->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
       int len = strlen(alignedProcessFieldTitle(this, field));
@@ -661,7 +663,7 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
    // Set UID column width based on max UID.
    Process_setUidColumnWidth(maxUid);
 
-   if (this->settings->treeView) {
+   if (this->settings->ss->treeView) {
       // Clear out the hashtable to avoid any left-over processes from previous build
       //
       // The sorting algorithm relies on the fact that

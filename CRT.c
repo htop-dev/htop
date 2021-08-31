@@ -193,6 +193,11 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Magenta, Black),
       [CPU_STEAL] = ColorPair(Cyan, Black),
       [CPU_GUEST] = ColorPair(Cyan, Black),
+      [PANEL_EDIT] = ColorPair(White, Blue),
+      [SCREENS_OTH_BORDER] = ColorPair(Blue, Blue),
+      [SCREENS_OTH_TEXT] = ColorPair(Black, Blue),
+      [SCREENS_CUR_BORDER] = ColorPair(Green, Green),
+      [SCREENS_CUR_TEXT] = ColorPair(Black, Green),
       [PRESSURE_STALL_THREEHUNDRED] = ColorPair(Cyan, Black),
       [PRESSURE_STALL_SIXTY] = A_BOLD | ColorPair(Cyan, Black),
       [PRESSURE_STALL_TEN] = A_BOLD | ColorPair(White, Black),
@@ -295,6 +300,11 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = A_BOLD,
       [CPU_STEAL] = A_DIM,
       [CPU_GUEST] = A_DIM,
+      [PANEL_EDIT] = A_BOLD,
+      [SCREENS_OTH_BORDER] = A_DIM,
+      [SCREENS_OTH_TEXT] = A_DIM,
+      [SCREENS_CUR_BORDER] = A_REVERSE,
+      [SCREENS_CUR_TEXT] = A_REVERSE,
       [PRESSURE_STALL_THREEHUNDRED] = A_DIM,
       [PRESSURE_STALL_SIXTY] = A_NORMAL,
       [PRESSURE_STALL_TEN] = A_BOLD,
@@ -397,6 +407,11 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Blue, White),
       [CPU_STEAL] = ColorPair(Cyan, White),
       [CPU_GUEST] = ColorPair(Cyan, White),
+      [PANEL_EDIT] = ColorPair(White,Blue),
+      [SCREENS_OTH_BORDER] = A_BOLD | ColorPair(Black,White),
+      [SCREENS_OTH_TEXT] = A_BOLD | ColorPair(Black,White),
+      [SCREENS_CUR_BORDER] = ColorPair(Green,Green),
+      [SCREENS_CUR_TEXT] = ColorPair(Black,Green),
       [PRESSURE_STALL_THREEHUNDRED] = ColorPair(Black, White),
       [PRESSURE_STALL_SIXTY] = ColorPair(Black, White),
       [PRESSURE_STALL_TEN] = ColorPair(Black, White),
@@ -499,6 +514,11 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Blue, Black),
       [CPU_STEAL] = ColorPair(Black, Black),
       [CPU_GUEST] = ColorPair(Black, Black),
+      [PANEL_EDIT] = ColorPair(White,Blue),
+      [SCREENS_OTH_BORDER] = ColorPair(Blue,Black),
+      [SCREENS_OTH_TEXT] = ColorPair(Blue,Black),
+      [SCREENS_CUR_BORDER] = ColorPair(Green,Green),
+      [SCREENS_CUR_TEXT] = ColorPair(Black,Green),
       [PRESSURE_STALL_THREEHUNDRED] = ColorPair(Black, Black),
       [PRESSURE_STALL_SIXTY] = ColorPair(Black, Black),
       [PRESSURE_STALL_TEN] = ColorPair(Black, Black),
@@ -601,6 +621,11 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Black, Blue),
       [CPU_STEAL] = ColorPair(White, Blue),
       [CPU_GUEST] = ColorPair(White, Blue),
+      [PANEL_EDIT] = ColorPair(White,Blue),
+      [SCREENS_OTH_BORDER] = A_BOLD | ColorPair(Yellow,Blue),
+      [SCREENS_OTH_TEXT] = ColorPair(Cyan,Blue),
+      [SCREENS_CUR_BORDER] = ColorPair(Cyan,Cyan),
+      [SCREENS_CUR_TEXT] = ColorPair(Black,Cyan),
       [PRESSURE_STALL_THREEHUNDRED] = A_BOLD | ColorPair(Black, Blue),
       [PRESSURE_STALL_SIXTY] = A_NORMAL | ColorPair(White, Blue),
       [PRESSURE_STALL_TEN] = A_BOLD | ColorPair(White, Blue),
@@ -701,6 +726,11 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_SOFTIRQ] = ColorPair(Blue, Black),
       [CPU_STEAL] = ColorPair(Cyan, Black),
       [CPU_GUEST] = ColorPair(Cyan, Black),
+      [PANEL_EDIT] = ColorPair(White,Cyan),
+      [SCREENS_OTH_BORDER] = ColorPair(White,Black),
+      [SCREENS_OTH_TEXT] = ColorPair(Cyan,Black),
+      [SCREENS_CUR_BORDER] = A_BOLD | ColorPair(White,Black),
+      [SCREENS_CUR_TEXT] = A_BOLD | ColorPair(Green,Black),
       [PRESSURE_STALL_THREEHUNDRED] = ColorPair(Green, Black),
       [PRESSURE_STALL_SIXTY] = ColorPair(Green, Black),
       [PRESSURE_STALL_TEN] = A_BOLD | ColorPair(Green, Black),
@@ -724,8 +754,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    },
    [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
 };
-
-int CRT_cursorX = 0;
 
 int CRT_scrollHAmount = 5;
 
@@ -915,6 +943,7 @@ IGNORE_WCASTQUAL_BEGIN
       define_key("\033[14~", KEY_F(4));
       define_key("\033[14;2~", KEY_F(15));
       define_key("\033[17;2~", KEY_F(18));
+      define_key("\033[Z", KEY_SHIFT_TAB);
       char sequence[3] = "\033a";
       for (char c = 'a'; c <= 'z'; c++) {
          sequence[1] = c;
@@ -924,6 +953,9 @@ IGNORE_WCASTQUAL_BEGIN
 IGNORE_WCASTQUAL_END
 #undef define_key
 #endif
+   }
+   if (termType && (String_startsWith(termType, "rxvt"))) {
+      define_key("\033[Z", KEY_SHIFT_TAB);
    }
 
    CRT_installSignalHandlers();

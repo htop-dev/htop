@@ -51,7 +51,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    Process_updateCmdline(proc, "<unsupported architecture>", 0, 0);
    Process_updateExe(proc, "/path/to/executable");
 
-   if (proc->settings->flags & PROCESS_FLAG_CWD) {
+   if (proc->settings->ss->flags & PROCESS_FLAG_CWD) {
       free_and_xStrdup(&proc->procCwd, "/current/working/directory");
    }
 

@@ -20,11 +20,13 @@ in the source distribution for its full text.
 #include "unsupported/UnsupportedProcess.h"
 
 
+extern const ScreenDefaults Platform_defaultScreens[];
+
+extern const unsigned int Platform_numberOfDefaultScreens;
+
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
-
-extern const ProcessField Platform_defaultFields[];
 
 extern const MeterClass* const Platform_meterTypes[];
 

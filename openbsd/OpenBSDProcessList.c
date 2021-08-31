@@ -309,7 +309,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
 
          OpenBSDProcessList_updateProcessName(this->kd, kproc, proc);
 
-         if (settings->flags & PROCESS_FLAG_CWD) {
+         if (settings->ss->flags & PROCESS_FLAG_CWD) {
             OpenBSDProcessList_updateCwd(kproc, proc);
          }
 

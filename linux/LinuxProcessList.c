@@ -1370,6 +1370,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
    ProcessList* pl = (ProcessList*) this;
    const struct dirent* entry;
    const Settings* settings = pl->settings;
+   const ScreenSettings* ss = settings->ss;
 
 #ifdef HAVE_OPENAT
    int dirFd = openat(parentFd, dirname, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
@@ -1463,7 +1464,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          continue;
       }
 
-      if (settings->flags & PROCESS_FLAG_IO)
+      if (ss->flags & PROCESS_FLAG_IO)
          LinuxProcessList_readIoFile(lp, procFd, pl->realtimeMs);
 
       if (!LinuxProcessList_readStatmFile(lp, procFd))
@@ -1472,7 +1473,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       {
          bool prev = proc->usesDeletedLib;
 
-         if ((settings->flags & PROCESS_FLAG_LINUX_LRS_FIX) ||
+         if ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) ||
              (settings->highlightDeletedExe && !proc->procExeDeleted && !proc->isKernelThread && !proc->isUserlandThread)) {
             // Check if we really should recalculate the M_LRS value for this process
             uint64_t passedTimeInMs = pl->realtimeMs - lp->last_mlrs_calctime;
@@ -1481,7 +1482,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
             if (passedTimeInMs > recheck) {
                lp->last_mlrs_calctime = pl->realtimeMs;
-               LinuxProcessList_readMaps(lp, procFd, settings->flags & PROCESS_FLAG_LINUX_LRS_FIX, settings->highlightDeletedExe);
+               LinuxProcessList_readMaps(lp, procFd, ss->flags & PROCESS_FLAG_LINUX_LRS_FIX, settings->highlightDeletedExe);
             }
          } else {
             /* Copy from process structure in threads and reset if setting got disabled */
@@ -1491,7 +1492,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          proc->mergedCommand.exeChanged |= prev ^ proc->usesDeletedLib;
       }
 
-      if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
+      if ((ss->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
          if (!parent) {
             // Read smaps file of each process only every second pass to improve performance
             static int smaps_flag = 0;
@@ -1521,7 +1522,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          proc->tty_name = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
       }
 
-      if (settings->flags & PROCESS_FLAG_LINUX_IOPRIO) {
+      if (ss->flags & PROCESS_FLAG_LINUX_IOPRIO) {
          LinuxProcess_updateIOPriority(lp);
       }
 
@@ -1536,13 +1537,13 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if (!preExisting) {
 
          #ifdef HAVE_OPENVZ
-         if (settings->flags & PROCESS_FLAG_LINUX_OPENVZ) {
+         if (ss->flags & PROCESS_FLAG_LINUX_OPENVZ) {
             LinuxProcessList_readOpenVZData(lp, procFd);
          }
          #endif
 
          #ifdef HAVE_VSERVER
-         if (settings->flags & PROCESS_FLAG_LINUX_VSERVER) {
+         if (ss->flags & PROCESS_FLAG_LINUX_VSERVER) {
             LinuxProcessList_readVServerData(lp, procFd);
          }
          #endif
@@ -1567,32 +1568,32 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       #ifdef HAVE_DELAYACCT
-      if (settings->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
+      if (ss->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
          LinuxProcessList_readDelayAcctData(this, lp);
       }
       #endif
 
-      if (settings->flags & PROCESS_FLAG_LINUX_CGROUP) {
+      if (ss->flags & PROCESS_FLAG_LINUX_CGROUP) {
          LinuxProcessList_readCGroupFile(lp, procFd);
       }
 
-      if (settings->flags & PROCESS_FLAG_LINUX_OOM) {
+      if (ss->flags & PROCESS_FLAG_LINUX_OOM) {
          LinuxProcessList_readOomData(lp, procFd);
       }
 
-      if (settings->flags & PROCESS_FLAG_LINUX_CTXT) {
+      if (ss->flags & PROCESS_FLAG_LINUX_CTXT) {
          LinuxProcessList_readCtxtData(lp, procFd);
       }
 
-      if (settings->flags & PROCESS_FLAG_LINUX_SECATTR) {
+      if (ss->flags & PROCESS_FLAG_LINUX_SECATTR) {
          LinuxProcessList_readSecattrData(lp, procFd);
       }
 
-      if (settings->flags & PROCESS_FLAG_CWD) {
+      if (ss->flags & PROCESS_FLAG_CWD) {
          LinuxProcessList_readCwd(lp, procFd);
       }
 
-      if ((settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP) && this->haveAutogroup) {
+      if ((ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP) && this->haveAutogroup) {
          LinuxProcessList_readAutogroup(lp, procFd);
       }
 
@@ -2146,7 +2147,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       return;
    }
 
-   if (settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP) {
+   if (settings->ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP) {
       // Refer to sched(7) 'autogroup feature' section
       // The kernel feature can be enabled/disabled through procfs at
       // any time, so check for it at the start of each sample - only

@@ -328,7 +328,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       settings->enableMouse = false;
 #endif
    if (flags.treeView)
-      settings->treeView = true;
+      settings->ss->treeView = true;
    if (flags.highlightChanges)
       settings->highlightChanges = true;
    if (flags.highlightDelaySecs != -1)
@@ -337,9 +337,9 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       // -t -s <key> means "tree sorted by key"
       // -s <key> means "list sorted by key" (previous existing behavior)
       if (!flags.treeView) {
-         settings->treeView = false;
+         settings->ss->treeView = false;
       }
-      Settings_setSortKey(settings, flags.sortKey);
+      ScreenSettings_setSortKey(settings->ss, flags.sortKey);
    }
 
    CRT_init(settings, flags.allowUnicode);
@@ -347,7 +347,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
 
-   MainPanel_updateTreeFunctions(panel, settings->treeView);
+   MainPanel_updateTreeFunctions(panel, settings->ss->treeView);
 
    State state = {
       .settings = settings,
@@ -370,10 +370,10 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    CommandLine_delay(pl, 75);
    ProcessList_scan(pl, false);
 
-   if (settings->allBranchesCollapsed)
+   if (settings->ss->allBranchesCollapsed)
       ProcessList_collapseAllBranches(pl);
 
-   ScreenManager_run(scr, NULL, NULL);
+   ScreenManager_run(scr, NULL, NULL, NULL);
 
    Platform_done();
 

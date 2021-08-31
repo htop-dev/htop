@@ -15,14 +15,17 @@ in the source distribution for its full text.
 
 typedef struct ColumnsPanel_ {
    Panel super;
+   ScreenSettings* ss;
+   bool* changed;
 
-   Settings* settings;
    bool moving;
 } ColumnsPanel;
 
 extern const PanelClass ColumnsPanel_class;
 
-ColumnsPanel* ColumnsPanel_new(Settings* settings);
+ColumnsPanel* ColumnsPanel_new(ScreenSettings* ss, Hashtable* columns, bool* changed);
+
+void ColumnsPanel_fill(ColumnsPanel* this, ScreenSettings* ss, Hashtable* columns);
 
 void ColumnsPanel_update(Panel* super);
 

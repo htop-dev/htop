@@ -57,7 +57,7 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
    attrset(CRT_colors[DEFAULT_COLOR]);
    Panel_draw(this->display, true, true, true, false);
 
-   IncSet_drawBar(this->inc);
+   IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
 }
 
 void InfoScreen_addLine(InfoScreen* this, const char* line) {
@@ -89,15 +89,9 @@ void InfoScreen_run(InfoScreen* this) {
    while (looping) {
 
       Panel_draw(panel, false, true, true, false);
-      IncSet_drawBar(this->inc);
+      IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
 
-      if (this->inc->active) {
-         (void) move(LINES - 1, CRT_cursorX);
-      }
-#ifdef HAVE_SET_ESCDELAY
-      set_escdelay(25);
-#endif
-      int ch = getch();
+      int ch = Panel_getCh(panel);
 
       if (ch == ERR) {
          if (As_InfoScreen(this)->onErr) {

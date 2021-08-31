@@ -516,7 +516,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          FreeBSDProcessList_updateExe(kproc, proc);
          FreeBSDProcessList_updateProcessName(fpl->kd, kproc, proc);
 
-         if (settings->flags & PROCESS_FLAG_CWD) {
+         if (settings->ss->flags & PROCESS_FLAG_CWD) {
             FreeBSDProcessList_updateCwd(kproc, proc);
          }
 

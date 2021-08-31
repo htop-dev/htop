@@ -451,7 +451,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       Process_updateComm(proc, _psinfo->pr_fname);
       Process_updateCmdline(proc, _psinfo->pr_psargs, 0, 0);
 
-      if (proc->settings->flags & PROCESS_FLAG_CWD) {
+      if (proc->settings->ss->flags & PROCESS_FLAG_CWD) {
          SolarisProcessList_updateCwd(_psinfo->pr_pid, proc);
       }
    }

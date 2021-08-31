@@ -14,7 +14,6 @@ in the source distribution for its full text.
 #include "AvailableColumnsPanel.h"
 #include "AvailableMetersPanel.h"
 #include "ColorsPanel.h"
-#include "ColumnsPanel.h"
 #include "DisplayOptionsPanel.h"
 #include "FunctionBar.h"
 #include "Header.h"
@@ -25,6 +24,7 @@ in the source distribution for its full text.
 #include "MetersPanel.h"
 #include "Object.h"
 #include "ProvideCurses.h"
+#include "ScreensPanel.h"
 #include "Vector.h"
 #include "XUtils.h"
 
@@ -69,9 +69,11 @@ static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
    ScreenManager_add(this->scr, colors, -1);
 }
 
-static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
-   Panel* columns = (Panel*) ColumnsPanel_new(this->settings);
+static void CategoriesPanel_makeScreensPage(CategoriesPanel* this) {
+   Panel* screens = (Panel*) ScreensPanel_new(this->settings);
+   Panel* columns = (Panel*) ((ScreensPanel*)screens)->columns;
    Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns, this->settings->dynamicColumns);
+   ScreenManager_add(this->scr, screens, 20);
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
 }
@@ -91,7 +93,7 @@ static const CategoriesPanelPage categoriesPanelPages[] = {
    { .name = "Display options", .ctor = CategoriesPanel_makeDisplayOptionsPage },
    { .name = "Header layout", .ctor = CategoriesPanel_makeHeaderOptionsPage },
    { .name = "Meters", .ctor = CategoriesPanel_makeMetersPage },
-   { .name = "Columns", .ctor = CategoriesPanel_makeColumnsPage },
+   { .name = "Screens", .ctor = CategoriesPanel_makeScreensPage },
    { .name = "Colors", .ctor = CategoriesPanel_makeColorsPage },
 };
 
@@ -157,7 +159,7 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    this->settings = settings;
    this->header = header;
    this->pl = pl;
-   Panel_setHeader(super, "Setup");
+   Panel_setHeader(super, "Categories");
    for (size_t i = 0; i < ARRAYSIZE(categoriesPanelPages); i++)
       Panel_add(super, (Object*) ListItem_new(categoriesPanelPages[i].name, 0));
 

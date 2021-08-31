@@ -481,7 +481,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          DragonFlyBSDProcessList_updateExe(kproc, proc);
          DragonFlyBSDProcessList_updateProcessName(dfpl->kd, kproc, proc);
 
-         if (settings->flags & PROCESS_FLAG_CWD) {
+         if (settings->ss->flags & PROCESS_FLAG_CWD) {
             DragonFlyBSDProcessList_updateCwd(kproc, proc);
          }
 

@@ -49,27 +49,43 @@ inline int ScreenManager_size(const ScreenManager* this) {
 }
 
 void ScreenManager_add(ScreenManager* this, Panel* item, int size) {
+   ScreenManager_insert(this, item, size, Vector_size(this->panels));
+}
+
+void ScreenManager_insert(ScreenManager* this, Panel* item, int size, int idx) {
    int lastX = 0;
-   if (this->panelCount > 0) {
-      const Panel* last = (const Panel*) Vector_get(this->panels, this->panelCount - 1);
+   if (idx > 0) {
+      const Panel* last = (const Panel*) Vector_get(this->panels, idx - 1);
       lastX = last->x + last->w + 1;
    }
    int height = LINES - this->y1 - (this->header ? this->header->height : 0) + this->y2;
-   if (size > 0) {
-      Panel_resize(item, size, height);
-   } else {
-      Panel_resize(item, COLS - this->x1 + this->x2 - lastX, height);
+   if (size <= 0) {
+      size = COLS - this->x1 + this->x2 - lastX;
    }
+   Panel_resize(item, size, height);
    Panel_move(item, lastX, this->y1 + (this->header ? this->header->height : 0));
-   Vector_add(this->panels, item);
+   if (idx < this->panelCount) {
+      for (int i =  idx + 1; i <= this->panelCount; i++) {
+         Panel* p = (Panel*) Vector_get(this->panels, i);
+         Panel_move(p, p->x + size, p->y);
+      }
+   }
+   Vector_insert(this->panels, idx, item);
    item->needsRedraw = true;
    this->panelCount++;
 }
 
 Panel* ScreenManager_remove(ScreenManager* this, int idx) {
    assert(this->panelCount > idx);
+   int w = ((Panel*) Vector_get(this->panels, idx))->w;
    Panel* panel = (Panel*) Vector_remove(this->panels, idx);
    this->panelCount--;
+   if (idx < this->panelCount) {
+      for (int i = idx; i < this->panelCount; i++) {
+         Panel* p = (Panel*) Vector_get(this->panels, i);
+         Panel_move(p, p->x - w, p->y);
+      }
+   }
    return panel;
 }
 
@@ -108,7 +124,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       ProcessList_scan(pl, this->state->pauseProcessUpdate);
       // always update header, especially to avoid gaps in graph meters
       Header_updateData(this->header);
-      if (!this->state->pauseProcessUpdate && (*sortTimeout == 0 || this->settings->treeView)) {
+      if (!this->state->pauseProcessUpdate && (*sortTimeout == 0 || this->settings->ss->treeView)) {
          ProcessList_sort(pl);
          *sortTimeout = 1;
       }
@@ -125,7 +141,53 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    *rescan = false;
 }
 
+static inline bool drawTab(int* y, int* x, int l, const char* name, bool cur) {
+   attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
+   mvaddch(*y, *x, '[');
+   (*x)++;
+   if (*x >= l)
+      return false;
+   int nameLen = strlen(name);
+   int n = MINIMUM(l - *x, nameLen);
+   attrset(CRT_colors[cur ? SCREENS_CUR_TEXT : SCREENS_OTH_TEXT]);
+   mvaddnstr(*y, *x, name, n);
+   *x += n;
+   if (*x >= l)
+      return false;
+   attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
+   mvaddch(*y, *x, ']');
+   *x += 2;
+   if (*x >= l)
+      return false;
+   return true;
+}
+
+static void ScreenManager_drawScreenTabs(ScreenManager* this) {
+   ScreenSettings** screens = this->settings->screens;
+   int cur = this->settings->ssIndex;
+   int l = COLS;
+   Panel* panel = (Panel*) Vector_get(this->panels, 0);
+   int y = panel->y - 1;
+   int x = 2;
+
+   if (this->name) {
+      drawTab(&y, &x, l, this->name, true);
+      return;
+   }
+
+   for (int s = 0; screens[s]; s++) {
+      bool ok = drawTab(&y, &x, l, screens[s]->name, s == cur);
+      if (!ok) {
+         break;
+      }
+   }
+   attrset(CRT_colors[RESET_COLOR]);
+}
+
 static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_redraw) {
+   if (this->settings->screenTabs) {
+      ScreenManager_drawScreenTabs(this);
+   }
    const int nPanels = this->panelCount;
    for (int i = 0; i < nPanels; i++) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);
@@ -138,7 +200,7 @@ static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_
    }
 }
 
-void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
+void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, const char* name) {
    bool quit = false;
    int focus = 0;
 
@@ -156,6 +218,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    int sortTimeout = 0;
    int resetSortTimeout = 5;
 
+   this->name = name;
+
    while (!quit) {
       if (this->header) {
          checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut, &force_redraw);
@@ -167,10 +231,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
 
       int prevCh = ch;
-#ifdef HAVE_SET_ESCDELAY
-      set_escdelay(25);
-#endif
-      ch = getch();
+      ch = Panel_getCh(panelFocus);
 
       HandlerResult result = IGNORED;
 #ifdef HAVE_GETMOUSE
@@ -188,6 +249,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                      if (mevent.x >= panel->x && mevent.x <= panel->x + panel->w) {
                         if (mevent.y == panel->y) {
                            ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
+                           break;
+                        } else if (this->settings->screenTabs && mevent.y == panel->y - 1) {
+                           ch = EVENT_SCREEN_TAB_CLICK(mevent.x);
                            break;
                         } else if (mevent.y > panel->y && mevent.y <= panel->y + panel->h) {
                            ch = KEY_MOUSE;

@@ -384,12 +384,12 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
          continue;
       }
 
-      if (settings->flags & PROCESS_FLAG_IO)
+      if (settings->ss->flags & PROCESS_FLAG_IO)
          PCPProcessList_updateIO(pp, pid, offset, now);
 
       PCPProcessList_updateMemory(pp, pid, offset);
 
-      if ((settings->flags & PROCESS_FLAG_LINUX_SMAPS) &&
+      if ((settings->ss->flags & PROCESS_FLAG_LINUX_SMAPS) &&
           (Process_isKernelThread(proc) == false)) {
          if (PCPMetric_enabled(PCP_PROC_SMAPS_PSS))
             PCPProcessList_updateSmaps(pp, pid, offset);
@@ -419,22 +419,22 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
          PCPProcessList_updateCmdline(proc, pid, offset, command);
       }
 
-      if (settings->flags & PROCESS_FLAG_LINUX_CGROUP)
+      if (settings->ss->flags & PROCESS_FLAG_LINUX_CGROUP)
          PCPProcessList_readCGroups(pp, pid, offset);
 
-      if (settings->flags & PROCESS_FLAG_LINUX_OOM)
+      if (settings->ss->flags & PROCESS_FLAG_LINUX_OOM)
          PCPProcessList_readOomData(pp, pid, offset);
 
-      if (settings->flags & PROCESS_FLAG_LINUX_CTXT)
+      if (settings->ss->flags & PROCESS_FLAG_LINUX_CTXT)
          PCPProcessList_readCtxtData(pp, pid, offset);
 
-      if (settings->flags & PROCESS_FLAG_LINUX_SECATTR)
+      if (settings->ss->flags & PROCESS_FLAG_LINUX_SECATTR)
          PCPProcessList_readSecattrData(pp, pid, offset);
 
-      if (settings->flags & PROCESS_FLAG_CWD)
+      if (settings->ss->flags & PROCESS_FLAG_CWD)
          PCPProcessList_readCwd(pp, pid, offset);
 
-      if (settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP)
+      if (settings->ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP)
          PCPProcessList_readAutogroup(pp, pid, offset);
 
       if (proc->state == ZOMBIE && !proc->cmdline && command[0]) {
@@ -676,16 +676,16 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    for (int metric = PCP_PROC_PID; metric < PCP_METRIC_COUNT; metric++)
       PCPMetric_enable(metric, enabled);
 
-   flagged = settings->flags & PROCESS_FLAG_LINUX_CGROUP;
+   flagged = settings->ss->flags & PROCESS_FLAG_LINUX_CGROUP;
    PCPMetric_enable(PCP_PROC_CGROUPS, flagged && enabled);
-   flagged = settings->flags & PROCESS_FLAG_LINUX_OOM;
+   flagged = settings->ss->flags & PROCESS_FLAG_LINUX_OOM;
    PCPMetric_enable(PCP_PROC_OOMSCORE, flagged && enabled);
-   flagged = settings->flags & PROCESS_FLAG_LINUX_CTXT;
+   flagged = settings->ss->flags & PROCESS_FLAG_LINUX_CTXT;
    PCPMetric_enable(PCP_PROC_VCTXSW, flagged && enabled);
    PCPMetric_enable(PCP_PROC_NVCTXSW, flagged && enabled);
-   flagged = settings->flags & PROCESS_FLAG_LINUX_SECATTR;
+   flagged = settings->ss->flags & PROCESS_FLAG_LINUX_SECATTR;
    PCPMetric_enable(PCP_PROC_LABELS, flagged && enabled);
-   flagged = settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP;
+   flagged = settings->ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP;
    PCPMetric_enable(PCP_PROC_AUTOGROUP_ID, flagged && enabled);
    PCPMetric_enable(PCP_PROC_AUTOGROUP_NICE, flagged && enabled);
 

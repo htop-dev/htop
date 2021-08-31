@@ -18,13 +18,13 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static void ListItem_delete(Object* cast) {
+void ListItem_delete(Object* cast) {
    ListItem* this = (ListItem*)cast;
    free(this->value);
    free(this);
 }
 
-static void ListItem_display(const Object* cast, RichString* out) {
+void ListItem_display(const Object* cast, RichString* out) {
    const ListItem* const this = (const ListItem*)cast;
    assert (this != NULL);
 
@@ -38,11 +38,15 @@ static void ListItem_display(const Object* cast, RichString* out) {
    RichString_appendWide(out, CRT_colors[DEFAULT_COLOR], this->value);
 }
 
-ListItem* ListItem_new(const char* value, int key) {
-   ListItem* this = AllocThis(ListItem);
+void ListItem_init(ListItem* this, const char* value, int key) {
    this->value = xStrdup(value);
    this->key = key;
    this->moving = false;
+}
+
+ListItem* ListItem_new(const char* value, int key) {
+   ListItem* this = AllocThis(ListItem);
+   ListItem_init(this, value, key);
    return this;
 }
 
@@ -55,7 +59,7 @@ void ListItem_append(ListItem* this, const char* text) {
    this->value[newLen] = '\0';
 }
 
-static int ListItem_compare(const void* cast1, const void* cast2) {
+int ListItem_compare(const void* cast1, const void* cast2) {
    const ListItem* obj1 = (const ListItem*) cast1;
    const ListItem* obj2 = (const ListItem*) cast2;
    return strcmp(obj1->value, obj2->value);

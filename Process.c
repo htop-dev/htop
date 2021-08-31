@@ -784,7 +784,8 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
          attr = CRT_colors[PROCESS_THREAD];
          baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
       }
-      if (!this->settings->treeView || this->indent == 0) {
+      const ScreenSettings* ss = this->settings->ss;
+      if (!ss->treeView || this->indent == 0) {
          Process_writeCommand(this, attr, baseattr, str);
          return;
       }
@@ -974,7 +975,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 
 void Process_display(const Object* cast, RichString* out) {
    const Process* this = (const Process*) cast;
-   const ProcessField* fields = this->settings->fields;
+   const ProcessField* fields = this->settings->ss->fields;
    for (int i = 0; fields[i]; i++)
       As_Process(this)->writeField(this, out, fields[i]);
 
@@ -1092,8 +1093,9 @@ int Process_compare(const void* v1, const void* v2) {
    const Process* p2 = (const Process*)v2;
 
    const Settings* settings = p1->settings;
+   const ScreenSettings* ss = settings->ss;
 
-   ProcessField key = Settings_getActiveSortKey(settings);
+   ProcessField key = ScreenSettings_getActiveSortKey(ss);
 
    int result = Process_compareByKey(p1, p2, key);
 
@@ -1101,7 +1103,7 @@ int Process_compare(const void* v1, const void* v2) {
    if (!result)
       return SPACESHIP_NUMBER(p1->pid, p2->pid);
 
-   return (Settings_getActiveDirection(settings) == 1) ? result : -result;
+   return (ScreenSettings_getActiveDirection(ss) == 1) ? result : -result;
 }
 
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {

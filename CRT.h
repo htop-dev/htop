@@ -120,6 +120,11 @@ typedef enum ColorElements_ {
    CPU_SOFTIRQ,
    CPU_STEAL,
    CPU_GUEST,
+   PANEL_EDIT,
+   SCREENS_OTH_BORDER,
+   SCREENS_OTH_TEXT,
+   SCREENS_CUR_BORDER,
+   SCREENS_CUR_TEXT,
    PRESSURE_STALL_TEN,
    PRESSURE_STALL_SIXTY,
    PRESSURE_STALL_THREEHUNDRED,
@@ -150,6 +155,7 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 #define KEY_WHEELUP   KEY_F(30)
 #define KEY_WHEELDOWN KEY_F(31)
 #define KEY_RECLICK   KEY_F(32)
+#define KEY_SHIFT_TAB KEY_F(33)
 #define KEY_ALT(x)    (KEY_F(64 - 26) + ((x) - 'A'))
 
 extern const char* CRT_degreeSign;

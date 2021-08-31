@@ -22,6 +22,7 @@ typedef struct ScreenManager_ {
    int x2;
    int y2;
    Vector* panels;
+   const char* name;
    int panelCount;
    Header* header;
    const Settings* settings;
@@ -37,10 +38,12 @@ int ScreenManager_size(const ScreenManager* this);
 
 void ScreenManager_add(ScreenManager* this, Panel* item, int size);
 
+void ScreenManager_insert(ScreenManager* this, Panel* item, int size, int idx);
+
 Panel* ScreenManager_remove(ScreenManager* this, int idx);
 
 void ScreenManager_resize(ScreenManager* this);
 
-void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey);
+void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, const char* name);
 
 #endif

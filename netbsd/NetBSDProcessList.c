@@ -307,7 +307,7 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
          }
       }
 
-      if (settings->flags & PROCESS_FLAG_CWD) {
+      if (settings->ss->flags & PROCESS_FLAG_CWD) {
          NetBSDProcessList_updateCwd(kproc, proc);
       }
 

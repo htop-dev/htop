@@ -71,22 +71,28 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (needReset)
       this->state->hideProcessSelection = false;
 
+   Settings* settings = this->state->settings;
+   ScreenSettings* ss = settings->ss;
+
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
       const ProcessList* pl = this->state->pl;
-      Settings* settings = this->state->settings;
       int hx = super->scrollH + x + 1;
       ProcessField field = ProcessList_keyAt(pl, hx);
-      if (settings->treeView && settings->treeViewAlwaysByPID) {
-         settings->treeView = false;
-         settings->direction = 1;
+      if (ss->treeView && ss->treeViewAlwaysByPID) {
+         ss->treeView = false;
+         ss->direction = 1;
          reaction |= Action_setSortKey(settings, field);
-      } else if (field == Settings_getActiveSortKey(settings)) {
-         Settings_invertSortOrder(settings);
+      } else if (field == ScreenSettings_getActiveSortKey(ss)) {
+         ScreenSettings_invertSortOrder(ss);
       } else {
          reaction |= Action_setSortKey(settings, field);
       }
       reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS;
+      result = HANDLED;
+   } else if (EVENT_IS_SCREEN_TAB_CLICK(ch)) {
+      int x = EVENT_SCREEN_TAB_GET_X(ch);
+      reaction |= Action_setScreenTab(settings, x);
       result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, MainPanel_getValue, NULL);
@@ -116,7 +122,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    }
 
    if (reaction & HTOP_REDRAW_BAR) {
-      MainPanel_updateTreeFunctions(this, this->state->settings->treeView);
+      MainPanel_updateTreeFunctions(this, settings->ss->treeView);
    }
    if (reaction & HTOP_RESIZE) {
       result |= RESIZE;
@@ -182,7 +188,7 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
    if (hideFunctionBar && !this->inc->active)
       return;
 
-   IncSet_drawBar(this->inc);
+   IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
    if (this->state->pauseProcessUpdate) {
       FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
    }

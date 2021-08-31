@@ -19,13 +19,32 @@ in the source distribution for its full text.
 
 #define DEFAULT_DELAY 15
 
-#define CONFIG_READER_MIN_VERSION 2
+#define CONFIG_READER_MIN_VERSION 3
+
+typedef struct {
+   const char* name;
+   const char* columns;
+   const char* sortKey;
+} ScreenDefaults;
 
 typedef struct {
    size_t len;
    char** names;
    int* modes;
 } MeterColumnSetting;
+
+typedef struct {
+   char* name;
+   ProcessField* fields;
+   uint32_t flags;
+   int direction;
+   int treeDirection;
+   ProcessField sortKey;
+   ProcessField treeSortKey;
+   bool treeView;
+   bool treeViewAlwaysByPID;
+   bool allBranchesCollapsed;
+} ScreenSettings;
 
 typedef struct Settings_ {
    char* filename;
@@ -34,15 +53,13 @@ typedef struct Settings_ {
    MeterColumnSetting* hColumns;
    Hashtable* dynamicColumns;
 
-   ProcessField* fields;
-   uint32_t flags;
+   ScreenSettings** screens;
+   unsigned int nScreens;
+   unsigned int ssIndex;
+   ScreenSettings* ss;
+
    int colorScheme;
    int delay;
-
-   int direction;
-   int treeDirection;
-   ProcessField sortKey;
-   ProcessField treeSortKey;
 
    bool countCPUsFromOne;
    bool detailedCPUTime;
@@ -52,9 +69,6 @@ typedef struct Settings_ {
    bool showCPUTemperature;
    bool degreeFahrenheit;
    #endif
-   bool treeView;
-   bool treeViewAlwaysByPID;
-   bool allBranchesCollapsed;
    bool showProgramPath;
    bool shadowOtherUsers;
    bool showThreadNames;
@@ -72,6 +86,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool screenTabs;
    #ifdef HAVE_GETMOUSE
    bool enableMouse;
    #endif
@@ -85,13 +100,13 @@ typedef struct Settings_ {
 
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
 
-static inline ProcessField Settings_getActiveSortKey(const Settings* this) {
+static inline ProcessField ScreenSettings_getActiveSortKey(const ScreenSettings* this) {
    return (this->treeView)
           ? (this->treeViewAlwaysByPID ? PID : this->treeSortKey)
           : this->sortKey;
 }
 
-static inline int Settings_getActiveDirection(const Settings* this) {
+static inline int ScreenSettings_getActiveDirection(const ScreenSettings* this) {
    return this->treeView ? this->treeDirection : this->direction;
 }
 
@@ -101,9 +116,11 @@ int Settings_write(const Settings* this, bool onCrash);
 
 Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns);
 
-void Settings_invertSortOrder(Settings* this);
+ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char* line);
 
-void Settings_setSortKey(Settings* this, ProcessField sortKey);
+void ScreenSettings_invertSortOrder(ScreenSettings* this);
+
+void ScreenSettings_setSortKey(ScreenSettings* this, ProcessField sortKey);
 
 void Settings_enableReadonly(void);
 
