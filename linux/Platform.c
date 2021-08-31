@@ -573,6 +573,17 @@ bool Platform_getDiskIO(DiskIOData* data) {
              && diskname[7] == 'p')
             continue;
 
+         /* only count root disks, e.g. do not count IO from nvme0n1 and nvme0n1p1 twice */
+         if (diskname[0] == 'n'
+             && diskname[1] == 'v'	 
+             && diskname[2] == 'm'	 
+             && diskname[3] == 'e'	 
+             && isdigit((unsigned char)diskname[4])
+             && diskname[5] == 'n'
+             && isdigit((unsigned char)diskname[6])
+             && diskname[7] == 'p')
+            continue;		 
+
          read_sum += read_tmp;
          write_sum += write_tmp;
          timeSpend_sum += timeSpend_tmp;
