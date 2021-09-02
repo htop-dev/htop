@@ -63,9 +63,9 @@ Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
             Affinity_add(affinity, i);
          }
       } else {
-         unsigned int id;
-         hwloc_bitmap_foreach_begin(id, cpuset);
-         Affinity_add(affinity, id);
+         int id;
+         hwloc_bitmap_foreach_begin(id, cpuset)
+            Affinity_add(affinity, (unsigned)id);
          hwloc_bitmap_foreach_end();
       }
    }

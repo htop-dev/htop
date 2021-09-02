@@ -425,9 +425,9 @@ Affinity* AffinityPanel_getAffinity(Panel* super, ProcessList* pl) {
    Affinity* affinity = Affinity_new(pl);
 
    #ifdef HAVE_LIBHWLOC
-   unsigned int i;
+   int i;
    hwloc_bitmap_foreach_begin(i, this->workCpuset)
-   Affinity_add(affinity, i);
+      Affinity_add(affinity, (unsigned)i);
    hwloc_bitmap_foreach_end();
    #else
    for (int i = 0; i < Vector_size(this->cpuids); i++) {
