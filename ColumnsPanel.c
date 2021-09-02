@@ -118,12 +118,6 @@ const PanelClass ColumnsPanel_class = {
    .eventHandler = ColumnsPanel_eventHandler
 };
 
-typedef struct {
-   Panel* super;
-   unsigned int id;
-   unsigned int offset;
-} DynamicIterator;
-
 static void ColumnsPanel_add(Panel* super, unsigned int key, Hashtable* columns) {
    const char* name;
    if (key < LAST_PROCESSFIELD) {
