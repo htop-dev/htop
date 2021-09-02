@@ -472,7 +472,7 @@ AC_ARG_ENABLE([vserver],
               [],
               [enable_vserver=no])
 if test "x$enable_vserver" = xyes; then
-    AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
+   AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
 fi
 
 
@@ -482,8 +482,11 @@ AC_ARG_ENABLE([ancient_vserver],
               [],
               [enable_ancient_vserver=no])
 if test "x$enable_ancient_vserver" = xyes; then
-    AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
-    AC_DEFINE([HAVE_ANCIENT_VSERVER], [1], [Define if ancient vserver support enabled.])
+   if test "x$enable_vserver" != xyes; then
+      enable_vserver=implied
+   fi
+   AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
+   AC_DEFINE([HAVE_ANCIENT_VSERVER], [1], [Define if ancient vserver support enabled.])
 fi
 
 
