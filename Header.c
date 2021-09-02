@@ -86,8 +86,9 @@ static void Header_addMeterByName(Header* this, const char* name, MeterModeId mo
    if (paren) {
       int ok = sscanf(paren, "(%10u)", &param); // CPUMeter
       if (!ok) {
-         char* end, dynamic[32] = {0};
+         char dynamic[32] = {0};
          if (sscanf(paren, "(%30s)", dynamic)) { // DynamicMeter
+            char* end;
             if ((end = strrchr(dynamic, ')')) == NULL)
                return;    // htoprc parse failure
             *end = '\0';

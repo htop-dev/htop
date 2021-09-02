@@ -134,8 +134,9 @@ static void Settings_readFields(Settings* settings, const char* line) {
       }
 
       // Dynamically-defined columns are always stored by-name.
-      char* end, dynamic[32] = {0};
+      char dynamic[32] = {0};
       if (sscanf(ids[i], "Dynamic(%30s)", dynamic)) {
+         char* end;
          if ((end = strrchr(dynamic, ')')) == NULL)
             continue;
          *end = '\0';
