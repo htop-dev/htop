@@ -196,16 +196,16 @@ void Header_draw(const Header* this) {
    }
    const int width = COLS - pad;
    int x = pad;
-   float roundingLoss = 0.0f;
+   float roundingLoss = 0.0F;
 
    Header_forEachColumn(this, col) {
       Vector* meters = this->columns[col];
-      float colWidth = (float)width * HeaderLayout_layouts[this->headerLayout].widths[col] / 100.0f;
+      float colWidth = (float)width * HeaderLayout_layouts[this->headerLayout].widths[col] / 100.0F;
 
       roundingLoss += colWidth - floorf(colWidth);
-      if (roundingLoss >= 1.0f) {
-         colWidth += 1.0f;
-         roundingLoss -= 1.0f;
+      if (roundingLoss >= 1.0F) {
+         colWidth += 1.0F;
+         roundingLoss -= 1.0F;
       }
 
       for (int y = (pad / 2), i = 0; i < Vector_size(meters); i++) {
@@ -214,7 +214,7 @@ void Header_draw(const Header* this) {
          float actualWidth = colWidth;
          if (meter->mode == TEXT_METERMODE) {
             for (int j = 1; j < meter->columnWidthCount; j++) {
-               actualWidth += (float)width * HeaderLayout_layouts[this->headerLayout].widths[col + j] / 100.0f;
+               actualWidth += (float)width * HeaderLayout_layouts[this->headerLayout].widths[col + j] / 100.0F;
             }
          }
 
