@@ -155,11 +155,19 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       case 'n':  /* file name, comment, Internet address */
       case 's':  /* file's size */
       case 't':  /* file's type */
+      {
+         size_t index = getIndexForType(cmd);
+         free_and_xStrdup(&item->data[index], line + 1);
+         break;
+      }
       case 'o':  /* file's offset */
       {
          size_t index = getIndexForType(cmd);
-         free(item->data[index]);
-         item->data[index] = xStrdup(line + 1);
+         if (String_startsWith(line + 1, "0t")) {
+            free_and_xStrdup(&item->data[index], line + 3);
+         } else {
+            free_and_xStrdup(&item->data[index], line + 1);
+         }
          break;
       }
       case 'c':  /* process command name  */
