@@ -33,6 +33,8 @@ typedef struct PCPDynamicMeters_ {
 
 void PCPDynamicMeters_init(PCPDynamicMeters* meters);
 
+void PCPDynamicMeters_done(Hashtable* table);
+
 void PCPDynamicMeter_enable(PCPDynamicMeter* this);
 
 void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter);

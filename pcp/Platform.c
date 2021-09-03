@@ -363,6 +363,14 @@ void Platform_init(void) {
    Platform_getMaxPid();
 }
 
+void Platform_dynamicColumnsDone(Hashtable* columns) {
+   PCPDynamicColumns_done(columns);
+}
+
+void Platform_dynamicMetersDone(Hashtable* meters) {
+   PCPDynamicMeters_done(meters);
+}
+
 void Platform_done(void) {
    pmDestroyContext(pcp->context);
    if (pcp->result)

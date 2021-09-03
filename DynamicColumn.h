@@ -21,6 +21,8 @@ typedef struct DynamicColumn_ {
 
 Hashtable* DynamicColumns_new(void);
 
+void DynamicColumns_delete(Hashtable* dynamics);
+
 const char* DynamicColumn_init(unsigned int key);
 
 const DynamicColumn* DynamicColumn_lookup(Hashtable* dynamics, unsigned int key);
