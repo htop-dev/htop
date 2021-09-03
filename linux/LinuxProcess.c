@@ -85,9 +85,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [OOM] = { .name = "OOM", .title = " OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, .defaultSortDesc = true, },
    [IO_PRIORITY] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
 #ifdef HAVE_DELAYACCT
-   [PERCENT_CPU_DELAY] = { .name = "PERCENT_CPU_DELAY", .title = "CPUD% ", .description = "CPU delay %", .flags = PROCESS_FLAG_LINUX_DELAYACCT, .defaultSortDesc = true, },
+   [PERCENT_CPU_DELAY] = { .name = "PERCENT_CPU_DELAY", .title = "CPUD%", .description = "CPU delay %", .flags = PROCESS_FLAG_LINUX_DELAYACCT, .defaultSortDesc = true, },
    [PERCENT_IO_DELAY] = { .name = "PERCENT_IO_DELAY", .title = "IOD% ", .description = "Block I/O delay %", .flags = PROCESS_FLAG_LINUX_DELAYACCT, .defaultSortDesc = true, },
-   [PERCENT_SWAP_DELAY] = { .name = "PERCENT_SWAP_DELAY", .title = "SWAPD% ", .description = "Swapin delay %", .flags = PROCESS_FLAG_LINUX_DELAYACCT, .defaultSortDesc = true, },
+   [PERCENT_SWAP_DELAY] = { .name = "PERCENT_SWAP_DELAY", .title = "SWPD%", .description = "Swapin delay %", .flags = PROCESS_FLAG_LINUX_DELAYACCT, .defaultSortDesc = true, },
 #endif
    [M_PSS] = { .name = "M_PSS", .title = "  PSS ", .description = "proportional set size, same as M_RESIDENT but each page is divided by the number of processes sharing it", .flags = PROCESS_FLAG_LINUX_SMAPS, .defaultSortDesc = true, },
    [M_SWAP] = { .name = "M_SWAP", .title = " SWAP ", .description = "Size of the process's swapped pages", .flags = PROCESS_FLAG_LINUX_SMAPS, .defaultSortDesc = true, },
@@ -189,20 +189,6 @@ bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
    return success;
 }
 
-#ifdef HAVE_DELAYACCT
-static void LinuxProcess_printDelay(float delay_percent, char* buffer, int n, int* attr) {
-   if (isnan(delay_percent)) {
-      xSnprintf(buffer, n, " N/A  ");
-      *attr = CRT_colors[PROCESS_SHADOW];
-   } else {
-      xSnprintf(buffer, n, "%4.1f  ", delay_percent);
-      if (delay_percent < 0.05) {
-         *attr = CRT_colors[PROCESS_SHADOW];
-      }
-   }
-}
-#endif
-
 static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const LinuxProcess* lp = (const LinuxProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
@@ -281,9 +267,9 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       break;
    }
    #ifdef HAVE_DELAYACCT
-   case PERCENT_CPU_DELAY: LinuxProcess_printDelay(lp->cpu_delay_percent, buffer, n, &attr); break;
-   case PERCENT_IO_DELAY: LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n, &attr); break;
-   case PERCENT_SWAP_DELAY: LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n, &attr); break;
+   case PERCENT_CPU_DELAY: Process_printPercentage(lp->cpu_delay_percent, buffer, n, &attr); break;
+   case PERCENT_IO_DELAY: Process_printPercentage(lp->blkio_delay_percent, buffer, n, &attr); break;
+   case PERCENT_SWAP_DELAY: Process_printPercentage(lp->swapin_delay_percent, buffer, n, &attr); break;
    #endif
    case CTXT:
       if (lp->ctxt_diff > 1000) {

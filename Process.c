@@ -707,6 +707,24 @@ void Process_printLeftAlignedField(RichString* str, int attr, const char* conten
    RichString_appendChr(str, attr, ' ', width + 1 - columns);
 }
 
+void Process_printPercentage(float val, char* buffer, int n, int* attr) {
+   if (val >= 0) {
+      if (val < 99.9F) {
+         if (val < 0.05F) {
+            *attr = CRT_colors[PROCESS_SHADOW];
+         }
+         xSnprintf(buffer, n, "%4.1f ", val);
+      } else if (val < 999) {
+         xSnprintf(buffer, n, "%3d. ", (int)val);
+      } else {
+         xSnprintf(buffer, n, "%4d ", (int)val);
+      }
+   } else {
+      *attr = CRT_colors[PROCESS_SHADOW];
+      xSnprintf(buffer, n, " N/A ");
+   }
+}
+
 void Process_writeField(const Process* this, RichString* str, ProcessField field) {
    char buffer[256];
    size_t n = sizeof(buffer);
@@ -821,34 +839,13 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 
       xSnprintf(buffer, n, "%4ld ", this->nlwp);
       break;
-   case PERCENT_CPU:
+   case PERCENT_CPU: Process_printPercentage(this->percent_cpu, buffer, n, &attr); break;
    case PERCENT_NORM_CPU: {
-      float cpuPercentage = this->percent_cpu;
-      if (field == PERCENT_NORM_CPU) {
-         cpuPercentage /= this->processList->activeCPUs;
-      }
-      if (cpuPercentage > 999.9F) {
-         xSnprintf(buffer, n, "%4u ", (unsigned int)cpuPercentage);
-      } else if (cpuPercentage > 99.9F) {
-         xSnprintf(buffer, n, "%3u. ", (unsigned int)cpuPercentage);
-      } else {
-         if (cpuPercentage < 0.05F)
-            attr = CRT_colors[PROCESS_SHADOW];
-
-         xSnprintf(buffer, n, "%4.1f ", cpuPercentage);
-      }
+      float cpuPercentage = this->percent_cpu / this->processList->activeCPUs;
+      Process_printPercentage(cpuPercentage, buffer, n, &attr);
       break;
    }
-   case PERCENT_MEM:
-      if (this->percent_mem > 99.9F) {
-         xSnprintf(buffer, n, "100. ");
-      } else {
-         if (this->percent_mem < 0.05F)
-            attr = CRT_colors[PROCESS_SHADOW];
-
-         xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
-      }
-      break;
+   case PERCENT_MEM: Process_printPercentage(this->percent_mem, buffer, n, &attr); break;
    case PGRP: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pgrp); break;
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pid); break;
    case PPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->ppid); break;
