@@ -10,12 +10,14 @@ in the source distribution for its full text.
 #include "OpenFilesScreen.h"
 
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 #include "Macros.h"
 #include "Panel.h"
@@ -124,6 +126,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
 
    OpenFiles_Data* item = &(pdata->data);
    OpenFiles_FileData* fdata = NULL;
+   bool lsofIncludesFileSize = false;
 
    FILE* fd = fdopen(fdpair[0], "r");
    if (!fd) {
@@ -185,6 +188,10 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
          /* ignore */
          break;
       }
+
+      if (cmd == 's')
+         lsofIncludesFileSize = true;
+
       free(line);
    }
    fclose(fd);
@@ -199,6 +206,25 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       pdata->error = 1;
    } else {
       pdata->error = WEXITSTATUS(wstatus);
+   }
+
+   /* We got all information we need; no post-processing needed */
+   if (lsofIncludesFileSize)
+      return pdata;
+
+   /* On linux, `lsof -o -F` omits SIZE, so add it back. */
+   /* On macOS, `lsof -o -F` includes SIZE, so this block isn't needed.  If no open files have a filesize, this will still run, unfortunately. */
+   size_t fileSizeIndex = getIndexForType('s');
+   for (fdata = pdata->files; fdata != NULL; fdata = fdata->next) {
+      item = &fdata->data;
+      const char* filename = getDataForType(item, 'n');
+
+      struct stat st;
+      if (stat(filename, &st) == 0) {
+         char fileSizeBuf[21]; /* 20 (long long) + 1 (NULL) */
+         xSnprintf(fileSizeBuf, sizeof(fileSizeBuf), "%"PRIu64, st.st_size); /* st.st_size is long long on macOS, long on linux */
+         free_and_xStrdup(&item->data[fileSizeIndex], fileSizeBuf);
+      }
    }
 
    return pdata;
