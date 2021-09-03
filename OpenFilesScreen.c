@@ -25,7 +25,7 @@ in the source distribution for its full text.
 
 
 typedef struct OpenFiles_Data_ {
-   char* data[7];
+   char* data[8];
 } OpenFiles_Data;
 
 typedef struct OpenFiles_ProcessData_ {
@@ -55,6 +55,8 @@ static size_t getIndexForType(char type) {
       return 5;
    case 't':
       return 6;
+   case 'o':
+      return 7;
    }
 
    /* should never reach here */
@@ -74,7 +76,7 @@ OpenFilesScreen* OpenFilesScreen_new(const Process* process) {
    } else {
       this->pid = process->pid;
    }
-   return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 2, "   FD TYPE    MODE DEVICE           SIZE       NODE  NAME");
+   return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 2, "   FD TYPE    MODE DEVICE           SIZE     OFFSET       NODE  NAME");
 }
 
 void OpenFilesScreen_delete(Object* this) {
@@ -115,7 +117,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       close(fdnull);
       char buffer[32] = {0};
       xSnprintf(buffer, sizeof(buffer), "%d", pid);
-      execlp("lsof", "lsof", "-P", "-p", buffer, "-F", NULL);
+      execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", NULL);
       exit(127);
    }
    close(fdpair[1]);
@@ -153,6 +155,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       case 'n':  /* file name, comment, Internet address */
       case 's':  /* file's size */
       case 't':  /* file's type */
+      case 'o':  /* file's offset */
       {
          size_t index = getIndexForType(cmd);
          free(item->data[index]);
@@ -166,7 +169,6 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       case 'k':  /* link count */
       case 'l':  /* file's lock status */
       case 'L':  /* process login name */
-      case 'o':  /* file's offset */
       case 'p':  /* process ID */
       case 'P':  /* protocol name */
       case 'R':  /* parent process ID */
@@ -213,14 +215,15 @@ static void OpenFilesScreen_scan(InfoScreen* this) {
       while (fdata) {
          OpenFiles_Data* data = &fdata->data;
          size_t lenN = strlen(getDataForType(data, 'n'));
-         size_t sizeEntry = 5 + 7 + 4 + 10 + 10 + 10 + lenN + 7 /*spaces*/ + 1 /*null*/;
+         size_t sizeEntry = 5 + 7 + 4 + 10 + 10 + 10 + 10 + lenN + 8 /*spaces*/ + 1 /*null*/;
          char entry[sizeEntry];
-         xSnprintf(entry, sizeof(entry), "%5.5s %-7.7s %-4.4s %-10.10s %10.10s %10.10s  %s",
+         xSnprintf(entry, sizeof(entry), "%5.5s %-7.7s %-4.4s %-10.10s %10.10s %10.10s %10.10s  %s",
                    getDataForType(data, 'f'),
                    getDataForType(data, 't'),
                    getDataForType(data, 'a'),
                    getDataForType(data, 'D'),
                    getDataForType(data, 's'),
+                   getDataForType(data, 'o'),
                    getDataForType(data, 'i'),
                    getDataForType(data, 'n'));
          InfoScreen_addLine(this, entry);
