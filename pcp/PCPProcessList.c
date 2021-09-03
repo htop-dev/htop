@@ -317,7 +317,7 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
    Process_updateComm(process, comm);
 
    if (PCPMetric_instance(PCP_PROC_EXE, pid, offset, &value, PM_TYPE_STRING)) {
-      Process_updateExe(process, value.cp);
+      Process_updateExe(process, value.cp[0] ? value.cp : NULL);
       free(value.cp);
    }
 }
