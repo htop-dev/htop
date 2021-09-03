@@ -38,6 +38,13 @@ Hashtable* DynamicMeters_new(void) {
    return Platform_dynamicMeters();
 }
 
+void DynamicMeters_delete(Hashtable* dynamics) {
+   if (dynamics) {
+      Platform_dynamicMetersDone(dynamics);
+      Hashtable_delete(dynamics);
+   }
+}
+
 typedef struct {
    unsigned int key;
    const char* name;

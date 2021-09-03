@@ -283,6 +283,22 @@ void PCPDynamicMeters_init(PCPDynamicMeters* meters) {
    free(path);
 }
 
+static void PCPDynamicMeter_free(ATTR_UNUSED ht_key_t key, void* value, ATTR_UNUSED void* data) {
+   PCPDynamicMeter* meter = (PCPDynamicMeter*) value;
+   for (size_t i = 0; i < meter->totalMetrics; i++) {
+      free(meter->metrics[i].name);
+      free(meter->metrics[i].label);
+      free(meter->metrics[i].suffix);
+   }
+   free(meter->metrics);
+   free(meter->super.caption);
+   free(meter->super.description);
+}
+
+void PCPDynamicMeters_done(Hashtable* table) {
+   Hashtable_foreach(table, PCPDynamicMeter_free, NULL);
+}
+
 void PCPDynamicMeter_enable(PCPDynamicMeter* this) {
    for (size_t i = 0; i < this->totalMetrics; i++)
       PCPMetric_enable(this->metrics[i].id, true);

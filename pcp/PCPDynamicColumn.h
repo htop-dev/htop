@@ -26,6 +26,8 @@ typedef struct PCPDynamicColumns_ {
 
 void PCPDynamicColumns_init(PCPDynamicColumns* columns);
 
+void PCPDynamicColumns_done(Hashtable* table);
+
 void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, RichString* str);
 
 int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, ProcessField key);

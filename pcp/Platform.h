@@ -138,6 +138,8 @@ void Platform_gettime_monotonic(uint64_t* msec);
 
 Hashtable* Platform_dynamicMeters(void);
 
+void Platform_dynamicMetersDone(Hashtable* meters);
+
 void Platform_dynamicMeterInit(Meter* meter);
 
 void Platform_dynamicMeterUpdateValues(Meter* meter);
@@ -145,6 +147,8 @@ void Platform_dynamicMeterUpdateValues(Meter* meter);
 void Platform_dynamicMeterDisplay(const Meter* meter, RichString* out);
 
 Hashtable* Platform_dynamicColumns(void);
+
+void Platform_dynamicColumnsDone(Hashtable* columns);
 
 const char* Platform_dynamicColumnInit(unsigned int key);
 

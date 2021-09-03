@@ -393,10 +393,8 @@ int CommandLine_run(const char* name, int argc, char** argv) {
 
    /* Delete these last, since they can get accessed in the crash handler */
    Settings_delete(settings);
-   if (dc)
-      Hashtable_delete(dc);
-   if (dm)
-      Hashtable_delete(dm);
+   DynamicColumns_delete(dc);
+   DynamicMeters_delete(dm);
 
    return 0;
 }

@@ -22,6 +22,13 @@ Hashtable* DynamicColumns_new(void) {
    return Platform_dynamicColumns();
 }
 
+void DynamicColumns_delete(Hashtable* dynamics) {
+   if (dynamics) {
+      Platform_dynamicColumnsDone(dynamics);
+      Hashtable_delete(dynamics);
+   }
+}
+
 const char* DynamicColumn_init(unsigned int key) {
    return Platform_dynamicColumnInit(key);
 }

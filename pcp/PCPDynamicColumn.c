@@ -226,6 +226,18 @@ void PCPDynamicColumns_init(PCPDynamicColumns* columns) {
    free(path);
 }
 
+static void PCPDynamicColumns_free(ATTR_UNUSED ht_key_t key, void* value, ATTR_UNUSED void* data) {
+   PCPDynamicColumn* column = (PCPDynamicColumn*) value;
+   free(column->metricName);
+   free(column->super.heading);
+   free(column->super.caption);
+   free(column->super.description);
+}
+
+void PCPDynamicColumns_done(Hashtable* table) {
+   Hashtable_foreach(table, PCPDynamicColumns_free, NULL);
+}
+
 void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, RichString* str) {
    const PCPProcess* pp = (const PCPProcess*) proc;
    unsigned int type = PCPMetric_type(this->id);

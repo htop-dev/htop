@@ -17,6 +17,8 @@ typedef struct DynamicMeter_ {
 
 Hashtable* DynamicMeters_new(void);
 
+void DynamicMeters_delete(Hashtable* dynamics);
+
 const char* DynamicMeter_lookup(Hashtable* dynamics, unsigned int key);
 
 bool DynamicMeter_search(Hashtable* dynamics, const char* name, unsigned int* key);
