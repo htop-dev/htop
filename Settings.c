@@ -358,9 +358,9 @@ int Settings_write(const Settings* this, bool onCrash) {
    }
 
    #define printSettingInteger(setting_, value_) \
-      fprintf(fd, setting_ "=%d%c", (int) (value_), separator);
+      fprintf(fd, setting_ "=%d%c", (int) (value_), separator)
    #define printSettingString(setting_, value_) \
-      fprintf(fd, setting_ "=%s%c", value_, separator);
+      fprintf(fd, setting_ "=%s%c", value_, separator)
 
    if (!onCrash) {
       fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
