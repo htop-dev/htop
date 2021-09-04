@@ -22,7 +22,7 @@ in the source distribution for its full text.
 #define CONFIG_READER_MIN_VERSION 2
 
 typedef struct {
-   uint8_t len;
+   size_t len;
    char** names;
    int* modes;
 } MeterColumnSetting;

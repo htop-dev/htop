@@ -29,7 +29,7 @@ void Settings_delete(Settings* this) {
    free(this->fields);
    for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       if (this->hColumns[i].names) {
-         for (uint8_t j = 0; j < this->hColumns[i].len; j++)
+         for (size_t j = 0; j < this->hColumns[i].len; j++)
             free(this->hColumns[i].names[j]);
          free(this->hColumns[i].names);
       }
@@ -329,7 +329,7 @@ static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns
 
 static void writeMeters(const Settings* this, FILE* fd, char separator, unsigned int column) {
    const char* sep = "";
-   for (uint8_t i = 0; i < this->hColumns[column].len; i++) {
+   for (size_t i = 0; i < this->hColumns[column].len; i++) {
       fprintf(fd, "%s%s", sep, this->hColumns[column].names[i]);
       sep = " ";
    }
@@ -338,7 +338,7 @@ static void writeMeters(const Settings* this, FILE* fd, char separator, unsigned
 
 static void writeMeterModes(const Settings* this, FILE* fd, char separator, unsigned int column) {
    const char* sep = "";
-   for (uint8_t i = 0; i < this->hColumns[column].len; i++) {
+   for (size_t i = 0; i < this->hColumns[column].len; i++) {
       fprintf(fd, "%s%d", sep, this->hColumns[column].modes[i]);
       sep = " ";
    }
@@ -587,7 +587,7 @@ void Settings_setHeaderLayout(Settings* this, HeaderLayout hLayout) {
    } else if (newColumns < oldColumns) {
       for (unsigned int i = newColumns; i < oldColumns; i++) {
          if (this->hColumns[i].names) {
-            for (uint8_t j = 0; j < this->hColumns[i].len; j++)
+            for (size_t j = 0; j < this->hColumns[i].len; j++)
                free(this->hColumns[i].names[j]);
             free(this->hColumns[i].names);
          }
