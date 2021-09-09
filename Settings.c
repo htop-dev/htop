@@ -542,7 +542,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    }
    if (!ok) {
       this->changed = true;
-      Settings_read(this, SYSCONFDIR "/htoprc", initialCpuCount);
+      ok = Settings_read(this, SYSCONFDIR "/htoprc", initialCpuCount);
    }
    if (!ok) {
       Settings_defaultMeters(this, initialCpuCount);
