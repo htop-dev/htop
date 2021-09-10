@@ -23,7 +23,7 @@ typedef struct Header_ {
    int height;
 } Header;
 
-#define Header_forEachColumn(this_, i_) for (size_t (i_)=0; (i_) < HeaderLayout_getColumns((this_)->headerLayout); ++(i_))
+#define Header_forEachColumn(this_, i_) for (size_t (i_)=0, H_fEC_numColumns_ = HeaderLayout_getColumns((this_)->headerLayout); (i_) < H_fEC_numColumns_; ++(i_))
 
 Header* Header_new(ProcessList* pl, Settings* settings, HeaderLayout hLayout);
 
