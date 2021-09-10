@@ -30,6 +30,8 @@ void* xRealloc(void* ptr, size_t size) ATTR_ALLOC_SIZE1(2);
 
 void* xReallocArray(void* ptr, size_t nmemb, size_t size) ATTR_ALLOC_SIZE2(2, 3);
 
+void* xReallocArrayZero(void* ptr, size_t prevmemb, size_t newmemb, size_t size) ATTR_ALLOC_SIZE2(3, 4);
+
 /*
  * String_startsWith gives better performance if strlen(match) can be computed
  * at compile time (e.g. when they are immutable string literals). :)
