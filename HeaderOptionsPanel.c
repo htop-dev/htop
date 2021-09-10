@@ -82,6 +82,6 @@ HeaderOptionsPanel* HeaderOptionsPanel_new(Settings* settings, ScreenManager* sc
    for (int i = 0; i < LAST_HEADER_LAYOUT; i++) {
       Panel_add(super, (Object*) CheckItem_newByVal(HeaderLayout_layouts[i].description, false));
    }
-   CheckItem_set((CheckItem*)Panel_get(super, settings->hLayout), true);
+   CheckItem_set((CheckItem*)Panel_get(super, scr->header->headerLayout), true);
    return this;
 }
