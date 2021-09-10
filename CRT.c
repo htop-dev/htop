@@ -772,6 +772,8 @@ static void dumpStderr(void) {
 
    fsync(STDERR_FILENO);
    dup2(stderrRedirectBackupFd, STDERR_FILENO);
+   close(stderrRedirectBackupFd);
+   stderrRedirectBackupFd = -1;
    lseek(stderrRedirectNewFd, 0, SEEK_SET);
 
    bool header = false;
