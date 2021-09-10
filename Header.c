@@ -194,7 +194,8 @@ void Header_draw(const Header* this) {
    for (int y = 0; y < height; y++) {
       mvhline(y, 0, ' ', COLS);
    }
-   const int width = COLS - pad;
+   const int numCols = HeaderLayout_getColumns(this->headerLayout);
+   const int width = COLS - 2 * pad - (numCols - 1);
    int x = pad;
    float roundingLoss = 0.0F;
 
@@ -217,6 +218,7 @@ void Header_draw(const Header* this) {
             except for multi column meters. */
          if (meter->mode == TEXT_METERMODE && !Meter_isMultiColumn(meter)) {
             for (int j = 1; j < meter->columnWidthCount; j++) {
+               actualWidth++; /* separator column */
                actualWidth += (float)width * HeaderLayout_layouts[this->headerLayout].widths[col + j] / 100.0F;
             }
          }
@@ -227,6 +229,7 @@ void Header_draw(const Header* this) {
       }
 
       x += floorf(colWidth);
+      x++; /* separator column */
    }
 }
 

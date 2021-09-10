@@ -155,7 +155,7 @@ ListItem* Meter_toListItem(const Meter* this, bool moving) {
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
-   mvaddnstr(y, x, caption, w - 1);
+   mvaddnstr(y, x, caption, w);
    attrset(CRT_colors[RESET_COLOR]);
 
    int captionLen = strlen(caption);
@@ -166,7 +166,7 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
    RichString_begin(out);
    Meter_displayBuffer(this, &out);
-   RichString_printoffnVal(out, y, x, 0, w - 1);
+   RichString_printoffnVal(out, y, x, 0, w);
    RichString_delete(&out);
 }
 
@@ -176,7 +176,6 @@ static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    const char* caption = Meter_getCaption(this);
-   w -= 2;
    attrset(CRT_colors[METER_TEXT]);
    int captionLen = 3;
    mvaddnstr(y, x, caption, captionLen);
@@ -184,10 +183,11 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    w -= captionLen;
    attrset(CRT_colors[BAR_BORDER]);
    mvaddch(y, x, '[');
+   w--;
    mvaddch(y, x + MAXIMUM(w, 0), ']');
+   w--;
    attrset(CRT_colors[RESET_COLOR]);
 
-   w--;
    x++;
 
    if (w < 1)
@@ -329,7 +329,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       data->values[nValues - 1] = value;
    }
 
-   int i = nValues - (w * 2) + 2, k = 0;
+   int i = nValues - (w * 2), k = 0;
    if (i < 0) {
       k = -i / 2;
       i = 0;
