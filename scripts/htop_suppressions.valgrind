@@ -1,63 +1,47 @@
 {
-   <ncurses internal memory allocated at startup>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:CRT_init
-   fun:main
-}
-
-{
-   <ncurses internal memory allocated at startup>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:CRT_init
-}
-
-{
    <ncurses internal memory>
    Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:wgetch
-   fun:ScreenManager_run
-   fun:Action_runSetup
-   fun:actionSetup
-   fun:MainPanel_eventHandler
-   fun:ScreenManager_run
-   fun:main
-}
-
-{
-   <ncurses internal memory>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:wgetch
-   fun:ScreenManager_run
-   fun:main
-}
-
-{
-   <ncurses internal memory>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:wrefresh
-   fun:main
-}
-
-{
-   <ncurses internal memory>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:realloc
-   fun:_nc_doalloc
-   fun:_nc_tparm_analyze
-   fun:tparm
+   match-leak-kinds: possible,reachable
    ...
    fun:doupdate_sp
    fun:wrefresh
-   obj:*
+}
+
+{
+   <ncurses internal memory>
+   Memcheck:Leak
+   match-leak-kinds: possible,reachable
+   ...
+   fun:newterm_sp
+   fun:newterm
+   fun:initscr
+   fun:CRT_init
+}
+
+{
+   <ncurses internal memory>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*/libtinfo*
+   fun:CRT_init
+}
+
+{
+   <ncurses internal memory>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*/libncurses*
+   fun:CRT_init
+}
+
+{
+   <ncurses internal memory>
+   Memcheck:Leak
+   match-leak-kinds: possible,reachable
+   ...
+   obj:*/libncurses*
+   fun:CRT_setColors
+   fun:CRT_init
 }
