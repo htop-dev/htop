@@ -169,7 +169,11 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
    if (!dir) {
       super->activeCPUs = 1;
       super->existingCPUs = 1;
+      bool init = (this->cpuData == NULL);
       this->cpuData = xReallocArray(this->cpuData, 2, sizeof(CPUData));
+      if (init) {
+         memset(this->cpuData, '\0', 2 * sizeof(CPUData));
+      }
       this->cpuData[0].online = true; /* average is always "online" */
       this->cpuData[1].online = true;
       return;
@@ -205,10 +209,12 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
       unsigned int max = MAXIMUM(existing, id + 1);
       if (max > currExisting) {
          this->cpuData = xReallocArray(this->cpuData, max + /* aggregate */ 1, sizeof(CPUData));
-         for (unsigned int j = currExisting; j < max; j++) {
-            this->cpuData[j].online = false;
+         if (currExisting == 0) {
+            memset(this->cpuData, '\0', (max + 1) * sizeof(CPUData)); /* zero everything */
+            this->cpuData[0].online = true; /* average is always "online" */
+         } else {
+            memset(this->cpuData + currExisting + 1, '\0', (max - currExisting) * sizeof(CPUData)); /* zero only added memory */
          }
-         this->cpuData[0].online = true; /* average is always "online" */
          currExisting = max;
       }
 
