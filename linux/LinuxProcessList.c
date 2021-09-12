@@ -566,18 +566,12 @@ static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void* 
    *d += v->size;
 }
 
-static void LinuxProcessList_readMaps(LinuxProcess* process, openat_arg_t procFd, bool calcSize, bool checkDeletedLib) {
-   Process* proc = (Process*)process;
-
-   proc->usesDeletedLib = false;
-
+static void LinuxProcessList_readMaps(LinuxProcess* process, openat_arg_t procFd) {
    FILE* mapsfile = fopenat(procFd, "maps", "r");
    if (!mapsfile)
       return;
 
-   Hashtable* ht = NULL;
-   if (calcSize)
-      ht = Hashtable_new(64, true);
+   Hashtable* ht = Hashtable_new(64, true);
 
    char buffer[1024];
    while (fgets(buffer, sizeof(buffer), mapsfile)) {
@@ -629,45 +623,85 @@ static void LinuxProcessList_readMaps(LinuxProcess* process, openat_arg_t procFd
       if (!map_inode)
          continue;
 
-      if (calcSize) {
-         LibraryData* libdata = Hashtable_get(ht, map_inode);
-         if (!libdata) {
-            libdata = xCalloc(1, sizeof(LibraryData));
-            Hashtable_put(ht, map_inode, libdata);
-         }
-
-         libdata->size += map_end - map_start;
-         libdata->exec |= map_execute;
+      LibraryData* libdata = Hashtable_get(ht, map_inode);
+      if (!libdata) {
+         libdata = xCalloc(1, sizeof(LibraryData));
+         Hashtable_put(ht, map_inode, libdata);
       }
 
-      if (checkDeletedLib && map_execute && !proc->usesDeletedLib) {
-         while (*readptr == ' ')
-            readptr++;
-
-         if (*readptr != '/')
-            continue;
-
-         if (String_startsWith(readptr, "/memfd:"))
-            continue;
-
-         if (strstr(readptr, " (deleted)\n")) {
-            proc->usesDeletedLib = true;
-            if (!calcSize)
-               break;
-         }
-      }
+      libdata->size += map_end - map_start;
+      libdata->exec |= map_execute;
    }
 
    fclose(mapsfile);
 
-   if (calcSize) {
-      uint64_t total_size = 0;
-      Hashtable_foreach(ht, LinuxProcessList_calcLibSize_helper, &total_size);
+   uint64_t total_size = 0;
+   Hashtable_foreach(ht, LinuxProcessList_calcLibSize_helper, &total_size);
 
-      Hashtable_delete(ht);
+   Hashtable_delete(ht);
 
-      process->m_lrs = total_size / pageSize;
+   process->m_lrs = total_size / pageSize;
+}
+
+static void LinuxProcessList_readMapFiles(LinuxProcess* lp, openat_arg_t procFd) {
+   Process* proc = (Process*)lp;
+   proc->usesDeletedLib = false;
+
+#ifndef HAVE_OPENAT
+
+   /*
+    * /proc/[pid]/map_files/ exists since kernel 3.3;
+    * use openat(2), available since kernel 2.6.16, unconditionally.
+    */
+   (void) procFd;
+   return;
+
+#else /* !HAVE_OPENAT */
+
+   int fd = openat(procFd, "map_files", O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+   if (fd < 0)
+      return;
+
+   DIR* dir = fdopendir(fd);
+   if (!dir) {
+      close(fd);
+      return;
    }
+
+   const struct dirent* entry;
+   while ((entry = readdir(dir)) != NULL) {
+      /* Ignore all non-symlinks */
+      if (entry->d_type != DT_LNK && entry->d_type != DT_UNKNOWN)
+         continue;
+
+      char linkBuf[PATH_MAX];
+      ssize_t rc = readlinkat(fd, entry->d_name, linkBuf, sizeof(linkBuf));
+      if (rc < 0)
+         continue;
+
+      linkBuf[rc] = '\0';
+
+      if (String_startsWith(linkBuf, "/memfd:"))
+         continue;
+
+      if (String_startsWith(linkBuf, "/SYSV00000000"))
+         continue;
+
+      if (String_startsWith(linkBuf, "/SYSV5"))
+         continue;
+
+      if (String_startsWith(linkBuf, "/[aio]"))
+         continue;
+
+      if ((size_t)rc > strlen(" (deleted)") && String_eq(&linkBuf[(size_t)rc - strlen(" (deleted)")], " (deleted)")) {
+         proc->usesDeletedLib = true;
+         break;
+      }
+   }
+
+   closedir(dir);
+
+#endif /* !HAVE_OPENAT */
 }
 
 static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t procFd) {
@@ -1420,20 +1454,23 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if (!LinuxProcessList_readStatmFile(lp, procFd))
          goto errorReadingProcess;
 
+      if (settings->flags & PROCESS_FLAG_LINUX_LRS_FIX) {
+         uint64_t passedTimeInMs = pl->realtimeMs - lp->last_mlrs_calctime;
+
+         uint64_t recheck = ((uint64_t)rand()) % 2048;
+
+         if (passedTimeInMs > recheck) {
+            lp->last_mlrs_calctime = pl->realtimeMs;
+            LinuxProcessList_readMaps(lp, procFd);
+         }
+      }
+
+
       {
          bool prev = proc->usesDeletedLib;
 
-         if ((lp->m_lrs == 0 && (settings->flags & PROCESS_FLAG_LINUX_LRS_FIX)) ||
-             (settings->highlightDeletedExe && !proc->procExeDeleted && !proc->isKernelThread && !proc->isUserlandThread)) {
-            // Check if we really should recalculate the M_LRS value for this process
-            uint64_t passedTimeInMs = pl->realtimeMs - lp->last_mlrs_calctime;
-
-            uint64_t recheck = ((uint64_t)rand()) % 2048;
-
-            if (passedTimeInMs > recheck) {
-               lp->last_mlrs_calctime = pl->realtimeMs;
-               LinuxProcessList_readMaps(lp, procFd, settings->flags & PROCESS_FLAG_LINUX_LRS_FIX, settings->highlightDeletedExe);
-            }
+         if (settings->highlightDeletedExe && !proc->procExeDeleted && !proc->isKernelThread && !proc->isUserlandThread) {
+            LinuxProcessList_readMapFiles(lp, procFd);
          } else {
             /* Copy from process structure in threads and reset if setting got disabled */
             proc->usesDeletedLib = (proc->isUserlandThread && parent) ? parent->usesDeletedLib : false;
