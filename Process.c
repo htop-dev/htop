@@ -715,8 +715,10 @@ void Process_printPercentage(float val, char* buffer, int n, int* attr) {
          }
          xSnprintf(buffer, n, "%4.1f ", val);
       } else if (val < 999) {
+         *attr = CRT_colors[PROCESS_MEGABYTES];
          xSnprintf(buffer, n, "%3d. ", (int)val);
       } else {
+         *attr = CRT_colors[PROCESS_MEGABYTES];
          xSnprintf(buffer, n, "%4d ", (int)val);
       }
    } else {
