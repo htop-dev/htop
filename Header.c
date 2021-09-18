@@ -212,7 +212,10 @@ void Header_draw(const Header* this) {
          Meter* meter = (Meter*) Vector_get(meters, i);
 
          float actualWidth = colWidth;
-         if (meter->mode == TEXT_METERMODE) {
+
+         /* Let meters in text mode expand to the right on empty neighbors;
+            except for multi column meters. */
+         if (meter->mode == TEXT_METERMODE && !Meter_isMultiColumn(meter)) {
             for (int j = 1; j < meter->columnWidthCount; j++) {
                actualWidth += (float)width * HeaderLayout_layouts[this->headerLayout].widths[col + j] / 100.0F;
             }
