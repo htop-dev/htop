@@ -432,7 +432,8 @@ void Platform_gettime_monotonic(uint64_t* msec) {
 
 #else
 
-   Generic_gettime_monotomic(msec);
+   Generic_gettime_monotonic(msec);
 
 #endif
+
 }
