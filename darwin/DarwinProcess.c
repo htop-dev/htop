@@ -269,7 +269,7 @@ ERROR_A:
    Process_updateCmdline(proc, k->kp_proc.p_comm, 0, strlen(k->kp_proc.p_comm));
 }
 
-// Converts nanoseconds to hundreths of a second (centiseconds) as needed by the "time" field of the Process struct.
+// Converts nanoseconds to hundredths of a second (centiseconds) as needed by the "time" field of the Process struct.
 static long long int nanosecondsToCentiseconds(uint64_t nanoseconds) {
    const uint64_t centiseconds_per_second = 100;
    const uint64_t nanoseconds_per_second = 1e9;
