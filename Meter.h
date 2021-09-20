@@ -73,6 +73,7 @@ typedef struct MeterClass_ {
    const char* const caption;              /* prefix in the actual header */
    const char* const description;          /* optional meter description in header setup menu */
    const uint8_t maxItems;
+   const bool isMultiColumn;               /* whether the meter draws multiple sub-columns (defaults to false) */
 } MeterClass;
 
 #define As_Meter(this_)                ((const MeterClass*)((this_)->super.klass))
@@ -92,6 +93,7 @@ typedef struct MeterClass_ {
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
+#define Meter_isMultiColumn(this_)     As_Meter(this_)->isMultiColumn
 
 typedef struct GraphData_ {
    struct timeval time;
