@@ -95,6 +95,7 @@ const MeterClass MemorySwapMeter_class = {
    },
    .updateValues = MemorySwapMeter_updateValues,
    .defaultMode = CUSTOM_METERMODE,
+   .isMultiColumn = true,
    .name = "MemorySwap",
    .uiName = "Memory & Swap",
    .description = "Combined memory and swap usage",
