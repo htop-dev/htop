@@ -38,7 +38,7 @@ List of build-time dependencies:
   * `ncurses`
 
 **Note about `ncurses`:**
-> htop requires ncurses 6.0.  Be aware the appropriate package is sometimes still called libncurses5 (on Debian/Ubuntu). Also ncurses usually comes in two flavours:
+> `htop` requires `ncurses` 6.0. Be aware the appropriate package is sometimes still called libncurses5 (on Debian/Ubuntu). Also `ncurses` usually comes in two flavours:
 >* With Unicode support.
 >* Without Unicode support.
 >
@@ -138,12 +138,12 @@ To install on the local system run `make install`. By default `make install` ins
 `htop` has a set of fixed optional dependencies, depending on build/configure option used:
 
 #### Linux
-* `libdl`, if not building a static binary, is always required when support for to optionally dependencies (i.e. `libsensors`, `libsystemd`) is present.
-* `libcap`, user-space interfaces to the POSIX 1003.1e, is always required when `--enable-capabilities` was used to configure `htop`.
+* `libdl`, if not building a static binary, is always required when support for optional dependencies (i.e. `libsensors`, `libsystemd`) is present.
+* `libcap`, user-space interfaces to POSIX 1003.1e capabilities, is always required when `--enable-capabilities` was used to configure `htop`.
 * `libsensors`, readout of temperatures and CPU speeds, is optional even when `--enable-sensors` was used to configure `htop`.
 * `libsystemd` is optional when `--enable-static` was not used to configure `htop`. If building statically and `libsystemd` is not found by `configure`, support for the systemd meter is disabled entirely.
 
-`htop` checks for the availability of the actual runtime lib as `htop` runs.
+`htop` checks for the availability of the actual runtime libraries as `htop` runs.
 
 #### BSD
 On most BSD systems `kvm` is a requirement to read kernel information.
@@ -155,15 +155,15 @@ See the manual page (`man htop`) or the help menu (**F1** or **h** inside `htop`
 
 ## Support
 
-If you have trouble running `htop` please consult your Operating System / Linux distribution documentation for getting support and filing bugs.
+If you have trouble running `htop` please consult your operating system / Linux distribution documentation for getting support and filing bugs.
 
 ## Bugs, development feedback
 
-We have a [development mailing list](https://htop.dev/mailinglist.html). Feel free to subscribe for release announcements or asking questions on the development of htop.
+We have a [development mailing list](https://htop.dev/mailinglist.html). Feel free to subscribe for release announcements or asking questions on the development of `htop`.
 
 You can also join our IRC channel [#htop on Libera.Chat](https://web.libera.chat/#htop) and talk to the developers there.
 
-If you have found an issue within the source of htop, please check whether this has already been reported in our [GitHub issue tracker](https://github.com/htop-dev/htop/issues).
+If you have found an issue within the source of `htop`, please check whether this has already been reported in our [GitHub issue tracker](https://github.com/htop-dev/htop/issues).
 If not, please file a new issue describing the problem you have found, the potential location in the source code you are referring to and a possible fix if available.
 
 ## History
