@@ -147,9 +147,9 @@ void CRT_fatalError(const char* note) ATTR_NORETURN;
 
 void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 
-#define KEY_WHEELUP   KEY_F(20)
-#define KEY_WHEELDOWN KEY_F(21)
-#define KEY_RECLICK   KEY_F(22)
+#define KEY_WHEELUP   KEY_F(30)
+#define KEY_WHEELDOWN KEY_F(31)
+#define KEY_RECLICK   KEY_F(32)
 #define KEY_ALT(x)    (KEY_F(64 - 26) + ((x) - 'A'))
 
 extern const char* CRT_degreeSign;
