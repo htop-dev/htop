@@ -37,6 +37,9 @@ List of build-time dependencies:
     - `autotools`
   * `ncurses`
 
+When building `htop` on Linux with the GNU C Library you will need `glibc` v2.14 or later.
+`pcp-htop` for Linux can still be built with older `glibc` versions.
+
 **Note about `ncurses`:**
 > `htop` requires `ncurses` 6.0. Be aware the appropriate package is sometimes still called libncurses5 (on Debian/Ubuntu). Also `ncurses` usually comes in two flavours:
 >* With Unicode support.
@@ -47,7 +50,7 @@ List of build-time dependencies:
 List of additional build-time dependencies (based on feature flags):
 *  `sensors`
 *  `hwloc`
-*  `libcap`
+*  `libcap` (v2.21 or later)
 *  `libnl-3`
 
 Install these and other required packages for C development from your package manager.
