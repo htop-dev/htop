@@ -45,14 +45,16 @@ Example:
 #define HEADER_FILENAME
 /*
 htop - Filename.h
-(C) 2020 htop dev team
-Released under the GNU GPLv2, see the COPYING file
+(C) 2021 htop dev team
+Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 ```
 
 Import and use of headers
 -------------------------
+
+We use the GPLv2+ as a shorthand indication that we release `htop` under the GNU Public license version 2 but are totally fine with users opting to apply the "any later version" clause.
 
 Every file should import headers for all symbols it's using.
 Thus when using a symbol from a header, even if that symbol is already imported by something else you use, you should declare an import for that header.
