@@ -31,4 +31,10 @@ bool Platform_KernelVersionIsBetween(KernelVersion lowerBound, KernelVersion upp
 
 double Platform_calculateNanosecondsPerMachTick(void);
 
+void Platform_getCPUBrandString(char *cpuBrandString, size_t cpuBrandStringSize);
+
+bool Platform_isRunningTranslated(void);
+
+double Platform_calculateNanosecondsPerMachTick(void);
+
 #endif
