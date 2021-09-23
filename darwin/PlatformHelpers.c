@@ -20,41 +20,42 @@ in the source distribution for its full text.
 #endif
 
 
-void Platform_GetKernelVersion(struct kern* k) {
-   static short int version_[3] = {0};
-   if (!version_[0]) {
+void Platform_GetKernelVersion(KernelVersion* k) {
+   static KernelVersion cachedKernelVersion;
+
+   if (!cachedKernelVersion.major) {
       // just in case it fails someday
-      version_[0] = version_[1] = version_[2] = -1;
+      cachedKernelVersion = (KernelVersion) { -1, -1, -1 };
       char str[256] = {0};
       size_t size = sizeof(str);
       int ret = sysctlbyname("kern.osrelease", str, &size, NULL, 0);
       if (ret == 0) {
-         sscanf(str, "%hd.%hd.%hd", &version_[0], &version_[1], &version_[2]);
+         sscanf(str, "%hd.%hd.%hd", &cachedKernelVersion.major, &cachedKernelVersion.minor, &cachedKernelVersion.patch);
       }
    }
-   memcpy(k->version, version_, sizeof(version_));
+   memcpy(k, &cachedKernelVersion, sizeof(cachedKernelVersion));
 }
 
-/* compare the given os version with the one installed returns:
-0 if equals the installed version
-positive value if less than the installed version
-negative value if more than the installed version
-*/
-int Platform_CompareKernelVersion(short int major, short int minor, short int component) {
-   struct kern k;
-   Platform_GetKernelVersion(&k);
+int Platform_CompareKernelVersion(KernelVersion v) {
+   struct KernelVersion actualVersion;
+   Platform_GetKernelVersion(&actualVersion);
 
-   if (k.version[0] != major) {
-      return k.version[0] - major;
+   if (actualVersion.major != v.major) {
+      return actualVersion.major - v.major;
    }
-   if (k.version[1] != minor) {
-      return k.version[1] - minor;
+   if (actualVersion.minor != v.minor) {
+      return actualVersion.minor - v.minor;
    }
-   if (k.version[2] != component) {
-      return k.version[2] - component;
+   if (actualVersion.patch != v.patch) {
+      return actualVersion.patch - v.patch;
    }
 
    return 0;
+}
+
+bool Platform_KernelVersionIsBetween(KernelVersion lowerBound, KernelVersion upperBound) {
+   return 0 <= Platform_CompareKernelVersion(lowerBound)
+      && Platform_CompareKernelVersion(upperBound) < 0;
 }
 
 double Platform_calculateNanosecondsPerMachTick() {

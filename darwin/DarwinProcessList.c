@@ -176,7 +176,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       }
 
       // Disabled for High Sierra due to bug in macOS High Sierra
-      bool isScanThreadSupported  = !(Platform_CompareKernelVersion(17, 0, 0) >= 0 && Platform_CompareKernelVersion(17, 5, 0) < 0);
+      bool isScanThreadSupported  = !Platform_KernelVersionIsBetween((KernelVersion) {17, 0, 0}, (KernelVersion) {17, 5, 0});
 
       if (isScanThreadSupported) {
          DarwinProcess_scanThreads(proc);

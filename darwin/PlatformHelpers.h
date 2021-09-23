@@ -11,18 +11,23 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 
-struct kern {
-   short int version[3];
-};
+typedef struct KernelVersion {
+   short int major;
+   short int minor;
+   short int patch;
+} KernelVersion;
 
-void Platform_GetKernelVersion(struct kern* k);
+void Platform_GetKernelVersion(KernelVersion* k);
 
 /* compare the given os version with the one installed returns:
 0 if equals the installed version
 positive value if less than the installed version
 negative value if more than the installed version
 */
-int Platform_CompareKernelVersion(short int major, short int minor, short int component);
+int Platform_CompareKernelVersion(KernelVersion v);
+
+// lowerBound <= currentVersion < upperBound
+bool Platform_KernelVersionIsBetween(KernelVersion lowerBound, KernelVersion upperBound);
 
 double Platform_calculateNanosecondsPerMachTick(void);
 
