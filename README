@@ -6,7 +6,7 @@
 [![IRC #htop](https://img.shields.io/badge/IRC-htop-blue.svg)](https://web.libera.chat/#htop)
 [![GitHub Release](https://img.shields.io/github/release/htop-dev/htop.svg)](https://github.com/htop-dev/htop/releases/latest)
 [![Packaging status](https://repology.org/badge/tiny-repos/htop.svg)](https://repology.org/project/htop/versions)
-[![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](COPYING?raw=true)
+[![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2+-blue.svg)](COPYING?raw=true)
 
 ![Screenshot of htop](docs/images/screenshot.png?raw=true)
 
