@@ -1,3 +1,11 @@
+if !HTOP_PCP
+bin_PROGRAMS = htop
+myhtopplatprogram = htop.c
+else
+bin_PROGRAMS = pcp-htop
+myhtopplatprogram = pcp-htop.c
+endif
+
 dist_man_MANS = htop.1
 EXTRA_DIST = \
 	$(dist_man_MANS) \
@@ -181,7 +189,6 @@ linux_platform_sources = \
 
 if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
-myhtopplatprogram = htop
 myhtopplatheaders = $(linux_platform_headers)
 myhtopplatsources = $(linux_platform_sources)
 endif
@@ -214,7 +221,6 @@ freebsd_platform_sources = \
 	zfs/ZfsCompressedArcMeter.c
 
 if HTOP_FREEBSD
-myhtopplatprogram = htop
 myhtopplatheaders = $(freebsd_platform_headers)
 myhtopplatsources = $(freebsd_platform_sources)
 endif
@@ -240,7 +246,6 @@ dragonflybsd_platform_sources = \
 	generic/uname.c
 
 if HTOP_DRAGONFLYBSD
-myhtopplatprogram = htop
 myhtopplatheaders = $(dragonflybsd_platform_headers)
 myhtopplatsources = $(dragonflybsd_platform_sources)
 endif
@@ -266,7 +271,6 @@ netbsd_platform_sources = \
 	netbsd/NetBSDProcessList.c
 
 if HTOP_NETBSD
-myhtopplatprogram = htop
 myhtopplatheaders = $(netbsd_platform_headers)
 myhtopplatsources = $(netbsd_platform_sources)
 endif
@@ -292,7 +296,6 @@ openbsd_platform_sources = \
 	openbsd/Platform.c
 
 if HTOP_OPENBSD
-myhtopplatprogram = htop
 myhtopplatheaders = $(openbsd_platform_headers)
 myhtopplatsources = $(openbsd_platform_sources)
 endif
@@ -326,7 +329,6 @@ darwin_platform_sources = \
 
 if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
-myhtopplatprogram = htop
 myhtopplatheaders = $(darwin_platform_headers)
 myhtopplatsources = $(darwin_platform_sources)
 endif
@@ -357,7 +359,6 @@ solaris_platform_sources = \
 	zfs/ZfsCompressedArcMeter.c
 
 if HTOP_SOLARIS
-myhtopplatprogram = htop
 myhtopplatheaders = $(solaris_platform_headers)
 myhtopplatsources = $(solaris_platform_sources)
 endif
@@ -393,10 +394,9 @@ pcp_platform_sources = \
 	zfs/ZfsCompressedArcMeter.c
 
 if HTOP_PCP
-myhtopplatprogram = pcp-htop
 myhtopplatheaders = $(pcp_platform_headers)
 myhtopplatsources = $(pcp_platform_sources)
-pcp_htop_SOURCES  = $(myhtopplatprogram).c $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
+pcp_htop_SOURCES  = $(myhtopplatprogram) $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
 endif
 
 # Unsupported
@@ -416,15 +416,13 @@ unsupported_platform_sources = \
 	unsupported/UnsupportedProcessList.c
 
 if HTOP_UNSUPPORTED
-myhtopplatprogram = htop
 myhtopplatsources = $(unsupported_platform_sources)
 myhtopplatheaders = $(unsupported_platform_headers)
 endif
 
 # ----
 
-bin_PROGRAMS = $(myhtopplatprogram)
-htop_SOURCES = $(myhtopplatprogram).c $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
+htop_SOURCES = $(myhtopplatprogram) $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources)
 nodist_htop_SOURCES = config.h
 
 target:
