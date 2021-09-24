@@ -2,7 +2,7 @@
 htop - PCPDynamicMeter.c
 (C) 2021 htop dev team
 (C) 2021 Red Hat, Inc.
-Released under the GNU GPLv2, see the COPYING file
+Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 #include "config.h" // IWYU pragma: keep

@@ -1,7 +1,7 @@
 /*
 htop - DateMeter.c
 (C) 2004-2020 Hisham H. Muhammad, Michael Schönitzer
-Released under the GNU GPL, see the COPYING file
+Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 

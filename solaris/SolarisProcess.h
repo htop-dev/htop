@@ -4,7 +4,7 @@
 htop - SolarisProcess.h
 (C) 2015 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
-Released under the GNU GPLv2, see the COPYING file
+Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 

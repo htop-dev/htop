@@ -4,7 +4,7 @@
 htop - darwin/Platform.h
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Released under the GNU GPLv2, see the COPYING file
+Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
