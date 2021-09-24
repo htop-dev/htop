@@ -58,6 +58,10 @@ in the source distribution for its full text.
 #include "LibSensors.h"
 #endif
 
+#ifndef O_PATH
+#define O_PATH         010000000 // declare for ancient glibc versions
+#endif
+
 
 static long long btime = -1;
 
