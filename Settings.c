@@ -280,12 +280,15 @@ ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char*
    return ss;
 }
 
-static void Settings_defaultScreens(Settings* this) {
+static ScreenSettings* Settings_defaultScreens(Settings* this) {
+   if (this->nScreens)
+      return this->screens[0];
    for (unsigned int i = 0; i < Platform_numberOfDefaultScreens; i++) {
       ScreenDefaults* defaults = &Platform_defaultScreens[i];
-      Settings_newScreen(this, defaults->name, defaults->columns);
-      this->screens[i]->sortKey = toFieldIndex(this->dynamicColumns, defaults->sortKey);
+      ScreenSettings* settings = Settings_newScreen(this, defaults->name, defaults->columns);
+      settings->sortKey = toFieldIndex(this->dynamicColumns, defaults->sortKey);
    }
+   return this->screens[0];
 }
 
 static bool Settings_read(Settings* this, const char* fileName, unsigned int initialCpuCount) {
@@ -293,6 +296,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
    if (!fd)
       return false;
 
+   ScreenSettings* screen = NULL;
    bool didReadMeters = false;
    bool didReadAny = false;
    for (;;) {
@@ -319,34 +323,40 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
             fclose(fd);
             return false;
          }
-      } else if (String_eq(option[0], "fields")) {
+      } else if (String_eq(option[0], "fields") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
-         if (!this->nScreens)
-            Settings_defaultScreens(this);
-         ScreenSettings_readFields(this->screens[0], this->dynamicColumns, option[1]);
-      } else if (String_eq(option[0], "sort_key")) {
-         // old (no screen) naming also supported for backwards compatibility
-         // This "+1" is for compatibility with the older enum format.
-         this->screens[0]->sortKey = atoi(option[1]) + 1;
-      } else if (String_eq(option[0], "tree_sort_key")) {
+         screen = Settings_defaultScreens(this);
+         ScreenSettings_readFields(screen, this->dynamicColumns, option[1]);
+      } else if (String_eq(option[0], "sort_key") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          // This "+1" is for compatibility with the older enum format.
-         this->screens[0]->treeSortKey = atoi(option[1]) + 1;
-      } else if (String_eq(option[0], "sort_direction")) {
+         screen = Settings_defaultScreens(this);
+         screen->sortKey = atoi(option[1]) + 1;
+      } else if (String_eq(option[0], "tree_sort_key") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
-         this->screens[0]->direction = atoi(option[1]);
-      } else if (String_eq(option[0], "tree_sort_direction")) {
+         // This "+1" is for compatibility with the older enum format.
+         screen = Settings_defaultScreens(this);
+         screen->treeSortKey = atoi(option[1]) + 1;
+      } else if (String_eq(option[0], "sort_direction") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
-         this->screens[0]->treeDirection = atoi(option[1]);
-      } else if (String_eq(option[0], "tree_view")) {
+         screen = Settings_defaultScreens(this);
+         screen->direction = atoi(option[1]);
+      } else if (String_eq(option[0], "tree_sort_direction") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
-         this->screens[0]->treeView = atoi(option[1]);
-      } else if (String_eq(option[0], "tree_view_always_by_pid")) {
+         screen = Settings_defaultScreens(this);
+         screen->treeDirection = atoi(option[1]);
+      } else if (String_eq(option[0], "tree_view") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
-         this->screens[0]->treeViewAlwaysByPID = atoi(option[1]);
-      } else if (String_eq(option[0], "all_branches_collapsed")) {
+         screen = Settings_defaultScreens(this);
+         screen->treeView = atoi(option[1]);
+      } else if (String_eq(option[0], "tree_view_always_by_pid") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
-         this->screens[0]->allBranchesCollapsed = atoi(option[1]);
+         screen = Settings_defaultScreens(this);
+         screen->treeViewAlwaysByPID = atoi(option[1]);
+      } else if (String_eq(option[0], "all_branches_collapsed") && this->config_version <= 2) {
+         // old (no screen) naming also supported for backwards compatibility
+         screen = Settings_defaultScreens(this);
+         screen->allBranchesCollapsed = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
          this->hideKernelThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_userland_threads")) {
@@ -445,28 +455,28 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          this->topologyAffinity = !!atoi(option[1]);
       #endif
       } else if (strncmp(option[0], "screen:", 7) == 0) {
-         Settings_newScreen(this, option[0] + 7, option[1]);
+         screen = Settings_newScreen(this, option[0] + 7, option[1]);
       } else if (String_eq(option[0], ".sort_key")) {
-         if (this->nScreens)
-            this->screens[this->nScreens - 1]->sortKey = toFieldIndex(this->dynamicColumns, option[1]);
+         if (screen)
+            screen->sortKey = toFieldIndex(this->dynamicColumns, option[1]);
       } else if (String_eq(option[0], ".tree_sort_key")) {
-         if (this->nScreens)
-            this->screens[this->nScreens - 1]->treeSortKey = toFieldIndex(this->dynamicColumns, option[1]);
+         if (screen)
+            screen->treeSortKey = toFieldIndex(this->dynamicColumns, option[1]);
       } else if (String_eq(option[0], ".sort_direction")) {
-         if (this->nScreens)
-            this->screens[this->nScreens - 1]->direction = atoi(option[1]);
+         if (screen)
+            screen->direction = atoi(option[1]);
       } else if (String_eq(option[0], ".tree_sort_direction")) {
-         if (this->nScreens)
-            this->screens[this->nScreens - 1]->treeDirection = atoi(option[1]);
+         if (screen)
+            screen->treeDirection = atoi(option[1]);
       } else if (String_eq(option[0], ".tree_view")) {
-         if (this->nScreens)
-            this->screens[this->nScreens - 1]->treeView = atoi(option[1]);
+         if (screen)
+            screen->treeView = atoi(option[1]);
       } else if (String_eq(option[0], ".tree_view_always_by_pid")) {
-         if (this->nScreens)
-            this->screens[this->nScreens - 1]->treeViewAlwaysByPID = atoi(option[1]);
+         if (screen)
+            screen->treeViewAlwaysByPID = atoi(option[1]);
       } else if (String_eq(option[0], ".all_branches_collapsed")) {
-         if (this->nScreens)
-            this->screens[this->nScreens - 1]->allBranchesCollapsed = atoi(option[1]);
+         if (screen)
+            screen->allBranchesCollapsed = atoi(option[1]);
       }
       String_freeArray(option);
    }
@@ -482,7 +492,8 @@ static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns
    const char* sep = "";
    for (unsigned int i = 0; fields[i]; i++) {
       if (fields[i] >= LAST_PROCESSFIELD || byName) {
-         fprintf(fd, "%s%s", sep, toFieldName(columns, i));
+         const char* pName = toFieldName(columns, fields[i]);
+         fprintf(fd, "%s%s", sep, pName);
       } else {
          // This "-1" is for compatibility with the older enum format.
          fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
