@@ -1236,8 +1236,8 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
    if (amtRead > 0) {
       filename[amtRead] = 0;
       if (!process->procExe ||
-         (!process->procExeDeleted && !String_eq(filename, process->procExe)) ||
-         (process->procExeDeleted && !String_startsWith(filename, process->procExe))) {
+          (!process->procExeDeleted && !String_eq(filename, process->procExe)) ||
+          process->procExeDeleted) {
 
          const char* deletedMarker = " (deleted)";
          const size_t markerLen = strlen(deletedMarker);
