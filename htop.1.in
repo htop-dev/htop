@@ -1,4 +1,4 @@
-.TH "HTOP" "1" "2020" "@PACKAGE_STRING@" "User Commands"
+.TH "HTOP" "1" "2021" "@PACKAGE_STRING@" "User Commands"
 .SH "NAME"
 htop, pcp-htop \- interactive process viewer
 .SH "SYNOPSIS"
@@ -632,3 +632,12 @@ Nowadays it is maintained by the community at <htop@groups.io>.
 .B pcp-htop
 is maintained as a collaboration between the <htop@groups.io> and <pcp@groups.io>
 communities, and forms part of the Performance Co-Pilot suite of tools.
+.SH "COPYRIGHT"
+Copyright \(co 2004-2019 Hisham Muhammad.
+.br
+Copyright \(co 2020-2021 htop dev team.
+.LP
+License GPLv2+: GNU General Public License version 2 or, at your option, any later version.
+.LP
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.

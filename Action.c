@@ -1,7 +1,7 @@
 /*
 htop - Action.c
 (C) 2015 Hisham H. Muhammad
-Released under the GNU GPLv2, see the COPYING file
+Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
@@ -519,7 +519,7 @@ static Htop_Reaction actionHelp(State* st) {
    int line = 0;
 
    mvaddstr(line++, 0, "htop " VERSION " - " COPYRIGHT);
-   mvaddstr(line++, 0, "Released under the GNU GPLv2. See 'man' page for more info.");
+   mvaddstr(line++, 0, "Released under the GNU GPLv2+. See 'man' page for more info.");
 
    attrset(CRT_colors[DEFAULT_COLOR]);
    line++;
