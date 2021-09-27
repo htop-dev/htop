@@ -74,7 +74,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
             item->value = xStrdup(this->buffer);
             this->renaming = false;
             super->cursorOn = false;
-            Panel_setSelectionColor(super, CRT_colors[PANEL_SELECTION_FOCUS]);
+            Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
             ScreensPanel_update(super);
             break;
          }
@@ -86,7 +86,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
             item->value = this->saved;
             this->renaming = false;
             super->cursorOn = false;
-            Panel_setSelectionColor(super, CRT_colors[PANEL_SELECTION_FOCUS]);
+            Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
             break;
          }
       }
@@ -108,7 +108,7 @@ static void startRenaming(Panel* super) {
    this->buffer[SCREEN_NAME_LEN] = '\0';
    this->cursor = strlen(this->buffer);
    item->value = this->buffer;
-   Panel_setSelectionColor(super, CRT_colors[PANEL_EDIT]);
+   Panel_setSelectionColor(super, PANEL_EDIT);
    super->selectedLen = strlen(this->buffer);
    Panel_setCursorToSelection(super);
 }
@@ -153,7 +153,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       case KEY_RECLICK:
       {
          this->moving = !(this->moving);
-         Panel_setSelectionColor(super, this->moving ? CRT_colors[PANEL_SELECTION_FOLLOW] : CRT_colors[PANEL_SELECTION_FOCUS]);
+         Panel_setSelectionColor(super, this->moving ? PANEL_SELECTION_FOLLOW : PANEL_SELECTION_FOCUS);
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (item)
             item->moving = this->moving;
