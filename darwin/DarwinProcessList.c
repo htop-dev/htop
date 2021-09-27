@@ -22,50 +22,10 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "darwin/DarwinProcess.h"
 #include "darwin/Platform.h"
+#include "darwin/PlatformHelpers.h"
 #include "generic/openzfs_sysctl.h"
 #include "zfs/ZfsArcStats.h"
 
-
-struct kern {
-   short int version[3];
-};
-
-static void GetKernelVersion(struct kern* k) {
-   static short int version_[3] = {0};
-   if (!version_[0]) {
-      // just in case it fails someday
-      version_[0] = version_[1] = version_[2] = -1;
-      char str[256] = {0};
-      size_t size = sizeof(str);
-      int ret = sysctlbyname("kern.osrelease", str, &size, NULL, 0);
-      if (ret == 0) {
-         sscanf(str, "%hd.%hd.%hd", &version_[0], &version_[1], &version_[2]);
-      }
-   }
-   memcpy(k->version, version_, sizeof(version_));
-}
-
-/* compare the given os version with the one installed returns:
-0 if equals the installed version
-positive value if less than the installed version
-negative value if more than the installed version
-*/
-static int CompareKernelVersion(short int major, short int minor, short int component) {
-   struct kern k;
-   GetKernelVersion(&k);
-
-   if (k.version[0] != major) {
-      return k.version[0] - major;
-   }
-   if (k.version[1] != minor) {
-      return k.version[1] - minor;
-   }
-   if (k.version[2] != component) {
-      return k.version[2] - component;
-   }
-
-   return 0;
-}
 
 static void ProcessList_getHostInfo(host_basic_info_data_t* p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
@@ -216,7 +176,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       }
 
       // Disabled for High Sierra due to bug in macOS High Sierra
-      bool isScanThreadSupported  = ! ( CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);
+      bool isScanThreadSupported  = !Platform_KernelVersionIsBetween((KernelVersion) {17, 0, 0}, (KernelVersion) {17, 5, 0});
 
       if (isScanThreadSupported) {
          DarwinProcess_scanThreads(proc);

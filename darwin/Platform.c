@@ -35,6 +35,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "darwin/DarwinProcessList.h"
+#include "darwin/PlatformHelpers.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
@@ -42,6 +43,7 @@ in the source distribution for its full text.
 #include <mach/clock.h>
 #include <mach/mach.h>
 #endif
+
 #ifdef HAVE_MACH_MACH_TIME_H
 #include <mach/mach_time.h>
 #endif
@@ -125,15 +127,7 @@ static double Platform_nanosecondsPerMachTick = 1.0;
 static double Platform_nanosecondsPerSchedulerTick = -1;
 
 void Platform_init(void) {
-   // Check if we can determine the timebase used on this system.
-   // If the API is unavailable assume we get our timebase in nanoseconds.
-#ifdef HAVE_MACH_TIMEBASE_INFO
-   mach_timebase_info_data_t info;
-   mach_timebase_info(&info);
-   Platform_nanosecondsPerMachTick = (double)info.numer / (double)info.denom;
-#else
-   Platform_nanosecondsPerMachTick = 1.0;
-#endif
+   Platform_nanosecondsPerMachTick = Platform_calculateNanosecondsPerMachTick();
 
    // Determine the number of scheduler clock ticks per second
    errno = 0;

@@ -307,6 +307,7 @@ darwin_platform_headers = \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
 	darwin/Platform.h \
+	darwin/PlatformHelpers.h \
 	darwin/ProcessField.h \
 	generic/gettime.h \
 	generic/hostname.h \
@@ -318,6 +319,7 @@ darwin_platform_headers = \
 
 darwin_platform_sources = \
 	darwin/Platform.c \
+	darwin/PlatformHelpers.c \
 	darwin/DarwinProcess.c \
 	darwin/DarwinProcessList.c \
 	generic/gettime.c \
