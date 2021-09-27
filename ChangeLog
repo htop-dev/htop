@@ -1,3 +1,13 @@
+What's new in version 3.1.1
+
+* Update license headers to explicitly say GPLv2+
+* Document minimum version for libcap (thanks to James Brown)
+* Fix mouse wheel collision with autogroups nice adjustment
+* Adjust Makefile.am macro definitions for older automake versions
+* On Linux, provide O_PATH value if not defined
+* On Linux, always compute procExeDeleted if already set
+* Workaround for Rosetta 2 on Darwin (thanks to Alexander Momchilov)
+
 What's new in version 3.1.0
 
 * Updated COPYING file to remove the PLPA exemption (appendix 2)
