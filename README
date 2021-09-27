@@ -37,9 +37,6 @@ List of build-time dependencies:
     - `autotools`
   * `ncurses`
 
-When building `htop` on Linux with the GNU C Library you will need `glibc` v2.14 or later.
-`pcp-htop` for Linux can still be built with older `glibc` versions.
-
 **Note about `ncurses`:**
 > `htop` requires `ncurses` 6.0. Be aware the appropriate package is sometimes still called libncurses5 (on Debian/Ubuntu). Also `ncurses` usually comes in two flavours:
 >* With Unicode support.
