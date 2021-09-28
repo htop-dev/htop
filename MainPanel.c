@@ -61,8 +61,14 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (ch == KEY_RESIZE)
       return IGNORED;
 
-   /* reset on every normal key, except mouse events while mouse support is disabled */
-   if (ch != ERR && (ch != KEY_MOUSE || this->state->settings->enableMouse))
+   /* reset on every normal key */
+   bool needReset = ch != ERR;
+   #ifdef HAVE_GETMOUSE
+   /* except mouse events while mouse support is disabled */
+   if (!(ch != KEY_MOUSE || this->state->settings->enableMouse))
+      needReset = false;
+   #endif
+   if (needReset)
       this->state->hideProcessSelection = false;
 
    if (EVENT_IS_HEADER_CLICK(ch)) {
