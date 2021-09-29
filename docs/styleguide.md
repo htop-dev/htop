@@ -196,7 +196,7 @@ They can be a great asset to structure the flow of a method.
 If you want to automate formatting your code, the following command gives you a good baseline of how it should look:
 
 ```bash
-astyle -r -xb -s3 -p -xg -c -k1 -W1 \*.c \*.h
+astyle -r -xb -s3 -p -xg -c -k1 -W1 -H \*.c \*.h
 ```
 
 Working with System APIs
