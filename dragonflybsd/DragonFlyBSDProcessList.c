@@ -333,6 +333,7 @@ static void DragonFlyBSDProcessList_updateProcessName(kvm_t* kd, const struct ki
    }
 
    char* cmdline = xMalloc(len);
+
    char* at = cmdline;
    int end = 0;
    for (int i = 0; argv[i]; i++) {
@@ -346,6 +347,8 @@ static void DragonFlyBSDProcessList_updateProcessName(kvm_t* kd, const struct ki
    *at = '\0';
 
    Process_updateCmdline(proc, cmdline, 0, end);
+
+   free(cmdline);
 }
 
 static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* dfpl) {
