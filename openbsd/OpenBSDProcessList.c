@@ -255,6 +255,8 @@ static void OpenBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_p
    }
 
    Process_updateCmdline(proc, s, start, end);
+
+   free(s);
 }
 
 /*
