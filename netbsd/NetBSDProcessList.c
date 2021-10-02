@@ -247,6 +247,8 @@ static void NetBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_pr
    }
 
    Process_updateCmdline(proc, s, start, end);
+
+   free(s);
 }
 
 /*
