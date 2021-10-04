@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "CommandLine.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <getopt.h>
 #include <locale.h>
 #include <stdbool.h>
@@ -178,8 +179,12 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
             if (!username) {
                flags.userId = geteuid();
             } else if (!Action_setUserOnly(username, &(flags.userId))) {
-               fprintf(stderr, "Error: invalid user \"%s\".\n", username);
-               exit(1);
+               for (const char *itr = username; *itr; ++itr)
+                  if (!isdigit((unsigned char)*itr)) {
+                     fprintf(stderr, "Error: invalid user \"%s\".\n", username);
+                     exit(1);
+                  }
+               flags.userId = atol(username);
             }
             break;
          }

@@ -62,7 +62,7 @@ Show only the given PIDs
 Sort by this column (use \-\-sort\-key help for a column list).
 This will force a list view unless you specify -t at the same time.
 .TP
-\fB\-u \-\-user=USERNAME\fR
+\fB\-u \-\-user=USERNAME|UID\fR
 Show only the processes of a given user
 .TP
 \fB\-U \-\-no-unicode\fR
