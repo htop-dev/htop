@@ -61,6 +61,29 @@ static void Settings_readMeterModes(Settings* this, const char* line, unsigned i
    this->hColumns[column].modes = modes;
 }
 
+static bool Settings_validateMeters(Settings* this) {
+   const size_t colCount = HeaderLayout_getColumns(this->hLayout);
+
+   for (size_t column = 0; column < colCount; column++) {
+      char** names = this->hColumns[column].names;
+      const int* modes = this->hColumns[column].modes;
+      const size_t len = this->hColumns[column].len;
+
+      if (!names || !modes || !len)
+         return false;
+
+      // Check for each mode there is an entry with a non-NULL name
+      for (size_t meterIdx = 0; meterIdx < len; meterIdx++)
+         if (!names[meterIdx])
+            return false;
+
+      if (names[len])
+         return false;
+   }
+
+   return true;
+}
+
 static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount) {
    int sizes[] = { 3, 3 };
 
@@ -313,7 +336,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       String_freeArray(option);
    }
    fclose(fd);
-   if (!didReadMeters) {
+   if (!didReadMeters || !Settings_validateMeters(this)) {
       Settings_defaultMeters(this, initialCpuCount);
    }
    return didReadAny;
