@@ -28,11 +28,7 @@ void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->fields);
    for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
-      if (this->hColumns[i].names) {
-         for (size_t j = 0; j < this->hColumns[i].len; j++)
-            free(this->hColumns[i].names[j]);
-         free(this->hColumns[i].names);
-      }
+      String_freeArray(this->hColumns[i].names);
       free(this->hColumns[i].modes);
    }
    free(this->hColumns);
@@ -67,14 +63,26 @@ static void Settings_readMeterModes(Settings* this, const char* line, unsigned i
 
 static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount) {
    int sizes[] = { 3, 3 };
+
    if (initialCpuCount > 4 && initialCpuCount <= 128) {
       sizes[1]++;
    }
-   for (int i = 0; i < 2; i++) {
+
+   // Release any previously allocated memory
+   for (size_t i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
+      String_freeArray(this->hColumns[i].names);
+      free(this->hColumns[i].modes);
+   }
+   free(this->hColumns);
+
+   this->hLayout = HF_TWO_50_50;
+   this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
+   for (size_t i = 0; i < 2; i++) {
       this->hColumns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
       this->hColumns[i].modes = xCalloc(sizes[i], sizeof(int));
       this->hColumns[i].len = sizes[i];
    }
+
    int r = 0;
 
    if (initialCpuCount > 128) {
