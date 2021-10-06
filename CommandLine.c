@@ -86,9 +86,9 @@ typedef struct CommandLineSettings_ {
    bool readonly;
 } CommandLineSettings;
 
-static CommandLineSettings parseArguments(const char* program, int argc, char** argv) {
+static CommandLineStatus parseArguments(const char* program, int argc, char** argv, CommandLineSettings* flags) {
 
-   CommandLineSettings flags = {
+   *flags = (CommandLineSettings) {
       .pidMatchList = NULL,
       .commFilter = NULL,
       .userId = (uid_t)-1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
@@ -131,10 +131,10 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
       switch (opt) {
          case 'h':
             printHelpFlag(program);
-            exit(0);
+            return STATUS_OK_EXIT;
          case 'V':
             printVersionFlag(program);
-            exit(0);
+            return STATUS_OK_EXIT;
          case 's':
             assert(optarg); /* please clang analyzer, cause optarg can be NULL in the 'u' case */
             if (String_eq(optarg, "help")) {
@@ -143,29 +143,29 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
                   const char* description = Process_fields[j].description;
                   if (name) printf("%19s %s\n", name, description);
                }
-               exit(0);
+               return STATUS_OK_EXIT;
             }
-            flags.sortKey = 0;
+            flags->sortKey = 0;
             for (int j = 1; j < LAST_PROCESSFIELD; j++) {
                if (Process_fields[j].name == NULL)
                   continue;
                if (String_eq(optarg, Process_fields[j].name)) {
-                  flags.sortKey = j;
+                  flags->sortKey = j;
                   break;
                }
             }
-            if (flags.sortKey == 0) {
+            if (flags->sortKey == 0) {
                fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
-               exit(1);
+               return STATUS_ERROR_EXIT;
             }
             break;
          case 'd':
-            if (sscanf(optarg, "%16d", &(flags.delay)) == 1) {
-               if (flags.delay < 1) flags.delay = 1;
-               if (flags.delay > 100) flags.delay = 100;
+            if (sscanf(optarg, "%16d", &(flags->delay)) == 1) {
+               if (flags->delay < 1) flags->delay = 1;
+               if (flags->delay > 100) flags->delay = 100;
             } else {
                fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
-               exit(1);
+               return STATUS_ERROR_EXIT;
             }
             break;
          case 'u':
@@ -177,30 +177,30 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
             }
 
             if (!username) {
-               flags.userId = geteuid();
-            } else if (!Action_setUserOnly(username, &(flags.userId))) {
+               flags->userId = geteuid();
+            } else if (!Action_setUserOnly(username, &(flags->userId))) {
                for (const char *itr = username; *itr; ++itr)
                   if (!isdigit((unsigned char)*itr)) {
                      fprintf(stderr, "Error: invalid user \"%s\".\n", username);
-                     exit(1);
+                     return STATUS_ERROR_EXIT;
                   }
-               flags.userId = atol(username);
+               flags->userId = atol(username);
             }
             break;
          }
          case 'C':
-            flags.useColors = false;
+            flags->useColors = false;
             break;
          case 'M':
 #ifdef HAVE_GETMOUSE
-            flags.enableMouse = false;
+            flags->enableMouse = false;
 #endif
             break;
          case 'U':
-            flags.allowUnicode = false;
+            flags->allowUnicode = false;
             break;
          case 't':
-            flags.treeView = true;
+            flags->treeView = true;
             break;
          case 'p': {
             assert(optarg); /* please clang analyzer, cause optarg can be NULL in the 'u' case */
@@ -208,14 +208,14 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
             char* saveptr;
             const char* pid = strtok_r(argCopy, ",", &saveptr);
 
-            if (!flags.pidMatchList) {
-               flags.pidMatchList = Hashtable_new(8, false);
+            if (!flags->pidMatchList) {
+               flags->pidMatchList = Hashtable_new(8, false);
             }
 
             while(pid) {
                 unsigned int num_pid = atoi(pid);
-                //  deepcode ignore CastIntegerToAddress: we just want a non-NUll pointer here
-                Hashtable_put(flags.pidMatchList, num_pid, (void *) 1);
+                //  deepcode ignore CastIntegerToAddress: we just want a non-NULL pointer here
+                Hashtable_put(flags->pidMatchList, num_pid, (void *) 1);
                 pid = strtok_r(NULL, ",", &saveptr);
             }
             free(argCopy);
@@ -224,7 +224,7 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
          }
          case 'F': {
             assert(optarg);
-            free_and_xStrdup(&flags.commFilter, optarg);
+            free_and_xStrdup(&flags->commFilter, optarg);
             break;
          }
          case 'H': {
@@ -234,28 +234,30 @@ static CommandLineSettings parseArguments(const char* program, int argc, char** 
                 delay = argv[optind++];
             }
             if (delay) {
-                if (sscanf(delay, "%16d", &(flags.highlightDelaySecs)) == 1) {
-                   if (flags.highlightDelaySecs < 1)
-                      flags.highlightDelaySecs = 1;
+                if (sscanf(delay, "%16d", &(flags->highlightDelaySecs)) == 1) {
+                   if (flags->highlightDelaySecs < 1)
+                      flags->highlightDelaySecs = 1;
                 } else {
                    fprintf(stderr, "Error: invalid highlight delay value \"%s\".\n", delay);
-                   exit(1);
+                   return STATUS_ERROR_EXIT;
                 }
             }
-            flags.highlightChanges = true;
+            flags->highlightChanges = true;
             break;
          }
          case 128:
-            flags.readonly = true;
+            flags->readonly = true;
             break;
 
-         default:
-           if (Platform_getLongOption(opt, argc, argv) == false)
-              exit(1);
-           break;
+         default: {
+            CommandLineStatus status;
+            if ((status = Platform_getLongOption(opt, argc, argv)) != STATUS_OK)
+               return status;
+            break;
+         }
       }
    }
-   return flags;
+   return STATUS_OK;
 }
 
 static void CommandLine_delay(ProcessList* pl, unsigned long millisec) {
@@ -288,12 +290,17 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    else
       setlocale(LC_CTYPE, "");
 
-   CommandLineSettings flags = parseArguments(name, argc, argv);
+   CommandLineStatus status = STATUS_OK;
+   CommandLineSettings flags = { 0 };
+
+   if ((status = parseArguments(name, argc, argv, &flags)) != STATUS_OK)
+      return status != STATUS_OK_EXIT ? 1 : 0;
 
    if (flags.readonly)
       Settings_enableReadonly();
 
-   Platform_init();
+   if (!Platform_init())
+      return 1;
 
    Process_setupColumnWidths();
 

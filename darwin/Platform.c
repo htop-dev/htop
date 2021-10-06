@@ -126,7 +126,7 @@ static double Platform_nanosecondsPerMachTick = 1.0;
 
 static double Platform_nanosecondsPerSchedulerTick = -1;
 
-void Platform_init(void) {
+bool Platform_init(void) {
    Platform_nanosecondsPerMachTick = Platform_calculateNanosecondsPerMachTick();
 
    // Determine the number of scheduler clock ticks per second
@@ -139,6 +139,8 @@ void Platform_init(void) {
 
    const double nanos_per_sec = 1e9;
    Platform_nanosecondsPerSchedulerTick = nanos_per_sec / scheduler_ticks_per_sec;
+
+   return true;
 }
 
 // Converts ticks in the Mach "timebase" to nanoseconds.

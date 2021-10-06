@@ -68,8 +68,9 @@ const MeterClass* const Platform_meterTypes[] = {
 
 static const char Platform_unsupported[] = "unsupported";
 
-void Platform_init(void) {
+bool Platform_init(void) {
    /* no platform-specific setup needed */
+   return true;
 }
 
 void Platform_done(void) {

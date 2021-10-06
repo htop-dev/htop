@@ -257,7 +257,7 @@ size_t Platform_addMetric(PCPMetric id, const char* name) {
 /* global state from the environment and command line arguments */
 pmOptions opts;
 
-void Platform_init(void) {
+bool Platform_init(void) {
    const char* source;
    if (opts.context == PM_CONTEXT_ARCHIVE) {
       source = opts.archives[0];
@@ -277,12 +277,12 @@ void Platform_init(void) {
    }
    if (sts < 0) {
       fprintf(stderr, "Cannot setup PCP metric source: %s\n", pmErrStr(sts));
-      exit(1);
+      return false;
    }
    /* setup timezones and other general startup preparation completion */
    if (pmGetContextOptions(sts, &opts) < 0 || opts.errors) {
       pmflush();
-      exit(1);
+      return false;
    }
 
    pcp = xCalloc(1, sizeof(Platform));
@@ -309,7 +309,8 @@ void Platform_init(void) {
    sts = pmLookupName(pcp->totalMetrics, pcp->names, pcp->pmids);
    if (sts < 0) {
       fprintf(stderr, "Error: cannot lookup metric names: %s\n", pmErrStr(sts));
-      exit(1);
+      Platform_done();
+      return false;
    }
 
    for (size_t i = 0; i < pcp->totalMetrics; i++) {
@@ -361,6 +362,8 @@ void Platform_init(void) {
    Platform_getRelease(0);
    Platform_getMaxCPU();
    Platform_getMaxPid();
+
+   return true;
 }
 
 void Platform_dynamicColumnsDone(Hashtable* columns) {
@@ -697,16 +700,16 @@ void Platform_longOptionsUsage(ATTR_UNUSED const char* name) {
 "   --timezone=TZ                set reporting timezone\n");
 }
 
-bool Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** argv) {
+CommandLineStatus Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** argv) {
    /* libpcp export without a header definition */
    extern void __pmAddOptHost(pmOptions*, char*);
 
    switch (opt) {
       case PLATFORM_LONGOPT_HOST:  /* --host=HOSTSPEC */
          if (argv[optind][0] == '\0')
-            return false;
+            return STATUS_ERROR_EXIT;
           __pmAddOptHost(&opts, optarg);
-         return true;
+         return STATUS_OK;
 
       case PLATFORM_LONGOPT_HOSTZONE:  /* --hostzone */
          if (opts.timezone) {
@@ -715,23 +718,23 @@ bool Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** argv) {
          } else {
             opts.tzflag = 1;
          }
-         return true;
+         return STATUS_OK;
 
       case PLATFORM_LONGOPT_TIMEZONE:  /* --timezone=TZ */
          if (argv[optind][0] == '\0')
-            return false;
+            return STATUS_ERROR_EXIT;
          if (opts.tzflag) {
             pmprintf("%s: at most one of -Z and -z allowed\n", pmGetProgname());
             opts.errors++;
          } else {
             opts.timezone = optarg;
          }
-         return true;
+         return STATUS_OK;
 
       default:
          break;
    }
-   return false;
+   return STATUS_ERROR_EXIT;
 }
 
 void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
