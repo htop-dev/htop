@@ -127,8 +127,9 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-void Platform_init(void) {
+bool Platform_init(void) {
    /* no platform-specific setup needed */
+   return true;
 }
 
 void Platform_done(void) {

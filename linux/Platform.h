@@ -27,6 +27,7 @@ in the source distribution for its full text.
 #include "ProcessLocksScreen.h"
 #include "RichString.h"
 #include "SignalsPanel.h"
+#include "CommandLine.h"
 #include "generic/gettime.h"
 #include "generic/hostname.h"
 #include "generic/uname.h"
@@ -45,8 +46,7 @@ extern const unsigned int Platform_numberOfSignals;
 
 extern const MeterClass* const Platform_meterTypes[];
 
-void Platform_init(void);
-
+bool Platform_init(void);
 void Platform_done(void);
 
 void Platform_setBindings(Htop_Action* keys);
@@ -100,7 +100,7 @@ static inline void Platform_getRelease(char** string) {
 
 void Platform_longOptionsUsage(const char* name);
 
-bool Platform_getLongOption(int opt, int argc, char** argv);
+CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv);
 
 static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
    Generic_gettime_realtime(tv, msec);

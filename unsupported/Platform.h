@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+#include "CommandLine.h"
 #include "generic/gettime.h"
 #include "unsupported/UnsupportedProcess.h"
 
@@ -27,7 +28,7 @@ extern const ProcessField Platform_defaultFields[];
 
 extern const MeterClass* const Platform_meterTypes[];
 
-void Platform_init(void);
+bool Platform_init(void);
 
 void Platform_done(void);
 
@@ -65,8 +66,8 @@ void Platform_getRelease(char** string);
 
 static inline void Platform_longOptionsUsage(ATTR_UNUSED const char* name) { }
 
-static inline bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
-   return false;
+static inline CommandLineStatus Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
+   return STATUS_ERROR_EXIT;
 }
 
 static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {

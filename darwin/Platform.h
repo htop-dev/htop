@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
+#include "CommandLine.h"
 #include "darwin/DarwinProcess.h"
 #include "generic/gettime.h"
 #include "generic/hostname.h"
@@ -33,7 +34,7 @@ extern const unsigned int Platform_numberOfSignals;
 
 extern const MeterClass* const Platform_meterTypes[];
 
-void Platform_init(void);
+bool Platform_init(void);
 
 // Converts ticks in the Mach "timebase" to nanoseconds.
 // See `mach_timebase_info`, as used to define the `Platform_nanosecondsPerMachTick` constant.
@@ -87,8 +88,8 @@ static inline void Platform_getRelease(char** string) {
 
 static inline void Platform_longOptionsUsage(ATTR_UNUSED const char* name) { }
 
-static inline bool Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
-   return false;
+static inline CommandLineStatus Platform_getLongOption(ATTR_UNUSED int opt, ATTR_UNUSED int argc, ATTR_UNUSED char** argv) {
+   return STATUS_ERROR_EXIT;
 }
 
 static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {

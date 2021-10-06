@@ -835,7 +835,7 @@ void Platform_longOptionsUsage(const char* name)
 #endif
 }
 
-bool Platform_getLongOption(int opt, int argc, char** argv) {
+CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv) {
 #ifndef HAVE_LIBCAP
    (void) argc;
    (void) argv;
@@ -858,16 +858,16 @@ bool Platform_getLongOption(int opt, int argc, char** argv) {
             Platform_capabilitiesMode = CAP_MODE_STRICT;
          } else {
             fprintf(stderr, "Error: invalid capabilities mode \"%s\".\n", mode);
-            exit(1);
+            return STATUS_ERROR_EXIT;
          }
-         return true;
+         return STATUS_OK;
       }
 #endif
 
       default:
          break;
    }
-   return false;
+   return STATUS_ERROR_EXIT;
 }
 
 #ifdef HAVE_LIBCAP
@@ -956,20 +956,22 @@ static int dropCapabilities(enum CapMode mode) {
 }
 #endif
 
-void Platform_init(void) {
+bool Platform_init(void) {
 #ifdef HAVE_LIBCAP
    if (dropCapabilities(Platform_capabilitiesMode) < 0)
-      exit(1);
+      return false;
 #endif
 
    if (access(PROCDIR, R_OK) != 0) {
       fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
-      exit(1);
+      return false;
    }
 
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_init();
 #endif
+
+   return true;
 }
 
 void Platform_done(void) {
