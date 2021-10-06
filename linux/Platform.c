@@ -611,133 +611,85 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
 
 // Linux battery reading by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 
-#define MAX_BATTERIES 64
 #define PROC_BATTERY_DIR PROCDIR "/acpi/battery"
 #define PROC_POWERSUPPLY_DIR PROCDIR "/acpi/ac_adapter"
+#define PROC_POWERSUPPLY_ACSTATE_FILE PROC_POWERSUPPLY_DIR "/AC/state"
 #define SYS_POWERSUPPLY_DIR "/sys/class/power_supply"
 
 // ----------------------------------------
 // READ FROM /proc
 // ----------------------------------------
 
-static unsigned long int parseBatInfo(const char* fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
-   const char batteryPath[] = PROC_BATTERY_DIR;
-   DIR* batteryDir = opendir(batteryPath);
+static double Platform_Battery_getProcBatInfo(void) {
+   DIR* batteryDir = opendir(PROC_BATTERY_DIR);
    if (!batteryDir)
-      return 0;
+      return NAN;
 
-   char* batteries[MAX_BATTERIES];
-   unsigned int nBatteries = 0;
-   memset(batteries, 0, MAX_BATTERIES * sizeof(char*));
+   uint64_t totalFull = 0;
+   uint64_t totalRemain = 0;
 
-   while (nBatteries < MAX_BATTERIES) {
-      const struct dirent* dirEntry = readdir(batteryDir);
-      if (!dirEntry)
-         break;
-
+   struct dirent* dirEntry = NULL;
+   while ((dirEntry = readdir(batteryDir))) {
       const char* entryName = dirEntry->d_name;
       if (!String_startsWith(entryName, "BAT"))
          continue;
 
-      batteries[nBatteries] = xStrdup(entryName);
-      nBatteries++;
-   }
-   closedir(batteryDir);
+      char filePath[256];
+      char bufInfo[1024] = {0};
+      xSnprintf(filePath, sizeof(filePath), "%s/%s/info", PROC_BATTERY_DIR, entryName);
+      ssize_t r = xReadfile(filePath, bufInfo, sizeof(bufInfo));
+      if (r < 0)
+         continue;
 
-   unsigned long int total = 0;
-   for (unsigned int i = 0; i < nBatteries; i++) {
-      char infoPath[30];
-      xSnprintf(infoPath, sizeof infoPath, "%s%s/%s", batteryPath, batteries[i], fileName);
+      char bufState[1024] = {0};
+      xSnprintf(filePath, sizeof(filePath), "%s/%s/state", PROC_BATTERY_DIR, entryName);
+      r = xReadfile(filePath, bufState, sizeof(bufState));
+      if (r < 0)
+         continue;
 
-      FILE* file = fopen(infoPath, "r");
-      if (!file)
-         break;
+      const char* line;
 
-      char* line = NULL;
-      for (unsigned short int j = 0; j < lineNum; j++) {
-         free(line);
-         line = String_readLine(file);
-         if (!line)
+      //Getting total charge for all batteries
+      char* buf = bufInfo;
+      while ((line = strsep(&buf, "\n")) != NULL) {
+         char field[100] = {0};
+         int val = 0;
+         if (2 != sscanf(line, "%99[^:]:%d", field, &val))
+            continue;
+
+         if (String_eq(field, "last full capacity")) {
+            totalFull += val;
             break;
+         }
       }
 
-      fclose(file);
+      //Getting remaining charge for all batteries
+      buf = bufState;
+      while ((line = strsep(&buf, "\n")) != NULL) {
+         char field[100] = {0};
+         int val = 0;
+         if (2 != sscanf(line, "%99[^:]:%d", field, &val))
+            continue;
 
-      if (!line)
-         break;
-
-      char* foundNumStr = String_getToken(line, wordNum);
-      const unsigned long int foundNum = atoi(foundNumStr);
-      free(foundNumStr);
-      free(line);
-
-      total += foundNum;
+         if (String_eq(field, "remaining capacity")) {
+            totalRemain += val;
+            break;
+         }
+      }
    }
 
-   for (unsigned int i = 0; i < nBatteries; i++)
-      free(batteries[i]);
+   closedir(batteryDir);
 
-   return total;
+   return totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
 }
 
 static ACPresence procAcpiCheck(void) {
-   ACPresence isOn = AC_ERROR;
-   const char* power_supplyPath = PROC_POWERSUPPLY_DIR;
-   DIR* dir = opendir(power_supplyPath);
-   if (!dir)
+   char buffer[1024] = {0};
+   ssize_t r = xReadfile(PROC_POWERSUPPLY_ACSTATE_FILE, buffer, sizeof(buffer));
+   if (r < 1)
       return AC_ERROR;
 
-   for (;;) {
-      const struct dirent* dirEntry = readdir(dir);
-      if (!dirEntry)
-         break;
-
-      const char* entryName = dirEntry->d_name;
-
-      if (entryName[0] != 'A')
-         continue;
-
-      char statePath[256];
-      xSnprintf(statePath, sizeof(statePath), "%s/%s/state", power_supplyPath, entryName);
-      FILE* file = fopen(statePath, "r");
-      if (!file) {
-         isOn = AC_ERROR;
-         continue;
-      }
-      char* line = String_readLine(file);
-
-      fclose(file);
-
-      if (!line)
-         continue;
-
-      char* isOnline = String_getToken(line, 2);
-      free(line);
-
-      if (String_eq(isOnline, "on-line"))
-         isOn = AC_PRESENT;
-      else
-         isOn = AC_ABSENT;
-      free(isOnline);
-      if (isOn == AC_PRESENT)
-         break;
-   }
-
-   closedir(dir);
-
-   return isOn;
-}
-
-static double Platform_Battery_getProcBatInfo(void) {
-   const unsigned long int totalFull = parseBatInfo("info", 3, 4);
-   if (totalFull == 0)
-      return NAN;
-
-   const unsigned long int totalRemain = parseBatInfo("state", 5, 3);
-   if (totalRemain == 0)
-      return NAN;
-
-   return totalRemain * 100.0 / (double) totalFull;
+   return String_eq(buffer, "on-line") ? AC_PRESENT : AC_ABSENT;
 }
 
 static void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
@@ -750,7 +702,6 @@ static void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
 // ----------------------------------------
 
 static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
-
    *percent = NAN;
    *isOnAC = AC_ERROR;
 
@@ -758,68 +709,52 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
    if (!dir)
       return;
 
-   unsigned long int totalFull = 0;
-   unsigned long int totalRemain = 0;
+   uint64_t totalFull = 0;
+   uint64_t totalRemain = 0;
 
-   for (;;) {
-      const struct dirent* dirEntry = readdir(dir);
-      if (!dirEntry)
-         break;
-
+   struct dirent* dirEntry = NULL;
+   while ((dirEntry = readdir(dir))) {
       const char* entryName = dirEntry->d_name;
-      char filePath[256];
 
-      xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
-
-      char type[8];
-      ssize_t r = xReadfile(filePath, type, sizeof(type));
-      if (r < 3)
-         continue;
-
-      if (type[0] == 'B' && type[1] == 'a' && type[2] == 't') {
+      if (String_startsWith(entryName, "BAT")) {
+         char buffer[1024] = {0};
+         char filePath[256];
          xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
 
-         char buffer[1024];
-         r = xReadfile(filePath, buffer, sizeof(buffer));
-         if (r < 0) {
-            closedir(dir);
-            return;
-         }
+         ssize_t r = xReadfile(filePath, buffer, sizeof(buffer));
+         if (r < 0)
+            continue;
 
-         char* buf = buffer;
-         const char* line;
          bool full = false;
          bool now = false;
-         int fullSize = 0;
+
+         double fullCharge = 0;
          double capacityLevel = NAN;
+         const char* line;
 
-         #define match(str,prefix) \
-            (String_startsWith(str,prefix) ? (str) + strlen(prefix) : NULL)
-
+         char* buf = buffer;
          while ((line = strsep(&buf, "\n")) != NULL) {
-            const char* ps = match(line, "POWER_SUPPLY_");
-            if (!ps)
+            char field[100] = {0};
+            int val = 0;
+            if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%d", field, &val))
                continue;
-            const char* capacity = match(ps, "CAPACITY=");
-            if (capacity)
-               capacityLevel = atoi(capacity) / 100.0;
-            const char* energy = match(ps, "ENERGY_");
-            if (!energy)
-               energy = match(ps, "CHARGE_");
-            if (!energy)
+
+            if (String_eq(field, "CAPACITY")) {
+               capacityLevel = val / 100.0;
                continue;
-            const char* value = (!full) ? match(energy, "FULL=") : NULL;
-            if (value) {
-               fullSize = atoi(value);
-               totalFull += fullSize;
+            }
+
+            if (String_eq(field, "ENERGY_FULL") || String_eq(field, "CHARGE_FULL")) {
+               fullCharge = val;
+               totalFull += fullCharge;
                full = true;
                if (now)
                   break;
                continue;
             }
-            value = (!now) ? match(energy, "NOW=") : NULL;
-            if (value) {
-               totalRemain += atoi(value);
+
+            if (String_eq(field, "ENERGY_NOW") || String_eq(field, "CHARGE_NOW")) {
+               totalRemain += val;
                now = true;
                if (full)
                   break;
@@ -827,23 +762,21 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
             }
          }
 
-         #undef match
-
          if (!now && full && !isnan(capacityLevel))
-            totalRemain += (capacityLevel * fullSize);
+            totalRemain += capacityLevel * fullCharge;
 
-      } else if (entryName[0] == 'A') {
+      } else if (String_eq(entryName, "AC")) {
+         char buffer[2] = {0};
          if (*isOnAC != AC_ERROR)
             continue;
 
-         xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
+         char filePath[256];
+         xSnprintf(filePath, sizeof(filePath), SYS_POWERSUPPLY_DIR "/%s/online", entryName);
 
-         char buffer[2];
-
-         r = xReadfile(filePath, buffer, sizeof(buffer));
+         ssize_t r = xReadfile(filePath, buffer, sizeof(buffer));
          if (r < 1) {
-            closedir(dir);
-            return;
+            *isOnAC = AC_ERROR;
+            continue;
          }
 
          if (buffer[0] == '0')
@@ -852,6 +785,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
             *isOnAC = AC_PRESENT;
       }
    }
+
    closedir(dir);
 
    *percent = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
