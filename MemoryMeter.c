@@ -36,7 +36,7 @@ static void MemoryMeter_updateValues(Meter* this) {
    /* Do not print available memory in bar mode */
    this->curItems = 4;
 
-   written = Meter_humanUnit(buffer, isnan(this->values[4]) ? this->values[0] : this->total - this->values[4], size);
+   written = Meter_humanUnit(buffer, this->values[0], size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');
