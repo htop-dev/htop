@@ -288,8 +288,11 @@ bool Platform_getDiskIO(DiskIOData* data) {
    struct statinfo current = { .dinfo = &info };
 
    // get number of devices
-   if (devstat_getdevs(NULL, &current) < 0)
+   if (devstat_getdevs(NULL, &current) < 0) {
+      free(info.mem_ptr);
+
       return false;
+   }
 
    int count = current.dinfo->numdevs;
 
@@ -316,6 +319,9 @@ bool Platform_getDiskIO(DiskIOData* data) {
    data->totalBytesRead = bytesReadSum;
    data->totalBytesWritten = bytesWriteSum;
    data->totalMsTimeSpend = timeSpendSum;
+
+   free(info.mem_ptr);
+
    return true;
 }
 
