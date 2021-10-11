@@ -363,6 +363,19 @@ static void SolarisProcessList_updateCwd(pid_t pid, Process* proc) {
    free_and_xStrdup(&proc->procCwd, target);
 }
 
+/* Taken from: https://docs.oracle.com/cd/E19253-01/817-6223/6mlkidlom/index.html#tbl-sched-state */
+static inline ProcessState SolarisProcessList_getProcessState(char state) {
+   switch (state) {
+      case 'S': return SLEEPING;
+      case 'R': return RUNNABLE;
+      case 'O': return RUNNING;
+      case 'Z': return ZOMBIE;
+      case 'T': return STOPPED;
+      case 'I': return IDLE;
+      default: return UNKNOWN;
+   }
+}
+
 /* NOTE: the following is a callback function of type proc_walk_f
  *       and MUST conform to the appropriate definition in order
  *       to work.  See libproc(3LIB) on a Solaris or Illumos
@@ -402,7 +415,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    proc->priority           = _lwpsinfo->pr_pri;
    proc->nice               = _lwpsinfo->pr_nice - NZERO;
    proc->processor          = _lwpsinfo->pr_onpro;
-   proc->state              = _lwpsinfo->pr_sname;
+   proc->state              = SolarisProcessList_getProcessState(_lwpsinfo->pr_sname);
    // NOTE: This 'percentage' is a 16-bit BINARY FRACTIONS where 1.0 = 0x8000
    // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
    // (accessed on 18 November 2017)
@@ -462,11 +475,11 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       if (proc->isKernelThread && !pl->settings->hideKernelThreads) {
          pl->kernelThreads += proc->nlwp;
          pl->totalTasks += proc->nlwp + 1;
-         if (proc->state == 'O') {
+         if (proc->state == RUNNING) {
             pl->runningTasks++;
          }
       } else if (!proc->isKernelThread) {
-         if (proc->state == 'O') {
+         if (proc->state == RUNNING) {
             pl->runningTasks++;
          }
          if (pl->settings->hideUserlandThreads) {

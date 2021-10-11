@@ -310,6 +310,22 @@ static inline unsigned long long LinuxProcessList_adjustTime(unsigned long long 
    return t * 100 / jiffy;
 }
 
+/* Taken from: https://github.com/torvalds/linux/blob/64570fbc14f8d7cb3fe3995f20e26bc25ce4b2cc/fs/proc/array.c#L120 */
+static inline ProcessState LinuxProcessList_getProcessState(char state) {
+   switch (state) {
+      case 'S': return SLEEPING;
+      case 'X': return DEFUNCT;
+      case 'Z': return ZOMBIE;
+      case 't': return TRACED;
+      case 'T': return STOPPED;
+      case 'D': return UNINTERRUPTIBLE_WAIT;
+      case 'R': return RUNNING;
+      case 'P': return BLOCKED;
+      case 'I': return IDLE;
+      default: return UNKNOWN;
+   }
+}
+
 static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd, char* command, size_t commLen) {
    LinuxProcess* lp = (LinuxProcess*) process;
 
@@ -335,7 +351,7 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    location = end + 2;
 
    /* (3) state  -  %c */
-   process->state = location[0];
+   process->state = LinuxProcessList_getProcessState(location[0]);
    location += 2;
 
    /* (4) ppid  -  %d */
@@ -1098,7 +1114,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
       return false;
 
    if (amtRead == 0) {
-      if (process->state != 'Z') {
+      if (process->state != ZOMBIE) {
          process->isKernelThread = true;
       }
       Process_updateCmdline(process, NULL, 0, 0);
@@ -1511,7 +1527,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
          ProcessList_add(pl, proc);
       } else {
-         if (settings->updateProcessNames && proc->state != 'Z') {
+         if (settings->updateProcessNames && proc->state != ZOMBIE) {
             if (! LinuxProcessList_readCmdlineFile(proc, procFd)) {
                goto errorReadingProcess;
             }
@@ -1549,7 +1565,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       if (!proc->cmdline && statCommand[0] &&
-          (proc->state == 'Z' || Process_isKernelThread(proc) || settings->showThreadNames)) {
+          (proc->state == ZOMBIE || Process_isKernelThread(proc) || settings->showThreadNames)) {
          Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
       }
 
