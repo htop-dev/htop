@@ -345,15 +345,16 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
       }
 
+      /* Taken from: https://github.com/openbsd/src/blob/6a38af0976a6870911f4b2de19d8da28723a5778/sys/sys/proc.h#L420 */
       switch (kproc->p_stat) {
-         case SIDL:    proc->state = 'I'; break;
-         case SRUN:    proc->state = 'P'; break;
-         case SSLEEP:  proc->state = 'S'; break;
-         case SSTOP:   proc->state = 'T'; break;
-         case SZOMB:   proc->state = 'Z'; break;
-         case SDEAD:   proc->state = 'D'; break;
-         case SONPROC: proc->state = 'R'; break;
-         default:      proc->state = '?';
+         case SIDL:    proc->state = IDLE; break;
+         case SRUN:    proc->state = RUNNABLE; break;
+         case SSLEEP:  proc->state = SLEEPING; break;
+         case SSTOP:   proc->state = STOPPED; break;
+         case SZOMB:   proc->state = ZOMBIE; break;
+         case SDEAD:   proc->state = DEFUNCT; break;
+         case SONPROC: proc->state = RUNNING; break;
+         default:      proc->state = UNKNOWN;
       }
 
       if (Process_isKernelThread(proc)) {
@@ -363,7 +364,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       }
 
       this->super.totalTasks++;
-      if (proc->state == 'R') {
+      if (proc->state == RUNNING) {
          this->super.runningTasks++;
       }
 

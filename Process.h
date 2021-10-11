@@ -60,6 +60,26 @@ typedef enum ProcessField_ {
    LAST_PROCESSFIELD
 } ProcessField;
 
+/* Core process states (shared by platforms)
+ * NOTE: The enum has an ordering that is important!
+ * See processStateChar in process.c for ProcessSate -> letter mapping */
+typedef enum ProcessState_ {
+   UNKNOWN = 1,
+   RUNNABLE,
+   RUNNING,
+   QUEUED,
+   WAITING,
+   UNINTERRUPTIBLE_WAIT,
+   BLOCKED,
+   PAGING,
+   STOPPED,
+   TRACED,
+   ZOMBIE,
+   DEFUNCT,
+   IDLE,
+   SLEEPING
+} ProcessState;
+
 struct Settings_;
 
 /* Holds information about regions of the cmdline that should be
@@ -202,20 +222,8 @@ typedef struct Process_ {
    /* Number of major faults the process has made which have required loading a memory page from disk */
    unsigned long int majflt;
 
-   /*
-    * Process state (platform dependent):
-    *   D  -  Waiting
-    *   I  -  Idle
-    *   L  -  Acquiring lock
-    *   R  -  Running
-    *   S  -  Sleeping
-    *   T  -  Stopped (on a signal)
-    *   X  -  Dead
-    *   Z  -  Zombie
-    *   t  -  Tracing stop
-    *   ?  -  Unknown
-    */
-   char state;
+   /* Process state enum field (platform dependent) */
+   ProcessState state;
 
    /* Whether the process was updated during the current scan */
    bool updated;

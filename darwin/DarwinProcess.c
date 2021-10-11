@@ -331,7 +331,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    proc->nice = ep->p_nice;
    proc->priority = ep->p_priority;
 
-   proc->state = (ep->p_stat == SZOMB) ? 'Z' : '?';
+   proc->state = (ep->p_stat == SZOMB) ? ZOMBIE : UNKNOWN;
 
    /* Make sure the updated flag is set */
    proc->updated = true;
@@ -386,7 +386,7 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
       return;
    }
 
-   if (proc->state == 'Z') {
+   if (proc->state == ZOMBIE) {
       return;
    }
 
@@ -430,15 +430,15 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
    vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
    mach_port_deallocate(mach_task_self(), port);
 
-   char state = '?';
+   /* Taken from: https://github.com/apple/darwin-xnu/blob/2ff845c2e033bd0ff64b5b6aa6063a1f8f65aa32/osfmk/mach/thread_info.h#L129 */
    switch (run_state) {
-      case TH_STATE_RUNNING: state = 'R'; break;
-      case TH_STATE_STOPPED: state = 'S'; break;
-      case TH_STATE_WAITING: state = 'W'; break;
-      case TH_STATE_UNINTERRUPTIBLE: state = 'U'; break;
-      case TH_STATE_HALTED: state = 'H'; break;
+      case TH_STATE_RUNNING: proc->state = RUNNING; break;
+      case TH_STATE_STOPPED: proc->state = STOPPED; break;
+      case TH_STATE_WAITING: proc->state = WAITING; break;
+      case TH_STATE_UNINTERRUPTIBLE: proc->state = UNINTERRUPTIBLE_WAIT; break;
+      case TH_STATE_HALTED: proc->state = BLOCKED; break;
+      default: proc->state = UNKNOWN;
    }
-   proc->state = state;
 }
 
 

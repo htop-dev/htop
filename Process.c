@@ -415,7 +415,7 @@ void Process_makeCommandStr(Process* this) {
     * - a user thread and showThreadNames is not set */
    if (Process_isKernelThread(this))
       return;
-   if (this->state == 'Z' && !this->mergedCommand.str)
+   if (this->state == ZOMBIE && !this->mergedCommand.str)
       return;
    if (Process_isUserlandThread(this) && settings->showThreadNames && (showThreadNames == mc->prevShowThreadNames))
       return;
@@ -749,6 +749,28 @@ void Process_printPercentage(float val, char* buffer, int n, int* attr) {
    }
 }
 
+static inline char processStateChar(ProcessState state) {
+   switch (state) {
+      case UNKNOWN: return '?';
+      case RUNNABLE: return 'U';
+      case RUNNING: return 'R';
+      case QUEUED: return 'Q';
+      case WAITING: return 'W';
+      case UNINTERRUPTIBLE_WAIT: return 'D';
+      case BLOCKED: return 'B';
+      case PAGING: return 'P';
+      case STOPPED: return 'T';
+      case TRACED: return 't';
+      case ZOMBIE: return 'Z';
+      case DEFUNCT: return 'X';
+      case IDLE: return 'I';
+      case SLEEPING: return 'S';
+      default:
+         assert(0);
+         return '!';
+   }
+}
+
 void Process_writeField(const Process* this, RichString* str, ProcessField field) {
    char buffer[256];
    size_t n = sizeof(buffer);
@@ -883,21 +905,31 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
    case SESSION: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->session); break;
    case STARTTIME: xSnprintf(buffer, n, "%s", this->starttime_show); break;
    case STATE:
-      xSnprintf(buffer, n, "%c ", this->state);
+      xSnprintf(buffer, n, "%c ", processStateChar(this->state));
       switch (this->state) {
-#ifdef HTOP_NETBSD
-         case 'P':
-#else
-         case 'R':
-#endif
+         case RUNNABLE:
+         case RUNNING:
+         case TRACED:
             attr = CRT_colors[PROCESS_RUN_STATE];
             break;
-         case 'D':
+
+         case BLOCKED:
+         case DEFUNCT:
+         case STOPPED:
+         case ZOMBIE:
             attr = CRT_colors[PROCESS_D_STATE];
             break;
-         case 'I':
-         case 'S':
+
+         case QUEUED:
+         case WAITING:
+         case UNINTERRUPTIBLE_WAIT:
+         case IDLE:
+         case SLEEPING:
             attr = CRT_colors[PROCESS_SHADOW];
+            break;
+
+         case UNKNOWN:
+         case PAGING:
             break;
       }
       break;
@@ -1072,44 +1104,6 @@ int Process_compare(const void* v1, const void* v2) {
    return (Settings_getActiveDirection(settings) == 1) ? result : -result;
 }
 
-static uint8_t stateCompareValue(char state) {
-   switch (state) {
-
-   case 'S':
-      return 10;
-
-   case 'I':
-      return 9;
-
-   case 'X':
-      return 8;
-
-   case 'Z':
-      return 7;
-
-   case 't':
-      return 6;
-
-   case 'T':
-      return 5;
-
-   case 'L':
-      return 4;
-
-   case 'D':
-      return 3;
-
-   case 'R':
-      return 2;
-
-   case '?':
-      return 1;
-
-   default:
-      return 0;
-   }
-}
-
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
    int r;
 
@@ -1164,7 +1158,7 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       r = SPACESHIP_NUMBER(p1->starttime_ctime, p2->starttime_ctime);
       return r != 0 ? r : SPACESHIP_NUMBER(p1->pid, p2->pid);
    case STATE:
-      return SPACESHIP_NUMBER(stateCompareValue(p1->state), stateCompareValue(p2->state));
+      return SPACESHIP_NUMBER(p1->state, p2->state);
    case ST_UID:
       return SPACESHIP_NUMBER(p1->st_uid, p2->st_uid);
    case TIME:

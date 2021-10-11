@@ -142,10 +142,27 @@ static inline char Metric_instance_char(int metric, int pid, int offset, char fa
    return fallback;
 }
 
+static inline PCPProcessList_getProcessState(char state) {
+   switch (state) {
+      case '?': return UNKNOWN;
+      case 'R': return RUNNING;
+      case 'W': return WAITING;
+      case 'D': return UNINTERRUPTIBLE_WAIT;
+      case 'P': return PAGING;
+      case 'T': return STOPPED;
+      case 't': return TRACED;
+      case 'Z': return ZOMBIE;
+      case 'X': return DEFUNCT;
+      case 'I': return IDLE;
+      case 'S': return SLEEPING;
+      default: return UNKNOWN;
+   }
+}
+
 static void PCPProcessList_updateID(Process* process, int pid, int offset) {
    process->tgid = Metric_instance_u32(PCP_PROC_TGID, pid, offset, 1);
    process->ppid = Metric_instance_u32(PCP_PROC_PPID, pid, offset, 1);
-   process->state = Metric_instance_char(PCP_PROC_STATE, pid, offset, '?');
+   process->state = PCPProcessList_getProcessState(Metric_instance_char(PCP_PROC_STATE, pid, offset, '?'));
 }
 
 static void PCPProcessList_updateInfo(Process* process, int pid, int offset, char* command, size_t commLen) {
@@ -283,7 +300,7 @@ static void PCPProcessList_updateUsername(Process* process, int pid, int offset,
 static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, const char* comm) {
    pmAtomValue value;
    if (!PCPMetric_instance(PCP_PROC_PSARGS, pid, offset, &value, PM_TYPE_STRING)) {
-      if (process->state != 'Z')
+      if (process->state != ZOMBIE)
          process->isKernelThread = true;
       Process_updateCmdline(process, NULL, 0, 0);
       return;
@@ -351,7 +368,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       if (preExisting && hideKernelThreads && Process_isKernelThread(proc)) {
          proc->updated = true;
          proc->show = false;
-         if (proc->state == 'R')
+         if (proc->state == RUNNING)
             pl->runningTasks++;
          pl->kernelThreads++;
          pl->totalTasks++;
@@ -360,7 +377,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       if (preExisting && hideUserlandThreads && Process_isUserlandThread(proc)) {
          proc->updated = true;
          proc->show = false;
-         if (proc->state == 'R')
+         if (proc->state == RUNNING)
             pl->runningTasks++;
          pl->userlandThreads++;
          pl->totalTasks++;
@@ -398,7 +415,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
          PCPProcessList_updateCmdline(proc, pid, offset, command);
          Process_fillStarttimeBuffer(proc);
          ProcessList_add(pl, proc);
-      } else if (settings->updateProcessNames && proc->state != 'Z') {
+      } else if (settings->updateProcessNames && proc->state != ZOMBIE) {
          PCPProcessList_updateCmdline(proc, pid, offset, command);
       }
 
@@ -420,7 +437,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       if (settings->flags & PROCESS_FLAG_LINUX_AUTOGROUP)
          PCPProcessList_readAutogroup(pp, pid, offset);
 
-      if (proc->state == 'Z' && !proc->cmdline && command[0]) {
+      if (proc->state == ZOMBIE && !proc->cmdline && command[0]) {
          Process_updateCmdline(proc, command, 0, strlen(command));
       } else if (Process_isThread(proc)) {
          if ((settings->showThreadNames || Process_isKernelThread(proc)) && command[0]) {
@@ -439,7 +456,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
                       (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       pl->totalTasks++;
-      if (proc->state == 'R')
+      if (proc->state == RUNNING)
          pl->runningTasks++;
       proc->updated = true;
    }
