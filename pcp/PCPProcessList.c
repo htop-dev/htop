@@ -680,7 +680,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    PCPMetric_enable(PCP_PROC_SMAPS_SWAPPSS, smaps_flag && enabled);
 
    struct timeval timestamp;
-   PCPMetric_fetch(&timestamp);
+   if (PCPMetric_fetch(&timestamp) != true)
+      return;
 
    double sample = this->timestamp;
    this->timestamp = pmtimevalToReal(&timestamp);

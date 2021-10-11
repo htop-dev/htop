@@ -444,6 +444,8 @@ static void FreeBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_p
    *at = '\0';
 
    Process_updateCmdline(proc, cmdline, 0, end);
+
+   free(cmdline);
 }
 
 static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
