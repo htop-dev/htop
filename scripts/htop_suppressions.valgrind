@@ -45,3 +45,13 @@
    fun:CRT_setColors
    fun:CRT_init
 }
+
+{
+   <devstat internal memory>
+   Memcheck:Leak
+   match-leak-kinds: possible,reachable
+   ...
+   obj:*/libdevstat*
+   ...
+   fun:Platform_getDiskIO
+}
