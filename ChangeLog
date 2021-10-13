@@ -4,9 +4,17 @@ What's new in version 3.1.1
 * Document minimum version for libcap (thanks to James Brown)
 * Fix mouse wheel collision with autogroups nice adjustment
 * Adjust Makefile.am macro definitions for older automake versions
+* Ensure consistent reporting of MemoryMeter 'used' memory
+* Report hugepage memory as real and used memory (as before)
+* Handle procExeDeleted, usesDeletedLib without mergedCommandline mode
+* Validate meter configuration before proceeding beyond htoprc parsing
+* Properly release memory on partially read configuration
+* Handle interrupted sampling from within libpcp PDU transfers
 * On Linux, provide O_PATH value if not defined
 * On Linux, always compute procExeDeleted if already set
 * Workaround for Rosetta 2 on Darwin (thanks to Alexander Momchilov)
+* Fix FreeBSD cmdline memory leak in Process_updateCmdline, and
+* Plug a Disk I/O meter memory leak on FreeBSD (thanks to Ximalas)
 
 What's new in version 3.1.0
 
