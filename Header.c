@@ -145,7 +145,7 @@ void Header_writeBackToSettings(const Header* this) {
       const Vector* vec = this->columns[col];
       int len = Vector_size(vec);
 
-      colSettings->names = len ? xCalloc(len, sizeof(char*)) : NULL;
+      colSettings->names = len ? xCalloc(len + 1, sizeof(char*)) : NULL;
       colSettings->modes = len ? xCalloc(len, sizeof(int)) : NULL;
       colSettings->len = len;
 
