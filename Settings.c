@@ -491,9 +491,12 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
 static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns, bool byName, char separator) {
    const char* sep = "";
    for (unsigned int i = 0; fields[i]; i++) {
-      if (fields[i] >= LAST_PROCESSFIELD || byName) {
+      if (fields[i] < LAST_PROCESSFIELD && byName) {
          const char* pName = toFieldName(columns, fields[i]);
          fprintf(fd, "%s%s", sep, pName);
+      } else if(fields[i] >= LAST_PROCESSFIELD && byName) {
+         const char* pName = toFieldName(columns, fields[i]);
+         fprintf(fd, " Dynamic(%s)", pName);
       } else {
          // This "-1" is for compatibility with the older enum format.
          fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
