@@ -285,19 +285,31 @@ is active, the executable path (/proc/[pid]/exe) and the command name
 (/proc/[pid]/comm) are also shown merged with the command line, if available.
 
 The program basename is highlighted if set in the configuration. Additional
-highlighting can be configured for stale executables (cf. Exe column below).
+highlighting can be configured for stale executables (cf. EXE column below).
 .TP
-.B Comm
+.B COMM
 The command name of the process obtained from /proc/[pid]/comm, if readable.
 .TP
-.B Exe
+.B EXE
 The abbreviated basename of the executable of the process, obtained from
 /proc/[pid]/exe, if readable. htop is able to read this file on linux for ALL
 the processes only if it has the capability CAP_SYS_PTRACE or root privileges.
 
 The basename is marked in red if the executable used to run the process has
-been replaced or deleted on disk since the process started. This additional
-markup can be configured.
+been replaced or deleted on disk since the process started. The information is
+obtained by processing the contents of /proc/[pid]/exe.
+
+Furthermore the basename is marked in yellow if any library is reported as having
+been replaced or deleted on disk since it was last loaded. The information is
+obtained by processing the contents of /proc/[pid]/maps.
+
+When deciding the color the replacement of the main executable always takes
+precedence over replacement of any other library. If only the memory map indicates
+a replacement of the main executable, this will show as if any other library had
+been replaced or deleted.
+
+This additional color markup can be configured in the "Display Options" section of
+the setup screen.
 .TP
 .B PID
 The process ID.
