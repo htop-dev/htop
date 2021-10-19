@@ -89,6 +89,7 @@ typedef struct LinuxProcess_ {
    unsigned int vxid;
    #endif
    char* cgroup;
+   char* cgroup_short;
    unsigned int oom;
    #ifdef HAVE_DELAYACCT
    unsigned long long int delay_read_time;
