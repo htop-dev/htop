@@ -45,6 +45,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "linux/CGroupUtils.h"
 #include "linux/LinuxProcess.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
@@ -860,6 +861,10 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
          free(process->cgroup);
          process->cgroup = NULL;
       }
+      if (process->cgroup_short) {
+         free(process->cgroup_short);
+         process->cgroup_short = NULL;
+      }
       return;
    }
    char output[PROC_LINE_LENGTH + 1];
@@ -892,7 +897,22 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
       left -= wrote;
    }
    fclose(file);
+
+   bool changed = !process->cgroup || !String_eq(process->cgroup, output);
+
    free_and_xStrdup(&process->cgroup, output);
+
+   if (!changed)
+      return;
+
+   char* cgroup_short = xCalloc(strlen(process->cgroup) + 1, 1);
+   if (CGroup_filterName(process->cgroup, cgroup_short, strlen(process->cgroup) + 1)) {
+      free_and_xStrdup(&process->cgroup_short, cgroup_short);
+   } else {
+      free(process->cgroup_short);
+      process->cgroup_short = NULL;
+   }
+   free(cgroup_short);
 }
 
 #ifdef HAVE_VSERVER
