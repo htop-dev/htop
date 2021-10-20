@@ -10,7 +10,45 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static bool CGroup_filterName_internal(const char *cgroup, char* buf, size_t bufsize) {
+typedef struct StrBuf_state {
+   char *buf;
+   size_t size;
+   size_t pos;
+} StrBuf_state;
+
+typedef bool (*StrBuf_putc_t)(StrBuf_state* p, char c);
+
+static bool StrBuf_putc_count(StrBuf_state* p, ATTR_UNUSED char c) {
+   p->pos++;
+   return true;
+}
+
+static bool StrBuf_putc_write(StrBuf_state* p, char c) {
+   if (p->pos >= p->size)
+      return false;
+
+   p->buf[p->pos] = c;
+   p->pos++;
+   return true;
+}
+
+static bool StrBuf_putsn(StrBuf_state* p, StrBuf_putc_t w, const char* s, size_t count) {
+   while (count--)
+      if (!w(p, *s++))
+         return false;
+
+   return true;
+}
+
+static bool StrBuf_putsz(StrBuf_state* p, StrBuf_putc_t w, const char* s) {
+   while (*s)
+      if (!w(p, *s++))
+         return false;
+
+   return true;
+}
+
+static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrBuf_putc_t w) {
    const char* str_slice_suffix = ".slice";
    const char* str_system_slice = "system.slice";
    const char* str_user_slice = "user.slice";
@@ -22,20 +60,18 @@ static bool CGroup_filterName_internal(const char *cgroup, char* buf, size_t buf
 
    const char* str_nspawn_scope_prefix = "machine-";
    const char* str_nspawn_monitor_label = "/supervisor";
+   const char* str_nspawn_payload_label = "/payload";
 
    const char* str_service_suffix = ".service";
    const char* str_scope_suffix = ".scope";
 
-   while(*cgroup) {
+   while (*cgroup) {
       if ('/' == *cgroup) {
          while ('/' == *cgroup)
             cgroup++;
 
-         if (!bufsize)
+         if (!w(s, '/'))
             return false;
-
-         *buf++ = '/';
-         bufsize--;
 
          continue;
       }
@@ -44,53 +80,29 @@ static bool CGroup_filterName_internal(const char *cgroup, char* buf, size_t buf
       const char* nextSlash = strchrnul(labelStart, '/');
       const size_t labelLen = nextSlash - labelStart;
 
-      if (String_startsWith(cgroup, str_system_slice)) {
-         cgroup += strlen(str_system_slice);
+      if (labelLen == strlen(str_system_slice) && String_startsWith(cgroup, str_system_slice)) {
+         cgroup = nextSlash;
 
-         if (*cgroup && *cgroup != '/')
-            goto handle_default;
-
-         if (bufsize < 3)
+         if (!StrBuf_putsz(s, w, "[S]"))
             return false;
-
-         *buf++ = '[';
-         *buf++ = 'S';
-         *buf++ = ']';
-         bufsize -= 3;
 
          continue;
       }
 
-      if (String_startsWith(cgroup, str_machine_slice)) {
-         cgroup += strlen(str_machine_slice);
+      if (labelLen == strlen(str_machine_slice) && String_startsWith(cgroup, str_machine_slice)) {
+         cgroup = nextSlash;
 
-         if (*cgroup && *cgroup != '/')
-            goto handle_default;
-
-         if (bufsize < 3)
+         if (!StrBuf_putsz(s, w, "[M]"))
             return false;
-
-         *buf++ = '[';
-         *buf++ = 'M';
-         *buf++ = ']';
-         bufsize -= 3;
 
          continue;
       }
 
-      if (String_startsWith(cgroup, str_user_slice)) {
-         cgroup += strlen(str_user_slice);
+      if (labelLen == strlen(str_user_slice) && String_startsWith(cgroup, str_user_slice)) {
+         cgroup = nextSlash;
 
-         if (*cgroup && *cgroup != '/')
-            goto handle_default;
-
-         if (bufsize < 3)
+         if (!StrBuf_putsz(s, w, "[U]"))
             return false;
-
-         *buf++ = '[';
-         *buf++ = 'U';
-         *buf++ = ']';
-         bufsize -= 3;
 
          if (!String_startsWith(cgroup, str_user_slice_prefix))
             continue;
@@ -103,39 +115,32 @@ static bool CGroup_filterName_internal(const char *cgroup, char* buf, size_t buf
 
          const size_t sliceNameLen = sliceSpec - (cgroup + strlen(str_user_slice_prefix));
 
-         if (bufsize < sliceNameLen + 1)
+         s->pos--;
+         if (!w(s, ':'))
             return false;
 
-         buf[-1] = ':';
+         if (!StrBuf_putsn(s, w, cgroup + strlen(str_user_slice_prefix), sliceNameLen))
+            return false;
 
-         cgroup += strlen(str_user_slice_prefix);
-         while(cgroup < sliceSpec) {
-            *buf++ = *cgroup++;
-            bufsize--;
-         }
+         if (!w(s, ']'))
+            return false;
+
          cgroup = userSliceSlash;
-
-         *buf++ = ']';
-         bufsize--;
 
          continue;
       }
 
       if (labelLen > strlen(str_slice_suffix) && String_startsWith(nextSlash - strlen(str_slice_suffix), str_slice_suffix)) {
          const size_t sliceNameLen = labelLen - strlen(str_slice_suffix);
-         if (bufsize < 2 + sliceNameLen)
+
+         if (!w(s, '['))
             return false;
 
-         *buf++ = '[';
-         bufsize--;
+         if (!StrBuf_putsn(s, w, cgroup, sliceNameLen))
+            return false;
 
-         for(size_t i = sliceNameLen; i; i--) {
-            *buf++ = *cgroup++;
-            bufsize--;
-         }
-
-         *buf++ = ']';
-         bufsize--;
+         if (!w(s, ']'))
+            return false;
 
          cgroup = nextSlash;
 
@@ -144,48 +149,34 @@ static bool CGroup_filterName_internal(const char *cgroup, char* buf, size_t buf
 
       if (String_startsWith(cgroup, str_lxc_payload_prefix)) {
          const size_t cgroupNameLen = labelLen - strlen(str_lxc_payload_prefix);
-         if (bufsize < 6 + cgroupNameLen)
+
+         if (!StrBuf_putsz(s, w, "[lxc:"))
             return false;
 
-         *buf++ = '[';
-         *buf++ = 'l';
-         *buf++ = 'x';
-         *buf++ = 'c';
-         *buf++ = ':';
-         bufsize -= 5;
+         if (!StrBuf_putsn(s, w, cgroup + strlen(str_lxc_payload_prefix), cgroupNameLen))
+            return false;
 
-         cgroup += strlen(str_lxc_payload_prefix);
-         while(cgroup < nextSlash) {
-            *buf++ = *cgroup++;
-            bufsize--;
-         }
+         if (!w(s, ']'))
+            return false;
 
-         *buf++ = ']';
-         bufsize--;
+         cgroup = nextSlash;
 
          continue;
       }
 
       if (String_startsWith(cgroup, str_lxc_monitor_prefix)) {
          const size_t cgroupNameLen = labelLen - strlen(str_lxc_monitor_prefix);
-         if (bufsize < 6 + cgroupNameLen)
+
+         if (!StrBuf_putsz(s, w, "[LXC:"))
             return false;
 
-         *buf++ = '[';
-         *buf++ = 'L';
-         *buf++ = 'X';
-         *buf++ = 'C';
-         *buf++ = ':';
-         bufsize -= 5;
+         if (!StrBuf_putsn(s, w, cgroup + strlen(str_lxc_monitor_prefix), cgroupNameLen))
+            return false;
 
-         cgroup += strlen(str_lxc_monitor_prefix);
-         while(cgroup < nextSlash) {
-            *buf++ = *cgroup++;
-            bufsize--;
-         }
+         if (!w(s, ']'))
+            return false;
 
-         *buf++ = ']';
-         bufsize--;
+         cgroup = nextSlash;
 
          continue;
       }
@@ -202,13 +193,8 @@ static bool CGroup_filterName_internal(const char *cgroup, char* buf, size_t buf
             continue;
          }
 
-         if (bufsize < serviceNameLen)
+         if (!StrBuf_putsn(s, w, cgroup, serviceNameLen))
             return false;
-
-         for(size_t i = serviceNameLen; i; i--) {
-            *buf++ = *cgroup++;
-            bufsize--;
-         }
 
          cgroup = nextSlash;
 
@@ -220,66 +206,70 @@ static bool CGroup_filterName_internal(const char *cgroup, char* buf, size_t buf
 
          if (String_startsWith(cgroup, str_nspawn_scope_prefix)) {
             const size_t machineScopeNameLen = scopeNameLen - strlen(str_nspawn_scope_prefix);
-            if (bufsize < 6 + machineScopeNameLen)
-               return false;
 
             const bool is_monitor = String_startsWith(nextSlash, str_nspawn_monitor_label);
 
-            *buf++ = '[';
-            *buf++ = is_monitor ? 'S' : 's';
-            *buf++ = is_monitor ? 'N' : 'n';
-            *buf++ = is_monitor ? 'C' : 'c';
-            *buf++ = ':';
-            bufsize -= 5;
+            if (!StrBuf_putsz(s, w, is_monitor ? "[SNC:" : "[snc:"))
+               return false;
 
-            cgroup += strlen(str_nspawn_scope_prefix);
-            for(size_t i = machineScopeNameLen; i; i--) {
-               *buf++ = *cgroup++;
-               bufsize--;
-            }
+            if (!StrBuf_putsn(s, w, cgroup + strlen(str_nspawn_scope_prefix), machineScopeNameLen))
+               return false;
 
-            *buf++ = ']';
-            bufsize--;
+            if (!w(s, ']'))
+               return false;
 
             cgroup = nextSlash;
+            if (String_startsWith(nextSlash, str_nspawn_monitor_label))
+               cgroup += strlen(str_nspawn_monitor_label);
+            else if (String_startsWith(nextSlash, str_nspawn_payload_label))
+               cgroup += strlen(str_nspawn_payload_label);
 
             continue;
          }
 
-         if (bufsize < 1 + scopeNameLen)
+         if (!w(s, '!'))
             return false;
 
-         *buf++ = '!';
-         bufsize--;
-
-         for(size_t i = scopeNameLen; i; i--) {
-            *buf++ = *cgroup++;
-            bufsize--;
-         }
+         if (!StrBuf_putsn(s, w, cgroup, scopeNameLen))
+            return false;
 
          cgroup = nextSlash;
 
          continue;
       }
 
-handle_default:
       // Default behavior: Copy the full label
       cgroup = labelStart;
 
-      if (bufsize < (size_t)(nextSlash - cgroup))
+      if (!StrBuf_putsn(s, w, cgroup, labelLen))
          return false;
 
-      while(cgroup < nextSlash) {
-         *buf++ = *cgroup++;
-         bufsize--;
-      }
+      cgroup = nextSlash;
    }
 
    return true;
 }
 
-bool CGroup_filterName(const char *cgroup, char* buf, size_t bufsize) {
-   memset(buf, 0, bufsize);
+char* CGroup_filterName(const char *cgroup) {
+   StrBuf_state s = {
+      .buf = NULL,
+      .size = 0,
+      .pos = 0,
+   };
 
-   return CGroup_filterName_internal(cgroup, buf, bufsize - 1);
+   if (!CGroup_filterName_internal(cgroup, &s, StrBuf_putc_count)) {
+      return NULL;
+   }
+
+   s.buf = xCalloc(s.pos + 1, sizeof(char));
+   s.size = s.pos;
+   s.pos = 0;
+
+   if (!CGroup_filterName_internal(cgroup, &s, StrBuf_putc_write)) {
+      free(s.buf);
+      return NULL;
+   }
+
+   s.buf[s.size] = '\0';
+   return s.buf;
 }

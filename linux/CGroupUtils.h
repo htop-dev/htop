@@ -11,6 +11,6 @@ in the source distribution for its full text.
 #include <stddef.h>
 
 
-bool CGroup_filterName(const char *cgroup, char* buf, size_t bufsize);
+char* CGroup_filterName(const char *cgroup);
 
 #endif /* HEADER_CGroupUtils */

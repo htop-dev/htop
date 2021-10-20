@@ -905,14 +905,14 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
    if (!changed)
       return;
 
-   char* cgroup_short = xCalloc(strlen(process->cgroup) + 1, 1);
-   if (CGroup_filterName(process->cgroup, cgroup_short, strlen(process->cgroup) + 1)) {
+   char* cgroup_short = CGroup_filterName(process->cgroup);
+   if (cgroup_short) {
       free_and_xStrdup(&process->cgroup_short, cgroup_short);
+      free(cgroup_short);
    } else {
       free(process->cgroup_short);
       process->cgroup_short = NULL;
    }
-   free(cgroup_short);
 }
 
 #ifdef HAVE_VSERVER
