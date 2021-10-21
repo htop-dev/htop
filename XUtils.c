@@ -323,3 +323,83 @@ ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size
 
    return readfd_internal(fd, buffer, count);
 }
+
+wchar_t* xMbstowcs(const char *mbs) {
+   size_t len = strlen(mbs);
+   wchar_t *wcs = xCalloc(len + 1, sizeof(wchar_t));
+   mbstate_t mbstate = {0};
+   mbsrtowcs(wcs, &mbs, len + 1, &mbstate);
+   if (mbs)
+      fail();
+   return wcs;
+}
+
+char* xWcstombs(const wchar_t *wcs) {
+   size_t len = wcslen(wcs);
+   size_t mbsSize = len * sizeof(wchar_t) + 1;
+   char *mbs = xMalloc(mbsSize);
+   mbstate_t mbstate = {0};
+   wcsrtombs(mbs, &wcs, mbsSize, &mbstate);
+   if (wcs)
+      fail();
+   return mbs;
+}
+
+wchar_t* xWcsdup(const wchar_t* str) {
+   wchar_t* data = wcsdup(str);
+   if (!data)
+      fail();
+   return data;
+}
+
+wchar_t* xWcsndup(const wchar_t* str, size_t len) {
+   wchar_t* data = xCalloc(len + 1, sizeof(wchar_t));
+   if (!data)
+      fail();
+
+   for (size_t i = 0; i < len && str[i]; i++)
+      data[i] = str[i];
+
+   return data;
+}
+
+wchar_t** Wstring_split(const wchar_t* s, wchar_t sep, size_t* n) {
+   const unsigned int rate = 10;
+   wchar_t** out = xCalloc(rate, sizeof(wchar_t*));
+   size_t ctr = 0;
+   unsigned int blocks = rate;
+   const wchar_t* where;
+   while ((where = wcschr(s, sep)) != NULL) {
+      size_t size = (size_t)(where - s);
+      out[ctr] = xWcsndup(s, size);
+      ctr++;
+      if (ctr == blocks) {
+         blocks += rate;
+         out = (wchar_t**) xRealloc(out, sizeof(wchar_t*) * blocks);
+      }
+      s += size + 1;
+   }
+   if (s[0] != L'\0') {
+      out[ctr] = xWcsdup(s);
+      ctr++;
+   }
+   out = xRealloc(out, sizeof(wchar_t*) * (ctr + 1));
+   out[ctr] = NULL;
+
+   if (n)
+      *n = ctr;
+
+   return out;
+}
+
+size_t Wstring_safeWcsncpy(wchar_t* restrict dest, const wchar_t* restrict src, size_t size) {
+   assert(size > 0);
+
+   size_t i = 0;
+   for (; i < size - 1 && src[i]; i++)
+      dest[i] = src[i];
+
+   dest[i] = L'\0';
+
+   return i;
+}
