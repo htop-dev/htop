@@ -654,6 +654,11 @@ static void LinuxProcessList_readMaps(LinuxProcess* process, openat_arg_t procFd
          if (String_startsWith(readptr, "/memfd:"))
             continue;
 
+         /* Virtualbox maps /dev/zero for memory allocation. That results in
+          * false positive, so ignore. */
+         if (String_eq(readptr, "/dev/zero (deleted)\n"))
+            continue;
+
          if (strstr(readptr, " (deleted)\n")) {
             proc->usesDeletedLib = true;
             if (!calcSize)
