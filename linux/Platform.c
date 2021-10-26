@@ -765,7 +765,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
          if (!now && full && !isnan(capacityLevel))
             totalRemain += capacityLevel * fullCharge;
 
-      } else if (String_eq(entryName, "AC")) {
+      } else if (String_startsWith(entryName, "AC")) {
          char buffer[2] = {0};
          if (*isOnAC != AC_ERROR)
             continue;
