@@ -6,15 +6,16 @@ in the source distribution for its full text.
 */
 
 #include "ScreensPanel.h"
-#include "Platform.h"
 
-#include "CRT.h"
-#include "XUtils.h"
-
-#include <assert.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "Hashtable.h"
+#include "ProvideCurses.h"
+#include "XUtils.h"
 
 
 ObjectClass ScreenListItem_class = {

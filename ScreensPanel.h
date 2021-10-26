@@ -7,11 +7,14 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+
+#include "ColumnsPanel.h"
+#include "ListItem.h"
+#include "Object.h"
 #include "Panel.h"
 #include "ScreenManager.h"
-#include "ColumnsPanel.h"
 #include "Settings.h"
-#include "ListItem.h"
 
 #ifndef SCREEN_NAME_LEN
 #define SCREEN_NAME_LEN 20

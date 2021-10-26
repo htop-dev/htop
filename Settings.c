@@ -219,12 +219,12 @@ static int toFieldIndex(Hashtable* columns, const char* str) {
       if (sscanf(str, "Dynamic(%30s)", dynamic)) {
          char* end;
          if ((end = strrchr(dynamic, ')')) != NULL) {
-	    bool success;
+            bool success;
             unsigned int key;
             *end = '\0';
             success = DynamicColumn_search(columns, dynamic, &key) != NULL;
             *end = ')';
-	    if (success)
+            if (success)
                return key;
          }
       }
@@ -248,7 +248,7 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
       if (j >= UINT_MAX / sizeof(ProcessField))
          continue;
       if (j >= LAST_PROCESSFIELD) {
-         ss->fields = xRealloc(ss->fields, (j+1) * sizeof(ProcessField));
+         ss->fields = xRealloc(ss->fields, (j + 1) * sizeof(ProcessField));
          memset(&ss->fields[j], 0, sizeof(ProcessField));
       }
       int id = toFieldIndex(columns, ids[i]);
@@ -494,7 +494,7 @@ static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns
       if (fields[i] < LAST_PROCESSFIELD && byName) {
          const char* pName = toFieldName(columns, fields[i]);
          fprintf(fd, "%s%s", sep, pName);
-      } else if(fields[i] >= LAST_PROCESSFIELD && byName) {
+      } else if (fields[i] >= LAST_PROCESSFIELD && byName) {
          const char* pName = toFieldName(columns, fields[i]);
          fprintf(fd, " Dynamic(%s)", pName);
       } else {
