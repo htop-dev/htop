@@ -46,7 +46,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
 
    if (ch >= 32 && ch < 127 && ch != 61) {
       if (this->cursor < SCREEN_NAME_LEN - 1) {
-         this->buffer[this->cursor] = ch;
+         this->buffer[this->cursor] = (char)ch;
          this->cursor++;
          super->selectedLen = strlen(this->buffer);
          Panel_setCursorToSelection(super);
