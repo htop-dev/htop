@@ -671,7 +671,6 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    this->showMergedCommand = false;
    this->hideFunctionBar = 0;
    this->headerMargin = true;
-   this->screenTabs = true;
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
@@ -733,6 +732,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
       ok = Settings_read(this, this->filename, initialCpuCount);
    }
    if (!ok) {
+      this->screenTabs = true;
       this->changed = true;
       ok = Settings_read(this, SYSCONFDIR "/htoprc", initialCpuCount);
    }
