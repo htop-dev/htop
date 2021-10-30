@@ -81,6 +81,12 @@ static void DiskIOMeter_updateValues(Meter* this) {
       cached_msTimeSpend_total = data.totalMsTimeSpend;
    }
 
+   if (passedTimeInMs > 30000) {
+      // Triggers for the first initialization and
+      // when there was a long time we did not collect updates
+      hasData = false;
+   }
+
    this->values[0] = cached_utilisation_diff;
    this->total = MAXIMUM(this->values[0], 100.0); /* fix total after (initial) spike */
 

@@ -85,6 +85,12 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       cached_txp_total = data.packetsTransmitted;
    }
 
+   if (passedTimeInMs > 30000) {
+      // Triggers for the first initialization and
+      // when there was a long time we did not collect updates
+      hasData = false;
+   }
+
    this->values[0] = cached_rxb_diff;
    this->values[1] = cached_txb_diff;
    if (cached_rxb_diff + cached_txb_diff > this->total) {
