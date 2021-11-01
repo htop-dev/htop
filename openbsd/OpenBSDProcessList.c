@@ -388,7 +388,7 @@ static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
 
    unsigned long long sysAllTime = times[CP_INTR] + times[CP_SYS];
 
-   // XXX Not sure if CP_SPIN should be added to sysAllTime.
+   // XXX Not sure if CP_SPIN should be added to sysAllTime.
    // See https://github.com/openbsd/src/commit/531d8034253fb82282f0f353c086e9ad827e031c
    #ifdef CP_SPIN
    sysAllTime += times[CP_SPIN];
