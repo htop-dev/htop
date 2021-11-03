@@ -142,7 +142,7 @@ static inline char Metric_instance_char(int metric, int pid, int offset, char fa
    return fallback;
 }
 
-static inline PCPProcessList_getProcessState(char state) {
+static inline ProcessState PCPProcessList_getProcessState(char state) {
    switch (state) {
       case '?': return UNKNOWN;
       case 'R': return RUNNING;
