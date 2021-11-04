@@ -203,7 +203,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 };
 
 Process* OpenBSDProcess_new(const Settings* settings) {
-   OpenBSDProcess* this = xCalloc(sizeof(OpenBSDProcess), 1);
+   OpenBSDProcess* this = xCalloc(1, sizeof(OpenBSDProcess));
    Object_setClass(this, Class(OpenBSDProcess));
    Process_init(&this->super, settings);
    return &this->super;

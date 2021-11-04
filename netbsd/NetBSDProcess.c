@@ -211,7 +211,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 };
 
 Process* NetBSDProcess_new(const Settings* settings) {
-   NetBSDProcess* this = xCalloc(sizeof(NetBSDProcess), 1);
+   NetBSDProcess* this = xCalloc(1, sizeof(NetBSDProcess));
    Object_setClass(this, Class(NetBSDProcess));
    Process_init(&this->super, settings);
    return &this->super;
