@@ -77,6 +77,7 @@ void Settings_delete(Settings* this) {
       for (unsigned int i = 0; this->screens[i]; i++) {
          free(this->screens[i]->name);
          free(this->screens[i]->fields);
+         free(this->screens[i]);
       }
       free(this->screens);
    }
@@ -262,7 +263,7 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
 }
 
 ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char* line) {
-   ScreenSettings* ss = xCalloc(sizeof(ScreenSettings), 1);
+   ScreenSettings* ss = xCalloc(1, sizeof(ScreenSettings));
    ss->name = xStrdup(name);
    ss->fields = xCalloc(LAST_PROCESSFIELD, sizeof(ProcessField));
    ss->flags = 0;
