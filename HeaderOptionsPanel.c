@@ -35,7 +35,7 @@ static HandlerResult HeaderOptionsPanel_eventHandler(Panel* super, int ch) {
    HandlerResult result = IGNORED;
    int mark;
 
-   switch(ch) {
+   switch (ch) {
    case 0x0a:
    case 0x0d:
    case KEY_ENTER:
