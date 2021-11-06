@@ -872,9 +872,16 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
       if (!ok)
          break;
 
-      char* group = strchr(buffer, ':');
-      if (!group)
-         break;
+      char* group = buffer;
+      for (size_t i = 0; i < 2; i++) {
+         group = strchrnul(group, ':');
+         if (!*group)
+            break;
+         group++;
+      }
+
+      char* eol = strchrnul(group, '\n');
+      *eol = '\0';
 
       if (at != output) {
          *at = ';';
