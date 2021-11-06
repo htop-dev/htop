@@ -81,7 +81,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = " DISK READ  ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_WRITE_RATE] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
-   [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
+   [CGROUP] = { .name = "CGROUP", .title = "CGROUP                              ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
    [OOM] = { .name = "OOM", .title = " OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, .defaultSortDesc = true, },
    [IO_PRIORITY] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
 #ifdef HAVE_DELAYACCT
@@ -246,7 +246,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    #ifdef HAVE_VSERVER
    case VXID: xSnprintf(buffer, n, "%5u ", lp->vxid); break;
    #endif
-   case CGROUP: xSnprintf(buffer, n, "%-10s ", lp->cgroup ? lp->cgroup : ""); break;
+   case CGROUP: xSnprintf(buffer, n, "%-35.35s ", lp->cgroup ? lp->cgroup : "N/A"); break;
    case OOM: xSnprintf(buffer, n, "%4u ", lp->oom); break;
    case IO_PRIORITY: {
       int klass = IOPriority_class(lp->ioPriority);
