@@ -48,6 +48,9 @@ typedef struct LinuxProcess_ {
    long m_drs;
    long m_lrs;
 
+   /* Process flags */
+   unsigned long int flags;
+
    /* Data read (in bytes) */
    unsigned long long io_rchar;
 
