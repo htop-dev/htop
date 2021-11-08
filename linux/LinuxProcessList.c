@@ -62,6 +62,10 @@ in the source distribution for its full text.
 #define O_PATH         010000000 // declare for ancient glibc versions
 #endif
 
+/* Not exposed yet. Defined at include/linux/sched.h */
+#ifndef PF_KTHREAD
+#define PF_KTHREAD 0x00200000
+#endif
 
 static long long btime = -1;
 
@@ -374,8 +378,9 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    process->tpgid = strtol(location, &location, 10);
    location += 1;
 
-   /* Skip (9) flags  -  %u */
-   location = strchr(location, ' ') + 1;
+   /* (9) flags  -  %u */
+   lp->flags = strtoul(location, &location, 10);
+   location += 1;
 
    /* (10) minflt  -  %lu */
    process->minflt = strtoull(location, &location, 10);
@@ -1110,16 +1115,8 @@ delayacct_failure:
 static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t procFd) {
    char command[4096 + 1]; // max cmdline length on Linux
    ssize_t amtRead = xReadfileat(procFd, "cmdline", command, sizeof(command));
-   if (amtRead < 0)
+   if (amtRead <= 0)
       return false;
-
-   if (amtRead == 0) {
-      if (process->state != ZOMBIE) {
-         process->isKernelThread = true;
-      }
-      Process_updateCmdline(process, NULL, 0, 0);
-      return true;
-   }
 
    int tokenEnd = 0;
    int tokenStart = 0;
@@ -1488,6 +1485,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if (! LinuxProcessList_readStatFile(proc, procFd, statCommand, sizeof(statCommand)))
          goto errorReadingProcess;
 
+      if (lp->flags & PF_KTHREAD) {
+         proc->isKernelThread = true;
+      }
+
       if (tty_nr != proc->tty_nr && this->ttyDrivers) {
          free(proc->tty_name);
          proc->tty_name = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
@@ -1519,8 +1520,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          }
          #endif
 
-         if (! LinuxProcessList_readCmdlineFile(proc, procFd)) {
-            goto errorReadingProcess;
+         if (proc->isKernelThread) {
+            Process_updateCmdline(proc, NULL, 0, 0);
+         } else if (!LinuxProcessList_readCmdlineFile(proc, procFd)) {
+            Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
          }
 
          Process_fillStarttimeBuffer(proc);
@@ -1528,8 +1531,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          ProcessList_add(pl, proc);
       } else {
          if (settings->updateProcessNames && proc->state != ZOMBIE) {
-            if (! LinuxProcessList_readCmdlineFile(proc, procFd)) {
-               goto errorReadingProcess;
+            if (proc->isKernelThread) {
+               Process_updateCmdline(proc, NULL, 0, 0);
+            } else if (!LinuxProcessList_readCmdlineFile(proc, procFd)) {
+               Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
             }
          }
       }
