@@ -109,8 +109,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
 
    size_t sizeof_cp_time_array = sizeof(unsigned long) * CPUSTATES;
    len = 2; sysctlnametomib("kern.cp_time", MIB_kern_cp_time, &len);
-   fpl->cp_time_o = xCalloc(cpus, sizeof_cp_time_array);
-   fpl->cp_time_n = xCalloc(cpus, sizeof_cp_time_array);
+   fpl->cp_time_o = xCalloc(CPUSTATES, sizeof(unsigned long));
+   fpl->cp_time_n = xCalloc(CPUSTATES, sizeof(unsigned long));
    len = sizeof_cp_time_array;
 
    // fetch initial single (or average) CPU clicks from kernel
