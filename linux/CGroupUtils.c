@@ -48,6 +48,18 @@ static bool StrBuf_putsz(StrBuf_state* p, StrBuf_putc_t w, const char* s) {
    return true;
 }
 
+static bool Label_checkEqual(const char* labelStart, size_t labelLen, const char* expected) {
+   return labelLen == strlen(expected) && String_startsWith(labelStart, expected);
+}
+
+static bool Label_checkPrefix(const char* labelStart, size_t labelLen, const char* expected) {
+   return labelLen > strlen(expected) && String_startsWith(labelStart, expected);
+}
+
+static bool Label_checkSuffix(const char* labelStart, size_t labelLen, const char* expected) {
+   return labelLen > strlen(expected) && String_startsWith(labelStart + labelLen - strlen(expected), expected);
+}
+
 static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrBuf_putc_t w) {
    const char* str_slice_suffix = ".slice";
    const char* str_system_slice = "system.slice";
@@ -80,7 +92,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
       const char* nextSlash = strchrnul(labelStart, '/');
       const size_t labelLen = nextSlash - labelStart;
 
-      if (labelLen == strlen(str_system_slice) && String_startsWith(cgroup, str_system_slice)) {
+      if (Label_checkEqual(labelStart, labelLen, str_system_slice)) {
          cgroup = nextSlash;
 
          if (!StrBuf_putsz(s, w, "[S]"))
@@ -89,7 +101,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          continue;
       }
 
-      if (labelLen == strlen(str_machine_slice) && String_startsWith(cgroup, str_machine_slice)) {
+      if (Label_checkEqual(labelStart, labelLen, str_machine_slice)) {
          cgroup = nextSlash;
 
          if (!StrBuf_putsz(s, w, "[M]"))
@@ -98,7 +110,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          continue;
       }
 
-      if (labelLen == strlen(str_user_slice) && String_startsWith(cgroup, str_user_slice)) {
+      if (Label_checkEqual(labelStart, labelLen, str_user_slice)) {
          cgroup = nextSlash;
 
          if (!StrBuf_putsz(s, w, "[U]"))
@@ -130,7 +142,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          continue;
       }
 
-      if (labelLen > strlen(str_slice_suffix) && String_startsWith(nextSlash - strlen(str_slice_suffix), str_slice_suffix)) {
+      if (Label_checkSuffix(labelStart, labelLen, str_slice_suffix)) {
          const size_t sliceNameLen = labelLen - strlen(str_slice_suffix);
 
          if (!w(s, '['))
@@ -147,7 +159,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          continue;
       }
 
-      if (String_startsWith(cgroup, str_lxc_payload_prefix)) {
+      if (Label_checkPrefix(labelStart, labelLen, str_lxc_payload_prefix)) {
          const size_t cgroupNameLen = labelLen - strlen(str_lxc_payload_prefix);
 
          if (!StrBuf_putsz(s, w, "[lxc:"))
@@ -164,7 +176,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          continue;
       }
 
-      if (String_startsWith(cgroup, str_lxc_monitor_prefix)) {
+      if (Label_checkPrefix(labelStart, labelLen, str_lxc_monitor_prefix)) {
          const size_t cgroupNameLen = labelLen - strlen(str_lxc_monitor_prefix);
 
          if (!StrBuf_putsz(s, w, "[LXC:"))
@@ -181,7 +193,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          continue;
       }
 
-      if (labelLen > strlen(str_service_suffix) && String_startsWith(nextSlash - strlen(str_service_suffix), str_service_suffix)) {
+      if (Label_checkSuffix(labelStart, labelLen, str_service_suffix)) {
          const size_t serviceNameLen = labelLen - strlen(str_service_suffix);
 
          if (String_startsWith(cgroup, "user@")) {
@@ -201,10 +213,10 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          continue;
       }
 
-      if (labelLen > strlen(str_scope_suffix) && String_startsWith(nextSlash - strlen(str_scope_suffix), str_scope_suffix)) {
+      if (Label_checkSuffix(labelStart, labelLen, str_scope_suffix)) {
          const size_t scopeNameLen = labelLen - strlen(str_scope_suffix);
 
-         if (String_startsWith(cgroup, str_nspawn_scope_prefix)) {
+         if (Label_checkPrefix(labelStart, scopeNameLen, str_nspawn_scope_prefix)) {
             const size_t machineScopeNameLen = scopeNameLen - strlen(str_nspawn_scope_prefix);
 
             const bool is_monitor = String_startsWith(nextSlash, str_nspawn_monitor_label);
