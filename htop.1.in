@@ -488,7 +488,23 @@ The I/O rate of write(2) in bytes per second, for the process.
 The I/O rate, IO_READ_RATE + IO_WRITE_RATE (see above).
 .TP
 .B CGROUP
-Which cgroup the process is in.
+Which cgroup the process is in. For a shortened view see the CCGROUP column below.
+.TP
+.B CCGROUP
+Shortened view of the cgroup name that the process is in.
+This performs some pattern-based replacements to shorten the displayed string and thus condense the information.
+   \fB/*.slice\fR is shortened to \fB/[*]\fR (exceptions below)
+   \fB/system.slice\fR is shortened to \fB/[S]\fR
+   \fB/user.slice\fR is shortened to \fB/[U]\fR
+   \fB/user-*.slice\fR is shortened to \fB/[U:*]\fR (directly preceeding \fB/[U]\fR before dropped)
+   \fB/machine.slice\fR is shortened to \fB/[M]\fR
+   \fB/machine-*.scope\fR is shortened to \fB/[SNC:*]\fR (SNC: systemd nspawn container), uppercase for the monitor
+   \fB/lxc.monitor.*\fR is shortened to \fB/[LXC:*]\fR
+   \fB/lxc.payload.*\fR is shortened to \fB/[lxc:*]\fR
+   \fB/*.scope\fR is shortened to \fB/!*\fR
+   \fB/*.service\fR is shortened to \fB/*\fR (suffix removed)
+
+Encountered escape sequences (e.g. from systemd) inside the cgroup name are not decoded.
 .TP
 .B OOM
 OOM killer score.
