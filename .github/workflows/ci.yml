@@ -113,6 +113,10 @@ jobs:
   build-ubuntu-latest-pcp:
     # Turns out 'ubuntu-latest' can be older than 20.04, we want PCP v5+
     runs-on: ubuntu-20.04
+    env:
+      # Until Ubuntu catches up with pcp-5.2.3+:
+      #   pcp/Platform.c:309:45: warning: passing argument 2 of ‘pmLookupName’ from incompatible pointer type [-Wincompatible-pointer-types]
+      CFLAGS: -Wno-error=incompatible-pointer-types
     steps:
     - uses: actions/checkout@v2
     - name: Install Dependencies
@@ -120,9 +124,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      # Until Ubuntu catches up with pcp-5.2.3+, cannot use -werror due to:
-      # passing argument 2 of ‘pmLookupName’ from incompatible pointer type
-      run: ./configure --enable-pcp --enable-unicode
+      run: ./configure --enable-werror --enable-pcp --enable-unicode
     - name: Build
       run: make -k
 
