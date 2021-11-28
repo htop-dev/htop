@@ -67,6 +67,8 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
    const char* str_machine_slice = "machine.slice";
    const char* str_user_slice_prefix = "/user-";
 
+   const char* str_lxc_monitor_legacy = "lxc.monitor";
+   const char* str_lxc_payload_legacy = "lxc.payload";
    const char* str_lxc_monitor_prefix = "lxc.monitor.";
    const char* str_lxc_payload_prefix = "lxc.payload.";
 
@@ -191,6 +193,34 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          cgroup = nextSlash;
 
          continue;
+      }
+
+      // LXC legacy cgroup naming
+      if (Label_checkEqual(labelStart, labelLen, str_lxc_monitor_legacy) ||
+         Label_checkEqual(labelStart, labelLen, str_lxc_payload_legacy)) {
+         bool isMonitor = Label_checkEqual(labelStart, labelLen, str_lxc_monitor_legacy);
+
+         labelStart = nextSlash;
+         while (*labelStart == '/')
+            labelStart++;
+
+         nextSlash = strchrnul(labelStart, '/');
+         if (nextSlash - labelStart > 0) {
+            if (!StrBuf_putsz(s, w, isMonitor ? "[LXC:" : "[lxc:"))
+               return false;
+
+            if (!StrBuf_putsn(s, w, labelStart, nextSlash - labelStart))
+               return false;
+
+            if (!w(s, ']'))
+               return false;
+
+            cgroup = nextSlash;
+            continue;
+         }
+
+         labelStart = cgroup;
+         nextSlash = labelStart + labelLen;
       }
 
       if (Label_checkSuffix(labelStart, labelLen, str_service_suffix)) {
