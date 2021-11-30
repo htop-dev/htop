@@ -2,13 +2,13 @@ What's new in version 3.1.2
 
 * Bugfix for crash when storing modified settings at exit
 * Allow -u UID with numerical value as argument
-* Elaborate documentation for obsolete/state libraries/program files highlighting
+* Added documentation for obsolete/state libraries/program files highlighting
 * Some obsolete/stale library highlighting refinements
-* Column width issues
-* Dynamic UID column sizing
+* Column width issues resolved
+* Dynamic UID column sizing improved
 * Discard stale information from Disk and Network I/O meters
 * Refined Linux kernel thread detection
-* Reworked prcess state handling
+* Reworked process state handling
 * New CCGROUP column showing abbreviated cgroup name
 * New OFFSET column in the list of open files screen
 
