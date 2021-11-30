@@ -1,6 +1,7 @@
 What's new in version 3.1.2
 
 * Bugfix for crash when storing modified settings at exit
+* Generate xz-compressed source tarball (with configure) using github actions
 * Allow -u UID with numerical value as argument
 * Added documentation for obsolete/state libraries/program files highlighting
 * Some obsolete/stale library highlighting refinements
