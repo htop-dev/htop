@@ -375,11 +375,6 @@ int CommandLine_run(const char* name, int argc, char** argv) {
 
    ScreenManager_run(scr, NULL, NULL);
 
-   attron(CRT_colors[RESET_COLOR]);
-   mvhline(LINES - 1, 0, ' ', COLS);
-   attroff(CRT_colors[RESET_COLOR]);
-   refresh();
-
    Platform_done();
 
    CRT_done();

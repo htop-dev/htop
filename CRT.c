@@ -961,6 +961,11 @@ IGNORE_WCASTQUAL_END
 }
 
 void CRT_done() {
+   attron(CRT_colors[RESET_COLOR]);
+   mvhline(LINES - 1, 0, ' ', COLS);
+   attroff(CRT_colors[RESET_COLOR]);
+   refresh();
+
    curs_set(1);
    endwin();
 
