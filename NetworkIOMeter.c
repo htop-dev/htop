@@ -5,6 +5,7 @@
 
 #include "CRT.h"
 #include "Macros.h"
+#include "Meter.h"
 #include "Object.h"
 #include "Platform.h"
 #include "Process.h"
@@ -18,8 +19,7 @@ static const int NetworkIOMeter_attributes[] = {
    METER_VALUE_IOWRITE,
 };
 
-static bool hasData = false;
-
+static MeterRateStatus status = RATESTATUS_INIT;
 static uint32_t cached_rxb_diff;
 static uint32_t cached_rxp_diff;
 static uint32_t cached_txb_diff;
@@ -31,7 +31,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
    uint64_t passedTimeInMs = pl->realtimeMs - cached_last_update;
 
-   /* update only every 500ms */
+   /* update only every 500ms to have a sane span for rate calculation */
    if (passedTimeInMs > 500) {
       static uint64_t cached_rxb_total;
       static uint64_t cached_rxp_total;
@@ -39,11 +39,20 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       static uint64_t cached_txp_total;
       uint64_t diff;
 
+      NetworkIOData data;
+      if (!Platform_getNetworkIO(&data)) {
+         status = RATESTATUS_NODATA;
+      } else if (cached_last_update == 0) {
+         status = RATESTATUS_INIT;
+      } else if (passedTimeInMs > 30000) {
+         status = RATESTATUS_STALE;
+      } else {
+         status = RATESTATUS_DATA;
+      }
+
       cached_last_update = pl->realtimeMs;
 
-      NetworkIOData data;
-      hasData = Platform_getNetworkIO(&data);
-      if (!hasData) {
+      if (status == RATESTATUS_NODATA) {
          xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
          return;
       }
@@ -85,10 +94,13 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       cached_txp_total = data.packetsTransmitted;
    }
 
-   if (passedTimeInMs > 30000) {
-      // Triggers for the first initialization and
-      // when there was a long time we did not collect updates
-      hasData = false;
+   if (status == RATESTATUS_INIT) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "init");
+      return;
+   }
+   if (status == RATESTATUS_STALE) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "stale");
+      return;
    }
 
    this->values[0] = cached_rxb_diff;
@@ -104,9 +116,18 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 }
 
 static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
-   if (!hasData) {
+   switch (status) {
+   case RATESTATUS_NODATA:
       RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
       return;
+   case RATESTATUS_INIT:
+      RichString_writeAscii(out, CRT_colors[METER_VALUE], "initializing...");
+      return;
+   case RATESTATUS_STALE:
+      RichString_writeAscii(out, CRT_colors[METER_VALUE_WARN], "stale data");
+      return;
+   case RATESTATUS_DATA:
+      break;
    }
 
    char buffer[64];

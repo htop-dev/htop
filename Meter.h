@@ -134,6 +134,13 @@ typedef enum {
    LAST_METERMODE
 } MeterModeId;
 
+typedef enum {
+   RATESTATUS_DATA,
+   RATESTATUS_INIT,
+   RATESTATUS_NODATA,
+   RATESTATUS_STALE
+} MeterRateStatus;
+
 extern const MeterClass Meter_class;
 
 Meter* Meter_new(const ProcessList* pl, unsigned int param, const MeterClass* type);
