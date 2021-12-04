@@ -916,13 +916,13 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
          case BLOCKED:
          case DEFUNCT:
          case STOPPED:
+         case UNINTERRUPTIBLE_WAIT:
          case ZOMBIE:
             attr = CRT_colors[PROCESS_D_STATE];
             break;
 
          case QUEUED:
          case WAITING:
-         case UNINTERRUPTIBLE_WAIT:
          case IDLE:
          case SLEEPING:
             attr = CRT_colors[PROCESS_SHADOW];
