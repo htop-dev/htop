@@ -12,6 +12,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Macros.h"
+#include "Meter.h"
 #include "Object.h"
 #include "Platform.h"
 #include "ProcessList.h"
@@ -25,7 +26,7 @@ static const int DiskIOMeter_attributes[] = {
    METER_VALUE_IOWRITE,
 };
 
-static bool hasData = false;
+static MeterRateStatus status = RATESTATUS_INIT;
 static uint32_t cached_read_diff;
 static uint32_t cached_write_diff;
 static double cached_utilisation_diff;
@@ -36,20 +37,27 @@ static void DiskIOMeter_updateValues(Meter* this) {
    static uint64_t cached_last_update;
    uint64_t passedTimeInMs = pl->realtimeMs - cached_last_update;
 
-   /* update only every 500ms */
+   /* update only every 500ms to have a sane span for rate calculation */
    if (passedTimeInMs > 500) {
       static uint64_t cached_read_total;
       static uint64_t cached_write_total;
       static uint64_t cached_msTimeSpend_total;
       uint64_t diff;
 
+      DiskIOData data;
+      if (!Platform_getDiskIO(&data)) {
+         status = RATESTATUS_NODATA;
+      } else if (cached_last_update == 0) {
+         status = RATESTATUS_INIT;
+      } else if (passedTimeInMs > 30000) {
+         status = RATESTATUS_STALE;
+      } else {
+         status = RATESTATUS_DATA;
+      }
+
       cached_last_update = pl->realtimeMs;
 
-      DiskIOData data;
-
-      hasData = Platform_getDiskIO(&data);
-      if (!hasData) {
-         this->values[0] = 0;
+      if (status == RATESTATUS_NODATA) {
          xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
          return;
       }
@@ -81,10 +89,13 @@ static void DiskIOMeter_updateValues(Meter* this) {
       cached_msTimeSpend_total = data.totalMsTimeSpend;
    }
 
-   if (passedTimeInMs > 30000) {
-      // Triggers for the first initialization and
-      // when there was a long time we did not collect updates
-      hasData = false;
+   if (status == RATESTATUS_INIT) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "init");
+      return;
+   }
+   if (status == RATESTATUS_STALE) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "stale");
+      return;
    }
 
    this->values[0] = cached_utilisation_diff;
@@ -97,9 +108,18 @@ static void DiskIOMeter_updateValues(Meter* this) {
 }
 
 static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
-   if (!hasData) {
+   switch (status) {
+   case RATESTATUS_NODATA:
       RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
       return;
+   case RATESTATUS_INIT:
+      RichString_writeAscii(out, CRT_colors[METER_VALUE], "initializing...");
+      return;
+   case RATESTATUS_STALE:
+      RichString_writeAscii(out, CRT_colors[METER_VALUE_WARN], "stale data");
+      return;
+   case RATESTATUS_DATA:
+      break;
    }
 
    char buffer[16];
