@@ -279,6 +279,9 @@ typedef struct ProcessFieldData_ {
 
    /* Whether the column should be sorted in descending order by default */
    bool defaultSortDesc;
+
+   /* Whether the column width is dynamically adjusted (the minimum width is determined by the title length) */
+   bool autoWidth;
 } ProcessFieldData;
 
 // Implemented in platform-specific code:
@@ -286,6 +289,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 int Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
+extern uint8_t Process_fieldWidths[LAST_PROCESSFIELD];
 #define PROCESS_MIN_PID_DIGITS 5
 #define PROCESS_MAX_PID_DIGITS 19
 #define PROCESS_MIN_UID_DIGITS 5
@@ -405,5 +409,8 @@ void Process_updateExe(Process* this, const char* exe);
 void Process_makeCommandStr(Process* this);
 
 void Process_writeCommand(const Process* this, int attr, int baseAttr, RichString* str);
+
+void Process_resetFieldWidths(void);
+void Process_updateFieldWidth(ProcessField key, size_t width);
 
 #endif

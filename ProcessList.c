@@ -114,6 +114,12 @@ static const char* alignedProcessFieldTitle(const ProcessList* this, ProcessFiel
       return titleBuffer;
    }
 
+   if (Process_fields[field].autoWidth) {
+      static char titleBuffer[UINT8_MAX + 1];
+      xSnprintf(titleBuffer, sizeof(titleBuffer), "%-*.*s ", Process_fieldWidths[field], Process_fieldWidths[field], title);
+      return titleBuffer;
+   }
+
    return title;
 }
 
@@ -453,6 +459,7 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
    this->kernelThreads = 0;
    this->runningTasks = 0;
 
+   Process_resetFieldWidths();
 
    // set scan timestamp
    static bool firstScanDone = false;

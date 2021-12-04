@@ -1252,3 +1252,23 @@ void Process_updateExe(Process* this, const char* exe) {
    }
    this->mergedCommand.exeChanged = true;
 }
+
+uint8_t Process_fieldWidths[LAST_PROCESSFIELD] = { 0 };
+
+void Process_resetFieldWidths() {
+   for (size_t i = 0; i < LAST_PROCESSFIELD; i++) {
+      if (!Process_fields[i].autoWidth)
+         continue;
+
+      size_t len = strlen(Process_fields[i].title);
+      assert(len <= UINT8_MAX);
+      Process_fieldWidths[i] = (uint8_t)len;
+   }
+}
+
+void Process_updateFieldWidth(ProcessField key, size_t width) {
+   if (width > UINT8_MAX)
+      Process_fieldWidths[key] = UINT8_MAX;
+   else if (width > Process_fieldWidths[key])
+      Process_fieldWidths[key] = (uint8_t)width;
+}
