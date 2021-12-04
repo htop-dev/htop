@@ -1029,6 +1029,9 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t
    if (newline) {
       *newline = '\0';
    }
+
+   Process_updateFieldWidth(SECATTR, strlen(buffer));
+
    if (process->secattr && String_eq(process->secattr, buffer)) {
       return;
    }
