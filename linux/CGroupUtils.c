@@ -33,7 +33,7 @@ static bool StrBuf_putc_write(StrBuf_state* p, char c) {
 }
 
 static bool StrBuf_putsn(StrBuf_state* p, StrBuf_putc_t w, const char* s, size_t count) {
-   while (count--)
+   for (; count; count--)
       if (!w(p, *s++))
          return false;
 
