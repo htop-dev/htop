@@ -7,6 +7,8 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <signal.h>
+
 #include "Panel.h"
 
 
@@ -15,6 +17,8 @@ typedef struct SignalItem_ {
    int number;
 } SignalItem;
 
-Panel* SignalsPanel_new(void);
+#define SIGNALSPANEL_INITSELECTEDSIGNAL SIGTERM
+
+Panel* SignalsPanel_new(int preSelectedSignal);
 
 #endif

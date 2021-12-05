@@ -344,9 +344,12 @@ static Htop_Reaction actionKill(State* st) {
    if (Settings_isReadonly())
       return HTOP_OK;
 
-   Panel* signalsPanel = SignalsPanel_new();
+   static int preSelectedSignal = SIGNALSPANEL_INITSELECTEDSIGNAL;
+
+   Panel* signalsPanel = SignalsPanel_new(preSelectedSignal);
    const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 14, true);
    if (sgn && sgn->key != 0) {
+      preSelectedSignal = sgn->key;
       Panel_setHeader((Panel*)st->mainPanel, "Sending...");
       Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
       refresh();
