@@ -98,7 +98,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
 
 static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    if (!hasData) {
-      RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
+      RichString_writeAscii(out, CRT_colors[METER_VALUE_WARN], "no data");
       return;
    }
 
