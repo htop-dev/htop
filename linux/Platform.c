@@ -70,6 +70,10 @@ in the source distribution for its full text.
 #include "LibSensors.h"
 #endif
 
+#ifndef O_PATH
+#define O_PATH         010000000 // declare for ancient glibc versions
+#endif
+
 
 #ifdef HAVE_LIBCAP
 enum CapMode {
@@ -725,18 +729,47 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
    uint64_t totalFull = 0;
    uint64_t totalRemain = 0;
 
-   struct dirent* dirEntry = NULL;
+   const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
       const char* entryName = dirEntry->d_name;
 
-      if (String_startsWith(entryName, "BAT")) {
-         char buffer[1024] = {0};
-         char filePath[256];
-         xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
+#ifdef HAVE_OPENAT
+      int entryFd = openat(dirfd(dir), entryName, O_DIRECTORY | O_PATH);
+      if (entryFd < 0)
+         continue;
+#else
+      char entryFd[4096];
+      xSnprintf(entryFd, sizeof(entryFd), SYS_POWERSUPPLY_DIR "/%s", entryName);
+#endif
 
-         ssize_t r = xReadfile(filePath, buffer, sizeof(buffer));
+      enum { AC, BAT } type;
+      if (String_startsWith(entryName, "BAT")) {
+         type = BAT;
+      } else if (String_startsWith(entryName, "AC")) {
+         type = AC;
+      } else {
+         char buffer[32];
+         ssize_t ret = xReadfileat(entryFd, "type", buffer, sizeof(buffer));
+         if (ret <= 0)
+            goto next;
+
+         /* drop optional trailing newlines */
+         for (char* buf = &buffer[(size_t)ret - 1]; *buf == '\n'; buf--)
+            *buf = '\0';
+
+         if (String_eq(buffer, "Battery"))
+            type = BAT;
+         else if (String_eq(buffer, "Mains"))
+            type = AC;
+         else
+            goto next;
+      }
+
+      if (type == BAT) {
+         char buffer[1024];
+         ssize_t r = xReadfileat(entryFd, "uevent", buffer, sizeof(buffer));
          if (r < 0)
-            continue;
+            goto next;
 
          bool full = false;
          bool now = false;
@@ -778,18 +811,15 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
          if (!now && full && !isnan(capacityLevel))
             totalRemain += capacityLevel * fullCharge;
 
-      } else if (String_startsWith(entryName, "AC")) {
-         char buffer[2] = {0};
+      } else if (type == AC) {
          if (*isOnAC != AC_ERROR)
-            continue;
+            goto next;
 
-         char filePath[256];
-         xSnprintf(filePath, sizeof(filePath), SYS_POWERSUPPLY_DIR "/%s/online", entryName);
-
-         ssize_t r = xReadfile(filePath, buffer, sizeof(buffer));
+         char buffer[2];
+         ssize_t r = xReadfileat(entryFd, "online", buffer, sizeof(buffer));
          if (r < 1) {
             *isOnAC = AC_ERROR;
-            continue;
+            goto next;
          }
 
          if (buffer[0] == '0')
@@ -797,6 +827,9 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
          else if (buffer[0] == '1')
             *isOnAC = AC_PRESENT;
       }
+
+next:
+      Compat_openatArgClose(entryFd);
    }
 
    closedir(dir);
