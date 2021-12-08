@@ -150,6 +150,13 @@ typedef enum ColorElements_ {
 
 void CRT_fatalError(const char* note) ATTR_NORETURN;
 
+#ifdef NDEBUG
+# define CRT_debug(...)
+#else
+void CRT_debug_impl(const char* file, size_t lineno, const char* func, const char* fmt, ...) ATTR_FORMAT(printf, 4, 5);
+# define CRT_debug(...) CRT_debug_impl(__FILE__, __LINE__, __func__, __VA_ARGS__)
+#endif
+
 void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 
 #define KEY_WHEELUP   KEY_F(30)

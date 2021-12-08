@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #include <langinfo.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -842,6 +843,16 @@ static void dumpStderr(void) {
 
    close(stderrRedirectNewFd);
    stderrRedirectNewFd = -1;
+}
+
+void CRT_debug_impl(const char* file, size_t lineno, const char* func, const char* fmt, ...)  {
+   va_list args;
+
+   fprintf(stderr, "[%s:%zu (%s)]: ", file, lineno, func);
+   va_start(args, fmt);
+   vfprintf(stderr, fmt, args);
+   va_end(args);
+   fprintf(stderr, "\n");
 }
 
 #else /* !NDEBUG */
