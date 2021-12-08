@@ -15,13 +15,22 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 #include "Hashtable.h"
 #include "ProvideCurses.h"
+#include "Settings.h"
 #include "XUtils.h"
 
+
+static void ScreenListItem_delete(Object* cast) {
+   ScreenListItem* this = (ScreenListItem*)cast;
+   if (this->ss) {
+      ScreenSettings_delete(this->ss);
+   }
+   ListItem_delete(cast);
+}
 
 ObjectClass ScreenListItem_class = {
    .extends = Class(ListItem),
    .display = ListItem_display,
-   .delete = ListItem_delete,
+   .delete = ScreenListItem_delete,
    .compare = ListItem_compare
 };
 
@@ -37,6 +46,14 @@ static const char* const ScreensFunctions[] = {"      ", "Rename", "      ", "  
 static void ScreensPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    ScreensPanel* this = (ScreensPanel*) object;
+
+   /* do not delete screen settings still in use */
+   int n = Panel_size(super);
+   for (int i = 0; i < n; i++) {
+      ScreenListItem* item = (ScreenListItem*) Panel_get(super, i);
+      item->ss = NULL;
+   }
+
    Panel_done(super);
    free(this);
 }
