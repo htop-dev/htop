@@ -1175,6 +1175,7 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    case USER:
       return SPACESHIP_NULLSTR(p1->user, p2->user);
    default:
+      CRT_debug("Process_compareByKey_Base() called with key %d", key);
       assert(0 && "Process_compareByKey_Base: default key reached"); /* should never be reached */
       return SPACESHIP_NUMBER(p1->pid, p2->pid);
    }
