@@ -263,16 +263,20 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
 }
 
 ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char* line) {
-   ScreenSettings* ss = xCalloc(1, sizeof(ScreenSettings));
-   ss->name = xStrdup(name);
-   ss->fields = xCalloc(LAST_PROCESSFIELD, sizeof(ProcessField));
-   ss->flags = 0;
-   ss->direction = 1;
-   ss->treeDirection = 1;
-   ss->treeSortKey = 1;
-   ss->treeView = false;
-   ss->treeViewAlwaysByPID = false;
-   ss->allBranchesCollapsed = false;
+   ScreenSettings* ss = xMalloc(sizeof(ScreenSettings));
+   *ss = (ScreenSettings) {
+      .name = xStrdup(name),
+      .fields = xCalloc(LAST_PROCESSFIELD, sizeof(ProcessField)),
+      .flags = 0,
+      .direction = 1,
+      .treeDirection = 1,
+      .sortKey = PID,
+      .treeSortKey = PID,
+      .treeView = false,
+      .treeViewAlwaysByPID = false,
+      .allBranchesCollapsed = false,
+   };
+
    ScreenSettings_readFields(ss, this->dynamicColumns, line);
    this->screens[this->nScreens] = ss;
    this->nScreens++;
