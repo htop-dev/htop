@@ -15,13 +15,22 @@ in the source distribution for its full text.
 #include "FunctionBar.h"
 #include "Hashtable.h"
 #include "ProvideCurses.h"
+#include "Settings.h"
 #include "XUtils.h"
 
+
+static void ScreenListItem_delete(Object* cast) {
+   ScreenListItem* this = (ScreenListItem*)cast;
+   if (this->ss) {
+      ScreenSettings_delete(this->ss);
+   }
+   ListItem_delete(cast);
+}
 
 ObjectClass ScreenListItem_class = {
    .extends = Class(ListItem),
    .display = ListItem_display,
-   .delete = ListItem_delete,
+   .delete = ScreenListItem_delete,
    .compare = ListItem_compare
 };
 
@@ -37,6 +46,14 @@ static const char* const ScreensFunctions[] = {"      ", "Rename", "      ", "  
 static void ScreensPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    ScreensPanel* this = (ScreensPanel*) object;
+
+   /* do not delete screen settings still in use */
+   int n = Panel_size(super);
+   for (int i = 0; i < n; i++) {
+      ScreenListItem* item = (ScreenListItem*) Panel_get(super, i);
+      item->ss = NULL;
+   }
+
    Panel_done(super);
    free(this);
 }
@@ -44,7 +61,7 @@ static void ScreensPanel_delete(Object* object) {
 static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
-   if (ch >= 32 && ch < 127 && ch != 61) {
+   if (ch >= 32 && ch < 127 && ch != '=') {
       if (this->cursor < SCREEN_NAME_LEN - 1) {
          this->buffer[this->cursor] = (char)ch;
          this->cursor++;
@@ -64,8 +81,8 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
             }
             break;
          }
-         case 0x0a:
-         case 0x0d:
+         case '\n':
+         case '\r':
          case KEY_ENTER:
          {
             ListItem* item = (ListItem*) Panel_getSelected(super);
@@ -119,7 +136,7 @@ static void rebuildSettingsArray(Panel* super) {
 
    int n = Panel_size(super);
    free(this->settings->screens);
-   this->settings->screens = xMalloc(sizeof(ScreenSettings*) * (n + 1));
+   this->settings->screens = xMallocArray(n + 1, sizeof(ScreenSettings*));
    this->settings->screens[n] = NULL;
    for (int i = 0; i < n; i++) {
       ScreenListItem* item = (ScreenListItem*) Panel_get(super, i);
@@ -147,8 +164,8 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    bool shouldRebuildArray = false;
    HandlerResult result = IGNORED;
    switch(ch) {
-      case 0x0a:
-      case 0x0d:
+      case '\n':
+      case '\r':
       case KEY_ENTER:
       case KEY_MOUSE:
       case KEY_RECLICK:
@@ -297,7 +314,7 @@ void ScreensPanel_update(Panel* super) {
    ScreensPanel* this = (ScreensPanel*) super;
    int size = Panel_size(super);
    this->settings->changed = true;
-   this->settings->screens = xRealloc(this->settings->screens, sizeof(char*) * (size+1));
+   this->settings->screens = xReallocArray(this->settings->screens, size + 1, sizeof(ScreenSettings*));
    for (int i = 0; i < size; i++) {
       ScreenListItem* item = (ScreenListItem*) Panel_get(super, i);
       ScreenSettings* ss = item->ss;

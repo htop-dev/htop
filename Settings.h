@@ -118,6 +118,8 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns);
 
 ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char* line);
 
+void ScreenSettings_delete(ScreenSettings* this);
+
 void ScreenSettings_invertSortOrder(ScreenSettings* this);
 
 void ScreenSettings_setSortKey(ScreenSettings* this, ProcessField sortKey);

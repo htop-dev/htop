@@ -75,9 +75,7 @@ void Settings_delete(Settings* this) {
    free(this->hColumns);
    if (this->screens) {
       for (unsigned int i = 0; this->screens[i]; i++) {
-         free(this->screens[i]->name);
-         free(this->screens[i]->fields);
-         free(this->screens[i]);
+         ScreenSettings_delete(this->screens[i]);
       }
       free(this->screens);
    }
@@ -283,6 +281,12 @@ ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char*
    this->screens = xRealloc(this->screens, sizeof(ScreenSettings*) * (this->nScreens + 1));
    this->screens[this->nScreens] = NULL;
    return ss;
+}
+
+void ScreenSettings_delete(ScreenSettings* this) {
+   free(this->name);
+   free(this->fields);
+   free(this);
 }
 
 static ScreenSettings* Settings_defaultScreens(Settings* this) {
