@@ -902,16 +902,27 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
 
    bool changed = !process->cgroup || !String_eq(process->cgroup, output);
 
+   Process_updateFieldWidth(CGROUP, strlen(output));
    free_and_xStrdup(&process->cgroup, output);
 
-   if (!changed)
+   if (!changed) {
+      if(process->cgroup_short) {
+         Process_updateFieldWidth(CCGROUP, strlen(process->cgroup_short));
+      } else {
+         //CCGROUP is alias to normal CGROUP if shortening fails
+         Process_updateFieldWidth(CCGROUP, strlen(process->cgroup));
+      }
       return;
+   }
 
    char* cgroup_short = CGroup_filterName(process->cgroup);
    if (cgroup_short) {
+      Process_updateFieldWidth(CCGROUP, strlen(cgroup_short));
       free_and_xStrdup(&process->cgroup_short, cgroup_short);
       free(cgroup_short);
    } else {
+      //CCGROUP is alias to normal CGROUP if shortening fails
+      Process_updateFieldWidth(CCGROUP, strlen(process->cgroup));
       free(process->cgroup_short);
       process->cgroup_short = NULL;
    }
