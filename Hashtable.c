@@ -191,10 +191,14 @@ void Hashtable_setSize(Hashtable* this, size_t size) {
    if (size <= this->items)
       return;
 
+   size_t newSize = nextPrime(size);
+   if (newSize == this->size)
+      return;
+
    HashtableItem* oldBuckets = this->buckets;
    size_t oldSize = this->size;
 
-   this->size = nextPrime(size);
+   this->size = newSize;
    this->buckets = (HashtableItem*) xCalloc(this->size, sizeof(HashtableItem));
    this->items = 0;
 
