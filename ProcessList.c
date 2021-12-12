@@ -433,36 +433,24 @@ static void ProcessList_buildTree(ProcessList* this) {
          }
 
          pid_t ppid = Process_getParentPid(process);
-
-         // Bisect the process vector to find parent
-         int l = 0;
-         int r = size;
+         bool isRoot = false;
 
          // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)
-         // on Mac OS X 10.11.6) cancel bisecting and regard this process as
-         // root.
+         // on Mac OS X 10.11.6) regard this process as root.
          if (process->pid == ppid)
-            r = 0;
+            isRoot = true;
 
          // On Linux both the init process (pid 1) and the root UMH kernel thread (pid 2)
          // use a ppid of 0. As that PID can't exist, we can skip searching for it.
          if (!ppid)
-            r = 0;
+            isRoot = true;
 
-         while (l < r) {
-            int c = (l + r) / 2;
-            pid_t pid = ((Process*)Vector_get(this->processes, c))->pid;
-            if (ppid == pid) {
-               break;
-            } else if (ppid < pid) {
-               r = c;
-            } else {
-               l = c + 1;
-            }
-         }
+         // Lookup the parent via the processTable hashtable not modified in buildTree
+         if (ProcessList_findProcess(this, ppid) == NULL)
+            isRoot = true;
 
          // If parent not found, then construct the tree with this node as root
-         if (l >= r) {
+         if (isRoot) {
             process = (Process*)Vector_take(this->processes, i);
             process->indent = 0;
             process->tree_depth = 0;
