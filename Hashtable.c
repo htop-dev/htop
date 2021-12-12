@@ -286,7 +286,7 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
 
    /* shrink on load-factor < 0.125 */
    if (8 * this->items < this->size)
-      Hashtable_setSize(this, this->size / 2);
+      Hashtable_setSize(this, this->size / 3); /* account for nextPrime rounding up */
 
    return res;
 }
