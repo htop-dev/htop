@@ -419,13 +419,23 @@ case "$enable_unwind" in
          AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
       fi
       AC_CHECK_LIB([unwind], [backtrace], [], [enable_unwind=no])
-      AC_CHECK_HEADERS([libunwind.h], [], [enable_unwind=no])
+      AC_CHECK_HEADERS([libunwind.h], [], [
+         old_CFLAGS="$CFLAGS"
+         CFLAGS="$CFLAGS -I/usr/include/libunwind"
+         AC_CHECK_HEADERS([libunwind/libunwind.h], [], [
+            enable_unwind=no
+            CFLAGS="$old_CFLAGS"
+         ])
+      ])
       ;;
    no)
       ;;
    yes)
       AC_CHECK_LIB([unwind], [backtrace], [], [AC_MSG_ERROR([can not find required library libunwind])])
-      AC_CHECK_HEADERS([libunwind.h], [], [AC_MSG_ERROR([can not find require header file libunwind.h])])
+      AC_CHECK_HEADERS([libunwind.h], [], [
+         CFLAGS="$CFLAGS -I/usr/include/libunwind"
+         AC_CHECK_HEADERS([libunwind/libunwind.h], [], [AC_MSG_ERROR([can not find required header file libunwind.h])])
+      ])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
