@@ -400,6 +400,69 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    }
 }
 
+static int LinuxProcess_sameApplication(const Process* p1, const Process* p2) {
+   return Process_sameApplication(p1, p2);
+}
+
+static void LinuxProcess_mergeData(Process* p1, const Process* p2) {
+   //LinuxProcess* lp1 = (LinuxProcess*) p1;
+   //const LinuxProcess* lp2 = (const LinuxProcess*) p2;
+
+   // TODO
+
+   /*
+    * TTY_NR
+    * CMINFLT
+    * CMAJFLT
+    * M_DRS
+    * M_DT
+    * M_LRS
+    * M_TRS
+    * M_SHARE
+    * M_PSS
+    * M_SWAP
+    * M_PSSWP
+    * UTIME
+    * STIME
+    * CUTIME
+    * CSTIME
+    * #ifdef HAVE_TASKSTATS
+    * RCHAR
+    * WCHAR
+    * SYSCR
+    * SYSCW
+    * RBYTES
+    * WBYTES
+    * CNCLWB
+    * IO_READ_RATE
+    * IO_WRITE_RATE
+    * IO_RATE
+    * #endif
+    * #ifdef HAVE_OPENVZ
+    * CTID
+    * VPID
+    * #endif
+    * #ifdef HAVE_VSERVER
+    * VXID
+    * #endif
+    * #ifdef HAVE_CGROUP
+    * CGROUP
+    * #endif
+    * OOM
+    * IO_PRIORITY
+    * #ifdef HAVE_DELAYACCT
+    * PERCENT_CPU_DELAY
+    * PERCENT_IO_DELAY
+    * PERCENT_SWAP_DELAY
+    * #endif
+    * CTXT
+    * SECATTR
+    * EXE
+    */
+
+   Process_mergeData(p1, p2);
+}
+
 const ProcessClass LinuxProcess_class = {
    .super = {
       .extends = Class(Process),
@@ -408,5 +471,7 @@ const ProcessClass LinuxProcess_class = {
       .compare = Process_compare
    },
    .writeField = LinuxProcess_writeField,
-   .compareByKey = LinuxProcess_compareByKey
+   .compareByKey = LinuxProcess_compareByKey,
+   .sameApplication = LinuxProcess_sameApplication,
+   .mergeData = LinuxProcess_mergeData
 };

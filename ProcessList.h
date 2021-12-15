@@ -43,13 +43,14 @@ typedef unsigned long long int memory_t;
 typedef struct ProcessList_ {
    const Settings* settings;
 
-   Vector* processes;
-   Vector* processes2;
-   Hashtable* processTable;
-   UsersTable* usersTable;
+   Vector* rawProcesses;       /**<                                actually existing processes */
+   Vector* mergedProcesses;    /**<                                merged processes to display */
+   Hashtable* processTable;    /**<  hashtable of actually existing processes for quick search */
 
-   Hashtable* displayTreeSet;
-   Hashtable* draftingTreeSet;
+   Hashtable* displayTreeSet;  /**<                   auxiliary hashtable for sorted tree view */
+   Hashtable* draftingTreeSet; /**<                   auxiliary hashtable for sorted tree view */
+
+   UsersTable* usersTable;
 
    Hashtable* dynamicMeters;  /* runtime-discovered meters */
    Hashtable* dynamicColumns; /* runtime-discovered Columns */
@@ -118,12 +119,12 @@ void ProcessList_collapseAllBranches(ProcessList* this);
 
 void ProcessList_rebuildPanel(ProcessList* this);
 
+static inline const Process* ProcessList_findProcess(const ProcessList* this, pid_t pid) {
+   return (Process*) Hashtable_get(this->processTable, pid);
+}
+
 Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor);
 
 void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate);
-
-static inline Process* ProcessList_findProcess(ProcessList* this, pid_t pid) {
-   return (Process*) Hashtable_get(this->processTable, pid);
-}
 
 #endif

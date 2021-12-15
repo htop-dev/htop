@@ -366,6 +366,8 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          // old (no screen) naming also supported for backwards compatibility
          screen = Settings_defaultScreens(this);
          screen->allBranchesCollapsed = atoi(option[1]);
+      } else if (String_eq(option[0], "merge_applications")) {
+         this->mergeApplications = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
          this->hideKernelThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_userland_threads")) {
@@ -566,6 +568,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("hide_userland_threads", this->hideUserlandThreads);
    printSettingInteger("shadow_other_users", this->shadowOtherUsers);
    printSettingInteger("show_thread_names", this->showThreadNames);
+   printSettingInteger("merge_applications", this->mergeApplications);
    printSettingInteger("show_program_path", this->showProgramPath);
    printSettingInteger("highlight_base_name", this->highlightBaseName);
    printSettingInteger("highlight_deleted_exe", this->highlightDeletedExe);
@@ -659,6 +662,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    this->showThreadNames = false;
    this->hideKernelThreads = true;
    this->hideUserlandThreads = false;
+   this->mergeApplications = false;
    this->highlightBaseName = false;
    this->highlightDeletedExe = true;
    this->highlightMegabytes = true;
