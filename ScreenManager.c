@@ -126,7 +126,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       // always update header, especially to avoid gaps in graph meters
       Header_updateData(this->header);
       if (!this->state->pauseProcessUpdate && (*sortTimeout == 0 || this->settings->ss->treeView)) {
-         ProcessList_sort(pl);
+         pl->needsSort = true;
          *sortTimeout = 1;
       }
       // force redraw if the number of UID digits was changed

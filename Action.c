@@ -189,8 +189,7 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    }
    Object_delete(sortPanel);
 
-   if (st->pauseProcessUpdate)
-      ProcessList_sort(st->pl);
+   st->pl->needsSort = true;
 
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
@@ -281,8 +280,7 @@ static Htop_Reaction actionLowerPriority(State* st) {
 
 static Htop_Reaction actionInvertSortOrder(State* st) {
    ScreenSettings_invertSortOrder(st->settings->ss);
-   if (st->pauseProcessUpdate)
-      ProcessList_sort(st->pl);
+   st->pl->needsSort = true;
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
