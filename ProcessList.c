@@ -27,6 +27,7 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
    this->processTable = Hashtable_new(200, false);
    this->displayTreeSet = Hashtable_new(200, false);
    this->draftingTreeSet = Hashtable_new(200, false);
+   this->needsSort = true;
 
    this->usersTable = usersTable;
    this->pidMatchList = pidMatchList;
@@ -496,6 +497,7 @@ void ProcessList_sort(ProcessList* this) {
    } else {
       Vector_insertionSort(this->processes);
    }
+   this->needsSort = false;
 }
 
 ProcessField ProcessList_keyAt(const ProcessList* this, int at) {
@@ -531,6 +533,9 @@ void ProcessList_collapseAllBranches(ProcessList* this) {
 }
 
 void ProcessList_rebuildPanel(ProcessList* this) {
+   if (this->needsSort)
+      ProcessList_sort(this);
+
    const char* incFilter = this->incFilter;
 
    const int currPos = Panel_getSelectedIndex(this->panel);

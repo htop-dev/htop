@@ -50,6 +50,7 @@ typedef struct ProcessList_ {
 
    Hashtable* displayTreeSet;
    Hashtable* draftingTreeSet;
+   bool needsSort;
 
    Hashtable* dynamicMeters;  /* runtime-discovered meters */
    Hashtable* dynamicColumns; /* runtime-discovered Columns */
