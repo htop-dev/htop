@@ -38,7 +38,7 @@ in the source distribution for its full text.
 #endif
 
 
-extern ScreenDefaults Platform_defaultScreens[];
+extern const ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
 

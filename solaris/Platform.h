@@ -52,7 +52,7 @@ typedef struct envAccum_ {
    char* env;
 } envAccum;
 
-extern ScreenDefaults Platform_defaultScreens[];
+extern const ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
 

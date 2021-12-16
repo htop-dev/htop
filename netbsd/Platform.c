@@ -66,7 +66,7 @@ in the source distribution for its full text.
 #define prop_number_signed_value prop_number_integer_value
 #endif
 
-ScreenDefaults Platform_defaultScreens[] = {
+const ScreenDefaults Platform_defaultScreens[] = {
    {
       .name = "Main",
       .columns = "PID USER PRIORITY NICE M_VIRT M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME COMM",

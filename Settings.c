@@ -293,7 +293,7 @@ static ScreenSettings* Settings_defaultScreens(Settings* this) {
    if (this->nScreens)
       return this->screens[0];
    for (unsigned int i = 0; i < Platform_numberOfDefaultScreens; i++) {
-      ScreenDefaults* defaults = &Platform_defaultScreens[i];
+      const ScreenDefaults* defaults = &Platform_defaultScreens[i];
       ScreenSettings* settings = Settings_newScreen(this, defaults->name, defaults->columns);
       settings->sortKey = toFieldIndex(this->dynamicColumns, defaults->sortKey);
    }
