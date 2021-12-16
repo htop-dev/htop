@@ -404,7 +404,7 @@ static int ProcessList_treeProcessCompare(const void* v1, const void* v2) {
    return SPACESHIP_NUMBER(p1->tree_left, p2->tree_left);
 }
 
-static int compareProcessByKnownParentThenPID(const void* v1, const void* v2) {
+static int compareProcessByKnownParentThenNatural(const void* v1, const void* v2) {
    const Process* p1 = (const Process*)v1;
    const Process* p2 = (const Process*)v2;
 
@@ -416,7 +416,7 @@ static int compareProcessByKnownParentThenPID(const void* v1, const void* v2) {
    if (result != 0)
       return result;
 
-   return SPACESHIP_NUMBER(p1->pid, p2->pid);
+   return Process_compare(v1, v2);
 }
 
 // Builds a sorted tree from scratch, without relying on previously gathered information
@@ -449,7 +449,7 @@ static void ProcessList_buildTree(ProcessList* this) {
    }
 
    // Sort by known parent PID (roots first), then PID
-   Vector_quickSortCustomCompare(this->processes, compareProcessByKnownParentThenPID);
+   Vector_quickSortCustomCompare(this->processes, compareProcessByKnownParentThenNatural);
 
    // Find all processes whose parent is not visible
    for (int i = 0; i < vsize; i++) {
@@ -470,14 +470,16 @@ static void ProcessList_buildTree(ProcessList* this) {
       }
    }
 
+   this->needsSort = false;
+
    // Check consistency of the built structures
    assert(Vector_size(this->displayList) == vsize); (void)vsize;
 }
 
 void ProcessList_updateDisplayList(ProcessList* this) {
    if (this->settings->ss->treeView) {
-      ProcessList_updateTreeSet(this);
-      Vector_quickSortCustomCompare(this->displayList, ProcessList_treeProcessCompare);
+      if (this->needsSort)
+         ProcessList_buildTree(this);
    } else {
       if (this->needsSort)
          Vector_insertionSort(this->processes);
