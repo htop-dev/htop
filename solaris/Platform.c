@@ -43,7 +43,7 @@ in the source distribution for its full text.
 const ScreenDefaults Platform_defaultScreens[] = {
    {
       .name = "Default",
-      .columns = "PID LWPID USER PRIORITY NICE M_VIRT M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME COMM",
+      .columns = "PID LWPID USER PRIORITY NICE M_VIRT M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME Command",
       .sortKey = "PERCENT_CPU",
    },
 };
