@@ -34,8 +34,6 @@ in the source distribution for its full text.
 #define PLATFORM_LONG_OPTIONS \
    // End of list
 
-extern const ProcessField Platform_defaultFields[];
-
 extern ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
