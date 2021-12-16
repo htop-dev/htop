@@ -149,7 +149,7 @@ static void addNewScreen(Panel* super) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
    const char* name = "New";
-   ScreenSettings* ss = Settings_newScreen(this->settings, name, "PID Command");
+   ScreenSettings* ss = Settings_newScreen(this->settings, &(const ScreenDefaults){ .name = name, .columns = "PID Command", .sortKey = "PID" });
    ScreenListItem* item = ScreenListItem_new(name, ss);
    int idx = Panel_getSelectedIndex(super);
    Panel_insert(super, idx + 1, (Object*) item);
