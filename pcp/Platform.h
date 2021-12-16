@@ -62,10 +62,6 @@ extern ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
 
-extern ProcessField Platform_defaultFields[];
-
-extern int Platform_numberOfFields;
-
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;

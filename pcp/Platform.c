@@ -69,10 +69,6 @@ ScreenDefaults Platform_defaultScreens[] = {
 
 const unsigned int Platform_numberOfDefaultScreens = ARRAYSIZE(Platform_defaultScreens);
 
-ProcessField Platform_defaultFields[] = { PID, USER, PRIORITY, NICE, M_VIRT, M_RESIDENT, (int)M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
-
-int Platform_numberOfFields = LAST_PROCESSFIELD;
-
 const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number = 0 },
 };
