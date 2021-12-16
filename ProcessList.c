@@ -340,10 +340,13 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
 
    Vector* children = Vector_new(Class(Process), false, DEFAULT_SIZE);
 
+   int lastShown = 0;
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* process = (Process*)Vector_get(this->processes, i);
-      if (process->show && Process_isChildOf(process, pid)) {
+      if (Process_isChildOf(process, pid)) {
          process = (Process*)Vector_take(this->processes, i);
+         if (process->show)
+            lastShown = Vector_size(children);
          Vector_add(children, process);
       }
    }
@@ -369,8 +372,8 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
       assert(Vector_size(this->processes2) == s + 1); (void)s;
 
       int nextIndent = indent | (1 << level);
-      ProcessList_buildTreeBranch(this, process->pid, level + 1, (i < size - 1) ? nextIndent : indent, direction, show ? process->showChildren : false, node_counter, node_index);
-      if (i == size - 1) {
+      ProcessList_buildTreeBranch(this, process->pid, level + 1, (i < lastShown) ? nextIndent : indent, direction, process->show && process->showChildren, node_counter, node_index);
+      if (i == lastShown) {
          process->indent = -nextIndent;
       } else {
          process->indent = nextIndent;
@@ -417,20 +420,6 @@ static void ProcessList_buildTree(ProcessList* this) {
       int i;
       for (i = 0; i < size; i++) {
          Process* process = (Process*)Vector_get(this->processes, i);
-
-         // Immediately consume processes hidden from view
-         if (!process->show) {
-            process = (Process*)Vector_take(this->processes, i);
-            process->indent = 0;
-            process->tree_depth = 0;
-            process->tree_left = node_counter++;
-            process->tree_index = node_index++;
-            Vector_add(this->processes2, process);
-            ProcessList_buildTreeBranch(this, process->pid, 0, 0, direction, false, &node_counter, &node_index);
-            process->tree_right = node_counter++;
-            Hashtable_put(this->displayTreeSet, process->tree_index, process);
-            break;
-         }
 
          pid_t ppid = Process_getParentPid(process);
          bool isRoot = false;
