@@ -22,7 +22,7 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
-   this->processes2 = Vector_new(klass, true, DEFAULT_SIZE); // tree-view auxiliary buffer
+   this->displayList = Vector_new(klass, false, DEFAULT_SIZE);
 
    this->processTable = Hashtable_new(200, false);
    this->displayTreeSet = Hashtable_new(200, false);
@@ -78,7 +78,7 @@ void ProcessList_done(ProcessList* this) {
    Hashtable_delete(this->displayTreeSet);
    Hashtable_delete(this->processTable);
 
-   Vector_delete(this->processes2);
+   Vector_delete(this->displayList);
    Vector_delete(this->processes);
 }
 
@@ -224,7 +224,7 @@ static void ProcessList_updateTreeSetLayer(ProcessList* this, unsigned int leftB
    if (layerSize == 0)
       return;
 
-   Vector* layer = Vector_new(Vector_type(this->processes), false, layerSize);
+   Vector* layer = Vector_new(Vector_type(this->displayList), false, layerSize);
 
    // Find all processes on the same layer (process with the same `deep` value
    // and included in a range from `leftBound` to `rightBound`).
@@ -317,7 +317,7 @@ static void ProcessList_updateTreeSet(ProcessList* this) {
    unsigned int index = 0;
    unsigned int tree_index = 1;
 
-   const int vsize = Vector_size(this->processes);
+   const int vsize = Vector_size(this->displayList);
 
    assert(Hashtable_count(this->draftingTreeSet) == 0);
    assert((int)Hashtable_count(this->displayTreeSet) == vsize);
@@ -344,7 +344,6 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* process = (Process*)Vector_get(this->processes, i);
       if (Process_isChildOf(process, pid)) {
-         process = (Process*)Vector_take(this->processes, i);
          if (process->show)
             lastShown = Vector_size(children);
          Vector_add(children, process);
@@ -362,14 +361,14 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
          process->show = false;
       }
 
-      int s = Vector_size(this->processes2);
+      int s = Vector_size(this->displayList);
       if (direction == 1) {
-         Vector_add(this->processes2, process);
+         Vector_add(this->displayList, process);
       } else {
-         Vector_insert(this->processes2, 0, process);
+         Vector_insert(this->displayList, 0, process);
       }
 
-      assert(Vector_size(this->processes2) == s + 1); (void)s;
+      assert(Vector_size(this->displayList) == s + 1); (void)s;
 
       int nextIndent = indent | (1 << level);
       ProcessList_buildTreeBranch(this, process->pid, level + 1, (i < lastShown) ? nextIndent : indent, direction, process->show && process->showChildren, node_counter, node_index);
@@ -406,6 +405,8 @@ static int ProcessList_treeProcessCompareByPID(const void* v1, const void* v2) {
 
 // Builds a sorted tree from scratch, without relying on previously gathered information
 static void ProcessList_buildTree(ProcessList* this) {
+   Vector_prune(this->displayList);
+
    int node_counter = 1;
    int node_index = 0;
    int direction = ScreenSettings_getActiveDirection(this->settings->ss);
@@ -415,64 +416,57 @@ static void ProcessList_buildTree(ProcessList* this) {
    int vsize = Vector_size(this->processes);
 
    // Find all processes whose parent is not visible
-   int size;
-   while ((size = Vector_size(this->processes))) {
-      int i;
-      for (i = 0; i < size; i++) {
-         Process* process = (Process*)Vector_get(this->processes, i);
+   int size = Vector_size(this->processes);
+   for (int i = 0; i < size; i++) {
+      Process* process = (Process*)Vector_get(this->processes, i);
 
-         pid_t ppid = Process_getParentPid(process);
-         bool isRoot = false;
+      pid_t ppid = Process_getParentPid(process);
+      bool isRoot = false;
 
-         // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)
-         // on Mac OS X 10.11.6) regard this process as root.
-         if (process->pid == ppid)
-            isRoot = true;
+      // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)
+      // on Mac OS X 10.11.6) regard this process as root.
+      if (process->pid == ppid)
+         isRoot = true;
 
-         // On Linux both the init process (pid 1) and the root UMH kernel thread (pid 2)
-         // use a ppid of 0. As that PID can't exist, we can skip searching for it.
-         if (!ppid)
-            isRoot = true;
+      // On Linux both the init process (pid 1) and the root UMH kernel thread (pid 2)
+      // use a ppid of 0. As that PID can't exist, we can skip searching for it.
+      if (!ppid)
+         isRoot = true;
 
-         // Lookup the parent via the processTable hashtable not modified in buildTree
-         if (ProcessList_findProcess(this, ppid) == NULL)
-            isRoot = true;
+      // Lookup the parent via the processTable hashtable not modified in buildTree
+      if (ProcessList_findProcess(this, ppid) == NULL)
+         isRoot = true;
 
-         // If parent not found, then construct the tree with this node as root
-         if (isRoot) {
-            process = (Process*)Vector_take(this->processes, i);
-            process->indent = 0;
-            process->tree_depth = 0;
-            process->tree_left = node_counter++;
-            process->tree_index = node_index++;
-            Vector_add(this->processes2, process);
-            Hashtable_put(this->displayTreeSet, process->tree_index, process);
-            ProcessList_buildTreeBranch(this, process->pid, 0, 0, direction, process->showChildren, &node_counter, &node_index);
-            process->tree_right = node_counter++;
-            break;
-         }
+      // If parent not found, then construct the tree with this node as root
+      if (isRoot) {
+         process = (Process*)Vector_get(this->processes, i);
+         process->indent = 0;
+         process->tree_depth = 0;
+         process->tree_left = node_counter++;
+         process->tree_index = node_index++;
+         Vector_add(this->displayList, process);
+         Hashtable_put(this->displayTreeSet, process->tree_index, process);
+         ProcessList_buildTreeBranch(this, process->pid, 0, 0, direction, process->showChildren, &node_counter, &node_index);
+         process->tree_right = node_counter++;
+         continue;
       }
-
-      // There should be no loop in the process tree
-      assert(i < size);
    }
 
-   // Swap listings around
-   Vector* t = this->processes;
-   this->processes = this->processes2;
-   this->processes2 = t;
-
    // Check consistency of the built structures
-   assert(Vector_size(this->processes) == vsize); (void)vsize;
-   assert(Vector_size(this->processes2) == 0);
+   assert(Vector_size(this->displayList) == vsize); (void)vsize;
 }
 
-void ProcessList_sort(ProcessList* this) {
+void ProcessList_updateDisplayList(ProcessList* this) {
    if (this->settings->ss->treeView) {
       ProcessList_updateTreeSet(this);
-      Vector_quickSortCustomCompare(this->processes, ProcessList_treeProcessCompare);
+      Vector_quickSortCustomCompare(this->displayList, ProcessList_treeProcessCompare);
    } else {
-      Vector_insertionSort(this->processes);
+      if (this->needsSort)
+         Vector_insertionSort(this->processes);
+      Vector_prune(this->displayList);
+      int size = Vector_size(this->processes);
+      for (int i = 0; i < size; i++)
+         Vector_add(this->displayList, Vector_get(this->processes, i));
    }
    this->needsSort = false;
 }
@@ -510,8 +504,7 @@ void ProcessList_collapseAllBranches(ProcessList* this) {
 }
 
 void ProcessList_rebuildPanel(ProcessList* this) {
-   if (this->needsSort)
-      ProcessList_sort(this);
+   ProcessList_updateDisplayList(this);
 
    const char* incFilter = this->incFilter;
 
@@ -530,12 +523,12 @@ void ProcessList_rebuildPanel(ProcessList* this) {
       }
    }
 
-   const int processCount = Vector_size(this->processes);
+   const int processCount = Vector_size(this->displayList);
    int idx = 0;
    bool foundFollowed = false;
 
    for (int i = 0; i < processCount; i++) {
-      Process* p = (Process*) Vector_get(this->processes, i);
+      Process* p = (Process*) Vector_get(this->displayList, i);
 
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
