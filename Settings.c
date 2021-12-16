@@ -242,8 +242,10 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
 
-   unsigned int i, j;
-   for (j = 0, i = 0; ids[i]; i++) {
+   /* reset default fields */
+   memset(ss->fields, '\0', LAST_PROCESSFIELD * sizeof(ProcessField));
+
+   for (size_t j = 0, i = 0; ids[i]; i++) {
       if (j >= UINT_MAX / sizeof(ProcessField))
          continue;
       if (j >= LAST_PROCESSFIELD) {
