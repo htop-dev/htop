@@ -338,22 +338,35 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
    if (pid == 0)
       return;
 
-   Vector* children = Vector_new(Class(Process), false, DEFAULT_SIZE);
-
-   int lastShown = 0;
-   for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
-      Process* process = (Process*)Vector_get(this->processes, i);
-      if (Process_isChildOf(process, pid)) {
-         if (process->show)
-            lastShown = Vector_size(children);
-         Vector_add(children, process);
+   // The vector is sorted by parent PID, find the start of the range by bisection
+   int vsize = Vector_size(this->processes);
+   int l = 0;
+   int r = vsize;
+   while (l < r) {
+      int c = (l + r) / 2;
+      Process* process = (Process*)Vector_get(this->processes, c);
+      pid_t ppid = process->isRoot ? 0 : Process_getParentPid(process);
+      if (ppid < pid) {
+         l = c + 1;
+      } else {
+         r = c;
       }
    }
+   // Find the end to know the last line for indent handling purposes
+   int lastShown = r;
+   while (r < vsize) {
+      Process* process = (Process*)Vector_get(this->processes, r);
+      if (!Process_isChildOf(process, pid))
+         break;
+      if (process->show)
+         lastShown = r;
+      r++;
+   }
 
-   int size = Vector_size(children);
-   for (int i = 0; i < size; i++) {
+   for (int i = l; i < r; i++) {
+      Process* process = (Process*)Vector_get(this->processes, i);
+
       int index = (*node_index)++;
-      Process* process = (Process*)Vector_get(children, i);
 
       int lft = (*node_counter)++;
 
@@ -382,7 +395,6 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
       process->tree_index = index;
       Hashtable_put(this->displayTreeSet, index, process);
    }
-   Vector_delete(children);
 }
 
 static int ProcessList_treeProcessCompare(const void* v1, const void* v2) {
@@ -392,9 +404,17 @@ static int ProcessList_treeProcessCompare(const void* v1, const void* v2) {
    return SPACESHIP_NUMBER(p1->tree_left, p2->tree_left);
 }
 
-static int ProcessList_treeProcessCompareByPID(const void* v1, const void* v2) {
+static int compareProcessByKnownParentThenPID(const void* v1, const void* v2) {
    const Process* p1 = (const Process*)v1;
    const Process* p2 = (const Process*)v2;
+
+   int result = SPACESHIP_NUMBER(
+      p1->isRoot ? 0 : Process_getParentPid(p1),
+      p2->isRoot ? 0 : Process_getParentPid(p2)
+   );
+
+   if (result != 0)
+      return result;
 
    return SPACESHIP_NUMBER(p1->pid, p2->pid);
 }
@@ -406,34 +426,37 @@ static void ProcessList_buildTree(ProcessList* this) {
    int node_counter = 1;
    int node_index = 0;
 
-   // Sort by PID
-   Vector_quickSortCustomCompare(this->processes, ProcessList_treeProcessCompareByPID);
+   // Mark root processes
    int vsize = Vector_size(this->processes);
-
-   // Find all processes whose parent is not visible
-   int size = Vector_size(this->processes);
-   for (int i = 0; i < size; i++) {
+   for (int i = 0; i < vsize; i++) {
       Process* process = (Process*)Vector_get(this->processes, i);
-
       pid_t ppid = Process_getParentPid(process);
-      bool isRoot = false;
+      process->isRoot = false;
 
       // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)
       // on Mac OS X 10.11.6) regard this process as root.
       if (process->pid == ppid)
-         isRoot = true;
+         process->isRoot = true;
 
       // On Linux both the init process (pid 1) and the root UMH kernel thread (pid 2)
       // use a ppid of 0. As that PID can't exist, we can skip searching for it.
       if (!ppid)
-         isRoot = true;
+         process->isRoot = true;
 
-      // Lookup the parent via the processTable hashtable not modified in buildTree
+      // We don't know about its parent for whatever reason
       if (ProcessList_findProcess(this, ppid) == NULL)
-         isRoot = true;
+         process->isRoot = true;
+   }
+
+   // Sort by known parent PID (roots first), then PID
+   Vector_quickSortCustomCompare(this->processes, compareProcessByKnownParentThenPID);
+
+   // Find all processes whose parent is not visible
+   for (int i = 0; i < vsize; i++) {
+      Process* process = (Process*)Vector_get(this->processes, i);
 
       // If parent not found, then construct the tree with this node as root
-      if (isRoot) {
+      if (process->isRoot) {
          process = (Process*)Vector_get(this->processes, i);
          process->indent = 0;
          process->tree_depth = 0;
