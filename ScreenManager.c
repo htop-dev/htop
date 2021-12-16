@@ -121,14 +121,14 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    if (*rescan) {
       *oldTime = newTime;
       int oldUidDigits = Process_uidDigits;
-      // scan processes first - some header values are calculated there
-      ProcessList_scan(pl, this->state->pauseProcessUpdate);
-      // always update header, especially to avoid gaps in graph meters
-      Header_updateData(this->header);
       if (!this->state->pauseProcessUpdate && (*sortTimeout == 0 || this->settings->ss->treeView)) {
          pl->needsSort = true;
          *sortTimeout = 1;
       }
+      // scan processes first - some header values are calculated there
+      ProcessList_scan(pl, this->state->pauseProcessUpdate);
+      // always update header, especially to avoid gaps in graph meters
+      Header_updateData(this->header);
       // force redraw if the number of UID digits was changed
       if (Process_uidDigits != oldUidDigits) {
          *force_redraw = true;
