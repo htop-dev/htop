@@ -58,7 +58,7 @@ typedef struct Platform_ {
    unsigned int ncpu;         /* maximum processor count configured */
 } Platform;
 
-extern ScreenDefaults Platform_defaultScreens[];
+extern const ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
 

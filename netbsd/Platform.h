@@ -34,7 +34,7 @@ in the source distribution for its full text.
 #define PLATFORM_LONG_OPTIONS \
    // End of list
 
-extern ScreenDefaults Platform_defaultScreens[];
+extern const ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
 

@@ -25,7 +25,7 @@ in the source distribution for its full text.
 #include "generic/uname.h"
 
 
-extern ScreenDefaults Platform_defaultScreens[];
+extern const ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
 

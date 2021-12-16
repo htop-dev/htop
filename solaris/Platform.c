@@ -40,7 +40,7 @@ in the source distribution for its full text.
 #include "SolarisProcessList.h"
 
 
-ScreenDefaults Platform_defaultScreens[] = {
+const ScreenDefaults Platform_defaultScreens[] = {
    {
       .name = "Default",
       .columns = "PID LWPID USER PRIORITY NICE M_VIRT M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME COMM",

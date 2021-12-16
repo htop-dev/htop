@@ -83,7 +83,7 @@ enum CapMode {
 };
 #endif
 
-ScreenDefaults Platform_defaultScreens[] = {
+const ScreenDefaults Platform_defaultScreens[] = {
    {
       .name = "Main",
       .columns = "PID USER PRIORITY NICE M_VIRT M_RESIDENT M_SHARE STATE PERCENT_CPU PERCENT_MEM TIME COMM",

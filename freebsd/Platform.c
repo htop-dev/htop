@@ -50,7 +50,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
-ScreenDefaults Platform_defaultScreens[] = {
+const ScreenDefaults Platform_defaultScreens[] = {
    {
       .name = "Main",
       .columns = "PID USER PRIORITY NICE M_VIRT M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME COMM",
