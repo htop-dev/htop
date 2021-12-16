@@ -332,7 +332,7 @@ static void ProcessList_updateTreeSet(ProcessList* this) {
    assert((int)Hashtable_count(this->displayTreeSet) == vsize);
 }
 
-static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, int direction, bool show, int* node_counter, int* node_index) {
+static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, bool show, int* node_counter, int* node_index) {
    // On OpenBSD the kernel thread 'swapper' has pid 0.
    // Do not treat it as root of any tree.
    if (pid == 0)
@@ -362,16 +362,12 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
       }
 
       int s = Vector_size(this->displayList);
-      if (direction == 1) {
-         Vector_add(this->displayList, process);
-      } else {
-         Vector_insert(this->displayList, 0, process);
-      }
+      Vector_add(this->displayList, process);
 
       assert(Vector_size(this->displayList) == s + 1); (void)s;
 
       int nextIndent = indent | (1 << level);
-      ProcessList_buildTreeBranch(this, process->pid, level + 1, (i < lastShown) ? nextIndent : indent, direction, process->show && process->showChildren, node_counter, node_index);
+      ProcessList_buildTreeBranch(this, process->pid, level + 1, (i < lastShown) ? nextIndent : indent, process->show && process->showChildren, node_counter, node_index);
       if (i == lastShown) {
          process->indent = -nextIndent;
       } else {
@@ -409,7 +405,6 @@ static void ProcessList_buildTree(ProcessList* this) {
 
    int node_counter = 1;
    int node_index = 0;
-   int direction = ScreenSettings_getActiveDirection(this->settings->ss);
 
    // Sort by PID
    Vector_quickSortCustomCompare(this->processes, ProcessList_treeProcessCompareByPID);
@@ -446,7 +441,7 @@ static void ProcessList_buildTree(ProcessList* this) {
          process->tree_index = node_index++;
          Vector_add(this->displayList, process);
          Hashtable_put(this->displayTreeSet, process->tree_index, process);
-         ProcessList_buildTreeBranch(this, process->pid, 0, 0, direction, process->showChildren, &node_counter, &node_index);
+         ProcessList_buildTreeBranch(this, process->pid, 0, 0, process->showChildren, &node_counter, &node_index);
          process->tree_right = node_counter++;
          continue;
       }
