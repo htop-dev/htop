@@ -116,7 +116,7 @@ int Settings_write(const Settings* this, bool onCrash);
 
 Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns);
 
-ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char* line);
+ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* defaults);
 
 void ScreenSettings_delete(ScreenSettings* this);
 

@@ -262,22 +262,23 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
    String_freeArray(ids);
 }
 
-ScreenSettings* Settings_newScreen(Settings* this, const char* name, const char* line) {
+ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* defaults) {
+   int sortKey = defaults->sortKey ? toFieldIndex(this->dynamicColumns, defaults->sortKey) : PID;
    ScreenSettings* ss = xMalloc(sizeof(ScreenSettings));
    *ss = (ScreenSettings) {
-      .name = xStrdup(name),
+      .name = xStrdup(defaults->name),
       .fields = xCalloc(LAST_PROCESSFIELD, sizeof(ProcessField)),
       .flags = 0,
-      .direction = 1,
+      .direction = (Process_fields[sortKey].defaultSortDesc) ? -1 : 1,
       .treeDirection = 1,
-      .sortKey = PID,
+      .sortKey = sortKey,
       .treeSortKey = PID,
       .treeView = false,
       .treeViewAlwaysByPID = false,
       .allBranchesCollapsed = false,
    };
 
-   ScreenSettings_readFields(ss, this->dynamicColumns, line);
+   ScreenSettings_readFields(ss, this->dynamicColumns, defaults->columns);
    this->screens[this->nScreens] = ss;
    this->nScreens++;
    this->screens = xRealloc(this->screens, sizeof(ScreenSettings*) * (this->nScreens + 1));
@@ -296,8 +297,7 @@ static ScreenSettings* Settings_defaultScreens(Settings* this) {
       return this->screens[0];
    for (unsigned int i = 0; i < Platform_numberOfDefaultScreens; i++) {
       const ScreenDefaults* defaults = &Platform_defaultScreens[i];
-      ScreenSettings* settings = Settings_newScreen(this, defaults->name, defaults->columns);
-      settings->sortKey = toFieldIndex(this->dynamicColumns, defaults->sortKey);
+      Settings_newScreen(this, defaults);
    }
    return this->screens[0];
 }
@@ -466,7 +466,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          this->topologyAffinity = !!atoi(option[1]);
       #endif
       } else if (strncmp(option[0], "screen:", 7) == 0) {
-         screen = Settings_newScreen(this, option[0] + 7, option[1]);
+         screen = Settings_newScreen(this, &(const ScreenDefaults){ .name = option[0] + 7, .columns = option[1] });
       } else if (String_eq(option[0], ".sort_key")) {
          if (screen)
             screen->sortKey = toFieldIndex(this->dynamicColumns, option[1]);
