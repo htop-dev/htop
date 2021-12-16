@@ -100,6 +100,5 @@ const ProcessClass UnsupportedProcess_class = {
       .compare = Process_compare
    },
    .writeField = UnsupportedProcess_writeField,
-   .getCommandStr = NULL,
    .compareByKey = UnsupportedProcess_compareByKey
 };
