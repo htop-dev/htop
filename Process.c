@@ -397,7 +397,7 @@ static inline char* stpcpyWithNewlineConversion(char* dstStr, const char* srcStr
  * This function makes the merged Command string. It also stores the offsets of the
  * basename, comm w.r.t the merged Command string - these offsets will be used by
  * Process_writeCommand() for coloring. The merged Command string is also
- * returned by Process_getCommandStr() for searching, sorting and filtering.
+ * returned by Process_getCommand() for searching, sorting and filtering.
  */
 void Process_makeCommandStr(Process* this) {
    ProcessMergedCommand* mc = &this->mergedCommand;
@@ -1011,7 +1011,7 @@ void Process_done(Process* this) {
 /* This function returns the string displayed in Command column, so that sorting
  * happens on what is displayed - whether comm, full path, basename, etc.. So
  * this follows Process_writeField(COMM) and Process_writeCommand */
-const char* Process_getCommandStr(const Process* this) {
+const char* Process_getCommand(const Process* this) {
    if ((Process_isUserlandThread(this) && this->settings->showThreadNames) || !this->mergedCommand.str) {
       return this->cmdline;
    }
@@ -1027,7 +1027,6 @@ const ProcessClass Process_class = {
       .compare = Process_compare
    },
    .writeField = Process_writeField,
-   .getCommandStr = Process_getCommandStr,
 };
 
 void Process_init(Process* this, const Settings* settings) {

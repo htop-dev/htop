@@ -296,18 +296,15 @@ extern int Process_uidDigits;
 typedef Process* (*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
 typedef int (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
-typedef const char* (*Process_GetCommandStr)(const Process*);
 
 typedef struct ProcessClass_ {
    const ObjectClass super;
    const Process_WriteField writeField;
    const Process_CompareByKey compareByKey;
-   const Process_GetCommandStr getCommandStr;
 } ProcessClass;
 
 #define As_Process(this_)                              ((const ProcessClass*)((this_)->super.klass))
 
-#define Process_getCommand(this_)                      (As_Process(this_)->getCommandStr ? As_Process(this_)->getCommandStr((const Process*)(this_)) : Process_getCommandStr((const Process*)(this_)))
 #define Process_compareByKey(p1_, p2_, key_)           (As_Process(p1_)->compareByKey ? (As_Process(p1_)->compareByKey(p1_, p2_, key_)) : Process_compareByKey_Base(p1_, p2_, key_))
 
 static inline pid_t Process_getParentPid(const Process* this) {
@@ -397,15 +394,14 @@ int Process_pidCompare(const void* v1, const void* v2);
 
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key);
 
-// Avoid direct calls, use Process_getCommand instead
-const char* Process_getCommandStr(const Process* this);
+const char* Process_getCommand(const Process* this);
 
 void Process_updateComm(Process* this, const char* comm);
 void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart, int basenameEnd);
 void Process_updateExe(Process* this, const char* exe);
 
 /* This function constructs the string that is displayed by
- * Process_writeCommand and also returned by Process_getCommandStr */
+ * Process_writeCommand and also returned by Process_getCommand */
 void Process_makeCommandStr(Process* this);
 
 void Process_writeCommand(const Process* this, int attr, int baseAttr, RichString* str);
