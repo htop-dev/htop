@@ -255,6 +255,9 @@ typedef struct Process_ {
    unsigned int tree_depth;
    unsigned int tree_index;
 
+   /* Has no known parent process */
+   bool isRoot;
+
    /*
     * Internal state for merged Command display
     */
