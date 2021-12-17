@@ -1473,8 +1473,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       {
          bool prev = proc->usesDeletedLib;
 
-         if ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) ||
-             (settings->highlightDeletedExe && !proc->procExeDeleted && !proc->isKernelThread && !proc->isUserlandThread)) {
+         if (!proc->isKernelThread && !proc->isUserlandThread &&
+            ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted))) {
+
             // Check if we really should recalculate the M_LRS value for this process
             uint64_t passedTimeInMs = pl->realtimeMs - lp->last_mlrs_calctime;
 
@@ -1487,6 +1488,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          } else {
             /* Copy from process structure in threads and reset if setting got disabled */
             proc->usesDeletedLib = (proc->isUserlandThread && parent) ? parent->usesDeletedLib : false;
+            lp->m_lrs = (proc->isUserlandThread && parent) ? ((const LinuxProcess*)parent)->m_lrs : 0;
          }
 
          proc->mergedCommand.exeChanged |= prev ^ proc->usesDeletedLib;
