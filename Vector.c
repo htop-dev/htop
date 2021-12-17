@@ -178,10 +178,10 @@ void Vector_quickSortCustomCompare(Vector* this, Object_Compare compare) {
    assert(Vector_isConsistent(this));
 }
 
-void Vector_insertionSort(Vector* this) {
-   assert(this->type->compare);
+void Vector_insertionSortCustomCompare(Vector* this, Object_Compare compare) {
+   assert(compare);
    assert(Vector_isConsistent(this));
-   insertionSort(this->array, 0, this->items - 1, this->type->compare);
+   insertionSort(this->array, 0, this->items - 1, compare);
    assert(Vector_isConsistent(this));
 }
 
@@ -337,4 +337,15 @@ void Vector_splice(Vector* this, Vector* from) {
    for (int j = 0; j < from->items; j++) {
       this->array[olditems + j] = from->array[j];
    }
+}
+
+void Vector_swap(Vector** a, Vector** b) {
+   assert(Vector_isConsistent(*a));
+   assert(Vector_isConsistent(*b));
+   assert((*a)->type == (*b)->type);
+   assert((*a)->owner == (*b)->owner);
+
+   Vector* tmp = *a;
+   *a = *b;
+   *b = tmp;
 }

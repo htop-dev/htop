@@ -240,6 +240,9 @@ typedef struct Process_ {
    /* Whether to show children of this process in tree-mode */
    bool showChildren;
 
+   /* The number of processes merged into this one. */
+   unsigned int merged;
+
    /*
     * Internal time counts for showing new and exited processes.
     */
@@ -284,6 +287,11 @@ typedef struct ProcessFieldData_ {
 // Implemented in platform-specific code:
 void Process_writeField(const Process* this, RichString* str, ProcessField field);
 int Process_compare(const void* v1, const void* v2);
+/* returns 1 on match and if v1 is the master process,
+ *         2 on match and if v2 is the master process,
+ *         0 else */
+int Process_sameApplication(const Process* p1, const Process* p2);
+void Process_mergeData(Process* p1, const Process* p2);
 void Process_delete(Object* cast);
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 #define PROCESS_MIN_PID_DIGITS 5
@@ -297,12 +305,16 @@ typedef Process* (*Process_New)(const struct Settings_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
 typedef int (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
 typedef const char* (*Process_GetCommandStr)(const Process*);
+typedef int (*Process_SameApplication)(const Process*, const Process*);
+typedef void (*Process_MergeData)(Process*, const Process*);
 
 typedef struct ProcessClass_ {
    const ObjectClass super;
    const Process_WriteField writeField;
    const Process_CompareByKey compareByKey;
    const Process_GetCommandStr getCommandStr;
+   const Process_SameApplication sameApplication;
+   const Process_MergeData mergeData;
 } ProcessClass;
 
 #define As_Process(this_)                              ((const ProcessClass*)((this_)->super.klass))

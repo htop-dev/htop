@@ -36,7 +36,10 @@ static inline void Vector_quickSort(Vector* this) {
    Vector_quickSortCustomCompare(this, this->type->compare);
 }
 
-void Vector_insertionSort(Vector* this);
+void Vector_insertionSortCustomCompare(Vector* this, Object_Compare compare);
+static inline void Vector_insertionSort(Vector* this) {
+   Vector_insertionSortCustomCompare(this, this->type->compare);
+}
 
 void Vector_insert(Vector* this, int idx, void* data_);
 
@@ -77,5 +80,7 @@ void Vector_add(Vector* this, void* data_);
 int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compare);
 
 void Vector_splice(Vector* this, Vector* from);
+
+void Vector_swap(Vector** a, Vector** b);
 
 #endif
