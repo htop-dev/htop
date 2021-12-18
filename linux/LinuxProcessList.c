@@ -1552,6 +1552,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
             Process_updateCmdline(proc, NULL, 0, 0);
          } else if (!LinuxProcessList_readCmdlineFile(proc, procFd)) {
             Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
+         } else if (Process_isThread(proc)) {
+            if (settings->showThreadNames && statCommand[0]) {
+               Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
+            }
          }
 
          Process_fillStarttimeBuffer(proc);
