@@ -492,7 +492,4 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
 
    // Set UID column width based on max UID.
    Process_setUidColumnWidth(maxUid);
-
-   if (this->settings->ss->treeView)
-      ProcessList_buildTree(this);
 }
