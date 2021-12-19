@@ -44,7 +44,8 @@ typedef struct ProcessList_ {
    const Settings* settings;
 
    Vector* processes;         /* all known processes; sort order can vary and differ from display order */
-   Vector* displayList;       /* process tree flattened in display order (borrowed) */
+   Vector* displayList;       /* process tree flattened in display order (borrowed);
+                                 updated in ProcessList_updateDisplayList when rebuilding panel */
    Hashtable* processTable;   /* fast known process lookup by PID */
    UsersTable* usersTable;
 
