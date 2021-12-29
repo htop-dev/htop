@@ -557,9 +557,24 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
-         || (incFilter && !(String_contains_i(Process_getCommand(p), incFilter)))
-         || (this->pidMatchList && !Hashtable_get(this->pidMatchList, p->tgid)) )
+         || (incFilter && !(String_contains_i(Process_getCommand(p), incFilter))) ) {
          continue;
+      }
+
+      if (this->pidMatchList && !Hashtable_get(this->pidMatchList, p->tgid)) {
+         /* Follow processes parents to find matches to process match list */
+         Process* currProc = p;
+         bool found = Hashtable_get(this->pidMatchList, currProc->tgid);
+         while (!Process_isChildOf(currProc, 0) && !found) {
+            pid_t ppid = Process_getParentPid(currProc);
+            currProc = ProcessList_findProcess(this, ppid);
+            if (!currProc)
+               break;
+            found = Hashtable_get(this->pidMatchList, currProc->tgid);
+         }
+         if (!found)
+            continue;
+      }
 
       Panel_set(this->panel, idx, (Object*)p);
 
