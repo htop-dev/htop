@@ -229,10 +229,7 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
          process->show = false;
       }
 
-      int s = Vector_size(this->displayList);
       Vector_add(this->displayList, process);
-
-      assert(Vector_size(this->displayList) == s + 1); (void)s;
 
       int nextIndent = indent | (1 << level);
       ProcessList_buildTreeBranch(this, process->pid, level + 1, (i < lastShown) ? nextIndent : indent, process->show && process->showChildren);
