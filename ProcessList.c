@@ -557,9 +557,8 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
       if ( (!p->show)
          || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
-         || (incFilter && !(String_contains_i(Process_getCommand(p), incFilter))) ) {
+         || (incFilter && !(String_contains_i(Process_getCommand(p), incFilter))) )
          continue;
-      }
 
       if (this->pidMatchList && !Hashtable_get(this->pidMatchList, p->tgid)) {
          /* Follow processes parents to find matches to process match list */
