@@ -274,13 +274,17 @@ static void ProcessList_buildTree(ProcessList* this) {
 
       // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)
       // on Mac OS X 10.11.6) regard this process as root.
-      if (process->pid == ppid)
+      if (process->pid == ppid) {
          process->isRoot = true;
+         continue;
+      }
 
       // On Linux both the init process (pid 1) and the root UMH kernel thread (pid 2)
       // use a ppid of 0. As that PID can't exist, we can skip searching for it.
-      if (!ppid)
+      if (!ppid) {
          process->isRoot = true;
+         continue;
+      }
 
       // We don't know about its parent for whatever reason
       if (ProcessList_findProcess(this, ppid) == NULL)
