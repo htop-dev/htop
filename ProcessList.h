@@ -48,8 +48,6 @@ typedef struct ProcessList_ {
    Hashtable* processTable;   /* fast known process lookup by PID */
    UsersTable* usersTable;
 
-   Hashtable* displayTreeSet;
-   Hashtable* draftingTreeSet;
    bool needsSort;
 
    Hashtable* dynamicMeters;  /* runtime-discovered meters */
