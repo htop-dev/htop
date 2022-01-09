@@ -19,9 +19,9 @@ in the source distribution for its full text.
 
 static const int MemoryMeter_attributes[] = {
    MEMORY_USED,
-   MEMORY_BUFFERS,
    MEMORY_SHARED,
    MEMORY_COMPRESSED,
+   MEMORY_BUFFERS,
    MEMORY_CACHE
 };
 
@@ -66,10 +66,6 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " used:");
    RichString_appendAscii(out, CRT_colors[MEMORY_USED], buffer);
 
-   Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " buffers:");
-   RichString_appendAscii(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
-
    /* shared memory is not supported on all platforms */
    if (isNonnegative(this->values[MEMORY_METER_SHARED])) {
       Meter_humanUnit(buffer, this->values[MEMORY_METER_SHARED], sizeof(buffer));
@@ -83,6 +79,10 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " compressed:");
       RichString_appendAscii(out, CRT_colors[MEMORY_COMPRESSED], buffer);
    }
+
+   Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " buffers:");
+   RichString_appendAscii(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
 
    Meter_humanUnit(buffer, this->values[MEMORY_METER_CACHE], sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");

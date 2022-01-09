@@ -11,9 +11,9 @@ in the source distribution for its full text.
 
 typedef enum {
    MEMORY_METER_USED = 0,
-   MEMORY_METER_BUFFERS = 1,
-   MEMORY_METER_SHARED = 2,
-   MEMORY_METER_COMPRESSED = 3,
+   MEMORY_METER_SHARED = 1,
+   MEMORY_METER_COMPRESSED = 2,
+   MEMORY_METER_BUFFERS = 3,
    MEMORY_METER_CACHE = 4,
    MEMORY_METER_AVAILABLE = 5,
    MEMORY_METER_ITEMCOUNT = 6, // number of entries in this enum

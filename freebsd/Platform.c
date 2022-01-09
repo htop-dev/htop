@@ -229,9 +229,9 @@ void Platform_setMemoryValues(Meter* this) {
 
    this->total = host->totalMem;
    this->values[MEMORY_METER_USED] = host->usedMem;
-   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
    this->values[MEMORY_METER_SHARED] = host->sharedMem;
    // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
    this->values[MEMORY_METER_CACHE] = host->cachedMem;
    // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 
