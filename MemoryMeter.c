@@ -41,8 +41,10 @@ static void MemoryMeter_updateValues(Meter* this) {
       "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
    this->curItems = MEMORY_METER_AVAILABLE;
 
-   /* we actually want to show "used + compressed" */
+   /* we actually want to show "used + shared + compressed" */
    double used = this->values[MEMORY_METER_USED];
+   if (isPositive(this->values[MEMORY_METER_SHARED]))
+      used += this->values[MEMORY_METER_SHARED];
    if (isPositive(this->values[MEMORY_METER_COMPRESSED]))
       used += this->values[MEMORY_METER_COMPRESSED];
 
