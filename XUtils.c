@@ -161,35 +161,6 @@ void String_freeArray(char** s) {
    free(s);
 }
 
-char* String_getToken(const char* line, const unsigned short int numMatch) {
-   const size_t len = strlen(line);
-   char inWord = 0;
-   unsigned short int count = 0;
-   char match[50];
-
-   size_t foundCount = 0;
-
-   for (size_t i = 0; i < len; i++) {
-      char lastState = inWord;
-      inWord = line[i] == ' ' ? 0 : 1;
-
-      if (lastState == 0 && inWord == 1)
-         count++;
-
-      if (inWord == 1) {
-         if (count == numMatch && line[i] != ' ' && line[i] != '\0' && line[i] != '\n' && line[i] != (char)EOF) {
-            if (foundCount == sizeof(match) / sizeof(match[0]) - 1)
-               break;
-            match[foundCount] = line[i];
-            foundCount++;
-         }
-      }
-   }
-
-   match[foundCount] = '\0';
-   return xStrdup(match);
-}
-
 char* String_readLine(FILE* fd) {
    const size_t step = 1024;
    size_t bufSize = step;
