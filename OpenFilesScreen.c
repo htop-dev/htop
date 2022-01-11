@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "OpenFilesScreen.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -197,10 +198,11 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    fclose(fd);
 
    int wstatus;
-   if (waitpid(child, &wstatus, 0) == -1) {
-      pdata->error = 1;
-      return pdata;
-   }
+   while (waitpid(child, &wstatus, 0) == -1)
+      if (errno != EINTR) {
+         pdata->error = 1;
+         return pdata;
+      }
 
    if (!WIFEXITED(wstatus)) {
       pdata->error = 1;

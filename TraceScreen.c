@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "TraceScreen.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -47,7 +48,9 @@ void TraceScreen_delete(Object* cast) {
    TraceScreen* this = (TraceScreen*) cast;
    if (this->child > 0) {
       kill(this->child, SIGTERM);
-      waitpid(this->child, NULL, 0);
+      while (waitpid(this->child, NULL, 0) == -1)
+         if (errno != EINTR)
+            break;
    }
 
    if (this->strace) {
