@@ -54,8 +54,6 @@ char** String_split(const char* s, char sep, size_t* n);
 
 void String_freeArray(char** s);
 
-char* String_getToken(const char* line, unsigned short int numMatch) ATTR_MALLOC;
-
 char* String_readLine(FILE* fd) ATTR_MALLOC;
 
 /* Always null-terminates dest. Caller must pass a strictly positive size. */
