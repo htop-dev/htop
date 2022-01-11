@@ -496,7 +496,7 @@ This performs some pattern-based replacements to shorten the displayed string an
    \fB/*.slice\fR is shortened to \fB/[*]\fR (exceptions below)
    \fB/system.slice\fR is shortened to \fB/[S]\fR
    \fB/user.slice\fR is shortened to \fB/[U]\fR
-   \fB/user-*.slice\fR is shortened to \fB/[U:*]\fR (directly preceeding \fB/[U]\fR before dropped)
+   \fB/user-*.slice\fR is shortened to \fB/[U:*]\fR (directly preceding \fB/[U]\fR before dropped)
    \fB/machine.slice\fR is shortened to \fB/[M]\fR
    \fB/machine-*.scope\fR is shortened to \fB/[SNC:*]\fR (SNC: systemd nspawn container), uppercase for the monitor
    \fB/lxc.monitor.*\fR is shortened to \fB/[LXC:*]\fR
