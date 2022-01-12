@@ -603,7 +603,7 @@ static Htop_Reaction actionHelp(State* st) {
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[SWAP], "used");
 #ifdef HTOP_LINUX
-   addattrstr(CRT_colors[BAR_SHADOW], "/");
+   addstr("/");
    addattrstr(CRT_colors[SWAP_CACHE], "cache");
    addattrstr(CRT_colors[BAR_SHADOW], "                                    used/total");
 #else
