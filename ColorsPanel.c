@@ -35,6 +35,7 @@ static const char* const ColorSchemeNames[] = {
    "Light Terminal",
    "MC",
    "Black Night",
+   "Red/Green Colorblind",
    "Broken Gray",
    NULL
 };
