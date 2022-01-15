@@ -18,6 +18,7 @@ typedef struct FreeBSDProcess_ {
    Process super;
    int   jid;
    char* jname;
+   char* emul;
 } FreeBSDProcess;
 
 extern const ProcessClass FreeBSDProcess_class;

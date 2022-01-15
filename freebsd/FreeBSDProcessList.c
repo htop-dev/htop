@@ -549,6 +549,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          }
       }
 
+      free_and_xStrdup(&fp->emul, kproc->ki_emul);
+
       // from FreeBSD source /src/usr.bin/top/machine.c
       proc->m_virt = kproc->ki_size / ONE_K;
       proc->m_resident = kproc->ki_rssize * pageSizeKb;

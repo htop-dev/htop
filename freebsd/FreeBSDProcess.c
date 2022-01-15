@@ -49,6 +49,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [JID] = { .name = "JID", .title = "JID", .description = "Jail prison ID", .flags = 0, .pidColumn = true, },
    [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
+   [EMULATION] = { .name = "EMULATION", .title = "EMULATION        ", .description = "System call emulation environment (ABI)", .flags = 0, },
 };
 
 Process* FreeBSDProcess_new(const Settings* settings) {
@@ -77,6 +78,9 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    case JAIL:
       Process_printLeftAlignedField(str, attr, fp->jname ? fp->jname : "N/A", 11);
       return;
+   case EMULATION:
+      Process_printLeftAlignedField(str, attr, fp->emul ? fp->emul : "N/A", 16);
+      return;
    default:
       Process_writeField(this, str, field);
       return;
@@ -94,6 +98,8 @@ static int FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, Pro
       return SPACESHIP_NUMBER(p1->jid, p2->jid);
    case JAIL:
       return SPACESHIP_NULLSTR(p1->jname, p2->jname);
+   case EMULATION:
+      return SPACESHIP_NULLSTR(p1->emul, p2->emul);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }
