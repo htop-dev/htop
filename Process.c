@@ -516,7 +516,7 @@ void Process_makeCommandStr(Process* this) {
    assert(cmdlineBasenameStart <= (int)strlen(cmdline));
 
    if (!showMergedCommand || !procExe || !procComm) { /* fall back to cmdline */
-      if ((showMergedCommand || (Process_isUserlandThread(this) && showThreadNames)) && procComm && strlen(procComm)) { /* set or prefix column with comm */
+      if ((showMergedCommand || (Process_isUserlandThread(this) && showThreadNames)) && procComm && strlen(procComm)) { /* set column to or prefix it with comm */
          if (strncmp(cmdline + cmdlineBasenameStart, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
             WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
             str = stpcpy(str, procComm);
