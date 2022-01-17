@@ -33,7 +33,9 @@ static void SwapMeter_updateValues(Meter* this) {
    this->values[SWAP_METER_FRONTSWAP] = NAN;   /* 'frontswap' not present on all platforms */
    Platform_setSwapValues(this);
 
-   written = Meter_humanUnit(buffer, this->values[SWAP_METER_USED], size);
+   this->summaryValue = this->values[SWAP_METER_USED];
+
+   written = Meter_humanUnit(buffer, this->summaryValue, size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');

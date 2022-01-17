@@ -41,6 +41,7 @@ Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type
    this->curItems = type->maxItems;
    this->curAttributes = NULL;
    this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
+   this->summaryValue = NAN;
    this->total = type->total;
    this->caption = xStrdup(type->caption);
    if (Meter_initFn(this)) {
@@ -330,7 +331,9 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       for (int i = 0; i < nValues - 1; i++)
          data->values[i] = data->values[i + 1];
 
-      if (Meter_comprisedValues(this)) {
+      if (!isnan(this->summaryValue)) {
+         data->values[nValues - 1] = this->summaryValue;
+      } else if (Meter_comprisedValues(this)) {
          data->values[nValues - 1] = (this->curItems > 0) ? this->values[this->curItems - 1] : 0.0;
       } else {
          double value = 0.0;

@@ -117,6 +117,7 @@ struct Meter_ {
    const int* curAttributes;
    char txtBuffer[METER_TXTBUFFER_LEN];
    double* values;
+   double summaryValue;
    double total;
    void* meterData;
 };
