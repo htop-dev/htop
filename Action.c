@@ -570,7 +570,7 @@ static Htop_Reaction actionHelp(State* st) {
 
    addattrstr(CRT_colors[BAR_BORDER], "[");
    if (st->settings->detailedCPUTime) {
-      addattrstr(CRT_colors[CPU_NICE_TEXT], "low"); addstr("/");
+      addattrstr(CRT_colors[CPU_NICE], "low"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
       addattrstr(CRT_colors[CPU_SYSTEM], "kernel"); addstr("/");
       addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
@@ -580,7 +580,7 @@ static Htop_Reaction actionHelp(State* st) {
       addattrstr(CRT_colors[CPU_IOWAIT], "io-wait");
       addattrstr(CRT_colors[BAR_SHADOW], " used%");
    } else {
-      addattrstr(CRT_colors[CPU_NICE_TEXT], "low-priority"); addstr("/");
+      addattrstr(CRT_colors[CPU_NICE], "low-priority"); addstr("/");
       addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
       addattrstr(CRT_colors[CPU_SYSTEM], "kernel"); addstr("/");
       addattrstr(CRT_colors[CPU_GUEST], "virtualized");
@@ -591,7 +591,7 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddstr(line++, 0, "Memory bar:    ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addattrstr(CRT_colors[MEMORY_USED], "used"); addstr("/");
-   addattrstr(CRT_colors[MEMORY_BUFFERS_TEXT], "buffers"); addstr("/");
+   addattrstr(CRT_colors[MEMORY_BUFFERS], "buffers"); addstr("/");
    addattrstr(CRT_colors[MEMORY_SHARED], "shared"); addstr("/");
    addattrstr(CRT_colors[MEMORY_CACHE], "cache");
    addattrstr(CRT_colors[BAR_SHADOW], "                     used/total");
