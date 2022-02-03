@@ -493,6 +493,8 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
 
    unsigned long long last_read = process->io_read_bytes;
    unsigned long long last_write = process->io_write_bytes;
+   unsigned long long time_delta = realtimeMs > process->io_last_scan_time_ms ? realtimeMs - process->io_last_scan_time_ms : 0;
+
    char* buf = buffer;
    const char* line;
    while ((line = strsep(&buf, "\n")) != NULL) {
@@ -502,7 +504,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
             process->io_rchar = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "ead_bytes: ")) {
             process->io_read_bytes = strtoull(line + 12, NULL, 10);
-            process->io_rate_read_bps = (process->io_read_bytes - last_read) * /*ms to s*/1000 / (realtimeMs - process->io_last_scan_time_ms);
+            process->io_rate_read_bps = time_delta ? (process->io_read_bytes - last_read) * /*ms to s*/1000. / time_delta : NAN;
          }
          break;
       case 'w':
@@ -510,7 +512,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
             process->io_wchar = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "rite_bytes: ")) {
             process->io_write_bytes = strtoull(line + 13, NULL, 10);
-            process->io_rate_write_bps = (process->io_write_bytes - last_write) * /*ms to s*/1000 / (realtimeMs - process->io_last_scan_time_ms);
+            process->io_rate_write_bps = time_delta ? (process->io_write_bytes - last_write) * /*ms to s*/1000. / time_delta : NAN;
          }
          break;
       case 's':
