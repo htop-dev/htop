@@ -13,6 +13,8 @@ in the source distribution for its full text.
 #include "darwin/DarwinProcessList.h"
 
 
+#define PROCESS_FLAG_TTY 0x00000100
+
 typedef struct DarwinProcess_ {
    Process super;
 

@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <mach/mach.h>
+#include <sys/dirent.h>
 
 #include "CRT.h"
 #include "Process.h"
@@ -26,7 +27,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PPID] = { .name = "PPID", .title = "PPID", .description = "Parent process ID", .flags = 0, .pidColumn = true, },
    [PGRP] = { .name = "PGRP", .title = "PGRP", .description = "Process group ID", .flags = 0, .pidColumn = true, },
    [SESSION] = { .name = "SESSION", .title = "SID", .description = "Process's session ID", .flags = 0, .pidColumn = true, },
-   [TTY] = { .name = "TTY", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
+   [TTY] = { .name = "TTY", .title = "TTY      ", .description = "Controlling terminal", .flags = PROCESS_FLAG_TTY, },
    [TPGID] = { .name = "TPGID", .title = "TPGID", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, .pidColumn = true, },
    [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, .defaultSortDesc = true, },
    [MAJFLT] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, .defaultSortDesc = true, },
@@ -276,6 +277,18 @@ static long long int nanosecondsToCentiseconds(uint64_t nanoseconds) {
    return nanoseconds / nanoseconds_per_second * centiseconds_per_second;
 }
 
+static char* DarwinProcess_getDevname(dev_t dev) {
+   if (dev == NODEV) {
+      return NULL;
+   }
+   char buf[sizeof("/dev/") + MAXNAMLEN];
+   char *name = devname_r(dev, S_IFCHR, buf, MAXNAMLEN);
+   if (name) {
+      return xStrdup(name);
+   }
+   return NULL;
+}
+
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists) {
    DarwinProcess* dp = (DarwinProcess*)proc;
 
@@ -306,15 +319,8 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       proc->isKernelThread = false;
       proc->isUserlandThread = false;
       dp->translated = ps->kp_proc.p_flag & P_TRANSLATED;
-
       proc->tty_nr = ps->kp_eproc.e_tdev;
-      const char* name = (ps->kp_eproc.e_tdev != NODEV) ? devname(ps->kp_eproc.e_tdev, S_IFCHR) : NULL;
-      if (!name) {
-         free(proc->tty_name);
-         proc->tty_name = NULL;
-      } else {
-         free_and_xStrdup(&proc->tty_name, name);
-      }
+      proc->tty_name = NULL;
 
       proc->starttime_ctime = ep->p_starttime.tv_sec;
       Process_fillStarttimeBuffer(proc);
@@ -324,6 +330,23 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
 
       if (proc->settings->ss->flags & PROCESS_FLAG_CWD) {
          DarwinProcess_updateCwd(ep->p_pid, proc);
+      }
+   }
+
+   if (proc->tty_name == NULL && (dev_t)proc->tty_nr != NODEV) {
+      /* The call to devname() is extremely expensive (due to lstat)
+       * and represents ~95% of htop's CPU usage when there is high
+       * process turnover.
+       *
+       * To mitigate this we only fetch TTY information if the TTY
+       * field is enabled in the settings.
+       */
+      if (proc->settings->ss->flags & PROCESS_FLAG_TTY) {
+         proc->tty_name = DarwinProcess_getDevname(proc->tty_nr);
+         if (!proc->tty_name) {
+            /* devname failed: prevent us from calling it again */
+            proc->tty_nr = NODEV;
+         }
       }
    }
 
