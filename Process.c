@@ -1095,13 +1095,6 @@ bool Process_sendSignal(Process* this, Arg sgn) {
    return kill(this->pid, sgn.i) == 0;
 }
 
-int Process_pidCompare(const void* v1, const void* v2) {
-   const Process* p1 = (const Process*)v1;
-   const Process* p2 = (const Process*)v2;
-
-   return SPACESHIP_NUMBER(p1->pid, p2->pid);
-}
-
 int Process_compare(const void* v1, const void* v2) {
    const Process* p1 = (const Process*)v1;
    const Process* p2 = (const Process*)v2;

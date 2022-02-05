@@ -22,6 +22,11 @@ typedef struct Vector_ {
    int arraySize;
    int growthRate;
    int items;
+   /* lowest index of a pending soft remove/delete operation,
+      used to speed up compaction */
+   int dirty_index;
+   /* count of soft deletes, required for Vector_count to work in debug mode */
+   int dirty_count;
    bool owner;
 } Vector;
 
@@ -44,6 +49,15 @@ Object* Vector_take(Vector* this, int idx);
 
 Object* Vector_remove(Vector* this, int idx);
 
+/* Vector_softRemove marks the item at index idx for deletion without
+   reclaiming any space. If owned, the item is immediately freed.
+
+   Vector_compact must be called to reclaim space.*/
+Object* Vector_softRemove(Vector* this, int idx);
+
+/* Vector_compact reclaims space free'd up by Vector_softRemove, if any. */
+void Vector_compact(Vector* this);
+
 void Vector_moveUp(Vector* this, int idx);
 
 void Vector_moveDown(Vector* this, int idx);
@@ -54,7 +68,11 @@ void Vector_set(Vector* this, int idx, void* data_);
 
 Object* Vector_get(const Vector* this, int idx);
 int Vector_size(const Vector* this);
-unsigned int Vector_count(const Vector* this);
+
+/* Vector_countEquals returns true if the number of non-NULL items
+   in the Vector is equal to expectedCount. This is only for debugging
+   and consistency checks. */
+bool Vector_countEquals(const Vector* this, unsigned int expectedCount);
 
 #else /* NDEBUG */
 
