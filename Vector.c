@@ -29,6 +29,8 @@ Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
    this->items = 0;
    this->type = type;
    this->owner = owner;
+   this->dirty_index = -1;
+   this->dirty_count = 0;
    return this;
 }
 
@@ -44,10 +46,21 @@ void Vector_delete(Vector* this) {
    free(this);
 }
 
+static inline bool Vector_isDirty(const Vector* this) {
+   if (this->dirty_count > 0) {
+      assert(0 <= this->dirty_index && this->dirty_index < this->items);
+      assert(this->dirty_count <= this->items);
+      return true;
+   }
+   assert(this->dirty_index == -1);
+   return false;
+}
+
 #ifndef NDEBUG
 
 static bool Vector_isConsistent(const Vector* this) {
    assert(this->items <= this->arraySize);
+   assert(!Vector_isDirty(this));
 
    if (this->owner) {
       for (int i = 0; i < this->items; i++) {
@@ -60,15 +73,14 @@ static bool Vector_isConsistent(const Vector* this) {
    return true;
 }
 
-unsigned int Vector_count(const Vector* this) {
-   unsigned int items = 0;
+bool Vector_countEquals(const Vector* this, unsigned int expectedCount) {
+   unsigned int n = 0;
    for (int i = 0; i < this->items; i++) {
       if (this->array[i]) {
-         items++;
+         n++;
       }
    }
-   assert(items == (unsigned int)this->items);
-   return items;
+   return n == expectedCount;
 }
 
 Object* Vector_get(const Vector* this, int idx) {
@@ -88,13 +100,16 @@ int Vector_size(const Vector* this) {
 void Vector_prune(Vector* this) {
    assert(Vector_isConsistent(this));
    if (this->owner) {
-      for (int i = 0; i < this->items; i++)
+      for (int i = 0; i < this->items; i++) {
          if (this->array[i]) {
             Object_delete(this->array[i]);
-            //this->array[i] = NULL;
+            this->array[i] = NULL;
          }
+      }
    }
    this->items = 0;
+   this->dirty_index = -1;
+   this->dirty_count = 0;
 }
 
 //static int comparisons = 0;
@@ -240,6 +255,58 @@ Object* Vector_remove(Vector* this, int idx) {
    } else {
       return removed;
    }
+}
+
+Object* Vector_softRemove(Vector* this, int idx) {
+   assert(idx >= 0 && idx < this->items);
+
+   Object* removed = this->array[idx];
+   assert(removed);
+   if (removed) {
+      this->array[idx] = NULL;
+
+      this->dirty_count++;
+      if (this->dirty_index < 0 || idx < this->dirty_index) {
+         this->dirty_index = idx;
+      }
+
+      if (this->owner) {
+         Object_delete(removed);
+         return NULL;
+      }
+   }
+
+   return removed;
+}
+
+void Vector_compact(Vector* this) {
+   if (!Vector_isDirty(this)) {
+      return;
+   }
+
+   const int size = this->items;
+   assert(0 <= this->dirty_index && this->dirty_index < size);
+   assert(this->array[this->dirty_index] == NULL);
+
+   int idx = this->dirty_index;
+
+   /* one deletion: use memmove, which should be faster */
+   if (this->dirty_count == 1) {
+      memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx) * sizeof(this->array[0]));
+   } else {
+      /* multiple deletions */
+      for (int i = idx + 1; i < size; i++) {
+         if (this->array[i]) {
+            this->array[idx++] = this->array[i];
+         }
+      }
+   }
+
+   this->items -= this->dirty_count;
+   this->dirty_index = -1;
+   this->dirty_count = 0;
+
+   assert(Vector_isConsistent(this));
 }
 
 void Vector_moveUp(Vector* this, int idx) {
