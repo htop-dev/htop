@@ -1446,21 +1446,21 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if (parent && pid == parent->pid)
          continue;
 
+#ifdef HAVE_OPENAT
+      int procFd = openat(dirFd, entry->d_name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+      if (procFd < 0)
+         continue;
+#else
+      char procFd[4096];
+      xSnprintf(procFd, sizeof(procFd), "%s/%s", dirFd, entry->d_name);
+#endif
+
       bool preExisting;
       Process* proc = ProcessList_getProcess(pl, pid, &preExisting, LinuxProcess_new);
       LinuxProcess* lp = (LinuxProcess*) proc;
 
       proc->tgid = parent ? parent->pid : pid;
       proc->isUserlandThread = proc->pid != proc->tgid;
-
-#ifdef HAVE_OPENAT
-      int procFd = openat(dirFd, entry->d_name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
-      if (procFd < 0)
-         goto errorReadingProcess;
-#else
-      char procFd[4096];
-      xSnprintf(procFd, sizeof(procFd), "%s/%s", dirFd, entry->d_name);
-#endif
 
       LinuxProcessList_recurseProcTree(this, procFd, "task", proc, period);
 
