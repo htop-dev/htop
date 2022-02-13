@@ -289,6 +289,8 @@ highlighting can be configured for stale executables (cf. EXE column below).
 .TP
 .B COMM
 The command name of the process obtained from /proc/[pid]/comm, if readable.
+
+Requires Linux kernel 2.6.33 or newer.
 .TP
 .B EXE
 The abbreviated basename of the executable of the process, obtained from
@@ -310,6 +312,8 @@ been replaced or deleted.
 
 This additional color markup can be configured in the "Display Options" section of
 the setup screen.
+
+Displaying EXE requires CAP_SYS_PTRACE and PTRACE_MODE_READ_FSCRED.
 .TP
 .B PID
 The process ID.
@@ -526,12 +530,6 @@ The percentage of time spent waiting for the completion of synchronous block I/O
 .TP
 .B PERCENT_SWAP_DELAY (SWAPD%)
 The percentage of time spent swapping in pages. Requires CAP_NET_ADMIN.
-.TP
-.B COMM
-The command name for the process. Requires Linux kernel 2.6.33 or newer.
-.TP
-.B EXE
-The executable file of the process as reported by the kernel. Requires CAP_SYS_PTRACE and PTRACE_MODE_READ_FSCRED.
 .TP
 .B AGRP
 The autogroup identifier for the process. Requires Linux CFS to be enabled.
