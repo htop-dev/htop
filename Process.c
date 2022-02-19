@@ -741,7 +741,9 @@ void Process_printPercentage(float val, char* buffer, int n, int* attr) {
          xSnprintf(buffer, n, "%4.1f ", val);
       } else {
          *attr = CRT_colors[PROCESS_MEGABYTES];
-         xSnprintf(buffer, n, "%4d ", (int)val);
+         if (val < 100.0F)
+            val = 100.0F; // Don't round down and display "val" as "99".
+         xSnprintf(buffer, n, "%4.0f ", val);
       }
    } else {
       *attr = CRT_colors[PROCESS_SHADOW];
