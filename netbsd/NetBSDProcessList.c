@@ -318,8 +318,11 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
 
       proc->m_virt = kproc->p_vm_vsize;
       proc->m_resident = kproc->p_vm_rssize;
+
       proc->percent_mem = (proc->m_resident * pageSizeKB) / (double)(this->super.totalMem) * 100.0;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.activeCPUs * 100.0);
+      Process_updateCPUFieldWidths(proc->percent_cpu);
+
       proc->nlwp = kproc->p_nlwps;
       proc->nice = kproc->p_nice - 20;
       proc->time = 100 * (kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000));

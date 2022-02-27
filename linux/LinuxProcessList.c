@@ -1548,6 +1548,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       float percent_cpu = (period < 1E-6) ? 0.0F : ((lp->utime + lp->stime - lasttimes) / period * 100.0);
       proc->percent_cpu = CLAMP(percent_cpu, 0.0F, activeCPUs * 100.0F);
       proc->percent_mem = proc->m_resident / (double)(pl->totalMem) * 100.0;
+      Process_updateCPUFieldWidths(proc->percent_cpu);
 
       if (! LinuxProcessList_updateUser(pl, proc, procFd))
          goto errorReadingProcess;

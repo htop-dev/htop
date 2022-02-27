@@ -732,22 +732,22 @@ void Process_printLeftAlignedField(RichString* str, int attr, const char* conten
    RichString_appendChr(str, attr, ' ', width + 1 - columns);
 }
 
-void Process_printPercentage(float val, char* buffer, int n, int* attr) {
+void Process_printPercentage(float val, char* buffer, int n, uint8_t width, int* attr) {
    if (val >= 0) {
       if (val < 99.9F) {
          if (val < 0.05F) {
             *attr = CRT_colors[PROCESS_SHADOW];
          }
-         xSnprintf(buffer, n, "%4.1f ", val);
+         xSnprintf(buffer, n, "%*.1f ", width, val);
       } else {
          *attr = CRT_colors[PROCESS_MEGABYTES];
          if (val < 100.0F)
             val = 100.0F; // Don't round down and display "val" as "99".
-         xSnprintf(buffer, n, "%4.0f ", val);
+         xSnprintf(buffer, n, "%*.0f ", width, val);
       }
    } else {
       *attr = CRT_colors[PROCESS_SHADOW];
-      xSnprintf(buffer, n, " N/A ");
+      xSnprintf(buffer, n, "%*.*s ", width, width, "N/A");
    }
 }
 
@@ -888,13 +888,13 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 
       xSnprintf(buffer, n, "%4ld ", this->nlwp);
       break;
-   case PERCENT_CPU: Process_printPercentage(this->percent_cpu, buffer, n, &attr); break;
+   case PERCENT_CPU: Process_printPercentage(this->percent_cpu, buffer, n, Process_fieldWidths[PERCENT_CPU], &attr); break;
    case PERCENT_NORM_CPU: {
       float cpuPercentage = this->percent_cpu / this->processList->activeCPUs;
-      Process_printPercentage(cpuPercentage, buffer, n, &attr);
+      Process_printPercentage(cpuPercentage, buffer, n, Process_fieldWidths[PERCENT_CPU], &attr);
       break;
    }
-   case PERCENT_MEM: Process_printPercentage(this->percent_mem, buffer, n, &attr); break;
+   case PERCENT_MEM: Process_printPercentage(this->percent_mem, buffer, n, 4, &attr); break;
    case PGRP: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pgrp); break;
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pid); break;
    case PPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->ppid); break;
@@ -1271,4 +1271,17 @@ void Process_updateFieldWidth(ProcessField key, size_t width) {
       Process_fieldWidths[key] = UINT8_MAX;
    else if (width > Process_fieldWidths[key])
       Process_fieldWidths[key] = (uint8_t)width;
+}
+
+void Process_updateCPUFieldWidths(float percentage) {
+   if (percentage < 99.9) {
+      Process_updateFieldWidth(PERCENT_CPU, 4);
+      Process_updateFieldWidth(PERCENT_NORM_CPU, 4);
+      return;
+   }
+
+   uint8_t width = ceil(log10(percentage + .2));
+
+   Process_updateFieldWidth(PERCENT_CPU, width);
+   Process_updateFieldWidth(PERCENT_NORM_CPU, width);
 }

@@ -70,6 +70,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    proc->percent_cpu = 2.5;
    proc->percent_mem = 2.5;
+   Process_updateCPUFieldWidths(proc->percent_cpu);
 
    proc->st_uid = 0;
    proc->user = "nobody"; /* Update whenever proc->st_uid is changed */

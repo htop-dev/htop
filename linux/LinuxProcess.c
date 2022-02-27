@@ -57,8 +57,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, .defaultSortDesc = true, },
    [M_LRS] = { .name = "M_LRS", .title = "  LIB ", .description = "The library size of the process (calculated from memory maps)", .flags = PROCESS_FLAG_LINUX_LRS_FIX, .defaultSortDesc = true, },
    [ST_UID] = { .name = "ST_UID", .title = "UID", .description = "User ID of the process owner", .flags = 0, },
-   [PERCENT_CPU] = { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, .defaultSortDesc = true, },
-   [PERCENT_NORM_CPU] = { .name = "PERCENT_NORM_CPU", .title = "NCPU%", .description = "Normalized percentage of the CPU time the process used in the last sampling (normalized by cpu count)", .flags = 0, .defaultSortDesc = true, },
+   [PERCENT_CPU] = { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, .defaultSortDesc = true, .autoWidth = true, },
+   [PERCENT_NORM_CPU] = { .name = "PERCENT_NORM_CPU", .title = "NCPU%", .description = "Normalized percentage of the CPU time the process used in the last sampling (normalized by cpu count)", .flags = 0, .defaultSortDesc = true, .autoWidth = true, },
    [PERCENT_MEM] = { .name = "PERCENT_MEM", .title = "MEM% ", .description = "Percentage of the memory the process is using, based on resident memory size", .flags = 0, .defaultSortDesc = true, },
    [USER] = { .name = "USER", .title = "USER       ", .description = "Username of the process owner (or user ID if name cannot be determined)", .flags = 0, },
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, .defaultSortDesc = true, },
@@ -270,9 +270,9 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       break;
    }
    #ifdef HAVE_DELAYACCT
-   case PERCENT_CPU_DELAY: Process_printPercentage(lp->cpu_delay_percent, buffer, n, &attr); break;
-   case PERCENT_IO_DELAY: Process_printPercentage(lp->blkio_delay_percent, buffer, n, &attr); break;
-   case PERCENT_SWAP_DELAY: Process_printPercentage(lp->swapin_delay_percent, buffer, n, &attr); break;
+   case PERCENT_CPU_DELAY: Process_printPercentage(lp->cpu_delay_percent, buffer, n, 4, &attr); break;
+   case PERCENT_IO_DELAY: Process_printPercentage(lp->blkio_delay_percent, buffer, n, 4, &attr); break;
+   case PERCENT_SWAP_DELAY: Process_printPercentage(lp->swapin_delay_percent, buffer, n, 4, &attr); break;
    #endif
    case CTXT:
       if (lp->ctxt_diff > 1000) {
