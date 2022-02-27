@@ -559,6 +559,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
       proc->percent_mem = 100.0 * proc->m_resident / (double)(super->totalMem);
+      Process_updateCPUFieldWidths(proc->percent_cpu);
 
       if (kproc->ki_stat == SRUN && kproc->ki_oncpu != NOCPU) {
          proc->processor = kproc->ki_oncpu;

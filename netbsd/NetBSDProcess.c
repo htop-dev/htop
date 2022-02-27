@@ -148,6 +148,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .description = "Percentage of the CPU time the process used in the last sampling",
       .flags = 0,
       .defaultSortDesc = true,
+      .autoWidth = true,
    },
    [PERCENT_NORM_CPU] = {
       .name = "PERCENT_NORM_CPU",
@@ -155,6 +156,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .description = "Normalized percentage of the CPU time the process used in the last sampling (normalized by cpu count)",
       .flags = 0,
       .defaultSortDesc = true,
+      .autoWidth = true,
    },
    [PERCENT_MEM] = {
       .name = "PERCENT_MEM",

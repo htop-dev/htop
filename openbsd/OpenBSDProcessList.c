@@ -330,8 +330,11 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       fp->addr = kproc->p_addr;
       proc->m_virt = kproc->p_vm_dsize * pageSizeKB;
       proc->m_resident = kproc->p_vm_rssize * pageSizeKB;
+
       proc->percent_mem = proc->m_resident / (float)this->super.totalMem * 100.0F;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0F, this->super.activeCPUs * 100.0F);
+      Process_updateCPUFieldWidths(proc->percent_cpu);
+
       proc->nice = kproc->p_nice - 20;
       proc->time = 100 * (kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000));
       proc->priority = kproc->p_priority - PZERO;

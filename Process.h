@@ -372,7 +372,7 @@ void Process_fillStarttimeBuffer(Process* this);
 
 void Process_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width);
 
-void Process_printPercentage(float val, char* buffer, int n, int* attr);
+void Process_printPercentage(float val, char* buffer, int n, uint8_t width, int* attr);
 
 void Process_display(const Object* cast, RichString* out);
 
@@ -412,5 +412,6 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
 
 void Process_resetFieldWidths(void);
 void Process_updateFieldWidth(ProcessField key, size_t width);
+void Process_updateCPUFieldWidths(float percentage);
 
 #endif
