@@ -76,6 +76,8 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
    const char* str_nspawn_monitor_label = "/supervisor";
    const char* str_nspawn_payload_label = "/payload";
 
+   const char* str_snap_scope_prefix = "snap.";
+
    const char* str_service_suffix = ".service";
    const char* str_scope_suffix = ".scope";
 
@@ -265,6 +267,22 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
                cgroup += strlen(str_nspawn_monitor_label);
             else if (String_startsWith(nextSlash, str_nspawn_payload_label))
                cgroup += strlen(str_nspawn_payload_label);
+
+            continue;
+         } else if(Label_checkPrefix(labelStart, scopeNameLen, str_snap_scope_prefix)) {
+            const char* nextDot = strchrnul(labelStart + strlen(str_snap_scope_prefix), '.');
+
+            if (!StrBuf_putsz(s, w, "!snap:"))
+               return false;
+
+            if (nextDot >= labelStart + scopeNameLen) {
+               nextDot = labelStart + scopeNameLen;
+            }
+
+            if (!StrBuf_putsn(s, w, labelStart + strlen(str_snap_scope_prefix), nextDot - (labelStart + strlen(str_snap_scope_prefix))))
+               return false;
+
+            cgroup = nextSlash;
 
             continue;
          }
