@@ -1065,6 +1065,16 @@ void CRT_setColors(int colorScheme) {
    CRT_colors = CRT_colorSchemes[colorScheme];
 }
 
+int CRT_getBarGraphicColor(int attr) {
+   // Meters may use these bold/bright colors for better text readability on a
+   // black background. These bold colors would look strange when applied on
+   // bar graphics ("|"), so don't.
+   if (CRT_colors[attr] == (A_BOLD | ColorPair(Blue, Black)))
+      return ColorPair(Blue, Black);
+
+   return CRT_colors[attr];
+}
+
 #ifdef PRINT_BACKTRACE
 static void print_backtrace(void) {
 #if defined(HAVE_LIBUNWIND_H) && defined(HAVE_LIBUNWIND)

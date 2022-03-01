@@ -11,9 +11,9 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "CRT.h"
 #include "Macros.h"
@@ -218,42 +218,40 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(startPos <= w);
    assert(startPos + w <= RichString_sizeVal(bar));
 
-   int blockSizes[10];
-
-   // First draw in the bar[] buffer...
    int offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
-      double value = this->values[i];
-      value = CLAMP(value, 0.0, this->total);
-      if (value > 0) {
-         blockSizes[i] = ceil((value / this->total) * w);
-      } else {
-         blockSizes[i] = 0;
-      }
-      int nextOffset = offset + blockSizes[i];
+      double value = CLAMP(this->values[i], 0.0, this->total);
+      if (!(value > 0))
+         continue;
+
+      int blockSize = ceil((value / this->total) * w);
+      int nextOffset = offset + blockSize;
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++)
-         if (RichString_getCharVal(bar, startPos + j) == ' ') {
-            if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
-               assert(i < strlen(BarMeterMode_characters));
-               RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
-            } else {
-               RichString_setChar(&bar, startPos + j, '|');
-            }
+
+      int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
+      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSize);
+
+      // First draw in the bar[] buffer...
+      for (int j = offset; j < nextOffset; j++) {
+         if (RichString_getCharVal(bar, startPos + j) != ' ')
+            continue;
+
+         if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
+            assert(i < strlen(BarMeterMode_characters));
+            RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
+         } else {
+            RichString_setChar(&bar, startPos + j, '|');
          }
+         RichString_setAttrn(&bar, CRT_getBarGraphicColor(attr), startPos + j, 1);
+      }
+
+      // ...then print the buffer.
+      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSize, w - offset));
+
       offset = nextOffset;
    }
 
-   // ...then print the buffer.
-   offset = 0;
-   for (uint8_t i = 0; i < this->curItems; i++) {
-      int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
-      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSizes[i], w - offset));
-      offset += blockSizes[i];
-      offset = CLAMP(offset, 0, w);
-   }
    if (offset < w) {
       RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, w - offset);
       RichString_printoffnVal(bar, y, x + offset, startPos + offset, w - offset);

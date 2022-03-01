@@ -199,4 +199,6 @@ void CRT_enableDelay(void);
 
 void CRT_setColors(int colorScheme);
 
+int CRT_getBarGraphicColor(int attr);
+
 #endif
