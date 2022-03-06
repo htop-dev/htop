@@ -66,6 +66,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
    const char* str_user_slice = "user.slice";
    const char* str_machine_slice = "machine.slice";
    const char* str_user_slice_prefix = "/user-";
+   const char* str_system_slice_prefix = "/system-";
 
    const char* str_lxc_monitor_legacy = "lxc.monitor";
    const char* str_lxc_payload_legacy = "lxc.payload";
@@ -101,6 +102,11 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
 
          if (!StrBuf_putsz(s, w, "[S]"))
             return false;
+
+         if (String_startsWith(cgroup, str_system_slice_prefix)) {
+            cgroup = strchrnul(cgroup + 1, '/');
+            continue;
+         }
 
          continue;
       }
