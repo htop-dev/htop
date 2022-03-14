@@ -2,8 +2,8 @@
 #define HEADER_PlatformHelpers
 /*
 htop - darwin/PlatformHelpers.h
-(C) 2018 Pierre Malhaire, 2020-2021 htop dev team, 2021 Alexander Momchilov
-Released under the GNU GPLv2, see the COPYING file
+(C) 2018 Pierre Malhaire, 2020-2022 htop dev team, 2021 Alexander Momchilov
+Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
