@@ -62,6 +62,11 @@ sudo apt install libncursesw5-dev autotools-dev autoconf build-essential
 sudo dnf install ncurses-devel automake autoconf gcc
 ~~~
 
+**Archlinux/Manjaro**
+~~~ shell
+sudo pacman -S ncurses automake autoconf gcc
+~~~
+
 ### Compile from source:
 To compile from source, download from the Git repository (`git clone` or downloads from [GitHub releases](https://github.com/htop-dev/htop/releases/)), then run:
 ~~~ shell
