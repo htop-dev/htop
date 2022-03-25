@@ -85,7 +85,7 @@ char* Generic_uname(void) {
 
       if (uname_result == 0) {
          size_t written = xSnprintf(savedString, sizeof(savedString), "%s %s [%s]", uname_info.sysname, uname_info.release, uname_info.machine);
-         if (!String_contains_i(savedString, distro) && sizeof(savedString) > written)
+         if (!String_contains_i(savedString, distro, false) && sizeof(savedString) > written)
             snprintf(savedString + written, sizeof(savedString) - written, " @ %s", distro);
       } else {
          snprintf(savedString, sizeof(savedString), "%s", distro);

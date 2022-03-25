@@ -85,7 +85,7 @@ static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
       const char* incFilter = this->modes[INC_FILTER].buffer;
       for (int i = 0; i < Vector_size(lines); i++) {
          ListItem* line = (ListItem*)Vector_get(lines, i);
-         if (String_contains_i(line->value, incFilter)) {
+         if (String_contains_i(line->value, incFilter, true)) {
             Panel_add(panel, (Object*)line);
             if (selected == (Object*)line) {
                Panel_setSelected(panel, n);
@@ -108,7 +108,7 @@ static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
 static bool search(const IncSet* this, Panel* panel, IncMode_GetPanelValue getPanelValue) {
    int size = Panel_size(panel);
    for (int i = 0; i < size; i++) {
-      if (String_contains_i(getPanelValue(panel, i), this->active->buffer)) {
+      if (String_contains_i(getPanelValue(panel, i), this->active->buffer, true)) {
          Panel_setSelected(panel, i);
          return true;
       }
@@ -148,7 +148,7 @@ static bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValu
          return false;
       }
 
-      if (String_contains_i(getPanelValue(panel, i), mode->buffer)) {
+      if (String_contains_i(getPanelValue(panel, i), mode->buffer, true)) {
          Panel_setSelected(panel, i);
          return true;
       }
