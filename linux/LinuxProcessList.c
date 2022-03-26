@@ -188,7 +188,7 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
 
    const struct dirent* entry;
    while ((entry = readdir(dir)) != NULL) {
-      if (entry->d_type != DT_DIR)
+      if (entry->d_type != DT_DIR && entry->d_type != DT_UNKNOWN)
          continue;
 
       if (!String_startsWith(entry->d_name, "cpu"))
