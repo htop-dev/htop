@@ -176,7 +176,7 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
 
    // Initialize the cpuData array before anything else.
    if (!this->cpuData) {
-      this->cpuData = xReallocArrayZero(this->cpuData, super->existingCPUs ? (super->existingCPUs + 1) : 0, 2, sizeof(CPUData));
+      this->cpuData = xCalloc(2, sizeof(CPUData));
       this->cpuData[0].online = true; /* average is always "online" */
       this->cpuData[1].online = true;
       super->activeCPUs = 1;
