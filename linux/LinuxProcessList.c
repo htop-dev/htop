@@ -174,21 +174,24 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
    LinuxProcessList* this = (LinuxProcessList*) super;
    unsigned int existing = 0, active = 0;
 
-   DIR* dir = opendir("/sys/devices/system/cpu");
-   if (!dir) {
-      this->cpuData = xReallocArrayZero(this->cpuData, super->existingCPUs ? (super->existingCPUs + 1) : 0, 2, sizeof(CPUData));
+   // Initialize the cpuData array before anything else.
+   if (!this->cpuData) {
+      this->cpuData = xCalloc(2, sizeof(CPUData));
       this->cpuData[0].online = true; /* average is always "online" */
       this->cpuData[1].online = true;
       super->activeCPUs = 1;
       super->existingCPUs = 1;
-      return;
    }
+
+   DIR* dir = opendir("/sys/devices/system/cpu");
+   if (!dir)
+      return;
 
    unsigned int currExisting = super->existingCPUs;
 
    const struct dirent* entry;
    while ((entry = readdir(dir)) != NULL) {
-      if (entry->d_type != DT_DIR)
+      if (entry->d_type != DT_DIR && entry->d_type != DT_UNKNOWN)
          continue;
 
       if (!String_startsWith(entry->d_name, "cpu"))
@@ -232,6 +235,10 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
    }
 
    closedir(dir);
+
+   // return if no CPU is found
+   if (existing < 1)
+      return;
 
 #ifdef HAVE_SENSORS_SENSORS_H
    /* When started with offline CPUs, libsensors does not monitor those,
