@@ -456,8 +456,18 @@ case "$enable_hwloc" in
    no)
       ;;
    yes)
-      AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
-      AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
+      m4_ifdef([PKG_PROG_PKG_CONFIG], [
+         PKG_PROG_PKG_CONFIG()
+         PKG_CHECK_MODULES(HWLOC, hwloc, [
+               CFLAGS="$CFLAGS $HWLOC_CFLAGS" LIBS="$LIBS $HWLOC_LIBS"
+            ], [
+               AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
+               AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
+            ])
+         ], [
+            AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
+            AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
+         ])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_hwloc' for --enable-hwloc])
