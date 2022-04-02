@@ -111,13 +111,20 @@ static void Settings_readMeterModes(Settings* this, const char* line, unsigned i
 static bool Settings_validateMeters(Settings* this) {
    const size_t colCount = HeaderLayout_getColumns(this->hLayout);
 
+   bool anyMeter = false;
+
    for (size_t column = 0; column < colCount; column++) {
       char** names = this->hColumns[column].names;
       const int* modes = this->hColumns[column].modes;
       const size_t len = this->hColumns[column].len;
 
-      if (!names || !modes || !len)
+      if (!len)
+         continue;
+
+      if (!names || !modes)
          return false;
+
+      anyMeter |= !!len;
 
       // Check for each mode there is an entry with a non-NULL name
       for (size_t meterIdx = 0; meterIdx < len; meterIdx++)
@@ -128,7 +135,7 @@ static bool Settings_validateMeters(Settings* this) {
          return false;
    }
 
-   return true;
+   return anyMeter;
 }
 
 static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount) {
