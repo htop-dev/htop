@@ -83,6 +83,8 @@ enum CapMode {
 };
 #endif
 
+bool Running_containerized = false;
+
 const ScreenDefaults Platform_defaultScreens[] = {
    {
       .name = "Main",
@@ -355,7 +357,7 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[3] = pl->cachedMem;
    this->values[4] = pl->availableMem;
 
-   if (lpl->zfs.enabled != 0) {
+   if (lpl->zfs.enabled != 0 && !Running_containerized) {
       this->values[0] -= lpl->zfs.size;
       this->values[3] += lpl->zfs.size;
    }
@@ -1016,6 +1018,31 @@ bool Platform_init(void) {
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_init();
 #endif
+
+   char target[PATH_MAX];
+   ssize_t ret = readlink(PROCDIR "/self/ns/pid", target, sizeof(target) - 1);
+   if (ret > 0) {
+      target[ret] = '\0';
+
+      if (!String_eq("pid:[4026531836]", target)) { // magic constant PROC_PID_INIT_INO from include/linux/proc_ns.h#L46
+         Running_containerized = true;
+         return true; // early return
+      }
+   }
+
+   FILE* fd = fopen(PROCDIR "/1/mounts", "r");
+   if (fd) {
+      char lineBuffer[256];
+      while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
+         // detect lxc or overlayfs and guess that this means we are running containerized
+         if (String_startsWith(lineBuffer, "lxcfs ") || String_startsWith(lineBuffer, "overlay ")) {
+            fprintf(stderr, "%s\n", lineBuffer);
+            Running_containerized = true;
+            break;
+         }
+      }
+      fclose(fd);
+   } // if (fd)
 
    return true;
 }
