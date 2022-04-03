@@ -509,6 +509,9 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->pgrp = kproc->ki_pgid;
          proc->st_uid = kproc->ki_uid;
          proc->starttime_ctime = kproc->ki_start.tv_sec;
+         if (proc->starttime_ctime < 0) {
+            proc->starttime_ctime = super->realtimeMs / 1000;
+         }
          Process_fillStarttimeBuffer(proc);
          proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
          ProcessList_add(super, proc);
