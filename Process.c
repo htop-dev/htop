@@ -871,7 +871,15 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       Process_printLeftAlignedField(str, attr, cwd, 25);
       return;
    }
-   case ELAPSED: Process_printTime(str, /* convert to hundreds of a second */ this->processList->realtimeMs / 10 - 100 * this->starttime_ctime, coloring); return;
+   case ELAPSED: {
+      const uint64_t rt = this->processList->realtimeMs;
+      const uint64_t st = this->starttime_ctime * 1000;
+      const uint64_t dt =
+         rt < st ? 0 :
+         rt - st;
+      Process_printTime(str, /* convert to hundreds of a second */ dt / 10, coloring);
+      return;
+   }
    case MAJFLT: Process_printCount(str, this->majflt, coloring); return;
    case MINFLT: Process_printCount(str, this->minflt, coloring); return;
    case M_RESIDENT: Process_printKBytes(str, this->m_resident, coloring); return;
