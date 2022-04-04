@@ -54,6 +54,8 @@ static void printHelpFlag(const char* name) {
           "-F --filter=FILTER              Show only the commands matching the given filter\n"
           "-h --help                       Print this help screen\n"
           "-H --highlight-changes[=DELAY]  Highlight new and old processes\n"
+          "   --kiosk                      Start htop in kiosk mode, hiding process selection and function bar.\n"
+          "                                Implies --readonly.\n"
           "-M --no-mouse                   Disable the mouse\n"
           "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
           "   --readonly                   Disable all system and process changing features\n"
@@ -84,6 +86,7 @@ typedef struct CommandLineSettings_ {
    bool highlightChanges;
    int highlightDelaySecs;
    bool readonly;
+   bool kiosk;
 } CommandLineSettings;
 
 static CommandLineStatus parseArguments(const char* program, int argc, char** argv, CommandLineSettings* flags) {
@@ -101,6 +104,7 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
       .highlightChanges = false,
       .highlightDelaySecs = -1,
       .readonly = false,
+      .kiosk = false,
    };
 
    const struct option long_opts[] =
@@ -110,6 +114,7 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
       {"delay",      required_argument,   0, 'd'},
       {"sort-key",   required_argument,   0, 's'},
       {"user",       optional_argument,   0, 'u'},
+      {"kiosk",      no_argument,         0, 129},
       {"no-color",   no_argument,         0, 'C'},
       {"no-colour",  no_argument,         0, 'C'},
       {"no-mouse",   no_argument,         0, 'M'},
@@ -248,6 +253,10 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
          case 128:
             flags->readonly = true;
             break;
+         case 129:
+            flags.readonly = true;
+            flags.kiosk = true;
+            break;
 
          default: {
             CommandLineStatus status;
@@ -333,6 +342,8 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       settings->highlightChanges = true;
    if (flags.highlightDelaySecs != -1)
       settings->highlightDelaySecs = flags.highlightDelaySecs;
+   if (flags.kiosk)
+      settings->hideFunctionBar = 1;
    if (flags.sortKey > 0) {
       // -t -s <key> means "tree sorted by key"
       // -s <key> means "list sorted by key" (previous existing behavior)
@@ -356,7 +367,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       .mainPanel = panel,
       .header = header,
       .pauseProcessUpdate = false,
-      .hideProcessSelection = false,
+      .hideProcessSelection = flags.kiosk,
    };
 
    MainPanel_setState(panel, &state);
