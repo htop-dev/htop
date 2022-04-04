@@ -18,6 +18,7 @@ in the source distribution for its full text.
 
 
 typedef enum HeaderLayout_ {
+   HF_INVALID = -1,
    HF_TWO_50_50,
    HF_TWO_33_67,
    HF_TWO_67_33,
