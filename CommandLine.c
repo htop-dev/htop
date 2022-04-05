@@ -291,7 +291,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       setlocale(LC_CTYPE, "");
 
    CommandLineStatus status = STATUS_OK;
-   CommandLineSettings flags = { 0 };
+   CommandLineSettings flags;
 
    if ((status = parseArguments(name, argc, argv, &flags)) != STATUS_OK)
       return status != STATUS_OK_EXIT ? 1 : 0;
