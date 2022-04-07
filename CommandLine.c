@@ -54,7 +54,9 @@ static void printHelpFlag(const char* name) {
           "-F --filter=FILTER              Show only the commands matching the given filter\n"
           "-h --help                       Print this help screen\n"
           "-H --highlight-changes[=DELAY]  Highlight new and old processes\n"
+#ifdef HAVE_GETMOUSE
           "-M --no-mouse                   Disable the mouse\n"
+#endif
           "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
           "   --readonly                   Disable all system and process changing features\n"
           "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
