@@ -211,7 +211,12 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths, bool
       int years = days / 365;
       int daysLeft = days - 365 * years;
 
-      if (daysLeft >= 100) {
+      if (years >= 10000000) {
+         RichString_appendnAscii(str, yearColor, "eternity ", 9);
+      } else if (years >= 1000) {
+         len = xSnprintf(buffer, sizeof(buffer), "%7dy ", years);
+         RichString_appendnAscii(str, yearColor, buffer, len);
+      } else if (daysLeft >= 100) {
          len = xSnprintf(buffer, sizeof(buffer), "%3dy", years);
          RichString_appendnAscii(str, yearColor, buffer, len);
          len = xSnprintf(buffer, sizeof(buffer), "%3dd ", daysLeft);
