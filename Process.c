@@ -739,17 +739,20 @@ void Process_printLeftAlignedField(RichString* str, int attr, const char* conten
 
 void Process_printPercentage(float val, char* buffer, int n, uint8_t width, int* attr) {
    if (val >= 0) {
-      if (val < 99.9F) {
-         if (val < 0.05F) {
-            *attr = CRT_colors[PROCESS_SHADOW];
-         }
-         xSnprintf(buffer, n, "%*.1f ", width, val);
-      } else {
+      if (val < 0.05F)
+         *attr = CRT_colors[PROCESS_SHADOW];
+      else if (val >= 99.9F)
          *attr = CRT_colors[PROCESS_MEGABYTES];
-         if (val < 100.0F)
-            val = 100.0F; // Don't round down and display "val" as "99".
-         xSnprintf(buffer, n, "%*.0f ", width, val);
+
+      int precision = 1;
+
+      // Display "val" as "100" for columns like "MEM%".
+      if (width == 4 && val > 99.9F) {
+         precision = 0;
+         val = 100.0F;
       }
+
+      xSnprintf(buffer, n, "%*.*f ", width, precision, val);
    } else {
       *attr = CRT_colors[PROCESS_SHADOW];
       xSnprintf(buffer, n, "%*.*s ", width, width, "N/A");
@@ -1280,13 +1283,14 @@ void Process_updateFieldWidth(ProcessField key, size_t width) {
 }
 
 void Process_updateCPUFieldWidths(float percentage) {
-   if (percentage < 99.9) {
+   if (percentage < 99.9F) {
       Process_updateFieldWidth(PERCENT_CPU, 4);
       Process_updateFieldWidth(PERCENT_NORM_CPU, 4);
       return;
    }
 
-   uint8_t width = ceil(log10(percentage + .2));
+   // Add additional two characters, one for "." and another for precision.
+   uint8_t width = ceil(log10(percentage + 0.1)) + 2;
 
    Process_updateFieldWidth(PERCENT_CPU, width);
    Process_updateFieldWidth(PERCENT_NORM_CPU, width);

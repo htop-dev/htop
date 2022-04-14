@@ -144,7 +144,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    },
    [PERCENT_CPU] = {
       .name = "PERCENT_CPU",
-      .title = "CPU% ",
+      .title = " CPU%",
       .description = "Percentage of the CPU time the process used in the last sampling",
       .flags = 0,
       .defaultSortDesc = true,
