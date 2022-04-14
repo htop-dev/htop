@@ -116,7 +116,10 @@ static const char* alignedProcessFieldTitle(const ProcessList* this, ProcessFiel
 
    if (Process_fields[field].autoWidth) {
       static char titleBuffer[UINT8_MAX + 1];
-      xSnprintf(titleBuffer, sizeof(titleBuffer), "%-*.*s ", Process_fieldWidths[field], Process_fieldWidths[field], title);
+      if (field == PERCENT_CPU)
+         xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_fieldWidths[field], title);
+      else
+         xSnprintf(titleBuffer, sizeof(titleBuffer), "%-*.*s ", Process_fieldWidths[field], Process_fieldWidths[field], title);
       return titleBuffer;
    }
 
