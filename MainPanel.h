@@ -32,7 +32,8 @@ typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
 
 #define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
 
-void MainPanel_updateTreeFunctions(MainPanel* this, bool mode);
+// update the Label Keys in the MainPanel bar, list: list / tree mode, filter: filter (inc) active / inactive
+void MainPanel_updateLabels(MainPanel* this, bool list, bool filter);
 
 int MainPanel_selectedPid(MainPanel* this);
 

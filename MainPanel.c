@@ -24,9 +24,10 @@ in the source distribution for its full text.
 static const char* const MainFunctions[]     = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
 static const char* const MainFunctions_ro[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "      ", "      ", "      ", "Quit  ", NULL};
 
-void MainPanel_updateTreeFunctions(MainPanel* this, bool mode) {
+void MainPanel_updateLabels(MainPanel* this, bool list, bool filter) {
    FunctionBar* bar = MainPanel_getFunctionBar(this);
-   FunctionBar_setLabel(bar, KEY_F(5), mode ? "List  " : "Tree  ");
+   FunctionBar_setLabel(bar, KEY_F(5), list   ? "List  " : "Tree  ");
+   FunctionBar_setLabel(bar, KEY_F(4), filter ? "FILTER" : "Filter");
 }
 
 static void MainPanel_pidSearch(MainPanel* this, int ch) {
@@ -122,7 +123,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    }
 
    if (reaction & HTOP_REDRAW_BAR) {
-      MainPanel_updateTreeFunctions(this, settings->ss->treeView);
+      MainPanel_updateLabels(this, settings->ss->treeView, this->state->pl->incFilter);
    }
    if (reaction & HTOP_RESIZE) {
       result |= RESIZE;
