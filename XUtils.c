@@ -94,8 +94,22 @@ void* xReallocArrayZero(void* ptr, size_t prevmemb, size_t newmemb, size_t size)
    return ret;
 }
 
-inline bool String_contains_i(const char* s1, const char* s2) {
-   return strcasestr(s1, s2) != NULL;
+inline bool String_contains_i(const char* s1, const char* s2, bool multi) {
+   // we have a multi-string search term, handle as special case for performance reasons
+   if (multi && strstr(s2, "|")) {
+      size_t nNeedles;
+      char** needles = String_split(s2, '|', &nNeedles);
+      for (size_t i = 0; i < nNeedles; i++) {
+         if (strcasestr(s1, needles[i]) != NULL) {
+            String_freeArray(needles);
+            return true;
+         }
+       }
+       String_freeArray(needles);
+       return false;
+   } else {
+      return strcasestr(s1, s2) != NULL;
+   }
 }
 
 char* String_cat(const char* s1, const char* s2) {

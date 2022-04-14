@@ -63,7 +63,7 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
 void InfoScreen_addLine(InfoScreen* this, const char* line) {
    Vector_add(this->lines, (Object*) ListItem_new(line, 0));
    const char* incFilter = IncSet_filter(this->inc);
-   if (!incFilter || String_contains_i(line, incFilter)) {
+   if (!incFilter || String_contains_i(line, incFilter, true)) {
       Panel_add(this->display, Vector_get(this->lines, Vector_size(this->lines) - 1));
    }
 }
@@ -72,7 +72,7 @@ void InfoScreen_appendLine(InfoScreen* this, const char* line) {
    ListItem* last = (ListItem*)Vector_get(this->lines, Vector_size(this->lines) - 1);
    ListItem_append(last, line);
    const char* incFilter = IncSet_filter(this->inc);
-   if (incFilter && Panel_get(this->display, Panel_size(this->display) - 1) != (Object*)last && String_contains_i(line, incFilter)) {
+   if (incFilter && Panel_get(this->display, Panel_size(this->display) - 1) != (Object*)last && String_contains_i(line, incFilter, true)) {
       Panel_add(this->display, (Object*)last);
    }
 }

@@ -40,7 +40,7 @@ static inline bool String_startsWith(const char* s, const char* match) {
    return strncmp(s, match, strlen(match)) == 0;
 }
 
-bool String_contains_i(const char* s1, const char* s2);
+bool String_contains_i(const char* s1, const char* s2, bool multi);
 
 static inline bool String_eq(const char* s1, const char* s2) {
    return strcmp(s1, s2) == 0;

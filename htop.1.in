@@ -50,7 +50,8 @@ Start
 in monochrome mode
 .TP
 \fB\-F \-\-filter=FILTER
-Filter processes by command
+Filter processes by terms matching the commands. The terms are matched
+case-insensitive and as fixed strings (not regexs). You can separate multiple terms with "|".
 .TP
 \fB\-h \-\-help
 Display a help message and exit
@@ -175,6 +176,8 @@ bindings take precedence.
 Incremental process filtering: type in part of a process command line and
 only processes whose names match will be shown. To cancel filtering,
 enter the Filter option again and press Esc.
+The matching is done case-insensitive. Terms are fixed strings (no regex).
+You can separate multiple terms with "|".
 .TP
 .B F5, t
 Tree view: organize processes by parenthood, and layout the relations
