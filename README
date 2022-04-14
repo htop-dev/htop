@@ -67,6 +67,11 @@ sudo dnf install ncurses-devel automake autoconf gcc
 sudo pacman -S ncurses automake autoconf gcc
 ~~~
 
+**macOS**
+~~~ shell
+brew install ncurses automake autoconf gcc
+~~~
+
 ### Compile from source:
 To compile from source, download from the Git repository (`git clone` or downloads from [GitHub releases](https://github.com/htop-dev/htop/releases/)), then run:
 ~~~ shell
