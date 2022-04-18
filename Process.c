@@ -54,7 +54,7 @@ void Process_setupColumnWidths() {
       return;
    }
 
-   Process_pidDigits = ceil(log10(maxPid));
+   Process_pidDigits = (int)log10(maxPid) + 1;
    assert(Process_pidDigits <= PROCESS_MAX_PID_DIGITS);
 }
 
@@ -64,7 +64,7 @@ void Process_setUidColumnWidth(uid_t maxUid) {
       return;
    }
 
-   Process_uidDigits = ceil(log10(maxUid));
+   Process_uidDigits = (int)log10(maxUid) + 1;
    assert(Process_uidDigits <= PROCESS_MAX_UID_DIGITS);
 }
 
