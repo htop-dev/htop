@@ -293,7 +293,7 @@ extern uint8_t Process_fieldWidths[LAST_PROCESSFIELD];
 #define PROCESS_MIN_PID_DIGITS 5
 #define PROCESS_MAX_PID_DIGITS 19
 #define PROCESS_MIN_UID_DIGITS 5
-#define PROCESS_MAX_UID_DIGITS 19
+#define PROCESS_MAX_UID_DIGITS 20
 extern int Process_pidDigits;
 extern int Process_uidDigits;
 
