@@ -82,40 +82,41 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
    this->panel = panel;
 }
 
-static const char* alignedDynamicColumnTitle(const ProcessList* this, int key) {
+static const char* alignedDynamicColumnTitle(const ProcessList* this, int key, char* titleBuffer, size_t titleBufferSize) {
    const DynamicColumn* column = Hashtable_get(this->dynamicColumns, key);
    if (column == NULL)
       return "- ";
-   static char titleBuffer[DYNAMIC_MAX_COLUMN_WIDTH + /* space */ 1 + /* null terminator */ + 1];
    int width = column->width;
    if (!width || abs(width) > DYNAMIC_MAX_COLUMN_WIDTH)
       width = DYNAMIC_DEFAULT_COLUMN_WIDTH;
-   xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s", width, column->heading);
+   xSnprintf(titleBuffer, titleBufferSize, "%*s", width, column->heading);
    return titleBuffer;
 }
 
 static const char* alignedProcessFieldTitle(const ProcessList* this, ProcessField field) {
+   static char titleBuffer[UINT8_MAX + sizeof(" ")];
+   assert(sizeof(titleBuffer) >= DYNAMIC_MAX_COLUMN_WIDTH + sizeof(" "));
+   assert(sizeof(titleBuffer) >= PROCESS_MAX_PID_DIGITS + sizeof(" "));
+   assert(sizeof(titleBuffer) >= PROCESS_MAX_UID_DIGITS + sizeof(" "));
+
    if (field >= LAST_PROCESSFIELD)
-      return alignedDynamicColumnTitle(this, field);
+      return alignedDynamicColumnTitle(this, field, titleBuffer, sizeof(titleBuffer));
 
    const char* title = Process_fields[field].title;
    if (!title)
       return "- ";
 
    if (Process_fields[field].pidColumn) {
-      static char titleBuffer[PROCESS_MAX_PID_DIGITS + sizeof(" ")];
       xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_pidDigits, title);
       return titleBuffer;
    }
 
    if (field == ST_UID) {
-      static char titleBuffer[PROCESS_MAX_UID_DIGITS + sizeof(" ")];
       xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_uidDigits, title);
       return titleBuffer;
    }
 
    if (Process_fields[field].autoWidth) {
-      static char titleBuffer[UINT8_MAX + 1];
       if (field == PERCENT_CPU)
          xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_fieldWidths[field], title);
       else
