@@ -1036,7 +1036,6 @@ bool Platform_init(void) {
       while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
          // detect lxc or overlayfs and guess that this means we are running containerized
          if (String_startsWith(lineBuffer, "lxcfs ") || String_startsWith(lineBuffer, "overlay ")) {
-            fprintf(stderr, "%s\n", lineBuffer);
             Running_containerized = true;
             break;
          }
