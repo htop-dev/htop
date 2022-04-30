@@ -502,6 +502,7 @@ static const struct {
    bool roInactive;
    const char* info;
 } helpLeft[] = {
+   { .key = "    Tab: ",  .roInactive = false, .info = "switch to next screen tab" },
    { .key = " Arrows: ",  .roInactive = false, .info = "scroll process list" },
    { .key = " Digits: ",  .roInactive = false, .info = "incremental PID search" },
    { .key = "   F3 /: ",  .roInactive = false, .info = "incremental name search" },
@@ -526,6 +527,7 @@ static const struct {
    bool roInactive;
    const char* info;
 } helpRight[] = {
+   { .key = "  S-Tab: ", .roInactive = false, .info = "switch to previous screen tab" },
    { .key = "  Space: ", .roInactive = false, .info = "tag process" },
    { .key = "      c: ", .roInactive = false, .info = "tag process and its children" },
    { .key = "      U: ", .roInactive = false, .info = "untag all processes" },
