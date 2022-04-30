@@ -62,6 +62,7 @@ Process* FreeBSDProcess_new(const Settings* settings) {
 void Process_delete(Object* cast) {
    FreeBSDProcess* this = (FreeBSDProcess*) cast;
    Process_done((Process*)cast);
+   free(this->emul);
    free(this->jname);
    free(this);
 }
