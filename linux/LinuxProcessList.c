@@ -1417,6 +1417,21 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned lo
    return out;
 }
 
+static bool isOlderThan(const ProcessList* pl, const Process* proc, unsigned int seconds) {
+   assert(pl->realtimeMs > 0);
+
+   /* Starttime might not yet be parsed */
+   if (proc->starttime_ctime <= 0)
+	   return false;
+
+   uint64_t realtime = pl->realtimeMs / 1000;
+
+   if (realtime < (uint64_t)proc->starttime_ctime)
+      return false;
+
+   return realtime - proc->starttime_ctime > seconds;
+}
+
 static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_t parentFd, const char* dirname, const Process* parent, double period) {
    ProcessList* pl = (ProcessList*) this;
    const struct dirent* entry;
@@ -1525,7 +1540,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          bool prev = proc->usesDeletedLib;
 
          if (!proc->isKernelThread && !proc->isUserlandThread &&
-            ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted))) {
+            ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted && isOlderThan(pl, proc, 10)))) {
 
             // Check if we really should recalculate the M_LRS value for this process
             uint64_t passedTimeInMs = pl->realtimeMs - lp->last_mlrs_calctime;
