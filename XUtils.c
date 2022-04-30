@@ -115,7 +115,9 @@ inline bool String_contains_i(const char* s1, const char* s2, bool multi) {
 char* String_cat(const char* s1, const char* s2) {
    const size_t l1 = strlen(s1);
    const size_t l2 = strlen(s2);
-   assert(SIZE_MAX - l1 > l2);
+   if (SIZE_MAX - l1 <= l2) {
+      fail();
+   }
    char* out = xMalloc(l1 + l2 + 1);
    memcpy(out, s1, l1);
    memcpy(out + l1, s2, l2);
