@@ -2021,7 +2021,7 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
    return period;
 }
 
-static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
+static int scanCPUFrequencyFromSysCPUFreq(LinuxProcessList* this) {
    unsigned int existingCPUs = this->super.existingCPUs;
    int numCPUsWithFrequency = 0;
    unsigned long totalFrequency = 0;
@@ -2084,7 +2084,7 @@ static int scanCPUFreqencyFromSysCPUFreq(LinuxProcessList* this) {
    return 0;
 }
 
-static void scanCPUFreqencyFromCPUinfo(LinuxProcessList* this) {
+static void scanCPUFrequencyFromCPUinfo(LinuxProcessList* this) {
    FILE* file = fopen(PROCCPUINFOFILE, "r");
    if (file == NULL)
       return;
@@ -2141,11 +2141,11 @@ static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
       this->cpuData[i].frequency = NAN;
    }
 
-   if (scanCPUFreqencyFromSysCPUFreq(this) == 0) {
+   if (scanCPUFrequencyFromSysCPUFreq(this) == 0) {
       return;
    }
 
-   scanCPUFreqencyFromCPUinfo(this);
+   scanCPUFrequencyFromCPUinfo(this);
 }
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
