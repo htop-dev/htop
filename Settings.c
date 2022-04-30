@@ -631,19 +631,17 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("tree_view_always_by_pid", this->screens[0]->treeViewAlwaysByPID);
    printSettingInteger("all_branches_collapsed", this->screens[0]->allBranchesCollapsed);
 
-   if (this->screens && this->screens[0]) {
-      for (unsigned int i = 0; i < this->nScreens; i++) {
-         ScreenSettings* ss = this->screens[i];
-         fprintf(fd, "screen:%s=", ss->name);
-         writeFields(fd, ss->fields, this->dynamicColumns, true, separator);
-         printSettingString(".sort_key", toFieldName(this->dynamicColumns, ss->sortKey));
-         printSettingString(".tree_sort_key", toFieldName(this->dynamicColumns, ss->treeSortKey));
-         printSettingInteger(".tree_view", ss->treeView);
-         printSettingInteger(".tree_view_always_by_pid", ss->treeViewAlwaysByPID);
-         printSettingInteger(".sort_direction", ss->direction);
-         printSettingInteger(".tree_sort_direction", ss->treeDirection);
-         printSettingInteger(".all_branches_collapsed", ss->allBranchesCollapsed);
-      }
+   for (unsigned int i = 0; i < this->nScreens; i++) {
+      ScreenSettings* ss = this->screens[i];
+      fprintf(fd, "screen:%s=", ss->name);
+      writeFields(fd, ss->fields, this->dynamicColumns, true, separator);
+      printSettingString(".sort_key", toFieldName(this->dynamicColumns, ss->sortKey));
+      printSettingString(".tree_sort_key", toFieldName(this->dynamicColumns, ss->treeSortKey));
+      printSettingInteger(".tree_view", ss->treeView);
+      printSettingInteger(".tree_view_always_by_pid", ss->treeViewAlwaysByPID);
+      printSettingInteger(".sort_direction", ss->direction);
+      printSettingInteger(".tree_sort_direction", ss->treeDirection);
+      printSettingInteger(".all_branches_collapsed", ss->allBranchesCollapsed);
    }
 
    #undef printSettingString
