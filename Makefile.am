@@ -50,6 +50,7 @@ myhtopsources = \
 	DynamicColumn.c \
 	DynamicMeter.c \
 	EnvScreen.c \
+	FileDescriptorMeter.c \
 	FunctionBar.c \
 	Hashtable.c \
 	Header.c \
@@ -110,6 +111,7 @@ myhtopheaders = \
 	DynamicColumn.h \
 	DynamicMeter.h \
 	EnvScreen.h \
+	FileDescriptorMeter.h \
 	FunctionBar.h \
 	Hashtable.h \
 	Header.h \
