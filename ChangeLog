@@ -1,3 +1,37 @@
+What's new in version 3.2.0
+
+* Support for displaying multiple tabs in the user interface
+* Allow multiple filter and search terms (logical OR, separate by "|")
+* Set correct default sorting direction (defaultSortDesc)
+* Improve performance for process lookup and update
+* Rework the IOMeters initial display
+* Removed duplicate sections on COMM and EXE
+* Highlight process UNINTERRUPTIBLE_WAIT state (D)
+* Show only integer value when CPU% more than 99.9%
+* Handle rounding ambiguity between 99.9 and 100.0%
+* No longer leaves empty the last column in header
+* Fix header layout and meters reset if a header column is empty
+* Fix PID and UID column widths off-by-one error
+* On Linux, read generic sysfs batteries
+* On Linux, do not collect LRS per thread (it is process-wide)
+* On Linux, dynamically adjust the SECATTR and CGROUP column widths
+* On Linux, fix a crash in LXD
+* On FreeBSD, add support for showing process emulation
+* On Darwin, lazily set process TTY name
+* Always set SIGCHLD to default handling
+* Avoid zombie processes on signal races
+* Ensure last line is cleared when SIGINT is received
+* Instead of SIGTERM, pre-select the last sent signal
+* Internal Hashtable performance and sizing improvements
+* Add heuristics for guessing LXC or Docker from /proc/1/mounts
+* Force elapsed time display to zero if process started in the future
+* Avoid extremely large year values when printing time
+* Fix division by zero when calculating IO rates
+* Fix out of boundary writes in XUtils
+* Fix custom thread name display issue
+* Use AC_CANONICAL_HOST, not AC_CANONICAL_TARGET in configure.ac
+* Support libunwind of LLVM
+
 What's new in version 3.1.2
 
 * Bugfix for crash when storing modified settings at exit
