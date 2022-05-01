@@ -271,11 +271,7 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
 
 ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* defaults) {
    int sortKey = defaults->sortKey ? toFieldIndex(this->dynamicColumns, defaults->sortKey) : PID;
-   int sortDesc;
-   if (sortKey >= 0 && sortKey < LAST_PROCESSFIELD)
-      sortDesc = Process_fields[sortKey].defaultSortDesc;
-   else
-      sortDesc = 1;
+   int sortDesc = (sortKey >= 0 && sortKey < LAST_PROCESSFIELD) ? Process_fields[sortKey].defaultSortDesc : 1;
 
    ScreenSettings* ss = xMalloc(sizeof(ScreenSettings));
    *ss = (ScreenSettings) {
