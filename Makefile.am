@@ -152,6 +152,7 @@ myhtopheaders = \
 # -----
 
 linux_platform_headers = \
+	FileDescriptorMeter.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
@@ -174,6 +175,7 @@ linux_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 linux_platform_sources = \
+	FileDescriptorMeter.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
