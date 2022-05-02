@@ -1653,8 +1653,13 @@ errorReadingProcess:
 #endif
 
          if (preExisting) {
-            ProcessList_remove(pl, proc);
+            /*
+             * The only real reason for coming here (apart from Linux violating the /proc API)
+             * would be the process going away with its /proc files disappearing (!HAVE_OPENAT).
+             * However, we want to keep in the process list for now for the "highlight dying" mode.
+             */
          } else {
+            /* A really short-lived process that we don't have full info about */
             Process_delete((Object*)proc);
          }
       }
