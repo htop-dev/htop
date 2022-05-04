@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "DiskIOMeter.h"
 #include "DynamicColumn.h"
 #include "DynamicMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -115,6 +116,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
    &SysArchMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -192,6 +194,8 @@ static const char* Platform_metricNames[] = {
    [PCP_ZRAM_CAPACITY] = "zram.capacity",
    [PCP_ZRAM_ORIGINAL] = "zram.mm_stat.data_size.original",
    [PCP_ZRAM_COMPRESSED] = "zram.mm_stat.data_size.compressed",
+   [PCP_VFS_FILES_COUNT] = "vfs.files.count",
+   [PCP_VFS_FILES_MAX] = "vfs.files.max",
 
    [PCP_PROC_PID] = "proc.psinfo.pid",
    [PCP_PROC_PPID] = "proc.psinfo.ppid",
@@ -725,6 +729,17 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    if (PCPMetric_values(PCP_NET_SENDP, &value, 1, PM_TYPE_U64) != NULL)
       data->packetsTransmitted = value.ull;
    return true;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = NAN;
+   *max = 65536;
+
+   pmAtomValue value;
+   if (PCPMetric_values(PCP_VFS_FILES_COUNT, &value, 1, PM_TYPE_32) != NULL)
+      *used = value.l;
+   if (PCPMetric_values(PCP_VFS_FILES_MAX, &value, 1, PM_TYPE_32) != NULL)
+      *max = value.l;
 }
 
 void Platform_getBattery(double* level, ACPresence* isOnAC) {
