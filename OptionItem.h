@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 
 enum OptionItemType {
+   OPTION_ITEM_TEXT,
    OPTION_ITEM_CHECK,
    OPTION_ITEM_NUMBER,
 };
@@ -31,6 +32,12 @@ typedef struct OptionItem_ {
 
    char* text;
 } OptionItem;
+
+typedef struct TextItem_ {
+   OptionItem super;
+
+   char* text;
+} TextItem;
 
 typedef struct CheckItem_ {
    OptionItem super;
@@ -51,8 +58,11 @@ typedef struct NumberItem_ {
 } NumberItem;
 
 extern const OptionItemClass OptionItem_class;
+extern const OptionItemClass TextItem_class;
 extern const OptionItemClass CheckItem_class;
 extern const OptionItemClass NumberItem_class;
+
+TextItem* TextItem_new(const char* text);
 
 CheckItem* CheckItem_newByRef(const char* text, bool* ref);
 CheckItem* CheckItem_newByVal(const char* text, bool value);

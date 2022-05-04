@@ -25,6 +25,13 @@ static void OptionItem_delete(Object* cast) {
    free(this);
 }
 
+static void TextItem_display(const Object* cast, RichString* out) {
+   const TextItem* this = (const TextItem*)cast;
+   assert (this != NULL);
+
+   RichString_appendWide(out, CRT_colors[HELP_BOLD], this->super.text);
+}
+
 static void CheckItem_display(const Object* cast, RichString* out) {
    const CheckItem* this = (const CheckItem*)cast;
    assert (this != NULL);
@@ -68,6 +75,16 @@ const OptionItemClass OptionItem_class = {
    }
 };
 
+const OptionItemClass TextItem_class = {
+   .super = {
+      .extends = Class(OptionItem),
+      .delete = OptionItem_delete,
+      .display = TextItem_display
+   },
+   .kind = OPTION_ITEM_TEXT
+};
+
+
 const OptionItemClass CheckItem_class = {
    .super = {
       .extends = Class(OptionItem),
@@ -77,6 +94,7 @@ const OptionItemClass CheckItem_class = {
    .kind = OPTION_ITEM_CHECK
 };
 
+
 const OptionItemClass NumberItem_class = {
    .super = {
       .extends = Class(OptionItem),
@@ -85,6 +103,12 @@ const OptionItemClass NumberItem_class = {
    },
    .kind = OPTION_ITEM_NUMBER
 };
+
+TextItem* TextItem_new(const char* text) {
+   TextItem* this = AllocThis(TextItem);
+   this->super.text = xStrdup(text);
+   return this;
+}
 
 CheckItem* CheckItem_newByRef(const char* text, bool* ref) {
    CheckItem* this = AllocThis(CheckItem);

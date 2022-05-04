@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "OptionItem.h"
 #include "ProvideCurses.h"
+#include "ScreensPanel.h"
 
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
@@ -43,6 +44,8 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    case KEY_RECLICK:
    case ' ':
       switch (OptionItem_kind(selected)) {
+      case OPTION_ITEM_TEXT:
+         break;
       case OPTION_ITEM_CHECK:
          CheckItem_toggle((CheckItem*)selected);
          result = HANDLED;
@@ -97,9 +100,17 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    this->scr = scr;
 
    Panel_setHeader(super, "Display options");
-   Panel_add(super, (Object*) CheckItem_newByRef("Tree view (for the current Screen tab)", &(settings->ss->treeView)));
+
+   #define TABMSG "For current screen tab: \0"
+   char tabheader[sizeof(TABMSG) + SCREEN_NAME_LEN + 1] = TABMSG;
+   strncat(tabheader, settings->ss->name, SCREEN_NAME_LEN);
+   Panel_add(super, (Object*) TextItem_new(tabheader));
+   #undef TABMSG
+
+   Panel_add(super, (Object*) CheckItem_newByRef("Tree view", &(settings->ss->treeView)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is always sorted by PID (htop 2 behavior)", &(settings->ss->treeViewAlwaysByPID)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is collapsed by default", &(settings->ss->allBranchesCollapsed)));
+   Panel_add(super, (Object*) TextItem_new("Global options:"));
    Panel_add(super, (Object*) CheckItem_newByRef("Show tabs for screens", &(settings->screenTabs)));
    Panel_add(super, (Object*) CheckItem_newByRef("Shadow other users' processes", &(settings->shadowOtherUsers)));
    Panel_add(super, (Object*) CheckItem_newByRef("Hide kernel threads", &(settings->hideKernelThreads)));
