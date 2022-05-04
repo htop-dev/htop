@@ -2101,16 +2101,11 @@ static void scanCPUFrequencyFromCPUinfo(LinuxProcessList* this) {
       if (fgets(buffer, PROC_LINE_LENGTH, file) == NULL)
          break;
 
-      if (
-         (sscanf(buffer, "processor : %d", &cpuid) == 1) ||
-         (sscanf(buffer, "processor: %d", &cpuid) == 1)
-      ) {
+      if (sscanf(buffer, "processor : %d", &cpuid) == 1) {
          continue;
       } else if (
          (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
-         (sscanf(buffer, "cpu MHz: %lf", &frequency) == 1) ||
-         (sscanf(buffer, "clock : %lfMHz", &frequency) == 1) ||
-         (sscanf(buffer, "clock: %lfMHz", &frequency) == 1)
+         (sscanf(buffer, "clock : %lfMHz", &frequency) == 1)
       ) {
          if (cpuid < 0 || (unsigned int)cpuid > (existingCPUs - 1)) {
             continue;
