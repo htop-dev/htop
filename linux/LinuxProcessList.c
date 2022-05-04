@@ -166,6 +166,28 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 
 #endif
 
+static unsigned int scanAvailableCPUsFromCPUinfo(LinuxProcessList* this) {
+   FILE* file = fopen(PROCCPUINFOFILE, "r");
+   if (file == NULL)
+      return this->super.existingCPUs;
+
+   unsigned int availableCPUs = 0;
+
+   while (!feof(file)) {
+      char buffer[PROC_LINE_LENGTH];
+
+      if (fgets(buffer, PROC_LINE_LENGTH, file) == NULL)
+         break;
+
+      if (String_startsWith(buffer, "processor"))
+         availableCPUs++;
+      }
+
+   fclose(file);
+
+   return availableCPUs ? availableCPUs : 1;
+}
+
 static void LinuxProcessList_updateCPUcount(ProcessList* super) {
    /* Similar to get_nprocs_conf(3) / _SC_NPROCESSORS_CONF
     * https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/getsysstats.c;hb=HEAD
@@ -240,6 +262,12 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
    if (existing < 1)
       return;
 
+   if (Running_containerized) {
+	   /* LXC munges /proc/cpuinfo but not the /sys/devices/system/cpu/ files,
+	    * so limit the visible CPUs to what the guest has been configured to see: */
+	   currExisting = scanAvailableCPUsFromCPUinfo(this);
+   }
+
 #ifdef HAVE_SENSORS_SENSORS_H
    /* When started with offline CPUs, libsensors does not monitor those,
     * even when they become online. */
@@ -248,7 +276,7 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
 #endif
 
    super->activeCPUs = active;
-   assert(existing == currExisting);
+   assert(Running_containerized || (existing == currExisting));
    super->existingCPUs = currExisting;
 }
 
