@@ -93,6 +93,8 @@ typedef enum PCPMetric_ {
    PCP_ZRAM_CAPACITY,           /* zram.capacity */
    PCP_ZRAM_ORIGINAL,           /* zram.mm_stat.data_size.original */
    PCP_ZRAM_COMPRESSED,         /* zram.mm_stat.data_size.compressed */
+   PCP_VFS_FILES_COUNT,         /* vfs.files.count */
+   PCP_VFS_FILES_MAX,           /* vfs.files.max */
 
    PCP_PROC_PID,                /* proc.psinfo.pid */
    PCP_PROC_PPID,               /* proc.psinfo.ppid */

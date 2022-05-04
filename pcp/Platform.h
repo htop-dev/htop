@@ -131,6 +131,8 @@ extern pmOptions opts;
 
 size_t Platform_addMetric(PCPMetric id, const char* name);
 
+void Platform_getFileDescriptors(double* used, double* max);
+
 void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
 
 void Platform_gettime_monotonic(uint64_t* msec);
