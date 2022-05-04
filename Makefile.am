@@ -375,6 +375,7 @@ endif
 # --------------------------
 
 pcp_platform_headers = \
+	FileDescriptorMeter.h \
 	linux/PressureStallMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
@@ -390,6 +391,7 @@ pcp_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 pcp_platform_sources = \
+	FileDescriptorMeter.c \
 	linux/PressureStallMeter.c \
 	linux/ZramMeter.c \
 	pcp/PCPDynamicColumn.c \
