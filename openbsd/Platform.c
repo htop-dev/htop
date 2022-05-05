@@ -269,7 +269,13 @@ char* Platform_getProcessEnv(pid_t pid) {
    for (char** p = ptr; *p; p++) {
       size_t len = strlen(*p) + 1;
 
-      if (size + len > capacity) {
+      while (size + len > capacity) {
+         if (capacity > (SIZE_MAX / 2)) {
+            free(env);
+            env = NULL;
+            goto end;
+         }
+
          capacity *= 2;
          env = xRealloc(env, capacity);
       }
@@ -285,6 +291,7 @@ char* Platform_getProcessEnv(pid_t pid) {
       env[size + 1] = 0;
    }
 
+end:
    (void) kvm_close(kt);
    return env;
 }
