@@ -176,6 +176,7 @@ void ProcessList_add(ProcessList* this, Process* p) {
 // ProcessList_removeIndex removes Process p from the list's map and soft deletes
 // it from its vector. Vector_compact *must* be called once the caller is done
 // removing items.
+// Should only be called from ProcessList_scan to avoid breaking dying process highlighting.
 static void ProcessList_removeIndex(ProcessList* this, const Process* p, int idx) {
    pid_t pid = p->pid;
 
@@ -192,16 +193,6 @@ static void ProcessList_removeIndex(ProcessList* this, const Process* p, int idx
 
    assert(Hashtable_get(this->processTable, pid) == NULL);
    assert(Vector_countEquals(this->processes, Hashtable_count(this->processTable)));
-}
-
-void ProcessList_remove(ProcessList* this, const Process* p) {
-   int idx = Vector_indexOf(this->processes, p, Process_pidEqualCompare);
-   assert(0 <= idx && idx < Vector_size(this->processes));
-   if (idx >= 0) {
-      ProcessList_removeIndex(this, p, idx);
-      // This function is public so must not require callers to compact the Vector
-      Vector_compact(this->processes);
-   }
 }
 
 static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, bool show) {

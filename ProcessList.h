@@ -106,8 +106,6 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header);
 
 void ProcessList_add(ProcessList* this, Process* p);
 
-void ProcessList_remove(ProcessList* this, const Process* p);
-
 void ProcessList_updateDisplayList(ProcessList* this);
 
 ProcessField ProcessList_keyAt(const ProcessList* this, int at);
