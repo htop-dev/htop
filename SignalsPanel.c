@@ -6,8 +6,8 @@ in the source distribution for its full text.
 */
 
 #include "SignalsPanel.h"
+// the above contains #include <signal.h> so do not add that here again (breaks Solaris build)
 
-#include <signal.h>
 #include <stdbool.h>
 
 #include "FunctionBar.h"
