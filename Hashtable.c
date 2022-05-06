@@ -52,7 +52,7 @@ static void Hashtable_dump(const Hashtable* this) {
               i,
               this->buckets[i].key,
               this->buckets[i].probe,
-              this->buckets[i].value ? (const void*)this->buckets[i].value : "(nil)");
+              this->buckets[i].value);
 
       if (this->buckets[i].value)
          items++;
