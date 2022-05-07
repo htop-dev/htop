@@ -265,7 +265,7 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
    if (Running_containerized) {
 	   /* LXC munges /proc/cpuinfo but not the /sys/devices/system/cpu/ files,
 	    * so limit the visible CPUs to what the guest has been configured to see: */
-	   currExisting = scanAvailableCPUsFromCPUinfo(this);
+	   currExisting = active = scanAvailableCPUsFromCPUinfo(this);
    }
 
 #ifdef HAVE_SENSORS_SENSORS_H
