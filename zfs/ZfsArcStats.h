@@ -10,6 +10,7 @@ in the source distribution for its full text.
 typedef struct ZfsArcStats_ {
    int enabled;
    int isCompressed;
+   unsigned long long int min;
    unsigned long long int max;
    unsigned long long int size;
    unsigned long long int MFU;

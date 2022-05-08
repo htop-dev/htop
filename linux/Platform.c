@@ -358,8 +358,13 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[4] = pl->availableMem;
 
    if (lpl->zfs.enabled != 0 && !Running_containerized) {
-      this->values[0] -= lpl->zfs.size;
-      this->values[3] += lpl->zfs.size;
+      // ZFS does not shrink below the value of zfs_arc_min.
+      unsigned long long int shrinkableSize = 0;
+      if (lpl->zfs.size > lpl->zfs.min)
+         shrinkableSize = lpl->zfs.size - lpl->zfs.min;
+      this->values[0] -= shrinkableSize;
+      this->values[3] += shrinkableSize;
+      this->values[4] += shrinkableSize;
    }
 }
 

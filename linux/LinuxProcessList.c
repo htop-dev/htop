@@ -1922,6 +1922,7 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
 
       switch (buffer[0]) {
       case 'c':
+         tryRead("c_min", &lpl->zfs.min);
          tryRead("c_max", &lpl->zfs.max);
          tryReadFlag("compressed_size", &lpl->zfs.compressed, lpl->zfs.isCompressed);
          break;
@@ -1956,6 +1957,7 @@ static inline void LinuxProcessList_scanZfsArcstats(LinuxProcessList* lpl) {
 
    lpl->zfs.enabled = (lpl->zfs.size > 0 ? 1 : 0);
    lpl->zfs.size    /= 1024;
+   lpl->zfs.min    /= 1024;
    lpl->zfs.max    /= 1024;
    lpl->zfs.MFU    /= 1024;
    lpl->zfs.MRU    /= 1024;
