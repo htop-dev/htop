@@ -292,7 +292,7 @@ void Vector_compact(Vector* this) {
 
    /* one deletion: use memmove, which should be faster */
    if (this->dirty_count == 1) {
-      memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx) * sizeof(this->array[0]));
+      memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx - 1) * sizeof(this->array[0]));
    } else {
       /* multiple deletions */
       for (int i = idx + 1; i < size; i++) {
