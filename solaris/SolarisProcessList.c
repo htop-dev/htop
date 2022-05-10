@@ -468,7 +468,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu / (double)32768) * (double)100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
-      proc->time            = _psinfo->pr_time.tv_sec;
+      proc->time            = _psinfo->pr_time.tv_sec * 100 + _psinfo->pr_time.tv_nsec / 10000000;
       if (!preExisting) { // Tasks done only for NEW processes
          proc->isUserlandThread = false;
          proc->starttime_ctime = _psinfo->pr_start.tv_sec;
@@ -497,7 +497,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu / (double)32768) * (double)100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
-      proc->time               = _lwpsinfo->pr_time.tv_sec;
+      proc->time               = _lwpsinfo->pr_time.tv_sec * 100 + _lwpsinfo->pr_time.tv_nsec / 10000000;
       if (!preExisting) { // Tasks done only for NEW LWPs
          proc->isUserlandThread    = true;
          proc->ppid            = _psinfo->pr_pid * 1024;
