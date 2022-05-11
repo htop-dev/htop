@@ -459,6 +459,7 @@ static Htop_Reaction actionShowLocks(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+#ifdef TRACE_PROGRAM_NAME
 static Htop_Reaction actionStrace(State* st) {
    if (Settings_isReadonly())
       return HTOP_OK;
@@ -477,6 +478,7 @@ static Htop_Reaction actionStrace(State* st) {
    CRT_enableDelay();
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
+#endif
 
 static Htop_Reaction actionTag(State* st) {
    Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
@@ -542,7 +544,9 @@ static const struct {
    { .key = "      i: ", .roInactive = true,  .info = "set IO priority" },
    { .key = "      l: ", .roInactive = true,  .info = "list open files with lsof" },
    { .key = "      x: ", .roInactive = false, .info = "list file locks of process" },
-   { .key = "      s: ", .roInactive = true,  .info = "trace syscalls with strace" },
+#ifdef TRACE_PROGRAM_NAME
+   { .key = "      s: ", .roInactive = true,  .info = "trace syscalls with " TRACE_PROGRAM_SHORTNAME },
+#endif
    { .key = "      w: ", .roInactive = false, .info = "wrap process command in multiple lines" },
    { .key = " F2 C S: ", .roInactive = false, .info = "setup" },
    { .key = " F1 h ?: ", .roInactive = false, .info = "show this help screen" },
@@ -740,7 +744,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['m'] = actionToggleMergedCommand;
    keys['p'] = actionToggleProgramPath;
    keys['q'] = actionQuit;
+#ifdef TRACE_PROGRAM_NAME
    keys['s'] = actionStrace;
+#endif
    keys['t'] = actionToggleTreeView;
    keys['u'] = actionFilterByUser;
    keys['w'] = actionShowCommandScreen;
