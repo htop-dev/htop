@@ -533,7 +533,7 @@ static const struct {
    { .key = "      U: ", .roInactive = false, .info = "untag all processes" },
    { .key = "   F9 k: ", .roInactive = true,  .info = "kill process/tagged processes" },
    { .key = "   F7 ]: ", .roInactive = true,  .info = "higher priority (root only)" },
-   { .key = "   F8 [: ", .roInactive = false, .info = "lower priority (+ nice)" },
+   { .key = "   F8 [: ", .roInactive = true,  .info = "lower priority (+ nice)" },
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
    { .key = "      a: ", .roInactive = true, .info = "set CPU affinity" },
 #endif
