@@ -91,7 +91,6 @@ typedef enum ColorElements_ {
    GRAPH_2,
    MEMORY_USED,
    MEMORY_BUFFERS,
-   MEMORY_BUFFERS_TEXT,
    MEMORY_CACHE,
    MEMORY_SHARED,
    HUGEPAGE_1,
@@ -112,7 +111,6 @@ typedef enum ColorElements_ {
    HELP_SHADOW,
    HOSTNAME,
    CPU_NICE,
-   CPU_NICE_TEXT,
    CPU_NORMAL,
    CPU_SYSTEM,
    CPU_IOWAIT,
@@ -198,5 +196,7 @@ void CRT_disableDelay(void);
 void CRT_enableDelay(void);
 
 void CRT_setColors(int colorScheme);
+
+int CRT_getBarGraphicColor(int attr);
 
 #endif

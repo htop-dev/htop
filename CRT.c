@@ -164,8 +164,7 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [GRAPH_1] = A_BOLD | ColorPair(Cyan, Black),
       [GRAPH_2] = ColorPair(Cyan, Black),
       [MEMORY_USED] = ColorPair(Green, Black),
-      [MEMORY_BUFFERS] = ColorPair(Blue, Black),
-      [MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue, Black),
+      [MEMORY_BUFFERS] = A_BOLD | ColorPair(Blue, Black),
       [MEMORY_CACHE] = ColorPair(Yellow, Black),
       [MEMORY_SHARED] = ColorPair(Magenta, Black),
       [HUGEPAGE_1] = ColorPair(Green, Black),
@@ -185,8 +184,7 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CHECK_MARK] = A_BOLD,
       [CHECK_TEXT] = A_NORMAL,
       [HOSTNAME] = A_BOLD,
-      [CPU_NICE] = ColorPair(Blue, Black),
-      [CPU_NICE_TEXT] = A_BOLD | ColorPair(Blue, Black),
+      [CPU_NICE] = A_BOLD | ColorPair(Blue, Black),
       [CPU_NORMAL] = ColorPair(Green, Black),
       [CPU_SYSTEM] = ColorPair(Red, Black),
       [CPU_IOWAIT] = A_BOLD | ColorPairGrayBlack,
@@ -272,7 +270,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [GRAPH_2] = A_NORMAL,
       [MEMORY_USED] = A_BOLD,
       [MEMORY_BUFFERS] = A_NORMAL,
-      [MEMORY_BUFFERS_TEXT] = A_NORMAL,
       [MEMORY_CACHE] = A_NORMAL,
       [MEMORY_SHARED] = A_NORMAL,
       [HUGEPAGE_1] = A_BOLD,
@@ -293,7 +290,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CHECK_TEXT] = A_NORMAL,
       [HOSTNAME] = A_BOLD,
       [CPU_NICE] = A_NORMAL,
-      [CPU_NICE_TEXT] = A_NORMAL,
       [CPU_NORMAL] = A_BOLD,
       [CPU_SYSTEM] = A_BOLD,
       [CPU_IOWAIT] = A_NORMAL,
@@ -379,7 +375,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [GRAPH_2] = ColorPair(Blue, White),
       [MEMORY_USED] = ColorPair(Green, White),
       [MEMORY_BUFFERS] = ColorPair(Cyan, White),
-      [MEMORY_BUFFERS_TEXT] = ColorPair(Cyan, White),
       [MEMORY_CACHE] = ColorPair(Yellow, White),
       [MEMORY_SHARED] = ColorPair(Magenta, White),
       [HUGEPAGE_1] = ColorPair(Green, White),
@@ -400,7 +395,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CHECK_TEXT] = ColorPair(Black, White),
       [HOSTNAME] = ColorPair(Black, White),
       [CPU_NICE] = ColorPair(Cyan, White),
-      [CPU_NICE_TEXT] = ColorPair(Cyan, White),
       [CPU_NORMAL] = ColorPair(Green, White),
       [CPU_SYSTEM] = ColorPair(Red, White),
       [CPU_IOWAIT] = A_BOLD | ColorPair(Black, White),
@@ -486,7 +480,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [GRAPH_2] = ColorPair(Cyan, Black),
       [MEMORY_USED] = ColorPair(Green, Black),
       [MEMORY_BUFFERS] = ColorPair(Cyan, Black),
-      [MEMORY_BUFFERS_TEXT] = ColorPair(Cyan, Black),
       [MEMORY_CACHE] = ColorPair(Yellow, Black),
       [MEMORY_SHARED] = ColorPair(Magenta, Black),
       [HUGEPAGE_1] = ColorPair(Green, Black),
@@ -507,7 +500,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CHECK_TEXT] = ColorPair(Black, Black),
       [HOSTNAME] = ColorPairWhiteDefault,
       [CPU_NICE] = ColorPair(Cyan, Black),
-      [CPU_NICE_TEXT] = ColorPair(Cyan, Black),
       [CPU_NORMAL] = ColorPair(Green, Black),
       [CPU_SYSTEM] = ColorPair(Red, Black),
       [CPU_IOWAIT] = A_BOLD | ColorPair(Black, Black),
@@ -593,7 +585,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [GRAPH_2] = ColorPair(Cyan, Blue),
       [MEMORY_USED] = A_BOLD | ColorPair(Green, Blue),
       [MEMORY_BUFFERS] = A_BOLD | ColorPair(Cyan, Blue),
-      [MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Cyan, Blue),
       [MEMORY_CACHE] = A_BOLD | ColorPair(Yellow, Blue),
       [MEMORY_SHARED] = A_BOLD | ColorPair(Magenta, Blue),
       [HUGEPAGE_1] = A_BOLD | ColorPair(Green, Blue),
@@ -614,7 +605,6 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CHECK_TEXT] = A_NORMAL | ColorPair(White, Blue),
       [HOSTNAME] = ColorPair(White, Blue),
       [CPU_NICE] = A_BOLD | ColorPair(Cyan, Blue),
-      [CPU_NICE_TEXT] = A_BOLD | ColorPair(Cyan, Blue),
       [CPU_NORMAL] = A_BOLD | ColorPair(Green, Blue),
       [CPU_SYSTEM] = A_BOLD | ColorPair(Red, Blue),
       [CPU_IOWAIT] = A_BOLD | ColorPair(Black, Blue),
@@ -699,8 +689,7 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [GRAPH_1] = A_BOLD | ColorPair(Green, Black),
       [GRAPH_2] = ColorPair(Green, Black),
       [MEMORY_USED] = ColorPair(Green, Black),
-      [MEMORY_BUFFERS] = ColorPair(Blue, Black),
-      [MEMORY_BUFFERS_TEXT] = A_BOLD | ColorPair(Blue, Black),
+      [MEMORY_BUFFERS] = A_BOLD | ColorPair(Blue, Black),
       [MEMORY_CACHE] = ColorPair(Yellow, Black),
       [MEMORY_SHARED] = ColorPair(Magenta, Black),
       [HUGEPAGE_1] = ColorPair(Green, Black),
@@ -718,8 +707,7 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CHECK_MARK] = A_BOLD | ColorPair(Green, Black),
       [CHECK_TEXT] = ColorPair(Cyan, Black),
       [HOSTNAME] = ColorPair(Green, Black),
-      [CPU_NICE] = ColorPair(Blue, Black),
-      [CPU_NICE_TEXT] = A_BOLD | ColorPair(Blue, Black),
+      [CPU_NICE] = A_BOLD | ColorPair(Blue, Black),
       [CPU_NORMAL] = ColorPair(Green, Black),
       [CPU_SYSTEM] = ColorPair(Red, Black),
       [CPU_IOWAIT] = ColorPair(Yellow, Black),
@@ -1063,6 +1051,16 @@ void CRT_setColors(int colorScheme) {
    init_pair(ColorIndexWhiteDefault, White, -1);
 
    CRT_colors = CRT_colorSchemes[colorScheme];
+}
+
+int CRT_getBarGraphicColor(int attr) {
+   // Meters may use these bold/bright colors for better text readability on a
+   // black background. These bold colors would look strange when applied on
+   // bar graphics ("|"), so don't.
+   if (CRT_colors[attr] == (A_BOLD | ColorPair(Blue, Black)))
+      return ColorPair(Blue, Black);
+
+   return CRT_colors[attr];
 }
 
 #ifdef PRINT_BACKTRACE

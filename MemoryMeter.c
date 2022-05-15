@@ -58,7 +58,7 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
 
    Meter_humanUnit(buffer, this->values[1], sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " buffers:");
-   RichString_appendAscii(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
+   RichString_appendAscii(out, CRT_colors[MEMORY_BUFFERS], buffer);
 
    /* shared memory is not supported on all platforms */
    if (!isnan(this->values[2])) {
