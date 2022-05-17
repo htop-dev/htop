@@ -120,7 +120,9 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       close(fdnull);
       char buffer[32] = {0};
       xSnprintf(buffer, sizeof(buffer), "%d", pid);
-      execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", NULL);
+      // Use of NULL in variadic functions must have a pointer cast.
+      // The NULL constant is not required by standard to have a pointer type.
+      execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", (char *)NULL);
       exit(127);
    }
    close(fdpair[1]);
