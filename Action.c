@@ -569,48 +569,69 @@ static Htop_Reaction actionHelp(State* st) {
 
    attrset(CRT_colors[DEFAULT_COLOR]);
    line++;
-   mvaddstr(line++, 0, "CPU usage bar: ");
+   mvaddstr(line, 0, "CPU usage bar: ");
+
+   int bar_x = 0;
+
+#define addfirstbartext(attr, text) \
+   do { \
+      bar_x = getcurx(stdscr); \
+      addattrstr((attr), (text)); \
+   } while(0)
+#define addbartext(attr, text) \
+   do { \
+      addattrstr(CRT_colors[DEFAULT_COLOR], "/"); \
+      addattrstr((attr), (text)); \
+   } while(0)
+#define addlastbartext(text) \
+   do { \
+      int text_len = strlen(text); \
+      attrset(CRT_colors[BAR_SHADOW]); \
+      mvaddstr(line, 56 - text_len + bar_x, (text)); \
+   } while(0)
 
    addattrstr(CRT_colors[BAR_BORDER], "[");
    if (st->settings->detailedCPUTime) {
-      addattrstr(CRT_colors[CPU_NICE_TEXT], "low"); addstr("/");
-      addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
-      addattrstr(CRT_colors[CPU_SYSTEM], "kernel"); addstr("/");
-      addattrstr(CRT_colors[CPU_IRQ], "irq"); addstr("/");
-      addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq"); addstr("/");
-      addattrstr(CRT_colors[CPU_STEAL], "steal"); addstr("/");
-      addattrstr(CRT_colors[CPU_GUEST], "guest"); addstr("/");
-      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait");
-      addattrstr(CRT_colors[BAR_SHADOW], " used%");
+      addfirstbartext(CRT_colors[CPU_NICE_TEXT], "low");
+      addbartext(CRT_colors[CPU_NORMAL], "normal");
+      addbartext(CRT_colors[CPU_SYSTEM], "kernel");
+      addbartext(CRT_colors[CPU_IRQ], "irq");
+      addbartext(CRT_colors[CPU_SOFTIRQ], "soft-irq");
+      addbartext(CRT_colors[CPU_STEAL], "steal");
+      addbartext(CRT_colors[CPU_GUEST], "guest");
+      addbartext(CRT_colors[CPU_IOWAIT], "io-wait");
    } else {
-      addattrstr(CRT_colors[CPU_NICE_TEXT], "low-priority"); addstr("/");
-      addattrstr(CRT_colors[CPU_NORMAL], "normal"); addstr("/");
-      addattrstr(CRT_colors[CPU_SYSTEM], "kernel"); addstr("/");
-      addattrstr(CRT_colors[CPU_GUEST], "virtualized");
-      addattrstr(CRT_colors[BAR_SHADOW], "             used%");
+      addfirstbartext(CRT_colors[CPU_NICE_TEXT], "low-priority");
+      addbartext(CRT_colors[CPU_NORMAL], "normal");
+      addbartext(CRT_colors[CPU_SYSTEM], "kernel");
+      addbartext(CRT_colors[CPU_GUEST], "virtualized");
    }
+   addlastbartext("used%");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(line++, 0, "Memory bar:    ");
+   mvaddstr(++line, 0, "Memory bar:    ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
-   addattrstr(CRT_colors[MEMORY_USED], "used"); addstr("/");
-   addattrstr(CRT_colors[MEMORY_BUFFERS_TEXT], "buffers"); addstr("/");
-   addattrstr(CRT_colors[MEMORY_SHARED], "shared"); addstr("/");
-   addattrstr(CRT_colors[MEMORY_CACHE], "cache");
-   addattrstr(CRT_colors[BAR_SHADOW], "                     used/total");
+   addfirstbartext(CRT_colors[MEMORY_USED], "used");
+   addbartext(CRT_colors[MEMORY_BUFFERS_TEXT], "buffers");
+   addbartext(CRT_colors[MEMORY_SHARED], "shared");
+   addbartext(CRT_colors[MEMORY_CACHE], "cache");
+   addlastbartext("used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
    attrset(CRT_colors[DEFAULT_COLOR]);
-   mvaddstr(line++, 0, "Swap bar:      ");
+   mvaddstr(++line, 0, "Swap bar:      ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
-   addattrstr(CRT_colors[SWAP], "used");
+   addfirstbartext(CRT_colors[SWAP], "used");
 #ifdef HTOP_LINUX
-   addstr("/");
-   addattrstr(CRT_colors[SWAP_CACHE], "cache");
-   addattrstr(CRT_colors[BAR_SHADOW], "                                    used/total");
-#else
-   addattrstr(CRT_colors[BAR_SHADOW], "                                          used/total");
+   addbartext(CRT_colors[SWAP_CACHE], "cache");
 #endif
+   addlastbartext("used/total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
+   line++;
+
+#undef addfirstbartext
+#undef addbartext
+#undef addlastbartext
+
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(line++, 0, "Type and layout of header meters are configurable in the setup screen.");
    if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
