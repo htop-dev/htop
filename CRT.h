@@ -185,6 +185,8 @@ extern int CRT_scrollWheelVAmount;
 
 extern ColorScheme CRT_colorScheme;
 
+void CRT_setMouse(bool enabled);
+
 void CRT_init(const Settings* settings, bool allowUnicode);
 
 void CRT_done(void);

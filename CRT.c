@@ -900,6 +900,20 @@ void CRT_resetSignalHandlers(void) {
    signal(SIGQUIT, SIG_DFL);
 }
 
+void CRT_setMouse(bool enabled) {
+#ifdef HAVE_GETMOUSE
+   if (enabled) {
+#if NCURSES_MOUSE_VERSION > 1
+      mousemask(BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
+#else
+      mousemask(BUTTON1_RELEASED, NULL);
+#endif
+   } else {
+      mousemask(0, NULL);
+   }
+#endif
+}
+
 void CRT_init(const Settings* settings, bool allowUnicode) {
    redirectStderr();
 
@@ -993,13 +1007,7 @@ IGNORE_WCASTQUAL_END
 #endif
       CRT_treeStrAscii;
 
-#ifdef HAVE_GETMOUSE
-#if NCURSES_MOUSE_VERSION > 1
-   mousemask(BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
-#else
-   mousemask(BUTTON1_RELEASED, NULL);
-#endif
-#endif
+   CRT_setMouse(settings->enableMouse);
 
    CRT_degreeSign = initDegreeSign();
 }
