@@ -51,6 +51,8 @@ extern const MeterClass* const Platform_meterTypes[];
 bool Platform_init(void);
 void Platform_done(void);
 
+extern bool Running_containerized;
+
 void Platform_setBindings(Htop_Action* keys);
 
 int Platform_getUptime(void);
