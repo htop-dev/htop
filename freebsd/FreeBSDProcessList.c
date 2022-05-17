@@ -397,6 +397,7 @@ static void FreeBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process
 }
 
 static void FreeBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
+#ifdef KERN_PROC_CWD
    const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_CWD, kproc->ki_pid };
    char buffer[2048];
    size_t size = sizeof(buffer);
@@ -414,6 +415,9 @@ static void FreeBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process
    }
 
    free_and_xStrdup(&proc->procCwd, buffer);
+#else
+   proc->procCwd = NULL;
+#endif
 }
 
 static void FreeBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
