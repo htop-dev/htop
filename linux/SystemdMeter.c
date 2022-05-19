@@ -221,15 +221,16 @@ static void updateViaExec(void) {
       close(fdnull);
       // Use of NULL in variadic functions must have a pointer cast.
       // The NULL constant is not required by standard to have a pointer type.
-      execlp("systemctl",
-             "systemctl",
-             "show",
-             "--property=SystemState",
-             "--property=NFailedUnits",
-             "--property=NNames",
-             "--property=NJobs",
-             "--property=NInstalledJobs",
-             (char *)NULL);
+      execlp(
+         "systemctl",
+         "systemctl",
+         "show",
+         "--property=SystemState",
+         "--property=NFailedUnits",
+         "--property=NNames",
+         "--property=NJobs",
+         "--property=NInstalledJobs",
+         (char *)NULL);
       exit(127);
    }
    close(fdpair[1]);
