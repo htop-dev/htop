@@ -618,9 +618,23 @@ static Htop_Reaction actionHelp(State* st) {
    }
    line++;
 
-   mvaddstr(line++, 0, "Process state: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
+#define addattrstatestr(attr, state, desc)              \
+   do {                                                 \
+      addattrstr(attr, state);                          \
+      addattrstr(CRT_colors[DEFAULT_COLOR], ": " desc); \
+   } while(0)
 
-   line++;
+   mvaddstr(line, 0, "Process state: ");
+   addattrstatestr(CRT_colors[PROCESS_RUN_STATE], "R", "running; ");
+   addattrstatestr(CRT_colors[PROCESS_SHADOW], "S", "sleeping; ");
+   addattrstatestr(CRT_colors[PROCESS_RUN_STATE], "t", "traced/stopped; ");
+   addattrstatestr(CRT_colors[PROCESS_D_STATE], "Z", "zombie; ");
+   addattrstatestr(CRT_colors[PROCESS_D_STATE], "D", "dist sleep");
+   attrset(CRT_colors[DEFAULT_COLOR]);
+
+#undef addattrstatestr
+
+   line += 2;
 
    const bool readonly = Settings_isReadonly();
 
