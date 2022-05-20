@@ -629,7 +629,7 @@ static Htop_Reaction actionHelp(State* st) {
    addattrstatestr(CRT_colors[PROCESS_SHADOW], "S", "sleeping; ");
    addattrstatestr(CRT_colors[PROCESS_RUN_STATE], "t", "traced/stopped; ");
    addattrstatestr(CRT_colors[PROCESS_D_STATE], "Z", "zombie; ");
-   addattrstatestr(CRT_colors[PROCESS_D_STATE], "D", "dist sleep");
+   addattrstatestr(CRT_colors[PROCESS_D_STATE], "D", "disk sleep");
    attrset(CRT_colors[DEFAULT_COLOR]);
 
 #undef addattrstatestr
