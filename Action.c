@@ -602,7 +602,7 @@ static Htop_Reaction actionHelp(State* st) {
    addbartext(CRT_colors[MEMORY_SHARED], "/", "shared");
    addbartext(CRT_colors[MEMORY_CACHE], "/", "cache");
    addbartext(CRT_colors[BAR_SHADOW], "                     ", "used");
-   addbartext(CRT_colors[BAR_SHADOW], "/", "totel");
+   addbartext(CRT_colors[BAR_SHADOW], "/", "total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
 
    attrset(CRT_colors[DEFAULT_COLOR]);
