@@ -86,7 +86,7 @@ void Meter_delete(Object* cast) {
    if (Meter_doneFn(this)) {
       Meter_done(this);
    }
-   free(this->drawData);
+   free(this->drawData.values);
    free(this->caption);
    free(this->values);
    free(this);
@@ -121,8 +121,9 @@ void Meter_setMode(Meter* this, int modeIndex) {
       }
    } else {
       assert(modeIndex >= 1);
-      free(this->drawData);
-      this->drawData = NULL;
+      free(this->drawData.values);
+      this->drawData.values = NULL;
+      this->drawData.nValues = 0;
 
       const MeterMode* mode = Meter_modes[modeIndex];
       this->draw = mode->draw;
@@ -289,12 +290,17 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    const Machine* host = this->host;
+   GraphData* data = &this->drawData;
 
-   if (!this->drawData) {
-      this->drawData = xCalloc(1, sizeof(GraphData));
+   assert(w > 0);
+   if ((size_t)w * 2 > data->nValues) {
+      size_t oldNValues = data->nValues;
+      data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (unsigned int)w * 2);
+      data->values = xReallocArray(data->values, data->nValues, sizeof(*data->values));
+      memmove(data->values + (data->nValues - oldNValues), data->values, oldNValues * sizeof(*data->values));
+      memset(data->values, 0, (data->nValues - oldNValues) * sizeof(*data->values));
    }
-   GraphData* data = this->drawData;
-   const int nValues = METER_GRAPHDATA_SIZE;
+   const int nValues = data->nValues;
 
    const char* const* GraphMeterMode_dots;
    int GraphMeterMode_pixPerRow;
