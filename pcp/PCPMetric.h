@@ -81,6 +81,7 @@ typedef enum PCPMetric_ {
    PCP_ZFS_ARC_BONUS_SIZE,      /* zfs.arc.bonus_size */
    PCP_ZFS_ARC_COMPRESSED_SIZE, /* zfs.arc.compressed_size */
    PCP_ZFS_ARC_UNCOMPRESSED_SIZE, /* zfs.arc.uncompressed_size */
+   PCP_ZFS_ARC_C_MIN,           /* zfs.arc.c_min */
    PCP_ZFS_ARC_C_MAX,           /* zfs.arc.c_max */
    PCP_ZFS_ARC_DBUF_SIZE,       /* zfs.arc.dbuf_size */
    PCP_ZFS_ARC_DNODE_SIZE,      /* zfs.arc.dnode_size */
