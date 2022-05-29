@@ -414,6 +414,8 @@ void Process_makeCommandStr(Process* this) {
    bool stripExeFromCmdline = settings->stripExeFromCmdline;
    bool showThreadNames = settings->showThreadNames;
 
+   uint64_t settingsStamp = settings->lastUpdate;
+
    /* Nothing to do to (Re)Generate the Command string, if the process is:
     * - a kernel thread, or
     * - a zombie from before being under htop's watch, or
@@ -422,52 +424,27 @@ void Process_makeCommandStr(Process* this) {
       return;
    if (this->state == ZOMBIE && !this->mergedCommand.str)
       return;
-   if (Process_isUserlandThread(this) && settings->showThreadNames && (showThreadNames == mc->prevShowThreadNames) && (mc->prevMergeSet == showMergedCommand))
-      return;
 
    /* this->mergedCommand.str needs updating only if its state or contents changed.
     * Its content is based on the fields cmdline, comm, and exe. */
-   if (
-      mc->prevMergeSet == showMergedCommand &&
-      mc->prevPathSet == showProgramPath &&
-      mc->prevCommSet == searchCommInCmdline &&
-      mc->prevCmdlineSet == stripExeFromCmdline &&
-      mc->prevShowThreadNames == showThreadNames &&
-      !mc->cmdlineChanged &&
-      !mc->commChanged &&
-      !mc->exeChanged
-   ) {
+   if (mc->lastUpdate >= settingsStamp)
       return;
-   }
+
+   mc->lastUpdate = settingsStamp;
 
    /* The field separtor "│" has been chosen such that it will not match any
     * valid string used for searching or filtering */
    const char* SEPARATOR = CRT_treeStr[TREE_STR_VERT];
    const int SEPARATOR_LEN = strlen(SEPARATOR);
 
-   /* Check for any changed fields since we last built this string */
-   if (mc->cmdlineChanged || mc->commChanged || mc->exeChanged) {
-      free(mc->str);
-      /* Accommodate the column text, two field separators and terminating NUL */
-      size_t maxLen = 2 * SEPARATOR_LEN + 1;
-      maxLen += this->cmdline ? strlen(this->cmdline) : strlen("(zombie)");
-      maxLen += this->procComm ? strlen(this->procComm) : 0;
-      maxLen += this->procExe ? strlen(this->procExe) : 0;
+   /* Accommodate the column text, two field separators and terminating NUL */
+   size_t maxLen = 2 * SEPARATOR_LEN + 1;
+   maxLen += this->cmdline ? strlen(this->cmdline) : strlen("(zombie)");
+   maxLen += this->procComm ? strlen(this->procComm) : 0;
+   maxLen += this->procExe ? strlen(this->procExe) : 0;
 
-      mc->str = xCalloc(1, maxLen);
-   }
-
-   /* Preserve the settings used in this run */
-   mc->prevMergeSet = showMergedCommand;
-   mc->prevPathSet = showProgramPath;
-   mc->prevCommSet = searchCommInCmdline;
-   mc->prevCmdlineSet = stripExeFromCmdline;
-   mc->prevShowThreadNames = showThreadNames;
-
-   /* Mark everything as unchanged */
-   mc->cmdlineChanged = false;
-   mc->commChanged = false;
-   mc->exeChanged = false;
+   free(mc->str);
+   mc->str = xCalloc(1, maxLen);
 
    /* Reset all locations that need extra handling when actually displaying */
    mc->highlightCount = 0;
@@ -1204,7 +1181,8 @@ void Process_updateComm(Process* this, const char* comm) {
 
    free(this->procComm);
    this->procComm = comm ? xStrdup(comm) : NULL;
-   this->mergedCommand.commChanged = true;
+
+   this->mergedCommand.lastUpdate = 0;
 }
 
 static int skipPotentialPath(const char* cmdline, int end) {
@@ -1244,7 +1222,8 @@ void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart
    this->cmdline = cmdline ? xStrdup(cmdline) : NULL;
    this->cmdlineBasenameStart = (basenameStart || !cmdline) ? basenameStart : skipPotentialPath(cmdline, basenameEnd);
    this->cmdlineBasenameEnd = basenameEnd;
-   this->mergedCommand.cmdlineChanged = true;
+
+   this->mergedCommand.lastUpdate = 0;
 }
 
 void Process_updateExe(Process* this, const char* exe) {
@@ -1263,7 +1242,8 @@ void Process_updateExe(Process* this, const char* exe) {
       this->procExe = NULL;
       this->procExeBasenameOffset = 0;
    }
-   this->mergedCommand.exeChanged = true;
+
+   this->mergedCommand.lastUpdate = 0;
 }
 
 uint8_t Process_fieldWidths[LAST_PROCESSFIELD] = { 0 };

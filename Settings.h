@@ -96,6 +96,7 @@ typedef struct Settings_ {
    #endif
 
    bool changed;
+   uint64_t lastUpdate;
 } Settings;
 
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))

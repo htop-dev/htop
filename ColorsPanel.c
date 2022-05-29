@@ -68,6 +68,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
 
       this->settings->colorScheme = mark;
       this->settings->changed = true;
+      this->settings->lastUpdate++;
 
       CRT_setColors(mark);
       clear();

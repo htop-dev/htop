@@ -52,6 +52,7 @@ static HandlerResult HeaderOptionsPanel_eventHandler(Panel* super, int ch) {
 
       Header_setLayout(this->scr->header, mark);
       this->settings->changed = true;
+      this->settings->lastUpdate++;
 
       ScreenManager_resize(this->scr);
 
