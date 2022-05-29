@@ -601,6 +601,8 @@ static inline void PCPProcessList_scanZfsArcstats(PCPProcessList* this) {
    memset(&this->zfs, 0, sizeof(ZfsArcStats));
    if (PCPMetric_values(PCP_ZFS_ARC_ANON_SIZE, &value, 1, PM_TYPE_U64))
       this->zfs.anon = value.ull / ONE_K;
+   if (PCPMetric_values(PCP_ZFS_ARC_C_MIN, &value, 1, PM_TYPE_U64))
+      this->zfs.min = value.ull / ONE_K;
    if (PCPMetric_values(PCP_ZFS_ARC_C_MAX, &value, 1, PM_TYPE_U64))
       this->zfs.max = value.ull / ONE_K;
    if (PCPMetric_values(PCP_ZFS_ARC_BONUS_SIZE, &value, 1, PM_TYPE_U64))
