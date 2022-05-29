@@ -15,6 +15,7 @@ in the source distribution for its full text.
 
 
 static int MIB_kstat_zfs_misc_arcstats_size[5];
+static int MIB_kstat_zfs_misc_arcstats_c_min[5];
 static int MIB_kstat_zfs_misc_arcstats_c_max[5];
 static int MIB_kstat_zfs_misc_arcstats_mfu_size[5];
 static int MIB_kstat_zfs_misc_arcstats_mru_size[5];
@@ -35,6 +36,7 @@ void openzfs_sysctl_init(ZfsArcStats* stats) {
       len = 5;
       sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
 
+      sysctlnametomib("kstat.zfs.misc.arcstats.c_min", MIB_kstat_zfs_misc_arcstats_c_min, &len);
       sysctlnametomib("kstat.zfs.misc.arcstats.c_max", MIB_kstat_zfs_misc_arcstats_c_max, &len);
       sysctlnametomib("kstat.zfs.misc.arcstats.mfu_size", MIB_kstat_zfs_misc_arcstats_mfu_size, &len);
       sysctlnametomib("kstat.zfs.misc.arcstats.mru_size", MIB_kstat_zfs_misc_arcstats_mru_size, &len);
@@ -60,6 +62,10 @@ void openzfs_sysctl_updateArcStats(ZfsArcStats* stats) {
       len = sizeof(stats->size);
       sysctl(MIB_kstat_zfs_misc_arcstats_size, 5, &(stats->size), &len, NULL, 0);
       stats->size /= 1024;
+
+      len = sizeof(stats->min);
+      sysctl(MIB_kstat_zfs_misc_arcstats_c_min, 5, &(stats->min), &len, NULL, 0);
+      stats->min /= 1024;
 
       len = sizeof(stats->max);
       sysctl(MIB_kstat_zfs_misc_arcstats_c_max, 5, &(stats->max), &len, NULL, 0);

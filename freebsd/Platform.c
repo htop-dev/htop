@@ -227,6 +227,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    const ProcessList* pl = this->pl;
+   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) pl;
 
    this->total = pl->totalMem;
    this->values[0] = pl->usedMem;
@@ -234,6 +235,16 @@ void Platform_setMemoryValues(Meter* this) {
    // this->values[2] = "shared memory, like tmpfs and shm"
    this->values[3] = pl->cachedMem;
    // this->values[4] = "available memory"
+
+   if (fpl->zfs.enabled) {
+      // ZFS does not shrink below the value of zfs_arc_min.
+      unsigned long long int shrinkableSize = 0;
+      if (fpl->zfs.size > fpl->zfs.min)
+         shrinkableSize = fpl->zfs.size - fpl->zfs.min;
+      this->values[0] -= shrinkableSize;
+      this->values[3] += shrinkableSize;
+      // this->values[4] += shrinkableSize;
+   }
 }
 
 void Platform_setSwapValues(Meter* this) {
