@@ -289,6 +289,9 @@ static Htop_Reaction actionInvertSortOrder(State* st) {
 }
 
 static Htop_Reaction actionExpandOrCollapse(State* st) {
+   if (!st->settings->ss->treeView)
+      return HTOP_OK;
+
    bool changed = expandCollapse((Panel*)st->mainPanel);
    return changed ? HTOP_RECALCULATE : HTOP_OK;
 }
