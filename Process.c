@@ -601,11 +601,15 @@ void Process_makeCommandStr(Process* this) {
    }
 
    if (matchLen) {
-      /* strip the matched exe prefix */
-      cmdline += matchLen;
+      if (stripExeFromCmdline) {
+         /* strip the matched exe prefix */
+         cmdline += matchLen;
 
-      commStart -= matchLen;
-      commEnd -= matchLen;
+         commStart -= matchLen;
+         commEnd -= matchLen;
+      } else {
+         matchLen = 0;
+      }
    }
 
    if (!matchLen || (haveCommField && *cmdline)) {
