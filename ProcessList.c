@@ -357,7 +357,10 @@ void ProcessList_expandTree(ProcessList* this) {
    }
 }
 
+// Called on collapse-all toggle and on startup, possibly in non-tree mode
 void ProcessList_collapseAllBranches(ProcessList* this) {
+   ProcessList_buildTree(this); // Update `tree_depth` fields of the processes
+   this->needsSort = true; // ProcessList is sorted by parent now, force new sort
    int size = Vector_size(this->processes);
    for (int i = 0; i < size; i++) {
       Process* process = (Process*) Vector_get(this->processes, i);

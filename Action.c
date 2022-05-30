@@ -242,6 +242,9 @@ static Htop_Reaction actionToggleTreeView(State* st) {
 
 static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
    ScreenSettings* ss = st->settings->ss;
+   if (!ss->treeView) {
+      return HTOP_OK;
+   }
    ss->allBranchesCollapsed = !ss->allBranchesCollapsed;
    if (ss->allBranchesCollapsed)
       ProcessList_collapseAllBranches(st->pl);
