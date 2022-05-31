@@ -219,7 +219,7 @@ The primary user documentation should be the man file which you can find in `hto
 
 Additional documentation, like this file, should be written in gh-style markdown.
 Make each sentence one line.
-Markdown will combined these in output formats.
+Markdown will combine these in output formats.
 It does only insert a paragraph if you insert a blank line into the source file.
 This way git can better diff and present the changes when documentation is altered.
 
