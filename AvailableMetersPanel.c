@@ -79,6 +79,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    }
    if (update) {
       this->settings->changed = true;
+      this->settings->lastUpdate++;
       Header_calculateHeight(header);
       Header_updateData(header);
       Header_draw(header);

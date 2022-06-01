@@ -315,6 +315,7 @@ void ScreensPanel_update(Panel* super) {
    ScreensPanel* this = (ScreensPanel*) super;
    int size = Panel_size(super);
    this->settings->changed = true;
+   this->settings->lastUpdate++;
    this->settings->screens = xReallocArray(this->settings->screens, size + 1, sizeof(ScreenSettings*));
    for (int i = 0; i < size; i++) {
       ScreenListItem* item = (ScreenListItem*) Panel_get(super, i);

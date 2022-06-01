@@ -96,17 +96,10 @@ typedef struct ProcessCmdlineHighlight_ {
  * Process_writeCommand to color the string. str will be NULL for kernel
  * threads and zombies */
 typedef struct ProcessMergedCommand_ {
+   uint64_t lastUpdate;                        /* Marker based on settings->lastUpdate to track when the rendering needs refreshing */
    char* str;                                  /* merged Command string */
    size_t highlightCount;                      /* how many portions of cmdline to highlight */
    ProcessCmdlineHighlight highlights[8];      /* which portions of cmdline to highlight */
-   bool cmdlineChanged : 1;                    /* whether cmdline changed */
-   bool exeChanged : 1;                        /* whether exe changed */
-   bool commChanged : 1;                       /* whether comm changed */
-   bool prevMergeSet : 1;                      /* whether showMergedCommand was set */
-   bool prevPathSet : 1;                       /* whether showProgramPath was set */
-   bool prevCommSet : 1;                       /* whether findCommInCmdline was set */
-   bool prevCmdlineSet : 1;                    /* whether stripExeFromCmdline was set */
-   bool prevShowThreadNames : 1;               /* whether showThreadNames was set */
 } ProcessMergedCommand;
 
 typedef struct Process_ {

@@ -1351,7 +1351,8 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
             if (process->procExeDeleted)
                filename[filenameLen - markerLen] = '\0';
 
-            process->mergedCommand.exeChanged |= oldExeDeleted ^ process->procExeDeleted;
+            if (oldExeDeleted != process->procExeDeleted)
+               process->mergedCommand.lastUpdate = 0;
          }
 
          Process_updateExe(process, filename);
@@ -1557,7 +1558,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
             lp->m_lrs = (proc->isUserlandThread && parent) ? ((const LinuxProcess*)parent)->m_lrs : 0;
          }
 
-         proc->mergedCommand.exeChanged |= prev ^ proc->usesDeletedLib;
+         if (prev != proc->usesDeletedLib)
+            proc->mergedCommand.lastUpdate = 0;
       }
 
       if ((ss->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
