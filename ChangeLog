@@ -1,3 +1,23 @@
+What's new in version 3.2.1
+
+* Fix setting to show all branches collapsed by default
+* Restore functionality of stripExeFromCmdline setting
+* Fix some command line display settings not being honored without restart
+* Display single digit precision for CPU% greater than 99.9%
+* On Linux, FreeBSD and PCP consider only shrinkable ZFS ARC as cache
+* On Linux, increase field width of CPUD% and SWAPD% columns
+* Colorize process state characters in help screen
+* Use mousemask(3X) to enable and disable mouse control
+* Fix heap buffer overflow in Vector_compact
+* On Solaris, fix a process time scaling error
+* On Solaris, fix the build
+* On NetBSD, OpenBSD and Solaris ensure env buffer size is sufficient
+* On Linux, resolve processes exiting interfering with sampling
+* Fix ProcessList quadratic removal when scanning processes
+* Under LXC, limit CPU count to that given by /proc/cpuinfo
+* Improve container detection for LXC
+* Some minor documentation fixes
+
 What's new in version 3.2.0
 
 * Support for displaying multiple tabs in the user interface

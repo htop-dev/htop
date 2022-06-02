@@ -6,7 +6,7 @@
 # ----------------------------------------------------------------------
 
 AC_PREREQ([2.69])
-AC_INIT([htop], [3.2.0], [htop@groups.io], [], [https://htop.dev/])
+AC_INIT([htop], [3.2.1], [htop@groups.io], [], [https://htop.dev/])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([build-aux])
