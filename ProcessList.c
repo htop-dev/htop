@@ -199,7 +199,7 @@ static void ProcessList_removeIndex(ProcessList* this, const Process* p, int idx
    assert(Vector_countEquals(this->processes, Hashtable_count(this->processTable)));
 }
 
-static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level, int indent, bool show) {
+static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, unsigned int level, int32_t indent, bool show) {
    // On OpenBSD the kernel thread 'swapper' has pid 0.
    // Do not treat it as root of any tree.
    if (pid == 0)
@@ -239,7 +239,7 @@ static void ProcessList_buildTreeBranch(ProcessList* this, pid_t pid, int level,
 
       Vector_add(this->displayList, process);
 
-      int nextIndent = indent | (1 << level);
+      int32_t nextIndent = indent | ((int32_t)1 << MINIMUM(level, sizeof(process->indent) * 8 - 2));
       ProcessList_buildTreeBranch(this, process->pid, level + 1, (i < lastShown) ? nextIndent : indent, process->show && process->showChildren);
       if (i == lastShown) {
          process->indent = -nextIndent;

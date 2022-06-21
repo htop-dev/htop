@@ -242,7 +242,7 @@ typedef struct Process_ {
    /*
     * Internal state for tree-mode.
     */
-   int indent;
+   int32_t indent;
    unsigned int tree_depth;
 
    /* Has no known parent process */
