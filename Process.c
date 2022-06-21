@@ -782,19 +782,11 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       }
 
       char* buf = buffer;
-      int maxIndent = 0;
-      bool lastItem = (this->indent < 0);
-      int indent = (this->indent < 0 ? -this->indent : this->indent);
+      const bool lastItem = (this->indent < 0);
 
-      for (int i = 0; i < 32; i++) {
-         if (indent & (1U << i)) {
-            maxIndent = i + 1;
-         }
-      }
-
-      for (int i = 0; i < maxIndent - 1; i++) {
+      for (int indent = (this->indent < 0 ? -this->indent : this->indent); indent > 1; indent >>= 1) {
          int written, ret;
-         if (indent & (1 << i)) {
+         if (indent & 1) {
             ret = xSnprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
          } else {
             ret = xSnprintf(buf, n, "   ");
