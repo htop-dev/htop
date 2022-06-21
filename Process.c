@@ -784,9 +784,9 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       char* buf = buffer;
       const bool lastItem = (this->indent < 0);
 
-      for (int indent = (this->indent < 0 ? -this->indent : this->indent); indent > 1; indent >>= 1) {
+      for (uint32_t indent = (this->indent < 0 ? -this->indent : this->indent); indent > 1; indent >>= 1) {
          int written, ret;
-         if (indent & 1) {
+         if (indent & 1U) {
             ret = xSnprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
          } else {
             ret = xSnprintf(buf, n, "   ");
