@@ -313,3 +313,26 @@ ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size
 
    return readfd_internal(fd, buffer, count);
 }
+
+ssize_t full_write(int fd, const void *buf, size_t count) {
+   ssize_t written = 0;
+
+   while (count > 0) {
+      ssize_t r = write(fd, buf, count);
+      if (r < 0) {
+         if (errno == EINTR)
+            continue;
+
+         return r;
+      }
+
+      if (r == 0)
+         break;
+
+      written += r;
+      buf = (const unsigned char*)buf + r;
+      count -= (size_t)r;
+   }
+
+   return written;
+}

@@ -834,7 +834,7 @@ static void dumpStderr(void) {
             fprintf(stderr, ">>>>>>>>>> stderr output >>>>>>>>>>\n");
             header = true;
          }
-         (void)! write(STDERR_FILENO, buffer, res);
+         full_write(STDERR_FILENO, buffer, res);
       }
    }
 
