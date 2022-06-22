@@ -73,4 +73,6 @@ char* xStrndup(const char* str, size_t len) ATTR_NONNULL ATTR_MALLOC;
 ssize_t xReadfile(const char* pathname, void* buffer, size_t count);
 ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
 
+ssize_t full_write(int fd, const void *buf, size_t count);
+
 #endif
