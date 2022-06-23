@@ -43,6 +43,7 @@ myhtopsources = \
 	Compat.c \
 	CPUMeter.c \
 	CRT.c \
+	CwdUtils.c \
 	DateMeter.c \
 	DateTimeMeter.c \
 	DiskIOMeter.c \
@@ -102,6 +103,7 @@ myhtopheaders = \
 	CommandLine.h \
 	CommandScreen.h \
 	Compat.h \
+	CwdUtils.h \
 	DateMeter.h \
 	DateTimeMeter.h \
 	DiskIOMeter.h \

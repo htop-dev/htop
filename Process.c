@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "CwdUtils.h"
 
 #if defined(MAJOR_IN_MKDEV)
 #include <sys/mkdev.h>
@@ -855,7 +856,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
          attr = CRT_colors[PROCESS_SHADOW];
          cwd = "main thread terminated";
       } else {
-         cwd = this->procCwd;
+         cwd = this->procCwdShort;
       }
       Process_printLeftAlignedField(str, attr, cwd, 25);
       return;
@@ -1003,6 +1004,7 @@ void Process_done(Process* this) {
    free(this->procComm);
    free(this->procExe);
    free(this->procCwd);
+   free(this->procCwdShort);
    free(this->mergedCommand.str);
    free(this->tty_name);
 }
@@ -1278,4 +1280,9 @@ void Process_updateCPUFieldWidths(float percentage) {
 
    Process_updateFieldWidth(PERCENT_CPU, width);
    Process_updateFieldWidth(PERCENT_NORM_CPU, width);
+}
+
+void Process_updateShortCwd(Process* this) {
+   free(this->procCwdShort);
+   this->procCwdShort = this->procCwd ? CwdUtils_shortenCwd(this->procCwd, 25) : NULL;
 }

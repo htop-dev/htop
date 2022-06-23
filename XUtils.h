@@ -73,4 +73,11 @@ char* xStrndup(const char* str, size_t len) ATTR_NONNULL ATTR_MALLOC;
 ssize_t xReadfile(const char* pathname, void* buffer, size_t count);
 ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
 
+wchar_t* xMbstowcs(const char *mbs);
+char* xWcstombs(const wchar_t *wcs);
+wchar_t* xWcsdup(const wchar_t* str);
+wchar_t* xWcsndup(const wchar_t* str, size_t len);
+wchar_t** Wstring_split(const wchar_t* s, wchar_t sep, size_t* n);
+size_t Wstring_safeWcsncpy(wchar_t* restrict dest, const wchar_t* restrict src, size_t size);
+
 #endif

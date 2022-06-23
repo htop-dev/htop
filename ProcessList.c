@@ -481,6 +481,8 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
       Process_makeCommandStr(p);
+      if (p->settings->flags & PROCESS_FLAG_CWD)
+         Process_updateShortCwd(p);
 
       // keep track of the highest UID for column scaling
       if (p->st_uid > maxUid)
