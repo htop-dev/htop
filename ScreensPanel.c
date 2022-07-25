@@ -132,7 +132,7 @@ static void startRenaming(Panel* super) {
    Panel_setCursorToSelection(super);
 }
 
-static void rebuildSettingsArray(Panel* super) {
+static void rebuildSettingsArray(Panel* super, int selected) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
    int n = Panel_size(super);
@@ -144,6 +144,13 @@ static void rebuildSettingsArray(Panel* super) {
       this->settings->screens[i] = item->ss;
    }
    this->settings->nScreens = n;
+   /* ensure selection is in valid range */
+   if (selected > n - 1)
+      selected = n - 1;
+   else if (selected < 0)
+      selected = 0;
+   this->settings->ssIndex = selected;
+   this->settings->ss = this->settings->screens[selected];
 }
 
 static void addNewScreen(Panel* super) {
@@ -242,9 +249,8 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       case KEY_F(9):
       //case KEY_DC:
       {
-         if (Panel_size(super) > 1) {
+         if (Panel_size(super) > 1)
             Panel_remove(super, selected);
-         }
          shouldRebuildArray = true;
          result = HANDLED;
          break;
@@ -264,7 +270,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       result = HANDLED;
    }
    if (shouldRebuildArray)
-      rebuildSettingsArray(super);
+      rebuildSettingsArray(super, selected);
    if (result == HANDLED)
       ScreensPanel_update(super);
    return result;
