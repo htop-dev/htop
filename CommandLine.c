@@ -66,7 +66,6 @@ static void printHelpFlag(const char* name) {
           "-V --version                    Print version info\n");
    Platform_longOptionsUsage(name);
    printf("\n"
-          "Long options may be passed with a single dash.\n\n"
           "Press F1 inside %s for online help.\n"
           "See 'man %s' for more information.\n", name, name);
 }
