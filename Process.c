@@ -44,7 +44,7 @@ static uid_t Process_getuid = (uid_t)-1;
 int Process_pidDigits = PROCESS_MIN_PID_DIGITS;
 int Process_uidDigits = PROCESS_MIN_UID_DIGITS;
 
-void Process_setupColumnWidths() {
+void Process_setupColumnWidths(void) {
    int maxPid = Platform_getMaxPid();
    if (maxPid == -1)
       return;
@@ -1240,7 +1240,7 @@ void Process_updateExe(Process* this, const char* exe) {
 
 uint8_t Process_fieldWidths[LAST_PROCESSFIELD] = { 0 };
 
-void Process_resetFieldWidths() {
+void Process_resetFieldWidths(void) {
    for (size_t i = 0; i < LAST_PROCESSFIELD; i++) {
       if (!Process_fields[i].autoWidth)
          continue;

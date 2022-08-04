@@ -33,7 +33,7 @@ static const char* const MetersMovingKeys[] = {"Space", "Enter", "Up", "Dn", "<-
 static const int MetersMovingEvents[] = {' ', 13, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ERR, KEY_DC, KEY_F(10)};
 static FunctionBar* Meters_movingBar = NULL;
 
-void MetersPanel_cleanup() {
+void MetersPanel_cleanup(void) {
    if (Meters_movingBar) {
       FunctionBar_delete(Meters_movingBar);
       Meters_movingBar = NULL;

@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-UsersTable* UsersTable_new() {
+UsersTable* UsersTable_new(void) {
    UsersTable* this;
    this = xMalloc(sizeof(UsersTable));
    this->users = Hashtable_new(10, true);
