@@ -21,7 +21,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 
 
-void fail() {
+void fail(void) {
    CRT_done();
    abort();
 

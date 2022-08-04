@@ -250,7 +250,7 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    double uptime = 0;
    FILE* fd = fopen(PROCDIR "/uptime", "r");
    if (fd) {
@@ -285,7 +285,7 @@ err:
    *fifteen = NAN;
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
    if (!file)
       return -1;
