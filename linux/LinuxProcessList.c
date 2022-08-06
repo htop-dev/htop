@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "linux/LinuxProcessList.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -763,6 +764,43 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
    return r == 7;
 }
 
+static bool LinuxProcessList_checkPidNamespace(Process *process, openat_arg_t procFd) {
+   FILE *statusfile = fopenat(procFd, "status", "r");
+   if (!statusfile)
+      return false;
+
+   while (true) {
+      char buffer[PROC_LINE_LENGTH + 1];
+      if (fgets(buffer, sizeof(buffer), statusfile) == NULL)
+         break;
+
+      if (!String_startsWith(buffer, "NSpid:"))
+         continue;
+
+      char *ptr = buffer;
+      int pid_ns_count = 0;
+      while(*ptr != '\0' && *ptr != '\n' && !isdigit(*ptr))
+         ++ptr;
+
+      while(*ptr != '\0' && *ptr != '\n') {
+         if (isdigit(*ptr))
+            pid_ns_count++;
+         while(isdigit(*ptr))
+            ++ptr;
+         while(*ptr != '\0' && *ptr != '\n' && !isdigit(*ptr))
+            ++ptr;
+      }
+
+      if (pid_ns_count > 1)
+         process->isRunningInContainer = true;
+
+      break;
+   }
+
+   fclose(statusfile);
+   return true;
+}
+
 static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, openat_arg_t procFd, bool haveSmapsRollup) {
    //http://elixir.free-electrons.com/linux/v4.10/source/fs/proc/task_mmu.c#L719
    //kernel will return data in chunks of size PAGE_SIZE or less.
@@ -890,6 +928,13 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
 }
 
 #endif
+
+static bool isContainerOrVMSlice(char *cgroup) {
+   if (String_startsWith(cgroup, "/user") || String_startsWith(cgroup, "/system"))
+      return false;
+
+   return true;
+}
 
 static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "cgroup", "r");
@@ -1453,6 +1498,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
    const unsigned int activeCPUs = pl->activeCPUs;
    const bool hideKernelThreads = settings->hideKernelThreads;
    const bool hideUserlandThreads = settings->hideUserlandThreads;
+   const bool hideRunningInContainer = settings->hideRunningInContainer;
    while ((entry = readdir(dir)) != NULL) {
       const char* name = entry->d_name;
 
@@ -1504,6 +1550,14 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       LinuxProcessList_recurseProcTree(this, procFd, "task", proc, period);
 
+      if ((ss->flags & PROCESS_FLAG_LINUX_CGROUP) || hideRunningInContainer) {
+         LinuxProcessList_readCGroupFile(lp, procFd);
+         if (hideRunningInContainer && lp->cgroup && isContainerOrVMSlice(lp -> cgroup)) {
+            if (!LinuxProcessList_checkPidNamespace(proc, procFd))
+               goto errorReadingProcess;
+         }
+      }
+
       /*
        * These conditions will not trigger on first occurrence, cause we need to
        * add the process to the ProcessList and do all one time scans
@@ -1523,6 +1577,12 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          proc->show = false;
          pl->userlandThreads++;
          pl->totalTasks++;
+         Compat_openatArgClose(procFd);
+         continue;
+      }
+      if (preExisting && hideRunningInContainer && proc->isRunningInContainer) {
+         proc->updated = true;
+         proc->show = false;
          Compat_openatArgClose(procFd);
          continue;
       }
@@ -1639,10 +1699,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          LinuxProcessList_readDelayAcctData(this, lp);
       }
       #endif
-
-      if (ss->flags & PROCESS_FLAG_LINUX_CGROUP) {
-         LinuxProcessList_readCGroupFile(lp, procFd);
-      }
 
       if (ss->flags & PROCESS_FLAG_LINUX_OOM) {
          LinuxProcessList_readOomData(lp, procFd);
