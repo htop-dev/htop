@@ -221,6 +221,11 @@ static Htop_Reaction actionToggleUserlandThreads(State* st) {
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
+static Htop_Reaction actionToggleRunningInContainer(State* st){
+   st->settings->hideRunningInContainer = !st->settings->hideRunningInContainer;
+   return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
+}
+
 static Htop_Reaction actionToggleProgramPath(State* st) {
    st->settings->showProgramPath = !st->settings->showProgramPath;
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
@@ -752,6 +757,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['K'] = actionToggleKernelThreads;
    keys['M'] = actionSortByMemory;
    keys['N'] = actionSortByPID;
+   keys['O'] = actionToggleRunningInContainer;
    keys['P'] = actionSortByCPU;
    keys['S'] = actionSetup;
    keys['T'] = actionSortByTime;
