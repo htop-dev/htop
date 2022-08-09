@@ -79,7 +79,9 @@ typedef struct CommandLineSettings_ {
    int sortKey;
    int delay;
    bool useColors;
+#ifdef HAVE_GETMOUSE
    bool enableMouse;
+#endif
    bool treeView;
    bool allowUnicode;
    bool highlightChanges;
@@ -96,7 +98,9 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
       .sortKey = 0,
       .delay = -1,
       .useColors = true,
+#ifdef HAVE_GETMOUSE
       .enableMouse = true,
+#endif
       .treeView = false,
       .allowUnicode = true,
       .highlightChanges = false,

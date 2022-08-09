@@ -900,8 +900,8 @@ void CRT_resetSignalHandlers(void) {
    signal(SIGQUIT, SIG_DFL);
 }
 
-void CRT_setMouse(bool enabled) {
 #ifdef HAVE_GETMOUSE
+void CRT_setMouse(bool enabled) {
    if (enabled) {
 #if NCURSES_MOUSE_VERSION > 1
       mousemask(BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
@@ -911,8 +911,8 @@ void CRT_setMouse(bool enabled) {
    } else {
       mousemask(0, NULL);
    }
-#endif
 }
+#endif
 
 void CRT_init(const Settings* settings, bool allowUnicode) {
    redirectStderr();
