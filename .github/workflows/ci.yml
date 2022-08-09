@@ -11,7 +11,7 @@ jobs:
   build-ubuntu-latest-minimal-gcc:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev
     - name: Bootstrap
@@ -31,16 +31,16 @@ jobs:
   build-ubuntu-latest-minimal-clang:
     runs-on: ubuntu-latest
     env:
-      CC: clang-12
+      CC: clang-14
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-12 libncursesw5-dev
+      run: sudo apt-get install --no-install-recommends clang-14 libncursesw5-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -57,7 +57,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto -Wl,--as-needed
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
@@ -72,16 +72,16 @@ jobs:
   build-ubuntu-latest-full-featured-clang:
     runs-on: ubuntu-latest
     env:
-      CC: clang-12
+      CC: clang-14
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-12 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-14 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -98,7 +98,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev libsensors4-dev libcap-dev
     - name: Bootstrap
@@ -111,14 +111,10 @@ jobs:
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --disable-delayacct --enable-sensors --enable-capabilities'
 
   build-ubuntu-latest-pcp:
-    # Turns out 'ubuntu-latest' can be older than 20.04, we want PCP v5+
-    runs-on: ubuntu-20.04
-    env:
-      # Until Ubuntu catches up with pcp-5.2.3+:
-      #   pcp/Platform.c:309:45: warning: passing argument 2 of ‘pmLookupName’ from incompatible pointer type [-Wincompatible-pointer-types]
-      CFLAGS: -Wno-error=incompatible-pointer-types
+    # we want PCP v5.2.3+
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libpcp3-dev libncursesw5-dev libtinfo-dev libgpm-dev
     - name: Bootstrap
@@ -131,29 +127,29 @@ jobs:
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
     env:
-      CC: clang-12
+      CC: clang-14
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-12 clang-tools-12 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-14 clang-tools-14 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: scan-build-12 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities
+      run: scan-build-14 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities
     - name: Build
-      run: scan-build-12 -analyze-headers --status-bugs make -j"$(nproc)"
+      run: scan-build-14 -analyze-headers --status-bugs make -j"$(nproc)"
 
   build-macos-latest-clang:
     runs-on: macOS-latest
     env:
       CC: clang
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Install Dependencies
       run: brew install automake
     - name: Bootstrap
@@ -168,6 +164,6 @@ jobs:
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: check-whitespaces
         run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
