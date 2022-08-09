@@ -1090,9 +1090,7 @@ static void LinuxProcessList_readCwd(LinuxProcess* process, openat_arg_t procFd)
 #if defined(HAVE_READLINKAT) && defined(HAVE_OPENAT)
    ssize_t r = readlinkat(procFd, "cwd", pathBuffer, sizeof(pathBuffer) - 1);
 #else
-   char filename[MAX_NAME + 1];
-   xSnprintf(filename, sizeof(filename), "%s/cwd", procFd);
-   ssize_t r = readlink(filename, pathBuffer, sizeof(pathBuffer) - 1);
+   ssize_t r = Compat_readlink(procFd, "cwd", pathBuffer, sizeof(pathBuffer) - 1);
 #endif
 
    if (r < 0) {
@@ -1329,9 +1327,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, openat_arg_t proc
 #if defined(HAVE_READLINKAT) && defined(HAVE_OPENAT)
    amtRead = readlinkat(procFd, "exe", filename, sizeof(filename) - 1);
 #else
-   char path[4096];
-   xSnprintf(path, sizeof(path), "%s/exe", procFd);
-   amtRead = readlink(path, filename, sizeof(filename) - 1);
+   amtRead = Compat_readlink(procFd, "exe", filename, sizeof(filename) - 1);
 #endif
    if (amtRead > 0) {
       filename[amtRead] = 0;
