@@ -56,4 +56,9 @@ ssize_t Compat_readlinkat(int dirfd,
                           char* buf,
                           size_t bufsize);
 
+ssize_t Compat_readlink(openat_arg_t dirfd,
+                        const char* pathname,
+                        char* buf,
+                        size_t bufsize);
+
 #endif /* HEADER_Compat */
