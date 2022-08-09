@@ -327,7 +327,8 @@ The process ID.
 .TP
 .B STATE (S)
 The state of the process:
-   \fBS\fR for sleeping (idle)
+   \fBS\fR for sleeping
+   \fBI\fR for idle (longer inactivity than sleeping on platforms that distinguish)
    \fBR\fR for running
    \fBD\fR for disk sleep (uninterruptible)
    \fBZ\fR for zombie (waiting for parent to read its exit status)
