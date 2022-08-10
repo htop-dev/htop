@@ -779,15 +779,15 @@ static bool LinuxProcessList_checkPidNamespace(Process *process, openat_arg_t pr
 
       char *ptr = buffer;
       int pid_ns_count = 0;
-      while(*ptr != '\0' && *ptr != '\n' && !isdigit(*ptr))
+      while (*ptr && *ptr != '\n' && !isdigit(*ptr))
          ++ptr;
 
-      while(*ptr != '\0' && *ptr != '\n') {
+      while (*ptr && *ptr != '\n') {
          if (isdigit(*ptr))
             pid_ns_count++;
-         while(isdigit(*ptr))
+         while (isdigit(*ptr))
             ++ptr;
-         while(*ptr != '\0' && *ptr != '\n' && !isdigit(*ptr))
+         while (*ptr && *ptr != '\n' && !isdigit(*ptr))
             ++ptr;
       }
 
@@ -1550,11 +1550,12 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       LinuxProcessList_recurseProcTree(this, procFd, "task", proc, period);
 
-      if ((ss->flags & PROCESS_FLAG_LINUX_CGROUP) || hideRunningInContainer) {
+      if (ss->flags & PROCESS_FLAG_LINUX_CGROUP || hideRunningInContainer) {
          LinuxProcessList_readCGroupFile(lp, procFd);
-         if (hideRunningInContainer && lp->cgroup && isContainerOrVMSlice(lp -> cgroup)) {
-            if (!LinuxProcessList_checkPidNamespace(proc, procFd))
+         if (hideRunningInContainer && lp->cgroup && isContainerOrVMSlice(lp->cgroup)) {
+            if (!LinuxProcessList_checkPidNamespace(proc, procFd)) {
                goto errorReadingProcess;
+            }
          }
       }
 
@@ -1636,7 +1637,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       char statCommand[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       unsigned long int tty_nr = proc->tty_nr;
-      if (! LinuxProcessList_readStatFile(proc, procFd, statCommand, sizeof(statCommand)))
+      if (!LinuxProcessList_readStatFile(proc, procFd, statCommand, sizeof(statCommand)))
          goto errorReadingProcess;
 
       if (lp->flags & PF_KTHREAD) {
