@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -702,9 +703,10 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
       this->filename = xStrdup(rcfile);
    } else {
       const char* home = getenv("HOME");
-      if (!home)
-         home = "";
-
+      if (!home) {
+         const struct passwd* pw = getpwuid(getuid());
+         home = pw ? pw->pw_dir : "";
+      }
       const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
       char* configDir = NULL;
       char* htopDir = NULL;

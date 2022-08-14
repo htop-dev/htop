@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -193,6 +194,12 @@ void PCPDynamicColumns_init(PCPDynamicColumns* columns) {
    const char* override = getenv("PCP_HTOP_DIR");
    const char* home = getenv("HOME");
    char* path;
+
+   if (!xdgConfigHome && !home) {
+      const struct passwd* pw = getpwuid(getuid());
+      if (pw)
+         home = pw->pw_dir;
+   }
 
    columns->table = Hashtable_new(0, true);
 
