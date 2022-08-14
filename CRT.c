@@ -915,9 +915,8 @@ void CRT_setMouse(bool enabled) {
 #endif
 
 void CRT_init(const Settings* settings, bool allowUnicode) {
-   redirectStderr();
-
    initscr();
+   redirectStderr();
    noecho();
    CRT_crashSettings = settings;
    CRT_delay = &(settings->delay);
