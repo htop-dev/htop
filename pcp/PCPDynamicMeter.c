@@ -12,11 +12,13 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
-#include <pcp/pmapi.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <pcp/pmapi.h>
 
 #include "Macros.h"
 #include "Platform.h"
@@ -250,6 +252,12 @@ void PCPDynamicMeters_init(PCPDynamicMeters* meters) {
    const char* override = getenv("PCP_HTOP_DIR");
    const char* home = getenv("HOME");
    char* path;
+
+   if (!xdgConfigHome && !home) {
+      const struct passwd* pw = getpwuid(getuid());
+      if (pw)
+         home = pw->pw_dir;
+   }
 
    meters->table = Hashtable_new(0, true);
 
