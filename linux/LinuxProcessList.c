@@ -263,9 +263,9 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
       return;
 
    if (Running_containerized) {
-	   /* LXC munges /proc/cpuinfo but not the /sys/devices/system/cpu/ files,
-	    * so limit the visible CPUs to what the guest has been configured to see: */
-	   currExisting = active = scanAvailableCPUsFromCPUinfo(this);
+      /* LXC munges /proc/cpuinfo but not the /sys/devices/system/cpu/ files,
+       * so limit the visible CPUs to what the guest has been configured to see: */
+      currExisting = active = scanAvailableCPUsFromCPUinfo(this);
    }
 
 #ifdef HAVE_SENSORS_SENSORS_H
@@ -1419,7 +1419,7 @@ static bool isOlderThan(const ProcessList* pl, const Process* proc, unsigned int
 
    /* Starttime might not yet be parsed */
    if (proc->starttime_ctime <= 0)
-	   return false;
+      return false;
 
    uint64_t realtime = pl->realtimeMs / 1000;
 
