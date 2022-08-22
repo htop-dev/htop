@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -78,15 +79,15 @@ typedef struct MeterClass_ {
 
 #define As_Meter(this_)                ((const MeterClass*)((this_)->super.klass))
 #define Meter_initFn(this_)            As_Meter(this_)->init
-#define Meter_init(this_)              As_Meter(this_)->init((Meter*)(this_))
-#define Meter_done(this_)              As_Meter(this_)->done((Meter*)(this_))
+#define Meter_init(this_)              (assert(As_Meter(this_)->init), As_Meter(this_)->init((Meter*)(this_)))
+#define Meter_done(this_)              (assert(As_Meter(this_)->done), As_Meter(this_)->done((Meter*)(this_)))
 #define Meter_updateModeFn(this_)      As_Meter(this_)->updateMode
-#define Meter_updateMode(this_, m_)    As_Meter(this_)->updateMode((Meter*)(this_), m_)
+#define Meter_updateMode(this_, m_)    (assert(As_Meter(this_)->updateMode), As_Meter(this_)->updateMode((Meter*)(this_), m_))
 #define Meter_drawFn(this_)            As_Meter(this_)->draw
 #define Meter_doneFn(this_)            As_Meter(this_)->done
-#define Meter_updateValues(this_)      As_Meter(this_)->updateValues((Meter*)(this_))
+#define Meter_updateValues(this_)      (assert(As_Meter(this_)->updateValues), As_Meter(this_)->updateValues((Meter*)(this_)))
 #define Meter_getUiNameFn(this_)       As_Meter(this_)->getUiName
-#define Meter_getUiName(this_,n_,l_)   As_Meter(this_)->getUiName((const Meter*)(this_),n_,l_)
+#define Meter_getUiName(this_,n_,l_)   (assert(As_Meter(this_)->getUiName), As_Meter(this_)->getUiName((const Meter*)(this_),n_,l_))
 #define Meter_getCaptionFn(this_)      As_Meter(this_)->getCaption
 #define Meter_getCaption(this_)        (Meter_getCaptionFn(this_) ? As_Meter(this_)->getCaption((const Meter*)(this_)) : (this_)->caption)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
