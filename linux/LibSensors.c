@@ -313,7 +313,7 @@ static char** LibSensors_getChoices(sensors_feature_type type, sensors_subfeatur
    return ret;
 }
 
-char** LibSensors_getTempChoices(void) {
+char** LibSensors_getTempChoices(ATTR_UNUSED Meter* meter) {
    return LibSensors_getChoices(SENSORS_FEATURE_TEMP, SENSORS_SUBFEATURE_TEMP_INPUT);
 }
 
@@ -377,7 +377,7 @@ void LibSensors_getTemp(const char* choice, double* currTemp, double* maxTemp) {
    return;
 }
 
-char** LibSensors_getFanChoices(void) {
+char** LibSensors_getFanChoices(ATTR_UNUSED Meter* meter) {
    return LibSensors_getChoices(SENSORS_FEATURE_FAN, SENSORS_SUBFEATURE_FAN_INPUT);
 }
 

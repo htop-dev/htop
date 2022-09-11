@@ -165,11 +165,13 @@ void Platform_getRelease(char** string) {
    *string = xStrdup(Platform_unsupported);
 }
 
-char** Platform_getLocalIPv4addressChoices(void) {
+char** Platform_getLocalIPv4addressChoices(Meter* meter) {
+   (void) meter;
    return NULL;
 }
 
-char** Platform_getLocalIPv6addressChoices(void) {
+char** Platform_getLocalIPv6addressChoices(Meter* meter) {
+   (void) meter;
    return NULL;
 }
 
@@ -187,11 +189,18 @@ void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size)
    return;
 }
 
-char **Platform_getDiskUsageChoices() {
+char **Platform_getDiskUsageChoices(Meter* meter) {
+   (void) meter;
    return NULL;
 }
 
 void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
    (void) choice;
    (void) data;
+}
+
+char **Platform_getDynamicMeterChoices(Meter* meter) {
+   // TODO
+   (void) meter;
+   return NULL;
 }

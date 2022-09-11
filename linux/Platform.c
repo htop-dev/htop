@@ -1087,7 +1087,7 @@ void Platform_done(void) {
 #endif
 }
 
-char** Platform_getLocalIPv4addressChoices(void) {
+char** Platform_getLocalIPv4addressChoices(ATTR_UNUSED Meter* meter) {
    int s = socket(AF_INET, SOCK_STREAM, 0);
    if (s < 0)
       return NULL;
@@ -1160,7 +1160,7 @@ void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size)
    xSnprintf(buffer, size, "N/A");
 }
 
-char** Platform_getLocalIPv6addressChoices(void) {
+char** Platform_getLocalIPv6addressChoices(ATTR_UNUSED Meter* meter) {
    FILE* file = fopen(PROCDIR "/net/if_inet6", "r");
    if (!file)
       return NULL;
@@ -1260,7 +1260,7 @@ static bool isFilesystemOfInterest(const char* fsname) {
    return false;
 }
 
-char **Platform_getDiskUsageChoices(void) {
+char **Platform_getDiskUsageChoices(ATTR_UNUSED Meter* meter) {
    FILE* mntFile = setmntent(PROCDIR "/mounts", "r");
    if (!mntFile)
       return NULL;
@@ -1290,4 +1290,10 @@ char **Platform_getDiskUsageChoices(void) {
    ret[count] = NULL;
 
    return ret;
+}
+
+char **Platform_getDynamicMeterChoices(Meter* meter) {
+   // TODO
+   (void) meter;
+   return NULL;
 }

@@ -110,12 +110,14 @@ static inline const char* Platform_dynamicColumnInit(ATTR_UNUSED unsigned int ke
 
 static inline bool Platform_dynamicColumnWriteField(ATTR_UNUSED const Process* proc, ATTR_UNUSED RichString* str, ATTR_UNUSED unsigned int key) { return false; }
 
-char** Platform_getLocalIPv4addressChoices(void);
-char** Platform_getLocalIPv6addressChoices(void);
+char** Platform_getLocalIPv4addressChoices(Meter* meter);
+char** Platform_getLocalIPv6addressChoices(Meter* meter);
 void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size);
 void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size);
 
-char **Platform_getDiskUsageChoices(void);
+char **Platform_getDiskUsageChoices(Meter* meter);
 void Platform_getDiskUsage(const char* choice, DiskUsageData *data);
+
+char **Platform_getDynamicMeterChoices(Meter* meter);
 
 #endif

@@ -56,7 +56,7 @@ typedef void(*Meter_UpdateValues)(Meter*);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 typedef const char* (*Meter_GetCaption)(const Meter*);
 typedef void(*Meter_GetUiName)(const Meter*, char*, size_t);
-typedef char**(*Meter_GetChoices)(void);
+typedef char**(*Meter_GetChoices)(Meter*);
 
 typedef struct MeterClass_ {
    const ObjectClass super;
@@ -98,7 +98,7 @@ typedef struct MeterClass_ {
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
 #define Meter_isMultiColumn(this_)     As_Meter(this_)->isMultiColumn
 #define Meter_getChoicesFn(this_)      As_Meter(this_)->getChoices
-#define Meter_getChoices(this_)        (assert(As_Meter(this_)->getChoices), As_Meter(this_)->getChoices())
+#define Meter_getChoices(this_)        (assert(As_Meter(this_)->getChoices), As_Meter(this_)->getChoices((Meter*)(this_)))
 
 typedef struct GraphData_ {
    struct timeval time;

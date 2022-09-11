@@ -408,7 +408,7 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
 }
 
-char** Platform_getLocalIPv4addressChoices(void) {
+char** Platform_getLocalIPv4addressChoices(ATTR_UNUSED Meter* meter) {
    struct ifaddrs* ifp;
    int r = getifaddrs(&ifp);
    if (r < 0)
@@ -441,7 +441,7 @@ char** Platform_getLocalIPv4addressChoices(void) {
    return ret;
 }
 
-char** Platform_getLocalIPv6addressChoices(void) {
+char** Platform_getLocalIPv6addressChoices(ATTR_UNUSED Meter* meter) {
    struct ifaddrs* ifp;
    int r = getifaddrs(&ifp);
    if (r < 0)
@@ -530,7 +530,7 @@ void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size)
    return;
 }
 
-char **Platform_getDiskUsageChoices(void) {
+char **Platform_getDiskUsageChoices(ATTR_UNUSED Meter* meter) {
    unsigned int count = 0;
    struct statfs* mntbufp;
    int r = getmntinfo(&mntbufp, MNT_WAIT);
@@ -572,4 +572,10 @@ void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
    double available = (double)info.f_bfree * info.f_bsize;
    data->used = data->total - available;
    data->usedPercentage = 100.0 * (data->used / data->total);
+}
+
+char **Platform_getDynamicMeterChoices(Meter* meter) {
+   // TODO
+   (void) meter;
+   return NULL;
 }

@@ -84,6 +84,7 @@ static void DynamicMeter_updateValues(Meter* meter) {
 
 static void DynamicMeter_display(const Object* cast, RichString* out) {
    const Meter* meter = (const Meter*)cast;
+
    Platform_dynamicMeterDisplay(meter, out);
 }
 
@@ -128,4 +129,5 @@ const MeterClass DynamicMeter_class = {
    .name = "Dynamic",
    .uiName = "Dynamic",
    .caption = "",
+   .getChoices = Platform_getDynamicMeterChoices,
 };

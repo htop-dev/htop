@@ -16,6 +16,7 @@ typedef struct PCPDynamicMetric_ {
    char* name; /* derived metric name */
    char* label;
    char* suffix;
+   unsigned int indom;
 } PCPDynamicMetric;
 
 typedef struct PCPDynamicMeter_ {
@@ -40,5 +41,7 @@ void PCPDynamicMeter_enable(PCPDynamicMeter* this);
 void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter);
 
 void PCPDynamicMeter_display(PCPDynamicMeter* this, const Meter* meter, RichString* out);
+
+char** PCPDynamicMeter_getChoices(PCPDynamicMeter* this);
 
 #endif
