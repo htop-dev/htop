@@ -266,6 +266,10 @@ if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([mach_timebase_info])
 fi
 
+if test "$my_htop_platform" = pcp; then
+   AC_CHECK_FUNCS([pmLookupDescs])
+fi
+
 if test "$my_htop_platform" = linux && test "x$enable_static" = xyes; then
    AC_CHECK_LIB([systemd], [sd_bus_open_system])
 fi

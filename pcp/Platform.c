@@ -1,8 +1,8 @@
 /*
 htop - linux/Platform.c
 (C) 2014 Hisham H. Muhammad
-(C) 2020-2021 htop dev team
-(C) 2020-2021 Red Hat, Inc.
+(C) 2020-2022 htop dev team
+(C) 2020-2022 Red Hat, Inc.
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -248,6 +248,37 @@ static const char* Platform_metricNames[] = {
    [PCP_METRIC_COUNT] = NULL
 };
 
+#ifndef HAVE_PMLOOKUPDESCS
+/*
+ * pmLookupDescs(3) exists in latest versions of libpcp (5.3.6+),
+ * but for older versions we provide an implementation here. This
+ * involves multiple round trips to pmcd though, which the latest
+ * libpcp version avoids by using a protocol extension.  In time,
+ * perhaps in a few years, we could remove this back-compat code.
+ */
+int pmLookupDescs(int numpmid, pmID *pmids, pmDesc *descs) {
+   int count = 0;
+
+   for (int i = 0; i < numpmid; i++) {
+      /* expect some metrics to be missing - e.g. PMDA not available */
+      if (pmids[i] == PM_ID_NULL)
+         continue;
+
+      int sts = pmLookupDesc(pmids[i], &descs[i]);
+      if (sts < 0) {
+         if (pmDebugOptions.appl0)
+            fprintf(stderr, "Error: cannot lookup metric %s(%s): %s\n",
+                    pcp->names[i], pmIDStr(pcp->pmids[i]), pmErrStr(sts));
+         pmids[i] = PM_ID_NULL;
+         continue;
+      }
+
+      count++;
+   }
+   return count;
+}
+#endif
+
 size_t Platform_addMetric(PCPMetric id, const char* name) {
    unsigned int i = (unsigned int)id;
 
@@ -325,21 +356,14 @@ bool Platform_init(void) {
       return false;
    }
 
-   for (size_t i = 0; i < pcp->totalMetrics; i++) {
-      pcp->fetch[i] = PM_ID_NULL; /* default is to not sample */
-
-      /* expect some metrics to be missing - e.g. PMDA not available */
-      if (pcp->pmids[i] == PM_ID_NULL)
-         continue;
-
-      sts = pmLookupDesc(pcp->pmids[i], &pcp->descs[i]);
-      if (sts < 0) {
-         if (pmDebugOptions.appl0)
-            fprintf(stderr, "Error: cannot lookup metric %s(%s): %s\n",
-                    pcp->names[i], pmIDStr(pcp->pmids[i]), pmErrStr(sts));
-         pcp->pmids[i] = PM_ID_NULL;
-         continue;
-      }
+   sts = pmLookupDescs(pcp->totalMetrics, pcp->pmids, pcp->descs);
+   if (sts < 1) {
+      if (sts < 0)
+         fprintf(stderr, "Error: cannot lookup descriptors: %s\n", pmErrStr(sts));
+      else /* ensure we have at least one valid metric to work with */
+         fprintf(stderr, "Error: cannot find a single valid metric, exiting\n");
+      Platform_done();
+      return false;
    }
 
    /* set proc.control.perclient.threads to 1 for live contexts */
