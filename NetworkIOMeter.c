@@ -20,10 +20,10 @@ static const int NetworkIOMeter_attributes[] = {
 };
 
 static MeterRateStatus status = RATESTATUS_INIT;
-static uint32_t cached_rxb_diff;
-static uint32_t cached_rxp_diff;
-static uint32_t cached_txb_diff;
-static uint32_t cached_txp_diff;
+static uint32_t cached_rxb_diff = 0;
+static uint32_t cached_rxp_diff = 0;
+static uint32_t cached_txb_diff = 0;
+static uint32_t cached_txp_diff = 0;
 
 static void NetworkIOMeter_updateValues(Meter* this) {
    const ProcessList* pl = this->pl;
