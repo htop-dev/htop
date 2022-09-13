@@ -171,12 +171,12 @@ const pmDesc* PCPMetric_desc(PCPMetric metric);
 
 int PCPMetric_type(PCPMetric metric);
 
+pmInDom PCPMetric_indom(PCPMetric metric);
+
 int PCPMetric_instanceCount(PCPMetric metric);
 
 int PCPMetric_instanceOffset(PCPMetric metric, int inst);
 
 pmAtomValue* PCPMetric_instance(PCPMetric metric, int inst, int offset, pmAtomValue* atom, int type);
-
-unsigned int PCPMetric_lookupInDom(const char* metric);
 
 #endif

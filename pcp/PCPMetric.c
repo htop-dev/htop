@@ -29,6 +29,10 @@ int PCPMetric_type(PCPMetric metric) {
    return pcp->descs[metric].type;
 }
 
+pmInDom PCPMetric_indom(PCPMetric metric) {
+   return pcp->descs[metric].indom;
+}
+
 pmAtomValue* PCPMetric_values(PCPMetric metric, pmAtomValue* atom, int count, int type) {
    if (pcp->result == NULL)
       return NULL;
@@ -177,22 +181,4 @@ bool PCPMetric_fetch(struct timeval* timestamp) {
    if (timestamp)
       *timestamp = pcp->result->timestamp;
    return true;
-}
-
-unsigned int PCPMetric_lookupInDom(const char* metric) {
-   pmID pmid;
-   pmDesc desc;
-   int sts;
-
-   sts = pmLookupName(1, &metric, &pmid);
-   if (sts < 0) {
-      return 0;
-   }
-
-   sts = pmLookupDesc(pmid, &desc);
-   if (sts < 0) {
-      return 0;
-   }
-
-   return desc.indom;
 }

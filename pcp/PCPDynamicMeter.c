@@ -70,9 +70,6 @@ static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMete
       /* lookup a dynamic metric with this name, else create */
       metric = PCPDynamicMeter_lookupMetric(meters, meter, key);
 
-      /* fill metric's indom */
-      metric->indom = PCPMetric_lookupInDom(value);
-
       /* use derived metrics in dynamic meters for simplicity */
       char* error;
       if (pmRegisterDerivedMetric(metric->name, value, &error) < 0) {
@@ -334,8 +331,9 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
             continue;
          }
       } else {
-         int internalId = pmLookupInDom(metric->indom, meter->curChoice);
-         if (!PCPMetric_instance(metric->id, internalId, internalId, &raw, desc->type)) {
+         int instanceId = pmLookupInDom(desc->indom, meter->curChoice);
+         if (instanceId < 0 ||
+             !PCPMetric_instance(metric->id, instanceId, 0, &raw, desc->type)) {
             bytes--; /* clear the separator */
             continue;
          }
@@ -399,7 +397,7 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
       xSnprintf(buffer, size, "no data");
 }
 
-void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* meter, RichString* out) {
+void PCPDynamicMeter_display(PCPDynamicMeter* this, const Meter* meter, RichString* out) {
    int nodata = 1;
 
    for (size_t i = 0; i < this->totalMetrics; i++) {
@@ -412,8 +410,9 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
          if (!PCPMetric_values(metric->id, &raw, 1, desc->type))
             continue;
       } else {
-         int internalId = pmLookupInDom(metric->indom, meter->curChoice);
-         if (!PCPMetric_instance(metric->id, internalId, internalId, &raw, desc->type)) {
+         int instanceId = pmLookupInDom(desc->indom, meter->curChoice);
+         if (instanceId < 0 ||
+             !PCPMetric_instance(metric->id, instanceId, 0, &raw, desc->type)) {
             continue;
          }
       }
@@ -486,23 +485,23 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
 }
 
 char** PCPDynamicMeter_getChoices(PCPDynamicMeter* this) {
-   unsigned int indom = this->metrics->indom;
+   pmInDom indom = PCPMetric_indom(this->metrics->id);
    int count = 0;
-   int* in;
-   char** raw;
+   int* insts;
+   char** names;
 
-   count = pmGetInDom(indom, &in, &raw);
-   if (count < 0)
+   count = pmGetInDom(indom, &insts, &names);
+   if (count < 1)
       return NULL;
 
-   char** ret = xCalloc(count+1, sizeof(char*));
+   free(insts); /* unused here */
 
+   char** ret = xCalloc(count+1, sizeof(char*));
    for (int i = 0; i < count; i++)
-      ret[i] = xStrdup(raw[i]);
+      ret[i] = xStrdup(names[i]);
    ret[count] = NULL;
 
-   free(raw);
-   free(in);
+   free(names);
 
    return ret;
 }

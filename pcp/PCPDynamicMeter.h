@@ -16,7 +16,6 @@ typedef struct PCPDynamicMetric_ {
    char* name; /* derived metric name */
    char* label;
    char* suffix;
-   unsigned int indom;
 } PCPDynamicMetric;
 
 typedef struct PCPDynamicMeter_ {
