@@ -33,10 +33,10 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
    /* update only every 500ms to have a sane span for rate calculation */
    if (passedTimeInMs > 500) {
-      static uint64_t cached_rxb_total;
-      static uint64_t cached_rxp_total;
-      static uint64_t cached_txb_total;
-      static uint64_t cached_txp_total;
+      static uint64_t cached_rxb_total = 0;
+      static uint64_t cached_rxp_total = 0;
+      static uint64_t cached_txb_total = 0;
+      static uint64_t cached_txp_total = 0;
       uint64_t diff;
 
       NetworkIOData data;
