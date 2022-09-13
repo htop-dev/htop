@@ -27,9 +27,9 @@ static const int DiskIOMeter_attributes[] = {
 };
 
 static MeterRateStatus status = RATESTATUS_INIT;
-static uint32_t cached_read_diff;
-static uint32_t cached_write_diff;
-static double cached_utilisation_diff;
+static uint32_t cached_read_diff = 0;
+static uint32_t cached_write_diff = 0;
+static double cached_utilisation_diff = 0.0;
 
 static void DiskIOMeter_updateValues(Meter* this) {
    const ProcessList* pl = this->pl;
