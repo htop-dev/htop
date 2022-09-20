@@ -68,12 +68,13 @@ static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
    struct kinfo_proc* processes = NULL;
 
-   for (int retry = 3; retry > 0; retry--) {
+   for (unsigned int retry = 0; retry < 4; retry++) {
       size_t size = 0;
       if (sysctl(mib, 4, NULL, &size, NULL, 0) < 0 || size == 0) {
          CRT_fatalError("Unable to get size of kproc_infos");
       }
 
+      size += 16 * retry * retry * sizeof(struct kinfo_proc);
       processes = xRealloc(processes, size);
 
       if (sysctl(mib, 4, processes, &size, NULL, 0) == 0) {
