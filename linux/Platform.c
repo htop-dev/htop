@@ -37,6 +37,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
+#include "DiskNetMeter.h"
 #include "NetworkIOMeter.h"
 #include "Object.h"
 #include "Panel.h"
@@ -216,6 +217,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &MemorySwapMeter_class,
+   &DiskNetMeter_class,
    &SysArchMeter_class,
    &HugePageMeter_class,
    &TasksMeter_class,

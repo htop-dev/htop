@@ -62,6 +62,7 @@ myhtopsources = \
 	MainPanel.c \
 	MemoryMeter.c \
 	MemorySwapMeter.c \
+	DiskNetMeter.c \
 	Meter.c \
 	MetersPanel.c \
 	NetworkIOMeter.c \
@@ -123,6 +124,7 @@ myhtopheaders = \
 	MainPanel.h \
 	MemoryMeter.h \
 	MemorySwapMeter.h \
+	DiskNetMeter.h \
 	Meter.h \
 	MetersPanel.h \
 	NetworkIOMeter.h \
