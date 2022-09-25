@@ -34,6 +34,7 @@ List of build-time dependencies:
   * standard GNU autotools-based C toolchain
     - C99 compliant compiler
     - `autoconf`
+    - `automake`
     - `autotools`
   * `ncurses`
 
@@ -54,7 +55,7 @@ Install these and other required packages for C development from your package ma
 
 **Debian/Ubuntu**
 ~~~ shell
-sudo apt install libncursesw5-dev autotools-dev autoconf build-essential
+sudo apt install libncursesw5-dev autotools-dev autoconf automake build-essential
 ~~~
 
 **Fedora/RHEL**
