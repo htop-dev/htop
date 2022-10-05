@@ -165,6 +165,7 @@ linux_platform_headers = \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
 	linux/ProcessField.h \
+	linux/RNGEntropy.h \
 	linux/SELinuxMeter.h \
 	linux/SystemdMeter.h \
 	linux/ZramMeter.h \
@@ -185,6 +186,7 @@ linux_platform_sources = \
 	linux/LinuxProcessList.c \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
+	linux/RNGEntropy.c \
 	linux/SELinuxMeter.c \
 	linux/SystemdMeter.c \
 	linux/ZramMeter.c \

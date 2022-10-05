@@ -43,6 +43,7 @@ in the source distribution for its full text.
 #include "PressureStallMeter.h"
 #include "ProcessList.h"
 #include "ProvideCurses.h"
+#include "linux/RNGEntropy.h"
 #include "linux/SELinuxMeter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
@@ -245,6 +246,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZramMeter_class,
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
+   &RNGEntropy_class,
    &SELinuxMeter_class,
    &SystemdMeter_class,
    NULL
