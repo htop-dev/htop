@@ -60,7 +60,7 @@ static void RNGEntropy_display(ATTR_UNUSED const Object* cast, RichString* out) 
       RichString_appendnAscii(out, CRT_colors[METER_VALUE_OK], buffer, len);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " Poolsize: ");
       len = xSnprintf(buffer, sizeof(buffer), "%zu", poolsize);
-      RichString_appendnAscii(out, CRT_colors[METER_VALUE_OK], buffer, len);
+      RichString_appendnAscii(out, CRT_colors[poolsize ? METER_VALUE_OK : METER_VALUE_ERROR], buffer, len);
    }
 }
 
