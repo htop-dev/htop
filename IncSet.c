@@ -10,8 +10,10 @@ in the source distribution for its full text.
 #include "IncSet.h"
 
 #include <ctype.h>
-#include <string.h>
+#include <limits.h>
 #include <stdlib.h>
+#include <string.h>
+#include <wctype.h>
 
 #include "CRT.h"
 #include "ListItem.h"
@@ -155,6 +157,23 @@ static bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValu
    }
 }
 
+static int IncSet_backspaceLen(const char *s, size_t slen) {
+   size_t i = 0;
+   int mblen = 0;
+
+   mbtowc(NULL, 0, 0);
+
+   while (i < slen) {
+      mblen = mbtowc(NULL, s + i, slen - i);
+      if (mblen <= 0) {
+         return slen - i;
+      }
+      i += mblen;
+   }
+
+   return mblen;
+}
+
 bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue getPanelValue, Vector* lines) {
    if (ch == ERR)
       return true;
@@ -169,7 +188,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
 
       IncMode_find(mode, panel, getPanelValue, ch == KEY_F(3) ? 1 : -1);
       doSearch = false;
-   } else if (0 < ch && ch < 255 && isprint((unsigned char)ch)) {
+   } else if (iswprint(Panel_getLastWkey())) {
       if (mode->index < INCMODE_MAX) {
          mode->buffer[mode->index] = (char) ch;
          mode->index++;
@@ -183,8 +202,9 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       }
    } else if (ch == KEY_BACKSPACE || ch == 127) {
       if (mode->index > 0) {
-         mode->index--;
+         mode->index -= IncSet_backspaceLen(mode->buffer, mode->index);
          mode->buffer[mode->index] = 0;
+
          if (mode->isFilter) {
             filterChanged = true;
             if (mode->index == 0) {

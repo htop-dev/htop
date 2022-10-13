@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <ctype.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,8 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "XUtils.h"
 
+
+static wint_t last_wkey = 0;
 
 const PanelClass Panel_class = {
    .super = {
@@ -503,5 +506,39 @@ int Panel_getCh(Panel* this) {
 #ifdef HAVE_SET_ESCDELAY
    set_escdelay(25);
 #endif
-   return getch();
+
+#ifdef HAVE_LIBNCURSESW
+   static char mbbuf[MB_LEN_MAX];
+   static size_t mbbuf_len = 0, mbbuf_i = 0;
+
+   if (mbbuf_i < mbbuf_len) {
+      return mbbuf[mbbuf_i++];
+   }
+
+   wint_t wkey;
+   int wchrv = get_wch(&wkey);
+   wchar_t wch = (wchar_t)wkey;
+
+   if (wchrv == OK) {
+      mbbuf_i = 0;
+      mbbuf_len = wcrtomb(mbbuf, wch, NULL);
+      if (mbbuf_len == (size_t)-1) {
+         mbbuf_len = 0;
+         return wkey;
+      }
+      last_wkey = wkey;
+      return mbbuf[mbbuf_i++];
+   } else if (wchrv == KEY_CODE_YES) {
+      last_wkey = 0;
+      return wch;
+   }
+
+   return ERR;
+#else
+   return last_wkey = getch();
+#endif
+}
+
+wint_t Panel_getLastWkey(void) {
+   return last_wkey;
 }

@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <stdbool.h>
+#include <wchar.h>
 
 #include "CRT.h"
 #include "FunctionBar.h"
@@ -139,5 +140,7 @@ bool Panel_onKey(Panel* this, int key);
 HandlerResult Panel_selectByTyping(Panel* this, int ch);
 
 int Panel_getCh(Panel* this);
+
+wint_t Panel_getLastWkey(void);
 
 #endif
