@@ -1,0 +1,55 @@
+Action.c:12:10: fatal error: pwd.h: No such file or directory
+   12 | #include <pwd.h>
+      |          ^~~~~~~
+compilation terminated.
+make[1]: *** [Makefile:1476: Action.o] Error 1
+Compat.c: In function ‘Compat_faccessat’:
+Compat.c:47:22: error: ‘AT_FDCWD’ undeclared (first use in this function)
+   47 |    if (dirfd != (int)AT_FDCWD || mode != F_OK) {
+      |                      ^~~~~~~~
+Compat.c:47:22: note: each undeclared identifier is reported only once for each function it appears in
+Compat.c:55:13: warning: implicit declaration of function ‘lstat’; did you mean ‘wstat’? [-Wimplicit-function-declaration]
+   55 |       ret = lstat(pathname, &statinfo);
+      |             ^~~~~
+      |             wstat
+Compat.c: In function ‘Compat_fstatat’:
+Compat.c:82:16: error: ‘AT_SYMLINK_NOFOLLOW’ undeclared (first use in this function)
+   82 |    if (flags & AT_SYMLINK_NOFOLLOW)
+      |                ^~~~~~~~~~~~~~~~~~~
+Compat.c: In function ‘Compat_readlinkat’:
+Compat.c:123:11: warning: implicit declaration of function ‘readlink’ [-Wimplicit-function-declaration]
+  123 |    return readlink(path, buf, bufsize);
+      |           ^~~~~~~~
+make[1]: *** [Makefile:1476: Compat.o] Error 1
+CRT.c:14:10: fatal error: langinfo.h: No such file or directory
+   14 | #include <langinfo.h>
+      |          ^~~~~~~~~~~~
+compilation terminated.
+make[1]: *** [Makefile:1476: CRT.o] Error 1
+OpenFilesScreen.c:20:10: fatal error: sys/wait.h: No such file or directory
+   20 | #include <sys/wait.h>
+      |          ^~~~~~~~~~~~
+compilation terminated.
+make[1]: *** [Makefile:1476: OpenFilesScreen.o] Error 1
+Process.c:23:10: fatal error: sys/resource.h: No such file or directory
+   23 | #include <sys/resource.h>
+      |          ^~~~~~~~~~~~~~~~
+compilation terminated.
+make[1]: *** [Makefile:1476: Process.o] Error 1
+Settings.c:13:10: fatal error: pwd.h: No such file or directory
+   13 | #include <pwd.h>
+      |          ^~~~~~~
+compilation terminated.
+make[1]: *** [Makefile:1476: Settings.o] Error 1
+TraceScreen.c:21:10: fatal error: sys/select.h: No such file or directory
+   21 | #include <sys/select.h>
+      |          ^~~~~~~~~~~~~~
+compilation terminated.
+make[1]: *** [Makefile:1476: TraceScreen.o] Error 1
+UsersTable.c:12:10: fatal error: pwd.h: No such file or directory
+   12 | #include <pwd.h>
+      |          ^~~~~~~
+compilation terminated.
+make[1]: *** [Makefile:1476: UsersTable.o] Error 1
+make[1]: Target 'all-am' not remade because of errors.
+make: *** [Makefile:1065: all] Error 2
