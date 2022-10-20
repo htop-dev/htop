@@ -262,6 +262,15 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
          }
       }
    }
+
+   if (optind < argc) {
+      fprintf(stderr, "Error: unsupported non-option ARGV-elements:");
+      while (optind < argc)
+         fprintf(stderr, " %s", argv[optind++]);
+      fprintf(stderr, "\n");
+      return STATUS_ERROR_EXIT;
+   }
+
    return STATUS_OK;
 }
 
