@@ -31,16 +31,16 @@ jobs:
   build-ubuntu-latest-minimal-clang:
     runs-on: ubuntu-latest
     env:
-      CC: clang-14
+      CC: clang-15
     steps:
     - uses: actions/checkout@v3
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-14 libncursesw5-dev
+      run: sudo apt-get install --no-install-recommends clang-15 libncursesw5-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -72,16 +72,16 @@ jobs:
   build-ubuntu-latest-full-featured-clang:
     runs-on: ubuntu-latest
     env:
-      CC: clang-14
+      CC: clang-15
     steps:
     - uses: actions/checkout@v3
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-14 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-15 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -127,22 +127,22 @@ jobs:
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
     env:
-      CC: clang-14
+      CC: clang-15
     steps:
     - uses: actions/checkout@v3
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-14 clang-tools-14 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-15 clang-tools-15 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: scan-build-14 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities
+      run: scan-build-15 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities
     - name: Build
-      run: scan-build-14 -analyze-headers --status-bugs make -j"$(nproc)"
+      run: scan-build-15 -analyze-headers --status-bugs make -j"$(nproc)"
 
   build-macos-latest-clang:
     runs-on: macOS-latest
