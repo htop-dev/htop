@@ -26,11 +26,11 @@ typedef struct ScreenManager_ {
    int panelCount;
    Header* header;
    const Settings* settings;
-   const State* state;
+   State* state;
    bool allowFocusChange;
 } ScreenManager;
 
-ScreenManager* ScreenManager_new(Header* header, const Settings* settings, const State* state, bool owner);
+ScreenManager* ScreenManager_new(Header* header, const Settings* settings, State* state, bool owner);
 
 void ScreenManager_delete(ScreenManager* this);
 

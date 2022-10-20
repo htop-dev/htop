@@ -43,6 +43,7 @@ typedef struct State_ {
    Header* header;
    bool pauseProcessUpdate;
    bool hideProcessSelection;
+   bool hideMeters;
 } State;
 
 static inline bool State_hideFunctionBar(const State* st) {
