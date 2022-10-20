@@ -274,8 +274,13 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths, bool
 
 void Process_fillStarttimeBuffer(Process* this) {
    struct tm date;
+   time_t now = time(NULL);
    (void) localtime_r(&this->starttime_ctime, &date);
-   strftime(this->starttime_show, sizeof(this->starttime_show) - 1, (this->starttime_ctime > (time(NULL) - 86400)) ? "%R " : "%b%d ", &date);
+
+   strftime(this->starttime_show,
+            sizeof(this->starttime_show) - 1,
+            (this->starttime_ctime > now - 86400) ? "%R " : (this->starttime_ctime > now - 364*86400) ? "%b%d " : " %Y ",
+            &date);
 }
 
 /*
