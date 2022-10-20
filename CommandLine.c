@@ -371,6 +371,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       .header = header,
       .pauseProcessUpdate = false,
       .hideProcessSelection = false,
+      .hideMeters = false,
    };
 
    MainPanel_setState(panel, &state);

@@ -443,6 +443,9 @@ bool Panel_onKey(Panel* this, int key) {
 HandlerResult Panel_selectByTyping(Panel* this, int ch) {
    int size = Panel_size(this);
 
+   if (ch == '#')
+      return IGNORED;
+
    if (!this->eventHandlerState)
       this->eventHandlerState = xCalloc(100, sizeof(char));
    char* buffer = this->eventHandlerState;

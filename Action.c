@@ -245,6 +245,11 @@ static Htop_Reaction actionToggleTreeView(State* st) {
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
+static Htop_Reaction actionToggleHideMeters(State* st) {
+   st->hideMeters = !st->hideMeters;
+   return HTOP_RESIZE | HTOP_KEEP_FOLLOWING;
+}
+
 static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
    ScreenSettings* ss = st->settings->ss;
    if (!ss->treeView) {
@@ -514,6 +519,7 @@ static const struct {
    bool roInactive;
    const char* info;
 } helpLeft[] = {
+   { .key = "      #: ",  .roInactive = false, .info = "hide/show header meters" },
    { .key = "    Tab: ",  .roInactive = false, .info = "switch to next screen tab" },
    { .key = " Arrows: ",  .roInactive = false, .info = "scroll process list" },
    { .key = " Digits: ",  .roInactive = false, .info = "incremental PID search" },
@@ -740,6 +746,7 @@ static Htop_Reaction actionShowCommandScreen(State* st) {
 
 void Action_setBindings(Htop_Action* keys) {
    keys[' '] = actionTag;
+   keys['#'] = actionToggleHideMeters;
    keys['*'] = actionExpandOrCollapseAllBranches;
    keys['+'] = actionExpandOrCollapse;
    keys[','] = actionSetSortColumn;
