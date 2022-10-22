@@ -496,7 +496,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
 
    char buffer[1024];
    FileLocks_LockData** data_ref = &pdata->locks;
-   while(fgets(buffer, sizeof(buffer), f)) {
+   while (fgets(buffer, sizeof(buffer), f)) {
       if (!strchr(buffer, '\n'))
          continue;
 

@@ -256,7 +256,7 @@ static const char* Platform_metricNames[] = {
  * libpcp version avoids by using a protocol extension.  In time,
  * perhaps in a few years, we could remove this back-compat code.
  */
-int pmLookupDescs(int numpmid, pmID *pmids, pmDesc *descs) {
+int pmLookupDescs(int numpmid, pmID* pmids, pmDesc* descs) {
    int count = 0;
 
    for (int i = 0; i < numpmid; i++) {

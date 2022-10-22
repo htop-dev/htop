@@ -146,7 +146,8 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
                for (int j = 1; j < LAST_PROCESSFIELD; j++) {
                   const char* name = Process_fields[j].name;
                   const char* description = Process_fields[j].description;
-                  if (name) printf("%19s %s\n", name, description);
+                  if (name)
+                     printf("%19s %s\n", name, description);
                }
                return STATUS_OK_EXIT;
             }
@@ -166,8 +167,10 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
             break;
          case 'd':
             if (sscanf(optarg, "%16d", &(flags->delay)) == 1) {
-               if (flags->delay < 1) flags->delay = 1;
-               if (flags->delay > 100) flags->delay = 100;
+               if (flags->delay < 1)
+                  flags->delay = 1;
+               if (flags->delay > 100)
+                  flags->delay = 100;
             } else {
                fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
                return STATUS_ERROR_EXIT;
@@ -175,7 +178,7 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
             break;
          case 'u':
          {
-            const char *username = optarg;
+            const char* username = optarg;
             if (!username && optind < argc && argv[optind] != NULL &&
                 (argv[optind][0] != '\0' && argv[optind][0] != '-')) {
                username = argv[optind++];
@@ -184,7 +187,7 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
             if (!username) {
                flags->userId = geteuid();
             } else if (!Action_setUserOnly(username, &(flags->userId))) {
-               for (const char *itr = username; *itr; ++itr)
+               for (const char* itr = username; *itr; ++itr)
                   if (!isdigit((unsigned char)*itr)) {
                      fprintf(stderr, "Error: invalid user \"%s\".\n", username);
                      return STATUS_ERROR_EXIT;
@@ -217,11 +220,11 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
                flags->pidMatchList = Hashtable_new(8, false);
             }
 
-            while(pid) {
-                unsigned int num_pid = atoi(pid);
-                //  deepcode ignore CastIntegerToAddress: we just want a non-NULL pointer here
-                Hashtable_put(flags->pidMatchList, num_pid, (void *) 1);
-                pid = strtok_r(NULL, ",", &saveptr);
+            while (pid) {
+               unsigned int num_pid = atoi(pid);
+               //  deepcode ignore CastIntegerToAddress: we just want a non-NULL pointer here
+               Hashtable_put(flags->pidMatchList, num_pid, (void*) 1);
+               pid = strtok_r(NULL, ",", &saveptr);
             }
             free(argCopy);
 
@@ -233,19 +236,19 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
             break;
          }
          case 'H': {
-            const char *delay = optarg;
+            const char* delay = optarg;
             if (!delay && optind < argc && argv[optind] != NULL &&
                 (argv[optind][0] != '\0' && argv[optind][0] != '-')) {
-                delay = argv[optind++];
+               delay = argv[optind++];
             }
             if (delay) {
-                if (sscanf(delay, "%16d", &(flags->highlightDelaySecs)) == 1) {
-                   if (flags->highlightDelaySecs < 1)
-                      flags->highlightDelaySecs = 1;
-                } else {
-                   fprintf(stderr, "Error: invalid highlight delay value \"%s\".\n", delay);
-                   return STATUS_ERROR_EXIT;
-                }
+               if (sscanf(delay, "%16d", &(flags->highlightDelaySecs)) == 1) {
+                  if (flags->highlightDelaySecs < 1)
+                     flags->highlightDelaySecs = 1;
+               } else {
+                  fprintf(stderr, "Error: invalid highlight delay value \"%s\".\n", delay);
+                  return STATUS_ERROR_EXIT;
+               }
             }
             flags->highlightChanges = true;
             break;

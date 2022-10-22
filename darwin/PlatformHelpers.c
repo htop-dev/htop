@@ -58,7 +58,7 @@ bool Platform_KernelVersionIsBetween(KernelVersion lowerBound, KernelVersion upp
       && Platform_CompareKernelVersion(upperBound) < 0;
 }
 
-void Platform_getCPUBrandString(char *cpuBrandString, size_t cpuBrandStringSize) {
+void Platform_getCPUBrandString(char* cpuBrandString, size_t cpuBrandStringSize) {
    if (sysctlbyname("machdep.cpu.brand_string", cpuBrandString, &cpuBrandStringSize, NULL, 0) == -1) {
       fprintf(stderr,
          "WARN: Unable to determine the CPU brand string.\n"
@@ -74,7 +74,8 @@ bool Platform_isRunningTranslated() {
    size_t size = sizeof(ret);
    errno = 0;
    if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
-      if (errno == ENOENT) return false;
+      if (errno == ENOENT)
+         return false;
 
       fprintf(stderr,
          "WARN: Could not determine if this process was running in a translation environment like Rosetta 2.\n"

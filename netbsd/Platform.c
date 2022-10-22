@@ -351,7 +351,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
 
 bool Platform_getDiskIO(DiskIOData* data) {
    const int mib[] = { CTL_HW, HW_IOSTATS, sizeof(struct io_sysctl) };
-   struct io_sysctl *iostats = NULL;
+   struct io_sysctl* iostats = NULL;
    size_t size = 0;
 
    for (int retry = 3; retry > 0; retry--) {

@@ -503,7 +503,7 @@ void Process_makeCommandStr(Process* this) {
             WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
             str = stpcpy(str, procComm);
 
-            if(!showMergedCommand)
+            if (!showMergedCommand)
                return;
 
             WRITE_SEPARATOR;
