@@ -91,7 +91,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    HandlerResult result = IGNORED;
    bool sideMove = false;
 
-   switch(ch) {
+   switch (ch) {
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
@@ -110,7 +110,8 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
             break;
          Meter* meter = (Meter*) Vector_get(this->meters, selected);
          int mode = meter->mode + 1;
-         if (mode == LAST_METERMODE) mode = 1;
+         if (mode == LAST_METERMODE)
+            mode = 1;
          Meter_setMode(meter, mode);
          Panel_set(super, selected, (Object*) Meter_toListItem(meter, this->moving));
          result = HANDLED;

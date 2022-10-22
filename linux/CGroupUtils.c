@@ -11,7 +11,7 @@ in the source distribution for its full text.
 
 
 typedef struct StrBuf_state {
-   char *buf;
+   char* buf;
    size_t size;
    size_t pos;
 } StrBuf_state;
@@ -60,7 +60,7 @@ static bool Label_checkSuffix(const char* labelStart, size_t labelLen, const cha
    return labelLen > strlen(expected) && String_startsWith(labelStart + labelLen - strlen(expected), expected);
 }
 
-static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrBuf_putc_t w) {
+static bool CGroup_filterName_internal(const char* cgroup, StrBuf_state* s, StrBuf_putc_t w) {
    const char* str_slice_suffix = ".slice";
    const char* str_system_slice = "system.slice";
    const char* str_user_slice = "user.slice";
@@ -237,7 +237,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
          if (String_startsWith(cgroup, "user@")) {
             cgroup = nextSlash;
 
-            while(*cgroup == '/')
+            while (*cgroup == '/')
                cgroup++;
 
             continue;
@@ -275,7 +275,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
                cgroup += strlen(str_nspawn_payload_label);
 
             continue;
-         } else if(Label_checkPrefix(labelStart, scopeNameLen, str_snap_scope_prefix)) {
+         } else if (Label_checkPrefix(labelStart, scopeNameLen, str_snap_scope_prefix)) {
             const char* nextDot = strchrnul(labelStart + strlen(str_snap_scope_prefix), '.');
 
             if (!StrBuf_putsz(s, w, "!snap:"))
@@ -316,7 +316,7 @@ static bool CGroup_filterName_internal(const char *cgroup, StrBuf_state* s, StrB
    return true;
 }
 
-char* CGroup_filterName(const char *cgroup) {
+char* CGroup_filterName(const char* cgroup) {
    StrBuf_state s = {
       .buf = NULL,
       .size = 0,

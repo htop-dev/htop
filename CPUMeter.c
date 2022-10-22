@@ -187,7 +187,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
 static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
    const CPUMeterData* data = this->meterData;
    unsigned int cpus = data->cpus;
-   switch(Meter_name(this)[0]) {
+   switch (Meter_name(this)[0]) {
       default:
       case 'A': // All
          *start = 0;
@@ -195,10 +195,10 @@ static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
          break;
       case 'L': // First Half
          *start = 0;
-         *count = (cpus+1) / 2;
+         *count = (cpus + 1) / 2;
          break;
       case 'R': // Second Half
-         *start = (cpus+1) / 2;
+         *start = (cpus + 1) / 2;
          *count = cpus / 2;
          break;
    }

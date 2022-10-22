@@ -182,7 +182,7 @@ static unsigned int scanAvailableCPUsFromCPUinfo(LinuxProcessList* this) {
 
       if (String_startsWith(buffer, "processor"))
          availableCPUs++;
-      }
+   }
 
    fclose(file);
 
@@ -220,7 +220,7 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
       if (!String_startsWith(entry->d_name, "cpu"))
          continue;
 
-      char *endp;
+      char* endp;
       unsigned long int id = strtoul(entry->d_name + 3, &endp, 10);
       if (id == ULONG_MAX || endp == entry->d_name + 3 || *endp != '\0')
          continue;
@@ -672,7 +672,7 @@ static void LinuxProcessList_readMaps(LinuxProcess* process, openat_arg_t procFd
       if (' ' != *readptr++)
          continue;
 
-      while(*readptr > ' ')
+      while (*readptr > ' ')
          readptr++; // Skip parsing this hex value
       if (' ' != *readptr++)
          continue;
@@ -764,8 +764,8 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
    return r == 7;
 }
 
-static bool LinuxProcessList_checkPidNamespace(Process *process, openat_arg_t procFd) {
-   FILE *statusfile = fopenat(procFd, "status", "r");
+static bool LinuxProcessList_checkPidNamespace(Process* process, openat_arg_t procFd) {
+   FILE* statusfile = fopenat(procFd, "status", "r");
    if (!statusfile)
       return false;
 
@@ -777,7 +777,7 @@ static bool LinuxProcessList_checkPidNamespace(Process *process, openat_arg_t pr
       if (!String_startsWith(buffer, "NSpid:"))
          continue;
 
-      char *ptr = buffer;
+      char* ptr = buffer;
       int pid_ns_count = 0;
       while (*ptr && *ptr != '\n' && !isdigit(*ptr))
          ++ptr;
@@ -889,7 +889,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
 
       char* value_end = name_value_sep;
 
-      while(*value_end > 32) {
+      while (*value_end > 32) {
          value_end++;
       }
 
@@ -899,7 +899,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
 
       *value_end = '\0';
 
-      switch(field) {
+      switch (field) {
       case 1:
          foundEnvID = true;
          if (!String_eq(name_value_sep, process->ctid ? process->ctid : ""))
@@ -929,7 +929,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
 
 #endif
 
-static bool isContainerOrVMSlice(char *cgroup) {
+static bool isContainerOrVMSlice(char* cgroup) {
    if (String_startsWith(cgroup, "/user") || String_startsWith(cgroup, "/system"))
       return false;
 
@@ -986,7 +986,7 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
    free_and_xStrdup(&process->cgroup, output);
 
    if (!changed) {
-      if(process->cgroup_short) {
+      if (process->cgroup_short) {
          Process_updateFieldWidth(CCGROUP, strlen(process->cgroup_short));
       } else {
          //CCGROUP is alias to normal CGROUP if shortening fails

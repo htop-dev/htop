@@ -164,17 +164,17 @@ static void TraceScreen_updateTrace(InfoScreen* super) {
 
 static bool TraceScreen_onKey(InfoScreen* super, int ch) {
    TraceScreen* this = (TraceScreen*) super;
-   switch(ch) {
+   switch (ch) {
       case 'f':
       case KEY_F(8):
          this->follow = !(this->follow);
          if (this->follow)
-            Panel_setSelected(super->display, Panel_size(super->display)-1);
+            Panel_setSelected(super->display, Panel_size(super->display) - 1);
          return true;
       case 't':
       case KEY_F(9):
          this->tracing = !this->tracing;
-         FunctionBar_setLabel(super->display->defaultBar, KEY_F(9), this->tracing?"Stop Tracing   ":"Resume Tracing ");
+         FunctionBar_setLabel(super->display->defaultBar, KEY_F(9), this->tracing ? "Stop Tracing   " : "Resume Tracing ");
          InfoScreen_draw(this);
          return true;
    }

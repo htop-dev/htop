@@ -201,7 +201,7 @@ static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
    MaskItem* selected = (MaskItem*) Panel_getSelected(super);
    bool keepSelected = true;
 
-   switch(ch) {
+   switch (ch) {
    case KEY_MOUSE:
    case KEY_RECLICK:
    case ' ':

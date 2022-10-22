@@ -54,7 +54,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    HandlerResult result = IGNORED;
    bool update = false;
 
-   switch(ch) {
+   switch (ch) {
       case KEY_F(5):
       case 'l':
       case 'L':

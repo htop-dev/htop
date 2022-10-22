@@ -471,7 +471,8 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
          len = strlen(buffer);
          for (int i = 0; i < size; i++) {
             const char* cur = ((ListItem*) Panel_get(this, i))->value;
-            while (*cur == ' ') cur++;
+            while (*cur == ' ')
+               cur++;
             if (strncasecmp(cur, buffer, len) == 0) {
                Panel_setSelected(this, i);
                return HANDLED;

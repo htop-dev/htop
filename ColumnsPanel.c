@@ -38,7 +38,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    HandlerResult result = IGNORED;
    int size = Panel_size(super);
 
-   switch(ch) {
+   switch (ch) {
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:

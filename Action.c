@@ -221,7 +221,7 @@ static Htop_Reaction actionToggleUserlandThreads(State* st) {
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
-static Htop_Reaction actionToggleRunningInContainer(State* st){
+static Htop_Reaction actionToggleRunningInContainer(State* st) {
    st->settings->hideRunningInContainer = !st->settings->hideRunningInContainer;
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }

@@ -104,9 +104,9 @@ inline bool String_contains_i(const char* s1, const char* s2, bool multi) {
             String_freeArray(needles);
             return true;
          }
-       }
-       String_freeArray(needles);
-       return false;
+      }
+      String_freeArray(needles);
+      return false;
    } else {
       return strcasestr(s1, s2) != NULL;
    }
@@ -314,7 +314,7 @@ ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size
    return readfd_internal(fd, buffer, count);
 }
 
-ssize_t full_write(int fd, const void *buf, size_t count) {
+ssize_t full_write(int fd, const void* buf, size_t count) {
    ssize_t written = 0;
 
    while (count > 0) {
