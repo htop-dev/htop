@@ -325,7 +325,7 @@ static Htop_Reaction actionNextScreen(State* st) {
       settings->ssIndex = 0;
    }
    settings->ss = settings->screens[settings->ssIndex];
-   return HTOP_REFRESH;
+   return HTOP_UPDATE_PANELHDR | HTOP_REFRESH;
 }
 
 static Htop_Reaction actionPrevScreen(State* st) {
@@ -336,7 +336,7 @@ static Htop_Reaction actionPrevScreen(State* st) {
       settings->ssIndex--;
    }
    settings->ss = settings->screens[settings->ssIndex];
-   return HTOP_REFRESH;
+   return HTOP_UPDATE_PANELHDR | HTOP_REFRESH;
 }
 
 Htop_Reaction Action_setScreenTab(Settings* settings, int x) {
@@ -350,7 +350,7 @@ Htop_Reaction Action_setScreenTab(Settings* settings, int x) {
       if (x <= s + len + 1) {
          settings->ssIndex = i;
          settings->ss = settings->screens[i];
-         return HTOP_REFRESH;
+         return HTOP_UPDATE_PANELHDR | HTOP_REFRESH;
       }
       s += len + 3;
    }
