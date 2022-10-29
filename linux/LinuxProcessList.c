@@ -88,6 +88,48 @@ static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* m
    return stream;
 }
 
+static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
+   register uint64_t result = 0;
+
+   if (!maxlen)
+      --maxlen;
+
+   while (maxlen-- && **str >= '0' && **str <= '9') {
+      result *= 10;
+      result += **str - '0';
+      (*str)++;
+   }
+
+   return result;
+}
+
+static inline uint64_t fast_strtoull_hex(char** str, int maxlen) {
+   register uint64_t result = 0;
+   register int nibble, letter;
+   const long valid_mask = 0x03FF007E;
+
+   if (!maxlen)
+      --maxlen;
+
+   while (maxlen--) {
+      nibble = (unsigned char)**str;
+      if (!(valid_mask & (1 << (nibble & 0x1F))))
+         break;
+      if ((nibble < '0') || (nibble & ~0x20) > 'F')
+         break;
+      letter = (nibble & 0x40) ? 'A' - '9' - 1 : 0;
+      nibble &=~0x20; // to upper
+      nibble ^= 0x10; // switch letters and digits
+      nibble -= letter;
+      nibble &= 0x0f;
+      result <<= 4;
+      result += (uint64_t)nibble;
+      (*str)++;
+   }
+
+   return result;
+}
+
 static int sortTtyDrivers(const void* va, const void* vb) {
    const TtyDriver* a = (const TtyDriver*) va;
    const TtyDriver* b = (const TtyDriver*) vb;
@@ -573,48 +615,6 @@ typedef struct LibraryData_ {
    uint64_t size;
    bool exec;
 } LibraryData;
-
-static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
-   register uint64_t result = 0;
-
-   if (!maxlen)
-      --maxlen;
-
-   while (maxlen-- && **str >= '0' && **str <= '9') {
-      result *= 10;
-      result += **str - '0';
-      (*str)++;
-   }
-
-   return result;
-}
-
-static inline uint64_t fast_strtoull_hex(char** str, int maxlen) {
-   register uint64_t result = 0;
-   register int nibble, letter;
-   const long valid_mask = 0x03FF007E;
-
-   if (!maxlen)
-      --maxlen;
-
-   while (maxlen--) {
-      nibble = (unsigned char)**str;
-      if (!(valid_mask & (1 << (nibble & 0x1F))))
-         break;
-      if ((nibble < '0') || (nibble & ~0x20) > 'F')
-         break;
-      letter = (nibble & 0x40) ? 'A' - '9' - 1 : 0;
-      nibble &=~0x20; // to upper
-      nibble ^= 0x10; // switch letters and digits
-      nibble -= letter;
-      nibble &= 0x0f;
-      result <<= 4;
-      result += (uint64_t)nibble;
-      (*str)++;
-   }
-
-   return result;
-}
 
 static void LinuxProcessList_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void* value, void* data) {
    if (!data)
