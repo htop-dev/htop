@@ -49,6 +49,10 @@ static bool PCPDynamicColumn_addMetric(PCPDynamicColumns* columns, PCPDynamicCol
 }
 
 static void PCPDynamicColumn_parseMetric(PCPDynamicColumns* columns, PCPDynamicColumn* column, const char* path, unsigned int line, char* value) {
+   /* pmLookupText */
+   if (!column->super.description)
+      PCPMetric_lookupText(value, &column->super.description);
+
    /* lookup a dynamic metric with this name, else create */
    if (PCPDynamicColumn_addMetric(columns, column) == false)
       return;
@@ -108,6 +112,8 @@ static bool PCPDynamicColumn_uniqueName(char* key, PCPDynamicColumns* columns) {
 static PCPDynamicColumn* PCPDynamicColumn_new(PCPDynamicColumns* columns, const char* name) {
    PCPDynamicColumn* column = xCalloc(1, sizeof(*column));
    String_safeStrncpy(column->super.name, name, sizeof(column->super.name));
+   column->instances = false;
+   column->super.enabled = true;
 
    size_t id = columns->count + LAST_PROCESSFIELD;
    Hashtable_put(columns->table, id, column);
@@ -160,6 +166,12 @@ static void PCPDynamicColumn_parseFile(PCPDynamicColumns* columns, const char* p
          free_and_xStrdup(&column->super.description, value);
       } else if (value && column && String_eq(key, "width")) {
          column->super.width = strtoul(value, NULL, 10);
+      } else if (value && column && String_eq(key, "instances")) {
+         if (String_eq(value, "True") || String_eq(value, "true"))
+            column->instances = true;
+      } else if (value && column && String_eq(key, "enabled")) {
+         if (String_eq(value, "False") || String_eq(value, "false"))
+            column->super.enabled = false;
       } else if (value && column && String_eq(key, "metric")) {
          PCPDynamicColumn_parseMetric(columns, column, path, lineno, value);
       }
@@ -201,7 +213,7 @@ void PCPDynamicColumns_init(PCPDynamicColumns* columns) {
          home = pw->pw_dir;
    }
 
-   columns->table = Hashtable_new(0, true);
+   columns->table = Hashtable_new(0, false);
 
    /* developer paths - PCP_HTOP_DIR=./pcp ./pcp-htop */
    if (override) {

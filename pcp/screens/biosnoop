@@ -1,0 +1,42 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[biosnoop]
+caption = BioSnoop
+enabled = true
+
+comm.heading = comm
+comm.caption = Comm
+comm.width = -7
+comm.metric = bpf.biosnoop.comm
+
+pid.heading = PID
+pid.caption = PID
+pid.width = -7
+pid.metric = bpf.biosnoop.pid
+
+disk.heading = disk
+disk.caption = Disk
+disk.width = -7
+disk.metric = bpf.biosnoop.disk
+
+rwbs.heading = rwbs
+rwbs.caption = rwbs
+rwbs.width = -7
+rwbs.metric = bpf.biosnoop.rwbs
+
+bytes.heading = bytes
+bytes.caption = Bytes
+bytes.width = -7
+bytes.metric = bpf.biosnoop.bytes
+
+lat.heading = lat
+lat.caption = lat
+lat.width = -7
+lat.metric = bpf.biosnoop.lat
+
+sector.heading = sector
+sector.caption = sector
+sector.width = -7
+sector.metric = bpf.biosnoop.sector

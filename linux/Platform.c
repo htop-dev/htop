@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "GenericDataList.h"
 #include "HostnameMeter.h"
 #include "HugePageMeter.h"
 #include "LoadAverageMeter.h"
@@ -1031,3 +1032,11 @@ void Platform_done(void) {
    LibSensors_cleanup();
 #endif
 }
+
+void GenericDataList_goThroughEntries(ATTR_UNUSED GenericDataList* super, ATTR_UNUSED bool pauseUpdate) { return; }
+
+void GenericDataList_removePlatformList(ATTR_UNUSED GenericDataList* gl) { return; }
+
+GenericDataList* GenericDataList_addPlatformList(ATTR_UNUSED GenericDataList* super) {return NULL; }
+
+void GenericData_delete(ATTR_UNUSED Object* cast) { return; }

@@ -8,7 +8,6 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include <ctype.h>
 #include <stdbool.h>
 #include <pcp/pmapi.h>
 #include <sys/time.h>
@@ -176,5 +175,11 @@ int PCPMetric_instanceCount(PCPMetric metric);
 int PCPMetric_instanceOffset(PCPMetric metric, int inst);
 
 pmAtomValue* PCPMetric_instance(PCPMetric metric, int inst, int offset, pmAtomValue* atom, int type);
+
+pmInDom PCPMetric_InDom(PCPMetric metric);
+
+void PCPMetric_externalName(PCPMetric metric, int inst, char** externalName);
+
+int PCPMetric_lookupText(const char* metric, char** desc);
 
 #endif

@@ -25,11 +25,12 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-Header* Header_new(ProcessList* pl, Settings* settings, HeaderLayout hLayout) {
+Header* Header_new(ProcessList* pl, GenericDataList* gl, Settings* settings, HeaderLayout hLayout) {
    Header* this = xCalloc(1, sizeof(Header));
    this->columns = xMallocArray(HeaderLayout_getColumns(hLayout), sizeof(Vector*));
    this->settings = settings;
    this->pl = pl;
+   this->gl = gl;
    this->headerLayout = hLayout;
 
    Header_forEachColumn(this, i) {

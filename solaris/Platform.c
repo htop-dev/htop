@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Meter.h"
 #include "CPUMeter.h"
+#include "GenericDataList.h"
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "SwapMeter.h"
@@ -329,3 +330,11 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    *percent = NAN;
    *isOnAC = AC_ERROR;
 }
+
+void GenericDataList_goThroughEntries(ATTR_UNUSED GenericDataList* super, ATTR_UNUSED bool pauseUpdate) { return; }
+
+void GenericDataList_removePlatformList(ATTR_UNUSED GenericDataList* gl) { return; }
+
+GenericDataList* GenericDataList_addPlatformList(ATTR_UNUSED GenericDataList* super) {return NULL; }
+
+void GenericData_delete(ATTR_UNUSED Object* cast) { return; }

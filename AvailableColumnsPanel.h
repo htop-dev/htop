@@ -20,4 +20,10 @@ extern const PanelClass AvailableColumnsPanel_class;
 
 AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns, Hashtable* dynamicColumns);
 
+void AvailableColumnsPanel_addPlatformColumn(Panel* super);
+
+void AvailableColumnsPanel_addDynamicColumns(Panel* super, Hashtable* dynamicColumns);
+
+Panel* AvailableColumnsPanel_get(void);
+
 #endif
