@@ -114,6 +114,7 @@ static PCPDynamicColumn* PCPDynamicColumn_new(PCPDynamicColumns* columns, const 
    String_safeStrncpy(column->super.name, name, sizeof(column->super.name));
    column->instances = false;
    column->super.enabled = true;
+   column->scale = false;
 
    size_t id = columns->count + LAST_PROCESSFIELD;
    Hashtable_put(columns->table, id, column);
@@ -172,6 +173,9 @@ static void PCPDynamicColumn_parseFile(PCPDynamicColumns* columns, const char* p
       } else if (value && column && String_eq(key, "enabled")) {
          if (String_eq(value, "False") || String_eq(value, "false"))
             column->super.enabled = false;
+      } else if (value && column && String_eq(key, "scale")) {
+         if (String_eq(value, "True") || String_eq(value, "true"))
+            column->scale = true;
       } else if (value && column && String_eq(key, "metric")) {
          PCPDynamicColumn_parseMetric(columns, column, path, lineno, value);
       }
@@ -263,7 +267,7 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
 
    pmAtomValue atom;
    if (!PCPMetric_instance(this->id, proc->pid, pp->offset, &atom, type)) {
-      RichString_appendAscii(str, CRT_colors[METER_VALUE_ERROR], "no data");
+      RichString_appendAscii(str, CRT_colors[DYNAMIC_RED], "no data");
       return;
    }
 
@@ -309,7 +313,7 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
          RichString_appendAscii(str, attr, buffer);
          break;
       default:
-         attr = CRT_colors[METER_VALUE_ERROR];
+         attr = CRT_colors[DYNAMIC_RED];
          RichString_appendAscii(str, attr, "no type");
          break;
    }
