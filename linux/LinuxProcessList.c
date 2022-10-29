@@ -533,6 +533,80 @@ static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd,
    return true;
 }
 
+static bool LinuxProcessList_readStatusFile(Process* process, openat_arg_t procFd) {
+  LinuxProcess* lp = (LinuxProcess*) process;
+
+   unsigned long ctxt = 0;
+#ifdef HAVE_VSERVER
+   lp->vxid = 0;
+#endif
+
+   FILE* statusfile = fopenat(procFd, "status", "r");
+   if (!statusfile)
+      return false;
+
+   char buffer[PROC_LINE_LENGTH + 1];
+
+   while (fgets(buffer, sizeof(buffer), statusfile)) {
+
+      if (String_startsWith(buffer, "NSpid:")) {
+         const char* ptr = buffer;
+         int pid_ns_count = 0;
+         while (*ptr && *ptr != '\n' && !isdigit((unsigned char)*ptr))
+            ++ptr;
+
+         while (*ptr && *ptr != '\n') {
+            if (isdigit(*ptr))
+               pid_ns_count++;
+            while (isdigit((unsigned char)*ptr))
+               ++ptr;
+            while (*ptr && *ptr != '\n' && !isdigit((unsigned char)*ptr))
+               ++ptr;
+         }
+
+         if (pid_ns_count > 1)
+            process->isRunningInContainer = true;
+
+      } else if (String_startsWith(buffer, "voluntary_ctxt_switches:")) {
+         unsigned long vctxt;
+         int ok = sscanf(buffer, "voluntary_ctxt_switches:\t%lu", &vctxt);
+         if (ok >= 1) {
+            ctxt += vctxt;
+         }
+
+      } else if (String_startsWith(buffer, "nonvoluntary_ctxt_switches:")) {
+         unsigned long nvctxt;
+         int ok = sscanf(buffer, "nonvoluntary_ctxt_switches:\t%lu", &nvctxt);
+         if (ok >= 1) {
+            ctxt += nvctxt;
+         }
+
+#ifdef HAVE_VSERVER
+      } else if (String_startsWith(buffer, "VxID:")) {
+         int vxid;
+         int ok = sscanf(buffer, "VxID:\t%32d", &vxid);
+         if (ok >= 1) {
+            lp->vxid = vxid;
+         }
+#ifdef HAVE_ANCIENT_VSERVER
+      } else if (String_startsWith(buffer, "s_context:")) {
+         int vxid;
+         int ok = sscanf(buffer, "s_context:\t%32d", &vxid);
+         if (ok >= 1) {
+            lp->vxid = vxid;
+         }
+#endif /* HAVE_ANCIENT_VSERVER */
+#endif /* HAVE_VSERVER */
+      }
+   }
+
+   fclose(statusfile);
+
+   lp->ctxt_diff = (ctxt > lp->ctxt_total) ? (ctxt - lp->ctxt_total) : 0;
+   lp->ctxt_total = ctxt;
+
+   return true;
+}
 
 static bool LinuxProcessList_updateUser(ProcessList* processList, Process* process, openat_arg_t procFd) {
    struct stat sstat;
@@ -764,43 +838,6 @@ static bool LinuxProcessList_readStatmFile(LinuxProcess* process, openat_arg_t p
    return r == 7;
 }
 
-static bool LinuxProcessList_checkPidNamespace(Process* process, openat_arg_t procFd) {
-   FILE* statusfile = fopenat(procFd, "status", "r");
-   if (!statusfile)
-      return false;
-
-   while (true) {
-      char buffer[PROC_LINE_LENGTH + 1];
-      if (fgets(buffer, sizeof(buffer), statusfile) == NULL)
-         break;
-
-      if (!String_startsWith(buffer, "NSpid:"))
-         continue;
-
-      char* ptr = buffer;
-      int pid_ns_count = 0;
-      while (*ptr && *ptr != '\n' && !isdigit(*ptr))
-         ++ptr;
-
-      while (*ptr && *ptr != '\n') {
-         if (isdigit(*ptr))
-            pid_ns_count++;
-         while (isdigit(*ptr))
-            ++ptr;
-         while (*ptr && *ptr != '\n' && !isdigit(*ptr))
-            ++ptr;
-      }
-
-      if (pid_ns_count > 1)
-         process->isRunningInContainer = true;
-
-      break;
-   }
-
-   fclose(statusfile);
-   return true;
-}
-
 static bool LinuxProcessList_readSmapsFile(LinuxProcess* process, openat_arg_t procFd, bool haveSmapsRollup) {
    //http://elixir.free-electrons.com/linux/v4.10/source/fs/proc/task_mmu.c#L719
    //kernel will return data in chunks of size PAGE_SIZE or less.
@@ -929,13 +966,6 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
 
 #endif
 
-static bool isContainerOrVMSlice(char* cgroup) {
-   if (String_startsWith(cgroup, "/user") || String_startsWith(cgroup, "/system"))
-      return false;
-
-   return true;
-}
-
 static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "cgroup", "r");
    if (!file) {
@@ -1008,38 +1038,6 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
    }
 }
 
-#ifdef HAVE_VSERVER
-
-static void LinuxProcessList_readVServerData(LinuxProcess* process, openat_arg_t procFd) {
-   FILE* file = fopenat(procFd, "status", "r");
-   if (!file)
-      return;
-
-   char buffer[PROC_LINE_LENGTH + 1];
-   process->vxid = 0;
-   while (fgets(buffer, PROC_LINE_LENGTH, file)) {
-      if (String_startsWith(buffer, "VxID:")) {
-         int vxid;
-         int ok = sscanf(buffer, "VxID:\t%32d", &vxid);
-         if (ok >= 1) {
-            process->vxid = vxid;
-         }
-      }
-      #if defined HAVE_ANCIENT_VSERVER
-      else if (String_startsWith(buffer, "s_context:")) {
-         int vxid;
-         int ok = sscanf(buffer, "s_context:\t%32d", &vxid);
-         if (ok >= 1) {
-            process->vxid = vxid;
-         }
-      }
-      #endif
-   }
-   fclose(file);
-}
-
-#endif
-
 static void LinuxProcessList_readOomData(LinuxProcess* process, openat_arg_t procFd) {
    FILE* file = fopenat(procFd, "oom_score", "r");
    if (!file)
@@ -1071,33 +1069,6 @@ static void LinuxProcessList_readAutogroup(LinuxProcess* process, openat_arg_t p
       process->autogroup_id = identity;
       process->autogroup_nice = nice;
    }
-}
-
-static void LinuxProcessList_readCtxtData(LinuxProcess* process, openat_arg_t procFd) {
-   FILE* file = fopenat(procFd, "status", "r");
-   if (!file)
-      return;
-
-   char buffer[PROC_LINE_LENGTH + 1];
-   unsigned long ctxt = 0;
-   while (fgets(buffer, PROC_LINE_LENGTH, file)) {
-      if (String_startsWith(buffer, "voluntary_ctxt_switches:")) {
-         unsigned long vctxt;
-         int ok = sscanf(buffer, "voluntary_ctxt_switches:\t%lu", &vctxt);
-         if (ok >= 1) {
-            ctxt += vctxt;
-         }
-      } else if (String_startsWith(buffer, "nonvoluntary_ctxt_switches:")) {
-         unsigned long nvctxt;
-         int ok = sscanf(buffer, "nonvoluntary_ctxt_switches:\t%lu", &nvctxt);
-         if (ok >= 1) {
-            ctxt += nvctxt;
-         }
-      }
-   }
-   fclose(file);
-   process->ctxt_diff = (ctxt > process->ctxt_total) ? (ctxt - process->ctxt_total) : 0;
-   process->ctxt_total = ctxt;
 }
 
 static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t procFd) {
@@ -1550,15 +1521,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       LinuxProcessList_recurseProcTree(this, procFd, "task", proc, period);
 
-      if (ss->flags & PROCESS_FLAG_LINUX_CGROUP || hideRunningInContainer) {
-         LinuxProcessList_readCGroupFile(lp, procFd);
-         if (hideRunningInContainer && lp->cgroup && isContainerOrVMSlice(lp->cgroup)) {
-            if (!LinuxProcessList_checkPidNamespace(proc, procFd)) {
-               goto errorReadingProcess;
-            }
-         }
-      }
-
       /*
        * These conditions will not trigger on first occurrence, cause we need to
        * add the process to the ProcessList and do all one time scans
@@ -1662,17 +1624,14 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if (! LinuxProcessList_updateUser(pl, proc, procFd))
          goto errorReadingProcess;
 
+      if (!LinuxProcessList_readStatusFile(proc, procFd))
+         goto errorReadingProcess;
+
       if (!preExisting) {
 
          #ifdef HAVE_OPENVZ
          if (ss->flags & PROCESS_FLAG_LINUX_OPENVZ) {
             LinuxProcessList_readOpenVZData(lp, procFd);
-         }
-         #endif
-
-         #ifdef HAVE_VSERVER
-         if (ss->flags & PROCESS_FLAG_LINUX_VSERVER) {
-            LinuxProcessList_readVServerData(lp, procFd);
          }
          #endif
 
@@ -1695,6 +1654,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          }
       }
 
+      if (ss->flags & PROCESS_FLAG_LINUX_CGROUP)
+         LinuxProcessList_readCGroupFile(lp, procFd);
+
       #ifdef HAVE_DELAYACCT
       if (ss->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
          LinuxProcessList_readDelayAcctData(this, lp);
@@ -1703,10 +1665,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       if (ss->flags & PROCESS_FLAG_LINUX_OOM) {
          LinuxProcessList_readOomData(lp, procFd);
-      }
-
-      if (ss->flags & PROCESS_FLAG_LINUX_CTXT) {
-         LinuxProcessList_readCtxtData(lp, procFd);
       }
 
       if (ss->flags & PROCESS_FLAG_LINUX_SECATTR) {
@@ -1726,6 +1684,18 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
       }
 
+      /*
+       * Final section after all data has been gathered
+       */
+
+      proc->updated = true;
+      Compat_openatArgClose(procFd);
+
+      if (hideRunningInContainer && proc->isRunningInContainer) {
+         proc->show = false;
+         continue;
+      }
+
       if (Process_isKernelThread(proc)) {
          pl->kernelThreads++;
       } else if (Process_isUserlandThread(proc)) {
@@ -1737,8 +1707,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       pl->totalTasks++;
       /* runningTasks is set in LinuxProcessList_scanCPUTime() from /proc/stat */
-      proc->updated = true;
-      Compat_openatArgClose(procFd);
       continue;
 
       // Exception handler.
