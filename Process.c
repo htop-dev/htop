@@ -1010,7 +1010,9 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       }
       break;
    case USER:
-      if (Process_getuid != this->st_uid)
+      if (this->elevated_priv)
+         attr = CRT_colors[PROCESS_PRIV];
+      else if (Process_getuid != this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];
 
       if (this->user) {

@@ -149,6 +149,13 @@ typedef struct Process_ {
    /* User name */
    const char* user;
 
+   /* Non root owned process with elevated privileges
+    * Linux:
+    *   - from file capabilities
+    *   - inherited from the ambient set
+    */
+   bool elevated_priv;
+
    /* Process runtime (in hundredth of a second) */
    unsigned long long int time;
 

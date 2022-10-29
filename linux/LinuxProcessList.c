@@ -567,6 +567,14 @@ static bool LinuxProcessList_readStatusFile(Process* process, openat_arg_t procF
          if (pid_ns_count > 1)
             process->isRunningInContainer = true;
 
+      } else if (String_startsWith(buffer, "CapPrm:")) {
+         char* ptr = buffer + strlen("CapPrm:");
+         while (*ptr == ' ' || *ptr == '\t')
+            ptr++;
+
+         uint64_t cap_permitted = fast_strtoull_hex(&ptr, 16);
+         process->elevated_priv = cap_permitted != 0 && process->st_uid != 0;
+
       } else if (String_startsWith(buffer, "voluntary_ctxt_switches:")) {
          unsigned long vctxt;
          int ok = sscanf(buffer, "voluntary_ctxt_switches:\t%lu", &vctxt);
