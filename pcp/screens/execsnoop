@@ -1,0 +1,37 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[execsnoop]
+caption = ExecSnoop
+enabled = true
+
+pid.heading = PID
+pid.caption = Process Identifier
+pid.width = -7
+pid.metric = bpf.execsnoop.pid
+
+ppid.heading = PPID
+ppid.caption = Parent Process
+ppid.width = -7
+ppid.metric = bpf.execsnoop.ppid
+
+uid.heading = UID
+uid.caption = User Identifier
+uid.width = -6
+uid.metric = bpf.execsnoop.uid
+
+comm.heading = COMM
+comm.caption = Command
+comm.width = -16
+comm.metric = bpf.execsnoop.comm
+
+ret.heading = RET
+ret.caption = Return Code
+ret.width = -4
+ret.metric = bpf.execsnoop.ret
+
+path.heading = Arguments
+path.caption = Arguments
+path.width = -12
+path.metric = bpf.execsnoop.args

@@ -1,0 +1,28 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[cgroup]
+caption = Cgroup
+enabled = true
+
+cuser.heading = UTIME
+cuser.caption = User CPU Time
+cuser.width = -8
+cuser.metric = 1000 * rate(cgroup.cpu.stat.user)
+
+csystem.heading = STIME
+csystem.caption = Kernel CPU Time
+csystem.width = -8
+csystem.metric = 1000 * rate(cgroup.cpu.stat.system)
+
+cusage.heading = CPU%
+cusage.caption = CPU Utilization
+cusage.width = 6
+cusage.metric = 100 * (rate(cgroup.cpu.stat.usage) / hinv.ncpu)
+
+name.heading = Control group
+name.caption = Control group name
+name.width = -12
+name.metric = cgroup.cpu.stat.system
+name.instances = true

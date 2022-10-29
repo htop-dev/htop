@@ -178,3 +178,38 @@ bool PCPMetric_fetch(struct timeval* timestamp) {
       *timestamp = pcp->result->timestamp;
    return true;
 }
+
+pmInDom PCPMetric_InDom(PCPMetric metric) {
+   if (pcp->result == NULL)
+      return -1;
+
+   pmValueSet* vset = pcp->result->vset[metric];
+   if (!vset || vset->numval <= 0)
+      return -1;
+
+   /* extract requested number of values as requested type */
+   const pmDesc* desc = &pcp->descs[metric];
+   return desc->indom;
+}
+
+/* Note: it is the responsibility of the caller to free(3) the space when it is
+ * no longer required.
+ */
+void PCPMetric_externalName(PCPMetric metric, int inst, char** externalName) {
+   unsigned int indom;
+
+   indom = PCPMetric_InDom(metric);
+   pmNameInDom(indom, inst, externalName);
+}
+
+int PCPMetric_lookupText(const char* metric, char** desc) {
+   pmID pmid;
+   int sts;
+
+   sts = pmLookupName(1, &metric, &pmid);
+   if (sts < 0) {
+      return false;
+   }
+   pmLookupText(pmid, PM_TEXT_ONELINE, desc);
+   return 0;
+}

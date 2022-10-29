@@ -12,11 +12,13 @@
 #define DYNAMIC_DEFAULT_COLUMN_WIDTH -5
 
 typedef struct DynamicColumn_ {
-   char name[32];     /* unique, internal-only name */
-   char* heading;     /* displayed in main screen */
-   char* caption;     /* displayed in setup menu (short name) */
-   char* description; /* displayed in setup menu (detail) */
-   int width;         /* display width +/- for value alignment */
+   char name[32];              /* unique, internal-only name */
+   char* heading;              /* displayed in main screen */
+   char* caption;              /* displayed in setup menu (short name) */
+   char* description;          /* displayed in setup menu (detail) */
+   int width;                  /* display width +/- for value alignment */
+   bool belongToDynamicScreen; /* belong to DynamicScreen or ProcessList screen? */
+   bool enabled;               /* false == ignore this column */
 } DynamicColumn;
 
 Hashtable* DynamicColumns_new(void);

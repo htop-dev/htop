@@ -1,0 +1,32 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[opensnoop]
+caption = OpenSnoop
+enabled = true
+
+pid.heading = PID
+pid.caption = PID
+pid.width = -7
+pid.metric = bpf.opensnoop.pid
+
+comm.heading = COMM
+comm.caption = COMM
+comm.width = -16
+comm.metric = bpf.opensnoop.comm
+
+fd.heading = FD
+fd.caption = FD
+fd.width = -4
+fd.metric = bpf.opensnoop.fd
+
+err.heading = ERR
+err.caption = ERR
+err.width = -4
+err.metric = bpf.opensnoop.err
+
+path.heading = File name
+path.caption = PATH
+path.width = -12
+path.metric = bpf.opensnoop.fname
