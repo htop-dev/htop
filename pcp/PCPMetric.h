@@ -166,6 +166,8 @@ bool PCPMetric_iterate(PCPMetric metric, int* instp, int* offsetp);
 
 pmAtomValue* PCPMetric_values(PCPMetric metric, pmAtomValue* atom, int count, int type);
 
+pmUnits PCPMetric_units(PCPMetric metric);
+
 const pmDesc* PCPMetric_desc(PCPMetric metric);
 
 int PCPMetric_type(PCPMetric metric);

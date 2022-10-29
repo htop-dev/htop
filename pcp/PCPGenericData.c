@@ -83,6 +83,22 @@ void PCPGenericData_removeAllFields(PCPGenericData* this)
    }
 }
 
+#define PrintField(format, value) \
+   xSnprintf(buffer, sizeof(buffer), format, width, value);\
+   RichString_appendAscii(str, attr, buffer);
+
+#define KBytesField(format, val) \
+   pmConvScale(format, gf->value, &gf->units, &atom, &kbyte_scale);\
+   Process_printKBytes(str, val, coloring);
+
+#define TimeField(format, val) \
+   pmConvScale(format, gf->value, &gf->units, &atom, &sec_scale);\
+   Process_printTime(str, val, coloring);
+
+#define CountField(format, val) \
+   pmConvScale(format, gf->value, &gf->units, &atom, &count_scale);\
+   Process_printCount(str, val, coloring);
+
 static void PCPGenericData_writeField(const GenericData* this, RichString* str, int field) {
    const PCPGenericData* gg = (const PCPGenericData*) this;
    PCPGenericDataField* gf = (PCPGenericDataField*)Hashtable_get(gg->fields, field);
@@ -92,6 +108,7 @@ static void PCPGenericData_writeField(const GenericData* this, RichString* str, 
    const ProcessField* fields = this->settings->ss->fields;
    char buffer[256];
    int attr = CRT_colors[DEFAULT_COLOR];
+   bool coloring = this->settings->highlightMegabytes;
 
    DynamicColumn* dc = Hashtable_get(this->settings->dynamicColumns, fields[field]);
    if (!dc || !dc->enabled)
@@ -99,6 +116,21 @@ static void PCPGenericData_writeField(const GenericData* this, RichString* str, 
 
    PCPDynamicColumn* column = (PCPDynamicColumn*) dc;
    bool instances = column->instances;
+
+   bool scaled = column->scale;
+   pmAtomValue atom;
+   pmUnits kbyte_scale;
+
+   kbyte_scale.dimSpace = 1;
+   kbyte_scale.scaleSpace = PM_SPACE_KBYTE;
+
+   pmUnits sec_scale;
+   sec_scale.dimTime = 1;
+   sec_scale.scaleTime = PM_TIME_SEC;
+
+   pmUnits count_scale;
+   count_scale.dimCount = 1;
+   count_scale.scaleCount = PM_COUNT_ONE;
 
    int width = column->super.width;
    if (!width || abs(width) > DYNAMIC_MAX_COLUMN_WIDTH)
@@ -125,32 +157,104 @@ static void PCPGenericData_writeField(const GenericData* this, RichString* str, 
             RichString_appendAscii(str, attr, buffer);
             break;
          case PM_TYPE_32:
-            xSnprintf(buffer, sizeof(buffer), "%*d ", width, gf->value->l);
-            RichString_appendAscii(str, attr, buffer);
-            break;
+            if (scaled) {
+               if (gf->units.dimSpace) {
+                  KBytesField(PM_TYPE_32, atom.l);
+                  break;
+               } else if (gf->units.dimTime) {
+                  TimeField(PM_TYPE_32, atom.l);
+                  break;
+               } else {
+                  CountField(PM_TYPE_32, atom.l);
+                  break;
+               }
+            } else {
+               PrintField("%*d ", gf->value->l);
+               break;
+            }
          case PM_TYPE_U32:
-            xSnprintf(buffer, sizeof(buffer), "%*u ", width, gf->value->ul);
-            RichString_appendAscii(str, attr, buffer);
-            break;
+            if (scaled) {
+               if (gf->units.dimSpace) {
+                  KBytesField(PM_TYPE_U32, atom.ul);
+                  break;
+               } else if (gf->units.dimTime) {
+                  TimeField(PM_TYPE_U32, atom.ul);
+                  break;
+               } else {
+                  CountField(PM_TYPE_U32, atom.ul);
+                  break;
+               }
+            } else {
+               PrintField("%*u ", gf->value->ul);
+               break;
+            }
          case PM_TYPE_64:
-            xSnprintf(buffer, sizeof(buffer), "%*lld ", width, (long long) gf->value->ll);
-            RichString_appendAscii(str, attr, buffer);
-            break;
+            if (scaled) {
+               if (gf->units.dimSpace) {
+                  KBytesField(PM_TYPE_64, atom.ll);
+                  break;
+               } else if (gf->units.dimTime) {
+                  TimeField(PM_TYPE_64, atom.ll);
+                  break;
+               } else {
+                  CountField(PM_TYPE_64, atom.ll);
+                  break;
+               }
+            } else {
+               PrintField("%*lld ", (long long)gf->value->ll);
+               break;
+            }
          case PM_TYPE_U64:
-            xSnprintf(buffer, sizeof(buffer), "%*llu ", width, (unsigned long long) gf->value->ull);
-            RichString_appendAscii(str, attr, buffer);
-            break;
+            if (scaled) {
+               if (gf->units.dimSpace) {
+                  KBytesField(PM_TYPE_U64, atom.ull);
+                  break;
+               } else if (gf->units.dimTime) {
+                  TimeField(PM_TYPE_U64, atom.ull);
+                  break;
+               } else {
+                  CountField(PM_TYPE_U64, atom.ull);
+                  break;
+               }
+            } else {
+               PrintField("%*llu ", (unsigned long long)gf->value->ull);
+               break;
+            }
          case PM_TYPE_FLOAT:
-            xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, (double) gf->value->f);
-            RichString_appendAscii(str, attr, buffer);
-            break;
+            if (scaled) {
+               if (gf->units.dimSpace) {
+                  KBytesField(PM_TYPE_FLOAT, atom.f);
+                  break;
+               } else if (gf->units.dimTime) {
+                  TimeField(PM_TYPE_FLOAT, atom.f);
+                  break;
+               } else {
+                  CountField(PM_TYPE_FLOAT, atom.f);
+                  break;
+               }
+            } else {
+               PrintField("%*.2f ", (double)gf->value->f);
+               break;
+            }
          case PM_TYPE_DOUBLE:
-            xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, gf->value->d);
-            RichString_appendAscii(str, attr, buffer);
-            break;
+            if (scaled) {
+               if (gf->units.dimSpace) {
+                  KBytesField(PM_TYPE_DOUBLE, atom.d);
+                  break;
+               } else if (gf->units.dimTime) {
+                  TimeField(PM_TYPE_DOUBLE, atom.d);
+                  break;
+               } else {
+                  CountField(PM_TYPE_DOUBLE, atom.d);
+                  break;
+               }
+            } else {
+               PrintField("%*.2f ", gf->value->d);
+               break;
+            }
          default:
             attr = CRT_colors[DYNAMIC_RED];
-            RichString_appendAscii(str, attr, "no data");
+            RichString_appendAscii(str, attr, "no data ");
             break;
       }
    }
