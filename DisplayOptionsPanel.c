@@ -127,6 +127,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("- Try to strip exe from cmdline (when Command is merged)", &(settings->stripExeFromCmdline)));
    Panel_add(super, (Object*) CheckItem_newByRef("Highlight large numbers in memory counters", &(settings->highlightMegabytes)));
    Panel_add(super, (Object*) CheckItem_newByRef("Leave a margin around header", &(settings->headerMargin)));
+   Panel_add(super, (Object*) CheckItem_newByRef("Exclude HugePages from memory", &(settings->excludeHugepages)));
    Panel_add(super, (Object*) CheckItem_newByRef("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)", &(settings->detailedCPUTime)));
    Panel_add(super, (Object*) CheckItem_newByRef("Count CPUs from 1 instead of 0", &(settings->countCPUsFromOne)));
    Panel_add(super, (Object*) CheckItem_newByRef("Update process names on every refresh", &(settings->updateProcessNames)));

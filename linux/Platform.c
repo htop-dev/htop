@@ -350,8 +350,13 @@ void Platform_setMemoryValues(Meter* this) {
    const ProcessList* pl = this->pl;
    const LinuxProcessList* lpl = (const LinuxProcessList*) pl;
 
-   this->total     = pl->totalMem;
-   this->values[0] = pl->usedMem;
+   if (this->pl->settings->excludeHugepages) {
+      this->total     = pl->totalMem > lpl->totalHugePageMem ? pl->totalMem - lpl->totalHugePageMem : pl->totalMem;
+      this->values[0] = pl->usedMem > lpl->totalHugePageMem ? pl->usedMem - lpl->totalHugePageMem : pl->usedMem;
+   } else {
+      this->total     = pl->totalMem;
+      this->values[0] = pl->usedMem;
+   }
    this->values[1] = pl->buffersMem;
    this->values[2] = pl->sharedMem;
    this->values[3] = pl->cachedMem;

@@ -412,6 +412,8 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          this->headerMargin = atoi(option[1]);
       } else if (String_eq(option[0], "screen_tabs")) {
          this->screenTabs = atoi(option[1]);
+      } else if (String_eq(option[0], "exclude_hugepages")) {
+         this->excludeHugepages = atoi(option[1]);
       } else if (String_eq(option[0], "expand_system_time")) {
          // Compatibility option.
          this->detailedCPUTime = atoi(option[1]);
@@ -593,6 +595,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("show_merged_command", this->showMergedCommand);
    printSettingInteger("header_margin", this->headerMargin);
    printSettingInteger("screen_tabs", this->screenTabs);
+   printSettingInteger("exclude_hugepages", this->excludeHugepages);
    printSettingInteger("detailed_cpu_time", this->detailedCPUTime);
    printSettingInteger("cpu_count_from_one", this->countCPUsFromOne);
    printSettingInteger("show_cpu_usage", this->showCPUUsage);
@@ -676,6 +679,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    this->highlightBaseName = false;
    this->highlightDeletedExe = true;
    this->highlightMegabytes = true;
+   this->excludeHugepages = false;
    this->detailedCPUTime = false;
    this->countCPUsFromOne = false;
    this->showCPUUsage = true;
