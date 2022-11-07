@@ -106,7 +106,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
    char bufferRead[12], bufferWrite[12];
    Meter_humanUnit(bufferRead, cached_read_diff, sizeof(bufferRead));
    Meter_humanUnit(bufferWrite, cached_write_diff, sizeof(bufferWrite));
-   snprintf(this->txtBuffer, sizeof(this->txtBuffer), "%sB %sB %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
+   snprintf(this->txtBuffer, sizeof(this->txtBuffer), "%siB/s %siB/s %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
 }
 
 static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
@@ -134,10 +134,12 @@ static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out)
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " read: ");
    Meter_humanUnit(buffer, cached_read_diff, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " write: ");
    Meter_humanUnit(buffer, cached_write_diff, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 }
 
 const MeterClass DiskIOMeter_class = {
