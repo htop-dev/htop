@@ -64,6 +64,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
 
       if (data.totalBytesRead > cached_read_total) {
          diff = data.totalBytesRead - cached_read_total;
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
          diff /= ONE_K; /* convert to KiB/s */
          cached_read_diff = (uint32_t)diff;
       } else {
@@ -73,6 +74,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
 
       if (data.totalBytesWritten > cached_write_total) {
          diff = data.totalBytesWritten - cached_write_total;
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
          diff /= ONE_K; /* convert to KiB/s */
          cached_write_diff = (uint32_t)diff;
       } else {
