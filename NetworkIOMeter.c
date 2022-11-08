@@ -59,8 +59,8 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
       if (data.bytesReceived > cached_rxb_total) {
          diff = data.bytesReceived - cached_rxb_total;
-         diff /= ONE_K; /* Meter_humanUnit() expects unit in kilo */
          diff = (1000 * diff) / passedTimeInMs; /* convert to per second */
+         diff /= ONE_K; /* convert to KiB/s */
          cached_rxb_diff = (uint32_t)diff;
       } else {
          cached_rxb_diff = 0;
@@ -77,8 +77,8 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
       if (data.bytesTransmitted > cached_txb_total) {
          diff = data.bytesTransmitted - cached_txb_total;
-         diff /= ONE_K; /* Meter_humanUnit() expects unit in kilo */
          diff = (1000 * diff) / passedTimeInMs; /* convert to per second */
+         diff /= ONE_K; /* convert to KiB/s */
          cached_txb_diff = (uint32_t)diff;
       } else {
          cached_txb_diff = 0;
