@@ -21,10 +21,11 @@ cusage.caption = CPU Utilization
 cusage.width = 6
 cusage.metric = 100 * (rate(cgroup.cpu.stat.usage) / hinv.ncpu)
 
-memory.heading = MEM
-memory.caption = Used memory
-memory.width = -6
-memory.metric = cgroup.memory.current
+## different pmInDom, argh
+#memory.heading = MEM
+#memory.caption = Used memory
+#memory.width = -6
+#memory.metric = cgroup.memory.current
 
 cpupressure.heading = CPU PSI
 cpupressure.caption = CPU Pressure Stall Information
