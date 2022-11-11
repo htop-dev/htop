@@ -3,7 +3,7 @@
 #
 
 [cgroup]
-caption = Cgroup
+caption = CGroups
 enabled = true
 
 cuser.heading = UTIME
@@ -21,8 +21,74 @@ cusage.caption = CPU Utilization
 cusage.width = 6
 cusage.metric = 100 * (rate(cgroup.cpu.stat.usage) / hinv.ncpu)
 
+memory.heading = MEM
+memory.caption = Used memory
+memory.width = -6
+memory.metric = cgroup.memory.current
+
+iops.heading = IOPS
+iops.caption = I/O operations
+iops.width = -6
+iops.metric = cgroup.io.stat.rios + cgroup.io.stat.wios + cgroup.io.stat.dios
+
+readops.heading = RDIO
+readops.caption = Read operations
+readops.width = -6
+readops.metric = cgroup.io.stat.rios
+readops.enabled = false
+
+writeops.heading = WRIO
+writeops.caption = Write operations
+writeops.width = -6
+writeops.metric = cgroup.io.stat.wios
+writeops.enabled = false
+
+directops.heading = DIO
+directops.caption = Direct I/O operations
+directops.width = -6
+directops.metric = cgroup.io.stat.dios
+directops.enabled = false
+
+totalbytes.heading = DISK R/W
+totalbytes.caption = Disk throughput
+totalbytes.width = -8
+totalbytes.metric = cgroup.io.stat.rbytes + cgroup.io.stat.wbytes + cgroup.io.stat.dbytes
+
+readbytes.heading = RBYTES
+readbytes.caption = Disk read throughput
+readbytes.width = -8
+readbytes.metric = cgroup.io.stat.rbytes
+readbytes.enabled = false
+
+writebytes.heading = WBYTES
+writebytes.caption = Disk throughput
+writebytes.width = -8
+writebytes.metric = cgroup.io.stat.wbytes
+writeytes.enabled = false
+
+directio.heading = DIRECT
+directio.caption = Direct I/O throughput
+directio.width = -8
+directio.metric = cgroup.io.stat.dbytes
+directio.enabled = false
+
+cpupressure.heading = CPU PSI
+cpupressure.caption = CPU Pressure Stall Information
+cpupressure.width = -6
+cpupressure.metric = cgroup.pressure.cpu.some.total
+
+mempressure.heading = MEM PSI
+mempressure.caption = Memory Pressure Stall Information
+mempressure.width = -6
+mempressure.metric = cgroup.pressure.memory.some.total
+
+iopressure.heading = I/O PSI
+iopressure.caption = I/O Pressure Stall Information
+iopressure.width = -6
+iopressure.metric = cgroup.pressure.io.some.total
+
 name.heading = Control group
 name.caption = Control group name
-name.width = -12
+name.width = -22
 name.metric = cgroup.cpu.stat.system
 name.instances = true

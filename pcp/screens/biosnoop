@@ -4,39 +4,39 @@
 
 [biosnoop]
 caption = BioSnoop
-enabled = true
-
-comm.heading = comm
-comm.caption = Comm
-comm.width = -7
-comm.metric = bpf.biosnoop.comm
+enabled = false
 
 pid.heading = PID
-pid.caption = PID
+pid.caption = Process identifier
 pid.width = -7
 pid.metric = bpf.biosnoop.pid
 
-disk.heading = disk
-disk.caption = Disk
+disk.heading = DISK
+disk.caption = Device name
 disk.width = -7
 disk.metric = bpf.biosnoop.disk
 
-rwbs.heading = rwbs
-rwbs.caption = rwbs
-rwbs.width = -7
+rwbs.heading = TYPE
+rwbs.caption = I/O type string
+rwbs.width = -4
 rwbs.metric = bpf.biosnoop.rwbs
 
-bytes.heading = bytes
-bytes.caption = Bytes
+bytes.heading = BYTES
+bytes.caption = I/O size in bytes
 bytes.width = -7
 bytes.metric = bpf.biosnoop.bytes
 
-lat.heading = lat
-lat.caption = lat
+lat.heading = LAT
+lat.caption = I/O latency
 lat.width = -7
 lat.metric = bpf.biosnoop.lat
 
-sector.heading = sector
-sector.caption = sector
-sector.width = -7
+sector.heading = SECTOR
+sector.caption = Device sector
+sector.width = -8
 sector.metric = bpf.biosnoop.sector
+
+comm.heading = Command
+comm.caption = Process command name
+comm.width = -16
+comm.metric = bpf.biosnoop.comm
