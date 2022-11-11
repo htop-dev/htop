@@ -55,8 +55,6 @@ void GenericDataList_delete(GenericDataList* gl);
 /* One GenericData List */
 void GenericDataList_addList(void);
 
-//void GenericDataList_removeList(GenericDataList* g);
-
 /* struct GenericData */
 GenericData* GenericDataList_getGenericData(GenericDataList* this, GenericData_New constructor);
 
@@ -64,14 +62,8 @@ void GenericDataList_addGenericData(GenericDataList* this, GenericData* g);
 
 void GenericDataList_removeGenericData(GenericDataList* this);
 
-/* helpers functions */
+/* helper functions */
 void GenericDataList_setPanel(GenericDataList* this, Panel* panel);
-
-void GenericDataList_printHeader(const GenericDataList* this, RichString* header); // TODO
-
-void GenericDataList_expandTree(GenericDataList* this); // TODO
-
-void GenericDataList_collapseAllBranches(GenericDataList* this); // TODO
 
 void GenericDataList_rebuildPanel(GenericDataList* this);
 

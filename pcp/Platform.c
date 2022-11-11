@@ -403,6 +403,9 @@ bool Platform_init(void) {
    Platform_getMaxCPU();
    Platform_getMaxPid();
 
+   Process_setupColumnWidths();
+   PCPDynamicColumns_setupWidths(&pcp->columns);
+
    return true;
 }
 

@@ -2,55 +2,43 @@
 # pcp-htop(1) configuration file - see pcp-htop(5)
 #
 
-[cgroupio]
-caption = CGroups IO
-enabled = false
+[cgroupsio]
+caption = CGroups I/O
 
 iops.heading = IOPS
 iops.caption = I/O operations
-iops.width = -6
 iops.metric = cgroup.io.stat.rios + cgroup.io.stat.wios + cgroup.io.stat.dios
 
 readops.heading = RDIO
 readops.caption = Read operations
-readops.width = -6
 readops.metric = cgroup.io.stat.rios
-readops.enabled = false
+readops.default = false
 
 writeops.heading = WRIO
 writeops.caption = Write operations
-writeops.width = -6
 writeops.metric = cgroup.io.stat.wios
-writeops.enabled = false
+writeops.default = false
 
 directops.heading = DIO
 directops.caption = Direct I/O operations
-directops.width = -6
 directops.metric = cgroup.io.stat.dios
-directops.enabled = false
+directops.default = false
 
-totalbytes.heading = DISK R/W
+totalbytes.heading = R/W/D
 totalbytes.caption = Disk throughput
-totalbytes.width = -8
 totalbytes.metric = cgroup.io.stat.rbytes + cgroup.io.stat.wbytes + cgroup.io.stat.dbytes
 
-readbytes.heading = RBYTES
+readbytes.heading = RBYTE
 readbytes.caption = Disk read throughput
-readbytes.width = -8
 readbytes.metric = cgroup.io.stat.rbytes
-readbytes.enabled = false
 
-writebytes.heading = WBYTES
+writebytes.heading = WBYTE
 writebytes.caption = Disk throughput
-writebytes.width = -8
 writebytes.metric = cgroup.io.stat.wbytes
-writeytes.enabled = false
 
-directio.heading = DIRECT
+directio.heading = DBYTE
 directio.caption = Direct I/O throughput
-directio.width = -8
 directio.metric = cgroup.io.stat.dbytes
-directio.enabled = false
 
 name.heading = Control group device
 name.caption = Control group device

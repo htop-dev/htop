@@ -100,12 +100,7 @@ static int PCPGenericDataList_updateGenericDataList(PCPGenericDataList* this) {
 
    keyMetric = defineKeyMetric(settings);
 
-   if (!settings->ss->generic)
-      return 0;
-
-   // one or more columns are added to pcp/screens and do not exist in
-   // pcp/columns, continue.
-   for (unsigned int i = 0 ; !fields[i]; i++)
+   if (!settings->ss->dynamic)
       return 0;
 
    // Instance Domain Validation
@@ -116,10 +111,8 @@ static int PCPGenericDataList_updateGenericDataList(PCPGenericDataList* this) {
       if (!dc)
          return -1;
 
-      pmInDom indom = PCPMetric_InDom(dc->id);
-      if (keyInDom != indom) {
+      if (keyInDom != PCPMetric_InDom(dc->id))
          return 0;
-      }
    }
 
    int requiredColumns = getColumnCount(fields);
@@ -133,38 +126,32 @@ static int PCPGenericDataList_updateGenericDataList(PCPGenericDataList* this) {
    allocColumns(gl, requiredColumns, requiredRows);
 
    // fill
-   int interInst = -1, offset = -1;
-   while (PCPMetric_iterate(keyMetric->id, &interInst, &offset)) {
+   int instance = -1, offset = -1;
+   while (PCPMetric_iterate(keyMetric->id, &instance, &offset)) {
       for (unsigned int i = 0; fields[i]; i++) {
-         int metricType;
-
          DynamicColumn* dc = Hashtable_get(settings->dynamicColumns, fields[i]);
-         if (!dc)
+         PCPDynamicColumn* column = (PCPDynamicColumn*) dc;
+         if (!column)
             return -1;
 
-         PCPDynamicColumn* column = (PCPDynamicColumn*) dc;
-         metricType = PCPMetric_type(column->id);
+         const pmDesc* desc = PCPMetric_desc(column->id);
 
          pmAtomValue value;
-         if (PCPMetric_instance(column->id, interInst, offset, &value, metricType)) {
-            GenericData* g;
-
-            g = Hashtable_get(gl->genericDataTable, offset);
-            if (!g)
-               return -1;
-
+         if (PCPMetric_instance(column->id, instance, offset, &value, desc->type)) {
+            GenericData* g = Hashtable_get(gl->genericDataTable, offset);
             PCPGenericData* gg = (PCPGenericData*) g;
+            if (!gg)
+               return -1;
+            gg->offset = offset;
 
-            PCPGenericDataField* field = (PCPGenericDataField*)Hashtable_get(gg->fields, i);
+            PCPGenericDataField* field = (PCPGenericDataField*) Hashtable_get(gg->fields, i);
             if (!field)
                return -1;
-
-            gg->offset       = offset;
-            *field->value    = value;
-            field->type      = metricType;
-            field->pmid      = column->id;
-            field->offset    = offset;
-            field->interInst = interInst;
+            field->id = column->id;
+            field->desc = desc;
+            field->value = value;
+            field->offset = offset;
+            field->instance = instance;
          }
       }
    }

@@ -56,11 +56,8 @@ void GenericData_delete(Object* cast) {
 PCPGenericDataField* PCPGenericData_addField(PCPGenericData* this)
 {
    PCPGenericDataField* field = xCalloc(1, sizeof(PCPGenericDataField));
-   pmAtomValue* atom = xCalloc(1, sizeof(pmAtomValue));
 
-   field->value = atom;
    Hashtable_put(this->fields, this->fieldsCount, field);
-
    this->fieldsCount++;
 
    return field;
@@ -70,90 +67,32 @@ void PCPGenericData_removeField(PCPGenericData* this)
 {
    int idx = this->fieldsCount - 1;
 
-   PCPGenericDataField* field = Hashtable_get(this->fields, idx);
-   free(field->value);
    Hashtable_remove(this->fields, idx);
    this->fieldsCount--;
 }
 
 void PCPGenericData_removeAllFields(PCPGenericData* this)
 {
-   for (size_t i = this->fieldsCount; i > 0; i--) {
+   for (size_t i = this->fieldsCount; i > 0; i--)
       PCPGenericData_removeField(this);
-   }
 }
 
 static void PCPGenericData_writeField(const GenericData* this, RichString* str, int field) {
    const PCPGenericData* gg = (const PCPGenericData*) this;
+   if (!gg)
+      return;
    PCPGenericDataField* gf = (PCPGenericDataField*)Hashtable_get(gg->fields, field);
    if (!gf)
       return;
 
-   const ProcessField* fields = this->settings->ss->fields;
-   char buffer[256];
-   int attr = CRT_colors[DEFAULT_COLOR];
-
-   DynamicColumn* dc = Hashtable_get(this->settings->dynamicColumns, fields[field]);
+   const Settings* settings = this->settings;
+   const ProcessField* fields = settings->ss->fields;
+   DynamicColumn* dc = Hashtable_get(settings->dynamicColumns, fields[field]);
    if (!dc || !dc->enabled)
       return;
 
-   PCPDynamicColumn* column = (PCPDynamicColumn*) dc;
-   bool instances = column->instances;
-
-   int width = column->super.width;
-   if (!width || abs(width) > DYNAMIC_MAX_COLUMN_WIDTH)
-      width = DYNAMIC_DEFAULT_COLUMN_WIDTH;
-   int abswidth = abs(width);
-   if (abswidth > DYNAMIC_MAX_COLUMN_WIDTH) {
-      abswidth = DYNAMIC_MAX_COLUMN_WIDTH;
-      width = -abswidth;
-   }
-
-   if (instances) {
-      char* instName;
-      attr = CRT_colors[DYNAMIC_GRAY];
-
-      PCPMetric_externalName(gf->pmid, gf->interInst, &instName);
-
-      xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, 250, instName);
-      RichString_appendAscii(str, attr, buffer);
-   } else {
-      switch (gf->type) {
-         case PM_TYPE_STRING:
-            attr = CRT_colors[DYNAMIC_GREEN];
-            xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, 250, gf->value->cp);
-            RichString_appendAscii(str, attr, buffer);
-            break;
-         case PM_TYPE_32:
-            xSnprintf(buffer, sizeof(buffer), "%*d ", width, gf->value->l);
-            RichString_appendAscii(str, attr, buffer);
-            break;
-         case PM_TYPE_U32:
-            xSnprintf(buffer, sizeof(buffer), "%*u ", width, gf->value->ul);
-            RichString_appendAscii(str, attr, buffer);
-            break;
-         case PM_TYPE_64:
-            xSnprintf(buffer, sizeof(buffer), "%*lld ", width, (long long) gf->value->ll);
-            RichString_appendAscii(str, attr, buffer);
-            break;
-         case PM_TYPE_U64:
-            xSnprintf(buffer, sizeof(buffer), "%*llu ", width, (unsigned long long) gf->value->ull);
-            RichString_appendAscii(str, attr, buffer);
-            break;
-         case PM_TYPE_FLOAT:
-            xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, (double) gf->value->f);
-            RichString_appendAscii(str, attr, buffer);
-            break;
-         case PM_TYPE_DOUBLE:
-            xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, gf->value->d);
-            RichString_appendAscii(str, attr, buffer);
-            break;
-         default:
-            attr = CRT_colors[DYNAMIC_RED];
-            RichString_appendAscii(str, attr, "no data");
-            break;
-      }
-   }
+   PCPDynamicColumn* pc = (PCPDynamicColumn*) dc;
+   PCPDynamicColumn_writeAtomValue(pc, str, settings, gf->id, gf->instance, gf->desc, &gf->value);
 }
 
 static int PCPGenericData_compareByKey(const GenericData* v1, const GenericData* v2, int key) {

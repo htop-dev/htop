@@ -17,27 +17,20 @@ in the source distribution for its full text.
 
 
 typedef struct PCPGenericDataField_ {
-   pmAtomValue* value;
-
-   pmID pmid;
-
+   pmAtomValue value;
+   size_t id;  /* identifier for metric array lookups */
    int offset;
-
-   int interInst;
-
-   int type;
+   int instance;
+   const pmDesc* desc;
 } PCPGenericDataField;
 
 typedef struct PCPGenericData_ {
    GenericData super;
-
-   /* default result offset to use for searching proc metrics */
-   unsigned int offset;
-
    Hashtable* fields;  /* PCPGenericDataFields */
 
+   /* default result offset to use for searching metrics with instances */
+   unsigned int offset;
    size_t fieldsCount;
-
    int sortKey;
 } PCPGenericData;
 

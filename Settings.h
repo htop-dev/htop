@@ -44,7 +44,7 @@ typedef struct {
    bool treeView;
    bool treeViewAlwaysByPID;
    bool allBranchesCollapsed;
-   bool generic;
+   bool dynamic;
 } ScreenSettings;
 
 typedef struct Settings_ {

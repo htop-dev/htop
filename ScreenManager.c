@@ -140,7 +140,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       // scan processes first - some header values are calculated there
       ProcessList_scan(pl, this->state->pauseUpdate);
 
-      if (this->settings->ss->generic)
+      if (this->settings->ss->dynamic)
          GenericDataList_scan(gl, this->state->pauseUpdate);
 
       // always update header, especially to avoid gaps in graph meters
@@ -152,7 +152,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       *redraw = true;
    }
    if (*redraw) {
-      if (this->settings->ss->generic) {
+      if (this->settings->ss->dynamic) {
          *force_redraw = true;
          Vector_prune(pl->panel->items);
 

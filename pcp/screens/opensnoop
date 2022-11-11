@@ -3,30 +3,23 @@
 #
 
 [opensnoop]
-caption = OpenSnoop
-enabled = true
+caption = Open syscall snoop
 
 pid.heading = PID
-pid.caption = PID
-pid.width = -7
 pid.metric = bpf.opensnoop.pid
+pid.format = process
 
 comm.heading = COMM
-comm.caption = COMM
-comm.width = -16
 comm.metric = bpf.opensnoop.comm
+comm.format = command
 
 fd.heading = FD
-fd.caption = FD
-fd.width = -4
 fd.metric = bpf.opensnoop.fd
 
 err.heading = ERR
-err.caption = ERR
-err.width = -4
 err.metric = bpf.opensnoop.err
 
-path.heading = File name
-path.caption = PATH
-path.width = -12
-path.metric = bpf.opensnoop.fname
+file.heading = File name
+file.width = -32
+file.metric = bpf.opensnoop.fname
+file.format = path

@@ -13,9 +13,6 @@ in the source distribution for its full text.
 #include <dirent.h>
 #include <pcp/pmapi.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "Macros.h"
 #include "Platform.h"
@@ -32,12 +29,14 @@ void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, PCPDynam
       if (!screen)
          return;
 
-      for (unsigned int column = 0; column < screen->totalColumns; column++) {
-         screen->columns[column].id = columns->offset + columns->cursor;
+      for (unsigned int j = 0; j < screen->totalColumns; j++) {
+         PCPDynamicColumn* column = &screen->columns[j];
+
+         column->id = columns->offset + columns->cursor;
          columns->cursor++;
-         Platform_addMetric(screen->columns[column].id, screen->columns[column].metricName);
+         Platform_addMetric(column->id, column->metricName);
          size_t id = columns->count + LAST_PROCESSFIELD;
-         Hashtable_put(columns->table, id, &screen->columns[column]);
+         Hashtable_put(columns->table, id, column);
          columns->count++;
       }
    }
@@ -67,8 +66,7 @@ static PCPDynamicColumn* PCPDynamicScreen_lookupMetric(PCPDynamicScreen* screen,
 
    column->metricName = metricName;
    xSnprintf(column->super.name, bytes, "%s_%s", screen->super.name, name);
-   column->instances = false;
-   column->super.belongToDynamicScreen = true;
+   column->super.hasDynamicScreen = true;
    column->super.enabled = true;
 
    return column;
@@ -118,7 +116,7 @@ static void PCPDynamicScreen_parseColumn(PCPDynamicScreen* screen, const char* p
       } else if (String_eq(p, "instances")) {
          if (String_eq(value, "True") || String_eq(value, "true"))
             column->instances = true;
-      } else if (String_eq(p, "enabled")) { /* default is True */
+      } else if (String_eq(p, "default")) { /* displayed by default */
          if (String_eq(value, "False") || String_eq(value, "false"))
             column->super.enabled = false;
       }
@@ -165,6 +163,7 @@ static bool PCPDynamicScreen_uniqueName(char* key, PCPDynamicScreens* screens) {
 static PCPDynamicScreen* PCPDynamicScreen_new(PCPDynamicScreens* screens, const char* name) {
    PCPDynamicScreen* screen = xCalloc(1, sizeof(*screen));
    String_safeStrncpy(screen->super.name, name, sizeof(screen->super.name));
+   screen->defaultEnabled = true;
 
    size_t id = screens->count;
    Hashtable_put(screens->table, id, screen);
@@ -209,6 +208,8 @@ static void PCPDynamicScreen_parseFile(PCPDynamicScreens* screens, const char* p
             ok = PCPDynamicScreen_uniqueName(key + 1, screens);
          if (ok)
             screen = PCPDynamicScreen_new(screens, key + 1);
+	 if (pmDebugOptions.appl0)
+             fprintf(stderr, "[%s] screen: %s\n", path, key+1);
       } else if (!ok) {
          ;  /* skip this one, we're looking for a new header */
       } else if (value && screen && String_eq(key, "caption")) {
@@ -219,9 +220,9 @@ static void PCPDynamicScreen_parseFile(PCPDynamicScreens* screens, const char* p
          free_and_xStrdup(&screen->super.sortKey, value);
       } else if (value && screen && String_eq(key, "sortDirection")) {
          screen->super.direction = strtoul(value, NULL, 10);
-      } else if (value && screen && String_eq(key, "enabled")) { /* default is false */
-         if (String_eq(value, "True") || String_eq(value, "true"))
-            screen->enabled = true;
+      } else if (value && screen && String_eq(key, "default")) { /* default is true */
+         if (String_eq(value, "False") || String_eq(value, "false"))
+            screen->defaultEnabled = false;
       } else if (value && screen) {
          PCPDynamicScreen_parseColumn(screen, path, lineno, key, value);
       }
@@ -291,7 +292,6 @@ void PCPDynamicScreens_init(PCPDynamicScreens* screens) {
 
 static void PCPDynamicScreens_free(ATTR_UNUSED ht_key_t key, void* value, ATTR_UNUSED void* data) {
    PCPDynamicScreen* screen = (PCPDynamicScreen*) value;
-   free(screen->instances);
    free(screen->super.caption);
    free(screen->super.fields);
    free(screen->super.sortKey);
@@ -315,12 +315,37 @@ void PCPDynamicScreen_appendScreens(PCPDynamicScreens* screens, Settings* settin
    ScreenSettings* ss;
    char* sortKey;
 
+   /* determine whether htoprc contains dynamic screens */
+   bool firstTime = true;
+   for (size_t i = 0; i < settings->nScreens; i++) {
+      if (settings->screens[i]->dynamic)
+         firstTime = false;
+   }
+
    for (size_t i = 0; i < screens->count; i++) {
       ds = (PCPDynamicScreen*)Hashtable_get(screens->table, i);
       if (!ds)
          continue;
-      if(!ds->enabled)
+
+      if (pmDebugOptions.appl0) {
+         fprintf(stderr, "screen[%zu] %s ", i, ds->super.name);
+         fprintf(stderr, "enabled=%d default=%d\n", ds->enabled, ds->defaultEnabled);
+      }
+
+      if (firstTime == false) {
+         bool found = false;
+         for (size_t j = 0; j < settings->nScreens; j++) {
+            if (strcmp(settings->screens[j]->name, ds->super.name) == 0) {
+                found = true;
+                break;
+            }
+         }
+         if (found == true)
+             continue;
+      }
+      else if (ds->defaultEnabled == false) {
          continue;
+      }
 
       char* columns = formatFields(ds);
 
@@ -333,12 +358,8 @@ void PCPDynamicScreen_appendScreens(PCPDynamicScreens* screens, Settings* settin
       };
 
       ss = Settings_newScreen(settings, &screen);
-
-      ss->generic = true;
-      if (ds->super.direction)
-         ss->direction = ds->super.direction;
-
-      free(columns);
+      ss->direction = ds->super.direction;
+      ss->dynamic = true;
    }
 }
 

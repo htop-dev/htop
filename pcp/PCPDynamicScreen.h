@@ -10,14 +10,16 @@
 #include "Hashtable.h"
 #include "Settings.h"
 
-#include "pcp/PCPDynamicColumn.h"
 
+struct PCPDynamicColumn_;
+struct PCPDynamicColumns_;
 
 typedef struct PCPDynamicScreen_ {
    DynamicScreen super;
-   PCPDynamicColumn* columns;
+   struct PCPDynamicColumn_* columns;
+   char* displayInstances;
    size_t totalColumns;
-   char* instances;
+   bool defaultEnabled;
    bool enabled;
 } PCPDynamicScreen;
 
@@ -26,7 +28,7 @@ typedef struct PCPDynamicScreens_ {
    size_t count;  /* count of dynamic screens discovered by scan */
 } PCPDynamicScreens;
 
-void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, PCPDynamicColumns* columns);
+void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, struct PCPDynamicColumns_* columns);
 
 void PCPDynamicScreens_init(PCPDynamicScreens* screens);
 

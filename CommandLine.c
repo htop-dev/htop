@@ -331,9 +331,11 @@ int CommandLine_run(const char* name, int argc, char** argv) {
 
    ProcessList* pl = ProcessList_new(ut, dm, dc, flags.pidMatchList, flags.userId);
    Settings* settings = Settings_new(pl->activeCPUs, dc);
-
+fprintf(stderr, "Settings created\n");
    Hashtable* dt = DynamicScreens_new(settings);
+fprintf(stderr, "DynamicScreens created\n");
    GenericDataList* gl = GenericDataList_new();
+fprintf(stderr, "GenericDataList created\n");
 
    pl->settings = settings;
    if (gl)

@@ -2,48 +2,39 @@
 # pcp-htop(1) configuration file - see pcp-htop(5)
 #
 
-[cgroup]
-caption = CGroups
-enabled = true
+[cgroups]
+caption = Control Groups
+default = true
 
-cuser.heading = UTIME
-cuser.caption = User CPU Time
-cuser.width = -8
-cuser.metric = 1000 * rate(cgroup.cpu.stat.user)
+user_cpu.heading = UTIME
+user_cpu.caption = User CPU Time
+user_cpu.metric = 1000 * rate(cgroup.cpu.stat.user)
 
-csystem.heading = STIME
-csystem.caption = Kernel CPU Time
-csystem.width = -8
-csystem.metric = 1000 * rate(cgroup.cpu.stat.system)
+system_cpu.heading = STIME
+system_cpu.caption = Kernel CPU Time
+system_cpu.metric = 1000 * rate(cgroup.cpu.stat.system)
 
-cusage.heading = CPU%
-cusage.caption = CPU Utilization
-cusage.width = 6
-cusage.metric = 100 * (rate(cgroup.cpu.stat.usage) / hinv.ncpu)
+cpu_usage.heading = CPU%
+cpu_usage.caption = CPU Utilization
+cpu_usage.width = 5
+cpu_usage.metric = 100 * (rate(cgroup.cpu.stat.usage) / hinv.ncpu)
+cpu_usage.format = percent
 
-## different pmInDom, argh
-#memory.heading = MEM
-#memory.caption = Used memory
-#memory.width = -6
-#memory.metric = cgroup.memory.current
+cpu_psi.heading = CPU-PSI
+cpu_psi.caption = CPU Pressure Stall Information
+cpu_psi.metric = 1000 * rate(cgroup.pressure.cpu.some.total)
 
-cpupressure.heading = CPU-PSI
-cpupressure.caption = CPU Pressure Stall Information
-cpupressure.width = -6
-cpupressure.metric = 1000 * rate (cgroup.pressure.cpu.some.total)
+mem_psi.heading = MEM-PSI
+mem_psi.caption = Memory Pressure Stall Information
+mem_psi.metric = 1000 * rate(cgroup.pressure.memory.some.total)
 
-mempressure.heading = MEM-PSI
-mempressure.caption = Memory Pressure Stall Information
-mempressure.width = -6
-mempressure.metric = 1000 * rate (cgroup.cgroup.pressure.memory.some.total)
-
-iopressure.heading = I/O-PSI
-iopressure.caption = I/O Pressure Stall Information
-iopressure.width = -6
-iopressure.metric = 1000 * rate (cgroup.cgroup.pressure.io.some.total)
+io_psi.heading = I/O-PSI
+io_psi.caption = I/O Pressure Stall Information
+io_psi.metric = 1000 * rate(cgroup.pressure.io.some.total)
 
 name.heading = Control group
 name.caption = Control group name
 name.width = -22
 name.metric = cgroup.cpu.stat.system
 name.instances = true
+name.format = cgroup

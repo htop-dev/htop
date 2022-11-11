@@ -86,7 +86,7 @@ static const char* alignedDynamicColumnTitle(const ProcessList* this, int key, c
    const DynamicColumn* column = Hashtable_get(this->dynamicColumns, key);
    if (column == NULL)
       return "- ";
-   if (!column->enabled)
+   if (column->enabled == false)
       return "";
    int width = column->width;
    if (!width || abs(width) > DYNAMIC_MAX_COLUMN_WIDTH)

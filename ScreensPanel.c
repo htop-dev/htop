@@ -275,7 +275,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreenListItem* newFocus = (ScreenListItem*) Panel_getSelected(super);
    if (newFocus && oldFocus != newFocus) {
       ColumnsPanel_fill(this->columns, newFocus->ss, this->settings->dynamicColumns);
-      if (newFocus->ss->generic) {
+      if (newFocus->ss->dynamic) {
          char* currentScreen = newFocus->ss->name;
          DynamicScreen_availableColumns(currentScreen);
       } else {

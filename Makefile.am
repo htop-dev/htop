@@ -381,6 +381,7 @@ endif
 # --------------------------
 
 pcp_platform_headers = \
+	linux/CGroupUtils.h \
 	linux/PressureStallMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
@@ -399,6 +400,7 @@ pcp_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 pcp_platform_sources = \
+	linux/CGroupUtils.c \
 	linux/PressureStallMeter.c \
 	linux/ZramMeter.c \
 	pcp/PCPDynamicColumn.c \

@@ -285,7 +285,7 @@ ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* default
       .treeView = false,
       .treeViewAlwaysByPID = false,
       .allBranchesCollapsed = false,
-      .generic = false,
+      .dynamic = false,
    };
 
    ScreenSettings_readFields(ss, this->dynamicColumns, defaults->columns);
@@ -369,9 +369,9 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (String_eq(option[0], "tree_view") && this->config_version <= 2) {
          screen = Settings_defaultScreens(this);
          screen->treeView = atoi(option[1]);
-      } else if (String_eq(option[0], "generic_screen") && this->config_version <= 2) {
+      } else if (String_eq(option[0], "dynamic_screen") && this->config_version <= 2) {
          screen = Settings_defaultScreens(this);
-         screen->generic = atoi(option[1]);
+         screen->dynamic = atoi(option[1]);
       } else if (String_eq(option[0], "tree_view_always_by_pid") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          screen = Settings_defaultScreens(this);
@@ -502,9 +502,9 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (String_eq(option[0], ".tree_view")) {
          if (screen)
             screen->treeView = atoi(option[1]);
-      } else if (String_eq(option[0], ".generic_screen")) {
+      } else if (String_eq(option[0], ".dynamic_screen")) {
          if (screen)
-            screen->generic = atoi(option[1]);
+            screen->dynamic = atoi(option[1]);
       } else if (String_eq(option[0], ".tree_view_always_by_pid")) {
          if (screen)
             screen->treeViewAlwaysByPID = atoi(option[1]);
@@ -530,7 +530,7 @@ static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns
          fprintf(fd, "%s%s", sep, pName);
       } else if (fields[i] >= LAST_PROCESSFIELD && byName) {
          const char* pName = toFieldName(columns, fields[i]);
-         fprintf(fd, " Dynamic(%s)", pName);
+         fprintf(fd, "%sDynamic(%s)", sep, pName);
       } else {
          // This "-1" is for compatibility with the older enum format.
          fprintf(fd, "%s%d", sep, (int) fields[i] - 1);
@@ -643,20 +643,21 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("tree_view_always_by_pid", this->screens[0]->treeViewAlwaysByPID);
    printSettingInteger("all_branches_collapsed", this->screens[0]->allBranchesCollapsed);
 
+fprintf(stderr, "writing %d screens\n", (int)this->nScreens);
    for (unsigned int i = 0; i < this->nScreens; i++) {
-      if (this->screens[i]->generic)
-         continue;
       ScreenSettings* ss = this->screens[i];
       fprintf(fd, "screen:%s=", ss->name);
       writeFields(fd, ss->fields, this->dynamicColumns, true, separator);
-      printSettingString(".sort_key", toFieldName(this->dynamicColumns, ss->sortKey));
-      printSettingString(".tree_sort_key", toFieldName(this->dynamicColumns, ss->treeSortKey));
-      printSettingInteger(".tree_view", ss->treeView);
-      printSettingInteger(".tree_view_always_by_pid", ss->treeViewAlwaysByPID);
-      printSettingInteger(".sort_direction", ss->direction);
-      printSettingInteger(".tree_sort_direction", ss->treeDirection);
-      printSettingInteger(".all_branches_collapsed", ss->allBranchesCollapsed);
-      printSettingInteger(".generic_screen", ss->generic);
+      if (ss->dynamic == false) {
+         printSettingString(".sort_key", toFieldName(this->dynamicColumns, ss->sortKey));
+         printSettingString(".tree_sort_key", toFieldName(this->dynamicColumns, ss->treeSortKey));
+         printSettingInteger(".tree_view", ss->treeView);
+         printSettingInteger(".tree_view_always_by_pid", ss->treeViewAlwaysByPID);
+         printSettingInteger(".sort_direction", ss->direction);
+         printSettingInteger(".tree_sort_direction", ss->treeDirection);
+         printSettingInteger(".all_branches_collapsed", ss->allBranchesCollapsed);
+      }
+      printSettingInteger(".dynamic_screen", ss->dynamic);
    }
 
    #undef printSettingString
