@@ -27,20 +27,20 @@ cusage.metric = 100 * (rate(cgroup.cpu.stat.usage) / hinv.ncpu)
 #memory.width = -6
 #memory.metric = cgroup.memory.current
 
-cpupressure.heading = CPU PSI
+cpupressure.heading = CPU-PSI
 cpupressure.caption = CPU Pressure Stall Information
 cpupressure.width = -6
-cpupressure.metric = cgroup.pressure.cpu.some.total
+cpupressure.metric = 1000 * rate (cgroup.pressure.cpu.some.total)
 
-mempressure.heading = MEM PSI
+mempressure.heading = MEM-PSI
 mempressure.caption = Memory Pressure Stall Information
 mempressure.width = -6
-mempressure.metric = cgroup.pressure.memory.some.total
+mempressure.metric = 1000 * rate (cgroup.cgroup.pressure.memory.some.total)
 
-iopressure.heading = I/O PSI
+iopressure.heading = I/O-PSI
 iopressure.caption = I/O Pressure Stall Information
 iopressure.width = -6
-iopressure.metric = cgroup.pressure.io.some.total
+iopressure.metric = 1000 * rate (cgroup.cgroup.pressure.io.some.total)
 
 name.heading = Control group
 name.caption = Control group name
