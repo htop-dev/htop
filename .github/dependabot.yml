@@ -7,6 +7,3 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    labels:
-      - 'type: dependencies'
-      - 'github-actions'
