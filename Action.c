@@ -228,12 +228,12 @@ static Htop_Reaction actionToggleRunningInContainer(State* st) {
 
 static Htop_Reaction actionToggleProgramPath(State* st) {
    st->settings->showProgramPath = !st->settings->showProgramPath;
-   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionToggleMergedCommand(State* st) {
    st->settings->showMergedCommand = !st->settings->showMergedCommand;
-   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_UPDATE_PANELHDR;
 }
 
 static Htop_Reaction actionToggleTreeView(State* st) {
