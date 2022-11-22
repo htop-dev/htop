@@ -26,8 +26,6 @@ typedef struct PCPGenericDataField_ {
    int interInst;
 
    int type;
-
-   pmUnits units;
 } PCPGenericDataField;
 
 typedef struct PCPGenericData_ {

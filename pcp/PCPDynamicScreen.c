@@ -28,19 +28,16 @@ in the source distribution for its full text.
 
 void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, PCPDynamicColumns* columns) {
    for (unsigned int i = 0; i < screens->count; i++) {
-      PCPDynamicScreen* screen = Hashtable_get(screens->table, i);
+      PCPDynamicScreen *screen = Hashtable_get(screens->table, i);
       if (!screen)
          return;
 
-      for (unsigned int j = 0; j < screen->totalColumns; j++) {
-         PCPDynamicColumn* column = &screen->columns[j];
-
-         column->id = columns->offset + columns->cursor;
+      for (unsigned int column = 0; column < screen->totalColumns; column++) {
+         screen->columns[column].id = columns->offset + columns->cursor;
          columns->cursor++;
-
-         Platform_addMetric(column->id, column->metricName);
+         Platform_addMetric(screen->columns[column].id, screen->columns[column].metricName);
          size_t id = columns->count + LAST_PROCESSFIELD;
-         Hashtable_put(columns->table, id, column);
+         Hashtable_put(columns->table, id, &screen->columns[column]);
          columns->count++;
       }
    }
@@ -73,7 +70,6 @@ static PCPDynamicColumn* PCPDynamicScreen_lookupMetric(PCPDynamicScreen* screen,
    column->instances = false;
    column->super.belongToDynamicScreen = true;
    column->super.enabled = true;
-   column->scale = false;
 
    return column;
 }
@@ -125,9 +121,6 @@ static void PCPDynamicScreen_parseColumn(PCPDynamicScreen* screen, const char* p
       } else if (String_eq(p, "enabled")) { /* default is True */
          if (String_eq(value, "False") || String_eq(value, "false"))
             column->super.enabled = false;
-      } else if (String_eq(p, "scale")) {
-         if (String_eq(value, "True") || String_eq(value, "true"))
-            column->scale = true;
       }
    }
 }

@@ -165,7 +165,6 @@ static int PCPGenericDataList_updateGenericDataList(PCPGenericDataList* this) {
             field->pmid      = column->id;
             field->offset    = offset;
             field->interInst = interInst;
-            field->units     = PCPMetric_units(column->id);
          }
       }
    }
