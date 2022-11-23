@@ -29,7 +29,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "Save  ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void CategoriesPanel_delete(Object* object) {
    Panel* super = (Panel*) object;

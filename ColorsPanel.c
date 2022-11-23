@@ -26,7 +26,7 @@ in the source distribution for its full text.
 // * Add the colors in CRT_setColors
 
 
-static const char* const ColorsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const ColorsFunctions[] = {"      ", "      ", "      ", "Save  ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static const char* const ColorSchemeNames[] = {
    "Default",

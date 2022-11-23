@@ -377,6 +377,8 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          // old (no screen) naming also supported for backwards compatibility
          screen = Settings_defaultScreens(this);
          screen->allBranchesCollapsed = atoi(option[1]);
+      } else if (String_eq(option[0], "save_on_exit")) {
+         this->saveOnExit = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_threads")) {
          this->hideKernelThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_userland_threads")) {
@@ -579,6 +581,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingString("htop_version", VERSION);
    printSettingInteger("config_reader_min_version", CONFIG_READER_MIN_VERSION);
    fprintf(fd, "fields="); writeFields(fd, this->screens[0]->fields, this->dynamicColumns, false, separator);
+   printSettingInteger("save_on_exit", this->saveOnExit);
    printSettingInteger("hide_kernel_threads", this->hideKernelThreads);
    printSettingInteger("hide_userland_threads", this->hideUserlandThreads);
    printSettingInteger("hide_running_in_container", this->hideRunningInContainer);
@@ -700,6 +703,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) 
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif
+   this->saveOnExit = true;
 
    this->screens = xCalloc(Platform_numberOfDefaultScreens * sizeof(ScreenSettings*), 1);
    this->nScreens = 0;

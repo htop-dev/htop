@@ -21,7 +21,7 @@ in the source distribution for its full text.
 #include "ScreensPanel.h"
 
 
-static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "Save  ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void DisplayOptionsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
@@ -112,6 +112,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is always sorted by PID (htop 2 behavior)", &(settings->ss->treeViewAlwaysByPID)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is collapsed by default", &(settings->ss->allBranchesCollapsed)));
    Panel_add(super, (Object*) TextItem_new("Global options:"));
+   Panel_add(super, (Object*) CheckItem_newByRef("Automatically save configuration/view on exit", &(settings->saveOnExit)));
    Panel_add(super, (Object*) CheckItem_newByRef("Show tabs for screens", &(settings->screenTabs)));
    Panel_add(super, (Object*) CheckItem_newByRef("Shadow other users' processes", &(settings->shadowOtherUsers)));
    Panel_add(super, (Object*) CheckItem_newByRef("Hide kernel threads", &(settings->hideKernelThreads)));

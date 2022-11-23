@@ -397,6 +397,22 @@ tryRight:
       case KEY_F(10):
          quit = true;
          continue;
+      case KEY_F(4):
+         redraw = false;
+         char msg[1024];
+         int saveOk = Settings_write(this->settings, false);
+         if (saveOk < 0) {
+            xSnprintf(msg, 1024, "Error saving to %s: %s", this->settings->filename, strerror(-saveOk));
+            attrset(CRT_colors[FAILED_SEARCH]);
+         } else {
+            xSnprintf(msg, 1024, "Saved to %s", this->settings->filename);
+            attrset(CRT_colors[FUNCTION_BAR]);
+         }
+
+         mvhline(LINES - 1, 0, ' ', COLS);
+         mvaddstr(LINES - 1, 0, msg);
+         attrset(CRT_colors[RESET_COLOR]);
+         break;
       default:
 defaultHandler:
          sortTimeout = resetSortTimeout;

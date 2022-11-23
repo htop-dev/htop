@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 
 
-static const char* const HeaderOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const HeaderOptionsFunctions[] = {"      ", "      ", "      ", "Save  ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void HeaderOptionsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;

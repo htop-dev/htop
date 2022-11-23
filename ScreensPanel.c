@@ -42,7 +42,7 @@ ScreenListItem* ScreenListItem_new(const char* value, ScreenSettings* ss) {
    return this;
 }
 
-static const char* const ScreensFunctions[] = {"      ", "Rename", "      ", "      ", "New   ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
+static const char* const ScreensFunctions[] = {"      ", "Rename", "      ", "Save  ", "New   ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 
 static void ScreensPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
