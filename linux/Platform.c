@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
@@ -487,60 +488,86 @@ out:
 
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    FileLocks_ProcessData* pdata = xCalloc(1, sizeof(FileLocks_ProcessData));
+   DIR* dirp;
+   int dfd;
 
-   FILE* f = fopen(PROCDIR "/locks", "r");
-   if (!f) {
-      pdata->error = true;
-      return pdata;
+   char path[PATH_MAX];
+   xSnprintf(path, sizeof(path), PROCDIR "/%d/fdinfo/", pid);
+   if (strlen(path) >= (sizeof(path) - 2))
+      goto err;
+
+   if (!(dirp = opendir(path)))
+      goto err;
+
+   if ((dfd = dirfd(dirp)) == -1) {
+      closedir(dirp);
+      goto err;
    }
 
-   char buffer[1024];
    FileLocks_LockData** data_ref = &pdata->locks;
-   while (fgets(buffer, sizeof(buffer), f)) {
-      if (!strchr(buffer, '\n'))
+   for (struct dirent* de; (de = readdir(dirp)); ) {
+      if (String_eq(de->d_name, ".") || String_eq(de->d_name, ".."))
          continue;
 
-      int lock_id;
-      char lock_type[16];
-      char lock_excl[16];
-      char lock_rw[16];
-      pid_t lock_pid;
-      unsigned int lock_dev[2];
-      uint64_t lock_inode;
-      char lock_start[25];
-      char lock_end[25];
-
-      if (10 != sscanf(buffer, "%d:  %15s  %15s %15s %d %x:%x:%"PRIu64" %24s %24s",
-         &lock_id, lock_type, lock_excl, lock_rw, &lock_pid,
-         &lock_dev[0], &lock_dev[1], &lock_inode,
-         lock_start, lock_end))
+      errno = 0;
+      char *end = de->d_name;
+      strtoull(de->d_name, &end, 10);
+      if (errno || *end)
          continue;
 
-      if (pid != lock_pid)
+      int fd = openat(dfd, de->d_name, O_RDONLY | O_CLOEXEC);
+      if(fd == -1)
          continue;
-
-      FileLocks_LockData* ldata = xCalloc(1, sizeof(FileLocks_LockData));
-      FileLocks_Data* data = &ldata->data;
-      data->id = lock_id;
-      data->locktype = xStrdup(lock_type);
-      data->exclusive = xStrdup(lock_excl);
-      data->readwrite = xStrdup(lock_rw);
-      data->filename = Platform_getInodeFilename(lock_pid, lock_inode);
-      data->dev[0] = lock_dev[0];
-      data->dev[1] = lock_dev[1];
-      data->inode = lock_inode;
-      data->start = strtoull(lock_start, NULL, 10);
-      if (!String_eq(lock_end, "EOF")) {
-         data->end = strtoull(lock_end, NULL, 10);
-      } else {
-         data->end = ULLONG_MAX;
+      FILE *f = fdopen(fd, "r");
+      if(!f) {
+         close(fd);
+         continue;
       }
 
-      *data_ref = ldata;
-      data_ref = &ldata->next;
+      for (char buffer[1024]; fgets(buffer, sizeof(buffer), f); ) {
+         if (!strchr(buffer, '\n'))
+            continue;
+
+         if (strncmp(buffer, "lock:\t", strlen("lock:\t")))
+            continue;
+
+         FileLocks_Data data = {0};
+         int _;
+         char lock_end[25], locktype[32], exclusive[32], readwrite[32];
+         if (10 != sscanf(buffer + strlen("lock:\t"), "%d: %31s %31s %31s %d %x:%x:%"PRIu64" %"PRIu64" %24s",
+            &data.id, locktype, exclusive, readwrite, &_,
+            &data.dev[0], &data.dev[1], &data.inode,
+            &data.start, lock_end))
+            continue;
+
+         data.locktype = xStrdup(locktype);
+         data.exclusive = xStrdup(exclusive);
+         data.readwrite = xStrdup(readwrite);
+
+         if (String_eq(lock_end, "EOF"))
+            data.end = ULLONG_MAX;
+         else
+            data.end = strtoull(lock_end, NULL, 10);
+
+         xSnprintf(path, sizeof(path), PROCDIR "/%d/fd/%s", pid, de->d_name);
+         char link[PATH_MAX];
+         ssize_t link_len;
+         if (strlen(path) < (sizeof(path) - 2) && (link_len = readlink(path, link, sizeof(link))) != -1)
+            data.filename = xStrndup(link, link_len);
+
+         *data_ref = xCalloc(1, sizeof(FileLocks_LockData));
+         (*data_ref)->data = data;
+         data_ref = &(*data_ref)->next;
+      }
+
+      fclose(f);
    }
 
-   fclose(f);
+   closedir(dirp);
+   return pdata;
+
+err:
+   pdata->error = true;
    return pdata;
 }
 
