@@ -456,7 +456,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
 
       errno = 0;
       char *end = de->d_name;
-      strtoull(de->d_name, &end, 10);
+      int file = strtoull(de->d_name, &end, 10);
       if (errno || *end)
          continue;
 
@@ -476,11 +476,11 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
          if (strncmp(buffer, "lock:\t", strlen("lock:\t")))
             continue;
 
-         FileLocks_Data data = {0};
+         FileLocks_Data data = {.fd = file};
          int _;
          char lock_end[25], locktype[32], exclusive[32], readwrite[32];
          if (10 != sscanf(buffer + strlen("lock:\t"), "%d: %31s %31s %31s %d %x:%x:%"PRIu64" %"PRIu64" %24s",
-            &data.id, locktype, exclusive, readwrite, &_,
+            &_, locktype, exclusive, readwrite, &_,
             &data.dev[0], &data.dev[1], &data.inode,
             &data.start, lock_end))
             continue;
