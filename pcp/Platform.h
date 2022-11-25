@@ -98,8 +98,6 @@ void Platform_setZfsCompressedArcValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode);
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred);

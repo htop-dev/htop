@@ -431,61 +431,6 @@ char* Platform_getProcessEnv(pid_t pid) {
    return env;
 }
 
-/*
- * Return the absolute path of a file given its pid&inode number
- *
- * Based on implementation of lslocks from util-linux:
- * https://sources.debian.org/src/util-linux/2.36-3/misc-utils/lslocks.c/#L162
- */
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   struct stat sb;
-   const struct dirent* de;
-   DIR* dirp;
-   ssize_t len;
-   int fd;
-
-   char path[PATH_MAX];
-   char sym[PATH_MAX];
-   char* ret = NULL;
-
-   memset(path, 0, sizeof(path));
-   memset(sym, 0, sizeof(sym));
-
-   xSnprintf(path, sizeof(path), "%s/%d/fd/", PROCDIR, pid);
-   if (strlen(path) >= (sizeof(path) - 2))
-      return NULL;
-
-   if (!(dirp = opendir(path)))
-      return NULL;
-
-   if ((fd = dirfd(dirp)) < 0 )
-      goto out;
-
-   while ((de = readdir(dirp))) {
-      if (String_eq(de->d_name, ".") || String_eq(de->d_name, ".."))
-         continue;
-
-      /* care only for numerical descriptors */
-      if (!strtoull(de->d_name, (char **) NULL, 10))
-         continue;
-
-      if (!Compat_fstatat(fd, path, de->d_name, &sb, 0) && inode != sb.st_ino)
-         continue;
-
-      if ((len = Compat_readlinkat(fd, path, de->d_name, sym, sizeof(sym) - 1)) < 1)
-         goto out;
-
-      sym[len] = '\0';
-
-      ret = xStrdup(sym);
-      break;
-   }
-
-out:
-   closedir(dirp);
-   return ret;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    FileLocks_ProcessData* pdata = xCalloc(1, sizeof(FileLocks_ProcessData));
    DIR* dirp;
