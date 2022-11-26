@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/sysmacros.h>
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
@@ -478,16 +479,18 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
 
          FileLocks_Data data = {.fd = file};
          int _;
+         unsigned int maj, min;
          char lock_end[25], locktype[32], exclusive[32], readwrite[32];
          if (10 != sscanf(buffer + strlen("lock:\t"), "%d: %31s %31s %31s %d %x:%x:%"PRIu64" %"PRIu64" %24s",
             &_, locktype, exclusive, readwrite, &_,
-            &data.dev[0], &data.dev[1], &data.inode,
+            &maj, &min, &data.inode,
             &data.start, lock_end))
             continue;
 
          data.locktype = xStrdup(locktype);
          data.exclusive = xStrdup(exclusive);
          data.readwrite = xStrdup(readwrite);
+         data.dev = makedev(maj, min);
 
          if (String_eq(lock_end, "EOF"))
             data.end = ULLONG_MAX;
