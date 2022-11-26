@@ -27,7 +27,7 @@ typedef struct FileLocks_Data_ {
    char* readwrite;
    char* filename;
    int fd;
-   unsigned int dev[2];
+   dev_t dev;
    uint64_t inode;
    uint64_t start;
    uint64_t end;
