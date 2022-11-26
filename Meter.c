@@ -89,6 +89,7 @@ void Meter_delete(Object* cast) {
    free(this->drawData);
    free(this->caption);
    free(this->values);
+   free(this->curChoice);
    free(this);
 }
 
@@ -134,20 +135,61 @@ void Meter_setMode(Meter* this, int modeIndex) {
 ListItem* Meter_toListItem(const Meter* this, bool moving) {
    char mode[20];
    if (this->mode) {
-      xSnprintf(mode, sizeof(mode), " [%s]", Meter_modes[this->mode]->uiName);
+      xSnprintf(mode, sizeof(mode), "[%s]", Meter_modes[this->mode]->uiName);
    } else {
       mode[0] = '\0';
    }
+
    char name[32];
    if (Meter_getUiNameFn(this))
       Meter_getUiName(this, name, sizeof(name));
    else
       xSnprintf(name, sizeof(name), "%s", Meter_uiName(this));
-   char buffer[50];
-   xSnprintf(buffer, sizeof(buffer), "%s%s", name, mode);
+
+   char buffer[54];
+   snprintf(buffer, sizeof(buffer), "%s%s%s",
+            name,
+            Meter_getChoicesFn(this) ? (this->curChoice ? " $" : " ?") : (this->mode ? " " : ""),
+            mode);
    ListItem* li = ListItem_new(buffer, 0);
    li->moving = moving;
    return li;
+}
+
+void Meter_setChoice(Meter* this, const char* choice) {
+   free(this->curChoice);
+   this->curChoice = Meter_getChoicesFn(this) ? xStrdup(choice) : NULL;
+}
+
+void Meter_nextChoice(Meter* this) {
+   char* newChoice = NULL;
+
+   char** availableChoices = Meter_getChoices(this);
+   if (!availableChoices)
+      goto finish;
+
+   if (!this->curChoice) {
+      newChoice = xStrdup(availableChoices[0]);
+      goto finish;
+   }
+
+   bool takeNext = false;
+   for (size_t i = 0; availableChoices[i]; i++) {
+      if (takeNext) {
+         newChoice = xStrdup(availableChoices[i]);
+         goto finish;
+      }
+
+      if (String_eq(this->curChoice, availableChoices[i]))
+         takeNext = true;
+   }
+   if (takeNext)
+      newChoice = xStrdup(availableChoices[0]);
+
+  finish:
+   free(this->curChoice);
+   this->curChoice = newChoice;
+   String_freeArray(availableChoices);
 }
 
 /* ---------- TextMeterMode ---------- */

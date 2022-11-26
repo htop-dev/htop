@@ -41,4 +41,6 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter);
 
 void PCPDynamicMeter_display(PCPDynamicMeter* this, const Meter* meter, RichString* out);
 
+char** PCPDynamicMeter_getChoices(PCPDynamicMeter* this);
+
 #endif

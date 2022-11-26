@@ -27,6 +27,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
+#include "DiskUsageMeter.h"
 #include "Hashtable.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
@@ -106,7 +107,7 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(NetworkIOData* data);
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 
@@ -154,5 +155,15 @@ void Platform_dynamicColumnsDone(Hashtable* columns);
 const char* Platform_dynamicColumnInit(unsigned int key);
 
 bool Platform_dynamicColumnWriteField(const Process* proc, RichString* str, unsigned int key);
+
+char** Platform_getLocalIPv4addressChoices(Meter* meter);
+char** Platform_getLocalIPv6addressChoices(Meter* meter);
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size);
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size);
+
+char **Platform_getDiskUsageChoices(Meter* meter);
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data);
+
+char **Platform_getDynamicMeterChoices(Meter* meter);
 
 #endif

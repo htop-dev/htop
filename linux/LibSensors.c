@@ -266,4 +266,192 @@ out:
       cpus[i].temperature = data[i];
 }
 
+static char** LibSensors_getChoices(sensors_feature_type type, sensors_subfeature_type subtype) {
+#ifndef BUILD_STATIC
+   if (!dlopenHandle)
+      return NULL;
+#endif /* !BUILD_STATIC */
+
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+
+   int n = 0;
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+
+      if (!chip->prefix)
+         continue;
+
+      int m = 0;
+      for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
+         if (feature->type != type)
+            continue;
+
+         if (!feature->name)
+            continue;
+
+         const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, subtype);
+         if (!subFeature)
+            continue;
+
+         size_t size = (count + 2) * sizeof(char*);
+         if (size / (count + 2) != sizeof(char*)) {
+            for (size_t i = 0; i < count; i++)
+               free(ret[i]);
+            free(ret);
+            return NULL;
+         }
+         ret = xRealloc(ret, size);
+         char* identifier;
+         xAsprintf(&identifier, "%s@%s", chip->prefix, feature->name);
+         ret[count] = identifier;
+         count++;
+      }
+   }
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+char** LibSensors_getTempChoices(ATTR_UNUSED Meter* meter) {
+   return LibSensors_getChoices(SENSORS_FEATURE_TEMP, SENSORS_SUBFEATURE_TEMP_INPUT);
+}
+
+void LibSensors_getTemp(const char* choice, double* currTemp, double* maxTemp) {
+   assert(choice);
+
+#ifndef BUILD_STATIC
+   if (!dlopenHandle)
+      goto out;
+#endif /* !BUILD_STATIC */
+
+   const char* separator = strchr(choice, '@');
+   if (!separator)
+      goto out;
+
+   int n = 0;
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+
+      if (0 != strncmp(chip->prefix, choice, separator - choice))
+         continue;
+
+      int m = 0;
+      for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
+         if (feature->type != SENSORS_FEATURE_TEMP)
+            continue;
+
+         if (!feature->name || !String_eq(feature->name, separator + 1))
+            continue;
+
+         if (currTemp) {
+            const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
+            if (subFeature) {
+               double temp;
+               int r = sym_sensors_get_value(chip, subFeature->number, &temp);
+               *currTemp = r == 0 ? temp : NAN;
+            } else {
+               *currTemp = NAN;
+            }
+         }
+
+         if (maxTemp) {
+            const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_MAX);
+            if (subFeature) {
+               double temp;
+               int r = sym_sensors_get_value(chip, subFeature->number, &temp);
+               *maxTemp = r == 0 ? temp : NAN;
+            } else {
+               *maxTemp = NAN;
+            }
+         }
+
+         return;
+      }
+   }
+
+  out:
+   if (currTemp)
+      *currTemp = NAN;
+   if (maxTemp)
+      *maxTemp = NAN;
+   return;
+}
+
+char** LibSensors_getFanChoices(ATTR_UNUSED Meter* meter) {
+   return LibSensors_getChoices(SENSORS_FEATURE_FAN, SENSORS_SUBFEATURE_FAN_INPUT);
+}
+
+void LibSensors_getFan(const char* choice, double* curr, double* min, double* max) {
+   assert(choice);
+
+   #ifndef BUILD_STATIC
+   if (!dlopenHandle)
+      goto out;
+   #endif /* !BUILD_STATIC */
+
+   const char* separator = strchr(choice, '@');
+   if (!separator)
+      goto out;
+
+   int n = 0;
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+
+      if (0 != strncmp(chip->prefix, choice, separator - choice))
+         continue;
+
+      int m = 0;
+      for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
+         if (feature->type != SENSORS_FEATURE_FAN)
+            continue;
+
+         if (!feature->name || !String_eq(feature->name, separator + 1))
+            continue;
+
+         if (curr) {
+            const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_FAN_INPUT);
+            if (subFeature) {
+               double value;
+               int r = sym_sensors_get_value(chip, subFeature->number, &value);
+               *curr = r == 0 ? value : NAN;
+            } else {
+               *curr = NAN;
+            }
+         }
+
+         if (min) {
+            const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_FAN_MIN);
+            if (subFeature) {
+               double value;
+               int r = sym_sensors_get_value(chip, subFeature->number, &value);
+               *min = r == 0 ? value : NAN;
+            } else {
+               *min = NAN;
+            }
+         }
+
+         if (max) {
+            const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_FAN_MAX);
+            if (subFeature) {
+               double value;
+               int r = sym_sensors_get_value(chip, subFeature->number, &value);
+               *max = r == 0 ? value : NAN;
+            } else {
+               *max = NAN;
+            }
+         }
+
+         return;
+      }
+   }
+
+   out:
+   if (curr)
+      *curr = NAN;
+   if (min)
+      *min = NAN;
+   if (max)
+      *max = NAN;
+   return;
+}
+
 #endif /* HAVE_SENSORS_SENSORS_H */

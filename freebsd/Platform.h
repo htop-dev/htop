@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
+#include "DiskUsageMeter.h"
 #include "Hashtable.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
@@ -65,7 +66,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(NetworkIOData* data);
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 
@@ -118,5 +119,15 @@ static inline void Platform_dynamicColumnsDone(ATTR_UNUSED Hashtable* table) { }
 static inline bool Platform_dynamicColumnWriteField(ATTR_UNUSED const Process* proc, ATTR_UNUSED RichString* str, ATTR_UNUSED unsigned int key) {
    return false;
 }
+
+char** Platform_getLocalIPv4addressChoices(Meter* meter);
+char** Platform_getLocalIPv6addressChoices(Meter* meter);
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size);
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size);
+
+char **Platform_getDiskUsageChoices(Meter* meter);
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data);
+
+char **Platform_getDynamicMeterChoices(Meter* meter);
 
 #endif

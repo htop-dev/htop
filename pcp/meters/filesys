@@ -1,0 +1,12 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[filesys]
+caption = Filesys
+mountdir.metric = filesys.mountdir
+mountdir.color = green
+mountdir.label = dirs
+usedfiles.metric = filesys.usedfiles
+usedfiles.color = blue
+usedfiles.label = usedfiles

@@ -9,20 +9,25 @@ in the source distribution for its full text.
 
 #include "freebsd/Platform.h"
 
+#include <arpa/inet.h>
 #include <devstat.h>
+#include <ifaddrs.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 #include <net/if.h>
 #include <net/if_mib.h>
+#include <netinet/in.h>
 #include <sys/_types.h>
 #include <sys/devicestat.h>
+#include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
+#include <sys/ucred.h>
 #include <sys/types.h>
 #include <vm/vm_param.h>
 
@@ -113,6 +118,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &UptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
+   &HostnameIPv4Meter_class,
+   &HostnameIPv6Meter_class,
    &SysArchMeter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
@@ -130,7 +137,9 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
    &DiskIOMeter_class,
+   &DiskUsageMeter_class,
    &NetworkIOMeter_class,
+   &NetworkInterfaceIOMeter_class,
    NULL
 };
 
@@ -339,7 +348,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
    // get number of interfaces
    int count;
    size_t countLen = sizeof(count);
@@ -348,6 +357,8 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    int r = sysctl(countMib, ARRAYSIZE(countMib), &count, &countLen, NULL, 0);
    if (r < 0)
       return false;
+
+   bool foundInterface = false;
 
    memset(data, 0, sizeof(NetworkIOData));
    for (int i = 1; i <= count; i++) {
@@ -360,6 +371,15 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       if (r < 0)
          continue;
 
+      if (choice && String_eq(choice, ifmd.ifmd_name)) {
+         data->bytesReceived += ifmd.ifmd_data.ifi_ibytes;
+         data->packetsReceived += ifmd.ifmd_data.ifi_ipackets;
+         data->bytesTransmitted += ifmd.ifmd_data.ifi_obytes;
+         data->packetsTransmitted += ifmd.ifmd_data.ifi_opackets;
+         foundInterface = true;
+         break;
+      }
+
       if (ifmd.ifmd_flags & IFF_LOOPBACK)
          continue;
 
@@ -369,7 +389,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       data->packetsTransmitted += ifmd.ifmd_data.ifi_opackets;
    }
 
-   return true;
+   return !choice || foundInterface;
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
@@ -386,4 +406,176 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       *isOnAC = AC_ERROR;
    else
       *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
+}
+
+char** Platform_getLocalIPv4addressChoices(ATTR_UNUSED Meter* meter) {
+   struct ifaddrs* ifp;
+   int r = getifaddrs(&ifp);
+   if (r < 0)
+      return NULL;
+
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+
+   for (const struct ifaddrs* ifa = ifp; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
+         continue;
+
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t i = 0; i < count; i++)
+            free(ret[i]);
+         free(ret);
+         freeifaddrs(ifp);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(ifa->ifa_name);
+      count++;
+   }
+
+   freeifaddrs(ifp);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+char** Platform_getLocalIPv6addressChoices(ATTR_UNUSED Meter* meter) {
+   struct ifaddrs* ifp;
+   int r = getifaddrs(&ifp);
+   if (r < 0)
+      return NULL;
+
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+
+   for (const struct ifaddrs* ifa = ifp; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET6)
+         continue;
+
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t i = 0; i < count; i++)
+            free(ret[i]);
+         free(ret);
+         freeifaddrs(ifp);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(ifa->ifa_name);
+      count++;
+   }
+
+   freeifaddrs(ifp);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   struct ifaddrs* ifp;
+   int r = getifaddrs(&ifp);
+   if (r < 0) {
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   for (const struct ifaddrs* ifa = ifp; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
+         continue;
+
+      if (!String_eq(choice, ifa->ifa_name))
+         continue;
+
+      const struct in_addr* ip_addr = &((const struct sockaddr_in*)/*align-cast*/(const void *)(ifa->ifa_addr))->sin_addr;
+
+      if (!inet_ntop(AF_INET, ip_addr, buffer, size))
+         xSnprintf(buffer, size, "N/A");
+
+      return;
+   }
+
+   xSnprintf(buffer, size, "N/A");
+
+   return;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   struct ifaddrs* ifp;
+   int r = getifaddrs(&ifp);
+   if (r < 0) {
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   for (const struct ifaddrs* ifa = ifp; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET6)
+         continue;
+
+      if (!String_eq(choice, ifa->ifa_name))
+         continue;
+
+      const struct in6_addr* ip_addr = &((const struct sockaddr_in6*)/*align-cast*/(const void *)(ifa->ifa_addr))->sin6_addr;
+
+      if (!inet_ntop(AF_INET6, ip_addr, buffer, size))
+         xSnprintf(buffer, size, "N/A");
+
+      return;
+   }
+
+   xSnprintf(buffer, size, "N/A");
+
+   return;
+}
+
+char **Platform_getDiskUsageChoices(ATTR_UNUSED Meter* meter) {
+   unsigned int count = 0;
+   struct statfs* mntbufp;
+   int r = getmntinfo(&mntbufp, MNT_WAIT);
+   if (r <= 0)
+      return NULL;
+
+   char** ret = xMalloc(sizeof(char*));
+   for (int i = 0; i < r; i++) {
+      const struct statfs* sfs = &mntbufp[i];
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t j = 0; j < count; j++)
+            free(ret[j]);
+         free(ret);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(sfs->f_mntonname);
+      count++;
+   }
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   assert(choice);
+   assert(data);
+
+   *data = invalidDiskUsageData;
+
+   struct statfs info;
+
+   if (statfs(choice, &info) < 0)
+      return;
+
+   data->total = (double)info.f_blocks * info.f_bsize;
+   double available = (double)info.f_bfree * info.f_bsize;
+   data->used = data->total - available;
+   data->usedPercentage = 100.0 * (data->used / data->total);
+}
+
+char **Platform_getDynamicMeterChoices(Meter* meter) {
+   // TODO
+   (void) meter;
+   return NULL;
 }

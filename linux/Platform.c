@@ -15,12 +15,17 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
+#include <mntent.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/statvfs.h>
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
@@ -29,6 +34,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "DiskUsageMeter.h"
 #include "HostnameMeter.h"
 #include "HugePageMeter.h"
 #include "LoadAverageMeter.h"
@@ -67,7 +73,9 @@ in the source distribution for its full text.
 #endif
 
 #ifdef HAVE_SENSORS_SENSORS_H
-#include "LibSensors.h"
+#include "linux/LibSensors.h"
+#include "linux/LibSensorsFanMeter.h"
+#include "linux/LibSensorsTempMeter.h"
 #endif
 
 #ifndef O_PATH
@@ -222,6 +230,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &UptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
+   &HostnameIPv4Meter_class,
+   &HostnameIPv6Meter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
    &AllCPUs4Meter_class,
@@ -244,7 +254,13 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsCompressedArcMeter_class,
    &ZramMeter_class,
    &DiskIOMeter_class,
+   &DiskUsageMeter_class,
    &NetworkIOMeter_class,
+   &NetworkInterfaceIOMeter_class,
+#ifdef HAVE_SENSORS_SENSORS_H
+   &LibSensorsFanMeter_class,
+   &LibSensorsTempMeter_class,
+#endif
    &SELinuxMeter_class,
    &SystemdMeter_class,
    NULL
@@ -601,11 +617,12 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
    FILE* fd = fopen(PROCDIR "/net/dev", "r");
    if (!fd)
       return false;
 
+   bool foundInterface = false;
    memset(data, 0, sizeof(NetworkIOData));
    char lineBuffer[512];
    while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
@@ -619,18 +636,31 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
                              &packetsTransmitted) != 5)
          continue;
 
-      if (String_eq(interfaceName, "lo:"))
+      size_t interfaceNameLen = strlen(interfaceName);
+      if (interfaceNameLen > 0 && interfaceName[interfaceNameLen - 1] == ':')
+         interfaceName[interfaceNameLen - 1] = '\0';
+
+      if (choice && String_eq(choice, interfaceName)) {
+         data->bytesReceived      = bytesReceived;
+         data->packetsReceived    = packetsReceived;
+         data->bytesTransmitted   = bytesTransmitted;
+         data->packetsTransmitted = packetsTransmitted;
+         foundInterface = true;
+         break;
+      }
+
+      if (String_eq(interfaceName, "lo"))
          continue;
 
-      data->bytesReceived += bytesReceived;
-      data->packetsReceived += packetsReceived;
-      data->bytesTransmitted += bytesTransmitted;
+      data->bytesReceived      += bytesReceived;
+      data->packetsReceived    += packetsReceived;
+      data->bytesTransmitted   += bytesTransmitted;
       data->packetsTransmitted += packetsTransmitted;
    }
 
    fclose(fd);
 
-   return true;
+   return !choice || foundInterface;
 }
 
 // Linux battery reading by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
@@ -1055,4 +1085,215 @@ void Platform_done(void) {
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_cleanup();
 #endif
+}
+
+char** Platform_getLocalIPv4addressChoices(ATTR_UNUSED Meter* meter) {
+   int s = socket(AF_INET, SOCK_STREAM, 0);
+   if (s < 0)
+      return NULL;
+
+   struct ifconf ifconf;
+   char ifBuffer[8192];
+   ifconf.ifc_buf = ifBuffer;
+   ifconf.ifc_len = sizeof(ifBuffer);
+
+   if (ioctl(s, SIOCGIFCONF, &ifconf) < 0) {
+      close(s);
+      return NULL;
+   }
+
+   close(s);
+
+   const struct ifreq* ifr = (const struct ifreq *)ifBuffer;
+   unsigned int count = ifconf.ifc_len / sizeof(*ifr);
+   size_t size = (count + 1) * sizeof(char*);
+   if (size / (count + 1) != sizeof(char*))
+      return NULL;
+
+   char** ret = xMalloc(size);
+
+   for (unsigned int i = 0; i < count; i++)
+      ret[i] = xStrdup(ifr[i].ifr_name);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   assert(choice);
+   assert(size > 0);
+
+   int s = socket(AF_INET, SOCK_STREAM, 0);
+   if (s < 0) {
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   struct ifconf ifconf;
+   char ifBuffer[8192];
+   ifconf.ifc_buf = ifBuffer;
+   ifconf.ifc_len = sizeof(ifBuffer);
+
+   if (ioctl(s, SIOCGIFCONF, &ifconf) < 0) {
+      close(s);
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   close(s);
+
+   const struct ifreq* ifr = (const struct ifreq *)ifBuffer;
+   unsigned int ifs = ifconf.ifc_len / sizeof(*ifr);
+   for (unsigned int i = 0; i < ifs; i++) {
+      if (!String_eq(ifr[i].ifr_name, choice))
+         continue;
+
+      const struct in_addr* ip_addr = &(((const struct sockaddr_in *)/*align-cast*/(const void *)&(ifr[i].ifr_addr))->sin_addr);
+
+      if (!inet_ntop(AF_INET, ip_addr, buffer, size))
+         xSnprintf(buffer, size, "N/A");
+
+      return;
+   }
+
+   xSnprintf(buffer, size, "N/A");
+}
+
+char** Platform_getLocalIPv6addressChoices(ATTR_UNUSED Meter* meter) {
+   FILE* file = fopen(PROCDIR "/net/if_inet6", "r");
+   if (!file)
+      return NULL;
+
+   struct in6_addr s6;
+   char ifName[16];
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+
+   while (fscanf(file, "%4hx%4hx%4hx%4hx%4hx%4hx%4hx%4hx %*02x %*02x %*02x %*02x %15s\n",
+                 &s6.s6_addr16[0], &s6.s6_addr16[1], &s6.s6_addr16[2], &s6.s6_addr16[3],
+                 &s6.s6_addr16[4], &s6.s6_addr16[5], &s6.s6_addr16[6], &s6.s6_addr16[7],
+                 ifName) == 9) {
+
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t i = 0; i < count; i++)
+            free(ret[i]);
+         free(ret);
+         fclose(file);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(ifName);
+      count++;
+   }
+
+   fclose(file);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   assert(choice);
+   assert(size > 0);
+
+   FILE* file = fopen(PROCDIR "/net/if_inet6", "r");
+   if (!file) {
+      xSnprintf(buffer, size, "N/A");
+      return;
+   }
+
+   struct in6_addr s6;
+   char ifName[16];
+
+   while (fscanf(file, "%4hx%4hx%4hx%4hx%4hx%4hx%4hx%4hx %*02x %*02x %*02x %*02x %15s\n",
+                 &s6.s6_addr16[0], &s6.s6_addr16[1], &s6.s6_addr16[2], &s6.s6_addr16[3],
+                 &s6.s6_addr16[4], &s6.s6_addr16[5], &s6.s6_addr16[6], &s6.s6_addr16[7],
+                 ifName) == 9) {
+      if (!String_eq(ifName, choice))
+         continue;
+
+      fclose(file);
+
+      for (int i = 0; i < 8; i++)
+         s6.s6_addr16[i] = htons(s6.s6_addr16[i]);
+
+      if (!inet_ntop(AF_INET6, &s6, buffer, size))
+         xSnprintf(buffer, size, "N/A");
+
+      return;
+   }
+
+   fclose(file);
+
+   xSnprintf(buffer, size, "N/A");
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   assert(choice);
+   assert(data);
+
+   *data = invalidDiskUsageData;
+
+   struct statvfs info;
+
+   if (statvfs(choice, &info) < 0)
+      return;
+
+   data->total = (double)info.f_blocks * info.f_frsize;
+   double available = (double)info.f_bfree * info.f_frsize;
+   data->used = data->total - available;
+   data->usedPercentage = 100.0 * (data->used / data->total);
+}
+
+static bool isFilesystemOfInterest(const char* fsname) {
+   // TODO: improve detection logic
+
+   if (fsname[0] == '/')
+      return true;
+
+   if (String_eq(fsname, "tmpfs"))
+      return true;
+
+   return false;
+}
+
+char **Platform_getDiskUsageChoices(ATTR_UNUSED Meter* meter) {
+   FILE* mntFile = setmntent(PROCDIR "/mounts", "r");
+   if (!mntFile)
+      return NULL;
+
+   unsigned int count = 0;
+   char** ret = xMalloc(sizeof(char*));
+   const struct mntent* ent;
+   while (NULL != (ent = getmntent(mntFile))) {
+      if (!isFilesystemOfInterest(ent->mnt_fsname))
+         continue;
+
+      size_t size = (count + 2) * sizeof(char*);
+      if (size / (count + 2) != sizeof(char*)) {
+         for (size_t i = 0; i < count; i++)
+            free(ret[i]);
+         free(ret);
+         endmntent(mntFile);
+         return NULL;
+      }
+      ret = xRealloc(ret, size);
+      ret[count] = xStrdup(ent->mnt_dir);
+      count++;
+   }
+
+   endmntent(mntFile);
+
+   ret[count] = NULL;
+
+   return ret;
+}
+
+char **Platform_getDynamicMeterChoices(Meter* meter) {
+   // TODO
+   (void) meter;
+   return NULL;
 }

@@ -29,6 +29,10 @@ int PCPMetric_type(PCPMetric metric) {
    return pcp->descs[metric].type;
 }
 
+pmInDom PCPMetric_indom(PCPMetric metric) {
+   return pcp->descs[metric].indom;
+}
+
 pmAtomValue* PCPMetric_values(PCPMetric metric, pmAtomValue* atom, int count, int type) {
    if (pcp->result == NULL)
       return NULL;

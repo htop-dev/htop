@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -55,6 +56,7 @@ typedef void(*Meter_UpdateValues)(Meter*);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 typedef const char* (*Meter_GetCaption)(const Meter*);
 typedef void(*Meter_GetUiName)(const Meter*, char*, size_t);
+typedef char**(*Meter_GetChoices)(Meter*);
 
 typedef struct MeterClass_ {
    const ObjectClass super;
@@ -65,6 +67,7 @@ typedef struct MeterClass_ {
    const Meter_Draw draw;
    const Meter_GetCaption getCaption;
    const Meter_GetUiName getUiName;
+   const Meter_GetChoices getChoices;
    const int defaultMode;
    const double total;
    const int* const attributes;
@@ -78,15 +81,15 @@ typedef struct MeterClass_ {
 
 #define As_Meter(this_)                ((const MeterClass*)((this_)->super.klass))
 #define Meter_initFn(this_)            As_Meter(this_)->init
-#define Meter_init(this_)              As_Meter(this_)->init((Meter*)(this_))
-#define Meter_done(this_)              As_Meter(this_)->done((Meter*)(this_))
+#define Meter_init(this_)              (assert(As_Meter(this_)->init), As_Meter(this_)->init((Meter*)(this_)))
+#define Meter_done(this_)              (assert(As_Meter(this_)->done), As_Meter(this_)->done((Meter*)(this_)))
 #define Meter_updateModeFn(this_)      As_Meter(this_)->updateMode
-#define Meter_updateMode(this_, m_)    As_Meter(this_)->updateMode((Meter*)(this_), m_)
+#define Meter_updateMode(this_, m_)    (assert(As_Meter(this_)->updateMode), As_Meter(this_)->updateMode((Meter*)(this_), m_))
 #define Meter_drawFn(this_)            As_Meter(this_)->draw
 #define Meter_doneFn(this_)            As_Meter(this_)->done
-#define Meter_updateValues(this_)      As_Meter(this_)->updateValues((Meter*)(this_))
+#define Meter_updateValues(this_)      (assert(As_Meter(this_)->updateValues), As_Meter(this_)->updateValues((Meter*)(this_)))
 #define Meter_getUiNameFn(this_)       As_Meter(this_)->getUiName
-#define Meter_getUiName(this_,n_,l_)   As_Meter(this_)->getUiName((const Meter*)(this_),n_,l_)
+#define Meter_getUiName(this_,n_,l_)   (assert(As_Meter(this_)->getUiName), As_Meter(this_)->getUiName((const Meter*)(this_),n_,l_))
 #define Meter_getCaptionFn(this_)      As_Meter(this_)->getCaption
 #define Meter_getCaption(this_)        (Meter_getCaptionFn(this_) ? As_Meter(this_)->getCaption((const Meter*)(this_)) : (this_)->caption)
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
@@ -94,6 +97,8 @@ typedef struct MeterClass_ {
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
 #define Meter_isMultiColumn(this_)     As_Meter(this_)->isMultiColumn
+#define Meter_getChoicesFn(this_)      As_Meter(this_)->getChoices
+#define Meter_getChoices(this_)        (assert(As_Meter(this_)->getChoices), As_Meter(this_)->getChoices((Meter*)(this_)))
 
 typedef struct GraphData_ {
    struct timeval time;
@@ -116,6 +121,7 @@ struct Meter_ {
    char txtBuffer[METER_TXTBUFFER_LEN];
    double* values;
    double total;
+   char* curChoice;           /*<< selected choice, can be NULL on invalid choice */
    void* meterData;
 };
 
@@ -152,6 +158,10 @@ void Meter_delete(Object* cast);
 void Meter_setCaption(Meter* this, const char* caption);
 
 void Meter_setMode(Meter* this, int modeIndex);
+
+void Meter_setChoice(Meter* this, const char* choice);
+
+void Meter_nextChoice(Meter* this);
 
 ListItem* Meter_toListItem(const Meter* this, bool moving);
 

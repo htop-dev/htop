@@ -145,7 +145,9 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
+   // TODO
+   (void) choice;
    (void)data;
    return false;
 }
@@ -161,4 +163,44 @@ void Platform_getHostname(char* buffer, size_t size) {
 
 void Platform_getRelease(char** string) {
    *string = xStrdup(Platform_unsupported);
+}
+
+char** Platform_getLocalIPv4addressChoices(Meter* meter) {
+   (void) meter;
+   return NULL;
+}
+
+char** Platform_getLocalIPv6addressChoices(Meter* meter) {
+   (void) meter;
+   return NULL;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   (void) choice;
+   (void) buffer; (void)
+   size;
+   return;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   (void) choice;
+   (void) buffer;
+   (void) size;
+   return;
+}
+
+char **Platform_getDiskUsageChoices(Meter* meter) {
+   (void) meter;
+   return NULL;
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   (void) choice;
+   (void) data;
+}
+
+char **Platform_getDynamicMeterChoices(Meter* meter) {
+   // TODO
+   (void) meter;
+   return NULL;
 }
