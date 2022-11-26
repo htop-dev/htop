@@ -361,8 +361,9 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
    // TODO
+   (void) choice;
    (void)data;
    return false;
 }
@@ -440,4 +441,41 @@ void Platform_gettime_monotonic(uint64_t* msec) {
 
 #endif
 
+}
+
+char** Platform_getLocalIPv4addressChoices(void) {
+   // TODO
+   return NULL;
+}
+
+char** Platform_getLocalIPv6addressChoices(void) {
+   // TODO
+   return NULL;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   // TODO
+   (void) choice;
+   (void) buffer;
+   (void) size;
+   return;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   // TODO
+   (void) choice;
+   (void) buffer;
+   (void) size;
+   return;
+}
+
+char **Platform_getDiskUsageChoices(void) {
+   // TODO
+   return NULL;
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   // TODO
+   (void) choice;
+   (void) data;
 }

@@ -714,7 +714,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(const char* choice, NetworkIOData* data) {
+   // TODO: choice support
+   assert(!choice); (void) choice;
+
    memset(data, 0, sizeof(*data));
 
    pmAtomValue value;
@@ -732,6 +735,38 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
 void Platform_getBattery(double* level, ACPresence* isOnAC) {
    *level = NAN;
    *isOnAC = AC_ERROR;
+}
+
+char** Platform_getLocalIPv4addressChoices() {
+   // TODO
+   return NULL;
+}
+
+char** Platform_getLocalIPv6addressChoices() {
+   // TODO
+   return NULL;
+}
+
+void Platform_getLocalIPv4address(const char* choice, char* buffer, size_t size) {
+   // TODO
+   (void) choice; (void) buffer; (void) size;
+   return;
+}
+
+void Platform_getLocalIPv6address(const char* choice, char* buffer, size_t size) {
+   // TODO
+   (void) choice; (void) buffer; (void) size;
+   return;
+}
+
+char **Platform_getDiskUsageChoices() {
+   // TODO
+   return NULL;
+}
+
+void Platform_getDiskUsage(const char* choice, DiskUsageData *data) {
+   // TODO
+   (void) choice; (void) data;
 }
 
 void Platform_longOptionsUsage(ATTR_UNUSED const char* name) {
