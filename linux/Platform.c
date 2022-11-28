@@ -249,6 +249,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &NetworkIOMeter_class,
    &SELinuxMeter_class,
    &SystemdMeter_class,
+   &SystemdUserMeter_class,
    NULL
 };
 
