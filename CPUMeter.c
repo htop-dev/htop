@@ -167,6 +167,18 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
       }
    }
 
+   if (this->pl->settings->showCPUFrequency) {
+      char cpuFrequencyBuffer[10];
+      double cpuFrequency = this->values[CPU_METER_FREQUENCY];
+      if (isnan(cpuFrequency)) {
+         len = xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A     ");
+      } else {
+         len = xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "%4uMHz ", (unsigned)cpuFrequency);
+      }
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], "freq: ");
+      RichString_appendnWide(out, CRT_colors[METER_VALUE], cpuFrequencyBuffer, len);
+   }
+
    #ifdef BUILD_WITH_CPU_TEMP
    if (this->pl->settings->showCPUTemperature) {
       char cpuTemperatureBuffer[10];
