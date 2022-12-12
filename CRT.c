@@ -1096,7 +1096,7 @@ static void print_backtrace(void) {
       unw_get_proc_name(&cursor, symbolName, sizeof(symbolName), &offset);
 
       unw_proc_info_t pip;
-      pip.unwind_info = NULL;
+      pip.unwind_info = 0;
 
       const char* fname = "?";
       const void* ptr = 0;
