@@ -61,7 +61,7 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
    int newLen = from + len;
    RichString_setLen(this, newLen);
    for (int i = from, j = 0; i < newLen; i++, j++) {
-      this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (iswprint(data[j]) ? data[j] : '?') } };
+      this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (iswprint(data[j]) ? data[j] : L'\xFFFD') } };
    }
 
    return len;
@@ -79,7 +79,7 @@ int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_
    int columnsWritten = 0;
    int pos = from;
    for (int j = 0; j < len; j++) {
-      wchar_t c = iswprint(data[j]) ? data[j] : '?';
+      wchar_t c = iswprint(data[j]) ? data[j] : L'\xFFFD';
       int cwidth = wcwidth(c);
       if (cwidth > *columns)
          break;
@@ -101,7 +101,7 @@ static inline int RichString_writeFromAscii(RichString* this, int attrs, const c
    int newLen = from + len;
    RichString_setLen(this, newLen);
    for (int i = from, j = 0; i < newLen; i++, j++) {
-      this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (isprint(data[j]) ? data[j] : '?') } };
+      this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (isprint(data[j]) ? data[j] : L'\xFFFD') } };
    }
 
    return len;
