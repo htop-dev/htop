@@ -51,3 +51,6 @@ callgrind.out.*
 # IDE workspace configurations
 /.idea/
 /.vscode/
+
+# Language Servers
+/.cache/clangd/
