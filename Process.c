@@ -49,22 +49,22 @@ void Process_setupColumnWidths(void) {
    if (maxPid == -1)
       return;
 
-   if (maxPid < (int)pow(10, PROCESS_MIN_PID_DIGITS)) {
+   if (maxPid < (int)powf(10, PROCESS_MIN_PID_DIGITS)) {
       Process_pidDigits = PROCESS_MIN_PID_DIGITS;
       return;
    }
 
-   Process_pidDigits = (int)log10(maxPid) + 1;
+   Process_pidDigits = (int)log10f(maxPid) + 1;
    assert(Process_pidDigits <= PROCESS_MAX_PID_DIGITS);
 }
 
 void Process_setUidColumnWidth(uid_t maxUid) {
-   if (maxUid < (uid_t)pow(10, PROCESS_MIN_UID_DIGITS)) {
+   if (maxUid < (uid_t)powf(10, PROCESS_MIN_UID_DIGITS)) {
       Process_uidDigits = PROCESS_MIN_UID_DIGITS;
       return;
    }
 
-   Process_uidDigits = (int)log10(maxUid) + 1;
+   Process_uidDigits = (int)log10f(maxUid) + 1;
    assert(Process_uidDigits <= PROCESS_MAX_UID_DIGITS);
 }
 
@@ -879,7 +879,7 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
       break;
    case PERCENT_CPU: Process_printPercentage(this->percent_cpu, buffer, n, Process_fieldWidths[PERCENT_CPU], &attr); break;
    case PERCENT_NORM_CPU: {
-      float cpuPercentage = this->percent_cpu / this->processList->activeCPUs;
+      float cpuPercentage = this->percent_cpu / (float)this->processList->activeCPUs;
       Process_printPercentage(cpuPercentage, buffer, n, Process_fieldWidths[PERCENT_CPU], &attr);
       break;
    }
@@ -1266,7 +1266,7 @@ void Process_updateCPUFieldWidths(float percentage) {
    }
 
    // Add additional two characters, one for "." and another for precision.
-   uint8_t width = ceil(log10(percentage + 0.1)) + 2;
+   uint8_t width = ceilf(log10f(percentage + 0.1F)) + 2;
 
    Process_updateFieldWidth(PERCENT_CPU, width);
    Process_updateFieldWidth(PERCENT_NORM_CPU, width);

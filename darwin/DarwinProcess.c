@@ -373,9 +373,9 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
 
       if (total_existing_time_ns && 1E-6 < timeIntervalNS) {
          uint64_t total_time_diff_ns = total_current_time_ns - total_existing_time_ns;
-         proc->super.percent_cpu = ((double)total_time_diff_ns / timeIntervalNS) * 100.0;
+         proc->super.percent_cpu = ((float)total_time_diff_ns / timeIntervalNS) * 100.0F;
       } else {
-         proc->super.percent_cpu = 0.0;
+         proc->super.percent_cpu = 0.0F;
       }
       Process_updateCPUFieldWidths(proc->super.percent_cpu);
 
@@ -384,8 +384,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
       proc->super.m_virt = pti.pti_virtual_size / ONE_K;
       proc->super.m_resident = pti.pti_resident_size / ONE_K;
       proc->super.majflt = pti.pti_faults;
-      proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
-                              / (double)dpl->host_info.max_mem;
+      proc->super.percent_mem = (float)pti.pti_resident_size * 100.0F
+                              / (float)dpl->host_info.max_mem;
 
       proc->stime = system_time_ns;
       proc->utime = user_time_ns;

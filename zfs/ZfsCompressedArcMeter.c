@@ -35,7 +35,7 @@ void ZfsCompressedArcMeter_readStats(Meter* this, const ZfsArcStats* stats) {
 
 static int ZfsCompressedArcMeter_printRatioString(const Meter* this, char* buffer, size_t size) {
    if (this->values[0] > 0) {
-      return xSnprintf(buffer, size, "%.2f:1", this->total / this->values[0]);
+      return xSnprintf(buffer, size, "%.2f:1", this->total / (float)this->values[0]);
    }
 
    return xSnprintf(buffer, size, "N/A");
@@ -78,7 +78,7 @@ const MeterClass ZfsCompressedArcMeter_class = {
    .updateValues = ZfsCompressedArcMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
-   .total = 100.0,
+   .total = 100.0F,
    .attributes = ZfsCompressedArcMeter_attributes,
    .name = "ZFSCARC",
    .uiName = "ZFS CARC",

@@ -75,7 +75,7 @@ int Meter_humanUnit(char* buffer, unsigned long int value, size_t size) {
          break;
    }
 
-   return snprintf(buffer, size, "%.*f%c", precision, (double) value / powi, *prefix);
+   return snprintf(buffer, size, "%.*f%c", precision, (float) value / powi, *prefix);
 }
 
 void Meter_delete(Object* cast) {
@@ -223,10 +223,10 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // First draw in the bar[] buffer...
    int offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
-      double value = this->values[i];
-      value = CLAMP(value, 0.0, this->total);
+      float value = this->values[i];
+      value = CLAMP(value, 0.0F, this->total);
       if (value > 0) {
-         blockSizes[i] = ceil((value / this->total) * w);
+         blockSizes[i] = ceilf((value / this->total) * w);
       } else {
          blockSizes[i] = 0;
       }
@@ -338,8 +338,8 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
       if (this->total < 1)
          this->total = 1;
-      int v1 = CLAMP((int) lround(data->values[i] / this->total * pix), 1, pix);
-      int v2 = CLAMP((int) lround(data->values[i + 1] / this->total * pix), 1, pix);
+      int v1 = CLAMP((int) lroundf((float)data->values[i] / this->total * pix), 1, pix);
+      int v2 = CLAMP((int) lroundf((float)data->values[i + 1] / this->total * pix), 1, pix);
 
       int colorIdx = GRAPH_1;
       for (int line = 0; line < GRAPH_HEIGHT; line++) {
@@ -479,7 +479,7 @@ const MeterClass BlankMeter_class = {
    .updateValues = BlankMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 0,
-   .total = 100.0,
+   .total = 100.0F,
    .attributes = BlankMeter_attributes,
    .name = "Blank",
    .uiName = "Blank",

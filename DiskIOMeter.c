@@ -29,7 +29,7 @@ static const int DiskIOMeter_attributes[] = {
 static MeterRateStatus status = RATESTATUS_INIT;
 static uint32_t cached_read_diff;
 static uint32_t cached_write_diff;
-static double cached_utilisation_diff;
+static float cached_utilisation_diff;
 
 static void DiskIOMeter_updateValues(Meter* this) {
    const ProcessList* pl = this->pl;
@@ -84,9 +84,9 @@ static void DiskIOMeter_updateValues(Meter* this) {
 
       if (data.totalMsTimeSpend > cached_msTimeSpend_total) {
          diff = data.totalMsTimeSpend - cached_msTimeSpend_total;
-         cached_utilisation_diff = 100.0 * (double)diff / passedTimeInMs;
+         cached_utilisation_diff = 100.0F * (float)diff / passedTimeInMs;
       } else {
-         cached_utilisation_diff = 0.0;
+         cached_utilisation_diff = 0.0F;
       }
       cached_msTimeSpend_total = data.totalMsTimeSpend;
    }
@@ -101,7 +101,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
    }
 
    this->values[0] = cached_utilisation_diff;
-   this->total = MAXIMUM(this->values[0], 100.0); /* fix total after (initial) spike */
+   this->total = MAXIMUM(this->values[0], 100.0F); /* fix total after (initial) spike */
 
    char bufferRead[12], bufferWrite[12];
    Meter_humanUnit(bufferRead, cached_read_diff, sizeof(bufferRead));
@@ -127,7 +127,7 @@ static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out)
    char buffer[16];
    int len;
 
-   int color = cached_utilisation_diff > 40.0 ? METER_VALUE_NOTICE : METER_VALUE;
+   int color = cached_utilisation_diff > 40.0F ? METER_VALUE_NOTICE : METER_VALUE;
    len = xSnprintf(buffer, sizeof(buffer), "%.1f%%", cached_utilisation_diff);
    RichString_appendnAscii(out, CRT_colors[color], buffer, len);
 
@@ -151,7 +151,7 @@ const MeterClass DiskIOMeter_class = {
    .updateValues = DiskIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
-   .total = 100.0,
+   .total = 100.0F,
    .attributes = DiskIOMeter_attributes,
    .name = "DiskIO",
    .uiName = "Disk IO",

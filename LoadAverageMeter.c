@@ -46,7 +46,7 @@ static void LoadAverageMeter_updateValues(Meter* this) {
    // change bar color and total based on value
    if (this->values[0] < 1.0) {
       this->curAttributes = OK_attributes;
-      this->total = 1.0;
+      this->total = 1.0F;
    } else if (this->values[0] < this->pl->activeCPUs) {
       this->curAttributes = Medium_attributes;
       this->total = this->pl->activeCPUs;
@@ -78,7 +78,7 @@ static void LoadMeter_updateValues(Meter* this) {
    // change bar color and total based on value
    if (this->values[0] < 1.0) {
       this->curAttributes = OK_attributes;
-      this->total = 1.0;
+      this->total = 1.0F;
    } else if (this->values[0] < this->pl->activeCPUs) {
       this->curAttributes = Medium_attributes;
       this->total = this->pl->activeCPUs;
@@ -108,7 +108,7 @@ const MeterClass LoadAverageMeter_class = {
    .updateValues = LoadAverageMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 3,
-   .total = 100.0,
+   .total = 100.0F,
    .attributes = LoadAverageMeter_attributes,
    .name = "LoadAverage",
    .uiName = "Load average",
@@ -125,7 +125,7 @@ const MeterClass LoadMeter_class = {
    .updateValues = LoadMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
-   .total = 100.0,
+   .total = 100.0F,
    .attributes = LoadMeter_attributes,
    .name = "Load",
    .uiName = "Load",

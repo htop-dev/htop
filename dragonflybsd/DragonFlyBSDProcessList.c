@@ -511,11 +511,11 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_lwp.kl_uticks + kproc->kp_lwp.kl_sticks + kproc->kp_lwp.kl_iticks) / 10000;
 
-      proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * proc->m_resident / (double)(super->totalMem);
+      proc->percent_cpu = 100.0F * ((float)kproc->kp_lwp.kl_pctcpu / (float)kernelFScale);
+      proc->percent_mem = 100.0F * proc->m_resident / (float)(super->totalMem);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
-      if (proc->percent_cpu > 0.1) {
+      if (proc->percent_cpu > 0.1F) {
          // system idle process should own all CPU time left regardless of CPU count
          if (String_eq("idle", kproc->kp_comm)) {
             isIdleProcess = true;

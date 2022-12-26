@@ -564,8 +564,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
-      proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * proc->m_resident / (double)(super->totalMem);
+      proc->percent_cpu = 100.0F * ((float)kproc->ki_pctcpu / (float)kernelFScale);
+      proc->percent_mem = 100.0F * proc->m_resident / (float)(super->totalMem);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       if (kproc->ki_stat == SRUN && kproc->ki_oncpu != NOCPU) {

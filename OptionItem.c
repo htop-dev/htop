@@ -54,9 +54,9 @@ static void NumberItem_display(const Object* cast, RichString* out) {
    RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
    int written;
    if (this->scale < 0) {
-      written = xSnprintf(buffer, sizeof(buffer), "%.*f", -this->scale, pow(10, this->scale) * NumberItem_get(this));
+      written = xSnprintf(buffer, sizeof(buffer), "%.*f", -this->scale, powf(10, this->scale) * NumberItem_get(this));
    } else if (this->scale > 0) {
-      written = xSnprintf(buffer, sizeof(buffer), "%d", (int) (pow(10, this->scale) * NumberItem_get(this)));
+      written = xSnprintf(buffer, sizeof(buffer), "%d", (int) (powf(10, this->scale) * NumberItem_get(this)));
    } else {
       written = xSnprintf(buffer, sizeof(buffer), "%d", NumberItem_get(this));
    }

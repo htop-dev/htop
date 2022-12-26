@@ -66,7 +66,7 @@ typedef struct MeterClass_ {
    const Meter_GetCaption getCaption;
    const Meter_GetUiName getUiName;
    const int defaultMode;
-   const double total;
+   const float total;
    const int* const attributes;
    const char* const name;                 /* internal name of the meter, must not contain any space */
    const char* const uiName;               /* display name in header setup menu */
@@ -115,7 +115,7 @@ struct Meter_ {
    const int* curAttributes;
    char txtBuffer[METER_TXTBUFFER_LEN];
    double* values;
-   double total;
+   float total;
    void* meterData;
 };
 

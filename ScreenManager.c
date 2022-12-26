@@ -115,13 +115,13 @@ void ScreenManager_resize(ScreenManager* this) {
    Panel_move(panel, lastX, y1_header);
 }
 
-static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut, bool* force_redraw) {
+static void checkRecalculation(ScreenManager* this, uint64_t* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut, bool* force_redraw) {
    ProcessList* pl = this->header->pl;
 
    Platform_gettime_realtime(&pl->realtime, &pl->realtimeMs);
-   double newTime = ((double)pl->realtime.tv_sec * 10) + ((double)pl->realtime.tv_usec / 100000);
+   uint64_t newTime = pl->realtime.tv_sec * 1000000 + pl->realtime.tv_usec;
 
-   *timedOut = (newTime - *oldTime > this->settings->delay);
+   *timedOut = (newTime - *oldTime > 100000ULL * this->settings->delay);
    *rescan |= *timedOut;
 
    if (newTime < *oldTime) {
@@ -218,7 +218,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
 
    Panel* panelFocus = (Panel*) Vector_get(this->panels, focus);
 
-   double oldTime = 0.0;
+   uint64_t oldTime = 0;
 
    int ch = ERR;
    int closeTimeout = 0;

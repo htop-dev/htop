@@ -1173,7 +1173,7 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
       assert(lp->super.pid == (pid_t)stats.ac_pid);
 
       unsigned long long int timeDelta = stats.ac_etime * 1000 - lp->delay_read_time;
-      #define BOUNDS(x) (isnan(x) ? 0.0 : ((x) > 100) ? 100.0 : (x))
+      #define BOUNDS(x) (isnan(x) ? 0.0F : ((x) > 100) ? 100.0F : (x))
       #define DELTAPERC(x,y) BOUNDS((float) ((x) - (y)) / timeDelta * 100)
       lp->cpu_delay_percent = DELTAPERC(stats.cpu_delay_total, lp->cpu_delay_total);
       lp->blkio_delay_percent = DELTAPERC(stats.blkio_delay_total, lp->blkio_delay_total);
@@ -1654,9 +1654,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       /* period might be 0 after system sleep */
-      float percent_cpu = (period < 1E-6) ? 0.0F : ((lp->utime + lp->stime - lasttimes) / period * 100.0);
+      float percent_cpu = (period < 1E-6) ? 0.0F : ((lp->utime + lp->stime - lasttimes) / period * 100.0F);
       proc->percent_cpu = CLAMP(percent_cpu, 0.0F, activeCPUs * 100.0F);
-      proc->percent_mem = proc->m_resident / (double)(pl->totalMem) * 100.0;
+      proc->percent_mem = proc->m_resident / (float)(pl->totalMem) * 100.0F;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       if (! LinuxProcessList_updateUser(pl, proc, procFd))

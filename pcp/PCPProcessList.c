@@ -404,10 +404,10 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
       if (tty_nr != proc->tty_nr)
          PCPProcessList_updateTTY(proc, pid, offset);
 
-      float percent_cpu = (pp->utime + pp->stime - lasttimes) / period * 100.0;
+      float percent_cpu = (pp->utime + pp->stime - lasttimes) / period * 100.0F;
       proc->percent_cpu = isnan(percent_cpu) ?
-                          0.0 : CLAMP(percent_cpu, 0.0, pl->activeCPUs * 100.0);
-      proc->percent_mem = proc->m_resident / (double)pl->totalMem * 100.0;
+                          0.0F : CLAMP(percent_cpu, 0.0F, pl->activeCPUs * 100.0F);
+      proc->percent_mem = proc->m_resident / (float)pl->totalMem * 100.0F;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       PCPProcessList_updateUsername(proc, pid, offset, pl->usersTable);

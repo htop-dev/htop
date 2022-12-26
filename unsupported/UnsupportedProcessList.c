@@ -68,8 +68,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->tpgid = 0;
    proc->processor = 0;
 
-   proc->percent_cpu = 2.5;
-   proc->percent_mem = 2.5;
+   proc->percent_cpu = 2.5F;
+   proc->percent_mem = 2.5F;
    Process_updateCPUFieldWidths(proc->percent_cpu);
 
    proc->st_uid = 0;
