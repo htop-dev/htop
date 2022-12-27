@@ -173,6 +173,7 @@ linux_platform_headers = \
 	linux/SystemdMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
+	linux/ZswapStats.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h

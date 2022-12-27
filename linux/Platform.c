@@ -359,7 +359,7 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[MEMORY_METER_USED] = pl->usedMem;
    this->values[MEMORY_METER_BUFFERS] = pl->buffersMem;
    this->values[MEMORY_METER_SHARED] = pl->sharedMem;
-   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+   this->values[MEMORY_METER_COMPRESSED] = 0; /* compressed */
    this->values[MEMORY_METER_CACHE] = pl->cachedMem;
    this->values[MEMORY_METER_AVAILABLE] = pl->availableMem;
 
@@ -372,13 +372,26 @@ void Platform_setMemoryValues(Meter* this) {
       this->values[MEMORY_METER_CACHE] += shrinkableSize;
       this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
    }
+
+   if (lpl->zswap.usedZswapOrig > 0 || lpl->zswap.usedZswapComp > 0) {
+      this->values[MEMORY_METER_USED] -= lpl->zswap.usedZswapComp;
+      this->values[MEMORY_METER_COMPRESSED] += lpl->zswap.usedZswapComp;
+   }
 }
 
 void Platform_setSwapValues(Meter* this) {
    const ProcessList* pl = this->pl;
+   const LinuxProcessList* lpl = (const LinuxProcessList*) pl;
+
    this->total = pl->totalSwap;
    this->values[SWAP_METER_USED] = pl->usedSwap;
    this->values[SWAP_METER_CACHE] = pl->cachedSwap;
+   this->values[SWAP_METER_FRONTSWAP] = 0; /* frontswap -- memory that is accounted to swap but resides elsewhere */
+
+   if (lpl->zswap.usedZswapOrig > 0 || lpl->zswap.usedZswapComp > 0) {
+      this->values[SWAP_METER_USED] -= lpl->zswap.usedZswapOrig;
+      this->values[SWAP_METER_FRONTSWAP] += lpl->zswap.usedZswapOrig;
+   }
 }
 
 void Platform_setZramValues(Meter* this) {
