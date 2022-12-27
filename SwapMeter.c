@@ -20,7 +20,8 @@ in the source distribution for its full text.
 
 static const int SwapMeter_attributes[] = {
    SWAP,
-   SWAP_CACHE
+   SWAP_CACHE,
+   SWAP_FRONTSWAP,
 };
 
 static void SwapMeter_updateValues(Meter* this) {
@@ -29,6 +30,7 @@ static void SwapMeter_updateValues(Meter* this) {
    int written;
 
    this->values[SWAP_METER_CACHE] = NAN;   /* 'cached' not present on all platforms */
+   this->values[SWAP_METER_FRONTSWAP] = NAN;   /* 'frontswap' not present on all platforms */
    Platform_setSwapValues(this);
 
    written = Meter_humanUnit(buffer, this->values[SWAP_METER_USED], size);
@@ -53,6 +55,12 @@ static void SwapMeter_display(const Object* cast, RichString* out) {
       Meter_humanUnit(buffer, this->values[SWAP_METER_CACHE], sizeof(buffer));
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
       RichString_appendAscii(out, CRT_colors[SWAP_CACHE], buffer);
+   }
+
+   if (!isnan(this->values[SWAP_METER_FRONTSWAP])) {
+      Meter_humanUnit(buffer, this->values[SWAP_METER_FRONTSWAP], sizeof(buffer));
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], " frontswap:");
+      RichString_appendAscii(out, CRT_colors[SWAP_FRONTSWAP], buffer);
    }
 }
 

@@ -270,6 +270,7 @@ void Platform_setMemoryValues(Meter* mtr) {
    mtr->values[MEMORY_METER_USED] = (double)(vm->active_count + vm->wire_count) * page_K;
    mtr->values[MEMORY_METER_BUFFERS] = (double)vm->purgeable_count * page_K;
    // mtr->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
    mtr->values[MEMORY_METER_CACHE] = (double)vm->inactive_count * page_K;
    // mtr->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
@@ -282,6 +283,8 @@ void Platform_setSwapValues(Meter* mtr) {
 
    mtr->total = swapused.xsu_total / 1024;
    mtr->values[SWAP_METER_USED] = swapused.xsu_used / 1024;
+   // mtr->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
+   // mtr->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 void Platform_setZfsArcValues(Meter* this) {
