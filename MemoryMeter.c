@@ -20,6 +20,7 @@ static const int MemoryMeter_attributes[] = {
    MEMORY_USED,
    MEMORY_BUFFERS,
    MEMORY_SHARED,
+   MEMORY_COMPRESSED,
    MEMORY_CACHE
 };
 
@@ -28,8 +29,9 @@ static void MemoryMeter_updateValues(Meter* this) {
    size_t size = sizeof(this->txtBuffer);
    int written;
 
-   /* shared and available memory are not supported on all platforms */
+   /* shared, compressed and available memory are not supported on all platforms */
    this->values[MEMORY_METER_SHARED] = NAN;
+   this->values[MEMORY_METER_COMPRESSED] = NAN;
    this->values[MEMORY_METER_AVAILABLE] = NAN;
    Platform_setMemoryValues(this);
 
@@ -38,7 +40,13 @@ static void MemoryMeter_updateValues(Meter* this) {
       "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
    this->curItems = MEMORY_METER_AVAILABLE;
 
-   written = Meter_humanUnit(buffer, this->values[MEMORY_METER_USED], size);
+   /* we actually want to show "used + compressed" */
+   double used = this->values[MEMORY_METER_USED];
+   if (!isnan(this->values[MEMORY_METER_COMPRESSED])) {
+      used += this->values[MEMORY_METER_COMPRESSED];
+   }
+
+   written = Meter_humanUnit(buffer, used, size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');
@@ -67,6 +75,13 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
       Meter_humanUnit(buffer, this->values[MEMORY_METER_SHARED], sizeof(buffer));
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " shared:");
       RichString_appendAscii(out, CRT_colors[MEMORY_SHARED], buffer);
+   }
+
+   /* compressed memory is not supported on all platforms */
+   if (!isnan(this->values[MEMORY_METER_COMPRESSED])) {
+      Meter_humanUnit(buffer, this->values[MEMORY_METER_COMPRESSED], sizeof(buffer));
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], " compressed:");
+      RichString_appendAscii(out, CRT_colors[MEMORY_COMPRESSED], buffer);
    }
 
    Meter_humanUnit(buffer, this->values[MEMORY_METER_CACHE], sizeof(buffer));

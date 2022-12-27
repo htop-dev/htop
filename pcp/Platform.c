@@ -537,6 +537,7 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[MEMORY_METER_USED] = pl->usedMem;
    this->values[MEMORY_METER_BUFFERS] = pl->buffersMem;
    this->values[MEMORY_METER_SHARED] = pl->sharedMem;
+   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
    this->values[MEMORY_METER_CACHE] = pl->cachedMem;
    this->values[MEMORY_METER_AVAILABLE] = pl->availableMem;
 
@@ -556,6 +557,7 @@ void Platform_setSwapValues(Meter* this) {
    this->total = pl->totalSwap;
    this->values[SWAP_METER_USED] = pl->usedSwap;
    this->values[SWAP_METER_CACHE] = pl->cachedSwap;
+   // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 void Platform_setZramValues(Meter* this) {
