@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "UsersTable.h"
 #include "linux/ZramStats.h"
+#include "linux/ZswapStats.h"
 #include "zfs/ZfsArcStats.h"
 
 #define HTOP_HUGEPAGE_BASE_SHIFT 16
@@ -85,6 +86,7 @@ typedef struct LinuxProcessList_ {
 
    ZfsArcStats zfs;
    ZramStats zram;
+   ZswapStats zswap;
 } LinuxProcessList;
 
 #ifndef PROCDIR
