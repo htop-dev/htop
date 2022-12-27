@@ -389,7 +389,22 @@ void Platform_setSwapValues(Meter* this) {
    this->values[SWAP_METER_FRONTSWAP] = 0; /* frontswap -- memory that is accounted to swap but resides elsewhere */
 
    if (lpl->zswap.usedZswapOrig > 0 || lpl->zswap.usedZswapComp > 0) {
+      /*
+       * FIXME: Zswapped pages can be both SwapUsed and SwapCached, and we do not know which.
+       *
+       * Apparently, it is possible that Zswapped > SwapUsed. This means that some of Zswapped pages
+       * were actually SwapCached, nor SwapUsed. Unfortunately, we cannot tell what exactly portion
+       * of Zswapped pages were SwapCached.
+       *
+       * For now, subtract Zswapped from SwapUsed and only if Zswapped > SwapUsed, subtract the
+       * overflow from SwapCached.
+       */
       this->values[SWAP_METER_USED] -= lpl->zswap.usedZswapOrig;
+      if (this->values[SWAP_METER_USED] < 0) {
+         /* subtract the overflow from SwapCached */
+         this->values[SWAP_METER_CACHE] += this->values[SWAP_METER_USED];
+         this->values[SWAP_METER_USED] = 0;
+      }
       this->values[SWAP_METER_FRONTSWAP] += lpl->zswap.usedZswapOrig;
    }
 }
