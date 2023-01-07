@@ -351,20 +351,20 @@ void Platform_setMemoryValues(Meter* this) {
    const LinuxProcessList* lpl = (const LinuxProcessList*) pl;
 
    this->total     = pl->totalMem;
-   this->values[0] = pl->usedMem;
-   this->values[1] = pl->buffersMem;
-   this->values[2] = pl->sharedMem;
-   this->values[3] = pl->cachedMem;
-   this->values[4] = pl->availableMem;
+   this->values[MEMORY_METER_USED] = pl->usedMem;
+   this->values[MEMORY_METER_BUFFERS] = pl->buffersMem;
+   this->values[MEMORY_METER_SHARED] = pl->sharedMem;
+   this->values[MEMORY_METER_CACHE] = pl->cachedMem;
+   this->values[MEMORY_METER_AVAILABLE] = pl->availableMem;
 
    if (lpl->zfs.enabled != 0 && !Running_containerized) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
       if (lpl->zfs.size > lpl->zfs.min)
          shrinkableSize = lpl->zfs.size - lpl->zfs.min;
-      this->values[0] -= shrinkableSize;
-      this->values[3] += shrinkableSize;
-      this->values[4] += shrinkableSize;
+      this->values[MEMORY_METER_USED] -= shrinkableSize;
+      this->values[MEMORY_METER_CACHE] += shrinkableSize;
+      this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
    }
 }
 
