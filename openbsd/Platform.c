@@ -227,11 +227,11 @@ void Platform_setMemoryValues(Meter* this) {
    long int cachedMem = pl->cachedMem;
    usedMem -= buffersMem + cachedMem;
    this->total = pl->totalMem;
-   this->values[0] = usedMem;
-   this->values[1] = buffersMem;
-   // this->values[2] = "shared memory, like tmpfs and shm"
-   this->values[3] = cachedMem;
-   // this->values[4] = "available memory"
+   this->values[MEMORY_METER_USED] = usedMem;
+   this->values[MEMORY_METER_BUFFERS] = buffersMem;
+   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   this->values[MEMORY_METER_CACHE] = cachedMem;
+   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* this) {
