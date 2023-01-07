@@ -262,10 +262,9 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
       }
       int id = toFieldIndex(columns, ids[i]);
       if (id >= 0)
-         ss->fields[j] = id;
+         ss->fields[j++] = id;
       if (id > 0 && id < LAST_PROCESSFIELD)
          ss->flags |= Process_fields[id].flags;
-      j++;
    }
    String_freeArray(ids);
 }
@@ -480,11 +479,15 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (strncmp(option[0], "screen:", 7) == 0) {
          screen = Settings_newScreen(this, &(const ScreenDefaults) { .name = option[0] + 7, .columns = option[1] });
       } else if (String_eq(option[0], ".sort_key")) {
-         if (screen)
-            screen->sortKey = toFieldIndex(this->dynamicColumns, option[1]);
+         if (screen) {
+            int key = toFieldIndex(this->dynamicColumns, option[1]);
+            screen->sortKey = key > 0 ? key : PID;
+         }
       } else if (String_eq(option[0], ".tree_sort_key")) {
-         if (screen)
-            screen->treeSortKey = toFieldIndex(this->dynamicColumns, option[1]);
+         if (screen) {
+            int key = toFieldIndex(this->dynamicColumns, option[1]);
+            screen->treeSortKey = key > 0 ? key : PID;
+         }
       } else if (String_eq(option[0], ".sort_direction")) {
          if (screen)
             screen->direction = atoi(option[1]);
