@@ -278,7 +278,7 @@ void Platform_setSwapValues(Meter* mtr) {
    sysctl(mib, 2, &swapused, &swlen, NULL, 0);
 
    mtr->total = swapused.xsu_total / 1024;
-   mtr->values[0] = swapused.xsu_used / 1024;
+   mtr->values[SWAP_METER_USED] = swapused.xsu_used / 1024;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
