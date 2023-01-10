@@ -44,6 +44,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"
+#include "Scheduling.h"
 #include "Settings.h"
 #include "XUtils.h"
 #include "linux/CGroupUtils.h"
@@ -1720,6 +1721,12 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       if ((ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP) && this->haveAutogroup) {
          LinuxProcessList_readAutogroup(lp, procFd);
       }
+
+      #ifdef SCHEDULER_SUPPORT
+      if (ss->flags & PROCESS_FLAG_SCHEDPOL) {
+         Scheduling_readProcessPolicy(proc);
+      }
+      #endif
 
       if (!proc->cmdline && statCommand[0] &&
           (proc->state == ZOMBIE || Process_isKernelThread(proc) || settings->showThreadNames)) {

@@ -29,6 +29,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "ProvideCurses.h"
+#include "Scheduling.h"
 #include "ScreenManager.h"
 #include "SignalsPanel.h"
 #include "TraceScreen.h"
@@ -407,6 +408,51 @@ static Htop_Reaction actionSetAffinity(State* st) {
 
 }
 
+#ifdef SCHEDULER_SUPPORT
+static Htop_Reaction actionSetSchedPolicy(State* st) {
+   if (Settings_isReadonly())
+      return HTOP_KEEP_FOLLOWING;
+
+   static int preSelectedPolicy = SCHEDULINGPANEL_INITSELECTEDPOLICY;
+   static int preSelectedPriority = SCHEDULINGPANEL_INITSELECTEDPRIORITY;
+
+   Panel* schedPanel = Scheduling_newPolicyPanel(preSelectedPolicy);
+
+   const ListItem* policy;
+   for(;;) {
+      policy = (const ListItem*) Action_pickFromVector(st, schedPanel, 18, true);
+
+      if (!policy || policy->key != -1)
+         break;
+
+      Scheduling_togglePolicyPanelResetOnFork(schedPanel);
+   }
+
+   if (policy) {
+      preSelectedPolicy = policy->key;
+
+      Panel* prioPanel = Scheduling_newPriorityPanel(policy->key, preSelectedPriority);
+      if (prioPanel) {
+         const ListItem* prio = (const ListItem*) Action_pickFromVector(st, prioPanel, 14, true);
+         if (prio)
+            preSelectedPriority = prio->key;
+
+         Panel_delete((Object*) prioPanel);
+      }
+
+      SchedulingArg v = { .policy = preSelectedPolicy, .priority = preSelectedPriority };
+
+      bool ok = MainPanel_foreachProcess(st->mainPanel, Scheduling_setPolicy, (Arg) { .v = &v }, NULL);
+      if (!ok)
+         beep();
+   }
+
+   Panel_delete((Object*)schedPanel);
+
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
+}
+#endif  /* SCHEDULER_SUPPORT */
+
 static Htop_Reaction actionKill(State* st) {
    if (Settings_isReadonly())
       return HTOP_OK;
@@ -571,6 +617,9 @@ static const struct {
    { .key = "      x: ", .roInactive = false, .info = "list file locks of process" },
    { .key = "      s: ", .roInactive = true,  .info = "trace syscalls with strace" },
    { .key = "      w: ", .roInactive = false, .info = "wrap process command in multiple lines" },
+#ifdef SCHEDULER_SUPPORT
+   { .key = "      Y: ", .roInactive = true,  .info = "set scheduling policy" },
+#endif
    { .key = " F2 C S: ", .roInactive = false, .info = "setup" },
    { .key = " F1 h ?: ", .roInactive = false, .info = "show this help screen" },
    { .key = "  F10 q: ", .roInactive = false, .info = "quit" },
@@ -779,6 +828,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['S'] = actionSetup;
    keys['T'] = actionSortByTime;
    keys['U'] = actionUntagAll;
+#ifdef SCHEDULER_SUPPORT
+   keys['Y'] = actionSetSchedPolicy;
+#endif
    keys['Z'] = actionTogglePauseProcessUpdate;
    keys['['] = actionLowerPriority;
    keys['\014'] = actionRedraw; // Ctrl+L
