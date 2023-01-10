@@ -305,7 +305,7 @@ static Htop_Reaction actionLowerPriority(State* st) {
 static Htop_Reaction actionInvertSortOrder(State* st) {
    ScreenSettings_invertSortOrder(st->settings->ss);
    st->pl->needsSort = true;
-   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_UPDATE_PANELHDR;
 }
 
 static Htop_Reaction actionExpandOrCollapse(State* st) {
