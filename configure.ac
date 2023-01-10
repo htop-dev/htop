@@ -260,6 +260,8 @@ AC_CHECK_FUNCS([ \
     memfd_create\
     openat \
     readlinkat \
+    sched_getscheduler \
+    sched_setscheduler \
    ])
 
 if test "$my_htop_platform" = darwin; then

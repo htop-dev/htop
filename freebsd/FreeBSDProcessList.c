@@ -34,6 +34,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "Process.h"
 #include "ProcessList.h"
+#include "Scheduling.h"
 #include "Settings.h"
 #include "XUtils.h"
 #include "generic/openzfs_sysctl.h"
@@ -605,6 +606,11 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
       if (Process_isKernelThread(proc))
          super->kernelThreads++;
+
+#ifdef SCHEDULER_SUPPORT
+      if (settings->ss->flags & PROCESS_FLAG_SCHEDPOL)
+         Scheduling_readProcessPolicy(proc);
+#endif
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 

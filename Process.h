@@ -19,6 +19,7 @@ in the source distribution for its full text.
 
 #define PROCESS_FLAG_IO              0x00000001
 #define PROCESS_FLAG_CWD             0x00000002
+#define PROCESS_FLAG_SCHEDPOL        0x00000004
 
 #define DEFAULT_HIGHLIGHT_SECS 5
 
@@ -49,6 +50,7 @@ typedef enum ProcessField_ {
    TGID = 52,
    PERCENT_NORM_CPU = 53,
    ELAPSED = 54,
+   SCHEDULERPOLICY = 55,
    PROC_COMM = 124,
    PROC_EXE = 125,
    CWD = 126,
@@ -220,6 +222,9 @@ typedef struct Process_ {
 
    /* Process state enum field (platform dependent) */
    ProcessState state;
+
+   /* Current scheduling policy */
+   int scheduling_policy;
 
    /* Whether the process was updated during the current scan */
    bool updated;

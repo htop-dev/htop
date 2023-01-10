@@ -73,6 +73,7 @@ myhtopsources = \
 	ProcessList.c \
 	ProcessLocksScreen.c \
 	RichString.c \
+	Scheduling.c \
 	ScreenManager.c \
 	ScreensPanel.c \
 	Settings.c \
@@ -135,6 +136,7 @@ myhtopheaders = \
 	ProcessLocksScreen.h \
 	ProvideCurses.h \
 	RichString.h \
+	Scheduling.h \
 	ScreenManager.h \
 	ScreensPanel.h \
 	Settings.h \

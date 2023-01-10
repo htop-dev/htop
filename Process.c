@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "DynamicColumn.h"
 #include "RichString.h"
+#include "Scheduling.h"
 #include "Settings.h"
 #include "XUtils.h"
 
@@ -960,6 +961,15 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
          xSnprintf(buffer, n, "%3ld ", this->priority);
       break;
    case PROCESSOR: xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor)); break;
+   case SCHEDULERPOLICY: {
+      const char* schedPolStr = "N/A";
+#ifdef SCHEDULER_SUPPORT
+      if (this->scheduling_policy >= 0)
+         schedPolStr = Scheduling_formatPolicy(this->scheduling_policy);
+#endif
+      xSnprintf(buffer, n, "%-5s ", schedPolStr);
+      break;
+   }
    case SESSION: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->session); break;
    case STARTTIME: xSnprintf(buffer, n, "%s", this->starttime_show); break;
    case STATE:
@@ -1203,6 +1213,8 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
       return SPACESHIP_NUMBER(p1->priority, p2->priority);
    case PROCESSOR:
       return SPACESHIP_NUMBER(p1->processor, p2->processor);
+   case SCHEDULERPOLICY:
+      return SPACESHIP_NUMBER(p1->scheduling_policy, p2->scheduling_policy);
    case SESSION:
       return SPACESHIP_NUMBER(p1->session, p2->session);
    case STARTTIME:
