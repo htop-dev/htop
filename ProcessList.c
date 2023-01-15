@@ -370,12 +370,12 @@ void ProcessList_collapseAllBranches(ProcessList* this) {
    }
 }
 
-static void ProcessList_filterChildern(ProcessList *this, pid_t pid, Hashtable *processFilter) {
+static void ProcessList_filterChildren(ProcessList *this, pid_t pid, Hashtable *processFilter) {
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process *p = (Process*) (Vector_get(this->processes, i));
       if (p->pid != pid && Process_isChildOf(p, pid)) {
          Hashtable_put(processFilter, p->pid, (void*) 1);
-         ProcessList_filterChildern(this, p->pid, processFilter);
+         ProcessList_filterChildren(this, p->pid, processFilter);
       }
    }
 }
@@ -413,7 +413,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
          continue;
 
       if (this->settings->showChildrenInFilter)
-         ProcessList_filterChildern(this, p->pid, filteredProcesses);
+         ProcessList_filterChildren(this, p->pid, filteredProcesses);
       do {
          Hashtable_put(filteredProcesses, p->pid, (void*) 1);
          ppid = Process_getParentPid(p);
