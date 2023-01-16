@@ -414,6 +414,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 
       if (this->settings->showChildrenInFilter)
          ProcessList_filterChildren(this, p->pid, filteredProcesses);
+
       do {
          Hashtable_put(filteredProcesses, p->pid, (void*) 1);
          ppid = Process_getParentPid(p);
