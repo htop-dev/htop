@@ -95,7 +95,11 @@ const ScreenDefaults Platform_defaultScreens[] = {
    },
    {
       .name = "I/O",
-      .columns = "PID USER IO_PRIORITY IO_RATE IO_READ_RATE IO_WRITE_RATE PERCENT_SWAP_DELAY PERCENT_IO_DELAY Command",
+      .columns = "PID USER IO_PRIORITY IO_RATE IO_READ_RATE IO_WRITE_RATE"
+#ifdef HAVE_DELAYACCT
+         " PERCENT_SWAP_DELAY PERCENT_IO_DELAY"
+#endif
+         " Command",
       .sortKey = "IO_RATE",
    },
 };
