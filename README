@@ -92,9 +92,6 @@ To install on the local system run `make install`. By default `make install` ins
     enable Unicode support
     - dependency: *libncursesw*
     - default: *yes*
-  * `--enable-affinity`:
-    enable `sched_setaffinity(2)` and `sched_getaffinity(2)` for affinity support; conflicts with hwloc
-    - default: *check*
   * `--enable-hwloc`:
     enable hwloc support for CPU affinity; disables affinity support
     - dependency: *libhwloc*
@@ -115,6 +112,9 @@ To install on the local system run `make install`. By default `make install` ins
 
 #### Linux
 
+  * `--enable-affinity`:
+    enable `sched_setaffinity(2)` and `sched_getaffinity(2)` for affinity support; conflicts with hwloc
+    - default: *check*
   * `--enable-sensors`:
     enable libsensors(3) support for reading temperature data
     - dependencies: *libsensors-dev*(build-time), at runtime *libsensors* is loaded via `dlopen(3)` if available
