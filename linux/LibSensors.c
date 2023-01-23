@@ -244,9 +244,9 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    }
 
    /* Only temperature for core 0, maybe Ryzen - copy to all other cores */
-   if (coreTempCount == 1 && !isnan(data[1])) {
-      for (unsigned int i = 2; i <= existingCPUs; i++)
-         data[i] = data[1];
+   if (coreTempCount == 1 && !isnan(data[0])) {
+      for (unsigned int i = 1; i <= existingCPUs; i++)
+         data[i] = data[0];
 
       /* No further adjustments */
       goto out;
