@@ -243,10 +243,27 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       /* Check for further adjustments */
    }
 
-   /* Only temperature for core 0, maybe Ryzen - copy to all other cores */
-   if (coreTempCount == 1 && !isnan(data[0])) {
-      for (unsigned int i = 1; i <= existingCPUs; i++)
-         data[i] = data[0];
+
+   /* Check AMD Zen CPUs packages, and mirror temps across packages */
+   if (coreTempCount != existingCPUs) {
+      int coresInDie = existingCPUs / coreTempCount;
+      double temps[coreTempCount];
+      unsigned int count = 0;
+      for (unsigned int i = 0; i <= existingCPUs; i++) {
+         if (!isnan(data[i])) {
+            temps[count] = data[i];
+            count++;
+            if (count == coreTempCount) {
+               break;
+            }
+         }
+      }
+
+      for (unsigned int die = 0; die < coreTempCount; die++) {
+         for (int i = 0; i <= coresInDie; i++) {
+            data[(die*coresInDie)+i] = temps[die];
+         }
+      }
 
       /* No further adjustments */
       goto out;
