@@ -262,7 +262,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       for (unsigned int die = 0; die < coreTempCount; die++) {
          for (unsigned int i = 0; i <= coresInDie; i++) {
             data[(die*coresInDie)+i] = temp[die];
-            printf("data index: %d, die: %d\n", (die*coresInDie)+i);
+            printf("data index: %d, die: %d\n", (die*coresInDie)+i, die);
          }
       }
 
