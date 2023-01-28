@@ -243,8 +243,17 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       /* Check for further adjustments */
    }
 
+   /* Half the temperatures, probably HT/SMT - copy to second half */
+   const unsigned int delta = activeCPUs / 2;
+   if (coreTempCount == delta) {
+      memcpy(&data[delta + 1], &data[1], delta * sizeof(*data));
+
+      /* No further adjustments */
+      goto out;
+   }
+
    /* Check AMD Zen CPUs packages, and mirror temps across packages */
-   if (coreTempCount != existingCPUs) {
+   if (coreTempCount > 0 && coreTempCount != existingCPUs) {
       double temp[coreTempCount];
       unsigned int count = 0;
       unsigned int coresInDie = existingCPUs / coreTempCount;
@@ -260,25 +269,19 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          }
       }
 
-      // Set Temperature
-      data[0] = temp[0];
-      for (unsigned int die = 0; die < coreTempCount; die++) {
-         for (unsigned int i = 1; i <= coresInDie; i++) {
-            data[(die*coresInDie)+i] = temp[die];
+      /* Returns to conditional checking if no temp is found  */
+      if (!isnan(temp[0])) {
+         // Set Temperature
+         data[0] = temp[0];
+         for (unsigned int die = 0; die < coreTempCount; die++) {
+            for (unsigned int i = 1; i <= coresInDie; i++) {
+               data[(die * coresInDie) + i] = temp[die];
+            }
          }
+
+         /* No further adjustments */
+         goto out;
       }
-
-      /* No further adjustments */
-      goto out;
-   }
-
-   /* Half the temperatures, probably HT/SMT - copy to second half */
-   const unsigned int delta = activeCPUs / 2;
-   if (coreTempCount == delta) {
-      memcpy(&data[delta + 1], &data[1], delta * sizeof(*data));
-
-      /* No further adjustments */
-      goto out;
    }
 
 out:
