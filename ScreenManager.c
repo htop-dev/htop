@@ -246,6 +246,12 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
       if (redraw || force_redraw) {
          ScreenManager_drawPanels(this, focus, force_redraw);
          force_redraw = false;
+         if (this->host->iterationsRemaining != -1) {
+            if (!--this->host->iterationsRemaining) {
+               quit = true;
+               continue;
+            }
+         }
       }
 
       int prevCh = ch;

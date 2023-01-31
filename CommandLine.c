@@ -57,7 +57,8 @@ static void printHelpFlag(const char* name) {
 #ifdef HAVE_GETMOUSE
    printf("-M --no-mouse                   Disable the mouse\n");
 #endif
-   printf("-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
+   printf("-n --max-iterations=NUMBER      Exit htop after NUMBER iterations/frame updates\n"
+          "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
           "   --readonly                   Disable all system and process changing features\n"
           "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
           "-t --tree                       Show the tree view (can be combined with -s)\n"
@@ -78,6 +79,7 @@ typedef struct CommandLineSettings_ {
    uid_t userId;
    int sortKey;
    int delay;
+   int iterationsRemaining;
    bool useColors;
 #ifdef HAVE_GETMOUSE
    bool enableMouse;
@@ -97,6 +99,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       .userId = (uid_t)-1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
+      .iterationsRemaining = -1,
       .useColors = true,
 #ifdef HAVE_GETMOUSE
       .enableMouse = true,
@@ -113,6 +116,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       {"help",       no_argument,         0, 'h'},
       {"version",    no_argument,         0, 'V'},
       {"delay",      required_argument,   0, 'd'},
+      {"max-iterations", required_argument, 0, 'n'},
       {"sort-key",   required_argument,   0, 's'},
       {"user",       optional_argument,   0, 'u'},
       {"no-color",   no_argument,         0, 'C'},
@@ -130,7 +134,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
 
    int opt, opti = 0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:H::", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hVMCs:td:n:u::Up:F:H::", long_opts, &opti))) {
       if (opt == EOF)
          break;
       switch (opt) {
@@ -173,6 +177,17 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
                   flags->delay = 100;
             } else {
                fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
+               return STATUS_ERROR_EXIT;
+            }
+            break;
+         case 'n':
+            if (sscanf(optarg, "%16d", &flags->iterationsRemaining) == 1) {
+               if (flags->iterationsRemaining <= 0) {
+                  fprintf(stderr, "Error: maximum iteration count must be positive.\n");
+                  return STATUS_ERROR_EXIT;
+               }
+            } else {
+               fprintf(stderr, "Error: invalid maximum iteration count \"%s\".\n", optarg);
                return STATUS_ERROR_EXIT;
             }
             break;
@@ -360,6 +375,7 @@ int CommandLine_run(int argc, char** argv) {
       ScreenSettings_setSortKey(settings->ss, flags.sortKey);
    }
 
+   host->iterationsRemaining = flags.iterationsRemaining;
    CRT_init(settings, flags.allowUnicode);
 
    MainPanel* panel = MainPanel_new();
