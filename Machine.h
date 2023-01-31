@@ -46,6 +46,8 @@ typedef struct Machine_ {
    uint64_t realtimeMs;       /* current time in milliseconds */
    uint64_t monotonicMs;      /* same, but from monotonic clock */
 
+   int64_t iterationsRemaining;
+
    #ifdef HAVE_LIBHWLOC
    hwloc_topology_t topology;
    bool topologyOk;
