@@ -325,7 +325,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
       double value = 0.0;
       for (uint8_t i = 0; i < this->curItems; i++)
-         value += this->values[i];
+         value += !isnan(this->values[i]) ? this->values[i] : 0;
       data->values[nValues - 1] = value;
    }
 
