@@ -368,11 +368,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    sysctl(MIB_vm_vmtotal, 2, &(vmtotal), &len, NULL, 0);
    pl->sharedMem = vmtotal.t_vmshr * pageSizeKb;
 
-   if (fpl->zfs.enabled) {
-      fpl->memWire -= fpl->zfs.size;
-      pl->cachedMem += fpl->zfs.size;
-   }
-
    pl->usedMem = fpl->memActive + fpl->memWire;
 
    struct kvm_swap swap[16];
