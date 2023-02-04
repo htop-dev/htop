@@ -258,7 +258,8 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       unsigned int count = 0;
       unsigned int coresInDie = existingCPUs / coreTempCount;
 
-      // Find package temps
+      /* Find package temps */
+      temp[0] = NAN;
       for (unsigned int i = 1; i <= existingCPUs; i++) {
          if (!isnan(data[i])) {
             temp[count] = data[i];
@@ -282,7 +283,19 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          /* No further adjustments */
          goto out;
       }
+      /* AMD Zen CPU can report coreTempCount as 1 - returns if temps are not reported as expected */
    }
+
+   /* Fallback for single temperature count reporting */
+   if (coreTempCount == 1 && !isnan(data[0])) {
+      for (unsigned int i = 1; i <= existingCPUs; i++) {
+         data[i] = data[0];
+      }
+
+      /* No further adjustments */
+      goto out;
+   }
+
 
 out:
    for (unsigned int i = 0; i <= existingCPUs; i++)
