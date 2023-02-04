@@ -232,7 +232,7 @@ void Platform_setMemoryValues(Meter* this) {
    this->total = pl->totalMem;
    this->values[MEMORY_METER_USED] = pl->usedMem;
    this->values[MEMORY_METER_BUFFERS] = pl->buffersMem;
-   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   this->values[MEMORY_METER_SHARED] = pl->sharedMem;
    this->values[MEMORY_METER_CACHE] = pl->cachedMem;
    // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 
