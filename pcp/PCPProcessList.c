@@ -571,7 +571,7 @@ static void PCPProcessList_updateAllCPUTime(PCPProcessList* this, PCPMetric metr
 {
    pmAtomValue* value = &this->cpu[cpumetric];
    if (PCPMetric_values(metric, value, 1, PM_TYPE_U64) == NULL)
-      memset(&value, 0, sizeof(pmAtomValue));
+      memset(value, 0, sizeof(pmAtomValue));
 }
 
 static void PCPProcessList_updatePerCPUTime(PCPProcessList* this, PCPMetric metric, CPUMetric cpumetric)
