@@ -84,9 +84,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
    len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
-   MIB_vm_vmtotal[0] = CTL_VM;
-   MIB_vm_vmtotal[1] = VM_TOTAL;
-
+   len = 2; sysctlnametomib("vm.vmtotal", MIB_vm_vmtotal, &len);
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
