@@ -188,6 +188,20 @@ AC_COMPILE_IFELSE([
    AC_MSG_RESULT(no))
 CFLAGS="$old_CFLAGS"
 
+AC_MSG_CHECKING(for access)
+old_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wno-error -Werror=attributes"
+AC_COMPILE_IFELSE([
+   AC_LANG_SOURCE(
+      [
+         __attribute__((access(read_only, 1, 2))) extern int foo(const char* str, unsigned len);
+      ],[]
+   )],
+   AC_DEFINE([HAVE_ATTR_ACCESS], 1, [The access attribute is supported.])
+   AC_MSG_RESULT(yes),
+   AC_MSG_RESULT(no))
+CFLAGS="$old_CFLAGS"
+
 AC_MSG_CHECKING(for NaN support)
 AC_RUN_IFELSE([
    AC_LANG_PROGRAM(
