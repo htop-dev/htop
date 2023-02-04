@@ -69,7 +69,7 @@ void Platform_getCPUBrandString(char* cpuBrandString, size_t cpuBrandStringSize)
 }
 
 // Adapted from https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
-bool Platform_isRunningTranslated() {
+bool Platform_isRunningTranslated(void) {
    int ret = 0;
    size_t size = sizeof(ret);
    errno = 0;
@@ -87,7 +87,7 @@ bool Platform_isRunningTranslated() {
    return ret;
 }
 
-double Platform_calculateNanosecondsPerMachTick() {
+double Platform_calculateNanosecondsPerMachTick(void) {
    // Check if we can determine the timebase used on this system.
    // If the API is unavailable assume we get our timebase in nanoseconds.
 #ifndef HAVE_MACH_TIMEBASE_INFO

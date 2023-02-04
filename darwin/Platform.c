@@ -172,7 +172,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    struct timeval bootTime, currTime;
    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
@@ -200,7 +200,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    }
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    /* http://opensource.apple.com/source/xnu/xnu-2782.1.97/bsd/sys/proc_internal.hh */
    return 99999;
 }

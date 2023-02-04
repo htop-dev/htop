@@ -144,7 +144,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    int boot_time = 0;
    int curr_time = time(NULL);
    struct utmpx* ent;
@@ -173,7 +173,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = plat_loadavg[LOADAVG_15MIN];
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    int vproc = 32778; // Reasonable Solaris default
 
    kstat_ctl_t* kc = kstat_open();

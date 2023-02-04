@@ -90,7 +90,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    return 0;
 }
 
@@ -100,7 +100,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = 0;
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    return 1;
 }
 
