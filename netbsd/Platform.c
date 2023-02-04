@@ -38,6 +38,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "GenericDataList.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -507,3 +508,11 @@ error:
    if (fd != -1)
       close(fd);
 }
+
+void GenericDataList_goThroughEntries(ATTR_UNUSED GenericDataList* super, ATTR_UNUSED bool pauseUpdate) { return; }
+
+void GenericDataList_removePlatformList(ATTR_UNUSED GenericDataList* gl) { return; }
+
+GenericDataList* GenericDataList_addPlatformList(ATTR_UNUSED GenericDataList* super) {return NULL; }
+
+void GenericData_delete(ATTR_UNUSED Object* cast) { return; }

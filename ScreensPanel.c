@@ -12,7 +12,9 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <string.h>
 
+#include "AvailableColumnsPanel.h"
 #include "CRT.h"
+#include "DynamicScreen.h"
 #include "FunctionBar.h"
 #include "Hashtable.h"
 #include "ProvideCurses.h"
@@ -273,6 +275,14 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreenListItem* newFocus = (ScreenListItem*) Panel_getSelected(super);
    if (newFocus && oldFocus != newFocus) {
       ColumnsPanel_fill(this->columns, newFocus->ss, this->settings->dynamicColumns);
+      if (newFocus->ss->generic) {
+         char* currentScreen = newFocus->ss->name;
+         DynamicScreen_availableColumns(currentScreen);
+      } else {
+         Panel* availableColumns = AvailableColumnsPanel_get();
+         AvailableColumnsPanel_addPlatformColumn(availableColumns);
+         AvailableColumnsPanel_addDynamicColumns(availableColumns, this->settings->dynamicColumns);
+      }
       result = HANDLED;
    }
    if (shouldRebuildArray)

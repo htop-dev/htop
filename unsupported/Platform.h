@@ -104,4 +104,12 @@ static inline bool Platform_dynamicColumnWriteField(ATTR_UNUSED const Process* p
    return false;
 }
 
+static inline Hashtable* Platform_dynamicScreens(ATTR_UNUSED Settings* settings) { return NULL; }
+
+static inline Hashtable* Platform_getDynamicScreens(void) { return NULL; }
+
+static inline void Platform_dynamicScreensDone(ATTR_UNUSED Hashtable* screens) { return; }
+
+static inline void Platform_dynamicScreenAvailableColumns(ATTR_UNUSED char* currentScreen) { }
+
 #endif

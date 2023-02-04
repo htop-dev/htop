@@ -7,6 +7,9 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stddef.h>
+
+#include "GenericDataList.h"
 #include "HeaderLayout.h"
 #include "Meter.h"
 #include "ProcessList.h"
@@ -18,6 +21,7 @@ typedef struct Header_ {
    Vector** columns;
    Settings* settings;
    ProcessList* pl;
+   GenericDataList* gl;
    HeaderLayout headerLayout;
    int pad;
    int height;
@@ -25,7 +29,7 @@ typedef struct Header_ {
 
 #define Header_forEachColumn(this_, i_) for (size_t (i_)=0, H_fEC_numColumns_ = HeaderLayout_getColumns((this_)->headerLayout); (i_) < H_fEC_numColumns_; ++(i_))
 
-Header* Header_new(ProcessList* pl, Settings* settings, HeaderLayout hLayout);
+Header* Header_new(ProcessList* pl, GenericDataList* gl, Settings* settings, HeaderLayout hLayout);
 
 void Header_delete(Header* this);
 

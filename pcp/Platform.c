@@ -45,6 +45,7 @@ in the source distribution for its full text.
 #include "linux/ZramStats.h"
 #include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
+#include "pcp/PCPDynamicScreen.h"
 #include "pcp/PCPMetric.h"
 #include "pcp/PCPProcessList.h"
 #include "zfs/ZfsArcMeter.h"
@@ -348,6 +349,9 @@ bool Platform_init(void) {
 
    pcp->columns.offset = PCP_METRIC_COUNT + pcp->meters.cursor;
    PCPDynamicColumns_init(&pcp->columns);
+
+   PCPDynamicScreens_init(&pcp->screens);
+   PCPDynamicScreens_appendDynamicColumns(&pcp->screens, &pcp->columns);
 
    sts = pmLookupName(pcp->totalMetrics, pcp->names, pcp->pmids);
    if (sts < 0) {
@@ -839,4 +843,21 @@ bool Platform_dynamicColumnWriteField(const Process* proc, RichString* str, unsi
       return true;
    }
    return false;
+}
+
+Hashtable* Platform_dynamicScreens(Settings* settings) {
+   PCPDynamicScreen_appendScreens(&pcp->screens, settings);
+   return pcp->screens.table;
+}
+
+Hashtable* Platform_getDynamicScreens(void) {
+   return pcp->screens.table;
+}
+
+void Platform_dynamicScreensDone(Hashtable* screens) {
+   PCPDynamicScreens_done(screens);
+}
+
+void Platform_dynamicScreenAvailableColumns(char* currentScreen) {
+   PCPDynamicScreens_availableColumns(pcp->screens.table, currentScreen);
 }

@@ -1,0 +1,77 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[filesys]
+caption = Filesystem
+enabled = true
+
+avail.heading = AVAIL
+avail.caption = avail
+avail.width = -12
+avail.metric = filesys.avail
+avail.scale = true
+
+blocksize.heading = BSIZE
+blocksize.caption = blocksize
+blocksize.width = -12
+blocksize.metric = filesys.blocksize
+blocksize.enabled = false
+blocksize.scale = true
+
+capacity.heading = SIZE
+capacity.caption = capacity
+capacity.width = -12
+capacity.metric = filesys.capacity
+capacity.scale = true
+
+free.heading = FREE
+free.caption = free
+free.width = -12
+free.metric = filesys.free
+free.scale = true
+
+freefiles.heading = FREEF
+freefiles.caption = freefiles
+freefiles.width = -12
+freefiles.metric = filesys.freefiles
+freefiles.scale = true
+
+full.heading = FULL
+full.caption = full
+full.width = -12
+full.metric = filesys.full
+#full.percent = true
+full.scale = true
+
+maxfiles.heading = MAXF
+maxfiles.caption = maxfiles
+maxfiles.width = -12
+maxfiles.metric = filesys.maxfiles
+maxfiles.enabled = false
+maxfiles.scale = true
+
+readonly.heading = RO
+readonly.caption = readonly
+readonly.width = -12
+readonly.metric = filesys.readonly
+readonly.enabled = false
+readonly.scale = true
+
+used.heading = USED
+used.caption = used
+used.width = -12
+used.metric = filesys.used
+used.scale = true
+
+usedfiles.heading = USEDF
+usedfiles.caption = usedfiles
+usedfiles.metric = filesys.usedfiles
+usedfiles.enabled = false
+usedfiles.scale = true
+
+mountdir.heading = Mount point
+mountdir.caption = mountdir
+mountdir.width = -12
+mountdir.metric = filesys.mountdir
+mountdir.scale = true

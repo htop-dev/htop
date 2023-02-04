@@ -1,0 +1,50 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[exitsnoop]
+caption = ExitSnoop
+enabled = true
+
+pid.heading = PID
+pid.caption = Process Identifier
+pid.width = -7
+pid.metric = bpf.exitsnoop.pid
+
+ppid.heading = PPID
+ppid.caption = Parent Process
+ppid.width = -7
+ppid.metric = bpf.exitsnoop.ppid
+
+tid.heading = TID
+tid.caption = Task Identifier
+tid.width = -7
+tid.metric = bpf.exitsnoop.tid
+tid.enabled = false
+
+signal.heading = SIG
+signal.caption = Signal number
+signal.width = -4
+signal.metric = bpf.exitsnoop.sig
+
+exit.heading = EXIT
+exit.caption = Exit Code
+exit.width = -4
+exit.metric = bpf.exitsnoop.exit_code
+
+core.heading = CORE
+core.caption = Dumped core
+core.width = -3
+core.metric = bpf.exitsnoop.coredump
+core.enabled = false
+
+age.heading = AGE
+age.caption = Process age
+age.width = -6
+age.metric = bpf.exitsnoop.age
+age.enabled = false
+
+comm.heading = Command
+comm.caption = COMM
+comm.width = -16
+comm.metric = bpf.exitsnoop.comm

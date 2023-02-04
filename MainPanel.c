@@ -70,7 +70,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       needReset = false;
    #endif
    if (needReset)
-      this->state->hideProcessSelection = false;
+      this->state->hideSelection = false;
 
    Settings* settings = this->state->settings;
    ScreenSettings* ss = settings->ss;
@@ -107,7 +107,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       }
       result = HANDLED;
    } else if (ch == 27) {
-      this->state->hideProcessSelection = true;
+      this->state->hideSelection = true;
       return HANDLED;
    } else if (ch != ERR && ch > 0 && ch < KEY_MAX && this->keys[ch]) {
       reaction |= (this->keys[ch])(this->state);
@@ -190,7 +190,7 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
       return;
 
    IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
-   if (this->state->pauseProcessUpdate) {
+   if (this->state->pauseUpdate) {
       FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
    }
 }

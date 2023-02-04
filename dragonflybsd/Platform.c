@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "GenericDataList.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "MemoryMeter.h"
@@ -260,3 +261,11 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    else
       *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
 }
+
+void GenericDataList_goThroughEntries(ATTR_UNUSED GenericDataList* super, ATTR_UNUSED bool pauseUpdate) { return; }
+
+void GenericDataList_removePlatformList(ATTR_UNUSED GenericDataList* gl) { return; }
+
+GenericDataList* GenericDataList_addPlatformList(ATTR_UNUSED GenericDataList* super) {return NULL; }
+
+void GenericData_delete(ATTR_UNUSED Object* cast) { return; }

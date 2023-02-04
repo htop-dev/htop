@@ -15,6 +15,8 @@ typedef struct PCPDynamicColumn_ {
    DynamicColumn super;
    char* metricName;
    size_t id;  /* identifier for metric array lookups */
+   bool instances;
+   bool scale;
 } PCPDynamicColumn;
 
 typedef struct PCPDynamicColumns_ {

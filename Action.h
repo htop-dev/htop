@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Process.h"
 #include "ProcessList.h"
+#include "GenericDataList.h"
 #include "Settings.h"
 #include "UsersTable.h"
 
@@ -39,15 +40,16 @@ typedef struct State_ {
    Settings* settings;
    UsersTable* ut;
    ProcessList* pl;
+   GenericDataList* gl;
    struct MainPanel_* mainPanel;
    Header* header;
-   bool pauseProcessUpdate;
-   bool hideProcessSelection;
+   bool pauseUpdate;
+   bool hideSelection;
    bool hideMeters;
 } State;
 
 static inline bool State_hideFunctionBar(const State* st) {
-   return st->settings->hideFunctionBar == 2 || (st->settings->hideFunctionBar == 1 && st->hideProcessSelection);
+   return st->settings->hideFunctionBar == 2 || (st->settings->hideFunctionBar == 1 && st->hideSelection);
 }
 
 typedef Htop_Reaction (*Htop_Action)(State* st);

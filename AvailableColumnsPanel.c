@@ -23,11 +23,15 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+Panel* activeAvailableColumns;
+
 static const char* const AvailableColumnsFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void AvailableColumnsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) object;
+   if (activeAvailableColumns == super)
+      activeAvailableColumns = NULL;
    Panel_done(super);
    free(this);
 }
@@ -81,6 +85,9 @@ const PanelClass AvailableColumnsPanel_class = {
 
 static void AvailableColumnsPanel_addDynamicColumn(ht_key_t key, void* value, void* data) {
    const DynamicColumn* column = (const DynamicColumn*) value;
+   if (column->belongToDynamicScreen)
+      return;
+
    Panel* super = (Panel*) data;
    const char* title = column->caption ? column->caption : column->heading;
    if (!title)
@@ -91,13 +98,13 @@ static void AvailableColumnsPanel_addDynamicColumn(ht_key_t key, void* value, vo
 }
 
 // Handle DynamicColumns entries in the AvailableColumnsPanel
-static void AvailableColumnsPanel_addDynamicColumns(Panel* super, Hashtable* dynamicColumns) {
+void AvailableColumnsPanel_addDynamicColumns(Panel* super, Hashtable* dynamicColumns) {
    assert(dynamicColumns);
    Hashtable_foreach(dynamicColumns, AvailableColumnsPanel_addDynamicColumn, super);
 }
 
 // Handle remaining Platform Meter entries in the AvailableColumnsPanel
-static void AvailableColumnsPanel_addPlatformColumn(Panel* super) {
+void AvailableColumnsPanel_addPlatformColumn(Panel* super) {
    for (int i = 1; i < LAST_PROCESSFIELD; i++) {
       if (i != COMM && Process_fields[i].description) {
          char description[256];
@@ -117,6 +124,11 @@ AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns, Hashtable* dyna
    AvailableColumnsPanel_addPlatformColumn(super);
    AvailableColumnsPanel_addDynamicColumns(super, dynamicColumns);
 
+   activeAvailableColumns = super;
    this->columns = columns;
    return this;
+}
+
+Panel* AvailableColumnsPanel_get(void) {
+   return activeAvailableColumns;
 }
