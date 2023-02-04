@@ -64,7 +64,6 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 
 #ifdef HAVE_LIBCAP
-#include <errno.h>
 #include <sys/capability.h>
 #endif
 
@@ -474,7 +473,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
          if (!strchr(buffer, '\n'))
             continue;
 
-         if (strncmp(buffer, "lock:\t", strlen("lock:\t")))
+         if (!String_startsWith(buffer, "lock:\t"))
             continue;
 
          FileLocks_Data data = {.fd = file};

@@ -153,7 +153,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    *rescan = false;
 }
 
-static inline bool drawTab(int* y, int* x, int l, const char* name, bool cur) {
+static inline bool drawTab(const int* y, int* x, int l, const char* name, bool cur) {
    attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
    mvaddch(*y, *x, '[');
    (*x)++;
