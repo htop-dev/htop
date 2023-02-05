@@ -209,6 +209,7 @@ freebsd_platform_headers = \
 	freebsd/FreeBSDProcess.h \
 	freebsd/Platform.h \
 	freebsd/ProcessField.h \
+	generic/fdstat_sysctl.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/openzfs_sysctl.h \
@@ -221,6 +222,7 @@ freebsd_platform_sources = \
 	freebsd/Platform.c \
 	freebsd/FreeBSDProcessList.c \
 	freebsd/FreeBSDProcess.c \
+	generic/fdstat_sysctl.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/openzfs_sysctl.c \
@@ -241,6 +243,7 @@ dragonflybsd_platform_headers = \
 	dragonflybsd/DragonFlyBSDProcess.h \
 	dragonflybsd/Platform.h \
 	dragonflybsd/ProcessField.h \
+	generic/fdstat_sysctl.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h
@@ -249,6 +252,7 @@ dragonflybsd_platform_sources = \
 	dragonflybsd/DragonFlyBSDProcessList.c \
 	dragonflybsd/DragonFlyBSDProcess.c \
 	dragonflybsd/Platform.c \
+	generic/fdstat_sysctl.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c
@@ -262,6 +266,7 @@ endif
 # -------
 
 netbsd_platform_headers = \
+	generic/fdstat_sysctl.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
@@ -271,6 +276,7 @@ netbsd_platform_headers = \
 	netbsd/NetBSDProcessList.h
 
 netbsd_platform_sources = \
+	generic/fdstat_sysctl.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
