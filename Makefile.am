@@ -323,6 +323,7 @@ darwin_platform_headers = \
 	darwin/Platform.h \
 	darwin/PlatformHelpers.h \
 	darwin/ProcessField.h \
+	generic/fdstat_sysctl.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/openzfs_sysctl.h \
@@ -336,6 +337,7 @@ darwin_platform_sources = \
 	darwin/PlatformHelpers.c \
 	darwin/DarwinProcess.c \
 	darwin/DarwinProcessList.c \
+	generic/fdstat_sysctl.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/openzfs_sysctl.c \
