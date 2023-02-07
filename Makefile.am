@@ -139,6 +139,7 @@ myhtopheaders = \
 	ProcessList.h \
 	ProcessLocksScreen.h \
 	ProvideCurses.h \
+	ProvideTerm.h \
 	RichString.h \
 	Scheduling.h \
 	ScreenManager.h \

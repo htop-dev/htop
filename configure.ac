@@ -360,6 +360,11 @@ if test "x$enable_unicode" = xyes; then
             [AC_CHECK_HEADERS([ncurses.h], [],
                [AC_MSG_ERROR([can not find required ncurses header file])])])])])
 
+   AC_CHECK_HEADERS([ncursesw/term.h], [],
+      [AC_CHECK_HEADERS([ncurses/term.h], [],
+         [AC_CHECK_HEADERS([term.h], [],
+            [AC_MSG_ERROR([can not find required term header file])])])])
+
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library with wide character support)
    AC_SEARCH_LIBS([keypad], [tinfow tinfo])
@@ -375,13 +380,18 @@ else
    AC_CHECK_HEADERS([curses.h], [],
       [AC_CHECK_HEADERS([ncurses/curses.h], [],
          [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
-            [AC_CHECK_HEADERS([ncurses.h] ,[],
+            [AC_CHECK_HEADERS([ncurses.h], [],
                [AC_MSG_ERROR([can not find required ncurses header file])])])])])
+
+   AC_CHECK_HEADERS([ncurses/term.h], [],
+      [AC_CHECK_HEADERS([term.h], [],
+         [AC_MSG_ERROR([can not find required term header file])])])
 
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library)
    AC_SEARCH_LIBS([keypad], [tinfo])
 fi
+
 if test "$enable_static" = yes; then
    AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
 fi
