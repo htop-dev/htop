@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "HugePageMeter.h"
 #include "LoadAverageMeter.h"
@@ -250,6 +251,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &SELinuxMeter_class,
    &SystemdMeter_class,
    &SystemdUserMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -535,6 +537,24 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
    }
    (void) total;
    assert(total == 3);
+   fclose(fd);
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = NAN;
+   *max = 65536;
+
+   FILE* fd = fopen(PROCDIR "/sys/fs/file-nr", "r");
+   if (!fd)
+      return;
+
+   unsigned long long v1, v2, v3;
+   int total = fscanf(fd, "%llu %llu %llu", &v1, &v2, &v3);
+   if (total == 3) {
+      *used = v1;
+      *max = v3;
+   }
+
    fclose(fd);
 }
 
