@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -125,6 +126,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -299,6 +301,30 @@ end:
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   static const int mib_kern_maxfile[] = { CTL_KERN, KERN_MAXFILES };
+   int sysctl_maxfile = 0;
+   size_t size_maxfile = sizeof(int);
+   if (sysctl(mib_kern_maxfile, ARRAYSIZE(mib_kern_maxfile), &sysctl_maxfile, &size_maxfile, NULL, 0) < 0) {
+      *max = NAN;
+   } else if (size_maxfile != sizeof(int) || sysctl_maxfile < 1) {
+      *max = NAN;
+   } else {
+      *max = sysctl_maxfile;
+   }
+
+   static const int mib_kern_nfiles[] = { CTL_KERN, KERN_NFILES };
+   int sysctl_nfiles = 0;
+   size_t size_nfiles = sizeof(int);
+   if (sysctl(mib_kern_nfiles, ARRAYSIZE(mib_kern_nfiles), &sysctl_nfiles, &size_nfiles, NULL, 0) < 0) {
+      *used = NAN;
+   } else if (size_nfiles != sizeof(int) || sysctl_nfiles < 0) {
+      *used = NAN;
+   } else {
+      *used = sysctl_nfiles;
+   }
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
