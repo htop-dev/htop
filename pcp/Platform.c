@@ -106,6 +106,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &PressureStallCPUSomeMeter_class,
    &PressureStallIOSomeMeter_class,
    &PressureStallIOFullMeter_class,
+   &PressureStallIRQFullMeter_class,
    &PressureStallMemorySomeMeter_class,
    &PressureStallMemoryFullMeter_class,
    &ZfsArcMeter_class,
@@ -171,6 +172,7 @@ static const char* Platform_metricNames[] = {
    [PCP_PSI_CPUSOME] = "kernel.all.pressure.cpu.some.avg",
    [PCP_PSI_IOSOME] = "kernel.all.pressure.io.some.avg",
    [PCP_PSI_IOFULL] = "kernel.all.pressure.io.full.avg",
+   [PCP_PSI_IRQFULL] = "kernel.all.pressure.irq.full.avg",
    [PCP_PSI_MEMSOME] = "kernel.all.pressure.memory.some.avg",
    [PCP_PSI_MEMFULL] = "kernel.all.pressure.memory.full.avg",
 
@@ -682,6 +684,8 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
       metric = PCP_PSI_CPUSOME;
    else if (String_eq(file, "io"))
       metric = some ? PCP_PSI_IOSOME : PCP_PSI_IOFULL;
+   else if (String_eq(file, "irq"))
+      metric = PCP_PSI_IRQFULL;
    else if (String_eq(file, "mem"))
       metric = some ? PCP_PSI_MEMSOME : PCP_PSI_MEMFULL;
    else

@@ -75,6 +75,7 @@ typedef enum PCPMetric_ {
    PCP_PSI_CPUSOME,             /* kernel.all.pressure.cpu.some.avg */
    PCP_PSI_IOSOME,              /* kernel.all.pressure.io.some.avg */
    PCP_PSI_IOFULL,              /* kernel.all.pressure.io.full.avg */
+   PCP_PSI_IRQFULL,             /* kernel.all.pressure.irq.full.avg */
    PCP_PSI_MEMSOME,             /* kernel.all.pressure.memory.some.avg */
    PCP_PSI_MEMFULL,             /* kernel.all.pressure.memory.full.avg */
    PCP_ZFS_ARC_ANON_SIZE,       /* zfs.arc.anon_size */
