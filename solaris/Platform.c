@@ -313,6 +313,11 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    return NULL;
 }
 
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = NAN;
+   *max = NAN;
+}
+
 bool Platform_getDiskIO(DiskIOData* data) {
    // TODO
    (void)data;
