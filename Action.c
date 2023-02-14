@@ -565,8 +565,8 @@ static Htop_Reaction actionRedraw(ATTR_UNUSED State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static Htop_Reaction actionTogglePauseProcessUpdate(State* st) {
-   st->pauseProcessUpdate = !st->pauseProcessUpdate;
+static Htop_Reaction actionTogglePauseUpdate(State* st) {
+   st->pauseUpdate = !st->pauseUpdate;
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
@@ -831,7 +831,7 @@ void Action_setBindings(Htop_Action* keys) {
 #ifdef SCHEDULER_SUPPORT
    keys['Y'] = actionSetSchedPolicy;
 #endif
-   keys['Z'] = actionTogglePauseProcessUpdate;
+   keys['Z'] = actionTogglePauseUpdate;
    keys['['] = actionLowerPriority;
    keys['\014'] = actionRedraw; // Ctrl+L
    keys['\177'] = actionCollapseIntoParent;

@@ -372,8 +372,8 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       .pl = pl,
       .mainPanel = panel,
       .header = header,
-      .pauseProcessUpdate = false,
-      .hideProcessSelection = false,
+      .pauseUpdate = false,
+      .hideSelection = false,
       .hideMeters = false,
    };
 
