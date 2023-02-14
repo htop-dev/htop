@@ -19,6 +19,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+#define FD_EFFECTIVE_UNLIMITED(x) ((x) > (1<<30))
+
 static const int FileDescriptorMeter_attributes[] = {
    FILE_DESCRIPTOR_USED,
    FILE_DESCRIPTOR_MAX
@@ -33,11 +35,42 @@ static void FileDescriptorMeter_updateValues(Meter* this) {
    /* only print bar for first value */
    this->curItems = 1;
 
-   /* Use maximum value for scaling of bar mode */
-   this->total = this->values[1];
+   /* Use maximum value for scaling of bar mode
+    *
+    * As the plain total value can be very large compared to
+    * the actually used value, this is capped in the following way:
+    *
+    * 1. If the maximum value is below (or equal to) 1<<16, use it directly
+    * 2. If the maximum value is above, use powers of 2 starting at 1<<16 and
+    *    double it until it's larger than 16 times the used file handles
+    *    (capped at the maximum number of files)
+    * 3. If the maximum is effectively unlimited (AKA > 1<<30),
+    *    Do the same as for 2, but cap at 1<<30.
+    */
+   if (this->values[1] <= 1<<16) {
+      this->total = this->values[1];
+   } else {
+      if (this->total < 16 * this->values[0]) {
+         for (this->total = 1<<16; this->total < 16 * this->values[0]; this->total *= 2) {
+            if (this->total >= 1<<30) {
+               break;
+            }
+         }
+      }
+
+      if (this->total > this->values[1]) {
+         this->total = this->values[1];
+      }
+
+      if (this->total > 1<<30) {
+         this->total = 1<<30;
+      }
+   }
 
    if (isnan(this->values[0])) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "unknown/unknown");
+   } else if (isnan(this->values[1]) || FD_EFFECTIVE_UNLIMITED(this->values[1])) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.0lf/unlimited", this->values[0]);
    } else {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.0lf/%.0lf", this->values[0], this->values[1]);
    }
@@ -58,8 +91,12 @@ static void FileDescriptorMeter_display(const Object* cast, RichString* out) {
    RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_USED], buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " max: ");
-   len = xSnprintf(buffer, sizeof(buffer), "%.0lf", this->values[1]);
-   RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], buffer, len);
+   if (isnan(this->values[1]) || FD_EFFECTIVE_UNLIMITED(this->values[1])) {
+      RichString_appendAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], "unlimited");
+   } else {
+      len = xSnprintf(buffer, sizeof(buffer), "%.0lf", this->values[1]);
+      RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], buffer, len);
+   }
 }
 
 const MeterClass FileDescriptorMeter_class = {
@@ -71,7 +108,7 @@ const MeterClass FileDescriptorMeter_class = {
    .updateValues = FileDescriptorMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 2,
-   .total = 100.0,
+   .total = 65536.0,
    .attributes = FileDescriptorMeter_attributes,
    .name = "FileDescriptors",
    .uiName = "File Descriptors",
