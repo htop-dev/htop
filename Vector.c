@@ -62,14 +62,6 @@ static bool Vector_isConsistent(const Vector* this) {
    assert(this->items <= this->arraySize);
    assert(!Vector_isDirty(this));
 
-   if (this->owner) {
-      for (int i = 0; i < this->items; i++) {
-         if (!this->array[i]) {
-            return false;
-         }
-      }
-   }
-
    return true;
 }
 
@@ -396,7 +388,7 @@ int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compa
 void Vector_splice(Vector* this, Vector* from) {
    assert(Vector_isConsistent(this));
    assert(Vector_isConsistent(from));
-   assert(!(this->owner && from->owner));
+   assert(!this->owner);
 
    int olditems = this->items;
    this->items += from->items;
