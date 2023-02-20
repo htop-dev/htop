@@ -151,7 +151,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install Dependencies
-      run: brew install automake
+      run: brew install automake pkg-config
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure

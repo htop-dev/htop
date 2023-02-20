@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "FileDescriptorMeter.h"
 #include "GenericDataList.h"
 #include "HostnameMeter.h"
 #include "HugePageMeter.h"
@@ -65,7 +66,6 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 
 #ifdef HAVE_LIBCAP
-#include <errno.h>
 #include <sys/capability.h>
 #endif
 
@@ -241,6 +241,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &PressureStallCPUSomeMeter_class,
    &PressureStallIOSomeMeter_class,
    &PressureStallIOFullMeter_class,
+   &PressureStallIRQFullMeter_class,
    &PressureStallMemorySomeMeter_class,
    &PressureStallMemoryFullMeter_class,
    &ZfsArcMeter_class,
@@ -251,6 +252,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &SELinuxMeter_class,
    &SystemdMeter_class,
    &SystemdUserMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -476,7 +478,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
          if (!strchr(buffer, '\n'))
             continue;
 
-         if (strncmp(buffer, "lock:\t", strlen("lock:\t")))
+         if (!String_startsWith(buffer, "lock:\t"))
             continue;
 
          FileLocks_Data data = {.fd = file};
@@ -536,6 +538,24 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
    }
    (void) total;
    assert(total == 3);
+   fclose(fd);
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = NAN;
+   *max = 65536;
+
+   FILE* fd = fopen(PROCDIR "/sys/fs/file-nr", "r");
+   if (!fd)
+      return;
+
+   unsigned long long v1, v2, v3;
+   int total = fscanf(fd, "%llu %llu %llu", &v1, &v2, &v3);
+   if (total == 3) {
+      *used = v1;
+      *max = v3;
+   }
+
    fclose(fd);
 }
 

@@ -79,6 +79,8 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred);
 
+void Platform_getFileDescriptors(double* used, double* max);
+
 bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(NetworkIOData* data);

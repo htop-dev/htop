@@ -38,6 +38,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "GenericDataList.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
@@ -53,6 +54,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "generic/fdstat_sysctl.h"
 #include "netbsd/NetBSDProcess.h"
 #include "netbsd/NetBSDProcessList.h"
 
@@ -180,6 +182,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &BlankMeter_class,
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -342,6 +345,10 @@ end:
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   Generic_getFileDescriptors_sysctl(used, max);
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

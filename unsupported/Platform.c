@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "GenericDataList.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
@@ -71,6 +72,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -133,6 +135,11 @@ char* Platform_getProcessEnv(pid_t pid) {
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = 1337;
+   *max = 4711;
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

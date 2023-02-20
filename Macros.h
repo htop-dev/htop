@@ -61,6 +61,27 @@
 
 #endif /* HAVE_ATTR_ALLOC_SIZE */
 
+#ifdef HAVE_ATTR_ACCESS
+
+#define ATTR_ACCESS2(mode, ref)         __attribute__((access (mode, ref)))
+#define ATTR_ACCESS3(mode, ref, size)   __attribute__((access (mode, ref, size)))
+
+#else
+
+#define ATTR_ACCESS2(mode, ref)
+#define ATTR_ACCESS3(mode, ref, size)
+
+#endif /* HAVE_ATTR_ACCESS */
+
+#define ATTR_ACCESS2_R(ref)              ATTR_ACCESS2(read_only, ref)
+#define ATTR_ACCESS3_R(ref, size)        ATTR_ACCESS3(read_only, ref, size)
+
+#define ATTR_ACCESS2_RW(ref)             ATTR_ACCESS2(read_write, ref)
+#define ATTR_ACCESS3_RW(ref, size)       ATTR_ACCESS3(read_write, ref, size)
+
+#define ATTR_ACCESS2_W(ref)              ATTR_ACCESS2(write_only, ref)
+#define ATTR_ACCESS3_W(ref, size)        ATTR_ACCESS3(write_only, ref, size)
+
 // ignore casts discarding const specifier, e.g.
 //     const char []     ->  char * / void *
 //     const char *[2]'  ->  char *const *

@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "GenericDataList.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
@@ -32,6 +33,8 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "dragonflybsd/DragonFlyBSDProcess.h"
 #include "dragonflybsd/DragonFlyBSDProcessList.h"
+#include "generic/fdstat_sysctl.h"
+
 
 const ScreenDefaults Platform_defaultScreens[] = {
    {
@@ -109,6 +112,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -232,6 +236,10 @@ char* Platform_getProcessEnv(pid_t pid) {
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   Generic_getFileDescriptors_sysctl(used, max);
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

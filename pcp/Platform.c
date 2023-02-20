@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "DiskIOMeter.h"
 #include "DynamicColumn.h"
 #include "DynamicMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -107,6 +108,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &PressureStallCPUSomeMeter_class,
    &PressureStallIOSomeMeter_class,
    &PressureStallIOFullMeter_class,
+   &PressureStallIRQFullMeter_class,
    &PressureStallMemorySomeMeter_class,
    &PressureStallMemoryFullMeter_class,
    &ZfsArcMeter_class,
@@ -115,6 +117,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
    &SysArchMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -172,6 +175,7 @@ static const char* Platform_metricNames[] = {
    [PCP_PSI_CPUSOME] = "kernel.all.pressure.cpu.some.avg",
    [PCP_PSI_IOSOME] = "kernel.all.pressure.io.some.avg",
    [PCP_PSI_IOFULL] = "kernel.all.pressure.io.full.avg",
+   [PCP_PSI_IRQFULL] = "kernel.all.pressure.irq.full.avg",
    [PCP_PSI_MEMSOME] = "kernel.all.pressure.memory.some.avg",
    [PCP_PSI_MEMFULL] = "kernel.all.pressure.memory.full.avg",
 
@@ -191,6 +195,8 @@ static const char* Platform_metricNames[] = {
    [PCP_ZRAM_CAPACITY] = "zram.capacity",
    [PCP_ZRAM_ORIGINAL] = "zram.mm_stat.data_size.original",
    [PCP_ZRAM_COMPRESSED] = "zram.mm_stat.data_size.compressed",
+   [PCP_VFS_FILES_COUNT] = "vfs.files.count",
+   [PCP_VFS_FILES_MAX] = "vfs.files.max",
 
    [PCP_PROC_PID] = "proc.psinfo.pid",
    [PCP_PROC_PPID] = "proc.psinfo.ppid",
@@ -689,6 +695,8 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
       metric = PCP_PSI_CPUSOME;
    else if (String_eq(file, "io"))
       metric = some ? PCP_PSI_IOSOME : PCP_PSI_IOFULL;
+   else if (String_eq(file, "irq"))
+      metric = PCP_PSI_IRQFULL;
    else if (String_eq(file, "mem"))
       metric = some ? PCP_PSI_MEMSOME : PCP_PSI_MEMFULL;
    else
@@ -728,6 +736,17 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    if (PCPMetric_values(PCP_NET_SENDP, &value, 1, PM_TYPE_U64) != NULL)
       data->packetsTransmitted = value.ull;
    return true;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = NAN;
+   *max = 65536;
+
+   pmAtomValue value;
+   if (PCPMetric_values(PCP_VFS_FILES_COUNT, &value, 1, PM_TYPE_32) != NULL)
+      *used = value.l;
+   if (PCPMetric_values(PCP_VFS_FILES_MAX, &value, 1, PM_TYPE_32) != NULL)
+      *max = value.l;
 }
 
 void Platform_getBattery(double* level, ACPresence* isOnAC) {

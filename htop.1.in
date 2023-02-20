@@ -449,6 +449,11 @@ resident memory size, see M_RESIDENT above).
 .B USER
 The username of the process owner, or the user ID if the name can't be
 determined.
+
+On Linux the username is highlighted if the process has elevated privileges,
+i.e. if it has been started from binaries with file capabilities set or
+retained Linux capabilities, via the ambient set, after switching from the
+root user.
 .TP
 .B TIME (TIME+)
 The time, measured in clock ticks that the process has spent in user and system
