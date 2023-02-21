@@ -192,12 +192,12 @@ void Vector_insertionSort(Vector* this) {
    assert(Vector_isConsistent(this));
 }
 
-static void Vector_checkArraySize(Vector* this) {
-   assert(Vector_isConsistent(this));
-   if (this->items >= this->arraySize) {
-      //int i;
-      //i = this->arraySize;
-      this->arraySize = this->items + this->growthRate;
+static void Vector_resizeIfNecessary(Vector* this, int newSize) {
+   assert(newSize >= 0);
+   if (newSize > this->arraySize) {
+      assert(Vector_isConsistent(this));
+      int oldSize = this->arraySize;
+      this->arraySize = newSize + this->growthRate;
       this->array = (Object**) xRealloc(this->array, sizeof(Object*) * this->arraySize);
       //for (; i < this->arraySize; i++)
       //   this->array[i] = NULL;
@@ -215,7 +215,7 @@ void Vector_insert(Vector* this, int idx, void* data_) {
       idx = this->items;
    }
 
-   Vector_checkArraySize(this);
+   Vector_resizeIfNecessary(this, this->items + 1);
    //assert(this->array[this->items] == NULL);
    if (idx < this->items) {
       memmove(&this->array[idx + 1], &this->array[idx], (this->items - idx) * sizeof(this->array[0]));
@@ -331,14 +331,15 @@ void Vector_set(Vector* this, int idx, void* data_) {
    assert(Object_isA(data, this->type));
    assert(Vector_isConsistent(this));
 
-   Vector_checkArraySize(this);
+   Vector_resizeIfNecessary(this, idx + 1);
    if (idx >= this->items) {
       this->items = idx + 1;
    } else {
       if (this->owner) {
          Object* removed = this->array[idx];
-         assert (removed != NULL);
-         Object_delete(removed);
+         if (removed != NULL) {
+            Object_delete(removed);
+         }
       }
    }
    this->array[idx] = data;
@@ -391,8 +392,8 @@ void Vector_splice(Vector* this, Vector* from) {
    assert(!this->owner);
 
    int olditems = this->items;
+   Vector_resizeIfNecessary(this, this->items + from->items);
    this->items += from->items;
-   Vector_checkArraySize(this);
    for (int j = 0; j < from->items; j++) {
       this->array[olditems + j] = from->array[j];
    }
