@@ -95,13 +95,13 @@ void Vector_prune(Vector* this) {
       for (int i = 0; i < this->items; i++) {
          if (this->array[i]) {
             Object_delete(this->array[i]);
-            this->array[i] = NULL;
          }
       }
    }
    this->items = 0;
    this->dirty_index = -1;
    this->dirty_count = 0;
+   memset(this->array, '\0', this->arraySize * sizeof(Object *));
 }
 
 //static int comparisons = 0;
@@ -198,9 +198,7 @@ static void Vector_resizeIfNecessary(Vector* this, int newSize) {
       assert(Vector_isConsistent(this));
       int oldSize = this->arraySize;
       this->arraySize = newSize + this->growthRate;
-      this->array = (Object**) xRealloc(this->array, sizeof(Object*) * this->arraySize);
-      //for (; i < this->arraySize; i++)
-      //   this->array[i] = NULL;
+      this->array = (Object **)xReallocArrayZero(this->array, oldSize, this->arraySize, sizeof(Object*));
    }
    assert(Vector_isConsistent(this));
 }
@@ -234,7 +232,7 @@ Object* Vector_take(Vector* this, int idx) {
    if (idx < this->items) {
       memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx) * sizeof(this->array[0]));
    }
-   //this->array[this->items] = NULL;
+   this->array[this->items] = NULL;
    assert(Vector_isConsistent(this));
    return removed;
 }
@@ -282,16 +280,19 @@ void Vector_compact(Vector* this) {
 
    int idx = this->dirty_index;
 
-   /* one deletion: use memmove, which should be faster */
+   // one deletion: use memmove, which should be faster
    if (this->dirty_count == 1) {
       memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx - 1) * sizeof(this->array[0]));
+      this->array[this->items - 1] = NULL;
    } else {
-      /* multiple deletions */
+      // multiple deletions
       for (int i = idx + 1; i < size; i++) {
          if (this->array[i]) {
             this->array[idx++] = this->array[i];
          }
       }
+      // idx is now at the end of the vector and on the first index which should be set to NULL
+      memset(&this->array[idx], '\0', (size - idx) * sizeof(this->array[0]));
    }
 
    this->items -= this->dirty_count;
