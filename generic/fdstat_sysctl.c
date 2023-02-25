@@ -11,8 +11,8 @@ in the source distribution for its full text.
 #include <stddef.h>
 #include <stdint.h>
 
+#include <sys/types.h> // Shitty FreeBSD upstream headers
 #include <sys/sysctl.h>
-#include <sys/types.h>
 
 #include "config.h"
 
