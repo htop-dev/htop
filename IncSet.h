@@ -15,7 +15,7 @@ in the source distribution for its full text.
 #include "Vector.h"
 
 
-#define INCMODE_MAX 254
+#define INCMODE_MAX 255
 
 typedef enum {
    INC_SEARCH = 0,
