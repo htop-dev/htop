@@ -213,11 +213,11 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[0] + v[1] + v[2] + v[3];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    } else {
-      v[2] = cpuData->systemAllPercent;
+      v[CPU_METER_NORMAL] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[0] + v[1] + v[2];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL];
    }
 
    percent = CLAMP(percent, 0.0, 100.0);
