@@ -254,14 +254,12 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_IOWAIT]  = 0.0;
       v[CPU_METER_FREQUENCY] = NAN;
       this->curItems = 8;
-      totalPercent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    } else {
       v[CPU_METER_KERNEL] = cpuData->sysAllPeriod / total * 100.0;
       v[CPU_METER_IRQ] = 0.0; // No steal nor guest on NetBSD
-      totalPercent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL];
       this->curItems = 4;
    }
-
+   totalPercent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    totalPercent = CLAMP(totalPercent, 0.0, 100.0);
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;

@@ -501,10 +501,9 @@ static double Platform_setOneCPUValues(Meter* this, pmAtomValue* values) {
       v[CPU_METER_GUEST]   = values[CPU_GUEST_PERIOD].ull / total * 100.0;
       v[CPU_METER_IOWAIT]  = values[CPU_IOWAIT_PERIOD].ull / total * 100.0;
       this->curItems = 8;
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ] + v[CPU_METER_SOFTIRQ];
       if (this->pl->settings->accountGuestInCPUMeter) {
-         percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ] + v[CPU_METER_SOFTIRQ] + v[CPU_METER_STEAL] + v[CPU_METER_GUEST];
-      } else {
-         percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ] + v[CPU_METER_SOFTIRQ];
+         percent += v[CPU_METER_STEAL] + v[CPU_METER_GUEST];
       }
    } else {
       v[CPU_METER_KERNEL] = values[CPU_SYSTEM_ALL_PERIOD].ull / total * 100.0;
