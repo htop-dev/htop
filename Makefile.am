@@ -10,6 +10,9 @@ dist_man_MANS = htop.1
 EXTRA_DIST = \
 	$(dist_man_MANS) \
 	autogen.sh \
+	signals/ParseSignals.sed \
+	signals/PrintSignals.sed \
+	signals/SignalList.in.c \
 	htop.desktop \
 	htop.png \
 	htop.svg \
@@ -437,6 +440,24 @@ if HTOP_UNSUPPORTED
 myhtopplatsources = $(unsupported_platform_sources)
 myhtopplatheaders = $(unsupported_platform_headers)
 endif
+
+# Sorting the signal list at build time
+# -------------------------------------
+
+SUFFIXES = .i
+# Preprocessing a list of signals to get their numbers from the headers.
+.c.i:
+	$(AM_V_GEN)$(CPP) $(AM_CPPFLAGS) $(CPPFLAGS) -o $@ $<
+
+MOSTLYCLEANFILES = signals/SignalList.in.i signals/SignalList.in.sorted
+# Sorting the list of signals by the signal number.
+signals/SignalList.in.sorted: signals/SignalList.in.i $(srcdir)/signals/ParseSignals.sed $(srcdir)/signals/PrintSignals.sed
+	$(AM_V_GEN)$(SED) -f $(srcdir)/signals/ParseSignals.sed signals/SignalList.in.i | LC_COLLATE=C $(SORT) -t'	' -k1n,1 -k2 | $(SED) -f $(srcdir)/signals/PrintSignals.sed > $@
+
+# Building the sorted signal list.
+# This should only add a dependency without inadvertently overriding any
+# Automake-generated rules, because SignalList.o is built using a suffix rule.
+signals/SignalList.$(OBJEXT): signals/SignalList.in.sorted
 
 # ----
 

@@ -69,8 +69,19 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_PROG_CC
 AM_PROG_CC_C_O
+AC_PROG_CPP
 m4_version_prereq([2.70], [], [AC_PROG_CC_C99])
 AS_IF([test "x$ac_cv_prog_cc_c99" = xno], [AC_MSG_ERROR([htop is written in C99. A newer compiler is required.])])
+
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Checks for common tools.
+# ----------------------------------------------------------------------
+
+AC_PROG_SED
+AC_PATH_PROG([SORT], [sort], [sort])
 
 # ----------------------------------------------------------------------
 
