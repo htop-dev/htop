@@ -19,7 +19,6 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
-#include "SignalsPanel.h"
 #include "CommandLine.h"
 #include "generic/gettime.h"
 #include "generic/hostname.h"
@@ -29,11 +28,6 @@ in the source distribution for its full text.
 extern const ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
-
-/* see /usr/include/sys/signal.h */
-extern const SignalItem Platform_signals[];
-
-extern const unsigned int Platform_numberOfSignals;
 
 extern const MeterClass* const Platform_meterTypes[];
 

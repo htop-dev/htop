@@ -81,6 +81,7 @@ myhtopsources = \
 	ScreenManager.c \
 	ScreensPanel.c \
 	Settings.c \
+	signals/SignalList.c \
 	SignalsPanel.c \
 	SwapMeter.c \
 	SysArchMeter.c \
@@ -145,6 +146,7 @@ myhtopheaders = \
 	ScreenManager.h \
 	ScreensPanel.h \
 	Settings.h \
+	signals/SignalList.h \
 	SignalsPanel.h \
 	SwapMeter.h \
 	SysArchMeter.h \

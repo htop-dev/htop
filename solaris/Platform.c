@@ -50,53 +50,6 @@ const ScreenDefaults Platform_defaultScreens[] = {
 
 const unsigned int Platform_numberOfDefaultScreens = ARRAYSIZE(Platform_defaultScreens);
 
-const SignalItem Platform_signals[] = {
-   { .name = " 0 Cancel",      .number =  0 },
-   { .name = " 1 SIGHUP",      .number =  1 },
-   { .name = " 2 SIGINT",      .number =  2 },
-   { .name = " 3 SIGQUIT",     .number =  3 },
-   { .name = " 4 SIGILL",      .number =  4 },
-   { .name = " 5 SIGTRAP",     .number =  5 },
-   { .name = " 6 SIGABRT/IOT", .number =  6 },
-   { .name = " 7 SIGEMT",      .number =  7 },
-   { .name = " 8 SIGFPE",      .number =  8 },
-   { .name = " 9 SIGKILL",     .number =  9 },
-   { .name = "10 SIGBUS",      .number = 10 },
-   { .name = "11 SIGSEGV",     .number = 11 },
-   { .name = "12 SIGSYS",      .number = 12 },
-   { .name = "13 SIGPIPE",     .number = 13 },
-   { .name = "14 SIGALRM",     .number = 14 },
-   { .name = "15 SIGTERM",     .number = 15 },
-   { .name = "16 SIGUSR1",     .number = 16 },
-   { .name = "17 SIGUSR2",     .number = 17 },
-   { .name = "18 SIGCHLD/CLD", .number = 18 },
-   { .name = "19 SIGPWR",      .number = 19 },
-   { .name = "20 SIGWINCH",    .number = 20 },
-   { .name = "21 SIGURG",      .number = 21 },
-   { .name = "22 SIGPOLL/IO",  .number = 22 },
-   { .name = "23 SIGSTOP",     .number = 23 },
-   { .name = "24 SIGTSTP",     .number = 24 },
-   { .name = "25 SIGCONT",     .number = 25 },
-   { .name = "26 SIGTTIN",     .number = 26 },
-   { .name = "27 SIGTTOU",     .number = 27 },
-   { .name = "28 SIGVTALRM",   .number = 28 },
-   { .name = "29 SIGPROF",     .number = 29 },
-   { .name = "30 SIGXCPU",     .number = 30 },
-   { .name = "31 SIGXFSZ",     .number = 31 },
-   { .name = "32 SIGWAITING",  .number = 32 },
-   { .name = "33 SIGLWP",      .number = 33 },
-   { .name = "34 SIGFREEZE",   .number = 34 },
-   { .name = "35 SIGTHAW",     .number = 35 },
-   { .name = "36 SIGCANCEL",   .number = 36 },
-   { .name = "37 SIGLOST",     .number = 37 },
-   { .name = "38 SIGXRES",     .number = 38 },
-   { .name = "39 SIGJVM1",     .number = 39 },
-   { .name = "40 SIGJVM2",     .number = 40 },
-   { .name = "41 SIGINFO",     .number = 41 },
-};
-
-const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
-
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
