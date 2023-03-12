@@ -34,7 +34,9 @@ static void MemoryMeter_updateValues(Meter* this) {
    Platform_setMemoryValues(this);
 
    /* Do not print available memory in bar mode */
-   this->curItems = 4;
+   static_assert(MEMORY_METER_AVAILABLE + 1 == MEMORY_METER_ITEMCOUNT,
+      "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
+   this->curItems = MEMORY_METER_AVAILABLE;
 
    written = Meter_humanUnit(buffer, this->values[MEMORY_METER_USED], size);
    METER_BUFFER_CHECK(buffer, size, written);
@@ -87,7 +89,7 @@ const MeterClass MemoryMeter_class = {
    },
    .updateValues = MemoryMeter_updateValues,
    .defaultMode = BAR_METERMODE,
-   .maxItems = 5,
+   .maxItems = MEMORY_METER_ITEMCOUNT,
    .total = 100.0,
    .attributes = MemoryMeter_attributes,
    .name = "Memory",

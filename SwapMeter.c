@@ -28,10 +28,10 @@ static void SwapMeter_updateValues(Meter* this) {
    size_t size = sizeof(this->txtBuffer);
    int written;
 
-   this->values[1] = NAN;   /* 'cached' not present on all platforms */
+   this->values[SWAP_METER_CACHE] = NAN;   /* 'cached' not present on all platforms */
    Platform_setSwapValues(this);
 
-   written = Meter_humanUnit(buffer, this->values[0], size);
+   written = Meter_humanUnit(buffer, this->values[SWAP_METER_USED], size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');
@@ -64,7 +64,7 @@ const MeterClass SwapMeter_class = {
    },
    .updateValues = SwapMeter_updateValues,
    .defaultMode = BAR_METERMODE,
-   .maxItems = 2,
+   .maxItems = SWAP_METER_ITEMCOUNT,
    .total = 100.0,
    .attributes = SwapMeter_attributes,
    .name = "Swap",
