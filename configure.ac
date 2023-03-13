@@ -507,6 +507,63 @@ if test -n "$with_os_release" && test ! -f "$with_os_release"; then
 fi
 AC_DEFINE_UNQUOTED([OSRELEASEFILE], ["$with_os_release"], [File with OS release details.])
 
+
+default_trace_program=no
+case $my_htop_platform in #(
+   linux)
+      default_trace_program=strace
+      ;;
+esac
+AC_ARG_WITH([trace_program],
+            [AS_HELP_STRING([--with-trace-program=no|strace],
+                            [program used for syscall tracing])],
+            [],
+            [with_trace_program=$default_trace_program])
+if test "$with_trace_program" != no; then
+   case $with_trace_program in #(
+      */*)
+         AC_DEFINE([TRACE_PROGRAM_NAME_WITH_SLASH], [1], [trace program name contains slashes])
+         ;;
+   esac
+   trace_program_shortname=$(printf '%s' "$with_trace_program"| sed 's|.*/||')
+
+   case $trace_program_shortname in #(
+      *strace)
+         : "${TRACE_PROGRAM_ARGS=-T -tt -s 512}"
+         ;; #(
+      *)
+         if test "x${TRACE_PROGRAM_ARGS:-}" = x; then
+            AC_MSG_WARN([--with-trace-program '$with_trace_program' is unrecognized; you may need to specify TRACE_PROGRAM_ARGS manually])
+         fi
+         ;;
+   esac
+
+   trace_program_args_c=''
+   for arg in $TRACE_PROGRAM_ARGS; do
+      arg=$(printf '%s' "$arg"|sed 's/\\/\\\\/g; s/"/\\"/g')
+      if test "x$trace_program_args_c" = x; then
+         trace_program_args_c=\"$arg\"
+      else
+         trace_program_args_c="${trace_program_args_c}, \"$arg\""
+      fi
+   done
+
+   AC_MSG_CHECKING([if $with_trace_program works])
+   if test "$cross_compiling" = no; then
+      if $with_trace_program -o /dev/null sh -c : ; then
+         AC_MSG_RESULT([yes])
+      else
+         AC_MSG_RESULT([no])
+         AC_MSG_WARN([trace feature may not work or might require additional privileges])
+      fi
+   else
+      AC_MSG_RESULT([skipped])
+   fi
+   AC_DEFINE_UNQUOTED([TRACE_PROGRAM_NAME], ["$with_trace_program"], [trace program executable])
+   AC_DEFINE_UNQUOTED([TRACE_PROGRAM_SHORTNAME], ["$trace_program_shortname"], [trace program shortname])
+   AC_DEFINE_UNQUOTED([TRACE_PROGRAM_ARGS], [$trace_program_args_c], [trace program arguments except '-p' option])
+fi
+
 # ----------------------------------------------------------------------
 
 

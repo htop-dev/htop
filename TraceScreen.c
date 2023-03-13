@@ -28,6 +28,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+#ifdef TRACE_PROGRAM_NAME
+
 static const char* const TraceScreenFunctions[] = {"Search ", "Filter ", "AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
 
 static const char* const TraceScreenKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
@@ -92,10 +94,14 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       xSnprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
       // Use of NULL in variadic functions must have a pointer cast.
       // The NULL constant is not required by standard to have a pointer type.
-      execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, (char *)NULL);
+      execlp(TRACE_PROGRAM_NAME, TRACE_PROGRAM_NAME, TRACE_PROGRAM_ARGS, "-p", buffer, (char *)NULL);
 
       // Should never reach here, unless execlp fails ...
-      const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
+      const char* message = "Could not execute '" TRACE_PROGRAM_NAME "'."
+#ifndef TRACE_PROGRAM_NAME_WITH_SLASH
+      " Please make sure it is available in your $PATH."
+#endif
+      ;
       (void)! write(STDERR_FILENO, message, strlen(message));
 
       exit(127);
@@ -191,3 +197,5 @@ const InfoScreenClass TraceScreen_class = {
    .onErr = TraceScreen_updateTrace,
    .onKey = TraceScreen_onKey,
 };
+
+#endif /* TRACE_PROGRAM_NAME */
