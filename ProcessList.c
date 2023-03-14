@@ -413,7 +413,8 @@ void ProcessList_rebuildPanel(ProcessList* this) {
       if (this->following != -1 && p->pid == this->following) {
          foundFollowed = true;
          Panel_setSelected(this->panel, idx);
-         this->panel->scrollV = currScrollV;
+         /* Keep scroll position relative to followed process */
+         this->panel->scrollV = idx - (currPos-currScrollV);
       }
       idx++;
    }
