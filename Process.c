@@ -434,7 +434,7 @@ void Process_makeCommandStr(Process* this) {
 
    mc->lastUpdate = settingsStamp;
 
-   /* The field separtor "│" has been chosen such that it will not match any
+   /* The field separator "│" has been chosen such that it will not match any
     * valid string used for searching or filtering */
    const char* SEPARATOR = CRT_treeStr[TREE_STR_VERT];
    const int SEPARATOR_LEN = strlen(SEPARATOR);
