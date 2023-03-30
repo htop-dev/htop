@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
@@ -382,11 +383,15 @@ static inline ProcessState LinuxProcessList_getProcessState(char state) {
    }
 }
 
-static bool LinuxProcessList_readStatFile(Process* process, openat_arg_t procFd, char* command, size_t commLen) {
-   LinuxProcess* lp = (LinuxProcess*) process;
+static bool LinuxProcessList_readStatFile(LinuxProcess* lp, openat_arg_t procFd, bool scanMainThread, char* command, size_t commLen) {
+   Process* process = &lp->super;
 
    char buf[MAX_READ + 1];
-   ssize_t r = xReadfileat(procFd, "stat", buf, sizeof(buf));
+   char path[22] = "stat";
+   if (scanMainThread) {
+      xSnprintf(path, sizeof(path), "task/%"PRIi32"/stat", (int32_t)process->pid);
+   }
+   ssize_t r = xReadfileat(procFd, path, buf, sizeof(buf));
    if (r < 0)
       return false;
 
@@ -607,9 +612,14 @@ static bool LinuxProcessList_updateUser(ProcessList* processList, Process* proce
    return true;
 }
 
-static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t procFd, unsigned long long realtimeMs) {
+static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t procFd, bool scanMainThread, unsigned long long realtimeMs) {
+   Process *proc = &process->super;
+   char path[20] = "io";
    char buffer[1024];
-   ssize_t r = xReadfileat(procFd, "io", buffer, sizeof(buffer));
+   if (scanMainThread) {
+      xSnprintf(path, sizeof(path), "task/%"PRIi32"/io", (int32_t)proc->pid);
+   }
+   ssize_t r = xReadfileat(procFd, path, buffer, sizeof(buffer));
    if (r < 0) {
       process->io_rate_read_bps = NAN;
       process->io_rate_write_bps = NAN;
@@ -1531,8 +1541,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          continue;
       }
 
+      bool scanMainThread = !hideUserlandThreads && !Process_isKernelThread(proc) && !parent;
       if (ss->flags & PROCESS_FLAG_IO)
-         LinuxProcessList_readIoFile(lp, procFd, pl->realtimeMs);
+         LinuxProcessList_readIoFile(lp, procFd, scanMainThread, pl->realtimeMs);
 
       if (!LinuxProcessList_readStatmFile(lp, procFd))
          goto errorReadingProcess;
@@ -1580,7 +1591,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       char statCommand[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       unsigned long int tty_nr = proc->tty_nr;
-      if (!LinuxProcessList_readStatFile(proc, procFd, statCommand, sizeof(statCommand)))
+      if (!LinuxProcessList_readStatFile(lp, procFd, scanMainThread, statCommand, sizeof(statCommand)))
          goto errorReadingProcess;
 
       if (lp->flags & PF_KTHREAD) {
