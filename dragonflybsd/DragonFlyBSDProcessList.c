@@ -527,7 +527,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       else
          proc->priority = -kproc->kp_lwp.kl_tdprio;
 
-      switch(kproc->kp_lwp.kl_rtprio.type) {
+      switch (kproc->kp_lwp.kl_rtprio.type) {
          case RTP_PRIO_REALTIME:
             proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX + kproc->kp_lwp.kl_rtprio.prio;
             break;

@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Process.h"
 #include "RichString.h"
+#include "Scheduling.h"
 #include "XUtils.h"
 
 
@@ -47,6 +48,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process", .flags = 0, },
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process", .flags = 0, },
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
+#ifdef SCHEDULER_SUPPORT
+   [SCHEDULERPOLICY] = { .name = "SCHEDULERPOLICY", .title = "SCHED ", .description = "Current scheduling policy of the process", .flags = PROCESS_FLAG_SCHEDPOL, },
+#endif
    [JID] = { .name = "JID", .title = "JID", .description = "Jail prison ID", .flags = 0, .pidColumn = true, },
    [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
    [EMULATION] = { .name = "EMULATION", .title = "EMULATION        ", .description = "System call emulation environment (ABI)", .flags = 0, },

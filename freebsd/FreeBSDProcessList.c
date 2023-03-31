@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/user.h>
+#include <sys/vmmeter.h>
 
 #include "CRT.h"
 #include "Compat.h"
@@ -33,6 +34,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "Process.h"
 #include "ProcessList.h"
+#include "Scheduling.h"
 #include "Settings.h"
 #include "XUtils.h"
 #include "generic/openzfs_sysctl.h"
@@ -49,6 +51,7 @@ static int MIB_vm_stats_vm_v_active_count[4];
 static int MIB_vm_stats_vm_v_cache_count[4];
 static int MIB_vm_stats_vm_v_inactive_count[4];
 static int MIB_vm_stats_vm_v_free_count[4];
+static int MIB_vm_vmtotal[2];
 
 static int MIB_vfs_bufspace[2];
 
@@ -82,6 +85,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, H
    len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
+   len = 2; sysctlnametomib("vm.vmtotal", MIB_vm_vmtotal, &len);
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
@@ -330,6 +334,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    u_int memActive, memWire, cachedMem;
    long buffersMem;
    size_t len;
+   struct vmtotal vmtotal;
 
    //disabled for now, as it is always smaller than phycal amount of memory...
    //...to avoid "where is my memory?" questions
@@ -360,10 +365,9 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    cachedMem *= pageSizeKb;
    pl->cachedMem = cachedMem;
 
-   if (fpl->zfs.enabled) {
-      fpl->memWire -= fpl->zfs.size;
-      pl->cachedMem += fpl->zfs.size;
-   }
+   len = sizeof(vmtotal);
+   sysctl(MIB_vm_vmtotal, 2, &(vmtotal), &len, NULL, 0);
+   pl->sharedMem = vmtotal.t_vmshr * pageSizeKb;
 
    pl->usedMem = fpl->memActive + fpl->memWire;
 
@@ -602,6 +606,11 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
       if (Process_isKernelThread(proc))
          super->kernelThreads++;
+
+#ifdef SCHEDULER_SUPPORT
+      if (settings->ss->flags & PROCESS_FLAG_SCHEDPOL)
+         Scheduling_readProcessPolicy(proc);
+#endif
 
       proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 

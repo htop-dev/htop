@@ -55,6 +55,10 @@ static void ScreensPanel_delete(Object* object) {
       item->ss = NULL;
    }
 
+   /* during renaming the ListItem's value points to our static buffer */
+   if (this->renamingItem)
+      this->renamingItem->value = this->saved;
+
    Panel_done(super);
    free(this);
 }
@@ -70,7 +74,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
          Panel_setCursorToSelection(super);
       }
    } else {
-      switch(ch) {
+      switch (ch) {
          case 127:
          case KEY_BACKSPACE:
          {
@@ -89,9 +93,10 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
             ListItem* item = (ListItem*) Panel_getSelected(super);
             if (!item)
                break;
+            assert(item == this->renamingItem);
             free(this->saved);
             item->value = xStrdup(this->buffer);
-            this->renaming = false;
+            this->renamingItem = NULL;
             super->cursorOn = false;
             Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
             ScreensPanel_update(super);
@@ -102,8 +107,9 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
             ListItem* item = (ListItem*) Panel_getSelected(super);
             if (!item)
                break;
+            assert(item == this->renamingItem);
             item->value = this->saved;
-            this->renaming = false;
+            this->renamingItem = NULL;
             super->cursorOn = false;
             Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
             break;
@@ -119,7 +125,7 @@ static void startRenaming(Panel* super) {
    ListItem* item = (ListItem*) Panel_getSelected(super);
    if (item == NULL)
       return;
-   this->renaming = true;
+   this->renamingItem = item;
    super->cursorOn = true;
    char* name = item->value;
    this->saved = name;
@@ -157,7 +163,7 @@ static void addNewScreen(Panel* super) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
    const char* name = "New";
-   ScreenSettings* ss = Settings_newScreen(this->settings, &(const ScreenDefaults){ .name = name, .columns = "PID Command", .sortKey = "PID" });
+   ScreenSettings* ss = Settings_newScreen(this->settings, &(const ScreenDefaults) { .name = name, .columns = "PID Command", .sortKey = "PID" });
    ScreenListItem* item = ScreenListItem_new(name, ss);
    int idx = Panel_getSelectedIndex(super);
    Panel_insert(super, idx + 1, (Object*) item);
@@ -171,7 +177,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreenListItem* oldFocus = (ScreenListItem*) Panel_getSelected(super);
    bool shouldRebuildArray = false;
    HandlerResult result = IGNORED;
-   switch(ch) {
+   switch (ch) {
       case '\n':
       case '\r':
       case KEY_ENTER:
@@ -279,7 +285,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
 static HandlerResult ScreensPanel_eventHandler(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
-   if (this->renaming) {
+   if (this->renamingItem) {
       return ScreensPanel_eventHandlerRenaming(super, ch);
    } else {
       return ScreensPanel_eventHandlerNormal(super, ch);
@@ -304,7 +310,7 @@ ScreensPanel* ScreensPanel_new(Settings* settings) {
    this->settings = settings;
    this->columns = ColumnsPanel_new(settings->screens[0], columns, &(settings->changed));
    this->moving = false;
-   this->renaming = false;
+   this->renamingItem = NULL;
    super->cursorOn = false;
    this->cursor = 0;
    Panel_setHeader(super, "Screens");

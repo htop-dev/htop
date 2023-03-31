@@ -104,9 +104,9 @@ inline bool String_contains_i(const char* s1, const char* s2, bool multi) {
             String_freeArray(needles);
             return true;
          }
-       }
-       String_freeArray(needles);
-       return false;
+      }
+      String_freeArray(needles);
+      return false;
    } else {
       return strcasestr(s1, s2) != NULL;
    }
@@ -265,6 +265,7 @@ char* xStrndup(const char* str, size_t len) {
    return data;
 }
 
+ATTR_ACCESS3_W(2, 3)
 static ssize_t readfd_internal(int fd, void* buffer, size_t count) {
    if (!count) {
       close(fd);
@@ -314,7 +315,7 @@ ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size
    return readfd_internal(fd, buffer, count);
 }
 
-ssize_t full_write(int fd, const void *buf, size_t count) {
+ssize_t full_write(int fd, const void* buf, size_t count) {
    ssize_t written = 0;
 
    while (count > 0) {

@@ -144,7 +144,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    int boot_time = 0;
    int curr_time = time(NULL);
    struct utmpx* ent;
@@ -173,7 +173,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = plat_loadavg[LOADAVG_15MIN];
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    int vproc = 32778; // Reasonable Solaris default
 
    kstat_ctl_t* kc = kstat_open();
@@ -219,11 +219,11 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[0] + v[1] + v[2] + v[3];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    } else {
-      v[2] = cpuData->systemAllPercent;
+      v[CPU_METER_KERNEL] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[0] + v[1] + v[2];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL];
    }
 
    percent = isnan(percent) ? 0.0 : CLAMP(percent, 0.0, 100.0);
@@ -237,18 +237,18 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 void Platform_setMemoryValues(Meter* this) {
    const ProcessList* pl = this->pl;
    this->total = pl->totalMem;
-   this->values[0] = pl->usedMem;
-   this->values[1] = pl->buffersMem;
-   // this->values[2] = "shared memory, like tmpfs and shm"
-   this->values[3] = pl->cachedMem;
-   // this->values[4] = "available memory"
+   this->values[MEMORY_METER_USED] = pl->usedMem;
+   this->values[MEMORY_METER_BUFFERS] = pl->buffersMem;
+   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   this->values[MEMORY_METER_CACHE] = pl->cachedMem;
+   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* this) {
    const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
-   this->values[1] = NAN;
+   this->values[SWAP_METER_USED] = pl->usedSwap;
+   this->values[SWAP_METER_CACHE] = NAN;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
@@ -308,15 +308,14 @@ char* Platform_getProcessEnv(pid_t pid) {
    return xRealloc(envBuilder.env, envBuilder.size + 1);
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = NAN;
+   *max = NAN;
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

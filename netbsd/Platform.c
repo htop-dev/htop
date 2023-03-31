@@ -38,6 +38,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -52,6 +53,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "generic/fdstat_sysctl.h"
 #include "netbsd/NetBSDProcess.h"
 #include "netbsd/NetBSDProcessList.h"
 
@@ -179,6 +181,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &BlankMeter_class,
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -196,7 +199,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    struct timeval bootTime, currTime;
    const int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
@@ -227,7 +230,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    // https://nxr.netbsd.org/xref/src/sys/sys/ansi.h#__pid_t
    // pid is assigned as a 32bit Integer.
    return INT32_MAX;
@@ -251,14 +254,12 @@ double Platform_setCPUValues(Meter* this, int cpu) {
       v[CPU_METER_IOWAIT]  = 0.0;
       v[CPU_METER_FREQUENCY] = NAN;
       this->curItems = 8;
-      totalPercent = v[0] + v[1] + v[2] + v[3];
    } else {
-      v[2] = cpuData->sysAllPeriod / total * 100.0;
-      v[3] = 0.0; // No steal nor guest on NetBSD
-      totalPercent = v[0] + v[1] + v[2];
+      v[CPU_METER_KERNEL] = cpuData->sysAllPeriod / total * 100.0;
+      v[CPU_METER_IRQ] = 0.0; // No steal nor guest on NetBSD
       this->curItems = 4;
    }
-
+   totalPercent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    totalPercent = CLAMP(totalPercent, 0.0, 100.0);
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
@@ -270,18 +271,18 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 void Platform_setMemoryValues(Meter* this) {
    const ProcessList* pl = this->pl;
    this->total = pl->totalMem;
-   this->values[0] = pl->usedMem;
-   this->values[1] = pl->buffersMem;
-   // this->values[2] = "shared memory, like tmpfs and shm"
-   this->values[3] = pl->cachedMem;
-   // this->values[4] = "available memory"
+   this->values[MEMORY_METER_USED] = pl->usedMem;
+   this->values[MEMORY_METER_BUFFERS] = pl->buffersMem;
+   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   this->values[MEMORY_METER_CACHE] = pl->cachedMem;
+   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* this) {
    const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
-   this->values[1] = NAN;
+   this->values[SWAP_METER_USED] = pl->usedSwap;
+   this->values[SWAP_METER_CACHE] = NAN;
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
@@ -338,20 +339,18 @@ end:
    return env;
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
 }
 
+void Platform_getFileDescriptors(double* used, double* max) {
+   Generic_getFileDescriptors_sysctl(used, max);
+}
+
 bool Platform_getDiskIO(DiskIOData* data) {
    const int mib[] = { CTL_HW, HW_IOSTATS, sizeof(struct io_sysctl) };
-   struct io_sysctl *iostats = NULL;
+   struct io_sysctl* iostats = NULL;
    size_t size = 0;
 
    for (int retry = 3; retry > 0; retry--) {

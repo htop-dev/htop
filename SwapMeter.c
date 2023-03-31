@@ -45,12 +45,12 @@ static void SwapMeter_display(const Object* cast, RichString* out) {
    RichString_writeAscii(out, CRT_colors[METER_TEXT], ":");
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
-   Meter_humanUnit(buffer, this->values[0], sizeof(buffer));
+   Meter_humanUnit(buffer, this->values[SWAP_METER_USED], sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " used:");
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
 
-   if (!isnan(this->values[1])) {
-      Meter_humanUnit(buffer, this->values[1], sizeof(buffer));
+   if (!isnan(this->values[SWAP_METER_CACHE])) {
+      Meter_humanUnit(buffer, this->values[SWAP_METER_CACHE], sizeof(buffer));
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
       RichString_appendAscii(out, CRT_colors[SWAP_CACHE], buffer);
    }

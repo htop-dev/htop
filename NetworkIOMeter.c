@@ -59,8 +59,8 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
       if (data.bytesReceived > cached_rxb_total) {
          diff = data.bytesReceived - cached_rxb_total;
-         diff /= ONE_K; /* Meter_humanUnit() expects unit in kilo */
-         diff = (1000 * diff) / passedTimeInMs; /* convert to per second */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+         diff /= ONE_K; /* convert to KiB/s */
          cached_rxb_diff = (uint32_t)diff;
       } else {
          cached_rxb_diff = 0;
@@ -69,6 +69,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
       if (data.packetsReceived > cached_rxp_total) {
          diff = data.packetsReceived - cached_rxp_total;
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
          cached_rxp_diff = (uint32_t)diff;
       } else {
          cached_rxp_diff = 0;
@@ -77,8 +78,8 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
       if (data.bytesTransmitted > cached_txb_total) {
          diff = data.bytesTransmitted - cached_txb_total;
-         diff /= ONE_K; /* Meter_humanUnit() expects unit in kilo */
-         diff = (1000 * diff) / passedTimeInMs; /* convert to per second */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+         diff /= ONE_K; /* convert to KiB/s */
          cached_txb_diff = (uint32_t)diff;
       } else {
          cached_txb_diff = 0;
@@ -87,6 +88,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
       if (data.packetsTransmitted > cached_txp_total) {
          diff = data.packetsTransmitted - cached_txp_total;
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
          cached_txp_diff = (uint32_t)diff;
       } else {
          cached_txp_diff = 0;
@@ -112,7 +114,8 @@ static void NetworkIOMeter_updateValues(Meter* this) {
    char bufferBytesReceived[12], bufferBytesTransmitted[12];
    Meter_humanUnit(bufferBytesReceived, cached_rxb_diff, sizeof(bufferBytesReceived));
    Meter_humanUnit(bufferBytesTransmitted, cached_txb_diff, sizeof(bufferBytesTransmitted));
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s", bufferBytesReceived, bufferBytesTransmitted);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s %d/%dpkts/s",
+      bufferBytesReceived, bufferBytesTransmitted, cached_rxp_diff, cached_txp_diff);
 }
 
 static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
@@ -143,7 +146,7 @@ static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* o
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 
-   len = xSnprintf(buffer, sizeof(buffer), " (%u/%u packets) ", cached_rxp_diff, cached_txp_diff);
+   len = xSnprintf(buffer, sizeof(buffer), " (%u/%u pkts/s) ", cached_rxp_diff, cached_txp_diff);
    RichString_appendnAscii(out, CRT_colors[METER_TEXT], buffer, len);
 }
 

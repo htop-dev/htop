@@ -19,6 +19,8 @@ extern const MeterClass PressureStallIOSomeMeter_class;
 
 extern const MeterClass PressureStallIOFullMeter_class;
 
+extern const MeterClass PressureStallIRQFullMeter_class;
+
 extern const MeterClass PressureStallMemorySomeMeter_class;
 
 extern const MeterClass PressureStallMemoryFullMeter_class;

@@ -75,6 +75,7 @@ typedef enum PCPMetric_ {
    PCP_PSI_CPUSOME,             /* kernel.all.pressure.cpu.some.avg */
    PCP_PSI_IOSOME,              /* kernel.all.pressure.io.some.avg */
    PCP_PSI_IOFULL,              /* kernel.all.pressure.io.full.avg */
+   PCP_PSI_IRQFULL,             /* kernel.all.pressure.irq.full.avg */
    PCP_PSI_MEMSOME,             /* kernel.all.pressure.memory.some.avg */
    PCP_PSI_MEMFULL,             /* kernel.all.pressure.memory.full.avg */
    PCP_ZFS_ARC_ANON_SIZE,       /* zfs.arc.anon_size */
@@ -92,6 +93,8 @@ typedef enum PCPMetric_ {
    PCP_ZRAM_CAPACITY,           /* zram.capacity */
    PCP_ZRAM_ORIGINAL,           /* zram.mm_stat.data_size.original */
    PCP_ZRAM_COMPRESSED,         /* zram.mm_stat.data_size.compressed */
+   PCP_VFS_FILES_COUNT,         /* vfs.files.count */
+   PCP_VFS_FILES_MAX,           /* vfs.files.max */
 
    PCP_PROC_PID,                /* proc.psinfo.pid */
    PCP_PROC_PPID,               /* proc.psinfo.ppid */

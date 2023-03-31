@@ -64,7 +64,8 @@ static void DiskIOMeter_updateValues(Meter* this) {
 
       if (data.totalBytesRead > cached_read_total) {
          diff = data.totalBytesRead - cached_read_total;
-         diff /= 1024; /* Meter_humanUnit() expects unit in kilo */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+         diff /= ONE_K; /* convert to KiB/s */
          cached_read_diff = (uint32_t)diff;
       } else {
          cached_read_diff = 0;
@@ -73,7 +74,8 @@ static void DiskIOMeter_updateValues(Meter* this) {
 
       if (data.totalBytesWritten > cached_write_total) {
          diff = data.totalBytesWritten - cached_write_total;
-         diff /= 1024; /* Meter_humanUnit() expects unit in kilo */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+         diff /= ONE_K; /* convert to KiB/s */
          cached_write_diff = (uint32_t)diff;
       } else {
          cached_write_diff = 0;
@@ -104,7 +106,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
    char bufferRead[12], bufferWrite[12];
    Meter_humanUnit(bufferRead, cached_read_diff, sizeof(bufferRead));
    Meter_humanUnit(bufferWrite, cached_write_diff, sizeof(bufferWrite));
-   snprintf(this->txtBuffer, sizeof(this->txtBuffer), "%sB %sB %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
+   snprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%siB/s w:%siB/s %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
 }
 
 static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
@@ -132,10 +134,12 @@ static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out)
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " read: ");
    Meter_humanUnit(buffer, cached_read_diff, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " write: ");
    Meter_humanUnit(buffer, cached_write_diff, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 }
 
 const MeterClass DiskIOMeter_class = {

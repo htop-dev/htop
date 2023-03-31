@@ -1,0 +1,49 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 1 * * 0'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      security-events: write
+
+    env:
+        # Enable format attributes in ncurses headers
+        # Enable fortified memory/string handling
+        CPPFLAGS: -DGCC_PRINTF -DGCC_SCANF -D_FORTIFY_SOURCE=2
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+
+    - name: Install Dependencies
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+
+    - name: Bootstrap
+      run: ./autogen.sh
+
+    - name: Configure
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities
+
+    - name: Build
+      run: make
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2

@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
+#include "Scheduling.h"
 #include "XUtils.h"
 #include "linux/IOPriority.h"
 
@@ -53,8 +54,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [M_VIRT] = { .name = "M_VIRT", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, .defaultSortDesc = true, },
    [M_RESIDENT] = { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, .defaultSortDesc = true, },
    [M_SHARE] = { .name = "M_SHARE", .title = "  SHR ", .description = "Size of the process's shared pages", .flags = 0, .defaultSortDesc = true, },
-   [M_TRS] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, .defaultSortDesc = true, },
-   [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, .defaultSortDesc = true, },
+   [M_TRS] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the .text segment of the process (CODE)", .flags = 0, .defaultSortDesc = true, },
+   [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the .data segment plus stack usage of the process (DATA)", .flags = 0, .defaultSortDesc = true, },
    [M_LRS] = { .name = "M_LRS", .title = "  LIB ", .description = "The library size of the process (calculated from memory maps)", .flags = PROCESS_FLAG_LINUX_LRS_FIX, .defaultSortDesc = true, },
    [ST_UID] = { .name = "ST_UID", .title = "UID", .description = "User ID of the process owner", .flags = 0, },
    [PERCENT_CPU] = { .name = "PERCENT_CPU", .title = " CPU%", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, .defaultSortDesc = true, .autoWidth = true, },
@@ -100,6 +101,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [AUTOGROUP_ID] = { .name = "AUTOGROUP_ID", .title = "AGRP", .description = "The autogroup identifier of the process", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
    [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
+#ifdef SCHEDULER_SUPPORT
+   [SCHEDULERPOLICY] = { .name = "SCHEDULERPOLICY", .title = "SCHED ", .description = "Current scheduling policy of the process", .flags = PROCESS_FLAG_SCHEDPOL, },
+#endif
 };
 
 Process* LinuxProcess_new(const Settings* settings) {

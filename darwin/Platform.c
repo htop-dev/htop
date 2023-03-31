@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -36,6 +37,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "darwin/DarwinProcessList.h"
 #include "darwin/PlatformHelpers.h"
+#include "generic/fdstat_sysctl.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
@@ -126,6 +128,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs8Meter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -172,7 +175,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    struct timeval bootTime, currTime;
    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
@@ -200,7 +203,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    }
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    /* http://opensource.apple.com/source/xnu/xnu-2782.1.97/bsd/sys/proc_internal.hh */
    return 99999;
 }
@@ -264,11 +267,11 @@ void Platform_setMemoryValues(Meter* mtr) {
    double page_K = (double)vm_page_size / (double)1024;
 
    mtr->total = dpl->host_info.max_mem / 1024;
-   mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_K;
-   mtr->values[1] = (double)vm->purgeable_count * page_K;
-   // mtr->values[2] = "shared memory, like tmpfs and shm"
-   mtr->values[3] = (double)vm->inactive_count * page_K;
-   // mtr->values[4] = "available memory"
+   mtr->values[MEMORY_METER_USED] = (double)(vm->active_count + vm->wire_count) * page_K;
+   mtr->values[MEMORY_METER_BUFFERS] = (double)vm->purgeable_count * page_K;
+   // mtr->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   mtr->values[MEMORY_METER_CACHE] = (double)vm->inactive_count * page_K;
+   // mtr->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* mtr) {
@@ -278,7 +281,7 @@ void Platform_setSwapValues(Meter* mtr) {
    sysctl(mib, 2, &swapused, &swlen, NULL, 0);
 
    mtr->total = swapused.xsu_total / 1024;
-   mtr->values[0] = swapused.xsu_used / 1024;
+   mtr->values[SWAP_METER_USED] = swapused.xsu_used / 1024;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
@@ -344,15 +347,13 @@ char* Platform_getProcessEnv(pid_t pid) {
    return env;
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   Generic_getFileDescriptors_sysctl(used, max);
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

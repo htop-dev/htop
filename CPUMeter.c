@@ -167,6 +167,18 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
       }
    }
 
+   if (this->pl->settings->showCPUFrequency) {
+      char cpuFrequencyBuffer[10];
+      double cpuFrequency = this->values[CPU_METER_FREQUENCY];
+      if (isnan(cpuFrequency)) {
+         len = xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A     ");
+      } else {
+         len = xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "%4uMHz ", (unsigned)cpuFrequency);
+      }
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], "freq: ");
+      RichString_appendnWide(out, CRT_colors[METER_VALUE], cpuFrequencyBuffer, len);
+   }
+
    #ifdef BUILD_WITH_CPU_TEMP
    if (this->pl->settings->showCPUTemperature) {
       char cpuTemperatureBuffer[10];
@@ -187,7 +199,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
 static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
    const CPUMeterData* data = this->meterData;
    unsigned int cpus = data->cpus;
-   switch(Meter_name(this)[0]) {
+   switch (Meter_name(this)[0]) {
       default:
       case 'A': // All
          *start = 0;
@@ -195,10 +207,10 @@ static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
          break;
       case 'L': // First Half
          *start = 0;
-         *count = (cpus+1) / 2;
+         *count = (cpus + 1) / 2;
          break;
       case 'R': // Second Half
-         *start = (cpus+1) / 2;
+         *start = (cpus + 1) / 2;
          *count = cpus / 2;
          break;
    }

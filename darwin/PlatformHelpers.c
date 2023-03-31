@@ -58,7 +58,7 @@ bool Platform_KernelVersionIsBetween(KernelVersion lowerBound, KernelVersion upp
       && Platform_CompareKernelVersion(upperBound) < 0;
 }
 
-void Platform_getCPUBrandString(char *cpuBrandString, size_t cpuBrandStringSize) {
+void Platform_getCPUBrandString(char* cpuBrandString, size_t cpuBrandStringSize) {
    if (sysctlbyname("machdep.cpu.brand_string", cpuBrandString, &cpuBrandStringSize, NULL, 0) == -1) {
       fprintf(stderr,
          "WARN: Unable to determine the CPU brand string.\n"
@@ -69,12 +69,13 @@ void Platform_getCPUBrandString(char *cpuBrandString, size_t cpuBrandStringSize)
 }
 
 // Adapted from https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
-bool Platform_isRunningTranslated() {
+bool Platform_isRunningTranslated(void) {
    int ret = 0;
    size_t size = sizeof(ret);
    errno = 0;
    if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
-      if (errno == ENOENT) return false;
+      if (errno == ENOENT)
+         return false;
 
       fprintf(stderr,
          "WARN: Could not determine if this process was running in a translation environment like Rosetta 2.\n"
@@ -86,7 +87,7 @@ bool Platform_isRunningTranslated() {
    return ret;
 }
 
-double Platform_calculateNanosecondsPerMachTick() {
+double Platform_calculateNanosecondsPerMachTick(void) {
    // Check if we can determine the timebase used on this system.
    // If the API is unavailable assume we get our timebase in nanoseconds.
 #ifndef HAVE_MACH_TIMEBASE_INFO

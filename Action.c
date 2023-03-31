@@ -29,6 +29,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "ProvideCurses.h"
+#include "Scheduling.h"
 #include "ScreenManager.h"
 #include "SignalsPanel.h"
 #include "TraceScreen.h"
@@ -213,27 +214,37 @@ static Htop_Reaction actionSortByTime(State* st) {
 
 static Htop_Reaction actionToggleKernelThreads(State* st) {
    st->settings->hideKernelThreads = !st->settings->hideKernelThreads;
+   st->settings->lastUpdate++;
+
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionToggleUserlandThreads(State* st) {
    st->settings->hideUserlandThreads = !st->settings->hideUserlandThreads;
+   st->settings->lastUpdate++;
+
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
-static Htop_Reaction actionToggleRunningInContainer(State* st){
+static Htop_Reaction actionToggleRunningInContainer(State* st) {
    st->settings->hideRunningInContainer = !st->settings->hideRunningInContainer;
+   st->settings->lastUpdate++;
+
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionToggleProgramPath(State* st) {
    st->settings->showProgramPath = !st->settings->showProgramPath;
-   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+   st->settings->lastUpdate++;
+
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionToggleMergedCommand(State* st) {
    st->settings->showMergedCommand = !st->settings->showMergedCommand;
-   return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
+   st->settings->lastUpdate++;
+
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_UPDATE_PANELHDR;
 }
 
 static Htop_Reaction actionToggleTreeView(State* st) {
@@ -243,6 +254,11 @@ static Htop_Reaction actionToggleTreeView(State* st) {
    if (!ss->allBranchesCollapsed)
       ProcessList_expandTree(st->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+
+static Htop_Reaction actionToggleHideMeters(State* st) {
+   st->hideMeters = !st->hideMeters;
+   return HTOP_RESIZE | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
@@ -290,7 +306,7 @@ static Htop_Reaction actionLowerPriority(State* st) {
 static Htop_Reaction actionInvertSortOrder(State* st) {
    ScreenSettings_invertSortOrder(st->settings->ss);
    st->pl->needsSort = true;
-   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
+   return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_UPDATE_PANELHDR;
 }
 
 static Htop_Reaction actionExpandOrCollapse(State* st) {
@@ -320,7 +336,7 @@ static Htop_Reaction actionNextScreen(State* st) {
       settings->ssIndex = 0;
    }
    settings->ss = settings->screens[settings->ssIndex];
-   return HTOP_REFRESH;
+   return HTOP_UPDATE_PANELHDR | HTOP_REFRESH;
 }
 
 static Htop_Reaction actionPrevScreen(State* st) {
@@ -331,7 +347,7 @@ static Htop_Reaction actionPrevScreen(State* st) {
       settings->ssIndex--;
    }
    settings->ss = settings->screens[settings->ssIndex];
-   return HTOP_REFRESH;
+   return HTOP_UPDATE_PANELHDR | HTOP_REFRESH;
 }
 
 Htop_Reaction Action_setScreenTab(Settings* settings, int x) {
@@ -345,7 +361,7 @@ Htop_Reaction Action_setScreenTab(Settings* settings, int x) {
       if (x <= s + len + 1) {
          settings->ssIndex = i;
          settings->ss = settings->screens[i];
-         return HTOP_REFRESH;
+         return HTOP_UPDATE_PANELHDR | HTOP_REFRESH;
       }
       s += len + 3;
    }
@@ -391,6 +407,51 @@ static Htop_Reaction actionSetAffinity(State* st) {
 #endif
 
 }
+
+#ifdef SCHEDULER_SUPPORT
+static Htop_Reaction actionSetSchedPolicy(State* st) {
+   if (Settings_isReadonly())
+      return HTOP_KEEP_FOLLOWING;
+
+   static int preSelectedPolicy = SCHEDULINGPANEL_INITSELECTEDPOLICY;
+   static int preSelectedPriority = SCHEDULINGPANEL_INITSELECTEDPRIORITY;
+
+   Panel* schedPanel = Scheduling_newPolicyPanel(preSelectedPolicy);
+
+   const ListItem* policy;
+   for(;;) {
+      policy = (const ListItem*) Action_pickFromVector(st, schedPanel, 18, true);
+
+      if (!policy || policy->key != -1)
+         break;
+
+      Scheduling_togglePolicyPanelResetOnFork(schedPanel);
+   }
+
+   if (policy) {
+      preSelectedPolicy = policy->key;
+
+      Panel* prioPanel = Scheduling_newPriorityPanel(policy->key, preSelectedPriority);
+      if (prioPanel) {
+         const ListItem* prio = (const ListItem*) Action_pickFromVector(st, prioPanel, 14, true);
+         if (prio)
+            preSelectedPriority = prio->key;
+
+         Panel_delete((Object*) prioPanel);
+      }
+
+      SchedulingArg v = { .policy = preSelectedPolicy, .priority = preSelectedPriority };
+
+      bool ok = MainPanel_foreachProcess(st->mainPanel, Scheduling_setPolicy, (Arg) { .v = &v }, NULL);
+      if (!ok)
+         beep();
+   }
+
+   Panel_delete((Object*)schedPanel);
+
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
+}
+#endif  /* SCHEDULER_SUPPORT */
 
 static Htop_Reaction actionKill(State* st) {
    if (Settings_isReadonly())
@@ -514,6 +575,7 @@ static const struct {
    bool roInactive;
    const char* info;
 } helpLeft[] = {
+   { .key = "      #: ",  .roInactive = false, .info = "hide/show header meters" },
    { .key = "    Tab: ",  .roInactive = false, .info = "switch to next screen tab" },
    { .key = " Arrows: ",  .roInactive = false, .info = "scroll process list" },
    { .key = " Digits: ",  .roInactive = false, .info = "incremental PID search" },
@@ -555,6 +617,9 @@ static const struct {
    { .key = "      x: ", .roInactive = false, .info = "list file locks of process" },
    { .key = "      s: ", .roInactive = true,  .info = "trace syscalls with strace" },
    { .key = "      w: ", .roInactive = false, .info = "wrap process command in multiple lines" },
+#ifdef SCHEDULER_SUPPORT
+   { .key = "      Y: ", .roInactive = true,  .info = "set scheduling policy" },
+#endif
    { .key = " F2 C S: ", .roInactive = false, .info = "setup" },
    { .key = " F1 h ?: ", .roInactive = false, .info = "show this help screen" },
    { .key = "  F10 q: ", .roInactive = false, .info = "quit" },
@@ -740,6 +805,7 @@ static Htop_Reaction actionShowCommandScreen(State* st) {
 
 void Action_setBindings(Htop_Action* keys) {
    keys[' '] = actionTag;
+   keys['#'] = actionToggleHideMeters;
    keys['*'] = actionExpandOrCollapseAllBranches;
    keys['+'] = actionExpandOrCollapse;
    keys[','] = actionSetSortColumn;
@@ -762,6 +828,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['S'] = actionSetup;
    keys['T'] = actionSortByTime;
    keys['U'] = actionUntagAll;
+#ifdef SCHEDULER_SUPPORT
+   keys['Y'] = actionSetSchedPolicy;
+#endif
    keys['Z'] = actionTogglePauseProcessUpdate;
    keys['['] = actionLowerPriority;
    keys['\014'] = actionRedraw; // Ctrl+L

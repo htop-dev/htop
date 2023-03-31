@@ -282,7 +282,7 @@ static char* DarwinProcess_getDevname(dev_t dev) {
       return NULL;
    }
    char buf[sizeof("/dev/") + MAXNAMLEN];
-   char *name = devname_r(dev, S_IFCHR, buf, MAXNAMLEN);
+   char* name = devname_r(dev, S_IFCHR, buf, MAXNAMLEN);
    if (name) {
       return xStrdup(name);
    }

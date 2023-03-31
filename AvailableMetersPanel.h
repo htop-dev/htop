@@ -29,6 +29,6 @@ typedef struct AvailableMetersPanel_ {
 
 extern const PanelClass AvailableMetersPanel_class;
 
-AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, size_t columns, MetersPanel **meterPanels, ScreenManager* scr, const ProcessList* pl);
+AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, size_t columns, MetersPanel** meterPanels, ScreenManager* scr, const ProcessList* pl);
 
 #endif

@@ -45,7 +45,7 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) super;
    HandlerResult result = IGNORED;
 
-   switch(ch) {
+   switch (ch) {
       case 13:
       case KEY_ENTER:
       case KEY_F(5):

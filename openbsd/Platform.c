@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -125,6 +126,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -143,7 +145,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    struct timeval bootTime, currTime;
    const int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
@@ -174,7 +176,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    return 2 * THREAD_PID_OFFSET;
 }
 
@@ -203,13 +205,12 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_IOWAIT]  = 0.0;
       v[CPU_METER_FREQUENCY] = NAN;
       this->curItems = 8;
-      totalPercent = v[0] + v[1] + v[2] + v[3];
    } else {
-      v[2] = cpuData->sysAllPeriod / total * 100.0;
-      v[3] = 0.0; // No steal nor guest on OpenBSD
-      totalPercent = v[0] + v[1] + v[2];
+      v[CPU_METER_KERNEL] = cpuData->sysAllPeriod / total * 100.0;
+      v[CPU_METER_IRQ] = 0.0; // No steal nor guest on OpenBSD
       this->curItems = 4;
    }
+   totalPercent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
 
    totalPercent = CLAMP(totalPercent, 0.0, 100.0);
 
@@ -227,18 +228,18 @@ void Platform_setMemoryValues(Meter* this) {
    long int cachedMem = pl->cachedMem;
    usedMem -= buffersMem + cachedMem;
    this->total = pl->totalMem;
-   this->values[0] = usedMem;
-   this->values[1] = buffersMem;
-   // this->values[2] = "shared memory, like tmpfs and shm"
-   this->values[3] = cachedMem;
-   // this->values[4] = "available memory"
+   this->values[MEMORY_METER_USED] = usedMem;
+   this->values[MEMORY_METER_BUFFERS] = buffersMem;
+   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   this->values[MEMORY_METER_CACHE] = cachedMem;
+   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* this) {
    const ProcessList* pl = this->pl;
    this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
-   this->values[1] = NAN;
+   this->values[SWAP_METER_USED] = pl->usedSwap;
+   this->values[SWAP_METER_CACHE] = NAN;
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
@@ -296,15 +297,33 @@ end:
    return env;
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   static const int mib_kern_maxfile[] = { CTL_KERN, KERN_MAXFILES };
+   int sysctl_maxfile = 0;
+   size_t size_maxfile = sizeof(int);
+   if (sysctl(mib_kern_maxfile, ARRAYSIZE(mib_kern_maxfile), &sysctl_maxfile, &size_maxfile, NULL, 0) < 0) {
+      *max = NAN;
+   } else if (size_maxfile != sizeof(int) || sysctl_maxfile < 1) {
+      *max = NAN;
+   } else {
+      *max = sysctl_maxfile;
+   }
+
+   static const int mib_kern_nfiles[] = { CTL_KERN, KERN_NFILES };
+   int sysctl_nfiles = 0;
+   size_t size_nfiles = sizeof(int);
+   if (sysctl(mib_kern_nfiles, ARRAYSIZE(mib_kern_nfiles), &sysctl_nfiles, &size_nfiles, NULL, 0) < 0) {
+      *used = NAN;
+   } else if (size_nfiles != sizeof(int) || sysctl_nfiles < 0) {
+      *used = NAN;
+   } else {
+      *used = sysctl_nfiles;
+   }
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
