@@ -612,31 +612,31 @@ static bool LinuxProcessList_updateUser(ProcessList* processList, Process* proce
    return true;
 }
 
-static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t procFd, bool scanMainThread, unsigned long long realtimeMs) {
-   Process *proc = &process->super;
+static void LinuxProcessList_readIoFile(LinuxProcess* lp, openat_arg_t procFd, bool scanMainThread, unsigned long long realtimeMs) {
+   Process *process = &lp->super;
    char path[20] = "io";
    char buffer[1024];
    if (scanMainThread) {
-      xSnprintf(path, sizeof(path), "task/%"PRIi32"/io", (int32_t)proc->pid);
+      xSnprintf(path, sizeof(path), "task/%"PRIi32"/io", (int32_t)process->pid);
    }
    ssize_t r = xReadfileat(procFd, path, buffer, sizeof(buffer));
    if (r < 0) {
-      process->io_rate_read_bps = NAN;
-      process->io_rate_write_bps = NAN;
-      process->io_rchar = ULLONG_MAX;
-      process->io_wchar = ULLONG_MAX;
-      process->io_syscr = ULLONG_MAX;
-      process->io_syscw = ULLONG_MAX;
-      process->io_read_bytes = ULLONG_MAX;
-      process->io_write_bytes = ULLONG_MAX;
-      process->io_cancelled_write_bytes = ULLONG_MAX;
-      process->io_last_scan_time_ms = realtimeMs;
+      lp->io_rate_read_bps = NAN;
+      lp->io_rate_write_bps = NAN;
+      lp->io_rchar = ULLONG_MAX;
+      lp->io_wchar = ULLONG_MAX;
+      lp->io_syscr = ULLONG_MAX;
+      lp->io_syscw = ULLONG_MAX;
+      lp->io_read_bytes = ULLONG_MAX;
+      lp->io_write_bytes = ULLONG_MAX;
+      lp->io_cancelled_write_bytes = ULLONG_MAX;
+      lp->io_last_scan_time_ms = realtimeMs;
       return;
    }
 
-   unsigned long long last_read = process->io_read_bytes;
-   unsigned long long last_write = process->io_write_bytes;
-   unsigned long long time_delta = realtimeMs > process->io_last_scan_time_ms ? realtimeMs - process->io_last_scan_time_ms : 0;
+   unsigned long long last_read = lp->io_read_bytes;
+   unsigned long long last_write = lp->io_write_bytes;
+   unsigned long long time_delta = realtimeMs > lp->io_last_scan_time_ms ? realtimeMs - lp->io_last_scan_time_ms : 0;
 
    char* buf = buffer;
    const char* line;
@@ -644,35 +644,35 @@ static void LinuxProcessList_readIoFile(LinuxProcess* process, openat_arg_t proc
       switch (line[0]) {
       case 'r':
          if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-            process->io_rchar = strtoull(line + 7, NULL, 10);
+            lp->io_rchar = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "ead_bytes: ")) {
-            process->io_read_bytes = strtoull(line + 12, NULL, 10);
-            process->io_rate_read_bps = time_delta ? (process->io_read_bytes - last_read) * /*ms to s*/1000. / time_delta : NAN;
+            lp->io_read_bytes = strtoull(line + 12, NULL, 10);
+            lp->io_rate_read_bps = time_delta ? (lp->io_read_bytes - last_read) * /*ms to s*/1000. / time_delta : NAN;
          }
          break;
       case 'w':
          if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-            process->io_wchar = strtoull(line + 7, NULL, 10);
+            lp->io_wchar = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "rite_bytes: ")) {
-            process->io_write_bytes = strtoull(line + 13, NULL, 10);
-            process->io_rate_write_bps = time_delta ? (process->io_write_bytes - last_write) * /*ms to s*/1000. / time_delta : NAN;
+            lp->io_write_bytes = strtoull(line + 13, NULL, 10);
+            lp->io_rate_write_bps = time_delta ? (lp->io_write_bytes - last_write) * /*ms to s*/1000. / time_delta : NAN;
          }
          break;
       case 's':
          if (line[4] == 'r' && String_startsWith(line + 1, "yscr: ")) {
-            process->io_syscr = strtoull(line + 7, NULL, 10);
+            lp->io_syscr = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "yscw: ")) {
-            process->io_syscw = strtoull(line + 7, NULL, 10);
+            lp->io_syscw = strtoull(line + 7, NULL, 10);
          }
          break;
       case 'c':
          if (String_startsWith(line + 1, "ancelled_write_bytes: ")) {
-            process->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10);
+            lp->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10);
          }
       }
    }
 
-   process->io_last_scan_time_ms = realtimeMs;
+   lp->io_last_scan_time_ms = realtimeMs;
 }
 
 typedef struct LibraryData_ {
