@@ -367,7 +367,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    len = sizeof(vmtotal);
    sysctl(MIB_vm_vmtotal, 2, &(vmtotal), &len, NULL, 0);
-   pl->sharedMem = vmtotal.t_vmshr * pageSizeKb;
+   pl->sharedMem = vmtotal.t_rmshr * pageSizeKb;
 
    pl->usedMem = fpl->memActive + fpl->memWire;
 
