@@ -89,7 +89,7 @@ typedef struct CommandLineSettings_ {
    bool readonly;
 } CommandLineSettings;
 
-static CommandLineStatus parseArguments(const char* program, int argc, char** argv, CommandLineSettings* flags) {
+static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettings* flags) {
 
    *flags = (CommandLineSettings) {
       .pidMatchList = NULL,
@@ -298,7 +298,7 @@ static void setCommFilter(State* state, char** commFilter) {
    *commFilter = NULL;
 }
 
-int CommandLine_run(const char* name, int argc, char** argv) {
+int CommandLine_run(int argc, char** argv) {
 
    /* initialize locale */
    const char* lc_ctype;
@@ -310,7 +310,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    CommandLineStatus status = STATUS_OK;
    CommandLineSettings flags = { 0 };
 
-   if ((status = parseArguments(name, argc, argv, &flags)) != STATUS_OK)
+   if ((status = parseArguments(argc, argv, &flags)) != STATUS_OK)
       return status != STATUS_OK_EXIT ? 1 : 0;
 
    if (flags.readonly)
