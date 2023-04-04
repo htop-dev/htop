@@ -51,7 +51,8 @@ typedef struct Settings_ {
    int config_version;
    HeaderLayout hLayout;
    MeterColumnSetting* hColumns;
-   Hashtable* dynamicColumns;
+   Hashtable* dynamicColumns; /* runtime-discovered columns */
+   Hashtable* dynamicMeters;  /* runtime-discovered meters */
 
    ScreenSettings** screens;
    unsigned int nScreens;
@@ -117,7 +118,7 @@ void Settings_delete(Settings* this);
 
 int Settings_write(const Settings* this, bool onCrash);
 
-Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns);
+Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns);
 
 ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* defaults);
 

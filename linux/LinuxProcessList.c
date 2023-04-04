@@ -297,11 +297,11 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
    super->existingCPUs = currExisting;
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
 
-   ProcessList_init(pl, Class(LinuxProcess), usersTable, dynamicMeters, dynamicColumns, pidMatchList, userId);
+   ProcessList_init(pl, Class(LinuxProcess), usersTable, pidMatchList, userId);
    LinuxProcessList_initTtyDrivers(this);
 
    // Initialize page size

@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->displayList = Vector_new(klass, false, DEFAULT_SIZE);
 
@@ -29,8 +29,6 @@ ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, Users
 
    this->usersTable = usersTable;
    this->pidMatchList = pidMatchList;
-   this->dynamicMeters = dynamicMeters;
-   this->dynamicColumns = dynamicColumns;
 
    this->userId = userId;
 
@@ -82,8 +80,9 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
    this->panel = panel;
 }
 
-static const char* alignedDynamicColumnTitle(const ProcessList* this, int key, char* titleBuffer, size_t titleBufferSize) {
-   const DynamicColumn* column = Hashtable_get(this->dynamicColumns, key);
+// helper function to fill an aligned title string for a dynamic column
+static const char* alignedTitleDynamicColumn(const Settings* settings, int key, char* titleBuffer, size_t titleBufferSize) {
+   const DynamicColumn* column = Hashtable_get(settings->dynamicColumns, key);
    if (column == NULL)
       return "- ";
    int width = column->width;
@@ -93,38 +92,43 @@ static const char* alignedDynamicColumnTitle(const ProcessList* this, int key, c
    return titleBuffer;
 }
 
-static const char* alignedProcessFieldTitle(const ProcessList* this, ProcessField field) {
-   static char titleBuffer[UINT8_MAX + sizeof(" ")];
-   assert(sizeof(titleBuffer) >= DYNAMIC_MAX_COLUMN_WIDTH + sizeof(" "));
-   assert(sizeof(titleBuffer) >= PROCESS_MAX_PID_DIGITS + sizeof(" "));
-   assert(sizeof(titleBuffer) >= PROCESS_MAX_UID_DIGITS + sizeof(" "));
-
-   if (field >= LAST_PROCESSFIELD)
-      return alignedDynamicColumnTitle(this, field, titleBuffer, sizeof(titleBuffer));
-
+// helper function to fill an aligned title string for a process field
+static const char* alignedTitleProcessField(ProcessField field, char* titleBuffer, size_t titleBufferSize) {
    const char* title = Process_fields[field].title;
    if (!title)
       return "- ";
 
    if (Process_fields[field].pidColumn) {
-      xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_pidDigits, title);
+      xSnprintf(titleBuffer, titleBufferSize, "%*s ", Process_pidDigits, title);
       return titleBuffer;
    }
 
    if (field == ST_UID) {
-      xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_uidDigits, title);
+      xSnprintf(titleBuffer, titleBufferSize, "%*s ", Process_uidDigits, title);
       return titleBuffer;
    }
 
    if (Process_fields[field].autoWidth) {
       if (field == PERCENT_CPU)
-         xSnprintf(titleBuffer, sizeof(titleBuffer), "%*s ", Process_fieldWidths[field], title);
+         xSnprintf(titleBuffer, titleBufferSize, "%*s ", Process_fieldWidths[field], title);
       else
-         xSnprintf(titleBuffer, sizeof(titleBuffer), "%-*.*s ", Process_fieldWidths[field], Process_fieldWidths[field], title);
+         xSnprintf(titleBuffer, titleBufferSize, "%-*.*s ", Process_fieldWidths[field], Process_fieldWidths[field], title);
       return titleBuffer;
    }
 
    return title;
+}
+
+// helper function to create an aligned title string for a given field
+static const char* ProcessField_alignedTitle(const Settings* settings, ProcessField field) {
+   static char titleBuffer[UINT8_MAX + sizeof(" ")];
+   assert(sizeof(titleBuffer) >= DYNAMIC_MAX_COLUMN_WIDTH + sizeof(" "));
+   assert(sizeof(titleBuffer) >= PROCESS_MAX_PID_DIGITS + sizeof(" "));
+   assert(sizeof(titleBuffer) >= PROCESS_MAX_UID_DIGITS + sizeof(" "));
+
+   if (field < LAST_PROCESSFIELD)
+      return alignedTitleProcessField(field, titleBuffer, sizeof(titleBuffer));
+   return alignedTitleDynamicColumn(settings, field, titleBuffer, sizeof(titleBuffer));
 }
 
 void ProcessList_printHeader(const ProcessList* this, RichString* header) {
@@ -146,7 +150,7 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header) {
          color = CRT_colors[PANEL_HEADER_FOCUS];
       }
 
-      RichString_appendWide(header, color, alignedProcessFieldTitle(this, fields[i]));
+      RichString_appendWide(header, color, ProcessField_alignedTitle(settings, fields[i]));
       if (key == fields[i] && RichString_getCharVal(*header, RichString_size(header) - 1) == ' ') {
          bool ascending = ScreenSettings_getActiveDirection(ss) == 1;
          RichString_rewind(header, 1);  // rewind to override space
@@ -337,10 +341,11 @@ void ProcessList_updateDisplayList(ProcessList* this) {
 
 ProcessField ProcessList_keyAt(const ProcessList* this, int at) {
    int x = 0;
-   const ProcessField* fields = this->settings->ss->fields;
+   const Settings* settings = this->settings;
+   const ProcessField* fields = settings->ss->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
-      int len = strlen(alignedProcessFieldTitle(this, field));
+      int len = strlen(ProcessField_alignedTitle(settings, field));
       if (at >= x && at <= x + len) {
          return field;
       }

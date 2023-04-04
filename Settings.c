@@ -667,10 +667,11 @@ int Settings_write(const Settings* this, bool onCrash) {
    return r;
 }
 
-Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns) {
+Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->dynamicColumns = dynamicColumns;
+   this->dynamicMeters = dynamicMeters;
    this->hLayout = HF_TWO_50_50;
    this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
 

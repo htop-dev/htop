@@ -53,7 +53,7 @@ typedef struct DragonFlyBSDProcessList_ {
    Hashtable* jails;
 } DragonFlyBSDProcessList;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
 
