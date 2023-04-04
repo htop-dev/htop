@@ -322,14 +322,14 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    Process_setupColumnWidths();
 
    UsersTable* ut = UsersTable_new();
-   Hashtable* dc = DynamicColumns_new();
    Hashtable* dm = DynamicMeters_new();
+   Hashtable* dc = DynamicColumns_new();
    if (!dc)
       dc = Hashtable_new(0, true);
 
-   ProcessList* pl = ProcessList_new(ut, dm, dc, flags.pidMatchList, flags.userId);
+   ProcessList* pl = ProcessList_new(ut, flags.pidMatchList, flags.userId);
 
-   Settings* settings = Settings_new(pl->activeCPUs, dc);
+   Settings* settings = Settings_new(pl->activeCPUs, dm, dc);
    pl->settings = settings;
 
    Header* header = Header_new(pl, settings, 2);

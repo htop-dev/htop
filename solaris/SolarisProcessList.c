@@ -89,10 +89,10 @@ static void SolarisProcessList_updateCPUcount(ProcessList* super) {
    }
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    SolarisProcessList* spl = xCalloc(1, sizeof(SolarisProcessList));
    ProcessList* pl = (ProcessList*) spl;
-   ProcessList_init(pl, Class(SolarisProcess), usersTable, dynamicMeters, dynamicColumns, pidMatchList, userId);
+   ProcessList_init(pl, Class(SolarisProcess), usersTable, pidMatchList, userId);
 
    spl->kd = kstat_open();
    if (!spl->kd)

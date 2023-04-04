@@ -94,14 +94,14 @@ static void OpenBSDProcessList_updateCPUcount(ProcessList* super) {
 }
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
    const int fmib[] = { CTL_KERN, KERN_FSCALE };
    size_t size;
    char errbuf[_POSIX2_LINE_MAX];
 
    OpenBSDProcessList* opl = xCalloc(1, sizeof(OpenBSDProcessList));
    ProcessList* pl = (ProcessList*) opl;
-   ProcessList_init(pl, Class(OpenBSDProcess), usersTable, dynamicMeters, dynamicColumns, pidMatchList, userId);
+   ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidMatchList, userId);
 
    OpenBSDProcessList_updateCPUcount(pl);
 

@@ -128,10 +128,11 @@ static void AvailableMetersPanel_addDynamicMeter(ATTR_UNUSED ht_key_t key, void*
 }
 
 // Handle (&DynamicMeter_class) entries in the AvailableMetersPanel
-static void AvailableMetersPanel_addDynamicMeters(Panel* super, const ProcessList* pl, unsigned int offset) {
+static void AvailableMetersPanel_addDynamicMeters(Panel* super, const Settings* settings, unsigned int offset) {
    DynamicIterator iter = { .super = super, .id = 1, .offset = offset };
-   assert(pl->dynamicMeters != NULL);
-   Hashtable_foreach(pl->dynamicMeters, AvailableMetersPanel_addDynamicMeter, &iter);
+   Hashtable* dynamicMeters = settings->dynamicColumns;
+   assert(dynamicMeters != NULL);
+   Hashtable_foreach(dynamicMeters, AvailableMetersPanel_addDynamicMeter, &iter);
 }
 
 // Handle remaining Platform Meter entries in the AvailableMetersPanel
@@ -161,7 +162,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
       const MeterClass* type = Platform_meterTypes[i];
       assert(type != &CPUMeter_class);
       if (type == &DynamicMeter_class)
-         AvailableMetersPanel_addDynamicMeters(super, pl, i);
+         AvailableMetersPanel_addDynamicMeters(super, settings, i);
       else
          AvailableMetersPanel_addPlatformMeter(super, type, i);
    }

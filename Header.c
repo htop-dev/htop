@@ -92,7 +92,7 @@ static void Header_addMeterByName(Header* this, const char* name, MeterModeId mo
             if ((end = strrchr(dynamic, ')')) == NULL)
                return;    // htoprc parse failure
             *end = '\0';
-            if (!DynamicMeter_search(this->pl->dynamicMeters, dynamic, &param))
+            if (!DynamicMeter_search(this->settings->dynamicMeters, dynamic, &param))
                return;    // name lookup failure
          } else {
             param = 0;
@@ -130,10 +130,11 @@ void Header_populateFromSettings(Header* this) {
 }
 
 void Header_writeBackToSettings(const Header* this) {
-   Settings_setHeaderLayout(this->settings, this->headerLayout);
+   Settings* settings = this->settings;
+   Settings_setHeaderLayout(settings, this->headerLayout);
 
    Header_forEachColumn(this, col) {
-      MeterColumnSetting* colSettings = &this->settings->hColumns[col];
+      MeterColumnSetting* colSettings = &settings->hColumns[col];
 
       if (colSettings->names) {
          for (size_t j = 0; j < colSettings->len; j++)
@@ -153,7 +154,7 @@ void Header_writeBackToSettings(const Header* this) {
          const Meter* meter = (Meter*) Vector_get(vec, i);
          char* name;
          if (meter->param && As_Meter(meter) == &DynamicMeter_class) {
-            const char* dynamic = DynamicMeter_lookup(this->pl->dynamicMeters, meter->param);
+            const char* dynamic = DynamicMeter_lookup(settings->dynamicMeters, meter->param);
             xAsprintf(&name, "%s(%s)", As_Meter(meter)->name, dynamic);
          } else if (meter->param && As_Meter(meter) == &CPUMeter_class) {
             xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
