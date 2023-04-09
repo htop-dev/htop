@@ -219,6 +219,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(startPos + w <= RichString_sizeVal(bar));
 
    int blockSizes[10];
+   int blockSizeSum = 0;
 
    // First draw in the bar[] buffer...
    int offset = 0;
@@ -230,6 +231,12 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       } else {
          blockSizes[i] = 0;
       }
+
+      if (Meter_comprisedValues(this)) {
+         blockSizes[i] = MAXIMUM(blockSizes[i] - blockSizeSum, 0);
+         blockSizeSum += blockSizes[i];
+      }
+
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
@@ -323,10 +330,14 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       for (int i = 0; i < nValues - 1; i++)
          data->values[i] = data->values[i + 1];
 
-      double value = 0.0;
-      for (uint8_t i = 0; i < this->curItems; i++)
-         value += !isnan(this->values[i]) ? this->values[i] : 0;
-      data->values[nValues - 1] = value;
+      if (Meter_comprisedValues(this)) {
+         data->values[nValues - 1] = (this->curItems > 0) ? this->values[this->curItems - 1] : 0.0;
+      } else {
+         double value = 0.0;
+         for (uint8_t i = 0; i < this->curItems; i++)
+            value += !isnan(this->values[i]) ? this->values[i] : 0;
+         data->values[nValues - 1] = value;
+      }
    }
 
    int i = nValues - (w * 2), k = 0;
