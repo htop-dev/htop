@@ -123,9 +123,9 @@ static int updateViaLib(bool user) {
    /* Connect to the system bus */
    if (!ctx->bus) {
       if (user) {
-            r = sym_sd_bus_open_user(&ctx->bus);
+         r = sym_sd_bus_open_user(&ctx->bus);
       } else {
-            r = sym_sd_bus_open_system(&ctx->bus);
+         r = sym_sd_bus_open_system(&ctx->bus);
       }
       if (r < 0)
          goto busfailure;
@@ -246,7 +246,7 @@ static void updateViaExec(bool user) {
          "--property=NNames",
          "--property=NJobs",
          "--property=NInstalledJobs",
-         (char *)NULL);
+         (char*)NULL);
       exit(127);
    }
    close(fdpair[1]);

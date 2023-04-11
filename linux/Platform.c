@@ -458,16 +458,16 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
          continue;
 
       errno = 0;
-      char *end = de->d_name;
+      char* end = de->d_name;
       int file = strtoull(de->d_name, &end, 10);
       if (errno || *end)
          continue;
 
       int fd = openat(dfd, de->d_name, O_RDONLY | O_CLOEXEC);
-      if(fd == -1)
+      if (fd == -1)
          continue;
-      FILE *f = fdopen(fd, "r");
-      if(!f) {
+      FILE* f = fdopen(fd, "r");
+      if (!f) {
          close(fd);
          continue;
       }

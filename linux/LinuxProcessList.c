@@ -512,7 +512,7 @@ static bool LinuxProcessList_readStatFile(LinuxProcess* lp, openat_arg_t procFd,
 }
 
 static bool LinuxProcessList_readStatusFile(Process* process, openat_arg_t procFd) {
-  LinuxProcess* lp = (LinuxProcess*) process;
+   LinuxProcess* lp = (LinuxProcess*) process;
 
    unsigned long ctxt = 0;
 #ifdef HAVE_VSERVER
@@ -613,7 +613,7 @@ static bool LinuxProcessList_updateUser(ProcessList* processList, Process* proce
 }
 
 static void LinuxProcessList_readIoFile(LinuxProcess* lp, openat_arg_t procFd, bool scanMainThread, unsigned long long realtimeMs) {
-   Process *process = &lp->super;
+   Process* process = &lp->super;
    char path[20] = "io";
    char buffer[1024];
    if (scanMainThread) {

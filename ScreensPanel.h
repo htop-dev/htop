@@ -31,7 +31,7 @@ typedef struct ScreensPanel_ {
    char* saved;
    int cursor;
    bool moving;
-   ListItem *renamingItem;
+   ListItem* renamingItem;
 } ScreensPanel;
 
 typedef struct ScreenListItem_ {

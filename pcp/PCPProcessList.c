@@ -44,7 +44,7 @@ static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
    free(this->percpu);
    free(this->values);
 
-   this->percpu = xCalloc(cpus, sizeof(pmAtomValue *));
+   this->percpu = xCalloc(cpus, sizeof(pmAtomValue*));
    for (unsigned int i = 0; i < cpus; i++)
       this->percpu[i] = xCalloc(CPU_METRIC_COUNT, sizeof(pmAtomValue));
    this->values = xCalloc(cpus, sizeof(pmAtomValue));

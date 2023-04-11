@@ -413,7 +413,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       if (ifa->ifa_flags & IFF_LOOPBACK)
          continue;
 
-      const struct if_data* ifd = (const struct if_data *)ifa->ifa_data;
+      const struct if_data* ifd = (const struct if_data*)ifa->ifa_data;
 
       data->bytesReceived += ifd->ifi_ibytes;
       data->packetsReceived += ifd->ifi_ipackets;

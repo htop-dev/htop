@@ -47,12 +47,12 @@ static void FileDescriptorMeter_updateValues(Meter* this) {
     * 3. If the maximum is effectively unlimited (AKA > 1<<30),
     *    Do the same as for 2, but cap at 1<<30.
     */
-   if (this->values[1] <= 1<<16) {
+   if (this->values[1] <= 1 << 16) {
       this->total = this->values[1];
    } else {
       if (this->total < 16 * this->values[0]) {
-         for (this->total = 1<<16; this->total < 16 * this->values[0]; this->total *= 2) {
-            if (this->total >= 1<<30) {
+         for (this->total = 1 << 16; this->total < 16 * this->values[0]; this->total *= 2) {
+            if (this->total >= 1 << 30) {
                break;
             }
          }
@@ -62,8 +62,8 @@ static void FileDescriptorMeter_updateValues(Meter* this) {
          this->total = this->values[1];
       }
 
-      if (this->total > 1<<30) {
-         this->total = 1<<30;
+      if (this->total > 1 << 30) {
+         this->total = 1 << 30;
       }
    }
 

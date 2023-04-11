@@ -419,7 +419,7 @@ static Htop_Reaction actionSetSchedPolicy(State* st) {
    Panel* schedPanel = Scheduling_newPolicyPanel(preSelectedPolicy);
 
    const ListItem* policy;
-   for(;;) {
+   for (;;) {
       policy = (const ListItem*) Action_pickFromVector(st, schedPanel, 18, true);
 
       if (!policy || policy->key != -1)
