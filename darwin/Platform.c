@@ -14,10 +14,19 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/_types/_mach_port_t.h>
+
+#include <CoreFoundation/CFBase.h>
+#include <CoreFoundation/CFDictionary.h>
+#include <CoreFoundation/CFNumber.h>
 #include <CoreFoundation/CFString.h>
 #include <CoreFoundation/CoreFoundation.h>
+
+#include <IOKit/IOKitLib.h>
+#include <IOKit/IOTypes.h>
 #include <IOKit/ps/IOPowerSources.h>
 #include <IOKit/ps/IOPSKeys.h>
+#include <IOKit/storage/IOBlockStorageDriver.h>
 
 #include "ClockMeter.h"
 #include "CPUMeter.h"
@@ -128,6 +137,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs8Meter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &DiskIOMeter_class,
    &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
@@ -136,6 +146,9 @@ const MeterClass* const Platform_meterTypes[] = {
 static double Platform_nanosecondsPerMachTick = 1.0;
 
 static double Platform_nanosecondsPerSchedulerTick = -1;
+
+static bool iokit_available = false;
+static mach_port_t iokit_port; // the mach port used to initiate communication with IOKit
 
 bool Platform_init(void) {
    Platform_nanosecondsPerMachTick = Platform_calculateNanosecondsPerMachTick();
@@ -150,6 +163,17 @@ bool Platform_init(void) {
 
    const double nanos_per_sec = 1e9;
    Platform_nanosecondsPerSchedulerTick = nanos_per_sec / scheduler_ticks_per_sec;
+
+   // Since macOS 12.0, IOMasterPort is deprecated, and one should use IOMainPort instead
+   #if defined(HAVE_DECL_IOMAINPORT) && HAVE_DECL_IOMAINPORT
+   if (!IOMainPort(bootstrap_port, &iokit_port)) {
+      iokit_available = true;
+   }
+   #elif defined(HAVE_DECL_IOMASTERPORT) && HAVE_DECL_IOMASTERPORT
+   if (!IOMasterPort(bootstrap_port, &iokit_port)) {
+      iokit_available = true;
+   }
+   #endif
 
    return true;
 }
@@ -357,9 +381,87 @@ void Platform_getFileDescriptors(double* used, double* max) {
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
-   // TODO
-   (void)data;
-   return false;
+   if (!iokit_available)
+      return false;
+
+   io_iterator_t drive_list;
+
+   /* Get the list of all drives */
+   if (IOServiceGetMatchingServices(iokit_port, IOServiceMatching("IOBlockStorageDriver"), &drive_list))
+      return false;
+
+   unsigned long long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
+
+   io_registry_entry_t drive;
+   while ((drive = IOIteratorNext(drive_list)) != 0) {
+      CFMutableDictionaryRef properties_tmp = NULL;
+
+      /* Get the properties of this drive */
+      if (IORegistryEntryCreateCFProperties(drive, &properties_tmp, kCFAllocatorDefault, 0)) {
+         IOObjectRelease(drive);
+         IOObjectRelease(drive_list);
+         return false;
+      }
+
+      if (!properties_tmp) {
+         IOObjectRelease(drive);
+         continue;
+      }
+
+      CFDictionaryRef properties = properties_tmp;
+
+      /* Get the statistics of this drive */
+      CFDictionaryRef statistics = (CFDictionaryRef) CFDictionaryGetValue(properties, CFSTR(kIOBlockStorageDriverStatisticsKey));
+
+      if (!statistics) {
+         CFRelease(properties);
+         IOObjectRelease(drive);
+         continue;
+      }
+
+      CFNumberRef number;
+      unsigned long long int value;
+
+      /* Get bytes read */
+      number = (CFNumberRef) CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesReadKey));
+      if (number != 0) {
+         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
+         read_sum += value;
+      }
+
+      /* Get bytes written */
+      number = (CFNumberRef) CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesWrittenKey));
+      if (number != 0) {
+         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
+         write_sum += value;
+      }
+
+      /* Get total read time (in ns) */
+      number = (CFNumberRef) CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsTotalReadTimeKey));
+      if (number != 0) {
+         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
+         timeSpend_sum += value;
+      }
+
+      /* Get total write time (in ns) */
+      number = (CFNumberRef) CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsTotalWriteTimeKey));
+      if (number != 0) {
+         CFNumberGetValue(number, kCFNumberSInt64Type, &value);
+         timeSpend_sum += value;
+      }
+
+      CFRelease(properties);
+      IOObjectRelease(drive);
+   }
+
+   data->totalBytesRead = read_sum;
+   data->totalBytesWritten = write_sum;
+   data->totalMsTimeSpend = timeSpend_sum / 1e6; /* Convert from ns to ms */
+
+   if (drive_list)
+      IOObjectRelease(drive_list);
+
+   return true;
 }
 
 bool Platform_getNetworkIO(NetworkIOData* data) {
