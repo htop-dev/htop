@@ -193,6 +193,9 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
    return NL_OK;
 }
 
+/*
+ * Gather delay-accounting information (thread-specific data)
+ */
 void LibNl_readDelayAcctData(LinuxProcessTable* this, LinuxProcess* process) {
    struct nl_msg* msg;
 

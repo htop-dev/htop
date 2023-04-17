@@ -156,6 +156,9 @@ const char* Scheduling_formatPolicy(int policy) {
    }
 }
 
+/*
+ * Gather scheduling policy (thread-specific data)
+ */
 void Scheduling_readProcessPolicy(Process* proc) {
    proc->scheduling_policy = sched_getscheduler(Process_getPid(proc));
 }

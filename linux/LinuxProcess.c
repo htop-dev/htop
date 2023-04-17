@@ -154,6 +154,9 @@ static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
 #define SYS_ioprio_set __NR_ioprio_set
 #endif
 
+/*
+ * Gather I/O scheduling class and priority (thread-specific data)
+ */
 IOPriority LinuxProcess_updateIOPriority(Process* p) {
    IOPriority ioprio = 0;
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
