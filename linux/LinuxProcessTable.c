@@ -1495,7 +1495,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
 
       char statCommand[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
-      unsigned long int tty_nr = proc->tty_nr;
+      unsigned long int last_tty_nr = proc->tty_nr;
       if (!LinuxProcessTable_readStatFile(lp, procFd, lhost, scanMainThread, statCommand, sizeof(statCommand)))
          goto errorReadingProcess;
 
@@ -1503,7 +1503,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          proc->isKernelThread = true;
       }
 
-      if (tty_nr != proc->tty_nr && this->ttyDrivers) {
+      if (last_tty_nr != proc->tty_nr && this->ttyDrivers) {
          free(proc->tty_name);
          proc->tty_name = LinuxProcessTable_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
       }
