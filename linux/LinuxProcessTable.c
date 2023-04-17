@@ -1578,9 +1578,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
 
       const bool scanMainThread = !hideUserlandThreads && !Process_isKernelThread(proc) && !mainTask;
 
-      if (ss->flags & PROCESS_FLAG_IO)
-         LinuxProcessTable_readIoFile(lp, procFd, scanMainThread);
-
       if (!LinuxProcessTable_readStatmFile(lp, procFd, lhost, mainTask))
          goto errorReadingProcess;
 
@@ -1609,21 +1606,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
             proc->mergedCommand.lastUpdate = 0;
       }
 
-      if ((ss->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
-         if (!mainTask) {
-            // Read smaps file of each process only every second pass to improve performance
-            static int smaps_flag = 0;
-            if ((pid & 1) == smaps_flag) {
-               LinuxProcessTable_readSmapsFile(lp, procFd, this->haveSmapsRollup);
-            }
-            if (pid == 1) {
-               smaps_flag = !smaps_flag;
-            }
-         } else {
-            lp->m_pss = ((const LinuxProcess*)mainTask)->m_pss;
-         }
-      }
-
       char statCommand[MAX_NAME + 1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       unsigned long int last_tty_nr = proc->tty_nr;
@@ -1637,10 +1619,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       if (last_tty_nr != proc->tty_nr && this->ttyDrivers) {
          free(proc->tty_name);
          proc->tty_name = LinuxProcessTable_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
-      }
-
-      if (ss->flags & PROCESS_FLAG_LINUX_IOPRIO) {
-         LinuxProcess_updateIOPriority(proc);
       }
 
       proc->percent_cpu = NAN;
@@ -1691,6 +1669,11 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          }
       }
 
+      /*
+       * Section gathering non-critical information that is independent from
+       * each other.
+       */
+
       /* Gather permitted capabilities (thread-specific data) for non-root process. */
       if (proc->st_uid != 0 && proc->elevated_priv != TRI_OFF) {
          struct __user_cap_header_struct header = { .version = _LINUX_CAPABILITY_VERSION_3, .pid = Process_getPid(proc) };
@@ -1707,6 +1690,27 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       if (ss->flags & PROCESS_FLAG_LINUX_CGROUP)
          LinuxProcessTable_readCGroupFile(lp, procFd);
 
+      if ((ss->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
+         if (!mainTask) {
+            // Read smaps file of each process only every second pass to improve performance
+            static int smaps_flag = 0;
+            if ((pid & 1) == smaps_flag) {
+               LinuxProcessTable_readSmapsFile(lp, procFd, this->haveSmapsRollup);
+            }
+            if (pid == 1) {
+               smaps_flag = !smaps_flag;
+            }
+         } else {
+            lp->m_pss   = ((const LinuxProcess*)mainTask)->m_pss;
+            lp->m_swap  = ((const LinuxProcess*)mainTask)->m_swap;
+            lp->m_psswp = ((const LinuxProcess*)mainTask)->m_psswp;
+         }
+      }
+
+      if (ss->flags & PROCESS_FLAG_IO) {
+         LinuxProcessTable_readIoFile(lp, procFd, scanMainThread);
+      }
+
       #ifdef HAVE_DELAYACCT
       if (ss->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
          LinuxProcessTable_readDelayAcctData(this, lp);
@@ -1715,6 +1719,10 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
 
       if (ss->flags & PROCESS_FLAG_LINUX_OOM) {
          LinuxProcessTable_readOomData(lp, procFd, mainTask);
+      }
+
+      if (ss->flags & PROCESS_FLAG_LINUX_IOPRIO) {
+         LinuxProcess_updateIOPriority(proc);
       }
 
       if (ss->flags & PROCESS_FLAG_LINUX_SECATTR) {
@@ -1743,14 +1751,14 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          }
       }
 
+      /*
+       * Final section after all data has been gathered
+       */
+
       if (!proc->cmdline && statCommand[0] &&
           (proc->state == ZOMBIE || Process_isKernelThread(proc) || settings->showThreadNames)) {
          Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
       }
-
-      /*
-       * Final section after all data has been gathered
-       */
 
       proc->super.updated = true;
       Compat_openatArgClose(procFd);
