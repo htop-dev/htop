@@ -6,7 +6,9 @@
 # ----------------------------------------------------------------------
 
 AC_PREREQ([2.69])
-AC_INIT([htop], [3.3.0-dev], [htop@groups.io], [], [https://htop.dev/])
+AC_INIT([htop],
+   m4_esyscmd_s(printf "%s (commit %s)" "3.3.0-dev" `git rev-parse --short HEAD`),
+   [htop@groups.io], [], [https://htop.dev/])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([build-aux])
