@@ -985,9 +985,6 @@ static void LinuxProcessTable_readSecattrData(LinuxProcess* process, openat_arg_
 
    Row_updateFieldWidth(SECATTR, strlen(buffer));
 
-   if (process->secattr && String_eq(process->secattr, buffer)) {
-      return;
-   }
    free_and_xStrdup(&process->secattr, buffer);
 }
 
@@ -1007,9 +1004,6 @@ static void LinuxProcessTable_readCwd(LinuxProcess* process, openat_arg_t procFd
    }
 
    pathBuffer[r] = '\0';
-
-   if (process->super.procCwd && String_eq(process->super.procCwd, pathBuffer))
-      return;
 
    free_and_xStrdup(&process->super.procCwd, pathBuffer);
 }
