@@ -15,7 +15,7 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 #include "ProcessList.h"
 #include "UsersTable.h"
-#include "ZramStats.h"
+#include "linux/ZramStats.h"
 #include "zfs/ZfsArcStats.h"
 
 #define HTOP_HUGEPAGE_BASE_SHIFT 16
