@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Object.h"
 #include "Panel.h"
+#include "ScreenWarning.h"
 #include "XUtils.h"
 
 
@@ -113,6 +114,8 @@ bool Scheduling_setPolicy(Process* proc, Arg arg) {
    #endif
 
    int r = sched_setscheduler(proc->pid, policy, &param);
+   if (r == -1)
+      ScreenWarning_add("Failed to set scheduling policy %d for process %d (%s): %s", policy, proc->pid, proc->procComm, strerror(errno));
 
    /* POSIX says on success the previous scheduling policy should be returned,
     * but Linux always returns 0. */

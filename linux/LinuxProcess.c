@@ -8,6 +8,7 @@ in the source distribution for its full text.
 
 #include "linux/LinuxProcess.h"
 
+#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +21,7 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "RichString.h"
 #include "Scheduling.h"
+#include "ScreenWarning.h"
 #include "XUtils.h"
 #include "linux/IOPriority.h"
 
@@ -159,7 +161,9 @@ IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this) {
 bool LinuxProcess_setIOPriority(Process* this, Arg ioprio) {
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
 #ifdef SYS_ioprio_set
-   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->pid, ioprio.i);
+   int r = syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->pid, ioprio.i);
+   if (r < 0)
+      ScreenWarning_add("Failed to set IO priority %d for process %d (%s): %s", ioprio.i, this->pid, this->procComm, strerror(errno));
 #endif
    return (LinuxProcess_updateIOPriority((LinuxProcess*)this) == ioprio.i);
 }
@@ -187,6 +191,8 @@ bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
       rewind(file);
       xSnprintf(buffer, sizeof(buffer), "%d", nice + delta.i);
       success = fputs(buffer, file) > 0;
+      if (!success)
+         ScreenWarning_add("Failed to set autogroup for process %d (%s): %s", this->pid, this->procComm, strerror(errno));
    } else {
       success = false;
    }
