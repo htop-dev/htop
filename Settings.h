@@ -89,6 +89,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool showWarnings;
    bool screenTabs;
    #ifdef HAVE_GETMOUSE
    bool enableMouse;

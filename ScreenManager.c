@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include "Platform.h"
 #include "ProcessList.h"
 #include "ProvideCurses.h"
+#include "ScreenWarning.h"
 #include "XUtils.h"
 
 
@@ -210,6 +211,8 @@ static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_
                  State_hideFunctionBar(this->state));
       mvvline(panel->y, panel->x + panel->w, ' ', panel->h + (State_hideFunctionBar(this->state) ? 1 : 0));
    }
+
+   ScreenWarning_display();
 }
 
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, const char* name) {
