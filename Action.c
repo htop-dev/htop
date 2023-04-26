@@ -253,6 +253,9 @@ static Htop_Reaction actionToggleTreeView(State* st) {
 
    if (!ss->allBranchesCollapsed)
       ProcessList_expandTree(st->pl);
+
+   st->pl->needsSort = true;
+
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
