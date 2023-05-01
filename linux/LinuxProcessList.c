@@ -216,6 +216,7 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
     * https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/getsysstats.c;hb=HEAD
     */
 
+   Machine* host = super->host;
    LinuxProcessList* this = (LinuxProcessList*) super;
    unsigned int existing = 0, active = 0;
 
@@ -224,15 +225,15 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
       this->cpuData = xCalloc(2, sizeof(CPUData));
       this->cpuData[0].online = true; /* average is always "online" */
       this->cpuData[1].online = true;
-      super->activeCPUs = 1;
-      super->existingCPUs = 1;
+      host->activeCPUs = 1;
+      host->existingCPUs = 1;
    }
 
    DIR* dir = opendir("/sys/devices/system/cpu");
    if (!dir)
       return;
 
-   unsigned int currExisting = super->existingCPUs;
+   unsigned int currExisting = host->existingCPUs;
 
    const struct dirent* entry;
    while ((entry = readdir(dir)) != NULL) {
@@ -288,20 +289,20 @@ static void LinuxProcessList_updateCPUcount(ProcessList* super) {
 #ifdef HAVE_SENSORS_SENSORS_H
    /* When started with offline CPUs, libsensors does not monitor those,
     * even when they become online. */
-   if (super->existingCPUs != 0 && (active > super->activeCPUs || currExisting > super->existingCPUs))
+   if (host->existingCPUs != 0 && (active > host->activeCPUs || currExisting > host->existingCPUs))
       LibSensors_reload();
 #endif
 
-   super->activeCPUs = active;
+   host->activeCPUs = active;
    assert(existing == currExisting);
-   super->existingCPUs = currExisting;
+   host->existingCPUs = currExisting;
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
    ProcessList* pl = &(this->super);
 
-   ProcessList_init(pl, Class(LinuxProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(LinuxProcess), host, pidMatchList);
    LinuxProcessList_initTtyDrivers(this);
 
    // Initialize page size
@@ -594,7 +595,7 @@ static bool LinuxProcessList_readStatusFile(Process* process, openat_arg_t procF
    return true;
 }
 
-static bool LinuxProcessList_updateUser(ProcessList* processList, Process* process, openat_arg_t procFd) {
+static bool LinuxProcessList_updateUser(const Machine* host, Process* process, openat_arg_t procFd) {
    struct stat sstat;
 #ifdef HAVE_OPENAT
    int statok = fstat(procFd, &sstat);
@@ -606,7 +607,7 @@ static bool LinuxProcessList_updateUser(ProcessList* processList, Process* proce
 
    if (process->st_uid != sstat.st_uid) {
       process->st_uid = sstat.st_uid;
-      process->user = UsersTable_getRef(processList->usersTable, sstat.st_uid);
+      process->user = UsersTable_getRef(host->usersTable, sstat.st_uid);
    }
 
    return true;
@@ -1421,14 +1422,14 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned lo
    return out;
 }
 
-static bool isOlderThan(const ProcessList* pl, const Process* proc, unsigned int seconds) {
-   assert(pl->realtimeMs > 0);
+static bool isOlderThan(const Machine* host, const Process* proc, unsigned int seconds) {
+   assert(host->realtimeMs > 0);
 
    /* Starttime might not yet be parsed */
    if (proc->starttime_ctime <= 0)
       return false;
 
-   uint64_t realtime = pl->realtimeMs / 1000;
+   uint64_t realtime = host->realtimeMs / 1000;
 
    if (realtime < (uint64_t)proc->starttime_ctime)
       return false;
@@ -1438,9 +1439,10 @@ static bool isOlderThan(const ProcessList* pl, const Process* proc, unsigned int
 
 static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_t parentFd, const char* dirname, const Process* parent, double period) {
    ProcessList* pl = (ProcessList*) this;
-   const struct dirent* entry;
-   const Settings* settings = pl->settings;
+   const Machine* host = pl->host;
+   const Settings* settings = host->settings;
    const ScreenSettings* ss = settings->ss;
+   const struct dirent* entry;
 
 #ifdef HAVE_OPENAT
    int dirFd = openat(parentFd, dirname, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
@@ -1457,7 +1459,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       return false;
    }
 
-   const unsigned int activeCPUs = pl->activeCPUs;
+   const unsigned int activeCPUs = host->activeCPUs;
    const bool hideKernelThreads = settings->hideKernelThreads;
    const bool hideUserlandThreads = settings->hideUserlandThreads;
    const bool hideRunningInContainer = settings->hideRunningInContainer;
@@ -1543,7 +1545,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
 
       bool scanMainThread = !hideUserlandThreads && !Process_isKernelThread(proc) && !parent;
       if (ss->flags & PROCESS_FLAG_IO)
-         LinuxProcessList_readIoFile(lp, procFd, scanMainThread, pl->realtimeMs);
+         LinuxProcessList_readIoFile(lp, procFd, scanMainThread, host->realtimeMs);
 
       if (!LinuxProcessList_readStatmFile(lp, procFd))
          goto errorReadingProcess;
@@ -1552,15 +1554,15 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          bool prev = proc->usesDeletedLib;
 
          if (!proc->isKernelThread && !proc->isUserlandThread &&
-            ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted && isOlderThan(pl, proc, 10)))) {
+            ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted && isOlderThan(host, proc, 10)))) {
 
             // Check if we really should recalculate the M_LRS value for this process
-            uint64_t passedTimeInMs = pl->realtimeMs - lp->last_mlrs_calctime;
+            uint64_t passedTimeInMs = host->realtimeMs - lp->last_mlrs_calctime;
 
             uint64_t recheck = ((uint64_t)rand()) % 2048;
 
             if (passedTimeInMs > recheck) {
-               lp->last_mlrs_calctime = pl->realtimeMs;
+               lp->last_mlrs_calctime = host->realtimeMs;
                LinuxProcessList_readMaps(lp, procFd, ss->flags & PROCESS_FLAG_LINUX_LRS_FIX, settings->highlightDeletedExe);
             }
          } else {
@@ -1610,10 +1612,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       /* period might be 0 after system sleep */
       float percent_cpu = (period < 1E-6) ? 0.0F : ((lp->utime + lp->stime - lasttimes) / period * 100.0);
       proc->percent_cpu = CLAMP(percent_cpu, 0.0F, activeCPUs * 100.0F);
-      proc->percent_mem = proc->m_resident / (double)(pl->totalMem) * 100.0;
+      proc->percent_mem = proc->m_resident / (double)(host->totalMem) * 100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
-      if (! LinuxProcessList_updateUser(pl, proc, procFd))
+      if (! LinuxProcessList_updateUser(host, proc, procFd))
          goto errorReadingProcess;
 
       if (!LinuxProcessList_readStatusFile(proc, procFd))
@@ -1733,6 +1735,7 @@ errorReadingProcess:
 }
 
 static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
+   Machine* host = this->host;
    LinuxProcessList *lpl = (LinuxProcessList *)this;
    memory_t availableMem = 0;
    memory_t freeMem = 0;
@@ -1809,16 +1812,16 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
     *  - Shmem in part of Cached (see https://lore.kernel.org/patchwork/patch/648763/),
     *    do not show twice by subtracting from Cached and do not subtract twice from used.
     */
-   this->totalMem = totalMem;
-   this->cachedMem = cachedMem + sreclaimableMem - sharedMem;
-   this->sharedMem = sharedMem;
+   host->totalMem = totalMem;
+   host->cachedMem = cachedMem + sreclaimableMem - sharedMem;
+   host->sharedMem = sharedMem;
    const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem;
-   this->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
-   this->buffersMem = buffersMem;
-   this->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
-   this->totalSwap = swapTotalMem;
-   this->usedSwap = swapTotalMem - swapFreeMem - swapCacheMem;
-   this->cachedSwap = swapCacheMem;
+   host->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
+   host->buffersMem = buffersMem;
+   host->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
+   host->totalSwap = swapTotalMem;
+   host->usedSwap = swapTotalMem - swapFreeMem - swapCacheMem;
+   host->cachedSwap = swapCacheMem;
    lpl->zswap.usedZswapComp = zswapCompMem;
    lpl->zswap.usedZswapOrig = zswapOrigMem;
 }
@@ -1880,6 +1883,7 @@ static void LinuxProcessList_scanHugePages(LinuxProcessList* this) {
 }
 
 static inline void LinuxProcessList_scanZswapInfo(LinuxProcessList *this) {
+   const Machine* host = this->super.host;
    long max_pool_percent = 0;
    int r;
    char buf[256];
@@ -1893,7 +1897,7 @@ static inline void LinuxProcessList_scanZswapInfo(LinuxProcessList *this) {
       return;
    }
 
-   this->zswap.totalZswapPool = this->super.totalMem * max_pool_percent / 100;
+   this->zswap.totalZswapPool = host->totalMem * max_pool_percent / 100;
    /* the rest of the metrics are set in LinuxProcessList_scanMemoryInfo() */
 }
 
@@ -2027,7 +2031,8 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
    if (!file)
       CRT_fatalError("Cannot open " PROCSTATFILE);
 
-   unsigned int existingCPUs = super->existingCPUs;
+   Machine* host = super->host;
+   unsigned int existingCPUs = host->existingCPUs;
    unsigned int lastAdjCpuId = 0;
 
    for (unsigned int i = 0; i <= existingCPUs; i++) {
@@ -2056,7 +2061,7 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
          adjCpuId = cpuid + 1;
       }
 
-      if (adjCpuId > super->existingCPUs)
+      if (adjCpuId > host->existingCPUs)
          break;
 
       for (unsigned int j = lastAdjCpuId + 1; j < adjCpuId; j++) {
@@ -2104,7 +2109,7 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
       cpuData->totalTime = totaltime;
    }
 
-   double period = (double)this->cpuData[0].totalPeriod / super->activeCPUs;
+   double period = (double)this->cpuData[0].totalPeriod / host->activeCPUs;
 
    char buffer[PROC_LINE_LENGTH + 1];
    while (fgets(buffer, sizeof(buffer), file)) {
@@ -2120,7 +2125,8 @@ static inline double LinuxProcessList_scanCPUTime(ProcessList* super) {
 }
 
 static int scanCPUFrequencyFromSysCPUFreq(LinuxProcessList* this) {
-   unsigned int existingCPUs = this->super.existingCPUs;
+   const Machine* host = this->super.host;
+   unsigned int existingCPUs = host->existingCPUs;
    int numCPUsWithFrequency = 0;
    unsigned long totalFrequency = 0;
 
@@ -2139,7 +2145,7 @@ static int scanCPUFrequencyFromSysCPUFreq(LinuxProcessList* this) {
    }
 
    for (unsigned int i = 0; i < existingCPUs; ++i) {
-      if (!ProcessList_isCPUonline(&this->super, i))
+      if (!Machine_isCPUonline(host, i))
          continue;
 
       char pathBuffer[64];
@@ -2187,7 +2193,7 @@ static void scanCPUFrequencyFromCPUinfo(LinuxProcessList* this) {
    if (file == NULL)
       return;
 
-   unsigned int existingCPUs = this->super.existingCPUs;
+   unsigned int existingCPUs = this->super.host->existingCPUs;
    int numCPUsWithFrequency = 0;
    double totalFrequency = 0;
    int cpuid = -1;
@@ -2228,7 +2234,7 @@ static void scanCPUFrequencyFromCPUinfo(LinuxProcessList* this) {
 }
 
 static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
-   unsigned int existingCPUs = this->super.existingCPUs;
+   unsigned int existingCPUs = this->super.host->existingCPUs;
 
    for (unsigned int i = 0; i <= existingCPUs; i++) {
       this->cpuData[i].frequency = NAN;
@@ -2243,7 +2249,9 @@ static void LinuxProcessList_scanCPUFrequency(LinuxProcessList* this) {
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    LinuxProcessList* this = (LinuxProcessList*) super;
-   const Settings* settings = super->settings;
+
+   const Machine* host = super->host;
+   const Settings* settings = host->settings;
 
    LinuxProcessList_scanMemoryInfo(super);
    LinuxProcessList_scanHugePages(this);
@@ -2259,7 +2267,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    #ifdef HAVE_SENSORS_SENSORS_H
    if (settings->showCPUTemperature)
-      LibSensors_getCPUTemperatures(this->cpuData, this->super.existingCPUs, this->super.activeCPUs);
+      LibSensors_getCPUTemperatures(this->cpuData, host->existingCPUs, host->activeCPUs);
    #endif
 
    // in pause mode only gather global data for meters (CPU/memory/...)
@@ -2288,9 +2296,19 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    LinuxProcessList_recurseProcTree(this, rootFd, PROCDIR, NULL, period);
 }
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
+Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
+   Machine* this = xCalloc(1, sizeof(Machine));
+   Machine_init(this, usersTable, userId);
+   return this;
+}
 
-   const LinuxProcessList* this = (const LinuxProcessList*) super;
+void Machine_delete(Machine* host) {
+   free(host);
+}
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+
+   const LinuxProcessList* this = (const LinuxProcessList*) host->pl;
    return this->cpuData[id + 1].online;
 }

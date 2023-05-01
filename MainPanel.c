@@ -53,10 +53,9 @@ static const char* MainPanel_getValue(Panel* this, int i) {
 
 static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    MainPanel* this = (MainPanel*) super;
-
-   HandlerResult result = IGNORED;
-
+   Machine* host = this->state->host;
    Htop_Reaction reaction = HTOP_OK;
+   HandlerResult result = IGNORED;
 
    /* Let supervising ScreenManager handle resize */
    if (ch == KEY_RESIZE)
@@ -66,20 +65,19 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    bool needReset = ch != ERR;
    #ifdef HAVE_GETMOUSE
    /* except mouse events while mouse support is disabled */
-   if (!(ch != KEY_MOUSE || this->state->settings->enableMouse))
+   if (!(ch != KEY_MOUSE || host->settings->enableMouse))
       needReset = false;
    #endif
    if (needReset)
       this->state->hideSelection = false;
 
-   Settings* settings = this->state->settings;
+   Settings* settings = host->settings;
    ScreenSettings* ss = settings->ss;
 
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
-      const ProcessList* pl = this->state->pl;
       int hx = super->scrollH + x + 1;
-      ProcessField field = ProcessList_keyAt(pl, hx);
+      ProcessField field = ProcessList_keyAt(host->pl, hx);
       if (ss->treeView && ss->treeViewAlwaysByPID) {
          ss->treeView = false;
          ss->direction = 1;
@@ -98,7 +96,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, MainPanel_getValue, NULL);
       if (filterChanged) {
-         this->state->pl->incFilter = IncSet_filter(this->inc);
+         host->pl->incFilter = IncSet_filter(this->inc);
          reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
       if (this->inc->found) {
@@ -123,7 +121,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    }
 
    if ((reaction & HTOP_REDRAW_BAR) == HTOP_REDRAW_BAR) {
-      MainPanel_updateLabels(this, settings->ss->treeView, this->state->pl->incFilter);
+      MainPanel_updateLabels(this, settings->ss->treeView, host->pl->incFilter);
    }
    if ((reaction & HTOP_RESIZE) == HTOP_RESIZE) {
       result |= RESIZE;
@@ -138,13 +136,13 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       result |= RESCAN;
    }
    if ((reaction & HTOP_SAVE_SETTINGS) == HTOP_SAVE_SETTINGS) {
-      this->state->settings->changed = true;
+      host->settings->changed = true;
    }
    if ((reaction & HTOP_QUIT) == HTOP_QUIT) {
       return BREAK_LOOP;
    }
    if ((reaction & HTOP_KEEP_FOLLOWING) != HTOP_KEEP_FOLLOWING) {
-      this->state->pl->following = -1;
+      host->pl->following = -1;
       Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
    }
    return result;
@@ -197,7 +195,8 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
 
 static void MainPanel_printHeader(Panel* super) {
    MainPanel* this = (MainPanel*) super;
-   ProcessList_printHeader(this->state->pl, &super->header);
+   Machine* host = this->state->host;
+   ProcessList_printHeader(host->pl, &super->header);
 }
 
 const PanelClass MainPanel_class = {

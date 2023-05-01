@@ -82,7 +82,7 @@ typedef enum ProcessState_ {
    SLEEPING
 } ProcessState;
 
-struct Settings_;
+struct Machine_;
 
 /* Holds information about regions of the cmdline that should be
  * highlighted (e.g. program basename, delimiter, comm). */
@@ -108,9 +108,8 @@ typedef struct Process_ {
    /* Super object for emulated OOP */
    Object super;
 
-   /* Pointer to quasi-global data structures */
-   const struct ProcessList_* processList;
-   const struct Settings_* settings;
+   /* Pointer to quasi-global data */
+   const struct Machine_* host;
 
    /* Process identifier */
    pid_t pid;
@@ -305,7 +304,7 @@ extern uint8_t Process_fieldWidths[LAST_PROCESSFIELD];
 extern int Process_pidDigits;
 extern int Process_uidDigits;
 
-typedef Process* (*Process_New)(const struct Settings_*);
+typedef Process* (*Process_New)(const struct Machine_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
 typedef int (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
 
@@ -389,7 +388,7 @@ void Process_done(Process* this);
 
 extern const ProcessClass Process_class;
 
-void Process_init(Process* this, const struct Settings_* settings);
+void Process_init(Process* this, const struct Machine_* host);
 
 void Process_toggleTag(Process* this);
 

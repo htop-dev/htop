@@ -20,58 +20,18 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ProcessList* ProcessList_init(ProcessList* this, const ObjectClass* klass, UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+void ProcessList_init(ProcessList* this, const ObjectClass* klass, Machine* host, Hashtable* pidMatchList) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->displayList = Vector_new(klass, false, DEFAULT_SIZE);
-
    this->processTable = Hashtable_new(200, false);
-   this->needsSort = true;
-
-   this->usersTable = usersTable;
    this->pidMatchList = pidMatchList;
-
-   this->userId = userId;
-
-   // set later by platform-specific code
-   this->activeCPUs = 0;
-   this->existingCPUs = 0;
-   this->monotonicMs = 0;
-
-   // always maintain valid realtime timestamps
-   Platform_gettime_realtime(&this->realtime, &this->realtimeMs);
-
-#ifdef HAVE_LIBHWLOC
-   this->topologyOk = false;
-   if (hwloc_topology_init(&this->topology) == 0) {
-      this->topologyOk =
-         #if HWLOC_API_VERSION < 0x00020000
-         /* try to ignore the top-level machine object type */
-         0 == hwloc_topology_ignore_type_keep_structure(this->topology, HWLOC_OBJ_MACHINE) &&
-         /* ignore caches, which don't add structure */
-         0 == hwloc_topology_ignore_type_keep_structure(this->topology, HWLOC_OBJ_CORE) &&
-         0 == hwloc_topology_ignore_type_keep_structure(this->topology, HWLOC_OBJ_CACHE) &&
-         0 == hwloc_topology_set_flags(this->topology, HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM) &&
-         #else
-         0 == hwloc_topology_set_all_types_filter(this->topology, HWLOC_TYPE_FILTER_KEEP_STRUCTURE) &&
-         #endif
-         0 == hwloc_topology_load(this->topology);
-   }
-#endif
-
+   this->needsSort = true;
    this->following = -1;
-
-   return this;
+   this->host = host;
 }
 
 void ProcessList_done(ProcessList* this) {
-#ifdef HAVE_LIBHWLOC
-   if (this->topologyOk) {
-      hwloc_topology_destroy(this->topology);
-   }
-#endif
-
    Hashtable_delete(this->processTable);
-
    Vector_delete(this->displayList);
    Vector_delete(this->processes);
 }
@@ -134,7 +94,7 @@ static const char* ProcessField_alignedTitle(const Settings* settings, ProcessFi
 void ProcessList_printHeader(const ProcessList* this, RichString* header) {
    RichString_rewind(header, RichString_size(header));
 
-   const Settings* settings = this->settings;
+   const Settings* settings = this->host->settings;
    const ScreenSettings* ss = settings->ss;
    const ProcessField* fields = ss->fields;
 
@@ -168,10 +128,9 @@ void ProcessList_printHeader(const ProcessList* this, RichString* header) {
 void ProcessList_add(ProcessList* this, Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidEqualCompare) == -1);
    assert(Hashtable_get(this->processTable, p->pid) == NULL);
-   p->processList = this;
 
    // highlighting processes found in first scan by first scan marked "far in the past"
-   p->seenStampMs = this->monotonicMs;
+   p->seenStampMs = this->host->monotonicMs;
 
    Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
@@ -325,7 +284,7 @@ static void ProcessList_buildTree(ProcessList* this) {
 }
 
 void ProcessList_updateDisplayList(ProcessList* this) {
-   if (this->settings->ss->treeView) {
+   if (this->host->settings->ss->treeView) {
       if (this->needsSort)
          ProcessList_buildTree(this);
    } else {
@@ -341,7 +300,7 @@ void ProcessList_updateDisplayList(ProcessList* this) {
 
 ProcessField ProcessList_keyAt(const ProcessList* this, int at) {
    int x = 0;
-   const Settings* settings = this->settings;
+   const Settings* settings = this->host->settings;
    const ProcessField* fields = settings->ss->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
@@ -387,7 +346,8 @@ void ProcessList_rebuildPanel(ProcessList* this) {
    Panel_prune(this->panel);
 
    /* Follow main process if followed a userland thread and threads are now hidden */
-   const Settings* settings = this->settings;
+   const Machine* host= this->host;
+   const Settings* settings = host->settings;
    if (this->following != -1 && settings->hideUserlandThreads) {
       const Process* followedProcess = (const Process*) Hashtable_get(this->processTable, this->following);
       if (followedProcess && Process_isThread(followedProcess) && Hashtable_get(this->processTable, followedProcess->tgid) != NULL) {
@@ -403,7 +363,7 @@ void ProcessList_rebuildPanel(ProcessList* this) {
       Process* p = (Process*) Vector_get(this->displayList, i);
 
       if ( (!p->show)
-         || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
+         || (host->userId != (uid_t) -1 && (p->st_uid != host->userId))
          || (incFilter && !(String_contains_i(Process_getCommand(p), incFilter, true)))
          || (this->pidMatchList && !Hashtable_get(this->pidMatchList, p->tgid)) )
          continue;
@@ -443,7 +403,7 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
       assert(Vector_indexOf(this->processes, proc, Process_pidEqualCompare) != -1);
       assert(proc->pid == pid);
    } else {
-      proc = constructor(this->settings);
+      proc = constructor(this->host);
       assert(proc->cmdline == NULL);
       proc->pid = pid;
    }
@@ -474,16 +434,18 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
 
    // set scan timestamp
    static bool firstScanDone = false;
+   Machine* host = this->host;
    if (firstScanDone) {
-      Platform_gettime_monotonic(&this->monotonicMs);
+      Platform_gettime_monotonic(&host->monotonicMs);
    } else {
-      this->monotonicMs = 0;
+      host->monotonicMs = 0;
       firstScanDone = true;
    }
 
    ProcessList_goThroughEntries(this, false);
 
    uid_t maxUid = 0;
+   const Settings* settings = host->settings;
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
       Process_makeCommandStr(p);
@@ -494,14 +456,14 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
 
       if (p->tombStampMs > 0) {
          // remove tombed process
-         if (this->monotonicMs >= p->tombStampMs) {
+         if (host->monotonicMs >= p->tombStampMs) {
             ProcessList_removeIndex(this, p, i);
          }
       } else if (p->updated == false) {
          // process no longer exists
-         if (this->settings->highlightChanges && p->wasShown) {
+         if (settings->highlightChanges && p->wasShown) {
             // mark tombed
-            p->tombStampMs = this->monotonicMs + 1000 * this->settings->highlightDelaySecs;
+            p->tombStampMs = host->monotonicMs + 1000 * settings->highlightDelaySecs;
          } else {
             // immediately remove
             ProcessList_removeIndex(this, p, i);

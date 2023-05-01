@@ -277,18 +277,18 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
    return STATUS_OK;
 }
 
-static void CommandLine_delay(ProcessList* pl, unsigned long millisec) {
+static void CommandLine_delay(Machine* host, unsigned long millisec) {
    struct timespec req = {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
    };
    while (nanosleep(&req, &req) == -1)
       continue;
-   Platform_gettime_realtime(&pl->realtime, &pl->realtimeMs);
+   Platform_gettime_realtime(&host->realtime, &host->realtimeMs);
 }
 
 static void setCommFilter(State* state, char** commFilter) {
-   ProcessList* pl = state->pl;
+   ProcessList* pl = state->host->pl;
    IncSet* inc = state->mainPanel->inc;
 
    IncSet_setFilter(inc, *commFilter);
@@ -327,13 +327,14 @@ int CommandLine_run(int argc, char** argv) {
    if (!dc)
       dc = Hashtable_new(0, true);
 
-   ProcessList* pl = ProcessList_new(ut, flags.pidMatchList, flags.userId);
+   Machine* host = Machine_new(ut, flags.userId);
+   ProcessList* pl = ProcessList_new(host, flags.pidMatchList);
+   Settings* settings = Settings_new(host->activeCPUs, dm, dc);
 
-   Settings* settings = Settings_new(pl->activeCPUs, dm, dc);
-   pl->settings = settings;
+   host->settings = settings;
+   Machine_addList(host, pl);
 
-   Header* header = Header_new(pl, settings, 2);
-
+   Header* header = Header_new(host, 2);
    Header_populateFromSettings(header);
 
    if (flags.delay != -1)
@@ -367,9 +368,7 @@ int CommandLine_run(int argc, char** argv) {
    MainPanel_updateLabels(panel, settings->ss->treeView, flags.commFilter);
 
    State state = {
-      .settings = settings,
-      .ut = ut,
-      .pl = pl,
+      .host = host,
       .mainPanel = panel,
       .header = header,
       .pauseUpdate = false,
@@ -381,11 +380,11 @@ int CommandLine_run(int argc, char** argv) {
    if (flags.commFilter)
       setCommFilter(&state, &(flags.commFilter));
 
-   ScreenManager* scr = ScreenManager_new(header, settings, &state, true);
+   ScreenManager* scr = ScreenManager_new(header, host, &state, true);
    ScreenManager_add(scr, (Panel*) panel, -1);
 
    ProcessList_scan(pl, false);
-   CommandLine_delay(pl, 75);
+   CommandLine_delay(host, 75);
    ProcessList_scan(pl, false);
 
    if (settings->ss->allBranchesCollapsed)
@@ -405,6 +404,7 @@ int CommandLine_run(int argc, char** argv) {
 
    Header_delete(header);
    ProcessList_delete(pl);
+   Machine_delete(host);
 
    ScreenManager_delete(scr);
    MetersPanel_cleanup();

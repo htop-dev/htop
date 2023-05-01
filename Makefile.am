@@ -60,6 +60,7 @@ myhtopsources = \
 	InfoScreen.c \
 	ListItem.c \
 	LoadAverageMeter.c \
+	Machine.c \
 	MainPanel.c \
 	MemoryMeter.c \
 	MemorySwapMeter.c \
@@ -122,6 +123,7 @@ myhtopheaders = \
 	InfoScreen.h \
 	ListItem.h \
 	LoadAverageMeter.h \
+	Machine.h \
 	Macros.h \
 	MainPanel.h \
 	MemoryMeter.h \

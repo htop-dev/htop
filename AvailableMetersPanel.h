@@ -10,18 +10,16 @@ in the source distribution for its full text.
 #include <stddef.h>
 
 #include "Header.h"
+#include "Machine.h"
 #include "MetersPanel.h"
 #include "Panel.h"
-#include "ProcessList.h"
 #include "ScreenManager.h"
-#include "Settings.h"
 
 
 typedef struct AvailableMetersPanel_ {
    Panel super;
    ScreenManager* scr;
-
-   Settings* settings;
+   Machine* host;
    Header* header;
    size_t columns;
    MetersPanel** meterPanels;
@@ -29,6 +27,6 @@ typedef struct AvailableMetersPanel_ {
 
 extern const PanelClass AvailableMetersPanel_class;
 
-AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* header, size_t columns, MetersPanel** meterPanels, ScreenManager* scr, const ProcessList* pl);
+AvailableMetersPanel* AvailableMetersPanel_new(Machine* host, Header* header, size_t columns, MetersPanel** meterPanels, ScreenManager* scr);
 
 #endif

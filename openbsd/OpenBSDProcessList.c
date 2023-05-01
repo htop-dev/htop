@@ -38,6 +38,7 @@ static int pageSizeKB;
 
 static void OpenBSDProcessList_updateCPUcount(ProcessList* super) {
    OpenBSDProcessList* opl = (OpenBSDProcessList*) super;
+   Machine* host = super->host;
    const int nmib[] = { CTL_HW, HW_NCPU };
    const int mib[] = { CTL_HW, HW_NCPUONLINE };
    int r;
@@ -51,20 +52,20 @@ static void OpenBSDProcessList_updateCPUcount(ProcessList* super) {
       value = 1;
    }
 
-   if (value != super->activeCPUs) {
-      super->activeCPUs = value;
+   if (value != host->activeCPUs) {
+      host->activeCPUs = value;
       change = true;
    }
 
    size = sizeof(value);
    r = sysctl(nmib, 2, &value, &size, NULL, 0);
    if (r < 0 || value < 1) {
-      value = super->activeCPUs;
+      value = host->activeCPUs;
    }
 
-   if (value != super->existingCPUs) {
+   if (value != host->existingCPUs) {
       opl->cpuData = xReallocArray(opl->cpuData, value + 1, sizeof(CPUData));
-      super->existingCPUs = value;
+      host->existingCPUs = value;
       change = true;
    }
 
@@ -75,7 +76,7 @@ static void OpenBSDProcessList_updateCPUcount(ProcessList* super) {
       dAvg->totalPeriod = 1;
       dAvg->online = true;
 
-      for (unsigned int i = 0; i < super->existingCPUs; i++) {
+      for (unsigned int i = 0; i < host->existingCPUs; i++) {
          CPUData* d = &opl->cpuData[i + 1];
          memset(d, '\0', sizeof(CPUData));
          d->totalTime = 1;
@@ -94,14 +95,14 @@ static void OpenBSDProcessList_updateCPUcount(ProcessList* super) {
 }
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    const int fmib[] = { CTL_KERN, KERN_FSCALE };
    size_t size;
    char errbuf[_POSIX2_LINE_MAX];
 
    OpenBSDProcessList* opl = xCalloc(1, sizeof(OpenBSDProcessList));
    ProcessList* pl = (ProcessList*) opl;
-   ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(OpenBSDProcess), host, pidMatchList);
 
    OpenBSDProcessList_updateCPUcount(pl);
 
@@ -138,6 +139,7 @@ void ProcessList_delete(ProcessList* this) {
 }
 
 static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
+   Machine* host = pl->host;
    const int uvmexp_mib[] = { CTL_VM, VM_UVMEXP };
    struct uvmexp uvmexp;
    size_t size_uvmexp = sizeof(uvmexp);
@@ -146,8 +148,8 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       CRT_fatalError("uvmexp sysctl call failed");
    }
 
-   pl->totalMem = uvmexp.npages * pageSizeKB;
-   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * pageSizeKB;
+   host->totalMem = uvmexp.npages * pageSizeKB;
+   host->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * pageSizeKB;
 
    // Taken from OpenBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
    const int bcache_mib[] = { CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT };
@@ -158,7 +160,7 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       CRT_fatalError("cannot get vfs.bcachestat");
    }
 
-   pl->cachedMem = bcstats.numbufpages * pageSizeKB;
+   host->cachedMem = bcstats.numbufpages * pageSizeKB;
 
    /*
     * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
@@ -183,10 +185,10 @@ static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
          }
       }
 
-      pl->totalSwap = total;
-      pl->usedSwap = used;
+      host->totalSwap = total;
+      host->usedSwap = used;
    } else {
-      pl->totalSwap = pl->usedSwap = 0;
+      host->totalSwap = host->usedSwap = 0;
    }
 }
 
@@ -270,7 +272,8 @@ static double getpcpu(const struct kinfo_proc* kp) {
 }
 
 static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
-   const Settings* settings = this->super.settings;
+   Machine* host = this->super.host;
+   const Settings* settings = host->settings;
    const bool hideKernelThreads = settings->hideKernelThreads;
    const bool hideUserlandThreads = settings->hideUserlandThreads;
    int count = 0;
@@ -331,8 +334,8 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       proc->m_virt = kproc->p_vm_dsize * pageSizeKB;
       proc->m_resident = kproc->p_vm_rssize * pageSizeKB;
 
-      proc->percent_mem = proc->m_resident / (float)this->super.totalMem * 100.0F;
-      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0F, this->super.activeCPUs * 100.0F);
+      proc->percent_mem = proc->m_resident / (float)host->totalMem * 100.0F;
+      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0F, host->activeCPUs * 100.0F);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       proc->nice = kproc->p_nice - 20;
@@ -345,7 +348,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
 
       if (proc->st_uid != kproc->p_uid) {
          proc->st_uid = kproc->p_uid;
-         proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
+         proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
       }
 
       /* Taken from: https://github.com/openbsd/src/blob/6a38af0976a6870911f4b2de19d8da28723a5778/sys/sys/proc.h#L420 */
@@ -422,10 +425,11 @@ static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
 }
 
 static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
+   Machine* host = this->super.host;
    u_int64_t kernelTimes[CPUSTATES] = {0};
    u_int64_t avg[CPUSTATES] = {0};
 
-   for (unsigned int i = 0; i < this->super.existingCPUs; i++) {
+   for (unsigned int i = 0; i < host->existingCPUs; i++) {
       CPUData* cpu = &this->cpuData[i + 1];
 
       if (!cpu->online) {
@@ -446,7 +450,7 @@ static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
    }
 
    for (int i = 0; i < CPUSTATES; i++) {
-      avg[i] /= this->super.activeCPUs;
+      avg[i] /= host->activeCPUs;
    }
 
    kernelCPUTimesToHtop(avg, &this->cpuData[0]);
@@ -478,9 +482,19 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    OpenBSDProcessList_scanProcs(opl);
 }
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
+Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
+   Machine* this = xCalloc(1, sizeof(Machine));
+   Machine_init(this, usersTable, userId);
+   return this;
+}
 
-   const OpenBSDProcessList* opl = (const OpenBSDProcessList*) super;
+void Machine_delete(Machine* host) {
+   free(host);
+}
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+
+   const OpenBSDProcessList* opl = (const OpenBSDProcessList*) host->pl;
    return opl->cpuData[id + 1].online;
 }

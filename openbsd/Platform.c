@@ -181,7 +181,8 @@ int Platform_getMaxPid(void) {
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   const OpenBSDProcessList* pl = (const OpenBSDProcessList*) this->pl;
+   const Machine* host = this->host;
+   const OpenBSDProcessList* pl = (const OpenBSDProcessList*) host->pl;
    const CPUData* cpuData = &(pl->cpuData[cpu]);
    double total;
    double totalPercent;
@@ -196,7 +197,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
    v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
-   if (this->pl->settings->detailedCPUTime) {
+   if (host->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->sysPeriod / total * 100.0;
       v[CPU_METER_IRQ]     = cpuData->intrPeriod / total * 100.0;
       v[CPU_METER_SOFTIRQ] = 0.0;
@@ -222,12 +223,12 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   long int usedMem = pl->usedMem;
-   long int buffersMem = pl->buffersMem;
-   long int cachedMem = pl->cachedMem;
+   const Machine* host = this->host;
+   long int usedMem = host->usedMem;
+   long int buffersMem = host->buffersMem;
+   long int cachedMem = host->cachedMem;
    usedMem -= buffersMem + cachedMem;
-   this->total = pl->totalMem;
+   this->total = host->totalMem;
    this->values[MEMORY_METER_USED] = usedMem;
    this->values[MEMORY_METER_BUFFERS] = buffersMem;
    // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
@@ -237,9 +238,9 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->total = pl->totalSwap;
-   this->values[SWAP_METER_USED] = pl->usedSwap;
+   const Machine* host = this->host;
+   this->total = host->totalSwap;
+   this->values[SWAP_METER_USED] = host->usedSwap;
    // this->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
    // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }

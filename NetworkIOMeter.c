@@ -26,10 +26,10 @@ static uint32_t cached_txb_diff;
 static uint32_t cached_txp_diff;
 
 static void NetworkIOMeter_updateValues(Meter* this) {
-   const ProcessList* pl = this->pl;
+   const Machine* host = this->host;
    static uint64_t cached_last_update = 0;
 
-   uint64_t passedTimeInMs = pl->realtimeMs - cached_last_update;
+   uint64_t passedTimeInMs = host->realtimeMs - cached_last_update;
 
    /* update only every 500ms to have a sane span for rate calculation */
    if (passedTimeInMs > 500) {
@@ -50,7 +50,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
          status = RATESTATUS_DATA;
       }
 
-      cached_last_update = pl->realtimeMs;
+      cached_last_update = host->realtimeMs;
 
       if (status == RATESTATUS_NODATA) {
          xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");

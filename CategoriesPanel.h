@@ -8,23 +8,20 @@ in the source distribution for its full text.
 */
 
 #include "Header.h"
+#include "Machine.h"
 #include "Panel.h"
-#include "ProcessList.h"
 #include "ScreenManager.h"
-#include "Settings.h"
 
 
 typedef struct CategoriesPanel_ {
    Panel super;
    ScreenManager* scr;
-
-   Settings* settings;
+   Machine* host;
    Header* header;
-   ProcessList* pl;
 } CategoriesPanel;
 
 extern const PanelClass CategoriesPanel_class;
 
-CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl);
+CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Header* header, Machine* host);
 
 #endif

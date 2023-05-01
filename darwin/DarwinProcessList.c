@@ -89,15 +89,15 @@ static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
    CRT_fatalError("Unable to get kinfo_procs");
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    DarwinProcessList* this = xCalloc(1, sizeof(DarwinProcessList));
 
-   ProcessList_init(&this->super, Class(DarwinProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(&this->super, Class(DarwinProcess), host, pidMatchList);
 
    /* Initialize the CPU information */
-   this->super.activeCPUs = ProcessList_allocateCPULoadInfo(&this->prev_load);
+   host->activeCPUs = ProcessList_allocateCPULoadInfo(&this->prev_load);
    // TODO: support offline CPUs and hot swapping
-   this->super.existingCPUs = this->super.activeCPUs;
+   host->existingCPUs = host->activeCPUs;
    ProcessList_getHostInfo(&this->host_info);
    ProcessList_allocateCPULoadInfo(&this->curr_load);
 
@@ -123,6 +123,7 @@ void ProcessList_delete(ProcessList* this) {
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    DarwinProcessList* dpl = (DarwinProcessList*)super;
+   const Machine* host = super->host;
    bool preExisting = true;
    struct kinfo_proc* ps;
    size_t count;
@@ -142,13 +143,13 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    /* Get the time difference */
    dpl->global_diff = 0;
-   for (unsigned int i = 0; i < dpl->super.existingCPUs; ++i) {
+   for (unsigned int i = 0; i < host->existingCPUs; ++i) {
       for (size_t j = 0; j < CPU_STATE_MAX; ++j) {
          dpl->global_diff += dpl->curr_load[i].cpu_ticks[j] - dpl->prev_load[i].cpu_ticks[j];
       }
    }
 
-   const double time_interval_ns = Platform_schedulerTicksToNanoseconds(dpl->global_diff) / (double) dpl->super.activeCPUs;
+   const double time_interval_ns = Platform_schedulerTicksToNanoseconds(dpl->global_diff) / (double) host->activeCPUs;
 
    /* Clear the thread counts */
    super->kernelThreads = 0;
@@ -173,7 +174,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
       if (proc->super.st_uid != ps[i].kp_eproc.e_ucred.cr_uid) {
          proc->super.st_uid = ps[i].kp_eproc.e_ucred.cr_uid;
-         proc->super.user = UsersTable_getRef(super->usersTable, proc->super.st_uid);
+         proc->super.user = UsersTable_getRef(host->usersTable, proc->super.st_uid);
       }
 
       // Disabled for High Sierra due to bug in macOS High Sierra
@@ -193,11 +194,21 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    free(ps);
 }
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
+Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
+   Machine* this = xCalloc(1, sizeof(Machine));
+   Machine_init(this, usersTable, userId);
+   return this;
+}
+
+void Machine_delete(Machine* host) {
+   free(host);
+}
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
 
    // TODO: support offline CPUs and hot swapping
-   (void) super; (void) id;
+   (void) host; (void) id;
 
    return true;
 }

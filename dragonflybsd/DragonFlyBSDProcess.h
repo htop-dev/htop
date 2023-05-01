@@ -12,7 +12,7 @@ in the source distribution for its full text.
 
 #include "Object.h"
 #include "Process.h"
-#include "Settings.h"
+#include "Machine.h"
 
 
 typedef struct DragonFlyBSDProcess_ {
@@ -25,7 +25,7 @@ extern const ProcessClass DragonFlyBSDProcess_class;
 
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
-Process* DragonFlyBSDProcess_new(const Settings* settings);
+Process* DragonFlyBSDProcess_new(const Machine* host);
 
 void Process_delete(Object* cast);
 

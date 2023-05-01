@@ -172,8 +172,9 @@ int Platform_getMaxPid(void) {
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   const DragonFlyBSDProcessList* fpl = (const DragonFlyBSDProcessList*) this->pl;
-   unsigned int cpus = this->pl->activeCPUs;
+   const Machine* host = this->host;
+   const DragonFlyBSDProcessList* fpl = (const DragonFlyBSDProcessList*) host->pl;
+   unsigned int cpus = this->host->activeCPUs;
    const CPUData* cpuData;
 
    if (cpus == 1) {
@@ -188,7 +189,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (this->pl->settings->detailedCPUTime) {
+   if (host->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
@@ -209,7 +210,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    // TODO
-   const ProcessList* pl = this->pl;
+   const ProcessList* pl = this->host->pl;
 
    this->total = pl->totalMem;
    this->values[MEMORY_METER_USED] = pl->usedMem;
@@ -221,7 +222,7 @@ void Platform_setMemoryValues(Meter* this) {
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->pl;
+   const ProcessList* pl = this->host->pl;
    this->total = pl->totalSwap;
    this->values[SWAP_METER_USED] = pl->usedSwap;
    // mtr->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"

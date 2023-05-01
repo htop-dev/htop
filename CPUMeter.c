@@ -40,11 +40,12 @@ typedef struct CPUMeterData_ {
 
 static void CPUMeter_init(Meter* this) {
    unsigned int cpu = this->param;
+   const Machine* host = this->host;
    if (cpu == 0) {
       Meter_setCaption(this, "Avg");
-   } else if (this->pl->activeCPUs > 1) {
+   } else if (host->activeCPUs > 1) {
       char caption[10];
-      xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(this->pl->settings, cpu - 1));
+      xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
       Meter_setCaption(this, caption);
    }
 }
@@ -60,8 +61,11 @@ static void CPUMeter_getUiName(const Meter* this, char* buffer, size_t length) {
 static void CPUMeter_updateValues(Meter* this) {
    memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
 
+   const Machine* host = this->host;
+   const Settings* settings = host->settings;
+
    unsigned int cpu = this->param;
-   if (cpu > this->pl->existingCPUs) {
+   if (cpu > host->existingCPUs) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "absent");
       return;
    }
@@ -76,11 +80,11 @@ static void CPUMeter_updateValues(Meter* this) {
    char cpuFrequencyBuffer[16] = { 0 };
    char cpuTemperatureBuffer[16] = { 0 };
 
-   if (this->pl->settings->showCPUUsage) {
+   if (settings->showCPUUsage) {
       xSnprintf(cpuUsageBuffer, sizeof(cpuUsageBuffer), "%.1f%%", percent);
    }
 
-   if (this->pl->settings->showCPUFrequency) {
+   if (settings->showCPUFrequency) {
       double cpuFrequency = this->values[CPU_METER_FREQUENCY];
       if (isnan(cpuFrequency)) {
          xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A");
@@ -90,11 +94,11 @@ static void CPUMeter_updateValues(Meter* this) {
    }
 
    #ifdef BUILD_WITH_CPU_TEMP
-   if (this->pl->settings->showCPUTemperature) {
+   if (settings->showCPUTemperature) {
       double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
       if (isnan(cpuTemperature))
          xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "N/A");
-      else if (this->pl->settings->degreeFahrenheit)
+      else if (settings->degreeFahrenheit)
          xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%3d%sF", (int)(cpuTemperature * 9 / 5 + 32), CRT_degreeSign);
       else
          xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%d%sC", (int)cpuTemperature, CRT_degreeSign);
@@ -113,8 +117,10 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    int len;
    const Meter* this = (const Meter*)cast;
+   const Machine* host = this->host;
+   const Settings* settings = host->settings;
 
-   if (this->param > this->pl->existingCPUs) {
+   if (this->param > host->existingCPUs) {
       RichString_appendAscii(out, CRT_colors[METER_SHADOW], " absent");
       return;
    }
@@ -127,7 +133,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
    len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NORMAL]);
    RichString_appendAscii(out, CRT_colors[METER_TEXT], ":");
    RichString_appendnAscii(out, CRT_colors[CPU_NORMAL], buffer, len);
-   if (this->pl->settings->detailedCPUTime) {
+   if (settings->detailedCPUTime) {
       len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "sy:");
       RichString_appendnAscii(out, CRT_colors[CPU_SYSTEM], buffer, len);
@@ -167,7 +173,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
       }
    }
 
-   if (this->pl->settings->showCPUFrequency) {
+   if (settings->showCPUFrequency) {
       char cpuFrequencyBuffer[10];
       double cpuFrequency = this->values[CPU_METER_FREQUENCY];
       if (isnan(cpuFrequency)) {
@@ -180,12 +186,12 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
    }
 
    #ifdef BUILD_WITH_CPU_TEMP
-   if (this->pl->settings->showCPUTemperature) {
+   if (settings->showCPUTemperature) {
       char cpuTemperatureBuffer[10];
       double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
       if (isnan(cpuTemperature)) {
          len = xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "N/A");
-      } else if (this->pl->settings->degreeFahrenheit) {
+      } else if (settings->degreeFahrenheit) {
          len = xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%5.1f%sF", cpuTemperature * 9 / 5 + 32, CRT_degreeSign);
       } else {
          len = xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%5.1f%sC", cpuTemperature, CRT_degreeSign);
@@ -226,7 +232,7 @@ static void AllCPUsMeter_updateValues(Meter* this) {
 }
 
 static void CPUMeterCommonInit(Meter* this, int ncol) {
-   unsigned int cpus = this->pl->existingCPUs;
+   unsigned int cpus = this->host->existingCPUs;
    CPUMeterData* data = this->meterData;
    if (!data) {
       data = this->meterData = xMalloc(sizeof(CPUMeterData));
@@ -238,7 +244,7 @@ static void CPUMeterCommonInit(Meter* this, int ncol) {
    AllCPUsMeter_getRange(this, &start, &count);
    for (int i = 0; i < count; i++) {
       if (!meters[i])
-         meters[i] = Meter_new(this->pl, start + i + 1, (const MeterClass*) Class(CPUMeter));
+         meters[i] = Meter_new(this->host, start + i + 1, (const MeterClass*) Class(CPUMeter));
 
       Meter_init(meters[i]);
    }

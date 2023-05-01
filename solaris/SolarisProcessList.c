@@ -48,6 +48,7 @@ static char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sp
 }
 
 static void SolarisProcessList_updateCPUcount(ProcessList* super) {
+   Machine* host = super->host;
    SolarisProcessList* spl = (SolarisProcessList*) super;
    long int s;
    bool change = false;
@@ -56,7 +57,7 @@ static void SolarisProcessList_updateCPUcount(ProcessList* super) {
    if (s < 1)
       CRT_fatalError("Cannot get existing CPU count by sysconf(_SC_NPROCESSORS_CONF)");
 
-   if (s != super->existingCPUs) {
+   if (s != host->existingCPUs) {
       if (s == 1) {
          spl->cpus = xRealloc(spl->cpus, sizeof(CPUData));
          spl->cpus[0].online = true;
@@ -69,16 +70,16 @@ static void SolarisProcessList_updateCPUcount(ProcessList* super) {
       }
 
       change = true;
-      super->existingCPUs = s;
+      host->existingCPUs = s;
    }
 
    s = sysconf(_SC_NPROCESSORS_ONLN);
    if (s < 1)
       CRT_fatalError("Cannot get active CPU count by sysconf(_SC_NPROCESSORS_ONLN)");
 
-   if (s != super->activeCPUs) {
+   if (s != host->activeCPUs) {
       change = true;
-      super->activeCPUs = s;
+      host->activeCPUs = s;
    }
 
    if (change) {
@@ -89,10 +90,10 @@ static void SolarisProcessList_updateCPUcount(ProcessList* super) {
    }
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    SolarisProcessList* spl = xCalloc(1, sizeof(SolarisProcessList));
    ProcessList* pl = (ProcessList*) spl;
-   ProcessList_init(pl, Class(SolarisProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(SolarisProcess), host, pidMatchList);
 
    spl->kd = kstat_open();
    if (!spl->kd)
@@ -110,8 +111,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
 
 static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    const SolarisProcessList* spl = (SolarisProcessList*) pl;
-   unsigned int activeCPUs = pl->activeCPUs;
-   unsigned int existingCPUs = pl->existingCPUs;
+   unsigned int activeCPUs = pl->host->activeCPUs;
+   unsigned int existingCPUs = pl->host->existingCPUs;
    kstat_t* cpuinfo = NULL;
    kstat_named_t* idletime = NULL;
    kstat_named_t* intrtime = NULL;
@@ -203,7 +204,9 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
 }
 
 static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
+   Machine* host = pl->host;
    SolarisProcessList* spl = (SolarisProcessList*) pl;
+
    static kstat_t      *meminfo = NULL;
    int                 ksrphyserr = -1;
    kstat_named_t       *totalmem_pgs = NULL;
@@ -230,23 +233,23 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       freemem_pgs    = kstat_data_lookup_wrapper(meminfo, "freemem");
       pages          = kstat_data_lookup_wrapper(meminfo, "pagestotal");
 
-      pl->totalMem   = totalmem_pgs->value.ui64 * pageSizeKB;
-      if (pl->totalMem > freemem_pgs->value.ui64 * pageSizeKB) {
-         pl->usedMem  = pl->totalMem - freemem_pgs->value.ui64 * pageSizeKB;
+      host->totalMem = totalmem_pgs->value.ui64 * pageSizeKB;
+      if (host->totalMem > freemem_pgs->value.ui64 * pageSizeKB) {
+         host->usedMem = host->totalMem - freemem_pgs->value.ui64 * pageSizeKB;
       } else {
-         pl->usedMem  = 0;   // This can happen in non-global zone (in theory)
+         host->usedMem = 0;   // This can happen in non-global zone (in theory)
       }
       // Not sure how to implement this on Solaris - suggestions welcome!
-      pl->cachedMem  = 0;
+      host->cachedMem = 0;
       // Not really "buffers" but the best Solaris analogue that I can find to
       // "memory in use but not by programs or the kernel itself"
-      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * pageSizeKB;
+      host->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * pageSizeKB;
    } else {
       // Fall back to basic sysconf if kstat isn't working
-      pl->totalMem = sysconf(_SC_PHYS_PAGES) * pageSize;
-      pl->buffersMem = 0;
-      pl->cachedMem  = 0;
-      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * pageSize);
+      host->totalMem = sysconf(_SC_PHYS_PAGES) * pageSize;
+      host->buffersMem = 0;
+      host->cachedMem = 0;
+      host->usedMem = host->totalMem - (sysconf(_SC_AVPHYS_PAGES) * pageSize);
    }
 
    // Part 2 - swap
@@ -276,8 +279,8 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    free(spathbase);
    free(sl);
-   pl->totalSwap = totalswap * pageSizeKB;
-   pl->usedSwap  = pl->totalSwap - (totalfree * pageSizeKB);
+   host->totalSwap = totalswap * pageSizeKB;
+   host->usedSwap  = host->totalSwap - (totalfree * pageSizeKB);
 }
 
 static inline void SolarisProcessList_scanZfsArcstats(ProcessList* pl) {
@@ -389,6 +392,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    // Setup process list
    ProcessList* pl = (ProcessList*) listptr;
    SolarisProcessList* spl = (SolarisProcessList*) listptr;
+   Machine* host = pl->super.host;
 
    id_t lwpid_real = _lwpsinfo->pr_lwpid;
    if (lwpid_real > 1023) {
@@ -438,7 +442,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
 
    if (proc->st_uid != _psinfo->pr_euid) {
       proc->st_uid          = _psinfo->pr_euid;
-      proc->user            = UsersTable_getRef(pl->usersTable, proc->st_uid);
+      proc->user            = UsersTable_getRef(host->usersTable, proc->st_uid);
    }
 
    if (!preExisting) {
@@ -551,10 +555,20 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc_walk(&SolarisProcessList_walkproc, super, PR_WALK_LWP);
 }
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
+Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
+   Machine* this = xCalloc(1, sizeof(Machine));
+   Machine_init(this, usersTable, userId);
+   return this;
+}
 
-   const SolarisProcessList* spl = (const SolarisProcessList*) super;
+void Machine_delete(Machine* host) {
+   free(host);
+}
 
-   return (super->existingCPUs == 1) ? true : spl->cpus[id + 1].online;
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+
+   const SolarisProcessList* spl = (const SolarisProcessList*) host->pl;
+
+   return (super->host->existingCPUs == 1) ? true : spl->cpus[id + 1].online;
 }

@@ -88,10 +88,10 @@ const ProcessFieldData Process_fields[] = {
    [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
 };
 
-Process* PCPProcess_new(const Settings* settings) {
+Process* PCPProcess_new(const Machine* host) {
    PCPProcess* this = xCalloc(1, sizeof(PCPProcess));
    Object_setClass(this, Class(PCPProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, host);
    return &this->super;
 }
 
@@ -113,7 +113,7 @@ static void PCPProcess_printDelay(float delay_percent, char* buffer, int n) {
 
 static void PCPProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const PCPProcess* pp = (const PCPProcess*) this;
-   bool coloring = this->settings->highlightMegabytes;
+   bool coloring = this->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;

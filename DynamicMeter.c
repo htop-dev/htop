@@ -88,7 +88,7 @@ static void DynamicMeter_display(const Object* cast, RichString* out) {
 }
 
 static const char* DynamicMeter_getCaption(const Meter* this) {
-   const Settings* settings = this->pl->settings;
+   const Settings* settings = this->host->settings;
    const DynamicMeter* meter = Hashtable_get(settings->dynamicMeters, this->param);
    if (meter)
       return meter->caption ? meter->caption : meter->name;
@@ -96,7 +96,7 @@ static const char* DynamicMeter_getCaption(const Meter* this) {
 }
 
 static void DynamicMeter_getUiName(const Meter* this, char* name, size_t length) {
-   const Settings* settings = this->pl->settings;
+   const Settings* settings = this->host->settings;
    const DynamicMeter* meter = Hashtable_get(settings->dynamicMeters, this->param);
    if (meter) {
       const char* uiName = meter->caption;

@@ -51,10 +51,10 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [TRANSLATED] = { .name = "TRANSLATED", .title = "T ", .description = "Translation info (T translated, N native)", .flags = 0, },
 };
 
-Process* DarwinProcess_new(const Settings* settings) {
+Process* DarwinProcess_new(const Machine* host) {
    DarwinProcess* this = xCalloc(1, sizeof(DarwinProcess));
    Object_setClass(this, Class(DarwinProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, host);
 
    this->utime = 0;
    this->stime = 0;
@@ -291,6 +291,7 @@ static char* DarwinProcess_getDevname(dev_t dev) {
 
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists) {
    DarwinProcess* dp = (DarwinProcess*)proc;
+   const Settings* settings = proc->host->settings;
 
    const struct extern_proc* ep = &ps->kp_proc;
 
@@ -328,7 +329,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       DarwinProcess_updateExe(ep->p_pid, proc);
       DarwinProcess_updateCmdLine(ps, proc);
 
-      if (proc->settings->ss->flags & PROCESS_FLAG_CWD) {
+      if (settings->ss->flags & PROCESS_FLAG_CWD) {
          DarwinProcess_updateCwd(ep->p_pid, proc);
       }
    }
@@ -341,7 +342,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
        * To mitigate this we only fetch TTY information if the TTY
        * field is enabled in the settings.
        */
-      if (proc->settings->ss->flags & PROCESS_FLAG_TTY) {
+      if (settings->ss->flags & PROCESS_FLAG_TTY) {
          proc->tty_name = DarwinProcess_getDevname(proc->tty_nr);
          if (!proc->tty_name) {
             /* devname failed: prevent us from calling it again */

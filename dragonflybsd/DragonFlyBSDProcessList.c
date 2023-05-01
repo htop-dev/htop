@@ -42,12 +42,12 @@ static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
 static int kernelFScale;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    size_t len;
    char errbuf[_POSIX2_LINE_MAX];
    DragonFlyBSDProcessList* dfpl = xCalloc(1, sizeof(DragonFlyBSDProcessList));
    ProcessList* pl = (ProcessList*) dfpl;
-   ProcessList_init(pl, Class(DragonFlyBSDProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(DragonFlyBSDProcess), host, pidMatchList);
 
    // physical memory in system: hw.physmem
    // physical page size: hw.pagesize
@@ -95,15 +95,15 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_o, &len, NULL, 0);
    }
 
-   pl->existingCPUs = MAXIMUM(cpus, 1);
+   host->existingCPUs = MAXIMUM(cpus, 1);
    // TODO: support offline CPUs and hot swapping
-   pl->activeCPUs = pl->existingCPUs;
+   host->activeCPUs = host->existingCPUs;
 
    if (cpus == 1 ) {
       dfpl->cpus = xRealloc(dfpl->cpus, sizeof(CPUData));
    } else {
       // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
-      dfpl->cpus = xRealloc(dfpl->cpus, (pl->existingCPUs + 1) * sizeof(CPUData));
+      dfpl->cpus = xRealloc(dfpl->cpus, (host->existingCPUs + 1) * sizeof(CPUData));
    }
 
    len = sizeof(kernelFScale);
@@ -420,7 +420,8 @@ static char* DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl,
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) super;
-   const Settings* settings = super->settings;
+   const Machine* host = super->host;
+   const Settings* settings = host->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
@@ -467,7 +468,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->processor = kproc->kp_lwp.kl_origcpu;
          proc->starttime_ctime = kproc->kp_start.tv_sec;
          Process_fillStarttimeBuffer(proc);
-         proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
+         proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
 
          proc->tty_nr = kproc->kp_tdev; // control terminal device number
          const char* name = (kproc->kp_tdev != NODEV) ? devname(kproc->kp_tdev, S_IFCHR) : NULL;
@@ -499,7 +500,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->ppid = kproc->kp_ppid;
          if (proc->st_uid != kproc->kp_uid) {	// some processes change users (eg. to lower privs)
             proc->st_uid = kproc->kp_uid;
-            proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
+            proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
             DragonFlyBSDProcessList_updateProcessName(dfpl->kd, kproc, proc);
@@ -605,11 +606,21 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    }
 }
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
+Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
+   Machine* this = xCalloc(1, sizeof(Machine));
+   Machine_init(this, usersTable, userId);
+   return this;
+}
+
+void Machine_delete(Machine* host) {
+   free(host);
+}
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
 
    // TODO: support offline CPUs and hot swapping
-   (void) super; (void) id;
+   (void) host; (void) id;
 
    return true;
 }

@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <sys/time.h>
 
 #include "Macros.h"
+#include "Machine.h"
 #include "Object.h"
 #include "Platform.h"
 #include "Process.h"
@@ -30,16 +31,16 @@ in the source distribution for its full text.
 
 
 static void PCPProcessList_updateCPUcount(PCPProcessList* this) {
-   ProcessList* pl = &(this->super);
-   pl->activeCPUs = PCPMetric_instanceCount(PCP_PERCPU_SYSTEM);
+   Machine* host = this->super.host;
+   host->activeCPUs = PCPMetric_instanceCount(PCP_PERCPU_SYSTEM);
    unsigned int cpus = Platform_getMaxCPU();
-   if (cpus == pl->existingCPUs)
+   if (cpus == host->existingCPUs)
       return;
    if (cpus == 0)
-      cpus = pl->activeCPUs;
+      cpus = host->activeCPUs;
    if (cpus <= 1)
-      cpus = pl->activeCPUs = 1;
-   pl->existingCPUs = cpus;
+      cpus = host->activeCPUs = 1;
+   host->existingCPUs = cpus;
 
    free(this->percpu);
    free(this->values);
@@ -63,11 +64,11 @@ static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
    return name;
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    PCPProcessList* this = xCalloc(1, sizeof(PCPProcessList));
    ProcessList* super = &(this->super);
 
-   ProcessList_init(super, Class(PCPProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(super, Class(PCPProcess), host, pidMatchList);
 
    struct timeval timestamp;
    gettimeofday(&timestamp, NULL);
@@ -83,7 +84,7 @@ void ProcessList_delete(ProcessList* pl) {
    PCPProcessList* this = (PCPProcessList*) pl;
    ProcessList_done(pl);
    free(this->values);
-   for (unsigned int i = 0; i < pl->existingCPUs; i++)
+   for (unsigned int i = 0; i < pl->host->existingCPUs; i++)
       free(this->percpu[i]);
    free(this->percpu);
    free(this->cpu);
@@ -341,7 +342,9 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
 
 static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, struct timeval* tv) {
    ProcessList* pl = (ProcessList*) this;
-   const Settings* settings = pl->settings;
+
+   Machine* host = pl->host;
+   const Settings* settings = host->settings;
 
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
@@ -406,11 +409,11 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
 
       float percent_cpu = (pp->utime + pp->stime - lasttimes) / period * 100.0;
       proc->percent_cpu = isnan(percent_cpu) ?
-                          0.0 : CLAMP(percent_cpu, 0.0, pl->activeCPUs * 100.0);
-      proc->percent_mem = proc->m_resident / (double)pl->totalMem * 100.0;
+                          0.0 : CLAMP(percent_cpu, 0.0, host->activeCPUs * 100.0);
+      proc->percent_mem = proc->m_resident / (double)host->totalMem * 100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
-      PCPProcessList_updateUsername(proc, pid, offset, pl->usersTable);
+      PCPProcessList_updateUsername(proc, pid, offset, host->usersTable);
 
       if (!preExisting) {
          PCPProcessList_updateCmdline(proc, pid, offset, command);
@@ -465,39 +468,40 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this, double period, 
 }
 
 static void PCPProcessList_updateMemoryInfo(ProcessList* super) {
+   Machine* host = super->host;
    unsigned long long int freeMem = 0;
    unsigned long long int swapFreeMem = 0;
    unsigned long long int sreclaimableMem = 0;
-   super->totalMem = super->usedMem = super->cachedMem = 0;
-   super->usedSwap = super->totalSwap = super->sharedMem = 0;
+   host->totalMem = host->usedMem = host->cachedMem = 0;
+   host->usedSwap = host->totalSwap = host->sharedMem = 0;
 
    pmAtomValue value;
    if (PCPMetric_values(PCP_MEM_TOTAL, &value, 1, PM_TYPE_U64) != NULL)
-      super->totalMem = value.ull;
+      host->totalMem = value.ull;
    if (PCPMetric_values(PCP_MEM_FREE, &value, 1, PM_TYPE_U64) != NULL)
       freeMem = value.ull;
    if (PCPMetric_values(PCP_MEM_BUFFERS, &value, 1, PM_TYPE_U64) != NULL)
-      super->buffersMem = value.ull;
+      host->buffersMem = value.ull;
    if (PCPMetric_values(PCP_MEM_SRECLAIM, &value, 1, PM_TYPE_U64) != NULL)
       sreclaimableMem = value.ull;
    if (PCPMetric_values(PCP_MEM_SHARED, &value, 1, PM_TYPE_U64) != NULL)
-      super->sharedMem = value.ull;
+      host->sharedMem = value.ull;
    if (PCPMetric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL)
-      super->cachedMem = value.ull + sreclaimableMem - super->sharedMem;
-   const memory_t usedDiff = freeMem + super->cachedMem + sreclaimableMem + super->buffersMem;
-   super->usedMem = (super->totalMem >= usedDiff) ?
-           super->totalMem - usedDiff : super->totalMem - freeMem;
+      host->cachedMem = value.ull + sreclaimableMem - host->sharedMem;
+   const memory_t usedDiff = freeMem + host->cachedMem + sreclaimableMem + host->buffersMem;
+   host->usedMem = (host->totalMem >= usedDiff) ?
+           host->totalMem - usedDiff : host->totalMem - freeMem;
    if (PCPMetric_values(PCP_MEM_AVAILABLE, &value, 1, PM_TYPE_U64) != NULL)
-      super->availableMem = MINIMUM(value.ull, super->totalMem);
+      host->availableMem = MINIMUM(value.ull, host->totalMem);
    else
-      super->availableMem = freeMem;
+      host->availableMem = freeMem;
    if (PCPMetric_values(PCP_MEM_SWAPFREE, &value, 1, PM_TYPE_U64) != NULL)
       swapFreeMem = value.ull;
    if (PCPMetric_values(PCP_MEM_SWAPTOTAL, &value, 1, PM_TYPE_U64) != NULL)
-      super->totalSwap = value.ull;
+      host->totalSwap = value.ull;
    if (PCPMetric_values(PCP_MEM_SWAPCACHED, &value, 1, PM_TYPE_U64) != NULL)
-      super->cachedSwap = value.ull;
-   super->usedSwap = super->totalSwap - swapFreeMem - super->cachedSwap;
+      host->cachedSwap = value.ull;
+   host->usedSwap = host->totalSwap - swapFreeMem - host->cachedSwap;
 }
 
 /* make copies of previously sampled values to avoid overwrite */
@@ -576,7 +580,7 @@ static void PCPProcessList_updateAllCPUTime(PCPProcessList* this, PCPMetric metr
 
 static void PCPProcessList_updatePerCPUTime(PCPProcessList* this, PCPMetric metric, CPUMetric cpumetric)
 {
-   int cpus = this->super.existingCPUs;
+   int cpus = this->super.host->existingCPUs;
    if (PCPMetric_values(metric, this->values, cpus, PM_TYPE_U64) == NULL)
       memset(this->values, 0, cpus * sizeof(pmAtomValue));
    for (int i = 0; i < cpus; i++)
@@ -585,7 +589,7 @@ static void PCPProcessList_updatePerCPUTime(PCPProcessList* this, PCPMetric metr
 
 static void PCPProcessList_updatePerCPUReal(PCPProcessList* this, PCPMetric metric, CPUMetric cpumetric)
 {
-   int cpus = this->super.existingCPUs;
+   int cpus = this->super.host->existingCPUs;
    if (PCPMetric_values(metric, this->values, cpus, PM_TYPE_DOUBLE) == NULL)
       memset(this->values, 0, cpus * sizeof(pmAtomValue));
    for (int i = 0; i < cpus; i++)
@@ -630,6 +634,7 @@ static inline void PCPProcessList_scanZfsArcstats(PCPProcessList* this) {
 }
 
 static void PCPProcessList_updateHeader(ProcessList* super, const Settings* settings) {
+   Machine* host = super->host;
    PCPProcessList_updateMemoryInfo(super);
 
    PCPProcessList* this = (PCPProcessList*) super;
@@ -647,7 +652,7 @@ static void PCPProcessList_updateHeader(ProcessList* super, const Settings* sett
    PCPProcessList_updateAllCPUTime(this, PCP_CPU_GUEST, CPU_GUEST_TIME);
    PCPProcessList_deriveCPUTime(this->cpu);
 
-   for (unsigned int i = 0; i < super->existingCPUs; i++)
+   for (unsigned int i = 0; i < host->existingCPUs; i++)
       PCPProcessList_backupCPUTime(this->percpu[i]);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_USER, CPU_USER_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_NICE, CPU_NICE_TIME);
@@ -658,7 +663,7 @@ static void PCPProcessList_updateHeader(ProcessList* super, const Settings* sett
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_SOFTIRQ, CPU_SOFTIRQ_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_STEAL, CPU_STEAL_TIME);
    PCPProcessList_updatePerCPUTime(this, PCP_PERCPU_GUEST, CPU_GUEST_TIME);
-   for (unsigned int i = 0; i < super->existingCPUs; i++)
+   for (unsigned int i = 0; i < host->existingCPUs; i++)
       PCPProcessList_deriveCPUTime(this->percpu[i]);
 
    if (settings->showCPUFrequency)
@@ -669,7 +674,8 @@ static void PCPProcessList_updateHeader(ProcessList* super, const Settings* sett
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    PCPProcessList* this = (PCPProcessList*) super;
-   const Settings* settings = super->settings;
+   Machine* host = super->host;
+   const Settings* settings = host->settings;
    bool enabled = !pauseProcessUpdate;
 
    bool flagged = settings->showCPUFrequency;
@@ -716,9 +722,19 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    PCPProcessList_updateProcesses(this, period, &timestamp);
 }
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
-   (void) super;
+Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
+   Machine* this = xCalloc(1, sizeof(Machine));
+   Machine_init(this, usersTable, userId);
+   return this;
+}
+
+void Machine_delete(Machine* host) {
+   free(host);
+}
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host;
 
    pmAtomValue value;
    if (PCPMetric_instance(PCP_PERCPU_SYSTEM, id, id, &value, PM_TYPE_U32))

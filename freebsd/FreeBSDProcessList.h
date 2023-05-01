@@ -47,12 +47,16 @@ typedef struct FreeBSDProcessList_ {
 
 } FreeBSDProcessList;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId);
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList);
 
 void ProcessList_delete(ProcessList* this);
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id);
+Machine* Machine_new(UsersTable* usersTable, uid_t userId);
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id);
+
+void Machine_delete(Machine* host);
 
 #endif

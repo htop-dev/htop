@@ -11,7 +11,7 @@ in the source distribution for its full text.
 
 #include "Object.h"
 #include "Process.h"
-#include "Settings.h"
+#include "Machine.h"
 
 
 typedef struct FreeBSDProcess_ {
@@ -25,7 +25,7 @@ extern const ProcessClass FreeBSDProcess_class;
 
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
-Process* FreeBSDProcess_new(const Settings* settings);
+Process* FreeBSDProcess_new(const Machine* host);
 
 void Process_delete(Object* cast);
 

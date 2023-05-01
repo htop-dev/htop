@@ -233,13 +233,13 @@ int Platform_getMaxPid(void) {
 }
 
 static double Platform_setCPUAverageValues(Meter* mtr) {
-   const ProcessList* dpl = mtr->pl;
-   unsigned int activeCPUs = dpl->activeCPUs;
+   const Machine* host = mtr->host;
+   unsigned int activeCPUs = host->activeCPUs;
    double sumNice = 0.0;
    double sumNormal = 0.0;
    double sumKernel = 0.0;
    double sumPercent = 0.0;
-   for (unsigned int i = 1; i <= dpl->existingCPUs; i++) {
+   for (unsigned int i = 1; i <= host->existingCPUs; i++) {
       sumPercent += Platform_setCPUValues(mtr, i);
       sumNice    += mtr->values[CPU_METER_NICE];
       sumNormal  += mtr->values[CPU_METER_NORMAL];
@@ -257,7 +257,7 @@ double Platform_setCPUValues(Meter* mtr, unsigned int cpu) {
       return Platform_setCPUAverageValues(mtr);
    }
 
-   const DarwinProcessList* dpl = (const DarwinProcessList*)mtr->pl;
+   const DarwinProcessList* dpl = (const DarwinProcessList*)mtr->host->pl;
    const processor_cpu_load_info_t prev = &dpl->prev_load[cpu - 1];
    const processor_cpu_load_info_t curr = &dpl->curr_load[cpu - 1];
    double total = 0;
@@ -286,7 +286,8 @@ double Platform_setCPUValues(Meter* mtr, unsigned int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* mtr) {
-   const DarwinProcessList* dpl = (const DarwinProcessList*)mtr->pl;
+   const Machine* host = mtr->host;
+   const DarwinProcessList* dpl = (const DarwinProcessList*) host->pl;
    const struct vm_statistics* vm = &dpl->vm_stats;
    double page_K = (double)vm_page_size / (double)1024;
 
@@ -312,13 +313,13 @@ void Platform_setSwapValues(Meter* mtr) {
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const DarwinProcessList* dpl = (const DarwinProcessList*) this->pl;
+   const DarwinProcessList* dpl = (const DarwinProcessList*) this->host->pl;
 
    ZfsArcMeter_readStats(this, &(dpl->zfs));
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const DarwinProcessList* dpl = (const DarwinProcessList*) this->pl;
+   const DarwinProcessList* dpl = (const DarwinProcessList*) this->host->pl;
 
    ZfsCompressedArcMeter_readStats(this, &(dpl->zfs));
 }

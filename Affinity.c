@@ -27,11 +27,11 @@ in the source distribution for its full text.
 #endif
 
 
-Affinity* Affinity_new(ProcessList* pl) {
+Affinity* Affinity_new(Machine* host) {
    Affinity* this = xCalloc(1, sizeof(Affinity));
    this->size = 8;
    this->cpus = xCalloc(this->size, sizeof(unsigned int));
-   this->pl = pl;
+   this->host = host;
    return this;
 }
 
@@ -52,14 +52,14 @@ void Affinity_add(Affinity* this, unsigned int id) {
 
 #if defined(HAVE_LIBHWLOC)
 
-Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
+Affinity* Affinity_get(const Process* proc, Machine* host) {
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
-   bool ok = (hwloc_get_proc_cpubind(pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
+   bool ok = (hwloc_get_proc_cpubind(host->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
    Affinity* affinity = NULL;
    if (ok) {
-      affinity = Affinity_new(pl);
+      affinity = Affinity_new(host);
       if (hwloc_bitmap_last(cpuset) == -1) {
-         for (unsigned int i = 0; i < pl->existingCPUs; i++) {
+         for (unsigned int i = 0; i < host->existingCPUs; i++) {
             Affinity_add(affinity, i);
          }
       } else {
@@ -79,21 +79,21 @@ bool Affinity_set(Process* proc, Arg arg) {
    for (unsigned int i = 0; i < this->used; i++) {
       hwloc_bitmap_set(cpuset, this->cpus[i]);
    }
-   bool ok = (hwloc_set_proc_cpubind(this->pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
+   bool ok = (hwloc_set_proc_cpubind(this->host->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
    hwloc_bitmap_free(cpuset);
    return ok;
 }
 
 #elif defined(HAVE_AFFINITY)
 
-Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
+Affinity* Affinity_get(const Process* proc, Machine* host) {
    cpu_set_t cpuset;
    bool ok = (sched_getaffinity(proc->pid, sizeof(cpu_set_t), &cpuset) == 0);
    if (!ok)
       return NULL;
 
-   Affinity* affinity = Affinity_new(pl);
-   for (unsigned int i = 0; i < pl->existingCPUs; i++) {
+   Affinity* affinity = Affinity_new(host);
+   for (unsigned int i = 0; i < host->existingCPUs; i++) {
       if (CPU_ISSET(i, &cpuset)) {
          Affinity_add(affinity, i);
       }

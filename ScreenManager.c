@@ -24,7 +24,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-ScreenManager* ScreenManager_new(Header* header, const Settings* settings, State* state, bool owner) {
+ScreenManager* ScreenManager_new(Header* header, Machine* host, State* state, bool owner) {
    ScreenManager* this;
    this = xMalloc(sizeof(ScreenManager));
    this->x1 = 0;
@@ -34,7 +34,7 @@ ScreenManager* ScreenManager_new(Header* header, const Settings* settings, State
    this->panels = Vector_new(Class(Panel), owner, DEFAULT_SIZE);
    this->panelCount = 0;
    this->header = header;
-   this->settings = settings;
+   this->host = host;
    this->state = state;
    this->allowFocusChange = true;
    return this;
@@ -116,12 +116,12 @@ void ScreenManager_resize(ScreenManager* this) {
 }
 
 static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut, bool* force_redraw) {
-   ProcessList* pl = this->header->pl;
+   Machine* host = this->host;
 
-   Platform_gettime_realtime(&pl->realtime, &pl->realtimeMs);
-   double newTime = ((double)pl->realtime.tv_sec * 10) + ((double)pl->realtime.tv_usec / 100000);
+   Platform_gettime_realtime(&host->realtime, &host->realtimeMs);
+   double newTime = ((double)host->realtime.tv_sec * 10) + ((double)host->realtime.tv_usec / 100000);
 
-   *timedOut = (newTime - *oldTime > this->settings->delay);
+   *timedOut = (newTime - *oldTime > host->settings->delay);
    *rescan |= *timedOut;
 
    if (newTime < *oldTime) {
@@ -131,12 +131,12 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    if (*rescan) {
       *oldTime = newTime;
       int oldUidDigits = Process_uidDigits;
-      if (!this->state->pauseUpdate && (*sortTimeout == 0 || this->settings->ss->treeView)) {
-         pl->needsSort = true;
+      if (!this->state->pauseUpdate && (*sortTimeout == 0 || host->settings->ss->treeView)) {
+         host->pl->needsSort = true;
          *sortTimeout = 1;
       }
       // scan processes first - some header values are calculated there
-      ProcessList_scan(pl, this->state->pauseUpdate);
+      ProcessList_scan(host->pl, this->state->pauseUpdate);
       // always update header, especially to avoid gaps in graph meters
       Header_updateData(this->header);
       // force redraw if the number of UID digits was changed
@@ -146,7 +146,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       *redraw = true;
    }
    if (*redraw) {
-      ProcessList_rebuildPanel(pl);
+      ProcessList_rebuildPanel(host->pl);
       if (!this->state->hideMeters)
          Header_draw(this->header);
    }
@@ -175,8 +175,9 @@ static inline bool drawTab(const int* y, int* x, int l, const char* name, bool c
 }
 
 static void ScreenManager_drawScreenTabs(ScreenManager* this) {
-   ScreenSettings** screens = this->settings->screens;
-   int cur = this->settings->ssIndex;
+   Settings* settings = this->host->settings;
+   ScreenSettings** screens = settings->screens;
+   int cur = settings->ssIndex;
    int l = COLS;
    Panel* panel = (Panel*) Vector_get(this->panels, 0);
    int y = panel->y - 1;
@@ -197,7 +198,8 @@ static void ScreenManager_drawScreenTabs(ScreenManager* this) {
 }
 
 static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_redraw) {
-   if (this->settings->screenTabs) {
+   Settings* settings = this->host->settings;
+   if (settings->screenTabs) {
       ScreenManager_drawScreenTabs(this);
    }
    const int nPanels = this->panelCount;
@@ -217,6 +219,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
    int focus = 0;
 
    Panel* panelFocus = (Panel*) Vector_get(this->panels, focus);
+   Settings* settings = this->host->settings;
 
    double oldTime = 0.0;
 
@@ -247,7 +250,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
 
       HandlerResult result = IGNORED;
 #ifdef HAVE_GETMOUSE
-      if (ch == KEY_MOUSE && this->settings->enableMouse) {
+      if (ch == KEY_MOUSE && settings->enableMouse) {
          ch = ERR;
          MEVENT mevent;
          int ok = getmouse(&mevent);
@@ -262,7 +265,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
                         if (mevent.y == panel->y) {
                            ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
                            break;
-                        } else if (this->settings->screenTabs && mevent.y == panel->y - 1) {
+                        } else if (settings->screenTabs && mevent.y == panel->y - 1) {
                            ch = EVENT_SCREEN_TAB_CLICK(mevent.x);
                            break;
                         } else if (mevent.y > panel->y && mevent.y <= panel->y + panel->h) {

@@ -106,10 +106,10 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 #endif
 };
 
-Process* LinuxProcess_new(const Settings* settings) {
+Process* LinuxProcess_new(const Machine* host) {
    LinuxProcess* this = xCalloc(1, sizeof(LinuxProcess));
    Object_setClass(this, Class(LinuxProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, host);
    return &this->super;
 }
 
@@ -197,7 +197,7 @@ bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
 
 static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const LinuxProcess* lp = (const LinuxProcess*) this;
-   bool coloring = this->settings->highlightMegabytes;
+   bool coloring = this->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;

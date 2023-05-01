@@ -53,9 +53,9 @@ static void MemorySwapMeter_init(Meter* this) {
    }
 
    if (!data->memoryMeter)
-      data->memoryMeter = Meter_new(this->pl, 0, (const MeterClass*) Class(MemoryMeter));
+      data->memoryMeter = Meter_new(this->host, 0, (const MeterClass*) Class(MemoryMeter));
    if (!data->swapMeter)
-      data->swapMeter = Meter_new(this->pl, 0, (const MeterClass*) Class(SwapMeter));
+      data->swapMeter = Meter_new(this->host, 0, (const MeterClass*) Class(SwapMeter));
 
    if (Meter_initFn(data->memoryMeter))
       Meter_init(data->memoryMeter);

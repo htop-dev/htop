@@ -11,8 +11,8 @@ in the source distribution for its full text.
 
 #include "Action.h"
 #include "Header.h"
+#include "Machine.h"
 #include "Panel.h"
-#include "Settings.h"
 #include "Vector.h"
 
 
@@ -25,12 +25,12 @@ typedef struct ScreenManager_ {
    const char* name;
    int panelCount;
    Header* header;
-   const Settings* settings;
+   Machine* host;
    State* state;
    bool allowFocusChange;
 } ScreenManager;
 
-ScreenManager* ScreenManager_new(Header* header, const Settings* settings, State* state, bool owner);
+ScreenManager* ScreenManager_new(Header* header, Machine* host, State* state, bool owner);
 
 void ScreenManager_delete(ScreenManager* this);
 

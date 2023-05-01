@@ -47,12 +47,12 @@ static void LoadAverageMeter_updateValues(Meter* this) {
    if (this->values[0] < 1.0) {
       this->curAttributes = OK_attributes;
       this->total = 1.0;
-   } else if (this->values[0] < this->pl->activeCPUs) {
+   } else if (this->values[0] < this->host->activeCPUs) {
       this->curAttributes = Medium_attributes;
-      this->total = this->pl->activeCPUs;
+      this->total = this->host->activeCPUs;
    } else {
       this->curAttributes = High_attributes;
-      this->total = 2 * this->pl->activeCPUs;
+      this->total = 2 * this->host->activeCPUs;
    }
 
    xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
@@ -79,12 +79,12 @@ static void LoadMeter_updateValues(Meter* this) {
    if (this->values[0] < 1.0) {
       this->curAttributes = OK_attributes;
       this->total = 1.0;
-   } else if (this->values[0] < this->pl->activeCPUs) {
+   } else if (this->values[0] < this->host->activeCPUs) {
       this->curAttributes = Medium_attributes;
-      this->total = this->pl->activeCPUs;
+      this->total = this->host->activeCPUs;
    } else {
       this->curAttributes = High_attributes;
-      this->total = 2 * this->pl->activeCPUs;
+      this->total = 2 * this->host->activeCPUs;
    }
 
    xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.2f", this->values[0]);

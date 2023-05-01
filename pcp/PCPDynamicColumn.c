@@ -304,7 +304,7 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
 }
 
 int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, ProcessField key) {
-   const PCPDynamicColumn* column = Hashtable_get(p1->super.settings->dynamicColumns, key);
+   const PCPDynamicColumn* column = Hashtable_get(p1->super.host->settings->dynamicColumns, key);
 
    if (!column)
       return -1;

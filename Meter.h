@@ -15,8 +15,8 @@ in the source distribution for its full text.
 #include <sys/time.h>
 
 #include "ListItem.h"
+#include "Machine.h"
 #include "Object.h"
-#include "ProcessList.h"
 
 
 #define METER_TXTBUFFER_LEN 256
@@ -105,6 +105,7 @@ typedef struct GraphData_ {
 struct Meter_ {
    Object super;
    Meter_Draw draw;
+   const Machine* host;
 
    char* caption;
    int mode;
@@ -112,7 +113,6 @@ struct Meter_ {
    GraphData* drawData;
    int h;
    int columnWidthCount;      /**< only used internally by the Header */
-   const ProcessList* pl;
    uint8_t curItems;
    const int* curAttributes;
    char txtBuffer[METER_TXTBUFFER_LEN];
@@ -145,7 +145,7 @@ typedef enum {
 
 extern const MeterClass Meter_class;
 
-Meter* Meter_new(const ProcessList* pl, unsigned int param, const MeterClass* type);
+Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type);
 
 int Meter_humanUnit(char* buffer, unsigned long int value, size_t size);
 

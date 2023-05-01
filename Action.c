@@ -27,6 +27,7 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
+#include "ProcessList.h"
 #include "ProcessLocksScreen.h"
 #include "ProvideCurses.h"
 #include "Scheduling.h"
@@ -45,9 +46,10 @@ in the source distribution for its full text.
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    MainPanel* mainPanel = st->mainPanel;
    Header* header = st->header;
+   Machine* host = st->host;
 
    int y = ((Panel*)mainPanel)->y;
-   ScreenManager* scr = ScreenManager_new(header, st->settings, st, false);
+   ScreenManager* scr = ScreenManager_new(header, host, st, false);
    scr->allowFocusChange = false;
    ScreenManager_add(scr, list, x);
    ScreenManager_add(scr, (Panel*)mainPanel, -1);
@@ -55,13 +57,13 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    int ch;
    bool unfollow = false;
    int pid = followProcess ? MainPanel_selectedPid(mainPanel) : -1;
-   if (followProcess && header->pl->following == -1) {
-      header->pl->following = pid;
+   if (followProcess && host->pl->following == -1) {
+      host->pl->following = pid;
       unfollow = true;
    }
    ScreenManager_run(scr, &panelFocus, &ch, NULL);
    if (unfollow) {
-      header->pl->following = -1;
+      host->pl->following = -1;
    }
    ScreenManager_delete(scr);
    Panel_move((Panel*)mainPanel, 0, y);
@@ -84,12 +86,13 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
 // ----------------------------------------
 
 static void Action_runSetup(State* st) {
-   ScreenManager* scr = ScreenManager_new(st->header, st->settings, st, true);
-   CategoriesPanel_new(scr, st->settings, st->header, st->pl);
+   const Settings* settings = st->host->settings;
+   ScreenManager* scr = ScreenManager_new(st->header, st->host, st, true);
+   CategoriesPanel_new(scr, st->header, st->host);
    ScreenManager_run(scr, NULL, NULL, "Setup");
    ScreenManager_delete(scr);
-   if (st->settings->changed) {
-      CRT_setMouse(st->settings->enableMouse);
+   if (settings->changed) {
+      CRT_setMouse(settings->enableMouse);
       Header_writeBackToSettings(st->header);
    }
 }
@@ -166,7 +169,8 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    Htop_Reaction reaction = HTOP_OK;
    Panel* sortPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
-   const Settings* settings = st->settings;
+   Machine* host = st->host;
+   Settings* settings = host->settings;
    const ProcessField* fields = settings->ss->fields;
    Hashtable* dynamicColumns = settings->dynamicColumns;
    for (int i = 0; fields[i]; i++) {
@@ -187,74 +191,80 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    }
    const ListItem* field = (const ListItem*) Action_pickFromVector(st, sortPanel, 14, false);
    if (field) {
-      reaction |= Action_setSortKey(st->settings, field->key);
+      reaction |= Action_setSortKey(settings, field->key);
    }
    Object_delete(sortPanel);
 
-   st->pl->needsSort = true;
+   host->pl->needsSort = true;
 
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
 static Htop_Reaction actionSortByPID(State* st) {
-   return Action_setSortKey(st->settings, PID);
+   return Action_setSortKey(st->host->settings, PID);
 }
 
 static Htop_Reaction actionSortByMemory(State* st) {
-   return Action_setSortKey(st->settings, PERCENT_MEM);
+   return Action_setSortKey(st->host->settings, PERCENT_MEM);
 }
 
 static Htop_Reaction actionSortByCPU(State* st) {
-   return Action_setSortKey(st->settings, PERCENT_CPU);
+   return Action_setSortKey(st->host->settings, PERCENT_CPU);
 }
 
 static Htop_Reaction actionSortByTime(State* st) {
-   return Action_setSortKey(st->settings, TIME);
+   return Action_setSortKey(st->host->settings, TIME);
 }
 
 static Htop_Reaction actionToggleKernelThreads(State* st) {
-   st->settings->hideKernelThreads = !st->settings->hideKernelThreads;
-   st->settings->lastUpdate++;
+   Settings* settings = st->host->settings;
+   settings->hideKernelThreads = !settings->hideKernelThreads;
+   settings->lastUpdate++;
 
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionToggleUserlandThreads(State* st) {
-   st->settings->hideUserlandThreads = !st->settings->hideUserlandThreads;
-   st->settings->lastUpdate++;
+   Settings* settings = st->host->settings;
+   settings->hideUserlandThreads = !settings->hideUserlandThreads;
+   settings->lastUpdate++;
 
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionToggleRunningInContainer(State* st) {
-   st->settings->hideRunningInContainer = !st->settings->hideRunningInContainer;
-   st->settings->lastUpdate++;
+   Settings* settings = st->host->settings;
+   settings->hideRunningInContainer = !settings->hideRunningInContainer;
+   settings->lastUpdate++;
 
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionToggleProgramPath(State* st) {
-   st->settings->showProgramPath = !st->settings->showProgramPath;
-   st->settings->lastUpdate++;
+   Settings* settings = st->host->settings;
+   settings->showProgramPath = !settings->showProgramPath;
+   settings->lastUpdate++;
 
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionToggleMergedCommand(State* st) {
-   st->settings->showMergedCommand = !st->settings->showMergedCommand;
-   st->settings->lastUpdate++;
+   Settings* settings = st->host->settings;
+   settings->showMergedCommand = !settings->showMergedCommand;
+   settings->lastUpdate++;
 
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_UPDATE_PANELHDR;
 }
 
 static Htop_Reaction actionToggleTreeView(State* st) {
-   ScreenSettings* ss = st->settings->ss;
+   Machine* host = st->host;
+   ScreenSettings* ss = host->settings->ss;
    ss->treeView = !ss->treeView;
 
    if (!ss->allBranchesCollapsed)
-      ProcessList_expandTree(st->pl);
+      ProcessList_expandTree(host->pl);
 
-   st->pl->needsSort = true;
+   host->pl->needsSort = true;
 
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
@@ -265,22 +275,24 @@ static Htop_Reaction actionToggleHideMeters(State* st) {
 }
 
 static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
-   ScreenSettings* ss = st->settings->ss;
+   Machine* host = st->host;
+   ScreenSettings* ss = host->settings->ss;
    if (!ss->treeView) {
       return HTOP_OK;
    }
    ss->allBranchesCollapsed = !ss->allBranchesCollapsed;
    if (ss->allBranchesCollapsed)
-      ProcessList_collapseAllBranches(st->pl);
+      ProcessList_collapseAllBranches(host->pl);
    else
-      ProcessList_expandTree(st->pl);
+      ProcessList_expandTree(host->pl);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
 static Htop_Reaction actionIncFilter(State* st) {
+   Machine* host = st->host;
    IncSet* inc = (st->mainPanel)->inc;
    IncSet_activate(inc, INC_FILTER, (Panel*)st->mainPanel);
-   st->pl->incFilter = IncSet_filter(inc);
+   host->pl->incFilter = IncSet_filter(inc);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 
@@ -307,13 +319,14 @@ static Htop_Reaction actionLowerPriority(State* st) {
 }
 
 static Htop_Reaction actionInvertSortOrder(State* st) {
-   ScreenSettings_invertSortOrder(st->settings->ss);
-   st->pl->needsSort = true;
+   Machine* host = st->host;
+   ScreenSettings_invertSortOrder(host->settings->ss);
+   host->pl->needsSort = true;
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_UPDATE_PANELHDR;
 }
 
 static Htop_Reaction actionExpandOrCollapse(State* st) {
-   if (!st->settings->ss->treeView)
+   if (!st->host->settings->ss->treeView)
       return HTOP_OK;
 
    bool changed = expandCollapse((Panel*)st->mainPanel);
@@ -321,7 +334,7 @@ static Htop_Reaction actionExpandOrCollapse(State* st) {
 }
 
 static Htop_Reaction actionCollapseIntoParent(State* st) {
-   if (!st->settings->ss->treeView) {
+   if (!st->host->settings->ss->treeView) {
       return HTOP_OK;
    }
    bool changed = collapseIntoParent((Panel*)st->mainPanel);
@@ -329,11 +342,11 @@ static Htop_Reaction actionCollapseIntoParent(State* st) {
 }
 
 static Htop_Reaction actionExpandCollapseOrSortColumn(State* st) {
-   return st->settings->ss->treeView ? actionExpandOrCollapse(st) : actionSetSortColumn(st);
+   return st->host->settings->ss->treeView ? actionExpandOrCollapse(st) : actionSetSortColumn(st);
 }
 
 static Htop_Reaction actionNextScreen(State* st) {
-   Settings* settings = st->settings;
+   Settings* settings = st->host->settings;
    settings->ssIndex++;
    if (settings->ssIndex == settings->nScreens) {
       settings->ssIndex = 0;
@@ -343,7 +356,7 @@ static Htop_Reaction actionNextScreen(State* st) {
 }
 
 static Htop_Reaction actionPrevScreen(State* st) {
-   Settings* settings = st->settings;
+   Settings* settings = st->host->settings;
    if (settings->ssIndex == 0) {
       settings->ssIndex = settings->nScreens - 1;
    } else {
@@ -379,7 +392,8 @@ static Htop_Reaction actionSetAffinity(State* st) {
    if (Settings_isReadonly())
       return HTOP_OK;
 
-   if (st->pl->activeCPUs == 1)
+   Machine* host = st->host;
+   if (host->activeCPUs == 1)
       return HTOP_OK;
 
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
@@ -387,17 +401,17 @@ static Htop_Reaction actionSetAffinity(State* st) {
    if (!p)
       return HTOP_OK;
 
-   Affinity* affinity1 = Affinity_get(p, st->pl);
+   Affinity* affinity1 = Affinity_get(p, host);
    if (!affinity1)
       return HTOP_OK;
 
    int width;
-   Panel* affinityPanel = AffinityPanel_new(st->pl, affinity1, &width);
+   Panel* affinityPanel = AffinityPanel_new(host, affinity1, &width);
    Affinity_delete(affinity1);
 
    const void* set = Action_pickFromVector(st, affinityPanel, width, true);
    if (set) {
-      Affinity* affinity2 = AffinityPanel_getAffinity(affinityPanel, st->pl);
+      Affinity* affinity2 = AffinityPanel_getAffinity(affinityPanel, host);
       bool ok = MainPanel_foreachProcess(st->mainPanel, Affinity_set, (Arg) { .v = affinity2 }, NULL);
       if (!ok)
          beep();
@@ -479,16 +493,17 @@ static Htop_Reaction actionKill(State* st) {
 static Htop_Reaction actionFilterByUser(State* st) {
    Panel* usersPanel = Panel_new(0, 0, 0, 0, Class(ListItem), true, FunctionBar_newEnterEsc("Show   ", "Cancel "));
    Panel_setHeader(usersPanel, "Show processes of:");
-   UsersTable_foreach(st->ut, addUserToVector, usersPanel);
+   Machine* host = st->host;
+   UsersTable_foreach(host->usersTable, addUserToVector, usersPanel);
    Vector_insertionSort(usersPanel->items);
    ListItem* allUsers = ListItem_new("All users", -1);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
    const ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 19, false);
    if (picked) {
       if (picked == allUsers) {
-         st->pl->userId = (uid_t)-1;
+         host->userId = (uid_t)-1;
       } else {
-         Action_setUserOnly(ListItem_getRef(picked), &(st->pl->userId));
+         Action_setUserOnly(ListItem_getRef(picked), &host->userId);
       }
    }
    Panel_delete((Object*)usersPanel);
@@ -496,7 +511,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
 }
 
 Htop_Reaction Action_follow(State* st) {
-   st->pl->following = MainPanel_selectedPid(st->mainPanel);
+   st->host->pl->following = MainPanel_selectedPid(st->mainPanel);
    Panel_setSelectionColor((Panel*)st->mainPanel, PANEL_SELECTION_FOLLOW);
    return HTOP_KEEP_FOLLOWING;
 }
@@ -660,7 +675,7 @@ static Htop_Reaction actionHelp(State* st) {
    addbartext(CRT_colors[CPU_NICE_TEXT], "", "low");
    addbartext(CRT_colors[CPU_NORMAL], "/", "normal");
    addbartext(CRT_colors[CPU_SYSTEM], "/", "kernel");
-   if (st->settings->detailedCPUTime) {
+   if (st->host->settings->detailedCPUTime) {
       addbartext(CRT_colors[CPU_IRQ], "/", "irq");
       addbartext(CRT_colors[CPU_SOFTIRQ], "/", "soft-irq");
       addbartext(CRT_colors[CPU_STEAL], "/", "steal");

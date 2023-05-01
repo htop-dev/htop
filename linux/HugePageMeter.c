@@ -43,7 +43,7 @@ static void HugePageMeter_updateValues(Meter* this) {
    memory_t usedTotal = 0;
    unsigned nextUsed = 0;
 
-   const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
+   const LinuxProcessList* lpl = (const LinuxProcessList*) this->host->pl;
    this->total = lpl->totalHugePageMem;
    this->values[0] = 0;
    HugePageMeter_active_labels[0] = " used:";

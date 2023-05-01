@@ -8,16 +8,14 @@ in the source distribution for its full text.
 */
 
 #include "HeaderLayout.h"
+#include "Machine.h"
 #include "Meter.h"
-#include "ProcessList.h"
-#include "Settings.h"
 #include "Vector.h"
 
 
 typedef struct Header_ {
    Vector** columns;
-   Settings* settings;
-   ProcessList* pl;
+   Machine* host;
    HeaderLayout headerLayout;
    int pad;
    int height;
@@ -25,7 +23,7 @@ typedef struct Header_ {
 
 #define Header_forEachColumn(this_, i_) for (size_t (i_)=0, H_fEC_numColumns_ = HeaderLayout_getColumns((this_)->headerLayout); (i_) < H_fEC_numColumns_; ++(i_))
 
-Header* Header_new(ProcessList* pl, Settings* settings, HeaderLayout hLayout);
+Header* Header_new(Machine *host, HeaderLayout hLayout);
 
 void Header_delete(Header* this);
 

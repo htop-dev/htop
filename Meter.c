@@ -32,12 +32,12 @@ const MeterClass Meter_class = {
    }
 };
 
-Meter* Meter_new(const struct ProcessList_* pl, unsigned int param, const MeterClass* type) {
+Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type) {
    Meter* this = xCalloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
    this->param = param;
-   this->pl = pl;
+   this->host = host;
    this->curItems = type->maxItems;
    this->curAttributes = NULL;
    this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
@@ -294,7 +294,7 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
-   const ProcessList* pl = this->pl;
+   const Machine* host = this->host;
 
    if (!this->drawData) {
       this->drawData = xCalloc(1, sizeof(GraphData));
@@ -322,10 +322,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    x += captionLen;
    w -= captionLen;
 
-   if (!timercmp(&pl->realtime, &(data->time), <)) {
-      int globalDelay = this->pl->settings->delay;
+   if (!timercmp(&host->realtime, &(data->time), <)) {
+      int globalDelay = this->host->settings->delay;
       struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
-      timeradd(&pl->realtime, &delay, &(data->time));
+      timeradd(&host->realtime, &delay, &(data->time));
 
       for (int i = 0; i < nValues - 1; i++)
          data->values[i] = data->values[i + 1];

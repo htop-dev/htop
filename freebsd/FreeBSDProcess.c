@@ -56,10 +56,10 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [EMULATION] = { .name = "EMULATION", .title = "EMULATION        ", .description = "System call emulation environment (ABI)", .flags = 0, },
 };
 
-Process* FreeBSDProcess_new(const Settings* settings) {
+Process* FreeBSDProcess_new(const Machine* machine) {
    FreeBSDProcess* this = xCalloc(1, sizeof(FreeBSDProcess));
    Object_setClass(this, Class(FreeBSDProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, machine);
    return &this->super;
 }
 

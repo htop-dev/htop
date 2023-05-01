@@ -194,8 +194,9 @@ int Platform_getMaxPid(void) {
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
-   unsigned int cpus = this->pl->existingCPUs;
+   const Machine* host = this->host;
+   const SolarisProcessList* spl = (const SolarisProcessList*) host->pl;
+   unsigned int cpus = host->existingCPUs;
    const CPUData* cpuData = NULL;
 
    if (cpus == 1) {
@@ -215,7 +216,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (this->pl->settings->detailedCPUTime) {
+   if (host->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
@@ -235,32 +236,32 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->total = pl->totalMem;
-   this->values[MEMORY_METER_USED] = pl->usedMem;
-   this->values[MEMORY_METER_BUFFERS] = pl->buffersMem;
+   const Machine* host = this->host;
+   this->total = host->totalMem;
+   this->values[MEMORY_METER_USED] = host->usedMem;
+   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
    // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
    // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
-   this->values[MEMORY_METER_CACHE] = pl->cachedMem;
+   this->values[MEMORY_METER_CACHE] = host->cachedMem;
    // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->total = pl->totalSwap;
-   this->values[SWAP_METER_USED] = pl->usedSwap;
+   const Machine* host = this->host;
+   this->total = host->totalSwap;
+   this->values[SWAP_METER_USED] = host->usedSwap;
    // this->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
    // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
+   const SolarisProcessList* spl = (const SolarisProcessList*) this->host->pl;
 
    ZfsArcMeter_readStats(this, &(spl->zfs));
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const SolarisProcessList* spl = (const SolarisProcessList*) this->pl;
+   const SolarisProcessList* spl = (const SolarisProcessList*) this->host->pl;
 
    ZfsCompressedArcMeter_readStats(this, &(spl->zfs));
 }

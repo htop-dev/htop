@@ -59,12 +59,12 @@ static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
 static int kernelFScale;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    size_t len;
    char errbuf[_POSIX2_LINE_MAX];
    FreeBSDProcessList* fpl = xCalloc(1, sizeof(FreeBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
-   ProcessList_init(pl, Class(FreeBSDProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(FreeBSDProcess), host, pidMatchList);
 
    // physical memory in system: hw.physmem
    // physical page size: hw.pagesize
@@ -129,15 +129,15 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, ui
       sysctl(MIB_kern_cp_times, 2, fpl->cp_times_o, &len, NULL, 0);
    }
 
-   pl->existingCPUs = MAXIMUM(cpus, 1);
+   host->existingCPUs = MAXIMUM(cpus, 1);
    // TODO: support offline CPUs and hot swapping
-   pl->activeCPUs = pl->existingCPUs;
+   host->activeCPUs = host->existingCPUs;
 
    if (cpus == 1 ) {
       fpl->cpus = xRealloc(fpl->cpus, sizeof(CPUData));
    } else {
       // on smp we need CPUs + 1 to store averages too (as kernel kindly provides that as well)
-      fpl->cpus = xRealloc(fpl->cpus, (pl->existingCPUs + 1) * sizeof(CPUData));
+      fpl->cpus = xRealloc(fpl->cpus, (host->existingCPUs + 1) * sizeof(CPUData));
    }
 
 
@@ -174,8 +174,9 @@ void ProcessList_delete(ProcessList* this) {
 
 static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
+   const Machine* host = pl->host;
 
-   unsigned int cpus   = pl->existingCPUs; // actual CPU count
+   unsigned int cpus   = host->existingCPUs; // actual CPU count
    unsigned int maxcpu = cpus;             // max iteration (in case we have average + smp)
    int cp_times_offset;
 
@@ -260,7 +261,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
          continue;
 
       // TODO: test with hyperthreading and multi-cpu systems
-      if (pl->settings->showCPUTemperature) {
+      if (host->settings->showCPUTemperature) {
          int temperature;
          size_t len = sizeof(temperature);
          char mibBuffer[32];
@@ -271,7 +272,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
       }
 
       // TODO: test with hyperthreading and multi-cpu systems
-      if (pl->settings->showCPUFrequency) {
+      if (host->settings->showCPUFrequency) {
          int frequency;
          size_t len = sizeof(frequency);
          char mibBuffer[32];
@@ -285,7 +286,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
    // calculate max temperature and avg frequency for average meter and
    // propagate frequency to all cores if only supplied for CPU 0
    if (cpus > 1) {
-      if (pl->settings->showCPUTemperature) {
+      if (host->settings->showCPUTemperature) {
          double maxTemp = NAN;
          for (unsigned int i = 1; i < maxcpu; i++) {
             const double coreTemp = fpl->cpus[i].temperature;
@@ -298,7 +299,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
          fpl->cpus[0].temperature = maxTemp;
       }
 
-      if (pl->settings->showCPUFrequency) {
+      if (host->settings->showCPUFrequency) {
          const double coreZeroFreq = fpl->cpus[1].frequency;
          double freqSum = coreZeroFreq;
          if (!isnan(coreZeroFreq)) {
@@ -317,6 +318,7 @@ static inline void FreeBSDProcessList_scanCPU(ProcessList* pl) {
 
 static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) pl;
+   Machine* host = pl->host;
 
    // @etosan:
    // memory counter relationships seem to be these:
@@ -338,12 +340,12 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    //disabled for now, as it is always smaller than phycal amount of memory...
    //...to avoid "where is my memory?" questions
-   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(pl->totalMem), &len, NULL, 0);
-   //pl->totalMem *= pageSizeKb;
+   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(host->totalMem), &len, NULL, 0);
+   //host->totalMem *= pageSizeKb;
    len = sizeof(totalMem);
    sysctl(MIB_hw_physmem, 2, &(totalMem), &len, NULL, 0);
    totalMem /= 1024;
-   pl->totalMem = totalMem;
+   host->totalMem = totalMem;
 
    len = sizeof(memActive);
    sysctl(MIB_vm_stats_vm_v_active_count, 4, &(memActive), &len, NULL, 0);
@@ -358,29 +360,29 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    len = sizeof(buffersMem);
    sysctl(MIB_vfs_bufspace, 2, &(buffersMem), &len, NULL, 0);
    buffersMem /= 1024;
-   pl->buffersMem = buffersMem;
+   host->buffersMem = buffersMem;
 
    len = sizeof(cachedMem);
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(cachedMem), &len, NULL, 0);
    cachedMem *= pageSizeKb;
-   pl->cachedMem = cachedMem;
+   host->cachedMem = cachedMem;
 
    len = sizeof(vmtotal);
    sysctl(MIB_vm_vmtotal, 2, &(vmtotal), &len, NULL, 0);
-   pl->sharedMem = vmtotal.t_rmshr * pageSizeKb;
+   host->sharedMem = vmtotal.t_rmshr * pageSizeKb;
 
-   pl->usedMem = fpl->memActive + fpl->memWire;
+   host->usedMem = fpl->memActive + fpl->memWire;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(fpl->kd, swap, ARRAYSIZE(swap), 0);
-   pl->totalSwap = 0;
-   pl->usedSwap = 0;
+   host->totalSwap = 0;
+   host->usedSwap = 0;
    for (int i = 0; i < nswap; i++) {
-      pl->totalSwap += swap[i].ksw_total;
-      pl->usedSwap += swap[i].ksw_used;
+      host->totalSwap += swap[i].ksw_total;
+      host->usedSwap += swap[i].ksw_used;
    }
-   pl->totalSwap *= pageSizeKb;
-   pl->usedSwap *= pageSizeKb;
+   host->totalSwap *= pageSizeKb;
+   host->usedSwap *= pageSizeKb;
 }
 
 static void FreeBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process* proc) {
@@ -483,7 +485,8 @@ IGNORE_WCASTQUAL_END
 
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) super;
-   const Settings* settings = super->settings;
+   const Machine* host = super->host;
+   const Settings* settings = host->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
@@ -518,10 +521,10 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          proc->st_uid = kproc->ki_uid;
          proc->starttime_ctime = kproc->ki_start.tv_sec;
          if (proc->starttime_ctime < 0) {
-            proc->starttime_ctime = super->realtimeMs / 1000;
+            proc->starttime_ctime = super->host.realtimeMs / 1000;
          }
          Process_fillStarttimeBuffer(proc);
-         proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
+         proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
          ProcessList_add(super, proc);
 
          FreeBSDProcessList_updateExe(kproc, proc);
@@ -553,7 +556,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
          if (proc->st_uid != kproc->ki_uid) {
             // some processes change users (eg. to lower privs)
             proc->st_uid = kproc->ki_uid;
-            proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
+            proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
             FreeBSDProcessList_updateProcessName(fpl->kd, kproc, proc);
@@ -569,7 +572,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * proc->m_resident / (double)(super->totalMem);
+      proc->percent_mem = 100.0 * proc->m_resident / (double)(host->totalMem);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       if (kproc->ki_stat == SRUN && kproc->ki_oncpu != NOCPU) {
@@ -621,11 +624,21 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    }
 }
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
+Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
+   Machine* this = xCalloc(1, sizeof(Machine));
+   Machine_init(this, usersTable, userId);
+   return this;
+}
+
+void Machine_delete(Machine* host) {
+   free(host);
+}
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
 
    // TODO: support offline CPUs and hot swapping
-   (void) super; (void) id;
+   (void) host; (void) id;
 
    return true;
 }

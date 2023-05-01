@@ -54,6 +54,7 @@ static const struct {
 
 static void NetBSDProcessList_updateCPUcount(ProcessList* super) {
    NetBSDProcessList* opl = (NetBSDProcessList*) super;
+   Machine* host = super->host;
 
    // Definitions for sysctl(3), cf. https://nxr.netbsd.org/xref/src/sys/sys/sysctl.h#813
    const int mib_ncpu_existing[] = { CTL_HW, HW_NCPU }; // Number of existing CPUs
@@ -72,8 +73,8 @@ static void NetBSDProcessList_updateCPUcount(ProcessList* super) {
       value = 1;
    }
 
-   if (value != super->activeCPUs) {
-      super->activeCPUs = value;
+   if (value != host->activeCPUs) {
+      host->activeCPUs = value;
       change = true;
    }
 
@@ -81,12 +82,12 @@ static void NetBSDProcessList_updateCPUcount(ProcessList* super) {
    size = sizeof(value);
    r = sysctl(mib_ncpu_existing, 2, &value, &size, NULL, 0);
    if (r < 0 || value < 1) {
-      value = super->activeCPUs;
+      value = host->activeCPUs;
    }
 
-   if (value != super->existingCPUs) {
+   if (value != host->existingCPUs) {
       opl->cpuData = xReallocArray(opl->cpuData, value + 1, sizeof(CPUData));
-      super->existingCPUs = value;
+      host->existingCPUs = value;
       change = true;
    }
 
@@ -97,7 +98,7 @@ static void NetBSDProcessList_updateCPUcount(ProcessList* super) {
       dAvg->totalTime = 1;
       dAvg->totalPeriod = 1;
 
-      for (unsigned int i = 0; i < super->existingCPUs; i++) {
+      for (unsigned int i = 0; i < host->existingCPUs; i++) {
          CPUData* d = &opl->cpuData[i + 1];
          memset(d, '\0', sizeof(CPUData));
          d->totalTime = 1;
@@ -106,14 +107,14 @@ static void NetBSDProcessList_updateCPUcount(ProcessList* super) {
    }
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    const int fmib[] = { CTL_KERN, KERN_FSCALE };
    size_t size;
    char errbuf[_POSIX2_LINE_MAX];
 
    NetBSDProcessList* npl = xCalloc(1, sizeof(NetBSDProcessList));
    ProcessList* pl = (ProcessList*) npl;
-   ProcessList_init(pl, Class(NetBSDProcess), usersTable, pidMatchList, userId);
+   ProcessList_init(pl, Class(NetBSDProcess), host, pidMatchList);
 
    NetBSDProcessList_updateCPUcount(pl);
 
@@ -147,7 +148,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-static void NetBSDProcessList_scanMemoryInfo(ProcessList* pl) {
+static void NetBSDProcessList_scanMemoryInfo(Machine* host) {
    static int uvmexp_mib[] = {CTL_VM, VM_UVMEXP2};
    struct uvmexp_sysctl uvmexp;
    size_t size_uvmexp = sizeof(uvmexp);
@@ -156,12 +157,12 @@ static void NetBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       CRT_fatalError("uvmexp sysctl call failed");
    }
 
-   pl->totalMem = uvmexp.npages * pageSizeKB;
-   pl->buffersMem = 0;
-   pl->cachedMem = (uvmexp.filepages + uvmexp.execpages) * pageSizeKB;
-   pl->usedMem = (uvmexp.active + uvmexp.wired) * pageSizeKB;
-   pl->totalSwap = uvmexp.swpages * pageSizeKB;
-   pl->usedSwap = uvmexp.swpginuse * pageSizeKB;
+   host->totalMem = uvmexp.npages * pageSizeKB;
+   host->buffersMem = 0;
+   host->cachedMem = (uvmexp.filepages + uvmexp.execpages) * pageSizeKB;
+   host->usedMem = (uvmexp.active + uvmexp.wired) * pageSizeKB;
+   host->totalSwap = uvmexp.swpages * pageSizeKB;
+   host->usedSwap = uvmexp.swpginuse * pageSizeKB;
 }
 
 static void NetBSDProcessList_updateExe(const struct kinfo_proc2* kproc, Process* proc) {
@@ -262,7 +263,8 @@ static double getpcpu(const struct kinfo_proc2* kp) {
 }
 
 static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
-   const Settings* settings = this->super.settings;
+   const Machine* host = this->super.host;
+   const Settings* settings = host->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
    int count = 0;
@@ -313,14 +315,14 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
 
       if (proc->st_uid != kproc->p_uid) {
          proc->st_uid = kproc->p_uid;
-         proc->user = UsersTable_getRef(this->super.usersTable, proc->st_uid);
+         proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
       }
 
       proc->m_virt = kproc->p_vm_vsize;
       proc->m_resident = kproc->p_vm_rssize;
 
-      proc->percent_mem = (proc->m_resident * pageSizeKB) / (double)(this->super.totalMem) * 100.0;
-      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->super.activeCPUs * 100.0);
+      proc->percent_mem = (proc->m_resident * pageSizeKB) / (double)(host->totalMem) * 100.0;
+      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, host->activeCPUs * 100.0);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       proc->nlwp = kproc->p_nlwps;
@@ -411,10 +413,11 @@ static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
 }
 
 static void NetBSDProcessList_scanCPUTime(NetBSDProcessList* this) {
+   const Machine* host = this->super.host;
    u_int64_t kernelTimes[CPUSTATES] = {0};
    u_int64_t avg[CPUSTATES] = {0};
 
-   for (unsigned int i = 0; i < this->super.existingCPUs; i++) {
+   for (unsigned int i = 0; i < host->existingCPUs; i++) {
       getKernelCPUTimes(i, kernelTimes);
       CPUData* cpu = &this->cpuData[i + 1];
       kernelCPUTimesToHtop(kernelTimes, cpu);
@@ -427,14 +430,15 @@ static void NetBSDProcessList_scanCPUTime(NetBSDProcessList* this) {
    }
 
    for (int i = 0; i < CPUSTATES; i++) {
-      avg[i] /= this->super.activeCPUs;
+      avg[i] /= host->activeCPUs;
    }
 
    kernelCPUTimesToHtop(avg, &this->cpuData[0]);
 }
 
 static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
-   unsigned int cpus = this->super.existingCPUs;
+   const Machine* host = this->super.host;
+   unsigned int cpus = host->existingCPUs;
    bool match = false;
    char name[64];
    long int freq = 0;
@@ -481,7 +485,7 @@ static void NetBSDProcessList_scanCPUFrequency(NetBSDProcessList* this) {
 void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    NetBSDProcessList* npl = (NetBSDProcessList*) super;
 
-   NetBSDProcessList_scanMemoryInfo(super);
+   NetBSDProcessList_scanMemoryInfo(super->host);
    NetBSDProcessList_scanCPUTime(npl);
 
    if (super->settings->showCPUFrequency) {
@@ -496,8 +500,18 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    NetBSDProcessList_scanProcs(npl);
 }
 
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
+Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
+   Machine* this = xCalloc(1, sizeof(Machine));
+   Machine_init(this, usersTable, userId);
+   return this;
+}
+
+void Machine_delete(Machine* host) {
+   free(host);
+}
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
 
    // TODO: Support detecting online / offline CPUs.
    return true;
