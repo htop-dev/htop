@@ -173,15 +173,15 @@ int Platform_getMaxPid(void) {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const Machine* host = this->host;
-   const DragonFlyBSDProcessList* fpl = (const DragonFlyBSDProcessList*) host->pl;
-   unsigned int cpus = this->host->activeCPUs;
+   const DragonFlyBSDMachine* dhost = (const DragonFlyBSDMachine*) host;
+   unsigned int cpus = host->activeCPUs;
    const CPUData* cpuData;
 
    if (cpus == 1) {
       // single CPU box has everything in fpl->cpus[0]
-      cpuData = &(fpl->cpus[0]);
+      cpuData = &(dhost->cpus[0]);
    } else {
-      cpuData = &(fpl->cpus[cpu]);
+      cpuData = &(dhost->cpus[cpu]);
    }
 
    double  percent;
@@ -189,7 +189,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (host->settings->detailedCPUTime) {
+   if (super->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
@@ -209,22 +209,21 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   // TODO
-   const ProcessList* pl = this->host->pl;
+   const Machine* host = this->host;
 
-   this->total = pl->totalMem;
-   this->values[MEMORY_METER_USED] = pl->usedMem;
-   this->values[MEMORY_METER_BUFFERS] = pl->buffersMem;
+   this->total = host->totalMem;
+   this->values[MEMORY_METER_USED] = host->usedMem;
+   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
    // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
    // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
-   this->values[MEMORY_METER_CACHE] = pl->cachedMem;
+   this->values[MEMORY_METER_CACHE] = host->cachedMem;
    // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->host->pl;
-   this->total = pl->totalSwap;
-   this->values[SWAP_METER_USED] = pl->usedSwap;
+   const Machine* host = this->host;
+   this->total = host->totalSwap;
+   this->values[SWAP_METER_USED] = host->usedSwap;
    // mtr->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
    // mtr->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }

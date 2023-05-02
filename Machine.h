@@ -86,4 +86,6 @@ bool Machine_isCPUonline(const Machine* this, unsigned int id);
 
 void Machine_addList(Machine* this, struct ProcessList_ *pl);
 
+void Machine_scan(Machine* this);
+
 #endif

@@ -34,20 +34,19 @@ in the source distribution for its full text.
 #include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
+#include "Machine.h"
 #include "Macros.h"
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
-#include "ProcessList.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
-#include "freebsd/FreeBSDProcess.h"
-#include "freebsd/FreeBSDProcessList.h"
+#include "freebsd/FreeBSDMachine.h"
 #include "generic/fdstat_sysctl.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
@@ -194,15 +193,15 @@ int Platform_getMaxPid(void) {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const Machine* host = this->host;
-   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) host->pl;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
    unsigned int cpus = host->activeCPUs;
    const CPUData* cpuData;
 
    if (cpus == 1) {
-      // single CPU box has everything in fpl->cpus[0]
-      cpuData = &(fpl->cpus[0]);
+      // single CPU box has everything in fhost->cpus[0]
+      cpuData = &(fhost->cpus[0]);
    } else {
-      cpuData = &(fpl->cpus[cpu]);
+      cpuData = &(fhost->cpus[cpu]);
    }
 
    double  percent;
@@ -210,7 +209,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (host->settings->detailedCPUTime) {
+   if (super->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
@@ -231,8 +230,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    const Machine* host = this->host;
-   const ProcessList* pl = host->pl;
-   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) pl;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
 
    this->total = host->totalMem;
    this->values[MEMORY_METER_USED] = host->usedMem;
@@ -242,11 +240,11 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[MEMORY_METER_CACHE] = host->cachedMem;
    // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 
-   if (fpl->zfs.enabled) {
+   if (dhost->zfs.enabled) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
-      if (fpl->zfs.size > fpl->zfs.min)
-         shrinkableSize = fpl->zfs.size - fpl->zfs.min;
+      if (dhost->zfs.size > dhost->zfs.min)
+         shrinkableSize = dhost->zfs.size - dhost->zfs.min;
       this->values[MEMORY_METER_USED] -= shrinkableSize;
       this->values[MEMORY_METER_CACHE] += shrinkableSize;
       // this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
@@ -263,15 +261,15 @@ void Platform_setSwapValues(Meter* this) {
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->host->pl;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) this->host;
 
-   ZfsArcMeter_readStats(this, &(fpl->zfs));
+   ZfsArcMeter_readStats(this, &fhost->zfs);
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->host->pl;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) this->host;
 
-   ZfsCompressedArcMeter_readStats(this, &(fpl->zfs));
+   ZfsCompressedArcMeter_readStats(this, &fhost->zfs);
 }
 
 char* Platform_getProcessEnv(pid_t pid) {

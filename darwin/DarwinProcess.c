@@ -16,6 +16,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Process.h"
+#include "darwin/DarwinMachine.h"
 #include "darwin/Platform.h"
 
 
@@ -365,6 +366,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
    struct proc_taskinfo pti;
 
    if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+      const DarwinMachine* dhost = (const DarwinMachine*) proc->super.host;
+
       uint64_t total_existing_time_ns = proc->stime + proc->utime;
 
       uint64_t user_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_user);
@@ -386,7 +389,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
       proc->super.m_resident = pti.pti_resident_size / ONE_K;
       proc->super.majflt = pti.pti_faults;
       proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
-                              / (double)dpl->host_info.max_mem;
+                              / (double)dhost->host_info.max_mem;
 
       proc->stime = system_time_ns;
       proc->utime = user_time_ns;

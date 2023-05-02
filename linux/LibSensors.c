@@ -16,7 +16,7 @@
 
 #include "Macros.h"
 #include "XUtils.h"
-#include "linux/LinuxProcessList.h"
+#include "linux/LinuxMachine.h"
 
 
 #ifdef BUILD_STATIC

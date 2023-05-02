@@ -22,11 +22,8 @@ in the source distribution for its full text.
 #include "Scheduling.h"
 #include "XUtils.h"
 #include "linux/IOPriority.h"
+#include "linux/LinuxMachine.h"
 
-
-/* semi-global */
-int pageSize;
-int pageSizeKB;
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
@@ -197,6 +194,7 @@ bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
 
 static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const LinuxProcess* lp = (const LinuxProcess*) this;
+   const LinuxMachine* lhost = (const LinuxMachine*) this->host;
    bool coloring = this->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -204,18 +202,18 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    switch (field) {
    case CMINFLT: Process_printCount(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_printCount(str, lp->cmajflt, coloring); return;
-   case M_DRS: Process_printBytes(str, lp->m_drs * pageSize, coloring); return;
+   case M_DRS: Process_printBytes(str, lp->m_drs * lhost->pageSize, coloring); return;
    case M_LRS:
       if (lp->m_lrs) {
-         Process_printBytes(str, lp->m_lrs * pageSize, coloring);
+         Process_printBytes(str, lp->m_lrs * lhost->pageSize, coloring);
          return;
       }
 
       attr = CRT_colors[PROCESS_SHADOW];
       xSnprintf(buffer, n, "  N/A ");
       break;
-   case M_TRS: Process_printBytes(str, lp->m_trs * pageSize, coloring); return;
-   case M_SHARE: Process_printBytes(str, lp->m_share * pageSize, coloring); return;
+   case M_TRS: Process_printBytes(str, lp->m_trs * lhost->pageSize, coloring); return;
+   case M_SHARE: Process_printBytes(str, lp->m_share * lhost->pageSize, coloring); return;
    case M_PSS: Process_printKBytes(str, lp->m_pss, coloring); return;
    case M_SWAP: Process_printKBytes(str, lp->m_swap, coloring); return;
    case M_PSSWP: Process_printKBytes(str, lp->m_psswp, coloring); return;

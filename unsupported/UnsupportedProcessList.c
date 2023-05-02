@@ -16,10 +16,8 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
-   ProcessList_init(this, Class(Process), host, pidMatchList);
 
-   host->existingCPUs = 1;
-   host->activeCPUs = 1;
+   ProcessList_init(this, Class(Process), host, pidMatchList);
 
    return this;
 }
@@ -29,13 +27,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
-
-   // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate) {
-      return;
-   }
-
+void ProcessList_goThroughEntries(ProcessList* super) {
    bool preExisting = true;
    Process* proc;
 
@@ -51,7 +43,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    Process_updateCmdline(proc, "<unsupported architecture>", 0, 0);
    Process_updateExe(proc, "/path/to/executable");
 
-   if (proc->settings->ss->flags & PROCESS_FLAG_CWD) {
+   const Settings* settings = proc->host->settings;
+   if (settings->ss->flags & PROCESS_FLAG_CWD) {
       free_and_xStrdup(&proc->procCwd, "/current/working/directory");
    }
 
@@ -60,7 +53,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->state = RUNNING;
    proc->isKernelThread = false;
    proc->isUserlandThread = false;
-   proc->show = true; /* Reflected in proc->settings-> "hideXXX" really */
+   proc->show = true; /* Reflected in settings-> "hideXXX" really */
    proc->pgrp = 0;
    proc->session = 0;
    proc->tty_nr = 0;
@@ -89,22 +82,4 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    if (!preExisting)
       ProcessList_add(super, proc);
-}
-
-Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
-   Machine* this = xCalloc(1, sizeof(Machine));
-   Machine_init(this, usersTable, userId);
-   return this;
-}
-
-void Machine_delete(Machine* host) {
-   free(host);
-}
-
-bool Machine_isCPUonline(const Machine* host, unsigned int id) {
-   assert(id < host->existingCPUs);
-
-   (void) host; (void) id;
-
-   return true;
 }

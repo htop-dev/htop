@@ -383,9 +383,11 @@ int CommandLine_run(int argc, char** argv) {
    ScreenManager* scr = ScreenManager_new(header, host, &state, true);
    ScreenManager_add(scr, (Panel*) panel, -1);
 
-   ProcessList_scan(pl, false);
+   Machine_scan(host);
+   ProcessList_scan(pl);
    CommandLine_delay(host, 75);
-   ProcessList_scan(pl, false);
+   Machine_scan(host);
+   ProcessList_scan(pl);
 
    if (settings->ss->allBranchesCollapsed)
       ProcessList_collapseAllBranches(pl);

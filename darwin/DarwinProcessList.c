@@ -20,49 +20,13 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "ProcessList.h"
+#include "darwin/DarwinMachine.h"
 #include "darwin/DarwinProcess.h"
 #include "darwin/Platform.h"
 #include "darwin/PlatformHelpers.h"
 #include "generic/openzfs_sysctl.h"
 #include "zfs/ZfsArcStats.h"
 
-
-static void ProcessList_getHostInfo(host_basic_info_data_t* p) {
-   mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
-
-   if (0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
-      CRT_fatalError("Unable to retrieve host info");
-   }
-}
-
-static void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t* p) {
-   if (NULL != p && NULL != *p) {
-      if (0 != munmap(*p, vm_page_size)) {
-         CRT_fatalError("Unable to free old CPU load information");
-      }
-      *p = NULL;
-   }
-}
-
-static unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
-   mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
-   unsigned cpu_count;
-
-   // TODO Improving the accuracy of the load counts woule help a lot.
-   if (0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t*)p, &info_size)) {
-      CRT_fatalError("Unable to retrieve CPU info");
-   }
-
-   return cpu_count;
-}
-
-static void ProcessList_getVMStats(vm_statistics_t p) {
-   mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
-
-   if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)p, &info_size) != 0) {
-      CRT_fatalError("Unable to retrieve VM statistics");
-   }
-}
 
 static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
@@ -91,29 +55,11 @@ static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    DarwinProcessList* this = xCalloc(1, sizeof(DarwinProcessList));
+   ProcessList* super = &this->super;
 
-   ProcessList_init(&this->super, Class(DarwinProcess), host, pidMatchList);
+   ProcessList_init(super, Class(DarwinProcess), host, pidMatchList);
 
-   /* Initialize the CPU information */
-   host->activeCPUs = ProcessList_allocateCPULoadInfo(&this->prev_load);
-   // TODO: support offline CPUs and hot swapping
-   host->existingCPUs = host->activeCPUs;
-   ProcessList_getHostInfo(&this->host_info);
-   ProcessList_allocateCPULoadInfo(&this->curr_load);
-
-   /* Initialize the VM statistics */
-   ProcessList_getVMStats(&this->vm_stats);
-
-   /* Initialize the ZFS kstats, if zfs.kext loaded */
-   openzfs_sysctl_init(&this->zfs);
-   openzfs_sysctl_updateArcStats(&this->zfs);
-
-   this->super.kernelThreads = 0;
-   this->super.userlandThreads = 0;
-   this->super.totalTasks = 0;
-   this->super.runningTasks = 0;
-
-   return &this->super;
+   return super;
 }
 
 void ProcessList_delete(ProcessList* this) {
@@ -121,31 +67,20 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
-   DarwinProcessList* dpl = (DarwinProcessList*)super;
+void ProcessList_goThroughEntries(ProcessList* super) {
    const Machine* host = super->host;
+   const DarwinMachine* dhost = (const DarwinMachine*) host;
+   DarwinProcessList* dpl = (DarwinProcessList*) super;
    bool preExisting = true;
    struct kinfo_proc* ps;
    size_t count;
    DarwinProcess* proc;
 
-   /* Update the global data (CPU times and VM stats) */
-   ProcessList_freeCPULoadInfo(&dpl->prev_load);
-   dpl->prev_load = dpl->curr_load;
-   ProcessList_allocateCPULoadInfo(&dpl->curr_load);
-   ProcessList_getVMStats(&dpl->vm_stats);
-   openzfs_sysctl_updateArcStats(&dpl->zfs);
-
-   // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate) {
-      return;
-   }
-
    /* Get the time difference */
    dpl->global_diff = 0;
    for (unsigned int i = 0; i < host->existingCPUs; ++i) {
       for (size_t j = 0; j < CPU_STATE_MAX; ++j) {
-         dpl->global_diff += dpl->curr_load[i].cpu_ticks[j] - dpl->prev_load[i].cpu_ticks[j];
+         dpl->global_diff += dhost->curr_load[i].cpu_ticks[j] - dhost->prev_load[i].cpu_ticks[j];
       }
    }
 
@@ -178,7 +113,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
       }
 
       // Disabled for High Sierra due to bug in macOS High Sierra
-      bool isScanThreadSupported  = !Platform_KernelVersionIsBetween((KernelVersion) {17, 0, 0}, (KernelVersion) {17, 5, 0});
+      bool isScanThreadSupported = !Platform_KernelVersionIsBetween((KernelVersion) {17, 0, 0}, (KernelVersion) {17, 5, 0});
 
       if (isScanThreadSupported) {
          DarwinProcess_scanThreads(proc);
@@ -192,23 +127,4 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    }
 
    free(ps);
-}
-
-Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
-   Machine* this = xCalloc(1, sizeof(Machine));
-   Machine_init(this, usersTable, userId);
-   return this;
-}
-
-void Machine_delete(Machine* host) {
-   free(host);
-}
-
-bool Machine_isCPUonline(const Machine* host, unsigned int id) {
-   assert(id < host->existingCPUs);
-
-   // TODO: support offline CPUs and hot swapping
-   (void) host; (void) id;
-
-   return true;
 }

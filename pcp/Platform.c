@@ -46,6 +46,7 @@ in the source distribution for its full text.
 #include "linux/ZramStats.h"
 #include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
+#include "pcp/PCPMachine.h"
 #include "pcp/PCPMetric.h"
 #include "pcp/PCPProcessList.h"
 #include "zfs/ZfsArcMeter.h"
@@ -484,9 +485,7 @@ long long Platform_getBootTime(void) {
    return pcp->btime;
 }
 
-static double Platform_setOneCPUValues(Meter* this, pmAtomValue* values) {
-   Settings* settings = this->host->settings;
-
+static double Platform_setOneCPUValues(Meter* this, const Settings* settings, pmAtomValue* values) {
    unsigned long long value = values[CPU_TOTAL_PERIOD].ull;
    double total = (double) (value == 0 ? 1 : value);
    double percent;
@@ -524,18 +523,19 @@ static double Platform_setOneCPUValues(Meter* this, pmAtomValue* values) {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-   const PCPProcessList* pl = (const PCPProcessList*) this->host->pl;
+   const PCPMachine* phost = (const PCPMachine*) this->host;
+   const Settings* settings = this->host->settings;
+
    if (cpu <= 0) /* use aggregate values */
-      return Platform_setOneCPUValues(this, pl->cpu);
-   return Platform_setOneCPUValues(this, pl->percpu[cpu - 1]);
+      return Platform_setOneCPUValues(this, settings, phost->cpu);
+   return Platform_setOneCPUValues(this, settings, phost->percpu[cpu - 1]);
 }
 
 void Platform_setMemoryValues(Meter* this) {
    const Machine* host = this->host;
-   const ProcessList* pl = host->pl;
-   const PCPProcessList* ppl = (const PCPProcessList*) pl;
+   const PCPMachine* phost = (const PCPMachine*) host;
 
-   this->total     = host->totalMem;
+   this->total = host->totalMem;
    this->values[MEMORY_METER_USED] = host->usedMem;
    this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
    this->values[MEMORY_METER_SHARED] = host->sharedMem;
@@ -543,11 +543,11 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[MEMORY_METER_CACHE] = host->cachedMem;
    this->values[MEMORY_METER_AVAILABLE] = host->availableMem;
 
-   if (ppl->zfs.enabled != 0) {
+   if (phost->zfs.enabled != 0) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
-      if (ppl->zfs.size > ppl->zfs.min)
-         shrinkableSize = ppl->zfs.size - ppl->zfs.min;
+      if (phost->zfs.size > phost->zfs.min)
+         shrinkableSize = phost->zfs.size - phost->zfs.min;
       this->values[MEMORY_METER_USED] -= shrinkableSize;
       this->values[MEMORY_METER_CACHE] += shrinkableSize;
       this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
@@ -595,15 +595,15 @@ void Platform_setZramValues(Meter* this) {
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const PCPProcessList* ppl = (const PCPProcessList*) this->host->pl;
+   const PCPMachine* phost = (const PCPMachine*) this->host;
 
-   ZfsArcMeter_readStats(this, &(ppl->zfs));
+   ZfsArcMeter_readStats(this, &phost->zfs);
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const PCPProcessList* ppl = (const PCPProcessList*) this->host->pl;
+   const PCPMachine* phost = (const PCPMachine*) this->host;
 
-   ZfsCompressedArcMeter_readStats(this, &(ppl->zfs));
+   ZfsCompressedArcMeter_readStats(this, &phost->zfs);
 }
 
 void Platform_getHostname(char* buffer, size_t size) {

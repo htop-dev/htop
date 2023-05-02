@@ -410,13 +410,7 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
    return proc;
 }
 
-void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
-   // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate) {
-      ProcessList_goThroughEntries(this, true);
-      return;
-   }
-
+void ProcessList_scan(ProcessList* this) {
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
       Process* p = (Process*) Vector_get(this->processes, i);
@@ -442,7 +436,7 @@ void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate) {
       firstScanDone = true;
    }
 
-   ProcessList_goThroughEntries(this, false);
+   ProcessList_goThroughEntries(this);
 
    uid_t maxUid = 0;
    const Settings* settings = host->settings;

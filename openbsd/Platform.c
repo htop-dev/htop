@@ -35,7 +35,6 @@ in the source distribution for its full text.
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "Meter.h"
-#include "ProcessList.h"
 #include "Settings.h"
 #include "SignalsPanel.h"
 #include "SwapMeter.h"
@@ -43,8 +42,8 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "openbsd/OpenBSDMachine.h"
 #include "openbsd/OpenBSDProcess.h"
-#include "openbsd/OpenBSDProcessList.h"
 
 
 const ScreenDefaults Platform_defaultScreens[] = {
@@ -182,8 +181,8 @@ int Platform_getMaxPid(void) {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const Machine* host = this->host;
-   const OpenBSDProcessList* pl = (const OpenBSDProcessList*) host->pl;
-   const CPUData* cpuData = &(pl->cpuData[cpu]);
+   const OpenBSDMachine* ohost = (const OpenBSDMachine*) host;
+   const CPUData* cpuData = &(ohost->cpuData[cpu]);
    double total;
    double totalPercent;
    double* v = this->values;
@@ -217,7 +216,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_TEMPERATURE] = NAN;
 
-   v[CPU_METER_FREQUENCY] = (pl->cpuSpeed != -1) ? pl->cpuSpeed : NAN;
+   v[CPU_METER_FREQUENCY] = (ohost->cpuSpeed != -1) ? ohost->cpuSpeed : NAN;
 
    return totalPercent;
 }

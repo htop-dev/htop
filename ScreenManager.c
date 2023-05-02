@@ -16,6 +16,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "FunctionBar.h"
+#include "Machine.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
@@ -135,8 +136,10 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
          host->pl->needsSort = true;
          *sortTimeout = 1;
       }
-      // scan processes first - some header values are calculated there
-      ProcessList_scan(host->pl, this->state->pauseUpdate);
+      // sample current values for system metrics and processes if not paused
+      Machine_scan(host);
+      if (!this->state->pauseUpdate)
+         ProcessList_scan(host->pl);
       // always update header, especially to avoid gaps in graph meters
       Header_updateData(this->header);
       // force redraw if the number of UID digits was changed

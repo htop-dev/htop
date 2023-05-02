@@ -49,8 +49,8 @@ typedef struct ProcessList_ {
 
 /* Implemented by platforms */
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList);
-void ProcessList_delete(ProcessList* pl);
-void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
+void ProcessList_delete(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this);
 
 void ProcessList_init(ProcessList* this, const ObjectClass* klass, Machine* host, Hashtable* pidMatchList);
 
@@ -74,7 +74,7 @@ void ProcessList_rebuildPanel(ProcessList* this);
 
 Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor);
 
-void ProcessList_scan(ProcessList* this, bool pauseProcessUpdate);
+void ProcessList_scan(ProcessList* this);
 
 static inline Process* ProcessList_findProcess(ProcessList* this, pid_t pid) {
    return (Process*) Hashtable_get(this->processTable, pid);

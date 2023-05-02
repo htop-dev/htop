@@ -10,16 +10,8 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 
 
-ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList);
-
-void ProcessList_delete(ProcessList* this);
-
-void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate);
-
-Machine* Machine_new(UsersTable* usersTable, uid_t userId);
-
-bool Machine_isCPUonline(const Machine* host, unsigned int id);
-
-void Machine_delete(Machine* host);
+typedef struct UnsupportedProcessList_ {
+   ProcessList super;
+} UnsupportedProcessList;
 
 #endif

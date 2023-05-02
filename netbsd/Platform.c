@@ -45,7 +45,6 @@ in the source distribution for its full text.
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "Meter.h"
-#include "ProcessList.h"
 #include "Settings.h"
 #include "SignalsPanel.h"
 #include "SwapMeter.h"
@@ -54,8 +53,8 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "XUtils.h"
 #include "generic/fdstat_sysctl.h"
+#include "netbsd/NetBSDMachine.h"
 #include "netbsd/NetBSDProcess.h"
-#include "netbsd/NetBSDProcessList.h"
 
 /*
  * The older proplib APIs will be deprecated in NetBSD 10, but we still
@@ -238,8 +237,8 @@ int Platform_getMaxPid(void) {
 
 double Platform_setCPUValues(Meter* this, int cpu) {
    const Machine* host = this->host;
-   const NetBSDProcessList* npl = (const NetBSDProcessList*) host->pl;
-   const CPUData* cpuData = &npl->cpuData[cpu];
+   const NetBSDMachine* nhost = (const NetBSDMachine*) host;
+   const CPUData* cpuData = &nhost->cpuData[cpu];
    double total = cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod;
    double totalPercent;
    double* v = this->values;

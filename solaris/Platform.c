@@ -34,10 +34,11 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "SysArchMeter.h"
 #include "UptimeMeter.h"
+
+#include "solaris/SolarisMachine.h"
+
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
-#include "SolarisProcess.h"
-#include "SolarisProcessList.h"
 
 
 const ScreenDefaults Platform_defaultScreens[] = {
@@ -195,15 +196,15 @@ int Platform_getMaxPid(void) {
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const Machine* host = this->host;
-   const SolarisProcessList* spl = (const SolarisProcessList*) host->pl;
+   const SolarisMachine* shost = (const SolarisMachine*) host;
    unsigned int cpus = host->existingCPUs;
    const CPUData* cpuData = NULL;
 
    if (cpus == 1) {
       // single CPU box has everything in spl->cpus[0]
-      cpuData = &(spl->cpus[0]);
+      cpuData = &(shost->cpus[0]);
    } else {
-      cpuData = &(spl->cpus[cpu]);
+      cpuData = &(shost->cpus[cpu]);
    }
 
    if (!cpuData->online) {
@@ -216,7 +217,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (host->settings->detailedCPUTime) {
+   if (super->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
@@ -255,15 +256,15 @@ void Platform_setSwapValues(Meter* this) {
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const SolarisProcessList* spl = (const SolarisProcessList*) this->host->pl;
+   const SolarisMachine* shost = (SolarisMachine*) this->host;
 
-   ZfsArcMeter_readStats(this, &(spl->zfs));
+   ZfsArcMeter_readStats(this, &(shost->zfs));
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const SolarisProcessList* spl = (const SolarisProcessList*) this->host->pl;
+   const SolarisMachine* shost = (SolarisMachine*) this->host;
 
-   ZfsCompressedArcMeter_readStats(this, &(spl->zfs));
+   ZfsCompressedArcMeter_readStats(this, &(shost->zfs));
 }
 
 static int Platform_buildenv(void* accum, struct ps_prochandle* Phandle, uintptr_t addr, const char* str) {

@@ -17,7 +17,6 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/sched.h>
-#include <sys/swap.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
 #include <uvm/uvmexp.h>
@@ -29,167 +28,24 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "openbsd/OpenBSDMachine.h"
 #include "openbsd/OpenBSDProcess.h"
 
 
-static long fscale;
-static int pageSize;
-static int pageSizeKB;
-
-static void OpenBSDProcessList_updateCPUcount(ProcessList* super) {
-   OpenBSDProcessList* opl = (OpenBSDProcessList*) super;
-   Machine* host = super->host;
-   const int nmib[] = { CTL_HW, HW_NCPU };
-   const int mib[] = { CTL_HW, HW_NCPUONLINE };
-   int r;
-   unsigned int value;
-   size_t size;
-   bool change = false;
-
-   size = sizeof(value);
-   r = sysctl(mib, 2, &value, &size, NULL, 0);
-   if (r < 0 || value < 1) {
-      value = 1;
-   }
-
-   if (value != host->activeCPUs) {
-      host->activeCPUs = value;
-      change = true;
-   }
-
-   size = sizeof(value);
-   r = sysctl(nmib, 2, &value, &size, NULL, 0);
-   if (r < 0 || value < 1) {
-      value = host->activeCPUs;
-   }
-
-   if (value != host->existingCPUs) {
-      opl->cpuData = xReallocArray(opl->cpuData, value + 1, sizeof(CPUData));
-      host->existingCPUs = value;
-      change = true;
-   }
-
-   if (change) {
-      CPUData* dAvg = &opl->cpuData[0];
-      memset(dAvg, '\0', sizeof(CPUData));
-      dAvg->totalTime = 1;
-      dAvg->totalPeriod = 1;
-      dAvg->online = true;
-
-      for (unsigned int i = 0; i < host->existingCPUs; i++) {
-         CPUData* d = &opl->cpuData[i + 1];
-         memset(d, '\0', sizeof(CPUData));
-         d->totalTime = 1;
-         d->totalPeriod = 1;
-
-         const int ncmib[] = { CTL_KERN, KERN_CPUSTATS, i };
-         struct cpustats cpu_stats;
-
-         size = sizeof(cpu_stats);
-         if (sysctl(ncmib, 3, &cpu_stats, &size, NULL, 0) < 0) {
-            CRT_fatalError("ncmib sysctl call failed");
-         }
-         d->online = (cpu_stats.cs_flags & CPUSTATS_ONLINE);
-      }
-   }
-}
-
-
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   const int fmib[] = { CTL_KERN, KERN_FSCALE };
-   size_t size;
-   char errbuf[_POSIX2_LINE_MAX];
+   OpenBSDProcessList* this = xCalloc(1, sizeof(OpenBSDProcessList));
+   ProcessList* super = (ProcessList*) this;
 
-   OpenBSDProcessList* opl = xCalloc(1, sizeof(OpenBSDProcessList));
-   ProcessList* pl = (ProcessList*) opl;
-   ProcessList_init(pl, Class(OpenBSDProcess), host, pidMatchList);
+   ProcessList_init(super, Class(OpenBSDProcess), host, pidMatchList);
 
-   OpenBSDProcessList_updateCPUcount(pl);
-
-   size = sizeof(fscale);
-   if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0) {
-      CRT_fatalError("fscale sysctl call failed");
-   }
-
-   if ((pageSize = sysconf(_SC_PAGESIZE)) == -1)
-      CRT_fatalError("pagesize sysconf call failed");
-   pageSizeKB = pageSize / ONE_K;
-
-   opl->kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
-   if (opl->kd == NULL) {
-      CRT_fatalError("kvm_openfiles() failed");
-   }
-
-   opl->cpuSpeed = -1;
-
-   return pl;
+   return this;
 }
 
-void ProcessList_delete(ProcessList* this) {
-   OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
+void ProcessList_delete(ProcessList* super) {
+   OpenBSDProcessList* this = (OpenBSDProcessList*) super;
 
-   if (opl->kd) {
-      kvm_close(opl->kd);
-   }
-
-   free(opl->cpuData);
-
-   ProcessList_done(this);
+   ProcessList_done(super);
    free(this);
-}
-
-static void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
-   Machine* host = pl->host;
-   const int uvmexp_mib[] = { CTL_VM, VM_UVMEXP };
-   struct uvmexp uvmexp;
-   size_t size_uvmexp = sizeof(uvmexp);
-
-   if (sysctl(uvmexp_mib, 2, &uvmexp, &size_uvmexp, NULL, 0) < 0) {
-      CRT_fatalError("uvmexp sysctl call failed");
-   }
-
-   host->totalMem = uvmexp.npages * pageSizeKB;
-   host->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * pageSizeKB;
-
-   // Taken from OpenBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
-   const int bcache_mib[] = { CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT };
-   struct bcachestats bcstats;
-   size_t size_bcstats = sizeof(bcstats);
-
-   if (sysctl(bcache_mib, 3, &bcstats, &size_bcstats, NULL, 0) < 0) {
-      CRT_fatalError("cannot get vfs.bcachestat");
-   }
-
-   host->cachedMem = bcstats.numbufpages * pageSizeKB;
-
-   /*
-    * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
-    * All rights reserved.
-    *
-    * Taken almost directly from OpenBSD's top(1)
-    *
-    * Originally released under a BSD-3 license
-    * Modified through htop developers applying GPL-2
-    */
-   int nswap = swapctl(SWAP_NSWAP, 0, 0);
-   if (nswap > 0) {
-      struct swapent swdev[nswap];
-      int rnswap = swapctl(SWAP_STATS, swdev, nswap);
-
-      /* Total things up */
-      unsigned long long int total = 0, used = 0;
-      for (int i = 0; i < rnswap; i++) {
-         if (swdev[i].se_flags & SWF_ENABLE) {
-            used += (swdev[i].se_inuse / (1024 / DEV_BSIZE));
-            total += (swdev[i].se_nblks / (1024 / DEV_BSIZE));
-         }
-      }
-
-      host->totalSwap = total;
-      host->usedSwap = used;
-   } else {
-      host->totalSwap = host->usedSwap = 0;
-   }
 }
 
 static void OpenBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
@@ -264,21 +120,22 @@ static void OpenBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_p
 /*
  * Taken from OpenBSD's ps(1).
  */
-static double getpcpu(const struct kinfo_proc* kp) {
-   if (fscale == 0)
+static double getpcpu(const OpenBSDMachine* ohost, const struct kinfo_proc* kp) {
+   if (ohost->fscale == 0)
       return 0.0;
 
-   return 100.0 * (double)kp->p_pctcpu / fscale;
+   return 100.0 * (double)kp->p_pctcpu / ohost->fscale;
 }
 
 static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    Machine* host = this->super.host;
+   OpenBSDMachine* ohost = (OpenBSDMachine*) host;
    const Settings* settings = host->settings;
    const bool hideKernelThreads = settings->hideKernelThreads;
    const bool hideUserlandThreads = settings->hideUserlandThreads;
    int count = 0;
 
-   const struct kinfo_proc* kprocs = kvm_getprocs(this->kd, KERN_PROC_KTHREAD | KERN_PROC_SHOW_THREADS, 0, sizeof(struct kinfo_proc), &count);
+   const struct kinfo_proc* kprocs = kvm_getprocs(ohost->kd, KERN_PROC_KTHREAD | KERN_PROC_SHOW_THREADS, 0, sizeof(struct kinfo_proc), &count);
 
    for (int i = 0; i < count; i++) {
       const struct kinfo_proc* kproc = &kprocs[i];
@@ -310,7 +167,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          Process_fillStarttimeBuffer(proc);
          ProcessList_add(&this->super, proc);
 
-         OpenBSDProcessList_updateProcessName(this->kd, kproc, proc);
+         OpenBSDProcessList_updateProcessName(ohost->kd, kproc, proc);
 
          if (settings->ss->flags & PROCESS_FLAG_CWD) {
             OpenBSDProcessList_updateCwd(kproc, proc);
@@ -326,16 +183,16 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          }
       } else {
          if (settings->updateProcessNames) {
-            OpenBSDProcessList_updateProcessName(this->kd, kproc, proc);
+            OpenBSDProcessList_updateProcessName(ohost->kd, kproc, proc);
          }
       }
 
       fp->addr = kproc->p_addr;
-      proc->m_virt = kproc->p_vm_dsize * pageSizeKB;
-      proc->m_resident = kproc->p_vm_rssize * pageSizeKB;
+      proc->m_virt = kproc->p_vm_dsize * ohost->pageSizeKB;
+      proc->m_resident = kproc->p_vm_rssize * ohost->pageSizeKB;
 
       proc->percent_mem = proc->m_resident / (float)host->totalMem * 100.0F;
-      proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0F, host->activeCPUs * 100.0F);
+      proc->percent_cpu = CLAMP(getpcpu(ohost, kproc), 0.0F, host->activeCPUs * 100.0F);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       proc->nice = kproc->p_nice - 20;
@@ -379,122 +236,8 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    }
 }
 
-static void getKernelCPUTimes(unsigned int cpuId, u_int64_t* times) {
-   const int mib[] = { CTL_KERN, KERN_CPTIME2, cpuId };
-   size_t length = sizeof(*times) * CPUSTATES;
-   if (sysctl(mib, 3, times, &length, NULL, 0) == -1 || length != sizeof(*times) * CPUSTATES) {
-      CRT_fatalError("sysctl kern.cp_time2 failed");
-   }
-}
+void ProcessList_goThroughEntries(ProcessList* super) {
+   OpenBSDProcessList* this = (OpenBSDProcessList*) super;
 
-static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
-   unsigned long long totalTime = 0;
-   for (int i = 0; i < CPUSTATES; i++) {
-      totalTime += times[i];
-   }
-
-   unsigned long long sysAllTime = times[CP_INTR] + times[CP_SYS];
-
-   // XXX Not sure if CP_SPIN should be added to sysAllTime.
-   // See https://github.com/openbsd/src/commit/531d8034253fb82282f0f353c086e9ad827e031c
-   #ifdef CP_SPIN
-   sysAllTime += times[CP_SPIN];
-   #endif
-
-   cpu->totalPeriod = saturatingSub(totalTime, cpu->totalTime);
-   cpu->userPeriod = saturatingSub(times[CP_USER], cpu->userTime);
-   cpu->nicePeriod = saturatingSub(times[CP_NICE], cpu->niceTime);
-   cpu->sysPeriod = saturatingSub(times[CP_SYS], cpu->sysTime);
-   cpu->sysAllPeriod = saturatingSub(sysAllTime, cpu->sysAllTime);
-   #ifdef CP_SPIN
-   cpu->spinPeriod = saturatingSub(times[CP_SPIN], cpu->spinTime);
-   #endif
-   cpu->intrPeriod = saturatingSub(times[CP_INTR], cpu->intrTime);
-   cpu->idlePeriod = saturatingSub(times[CP_IDLE], cpu->idleTime);
-
-   cpu->totalTime = totalTime;
-   cpu->userTime = times[CP_USER];
-   cpu->niceTime = times[CP_NICE];
-   cpu->sysTime = times[CP_SYS];
-   cpu->sysAllTime = sysAllTime;
-   #ifdef CP_SPIN
-   cpu->spinTime = times[CP_SPIN];
-   #endif
-   cpu->intrTime = times[CP_INTR];
-   cpu->idleTime = times[CP_IDLE];
-}
-
-static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
-   Machine* host = this->super.host;
-   u_int64_t kernelTimes[CPUSTATES] = {0};
-   u_int64_t avg[CPUSTATES] = {0};
-
-   for (unsigned int i = 0; i < host->existingCPUs; i++) {
-      CPUData* cpu = &this->cpuData[i + 1];
-
-      if (!cpu->online) {
-         continue;
-      }
-
-      getKernelCPUTimes(i, kernelTimes);
-      kernelCPUTimesToHtop(kernelTimes, cpu);
-
-      avg[CP_USER] += cpu->userTime;
-      avg[CP_NICE] += cpu->niceTime;
-      avg[CP_SYS] += cpu->sysTime;
-      #ifdef CP_SPIN
-      avg[CP_SPIN] += cpu->spinTime;
-      #endif
-      avg[CP_INTR] += cpu->intrTime;
-      avg[CP_IDLE] += cpu->idleTime;
-   }
-
-   for (int i = 0; i < CPUSTATES; i++) {
-      avg[i] /= host->activeCPUs;
-   }
-
-   kernelCPUTimesToHtop(avg, &this->cpuData[0]);
-
-   {
-      const int mib[] = { CTL_HW, HW_CPUSPEED };
-      int cpuSpeed;
-      size_t size = sizeof(cpuSpeed);
-      if (sysctl(mib, 2, &cpuSpeed, &size, NULL, 0) == -1) {
-         this->cpuSpeed = -1;
-      } else {
-         this->cpuSpeed = cpuSpeed;
-      }
-   }
-}
-
-void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
-   OpenBSDProcessList* opl = (OpenBSDProcessList*) super;
-
-   OpenBSDProcessList_updateCPUcount(super);
-   OpenBSDProcessList_scanMemoryInfo(super);
-   OpenBSDProcessList_scanCPUTime(opl);
-
-   // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate) {
-      return;
-   }
-
-   OpenBSDProcessList_scanProcs(opl);
-}
-
-Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
-   Machine* this = xCalloc(1, sizeof(Machine));
-   Machine_init(this, usersTable, userId);
-   return this;
-}
-
-void Machine_delete(Machine* host) {
-   free(host);
-}
-
-bool Machine_isCPUonline(const Machine* host, unsigned int id) {
-   assert(id < host->existingCPUs);
-
-   const OpenBSDProcessList* opl = (const OpenBSDProcessList*) host->pl;
-   return opl->cpuData[id + 1].online;
+   OpenBSDProcessList_scanProcs(this);
 }
