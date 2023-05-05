@@ -77,6 +77,7 @@ myhtopsources = \
 	Scheduling.c \
 	ScreenManager.c \
 	ScreensPanel.c \
+	ScreenWarning.c \
 	Settings.c \
 	SignalsPanel.c \
 	SwapMeter.c \
@@ -140,6 +141,7 @@ myhtopheaders = \
 	RichString.h \
 	Scheduling.h \
 	ScreenManager.h \
+	ScreenWarning.h \
 	ScreensPanel.h \
 	Settings.h \
 	SignalsPanel.h \

@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "Process.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <limits.h>
 #include <math.h>
 #include <signal.h>
@@ -29,6 +30,7 @@ in the source distribution for its full text.
 #include "DynamicColumn.h"
 #include "RichString.h"
 #include "Scheduling.h"
+#include "ScreenWarning.h"
 #include "Settings.h"
 #include "XUtils.h"
 
@@ -1134,6 +1136,8 @@ bool Process_setPriority(Process* this, int priority) {
 
    int old_prio = getpriority(PRIO_PROCESS, this->pid);
    int err = setpriority(PRIO_PROCESS, this->pid, priority);
+   if (err < 0)
+      ScreenWarning_add("Failed to set priority %d for process %d (%s): %s", priority, this->pid, this->procComm, strerror(errno));
 
    if (err == 0 && old_prio != getpriority(PRIO_PROCESS, this->pid)) {
       this->nice = priority;
@@ -1146,7 +1150,11 @@ bool Process_changePriorityBy(Process* this, Arg delta) {
 }
 
 bool Process_sendSignal(Process* this, Arg sgn) {
-   return kill(this->pid, sgn.i) == 0;
+   int r = kill(this->pid, sgn.i);
+   if (r < 0)
+      ScreenWarning_add("Failed to send signal %d to process %d (%s): %s", sgn.i, this->pid, this->procComm, strerror(errno));
+
+   return r == 0;
 }
 
 int Process_compare(const void* v1, const void* v2) {

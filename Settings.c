@@ -411,6 +411,8 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          this->showMergedCommand = atoi(option[1]);
       } else if (String_eq(option[0], "header_margin")) {
          this->headerMargin = atoi(option[1]);
+      } else if (String_eq(option[0], "show_warnings")) {
+         this->showWarnings = atoi(option[1]);
       } else if (String_eq(option[0], "screen_tabs")) {
          this->screenTabs = atoi(option[1]);
       } else if (String_eq(option[0], "expand_system_time")) {
@@ -598,6 +600,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("strip_exe_from_cmdline", this->stripExeFromCmdline);
    printSettingInteger("show_merged_command", this->showMergedCommand);
    printSettingInteger("header_margin", this->headerMargin);
+   printSettingInteger("show_warnings", this->showWarnings);
    printSettingInteger("screen_tabs", this->screenTabs);
    printSettingInteger("detailed_cpu_time", this->detailedCPUTime);
    printSettingInteger("cpu_count_from_one", this->countCPUsFromOne);
@@ -702,6 +705,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
    this->showMergedCommand = false;
    this->hideFunctionBar = 0;
    this->headerMargin = true;
+   this->showWarnings = true;
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif

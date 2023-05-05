@@ -10,8 +10,10 @@ in the source distribution for its full text.
 
 #include "Affinity.h"
 
+#include <errno.h>
 #include <stdlib.h>
 
+#include "ScreenWarning.h"
 #include "XUtils.h"
 
 #if defined(HAVE_LIBHWLOC)
@@ -54,9 +56,11 @@ void Affinity_add(Affinity* this, unsigned int id) {
 
 Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
-   bool ok = (hwloc_get_proc_cpubind(pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
+   int r = hwloc_get_proc_cpubind(pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG);
+   if (r < 0)
+      ScreenWarning_add("Failed to get affinity for process %d (%s): %s", proc->pid, proc->procComm, strerror(errno));
    Affinity* affinity = NULL;
-   if (ok) {
+   if (r == 0) {
       affinity = Affinity_new(pl);
       if (hwloc_bitmap_last(cpuset) == -1) {
          for (unsigned int i = 0; i < pl->existingCPUs; i++) {
@@ -79,18 +83,22 @@ bool Affinity_set(Process* proc, Arg arg) {
    for (unsigned int i = 0; i < this->used; i++) {
       hwloc_bitmap_set(cpuset, this->cpus[i]);
    }
-   bool ok = (hwloc_set_proc_cpubind(this->pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG) == 0);
+   int r = hwloc_set_proc_cpubind(this->pl->topology, proc->pid, cpuset, HTOP_HWLOC_CPUBIND_FLAG);
+   if (r < 0)
+      ScreenWarning_add("Failed to set affinity for process %d (%s): %s", proc->pid, proc->procComm, strerror(errno));
    hwloc_bitmap_free(cpuset);
-   return ok;
+   return r == 0;
 }
 
 #elif defined(HAVE_AFFINITY)
 
 Affinity* Affinity_get(const Process* proc, ProcessList* pl) {
    cpu_set_t cpuset;
-   bool ok = (sched_getaffinity(proc->pid, sizeof(cpu_set_t), &cpuset) == 0);
-   if (!ok)
+   int r = sched_getaffinity(proc->pid, sizeof(cpu_set_t), &cpuset);
+   if (r < 0) {
+      ScreenWarning_add("Failed to get affinity for process %d (%s): %s", proc->pid, proc->procComm, strerror(errno));
       return NULL;
+   }
 
    Affinity* affinity = Affinity_new(pl);
    for (unsigned int i = 0; i < pl->existingCPUs; i++) {
@@ -108,8 +116,11 @@ bool Affinity_set(Process* proc, Arg arg) {
    for (unsigned int i = 0; i < this->used; i++) {
       CPU_SET(this->cpus[i], &cpuset);
    }
-   bool ok = (sched_setaffinity(proc->pid, sizeof(unsigned long), &cpuset) == 0);
-   return ok;
+   int r = sched_setaffinity(proc->pid, sizeof(unsigned long), &cpuset);
+   if (r < 0)
+      ScreenWarning_add("Failed to set affinity for process %d (%s): %s", proc->pid, proc->procComm, strerror(errno));
+
+   return r == 0;
 }
 
 #endif
