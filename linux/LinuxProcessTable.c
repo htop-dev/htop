@@ -20,7 +20,9 @@ in the source distribution for its full text.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syscall.h>
 #include <unistd.h>
+#include <linux/capability.h> // raw syscall, no libcap  // IWYU pragma: keep // IWYU pragma: no_include <sys/capability.h>
 #include <sys/stat.h>
 
 #include "Compat.h"
@@ -390,14 +392,6 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
 
          if (pid_ns_count > 1)
             process->isRunningInContainer = true;
-
-      } else if (String_startsWith(buffer, "CapPrm:")) {
-         char* ptr = buffer + strlen("CapPrm:");
-         while (*ptr == ' ' || *ptr == '\t')
-            ptr++;
-
-         uint64_t cap_permitted = fast_strtoull_hex(&ptr, 16);
-         process->elevated_priv = cap_permitted != 0 && process->st_uid != 0;
 
       } else if (String_startsWith(buffer, "voluntary_ctxt_switches:")) {
          unsigned long vctxt;
@@ -1478,6 +1472,19 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
             } else if (!LinuxProcessTable_readCmdlineFile(proc, procFd)) {
                Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
             }
+         }
+      }
+
+      /* Gather permitted capabilities (thread-specific data) for non-root process. */
+      if (proc->st_uid != 0 && proc->elevated_priv != TRI_OFF) {
+         struct __user_cap_header_struct header = { .version = _LINUX_CAPABILITY_VERSION_3, .pid = Process_getPid(proc) };
+         struct __user_cap_data_struct data;
+
+         long res = syscall(SYS_capget, &header, &data);
+         if (res == 0) {
+            proc->elevated_priv = (data.permitted != 0) ? TRI_ON : TRI_OFF;
+         } else {
+            proc->elevated_priv = TRI_OFF;
          }
       }
 
