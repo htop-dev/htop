@@ -736,7 +736,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       }
       break;
    case USER:
-      if (this->elevated_priv)
+      if (this->elevated_priv == TRI_ON)
          attr = CRT_colors[PROCESS_PRIV];
       else if (host->htopUserId != this->st_uid)
          attr = CRT_colors[PROCESS_SHADOW];

@@ -24,6 +24,13 @@ in the source distribution for its full text.
 
 #define DEFAULT_HIGHLIGHT_SECS 5
 
+typedef enum Tristate_ {
+   TRI_INITIAL = 0,
+   TRI_OFF = -1,
+   TRI_ON = 1,
+} Tristate;
+
+
 /* Core process states (shared by platforms)
  * NOTE: The enum has an ordering that is important!
  * See processStateChar in process.c for ProcessSate -> letter mapping */
@@ -106,7 +113,7 @@ typedef struct Process_ {
     *   - from file capabilities
     *   - inherited from the ambient set
     */
-   bool elevated_priv;
+   Tristate elevated_priv;
 
    /* Process runtime (in hundredth of a second) */
    unsigned long long int time;
