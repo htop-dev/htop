@@ -159,7 +159,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    /* We use kinfo_procs for initial data since :
     *
     * 1) They always succeed.
-    * 2) The contain the basic information.
+    * 2) They contain the basic information.
     *
     * We attempt to fill-in additional information with libproc.
     */
