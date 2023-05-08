@@ -276,6 +276,7 @@ void Machine_scan(Machine* super) {
 
 bool Machine_isCPUonline(const Machine* host, unsigned int id) {
    assert(id < host->existingCPUs);
+   (void)host; (void)id;
 
    // TODO: Support detecting online / offline CPUs.
    return true;

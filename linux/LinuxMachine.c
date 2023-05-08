@@ -440,7 +440,7 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
       // The rest will remain at zero.
       unsigned int adjCpuId;
       if (i == 0) {
-         (void) sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         (void) sscanf(buffer, "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
          adjCpuId = 0;
       } else {
          unsigned int cpuid;

@@ -258,13 +258,13 @@ void Platform_setSwapValues(Meter* this) {
 void Platform_setZfsArcValues(Meter* this) {
    const SolarisMachine* shost = (SolarisMachine*) this->host;
 
-   ZfsArcMeter_readStats(this, &(shost->zfs));
+   ZfsArcMeter_readStats(this, &shost->zfs);
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
    const SolarisMachine* shost = (SolarisMachine*) this->host;
 
-   ZfsCompressedArcMeter_readStats(this, &(shost->zfs));
+   ZfsCompressedArcMeter_readStats(this, &shost->zfs);
 }
 
 static int Platform_buildenv(void* accum, struct ps_prochandle* Phandle, uintptr_t addr, const char* str) {

@@ -182,7 +182,7 @@ int Platform_getMaxPid(void) {
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const Machine* host = this->host;
    const OpenBSDMachine* ohost = (const OpenBSDMachine*) host;
-   const CPUData* cpuData = &(ohost->cpuData[cpu]);
+   const CPUData* cpuData = &ohost->cpuData[cpu];
    double total;
    double totalPercent;
    double* v = this->values;

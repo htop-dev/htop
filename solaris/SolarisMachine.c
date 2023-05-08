@@ -241,48 +241,51 @@ static void SolarisMachine_scanMemoryInfo(SolarisMachine* this) {
 }
 
 static void SolarisMachine_scanZfsArcstats(SolarisMachine* this) {
-   kstat_named_t       *cur_kstat = NULL;
-   kstat_t             *arcstats = NULL;
-   int                 ksrphyserr = -1;
+   kstat_named_t       *cur_kstat;
+   kstat_t             *arcstats;
+   int                 ksrphyserr;
 
-   if (this->kd != NULL) {
-      arcstats = kstat_lookup_wrapper(this->kd, "zfs", 0, "arcstats");
-   }
-   if (arcstats != NULL) {
-      ksrphyserr = kstat_read(this->kd, arcstats, NULL);
-   }
-   if (ksrphyserr != -1) {
-      cur_kstat = kstat_data_lookup_wrapper( arcstats, "size" );
-      this->zfs.size = cur_kstat->value.ui64 / 1024;
-      this->zfs.enabled = this->zfs.size > 0 ? 1 : 0;
+   if (this->kd == NULL)
+      return;
 
-      cur_kstat = kstat_data_lookup_wrapper( arcstats, "c_max" );
-      this->zfs.max = cur_kstat->value.ui64 / 1024;
+   arcstats = kstat_lookup_wrapper(this->kd, "zfs", 0, "arcstats");
+   if (arcstats == NULL)
+      return;
 
-      cur_kstat = kstat_data_lookup_wrapper( arcstats, "mfu_size" );
-      this->zfs.MFU = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
+   ksrphyserr = kstat_read(this->kd, arcstats, NULL);
+   if (ksrphyserr == -1)
+      return;
 
-      cur_kstat = kstat_data_lookup_wrapper( arcstats, "mru_size" );
-      this->zfs.MRU = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
+   cur_kstat = kstat_data_lookup_wrapper( arcstats, "size" );
+   this->zfs.size = cur_kstat->value.ui64 / 1024;
+   this->zfs.enabled = this->zfs.size > 0 ? 1 : 0;
 
-      cur_kstat = kstat_data_lookup_wrapper( arcstats, "anon_size" );
-      this->zfs.anon = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
+   cur_kstat = kstat_data_lookup_wrapper( arcstats, "c_max" );
+   this->zfs.max = cur_kstat->value.ui64 / 1024;
 
-      cur_kstat = kstat_data_lookup_wrapper( arcstats, "hdr_size" );
-      this->zfs.header = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
+   cur_kstat = kstat_data_lookup_wrapper( arcstats, "mfu_size" );
+   this->zfs.MFU = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
-      cur_kstat = kstat_data_lookup_wrapper( arcstats, "other_size" );
-      this->zfs.other = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
+   cur_kstat = kstat_data_lookup_wrapper( arcstats, "mru_size" );
+   this->zfs.MRU = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
-      if ((cur_kstat = kstat_data_lookup_wrapper( arcstats, "compressed_size" )) != NULL) {
-         this->zfs.compressed = cur_kstat->value.ui64 / 1024;
-         this->zfs.isCompressed = 1;
+   cur_kstat = kstat_data_lookup_wrapper( arcstats, "anon_size" );
+   this->zfs.anon = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
 
-         cur_kstat = kstat_data_lookup_wrapper( arcstats, "uncompressed_size" );
-         this->zfs.uncompressed = cur_kstat->value.ui64 / 1024;
-      } else {
-         this->zfs.isCompressed = 0;
-      }
+   cur_kstat = kstat_data_lookup_wrapper( arcstats, "hdr_size" );
+   this->zfs.header = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
+
+   cur_kstat = kstat_data_lookup_wrapper( arcstats, "other_size" );
+   this->zfs.other = cur_kstat != NULL ? cur_kstat->value.ui64 / 1024 : 0;
+
+   if ((cur_kstat = kstat_data_lookup_wrapper( arcstats, "compressed_size" )) != NULL) {
+      this->zfs.compressed = cur_kstat->value.ui64 / 1024;
+      this->zfs.isCompressed = 1;
+
+      cur_kstat = kstat_data_lookup_wrapper( arcstats, "uncompressed_size" );
+      this->zfs.uncompressed = cur_kstat->value.ui64 / 1024;
+   } else {
+      this->zfs.isCompressed = 0;
    }
 }
 

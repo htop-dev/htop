@@ -1,6 +1,7 @@
 /*
 htop - DarwinMachine.c
 (C) 2014 Hisham H. Muhammad
+(C) 2023 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -33,12 +34,17 @@ static void DarwinMachine_getHostInfo(host_basic_info_data_t* p) {
 }
 
 static void DarwinMachine_freeCPULoadInfo(processor_cpu_load_info_t* p) {
-   if (NULL != p && NULL != *p) {
-      if (0 != munmap(*p, vm_page_size)) {
-         CRT_fatalError("Unable to free old CPU load information");
-      }
-      *p = NULL;
+   if (!p)
+      return;
+
+   if (!*p)
+      return;
+
+   if (0 != munmap(*p, vm_page_size)) {
+      CRT_fatalError("Unable to free old CPU load information");
    }
+
+   *p = NULL;
 }
 
 static unsigned DarwinMachine_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
