@@ -28,7 +28,7 @@ typedef struct CPUData_ {
    double temperature;
 } CPUData;
 
-typedef struct FreeBSDProcessList_ {
+typedef struct FreeBSDMachine_ {
    Machine super;
    kvm_t* kd;
 
@@ -49,6 +49,6 @@ typedef struct FreeBSDProcessList_ {
    unsigned long* cp_times_o;
    unsigned long* cp_times_n;
 
-} FreeBSDProcessList;
+} FreeBSDMachine;
 
 #endif

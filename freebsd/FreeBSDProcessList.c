@@ -29,7 +29,6 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Compat.h"
-#include "FreeBSDProcess.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"
@@ -38,6 +37,9 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 
+#include "freebsd/FreeBSDMachine.h"
+#include "freebsd/FreeBSDProcess.h"
+
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    FreeBSDProcessList* this = xCalloc(1, sizeof(FreeBSDProcessList));
@@ -45,7 +47,7 @@ ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
 
    ProcessList_init(super, Class(FreeBSDProcess), host, pidMatchList);
 
-   return this;
+   return super;
 }
 
 void ProcessList_delete(ProcessList* super) {
@@ -156,14 +158,13 @@ IGNORE_WCASTQUAL_END
 
 void ProcessList_goThroughEntries(ProcessList* super) {
    const Machine* host = super->host;
-   const FreeBSDMachine* fhost = (FreeBSDMachine*) host;
-   FreeBSDProcessList* fpl = (FreeBSDProcessList*) super;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
    const Settings* settings = host->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
    bool hideUserlandThreads = settings->hideUserlandThreads;
 
    int count = 0;
-   const struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
+   const struct kinfo_proc* kprocs = kvm_getprocs(fhost->kd, KERN_PROC_PROC, 0, &count);
 
    for (int i = 0; i < count; i++) {
       const struct kinfo_proc* kproc = &kprocs[i];

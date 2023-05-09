@@ -209,7 +209,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (super->settings->detailedCPUTime) {
+   if (host->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
@@ -240,11 +240,11 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[MEMORY_METER_CACHE] = host->cachedMem;
    // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 
-   if (dhost->zfs.enabled) {
+   if (fhost->zfs.enabled) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
-      if (dhost->zfs.size > dhost->zfs.min)
-         shrinkableSize = dhost->zfs.size - dhost->zfs.min;
+      if (fhost->zfs.size > fhost->zfs.min)
+         shrinkableSize = fhost->zfs.size - fhost->zfs.min;
       this->values[MEMORY_METER_USED] -= shrinkableSize;
       this->values[MEMORY_METER_CACHE] += shrinkableSize;
       // this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;

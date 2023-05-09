@@ -59,7 +59,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    char errbuf[_POSIX2_LINE_MAX];
    size_t len;
 
-   Machine_init(this, usersTable, userId);
+   Machine_init(super, usersTable, userId);
 
    // physical memory in system: hw.physmem
    // physical page size: hw.pagesize
@@ -146,13 +146,13 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
       CRT_fatalError("kvm_openfiles() failed");
    }
 
-   return this;
+   return super;
 }
 
 void Machine_delete(Machine* super) {
    FreeBSDMachine* this = (FreeBSDMachine*) super;
 
-   ProcessList_done(this);
+   Machine_done(super);
 
    if (this->kd) {
       kvm_close(this->kd);
