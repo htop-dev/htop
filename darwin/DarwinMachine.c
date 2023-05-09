@@ -101,12 +101,12 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 }
 
 void Machine_delete(Machine* super) {
-   DarwinMachine* host = (DarwinMachine*) super;
+   DarwinMachine* this = (DarwinMachine*) super;
 
-   DarwinMachine_freeCPULoadInfo(&host->prev_load);
+   DarwinMachine_freeCPULoadInfo(&this->prev_load);
 
    Machine_done(super);
-   free(super);
+   free(this);
 }
 
 bool Machine_isCPUonline(const Machine* host, unsigned int id) {
