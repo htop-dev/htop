@@ -45,7 +45,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    DragonFlyBSDMachine* this = xCalloc(1, sizeof(DragonFlyBSDMachine));
    Machine* super = &this->super;
 
-   Machine_init(this, usersTable, userId);
+   Machine_init(super, usersTable, userId);
 
    // physical memory in system: hw.physmem
    // physical page size: hw.pagesize
@@ -119,9 +119,9 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 }
 
 void Machine_delete(Machine* super) {
-   const DragonFlyBSDMachine* this = (DragonFlyBSDProcessList*) super;
+   const DragonFlyBSDMachine* this = (const DragonFlyBSDMachine*) super;
 
-   Machine_done(this);
+   Machine_done(super);
 
    if (this->kd) {
       kvm_close(this->kd);
