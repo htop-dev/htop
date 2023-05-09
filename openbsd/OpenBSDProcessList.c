@@ -153,7 +153,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
 
       bool preExisting = false;
       Process* proc = ProcessList_getProcess(&this->super, (kproc->p_tid == -1) ? kproc->p_pid : kproc->p_tid, &preExisting, OpenBSDProcess_new);
-      OpenBSDProcess* fp = (OpenBSDProcess*) proc;
+      OpenBSDProcess* op = (OpenBSDProcess*) proc;
 
       if (!preExisting) {
          proc->ppid = kproc->p_ppid;
@@ -187,7 +187,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          }
       }
 
-      fp->addr = kproc->p_addr;
+      op->addr = kproc->p_addr;
       proc->m_virt = kproc->p_vm_dsize * ohost->pageSizeKB;
       proc->m_resident = kproc->p_vm_rssize * ohost->pageSizeKB;
 
