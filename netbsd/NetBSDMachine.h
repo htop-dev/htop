@@ -40,8 +40,8 @@ typedef struct CPUData_ {
    double frequency;
 } CPUData;
 
-typedef struct NetBSDProcessList_ {
-   ProcessList super;
+typedef struct NetBSDMachine_ {
+   Machine super;
    kvm_t* kd;
 
    long fscale;
@@ -49,6 +49,6 @@ typedef struct NetBSDProcessList_ {
    int pageSizeKB;
 
    CPUData* cpuData;
-} NetBSDProcessList;
+} NetBSDMachine;
 
 #endif
