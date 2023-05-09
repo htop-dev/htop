@@ -195,14 +195,9 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    const Machine* host = this->host;
    const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
    unsigned int cpus = host->activeCPUs;
-   const CPUData* cpuData;
 
-   if (cpus == 1) {
-      // single CPU box has everything in fhost->cpus[0]
-      cpuData = &(fhost->cpus[0]);
-   } else {
-      cpuData = &(fhost->cpus[cpu]);
-   }
+   // single CPU box has everything in fhost->cpus[0]
+   const CPUData* cpuData = cpus == 1 ? &fhost->cpus[0] : &fhost->cpus[cpu];
 
    double  percent;
    double* v = this->values;
