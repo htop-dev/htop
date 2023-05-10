@@ -32,9 +32,7 @@ static void UptimeMeter_updateValues(Meter* this) {
       this->total = days;
    }
    char daysbuf[32];
-   if (days > 100) {
-      xSnprintf(daysbuf, sizeof(daysbuf), "%d days(!), ", days);
-   } else if (days > 1) {
+   if (days > 1) {
       xSnprintf(daysbuf, sizeof(daysbuf), "%d days, ", days);
    } else if (days == 1) {
       xSnprintf(daysbuf, sizeof(daysbuf), "1 day, ");
