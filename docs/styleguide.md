@@ -8,12 +8,12 @@ Names are important to convey what all those things inside the project are for.
 Filenames for source code traditionally used camel-case naming with the first letter written in uppercase.
 The file extension is always lowercase.
 
-The only exception here is `htop.c` which is the main entrance point into the code.
+The only exceptions here are `htop.c` and `pcp-htop.c`, which contain the main entrance points into the code.
 
 Folders for e.g. platform-specific code or complex features spawning multiple files are written in lowercase, e.g. `linux`, `freebsd`, `zfs`.
 
 Inside files, the naming somewhat depends on the context.
-For functions names should include a camel-case prefix before the actual name, separated by an underscore.
+Function names should include a camel-case prefix before the actual name, separated by an underscore.
 While this prefix usually coincides with the module name, this is not required, yet strongly advised.
 One important exception to this rule are the memory management and the string utility functions from `XUtils.h`.
 
@@ -65,7 +65,7 @@ The list of includes should be the first thing in the file, after the copyright 
 The include list should be in the following order, with each group separated by one blank line:
 
 1. `include "config.h" // IWYU pragma: keep` if the global configuration
-    from automake&autoconfigure or any of the feature guards for C library headers
+    from `automake`&`autoconfigure` or any of the feature guards for C library headers
     (like `__GNU_SOURCE`) are required, optional otherwise. Beware of the IWYU comment.
 2. Accompanying module header file (for C source files only, missing inside headers)
 3. List of used system headers (non-conditional includes)
@@ -96,6 +96,8 @@ These functions check that memory allocation worked and error out on failure.
 Allocation functions assert the amount of memory requested is non-zero.
 Trying to allocate 0 bytes of memory is an error.
 Please use the explicit value `NULL` in this case and handle it in your code accordingly.
+
+If the allocated block of memory is intended to hold an array of values, you should use the alternate functions `xReallocArray` and `xReallocArrayZero` instead.
 
 Working with Strings
 --------------------
@@ -169,7 +171,7 @@ if (fd >= 0)
 
 While the existing code base isn't fully consistent with this code style yet it is strongly recommended that new code follows these rules.
 Adapting surrounding code near places you need to touch is encouraged.
-Try to separate such changes into a single, clean-up only commit to reduce noise while reviewing your changes.
+Try to split off such changes into a separate, clean-up only commit to reduce noise while reviewing your changes.
 
 When writing your code consistency with the surrounding codebase is favoured.
 
@@ -230,6 +232,8 @@ Writing pull-requests (PRs)
 
 When writing your PR or patch, the set of patches should contain the minimal changes required.
 Each patch in itself should ideally be self-contained and runable.
+The commit comment should be descriptive (`Updated Foo.c` is not), explain what the changes are and describe why they were made.
+While in trivial cases a short subject suffices, more complex changes might warrant a longer description and explanation of the rationale behind the changes.
 
 A PR should not contain any merge commits.
 To follow the upstream branch of your PR rebase your work instead.
@@ -239,5 +243,7 @@ Instead squash those changes in the appropriate commit that introduced that mist
 Git offers `git commit --fixup=<commit>` and `git rebase -i --autosquash` to help you with this.
 
 Your final PR should contain a minimal set of reasonably sized commits that by themselves are easy to review.
+If you open a PR you need to follow up to resolve any comments/change requests.
+Otherwise it may be closed without merging.
 
 Rebase early. Rebase often.
