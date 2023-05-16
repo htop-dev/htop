@@ -43,7 +43,7 @@ in the source distribution for its full text.
 #endif
 
 
-Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
+Object* Action_pickFromVector(State* st, Panel* list, int x, bool follow) {
    MainPanel* mainPanel = st->mainPanel;
    Header* header = st->header;
    Machine* host = st->host;
@@ -56,8 +56,8 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    Panel* panelFocus;
    int ch;
    bool unfollow = false;
-   int pid = followProcess ? MainPanel_selectedPid(mainPanel) : -1;
-   if (followProcess && host->pl->following == -1) {
+   int pid = follow ? MainPanel_selectedPid(mainPanel) : -1;
+   if (follow && host->pl->following == -1) {
       host->pl->following = pid;
       unfollow = true;
    }
@@ -69,7 +69,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    Panel_move((Panel*)mainPanel, 0, y);
    Panel_resize((Panel*)mainPanel, COLS, LINES - y - 1);
    if (panelFocus == list && ch == 13) {
-      if (followProcess) {
+      if (follow) {
          const Process* selected = (const Process*)Panel_getSelected((Panel*)mainPanel);
          if (selected && selected->pid == pid)
             return Panel_getSelected(list);
