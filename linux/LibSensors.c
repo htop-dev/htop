@@ -153,7 +153,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    assert(existingCPUs > 0 && existingCPUs < 16384);
 
    double* data = xMallocArray(existingCPUs + 1, sizeof(double));
-   for (size_t i = 0; i < existingCPUs + 1; i++)
+   for (size_t i = 0; i <= existingCPUs; i++)
       data[i] = NAN;
 
 #ifndef BUILD_STATIC
