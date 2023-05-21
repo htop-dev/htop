@@ -128,26 +128,28 @@ int LibSensors_reload(void) {
    return sym_sensors_init(NULL);
 }
 
-static int tempDriverPriority(const sensors_chip_name* chip) {
-   static const struct TempDriverDefs {
+typedef enum TempDriver_ {
+   TD_CORETEMP,
+   TD_CPUTEMP,
+   TD_CPUTHERMAL,
+   TD_K10TEMP,
+   TD_ZENPOWER,
+   TD_ACPITZ,
+   TD_UNKNOWN,
+} TempDriver;
+
+static const struct TempDriverDefs {
       const char* prefix;
       int priority;
-   } tempDrivers[] =  {
-      { "coretemp",    0 },
-      { "via_cputemp", 0 },
-      { "cpu_thermal", 0 },
-      { "k10temp",     0 },
-      { "zenpower",    0 },
-      /* Low priority drivers */
-      { "acpitz",      1 },
-   };
-
-   for (size_t i = 0; i < ARRAYSIZE(tempDrivers); i++)
-      if (String_eq(chip->prefix, tempDrivers[i].prefix))
-         return tempDrivers[i].priority;
-
-   return -1;
-}
+} tempDrivers[TD_UNKNOWN] =  {
+   [TD_CORETEMP]   = { "coretemp",    0 },
+   [TD_CPUTEMP]    = { "via_cputemp", 0 },
+   [TD_CPUTHERMAL] = { "cpu_thermal", 0 },
+   [TD_K10TEMP]    = { "k10temp",     0 },
+   [TD_ZENPOWER]   = { "zenpower",    0 },
+   /* Low priority drivers */
+   [TD_ACPITZ]     = { "acpitz",      1 },
+};
 
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
    assert(existingCPUs > 0 && existingCPUs < 16384);
@@ -163,11 +165,22 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
    unsigned int coreTempCount = 0;
    int topPriority = 99;
+   TempDriver topDriver = TD_UNKNOWN;
 
    int n = 0;
    for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
-      const int priority = tempDriverPriority(chip);
-      if (priority < 0)
+      int priority = -1;
+      TempDriver driver = TD_UNKNOWN;
+
+      for (size_t i = 0; i < ARRAYSIZE(tempDrivers); i++) {
+         if (chip->prefix && String_eq(chip->prefix, tempDrivers[i].prefix)) {
+            priority = tempDrivers[i].priority;
+            driver = i;
+            break;
+         }
+      }
+
+      if (driver == TD_UNKNOWN)
          continue;
 
       if (priority > topPriority)
@@ -180,6 +193,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       }
 
       topPriority = priority;
+      topDriver = driver;
 
       int m = 0;
       for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
