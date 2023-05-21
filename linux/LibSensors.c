@@ -29,12 +29,12 @@ in the source distribution for its full text.
 
 #ifdef BUILD_STATIC
 
-#define sym_sensors_init sensors_init
-#define sym_sensors_cleanup sensors_cleanup
+#define sym_sensors_init               sensors_init
+#define sym_sensors_cleanup            sensors_cleanup
 #define sym_sensors_get_detected_chips sensors_get_detected_chips
-#define sym_sensors_get_features sensors_get_features
-#define sym_sensors_get_subfeature sensors_get_subfeature
-#define sym_sensors_get_value sensors_get_value
+#define sym_sensors_get_features       sensors_get_features
+#define sym_sensors_get_subfeature     sensors_get_subfeature
+#define sym_sensors_get_value          sensors_get_value
 
 #else
 
