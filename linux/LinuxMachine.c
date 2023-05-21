@@ -657,7 +657,7 @@ void Machine_scan(Machine* super) {
 
    #ifdef HAVE_SENSORS_SENSORS_H
    if (settings->showCPUTemperature)
-      LibSensors_getCPUTemperatures(this->cpuData, super->existingCPUs, super->activeCPUs);
+      LibSensors_getCPUTemperatures(this->cpuData, super->existingCPUs, super->activeCPUs, this->maxCoreId);
    #endif
 }
 

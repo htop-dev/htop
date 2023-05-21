@@ -151,7 +151,7 @@ static const struct TempDriverDefs {
    [TD_ACPITZ]     = { "acpitz",      1 },
 };
 
-void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
+void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs, unsigned short maxCoreId) {
    assert(existingCPUs > 0 && existingCPUs < 16384);
 
    float* data = xMallocArray(existingCPUs + 1, sizeof(float));
@@ -231,6 +231,53 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
             data[tempID] = MAXIMUM(data[tempID], temp);
          }
       }
+   }
+
+   /*
+    * k10temp, see https://www.kernel.org/doc/html/latest/hwmon/k10temp.html
+    *   temp1 = Tctl, (optional) temp2 = Tdie, temp3..temp10 = Tccd1..8
+    */
+   if (topDriver == TD_K10TEMP) {
+      /* Display Tdie instead of Tctl if available */
+      if (!isNaN(data[1]))
+         data[0] = data[1];
+
+      /* Compute number of CCD entries */
+      unsigned int ccd_entries = 0;
+      for (size_t i = 2; i <= existingCPUs; i++) {
+         if (isNaN(data[i]))
+            break;
+
+         ccd_entries++;
+      }
+
+      if (ccd_entries == 0) {
+         const float ccd_temp = data[0];
+         for (size_t i = 1; i <= existingCPUs; i++)
+            data[i] = ccd_temp;
+      } else if (ccd_entries == 1) {
+         const float ccd_temp = data[2];
+         for (size_t i = 1; i <= existingCPUs; i++)
+            data[i] = ccd_temp;
+      } else {
+         assert(ccd_entries <= 64);
+         float ccd_data[ccd_entries];
+         for (size_t i = 0; i < ccd_entries; i++)
+            ccd_data[i] = data[i + 2];
+
+         /* Estimate the size of the CCDs, might be off of due to
+          * disabled cores on downgraded CPUs */
+         const unsigned int ccd_size = maxCoreId / ccd_entries + 1;
+
+         for (size_t i = 0; i < existingCPUs; i++) {
+            unsigned short coreId = cpus[i + 1].coreId;
+            unsigned int index = MINIMUM(coreId / ccd_size, ccd_entries - 1);
+            data[i + 1] = ccd_data[index];
+         }
+      }
+
+      /* No further adjustments */
+      goto out;
    }
 
    /* Adjust data for chips not providing a platform temperature */
