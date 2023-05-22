@@ -376,7 +376,7 @@ int CommandLine_run(int argc, char** argv) {
    }
 
    host->iterationsRemaining = flags.iterationsRemaining;
-   CRT_init(settings, flags.allowUnicode);
+   CRT_init(settings, flags.allowUnicode, flags.iterationsRemaining != -1);
 
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);

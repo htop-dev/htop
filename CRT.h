@@ -197,7 +197,7 @@ void CRT_setMouse(bool enabled);
 #define CRT_setMouse(enabled)
 #endif
 
-void CRT_init(const Settings* settings, bool allowUnicode);
+void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnExit);
 
 void CRT_done(void);
 
