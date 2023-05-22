@@ -21,6 +21,7 @@ in the source distribution for its full text.
 
 #include "CommandLine.h"
 #include "ProvideCurses.h"
+#include "ProvideTerm.h"
 #include "XUtils.h"
 
 #if !defined(NDEBUG) && defined(HAVE_MEMFD_CREATE)
@@ -793,6 +794,8 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
 };
 
+static bool CRT_retainScreenOnExit = false;
+
 int CRT_scrollHAmount = 5;
 
 int CRT_scrollWheelVAmount = 10;
@@ -951,8 +954,19 @@ void CRT_setMouse(bool enabled) {
 }
 #endif
 
-void CRT_init(const Settings* settings, bool allowUnicode) {
+void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnExit) {
    initscr();
+
+   if (retainScreenOnExit) {
+      CRT_retainScreenOnExit = true;
+      refresh();
+      tputs(exit_ca_mode, 0, putchar);
+      tputs(clear_screen, 0, putchar);
+      fflush(stdout);
+      enter_ca_mode = 0;
+      exit_ca_mode = 0;
+   }
+
    redirectStderr();
    noecho();
    CRT_crashSettings = settings;
@@ -1055,6 +1069,10 @@ void CRT_done(void) {
    mvhline(LINES - 1, 0, ' ', COLS);
    attroff(resetColor);
    refresh();
+
+   if (CRT_retainScreenOnExit) {
+      mvcur(-1, -1, LINES - 1, 0);
+   }
 
    curs_set(1);
    endwin();
