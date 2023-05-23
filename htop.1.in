@@ -258,6 +258,10 @@ Hide user threads: on systems that represent them differently than ordinary
 processes (such as recent NPTL-based systems), this can hide threads from
 userspace processes in the process list. (This is a toggle key.)
 .TP
+.B O
+Hide containerized processes: prevent processes running in a container
+from being displayed in the process list. (This is a toggle key.)
+.TP
 .B p
 Show full paths to running programs, where applicable. (This is a toggle key.)
 .TP
