@@ -6,7 +6,7 @@ in the source distribution for its full text.
 */
 
 #include "ZramMeter.h"
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "linux/Platform.h"
 
