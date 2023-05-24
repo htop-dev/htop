@@ -606,6 +606,7 @@ static const struct {
    { .key = "      u: ",  .roInactive = false, .info = "show processes of a single user" },
    { .key = "      H: ",  .roInactive = false, .info = "hide/show user process threads" },
    { .key = "      K: ",  .roInactive = false, .info = "hide/show kernel threads" },
+   { .key = "      O: ",  .roInactive = false, .info = "hide/show processes in containers" },
    { .key = "      F: ",  .roInactive = false, .info = "cursor follows process" },
    { .key = "  + - *: ",  .roInactive = false, .info = "expand/collapse tree/toggle all" },
    { .key = "N P M T: ",  .roInactive = false, .info = "sort by PID, CPU%, MEM% or TIME" },
@@ -763,9 +764,9 @@ static Htop_Reaction actionHelp(State* st) {
 
    for (item = 0; helpRight[item].key; item++) {
       attrset((helpRight[item].roInactive && readonly) ? CRT_colors[HELP_SHADOW] : CRT_colors[HELP_BOLD]);
-      mvaddstr(line + item, 41, helpRight[item].key);
+      mvaddstr(line + item, 43, helpRight[item].key);
       attrset((helpRight[item].roInactive && readonly) ? CRT_colors[HELP_SHADOW] : CRT_colors[DEFAULT_COLOR]);
-      mvaddstr(line + item, 50, helpRight[item].info);
+      mvaddstr(line + item, 52, helpRight[item].info);
    }
    line += MAXIMUM(leftHelpItems, item);
    line++;
