@@ -1,3 +1,11 @@
+/*
+htop - linux/ZramMeter.c
+(C) 2020 Murloc Knight
+(C) 2020-2023 htop dev team
+Released under the GNU GPLv2+, see the COPYING file
+in the source distribution for its full text.
+*/
+
 #include "linux/ZramMeter.h"
 
 #include <stddef.h>

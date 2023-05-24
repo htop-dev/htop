@@ -1,7 +1,7 @@
 #ifndef HEADER_ProvideCurses
 #define HEADER_ProvideCurses
 /*
-htop - RichString.h
+htop - ProvideCurses.h
 (C) 2004,2011 Hisham H. Muhammad
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.

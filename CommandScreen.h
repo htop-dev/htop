@@ -1,5 +1,12 @@
 #ifndef HEADER_CommandScreen
 #define HEADER_CommandScreen
+/*
+htop - CommandScreen.h
+(C) 2017,2020 ryenus
+(C) 2020,2021 htop dev team
+Released under the GNU GPLv2+, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "InfoScreen.h"
 #include "Object.h"
