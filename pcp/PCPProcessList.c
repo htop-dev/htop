@@ -18,8 +18,8 @@ in the source distribution for its full text.
 #include <string.h>
 #include <sys/time.h>
 
-#include "Macros.h"
 #include "Machine.h"
+#include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
 #include "Process.h"

@@ -32,6 +32,7 @@ in the source distribution for its full text.
 #include "generic/hostname.h"
 #include "generic/uname.h"
 
+
 /* GNU/Hurd does not have PATH_MAX in limits.h */
 #ifndef PATH_MAX
    #define PATH_MAX 4096

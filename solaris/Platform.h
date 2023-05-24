@@ -30,12 +30,12 @@ in the source distribution for its full text.
 
 #include "Action.h"
 #include "BatteryMeter.h"
+#include "CommandLine.h"
 #include "DiskIOMeter.h"
 #include "Hashtable.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
-#include "CommandLine.h"
 #include "generic/gettime.h"
 #include "generic/hostname.h"
 #include "generic/uname.h"

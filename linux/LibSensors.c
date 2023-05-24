@@ -1,6 +1,6 @@
-#include "linux/LibSensors.h"
-
 #include "config.h" // IWYU pragma: keep
+
+#include "linux/LibSensors.h"
 
 #ifdef HAVE_SENSORS_SENSORS_H
 
