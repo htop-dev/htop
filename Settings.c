@@ -592,15 +592,25 @@ static void writeList(FILE* fd, char** list, int len, char separator) {
 }
 
 static void writeMeters(const Settings* this, FILE* fd, char separator, unsigned int column) {
-   writeList(fd, this->hColumns[column].names, this->hColumns[column].len, separator);
+   if (this->hColumns[column].len) {
+      writeList(fd, this->hColumns[column].names, this->hColumns[column].len, separator);
+   } else {
+      fputc('!', fd);
+      fputc(separator, fd);
+   }
 }
 
 static void writeMeterModes(const Settings* this, FILE* fd, char separator, unsigned int column) {
-   const char* sep = "";
-   for (size_t i = 0; i < this->hColumns[column].len; i++) {
-      fprintf(fd, "%s%d", sep, this->hColumns[column].modes[i]);
-      sep = " ";
+   if (this->hColumns[column].len) {
+      const char* sep = "";
+      for (size_t i = 0; i < this->hColumns[column].len; i++) {
+         fprintf(fd, "%s%d", sep, this->hColumns[column].modes[i]);
+         sep = " ";
+      }
+   } else {
+      fputc('!', fd);
    }
+
    fputc(separator, fd);
 }
 
