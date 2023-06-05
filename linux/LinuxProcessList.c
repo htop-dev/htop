@@ -1312,6 +1312,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
    const ScreenSettings* ss = settings->ss;
    const struct dirent* entry;
 
+   /* set runningTasks from /proc/stat (from Machine_scanCPUTime) */
+   pl->runningTasks = lhost->runningTasks;
+
 #ifdef HAVE_OPENAT
    int dirFd = openat(parentFd, dirname, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
    if (dirFd < 0)

@@ -61,9 +61,12 @@ typedef struct LinuxMachine_ {
    Machine super;
 
    long jiffies;
-   long long boottime;
    int pageSize;
    int pageSizeKB;
+
+   /* see Linux kernel source for further detail, fs/proc/stat.c */
+   unsigned int runningTasks;   /* procs_running from /proc/stat */
+   long long boottime;   /* btime field from /proc/stat */
 
    double period;
 
