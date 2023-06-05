@@ -501,7 +501,7 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
    char buffer[PROC_LINE_LENGTH + 1];
    while (fgets(buffer, sizeof(buffer), file)) {
       if (String_startsWith(buffer, "procs_running")) {
-         super->pl->runningTasks = strtoul(buffer + strlen("procs_running"), NULL, 10);
+         this->runningTasks = strtoul(buffer + strlen("procs_running"), NULL, 10);
          break;
       }
    }
