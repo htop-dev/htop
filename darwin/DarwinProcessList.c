@@ -86,12 +86,6 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
    const double time_interval_ns = Platform_schedulerTicksToNanoseconds(dpl->global_diff) / (double) host->activeCPUs;
 
-   /* Clear the thread counts */
-   super->kernelThreads = 0;
-   super->userlandThreads = 0;
-   super->totalTasks = 0;
-   super->runningTasks = 0;
-
    /* We use kinfo_procs for initial data since :
     *
     * 1) They always succeed.
