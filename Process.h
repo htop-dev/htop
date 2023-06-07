@@ -19,6 +19,7 @@ in the source distribution for its full text.
 
 #define PROCESS_FLAG_IO              0x00000001
 #define PROCESS_FLAG_CWD             0x00000002
+#define PROCESS_FLAG_SCHEDPOL        0x00000004
 
 #define DEFAULT_HIGHLIGHT_SECS 5
 
@@ -49,6 +50,7 @@ typedef enum ProcessField_ {
    TGID = 52,
    PERCENT_NORM_CPU = 53,
    ELAPSED = 54,
+   SCHEDULERPOLICY = 55,
    PROC_COMM = 124,
    PROC_EXE = 125,
    CWD = 126,
@@ -80,7 +82,7 @@ typedef enum ProcessState_ {
    SLEEPING
 } ProcessState;
 
-struct Settings_;
+struct Machine_;
 
 /* Holds information about regions of the cmdline that should be
  * highlighted (e.g. program basename, delimiter, comm). */
@@ -106,9 +108,8 @@ typedef struct Process_ {
    /* Super object for emulated OOP */
    Object super;
 
-   /* Pointer to quasi-global data structures */
-   const struct ProcessList_* processList;
-   const struct Settings_* settings;
+   /* Pointer to quasi-global data */
+   const struct Machine_* host;
 
    /* Process identifier */
    pid_t pid;
@@ -148,6 +149,13 @@ typedef struct Process_ {
 
    /* User name */
    const char* user;
+
+   /* Non root owned process with elevated privileges
+    * Linux:
+    *   - from file capabilities
+    *   - inherited from the ambient set
+    */
+   bool elevated_priv;
 
    /* Process runtime (in hundredth of a second) */
    unsigned long long int time;
@@ -221,6 +229,9 @@ typedef struct Process_ {
    /* Process state enum field (platform dependent) */
    ProcessState state;
 
+   /* Current scheduling policy */
+   int scheduling_policy;
+
    /* Whether the process was updated during the current scan */
    bool updated;
 
@@ -293,7 +304,7 @@ extern uint8_t Process_fieldWidths[LAST_PROCESSFIELD];
 extern int Process_pidDigits;
 extern int Process_uidDigits;
 
-typedef Process* (*Process_New)(const struct Settings_*);
+typedef Process* (*Process_New)(const struct Machine_*);
 typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
 typedef int (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
 
@@ -331,6 +342,7 @@ static inline bool Process_isThread(const Process* this) {
 #define CMDLINE_HIGHLIGHT_FLAG_BASENAME   0x00000002
 #define CMDLINE_HIGHLIGHT_FLAG_COMM       0x00000004
 #define CMDLINE_HIGHLIGHT_FLAG_DELETED    0x00000008
+#define CMDLINE_HIGHLIGHT_FLAG_PREFIXDIR  0x00000010
 
 #define ONE_K 1024UL
 #define ONE_M (ONE_K * ONE_K)
@@ -376,7 +388,7 @@ void Process_done(Process* this);
 
 extern const ProcessClass Process_class;
 
-void Process_init(Process* this, const struct Settings_* settings);
+void Process_init(Process* this, const struct Machine_* host);
 
 void Process_toggleTag(Process* this);
 

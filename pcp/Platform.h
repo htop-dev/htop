@@ -98,8 +98,6 @@ void Platform_setZfsCompressedArcValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode);
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 void Platform_getPressureStall(const char* file, bool some, double* ten, double* sixty, double* threehundred);
@@ -132,6 +130,8 @@ CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv);
 extern pmOptions opts;
 
 size_t Platform_addMetric(PCPMetric id, const char* name);
+
+void Platform_getFileDescriptors(double* used, double* max);
 
 void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
 

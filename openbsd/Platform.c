@@ -28,13 +28,13 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "Meter.h"
-#include "ProcessList.h"
 #include "Settings.h"
 #include "SignalsPanel.h"
 #include "SwapMeter.h"
@@ -42,8 +42,8 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "openbsd/OpenBSDMachine.h"
 #include "openbsd/OpenBSDProcess.h"
-#include "openbsd/OpenBSDProcessList.h"
 
 
 const ScreenDefaults Platform_defaultScreens[] = {
@@ -125,6 +125,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -143,7 +144,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    struct timeval bootTime, currTime;
    const int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
@@ -174,13 +175,14 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    return 2 * THREAD_PID_OFFSET;
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   const OpenBSDProcessList* pl = (const OpenBSDProcessList*) this->pl;
-   const CPUData* cpuData = &(pl->cpuData[cpu]);
+   const Machine* host = this->host;
+   const OpenBSDMachine* ohost = (const OpenBSDMachine*) host;
+   const CPUData* cpuData = &ohost->cpuData[cpu];
    double total;
    double totalPercent;
    double* v = this->values;
@@ -194,7 +196,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
    v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
-   if (this->pl->settings->detailedCPUTime) {
+   if (host->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->sysPeriod / total * 100.0;
       v[CPU_METER_IRQ]     = cpuData->intrPeriod / total * 100.0;
       v[CPU_METER_SOFTIRQ] = 0.0;
@@ -203,42 +205,43 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_IOWAIT]  = 0.0;
       v[CPU_METER_FREQUENCY] = NAN;
       this->curItems = 8;
-      totalPercent = v[0] + v[1] + v[2] + v[3];
    } else {
-      v[2] = cpuData->sysAllPeriod / total * 100.0;
-      v[3] = 0.0; // No steal nor guest on OpenBSD
-      totalPercent = v[0] + v[1] + v[2];
+      v[CPU_METER_KERNEL] = cpuData->sysAllPeriod / total * 100.0;
+      v[CPU_METER_IRQ] = 0.0; // No steal nor guest on OpenBSD
       this->curItems = 4;
    }
+   totalPercent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
 
    totalPercent = CLAMP(totalPercent, 0.0, 100.0);
 
    v[CPU_METER_TEMPERATURE] = NAN;
 
-   v[CPU_METER_FREQUENCY] = (pl->cpuSpeed != -1) ? pl->cpuSpeed : NAN;
+   v[CPU_METER_FREQUENCY] = (ohost->cpuSpeed != -1) ? ohost->cpuSpeed : NAN;
 
    return totalPercent;
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   long int usedMem = pl->usedMem;
-   long int buffersMem = pl->buffersMem;
-   long int cachedMem = pl->cachedMem;
+   const Machine* host = this->host;
+   long int usedMem = host->usedMem;
+   long int buffersMem = host->buffersMem;
+   long int cachedMem = host->cachedMem;
    usedMem -= buffersMem + cachedMem;
-   this->total = pl->totalMem;
-   this->values[0] = usedMem;
-   this->values[1] = buffersMem;
-   // this->values[2] = "shared memory, like tmpfs and shm"
-   this->values[3] = cachedMem;
-   // this->values[4] = "available memory"
+   this->total = host->totalMem;
+   this->values[MEMORY_METER_USED] = usedMem;
+   this->values[MEMORY_METER_BUFFERS] = buffersMem;
+   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+   this->values[MEMORY_METER_CACHE] = cachedMem;
+   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
-   this->values[1] = NAN;
+   const Machine* host = this->host;
+   this->total = host->totalSwap;
+   this->values[SWAP_METER_USED] = host->usedSwap;
+   // this->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
+   // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
@@ -296,15 +299,33 @@ end:
    return env;
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   static const int mib_kern_maxfile[] = { CTL_KERN, KERN_MAXFILES };
+   int sysctl_maxfile = 0;
+   size_t size_maxfile = sizeof(int);
+   if (sysctl(mib_kern_maxfile, ARRAYSIZE(mib_kern_maxfile), &sysctl_maxfile, &size_maxfile, NULL, 0) < 0) {
+      *max = NAN;
+   } else if (size_maxfile != sizeof(int) || sysctl_maxfile < 1) {
+      *max = NAN;
+   } else {
+      *max = sysctl_maxfile;
+   }
+
+   static const int mib_kern_nfiles[] = { CTL_KERN, KERN_NFILES };
+   int sysctl_nfiles = 0;
+   size_t size_nfiles = sizeof(int);
+   if (sysctl(mib_kern_nfiles, ARRAYSIZE(mib_kern_nfiles), &sysctl_nfiles, &size_nfiles, NULL, 0) < 0) {
+      *used = NAN;
+   } else if (size_nfiles != sizeof(int) || sysctl_nfiles < 0) {
+      *used = NAN;
+   } else {
+      *used = sysctl_nfiles;
+   }
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

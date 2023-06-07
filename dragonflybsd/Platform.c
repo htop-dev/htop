@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "MemoryMeter.h"
@@ -31,6 +32,8 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "dragonflybsd/DragonFlyBSDProcess.h"
 #include "dragonflybsd/DragonFlyBSDProcessList.h"
+#include "generic/fdstat_sysctl.h"
+
 
 const ScreenDefaults Platform_defaultScreens[] = {
    {
@@ -108,6 +111,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -126,7 +130,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    struct timeval bootTime, currTime;
    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
@@ -157,7 +161,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
 
-int Platform_getMaxPid() {
+int Platform_getMaxPid(void) {
    int maxPid;
    size_t size = sizeof(maxPid);
    int err = sysctlbyname("kern.pid_max", &maxPid, &size, NULL, 0);
@@ -168,15 +172,16 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   const DragonFlyBSDProcessList* fpl = (const DragonFlyBSDProcessList*) this->pl;
-   unsigned int cpus = this->pl->activeCPUs;
+   const Machine* host = this->host;
+   const DragonFlyBSDMachine* dhost = (const DragonFlyBSDMachine*) host;
+   unsigned int cpus = host->activeCPUs;
    const CPUData* cpuData;
 
    if (cpus == 1) {
       // single CPU box has everything in fpl->cpus[0]
-      cpuData = &(fpl->cpus[0]);
+      cpuData = &(dhost->cpus[0]);
    } else {
-      cpuData = &(fpl->cpus[cpu]);
+      cpuData = &(dhost->cpus[cpu]);
    }
 
    double  percent;
@@ -184,15 +189,15 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (this->pl->settings->detailedCPUTime) {
+   if (super->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[0] + v[1] + v[2] + v[3];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    } else {
-      v[2] = cpuData->systemAllPercent;
+      v[CPU_METER_KERNEL] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[0] + v[1] + v[2];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL];
    }
 
    percent = isnan(percent) ? 0.0 : CLAMP(percent, 0.0, 100.0);
@@ -204,22 +209,23 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   // TODO
-   const ProcessList* pl = this->pl;
+   const Machine* host = this->host;
 
-   this->total = pl->totalMem;
-   this->values[0] = pl->usedMem;
-   this->values[1] = pl->buffersMem;
-   // this->values[2] = "shared memory, like tmpfs and shm"
-   this->values[3] = pl->cachedMem;
-   // this->values[4] = "available memory"
+   this->total = host->totalMem;
+   this->values[MEMORY_METER_USED] = host->usedMem;
+   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
+   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+   // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+   this->values[MEMORY_METER_CACHE] = host->cachedMem;
+   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
-   this->values[1] = NAN;
+   const Machine* host = this->host;
+   this->total = host->totalSwap;
+   this->values[SWAP_METER_USED] = host->usedSwap;
+   // mtr->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
+   // mtr->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
@@ -228,15 +234,13 @@ char* Platform_getProcessEnv(pid_t pid) {
    return NULL;
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   Generic_getFileDescriptors_sysctl(used, max);
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

@@ -15,8 +15,8 @@ in the source distribution for its full text.
 #include <sys/time.h>
 
 #include "ListItem.h"
+#include "Machine.h"
 #include "Object.h"
-#include "ProcessList.h"
 
 
 #define METER_TXTBUFFER_LEN 256
@@ -74,6 +74,7 @@ typedef struct MeterClass_ {
    const char* const description;          /* optional meter description in header setup menu */
    const uint8_t maxItems;
    const bool isMultiColumn;               /* whether the meter draws multiple sub-columns (defaults to false) */
+   const bool comprisedValues;             /* whether latter values comprise previous ones (defaults to false) */
 } MeterClass;
 
 #define As_Meter(this_)                ((const MeterClass*)((this_)->super.klass))
@@ -94,6 +95,7 @@ typedef struct MeterClass_ {
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
 #define Meter_isMultiColumn(this_)     As_Meter(this_)->isMultiColumn
+#define Meter_comprisedValues(this_)   As_Meter(this_)->comprisedValues
 
 typedef struct GraphData_ {
    struct timeval time;
@@ -103,6 +105,7 @@ typedef struct GraphData_ {
 struct Meter_ {
    Object super;
    Meter_Draw draw;
+   const Machine* host;
 
    char* caption;
    int mode;
@@ -110,7 +113,6 @@ struct Meter_ {
    GraphData* drawData;
    int h;
    int columnWidthCount;      /**< only used internally by the Header */
-   const ProcessList* pl;
    uint8_t curItems;
    const int* curAttributes;
    char txtBuffer[METER_TXTBUFFER_LEN];
@@ -143,7 +145,7 @@ typedef enum {
 
 extern const MeterClass Meter_class;
 
-Meter* Meter_new(const ProcessList* pl, unsigned int param, const MeterClass* type);
+Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type);
 
 int Meter_humanUnit(char* buffer, unsigned long int value, size_t size);
 

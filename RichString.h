@@ -18,7 +18,7 @@ in the source distribution for its full text.
 #define RichString_begin(this) RichString this; RichString_beginAllocated(this)
 #define RichString_beginAllocated(this)   \
    do {                                   \
-      (this).chlen = 0,                   \
+      (this).chlen = 0;                   \
       (this).chptr = (this).chstr;        \
       RichString_setChar(&(this), 0, 0);  \
       (this).highlightAttr = 0;           \

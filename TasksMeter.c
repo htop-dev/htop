@@ -24,19 +24,20 @@ static const int TasksMeter_attributes[] = {
 };
 
 static void TasksMeter_updateValues(Meter* this) {
-   const ProcessList* pl = this->pl;
+   const Machine* host = this->host;
+   const ProcessList* pl = host->pl;
    this->values[0] = pl->kernelThreads;
    this->values[1] = pl->userlandThreads;
    this->values[2] = pl->totalTasks - pl->kernelThreads - pl->userlandThreads;
-   this->values[3] = MINIMUM(pl->runningTasks, pl->activeCPUs);
+   this->values[3] = MINIMUM(pl->runningTasks, host->activeCPUs);
    this->total     = pl->totalTasks;
 
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%u/%u", MINIMUM(pl->runningTasks, pl->activeCPUs), pl->totalTasks);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%u/%u", MINIMUM(pl->runningTasks, host->activeCPUs), pl->totalTasks);
 }
 
 static void TasksMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
-   const Settings* settings = this->pl->settings;
+   const Settings* settings = this->host->settings;
    char buffer[20];
    int len;
 

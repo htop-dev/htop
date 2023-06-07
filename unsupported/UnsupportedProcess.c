@@ -44,10 +44,10 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [TGID] = { .name = "TGID", .title = "TGID", .description = "Thread group ID (i.e. process ID)", .flags = 0, .pidColumn = true, },
 };
 
-Process* UnsupportedProcess_new(const Settings* settings) {
+Process* UnsupportedProcess_new(const Machine* host) {
    Process* this = xCalloc(1, sizeof(UnsupportedProcess));
    Object_setClass(this, Class(UnsupportedProcess));
-   Process_init(this, settings);
+   Process_init(this, host);
    return this;
 }
 
@@ -60,7 +60,7 @@ void Process_delete(Object* cast) {
 
 static void UnsupportedProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const UnsupportedProcess* up = (const UnsupportedProcess*) this;
-   bool coloring = this->settings->highlightMegabytes;
+   bool coloring = this->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;

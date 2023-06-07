@@ -19,13 +19,11 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
+#include "Scheduling.h"
 #include "XUtils.h"
 #include "linux/IOPriority.h"
+#include "linux/LinuxMachine.h"
 
-
-/* semi-global */
-int pageSize;
-int pageSizeKB;
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
@@ -100,12 +98,15 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [AUTOGROUP_ID] = { .name = "AUTOGROUP_ID", .title = "AGRP", .description = "The autogroup identifier of the process", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
    [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
+#ifdef SCHEDULER_SUPPORT
+   [SCHEDULERPOLICY] = { .name = "SCHEDULERPOLICY", .title = "SCHED ", .description = "Current scheduling policy of the process", .flags = PROCESS_FLAG_SCHEDPOL, },
+#endif
 };
 
-Process* LinuxProcess_new(const Settings* settings) {
+Process* LinuxProcess_new(const Machine* host) {
    LinuxProcess* this = xCalloc(1, sizeof(LinuxProcess));
    Object_setClass(this, Class(LinuxProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, host);
    return &this->super;
 }
 
@@ -193,25 +194,26 @@ bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
 
 static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
    const LinuxProcess* lp = (const LinuxProcess*) this;
-   bool coloring = this->settings->highlightMegabytes;
+   const LinuxMachine* lhost = (const LinuxMachine*) this->host;
+   bool coloring = this->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
    switch (field) {
    case CMINFLT: Process_printCount(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_printCount(str, lp->cmajflt, coloring); return;
-   case M_DRS: Process_printBytes(str, lp->m_drs * pageSize, coloring); return;
+   case M_DRS: Process_printBytes(str, lp->m_drs * lhost->pageSize, coloring); return;
    case M_LRS:
       if (lp->m_lrs) {
-         Process_printBytes(str, lp->m_lrs * pageSize, coloring);
+         Process_printBytes(str, lp->m_lrs * lhost->pageSize, coloring);
          return;
       }
 
       attr = CRT_colors[PROCESS_SHADOW];
       xSnprintf(buffer, n, "  N/A ");
       break;
-   case M_TRS: Process_printBytes(str, lp->m_trs * pageSize, coloring); return;
-   case M_SHARE: Process_printBytes(str, lp->m_share * pageSize, coloring); return;
+   case M_TRS: Process_printBytes(str, lp->m_trs * lhost->pageSize, coloring); return;
+   case M_SHARE: Process_printBytes(str, lp->m_share * lhost->pageSize, coloring); return;
    case M_PSS: Process_printKBytes(str, lp->m_pss, coloring); return;
    case M_SWAP: Process_printKBytes(str, lp->m_swap, coloring); return;
    case M_PSSWP: Process_printKBytes(str, lp->m_psswp, coloring); return;

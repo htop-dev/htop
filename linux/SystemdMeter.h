@@ -13,4 +13,6 @@ in the source distribution for its full text.
 
 extern const MeterClass SystemdMeter_class;
 
+extern const MeterClass SystemdUserMeter_class;
+
 #endif /* HEADER_SystemdMeter */

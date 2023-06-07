@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "DiskIOMeter.h"
 #include "DynamicColumn.h"
 #include "DynamicMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -45,6 +46,7 @@ in the source distribution for its full text.
 #include "linux/ZramStats.h"
 #include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
+#include "pcp/PCPMachine.h"
 #include "pcp/PCPMetric.h"
 #include "pcp/PCPProcessList.h"
 #include "zfs/ZfsArcMeter.h"
@@ -106,6 +108,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &PressureStallCPUSomeMeter_class,
    &PressureStallIOSomeMeter_class,
    &PressureStallIOFullMeter_class,
+   &PressureStallIRQFullMeter_class,
    &PressureStallMemorySomeMeter_class,
    &PressureStallMemoryFullMeter_class,
    &ZfsArcMeter_class,
@@ -114,6 +117,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
    &SysArchMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -171,6 +175,7 @@ static const char* Platform_metricNames[] = {
    [PCP_PSI_CPUSOME] = "kernel.all.pressure.cpu.some.avg",
    [PCP_PSI_IOSOME] = "kernel.all.pressure.io.some.avg",
    [PCP_PSI_IOFULL] = "kernel.all.pressure.io.full.avg",
+   [PCP_PSI_IRQFULL] = "kernel.all.pressure.irq.full.avg",
    [PCP_PSI_MEMSOME] = "kernel.all.pressure.memory.some.avg",
    [PCP_PSI_MEMFULL] = "kernel.all.pressure.memory.full.avg",
 
@@ -190,6 +195,8 @@ static const char* Platform_metricNames[] = {
    [PCP_ZRAM_CAPACITY] = "zram.capacity",
    [PCP_ZRAM_ORIGINAL] = "zram.mm_stat.data_size.original",
    [PCP_ZRAM_COMPRESSED] = "zram.mm_stat.data_size.compressed",
+   [PCP_VFS_FILES_COUNT] = "vfs.files.count",
+   [PCP_VFS_FILES_MAX] = "vfs.files.max",
 
    [PCP_PROC_PID] = "proc.psinfo.pid",
    [PCP_PROC_PPID] = "proc.psinfo.ppid",
@@ -478,8 +485,7 @@ long long Platform_getBootTime(void) {
    return pcp->btime;
 }
 
-static double Platform_setOneCPUValues(Meter* this, pmAtomValue* values) {
-
+static double Platform_setOneCPUValues(Meter* this, const Settings* settings, pmAtomValue* values) {
    unsigned long long value = values[CPU_TOTAL_PERIOD].ull;
    double total = (double) (value == 0 ? 1 : value);
    double percent;
@@ -487,7 +493,7 @@ static double Platform_setOneCPUValues(Meter* this, pmAtomValue* values) {
    double* v = this->values;
    v[CPU_METER_NICE] = values[CPU_NICE_PERIOD].ull / total * 100.0;
    v[CPU_METER_NORMAL] = values[CPU_USER_PERIOD].ull / total * 100.0;
-   if (this->pl->settings->detailedCPUTime) {
+   if (settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = values[CPU_SYSTEM_PERIOD].ull / total * 100.0;
       v[CPU_METER_IRQ]     = values[CPU_IRQ_PERIOD].ull / total * 100.0;
       v[CPU_METER_SOFTIRQ] = values[CPU_SOFTIRQ_PERIOD].ull / total * 100.0;
@@ -495,16 +501,16 @@ static double Platform_setOneCPUValues(Meter* this, pmAtomValue* values) {
       v[CPU_METER_GUEST]   = values[CPU_GUEST_PERIOD].ull / total * 100.0;
       v[CPU_METER_IOWAIT]  = values[CPU_IOWAIT_PERIOD].ull / total * 100.0;
       this->curItems = 8;
-      if (this->pl->settings->accountGuestInCPUMeter)
-         percent = v[0] + v[1] + v[2] + v[3] + v[4] + v[5] + v[6];
-      else
-         percent = v[0] + v[1] + v[2] + v[3] + v[4];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ] + v[CPU_METER_SOFTIRQ];
+      if (settings->accountGuestInCPUMeter) {
+         percent += v[CPU_METER_STEAL] + v[CPU_METER_GUEST];
+      }
    } else {
-      v[2] = values[CPU_SYSTEM_ALL_PERIOD].ull / total * 100.0;
+      v[CPU_METER_KERNEL] = values[CPU_SYSTEM_ALL_PERIOD].ull / total * 100.0;
       value = values[CPU_STEAL_PERIOD].ull + values[CPU_GUEST_PERIOD].ull;
-      v[3] = value / total * 100.0;
+      v[CPU_METER_IRQ] = value / total * 100.0;
       this->curItems = 4;
-      percent = v[0] + v[1] + v[2] + v[3];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    }
    percent = CLAMP(percent, 0.0, 100.0);
    if (isnan(percent))
@@ -517,39 +523,43 @@ static double Platform_setOneCPUValues(Meter* this, pmAtomValue* values) {
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
-   const PCPProcessList* pl = (const PCPProcessList*) this->pl;
+   const PCPMachine* phost = (const PCPMachine*) this->host;
+   const Settings* settings = this->host->settings;
+
    if (cpu <= 0) /* use aggregate values */
-      return Platform_setOneCPUValues(this, pl->cpu);
-   return Platform_setOneCPUValues(this, pl->percpu[cpu - 1]);
+      return Platform_setOneCPUValues(this, settings, phost->cpu);
+   return Platform_setOneCPUValues(this, settings, phost->percpu[cpu - 1]);
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   const PCPProcessList* ppl = (const PCPProcessList*) pl;
+   const Machine* host = this->host;
+   const PCPMachine* phost = (const PCPMachine*) host;
 
-   this->total     = pl->totalMem;
-   this->values[0] = pl->usedMem;
-   this->values[1] = pl->buffersMem;
-   this->values[2] = pl->sharedMem;
-   this->values[3] = pl->cachedMem;
-   this->values[4] = pl->availableMem;
+   this->total = host->totalMem;
+   this->values[MEMORY_METER_USED] = host->usedMem;
+   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
+   this->values[MEMORY_METER_SHARED] = host->sharedMem;
+   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+   this->values[MEMORY_METER_CACHE] = host->cachedMem;
+   this->values[MEMORY_METER_AVAILABLE] = host->availableMem;
 
-   if (ppl->zfs.enabled != 0) {
+   if (phost->zfs.enabled != 0) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
-      if (ppl->zfs.size > ppl->zfs.min)
-         shrinkableSize = ppl->zfs.size - ppl->zfs.min;
-      this->values[0] -= shrinkableSize;
-      this->values[3] += shrinkableSize;
-      this->values[4] += shrinkableSize;
+      if (phost->zfs.size > phost->zfs.min)
+         shrinkableSize = phost->zfs.size - phost->zfs.min;
+      this->values[MEMORY_METER_USED] -= shrinkableSize;
+      this->values[MEMORY_METER_CACHE] += shrinkableSize;
+      this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
    }
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
-   this->values[1] = pl->cachedSwap;
+   const Machine* host = this->host;
+   this->total = host->totalSwap;
+   this->values[SWAP_METER_USED] = host->usedSwap;
+   this->values[SWAP_METER_CACHE] = host->cachedSwap;
+   // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 void Platform_setZramValues(Meter* this) {
@@ -585,15 +595,15 @@ void Platform_setZramValues(Meter* this) {
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const PCPProcessList* ppl = (const PCPProcessList*) this->pl;
+   const PCPMachine* phost = (const PCPMachine*) this->host;
 
-   ZfsArcMeter_readStats(this, &(ppl->zfs));
+   ZfsArcMeter_readStats(this, &phost->zfs);
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const PCPProcessList* ppl = (const PCPProcessList*) this->pl;
+   const PCPMachine* phost = (const PCPMachine*) this->host;
 
-   ZfsCompressedArcMeter_readStats(this, &(ppl->zfs));
+   ZfsCompressedArcMeter_readStats(this, &phost->zfs);
 }
 
 void Platform_getHostname(char* buffer, size_t size) {
@@ -669,12 +679,6 @@ char* Platform_getProcessEnv(pid_t pid) {
    return value.cp;
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
@@ -688,6 +692,8 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
       metric = PCP_PSI_CPUSOME;
    else if (String_eq(file, "io"))
       metric = some ? PCP_PSI_IOSOME : PCP_PSI_IOFULL;
+   else if (String_eq(file, "irq"))
+      metric = PCP_PSI_IRQFULL;
    else if (String_eq(file, "mem"))
       metric = some ? PCP_PSI_MEMSOME : PCP_PSI_MEMFULL;
    else
@@ -727,6 +733,17 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    if (PCPMetric_values(PCP_NET_SENDP, &value, 1, PM_TYPE_U64) != NULL)
       data->packetsTransmitted = value.ull;
    return true;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = NAN;
+   *max = 65536;
+
+   pmAtomValue value;
+   if (PCPMetric_values(PCP_VFS_FILES_COUNT, &value, 1, PM_TYPE_32) != NULL)
+      *used = value.l;
+   if (PCPMetric_values(PCP_VFS_FILES_MAX, &value, 1, PM_TYPE_32) != NULL)
+      *max = value.l;
 }
 
 void Platform_getBattery(double* level, ACPresence* isOnAC) {

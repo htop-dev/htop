@@ -41,11 +41,12 @@ static void CategoriesPanel_delete(Object* object) {
 static void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
    size_t columns = HeaderLayout_getColumns(this->scr->header->headerLayout);
    MetersPanel** meterPanels = xMallocArray(columns, sizeof(MetersPanel*));
+   Settings* settings = this->host->settings;
 
    for (size_t i = 0; i < columns; i++) {
       char titleBuffer[32];
       xSnprintf(titleBuffer, sizeof(titleBuffer), "Column %zu", i + 1);
-      meterPanels[i] = MetersPanel_new(this->settings, titleBuffer, this->header->columns[i], this->scr);
+      meterPanels[i] = MetersPanel_new(settings, titleBuffer, this->header->columns[i], this->scr);
 
       if (i != 0) {
          meterPanels[i]->leftNeighbor = meterPanels[i - 1];
@@ -55,31 +56,35 @@ static void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
       ScreenManager_add(this->scr, (Panel*) meterPanels[i], 20);
    }
 
-   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->settings, this->header, columns, meterPanels, this->scr, this->pl);
+   Panel* availableMeters = (Panel*) AvailableMetersPanel_new(this->host, this->header, columns, meterPanels, this->scr);
    ScreenManager_add(this->scr, availableMeters, -1);
 }
 
 static void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {
-   Panel* displayOptions = (Panel*) DisplayOptionsPanel_new(this->settings, this->scr);
+   Settings* settings = this->host->settings;
+   Panel* displayOptions = (Panel*) DisplayOptionsPanel_new(settings, this->scr);
    ScreenManager_add(this->scr, displayOptions, -1);
 }
 
 static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
-   Panel* colors = (Panel*) ColorsPanel_new(this->settings);
+   Settings* settings = this->host->settings;
+   Panel* colors = (Panel*) ColorsPanel_new(settings);
    ScreenManager_add(this->scr, colors, -1);
 }
 
 static void CategoriesPanel_makeScreensPage(CategoriesPanel* this) {
-   Panel* screens = (Panel*) ScreensPanel_new(this->settings);
+   Settings* settings = this->host->settings;
+   Panel* screens = (Panel*) ScreensPanel_new(settings);
    Panel* columns = (Panel*) ((ScreensPanel*)screens)->columns;
-   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns, this->settings->dynamicColumns);
+   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns, settings->dynamicColumns);
    ScreenManager_add(this->scr, screens, 20);
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
 }
 
 static void CategoriesPanel_makeHeaderOptionsPage(CategoriesPanel* this) {
-   Panel* colors = (Panel*) HeaderOptionsPanel_new(this->settings, this->scr);
+   Settings* settings = this->host->settings;
+   Panel* colors = (Panel*) HeaderOptionsPanel_new(settings, this->scr);
    ScreenManager_add(this->scr, colors, -1);
 }
 
@@ -149,16 +154,15 @@ const PanelClass CategoriesPanel_class = {
    .eventHandler = CategoriesPanel_eventHandler
 };
 
-CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl) {
+CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Header* header, Machine* host) {
    CategoriesPanel* this = AllocThis(CategoriesPanel);
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(CategoriesFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->scr = scr;
-   this->settings = settings;
+   this->host = host;
    this->header = header;
-   this->pl = pl;
    Panel_setHeader(super, "Categories");
    for (size_t i = 0; i < ARRAYSIZE(categoriesPanelPages); i++)
       Panel_add(super, (Object*) ListItem_new(categoriesPanelPages[i].name, 0));

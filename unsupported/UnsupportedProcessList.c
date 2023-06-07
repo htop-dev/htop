@@ -14,12 +14,10 @@ in the source distribution for its full text.
 #include "UnsupportedProcess.h"
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* pidMatchList, uid_t userId) {
+ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
-   ProcessList_init(this, Class(Process), usersTable, dynamicMeters, dynamicColumns, pidMatchList, userId);
 
-   this->existingCPUs = 1;
-   this->activeCPUs = 1;
+   ProcessList_init(this, Class(Process), host, pidMatchList);
 
    return this;
 }
@@ -29,13 +27,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
-
-   // in pause mode only gather global data for meters (CPU/memory/...)
-   if (pauseProcessUpdate) {
-      return;
-   }
-
+void ProcessList_goThroughEntries(ProcessList* super) {
    bool preExisting = true;
    Process* proc;
 
@@ -51,7 +43,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    Process_updateCmdline(proc, "<unsupported architecture>", 0, 0);
    Process_updateExe(proc, "/path/to/executable");
 
-   if (proc->settings->ss->flags & PROCESS_FLAG_CWD) {
+   const Settings* settings = proc->host->settings;
+   if (settings->ss->flags & PROCESS_FLAG_CWD) {
       free_and_xStrdup(&proc->procCwd, "/current/working/directory");
    }
 
@@ -60,7 +53,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
    proc->state = RUNNING;
    proc->isKernelThread = false;
    proc->isUserlandThread = false;
-   proc->show = true; /* Reflected in proc->settings-> "hideXXX" really */
+   proc->show = true; /* Reflected in settings-> "hideXXX" really */
    proc->pgrp = 0;
    proc->session = 0;
    proc->tty_nr = 0;
@@ -89,12 +82,4 @@ void ProcessList_goThroughEntries(ProcessList* super, bool pauseProcessUpdate) {
 
    if (!preExisting)
       ProcessList_add(super, proc);
-}
-
-bool ProcessList_isCPUonline(const ProcessList* super, unsigned int id) {
-   assert(id < super->existingCPUs);
-
-   (void) super; (void) id;
-
-   return true;
 }

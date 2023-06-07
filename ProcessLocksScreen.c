@@ -27,7 +27,8 @@ ProcessLocksScreen* ProcessLocksScreen_new(const Process* process) {
       this->pid = process->tgid;
    else
       this->pid = process->pid;
-   return (ProcessLocksScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 2, "        ID  TYPE       EXCLUSION  READ/WRITE DEVICE:INODE                              START                  END  FILENAME");
+
+   return (ProcessLocksScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 2, "   FD TYPE       EXCLUSION  READ/WRITE DEVICE       NODE               START                 END  FILENAME");
 }
 
 void ProcessLocksScreen_delete(Object* this) {
@@ -64,18 +65,18 @@ static void ProcessLocksScreen_scan(InfoScreen* this) {
 
          char entry[512];
          if (ULLONG_MAX == data->end) {
-            xSnprintf(entry, sizeof(entry), "%10d  %-10s %-10s %-10s %02x:%02x:%020"PRIu64" %20"PRIu64" %20s  %s",
-               data->id,
+            xSnprintf(entry, sizeof(entry), "%5d %-10s %-10s %-10s %#6"PRIx64" %10"PRIu64" %19"PRIu64" %19s  %s",
+               data->fd,
                data->locktype, data->exclusive, data->readwrite,
-               data->dev[0], data->dev[1], data->inode,
+               (uint64_t) data->dev, data->inode,
                data->start, "<END OF FILE>",
                data->filename ? data->filename : "<N/A>"
             );
          } else {
-            xSnprintf(entry, sizeof(entry), "%10d  %-10s %-10s %-10s %02x:%02x:%020"PRIu64" %20"PRIu64" %20"PRIu64"  %s",
-               data->id,
+            xSnprintf(entry, sizeof(entry), "%5d %-10s %-10s %-10s %#6"PRIx64" %10"PRIu64" %19"PRIu64" %19"PRIu64"  %s",
+               data->fd,
                data->locktype, data->exclusive, data->readwrite,
-               data->dev[0], data->dev[1], data->inode,
+               (uint64_t) data->dev, data->inode,
                data->start, data->end,
                data->filename ? data->filename : "<N/A>"
             );

@@ -32,12 +32,12 @@ const MeterClass Meter_class = {
    }
 };
 
-Meter* Meter_new(const struct ProcessList_* pl, unsigned int param, const MeterClass* type) {
+Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type) {
    Meter* this = xCalloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
    this->param = param;
-   this->pl = pl;
+   this->host = host;
    this->curItems = type->maxItems;
    this->curAttributes = NULL;
    this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
@@ -219,6 +219,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(startPos + w <= RichString_sizeVal(bar));
 
    int blockSizes[10];
+   int blockSizeSum = 0;
 
    // First draw in the bar[] buffer...
    int offset = 0;
@@ -230,6 +231,12 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       } else {
          blockSizes[i] = 0;
       }
+
+      if (Meter_comprisedValues(this)) {
+         blockSizes[i] = MAXIMUM(blockSizes[i] - blockSizeSum, 0);
+         blockSizeSum += blockSizes[i];
+      }
+
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
@@ -287,7 +294,7 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
-   const ProcessList* pl = this->pl;
+   const Machine* host = this->host;
 
    if (!this->drawData) {
       this->drawData = xCalloc(1, sizeof(GraphData));
@@ -315,18 +322,22 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    x += captionLen;
    w -= captionLen;
 
-   if (!timercmp(&pl->realtime, &(data->time), <)) {
-      int globalDelay = this->pl->settings->delay;
+   if (!timercmp(&host->realtime, &(data->time), <)) {
+      int globalDelay = this->host->settings->delay;
       struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
-      timeradd(&pl->realtime, &delay, &(data->time));
+      timeradd(&host->realtime, &delay, &(data->time));
 
       for (int i = 0; i < nValues - 1; i++)
          data->values[i] = data->values[i + 1];
 
-      double value = 0.0;
-      for (uint8_t i = 0; i < this->curItems; i++)
-         value += this->values[i];
-      data->values[nValues - 1] = value;
+      if (Meter_comprisedValues(this)) {
+         data->values[nValues - 1] = (this->curItems > 0) ? this->values[this->curItems - 1] : 0.0;
+      } else {
+         double value = 0.0;
+         for (uint8_t i = 0; i < this->curItems; i++)
+            value += !isnan(this->values[i]) ? this->values[i] : 0;
+         data->values[nValues - 1] = value;
+      }
    }
 
    int i = nValues - (w * 2), k = 0;

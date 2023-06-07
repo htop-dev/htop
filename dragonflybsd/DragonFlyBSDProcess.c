@@ -52,10 +52,10 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
 };
 
-Process* DragonFlyBSDProcess_new(const Settings* settings) {
+Process* DragonFlyBSDProcess_new(const Machine* host) {
    DragonFlyBSDProcess* this = xCalloc(1, sizeof(DragonFlyBSDProcess));
    Object_setClass(this, Class(DragonFlyBSDProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, host);
    return &this->super;
 }
 

@@ -265,6 +265,7 @@ char* xStrndup(const char* str, size_t len) {
    return data;
 }
 
+ATTR_ACCESS3_W(2, 3)
 static ssize_t readfd_internal(int fd, void* buffer, size_t count) {
    if (!count) {
       close(fd);

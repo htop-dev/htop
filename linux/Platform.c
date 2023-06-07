@@ -5,6 +5,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "ZramMeter.h"
 #include "config.h"
 
 #include "linux/Platform.h"
@@ -12,6 +13,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <math.h>
@@ -21,6 +23,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/sysmacros.h>
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
@@ -29,9 +32,11 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "HugePageMeter.h"
 #include "LoadAverageMeter.h"
+#include "Machine.h"
 #include "Macros.h"
 #include "MainPanel.h"
 #include "Meter.h"
@@ -41,7 +46,6 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "Panel.h"
 #include "PressureStallMeter.h"
-#include "ProcessList.h"
 #include "ProvideCurses.h"
 #include "linux/SELinuxMeter.h"
 #include "Settings.h"
@@ -52,8 +56,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 #include "linux/IOPriority.h"
 #include "linux/IOPriorityPanel.h"
+#include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
-#include "linux/LinuxProcessList.h"
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
@@ -62,7 +66,6 @@ in the source distribution for its full text.
 #include "zfs/ZfsCompressedArcMeter.h"
 
 #ifdef HAVE_LIBCAP
-#include <errno.h>
 #include <sys/capability.h>
 #endif
 
@@ -238,6 +241,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &PressureStallCPUSomeMeter_class,
    &PressureStallIOSomeMeter_class,
    &PressureStallIOFullMeter_class,
+   &PressureStallIRQFullMeter_class,
    &PressureStallMemorySomeMeter_class,
    &PressureStallMemoryFullMeter_class,
    &ZfsArcMeter_class,
@@ -247,6 +251,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &NetworkIOMeter_class,
    &SELinuxMeter_class,
    &SystemdMeter_class,
+   &SystemdUserMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -298,8 +304,9 @@ int Platform_getMaxPid(void) {
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   const LinuxProcessList* pl = (const LinuxProcessList*) this->pl;
-   const CPUData* cpuData = &(pl->cpuData[cpu]);
+   const LinuxMachine* lhost = (const LinuxMachine *) this->host;
+   const Settings* settings = this->host->settings;
+   const CPUData* cpuData = &(lhost->cpuData[cpu]);
    double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
    double percent;
    double* v = this->values;
@@ -311,7 +318,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
    v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
-   if (this->pl->settings->detailedCPUTime) {
+   if (settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPeriod / total * 100.0;
       v[CPU_METER_IRQ]     = cpuData->irqPeriod / total * 100.0;
       v[CPU_METER_SOFTIRQ] = cpuData->softIrqPeriod / total * 100.0;
@@ -319,16 +326,15 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_GUEST]   = cpuData->guestPeriod / total * 100.0;
       v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
       this->curItems = 8;
-      if (this->pl->settings->accountGuestInCPUMeter) {
-         percent = v[0] + v[1] + v[2] + v[3] + v[4] + v[5] + v[6];
-      } else {
-         percent = v[0] + v[1] + v[2] + v[3] + v[4];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ] + v[CPU_METER_SOFTIRQ];
+      if (settings->accountGuestInCPUMeter) {
+         percent += v[CPU_METER_STEAL] + v[CPU_METER_GUEST];
       }
    } else {
-      v[2] = cpuData->systemAllPeriod / total * 100.0;
-      v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
+      v[CPU_METER_KERNEL] = cpuData->systemAllPeriod / total * 100.0;
+      v[CPU_METER_IRQ] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
       this->curItems = 4;
-      percent = v[0] + v[1] + v[2] + v[3];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    }
    percent = CLAMP(percent, 0.0, 100.0);
    if (isnan(percent)) {
@@ -347,56 +353,86 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   const LinuxProcessList* lpl = (const LinuxProcessList*) pl;
+   const Machine* host = this->host;
+   const LinuxMachine* lhost = (const LinuxMachine*) host;
 
-   if (this->pl->settings->excludeHugepages) {
-      this->total     = pl->totalMem > lpl->totalHugePageMem ? pl->totalMem - lpl->totalHugePageMem : pl->totalMem;
-      this->values[0] = pl->usedMem > lpl->totalHugePageMem ? pl->usedMem - lpl->totalHugePageMem : pl->usedMem;
+   if (host->settings->excludeHugepages) {
+      this->total = host->totalMem > lhost->totalHugePageMem ? host->totalMem - lhost->totalHugePageMem : host->totalMem;
+      this->values[MEMORY_METER_USED] = host->usedMem > lhost->totalHugePageMem ? host->usedMem - lhost->totalHugePageMem : host->usedMem;
    } else {
-      this->total     = pl->totalMem;
-      this->values[0] = pl->usedMem;
+      this->total = host->totalMem;
+      this->values[MEMORY_METER_USED] = host->usedMem;
    }
-   this->values[1] = pl->buffersMem;
-   this->values[2] = pl->sharedMem;
-   this->values[3] = pl->cachedMem;
-   this->values[4] = pl->availableMem;
+   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
+   this->values[MEMORY_METER_SHARED] = host->sharedMem;
+   this->values[MEMORY_METER_COMPRESSED] = 0; /* compressed */
+   this->values[MEMORY_METER_CACHE] = host->cachedMem;
+   this->values[MEMORY_METER_AVAILABLE] = host->availableMem;
 
-   if (lpl->zfs.enabled != 0 && !Running_containerized) {
+   if (lhost->zfs.enabled != 0 && !Running_containerized) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
-      if (lpl->zfs.size > lpl->zfs.min)
-         shrinkableSize = lpl->zfs.size - lpl->zfs.min;
-      this->values[0] -= shrinkableSize;
-      this->values[3] += shrinkableSize;
-      this->values[4] += shrinkableSize;
+      if (lhost->zfs.size > lhost->zfs.min)
+         shrinkableSize = lhost->zfs.size - lhost->zfs.min;
+      this->values[MEMORY_METER_USED] -= shrinkableSize;
+      this->values[MEMORY_METER_CACHE] += shrinkableSize;
+      this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
+   }
+
+   if (lhost->zswap.usedZswapOrig > 0 || lhost->zswap.usedZswapComp > 0) {
+      this->values[MEMORY_METER_USED] -= lhost->zswap.usedZswapComp;
+      this->values[MEMORY_METER_COMPRESSED] += lhost->zswap.usedZswapComp;
    }
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
-   this->values[1] = pl->cachedSwap;
+   const Machine* host = this->host;
+   const LinuxMachine* lhost = (const LinuxMachine*) host;
+
+   this->total = host->totalSwap;
+   this->values[SWAP_METER_USED] = host->usedSwap;
+   this->values[SWAP_METER_CACHE] = host->cachedSwap;
+   this->values[SWAP_METER_FRONTSWAP] = 0; /* frontswap -- memory that is accounted to swap but resides elsewhere */
+
+   if (lhost->zswap.usedZswapOrig > 0 || lhost->zswap.usedZswapComp > 0) {
+      /*
+       * FIXME: Zswapped pages can be both SwapUsed and SwapCached, and we do not know which.
+       *
+       * Apparently, it is possible that Zswapped > SwapUsed. This means that some of Zswapped pages
+       * were actually SwapCached, nor SwapUsed. Unfortunately, we cannot tell what exactly portion
+       * of Zswapped pages were SwapCached.
+       *
+       * For now, subtract Zswapped from SwapUsed and only if Zswapped > SwapUsed, subtract the
+       * overflow from SwapCached.
+       */
+      this->values[SWAP_METER_USED] -= lhost->zswap.usedZswapOrig;
+      if (this->values[SWAP_METER_USED] < 0) {
+         /* subtract the overflow from SwapCached */
+         this->values[SWAP_METER_CACHE] += this->values[SWAP_METER_USED];
+         this->values[SWAP_METER_USED] = 0;
+      }
+      this->values[SWAP_METER_FRONTSWAP] += lhost->zswap.usedZswapOrig;
+   }
 }
 
 void Platform_setZramValues(Meter* this) {
-   const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
-   this->total = lpl->zram.totalZram;
-   this->values[0] = lpl->zram.usedZramComp;
-   this->values[1] = lpl->zram.usedZramOrig;
+   const LinuxMachine* lhost = (const LinuxMachine*) this->host;
+
+   this->total = lhost->zram.totalZram;
+   this->values[ZRAM_METER_COMPRESSED] = lhost->zram.usedZramComp;
+   this->values[ZRAM_METER_UNCOMPRESSED] = lhost->zram.usedZramOrig;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
+   const LinuxMachine* lhost = (const LinuxMachine*) this->host;
 
-   ZfsArcMeter_readStats(this, &(lpl->zfs));
+   ZfsArcMeter_readStats(this, &(lhost->zfs));
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
+   const LinuxMachine* lhost = (const LinuxMachine*) this->host;
 
-   ZfsCompressedArcMeter_readStats(this, &(lpl->zfs));
+   ZfsCompressedArcMeter_readStats(this, &(lhost->zfs));
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
@@ -435,117 +471,90 @@ char* Platform_getProcessEnv(pid_t pid) {
    return env;
 }
 
-/*
- * Return the absolute path of a file given its pid&inode number
- *
- * Based on implementation of lslocks from util-linux:
- * https://sources.debian.org/src/util-linux/2.36-3/misc-utils/lslocks.c/#L162
- */
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   struct stat sb;
-   const struct dirent* de;
+FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
+   FileLocks_ProcessData* pdata = xCalloc(1, sizeof(FileLocks_ProcessData));
    DIR* dirp;
-   ssize_t len;
-   int fd;
+   int dfd;
 
    char path[PATH_MAX];
-   char sym[PATH_MAX];
-   char* ret = NULL;
-
-   memset(path, 0, sizeof(path));
-   memset(sym, 0, sizeof(sym));
-
-   xSnprintf(path, sizeof(path), "%s/%d/fd/", PROCDIR, pid);
+   xSnprintf(path, sizeof(path), PROCDIR "/%d/fdinfo/", pid);
    if (strlen(path) >= (sizeof(path) - 2))
-      return NULL;
+      goto err;
 
    if (!(dirp = opendir(path)))
-      return NULL;
+      goto err;
 
-   if ((fd = dirfd(dirp)) < 0 )
-      goto out;
+   if ((dfd = dirfd(dirp)) == -1) {
+      closedir(dirp);
+      goto err;
+   }
 
-   while ((de = readdir(dirp))) {
+   FileLocks_LockData** data_ref = &pdata->locks;
+   for (struct dirent* de; (de = readdir(dirp)); ) {
       if (String_eq(de->d_name, ".") || String_eq(de->d_name, ".."))
          continue;
 
-      /* care only for numerical descriptors */
-      if (!strtoull(de->d_name, (char **) NULL, 10))
+      errno = 0;
+      char* end = de->d_name;
+      int file = strtoull(de->d_name, &end, 10);
+      if (errno || *end)
          continue;
 
-      if (!Compat_fstatat(fd, path, de->d_name, &sb, 0) && inode != sb.st_ino)
+      int fd = openat(dfd, de->d_name, O_RDONLY | O_CLOEXEC);
+      if (fd == -1)
          continue;
-
-      if ((len = Compat_readlinkat(fd, path, de->d_name, sym, sizeof(sym) - 1)) < 1)
-         goto out;
-
-      sym[len] = '\0';
-
-      ret = xStrdup(sym);
-      break;
-   }
-
-out:
-   closedir(dirp);
-   return ret;
-}
-
-FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
-   FileLocks_ProcessData* pdata = xCalloc(1, sizeof(FileLocks_ProcessData));
-
-   FILE* f = fopen(PROCDIR "/locks", "r");
-   if (!f) {
-      pdata->error = true;
-      return pdata;
-   }
-
-   char buffer[1024];
-   FileLocks_LockData** data_ref = &pdata->locks;
-   while (fgets(buffer, sizeof(buffer), f)) {
-      if (!strchr(buffer, '\n'))
+      FILE* f = fdopen(fd, "r");
+      if (!f) {
+         close(fd);
          continue;
-
-      int lock_id;
-      char lock_type[16];
-      char lock_excl[16];
-      char lock_rw[16];
-      pid_t lock_pid;
-      unsigned int lock_dev[2];
-      uint64_t lock_inode;
-      char lock_start[25];
-      char lock_end[25];
-
-      if (10 != sscanf(buffer, "%d:  %15s  %15s %15s %d %x:%x:%"PRIu64" %24s %24s",
-         &lock_id, lock_type, lock_excl, lock_rw, &lock_pid,
-         &lock_dev[0], &lock_dev[1], &lock_inode,
-         lock_start, lock_end))
-         continue;
-
-      if (pid != lock_pid)
-         continue;
-
-      FileLocks_LockData* ldata = xCalloc(1, sizeof(FileLocks_LockData));
-      FileLocks_Data* data = &ldata->data;
-      data->id = lock_id;
-      data->locktype = xStrdup(lock_type);
-      data->exclusive = xStrdup(lock_excl);
-      data->readwrite = xStrdup(lock_rw);
-      data->filename = Platform_getInodeFilename(lock_pid, lock_inode);
-      data->dev[0] = lock_dev[0];
-      data->dev[1] = lock_dev[1];
-      data->inode = lock_inode;
-      data->start = strtoull(lock_start, NULL, 10);
-      if (!String_eq(lock_end, "EOF")) {
-         data->end = strtoull(lock_end, NULL, 10);
-      } else {
-         data->end = ULLONG_MAX;
       }
 
-      *data_ref = ldata;
-      data_ref = &ldata->next;
+      for (char buffer[1024]; fgets(buffer, sizeof(buffer), f); ) {
+         if (!strchr(buffer, '\n'))
+            continue;
+
+         if (!String_startsWith(buffer, "lock:\t"))
+            continue;
+
+         FileLocks_Data data = {.fd = file};
+         int _;
+         unsigned int maj, min;
+         char lock_end[25], locktype[32], exclusive[32], readwrite[32];
+         if (10 != sscanf(buffer + strlen("lock:\t"), "%d: %31s %31s %31s %d %x:%x:%"PRIu64" %"PRIu64" %24s",
+            &_, locktype, exclusive, readwrite, &_,
+            &maj, &min, &data.inode,
+            &data.start, lock_end))
+            continue;
+
+         data.locktype = xStrdup(locktype);
+         data.exclusive = xStrdup(exclusive);
+         data.readwrite = xStrdup(readwrite);
+         data.dev = makedev(maj, min);
+
+         if (String_eq(lock_end, "EOF"))
+            data.end = ULLONG_MAX;
+         else
+            data.end = strtoull(lock_end, NULL, 10);
+
+         xSnprintf(path, sizeof(path), PROCDIR "/%d/fd/%s", pid, de->d_name);
+         char link[PATH_MAX];
+         ssize_t link_len;
+         if (strlen(path) < (sizeof(path) - 2) && (link_len = readlink(path, link, sizeof(link))) != -1)
+            data.filename = xStrndup(link, link_len);
+
+         *data_ref = xCalloc(1, sizeof(FileLocks_LockData));
+         (*data_ref)->data = data;
+         data_ref = &(*data_ref)->next;
+      }
+
+      fclose(f);
    }
 
-   fclose(f);
+   closedir(dirp);
+   return pdata;
+
+err:
+   pdata->error = true;
    return pdata;
 }
 
@@ -564,6 +573,24 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
    }
    (void) total;
    assert(total == 3);
+   fclose(fd);
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = NAN;
+   *max = 65536;
+
+   FILE* fd = fopen(PROCDIR "/sys/fs/file-nr", "r");
+   if (!fd)
+      return;
+
+   unsigned long long v1, v2, v3;
+   int total = fscanf(fd, "%llu %llu %llu", &v1, &v2, &v3);
+   if (total == 3) {
+      *used = v1;
+      *max = v3;
+   }
+
    fclose(fd);
 }
 

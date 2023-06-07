@@ -6,7 +6,7 @@
 # ----------------------------------------------------------------------
 
 AC_PREREQ([2.69])
-AC_INIT([htop], [3.2.1], [htop@groups.io], [], [https://htop.dev/])
+AC_INIT([htop], [3.3.0-dev], [htop@groups.io], [], [https://htop.dev/])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -188,6 +188,20 @@ AC_COMPILE_IFELSE([
    AC_MSG_RESULT(no))
 CFLAGS="$old_CFLAGS"
 
+AC_MSG_CHECKING(for access)
+old_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wno-error -Werror=attributes"
+AC_COMPILE_IFELSE([
+   AC_LANG_SOURCE(
+      [
+         __attribute__((access(read_only, 1, 2))) extern int foo(const char* str, unsigned len);
+      ],[]
+   )],
+   AC_DEFINE([HAVE_ATTR_ACCESS], 1, [The access attribute is supported.])
+   AC_MSG_RESULT(yes),
+   AC_MSG_RESULT(no))
+CFLAGS="$old_CFLAGS"
+
 AC_MSG_CHECKING(for NaN support)
 AC_RUN_IFELSE([
    AC_LANG_PROGRAM(
@@ -260,10 +274,14 @@ AC_CHECK_FUNCS([ \
     memfd_create\
     openat \
     readlinkat \
+    sched_getscheduler \
+    sched_setscheduler \
    ])
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([mach_timebase_info])
+   AC_CHECK_DECLS([IOMainPort], [], [], [[#include <IOKit/IOKitLib.h>]])
+   AC_CHECK_DECLS([IOMasterPort], [], [], [[#include <IOKit/IOKitLib.h>]])
 fi
 
 if test "$my_htop_platform" = pcp; then
@@ -342,6 +360,11 @@ if test "x$enable_unicode" = xyes; then
             [AC_CHECK_HEADERS([ncurses.h], [],
                [AC_MSG_ERROR([can not find required ncurses header file])])])])])
 
+   AC_CHECK_HEADERS([ncursesw/term.h], [],
+      [AC_CHECK_HEADERS([ncurses/term.h], [],
+         [AC_CHECK_HEADERS([term.h], [],
+            [AC_MSG_ERROR([can not find required term header file])])])])
+
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library with wide character support)
    AC_SEARCH_LIBS([keypad], [tinfow tinfo])
@@ -357,13 +380,18 @@ else
    AC_CHECK_HEADERS([curses.h], [],
       [AC_CHECK_HEADERS([ncurses/curses.h], [],
          [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
-            [AC_CHECK_HEADERS([ncurses.h] ,[],
+            [AC_CHECK_HEADERS([ncurses.h], [],
                [AC_MSG_ERROR([can not find required ncurses header file])])])])])
+
+   AC_CHECK_HEADERS([ncurses/term.h], [],
+      [AC_CHECK_HEADERS([term.h], [],
+         [AC_MSG_ERROR([can not find required term header file])])])
 
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library)
    AC_SEARCH_LIBS([keypad], [tinfo])
 fi
+
 if test "$enable_static" = yes; then
    AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
 fi
@@ -463,7 +491,9 @@ case "$enable_hwloc" in
       m4_ifdef([PKG_PROG_PKG_CONFIG], [
          PKG_PROG_PKG_CONFIG()
          PKG_CHECK_MODULES(HWLOC, hwloc, [
-               CFLAGS="$CFLAGS $HWLOC_CFLAGS" LIBS="$LIBS $HWLOC_LIBS"
+               CFLAGS="$CFLAGS $HWLOC_CFLAGS"
+               LIBS="$LIBS $HWLOC_LIBS"
+               AC_DEFINE([HAVE_LIBHWLOC], [1], [Define to 1 if you have the `hwloc' library (-lhwloc).])
             ], [
                AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
                AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
@@ -727,7 +757,7 @@ AC_SUBST([AM_CPPFLAGS])
 # We're done, let's go!
 # ----------------------------------------------------------------------
 
-AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2022 htop dev team."], [Copyright message.])
+AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2023 htop dev team."], [Copyright message.])
 
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
 AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])

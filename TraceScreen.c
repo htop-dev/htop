@@ -92,7 +92,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       xSnprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
       // Use of NULL in variadic functions must have a pointer cast.
       // The NULL constant is not required by standard to have a pointer type.
-      execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, (char *)NULL);
+      execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, (char*)NULL);
 
       // Should never reach here, unless execlp fails ...
       const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";

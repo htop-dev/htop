@@ -59,10 +59,10 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [LWPID] = { .name = "LWPID", .title = "LWPID", .description = "LWP ID", .flags = 0, .pidColumn = true, },
 };
 
-Process* SolarisProcess_new(const Settings* settings) {
+Process* SolarisProcess_new(const Machine* host) {
    SolarisProcess* this = xCalloc(1, sizeof(SolarisProcess));
    Object_setClass(this, Class(SolarisProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, host);
    return &this->super;
 }
 

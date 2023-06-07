@@ -9,7 +9,7 @@ in the source distribution for its full text.
 
 #include <sys/sysctl.h>
 
-#include "Settings.h"
+#include "Machine.h"
 #include "darwin/DarwinProcessList.h"
 
 
@@ -28,7 +28,7 @@ extern const ProcessClass DarwinProcess_class;
 
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
-Process* DarwinProcess_new(const Settings* settings);
+Process* DarwinProcess_new(const Machine* settings);
 
 void Process_delete(Object* cast);
 
