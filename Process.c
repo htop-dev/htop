@@ -208,7 +208,7 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths, bool
    int hourColor = coloring ? CRT_colors[PROCESS_MEGABYTES] : CRT_colors[PROCESS];
    int defColor  = CRT_colors[PROCESS];
 
-   if (days >= /* Ignore leapyears */365) {
+   if (days >= /* Ignore leap years */365) {
       int years = days / 365;
       int daysLeft = days - 365 * years;
 
@@ -287,7 +287,7 @@ void Process_fillStarttimeBuffer(Process* this) {
  *
  * Note: when colorizing a basename with the comm prefix, the entire basename
  * (not just the comm prefix) is colorized for better readability, and it is
- * implicit that only upto (TASK_COMM_LEN - 1) could be comm.
+ * implicit that only up to (TASK_COMM_LEN - 1) could be comm.
  */
 #define TASK_COMM_LEN 16
 
