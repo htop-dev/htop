@@ -41,12 +41,12 @@ static void MemoryMeter_updateValues(Meter* this) {
    this->curItems = MEMORY_METER_AVAILABLE;
 
    /* we actually want to show "used + compressed" */
-   double used = this->values[MEMORY_METER_USED];
+   this->summaryValue = this->values[MEMORY_METER_USED];
    if (!isnan(this->values[MEMORY_METER_COMPRESSED])) {
-      used += this->values[MEMORY_METER_COMPRESSED];
+      this->summaryValue += this->values[MEMORY_METER_COMPRESSED];
    }
 
-   written = Meter_humanUnit(buffer, used, size);
+   written = Meter_humanUnit(buffer, this->summaryValue, size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');

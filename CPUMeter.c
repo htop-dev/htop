@@ -73,8 +73,11 @@ static void CPUMeter_updateValues(Meter* this) {
    double percent = Platform_setCPUValues(this, cpu);
    if (isnan(percent)) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "offline");
+      this->summaryValue = 0;
       return;
    }
+
+   this->summaryValue = percent;
 
    char cpuUsageBuffer[8] = { 0 };
    char cpuFrequencyBuffer[16] = { 0 };
