@@ -261,6 +261,43 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       goto out;
    }
 
+   /* Read sysfs to get HT/SMT cores and correctly distribute the temperature values */
+   if (coreTempCount < activeCPUs) {
+      double oldData[existingCPUs + 1];
+      memcpy(oldData, data, sizeof(oldData));
+
+      int dataCell = 1;
+      for (unsigned int i = 0; i < existingCPUs; i++) {
+         char path[100];
+         sprintf(path, "/sys/devices/system/cpu/cpu%d/topology/thread_siblings_list", i);
+         FILE* file = fopen(path, "r");
+         if (file == NULL) {
+            data[i+1] = NAN;
+            dataCell++;
+            continue;
+         }
+
+         char contents[10];
+         fgets(contents, 10, file);
+         fclose(file);
+
+         int start, end;
+         int rangeNums = sscanf(contents, "%d-%d", &start, &end);
+
+         if (rangeNums == 1) {
+            data[i+1] = oldData[dataCell];
+            dataCell++;
+         } else if (rangeNums == 2) {
+            for (int j = start; j <= end; j++) {
+               data[j+1] = oldData[dataCell];
+               i++;
+            }
+            dataCell++;
+            i--;
+         }
+      }
+   }
+
 out:
    for (unsigned int i = 0; i <= existingCPUs; i++)
       cpus[i].temperature = data[i];
