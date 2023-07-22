@@ -274,7 +274,7 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths, bool
 
 void Process_fillStarttimeBuffer(Process* this) {
    struct tm date;
-   time_t now = time(NULL);
+   time_t now = this->host->realtime.tv_sec;
    (void) localtime_r(&this->starttime_ctime, &date);
 
    strftime(this->starttime_show,
