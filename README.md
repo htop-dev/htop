@@ -139,6 +139,11 @@ To install on the local system run `make install`. By default `make install` ins
     enable Linux delay accounting support
     - dependencies: *libnl-3-dev*(build-time) and *libnl-genl-3-dev*(build-time), at runtime *libnl-3* and *libnl-genl-3* are loaded via `dlopen(3)` if available and requested
     - default: *check*
+  * `--enable-backtrace`:
+    enable backtrace support
+    - default: *no*
+    - possible values:
+      - unwind-ptrace: use unwind-ptrace to get the backtraces
 
 
 ## Runtime dependencies:
