@@ -1165,6 +1165,64 @@ char** (*fn)(void* const*, BACKTRACE_RETURN_TYPE) = backtrace_symbols;
    )
 fi
 
+AC_ARG_ENABLE(
+   [backtrace],
+   [AS_HELP_STRING(
+      [--enable-backtrace=<unwind-ptrace>],
+      [enable printing backtraces.]
+   )],
+   [],
+   [enable_backtrace=no]
+)
+if test "x$enable_backtrace" = xyes; then
+   case $my_htop_platform in
+      linux)
+         enable_backtrace=unwind-ptrace
+         ;;
+      *)
+         AC_MSG_ERROR([backtrace feature not implemented for the '$my_htop_platform' platform])
+         ;;
+   esac
+fi
+
+case "$enable_backtrace" in
+   no)
+      ;;
+   unwind-ptrace)
+      HTOP_PKG_CHECK_MODULES(LIBUNWIND_PTRACE, libunwind-ptrace,
+         [
+            AM_CFLAGS="$AM_CFLAGS $LIBUNWIND_PTRACE_CFLAGS"
+            LIBS="$LIBS $LIBUNWIND_PTRACE_LIBS"
+          ], [
+            AC_MSG_ERROR([can not find required library libunwind-ptrace and libunwind-generic])
+         ]
+      )
+      AC_DEFINE([HAVE_LIBUNWIND_PTRACE], [1], [Define if libunwind-ptrace is present])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_backtrace' for --enable-backtrace])
+      ;;
+esac
+if test "x$enable_backtrace" != xno; then
+   AC_DEFINE([HAVE_BACKTRACE_SCREEN], [1], [Define if the backtrace feature is enabled])
+fi
+AM_CONDITIONAL([HAVE_BACKTRACE_SCREEN], [test x"$enable_backtrace" != xno])
+
+if test "x$enable_backtrace" = xunwind-ptrace; then
+   AC_MSG_CHECKING([if libunwind has unw_get_elf_filename])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[/* unw_get_elf_filename might exist as a macro */
+         #include <libunwind-ptrace.h>]],
+         [[static unw_cursor_t cursor;
+         /* First argument must be non-null */
+         unw_get_elf_filename(&cursor, (char*)0, (size_t)0, (unw_word_t*)0);]]
+      )],
+      AC_DEFINE([HAVE_LIBUNWIND_ELF_FILENAME], [1], [Define if libunwind has unw_get_elf_filename])
+      AC_MSG_RESULT(yes),
+      AC_MSG_RESULT(no)
+   )
+fi
 
 AC_ARG_ENABLE(
    [hwloc],
@@ -1619,6 +1677,7 @@ AC_MSG_RESULT([
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   unwind:                    $enable_unwind
+  backtrace:                 $enable_backtrace
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
