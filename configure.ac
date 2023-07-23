@@ -526,6 +526,29 @@ if test "x$enable_unwind" = xno; then
    AC_SEARCH_LIBS([backtrace], [execinfo])
 fi
 
+AC_ARG_ENABLE([backtraces],
+              [AS_HELP_STRING([--enable-backtraces=<unwind-ptrace>],
+              [enable printing backtraces.])],
+              [],
+              [enable_backtraces=no])
+case "$enable_backtraces" in
+   no)
+      ;;
+   unwind-ptrace)
+      AC_CHECK_LIB([unwind-ptrace], [_UPT_create], [], [AC_MSG_ERROR([can not find required library libunwind-ptrace])], [-lunwind-generic])
+      AC_CHECK_LIB([unwind-generic], [_UPT_create], [], [AC_MSG_ERROR([can not find required library libunwind-generic])])
+      AC_CHECK_HEADERS([libunwind-ptrace.h], [], [
+         CFLAGS="$CFLAGS -I/usr/include/libunwind"
+         AC_CHECK_HEADERS([libunwind/libunwind-ptrace.h], [], [AC_MSG_ERROR([can not find required header file libunwind-ptrace.h])])
+      ])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_backtraces' for --enable-backtraces])
+      ;;
+esac
+if test "x$enable_backtraces" = xunwind-ptrace; then
+   AC_DEFINE([BACKTRACE_ENABLED], [1], [Define if the backtraces is enabled])
+fi
 
 AC_ARG_ENABLE([hwloc],
               [AS_HELP_STRING([--enable-hwloc],
@@ -860,6 +883,7 @@ AC_MSG_RESULT([
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   unwind:                    $enable_unwind
+  backtraces:                $enable_backtraces
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
