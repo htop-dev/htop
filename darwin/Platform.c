@@ -279,7 +279,15 @@ double Platform_setCPUValues(Meter* mtr, unsigned int cpu) {
    /* Convert to percent and return */
    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
 
+#ifdef CPUFREQ_SUPPORT
+   if (dhost->cpu_freq_ok) {
+      mtr->values[CPU_METER_FREQUENCY] = dhost->cpu_freq.frequencies[cpu - 1];
+   } else {
+      mtr->values[CPU_METER_FREQUENCY] = NAN;
+   }
+#else
    mtr->values[CPU_METER_FREQUENCY] = NAN;
+#endif
    mtr->values[CPU_METER_TEMPERATURE] = NAN;
 
    return CLAMP(total, 0.0, 100.0);

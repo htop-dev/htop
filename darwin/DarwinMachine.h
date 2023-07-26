@@ -12,7 +12,7 @@ in the source distribution for its full text.
 
 #include "Machine.h"
 #include "zfs/ZfsArcStats.h"
-
+#include "CpuFreq.h"
 
 typedef struct DarwinMachine_ {
    Machine super;
@@ -21,6 +21,10 @@ typedef struct DarwinMachine_ {
    vm_statistics_data_t vm_stats;
    processor_cpu_load_info_t prev_load;
    processor_cpu_load_info_t curr_load;
+#ifdef CPUFREQ_SUPPORT
+   CpuFreqData cpu_freq;
+   bool cpu_freq_ok;
+#endif
 
    ZfsArcStats zfs;
 } DarwinMachine;
