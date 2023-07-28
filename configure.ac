@@ -149,7 +149,7 @@ dnl been updated in Autoconf 2.69, so use a workaround:
 m4_version_prereq([2.70], [],
 [if test "x$ac_cv_header_sys_mkdev_h" != xyes; then
    AC_CHECK_HEADER([sys/sysmacros.h], [AC_DEFINE([MAJOR_IN_SYSMACROS], [1],
-      [Define to 1 if `major', `minor', and `makedev' are declared in <sys/sysmacros.h>.])])
+      [Define to 1 if 'major', 'minor', and 'makedev' are declared in <sys/sysmacros.h>.])])
 fi])
 
 # Optional Section
@@ -428,7 +428,7 @@ if test "x$enable_affinity" = xcheck; then
          AC_MSG_RESULT([yes])],
       [enable_affinity=no
          AC_MSG_RESULT([no])],
-      [AC_MSG_RESULT([yes (assumed while cross compiling)])])
+      [AC_MSG_RESULT([assume yes (cross compiling)])])
    fi
 fi
 if test "x$enable_affinity" = xyes; then
@@ -493,7 +493,7 @@ case "$enable_hwloc" in
          PKG_CHECK_MODULES(HWLOC, hwloc, [
                CFLAGS="$CFLAGS $HWLOC_CFLAGS"
                LIBS="$LIBS $HWLOC_LIBS"
-               AC_DEFINE([HAVE_LIBHWLOC], [1], [Define to 1 if you have the `hwloc' library (-lhwloc).])
+               AC_DEFINE([HAVE_LIBHWLOC], [1], [Define to 1 if you have the 'hwloc' library (-lhwloc).])
             ], [
                AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
                AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
