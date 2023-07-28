@@ -505,7 +505,10 @@ static void LinuxProcessList_readIoFile(LinuxProcess* lp, openat_arg_t procFd, b
 
    unsigned long long last_read = lp->io_read_bytes;
    unsigned long long last_write = lp->io_write_bytes;
-   unsigned long long time_delta = host->realtimeMs > lp->io_last_scan_time_ms ? host->realtimeMs - lp->io_last_scan_time_ms : 0;
+   unsigned long long time_delta = saturatingSub(host->realtimeMs, lp->io_last_scan_time_ms);
+
+   // Note: Linux Kernel documentation states that /proc/<pid>/io may be racy
+   // on 32-bit machines. (Documentation/filesystems/proc.rst)
 
    char* buf = buffer;
    const char* line;
@@ -516,7 +519,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* lp, openat_arg_t procFd, b
             lp->io_rchar = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "ead_bytes: ")) {
             lp->io_read_bytes = strtoull(line + 12, NULL, 10);
-            lp->io_rate_read_bps = time_delta ? (lp->io_read_bytes - last_read) * /*ms to s*/1000. / time_delta : NAN;
+            lp->io_rate_read_bps = time_delta ? saturatingSub(lp->io_read_bytes, last_read) * /*ms to s*/1000. / time_delta : NAN;
          }
          break;
       case 'w':
@@ -524,7 +527,7 @@ static void LinuxProcessList_readIoFile(LinuxProcess* lp, openat_arg_t procFd, b
             lp->io_wchar = strtoull(line + 7, NULL, 10);
          } else if (String_startsWith(line + 1, "rite_bytes: ")) {
             lp->io_write_bytes = strtoull(line + 13, NULL, 10);
-            lp->io_rate_write_bps = time_delta ? (lp->io_write_bytes - last_write) * /*ms to s*/1000. / time_delta : NAN;
+            lp->io_rate_write_bps = time_delta ? saturatingSub(lp->io_write_bytes, last_write) * /*ms to s*/1000. / time_delta : NAN;
          }
          break;
       case 's':
@@ -1003,14 +1006,14 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
       memcpy(&stats, nla_data(nla_next(nla_data(nlattr), &rem)), sizeof(stats));
       assert(lp->super.pid == (pid_t)stats.ac_pid);
 
+      // The xxx_delay_total values wrap around on overflow.
+      // (Linux Kernel "Documentation/accounting/taskstats-struct.rst")
       unsigned long long int timeDelta = stats.ac_etime * 1000 - lp->delay_read_time;
-      #define BOUNDS(x) (isnan(x) ? 0.0 : ((x) > 100) ? 100.0 : (x))
-      #define DELTAPERC(x,y) BOUNDS((float) ((x) - (y)) / timeDelta * 100)
+      #define DELTAPERC(x, y) (timeDelta ? MINIMUM((float)((x) - (y)) / timeDelta * 100.0f, 100.0f) : NAN)
       lp->cpu_delay_percent = DELTAPERC(stats.cpu_delay_total, lp->cpu_delay_total);
       lp->blkio_delay_percent = DELTAPERC(stats.blkio_delay_total, lp->blkio_delay_total);
       lp->swapin_delay_percent = DELTAPERC(stats.swapin_delay_total, lp->swapin_delay_total);
       #undef DELTAPERC
-      #undef BOUNDS
 
       lp->swapin_delay_total = stats.swapin_delay_total;
       lp->blkio_delay_total = stats.blkio_delay_total;
@@ -1479,9 +1482,12 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
          LinuxProcess_updateIOPriority(lp);
       }
 
-      /* period might be 0 after system sleep */
-      float percent_cpu = (lhost->period < 1E-6) ? 0.0F : ((lp->utime + lp->stime - lasttimes) / lhost->period * 100.0);
-      proc->percent_cpu = CLAMP(percent_cpu, 0.0F, host->activeCPUs * 100.0F);
+      proc->percent_cpu = NAN;
+      /* lhost->period might be 0 after system sleep */
+      if (lhost->period > 0.0) {
+         float percent_cpu = saturatingSub(lp->utime + lp->stime, lasttimes) / lhost->period * 100.0;
+         proc->percent_cpu = MINIMUM(percent_cpu, host->activeCPUs * 100.0F);
+      }
       proc->percent_mem = proc->m_resident / (double)(host->totalMem) * 100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
