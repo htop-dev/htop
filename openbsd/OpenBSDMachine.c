@@ -163,7 +163,7 @@ static void OpenBSDMachine_scanMemoryInfo(OpenBSDMachine* this) {
     */
    int nswap = swapctl(SWAP_NSWAP, 0, 0);
    if (nswap > 0) {
-      struct swapent swdev[nswap];
+      struct swapent* swdev = xMallocArray(nswap, sizeof(struct swapent));
       int rnswap = swapctl(SWAP_STATS, swdev, nswap);
 
       /* Total things up */
@@ -177,6 +177,8 @@ static void OpenBSDMachine_scanMemoryInfo(OpenBSDMachine* this) {
 
       super->totalSwap = total;
       super->usedSwap = used;
+
+      free(swdev);
    } else {
       super->totalSwap = super->usedSwap = 0;
    }
