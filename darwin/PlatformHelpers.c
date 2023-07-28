@@ -103,9 +103,8 @@ double Platform_calculateNanosecondsPerMachTick(void) {
     *    the "Apple M1" chip specifically when running under Rosetta 2.
     */
 
-   size_t cpuBrandStringSize = 1024;
-   char cpuBrandString[cpuBrandStringSize];
-   Platform_getCPUBrandString(cpuBrandString, cpuBrandStringSize);
+   char cpuBrandString[1024] = "";
+   Platform_getCPUBrandString(cpuBrandString, sizeof(cpuBrandString));
 
    bool isRunningUnderRosetta2 = Platform_isRunningTranslated();
 
