@@ -9,9 +9,10 @@
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
 #include <sensors/sensors.h>
 
 #include "Macros.h"
