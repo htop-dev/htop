@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <string.h>
 
 #include "CRT.h"
+#include "Macros.h"
 #include "Meter.h"
 #include "Object.h"
 #include "Platform.h"
@@ -19,7 +20,7 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-#define FD_EFFECTIVE_UNLIMITED(x) ((x) > (1<<30))
+#define FD_EFFECTIVE_UNLIMITED(x) (!isgreaterequal((double)(1<<30), (x)))
 
 static const int FileDescriptorMeter_attributes[] = {
    FILE_DESCRIPTOR_USED,
@@ -67,9 +68,9 @@ static void FileDescriptorMeter_updateValues(Meter* this) {
       }
    }
 
-   if (isnan(this->values[0])) {
+   if (!isNonnegative(this->values[0])) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "unknown/unknown");
-   } else if (isnan(this->values[1]) || FD_EFFECTIVE_UNLIMITED(this->values[1])) {
+   } else if (FD_EFFECTIVE_UNLIMITED(this->values[1])) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.0lf/unlimited", this->values[0]);
    } else {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.0lf/%.0lf", this->values[0], this->values[1]);
@@ -81,7 +82,7 @@ static void FileDescriptorMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    int len;
 
-   if (isnan(this->values[0])) {
+   if (!isNonnegative(this->values[0])) {
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "unknown");
       return;
    }
@@ -91,7 +92,7 @@ static void FileDescriptorMeter_display(const Object* cast, RichString* out) {
    RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_USED], buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " max: ");
-   if (isnan(this->values[1]) || FD_EFFECTIVE_UNLIMITED(this->values[1])) {
+   if (FD_EFFECTIVE_UNLIMITED(this->values[1])) {
       RichString_appendAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], "unlimited");
    } else {
       len = xSnprintf(buffer, sizeof(buffer), "%.0lf", this->values[1]);

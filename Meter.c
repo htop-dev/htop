@@ -333,10 +333,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       if (Meter_comprisedValues(this)) {
          data->values[nValues - 1] = (this->curItems > 0) ? this->values[this->curItems - 1] : 0.0;
       } else {
-         double value = 0.0;
-         for (uint8_t i = 0; i < this->curItems; i++)
-            value += !isnan(this->values[i]) ? this->values[i] : 0;
-         data->values[nValues - 1] = value;
+         data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
       }
    }
 

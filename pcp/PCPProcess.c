@@ -104,11 +104,24 @@ void Process_delete(Object* cast) {
 }
 
 static void PCPProcess_printDelay(float delay_percent, char* buffer, size_t n) {
-   if (isnan(delay_percent)) {
-      xSnprintf(buffer, n, " N/A  ");
-   } else {
+   if (isNonnegative(delay_percent)) {
       xSnprintf(buffer, n, "%4.1f  ", delay_percent);
+   } else {
+      xSnprintf(buffer, n, " N/A  ");
    }
+}
+
+static double PCPProcess_totalIORate(const PCPProcess* pp) {
+   double totalRate = NAN;
+   if (isNonnegative(pp->io_rate_read_bps)) {
+      totalRate = pp->io_rate_read_bps;
+      if (isNonnegative(pp->io_rate_write_bps)) {
+         totalRate += pp->io_rate_write_bps;
+      }
+   } else if (isNonnegative(pp->io_rate_write_bps)) {
+      totalRate = pp->io_rate_write_bps;
+   }
+   return totalRate;
 }
 
 static void PCPProcess_writeField(const Process* this, RichString* str, ProcessField field) {
@@ -141,19 +154,7 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
    case CNCLWB: Process_printBytes(str, pp->io_cancelled_write_bytes, coloring); return;
    case IO_READ_RATE:  Process_printRate(str, pp->io_rate_read_bps, coloring); return;
    case IO_WRITE_RATE: Process_printRate(str, pp->io_rate_write_bps, coloring); return;
-   case IO_RATE: {
-      double totalRate = NAN;
-      if (!isnan(pp->io_rate_read_bps) && !isnan(pp->io_rate_write_bps))
-         totalRate = pp->io_rate_read_bps + pp->io_rate_write_bps;
-      else if (!isnan(pp->io_rate_read_bps))
-         totalRate = pp->io_rate_read_bps;
-      else if (!isnan(pp->io_rate_write_bps))
-         totalRate = pp->io_rate_write_bps;
-      else
-         totalRate = NAN;
-      Process_printRate(str, totalRate, coloring);
-      return;
-   }
+   case IO_RATE: Process_printRate(str, PCPProcess_totalIORate(pp), coloring); return;
    case CGROUP: xSnprintf(buffer, n, "%-10s ", pp->cgroup ? pp->cgroup : ""); break;
    case OOM: xSnprintf(buffer, n, "%4u ", pp->oom); break;
    case PERCENT_CPU_DELAY:
@@ -198,11 +199,14 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
    RichString_appendWide(str, attr, buffer);
 }
 
-static double adjustNaN(double num) {
-   if (isnan(num))
-      return -0.0005;
-
-   return num;
+/* Compares floating point values for ordering data entries. In this function,
+   NaN is considered "less than" any other floating point value (regardless of
+   sign), and two NaNs are considered "equal" regardless of payload. */
+static int compareRealNumbers(double a, double b) {
+   int result = isgreater(a, b) - isgreater(b, a);
+   if (result)
+      return result;
+   return !isNaN(a) - !isNaN(b);
 }
 
 static int PCPProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
@@ -249,11 +253,11 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
    case CNCLWB:
       return SPACESHIP_NUMBER(p1->io_cancelled_write_bytes, p2->io_cancelled_write_bytes);
    case IO_READ_RATE:
-      return SPACESHIP_NUMBER(adjustNaN(p1->io_rate_read_bps), adjustNaN(p2->io_rate_read_bps));
+      return compareRealNumbers(p1->io_rate_read_bps, p2->io_rate_read_bps);
    case IO_WRITE_RATE:
-      return SPACESHIP_NUMBER(adjustNaN(p1->io_rate_write_bps), adjustNaN(p2->io_rate_write_bps));
+      return compareRealNumbers(p1->io_rate_write_bps, p2->io_rate_write_bps);
    case IO_RATE:
-      return SPACESHIP_NUMBER(adjustNaN(p1->io_rate_read_bps) + adjustNaN(p1->io_rate_write_bps), adjustNaN(p2->io_rate_read_bps) + adjustNaN(p2->io_rate_write_bps));
+      return compareRealNumbers(PCPProcess_totalIORate(p1), PCPProcess_totalIORate(p2));
    case CGROUP:
       return SPACESHIP_NULLSTR(p1->cgroup, p2->cgroup);
    case OOM:

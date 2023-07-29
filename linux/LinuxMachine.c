@@ -27,6 +27,7 @@ in the source distribution for its full text.
 #include <time.h>
 
 #include "Compat.h"
+#include "Macros.h"
 #include "XUtils.h"
 #include "linux/LinuxMachine.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
@@ -601,7 +602,7 @@ static void scanCPUFrequencyFromCPUinfo(LinuxMachine* this) {
 
          CPUData* cpuData = &(this->cpuData[cpuid + 1]);
          /* do not override sysfs data */
-         if (isnan(cpuData->frequency)) {
+         if (!isNonnegative(cpuData->frequency)) {
             cpuData->frequency = frequency;
          }
          numCPUsWithFrequency++;

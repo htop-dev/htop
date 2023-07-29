@@ -202,7 +202,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
             continue;
 
          /* If already set, e.g. Ryzen reporting platform temperature for each die, use the bigger one */
-         if (isnan(data[tempID])) {
+         if (isNaN(data[tempID])) {
             data[tempID] = temp;
             if (tempID > 0)
                coreTempCount++;
@@ -222,7 +222,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    }
 
    /* Only package temperature - copy to all cores */
-   if (coreTempCount == 0 && !isnan(data[0])) {
+   if (coreTempCount == 0 && !isNaN(data[0])) {
       for (unsigned int i = 1; i <= existingCPUs; i++)
          data[i] = data[0];
 
@@ -231,22 +231,20 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    }
 
    /* No package temperature - set to max core temperature */
-   if (isnan(data[0]) && coreTempCount != 0) {
-      double maxTemp = NAN;
+   if (coreTempCount > 0 && isNaN(data[0])) {
+      double maxTemp = -HUGE_VAL;
       for (unsigned int i = 1; i <= existingCPUs; i++) {
-         if (isnan(data[i]))
-            continue;
-
-         maxTemp = MAXIMUM(maxTemp, data[i]);
+         if (isgreater(data[i], maxTemp)) {
+            maxTemp = data[i];
+            data[0] = data[i];
+         }
       }
-
-      data[0] = maxTemp;
 
       /* Check for further adjustments */
    }
 
    /* Only temperature for core 0, maybe Ryzen - copy to all other cores */
-   if (coreTempCount == 1 && !isnan(data[1])) {
+   if (coreTempCount == 1 && !isNaN(data[1])) {
       for (unsigned int i = 2; i <= existingCPUs; i++)
          data[i] = data[1];
 

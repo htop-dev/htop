@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <stddef.h>
 
 #include "CRT.h"
+#include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
 #include "RichString.h"
@@ -51,13 +52,13 @@ static void SwapMeter_display(const Object* cast, RichString* out) {
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " used:");
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
 
-   if (!isnan(this->values[SWAP_METER_CACHE])) {
+   if (isNonnegative(this->values[SWAP_METER_CACHE])) {
       Meter_humanUnit(buffer, this->values[SWAP_METER_CACHE], sizeof(buffer));
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
       RichString_appendAscii(out, CRT_colors[SWAP_CACHE], buffer);
    }
 
-   if (!isnan(this->values[SWAP_METER_FRONTSWAP])) {
+   if (isNonnegative(this->values[SWAP_METER_FRONTSWAP])) {
       Meter_humanUnit(buffer, this->values[SWAP_METER_FRONTSWAP], sizeof(buffer));
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " frontswap:");
       RichString_appendAscii(out, CRT_colors[SWAP_FRONTSWAP], buffer);

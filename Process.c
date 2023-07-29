@@ -757,7 +757,7 @@ void Process_printRate(RichString* str, double rate, bool coloring) {
       processMegabytesColor = CRT_colors[PROCESS];
    }
 
-   if (isnan(rate)) {
+   if (!isNonnegative(rate)) {
       RichString_appendAscii(str, shadowColor, "        N/A ");
    } else if (rate < 0.005) {
       int len = snprintf(buffer, sizeof(buffer), "%7.2f B/s ", rate);
@@ -790,7 +790,7 @@ void Process_printLeftAlignedField(RichString* str, int attr, const char* conten
 }
 
 void Process_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr) {
-   if (val >= 0) {
+   if (isNonnegative(val)) {
       if (val < 0.05F)
          *attr = CRT_colors[PROCESS_SHADOW];
       else if (val >= 99.9F)

@@ -322,23 +322,26 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPeriod / total * 100.0;
       v[CPU_METER_IRQ]     = cpuData->irqPeriod / total * 100.0;
       v[CPU_METER_SOFTIRQ] = cpuData->softIrqPeriod / total * 100.0;
+      this->curItems = 5;
+
       v[CPU_METER_STEAL]   = cpuData->stealPeriod / total * 100.0;
       v[CPU_METER_GUEST]   = cpuData->guestPeriod / total * 100.0;
-      v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
-      this->curItems = 8;
-      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ] + v[CPU_METER_SOFTIRQ];
       if (settings->accountGuestInCPUMeter) {
-         percent += v[CPU_METER_STEAL] + v[CPU_METER_GUEST];
+         this->curItems = 7;
       }
+
+      v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
    } else {
       v[CPU_METER_KERNEL] = cpuData->systemAllPeriod / total * 100.0;
       v[CPU_METER_IRQ] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
       this->curItems = 4;
-      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    }
-   percent = CLAMP(percent, 0.0, 100.0);
-   if (isnan(percent)) {
-      percent = 0.0;
+
+   percent = sumPositiveValues(v, this->curItems);
+   percent = MINIMUM(percent, 100.0);
+
+   if (settings->detailedCPUTime) {
+      this->curItems = 8;
    }
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
@@ -842,7 +845,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
             }
          }
 
-         if (!now && full && !isnan(capacityLevel))
+         if (!now && full && isNonnegative(capacityLevel))
             totalRemain += capacityLevel * fullCharge;
 
       } else if (type == AC) {
@@ -882,12 +885,12 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
 
    if (Platform_Battery_method == BAT_PROC) {
       Platform_Battery_getProcData(percent, isOnAC);
-      if (isnan(*percent))
+      if (!isNonnegative(*percent))
          Platform_Battery_method = BAT_SYS;
    }
    if (Platform_Battery_method == BAT_SYS) {
       Platform_Battery_getSysData(percent, isOnAC);
-      if (isnan(*percent))
+      if (!isNonnegative(*percent))
          Platform_Battery_method = BAT_ERR;
    }
    if (Platform_Battery_method == BAT_ERR) {
