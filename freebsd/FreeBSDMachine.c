@@ -281,24 +281,21 @@ static inline void FreeBSDMachine_scanCPU(Machine* super) {
    // propagate frequency to all cores if only supplied for CPU 0
    if (cpus > 1) {
       if (super->settings->showCPUTemperature) {
-         double maxTemp = NAN;
+         double maxTemp = -HUGE_VAL;
          for (unsigned int i = 1; i < maxcpu; i++) {
-            const double coreTemp = this->cpus[i].temperature;
-            if (isnan(coreTemp))
-               continue;
-
-            maxTemp = MAXIMUM(maxTemp, coreTemp);
+            if (isgreater(this->cpus[i].temperature, maxTemp)) {
+               maxTemp = this->cpus[i].temperature;
+               this->cpus[0].temperature = maxTemp;
+            }
          }
-
-         this->cpus[0].temperature = maxTemp;
       }
 
       if (super->settings->showCPUFrequency) {
          const double coreZeroFreq = this->cpus[1].frequency;
          double freqSum = coreZeroFreq;
-         if (!isnan(coreZeroFreq)) {
+         if (isNonnegative(coreZeroFreq)) {
             for (unsigned int i = 2; i < maxcpu; i++) {
-               if (isnan(this->cpus[i].frequency))
+               if (!isNonnegative(this->cpus[i].frequency))
                   this->cpus[i].frequency = coreZeroFreq;
 
                freqSum += this->cpus[i].frequency;

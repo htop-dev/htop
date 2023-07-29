@@ -34,6 +34,7 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "SysArchMeter.h"
 #include "UptimeMeter.h"
+#include "XUtils.h"
 
 #include "solaris/SolarisMachine.h"
 
@@ -221,14 +222,13 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    } else {
       v[CPU_METER_KERNEL] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL];
    }
 
-   percent = isnan(percent) ? 0.0 : CLAMP(percent, 0.0, 100.0);
+   percent = sumPositiveValues(v, this->curItems);
+   percent = MINIMUM(percent, 100.0);
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
    v[CPU_METER_TEMPERATURE] = NAN;

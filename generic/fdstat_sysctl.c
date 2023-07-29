@@ -43,9 +43,6 @@ static void Generic_getFileDescriptors_sysctl_internal(
    len = sizeof(open_fd);
    if (sysctlname_numfiles && sysctlbyname(sysctlname_numfiles, &open_fd, &len, NULL, 0) == 0) {
       *used = open_fd;
-   }
-
-   if (!isnan(*used)) {
       return;
    }
 

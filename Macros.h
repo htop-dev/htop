@@ -2,6 +2,8 @@
 #define HEADER_Macros
 
 #include <assert.h> // IWYU pragma: keep
+#include <math.h>
+#include <stdbool.h>
 
 #ifndef MINIMUM
 #define MINIMUM(a, b)                  ((a) < (b) ? (a) : (b))
@@ -97,6 +99,24 @@
 #define IGNORE_WCASTQUAL_BEGIN
 #define IGNORE_WCASTQUAL_END
 #endif
+
+/* Cheaper function for checking NaNs. Unlike the standard isnan(), this may
+   throw an FP exception on a "signaling" NaN.
+   (ISO/IEC TS 18661-1 and the C23 standard stated that isnan() throws no
+   exceptions even with a "signaling" NaN) */
+static inline bool isNaN(double x) {
+   return !isgreaterequal(x, x);
+}
+
+/* Checks if x is nonnegative. Returns false if x is NaN. */
+static inline bool isNonnegative(double x) {
+   return isgreaterequal(x, 0.0);
+}
+
+/* Checks if x is positive. Returns false if x is NaN. */
+static inline bool isPositive(double x) {
+   return isgreater(x, 0.0);
+}
 
 /* This subtraction is used by Linux / NetBSD / OpenBSD for calculation of CPU usage items. */
 static inline unsigned long long saturatingSub(unsigned long long a, unsigned long long b) {

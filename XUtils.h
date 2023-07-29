@@ -82,4 +82,9 @@ ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size
 ATTR_ACCESS3_R(2, 3)
 ssize_t full_write(int fd, const void* buf, size_t count);
 
+/* Computes the sum of all positive floating point values in an array.
+   NaN values in the array are skipped. The returned sum will always be
+   nonnegative. */
+double sumPositiveValues(const double* array, size_t count);
+
 #endif

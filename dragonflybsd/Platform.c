@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
+#include "Macros.h"
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "ProcessList.h"
@@ -30,6 +31,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "XUtils.h"
 #include "dragonflybsd/DragonFlyBSDProcess.h"
 #include "dragonflybsd/DragonFlyBSDProcessList.h"
 #include "generic/fdstat_sysctl.h"
@@ -193,14 +195,13 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    } else {
       v[CPU_METER_KERNEL] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL];
    }
 
-   percent = isnan(percent) ? 0.0 : CLAMP(percent, 0.0, 100.0);
+   percent = sumPositiveValues(v, this->curItems);
+   percent = MINIMUM(percent, 100.0);
 
    v[CPU_METER_FREQUENCY] = NAN;
    v[CPU_METER_TEMPERATURE] = NAN;

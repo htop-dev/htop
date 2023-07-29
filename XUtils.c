@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <unistd.h>
 
 #include "CRT.h"
+#include "Macros.h"
 
 
 void fail(void) {
@@ -336,4 +337,16 @@ ssize_t full_write(int fd, const void* buf, size_t count) {
    }
 
    return written;
+}
+
+/* Computes the sum of all positive floating point values in an array.
+   NaN values in the array are skipped. The returned sum will always be
+   nonnegative. */
+double sumPositiveValues(const double* array, size_t count) {
+   double sum = 0.0;
+   for (size_t i = 0; i < count; i++) {
+      if (isPositive(array[i]))
+         sum += array[i];
+   }
+   return sum;
 }

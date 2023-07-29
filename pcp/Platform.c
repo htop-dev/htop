@@ -497,24 +497,28 @@ static double Platform_setOneCPUValues(Meter* this, const Settings* settings, pm
       v[CPU_METER_KERNEL]  = values[CPU_SYSTEM_PERIOD].ull / total * 100.0;
       v[CPU_METER_IRQ]     = values[CPU_IRQ_PERIOD].ull / total * 100.0;
       v[CPU_METER_SOFTIRQ] = values[CPU_SOFTIRQ_PERIOD].ull / total * 100.0;
+      this->curItems = 5;
+
       v[CPU_METER_STEAL]   = values[CPU_STEAL_PERIOD].ull / total * 100.0;
       v[CPU_METER_GUEST]   = values[CPU_GUEST_PERIOD].ull / total * 100.0;
-      v[CPU_METER_IOWAIT]  = values[CPU_IOWAIT_PERIOD].ull / total * 100.0;
-      this->curItems = 8;
-      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ] + v[CPU_METER_SOFTIRQ];
       if (settings->accountGuestInCPUMeter) {
-         percent += v[CPU_METER_STEAL] + v[CPU_METER_GUEST];
+         this->curItems = 7;
       }
+
+      v[CPU_METER_IOWAIT]  = values[CPU_IOWAIT_PERIOD].ull / total * 100.0;
    } else {
       v[CPU_METER_KERNEL] = values[CPU_SYSTEM_ALL_PERIOD].ull / total * 100.0;
       value = values[CPU_STEAL_PERIOD].ull + values[CPU_GUEST_PERIOD].ull;
       v[CPU_METER_IRQ] = value / total * 100.0;
       this->curItems = 4;
-      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    }
-   percent = CLAMP(percent, 0.0, 100.0);
-   if (isnan(percent))
-      percent = 0.0;
+
+   percent = sumPositiveValues(v, this->curItems);
+   percent = MINIMUM(percent, 100.0);
+
+   if (settings->detailedCPUTime) {
+      this->curItems = 8;
+   }
 
    v[CPU_METER_FREQUENCY] = values[CPU_FREQUENCY].d;
    v[CPU_METER_TEMPERATURE] = NAN;

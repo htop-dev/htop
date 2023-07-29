@@ -203,21 +203,42 @@ AC_COMPILE_IFELSE([
 CFLAGS="$old_CFLAGS"
 
 AC_MSG_CHECKING(for NaN support)
-AC_RUN_IFELSE([
+dnl Note: AC_RUN_IFELSE does not try compiling the program at all when
+dnl $cross_compiling is 'yes'.
+AC_LINK_IFELSE([
    AC_LANG_PROGRAM(
       [[
-       #include <math.h>
+#include <math.h>
       ]],
       [[
-       double x = NAN; return !isnan(x);
+         double x = NAN;
+         /* Both should evaluate to false -> 0 (exit success) */
+         return isgreater(x, x) || isgreaterequal(x, x);
       ]]
    )],
-   [AC_MSG_RESULT(yes)],
-   [
+   [flag_finite_math_only=unknown
+   if test "$cross_compiling" = yes; then
+      AC_COMPILE_IFELSE([
+         AC_LANG_SOURCE([[
+/* __FINITE_MATH_ONLY__ is documented in Clang. */
+#ifdef __FINITE_MATH_ONLY__
+#error "should not enable -ffinite-math-only"
+#endif
+         ]])],
+         AC_MSG_RESULT([assume yes (cross compiling)]),
+	 flag_finite_math_only=yes)
+   elif ./conftest$EXEEXT >&AS_MESSAGE_LOG_FD; then
+      flag_finite_math_only=no
+      AC_MSG_RESULT(yes)
+   else
+      flag_finite_math_only=yes
+   fi
+   if test "$flag_finite_math_only" = yes; then
       AC_MSG_RESULT(no)
-      AC_MSG_WARN([Compiler does not respect NaN, some functionality might break; consider using '-fno-finite-math-only'])
-   ],
-   [AC_MSG_RESULT(skipped)])
+      AC_MSG_WARN([runtime behavior with NaN is not compliant - some functionality might break; consider using '-fno-finite-math-only'])
+   fi],
+   [AC_MSG_RESULT(no)
+   AC_MSG_ERROR([can not find required macros: NAN, isgreater() and isgreaterequal()])])
 
 # ----------------------------------------------------------------------
 
@@ -699,11 +720,6 @@ AM_CFLAGS="\
  -Wundef\
  -Wunused\
  -Wwrite-strings"
-
-# FreeBSD uses C11 _Generic in its isnan implementation, even with -std=c99
-if test "$my_htop_platform" = freebsd; then
-   AM_CFLAGS="$AM_CFLAGS -Wno-c11-extensions"
-fi
 
 dnl https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
 AC_DEFUN([AX_CHECK_COMPILE_FLAG],
