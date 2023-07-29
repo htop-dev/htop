@@ -103,7 +103,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void PCPProcess_printDelay(float delay_percent, char* buffer, int n) {
+static void PCPProcess_printDelay(float delay_percent, char* buffer, size_t n) {
    if (isnan(delay_percent)) {
       xSnprintf(buffer, n, " N/A  ");
    } else {
@@ -116,7 +116,7 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
    bool coloring = this->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   size_t n = sizeof(buffer) - 1;
    switch ((int)field) {
    case CMINFLT: Process_printCount(str, pp->cminflt, coloring); return;
    case CMAJFLT: Process_printCount(str, pp->cmajflt, coloring); return;
