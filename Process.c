@@ -791,7 +791,7 @@ void Process_printLeftAlignedField(RichString* str, int attr, const char* conten
    RichString_appendChr(str, attr, ' ', width + 1 - columns);
 }
 
-void Process_printPercentage(float val, char* buffer, int n, uint8_t width, int* attr) {
+void Process_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr) {
    if (val >= 0) {
       if (val < 0.05F)
          *attr = CRT_colors[PROCESS_SHADOW];
