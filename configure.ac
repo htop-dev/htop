@@ -758,6 +758,22 @@ AC_ARG_ENABLE([debug],
               [enable_debug=no])
 if test "x$enable_debug" != xyes; then
    AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"
+
+   AC_COMPILE_IFELSE([
+      AC_LANG_SOURCE([[
+#ifdef __SUPPORT_SNAN__
+#error "signaling NaN support not recommended"
+#endif
+      ]])],
+      :,
+      [warning_msg="signaling NaN support is enabled; not recommended for htop"
+      case "$CC" in
+      *gcc*)
+         warning_msg="$warning_msg (use '-fno-signaling-nans' compiler flag to disable)"
+         ;;
+      esac
+      AC_MSG_WARN([$warning_msg])
+      ])
 else
    AM_CPPFLAGS="$AM_CPPFLAGS -ggdb3"
 fi
