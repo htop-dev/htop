@@ -239,6 +239,7 @@ static void ProcessList_buildTree(ProcessList* this) {
       Process* process = (Process*)Vector_get(this->processes, i);
       pid_t ppid = Process_getParentPid(process);
       process->isRoot = false;
+      process->tree_depth = 0;
 
       // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)
       // on Mac OS X 10.11.6) regard this process as root.
@@ -270,17 +271,48 @@ static void ProcessList_buildTree(ProcessList* this) {
       if (process->isRoot) {
          process = (Process*)Vector_get(this->processes, i);
          process->indent = 0;
-         process->tree_depth = 0;
          Vector_add(this->displayList, process);
          ProcessList_buildTreeBranch(this, process->pid, 0, 0, process->showChildren);
          continue;
       }
    }
 
+   // Under some ptrace(2) implementations, a process ptrace(2)-attaching a
+   // parent process in its process tree will causing the traced process to
+   // be re-parented to the tracing process; this will creating a loop in the
+   // process tree. In this case build separated tree(s) for loop(s) left
+   // here.
+   int display_size = Vector_size(this->displayList);
+   if(display_size < vsize) {
+      for (int i = 0; i < vsize; i++) {
+         Process* process = (Process*)Vector_get(this->processes, i);
+         if(!process->isRoot && process->tree_depth == 0) {
+            // This lost process could either be a node at the loop itself,
+            // or a descendant node indirectly attached to the loop.
+            do {
+               // Make sure we break at the loop itself, not a descendant of it.
+               process->tree_depth = 1;
+               Process *parent = ProcessList_findProcess(this, Process_getParentPid(process));
+               assert(parent != NULL);
+               if(!parent) break;
+               process = parent;
+               assert(!process->isRoot);
+            } while(!process->isRoot && !process->tree_depth);
+            process->isRoot = true;
+            process->tree_depth = 0;
+            process->indent = 0;
+            Vector_add(this->displayList, process);
+            ProcessList_buildTreeBranch(this, process->pid, 0, 0, process->showChildren);
+            if(Vector_size(this->displayList) == vsize) break; // No more loop exist.
+         }
+         // There appears to have more loop(s) left, trying to continue find.
+      }
+   }
+
    this->needsSort = false;
 
    // Check consistency of the built structures
-   assert(Vector_size(this->displayList) == vsize); (void)vsize;
+   assert(Vector_size(this->displayList) == vsize);
 }
 
 void ProcessList_updateDisplayList(ProcessList* this) {
