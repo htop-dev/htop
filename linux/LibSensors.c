@@ -9,9 +9,10 @@
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
 #include <sensors/sensors.h>
 
 #include "Macros.h"
@@ -143,7 +144,8 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
 
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
    assert(existingCPUs > 0 && existingCPUs < 16384);
-   double data[existingCPUs + 1];
+
+   double* data = xMallocArray(existingCPUs + 1, sizeof(double));
    for (size_t i = 0; i < existingCPUs + 1; i++)
       data[i] = NAN;
 
@@ -264,6 +266,8 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 out:
    for (unsigned int i = 0; i <= existingCPUs; i++)
       cpus[i].temperature = data[i];
+
+   free(data);
 }
 
 #endif /* HAVE_SENSORS_SENSORS_H */
