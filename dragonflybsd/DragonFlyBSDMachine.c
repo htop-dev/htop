@@ -104,10 +104,10 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
       this->cpus = xRealloc(this->cpus, (super->existingCPUs + 1) * sizeof(CPUData));
    }
 
-   len = sizeof(kernelFScale);
-   if (sysctlbyname("kern.fscale", &kernelFScale, &len, NULL, 0) == -1) {
+   len = sizeof(this->kernelFScale);
+   if (sysctlbyname("kern.fscale", &this->kernelFScale, &len, NULL, 0) == -1) {
       //sane default for kernel provided CPU percentage scaling, at least on x86 machines, in case this sysctl call failed
-      kernelFScale = 2048;
+      this->kernelFScale = 2048;
    }
 
    this->kd = kvm_openfiles(NULL, "/dev/null", NULL, 0, errbuf);
