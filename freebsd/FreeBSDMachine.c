@@ -136,7 +136,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    }
 
    len = sizeof(this->kernelFScale);
-   if (sysctlbyname("kern.fscale", &this->kernelFScale, &len, NULL, 0) == -1) {
+   if (sysctlbyname("kern.fscale", &this->kernelFScale, &len, NULL, 0) == -1 || this->kernelFScale <= 0) {
       //sane default for kernel provided CPU percentage scaling, at least on x86 machines, in case this sysctl call failed
       this->kernelFScale = 2048;
    }
