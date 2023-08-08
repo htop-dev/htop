@@ -1,7 +1,7 @@
-#ifndef HEADER_OpenBSDProcessList
-#define HEADER_OpenBSDProcessList
+#ifndef HEADER_OpenBSDProcessTable
+#define HEADER_OpenBSDProcessTable
 /*
-htop - OpenBSDProcessList.h
+htop - OpenBSDProcessTable.h
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
 Released under the GNU GPLv2+, see the COPYING file
@@ -11,11 +11,11 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <sys/types.h>
 
-#include "ProcessList.h"
+#include "ProcessTable.h"
 
 
-typedef struct OpenBSDProcessList_ {
-   ProcessList super;
-} OpenBSDProcessList;
+typedef struct OpenBSDProcessTable_ {
+   ProcessTable super;
+} OpenBSDProcessTable;
 
 #endif

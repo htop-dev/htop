@@ -6,6 +6,8 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "openbsd/Platform.h"
 
 #include <errno.h>
@@ -175,7 +177,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
 
-int Platform_getMaxPid(void) {
+pid_t Platform_getMaxPid(void) {
    return 2 * THREAD_PID_OFFSET;
 }
 
@@ -229,9 +231,9 @@ void Platform_setMemoryValues(Meter* this) {
    usedMem -= buffersMem + cachedMem;
    this->total = host->totalMem;
    this->values[MEMORY_METER_USED] = usedMem;
-   this->values[MEMORY_METER_BUFFERS] = buffersMem;
    // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
    // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+   this->values[MEMORY_METER_BUFFERS] = buffersMem;
    this->values[MEMORY_METER_CACHE] = cachedMem;
    // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 }
