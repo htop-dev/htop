@@ -111,12 +111,11 @@ void Process_printBytes(RichString* str, unsigned long long number, bool colorin
       number %= 1000;
       len = xSnprintf(buffer, sizeof(buffer), "%03lluM ", number);
       RichString_appendnAscii(str, processMegabytesColor, buffer, len);
-   } else if (number < 100000 * ONE_K) {
+   } else if (number < 100 * ONE_M) {
       //2 digit GB, 1 digit MB
-      number /= 100 * ONE_K;
-      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / 10);
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / ONE_M);
       RichString_appendnAscii(str, processGigabytesColor, buffer, len);
-      number %= 10;
+      number = (number % ONE_M) * 10 / ONE_M;
       len = xSnprintf(buffer, sizeof(buffer), ".%1llu", number);
       RichString_appendnAscii(str, processMegabytesColor, buffer, len);
       RichString_appendAscii(str, processGigabytesColor, "G ");
@@ -133,12 +132,11 @@ void Process_printBytes(RichString* str, unsigned long long number, bool colorin
       number %= 1000;
       len = xSnprintf(buffer, sizeof(buffer), "%03lluG ", number);
       RichString_appendnAscii(str, processGigabytesColor, buffer, len);
-   } else if (number < 100000 * ONE_M) {
+   } else if (number < 100ULL * ONE_G) {
       //2 digit TB, 1 digit GB
-      number /= 100 * ONE_M;
-      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / 10);
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / ONE_G);
       RichString_appendnAscii(str, largeNumberColor, buffer, len);
-      number %= 10;
+      number = (number % ONE_G) * 10 / ONE_G;
       len = xSnprintf(buffer, sizeof(buffer), ".%1llu", number);
       RichString_appendnAscii(str, processGigabytesColor, buffer, len);
       RichString_appendAscii(str, largeNumberColor, "T ");
