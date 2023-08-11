@@ -245,15 +245,6 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       /* Check for further adjustments */
    }
 
-   /* Only temperature for core 0, maybe Ryzen - copy to all other cores */
-   if (coreTempCount == 1 && !isnan(data[1])) {
-      for (unsigned int i = 2; i <= existingCPUs; i++)
-         data[i] = data[1];
-
-      /* No further adjustments */
-      goto out;
-   }
-
    /* Half the temperatures, probably HT/SMT - copy to second half */
    const unsigned int delta = activeCPUs / 2;
    if (coreTempCount == delta) {
@@ -262,6 +253,51 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       /* No further adjustments */
       goto out;
    }
+
+   /* Check AMD Zen CPUs packages, and mirror temps across packages */
+   if (coreTempCount > 0 && coreTempCount != existingCPUs) {
+      double temp[coreTempCount];
+      unsigned int count = 0;
+      unsigned int coresInDie = existingCPUs / coreTempCount;
+
+      /* Find package temps */
+      temp[0] = NAN;
+      for (unsigned int i = 1; i <= existingCPUs; i++) {
+         if (!isnan(data[i])) {
+            temp[count] = data[i];
+            count++;
+            if (count == coreTempCount) {
+               break;
+            }
+         }
+      }
+
+      /* Returns to conditional checking if no temp is found  */
+      if (!isnan(temp[0])) {
+         // Set Temperature
+         data[0] = temp[0];
+         for (unsigned int die = 0; die < coreTempCount; die++) {
+            for (unsigned int i = 1; i <= coresInDie; i++) {
+               data[(die * coresInDie) + i] = temp[die];
+            }
+         }
+
+         /* No further adjustments */
+         goto out;
+      }
+      /* AMD Zen CPU can report coreTempCount as 1 - returns if temps are not reported as expected */
+   }
+
+   /* Fallback for single temperature count reporting */
+   if (coreTempCount == 1 && !isnan(data[0])) {
+      for (unsigned int i = 1; i <= existingCPUs; i++) {
+         data[i] = data[0];
+      }
+
+      /* No further adjustments */
+      goto out;
+   }
+
 
 out:
    for (unsigned int i = 0; i <= existingCPUs; i++)
