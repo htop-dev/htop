@@ -21,7 +21,7 @@ AM_INIT_AUTOMAKE([-Wall std-options subdir-objects])
 # ----------------------------------------------------------------------
 # Checks for platform.
 # ----------------------------------------------------------------------
-
+darwin_version=""
 case "$host_os" in
 linux*|gnu*)
    my_htop_platform=linux
@@ -46,6 +46,7 @@ dragonfly*)
 darwin*)
    my_htop_platform=darwin
    AC_DEFINE([HTOP_DARWIN], [], [Building for Darwin.])
+   darwin_version=$(sw_vers | grep ProductVersion | awk '{ print $2 }' | awk -F . '{ print $1 }')
    ;;
 solaris*)
    my_htop_platform=solaris
@@ -280,7 +281,10 @@ AC_CHECK_FUNCS([ \
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([mach_timebase_info])
-   AC_CHECK_DECLS([IOMainPort], [], [], [[#include <IOKit/IOKitLib.h>]])
+
+   if test "$darwin_version" -ge 12; then
+       AC_CHECK_DECLS([IOMainPort], [0], [1], [[#include <IOKit/IOKitLib.h>]])
+   fi
    AC_CHECK_DECLS([IOMasterPort], [], [], [[#include <IOKit/IOKitLib.h>]])
 fi
 
@@ -798,6 +802,7 @@ AC_MSG_RESULT([
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $enable_sensors
   (Linux) capabilities:      $enable_capabilities
+  (Darwin) version:          $darwin_version
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   unwind:                    $enable_unwind
