@@ -46,7 +46,7 @@ dragonfly*)
 darwin*)
    my_htop_platform=darwin
    AC_DEFINE([HTOP_DARWIN], [], [Building for Darwin.])
-   darwin_version=$(sw_vers | grep ProductVersion | awk '{ print $2 }' | awk -F . '{ print $1 }')
+   darwin_version=$(sw_vers -productVersion | cut -d . -f 1)
    ;;
 solaris*)
    my_htop_platform=solaris
