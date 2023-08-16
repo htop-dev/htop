@@ -1184,7 +1184,7 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    switch (key) {
    case PERCENT_CPU:
    case PERCENT_NORM_CPU:
-      return SPACESHIP_NUMBER(p1->percent_cpu, p2->percent_cpu);
+      return compareRealNumbers(p1->percent_cpu, p2->percent_cpu);
    case PERCENT_MEM:
       return SPACESHIP_NUMBER(p1->m_resident, p2->m_resident);
    case COMM:

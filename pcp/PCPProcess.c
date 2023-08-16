@@ -199,16 +199,6 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
    RichString_appendWide(str, attr, buffer);
 }
 
-/* Compares floating point values for ordering data entries. In this function,
-   NaN is considered "less than" any other floating point value (regardless of
-   sign), and two NaNs are considered "equal" regardless of payload. */
-static int compareRealNumbers(double a, double b) {
-   int result = isgreater(a, b) - isgreater(b, a);
-   if (result)
-      return result;
-   return !isNaN(a) - !isNaN(b);
-}
-
 static int PCPProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const PCPProcess* p1 = (const PCPProcess*)v1;
    const PCPProcess* p2 = (const PCPProcess*)v2;
@@ -263,11 +253,11 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
    case OOM:
       return SPACESHIP_NUMBER(p1->oom, p2->oom);
    case PERCENT_CPU_DELAY:
-      return SPACESHIP_NUMBER(p1->cpu_delay_percent, p2->cpu_delay_percent);
+      return compareRealNumbers(p1->cpu_delay_percent, p2->cpu_delay_percent);
    case PERCENT_IO_DELAY:
-      return SPACESHIP_NUMBER(p1->blkio_delay_percent, p2->blkio_delay_percent);
+      return compareRealNumbers(p1->blkio_delay_percent, p2->blkio_delay_percent);
    case PERCENT_SWAP_DELAY:
-      return SPACESHIP_NUMBER(p1->swapin_delay_percent, p2->swapin_delay_percent);
+      return compareRealNumbers(p1->swapin_delay_percent, p2->swapin_delay_percent);
    case CTXT:
       return SPACESHIP_NUMBER(p1->ctxt_diff, p2->ctxt_diff);
    case SECATTR:

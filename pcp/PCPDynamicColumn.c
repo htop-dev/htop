@@ -338,9 +338,9 @@ int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, Pr
       case PM_TYPE_U64:
          return SPACESHIP_NUMBER(atom2.ull, atom1.ull);
       case PM_TYPE_FLOAT:
-         return SPACESHIP_NUMBER(atom2.f, atom1.f);
+         return compareRealNumbers(atom2.f, atom1.f);
       case PM_TYPE_DOUBLE:
-         return SPACESHIP_NUMBER(atom2.d, atom1.d);
+         return compareRealNumbers(atom2.d, atom1.d);
       default:
          break;
    }
