@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -337,6 +338,16 @@ ssize_t full_write(int fd, const void* buf, size_t count) {
    }
 
    return written;
+}
+
+/* Compares floating point values for ordering data entries. In this function,
+   NaN is considered "less than" any other floating point value (regardless of
+   sign), and two NaNs are considered "equal" regardless of payload. */
+int compareRealNumbers(double a, double b) {
+   int result = isgreater(a, b) - isgreater(b, a);
+   if (result)
+      return result;
+   return !isNaN(a) - !isNaN(b);
 }
 
 /* Computes the sum of all positive floating point values in an array.

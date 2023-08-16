@@ -310,16 +310,6 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    RichString_appendAscii(str, attr, buffer);
 }
 
-/* Compares floating point values for ordering data entries. In this function,
-   NaN is considered "less than" any other floating point value (regardless of
-   sign), and two NaNs are considered "equal" regardless of payload. */
-static int compareRealNumbers(double a, double b) {
-   int result = isgreater(a, b) - isgreater(b, a);
-   if (result)
-      return result;
-   return !isNaN(a) - !isNaN(b);
-}
-
 static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
    const LinuxProcess* p1 = (const LinuxProcess*)v1;
    const LinuxProcess* p2 = (const LinuxProcess*)v2;
@@ -385,11 +375,11 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->oom, p2->oom);
    #ifdef HAVE_DELAYACCT
    case PERCENT_CPU_DELAY:
-      return SPACESHIP_NUMBER(p1->cpu_delay_percent, p2->cpu_delay_percent);
+      return compareRealNumbers(p1->cpu_delay_percent, p2->cpu_delay_percent);
    case PERCENT_IO_DELAY:
-      return SPACESHIP_NUMBER(p1->blkio_delay_percent, p2->blkio_delay_percent);
+      return compareRealNumbers(p1->blkio_delay_percent, p2->blkio_delay_percent);
    case PERCENT_SWAP_DELAY:
-      return SPACESHIP_NUMBER(p1->swapin_delay_percent, p2->swapin_delay_percent);
+      return compareRealNumbers(p1->swapin_delay_percent, p2->swapin_delay_percent);
    #endif
    case IO_PRIORITY:
       return SPACESHIP_NUMBER(LinuxProcess_effectiveIOPriority(p1), LinuxProcess_effectiveIOPriority(p2));
