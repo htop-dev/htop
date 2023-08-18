@@ -189,7 +189,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       sproc->realtgid       = _psinfo->pr_ppid;
 
       // See note above (in common section) about this BINARY FRACTION
-      proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu / (double)32768) * (double)100.0;
+      proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu / (double)32768) * pl->cpuCount * 100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       proc->time            = _psinfo->pr_time.tv_sec * 100 + _psinfo->pr_time.tv_nsec / 10000000;
@@ -218,7 +218,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       }
       proc->show = !(settings->hideKernelThreads && proc->isKernelThread);
    } else { // We are not in the master LWP, so jump to the LWP handling code
-      proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu / (double)32768) * (double)100.0;
+      proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu / (double)32768) * pl->cpuCount * 100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       proc->time               = _lwpsinfo->pr_time.tv_sec * 100 + _lwpsinfo->pr_time.tv_nsec / 10000000;
