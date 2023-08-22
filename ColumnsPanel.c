@@ -141,7 +141,7 @@ static void ColumnsPanel_add(Panel* super, unsigned int key, Hashtable* columns)
 void ColumnsPanel_fill(ColumnsPanel* this, ScreenSettings* ss, Hashtable* columns) {
    Panel* super = (Panel*) this;
    Panel_prune(super);
-   for (const ProcessField* fields = ss->fields; *fields; fields++)
+   for (const RowField* fields = ss->fields; *fields; fields++)
       ColumnsPanel_add(super, *fields, columns);
    this->ss = ss;
 }

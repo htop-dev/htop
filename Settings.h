@@ -14,7 +14,7 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 #include "HeaderLayout.h"
-#include "Process.h"
+#include "Row.h"
 
 
 #define DEFAULT_DELAY 15
@@ -33,16 +33,16 @@ typedef struct {
    int* modes;
 } MeterColumnSetting;
 
-typedef struct {
+typedef struct ScreenSettings_ {
    char* name;
-   ProcessField* fields;
+   RowField* fields;
    uint32_t flags;
    int direction;
    int treeDirection;
-   ProcessField sortKey;
-   ProcessField treeSortKey;
+   RowField sortKey;
+   RowField treeSortKey;
    bool treeView;
-   bool treeViewAlwaysByPID;
+   bool treeViewAlwaysByID;
    bool allBranchesCollapsed;
 } ScreenSettings;
 
@@ -104,9 +104,9 @@ typedef struct Settings_ {
 
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
 
-static inline ProcessField ScreenSettings_getActiveSortKey(const ScreenSettings* this) {
+static inline RowField ScreenSettings_getActiveSortKey(const ScreenSettings* this) {
    return (this->treeView)
-          ? (this->treeViewAlwaysByPID ? PID : this->treeSortKey)
+          ? (this->treeViewAlwaysByID ? 1 : this->treeSortKey)
           : this->sortKey;
 }
 
@@ -126,7 +126,7 @@ void ScreenSettings_delete(ScreenSettings* this);
 
 void ScreenSettings_invertSortOrder(ScreenSettings* this);
 
-void ScreenSettings_setSortKey(ScreenSettings* this, ProcessField sortKey);
+void ScreenSettings_setSortKey(ScreenSettings* this, RowField sortKey);
 
 void Settings_enableReadonly(void);
 

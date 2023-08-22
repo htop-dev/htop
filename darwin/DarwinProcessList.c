@@ -55,20 +55,22 @@ static struct kinfo_proc* ProcessList_getKInfoProcs(size_t* count) {
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    DarwinProcessList* this = xCalloc(1, sizeof(DarwinProcessList));
-   ProcessList* super = &this->super;
+   Object_setClass(this, Class(ProcessList));
 
+   ProcessList* super = &this->super;
    ProcessList_init(super, Class(DarwinProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(ProcessList* this) {
-   ProcessList_done(this);
+void ProcessList_delete(Object* cast) {
+   DarwinProcessList* this = (DarwinProcessList*) cast;
+   ProcessList_done(&this->super);
    free(this);
 }
 
 void ProcessList_goThroughEntries(ProcessList* super) {
-   const Machine* host = super->host;
+   const Machine* host = super->super.host;
    const DarwinMachine* dhost = (const DarwinMachine*) host;
    DarwinProcessList* dpl = (DarwinProcessList*) super;
    bool preExisting = true;

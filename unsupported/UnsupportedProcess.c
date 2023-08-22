@@ -58,21 +58,20 @@ void Process_delete(Object* cast) {
    free(cast);
 }
 
-static void UnsupportedProcess_writeField(const Process* this, RichString* str, ProcessField field) {
-   const UnsupportedProcess* up = (const UnsupportedProcess*) this;
-   bool coloring = this->host->settings->highlightMegabytes;
+static void UnsupportedProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+   const UnsupportedProcess* up = (const UnsupportedProcess*) super;
+   bool coloring = super->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
 
-   (void) up;
    (void) coloring;
    (void) n;
 
    switch (field) {
    /* Add platform specific fields */
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(&up->super, str, field);
       return;
    }
    RichString_appendWide(str, attr, buffer);
@@ -94,11 +93,18 @@ static int UnsupportedProcess_compareByKey(const Process* v1, const Process* v2,
 
 const ProcessClass UnsupportedProcess_class = {
    .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
+      .super = {
+         .extends = Class(Process),
+         .display = Row_display,
+         .delete = Process_delete,
+         .compare = Process_compare
+      },
+      .isHighlighted = Process_rowIsHighlighted,
+      .isVisible = Process_rowIsVisible,
+      .matchesFilter = Process_rowMatchesFilter,
+      .compareByParent = Process_compareByParent,
+      .sortKeyString = Process_rowGetSortKey,
+      .writeField = UnsupportedProcess_rowWriteField
    },
-   .writeField = UnsupportedProcess_writeField,
    .compareByKey = UnsupportedProcess_compareByKey
 };

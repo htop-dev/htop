@@ -25,7 +25,8 @@ static const int TasksMeter_attributes[] = {
 
 static void TasksMeter_updateValues(Meter* this) {
    const Machine* host = this->host;
-   const ProcessList* pl = host->pl;
+   const ProcessList* pl = (const ProcessList*) host->processTable;
+
    this->values[0] = pl->kernelThreads;
    this->values[1] = pl->userlandThreads;
    this->values[2] = pl->totalTasks - pl->kernelThreads - pl->userlandThreads;

@@ -43,18 +43,17 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    FreeBSDProcessList* this = xCalloc(1, sizeof(FreeBSDProcessList));
-   ProcessList* super = &this->super;
+   Object_setClass(this, Class(ProcessList));
 
+   ProcessList* super = &this->super;
    ProcessList_init(super, Class(FreeBSDProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(ProcessList* super) {
-   FreeBSDProcessList* this = (FreeBSDProcessList*) super;
-
-   ProcessList_done(super);
-
+void ProcessList_delete(Object* cast) {
+   FreeBSDProcessList* this = (FreeBSDProcessList*) cast;
+   ProcessList_done(&this->super);
    free(this);
 }
 
@@ -174,12 +173,12 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
-         proc->pid = kproc->ki_pid;
+         Process_setPid(proc, kproc->ki_pid);
+         Process_setThreadGroup(proc, kproc->ki_pid);
+         Process_setParent(proc, kproc->ki_ppid);
          proc->isKernelThread = kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
          proc->isUserlandThread = false;
-         proc->ppid = kproc->ki_ppid;
          proc->tpgid = kproc->ki_tpgid;
-         proc->tgid = kproc->ki_pid;
          proc->session = kproc->ki_sid;
          proc->pgrp = kproc->ki_pgid;
          proc->st_uid = kproc->ki_uid;
@@ -279,11 +278,11 @@ void ProcessList_goThroughEntries(ProcessList* super) {
          Scheduling_readProcessPolicy(proc);
 #endif
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       super->totalTasks++;
       if (proc->state == RUNNING)
          super->runningTasks++;
-      proc->updated = true;
+      proc->super.updated = true;
    }
 }

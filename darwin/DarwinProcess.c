@@ -72,8 +72,8 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void DarwinProcess_writeField(const Process* this, RichString* str, ProcessField field) {
-   const DarwinProcess* dp = (const DarwinProcess*) this;
+static void DarwinProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+   const DarwinProcess* dp = (const DarwinProcess*) super;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
@@ -81,7 +81,7 @@ static void DarwinProcess_writeField(const Process* this, RichString* str, Proce
    // add Platform-specific fields here
    case TRANSLATED: xSnprintf(buffer, n, "%c ", dp->translated ? 'T' : 'N'); break;
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(&dp->super, str, field);
       return;
    }
    RichString_appendWide(str, attr, buffer);
@@ -292,7 +292,7 @@ static char* DarwinProcess_getDevname(dev_t dev) {
 
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists) {
    DarwinProcess* dp = (DarwinProcess*)proc;
-   const Settings* settings = proc->host->settings;
+   const Settings* settings = proc->super.host->settings;
 
    const struct extern_proc* ep = &ps->kp_proc;
 
@@ -312,12 +312,12 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    /* First, the "immutable" parts */
    if (!exists) {
       /* Set the PID/PGID/etc. */
-      proc->pid = ep->p_pid;
-      proc->ppid = ps->kp_eproc.e_ppid;
+      Process_setPid(proc, ep->p_pid);
+      Process_setThreadGroup(proc, ep->p_pid);
+      Process_setParent(proc, ps->kp_eproc.e_ppid);
       proc->pgrp = ps->kp_eproc.e_pgid;
       proc->session = 0; /* TODO Get the session id */
       proc->tpgid = ps->kp_eproc.e_tpgid;
-      proc->tgid = proc->pid;
       proc->isKernelThread = false;
       proc->isUserlandThread = false;
       dp->translated = ps->kp_proc.p_flag & P_TRANSLATED;
@@ -359,14 +359,14 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    proc->state = (ep->p_stat == SZOMB) ? ZOMBIE : UNKNOWN;
 
    /* Make sure the updated flag is set */
-   proc->updated = true;
+   proc->super.updated = true;
 }
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double timeIntervalNS) {
    struct proc_taskinfo pti;
 
-   if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-      const DarwinMachine* dhost = (const DarwinMachine*) proc->super.host;
+   if (sizeof(pti) == proc_pidinfo(Process_getPid(&proc->super), PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+      const DarwinMachine* dhost = (const DarwinMachine*) proc->super.super.host;
 
       uint64_t total_existing_time_ns = proc->stime + proc->utime;
 
@@ -419,7 +419,7 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
    }
 
    task_t port;
-   ret = task_for_pid(mach_task_self(), proc->pid, &port);
+   ret = task_for_pid(mach_task_self(), Process_getPid(proc), &port);
    if (ret != KERN_SUCCESS) {
       dp->taskAccess = false;
       return;
@@ -472,11 +472,18 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
 
 const ProcessClass DarwinProcess_class = {
    .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
+      .super = {
+         .extends = Class(Process),
+         .display = Row_display,
+         .delete = Process_delete,
+         .compare = Process_compare
+      },
+      .isHighlighted = Process_rowIsHighlighted,
+      .isVisible = Process_rowIsVisible,
+      .matchesFilter = Process_rowMatchesFilter,
+      .compareByParent = Process_compareByParent,
+      .sortKeyString = Process_rowGetSortKey,
+      .writeField = DarwinProcess_rowWriteField
    },
-   .writeField = DarwinProcess_writeField,
-   .compareByKey = DarwinProcess_compareByKey,
+   .compareByKey = DarwinProcess_compareByKey
 };

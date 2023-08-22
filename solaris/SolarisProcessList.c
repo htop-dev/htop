@@ -45,18 +45,19 @@ static char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sp
 }
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   SolarisProcessList* spl = xCalloc(1, sizeof(SolarisProcessList));
-   ProcessList* pl = (ProcessList*) spl;
+   SolarisProcessList* this = xCalloc(1, sizeof(SolarisProcessList));
+   Object_setClass(this, Class(ProcessList));
 
-   ProcessList_init(pl, Class(SolarisProcess), host, pidMatchList);
+   ProcessList* super = &this->super;
+   ProcessList_init(super, Class(SolarisProcess), host, pidMatchList);
 
-   return pl;
+   return super;
 }
 
-void ProcessList_delete(ProcessList* pl) {
-   SolarisProcessList* spl = (SolarisProcessList*) pl;
-   ProcessList_done(pl);
-   free(spl);
+void ProcessList_delete(Object* cast) {
+   SolarisProcessList* this = (SolarisProcessList*) cast;
+   ProcessList_done(&this->super);
+   free(this);
 }
 
 static void SolarisProcessList_updateExe(pid_t pid, Process* proc) {
@@ -183,8 +184,8 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    // End common code pass 1
 
    if (onMasterLWP) { // Are we on the representative LWP?
-      proc->ppid            = (_psinfo->pr_ppid * 1024);
-      proc->tgid            = (_psinfo->pr_ppid * 1024);
+      Process_setParent(proc, (_psinfo->pr_ppid * 1024));
+      Process_setThreadGroup(proc, (_psinfo->pr_ppid * 1024));
       sproc->realppid       = _psinfo->pr_ppid;
       sproc->realtgid       = _psinfo->pr_ppid;
 
@@ -224,8 +225,8 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       proc->time               = _lwpsinfo->pr_time.tv_sec * 100 + _lwpsinfo->pr_time.tv_nsec / 10000000;
       if (!preExisting) { // Tasks done only for NEW LWPs
          proc->isUserlandThread    = true;
-         proc->ppid            = _psinfo->pr_pid * 1024;
-         proc->tgid            = _psinfo->pr_pid * 1024;
+         Process_setParent(proc, _psinfo->pr_pid * 1024);
+         Process_setThreadGroup(proc, _psinfo->pr_pid * 1024);
          sproc->realppid       = _psinfo->pr_pid;
          sproc->realtgid       = _psinfo->pr_pid;
          proc->starttime_ctime = _lwpsinfo->pr_start.tv_sec;
@@ -233,10 +234,10 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
 
       // Top-level process only gets this for the representative LWP
       if (proc->isKernelThread && !settings->hideKernelThreads) {
-         proc->show = true;
+         proc->super.show = true;
       }
       if (!proc->isKernelThread && !settings->hideUserlandThreads) {
-         proc->show = true;
+         proc->super.show = true;
       }
    } // Top-level LWP or subordinate LWP
 
@@ -253,7 +254,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       ProcessList_add(pl, proc);
    }
 
-   proc->updated = true;
+   proc->super.updated = true;
 
    // End common code pass 2
 

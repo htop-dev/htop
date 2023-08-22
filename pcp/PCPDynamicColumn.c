@@ -250,7 +250,7 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
    unsigned int type = PCPMetric_type(this->id);
 
    pmAtomValue atom;
-   if (!PCPMetric_instance(this->id, proc->pid, pp->offset, &atom, type)) {
+   if (!PCPMetric_instance(this->id, Process_getPid(proc), pp->offset, &atom, type)) {
       RichString_appendAscii(str, CRT_colors[METER_VALUE_ERROR], "no data");
       return;
    }
@@ -269,7 +269,7 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
    switch (type) {
       case PM_TYPE_STRING:
          attr = CRT_colors[PROCESS_SHADOW];
-         Process_printLeftAlignedField(str, attr, atom.cp, abswidth);
+         Row_printLeftAlignedField(str, attr, atom.cp, abswidth);
          free(atom.cp);
          break;
       case PM_TYPE_32:
@@ -304,7 +304,9 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
 }
 
 int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, ProcessField key) {
-   const PCPDynamicColumn* column = Hashtable_get(p1->super.host->settings->dynamicColumns, key);
+   const Process* proc = &p1->super;
+   const Settings* settings = proc->super.host->settings;
+   const PCPDynamicColumn* column = Hashtable_get(settings->dynamicColumns, key);
 
    if (!column)
       return -1;
@@ -313,8 +315,8 @@ int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, Pr
    unsigned int type = PCPMetric_type(metric);
 
    pmAtomValue atom1 = {0}, atom2 = {0};
-   if (!PCPMetric_instance(metric, p1->super.pid, p1->offset, &atom1, type) ||
-       !PCPMetric_instance(metric, p2->super.pid, p2->offset, &atom2, type)) {
+   if (!PCPMetric_instance(metric, Process_getPid(&p1->super), p1->offset, &atom1, type) ||
+       !PCPMetric_instance(metric, Process_getPid(&p2->super), p2->offset, &atom2, type)) {
       if (type == PM_TYPE_STRING) {
          free(atom1.cp);
          free(atom2.cp);

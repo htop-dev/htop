@@ -14,10 +14,10 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "FunctionBar.h"
 #include "Platform.h"
-#include "Process.h"
-#include "ProcessList.h"
 #include "ProvideCurses.h"
+#include "Row.h"
 #include "Settings.h"
+#include "Table.h"
 #include "XUtils.h"
 
 
@@ -30,25 +30,25 @@ void MainPanel_updateLabels(MainPanel* this, bool list, bool filter) {
    FunctionBar_setLabel(bar, KEY_F(4), filter ? "FILTER" : "Filter");
 }
 
-static void MainPanel_pidSearch(MainPanel* this, int ch) {
+static void MainPanel_idSearch(MainPanel* this, int ch) {
    Panel* super = (Panel*) this;
-   pid_t pid = ch - 48 + this->pidSearch;
+   pid_t id = ch - 48 + this->idSearch;
    for (int i = 0; i < Panel_size(super); i++) {
-      const Process* p = (const Process*) Panel_get(super, i);
-      if (p && p->pid == pid) {
+      const Row* row = (const Row*) Panel_get(super, i);
+      if (row && row->id == id) {
          Panel_setSelected(super, i);
          break;
       }
    }
-   this->pidSearch = pid * 10;
-   if (this->pidSearch > 10000000) {
-      this->pidSearch = 0;
+   this->idSearch = id * 10;
+   if (this->idSearch > 10000000) {
+      this->idSearch = 0;
    }
 }
 
 static const char* MainPanel_getValue(Panel* this, int i) {
-   const Process* p = (const Process*) Panel_get(this, i);
-   return Process_getCommand(p);
+   const Row* row = (const Row*) Panel_get(this, i);
+   return Row_sortKeyString(row);
 }
 
 static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
@@ -77,8 +77,8 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
       int hx = super->scrollH + x + 1;
-      ProcessField field = ProcessList_keyAt(host->pl, hx);
-      if (ss->treeView && ss->treeViewAlwaysByPID) {
+      RowField field = RowField_keyAt(settings, hx);
+      if (ss->treeView && ss->treeViewAlwaysByID) {
          ss->treeView = false;
          ss->direction = 1;
          reaction |= Action_setSortKey(settings, field);
@@ -96,7 +96,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, MainPanel_getValue, NULL);
       if (filterChanged) {
-         host->pl->incFilter = IncSet_filter(this->inc);
+         host->activeTable->incFilter = IncSet_filter(this->inc);
          reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
       if (this->inc->found) {
@@ -111,17 +111,17 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       reaction |= (this->keys[ch])(this->state);
       result = HANDLED;
    } else if (0 < ch && ch < 255 && isdigit((unsigned char)ch)) {
-      MainPanel_pidSearch(this, ch);
+      MainPanel_idSearch(this, ch);
    } else {
       if (ch != ERR) {
-         this->pidSearch = 0;
+         this->idSearch = 0;
       } else {
          reaction |= HTOP_KEEP_FOLLOWING;
       }
    }
 
    if ((reaction & HTOP_REDRAW_BAR) == HTOP_REDRAW_BAR) {
-      MainPanel_updateLabels(this, settings->ss->treeView, host->pl->incFilter);
+      MainPanel_updateLabels(this, settings->ss->treeView, host->activeTable->incFilter);
    }
    if ((reaction & HTOP_RESIZE) == HTOP_RESIZE) {
       result |= RESIZE;
@@ -142,35 +142,32 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       return BREAK_LOOP;
    }
    if ((reaction & HTOP_KEEP_FOLLOWING) != HTOP_KEEP_FOLLOWING) {
-      host->pl->following = -1;
+      host->activeTable->following = -1;
       Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
    }
    return result;
 }
 
-int MainPanel_selectedPid(MainPanel* this) {
-   const Process* p = (const Process*) Panel_getSelected((Panel*)this);
-   if (p) {
-      return p->pid;
-   }
-   return -1;
+int MainPanel_selectedRow(MainPanel* this) {
+   const Row* row = (const Row*) Panel_getSelected((Panel*)this);
+   return row ? row->id : -1;
 }
 
-bool MainPanel_foreachProcess(MainPanel* this, MainPanel_ForeachProcessFn fn, Arg arg, bool* wasAnyTagged) {
+bool MainPanel_foreachRow(MainPanel* this, MainPanel_foreachRowFn fn, Arg arg, bool* wasAnyTagged) {
    Panel* super = (Panel*) this;
    bool ok = true;
    bool anyTagged = false;
    for (int i = 0; i < Panel_size(super); i++) {
-      Process* p = (Process*) Panel_get(super, i);
-      if (p->tag) {
-         ok = fn(p, arg) && ok;
+      Row* row = (Row*) Panel_get(super, i);
+      if (row->tag) {
+         ok &= fn(row, arg);
          anyTagged = true;
       }
    }
    if (!anyTagged) {
-      Process* p = (Process*) Panel_getSelected(super);
-      if (p) {
-         ok &= fn(p, arg);
+      Row* row = (Row*) Panel_getSelected(super);
+      if (row) {
+         ok &= fn(row, arg);
       }
    }
 
@@ -196,7 +193,7 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
 static void MainPanel_printHeader(Panel* super) {
    MainPanel* this = (MainPanel*) super;
    Machine* host = this->state->host;
-   ProcessList_printHeader(host->pl, &super->header);
+   Table_printHeader(host->settings, &super->header);
 }
 
 const PanelClass MainPanel_class = {
@@ -211,7 +208,7 @@ const PanelClass MainPanel_class = {
 
 MainPanel* MainPanel_new(void) {
    MainPanel* this = AllocThis(MainPanel);
-   Panel_init((Panel*) this, 1, 1, 1, 1, Class(Process), false, FunctionBar_new(Settings_isReadonly() ? MainFunctions_ro : MainFunctions, NULL, NULL));
+   Panel_init((Panel*) this, 1, 1, 1, 1, Class(Row), false, FunctionBar_new(Settings_isReadonly() ? MainFunctions_ro : MainFunctions, NULL, NULL));
    this->keys = xCalloc(KEY_MAX, sizeof(Htop_Action));
    this->inc = IncSet_new(MainPanel_getFunctionBar(this));
 

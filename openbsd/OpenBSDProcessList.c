@@ -34,17 +34,17 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    OpenBSDProcessList* this = xCalloc(1, sizeof(OpenBSDProcessList));
-   ProcessList* super = (ProcessList*) this;
+   Object_setClass(this, Class(ProcessList));
 
+   ProcessList* super = &this->super;
    ProcessList_init(super, Class(OpenBSDProcess), host, pidMatchList);
 
    return this;
 }
 
-void ProcessList_delete(ProcessList* super) {
+void ProcessList_delete(Object* cast) {
    OpenBSDProcessList* this = (OpenBSDProcessList*) super;
-
-   ProcessList_done(super);
+   ProcessList_done(&this->super);
    free(this);
 }
 
@@ -156,9 +156,9 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       OpenBSDProcess* op = (OpenBSDProcess*) proc;
 
       if (!preExisting) {
-         proc->ppid = kproc->p_ppid;
+         Process_setParent(proc, kproc->p_ppid);
+         Process_setThreadGroup(proc, kproc->p_pid);
          proc->tpgid = kproc->p_tpgid;
-         proc->tgid = kproc->p_pid;
          proc->session = kproc->p_sid;
          proc->pgrp = kproc->p__pgid;
          proc->isKernelThread = proc->pgrp == 0;
@@ -231,8 +231,8 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          this->super.runningTasks++;
       }
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
-      proc->updated = true;
+      proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->super.updated = true;
    }
 }
 

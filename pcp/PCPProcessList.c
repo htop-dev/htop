@@ -33,16 +33,17 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    PCPProcessList* this = xCalloc(1, sizeof(PCPProcessList));
-   ProcessList* super = &(this->super);
+   Object_setClass(this, Class(ProcessList));
 
+   ProcessList* super = &this->super;
    ProcessList_init(super, Class(PCPProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(ProcessList* super) {
-   PCPProcessList* this = (PCPProcessList*) super;
-   ProcessList_done(super);
+void ProcessList_delete(Object* cast) {
+   PCPProcessList* this = (PCPProcessList*) cast;
+   ProcessList_done(&this->super);
    free(this);
 }
 
@@ -129,8 +130,8 @@ static inline ProcessState PCPProcessList_getProcessState(char state) {
 }
 
 static void PCPProcessList_updateID(Process* process, int pid, int offset) {
-   process->tgid = Metric_instance_u32(PCP_PROC_TGID, pid, offset, 1);
-   process->ppid = Metric_instance_u32(PCP_PROC_PPID, pid, offset, 1);
+   Process_setThreadGroup(process, Metric_instance_u32(PCP_PROC_TGID, pid, offset, 1));
+   Process_setParent(process, Metric_instance_u32(PCP_PROC_PPID, pid, offset, 1));
    process->state = PCPProcessList_getProcessState(Metric_instance_char(PCP_PROC_STATE, pid, offset, '?'));
 }
 
@@ -310,7 +311,7 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
 
 static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
    ProcessList* pl = (ProcessList*) this;
-   Machine* host = pl->host;
+   Machine* host = pl->super.host;
    PCPMachine* phost = (PCPMachine*) host;
 
    const Settings* settings = host->settings;
@@ -328,7 +329,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
       Process* proc = ProcessList_getProcess(pl, pid, &preExisting, PCPProcess_new);
       PCPProcess* pp = (PCPProcess*) proc;
       PCPProcessList_updateID(proc, pid, offset);
-      proc->isUserlandThread = proc->pid != proc->tgid;
+      proc->isUserlandThread = Process_getPid(proc) != Process_getThreadGroup(proc);
       pp->offset = offset >= 0 ? offset : 0;
 
       /*
@@ -338,8 +339,8 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
        * But it will short-circuit subsequent scans.
        */
       if (preExisting && hideKernelThreads && Process_isKernelThread(proc)) {
-         proc->updated = true;
-         proc->show = false;
+         proc->super.updated = true;
+         proc->super.show = false;
          if (proc->state == RUNNING)
             pl->runningTasks++;
          pl->kernelThreads++;
@@ -347,8 +348,8 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
          continue;
       }
       if (preExisting && hideUserlandThreads && Process_isUserlandThread(proc)) {
-         proc->updated = true;
-         proc->show = false;
+         proc->super.updated = true;
+         proc->super.show = false;
          if (proc->state == RUNNING)
             pl->runningTasks++;
          pl->userlandThreads++;
@@ -427,13 +428,13 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
       }
 
       /* Set at the end when we know if a new entry is a thread */
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) ||
+      proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) ||
                       (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       pl->totalTasks++;
       if (proc->state == RUNNING)
          pl->runningTasks++;
-      proc->updated = true;
+      proc->super.updated = true;
    }
    return true;
 }

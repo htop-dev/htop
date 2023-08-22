@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 #include "Panel.h"
+#include "Process.h"
 
 
 #if defined(HAVE_SCHED_SETSCHEDULER) && defined(HAVE_SCHED_GETSCHEDULER)
@@ -38,7 +39,7 @@ typedef struct {
    int priority;
 } SchedulingArg;
 
-bool Scheduling_setPolicy(Process* proc, Arg arg);
+bool Scheduling_rowSetPolicy(Row* proc, Arg arg);
 
 const char* Scheduling_formatPolicy(int policy);
 

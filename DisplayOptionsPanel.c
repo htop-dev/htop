@@ -109,7 +109,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    #undef TABMSG
 
    Panel_add(super, (Object*) CheckItem_newByRef("Tree view", &(settings->ss->treeView)));
-   Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is always sorted by PID (htop 2 behavior)", &(settings->ss->treeViewAlwaysByPID)));
+   Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is always sorted by ID (htop 2 behavior)", &(settings->ss->treeViewAlwaysByID)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is collapsed by default", &(settings->ss->allBranchesCollapsed)));
    Panel_add(super, (Object*) TextItem_new("Global options:"));
    Panel_add(super, (Object*) CheckItem_newByRef("Show tabs for screens", &(settings->screenTabs)));

@@ -37,17 +37,18 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    NetBSDProcessList* this = xCalloc(1, sizeof(NetBSDProcessList));
-   ProcessList* super = (ProcessList*) this;
+   Object_setClass(this, Class(ProcessList));
 
+   ProcessList* super = (ProcessList*) this;
    ProcessList_init(super, Class(NetBSDProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(ProcessList* this) {
-   NetBSDProcessList* npl = (NetBSDProcessList*) this;
-   ProcessList_done(this);
-   free(npl);
+void ProcessList_delete(Object* cast) {
+   NetBSDProcessList* this = (NetBSDProcessList*) cast;
+   ProcessList_done(&this->super);
+   free(this);
 }
 
 static void NetBSDProcessList_updateExe(const struct kinfo_proc2* kproc, Process* proc) {
@@ -163,17 +164,17 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
       bool preExisting = false;
       Process* proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, NetBSDProcess_new);
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       if (!preExisting) {
-         proc->pid = kproc->p_pid;
-         proc->ppid = kproc->p_ppid;
+         Process_setPid(proc, kproc->p_pid);
+         Process_setParent(proc, kproc->p_ppid);
+         Process_setThreadGroup(proc, kproc->p_pid);
          proc->tpgid = kproc->p_tpgid;
-         proc->tgid = kproc->p_pid;
          proc->session = kproc->p_sid;
          proc->pgrp = kproc->p__pgid;
          proc->isKernelThread = !!(kproc->p_flag & P_SYSTEM);
-         proc->isUserlandThread = proc->pid != proc->tgid;
+         proc->isUserlandThread = Process_getPid(proc) != Process_getThreadGroup(proc); // eh?
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
          ProcessList_add(&this->super, proc);
@@ -261,7 +262,7 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
       if (proc->state == RUNNING) {
          this->super.runningTasks++;
       }
-      proc->updated = true;
+      proc->super.updated = true;
    }
 }
 

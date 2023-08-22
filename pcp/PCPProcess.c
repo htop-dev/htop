@@ -124,37 +124,37 @@ static double PCPProcess_totalIORate(const PCPProcess* pp) {
    return totalRate;
 }
 
-static void PCPProcess_writeField(const Process* this, RichString* str, ProcessField field) {
-   const PCPProcess* pp = (const PCPProcess*) this;
-   bool coloring = this->host->settings->highlightMegabytes;
+static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+   const PCPProcess* pp = (const PCPProcess*) super;
+   bool coloring = super->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
    switch ((int)field) {
-   case CMINFLT: Process_printCount(str, pp->cminflt, coloring); return;
-   case CMAJFLT: Process_printCount(str, pp->cmajflt, coloring); return;
-   case M_DRS: Process_printBytes(str, pp->m_drs, coloring); return;
-   case M_DT: Process_printBytes(str, pp->m_dt, coloring); return;
-   case M_LRS: Process_printBytes(str, pp->m_lrs, coloring); return;
-   case M_TRS: Process_printBytes(str, pp->m_trs, coloring); return;
-   case M_SHARE: Process_printBytes(str, pp->m_share, coloring); return;
-   case M_PSS: Process_printKBytes(str, pp->m_pss, coloring); return;
-   case M_SWAP: Process_printKBytes(str, pp->m_swap, coloring); return;
-   case M_PSSWP: Process_printKBytes(str, pp->m_psswp, coloring); return;
-   case UTIME: Process_printTime(str, pp->utime, coloring); return;
-   case STIME: Process_printTime(str, pp->stime, coloring); return;
-   case CUTIME: Process_printTime(str, pp->cutime, coloring); return;
-   case CSTIME: Process_printTime(str, pp->cstime, coloring); return;
-   case RCHAR:  Process_printBytes(str, pp->io_rchar, coloring); return;
-   case WCHAR:  Process_printBytes(str, pp->io_wchar, coloring); return;
-   case SYSCR:  Process_printCount(str, pp->io_syscr, coloring); return;
-   case SYSCW:  Process_printCount(str, pp->io_syscw, coloring); return;
-   case RBYTES: Process_printBytes(str, pp->io_read_bytes, coloring); return;
-   case WBYTES: Process_printBytes(str, pp->io_write_bytes, coloring); return;
-   case CNCLWB: Process_printBytes(str, pp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Process_printRate(str, pp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Process_printRate(str, pp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Process_printRate(str, PCPProcess_totalIORate(pp), coloring); return;
+   case CMINFLT: Row_printCount(str, pp->cminflt, coloring); return;
+   case CMAJFLT: Row_printCount(str, pp->cmajflt, coloring); return;
+   case M_DRS: Row_printBytes(str, pp->m_drs, coloring); return;
+   case M_DT: Row_printBytes(str, pp->m_dt, coloring); return;
+   case M_LRS: Row_printBytes(str, pp->m_lrs, coloring); return;
+   case M_TRS: Row_printBytes(str, pp->m_trs, coloring); return;
+   case M_SHARE: Row_printBytes(str, pp->m_share, coloring); return;
+   case M_PSS: Row_printKBytes(str, pp->m_pss, coloring); return;
+   case M_SWAP: Row_printKBytes(str, pp->m_swap, coloring); return;
+   case M_PSSWP: Row_printKBytes(str, pp->m_psswp, coloring); return;
+   case UTIME: Row_printTime(str, pp->utime, coloring); return;
+   case STIME: Row_printTime(str, pp->stime, coloring); return;
+   case CUTIME: Row_printTime(str, pp->cutime, coloring); return;
+   case CSTIME: Row_printTime(str, pp->cstime, coloring); return;
+   case RCHAR:  Row_printBytes(str, pp->io_rchar, coloring); return;
+   case WCHAR:  Row_printBytes(str, pp->io_wchar, coloring); return;
+   case SYSCR:  Row_printCount(str, pp->io_syscr, coloring); return;
+   case SYSCW:  Row_printCount(str, pp->io_syscw, coloring); return;
+   case RBYTES: Row_printBytes(str, pp->io_read_bytes, coloring); return;
+   case WBYTES: Row_printBytes(str, pp->io_write_bytes, coloring); return;
+   case CNCLWB: Row_printBytes(str, pp->io_cancelled_write_bytes, coloring); return;
+   case IO_READ_RATE:  Row_printRate(str, pp->io_rate_read_bps, coloring); return;
+   case IO_WRITE_RATE: Row_printRate(str, pp->io_rate_write_bps, coloring); return;
+   case IO_RATE: Row_printRate(str, PCPProcess_totalIORate(pp), coloring); return;
    case CGROUP: xSnprintf(buffer, n, "%-10s ", pp->cgroup ? pp->cgroup : ""); break;
    case OOM: xSnprintf(buffer, n, "%4u ", pp->oom); break;
    case PERCENT_CPU_DELAY:
@@ -193,7 +193,7 @@ static void PCPProcess_writeField(const Process* this, RichString* str, ProcessF
       }
       break;
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(&pp->super, str, field);
       return;
    }
    RichString_appendWide(str, attr, buffer);
@@ -275,11 +275,18 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
 
 const ProcessClass PCPProcess_class = {
    .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
+      .super = {
+         .extends = Class(Process),
+         .display = Row_display,
+         .delete = Process_delete,
+         .compare = Process_compare
+      },
+      .isHighlighted = Process_rowIsHighlighted,
+      .isVisible = Process_rowIsVisible,
+      .matchesFilter = Process_rowMatchesFilter,
+      .compareByParent = Process_compareByParent,
+      .sortKeyString = Process_rowGetSortKey,
+      .writeField = PCPProcess_rowWriteField,
    },
-   .writeField = PCPProcess_writeField,
-   .compareByKey = PCPProcess_compareByKey
+   .compareByKey = PCPProcess_compareByKey,
 };

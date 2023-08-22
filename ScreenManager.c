@@ -133,13 +133,14 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       *oldTime = newTime;
       int oldUidDigits = Process_uidDigits;
       if (!this->state->pauseUpdate && (*sortTimeout == 0 || host->settings->ss->treeView)) {
-         host->pl->needsSort = true;
+         host->activeTable->needsSort = true;
          *sortTimeout = 1;
       }
       // sample current values for system metrics and processes if not paused
       Machine_scan(host);
       if (!this->state->pauseUpdate)
-         ProcessList_scan(host->pl);
+         Machine_scanTables(host);
+
       // always update header, especially to avoid gaps in graph meters
       Header_updateData(this->header);
       // force redraw if the number of UID digits was changed
@@ -149,7 +150,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       *redraw = true;
    }
    if (*redraw) {
-      ProcessList_rebuildPanel(host->pl);
+      Table_rebuildPanel(host->activeTable);
       if (!this->state->hideMeters)
          Header_draw(this->header);
    }

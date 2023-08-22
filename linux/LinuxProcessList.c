@@ -202,9 +202,11 @@ static void LinuxProcessList_initNetlinkSocket(LinuxProcessList* this) {
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    LinuxProcessList* this = xCalloc(1, sizeof(LinuxProcessList));
-   ProcessList* super = &this->super;
+   Object_setClass(this, Class(ProcessList));
 
+   ProcessList* super = &this->super;
    ProcessList_init(super, Class(LinuxProcess), host, pidMatchList);
+
    LinuxProcessList_initTtyDrivers(this);
 
    // Test /proc/PID/smaps_rollup availability (faster to parse, Linux 4.14+)
@@ -213,9 +215,9 @@ ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    return super;
 }
 
-void ProcessList_delete(ProcessList* pl) {
-   LinuxProcessList* this = (LinuxProcessList*) pl;
-   ProcessList_done(pl);
+void ProcessList_delete(Object* cast) {
+   LinuxProcessList* this = (LinuxProcessList*) cast;
+   ProcessList_done(&this->super);
    if (this->ttyDrivers) {
       for (int i = 0; this->ttyDrivers[i].path; i++) {
          free(this->ttyDrivers[i].path);
@@ -257,14 +259,14 @@ static bool LinuxProcessList_readStatFile(LinuxProcess* lp, openat_arg_t procFd,
    char buf[MAX_READ + 1];
    char path[22] = "stat";
    if (scanMainThread) {
-      xSnprintf(path, sizeof(path), "task/%"PRIi32"/stat", (int32_t)process->pid);
+      xSnprintf(path, sizeof(path), "task/%"PRIi32"/stat", (int32_t)Process_getPid(process));
    }
    ssize_t r = xReadfileat(procFd, path, buf, sizeof(buf));
    if (r < 0)
       return false;
 
    /* (1) pid   -  %d */
-   assert(process->pid == atoi(buf));
+   assert(Process_getPid(process) == atoi(buf));
    char* location = strchr(buf, ' ');
    if (!location)
       return false;
@@ -284,7 +286,7 @@ static bool LinuxProcessList_readStatFile(LinuxProcess* lp, openat_arg_t procFd,
    location += 2;
 
    /* (4) ppid  -  %d */
-   process->ppid = strtol(location, &location, 10);
+   Process_setParent(process, strtol(location, &location, 10));
    location += 1;
 
    /* (5) pgrp  -  %d */
@@ -482,11 +484,11 @@ static bool LinuxProcessList_updateUser(const Machine* host, Process* process, o
 
 static void LinuxProcessList_readIoFile(LinuxProcess* lp, openat_arg_t procFd, bool scanMainThread) {
    Process* process = &lp->super;
-   const Machine* host = process->host;
+   const Machine* host = process->super.host;
    char path[20] = "io";
    char buffer[1024];
    if (scanMainThread) {
-      xSnprintf(path, sizeof(path), "task/%"PRIi32"/io", (int32_t)process->pid);
+      xSnprintf(path, sizeof(path), "task/%"PRIi32"/io", (int32_t)Process_getPid(process));
    }
    ssize_t r = xReadfileat(procFd, path, buffer, sizeof(buffer));
    if (r < 0) {
@@ -743,7 +745,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
    if (access(PROCDIR "/vz", R_OK) != 0) {
       free(process->ctid);
       process->ctid = NULL;
-      process->vpid = process->super.pid;
+      process->vpid = Process_getPid(&process->super);
       return;
    }
 
@@ -751,7 +753,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
    if (!file) {
       free(process->ctid);
       process->ctid = NULL;
-      process->vpid = process->super.pid;
+      process->vpid = Process_getPid(&process->super);
       return;
    }
 
@@ -823,7 +825,7 @@ static void LinuxProcessList_readOpenVZData(LinuxProcess* process, openat_arg_t 
    }
 
    if (!foundVPid) {
-      process->vpid = process->super.pid;
+      process->vpid = Process_getPid(&process->super);
    }
 }
 
@@ -875,27 +877,27 @@ static void LinuxProcessList_readCGroupFile(LinuxProcess* process, openat_arg_t 
 
    bool changed = !process->cgroup || !String_eq(process->cgroup, output);
 
-   Process_updateFieldWidth(CGROUP, strlen(output));
+   Row_updateFieldWidth(CGROUP, strlen(output));
    free_and_xStrdup(&process->cgroup, output);
 
    if (!changed) {
       if (process->cgroup_short) {
-         Process_updateFieldWidth(CCGROUP, strlen(process->cgroup_short));
+         Row_updateFieldWidth(CCGROUP, strlen(process->cgroup_short));
       } else {
          //CCGROUP is alias to normal CGROUP if shortening fails
-         Process_updateFieldWidth(CCGROUP, strlen(process->cgroup));
+         Row_updateFieldWidth(CCGROUP, strlen(process->cgroup));
       }
       return;
    }
 
    char* cgroup_short = CGroup_filterName(process->cgroup);
    if (cgroup_short) {
-      Process_updateFieldWidth(CCGROUP, strlen(cgroup_short));
+      Row_updateFieldWidth(CCGROUP, strlen(cgroup_short));
       free_and_xStrdup(&process->cgroup_short, cgroup_short);
       free(cgroup_short);
    } else {
       //CCGROUP is alias to normal CGROUP if shortening fails
-      Process_updateFieldWidth(CCGROUP, strlen(process->cgroup));
+      Row_updateFieldWidth(CCGROUP, strlen(process->cgroup));
       free(process->cgroup_short);
       process->cgroup_short = NULL;
    }
@@ -955,7 +957,7 @@ static void LinuxProcessList_readSecattrData(LinuxProcess* process, openat_arg_t
       *newline = '\0';
    }
 
-   Process_updateFieldWidth(SECATTR, strlen(buffer));
+   Row_updateFieldWidth(SECATTR, strlen(buffer));
 
    if (process->secattr && String_eq(process->secattr, buffer)) {
       return;
@@ -1004,7 +1006,7 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
 
    if ((nlattr = nlattrs[TASKSTATS_TYPE_AGGR_PID]) || (nlattr = nlattrs[TASKSTATS_TYPE_NULL])) {
       memcpy(&stats, nla_data(nla_next(nla_data(nlattr), &rem)), sizeof(stats));
-      assert(lp->super.pid == (pid_t)stats.ac_pid);
+      assert(Process_getPid(&lp->super) == (pid_t)stats.ac_pid);
 
       // The xxx_delay_total values wrap around on overflow.
       // (Linux Kernel "Documentation/accounting/taskstats-struct.rst")
@@ -1045,7 +1047,7 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
       nlmsg_free(msg);
    }
 
-   if (nla_put_u32(msg, TASKSTATS_CMD_ATTR_PID, process->super.pid) < 0) {
+   if (nla_put_u32(msg, TASKSTATS_CMD_ATTR_PID, Process_getPid(&process->super)) < 0) {
       nlmsg_free(msg);
    }
 
@@ -1294,13 +1296,15 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned lo
 }
 
 static bool isOlderThan(const Process* proc, unsigned int seconds) {
-   assert(proc->host->realtimeMs > 0);
+   const Machine* host = proc->super.host;
+
+   assert(host->realtimeMs > 0);
 
    /* Starttime might not yet be parsed */
    if (proc->starttime_ctime <= 0)
       return false;
 
-   uint64_t realtime = proc->host->realtimeMs / 1000;
+   uint64_t realtime = host->realtimeMs / 1000;
 
    if (realtime < (uint64_t)proc->starttime_ctime)
       return false;
@@ -1366,7 +1370,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       // Skip task directory of main thread
-      if (parent && pid == parent->pid)
+      if (parent && pid == Process_getPid(parent))
          continue;
 
 #ifdef HAVE_OPENAT
@@ -1382,8 +1386,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       Process* proc = ProcessList_getProcess(pl, pid, &preExisting, LinuxProcess_new);
       LinuxProcess* lp = (LinuxProcess*) proc;
 
-      proc->tgid = parent ? parent->pid : pid;
-      proc->isUserlandThread = proc->pid != proc->tgid;
+      Process_setThreadGroup(proc, parent ? Process_getPid(parent) : pid);
+      proc->isUserlandThread = Process_getPid(proc) != Process_getThreadGroup(proc);
 
       LinuxProcessList_recurseProcTree(this, procFd, lhost, "task", proc);
 
@@ -1394,24 +1398,24 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
        * But it will short-circuit subsequent scans.
        */
       if (preExisting && hideKernelThreads && Process_isKernelThread(proc)) {
-         proc->updated = true;
-         proc->show = false;
+         proc->super.updated = true;
+         proc->super.show = false;
          pl->kernelThreads++;
          pl->totalTasks++;
          Compat_openatArgClose(procFd);
          continue;
       }
       if (preExisting && hideUserlandThreads && Process_isUserlandThread(proc)) {
-         proc->updated = true;
-         proc->show = false;
+         proc->super.updated = true;
+         proc->super.show = false;
          pl->userlandThreads++;
          pl->totalTasks++;
          Compat_openatArgClose(procFd);
          continue;
       }
       if (preExisting && hideRunningInContainer && proc->isRunningInContainer) {
-         proc->updated = true;
-         proc->show = false;
+         proc->super.updated = true;
+         proc->super.show = false;
          Compat_openatArgClose(procFd);
          continue;
       }
@@ -1479,7 +1483,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       if (ss->flags & PROCESS_FLAG_LINUX_IOPRIO) {
-         LinuxProcess_updateIOPriority(lp);
+         LinuxProcess_updateIOPriority(proc);
       }
 
       proc->percent_cpu = NAN;
@@ -1564,11 +1568,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
        * Final section after all data has been gathered
        */
 
-      proc->updated = true;
+      proc->super.updated = true;
       Compat_openatArgClose(procFd);
 
       if (hideRunningInContainer && proc->isRunningInContainer) {
-         proc->show = false;
+         proc->super.show = false;
          continue;
       }
 
@@ -1579,7 +1583,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, openat_arg_
       }
 
       /* Set at the end when we know if a new entry is a thread */
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       pl->totalTasks++;
       /* runningTasks is set in Machine_scanCPUTime() from /proc/stat */
@@ -1612,7 +1616,7 @@ errorReadingProcess:
 
 void ProcessList_goThroughEntries(ProcessList* super) {
    LinuxProcessList* this = (LinuxProcessList*) super;
-   const Machine* host = super->host;
+   const Machine* host = super->super.host;
    const Settings* settings = host->settings;
    const LinuxMachine* lhost = (const LinuxMachine*) host;
 

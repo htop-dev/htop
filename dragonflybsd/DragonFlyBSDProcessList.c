@@ -28,16 +28,17 @@ in the source distribution for its full text.
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
    DragonFlyBSDProcessList* this = xCalloc(1, sizeof(DragonFlyBSDProcessList));
-   ProcessList* super = (ProcessList*) this;
+   Object_setClass(this, Class(ProcessList));
 
+   ProcessList* super = (ProcessList*) this;
    ProcessList_init(super, Class(DragonFlyBSDProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(ProcessList* super) {
-   const DragonFlyBSDProcessList* this = (DragonFlyBSDProcessList*) super;
-   ProcessList_done(super);
+void ProcessList_delete(Object* cast) {
+   const DragonFlyBSDProcessList* this = (DragonFlyBSDProcessList*) cast;
+   ProcessList_done(&this->super);
    free(this);
 }
 
@@ -153,17 +154,17 @@ void ProcessList_goThroughEntries(ProcessList* super) {
          dfp->jid = kproc->kp_jailid;
          if (kproc->kp_ktaddr && kproc->kp_flags & P_SYSTEM) {
             // dfb kernel threads all have the same pid, so we misuse the kernel thread address to give them a unique identifier
-            proc->pid = (pid_t)kproc->kp_ktaddr;
+            Process_setPid(proc, (pid_t)kproc->kp_ktaddr);
             proc->isKernelThread = true;
          } else {
-            proc->pid = kproc->kp_pid;		// process ID
+            Process_setPid(proc, kproc->kp_pid);		// process ID
             proc->isKernelThread = false;
          }
          proc->isUserlandThread = kproc->kp_nthreads > 1;
-         proc->ppid = kproc->kp_ppid; // parent process id
+         Process_setParent(proc, kproc->kp_ppid); // parent process id
          proc->tpgid = kproc->kp_tpgid;		// tty process group id
-         //proc->tgid = kproc->kp_lwp.kl_tid;	// thread group id
-         proc->tgid = kproc->kp_pid;		// thread group id
+         //Process_setThreadGroup(proc, kproc->kp_lwp.kl_tid);	// thread group id
+         Process_setThreadGroup(proc, kproc->kp_pid);
          proc->pgrp = kproc->kp_pgid;		// process group id
          proc->session = kproc->kp_sid;
          proc->st_uid = kproc->kp_uid;		// user ID
@@ -199,7 +200,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
             dfp->jname = DragonFlyBSDMachine_readJailName(dhost, kproc->kp_jailid);
          }
          // if there are reapers in the system, process can get reparented anytime
-         proc->ppid = kproc->kp_ppid;
+         Process_setParent(proc, kproc->kp_ppid);
          if (proc->st_uid != kproc->kp_uid) {	// some processes change users (eg. to lower privs)
             proc->st_uid = kproc->kp_uid;
             proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
@@ -303,7 +304,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
       if (proc->state == RUNNING)
          super->runningTasks++;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
-      proc->updated = true;
+      proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->super.updated = true;
    }
 }

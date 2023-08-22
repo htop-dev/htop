@@ -206,7 +206,7 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
 static const char* toFieldName(Hashtable* columns, int id) {
    if (id < 0)
       return NULL;
-   if (id >= LAST_PROCESSFIELD) {
+   if (id >= ROW_DYNAMIC_FIELDS) {
       const DynamicColumn* column = DynamicColumn_lookup(columns, id);
       return column->name;
    }
@@ -283,7 +283,7 @@ ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* default
       .sortKey = sortKey,
       .treeSortKey = PID,
       .treeView = false,
-      .treeViewAlwaysByPID = false,
+      .treeViewAlwaysByID = false,
       .allBranchesCollapsed = false,
    };
 
@@ -372,7 +372,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       } else if (String_eq(option[0], "tree_view_always_by_pid") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          screen = Settings_defaultScreens(this);
-         screen->treeViewAlwaysByPID = atoi(option[1]);
+         screen->treeViewAlwaysByID = atoi(option[1]);
       } else if (String_eq(option[0], "all_branches_collapsed") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          screen = Settings_defaultScreens(this);
@@ -501,7 +501,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
             screen->treeView = atoi(option[1]);
       } else if (String_eq(option[0], ".tree_view_always_by_pid")) {
          if (screen)
-            screen->treeViewAlwaysByPID = atoi(option[1]);
+            screen->treeViewAlwaysByID = atoi(option[1]);
       } else if (String_eq(option[0], ".all_branches_collapsed")) {
          if (screen)
             screen->allBranchesCollapsed = atoi(option[1]);
@@ -634,7 +634,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("tree_sort_key", this->screens[0]->treeSortKey - 1);
    printSettingInteger("sort_direction", this->screens[0]->direction);
    printSettingInteger("tree_sort_direction", this->screens[0]->treeDirection);
-   printSettingInteger("tree_view_always_by_pid", this->screens[0]->treeViewAlwaysByPID);
+   printSettingInteger("tree_view_always_by_pid", this->screens[0]->treeViewAlwaysByID);
    printSettingInteger("all_branches_collapsed", this->screens[0]->allBranchesCollapsed);
 
    for (unsigned int i = 0; i < this->nScreens; i++) {
@@ -644,7 +644,7 @@ int Settings_write(const Settings* this, bool onCrash) {
       printSettingString(".sort_key", toFieldName(this->dynamicColumns, ss->sortKey));
       printSettingString(".tree_sort_key", toFieldName(this->dynamicColumns, ss->treeSortKey));
       printSettingInteger(".tree_view", ss->treeView);
-      printSettingInteger(".tree_view_always_by_pid", ss->treeViewAlwaysByPID);
+      printSettingInteger(".tree_view_always_by_pid", ss->treeViewAlwaysByID);
       printSettingInteger(".sort_direction", ss->direction);
       printSettingInteger(".tree_sort_direction", ss->treeDirection);
       printSettingInteger(".all_branches_collapsed", ss->allBranchesCollapsed);
@@ -787,7 +787,7 @@ void ScreenSettings_invertSortOrder(ScreenSettings* this) {
 }
 
 void ScreenSettings_setSortKey(ScreenSettings* this, ProcessField sortKey) {
-   if (this->treeViewAlwaysByPID || !this->treeView) {
+   if (this->treeViewAlwaysByID || !this->treeView) {
       this->sortKey = sortKey;
       this->direction = (Process_fields[sortKey].defaultSortDesc) ? -1 : 1;
       this->treeView = false;

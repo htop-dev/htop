@@ -164,7 +164,7 @@ static Htop_Reaction Platform_actionSetIOPriority(State* st) {
    const void* set = Action_pickFromVector(st, ioprioPanel, 20, true);
    if (set) {
       IOPriority ioprio2 = IOPriorityPanel_getIOPriority(ioprioPanel);
-      bool ok = MainPanel_foreachProcess(st->mainPanel, LinuxProcess_setIOPriority, (Arg) { .i = ioprio2 }, NULL);
+      bool ok = MainPanel_foreachRow(st->mainPanel, LinuxProcess_rowSetIOPriority, (Arg) { .i = ioprio2 }, NULL);
       if (!ok) {
          beep();
       }
@@ -179,7 +179,7 @@ static bool Platform_changeAutogroupPriority(MainPanel* panel, int delta) {
       return false;
    }
    bool anyTagged;
-   bool ok = MainPanel_foreachProcess(panel, LinuxProcess_changeAutogroupPriorityBy, (Arg) { .i = delta }, &anyTagged);
+   bool ok = MainPanel_foreachRow(panel, LinuxProcess_rowChangeAutogroupPriorityBy, (Arg) { .i = delta }, &anyTagged);
    if (!ok)
       beep();
    return anyTagged;
