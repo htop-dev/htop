@@ -21,10 +21,14 @@ in the source distribution for its full text.
 
 #define CONFIG_READER_MIN_VERSION 3
 
+struct DynamicScreen_;
+struct Table_;
+
 typedef struct {
    const char* name;
    const char* columns;
    const char* sortKey;
+   const char* treeSortKey;
 } ScreenDefaults;
 
 typedef struct {
@@ -34,7 +38,9 @@ typedef struct {
 } MeterColumnSetting;
 
 typedef struct ScreenSettings_ {
-   char* name;
+   char* heading;  /* user-editable screen name (pretty) */
+   char* dynamic;  /* from DynamicScreen config (fixed) */
+   struct Table_* table;
    RowField* fields;
    uint32_t flags;
    int direction;
@@ -42,7 +48,7 @@ typedef struct ScreenSettings_ {
    RowField sortKey;
    RowField treeSortKey;
    bool treeView;
-   bool treeViewAlwaysByID;
+   bool treeViewAlwaysByPID;
    bool allBranchesCollapsed;
 } ScreenSettings;
 
@@ -53,6 +59,7 @@ typedef struct Settings_ {
    MeterColumnSetting* hColumns;
    Hashtable* dynamicColumns; /* runtime-discovered columns */
    Hashtable* dynamicMeters;  /* runtime-discovered meters */
+   Hashtable* dynamicScreens; /* runtime-discovered screens */
 
    ScreenSettings** screens;
    unsigned int nScreens;
@@ -106,7 +113,7 @@ typedef struct Settings_ {
 
 static inline RowField ScreenSettings_getActiveSortKey(const ScreenSettings* this) {
    return (this->treeView)
-          ? (this->treeViewAlwaysByID ? 1 : this->treeSortKey)
+          ? (this->treeViewAlwaysByPID ? 1 : this->treeSortKey)
           : this->sortKey;
 }
 
@@ -118,9 +125,11 @@ void Settings_delete(Settings* this);
 
 int Settings_write(const Settings* this, bool onCrash);
 
-Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns);
+Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens);
 
 ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* defaults);
+
+ScreenSettings* Settings_newDynamicScreen(Settings* this, const char* tab, const struct DynamicScreen_* screen, struct Table_* table);
 
 void ScreenSettings_delete(ScreenSettings* this);
 

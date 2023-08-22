@@ -1,0 +1,48 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[cgroupsmem]
+heading = CGroupsMem
+caption = Control Groups Memory
+default = false
+
+current.heading = MEM
+current.caption = Current memory
+current.metric = cgroup.memory.current
+
+usage.heading = USAGE
+usage.caption = Memory usage
+usage.metric = cgroup.memory.usage
+
+container.heading = CONTAINER
+container.caption = Container Name
+container.metric = cgroup.memory.id.container
+
+resident.heading = RSS
+resident.metric = cgroup.memory.stat.rss
+
+cresident.heading = CRSS
+cresident.metric = cgroup.memory.stat.total.rss
+
+anonmem.heading = ANON
+anonmem.metric = cgroup.memory.stat.anon
+
+filemem.heading = FILE
+filemem.metric = cgroup.memory.stat.file
+
+shared.heading = SHMEM
+shared.metric = cgroup.memory.stat.shmem
+
+swap.heading = SWAP
+swap.metric = cgroup.memory.stat.swap
+
+pgfault.heading = FAULTS
+pgfault.metric = cgroup.memory.stat.pgfaults
+
+name.heading = Control group
+name.caption = Control group name
+name.width = -64
+name.metric = cgroup.memory.current
+name.instances = true
+name.format = cgroup

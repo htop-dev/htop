@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 #include "Panel.h"
+#include "Settings.h"
 
 
 typedef struct AvailableColumnsPanel_ {
@@ -19,5 +20,7 @@ typedef struct AvailableColumnsPanel_ {
 extern const PanelClass AvailableColumnsPanel_class;
 
 AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns, Hashtable* dynamicColumns);
+
+void AvailableColumnsPanel_fill(AvailableColumnsPanel* this, const char* dynamicScreen, Hashtable* dynamicColumns);
 
 #endif

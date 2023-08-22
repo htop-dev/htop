@@ -49,6 +49,7 @@ myhtopsources = \
 	DisplayOptionsPanel.c \
 	DynamicColumn.c \
 	DynamicMeter.c \
+	DynamicScreen.c \
 	EnvScreen.c \
 	FileDescriptorMeter.c \
 	FunctionBar.c \
@@ -79,6 +80,7 @@ myhtopsources = \
 	Scheduling.c \
 	ScreenManager.c \
 	ScreensPanel.c \
+	ScreenTabsPanel.c \
 	Settings.c \
 	SignalsPanel.c \
 	SwapMeter.c \
@@ -113,6 +115,7 @@ myhtopheaders = \
 	DisplayOptionsPanel.h \
 	DynamicColumn.h \
 	DynamicMeter.h \
+	DynamicScreen.h \
 	EnvScreen.h \
 	FileDescriptorMeter.h \
 	FunctionBar.h \
@@ -148,6 +151,7 @@ myhtopheaders = \
 	Scheduling.h \
 	ScreenManager.h \
 	ScreensPanel.h \
+	ScreenTabsPanel.h \
 	Settings.h \
 	SignalsPanel.h \
 	SwapMeter.h \
@@ -408,11 +412,15 @@ endif
 # --------------------------
 
 pcp_platform_headers = \
+	linux/CGroupUtils.h \
 	linux/PressureStallMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
 	pcp/PCPDynamicColumn.h \
 	pcp/PCPDynamicMeter.h \
+	pcp/PCPDynamicScreen.h \
+	pcp/Instance.h \
+	pcp/InDomTable.h \
 	pcp/PCPMachine.h \
 	pcp/PCPMetric.h \
 	pcp/PCPProcess.h \
@@ -424,10 +432,14 @@ pcp_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 pcp_platform_sources = \
+	linux/CGroupUtils.c \
 	linux/PressureStallMeter.c \
 	linux/ZramMeter.c \
 	pcp/PCPDynamicColumn.c \
 	pcp/PCPDynamicMeter.c \
+	pcp/PCPDynamicScreen.c \
+	pcp/Instance.c \
+	pcp/InDomTable.c \
 	pcp/PCPMachine.c \
 	pcp/PCPMetric.c \
 	pcp/PCPProcess.c \

@@ -47,7 +47,7 @@ static void MainPanel_idSearch(MainPanel* this, int ch) {
 }
 
 static const char* MainPanel_getValue(Panel* this, int i) {
-   const Row* row = (const Row*) Panel_get(this, i);
+   Row* row = (Row*) Panel_get(this, i);
    return Row_sortKeyString(row);
 }
 
@@ -78,7 +78,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
       int hx = super->scrollH + x + 1;
       RowField field = RowField_keyAt(settings, hx);
-      if (ss->treeView && ss->treeViewAlwaysByID) {
+      if (ss->treeView && ss->treeViewAlwaysByPID) {
          ss->treeView = false;
          ss->direction = 1;
          reaction |= Action_setSortKey(settings, field);
@@ -91,7 +91,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       result = HANDLED;
    } else if (EVENT_IS_SCREEN_TAB_CLICK(ch)) {
       int x = EVENT_SCREEN_TAB_GET_X(ch);
-      reaction |= Action_setScreenTab(settings, x);
+      reaction |= Action_setScreenTab(this->state, x);
       result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, MainPanel_getValue, NULL);
@@ -208,9 +208,12 @@ const PanelClass MainPanel_class = {
 
 MainPanel* MainPanel_new(void) {
    MainPanel* this = AllocThis(MainPanel);
-   Panel_init((Panel*) this, 1, 1, 1, 1, Class(Row), false, FunctionBar_new(Settings_isReadonly() ? MainFunctions_ro : MainFunctions, NULL, NULL));
+   this->processBar = FunctionBar_new(MainFunctions, NULL, NULL);
+   this->readonlyBar = FunctionBar_new(MainFunctions_ro, NULL, NULL);
+   FunctionBar* activeBar = Settings_isReadonly() ? this->readonlyBar : this->processBar;
+   Panel_init((Panel*) this, 1, 1, 1, 1, Class(Row), false, activeBar);
    this->keys = xCalloc(KEY_MAX, sizeof(Htop_Action));
-   this->inc = IncSet_new(MainPanel_getFunctionBar(this));
+   this->inc = IncSet_new(activeBar);
 
    Action_setBindings(this->keys);
    Platform_setBindings(this->keys);
@@ -222,9 +225,16 @@ void MainPanel_setState(MainPanel* this, State* state) {
    this->state = state;
 }
 
+void MainPanel_setFunctionBar(MainPanel* this, bool readonly) {
+   this->super.defaultBar = readonly ? this->readonlyBar : this->processBar;
+   this->inc->defaultBar = this->super.defaultBar;
+}
+
 void MainPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    MainPanel* this = (MainPanel*) object;
+   MainPanel_setFunctionBar(this, false);
+   FunctionBar_delete(this->readonlyBar);
    Panel_done(super);
    IncSet_delete(this->inc);
    free(this->keys);

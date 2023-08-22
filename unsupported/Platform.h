@@ -98,12 +98,24 @@ static inline Hashtable* Platform_dynamicColumns(void) {
 
 static inline void Platform_dynamicColumnsDone(ATTR_UNUSED Hashtable* table) { }
 
-static inline const char* Platform_dynamicColumnInit(ATTR_UNUSED unsigned int key) {
+static inline const char* Platform_dynamicColumnName(ATTR_UNUSED unsigned int key) {
    return NULL;
 }
 
 static inline bool Platform_dynamicColumnWriteField(ATTR_UNUSED const Process* proc, ATTR_UNUSED RichString* str, ATTR_UNUSED unsigned int key) {
    return false;
 }
+
+static inline Hashtable* Platform_dynamicScreens(void) {
+   return NULL;
+}
+
+static inline void Platform_defaultDynamicScreens(ATTR_UNUSED Settings* settings) { }
+
+static inline void Platform_addDynamicScreen(ATTR_UNUSED ScreenSettings* ss) { }
+
+static inline void Platform_addDynamicScreenAvailableColumns(ATTR_UNUSED Panel* availableColumns, ATTR_UNUSED const char* screen) { }
+
+static inline void Platform_dynamicScreensDone(ATTR_UNUSED Hashtable* screens) { }
 
 #endif

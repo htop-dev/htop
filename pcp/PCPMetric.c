@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "pcp/PCPMetric.h"
 
+#include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -177,4 +178,22 @@ bool PCPMetric_fetch(struct timeval* timestamp) {
    if (timestamp)
       *timestamp = pcp->result->timestamp;
    return true;
+}
+
+void PCPMetric_externalName(PCPMetric metric, int inst, char** externalName) {
+   const pmDesc* desc = &pcp->descs[metric];
+   pmNameInDom(desc->indom, inst, externalName);
+}
+
+int PCPMetric_lookupText(const char* metric, char** desc) {
+   pmID pmid;
+   int sts;
+
+   sts = pmLookupName(1, &metric, &pmid);
+   if (sts < 0)
+      return sts;
+
+   if (pmLookupText(pmid, PM_TEXT_ONELINE, desc) >= 0)
+      (*desc)[0] = toupper((*desc)[0]); /* UI consistency */
+   return 0;
 }

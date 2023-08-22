@@ -104,12 +104,12 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
 
    #define TABMSG "For current screen tab: \0"
    char tabheader[sizeof(TABMSG) + SCREEN_NAME_LEN + 1] = TABMSG;
-   strncat(tabheader, settings->ss->name, SCREEN_NAME_LEN);
+   strncat(tabheader, settings->ss->heading, SCREEN_NAME_LEN);
    Panel_add(super, (Object*) TextItem_new(tabheader));
    #undef TABMSG
 
    Panel_add(super, (Object*) CheckItem_newByRef("Tree view", &(settings->ss->treeView)));
-   Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is always sorted by ID (htop 2 behavior)", &(settings->ss->treeViewAlwaysByID)));
+   Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is always sorted by PID (htop 2 behavior)", &(settings->ss->treeViewAlwaysByPID)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is collapsed by default", &(settings->ss->allBranchesCollapsed)));
    Panel_add(super, (Object*) TextItem_new("Global options:"));
    Panel_add(super, (Object*) CheckItem_newByRef("Show tabs for screens", &(settings->screenTabs)));

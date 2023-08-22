@@ -192,6 +192,7 @@ static void Table_buildTree(Table* this) {
 
 void Table_updateDisplayList(Table* this) {
    const Settings* settings = this->host->settings;
+
    if (settings->ss->treeView) {
       if (this->needsSort)
          Table_buildTree(this);
@@ -294,7 +295,7 @@ void Table_printHeader(const Settings* settings, RichString* header) {
 
    for (int i = 0; fields[i]; i++) {
       int color;
-      if (ss->treeView && ss->treeViewAlwaysByID) {
+      if (ss->treeView && ss->treeViewAlwaysByPID) {
          color = CRT_colors[PANEL_HEADER_FOCUS];
       } else if (key == fields[i]) {
          color = CRT_colors[PANEL_SELECTION_FOCUS];

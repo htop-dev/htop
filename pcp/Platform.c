@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "DiskIOMeter.h"
 #include "DynamicColumn.h"
 #include "DynamicMeter.h"
+#include "DynamicScreen.h"
 #include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
@@ -46,6 +47,7 @@ in the source distribution for its full text.
 #include "linux/ZramStats.h"
 #include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
+#include "pcp/PCPDynamicScreen.h"
 #include "pcp/PCPMachine.h"
 #include "pcp/PCPMetric.h"
 #include "pcp/PCPProcessList.h"
@@ -355,6 +357,7 @@ bool Platform_init(void) {
 
    pcp->columns.offset = PCP_METRIC_COUNT + pcp->meters.cursor;
    PCPDynamicColumns_init(&pcp->columns);
+   PCPDynamicScreens_init(&pcp->screens, &pcp->columns);
 
    sts = pmLookupName(pcp->totalMetrics, pcp->names, pcp->pmids);
    if (sts < 0) {
@@ -386,6 +389,7 @@ bool Platform_init(void) {
    PCPMetric_enable(PCP_UNAME_MACHINE, true);
    PCPMetric_enable(PCP_UNAME_DISTRO, true);
 
+   /* enable metrics for all dynamic columns (including those from dynamic screens) */
    for (size_t i = pcp->columns.offset; i < pcp->columns.offset + pcp->columns.count; i++)
       PCPMetric_enable(i, true);
 
@@ -415,6 +419,10 @@ void Platform_dynamicColumnsDone(Hashtable* columns) {
 
 void Platform_dynamicMetersDone(Hashtable* meters) {
    PCPDynamicMeters_done(meters);
+}
+
+void Platform_dynamicScreensDone(Hashtable* screens) {
+   PCPDynamicScreens_done(screens);
 }
 
 void Platform_done(void) {
@@ -846,7 +854,7 @@ Hashtable* Platform_dynamicColumns(void) {
    return pcp->columns.table;
 }
 
-const char* Platform_dynamicColumnInit(unsigned int key) {
+const char* Platform_dynamicColumnName(unsigned int key) {
    PCPDynamicColumn* this = Hashtable_get(pcp->columns.table, key);
    if (this) {
       PCPMetric_enable(this->id, true);
@@ -866,4 +874,26 @@ bool Platform_dynamicColumnWriteField(const Process* proc, RichString* str, unsi
       return true;
    }
    return false;
+}
+
+Hashtable* Platform_dynamicScreens(void) {
+   return pcp->screens.table;
+}
+
+void Platform_defaultDynamicScreens(Settings* settings) {
+   PCPDynamicScreen_appendScreens(&pcp->screens, settings);
+}
+
+void Platform_addDynamicScreen(ScreenSettings* ss) {
+   PCPDynamicScreen_addDynamicScreen(&pcp->screens, ss);
+}
+
+void Platform_addDynamicScreenAvailableColumns(Panel* availableColumns, const char* screen) {
+   Hashtable* screens = pcp->screens.table;
+   PCPDynamicScreens_addAvailableColumns(availableColumns, screens, screen);
+}
+
+void Platform_updateTables(Machine* host) {
+    PCPDynamicScreen_appendTables(&pcp->screens, host);
+    PCPDynamicColumns_setupWidths(&pcp->columns);
 }

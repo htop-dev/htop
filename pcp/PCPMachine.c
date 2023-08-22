@@ -307,6 +307,8 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    this->cpu = xCalloc(CPU_METRIC_COUNT, sizeof(pmAtomValue));
    PCPMachine_updateCPUcount(this);
 
+   Platform_updateTables(super);
+
    return super;
 }
 
