@@ -225,7 +225,8 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void NetBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+static void NetBSDProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+   const Process* this = (const Process*) super;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
 
@@ -254,11 +255,18 @@ static int NetBSDProcess_compareByKey(const Process* v1, const Process* v2, Proc
 
 const ProcessClass NetBSDProcess_class = {
    .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
+      .super = {
+         .extends = Class(Process),
+         .display = Row_display,
+         .delete = Process_delete,
+         .compare = Process_compare
+      },
+      .isHighlighted = Process_rowIsHighlighted,
+      .isVisible = Process_rowIsVisible,
+      .matchesFilter = Process_rowMatchesFilter,
+      .compareByParent = Process_compareByParent,
+      .sortKeyString = Process_rowGetSortKey,
+      .writeField = NetBSDProcess_rowWriteField
    },
-   .writeField = NetBSDProcess_writeField,
    .compareByKey = NetBSDProcess_compareByKey
 };

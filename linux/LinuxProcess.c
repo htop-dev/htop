@@ -143,22 +143,29 @@ static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
 #define SYS_ioprio_set __NR_ioprio_set
 #endif
 
-IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this) {
+IOPriority LinuxProcess_updateIOPriority(Process* p) {
    IOPriority ioprio = 0;
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
 #ifdef SYS_ioprio_get
-   ioprio = syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, this->super.pid);
+   ioprio = syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, Process_getPid(p));
 #endif
+   LinuxProcess* this = (LinuxProcess*) p;
    this->ioPriority = ioprio;
    return ioprio;
 }
 
-bool LinuxProcess_setIOPriority(Process* this, Arg ioprio) {
+static bool LinuxProcess_setIOPriority(Process* p, Arg ioprio) {
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
 #ifdef SYS_ioprio_set
-   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, this->pid, ioprio.i);
+   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, Process_getPid(p), ioprio.i);
 #endif
-   return (LinuxProcess_updateIOPriority((LinuxProcess*)this) == ioprio.i);
+   return LinuxProcess_updateIOPriority(p) == ioprio.i;
+}
+
+bool LinuxProcess_rowSetIOPriority(Row* super, Arg ioprio) {
+   Process* p = (Process*) super;
+   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+   return LinuxProcess_setIOPriority(p, ioprio);
 }
 
 bool LinuxProcess_isAutogroupEnabled(void) {
@@ -168,9 +175,10 @@ bool LinuxProcess_isAutogroupEnabled(void) {
    return buf[0] == '1';
 }
 
-bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
+static bool LinuxProcess_changeAutogroupPriorityBy(Process* p, Arg delta) {
    char buffer[256];
-   xSnprintf(buffer, sizeof(buffer), PROCDIR "/%d/autogroup", this->pid);
+   pid_t pid = Process_getPid(p);
+   xSnprintf(buffer, sizeof(buffer), PROCDIR "/%d/autogroup", pid);
 
    FILE* file = fopen(buffer, "r+");
    if (!file)
@@ -192,6 +200,12 @@ bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta) {
    return success;
 }
 
+bool LinuxProcess_rowChangeAutogroupPriorityBy(Row* super, Arg delta) {
+   Process* p = (Process*) super;
+   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+   return LinuxProcess_changeAutogroupPriorityBy(p, delta);
+}
+
 static double LinuxProcess_totalIORate(const LinuxProcess* lp) {
    double totalRate = NAN;
    if (isNonnegative(lp->io_rate_read_bps)) {
@@ -205,45 +219,47 @@ static double LinuxProcess_totalIORate(const LinuxProcess* lp) {
    return totalRate;
 }
 
-static void LinuxProcess_writeField(const Process* this, RichString* str, ProcessField field) {
+static void LinuxProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+   const Process* this = (const Process*) super;
+   const Machine* host = (const Machine*) super->host;
+   const LinuxMachine* lhost = (const LinuxMachine*) host;
    const LinuxProcess* lp = (const LinuxProcess*) this;
-   const LinuxMachine* lhost = (const LinuxMachine*) this->host;
-   bool coloring = this->host->settings->highlightMegabytes;
+   bool coloring = host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
    switch (field) {
-   case CMINFLT: Process_printCount(str, lp->cminflt, coloring); return;
-   case CMAJFLT: Process_printCount(str, lp->cmajflt, coloring); return;
-   case M_DRS: Process_printBytes(str, lp->m_drs * lhost->pageSize, coloring); return;
+   case CMINFLT: Row_printCount(str, lp->cminflt, coloring); return;
+   case CMAJFLT: Row_printCount(str, lp->cmajflt, coloring); return;
+   case M_DRS: Row_printBytes(str, lp->m_drs * lhost->pageSize, coloring); return;
    case M_LRS:
       if (lp->m_lrs) {
-         Process_printBytes(str, lp->m_lrs * lhost->pageSize, coloring);
+         Row_printBytes(str, lp->m_lrs * lhost->pageSize, coloring);
          return;
       }
 
       attr = CRT_colors[PROCESS_SHADOW];
       xSnprintf(buffer, n, "  N/A ");
       break;
-   case M_TRS: Process_printBytes(str, lp->m_trs * lhost->pageSize, coloring); return;
-   case M_SHARE: Process_printBytes(str, lp->m_share * lhost->pageSize, coloring); return;
-   case M_PSS: Process_printKBytes(str, lp->m_pss, coloring); return;
-   case M_SWAP: Process_printKBytes(str, lp->m_swap, coloring); return;
-   case M_PSSWP: Process_printKBytes(str, lp->m_psswp, coloring); return;
-   case UTIME: Process_printTime(str, lp->utime, coloring); return;
-   case STIME: Process_printTime(str, lp->stime, coloring); return;
-   case CUTIME: Process_printTime(str, lp->cutime, coloring); return;
-   case CSTIME: Process_printTime(str, lp->cstime, coloring); return;
-   case RCHAR:  Process_printBytes(str, lp->io_rchar, coloring); return;
-   case WCHAR:  Process_printBytes(str, lp->io_wchar, coloring); return;
-   case SYSCR:  Process_printCount(str, lp->io_syscr, coloring); return;
-   case SYSCW:  Process_printCount(str, lp->io_syscw, coloring); return;
-   case RBYTES: Process_printBytes(str, lp->io_read_bytes, coloring); return;
-   case WBYTES: Process_printBytes(str, lp->io_write_bytes, coloring); return;
-   case CNCLWB: Process_printBytes(str, lp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Process_printRate(str, lp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Process_printRate(str, lp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Process_printRate(str, LinuxProcess_totalIORate(lp), coloring); return;
+   case M_TRS: Row_printBytes(str, lp->m_trs * lhost->pageSize, coloring); return;
+   case M_SHARE: Row_printBytes(str, lp->m_share * lhost->pageSize, coloring); return;
+   case M_PSS: Row_printKBytes(str, lp->m_pss, coloring); return;
+   case M_SWAP: Row_printKBytes(str, lp->m_swap, coloring); return;
+   case M_PSSWP: Row_printKBytes(str, lp->m_psswp, coloring); return;
+   case UTIME: Row_printTime(str, lp->utime, coloring); return;
+   case STIME: Row_printTime(str, lp->stime, coloring); return;
+   case CUTIME: Row_printTime(str, lp->cutime, coloring); return;
+   case CSTIME: Row_printTime(str, lp->cstime, coloring); return;
+   case RCHAR:  Row_printBytes(str, lp->io_rchar, coloring); return;
+   case WCHAR:  Row_printBytes(str, lp->io_wchar, coloring); return;
+   case SYSCR:  Row_printCount(str, lp->io_syscr, coloring); return;
+   case SYSCW:  Row_printCount(str, lp->io_syscw, coloring); return;
+   case RBYTES: Row_printBytes(str, lp->io_read_bytes, coloring); return;
+   case WBYTES: Row_printBytes(str, lp->io_write_bytes, coloring); return;
+   case CNCLWB: Row_printBytes(str, lp->io_cancelled_write_bytes, coloring); return;
+   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring); return;
+   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring); return;
+   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring); return;
    #ifdef HAVE_OPENVZ
    case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;
    case VPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, lp->vpid); break;
@@ -251,8 +267,8 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
    #ifdef HAVE_VSERVER
    case VXID: xSnprintf(buffer, n, "%5u ", lp->vxid); break;
    #endif
-   case CGROUP: xSnprintf(buffer, n, "%-*.*s ", Process_fieldWidths[CGROUP], Process_fieldWidths[CGROUP], lp->cgroup ? lp->cgroup : "N/A"); break;
-   case CCGROUP: xSnprintf(buffer, n, "%-*.*s ", Process_fieldWidths[CCGROUP], Process_fieldWidths[CCGROUP], lp->cgroup_short ? lp->cgroup_short : (lp->cgroup ? lp->cgroup : "N/A")); break;
+   case CGROUP: xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CGROUP], Row_fieldWidths[CGROUP], lp->cgroup ? lp->cgroup : "N/A"); break;
+   case CCGROUP: xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CCGROUP], Row_fieldWidths[CCGROUP], lp->cgroup_short ? lp->cgroup_short : (lp->cgroup ? lp->cgroup : "N/A")); break;
    case OOM: xSnprintf(buffer, n, "%4u ", lp->oom); break;
    case IO_PRIORITY: {
       int klass = IOPriority_class(lp->ioPriority);
@@ -273,9 +289,9 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       break;
    }
    #ifdef HAVE_DELAYACCT
-   case PERCENT_CPU_DELAY: Process_printPercentage(lp->cpu_delay_percent, buffer, n, 5, &attr); break;
-   case PERCENT_IO_DELAY: Process_printPercentage(lp->blkio_delay_percent, buffer, n, 5, &attr); break;
-   case PERCENT_SWAP_DELAY: Process_printPercentage(lp->swapin_delay_percent, buffer, n, 5, &attr); break;
+   case PERCENT_CPU_DELAY: Row_printPercentage(lp->cpu_delay_percent, buffer, n, 5, &attr); break;
+   case PERCENT_IO_DELAY: Row_printPercentage(lp->blkio_delay_percent, buffer, n, 5, &attr); break;
+   case PERCENT_SWAP_DELAY: Row_printPercentage(lp->swapin_delay_percent, buffer, n, 5, &attr); break;
    #endif
    case CTXT:
       if (lp->ctxt_diff > 1000) {
@@ -283,7 +299,7 @@ static void LinuxProcess_writeField(const Process* this, RichString* str, Proces
       }
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
-   case SECATTR: snprintf(buffer, n, "%-*.*s ", Process_fieldWidths[SECATTR], Process_fieldWidths[SECATTR], lp->secattr ? lp->secattr : "N/A"); break;
+   case SECATTR: snprintf(buffer, n, "%-*.*s ", Row_fieldWidths[SECATTR], Row_fieldWidths[SECATTR], lp->secattr ? lp->secattr : "N/A"); break;
    case AUTOGROUP_ID:
       if (lp->autogroup_id != -1) {
          xSnprintf(buffer, n, "%4ld ", lp->autogroup_id);
@@ -398,11 +414,18 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
 
 const ProcessClass LinuxProcess_class = {
    .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
+      .super = {
+         .extends = Class(Process),
+         .display = Row_display,
+         .delete = Process_delete,
+         .compare = Process_compare
+      },
+      .isHighlighted = Process_rowIsHighlighted,
+      .isVisible = Process_rowIsVisible,
+      .matchesFilter = Process_rowMatchesFilter,
+      .compareByParent = Process_compareByParent,
+      .sortKeyString = Process_rowGetSortKey,
+      .writeField = LinuxProcess_rowWriteField
    },
-   .writeField = LinuxProcess_writeField,
    .compareByKey = LinuxProcess_compareByKey
 };

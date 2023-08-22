@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 #include "Object.h"
-#include "Process.h"
+#include "Row.h"
 #endif
 
 
@@ -40,9 +40,9 @@ void Affinity_add(Affinity* this, unsigned int id);
 
 #if defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY)
 
-Affinity* Affinity_get(const Process* proc, Machine* host);
+Affinity* Affinity_rowGet(const Row* row, Machine* host);
 
-bool Affinity_set(Process* proc, Arg arg);
+bool Affinity_rowSet(Row* row, Arg arg);
 
 #endif /* HAVE_LIBHWLOC || HAVE_AFFINITY */
 

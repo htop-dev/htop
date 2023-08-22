@@ -34,7 +34,7 @@ static void AvailableColumnsPanel_delete(Object* object) {
 
 static void AvailableColumnsPanel_insert(AvailableColumnsPanel* this, int at, int key) {
    const char* name;
-   if (key >= LAST_PROCESSFIELD)
+   if (key >= ROW_DYNAMIC_FIELDS)
       name = DynamicColumn_init(key);
    else
       name = Process_fields[key].name;

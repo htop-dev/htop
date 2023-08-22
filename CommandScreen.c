@@ -46,7 +46,7 @@ static void CommandScreen_scan(InfoScreen* this) {
 }
 
 static void CommandScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Command of process %d - %s", this->process->pid, Process_getCommand(this->process));
+   InfoScreen_drawTitled(this, "Command of process %d - %s", Process_getPid(this->process), Process_getCommand(this->process));
 }
 
 const InfoScreenClass CommandScreen_class = {

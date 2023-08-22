@@ -56,22 +56,22 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool follow) {
    Panel* panelFocus;
    int ch;
    bool unfollow = false;
-   int pid = follow ? MainPanel_selectedPid(mainPanel) : -1;
-   if (follow && host->pl->following == -1) {
-      host->pl->following = pid;
+   int row = follow ? MainPanel_selectedRow(mainPanel) : -1;
+   if (follow && host->activeTable->following == -1) {
+      host->activeTable->following = row;
       unfollow = true;
    }
    ScreenManager_run(scr, &panelFocus, &ch, NULL);
    if (unfollow) {
-      host->pl->following = -1;
+      host->activeTable->following = -1;
    }
    ScreenManager_delete(scr);
    Panel_move((Panel*)mainPanel, 0, y);
    Panel_resize((Panel*)mainPanel, COLS, LINES - y - 1);
    if (panelFocus == list && ch == 13) {
       if (follow) {
-         const Process* selected = (const Process*)Panel_getSelected((Panel*)mainPanel);
-         if (selected && selected->pid == pid)
+         const Row* selected = (const Row*)Panel_getSelected((Panel*)mainPanel);
+         if (selected && selected->id == row)
             return Panel_getSelected(list);
 
          beep();
@@ -99,7 +99,7 @@ static void Action_runSetup(State* st) {
 
 static bool changePriority(MainPanel* panel, int delta) {
    bool anyTagged;
-   bool ok = MainPanel_foreachProcess(panel, Process_changePriorityBy, (Arg) { .i = delta }, &anyTagged);
+   bool ok = MainPanel_foreachRow(panel, Process_rowChangePriorityBy, (Arg) { .i = delta }, &anyTagged);
    if (!ok)
       beep();
    return anyTagged;
@@ -121,36 +121,36 @@ bool Action_setUserOnly(const char* userName, uid_t* userId) {
    return false;
 }
 
-static void tagAllChildren(Panel* panel, Process* parent) {
+static void tagAllChildren(Panel* panel, Row* parent) {
    parent->tag = true;
-   pid_t ppid = parent->pid;
+   int parent_id = parent->id;
    for (int i = 0; i < Panel_size(panel); i++) {
-      Process* p = (Process*) Panel_get(panel, i);
-      if (!p->tag && Process_isChildOf(p, ppid)) {
-         tagAllChildren(panel, p);
+      Row* row = (Row*) Panel_get(panel, i);
+      if (!row->tag && Row_isChildOf(row, parent_id)) {
+         tagAllChildren(panel, row);
       }
    }
 }
 
 static bool expandCollapse(Panel* panel) {
-   Process* p = (Process*) Panel_getSelected(panel);
-   if (!p)
+   Row* row = (Row*) Panel_getSelected(panel);
+   if (!row)
       return false;
 
-   p->showChildren = !p->showChildren;
+   row->showChildren = !row->showChildren;
    return true;
 }
 
 static bool collapseIntoParent(Panel* panel) {
-   const Process* p = (Process*) Panel_getSelected(panel);
-   if (!p)
+   const Row* r = (Row*) Panel_getSelected(panel);
+   if (!r)
       return false;
 
-   pid_t ppid = Process_getParentPid(p);
+   int parent_id = Row_getGroupOrParent(r);
    for (int i = 0; i < Panel_size(panel); i++) {
-      Process* q = (Process*) Panel_get(panel, i);
-      if (q->pid == ppid) {
-         q->showChildren = false;
+      Row* row = (Row*) Panel_get(panel, i);
+      if (row->id == parent_id) {
+         row->showChildren = false;
          Panel_setSelected(panel, i);
          return true;
       }
@@ -159,7 +159,7 @@ static bool collapseIntoParent(Panel* panel) {
 }
 
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
-   ScreenSettings_setSortKey(settings->ss, sortKey);
+   ScreenSettings_setSortKey(settings->ss, (RowField) sortKey);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR | HTOP_KEEP_FOLLOWING;
 }
 
@@ -171,11 +171,11 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    Panel_setHeader(sortPanel, "Sort by");
    Machine* host = st->host;
    Settings* settings = host->settings;
-   const ProcessField* fields = settings->ss->fields;
+   const RowField* fields = settings->ss->fields;
    Hashtable* dynamicColumns = settings->dynamicColumns;
    for (int i = 0; fields[i]; i++) {
       char* name = NULL;
-      if (fields[i] >= LAST_PROCESSFIELD) {
+      if (fields[i] >= ROW_DYNAMIC_FIELDS) {
          DynamicColumn* column = Hashtable_get(dynamicColumns, fields[i]);
          if (!column)
             continue;
@@ -195,7 +195,7 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    }
    Object_delete(sortPanel);
 
-   host->pl->needsSort = true;
+   host->activeTable->needsSort = true;
 
    return reaction | HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
@@ -262,9 +262,9 @@ static Htop_Reaction actionToggleTreeView(State* st) {
    ss->treeView = !ss->treeView;
 
    if (!ss->allBranchesCollapsed)
-      ProcessList_expandTree(host->pl);
+      Table_expandTree(host->activeTable);
 
-   host->pl->needsSort = true;
+   host->activeTable->needsSort = true;
 
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
@@ -282,9 +282,9 @@ static Htop_Reaction actionExpandOrCollapseAllBranches(State* st) {
    }
    ss->allBranchesCollapsed = !ss->allBranchesCollapsed;
    if (ss->allBranchesCollapsed)
-      ProcessList_collapseAllBranches(host->pl);
+      Table_collapseAllBranches(host->activeTable);
    else
-      ProcessList_expandTree(host->pl);
+      Table_expandTree(host->activeTable);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS;
 }
 
@@ -292,7 +292,7 @@ static Htop_Reaction actionIncFilter(State* st) {
    Machine* host = st->host;
    IncSet* inc = (st->mainPanel)->inc;
    IncSet_activate(inc, INC_FILTER, (Panel*)st->mainPanel);
-   host->pl->incFilter = IncSet_filter(inc);
+   host->activeTable->incFilter = IncSet_filter(inc);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
 }
 
@@ -321,7 +321,7 @@ static Htop_Reaction actionLowerPriority(State* st) {
 static Htop_Reaction actionInvertSortOrder(State* st) {
    Machine* host = st->host;
    ScreenSettings_invertSortOrder(host->settings->ss);
-   host->pl->needsSort = true;
+   host->activeTable->needsSort = true;
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_KEEP_FOLLOWING | HTOP_UPDATE_PANELHDR;
 }
 
@@ -397,11 +397,11 @@ static Htop_Reaction actionSetAffinity(State* st) {
       return HTOP_OK;
 
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
-   const Process* p = (const Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p)
+   const Row* row = (const Row*) Panel_getSelected((Panel*)st->mainPanel);
+   if (!row)
       return HTOP_OK;
 
-   Affinity* affinity1 = Affinity_get(p, host);
+   Affinity* affinity1 = Affinity_rowGet(row, host);
    if (!affinity1)
       return HTOP_OK;
 
@@ -412,7 +412,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
    const void* set = Action_pickFromVector(st, affinityPanel, width, true);
    if (set) {
       Affinity* affinity2 = AffinityPanel_getAffinity(affinityPanel, host);
-      bool ok = MainPanel_foreachProcess(st->mainPanel, Affinity_set, (Arg) { .v = affinity2 }, NULL);
+      bool ok = MainPanel_foreachRow(st->mainPanel, Affinity_rowSet, (Arg) { .v = affinity2 }, NULL);
       if (!ok)
          beep();
       Affinity_delete(affinity2);
@@ -422,7 +422,6 @@ static Htop_Reaction actionSetAffinity(State* st) {
 #else
    return HTOP_OK;
 #endif
-
 }
 
 #ifdef SCHEDULER_SUPPORT
@@ -459,7 +458,7 @@ static Htop_Reaction actionSetSchedPolicy(State* st) {
 
       SchedulingArg v = { .policy = preSelectedPolicy, .priority = preSelectedPriority };
 
-      bool ok = MainPanel_foreachProcess(st->mainPanel, Scheduling_setPolicy, (Arg) { .v = &v }, NULL);
+      bool ok = MainPanel_foreachRow(st->mainPanel, Scheduling_rowSetPolicy, (Arg) { .v = &v }, NULL);
       if (!ok)
          beep();
    }
@@ -483,7 +482,7 @@ static Htop_Reaction actionKill(State* st) {
       Panel_setHeader((Panel*)st->mainPanel, "Sending...");
       Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
       refresh();
-      MainPanel_foreachProcess(st->mainPanel, Process_sendSignal, (Arg) { .i = sgn->key }, NULL);
+      MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .i = sgn->key }, NULL);
       napms(500);
    }
    Panel_delete((Object*)signalsPanel);
@@ -511,7 +510,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
 }
 
 Htop_Reaction Action_follow(State* st) {
-   st->host->pl->following = MainPanel_selectedPid(st->mainPanel);
+   st->host->activeTable->following = MainPanel_selectedRow(st->mainPanel);
    Panel_setSelectionColor((Panel*)st->mainPanel, PANEL_SELECTION_FOLLOW);
    return HTOP_KEEP_FOLLOWING;
 }
@@ -529,6 +528,8 @@ static Htop_Reaction actionLsof(State* st) {
    if (!p)
       return HTOP_OK;
 
+   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+
    OpenFilesScreen* ofs = OpenFilesScreen_new(p);
    InfoScreen_run((InfoScreen*)ofs);
    OpenFilesScreen_delete((Object*)ofs);
@@ -541,6 +542,9 @@ static Htop_Reaction actionShowLocks(State* st) {
    const Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
+
+   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+
    ProcessLocksScreen* pls = ProcessLocksScreen_new(p);
    InfoScreen_run((InfoScreen*)pls);
    ProcessLocksScreen_delete((Object*)pls);
@@ -557,6 +561,8 @@ static Htop_Reaction actionStrace(State* st) {
    if (!p)
       return HTOP_OK;
 
+   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+
    TraceScreen* ts = TraceScreen_new(p);
    bool ok = TraceScreen_forkTracer(ts);
    if (ok) {
@@ -569,11 +575,11 @@ static Htop_Reaction actionStrace(State* st) {
 }
 
 static Htop_Reaction actionTag(State* st) {
-   Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p)
+   Row* r = (Row*) Panel_getSelected((Panel*)st->mainPanel);
+   if (!r)
       return HTOP_OK;
 
-   Process_toggleTag(p);
+   Row_toggleTag(r);
    Panel_onKey((Panel*)st->mainPanel, KEY_DOWN);
    return HTOP_OK;
 }
@@ -783,18 +789,18 @@ static Htop_Reaction actionHelp(State* st) {
 
 static Htop_Reaction actionUntagAll(State* st) {
    for (int i = 0; i < Panel_size((Panel*)st->mainPanel); i++) {
-      Process* p = (Process*) Panel_get((Panel*)st->mainPanel, i);
-      p->tag = false;
+      Row* row = (Row*) Panel_get((Panel*)st->mainPanel, i);
+      row->tag = false;
    }
    return HTOP_REFRESH;
 }
 
 static Htop_Reaction actionTagAllChildren(State* st) {
-   Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p)
+   Row* row = (Row*) Panel_getSelected((Panel*)st->mainPanel);
+   if (!row)
       return HTOP_OK;
 
-   tagAllChildren((Panel*)st->mainPanel, p);
+   tagAllChildren((Panel*)st->mainPanel, row);
    return HTOP_OK;
 }
 
@@ -802,6 +808,8 @@ static Htop_Reaction actionShowEnvScreen(State* st) {
    Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
+
+   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
 
    EnvScreen* es = EnvScreen_new(p);
    InfoScreen_run((InfoScreen*)es);
@@ -815,6 +823,8 @@ static Htop_Reaction actionShowCommandScreen(State* st) {
    Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
    if (!p)
       return HTOP_OK;
+
+   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
 
    CommandScreen* cmdScr = CommandScreen_new(p);
    InfoScreen_run((InfoScreen*)cmdScr);

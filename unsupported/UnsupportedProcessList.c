@@ -15,15 +15,18 @@ in the source distribution for its full text.
 
 
 ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   ProcessList* this = xCalloc(1, sizeof(ProcessList));
+   UnsupportedProcessList* this = xCalloc(1, sizeof(UnsupportedProcessList));
+   Object_setClass(this, Class(ProcessList));
 
-   ProcessList_init(this, Class(Process), host, pidMatchList);
+   ProcessList* super = &this->super;
+   ProcessList_init(super, Class(Process), host, pidMatchList);
 
    return this;
 }
 
-void ProcessList_delete(ProcessList* this) {
-   ProcessList_done(this);
+void ProcessList_delete(Object* cast) {
+   UnsupportedProcessList* this = (UnsupportedProcessList*) cast;
+   ProcessList_done(&this->super);
    free(this);
 }
 
@@ -35,9 +38,9 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
    /* Empty values */
    proc->time = proc->time + 10;
-   proc->pid  = 1;
-   proc->ppid = 1;
-   proc->tgid = 0;
+   Process_setPid(proc, 1);
+   Process_setParent(proc, 1);
+   Process_setThreadGroup(proc, 0);
 
    Process_updateComm(proc, "commof16char");
    Process_updateCmdline(proc, "<unsupported architecture>", 0, 0);
@@ -48,12 +51,12 @@ void ProcessList_goThroughEntries(ProcessList* super) {
       free_and_xStrdup(&proc->procCwd, "/current/working/directory");
    }
 
-   proc->updated = true;
+   proc->super.updated = true;
 
    proc->state = RUNNING;
    proc->isKernelThread = false;
    proc->isUserlandThread = false;
-   proc->show = true; /* Reflected in settings-> "hideXXX" really */
+   proc->super.show = true; /* Reflected in settings-> "hideXXX" really */
    proc->pgrp = 0;
    proc->session = 0;
    proc->tty_nr = 0;

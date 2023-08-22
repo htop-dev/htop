@@ -62,7 +62,7 @@ void TraceScreen_delete(Object* cast) {
 }
 
 static void TraceScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Trace of process %d - %s", this->process->pid, Process_getCommand(this->process));
+   InfoScreen_drawTitled(this, "Trace of process %d - %s", Process_getPid(this->process), Process_getCommand(this->process));
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
@@ -89,7 +89,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       close(fdpair[1]);
 
       char buffer[32] = {0};
-      xSnprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
+      xSnprintf(buffer, sizeof(buffer), "%d", Process_getPid(this->super.process));
       // Use of NULL in variadic functions must have a pointer cast.
       // The NULL constant is not required by standard to have a pointer type.
       execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, (char*)NULL);
