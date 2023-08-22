@@ -1,8 +1,7 @@
 /*
 htop - PCPDynamicColumn.c
-(C) 2021 Sohaib Mohammed
-(C) 2021 htop dev team
-(C) 2021 Red Hat, Inc.
+(C) 2021-2023 Sohaib Mohammed
+(C) 2021-2023 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -28,6 +27,7 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "XUtils.h"
 
+#include "linux/CGroupUtils.h"
 #include "pcp/PCPProcess.h"
 #include "pcp/PCPMetric.h"
 
@@ -49,6 +49,11 @@ static bool PCPDynamicColumn_addMetric(PCPDynamicColumns* columns, PCPDynamicCol
 }
 
 static void PCPDynamicColumn_parseMetric(PCPDynamicColumns* columns, PCPDynamicColumn* column, const char* path, unsigned int line, char* value) {
+   /* pmLookupText */
+   if (!column->super.description) {
+      PCPMetric_lookupText(value, &column->super.description);
+   }
+
    /* lookup a dynamic metric with this name, else create */
    if (PCPDynamicColumn_addMetric(columns, column) == false)
       return;
@@ -108,6 +113,10 @@ static bool PCPDynamicColumn_uniqueName(char* key, PCPDynamicColumns* columns) {
 static PCPDynamicColumn* PCPDynamicColumn_new(PCPDynamicColumns* columns, const char* name) {
    PCPDynamicColumn* column = xCalloc(1, sizeof(*column));
    String_safeStrncpy(column->super.name, name, sizeof(column->super.name));
+   column->super.enabled = false;
+   column->percent = false;
+   column->instances = false;
+   column->defaultEnabled = true;
 
    size_t id = columns->count + LAST_PROCESSFIELD;
    Hashtable_put(columns->table, id, column);
@@ -160,6 +169,14 @@ static void PCPDynamicColumn_parseFile(PCPDynamicColumns* columns, const char* p
          free_and_xStrdup(&column->super.description, value);
       } else if (value && column && String_eq(key, "width")) {
          column->super.width = strtoul(value, NULL, 10);
+      } else if (value && column && String_eq(key, "format")) {
+         free_and_xStrdup(&column->format, value);
+      } else if (value && column && String_eq(key, "instances")) {
+         if (String_eq(value, "True") || String_eq(value, "true"))
+            column->instances = true;
+      } else if (value && column && (String_eq(key, "default") || String_eq(key, "enabled"))) {
+         if (String_eq(value, "False") || String_eq(value, "false"))
+            column->defaultEnabled = false;
       } else if (value && column && String_eq(key, "metric")) {
          PCPDynamicColumn_parseMetric(columns, column, path, lineno, value);
       }
@@ -233,29 +250,115 @@ void PCPDynamicColumns_init(PCPDynamicColumns* columns) {
    free(path);
 }
 
+void PCPDynamicColumn_done(PCPDynamicColumn* this) {
+   DynamicColumn_done(&this->super);
+   free(this->metricName);
+   free(this->format);
+}
+
 static void PCPDynamicColumns_free(ATTR_UNUSED ht_key_t key, void* value, ATTR_UNUSED void* data) {
    PCPDynamicColumn* column = (PCPDynamicColumn*) value;
-   free(column->metricName);
-   free(column->super.heading);
-   free(column->super.caption);
-   free(column->super.description);
+   PCPDynamicColumn_done(column);
 }
 
 void PCPDynamicColumns_done(Hashtable* table) {
    Hashtable_foreach(table, PCPDynamicColumns_free, NULL);
 }
 
-void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, RichString* str) {
-   const PCPProcess* pp = (const PCPProcess*) proc;
-   unsigned int type = PCPMetric_type(this->id);
+static void PCPDynamicColumn_setupWidth(ATTR_UNUSED ht_key_t key, void* value, ATTR_UNUSED void* data) {
+   PCPDynamicColumn* column = (PCPDynamicColumn*) value;
 
-   pmAtomValue atom;
-   if (!PCPMetric_instance(this->id, Process_getPid(proc), pp->offset, &atom, type)) {
-      RichString_appendAscii(str, CRT_colors[METER_VALUE_ERROR], "no data");
+   /* calculate column size based on config file and metric units */
+   const pmDesc* desc = PCPMetric_desc(column->id);
+
+   if (column->instances || desc->type == PM_TYPE_STRING) {
+      column->super.width = column->width;
+      if (column->super.width == 0)
+          column->super.width = -16;
       return;
    }
 
-   int width = this->super.width;
+   if (column->format) {
+      if (strcmp(column->format, "percent") == 0) {
+         column->super.width = 5;
+         return;
+      }
+      if (strcmp(column->format, "process") == 0) {
+         column->super.width = Process_pidDigits;
+         return;
+      }
+   }
+
+   if (column->width) {
+      column->super.width = column->width;
+      return;
+   }
+
+   pmUnits units = desc->units;
+   if (units.dimSpace && units.dimTime)
+      column->super.width = 11; // Row_printRate
+   else if (units.dimSpace)
+      column->super.width = 5;  // Row_printBytes
+   else if (units.dimCount && units.dimTime)
+      column->super.width = 11;  // Row_printCount
+   else if (units.dimTime)
+      column->super.width = 8;  // Row_printTime
+   else
+      column->super.width = 11; // Row_printCount
+}
+
+void PCPDynamicColumns_setupWidths(PCPDynamicColumns* columns) {
+   Hashtable_foreach(columns->table, PCPDynamicColumn_setupWidth, NULL);
+}
+
+/* normalize output units to bytes and seconds */
+static int PCPDynamicColumn_normalize(const pmDesc* desc, const pmAtomValue* ap, double* value) {
+   /* form normalized units based on the original metric units */
+   pmUnits units = desc->units;
+   if (units.dimTime)
+      units.scaleTime = PM_TIME_SEC;
+   if (units.dimSpace)
+      units.scaleSpace = PM_SPACE_BYTE;
+   if (units.dimCount)
+      units.scaleCount = PM_COUNT_ONE;
+
+   pmAtomValue atom;
+   int sts, type = desc->type;
+   if ((sts = pmConvScale(type, ap, &desc->units, &atom, &units)) < 0)
+      return sts;
+
+   switch (type) {
+      case PM_TYPE_32:
+         *value = (double) atom.l;
+         break;
+      case PM_TYPE_U32:
+         *value = (double) atom.ul;
+         break;
+      case PM_TYPE_64:
+         *value = (double) atom.ll;
+         break;
+      case PM_TYPE_U64:
+         *value = (double) atom.ull;
+         break;
+      case PM_TYPE_FLOAT:
+         *value = (double) atom.f;
+         break;
+      case PM_TYPE_DOUBLE:
+         *value = atom.d;
+         break;
+      default:
+         return PM_ERR_CONV;
+   }
+   return 0;
+}
+
+void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, const struct Settings_* settings, int metric, int instance, const pmDesc* desc, const void* atom) {
+   const pmAtomValue* atomvalue = (const pmAtomValue*) atom;
+   char buffer[DYNAMIC_MAX_COLUMN_WIDTH + /*space*/ 1 + /*null*/ 1];
+   int attr = CRT_colors[DEFAULT_COLOR];
+   int width = column->super.width;
+   int n;
+
    if (!width || abs(width) > DYNAMIC_MAX_COLUMN_WIDTH)
       width = DYNAMIC_DEFAULT_COLUMN_WIDTH;
    int abswidth = abs(width);
@@ -264,43 +367,105 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
       width = -abswidth;
    }
 
-   char buffer[DYNAMIC_MAX_COLUMN_WIDTH + /* space */ 1 + /* null terminator */ + 1];
-   int attr = CRT_colors[DEFAULT_COLOR];
-   switch (type) {
-      case PM_TYPE_STRING:
-         attr = CRT_colors[PROCESS_SHADOW];
-         Row_printLeftAlignedField(str, attr, atom.cp, abswidth);
-         free(atom.cp);
-         break;
-      case PM_TYPE_32:
-         xSnprintf(buffer, sizeof(buffer), "%*d ", width, atom.l);
-         RichString_appendAscii(str, attr, buffer);
-         break;
-      case PM_TYPE_U32:
-         xSnprintf(buffer, sizeof(buffer), "%*u ", width, atom.ul);
-         RichString_appendAscii(str, attr, buffer);
-         break;
-      case PM_TYPE_64:
-         xSnprintf(buffer, sizeof(buffer), "%*lld ", width, (long long) atom.ll);
-         RichString_appendAscii(str, attr, buffer);
-         break;
-      case PM_TYPE_U64:
-         xSnprintf(buffer, sizeof(buffer), "%*llu ", width, (unsigned long long) atom.ull);
-         RichString_appendAscii(str, attr, buffer);
-         break;
-      case PM_TYPE_FLOAT:
-         xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, (double) atom.f);
-         RichString_appendAscii(str, attr, buffer);
-         break;
-      case PM_TYPE_DOUBLE:
-         xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, atom.d);
-         RichString_appendAscii(str, attr, buffer);
-         break;
-      default:
-         attr = CRT_colors[METER_VALUE_ERROR];
-         RichString_appendAscii(str, attr, "no type");
-         break;
+   if (atomvalue == NULL) {
+      n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "N/A");
+      RichString_appendnAscii(str, CRT_colors[PROCESS_SHADOW], buffer, n);
+      return;
    }
+
+   /* deal with instance names and metrics with string values first */
+   if (column->instances || desc->type == PM_TYPE_STRING) {
+      char* value = NULL;
+      char* dupd1 = NULL;
+      if (column->instances) {
+         attr = CRT_colors[DYNAMIC_GRAY];
+         PCPMetric_externalName(metric, instance, &dupd1);
+         value = dupd1;
+      } else {
+         attr = CRT_colors[DYNAMIC_GREEN];
+         value = atomvalue->cp;
+      }
+      if (column->format && value) {
+         char* dupd2 = NULL;
+         if (strcmp(column->format, "command") == 0)
+            attr = CRT_colors[PROCESS_COMM];
+         else if (strcmp(column->format, "process") == 0)
+            attr = CRT_colors[PROCESS_SHADOW];
+         else if (strcmp(column->format, "device") == 0 && strncmp(value, "/dev/", 5) == 0)
+            value += 5;
+         else if (strcmp(column->format, "cgroup") == 0 && (dupd2 = CGroup_filterName(value)))
+            value = dupd2;
+         n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, value);
+         if (dupd2)
+            free(dupd2);
+      } else if (value) {
+         n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, value);
+      } else {
+         n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "N/A");
+      }
+      if (dupd1)
+         free(dupd1);
+      RichString_appendnAscii(str, attr, buffer, n);
+      return;
+   }
+
+   /* deal with any numeric value - first, normalize units to bytes/seconds */
+   double value;
+   if (PCPDynamicColumn_normalize(desc, atomvalue, &value) < 0) {
+      n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "no conv");
+      RichString_appendnAscii(str, CRT_colors[METER_VALUE_ERROR], buffer, n);
+      return;
+   }
+
+   if (column->format) {
+      if (strcmp(column->format, "percent") == 0) {
+         n = Row_printPercentage(value, buffer, sizeof(buffer), width, &attr);
+         RichString_appendnAscii(str, attr, buffer, n);
+         return;
+      }
+      if (strcmp(column->format, "process") == 0) {
+         n = xSnprintf(buffer, sizeof(buffer), "%*d ", Row_pidDigits, (int)value);
+         RichString_appendnAscii(str, attr, buffer, n);
+         return;
+      }
+   }
+
+   /* width overrides unit suffix and coloring; too complex for a corner case */
+   if (column->width) {
+      if (value - (unsigned long long)value > 0)  /* display floating point */
+         n = xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, value);
+      else   /* display as integer */
+         n = xSnprintf(buffer, sizeof(buffer), "%*llu ", width, (unsigned long long)value);
+      RichString_appendnAscii(str, CRT_colors[PROCESS], buffer, n);
+      return;
+   }
+
+   bool coloring = settings->highlightMegabytes;
+   pmUnits units = desc->units;
+   if (units.dimSpace && units.dimTime)
+      Row_printRate(str, value, coloring);
+   else if (units.dimSpace)
+      Row_printBytes(str, value, coloring);
+   else if (units.dimCount)
+      Row_printCount(str, value, coloring);
+   else if (units.dimTime)
+      Row_printTime(str, value / 10 /* hundreds of a second */, coloring);
+   else
+      Row_printCount(str, value, 0);  /* e.g. PID */
+}
+
+void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, RichString* str) {
+   const Settings* settings = proc->super.host->settings;
+   const PCPProcess* pp = (const PCPProcess*) proc;
+   const pmDesc* desc = PCPMetric_desc(this->id);
+   pid_t pid = Process_getPid(proc);
+
+   pmAtomValue atom;
+   pmAtomValue *ap = &atom;
+   if (!PCPMetric_instance(this->id, pid, pp->offset, ap, desc->type))
+      ap = NULL;
+
+   PCPDynamicColumn_writeAtomValue(this, str, settings, this->id, pid, desc, ap);
 }
 
 int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, ProcessField key) {

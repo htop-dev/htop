@@ -180,4 +180,8 @@ int PCPMetric_instanceOffset(PCPMetric metric, int inst);
 
 pmAtomValue* PCPMetric_instance(PCPMetric metric, int inst, int offset, pmAtomValue* atom, int type);
 
+void PCPMetric_externalName(PCPMetric metric, int inst, char** externalName);
+
+int PCPMetric_lookupText(const char* metric, char** desc);
+
 #endif

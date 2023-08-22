@@ -40,6 +40,11 @@ void Row_init(Row* this, const Machine* host) {
    this->updated = false;
 }
 
+void Row_done(Row* this) {
+   assert(this != NULL);
+   (void) this;
+}
+
 static inline bool Row_isNew(const Row* this) {
    const Machine* host = this->host;
    if (host->monotonicMs < this->seenStampMs)
@@ -56,7 +61,7 @@ static inline bool Row_isTomb(const Row* this) {
 void Row_display(const Object* cast, RichString* out) {
    const Row* this = (const Row*) cast;
    const Settings* settings = this->host->settings;
-   const ProcessField* fields = settings->ss->fields;
+   const RowField* fields = settings->ss->fields;
 
    for (int i = 0; fields[i]; i++)
       As_Row(this)->writeField(this, out, fields[i]);
@@ -127,7 +132,7 @@ static const char* alignedTitleDynamicColumn(const Settings* settings, int key, 
    if (!width || abs(width) > DYNAMIC_MAX_COLUMN_WIDTH)
       width = DYNAMIC_DEFAULT_COLUMN_WIDTH;
 
-   xSnprintf(titleBuffer, titleBufferSize, "%*s", width, column->heading);
+   xSnprintf(titleBuffer, titleBufferSize, "%*s ", width, column->heading);
    return titleBuffer;
 }
 
@@ -430,7 +435,7 @@ void Row_printLeftAlignedField(RichString* str, int attr, const char* content, u
    RichString_appendChr(str, attr, ' ', width + 1 - columns);
 }
 
-void Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr) {
+int Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr) {
    if (isNonnegative(val)) {
       if (val < 0.05F)
          *attr = CRT_colors[PROCESS_SHADOW];
@@ -445,11 +450,11 @@ void Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* 
          val = 100.0F;
       }
 
-      xSnprintf(buffer, n, "%*.*f ", width, precision, val);
-   } else {
-      *attr = CRT_colors[PROCESS_SHADOW];
-      xSnprintf(buffer, n, "%*.*s ", width, width, "N/A");
+      return xSnprintf(buffer, n, "%*.*f ", width, precision, val);
    }
+
+   *attr = CRT_colors[PROCESS_SHADOW];
+   return xSnprintf(buffer, n, "%*.*s ", width, width, "N/A");
 }
 
 void Row_toggleTag(Row* this) {

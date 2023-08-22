@@ -25,6 +25,8 @@ typedef struct MainPanel_ {
    State* state;
    IncSet* inc;
    Htop_Action* keys;
+   FunctionBar* processBar;  /* function bar with process-specific actions */
+   FunctionBar* readonlyBar;  /* function bar without process actions (ro) */
    unsigned int idSearch;
 } MainPanel;
 
@@ -44,6 +46,8 @@ extern const PanelClass MainPanel_class;
 MainPanel* MainPanel_new(void);
 
 void MainPanel_setState(MainPanel* this, State* state);
+
+void MainPanel_setFunctionBar(MainPanel* this, bool readonly);
 
 void MainPanel_delete(Object* object);
 

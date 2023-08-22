@@ -290,7 +290,7 @@ extern const ProcessClass Process_class;
 
 void Process_init(Process* this, const struct Machine_* host);
 
-const char* Process_rowGetSortKey(const Row* super);
+const char* Process_rowGetSortKey(Row* super);
 
 bool Process_rowSetPriority(Row* super, int priority);
 

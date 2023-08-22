@@ -38,6 +38,7 @@ in the source distribution for its full text.
 
 #include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
+#include "pcp/PCPDynamicScreen.h"
 #include "pcp/PCPMetric.h"
 
 
@@ -51,6 +52,7 @@ typedef struct Platform_ {
    pmResult* result;          /* sample values result indexed by Metric */
    PCPDynamicMeters meters;   /* dynamic meters via configuration files */
    PCPDynamicColumns columns; /* dynamic columns via configuration files */
+   PCPDynamicScreens screens; /* dynamic screens via configuration files */
    struct timeval offset;     /* time offset used in archive mode only */
    long long btime;           /* boottime in seconds since the epoch */
    char* release;             /* uname and distro from this context */
@@ -151,8 +153,20 @@ Hashtable* Platform_dynamicColumns(void);
 
 void Platform_dynamicColumnsDone(Hashtable* columns);
 
-const char* Platform_dynamicColumnInit(unsigned int key);
+const char* Platform_dynamicColumnName(unsigned int key);
 
 bool Platform_dynamicColumnWriteField(const Process* proc, RichString* str, unsigned int key);
+
+Hashtable* Platform_dynamicScreens(void);
+
+void Platform_defaultDynamicScreens(Settings* settings);
+
+void Platform_addDynamicScreen(ScreenSettings* ss);
+
+void Platform_addDynamicScreenAvailableColumns(Panel* availableColumns, const char* screen);
+
+void Platform_dynamicScreensDone(Hashtable* screens);
+
+void Platform_updateTables(Machine* host);
 
 #endif

@@ -193,7 +193,7 @@ static void ScreenManager_drawScreenTabs(ScreenManager* this) {
    }
 
    for (int s = 0; screens[s]; s++) {
-      bool ok = drawTab(&y, &x, l, screens[s]->name, s == cur);
+      bool ok = drawTab(&y, &x, l, screens[s]->heading, s == cur);
       if (!ok) {
          break;
       }

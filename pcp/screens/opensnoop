@@ -1,0 +1,27 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[opensnoop]
+heading = OpenSnoop
+caption = BPF open(2) syscall snoop
+default = false
+
+pid.heading = PID
+pid.metric = bpf.opensnoop.pid
+pid.format = process
+
+comm.heading = COMM
+comm.metric = bpf.opensnoop.comm
+comm.format = command
+
+fd.heading = FD
+fd.metric = bpf.opensnoop.fd
+
+err.heading = ERR
+err.metric = bpf.opensnoop.err
+
+file.heading = File name
+file.width = -32
+file.metric = bpf.opensnoop.fname
+file.format = path

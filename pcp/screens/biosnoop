@@ -1,0 +1,41 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[biosnoop]
+heading = BioSnoop
+caption = BPF block I/O snoop
+default = false
+
+pid.heading = PID
+pid.caption = Process identifier
+pid.metric = bpf.biosnoop.pid
+pid.format = process
+
+disk.heading = DISK
+disk.caption = Device name
+disk.width = -7
+disk.metric = bpf.biosnoop.disk
+
+rwbs.heading = TYPE
+rwbs.caption = I/O type string
+rwbs.width = -4
+rwbs.metric = bpf.biosnoop.rwbs
+
+bytes.heading = BYTES
+bytes.caption = I/O size in bytes
+bytes.metric = bpf.biosnoop.bytes
+
+lat.heading = LAT
+lat.caption = I/O latency
+lat.metric = bpf.biosnoop.lat
+
+sector.heading = SECTOR
+sector.caption = Device sector
+sector.metric = bpf.biosnoop.sector
+
+comm.heading = Command
+comm.caption = Process command name
+comm.width = -16
+comm.metric = bpf.biosnoop.comm
+comm.format = process

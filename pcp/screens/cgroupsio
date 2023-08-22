@@ -1,0 +1,49 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[cgroupsio]
+heading = CGroupsIO
+caption = Control Groups I/O
+default = false
+
+iops.heading = IOPS
+iops.caption = I/O operations
+iops.metric = rate(cgroup.io.stat.rios) + rate(cgroup.io.stat.wios) + rate(cgroup.io.stat.dios)
+
+readops.heading = RDIO
+readops.caption = Read operations
+readops.metric = rate(cgroup.io.stat.rios)
+readops.default = false
+
+writeops.heading = WRIO
+writeops.caption = Write operations
+writeops.metric = rate(cgroup.io.stat.wios)
+writeops.default = false
+
+directops.heading = DIO
+directops.caption = Direct I/O operations
+directops.metric = rate(cgroup.io.stat.dios)
+directops.default = false
+
+totalbytes.heading = R/W/D
+totalbytes.caption = Disk throughput
+totalbytes.metric = rate(cgroup.io.stat.rbytes) + rate(cgroup.io.stat.wbytes) + rate(cgroup.io.stat.dbytes)
+
+readbytes.heading = RBYTE
+readbytes.caption = Disk read throughput
+readbytes.metric = rate(cgroup.io.stat.rbytes)
+
+writebytes.heading = WBYTE
+writebytes.caption = Disk throughput
+writebytes.metric = rate(cgroup.io.stat.wbytes)
+
+directio.heading = DBYTE
+directio.caption = Direct I/O throughput
+directio.metric = rate(cgroup.io.stat.dbytes)
+
+name.heading = Control group device
+name.caption = Control group device
+name.width = -64
+name.metric = cgroup.io.stat.rbytes
+name.instances = true

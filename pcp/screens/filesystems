@@ -1,0 +1,50 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[filesystems]
+heading = Filesystems
+caption = Mounted block device filesystems
+
+blockdev.heading = Device
+blockdev.metric = filesys.mountdir
+blockdev.instances = true
+blockdev.width = -14
+
+blocksize.heading = BSIZE
+blocksize.metric = filesys.blocksize
+blocksize.default = false
+
+capacity.heading = SIZE
+capacity.metric = filesys.capacity
+
+used.heading = USED
+used.metric = filesys.used
+
+free.heading = FREE
+free.metric = filesys.free
+free.default = false
+
+avail.heading = AVAIL
+avail.metric = filesys.avail
+
+full.heading = USE%
+full.metric = filesys.full
+full.format = percent
+
+usedfiles.heading = USEDF
+usedfiles.metric = filesys.usedfiles
+usedfiles.default = false
+
+freefiles.heading = FREEF
+freefiles.metric = filesys.freefiles
+freefiles.default = false
+
+maxfiles.heading = MAXF
+maxfiles.metric = filesys.maxfiles
+maxfiles.default = false
+
+mountdir.heading = Mount point
+mountdir.metric = filesys.mountdir
+mountdir.format = path
+mountdir.width = -33

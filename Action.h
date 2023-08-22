@@ -57,7 +57,7 @@ bool Action_setUserOnly(const char* userName, uid_t* userId);
 
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
 
-Htop_Reaction Action_setScreenTab(Settings* settings, int x);
+Htop_Reaction Action_setScreenTab(State* st, int x);
 
 Htop_Reaction Action_follow(State* st);
 

@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Hashtable.h"
+#include "Panel.h"
 #include "Settings.h"
 #include "Table.h"
 #include "UsersTable.h"
@@ -37,8 +38,6 @@ in the source distribution for its full text.
 
 typedef unsigned long long int memory_t;
 #define MEMORY_MAX ULLONG_MAX
-
-struct Settings_;
 
 typedef struct Machine_ {
    struct Settings_* settings;
@@ -90,7 +89,9 @@ void Machine_done(Machine* this);
 
 bool Machine_isCPUonline(const Machine* this, unsigned int id);
 
-void Machine_addTable(Machine* this, Table *table, bool processes);
+void Machine_populateTablesFromSettings(Machine* this, Settings* settings, Table* processTable);
+
+void Machine_setTablesPanel(Machine* host, Panel* panel);
 
 void Machine_scan(Machine* this);
 

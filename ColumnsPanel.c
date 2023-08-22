@@ -128,9 +128,8 @@ static void ColumnsPanel_add(Panel* super, unsigned int key, Hashtable* columns)
       if (!column) {
          name = NULL;
       } else {
-         name = column->caption ? column->caption : column->heading;
-         if (!name)
-            name = column->name; /* name is a mandatory field */
+         /* heading preferred here but name is always available */
+         name = column->heading ? column->heading : column->name;
       }
    }
    if (name == NULL)

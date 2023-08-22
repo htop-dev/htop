@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "DynamicColumn.h"
 #include "DynamicMeter.h"
+#include "DynamicScreen.h"
 #include "Hashtable.h"
 #include "Header.h"
 #include "IncSet.h"
@@ -337,15 +338,12 @@ int CommandLine_run(int argc, char** argv) {
    UsersTable* ut = UsersTable_new();
    Hashtable* dm = DynamicMeters_new();
    Hashtable* dc = DynamicColumns_new();
-   if (!dc)
-      dc = Hashtable_new(0, true);
+   Hashtable* ds = DynamicScreens_new();
 
    Machine* host = Machine_new(ut, flags.userId);
    ProcessList* pl = ProcessList_new(host, flags.pidMatchList);
-   Settings* settings = Settings_new(host->activeCPUs, dm, dc);
-
-   host->settings = settings;
-   Machine_addTable(host, &pl->super, true);
+   Settings* settings = Settings_new(host->activeCPUs, dm, dc, ds);
+   Machine_populateTablesFromSettings(host, settings, &pl->super);
 
    Header* header = Header_new(host, 2);
    Header_populateFromSettings(header);
@@ -377,7 +375,7 @@ int CommandLine_run(int argc, char** argv) {
    CRT_init(settings, flags.allowUnicode, flags.iterationsRemaining != -1);
 
    MainPanel* panel = MainPanel_new();
-   Table_setPanel(&pl->super, (Panel*) panel);
+   Machine_setTablesPanel(host, (Panel*) panel);
 
    MainPanel_updateLabels(panel, settings->ss->treeView, flags.commFilter);
 
@@ -435,6 +433,7 @@ int CommandLine_run(int argc, char** argv) {
    Settings_delete(settings);
    DynamicColumns_delete(dc);
    DynamicMeters_delete(dm);
+   DynamicScreens_delete(ds);
 
    return 0;
 }
