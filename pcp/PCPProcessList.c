@@ -288,15 +288,23 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
       process->isKernelThread = true;
    }
 
+   int tokenEnd = 0;
    int tokenStart = 0;
+   bool argSepSpace = false;
+
    for (int i = 0; i < length; i++) {
       /* htop considers the next character after the last / that is before
        * basenameOffset, as the start of the basename in cmdline - see
        * Process_writeCommand */
       if (command[i] == '/')
          tokenStart = i + 1;
+      /* special-case arguments for problematic situations like "find /" */
+      if (command[i] <= ' ')
+	 argSepSpace = true;
    }
-   int tokenEnd = length;
+   tokenEnd = length;
+   if (argSepSpace)
+      tokenStart = 0;
 
    Process_updateCmdline(process, command, tokenStart, tokenEnd);
    free(value.cp);
