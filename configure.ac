@@ -62,6 +62,18 @@ AC_USE_SYSTEM_EXTENSIONS
 
 # ----------------------------------------------------------------------
 
+# ----------------------------------------------------------------------
+# Checks for cpu.
+# ----------------------------------------------------------------------
+
+case "$host_cpu" in
+aarch64*)
+   my_htop_cpu=aarch64
+   AC_DEFINE([HTOP_AARCH64], [], [Building for aarch64.])
+   ;;
+esac
+
+# ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
 # Checks for compiler.
@@ -700,6 +712,30 @@ fi
 
 
 # ----------------------------------------------------------------------
+# Checks for Darwin features and flags.
+# ----------------------------------------------------------------------
+
+if test "$my_htop_cpu" = aarch64; then
+   AC_ARG_ENABLE([libioreport],
+               [AS_HELP_STRING([--enable-libioreport],
+               [enable libIOReport support for getting cpu frequency on Apple Silicon machines @<:@default=yes@:>@])],
+               [],
+               [enable_libioreport=yes])
+   case "$enable_libioreport" in
+      no)
+         ;;
+      yes)
+         AC_CHECK_LIB([IOReport], [IOReportCreateSubscription])
+         ;;
+      *)
+         AC_MSG_ERROR([bad value '$enable_libioreport' for --enable_libioreport])
+         ;;
+   esac
+fi
+
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
 # Checks for compiler warnings.
 # ----------------------------------------------------------------------
 
@@ -800,6 +836,8 @@ AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
 AM_CONDITIONAL([HTOP_PCP], [test "$my_htop_platform" = pcp])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
+
+AM_CONDITIONAL([HTOP_AARCH64], [test "$my_htop_cpu" = aarch64])
 
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
