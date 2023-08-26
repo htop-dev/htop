@@ -11,9 +11,9 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "CRT.h"
 #include "Macros.h"
