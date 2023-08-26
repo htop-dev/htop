@@ -219,7 +219,6 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(startPos + w <= RichString_sizeVal(bar));
 
    int blockSizes[10];
-   int blockSizeSum = 0;
 
    // First draw in the bar[] buffer...
    int offset = 0;
@@ -232,12 +231,6 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       } else {
          blockSizes[i] = 0;
       }
-
-      if (Meter_comprisedValues(this)) {
-         blockSizes[i] = MAXIMUM(blockSizes[i] - blockSizeSum, 0);
-         blockSizeSum += blockSizes[i];
-      }
-
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
@@ -331,11 +324,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       for (int i = 0; i < nValues - 1; i++)
          data->values[i] = data->values[i + 1];
 
-      if (Meter_comprisedValues(this)) {
-         data->values[nValues - 1] = (this->curItems > 0) ? this->values[this->curItems - 1] : 0.0;
-      } else {
-         data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
-      }
+      data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
    }
 
    int i = nValues - (w * 2), k = 0;

@@ -418,7 +418,7 @@ void Platform_setZramValues(Meter* this) {
 
    this->total = lhost->zram.totalZram;
    this->values[ZRAM_METER_COMPRESSED] = lhost->zram.usedZramComp;
-   this->values[ZRAM_METER_UNCOMPRESSED] = lhost->zram.usedZramOrig;
+   this->values[ZRAM_METER_UNCOMPRESSED] = lhost->zram.usedZramOrig - lhost->zram.usedZramComp;
 }
 
 void Platform_setZfsArcValues(Meter* this) {

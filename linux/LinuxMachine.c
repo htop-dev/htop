@@ -337,6 +337,9 @@ static void LinuxMachine_scanZramInfo(LinuxMachine* this) {
    this->zram.totalZram = totalZram / 1024;
    this->zram.usedZramComp = usedZramComp / 1024;
    this->zram.usedZramOrig = usedZramOrig / 1024;
+   if (this->zram.usedZramComp > this->zram.usedZramOrig) {
+      this->zram.usedZramComp = this->zram.usedZramOrig;
+   }
 }
 
 static void LinuxMachine_scanZfsArcstats(LinuxMachine* this) {

@@ -593,9 +593,13 @@ void Platform_setZramValues(Meter* this) {
 
    free(values);
 
+   if (stats.usedZramComp > stats.usedZramOrig) {
+      stats.usedZramComp = stats.usedZramOrig;
+   }
+
    this->total = stats.totalZram;
    this->values[0] = stats.usedZramComp;
-   this->values[1] = stats.usedZramOrig;
+   this->values[1] = stats.usedZramOrig - stats.usedZramComp;
 }
 
 void Platform_setZfsArcValues(Meter* this) {
