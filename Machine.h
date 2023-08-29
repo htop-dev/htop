@@ -41,6 +41,7 @@ typedef struct Machine_ {
    struct timeval realtime;   /* time of the current sample */
    uint64_t realtimeMs;       /* current time in milliseconds */
    uint64_t monotonicMs;      /* same, but from monotonic clock */
+   uint64_t prevMonotonicMs;  /* time in milliseconds from monotonic clock of previous scan */
 
    int64_t iterationsRemaining;
 

@@ -99,10 +99,14 @@ void Machine_scanTables(Machine* this) {
    // set scan timestamp
    static bool firstScanDone = false;
 
-   if (firstScanDone)
-      Platform_gettime_monotonic(&this->monotonicMs);
-   else
+   if (firstScanDone) {
+      this->prevMonotonicMs = this->monotonicMs;
+   } else {
+      this->prevMonotonicMs = 0;
       firstScanDone = true;
+   }
+   Platform_gettime_monotonic(&this->monotonicMs);
+   assert(this->monotonicMs > this->prevMonotonicMs);
 
    this->maxUserId = 0;
    Row_resetFieldWidths();
