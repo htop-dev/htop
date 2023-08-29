@@ -149,6 +149,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .flags = 0,
       .defaultSortDesc = true,
       .autoWidth = true,
+      .autoTitleRightAlign = true,
    },
    [PERCENT_NORM_CPU] = {
       .name = "PERCENT_NORM_CPU",

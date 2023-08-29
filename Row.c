@@ -153,7 +153,7 @@ static const char* alignedTitleProcessField(ProcessField field, char* titleBuffe
    }
 
    if (Process_fields[field].autoWidth) {
-      if (field == PERCENT_CPU)
+      if (Process_fields[field].autoTitleRightAlign)
          xSnprintf(titleBuffer, titleBufferSize, "%*s ", Row_fieldWidths[field], title);
       else
          xSnprintf(titleBuffer, titleBufferSize, "%-*.*s ", Row_fieldWidths[field], Row_fieldWidths[field], title);
