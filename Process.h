@@ -210,6 +210,9 @@ typedef struct ProcessFieldData_ {
 
    /* Whether the column width is dynamically adjusted (the minimum width is determined by the title length) */
    bool autoWidth;
+
+   /* Whether the title of a column with dynamically adjusted width is right aligned (default is left aligned) */
+   bool autoTitleRightAlign;
 } ProcessFieldData;
 
 #define LAST_PROCESSFIELD LAST_RESERVED_FIELD
