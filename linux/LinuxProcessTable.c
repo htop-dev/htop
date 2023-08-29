@@ -49,6 +49,8 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 #include "XUtils.h"
 #include "linux/CGroupUtils.h"
+#include "linux/GPU.h"
+#include "linux/GPUMeter.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
@@ -1617,6 +1619,14 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       }
       #endif
 
+      if (ss->flags & PROCESS_FLAG_LINUX_GPU || GPUMeter_active()) {
+         if (parent) {
+            lp->gpu_time = ((const LinuxProcess*)parent)->gpu_time;
+         } else {
+            GPU_readProcessData(this, lp, procFd);
+         }
+      }
+
       if (!proc->cmdline && statCommand[0] &&
           (proc->state == ZOMBIE || Process_isKernelThread(proc) || settings->showThreadNames)) {
          Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
@@ -1674,9 +1684,9 @@ errorReadingProcess:
 
 void ProcessTable_goThroughEntries(ProcessTable* super) {
    LinuxProcessTable* this = (LinuxProcessTable*) super;
-   const Machine* host = super->super.host;
+   Machine* host = super->super.host;
    const Settings* settings = host->settings;
-   const LinuxMachine* lhost = (const LinuxMachine*) host;
+   LinuxMachine* lhost = (LinuxMachine*) host;
 
    if (settings->ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP) {
       // Refer to sched(7) 'autogroup feature' section
@@ -1686,6 +1696,17 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       this->haveAutogroup = LinuxProcess_isAutogroupEnabled();
    } else {
       this->haveAutogroup = false;
+   }
+
+   /* Shift GPU values */
+   {
+      lhost->prevGpuTime = lhost->curGpuTime;
+      lhost->curGpuTime = 0;
+
+      for (GPUEngineData* engine = lhost->gpuEngineData; engine; engine = engine->next) {
+         engine->prevTime = engine->curTime;
+         engine->curTime = 0;
+      }
    }
 
    /* PROCDIR is an absolute path */

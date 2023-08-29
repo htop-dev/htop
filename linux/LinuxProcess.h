@@ -29,6 +29,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_LRS_FIX   0x00010000
 #define PROCESS_FLAG_LINUX_DELAYACCT 0x00040000
 #define PROCESS_FLAG_LINUX_AUTOGROUP 0x00080000
+#define PROCESS_FLAG_LINUX_GPU       0x00100000
 
 typedef struct LinuxProcess_ {
    Process super;
@@ -105,6 +106,11 @@ typedef struct LinuxProcess_ {
    unsigned long ctxt_diff;
    char* secattr;
    unsigned long long int last_mlrs_calctime;
+
+   /* Total GPU time used in nano seconds */
+   unsigned long long int gpu_time;
+   /* GPU utilization in percent */
+   float gpu_percent;
 
    /* Autogroup scheduling (CFS) information */
    long int autogroup_id;

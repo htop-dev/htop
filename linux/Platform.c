@@ -51,6 +51,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
+#include "linux/GPUMeter.h"
 #include "linux/IOPriority.h"
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
@@ -252,6 +253,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &SystemdMeter_class,
    &SystemdUserMeter_class,
    &FileDescriptorMeter_class,
+   &GPUMeter_class,
    NULL
 };
 
