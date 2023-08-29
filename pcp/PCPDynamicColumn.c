@@ -28,8 +28,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 #include "linux/CGroupUtils.h"
+#include "pcp/Metric.h"
 #include "pcp/PCPProcess.h"
-#include "pcp/PCPMetric.h"
 
 
 static bool PCPDynamicColumn_addMetric(PCPDynamicColumns* columns, PCPDynamicColumn* column) {
@@ -50,9 +50,8 @@ static bool PCPDynamicColumn_addMetric(PCPDynamicColumns* columns, PCPDynamicCol
 
 static void PCPDynamicColumn_parseMetric(PCPDynamicColumns* columns, PCPDynamicColumn* column, const char* path, unsigned int line, char* value) {
    /* pmLookupText */
-   if (!column->super.description) {
-      PCPMetric_lookupText(value, &column->super.description);
-   }
+   if (!column->super.description)
+      Metric_lookupText(value, &column->super.description);
 
    /* lookup a dynamic metric with this name, else create */
    if (PCPDynamicColumn_addMetric(columns, column) == false)
@@ -269,7 +268,7 @@ static void PCPDynamicColumn_setupWidth(ATTR_UNUSED ht_key_t key, void* value, A
    PCPDynamicColumn* column = (PCPDynamicColumn*) value;
 
    /* calculate column size based on config file and metric units */
-   const pmDesc* desc = PCPMetric_desc(column->id);
+   const pmDesc* desc = Metric_desc(column->id);
 
    if (column->instances || desc->type == PM_TYPE_STRING) {
       column->super.width = column->width;
@@ -379,7 +378,7 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
       char* dupd1 = NULL;
       if (column->instances) {
          attr = CRT_colors[DYNAMIC_GRAY];
-         PCPMetric_externalName(metric, instance, &dupd1);
+         Metric_externalName(metric, instance, &dupd1);
          value = dupd1;
       } else {
          attr = CRT_colors[DYNAMIC_GREEN];
@@ -457,12 +456,12 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
 void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, RichString* str) {
    const Settings* settings = proc->super.host->settings;
    const PCPProcess* pp = (const PCPProcess*) proc;
-   const pmDesc* desc = PCPMetric_desc(this->id);
+   const pmDesc* desc = Metric_desc(this->id);
    pid_t pid = Process_getPid(proc);
 
    pmAtomValue atom;
    pmAtomValue *ap = &atom;
-   if (!PCPMetric_instance(this->id, pid, pp->offset, ap, desc->type))
+   if (!Metric_instance(this->id, pid, pp->offset, ap, desc->type))
       ap = NULL;
 
    PCPDynamicColumn_writeAtomValue(this, str, settings, this->id, pid, desc, ap);
@@ -477,11 +476,11 @@ int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, Pr
       return -1;
 
    size_t metric = column->id;
-   unsigned int type = PCPMetric_type(metric);
+   unsigned int type = Metric_type(metric);
 
    pmAtomValue atom1 = {0}, atom2 = {0};
-   if (!PCPMetric_instance(metric, Process_getPid(&p1->super), p1->offset, &atom1, type) ||
-       !PCPMetric_instance(metric, Process_getPid(&p2->super), p2->offset, &atom2, type)) {
+   if (!Metric_instance(metric, Process_getPid(&p1->super), p1->offset, &atom1, type) ||
+       !Metric_instance(metric, Process_getPid(&p2->super), p2->offset, &atom2, type)) {
       if (type == PM_TYPE_STRING) {
          free(atom1.cp);
          free(atom2.cp);

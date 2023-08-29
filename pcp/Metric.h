@@ -1,7 +1,7 @@
-#ifndef HEADER_PCPMetric
-#define HEADER_PCPMetric
+#ifndef HEADER_Metric
+#define HEADER_Metric
 /*
-htop - PCPMetric.h
+htop - Metric.h
 (C) 2020-2021 htop dev team
 (C) 2020-2021 Red Hat, Inc.
 Released under the GNU GPLv2+, see the COPYING file
@@ -22,7 +22,7 @@ in the source distribution for its full text.
 #undef PACKAGE_BUGREPORT
 
 
-typedef enum PCPMetric_ {
+typedef enum Metric_ {
    PCP_CONTROL_THREADS,         /* proc.control.perclient.threads */
 
    PCP_HINV_NCPU,               /* hinv.ncpu */
@@ -156,32 +156,32 @@ typedef enum PCPMetric_ {
    PCP_PROC_SMAPS_SWAPPSS,      /* proc.smaps.swappss */
 
    PCP_METRIC_COUNT             /* total metric count */
-} PCPMetric;
+} Metric;
 
-void PCPMetric_enable(PCPMetric metric, bool enable);
+void Metric_enable(Metric metric, bool enable);
 
-bool PCPMetric_enabled(PCPMetric metric);
+bool Metric_enabled(Metric metric);
 
-void PCPMetric_enableThreads(void);
+void Metric_enableThreads(void);
 
-bool PCPMetric_fetch(struct timeval* timestamp);
+bool Metric_fetch(struct timeval* timestamp);
 
-bool PCPMetric_iterate(PCPMetric metric, int* instp, int* offsetp);
+bool Metric_iterate(Metric metric, int* instp, int* offsetp);
 
-pmAtomValue* PCPMetric_values(PCPMetric metric, pmAtomValue* atom, int count, int type);
+pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type);
 
-const pmDesc* PCPMetric_desc(PCPMetric metric);
+const pmDesc* Metric_desc(Metric metric);
 
-int PCPMetric_type(PCPMetric metric);
+int Metric_type(Metric metric);
 
-int PCPMetric_instanceCount(PCPMetric metric);
+int Metric_instanceCount(Metric metric);
 
-int PCPMetric_instanceOffset(PCPMetric metric, int inst);
+int Metric_instanceOffset(Metric metric, int inst);
 
-pmAtomValue* PCPMetric_instance(PCPMetric metric, int inst, int offset, pmAtomValue* atom, int type);
+pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type);
 
-void PCPMetric_externalName(PCPMetric metric, int inst, char** externalName);
+void Metric_externalName(Metric metric, int inst, char** externalName);
 
-int PCPMetric_lookupText(const char* metric, char** desc);
+int Metric_lookupText(const char* metric, char** desc);
 
 #endif

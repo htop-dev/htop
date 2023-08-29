@@ -19,16 +19,16 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 #include "Machine.h"
 #include "Macros.h"
+#include "Metric.h"
+#include "Platform.h"
 #include "PCPDynamicColumn.h"
 #include "PCPDynamicScreen.h"
-#include "PCPMetric.h"
-#include "Platform.h"
 #include "Row.h"
 #include "RichString.h"
 #include "XUtils.h"
 
 #include "pcp/InDomTable.h"
-#include "pcp/PCPMetric.h"
+#include "pcp/Metric.h"
 
 
 Instance* Instance_new(const Machine* host, const InDomTable* indom) {
@@ -62,11 +62,11 @@ static void Instance_writeField(const Row* super, RichString* str, RowField fiel
    const Settings* settings = super->host->settings;
    DynamicColumn* column = Hashtable_get(settings->dynamicColumns, field);
    PCPDynamicColumn* cp = (PCPDynamicColumn*) column;
-   const pmDesc* descp = PCPMetric_desc(cp->id);
+   const pmDesc* descp = Metric_desc(cp->id);
 
    pmAtomValue atom;
    pmAtomValue *ap = &atom;
-   if (!PCPMetric_instance(cp->id, instid, this->offset, ap, descp->type))
+   if (!Metric_instance(cp->id, instid, this->offset, ap, descp->type))
       ap = NULL;
 
    PCPDynamicColumn_writeAtomValue(cp, str, settings, cp->id, instid, descp, ap);
@@ -96,11 +96,11 @@ static int Instance_compareByKey(const Row* v1, const Row* v2, int key) {
       return -1;
 
    size_t metric = column->id;
-   unsigned int type = PCPMetric_type(metric);
+   unsigned int type = Metric_type(metric);
 
    pmAtomValue atom1 = {0}, atom2 = {0};
-   if (!PCPMetric_instance(metric, i1->offset, i1->offset, &atom1, type) ||
-       !PCPMetric_instance(metric, i2->offset, i2->offset, &atom2, type)) {
+   if (!Metric_instance(metric, i1->offset, i1->offset, &atom1, type) ||
+       !Metric_instance(metric, i2->offset, i2->offset, &atom2, type)) {
       if (type == PM_TYPE_STRING) {
          free(atom1.cp);
          free(atom2.cp);

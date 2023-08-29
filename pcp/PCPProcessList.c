@@ -26,8 +26,8 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 
+#include "pcp/Metric.h"
 #include "pcp/PCPMachine.h"
-#include "pcp/PCPMetric.h"
 #include "pcp/PCPProcess.h"
 
 
@@ -49,49 +49,49 @@ void ProcessList_delete(Object* cast) {
 
 static inline long Metric_instance_s32(int metric, int pid, int offset, long fallback) {
    pmAtomValue value;
-   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_32))
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_32))
       return value.l;
    return fallback;
 }
 
 static inline long long Metric_instance_s64(int metric, int pid, int offset, long long fallback) {
    pmAtomValue value;
-   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_64))
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_64))
       return value.l;
    return fallback;
 }
 
 static inline unsigned long Metric_instance_u32(int metric, int pid, int offset, unsigned long fallback) {
    pmAtomValue value;
-   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_U32))
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U32))
       return value.ul;
    return fallback;
 }
 
 static inline unsigned long long Metric_instance_u64(int metric, int pid, int offset, unsigned long long fallback) {
    pmAtomValue value;
-   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
       return value.ull;
    return fallback;
 }
 
 static inline unsigned long long Metric_instance_time(int metric, int pid, int offset) {
    pmAtomValue value;
-   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
       return value.ull / 10;
    return 0;
 }
 
 static inline unsigned long long Metric_instance_ONE_K(int metric, int pid, int offset) {
    pmAtomValue value;
-   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_U64))
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
       return value.ull / ONE_K;
    return ULLONG_MAX;
 }
 
 static inline char Metric_instance_char(int metric, int pid, int offset, char fallback) {
    pmAtomValue value;
-   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_STRING)) {
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_STRING)) {
       char uchar = value.cp[0];
       free(value.cp);
       return uchar;
@@ -105,7 +105,7 @@ static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
       return name;
 
    pmAtomValue value;
-   if (PCPMetric_instance(PCP_PROC_ID_USER, pid, offset, &value, PM_TYPE_STRING)) {
+   if (Metric_instance(PCP_PROC_ID_USER, pid, offset, &value, PM_TYPE_STRING)) {
       Hashtable_put(this->users, uid, value.cp);
       name = value.cp;
    }
@@ -139,7 +139,7 @@ static void PCPProcessList_updateInfo(PCPProcess* pp, int pid, int offset, char*
    Process* process = &pp->super;
    pmAtomValue value;
 
-   if (!PCPMetric_instance(PCP_PROC_CMD, pid, offset, &value, PM_TYPE_STRING))
+   if (!Metric_instance(PCP_PROC_CMD, pid, offset, &value, PM_TYPE_STRING))
       value.cp = xStrdup("<unknown>");
    String_safeStrncpy(command, value.cp, commLen);
    free(value.cp);
@@ -174,7 +174,7 @@ static void PCPProcessList_updateIO(PCPProcess* pp, int pid, int offset, unsigne
    pp->io_syscw = Metric_instance_u64(PCP_PROC_IO_SYSCW, pid, offset, ULLONG_MAX);
    pp->io_cancelled_write_bytes = Metric_instance_ONE_K(PCP_PROC_IO_CANCELLED, pid, offset);
 
-   if (PCPMetric_instance(PCP_PROC_IO_READB, pid, offset, &value, PM_TYPE_U64)) {
+   if (Metric_instance(PCP_PROC_IO_READB, pid, offset, &value, PM_TYPE_U64)) {
       unsigned long long last_read = pp->io_read_bytes;
       pp->io_read_bytes = value.ull / ONE_K;
       pp->io_rate_read_bps = ONE_K * (pp->io_read_bytes - last_read) /
@@ -184,7 +184,7 @@ static void PCPProcessList_updateIO(PCPProcess* pp, int pid, int offset, unsigne
       pp->io_rate_read_bps = NAN;
    }
 
-   if (PCPMetric_instance(PCP_PROC_IO_WRITEB, pid, offset, &value, PM_TYPE_U64)) {
+   if (Metric_instance(PCP_PROC_IO_WRITEB, pid, offset, &value, PM_TYPE_U64)) {
       unsigned long long last_write = pp->io_write_bytes;
       pp->io_write_bytes = value.ull;
       pp->io_rate_write_bps = ONE_K * (pp->io_write_bytes - last_write) /
@@ -226,20 +226,20 @@ static void PCPProcessList_readCtxtData(PCPProcess* pp, int pid, int offset) {
    pmAtomValue value;
    unsigned long ctxt = 0;
 
-   if (PCPMetric_instance(PCP_PROC_VCTXSW, pid, offset, &value, PM_TYPE_U32))
+   if (Metric_instance(PCP_PROC_VCTXSW, pid, offset, &value, PM_TYPE_U32))
       ctxt += value.ul;
-   if (PCPMetric_instance(PCP_PROC_NVCTXSW, pid, offset, &value, PM_TYPE_U32))
+   if (Metric_instance(PCP_PROC_NVCTXSW, pid, offset, &value, PM_TYPE_U32))
       ctxt += value.ul;
 
    pp->ctxt_diff = ctxt > pp->ctxt_total ? ctxt - pp->ctxt_total : 0;
    pp->ctxt_total = ctxt;
 }
 
-static char* setString(PCPMetric metric, int pid, int offset, char* string) {
+static char* setString(Metric metric, int pid, int offset, char* string) {
    if (string)
       free(string);
    pmAtomValue value;
-   if (PCPMetric_instance(metric, pid, offset, &value, PM_TYPE_STRING))
+   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_STRING))
       string = value.cp;
    else
       string = NULL;
@@ -269,7 +269,7 @@ static void PCPProcessList_updateUsername(Process* process, int pid, int offset,
 
 static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, const char* comm) {
    pmAtomValue value;
-   if (!PCPMetric_instance(PCP_PROC_PSARGS, pid, offset, &value, PM_TYPE_STRING)) {
+   if (!Metric_instance(PCP_PROC_PSARGS, pid, offset, &value, PM_TYPE_STRING)) {
       if (process->state != ZOMBIE)
          process->isKernelThread = true;
       Process_updateCmdline(process, NULL, 0, 0);
@@ -303,7 +303,7 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
 
    Process_updateComm(process, comm);
 
-   if (PCPMetric_instance(PCP_PROC_EXE, pid, offset, &value, PM_TYPE_STRING)) {
+   if (Metric_instance(PCP_PROC_EXE, pid, offset, &value, PM_TYPE_STRING)) {
       Process_updateExe(process, value.cp[0] ? value.cp : NULL);
       free(value.cp);
    }
@@ -323,7 +323,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
    int pid = -1, offset = -1;
 
    /* for every process ... */
-   while (PCPMetric_iterate(PCP_PROC_PID, &pid, &offset)) {
+   while (Metric_iterate(PCP_PROC_PID, &pid, &offset)) {
 
       bool preExisting;
       Process* proc = ProcessList_getProcess(pl, pid, &preExisting, PCPProcess_new);
@@ -364,7 +364,7 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
 
       if ((flags & PROCESS_FLAG_LINUX_SMAPS) &&
           (Process_isKernelThread(proc) == false)) {
-         if (PCPMetric_enabled(PCP_PROC_SMAPS_PSS))
+         if (Metric_enabled(PCP_PROC_SMAPS_PSS))
             PCPProcessList_updateSmaps(pp, pid, offset);
       }
 

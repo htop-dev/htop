@@ -1,5 +1,5 @@
 /*
-htop - PCPMetric.c
+htop - Metric.c
 (C) 2020-2021 htop dev team
 (C) 2020-2021 Red Hat, Inc.
 Released under the GNU GPLv2+, see the COPYING file
@@ -8,7 +8,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "pcp/PCPMetric.h"
+#include "pcp/Metric.h"
 
 #include <ctype.h>
 #include <stddef.h>
@@ -22,15 +22,15 @@ in the source distribution for its full text.
 
 extern Platform* pcp;
 
-const pmDesc* PCPMetric_desc(PCPMetric metric) {
+const pmDesc* Metric_desc(Metric metric) {
    return &pcp->descs[metric];
 }
 
-int PCPMetric_type(PCPMetric metric) {
+int Metric_type(Metric metric) {
    return pcp->descs[metric].type;
 }
 
-pmAtomValue* PCPMetric_values(PCPMetric metric, pmAtomValue* atom, int count, int type) {
+pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type) {
    if (pcp->result == NULL)
       return NULL;
 
@@ -55,14 +55,14 @@ pmAtomValue* PCPMetric_values(PCPMetric metric, pmAtomValue* atom, int count, in
    return atom;
 }
 
-int PCPMetric_instanceCount(PCPMetric metric) {
+int Metric_instanceCount(Metric metric) {
    pmValueSet* vset = pcp->result->vset[metric];
    if (vset)
       return vset->numval;
    return 0;
 }
 
-int PCPMetric_instanceOffset(PCPMetric metric, int inst) {
+int Metric_instanceOffset(Metric metric, int inst) {
    pmValueSet* vset = pcp->result->vset[metric];
    if (!vset || vset->numval <= 0)
       return 0;
@@ -75,7 +75,7 @@ int PCPMetric_instanceOffset(PCPMetric metric, int inst) {
    return 0;
 }
 
-static pmAtomValue* PCPMetric_extract(PCPMetric metric, int inst, int offset, pmValueSet* vset, pmAtomValue* atom, int type) {
+static pmAtomValue* Metric_extract(Metric metric, int inst, int offset, pmValueSet* vset, pmAtomValue* atom, int type) {
 
    /* extract value (using requested type) of given metric instance */
    const pmDesc* desc = &pcp->descs[metric];
@@ -90,7 +90,7 @@ static pmAtomValue* PCPMetric_extract(PCPMetric metric, int inst, int offset, pm
    return atom;
 }
 
-pmAtomValue* PCPMetric_instance(PCPMetric metric, int inst, int offset, pmAtomValue* atom, int type) {
+pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type) {
 
    pmValueSet* vset = pcp->result->vset[metric];
    if (!vset || vset->numval <= 0)
@@ -98,12 +98,12 @@ pmAtomValue* PCPMetric_instance(PCPMetric metric, int inst, int offset, pmAtomVa
 
    /* fast-path using heuristic offset based on expected location */
    if (offset >= 0 && offset < vset->numval && inst == vset->vlist[offset].inst)
-      return PCPMetric_extract(metric, inst, offset, vset, atom, type);
+      return Metric_extract(metric, inst, offset, vset, atom, type);
 
    /* slow-path using a linear search for the requested instance */
    for (int i = 0; i < vset->numval; i++) {
       if (inst == vset->vlist[i].inst)
-         return PCPMetric_extract(metric, inst, i, vset, atom, type);
+         return Metric_extract(metric, inst, i, vset, atom, type);
    }
    return NULL;
 }
@@ -114,7 +114,7 @@ pmAtomValue* PCPMetric_instance(PCPMetric metric, int inst, int offset, pmAtomVa
  *
  * Start it off by passing offset -1 into the routine.
  */
-bool PCPMetric_iterate(PCPMetric metric, int* instp, int* offsetp) {
+bool Metric_iterate(Metric metric, int* instp, int* offsetp) {
    if (!pcp->result)
       return false;
 
@@ -133,15 +133,15 @@ bool PCPMetric_iterate(PCPMetric metric, int* instp, int* offsetp) {
 }
 
 /* Switch on/off a metric for value fetching (sampling) */
-void PCPMetric_enable(PCPMetric metric, bool enable) {
+void Metric_enable(Metric metric, bool enable) {
    pcp->fetch[metric] = enable ? pcp->pmids[metric] : PM_ID_NULL;
 }
 
-bool PCPMetric_enabled(PCPMetric metric) {
+bool Metric_enabled(Metric metric) {
    return pcp->fetch[metric] != PM_ID_NULL;
 }
 
-void PCPMetric_enableThreads(void) {
+void Metric_enableThreads(void) {
    pmValueSet* vset = xCalloc(1, sizeof(pmValueSet));
    vset->vlist[0].inst = PM_IN_NULL;
    vset->vlist[0].value.lval = 1;
@@ -160,7 +160,7 @@ void PCPMetric_enableThreads(void) {
    pmFreeResult(result);
 }
 
-bool PCPMetric_fetch(struct timeval* timestamp) {
+bool Metric_fetch(struct timeval* timestamp) {
    if (pcp->result) {
       pmFreeResult(pcp->result);
       pcp->result = NULL;
@@ -180,12 +180,12 @@ bool PCPMetric_fetch(struct timeval* timestamp) {
    return true;
 }
 
-void PCPMetric_externalName(PCPMetric metric, int inst, char** externalName) {
+void Metric_externalName(Metric metric, int inst, char** externalName) {
    const pmDesc* desc = &pcp->descs[metric];
    pmNameInDom(desc->indom, inst, externalName);
 }
 
-int PCPMetric_lookupText(const char* metric, char** desc) {
+int Metric_lookupText(const char* metric, char** desc) {
    pmID pmid;
    int sts;
 

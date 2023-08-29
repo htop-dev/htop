@@ -57,8 +57,8 @@ static void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, P
          columns->count++;
 
          if (j == 0) {
-            const pmDesc* desc = PCPMetric_desc(column->id);
-            assert(desc->indom != PM_INDOM_NULL);
+            const pmDesc* desc = Metric_desc(column->id);
+	    assert(desc->indom != PM_INDOM_NULL);
             screen->indom = desc->indom;
             screen->key = column->id;
          }
@@ -126,7 +126,7 @@ static void PCPDynamicScreen_parseColumn(PCPDynamicScreen* screen, const char* p
 
       /* pmLookupText - add optional metric help text */
       if (!column->super.description && !column->instances)
-         PCPMetric_lookupText(value, &column->super.description);
+         Metric_lookupText(value, &column->super.description);
 
    } else {
       /* this is a property of a dynamic column - the column expression */
