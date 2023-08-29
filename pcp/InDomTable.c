@@ -22,8 +22,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 #include "pcp/Instance.h"
+#include "pcp/Metric.h"
 #include "pcp/PCPDynamicColumn.h"
-#include "pcp/PCPMetric.h"
 
 
 InDomTable* InDomTable_new(Machine* host, pmInDom indom, int metricKey) {
@@ -68,7 +68,7 @@ static void InDomTable_goThroughEntries(InDomTable* this) {
 
    /* for every instance ... */
    int instid = -1, offset = -1;
-   while (PCPMetric_iterate(this->metricKey, &instid, &offset)) {
+   while (Metric_iterate(this->metricKey, &instid, &offset)) {
       bool preExisting;
       Instance* inst = InDomTable_getInstance(this, instid, &preExisting);
       inst->offset = offset >= 0 ? offset : 0;

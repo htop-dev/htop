@@ -36,10 +36,10 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 #include "CommandLine.h"
 
+#include "pcp/Metric.h"
 #include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
 #include "pcp/PCPDynamicScreen.h"
-#include "pcp/PCPMetric.h"
 
 
 typedef struct Platform_ {
@@ -131,7 +131,7 @@ CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv);
 
 extern pmOptions opts;
 
-size_t Platform_addMetric(PCPMetric id, const char* name);
+size_t Platform_addMetric(Metric id, const char* name);
 
 void Platform_getFileDescriptors(double* used, double* max);
 
