@@ -682,7 +682,17 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
 void Machine_delete(Machine* super) {
    LinuxMachine* this = (LinuxMachine*) super;
+   GPUEngineData* gpuEngineData = this->gpuEngineData;
+
    Machine_done(super);
+
+   while (gpuEngineData) {
+      GPUEngineData* next = gpuEngineData->next;
+      free(gpuEngineData->key);
+      free(gpuEngineData);
+      gpuEngineData = next;
+   }
+
    free(this->cpuData);
    free(this);
 }

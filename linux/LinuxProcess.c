@@ -109,6 +109,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 #ifdef SCHEDULER_SUPPORT
    [SCHEDULERPOLICY] = { .name = "SCHEDULERPOLICY", .title = "SCHED ", .description = "Current scheduling policy of the process", .flags = PROCESS_FLAG_SCHEDPOL, },
 #endif
+   [GPU_TIME] = { .name = "GPU_TIME", .title = " GPU_TIME", .description = "Total GPU time in nano seconds", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, .autoWidth = true, .autoTitleRightAlign = true, },
+   [GPU_PERCENT] = { .name = "GPU_PERCENT", .title = "GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, },
 };
 
 Process* LinuxProcess_new(const Machine* host) {
@@ -242,6 +244,8 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    switch (field) {
    case CMINFLT: Row_printCount(str, lp->cminflt, coloring); return;
    case CMAJFLT: Row_printCount(str, lp->cmajflt, coloring); return;
+   case GPU_PERCENT: Row_printPercentage(lp->gpu_percent, buffer, n, 5, &attr); break;
+   case GPU_TIME: Row_printTime(str, lp->gpu_time / 1000 / 1000 / 10 /* nano to centi seconds */, coloring); return;
    case M_DRS: Row_printBytes(str, lp->m_drs * lhost->pageSize, coloring); return;
    case M_LRS:
       if (lp->m_lrs) {
@@ -425,6 +429,15 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->autogroup_id, p2->autogroup_id);
    case AUTOGROUP_NICE:
       return SPACESHIP_NUMBER(p1->autogroup_nice, p2->autogroup_nice);
+   case GPU_PERCENT: {
+      int r = compareRealNumbers(p1->gpu_percent, p2->gpu_percent);
+      if (r)
+         return r;
+
+      return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
+   }
+   case GPU_TIME:
+      return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

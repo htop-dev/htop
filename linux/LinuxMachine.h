@@ -53,6 +53,12 @@ typedef struct CPUData_ {
    bool online;
 } CPUData;
 
+typedef struct GPUEngineData_ {
+   unsigned long long int prevTime, curTime;  /* absolute GPU time in nano seconds */
+   char* key;                                 /* engine name */
+   struct GPUEngineData_* next;
+} GPUEngineData;
+
 typedef struct LinuxMachine_ {
    Machine super;
 
@@ -72,6 +78,9 @@ typedef struct LinuxMachine_ {
    memory_t usedHugePageMem[HTOP_HUGEPAGE_COUNT];
 
    memory_t availableMem;
+
+   unsigned long long int prevGpuTime, curGpuTime;  /* total absolute GPU time in nano seconds */
+   GPUEngineData* gpuEngineData;
 
    ZfsArcStats zfs;
    ZramStats zram;
