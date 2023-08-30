@@ -129,7 +129,7 @@ void Machine_delete(Machine* super) {
 }
 
 static void OpenBSDMachine_scanMemoryInfo(OpenBSDMachine* this) {
-   Machine* host = &this->super;
+   Machine* super = &this->super;
    const int uvmexp_mib[] = { CTL_VM, VM_UVMEXP };
    struct uvmexp uvmexp;
    size_t size_uvmexp = sizeof(uvmexp);
@@ -230,7 +230,7 @@ static void kernelCPUTimesToHtop(const u_int64_t* times, CPUData* cpu) {
 }
 
 static void OpenBSDMachine_scanCPUTime(OpenBSDMachine* this) {
-   Machine* host = &this->super;
+   Machine* super = &this->super;
    u_int64_t kernelTimes[CPUSTATES] = {0};
    u_int64_t avg[CPUSTATES] = {0};
 
