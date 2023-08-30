@@ -110,5 +110,5 @@ qlen.metric = disk.dev.avg_qlen
 
 util.heading = UTIL%
 util.metric = 100 * disk.dev.util
-util.caption = Perentage device utilitization
+util.caption = Perentage device utilization
 util.format = percent
