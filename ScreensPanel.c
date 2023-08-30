@@ -48,7 +48,6 @@ static const char* const DynamicFunctions[] = {"      ", "Rename", "      ", "  
 
 static void ScreensPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
-   ScreensPanel* this = (ScreensPanel*) object;
 
    /* do not delete screen settings still in use */
    int n = Panel_size(super);
@@ -57,7 +56,7 @@ static void ScreensPanel_delete(Object* object) {
       item->ss = NULL;
    }
 
-   free(this);
+   Panel_delete(object);
 }
 
 static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {

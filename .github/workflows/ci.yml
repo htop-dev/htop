@@ -17,7 +17,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-affinity --disable-unicode --disable-sensors
+      run: ./configure --enable-werror --enable-affinity --disable-unicode --disable-sensors || (cat config.log; exit 1)
     - name: Enable compatibility modes
       run: |
         sed -i 's/#define HAVE_FSTATAT 1/#undef HAVE_FSTATAT/g' config.h
@@ -44,7 +44,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-affinity --disable-unicode --disable-sensors
+      run: ./configure --enable-werror --enable-affinity --disable-unicode --disable-sensors || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
@@ -63,7 +63,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
@@ -85,7 +85,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
@@ -104,7 +104,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --disable-delayacct --enable-sensors --enable-capabilities
+      run: ./configure --enable-static --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --disable-hwloc --disable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
@@ -120,7 +120,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-pcp --enable-unicode
+      run: ./configure --enable-werror --enable-pcp --enable-unicode || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
 
@@ -140,9 +140,45 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: scan-build-16 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities
+      run: scan-build-16 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
     - name: Build
       run: scan-build-16 -analyze-headers --status-bugs make -j"$(nproc)"
+
+  build-ubuntu-latest-clang-sanitizer:
+    runs-on: ubuntu-latest
+    env:
+      CC: clang-16
+      CFLAGS: '-O1 -g -ftrivial-auto-var-init=pattern -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=nullability -fsanitize=implicit-conversion -fsanitize=integer -fsanitize=float-divide-by-zero -fsanitize=local-bounds'
+      LDFLAGS: '-ftrivial-auto-var-init=pattern -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=nullability -fsanitize=implicit-conversion -fsanitize=integer -fsanitize=float-divide-by-zero -fsanitize=local-bounds'
+      ASAN_OPTIONS: strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
+      UBSAN_OPTIONS: print_stacktrace=1:print_summary=1:halt_on_error=1
+      TERM: xterm-color
+      HTOPRC: .github/workflows/htoprc
+    steps:
+    - uses: actions/checkout@v3
+    - name: install clang repo
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
+        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-16 main' -y
+        sudo apt-get update -q
+    - name: Install LLVM Toolchain
+      run: sudo apt-get install --no-install-recommends clang-16 libclang-rt-16-dev llvm-16
+    - name: Install Dependencies
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+    - name: Build
+      run: make -k
+    - name: Run sanitized htop (1)
+      run: ./htop -h
+    - name: Run sanitized htop (2)
+      run: ./htop -n 5
+    - name: Run sanitized htop (3)
+      run: ./htop -n 5 -t
+    - name: Run sanitized htop (4)
+      run: ./htop -d 1 -n 50
 
   build-macos-latest-clang:
     runs-on: macOS-latest
@@ -155,7 +191,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror
+      run: ./configure --enable-werror || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
