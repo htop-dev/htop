@@ -156,7 +156,7 @@ IGNORE_WCASTQUAL_END
 }
 
 void ProcessList_goThroughEntries(ProcessList* super) {
-   const Machine* host = super->host;
+   const Machine* host = super->super.host;
    const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
    const Settings* settings = host->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
@@ -215,7 +215,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
             fp->jname = FreeBSDProcessList_readJailName(kproc);
          }
          // if there are reapers in the system, process can get reparented anytime
-         proc->ppid = kproc->ki_ppid;
+         Process_setParent(proc, kproc->ki_ppid);
          if (proc->st_uid != kproc->ki_uid) {
             // some processes change users (eg. to lower privs)
             proc->st_uid = kproc->ki_uid;
