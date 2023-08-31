@@ -73,7 +73,7 @@ static void InDomTable_goThroughEntries(InDomTable* this) {
       Instance* inst = InDomTable_getInstance(this, instid, &preExisting);
       inst->offset = offset >= 0 ? offset : 0;
 
-      Row* row = &inst->super;
+      Row* row = (Row*) inst;
       if (!preExisting)
          Table_add(super, row);
       row->updated = true;
