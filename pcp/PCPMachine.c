@@ -1,5 +1,5 @@
 /*
-htop - PCPProcessList.c
+htop - PCPProcessTable.c
 (C) 2014 Hisham H. Muhammad
 (C) 2020-2023 htop dev team
 (C) 2020-2023 Red Hat, Inc.

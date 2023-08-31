@@ -1,7 +1,7 @@
-#ifndef HEADER_FreeBSDProcessList
-#define HEADER_FreeBSDProcessList
+#ifndef HEADER_FreeBSDProcessTable
+#define HEADER_FreeBSDProcessTable
 /*
-htop - FreeBSDProcessList.h
+htop - FreeBSDProcessTable.h
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
@@ -11,11 +11,11 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Hashtable.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "UsersTable.h"
 
-typedef struct FreeBSDProcessList_ {
-   ProcessList super;
-} FreeBSDProcessList;
+typedef struct FreeBSDProcessTable_ {
+   ProcessTable super;
+} FreeBSDProcessTable;
 
 #endif

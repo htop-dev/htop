@@ -96,7 +96,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    Machine_init(super, usersTable, userId);
 
-   OpenBSDProcessList_updateCPUcount(this);
+   OpenBSDProcessTable_updateCPUcount(this);
 
    size = sizeof(this->fscale);
    if (sysctl(fmib, 2, &this->fscale, &size, NULL, 0) < 0 || this->fscale <= 0) {

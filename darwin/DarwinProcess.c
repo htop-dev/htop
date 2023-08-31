@@ -299,7 +299,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    /* UNSET HERE :
     *
     * processor
-    * user (set at ProcessList level)
+    * user (set at ProcessTable level)
     * nlwp
     * percent_cpu
     * percent_mem
@@ -362,7 +362,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    proc->super.updated = true;
 }
 
-void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double timeIntervalNS) {
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable* dpt, double timeIntervalNS) {
    struct proc_taskinfo pti;
 
    if (sizeof(pti) == proc_pidinfo(Process_getPid(&proc->super), PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
@@ -394,10 +394,10 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
       proc->stime = system_time_ns;
       proc->utime = user_time_ns;
 
-      dpl->super.kernelThreads += 0; /*pti.pti_threads_system;*/
-      dpl->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
-      dpl->super.totalTasks += pti.pti_threadnum;
-      dpl->super.runningTasks += pti.pti_numrunning;
+      dpt->super.kernelThreads += 0; /*pti.pti_threads_system;*/
+      dpt->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
+      dpt->super.totalTasks += pti.pti_threadnum;
+      dpt->super.runningTasks += pti.pti_numrunning;
    }
 }
 

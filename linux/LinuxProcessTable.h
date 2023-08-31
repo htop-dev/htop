@@ -1,7 +1,7 @@
-#ifndef HEADER_LinuxProcessList
-#define HEADER_LinuxProcessList
+#ifndef HEADER_LinuxProcessTable
+#define HEADER_LinuxProcessTable
 /*
-htop - LinuxProcessList.h
+htop - LinuxProcessTable.h
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
@@ -13,7 +13,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Hashtable.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "UsersTable.h"
 
 
@@ -24,8 +24,8 @@ typedef struct TtyDriver_ {
    unsigned int minorTo;
 } TtyDriver;
 
-typedef struct LinuxProcessList_ {
-   ProcessList super;
+typedef struct LinuxProcessTable_ {
+   ProcessTable super;
 
    TtyDriver* ttyDrivers;
    bool haveSmapsRollup;
@@ -35,6 +35,6 @@ typedef struct LinuxProcessList_ {
    struct nl_sock* netlink_socket;
    int netlink_family;
    #endif
-} LinuxProcessList;
+} LinuxProcessTable;
 
 #endif

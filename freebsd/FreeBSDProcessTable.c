@@ -1,5 +1,5 @@
 /*
-htop - FreeBSDProcessList.c
+htop - FreeBSDProcessTable.c
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "freebsd/FreeBSDProcessList.h"
+#include "freebsd/FreeBSDProcessTable.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -32,7 +32,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "Scheduling.h"
 #include "Settings.h"
 #include "XUtils.h"
@@ -41,23 +41,23 @@ in the source distribution for its full text.
 #include "freebsd/FreeBSDProcess.h"
 
 
-ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   FreeBSDProcessList* this = xCalloc(1, sizeof(FreeBSDProcessList));
-   Object_setClass(this, Class(ProcessList));
+ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
+   FreeBSDProcessTable* this = xCalloc(1, sizeof(FreeBSDProcessTable));
+   Object_setClass(this, Class(ProcessTable));
 
-   ProcessList* super = &this->super;
-   ProcessList_init(super, Class(FreeBSDProcess), host, pidMatchList);
+   ProcessTable* super = &this->super;
+   ProcessTable_init(super, Class(FreeBSDProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(Object* cast) {
-   FreeBSDProcessList* this = (FreeBSDProcessList*) cast;
-   ProcessList_done(&this->super);
+void ProcessTable_delete(Object* cast) {
+   FreeBSDProcessTable* this = (FreeBSDProcessTable*) cast;
+   ProcessTable_done(&this->super);
    free(this);
 }
 
-static void FreeBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process* proc) {
+static void FreeBSDProcessTable_updateExe(const struct kinfo_proc* kproc, Process* proc) {
    if (Process_isKernelThread(proc)) {
       Process_updateExe(proc, NULL);
       return;
@@ -74,7 +74,7 @@ static void FreeBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process
    Process_updateExe(proc, buffer);
 }
 
-static void FreeBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
+static void FreeBSDProcessTable_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
 #ifdef KERN_PROC_CWD
    const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_CWD, kproc->ki_pid };
    char buffer[2048];
@@ -98,7 +98,7 @@ static void FreeBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process
 #endif
 }
 
-static void FreeBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
+static void FreeBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
    Process_updateComm(proc, kproc->ki_comm);
 
    char** argv = kvm_getargv(kd, kproc, 0);
@@ -130,7 +130,7 @@ static void FreeBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_p
    free(cmdline);
 }
 
-static char* FreeBSDProcessList_readJailName(const struct kinfo_proc* kproc) {
+static char* FreeBSDProcessTable_readJailName(const struct kinfo_proc* kproc) {
    if (kproc->ki_jid == 0)
       return xStrdup("-");
 
@@ -155,7 +155,7 @@ IGNORE_WCASTQUAL_END
    return NULL;
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessTable_goThroughEntries(ProcessTable* super) {
    const Machine* host = super->super.host;
    const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
    const Settings* settings = host->settings;
@@ -168,7 +168,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
    for (int i = 0; i < count; i++) {
       const struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
-      Process* proc = ProcessList_getProcess(super, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
+      Process* proc = ProcessTable_getProcess(super, kproc->ki_pid, &preExisting, FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
       if (!preExisting) {
@@ -188,16 +188,16 @@ void ProcessList_goThroughEntries(ProcessList* super) {
          }
          Process_fillStarttimeBuffer(proc);
          proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
-         ProcessList_add(super, proc);
+         ProcessTable_add(super, proc);
 
-         FreeBSDProcessList_updateExe(kproc, proc);
-         FreeBSDProcessList_updateProcessName(fhost->kd, kproc, proc);
+         FreeBSDProcessTable_updateExe(kproc, proc);
+         FreeBSDProcessTable_updateProcessName(fhost->kd, kproc, proc);
 
          if (settings->ss->flags & PROCESS_FLAG_CWD) {
-            FreeBSDProcessList_updateCwd(kproc, proc);
+            FreeBSDProcessTable_updateCwd(kproc, proc);
          }
 
-         fp->jname = FreeBSDProcessList_readJailName(kproc);
+         fp->jname = FreeBSDProcessTable_readJailName(kproc);
 
          proc->tty_nr = kproc->ki_tdev;
          const char* name = (kproc->ki_tdev != NODEV) ? devname(kproc->ki_tdev, S_IFCHR) : NULL;
@@ -212,7 +212,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
             // process can enter jail anytime
             fp->jid = kproc->ki_jid;
             free(fp->jname);
-            fp->jname = FreeBSDProcessList_readJailName(kproc);
+            fp->jname = FreeBSDProcessTable_readJailName(kproc);
          }
          // if there are reapers in the system, process can get reparented anytime
          Process_setParent(proc, kproc->ki_ppid);
@@ -222,7 +222,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
             proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
-            FreeBSDProcessList_updateProcessName(fhost->kd, kproc, proc);
+            FreeBSDProcessTable_updateProcessName(fhost->kd, kproc, proc);
          }
       }
 

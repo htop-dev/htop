@@ -53,7 +53,7 @@ What's new in version 3.2.1
 * On Solaris, fix the build
 * On NetBSD, OpenBSD and Solaris ensure env buffer size is sufficient
 * On Linux, resolve processes exiting interfering with sampling
-* Fix ProcessList quadratic removal when scanning processes
+* Fix ProcessTable quadratic removal when scanning processes
 * Under LXC, limit CPU count to that given by /proc/cpuinfo
 * Improve container detection for LXC
 * Some minor documentation fixes

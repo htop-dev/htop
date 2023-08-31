@@ -34,7 +34,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Platform.h"
 #include "Process.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "ProvideCurses.h"
 #include "ScreenManager.h"
 #include "Settings.h"
@@ -341,9 +341,9 @@ int CommandLine_run(int argc, char** argv) {
    Hashtable* ds = DynamicScreens_new();
 
    Machine* host = Machine_new(ut, flags.userId);
-   ProcessList* pl = ProcessList_new(host, flags.pidMatchList);
+   ProcessTable* pt = ProcessTable_new(host, flags.pidMatchList);
    Settings* settings = Settings_new(host->activeCPUs, dm, dc, ds);
-   Machine_populateTablesFromSettings(host, settings, &pl->super);
+   Machine_populateTablesFromSettings(host, settings, &pt->super);
 
    Header* header = Header_new(host, 2);
    Header_populateFromSettings(header);
@@ -402,7 +402,7 @@ int CommandLine_run(int argc, char** argv) {
    Machine_scanTables(host);
 
    if (settings->ss->allBranchesCollapsed)
-      Table_collapseAllBranches(&pl->super);
+      Table_collapseAllBranches(&pt->super);
 
    ScreenManager_run(scr, NULL, NULL, NULL);
 

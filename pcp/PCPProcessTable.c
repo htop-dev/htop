@@ -1,5 +1,5 @@
 /*
-htop - PCPProcessList.c
+htop - PCPProcessTable.c
 (C) 2014 Hisham H. Muhammad
 (C) 2020-2021 htop dev team
 (C) 2020-2021 Red Hat, Inc.
@@ -9,7 +9,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "pcp/PCPProcessList.h"
+#include "pcp/PCPProcessTable.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -31,19 +31,19 @@ in the source distribution for its full text.
 #include "pcp/PCPProcess.h"
 
 
-ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   PCPProcessList* this = xCalloc(1, sizeof(PCPProcessList));
-   Object_setClass(this, Class(ProcessList));
+ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
+   PCPProcessTable* this = xCalloc(1, sizeof(PCPProcessTable));
+   Object_setClass(this, Class(ProcessTable));
 
-   ProcessList* super = &this->super;
-   ProcessList_init(super, Class(PCPProcess), host, pidMatchList);
+   ProcessTable* super = &this->super;
+   ProcessTable_init(super, Class(PCPProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(Object* cast) {
-   PCPProcessList* this = (PCPProcessList*) cast;
-   ProcessList_done(&this->super);
+void ProcessTable_delete(Object* cast) {
+   PCPProcessTable* this = (PCPProcessTable*) cast;
+   ProcessTable_done(&this->super);
    free(this);
 }
 
@@ -112,7 +112,7 @@ static char* setUser(UsersTable* this, unsigned int uid, int pid, int offset) {
    return name;
 }
 
-static inline ProcessState PCPProcessList_getProcessState(char state) {
+static inline ProcessState PCPProcessTable_getProcessState(char state) {
    switch (state) {
       case '?': return UNKNOWN;
       case 'R': return RUNNING;
@@ -129,13 +129,13 @@ static inline ProcessState PCPProcessList_getProcessState(char state) {
    }
 }
 
-static void PCPProcessList_updateID(Process* process, int pid, int offset) {
+static void PCPProcessTable_updateID(Process* process, int pid, int offset) {
    Process_setThreadGroup(process, Metric_instance_u32(PCP_PROC_TGID, pid, offset, 1));
    Process_setParent(process, Metric_instance_u32(PCP_PROC_PPID, pid, offset, 1));
-   process->state = PCPProcessList_getProcessState(Metric_instance_char(PCP_PROC_STATE, pid, offset, '?'));
+   process->state = PCPProcessTable_getProcessState(Metric_instance_char(PCP_PROC_STATE, pid, offset, '?'));
 }
 
-static void PCPProcessList_updateInfo(PCPProcess* pp, int pid, int offset, char* command, size_t commLen) {
+static void PCPProcessTable_updateInfo(PCPProcess* pp, int pid, int offset, char* command, size_t commLen) {
    Process* process = &pp->super;
    pmAtomValue value;
 
@@ -165,7 +165,7 @@ static void PCPProcessList_updateInfo(PCPProcess* pp, int pid, int offset, char*
    process->time = pp->utime + pp->stime;
 }
 
-static void PCPProcessList_updateIO(PCPProcess* pp, int pid, int offset, unsigned long long now) {
+static void PCPProcessTable_updateIO(PCPProcess* pp, int pid, int offset, unsigned long long now) {
    pmAtomValue value;
 
    pp->io_rchar = Metric_instance_ONE_K(PCP_PROC_IO_RCHAR, pid, offset);
@@ -197,7 +197,7 @@ static void PCPProcessList_updateIO(PCPProcess* pp, int pid, int offset, unsigne
    pp->io_last_scan_time = now;
 }
 
-static void PCPProcessList_updateMemory(PCPProcess* pp, int pid, int offset) {
+static void PCPProcessTable_updateMemory(PCPProcess* pp, int pid, int offset) {
    pp->super.m_virt = Metric_instance_u32(PCP_PROC_MEM_SIZE, pid, offset, 0);
    pp->super.m_resident = Metric_instance_u32(PCP_PROC_MEM_RSS, pid, offset, 0);
    pp->m_share = Metric_instance_u32(PCP_PROC_MEM_SHARE, pid, offset, 0);
@@ -207,22 +207,22 @@ static void PCPProcessList_updateMemory(PCPProcess* pp, int pid, int offset) {
    pp->m_dt = Metric_instance_u32(PCP_PROC_MEM_DIRTY, pid, offset, 0);
 }
 
-static void PCPProcessList_updateSmaps(PCPProcess* pp, pid_t pid, int offset) {
+static void PCPProcessTable_updateSmaps(PCPProcess* pp, pid_t pid, int offset) {
    pp->m_pss = Metric_instance_u64(PCP_PROC_SMAPS_PSS, pid, offset, 0);
    pp->m_swap = Metric_instance_u64(PCP_PROC_SMAPS_SWAP, pid, offset, 0);
    pp->m_psswp = Metric_instance_u64(PCP_PROC_SMAPS_SWAPPSS, pid, offset, 0);
 }
 
-static void PCPProcessList_readOomData(PCPProcess* pp, int pid, int offset) {
+static void PCPProcessTable_readOomData(PCPProcess* pp, int pid, int offset) {
    pp->oom = Metric_instance_u32(PCP_PROC_OOMSCORE, pid, offset, 0);
 }
 
-static void PCPProcessList_readAutogroup(PCPProcess* pp, int pid, int offset) {
+static void PCPProcessTable_readAutogroup(PCPProcess* pp, int pid, int offset) {
    pp->autogroup_id = Metric_instance_s64(PCP_PROC_AUTOGROUP_ID, pid, offset, -1);
    pp->autogroup_nice = Metric_instance_s32(PCP_PROC_AUTOGROUP_NICE, pid, offset, 0);
 }
 
-static void PCPProcessList_readCtxtData(PCPProcess* pp, int pid, int offset) {
+static void PCPProcessTable_readCtxtData(PCPProcess* pp, int pid, int offset) {
    pmAtomValue value;
    unsigned long ctxt = 0;
 
@@ -246,28 +246,28 @@ static char* setString(Metric metric, int pid, int offset, char* string) {
    return string;
 }
 
-static void PCPProcessList_updateTTY(Process* process, int pid, int offset) {
+static void PCPProcessTable_updateTTY(Process* process, int pid, int offset) {
    process->tty_name = setString(PCP_PROC_TTYNAME, pid, offset, process->tty_name);
 }
 
-static void PCPProcessList_readCGroups(PCPProcess* pp, int pid, int offset) {
+static void PCPProcessTable_readCGroups(PCPProcess* pp, int pid, int offset) {
    pp->cgroup = setString(PCP_PROC_CGROUPS, pid, offset, pp->cgroup);
 }
 
-static void PCPProcessList_readSecattrData(PCPProcess* pp, int pid, int offset) {
+static void PCPProcessTable_readSecattrData(PCPProcess* pp, int pid, int offset) {
    pp->secattr = setString(PCP_PROC_LABELS, pid, offset, pp->secattr);
 }
 
-static void PCPProcessList_readCwd(PCPProcess* pp, int pid, int offset) {
+static void PCPProcessTable_readCwd(PCPProcess* pp, int pid, int offset) {
    pp->super.procCwd = setString(PCP_PROC_CWD, pid, offset, pp->super.procCwd);
 }
 
-static void PCPProcessList_updateUsername(Process* process, int pid, int offset, UsersTable* users) {
+static void PCPProcessTable_updateUsername(Process* process, int pid, int offset, UsersTable* users) {
    process->st_uid = Metric_instance_u32(PCP_PROC_ID_UID, pid, offset, 0);
    process->user = setUser(users, process->st_uid, pid, offset);
 }
 
-static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, const char* comm) {
+static void PCPProcessTable_updateCmdline(Process* process, int pid, int offset, const char* comm) {
    pmAtomValue value;
    if (!Metric_instance(PCP_PROC_PSARGS, pid, offset, &value, PM_TYPE_STRING)) {
       if (process->state != ZOMBIE)
@@ -317,9 +317,9 @@ static void PCPProcessList_updateCmdline(Process* process, int pid, int offset, 
    }
 }
 
-static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
-   ProcessList* pl = (ProcessList*) this;
-   Machine* host = pl->super.host;
+static bool PCPProcessTable_updateProcesses(PCPProcessTable* this) {
+   ProcessTable* pt = (ProcessTable*) this;
+   Machine* host = pt->super.host;
    PCPMachine* phost = (PCPMachine*) host;
 
    const Settings* settings = host->settings;
@@ -334,15 +334,15 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
    while (Metric_iterate(PCP_PROC_PID, &pid, &offset)) {
 
       bool preExisting;
-      Process* proc = ProcessList_getProcess(pl, pid, &preExisting, PCPProcess_new);
+      Process* proc = ProcessTable_getProcess(pt, pid, &preExisting, PCPProcess_new);
       PCPProcess* pp = (PCPProcess*) proc;
-      PCPProcessList_updateID(proc, pid, offset);
+      PCPProcessTable_updateID(proc, pid, offset);
       proc->isUserlandThread = Process_getPid(proc) != Process_getThreadGroup(proc);
       pp->offset = offset >= 0 ? offset : 0;
 
       /*
        * These conditions will not trigger on first occurrence, cause we need to
-       * add the process to the ProcessList and do all one time scans
+       * add the process to the ProcessTable and do all one time scans
        * (e.g. parsing the cmdline to detect a kernel thread)
        * But it will short-circuit subsequent scans.
        */
@@ -350,40 +350,40 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
          proc->super.updated = true;
          proc->super.show = false;
          if (proc->state == RUNNING)
-            pl->runningTasks++;
-         pl->kernelThreads++;
-         pl->totalTasks++;
+            pt->runningTasks++;
+         pt->kernelThreads++;
+         pt->totalTasks++;
          continue;
       }
       if (preExisting && hideUserlandThreads && Process_isUserlandThread(proc)) {
          proc->super.updated = true;
          proc->super.show = false;
          if (proc->state == RUNNING)
-            pl->runningTasks++;
-         pl->userlandThreads++;
-         pl->totalTasks++;
+            pt->runningTasks++;
+         pt->userlandThreads++;
+         pt->totalTasks++;
          continue;
       }
 
       if (flags & PROCESS_FLAG_IO)
-         PCPProcessList_updateIO(pp, pid, offset, now);
+         PCPProcessTable_updateIO(pp, pid, offset, now);
 
-      PCPProcessList_updateMemory(pp, pid, offset);
+      PCPProcessTable_updateMemory(pp, pid, offset);
 
       if ((flags & PROCESS_FLAG_LINUX_SMAPS) &&
           (Process_isKernelThread(proc) == false)) {
          if (Metric_enabled(PCP_PROC_SMAPS_PSS))
-            PCPProcessList_updateSmaps(pp, pid, offset);
+            PCPProcessTable_updateSmaps(pp, pid, offset);
       }
 
       char command[MAX_NAME + 1];
       unsigned int tty_nr = proc->tty_nr;
       unsigned long long int lasttimes = pp->utime + pp->stime;
 
-      PCPProcessList_updateInfo(pp, pid, offset, command, sizeof(command));
+      PCPProcessTable_updateInfo(pp, pid, offset, command, sizeof(command));
       proc->starttime_ctime += Platform_getBootTime();
       if (tty_nr != proc->tty_nr)
-         PCPProcessList_updateTTY(proc, pid, offset);
+         PCPProcessTable_updateTTY(proc, pid, offset);
 
       proc->percent_cpu = NAN;
       if (phost->period > 0.0) {
@@ -393,33 +393,33 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
       proc->percent_mem = proc->m_resident / (double) host->totalMem * 100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
-      PCPProcessList_updateUsername(proc, pid, offset, host->usersTable);
+      PCPProcessTable_updateUsername(proc, pid, offset, host->usersTable);
 
       if (!preExisting) {
-         PCPProcessList_updateCmdline(proc, pid, offset, command);
+         PCPProcessTable_updateCmdline(proc, pid, offset, command);
          Process_fillStarttimeBuffer(proc);
-         ProcessList_add(pl, proc);
+         ProcessTable_add(pt, proc);
       } else if (settings->updateProcessNames && proc->state != ZOMBIE) {
-         PCPProcessList_updateCmdline(proc, pid, offset, command);
+         PCPProcessTable_updateCmdline(proc, pid, offset, command);
       }
 
       if (flags & PROCESS_FLAG_LINUX_CGROUP)
-         PCPProcessList_readCGroups(pp, pid, offset);
+         PCPProcessTable_readCGroups(pp, pid, offset);
 
       if (flags & PROCESS_FLAG_LINUX_OOM)
-         PCPProcessList_readOomData(pp, pid, offset);
+         PCPProcessTable_readOomData(pp, pid, offset);
 
       if (flags & PROCESS_FLAG_LINUX_CTXT)
-         PCPProcessList_readCtxtData(pp, pid, offset);
+         PCPProcessTable_readCtxtData(pp, pid, offset);
 
       if (flags & PROCESS_FLAG_LINUX_SECATTR)
-         PCPProcessList_readSecattrData(pp, pid, offset);
+         PCPProcessTable_readSecattrData(pp, pid, offset);
 
       if (flags & PROCESS_FLAG_CWD)
-         PCPProcessList_readCwd(pp, pid, offset);
+         PCPProcessTable_readCwd(pp, pid, offset);
 
       if (flags & PROCESS_FLAG_LINUX_AUTOGROUP)
-         PCPProcessList_readAutogroup(pp, pid, offset);
+         PCPProcessTable_readAutogroup(pp, pid, offset);
 
       if (proc->state == ZOMBIE && !proc->cmdline && command[0]) {
          Process_updateCmdline(proc, command, 0, strlen(command));
@@ -429,9 +429,9 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
          }
 
          if (Process_isKernelThread(proc)) {
-            pl->kernelThreads++;
+            pt->kernelThreads++;
          } else {
-            pl->userlandThreads++;
+            pt->userlandThreads++;
          }
       }
 
@@ -439,15 +439,15 @@ static bool PCPProcessList_updateProcesses(PCPProcessList* this) {
       proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) ||
                       (hideUserlandThreads && Process_isUserlandThread(proc)));
 
-      pl->totalTasks++;
+      pt->totalTasks++;
       if (proc->state == RUNNING)
-         pl->runningTasks++;
+         pt->runningTasks++;
       proc->super.updated = true;
    }
    return true;
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
-   PCPProcessList* this = (PCPProcessList*) super;
-   PCPProcessList_updateProcesses(this);
+void ProcessTable_goThroughEntries(ProcessTable* super) {
+   PCPProcessTable* this = (PCPProcessTable*) super;
+   PCPProcessTable_updateProcesses(this);
 }

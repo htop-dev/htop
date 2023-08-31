@@ -1,11 +1,11 @@
 /*
-htop - ProcessList.c
+htop - ProcessTable.c
 (C) 2004,2005 Hisham H. Muhammad
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
+#include "ProcessTable.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -20,17 +20,17 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-void ProcessList_init(ProcessList* this, const ObjectClass* klass, Machine* host, Hashtable* pidMatchList) {
+void ProcessTable_init(ProcessTable* this, const ObjectClass* klass, Machine* host, Hashtable* pidMatchList) {
    Table_init(&this->super, klass, host);
 
    this->pidMatchList = pidMatchList;
 }
 
-void ProcessList_done(ProcessList* this) {
+void ProcessTable_done(ProcessTable* this) {
    Table_done(&this->super);
 }
 
-Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor) {
+Process* ProcessTable_getProcess(ProcessTable* this, pid_t pid, bool* preExisting, Process_New constructor) {
    const Table* table = &this->super;
    Process* proc = (Process*) Hashtable_get(table->table, pid);
    *preExisting = proc != NULL;
@@ -45,8 +45,8 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
    return proc;
 }
 
-static void ProcessList_prepareEntries(Table* super) {
-   ProcessList* this = (ProcessList*) super;
+static void ProcessTable_prepareEntries(Table* super) {
+   ProcessTable* this = (ProcessTable*) super;
    this->totalTasks = 0;
    this->userlandThreads = 0;
    this->kernelThreads = 0;
@@ -55,13 +55,13 @@ static void ProcessList_prepareEntries(Table* super) {
    Table_prepareEntries(super);
 }
 
-static void ProcessList_iterateEntries(Table* super) {
-   ProcessList* this = (ProcessList*) super;
+static void ProcessTable_iterateEntries(Table* super) {
+   ProcessTable* this = (ProcessTable*) super;
    // calling into platform-specific code
-   ProcessList_goThroughEntries(this);
+   ProcessTable_goThroughEntries(this);
 }
 
-static void ProcessList_cleanupEntries(Table* super) {
+static void ProcessTable_cleanupEntries(Table* super) {
    Machine* host = super->host;
    const Settings* settings = host->settings;
 
@@ -69,7 +69,7 @@ static void ProcessList_cleanupEntries(Table* super) {
    for (int i = Vector_size(super->rows) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(super->rows, i);
 
-      // tidy up Process state after refreshing the ProcessList table
+      // tidy up Process state after refreshing the ProcessTable table
       Process_makeCommandStr(p, settings);
 
       // keep track of the highest UID for column scaling
@@ -83,12 +83,12 @@ static void ProcessList_cleanupEntries(Table* super) {
    Table_compact(super);
 }
 
-const TableClass ProcessList_class = {
+const TableClass ProcessTable_class = {
    .super = {
       .extends = Class(Table),
-      .delete = ProcessList_delete,
+      .delete = ProcessTable_delete,
    },
-   .prepare = ProcessList_prepareEntries,
-   .iterate = ProcessList_iterateEntries,
-   .cleanup = ProcessList_cleanupEntries,
+   .prepare = ProcessTable_prepareEntries,
+   .iterate = ProcessTable_iterateEntries,
+   .cleanup = ProcessTable_cleanupEntries,
 };

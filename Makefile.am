@@ -73,8 +73,8 @@ myhtopsources = \
 	OptionItem.c \
 	Panel.c \
 	Process.c \
-	ProcessList.c \
 	ProcessLocksScreen.c \
+	ProcessTable.c \
 	Row.c \
 	RichString.c \
 	Scheduling.c \
@@ -141,8 +141,8 @@ myhtopheaders = \
 	OptionItem.h \
 	Panel.h \
 	Process.h \
-	ProcessList.h \
 	ProcessLocksScreen.h \
+	ProcessTable.h \
 	ProvideCurses.h \
 	ProvideTerm.h \
 	RichString.h \
@@ -178,7 +178,7 @@ linux_platform_headers = \
 	linux/LibSensors.h \
 	linux/LinuxMachine.h \
 	linux/LinuxProcess.h \
-	linux/LinuxProcessList.h \
+	linux/LinuxProcessTable.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
 	linux/ProcessField.h \
@@ -201,7 +201,7 @@ linux_platform_sources = \
 	linux/LibSensors.c \
 	linux/LinuxMachine.c \
 	linux/LinuxProcess.c \
-	linux/LinuxProcessList.c \
+	linux/LinuxProcessTable.c \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
 	linux/SELinuxMeter.c \
@@ -221,7 +221,7 @@ endif
 
 freebsd_platform_headers = \
 	freebsd/FreeBSDMachine.h \
-	freebsd/FreeBSDProcessList.h \
+	freebsd/FreeBSDProcessTable.h \
 	freebsd/FreeBSDProcess.h \
 	freebsd/Platform.h \
 	freebsd/ProcessField.h \
@@ -237,7 +237,7 @@ freebsd_platform_headers = \
 freebsd_platform_sources = \
 	freebsd/Platform.c \
 	freebsd/FreeBSDMachine.c \
-	freebsd/FreeBSDProcessList.c \
+	freebsd/FreeBSDProcessTable.c \
 	freebsd/FreeBSDProcess.c \
 	generic/fdstat_sysctl.c \
 	generic/gettime.c \
@@ -257,7 +257,7 @@ endif
 
 dragonflybsd_platform_headers = \
 	dragonflybsd/DragonFlyBSDMachine.h \
-	dragonflybsd/DragonFlyBSDProcessList.h \
+	dragonflybsd/DragonFlyBSDProcessTable.h \
 	dragonflybsd/DragonFlyBSDProcess.h \
 	dragonflybsd/Platform.h \
 	dragonflybsd/ProcessField.h \
@@ -268,7 +268,7 @@ dragonflybsd_platform_headers = \
 
 dragonflybsd_platform_sources = \
 	dragonflybsd/DragonFlyBSDMachine.c \
-	dragonflybsd/DragonFlyBSDProcessList.c \
+	dragonflybsd/DragonFlyBSDProcessTable.c \
 	dragonflybsd/DragonFlyBSDProcess.c \
 	dragonflybsd/Platform.c \
 	generic/fdstat_sysctl.c \
@@ -293,7 +293,7 @@ netbsd_platform_headers = \
 	netbsd/ProcessField.h \
 	netbsd/NetBSDMachine.h \
 	netbsd/NetBSDProcess.h \
-	netbsd/NetBSDProcessList.h
+	netbsd/NetBSDProcessTable.h
 
 netbsd_platform_sources = \
 	generic/fdstat_sysctl.c \
@@ -303,7 +303,7 @@ netbsd_platform_sources = \
 	netbsd/Platform.c \
 	netbsd/NetBSDMachine.c \
 	netbsd/NetBSDProcess.c \
-	netbsd/NetBSDProcessList.c
+	netbsd/NetBSDProcessTable.c
 
 if HTOP_NETBSD
 myhtopplatheaders = $(netbsd_platform_headers)
@@ -318,7 +318,7 @@ openbsd_platform_headers = \
 	generic/hostname.h \
 	generic/uname.h \
 	openbsd/OpenBSDMachine.h \
-	openbsd/OpenBSDProcessList.h \
+	openbsd/OpenBSDProcessTable.h \
 	openbsd/OpenBSDProcess.h \
 	openbsd/Platform.h \
 	openbsd/ProcessField.h
@@ -328,7 +328,7 @@ openbsd_platform_sources = \
 	generic/hostname.c \
 	generic/uname.c \
 	openbsd/OpenBSDMachine.c \
-	openbsd/OpenBSDProcessList.c \
+	openbsd/OpenBSDProcessTable.c \
 	openbsd/OpenBSDProcess.c \
 	openbsd/Platform.c
 
@@ -343,7 +343,7 @@ endif
 darwin_platform_headers = \
 	darwin/DarwinMachine.h \
 	darwin/DarwinProcess.h \
-	darwin/DarwinProcessList.h \
+	darwin/DarwinProcessTable.h \
 	darwin/Platform.h \
 	darwin/PlatformHelpers.h \
 	darwin/ProcessField.h \
@@ -361,7 +361,7 @@ darwin_platform_sources = \
 	darwin/PlatformHelpers.c \
 	darwin/DarwinMachine.c \
 	darwin/DarwinProcess.c \
-	darwin/DarwinProcessList.c \
+	darwin/DarwinProcessTable.c \
 	generic/fdstat_sysctl.c \
 	generic/gettime.c \
 	generic/hostname.c \
@@ -387,7 +387,7 @@ solaris_platform_headers = \
 	solaris/Platform.h \
 	solaris/SolarisMachine.h \
 	solaris/SolarisProcess.h \
-	solaris/SolarisProcessList.h \
+	solaris/SolarisProcessTable.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h
@@ -399,7 +399,7 @@ solaris_platform_sources = \
 	solaris/Platform.c \
 	solaris/SolarisMachine.c \
 	solaris/SolarisProcess.c \
-	solaris/SolarisProcessList.c \
+	solaris/SolarisProcessTable.c \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 
@@ -426,7 +426,7 @@ pcp_platform_headers = \
 	pcp/PCPDynamicScreen.h \
 	pcp/PCPMachine.h \
 	pcp/PCPProcess.h \
-	pcp/PCPProcessList.h \
+	pcp/PCPProcessTable.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h
@@ -444,7 +444,7 @@ pcp_platform_sources = \
 	pcp/PCPDynamicScreen.c \
 	pcp/PCPMachine.c \
 	pcp/PCPProcess.c \
-	pcp/PCPProcessList.c \
+	pcp/PCPProcessTable.c \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 
@@ -463,14 +463,14 @@ unsupported_platform_headers = \
 	unsupported/ProcessField.h \
 	unsupported/UnsupportedMachine.h \
 	unsupported/UnsupportedProcess.h \
-	unsupported/UnsupportedProcessList.h
+	unsupported/UnsupportedProcessTable.h
 
 unsupported_platform_sources = \
 	generic/gettime.c \
 	unsupported/Platform.c \
 	unsupported/UnsupportedMachine.c \
 	unsupported/UnsupportedProcess.c \
-	unsupported/UnsupportedProcessList.c
+	unsupported/UnsupportedProcessTable.c
 
 if HTOP_UNSUPPORTED
 myhtopplatsources = $(unsupported_platform_sources)

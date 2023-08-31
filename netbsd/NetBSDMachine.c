@@ -129,7 +129,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 }
 
 void Machine_delete(Machine* super) {
-   NetBSDMachine* this = (NetBSDProcessList*) super;
+   NetBSDMachine* this = (NetBSDMachine*) super;
 
    Machine_done(super);
 
@@ -266,11 +266,11 @@ static void NetBSDMachine_scanCPUFrequency(NetBSDMachine* this) {
 void Machine_scan(Machine* super) {
    NetBSDMachine* this = (NetBSDMachine*) super;
 
-   NetBSDProcessList_scanMemoryInfo(this);
-   NetBSDProcessList_scanCPUTime(this);
+   NetBSDProcessTable_scanMemoryInfo(this);
+   NetBSDProcessTable_scanCPUTime(this);
 
    if (super->settings->showCPUFrequency) {
-      NetBSDProcessList_scanCPUFrequency(npl);
+      NetBSDProcessTable_scanCPUFrequency(npl);
    }
 }
 

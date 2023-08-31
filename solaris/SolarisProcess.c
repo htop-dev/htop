@@ -14,7 +14,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 
 #include "Process.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "CRT.h"
 
 #include "solaris/Platform.h"

@@ -15,7 +15,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Machine.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 
 
 typedef struct CPUData_ {

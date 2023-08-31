@@ -1,7 +1,7 @@
-#ifndef HEADER_PCPProcessList
-#define HEADER_PCPProcessList
+#ifndef HEADER_PCPProcessTable
+#define HEADER_PCPProcessTable
 /*
-htop - PCPProcessList.h
+htop - PCPProcessTable.h
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
@@ -13,14 +13,14 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Hashtable.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "UsersTable.h"
 
 #include "pcp/Platform.h"
 
 
-typedef struct PCPProcessList_ {
-   ProcessList super;
-} PCPProcessList;
+typedef struct PCPProcessTable_ {
+   ProcessTable super;
+} PCPProcessTable;
 
 #endif

@@ -1,5 +1,5 @@
 /*
-htop - NetBSDProcessList.c
+htop - NetBSDProcessTable.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
 (C) 2021 Santhosh Raju
@@ -8,7 +8,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "netbsd/NetBSDProcessList.h"
+#include "netbsd/NetBSDProcessTable.h"
 
 #include <kvm.h>
 #include <math.h>
@@ -28,30 +28,30 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "Settings.h"
 #include "XUtils.h"
 #include "netbsd/NetBSDMachine.h"
 #include "netbsd/NetBSDProcess.h"
 
 
-ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   NetBSDProcessList* this = xCalloc(1, sizeof(NetBSDProcessList));
-   Object_setClass(this, Class(ProcessList));
+ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
+   NetBSDProcessTable* this = xCalloc(1, sizeof(NetBSDProcessTable));
+   Object_setClass(this, Class(ProcessTable));
 
-   ProcessList* super = (ProcessList*) this;
-   ProcessList_init(super, Class(NetBSDProcess), host, pidMatchList);
+   ProcessTable* super = (ProcessTable*) this;
+   ProcessTable_init(super, Class(NetBSDProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(Object* cast) {
-   NetBSDProcessList* this = (NetBSDProcessList*) cast;
-   ProcessList_done(&this->super);
+void ProcessTable_delete(Object* cast) {
+   NetBSDProcessTable* this = (NetBSDProcessTable*) cast;
+   ProcessTable_done(&this->super);
    free(this);
 }
 
-static void NetBSDProcessList_updateExe(const struct kinfo_proc2* kproc, Process* proc) {
+static void NetBSDProcessTable_updateExe(const struct kinfo_proc2* kproc, Process* proc) {
    const int mib[] = { CTL_KERN, KERN_PROC_ARGS, kproc->p_pid, KERN_PROC_PATHNAME };
    char buffer[2048];
    size_t size = sizeof(buffer);
@@ -69,7 +69,7 @@ static void NetBSDProcessList_updateExe(const struct kinfo_proc2* kproc, Process
    Process_updateExe(proc, buffer);
 }
 
-static void NetBSDProcessList_updateCwd(const struct kinfo_proc2* kproc, Process* proc) {
+static void NetBSDProcessTable_updateCwd(const struct kinfo_proc2* kproc, Process* proc) {
    const int mib[] = { CTL_KERN, KERN_PROC_ARGS, kproc->p_pid, KERN_PROC_CWD };
    char buffer[2048];
    size_t size = sizeof(buffer);
@@ -89,7 +89,7 @@ static void NetBSDProcessList_updateCwd(const struct kinfo_proc2* kproc, Process
    free_and_xStrdup(&proc->procCwd, buffer);
 }
 
-static void NetBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc2* kproc, Process* proc) {
+static void NetBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_proc2* kproc, Process* proc) {
    Process_updateComm(proc, kproc->p_comm);
 
    /*
@@ -148,7 +148,7 @@ static double getpcpu(const NetBSDMachine* nhost, const struct kinfo_proc2* kp) 
    return 100.0 * (double)kp->p_pctcpu / nhost->fscale;
 }
 
-static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
+static void NetBSDProcessTable_scanProcs(NetBSDProcessTable* this) {
    const Machine* host = this->super.host;
    const NetBSDMachine* nhost = (const NetBSDMachine*) host;
    const Settings* settings = host->settings;
@@ -162,7 +162,7 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
       const struct kinfo_proc2* kproc = &kprocs[i];
 
       bool preExisting = false;
-      Process* proc = ProcessList_getProcess(&this->super, kproc->p_pid, &preExisting, NetBSDProcess_new);
+      Process* proc = ProcessTable_getProcess(&this->super, kproc->p_pid, &preExisting, NetBSDProcess_new);
 
       proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
@@ -177,7 +177,7 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
          proc->isUserlandThread = Process_getPid(proc) != Process_getThreadGroup(proc); // eh?
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
-         ProcessList_add(&this->super, proc);
+         ProcessTable_add(&this->super, proc);
 
          proc->tty_nr = kproc->p_tdev;
          const char* name = ((dev_t)kproc->p_tdev != KERN_PROC_TTY_NODEV) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
@@ -188,16 +188,16 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
             free_and_xStrdup(&proc->tty_name, name);
          }
 
-         NetBSDProcessList_updateExe(kproc, proc);
-         NetBSDProcessList_updateProcessName(nhost->kd, kproc, proc);
+         NetBSDProcessTable_updateExe(kproc, proc);
+         NetBSDProcessTable_updateProcessName(nhost->kd, kproc, proc);
       } else {
          if (settings->updateProcessNames) {
-            NetBSDProcessList_updateProcessName(nhost->kd, kproc, proc);
+            NetBSDProcessTable_updateProcessName(nhost->kd, kproc, proc);
          }
       }
 
       if (settings->ss->flags & PROCESS_FLAG_CWD) {
-         NetBSDProcessList_updateCwd(kproc, proc);
+         NetBSDProcessTable_updateCwd(kproc, proc);
       }
 
       if (proc->st_uid != kproc->p_uid) {
@@ -266,8 +266,8 @@ static void NetBSDProcessList_scanProcs(NetBSDProcessList* this) {
    }
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
-   NetBSDProcessList* npl = (NetBSDProcessList*) super;
+void ProcessTable_goThroughEntries(ProcessTable* super) {
+   NetBSDProcessTable* npt = (NetBSDProcessTable*) super;
 
-   NetBSDProcessList_scanProcs(npl);
+   NetBSDProcessTable_scanProcs(npt);
 }

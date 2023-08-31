@@ -1,12 +1,12 @@
 /*
-htop - DragonFlyBSDProcessList.c
+htop - DragonFlyBSDProcessTable.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "dragonflybsd/DragonFlyBSDProcessList.h"
+#include "dragonflybsd/DragonFlyBSDProcessTable.h"
 
 #include <fcntl.h>
 #include <limits.h>
@@ -26,23 +26,23 @@ in the source distribution for its full text.
 #include "dragonflybsd/DragonFlyBSDProcess.h"
 
 
-ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   DragonFlyBSDProcessList* this = xCalloc(1, sizeof(DragonFlyBSDProcessList));
-   Object_setClass(this, Class(ProcessList));
+ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
+   DragonFlyBSDProcessTable* this = xCalloc(1, sizeof(DragonFlyBSDProcessTable));
+   Object_setClass(this, Class(ProcessTable));
 
-   ProcessList* super = (ProcessList*) this;
-   ProcessList_init(super, Class(DragonFlyBSDProcess), host, pidMatchList);
+   ProcessTable* super = (ProcessTable*) this;
+   ProcessTable_init(super, Class(DragonFlyBSDProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(Object* cast) {
-   const DragonFlyBSDProcessList* this = (DragonFlyBSDProcessList*) cast;
-   ProcessList_done(&this->super);
+void ProcessTable_delete(Object* cast) {
+   const DragonFlyBSDProcessTable* this = (DragonFlyBSDProcessTable*) cast;
+   ProcessTable_done(&this->super);
    free(this);
 }
 
-//static void DragonFlyBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process* proc) {
+//static void DragonFlyBSDProcessTable_updateExe(const struct kinfo_proc* kproc, Process* proc) {
 //   const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, kproc->kp_pid };
 //   char buffer[2048];
 //   size_t size = sizeof(buffer);
@@ -60,7 +60,7 @@ void ProcessList_delete(Object* cast) {
 //   Process_updateExe(proc, buffer);
 //}
 
-static void DragonFlyBSDProcessList_updateExe(const struct kinfo_proc* kproc, Process* proc) {
+static void DragonFlyBSDProcessTable_updateExe(const struct kinfo_proc* kproc, Process* proc) {
    if (Process_isKernelThread(proc))
       return;
 
@@ -76,7 +76,7 @@ static void DragonFlyBSDProcessList_updateExe(const struct kinfo_proc* kproc, Pr
    Process_updateExe(proc, target);
 }
 
-static void DragonFlyBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
+static void DragonFlyBSDProcessTable_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
    const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_CWD, kproc->kp_pid };
    char buffer[2048];
    size_t size = sizeof(buffer);
@@ -96,7 +96,7 @@ static void DragonFlyBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Pr
    free_and_xStrdup(&proc->procCwd, buffer);
 }
 
-static void DragonFlyBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
+static void DragonFlyBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
    Process_updateComm(proc, kproc->kp_comm);
 
    char** argv = kvm_getargv(kd, kproc, 0);
@@ -129,7 +129,7 @@ static void DragonFlyBSDProcessList_updateProcessName(kvm_t* kd, const struct ki
    free(cmdline);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessTable_goThroughEntries(ProcessTable* super) {
    const Machine* host = super->host;
    const DragonFlyMachine* dhost = (const DragonFlyMachine*) host;
    const Settings* settings = host->settings;
@@ -147,7 +147,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
       bool ATTR_UNUSED isIdleProcess = false;
 
       // note: dragonflybsd kernel processes all have the same pid, so we misuse the kernel thread address to give them a unique identifier
-      Process* proc = ProcessList_getProcess(super, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, DragonFlyBSDProcess_new);
+      Process* proc = ProcessTable_getProcess(super, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, DragonFlyBSDProcess_new);
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
 
       if (!preExisting) {
@@ -182,14 +182,14 @@ void ProcessList_goThroughEntries(ProcessList* super) {
             free_and_xStrdup(&proc->tty_name, name);
          }
 
-         DragonFlyBSDProcessList_updateExe(kproc, proc);
-         DragonFlyBSDProcessList_updateProcessName(dhost->kd, kproc, proc);
+         DragonFlyBSDProcessTable_updateExe(kproc, proc);
+         DragonFlyBSDProcessTable_updateProcessName(dhost->kd, kproc, proc);
 
          if (settings->ss->flags & PROCESS_FLAG_CWD) {
-            DragonFlyBSDProcessList_updateCwd(kproc, proc);
+            DragonFlyBSDProcessTable_updateCwd(kproc, proc);
          }
 
-         ProcessList_add(super, proc);
+         ProcessTable_add(super, proc);
 
          dfp->jname = DragonFlyBSDMachine_readJailName(dhost, kproc->kp_jailid);
       } else {
@@ -206,7 +206,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
             proc->user = UsersTable_getRef(host->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
-            DragonFlyBSDProcessList_updateProcessName(dhost->kd, kproc, proc);
+            DragonFlyBSDProcessTable_updateProcessName(dhost->kd, kproc, proc);
          }
       }
 

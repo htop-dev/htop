@@ -27,7 +27,7 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "ProcessLocksScreen.h"
 #include "ProvideCurses.h"
 #include "Scheduling.h"

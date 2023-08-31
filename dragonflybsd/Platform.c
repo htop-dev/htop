@@ -26,14 +26,14 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
 #include "dragonflybsd/DragonFlyBSDProcess.h"
-#include "dragonflybsd/DragonFlyBSDProcessList.h"
+#include "dragonflybsd/DragonFlyBSDProcessTable.h"
 #include "generic/fdstat_sysctl.h"
 
 

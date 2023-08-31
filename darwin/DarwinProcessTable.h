@@ -1,7 +1,7 @@
-#ifndef HEADER_DarwinProcessList
-#define HEADER_DarwinProcessList
+#ifndef HEADER_DarwinProcessTable
+#define HEADER_DarwinProcessTable
 /*
-htop - DarwinProcessList.h
+htop - DarwinProcessTable.h
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
@@ -10,13 +10,13 @@ in the source distribution for its full text.
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
 
-#include "ProcessList.h"
+#include "ProcessTable.h"
 
 
-typedef struct DarwinProcessList_ {
-   ProcessList super;
+typedef struct DarwinProcessTable_ {
+   ProcessTable super;
 
    uint64_t global_diff;
-} DarwinProcessList;
+} DarwinProcessTable;
 
 #endif

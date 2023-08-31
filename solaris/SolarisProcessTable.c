@@ -1,5 +1,5 @@
 /*
-htop - SolarisProcessList.c
+htop - SolarisProcessTable.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
 Released under the GNU GPLv2+, see the COPYING file
@@ -7,7 +7,7 @@ in the source distribution for its full text.
 */
 
 
-#include "solaris/SolarisProcessList.h"
+#include "solaris/SolarisProcessTable.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ in the source distribution for its full text.
 #define GZONE "global    "
 #define UZONE "unknown   "
 
-static char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
+static char* SolarisProcessTable_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
    char* zname;
 
    if ( sproc->zoneid == 0 ) {
@@ -44,23 +44,23 @@ static char* SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sp
    return zname;
 }
 
-ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   SolarisProcessList* this = xCalloc(1, sizeof(SolarisProcessList));
-   Object_setClass(this, Class(ProcessList));
+ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
+   SolarisProcessTable* this = xCalloc(1, sizeof(SolarisProcessTable));
+   Object_setClass(this, Class(ProcessTable));
 
-   ProcessList* super = &this->super;
-   ProcessList_init(super, Class(SolarisProcess), host, pidMatchList);
+   ProcessTable* super = &this->super;
+   ProcessTable_init(super, Class(SolarisProcess), host, pidMatchList);
 
    return super;
 }
 
-void ProcessList_delete(Object* cast) {
-   SolarisProcessList* this = (SolarisProcessList*) cast;
-   ProcessList_done(&this->super);
+void ProcessTable_delete(Object* cast) {
+   SolarisProcessTable* this = (SolarisProcessTable*) cast;
+   ProcessTable_done(&this->super);
    free(this);
 }
 
-static void SolarisProcessList_updateExe(pid_t pid, Process* proc) {
+static void SolarisProcessTable_updateExe(pid_t pid, Process* proc) {
    char path[32];
    xSnprintf(path, sizeof(path), "/proc/%d/path/a.out", pid);
 
@@ -73,7 +73,7 @@ static void SolarisProcessList_updateExe(pid_t pid, Process* proc) {
    Process_updateExe(proc, target);
 }
 
-static void SolarisProcessList_updateCwd(pid_t pid, Process* proc) {
+static void SolarisProcessTable_updateCwd(pid_t pid, Process* proc) {
    char path[32];
    xSnprintf(path, sizeof(path), "/proc/%d/cwd", pid);
 
@@ -87,7 +87,7 @@ static void SolarisProcessList_updateCwd(pid_t pid, Process* proc) {
 }
 
 /* Taken from: https://docs.oracle.com/cd/E19253-01/817-6223/6mlkidlom/index.html#tbl-sched-state */
-static inline ProcessState SolarisProcessList_getProcessState(char state) {
+static inline ProcessState SolarisProcessTable_getProcessState(char state) {
    switch (state) {
       case 'S': return SLEEPING;
       case 'R': return RUNNABLE;
@@ -105,14 +105,14 @@ static inline ProcessState SolarisProcessList_getProcessState(char state) {
  *       system for more info.
  */
 
-static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* listptr) {
+static int SolarisProcessTable_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo, void* listptr) {
    bool preExisting;
    pid_t getpid;
 
    // Setup process list
-   ProcessList* pl = (ProcessList*) listptr;
-   SolarisProcessList* spl = (SolarisProcessList*) listptr;
-   Machine* host = pl->host;
+   ProcessTable* pt = (ProcessTable*) listptr;
+   SolarisProcessTable* spt = (SolarisProcessTable*) listptr;
+   Machine* host = pt->host;
 
    id_t lwpid_real = _lwpsinfo->pr_lwpid;
    if (lwpid_real > 1023) {
@@ -127,7 +127,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       getpid = lwpid;
    }
 
-   Process* proc            = ProcessList_getProcess(pl, getpid, &preExisting, SolarisProcess_new);
+   Process* proc            = ProcessTable_getProcess(pt, getpid, &preExisting, SolarisProcess_new);
    SolarisProcess* sproc    = (SolarisProcess*) proc;
    const Settings* settings = host->settings;
 
@@ -140,7 +140,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    proc->priority           = _lwpsinfo->pr_pri;
    proc->nice               = _lwpsinfo->pr_nice - NZERO;
    proc->processor          = _lwpsinfo->pr_onpro;
-   proc->state              = SolarisProcessList_getProcessState(_lwpsinfo->pr_sname);
+   proc->state              = SolarisProcessTable_getProcessState(_lwpsinfo->pr_sname);
    // NOTE: This 'percentage' is a 16-bit BINARY FRACTIONS where 1.0 = 0x8000
    // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
    // (accessed on 18 November 2017)
@@ -170,14 +170,14 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       sproc->realpid        = _psinfo->pr_pid;
       sproc->lwpid          = lwpid_real;
       sproc->zoneid         = _psinfo->pr_zoneid;
-      sproc->zname          = SolarisProcessList_readZoneName(spl->kd, sproc);
-      SolarisProcessList_updateExe(_psinfo->pr_pid, proc);
+      sproc->zname          = SolarisProcessTable_readZoneName(spt->kd, sproc);
+      SolarisProcessTable_updateExe(_psinfo->pr_pid, proc);
 
       Process_updateComm(proc, _psinfo->pr_fname);
       Process_updateCmdline(proc, _psinfo->pr_psargs, 0, 0);
 
       if (settings->ss->flags & PROCESS_FLAG_CWD) {
-         SolarisProcessList_updateCwd(_psinfo->pr_pid, proc);
+         SolarisProcessTable_updateCwd(_psinfo->pr_pid, proc);
       }
    }
 
@@ -201,20 +201,20 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
 
       // Update proc and thread counts based on settings
       if (proc->isKernelThread && !settings->hideKernelThreads) {
-         pl->kernelThreads += proc->nlwp;
-         pl->totalTasks += proc->nlwp + 1;
+         pt->kernelThreads += proc->nlwp;
+         pt->totalTasks += proc->nlwp + 1;
          if (proc->state == RUNNING) {
-            pl->runningTasks++;
+            pt->runningTasks++;
          }
       } else if (!proc->isKernelThread) {
          if (proc->state == RUNNING) {
-            pl->runningTasks++;
+            pt->runningTasks++;
          }
          if (settings->hideUserlandThreads) {
-            pl->totalTasks++;
+            pt->totalTasks++;
          } else {
-            pl->userlandThreads += proc->nlwp;
-            pl->totalTasks += proc->nlwp + 1;
+            pt->userlandThreads += proc->nlwp;
+            pt->totalTasks += proc->nlwp + 1;
          }
       }
       proc->show = !(settings->hideKernelThreads && proc->isKernelThread);
@@ -251,7 +251,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
       }
 
       Process_fillStarttimeBuffer(proc);
-      ProcessList_add(pl, proc);
+      ProcessTable_add(pt, proc);
    }
 
    proc->super.updated = true;
@@ -261,7 +261,7 @@ static int SolarisProcessList_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo,
    return 0;
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessTable_goThroughEntries(ProcessTable* super) {
    super->kernelThreads = 1;
-   proc_walk(&SolarisProcessList_walkproc, super, PR_WALK_LWP);
+   proc_walk(&SolarisProcessTable_walkproc, super, PR_WALK_LWP);
 }

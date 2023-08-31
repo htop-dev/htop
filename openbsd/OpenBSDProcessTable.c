@@ -1,12 +1,12 @@
 /*
-htop - OpenBSDProcessList.c
+htop - OpenBSDProcessTable.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "openbsd/OpenBSDProcessList.h"
+#include "openbsd/OpenBSDProcessTable.h"
 
 #include <kvm.h>
 #include <limits.h>
@@ -25,30 +25,30 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "Settings.h"
 #include "XUtils.h"
 #include "openbsd/OpenBSDMachine.h"
 #include "openbsd/OpenBSDProcess.h"
 
 
-ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   OpenBSDProcessList* this = xCalloc(1, sizeof(OpenBSDProcessList));
-   Object_setClass(this, Class(ProcessList));
+ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
+   OpenBSDProcessTable* this = xCalloc(1, sizeof(OpenBSDProcessTable));
+   Object_setClass(this, Class(ProcessTable));
 
-   ProcessList* super = &this->super;
-   ProcessList_init(super, Class(OpenBSDProcess), host, pidMatchList);
+   ProcessTable* super = &this->super;
+   ProcessTable_init(super, Class(OpenBSDProcess), host, pidMatchList);
 
    return this;
 }
 
-void ProcessList_delete(Object* cast) {
-   OpenBSDProcessList* this = (OpenBSDProcessList*) super;
-   ProcessList_done(&this->super);
+void ProcessTable_delete(Object* cast) {
+   OpenBSDProcessTable* this = (OpenBSDProcessTable*) super;
+   ProcessTable_done(&this->super);
    free(this);
 }
 
-static void OpenBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
+static void OpenBSDProcessTable_updateCwd(const struct kinfo_proc* kproc, Process* proc) {
    const int mib[] = { CTL_KERN, KERN_PROC_CWD, kproc->p_pid };
    char buffer[2048];
    size_t size = sizeof(buffer);
@@ -68,7 +68,7 @@ static void OpenBSDProcessList_updateCwd(const struct kinfo_proc* kproc, Process
    free_and_xStrdup(&proc->procCwd, buffer);
 }
 
-static void OpenBSDProcessList_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
+static void OpenBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
    Process_updateComm(proc, kproc->p_comm);
 
    /*
@@ -127,7 +127,7 @@ static double getpcpu(const OpenBSDMachine* ohost, const struct kinfo_proc* kp) 
    return 100.0 * (double)kp->p_pctcpu / ohost->fscale;
 }
 
-static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
+static void OpenBSDProcessTable_scanProcs(OpenBSDProcessTable* this) {
    Machine* host = this->super.host;
    OpenBSDMachine* ohost = (OpenBSDMachine*) host;
    const Settings* settings = host->settings;
@@ -142,7 +142,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
 
       /* Ignore main threads */
       if (kproc->p_tid != -1) {
-         Process* containingProcess = ProcessList_findProcess(&this->super, kproc->p_pid);
+         Process* containingProcess = ProcessTable_findProcess(&this->super, kproc->p_pid);
          if (containingProcess) {
             if (((OpenBSDProcess*)containingProcess)->addr == kproc->p_addr)
                continue;
@@ -152,7 +152,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
       }
 
       bool preExisting = false;
-      Process* proc = ProcessList_getProcess(&this->super, (kproc->p_tid == -1) ? kproc->p_pid : kproc->p_tid, &preExisting, OpenBSDProcess_new);
+      Process* proc = ProcessTable_getProcess(&this->super, (kproc->p_tid == -1) ? kproc->p_pid : kproc->p_tid, &preExisting, OpenBSDProcess_new);
       OpenBSDProcess* op = (OpenBSDProcess*) proc;
 
       if (!preExisting) {
@@ -165,12 +165,12 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          proc->isUserlandThread = kproc->p_tid != -1;
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
-         ProcessList_add(&this->super, proc);
+         ProcessTable_add(&this->super, proc);
 
-         OpenBSDProcessList_updateProcessName(ohost->kd, kproc, proc);
+         OpenBSDProcessTable_updateProcessName(ohost->kd, kproc, proc);
 
          if (settings->ss->flags & PROCESS_FLAG_CWD) {
-            OpenBSDProcessList_updateCwd(kproc, proc);
+            OpenBSDProcessTable_updateCwd(kproc, proc);
          }
 
          proc->tty_nr = kproc->p_tdev;
@@ -183,7 +183,7 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
          }
       } else {
          if (settings->updateProcessNames) {
-            OpenBSDProcessList_updateProcessName(ohost->kd, kproc, proc);
+            OpenBSDProcessTable_updateProcessName(ohost->kd, kproc, proc);
          }
       }
 
@@ -236,8 +236,8 @@ static void OpenBSDProcessList_scanProcs(OpenBSDProcessList* this) {
    }
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
-   OpenBSDProcessList* this = (OpenBSDProcessList*) super;
+void ProcessTable_goThroughEntries(ProcessTable* super) {
+   OpenBSDProcessTable* this = (OpenBSDProcessTable*) super;
 
-   OpenBSDProcessList_scanProcs(this);
+   OpenBSDProcessTable_scanProcs(this);
 }

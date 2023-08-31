@@ -25,7 +25,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Platform.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "DynamicColumn.h"
 #include "RichString.h"
 #include "Scheduling.h"
@@ -826,9 +826,9 @@ static bool Process_matchesFilter(const Process* this, const Table* table) {
    if (incFilter && !String_contains_i(Process_getCommand(this), incFilter, true))
       return true;
 
-   const ProcessList* pl = (const ProcessList*) host->activeTable;
-   assert(Object_isA((const Object*) pl, (const ObjectClass*) &ProcessList_class));
-   if (pl->pidMatchList && !Hashtable_get(pl->pidMatchList, Process_getThreadGroup(this)))
+   const ProcessTable* pt = (const ProcessTable*) host->activeTable;
+   assert(Object_isA((const Object*) pt, (const ObjectClass*) &ProcessTable_class));
+   if (pt->pidMatchList && !Hashtable_get(pt->pidMatchList, Process_getThreadGroup(this)))
       return true;
 
    return false;

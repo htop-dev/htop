@@ -223,7 +223,7 @@ static void DragonFlyBSDMachine_scanCPUTime(Machine* super) {
 }
 
 static void DragonFlyBSDMachine_scanMemoryInfo(Machine* super) {
-   DragonFlyBSDMachine* this = (DragonFlyBSDProcessList*) super;
+   DragonFlyBSDMachine* this = (DragonFlyBSDProcessTable*) super;
 
    // @etosan:
    // memory counter relationships seem to be these:
@@ -235,10 +235,10 @@ static void DragonFlyBSDMachine_scanMemoryInfo(Machine* super) {
 
    //disabled for now, as it is always smaller than phycal amount of memory...
    //...to avoid "where is my memory?" questions
-   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(pl->totalMem), &len, NULL, 0);
-   //pl->totalMem *= pageSizeKb;
+   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(this->totalMem), &len, NULL, 0);
+   //this->totalMem *= pageSizeKb;
    sysctl(MIB_hw_physmem, 2, &(super->totalMem), &len, NULL, 0);
-   pl->totalMem /= 1024;
+   super->totalMem /= 1024;
 
    sysctl(MIB_vm_stats_vm_v_active_count, 4, &(this->memActive), &len, NULL, 0);
    this->memActive *= this->pageSizeKb;

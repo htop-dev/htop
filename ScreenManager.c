@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "ProvideCurses.h"
 #include "XUtils.h"
 

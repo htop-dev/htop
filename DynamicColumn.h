@@ -25,7 +25,7 @@ typedef struct DynamicColumn_ {
    char* description;       /* displayed in setup menu (detail) */
    int width;               /* display width +/- for value alignment */
    bool enabled;            /* false == ignore this column (until enabled) */
-   Table* table;            /* pointer to DynamicScreen or ProcessList */
+   Table* table;            /* pointer to DynamicScreen or ProcessTable */
 } DynamicColumn;
 
 Hashtable* DynamicColumns_new(void);

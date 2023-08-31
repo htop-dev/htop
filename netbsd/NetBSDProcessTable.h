@@ -1,7 +1,7 @@
-#ifndef HEADER_NetBSDProcessList
-#define HEADER_NetBSDProcessList
+#ifndef HEADER_NetBSDProcessTable
+#define HEADER_NetBSDProcessTable
 /*
-htop - NetBSDProcessList.h
+htop - NetBSDProcessTable.h
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
 (C) 2021 Santhosh Raju
@@ -14,11 +14,11 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Hashtable.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 
 
-typedef struct NetBSDProcessList_ {
-   ProcessList super;
-} NetBSDProcessList;
+typedef struct NetBSDProcessTable_ {
+   ProcessTable super;
+} NetBSDProcessTable;
 
 #endif

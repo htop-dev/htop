@@ -66,7 +66,7 @@ void Table_add(Table* this, Row* row) {
 // Table_removeIndex removes a given row from the lists map and soft deletes
 // it from its vector. Vector_compact *must* be called once the caller is done
 // removing items.
-// Note: for processes should only be called from ProcessList_iterate to avoid
+// Note: for processes should only be called from ProcessTable_iterate to avoid
 // breaking dying process highlighting.
 void Table_removeIndex(Table* this, const Row* row, int idx) {
    int rowid = row->id;

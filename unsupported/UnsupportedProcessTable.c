@@ -1,40 +1,40 @@
 /*
-htop - UnsupportedProcessList.c
+htop - UnsupportedProcessTable.c
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "UnsupportedProcessList.h"
+#include "UnsupportedProcessTable.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "UnsupportedProcess.h"
 
 
-ProcessList* ProcessList_new(Machine* host, Hashtable* pidMatchList) {
-   UnsupportedProcessList* this = xCalloc(1, sizeof(UnsupportedProcessList));
-   Object_setClass(this, Class(ProcessList));
+ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
+   UnsupportedProcessTable* this = xCalloc(1, sizeof(UnsupportedProcessTable));
+   Object_setClass(this, Class(ProcessTable));
 
-   ProcessList* super = &this->super;
-   ProcessList_init(super, Class(Process), host, pidMatchList);
+   ProcessTable* super = &this->super;
+   ProcessTable_init(super, Class(Process), host, pidMatchList);
 
    return this;
 }
 
-void ProcessList_delete(Object* cast) {
-   UnsupportedProcessList* this = (UnsupportedProcessList*) cast;
-   ProcessList_done(&this->super);
+void ProcessTable_delete(Object* cast) {
+   UnsupportedProcessTable* this = (UnsupportedProcessTable*) cast;
+   ProcessTable_done(&this->super);
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessTable_goThroughEntries(ProcessTable* super) {
    bool preExisting = true;
    Process* proc;
 
-   proc = ProcessList_getProcess(super, 1, &preExisting, UnsupportedProcess_new);
+   proc = ProcessTable_getProcess(super, 1, &preExisting, UnsupportedProcess_new);
 
    /* Empty values */
    proc->time = proc->time + 10;
@@ -84,5 +84,5 @@ void ProcessList_goThroughEntries(ProcessList* super) {
    proc->majflt = 20;
 
    if (!preExisting)
-      ProcessList_add(super, proc);
+      ProcessTable_add(super, proc);
 }

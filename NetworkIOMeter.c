@@ -9,7 +9,7 @@
 #include "Object.h"
 #include "Platform.h"
 #include "Process.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "RichString.h"
 #include "XUtils.h"
 

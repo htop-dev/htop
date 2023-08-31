@@ -5,7 +5,7 @@ Main screen:
 
       Mouse click header - nothing happens.
 
-      Mouse click on ProcessList title bar - exit Tree view, update FunctionBar, title bar updates, sort by clicked field.
+      Mouse click on ProcessTable title bar - exit Tree view, update FunctionBar, title bar updates, sort by clicked field.
 *** FAILING: wrong FB update depending on mode; does not change sort in wip branch
          click on same entry - invert sort.
             click on another entry - sort another field.

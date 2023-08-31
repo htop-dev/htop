@@ -7,7 +7,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
+#include "ProcessTable.h"
 
 typedef struct ZswapStats_ {
    /* maximum size of the zswap pool */

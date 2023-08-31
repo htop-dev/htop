@@ -14,7 +14,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "RichString.h"
 #include "linux/LinuxMachine.h"
 
