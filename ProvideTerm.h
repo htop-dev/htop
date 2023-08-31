@@ -1,7 +1,7 @@
 #ifndef HEADER_ProvideTerm
 #define HEADER_ProvideTerm
 /*
-htop - Filename.h
+htop - ProvideTerm.h
 (C) 2023 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
