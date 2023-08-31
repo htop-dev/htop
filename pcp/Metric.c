@@ -182,7 +182,8 @@ bool Metric_fetch(struct timeval* timestamp) {
 
 void Metric_externalName(Metric metric, int inst, char** externalName) {
    const pmDesc* desc = &pcp->descs[metric];
-   pmNameInDom(desc->indom, inst, externalName);
+   /* ignore a failure here - its safe to do so */
+   (void)pmNameInDom(desc->indom, inst, externalName);
 }
 
 int Metric_lookupText(const char* metric, char** desc) {

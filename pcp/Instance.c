@@ -81,7 +81,8 @@ static const char* Instance_externalName(Row* super) {
    Instance* this = (Instance*) super;
 
    if (!this->name)
-      pmNameInDom(InDom_getId(this), Instance_getId(this), &this->name);
+      /* ignore any failure here - its safe and we try again next time */
+      (void)pmNameInDom(InDom_getId(this), Instance_getId(this), &this->name);
    return this->name;
 }
 
