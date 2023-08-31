@@ -49,7 +49,7 @@ int Platform_getUptime(void);
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
-int Platform_getMaxPid(void);
+pid_t Platform_getMaxPid(void);
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu);
 

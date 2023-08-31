@@ -84,7 +84,7 @@ long long Platform_getBootTime(void);
 
 unsigned int Platform_getMaxCPU(void);
 
-int Platform_getMaxPid(void);
+pid_t Platform_getMaxPid(void);
 
 double Platform_setCPUValues(Meter* this, int cpu);
 

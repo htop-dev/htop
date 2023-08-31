@@ -472,13 +472,13 @@ unsigned int Platform_getMaxCPU(void) {
    return pcp->ncpu;
 }
 
-int Platform_getMaxPid(void) {
+pid_t Platform_getMaxPid(void) {
    if (pcp->pidmax)
       return pcp->pidmax;
 
    pmAtomValue value;
    if (Metric_values(PCP_PID_MAX, &value, 1, PM_TYPE_32) == NULL)
-      return -1;
+      return UINT_MAX;
    pcp->pidmax = value.l;
    return pcp->pidmax;
 }

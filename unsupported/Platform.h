@@ -8,6 +8,9 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+#include <sys/types.h>
+
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
@@ -40,7 +43,7 @@ int Platform_getUptime(void);
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
-int Platform_getMaxPid(void);
+pid_t Platform_getMaxPid(void);
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu);
 

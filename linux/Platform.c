@@ -291,12 +291,12 @@ err:
    *fifteen = NAN;
 }
 
-int Platform_getMaxPid(void) {
+pid_t Platform_getMaxPid(void) {
+   pid_t maxPid = 4194303;
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
    if (!file)
-      return -1;
+      return maxPid;
 
-   int maxPid = 4194303;
    int match = fscanf(file, "%32d", &maxPid);
    (void) match;
    fclose(file);

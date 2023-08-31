@@ -102,8 +102,8 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = 0;
 }
 
-int Platform_getMaxPid(void) {
-   return 1;
+pid_t Platform_getMaxPid(void) {
+   return INT_MAX;
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
