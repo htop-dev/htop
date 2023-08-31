@@ -72,7 +72,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void DarwinProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+static void DarwinProcess_rowWriteField(const Row* super, RichString* str, FieldID field) {
    const DarwinProcess* dp = (const DarwinProcess*) super;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -87,7 +87,7 @@ static void DarwinProcess_rowWriteField(const Row* super, RichString* str, Proce
    RichString_appendWide(str, attr, buffer);
 }
 
-static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, FieldID key) {
    const DarwinProcess* p1 = (const DarwinProcess*)v1;
    const DarwinProcess* p2 = (const DarwinProcess*)v2;
 

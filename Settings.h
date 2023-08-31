@@ -41,12 +41,12 @@ typedef struct ScreenSettings_ {
    char* heading;  /* user-editable screen name (pretty) */
    char* dynamic;  /* from DynamicScreen config (fixed) */
    struct Table_* table;
-   RowField* fields;
+   FieldID* fields;
    uint32_t flags;
    int direction;
    int treeDirection;
-   RowField sortKey;
-   RowField treeSortKey;
+   FieldID sortKey;
+   FieldID treeSortKey;
    bool treeView;
    bool treeViewAlwaysByPID;
    bool allBranchesCollapsed;
@@ -111,7 +111,7 @@ typedef struct Settings_ {
 
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
 
-static inline RowField ScreenSettings_getActiveSortKey(const ScreenSettings* this) {
+static inline FieldID ScreenSettings_getActiveSortKey(const ScreenSettings* this) {
    return (this->treeView)
           ? (this->treeViewAlwaysByPID ? 1 : this->treeSortKey)
           : this->sortKey;
@@ -135,7 +135,7 @@ void ScreenSettings_delete(ScreenSettings* this);
 
 void ScreenSettings_invertSortOrder(ScreenSettings* this);
 
-void ScreenSettings_setSortKey(ScreenSettings* this, RowField sortKey);
+void ScreenSettings_setSortKey(ScreenSettings* this, FieldID sortKey);
 
 void Settings_enableReadonly(void);
 

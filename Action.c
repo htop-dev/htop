@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "Action.h"
 
+#include <assert.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -158,8 +159,8 @@ static bool collapseIntoParent(Panel* panel) {
    return false;
 }
 
-Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
-   ScreenSettings_setSortKey(settings->ss, (RowField) sortKey);
+Htop_Reaction Action_setSortKey(Settings* settings, FieldID sortKey) {
+   ScreenSettings_setSortKey(settings->ss, sortKey);
    return HTOP_REFRESH | HTOP_SAVE_SETTINGS | HTOP_UPDATE_PANELHDR | HTOP_KEEP_FOLLOWING;
 }
 
@@ -182,7 +183,7 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    Panel_setHeader(sortPanel, "Sort by");
    Machine* host = st->host;
    Settings* settings = host->settings;
-   const RowField* fields = settings->ss->fields;
+   const FieldID* fields = settings->ss->fields;
    Hashtable* dynamicColumns = settings->dynamicColumns;
    for (int i = 0; fields[i]; i++) {
       char* name = NULL;
@@ -202,7 +203,8 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    }
    const ListItem* field = (const ListItem*) Action_pickFromVector(st, sortPanel, 14, false);
    if (field) {
-      reaction |= Action_setSortKey(settings, field->key);
+      assert(sizeof(field->key) <= sizeof(FieldID));
+      reaction |= Action_setSortKey(settings, (FieldID) field->key);
    }
    Object_delete(sortPanel);
 

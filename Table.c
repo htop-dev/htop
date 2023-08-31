@@ -289,9 +289,9 @@ void Table_printHeader(const Settings* settings, RichString* header) {
    RichString_rewind(header, RichString_size(header));
 
    const ScreenSettings* ss = settings->ss;
-   const RowField* fields = ss->fields;
+   const FieldID* fields = ss->fields;
 
-   RowField key = ScreenSettings_getActiveSortKey(ss);
+   FieldID key = ScreenSettings_getActiveSortKey(ss);
 
    for (int i = 0; fields[i]; i++) {
       int color;

@@ -225,7 +225,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void NetBSDProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+static void NetBSDProcess_rowWriteField(const Row* super, RichString* str, FieldID field) {
    const Process* this = (const Process*) super;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -239,7 +239,7 @@ static void NetBSDProcess_rowWriteField(const Row* super, RichString* str, Proce
    RichString_appendWide(str, attr, buffer);
 }
 
-static int NetBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int NetBSDProcess_compareByKey(const Process* v1, const Process* v2, FieldID key) {
    const NetBSDProcess* p1 = (const NetBSDProcess*)v1;
    const NetBSDProcess* p2 = (const NetBSDProcess*)v2;
 

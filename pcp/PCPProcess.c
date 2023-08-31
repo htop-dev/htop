@@ -124,13 +124,13 @@ static double PCPProcess_totalIORate(const PCPProcess* pp) {
    return totalRate;
 }
 
-static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+static void PCPProcess_rowWriteField(const Row* super, RichString* str, FieldID field) {
    const PCPProcess* pp = (const PCPProcess*) super;
    bool coloring = super->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
-   switch ((int)field) {
+   switch (field) {
    case CMINFLT: Row_printCount(str, pp->cminflt, coloring); return;
    case CMAJFLT: Row_printCount(str, pp->cmajflt, coloring); return;
    case M_DRS: Row_printBytes(str, pp->m_drs, coloring); return;
@@ -199,7 +199,7 @@ static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessF
    RichString_appendWide(str, attr, buffer);
 }
 
-static int PCPProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int PCPProcess_compareByKey(const Process* v1, const Process* v2, FieldID key) {
    const PCPProcess* p1 = (const PCPProcess*)v1;
    const PCPProcess* p2 = (const PCPProcess*)v2;
 

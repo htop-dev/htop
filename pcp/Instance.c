@@ -55,7 +55,7 @@ static void Instance_delete(Object* cast) {
    free(this);
 }
 
-static void Instance_writeField(const Row* super, RichString* str, RowField field) {
+static void Instance_writeField(const Row* super, RichString* str, FieldID field) {
    const Instance* this = (const Instance*) super;
    int instid = Instance_getId(this);
 
@@ -138,7 +138,7 @@ static int Instance_compare(const void* v1, const void* v2) {
    const Instance* i1 = (const Instance*)v1;
    const Instance* i2 = (const Instance*)v2;
    const ScreenSettings* ss = i1->super.host->settings->ss;
-   RowField key = ScreenSettings_getActiveSortKey(ss);
+   FieldID key = ScreenSettings_getActiveSortKey(ss);
    int result = Instance_compareByKey(v1, v2, key);
 
    // Implement tie-breaker (needed to make tree mode more stable)

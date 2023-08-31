@@ -264,14 +264,14 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
    free(trim);
 
    /* reset default fields */
-   memset(ss->fields, '\0', LAST_PROCESSFIELD * sizeof(ProcessField));
+   memset(ss->fields, '\0', LAST_PROCESSFIELD * sizeof(*ss->fields));
 
    for (size_t j = 0, i = 0; ids[i]; i++) {
-      if (j >= UINT_MAX / sizeof(ProcessField))
+      if (j >= UINT_MAX / sizeof(*ss->fields))
          continue;
       if (j >= LAST_PROCESSFIELD) {
-         ss->fields = xRealloc(ss->fields, (j + 1) * sizeof(ProcessField));
-         memset(&ss->fields[j], 0, sizeof(ProcessField));
+         ss->fields = xRealloc(ss->fields, (j + 1) * sizeof(*ss->fields));
+         memset(&ss->fields[j], 0, sizeof(*ss->fields));
       }
       int id = toFieldIndex(columns, ids[i]);
       if (id >= 0)
@@ -301,7 +301,7 @@ ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* default
       .heading = xStrdup(defaults->name),
       .dynamic = NULL,
       .table = NULL,
-      .fields = xCalloc(LAST_PROCESSFIELD, sizeof(ProcessField)),
+      .fields = xCalloc(LAST_PROCESSFIELD, sizeof(*ss->fields)),
       .flags = 0,
       .direction = sortDesc ? -1 : 1,
       .treeDirection = 1,
@@ -322,7 +322,7 @@ ScreenSettings* Settings_newDynamicScreen(Settings* this, const char* tab, const
       .heading = xStrdup(tab),
       .dynamic = xStrdup(screen->name),
       .table = table,
-      .fields = xCalloc(LAST_PROCESSFIELD, sizeof(ProcessField)),
+      .fields = xCalloc(LAST_PROCESSFIELD, sizeof(*ss->fields)),
       .direction = screen->direction,
       .treeDirection = 1,
       .sortKey = sortKey,
@@ -557,7 +557,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
    return didReadAny;
 }
 
-static void writeFields(FILE* fd, const ProcessField* fields, Hashtable* columns, bool byName, char separator) {
+static void writeFields(FILE* fd, const FieldID* fields, Hashtable* columns, bool byName, char separator) {
    const char* sep = "";
    for (unsigned int i = 0; fields[i]; i++) {
       if (fields[i] < LAST_PROCESSFIELD && byName) {
@@ -841,7 +841,7 @@ void ScreenSettings_invertSortOrder(ScreenSettings* this) {
    *attr = (*attr == 1) ? -1 : 1;
 }
 
-void ScreenSettings_setSortKey(ScreenSettings* this, ProcessField sortKey) {
+void ScreenSettings_setSortKey(ScreenSettings* this, FieldID sortKey) {
    if (this->treeViewAlwaysByPID || !this->treeView) {
       this->sortKey = sortKey;
       this->direction = (Process_fields[sortKey].defaultSortDesc) ? -1 : 1;

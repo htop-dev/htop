@@ -47,7 +47,7 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
 
 void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, const struct Settings_* settings, int metric, int instance, const struct pmDesc* desc, const void* atomvalue);
 
-int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, ProcessField key);
+int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, FieldID key);
 
 void PCPDynamicColumn_done(PCPDynamicColumn* this);
 

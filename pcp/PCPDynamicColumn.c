@@ -467,7 +467,7 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
    PCPDynamicColumn_writeAtomValue(this, str, settings, this->id, pid, desc, ap);
 }
 
-int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, ProcessField key) {
+int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, FieldID key) {
    const Process* proc = &p1->super;
    const Settings* settings = proc->super.host->settings;
    const PCPDynamicColumn* column = Hashtable_get(settings->dynamicColumns, key);

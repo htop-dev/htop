@@ -51,6 +51,6 @@ typedef enum ReservedFields_ {
 
 /* Follow ReservedField entries with dynamic fields defined at runtime */
 #define ROW_DYNAMIC_FIELDS LAST_RESERVED_FIELD
-typedef int32_t RowField;
+typedef int32_t FieldID;
 
 #endif

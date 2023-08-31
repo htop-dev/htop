@@ -140,7 +140,7 @@ static void ColumnsPanel_add(Panel* super, unsigned int key, Hashtable* columns)
 void ColumnsPanel_fill(ColumnsPanel* this, ScreenSettings* ss, Hashtable* columns) {
    Panel* super = (Panel*) this;
    Panel_prune(super);
-   for (const RowField* fields = ss->fields; *fields; fields++)
+   for (const FieldID* fields = ss->fields; *fields; fields++)
       ColumnsPanel_add(super, *fields, columns);
    this->ss = ss;
 }
@@ -165,7 +165,7 @@ void ColumnsPanel_update(Panel* super) {
    ColumnsPanel* this = (ColumnsPanel*) super;
    int size = Panel_size(super);
    *(this->changed) = true;
-   this->ss->fields = xRealloc(this->ss->fields, sizeof(ProcessField) * (size + 1));
+   this->ss->fields = xRealloc(this->ss->fields, sizeof(*this->ss->fields) * (size + 1));
    this->ss->flags = 0;
    for (int i = 0; i < size; i++) {
       int key = ((ListItem*) Panel_get(super, i))->key;

@@ -219,7 +219,7 @@ static double LinuxProcess_totalIORate(const LinuxProcess* lp) {
    return totalRate;
 }
 
-static void LinuxProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+static void LinuxProcess_rowWriteField(const Row* super, RichString* str, FieldID field) {
    const Process* this = (const Process*) super;
    const Machine* host = (const Machine*) super->host;
    const LinuxMachine* lhost = (const LinuxMachine*) host;
@@ -326,7 +326,7 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    RichString_appendAscii(str, attr, buffer);
 }
 
-static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, FieldID key) {
    const LinuxProcess* p1 = (const LinuxProcess*)v1;
    const LinuxProcess* p2 = (const LinuxProcess*)v2;
 

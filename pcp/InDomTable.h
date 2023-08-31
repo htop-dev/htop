@@ -29,8 +29,6 @@ InDomTable* InDomTable_new(Machine* host, pmInDom indom, int metricKey);
 
 void InDomTable_done(InDomTable* this);
 
-RowField RowField_keyAt(const Settings* settings, int at);
-
 void InDomTable_scan(Table* super);
 
 #endif

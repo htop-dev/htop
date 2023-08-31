@@ -535,13 +535,13 @@ static inline char processStateChar(ProcessState state) {
    }
 }
 
-static void Process_rowWriteField(const Row* super, RichString* str, RowField field) {
+static void Process_rowWriteField(const Row* super, RichString* str, FieldID field) {
    const Process* this = (const Process*) super;
    assert(Object_isA((const Object*) this, (const ObjectClass*) &Process_class));
    Process_writeField(this, str, field);
 }
 
-void Process_writeField(const Process* this, RichString* str, RowField field) {
+void Process_writeField(const Process* this, RichString* str, FieldID field) {
    char buffer[256];
    size_t n = sizeof(buffer);
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -887,7 +887,7 @@ int Process_compare(const void* v1, const void* v2) {
 
    const ScreenSettings* ss = p1->super.host->settings->ss;
 
-   ProcessField key = ScreenSettings_getActiveSortKey(ss);
+   FieldID key = ScreenSettings_getActiveSortKey(ss);
 
    int result = Process_compareByKey(p1, p2, key);
 
@@ -907,7 +907,7 @@ int Process_compareByParent(const Row* r1, const Row* r2) {
    return Process_compare(r1, r2);
 }
 
-int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
+int Process_compareByKey_Base(const Process* p1, const Process* p2, FieldID key) {
    int r;
 
    switch (key) {

@@ -212,10 +212,9 @@ typedef struct ProcessFieldData_ {
 } ProcessFieldData;
 
 #define LAST_PROCESSFIELD LAST_RESERVED_FIELD
-typedef int32_t ProcessField;  /* see ReservedField list in RowField.h */
 
 // Implemented in platform-specific code:
-void Process_writeField(const Process* row, RichString* str, ProcessField field);
+void Process_writeField(const Process* row, RichString* str, FieldID field);
 int Process_compare(const void* v1, const void* v2);
 int Process_compareByParent(const Row* r1, const Row* v2);
 void Process_delete(Object* cast);
@@ -224,7 +223,7 @@ extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 #define Process_uidDigits Row_uidDigits
 
 typedef Process* (*Process_New)(const struct Machine_*);
-typedef int (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
+typedef int (*Process_CompareByKey)(const Process*, const Process*, FieldID);
 
 typedef struct ProcessClass_ {
    const RowClass super;
@@ -308,7 +307,7 @@ static inline int Process_pidEqualCompare(const void* v1, const void* v2) {
    return Row_idEqualCompare(v1, v2);
 }
 
-int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key);
+int Process_compareByKey_Base(const Process* p1, const Process* p2, FieldID key);
 
 const char* Process_getCommand(const Process* this);
 

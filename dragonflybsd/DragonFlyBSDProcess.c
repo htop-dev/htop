@@ -66,7 +66,7 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void DragonFlyBSDProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+static void DragonFlyBSDProcess_rowWriteField(const Row* super, RichString* str, FieldID field) {
    const Process* this = (const Process*) super;
    const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
@@ -84,7 +84,7 @@ static void DragonFlyBSDProcess_rowWriteField(const Row* super, RichString* str,
    RichString_appendWide(str, attr, buffer);
 }
 
-static int DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int DragonFlyBSDProcess_compareByKey(const Process* v1, const Process* v2, FieldID key) {
    const DragonFlyBSDProcess* p1 = (const DragonFlyBSDProcess*)v1;
    const DragonFlyBSDProcess* p2 = (const DragonFlyBSDProcess*)v2;
 

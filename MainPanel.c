@@ -77,7 +77,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
       int hx = super->scrollH + x + 1;
-      RowField field = RowField_keyAt(settings, hx);
+      FieldID field = RowField_keyAt(settings, hx);
       if (ss->treeView && ss->treeViewAlwaysByPID) {
          ss->treeView = false;
          ss->direction = 1;

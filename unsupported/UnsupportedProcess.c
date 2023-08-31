@@ -58,7 +58,7 @@ void Process_delete(Object* cast) {
    free(cast);
 }
 
-static void UnsupportedProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+static void UnsupportedProcess_rowWriteField(const Row* super, RichString* str, FieldID field) {
    const UnsupportedProcess* up = (const UnsupportedProcess*) super;
    bool coloring = super->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
@@ -77,7 +77,7 @@ static void UnsupportedProcess_rowWriteField(const Row* super, RichString* str, 
    RichString_appendWide(str, attr, buffer);
 }
 
-static int UnsupportedProcess_compareByKey(const Process* v1, const Process* v2, ProcessField key) {
+static int UnsupportedProcess_compareByKey(const Process* v1, const Process* v2, FieldID key) {
    const UnsupportedProcess* p1 = (const UnsupportedProcess*)v1;
    const UnsupportedProcess* p2 = (const UnsupportedProcess*)v2;
 

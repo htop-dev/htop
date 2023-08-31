@@ -77,7 +77,7 @@ typedef struct Row_ {
 } Row;
 
 typedef Row* (*Row_New)(const struct Machine_*);
-typedef void (*Row_WriteField)(const Row*, RichString*, RowField);
+typedef void (*Row_WriteField)(const Row*, RichString*, FieldID);
 typedef bool (*Row_IsHighlighted)(const Row*);
 typedef bool (*Row_IsVisible)(const Row*, const struct Table_*);
 typedef bool (*Row_MatchesFilter)(const Row*, const struct Table_*);
@@ -128,13 +128,13 @@ void Row_toggleTag(Row* this);
 
 void Row_resetFieldWidths(void);
 
-void Row_updateFieldWidth(RowField key, size_t width);
+void Row_updateFieldWidth(FieldID key, size_t width);
 
 void Row_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width);
 
-const char* RowField_alignedTitle(const struct Settings_* settings, RowField field);
+const char* RowField_alignedTitle(const struct Settings_* settings, FieldID fieldId);
 
-RowField RowField_keyAt(const struct Settings_* settings, int at);
+FieldID RowField_keyAt(const struct Settings_* settings, int at);
 
 /* Sets the size of the PID column based on the passed PID */
 void Row_setPidColumnWidth(pid_t maxPid);

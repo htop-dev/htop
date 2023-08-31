@@ -61,7 +61,7 @@ static inline bool Row_isTomb(const Row* this) {
 void Row_display(const Object* cast, RichString* out) {
    const Row* this = (const Row*) cast;
    const Settings* settings = this->host->settings;
-   const RowField* fields = settings->ss->fields;
+   const FieldID* fields = settings->ss->fields;
 
    for (int i = 0; fields[i]; i++)
       As_Row(this)->writeField(this, out, fields[i]);
@@ -115,7 +115,7 @@ void Row_resetFieldWidths(void) {
    }
 }
 
-void Row_updateFieldWidth(RowField key, size_t width) {
+void Row_updateFieldWidth(FieldID key, size_t width) {
    if (width > UINT8_MAX)
       Row_fieldWidths[key] = UINT8_MAX;
    else if (width > Row_fieldWidths[key])
@@ -137,26 +137,26 @@ static const char* alignedTitleDynamicColumn(const Settings* settings, int key, 
 }
 
 // helper function to fill an aligned title string for a process field
-static const char* alignedTitleProcessField(ProcessField field, char* titleBuffer, size_t titleBufferSize) {
-   const char* title = Process_fields[field].title;
+static const char* alignedTitleProcessField(FieldID fieldId, char* titleBuffer, size_t titleBufferSize) {
+   const char* title = Process_fields[fieldId].title;
    if (!title)
       return "- ";
 
-   if (Process_fields[field].pidColumn) {
+   if (Process_fields[fieldId].pidColumn) {
       xSnprintf(titleBuffer, titleBufferSize, "%*s ", Row_pidDigits, title);
       return titleBuffer;
    }
 
-   if (field == ST_UID) {
+   if (fieldId == ST_UID) {
       xSnprintf(titleBuffer, titleBufferSize, "%*s ", Row_uidDigits, title);
       return titleBuffer;
    }
 
-   if (Process_fields[field].autoWidth) {
-      if (field == PERCENT_CPU)
-         xSnprintf(titleBuffer, titleBufferSize, "%*s ", Row_fieldWidths[field], title);
+   if (Process_fields[fieldId].autoWidth) {
+      if (fieldId == PERCENT_CPU)
+         xSnprintf(titleBuffer, titleBufferSize, "%*s ", Row_fieldWidths[fieldId], title);
       else
-         xSnprintf(titleBuffer, titleBufferSize, "%-*.*s ", Row_fieldWidths[field], Row_fieldWidths[field], title);
+         xSnprintf(titleBuffer, titleBufferSize, "%-*.*s ", Row_fieldWidths[fieldId], Row_fieldWidths[fieldId], title);
       return titleBuffer;
    }
 
@@ -164,25 +164,25 @@ static const char* alignedTitleProcessField(ProcessField field, char* titleBuffe
 }
 
 // helper function to create an aligned title string for a given field
-const char* RowField_alignedTitle(const Settings* settings, RowField field) {
+const char* RowField_alignedTitle(const Settings* settings, FieldID fieldId) {
    static char titleBuffer[UINT8_MAX + sizeof(" ")];
    assert(sizeof(titleBuffer) >= DYNAMIC_MAX_COLUMN_WIDTH + sizeof(" "));
    assert(sizeof(titleBuffer) >= ROW_MAX_PID_DIGITS + sizeof(" "));
    assert(sizeof(titleBuffer) >= ROW_MAX_UID_DIGITS + sizeof(" "));
 
-   if (field < LAST_PROCESSFIELD)
-      return alignedTitleProcessField((ProcessField)field, titleBuffer, sizeof(titleBuffer));
-   return alignedTitleDynamicColumn(settings, field, titleBuffer, sizeof(titleBuffer));
+   if (fieldId < LAST_PROCESSFIELD)
+      return alignedTitleProcessField(fieldId, titleBuffer, sizeof(titleBuffer));
+   return alignedTitleDynamicColumn(settings, fieldId, titleBuffer, sizeof(titleBuffer));
 }
 
-RowField RowField_keyAt(const Settings* settings, int at) {
-   const RowField* fields = (const RowField*) settings->ss->fields;
-   RowField field;
+FieldID RowField_keyAt(const Settings* settings, int at) {
+   const FieldID* fields = settings->ss->fields;
+   FieldID key;
    int x = 0;
-   for (int i = 0; (field = fields[i]); i++) {
-      int len = strlen(RowField_alignedTitle(settings, field));
+   for (int i = 0; (key = fields[i]); i++) {
+      int len = strlen(RowField_alignedTitle(settings, key));
       if (at >= x && at <= x + len) {
-         return field;
+         return key;
       }
       x += len;
    }
