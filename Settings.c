@@ -543,9 +543,10 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
          if (screen)
             screen->allBranchesCollapsed = atoi(option[1]);
       } else if (String_eq(option[0], ".dynamic")) {
-         if (screen)
+         if (screen) {
             free_and_xStrdup(&screen->dynamic, option[1]);
-         Platform_addDynamicScreen(screen);
+            Platform_addDynamicScreen(screen);
+         }
       }
       String_freeArray(option);
    }

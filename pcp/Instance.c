@@ -62,10 +62,12 @@ static void Instance_writeField(const Row* super, RichString* str, RowField fiel
    const Settings* settings = super->host->settings;
    DynamicColumn* column = Hashtable_get(settings->dynamicColumns, field);
    PCPDynamicColumn* cp = (PCPDynamicColumn*) column;
-   const pmDesc* descp = Metric_desc(cp->id);
+   if (!cp)
+      return;
 
    pmAtomValue atom;
    pmAtomValue *ap = &atom;
+   const pmDesc* descp = Metric_desc(cp->id);
    if (!Metric_instance(cp->id, instid, this->offset, ap, descp->type))
       ap = NULL;
 
