@@ -54,6 +54,16 @@ static inline bool String_eq(const char* s1, const char* s2) {
    return strcmp(s1, s2) == 0;
 }
 
+static inline bool String_eq_nullable(const char* s1, const char* s2) {
+   if (s1 == s2)
+      return true;
+
+   if (s1 && s2)
+      return String_eq(s1, s2);
+
+   return false;
+}
+
 ATTR_NONNULL
 char* String_cat(const char* s1, const char* s2) ATTR_MALLOC;
 
