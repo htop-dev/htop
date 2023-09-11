@@ -11,7 +11,7 @@ jobs:
   build-ubuntu-latest-minimal-gcc:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev
     - name: Bootstrap
@@ -33,7 +33,7 @@ jobs:
     env:
       CC: clang-16
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
@@ -57,7 +57,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto -Wl,--as-needed
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
     - name: Bootstrap
@@ -74,7 +74,7 @@ jobs:
     env:
       CC: clang-16
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
@@ -98,7 +98,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev libsensors4-dev libcap-dev
     - name: Bootstrap
@@ -114,7 +114,7 @@ jobs:
     # we want PCP v5.2.3+
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libpcp3-dev libncursesw5-dev libtinfo-dev libgpm-dev
     - name: Bootstrap
@@ -129,7 +129,7 @@ jobs:
     env:
       CC: clang-16
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
@@ -155,7 +155,7 @@ jobs:
       TERM: xterm-color
       HTOPRC: .github/workflows/htoprc
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
@@ -185,7 +185,7 @@ jobs:
     env:
       CC: clang
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install Dependencies
       run: brew install automake pkg-config
     - name: Bootstrap
@@ -200,6 +200,6 @@ jobs:
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: check-whitespaces
         run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
