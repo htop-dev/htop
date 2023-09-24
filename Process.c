@@ -844,6 +844,7 @@ void Process_init(Process* this, const Machine* host) {
    Row_init(&this->super, host);
 
    this->cmdlineBasenameEnd = -1;
+   this->st_uid = (uid_t)-1;
 }
 
 static bool Process_setPriority(Process* this, int priority) {
