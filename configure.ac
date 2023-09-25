@@ -27,6 +27,10 @@ linux*|gnu*)
    my_htop_platform=linux
    AC_DEFINE([HTOP_LINUX], [], [Building for Linux.])
    ;;
+cygwin*|msys*)
+   my_htop_platform=cygwin
+   AC_DEFINE([HTOP_CYGWIN], [], [Building for Cygwin.])
+   ;;
 freebsd*|kfreebsd*)
    my_htop_platform=freebsd
    AC_DEFINE([HTOP_FREEBSD], [], [Building for FreeBSD.])
@@ -792,6 +796,7 @@ AC_SUBST([AM_CPPFLAGS])
 AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2023 htop dev team."], [Copyright message.])
 
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
+AM_CONDITIONAL([HTOP_CYGWIN], [test "$my_htop_platform" = cygwin])
 AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])
 AM_CONDITIONAL([HTOP_DRAGONFLYBSD], [test "$my_htop_platform" = dragonflybsd])
 AM_CONDITIONAL([HTOP_NETBSD], [test "$my_htop_platform" = netbsd])

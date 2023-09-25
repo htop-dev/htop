@@ -1,6 +1,7 @@
 # the binaries:
 htop
 pcp-htop
+*.exe
 
 # all object files
 *.o

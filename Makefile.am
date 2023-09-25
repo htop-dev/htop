@@ -216,6 +216,33 @@ myhtopplatheaders = $(linux_platform_headers)
 myhtopplatsources = $(linux_platform_sources)
 endif
 
+# Cygwin
+# ----
+
+cygwin_platform_headers = \
+	generic/gettime.h \
+	generic/hostname.h \
+	generic/uname.h \
+	cygwin/CygwinMachine.h \
+	cygwin/CygwinProcess.h \
+	cygwin/CygwinProcessTable.h \
+	cygwin/Platform.h \
+	cygwin/ProcessField.h
+
+cygwin_platform_sources = \
+	generic/gettime.c \
+	generic/hostname.c \
+	generic/uname.c \
+	cygwin/CygwinMachine.c \
+	cygwin/CygwinProcess.c \
+	cygwin/CygwinProcessTable.c \
+	cygwin/Platform.c
+
+if HTOP_CYGWIN
+myhtopplatheaders = $(cygwin_platform_headers)
+myhtopplatsources = $(cygwin_platform_sources)
+endif
+
 # FreeBSD
 # -------
 
