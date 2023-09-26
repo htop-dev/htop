@@ -2,6 +2,7 @@
 htop - CygwinMachine.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
+(C) 2017,2018 Guy M. Broome
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -18,11 +19,35 @@ in the source distribution for its full text.
 
 
 static void CygwinMachine_updateCPUcount(CygwinMachine* this) {
-   // TODO
    Machine* super = &this->super;
+   long int s;
 
-   super->activeCPUs = 1;
-   super->existingCPUs = 1;
+   s = sysconf(_SC_NPROCESSORS_CONF);
+   if (s < 1)
+      CRT_fatalError("Cannot get existing CPU count by sysconf(_SC_NPROCESSORS_CONF)");
+
+   if (s != super->existingCPUs) {
+      if (s == 1) {
+         this->cpuData = xRealloc(this->cpuData, sizeof(CPUData));
+         this->cpuData[0].online = true;
+      } else {
+         this->cpuData = xReallocArray(this->cpuData, s + 1, sizeof(CPUData));
+         this->cpuData[0].online = true; /* average is always "online" */
+         for (int i = 1; i < s + 1; i++) {
+            this->cpuData[i].online = true;  // TODO: support offline CPUs and hot swapping
+         }
+      }
+
+      super->existingCPUs = s;
+   }
+
+   s = sysconf(_SC_NPROCESSORS_ONLN);
+   if (s < 1)
+      CRT_fatalError("Cannot get active CPU count by sysconf(_SC_NPROCESSORS_ONLN)");
+
+   if (s != super->activeCPUs) {
+      super->activeCPUs = s;
+   }
 }
 
 Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
@@ -40,6 +65,7 @@ void Machine_delete(Machine* super) {
    CygwinMachine* this = (CygwinMachine*) super;
 
    Machine_done(super);
+   free(this->cpuData);
    free(this);
 }
 
@@ -107,9 +133,8 @@ void Machine_scan(Machine* super) {
 }
 
 bool Machine_isCPUonline(const Machine* super, unsigned int id) {
-   // TODO
-   assert(id < super->existingCPUs);
+   const CygwinMachine* this = (const CygwinMachine*) super;
 
-   (void) super; (void) id;
-   return true;
+   assert(id < super->existingCPUs);
+   return this->cpuData[id + 1].online;
 }

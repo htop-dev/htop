@@ -2,6 +2,8 @@
 htop - cygwin/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
+(C) 2015 David C. Hunt
+(C) 2017,2018 Guy M. Broome
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -26,6 +28,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "cygwin/CygwinMachine.h"
 
 
 const ScreenDefaults Platform_defaultScreens[] = {
@@ -167,9 +170,16 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    // TODO
    (void) cpu;
 
+   const CygwinMachine* chost = (const CygwinMachine *) this->host;
    const Settings* settings = this->host->settings;
+   const CPUData* cpuData = &(chost->cpuData[cpu]);
    double percent;
    double* v = this->values;
+
+   if (!cpuData->online) {
+      this->curItems = 0;
+      return NAN;
+   }
 
    v[CPU_METER_NICE] = 0.0;
    v[CPU_METER_NORMAL] = 0.0;
