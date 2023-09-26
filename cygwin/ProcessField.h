@@ -9,6 +9,18 @@ in the source distribution for its full text.
 
 
 #define PLATFORM_PROCESS_FIELDS  \
+   CMINFLT = 11,                 \
+   CMAJFLT = 13,                 \
+   UTIME = 14,                   \
+   STIME = 15,                   \
+   CUTIME = 16,                  \
+   CSTIME = 17,                  \
+   M_SHARE = 41,                 \
+   M_TRS = 42,                   \
+   M_DRS = 43,                   \
+   M_LRS = 44,                   \
+                                 \
+   DUMMY_BUMP_FIELD = CWD,       \
    // End of list
 
 

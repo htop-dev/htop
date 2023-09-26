@@ -17,6 +17,19 @@ in the source distribution for its full text.
 
 typedef struct CygwinProcess_ {
    Process super;
+   unsigned long int cminflt;
+   unsigned long int cmajflt;
+   unsigned long long int utime;
+   unsigned long long int stime;
+   unsigned long long int cutime;
+   unsigned long long int cstime;
+   long m_share;
+   long m_trs;
+   long m_drs;
+   long m_lrs;
+
+   /* Process flags */
+   unsigned long int flags;
 } CygwinProcess;
 
 extern const ProcessClass CygwinProcess_class;

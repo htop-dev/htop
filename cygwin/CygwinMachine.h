@@ -47,6 +47,12 @@ typedef struct CPUData_ {
 typedef struct CygwinMachine_ {
    Machine super;
 
+   long jiffies;
+   int pageSize;
+   int pageSizeKB;
+
+   long long boottime;   /* btime field from /proc/stat */
+
    double period;
 
    CPUData* cpuData;

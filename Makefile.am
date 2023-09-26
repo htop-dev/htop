@@ -168,6 +168,8 @@ myhtopheaders = \
 # -----
 
 linux_platform_headers = \
+	generic/fast_strtoull.h \
+	generic/fdopenat.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
@@ -192,6 +194,8 @@ linux_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 linux_platform_sources = \
+	generic/fast_strtoull.c \
+	generic/fdopenat.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
@@ -220,6 +224,8 @@ endif
 # ----
 
 cygwin_platform_headers = \
+	generic/fast_strtoull.h \
+	generic/fdopenat.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
@@ -230,6 +236,8 @@ cygwin_platform_headers = \
 	cygwin/ProcessField.h
 
 cygwin_platform_sources = \
+	generic/fast_strtoull.c \
+	generic/fdopenat.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \

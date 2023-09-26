@@ -57,6 +57,37 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    Machine_init(super, usersTable, userId);
 
+   // Initialize page size
+   if ((this->pageSize = sysconf(_SC_PAGESIZE)) == -1)
+      CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
+   this->pageSizeKB = this->pageSize / ONE_K;
+
+   // Initialize clock ticks
+   if ((this->jiffies = sysconf(_SC_CLK_TCK)) == -1)
+      CRT_fatalError("Cannot get clock ticks by sysconf(_SC_CLK_TCK)");
+
+   // Read btime (the kernel boot time, as number of seconds since the epoch)
+   FILE* statfile = fopen(PROCSTATFILE, "r");
+   if (statfile == NULL)
+      CRT_fatalError("Cannot open " PROCSTATFILE);
+
+   this->boottime = -1;
+
+   while (true) {
+      char buffer[PROC_LINE_LENGTH + 1];
+      if (fgets(buffer, sizeof(buffer), statfile) == NULL)
+         break;
+      if (String_startsWith(buffer, "btime ") == false)
+         continue;
+      if (sscanf(buffer, "btime %lld\n", &this->boottime) == 1)
+         break;
+      CRT_fatalError("Failed to parse btime from " PROCSTATFILE);
+   }
+   fclose(statfile);
+
+   if (this->boottime == -1)
+      CRT_fatalError("No btime in " PROCSTATFILE);
+
    CygwinMachine_updateCPUcount(this);
 
    return super;

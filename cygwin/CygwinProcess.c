@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "RichString.h"
 #include "XUtils.h"
+#include "cygwin/CygwinMachine.h"
 
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
@@ -83,10 +84,52 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .flags = 0,
       .defaultSortDesc = true,
    },
+   [CMINFLT] = {
+      .name = "CMINFLT",
+      .title = "    CMINFLT ",
+      .description = "Children processes' minor faults",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
    [MAJFLT] = {
       .name = "MAJFLT",
       .title = "     MAJFLT ",
       .description = "Number of major faults which have required loading a memory page from disk",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [CMAJFLT] = {
+      .name = "CMAJFLT",
+      .title = "    CMAJFLT ",
+      .description = "Children processes' major faults",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [UTIME] = {
+      .name = "UTIME",
+      .title = " UTIME+  ",
+      .description = "User CPU time - time the process spent executing in user mode",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [STIME] = {
+      .name = "STIME",
+      .title = " STIME+  ",
+      .description = "System CPU time - time the kernel spent running system calls for this process",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [CUTIME] = {
+      .name = "CUTIME",
+      .title = " CUTIME+ ",
+      .description = "Children processes' user CPU time",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [CSTIME] = {
+      .name = "CSTIME",
+      .title = " CSTIME+ ",
+      .description = "Children processes' system CPU time",
       .flags = 0,
       .defaultSortDesc = true,
    },
@@ -131,6 +174,34 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .name = "M_RESIDENT",
       .title = "  RES ",
       .description = "Resident set size, size of the text and data sections, plus stack usage",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [M_SHARE] = {
+      .name = "M_SHARE",
+      .title = "  SHR ",
+      .description = "Size of the process's shared pages",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [M_TRS] = {
+      .name = "M_TRS",
+      .title = " CODE ",
+      .description = "Size of the .text segment of the process (CODE)",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [M_DRS] = {
+      .name = "M_DRS",
+      .title = " DATA ",
+      .description = "Size of the .data segment plus stack usage of the process (DATA)",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [M_LRS] = {
+      .name = "M_LRS",
+      .title = "  LIB ",
+      .description = "The library size of the process",
       .flags = 0,
       .defaultSortDesc = true,
    },
@@ -195,6 +266,12 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .description = "comm string of the process",
       .flags = 0,
    },
+   [PROC_EXE] = {
+      .name = "EXE",
+      .title = "EXE             ",
+      .description = "Basename of exe of the process from /proc/[pid]/exe",
+      .flags = 0,
+   },
    [CWD] = {
       .name = "CWD",
       .title = "CWD                       ",
@@ -219,12 +296,32 @@ void Process_delete(Object* cast) {
 
 static void CygwinProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const Process* this = (const Process*) super;
-   //const CygwinProcess* cp = (const CygwinProcess*) this;
+   const Machine* host = (const Machine*) super->host;
+   const CygwinMachine* chost = (const CygwinMachine*) host;
+   const CygwinProcess* cp = (const CygwinProcess*) this;
+   bool coloring = host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   //int n = sizeof(buffer) - 1;
+   int n = sizeof(buffer) - 1;
    switch (field) {
-   // add Cygwin-specific fields here
+   case CMINFLT: Row_printCount(str, cp->cminflt, coloring); return;
+   case CMAJFLT: Row_printCount(str, cp->cmajflt, coloring); return;
+   case M_DRS: Row_printBytes(str, cp->m_drs * chost->pageSize, coloring); return;
+   case M_LRS:
+      if (cp->m_lrs) {
+         Row_printBytes(str, cp->m_lrs * chost->pageSize, coloring);
+         return;
+      }
+
+      attr = CRT_colors[PROCESS_SHADOW];
+      xSnprintf(buffer, n, "  N/A ");
+      break;
+   case M_TRS: Row_printBytes(str, cp->m_trs * chost->pageSize, coloring); return;
+   case M_SHARE: Row_printBytes(str, cp->m_share * chost->pageSize, coloring); return;
+   case UTIME: Row_printTime(str, cp->utime, coloring); return;
+   case STIME: Row_printTime(str, cp->stime, coloring); return;
+   case CUTIME: Row_printTime(str, cp->cutime, coloring); return;
+   case CSTIME: Row_printTime(str, cp->cstime, coloring); return;
    default:
       Process_writeField(this, str, field);
       return;
@@ -236,11 +333,23 @@ static int CygwinProcess_compareByKey(const Process* v1, const Process* v2, Proc
    const CygwinProcess* p1 = (const CygwinProcess*)v1;
    const CygwinProcess* p2 = (const CygwinProcess*)v2;
 
-   // remove if actually used
-   (void)p1; (void)p2;
-
    switch (key) {
-   // add Cygwin-specific fields here
+   case M_DRS:
+      return SPACESHIP_NUMBER(p1->m_drs, p2->m_drs);
+   case M_LRS:
+      return SPACESHIP_NUMBER(p1->m_lrs, p2->m_lrs);
+   case M_TRS:
+      return SPACESHIP_NUMBER(p1->m_trs, p2->m_trs);
+   case M_SHARE:
+      return SPACESHIP_NUMBER(p1->m_share, p2->m_share);
+   case UTIME:
+      return SPACESHIP_NUMBER(p1->utime, p2->utime);
+   case CUTIME:
+      return SPACESHIP_NUMBER(p1->cutime, p2->cutime);
+   case STIME:
+      return SPACESHIP_NUMBER(p1->stime, p2->stime);
+   case CSTIME:
+      return SPACESHIP_NUMBER(p1->cstime, p2->cstime);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

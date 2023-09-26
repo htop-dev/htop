@@ -48,6 +48,8 @@ in the source distribution for its full text.
 #include "Scheduling.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "generic/fast_strtoull.h"
+#include "generic/fdopenat.h"
 #include "linux/CGroupUtils.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
@@ -64,61 +66,6 @@ in the source distribution for its full text.
 #define PF_KTHREAD 0x00200000
 #endif
 
-static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* mode) {
-   assert(String_eq(mode, "r")); /* only currently supported mode */
-
-   int fd = Compat_openat(openatArg, pathname, O_RDONLY);
-   if (fd < 0)
-      return NULL;
-
-   FILE* stream = fdopen(fd, mode);
-   if (!stream)
-      close(fd);
-
-   return stream;
-}
-
-static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
-   register uint64_t result = 0;
-
-   if (!maxlen)
-      --maxlen;
-
-   while (maxlen-- && **str >= '0' && **str <= '9') {
-      result *= 10;
-      result += **str - '0';
-      (*str)++;
-   }
-
-   return result;
-}
-
-static inline uint64_t fast_strtoull_hex(char** str, int maxlen) {
-   register uint64_t result = 0;
-   register int nibble, letter;
-   const long valid_mask = 0x03FF007E;
-
-   if (!maxlen)
-      --maxlen;
-
-   while (maxlen--) {
-      nibble = (unsigned char)**str;
-      if (!(valid_mask & (1 << (nibble & 0x1F))))
-         break;
-      if ((nibble < '0') || (nibble & ~0x20) > 'F')
-         break;
-      letter = (nibble & 0x40) ? 'A' - '9' - 1 : 0;
-      nibble &=~0x20; // to upper
-      nibble ^= 0x10; // switch letters and digits
-      nibble -= letter;
-      nibble &= 0x0f;
-      result <<= 4;
-      result += (uint64_t)nibble;
-      (*str)++;
-   }
-
-   return result;
-}
 
 static int sortTtyDrivers(const void* va, const void* vb) {
    const TtyDriver* a = (const TtyDriver*) va;
