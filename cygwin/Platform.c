@@ -13,6 +13,12 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdio.h>
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif /* WIN32_LEAN_AND_MEAN */
+#include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
+
 #include "ClockMeter.h"
 #include "CPUMeter.h"
 #include "DateMeter.h"
@@ -94,6 +100,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &MemorySwapMeter_class,
    &TasksMeter_class,
    &UptimeMeter_class,
+   &BatteryMeter_class,
    &HostnameMeter_class,
    &SysArchMeter_class,
    &AllCPUsMeter_class,
@@ -269,7 +276,34 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
-   // TODO
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+   SYSTEM_POWER_STATUS status;
+
+   if (GetSystemPowerStatus(&status)) {
+      if (status.BatteryFlag == BATTERY_FLAG_NO_BATTERY ||
+          status.BatteryFlag == BATTERY_FLAG_UNKNOWN)
+         goto no_batt;
+
+      if (status.BatteryLifeTime == BATTERY_LIFE_UNKNOWN ||
+          status.BatteryFullLifeTime == BATTERY_LIFE_UNKNOWN) {
+         if (status.BatteryLifePercent == BATTERY_PERCENTAGE_UNKNOWN)
+            *percent = NAN;
+         else
+            *percent = CLAMP(status.BatteryLifePercent, 0.0, 100.0);
+      } else {
+         double _percent;
+
+         _percent = status.BatteryLifeTime / status.BatteryFullLifeTime;
+
+         *percent = CLAMP(100 * _percent, 0.0, 100.0);
+      }
+
+      if (status.ACLineStatus == AC_LINE_UNKNOWN)
+         *isOnAC = AC_ERROR;
+      else
+         *isOnAC = status.ACLineStatus == AC_LINE_ONLINE;
+   } else {
+no_batt:
+      *percent = NAN;
+      *isOnAC = AC_ERROR;
+   }
 }
