@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <unistd.h>
 
 #include "CRT.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 
@@ -209,12 +210,71 @@ static void CygwinMachine_scanCPUTime(CygwinMachine* this) {
    fclose(file);
 }
 
+static void scanCPUFrequencyFromCPUinfo(CygwinMachine* this) {
+   const Machine* super = &this->super;
+
+   FILE* file = fopen(PROCCPUINFOFILE, "r");
+   if (file == NULL)
+      return;
+
+   int numCPUsWithFrequency = 0;
+   double totalFrequency = 0;
+   int cpuid = -1;
+
+   while (!feof(file)) {
+      double frequency;
+      char buffer[PROC_LINE_LENGTH];
+
+      if (fgets(buffer, PROC_LINE_LENGTH, file) == NULL)
+         break;
+
+      if (sscanf(buffer, "processor : %d", &cpuid) == 1) {
+         continue;
+      } else if (
+         (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
+         (sscanf(buffer, "clock : %lfMHz", &frequency) == 1)
+      ) {
+         if (cpuid < 0 || (unsigned int)cpuid > (super->existingCPUs - 1)) {
+            continue;
+         }
+
+         CPUData* cpuData = &(this->cpuData[cpuid + 1]);
+         /* do not override sysfs data */
+         if (!isNonnegative(cpuData->frequency)) {
+            cpuData->frequency = frequency;
+         }
+         numCPUsWithFrequency++;
+         totalFrequency += frequency;
+      } else if (buffer[0] == '\n') {
+         cpuid = -1;
+      }
+   }
+   fclose(file);
+
+   if (numCPUsWithFrequency > 0) {
+      this->cpuData[0].frequency = totalFrequency / numCPUsWithFrequency;
+   }
+}
+
+static void CygwinMachine_scanCPUFrequency(CygwinMachine* this) {
+   const Machine* super = &this->super;
+
+   for (unsigned int i = 0; i <= super->existingCPUs; i++)
+      this->cpuData[i].frequency = NAN;
+
+   scanCPUFrequencyFromCPUinfo(this);
+}
+
 void Machine_scan(Machine* super) {
    CygwinMachine* this = (CygwinMachine*) super;
 
    CygwinMachine_updateCPUcount(this);
    CygwinMachine_scanMemoryInfo(this);
    CygwinMachine_scanCPUTime(this);
+
+   const Settings* settings = super->settings;
+   if (settings->showCPUFrequency)
+      CygwinMachine_scanCPUFrequency(this);
 }
 
 bool Machine_isCPUonline(const Machine* super, unsigned int id) {

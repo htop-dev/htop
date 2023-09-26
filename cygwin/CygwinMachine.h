@@ -39,6 +39,8 @@ typedef struct CPUData_ {
    unsigned long long int stealPeriod;
    unsigned long long int guestPeriod;
 
+   double frequency;
+
    bool online;
 } CPUData;
 
@@ -52,6 +54,10 @@ typedef struct CygwinMachine_ {
 
 #ifndef PROCDIR
 #define PROCDIR "/proc"
+#endif
+
+#ifndef PROCCPUINFOFILE
+#define PROCCPUINFOFILE PROCDIR "/cpuinfo"
 #endif
 
 #ifndef PROCSTATFILE
