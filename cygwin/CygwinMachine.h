@@ -15,4 +15,12 @@ typedef struct CygwinMachine_ {
    Machine super;
 } CygwinMachine;
 
+#ifndef PROCDIR
+#define PROCDIR "/proc"
+#endif
+
+#ifndef PROCMEMINFOFILE
+#define PROCMEMINFOFILE PROCDIR "/meminfo"
+#endif
+
 #endif /* HEADER_CygwinMachine */
