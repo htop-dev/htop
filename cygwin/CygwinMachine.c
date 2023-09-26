@@ -120,8 +120,93 @@ static void CygwinMachine_scanMemoryInfo(CygwinMachine* this) {
 }
 
 static void CygwinMachine_scanCPUTime(CygwinMachine* this) {
-   // TODO
-   (void) this;
+   const Machine* super = &this->super;
+
+   CygwinMachine_updateCPUcount(this);
+
+   FILE* file = fopen(PROCSTATFILE, "r");
+   if (!file)
+      CRT_fatalError("Cannot open " PROCSTATFILE);
+
+   unsigned int lastAdjCpuId = 0;
+
+   for (unsigned int i = 0; i <= super->existingCPUs; i++) {
+      char buffer[PROC_LINE_LENGTH + 1];
+      unsigned long long int usertime, nicetime, systemtime, idletime;
+      unsigned long long int ioWait = 0, irq = 0, softIrq = 0, steal = 0, guest = 0, guestnice = 0;
+
+      const char* ok = fgets(buffer, sizeof(buffer), file);
+      if (!ok)
+         break;
+
+      // cpu fields are sorted first
+      if (!String_startsWith(buffer, "cpu"))
+         break;
+
+      // As for Cygwin 3.4.9,
+      // only the first 4 fields are set,
+      // the rest will remain at zero.
+      unsigned int adjCpuId;
+      if (i == 0) {
+         (void) sscanf(buffer, "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         adjCpuId = 0;
+      } else {
+         unsigned int cpuid;
+         (void) sscanf(buffer, "cpu%4u %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         adjCpuId = cpuid + 1;
+      }
+
+      if (adjCpuId > super->existingCPUs)
+         break;
+
+      for (unsigned int j = lastAdjCpuId + 1; j < adjCpuId; j++) {
+         // Skipped an ID, but /proc/stat is ordered => got offline CPU
+         memset(&(this->cpuData[j]), '\0', sizeof(CPUData));
+      }
+      lastAdjCpuId = adjCpuId;
+
+      // Guest time is already accounted in usertime
+      usertime -= guest;
+      nicetime -= guestnice;
+      // Fields existing on kernels >= 2.6
+      // (and RHEL's patched kernel 2.4...)
+      unsigned long long int idlealltime = idletime + ioWait;
+      unsigned long long int systemalltime = systemtime + irq + softIrq;
+      unsigned long long int virtalltime = guest + guestnice;
+      unsigned long long int totaltime = usertime + nicetime + systemalltime + idlealltime + steal + virtalltime;
+      CPUData* cpuData = &(this->cpuData[adjCpuId]);
+      // Since we do a subtraction (usertime - guest) and cputime64_to_clock_t()
+      // used in /proc/stat rounds down numbers, it can lead to a case where the
+      // integer overflow.
+      cpuData->userPeriod = saturatingSub(usertime, cpuData->userTime);
+      cpuData->nicePeriod = saturatingSub(nicetime, cpuData->niceTime);
+      cpuData->systemPeriod = saturatingSub(systemtime, cpuData->systemTime);
+      cpuData->systemAllPeriod = saturatingSub(systemalltime, cpuData->systemAllTime);
+      cpuData->idleAllPeriod = saturatingSub(idlealltime, cpuData->idleAllTime);
+      cpuData->idlePeriod = saturatingSub(idletime, cpuData->idleTime);
+      cpuData->ioWaitPeriod = saturatingSub(ioWait, cpuData->ioWaitTime);
+      cpuData->irqPeriod = saturatingSub(irq, cpuData->irqTime);
+      cpuData->softIrqPeriod = saturatingSub(softIrq, cpuData->softIrqTime);
+      cpuData->stealPeriod = saturatingSub(steal, cpuData->stealTime);
+      cpuData->guestPeriod = saturatingSub(virtalltime, cpuData->guestTime);
+      cpuData->totalPeriod = saturatingSub(totaltime, cpuData->totalTime);
+      cpuData->userTime = usertime;
+      cpuData->niceTime = nicetime;
+      cpuData->systemTime = systemtime;
+      cpuData->systemAllTime = systemalltime;
+      cpuData->idleAllTime = idlealltime;
+      cpuData->idleTime = idletime;
+      cpuData->ioWaitTime = ioWait;
+      cpuData->irqTime = irq;
+      cpuData->softIrqTime = softIrq;
+      cpuData->stealTime = steal;
+      cpuData->guestTime = virtalltime;
+      cpuData->totalTime = totaltime;
+   }
+
+   this->period = (double)this->cpuData[0].totalPeriod / super->activeCPUs;
+
+   fclose(file);
 }
 
 void Machine_scan(Machine* super) {

@@ -167,12 +167,10 @@ pid_t Platform_getMaxPid(void) {
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   // TODO
-   (void) cpu;
-
    const CygwinMachine* chost = (const CygwinMachine *) this->host;
    const Settings* settings = this->host->settings;
    const CPUData* cpuData = &(chost->cpuData[cpu]);
+   double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
    double percent;
    double* v = this->values;
 
@@ -181,24 +179,24 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       return NAN;
    }
 
-   v[CPU_METER_NICE] = 0.0;
-   v[CPU_METER_NORMAL] = 0.0;
+   v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
+   v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
    if (settings->detailedCPUTime) {
-      v[CPU_METER_KERNEL] = 0.0;
-      v[CPU_METER_IRQ] = 0.0;
-      v[CPU_METER_SOFTIRQ] = 0.0;
+      v[CPU_METER_KERNEL]  = cpuData->systemPeriod / total * 100.0;
+      v[CPU_METER_IRQ]     = cpuData->irqPeriod / total * 100.0;
+      v[CPU_METER_SOFTIRQ] = cpuData->softIrqPeriod / total * 100.0;
       this->curItems = 5;
 
-      v[CPU_METER_STEAL]   = 0.0;
-      v[CPU_METER_GUEST]   = 0.0;
+      v[CPU_METER_STEAL]   = cpuData->stealPeriod / total * 100.0;
+      v[CPU_METER_GUEST]   = cpuData->guestPeriod / total * 100.0;
       if (settings->accountGuestInCPUMeter) {
          this->curItems = 7;
       }
 
-      v[CPU_METER_IOWAIT]  = 0.0;
+      v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
    } else {
-      v[CPU_METER_KERNEL] = 0.0;
-      v[CPU_METER_IRQ] = 0.0;
+      v[CPU_METER_KERNEL] = cpuData->systemAllPeriod / total * 100.0;
+      v[CPU_METER_IRQ] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
       this->curItems = 4;
    }
 
