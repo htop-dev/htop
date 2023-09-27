@@ -478,6 +478,9 @@ OpenVZ process ID.
 .B VXID
 VServer process ID.
 .TP
+.B WINPID
+Windows process ID.
+.TP
 .B RCHAR (RD_CHAR)
 The number of bytes the process has read.
 .TP

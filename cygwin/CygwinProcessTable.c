@@ -498,6 +498,23 @@ static char* CygwinProcessTable_getDevname(dev_t dev) {
    return NULL;
 }
 
+static bool CygwinProcessTable_readWinpid(CygwinProcess* process, openat_arg_t procFd) {
+   // max PID length on Windows
+   // Reference: https://learn.microsoft.com/en-us/answers/questions/70930/maximum-value-of-process-id
+   char buf[10 + 1];
+
+   ssize_t r = xReadfileat(procFd, "winpid", buf, sizeof(buf));
+
+   if (r < 0)
+      return false;
+
+   char* readptr = buf;
+
+   process->winpid = fast_strtoull_dec(&readptr, sizeof(buf));
+
+   return true;
+}
+
 static bool CygwinProcessTable_recurseProcTree(CygwinProcessTable* this, openat_arg_t parentFd, const CygwinMachine* chost, const char* dirname, const Process* parent) {
    ProcessTable* pt = (ProcessTable*) this;
    const Machine* host = &chost->super;
@@ -587,6 +604,9 @@ static bool CygwinProcessTable_recurseProcTree(CygwinProcessTable* this, openat_
          Compat_openatArgClose(procFd);
          continue;
       }
+
+      if (!CygwinProcessTable_readWinpid(cp, procFd))
+         cp->winpid = -1;
 
       if (!CygwinProcessTable_readStatmFile(cp, procFd, chost))
          goto errorReadingProcess;

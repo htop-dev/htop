@@ -260,6 +260,13 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .flags = 0,
       .pidColumn = true,
    },
+   [WINPID] = {
+      .name = "WINPID",
+      .title = "WINPID",
+      .description = "Windows process ID",
+      .flags = 0,
+      .pidColumn = true,
+   },
    [PROC_COMM] = {
       .name = "COMM",
       .title = "COMM            ",
@@ -322,6 +329,7 @@ static void CygwinProcess_rowWriteField(const Row* super, RichString* str, Proce
    case STIME: Row_printTime(str, cp->stime, coloring); return;
    case CUTIME: Row_printTime(str, cp->cutime, coloring); return;
    case CSTIME: Row_printTime(str, cp->cstime, coloring); return;
+   case WINPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, cp->winpid); break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -350,6 +358,8 @@ static int CygwinProcess_compareByKey(const Process* v1, const Process* v2, Proc
       return SPACESHIP_NUMBER(p1->stime, p2->stime);
    case CSTIME:
       return SPACESHIP_NUMBER(p1->cstime, p2->cstime);
+   case WINPID:
+      return SPACESHIP_NUMBER(p1->winpid, p2->winpid);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

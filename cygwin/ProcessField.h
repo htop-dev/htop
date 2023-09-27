@@ -19,6 +19,7 @@ in the source distribution for its full text.
    M_TRS = 42,                   \
    M_DRS = 43,                   \
    M_LRS = 44,                   \
+   WINPID = 100,                 \
                                  \
    DUMMY_BUMP_FIELD = CWD,       \
    // End of list

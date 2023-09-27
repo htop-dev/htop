@@ -10,6 +10,12 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif /* WIN32_LEAN_AND_MEAN */
+#include <windows.h>  // for DWORD
+#undef WIN32_LEAN_AND_MEAN
+
 #include "Machine.h"
 #include "Object.h"
 #include "Process.h"
@@ -30,6 +36,8 @@ typedef struct CygwinProcess_ {
 
    /* Process flags */
    unsigned long int flags;
+
+   DWORD winpid;
 } CygwinProcess;
 
 extern const ProcessClass CygwinProcess_class;
