@@ -34,6 +34,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "XUtils.h"
 #include "cygwin/CygwinMachine.h"
 
 
@@ -246,9 +247,39 @@ void Platform_setSwapValues(Meter* this) {
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
-    // TODO
-   (void) pid;
-   return NULL;
+   char procname[128];
+   xSnprintf(procname, sizeof(procname), PROCDIR "/%d/environ", pid);
+   FILE* fd = fopen(procname, "r");
+   if (!fd)
+      return NULL;
+
+   char* env = NULL;
+
+   size_t capacity = 0;
+   size_t size = 0;
+   ssize_t bytes = 0;
+
+   do {
+      size += bytes;
+      capacity += 4096;
+      env = xRealloc(env, capacity);
+   } while ((bytes = fread(env + size, 1, capacity - size, fd)) > 0);
+
+   fclose(fd);
+
+   if (bytes < 0) {
+      free(env);
+      return NULL;
+   }
+
+   size += bytes;
+
+   env = xRealloc(env, size + 2);
+
+   env[size] = '\0';
+   env[size + 1] = '\0';
+
+   return env;
 }
 
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
