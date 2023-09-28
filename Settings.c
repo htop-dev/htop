@@ -603,11 +603,16 @@ static void writeMeterModes(const Settings* this, FILE* fd, char separator, unsi
 int Settings_write(const Settings* this, bool onCrash) {
    FILE* fd;
    char separator;
+   char *tmpFilename = NULL;
    if (onCrash) {
       fd = stderr;
       separator = ';';
    } else {
-      fd = fopen(this->filename, "w");
+      xAsprintf(&tmpFilename, "%s.tmp.XXXXXX", this->filename);
+      int fdtmp = mkstemp(tmpFilename);
+      if (fdtmp == -1)
+         return -errno;
+      fd = fdopen(fdtmp, "w");
       if (fd == NULL)
          return -errno;
       separator = '\n';
@@ -718,6 +723,11 @@ int Settings_write(const Settings* this, bool onCrash) {
 
    if (fclose(fd) != 0)
       r = r ? r : -errno;
+
+   if (r == 0)
+      r = (rename(tmpFilename, this->filename) == -1) ? -errno : 0;
+
+   free(tmpFilename);
 
    return r;
 }
