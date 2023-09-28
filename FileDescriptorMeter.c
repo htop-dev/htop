@@ -31,7 +31,7 @@ static void FileDescriptorMeter_updateValues(Meter* this) {
    this->values[0] = 0;
    this->values[1] = 1;
 
-   Platform_getFileDescriptors(&this->values[0], &this->values[1]);
+   Platform_getFileDescriptors(this, &this->values[0], &this->values[1]);
 
    /* only print bar for first value */
    this->curItems = 1;

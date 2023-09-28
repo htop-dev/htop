@@ -61,7 +61,7 @@ char* Platform_getProcessEnv(pid_t pid);
 
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
-void Platform_getFileDescriptors(double* used, double* max);
+void Platform_getFileDescriptors(Meter* this, double* used, double* max);
 
 bool Platform_getDiskIO(DiskIOData* data);
 

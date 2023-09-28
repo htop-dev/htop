@@ -56,6 +56,8 @@ typedef struct CygwinMachine_ {
    double period;
 
    CPUData* cpuData;
+
+   int openedFDs;
 } CygwinMachine;
 
 #ifndef PROCDIR

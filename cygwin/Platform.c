@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -117,6 +118,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
    &BlankMeter_class,
+   &FileDescriptorMeter_class,
    NULL
 };
 
@@ -288,10 +290,11 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    return NULL;
 }
 
-void Platform_getFileDescriptors(double* used, double* max) {
-   // TODO
-   *used = NAN;
-   *max = NAN;
+void Platform_getFileDescriptors(Meter* this, double* used, double* max) {
+   const CygwinMachine* chost = (const CygwinMachine *) this->host;
+
+   *used = chost->openedFDs;
+   *max = NAN;  // TODO
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

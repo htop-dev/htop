@@ -515,7 +515,34 @@ static bool CygwinProcessTable_readWinpid(CygwinProcess* process, openat_arg_t p
    return true;
 }
 
-static bool CygwinProcessTable_recurseProcTree(CygwinProcessTable* this, openat_arg_t parentFd, const CygwinMachine* chost, const char* dirname, const Process* parent) {
+static bool CygwinProcessTable_goThroughFd(CygwinMachine* chost, openat_arg_t procFd) {
+   const struct dirent* entry;
+
+#ifdef HAVE_OPENAT
+   int dirFd = openat(procFd, "fd", O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+   if (dirFd < 0)
+      return false;
+   DIR* dir = fdopendir(dirFd);
+#else
+   char dirFd[4096];
+   xSnprintf(dirFd, sizeof(dirFd), "%s/fd", procFd);
+   DIR* dir = opendir(dirFd);
+#endif
+
+   while ((entry = readdir(dir)) != NULL) {
+      if (String_eq(entry->d_name, ".") ||
+          String_eq(entry->d_name, ".."))
+         continue;
+
+      chost->openedFDs++;
+   }
+
+   closedir(dir);
+
+   return true;
+}
+
+static bool CygwinProcessTable_recurseProcTree(CygwinProcessTable* this, openat_arg_t parentFd, CygwinMachine* chost, const char* dirname, const Process* parent) {
    ProcessTable* pt = (ProcessTable*) this;
    const Machine* host = &chost->super;
    const Settings* settings = host->settings;
@@ -536,6 +563,8 @@ static bool CygwinProcessTable_recurseProcTree(CygwinProcessTable* this, openat_
       Compat_openatArgClose(dirFd);
       return false;
    }
+
+   chost->openedFDs = 0;
 
    const bool hideKernelThreads = settings->hideKernelThreads;
    const bool hideUserlandThreads = settings->hideUserlandThreads;
@@ -632,6 +661,8 @@ static bool CygwinProcessTable_recurseProcTree(CygwinProcessTable* this, openat_
       unsigned long int tty_nr = proc->tty_nr;
       if (!CygwinProcessTable_readStatFile(cp, procFd, chost, statCommand, sizeof(statCommand)))
          goto errorReadingProcess;
+
+      CygwinProcessTable_goThroughFd(chost, procFd);
 
       Process_updateComm(proc, statCommand);
 
@@ -732,8 +763,8 @@ errorReadingProcess:
 
 void ProcessTable_goThroughEntries(ProcessTable* super) {
    CygwinProcessTable* this = (CygwinProcessTable*) super;
-   const Machine* host = super->super.host;
-   const CygwinMachine* chost = (const CygwinMachine*) host;
+   Machine* host = super->super.host;
+   CygwinMachine* chost = (CygwinMachine*) host;
 
    /* PROCDIR is an absolute path */
    assert(PROCDIR[0] == '/');

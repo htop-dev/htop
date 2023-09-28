@@ -304,7 +304,9 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    return NULL;
 }
 
-void Platform_getFileDescriptors(double* used, double* max) {
+void Platform_getFileDescriptors(Meter* this, double* used, double* max) {
+   (void)this;
+
    static const int mib_kern_maxfile[] = { CTL_KERN, KERN_MAXFILES };
    int sysctl_maxfile = 0;
    size_t size_maxfile = sizeof(int);

@@ -574,7 +574,9 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
    fclose(fd);
 }
 
-void Platform_getFileDescriptors(double* used, double* max) {
+void Platform_getFileDescriptors(Meter* this, double* used, double* max) {
+   (void) this;
+
    *used = NAN;
    *max = 65536;
 

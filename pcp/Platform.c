@@ -751,7 +751,9 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getFileDescriptors(double* used, double* max) {
+void Platform_getFileDescriptors(Meter* this, double* used, double* max) {
+   (void)this;
+
    *used = NAN;
    *max = 65536;
 

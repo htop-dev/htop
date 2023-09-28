@@ -133,7 +133,7 @@ extern pmOptions opts;
 
 size_t Platform_addMetric(Metric id, const char* name);
 
-void Platform_getFileDescriptors(double* used, double* max);
+void Platform_getFileDescriptors(Meter* this, double* used, double* max);
 
 void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
 

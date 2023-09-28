@@ -240,7 +240,8 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    return NULL;
 }
 
-void Platform_getFileDescriptors(double* used, double* max) {
+void Platform_getFileDescriptors(Meter* this, double* used, double* max) {
+   (void)this;
    Generic_getFileDescriptors_sysctl(used, max);
 }
 
