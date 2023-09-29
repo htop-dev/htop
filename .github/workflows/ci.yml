@@ -197,6 +197,62 @@ jobs:
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror"
 
+  build-cygwin-latest-gcc:
+    runs-on: windows-latest
+    env:
+      CYGWIN_NOWINPATH: 1
+      CHERE_INVOKING: 1
+    steps:
+    - name: Configure Git
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+    - name: Install Dependencies
+      uses: cygwin/cygwin-install-action@master
+      with:
+        add-to-path: false
+        packages: autoconf automake gcc-core libncurses-devel make pkgconf
+    - name: Bootstrap
+      shell: C:\cygwin\bin\bash.exe -o igncr -eo pipefail -l '{0}'
+      run: ./autogen.sh
+    - name: Configure
+      shell: C:\cygwin\bin\bash.exe -o igncr -eo pipefail -l '{0}'
+      run: ./configure --enable-werror --enable-unicode || (cat config.log; exit 1)
+    - name: Build
+      shell: C:\cygwin\bin\bash.exe -o igncr -eo pipefail -l '{0}'
+      run: make -k
+    - name: Distcheck
+      shell: C:\cygwin\bin\bash.exe -o igncr -eo pipefail -l '{0}'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-unicode"
+
+  build-msys2-latest-gcc:
+    runs-on: windows-latest
+    steps:
+    - name: Configure Git
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+    - name: Install Dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MSYS
+        update: true
+        install: autoconf-wrapper automake-wrapper gcc make ncurses-devel pkgconf
+    - name: Bootstrap
+      shell: msys2 {0}
+      run: ./autogen.sh
+    - name: Configure
+      shell: msys2 {0}
+      run: ./configure --enable-werror --enable-unicode || (cat config.log; exit 1)
+    - name: Build
+      shell: msys2 {0}
+      run: make -k
+    - name: Distcheck
+      shell: msys2 {0}
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror --enable-unicode"
+
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
