@@ -132,7 +132,7 @@ checking for sys/utsname.h... no
 configure: error: can not find required generic header files
 ```
 
-This header is needed for the `uname` function (see UNAME(3)), which isn't available on Windows. For the moment, let's workaround this error to get the `configure` script to complete to complete so we have a makefile. 
+This header is needed for the `uname` function (see UNAME(3)), which isn't available on Windows. For the moment, let's workaround this error to get the `configure` script to complete to complete so we have a makefile.
 
 The `configure` script is only concerned that this header exists. So placing a blank file in its place will work:
 
@@ -141,7 +141,7 @@ mkdir -p $MINGW_ROOT/include/sys
 touch $MINGW_ROOT/include/sys/utsname.h
 ```
 
-Rerun the `configure` command from above. It should complete,  displaying a warning box about the platform not currently being supported, and printing the normal configuration summary. 
+Rerun the `configure` command from above. It should complete,  displaying a warning box about the platform not currently being supported, and printing the normal configuration summary.
 
 You will be able to run `make` at this point, giving numerous errors. However, we can confirm that the build system is using the cross-compiler and it is properly producing the COFF object files used by Windows:
 
@@ -152,9 +152,9 @@ htop.o: Intel amd64 COFF object file, no line number info, not stripped, 7 secti
 
 ## Porting Plan/Progress
 
-The platform-specific code will be placed in the subdirectory `winnt`, and the configure scripts will define and use the variable `HTOP_WINNT` while building for that platform. 
+The platform-specific code will be placed in the subdirectory `winnt`, and the configure scripts will define and use the variable `HTOP_WINNT` while building for that platform.
 
-At the moment a number of functions use functionality that Windows doesn't provide directly, mainly definitions and functions from `pwd.h` and `uts_name.h`. 
+At the moment a number of functions use functionality that Windows doesn't provide directly, mainly definitions and functions from `pwd.h` and `uts_name.h`.
 
 Relevant notes on `htop` code layout:
 
@@ -172,7 +172,7 @@ Rough steps from here:
 5.  Work on Windows proof-of-concept code.
 
 Goals for Proof-of-Concept
-* Cross build everything from Linux using autoconf tools 
+* Cross build everything from Linux using autoconf tools
 * Github Action for CI that goes through the steps documented here
 * Produce binary that runs on Windows Console
 * Demonstrate existing `ncurses`-based code is working
@@ -181,4 +181,4 @@ Goals for Proof-of-Concept
 The current cross-build setup provides the core Windows API (basically libc + everything under the `windows.h` header) plus NCurses. This is expected to be enough functionality. The full Windows SDK can be added, if it turns out to be necessary.
 __
 
-This is a work in progress, see issues #1097 for on-going details. This document, modified and added code, scripts and anything else is authored or modified by @dnabre. Everything is license under GPL 2.0 (and/or additional licenses per existing `htop` project). 
+This is a work in progress, see issues #1097 for on-going details. This document, modified and added code, scripts and anything else is authored or modified by @dnabre. Everything is license under GPL 2.0 (and/or additional licenses per existing `htop` project).
