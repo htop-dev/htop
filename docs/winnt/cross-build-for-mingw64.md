@@ -113,7 +113,7 @@ To configure `htop` for cross-compiling we just need to tell autoconf we want to
 ```
 ./autogen.sh
 
-# Make sure configure can find the cross built NCurses library and headers
+# Make sure configure can find the cross-built NCurses library and headers
 
 export CFLAGS="-I$MINGW_ROOT/include"
 export LDFLAGS="-L$MINGW_ROOT/lib"
