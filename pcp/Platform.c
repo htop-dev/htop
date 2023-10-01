@@ -73,12 +73,6 @@ const ScreenDefaults Platform_defaultScreens[] = {
 
 const unsigned int Platform_numberOfDefaultScreens = ARRAYSIZE(Platform_defaultScreens);
 
-const SignalItem Platform_signals[] = {
-   { .name = " 0 Cancel",    .number = 0 },
-};
-
-const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
-
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &DynamicMeter_class,

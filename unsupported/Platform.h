@@ -17,7 +17,6 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
-#include "SignalsPanel.h"
 #include "CommandLine.h"
 #include "generic/gettime.h"
 #include "unsupported/UnsupportedProcess.h"
@@ -26,10 +25,6 @@ in the source distribution for its full text.
 extern const ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
-
-extern const SignalItem Platform_signals[];
-
-extern const unsigned int Platform_numberOfSignals;
 
 extern const MeterClass* const Platform_meterTypes[];
 

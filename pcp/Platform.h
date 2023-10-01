@@ -33,7 +33,6 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "RichString.h"
-#include "SignalsPanel.h"
 #include "CommandLine.h"
 
 #include "pcp/Metric.h"
@@ -63,10 +62,6 @@ typedef struct Platform_ {
 extern const ScreenDefaults Platform_defaultScreens[];
 
 extern const unsigned int Platform_numberOfDefaultScreens;
-
-extern const SignalItem Platform_signals[];
-
-extern const unsigned int Platform_numberOfSignals;
 
 extern const MeterClass* const Platform_meterTypes[];
 

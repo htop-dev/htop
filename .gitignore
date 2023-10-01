@@ -5,6 +5,10 @@ pcp-htop
 # all object files
 *.o
 
+# intermediate signal lists
+/signals/SignalList.in.i
+/signals/SignalList.in.sorted
+
 # skip all backups
 *.bak
 *~

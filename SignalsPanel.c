@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "Panel.h"
 #include "Platform.h"
+#include "signals/SignalList.h"
 #include "XUtils.h"
 
 
