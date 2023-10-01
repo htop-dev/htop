@@ -22,7 +22,7 @@ and it will use the appropriate compiler, linkers, and libraries for that platfo
 
 ## Setting up the Cross-Build Environment
 
-Going through specifics, we going assume a base install of Ubuntu 22.04 for `x86_64`. The same version used by GitHub's ubuntu-latest runner. It has (almost) everything needed in its packaging system. While package names may differ,  most major distributions will have same tools available.
+Going through specifics, we are going to assume a base install of Ubuntu 22.04 for `x86_64`; the same version also used by GitHub's `ubuntu-latest` runner. It has (almost) everything needed in its packaging system. While package names may differ, most major distributions will have these tools available.
 
 These should be the minimal needed packages on a clean install. If you have a development environment of any sort setup, you likely only need to pull in `mingw-64`.
 
