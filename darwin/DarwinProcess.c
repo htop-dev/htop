@@ -16,6 +16,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Process.h"
+#include "darwin/DarwinMachine.h"
 #include "darwin/Platform.h"
 
 
@@ -51,10 +52,10 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [TRANSLATED] = { .name = "TRANSLATED", .title = "T ", .description = "Translation info (T translated, N native)", .flags = 0, },
 };
 
-Process* DarwinProcess_new(const Settings* settings) {
+Process* DarwinProcess_new(const Machine* host) {
    DarwinProcess* this = xCalloc(1, sizeof(DarwinProcess));
    Object_setClass(this, Class(DarwinProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, host);
 
    this->utime = 0;
    this->stime = 0;
@@ -71,8 +72,8 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void DarwinProcess_writeField(const Process* this, RichString* str, ProcessField field) {
-   const DarwinProcess* dp = (const DarwinProcess*) this;
+static void DarwinProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+   const DarwinProcess* dp = (const DarwinProcess*) super;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
@@ -80,7 +81,7 @@ static void DarwinProcess_writeField(const Process* this, RichString* str, Proce
    // add Platform-specific fields here
    case TRANSLATED: xSnprintf(buffer, n, "%c ", dp->translated ? 'T' : 'N'); break;
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(&dp->super, str, field);
       return;
    }
    RichString_appendWide(str, attr, buffer);
@@ -291,13 +292,14 @@ static char* DarwinProcess_getDevname(dev_t dev) {
 
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists) {
    DarwinProcess* dp = (DarwinProcess*)proc;
+   const Settings* settings = proc->super.host->settings;
 
    const struct extern_proc* ep = &ps->kp_proc;
 
    /* UNSET HERE :
     *
     * processor
-    * user (set at ProcessList level)
+    * user (set at ProcessTable level)
     * nlwp
     * percent_cpu
     * percent_mem
@@ -310,12 +312,12 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    /* First, the "immutable" parts */
    if (!exists) {
       /* Set the PID/PGID/etc. */
-      proc->pid = ep->p_pid;
-      proc->ppid = ps->kp_eproc.e_ppid;
+      Process_setPid(proc, ep->p_pid);
+      Process_setThreadGroup(proc, ep->p_pid);
+      Process_setParent(proc, ps->kp_eproc.e_ppid);
       proc->pgrp = ps->kp_eproc.e_pgid;
       proc->session = 0; /* TODO Get the session id */
       proc->tpgid = ps->kp_eproc.e_tpgid;
-      proc->tgid = proc->pid;
       proc->isKernelThread = false;
       proc->isUserlandThread = false;
       dp->translated = ps->kp_proc.p_flag & P_TRANSLATED;
@@ -328,7 +330,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       DarwinProcess_updateExe(ep->p_pid, proc);
       DarwinProcess_updateCmdLine(ps, proc);
 
-      if (proc->settings->ss->flags & PROCESS_FLAG_CWD) {
+      if (settings->ss->flags & PROCESS_FLAG_CWD) {
          DarwinProcess_updateCwd(ep->p_pid, proc);
       }
    }
@@ -341,7 +343,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
        * To mitigate this we only fetch TTY information if the TTY
        * field is enabled in the settings.
        */
-      if (proc->settings->ss->flags & PROCESS_FLAG_TTY) {
+      if (settings->ss->flags & PROCESS_FLAG_TTY) {
          proc->tty_name = DarwinProcess_getDevname(proc->tty_nr);
          if (!proc->tty_name) {
             /* devname failed: prevent us from calling it again */
@@ -357,13 +359,15 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    proc->state = (ep->p_stat == SZOMB) ? ZOMBIE : UNKNOWN;
 
    /* Make sure the updated flag is set */
-   proc->updated = true;
+   proc->super.updated = true;
 }
 
-void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double timeIntervalNS) {
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable* dpt, double timeIntervalNS) {
    struct proc_taskinfo pti;
 
-   if (sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+   if (sizeof(pti) == proc_pidinfo(Process_getPid(&proc->super), PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+      const DarwinMachine* dhost = (const DarwinMachine*) proc->super.super.host;
+
       uint64_t total_existing_time_ns = proc->stime + proc->utime;
 
       uint64_t user_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_user);
@@ -385,15 +389,15 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList*
       proc->super.m_resident = pti.pti_resident_size / ONE_K;
       proc->super.majflt = pti.pti_faults;
       proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
-                              / (double)dpl->host_info.max_mem;
+                              / (double)dhost->host_info.max_mem;
 
       proc->stime = system_time_ns;
       proc->utime = user_time_ns;
 
-      dpl->super.kernelThreads += 0; /*pti.pti_threads_system;*/
-      dpl->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
-      dpl->super.totalTasks += pti.pti_threadnum;
-      dpl->super.runningTasks += pti.pti_numrunning;
+      dpt->super.kernelThreads += 0; /*pti.pti_threads_system;*/
+      dpt->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
+      dpt->super.totalTasks += pti.pti_threadnum;
+      dpt->super.runningTasks += pti.pti_numrunning;
    }
 }
 
@@ -415,7 +419,7 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
    }
 
    task_t port;
-   ret = task_for_pid(mach_task_self(), proc->pid, &port);
+   ret = task_for_pid(mach_task_self(), Process_getPid(proc), &port);
    if (ret != KERN_SUCCESS) {
       dp->taskAccess = false;
       return;
@@ -468,11 +472,18 @@ void DarwinProcess_scanThreads(DarwinProcess* dp) {
 
 const ProcessClass DarwinProcess_class = {
    .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
+      .super = {
+         .extends = Class(Process),
+         .display = Row_display,
+         .delete = Process_delete,
+         .compare = Process_compare
+      },
+      .isHighlighted = Process_rowIsHighlighted,
+      .isVisible = Process_rowIsVisible,
+      .matchesFilter = Process_rowMatchesFilter,
+      .compareByParent = Process_compareByParent,
+      .sortKeyString = Process_rowGetSortKey,
+      .writeField = DarwinProcess_rowWriteField
    },
-   .writeField = DarwinProcess_writeField,
-   .compareByKey = DarwinProcess_compareByKey,
+   .compareByKey = DarwinProcess_compareByKey
 };

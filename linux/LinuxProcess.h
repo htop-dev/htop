@@ -14,9 +14,9 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "linux/IOPriority.h"
+#include "Machine.h"
 #include "Object.h"
 #include "Process.h"
-#include "Settings.h"
 
 
 #define PROCESS_FLAG_LINUX_IOPRIO    0x00000100
@@ -118,17 +118,17 @@ extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 extern const ProcessClass LinuxProcess_class;
 
-Process* LinuxProcess_new(const Settings* settings);
+Process* LinuxProcess_new(const Machine* host);
 
 void Process_delete(Object* cast);
 
-IOPriority LinuxProcess_updateIOPriority(LinuxProcess* this);
+IOPriority LinuxProcess_updateIOPriority(Process* proc);
 
-bool LinuxProcess_setIOPriority(Process* this, Arg ioprio);
+bool LinuxProcess_rowSetIOPriority(Row* super, Arg ioprio);
 
 bool LinuxProcess_isAutogroupEnabled(void);
 
-bool LinuxProcess_changeAutogroupPriorityBy(Process* this, Arg delta);
+bool LinuxProcess_rowChangeAutogroupPriorityBy(Row* super, Arg delta);
 
 bool Process_isThread(const Process* this);
 

@@ -36,9 +36,10 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 #include "CommandLine.h"
 
+#include "pcp/Metric.h"
 #include "pcp/PCPDynamicColumn.h"
 #include "pcp/PCPDynamicMeter.h"
-#include "pcp/PCPMetric.h"
+#include "pcp/PCPDynamicScreen.h"
 
 
 typedef struct Platform_ {
@@ -51,6 +52,7 @@ typedef struct Platform_ {
    pmResult* result;          /* sample values result indexed by Metric */
    PCPDynamicMeters meters;   /* dynamic meters via configuration files */
    PCPDynamicColumns columns; /* dynamic columns via configuration files */
+   PCPDynamicScreens screens; /* dynamic screens via configuration files */
    struct timeval offset;     /* time offset used in archive mode only */
    long long btime;           /* boottime in seconds since the epoch */
    char* release;             /* uname and distro from this context */
@@ -82,7 +84,7 @@ long long Platform_getBootTime(void);
 
 unsigned int Platform_getMaxCPU(void);
 
-int Platform_getMaxPid(void);
+pid_t Platform_getMaxPid(void);
 
 double Platform_setCPUValues(Meter* this, int cpu);
 
@@ -97,8 +99,6 @@ void Platform_setZfsArcValues(Meter* this);
 void Platform_setZfsCompressedArcValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
-
-char* Platform_getInodeFilename(pid_t pid, ino_t inode);
 
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
@@ -131,7 +131,9 @@ CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv);
 
 extern pmOptions opts;
 
-size_t Platform_addMetric(PCPMetric id, const char* name);
+size_t Platform_addMetric(Metric id, const char* name);
+
+void Platform_getFileDescriptors(double* used, double* max);
 
 void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
 
@@ -151,8 +153,20 @@ Hashtable* Platform_dynamicColumns(void);
 
 void Platform_dynamicColumnsDone(Hashtable* columns);
 
-const char* Platform_dynamicColumnInit(unsigned int key);
+const char* Platform_dynamicColumnName(unsigned int key);
 
 bool Platform_dynamicColumnWriteField(const Process* proc, RichString* str, unsigned int key);
+
+Hashtable* Platform_dynamicScreens(void);
+
+void Platform_defaultDynamicScreens(Settings* settings);
+
+void Platform_addDynamicScreen(ScreenSettings* ss);
+
+void Platform_addDynamicScreenAvailableColumns(Panel* availableColumns, const char* screen);
+
+void Platform_dynamicScreensDone(Hashtable* screens);
+
+void Platform_updateTables(Machine* host);
 
 #endif

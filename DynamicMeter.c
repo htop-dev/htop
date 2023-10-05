@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Object.h"
 #include "Platform.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "RichString.h"
 #include "XUtils.h"
 
@@ -88,16 +88,16 @@ static void DynamicMeter_display(const Object* cast, RichString* out) {
 }
 
 static const char* DynamicMeter_getCaption(const Meter* this) {
-   const ProcessList* pl = this->pl;
-   const DynamicMeter* meter = Hashtable_get(pl->dynamicMeters, this->param);
+   const Settings* settings = this->host->settings;
+   const DynamicMeter* meter = Hashtable_get(settings->dynamicMeters, this->param);
    if (meter)
       return meter->caption ? meter->caption : meter->name;
    return this->caption;
 }
 
 static void DynamicMeter_getUiName(const Meter* this, char* name, size_t length) {
-   const ProcessList* pl = this->pl;
-   const DynamicMeter* meter = Hashtable_get(pl->dynamicMeters, this->param);
+   const Settings* settings = this->host->settings;
+   const DynamicMeter* meter = Hashtable_get(settings->dynamicMeters, this->param);
    if (meter) {
       const char* uiName = meter->caption;
       if (uiName) {

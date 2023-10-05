@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 #include "ListItem.h"
 #include "Object.h"
+#include "Platform.h"
 #include "Process.h"
 #include "ProvideCurses.h"
 #include "XUtils.h"
@@ -34,8 +35,8 @@ static void AvailableColumnsPanel_delete(Object* object) {
 
 static void AvailableColumnsPanel_insert(AvailableColumnsPanel* this, int at, int key) {
    const char* name;
-   if (key >= LAST_PROCESSFIELD)
-      name = DynamicColumn_init(key);
+   if (key >= ROW_DYNAMIC_FIELDS)
+      name = DynamicColumn_name(key);
    else
       name = Process_fields[key].name;
    Panel_insert(this->columns, at, (Object*) ListItem_new(name, key));
@@ -81,29 +82,49 @@ const PanelClass AvailableColumnsPanel_class = {
 
 static void AvailableColumnsPanel_addDynamicColumn(ht_key_t key, void* value, void* data) {
    const DynamicColumn* column = (const DynamicColumn*) value;
-   Panel* super = (Panel*) data;
-   const char* title = column->caption ? column->caption : column->heading;
-   if (!title)
-      title = column->name;  // fallback to the only mandatory field
+   if (column->table) /* DynamicScreen, handled differently */
+      return;
+   AvailableColumnsPanel* this = (AvailableColumnsPanel*) data;
+   const char* title = column->heading ? column->heading : column->name;
+   const char* text = column->description ? column->description : column->caption;
    char description[256];
-   xSnprintf(description, sizeof(description), "%s - %s", title, column->description);
-   Panel_add(super, (Object*) ListItem_new(description, key));
+   if (text)
+      xSnprintf(description, sizeof(description), "%s - %s", title, text);
+   else
+      xSnprintf(description, sizeof(description), "%s", title);
+   Panel_add(&this->super, (Object*) ListItem_new(description, key));
 }
 
 // Handle DynamicColumns entries in the AvailableColumnsPanel
-static void AvailableColumnsPanel_addDynamicColumns(Panel* super, Hashtable* dynamicColumns) {
+static void AvailableColumnsPanel_addDynamicColumns(AvailableColumnsPanel* this, Hashtable* dynamicColumns) {
    assert(dynamicColumns);
-   Hashtable_foreach(dynamicColumns, AvailableColumnsPanel_addDynamicColumn, super);
+   Hashtable_foreach(dynamicColumns, AvailableColumnsPanel_addDynamicColumn, this);
 }
 
 // Handle remaining Platform Meter entries in the AvailableColumnsPanel
-static void AvailableColumnsPanel_addPlatformColumn(Panel* super) {
+static void AvailableColumnsPanel_addPlatformColumns(AvailableColumnsPanel* this) {
    for (int i = 1; i < LAST_PROCESSFIELD; i++) {
       if (i != COMM && Process_fields[i].description) {
          char description[256];
          xSnprintf(description, sizeof(description), "%s - %s", Process_fields[i].name, Process_fields[i].description);
-         Panel_add(super, (Object*) ListItem_new(description, i));
+         Panel_add(&this->super, (Object*) ListItem_new(description, i));
       }
+   }
+}
+
+// Handle DynamicColumns entries associated with DynamicScreens
+static void AvailableColumnsPanel_addDynamicScreens(AvailableColumnsPanel* this, const char* screen) {
+   Platform_addDynamicScreenAvailableColumns(&this->super, screen);
+}
+
+void AvailableColumnsPanel_fill(AvailableColumnsPanel* this, const char* dynamicScreen, Hashtable* dynamicColumns) {
+   Panel* super = (Panel*) this;
+   Panel_prune(super);
+   if (dynamicScreen) {
+      AvailableColumnsPanel_addDynamicScreens(this, dynamicScreen);
+   } else {
+      AvailableColumnsPanel_addPlatformColumns(this);
+      AvailableColumnsPanel_addDynamicColumns(this, dynamicColumns);
    }
 }
 
@@ -112,11 +133,10 @@ AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns, Hashtable* dyna
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(AvailableColumnsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
-
    Panel_setHeader(super, "Available Columns");
-   AvailableColumnsPanel_addPlatformColumn(super);
-   AvailableColumnsPanel_addDynamicColumns(super, dynamicColumns);
 
    this->columns = columns;
+   AvailableColumnsPanel_fill(this, NULL, dynamicColumns);
+
    return this;
 }

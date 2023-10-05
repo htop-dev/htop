@@ -6,7 +6,7 @@
 # ----------------------------------------------------------------------
 
 AC_PREREQ([2.69])
-AC_INIT([htop], [3.2.1], [htop@groups.io], [], [https://htop.dev/])
+AC_INIT([htop], [3.3.0-dev], [htop@groups.io], [], [https://htop.dev/])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -149,7 +149,7 @@ dnl been updated in Autoconf 2.69, so use a workaround:
 m4_version_prereq([2.70], [],
 [if test "x$ac_cv_header_sys_mkdev_h" != xyes; then
    AC_CHECK_HEADER([sys/sysmacros.h], [AC_DEFINE([MAJOR_IN_SYSMACROS], [1],
-      [Define to 1 if `major', `minor', and `makedev' are declared in <sys/sysmacros.h>.])])
+      [Define to 1 if 'major', 'minor', and 'makedev' are declared in <sys/sysmacros.h>.])])
 fi])
 
 # Optional Section
@@ -188,22 +188,57 @@ AC_COMPILE_IFELSE([
    AC_MSG_RESULT(no))
 CFLAGS="$old_CFLAGS"
 
+AC_MSG_CHECKING(for access)
+old_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wno-error -Werror=attributes"
+AC_COMPILE_IFELSE([
+   AC_LANG_SOURCE(
+      [
+         __attribute__((access(read_only, 1, 2))) extern int foo(const char* str, unsigned len);
+      ],[]
+   )],
+   AC_DEFINE([HAVE_ATTR_ACCESS], 1, [The access attribute is supported.])
+   AC_MSG_RESULT(yes),
+   AC_MSG_RESULT(no))
+CFLAGS="$old_CFLAGS"
+
 AC_MSG_CHECKING(for NaN support)
-AC_RUN_IFELSE([
+dnl Note: AC_RUN_IFELSE does not try compiling the program at all when
+dnl $cross_compiling is 'yes'.
+AC_LINK_IFELSE([
    AC_LANG_PROGRAM(
       [[
-       #include <math.h>
+#include <math.h>
       ]],
       [[
-       double x = NAN; return !isnan(x);
+         double x = NAN;
+         /* Both should evaluate to false -> 0 (exit success) */
+         return isgreater(x, x) || isgreaterequal(x, x);
       ]]
    )],
-   [AC_MSG_RESULT(yes)],
-   [
+   [flag_finite_math_only=unknown
+   if test "$cross_compiling" = yes; then
+      AC_COMPILE_IFELSE([
+         AC_LANG_SOURCE([[
+/* __FINITE_MATH_ONLY__ is documented in Clang. */
+#ifdef __FINITE_MATH_ONLY__
+#error "should not enable -ffinite-math-only"
+#endif
+         ]])],
+         AC_MSG_RESULT([assume yes (cross compiling)]),
+	 flag_finite_math_only=yes)
+   elif ./conftest$EXEEXT >&AS_MESSAGE_LOG_FD; then
+      flag_finite_math_only=no
+      AC_MSG_RESULT(yes)
+   else
+      flag_finite_math_only=yes
+   fi
+   if test "$flag_finite_math_only" = yes; then
       AC_MSG_RESULT(no)
-      AC_MSG_WARN([Compiler does not respect NaN, some functionality might break; consider using '-fno-finite-math-only'])
-   ],
-   [AC_MSG_RESULT(skipped)])
+      AC_MSG_WARN([runtime behavior with NaN is not compliant - some functionality might break; consider using '-fno-finite-math-only'])
+   fi],
+   [AC_MSG_RESULT(no)
+   AC_MSG_ERROR([can not find required macros: NAN, isgreater() and isgreaterequal()])])
 
 # ----------------------------------------------------------------------
 
@@ -260,10 +295,14 @@ AC_CHECK_FUNCS([ \
     memfd_create\
     openat \
     readlinkat \
+    sched_getscheduler \
+    sched_setscheduler \
    ])
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([mach_timebase_info])
+   AC_CHECK_DECLS([IOMainPort], [], [], [[#include <IOKit/IOKitLib.h>]])
+   AC_CHECK_DECLS([IOMasterPort], [], [], [[#include <IOKit/IOKitLib.h>]])
 fi
 
 if test "$my_htop_platform" = pcp; then
@@ -342,6 +381,11 @@ if test "x$enable_unicode" = xyes; then
             [AC_CHECK_HEADERS([ncurses.h], [],
                [AC_MSG_ERROR([can not find required ncurses header file])])])])])
 
+   AC_CHECK_HEADERS([ncursesw/term.h], [],
+      [AC_CHECK_HEADERS([ncurses/term.h], [],
+         [AC_CHECK_HEADERS([term.h], [],
+            [AC_MSG_ERROR([can not find required term header file])])])])
+
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library with wide character support)
    AC_SEARCH_LIBS([keypad], [tinfow tinfo])
@@ -357,13 +401,18 @@ else
    AC_CHECK_HEADERS([curses.h], [],
       [AC_CHECK_HEADERS([ncurses/curses.h], [],
          [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
-            [AC_CHECK_HEADERS([ncurses.h] ,[],
+            [AC_CHECK_HEADERS([ncurses.h], [],
                [AC_MSG_ERROR([can not find required ncurses header file])])])])])
+
+   AC_CHECK_HEADERS([ncurses/term.h], [],
+      [AC_CHECK_HEADERS([term.h], [],
+         [AC_MSG_ERROR([can not find required term header file])])])
 
    # check if additional linker flags are needed for keypad(3)
    # (at this point we already link against a working ncurses library)
    AC_SEARCH_LIBS([keypad], [tinfo])
 fi
+
 if test "$enable_static" = yes; then
    AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
 fi
@@ -400,7 +449,7 @@ if test "x$enable_affinity" = xcheck; then
          AC_MSG_RESULT([yes])],
       [enable_affinity=no
          AC_MSG_RESULT([no])],
-      [AC_MSG_RESULT([yes (assumed while cross compiling)])])
+      [AC_MSG_RESULT([assume yes (cross compiling)])])
    fi
 fi
 if test "x$enable_affinity" = xyes; then
@@ -463,7 +512,9 @@ case "$enable_hwloc" in
       m4_ifdef([PKG_PROG_PKG_CONFIG], [
          PKG_PROG_PKG_CONFIG()
          PKG_CHECK_MODULES(HWLOC, hwloc, [
-               CFLAGS="$CFLAGS $HWLOC_CFLAGS" LIBS="$LIBS $HWLOC_LIBS"
+               CFLAGS="$CFLAGS $HWLOC_CFLAGS"
+               LIBS="$LIBS $HWLOC_LIBS"
+               AC_DEFINE([HAVE_LIBHWLOC], [1], [Define to 1 if you have the 'hwloc' library (-lhwloc).])
             ], [
                AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
                AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
@@ -670,11 +721,6 @@ AM_CFLAGS="\
  -Wunused\
  -Wwrite-strings"
 
-# FreeBSD uses C11 _Generic in its isnan implementation, even with -std=c99
-if test "$my_htop_platform" = freebsd; then
-   AM_CFLAGS="$AM_CFLAGS -Wno-c11-extensions"
-fi
-
 dnl https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
 AC_DEFUN([AX_CHECK_COMPILE_FLAG],
 [
@@ -712,6 +758,22 @@ AC_ARG_ENABLE([debug],
               [enable_debug=no])
 if test "x$enable_debug" != xyes; then
    AM_CPPFLAGS="$AM_CPPFLAGS -DNDEBUG"
+
+   AC_COMPILE_IFELSE([
+      AC_LANG_SOURCE([[
+#ifdef __SUPPORT_SNAN__
+#error "signaling NaN support not recommended"
+#endif
+      ]])],
+      :,
+      [warning_msg="signaling NaN support is enabled; not recommended for htop"
+      case "$CC" in
+      *gcc*)
+         warning_msg="$warning_msg (use '-fno-signaling-nans' compiler flag to disable)"
+         ;;
+      esac
+      AC_MSG_WARN([$warning_msg])
+      ])
 else
    AM_CPPFLAGS="$AM_CPPFLAGS -ggdb3"
 fi
@@ -727,7 +789,7 @@ AC_SUBST([AM_CPPFLAGS])
 # We're done, let's go!
 # ----------------------------------------------------------------------
 
-AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2022 htop dev team."], [Copyright message.])
+AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2023 htop dev team."], [Copyright message.])
 
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
 AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])

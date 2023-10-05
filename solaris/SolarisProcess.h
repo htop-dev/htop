@@ -21,7 +21,7 @@ in the source distribution for its full text.
 #undef ERR
 #define ERR (-1)
 
-#include "Settings.h"
+#include "Machine.h"
 
 
 typedef struct SolarisProcess_ {
@@ -42,7 +42,7 @@ extern const ProcessClass SolarisProcess_class;
 
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
-Process* SolarisProcess_new(const Settings* settings);
+Process* SolarisProcess_new(const Machine* host);
 
 void Process_delete(Object* cast);
 

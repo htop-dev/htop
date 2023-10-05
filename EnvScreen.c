@@ -24,7 +24,7 @@ void EnvScreen_delete(Object* this) {
 }
 
 static void EnvScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Environment of process %d - %s", this->process->pid, Process_getCommand(this->process));
+   InfoScreen_drawTitled(this, "Environment of process %d - %s", Process_getPid(this->process), Process_getCommand(this->process));
 }
 
 static void EnvScreen_scan(InfoScreen* this) {
@@ -33,7 +33,7 @@ static void EnvScreen_scan(InfoScreen* this) {
 
    Panel_prune(panel);
 
-   char* env = Platform_getProcessEnv(this->process->pid);
+   char* env = Platform_getProcessEnv(Process_getPid(this->process));
    if (env) {
       for (const char* p = env; *p; p = strrchr(p, 0) + 1)
          InfoScreen_addLine(this, p);

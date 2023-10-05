@@ -122,7 +122,7 @@ static MaskItem* MaskItem_newSingleton(const char* text, int cpu, bool isSet) {
 
 typedef struct AffinityPanel_ {
    Panel super;
-   ProcessList* pl;
+   Machine* host;
    bool topoView;
    Vector* cpuids;
    unsigned width;
@@ -272,7 +272,7 @@ static MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
    char buf[64], indent_buf[left + 1];
 
    if (obj->type == HWLOC_OBJ_PU) {
-      index = Settings_cpuId(this->pl->settings, obj->os_index);
+      index = Settings_cpuId(this->host->settings, obj->os_index);
       type_name = "CPU";
       index_prefix = "";
    }
@@ -357,12 +357,12 @@ static const char* const AffinityPanelFunctions[] = {
 static const char* const AffinityPanelKeys[] = {"Enter", "Esc", "F1", "F2", "F3"};
 static const int AffinityPanelEvents[] = {13, 27, KEY_F(1), KEY_F(2), KEY_F(3)};
 
-Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width) {
+Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
    AffinityPanel* this = AllocThis(AffinityPanel);
    Panel* super = (Panel*) this;
    Panel_init(super, 1, 1, 1, 1, Class(MaskItem), false, FunctionBar_new(AffinityPanelFunctions, AffinityPanelKeys, AffinityPanelEvents));
 
-   this->pl = pl;
+   this->host = host;
    /* defaults to 15, this also includes the gap between the panels,
     * but this will be added by the caller */
    this->width = 14;
@@ -370,25 +370,25 @@ Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width) 
    this->cpuids   = Vector_new(Class(MaskItem), true, DEFAULT_SIZE);
 
    #ifdef HAVE_LIBHWLOC
-   this->topoView = pl->settings->topologyAffinity;
+   this->topoView = host->settings->topologyAffinity;
    #else
    this->topoView = false;
    #endif
 
    #ifdef HAVE_LIBHWLOC
-   this->allCpuset  = hwloc_topology_get_complete_cpuset(pl->topology);
+   this->allCpuset  = hwloc_topology_get_complete_cpuset(host->topology);
    this->workCpuset = hwloc_bitmap_alloc();
    #endif
 
    Panel_setHeader(super, "Use CPUs:");
 
    unsigned int curCpu = 0;
-   for (unsigned int i = 0; i < pl->existingCPUs; i++) {
-      if (!ProcessList_isCPUonline(this->pl, i))
+   for (unsigned int i = 0; i < host->existingCPUs; i++) {
+      if (!Machine_isCPUonline(host, i))
          continue;
 
       char number[16];
-      xSnprintf(number, 9, "CPU %d", Settings_cpuId(pl->settings, i));
+      xSnprintf(number, 9, "CPU %d", Settings_cpuId(host->settings, i));
       unsigned cpu_width = 4 + strlen(number);
       if (cpu_width > this->width) {
          this->width = cpu_width;
@@ -408,7 +408,7 @@ Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width) 
    }
 
    #ifdef HAVE_LIBHWLOC
-   this->topoRoot = AffinityPanel_buildTopology(this, hwloc_get_root_obj(pl->topology), 0, NULL);
+   this->topoRoot = AffinityPanel_buildTopology(this, hwloc_get_root_obj(host->topology), 0, NULL);
    #endif
 
    if (width) {
@@ -420,9 +420,9 @@ Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width) 
    return super;
 }
 
-Affinity* AffinityPanel_getAffinity(Panel* super, ProcessList* pl) {
+Affinity* AffinityPanel_getAffinity(Panel* super, Machine* host) {
    const AffinityPanel* this = (AffinityPanel*) super;
-   Affinity* affinity = Affinity_new(pl);
+   Affinity* affinity = Affinity_new(host);
 
    #ifdef HAVE_LIBHWLOC
    int i;

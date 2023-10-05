@@ -2,6 +2,8 @@
 #define HEADER_Macros
 
 #include <assert.h> // IWYU pragma: keep
+#include <math.h>
+#include <stdbool.h>
 
 #ifndef MINIMUM
 #define MINIMUM(a, b)                  ((a) < (b) ? (a) : (b))
@@ -61,6 +63,27 @@
 
 #endif /* HAVE_ATTR_ALLOC_SIZE */
 
+#ifdef HAVE_ATTR_ACCESS
+
+#define ATTR_ACCESS2(mode, ref)         __attribute__((access (mode, ref)))
+#define ATTR_ACCESS3(mode, ref, size)   __attribute__((access (mode, ref, size)))
+
+#else
+
+#define ATTR_ACCESS2(mode, ref)
+#define ATTR_ACCESS3(mode, ref, size)
+
+#endif /* HAVE_ATTR_ACCESS */
+
+#define ATTR_ACCESS2_R(ref)              ATTR_ACCESS2(read_only, ref)
+#define ATTR_ACCESS3_R(ref, size)        ATTR_ACCESS3(read_only, ref, size)
+
+#define ATTR_ACCESS2_RW(ref)             ATTR_ACCESS2(read_write, ref)
+#define ATTR_ACCESS3_RW(ref, size)       ATTR_ACCESS3(read_write, ref, size)
+
+#define ATTR_ACCESS2_W(ref)              ATTR_ACCESS2(write_only, ref)
+#define ATTR_ACCESS3_W(ref, size)        ATTR_ACCESS3(write_only, ref, size)
+
 // ignore casts discarding const specifier, e.g.
 //     const char []     ->  char * / void *
 //     const char *[2]'  ->  char *const *
@@ -76,6 +99,24 @@
 #define IGNORE_WCASTQUAL_BEGIN
 #define IGNORE_WCASTQUAL_END
 #endif
+
+/* Cheaper function for checking NaNs. Unlike the standard isnan(), this may
+   throw an FP exception on a "signaling" NaN.
+   (ISO/IEC TS 18661-1 and the C23 standard stated that isnan() throws no
+   exceptions even with a "signaling" NaN) */
+static inline bool isNaN(double x) {
+   return !isgreaterequal(x, x);
+}
+
+/* Checks if x is nonnegative. Returns false if x is NaN. */
+static inline bool isNonnegative(double x) {
+   return isgreaterequal(x, 0.0);
+}
+
+/* Checks if x is positive. Returns false if x is NaN. */
+static inline bool isPositive(double x) {
+   return isgreater(x, 0.0);
+}
 
 /* This subtraction is used by Linux / NetBSD / OpenBSD for calculation of CPU usage items. */
 static inline unsigned long long saturatingSub(unsigned long long a, unsigned long long b) {

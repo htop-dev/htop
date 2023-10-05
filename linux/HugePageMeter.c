@@ -14,9 +14,9 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "RichString.h"
-#include "linux/LinuxProcessList.h"
+#include "linux/LinuxMachine.h"
 
 
 static const char* HugePageMeter_active_labels[4] = { NULL, NULL, NULL, NULL };
@@ -43,8 +43,8 @@ static void HugePageMeter_updateValues(Meter* this) {
    memory_t usedTotal = 0;
    unsigned nextUsed = 0;
 
-   const LinuxProcessList* lpl = (const LinuxProcessList*) this->pl;
-   this->total = lpl->totalHugePageMem;
+   const LinuxMachine* host = (const LinuxMachine*) this->host;
+   this->total = host->totalHugePageMem;
    this->values[0] = 0;
    HugePageMeter_active_labels[0] = " used:";
    for (unsigned i = 1; i < ARRAYSIZE(HugePageMeter_active_labels); i++) {
@@ -52,7 +52,7 @@ static void HugePageMeter_updateValues(Meter* this) {
       HugePageMeter_active_labels[i] = NULL;
    }
    for (unsigned i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
-      memory_t value = lpl->usedHugePageMem[i];
+      memory_t value = host->usedHugePageMem[i];
       if (value != MEMORY_MAX) {
          this->values[nextUsed] = value;
          usedTotal += value;
@@ -80,7 +80,7 @@ static void HugePageMeter_display(const Object* cast, RichString* out) {
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
 
    for (unsigned i = 0; i < ARRAYSIZE(HugePageMeter_active_labels); i++) {
-      if (isnan(this->values[i])) {
+      if (!HugePageMeter_active_labels[i]) {
          break;
       }
       RichString_appendAscii(out, CRT_colors[METER_TEXT], HugePageMeter_active_labels[i]);

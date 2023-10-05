@@ -1,7 +1,7 @@
 #ifndef HEADER_LibSensors
 #define HEADER_LibSensors
 
-#include "linux/LinuxProcessList.h"
+#include "linux/LinuxMachine.h"
 
 
 int LibSensors_init(void);

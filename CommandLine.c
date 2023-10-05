@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "DynamicColumn.h"
 #include "DynamicMeter.h"
+#include "DynamicScreen.h"
 #include "Hashtable.h"
 #include "Header.h"
 #include "IncSet.h"
@@ -33,7 +34,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Platform.h"
 #include "Process.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "ProvideCurses.h"
 #include "ScreenManager.h"
 #include "Settings.h"
@@ -57,7 +58,8 @@ static void printHelpFlag(const char* name) {
 #ifdef HAVE_GETMOUSE
    printf("-M --no-mouse                   Disable the mouse\n");
 #endif
-   printf("-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
+   printf("-n --max-iterations=NUMBER      Exit htop after NUMBER iterations/frame updates\n"
+          "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
           "   --readonly                   Disable all system and process changing features\n"
           "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
           "-t --tree                       Show the tree view (can be combined with -s)\n"
@@ -78,6 +80,7 @@ typedef struct CommandLineSettings_ {
    uid_t userId;
    int sortKey;
    int delay;
+   int iterationsRemaining;
    bool useColors;
 #ifdef HAVE_GETMOUSE
    bool enableMouse;
@@ -89,7 +92,7 @@ typedef struct CommandLineSettings_ {
    bool readonly;
 } CommandLineSettings;
 
-static CommandLineStatus parseArguments(const char* program, int argc, char** argv, CommandLineSettings* flags) {
+static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettings* flags) {
 
    *flags = (CommandLineSettings) {
       .pidMatchList = NULL,
@@ -97,6 +100,7 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
       .userId = (uid_t)-1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
+      .iterationsRemaining = -1,
       .useColors = true,
 #ifdef HAVE_GETMOUSE
       .enableMouse = true,
@@ -113,6 +117,7 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
       {"help",       no_argument,         0, 'h'},
       {"version",    no_argument,         0, 'V'},
       {"delay",      required_argument,   0, 'd'},
+      {"max-iterations", required_argument, 0, 'n'},
       {"sort-key",   required_argument,   0, 's'},
       {"user",       optional_argument,   0, 'u'},
       {"no-color",   no_argument,         0, 'C'},
@@ -130,7 +135,7 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
 
    int opt, opti = 0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hVMCs:td:u::Up:F:H::", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hVMCs:td:n:u::Up:F:H::", long_opts, &opti))) {
       if (opt == EOF)
          break;
       switch (opt) {
@@ -173,6 +178,17 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
                   flags->delay = 100;
             } else {
                fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
+               return STATUS_ERROR_EXIT;
+            }
+            break;
+         case 'n':
+            if (sscanf(optarg, "%16d", &flags->iterationsRemaining) == 1) {
+               if (flags->iterationsRemaining <= 0) {
+                  fprintf(stderr, "Error: maximum iteration count must be positive.\n");
+                  return STATUS_ERROR_EXIT;
+               }
+            } else {
+               fprintf(stderr, "Error: invalid maximum iteration count \"%s\".\n", optarg);
                return STATUS_ERROR_EXIT;
             }
             break;
@@ -277,28 +293,28 @@ static CommandLineStatus parseArguments(const char* program, int argc, char** ar
    return STATUS_OK;
 }
 
-static void CommandLine_delay(ProcessList* pl, unsigned long millisec) {
+static void CommandLine_delay(Machine* host, unsigned long millisec) {
    struct timespec req = {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
    };
    while (nanosleep(&req, &req) == -1)
       continue;
-   Platform_gettime_realtime(&pl->realtime, &pl->realtimeMs);
+   Platform_gettime_realtime(&host->realtime, &host->realtimeMs);
 }
 
 static void setCommFilter(State* state, char** commFilter) {
-   ProcessList* pl = state->pl;
+   Table* table = state->host->activeTable;
    IncSet* inc = state->mainPanel->inc;
 
    IncSet_setFilter(inc, *commFilter);
-   pl->incFilter = IncSet_filter(inc);
+   table->incFilter = IncSet_filter(inc);
 
    free(*commFilter);
    *commFilter = NULL;
 }
 
-int CommandLine_run(const char* name, int argc, char** argv) {
+int CommandLine_run(int argc, char** argv) {
 
    /* initialize locale */
    const char* lc_ctype;
@@ -310,7 +326,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    CommandLineStatus status = STATUS_OK;
    CommandLineSettings flags = { 0 };
 
-   if ((status = parseArguments(name, argc, argv, &flags)) != STATUS_OK)
+   if ((status = parseArguments(argc, argv, &flags)) != STATUS_OK)
       return status != STATUS_OK_EXIT ? 1 : 0;
 
    if (flags.readonly)
@@ -319,21 +335,17 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    if (!Platform_init())
       return 1;
 
-   Process_setupColumnWidths();
-
    UsersTable* ut = UsersTable_new();
-   Hashtable* dc = DynamicColumns_new();
    Hashtable* dm = DynamicMeters_new();
-   if (!dc)
-      dc = Hashtable_new(0, true);
+   Hashtable* dc = DynamicColumns_new();
+   Hashtable* ds = DynamicScreens_new();
 
-   ProcessList* pl = ProcessList_new(ut, dm, dc, flags.pidMatchList, flags.userId);
+   Machine* host = Machine_new(ut, flags.userId);
+   ProcessTable* pt = ProcessTable_new(host, flags.pidMatchList);
+   Settings* settings = Settings_new(host->activeCPUs, dm, dc, ds);
+   Machine_populateTablesFromSettings(host, settings, &pt->super);
 
-   Settings* settings = Settings_new(pl->activeCPUs, dc);
-   pl->settings = settings;
-
-   Header* header = Header_new(pl, settings, 2);
-
+   Header* header = Header_new(host, 2);
    Header_populateFromSettings(header);
 
    if (flags.delay != -1)
@@ -359,21 +371,20 @@ int CommandLine_run(const char* name, int argc, char** argv) {
       ScreenSettings_setSortKey(settings->ss, flags.sortKey);
    }
 
-   CRT_init(settings, flags.allowUnicode);
+   host->iterationsRemaining = flags.iterationsRemaining;
+   CRT_init(settings, flags.allowUnicode, flags.iterationsRemaining != -1);
 
    MainPanel* panel = MainPanel_new();
-   ProcessList_setPanel(pl, (Panel*) panel);
+   Machine_setTablesPanel(host, (Panel*) panel);
 
    MainPanel_updateLabels(panel, settings->ss->treeView, flags.commFilter);
 
    State state = {
-      .settings = settings,
-      .ut = ut,
-      .pl = pl,
+      .host = host,
       .mainPanel = panel,
       .header = header,
-      .pauseProcessUpdate = false,
-      .hideProcessSelection = false,
+      .pauseUpdate = false,
+      .hideSelection = false,
       .hideMeters = false,
    };
 
@@ -381,15 +392,17 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    if (flags.commFilter)
       setCommFilter(&state, &(flags.commFilter));
 
-   ScreenManager* scr = ScreenManager_new(header, settings, &state, true);
+   ScreenManager* scr = ScreenManager_new(header, host, &state, true);
    ScreenManager_add(scr, (Panel*) panel, -1);
 
-   ProcessList_scan(pl, false);
-   CommandLine_delay(pl, 75);
-   ProcessList_scan(pl, false);
+   Machine_scan(host);
+   Machine_scanTables(host);
+   CommandLine_delay(host, 75);
+   Machine_scan(host);
+   Machine_scanTables(host);
 
    if (settings->ss->allBranchesCollapsed)
-      ProcessList_collapseAllBranches(pl);
+      Table_collapseAllBranches(&pt->super);
 
    ScreenManager_run(scr, NULL, NULL, NULL);
 
@@ -404,7 +417,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    }
 
    Header_delete(header);
-   ProcessList_delete(pl);
+   Machine_delete(host);
 
    ScreenManager_delete(scr);
    MetersPanel_cleanup();
@@ -420,6 +433,7 @@ int CommandLine_run(const char* name, int argc, char** argv) {
    Settings_delete(settings);
    DynamicColumns_delete(dc);
    DynamicMeters_delete(dm);
+   DynamicScreens_delete(ds);
 
    return 0;
 }

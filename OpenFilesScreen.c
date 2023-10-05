@@ -72,12 +72,12 @@ static const char* getDataForType(const OpenFiles_Data* data, char type) {
 }
 
 OpenFilesScreen* OpenFilesScreen_new(const Process* process) {
-   OpenFilesScreen* this = xMalloc(sizeof(OpenFilesScreen));
+   OpenFilesScreen* this = xCalloc(1, sizeof(OpenFilesScreen));
    Object_setClass(this, Class(OpenFilesScreen));
    if (Process_isThread(process)) {
-      this->pid = process->tgid;
+      this->pid = Process_getThreadGroup(process);
    } else {
-      this->pid = process->pid;
+      this->pid = Process_getPid(process);
    }
    return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES - 2, "   FD TYPE    MODE DEVICE           SIZE     OFFSET       NODE  NAME");
 }
@@ -252,10 +252,8 @@ static void OpenFilesScreen_scan(InfoScreen* this) {
       OpenFiles_FileData* fdata = pdata->files;
       while (fdata) {
          OpenFiles_Data* data = &fdata->data;
-         size_t lenN = strlen(getDataForType(data, 'n'));
-         size_t sizeEntry = 5 + 7 + 4 + 10 + 10 + 10 + 10 + lenN + 8 /*spaces*/ + 1 /*null*/;
-         char entry[sizeEntry];
-         xSnprintf(entry, sizeof(entry), "%5.5s %-7.7s %-4.4s %-10.10s %10.10s %10.10s %10.10s  %s",
+         char* entry = NULL;
+         xAsprintf(&entry, "%5.5s %-7.7s %-4.4s %-10.10s %10.10s %10.10s %10.10s  %s",
                    getDataForType(data, 'f'),
                    getDataForType(data, 't'),
                    getDataForType(data, 'a'),
@@ -265,6 +263,7 @@ static void OpenFilesScreen_scan(InfoScreen* this) {
                    getDataForType(data, 'i'),
                    getDataForType(data, 'n'));
          InfoScreen_addLine(this, entry);
+         free(entry);
          OpenFiles_Data_clear(data);
          OpenFiles_FileData* old = fdata;
          fdata = fdata->next;

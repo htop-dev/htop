@@ -10,7 +10,9 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
+#include "AvailableColumnsPanel.h"
 #include "ColumnsPanel.h"
+#include "DynamicScreen.h"
 #include "ListItem.h"
 #include "Object.h"
 #include "Panel.h"
@@ -27,15 +29,17 @@ typedef struct ScreensPanel_ {
    ScreenManager* scr;
    Settings* settings;
    ColumnsPanel* columns;
+   AvailableColumnsPanel* availableColumns;
    char buffer[SCREEN_NAME_LEN + 1];
    char* saved;
    int cursor;
    bool moving;
-   bool renaming;
+   ListItem* renamingItem;
 } ScreensPanel;
 
 typedef struct ScreenListItem_ {
    ListItem super;
+   DynamicScreen* ds;
    ScreenSettings* ss;
 } ScreenListItem;
 
@@ -43,8 +47,6 @@ typedef struct ScreenListItem_ {
 extern ObjectClass ScreenListItem_class;
 
 ScreenListItem* ScreenListItem_new(const char* value, ScreenSettings* ss);
-
-extern PanelClass ScreensPanel_class;
 
 ScreensPanel* ScreensPanel_new(Settings* settings);
 

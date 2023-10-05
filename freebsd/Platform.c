@@ -31,22 +31,23 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
+#include "Machine.h"
 #include "Macros.h"
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "Meter.h"
 #include "NetworkIOMeter.h"
-#include "ProcessList.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
-#include "freebsd/FreeBSDProcess.h"
-#include "freebsd/FreeBSDProcessList.h"
+#include "freebsd/FreeBSDMachine.h"
+#include "generic/fdstat_sysctl.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
 
@@ -130,6 +131,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
    &DiskIOMeter_class,
+   &FileDescriptorMeter_class,
    &NetworkIOMeter_class,
    NULL
 };
@@ -148,7 +150,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    struct timeval bootTime, currTime;
    const int mib[2] = { CTL_KERN, KERN_BOOTTIME };
    size_t size = sizeof(bootTime);
@@ -179,7 +181,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
 
-int Platform_getMaxPid() {
+pid_t Platform_getMaxPid(void) {
    int maxPid;
    size_t size = sizeof(maxPid);
    int err = sysctlbyname("kern.pid_max", &maxPid, &size, NULL, 0);
@@ -190,31 +192,27 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->pl;
-   unsigned int cpus = this->pl->activeCPUs;
-   const CPUData* cpuData;
+   const Machine* host = this->host;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
+   unsigned int cpus = host->activeCPUs;
 
-   if (cpus == 1) {
-      // single CPU box has everything in fpl->cpus[0]
-      cpuData = &(fpl->cpus[0]);
-   } else {
-      cpuData = &(fpl->cpus[cpu]);
-   }
+   // single CPU box has everything in fhost->cpus[0]
+   const CPUData* cpuData = cpus == 1 ? &fhost->cpus[0] : &fhost->cpus[cpu];
 
    double  percent;
    double* v = this->values;
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (this->pl->settings->detailedCPUTime) {
+   if (host->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
-      percent = v[0] + v[1] + v[2] + v[3];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    } else {
-      v[2] = cpuData->systemAllPercent;
+      v[CPU_METER_NORMAL] = cpuData->systemAllPercent;
       this->curItems = 3;
-      percent = v[0] + v[1] + v[2];
+      percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL];
    }
 
    percent = CLAMP(percent, 0.0, 100.0);
@@ -226,44 +224,47 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) pl;
+   const Machine* host = this->host;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
 
-   this->total = pl->totalMem;
-   this->values[0] = pl->usedMem;
-   this->values[1] = pl->buffersMem;
-   // this->values[2] = "shared memory, like tmpfs and shm"
-   this->values[3] = pl->cachedMem;
-   // this->values[4] = "available memory"
+   this->total = host->totalMem;
+   this->values[MEMORY_METER_USED] = host->usedMem;
+   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
+   this->values[MEMORY_METER_SHARED] = host->sharedMem;
+   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+   this->values[MEMORY_METER_CACHE] = host->cachedMem;
+   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
 
-   if (fpl->zfs.enabled) {
+   if (fhost->zfs.enabled) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
-      if (fpl->zfs.size > fpl->zfs.min)
-         shrinkableSize = fpl->zfs.size - fpl->zfs.min;
-      this->values[0] -= shrinkableSize;
-      this->values[3] += shrinkableSize;
-      // this->values[4] += shrinkableSize;
+      if (fhost->zfs.size > fhost->zfs.min)
+         shrinkableSize = fhost->zfs.size - fhost->zfs.min;
+      this->values[MEMORY_METER_USED] -= shrinkableSize;
+      this->values[MEMORY_METER_CACHE] += shrinkableSize;
+      // this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
    }
 }
 
 void Platform_setSwapValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
-   this->values[1] = NAN;
+   const Machine* host = this->host;
+
+   this->total = host->totalSwap;
+   this->values[SWAP_METER_USED] = host->usedSwap;
+   // this->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
+   // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->pl;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) this->host;
 
-   ZfsArcMeter_readStats(this, &(fpl->zfs));
+   ZfsArcMeter_readStats(this, &fhost->zfs);
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const FreeBSDProcessList* fpl = (const FreeBSDProcessList*) this->pl;
+   const FreeBSDMachine* fhost = (const FreeBSDMachine*) this->host;
 
-   ZfsCompressedArcMeter_readStats(this, &(fpl->zfs));
+   ZfsCompressedArcMeter_readStats(this, &fhost->zfs);
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
@@ -287,15 +288,13 @@ char* Platform_getProcessEnv(pid_t pid) {
    return env;
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   Generic_getFileDescriptors_sysctl(used, max);
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

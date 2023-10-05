@@ -104,7 +104,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
 
    #define TABMSG "For current screen tab: \0"
    char tabheader[sizeof(TABMSG) + SCREEN_NAME_LEN + 1] = TABMSG;
-   strncat(tabheader, settings->ss->name, SCREEN_NAME_LEN);
+   strncat(tabheader, settings->ss->heading, SCREEN_NAME_LEN);
    Panel_add(super, (Object*) TextItem_new(tabheader));
    #undef TABMSG
 
@@ -122,6 +122,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Show program path", &(settings->showProgramPath)));
    Panel_add(super, (Object*) CheckItem_newByRef("Highlight program \"basename\"", &(settings->highlightBaseName)));
    Panel_add(super, (Object*) CheckItem_newByRef("Highlight out-dated/removed programs (red) / libraries (yellow)", &(settings->highlightDeletedExe)));
+   Panel_add(super, (Object*) CheckItem_newByRef("Shadow distribution path prefixes", &(settings->shadowDistPathPrefix)));
    Panel_add(super, (Object*) CheckItem_newByRef("Merge exe, comm and cmdline in Command", &(settings->showMergedCommand)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Try to find comm in cmdline (when Command is merged)", &(settings->findCommInCmdline)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Try to strip exe from cmdline (when Command is merged)", &(settings->stripExeFromCmdline)));

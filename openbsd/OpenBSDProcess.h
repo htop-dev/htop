@@ -10,9 +10,9 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
+#include "Machine.h"
 #include "Object.h"
 #include "Process.h"
-#include "Settings.h"
 
 
 typedef struct OpenBSDProcess_ {
@@ -26,7 +26,7 @@ extern const ProcessClass OpenBSDProcess_class;
 
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
-Process* OpenBSDProcess_new(const Settings* settings);
+Process* OpenBSDProcess_new(const Machine* host);
 
 void Process_delete(Object* cast);
 

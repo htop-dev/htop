@@ -57,22 +57,39 @@ void String_freeArray(char** s);
 char* String_readLine(FILE* fd) ATTR_MALLOC;
 
 /* Always null-terminates dest. Caller must pass a strictly positive size. */
+ATTR_ACCESS3_W(1, 3)
+ATTR_ACCESS3_R(2, 3)
 size_t String_safeStrncpy(char* restrict dest, const char* restrict src, size_t size);
 
 ATTR_FORMAT(printf, 2, 3)
 int xAsprintf(char** strp, const char* fmt, ...);
 
 ATTR_FORMAT(printf, 3, 4)
+ATTR_ACCESS3_W(1, 2)
 int xSnprintf(char* buf, size_t len, const char* fmt, ...);
 
 char* xStrdup(const char* str) ATTR_NONNULL ATTR_MALLOC;
 void free_and_xStrdup(char** ptr, const char* str);
 
+ATTR_ACCESS3_R(1, 2)
 char* xStrndup(const char* str, size_t len) ATTR_NONNULL ATTR_MALLOC;
 
+ATTR_ACCESS3_W(2, 3)
 ssize_t xReadfile(const char* pathname, void* buffer, size_t count);
+ATTR_ACCESS3_W(3, 4)
 ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
 
+ATTR_ACCESS3_R(2, 3)
 ssize_t full_write(int fd, const void* buf, size_t count);
+
+/* Compares floating point values for ordering data entries. In this function,
+   NaN is considered "less than" any other floating point value (regardless of
+   sign), and two NaNs are considered "equal" regardless of payload. */
+int compareRealNumbers(double a, double b);
+
+/* Computes the sum of all positive floating point values in an array.
+   NaN values in the array are skipped. The returned sum will always be
+   nonnegative. */
+double sumPositiveValues(const double* array, size_t count);
 
 #endif

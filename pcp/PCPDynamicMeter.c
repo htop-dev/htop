@@ -25,7 +25,7 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "XUtils.h"
 
-#include "pcp/PCPMetric.h"
+#include "pcp/Metric.h"
 
 
 static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, PCPDynamicMeter* meter, const char* name) {
@@ -309,7 +309,7 @@ void PCPDynamicMeters_done(Hashtable* table) {
 
 void PCPDynamicMeter_enable(PCPDynamicMeter* this) {
    for (size_t i = 0; i < this->totalMetrics; i++)
-      PCPMetric_enable(this->metrics[i].id, true);
+      Metric_enable(this->metrics[i].id, true);
 }
 
 void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
@@ -322,10 +322,10 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
          buffer[bytes++] = '/';  /* separator */
 
       PCPDynamicMetric* metric = &this->metrics[i];
-      const pmDesc* desc = PCPMetric_desc(metric->id);
+      const pmDesc* desc = Metric_desc(metric->id);
       pmAtomValue atom, raw;
 
-      if (!PCPMetric_values(metric->id, &raw, 1, desc->type)) {
+      if (!Metric_values(metric->id, &raw, 1, desc->type)) {
          bytes--; /* clear the separator */
          continue;
       }
@@ -393,11 +393,11 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
 
    for (size_t i = 0; i < this->totalMetrics; i++) {
       PCPDynamicMetric* metric = &this->metrics[i];
-      const pmDesc* desc = PCPMetric_desc(metric->id);
+      const pmDesc* desc = Metric_desc(metric->id);
       pmAtomValue atom, raw;
       char buffer[64];
 
-      if (!PCPMetric_values(metric->id, &raw, 1, desc->type))
+      if (!Metric_values(metric->id, &raw, 1, desc->type))
          continue;
 
       pmUnits conv = desc->units;  /* convert to canonical units */

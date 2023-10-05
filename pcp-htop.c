@@ -14,13 +14,14 @@ in the source distribution for its full text.
 #include "Platform.h"
 
 
+const char* program = "pcp-htop";
+
 int main(int argc, char** argv) {
-   const char* name = "pcp-htop";
-   pmSetProgname(name);
+   pmSetProgname(program);
 
    /* extract environment variables */
    opts.flags |= PM_OPTFLAG_ENV_ONLY;
    (void)pmGetOptions(argc, argv, &opts);
 
-   return CommandLine_run(name, argc, argv);
+   return CommandLine_run(argc, argv);
 }

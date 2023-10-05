@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
+#include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -70,6 +71,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -90,7 +92,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_getUptime() {
+int Platform_getUptime(void) {
    return 0;
 }
 
@@ -100,8 +102,8 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *fifteen = 0;
 }
 
-int Platform_getMaxPid() {
-   return 1;
+pid_t Platform_getMaxPid(void) {
+   return INT_MAX;
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
@@ -129,15 +131,14 @@ char* Platform_getProcessEnv(pid_t pid) {
    return NULL;
 }
 
-char* Platform_getInodeFilename(pid_t pid, ino_t inode) {
-   (void)pid;
-   (void)inode;
-   return NULL;
-}
-
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
+}
+
+void Platform_getFileDescriptors(double* used, double* max) {
+   *used = 1337;
+   *max = 4711;
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {

@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include <stddef.h>
 
 #include "CRT.h"
+#include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
 #include "RichString.h"
@@ -20,6 +21,7 @@ static const int MemoryMeter_attributes[] = {
    MEMORY_USED,
    MEMORY_BUFFERS,
    MEMORY_SHARED,
+   MEMORY_COMPRESSED,
    MEMORY_CACHE
 };
 
@@ -28,15 +30,23 @@ static void MemoryMeter_updateValues(Meter* this) {
    size_t size = sizeof(this->txtBuffer);
    int written;
 
-   /* shared and available memory are not supported on all platforms */
-   this->values[2] = NAN;
-   this->values[4] = NAN;
+   /* shared, compressed and available memory are not supported on all platforms */
+   this->values[MEMORY_METER_SHARED] = NAN;
+   this->values[MEMORY_METER_COMPRESSED] = NAN;
+   this->values[MEMORY_METER_AVAILABLE] = NAN;
    Platform_setMemoryValues(this);
 
    /* Do not print available memory in bar mode */
-   this->curItems = 4;
+   static_assert(MEMORY_METER_AVAILABLE + 1 == MEMORY_METER_ITEMCOUNT,
+      "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
+   this->curItems = MEMORY_METER_AVAILABLE;
 
-   written = Meter_humanUnit(buffer, this->values[0], size);
+   /* we actually want to show "used + compressed" */
+   double used = this->values[MEMORY_METER_USED];
+   if (isPositive(this->values[MEMORY_METER_COMPRESSED]))
+      used += this->values[MEMORY_METER_COMPRESSED];
+
+   written = Meter_humanUnit(buffer, used, size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');
@@ -52,28 +62,35 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
 
-   Meter_humanUnit(buffer, this->values[0], sizeof(buffer));
+   Meter_humanUnit(buffer, this->values[MEMORY_METER_USED], sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " used:");
    RichString_appendAscii(out, CRT_colors[MEMORY_USED], buffer);
 
-   Meter_humanUnit(buffer, this->values[1], sizeof(buffer));
+   Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " buffers:");
    RichString_appendAscii(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
 
    /* shared memory is not supported on all platforms */
-   if (!isnan(this->values[2])) {
-      Meter_humanUnit(buffer, this->values[2], sizeof(buffer));
+   if (isNonnegative(this->values[MEMORY_METER_SHARED])) {
+      Meter_humanUnit(buffer, this->values[MEMORY_METER_SHARED], sizeof(buffer));
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " shared:");
       RichString_appendAscii(out, CRT_colors[MEMORY_SHARED], buffer);
    }
 
-   Meter_humanUnit(buffer, this->values[3], sizeof(buffer));
+   /* compressed memory is not supported on all platforms */
+   if (isNonnegative(this->values[MEMORY_METER_COMPRESSED])) {
+      Meter_humanUnit(buffer, this->values[MEMORY_METER_COMPRESSED], sizeof(buffer));
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], " compressed:");
+      RichString_appendAscii(out, CRT_colors[MEMORY_COMPRESSED], buffer);
+   }
+
+   Meter_humanUnit(buffer, this->values[MEMORY_METER_CACHE], sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
    RichString_appendAscii(out, CRT_colors[MEMORY_CACHE], buffer);
 
    /* available memory is not supported on all platforms */
-   if (!isnan(this->values[4])) {
-      Meter_humanUnit(buffer, this->values[4], sizeof(buffer));
+   if (isNonnegative(this->values[MEMORY_METER_AVAILABLE])) {
+      Meter_humanUnit(buffer, this->values[MEMORY_METER_AVAILABLE], sizeof(buffer));
       RichString_appendAscii(out, CRT_colors[METER_TEXT], " available:");
       RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
    }
@@ -87,7 +104,7 @@ const MeterClass MemoryMeter_class = {
    },
    .updateValues = MemoryMeter_updateValues,
    .defaultMode = BAR_METERMODE,
-   .maxItems = 5,
+   .maxItems = MEMORY_METER_ITEMCOUNT,
    .total = 100.0,
    .attributes = MemoryMeter_attributes,
    .name = "Memory",

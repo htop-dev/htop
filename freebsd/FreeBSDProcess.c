@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Process.h"
 #include "RichString.h"
+#include "Scheduling.h"
 #include "XUtils.h"
 
 
@@ -47,15 +48,18 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process", .flags = 0, },
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process", .flags = 0, },
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
+#ifdef SCHEDULER_SUPPORT
+   [SCHEDULERPOLICY] = { .name = "SCHEDULERPOLICY", .title = "SCHED ", .description = "Current scheduling policy of the process", .flags = PROCESS_FLAG_SCHEDPOL, },
+#endif
    [JID] = { .name = "JID", .title = "JID", .description = "Jail prison ID", .flags = 0, .pidColumn = true, },
    [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
    [EMULATION] = { .name = "EMULATION", .title = "EMULATION        ", .description = "System call emulation environment (ABI)", .flags = 0, },
 };
 
-Process* FreeBSDProcess_new(const Settings* settings) {
+Process* FreeBSDProcess_new(const Machine* machine) {
    FreeBSDProcess* this = xCalloc(1, sizeof(FreeBSDProcess));
    Object_setClass(this, Class(FreeBSDProcess));
-   Process_init(&this->super, settings);
+   Process_init(&this->super, machine);
    return &this->super;
 }
 
@@ -67,8 +71,8 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-static void FreeBSDProcess_writeField(const Process* this, RichString* str, ProcessField field) {
-   const FreeBSDProcess* fp = (const FreeBSDProcess*) this;
+static void FreeBSDProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
+   const FreeBSDProcess* fp = (const FreeBSDProcess*) super;
    char buffer[256];
    size_t n = sizeof(buffer);
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -77,13 +81,13 @@ static void FreeBSDProcess_writeField(const Process* this, RichString* str, Proc
    // add FreeBSD-specific fields here
    case JID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, fp->jid); break;
    case JAIL:
-      Process_printLeftAlignedField(str, attr, fp->jname ? fp->jname : "N/A", 11);
+      Row_printLeftAlignedField(str, attr, fp->jname ? fp->jname : "N/A", 11);
       return;
    case EMULATION:
-      Process_printLeftAlignedField(str, attr, fp->emul ? fp->emul : "N/A", 16);
+      Row_printLeftAlignedField(str, attr, fp->emul ? fp->emul : "N/A", 16);
       return;
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(&fp->super, str, field);
       return;
    }
    RichString_appendWide(str, attr, buffer);
@@ -108,11 +112,18 @@ static int FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, Pro
 
 const ProcessClass FreeBSDProcess_class = {
    .super = {
-      .extends = Class(Process),
-      .display = Process_display,
-      .delete = Process_delete,
-      .compare = Process_compare
+      .super = {
+         .extends = Class(Process),
+         .display = Row_display,
+         .delete = Process_delete,
+         .compare = Process_compare
+      },
+      .isHighlighted = Process_rowIsHighlighted,
+      .isVisible = Process_rowIsVisible,
+      .matchesFilter = Process_rowMatchesFilter,
+      .compareByParent = Process_compareByParent,
+      .sortKeyString = Process_rowGetSortKey,
+      .writeField = FreeBSDProcess_rowWriteField
    },
-   .writeField = FreeBSDProcess_writeField,
    .compareByKey = FreeBSDProcess_compareByKey
 };

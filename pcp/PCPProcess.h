@@ -13,9 +13,9 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
+#include "Machine.h"
 #include "Object.h"
 #include "Process.h"
-#include "Settings.h"
 
 
 #define PROCESS_FLAG_LINUX_CGROUP    0x00000800
@@ -93,7 +93,7 @@ extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
 extern const ProcessClass PCPProcess_class;
 
-Process* PCPProcess_new(const Settings* settings);
+Process* PCPProcess_new(const Machine* host);
 
 void Process_delete(Object* cast);
 

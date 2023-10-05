@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +40,7 @@ in the source distribution for its full text.
 typedef void sd_bus;
 typedef void sd_bus_error;
 static int (*sym_sd_bus_open_system)(sd_bus**);
+static int (*sym_sd_bus_open_user)(sd_bus**);
 static int (*sym_sd_bus_get_property_string)(sd_bus*, const char*, const char*, const char*, const char*, sd_bus_error*, char**);
 static int (*sym_sd_bus_get_property_trivial)(sd_bus*, const char*, const char*, const char*, const char*, sd_bus_error*, char, void*);
 static sd_bus* (*sym_sd_bus_unref)(sd_bus*);
@@ -46,37 +48,43 @@ static void* dlopenHandle = NULL;
 
 #endif /* BUILD_STATIC */
 
-#if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
-static sd_bus* bus = NULL;
-#endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
-
 
 #define INVALID_VALUE ((unsigned int)-1)
 
-static char* systemState = NULL;
-static unsigned int nFailedUnits = INVALID_VALUE;
-static unsigned int nInstalledJobs = INVALID_VALUE;
-static unsigned int nNames = INVALID_VALUE;
-static unsigned int nJobs = INVALID_VALUE;
+typedef struct SystemdMeterContext {
+#if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
+   sd_bus* bus;
+#endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
+   char* systemState;
+   unsigned int nFailedUnits;
+   unsigned int nInstalledJobs;
+   unsigned int nNames;
+   unsigned int nJobs;
+} SystemdMeterContext_t;
+
+static SystemdMeterContext_t ctx_system;
+static SystemdMeterContext_t ctx_user;
 
 static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
-   free(systemState);
-   systemState = NULL;
+   SystemdMeterContext_t* ctx = String_eq(Meter_name(this), "SystemdUser") ? &ctx_user : &ctx_system;
+
+   free(ctx->systemState);
+   ctx->systemState = NULL;
 
 #ifdef BUILD_STATIC
 # ifdef HAVE_LIBSYSTEMD
-   if (bus) {
-      sym_sd_bus_unref(bus);
+   if (ctx->bus) {
+      sym_sd_bus_unref(ctx->bus);
    }
-   bus = NULL;
+   ctx->bus = NULL;
 # endif /* HAVE_LIBSYSTEMD */
 #else /* BUILD_STATIC */
-   if (bus && dlopenHandle) {
-      sym_sd_bus_unref(bus);
+   if (ctx->bus && dlopenHandle) {
+      sym_sd_bus_unref(ctx->bus);
    }
-   bus = NULL;
+   ctx->bus = NULL;
 
-   if (dlopenHandle) {
+   if (!ctx_system.systemState && !ctx_user.systemState && dlopenHandle) {
       dlclose(dlopenHandle);
       dlopenHandle = NULL;
    }
@@ -84,7 +92,8 @@ static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
 }
 
 #if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
-static int updateViaLib(void) {
+static int updateViaLib(bool user) {
+   SystemdMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
 #ifndef BUILD_STATIC
    if (!dlopenHandle) {
       dlopenHandle = dlopen("libsystemd.so.0", RTLD_LAZY);
@@ -101,6 +110,7 @@ static int updateViaLib(void) {
       } while(0)
 
       resolve(sd_bus_open_system);
+      resolve(sd_bus_open_user);
       resolve(sd_bus_get_property_string);
       resolve(sd_bus_get_property_trivial);
       resolve(sd_bus_unref);
@@ -110,10 +120,13 @@ static int updateViaLib(void) {
 #endif /* !BUILD_STATIC */
 
    int r;
-
    /* Connect to the system bus */
-   if (!bus) {
-      r = sym_sd_bus_open_system(&bus);
+   if (!ctx->bus) {
+      if (user) {
+         r = sym_sd_bus_open_user(&ctx->bus);
+      } else {
+         r = sym_sd_bus_open_system(&ctx->bus);
+      }
       if (r < 0)
          goto busfailure;
    }
@@ -122,57 +135,57 @@ static int updateViaLib(void) {
    static const char* const busObjectPath = "/org/freedesktop/systemd1";
    static const char* const busInterfaceName = "org.freedesktop.systemd1.Manager";
 
-   r = sym_sd_bus_get_property_string(bus,
+   r = sym_sd_bus_get_property_string(ctx->bus,
                                       busServiceName,        /* service to contact */
                                       busObjectPath,         /* object path */
                                       busInterfaceName,      /* interface name */
                                       "SystemState",         /* property name */
                                       NULL,                  /* object to return error in */
-                                      &systemState);
+                                      &ctx->systemState);
    if (r < 0)
       goto busfailure;
 
-   r = sym_sd_bus_get_property_trivial(bus,
+   r = sym_sd_bus_get_property_trivial(ctx->bus,
                                        busServiceName,       /* service to contact */
                                        busObjectPath,        /* object path */
                                        busInterfaceName,     /* interface name */
                                        "NFailedUnits",       /* property name */
                                        NULL,                 /* object to return error in */
                                        'u',                  /* property type */
-                                       &nFailedUnits);
+                                       &ctx->nFailedUnits);
    if (r < 0)
       goto busfailure;
 
-   r = sym_sd_bus_get_property_trivial(bus,
+   r = sym_sd_bus_get_property_trivial(ctx->bus,
                                        busServiceName,       /* service to contact */
                                        busObjectPath,        /* object path */
                                        busInterfaceName,     /* interface name */
                                        "NInstalledJobs",     /* property name */
                                        NULL,                 /* object to return error in */
                                        'u',                  /* property type */
-                                       &nInstalledJobs);
+                                       &ctx->nInstalledJobs);
    if (r < 0)
       goto busfailure;
 
-   r = sym_sd_bus_get_property_trivial(bus,
+   r = sym_sd_bus_get_property_trivial(ctx->bus,
                                        busServiceName,       /* service to contact */
                                        busObjectPath,        /* object path */
                                        busInterfaceName,     /* interface name */
                                        "NNames",             /* property name */
                                        NULL,                 /* object to return error in */
                                        'u',                  /* property type */
-                                       &nNames);
+                                       &ctx->nNames);
    if (r < 0)
       goto busfailure;
 
-   r = sym_sd_bus_get_property_trivial(bus,
+   r = sym_sd_bus_get_property_trivial(ctx->bus,
                                        busServiceName,       /* service to contact */
                                        busObjectPath,        /* object path */
                                        busInterfaceName,     /* interface name */
                                        "NJobs",              /* property name */
                                        NULL,                 /* object to return error in */
                                        'u',                  /* property type */
-                                       &nJobs);
+                                       &ctx->nJobs);
    if (r < 0)
       goto busfailure;
 
@@ -180,8 +193,8 @@ static int updateViaLib(void) {
    return 0;
 
 busfailure:
-   sym_sd_bus_unref(bus);
-   bus = NULL;
+   sym_sd_bus_unref(ctx->bus);
+   ctx->bus = NULL;
    return -2;
 
 #ifndef BUILD_STATIC
@@ -195,7 +208,9 @@ dlfailure:
 }
 #endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
 
-static void updateViaExec(void) {
+static void updateViaExec(bool user) {
+   SystemdMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
+
    if (Settings_isReadonly())
       return;
 
@@ -225,12 +240,13 @@ static void updateViaExec(void) {
          "systemctl",
          "systemctl",
          "show",
+         user ? "--user" : "--system",
          "--property=SystemState",
          "--property=NFailedUnits",
          "--property=NNames",
          "--property=NJobs",
          "--property=NInstalledJobs",
-         (char *)NULL);
+         (char*)NULL);
       exit(127);
    }
    close(fdpair[1]);
@@ -254,15 +270,15 @@ static void updateViaExec(void) {
          if (newline) {
             *newline = '\0';
          }
-         free_and_xStrdup(&systemState, lineBuffer + strlen("SystemState="));
+         free_and_xStrdup(&ctx->systemState, lineBuffer + strlen("SystemState="));
       } else if (String_startsWith(lineBuffer, "NFailedUnits=")) {
-         nFailedUnits = strtoul(lineBuffer + strlen("NFailedUnits="), NULL, 10);
+         ctx->nFailedUnits = strtoul(lineBuffer + strlen("NFailedUnits="), NULL, 10);
       } else if (String_startsWith(lineBuffer, "NNames=")) {
-         nNames = strtoul(lineBuffer + strlen("NNames="), NULL, 10);
+         ctx->nNames = strtoul(lineBuffer + strlen("NNames="), NULL, 10);
       } else if (String_startsWith(lineBuffer, "NJobs=")) {
-         nJobs = strtoul(lineBuffer + strlen("NJobs="), NULL, 10);
+         ctx->nJobs = strtoul(lineBuffer + strlen("NJobs="), NULL, 10);
       } else if (String_startsWith(lineBuffer, "NInstalledJobs=")) {
-         nInstalledJobs = strtoul(lineBuffer + strlen("NInstalledJobs="), NULL, 10);
+         ctx->nInstalledJobs = strtoul(lineBuffer + strlen("NInstalledJobs="), NULL, 10);
       }
    }
 
@@ -270,18 +286,21 @@ static void updateViaExec(void) {
 }
 
 static void SystemdMeter_updateValues(Meter* this) {
-   free(systemState);
-   systemState = NULL;
-   nFailedUnits = nInstalledJobs = nNames = nJobs = INVALID_VALUE;
+   bool user = String_eq(Meter_name(this), "SystemdUser");
+   SystemdMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
+
+   free(ctx->systemState);
+   ctx->systemState = NULL;
+   ctx->nFailedUnits = ctx->nInstalledJobs = ctx->nNames = ctx->nJobs = INVALID_VALUE;
 
 #if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
-   if (updateViaLib() < 0)
-      updateViaExec();
+   if (updateViaLib(user) < 0)
+      updateViaExec(user);
 #else
-   updateViaExec();
+   updateViaExec(user);
 #endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
 
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s", systemState ? systemState : "???");
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s", ctx->systemState ? ctx->systemState : "???");
 }
 
 static int zeroDigitColor(unsigned int value) {
@@ -307,62 +326,70 @@ static int valueDigitColor(unsigned int value) {
 }
 
 
-static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out, SystemdMeterContext_t* ctx) {
    char buffer[16];
    int len;
    int color = METER_VALUE_ERROR;
 
-   if (systemState) {
-      color = String_eq(systemState, "running") ? METER_VALUE_OK :
-              String_eq(systemState, "degraded") ? METER_VALUE_ERROR : METER_VALUE_WARN;
+   if (ctx->systemState) {
+      color = String_eq(ctx->systemState, "running") ? METER_VALUE_OK :
+              String_eq(ctx->systemState, "degraded") ? METER_VALUE_ERROR : METER_VALUE_WARN;
    }
-   RichString_writeAscii(out, CRT_colors[color], systemState ? systemState : "N/A");
+   RichString_writeAscii(out, CRT_colors[color], ctx->systemState ? ctx->systemState : "N/A");
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " (");
 
-   if (nFailedUnits == INVALID_VALUE) {
+   if (ctx->nFailedUnits == INVALID_VALUE) {
       buffer[0] = '?';
       buffer[1] = '\0';
       len = 1;
    } else {
-      len = xSnprintf(buffer, sizeof(buffer), "%u", nFailedUnits);
+      len = xSnprintf(buffer, sizeof(buffer), "%u", ctx->nFailedUnits);
    }
-   RichString_appendnAscii(out, zeroDigitColor(nFailedUnits), buffer, len);
+   RichString_appendnAscii(out, zeroDigitColor(ctx->nFailedUnits), buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], "/");
 
-   if (nNames == INVALID_VALUE) {
+   if (ctx->nNames == INVALID_VALUE) {
       buffer[0] = '?';
       buffer[1] = '\0';
       len = 1;
    } else {
-      len = xSnprintf(buffer, sizeof(buffer), "%u", nNames);
+      len = xSnprintf(buffer, sizeof(buffer), "%u", ctx->nNames);
    }
-   RichString_appendnAscii(out, valueDigitColor(nNames), buffer, len);
+   RichString_appendnAscii(out, valueDigitColor(ctx->nNames), buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " failed) (");
 
-   if (nJobs == INVALID_VALUE) {
+   if (ctx->nJobs == INVALID_VALUE) {
       buffer[0] = '?';
       buffer[1] = '\0';
       len = 1;
    } else {
-      len = xSnprintf(buffer, sizeof(buffer), "%u", nJobs);
+      len = xSnprintf(buffer, sizeof(buffer), "%u", ctx->nJobs);
    }
-   RichString_appendnAscii(out, zeroDigitColor(nJobs), buffer, len);
+   RichString_appendnAscii(out, zeroDigitColor(ctx->nJobs), buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], "/");
 
-   if (nInstalledJobs == INVALID_VALUE) {
+   if (ctx->nInstalledJobs == INVALID_VALUE) {
       buffer[0] = '?';
       buffer[1] = '\0';
       len = 1;
    } else {
-      len = xSnprintf(buffer, sizeof(buffer), "%u", nInstalledJobs);
+      len = xSnprintf(buffer, sizeof(buffer), "%u", ctx->nInstalledJobs);
    }
-   RichString_appendnAscii(out, valueDigitColor(nInstalledJobs), buffer, len);
+   RichString_appendnAscii(out, valueDigitColor(ctx->nInstalledJobs), buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " jobs)");
+}
+
+static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+   _SystemdMeter_display(cast, out, &ctx_system);
+}
+
+static void SystemdUserMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+   _SystemdMeter_display(cast, out, &ctx_user);
 }
 
 static const int SystemdMeter_attributes[] = {
@@ -385,4 +412,22 @@ const MeterClass SystemdMeter_class = {
    .uiName = "Systemd state",
    .description = "Systemd system state and unit overview",
    .caption = "Systemd: ",
+};
+
+const MeterClass SystemdUserMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = SystemdUserMeter_display
+   },
+   .updateValues = SystemdMeter_updateValues,
+   .done = SystemdMeter_done,
+   .defaultMode = TEXT_METERMODE,
+   .maxItems = 0,
+   .total = 100.0,
+   .attributes = SystemdMeter_attributes,
+   .name = "SystemdUser",
+   .uiName = "Systemd user state",
+   .description = "Systemd user state and unit overview",
+   .caption = "Systemd User: ",
 };

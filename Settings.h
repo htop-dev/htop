@@ -14,17 +14,21 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 #include "HeaderLayout.h"
-#include "Process.h"
+#include "Row.h"
 
 
 #define DEFAULT_DELAY 15
 
 #define CONFIG_READER_MIN_VERSION 3
 
+struct DynamicScreen_;
+struct Table_;
+
 typedef struct {
    const char* name;
    const char* columns;
    const char* sortKey;
+   const char* treeSortKey;
 } ScreenDefaults;
 
 typedef struct {
@@ -33,14 +37,16 @@ typedef struct {
    int* modes;
 } MeterColumnSetting;
 
-typedef struct {
-   char* name;
-   ProcessField* fields;
+typedef struct ScreenSettings_ {
+   char* heading;  /* user-editable screen name (pretty) */
+   char* dynamic;  /* from DynamicScreen config (fixed) */
+   struct Table_* table;
+   RowField* fields;
    uint32_t flags;
    int direction;
    int treeDirection;
-   ProcessField sortKey;
-   ProcessField treeSortKey;
+   RowField sortKey;
+   RowField treeSortKey;
    bool treeView;
    bool treeViewAlwaysByPID;
    bool allBranchesCollapsed;
@@ -51,7 +57,9 @@ typedef struct Settings_ {
    int config_version;
    HeaderLayout hLayout;
    MeterColumnSetting* hColumns;
-   Hashtable* dynamicColumns;
+   Hashtable* dynamicColumns; /* runtime-discovered columns */
+   Hashtable* dynamicMeters;  /* runtime-discovered meters */
+   Hashtable* dynamicScreens; /* runtime-discovered screens */
 
    ScreenSettings** screens;
    unsigned int nScreens;
@@ -77,6 +85,7 @@ typedef struct Settings_ {
    bool hideUserlandThreads;
    bool highlightBaseName;
    bool highlightDeletedExe;
+   bool shadowDistPathPrefix;
    bool highlightMegabytes;
    bool highlightThreads;
    bool highlightChanges;
@@ -102,9 +111,9 @@ typedef struct Settings_ {
 
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
 
-static inline ProcessField ScreenSettings_getActiveSortKey(const ScreenSettings* this) {
+static inline RowField ScreenSettings_getActiveSortKey(const ScreenSettings* this) {
    return (this->treeView)
-          ? (this->treeViewAlwaysByPID ? PID : this->treeSortKey)
+          ? (this->treeViewAlwaysByPID ? 1 : this->treeSortKey)
           : this->sortKey;
 }
 
@@ -116,15 +125,17 @@ void Settings_delete(Settings* this);
 
 int Settings_write(const Settings* this, bool onCrash);
 
-Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicColumns);
+Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens);
 
 ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* defaults);
+
+ScreenSettings* Settings_newDynamicScreen(Settings* this, const char* tab, const struct DynamicScreen_* screen, struct Table_* table);
 
 void ScreenSettings_delete(ScreenSettings* this);
 
 void ScreenSettings_invertSortOrder(ScreenSettings* this);
 
-void ScreenSettings_setSortKey(ScreenSettings* this, ProcessField sortKey);
+void ScreenSettings_setSortKey(ScreenSettings* this, RowField sortKey);
 
 void Settings_enableReadonly(void);
 

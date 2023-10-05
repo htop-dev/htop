@@ -7,7 +7,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Settings.h"
+#include "Machine.h"
 
 
 typedef struct UnsupportedProcess_ {
@@ -19,7 +19,7 @@ typedef struct UnsupportedProcess_ {
 
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
-Process* UnsupportedProcess_new(const Settings* settings);
+Process* UnsupportedProcess_new(const Machine* host);
 
 void Process_delete(Object* cast);
 

@@ -1,0 +1,45 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[cgroups]
+heading = CGroups
+caption = Control Groups
+default = true
+
+user_cpu.heading = UTIME
+user_cpu.caption = User CPU Time
+user_cpu.metric = 1000 * rate(cgroup.cpu.stat.user)
+user_cpu.width = 6
+
+system_cpu.heading = STIME
+system_cpu.caption = Kernel CPU Time
+system_cpu.metric = 1000 * rate(cgroup.cpu.stat.system)
+system_cpu.width = 6
+
+cpu_usage.heading = CPU%
+cpu_usage.caption = CPU Utilization
+cpu_usage.metric = 100 * (rate(cgroup.cpu.stat.usage) / hinv.ncpu)
+cpu_usage.format = percent
+
+cpu_psi.heading = CPU-PSI
+cpu_psi.caption = CPU Pressure Stall Information
+cpu_psi.metric = 1000 * rate(cgroup.pressure.cpu.some.total)
+cpu_psi.width = 7
+
+mem_psi.heading = MEM-PSI
+mem_psi.caption = Memory Pressure Stall Information
+mem_psi.metric = 1000 * rate(cgroup.pressure.memory.some.total)
+mem_psi.width = 7
+
+io_psi.heading = I/O-PSI
+io_psi.caption = I/O Pressure Stall Information
+io_psi.metric = 1000 * rate(cgroup.pressure.io.some.total)
+io_psi.width = 7
+
+name.heading = Control group
+name.caption = Control group name
+name.width = -64
+name.metric = cgroup.cpu.stat.system
+name.instances = true
+name.format = cgroup

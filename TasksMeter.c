@@ -10,7 +10,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
-#include "ProcessList.h"
+#include "ProcessTable.h"
 #include "RichString.h"
 #include "Settings.h"
 #include "XUtils.h"
@@ -24,19 +24,21 @@ static const int TasksMeter_attributes[] = {
 };
 
 static void TasksMeter_updateValues(Meter* this) {
-   const ProcessList* pl = this->pl;
-   this->values[0] = pl->kernelThreads;
-   this->values[1] = pl->userlandThreads;
-   this->values[2] = pl->totalTasks - pl->kernelThreads - pl->userlandThreads;
-   this->values[3] = MINIMUM(pl->runningTasks, pl->activeCPUs);
-   this->total     = pl->totalTasks;
+   const Machine* host = this->host;
+   const ProcessTable* pt = (const ProcessTable*) host->processTable;
 
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%u/%u", MINIMUM(pl->runningTasks, pl->activeCPUs), pl->totalTasks);
+   this->values[0] = pt->kernelThreads;
+   this->values[1] = pt->userlandThreads;
+   this->values[2] = pt->totalTasks - pt->kernelThreads - pt->userlandThreads;
+   this->values[3] = MINIMUM(pt->runningTasks, host->activeCPUs);
+   this->total     = pt->totalTasks;
+
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%u/%u", MINIMUM(pt->runningTasks, host->activeCPUs), pt->totalTasks);
 }
 
 static void TasksMeter_display(const Object* cast, RichString* out) {
    const Meter* this = (const Meter*)cast;
-   const Settings* settings = this->pl->settings;
+   const Settings* settings = this->host->settings;
    char buffer[20];
    int len;
 

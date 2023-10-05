@@ -8,14 +8,14 @@ in the source distribution for its full text.
 */
 
 #include "Affinity.h"
+#include "Machine.h"
 #include "Panel.h"
-#include "ProcessList.h"
 
 
 extern const PanelClass AffinityPanel_class;
 
-Panel* AffinityPanel_new(ProcessList* pl, const Affinity* affinity, int* width);
+Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width);
 
-Affinity* AffinityPanel_getAffinity(Panel* super, ProcessList* pl);
+Affinity* AffinityPanel_getAffinity(Panel* super, Machine* host);
 
 #endif

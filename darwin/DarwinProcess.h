@@ -9,8 +9,8 @@ in the source distribution for its full text.
 
 #include <sys/sysctl.h>
 
-#include "Settings.h"
-#include "darwin/DarwinProcessList.h"
+#include "Machine.h"
+#include "darwin/DarwinProcessTable.h"
 
 
 #define PROCESS_FLAG_TTY 0x00000100
@@ -28,13 +28,13 @@ extern const ProcessClass DarwinProcess_class;
 
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 
-Process* DarwinProcess_new(const Settings* settings);
+Process* DarwinProcess_new(const Machine* settings);
 
 void Process_delete(Object* cast);
 
 void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, bool exists);
 
-void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessList* dpl, double timeIntervalNS);
+void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable* dpt, double timeIntervalNS);
 
 /*
  * Scan threads for process state information.

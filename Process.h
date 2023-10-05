@@ -13,52 +13,15 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Object.h"
-#include "ProcessField.h"
 #include "RichString.h"
+#include "Row.h"
 
 
 #define PROCESS_FLAG_IO              0x00000001
 #define PROCESS_FLAG_CWD             0x00000002
+#define PROCESS_FLAG_SCHEDPOL        0x00000004
 
 #define DEFAULT_HIGHLIGHT_SECS 5
-
-typedef enum ProcessField_ {
-   NULL_PROCESSFIELD = 0,
-   PID = 1,
-   COMM = 2,
-   STATE = 3,
-   PPID = 4,
-   PGRP = 5,
-   SESSION = 6,
-   TTY = 7,
-   TPGID = 8,
-   MINFLT = 10,
-   MAJFLT = 12,
-   PRIORITY = 18,
-   NICE = 19,
-   STARTTIME = 21,
-   PROCESSOR = 38,
-   M_VIRT = 39,
-   M_RESIDENT = 40,
-   ST_UID = 46,
-   PERCENT_CPU = 47,
-   PERCENT_MEM = 48,
-   USER = 49,
-   TIME = 50,
-   NLWP = 51,
-   TGID = 52,
-   PERCENT_NORM_CPU = 53,
-   ELAPSED = 54,
-   PROC_COMM = 124,
-   PROC_EXE = 125,
-   CWD = 126,
-
-   /* Platform specific fields, defined in ${platform}/ProcessField.h */
-   PLATFORM_PROCESS_FIELDS
-
-   /* Do not add new fields after this entry (dynamic entries follow) */
-   LAST_PROCESSFIELD
-} ProcessField;
 
 /* Core process states (shared by platforms)
  * NOTE: The enum has an ordering that is important!
@@ -80,6 +43,7 @@ typedef enum ProcessState_ {
    SLEEPING
 } ProcessState;
 
+struct Machine_;
 struct Settings_;
 
 /* Holds information about regions of the cmdline that should be
@@ -104,20 +68,7 @@ typedef struct ProcessMergedCommand_ {
 
 typedef struct Process_ {
    /* Super object for emulated OOP */
-   Object super;
-
-   /* Pointer to quasi-global data structures */
-   const struct ProcessList_* processList;
-   const struct Settings_* settings;
-
-   /* Process identifier */
-   pid_t pid;
-
-   /* Parent process identifier */
-   pid_t ppid;
-
-   /* Thread group identifier */
-   pid_t tgid;
+   Row super;
 
    /* Process group identifier */
    int pgrp;
@@ -148,6 +99,13 @@ typedef struct Process_ {
 
    /* User name */
    const char* user;
+
+   /* Non root owned process with elevated privileges
+    * Linux:
+    *   - from file capabilities
+    *   - inherited from the ambient set
+    */
+   bool elevated_priv;
 
    /* Process runtime (in hundredth of a second) */
    unsigned long long int time;
@@ -221,35 +179,8 @@ typedef struct Process_ {
    /* Process state enum field (platform dependent) */
    ProcessState state;
 
-   /* Whether the process was updated during the current scan */
-   bool updated;
-
-   /* Whether the process was tagged by the user */
-   bool tag;
-
-   /* Whether to display this process */
-   bool show;
-
-   /* Whether this process was shown last cycle */
-   bool wasShown;
-
-   /* Whether to show children of this process in tree-mode */
-   bool showChildren;
-
-   /*
-    * Internal time counts for showing new and exited processes.
-    */
-   uint64_t seenStampMs;
-   uint64_t tombStampMs;
-
-   /*
-    * Internal state for tree-mode.
-    */
-   int32_t indent;
-   unsigned int tree_depth;
-
-   /* Has no known parent process */
-   bool isRoot;
+   /* Current scheduling policy */
+   int scheduling_policy;
 
    /*
     * Internal state for merged Command display
@@ -280,39 +211,57 @@ typedef struct ProcessFieldData_ {
    bool autoWidth;
 } ProcessFieldData;
 
+#define LAST_PROCESSFIELD LAST_RESERVED_FIELD
+typedef int32_t ProcessField;  /* see ReservedField list in RowField.h */
+
 // Implemented in platform-specific code:
-void Process_writeField(const Process* this, RichString* str, ProcessField field);
+void Process_writeField(const Process* row, RichString* str, ProcessField field);
 int Process_compare(const void* v1, const void* v2);
+int Process_compareByParent(const Row* r1, const Row* v2);
 void Process_delete(Object* cast);
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
-extern uint8_t Process_fieldWidths[LAST_PROCESSFIELD];
-#define PROCESS_MIN_PID_DIGITS 5
-#define PROCESS_MAX_PID_DIGITS 19
-#define PROCESS_MIN_UID_DIGITS 5
-#define PROCESS_MAX_UID_DIGITS 20
-extern int Process_pidDigits;
-extern int Process_uidDigits;
+#define Process_pidDigits Row_pidDigits
+#define Process_uidDigits Row_uidDigits
 
-typedef Process* (*Process_New)(const struct Settings_*);
-typedef void (*Process_WriteField)(const Process*, RichString*, ProcessField);
+typedef Process* (*Process_New)(const struct Machine_*);
 typedef int (*Process_CompareByKey)(const Process*, const Process*, ProcessField);
 
 typedef struct ProcessClass_ {
-   const ObjectClass super;
-   const Process_WriteField writeField;
+   const RowClass super;
    const Process_CompareByKey compareByKey;
 } ProcessClass;
 
-#define As_Process(this_)                              ((const ProcessClass*)((this_)->super.klass))
+#define As_Process(this_)   ((const ProcessClass*)((this_)->super.super.klass))
 
-#define Process_compareByKey(p1_, p2_, key_)           (As_Process(p1_)->compareByKey ? (As_Process(p1_)->compareByKey(p1_, p2_, key_)) : Process_compareByKey_Base(p1_, p2_, key_))
+#define Process_compareByKey(p1_, p2_, key_)   (As_Process(p1_)->compareByKey ? (As_Process(p1_)->compareByKey(p1_, p2_, key_)) : Process_compareByKey_Base(p1_, p2_, key_))
 
-static inline pid_t Process_getParentPid(const Process* this) {
-   return this->tgid == this->pid ? this->ppid : this->tgid;
+
+static inline void Process_setPid(Process* this, pid_t pid) {
+   this->super.id = pid;
 }
 
-static inline bool Process_isChildOf(const Process* this, pid_t pid) {
-   return pid == Process_getParentPid(this);
+static inline pid_t Process_getPid(const Process* this) {
+   return (pid_t)this->super.id;
+}
+
+static inline void Process_setThreadGroup(Process* this, pid_t pid) {
+   this->super.group = pid;
+}
+
+static inline pid_t Process_getThreadGroup(const Process* this) {
+   return (pid_t)this->super.group;
+}
+
+static inline void Process_setParent(Process* this, pid_t pid) {
+    this->super.parent = pid;
+}
+
+static inline pid_t Process_getParent(const Process* this) {
+    return (pid_t)this->super.parent;
+}
+
+static inline pid_t Process_getGroupOrParent(const Process* this) {
+   return Row_getGroupOrParent(&this->super);
 }
 
 static inline bool Process_isKernelThread(const Process* this) {
@@ -331,69 +280,32 @@ static inline bool Process_isThread(const Process* this) {
 #define CMDLINE_HIGHLIGHT_FLAG_BASENAME   0x00000002
 #define CMDLINE_HIGHLIGHT_FLAG_COMM       0x00000004
 #define CMDLINE_HIGHLIGHT_FLAG_DELETED    0x00000008
-
-#define ONE_K 1024UL
-#define ONE_M (ONE_K * ONE_K)
-#define ONE_G (ONE_M * ONE_K)
-#define ONE_T (1ULL * ONE_G * ONE_K)
-#define ONE_P (1ULL * ONE_T * ONE_K)
-
-#define ONE_DECIMAL_K 1000UL
-#define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
-#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
-#define ONE_DECIMAL_T (1ULL * ONE_DECIMAL_G * ONE_DECIMAL_K)
-#define ONE_DECIMAL_P (1ULL * ONE_DECIMAL_T * ONE_DECIMAL_K)
-
-void Process_setupColumnWidths(void);
-
-/* Sets the size of the UID column based on the passed UID */
-void Process_setUidColumnWidth(uid_t maxUid);
-
-/* Takes number in bytes (base 1024). Prints 6 columns. */
-void Process_printBytes(RichString* str, unsigned long long number, bool coloring);
-
-/* Takes number in kilo bytes (base 1024). Prints 6 columns. */
-void Process_printKBytes(RichString* str, unsigned long long number, bool coloring);
-
-/* Takes number as count (base 1000). Prints 12 columns. */
-void Process_printCount(RichString* str, unsigned long long number, bool coloring);
-
-/* Takes time in hundredths of a seconds. Prints 9 columns. */
-void Process_printTime(RichString* str, unsigned long long totalHundredths, bool coloring);
-
-/* Takes rate in bare unit (base 1024) per second. Prints 12 columns. */
-void Process_printRate(RichString* str, double rate, bool coloring);
+#define CMDLINE_HIGHLIGHT_FLAG_PREFIXDIR  0x00000010
 
 void Process_fillStarttimeBuffer(Process* this);
-
-void Process_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width);
-
-void Process_printPercentage(float val, char* buffer, int n, uint8_t width, int* attr);
-
-void Process_display(const Object* cast, RichString* out);
 
 void Process_done(Process* this);
 
 extern const ProcessClass Process_class;
 
-void Process_init(Process* this, const struct Settings_* settings);
+void Process_init(Process* this, const struct Machine_* host);
 
-void Process_toggleTag(Process* this);
+const char* Process_rowGetSortKey(Row* super);
 
-bool Process_isNew(const Process* this);
+bool Process_rowSetPriority(Row* super, int priority);
 
-bool Process_isTomb(const Process* this);
+bool Process_rowChangePriorityBy(Row* super, Arg delta);
 
-bool Process_setPriority(Process* this, int priority);
+bool Process_rowSendSignal(Row* super, Arg sgn);
 
-bool Process_changePriorityBy(Process* this, Arg delta);
+bool Process_rowIsHighlighted(const Row* super);
 
-bool Process_sendSignal(Process* this, Arg sgn);
+bool Process_rowIsVisible(const Row* super, const struct Table_* table);
+
+bool Process_rowMatchesFilter(const Row* super, const struct Table_* table);
 
 static inline int Process_pidEqualCompare(const void* v1, const void* v2) {
-   const pid_t p1 = ((const Process*)v1)->pid;
-   const pid_t p2 = ((const Process*)v2)->pid;
-   return p1 != p2; /* return zero when equal */
+   return Row_idEqualCompare(v1, v2);
 }
 
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key);
@@ -406,12 +318,10 @@ void Process_updateExe(Process* this, const char* exe);
 
 /* This function constructs the string that is displayed by
  * Process_writeCommand and also returned by Process_getCommand */
-void Process_makeCommandStr(Process* this);
+void Process_makeCommandStr(Process* this, const struct Settings_ *settings);
 
 void Process_writeCommand(const Process* this, int attr, int baseAttr, RichString* str);
 
-void Process_resetFieldWidths(void);
-void Process_updateFieldWidth(ProcessField key, size_t width);
 void Process_updateCPUFieldWidths(float percentage);
 
 #endif
