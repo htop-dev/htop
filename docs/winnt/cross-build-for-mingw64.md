@@ -99,12 +99,12 @@ Standard `make` and `make install` will build the library and install it and its
 
 This should be everything we need to cross-compile `htop` itself.
 
-Clone the `htop` repo and checkout the `winnt` branch
+Clone the `htop` repo and checkout the `windows` branch
 
 ```bash
     git clone git@github.com:htop-dev/htop.git
     cd htop
-    git checkout winnt
+    git checkout windows
 ```
 
 To configure `htop` for cross-compiling we just need to tell `autoconf` we want to target the desired platform, and make sure that it looks to our `$MINGW_ROOT` for `ncurses`.
