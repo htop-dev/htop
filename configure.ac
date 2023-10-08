@@ -297,6 +297,7 @@ AC_CHECK_FUNCS([ \
     readlinkat \
     sched_getscheduler \
     sched_setscheduler \
+    strchrnul \
    ])
 
 if test "$my_htop_platform" = darwin; then
