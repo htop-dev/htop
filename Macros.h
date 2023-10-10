@@ -42,7 +42,6 @@ in the source distribution for its full text.
 #ifdef  __GNUC__  // defined by GCC and Clang
 
 #define ATTR_FORMAT(type, index, check) __attribute__((format (type, index, check)))
-#define ATTR_NONNULL                    __attribute__((nonnull))
 #define ATTR_NORETURN                   __attribute__((noreturn))
 #define ATTR_UNUSED                     __attribute__((unused))
 #define ATTR_MALLOC                     __attribute__((malloc))
@@ -50,12 +49,23 @@ in the source distribution for its full text.
 #else /* __GNUC__ */
 
 #define ATTR_FORMAT(type, index, check)
-#define ATTR_NONNULL
 #define ATTR_NORETURN
 #define ATTR_UNUSED
 #define ATTR_MALLOC
 
 #endif /* __GNUC__ */
+
+#ifdef HAVE_ATTR_NONNULL
+
+#define ATTR_NONNULL                    __attribute__((nonnull))
+#define ATTR_NONNULL_N(...)             __attribute__((nonnull(__VA_ARGS__)))
+
+#else
+
+#define ATTR_NONNULL
+#define ATTR_NONNULL_N(...)
+
+#endif /* HAVE_ATTR_NONNULL */
 
 #ifdef HAVE_ATTR_ALLOC_SIZE
 
