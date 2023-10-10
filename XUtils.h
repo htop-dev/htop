@@ -36,26 +36,33 @@ void* xReallocArrayZero(void* ptr, size_t prevmemb, size_t newmemb, size_t size)
  * String_startsWith gives better performance if strlen(match) can be computed
  * at compile time (e.g. when they are immutable string literals). :)
  */
+ATTR_NONNULL
 static inline bool String_startsWith(const char* s, const char* match) {
    return strncmp(s, match, strlen(match)) == 0;
 }
 
 bool String_contains_i(const char* s1, const char* s2, bool multi);
 
+ATTR_NONNULL
 static inline bool String_eq(const char* s1, const char* s2) {
    return strcmp(s1, s2) == 0;
 }
 
+ATTR_NONNULL
 char* String_cat(const char* s1, const char* s2) ATTR_MALLOC;
 
+ATTR_NONNULL
 char* String_trim(const char* in) ATTR_MALLOC;
 
+ATTR_NONNULL_N(1)
 char** String_split(const char* s, char sep, size_t* n);
 
 void String_freeArray(char** s);
 
+ATTR_NONNULL
 char* String_readLine(FILE* fd) ATTR_MALLOC;
 
+ATTR_NONNULL
 static inline char* String_strchrnul(const char* s, int c) {
 #ifdef HAVE_STRCHRNUL
    return strchrnul(s, c);
@@ -73,6 +80,7 @@ ATTR_ACCESS3_R(2, 3)
 size_t String_safeStrncpy(char* restrict dest, const char* restrict src, size_t size);
 
 ATTR_FORMAT(printf, 2, 3)
+ATTR_NONNULL_N(1, 2)
 int xAsprintf(char** strp, const char* fmt, ...);
 
 ATTR_FORMAT(printf, 3, 4)
