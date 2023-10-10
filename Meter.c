@@ -301,12 +301,12 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    GraphData* data = &this->drawData;
    if ((size_t)w * 2 > data->nValues) {
       size_t oldNValues = data->nValues;
-      data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (unsigned int)w * 2);
+      data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (size_t)w * 2);
       data->values = xReallocArray(data->values, data->nValues, sizeof(*data->values));
       memmove(data->values + (data->nValues - oldNValues), data->values, oldNValues * sizeof(*data->values));
       memset(data->values, 0, (data->nValues - oldNValues) * sizeof(*data->values));
    }
-   const int nValues = data->nValues;
+   const size_t nValues = data->nValues;
 
    const Machine* host = this->host;
    if (!timercmp(&host->realtime, &(data->time), <)) {
@@ -314,7 +314,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
       timeradd(&host->realtime, &delay, &(data->time));
 
-      for (int i = 0; i < nValues - 1; i++)
+      for (size_t i = 0; i < nValues - 1; i++)
          data->values[i] = data->values[i + 1];
 
       data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
@@ -333,12 +333,8 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
    }
 
-   int i = nValues - (w * 2), k = 0;
-   if (i < 0) {
-      k = -i / 2;
-      i = 0;
-   }
-   for (; i < nValues - 1; i += 2, k++) {
+   size_t i = nValues - (size_t)w * 2;
+   for (int k = 0; i < nValues - 1; i += 2, k++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
       if (this->total < 1)
          this->total = 1;
