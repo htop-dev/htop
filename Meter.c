@@ -289,10 +289,18 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+   const char* caption = Meter_getCaption(this);
+   attrset(CRT_colors[METER_TEXT]);
+   const int captionLen = 3;
+   mvaddnstr(y, x, caption, captionLen);
+   x += captionLen;
+   w -= captionLen;
+   if (w <= 0)
+      return;
+
    const Machine* host = this->host;
    GraphData* data = &this->drawData;
 
-   assert(w > 0);
    if ((size_t)w * 2 > data->nValues) {
       size_t oldNValues = data->nValues;
       data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (size_t)w * 2);
@@ -314,13 +322,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       GraphMeterMode_dots = GraphMeterMode_dotsAscii;
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
    }
-
-   const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   int captionLen = 3;
-   mvaddnstr(y, x, caption, captionLen);
-   x += captionLen;
-   w -= captionLen;
 
    if (!timercmp(&host->realtime, &(data->time), <)) {
       int globalDelay = this->host->settings->delay;
