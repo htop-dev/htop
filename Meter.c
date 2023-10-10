@@ -295,7 +295,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(w > 0);
    if ((size_t)w * 2 > data->nValues) {
       size_t oldNValues = data->nValues;
-      data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (unsigned int)w * 2);
+      data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (size_t)w * 2);
       data->values = xReallocArray(data->values, data->nValues, sizeof(*data->values));
       memmove(data->values + (data->nValues - oldNValues), data->values, oldNValues * sizeof(*data->values));
       memset(data->values, 0, (data->nValues - oldNValues) * sizeof(*data->values));
