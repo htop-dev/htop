@@ -20,6 +20,7 @@ in the source distribution for its full text.
 
 
 #define METER_TXTBUFFER_LEN 256
+#define MAX_METER_GRAPHDATA_VALUES 32768
 
 #define METER_BUFFER_CHECK(buffer, size, written)          \
    do {                                                    \

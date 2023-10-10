@@ -302,6 +302,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    if ((size_t)w * 2 > data->nValues) {
       size_t oldNValues = data->nValues;
       data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (size_t)w * 2);
+      data->nValues = MINIMUM(data->nValues, MAX_METER_GRAPHDATA_VALUES);
       data->values = xReallocArray(data->values, data->nValues, sizeof(*data->values));
       memmove(data->values + (data->nValues - oldNValues), data->values, oldNValues * sizeof(*data->values));
       memset(data->values, 0, (data->nValues - oldNValues) * sizeof(*data->values));
@@ -333,6 +334,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
    }
 
+   if ((size_t)w * 2 > nValues) {
+      x += w - (nValues / 2);
+      w = nValues / 2;
+   }
    size_t i = nValues - (size_t)w * 2;
    for (int k = 0; i < nValues - 1; i += 2, k++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
