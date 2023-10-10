@@ -289,10 +289,16 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
-   const Machine* host = this->host;
-   GraphData* data = &this->drawData;
+   const int captionLen = 3;
+   const char* caption = Meter_getCaption(this);
+   attrset(CRT_colors[METER_TEXT]);
+   mvaddnstr(y, x, caption, captionLen);
+   w -= captionLen;
+   x += captionLen;
+   if (w <= 0)
+      return;
 
-   assert(w > 0);
+   GraphData* data = &this->drawData;
    if ((size_t)w * 2 > data->nValues) {
       size_t oldNValues = data->nValues;
       data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (unsigned int)w * 2);
@@ -301,6 +307,18 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       memset(data->values, 0, (data->nValues - oldNValues) * sizeof(*data->values));
    }
    const int nValues = data->nValues;
+
+   const Machine* host = this->host;
+   if (!timercmp(&host->realtime, &(data->time), <)) {
+      int globalDelay = host->settings->delay;
+      struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
+      timeradd(&host->realtime, &delay, &(data->time));
+
+      for (int i = 0; i < nValues - 1; i++)
+         data->values[i] = data->values[i + 1];
+
+      data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
+   }
 
    const char* const* GraphMeterMode_dots;
    int GraphMeterMode_pixPerRow;
@@ -313,24 +331,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    {
       GraphMeterMode_dots = GraphMeterMode_dotsAscii;
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
-   }
-
-   const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   int captionLen = 3;
-   mvaddnstr(y, x, caption, captionLen);
-   x += captionLen;
-   w -= captionLen;
-
-   if (!timercmp(&host->realtime, &(data->time), <)) {
-      int globalDelay = this->host->settings->delay;
-      struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
-      timeradd(&host->realtime, &delay, &(data->time));
-
-      for (int i = 0; i < nValues - 1; i++)
-         data->values[i] = data->values[i + 1];
-
-      data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
    }
 
    int i = nValues - (w * 2), k = 0;
