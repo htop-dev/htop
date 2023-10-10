@@ -7,7 +7,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include <limits.h>
 #include <stdbool.h>
@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include "generic/gettime.h"
 #include "generic/hostname.h"
 #include "generic/uname.h"
+
 
 /* GNU/Hurd does not have PATH_MAX in limits.h */
 #ifndef PATH_MAX

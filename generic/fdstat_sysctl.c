@@ -5,6 +5,8 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "generic/fdstat_sysctl.h"
 
 #include <math.h>
@@ -13,8 +15,6 @@ in the source distribution for its full text.
 
 #include <sys/types.h> // Shitty FreeBSD upstream headers
 #include <sys/sysctl.h>
-
-#include "config.h"
 
 
 static void Generic_getFileDescriptors_sysctl_internal(

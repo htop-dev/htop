@@ -9,11 +9,11 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
+#include "Panel.h"
+
 #ifndef HTOP_SOLARIS
 #include <signal.h>
 #endif
-
-#include "Panel.h"
 
 
 typedef struct SignalItem_ {

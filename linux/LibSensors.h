@@ -1,5 +1,11 @@
 #ifndef HEADER_LibSensors
 #define HEADER_LibSensors
+/*
+htop - linux/LibSensors.h
+(C) 2020-2023 htop dev team
+Released under the GNU GPLv2+, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "linux/LinuxMachine.h"
 

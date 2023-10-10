@@ -1,5 +1,12 @@
 #ifndef HEADER_InfoScreen
 #define HEADER_InfoScreen
+/*
+htop - InfoScreen.h
+(C) 2016 Hisham H. Muhammad
+(C) 2020,2022 htop dev team
+Released under the GNU GPLv2+, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include <stdbool.h>
 

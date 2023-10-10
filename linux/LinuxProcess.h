@@ -13,10 +13,10 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <sys/types.h>
 
-#include "linux/IOPriority.h"
 #include "Machine.h"
 #include "Object.h"
 #include "Process.h"
+#include "linux/IOPriority.h"
 
 
 #define PROCESS_FLAG_LINUX_IOPRIO    0x00000100

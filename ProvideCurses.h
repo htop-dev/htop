@@ -8,7 +8,7 @@ in the source distribution for its full text.
 */
 
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 // IWYU pragma: begin_exports
 

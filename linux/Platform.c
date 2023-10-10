@@ -5,8 +5,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ZramMeter.h"
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "linux/Platform.h"
 
@@ -47,7 +46,6 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "PressureStallMeter.h"
 #include "ProvideCurses.h"
-#include "linux/SELinuxMeter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
@@ -58,6 +56,7 @@ in the source distribution for its full text.
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
+#include "linux/SELinuxMeter.h"
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"

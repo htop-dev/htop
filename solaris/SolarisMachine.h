@@ -14,11 +14,11 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/param.h>
-#include <sys/uio.h>
 #include <sys/resource.h>
+#include <sys/swap.h>
 #include <sys/sysconf.h>
 #include <sys/sysinfo.h>
-#include <sys/swap.h>
+#include <sys/uio.h>
 
 #include "Hashtable.h"
 #include "UsersTable.h"
