@@ -298,9 +298,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    if (w <= 0)
       return;
 
-   const Machine* host = this->host;
    GraphData* data = &this->drawData;
-
    if ((size_t)w * 2 > data->nValues) {
       size_t oldNValues = data->nValues;
       data->nValues = MAXIMUM(oldNValues + (oldNValues / 2), (size_t)w * 2);
@@ -309,6 +307,18 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       memset(data->values, 0, (data->nValues - oldNValues) * sizeof(*data->values));
    }
    const size_t nValues = data->nValues;
+
+   const Machine* host = this->host;
+   if (!timercmp(&host->realtime, &(data->time), <)) {
+      int globalDelay = host->settings->delay;
+      struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
+      timeradd(&host->realtime, &delay, &(data->time));
+
+      for (size_t i = 0; i < nValues - 1; i++)
+         data->values[i] = data->values[i + 1];
+
+      data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
+   }
 
    const char* const* GraphMeterMode_dots;
    int GraphMeterMode_pixPerRow;
@@ -321,17 +331,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    {
       GraphMeterMode_dots = GraphMeterMode_dotsAscii;
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
-   }
-
-   if (!timercmp(&host->realtime, &(data->time), <)) {
-      int globalDelay = this->host->settings->delay;
-      struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
-      timeradd(&host->realtime, &delay, &(data->time));
-
-      for (size_t i = 0; i < nValues - 1; i++)
-         data->values[i] = data->values[i + 1];
-
-      data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
    }
 
    assert(nValues <= SSIZE_MAX);
