@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -295,11 +296,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    mvaddnstr(y, x, caption, captionLen);
    x += captionLen;
    w -= captionLen;
-   if (w <= 0)
-      return;
 
    GraphData* data = &this->drawData;
-   if ((size_t)w * 2 > data->nValues && MAX_METER_GRAPHDATA_VALUES > data->nValues) {
+   assert(data->nValues / 2 <= INT_MAX);
+   if (w > (int)(data->nValues / 2) && MAX_METER_GRAPHDATA_VALUES > data->nValues) {
       size_t oldNValues = data->nValues;
       data->nValues = MAXIMUM(oldNValues + oldNValues / 2, (size_t)w * 2);
       data->nValues = MINIMUM(data->nValues, MAX_METER_GRAPHDATA_VALUES);
@@ -307,11 +307,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       memmove(data->values + (data->nValues - oldNValues), data->values, oldNValues * sizeof(*data->values));
       memset(data->values, 0, (data->nValues - oldNValues) * sizeof(*data->values));
    }
+
    const size_t nValues = data->nValues;
-   if ((size_t)w * 2 > nValues) {
-      x += w - nValues / 2;
-      w = nValues / 2;
-   }
+   if (nValues < 1)
+      return;
 
    const Machine* host = this->host;
    if (!timercmp(&host->realtime, &(data->time), <)) {
@@ -323,6 +322,14 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
          data->values[i] = data->values[i + 1];
 
       data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
+   }
+
+   if (w <= 0)
+      return;
+
+   if ((size_t)w > nValues / 2) {
+      x += w - nValues / 2;
+      w = nValues / 2;
    }
 
    const char* const* GraphMeterMode_dots;
