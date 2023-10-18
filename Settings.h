@@ -97,6 +97,7 @@ typedef struct Settings_ {
    bool accountGuestInCPUMeter;
    bool headerMargin;
    bool screenTabs;
+   bool excludeHugepages;
    #ifdef HAVE_GETMOUSE
    bool enableMouse;
    #endif

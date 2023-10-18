@@ -358,8 +358,13 @@ void Platform_setMemoryValues(Meter* this) {
    const Machine* host = this->host;
    const LinuxMachine* lhost = (const LinuxMachine*) host;
 
-   this->total = host->totalMem;
-   this->values[MEMORY_METER_USED] = host->usedMem;
+   if (host->settings->excludeHugepages) {
+      this->total = host->totalMem > lhost->totalHugePageMem ? host->totalMem - lhost->totalHugePageMem : host->totalMem;
+      this->values[MEMORY_METER_USED] = host->usedMem > lhost->totalHugePageMem ? host->usedMem - lhost->totalHugePageMem : host->usedMem;
+   } else {
+      this->total = host->totalMem;
+      this->values[MEMORY_METER_USED] = host->usedMem;
+   }
    this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
    this->values[MEMORY_METER_SHARED] = host->sharedMem;
    this->values[MEMORY_METER_COMPRESSED] = 0; /* compressed */
