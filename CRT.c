@@ -803,8 +803,16 @@ int CRT_scrollWheelVAmount = 10;
 ColorScheme CRT_colorScheme = COLORSCHEME_DEFAULT;
 
 ATTR_NORETURN
-static void CRT_handleSIGTERM(ATTR_UNUSED int sgn) {
+static void CRT_handleSIGTERM(int sgn) {
    CRT_done();
+
+   const char* signal_str = strsignal(sgn);
+   if (!signal_str)
+      signal_str = "unknown reason";
+
+   fprintf(stderr,
+           "A signal %d (%s) was received, exiting without persisting settings to htoprc.\n",
+           sgn, signal_str);
    _exit(0);
 }
 
