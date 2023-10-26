@@ -733,9 +733,9 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddstr(line++, 0, "Memory bar:    ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    addbartext(CRT_colors[MEMORY_USED], "", "used");
+   addbartext(CRT_colors[MEMORY_SHARED], "/", "shared");
    addbartext(CRT_colors[MEMORY_COMPRESSED], "/", "compressed");
    addbartext(CRT_colors[MEMORY_BUFFERS_TEXT], "/", "buffers");
-   addbartext(CRT_colors[MEMORY_SHARED], "/", "shared");
    addbartext(CRT_colors[MEMORY_CACHE], "/", "cache");
    addbartext(CRT_colors[BAR_SHADOW], "          ", "used");
    addbartext(CRT_colors[BAR_SHADOW], "/", "total");
