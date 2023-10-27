@@ -83,8 +83,8 @@ static HandlerResult ScreenTabsPanel_eventHandler(Panel* super, int ch) {
       case KEY_END: {
          int previous = selected;
          Panel_onKey(super, ch);
-	 selected = Panel_getSelectedIndex(super);
-	 if (previous != selected)
+         selected = Panel_getSelectedIndex(super);
+         if (previous != selected)
             result = HANDLED;
          break;
       }
