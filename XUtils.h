@@ -111,4 +111,7 @@ int compareRealNumbers(double a, double b);
    nonnegative. */
 double sumPositiveValues(const double* array, size_t count);
 
+/* IEC unit prefixes */
+static const char unitPrefixes[] = { 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q' };
+
 #endif

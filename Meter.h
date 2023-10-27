@@ -146,7 +146,9 @@ extern const MeterClass Meter_class;
 
 Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type);
 
-int Meter_humanUnit(char* buffer, unsigned long int value, size_t size);
+/* Converts 'value' in kibibytes into a human readable string.
+   Example output strings: "0K", "1023K", "98.7M" and "1.23G" */
+int Meter_humanUnit(char* buffer, double value, size_t size);
 
 void Meter_delete(Object* cast);
 

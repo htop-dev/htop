@@ -351,27 +351,27 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
             break;
          case PM_TYPE_32:
             bytes += conv.dimSpace ?
-               Meter_humanUnit(buffer + bytes, atom.l, size - bytes) :
+               Meter_humanUnit(buffer + bytes, (double) atom.l, size - bytes) :
                xSnprintf(buffer + bytes, size - bytes, "%d", atom.l);
             break;
          case PM_TYPE_U32:
             bytes += conv.dimSpace ?
-               Meter_humanUnit(buffer + bytes, atom.ul, size - bytes) :
+               Meter_humanUnit(buffer + bytes, (double) atom.ul, size - bytes) :
                xSnprintf(buffer + bytes, size - bytes, "%u", atom.ul);
             break;
          case PM_TYPE_64:
             bytes += conv.dimSpace ?
-               Meter_humanUnit(buffer + bytes, atom.ll, size - bytes) :
+               Meter_humanUnit(buffer + bytes, (double) atom.ll, size - bytes) :
                xSnprintf(buffer + bytes, size - bytes, "%lld", (long long) atom.ll);
             break;
          case PM_TYPE_U64:
             bytes += conv.dimSpace ?
-               Meter_humanUnit(buffer + bytes, atom.ull, size - bytes) :
+               Meter_humanUnit(buffer + bytes, (double) atom.ull, size - bytes) :
                xSnprintf(buffer + bytes, size - bytes, "%llu", (unsigned long long) atom.ull);
             break;
          case PM_TYPE_FLOAT:
             bytes += conv.dimSpace ?
-               Meter_humanUnit(buffer + bytes, atom.f, size - bytes) :
+               Meter_humanUnit(buffer + bytes, (double) atom.f, size - bytes) :
                xSnprintf(buffer + bytes, size - bytes, "%.2f", (double) atom.f);
             break;
          case PM_TYPE_DOUBLE:
@@ -427,27 +427,27 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
             break;
          case PM_TYPE_32:
             len = conv.dimSpace ?
-               Meter_humanUnit(buffer, atom.l, sizeof(buffer)) :
+               Meter_humanUnit(buffer, (double) atom.l, sizeof(buffer)) :
                xSnprintf(buffer, sizeof(buffer), "%d", atom.l);
             break;
          case PM_TYPE_U32:
             len = conv.dimSpace ?
-               Meter_humanUnit(buffer, atom.ul, sizeof(buffer)) :
+               Meter_humanUnit(buffer, (double) atom.ul, sizeof(buffer)) :
                xSnprintf(buffer, sizeof(buffer), "%u", atom.ul);
             break;
          case PM_TYPE_64:
             len = conv.dimSpace ?
-               Meter_humanUnit(buffer, atom.ll, sizeof(buffer)) :
+               Meter_humanUnit(buffer, (double) atom.ll, sizeof(buffer)) :
                xSnprintf(buffer, sizeof(buffer), "%lld", (long long) atom.ll);
             break;
          case PM_TYPE_U64:
             len = conv.dimSpace ?
-               Meter_humanUnit(buffer, atom.ull, sizeof(buffer)) :
+               Meter_humanUnit(buffer, (double) atom.ull, sizeof(buffer)) :
                xSnprintf(buffer, sizeof(buffer), "%llu", (unsigned long long) atom.ull);
             break;
          case PM_TYPE_FLOAT:
             len = conv.dimSpace ?
-               Meter_humanUnit(buffer, atom.f, sizeof(buffer)) :
+               Meter_humanUnit(buffer, (double) atom.f, sizeof(buffer)) :
                xSnprintf(buffer, sizeof(buffer), "%.2f", (double) atom.f);
             break;
          case PM_TYPE_DOUBLE:

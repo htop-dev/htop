@@ -51,32 +51,40 @@ Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type
    return this;
 }
 
-int Meter_humanUnit(char* buffer, unsigned long int value, size_t size) {
-   const char* prefix = "KMGTPEZY";
-   unsigned long int powi = 1;
-   unsigned int powj = 1, precision = 2;
+/* Converts 'value' in kibibytes into a human readable string.
+   Example output strings: "0K", "1023K", "98.7M" and "1.23G" */
+int Meter_humanUnit(char* buffer, double value, size_t size) {
+   size_t i = 0;
 
-   for (;;) {
-      if (value / 1024 < powi)
+   assert(value >= 0.0);
+   while (value >= ONE_K) {
+      if (i >= ARRAYSIZE(unitPrefixes) - 1) {
+         if (value > 9999.0) {
+            return snprintf(buffer, size, "inf");
+         }
          break;
+      }
 
-      if (prefix[1] == '\0')
-         break;
-
-      powi *= 1024;
-      ++prefix;
+      value /= ONE_K;
+      ++i;
    }
 
-   if (*prefix == 'K')
-      precision = 0;
+   int precision = 0;
 
-   for (; precision > 0; precision--) {
-      powj *= 10;
-      if (value / powi < powj)
-         break;
+   if (i > 0) {
+      // Fraction digits for mebibytes and above
+      precision = value <= 99.9 ? (value <= 9.99 ? 2 : 1) : 0;
+
+      // Round up if 'value' is in range (99.9, 100) or (9.99, 10)
+      if (precision < 2) {
+         double limit = precision == 1 ? 10.0 : 100.0;
+         if (value < limit) {
+            value = limit;
+         }
+      }
    }
 
-   return snprintf(buffer, size, "%.*f%c", precision, (double) value / powi, *prefix);
+   return snprintf(buffer, size, "%.*f%c", precision, value, unitPrefixes[i]);
 }
 
 void Meter_delete(Object* cast) {
