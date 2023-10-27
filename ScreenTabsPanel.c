@@ -99,7 +99,9 @@ static HandlerResult ScreenTabsPanel_eventHandler(Panel* super, int ch) {
    }
    if (result == HANDLED) {
       ScreenTabListItem* focus = (ScreenTabListItem*) Panel_getSelected(super);
-      ScreenNamesPanel_fill(this->names, focus->ds);
+      if (focus) {
+         ScreenNamesPanel_fill(this->names, focus->ds);
+      }
    }
    return result;
 }
