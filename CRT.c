@@ -1165,11 +1165,10 @@ static void print_backtrace(void) {
          #endif
       }
 
-      const char* frame = "";
-      if (unw_is_signal_frame(&cursor) > 0)
-         frame = "{signal frame}";
+      const bool is_signal_frame = unw_is_signal_frame(&cursor) > 0;
+      const char* frame = is_signal_frame ? "  {signal frame}" : "";
 
-      fprintf(stderr, "%2u: %#14lx  %s  (%s+%#lx)  [%p]%s%s\n", item++, pc, fname, symbolName, offset, ptr, frame ? "  " : "", frame);
+      fprintf(stderr, "%2u: %#14lx  %s  (%s+%#lx)  [%p]%s\n", item++, pc, fname, symbolName, offset, ptr, frame);
    }
 #elif defined(HAVE_EXECINFO_H)
    void* backtraceArray[256];
