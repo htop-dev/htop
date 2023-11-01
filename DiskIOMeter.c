@@ -85,6 +85,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
       if (data.totalMsTimeSpend > cached_msTimeSpend_total) {
          diff = data.totalMsTimeSpend - cached_msTimeSpend_total;
          cached_utilisation_diff = 100.0 * (double)diff / passedTimeInMs;
+         cached_utilisation_diff = MINIMUM(cached_utilisation_diff, 100.0);
       } else {
          cached_utilisation_diff = 0.0;
       }
@@ -101,7 +102,6 @@ static void DiskIOMeter_updateValues(Meter* this) {
    }
 
    this->values[0] = cached_utilisation_diff;
-   this->total = MAXIMUM(this->values[0], 100.0); /* fix total after (initial) spike */
 
    char bufferRead[12], bufferWrite[12];
    Meter_humanUnit(bufferRead, cached_read_diff, sizeof(bufferRead));
