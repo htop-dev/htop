@@ -34,20 +34,16 @@ static uint32_t cached_txp_diff;
 
 static void NetworkIOMeter_updateValues(Meter* this) {
    const Machine* host = this->host;
-   static uint64_t cached_last_update = 0;
 
+   static uint64_t cached_last_update = 0;
    uint64_t passedTimeInMs = host->realtimeMs - cached_last_update;
+   bool hasNewData = false;
+   NetworkIOData data;
 
    /* update only every 500ms to have a sane span for rate calculation */
    if (passedTimeInMs > 500) {
-      static uint64_t cached_rxb_total;
-      static uint64_t cached_rxp_total;
-      static uint64_t cached_txb_total;
-      static uint64_t cached_txp_total;
-      uint64_t diff;
-
-      NetworkIOData data;
-      if (!Platform_getNetworkIO(&data)) {
+      hasNewData = Platform_getNetworkIO(&data);
+      if (!hasNewData) {
          status = RATESTATUS_NODATA;
       } else if (cached_last_update == 0) {
          status = RATESTATUS_INIT;
@@ -58,51 +54,68 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       }
 
       cached_last_update = host->realtimeMs;
+   }
 
-      if (status == RATESTATUS_NODATA) {
-         xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
-         return;
+   if (hasNewData) {
+      static uint64_t cached_rxb_total;
+      static uint64_t cached_rxp_total;
+      static uint64_t cached_txb_total;
+      static uint64_t cached_txp_total;
+
+      if (status != RATESTATUS_INIT) {
+         uint64_t diff;
+
+         if (data.bytesReceived > cached_rxb_total) {
+            diff = data.bytesReceived - cached_rxb_total;
+            diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+            diff /= ONE_K; /* convert to KiB/s */
+            cached_rxb_diff = (uint32_t)diff;
+         } else {
+            cached_rxb_diff = 0;
+         }
+
+         if (data.packetsReceived > cached_rxp_total) {
+            diff = data.packetsReceived - cached_rxp_total;
+            diff = (1000 * diff) / passedTimeInMs; /* convert to pkts/s */
+            cached_rxp_diff = (uint32_t)diff;
+         } else {
+            cached_rxp_diff = 0;
+         }
+
+         if (data.bytesTransmitted > cached_txb_total) {
+            diff = data.bytesTransmitted - cached_txb_total;
+            diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+            diff /= ONE_K; /* convert to KiB/s */
+            cached_txb_diff = (uint32_t)diff;
+         } else {
+            cached_txb_diff = 0;
+         }
+
+         if (data.packetsTransmitted > cached_txp_total) {
+            diff = data.packetsTransmitted - cached_txp_total;
+            diff = (1000 * diff) / passedTimeInMs; /* convert to pkts/s */
+            cached_txp_diff = (uint32_t)diff;
+         } else {
+            cached_txp_diff = 0;
+         }
       }
 
-      if (data.bytesReceived > cached_rxb_total) {
-         diff = data.bytesReceived - cached_rxb_total;
-         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
-         diff /= ONE_K; /* convert to KiB/s */
-         cached_rxb_diff = (uint32_t)diff;
-      } else {
-         cached_rxb_diff = 0;
-      }
       cached_rxb_total = data.bytesReceived;
-
-      if (data.packetsReceived > cached_rxp_total) {
-         diff = data.packetsReceived - cached_rxp_total;
-         diff = (1000 * diff) / passedTimeInMs; /* convert to pkts/s */
-         cached_rxp_diff = (uint32_t)diff;
-      } else {
-         cached_rxp_diff = 0;
-      }
       cached_rxp_total = data.packetsReceived;
-
-      if (data.bytesTransmitted > cached_txb_total) {
-         diff = data.bytesTransmitted - cached_txb_total;
-         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
-         diff /= ONE_K; /* convert to KiB/s */
-         cached_txb_diff = (uint32_t)diff;
-      } else {
-         cached_txb_diff = 0;
-      }
       cached_txb_total = data.bytesTransmitted;
-
-      if (data.packetsTransmitted > cached_txp_total) {
-         diff = data.packetsTransmitted - cached_txp_total;
-         diff = (1000 * diff) / passedTimeInMs; /* convert to pkts/s */
-         cached_txp_diff = (uint32_t)diff;
-      } else {
-         cached_txp_diff = 0;
-      }
       cached_txp_total = data.packetsTransmitted;
    }
 
+   this->values[0] = cached_rxb_diff;
+   this->values[1] = cached_txb_diff;
+   if (cached_rxb_diff + cached_txb_diff > this->total) {
+      this->total = cached_rxb_diff + cached_txb_diff;
+   }
+
+   if (status == RATESTATUS_NODATA) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
+      return;
+   }
    if (status == RATESTATUS_INIT) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "init");
       return;
@@ -110,12 +123,6 @@ static void NetworkIOMeter_updateValues(Meter* this) {
    if (status == RATESTATUS_STALE) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "stale");
       return;
-   }
-
-   this->values[0] = cached_rxb_diff;
-   this->values[1] = cached_txb_diff;
-   if (cached_rxb_diff + cached_txb_diff > this->total) {
-      this->total = cached_rxb_diff + cached_txb_diff;
    }
 
    char bufferBytesReceived[12], bufferBytesTransmitted[12];
