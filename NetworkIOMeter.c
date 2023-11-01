@@ -27,10 +27,10 @@ static const int NetworkIOMeter_attributes[] = {
 };
 
 static MeterRateStatus status = RATESTATUS_INIT;
-static uint32_t cached_rxb_diff;
+static double cached_rxb_diff;
 static char cached_rxb_diff_str[6];
 static uint32_t cached_rxp_diff;
-static uint32_t cached_txb_diff;
+static double cached_txb_diff;
 static char cached_txb_diff_str[6];
 static uint32_t cached_txp_diff;
 
@@ -71,7 +71,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
             diff = data.bytesReceived - cached_rxb_total;
             diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
             diff /= ONE_K; /* convert to KiB/s */
-            cached_rxb_diff = (uint32_t)diff;
+            cached_rxb_diff = diff;
          } else {
             cached_rxb_diff = 0;
          }
@@ -89,7 +89,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
             diff = data.bytesTransmitted - cached_txb_total;
             diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
             diff /= ONE_K; /* convert to KiB/s */
-            cached_txb_diff = (uint32_t)diff;
+            cached_txb_diff = diff;
          } else {
             cached_txb_diff = 0;
          }
