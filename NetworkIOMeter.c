@@ -28,8 +28,10 @@ static const int NetworkIOMeter_attributes[] = {
 
 static MeterRateStatus status = RATESTATUS_INIT;
 static uint32_t cached_rxb_diff;
+static char cached_rxb_diff_str[6];
 static uint32_t cached_rxp_diff;
 static uint32_t cached_txb_diff;
+static char cached_txb_diff_str[6];
 static uint32_t cached_txp_diff;
 
 static void NetworkIOMeter_updateValues(Meter* this) {
@@ -73,6 +75,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
          } else {
             cached_rxb_diff = 0;
          }
+         Meter_humanUnit(cached_rxb_diff_str, cached_rxb_diff, sizeof(cached_rxb_diff_str));
 
          if (data.packetsReceived > cached_rxp_total) {
             diff = data.packetsReceived - cached_rxp_total;
@@ -90,6 +93,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
          } else {
             cached_txb_diff = 0;
          }
+         Meter_humanUnit(cached_txb_diff_str, cached_txb_diff, sizeof(cached_txb_diff_str));
 
          if (data.packetsTransmitted > cached_txp_total) {
             diff = data.packetsTransmitted - cached_txp_total;
@@ -125,11 +129,8 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       return;
    }
 
-   char bufferBytesReceived[12], bufferBytesTransmitted[12];
-   Meter_humanUnit(bufferBytesReceived, cached_rxb_diff, sizeof(bufferBytesReceived));
-   Meter_humanUnit(bufferBytesTransmitted, cached_txb_diff, sizeof(bufferBytesTransmitted));
    xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s %u/%upkts/s",
-      bufferBytesReceived, bufferBytesTransmitted, cached_rxp_diff, cached_txp_diff);
+      cached_rxb_diff_str, cached_txb_diff_str, cached_rxp_diff, cached_txp_diff);
 }
 
 static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
@@ -151,13 +152,11 @@ static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* o
    int len;
 
    RichString_writeAscii(out, CRT_colors[METER_TEXT], "rx: ");
-   Meter_humanUnit(buffer, cached_rxb_diff, sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_rxb_diff_str);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " tx: ");
-   Meter_humanUnit(buffer, cached_txb_diff, sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_txb_diff_str);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 
    len = xSnprintf(buffer, sizeof(buffer), " (%u/%u pkts/s) ", cached_rxp_diff, cached_txp_diff);
