@@ -289,6 +289,8 @@ static ssize_t readfd_internal(int fd, void* buffer, size_t count) {
       }
 
       if (res > 0) {
+         assert(res <= count);
+
          buffer = ((char*)buffer) + res;
          count -= (size_t)res;
          alreadyRead += res;
