@@ -512,10 +512,14 @@ static Htop_Reaction actionKill(State* st) {
       Panel_setHeader((Panel*)st->mainPanel, "Sending...");
       Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
       refresh();
-      MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .i = sgn->key }, NULL);
+      bool ok = MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .i = sgn->key }, NULL);
+      if (!ok) {
+         beep();
+      }
       napms(500);
    }
    Panel_delete((Object*)signalsPanel);
+
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
