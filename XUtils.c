@@ -284,6 +284,7 @@ static ssize_t readfd_internal(int fd, void* buffer, size_t count) {
             continue;
 
          close(fd);
+         *((char*)buffer) = '\0';
          return -errno;
       }
 
