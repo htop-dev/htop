@@ -606,6 +606,9 @@ static void LinuxProcessTable_readMaps(LinuxProcess* process, openat_arg_t procF
       if (' ' != *readptr++)
          continue;
 
+      if (!readptr[0] || !readptr[1] || !readptr[2] || !readptr[3])
+         continue;
+
       map_execute = (readptr[2] == 'x');
       readptr += 4;
       if (' ' != *readptr++)
