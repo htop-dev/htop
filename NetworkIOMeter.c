@@ -76,7 +76,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
       if (data.packetsReceived > cached_rxp_total) {
          diff = data.packetsReceived - cached_rxp_total;
-         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to pkts/s */
          cached_rxp_diff = (uint32_t)diff;
       } else {
          cached_rxp_diff = 0;
@@ -95,7 +95,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
       if (data.packetsTransmitted > cached_txp_total) {
          diff = data.packetsTransmitted - cached_txp_total;
-         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+         diff = (1000 * diff) / passedTimeInMs; /* convert to pkts/s */
          cached_txp_diff = (uint32_t)diff;
       } else {
          cached_txp_diff = 0;
@@ -121,7 +121,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
    char bufferBytesReceived[12], bufferBytesTransmitted[12];
    Meter_humanUnit(bufferBytesReceived, cached_rxb_diff, sizeof(bufferBytesReceived));
    Meter_humanUnit(bufferBytesTransmitted, cached_txb_diff, sizeof(bufferBytesTransmitted));
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s %d/%dpkts/s",
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s %u/%upkts/s",
       bufferBytesReceived, bufferBytesTransmitted, cached_rxp_diff, cached_txp_diff);
 }
 
