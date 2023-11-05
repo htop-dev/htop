@@ -337,6 +337,14 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    char buffer[10];
    int len;
 
+   if (totalHundredths == 0) {
+      int shadowColor = coloring ? CRT_colors[PROCESS_SHADOW] : CRT_colors[PROCESS];
+
+      len = xSnprintf(buffer, sizeof(buffer), " 0:00.00 ");
+      RichString_appendnAscii(str, shadowColor, buffer, len);
+      return;
+   }
+
    int yearColor = coloring ? CRT_colors[LARGE_NUMBER]      : CRT_colors[PROCESS];
    int dayColor  = coloring ? CRT_colors[PROCESS_GIGABYTES] : CRT_colors[PROCESS];
    int hourColor = coloring ? CRT_colors[PROCESS_MEGABYTES] : CRT_colors[PROCESS];
