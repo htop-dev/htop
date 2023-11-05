@@ -79,10 +79,18 @@ static void update_machine_gpu(LinuxProcessTable* lpt, unsigned long long int ti
  * https://www.kernel.org/doc/html/latest/gpu/drm-usage-stats.html
  */
 void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t procFd) {
+   const Machine* host = lp->super.super.host;
    int fdinfoFd = -1;
    DIR* fdinfoDir = NULL;
    ClientInfo* parsed_ids = NULL;
    unsigned long long int new_gpu_time = 0;
+
+   /* check only if active in last check or last scan was more than 5s ago */
+   if (lp->gpu_activityMs != 0 && host->monotonicMs - lp->gpu_activityMs < 5000) {
+      lp->gpu_percent = 0.0f;
+      return;
+   }
+   lp->gpu_activityMs = host->monotonicMs;
 
    fdinfoFd = Compat_openat(procFd, "fdinfo", O_RDONLY | O_NOFOLLOW | O_DIRECTORY | O_CLOEXEC);
    if (fdinfoFd == -1)
@@ -108,11 +116,7 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
          break;
       const char* ename = entry->d_name;
 
-      if (String_eq(ename, ".") ||
-          String_eq(ename, "..") ||
-          String_eq(ename, "0") ||
-          String_eq(ename, "1") ||
-          String_eq(ename, "2"))
+      if (ename[0] == '.' && (ename[1] == '\0' || (ename[1] == '.' && ename[2] == '\0')))
          continue;
 
       char buffer[4096];
@@ -211,7 +215,6 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
    } /* finished parsing fdinfo entries */
 
    if (new_gpu_time > 0) {
-      const Machine* host = lp->super.super.host;
       unsigned long long int gputimeDelta;
       uint64_t monotonicTimeDelta;
 
@@ -220,6 +223,8 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
       gputimeDelta = saturatingSub(new_gpu_time, lp->gpu_time);
       monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
       lp->gpu_percent = 100.0f * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
+
+      lp->gpu_activityMs = 0;
    } else
       lp->gpu_percent = 0.0f;
 
