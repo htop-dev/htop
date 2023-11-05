@@ -111,6 +111,8 @@ typedef struct LinuxProcess_ {
    unsigned long long int gpu_time;
    /* GPU utilization in percent */
    float gpu_percent;
+   /* Activity of GPU: 0 if active, otherwise time of last scan in milliseconds */
+   uint64_t gpu_activityMs;
 
    /* Autogroup scheduling (CFS) information */
    long int autogroup_id;
