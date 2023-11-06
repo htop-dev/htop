@@ -226,8 +226,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    int offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
-      if (isPositive(value)) {
-         assert(this->total > 0.0);
+      if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
          blockSizes[i] = ceil((value / this->total) * w);
       } else {
@@ -348,10 +347,9 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    size_t i = nValues - (size_t)w * 2;
    for (int col = 0; i < nValues - 1; i += 2, col++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
-      if (this->total < 1)
-         this->total = 1;
-      int v1 = CLAMP((int) lround(data->values[i] / this->total * pix), 1, pix);
-      int v2 = CLAMP((int) lround(data->values[i + 1] / this->total * pix), 1, pix);
+      double total = MAXIMUM(this->total, 1);
+      int v1 = CLAMP((int) lround(data->values[i] / total * pix), 1, pix);
+      int v2 = CLAMP((int) lround(data->values[i + 1] / total * pix), 1, pix);
 
       int colorIdx = GRAPH_1;
       for (int line = 0; line < GRAPH_HEIGHT; line++) {
