@@ -351,7 +351,7 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
          len = xSnprintf(buffer, sizeof(buffer), "%1dd ", daysLeft);
          RichString_appendnAscii(str, dayColor, buffer, len);
       }
-   } else if (days >= 100) {
+   } else if (days >= 1) {
       int hoursLeft = hours - days * 24;
 
       if (hoursLeft >= 10) {
@@ -364,20 +364,6 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
          RichString_appendnAscii(str, dayColor, buffer, len);
          len = xSnprintf(buffer, sizeof(buffer), "%1dh ", hoursLeft);
          RichString_appendnAscii(str, hourColor, buffer, len);
-      }
-   } else if (hours >= 100) {
-      int minutesLeft = totalSeconds / 60 - hours * 60;
-
-      if (minutesLeft >= 10) {
-         len = xSnprintf(buffer, sizeof(buffer), "%4lluh", hours);
-         RichString_appendnAscii(str, hourColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%2dm ", minutesLeft);
-         RichString_appendnAscii(str, baseColor, buffer, len);
-      } else {
-         len = xSnprintf(buffer, sizeof(buffer), "%5lluh", hours);
-         RichString_appendnAscii(str, hourColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%1dm ", minutesLeft);
-         RichString_appendnAscii(str, baseColor, buffer, len);
       }
    } else if (hours > 0) {
       len = xSnprintf(buffer, sizeof(buffer), "%2lluh", hours);
