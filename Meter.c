@@ -60,7 +60,7 @@ int Meter_humanUnit(char* buffer, double value, size_t size) {
    while (value >= ONE_K) {
       if (i >= ARRAYSIZE(unitPrefixes) - 1) {
          if (value > 9999.0) {
-            return snprintf(buffer, size, "inf");
+            return xSnprintf(buffer, size, "inf");
          }
          break;
       }
@@ -84,7 +84,7 @@ int Meter_humanUnit(char* buffer, double value, size_t size) {
       }
    }
 
-   return snprintf(buffer, size, "%.*f%c", precision, value, unitPrefixes[i]);
+   return xSnprintf(buffer, size, "%.*f%c", precision, value, unitPrefixes[i]);
 }
 
 void Meter_delete(Object* cast) {
