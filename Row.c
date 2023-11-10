@@ -314,79 +314,62 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    char buffer[10];
    int len;
 
-   unsigned long long totalSeconds = totalHundredths / 100;
-   unsigned long long hours = totalSeconds / 3600;
-   unsigned long long days = totalSeconds / 86400;
-   int minutes = (totalSeconds / 60) % 60;
-   int seconds = totalSeconds % 60;
-   int hundredths = totalHundredths - (totalSeconds * 100);
-
    int yearColor = coloring ? CRT_colors[LARGE_NUMBER]      : CRT_colors[PROCESS];
    int dayColor  = coloring ? CRT_colors[PROCESS_GIGABYTES] : CRT_colors[PROCESS];
    int hourColor = coloring ? CRT_colors[PROCESS_MEGABYTES] : CRT_colors[PROCESS];
-   int baseColor  = CRT_colors[PROCESS];
+   int baseColor = CRT_colors[PROCESS];
 
-   if (days >= /* Ignore leap years */365) {
-      int years = days / 365;
-      int daysLeft = days - 365 * years;
+   unsigned long long totalSeconds = totalHundredths / 100;
+   unsigned long long totalMinutes = totalSeconds / 60;
+   unsigned long long totalHours = totalMinutes / 60;
+   unsigned int seconds = totalSeconds % 60;
+   unsigned int minutes = totalMinutes % 60;
 
-      if (years >= 10000000) {
-         RichString_appendnAscii(str, yearColor, "eternity ", 9);
-      } else if (years >= 1000) {
-         len = xSnprintf(buffer, sizeof(buffer), "%7dy ", years);
-         RichString_appendnAscii(str, yearColor, buffer, len);
-      } else if (daysLeft >= 100) {
-         len = xSnprintf(buffer, sizeof(buffer), "%3dy", years);
-         RichString_appendnAscii(str, yearColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%3dd ", daysLeft);
-         RichString_appendnAscii(str, dayColor, buffer, len);
-      } else if (daysLeft >= 10) {
-         len = xSnprintf(buffer, sizeof(buffer), "%4dy", years);
-         RichString_appendnAscii(str, yearColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%2dd ", daysLeft);
-         RichString_appendnAscii(str, dayColor, buffer, len);
-      } else {
-         len = xSnprintf(buffer, sizeof(buffer), "%5dy", years);
-         RichString_appendnAscii(str, yearColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%1dd ", daysLeft);
-         RichString_appendnAscii(str, dayColor, buffer, len);
-      }
-   } else if (days >= 100) {
-      int hoursLeft = hours - days * 24;
-
-      if (hoursLeft >= 10) {
-         len = xSnprintf(buffer, sizeof(buffer), "%4llud", days);
-         RichString_appendnAscii(str, dayColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%2dh ", hoursLeft);
-         RichString_appendnAscii(str, hourColor, buffer, len);
-      } else {
-         len = xSnprintf(buffer, sizeof(buffer), "%5llud", days);
-         RichString_appendnAscii(str, dayColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%1dh ", hoursLeft);
-         RichString_appendnAscii(str, hourColor, buffer, len);
-      }
-   } else if (hours >= 100) {
-      int minutesLeft = totalSeconds / 60 - hours * 60;
-
-      if (minutesLeft >= 10) {
-         len = xSnprintf(buffer, sizeof(buffer), "%4lluh", hours);
-         RichString_appendnAscii(str, hourColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%2dm ", minutesLeft);
-         RichString_appendnAscii(str, baseColor, buffer, len);
-      } else {
-         len = xSnprintf(buffer, sizeof(buffer), "%5lluh", hours);
-         RichString_appendnAscii(str, hourColor, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), "%1dm ", minutesLeft);
-         RichString_appendnAscii(str, baseColor, buffer, len);
-      }
-   } else if (hours > 0) {
-      len = xSnprintf(buffer, sizeof(buffer), "%2lluh", hours);
+   if (totalMinutes < 60) {
+      unsigned int hundredths = totalHundredths % 100;
+      len = xSnprintf(buffer, sizeof(buffer), "%2llu:%02u.%02u ", totalMinutes, seconds, hundredths);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+   if (totalHours < 24) {
+      len = xSnprintf(buffer, sizeof(buffer), "%2lluh", totalHours);
       RichString_appendnAscii(str, hourColor, buffer, len);
-      len = xSnprintf(buffer, sizeof(buffer), "%02d:%02d ", minutes, seconds);
+      len = xSnprintf(buffer, sizeof(buffer), "%02u:%02u ", minutes, seconds);
       RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+
+   unsigned long long totalDays = totalHours / 24;
+   unsigned int hours = totalHours % 24;
+   if (totalDays < 10) {
+      len = xSnprintf(buffer, sizeof(buffer), "%1llud", totalDays);
+      RichString_appendnAscii(str, dayColor, buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%02uh", hours);
+      RichString_appendnAscii(str, hourColor, buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%02um ", minutes);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+   if (totalDays < /* Ignore leap years */365) {
+      len = xSnprintf(buffer, sizeof(buffer), "%4llud", totalDays);
+      RichString_appendnAscii(str, dayColor, buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%02uh ", hours);
+      RichString_appendnAscii(str, hourColor, buffer, len);
+      return;
+   }
+
+   unsigned long long years = totalDays / 365;
+   unsigned int days = totalDays % 365;
+   if (years < 1000) {
+      len = xSnprintf(buffer, sizeof(buffer), "%3lluy", years);
+      RichString_appendnAscii(str, yearColor, buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%03ud ", days);
+      RichString_appendnAscii(str, dayColor, buffer, len);
+   } else if (years < 10000000) {
+      len = xSnprintf(buffer, sizeof(buffer), "%7lluy ", years);
+      RichString_appendnAscii(str, yearColor, buffer, len);
    } else {
-      len = xSnprintf(buffer, sizeof(buffer), "%2d:%02d.%02d ", minutes, seconds, hundredths);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, yearColor, "eternity ", 9);
    }
 }
 
