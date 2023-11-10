@@ -27,8 +27,8 @@ static const int DiskIOMeter_attributes[] = {
 };
 
 static MeterRateStatus status = RATESTATUS_INIT;
-static uint32_t cached_read_diff;
-static uint32_t cached_write_diff;
+static char cached_read_diff_str[6];
+static char cached_write_diff_str[6];
 static double cached_utilisation_diff;
 
 static void DiskIOMeter_updateValues(Meter* this) {
@@ -67,19 +67,19 @@ static void DiskIOMeter_updateValues(Meter* this) {
             diff = data.totalBytesRead - cached_read_total;
             diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
             diff /= ONE_K; /* convert to KiB/s */
-            cached_read_diff = (uint32_t)diff;
          } else {
-            cached_read_diff = 0;
+            diff = 0;
          }
+         Meter_humanUnit(cached_read_diff_str, diff, sizeof(cached_read_diff_str));
 
          if (data.totalBytesWritten > cached_write_total) {
             diff = data.totalBytesWritten - cached_write_total;
             diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
             diff /= ONE_K; /* convert to KiB/s */
-            cached_write_diff = (uint32_t)diff;
          } else {
-            cached_write_diff = 0;
+            diff = 0;
          }
+         Meter_humanUnit(cached_write_diff_str, diff, sizeof(cached_write_diff_str));
 
          if (data.totalMsTimeSpend > cached_msTimeSpend_total) {
             diff = data.totalMsTimeSpend - cached_msTimeSpend_total;
@@ -110,10 +110,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
       return;
    }
 
-   char bufferRead[12], bufferWrite[12];
-   Meter_humanUnit(bufferRead, cached_read_diff, sizeof(bufferRead));
-   Meter_humanUnit(bufferWrite, cached_write_diff, sizeof(bufferWrite));
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%siB/s w:%siB/s %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%siB/s w:%siB/s %.1f%%", cached_read_diff_str, cached_write_diff_str, cached_utilisation_diff);
 }
 
 static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
@@ -139,13 +136,11 @@ static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out)
    RichString_appendnAscii(out, CRT_colors[color], buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " read: ");
-   Meter_humanUnit(buffer, cached_read_diff, sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_read_diff_str);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " write: ");
-   Meter_humanUnit(buffer, cached_write_diff, sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], buffer);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_write_diff_str);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 }
 
