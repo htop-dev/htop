@@ -106,7 +106,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
    char bufferRead[12], bufferWrite[12];
    Meter_humanUnit(bufferRead, cached_read_diff, sizeof(bufferRead));
    Meter_humanUnit(bufferWrite, cached_write_diff, sizeof(bufferWrite));
-   snprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%siB/s w:%siB/s %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%siB/s w:%siB/s %.1f%%", bufferRead, bufferWrite, cached_utilisation_diff);
 }
 
 static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
