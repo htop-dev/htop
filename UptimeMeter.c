@@ -29,7 +29,7 @@ static void UptimeMeter_updateValues(Meter* this) {
    int minutes = (totalseconds / 60) % 60;
    int hours = (totalseconds / 3600) % 24;
    int days = (totalseconds / 86400);
-   this->values[0] = days;
+   this->values[0] = (double)totalseconds / 86400.0;
    if (days > this->total) {
       this->total = days;
    }
