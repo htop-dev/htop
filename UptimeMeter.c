@@ -30,9 +30,7 @@ static void UptimeMeter_updateValues(Meter* this) {
    int hours = (totalseconds / 3600) % 24;
    int days = (totalseconds / 86400);
    this->values[0] = (double)totalseconds / 86400.0;
-   if (days > this->total) {
-      this->total = days;
-   }
+
    char daysbuf[32];
    if (days > 100) {
       xSnprintf(daysbuf, sizeof(daysbuf), "%d days(!), ", days);
