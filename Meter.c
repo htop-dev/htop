@@ -318,8 +318,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
       timeradd(&host->realtime, &delay, &(data->time));
 
-      for (size_t i = 0; i < nValues - 1; i++)
-         data->values[i] = data->values[i + 1];
+      memmove(&data->values[0], &data->values[1], (nValues - 1) * sizeof(*data->values));
 
       data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
    }
