@@ -197,6 +197,9 @@ static const char* Platform_metricNames[] = {
    [PCP_ZRAM_CAPACITY] = "zram.capacity",
    [PCP_ZRAM_ORIGINAL] = "zram.mm_stat.data_size.original",
    [PCP_ZRAM_COMPRESSED] = "zram.mm_stat.data_size.compressed",
+   [PCP_ZSWAP_MAX_POOL_PERCENT] = "sysfs.module.zswap.max_pool_percent",
+   [PCP_MEM_ZSWAP] = "mem.util.zswap",
+   [PCP_MEM_ZSWAPPED] = "mem.util.zswapped",
    [PCP_VFS_FILES_COUNT] = "vfs.files.count",
    [PCP_VFS_FILES_MAX] = "vfs.files.max",
 
@@ -549,9 +552,9 @@ void Platform_setMemoryValues(Meter* this) {
 
    this->total = host->totalMem;
    this->values[MEMORY_METER_USED] = host->usedMem;
-   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
    this->values[MEMORY_METER_SHARED] = host->sharedMem;
-   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+   this->values[MEMORY_METER_COMPRESSED] = 0;
+   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
    this->values[MEMORY_METER_CACHE] = host->cachedMem;
    this->values[MEMORY_METER_AVAILABLE] = host->availableMem;
 
@@ -564,14 +567,32 @@ void Platform_setMemoryValues(Meter* this) {
       this->values[MEMORY_METER_CACHE] += shrinkableSize;
       this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
    }
+
+   if (phost->zswap.usedZswapOrig > 0 || phost->zswap.usedZswapComp > 0) {
+      this->values[MEMORY_METER_USED] -= phost->zswap.usedZswapComp;
+      this->values[MEMORY_METER_COMPRESSED] += phost->zswap.usedZswapComp;
+   }
 }
 
 void Platform_setSwapValues(Meter* this) {
    const Machine* host = this->host;
+   const PCPMachine* phost = (const PCPMachine*) host;
+
    this->total = host->totalSwap;
    this->values[SWAP_METER_USED] = host->usedSwap;
    this->values[SWAP_METER_CACHE] = host->cachedSwap;
-   // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
+   this->values[SWAP_METER_FRONTSWAP] = 0; /* frontswap -- memory that is accounted to swap but resides elsewhere */
+
+   if (phost->zswap.usedZswapOrig > 0 || phost->zswap.usedZswapComp > 0) {
+      /* refer to linux/Platform.c::Platform_setSwapValues for details */
+      this->values[SWAP_METER_USED] -= phost->zswap.usedZswapOrig;
+      if (this->values[SWAP_METER_USED] < 0) {
+         /* subtract the overflow from SwapCached */
+         this->values[SWAP_METER_CACHE] += this->values[SWAP_METER_USED];
+         this->values[SWAP_METER_USED] = 0;
+      }
+      this->values[SWAP_METER_FRONTSWAP] += phost->zswap.usedZswapOrig;
+   }
 }
 
 void Platform_setZramValues(Meter* this) {

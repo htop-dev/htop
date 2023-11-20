@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 
 #include "pcp/Platform.h"
+#include "linux/ZswapStats.h"
 #include "zfs/ZfsArcStats.h"
 
 
@@ -59,10 +60,14 @@ typedef struct PCPMachine_ {
    int smaps_flag;
    double period;
    double timestamp;     /* previous sample timestamp */
+
    pmAtomValue* cpu;     /* aggregate values for each metric */
    pmAtomValue** percpu; /* per-processor values for each metric */
    pmAtomValue* values;  /* per-processor buffer for just one metric */
+
    ZfsArcStats zfs;
+   /*ZramStats zram; -- not needed, calculated in-line in Platform.c */
+   ZswapStats zswap;
 } PCPMachine;
 
 #endif
