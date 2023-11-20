@@ -10,8 +10,6 @@ in the source distribution for its full text.
 #include "ProcessTable.h"
 
 typedef struct ZswapStats_ {
-   /* maximum size of the zswap pool */
-   memory_t totalZswapPool;
    /* amount of RAM used by the zswap pool */
    memory_t usedZswapComp;
    /* amount of data stored inside the zswap pool */

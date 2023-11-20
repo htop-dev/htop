@@ -272,25 +272,6 @@ static void LinuxMachine_scanHugePages(LinuxMachine* this) {
    closedir(dir);
 }
 
-static inline void LinuxMachine_scanZswapInfo(LinuxMachine* this) {
-   const Machine* host = &this->super;
-   long max_pool_percent = 0;
-   char buf[256];
-   int r;
-
-   r = xReadfile("/sys/module/zswap/parameters/max_pool_percent", buf, 256);
-   if (r <= 0) {
-      return;
-   }
-   max_pool_percent = strtol(buf, NULL, 10);
-   if (max_pool_percent < 0 || max_pool_percent > 100) {
-      return;
-   }
-
-   this->zswap.totalZswapPool = host->totalMem * max_pool_percent / 100;
-   /* the rest of the metrics are set in LinuxMachine_scanMemoryInfo() */
-}
-
 static void LinuxMachine_scanZramInfo(LinuxMachine* this) {
    memory_t totalZram = 0;
    memory_t usedZramComp = 0;
@@ -641,7 +622,6 @@ void Machine_scan(Machine* super) {
    LinuxMachine_scanHugePages(this);
    LinuxMachine_scanZfsArcstats(this);
    LinuxMachine_scanZramInfo(this);
-   LinuxMachine_scanZswapInfo(this);
    LinuxMachine_scanCPUTime(this);
 
    const Settings* settings = super->settings;

@@ -179,12 +179,9 @@ static void PCPMachine_updatePerCPUReal(PCPMachine* this, Metric metric, CPUMetr
 }
 
 static inline void PCPMachine_scanZswapInfo(PCPMachine* this) {
-   const Machine* host = &this->super;
    pmAtomValue value;
 
    memset(&this->zswap, 0, sizeof(ZswapStats));
-   if (Metric_values(PCP_ZSWAP_MAX_POOL_PERCENT, &value, 1, PM_TYPE_U64))
-      this->zswap.totalZswapPool = host->totalMem * value.ull / 100;
    if (Metric_values(PCP_MEM_ZSWAP, &value, 1, PM_TYPE_U64))
       this->zswap.usedZswapComp = value.ull;
    if (Metric_values(PCP_MEM_ZSWAPPED, &value, 1, PM_TYPE_U64))

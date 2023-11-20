@@ -93,7 +93,6 @@ typedef enum Metric_ {
    PCP_ZRAM_CAPACITY,           /* zram.capacity */
    PCP_ZRAM_ORIGINAL,           /* zram.mm_stat.data_size.original */
    PCP_ZRAM_COMPRESSED,         /* zram.mm_stat.data_size.compressed */
-   PCP_ZSWAP_MAX_POOL_PERCENT,  /* sysfs.module.zswap.max_pool_percent */
    PCP_MEM_ZSWAP,               /* mem.util.zswap */
    PCP_MEM_ZSWAPPED,            /* mem.util.zswapped */
    PCP_VFS_FILES_COUNT,         /* vfs.files.count */
