@@ -36,6 +36,7 @@ static const char* str_nspawn_payload_label = "/payload";
 
 static const char* str_snap_scope_prefix = "snap.";
 static const char* str_pod_scope_prefix = "libpod-";
+static const char* str_docker_scope_prefix = "docker-";
 
 static const char* str_service_suffix = ".service";
 static const char* str_scope_suffix = ".scope";
@@ -317,6 +318,23 @@ static bool CGroup_filterName_internal(const char* cgroup, StrBuf_state* s, StrB
             cgroup = nextSlash;
 
             continue;
+         } else if (Label_checkPrefix(labelStart, scopeNameLen, str_docker_scope_prefix)) {
+            const char* nextDot = String_strchrnul(labelStart + strlen(str_docker_scope_prefix), '.');
+
+            if (!StrBuf_putsz(s, w, "!docker:"))
+               return false;
+
+            if (nextDot >= labelStart + scopeNameLen) {
+               nextDot = labelStart + scopeNameLen;
+            }
+
+            if (!StrBuf_putsn(s, w, labelStart + strlen(str_docker_scope_prefix),
+               MINIMUM( nextDot - (labelStart + strlen(str_docker_scope_prefix)), 12)))
+               return false;
+
+            cgroup = nextSlash;
+
+            continue;
          }
 
          if (!w(s, '!'))
@@ -450,6 +468,23 @@ static bool CGroup_filterContainer_internal(const char* cgroup, StrBuf_state* s,
 
             if (!StrBuf_putsn(s, w, labelStart + strlen(str_pod_scope_prefix),
                MINIMUM( nextDot - (labelStart + strlen(str_pod_scope_prefix)), 12)))
+               return false;
+
+            cgroup = nextSlash;
+
+            continue;
+         } else if (Label_checkPrefix(labelStart, scopeNameLen, str_docker_scope_prefix)) {
+            const char* nextDot = String_strchrnul(labelStart + strlen(str_docker_scope_prefix), '.');
+
+            if (!StrBuf_putsz(s, w, "!docker:"))
+               return false;
+
+            if (nextDot >= labelStart + scopeNameLen) {
+               nextDot = labelStart + scopeNameLen;
+            }
+
+            if (!StrBuf_putsn(s, w, labelStart + strlen(str_docker_scope_prefix),
+               MINIMUM( nextDot - (labelStart + strlen(str_docker_scope_prefix)), 12)))
                return false;
 
             cgroup = nextSlash;
