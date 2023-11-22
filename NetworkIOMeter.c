@@ -70,12 +70,11 @@ static void NetworkIOMeter_updateValues(Meter* this) {
          if (data.bytesReceived > cached_rxb_total) {
             diff = data.bytesReceived - cached_rxb_total;
             diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
-            diff /= ONE_K; /* convert to KiB/s */
             cached_rxb_diff = diff;
          } else {
             cached_rxb_diff = 0;
          }
-         Meter_humanUnit(cached_rxb_diff_str, cached_rxb_diff, sizeof(cached_rxb_diff_str));
+         Meter_humanUnit(cached_rxb_diff_str, cached_rxb_diff / ONE_K, sizeof(cached_rxb_diff_str));
 
          if (data.packetsReceived > cached_rxp_total) {
             diff = data.packetsReceived - cached_rxp_total;
@@ -88,12 +87,11 @@ static void NetworkIOMeter_updateValues(Meter* this) {
          if (data.bytesTransmitted > cached_txb_total) {
             diff = data.bytesTransmitted - cached_txb_total;
             diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
-            diff /= ONE_K; /* convert to KiB/s */
             cached_txb_diff = diff;
          } else {
             cached_txb_diff = 0;
          }
-         Meter_humanUnit(cached_txb_diff_str, cached_txb_diff, sizeof(cached_txb_diff_str));
+         Meter_humanUnit(cached_txb_diff_str, cached_txb_diff / ONE_K, sizeof(cached_txb_diff_str));
 
          if (data.packetsTransmitted > cached_txp_total) {
             diff = data.packetsTransmitted - cached_txp_total;
