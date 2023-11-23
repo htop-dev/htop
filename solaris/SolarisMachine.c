@@ -300,7 +300,7 @@ void Machine_scan(Machine* super) {
 
 Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    SolarisMachine* this = xCalloc(1, sizeof(SolarisMachine));
-   Machine *super = &this->super;
+   Machine* super = &this->super;
 
    Machine_init(super, usersTable, userId);
 

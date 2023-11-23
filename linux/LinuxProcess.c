@@ -319,8 +319,8 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
       if (lp->autogroup_id != -1) {
          xSnprintf(buffer, n, "%3d ", lp->autogroup_nice);
          attr = lp->autogroup_nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
-              : lp->autogroup_nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
-              : CRT_colors[PROCESS_SHADOW];
+            : lp->autogroup_nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
+            : CRT_colors[PROCESS_SHADOW];
       } else {
          attr = CRT_colors[PROCESS_SHADOW];
          xSnprintf(buffer, n, "N/A ");

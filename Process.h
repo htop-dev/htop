@@ -253,11 +253,11 @@ static inline pid_t Process_getThreadGroup(const Process* this) {
 }
 
 static inline void Process_setParent(Process* this, pid_t pid) {
-    this->super.parent = pid;
+   this->super.parent = pid;
 }
 
 static inline pid_t Process_getParent(const Process* this) {
-    return (pid_t)this->super.parent;
+   return (pid_t)this->super.parent;
 }
 
 static inline pid_t Process_getGroupOrParent(const Process* this) {

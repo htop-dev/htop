@@ -46,7 +46,6 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_ENTER:
       case KEY_MOUSE:
       case KEY_RECLICK:
-      {
          if (selected < size - 1) {
             this->moving = !(this->moving);
             Panel_setSelectionColor(super, this->moving ? PANEL_SELECTION_FOLLOW : PANEL_SELECTION_FOCUS);
@@ -56,59 +55,45 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
             result = HANDLED;
          }
          break;
-      }
       case KEY_UP:
-      {
-         if (!this->moving) {
+         if (!this->moving)
             break;
-         }
-      }
          /* else fallthrough */
       case KEY_F(7):
       case '[':
       case '-':
-      {
          if (selected < size - 1)
             Panel_moveSelectedUp(super);
          result = HANDLED;
          break;
-      }
       case KEY_DOWN:
-      {
-         if (!this->moving) {
+         if (!this->moving)
             break;
-         }
-      }
          /* else fallthrough */
       case KEY_F(8):
       case ']':
       case '+':
-      {
          if (selected < size - 2)
             Panel_moveSelectedDown(super);
          result = HANDLED;
          break;
-      }
       case KEY_F(9):
       case KEY_DC:
-      {
-         if (selected < size - 1) {
+         if (selected < size - 1)
             Panel_remove(super, selected);
-         }
          result = HANDLED;
          break;
-      }
       default:
-      {
          if (0 < ch && ch < 255 && isgraph((unsigned char)ch))
             result = Panel_selectByTyping(super, ch);
          if (result == BREAK_LOOP)
             result = IGNORED;
          break;
-      }
    }
+
    if (result == HANDLED)
       ColumnsPanel_update(super);
+
    return result;
 }
 

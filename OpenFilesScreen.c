@@ -44,22 +44,22 @@ typedef struct OpenFiles_FileData_ {
 
 static size_t getIndexForType(char type) {
    switch (type) {
-   case 'f':
-      return 0;
-   case 'a':
-      return 1;
-   case 'D':
-      return 2;
-   case 'i':
-      return 3;
-   case 'n':
-      return 4;
-   case 's':
-      return 5;
-   case 't':
-      return 6;
-   case 'o':
-      return 7;
+      case 'f':
+         return 0;
+      case 'a':
+         return 1;
+      case 'D':
+         return 2;
+      case 'i':
+         return 3;
+      case 'n':
+         return 4;
+      case 's':
+         return 5;
+      case 't':
+         return 6;
+      case 'o':
+         return 7;
    }
 
    /* should never reach here */
@@ -122,7 +122,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       xSnprintf(buffer, sizeof(buffer), "%d", pid);
       // Use of NULL in variadic functions must have a pointer cast.
       // The NULL constant is not required by standard to have a pointer type.
-      execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", (char *)NULL);
+      execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", (char*)NULL);
       exit(127);
    }
    close(fdpair[1]);
@@ -144,52 +144,52 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
 
       unsigned char cmd = line[0];
       switch (cmd) {
-      case 'f':  /* file descriptor */
-      {
-         OpenFiles_FileData* nextFile = xCalloc(1, sizeof(OpenFiles_FileData));
-         if (fdata == NULL) {
-            pdata->files = nextFile;
-         } else {
-            fdata->next = nextFile;
-         }
-         fdata = nextFile;
-         item = &(fdata->data);
-      } /* FALLTHRU */
-      case 'a':  /* file access mode */
-      case 'D':  /* file's major/minor device number */
-      case 'i':  /* file's inode number */
-      case 'n':  /* file name, comment, Internet address */
-      case 's':  /* file's size */
-      case 't':  /* file's type */
-      {
-         size_t index = getIndexForType(cmd);
-         free_and_xStrdup(&item->data[index], line + 1);
-         break;
-      }
-      case 'o':  /* file's offset */
-      {
-         size_t index = getIndexForType(cmd);
-         if (String_startsWith(line + 1, "0t")) {
-            free_and_xStrdup(&item->data[index], line + 3);
-         } else {
+         case 'f':  /* file descriptor */
+         {
+            OpenFiles_FileData* nextFile = xCalloc(1, sizeof(OpenFiles_FileData));
+            if (fdata == NULL) {
+               pdata->files = nextFile;
+            } else {
+               fdata->next = nextFile;
+            }
+            fdata = nextFile;
+            item = &(fdata->data);
+         } /* FALLTHRU */
+         case 'a':  /* file access mode */
+         case 'D':  /* file's major/minor device number */
+         case 'i':  /* file's inode number */
+         case 'n':  /* file name, comment, Internet address */
+         case 's':  /* file's size */
+         case 't':  /* file's type */
+         {
+            size_t index = getIndexForType(cmd);
             free_and_xStrdup(&item->data[index], line + 1);
+            break;
          }
-         break;
-      }
-      case 'c':  /* process command name  */
-      case 'd':  /* file's device character code */
-      case 'g':  /* process group ID */
-      case 'G':  /* file flags */
-      case 'k':  /* link count */
-      case 'l':  /* file's lock status */
-      case 'L':  /* process login name */
-      case 'p':  /* process ID */
-      case 'P':  /* protocol name */
-      case 'R':  /* parent process ID */
-      case 'T':  /* TCP/TPI information, identified by prefixes */
-      case 'u':  /* process user ID */
-         /* ignore */
-         break;
+         case 'o':  /* file's offset */
+         {
+            size_t index = getIndexForType(cmd);
+            if (String_startsWith(line + 1, "0t")) {
+               free_and_xStrdup(&item->data[index], line + 3);
+            } else {
+               free_and_xStrdup(&item->data[index], line + 1);
+            }
+            break;
+         }
+         case 'c':  /* process command name  */
+         case 'd':  /* file's device character code */
+         case 'g':  /* process group ID */
+         case 'G':  /* file flags */
+         case 'k':  /* link count */
+         case 'l':  /* file's lock status */
+         case 'L':  /* process login name */
+         case 'p':  /* process ID */
+         case 'P':  /* protocol name */
+         case 'R':  /* parent process ID */
+         case 'T':  /* TCP/TPI information, identified by prefixes */
+         case 'u':  /* process user ID */
+            /* ignore */
+            break;
       }
 
       if (cmd == 's')

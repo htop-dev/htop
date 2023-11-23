@@ -333,7 +333,7 @@ static void PCPProcessTable_updateCmdline(Process* process, int pid, int offset,
          tokenStart = i + 1;
       /* special-case arguments for problematic situations like "find /" */
       if (command[i] <= ' ')
-	 argSepSpace = true;
+         argSepSpace = true;
    }
    tokenEnd = length;
    if (argSepSpace)
@@ -403,10 +403,10 @@ static bool PCPProcessTable_updateProcesses(PCPProcessTable* this) {
 
       PCPProcessTable_updateMemory(pp, pid, offset);
 
-      if ((flags & PROCESS_FLAG_LINUX_SMAPS) &&
-          (Process_isKernelThread(proc) == false)) {
-         if (Metric_enabled(PCP_PROC_SMAPS_PSS))
+      if ((flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
+         if (Metric_enabled(PCP_PROC_SMAPS_PSS)) {
             PCPProcessTable_updateSmaps(pp, pid, offset);
+         }
       }
 
       char command[MAX_NAME + 1];

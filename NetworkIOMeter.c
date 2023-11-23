@@ -135,21 +135,20 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
 static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    switch (status) {
-   case RATESTATUS_NODATA:
-      RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
-      return;
-   case RATESTATUS_INIT:
-      RichString_writeAscii(out, CRT_colors[METER_VALUE], "initializing...");
-      return;
-   case RATESTATUS_STALE:
-      RichString_writeAscii(out, CRT_colors[METER_VALUE_WARN], "stale data");
-      return;
-   case RATESTATUS_DATA:
-      break;
+      case RATESTATUS_NODATA:
+         RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
+         return;
+      case RATESTATUS_INIT:
+         RichString_writeAscii(out, CRT_colors[METER_VALUE], "initializing...");
+         return;
+      case RATESTATUS_STALE:
+         RichString_writeAscii(out, CRT_colors[METER_VALUE_WARN], "stale data");
+         return;
+      case RATESTATUS_DATA:
+         break;
    }
 
    char buffer[64];
-   int len;
 
    RichString_writeAscii(out, CRT_colors[METER_TEXT], "rx: ");
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_rxb_diff_str);
@@ -159,7 +158,7 @@ static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* o
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_txb_diff_str);
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 
-   len = xSnprintf(buffer, sizeof(buffer), " (%u/%u pkts/s) ", cached_rxp_diff, cached_txp_diff);
+   int len = xSnprintf(buffer, sizeof(buffer), " (%u/%u pkts/s) ", cached_rxp_diff, cached_txp_diff);
    RichString_appendnAscii(out, CRT_colors[METER_TEXT], buffer, len);
 }
 

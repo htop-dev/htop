@@ -228,30 +228,32 @@ static void NetBSDProcessTable_scanProcs(NetBSDProcessTable* this) {
       /* TODO: According to the link below, SDYING should be a regarded state */
       /* Taken from: https://ftp.netbsd.org/pub/NetBSD/NetBSD-current/src/sys/sys/proc.h */
       switch (kproc->p_realstat) {
-      case SIDL:     proc->state = IDLE; break;
-      case SACTIVE:
-         // We only consider the first LWP with a one of the below states.
-         for (int j = 0; j < nlwps; j++) {
-            if (klwps) {
-               switch (klwps[j].l_stat) {
-               case LSONPROC: proc->state = RUNNING; break;
-               case LSRUN:    proc->state = RUNNABLE; break;
-               case LSSLEEP:  proc->state = SLEEPING; break;
-               case LSSTOP:   proc->state = STOPPED; break;
-               default:       proc->state = UNKNOWN;
-               }
-               if (proc->state != UNKNOWN)
+         case SIDL:     proc->state = IDLE; break;
+         case SACTIVE:
+            // We only consider the first LWP with a one of the below states.
+            for (int j = 0; j < nlwps; j++) {
+               if (klwps) {
+                  switch (klwps[j].l_stat) {
+                     case LSONPROC: proc->state = RUNNING; break;
+                     case LSRUN:    proc->state = RUNNABLE; break;
+                     case LSSLEEP:  proc->state = SLEEPING; break;
+                     case LSSTOP:   proc->state = STOPPED; break;
+                     default:       proc->state = UNKNOWN;
+                  }
+
+                  if (proc->state != UNKNOWN) {
+                     break;
+                  }
+               } else {
+                  proc->state = UNKNOWN;
                   break;
-            } else {
-               proc->state = UNKNOWN;
-               break;
+               }
             }
-         }
-         break;
-      case SSTOP:    proc->state = STOPPED; break;
-      case SZOMB:    proc->state = ZOMBIE; break;
-      case SDEAD:    proc->state = DEFUNCT; break;
-      default:       proc->state = UNKNOWN;
+            break;
+         case SSTOP:    proc->state = STOPPED; break;
+         case SZOMB:    proc->state = ZOMBIE; break;
+         case SDEAD:    proc->state = DEFUNCT; break;
+         default:       proc->state = UNKNOWN;
       }
 
       if (Process_isKernelThread(proc)) {

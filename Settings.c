@@ -284,7 +284,7 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
    String_freeArray(ids);
 }
 
-static ScreenSettings* Settings_initScreenSettings(ScreenSettings* ss, Settings* this, const char *columns) {
+static ScreenSettings* Settings_initScreenSettings(ScreenSettings* ss, Settings* this, const char* columns) {
    ScreenSettings_readFields(ss, this->dynamicColumns, columns);
    this->screens[this->nScreens] = ss;
    this->nScreens++;
@@ -605,7 +605,7 @@ static void writeMeterModes(const Settings* this, FILE* fd, char separator, unsi
 int Settings_write(const Settings* this, bool onCrash) {
    FILE* fd;
    char separator;
-   char *tmpFilename = NULL;
+   char* tmpFilename = NULL;
    if (onCrash) {
       fd = stderr;
       separator = ';';

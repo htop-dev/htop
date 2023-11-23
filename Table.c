@@ -137,7 +137,7 @@ static void Table_buildTreeBranch(Table* this, int rowid, unsigned int level, in
 }
 
 static int compareRowByKnownParentThenNatural(const void* v1, const void* v2) {
-    return Row_compareByParent((const Row*) v1, (const Row*) v2);
+   return Row_compareByParent((const Row*) v1, (const Row*) v2);
 }
 
 // Builds a sorted tree from scratch, without relying on previously gathered information
@@ -263,7 +263,7 @@ void Table_rebuildPanel(Table* this) {
          foundFollowed = true;
          Panel_setSelected(this->panel, idx);
          /* Keep scroll position relative to followed row */
-         this->panel->scrollV = idx - (currPos-currScrollV);
+         this->panel->scrollV = idx - (currPos - currScrollV);
       }
       idx++;
    }

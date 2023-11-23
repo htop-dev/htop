@@ -47,7 +47,7 @@ void Process_fillStarttimeBuffer(Process* this) {
 
    strftime(this->starttime_show,
             sizeof(this->starttime_show) - 1,
-            (this->starttime_ctime > now - 86400) ? "%R " : (this->starttime_ctime > now - 364*86400) ? "%b%d " : " %Y ",
+            (this->starttime_ctime > now - 86400) ? "%R " : (this->starttime_ctime > now - 364 * 86400) ? "%b%d " : " %Y ",
             &date);
 }
 
@@ -650,8 +650,8 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    case NICE:
       xSnprintf(buffer, n, "%3ld ", this->nice);
       attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
-           : this->nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
-           : CRT_colors[PROCESS_SHADOW];
+         : this->nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
+         : CRT_colors[PROCESS_SHADOW];
       break;
    case NLWP:
       if (this->nlwp == 1)
@@ -690,30 +690,30 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    case STATE:
       xSnprintf(buffer, n, "%c ", processStateChar(this->state));
       switch (this->state) {
-         case RUNNABLE:
-         case RUNNING:
-         case TRACED:
-            attr = CRT_colors[PROCESS_RUN_STATE];
-            break;
+      case RUNNABLE:
+      case RUNNING:
+      case TRACED:
+         attr = CRT_colors[PROCESS_RUN_STATE];
+         break;
 
-         case BLOCKED:
-         case DEFUNCT:
-         case STOPPED:
-         case UNINTERRUPTIBLE_WAIT:
-         case ZOMBIE:
-            attr = CRT_colors[PROCESS_D_STATE];
-            break;
+      case BLOCKED:
+      case DEFUNCT:
+      case STOPPED:
+      case UNINTERRUPTIBLE_WAIT:
+      case ZOMBIE:
+         attr = CRT_colors[PROCESS_D_STATE];
+         break;
 
-         case QUEUED:
-         case WAITING:
-         case IDLE:
-         case SLEEPING:
-            attr = CRT_colors[PROCESS_SHADOW];
-            break;
+      case QUEUED:
+      case WAITING:
+      case IDLE:
+      case SLEEPING:
+         attr = CRT_colors[PROCESS_SHADOW];
+         break;
 
-         case UNKNOWN:
-         case PAGING:
-            break;
+      case UNKNOWN:
+      case PAGING:
+         break;
       }
       break;
    case ST_UID: xSnprintf(buffer, n, "%*d ", Process_uidDigits, this->st_uid); break;

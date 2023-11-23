@@ -273,7 +273,7 @@ static void PCPDynamicColumn_setupWidth(ATTR_UNUSED ht_key_t key, void* value, A
    if (column->instances || desc->type == PM_TYPE_STRING) {
       column->super.width = column->width;
       if (column->super.width == 0)
-          column->super.width = -16;
+         column->super.width = -16;
       return;
    }
 
@@ -348,6 +348,7 @@ static int PCPDynamicColumn_normalize(const pmDesc* desc, const pmAtomValue* ap,
       default:
          return PM_ERR_CONV;
    }
+
    return 0;
 }
 
@@ -460,7 +461,7 @@ void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, Ri
    pid_t pid = Process_getPid(proc);
 
    pmAtomValue atom;
-   pmAtomValue *ap = &atom;
+   pmAtomValue* ap = &atom;
    if (!Metric_instance(this->id, pid, pp->offset, ap, desc->type))
       ap = NULL;
 
@@ -510,5 +511,6 @@ int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, Pr
       default:
          break;
    }
+
    return -1;
 }

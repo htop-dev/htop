@@ -66,7 +66,7 @@ static void Instance_writeField(const Row* super, RichString* str, RowField fiel
       return;
 
    pmAtomValue atom;
-   pmAtomValue *ap = &atom;
+   pmAtomValue* ap = &atom;
    const pmDesc* descp = Metric_desc(cp->id);
    if (!Metric_instance(cp->id, instid, this->offset, ap, descp->type))
       ap = NULL;

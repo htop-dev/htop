@@ -51,8 +51,7 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    switch (ch) {
       case 13:
       case KEY_ENTER:
-      case KEY_F(5):
-      {
+      case KEY_F(5): {
          const ListItem* selected = (ListItem*) Panel_getSelected(super);
          if (!selected)
             break;
@@ -65,11 +64,9 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
          break;
       }
       default:
-      {
          if (0 < ch && ch < 255 && isgraph((unsigned char)ch))
             result = Panel_selectByTyping(super, ch);
          break;
-      }
    }
    return result;
 }

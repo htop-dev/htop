@@ -382,9 +382,11 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
          default:
             break;
       }
+
       if (saved != bytes && metric->suffix)
          bytes += xSnprintf(buffer + bytes, size - bytes, "%s", metric->suffix);
    }
+
    if (!bytes)
       xSnprintf(buffer, size, "no data");
 }
@@ -458,12 +460,14 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
          default:
             break;
       }
+
       if (len) {
          RichString_appendnAscii(out, CRT_colors[metric->color], buffer, len);
          if (metric->suffix)
             RichString_appendAscii(out, CRT_colors[METER_TEXT], metric->suffix);
       }
    }
+
    if (nodata)
       RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
 }

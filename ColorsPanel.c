@@ -50,30 +50,31 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
    ColorsPanel* this = (ColorsPanel*) super;
 
    HandlerResult result = IGNORED;
-   int mark;
 
    switch (ch) {
-   case 0x0a:
-   case 0x0d:
-   case KEY_ENTER:
-   case KEY_MOUSE:
-   case KEY_RECLICK:
-   case ' ':
-      mark = Panel_getSelectedIndex(super);
-      assert(mark >= 0);
-      assert(mark < LAST_COLORSCHEME);
-      for (int i = 0; ColorSchemeNames[i] != NULL; i++)
-         CheckItem_set((CheckItem*)Panel_get(super, i), false);
-      CheckItem_set((CheckItem*)Panel_get(super, mark), true);
+      case 0x0a:
+      case 0x0d:
+      case KEY_ENTER:
+      case KEY_MOUSE:
+      case KEY_RECLICK:
+      case ' ': {
+         int mark = Panel_getSelectedIndex(super);
+         assert(mark >= 0);
+         assert(mark < LAST_COLORSCHEME);
 
-      this->settings->colorScheme = mark;
-      this->settings->changed = true;
-      this->settings->lastUpdate++;
+         for (int i = 0; ColorSchemeNames[i] != NULL; i++)
+            CheckItem_set((CheckItem*)Panel_get(super, i), false);
+         CheckItem_set((CheckItem*)Panel_get(super, mark), true);
 
-      CRT_setColors(mark);
-      clear();
+         this->settings->colorScheme = mark;
+         this->settings->changed = true;
+         this->settings->lastUpdate++;
 
-      result = HANDLED | REDRAW;
+         CRT_setColors(mark);
+         clear();
+
+         result = HANDLED | REDRAW;
+      }
    }
 
    return result;

@@ -164,6 +164,7 @@ static void TraceScreen_updateTrace(InfoScreen* super) {
 
 static bool TraceScreen_onKey(InfoScreen* super, int ch) {
    TraceScreen* this = (TraceScreen*) super;
+
    switch (ch) {
       case 'f':
       case KEY_F(8):
@@ -178,6 +179,7 @@ static bool TraceScreen_onKey(InfoScreen* super, int ch) {
          InfoScreen_draw(this);
          return true;
    }
+
    this->follow = false;
    return false;
 }

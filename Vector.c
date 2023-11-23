@@ -103,7 +103,7 @@ void Vector_prune(Vector* this) {
    this->items = 0;
    this->dirty_index = -1;
    this->dirty_count = 0;
-   memset(this->array, '\0', this->arraySize * sizeof(Object *));
+   memset(this->array, '\0', this->arraySize * sizeof(Object*));
 }
 
 //static int comparisons = 0;
@@ -200,7 +200,7 @@ static void Vector_resizeIfNecessary(Vector* this, int newSize) {
       assert(Vector_isConsistent(this));
       int oldSize = this->arraySize;
       this->arraySize = newSize + this->growthRate;
-      this->array = (Object **)xReallocArrayZero(this->array, oldSize, this->arraySize, sizeof(Object*));
+      this->array = (Object**)xReallocArrayZero(this->array, oldSize, this->arraySize, sizeof(Object*));
    }
    assert(Vector_isConsistent(this));
 }
