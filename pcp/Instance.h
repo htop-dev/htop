@@ -17,16 +17,16 @@ in the source distribution for its full text.
 typedef struct Instance_ {
    Row super;
 
-   char *name;	/* external instance name */
+   char* name; /* external instance name */
    const struct InDomTable_* indom;  /* instance domain */
 
    /* default result offset to use for searching metrics with instances */
    unsigned int offset;
 } Instance;
 
-#define InDom_getId(i_)	         ((i_)->indom->id)
+#define InDom_getId(i_)          ((i_)->indom->id)
 #define Instance_getId(i_)       ((i_)->super.id)
-#define Instance_setId(i_, id_)	 ((i_)->super.id = (id_))
+#define Instance_setId(i_, id_)  ((i_)->super.id = (id_))
 
 extern const RowClass Instance_class;
 

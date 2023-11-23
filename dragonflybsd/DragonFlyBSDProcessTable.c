@@ -249,44 +249,56 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       // would be nice if we could store multiple states in proc->state (as enum) and have writeField render them
       /* Taken from: https://github.com/DragonFlyBSD/DragonFlyBSD/blob/c163a4d7ee9c6857ee4e04a3a2cbb50c3de29da1/sys/sys/proc_common.h */
       switch (kproc->kp_stat) {
-      case SIDL:   proc->state = IDLE; isIdleProcess = true; break;
-      case SACTIVE:
-         switch (kproc->kp_lwp.kl_stat) {
-            case LSSLEEP:
-               if (kproc->kp_lwp.kl_flags & LWP_SINTR)					// interruptible wait short/long
-                  if (kproc->kp_lwp.kl_slptime >= MAXSLP) {
-                     proc->state = IDLE;
-                     isIdleProcess = true;
-                  } else {
+         case SIDL:
+            proc->state = IDLE;
+            isIdleProcess = true;
+            break;
+         case SACTIVE:
+            switch (kproc->kp_lwp.kl_stat) {
+               case LSSLEEP:
+                  if (kproc->kp_lwp.kl_flags & LWP_SINTR) {          // interruptible wait short/long
+                     if (kproc->kp_lwp.kl_slptime >= MAXSLP) {
+                        proc->state = IDLE;
+                        isIdleProcess = true;
+                     } else {
+                        proc->state = SLEEPING;
+                     }
+                  } else if (kproc->kp_lwp.kl_tdflags & TDF_SINTR) { // interruptible lwkt wait
                      proc->state = SLEEPING;
+                  } else if (kproc->kp_paddr) {                      // uninterruptible wait
+                     proc->state = UNINTERRUPTIBLE_WAIT;
+                  } else {                                           // uninterruptible lwkt wait
+                     proc->state = UNINTERRUPTIBLE_WAIT;
                   }
-               else if (kproc->kp_lwp.kl_tdflags & TDF_SINTR)				// interruptible lwkt wait
-                  proc->state = SLEEPING;
-               else if (kproc->kp_paddr)						// uninterruptible wait
-                  proc->state = UNINTERRUPTIBLE_WAIT;
-               else									// uninterruptible lwkt wait
-                  proc->state = UNINTERRUPTIBLE_WAIT;
-               break;
-            case LSRUN:
-               if (kproc->kp_lwp.kl_stat == LSRUN) {
-                  if (!(kproc->kp_lwp.kl_tdflags & (TDF_RUNNING | TDF_RUNQ)))
-                     proc->state = QUEUED;
-                  else
-                     proc->state = RUNNING;
-               }
-               break;
-            case LSSTOP:
-               proc->state = STOPPED;
-               break;
-            default:
-               proc->state = PAGING;
-               break;
-         }
-         break;
-      case SSTOP:  proc->state = STOPPED; break;
-      case SZOMB:  proc->state = ZOMBIE; break;
-      case SCORE:  proc->state = BLOCKED; break;
-      default:     proc->state = UNKNOWN;
+                  break;
+               case LSRUN:
+                  if (kproc->kp_lwp.kl_stat == LSRUN) {
+                     if (!(kproc->kp_lwp.kl_tdflags & (TDF_RUNNING | TDF_RUNQ))) {
+                        proc->state = QUEUED;
+                     } else {
+                        proc->state = RUNNING;
+                     }
+                  }
+                  break;
+               case LSSTOP:
+                  proc->state = STOPPED;
+                  break;
+               default:
+                  proc->state = PAGING;
+                  break;
+            }
+            break;
+         case SSTOP:
+            proc->state = STOPPED;
+            break;
+         case SZOMB:
+            proc->state = ZOMBIE;
+            break;
+         case SCORE:
+            proc->state = BLOCKED;
+            break;
+         default:
+            proc->state = UNKNOWN;
       }
 
       if (kproc->kp_flags & P_SWAPPEDOUT)

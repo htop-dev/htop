@@ -60,25 +60,22 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(5):
       case 'l':
       case 'L':
-      {
          AvailableMetersPanel_addMeter(header, this->meterPanels[0], Platform_meterTypes[type], param, 0);
          result = HANDLED;
          update = true;
          break;
-      }
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
       case KEY_F(6):
       case 'r':
       case 'R':
-      {
          AvailableMetersPanel_addMeter(header, this->meterPanels[this->columns - 1], Platform_meterTypes[type], param, this->columns - 1);
          result = (KEY_LEFT << 16) | SYNTH_KEY;
          update = true;
          break;
-      }
    }
+
    if (update) {
       Settings* settings = this->host->settings;
       settings->changed = true;
@@ -88,6 +85,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       Header_draw(header);
       ScreenManager_resize(this->scr);
    }
+
    return result;
 }
 

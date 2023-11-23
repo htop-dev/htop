@@ -33,30 +33,30 @@ static HandlerResult HeaderOptionsPanel_eventHandler(Panel* super, int ch) {
    HeaderOptionsPanel* this = (HeaderOptionsPanel*) super;
 
    HandlerResult result = IGNORED;
-   int mark;
 
    switch (ch) {
-   case 0x0a:
-   case 0x0d:
-   case KEY_ENTER:
-   case KEY_MOUSE:
-   case KEY_RECLICK:
-   case ' ':
-      mark = Panel_getSelectedIndex(super);
-      assert(mark >= 0);
-      assert(mark < LAST_HEADER_LAYOUT);
+      case 0x0a:
+      case 0x0d:
+      case KEY_ENTER:
+      case KEY_MOUSE:
+      case KEY_RECLICK:
+      case ' ': {
+         int mark = Panel_getSelectedIndex(super);
+         assert(mark >= 0);
+         assert(mark < LAST_HEADER_LAYOUT);
 
-      for (int i = 0; i < LAST_HEADER_LAYOUT; i++)
-         CheckItem_set((CheckItem*)Panel_get(super, i), false);
-      CheckItem_set((CheckItem*)Panel_get(super, mark), true);
+         for (int i = 0; i < LAST_HEADER_LAYOUT; i++)
+            CheckItem_set((CheckItem*)Panel_get(super, i), false);
+         CheckItem_set((CheckItem*)Panel_get(super, mark), true);
 
-      Header_setLayout(this->scr->header, mark);
-      this->settings->changed = true;
-      this->settings->lastUpdate++;
+         Header_setLayout(this->scr->header, mark);
+         this->settings->changed = true;
+         this->settings->lastUpdate++;
 
-      ScreenManager_resize(this->scr);
+         ScreenManager_resize(this->scr);
 
-      result = HANDLED;
+         result = HANDLED;
+      }
    }
 
    return result;

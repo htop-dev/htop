@@ -802,7 +802,7 @@ CommandLineStatus Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** a
       case PLATFORM_LONGOPT_HOST:  /* --host=HOSTSPEC */
          if (argv[optind][0] == '\0')
             return STATUS_ERROR_EXIT;
-          __pmAddOptHost(&opts, optarg);
+         __pmAddOptHost(&opts, optarg);
          return STATUS_OK;
 
       case PLATFORM_LONGOPT_HOSTZONE:  /* --hostzone */
@@ -828,6 +828,7 @@ CommandLineStatus Platform_getLongOption(int opt, ATTR_UNUSED int argc, char** a
       default:
          break;
    }
+
    return STATUS_ERROR_EXIT;
 }
 
@@ -918,6 +919,6 @@ void Platform_addDynamicScreenAvailableColumns(Panel* availableColumns, const ch
 }
 
 void Platform_updateTables(Machine* host) {
-    PCPDynamicScreen_appendTables(&pcp->screens, host);
-    PCPDynamicColumns_setupWidths(&pcp->columns);
+   PCPDynamicScreen_appendTables(&pcp->screens, host);
+   PCPDynamicColumns_setupWidths(&pcp->columns);
 }

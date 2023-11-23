@@ -318,12 +318,14 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
          redraw = false;
          continue;
       }
+
       switch (ch) {
          case KEY_ALT('H'): ch = KEY_LEFT; break;
          case KEY_ALT('J'): ch = KEY_DOWN; break;
          case KEY_ALT('K'): ch = KEY_UP; break;
          case KEY_ALT('L'): ch = KEY_RIGHT; break;
       }
+
       redraw = true;
       if (Panel_eventHandlerFn(panelFocus)) {
          result = Panel_eventHandler(panelFocus, ch);

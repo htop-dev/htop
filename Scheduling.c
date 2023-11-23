@@ -133,26 +133,26 @@ const char* Scheduling_formatPolicy(int policy) {
 #endif
 
    switch (policy) {
-   case SCHED_OTHER:
-      return "OTHER";
-   case SCHED_FIFO:
-      return "FIFO";
-   case SCHED_RR:
-      return "RR";
+      case SCHED_OTHER:
+         return "OTHER";
+      case SCHED_FIFO:
+         return "FIFO";
+      case SCHED_RR:
+         return "RR";
 #ifdef SCHED_BATCH
-   case SCHED_BATCH:
-      return "BATCH";
+      case SCHED_BATCH:
+         return "BATCH";
 #endif
 #ifdef SCHED_IDLE
-   case SCHED_IDLE:
-      return "IDLE";
+      case SCHED_IDLE:
+         return "IDLE";
 #endif
 #ifdef SCHED_DEADLINE
-   case SCHED_DEADLINE:
-      return "EDF";
+      case SCHED_DEADLINE:
+         return "EDF";
 #endif
-   default:
-      return "???";
+      default:
+         return "???";
    }
 }
 

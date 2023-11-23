@@ -251,7 +251,7 @@ AC_LINK_IFELSE([
 #endif
          ]])],
          AC_MSG_RESULT([assume yes (cross compiling)]),
-	 flag_finite_math_only=yes)
+         flag_finite_math_only=yes)
    elif ./conftest$EXEEXT >&AS_MESSAGE_LOG_FD; then
       flag_finite_math_only=no
       AC_MSG_RESULT(yes)

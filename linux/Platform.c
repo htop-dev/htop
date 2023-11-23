@@ -303,7 +303,7 @@ pid_t Platform_getMaxPid(void) {
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
-   const LinuxMachine* lhost = (const LinuxMachine *) this->host;
+   const LinuxMachine* lhost = (const LinuxMachine*) this->host;
    const Settings* settings = this->host->settings;
    const CPUData* cpuData = &(lhost->cpuData[cpu]);
    double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
@@ -928,7 +928,7 @@ CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv) {
       case 160: {
          const char* mode = optarg;
          if (!mode && optind < argc && argv[optind] != NULL &&
-            (argv[optind][0] != '\0' && argv[optind][0] != '-')) {
+             (argv[optind][0] != '\0' && argv[optind][0] != '-')) {
             mode = argv[optind++];
          }
 

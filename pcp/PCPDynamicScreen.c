@@ -42,7 +42,7 @@ static char* formatFields(PCPDynamicScreen* screen) {
 
 static void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, PCPDynamicColumns* columns) {
    for (size_t i = 0; i < screens->count; i++) {
-      PCPDynamicScreen *screen = Hashtable_get(screens->table, i);
+      PCPDynamicScreen* screen = Hashtable_get(screens->table, i);
       if (!screen)
          return;
 
@@ -60,7 +60,7 @@ static void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, P
 
          if (j == 0) {
             const pmDesc* desc = Metric_desc(column->id);
-	    assert(desc->indom != PM_INDOM_NULL);
+            assert(desc->indom != PM_INDOM_NULL);
             screen->indom = desc->indom;
             screen->key = column->id;
          }
@@ -241,7 +241,7 @@ static void PCPDynamicScreen_parseFile(PCPDynamicScreens* screens, const char* p
          if (ok)
             screen = PCPDynamicScreen_new(screens, key + 1);
          if (pmDebugOptions.appl0)
-             fprintf(stderr, "[%s] screen: %s\n", path, key+1);
+            fprintf(stderr, "[%s] screen: %s\n", path, key + 1);
       } else if (!ok) {
          ;  /* skip this one, we're looking for a new header */
       } else if (!value || !screen) {

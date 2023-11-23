@@ -307,12 +307,12 @@ static void SystemdMeter_updateValues(Meter* this) {
 
 static int zeroDigitColor(unsigned int value) {
    switch (value) {
-   case 0:
-      return CRT_colors[METER_VALUE];
-   case INVALID_VALUE:
-      return CRT_colors[METER_VALUE_ERROR];
-   default:
-      return CRT_colors[METER_VALUE_NOTICE];
+      case 0:
+         return CRT_colors[METER_VALUE];
+      case INVALID_VALUE:
+         return CRT_colors[METER_VALUE_ERROR];
+      default:
+         return CRT_colors[METER_VALUE_NOTICE];
    }
 }
 

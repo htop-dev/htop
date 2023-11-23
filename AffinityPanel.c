@@ -202,57 +202,57 @@ static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
    bool keepSelected = true;
 
    switch (ch) {
-   case KEY_MOUSE:
-   case KEY_RECLICK:
-   case ' ':
-      #ifdef HAVE_LIBHWLOC
-      if (selected->value == 2) {
-         /* Item was selected, so remove this mask from the top cpuset. */
-         hwloc_bitmap_andnot(this->workCpuset, this->workCpuset, selected->cpuset);
-         selected->value = 0;
-      } else {
-         /* Item was not or only partial selected, so set all bits from this object
-            in the top cpuset. */
-         hwloc_bitmap_or(this->workCpuset, this->workCpuset, selected->cpuset);
-         selected->value = 2;
-      }
-      #else
-      selected->value = selected->value ? 0 : 2; /* toggle between 0 and 2 */
-      #endif
+      case KEY_MOUSE:
+      case KEY_RECLICK:
+      case ' ':
+         #ifdef HAVE_LIBHWLOC
+         if (selected->value == 2) {
+            /* Item was selected, so remove this mask from the top cpuset. */
+            hwloc_bitmap_andnot(this->workCpuset, this->workCpuset, selected->cpuset);
+            selected->value = 0;
+         } else {
+            /* Item was not or only partial selected, so set all bits from this object
+               in the top cpuset. */
+            hwloc_bitmap_or(this->workCpuset, this->workCpuset, selected->cpuset);
+            selected->value = 2;
+         }
+         #else
+         selected->value = selected->value ? 0 : 2; /* toggle between 0 and 2 */
+         #endif
 
-      result = HANDLED;
-      break;
+         result = HANDLED;
+         break;
 
-   #ifdef HAVE_LIBHWLOC
+#ifdef HAVE_LIBHWLOC
 
-   case KEY_F(1):
-      hwloc_bitmap_copy(this->workCpuset, this->allCpuset);
-      result = HANDLED;
-      break;
+      case KEY_F(1):
+         hwloc_bitmap_copy(this->workCpuset, this->allCpuset);
+         result = HANDLED;
+         break;
 
-   case KEY_F(2):
-      this->topoView = !this->topoView;
-      keepSelected = false;
+      case KEY_F(2):
+         this->topoView = !this->topoView;
+         keepSelected = false;
 
-      result = HANDLED;
-      break;
+         result = HANDLED;
+         break;
 
-   case KEY_F(3):
-   case '-':
-   case '+':
-      if (selected->sub_tree)
-         selected->sub_tree = 1 + !(selected->sub_tree - 1); /* toggle between 1 and 2 */
+      case KEY_F(3):
+      case '-':
+      case '+':
+         if (selected->sub_tree)
+            selected->sub_tree = 1 + !(selected->sub_tree - 1); /* toggle between 1 and 2 */
 
-      result = HANDLED;
-      break;
+         result = HANDLED;
+         break;
 
-   #endif
+#endif
 
-   case 0x0a:
-   case 0x0d:
-   case KEY_ENTER:
-      result = BREAK_LOOP;
-      break;
+      case 0x0a:
+      case 0x0d:
+      case KEY_ENTER:
+         result = BREAK_LOOP;
+         break;
    }
 
    if (HANDLED == result)

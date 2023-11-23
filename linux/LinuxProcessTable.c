@@ -516,33 +516,33 @@ static void LinuxProcessTable_readIoFile(LinuxProcess* lp, openat_arg_t procFd, 
    const char* line;
    while ((line = strsep(&buf, "\n")) != NULL) {
       switch (line[0]) {
-      case 'r':
-         if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-            lp->io_rchar = strtoull(line + 7, NULL, 10);
-         } else if (String_startsWith(line + 1, "ead_bytes: ")) {
-            lp->io_read_bytes = strtoull(line + 12, NULL, 10);
-            lp->io_rate_read_bps = time_delta ? saturatingSub(lp->io_read_bytes, last_read) * /*ms to s*/1000. / time_delta : NAN;
-         }
-         break;
-      case 'w':
-         if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-            lp->io_wchar = strtoull(line + 7, NULL, 10);
-         } else if (String_startsWith(line + 1, "rite_bytes: ")) {
-            lp->io_write_bytes = strtoull(line + 13, NULL, 10);
-            lp->io_rate_write_bps = time_delta ? saturatingSub(lp->io_write_bytes, last_write) * /*ms to s*/1000. / time_delta : NAN;
-         }
-         break;
-      case 's':
-         if (line[4] == 'r' && String_startsWith(line + 1, "yscr: ")) {
-            lp->io_syscr = strtoull(line + 7, NULL, 10);
-         } else if (String_startsWith(line + 1, "yscw: ")) {
-            lp->io_syscw = strtoull(line + 7, NULL, 10);
-         }
-         break;
-      case 'c':
-         if (String_startsWith(line + 1, "ancelled_write_bytes: ")) {
-            lp->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10);
-         }
+         case 'r':
+            if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
+               lp->io_rchar = strtoull(line + 7, NULL, 10);
+            } else if (String_startsWith(line + 1, "ead_bytes: ")) {
+               lp->io_read_bytes = strtoull(line + 12, NULL, 10);
+               lp->io_rate_read_bps = time_delta ? saturatingSub(lp->io_read_bytes, last_read) * /*ms to s*/1000. / time_delta : NAN;
+            }
+            break;
+         case 'w':
+            if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
+               lp->io_wchar = strtoull(line + 7, NULL, 10);
+            } else if (String_startsWith(line + 1, "rite_bytes: ")) {
+               lp->io_write_bytes = strtoull(line + 13, NULL, 10);
+               lp->io_rate_write_bps = time_delta ? saturatingSub(lp->io_write_bytes, last_write) * /*ms to s*/1000. / time_delta : NAN;
+            }
+            break;
+         case 's':
+            if (line[4] == 'r' && String_startsWith(line + 1, "yscr: ")) {
+               lp->io_syscr = strtoull(line + 7, NULL, 10);
+            } else if (String_startsWith(line + 1, "yscw: ")) {
+               lp->io_syscw = strtoull(line + 7, NULL, 10);
+            }
+            break;
+         case 'c':
+            if (String_startsWith(line + 1, "ancelled_write_bytes: ")) {
+               lp->io_cancelled_write_bytes = strtoull(line + 23, NULL, 10);
+            }
       }
    }
 
@@ -807,18 +807,18 @@ static void LinuxProcessTable_readOpenVZData(LinuxProcess* process, openat_arg_t
       *value_end = '\0';
 
       switch (field) {
-      case 1:
-         foundEnvID = true;
-         if (!String_eq(name_value_sep, process->ctid ? process->ctid : ""))
-            free_and_xStrdup(&process->ctid, name_value_sep);
-         break;
-      case 2:
-         foundVPid = true;
-         process->vpid = strtoul(name_value_sep, NULL, 0);
-         break;
-      default:
-         //Sanity Check: Should never reach here, or the implementation is missing something!
-         assert(false && "OpenVZ handling: Unimplemented case for field handling reached.");
+         case 1:
+            foundEnvID = true;
+            if (!String_eq(name_value_sep, process->ctid ? process->ctid : ""))
+               free_and_xStrdup(&process->ctid, name_value_sep);
+            break;
+         case 2:
+            foundVPid = true;
+            process->vpid = strtoul(name_value_sep, NULL, 0);
+            break;
+         default:
+            //Sanity Check: Should never reach here, or the implementation is missing something!
+            assert(false && "OpenVZ handling: Unimplemented case for field handling reached.");
       }
    }
 
@@ -1457,7 +1457,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          bool prev = proc->usesDeletedLib;
 
          if (!proc->isKernelThread && !proc->isUserlandThread &&
-            ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted && isOlderThan(proc, 10)))) {
+             ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted && isOlderThan(proc, 10)))) {
 
             // Check if we really should recalculate the M_LRS value for this process
             uint64_t passedTimeInMs = host->realtimeMs - lp->last_mlrs_calctime;
@@ -1521,7 +1521,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       proc->percent_mem = proc->m_resident / (double)(host->totalMem) * 100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
-      if (! LinuxProcessTable_updateUser(host, proc, procFd))
+      if (!LinuxProcessTable_updateUser(host, proc, procFd))
          goto errorReadingProcess;
 
       if (!LinuxProcessTable_readStatusFile(proc, procFd))

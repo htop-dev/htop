@@ -273,8 +273,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    int upTo = MINIMUM(first + h, size);
 
    int selectionColor = focus
-                      ? CRT_colors[this->selectionColorId]
-                      : CRT_colors[PANEL_SELECTION_UNFOCUS];
+      ? CRT_colors[this->selectionColorId]
+      : CRT_colors[PANEL_SELECTION_UNFOCUS];
 
    if (this->needsRedraw || force_redraw) {
       int line = 0;
@@ -359,72 +359,74 @@ bool Panel_onKey(Panel* this, int key) {
    } while (0)
 
    switch (key) {
-   case KEY_DOWN:
-   case KEY_CTRL('N'):
-   #ifdef KEY_C_DOWN
-   case KEY_C_DOWN:
-   #endif
-      this->selected++;
-      break;
+      case KEY_DOWN:
+      case KEY_CTRL('N'):
+      #ifdef KEY_C_DOWN
+      case KEY_C_DOWN:
+      #endif
+         this->selected++;
+         break;
 
-   case KEY_UP:
-   case KEY_CTRL('P'):
-   #ifdef KEY_C_UP
-   case KEY_C_UP:
-   #endif
-      this->selected--;
-      break;
+      case KEY_UP:
+      case KEY_CTRL('P'):
+      #ifdef KEY_C_UP
+      case KEY_C_UP:
+      #endif
+         this->selected--;
+         break;
 
-   case KEY_LEFT:
-   case KEY_CTRL('B'):
-      if (this->scrollH > 0) {
-         this->scrollH -= MAXIMUM(CRT_scrollHAmount, 0);
+      case KEY_LEFT:
+      case KEY_CTRL('B'):
+         if (this->scrollH > 0) {
+            this->scrollH -= MAXIMUM(CRT_scrollHAmount, 0);
+            this->needsRedraw = true;
+         }
+         break;
+
+      case KEY_RIGHT:
+      case KEY_CTRL('F'):
+         this->scrollH += CRT_scrollHAmount;
          this->needsRedraw = true;
-      }
-      break;
+         break;
 
-   case KEY_RIGHT:
-   case KEY_CTRL('F'):
-      this->scrollH += CRT_scrollHAmount;
-      this->needsRedraw = true;
-      break;
+      case KEY_PPAGE:
+         PANEL_SCROLL(-(this->h - Panel_headerHeight(this)));
+         break;
 
-   case KEY_PPAGE:
-      PANEL_SCROLL(-(this->h - Panel_headerHeight(this)));
-      break;
+      case KEY_NPAGE:
+         PANEL_SCROLL(+(this->h - Panel_headerHeight(this)));
+         break;
 
-   case KEY_NPAGE:
-      PANEL_SCROLL(+(this->h - Panel_headerHeight(this)));
-      break;
+      case KEY_WHEELUP:
+         PANEL_SCROLL(-CRT_scrollWheelVAmount);
+         break;
 
-   case KEY_WHEELUP:
-      PANEL_SCROLL(-CRT_scrollWheelVAmount);
-      break;
+      case KEY_WHEELDOWN:
+         PANEL_SCROLL(+CRT_scrollWheelVAmount);
+         break;
 
-   case KEY_WHEELDOWN:
-      PANEL_SCROLL(+CRT_scrollWheelVAmount);
-      break;
+      case KEY_HOME:
+         this->selected = 0;
+         break;
 
-   case KEY_HOME:
-      this->selected = 0;
-      break;
+      case KEY_END:
+         this->selected = size - 1;
+         break;
 
-   case KEY_END:
-      this->selected = size - 1;
-      break;
+      case KEY_CTRL('A'):
+      case '^':
+         this->scrollH = 0;
+         this->needsRedraw = true;
+         break;
 
-   case KEY_CTRL('A'):
-   case '^':
-      this->scrollH = 0;
-      this->needsRedraw = true;
-      break;
-   case KEY_CTRL('E'):
-   case '$':
-      this->scrollH = MAXIMUM(this->selectedLen - this->w, 0);
-      this->needsRedraw = true;
-      break;
-   default:
-      return false;
+      case KEY_CTRL('E'):
+      case '$':
+         this->scrollH = MAXIMUM(this->selectedLen - this->w, 0);
+         this->needsRedraw = true;
+         break;
+
+      default:
+         return false;
    }
 
    #undef PANEL_SCROLL

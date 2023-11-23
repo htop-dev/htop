@@ -25,7 +25,7 @@ struct PCPDynamicColumns_;
 typedef struct PCPDynamicScreen_ {
    DynamicScreen super;
 
-   struct InDomTable_ *table;
+   struct InDomTable_* table;
    struct PCPDynamicColumn_** columns;
    size_t totalColumns;
 

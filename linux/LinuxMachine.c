@@ -157,36 +157,36 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
          } else (void) 0 /* Require a ";" after the macro use. */
 
       switch (buffer[0]) {
-      case 'M':
-         tryRead("MemAvailable:", availableMem);
-         tryRead("MemFree:", freeMem);
-         tryRead("MemTotal:", totalMem);
-         break;
-      case 'B':
-         tryRead("Buffers:", buffersMem);
-         break;
-      case 'C':
-         tryRead("Cached:", cachedMem);
-         break;
-      case 'S':
-         switch (buffer[1]) {
-         case 'h':
-            tryRead("Shmem:", sharedMem);
+         case 'M':
+            tryRead("MemAvailable:", availableMem);
+            tryRead("MemFree:", freeMem);
+            tryRead("MemTotal:", totalMem);
             break;
-         case 'w':
-            tryRead("SwapTotal:", swapTotalMem);
-            tryRead("SwapCached:", swapCacheMem);
-            tryRead("SwapFree:", swapFreeMem);
+         case 'B':
+            tryRead("Buffers:", buffersMem);
             break;
-         case 'R':
-            tryRead("SReclaimable:", sreclaimableMem);
+         case 'C':
+            tryRead("Cached:", cachedMem);
             break;
-         }
-         break;
-      case 'Z':
-         tryRead("Zswap:", zswapCompMem);
-         tryRead("Zswapped:", zswapOrigMem);
-         break;
+         case 'S':
+            switch (buffer[1]) {
+               case 'h':
+                  tryRead("Shmem:", sharedMem);
+                  break;
+               case 'w':
+                  tryRead("SwapTotal:", swapTotalMem);
+                  tryRead("SwapCached:", swapCacheMem);
+                  tryRead("SwapFree:", swapFreeMem);
+                  break;
+               case 'R':
+                  tryRead("SReclaimable:", sreclaimableMem);
+                  break;
+            }
+            break;
+         case 'Z':
+            tryRead("Zswap:", zswapCompMem);
+            tryRead("Zswapped:", zswapOrigMem);
+            break;
       }
 
       #undef tryRead
@@ -347,35 +347,36 @@ static void LinuxMachine_scanZfsArcstats(LinuxMachine* this) {
          } else (void) 0 /* Require a ";" after the macro use. */
 
       switch (buffer[0]) {
-      case 'c':
-         tryRead("c_min", &this->zfs.min);
-         tryRead("c_max", &this->zfs.max);
-         tryReadFlag("compressed_size", &this->zfs.compressed, this->zfs.isCompressed);
-         break;
-      case 'u':
-         tryRead("uncompressed_size", &this->zfs.uncompressed);
-         break;
-      case 's':
-         tryRead("size", &this->zfs.size);
-         break;
-      case 'h':
-         tryRead("hdr_size", &this->zfs.header);
-         break;
-      case 'd':
-         tryRead("dbuf_size", &dbufSize);
-         tryRead("dnode_size", &dnodeSize);
-         break;
-      case 'b':
-         tryRead("bonus_size", &bonusSize);
-         break;
-      case 'a':
-         tryRead("anon_size", &this->zfs.anon);
-         break;
-      case 'm':
-         tryRead("mfu_size", &this->zfs.MFU);
-         tryRead("mru_size", &this->zfs.MRU);
-         break;
+         case 'c':
+            tryRead("c_min", &this->zfs.min);
+            tryRead("c_max", &this->zfs.max);
+            tryReadFlag("compressed_size", &this->zfs.compressed, this->zfs.isCompressed);
+            break;
+         case 'u':
+            tryRead("uncompressed_size", &this->zfs.uncompressed);
+            break;
+         case 's':
+            tryRead("size", &this->zfs.size);
+            break;
+         case 'h':
+            tryRead("hdr_size", &this->zfs.header);
+            break;
+         case 'd':
+            tryRead("dbuf_size", &dbufSize);
+            tryRead("dnode_size", &dnodeSize);
+            break;
+         case 'b':
+            tryRead("bonus_size", &bonusSize);
+            break;
+         case 'a':
+            tryRead("anon_size", &this->zfs.anon);
+            break;
+         case 'm':
+            tryRead("mfu_size", &this->zfs.MFU);
+            tryRead("mru_size", &this->zfs.MRU);
+            break;
       }
+
       #undef tryRead
       #undef tryReadFlag
    }

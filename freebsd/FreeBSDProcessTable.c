@@ -260,14 +260,14 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
       /* Taken from: https://github.com/freebsd/freebsd-src/blob/1ad2d87778970582854082bcedd2df0394fd4933/sys/sys/proc.h#L851 */
       switch (kproc->ki_stat) {
-      case SIDL:   proc->state = IDLE; break;
-      case SRUN:   proc->state = RUNNING; break;
-      case SSLEEP: proc->state = SLEEPING; break;
-      case SSTOP:  proc->state = STOPPED; break;
-      case SZOMB:  proc->state = ZOMBIE; break;
-      case SWAIT:  proc->state = WAITING; break;
-      case SLOCK:  proc->state = BLOCKED; break;
-      default:     proc->state = UNKNOWN;
+         case SIDL:   proc->state = IDLE; break;
+         case SRUN:   proc->state = RUNNING; break;
+         case SSLEEP: proc->state = SLEEPING; break;
+         case SSTOP:  proc->state = STOPPED; break;
+         case SZOMB:  proc->state = ZOMBIE; break;
+         case SWAIT:  proc->state = WAITING; break;
+         case SLOCK:  proc->state = BLOCKED; break;
+         default:     proc->state = UNKNOWN;
       }
 
       if (Process_isKernelThread(proc))

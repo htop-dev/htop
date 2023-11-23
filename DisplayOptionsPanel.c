@@ -37,37 +37,37 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    OptionItem* selected = (OptionItem*) Panel_getSelected(super);
 
    switch (ch) {
-   case '\n':
-   case '\r':
-   case KEY_ENTER:
-   case KEY_MOUSE:
-   case KEY_RECLICK:
-   case ' ':
-      switch (OptionItem_kind(selected)) {
-      case OPTION_ITEM_TEXT:
+      case '\n':
+      case '\r':
+      case KEY_ENTER:
+      case KEY_MOUSE:
+      case KEY_RECLICK:
+      case ' ':
+         switch (OptionItem_kind(selected)) {
+            case OPTION_ITEM_TEXT:
+               break;
+            case OPTION_ITEM_CHECK:
+               CheckItem_toggle((CheckItem*)selected);
+               result = HANDLED;
+               break;
+            case OPTION_ITEM_NUMBER:
+               NumberItem_toggle((NumberItem*)selected);
+               result = HANDLED;
+               break;
+         }
          break;
-      case OPTION_ITEM_CHECK:
-         CheckItem_toggle((CheckItem*)selected);
-         result = HANDLED;
+      case '-':
+         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+            NumberItem_decrease((NumberItem*)selected);
+            result = HANDLED;
+         }
          break;
-      case OPTION_ITEM_NUMBER:
-         NumberItem_toggle((NumberItem*)selected);
-         result = HANDLED;
+      case '+':
+         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+            NumberItem_increase((NumberItem*)selected);
+            result = HANDLED;
+         }
          break;
-      }
-      break;
-   case '-':
-      if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
-         NumberItem_decrease((NumberItem*)selected);
-         result = HANDLED;
-      }
-      break;
-   case '+':
-      if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
-         NumberItem_increase((NumberItem*)selected);
-         result = HANDLED;
-      }
-      break;
    }
 
    if (result == HANDLED) {
@@ -80,6 +80,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
       Header_draw(header);
       ScreenManager_resize(this->scr);
    }
+
    return result;
 }
 
