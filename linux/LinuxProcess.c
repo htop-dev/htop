@@ -244,7 +244,7 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
       break;
    case M_TRS: Row_printBytes(str, lp->m_trs * lhost->pageSize, coloring); return;
    case M_SHARE: Row_printBytes(str, lp->m_share * lhost->pageSize, coloring); return;
-   case M_PRIV: Row_printBytes(str, lp->m_priv, coloring); return;
+   case M_PRIV: Row_printKBytes(str, lp->m_priv, coloring); return;
    case M_PSS: Row_printKBytes(str, lp->m_pss, coloring); return;
    case M_SWAP: Row_printKBytes(str, lp->m_swap, coloring); return;
    case M_PSSWP: Row_printKBytes(str, lp->m_psswp, coloring); return;
