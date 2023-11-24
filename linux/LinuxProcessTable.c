@@ -703,6 +703,8 @@ static bool LinuxProcessTable_readStatmFile(LinuxProcess* process, openat_arg_t 
       process->super.m_resident *= host->pageSizeKB;
    }
 
+   process->m_priv = (process->super.m_resident - (process->m_share * host->pageSizeKB)) * ONE_K;
+
    return r == 7;
 }
 

@@ -201,6 +201,7 @@ static void PCPProcessTable_updateMemory(PCPProcess* pp, int pid, int offset) {
    pp->super.m_virt = Metric_instance_u32(PCP_PROC_MEM_SIZE, pid, offset, 0);
    pp->super.m_resident = Metric_instance_u32(PCP_PROC_MEM_RSS, pid, offset, 0);
    pp->m_share = Metric_instance_u32(PCP_PROC_MEM_SHARE, pid, offset, 0);
+   pp->m_priv = pp->super.m_resident - pp->m_share;
    pp->m_trs = Metric_instance_u32(PCP_PROC_MEM_TEXTRS, pid, offset, 0);
    pp->m_lrs = Metric_instance_u32(PCP_PROC_MEM_LIBRS, pid, offset, 0);
    pp->m_drs = Metric_instance_u32(PCP_PROC_MEM_DATRS, pid, offset, 0);
