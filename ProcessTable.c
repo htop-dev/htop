@@ -55,10 +55,16 @@ static void ProcessTable_prepareEntries(Table* super) {
    Table_prepareEntries(super);
 }
 
+static void ProcessTable_aggregate(ProcessTable* this) {
+   Hashtable_foreach(this->super.table, Process_resetGroupFields, NULL);
+   Hashtable_foreach(this->super.table, Process_updateGroupFields, NULL);
+}
+
 static void ProcessTable_iterateEntries(Table* super) {
    ProcessTable* this = (ProcessTable*) super;
    // calling into platform-specific code
    ProcessTable_goThroughEntries(this);
+   ProcessTable_aggregate(this);
 }
 
 static void ProcessTable_cleanupEntries(Table* super) {

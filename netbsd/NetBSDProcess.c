@@ -150,6 +150,14 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .defaultSortDesc = true,
       .autoWidth = true,
    },
+   [PERCENT_CPU_GROUP] = {
+      .name = "PERCENT_CPU_GROUP",
+      .title = " GCPU%",
+      .description = "Percentage of the CPU time the process and its children used in the last sampling",
+      .flags = 0,
+      .defaultSortDesc = true,
+      .autoWidth = true,
+   },
    [PERCENT_NORM_CPU] = {
       .name = "PERCENT_NORM_CPU",
       .title = "NCPU%",
@@ -162,6 +170,13 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
       .name = "PERCENT_MEM",
       .title = "MEM% ",
       .description = "Percentage of the memory the process is using, based on resident memory size",
+      .flags = 0,
+      .defaultSortDesc = true,
+   },
+   [PERCENT_MEM_GROUP] = {
+      .name = "PERCENT_MEM_GROUP",
+      .title = "GMEM% ",
+      .description = "Percentage of the memory the process and its children are using, based on resident memory size",
       .flags = 0,
       .defaultSortDesc = true,
    },

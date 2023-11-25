@@ -146,8 +146,14 @@ typedef struct Process_ {
    /* CPU usage during last cycle (in percent) */
    float percent_cpu;
 
+   /* Sum of percent_mem for self and children */
+   float percent_cpu_group;
+
    /* Memory usage during last cycle (in percent) */
    float percent_mem;
+
+   /* Sum of percent_mem for self and children */
+   float percent_mem_group;
 
    /* Scheduling priority */
    long int priority;
@@ -323,5 +329,9 @@ void Process_makeCommandStr(Process* this, const struct Settings_ *settings);
 void Process_writeCommand(const Process* this, int attr, int baseAttr, RichString* str);
 
 void Process_updateCPUFieldWidths(float percentage);
+
+void Process_resetGroupFields(pid_t _pid, Process* this, void* _data);
+
+void Process_updateGroupFields(pid_t pid, Process* this, void* _data);
 
 #endif
