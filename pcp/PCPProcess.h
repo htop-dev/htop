@@ -73,6 +73,7 @@ typedef struct PCPProcess_ {
    double io_rate_read_bps;
    double io_rate_write_bps;
    char* cgroup;
+   char* cgroup_short;
    long int autogroup_id;
    int autogroup_nice;
    unsigned int oom;

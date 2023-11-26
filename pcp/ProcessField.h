@@ -45,6 +45,7 @@ in the source distribution for its full text.
    SECATTR = 123,                \
    AUTOGROUP_ID = 127,           \
    AUTOGROUP_NICE = 128,         \
+   CCGROUP = 129,                \
    // End of list
 
 
