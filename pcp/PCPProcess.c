@@ -74,6 +74,7 @@ const ProcessFieldData Process_fields[] = {
    [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [CGROUP] = { .name = "CGROUP", .title = "CGROUP (raw)                        ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
    [CCGROUP] = { .name = "CCGROUP", .title = "CGROUP (compressed)                 ", .description = "Which cgroup the process is in (condensed to essentials)", .flags = PROCESS_FLAG_LINUX_CGROUP, },
+   [CONTAINER] = { .name = "CONTAINER", .title = "CONTAINER                           ", .description = "Name of the container the process is in (guessed by heuristics)", .flags = PROCESS_FLAG_LINUX_CGROUP, },
    [OOM] = { .name = "OOM", .title = " OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, .defaultSortDesc = true, },
    [PERCENT_CPU_DELAY] = { .name = "PERCENT_CPU_DELAY", .title = "CPUD% ", .description = "CPU delay %", .flags = 0, .defaultSortDesc = true, },
    [PERCENT_IO_DELAY] = { .name = "PERCENT_IO_DELAY", .title = " IOD% ", .description = "Block I/O delay %", .flags = 0, .defaultSortDesc = true, },
@@ -161,6 +162,7 @@ static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessF
    case IO_RATE: Row_printRate(str, PCPProcess_totalIORate(pp), coloring); return;
    case CGROUP: xSnprintf(buffer, n, "%-35.35s ", pp->cgroup ? pp->cgroup : "N/A"); break;
    case CCGROUP: xSnprintf(buffer, n, "%-35.35s ", pp->cgroup_short ? pp->cgroup_short : (pp->cgroup ? pp->cgroup : "N/A")); break;
+   case CONTAINER: xSnprintf(buffer, n, "%-35.35s ", pp->container_short ? pp->container_short : "N/A"); break;
    case OOM: xSnprintf(buffer, n, "%4u ", pp->oom); break;
    case PERCENT_CPU_DELAY:
       PCPProcess_printDelay(pp->cpu_delay_percent, buffer, n);
@@ -259,6 +261,8 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
       return SPACESHIP_NULLSTR(p1->cgroup, p2->cgroup);
    case CCGROUP:
       return SPACESHIP_NULLSTR(p1->cgroup_short, p2->cgroup_short);
+   case CONTAINER:
+      return SPACESHIP_NULLSTR(p1->container_short, p2->container_short);
    case OOM:
       return SPACESHIP_NUMBER(p1->oom, p2->oom);
    case PERCENT_CPU_DELAY:
