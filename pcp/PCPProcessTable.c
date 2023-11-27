@@ -267,9 +267,23 @@ static void PCPProcessTable_readCGroups(PCPProcess* pp, int pid, int offset) {
          free(pp->cgroup_short);
          pp->cgroup_short = NULL;
       }
+
+      char* container_short = CGroup_filterName(pp->cgroup);
+      if (container_short) {
+         Row_updateFieldWidth(CONTAINER, strlen(container_short));
+         free_and_xStrdup(&pp->container_short, container_short);
+         free(container_short);
+      } else {
+         Row_updateFieldWidth(CONTAINER, strlen("N/A"));
+         free(pp->container_short);
+         pp->container_short = NULL;
+      }
    } else {
       free(pp->cgroup_short);
       pp->cgroup_short = NULL;
+
+      free(pp->container_short);
+      pp->container_short = NULL;
    }
 }
 
