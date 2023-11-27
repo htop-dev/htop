@@ -701,6 +701,8 @@ static bool LinuxProcessTable_readStatmFile(LinuxProcess* process, openat_arg_t 
    if (r == 7) {
       process->super.m_virt *= host->pageSizeKB;
       process->super.m_resident *= host->pageSizeKB;
+
+      process->m_priv = process->super.m_resident - (process->m_share * host->pageSizeKB);
    }
 
    return r == 7;

@@ -49,6 +49,7 @@ const ProcessFieldData Process_fields[] = {
    [M_VIRT] = { .name = "M_VIRT", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, .defaultSortDesc = true, },
    [M_RESIDENT] = { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, .defaultSortDesc = true, },
    [M_SHARE] = { .name = "M_SHARE", .title = "  SHR ", .description = "Size of the process's shared pages", .flags = 0, .defaultSortDesc = true, },
+   [M_PRIV] = { .name = "M_PRIV", .title = " PRIV ", .description = "The private memory size of the process - resident set size minus shared memory", .flags = 0, .defaultSortDesc = true, },
    [M_TRS] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, .defaultSortDesc = true, },
    [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, .defaultSortDesc = true, },
    [M_LRS] = { .name = "M_LRS", .title = "  LIB ", .description = "The library size of the process (unused since Linux 2.6; always 0)", .flags = 0, .defaultSortDesc = true, },
@@ -140,6 +141,7 @@ static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessF
    case M_LRS: Row_printBytes(str, pp->m_lrs, coloring); return;
    case M_TRS: Row_printBytes(str, pp->m_trs, coloring); return;
    case M_SHARE: Row_printBytes(str, pp->m_share, coloring); return;
+   case M_PRIV: Row_printBytes(str, pp->m_priv, coloring); return;
    case M_PSS: Row_printKBytes(str, pp->m_pss, coloring); return;
    case M_SWAP: Row_printKBytes(str, pp->m_swap, coloring); return;
    case M_PSSWP: Row_printKBytes(str, pp->m_psswp, coloring); return;
@@ -217,6 +219,8 @@ static int PCPProcess_compareByKey(const Process* v1, const Process* v2, Process
       return SPACESHIP_NUMBER(p1->m_trs, p2->m_trs);
    case M_SHARE:
       return SPACESHIP_NUMBER(p1->m_share, p2->m_share);
+   case M_PRIV:
+      return SPACESHIP_NUMBER(p1->m_priv, p2->m_priv);
    case M_PSS:
       return SPACESHIP_NUMBER(p1->m_pss, p2->m_pss);
    case M_SWAP:
