@@ -8,6 +8,9 @@
     { include: ["<ncurses/term.h>", "private", "\"ProvideTerm.h\"", "public"] },
     { include: ["<ncursesw/term.h>", "private", "\"ProvideTerm.h\"", "public"] },
 
+    { include: ["<libunwind-x86_64.h>", "private", "<libunwind.h>", "public"] },
+    { include: ["\"ibunwind-x86_64.h\"", "private", "<libunwind.h>", "public"] },
+
     { include: ["<bits/types/struct_tm.h>", "private", "<time.h>", "public"] },
 
     { include: ["<bits/getopt_core.h>", "private", "<unistd.h>", "public"] },
@@ -25,4 +28,6 @@
     { include: ["<linux/capability.h>", "private", "<sys/capability.h>", "public"] },
 
     { include: ["<bits/mman-shared.h>", "private", "<sys/mman.h>", "public"] },
+
+    { include: ["<bits/types/struct_sched_param.h>", "private", "<sched.h>", "public"] },
 ]
