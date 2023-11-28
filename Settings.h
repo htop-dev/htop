@@ -23,8 +23,8 @@ in the source distribution for its full text.
 
 #define CONFIG_READER_MIN_VERSION 3
 
-struct DynamicScreen_;
-struct Table_;
+struct DynamicScreen_;  // IWYU pragma: keep
+struct Table_;          // IWYU pragma: keep
 
 typedef struct {
    const char* name;

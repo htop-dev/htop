@@ -26,9 +26,9 @@ extern uint8_t Row_fieldWidths[LAST_RESERVED_FIELD];
 extern int Row_pidDigits;
 extern int Row_uidDigits;
 
-struct Machine_;
-struct Settings_;
-struct Table_;
+struct Machine_;     // IWYU pragma: keep
+struct Settings_;    // IWYU pragma: keep
+struct Table_;       // IWYU pragma: keep
 
 /* Class representing entities (such as processes) that can be
  * represented in a tabular form in the lower half of the htop

@@ -44,8 +44,8 @@ typedef enum ProcessState_ {
    SLEEPING
 } ProcessState;
 
-struct Machine_;
-struct Settings_;
+struct Machine_;  // IWYU pragma: keep
+struct Settings_; // IWYU pragma: keep
 
 /* Holds information about regions of the cmdline that should be
  * highlighted (e.g. program basename, delimiter, comm). */
