@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 #include "Object.h"
+#include "RichString.h"
 
 
 typedef struct ListItem_ {

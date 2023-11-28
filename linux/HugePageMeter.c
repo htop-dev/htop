@@ -12,9 +12,9 @@ in the source distribution for its full text.
 #include <stddef.h>
 
 #include "CRT.h"
+#include "Machine.h"
 #include "Macros.h"
 #include "Object.h"
-#include "ProcessTable.h"
 #include "RichString.h"
 #include "linux/LinuxMachine.h"
 

@@ -9,17 +9,16 @@ in the source distribution for its full text.
 #include "Table.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "CRT.h"
-#include "DynamicColumn.h"
 #include "Hashtable.h"
 #include "Machine.h"
 #include "Macros.h"
-#include "Platform.h"
+#include "Panel.h"
+#include "RowField.h"
 #include "Vector.h"
-#include "XUtils.h"
 
 
 Table* Table_init(Table* this, const ObjectClass* klass, Machine* host) {

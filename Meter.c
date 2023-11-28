@@ -10,9 +10,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 
 #include <assert.h>
-#include <limits.h>
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -21,6 +19,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
+#include "Row.h"
 #include "Settings.h"
 #include "XUtils.h"
 

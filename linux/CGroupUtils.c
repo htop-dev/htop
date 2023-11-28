@@ -9,6 +9,12 @@ in the source distribution for its full text.
 
 #include "linux/CGroupUtils.h"
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "Macros.h"
 #include "XUtils.h"
 
 

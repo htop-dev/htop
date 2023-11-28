@@ -13,8 +13,8 @@ in the source distribution for its full text.
 #include <sys/time.h>
 
 #include "CRT.h"
+#include "Machine.h"
 #include "Object.h"
-#include "ProcessTable.h"
 
 
 static const int ClockMeter_attributes[] = {

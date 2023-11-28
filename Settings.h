@@ -10,11 +10,13 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "Hashtable.h"
 #include "HeaderLayout.h"
 #include "Row.h"
+#include "RowField.h"
 
 
 #define DEFAULT_DELAY 15

@@ -10,7 +10,9 @@ in the source distribution for its full text.
 
 #include "linux/LinuxProcess.h"
 
+#include <assert.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <syscall.h>
@@ -21,7 +23,9 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
+#include "RowField.h"
 #include "Scheduling.h"
+#include "Settings.h"
 #include "XUtils.h"
 #include "linux/IOPriority.h"
 #include "linux/LinuxMachine.h"

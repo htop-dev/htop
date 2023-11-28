@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "DynamicScreen.h"
 #include "ListItem.h"
+#include "Object.h"
 #include "Panel.h"
 #include "ScreensPanel.h"
 #include "ScreenManager.h"

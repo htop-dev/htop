@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "Platform.h"
 #include "ProvideCurses.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 

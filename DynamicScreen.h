@@ -11,7 +11,6 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 #include "Panel.h"
-#include "Settings.h"
 
 
 typedef struct DynamicScreen_ {

@@ -10,15 +10,14 @@ in the source distribution for its full text.
 #include "DiskIOMeter.h"
 
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "CRT.h"
+#include "Machine.h"
 #include "Macros.h"
-#include "Meter.h"
 #include "Object.h"
 #include "Platform.h"
-#include "ProcessTable.h"
 #include "RichString.h"
+#include "Row.h"
 #include "XUtils.h"
 
 

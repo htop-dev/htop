@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "Object.h"
 #include "RichString.h"
 #include "Row.h"
+#include "RowField.h"
 
 
 #define PROCESS_FLAG_IO              0x00000001

@@ -7,9 +7,6 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include <stdbool.h>
-#include <stddef.h>
-
 
 char* CGroup_filterName(const char* cgroup);
 char* CGroup_filterContainer(const char* cgroup);

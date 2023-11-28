@@ -10,21 +10,22 @@ in the source distribution for its full text.
 
 #include "Row.h"
 
+#include <assert.h>
+#include <limits.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
 
 #include "CRT.h"
 #include "DynamicColumn.h"
+#include "Hashtable.h"
 #include "Machine.h"
 #include "Macros.h"
+#include "Process.h"
 #include "RichString.h"
 #include "Settings.h"
-#include "Table.h"
 #include "XUtils.h"
 
 

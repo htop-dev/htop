@@ -10,7 +10,6 @@ in the source distribution for its full text.
 #include "linux/Platform.h"
 
 #include <assert.h>
-#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -60,6 +59,7 @@ in the source distribution for its full text.
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
+#include "linux/ZswapStats.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"

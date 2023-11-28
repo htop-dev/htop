@@ -16,12 +16,10 @@ in the source distribution for its full text.
 #include <sys/time.h>
 #include <sys/types.h>
 
-#include "Hashtable.h"
 #include "Panel.h"
 #include "Settings.h"
 #include "Table.h"
 #include "UsersTable.h"
-#include "Vector.h"
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>

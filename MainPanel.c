@@ -12,12 +12,15 @@ in the source distribution for its full text.
 
 #include <ctype.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 #include "CRT.h"
 #include "FunctionBar.h"
+#include "Machine.h"
 #include "Platform.h"
 #include "ProvideCurses.h"
 #include "Row.h"
+#include "RowField.h"
 #include "Settings.h"
 #include "Table.h"
 #include "XUtils.h"

@@ -10,8 +10,9 @@ in the source distribution for its full text.
 
 #include "ScreensPanel.h"
 
-#include <stdlib.h>
+#include <assert.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "AvailableColumnsPanel.h"

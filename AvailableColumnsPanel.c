@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include "Platform.h"
 #include "Process.h"
 #include "ProvideCurses.h"
+#include "RowField.h"
 #include "XUtils.h"
 
 

@@ -9,14 +9,16 @@ in the source distribution for its full text.
 
 #include "CPUMeter.h"
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "CRT.h"
+#include "Machine.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
-#include "ProcessTable.h"
 #include "RichString.h"
 #include "Settings.h"
 #include "XUtils.h"

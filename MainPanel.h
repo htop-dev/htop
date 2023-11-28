@@ -11,9 +11,9 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include <stdbool.h>
-#include <sys/types.h>
 
 #include "Action.h"
+#include "FunctionBar.h"
 #include "IncSet.h"
 #include "Object.h"
 #include "Panel.h"

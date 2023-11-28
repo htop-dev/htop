@@ -12,21 +12,16 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
-#include <time.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 
 #ifdef HAVE_DELAYACCT
 #include <linux/netlink.h>
@@ -41,12 +36,17 @@ in the source distribution for its full text.
 #endif
 
 #include "Compat.h"
-#include "CRT.h"
+#include "Hashtable.h"
+#include "Machine.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"
+#include "Row.h"
+#include "RowField.h"
 #include "Scheduling.h"
 #include "Settings.h"
+#include "Table.h"
+#include "UsersTable.h"
 #include "XUtils.h"
 #include "linux/CGroupUtils.h"
 #include "linux/LinuxMachine.h"

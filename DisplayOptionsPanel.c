@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "CRT.h"
 #include "FunctionBar.h"
