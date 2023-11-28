@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "Affinity.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 #include "Process.h"

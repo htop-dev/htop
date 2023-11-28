@@ -9,18 +9,13 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include <limits.h>
 #include <stdbool.h>
-#include <stdint.h>
-#include <sys/time.h>
 #include <sys/types.h>
 
 #include "Hashtable.h"
 #include "Machine.h"
 #include "Object.h"
-#include "Panel.h"
 #include "Process.h"
-#include "RichString.h"
 #include "Table.h"
 
 

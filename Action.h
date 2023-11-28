@@ -18,7 +18,6 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Process.h"
 #include "Settings.h"
-#include "UsersTable.h"
 
 
 typedef enum {

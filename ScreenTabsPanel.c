@@ -9,13 +9,16 @@ in the source distribution for its full text.
 
 #include "ScreenTabsPanel.h"
 
+#include <assert.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "CRT.h"
 #include "FunctionBar.h"
 #include "Hashtable.h"
+#include "Macros.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
 #include "XUtils.h"

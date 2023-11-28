@@ -15,10 +15,11 @@ in the source distribution for its full text.
 #include <string.h>
 
 #include "CRT.h"
+#include "Machine.h"
 #include "Object.h"
 #include "Platform.h"
-#include "ProcessTable.h"
 #include "RichString.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 

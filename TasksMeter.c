@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 
 #include "CRT.h"
+#include "Machine.h"
 #include "Macros.h"
 #include "Object.h"
 #include "ProcessTable.h"

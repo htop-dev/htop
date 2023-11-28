@@ -10,26 +10,28 @@ in the source distribution for its full text.
 #include "linux/LinuxMachine.h"
 
 #include <assert.h>
-#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <inttypes.h>
+#include <limits.h>
 #include <math.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <time.h>
 
 #include "Compat.h"
+#include "CRT.h"
 #include "Macros.h"
+#include "ProcessTable.h"
+#include "Row.h"
+#include "Settings.h"
+#include "UsersTable.h"
 #include "XUtils.h"
-#include "linux/LinuxMachine.h"
+
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
 #ifdef HAVE_SENSORS_SENSORS_H

@@ -10,8 +10,6 @@ in the source distribution for its full text.
 #include "FileDescriptorMeter.h"
 
 #include <math.h>
-#include <stdbool.h>
-#include <string.h>
 
 #include "CRT.h"
 #include "Macros.h"

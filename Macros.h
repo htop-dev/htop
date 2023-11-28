@@ -10,6 +10,8 @@ in the source distribution for its full text.
 #include <assert.h> // IWYU pragma: keep
 #include <math.h>
 #include <stdbool.h>
+#include <string.h> // IWYU pragma: keep
+
 
 #ifndef MINIMUM
 #define MINIMUM(a, b)                  ((a) < (b) ? (a) : (b))

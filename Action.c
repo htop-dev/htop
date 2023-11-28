@@ -9,9 +9,11 @@ in the source distribution for its full text.
 
 #include "Action.h"
 
+#include <assert.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "CRT.h"
 #include "CategoriesPanel.h"
@@ -27,13 +29,16 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
-#include "ProcessTable.h"
 #include "ProcessLocksScreen.h"
 #include "ProvideCurses.h"
+#include "Row.h"
+#include "RowField.h"
 #include "Scheduling.h"
 #include "ScreenManager.h"
 #include "SignalsPanel.h"
+#include "Table.h"
 #include "TraceScreen.h"
+#include "UsersTable.h"
 #include "Vector.h"
 #include "XUtils.h"
 

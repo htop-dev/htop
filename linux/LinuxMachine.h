@@ -10,10 +10,8 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include <stdbool.h>
-#include <sys/types.h>
 
 #include "Machine.h"
-#include "UsersTable.h"
 #include "linux/ZramStats.h"
 #include "linux/ZswapStats.h"
 #include "zfs/ZfsArcStats.h"

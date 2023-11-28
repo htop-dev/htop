@@ -11,11 +11,9 @@ in the source distribution for its full text.
 #include "Machine.h"
 
 #include <stdlib.h>
-#include <string.h>
+#include <unistd.h>
 
-#include "CRT.h"
-#include "Hashtable.h"
-#include "Macros.h"
+#include "Object.h"
 #include "Platform.h"
 #include "Row.h"
 #include "XUtils.h"

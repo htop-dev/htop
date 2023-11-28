@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
+#include "Hashtable.h"
 #include "Panel.h"
 #include "Settings.h"
 

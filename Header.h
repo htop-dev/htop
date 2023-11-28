@@ -7,6 +7,8 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stddef.h>
+
 #include "HeaderLayout.h"
 #include "Machine.h"
 #include "Meter.h"

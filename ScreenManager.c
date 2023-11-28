@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 
 #include "CRT.h"
@@ -20,8 +21,10 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
-#include "ProcessTable.h"
+#include "Process.h"
 #include "ProvideCurses.h"
+#include "Settings.h"
+#include "Table.h"
 #include "XUtils.h"
 
 

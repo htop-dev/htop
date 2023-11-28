@@ -7,6 +7,7 @@ in the source distribution for its full text.
 
 #include "MemoryMeter.h"
 
+#include <assert.h>
 #include <math.h>
 #include <stddef.h>
 

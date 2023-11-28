@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #endif
 
 #include <stdbool.h>
+#include <stddef.h> // IWYU pragma: keep
 #include <stdio.h>
 #include <stdlib.h> // IWYU pragma: keep
 #include <string.h> // IWYU pragma: keep

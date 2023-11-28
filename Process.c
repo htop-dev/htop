@@ -11,7 +11,6 @@ in the source distribution for its full text.
 #include "Process.h"
 
 #include <assert.h>
-#include <limits.h>
 #include <math.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -19,17 +18,18 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
 #include <sys/resource.h>
 
 #include "CRT.h"
+#include "Hashtable.h"
+#include "Machine.h"
 #include "Macros.h"
-#include "Platform.h"
 #include "ProcessTable.h"
 #include "DynamicColumn.h"
 #include "RichString.h"
 #include "Scheduling.h"
 #include "Settings.h"
+#include "Table.h"
 #include "XUtils.h"
 
 #if defined(MAJOR_IN_MKDEV)

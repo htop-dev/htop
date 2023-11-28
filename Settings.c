@@ -25,6 +25,8 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Meter.h"
 #include "Platform.h"
+#include "Process.h"
+#include "Table.h"
 #include "XUtils.h"
 
 

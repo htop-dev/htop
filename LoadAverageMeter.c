@@ -10,9 +10,9 @@ in the source distribution for its full text.
 #include "LoadAverageMeter.h"
 
 #include "CRT.h"
+#include "Machine.h"
 #include "Object.h"
 #include "Platform.h"
-#include "ProcessTable.h"
 #include "RichString.h"
 #include "XUtils.h"
 

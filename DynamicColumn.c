@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "DynamicColumn.h"
 
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "Platform.h"
 #include "RichString.h"

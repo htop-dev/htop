@@ -8,11 +8,11 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include "Scheduling.h"
-#include "EnvScreen.h"
 
 #ifdef SCHEDULER_SUPPORT
 
-#include <errno.h>
+#include <assert.h>
+#include <stddef.h>
 
 #include "FunctionBar.h"
 #include "ListItem.h"
