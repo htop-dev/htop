@@ -11,7 +11,7 @@ in the source distribution for its full text.
 
 #include <assert.h> // IWYU pragma: keep
 #include <fcntl.h>
-#include <stddef.h>
+#include <stddef.h> // IWYU pragma: keep
 #include <unistd.h>
 #include <sys/stat.h> // IWYU pragma: keep
 
