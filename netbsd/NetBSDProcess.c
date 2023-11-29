@@ -228,16 +228,19 @@ void Process_delete(Object* cast) {
 }
 
 static void NetBSDProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
-   const Process* this = (const Process*) super;
+   const NetBSDProcess* np = (const NetBSDProcess*) super;
+
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
+   //size_t n = sizeof(buffer) - 1;
 
    switch (field) {
    // add NetBSD-specific fields here
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(np->super, str, field);
       return;
    }
+
    RichString_appendWide(str, attr, buffer);
 }
 

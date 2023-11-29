@@ -74,9 +74,11 @@ void Process_delete(Object* cast) {
 
 static void DarwinProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const DarwinProcess* dp = (const DarwinProcess*) super;
+
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   size_t n = sizeof(buffer) - 1;
+
    switch (field) {
    // add Platform-specific fields here
    case TRANSLATED: xSnprintf(buffer, n, "%c ", dp->translated ? 'T' : 'N'); break;
@@ -84,6 +86,7 @@ static void DarwinProcess_rowWriteField(const Row* super, RichString* str, Proce
       Process_writeField(&dp->super, str, field);
       return;
    }
+
    RichString_appendWide(str, attr, buffer);
 }
 

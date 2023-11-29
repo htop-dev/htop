@@ -542,13 +542,14 @@ static void Process_rowWriteField(const Row* super, RichString* str, RowField fi
 }
 
 void Process_writeField(const Process* this, RichString* str, RowField field) {
-   char buffer[256];
-   size_t n = sizeof(buffer);
-   int attr = CRT_colors[DEFAULT_COLOR];
    const Row* super = (const Row*) &this->super;
    const Machine* host = super->host;
    const Settings* settings = host->settings;
+
    bool coloring = settings->highlightMegabytes;
+   char buffer[256]; buffer[255] = '\0';
+   int attr = CRT_colors[DEFAULT_COLOR];
+   size_t n = sizeof(buffer) - 1;
 
    switch (field) {
    case COMM: {
@@ -754,6 +755,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       xSnprintf(buffer, n, "- ");
       break;
    }
+
    RichString_appendAscii(str, attr, buffer);
 }
 

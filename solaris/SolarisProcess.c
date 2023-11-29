@@ -75,9 +75,11 @@ void Process_delete(Object* cast) {
 
 static void SolarisProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const SolarisProcess* sp = (const SolarisProcess*) super;
+
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   size_t n = sizeof(buffer) - 1;
+
    switch (field) {
    // add Solaris-specific fields here
    case ZONEID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, sp->zoneid); break;
@@ -94,6 +96,7 @@ static void SolarisProcess_rowWriteField(const Row* super, RichString* str, Proc
       Process_writeField(&sp->super, str, field);
       return;
    }
+
    RichString_appendWide(str, attr, buffer);
 }
 
