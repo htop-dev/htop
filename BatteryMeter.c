@@ -7,6 +7,8 @@ in the source distribution for its full text.
 This meter written by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #include "BatteryMeter.h"
 
 #include <math.h>

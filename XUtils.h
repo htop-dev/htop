@@ -3,11 +3,16 @@
 /*
 htop - StringUtils.h
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2020-2023 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h" // IWYU pragma: keep
+// IWYU pragma: no_include "config.h"
+#ifndef PACKAGE
+// strchrnul() needs _GNU_SOURCE defined, see PR #1337 for details
+#error "Must have #include \"config.h\" line at the top of the file that includes these XUtils helper functions"
+#endif
 
 #include <stdbool.h>
 #include <stdio.h>
