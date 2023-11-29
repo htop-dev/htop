@@ -60,6 +60,9 @@ esac
 # Enable extensions, required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
+# Activate some more of the missing global defines
+AC_SYS_LARGEFILE
+
 # ----------------------------------------------------------------------
 
 
@@ -168,7 +171,12 @@ fi
 # Checks for typedefs, structures, and compiler characteristics.
 # ----------------------------------------------------------------------
 
+AC_TYPE_MBSTATE_T
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
 AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
 AC_TYPE_UID_T
 AC_TYPE_UINT8_T
 AC_TYPE_UINT16_T
