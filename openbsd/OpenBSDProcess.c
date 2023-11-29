@@ -220,17 +220,19 @@ void Process_delete(Object* cast) {
 }
 
 static void OpenBSDProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
-   //const OpenBSDProcess* op = (const OpenBSDProcess*) super;
-   const Process* this = (const Process*) super;
+   const OpenBSDProcess* op = (const OpenBSDProcess*) super;
+
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   //int n = sizeof(buffer) - 1;
+   //size_t n = sizeof(buffer) - 1;
+
    switch (field) {
    // add OpenBSD-specific fields here
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(&op->super, str, field);
       return;
    }
+
    RichString_appendWide(str, attr, buffer);
 }
 

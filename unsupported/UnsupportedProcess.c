@@ -60,6 +60,7 @@ void Process_delete(Object* cast) {
 
 static void UnsupportedProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const UnsupportedProcess* up = (const UnsupportedProcess*) super;
+
    bool coloring = super->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
@@ -74,6 +75,7 @@ static void UnsupportedProcess_rowWriteField(const Row* super, RichString* str, 
       Process_writeField(&up->super, str, field);
       return;
    }
+
    RichString_appendWide(str, attr, buffer);
 }
 

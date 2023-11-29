@@ -132,10 +132,12 @@ static double PCPProcess_totalIORate(const PCPProcess* pp) {
 
 static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const PCPProcess* pp = (const PCPProcess*) super;
+
    bool coloring = super->host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
+
    switch ((int)field) {
    case CMINFLT: Row_printCount(str, pp->cminflt, coloring); return;
    case CMAJFLT: Row_printCount(str, pp->cmajflt, coloring); return;
@@ -205,6 +207,7 @@ static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessF
       Process_writeField(&pp->super, str, field);
       return;
    }
+
    RichString_appendWide(str, attr, buffer);
 }
 

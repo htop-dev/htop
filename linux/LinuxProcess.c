@@ -226,13 +226,15 @@ static double LinuxProcess_totalIORate(const LinuxProcess* lp) {
 
 static void LinuxProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const Process* this = (const Process*) super;
+   const LinuxProcess* lp = (const LinuxProcess*) super;
    const Machine* host = (const Machine*) super->host;
-   const LinuxMachine* lhost = (const LinuxMachine*) host;
-   const LinuxProcess* lp = (const LinuxProcess*) this;
+   const LinuxMachine* lhost = (const LinuxMachine*) super->host;
+
    bool coloring = host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
+
    switch (field) {
    case CMINFLT: Row_printCount(str, lp->cminflt, coloring); return;
    case CMAJFLT: Row_printCount(str, lp->cmajflt, coloring); return;
@@ -330,6 +332,7 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
       Process_writeField(this, str, field);
       return;
    }
+
    RichString_appendAscii(str, attr, buffer);
 }
 

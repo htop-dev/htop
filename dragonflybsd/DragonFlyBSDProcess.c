@@ -68,19 +68,22 @@ void Process_delete(Object* cast) {
 
 static void DragonFlyBSDProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const Process* this = (const Process*) super;
-   const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) this;
+   const DragonFlyBSDProcess* fp = (const DragonFlyBSDProcess*) super;
+
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
+
    switch (field) {
    // add Platform-specific fields here
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, Process_isKernelThread(this) ? -1 : Process_getPid(this)); break;
    case JID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, fp->jid); break;
    case JAIL: Row_printLeftAlignedField(str, attr, fp->jname, 11); return;
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(&fp->super, str, field);
       return;
    }
+
    RichString_appendWide(str, attr, buffer);
 }
 
