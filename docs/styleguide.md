@@ -75,6 +75,11 @@ The include list should be in the following order, with each group separated by 
 The list of headers should be sorted with includes from subdirectories following after files inside their parent directory.
 Thus `unistd.h` sorts before `sys/time.h`.
 
+When `XUtils.h` is used by the module itself or any of its included headers, the C source file must include `config.h` in the manner noted above.
+Failure to do so will cause a compilation error (sanity check inside `XUtils.h`) or may result in other, hard-to-debug compilation issues.
+The include for `config.h` is only ever placed in the C source file and never in any header file.
+For further details see PR #1337 in our issue tracker.
+
 Symbol Exports
 --------------
 
