@@ -40,9 +40,6 @@ in the source distribution for its full text.
 #define O_PATH         010000000 // declare for ancient glibc versions
 #endif
 
-/* Similar to get_nprocs_conf(3) / _SC_NPROCESSORS_CONF
- * https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/getsysstats.c;hb=HEAD
- */
 static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
    unsigned int existing = 0, active = 0;
    Machine* super = &this->super;
@@ -56,62 +53,21 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
       super->existingCPUs = 1;
    }
 
-   DIR* dir = opendir("/sys/devices/system/cpu");
-   if (!dir)
-      return;
-
    unsigned int currExisting = super->existingCPUs;
 
-   const struct dirent* entry;
-   while ((entry = readdir(dir)) != NULL) {
-      if (entry->d_type != DT_DIR && entry->d_type != DT_UNKNOWN)
-         continue;
+   existing = sysconf(_SC_NPROCESSORS_CONF);
+   active = sysconf(_SC_NPROCESSORS_ONLN);
 
-      if (!String_startsWith(entry->d_name, "cpu"))
-         continue;
+   this->cpuData = xReallocArrayZero(this->cpuData, currExisting ? (currExisting + 1) : 0, existing + 1, sizeof(CPUData));
+   this->cpuData[0].online = true; /* average is always "online" */
+   currExisting = existing;
 
-      char* endp;
-      unsigned long int id = strtoul(entry->d_name + 3, &endp, 10);
-      if (id == ULONG_MAX || endp == entry->d_name + 3 || *endp != '\0')
-         continue;
-
-#ifdef HAVE_OPENAT
-      int cpuDirFd = openat(dirfd(dir), entry->d_name, O_DIRECTORY | O_PATH | O_NOFOLLOW);
-      if (cpuDirFd < 0)
-         continue;
-#else
-      char cpuDirFd[4096];
-      xSnprintf(cpuDirFd, sizeof(cpuDirFd), "/sys/devices/system/cpu/%s", entry->d_name);
-#endif
-
-      existing++;
-
-      /* readdir() iterates with no specific order */
-      unsigned int max = MAXIMUM(existing, id + 1);
-      if (max > currExisting) {
-         this->cpuData = xReallocArrayZero(this->cpuData, currExisting ? (currExisting + 1) : 0, max + /* aggregate */ 1, sizeof(CPUData));
-         this->cpuData[0].online = true; /* average is always "online" */
-         currExisting = max;
-      }
-
-      char buffer[8];
-      ssize_t res = xReadfileat(cpuDirFd, "online", buffer, sizeof(buffer));
-      /* If the file "online" does not exist or on failure count as active */
-      if (res < 1 || buffer[0] != '0') {
-         active++;
-         this->cpuData[id + 1].online = true;
-      } else {
-         this->cpuData[id + 1].online = false;
-      }
-
-      Compat_openatArgClose(cpuDirFd);
+   for (unsigned int i = 0; i < existing; i++) {
+     if (i <= active)
+       this->cpuData[i].online = true;
+     else
+       this->cpuData[i].online = false;
    }
-
-   closedir(dir);
-
-   // return if no CPU is found
-   if (existing < 1)
-      return;
 
 #ifdef HAVE_SENSORS_SENSORS_H
    /* When started with offline CPUs, libsensors does not monitor those,
