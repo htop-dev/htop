@@ -8,8 +8,6 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h" // IWYU pragma: keep
-
 #include <kstat.h>
 #include <stdbool.h>
 #include <stdint.h>

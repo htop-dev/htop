@@ -9,8 +9,6 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h" // IWYU pragma: keep
-
 #include <kstat.h>
 
 /* On OmniOS /usr/include/sys/regset.h redefines ERR to 13 - \r, breaking the Enter key.
