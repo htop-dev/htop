@@ -10,6 +10,28 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+static const char* str_slice_suffix = ".slice";
+static const char* str_system_slice = "system.slice";
+static const char* str_user_slice = "user.slice";
+static const char* str_machine_slice = "machine.slice";
+static const char* str_user_slice_prefix = "/user-";
+static const char* str_system_slice_prefix = "/system-";
+
+static const char* str_lxc_monitor_legacy = "lxc.monitor";
+static const char* str_lxc_payload_legacy = "lxc.payload";
+static const char* str_lxc_monitor_prefix = "lxc.monitor.";
+static const char* str_lxc_payload_prefix = "lxc.payload.";
+
+static const char* str_nspawn_scope_prefix = "machine-";
+static const char* str_nspawn_monitor_label = "/supervisor";
+static const char* str_nspawn_payload_label = "/payload";
+
+static const char* str_snap_scope_prefix = "snap.";
+static const char* str_pod_scope_prefix = "libpod-";
+
+static const char* str_service_suffix = ".service";
+static const char* str_scope_suffix = ".scope";
+
 typedef struct StrBuf_state {
    char* buf;
    size_t size;
@@ -61,28 +83,6 @@ static bool Label_checkSuffix(const char* labelStart, size_t labelLen, const cha
 }
 
 static bool CGroup_filterName_internal(const char* cgroup, StrBuf_state* s, StrBuf_putc_t w) {
-   const char* str_slice_suffix = ".slice";
-   const char* str_system_slice = "system.slice";
-   const char* str_user_slice = "user.slice";
-   const char* str_machine_slice = "machine.slice";
-   const char* str_user_slice_prefix = "/user-";
-   const char* str_system_slice_prefix = "/system-";
-
-   const char* str_lxc_monitor_legacy = "lxc.monitor";
-   const char* str_lxc_payload_legacy = "lxc.payload";
-   const char* str_lxc_monitor_prefix = "lxc.monitor.";
-   const char* str_lxc_payload_prefix = "lxc.payload.";
-
-   const char* str_nspawn_scope_prefix = "machine-";
-   const char* str_nspawn_monitor_label = "/supervisor";
-   const char* str_nspawn_payload_label = "/payload";
-
-   const char* str_snap_scope_prefix = "snap.";
-   const char* str_pod_scope_prefix = "libpod-";
-
-   const char* str_service_suffix = ".service";
-   const char* str_scope_suffix = ".scope";
-
    while (*cgroup) {
       if ('/' == *cgroup) {
          while ('/' == *cgroup)
@@ -359,17 +359,6 @@ char* CGroup_filterName(const char* cgroup) {
 }
 
 static bool CGroup_filterContainer_internal(const char* cgroup, StrBuf_state* s, StrBuf_putc_t w) {
-   const char* str_lxc_payload_legacy = "lxc.payload";
-   const char* str_lxc_payload_prefix = "lxc.payload.";
-
-   const char* str_nspawn_scope_prefix = "machine-";
-   const char* str_nspawn_monitor_label = "/supervisor";
-   const char* str_nspawn_payload_label = "/payload";
-
-   const char* str_pod_scope_prefix = "libpod-";
-
-   const char* str_scope_suffix = ".scope";
-
    while (*cgroup) {
       if ('/' == *cgroup) {
          while ('/' == *cgroup)
