@@ -655,11 +655,13 @@ is only saved when a clean exit is performed. Sending any signal will cause
 Memory sizes in
 .B htop
 are displayed in a human-readable form.
-Sizes are printed in powers of 1024. (e.g., 1023M = 1072693248 Bytes)
+Sizes are printed in powers of 1024 using binary IEC units.
+If no suffix is shown the units are implicitly K as in KiB (kibibyte, 1 KiB = 1024 bytes).
 .LP
 The decision to use this convention was made in order to conserve screen
 space and make memory size representations consistent throughout
-.BR htop .
+.B htop
+as allocations are granular to full memory pages (4 KiB for most platforms).
 .SH "SEE ALSO"
 .BR proc (5),
 .BR top (1),
