@@ -26,6 +26,9 @@ typedef enum HeaderLayout_ {
    HF_THREE_25_25_50,
    HF_THREE_25_50_25,
    HF_THREE_50_25_25,
+   HF_THREE_40_30_30,
+   HF_THREE_30_40_30,
+   HF_THREE_30_30_40,
    HF_THREE_40_20_40,
    HF_FOUR_25_25_25_25,
    LAST_HEADER_LAYOUT
@@ -44,6 +47,9 @@ static const struct {
    [HF_THREE_25_25_50]   = { 3, { 25, 25, 50,  0 }, "three_25_25_50",   "3 columns - 25/25/50",        },
    [HF_THREE_25_50_25]   = { 3, { 25, 50, 25,  0 }, "three_25_50_25",   "3 columns - 25/50/25",        },
    [HF_THREE_50_25_25]   = { 3, { 50, 25, 25,  0 }, "three_50_25_25",   "3 columns - 50/25/25",        },
+   [HF_THREE_40_30_30]   = { 3, { 40, 30, 30,  0 }, "three_40_30_30",   "3 columns - 40/30/30",        },
+   [HF_THREE_30_40_30]   = { 3, { 30, 40, 30,  0 }, "three_30_40_30",   "3 columns - 30/40/30",        },
+   [HF_THREE_30_30_40]   = { 3, { 30, 30, 40,  0 }, "three_30_30_40",   "3 columns - 30/30/40",        },
    [HF_THREE_40_20_40]   = { 3, { 40, 20, 40,  0 }, "three_40_20_40",   "3 columns - 40/20/40",        },
    [HF_FOUR_25_25_25_25] = { 4, { 25, 25, 25, 25 }, "four_25_25_25_25", "4 columns - 25/25/25/25",     },
 };
