@@ -253,7 +253,7 @@ static void OpenFilesScreen_scan(InfoScreen* this) {
       while (fdata) {
          OpenFiles_Data* data = &fdata->data;
          char* entry = NULL;
-         xAsprintf(&entry, "%5.5s %-7.7s %-4.4s %-10.10s %10.10s %10.10s %10.10s  %s",
+         xAsprintf(&entry, "%5.5s %-7.7s %-4.4s %-4.4s %16s %10.10s %10.10s  %s",
                    getDataForType(data, 'f'),
                    getDataForType(data, 't'),
                    getDataForType(data, 'a'),
