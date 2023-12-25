@@ -618,6 +618,59 @@ static void scanCPUFrequencyFromCPUinfo(LinuxMachine* this) {
    }
 }
 
+#ifdef HAVE_SENSORS_SENSORS_H
+static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
+   const Machine* super = &this->super;
+
+   FILE* file = fopen(PROCCPUINFOFILE, "r");
+   if (file == NULL)
+      return;
+
+   int cpuid = -1;
+   int coreid = -1;
+   int physicalid = -1;
+
+   int max_physicalid = -1;
+   int max_coreid = -1;
+
+   while (!feof(file)) {
+      char *buffer = String_readLine(file);
+      if (!buffer)
+         break;
+
+      if (buffer[0] == '\0') {	/* empty line after each cpu */
+         if (cpuid >= 0 && (unsigned int)cpuid < super->existingCPUs) {
+            CPUData* cpuData = &(this->cpuData[cpuid + 1]);
+            cpuData->coreID = coreid;
+            cpuData->physicalID = physicalid;
+
+            if (coreid > max_coreid)
+               max_coreid = coreid;
+            if (physicalid > max_physicalid)
+               max_physicalid = physicalid;
+
+            cpuid = -1;
+            coreid = -1;
+            physicalid = -1;
+         }
+      } else if (String_startsWith(buffer, "processor")) {
+         sscanf(buffer, "processor : %d", &cpuid);
+      } else if (String_startsWith(buffer, "physical id")) {
+         sscanf(buffer, "physical id : %d", &physicalid);
+      } else if (String_startsWith(buffer, "core id")) {
+         sscanf(buffer, "core id : %d", &coreid);
+      }
+
+      free(buffer);
+   }
+
+   this->maxPhysicalID = max_physicalid;
+   this->maxCoreID = max_coreid;
+
+   fclose(file);
+}
+#endif
+
 static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
    const Machine* super = &this->super;
 
@@ -640,7 +693,11 @@ void Machine_scan(Machine* super) {
    LinuxMachine_scanCPUTime(this);
 
    const Settings* settings = super->settings;
-   if (settings->showCPUFrequency)
+   if (settings->showCPUFrequency
+#ifdef HAVE_SENSORS_SENSORS_H
+       || settings->showCPUTemperature
+#endif
+   )
       LinuxMachine_scanCPUFrequency(this);
 
    #ifdef HAVE_SENSORS_SENSORS_H
@@ -688,6 +745,11 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    // Initialize CPU count
    LinuxMachine_updateCPUcount(this);
+
+   #ifdef HAVE_SENSORS_SENSORS_H
+   // Fetch CPU topology
+   LinuxMachine_fetchCPUTopologyFromCPUinfo(this);
+   #endif
 
    return super;
 }
