@@ -35,6 +35,7 @@ in the source distribution for its full text.
 #define sym_sensors_get_features sensors_get_features
 #define sym_sensors_get_subfeature sensors_get_subfeature
 #define sym_sensors_get_value sensors_get_value
+#define sym_sensors_get_label sensors_get_label
 
 #else
 
@@ -44,6 +45,7 @@ static const sensors_chip_name* (*sym_sensors_get_detected_chips)(const sensors_
 static const sensors_feature* (*sym_sensors_get_features)(const sensors_chip_name*, int*);
 static const sensors_subfeature* (*sym_sensors_get_subfeature)(const sensors_chip_name*, const sensors_feature*, sensors_subfeature_type);
 static int (*sym_sensors_get_value)(const sensors_chip_name*, int, double*);
+static char* (*sym_sensors_get_label)(const sensors_chip_name*, const sensors_feature *feature);
 
 static void* dlopenHandle = NULL;
 
@@ -82,6 +84,7 @@ int LibSensors_init(void) {
       resolve(sensors_get_features);
       resolve(sensors_get_subfeature);
       resolve(sensors_get_value);
+      resolve(sensors_get_label);
 
       #undef resolve
    }
