@@ -159,6 +159,38 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
    return -1;
 }
 
+int LibSensors_countCCDs(void) {
+
+#ifndef BUILD_STATIC
+   if (!dlopenHandle)
+      return 0;
+#endif /* !BUILD_STATIC */
+
+   int ccds = 0;
+
+   int n = 0;
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+      int m = 0;
+      for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
+         if (feature->type != SENSORS_FEATURE_TEMP)
+            continue;
+
+         if (!feature->name || !String_startsWith(feature->name, "temp"))
+            continue;
+
+         char *label = sym_sensors_get_label(chip, feature);
+         if (label) {
+            if (String_startsWith(label, "Tccd")) {
+               ccds++;
+            }
+            free(label);
+         }
+      }
+   }
+
+   return ccds;
+}
+
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
    assert(existingCPUs > 0 && existingCPUs < 16384);
 
