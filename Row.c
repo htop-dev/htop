@@ -190,94 +190,116 @@ RowField RowField_keyAt(const Settings* settings, int at) {
    return COMM;
 }
 
-void Row_printBytes(RichString* str, unsigned long long number, bool coloring) {
+void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) {
    char buffer[16];
    int len;
 
-   int largeNumberColor = coloring ? CRT_colors[LARGE_NUMBER] : CRT_colors[PROCESS];
-   int megabytesColor = coloring ? CRT_colors[PROCESS_MEGABYTES] : CRT_colors[PROCESS];
-   int gigabytesColor = coloring ? CRT_colors[PROCESS_GIGABYTES] : CRT_colors[PROCESS];
-   int shadowColor = coloring ? CRT_colors[PROCESS_SHADOW] : CRT_colors[PROCESS];
-   int baseColor = CRT_colors[PROCESS];
+   int color = CRT_colors[PROCESS];
+   int nextUnitColor = CRT_colors[PROCESS];
 
-   if (number == ULLONG_MAX) {
-      //Invalid number
-      RichString_appendAscii(str, shadowColor, "  N/A ");
+   const int colors[4] = {
+      [0] = CRT_colors[PROCESS],
+      [1] = CRT_colors[PROCESS_MEGABYTES],
+      [2] = CRT_colors[PROCESS_GIGABYTES],
+      [3] = CRT_colors[LARGE_NUMBER]
+   };
+
+   if (number == ULLONG_MAX)
+      goto invalidNumber;
+
+   if (coloring) {
+      color = colors[0];
+      nextUnitColor = colors[1];
+   }
+
+   if (number < 1000) {
+      // Plain number, no markings
+      len = xSnprintf(buffer, sizeof(buffer), "%5u ", (unsigned int)number);
+      RichString_appendnAscii(str, color, buffer, len);
       return;
    }
 
-   number /= ONE_K;
-
-   if (number < 1000) {
-      //Plain number, no markings
-      len = xSnprintf(buffer, sizeof(buffer), "%5llu ", number);
-      RichString_appendnAscii(str, baseColor, buffer, len);
-   } else if (number < 100000) {
-      //2 digit MB, 3 digit KB
-      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / 1000);
-      RichString_appendnAscii(str, megabytesColor, buffer, len);
-      number %= 1000;
-      len = xSnprintf(buffer, sizeof(buffer), "%03llu ", number);
-      RichString_appendnAscii(str, baseColor, buffer, len);
-   } else if (number < 1000 * ONE_K) {
-      //3 digit MB
-      number /= ONE_K;
-      len = xSnprintf(buffer, sizeof(buffer), "%4lluM ", number);
-      RichString_appendnAscii(str, megabytesColor, buffer, len);
-   } else if (number < 10000 * ONE_K) {
-      //1 digit GB, 3 digit MB
-      number /= ONE_K;
-      len = xSnprintf(buffer, sizeof(buffer), "%1llu", number / 1000);
-      RichString_appendnAscii(str, gigabytesColor, buffer, len);
-      number %= 1000;
-      len = xSnprintf(buffer, sizeof(buffer), "%03lluM ", number);
-      RichString_appendnAscii(str, megabytesColor, buffer, len);
-   } else if (number < 100 * ONE_M) {
-      //2 digit GB, 1 digit MB
-      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / ONE_M);
-      RichString_appendnAscii(str, gigabytesColor, buffer, len);
-      number = (number % ONE_M) * 10 / ONE_M;
-      len = xSnprintf(buffer, sizeof(buffer), ".%1llu", number);
-      RichString_appendnAscii(str, megabytesColor, buffer, len);
-      RichString_appendAscii(str, gigabytesColor, "G ");
-   } else if (number < 1000 * ONE_M) {
-      //3 digit GB
-      number /= ONE_M;
-      len = xSnprintf(buffer, sizeof(buffer), "%4lluG ", number);
-      RichString_appendnAscii(str, gigabytesColor, buffer, len);
-   } else if (number < 10000ULL * ONE_M) {
-      //1 digit TB, 3 digit GB
-      number /= ONE_M;
-      len = xSnprintf(buffer, sizeof(buffer), "%1llu", number / 1000);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
-      number %= 1000;
-      len = xSnprintf(buffer, sizeof(buffer), "%03lluG ", number);
-      RichString_appendnAscii(str, gigabytesColor, buffer, len);
-   } else if (number < 100ULL * ONE_G) {
-      //2 digit TB, 1 digit GB
-      len = xSnprintf(buffer, sizeof(buffer), "%2llu", number / ONE_G);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
-      number = (number % ONE_G) * 10 / ONE_G;
-      len = xSnprintf(buffer, sizeof(buffer), ".%1llu", number);
-      RichString_appendnAscii(str, gigabytesColor, buffer, len);
-      RichString_appendAscii(str, largeNumberColor, "T ");
-   } else if (number < 10000ULL * ONE_G) {
-      //3 digit TB or 1 digit PB, 3 digit TB
-      number /= ONE_G;
-      len = xSnprintf(buffer, sizeof(buffer), "%4lluT ", number);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
-   } else {
-      //2 digit PB and above
-      len = xSnprintf(buffer, sizeof(buffer), "%4.1lfP ", (double)number / ONE_T);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
+   if (number < 100000) {
+      // 2 digits for M, 3 digits for K
+      len = xSnprintf(buffer, sizeof(buffer), "%2u", (unsigned int)(number / 1000));
+      RichString_appendnAscii(str, nextUnitColor, buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%03u ", (unsigned int)(number % 1000));
+      RichString_appendnAscii(str, color, buffer, len);
+      return;
    }
+
+   // 100000 KiB (97.6 MiB) or greater. A unit prefix would be added.
+   const size_t maxUnitIndex = (sizeof(number) * CHAR_BIT - 1) / 10 + 1;
+   const bool canOverflow = maxUnitIndex >= ARRAYSIZE(unitPrefixes);
+
+   size_t i = 1;
+   int prevUnitColor;
+   // Convert KiB to (1/100) of MiB
+   unsigned long long hundredths = (number / 256) * 25 + (number % 256) * 25 / 256;
+   while (true) {
+      if (canOverflow && i >= ARRAYSIZE(unitPrefixes))
+         goto invalidNumber;
+
+      prevUnitColor = color;
+      color = nextUnitColor;
+
+      if (coloring && i + 1 < ARRAYSIZE(colors))
+         nextUnitColor = colors[i + 1];
+
+      if (hundredths < 1000000)
+         break;
+
+      hundredths /= ONE_K;
+      i++;
+   }
+
+   number = hundredths / 100;
+   hundredths %= 100;
+   if (number < 100) {
+      if (number < 10) {
+         // 1 digit + decimal point + 2 digits
+         // "9.76G", "9.99G", "9.76T", "9.99T", etc.
+         len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number);
+         RichString_appendnAscii(str, color, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), ".%02u", (unsigned int)hundredths);
+      } else {
+         // 2 digits + decimal point + 1 digit
+         // "97.6M", "99.9M", "10.0G", "99.9G", etc.
+         len = xSnprintf(buffer, sizeof(buffer), "%2u", (unsigned int)number);
+         RichString_appendnAscii(str, color, buffer, len);
+         len = xSnprintf(buffer, sizeof(buffer), ".%1u", (unsigned int)hundredths / 10);
+      }
+      RichString_appendnAscii(str, prevUnitColor, buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%c ", unitPrefixes[i]);
+   } else if (number < 1000) {
+      // 3 digits
+      // "100M", "999M", "100G", "999G", etc.
+      len = xSnprintf(buffer, sizeof(buffer), "%4u%c ", (unsigned int)number, unitPrefixes[i]);
+   } else {
+      // 1 digit + 3 digits
+      // "1000M", "9999M", "1000G", "9999G", etc.
+      assert(number < 10000);
+
+      len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number / 1000);
+      RichString_appendnAscii(str, nextUnitColor, buffer, len);
+      len = xSnprintf(buffer, sizeof(buffer), "%03u%c ", (unsigned int)number % 1000, unitPrefixes[i]);
+   }
+   RichString_appendnAscii(str, color, buffer, len);
+   return;
+
+invalidNumber:
+   if (coloring)
+      color = CRT_colors[PROCESS_SHADOW];
+
+   RichString_appendAscii(str, color, "  N/A ");
+   return;
 }
 
-void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) {
+void Row_printBytes(RichString* str, unsigned long long number, bool coloring) {
    if (number == ULLONG_MAX)
-      Row_printBytes(str, ULLONG_MAX, coloring);
+      Row_printKBytes(str, ULLONG_MAX, coloring);
    else
-      Row_printBytes(str, number * ONE_K, coloring);
+      Row_printKBytes(str, number / ONE_K, coloring);
 }
 
 void Row_printCount(RichString* str, unsigned long long number, bool coloring) {
