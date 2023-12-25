@@ -223,6 +223,8 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    unsigned int coreTempCount = 0;
    int topPriority = 99;
 
+   int ccdID = 0;
+
    int n = 0;
    for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
       const int priority = tempDriverPriority(chip);
@@ -239,6 +241,8 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       }
 
       topPriority = priority;
+
+      int physicalID = -1;
 
       int m = 0;
       for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
@@ -266,6 +270,42 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          int r = sym_sensors_get_value(chip, subFeature->number, &temp);
          if (r != 0)
             continue;
+
+         char *label = sym_sensors_get_label(chip, feature);
+         if (label) {
+            int skip = 1;
+            /* Intel coretemp names, labels mention package and phyiscal id */
+            if (String_startsWith(label, "Package id ")) {
+               physicalID = strtoul(label + strlen("Package id "), NULL, 10);
+            } else if (String_startsWith(label, "Physical id ")) {
+               physicalID = strtoul(label + strlen("Physical id "), NULL, 10);
+            } else if (String_startsWith(label, "Core ")) {
+               int coreID = strtoul(label + strlen("Core "), NULL, 10);
+               for (size_t i = 1; i < existingCPUs + 1; i++) {
+                  if (cpus[i].physicalID == physicalID && cpus[i].coreID == coreID) {
+                     data[i] = temp;
+                     coreTempCount++;
+                  }
+               }
+            }
+
+            /* AMD k10temp/zenpower names, only CCD is known */
+            else if (String_startsWith(label, "Tccd")) {
+               for (size_t i = 1; i <= existingCPUs; i++) {
+                  if (cpus[i].ccdID == ccdID) {
+                     data[i] = temp;
+                     coreTempCount++;
+                  }
+               }
+               ccdID++;
+            } else {
+               skip = 0;
+            }
+
+            free(label);
+            if (skip)
+               continue;
+         }
 
          /* If already set, e.g. Ryzen reporting platform temperature for each die, use the bigger one */
          if (isNaN(data[tempID])) {
