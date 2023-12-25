@@ -603,6 +603,48 @@ static void scanCPUFrequencyFromCPUinfo(LinuxMachine* this) {
    }
 }
 
+#ifdef HAVE_SENSORS_SENSORS_H
+static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
+   const Machine* super = &this->super;
+
+   FILE* file = fopen(PROCCPUINFOFILE, "r");
+   if (file == NULL)
+      return;
+
+   int cpuid = -1;
+   int coreid = -1;
+   int physicalid = -1;
+
+   while (!feof(file)) {
+      char buffer[PROC_LINE_LENGTH];
+
+      if (fgets(buffer, PROC_LINE_LENGTH, file) == NULL)
+         break;
+
+      if (sscanf(buffer, "processor : %d", &cpuid) == 1) {
+         continue;
+      } else if (sscanf(buffer, "physical id : %d", &physicalid) == 1) {
+         continue;
+      } else if (sscanf(buffer, "core id : %d", &coreid) == 1) {
+         continue;
+      } else if (buffer[0] == '\n') {
+         if (cpuid < 0 || (unsigned int)cpuid > (super->existingCPUs - 1)) {
+            continue;
+         }
+
+         CPUData* cpuData = &(this->cpuData[cpuid + 1]);
+         cpuData->coreID = coreid;
+         cpuData->physicalID = physicalid;
+
+         cpuid = -1;
+         coreid = -1;
+      }
+   }
+
+   fclose(file);
+}
+#endif
+
 static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
    const Machine* super = &this->super;
 
@@ -625,7 +667,11 @@ void Machine_scan(Machine* super) {
    LinuxMachine_scanCPUTime(this);
 
    const Settings* settings = super->settings;
-   if (settings->showCPUFrequency)
+   if (settings->showCPUFrequency
+#ifdef HAVE_SENSORS_SENSORS_H
+       || settings->showCPUTemperature
+#endif
+   )
       LinuxMachine_scanCPUFrequency(this);
 
    #ifdef HAVE_SENSORS_SENSORS_H
@@ -673,6 +719,12 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    // Initialize CPU count
    LinuxMachine_updateCPUcount(this);
+
+   #ifdef HAVE_SENSORS_SENSORS_H
+   // Fetch CPU topology
+   LinuxMachine_fetchCPUTopologyFromCPUinfo(this);
+   LibSensors_countCCDs(this->cpuData, super->existingCPUs);
+   #endif
 
    return super;
 }
