@@ -142,11 +142,11 @@ void Row_setPidColumnWidth(pid_t maxPid);
 /* Sets the size of the UID column based on the passed UID */
 void Row_setUidColumnWidth(uid_t maxUid);
 
+/* Takes number in kibibytes (base 1024). Prints 6 columns. */
+void Row_printKBytes(RichString* str, unsigned long long number, bool coloring);
+
 /* Takes number in bytes (base 1024). Prints 6 columns. */
 void Row_printBytes(RichString* str, unsigned long long number, bool coloring);
-
-/* Takes number in kilo bytes (base 1024). Prints 6 columns. */
-void Row_printKBytes(RichString* str, unsigned long long number, bool coloring);
 
 /* Takes number as count (base 1000). Prints 12 columns. */
 void Row_printCount(RichString* str, unsigned long long number, bool coloring);
