@@ -669,6 +669,47 @@ static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
 
    fclose(file);
 }
+
+static void LinuxMachine_assignCCDs(LinuxMachine* this, int ccds) {
+   /* For AMD k10temp/zenpower, temperatures are provided for CCDs only,
+      which is an aggregate of multiple cores.
+      There's no obvious mapping between hwmon sensors and sockets and CCDs.
+      Assume both are iterated in order.
+      Hypothesis: Each CCD has same size N = #Cores/#CCD
+      and is assigned N coreID in sequence.
+      Also assume all CPUs have same number of CCDs. */
+
+   const Machine* super = &this->super;
+   CPUData *cpus = this->cpuData;
+
+   if (ccds == 0) {
+      for (size_t i = 0; i < super->existingCPUs + 1; i++) {
+         cpus[i].ccdID = -1;
+      }
+      return;
+   }
+
+   int coresPerCCD = super->existingCPUs / ccds;
+
+   int ccd = 0;
+   int nc = coresPerCCD;
+   for (int p = 0; p <= (int)this->maxPhysicalID; p++) {
+      for (int c = 0; c <= (int)this->maxCoreID; c++) {
+         for (size_t i = 1; i <= super->existingCPUs; i++) {
+            if (cpus[i].physicalID != p || cpus[i].coreID != c)
+               continue;
+
+            cpus[i].ccdID = ccd;
+
+            if (--nc <= 0) {
+               nc = coresPerCCD;
+               ccd++;
+            }
+         }
+      }
+   }
+}
+
 #endif
 
 static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
@@ -749,6 +790,8 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    #ifdef HAVE_SENSORS_SENSORS_H
    // Fetch CPU topology
    LinuxMachine_fetchCPUTopologyFromCPUinfo(this);
+   int ccds = LibSensors_countCCDs();
+   LinuxMachine_assignCCDs(this, ccds);
    #endif
 
    return super;

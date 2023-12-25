@@ -51,6 +51,7 @@ typedef struct CPUData_ {
 
    int physicalID;      /* different for each CPU socket */
    int coreID;          /* same for hyperthreading */
+   int ccdID;           /* same for each AMD chiplet */
    #endif
 
    bool online;
