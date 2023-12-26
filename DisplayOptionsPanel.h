@@ -17,6 +17,8 @@ typedef struct DisplayOptionsPanel_ {
 
    Settings* settings;
    ScreenManager* scr;
+   FunctionBar* numericFuBar;
+   FunctionBar* checkboxFuBar;
 } DisplayOptionsPanel;
 
 extern const PanelClass DisplayOptionsPanel_class;

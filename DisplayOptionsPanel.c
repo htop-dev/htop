@@ -21,13 +21,35 @@ in the source distribution for its full text.
 #include "ScreensPanel.h"
 
 
-static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const CheckboxDisplayOptionsFunctions[] = {"Select  ", "Done  ", NULL};
+static const char* const CheckboxDisplayOptionsKeys[] = {"Enter", "F10"};
+static const int CheckboxDisplayOptionsEvents[] = {KEY_ENTER, KEY_F(10)};
+static const char* const NumericDisplayOptionsFunctions[] = {"Decrement ", "Increment ", "Done  ", NULL};
+static const char* const NumericDisplayOptionsKeys[] = {"-", "+", "F10"};
+static const int NumericDisplayOptionsEvents[] = {'-', '+', KEY_F(10)};
 
 static void DisplayOptionsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
+   FunctionBar_delete(this->numericFuBar);
+   FunctionBar_delete(this->checkboxFuBar);
    Panel_done(super);
    free(this);
+}
+
+static void DisplayOptionsPanel_setFunctionBar(DisplayOptionsPanel* this, OptionItem* item) {
+   Panel* super = (Panel*) this;
+   switch (OptionItem_kind(item)) {
+      case OPTION_ITEM_NUMBER: 
+         super->currentBar = this->numericFuBar;
+         break;
+      case OPTION_ITEM_CHECK: 
+         super->currentBar = this->checkboxFuBar;
+         break;
+      defaut:
+         assert(0); // Unknown option type 
+   }
+   FunctionBar_draw(super->currentBar);
 }
 
 static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
@@ -37,6 +59,22 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    OptionItem* selected = (OptionItem*) Panel_getSelected(super);
 
    switch (ch) {
+   case KEY_UP: {
+      int selected_index = Panel_getSelectedIndex(super);
+      if (selected_index > 1) {
+         OptionItem* next_to_select = (OptionItem*) Panel_get(super, selected_index - 1);
+         DisplayOptionsPanel_setFunctionBar(this, next_to_select);
+      }
+      break;
+   }
+   case KEY_DOWN: {
+      int selected_index = Panel_getSelectedIndex(super);
+      if (selected_index < Panel_size(super) - 1) {
+         OptionItem* next_to_select = (OptionItem*) Panel_get(super, selected_index + 1);
+         DisplayOptionsPanel_setFunctionBar(this, next_to_select);
+      }
+      break;
+   }
    case '\n':
    case '\r':
    case KEY_ENTER:
@@ -94,11 +132,15 @@ const PanelClass DisplayOptionsPanel_class = {
 DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* scr) {
    DisplayOptionsPanel* this = AllocThis(DisplayOptionsPanel);
    Panel* super = (Panel*) this;
-   FunctionBar* fuBar = FunctionBar_new(DisplayOptionsFunctions, NULL, NULL);
-   Panel_init(super, 1, 1, 1, 1, Class(OptionItem), true, fuBar);
+   FunctionBar* checkboxFuBar = FunctionBar_new(CheckboxDisplayOptionsFunctions, CheckboxDisplayOptionsKeys, CheckboxDisplayOptionsEvents);
+   FunctionBar* numericFuBar = FunctionBar_new(NumericDisplayOptionsFunctions, NumericDisplayOptionsKeys, NumericDisplayOptionsEvents);
+   FunctionBar* emptyFuBar = FunctionBar_new(NULL, NULL, NULL);
+   Panel_init(super, 1, 1, 1, 1, Class(OptionItem), true, emptyFuBar);
 
    this->settings = settings;
    this->scr = scr;
+   this->numericFuBar = numericFuBar;
+   this->checkboxFuBar = checkboxFuBar;
 
    Panel_setHeader(super, "Display options");
 
@@ -156,5 +198,9 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    #ifdef HAVE_LIBHWLOC
    Panel_add(super, (Object*) CheckItem_newByRef("Show topology when selecting affinity by default", &(settings->topologyAffinity)));
    #endif
+
+   OptionItem* defaultSelected = (OptionItem*) Panel_getSelected(super);
+   DisplayOptionsPanel_setFunctionBar(this, defaultSelected);
+
    return this;
 }
