@@ -27,14 +27,17 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+// cf. getIndexForType; must be larger than the maximum value returned.
+#define LSOF_DATACOL_COUNT 8
+
 typedef struct OpenFiles_Data_ {
-   char* data[8];
+   char* data[LSOF_DATACOL_COUNT];
 } OpenFiles_Data;
 
 typedef struct OpenFiles_ProcessData_ {
    OpenFiles_Data data;
    int error;
-   int cols[8];
+   int cols[LSOF_DATACOL_COUNT];
    struct OpenFiles_FileData_* files;
 } OpenFiles_ProcessData;
 
