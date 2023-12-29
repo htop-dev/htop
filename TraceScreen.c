@@ -96,10 +96,11 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
          // The NULL constant is not required by standard to have a pointer type.
          execlp("truss", "truss", "-s", "512", "-p", buffer, (void*)NULL);
 
+         // Should never reach here, unless execlp fails ...
          const char* message = "Could not execute 'truss'. Please make sure it is available in your $PATH.";
          (void)! write(STDERR_FILENO, message, strlen(message));
       #elif defined(HTOP_LINUX)
-         execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, NULL);
+         execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, (void*)NULL);
 
          // Should never reach here, unless execlp fails ...
          const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
