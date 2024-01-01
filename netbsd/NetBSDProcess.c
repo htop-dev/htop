@@ -237,7 +237,7 @@ static void NetBSDProcess_rowWriteField(const Row* super, RichString* str, Proce
    switch (field) {
    // add NetBSD-specific fields here
    default:
-      Process_writeField(np->super, str, field);
+      Process_writeField(&np->super, str, field);
       return;
    }
 
