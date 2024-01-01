@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -273,7 +274,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
          char *label = sym_sensors_get_label(chip, feature);
          if (label) {
-            int skip = 1;
+            bool skip = true;
             /* Intel coretemp names, labels mention package and phyiscal id */
             if (String_startsWith(label, "Package id ")) {
                physicalID = strtoul(label + strlen("Package id "), NULL, 10);
@@ -299,7 +300,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                }
                ccdID++;
             } else {
-               skip = 0;
+               skip = false;
             }
 
             free(label);
