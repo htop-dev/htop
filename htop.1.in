@@ -1,4 +1,4 @@
-.TH "HTOP" "1" "2023" "@PACKAGE_STRING@" "User Commands"
+.TH "HTOP" "1" "2024" "@PACKAGE_STRING@" "User Commands"
 .SH "NAME"
 htop, pcp-htop \- interactive process viewer
 .SH "SYNOPSIS"
@@ -687,7 +687,7 @@ communities, and forms part of the Performance Co-Pilot suite of tools.
 .SH "COPYRIGHT"
 Copyright \(co 2004-2019 Hisham Muhammad.
 .br
-Copyright \(co 2020-2023 htop dev team.
+Copyright \(co 2020-2024 htop dev team.
 .LP
 License GPLv2+: GNU General Public License version 2 or, at your option, any later version.
 .LP

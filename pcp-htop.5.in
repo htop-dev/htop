@@ -1,4 +1,4 @@
-.TH "PCP-HTOP" "5" "2023" "@PACKAGE_STRING@" "File Formats"
+.TH "PCP-HTOP" "5" "2024" "@PACKAGE_STRING@" "File Formats"
 .SH "NAME"
 \f3pcp-htop\f1 \- pcp-htop configuration file
 .SH "DESCRIPTION"
