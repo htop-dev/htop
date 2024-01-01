@@ -151,7 +151,7 @@ static double getpcpu(const NetBSDMachine* nhost, const struct kinfo_proc2* kp) 
 }
 
 static void NetBSDProcessTable_scanProcs(NetBSDProcessTable* this) {
-   const Machine* host = this->super.host;
+   const Machine* host = this->super.super.host;
    const NetBSDMachine* nhost = (const NetBSDMachine*) host;
    const Settings* settings = host->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
