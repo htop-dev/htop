@@ -621,13 +621,7 @@ static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
       if (fgets(buffer, PROC_LINE_LENGTH, file) == NULL)
          break;
 
-      if (sscanf(buffer, "processor : %d", &cpuid) == 1) {
-         continue;
-      } else if (sscanf(buffer, "physical id : %d", &physicalid) == 1) {
-         continue;
-      } else if (sscanf(buffer, "core id : %d", &coreid) == 1) {
-         continue;
-      } else if (buffer[0] == '\n') {
+      if (buffer[0] == '\n') {
          if (cpuid < 0 || (unsigned int)cpuid > (super->existingCPUs - 1)) {
             continue;
          }
@@ -638,6 +632,12 @@ static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
 
          cpuid = -1;
          coreid = -1;
+      } else if (buffer[0] == 'p' && buffer[1] == 'r' && sscanf(buffer, "processor : %d", &cpuid) == 1) {
+         continue;
+      } else if (buffer[0] == 'p' && buffer[1] == 'h' && sscanf(buffer, "physical id : %d", &physicalid) == 1) {
+         continue;
+      } else if (buffer[0] == 'c' && buffer[1] == 'o' && sscanf(buffer, "core id : %d", &coreid) == 1) {
+         continue;
       }
    }
 
