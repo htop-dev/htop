@@ -153,20 +153,8 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
    return -1;
 }
 
-void LibSensors_countCCDs(CPUData* cpus, unsigned int existingCPUs) {
-   /* For AMD k10temp/zenpower, temperatures are provided for CCDs only,
-      which is an aggregate of multiple cores.
-      There's no obvious mapping between hwmon sensors and sockets and CCDs.
-      Assume both are iterated in order.
-      Hypothesis: Each CCD has same size N = #Cores/#CCD
-      and is assigned N coreID in sequence.
-      Also assume all CPUs have same number of CCDs. */
-
+int LibSensors_countCCDs() {
    int ccds = 0;
-
-   for (size_t i = 0; i < existingCPUs + 1; i++) {
-      cpus[i].ccdID = -1;
-   }
 
    int n = 0;
    for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
@@ -188,25 +176,7 @@ void LibSensors_countCCDs(CPUData* cpus, unsigned int existingCPUs) {
       }
    }
 
-   if (ccds > 0) {
-      int ccdsPerCore = existingCPUs / ccds;
-
-      int ccd = 0;
-      int nc = ccdsPerCore;
-      for (int p = 0; p < (int)existingCPUs; p++) {
-         for (int c = 0; c < (int)existingCPUs; c++) {
-            for (size_t i = 1; i <= existingCPUs; i++) {
-               if (cpus[i].physicalID == p && cpus[i].coreID == c) {
-                  cpus[i].ccdID = ccd;
-                  if (--nc == 0) {
-                     nc = ccdsPerCore;
-                     ccd++;
-                  }
-               }
-            }
-         }
-      }
-   }
+   return ccds;
 }
 
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
