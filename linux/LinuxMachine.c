@@ -629,9 +629,9 @@ static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
             cpuData->coreID = coreid;
             cpuData->physicalID = physicalid;
 
-	    if (coreid > max_coreid)
+            if (coreid > max_coreid)
                max_coreid = coreid;
-	    if (physicalid > max_physicalid)
+            if (physicalid > max_physicalid)
                max_physicalid = physicalid;
 
             cpuid = -1;
@@ -674,19 +674,21 @@ static void LinuxMachine_assignCCDs(LinuxMachine* this, int ccds) {
       return;
    }
 
-   int ccdsPerCore = super->existingCPUs / ccds;
+   int coresPerCCD = super->existingCPUs / ccds;
 
    int ccd = 0;
-   int nc = ccdsPerCore;
+   int nc = coresPerCCD;
    for (int p = 0; p <= (int)this->maxPhysicalID; p++) {
       for (int c = 0; c <= (int)this->maxCoreID; c++) {
          for (size_t i = 1; i <= super->existingCPUs; i++) {
-            if (cpus[i].physicalID == p && cpus[i].coreID == c) {
-               cpus[i].ccdID = ccd;
-               if (--nc == 0) {
-                  nc = ccdsPerCore;
-                  ccd++;
-               }
+            if (cpus[i].physicalID != p || cpus[i].coreID != c)
+               continue;
+
+            cpus[i].ccdID = ccd;
+
+            if (--nc == 0) {
+               nc = coresPerCCD;
+               ccd++;
             }
          }
       }
