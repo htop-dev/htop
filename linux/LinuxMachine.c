@@ -616,29 +616,29 @@ static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
    int physicalid = -1;
 
    while (!feof(file)) {
-      char buffer[PROC_LINE_LENGTH];
-
-      if (fgets(buffer, PROC_LINE_LENGTH, file) == NULL)
+      char *buffer = String_readLine(file);
+      if (!buffer)
          break;
 
-      if (buffer[0] == '\n') {
-         if (cpuid < 0 || (unsigned int)cpuid > (super->existingCPUs - 1)) {
-            continue;
+      if (buffer[0] == '\0') {	/* empty line after each cpu */
+         if (cpuid >= 0 && (unsigned int)cpuid < super->existingCPUs) {
+            CPUData* cpuData = &(this->cpuData[cpuid + 1]);
+            cpuData->coreID = coreid;
+            cpuData->physicalID = physicalid;
+
+            cpuid = -1;
+            coreid = -1;
+            physicalid = -1;
          }
-
-         CPUData* cpuData = &(this->cpuData[cpuid + 1]);
-         cpuData->coreID = coreid;
-         cpuData->physicalID = physicalid;
-
-         cpuid = -1;
-         coreid = -1;
-      } else if (buffer[0] == 'p' && buffer[1] == 'r' && sscanf(buffer, "processor : %d", &cpuid) == 1) {
-         continue;
-      } else if (buffer[0] == 'p' && buffer[1] == 'h' && sscanf(buffer, "physical id : %d", &physicalid) == 1) {
-         continue;
-      } else if (buffer[0] == 'c' && buffer[1] == 'o' && sscanf(buffer, "core id : %d", &coreid) == 1) {
-         continue;
+      } else if (String_startsWith(buffer, "processor")) {
+         sscanf(buffer, "processor : %d", &cpuid);
+      } else if (String_startsWith(buffer, "physical id")) {
+         sscanf(buffer, "physical id : %d", &physicalid);
+      } else if (String_startsWith(buffer, "core id")) {
+         sscanf(buffer, "core id : %d", &coreid);
       }
+
+      free(buffer);
    }
 
    fclose(file);
