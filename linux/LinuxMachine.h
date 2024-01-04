@@ -76,6 +76,11 @@ typedef struct LinuxMachine_ {
 
    CPUData* cpuData;
 
+   #ifdef HAVE_SENSORS_SENSORS_H
+   int maxPhysicalID;
+   int maxCoreID;
+   #endif
+
    memory_t totalHugePageMem;
    memory_t usedHugePageMem[HTOP_HUGEPAGE_COUNT];
 

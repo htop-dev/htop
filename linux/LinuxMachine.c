@@ -615,6 +615,9 @@ static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
    int coreid = -1;
    int physicalid = -1;
 
+   int max_physicalid = -1;
+   int max_coreid = -1;
+
    while (!feof(file)) {
       char *buffer = String_readLine(file);
       if (!buffer)
@@ -625,6 +628,11 @@ static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
             CPUData* cpuData = &(this->cpuData[cpuid + 1]);
             cpuData->coreID = coreid;
             cpuData->physicalID = physicalid;
+
+	    if (coreid > max_coreid)
+               max_coreid = coreid;
+	    if (physicalid > max_physicalid)
+               max_physicalid = physicalid;
 
             cpuid = -1;
             coreid = -1;
@@ -640,6 +648,9 @@ static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
 
       free(buffer);
    }
+
+   this->maxPhysicalID = max_physicalid;
+   this->maxCoreID = max_coreid;
 
    fclose(file);
 }
