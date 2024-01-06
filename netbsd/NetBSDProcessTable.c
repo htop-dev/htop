@@ -150,8 +150,8 @@ static double getpcpu(const NetBSDMachine* nhost, const struct kinfo_proc2* kp) 
    return 100.0 * (double)kp->p_pctcpu / nhost->fscale;
 }
 
-static void NetBSDProcessTable_scanProcs(NetBSDProcessTable* this) {
-   const Machine* host = this->super.super.host;
+void ProcessTable_goThroughEntries(ProcessTable* super) {
+   const Machine* host = super->super.host;
    const NetBSDMachine* nhost = (const NetBSDMachine*) host;
    const Settings* settings = host->settings;
    bool hideKernelThreads = settings->hideKernelThreads;
@@ -164,7 +164,7 @@ static void NetBSDProcessTable_scanProcs(NetBSDProcessTable* this) {
       const struct kinfo_proc2* kproc = &kprocs[i];
 
       bool preExisting = false;
-      Process* proc = ProcessTable_getProcess(&this->super, kproc->p_pid, &preExisting, NetBSDProcess_new);
+      Process* proc = ProcessTable_getProcess(super, kproc->p_pid, &preExisting, NetBSDProcess_new);
 
       proc->super.show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
@@ -179,10 +179,12 @@ static void NetBSDProcessTable_scanProcs(NetBSDProcessTable* this) {
          proc->isUserlandThread = Process_getPid(proc) != Process_getThreadGroup(proc); // eh?
          proc->starttime_ctime = kproc->p_ustart_sec;
          Process_fillStarttimeBuffer(proc);
-         ProcessTable_add(&this->super, proc);
+         ProcessTable_add(super, proc);
 
          proc->tty_nr = kproc->p_tdev;
-         const char* name = ((dev_t)kproc->p_tdev != KERN_PROC_TTY_NODEV) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
+         // KERN_PROC_TTY_NODEV is a negative constant but the type of
+         // kproc->p_tdev may be unsigned.
+         const char* name = ((dev_t)~kproc->p_tdev != (dev_t)~(KERN_PROC_TTY_NODEV)) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
          if (!name) {
             free(proc->tty_name);
             proc->tty_name = NULL;
@@ -257,21 +259,15 @@ static void NetBSDProcessTable_scanProcs(NetBSDProcessTable* this) {
       }
 
       if (Process_isKernelThread(proc)) {
-         this->super.kernelThreads++;
+         super->kernelThreads++;
       } else if (Process_isUserlandThread(proc)) {
-         this->super.userlandThreads++;
+         super->userlandThreads++;
       }
 
-      this->super.totalTasks++;
+      super->totalTasks++;
       if (proc->state == RUNNING) {
-         this->super.runningTasks++;
+         super->runningTasks++;
       }
       proc->super.updated = true;
    }
-}
-
-void ProcessTable_goThroughEntries(ProcessTable* super) {
-   NetBSDProcessTable* npt = (NetBSDProcessTable*) super;
-
-   NetBSDProcessTable_scanProcs(npt);
 }
