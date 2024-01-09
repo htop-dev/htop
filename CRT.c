@@ -924,6 +924,8 @@ static void CRT_installSignalHandlers(void) {
    signal(SIGINT, CRT_handleSIGTERM);
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
+   signal(SIGUSR1, SIG_IGN);
+   signal(SIGUSR2, SIG_IGN);
 }
 
 void CRT_resetSignalHandlers(void) {
@@ -938,6 +940,8 @@ void CRT_resetSignalHandlers(void) {
    signal(SIGINT, SIG_DFL);
    signal(SIGTERM, SIG_DFL);
    signal(SIGQUIT, SIG_DFL);
+   signal(SIGUSR1, SIG_DFL);
+   signal(SIGUSR2, SIG_DFL);
 }
 
 #ifdef HAVE_GETMOUSE
