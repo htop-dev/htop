@@ -33,6 +33,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "UserSessionsMeter.h"
 #include "XUtils.h"
 #include "dragonflybsd/DragonFlyBSDProcess.h"
 #include "dragonflybsd/DragonFlyBSDProcessTable.h"
@@ -116,6 +117,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
    &FileDescriptorMeter_class,
+   &UserSessionsMeter_class,
    &BlankMeter_class,
    NULL
 };

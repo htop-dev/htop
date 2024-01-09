@@ -168,9 +168,11 @@ myhtopheaders = \
 # -----
 
 linux_platform_headers = \
+	UserSessionsMeter.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
+	generic/utmpx.h \
 	linux/CGroupUtils.h \
 	linux/HugePageMeter.h \
 	linux/IOPriority.h \
@@ -192,9 +194,11 @@ linux_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 linux_platform_sources = \
+	UserSessionsMeter.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
+	generic/utmpx.c \
 	linux/CGroupUtils.c \
 	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \
@@ -220,6 +224,7 @@ endif
 # -------
 
 freebsd_platform_headers = \
+	UserSessionsMeter.h \
 	freebsd/FreeBSDMachine.h \
 	freebsd/FreeBSDProcessTable.h \
 	freebsd/FreeBSDProcess.h \
@@ -230,11 +235,13 @@ freebsd_platform_headers = \
 	generic/hostname.h \
 	generic/openzfs_sysctl.h \
 	generic/uname.h \
+	generic/utmpx.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h
 
 freebsd_platform_sources = \
+	UserSessionsMeter.c \
 	freebsd/Platform.c \
 	freebsd/FreeBSDMachine.c \
 	freebsd/FreeBSDProcessTable.c \
@@ -244,6 +251,7 @@ freebsd_platform_sources = \
 	generic/hostname.c \
 	generic/openzfs_sysctl.c \
 	generic/uname.c \
+	generic/utmpx.c \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 
@@ -256,6 +264,7 @@ endif
 # ------------
 
 dragonflybsd_platform_headers = \
+	UserSessionsMeter.h \
 	dragonflybsd/DragonFlyBSDMachine.h \
 	dragonflybsd/DragonFlyBSDProcessTable.h \
 	dragonflybsd/DragonFlyBSDProcess.h \
@@ -264,9 +273,11 @@ dragonflybsd_platform_headers = \
 	generic/fdstat_sysctl.h \
 	generic/gettime.h \
 	generic/hostname.h \
-	generic/uname.h
+	generic/uname.h \
+	generic/utmpx.h
 
 dragonflybsd_platform_sources = \
+	UserSessionsMeter.c \
 	dragonflybsd/DragonFlyBSDMachine.c \
 	dragonflybsd/DragonFlyBSDProcessTable.c \
 	dragonflybsd/DragonFlyBSDProcess.c \
@@ -274,7 +285,8 @@ dragonflybsd_platform_sources = \
 	generic/fdstat_sysctl.c \
 	generic/gettime.c \
 	generic/hostname.c \
-	generic/uname.c
+	generic/uname.c \
+	generic/utmpx.c
 
 if HTOP_DRAGONFLYBSD
 myhtopplatheaders = $(dragonflybsd_platform_headers)
@@ -285,10 +297,12 @@ endif
 # -------
 
 netbsd_platform_headers = \
+	UserSessionsMeter.h \
 	generic/fdstat_sysctl.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
+	generic/utmpx.h \
 	netbsd/Platform.h \
 	netbsd/ProcessField.h \
 	netbsd/NetBSDMachine.h \
@@ -296,10 +310,12 @@ netbsd_platform_headers = \
 	netbsd/NetBSDProcessTable.h
 
 netbsd_platform_sources = \
+	UserSessionsMeter.c \
 	generic/fdstat_sysctl.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
+	generic/utmpx.c \
 	netbsd/Platform.c \
 	netbsd/NetBSDMachine.c \
 	netbsd/NetBSDProcess.c \
@@ -341,6 +357,7 @@ endif
 # ------
 
 darwin_platform_headers = \
+	UserSessionsMeter.h \
 	darwin/DarwinMachine.h \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessTable.h \
@@ -352,11 +369,13 @@ darwin_platform_headers = \
 	generic/hostname.h \
 	generic/openzfs_sysctl.h \
 	generic/uname.h \
+	generic/utmpx.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
 	zfs/ZfsCompressedArcMeter.h
 
 darwin_platform_sources = \
+	UserSessionsMeter.c \
 	darwin/Platform.c \
 	darwin/PlatformHelpers.c \
 	darwin/DarwinMachine.c \
@@ -367,6 +386,7 @@ darwin_platform_sources = \
 	generic/hostname.c \
 	generic/openzfs_sysctl.c \
 	generic/uname.c \
+	generic/utmpx.c \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 
@@ -380,9 +400,11 @@ endif
 # -------
 
 solaris_platform_headers = \
+	UserSessionsMeter.h \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
+	generic/utmpx.h \
 	solaris/ProcessField.h \
 	solaris/Platform.h \
 	solaris/SolarisMachine.h \
@@ -393,9 +415,11 @@ solaris_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 solaris_platform_sources = \
+	UserSessionsMeter.c \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
+	generic/utmpx.c \
 	solaris/Platform.c \
 	solaris/SolarisMachine.c \
 	solaris/SolarisProcess.c \

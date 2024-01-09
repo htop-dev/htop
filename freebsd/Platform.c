@@ -45,6 +45,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "UserSessionsMeter.h"
 #include "XUtils.h"
 #include "freebsd/FreeBSDMachine.h"
 #include "generic/fdstat_sysctl.h"
@@ -133,6 +134,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskIOMeter_class,
    &FileDescriptorMeter_class,
    &NetworkIOMeter_class,
+   &UserSessionsMeter_class,
    NULL
 };
 

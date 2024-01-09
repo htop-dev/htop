@@ -9,7 +9,6 @@ in the source distribution for its full text.
 
 #include "linux/SystemdMeter.h"
 
-#include <dlfcn.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,10 +28,16 @@ in the source distribution for its full text.
 #include <systemd/sd-bus.h>
 #endif
 
+#ifndef BUILD_STATIC
+#include <dlfcn.h>
+#include "linux/Platform.h"
+#endif
+
 
 #ifdef BUILD_STATIC
 
 #define sym_sd_bus_open_system sd_bus_open_system
+#define sym_sd_bus_open_user sd_bus_open_user
 #define sym_sd_bus_get_property_string sd_bus_get_property_string
 #define sym_sd_bus_get_property_trivial sd_bus_get_property_trivial
 #define sym_sd_bus_unref sd_bus_unref
@@ -46,7 +51,8 @@ static int (*sym_sd_bus_open_user)(sd_bus**);
 static int (*sym_sd_bus_get_property_string)(sd_bus*, const char*, const char*, const char*, const char*, sd_bus_error*, char**);
 static int (*sym_sd_bus_get_property_trivial)(sd_bus*, const char*, const char*, const char*, const char*, sd_bus_error*, char, void*);
 static sd_bus* (*sym_sd_bus_unref)(sd_bus*);
-static void* dlopenHandle = NULL;
+static void* dlopenHandle;
+static size_t activeHandles;
 
 #endif /* BUILD_STATIC */
 
@@ -67,6 +73,46 @@ typedef struct SystemdMeterContext {
 static SystemdMeterContext_t ctx_system;
 static SystemdMeterContext_t ctx_user;
 
+static void SystemdMeter_init(ATTR_UNUSED Meter* this) {
+#ifndef BUILD_STATIC
+   assert(activeHandles != SIZE_MAX);
+   assert((dlopenHandle != NULL) == (activeHandles > 0));
+
+   if (activeHandles > 0) {
+      activeHandles++;
+      return;
+   }
+
+   dlopenHandle = Platform_load_libsystemd();
+   if (!dlopenHandle)
+      return;
+
+   /* Clear any errors */
+   dlerror();
+
+   #define resolve(symbolname) do {                                      \
+      *(void **)(&sym_##symbolname) = dlsym(dlopenHandle, #symbolname);  \
+      if (!sym_##symbolname || dlerror() != NULL)                        \
+         goto dlfailure;                                                 \
+   } while(0)
+
+   resolve(sd_bus_open_system);
+   resolve(sd_bus_open_user);
+   resolve(sd_bus_get_property_string);
+   resolve(sd_bus_get_property_trivial);
+   resolve(sd_bus_unref);
+
+   #undef resolve
+
+   activeHandles++;
+   return;
+
+dlfailure:
+   Platform_close_libsystemd();
+   dlopenHandle = NULL;
+#endif /* !BUILD_STATIC */
+}
+
 static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
    SystemdMeterContext_t* ctx = String_eq(Meter_name(this), "SystemdUser") ? &ctx_user : &ctx_system;
 
@@ -77,49 +123,33 @@ static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
 # ifdef HAVE_LIBSYSTEMD
    if (ctx->bus) {
       sym_sd_bus_unref(ctx->bus);
+      ctx->bus = NULL;
    }
-   ctx->bus = NULL;
 # endif /* HAVE_LIBSYSTEMD */
 #else /* BUILD_STATIC */
-   if (ctx->bus && dlopenHandle) {
+   if (ctx->bus) {
       sym_sd_bus_unref(ctx->bus);
+      ctx->bus = NULL;
    }
-   ctx->bus = NULL;
 
-   if (!ctx_system.systemState && !ctx_user.systemState && dlopenHandle) {
-      dlclose(dlopenHandle);
-      dlopenHandle = NULL;
+   if (activeHandles > 0) {
+      activeHandles--;
+      if (activeHandles == 0) {
+         Platform_close_libsystemd();
+         dlopenHandle = NULL;
+      }
    }
 #endif /* BUILD_STATIC */
 }
 
 #if !defined(BUILD_STATIC) || defined(HAVE_LIBSYSTEMD)
 static int updateViaLib(bool user) {
-   SystemdMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
 #ifndef BUILD_STATIC
-   if (!dlopenHandle) {
-      dlopenHandle = dlopen("libsystemd.so.0", RTLD_LAZY);
-      if (!dlopenHandle)
-         goto dlfailure;
-
-      /* Clear any errors */
-      dlerror();
-
-      #define resolve(symbolname) do {                                      \
-         *(void **)(&sym_##symbolname) = dlsym(dlopenHandle, #symbolname);  \
-         if (!sym_##symbolname || dlerror() != NULL)                        \
-            goto dlfailure;                                                 \
-      } while(0)
-
-      resolve(sd_bus_open_system);
-      resolve(sd_bus_open_user);
-      resolve(sd_bus_get_property_string);
-      resolve(sd_bus_get_property_trivial);
-      resolve(sd_bus_unref);
-
-      #undef resolve
-   }
+   if (!dlopenHandle)
+      return -1;
 #endif /* !BUILD_STATIC */
+
+   SystemdMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
 
    int r;
    /* Connect to the system bus */
@@ -198,15 +228,6 @@ busfailure:
    sym_sd_bus_unref(ctx->bus);
    ctx->bus = NULL;
    return -2;
-
-#ifndef BUILD_STATIC
-dlfailure:
-   if (dlopenHandle) {
-      dlclose(dlopenHandle);
-      dlopenHandle = NULL;
-   }
-   return -1;
-#endif /* !BUILD_STATIC */
 }
 #endif /* !BUILD_STATIC || HAVE_LIBSYSTEMD */
 
@@ -405,6 +426,7 @@ const MeterClass SystemdMeter_class = {
       .display = SystemdMeter_display
    },
    .updateValues = SystemdMeter_updateValues,
+   .init = SystemdMeter_init,
    .done = SystemdMeter_done,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 0,
@@ -423,6 +445,7 @@ const MeterClass SystemdUserMeter_class = {
       .display = SystemdUserMeter_display
    },
    .updateValues = SystemdMeter_updateValues,
+   .init = SystemdMeter_init,
    .done = SystemdMeter_done,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 0,
