@@ -1090,8 +1090,46 @@ delayacct_failure:
 #endif
 
 static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t procFd) {
+   char filename[MAX_NAME + 1];
+   ssize_t amtRead;
+
+   /* execve could change /proc/[pid]/exe, so procExe should be updated */
+#if defined(HAVE_READLINKAT) && defined(HAVE_OPENAT)
+   amtRead = readlinkat(procFd, "exe", filename, sizeof(filename) - 1);
+#else
+   amtRead = Compat_readlink(procFd, "exe", filename, sizeof(filename) - 1);
+#endif
+   if (amtRead > 0) {
+      filename[amtRead] = 0;
+      if (!process->procExe ||
+          (!process->procExeDeleted && !String_eq(filename, process->procExe)) ||
+          process->procExeDeleted) {
+
+         const char* deletedMarker = " (deleted)";
+         const size_t markerLen = strlen(deletedMarker);
+         const size_t filenameLen = strlen(filename);
+
+         if (filenameLen > markerLen) {
+            bool oldExeDeleted = process->procExeDeleted;
+
+            process->procExeDeleted = String_eq(filename + filenameLen - markerLen, deletedMarker);
+
+            if (process->procExeDeleted)
+               filename[filenameLen - markerLen] = '\0';
+
+            if (oldExeDeleted != process->procExeDeleted)
+               process->mergedCommand.lastUpdate = 0;
+         }
+
+         Process_updateExe(process, filename);
+      }
+   } else if (process->procExe) {
+      Process_updateExe(process, NULL);
+      process->procExeDeleted = false;
+   }
+
    char command[4096 + 1]; // max cmdline length on Linux
-   ssize_t amtRead = xReadfileat(procFd, "cmdline", command, sizeof(command));
+   amtRead = xReadfileat(procFd, "cmdline", command, sizeof(command));
    if (amtRead <= 0)
       return false;
 
@@ -1155,9 +1193,17 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
       tokenStart = -1;
       tokenEnd = -1;
 
+      size_t exeLen = process->procExe ? strlen(process->procExe) : 0;
+
+      if (process->procExe && String_startsWith(command, process->procExe) &&
+         exeLen < (size_t)lastChar && command[exeLen] <= ' ') {
+         tokenStart = process->procExeBasenameOffset;
+         tokenEnd = exeLen;
+      }
+
       // From initial scan we know there's at least one space.
       // Check if that's part of a filename for an existing file.
-      if (Compat_faccessat(AT_FDCWD, command, F_OK, AT_SYMLINK_NOFOLLOW) != 0) {
+      else if (Compat_faccessat(AT_FDCWD, command, F_OK, AT_SYMLINK_NOFOLLOW) != 0) {
          // If we reach here the path does not exist.
          // Thus begin searching for the part of it that actually does.
          int tokenArg0Start = -1;
@@ -1249,43 +1295,6 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
       Process_updateComm(process, command);
    } else {
       Process_updateComm(process, NULL);
-   }
-
-   char filename[MAX_NAME + 1];
-
-   /* execve could change /proc/[pid]/exe, so procExe should be updated */
-#if defined(HAVE_READLINKAT) && defined(HAVE_OPENAT)
-   amtRead = readlinkat(procFd, "exe", filename, sizeof(filename) - 1);
-#else
-   amtRead = Compat_readlink(procFd, "exe", filename, sizeof(filename) - 1);
-#endif
-   if (amtRead > 0) {
-      filename[amtRead] = 0;
-      if (!process->procExe ||
-          (!process->procExeDeleted && !String_eq(filename, process->procExe)) ||
-          process->procExeDeleted) {
-
-         const char* deletedMarker = " (deleted)";
-         const size_t markerLen = strlen(deletedMarker);
-         const size_t filenameLen = strlen(filename);
-
-         if (filenameLen > markerLen) {
-            bool oldExeDeleted = process->procExeDeleted;
-
-            process->procExeDeleted = String_eq(filename + filenameLen - markerLen, deletedMarker);
-
-            if (process->procExeDeleted)
-               filename[filenameLen - markerLen] = '\0';
-
-            if (oldExeDeleted != process->procExeDeleted)
-               process->mergedCommand.lastUpdate = 0;
-         }
-
-         Process_updateExe(process, filename);
-      }
-   } else if (process->procExe) {
-      Process_updateExe(process, NULL);
-      process->procExeDeleted = false;
    }
 
    return true;
