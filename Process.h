@@ -94,7 +94,7 @@ typedef struct Process_ {
    bool isUserlandThread;
 
    /* This process is running inside a container */
-   bool isRunningInContainer;
+   Tristate isRunningInContainer;
 
    /* Controlling terminal identifier of the process */
    unsigned long int tty_nr;
