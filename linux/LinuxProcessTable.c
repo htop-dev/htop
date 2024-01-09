@@ -1525,8 +1525,15 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       if (!LinuxProcessTable_updateUser(host, proc, procFd, mainTask))
          goto errorReadingProcess;
 
-      if (!LinuxProcessTable_readStatusFile(proc, procFd))
-         goto errorReadingProcess;
+      if (ss->flags & PROCESS_FLAG_LINUX_CTXT
+          || hideRunningInContainer
+#ifdef HAVE_VSERVER
+          || ss->flags & PROCESS_FLAG_LINUX_VSERVER
+#endif
+         ) {
+         if (!LinuxProcessTable_readStatusFile(proc, procFd))
+            goto errorReadingProcess;
+      }
 
       if (!preExisting) {
 
