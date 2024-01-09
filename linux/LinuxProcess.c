@@ -196,13 +196,10 @@ static bool LinuxProcess_changeAutogroupPriorityBy(Process* p, Arg delta) {
    long int identity;
    int nice;
    int ok = fscanf(file, "/autogroup-%ld nice %d", &identity, &nice);
-   bool success;
-   if (ok == 2) {
-      rewind(file);
+   bool success = false;
+   if (ok == 2 && fseek(file, 0L, SEEK_SET) == 0) {
       xSnprintf(buffer, sizeof(buffer), "%d", nice + delta.i);
       success = fputs(buffer, file) > 0;
-   } else {
-      success = false;
    }
 
    fclose(file);
