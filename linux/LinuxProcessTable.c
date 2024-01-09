@@ -60,6 +60,10 @@ in the source distribution for its full text.
 #define PF_KTHREAD 0x00200000
 #endif
 
+/* Inode number of the PID namespace of htop */
+static ino_t rootPidNs = (ino_t)-1;
+
+
 static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* mode) {
    assert(String_eq(mode, "r")); /* only currently supported mode */
 
@@ -192,6 +196,17 @@ ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
 
    // Test /proc/PID/smaps_rollup availability (faster to parse, Linux 4.14+)
    this->haveSmapsRollup = (access(PROCDIR "/self/smaps_rollup", R_OK) == 0);
+
+   // Read PID namespace inode number
+   {
+      struct stat sb;
+      int r = stat(PROCDIR "/self/ns/pid", &sb);
+      if (r == 0) {
+         rootPidNs = sb.st_ino;
+      } else {
+         rootPidNs = (ino_t)-1;
+      }
+   }
 
    return super;
 }
@@ -369,6 +384,7 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
    LinuxProcess* lp = (LinuxProcess*) process;
 
    unsigned long ctxt = 0;
+   process->isRunningInContainer = TRI_OFF;
 #ifdef HAVE_VSERVER
    lp->vxid = 0;
 #endif
@@ -397,7 +413,7 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
          }
 
          if (pid_ns_count > 1)
-            process->isRunningInContainer = true;
+            process->isRunningInContainer = TRI_ON;
 
       } else if (String_startsWith(buffer, "voluntary_ctxt_switches:")) {
          unsigned long vctxt;
@@ -1461,7 +1477,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          Compat_openatArgClose(procFd);
          continue;
       }
-      if (preExisting && hideRunningInContainer && proc->isRunningInContainer) {
+      if (preExisting && hideRunningInContainer && proc->isRunningInContainer == TRI_ON) {
          proc->super.updated = true;
          proc->super.show = false;
          Compat_openatArgClose(procFd);
@@ -1525,16 +1541,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       if (!LinuxProcessTable_updateUser(host, proc, procFd, mainTask))
          goto errorReadingProcess;
 
-      if (ss->flags & PROCESS_FLAG_LINUX_CTXT
-          || hideRunningInContainer
-#ifdef HAVE_VSERVER
-          || ss->flags & PROCESS_FLAG_LINUX_VSERVER
-#endif
-         ) {
-         if (!LinuxProcessTable_readStatusFile(proc, procFd))
-            goto errorReadingProcess;
-      }
-
       if (!preExisting) {
 
          #ifdef HAVE_OPENVZ
@@ -1566,6 +1572,32 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
                LinuxProcessList_readComm(proc, procFd);
             }
          }
+      }
+
+      /* Check if the process in inside a different PID namespace. */
+      if (proc->isRunningInContainer == TRI_INITIAL && rootPidNs != (ino_t)-1) {
+         struct stat sb;
+#if defined(HAVE_OPENAT) && defined(HAVE_FSTATAT)
+         int res = fstatat(procFd, "ns/pid", &sb, 0);
+#else
+         char path[4096];
+         xSnprintf(path, sizeof(path), "%s/ns/pid", procFd);
+         int res = stat(path, &sb);
+#endif
+         if (res == 0) {
+            proc->isRunningInContainer = (sb.st_ino != rootPidNs) ? TRI_ON : TRI_OFF;
+         }
+      }
+
+      if (ss->flags & PROCESS_FLAG_LINUX_CTXT
+         || (hideRunningInContainer && proc->isRunningInContainer == TRI_INITIAL)
+#ifdef HAVE_VSERVER
+         || ss->flags & PROCESS_FLAG_LINUX_VSERVER
+#endif
+      ) {
+         proc->isRunningInContainer = TRI_OFF;
+         if (!LinuxProcessTable_readStatusFile(proc, procFd))
+            goto errorReadingProcess;
       }
 
       /*
@@ -1662,7 +1694,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       proc->super.updated = true;
       Compat_openatArgClose(procFd);
 
-      if (hideRunningInContainer && proc->isRunningInContainer) {
+      if (hideRunningInContainer && proc->isRunningInContainer == TRI_ON) {
          proc->super.show = false;
          continue;
       }
