@@ -1095,38 +1095,45 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
    if (amtRead <= 0)
       return false;
 
-   int tokenEnd = 0;
-   int tokenStart = 0;
+   int tokenEnd = -1;
+   int tokenStart = -1;
    int lastChar = 0;
    bool argSepNUL = false;
    bool argSepSpace = false;
 
    for (int i = 0; i < amtRead; i++) {
-      /* newline used as delimiter - when forming the mergedCommand, newline is
-       * converted to space by Process_makeCommandStr */
-      if (command[i] == '\0') {
-         command[i] = '\n';
-      } else {
-         /* Record some information for the argument parsing heuristic below. */
-         if (tokenEnd)
-            argSepNUL = true;
-         if (command[i] <= ' ')
-            argSepSpace = true;
+      // If this is true, there's a NUL byte in the middle of command
+      if (tokenEnd >= 0) {
+         argSepNUL = true;
       }
 
-      if (command[i] == '\n') {
-         if (tokenEnd == 0) {
+      const char argChar = command[i];
+
+      /* newline used as delimiter - when forming the mergedCommand, newline is
+       * converted to space by Process_makeCommandStr */
+      if (argChar == '\0') {
+         command[i] = '\n';
+
+         // Set tokenEnd to the NUL byte
+         if (tokenEnd < 0) {
             tokenEnd = i;
          }
-      } else {
-         /* htop considers the next character after the last / that is before
-          * basenameOffset, as the start of the basename in cmdline - see
-          * Process_writeCommand */
-         if (!tokenEnd && command[i] == '/') {
-            tokenStart = i + 1;
-         }
-         lastChar = i;
+
+         continue;
       }
+
+      /* Record some information for the argument parsing heuristic below. */
+      if (argChar <= ' ') {
+         argSepSpace = true;
+      }
+
+      /* Detect the last / before the end of the token as
+       * the start of the basename in cmdline, see Process_writeCommand */
+      if (argChar == '/' && tokenEnd < 0) {
+         tokenStart = i + 1;
+      }
+
+      lastChar = i;
    }
 
    command[lastChar + 1] = '\0';
@@ -1145,54 +1152,70 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
        * As path names may contain we try to cross-validate if the path we got that way exists.
        */
 
-      tokenStart = tokenEnd = 0;
+      tokenStart = -1;
+      tokenEnd = -1;
 
       // From initial scan we know there's at least one space.
       // Check if that's part of a filename for an existing file.
       if (Compat_faccessat(AT_FDCWD, command, F_OK, AT_SYMLINK_NOFOLLOW) != 0) {
          // If we reach here the path does not exist.
-         // Thus begin searching for the part of it that actually is.
-
-         int tokenArg0Start = 0;
+         // Thus begin searching for the part of it that actually does.
+         int tokenArg0Start = -1;
 
          for (int i = 0; i <= lastChar; i++) {
+            const char cmdChar = command[i];
+
             /* Any ASCII control or space used as delimiter */
-            char tmpCommandChar = command[i];
-
-            if (command[i] <= ' ') {
-               if (!tokenEnd) {
-                  command[i] = '\0';
-
-                  bool found = Compat_faccessat(AT_FDCWD, command, F_OK, AT_SYMLINK_NOFOLLOW) == 0;
-
-                  // Restore if this wasn't it
-                  command[i] = found ? '\n' : tmpCommandChar;
-
-                  if (found)
-                     tokenEnd = i;
-                  if (!tokenArg0Start)
-                     tokenArg0Start = tokenStart;
-               } else {
+            if (cmdChar <= ' ') {
+               if (tokenEnd >= 0) {
                   // Split on every further separator, regardless of path correctness
                   command[i] = '\n';
+                  continue;
                }
-            } else if (!tokenEnd) {
-               if (command[i] == '/' || (command[i] == '\\' && (!tokenStart || command[tokenStart - 1] == '\\'))) {
-                  tokenStart = i + 1;
-               } else if (command[i] == ':' && (command[i + 1] != '/' && command[i + 1] != '\\')) {
+
+               // Found our first argument
+               command[i] = '\0';
+
+               bool found = Compat_faccessat(AT_FDCWD, command, F_OK, AT_SYMLINK_NOFOLLOW) == 0;
+
+               // Restore if this wasn't it
+               command[i] = found ? '\n' : cmdChar;
+
+               if (found)
                   tokenEnd = i;
-               }
+               if (tokenArg0Start < 0)
+                  tokenArg0Start = tokenStart < 0 ? 0 : tokenStart;
+
+               continue;
+            }
+
+            if (tokenEnd >= 0) {
+               continue;
+            }
+
+            if (cmdChar == '/') {
+               // Normal path separator
+               tokenStart = i + 1;
+            } else if (cmdChar == '\\' && (tokenStart < 1 || command[tokenStart - 1] == '\\')) {
+               // Windows Path separator (WINE)
+               tokenStart = i + 1;
+            } else if (cmdChar == ':' && (command[i + 1] != '/' && command[i + 1] != '\\')) {
+               // Colon not part of a Windows Path
+               tokenEnd = i;
+            } else if (tokenStart < 0) {
+               // Relative path
+               tokenStart = i;
             }
          }
 
-         if (!tokenEnd) {
+         if (tokenEnd < 0) {
             tokenStart = tokenArg0Start;
 
             // No token delimiter found, forcibly split
             for (int i = 0; i <= lastChar; i++) {
                if (command[i] <= ' ') {
                   command[i] = '\n';
-                  if (!tokenEnd) {
+                  if (tokenEnd < 0) {
                      tokenEnd = i;
                   }
                }
@@ -1204,11 +1227,17 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
        *   file.so [kdeinit5] file local:/run/user/1000/klauncherdqbouY.1.slave-socket local:/run/user/1000/kded5TwsDAx.1.slave-socket
        * Reset if start is behind end.
        */
-      if (tokenStart >= tokenEnd)
-         tokenStart = tokenEnd = 0;
+      if (tokenStart >= tokenEnd) {
+         tokenStart = -1;
+         tokenEnd = -1;
+      }
    }
 
-   if (tokenEnd == 0) {
+   if (tokenStart < 0) {
+      tokenStart = 0;
+   }
+
+   if (tokenEnd < 0) {
       tokenEnd = lastChar + 1;
    }
 
