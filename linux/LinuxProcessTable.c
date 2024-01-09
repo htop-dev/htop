@@ -1590,7 +1590,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       }
 
       if (ss->flags & PROCESS_FLAG_LINUX_CTXT
-         || (hideRunningInContainer && proc->isRunningInContainer == TRI_INITIAL)
+         || ((hideRunningInContainer || ss->flags & PROCESS_FLAG_LINUX_CONTAINER) && proc->isRunningInContainer == TRI_INITIAL)
 #ifdef HAVE_VSERVER
          || ss->flags & PROCESS_FLAG_LINUX_VSERVER
 #endif
