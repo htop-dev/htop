@@ -33,6 +33,7 @@ in the source distribution for its full text.
 #ifdef BUILD_STATIC
 
 #define sym_sd_bus_open_system sd_bus_open_system
+#define sym_sd_bus_open_user sd_bus_open_user
 #define sym_sd_bus_get_property_string sd_bus_get_property_string
 #define sym_sd_bus_get_property_trivial sd_bus_get_property_trivial
 #define sym_sd_bus_unref sd_bus_unref

@@ -336,7 +336,7 @@ if test "$my_htop_platform" = pcp; then
 fi
 
 if test "$my_htop_platform" = linux && test "x$enable_static" = xyes; then
-   AC_CHECK_LIB([systemd], [sd_bus_open_system])
+   AC_CHECK_LIB([systemd], [sd_bus_open_system], [], [], [-lcap])
 fi
 
 # ----------------------------------------------------------------------
