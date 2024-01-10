@@ -806,6 +806,9 @@ ATTR_NORETURN
 static void CRT_handleSIGTERM(int sgn) {
    CRT_done();
 
+   if (!CRT_crashSettings->changed)
+      _exit(0);
+
    const char* signal_str = strsignal(sgn);
    if (!signal_str)
       signal_str = "unknown reason";
