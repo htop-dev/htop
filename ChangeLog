@@ -1,3 +1,56 @@
+What's new in version 3.3.0
+
+* Multiple refactorings and code improvements
+* Shorten docker container IDs to 12 characters
+* Settings: preserve empty header
+* Fix execlp() argument without pointer cast
+* OpenFilesScreen: Make column sizing dynamic for file size, offset and inode
+* Add support for "truss" (FreeBSD equivalent of "strace")
+* Darwin: add NetworkIOMeter support
+* HeaderLayout: add "3 columns - 40/30/30", "... 30/40/30" & "... 30/30/40"
+* Meter: use correct unicode characters for digit '9'
+* Note in manual re default memory units of KiB
+* Add column for process container name
+* Add logic to filter the container name (+type) from the CGroup name
+* Change NetworkIOMeter value unit from KiB/s to bytes/second
+* Cap DiskIOMeter "utilisation" percentage at 100%
+* PCP platform implementation of frontswap and zswap accounting
+* Shorten podman/libpod container IDs to 12 characters
+* Write configuration to temporary file first
+* Incorporate shared memory in bar text
+* Move shared memory next to used memory
+* Correct order of memory meter in help
+* Add recalculate to Ctrl-L refresh
+* Update process list on thread visibility toggling
+* Support dynamic screens with 'top-most' entities beyond processes
+* Introduce Row and Table classes for screens beyond top-processes
+* Rework ZramMeter and remove MeterClass.comprisedValues
+* More robust logic for CPU process percentages (Linux & PCP)
+* Show year as start time for processes older than a year
+* Short-term fix for docker container detection
+* default color preset: use bold blue for better visibility
+* Document 'O' keyboard shortcut
+* Implement logic for '--max-iterations'
+* Update F5 key label on tab switch (Tree <-> List)
+* Force re-sorting of the process list view after switching between list/treeview mode
+* Linux: (hack) work around the fact that Zswapped pages may be SwapCached
+* Linux: implement zswap support
+* {Memory,Swap}Meter: add "compressed memory" metrics
+* Darwin: add DiskIOMeter support
+* Fix scroll relative to followed process
+* ZramMeter: update bar mode
+* Use shared real memory on FreeBSD
+* Increase Search and Filter max string length to 128
+* Improve CPU computation code
+* Remove LXC special handling for the CPU count
+* Create new File Descriptor meter
+* PCP: add IRQ PSI meter
+* Linux: add IRQ PSI meter
+* Linux: highlight username if process has elevated privileges
+* Add support for scheduling policies
+* Add a systemd user meter to monitor user units.
+* FreeBSD: remove duplicate zfs ARC size subtraction
+
 What's new in version 3.2.2
 
 * CPUMeter now can show frequency in text mode
