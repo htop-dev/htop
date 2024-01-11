@@ -57,7 +57,7 @@ static void SolarisMachine_updateCPUcount(SolarisMachine* this) {
 
    if (s != super->activeCPUs) {
       change = true;
-      hsuper->activeCPUs = s;
+      super->activeCPUs = s;
    }
 
    if (change) {
@@ -309,6 +309,10 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    if (this->pageSize == -1)
       CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
    this->pageSizeKB = this->pageSize / 1024;
+
+   this->kd = kstat_open();
+   if (!this->kd)
+      CRT_fatalError("Cannot open kstat handle");
 
    SolarisMachine_updateCPUcount(this);
 

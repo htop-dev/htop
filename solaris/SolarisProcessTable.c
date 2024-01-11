@@ -24,6 +24,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "solaris/Platform.h"
+#include "solaris/SolarisMachine.h"
 #include "solaris/SolarisProcess.h"
 
 
@@ -112,8 +113,8 @@ static int SolarisProcessTable_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo
 
    // Setup process list
    ProcessTable* pt = (ProcessTable*) listptr;
-   SolarisProcessTable* spt = (SolarisProcessTable*) listptr;
-   Machine* host = pt->host;
+   const Machine* host = pt->super.host;
+   const SolarisMachine* shost = (const SolarisMachine*) host;
 
    id_t lwpid_real = _lwpsinfo->pr_lwpid;
    if (lwpid_real > 1023) {
@@ -133,7 +134,7 @@ static int SolarisProcessTable_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo
    const Settings* settings = host->settings;
 
    // Common code pass 1
-   proc->show               = false;
+   proc->super.show         = false;
    sproc->taskid            = _psinfo->pr_taskid;
    sproc->projid            = _psinfo->pr_projid;
    sproc->poolid            = _psinfo->pr_poolid;
@@ -171,7 +172,7 @@ static int SolarisProcessTable_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo
       sproc->realpid        = _psinfo->pr_pid;
       sproc->lwpid          = lwpid_real;
       sproc->zoneid         = _psinfo->pr_zoneid;
-      sproc->zname          = SolarisProcessTable_readZoneName(spt->kd, sproc);
+      sproc->zname          = SolarisProcessTable_readZoneName(shost->kd, sproc);
       SolarisProcessTable_updateExe(_psinfo->pr_pid, proc);
 
       Process_updateComm(proc, _psinfo->pr_fname);
@@ -218,7 +219,7 @@ static int SolarisProcessTable_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo
             pt->totalTasks += proc->nlwp + 1;
          }
       }
-      proc->show = !(settings->hideKernelThreads && proc->isKernelThread);
+      proc->super.show = !(settings->hideKernelThreads && proc->isKernelThread);
    } else { // We are not in the master LWP, so jump to the LWP handling code
       proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu / (double)32768) * (double)100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);

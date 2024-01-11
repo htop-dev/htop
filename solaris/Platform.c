@@ -220,7 +220,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (super->settings->detailedCPUTime) {
+   if (host->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
       this->curItems = 4;
@@ -258,13 +258,13 @@ void Platform_setSwapValues(Meter* this) {
 }
 
 void Platform_setZfsArcValues(Meter* this) {
-   const SolarisMachine* shost = (SolarisMachine*) this->host;
+   const SolarisMachine* shost = (const SolarisMachine*) this->host;
 
    ZfsArcMeter_readStats(this, &shost->zfs);
 }
 
 void Platform_setZfsCompressedArcValues(Meter* this) {
-   const SolarisMachine* shost = (SolarisMachine*) this->host;
+   const SolarisMachine* shost = (const SolarisMachine*) this->host;
 
    ZfsCompressedArcMeter_readStats(this, &shost->zfs);
 }

@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #define ERR (-1)
 
 #include "Machine.h"
+#include "Process.h"
 
 
 typedef struct SolarisProcess_ {
