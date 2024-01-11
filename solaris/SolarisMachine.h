@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <sys/uio.h>
 
 #include "Hashtable.h"
+#include "Machine.h"
 #include "UsersTable.h"
 
 #include "zfs/ZfsArcStats.h"
