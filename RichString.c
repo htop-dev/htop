@@ -54,9 +54,42 @@ void RichString_rewind(RichString* this, int count) {
 
 #ifdef HAVE_LIBNCURSESW
 
+static size_t mbstowcs_nonfatal(wchar_t* dest, const char* src, size_t n) {
+   size_t written = 0;
+   mbstate_t ps = { 0 };
+   bool broken = false;
+
+   while (n > 0) {
+      size_t ret = mbrtowc(dest, src, n, &ps);
+      if (ret == (size_t)-1 || ret == (size_t)-2) {
+         if (!broken) {
+            broken = true;
+            *dest++ = L'\xFFFD';
+            written++;
+         }
+         src++;
+         n--;
+         continue;
+      }
+
+      broken = false;
+
+      if (ret == 0) {
+         break;
+      }
+
+      dest++;
+      written++;
+      src += ret;
+      n -= ret;
+   }
+
+   return written;
+}
+
 static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
-   wchar_t data[len + 1];
-   len = mbstowcs(data, data_c, len);
+   wchar_t data[len];
+   len = mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)
       return 0;
 
@@ -70,8 +103,8 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
 }
 
 int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, int len, int* columns) {
-   wchar_t data[len + 1];
-   len = mbstowcs(data, data_c, len);
+   wchar_t data[len];
+   len = mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)
       return 0;
 
