@@ -308,10 +308,9 @@ void Table_printHeader(const Settings* settings, RichString* header) {
       if (key == fields[i] && RichString_getCharVal(*header, RichString_size(header) - 1) == ' ') {
          bool ascending = ScreenSettings_getActiveDirection(ss) == 1;
          RichString_rewind(header, 1);  // rewind to override space
-         RichString_appendnWide(header,
+         RichString_appendWide(header,
                                 CRT_colors[PANEL_SELECTION_FOCUS],
-                                CRT_treeStr[ascending ? TREE_STR_ASC : TREE_STR_DESC],
-                                1);
+                                CRT_treeStr[ascending ? TREE_STR_ASC : TREE_STR_DESC]);
       }
       if (COMM == fields[i] && settings->showMergedCommand) {
          RichString_appendAscii(header, color, "(merged)");
