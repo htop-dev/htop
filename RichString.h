@@ -7,6 +7,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Macros.h"
 #include "ProvideCurses.h"
 
 
@@ -61,6 +62,7 @@ void RichString_appendChr(RichString* this, int attrs, char c, int count);
 
 int RichString_appendWide(RichString* this, int attrs, const char* data);
 
+ATTR_ACCESS3_R(3, 4)
 int RichString_appendnWide(RichString* this, int attrs, const char* data, int len);
 
 /* columns takes the maximum number of columns to write and contains on return the number of columns written. */
@@ -70,6 +72,7 @@ int RichString_writeWide(RichString* this, int attrs, const char* data);
 
 int RichString_appendAscii(RichString* this, int attrs, const char* data);
 
+ATTR_ACCESS3_R(3, 4)
 int RichString_appendnAscii(RichString* this, int attrs, const char* data, int len);
 
 int RichString_writeAscii(RichString* this, int attrs, const char* data);
