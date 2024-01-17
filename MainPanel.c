@@ -92,7 +92,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       } else {
          reaction |= Action_setSortKey(settings, field);
       }
-      reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS;
+      reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR | HTOP_SAVE_SETTINGS;
       result = HANDLED;
    } else if (EVENT_IS_SCREEN_TAB_CLICK(ch)) {
       int x = EVENT_SCREEN_TAB_GET_X(ch);
