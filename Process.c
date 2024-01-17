@@ -902,7 +902,10 @@ int Process_compare(const void* v1, const void* v2) {
 }
 
 int Process_compareByParent(const Row* r1, const Row* r2) {
-   int result = Row_compareByParent_Base(r1, r2);
+   int result = SPACESHIP_NUMBER(
+      r1->isRoot ? 0 : Row_getGroupOrParent(r1),
+      r2->isRoot ? 0 : Row_getGroupOrParent(r2)
+   );
 
    if (result != 0)
       return result;
