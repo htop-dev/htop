@@ -60,6 +60,10 @@ bool Platform_KernelVersionIsBetween(KernelVersion lowerBound, KernelVersion upp
 
 void Platform_getCPUBrandString(char* cpuBrandString, size_t cpuBrandStringSize) {
    if (sysctlbyname("machdep.cpu.brand_string", cpuBrandString, &cpuBrandStringSize, NULL, 0) == -1) {
+   #ifdef __POWERPC__
+      if (sysctlbyname("hw.cpusubtype", cpuBrandString, &cpuBrandStringSize, NULL, 0) != -1)
+         return;
+   #endif
       fprintf(stderr,
          "WARN: Unable to determine the CPU brand string.\n"
          "errno: %i, %s\n", errno, strerror(errno));
