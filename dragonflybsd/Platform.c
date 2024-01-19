@@ -10,6 +10,8 @@ in the source distribution for its full text.
 
 #include "dragonflybsd/Platform.h"
 
+#include <devstat.h>
+#include <errno.h>
 #include <ifaddrs.h>
 #include <math.h>
 #include <time.h>
@@ -118,6 +120,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &DiskIOMeter_class,
    &NetworkIOMeter_class,
    &FileDescriptorMeter_class,
    &BlankMeter_class,
@@ -251,9 +254,61 @@ void Platform_getFileDescriptors(double* used, double* max) {
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
-   // TODO
-   (void)data;
-   return false;
+   struct statinfo dev_stats = { 0 };
+   struct device_selection* dev_sel = NULL;
+   int n_selected, n_selections;
+   long sel_gen;
+
+   dev_stats.dinfo = xCalloc(1, sizeof(struct devinfo));
+
+   int ret = getdevs(&dev_stats);
+   if (ret < 0) {
+      CRT_debug("getdevs() failed [%d]: %s", ret, strerror(errno));
+      free(dev_stats.dinfo);
+      return false;
+   }
+
+   ret = selectdevs(&dev_sel, &n_selected, &n_selections, &sel_gen,
+         dev_stats.dinfo->generation, dev_stats.dinfo->devices, dev_stats.dinfo->numdevs,
+         NULL, 0, NULL, 0, DS_SELECT_ONLY, dev_stats.dinfo->numdevs, 1);
+   if (ret < 0) {
+      CRT_debug("selectdevs() failed [%d]: %s", ret, strerror(errno));
+      free(dev_stats.dinfo);
+      return false;
+   }
+
+   uint64_t bytesReadSum = 0;
+   uint64_t bytesWriteSum = 0;
+   uint64_t busyMsTimeSum = 0;
+
+   for (int i = 0; i < dev_stats.dinfo->numdevs; i++) {
+      const struct devstat* device = &dev_stats.dinfo->devices[dev_sel[i].position];
+
+      switch (device->device_type & DEVSTAT_TYPE_MASK) {
+      case DEVSTAT_TYPE_DIRECT:
+      case DEVSTAT_TYPE_SEQUENTIAL:
+      case DEVSTAT_TYPE_WORM:
+      case DEVSTAT_TYPE_CDROM:
+      case DEVSTAT_TYPE_OPTICAL:
+      case DEVSTAT_TYPE_CHANGER:
+      case DEVSTAT_TYPE_STORARRAY:
+      case DEVSTAT_TYPE_FLOPPY:
+         break;
+      default:
+         continue;
+      }
+
+      bytesReadSum  += device->bytes_read;
+      bytesWriteSum += device->bytes_written;
+      busyMsTimeSum += (device->busy_time.tv_sec * 1000 + device->busy_time.tv_usec / 1000);
+   }
+
+   data->totalBytesRead = bytesReadSum;
+   data->totalBytesWritten = bytesWriteSum;
+   data->totalMsTimeSpend = busyMsTimeSum;
+
+   free(dev_stats.dinfo);
+   return true;
 }
 
 bool Platform_getNetworkIO(NetworkIOData* data) {

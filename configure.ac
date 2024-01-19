@@ -276,6 +276,7 @@ AC_SEARCH_LIBS([ceil], [m], [], [AC_MSG_ERROR([can not find required function ce
 
 if test "$my_htop_platform" = dragonflybsd; then
    AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
+   AC_SEARCH_LIBS([getdevs], [devstat], [], [AC_MSG_ERROR([can not find required function getdevs()])])
 fi
 
 if test "$my_htop_platform" = freebsd; then
