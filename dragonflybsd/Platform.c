@@ -10,9 +10,11 @@ in the source distribution for its full text.
 
 #include "dragonflybsd/Platform.h"
 
+#include <ifaddrs.h>
 #include <math.h>
 #include <time.h>
 #include <sys/resource.h>
+#include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -116,6 +118,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
+   &NetworkIOMeter_class,
    &FileDescriptorMeter_class,
    &BlankMeter_class,
    NULL
@@ -254,9 +257,29 @@ bool Platform_getDiskIO(DiskIOData* data) {
 }
 
 bool Platform_getNetworkIO(NetworkIOData* data) {
-   // TODO
-   (void)data;
-   return false;
+   struct ifaddrs* ifaddrs = NULL;
+
+   if (getifaddrs(&ifaddrs) != 0)
+      return false;
+
+   for (const struct ifaddrs* ifa = ifaddrs; ifa; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr)
+         continue;
+      if (ifa->ifa_addr->sa_family != AF_LINK)
+         continue;
+      if (ifa->ifa_flags & IFF_LOOPBACK)
+         continue;
+
+      const struct if_data* ifd = (const struct if_data*)ifa->ifa_data;
+
+      data->bytesReceived += ifd->ifi_ibytes;
+      data->packetsReceived += ifd->ifi_ipackets;
+      data->bytesTransmitted += ifd->ifi_obytes;
+      data->packetsTransmitted += ifd->ifi_opackets;
+   }
+
+   freeifaddrs(ifaddrs);
+   return true;
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
