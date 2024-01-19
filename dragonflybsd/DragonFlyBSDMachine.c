@@ -119,7 +119,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 }
 
 void Machine_delete(Machine* super) {
-   const DragonFlyBSDMachine* this = (const DragonFlyBSDMachine*) super;
+   DragonFlyBSDMachine* this = (DragonFlyBSDMachine*) super;
 
    Machine_done(super);
 
@@ -223,7 +223,7 @@ static void DragonFlyBSDMachine_scanCPUTime(Machine* super) {
 }
 
 static void DragonFlyBSDMachine_scanMemoryInfo(Machine* super) {
-   DragonFlyBSDMachine* this = (DragonFlyBSDProcessTable*) super;
+   DragonFlyBSDMachine* this = (DragonFlyBSDMachine*) super;
 
    // @etosan:
    // memory counter relationships seem to be these:
@@ -319,7 +319,7 @@ retry:
    free(jails);
 }
 
-char* DragonFlyBSDMachine_readJailName(DragonFlyBSDMachine* host, int jailid) {
+char* DragonFlyBSDMachine_readJailName(const DragonFlyBSDMachine* host, int jailid) {
    char* hostname;
    char* jname;
 
@@ -338,4 +338,12 @@ void Machine_scan(Machine* super) {
    DragonFlyBSDMachine_scanMemoryInfo(super);
    DragonFlyBSDMachine_scanCPUTime(super);
    DragonFlyBSDMachine_scanJails(this);
+}
+
+bool Machine_isCPUonline(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void)host; (void)id;
+
+   // TODO: Support detecting online / offline CPUs.
+   return true;
 }
