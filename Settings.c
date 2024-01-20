@@ -240,7 +240,7 @@ static int toFieldIndex(Hashtable* columns, const char* str) {
    } else {
       // Dynamically-defined columns are always stored by-name.
       char dynamic[32] = {0};
-      if (sscanf(str, "Dynamic(%30s)", dynamic)) {
+      if (sscanf(str, "Dynamic(%30s)", dynamic) == 1) {
          char* end;
          if ((end = strrchr(dynamic, ')')) != NULL) {
             bool success;

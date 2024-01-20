@@ -261,7 +261,7 @@ int Platform_getUptime(void) {
    if (fd) {
       int n = fscanf(fd, "%64lf", &uptime);
       fclose(fd);
-      if (n <= 0) {
+      if (n != 1) {
          return 0;
       }
    }

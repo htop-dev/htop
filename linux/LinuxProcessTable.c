@@ -426,14 +426,14 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
       } else if (String_startsWith(buffer, "voluntary_ctxt_switches:")) {
          unsigned long vctxt;
          int ok = sscanf(buffer, "voluntary_ctxt_switches:\t%lu", &vctxt);
-         if (ok >= 1) {
+         if (ok == 1) {
             ctxt += vctxt;
          }
 
       } else if (String_startsWith(buffer, "nonvoluntary_ctxt_switches:")) {
          unsigned long nvctxt;
          int ok = sscanf(buffer, "nonvoluntary_ctxt_switches:\t%lu", &nvctxt);
-         if (ok >= 1) {
+         if (ok == 1) {
             ctxt += nvctxt;
          }
 
@@ -441,14 +441,14 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
       } else if (String_startsWith(buffer, "VxID:")) {
          int vxid;
          int ok = sscanf(buffer, "VxID:\t%32d", &vxid);
-         if (ok >= 1) {
+         if (ok == 1) {
             lp->vxid = vxid;
          }
 #ifdef HAVE_ANCIENT_VSERVER
       } else if (String_startsWith(buffer, "s_context:")) {
          int vxid;
          int ok = sscanf(buffer, "s_context:\t%32d", &vxid);
-         if (ok >= 1) {
+         if (ok == 1) {
             lp->vxid = vxid;
          }
 #endif /* HAVE_ANCIENT_VSERVER */
@@ -938,7 +938,7 @@ static void LinuxProcessTable_readOomData(LinuxProcess* process, openat_arg_t pr
    if (fgets(buffer, PROC_LINE_LENGTH, file)) {
       unsigned int oom;
       int ok = sscanf(buffer, "%u", &oom);
-      if (ok >= 1) {
+      if (ok == 1) {
          process->oom = oom;
       }
    }

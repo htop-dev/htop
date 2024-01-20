@@ -302,8 +302,8 @@ static void LinuxMachine_scanZramInfo(LinuxMachine* this) {
       memory_t orig_data_size = 0;
       memory_t compr_data_size = 0;
 
-      if (!fscanf(disksize_file, "%llu\n", &size) ||
-          !fscanf(mm_stat_file, "    %llu       %llu", &orig_data_size, &compr_data_size)) {
+      if (1 != fscanf(disksize_file, "%llu\n", &size) ||
+          2 != fscanf(mm_stat_file, "    %llu       %llu", &orig_data_size, &compr_data_size)) {
          fclose(disksize_file);
          fclose(mm_stat_file);
          break;
@@ -342,10 +342,10 @@ static void LinuxMachine_scanZfsArcstats(LinuxMachine* this) {
             sscanf(buffer + strlen(label), " %*2u %32llu", variable);          \
             break;                                                             \
          } else (void) 0 /* Require a ";" after the macro use. */
-      #define tryReadFlag(label, variable, flag)                               \
-         if (String_startsWith(buffer, label)) {                               \
-            (flag) = sscanf(buffer + strlen(label), " %*2u %32llu", variable); \
-            break;                                                             \
+      #define tryReadFlag(label, variable, flag)                                      \
+         if (String_startsWith(buffer, label)) {                                      \
+            (flag) = (1 == sscanf(buffer + strlen(label), " %*2u %32llu", variable)); \
+            break;                                                                    \
          } else (void) 0 /* Require a ";" after the macro use. */
 
       switch (buffer[0]) {
