@@ -86,10 +86,9 @@ static void Header_addMeterByName(Header* this, const char* name, MeterModeId mo
    unsigned int param = 0;
    size_t nameLen;
    if (paren) {
-      int ok = sscanf(paren, "(%10u)", &param); // CPUMeter
-      if (!ok) {
+      if (sscanf(paren, "(%10u)", &param) != 1) { // not CPUMeter
          char dynamic[32] = {0};
-         if (sscanf(paren, "(%30s)", dynamic)) { // DynamicMeter
+         if (sscanf(paren, "(%30s)", dynamic) == 1) { // DynamicMeter
             char* end;
             if ((end = strrchr(dynamic, ')')) == NULL)
                return;    // htoprc parse failure
