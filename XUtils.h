@@ -131,6 +131,15 @@ int compareRealNumbers(double a, double b);
    nonnegative. */
 double sumPositiveValues(const double* array, size_t count);
 
+/* Returns the number of trailing zero bits */
+#if defined(HAVE_BUILTIN_CTZ)
+static inline unsigned int countTrailingZeros(unsigned int x) {
+   return !x ? 32 : __builtin_ctz(x);
+}
+#else
+unsigned int countTrailingZeros(unsigned int x);
+#endif
+
 /* IEC unit prefixes */
 static const char unitPrefixes[] = { 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q' };
 
