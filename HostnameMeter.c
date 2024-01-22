@@ -29,6 +29,7 @@ const MeterClass HostnameMeter_class = {
    },
    .updateValues = HostnameMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedMode = (1 << TEXT_METERMODE),
    .maxItems = 0,
    .total = 100.0,
    .attributes = HostnameMeter_attributes,
