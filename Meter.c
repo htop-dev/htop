@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 
 #include <assert.h>
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -159,6 +160,15 @@ ListItem* Meter_toListItem(const Meter* this, bool moving) {
    return li;
 }
 
+static double Meter_computeSum(const Meter* this) {
+   double sum = sumPositiveValues(this->values, this->curItems);
+   // Prevent rounding to infinity in IEEE 754
+   if (sum > DBL_MAX)
+      return DBL_MAX;
+
+   return sum;
+}
+
 /* ---------- TextMeterMode ---------- */
 
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
@@ -231,6 +241,11 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
+   if (!Meter_isPercentChart(this) && this->curItems > 0) {
+      double sum = Meter_computeSum(this);
+      if (this->total < sum)
+         this->total = sum;
+   }
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
       if (isPositive(value) && this->total > 0.0) {
