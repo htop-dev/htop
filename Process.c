@@ -1038,8 +1038,14 @@ void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart
 
    free(this->cmdline);
    this->cmdline = cmdline ? xStrdup(cmdline) : NULL;
-   this->cmdlineBasenameStart = (basenameStart || !cmdline) ? basenameStart : skipPotentialPath(cmdline, basenameEnd);
-   this->cmdlineBasenameEnd = basenameEnd;
+   if (Process_isKernelThread(this)) {
+      /* kernel threads have no basename */
+      this->cmdlineBasenameStart = 0;
+      this->cmdlineBasenameEnd = 0;
+   } else {
+      this->cmdlineBasenameStart = (basenameStart || !cmdline) ? basenameStart : skipPotentialPath(cmdline, basenameEnd);
+      this->cmdlineBasenameEnd = basenameEnd;
+   }
 
    this->mergedCommand.lastUpdate = 0;
 }
