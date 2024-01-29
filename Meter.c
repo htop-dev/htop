@@ -112,7 +112,7 @@ static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
    }
 }
 
-void Meter_setMode(Meter* this, int modeIndex) {
+void Meter_setMode(Meter* this, MeterModeIndex_t modeIndex) {
    if (modeIndex > 0 && modeIndex == this->mode) {
       return;
    }
