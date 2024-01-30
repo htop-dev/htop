@@ -408,7 +408,9 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
    if (!file)
       CRT_fatalError("Cannot open " PROCSTATFILE);
 
-   unsigned int lastAdjCpuId = 0;
+   // Add an extra phantom thread for a later loop
+   bool adjCpuIdProcessed[super->existingCPUs+2];
+   memset(adjCpuIdProcessed, 0, sizeof(adjCpuIdProcessed));
 
    for (unsigned int i = 0; i <= super->existingCPUs; i++) {
       char buffer[PROC_LINE_LENGTH + 1];
@@ -438,12 +440,6 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
 
       if (adjCpuId > super->existingCPUs)
          break;
-
-      for (unsigned int j = lastAdjCpuId + 1; j < adjCpuId; j++) {
-         // Skipped an ID, but /proc/stat is ordered => got offline CPU
-         memset(&(this->cpuData[j]), '\0', sizeof(CPUData));
-      }
-      lastAdjCpuId = adjCpuId;
 
       // Guest time is already accounted in usertime
       usertime -= guest;
@@ -482,6 +478,21 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
       cpuData->stealTime = steal;
       cpuData->guestTime = virtalltime;
       cpuData->totalTime = totaltime;
+
+      adjCpuIdProcessed[adjCpuId] = true;
+   }
+
+   // Set the extra phantom thread as checked to make sure to mark trailing offline threads correctly in the loop
+   adjCpuIdProcessed[super->existingCPUs+1] = true;
+   unsigned int lastAdjCpuIdProcessed = 0;
+   for (unsigned int i = 0; i <= super->existingCPUs+1; i++) {
+      if (adjCpuIdProcessed[i]) {
+         for (unsigned int j = lastAdjCpuIdProcessed+1; j < i; j++) {
+            // Skipped an ID, but /proc/stat is ordered => threads in between are offline
+            memset(&(this->cpuData[j]), '\0', sizeof(CPUData));
+         }
+         lastAdjCpuIdProcessed = i;
+      }
    }
 
    this->period = (double)this->cpuData[0].totalPeriod / super->activeCPUs;
