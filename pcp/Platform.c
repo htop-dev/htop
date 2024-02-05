@@ -480,7 +480,7 @@ pid_t Platform_getMaxPid(void) {
 
    pmAtomValue value;
    if (Metric_values(PCP_PID_MAX, &value, 1, PM_TYPE_32) == NULL)
-      return UINT_MAX;
+      return INT_MAX;
    pcp->pidmax = value.l;
    return pcp->pidmax;
 }
