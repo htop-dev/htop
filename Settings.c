@@ -622,8 +622,11 @@ int Settings_write(const Settings* this, bool onCrash) {
       fd = stderr;
       separator = ';';
    } else {
+      /* create tempfile with mode 0600 */
+      mode_t	cur_umask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
       xAsprintf(&tmpFilename, "%s.tmp.XXXXXX", this->filename);
       int fdtmp = mkstemp(tmpFilename);
+      umask(cur_umask);
       if (fdtmp == -1)
          return -errno;
       fd = fdopen(fdtmp, "w");
