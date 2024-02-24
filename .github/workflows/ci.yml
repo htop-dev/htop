@@ -218,6 +218,31 @@ jobs:
               ./configure --enable-unicode --enable-werror
               gmake -k
 
+  build-netbsd-latest-gcc:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Compile
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: '9.3'
+          usesh: true
+          prepare: |
+            PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
+            PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/9.3/All/"
+            export PATH PKG_PATH
+            /usr/sbin/pkg_add pkgin
+            pkgin -y install autoconf automake libtool ncurses ncursesw gmake git
+            git config --global --add safe.directory /home/runner/work/htop/htop
+          run: |
+            set -e
+            ./autogen.sh
+            CPPFLAGS="-I/usr/pkg/include" ./configure --enable-unicode --enable-werror
+            gmake -k
+
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
