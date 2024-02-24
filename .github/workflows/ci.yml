@@ -243,6 +243,29 @@ jobs:
             CPPFLAGS="-I/usr/pkg/include" ./configure --enable-unicode --enable-werror
             gmake -k
 
+  build-openbsd-latest-gcc:
+      runs-on: ubuntu-22.04
+      timeout-minutes: 20
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            submodules: recursive
+        - name: Compile
+          uses: vmactions/openbsd-vm@v1
+          with:
+            release: '7.4'
+            usesh: true
+            prepare: |
+              pkg_add gmake autoconf-2.71 automake-1.16.5 git
+              git config --global --add safe.directory /home/runner/work/htop/htop
+            run: |
+              set -e
+              export AUTOCONF_VERSION=2.71
+              export AUTOMAKE_VERSION=1.16
+              ./autogen.sh
+              ./configure --enable-unicode --enable-werror
+              gmake -k
+
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
