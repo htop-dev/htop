@@ -197,6 +197,27 @@ jobs:
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror"
 
+  build-freebsd-latest-clang:
+      runs-on: ubuntu-22.04
+      timeout-minutes: 20
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            submodules: recursive
+        - name: Compile
+          uses: vmactions/freebsd-vm@v1
+          with:
+            release: '14.0'
+            usesh: true
+            prepare: |
+              pkg install -y gmake autoconf-2.71 automake git
+              git config --global --add safe.directory /home/runner/work/htop/htop
+            run: |
+              set -e
+              ./autogen.sh
+              ./configure --enable-unicode --enable-werror
+              gmake -k
+
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
