@@ -289,6 +289,27 @@ jobs:
               ./configure --enable-unicode --enable-werror
               gmake -k
 
+  build-solaris-latest-gcc:
+      runs-on: ubuntu-22.04
+      timeout-minutes: 20
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            submodules: recursive
+        - name: Compile
+          uses: vmactions/solaris-vm@v1
+          with:
+            release: '11.4'
+            usesh: true
+            prepare: |
+              pkg install gnu-make autoconf automake ncurses git gcc
+              git config --global --add safe.directory /home/runner/work/htop/htop
+            run: |
+              set -e
+              ./autogen.sh
+              ./configure --enable-unicode --enable-werror
+              gmake -k
+
   whitespace_check:
     runs-on: ubuntu-latest
     steps:
