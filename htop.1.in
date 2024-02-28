@@ -5,7 +5,7 @@ htop, pcp-htop \- interactive process viewer
 .B htop
 .RB [ \-dCFhpustvH ]
 .br
-.B pcp\ htop
+.B pcp-htop
 .RB [ \-dCFhpustvH ]
 .RB [ \-\-host/-h\ host ]
 .SH "DESCRIPTION"
