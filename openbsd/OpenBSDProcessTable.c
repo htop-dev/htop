@@ -41,7 +41,7 @@ ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
    ProcessTable* super = &this->super;
    ProcessTable_init(super, Class(OpenBSDProcess), host, pidMatchList);
 
-   return this;
+   return super;
 }
 
 void ProcessTable_delete(Object* cast) {
