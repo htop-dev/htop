@@ -684,13 +684,15 @@ static void LinuxProcessTable_readMaps(LinuxProcess* process, openat_arg_t procF
 }
 
 static bool LinuxProcessTable_readStatmFile(LinuxProcess* process, openat_arg_t procFd, const LinuxMachine* host) {
-   FILE* statmfile = fopenat(procFd, "statm", "r");
-   if (!statmfile)
+   char statmdata[128] = {0};
+
+   if (xReadfileat(procFd, "statm", statmdata, sizeof(statmdata)) < 1) {
       return false;
+   }
 
    long int dummy, dummy2;
 
-   int r = fscanf(statmfile, "%ld %ld %ld %ld %ld %ld %ld",
+   int r = sscanf(statmdata, "%ld %ld %ld %ld %ld %ld %ld",
                   &process->super.m_virt,
                   &process->super.m_resident,
                   &process->m_share,
@@ -698,7 +700,6 @@ static bool LinuxProcessTable_readStatmFile(LinuxProcess* process, openat_arg_t 
                   &dummy, /* unused since Linux 2.6; always 0 */
                   &process->m_drs,
                   &dummy2); /* unused since Linux 2.6; always 0 */
-   fclose(statmfile);
 
    if (r == 7) {
       process->super.m_virt *= host->pageSizeKB;
