@@ -298,15 +298,21 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 pid_t Platform_getMaxPid(void) {
-   pid_t maxPid = 4194303;
-   FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
-   if (!file)
-      return maxPid;
+   char piddata[32] = {0};
 
-   int match = fscanf(file, "%32d", &maxPid);
-   (void) match;
-   fclose(file);
-   return maxPid;
+   ssize_t pidread = xReadfile(PROCDIR "/sys/kernel/pid_max", piddata, sizeof(piddata));
+   if (pidread < 1)
+      goto err;
+
+   int pidmax = 0;
+   int match = sscanf(piddata, "%32d", &pidmax);
+   if (match != 1)
+      goto err;
+
+   return pidmax;
+
+err:
+   return 0x3FFFFF; // 4194303
 }
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu) {
