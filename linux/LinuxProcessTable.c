@@ -933,19 +933,24 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
 }
 
 static void LinuxProcessTable_readOomData(LinuxProcess* process, openat_arg_t procFd) {
-   FILE* file = fopenat(procFd, "oom_score", "r");
-   if (!file)
-      return;
+   char buffer[PROC_LINE_LENGTH + 1] = {0};
 
-   char buffer[PROC_LINE_LENGTH + 1];
-   if (fgets(buffer, PROC_LINE_LENGTH, file)) {
-      unsigned int oom;
-      int ok = sscanf(buffer, "%u", &oom);
-      if (ok == 1) {
-         process->oom = oom;
-      }
+   ssize_t oomRead = xReadfileat(procFd, "oom_score", buffer, sizeof(buffer));
+   if (oomRead < 1) {
+      return;
    }
-   fclose(file);
+
+   char* oomPtr = buffer;
+   uint64_t oom = fast_strtoull_dec(&oomPtr, oomRead);
+   if (*oomPtr && *oomPtr != '\n' && *oomPtr != ' ') {
+      return;
+   }
+
+   if (oom > UINT_MAX) {
+      return;
+   }
+
+   process->oom = oom;
 }
 
 static void LinuxProcessTable_readAutogroup(LinuxProcess* process, openat_arg_t procFd) {
