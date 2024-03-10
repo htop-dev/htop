@@ -258,15 +258,21 @@ const MeterClass* const Platform_meterTypes[] = {
 };
 
 int Platform_getUptime(void) {
-   double uptime = 0;
-   FILE* fd = fopen(PROCDIR "/uptime", "r");
-   if (fd) {
-      int n = fscanf(fd, "%64lf", &uptime);
-      fclose(fd);
-      if (n != 1) {
-         return 0;
-      }
+   char uptimedata[64] = {0};
+
+   ssize_t uptimeread = xReadfile(PROCDIR "/uptime", uptimedata, sizeof(uptimedata));
+   if (uptimeread < 1) {
+      return 0;
    }
+
+   double uptime = 0;
+   double idle = 0;
+
+   int n = sscanf(uptimedata, "%lf %lf", &uptime, &idle);
+   if (n != 2) {
+      return 0;
+   }
+
    return floor(uptime);
 }
 
