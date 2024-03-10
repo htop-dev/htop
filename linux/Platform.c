@@ -589,21 +589,21 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
 }
 
 void Platform_getFileDescriptors(double* used, double* max) {
+   char buffer[128] = {0};
+
    *used = NAN;
    *max = 65536;
 
-   FILE* fd = fopen(PROCDIR "/sys/fs/file-nr", "r");
-   if (!fd)
+   ssize_t fdread = xReadfile(PROCDIR "/sys/fs/file-nr", buffer, sizeof(buffer));
+   if (fdread < 1)
       return;
 
    unsigned long long v1, v2, v3;
-   int total = fscanf(fd, "%llu %llu %llu", &v1, &v2, &v3);
+   int total = sscanf(buffer, "%llu %llu %llu", &v1, &v2, &v3);
    if (total == 3) {
       *used = v1;
       *max = v3;
    }
-
-   fclose(fd);
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
