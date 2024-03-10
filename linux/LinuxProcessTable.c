@@ -971,21 +971,15 @@ static void LinuxProcessTable_readAutogroup(LinuxProcess* process, openat_arg_t 
 }
 
 static void LinuxProcessTable_readSecattrData(LinuxProcess* process, openat_arg_t procFd) {
-   FILE* file = fopenat(procFd, "attr/current", "r");
-   if (!file) {
+   char buffer[PROC_LINE_LENGTH + 1] = {0};
+
+   ssize_t attrdata = xReadfileat(procFd, "attr/current", buffer, sizeof(buffer));
+   if (attrdata < 1) {
       free(process->secattr);
       process->secattr = NULL;
       return;
    }
 
-   char buffer[PROC_LINE_LENGTH + 1];
-   const char* res = fgets(buffer, sizeof(buffer), file);
-   fclose(file);
-   if (!res) {
-      free(process->secattr);
-      process->secattr = NULL;
-      return;
-   }
    char* newline = strchr(buffer, '\n');
    if (newline) {
       *newline = '\0';
