@@ -826,6 +826,12 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
          legacyDotfile = NULL;
       }
    }
+
+   char* resolvedFilename = xMalloc(PATH_MAX);
+   if (realpath(this->filename, resolvedFilename))
+      free_and_xStrdup(&this->filename, resolvedFilename);
+   free(resolvedFilename);
+
    this->colorScheme = 0;
 #ifdef HAVE_GETMOUSE
    this->enableMouse = true;
