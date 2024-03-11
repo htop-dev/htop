@@ -133,13 +133,17 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
       const char* prefix;
       int priority;
    } tempDrivers[] =  {
-      { "coretemp",    0 },
-      { "via_cputemp", 0 },
-      { "cpu_thermal", 0 },
-      { "k10temp",     0 },
-      { "zenpower",    0 },
+      { "coretemp",           0 },
+      { "via_cputemp",        0 },
+      { "cpu_thermal",        0 },
+      { "k10temp",            0 },
+      { "zenpower",           0 },
+      /* Rockchip RK3588 */
+      { "littlecore_thermal", 0 },
+      { "bigcore0_thermal",   0 },
+      { "bigcore1_thermal",   0 },
       /* Low priority drivers */
-      { "acpitz",      1 },
+      { "acpitz",             1 },
    };
 
    for (size_t i = 0; i < ARRAYSIZE(tempDrivers); i++)
@@ -207,6 +211,33 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          int r = sym_sensors_get_value(chip, subFeature->number, &temp);
          if (r != 0)
             continue;
+
+         /* Map temperature values to Rockchip cores
+          *
+          *   littlecore -> cores 1..4
+          *   bigcore0   -> cores 5,6
+          *   bigcore1   -> cores 7,8
+          */
+         if (existingCPUs == 8 && String_eq(chip->prefix, "littlecore_thermal")) {
+            data[1] = temp;
+            data[2] = temp;
+            data[3] = temp;
+            data[4] = temp;
+            coreTempCount += 4;
+            continue;
+         }
+         if (existingCPUs == 8 && String_eq(chip->prefix, "bigcore0_thermal")) {
+            data[5] = temp;
+            data[6] = temp;
+            coreTempCount += 2;
+            continue;
+         }
+         if (existingCPUs == 8 && String_eq(chip->prefix, "bigcore1_thermal")) {
+            data[7] = temp;
+            data[8] = temp;
+            coreTempCount += 2;
+            continue;
+         }
 
          /* If already set, e.g. Ryzen reporting platform temperature for each die, use the bigger one */
          if (isNaN(data[tempID])) {
