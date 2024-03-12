@@ -29,12 +29,12 @@ in the source distribution for its full text.
 
 #ifdef BUILD_STATIC
 
-#define sym_sensors_init sensors_init
-#define sym_sensors_cleanup sensors_cleanup
+#define sym_sensors_init               sensors_init
+#define sym_sensors_cleanup            sensors_cleanup
 #define sym_sensors_get_detected_chips sensors_get_detected_chips
-#define sym_sensors_get_features sensors_get_features
-#define sym_sensors_get_subfeature sensors_get_subfeature
-#define sym_sensors_get_value sensors_get_value
+#define sym_sensors_get_features       sensors_get_features
+#define sym_sensors_get_subfeature     sensors_get_subfeature
+#define sym_sensors_get_value          sensors_get_value
 
 #else
 
@@ -128,32 +128,34 @@ int LibSensors_reload(void) {
    return sym_sensors_init(NULL);
 }
 
-static int tempDriverPriority(const sensors_chip_name* chip) {
-   static const struct TempDriverDefs {
+typedef enum TempDriver_ {
+   TD_CORETEMP,
+   TD_CPUTEMP,
+   TD_CPUTHERMAL,
+   TD_K10TEMP,
+   TD_ZENPOWER,
+   TD_ACPITZ,
+   TD_UNKNOWN,
+} TempDriver;
+
+static const struct TempDriverDefs {
       const char* prefix;
       int priority;
-   } tempDrivers[] =  {
-      { "coretemp",    0 },
-      { "via_cputemp", 0 },
-      { "cpu_thermal", 0 },
-      { "k10temp",     0 },
-      { "zenpower",    0 },
-      /* Low priority drivers */
-      { "acpitz",      1 },
-   };
-
-   for (size_t i = 0; i < ARRAYSIZE(tempDrivers); i++)
-      if (String_eq(chip->prefix, tempDrivers[i].prefix))
-         return tempDrivers[i].priority;
-
-   return -1;
-}
+} tempDrivers[TD_UNKNOWN] =  {
+   [TD_CORETEMP]   = { "coretemp",    0 },
+   [TD_CPUTEMP]    = { "via_cputemp", 0 },
+   [TD_CPUTHERMAL] = { "cpu_thermal", 0 },
+   [TD_K10TEMP]    = { "k10temp",     0 },
+   [TD_ZENPOWER]   = { "zenpower",    0 },
+   /* Low priority drivers */
+   [TD_ACPITZ]     = { "acpitz",      1 },
+};
 
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
    assert(existingCPUs > 0 && existingCPUs < 16384);
 
-   double* data = xMallocArray(existingCPUs + 1, sizeof(double));
-   for (size_t i = 0; i < existingCPUs + 1; i++)
+   float* data = xMallocArray(existingCPUs + 1, sizeof(float));
+   for (size_t i = 0; i <= existingCPUs; i++)
       data[i] = NAN;
 
 #ifndef BUILD_STATIC
@@ -163,11 +165,22 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
    unsigned int coreTempCount = 0;
    int topPriority = 99;
+   TempDriver topDriver = TD_UNKNOWN;
 
    int n = 0;
    for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
-      const int priority = tempDriverPriority(chip);
-      if (priority < 0)
+      int priority = -1;
+      TempDriver driver = TD_UNKNOWN;
+
+      for (size_t i = 0; i < ARRAYSIZE(tempDrivers); i++) {
+         if (String_eq(chip->prefix, tempDrivers[i].prefix)) {
+            priority = tempDrivers[i].priority;
+            driver = i;
+            break;
+         }
+      }
+
+      if (driver == TD_UNKNOWN)
          continue;
 
       if (priority > topPriority)
@@ -180,6 +193,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       }
 
       topPriority = priority;
+      topDriver = driver;
 
       int m = 0;
       for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
@@ -219,6 +233,46 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
       }
    }
 
+   /*
+    * k10temp, see https://www.kernel.org/doc/html/latest/hwmon/k10temp.html
+    *   temp1 = Tctl, (optional) temp2 = Tdie, temp3..temp10 = Tccd1..8
+    */
+   if (topDriver == TD_K10TEMP) {
+      /* Display Tdie instead of Tctl if available */
+      if (!isNaN(data[1]))
+         data[0] = data[1];
+
+      /* Compute number of CCD entries */
+      unsigned int ccd_entries = 0;
+      for (size_t i = 2; i <= existingCPUs; i++) {
+         if (isNaN(data[i]))
+            break;
+
+         ccd_entries++;
+      }
+
+      if (ccd_entries == 0) {
+         for (size_t i = 1; i <= existingCPUs; i++)
+            data[i] = data[0];
+      } else {
+         assert(ccd_entries <= 16);
+         float ccd_data[ccd_entries];
+         for (size_t i = 0; i < ccd_entries; i++)
+            ccd_data[i] = data[i + 2];
+
+         /* Handle threads being listed at the end */
+         unsigned int ccd_size = existingCPUs / ccd_entries / 2;
+
+         for (size_t i = 1; i <= existingCPUs; i++) {
+            unsigned int index = ((i - 1) / ccd_size) % ccd_entries;
+            data[i] = ccd_data[index];
+         }
+      }
+
+      /* No further adjustments */
+      goto out;
+   }
+
    /* Adjust data for chips not providing a platform temperature */
    if (coreTempCount + 1 == activeCPUs || coreTempCount + 1 == activeCPUs / 2) {
       memmove(&data[1], &data[0], existingCPUs * sizeof(*data));
@@ -239,7 +293,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
    /* No package temperature - set to max core temperature */
    if (coreTempCount > 0 && isNaN(data[0])) {
-      double maxTemp = -HUGE_VAL;
+      float maxTemp = -HUGE_VAL;
       for (unsigned int i = 1; i <= existingCPUs; i++) {
          if (isgreater(data[i], maxTemp)) {
             maxTemp = data[i];
