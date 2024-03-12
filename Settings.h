@@ -54,6 +54,7 @@ typedef struct ScreenSettings_ {
 
 typedef struct Settings_ {
    char* filename;
+   char* initialFilename;
    int config_version;
    HeaderLayout hLayout;
    MeterColumnSetting* hColumns;
