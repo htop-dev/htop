@@ -363,6 +363,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
          ScreenManager_resize(this);
          continue;
       }
+      case KEY_FOCUS_IN:
+      case KEY_FOCUS_OUT:
+         break;
       case KEY_LEFT:
       case KEY_CTRL('B'):
          if (this->panelCount < 2) {

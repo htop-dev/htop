@@ -1036,6 +1036,8 @@ IGNORE_WCASTQUAL_BEGIN
          sequence[1] = c;
          define_key(sequence, KEY_ALT('A' + (c - 'a')));
       }
+      define_key("\033[I", KEY_FOCUS_IN);
+      define_key("\033[O", KEY_FOCUS_OUT);
 #ifdef HTOP_NETBSD
 IGNORE_WCASTQUAL_END
 #undef define_key
