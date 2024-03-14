@@ -156,6 +156,11 @@ jobs:
       HTOPRC: .github/workflows/htoprc
     steps:
     - uses: actions/checkout@v4
+    - name: Fix kernel mmap rnd bits
+      # High entropy setting in GH runner images >= 20240310.1.0
+      # causes ASAN random segfaults
+      # https://github.com/actions/runner-images/issues/9491
+      run: sudo sysctl vm.mmap_rnd_bits=28
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
