@@ -50,6 +50,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "UserSessionsMeter.h"
 #include "XUtils.h"
 #include "linux/IOPriority.h"
 #include "linux/IOPriorityPanel.h"
@@ -63,6 +64,10 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
+
+#ifndef BUILD_STATIC
+#include <dlfcn.h>
+#endif
 
 #ifdef HAVE_LIBCAP
 #include <sys/capability.h>
@@ -252,6 +257,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &SystemdMeter_class,
    &SystemdUserMeter_class,
    &FileDescriptorMeter_class,
+   &UserSessionsMeter_class,
    NULL
 };
 
@@ -1085,3 +1091,34 @@ void Platform_done(void) {
    LibSensors_cleanup();
 #endif
 }
+
+#ifndef BUILD_STATIC
+
+static void* libsystemd_handle;
+static size_t libsystemd_loaded;
+
+void* Platform_load_libsystemd(void) {
+   assert(libsystemd_loaded != SIZE_MAX);
+   assert((libsystemd_handle != NULL) == (libsystemd_loaded > 0));
+
+   if (!libsystemd_handle)
+      libsystemd_handle = dlopen("libsystemd.so.0", RTLD_LAZY);
+
+   if (libsystemd_handle)
+      libsystemd_loaded++;
+
+   return libsystemd_handle;
+}
+
+void Platform_close_libsystemd(void) {
+   assert(libsystemd_handle != NULL);
+   assert(libsystemd_loaded > 0);
+
+   libsystemd_loaded--;
+   if (libsystemd_loaded == 0) {
+      dlclose(libsystemd_handle);
+      libsystemd_handle = NULL;
+   }
+}
+
+#endif /* !BUILD_STATIC */

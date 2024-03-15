@@ -36,6 +36,7 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "SysArchMeter.h"
 #include "UptimeMeter.h"
+#include "UserSessionsMeter.h"
 #include "XUtils.h"
 
 #include "solaris/SolarisMachine.h"
@@ -130,6 +131,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs8Meter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &UserSessionsMeter_class,
    &BlankMeter_class,
    NULL
 };

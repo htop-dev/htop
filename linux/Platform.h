@@ -153,4 +153,11 @@ static inline void Platform_addDynamicScreenAvailableColumns(ATTR_UNUSED Panel* 
 
 static inline void Platform_dynamicScreensDone(ATTR_UNUSED Hashtable* screens) { }
 
-#endif
+#ifndef BUILD_STATIC
+
+void* Platform_load_libsystemd(void);
+void Platform_close_libsystemd(void);
+
+#endif /* !BUILD_STATIC */
+
+#endif /* HEADER_Platform */

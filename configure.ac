@@ -158,7 +158,7 @@ fi])
 
 # Optional Section
 
-AC_CHECK_HEADERS([execinfo.h])
+AC_CHECK_HEADERS([execinfo.h utmpx.h])
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_HEADERS([mach/mach_time.h])
@@ -182,6 +182,8 @@ AC_TYPE_UINT8_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
+
+AC_CHECK_MEMBERS([struct utmpx.ut_session], [], [], [[#include <utmpx.h>]])
 
 AC_MSG_CHECKING(for alloc_size)
 old_CFLAGS="$CFLAGS"
