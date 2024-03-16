@@ -771,6 +771,10 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
+void Plateform_getBacktraces(Vector* frames, const Process* process, char **error) {
+   xAsprintf(error, "The backtrace screen is not implemented");
+}
+
 void Platform_getFileDescriptors(double* used, double* max) {
    *used = NAN;
    *max = 65536;

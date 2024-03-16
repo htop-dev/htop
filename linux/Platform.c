@@ -21,8 +21,11 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/ptrace.h>
 #include <sys/sysmacros.h>
+#include <sys/wait.h>
 
+#include "BacktraceScreen.h"
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
 #include "Compat.h"
@@ -66,6 +69,14 @@ in the source distribution for its full text.
 
 #ifdef HAVE_LIBCAP
 #include <sys/capability.h>
+#endif
+
+#ifdef HAVE_LIBIBERTY
+#include <libiberty/demangle.h>
+#endif
+
+#ifdef HAVE_LIBUNWIND_PTRACE
+#include <libunwind-ptrace.h>
 #endif
 
 #ifdef HAVE_SENSORS_SENSORS_H
@@ -660,6 +671,91 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    fclose(fd);
 
    return true;
+}
+
+void Plateform_getBacktraces(Vector* frames, const Process* process, char **error) {
+   Vector_prune(frames);
+#ifdef HAVE_LIBUNWIND_PTRACE
+   unw_addr_space_t addrSpace = unw_create_addr_space(&_UPT_accessors, 0);
+   if (!addrSpace) {
+      xAsprintf(error, "Unable to init libunwind.");
+      return;
+   }
+
+   const pid_t pid = Process_getPid(process);
+
+   if (pid <= 0) {
+      xAsprintf(error, "Unable to get the pid");
+      goto addr_space_error;
+   }
+
+   if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
+      xAsprintf(error, "ptrace: %s", strerror(errno));
+      goto addr_space_error;
+   }
+   wait(NULL);
+
+   struct UPT_info* context = _UPT_create(pid);
+   if (!context) {
+      xAsprintf(error, "Unable to init backtrace panel.");
+      goto ptrace_error;
+   }
+
+   unw_cursor_t cursor;
+   int ret = unw_init_remote(&cursor, addrSpace, context);
+   if (ret < 0) {
+      xAsprintf(error, "libunwind cursor: ret=%d", ret);
+      goto context_error;
+   }
+
+   int index = 0;
+   do {
+      char procName[256] = "?";
+      unw_word_t offset;
+      unw_word_t pc;
+
+      if (unw_get_proc_name(&cursor, procName, sizeof(procName), &offset) == 0) {
+         ret = unw_get_reg(&cursor, UNW_REG_IP, &pc);
+         if (ret < 0) {
+            xAsprintf(error, "unable to get register rip : %d", ret);
+            break;
+         }
+
+         Frame* frame = Frame_new();
+         frame->index = index;
+         frame->address = pc;
+         frame->offset = offset;
+         frame->isSignalFrame = unw_is_signal_frame(&cursor);
+#ifdef HAVE_LIBIBERTY
+         char* demangledName = cplus_demangle(procName,
+                                              DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_RET_POSTFIX);
+         if (demangledName == NULL) {
+            xAsprintf(&frame->functionName, "%s", procName);
+         } else {
+            xAsprintf(&frame->functionName, "%s", demangledName);
+            free(demangledName);
+         }
+#else
+         xAsprintf(&frame->functionName, "%s", procName);
+#endif
+         Vector_add(frames, (Object *)frame);
+      }
+      index++;
+   } while (unw_step(&cursor) > 0);
+
+context_error:
+   _UPT_destroy(context);
+
+ptrace_error:
+   ptrace(PTRACE_DETACH, pid, 0, 0);
+
+addr_space_error:
+   unw_destroy_addr_space(addrSpace);
+#else
+   (void)frames;
+   (void)process;
+   xAsprintf(error, "The backtrace screen is not implemented");
+#endif
 }
 
 // Linux battery reading by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).

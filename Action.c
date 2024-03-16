@@ -47,6 +47,10 @@ in the source distribution for its full text.
 #include "AffinityPanel.h"
 #endif
 
+#ifdef BACKTRACE_ENABLED
+#include "BacktraceScreen.h"
+#endif
+
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool follow) {
    MainPanel* mainPanel = st->mainPanel;
@@ -595,6 +599,27 @@ static Htop_Reaction actionShowLocks(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+#ifdef BACKTRACE_ENABLED
+static Htop_Reaction actionBacktrace(State *st) {
+   const Process* process = (Process*) Panel_getSelected((Panel*)st->mainPanel);
+   if (!process)
+      return HTOP_OK;
+
+   BacktracePanel *panel = BacktracePanel_new(process);
+   ScreenManager *screenManager = ScreenManager_new(NULL, st->host, st, false);
+   ScreenManager_add(screenManager, (Panel *)panel, 0);
+
+   Panel *lastFocusPanel = NULL;
+   int lastKey = 0;
+
+   ScreenManager_run(screenManager, &lastFocusPanel, &lastKey, NULL);
+   BacktracePanel_delete((Object *)panel);
+   ScreenManager_delete(screenManager);
+
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+#endif
+
 static Htop_Reaction actionStrace(State* st) {
    if (!Action_writeableProcess(st))
       return HTOP_OK;
@@ -678,6 +703,9 @@ static const struct {
    { .key = "   F8 [: ", .roInactive = true,  .info = "lower priority (+ nice)" },
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
    { .key = "      a: ", .roInactive = true, .info = "set CPU affinity" },
+#endif
+#if BACKTRACE_ENABLED
+   { .key = "      b: ", .roInactive = false, .info = "show the backtrace of user process" },
 #endif
    { .key = "      e: ", .roInactive = false, .info = "show process environment" },
    { .key = "      i: ", .roInactive = true,  .info = "set IO priority" },
@@ -918,6 +946,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['\\'] = actionIncFilter;
    keys[']'] = actionHigherPriority;
    keys['a'] = actionSetAffinity;
+#ifdef BACKTRACE_ENABLED
+   keys['b'] = actionBacktrace;
+#endif
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
    keys['h'] = actionHelp;
