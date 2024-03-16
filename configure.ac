@@ -575,6 +575,7 @@ esac
 if test "x$enable_backtrace" != xno; then
    AC_DEFINE([HAVE_BACKTRACE], [1], [Define if the backtrace feature is enabled])
 fi
+AM_CONDITIONAL([HAVE_BACKTRACE], [test x"$enable_backtrace" != xno])
 
 if test "x$enable_backtrace" = xunwind-ptrace; then
    AC_MSG_CHECKING([if libunwind has unw_get_elf_filename])
