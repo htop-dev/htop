@@ -374,6 +374,16 @@ double sumPositiveValues(const double* array, size_t count) {
    return sum;
 }
 
+size_t countDigit(size_t n, size_t base) {
+   assert(base > 1);
+   size_t res = 0;
+   while (n != 0) {
+      n /= base;
+      res++;
+   }
+   return res;
+}
+
 #if !defined(HAVE_BUILTIN_CTZ)
 // map a bit value mod 37 to its position
 static const uint8_t mod37BitPosition[] = {
