@@ -271,7 +271,7 @@ jobs:
             CPPFLAGS="-I/usr/pkg/include" ./configure --enable-unicode --enable-werror
             gmake -k
 
-  build-openbsd-latest-gcc:
+  build-openbsd-latest-clang:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
