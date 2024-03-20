@@ -37,7 +37,7 @@ jobs:
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-18 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends clang-18 libncursesw5-dev
@@ -78,7 +78,7 @@ jobs:
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-18 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends clang-18 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
@@ -133,7 +133,7 @@ jobs:
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-18 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends clang-18 clang-tools-18 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
@@ -159,7 +159,7 @@ jobs:
     - name: install clang repo
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-18 main' -y
+        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
         sudo apt-get update -q
     - name: Install LLVM Toolchain
       run: sudo apt-get install --no-install-recommends clang-18 libclang-rt-18-dev llvm-18
