@@ -1071,7 +1071,7 @@ void Process_updateExe(Process* this, const char* exe) {
 }
 
 void Process_updateCPUFieldWidths(float percentage) {
-   if (percentage < 99.9F) {
+   if (percentage < 99.9F || isNaN(percentage)) {
       Row_updateFieldWidth(PERCENT_CPU, 4);
       Row_updateFieldWidth(PERCENT_NORM_CPU, 4);
       return;
