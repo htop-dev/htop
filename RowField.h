@@ -44,6 +44,8 @@ typedef enum ReservedFields_ {
 
    /* Platform specific fields, defined in ${platform}/ProcessField.h */
    PLATFORM_PROCESS_FIELDS
+   PERCENT_CPU_GROUP = 130,
+   PERCENT_MEM_GROUP = 131,
 
    /* Do not add new fields after this entry (dynamic entries follow) */
    LAST_RESERVED_FIELD

@@ -440,6 +440,12 @@ This is the default way to represent CPU usage in Linux. Each process can
 consume up to 100% which means the full capacity of the core it is running
 on. This is sometimes called "Irix mode" e.g. in
 .BR top (1).
+.TP.B PERCENT_CPU_GROUP (GCPU%)
+The percentage of the CPU time that the process and its children are currently using.
+This is the default way to represent CPU usage in Linux. Each process can
+consume up to 100% which means the full capacity of the core it is running
+on. This is sometimes called "Irix mode" e.g. in
+.BR top (1).
 .TP
 .B PERCENT_NORM_CPU (NCPU%)
 The percentage of the CPU time that the process is currently using normalized
@@ -448,6 +454,9 @@ by CPU count. This is sometimes called "Solaris mode" e.g. in
 .TP
 .B PERCENT_MEM (MEM%)
 The percentage of memory the process is currently using (based on the process's
+resident memory size, see M_RESIDENT above).
+.TP.B PERCENT_MEM_GROUP (GMEM%)
+The percentage of memory the process and its children are currently using (based on the process's
 resident memory size, see M_RESIDENT above).
 .TP
 .B USER

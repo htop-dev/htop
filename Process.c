@@ -661,12 +661,14 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       xSnprintf(buffer, n, "%4ld ", this->nlwp);
       break;
    case PERCENT_CPU: Row_printPercentage(this->percent_cpu, buffer, n, Row_fieldWidths[PERCENT_CPU], &attr); break;
+   case PERCENT_CPU_GROUP: Row_printPercentage(this->percent_cpu_group, buffer, n, Row_fieldWidths[PERCENT_CPU_GROUP], &attr); break;
    case PERCENT_NORM_CPU: {
       float cpuPercentage = this->percent_cpu / host->activeCPUs;
       Row_printPercentage(cpuPercentage, buffer, n, Row_fieldWidths[PERCENT_CPU], &attr);
       break;
    }
    case PERCENT_MEM: Row_printPercentage(this->percent_mem, buffer, n, 4, &attr); break;
+   case PERCENT_MEM_GROUP: Row_printPercentage(this->percent_mem_group, buffer, n, 4, &attr); break;
    case PGRP: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pgrp); break;
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, Process_getPid(this)); break;
    case PPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, Process_getParent(this)); break;
@@ -920,8 +922,12 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    case PERCENT_CPU:
    case PERCENT_NORM_CPU:
       return compareRealNumbers(p1->percent_cpu, p2->percent_cpu);
+   case PERCENT_CPU_GROUP:
+      return compareRealNumbers(p1->percent_cpu_group, p2->percent_cpu_group);
    case PERCENT_MEM:
       return SPACESHIP_NUMBER(p1->m_resident, p2->m_resident);
+   case PERCENT_MEM_GROUP:
+      return SPACESHIP_NUMBER(p1->percent_mem_group, p2->percent_mem_group);
    case COMM:
       return SPACESHIP_NULLSTR(Process_getCommand(p1), Process_getCommand(p2));
    case PROC_COMM: {
@@ -1082,6 +1088,51 @@ void Process_updateCPUFieldWidths(float percentage) {
 
    Row_updateFieldWidth(PERCENT_CPU, width);
    Row_updateFieldWidth(PERCENT_NORM_CPU, width);
+}
+
+void Process_updateCPUGroupFieldWidth(float percentage) {
+   if (percentage < 99.9F) {
+      Row_updateFieldWidth(PERCENT_CPU_GROUP, 4);
+      return;
+   }
+
+   // Add additional two characters, one for "." and another for precision.
+   uint8_t width = ceil(log10(percentage + 0.1)) + 2;
+
+   Row_updateFieldWidth(PERCENT_CPU_GROUP, width);
+}
+
+void Process_resetGroupFields(pid_t _pid, Process* this, void* _data) {
+   this->percent_cpu_group = this->percent_cpu;
+   this->percent_mem_group = this->percent_mem;
+}
+
+void Process_updateGroupFields(pid_t _pid, Process* this, void* _data) {
+   const Machine* host = this->super.host;
+   const ProcessTable* pt = (const ProcessTable*) host->processTable;
+   Process* curProcess = this;
+
+   bool looping = curProcess->percent_cpu_group > 0 || curProcess->percent_mem_group > 0;
+
+   while (looping) {
+      const pid_t pid = Process_getPid(curProcess);
+      const pid_t parentPid = Process_getGroupOrParent(curProcess);
+      if (parentPid == pid) {
+         looping = false;
+
+         break;
+      }
+      Process* parentProc = Hashtable_get(pt->super.table, parentPid);
+      if (parentProc == NULL) {
+         // TODO: or assert ?
+         looping = false;
+         break;
+      }
+      parentProc->percent_cpu_group += this->percent_cpu;
+      parentProc->percent_mem_group += this->percent_mem;
+      curProcess = parentProc;
+   }
+   Process_updateCPUGroupFieldWidth(curProcess->percent_cpu_group);
 }
 
 const ProcessClass Process_class = {

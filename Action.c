@@ -224,8 +224,16 @@ static Htop_Reaction actionSortByMemory(State* st) {
    return Action_setSortKey(st->host->settings, PERCENT_MEM);
 }
 
+static Htop_Reaction actionSortByMemoryGroup(State* st) {
+   return Action_setSortKey(st->host->settings, PERCENT_MEM_GROUP);
+}
+
 static Htop_Reaction actionSortByCPU(State* st) {
    return Action_setSortKey(st->host->settings, PERCENT_CPU);
+}
+
+static Htop_Reaction actionSortByCPUGroup(State* st) {
+   return Action_setSortKey(st->host->settings, PERCENT_CPU_GROUP);
 }
 
 static Htop_Reaction actionSortByTime(State* st) {
@@ -902,9 +910,11 @@ void Action_setBindings(Htop_Action* keys) {
    keys['I'] = actionInvertSortOrder;
    keys['K'] = actionToggleKernelThreads;
    keys['M'] = actionSortByMemory;
+   keys['X'] = actionSortByMemoryGroup;
    keys['N'] = actionSortByPID;
    keys['O'] = actionToggleRunningInContainer;
    keys['P'] = actionSortByCPU;
+   keys['W'] = actionSortByCPUGroup;
    keys['S'] = actionSetup;
    keys['T'] = actionSortByTime;
    keys['U'] = actionUntagAll;
