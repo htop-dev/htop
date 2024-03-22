@@ -442,9 +442,10 @@ void Row_printLeftAlignedField(RichString* str, int attr, const char* content, u
 }
 
 int Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr) {
-   assert(width >= 4 && width < n && "Invalid width in Row_printPercentage()");
+   assert(n >= 6 && width >= 4 && "Invalid width in Row_printPercentage()");
    // truncate in favour of abort in xSnprintf()
-   width = (uint8_t)CLAMP(width, 4, n - 1);
+   width = (uint8_t)CLAMP(width, 4, n - 2);
+   assert(width < n - 1 && "Insuficient space to print column");
 
    if (isNonnegative(val)) {
       if (val < 0.05F)
