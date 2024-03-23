@@ -94,13 +94,23 @@ typedef struct MeterClass_ {
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
+#define Meter_maxItems(this_)          As_Meter(this_)->maxItems
 #define Meter_isMultiColumn(this_)     As_Meter(this_)->isMultiColumn
 #define Meter_isPercentChart(this_)    As_Meter(this_)->isPercentChart
+
+typedef union GraphColorCell_ {
+   int16_t scaleExp;
+   uint16_t numDots;
+   struct GraphColorCellCell_ {
+      uint8_t itemNum;
+      uint8_t details;
+   } c;
+} GraphColorCell;
 
 typedef struct GraphData_ {
    struct timeval time;
    size_t nValues;
-   double* values;
+   GraphColorCell* buffer;
 } GraphData;
 
 struct Meter_ {
@@ -121,6 +131,34 @@ struct Meter_ {
    double total;
    void* meterData;
 };
+
+/* Used in GraphMeterMode_draw() subroutines only */
+typedef struct GraphDrawContext_ {
+   uint8_t maxItems;
+   bool isPercentChart;
+   size_t nCellsPerValue;
+} GraphDrawContext;
+
+/* Used in GraphMeterMode_computeColors() subroutines only */
+typedef struct GraphColorComputeState_ {
+   double valueSum;
+   unsigned int nCellsPainted;
+   uint8_t nItemsPainted;
+} GraphColorComputeState;
+
+/* Used in GraphMeterMode_computeColors() subroutines only */
+typedef struct GraphColorAdjOffset_ {
+   uint32_t offsetVal; /* "offsetVal" requires at least 22 bits */
+   unsigned int nCells;
+} GraphColorAdjOffset;
+
+/* Used in GraphMeterMode_computeColors() subroutines only */
+typedef struct GraphColorAdjStack_ {
+   double startPoint;
+   double fractionSum;
+   double valueSum;
+   uint8_t nItems;
+} GraphColorAdjStack;
 
 typedef struct MeterMode_ {
    Meter_Draw draw;
