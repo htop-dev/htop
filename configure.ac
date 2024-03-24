@@ -526,6 +526,60 @@ if test "x$enable_unwind" = xno; then
    AC_SEARCH_LIBS([backtrace], [execinfo])
 fi
 
+AC_ARG_ENABLE([backtraces],
+              [AS_HELP_STRING([--enable-backtraces=<unwind-ptrace>],
+              [enable printing backtraces.])],
+              [],
+              [enable_backtraces=no])
+case "$enable_backtraces" in
+   no)
+      ;;
+   unwind-ptrace)
+      AC_CHECK_LIB([unwind-ptrace], [_UPT_create], [], [AC_MSG_ERROR([can not find required library libunwind-ptrace])], [-lunwind-generic])
+      AC_CHECK_LIB([unwind-generic], [_UPT_create], [], [AC_MSG_ERROR([can not find required library libunwind-generic])])
+      AC_CHECK_HEADERS([libunwind-ptrace.h], [], [
+         CFLAGS="$CFLAGS -I/usr/include/libunwind"
+         AC_CHECK_HEADERS([libunwind/libunwind-ptrace.h], [], [AC_MSG_ERROR([can not find required header file libunwind-ptrace.h])])
+      ])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_backtraces' for --enable-backtraces])
+      ;;
+esac
+if test "x$enable_backtraces" = xunwind-ptrace; then
+   AC_DEFINE([BACKTRACE_ENABLED], [1], [Define if the backtraces is enabled])
+fi
+
+AC_ARG_ENABLE([demangling],
+              [AS_HELP_STRING([--enable-demangline],
+                              [enable demangling support for backtraces @<:@default=check@:>@])],
+              [],
+              [enable_demangling=check])
+case "$enable_demangling" in
+   check)
+      enable_demangling=yes
+      AC_CHECK_HEADERS([demangle.h], [], [
+         old_CFLAGS="$CFLAGS"
+         CFLAGS="$CFLAGS -I/usr/include/libiberty"
+         AC_CHECK_HEADERS([libiberty/demangle.h], [], [
+            enable_demangling=no
+            CFLAGS="$old_CFLAGS"
+         ])
+      ])
+      ;;
+   no)
+      ;;
+   yes)
+      AC_CHECK_LIB([iberty], [cplus_demangle], [], [AC_MSG_ERROR([can not find required library iberty])])
+      AC_CHECK_HEADERS([demangle.h], [], [
+         CFLAGS="$CFLAGS -I/usr/include/libiberty"
+         AC_CHECK_HEADERS([libiberty/demangle.h], [], [AC_MSG_ERROR([can not find required header file libiberty/demange.h])])
+      ])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_demangling' for --enable-iberty])
+      ;;
+esac
 
 AC_ARG_ENABLE([hwloc],
               [AS_HELP_STRING([--enable-hwloc],
@@ -860,6 +914,8 @@ AC_MSG_RESULT([
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   unwind:                    $enable_unwind
+  backtraces:                $enable_backtraces
+  demangling:                $enable_demangling
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static

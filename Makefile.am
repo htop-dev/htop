@@ -33,6 +33,7 @@ myhtopsources = \
 	AffinityPanel.c \
 	AvailableColumnsPanel.c \
 	AvailableMetersPanel.c \
+	BacktraceScreen.c \
 	BatteryMeter.c \
 	CategoriesPanel.c \
 	ClockMeter.c \
@@ -99,6 +100,7 @@ myhtopheaders = \
 	AffinityPanel.h \
 	AvailableColumnsPanel.h \
 	AvailableMetersPanel.h \
+	BacktraceScreen.h \
 	BatteryMeter.h \
 	CPUMeter.h \
 	CRT.h \
