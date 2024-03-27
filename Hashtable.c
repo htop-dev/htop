@@ -10,6 +10,8 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 
 #include <assert.h>
+#include <inttypes.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,32 +90,91 @@ size_t Hashtable_count(const Hashtable* this) {
 
 #endif /* NDEBUG */
 
-/* https://oeis.org/A014234 */
-static const uint64_t OEISprimes[] = {
-   7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191,
-   16381, 32749, 65521, 131071, 262139, 524287, 1048573,
-   2097143, 4194301, 8388593, 16777213, 33554393,
-   67108859, 134217689, 268435399, 536870909, 1073741789,
-   2147483647, 4294967291, 8589934583, 17179869143,
-   34359738337, 68719476731, 137438953447
+#define MIN_TABLE_SIZE 11
+
+/* Primes borrowed from gnulib/lib/gl_anyhash_primes.h.
+
+   Array of primes, approximately in steps of factor 1.2.
+   This table was computed by executing the Common Lisp expression
+     (dotimes (i 244) (format t "nextprime(~D)~%" (ceiling (expt 1.2d0 i))))
+   and feeding the result to PARI/gp. */
+static const size_t primes[] = {
+   MIN_TABLE_SIZE, 13, 17, 19, 23, 29, 37, 41, 47, 59, 67, 83, 97, 127, 139,
+   167, 199, 239, 293, 347, 419, 499, 593, 709, 853, 1021, 1229, 1471, 1777,
+   2129, 2543, 3049, 3659, 4391, 5273, 6323, 7589, 9103, 10937, 13109, 15727,
+   18899, 22651, 27179, 32609, 39133, 46957, 56359, 67619, 81157, 97369,
+   116849, 140221, 168253, 201907, 242309, 290761, 348889, 418667, 502409,
+   602887, 723467, 868151, 1041779, 1250141, 1500181, 1800191, 2160233,
+   2592277, 3110741, 3732887, 4479463, 5375371, 6450413, 7740517, 9288589,
+   11146307, 13375573, 16050689, 19260817, 23112977, 27735583, 33282701,
+   39939233, 47927081, 57512503, 69014987, 82818011, 99381577, 119257891,
+   143109469, 171731387, 206077643, 247293161, 296751781, 356102141, 427322587,
+   512787097, 615344489, 738413383, 886096061, 1063315271, 1275978331,
+   1531174013, 1837408799, 2204890543UL, 2645868653UL, 3175042391UL,
+   3810050851UL,
+   /* on 32-bit make sure we do not return primes not fitting in size_t */
+#if SIZE_MAX > 4294967295ULL
+   4572061027ULL, 5486473229ULL, 6583767889ULL, 7900521449ULL, 9480625733ULL,
+   /* Largest possible size should be 13652101063ULL == GROWTH_RATE((UINT32_MAX/3)*4)
+      we include some larger values in case the above math is wrong */
+   11376750877ULL, 13652101063ULL, 16382521261ULL, 19659025513ULL, 23590830631ULL,
+#endif
 };
 
 static size_t nextPrime(size_t n) {
-   /* on 32-bit make sure we do not return primes not fitting in size_t */
-   for (size_t i = 0; i < ARRAYSIZE(OEISprimes) && OEISprimes[i] < SIZE_MAX; i++) {
-      if (n <= OEISprimes[i])
-         return OEISprimes[i];
+   for (size_t i = 0; i < ARRAYSIZE(primes); i++) {
+      if (n < primes[i]) {
+         return primes[i];
+      }
    }
 
    CRT_fatalError("Hashtable: no prime found");
 }
 
-Hashtable* Hashtable_new(size_t size, bool owner) {
-   Hashtable* this;
+/* USABLE_FRACTION is the maximum hash map load.
+ * Currently set to 2/3 capacity.
+ *
+ * Testing indicates that the median and average probe length
+ * increases significantly after 2/3 of the hash map capacity.
+ *
+ * load = {size,capacity} / items
+ *
+ * | load | probe max | probe avg | probe median |
+ * | ---- | --------- | --------- | ------------ |
+ * | 0.60 |     90.58 |     20.19 |         0.65 |
+ * | 0.65 |    167.00 |     37.07 |         1.58 |
+ * | 0.70 |    230.54 |     61.40 |        15.54 |
+ * | 0.75 |    287.00 |     85.23 |        26.15 |
+ * | 0.80 |    287.00 |     94.71 |        55.93 |
+ */
+#define USABLE_FRACTION(n) (((n) << 1)/3)
 
-   this = xMalloc(sizeof(Hashtable));
+/* SHRINK_THRESHOLD is number of items at with the hash map should shrink.
+ * Currently set to 1/4 of the USABLE_FRACTION, which is ~13% of the total
+ * hash map size.
+ */
+#define SHRINK_THRESHOLD(n) (USABLE_FRACTION((n)) / 4)
+
+/* GROWTH_RATE. Growth rate upon hitting maximum load.
+ * Currently set to items*3.
+ * This means that hashes double in size when growing without deletions,
+ * but have more head room when the number of deletions is on a par with the
+ * number of insertions.
+ */
+#define GROWTH_RATE(h) ((h)->items*3)
+
+static inline bool Hashtable_shouldResize(const Hashtable* this) {
+   /* grow table */
+   return this->items >= USABLE_FRACTION(this->size) ||
+      /* shrink table */
+      (this->size > MIN_TABLE_SIZE && this->items <= SHRINK_THRESHOLD(this->size));
+}
+
+Hashtable* Hashtable_new(size_t size, bool owner) {
+   assert(MIN_TABLE_SIZE == primes[0]);
+   Hashtable* this = xMalloc(sizeof(Hashtable));
+   this->size = nextPrime(size);
    this->items = 0;
-   this->size = size ? nextPrime(size) : 13;
    this->buckets = (HashtableItem*) xCalloc(this->size, sizeof(HashtableItem));
    this->owner = owner;
 
@@ -139,6 +200,10 @@ void Hashtable_clear(Hashtable* this) {
    this->items = 0;
 
    assert(Hashtable_isConsistent(this));
+}
+
+static inline size_t inc_index(size_t index, size_t size) {
+   return ++index != size ? index : 0;
 }
 
 static void insert(Hashtable* this, ht_key_t key, void* value) {
@@ -177,7 +242,7 @@ static void insert(Hashtable* this, ht_key_t key, void* value) {
          value = tmp.value;
       }
 
-      index = (index + 1) % this->size;
+      index = inc_index(index, this->size);
       probe++;
 
       assert(index != origIndex);
@@ -188,12 +253,12 @@ void Hashtable_setSize(Hashtable* this, size_t size) {
 
    assert(Hashtable_isConsistent(this));
 
-   if (size <= this->items)
-      return;
-
+   /* newSize will always be >= MIN_TABLE_SIZE */
    size_t newSize = nextPrime(size);
    if (newSize == this->size)
       return;
+
+   assert(newSize > this->items);
 
    HashtableItem* oldBuckets = this->buckets;
    size_t oldSize = this->size;
@@ -221,12 +286,9 @@ void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
    assert(this->size > 0);
    assert(value);
 
-   /* grow on load-factor > 0.7 */
-   if (10 * this->items > 7 * this->size) {
-      if (SIZE_MAX / 2 < this->size)
-         CRT_fatalError("Hashtable: size overflow");
-
-      Hashtable_setSize(this, 2 * this->size);
+   /* Resize the hash table, if necessary, before inserting */
+   if (Hashtable_shouldResize(this)) {
+      Hashtable_setSize(this, GROWTH_RATE(this));
    }
 
    insert(this, key, value);
@@ -255,14 +317,14 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
             res = this->buckets[index].value;
          }
 
-         size_t next = (index + 1) % this->size;
+         size_t next = inc_index(index, this->size);
 
          while (this->buckets[next].value && this->buckets[next].probe > 0) {
             this->buckets[index] = this->buckets[next];
             this->buckets[index].probe -= 1;
 
             index = next;
-            next = (index + 1) % this->size;
+            next = inc_index(index, this->size);
          }
 
          /* set empty after backward shifting */
@@ -275,7 +337,7 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
       if (this->buckets[index].probe < probe)
          break;
 
-      index = (index + 1) % this->size;
+      index = inc_index(index, this->size);
       probe++;
 
       assert(index != origIndex);
@@ -284,14 +346,10 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
    assert(Hashtable_isConsistent(this));
    assert(Hashtable_get(this, key) == NULL);
 
-   /* shrink on load-factor < 0.125 */
-   if (8 * this->items < this->size)
-      Hashtable_setSize(this, this->size / 3); /* account for nextPrime rounding up */
-
    return res;
 }
 
-void* Hashtable_get(Hashtable* this, ht_key_t key) {
+void* Hashtable_get(const Hashtable* this, ht_key_t key) {
    size_t index = key % this->size;
    size_t probe = 0;
    void* res = NULL;
@@ -310,7 +368,7 @@ void* Hashtable_get(Hashtable* this, ht_key_t key) {
       if (this->buckets[index].probe < probe)
          break;
 
-      index = (index + 1) != this->size ? (index + 1) : 0;
+      index = inc_index(index, this->size);
       probe++;
 
       assert(index != origIndex);
@@ -319,7 +377,7 @@ void* Hashtable_get(Hashtable* this, ht_key_t key) {
    return res;
 }
 
-void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData) {
+void Hashtable_foreach(const Hashtable* this, Hashtable_PairFunction f, void* userData) {
    assert(Hashtable_isConsistent(this));
    for (size_t i = 0; i < this->size; i++) {
       HashtableItem* walk = &this->buckets[i];

@@ -9,9 +9,10 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 
-typedef unsigned int ht_key_t;
+typedef uint32_t ht_key_t;
 
 typedef void(*Hashtable_PairFunction)(ht_key_t key, void* value, void* userdata);
 
@@ -35,8 +36,8 @@ void Hashtable_put(Hashtable* this, ht_key_t key, void* value);
 
 void* Hashtable_remove(Hashtable* this, ht_key_t key);
 
-void* Hashtable_get(Hashtable* this, ht_key_t key);
+void* Hashtable_get(const Hashtable* this, ht_key_t key);
 
-void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData);
+void Hashtable_foreach(const Hashtable* this, Hashtable_PairFunction f, void* userData);
 
 #endif
