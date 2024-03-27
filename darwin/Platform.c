@@ -478,7 +478,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
 bool Platform_getNetworkIO(NetworkIOData* data) {
    int mib[6] = {CTL_NET,
       PF_ROUTE, /* routing messages */
-      0, /* protocal number, currently always 0 */
+      0, /* protocol number, currently always 0 */
       0, /* select all address families */
       NET_RT_IFLIST2, /* interface list with addresses */
       0};
