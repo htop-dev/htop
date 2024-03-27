@@ -258,7 +258,7 @@ static void CPUMeterCommonInit(Meter* this, int ncol) {
    this->h = h * ((count + ncol - 1) / ncol);
 }
 
-static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
+static void CPUMeterCommonUpdateMode(Meter* this, MeterModeIndex_t mode, int ncol) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    this->mode = mode;
@@ -286,7 +286,7 @@ static void SingleColCPUsMeter_init(Meter* this) {
    CPUMeterCommonInit(this, 1);
 }
 
-static void SingleColCPUsMeter_updateMode(Meter* this, int mode) {
+static void SingleColCPUsMeter_updateMode(Meter* this, MeterModeIndex_t mode) {
    CPUMeterCommonUpdateMode(this, mode, 1);
 }
 
@@ -294,7 +294,7 @@ static void DualColCPUsMeter_init(Meter* this) {
    CPUMeterCommonInit(this, 2);
 }
 
-static void DualColCPUsMeter_updateMode(Meter* this, int mode) {
+static void DualColCPUsMeter_updateMode(Meter* this, MeterModeIndex_t mode) {
    CPUMeterCommonUpdateMode(this, mode, 2);
 }
 
@@ -302,7 +302,7 @@ static void QuadColCPUsMeter_init(Meter* this) {
    CPUMeterCommonInit(this, 4);
 }
 
-static void QuadColCPUsMeter_updateMode(Meter* this, int mode) {
+static void QuadColCPUsMeter_updateMode(Meter* this, MeterModeIndex_t mode) {
    CPUMeterCommonUpdateMode(this, mode, 4);
 }
 
@@ -310,7 +310,7 @@ static void OctoColCPUsMeter_init(Meter* this) {
    CPUMeterCommonInit(this, 8);
 }
 
-static void OctoColCPUsMeter_updateMode(Meter* this, int mode) {
+static void OctoColCPUsMeter_updateMode(Meter* this, MeterModeIndex_t mode) {
    CPUMeterCommonUpdateMode(this, mode, 8);
 }
 

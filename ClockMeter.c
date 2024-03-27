@@ -37,6 +37,7 @@ const MeterClass ClockMeter_class = {
    },
    .updateValues = ClockMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedMode = (1 << TEXT_METERMODE) | (1 << LED_METERMODE),
    .maxItems = 1,
    .total = 1440, /* 24*60 */
    .attributes = ClockMeter_attributes,

@@ -112,13 +112,29 @@ static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
    }
 }
 
-void Meter_setMode(Meter* this, int modeIndex) {
+void Meter_setMode(Meter* this, MeterModeIndex_t modeIndex) {
    if (modeIndex > 0 && modeIndex == this->mode) {
       return;
    }
 
    if (!modeIndex) {
       modeIndex = 1;
+   }
+
+   const MeterClass* klass = (const MeterClass*)this->super.klass;
+   int supportedMode = klass->supportedMode ? klass->supportedMode : METERMODE_DEFAULT_SUPPORTED;
+   assert(supportedMode);
+
+   if (!(supportedMode & (1 << modeIndex))) {
+      // The specified mode is not supported,
+      // Look up the next supported mode instead
+      int modeMask = (1 << modeIndex) - 1;
+
+      int nextMode = supportedMode & ~modeMask;
+      nextMode = nextMode ? nextMode : supportedMode & modeMask;
+      assert(nextMode);
+
+      modeIndex = countTrailingZeros((uint32_t)nextMode);
    }
 
    assert(modeIndex < LAST_METERMODE);
@@ -495,6 +511,7 @@ const MeterClass BlankMeter_class = {
    },
    .updateValues = BlankMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedMode = (1 << TEXT_METERMODE),
    .maxItems = 0,
    .total = 100.0,
    .attributes = BlankMeter_attributes,

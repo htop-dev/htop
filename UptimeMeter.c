@@ -53,6 +53,7 @@ const MeterClass UptimeMeter_class = {
    },
    .updateValues = UptimeMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedMode = (1 << TEXT_METERMODE) | (1 << LED_METERMODE),
    .maxItems = 1,
    .total = 100.0,
    .attributes = UptimeMeter_attributes,

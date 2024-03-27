@@ -43,6 +43,7 @@ const MeterClass DateMeter_class = {
    },
    .updateValues = DateMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedMode = (1 << TEXT_METERMODE) | (1 << LED_METERMODE),
    .maxItems = 1,
    .total = 365,
    .attributes = DateMeter_attributes,

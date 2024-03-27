@@ -35,6 +35,7 @@ const MeterClass SysArchMeter_class = {
    },
    .updateValues = SysArchMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedMode = (1 << TEXT_METERMODE),
    .maxItems = 0,
    .total = 100.0,
    .attributes = SysArchMeter_attributes,

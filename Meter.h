@@ -43,12 +43,14 @@ in the source distribution for its full text.
    } while (0)
 
 
+typedef unsigned int MeterModeIndex_t;
+
 struct Meter_;
 typedef struct Meter_ Meter;
 
 typedef void(*Meter_Init)(Meter*);
 typedef void(*Meter_Done)(Meter*);
-typedef void(*Meter_UpdateMode)(Meter*, int);
+typedef void(*Meter_UpdateMode)(Meter*, MeterModeIndex_t);
 typedef void(*Meter_UpdateValues)(Meter*);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 typedef const char* (*Meter_GetCaption)(const Meter*);
@@ -63,7 +65,8 @@ typedef struct MeterClass_ {
    const Meter_Draw draw;
    const Meter_GetCaption getCaption;
    const Meter_GetUiName getUiName;
-   const int defaultMode;
+   const MeterModeIndex_t defaultMode;
+   const MeterModeIndex_t supportedMode;       /* bitset of supported modes, 1<<mode_id */
    const double total;
    const int* const attributes;
    const char* const name;                 /* internal name of the meter, must not contain any space */
@@ -105,7 +108,7 @@ struct Meter_ {
    const Machine* host;
 
    char* caption;
-   int mode;
+   MeterModeIndex_t mode;
    unsigned int param;
    GraphData drawData;
    int h;
@@ -133,6 +136,13 @@ typedef enum {
    LAST_METERMODE
 } MeterModeId;
 
+#define METERMODE_DEFAULT_SUPPORTED ( \
+   (1 << BAR_METERMODE) |             \
+   (1 << TEXT_METERMODE) |            \
+   (1 << GRAPH_METERMODE) |           \
+   (1 << LED_METERMODE) |             \
+   0) // Avoids edits when updating
+
 typedef enum {
    RATESTATUS_DATA,
    RATESTATUS_INIT,
@@ -152,7 +162,7 @@ void Meter_delete(Object* cast);
 
 void Meter_setCaption(Meter* this, const char* caption);
 
-void Meter_setMode(Meter* this, int modeIndex);
+void Meter_setMode(Meter* this, MeterModeIndex_t modeIndex);
 
 ListItem* Meter_toListItem(const Meter* this, bool moving);
 

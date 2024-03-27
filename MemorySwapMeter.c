@@ -71,7 +71,7 @@ static void MemorySwapMeter_init(Meter* this) {
    this->h = MAXIMUM(Meter_modes[data->memoryMeter->mode]->h, Meter_modes[data->swapMeter->mode]->h);
 }
 
-static void MemorySwapMeter_updateMode(Meter* this, int mode) {
+static void MemorySwapMeter_updateMode(Meter* this, MeterModeIndex_t mode) {
    MemorySwapMeterData* data = this->meterData;
 
    this->mode = mode;
