@@ -340,8 +340,7 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    if (totalHundredths == 0) {
       int shadowColor = coloring ? CRT_colors[PROCESS_SHADOW] : CRT_colors[PROCESS];
 
-      len = xSnprintf(buffer, sizeof(buffer), " 0:00.00 ");
-      RichString_appendnAscii(str, shadowColor, buffer, len);
+      RichString_appendAscii(str, shadowColor, " 0:00.00 ");
       return;
    }
 
