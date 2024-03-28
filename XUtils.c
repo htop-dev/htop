@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h> // IWYU pragma: keep
 #include <math.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -364,3 +365,14 @@ double sumPositiveValues(const double* array, size_t count) {
    }
    return sum;
 }
+
+#if !defined(HAVE_BUILTIN_CLZ) && !defined(HAVE_STDC_BIT_FLOOR)
+/* Returns the nearest power of two that is not greater than x.
+   If x is 0, returns 0. */
+unsigned int powerOf2Floor(unsigned int x) {
+   for (unsigned int shift = 1; shift < sizeof(x) * CHAR_BIT; shift <<= 1)
+      x |= x >> shift;
+
+   return x - (x >> 1);
+}
+#endif

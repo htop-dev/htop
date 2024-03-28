@@ -44,6 +44,7 @@ const MeterClass DateMeter_class = {
    .updateValues = DateMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
+   .isPercentChart = true,
    .total = 365,
    .attributes = DateMeter_attributes,
    .name = "Date",

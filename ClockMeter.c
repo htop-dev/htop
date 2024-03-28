@@ -38,6 +38,7 @@ const MeterClass ClockMeter_class = {
    .updateValues = ClockMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
+   .isPercentChart = true,
    .total = 1440, /* 24*60 */
    .attributes = ClockMeter_attributes,
    .name = "Clock",

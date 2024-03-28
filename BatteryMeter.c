@@ -63,6 +63,7 @@ const MeterClass BatteryMeter_class = {
    .updateValues = BatteryMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = BatteryMeter_attributes,
    .name = "Battery",
