@@ -158,7 +158,10 @@ fi])
 
 # Optional Section
 
-AC_CHECK_HEADERS([execinfo.h])
+AC_CHECK_HEADERS([ \
+   execinfo.h \
+   stdbit.h
+   ])
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_HEADERS([mach/mach_time.h])
@@ -264,6 +267,52 @@ AC_LINK_IFELSE([
    fi],
    [AC_MSG_RESULT(no)
    AC_MSG_ERROR([can not find required macros: NAN, isgreater() and isgreaterequal()])])
+
+AC_MSG_CHECKING(for __builtin_clz)
+AC_COMPILE_IFELSE([
+   AC_LANG_PROGRAM([], [[return __builtin_clz(~0U); /* Supported in GCC 3.4 or later */]])],
+   [AC_DEFINE([HAVE_BUILTIN_CLZ], 1, [Define to 1 if the compiler supports '__builtin_clz' function.])
+   AC_MSG_RESULT(yes)],
+   AC_MSG_RESULT(no))
+
+AC_MSG_CHECKING(for stdc_bit_floor)
+AC_LINK_IFELSE([
+   AC_LANG_PROGRAM(
+      [[
+#include <stdbit.h>
+      ]],
+      [[
+         /* Both the type-generic and type-specific versions should exist.
+            htop uses the type-specific version. */
+         return stdc_bit_floor(0U) || stdc_bit_floor_ui(0U);
+      ]])],
+   [AC_DEFINE([HAVE_STDC_BIT_FLOOR], 1, [Define to 1 if stdc_bit_floor functions are supported.])
+   AC_MSG_RESULT(yes)],
+   AC_MSG_RESULT(no))
+
+case "$host_cpu" in
+   arm* | aarch64*)
+      AC_MSG_CHECKING(for ARM NEON intrinsics)
+      AC_COMPILE_IFELSE([
+         AC_LANG_PROGRAM(
+            [[
+#include <arm_neon.h>
+            ]],
+            [[
+            uint8x8_t v = vcreate_u8(0x0102030405060708ULL);
+            ]])],
+         [AC_DEFINE([HAVE_ARM_NEON_INTRINSICS], 1, [Define to 1 if ARM NEON intrinsics are supported.])
+         AC_MSG_RESULT(yes)],
+         AC_MSG_RESULT(no))
+      ;;
+esac
+
+AC_MSG_CHECKING(for __builtin_popcount)
+AC_COMPILE_IFELSE([
+   AC_LANG_PROGRAM([], [[return __builtin_popcount(0U); /* Supported in GCC 3.4 or later */]])],
+   [AC_DEFINE([HAVE_BUILTIN_POPCOUNT], 1, [Define to 1 if the compiler supports '__builtin_popcount' function.])
+   AC_MSG_RESULT(yes)],
+   AC_MSG_RESULT(no))
 
 # ----------------------------------------------------------------------
 

@@ -29,10 +29,8 @@ static void UptimeMeter_updateValues(Meter* this) {
    int minutes = (totalseconds / 60) % 60;
    int hours = (totalseconds / 3600) % 24;
    int days = (totalseconds / 86400);
-   this->values[0] = days;
-   if (days > this->total) {
-      this->total = days;
-   }
+   this->values[0] = (double)totalseconds / 86400.0;
+
    char daysbuf[32];
    if (days > 100) {
       xSnprintf(daysbuf, sizeof(daysbuf), "%d days(!), ", days);
@@ -54,6 +52,7 @@ const MeterClass UptimeMeter_class = {
    .updateValues = UptimeMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
+   .isPercentChart = false,
    .total = 100.0,
    .attributes = UptimeMeter_attributes,
    .name = "Uptime",
