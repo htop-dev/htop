@@ -106,6 +106,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [AUTOGROUP_ID] = { .name = "AUTOGROUP_ID", .title = "AGRP", .description = "The autogroup identifier of the process", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
    [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
+   [ISCONTAINER] = { .name = "ISCONTAINER", .title = "CONT ", .description = "Whether the process is running inside a child container", .flags = PROCESS_FLAG_LINUX_CONTAINER, },
 #ifdef SCHEDULER_SUPPORT
    [SCHEDULERPOLICY] = { .name = "SCHEDULERPOLICY", .title = "SCHED ", .description = "Current scheduling policy of the process", .flags = PROCESS_FLAG_SCHEDPOL, },
 #endif
@@ -154,6 +155,9 @@ static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
 #define SYS_ioprio_set __NR_ioprio_set
 #endif
 
+/*
+ * Gather I/O scheduling class and priority (thread-specific data)
+ */
 IOPriority LinuxProcess_updateIOPriority(Process* p) {
    IOPriority ioprio = 0;
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
@@ -333,6 +337,19 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
          xSnprintf(buffer, n, "N/A ");
       }
       break;
+   case ISCONTAINER:
+      switch (this->isRunningInContainer) {
+      case TRI_ON:
+         xSnprintf(buffer, n, "YES  ");
+         break;
+      case TRI_OFF:
+         xSnprintf(buffer, n, "NO   ");
+         break;
+      default:
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "N/A  ");
+      }
+      break;
    default:
       Process_writeField(this, str, field);
       return;
@@ -435,6 +452,8 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    }
    case GPU_TIME:
       return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
+   case ISCONTAINER:
+      return SPACESHIP_NUMBER(v1->isRunningInContainer, v2->isRunningInContainer);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

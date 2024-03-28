@@ -50,6 +50,7 @@ in the source distribution for its full text.
    M_PRIV = 131,                 \
    GPU_TIME = 132,               \
    GPU_PERCENT = 133,            \
+   ISCONTAINER = 134,            \
    // End of list
 
 
