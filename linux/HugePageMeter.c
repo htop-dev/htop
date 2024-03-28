@@ -100,6 +100,7 @@ const MeterClass HugePageMeter_class = {
    .updateValues = HugePageMeter_updateValues,
    .defaultMode = BAR_METERMODE,
    .maxItems = ARRAYSIZE(HugePageMeter_active_labels),
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = HugePageMeter_attributes,
    .name = "HugePages",

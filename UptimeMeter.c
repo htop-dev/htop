@@ -54,6 +54,7 @@ const MeterClass UptimeMeter_class = {
    .updateValues = UptimeMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
+   .isPercentChart = false,
    .total = 100.0,
    .attributes = UptimeMeter_attributes,
    .name = "Uptime",

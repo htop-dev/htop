@@ -365,6 +365,7 @@ const MeterClass CPUMeter_class = {
    .getUiName = CPUMeter_getUiName,
    .defaultMode = BAR_METERMODE,
    .maxItems = CPU_METER_ITEMCOUNT,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
    .name = "CPU",

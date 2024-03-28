@@ -80,6 +80,7 @@ const MeterClass ZfsCompressedArcMeter_class = {
    .updateValues = ZfsCompressedArcMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 1,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = ZfsCompressedArcMeter_attributes,
    .name = "ZFSCARC",

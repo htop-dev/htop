@@ -170,6 +170,7 @@ const MeterClass NetworkIOMeter_class = {
    .updateValues = NetworkIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 2,
+   .isPercentChart = false,
    .total = 100.0,
    .attributes = NetworkIOMeter_attributes,
    .name = "NetworkIO",

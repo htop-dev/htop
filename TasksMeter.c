@@ -73,6 +73,7 @@ const MeterClass TasksMeter_class = {
    .updateValues = TasksMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 4,
+   .isPercentChart = false,
    .total = 100.0,
    .attributes = TasksMeter_attributes,
    .name = "Tasks",
