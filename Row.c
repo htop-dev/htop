@@ -403,6 +403,37 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    }
 }
 
+void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, bool coloring) {
+   if (totalNanoseconds == 0) {
+      int shadowColor = coloring ? CRT_colors[PROCESS_SHADOW] : CRT_colors[PROCESS];
+
+      RichString_appendAscii(str, shadowColor, "     0ns ");
+      return;
+   }
+
+   char buffer[10];
+   int len;
+   int baseColor = CRT_colors[PROCESS];
+
+   if (totalNanoseconds < 1000000) {
+      len = xSnprintf(buffer, sizeof(buffer), "%6luns ", (unsigned long)totalNanoseconds);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+
+   unsigned long long totalMicroseconds = totalNanoseconds / 1000;
+   if (totalMicroseconds < 10000000) {
+      unsigned int seconds = totalMicroseconds / 1000000;
+      unsigned long microseconds = totalMicroseconds % 1000000;
+      len = xSnprintf(buffer, sizeof(buffer), "%u.%06lu ", seconds, microseconds);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+
+   unsigned long long totalHundredths = totalMicroseconds / 1000 / 10;
+   Row_printTime(str, totalHundredths, coloring);
+}
+
 void Row_printRate(RichString* str, double rate, bool coloring) {
    char buffer[16];
 
