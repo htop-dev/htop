@@ -692,6 +692,7 @@ case "$enable_delayacct" in
       AC_MSG_ERROR([bad value '$enable_delayacct' for --enable-delayacct])
       ;;
 esac
+AM_CONDITIONAL([HAVE_DELAYACCT], [test "$enable_delayacct" = yes])
 
 
 AC_ARG_ENABLE([sensors],

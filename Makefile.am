@@ -214,6 +214,11 @@ linux_platform_sources = \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 
+if HAVE_DELAYACCT
+linux_platform_headers += linux/LibNl.h
+linux_platform_sources += linux/LibNl.c
+endif
+
 if HTOP_LINUX
 AM_LDFLAGS += -rdynamic
 myhtopplatheaders = $(linux_platform_headers)
