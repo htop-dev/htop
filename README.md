@@ -49,7 +49,7 @@ List of additional build-time dependencies (based on feature flags):
 *  `sensors`
 *  `hwloc`
 *  `libcap` (v2.21 or later)
-*  `libnl-3`
+*  `libnl-3` and `libnl-genl-3`
 
 Install these and other required packages for C development from your package manager.
 
@@ -137,7 +137,7 @@ To install on the local system run `make install`. By default `make install` ins
     - default: *no*
   * `--enable-delayacct`:
     enable Linux delay accounting support
-    - dependencies: *pkg-config*(build-time), *libnl-3* and *libnl-genl-3*
+    - dependencies: *libnl-3-dev*(build-time) and *libnl-genl-3-dev*(build-time), at runtime *libnl-3* and *libnl-genl-3* are loaded via `dlopen(3)` if available and requested
     - default: *check*
 
 
@@ -153,6 +153,7 @@ To install on the local system run `make install`. By default `make install` ins
 * `libcap`, user-space interfaces to POSIX 1003.1e capabilities, is always required when `--enable-capabilities` was used to configure `htop`.
 * `libsensors`, readout of temperatures and CPU speeds, is optional even when `--enable-sensors` was used to configure `htop`.
 * `libsystemd` is optional when `--enable-static` was not used to configure `htop`. If building statically and `libsystemd` is not found by `configure`, support for the systemd meter is disabled entirely.
+* `libnl-3` and `libnl-genl-3`, if `htop` was configured with `--enable-delayacct` and delay accounting process fields are active.
 
 `htop` checks for the availability of the actual runtime libraries as `htop` runs.
 

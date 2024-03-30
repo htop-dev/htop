@@ -658,40 +658,26 @@ case "$enable_delayacct" in
       elif test "$enable_static" = yes; then
          enable_delayacct=no
       else
-         m4_ifdef([PKG_PROG_PKG_CONFIG], [
-            enable_delayacct=yes
-            PKG_PROG_PKG_CONFIG()
-            PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [enable_delayacct=no])
-            PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [enable_delayacct=no])
-            if test "$enable_delayacct" = yes; then
-               AM_CFLAGS="$AM_CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
-               LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
-               AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
-            fi
-         ], [
-            enable_delayacct=no
-            AC_MSG_NOTICE([Linux delay accounting support can not be enabled, cause pkg-config is required for checking its availability])
-         ])
+         old_CFLAGS="$CFLAGS"
+         CFLAGS="$CFLAGS -I/usr/include/libnl3"
+         AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [enable_delayacct=yes], [enable_delayacct=no])
+         CFLAGS="$old_CFLAGS"
       fi
       ;;
    yes)
-      m4_ifdef([PKG_PROG_PKG_CONFIG], [
-         PKG_PROG_PKG_CONFIG()
-         PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [AC_MSG_ERROR([can not find required library libnl3])])
-         PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [AC_MSG_ERROR([can not find required library libnl3genl])])
-         AM_CFLAGS="$AM_CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
-         LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
-         AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
-      ], [
-         pkg_m4_absent=1
-         m4_warning([configure is generated without pkg.m4. 'make dist' target will be disabled.])
-         AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
-      ])
+      old_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS -I/usr/include/libnl3"
+      AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [], [AC_MSG_ERROR([can not find required header files netlink/attr.h, netlink/handlers.h, netlink/msg.h])])
+      CFLAGS="$old_CFLAGS"
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_delayacct' for --enable-delayacct])
       ;;
 esac
+if test "$enable_delayacct" = yes; then
+  AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
+  AM_CFLAGS="$AM_CFLAGS -I/usr/include/libnl3"
+fi
 AM_CONDITIONAL([HAVE_DELAYACCT], [test "$enable_delayacct" = yes])
 
 
