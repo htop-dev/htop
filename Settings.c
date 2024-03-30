@@ -622,6 +622,8 @@ int Settings_write(const Settings* this, bool onCrash) {
    if (onCrash) {
       fd = stderr;
       separator = ';';
+   } else if (!this->writeConfig) {
+      return 0;
    } else {
       /* create tempfile with mode 0600 */
       mode_t cur_umask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
@@ -753,6 +755,8 @@ int Settings_write(const Settings* this, bool onCrash) {
 Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
+   this->writeConfig = true;
+
    this->dynamicScreens = dynamicScreens;
    this->dynamicColumns = dynamicColumns;
    this->dynamicMeters = dynamicMeters;
@@ -832,6 +836,19 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
    if (!realpath(this->initialFilename, this->filename))
       free_and_xStrdup(&this->filename, this->initialFilename);
 
+   /* check whether filename points to a regular file */
+   {
+      struct stat sb;
+      int err = lstat(this->filename, &sb);
+      if ((err == -1 && errno != ENOENT) || (err == 0 && !S_ISREG(sb.st_mode)))
+         this->writeConfig = false;
+      else {
+         err = access(this->filename, W_OK);
+         if (err == -1 && errno != ENOENT)
+            this->writeConfig = false;
+      }
+   }
+
    this->colorScheme = 0;
 #ifdef HAVE_GETMOUSE
    this->enableMouse = true;
@@ -849,7 +866,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
       }
       free(legacyDotfile);
    }
-   if (!ok) {
+   if (!ok && this->writeConfig) {
       ok = Settings_read(this, this->filename, initialCpuCount);
    }
    if (!ok) {
