@@ -25,14 +25,16 @@ Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
 
    assert(size > 0);
    this = xMalloc(sizeof(Vector));
-   this->growthRate = size;
-   this->array = (Object**) xCalloc(size, sizeof(Object*));
-   this->arraySize = size;
-   this->items = 0;
-   this->type = type;
-   this->owner = owner;
-   this->dirty_index = -1;
-   this->dirty_count = 0;
+   *this = (Vector) {
+      .growthRate = size,
+      .array = xCalloc(size, sizeof(Object*)),
+      .arraySize = size,
+      .items = 0,
+      .type = type,
+      .owner = owner,
+      .dirty_index = -1,
+      .dirty_count = 0,
+   };
    return this;
 }
 
