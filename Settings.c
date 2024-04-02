@@ -799,14 +799,14 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
       this->initialFilename = xStrdup(rcfile);
    } else {
       const char* home = getenv("HOME");
-      if (!home) {
+      if (!home || home[0] != '/') {
          const struct passwd* pw = getpwuid(getuid());
-         home = pw ? pw->pw_dir : "";
+         home = (pw && pw->pw_dir && pw->pw_dir[0] == '/') ? pw->pw_dir : "";
       }
       const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
       char* configDir = NULL;
       char* htopDir = NULL;
-      if (xdgConfigHome) {
+      if (xdgConfigHome && xdgConfigHome[0] == '/') {
          this->initialFilename = String_cat(xdgConfigHome, "/htop/htoprc");
          configDir = xStrdup(xdgConfigHome);
          htopDir = String_cat(xdgConfigHome, "/htop");
