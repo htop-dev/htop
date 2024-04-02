@@ -403,6 +403,57 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    }
 }
 
+void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, bool coloring) {
+   if (totalNanoseconds == 0) {
+      int shadowColor = coloring ? CRT_colors[PROCESS_SHADOW] : CRT_colors[PROCESS];
+
+      RichString_appendAscii(str, shadowColor, "     0ns ");
+      return;
+   }
+
+   char buffer[10];
+   int len;
+   int baseColor = CRT_colors[PROCESS];
+
+   if (totalNanoseconds < 1000000) {
+      len = xSnprintf(buffer, sizeof(buffer), "%6luns ", (unsigned long)totalNanoseconds);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+
+   unsigned long long totalMicroseconds = totalNanoseconds / 1000;
+   if (totalMicroseconds < 1000000) {
+      len = xSnprintf(buffer, sizeof(buffer), ".%06lus ", (unsigned long)totalMicroseconds);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+   }
+
+   unsigned long long totalSeconds = totalMicroseconds / 1000000;
+   unsigned long microseconds = totalMicroseconds % 1000000;
+   if (totalSeconds < 60) {
+      int width = 5;
+      unsigned long fraction = microseconds;
+      if (totalSeconds >= 10) {
+         width--;
+         fraction /= 10;
+      }
+      len = xSnprintf(buffer, sizeof(buffer), "%u.%0*lus ", (unsigned int)totalSeconds, width, fraction);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+
+   if (totalSeconds < 600) {
+      unsigned int minutes = totalSeconds / 60;
+      unsigned int seconds = totalSeconds % 60;
+      unsigned int milliseconds = microseconds / 1000;
+      len = xSnprintf(buffer, sizeof(buffer), "%u:%02u.%03u ", minutes, seconds, milliseconds);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+
+   unsigned long long totalHundredths = totalMicroseconds / 1000 / 10;
+   Row_printTime(str, totalHundredths, coloring);
+}
+
 void Row_printRate(RichString* str, double rate, bool coloring) {
    char buffer[16];
 
