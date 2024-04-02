@@ -139,23 +139,39 @@ static void LinuxProcessTable_initTtyDrivers(LinuxProcessTable* this) {
    if (r < 0)
       return;
 
-   int numDrivers = 0;
-   int allocd = 10;
+   size_t numDrivers = 0;
+   size_t allocd = 10;
    ttyDrivers = xMallocArray(allocd, sizeof(TtyDriver));
    char* at = buf;
-   while (*at != '\0') {
+   char* path = NULL;
+   while (at && *at != '\0') {
+      /*
+       * Format:
+       * [name]  [node path]  [major]  [minor range]  [type]
+       * serial  /dev/ttyS    4        64-95          serial
+       */
+
       at = strchr(at, ' ');    // skip first token
+      if (!at)
+         goto finish;          // bail out on truncation
       while (*at == ' ') at++; // skip spaces
+
       const char* token = at;  // mark beginning of path
       at = strchr(at, ' ');    // find end of path
+      if (!at)
+         goto finish;          // bail out on truncation
       *at = '\0'; at++;        // clear and skip
-      ttyDrivers[numDrivers].path = xStrdup(token); // save
+      path = xStrdup(token);   // save
       while (*at == ' ') at++; // skip spaces
+
       token = at;              // mark beginning of major
       at = strchr(at, ' ');    // find end of major
+      if (!at)
+         goto finish;          // bail out on truncation
       *at = '\0'; at++;        // clear and skip
       ttyDrivers[numDrivers].major = atoi(token); // save
       while (*at == ' ') at++; // skip spaces
+
       token = at;              // mark beginning of minorFrom
       while (*at >= '0' && *at <= '9') at++; //find end of minorFrom
       if (*at == '-') {        // if has range
@@ -163,6 +179,8 @@ static void LinuxProcessTable_initTtyDrivers(LinuxProcessTable* this) {
          ttyDrivers[numDrivers].minorFrom = atoi(token); // save
          token = at;              // mark beginning of minorTo
          at = strchr(at, ' ');    // find end of minorTo
+         if (!at)
+            goto finish;          // bail out on truncation
          *at = '\0'; at++;        // clear and skip
          ttyDrivers[numDrivers].minorTo = atoi(token); // save
       } else {                 // no range
@@ -170,18 +188,24 @@ static void LinuxProcessTable_initTtyDrivers(LinuxProcessTable* this) {
          ttyDrivers[numDrivers].minorFrom = atoi(token); // save
          ttyDrivers[numDrivers].minorTo = atoi(token); // save
       }
+
       at = strchr(at, '\n');   // go to end of line
-      at++;                    // skip
+      if (at)
+         at++;                 // skip
+      ttyDrivers[numDrivers].path = path;
+      path = NULL;
       numDrivers++;
       if (numDrivers == allocd) {
          allocd += 10;
          ttyDrivers = xReallocArray(ttyDrivers, allocd, sizeof(TtyDriver));
       }
    }
-   numDrivers++;
-   ttyDrivers = xRealloc(ttyDrivers, sizeof(TtyDriver) * numDrivers);
-   ttyDrivers[numDrivers - 1].path = NULL;
-   qsort(ttyDrivers, numDrivers - 1, sizeof(TtyDriver), sortTtyDrivers);
+finish:
+   free(path);
+
+   ttyDrivers = xRealloc(ttyDrivers, sizeof(TtyDriver) * (numDrivers + 1));
+   ttyDrivers[numDrivers].path = NULL;
+   qsort(ttyDrivers, numDrivers, sizeof(TtyDriver), sortTtyDrivers);
    this->ttyDrivers = ttyDrivers;
 }
 
