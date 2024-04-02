@@ -109,13 +109,15 @@ static size_t nextPrime(size_t n) {
 }
 
 Hashtable* Hashtable_new(size_t size, bool owner) {
-   Hashtable* this;
+   size = size ? nextPrime(size) : 13;
 
-   this = xMalloc(sizeof(Hashtable));
-   this->items = 0;
-   this->size = size ? nextPrime(size) : 13;
-   this->buckets = (HashtableItem*) xCalloc(this->size, sizeof(HashtableItem));
-   this->owner = owner;
+   Hashtable* this = xMalloc(sizeof(Hashtable));
+   *this = (Hashtable) {
+      .items = 0,
+      .size = size,
+      .buckets = xCalloc(size, sizeof(HashtableItem)),
+      .owner = owner,
+   };
 
    assert(Hashtable_isConsistent(this));
    return this;
