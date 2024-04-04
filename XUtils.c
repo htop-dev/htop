@@ -63,9 +63,16 @@ void* xCalloc(size_t nmemb, size_t size) {
 
 void* xRealloc(void* ptr, size_t size) {
    assert(size > 0);
-   void* data = realloc(ptr, size); // deepcode ignore MemoryLeakOnRealloc: this goes to fail()
+   void* data = size ? realloc(ptr, size) : NULL; // deepcode ignore MemoryLeakOnRealloc: this goes to fail()
    if (!data) {
-      free(ptr);
+      /* free'ing ptr here causes an indirect memory leak if pointers
+       * are held as part of an potential array referenced in ptr.
+       * In GCC 14 -fanalyzer recognizes this leak, but fails to
+       * ignore it given that this path ends in a noreturn function.
+       * Thus to avoid this confusing diagnostic we opt to leave
+       * that pointer alone instead.
+       */
+      // free(ptr);
       fail();
    }
    return data;
