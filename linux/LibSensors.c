@@ -230,7 +230,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
    /* Only package temperature - copy to all cores */
    if (coreTempCount == 0 && !isNaN(data[0])) {
-      for (unsigned int i = 1; i <= existingCPUs; i++)
+      for (size_t i = 1; i <= existingCPUs; i++)
          data[i] = data[0];
 
       /* No further adjustments */
@@ -240,7 +240,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    /* No package temperature - set to max core temperature */
    if (coreTempCount > 0 && isNaN(data[0])) {
       double maxTemp = -HUGE_VAL;
-      for (unsigned int i = 1; i <= existingCPUs; i++) {
+      for (size_t i = 1; i <= existingCPUs; i++) {
          if (isgreater(data[i], maxTemp)) {
             maxTemp = data[i];
             data[0] = data[i];
@@ -252,7 +252,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
    /* Only temperature for core 0, maybe Ryzen - copy to all other cores */
    if (coreTempCount == 1 && !isNaN(data[1])) {
-      for (unsigned int i = 2; i <= existingCPUs; i++)
+      for (size_t i = 2; i <= existingCPUs; i++)
          data[i] = data[1];
 
       /* No further adjustments */
@@ -260,7 +260,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    }
 
    /* Half the temperatures, probably HT/SMT - copy to second half */
-   const unsigned int delta = activeCPUs / 2;
+   const size_t delta = activeCPUs / 2;
    if (coreTempCount == delta) {
       memcpy(&data[delta + 1], &data[1], delta * sizeof(*data));
 
@@ -269,7 +269,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    }
 
 out:
-   for (unsigned int i = 0; i <= existingCPUs; i++)
+   for (size_t i = 0; i <= existingCPUs; i++)
       cpus[i].temperature = data[i];
 
    free(data);
