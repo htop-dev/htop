@@ -101,11 +101,12 @@ void Machine_scanTables(Machine* this) {
 
    if (firstScanDone) {
       this->prevMonotonicMs = this->monotonicMs;
+      Platform_gettime_monotonic(&this->monotonicMs);
    } else {
       this->prevMonotonicMs = 0;
+      this->monotonicMs = 1;
       firstScanDone = true;
    }
-   Platform_gettime_monotonic(&this->monotonicMs);
    assert(this->monotonicMs > this->prevMonotonicMs);
 
    this->maxUserId = 0;
