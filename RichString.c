@@ -20,18 +20,26 @@ in the source distribution for its full text.
 #define charBytes(n) (sizeof(CharType) * (n))
 
 static void RichString_extendLen(RichString* this, int len) {
-   if (this->chlen <= RICHSTRING_MAXLEN) {
+   if (this->chptr == this->chstr) {
+      // String is in internal buffer
       if (len > RICHSTRING_MAXLEN) {
+         // Copy from internal buffer to allocated string
          this->chptr = xMalloc(charBytes(len + 1));
          memcpy(this->chptr, this->chstr, charBytes(this->chlen));
+      } else {
+         // Still fits in internal buffer, do nothing
+         assert(this->chlen <= RICHSTRING_MAXLEN);
       }
    } else {
-      if (len <= RICHSTRING_MAXLEN) {
+      // String is managed externally
+      if (len > RICHSTRING_MAXLEN) {
+         // Just reallocate the buffer accordingly
+         this->chptr = xRealloc(this->chptr, charBytes(len + 1));
+      } else {
+         // Move string into internal buffer and free resources
          memcpy(this->chstr, this->chptr, charBytes(len));
          free(this->chptr);
          this->chptr = this->chstr;
-      } else {
-         this->chptr = xRealloc(this->chptr, charBytes(len + 1));
       }
    }
 
