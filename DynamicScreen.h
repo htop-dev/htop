@@ -25,7 +25,7 @@ typedef struct DynamicScreen_ {
 
 Hashtable* DynamicScreens_new(void);
 
-void DynamicScreens_delete(Hashtable* dynamics);
+void DynamicScreens_delete(Hashtable* screens);
 
 void DynamicScreen_done(DynamicScreen* this);
 

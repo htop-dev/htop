@@ -88,7 +88,7 @@ bool Machine_isCPUonline(const Machine* this, unsigned int id);
 
 void Machine_populateTablesFromSettings(Machine* this, Settings* settings, Table* processTable);
 
-void Machine_setTablesPanel(Machine* host, Panel* panel);
+void Machine_setTablesPanel(Machine* this, Panel* panel);
 
 void Machine_scan(Machine* this);
 

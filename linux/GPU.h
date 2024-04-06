@@ -12,6 +12,6 @@ in the source distribution for its full text.
 #include "linux/LinuxProcessTable.h"
 
 
-void GPU_readProcessData(LinuxProcessTable* lpl, LinuxProcess* lp, openat_arg_t procFd);
+void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t procFd);
 
 #endif /* HEADER_GPU */
