@@ -87,7 +87,7 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
 
    /* check only if active in last check or last scan was more than 5s ago */
    if (lp->gpu_activityMs != 0 && host->monotonicMs - lp->gpu_activityMs < 5000) {
-      lp->gpu_percent = 0.0f;
+      lp->gpu_percent = 0.0F;
       return;
    }
    lp->gpu_activityMs = host->monotonicMs;
@@ -222,11 +222,11 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
 
       gputimeDelta = saturatingSub(new_gpu_time, lp->gpu_time);
       monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
-      lp->gpu_percent = 100.0f * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
+      lp->gpu_percent = 100.0F * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
 
       lp->gpu_activityMs = 0;
    } else
-      lp->gpu_percent = 0.0f;
+      lp->gpu_percent = 0.0F;
 
 out:
 

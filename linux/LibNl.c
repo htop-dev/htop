@@ -179,7 +179,7 @@ static int handleNetlinkMsg(struct nl_msg* nlmsg, void* linuxProcess) {
       // The xxx_delay_total values wrap around on overflow.
       // (Linux Kernel "Documentation/accounting/taskstats-struct.rst")
       unsigned long long int timeDelta = stats.ac_etime * 1000 - lp->delay_read_time;
-      #define DELTAPERC(x, y) (timeDelta ? MINIMUM((float)((x) - (y)) / timeDelta * 100.0f, 100.0f) : NAN)
+      #define DELTAPERC(x, y) (timeDelta ? MINIMUM((float)((x) - (y)) / timeDelta * 100.0F, 100.0F) : NAN)
       lp->cpu_delay_percent = DELTAPERC(stats.cpu_delay_total, lp->cpu_delay_total);
       lp->blkio_delay_percent = DELTAPERC(stats.blkio_delay_total, lp->blkio_delay_total);
       lp->swapin_delay_percent = DELTAPERC(stats.swapin_delay_total, lp->swapin_delay_total);
