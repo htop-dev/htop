@@ -226,9 +226,9 @@ typedef struct ProcessFieldData_ {
 typedef int32_t ProcessField;  /* see ReservedField list in RowField.h */
 
 // Implemented in platform-specific code:
-void Process_writeField(const Process* row, RichString* str, ProcessField field);
+void Process_writeField(const Process* this, RichString* str, ProcessField field);
 int Process_compare(const void* v1, const void* v2);
-int Process_compareByParent(const Row* r1, const Row* v2);
+int Process_compareByParent(const Row* r1, const Row* r2);
 void Process_delete(Object* cast);
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 #define Process_pidDigits Row_pidDigits
