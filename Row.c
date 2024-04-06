@@ -292,7 +292,6 @@ invalidNumber:
       color = CRT_colors[PROCESS_SHADOW];
 
    RichString_appendAscii(str, color, "  N/A ");
-   return;
 }
 
 void Row_printBytes(RichString* str, unsigned long long number, bool coloring) {
