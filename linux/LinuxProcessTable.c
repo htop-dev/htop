@@ -1632,9 +1632,9 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
                smaps_flag = !smaps_flag;
             }
          } else {
-            lp->m_pss   = ((const LinuxProcess*)mainTask)->m_pss;
-            lp->m_swap  = ((const LinuxProcess*)mainTask)->m_swap;
-            lp->m_psswp = ((const LinuxProcess*)mainTask)->m_psswp;
+            lp->m_pss   = mainTask->m_pss;
+            lp->m_swap  = mainTask->m_swap;
+            lp->m_psswp = mainTask->m_psswp;
          }
       }
 
@@ -1676,7 +1676,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
 
       if (ss->flags & PROCESS_FLAG_LINUX_GPU || GPUMeter_active()) {
          if (mainTask) {
-            lp->gpu_time = ((const LinuxProcess*)mainTask)->gpu_time;
+            lp->gpu_time = mainTask->gpu_time;
          } else {
             GPU_readProcessData(this, lp, procFd);
          }
