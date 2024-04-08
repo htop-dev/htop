@@ -30,7 +30,7 @@ static const int FunctionBar_EnterEscEvents[] = {13, 27};
 static int currentLen = 0;
 
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
-   const char* functions[] = {enter, esc, NULL};
+   const char* functions[16] = {enter, esc, NULL};
    return FunctionBar_new(functions, FunctionBar_EnterEscKeys, FunctionBar_EnterEscEvents);
 }
 
