@@ -219,7 +219,7 @@ Process* NetBSDProcess_new(const Machine* host) {
    NetBSDProcess* this = xCalloc(1, sizeof(NetBSDProcess));
    Object_setClass(this, Class(NetBSDProcess));
    Process_init(&this->super, host);
-   return &this->super;
+   return (Process*)this;
 }
 
 void Process_delete(Object* cast) {

@@ -56,7 +56,7 @@ Process* DragonFlyBSDProcess_new(const Machine* host) {
    DragonFlyBSDProcess* this = xCalloc(1, sizeof(DragonFlyBSDProcess));
    Object_setClass(this, Class(DragonFlyBSDProcess));
    Process_init(&this->super, host);
-   return &this->super;
+   return (Process*)this;
 }
 
 void Process_delete(Object* cast) {

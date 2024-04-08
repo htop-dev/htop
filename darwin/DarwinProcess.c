@@ -62,7 +62,7 @@ Process* DarwinProcess_new(const Machine* host) {
    this->taskAccess = true;
    this->translated = false;
 
-   return &this->super;
+   return (Process*)this;
 }
 
 void Process_delete(Object* cast) {

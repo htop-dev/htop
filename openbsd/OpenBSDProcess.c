@@ -211,7 +211,7 @@ Process* OpenBSDProcess_new(const Machine* host) {
    OpenBSDProcess* this = xCalloc(1, sizeof(OpenBSDProcess));
    Object_setClass(this, Class(OpenBSDProcess));
    Process_init(&this->super, host);
-   return &this->super;
+   return (Process*)this;
 }
 
 void Process_delete(Object* cast) {
