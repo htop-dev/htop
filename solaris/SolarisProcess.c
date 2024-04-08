@@ -64,7 +64,7 @@ Process* SolarisProcess_new(const Machine* host) {
    SolarisProcess* this = xCalloc(1, sizeof(SolarisProcess));
    Object_setClass(this, Class(SolarisProcess));
    Process_init(&this->super, host);
-   return &this->super;
+   return (Process*)this;
 }
 
 void Process_delete(Object* cast) {

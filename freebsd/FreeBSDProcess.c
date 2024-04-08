@@ -62,7 +62,7 @@ Process* FreeBSDProcess_new(const Machine* machine) {
    FreeBSDProcess* this = xCalloc(1, sizeof(FreeBSDProcess));
    Object_setClass(this, Class(FreeBSDProcess));
    Process_init(&this->super, machine);
-   return &this->super;
+   return (Process*)this;
 }
 
 void Process_delete(Object* cast) {
