@@ -425,13 +425,14 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
    if (totalMicroseconds < 1000000) {
       len = xSnprintf(buffer, sizeof(buffer), ".%06lus ", (unsigned long)totalMicroseconds);
       RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
    }
 
    unsigned long long totalSeconds = totalMicroseconds / 1000000;
    unsigned long microseconds = totalMicroseconds % 1000000;
    if (totalSeconds < 60) {
       int width = 5;
-      unsigned long fraction = microseconds;
+      unsigned long fraction = microseconds / 10;
       if (totalSeconds >= 10) {
          width--;
          fraction /= 10;
