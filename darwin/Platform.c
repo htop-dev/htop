@@ -298,13 +298,28 @@ double Platform_setCPUValues(Meter* mtr, unsigned int cpu) {
 
 void Platform_setMemoryValues(Meter* mtr) {
    const DarwinMachine* dhost = (const DarwinMachine*) mtr->host;
+#ifdef HAVE_STRUCT_VM_STATISTICS64
+   const struct vm_statistics64* vm = &dhost->vm_stats;
+#else
    const struct vm_statistics* vm = &dhost->vm_stats;
+#endif
    double page_K = (double)vm_page_size / (double)1024;
 
    mtr->total = dhost->host_info.max_mem / 1024;
+#ifdef HAVE_STRUCT_VM_STATISTICS64
+   natural_t used = vm->active_count + vm->inactive_count +
+              vm->speculative_count + vm->wire_count +
+              vm->compressor_page_count - vm->purgeable_count - vm->external_page_count;
+   mtr->values[MEMORY_METER_USED] = (double)(used - vm->compressor_page_count) * page_K;
+#else
    mtr->values[MEMORY_METER_USED] = (double)(vm->active_count + vm->wire_count) * page_K;
+#endif
    // mtr->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
+#ifdef HAVE_STRUCT_VM_STATISTICS64
+   mtr->values[MEMORY_METER_COMPRESSED] = (double)vm->compressor_page_count * page_K;
+#else
    // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
+#endif
    mtr->values[MEMORY_METER_BUFFERS] = (double)vm->purgeable_count * page_K;
    mtr->values[MEMORY_METER_CACHE] = (double)vm->inactive_count * page_K;
    // mtr->values[MEMORY_METER_AVAILABLE] = "available memory"
