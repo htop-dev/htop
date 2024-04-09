@@ -56,6 +56,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
       this->cpuData[1].online = true;
       super->activeCPUs = 1;
       super->existingCPUs = 1;
+      this->maxCoreId = 0;
    }
 
    DIR* dir = opendir("/sys/devices/system/cpu");
@@ -63,6 +64,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
       return;
 
    unsigned int currExisting = super->existingCPUs;
+   unsigned short maxCoreId = 0;
 
    const struct dirent* entry;
    while ((entry = readdir(dir)) != NULL) {
@@ -73,7 +75,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
          continue;
 
       char* endp;
-      unsigned long int id = strtoul(entry->d_name + 3, &endp, 10);
+      const unsigned long int id = strtoul(entry->d_name + 3, &endp, 10);
       if (id == ULONG_MAX || endp == entry->d_name + 3 || *endp != '\0')
          continue;
 
@@ -106,6 +108,17 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
          this->cpuData[id + 1].online = false;
       }
 
+      res = xReadfileat(cpuDirFd, "topology/core_id", buffer, sizeof(buffer));
+      if (res > 0) {
+         unsigned long int parsedCoreId = strtoul(buffer, &endp, 10);
+         if (parsedCoreId < USHRT_MAX && endp != buffer && (*endp == '\0' || *endp == '\n')) {
+            unsigned short coreId = (unsigned short) parsedCoreId;
+            this->cpuData[id + 1].coreId = coreId;
+
+            maxCoreId = MAXIMUM(maxCoreId, coreId);
+         }
+      }
+
       Compat_openatArgClose(cpuDirFd);
    }
 
@@ -125,6 +138,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
    super->activeCPUs = active;
    assert(existing == currExisting);
    super->existingCPUs = currExisting;
+   this->maxCoreId = maxCoreId;
 }
 
 static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
