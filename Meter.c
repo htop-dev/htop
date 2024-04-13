@@ -184,12 +184,15 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
+   // Draw the caption
    const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
    int captionLen = 3;
    mvaddnstr(y, x, caption, captionLen);
    x += captionLen;
    w -= captionLen;
+
+   // Draw the bar borders
    attrset(CRT_colors[BAR_BORDER]);
    mvaddch(y, x, '[');
    w--;
@@ -199,14 +202,16 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    x++;
 
-   if (w < 1)
+   if (w < 1) {
       return;
+   }
 
    // The text in the bar is right aligned;
    // Pad with maximal spaces and then calculate needed starting position offset
    RichString_begin(bar);
    RichString_appendChr(&bar, 0, ' ', w);
    RichString_appendWide(&bar, 0, this->txtBuffer);
+
    int startPos = RichString_sizeVal(bar) - w;
    if (startPos > w) {
       // Text is too large for bar
@@ -223,6 +228,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       // If still too large, print the start not the end
       startPos = MINIMUM(startPos, w);
    }
+
    assert(startPos >= 0);
    assert(startPos <= w);
    assert(startPos + w <= RichString_sizeVal(bar));
