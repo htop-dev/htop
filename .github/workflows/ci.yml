@@ -210,7 +210,7 @@ jobs:
             release: '6.4.0'
             usesh: true
             prepare: |
-              pkg install -y gmake autoconf-2.71 automake ncurses git
+              pkg install -y gmake autoconf automake ncurses git
               git config --global --add safe.directory /home/runner/work/htop/htop
             run: |
               set -e
@@ -233,7 +233,7 @@ jobs:
             release: '14.0'
             usesh: true
             prepare: |
-              pkg install -y gmake autoconf-2.71 automake git
+              pkg install -y gmake autoconf automake git
               git config --global --add safe.directory /home/runner/work/htop/htop
             run: |
               set -e
