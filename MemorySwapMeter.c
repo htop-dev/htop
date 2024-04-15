@@ -50,9 +50,7 @@ static void MemorySwapMeter_init(Meter* this) {
    MemorySwapMeterData* data = this->meterData;
 
    if (!data) {
-      data = this->meterData = xMalloc(sizeof(MemorySwapMeterData));
-      data->memoryMeter = NULL;
-      data->swapMeter = NULL;
+      data = this->meterData = xCalloc(1, sizeof(MemorySwapMeterData));
    }
 
    if (!data->memoryMeter)
