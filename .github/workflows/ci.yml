@@ -279,12 +279,24 @@ jobs:
             release: '7.4'
             usesh: true
             prepare: |
-              pkg_add gmake autoconf-2.71 automake-1.16.5 git
+              pkg_add gmake git
               git config --global --add safe.directory /home/runner/work/htop/htop
             run: |
               set -e
-              export AUTOCONF_VERSION=2.71
-              export AUTOMAKE_VERSION=1.16
+              autoconf_version_full=$(pkg_info -Q autoconf |
+                LC_ALL=C sed 's/^autoconf-\([0-9]*\.[0-9]*\)\(p[.0-9]*\)\{0,1\}$/\1\2/p; d' |
+                LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 |
+                sed '1 q')
+              automake_version_full=$(pkg_info -Q automake |
+                LC_ALL=C sed 's/^automake-\([0-9]*\.[0-9]*\)\(\.[0-9]*\)\{0,1\}\(p[0-9]*\)\{0,1\}$/\1\2\3/p; d' |
+                LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 -k 3,3 |
+                sed '1 q')
+              pkg_add -v autoconf-${autoconf_version_full} automake-${automake_version_full}
+              export AUTOCONF_VERSION=$(echo ${autoconf_version_full} |
+                LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
+              # Must not include the third version field in $AUTOMAKE_VERSION
+              export AUTOMAKE_VERSION=$(echo ${automake_version_full} |
+                LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
               ./autogen.sh
               ./configure --enable-unicode --enable-werror
               gmake -k
