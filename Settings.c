@@ -815,12 +815,13 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
          configDir = String_cat(home, "/.config");
          htopDir = String_cat(home, "/.config/htop");
       }
-      legacyDotfile = String_cat(home, "/.htoprc");
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
       free(htopDir);
       free(configDir);
+
       struct stat st;
+      legacyDotfile = String_cat(home, "/.htoprc");
       int err = lstat(legacyDotfile, &st);
       if (err || S_ISLNK(st.st_mode)) {
          free(legacyDotfile);
@@ -838,6 +839,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
 #endif
    this->changed = false;
    this->delay = DEFAULT_DELAY;
+
    bool ok = Settings_read(this, this->filename, initialCpuCount);
    if (!ok && legacyDotfile) {
       ok = Settings_read(this, legacyDotfile, initialCpuCount);
@@ -847,7 +849,6 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
             unlink(legacyDotfile);
          }
       }
-      free(legacyDotfile);
    }
    if (!ok) {
       this->screenTabs = true;
@@ -863,6 +864,8 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
    this->ss = this->screens[this->ssIndex];
 
    this->lastUpdate = 1;
+
+   free(legacyDotfile);
 
    return this;
 }
