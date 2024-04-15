@@ -9,7 +9,9 @@ in the source distribution for its full text.
 
 #include "RichString.h"
 
+#include <assert.h>
 #include <ctype.h>
+#include <limits.h> // IWYU pragma: keep
 #include <stdlib.h>
 #include <string.h>
 
@@ -144,7 +146,8 @@ static inline int RichString_writeFromAscii(RichString* this, int attrs, const c
    int newLen = from + len;
    RichString_setLen(this, newLen);
    for (int i = from, j = 0; i < newLen; i++, j++) {
-      this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (isprint(data[j]) ? data[j] : L'\xFFFD') } };
+      assert((unsigned char)data[j] <= SCHAR_MAX);
+      this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (isprint((unsigned char)data[j]) ? data[j] : L'\xFFFD') } };
    }
 
    return len;

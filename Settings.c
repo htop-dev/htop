@@ -233,7 +233,7 @@ static const char* toFieldName(Hashtable* columns, int id, bool* enabled) {
 }
 
 static int toFieldIndex(Hashtable* columns, const char* str) {
-   if (isdigit(str[0])) {
+   if (isdigit((unsigned char)str[0])) {
       // This "+1" is for compatibility with the older enum format.
       int id = atoi(str) + 1;
       if (toFieldName(columns, id, NULL)) {
