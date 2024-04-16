@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "CPUMeter.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -256,12 +257,13 @@ static void CPUMeterCommonUpdateMode(Meter* this, int mode, int ncol) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    this->mode = mode;
-   int h = Meter_modes[mode]->h;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
    for (int i = 0; i < count; i++) {
       Meter_setMode(meters[i], mode);
    }
+   int h = meters[0]->h;
+   assert(h > 0);
    this->h = h * ((count + ncol - 1) / ncol);
 }
 
