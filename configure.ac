@@ -2,11 +2,19 @@
 # Process this file with autoconf to produce a configure script.
 
 # ----------------------------------------------------------------------
+# Build version string.
+# ----------------------------------------------------------------------
+
+m4_define([htop_git_version],
+  m4_normalize(m4_esyscmd([git describe --abbrev=7 --dirty --always --tags 2> /dev/null || echo ''])))
+m4_define([htop_release_version], [3.4.0-dev])
+
+# ----------------------------------------------------------------------
 # Autoconf initialization.
 # ----------------------------------------------------------------------
 
 AC_PREREQ([2.69])
-AC_INIT([htop], [3.4.0-dev], [htop@groups.io], [], [https://htop.dev/])
+AC_INIT([htop], [m4_join([-],m4_defn([htop_release_version]),m4_defn([htop_git_version]))], [htop@groups.io], [], [https://htop.dev/])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([build-aux])
