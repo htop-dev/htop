@@ -117,6 +117,10 @@ ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size
 ATTR_ACCESS3_R(2, 3)
 ssize_t full_write(int fd, const void* buf, size_t count);
 
+static inline ssize_t full_write_str(int fd, const char* str) {
+   return full_write(fd, str, strlen(str));
+}
+
 /* Compares floating point values for ordering data entries. In this function,
    NaN is considered "less than" any other floating point value (regardless of
    sign), and two NaNs are considered "equal" regardless of payload. */

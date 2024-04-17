@@ -843,9 +843,11 @@ static void CRT_handleSIGTERM(int sgn) {
    if (!signal_str)
       signal_str = "unknown reason";
 
-   fprintf(stderr,
+   char err_buf[512];
+   snprintf(err_buf, sizeof(err_buf),
            "A signal %d (%s) was received, exiting without persisting settings to htoprc.\n",
            sgn, signal_str);
+   full_write_str(STDERR_FILENO, err_buf);
    _exit(0);
 }
 
@@ -912,7 +914,7 @@ static void dumpStderr(void) {
 
       if (res > 0) {
          if (!header) {
-            fprintf(stderr, ">>>>>>>>>> stderr output >>>>>>>>>>\n");
+            full_write_str(STDERR_FILENO, ">>>>>>>>>> stderr output >>>>>>>>>>\n");
             header = true;
          }
          full_write(STDERR_FILENO, buffer, res);
@@ -920,7 +922,7 @@ static void dumpStderr(void) {
    }
 
    if (header)
-      fprintf(stderr, "\n<<<<<<<<<< stderr output <<<<<<<<<<\n");
+      full_write_str(STDERR_FILENO, "\n<<<<<<<<<< stderr output <<<<<<<<<<\n");
 
    close(stderrRedirectNewFd);
    stderrRedirectNewFd = -1;
@@ -1185,6 +1187,8 @@ static void print_backtrace(void) {
 
    unsigned int item = 0;
 
+   char err_buf[1024];
+
    while (unw_step(&cursor) > 0) {
       unw_word_t pc;
       unw_get_reg(&cursor, UNW_REG_IP, &pc);
@@ -1213,7 +1217,8 @@ static void print_backtrace(void) {
       const bool is_signal_frame = unw_is_signal_frame(&cursor) > 0;
       const char* frame = is_signal_frame ? "  {signal frame}" : "";
 
-      fprintf(stderr, "%2u: %#14lx  %s  (%s+%#lx)  [%p]%s\n", item++, pc, fname, symbolName, offset, ptr, frame);
+      snprintf(err_buf, sizeof(err_buf), "%2u: %#14lx  %s  (%s+%#lx)  [%p]%s\n", item++, pc, fname, symbolName, offset, ptr, frame);
+      full_write_str(STDERR_FILENO, err_buf);
    }
 #elif defined(HAVE_EXECINFO_H)
    void* backtraceArray[256];
@@ -1229,7 +1234,9 @@ static void print_backtrace(void) {
 void CRT_handleSIGSEGV(int signal) {
    CRT_done();
 
-   fprintf(stderr, "\n\n"
+   char err_buf[512];
+
+   snprintf(err_buf, sizeof(err_buf), "\n\n"
       "FATAL PROGRAM ERROR DETECTED\n"
       "============================\n"
       "Please check at https://htop.dev/issues whether this issue has already been reported.\n"
@@ -1240,12 +1247,13 @@ void CRT_handleSIGSEGV(int signal) {
       "  - Likely steps to reproduce (How did it happen?)\n",
       program
    );
+   full_write_str(STDERR_FILENO, err_buf);
 
 #ifdef PRINT_BACKTRACE
-   fprintf(stderr, "  - Backtrace of the issue (see below)\n");
+   full_write_str(STDERR_FILENO, "  - Backtrace of the issue (see below)\n");
 #endif
 
-   fprintf(stderr,
+   full_write_str(STDERR_FILENO,
       "\n"
    );
 
@@ -1253,29 +1261,30 @@ void CRT_handleSIGSEGV(int signal) {
    if (!signal_str) {
       signal_str = "unknown reason";
    }
-   fprintf(stderr,
+   snprintf(err_buf, sizeof(err_buf),
       "Error information:\n"
       "------------------\n"
       "A signal %d (%s) was received.\n"
       "\n",
       signal, signal_str
    );
+   full_write_str(STDERR_FILENO, err_buf);
 
-   fprintf(stderr,
+   full_write_str(STDERR_FILENO,
       "Setting information:\n"
       "--------------------\n");
    Settings_write(CRT_crashSettings, true);
-   fprintf(stderr, "\n\n");
+   full_write_str(STDERR_FILENO, "\n\n");
 
 #ifdef PRINT_BACKTRACE
-   fprintf(stderr,
+   full_write_str(STDERR_FILENO,
       "Backtrace information:\n"
       "----------------------\n"
    );
 
    print_backtrace();
 
-   fprintf(stderr,
+   snprintf(err_buf, sizeof(err_buf),
       "\n"
       "To make the above information more practical to work with, "
       "please also provide a disassembly of your %s binary. "
@@ -1283,31 +1292,34 @@ void CRT_handleSIGSEGV(int signal) {
       "\n",
       program
    );
+   full_write_str(STDERR_FILENO, err_buf);
 
 #ifdef HTOP_DARWIN
-   fprintf(stderr, "   otool -tvV `which %s` > ~/%s.otool\n", program, program);
+   snprintf(err_buf, sizeof(err_buf), "   otool -tvV `which %s` > ~/%s.otool\n", program, program);
 #else
-   fprintf(stderr, "   objdump -d -S -w `which %s` > ~/%s.objdump\n", program, program);
+   snprintf(err_buf, sizeof(err_buf), "   objdump -d -S -w `which %s` > ~/%s.objdump\n", program, program);
 #endif
+   full_write_str(STDERR_FILENO, err_buf);
 
-   fprintf(stderr,
+   full_write_str(STDERR_FILENO,
       "\n"
       "Please include the generated file in your report.\n"
    );
 #endif
 
-   fprintf(stderr,
+   snprintf(err_buf, sizeof(err_buf),
       "Running this program with debug symbols or inside a debugger may provide further insights.\n"
       "\n"
       "Thank you for helping to improve %s!\n"
       "\n",
       program
    );
+   full_write_str(STDERR_FILENO, err_buf);
 
    /* Call old sigsegv handler; may be default exit or third party one (e.g. ASAN) */
    if (sigaction(signal, &old_sig_handler[signal], NULL) < 0) {
       /* This avoids an infinite loop in case the handler could not be reset. */
-      fprintf(stderr,
+      full_write_str(STDERR_FILENO,
          "!!! Chained handler could not be restored. Forcing exit.\n"
       );
       _exit(1);
@@ -1317,7 +1329,7 @@ void CRT_handleSIGSEGV(int signal) {
    raise(signal);
 
    // Always terminate, even if installed handler returns
-   fprintf(stderr,
+   full_write_str(STDERR_FILENO,
       "!!! Chained handler did not exit. Forcing exit.\n"
    );
    _exit(1);
