@@ -238,10 +238,10 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       item = &fdata->data;
       const char* filename = getDataForType(item, 'n');
 
-      struct stat st;
-      if (stat(filename, &st) == 0) {
+      struct stat sb;
+      if (stat(filename, &sb) == 0) {
          char fileSizeBuf[21]; /* 20 (long long) + 1 (NULL) */
-         xSnprintf(fileSizeBuf, sizeof(fileSizeBuf), "%"PRIu64, (uint64_t)st.st_size); /* st.st_size is long long on macOS, long on linux */
+         xSnprintf(fileSizeBuf, sizeof(fileSizeBuf), "%"PRIu64, (uint64_t)sb.st_size); /* sb.st_size is long long on macOS, long on linux */
          free_and_xStrdup(&item->data[fileSizeIndex], fileSizeBuf);
       }
    }
