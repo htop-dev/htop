@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -353,16 +354,50 @@ static ScreenSettings* Settings_defaultScreens(Settings* this) {
    return this->screens[0];
 }
 
-static bool Settings_read(Settings* this, const char* fileName, unsigned int initialCpuCount) {
-   FILE* fd = fopen(fileName, "r");
-   if (!fd)
+static bool Settings_read(Settings* this, const char* fileName, unsigned int initialCpuCount, bool checkWritability) {
+   int fd = -1;
+   const char* fopen_mode = "r+";
+   if (checkWritability) {
+      do {
+         fd = open(fileName, O_RDWR | O_NOCTTY | O_NOFOLLOW);
+      } while (fd < 0 && errno == EINTR);
+
+      if (fd < 0) {
+         this->writeConfig = (errno == ENOENT);
+         if (errno != EACCES && errno != EPERM && errno != EROFS) {
+            return false;
+         }
+      } else {
+         // Check if this is a regular file
+         struct stat sb;
+         int err = fstat(fd, &sb);
+         this->writeConfig = !err && S_ISREG(sb.st_mode);
+      }
+   }
+
+   // If opening for read & write is not needed or fails, open for read only.
+   // There is no risk of following symlink in this case.
+   if (fd < 0) {
+      fopen_mode = "r";
+      do {
+         fd = open(fileName, O_RDONLY | O_NOCTTY);
+      } while (fd < 0 && errno == EINTR);
+   }
+
+   if (fd < 0)
       return false;
+
+   FILE* fp = fdopen(fd, fopen_mode);
+   if (!fp) {
+      close(fd);
+      return false;
+   }
 
    ScreenSettings* screen = NULL;
    bool didReadMeters = false;
    bool didReadAny = false;
    for (;;) {
-      char* line = String_readLine(fd);
+      char* line = String_readLine(fp);
       if (!line) {
          break;
       }
@@ -382,7 +417,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
             fprintf(stderr, "         version v%d, but this %s binary only supports up to version v%d.\n", this->config_version, PACKAGE, CONFIG_READER_MIN_VERSION);
             fprintf(stderr, "         The configuration file will be downgraded to v%d when %s exits.\n", CONFIG_READER_MIN_VERSION, PACKAGE);
             String_freeArray(option);
-            fclose(fd);
+            fclose(fp);
             return false;
          }
       } else if (String_eq(option[0], "fields") && this->config_version <= 2) {
@@ -555,7 +590,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
       }
       String_freeArray(option);
    }
-   fclose(fd);
+   fclose(fp);
    if (!didReadMeters || !Settings_validateMeters(this))
       Settings_defaultMeters(this, initialCpuCount);
    if (!this->nScreens)
@@ -622,6 +657,8 @@ int Settings_write(const Settings* this, bool onCrash) {
    if (onCrash) {
       fd = stderr;
       separator = ';';
+   } else if (!this->writeConfig) {
+      return 0;
    } else {
       /* create tempfile with mode 0600 */
       mode_t cur_umask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
@@ -753,6 +790,8 @@ int Settings_write(const Settings* this, bool onCrash) {
 Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
+   this->writeConfig = true;
+
    this->dynamicScreens = dynamicScreens;
    this->dynamicColumns = dynamicColumns;
    this->dynamicMeters = dynamicMeters;
@@ -820,13 +859,7 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
       free(htopDir);
       free(configDir);
 
-      struct stat st;
       legacyDotfile = String_cat(home, "/.htoprc");
-      int err = lstat(legacyDotfile, &st);
-      if (err || S_ISLNK(st.st_mode)) {
-         free(legacyDotfile);
-         legacyDotfile = NULL;
-      }
    }
 
    this->filename = xMalloc(PATH_MAX);
@@ -840,10 +873,10 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
    this->changed = false;
    this->delay = DEFAULT_DELAY;
 
-   bool ok = Settings_read(this, this->filename, initialCpuCount);
+   bool ok = Settings_read(this, this->filename, initialCpuCount, /*checkWritability*/true);
    if (!ok && legacyDotfile) {
-      ok = Settings_read(this, legacyDotfile, initialCpuCount);
-      if (ok) {
+      ok = Settings_read(this, legacyDotfile, initialCpuCount, this->writeConfig);
+      if (ok && this->writeConfig) {
          // Transition to new location and delete old configuration file
          if (Settings_write(this, false) == 0) {
             unlink(legacyDotfile);
@@ -853,7 +886,8 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
    if (!ok) {
       this->screenTabs = true;
       this->changed = true;
-      ok = Settings_read(this, SYSCONFDIR "/htoprc", initialCpuCount);
+
+      ok = Settings_read(this, SYSCONFDIR "/htoprc", initialCpuCount, /*checkWritability*/false);
    }
    if (!ok) {
       Settings_defaultMeters(this, initialCpuCount);
