@@ -76,7 +76,7 @@ char** String_split(const char* s, char sep, size_t* n);
 void String_freeArray(char** s);
 
 ATTR_NONNULL
-char* String_readLine(FILE* fd) ATTR_MALLOC;
+char* String_readLine(FILE* fp) ATTR_MALLOC;
 
 ATTR_NONNULL
 static inline char* String_strchrnul(const char* s, int c) {

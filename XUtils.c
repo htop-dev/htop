@@ -186,13 +186,13 @@ void String_freeArray(char** s) {
    free(s);
 }
 
-char* String_readLine(FILE* fd) {
+char* String_readLine(FILE* fp) {
    const size_t step = 1024;
    size_t bufSize = step;
    char* buffer = xMalloc(step + 1);
    char* at = buffer;
    for (;;) {
-      const char* ok = fgets(at, step + 1, fd);
+      const char* ok = fgets(at, step + 1, fp);
       if (!ok) {
          free(buffer);
          return NULL;
@@ -202,7 +202,7 @@ char* String_readLine(FILE* fd) {
          *newLine = '\0';
          return buffer;
       } else {
-         if (feof(fd)) {
+         if (feof(fp)) {
             return buffer;
          }
       }

@@ -113,14 +113,14 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       exit(127);
    }
 
-   FILE* fd = fdopen(fdpair[0], "r");
-   if (!fd)
+   FILE* fp = fdopen(fdpair[0], "r");
+   if (!fp)
       goto err;
 
    close(fdpair[1]);
 
    this->child = child;
-   this->strace = fd;
+   this->strace = fp;
    return true;
 
 err:
