@@ -450,8 +450,8 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
 char* Platform_getProcessEnv(pid_t pid) {
    char procname[128];
    xSnprintf(procname, sizeof(procname), PROCDIR "/%d/environ", pid);
-   FILE* fd = fopen(procname, "r");
-   if (!fd)
+   FILE* fp = fopen(procname, "r");
+   if (!fp)
       return NULL;
 
    char* env = NULL;
@@ -464,9 +464,9 @@ char* Platform_getProcessEnv(pid_t pid) {
       size += bytes;
       capacity += 4096;
       env = xRealloc(env, capacity);
-   } while ((bytes = fread(env + size, 1, capacity - size, fd)) > 0);
+   } while ((bytes = fread(env + size, 1, capacity - size, fp)) > 0);
 
-   fclose(fd);
+   fclose(fp);
 
    if (bytes < 0) {
       free(env);
@@ -515,13 +515,13 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
       int fd = openat(dfd, de->d_name, O_RDONLY | O_CLOEXEC);
       if (fd == -1)
          continue;
-      FILE* f = fdopen(fd, "r");
-      if (!f) {
+      FILE* fp = fdopen(fd, "r");
+      if (!fp) {
          close(fd);
          continue;
       }
 
-      for (char buffer[1024]; fgets(buffer, sizeof(buffer), f); ) {
+      for (char buffer[1024]; fgets(buffer, sizeof(buffer), fp); ) {
          if (!strchr(buffer, '\n'))
             continue;
 
@@ -559,7 +559,7 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
          data_ref = &(*data_ref)->next;
       }
 
-      fclose(f);
+      fclose(fp);
    }
 
    closedir(dirp);
@@ -574,18 +574,18 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
    *ten = *sixty = *threehundred = 0;
    char procname[128];
    xSnprintf(procname, sizeof(procname), PROCDIR "/pressure/%s", file);
-   FILE* fd = fopen(procname, "r");
-   if (!fd) {
+   FILE* fp = fopen(procname, "r");
+   if (!fp) {
       *ten = *sixty = *threehundred = NAN;
       return;
    }
-   int total = fscanf(fd, "some avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
+   int total = fscanf(fp, "some avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
    if (!some) {
-      total = fscanf(fd, "full avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
+      total = fscanf(fp, "full avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
    }
    (void) total;
    assert(total == 3);
-   fclose(fd);
+   fclose(fp);
 }
 
 void Platform_getFileDescriptors(double* used, double* max) {
@@ -607,15 +607,15 @@ void Platform_getFileDescriptors(double* used, double* max) {
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
-   FILE* fd = fopen(PROCDIR "/diskstats", "r");
-   if (!fd)
+   FILE* fp = fopen(PROCDIR "/diskstats", "r");
+   if (!fp)
       return false;
 
    char lastTopDisk[32] = { '\0' };
 
    unsigned long long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
    char lineBuffer[256];
-   while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
+   while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
       char diskname[32];
       unsigned long long int read_tmp, write_tmp, timeSpend_tmp;
       if (sscanf(lineBuffer, "%*d %*d %31s %*u %*u %llu %*u %*u %*u %llu %*u %*u %llu", diskname, &read_tmp, &write_tmp, &timeSpend_tmp) == 4) {
@@ -637,7 +637,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
          timeSpend_sum += timeSpend_tmp;
       }
    }
-   fclose(fd);
+   fclose(fp);
    /* multiply with sector size */
    data->totalBytesRead = 512 * read_sum;
    data->totalBytesWritten = 512 * write_sum;
@@ -646,13 +646,13 @@ bool Platform_getDiskIO(DiskIOData* data) {
 }
 
 bool Platform_getNetworkIO(NetworkIOData* data) {
-   FILE* fd = fopen(PROCDIR "/net/dev", "r");
-   if (!fd)
+   FILE* fp = fopen(PROCDIR "/net/dev", "r");
+   if (!fp)
       return false;
 
    memset(data, 0, sizeof(NetworkIOData));
    char lineBuffer[512];
-   while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
+   while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
       char interfaceName[32];
       unsigned long long int bytesReceived, packetsReceived, bytesTransmitted, packetsTransmitted;
       if (sscanf(lineBuffer, "%31s %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu",
@@ -672,7 +672,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       data->packetsTransmitted += packetsTransmitted;
    }
 
-   fclose(fd);
+   fclose(fp);
 
    return true;
 }
@@ -1079,18 +1079,18 @@ bool Platform_init(void) {
       }
    }
 
-   FILE* fd = fopen(PROCDIR "/1/mounts", "r");
-   if (fd) {
+   FILE* fp = fopen(PROCDIR "/1/mounts", "r");
+   if (fp) {
       char lineBuffer[256];
-      while (fgets(lineBuffer, sizeof(lineBuffer), fd)) {
+      while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
          // detect lxc or overlayfs and guess that this means we are running containerized
          if (String_startsWith(lineBuffer, "lxcfs /proc") || String_startsWith(lineBuffer, "overlay / overlay")) {
             Running_containerized = true;
             break;
          }
       }
-      fclose(fd);
-   } // if (fd)
+      fclose(fp);
+   }
 
    return true;
 }

@@ -62,13 +62,13 @@ static char** readQuotedList(char* line) {
    return list;
 }
 
-static void writeQuotedList(FILE* fd, char** list) {
+static void writeQuotedList(FILE* fp, char** list) {
    const char* sep = "";
    for (int i = 0; list[i]; i++) {
-      fprintf(fd, "%s\"%s\"", sep, list[i]);
+      fprintf(fp, "%s\"%s\"", sep, list[i]);
       sep = " ";
    }
-   fprintf(fd, "\n");
+   fprintf(fp, "\n");
 }
 
 */
@@ -600,60 +600,60 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
 
 typedef ATTR_FORMAT(printf, 2, 3) int (*OutputFunc)(FILE*, const char*,...);
 
-static void writeFields(OutputFunc of, FILE* fd,
+static void writeFields(OutputFunc of, FILE* fp,
                         const ProcessField* fields, Hashtable* columns,
                         bool byName, char separator) {
    const char* sep = "";
    for (unsigned int i = 0; fields[i]; i++) {
       if (fields[i] < LAST_PROCESSFIELD && byName) {
          const char* pName = toFieldName(columns, fields[i], NULL);
-         of(fd, "%s%s", sep, pName);
+         of(fp, "%s%s", sep, pName);
       } else if (fields[i] >= LAST_PROCESSFIELD && byName) {
          bool enabled;
          const char* pName = toFieldName(columns, fields[i], &enabled);
          if (enabled)
-            of(fd, "%sDynamic(%s)", sep, pName);
+            of(fp, "%sDynamic(%s)", sep, pName);
       } else {
          // This "-1" is for compatibility with the older enum format.
-         of(fd, "%s%d", sep, (int) fields[i] - 1);
+         of(fp, "%s%d", sep, (int) fields[i] - 1);
       }
       sep = " ";
    }
-   of(fd, "%c", separator);
+   of(fp, "%c", separator);
 }
 
-static void writeList(OutputFunc of, FILE* fd,
+static void writeList(OutputFunc of, FILE* fp,
                       char** list, int len, char separator) {
    const char* sep = "";
    for (int i = 0; i < len; i++) {
-      of(fd, "%s%s", sep, list[i]);
+      of(fp, "%s%s", sep, list[i]);
       sep = " ";
    }
-   of(fd, "%c", separator);
+   of(fp, "%c", separator);
 }
 
 static void writeMeters(const Settings* this, OutputFunc of,
-                        FILE* fd, char separator, unsigned int column) {
+                        FILE* fp, char separator, unsigned int column) {
    if (this->hColumns[column].len) {
-      writeList(of, fd, this->hColumns[column].names, this->hColumns[column].len, separator);
+      writeList(of, fp, this->hColumns[column].names, this->hColumns[column].len, separator);
    } else {
-      of(fd, "!%c", separator);
+      of(fp, "!%c", separator);
    }
 }
 
 static void writeMeterModes(const Settings* this, OutputFunc of,
-                            FILE* fd, char separator, unsigned int column) {
+                            FILE* fp, char separator, unsigned int column) {
    if (this->hColumns[column].len) {
       const char* sep = "";
       for (size_t i = 0; i < this->hColumns[column].len; i++) {
-         of(fd, "%s%d", sep, this->hColumns[column].modes[i]);
+         of(fp, "%s%d", sep, this->hColumns[column].modes[i]);
          sep = " ";
       }
    } else {
-      of(fd, "!");
+      of(fp, "!");
    }
 
-   of(fd, "%c", separator);
+   of(fp, "%c", separator);
 }
 
 ATTR_FORMAT(printf, 2, 3)
@@ -672,12 +672,12 @@ static int signal_safe_fprintf(FILE* stream, const char* fmt, ...) {
 }
 
 int Settings_write(const Settings* this, bool onCrash) {
-   FILE* fd;
+   FILE* fp;
    char separator;
    char* tmpFilename = NULL;
    OutputFunc of;
    if (onCrash) {
-      fd = stderr;
+      fp = stderr;
       separator = ';';
       of = signal_safe_fprintf;
    } else if (!this->writeConfig) {
@@ -690,25 +690,25 @@ int Settings_write(const Settings* this, bool onCrash) {
       umask(cur_umask);
       if (fdtmp == -1)
          return -errno;
-      fd = fdopen(fdtmp, "w");
-      if (fd == NULL)
+      fp = fdopen(fdtmp, "w");
+      if (!fp)
          return -errno;
       separator = '\n';
       of = fprintf;
    }
 
    #define printSettingInteger(setting_, value_) \
-      of(fd, setting_ "=%d%c", (int) (value_), separator)
+      of(fp, setting_ "=%d%c", (int) (value_), separator)
    #define printSettingString(setting_, value_) \
-      of(fd, setting_ "=%s%c", value_, separator)
+      of(fp, setting_ "=%s%c", value_, separator)
 
    if (!onCrash) {
-      of(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
-      of(fd, "# The parser is also very primitive, and not human-friendly.\n");
+      of(fp, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
+      of(fp, "# The parser is also very primitive, and not human-friendly.\n");
    }
    printSettingString("htop_version", VERSION);
    printSettingInteger("config_reader_min_version", CONFIG_READER_MIN_VERSION);
-   of(fd, "fields="); writeFields(of, fd, this->screens[0]->fields, this->dynamicColumns, false, separator);
+   of(fp, "fields="); writeFields(of, fp, this->screens[0]->fields, this->dynamicColumns, false, separator);
    printSettingInteger("hide_kernel_threads", this->hideKernelThreads);
    printSettingInteger("hide_userland_threads", this->hideUserlandThreads);
    printSettingInteger("hide_running_in_container", this->hideRunningInContainer);
@@ -749,10 +749,10 @@ int Settings_write(const Settings* this, bool onCrash) {
 
    printSettingString("header_layout", HeaderLayout_getName(this->hLayout));
    for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
-      of(fd, "column_meters_%u=", i);
-      writeMeters(this, of, fd, separator, i);
-      of(fd, "column_meter_modes_%u=", i);
-      writeMeterModes(this, of, fd, separator, i);
+      of(fp, "column_meters_%u=", i);
+      writeMeters(this, of, fp, separator, i);
+      of(fp, "column_meter_modes_%u=", i);
+      writeMeterModes(this, of, fp, separator, i);
    }
 
    // Legacy compatibility with older versions of htop
@@ -770,14 +770,14 @@ int Settings_write(const Settings* this, bool onCrash) {
       const char* sortKey = toFieldName(this->dynamicColumns, ss->sortKey, NULL);
       const char* treeSortKey = toFieldName(this->dynamicColumns, ss->treeSortKey, NULL);
 
-      of(fd, "screen:%s=", ss->heading);
-      writeFields(of, fd, ss->fields, this->dynamicColumns, true, separator);
+      of(fp, "screen:%s=", ss->heading);
+      writeFields(of, fp, ss->fields, this->dynamicColumns, true, separator);
       if (ss->dynamic) {
          printSettingString(".dynamic", ss->dynamic);
          if (ss->sortKey && ss->sortKey != PID)
-            of(fd, "%s=Dynamic(%s)%c", ".sort_key", sortKey, separator);
+            of(fp, "%s=Dynamic(%s)%c", ".sort_key", sortKey, separator);
          if (ss->treeSortKey && ss->treeSortKey != PID)
-            of(fd, "%s=Dynamic(%s)%c", ".tree_sort_key", treeSortKey, separator);
+            of(fp, "%s=Dynamic(%s)%c", ".tree_sort_key", treeSortKey, separator);
       } else {
          printSettingString(".sort_key", sortKey);
          printSettingString(".tree_sort_key", treeSortKey);
@@ -797,10 +797,10 @@ int Settings_write(const Settings* this, bool onCrash) {
 
    int r = 0;
 
-   if (ferror(fd) != 0)
+   if (ferror(fp) != 0)
       r = (errno != 0) ? -errno : -EBADF;
 
-   if (fclose(fd) != 0)
+   if (fclose(fp) != 0)
       r = r ? r : -errno;
 
    if (r == 0)

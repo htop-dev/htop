@@ -138,13 +138,13 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    OpenFiles_FileData* fdata = NULL;
    bool lsofIncludesFileSize = false;
 
-   FILE* fd = fdopen(fdpair[0], "r");
-   if (!fd) {
+   FILE* fp = fdopen(fdpair[0], "r");
+   if (!fp) {
       pdata->error = 1;
       return pdata;
    }
    for (;;) {
-      char* line = String_readLine(fd);
+      char* line = String_readLine(fp);
       if (!line) {
          break;
       }
@@ -212,7 +212,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
 
       free(line);
    }
-   fclose(fd);
+   fclose(fp);
 
    int wstatus;
    while (waitpid(child, &wstatus, 0) == -1)

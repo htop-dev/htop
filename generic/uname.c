@@ -26,8 +26,8 @@ in the source distribution for its full text.
 #endif
 
 static void parseOSRelease(char* buffer, size_t bufferLen) {
-   FILE* stream = fopen(OSRELEASEFILE, "r");
-   if (!stream) {
+   FILE* fp = fopen(OSRELEASEFILE, "r");
+   if (!fp) {
       xSnprintf(buffer, bufferLen, "No OS Release");
       return;
    }
@@ -35,14 +35,14 @@ static void parseOSRelease(char* buffer, size_t bufferLen) {
    char name[64] = {'\0'};
    char version[64] = {'\0'};
    char lineBuffer[256];
-   while (fgets(lineBuffer, sizeof(lineBuffer), stream)) {
+   while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
       if (String_startsWith(lineBuffer, "PRETTY_NAME=\"")) {
          const char* start = lineBuffer + strlen("PRETTY_NAME=\"");
          const char* stop = strrchr(lineBuffer, '"');
          if (!stop || stop <= start)
             continue;
          String_safeStrncpy(buffer, start, MINIMUM(bufferLen, (size_t)(stop - start + 1)));
-         fclose(stream);
+         fclose(fp);
          return;
       }
       if (String_startsWith(lineBuffer, "NAME=\"")) {
@@ -62,7 +62,7 @@ static void parseOSRelease(char* buffer, size_t bufferLen) {
          continue;
       }
    }
-   fclose(stream);
+   fclose(fp);
 
    snprintf(buffer, bufferLen, "%s%s%s", name[0] ? name : "", name[0] && version[0] ? " " : "", version);
 }
