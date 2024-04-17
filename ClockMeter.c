@@ -27,7 +27,7 @@ static void ClockMeter_updateValues(Meter* this) {
    struct tm result;
    const struct tm* lt = localtime_r(&host->realtime.tv_sec, &result);
    this->values[0] = lt->tm_hour * 60 + lt->tm_min;
-   strftime(this->txtBuffer, sizeof(this->txtBuffer), "%H:%M:%S", lt);
+   strftime(this->txtBuffer, sizeof(this->txtBuffer), "%H:%M:%S %Z", lt);
 }
 
 const MeterClass ClockMeter_class = {
