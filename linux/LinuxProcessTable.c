@@ -490,18 +490,18 @@ static bool LinuxProcessTable_updateUser(const Machine* host, Process* process, 
       return true;
    }
 
-   struct stat sstat;
+   struct stat sb;
 #ifdef HAVE_OPENAT
-   int statok = fstat(procFd, &sstat);
+   int statok = fstat(procFd, &sb);
 #else
-   int statok = stat(procFd, &sstat);
+   int statok = stat(procFd, &sb);
 #endif
    if (statok == -1)
       return false;
 
-   if (process->st_uid != sstat.st_uid) {
-      process->st_uid = sstat.st_uid;
-      process->user = UsersTable_getRef(host->usersTable, sstat.st_uid);
+   if (process->st_uid != sb.st_uid) {
+      process->st_uid = sb.st_uid;
+      process->user = UsersTable_getRef(host->usersTable, sb.st_uid);
    }
 
    return true;
@@ -1349,19 +1349,19 @@ static char* LinuxProcessTable_updateTtyDevice(TtyDriver* ttyDrivers, unsigned l
          continue;
       }
       unsigned int idx = min - ttyDrivers[i].minorFrom;
-      struct stat sstat;
+      struct stat sb;
       char* fullPath;
       for (;;) {
          xAsprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
-         int err = stat(fullPath, &sstat);
-         if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) {
+         int err = stat(fullPath, &sb);
+         if (err == 0 && major(sb.st_rdev) == maj && minor(sb.st_rdev) == min) {
             return fullPath;
          }
          free(fullPath);
 
          xAsprintf(&fullPath, "%s%d", ttyDrivers[i].path, idx);
-         err = stat(fullPath, &sstat);
-         if (err == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) {
+         err = stat(fullPath, &sb);
+         if (err == 0 && major(sb.st_rdev) == maj && minor(sb.st_rdev) == min) {
             return fullPath;
          }
          free(fullPath);
@@ -1372,8 +1372,8 @@ static char* LinuxProcessTable_updateTtyDevice(TtyDriver* ttyDrivers, unsigned l
 
          idx = min;
       }
-      int err = stat(ttyDrivers[i].path, &sstat);
-      if (err == 0 && tty_nr == sstat.st_rdev) {
+      int err = stat(ttyDrivers[i].path, &sb);
+      if (err == 0 && tty_nr == sb.st_rdev) {
          return xStrdup(ttyDrivers[i].path);
       }
    }
