@@ -50,11 +50,11 @@ int Compat_faccessat(int dirfd,
    }
 
    // Fallback to stat(2)/lstat(2) depending on flags
-   struct stat statinfo;
+   struct stat sb;
    if (flags) {
-      ret = lstat(pathname, &statinfo);
+      ret = lstat(pathname, &sb);
    } else {
-      ret = stat(pathname, &statinfo);
+      ret = stat(pathname, &sb);
    }
 
    return ret;
