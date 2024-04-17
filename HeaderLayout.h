@@ -17,6 +17,7 @@ in the source distribution for its full text.
 
 typedef enum HeaderLayout_ {
    HF_INVALID = -1,
+   HF_ONE_100,
    HF_TWO_50_50,
    HF_TWO_33_67,
    HF_TWO_67_33,
@@ -38,6 +39,7 @@ static const struct {
    const char* name;
    const char* description;
 } HeaderLayout_layouts[LAST_HEADER_LAYOUT] = {
+   [HF_ONE_100]          = { 1, { 100, 0,  0,  0 }, "one_100",          "1 column  - full width",      },
    [HF_TWO_50_50]        = { 2, { 50, 50,  0,  0 }, "two_50_50",        "2 columns - 50/50 (default)", },
    [HF_TWO_33_67]        = { 2, { 33, 67,  0,  0 }, "two_33_67",        "2 columns - 33/67",           },
    [HF_TWO_67_33]        = { 2, { 67, 33,  0,  0 }, "two_67_33",        "2 columns - 67/33",           },
