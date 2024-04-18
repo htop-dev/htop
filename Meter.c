@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 
 #include <assert.h>
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,6 +45,12 @@ static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
    } else {
       RichString_writeWide(out, CRT_colors[Meter_attributes(this)[0]], this->txtBuffer);
    }
+}
+
+static double Meter_computeSum(const Meter* this) {
+   double sum = sumPositiveValues(this->values, this->curItems);
+   // Prevent rounding to infinity in IEEE 754
+   return MINIMUM(DBL_MAX, sum);
 }
 
 /* ---------- TextMeterMode ---------- */
@@ -124,6 +131,12 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
+   if (!Meter_isPercentChart(this) && this->curItems > 0) {
+      double sum = Meter_computeSum(this);
+      if (this->total < sum) {
+         this->total = sum;
+      }
+   }
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
       if (isPositive(value) && this->total > 0.0) {
