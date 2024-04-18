@@ -438,7 +438,7 @@ void Meter_setCaption(Meter* this, const char* caption) {
    free_and_xStrdup(&this->caption, caption);
 }
 
-void Meter_setMode(Meter* this, int modeIndex) {
+void Meter_setMode(Meter* this, MeterModeId modeIndex) {
    if (modeIndex > 0 && modeIndex == this->mode) {
       return;
    }

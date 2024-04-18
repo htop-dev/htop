@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #include "Hashtable.h"
 #include "HeaderLayout.h"
+#include "MeterMode.h"
 #include "Row.h"
 #include "RowField.h"
 
@@ -34,7 +35,7 @@ typedef struct {
 typedef struct {
    size_t len;
    char** names;
-   int* modes;
+   MeterModeId* modes;
 } MeterColumnSetting;
 
 typedef struct ScreenSettings_ {

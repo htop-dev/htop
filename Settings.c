@@ -108,9 +108,9 @@ static void Settings_readMeterModes(Settings* this, const char* line, unsigned i
    }
    column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
    this->hColumns[column].len = len;
-   int* modes = len ? xCalloc(len, sizeof(int)) : NULL;
+   MeterModeId* modes = len ? xCalloc(len, sizeof(MeterModeId)) : NULL;
    for (int i = 0; i < len; i++) {
-      modes[i] = atoi(ids[i]);
+      modes[i] = (MeterModeId) atoi(ids[i]);
    }
    String_freeArray(ids);
    this->hColumns[column].modes = modes;
@@ -123,7 +123,7 @@ static bool Settings_validateMeters(Settings* this) {
 
    for (size_t column = 0; column < colCount; column++) {
       char** names = this->hColumns[column].names;
-      const int* modes = this->hColumns[column].modes;
+      const MeterModeId* modes = this->hColumns[column].modes;
       const size_t len = this->hColumns[column].len;
 
       if (!len)
@@ -164,7 +164,7 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
    this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
    for (size_t i = 0; i < 2; i++) {
       this->hColumns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
-      this->hColumns[i].modes = xCalloc(sizes[i], sizeof(int));
+      this->hColumns[i].modes = xCalloc(sizes[i], sizeof(MeterModeId));
       this->hColumns[i].len = sizes[i];
    }
 
@@ -646,7 +646,7 @@ static void writeMeterModes(const Settings* this, OutputFunc of,
    if (this->hColumns[column].len) {
       const char* sep = "";
       for (size_t i = 0; i < this->hColumns[column].len; i++) {
-         of(fp, "%s%d", sep, this->hColumns[column].modes[i]);
+         of(fp, "%s%u", sep, this->hColumns[column].modes[i]);
          sep = " ";
       }
    } else {

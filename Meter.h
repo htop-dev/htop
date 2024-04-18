@@ -49,7 +49,7 @@ typedef struct Meter_ Meter;
 
 typedef void(*Meter_Init)(Meter*);
 typedef void(*Meter_Done)(Meter*);
-typedef void(*Meter_UpdateMode)(Meter*, int);
+typedef void(*Meter_UpdateMode)(Meter*, MeterModeId);
 typedef void(*Meter_UpdateValues)(Meter*);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 typedef const char* (*Meter_GetCaption)(const Meter*);
@@ -64,7 +64,7 @@ typedef struct MeterClass_ {
    const Meter_Draw draw;
    const Meter_GetCaption getCaption;
    const Meter_GetUiName getUiName;
-   const int defaultMode;
+   const MeterModeId defaultMode;
    const double total;
    const int* const attributes;
    const char* const name;                 /* internal name of the meter, must not contain any space */
@@ -105,7 +105,7 @@ struct Meter_ {
    const Machine* host;
 
    char* caption;
-   int mode;
+   MeterModeId mode;
    unsigned int param;
    GraphData drawData;
    int h;
@@ -137,7 +137,7 @@ void Meter_delete(Object* cast);
 
 void Meter_setCaption(Meter* this, const char* caption);
 
-void Meter_setMode(Meter* this, int modeIndex);
+void Meter_setMode(Meter* this, MeterModeId modeIndex);
 
 ListItem* Meter_toListItem(const Meter* this, bool moving);
 

@@ -68,7 +68,7 @@ static void MemorySwapMeter_init(Meter* this) {
    }
 }
 
-static void MemorySwapMeter_updateMode(Meter* this, int mode) {
+static void MemorySwapMeter_updateMode(Meter* this, MeterModeId mode) {
    MemorySwapMeterData* data = this->meterData;
 
    this->mode = mode;

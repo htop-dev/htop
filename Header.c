@@ -150,7 +150,7 @@ void Header_writeBackToSettings(const Header* this) {
       int len = Vector_size(vec);
 
       colSettings->names = len ? xCalloc(len + 1, sizeof(char*)) : NULL;
-      colSettings->modes = len ? xCalloc(len, sizeof(int)) : NULL;
+      colSettings->modes = len ? xCalloc(len, sizeof(MeterModeId)) : NULL;
       colSettings->len = len;
 
       for (int i = 0; i < len; i++) {
