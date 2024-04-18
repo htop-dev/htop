@@ -417,7 +417,7 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
    if (!statusfile)
       return false;
 
-   char buffer[PROC_LINE_LENGTH + 1];
+   char buffer[PROC_LINE_LENGTH + 1] = {0};
 
    while (fgets(buffer, sizeof(buffer), statusfile)) {
 

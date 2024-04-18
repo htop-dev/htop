@@ -30,25 +30,25 @@ static const int FunctionBar_EnterEscEvents[] = {13, 27};
 static int currentLen = 0;
 
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
-   const char* functions[] = {enter, esc, NULL};
+   const char* functions[FUNCTIONBAR_MAXEVENTS + 1] = {enter, esc, NULL};
    return FunctionBar_new(functions, FunctionBar_EnterEscKeys, FunctionBar_EnterEscEvents);
 }
 
 FunctionBar* FunctionBar_new(const char* const* functions, const char* const* keys, const int* events) {
    FunctionBar* this = xCalloc(1, sizeof(FunctionBar));
-   this->functions = xCalloc(16, sizeof(char*));
+   this->functions = xCalloc(FUNCTIONBAR_MAXEVENTS + 1, sizeof(char*));
    if (!functions) {
       functions = FunctionBar_FLabels;
    }
-   for (int i = 0; i < 15 && functions[i]; i++) {
+   for (int i = 0; i < FUNCTIONBAR_MAXEVENTS && functions[i]; i++) {
       this->functions[i] = xStrdup(functions[i]);
    }
    if (keys && events) {
       this->staticData = false;
-      this->keys.keys = xCalloc(15, sizeof(char*));
-      this->events = xCalloc(15, sizeof(int));
+      this->keys.keys = xCalloc(FUNCTIONBAR_MAXEVENTS, sizeof(char*));
+      this->events = xCalloc(FUNCTIONBAR_MAXEVENTS, sizeof(int));
       int i = 0;
-      while (i < 15 && functions[i]) {
+      while (i < FUNCTIONBAR_MAXEVENTS && functions[i]) {
          this->keys.keys[i] = xStrdup(keys[i]);
          this->events[i] = events[i];
          i++;
@@ -64,7 +64,7 @@ FunctionBar* FunctionBar_new(const char* const* functions, const char* const* ke
 }
 
 void FunctionBar_delete(FunctionBar* this) {
-   for (int i = 0; i < 15 && this->functions[i]; i++) {
+   for (int i = 0; i < FUNCTIONBAR_MAXEVENTS && this->functions[i]; i++) {
       free(this->functions[i]);
    }
    free(this->functions);
