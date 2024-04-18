@@ -134,6 +134,7 @@ myhtopheaders = \
 	MemoryMeter.h \
 	MemorySwapMeter.h \
 	Meter.h \
+	MeterMode.h \
 	MetersPanel.h \
 	NetworkIOMeter.h \
 	Object.h \
