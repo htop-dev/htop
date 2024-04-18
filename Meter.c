@@ -26,83 +26,7 @@ in the source distribution for its full text.
 
 #define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
-const MeterClass Meter_class = {
-   .super = {
-      .extends = Class(Object)
-   }
-};
-
-Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type) {
-   Meter* this = xCalloc(1, sizeof(Meter));
-   Object_setClass(this, type);
-   this->h = 1;
-   this->param = param;
-   this->host = host;
-   this->curItems = type->maxItems;
-   this->curAttributes = NULL;
-   this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
-   this->total = type->total;
-   this->caption = xStrdup(type->caption);
-   if (Meter_initFn(this)) {
-      Meter_init(this);
-   }
-   Meter_setMode(this, type->defaultMode);
-   return this;
-}
-
-/* Converts 'value' in kibibytes into a human readable string.
-   Example output strings: "0K", "1023K", "98.7M" and "1.23G" */
-int Meter_humanUnit(char* buffer, double value, size_t size) {
-   size_t i = 0;
-
-   assert(value >= 0.0);
-   while (value >= ONE_K) {
-      if (i >= ARRAYSIZE(unitPrefixes) - 1) {
-         if (value > 9999.0) {
-            return xSnprintf(buffer, size, "inf");
-         }
-         break;
-      }
-
-      value /= ONE_K;
-      ++i;
-   }
-
-   int precision = 0;
-
-   if (i > 0) {
-      // Fraction digits for mebibytes and above
-      precision = value <= 99.9 ? (value <= 9.99 ? 2 : 1) : 0;
-
-      // Round up if 'value' is in range (99.9, 100) or (9.99, 10)
-      if (precision < 2) {
-         double limit = precision == 1 ? 10.0 : 100.0;
-         if (value < limit) {
-            value = limit;
-         }
-      }
-   }
-
-   return xSnprintf(buffer, size, "%.*f%c", precision, value, unitPrefixes[i]);
-}
-
-void Meter_delete(Object* cast) {
-   if (!cast)
-      return;
-
-   Meter* this = (Meter*) cast;
-   if (Meter_doneFn(this)) {
-      Meter_done(this);
-   }
-   free(this->drawData.values);
-   free(this->caption);
-   free(this->values);
-   free(this);
-}
-
-void Meter_setCaption(Meter* this, const char* caption) {
-   free_and_xStrdup(&this->caption, caption);
-}
+/* Meter drawing modes */
 
 static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
    if (Object_displayFn(this)) {
@@ -110,52 +34,6 @@ static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
    } else {
       RichString_writeWide(out, CRT_colors[Meter_attributes(this)[0]], this->txtBuffer);
    }
-}
-
-void Meter_setMode(Meter* this, int modeIndex) {
-   if (modeIndex > 0 && modeIndex == this->mode) {
-      return;
-   }
-
-   if (!modeIndex) {
-      modeIndex = 1;
-   }
-
-   assert(modeIndex < LAST_METERMODE);
-   if (Meter_updateModeFn(this)) {
-      assert(Meter_drawFn(this));
-      this->draw = Meter_drawFn(this);
-      Meter_updateMode(this, modeIndex);
-   } else {
-      assert(modeIndex >= 1);
-      free(this->drawData.values);
-      this->drawData.values = NULL;
-      this->drawData.nValues = 0;
-
-      const MeterMode* mode = Meter_modes[modeIndex];
-      this->draw = mode->draw;
-      this->h = mode->h;
-   }
-   this->mode = modeIndex;
-}
-
-ListItem* Meter_toListItem(const Meter* this, bool moving) {
-   char mode[20];
-   if (this->mode) {
-      xSnprintf(mode, sizeof(mode), " [%s]", Meter_modes[this->mode]->uiName);
-   } else {
-      mode[0] = '\0';
-   }
-   char name[32];
-   if (Meter_getUiNameFn(this))
-      Meter_getUiName(this, name, sizeof(name));
-   else
-      xSnprintf(name, sizeof(name), "%s", Meter_uiName(this));
-   char buffer[50];
-   xSnprintf(buffer, sizeof(buffer), "%s%s", name, mode);
-   ListItem* li = ListItem_new(buffer, 0);
-   li->moving = moving;
-   return li;
 }
 
 /* ---------- TextMeterMode ---------- */
@@ -478,6 +356,132 @@ const MeterMode* const Meter_modes[] = {
    &LEDMeterMode,
    NULL
 };
+
+/* Meter class and methods */
+
+const MeterClass Meter_class = {
+   .super = {
+      .extends = Class(Object)
+   }
+};
+
+Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type) {
+   Meter* this = xCalloc(1, sizeof(Meter));
+   Object_setClass(this, type);
+   this->h = 1;
+   this->param = param;
+   this->host = host;
+   this->curItems = type->maxItems;
+   this->curAttributes = NULL;
+   this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
+   this->total = type->total;
+   this->caption = xStrdup(type->caption);
+   if (Meter_initFn(this)) {
+      Meter_init(this);
+   }
+   Meter_setMode(this, type->defaultMode);
+   return this;
+}
+
+/* Converts 'value' in kibibytes into a human readable string.
+   Example output strings: "0K", "1023K", "98.7M" and "1.23G" */
+int Meter_humanUnit(char* buffer, double value, size_t size) {
+   size_t i = 0;
+
+   assert(value >= 0.0);
+   while (value >= ONE_K) {
+      if (i >= ARRAYSIZE(unitPrefixes) - 1) {
+         if (value > 9999.0) {
+            return xSnprintf(buffer, size, "inf");
+         }
+         break;
+      }
+
+      value /= ONE_K;
+      ++i;
+   }
+
+   int precision = 0;
+
+   if (i > 0) {
+      // Fraction digits for mebibytes and above
+      precision = value <= 99.9 ? (value <= 9.99 ? 2 : 1) : 0;
+
+      // Round up if 'value' is in range (99.9, 100) or (9.99, 10)
+      if (precision < 2) {
+         double limit = precision == 1 ? 10.0 : 100.0;
+         if (value < limit) {
+            value = limit;
+         }
+      }
+   }
+
+   return xSnprintf(buffer, size, "%.*f%c", precision, value, unitPrefixes[i]);
+}
+
+void Meter_delete(Object* cast) {
+   if (!cast)
+      return;
+
+   Meter* this = (Meter*) cast;
+   if (Meter_doneFn(this)) {
+      Meter_done(this);
+   }
+   free(this->drawData.values);
+   free(this->caption);
+   free(this->values);
+   free(this);
+}
+
+void Meter_setCaption(Meter* this, const char* caption) {
+   free_and_xStrdup(&this->caption, caption);
+}
+
+void Meter_setMode(Meter* this, int modeIndex) {
+   if (modeIndex > 0 && modeIndex == this->mode) {
+      return;
+   }
+
+   if (!modeIndex) {
+      modeIndex = 1;
+   }
+
+   assert(modeIndex < LAST_METERMODE);
+   if (Meter_updateModeFn(this)) {
+      assert(Meter_drawFn(this));
+      this->draw = Meter_drawFn(this);
+      Meter_updateMode(this, modeIndex);
+   } else {
+      assert(modeIndex >= 1);
+      free(this->drawData.values);
+      this->drawData.values = NULL;
+      this->drawData.nValues = 0;
+
+      const MeterMode* mode = Meter_modes[modeIndex];
+      this->draw = mode->draw;
+      this->h = mode->h;
+   }
+   this->mode = modeIndex;
+}
+
+ListItem* Meter_toListItem(const Meter* this, bool moving) {
+   char mode[20];
+   if (this->mode) {
+      xSnprintf(mode, sizeof(mode), " [%s]", Meter_modes[this->mode]->uiName);
+   } else {
+      mode[0] = '\0';
+   }
+   char name[32];
+   if (Meter_getUiNameFn(this))
+      Meter_getUiName(this, name, sizeof(name));
+   else
+      xSnprintf(name, sizeof(name), "%s", Meter_uiName(this));
+   char buffer[50];
+   xSnprintf(buffer, sizeof(buffer), "%s%s", name, mode);
+   ListItem* li = ListItem_new(buffer, 0);
+   li->moving = moving;
+   return li;
+}
 
 /* Blank meter */
 
