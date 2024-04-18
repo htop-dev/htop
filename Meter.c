@@ -26,6 +26,12 @@ in the source distribution for its full text.
 
 #define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
+typedef struct MeterMode_ {
+   Meter_Draw draw;
+   const char* uiName;
+   int h;
+} MeterMode;
+
 /* Meter drawing modes */
 
 static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
@@ -324,37 +330,32 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    RichString_delete(&out);
 }
 
-static MeterMode BarMeterMode = {
-   .uiName = "Bar",
-   .h = 1,
-   .draw = BarMeterMode_draw,
-};
-
-static MeterMode TextMeterMode = {
-   .uiName = "Text",
-   .h = 1,
-   .draw = TextMeterMode_draw,
-};
-
-static MeterMode GraphMeterMode = {
-   .uiName = "Graph",
-   .h = GRAPH_HEIGHT,
-   .draw = GraphMeterMode_draw,
-};
-
-static MeterMode LEDMeterMode = {
-   .uiName = "LED",
-   .h = 3,
-   .draw = LEDMeterMode_draw,
-};
-
-const MeterMode* const Meter_modes[] = {
-   NULL,
-   &BarMeterMode,
-   &TextMeterMode,
-   &GraphMeterMode,
-   &LEDMeterMode,
-   NULL
+static const MeterMode Meter_modes[] = {
+   [0] = {
+      .uiName = NULL,
+      .h = 0,
+      .draw = NULL,
+   },
+   [BAR_METERMODE] = {
+      .uiName = "Bar",
+      .h = 1,
+      .draw = BarMeterMode_draw,
+   },
+   [TEXT_METERMODE] = {
+      .uiName = "Text",
+      .h = 1,
+      .draw = TextMeterMode_draw,
+   },
+   [GRAPH_METERMODE] = {
+      .uiName = "Graph",
+      .h = GRAPH_HEIGHT,
+      .draw = GraphMeterMode_draw,
+   },
+   [LED_METERMODE] = {
+      .uiName = "LED",
+      .h = 3,
+      .draw = LEDMeterMode_draw,
+   },
 };
 
 /* Meter class and methods */
@@ -457,7 +458,7 @@ void Meter_setMode(Meter* this, int modeIndex) {
       this->drawData.values = NULL;
       this->drawData.nValues = 0;
 
-      const MeterMode* mode = Meter_modes[modeIndex];
+      const MeterMode* mode = &Meter_modes[modeIndex];
       this->draw = mode->draw;
       this->h = mode->h;
    }
@@ -467,7 +468,7 @@ void Meter_setMode(Meter* this, int modeIndex) {
 ListItem* Meter_toListItem(const Meter* this, bool moving) {
    char mode[20];
    if (this->mode) {
-      xSnprintf(mode, sizeof(mode), " [%s]", Meter_modes[this->mode]->uiName);
+      xSnprintf(mode, sizeof(mode), " [%s]", Meter_modes[this->mode].uiName);
    } else {
       mode[0] = '\0';
    }

@@ -117,12 +117,6 @@ struct Meter_ {
    void* meterData;
 };
 
-typedef struct MeterMode_ {
-   Meter_Draw draw;
-   const char* uiName;
-   int h;
-} MeterMode;
-
 typedef enum {
    /* Meter mode 0 is reserved */
    BAR_METERMODE = 1,
@@ -154,8 +148,6 @@ void Meter_setCaption(Meter* this, const char* caption);
 void Meter_setMode(Meter* this, int modeIndex);
 
 ListItem* Meter_toListItem(const Meter* this, bool moving);
-
-extern const MeterMode* const Meter_modes[];
 
 extern const MeterClass BlankMeter_class;
 
