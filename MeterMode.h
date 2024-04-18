@@ -8,13 +8,15 @@ in the source distribution for its full text.
 */
 
 
-typedef enum {
+enum MeterModeId_ {
    /* Meter mode 0 is reserved */
    BAR_METERMODE = 1,
    TEXT_METERMODE,
    GRAPH_METERMODE,
    LED_METERMODE,
    LAST_METERMODE
-} MeterModeId;
+};
+
+typedef unsigned int MeterModeId;
 
 #endif

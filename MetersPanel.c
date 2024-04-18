@@ -108,7 +108,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          if (!Vector_size(this->meters))
             break;
          Meter* meter = (Meter*) Vector_get(this->meters, selected);
-         int mode = meter->mode + 1;
+         MeterModeId mode = meter->mode + 1;
          if (mode == LAST_METERMODE)
             mode = 1;
          Meter_setMode(meter, mode);
