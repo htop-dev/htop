@@ -124,8 +124,8 @@ typedef struct MeterMode_ {
 } MeterMode;
 
 typedef enum {
-   CUSTOM_METERMODE = 0,
-   BAR_METERMODE,
+   /* Meter mode 0 is reserved */
+   BAR_METERMODE = 1,
    TEXT_METERMODE,
    GRAPH_METERMODE,
    LED_METERMODE,
