@@ -122,11 +122,10 @@ void Meter_setMode(Meter* this, int modeIndex) {
    }
 
    assert(modeIndex < LAST_METERMODE);
-   if (Meter_defaultMode(this) == CUSTOM_METERMODE) {
+   if (Meter_updateModeFn(this)) {
+      assert(Meter_drawFn(this));
       this->draw = Meter_drawFn(this);
-      if (Meter_updateModeFn(this)) {
-         Meter_updateMode(this, modeIndex);
-      }
+      Meter_updateMode(this, modeIndex);
    } else {
       assert(modeIndex >= 1);
       free(this->drawData.values);

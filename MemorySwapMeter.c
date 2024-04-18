@@ -65,8 +65,10 @@ static void MemorySwapMeter_init(Meter* this) {
    if (Meter_initFn(data->swapMeter))
       Meter_init(data->swapMeter);
 
-   if (this->mode == 0)
+   if (this->mode == 0) {
       this->mode = BAR_METERMODE;
+      this->draw = Meter_drawFn(this);
+   }
 
    this->h = MAXIMUM(Meter_modes[data->memoryMeter->mode]->h, Meter_modes[data->swapMeter->mode]->h);
 }
@@ -97,7 +99,7 @@ const MeterClass MemorySwapMeter_class = {
       .delete = Meter_delete,
    },
    .updateValues = MemorySwapMeter_updateValues,
-   .defaultMode = CUSTOM_METERMODE,
+   .defaultMode = BAR_METERMODE,
    .isMultiColumn = true,
    .name = "MemorySwap",
    .uiName = "Memory & Swap",
