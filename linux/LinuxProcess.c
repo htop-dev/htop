@@ -284,9 +284,18 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    #ifdef HAVE_VSERVER
    case VXID: xSnprintf(buffer, n, "%5u ", lp->vxid); break;
    #endif
-   case CGROUP: xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CGROUP], Row_fieldWidths[CGROUP], lp->cgroup ? lp->cgroup : "N/A"); break;
-   case CCGROUP: xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CCGROUP], Row_fieldWidths[CCGROUP], lp->cgroup_short ? lp->cgroup_short : (lp->cgroup ? lp->cgroup : "N/A")); break;
-   case CONTAINER: xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CONTAINER], Row_fieldWidths[CONTAINER], lp->container_short ? lp->container_short : "N/A"); break;
+   case CGROUP:
+      xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CGROUP], Row_fieldWidths[CGROUP], lp->cgroup ? lp->cgroup : "N/A");
+      RichString_appendWide(str, attr, buffer);
+      return;
+   case CCGROUP:
+      xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CCGROUP], Row_fieldWidths[CCGROUP], lp->cgroup_short ? lp->cgroup_short : (lp->cgroup ? lp->cgroup : "N/A"));
+      RichString_appendWide(str, attr, buffer);
+      return;
+   case CONTAINER:
+      xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CONTAINER], Row_fieldWidths[CONTAINER], lp->container_short ? lp->container_short : "N/A");
+      RichString_appendWide(str, attr, buffer);
+      return;
    case OOM: xSnprintf(buffer, n, "%4u ", lp->oom); break;
    case IO_PRIORITY: {
       int klass = IOPriority_class(lp->ioPriority);
@@ -317,7 +326,10 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
       }
       xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
       break;
-   case SECATTR: snprintf(buffer, n, "%-*.*s ", Row_fieldWidths[SECATTR], Row_fieldWidths[SECATTR], lp->secattr ? lp->secattr : "N/A"); break;
+   case SECATTR:
+      snprintf(buffer, n, "%-*.*s ", Row_fieldWidths[SECATTR], Row_fieldWidths[SECATTR], lp->secattr ? lp->secattr : "N/A");
+      RichString_appendWide(str, attr, buffer);
+      return;
    case AUTOGROUP_ID:
       if (lp->autogroup_id != -1) {
          xSnprintf(buffer, n, "%4ld ", lp->autogroup_id);
