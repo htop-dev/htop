@@ -443,7 +443,7 @@ void Meter_setMode(Meter* this, MeterModeId modeIndex) {
       return;
    }
 
-   if (!modeIndex) {
+   if (modeIndex == 0) {
       modeIndex = 1;
    }
 
@@ -467,7 +467,7 @@ void Meter_setMode(Meter* this, MeterModeId modeIndex) {
 
 ListItem* Meter_toListItem(const Meter* this, bool moving) {
    char mode[20];
-   if (this->mode) {
+   if (this->mode > 0) {
       xSnprintf(mode, sizeof(mode), " [%s]", Meter_modes[this->mode].uiName);
    } else {
       mode[0] = '\0';
