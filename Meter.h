@@ -14,6 +14,7 @@ in the source distribution for its full text.
 
 #include "ListItem.h"
 #include "Machine.h"
+#include "MeterMode.h"
 #include "Object.h"
 
 
@@ -116,15 +117,6 @@ struct Meter_ {
    double total;
    void* meterData;
 };
-
-typedef enum {
-   /* Meter mode 0 is reserved */
-   BAR_METERMODE = 1,
-   TEXT_METERMODE,
-   GRAPH_METERMODE,
-   LED_METERMODE,
-   LAST_METERMODE
-} MeterModeId;
 
 typedef enum {
    RATESTATUS_DATA,
