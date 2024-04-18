@@ -21,6 +21,8 @@ typedef struct FunctionBar_ {
    bool staticData;
 } FunctionBar;
 
+#define FUNCTIONBAR_MAXEVENTS 15
+
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc);
 
 FunctionBar* FunctionBar_new(const char* const* functions, const char* const* keys, const int* events);
