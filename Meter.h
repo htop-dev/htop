@@ -87,7 +87,6 @@ typedef struct MeterClass_ {
 #define Meter_getUiName(this_,n_,l_)   As_Meter(this_)->getUiName((const Meter*)(this_),n_,l_)
 #define Meter_getCaptionFn(this_)      As_Meter(this_)->getCaption
 #define Meter_getCaption(this_)        (Meter_getCaptionFn(this_) ? As_Meter(this_)->getCaption((const Meter*)(this_)) : (this_)->caption)
-#define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
