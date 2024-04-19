@@ -14,6 +14,8 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 
+struct Settings_; // IWYU pragma: keep
+
 typedef enum TreeStr_ {
    TREE_STR_VERT,
    TREE_STR_RTEE,
@@ -202,7 +204,7 @@ void CRT_setMouse(bool enabled);
 #define CRT_setMouse(enabled)
 #endif
 
-void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnExit);
+void CRT_init(const struct Settings_* settings, bool allowUnicode, bool retainScreenOnExit);
 
 void CRT_done(void);
 

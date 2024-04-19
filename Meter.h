@@ -42,6 +42,7 @@ in the source distribution for its full text.
       }                                                    \
    } while (0)
 
+struct Machine_; // IWYU pragma: keep
 
 struct Meter_;
 typedef struct Meter_ Meter;
@@ -102,7 +103,7 @@ typedef struct GraphData_ {
 struct Meter_ {
    Object super;
    Meter_Draw draw;
-   const Machine* host;
+   const struct Machine_* host;
 
    char* caption;
    int mode;
@@ -142,7 +143,7 @@ typedef enum {
 
 extern const MeterClass Meter_class;
 
-Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type);
+Meter* Meter_new(const struct Machine_* host, unsigned int param, const MeterClass* type);
 
 /* Converts 'value' in kibibytes into a human readable string.
    Example output strings: "0K", "1023K", "98.7M" and "1.23G" */

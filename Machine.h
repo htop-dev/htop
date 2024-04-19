@@ -32,6 +32,9 @@ in the source distribution for its full text.
 #define MAX_READ 2048
 #endif
 
+struct Panel_; // IWYU pragma: keep
+struct Settings_; // IWYU pragma: keep
+
 typedef unsigned long long int memory_t;
 #define MEMORY_MAX ULLONG_MAX
 
@@ -86,9 +89,9 @@ void Machine_done(Machine* this);
 
 bool Machine_isCPUonline(const Machine* this, unsigned int id);
 
-void Machine_populateTablesFromSettings(Machine* this, Settings* settings, Table* processTable);
+void Machine_populateTablesFromSettings(Machine* this, struct Settings_* settings, Table* processTable);
 
-void Machine_setTablesPanel(Machine* this, Panel* panel);
+void Machine_setTablesPanel(Machine* this, struct Panel_* panel);
 
 void Machine_scan(Machine* this);
 

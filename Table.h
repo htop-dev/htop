@@ -17,9 +17,10 @@ in the source distribution for its full text.
 #include "Vector.h"
 
 
-struct Machine_;  // IWYU pragma: keep
-struct Panel_;    // IWYU pragma: keep
-struct Row_;      // IWYU pragma: keep
+struct Machine_; // IWYU pragma: keep
+struct Panel_; // IWYU pragma: keep
+struct Row_; // IWYU pragma: keep
+struct Settings_; // IWYU pragma: keep
 
 typedef struct Table_ {
    /* Super object for emulated OOP */
@@ -64,7 +65,7 @@ extern const TableClass Table_class;
 
 void Table_setPanel(Table* this, struct Panel_* panel);
 
-void Table_printHeader(const Settings* settings, RichString* header);
+void Table_printHeader(const struct Settings_* settings, RichString* header);
 
 void Table_add(Table* this, struct Row_* row);
 
@@ -86,7 +87,7 @@ void Table_prepareEntries(Table* this);
 
 void Table_cleanupEntries(Table* this);
 
-void Table_cleanupRow(Table* this, Row* row, int idx);
+void Table_cleanupRow(Table* this, struct Row_* row, int idx);
 
 static inline void Table_compact(Table* this) {
    Vector_compact(this->rows);
