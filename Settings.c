@@ -163,8 +163,8 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
    this->hLayout = HF_TWO_50_50;
    this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
    for (size_t i = 0; i < 2; i++) {
-      this->hColumns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
-      this->hColumns[i].modes = xCalloc(sizes[i], sizeof(MeterModeId));
+      this->hColumns[i].names = xCalloc(sizes[i] + 1, sizeof(*this->hColumns[0].names));
+      this->hColumns[i].modes = xCalloc(sizes[i], sizeof(*this->hColumns[0].modes));
       this->hColumns[i].len = sizes[i];
    }
 
