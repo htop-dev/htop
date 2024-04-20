@@ -65,6 +65,7 @@ typedef struct MeterClass_ {
    const Meter_GetCaption getCaption;
    const Meter_GetUiName getUiName;
    const MeterModeId defaultMode;
+   const uint32_t supportedModes;          /* bitset of supported modes, 1<<mode_id */
    const double total;
    const int* const attributes;
    const char* const name;                 /* internal name of the meter, must not contain any space */
@@ -88,6 +89,7 @@ typedef struct MeterClass_ {
 #define Meter_getUiName(this_,n_,l_)   As_Meter(this_)->getUiName((const Meter*)(this_),n_,l_)
 #define Meter_getCaptionFn(this_)      As_Meter(this_)->getCaption
 #define Meter_getCaption(this_)        (Meter_getCaptionFn(this_) ? As_Meter(this_)->getCaption((const Meter*)(this_)) : (this_)->caption)
+#define Meter_supportedModes(this_)    As_Meter(this_)->supportedModes
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
@@ -138,6 +140,8 @@ void Meter_delete(Object* cast);
 void Meter_setCaption(Meter* this, const char* caption);
 
 void Meter_setMode(Meter* this, MeterModeId modeIndex);
+
+MeterModeId Meter_nextSupportedMode(const Meter* this);
 
 ListItem* Meter_toListItem(const Meter* this, bool moving);
 
