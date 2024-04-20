@@ -8,6 +8,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -23,6 +24,9 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_SCHEDPOL        0x00000004
 
 #define DEFAULT_HIGHLIGHT_SECS 5
+
+/* Sentinel value for an unknown niceness in Process.nice */
+#define PROCESS_NICE_UNKNOWN (-LONG_MAX)
 
 typedef enum Tristate_ {
    TRI_INITIAL = 0,
