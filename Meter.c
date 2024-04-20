@@ -24,6 +24,10 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+#ifndef UINT32_WIDTH
+#define UINT32_WIDTH 32
+#endif
+
 #define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
 typedef struct MeterMode_ {
@@ -380,7 +384,9 @@ Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type
    if (Meter_initFn(this)) {
       Meter_init(this);
    }
+
    Meter_setMode(this, type->defaultMode);
+   assert(this->mode > 0);
    return this;
 }
 
@@ -439,21 +445,28 @@ void Meter_setCaption(Meter* this, const char* caption) {
 }
 
 void Meter_setMode(Meter* this, MeterModeId modeIndex) {
-   if (modeIndex > 0 && modeIndex == this->mode) {
+   if (modeIndex == this->mode) {
+      assert(this->mode > 0);
       return;
    }
 
-   if (modeIndex == 0) {
-      modeIndex = 1;
+   uint32_t supportedModes = Meter_supportedModes(this);
+   if (!supportedModes) {
+      supportedModes = METERMODE_DEFAULT_SUPPORTED;
    }
+   assert(supportedModes);
+   assert(!(supportedModes & (1 << 0)));
 
-   assert(modeIndex < LAST_METERMODE);
+   assert(LAST_METERMODE <= UINT32_WIDTH);
+   if (modeIndex >= LAST_METERMODE || !(supportedModes & (1UL << modeIndex)))
+      return;
+
+   assert(modeIndex >= 1);
    if (Meter_updateModeFn(this)) {
       assert(Meter_drawFn(this));
       this->draw = Meter_drawFn(this);
       Meter_updateMode(this, modeIndex);
    } else {
-      assert(modeIndex >= 1);
       free(this->drawData.values);
       this->drawData.values = NULL;
       this->drawData.nValues = 0;
@@ -463,6 +476,23 @@ void Meter_setMode(Meter* this, MeterModeId modeIndex) {
       this->h = mode->h;
    }
    this->mode = modeIndex;
+}
+
+MeterModeId Meter_nextSupportedMode(const Meter* this) {
+   uint32_t supportedModes = Meter_supportedModes(this);
+   if (!supportedModes) {
+      supportedModes = METERMODE_DEFAULT_SUPPORTED;
+   }
+   assert(supportedModes);
+
+   assert(this->mode < UINT32_WIDTH);
+   uint32_t modeMask = ((uint32_t)-1 << 1) << this->mode;
+   uint32_t nextModes = supportedModes & modeMask;
+   if (!nextModes) {
+      nextModes = supportedModes;
+   }
+
+   return (MeterModeId)countTrailingZeros(nextModes);
 }
 
 ListItem* Meter_toListItem(const Meter* this, bool moving) {

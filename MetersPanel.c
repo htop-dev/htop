@@ -108,9 +108,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          if (!Vector_size(this->meters))
             break;
          Meter* meter = (Meter*) Vector_get(this->meters, selected);
-         MeterModeId mode = meter->mode + 1;
-         if (mode == LAST_METERMODE)
-            mode = 1;
+         MeterModeId mode = Meter_nextSupportedMode(meter);
          Meter_setMode(meter, mode);
          Panel_set(super, selected, (Object*) Meter_toListItem(meter, this->moving));
          result = HANDLED;

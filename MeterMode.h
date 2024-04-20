@@ -19,4 +19,11 @@ enum MeterModeId_ {
 
 typedef unsigned int MeterModeId;
 
+#define METERMODE_DEFAULT_SUPPORTED ( \
+   (1 << BAR_METERMODE) |             \
+   (1 << TEXT_METERMODE) |            \
+   (1 << GRAPH_METERMODE) |           \
+   (1 << LED_METERMODE) |             \
+   0) // Avoids edits when updating
+
 #endif
