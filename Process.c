@@ -649,10 +649,15 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    case M_RESIDENT: Row_printKBytes(str, this->m_resident, coloring); return;
    case M_VIRT: Row_printKBytes(str, this->m_virt, coloring); return;
    case NICE:
-      xSnprintf(buffer, n, "%3ld ", this->nice);
-      attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
-         : this->nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
-         : CRT_colors[PROCESS_SHADOW];
+      if (this->nice == PROCESS_NICE_UNKNOWN) {
+         xSnprintf(buffer, n, "N/A ");
+         attr = CRT_colors[PROCESS_SHADOW];
+      } else {
+         xSnprintf(buffer, n, "%3ld ", this->nice);
+         attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
+            : this->nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
+            : CRT_colors[PROCESS_SHADOW];
+      }
       break;
    case NLWP:
       if (this->nlwp == 1)

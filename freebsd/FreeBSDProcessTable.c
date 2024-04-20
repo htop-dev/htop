@@ -248,14 +248,45 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
       proc->priority = kproc->ki_pri.pri_level - PZERO;
 
-      if (String_eq("intr", kproc->ki_comm) && (kproc->ki_flag & P_SYSTEM)) {
-         proc->nice = 0; //@etosan: intr kernel process (not thread) has weird nice value
-      } else if (kproc->ki_pri.pri_class == PRI_TIMESHARE) {
-         proc->nice = kproc->ki_nice - NZERO;
-      } else if (PRI_IS_REALTIME(kproc->ki_pri.pri_class)) {
-         proc->nice = PRIO_MIN - 1 - (PRI_MAX_REALTIME - kproc->ki_pri.pri_level);
-      } else {
-         proc->nice = PRIO_MAX + 1 + kproc->ki_pri.pri_level - PRI_MIN_IDLE;
+      switch (PRI_BASE(kproc->ki_pri.pri_class)) {
+         /* Handling of the below is explained in the FreeBSD base system in:
+          * /usr/src/usr.bin/top/machine.c (function format_nice) */
+         case PRI_ITHD:
+            fp->sched_class = SCHEDCLASS_INTR_THREAD;
+            proc->nice = 0;
+            break;
+
+         case PRI_REALTIME:
+            fp->sched_class = SCHEDCLASS_REALTIME;
+
+            /* Different for KPROCs and user procs */
+            if (kproc->ki_flag & P_KPROC) {
+               proc->nice = kproc->ki_pri.pri_native - PRI_MIN_REALTIME;
+            } else {
+               proc->nice = kproc->ki_pri.pri_user - PRI_MIN_REALTIME;
+            }
+            break;
+
+         case PRI_IDLE:
+            fp->sched_class = SCHEDCLASS_IDLE;
+
+            /* Different for KPROCs and user procs */
+            if (kproc->ki_flag & P_KPROC) {
+               proc->nice = kproc->ki_pri.pri_native - PRI_MIN_IDLE;
+            } else {
+               proc->nice = kproc->ki_pri.pri_user - PRI_MIN_IDLE;
+            }
+            break;
+
+         case PRI_TIMESHARE:
+            fp->sched_class = SCHEDCLASS_TIMESHARE;
+            proc->nice = kproc->ki_nice - NZERO;
+            break;
+
+         default:
+            fp->sched_class = SCHEDCLASS_UNKNOWN;
+            proc->nice = PROCESS_NICE_UNKNOWN;
+            break;
       }
 
       /* Taken from: https://github.com/freebsd/freebsd-src/blob/1ad2d87778970582854082bcedd2df0394fd4933/sys/sys/proc.h#L851 */
