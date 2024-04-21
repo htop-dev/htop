@@ -26,13 +26,6 @@ static void DateTimeMeter_updateValues(Meter* this) {
 
    struct tm result;
    const struct tm* lt = localtime_r(&host->realtime.tv_sec, &result);
-   int year = lt->tm_year + 1900;
-   if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) {
-      this->total = 366;
-   } else {
-      this->total = 365;
-   }
-   this->values[0] = lt->tm_yday;
    strftime(this->txtBuffer, sizeof(this->txtBuffer), "%F %H:%M:%S", lt);
 }
 
@@ -43,8 +36,9 @@ const MeterClass DateTimeMeter_class = {
    },
    .updateValues = DateTimeMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
-   .maxItems = 1,
-   .total = 365,
+   .supportedModes = (1 << TEXT_METERMODE) | (1 << LED_METERMODE),
+   .maxItems = 0,
+   .total = 0.0,
    .attributes = DateTimeMeter_attributes,
    .name = "DateTime",
    .uiName = "Date and Time",
