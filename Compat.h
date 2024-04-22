@@ -74,9 +74,8 @@ ssize_t Compat_readlink(openat_arg_t dirfd,
 # endif
 #endif
 
-/* C23 will guarantee static_assert is a keyword or a macro */
-/* FIXME: replace 202300L with proper value once C23 is published */
-#if (defined __STDC_VERSION__ ? __STDC_VERSION__ : 0) < 202300L
+/* C23 guarantees static_assert is a keyword or a macro */
+#if (defined __STDC_VERSION__ ? __STDC_VERSION__ : 0) < 202311L
 # if !defined(static_assert)
 #  define static_assert(expr, msg) _Static_assert(expr, msg)
 # endif
