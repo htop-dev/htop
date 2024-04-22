@@ -203,6 +203,7 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+   // Draw the caption
    const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
    const int captionLen = 3;
@@ -211,6 +212,8 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    w -= captionLen;
 
    GraphData* data = &this->drawData;
+
+   // Expand the graph data buffer if necessary
    assert(data->nValues / 2 <= INT_MAX);
    if (w > (int)(data->nValues / 2) && MAX_METER_GRAPHDATA_VALUES > data->nValues) {
       size_t oldNValues = data->nValues;
@@ -225,6 +228,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    if (nValues < 1)
       return;
 
+   // Record new value if necessary
    const Machine* host = this->host;
    if (!timercmp(&host->realtime, &(data->time), <)) {
       int globalDelay = host->settings->delay;
@@ -239,11 +243,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    if (w <= 0)
       return;
 
-   if ((size_t)w > nValues / 2) {
-      x += w - nValues / 2;
-      w = nValues / 2;
-   }
-
    const char* const* GraphMeterMode_dots;
    int GraphMeterMode_pixPerRow;
 #ifdef HAVE_LIBNCURSESW
@@ -257,7 +256,14 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
    }
 
+   // Starting positions of graph data and terminal column
+   if ((size_t)w > nValues / 2) {
+      x += w - nValues / 2;
+      w = nValues / 2;
+   }
    size_t i = nValues - (size_t)w * 2;
+
+   // Draw the actual graph
    for (int col = 0; i < nValues - 1; i += 2, col++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
       double total = MAXIMUM(this->total, 1);
