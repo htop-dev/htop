@@ -59,15 +59,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev libiberty-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace --enable-demangling=libiberty || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace --enable-demangling=libiberty'
 
   build-ubuntu-latest-full-featured-clang:
     runs-on: ubuntu-latest
@@ -81,15 +81,15 @@ jobs:
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-18 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-18 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev libiberty-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace --enable-demangling=libiberty || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace --enable-demangling=libiberty'
 
   build-ubuntu-latest-gcc-static:
     runs-on: ubuntu-latest
@@ -136,11 +136,11 @@ jobs:
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-18 clang-tools-18 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-18 clang-tools-18 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev libiberty-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: scan-build-18 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: scan-build-18 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace --enable-demangling=libiberty || ( cat config.log; exit 1; )
     - name: Build
       run: scan-build-18 -analyze-headers --status-bugs make -j"$(nproc)"
 
@@ -164,11 +164,11 @@ jobs:
     - name: Install LLVM Toolchain
       run: sudo apt-get install --no-install-recommends clang-18 libclang-rt-18-dev llvm-18
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors4-dev libcap-dev libiberty-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace --enable-demangling=libiberty || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Run sanitized htop (1)
