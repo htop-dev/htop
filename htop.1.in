@@ -273,6 +273,10 @@ Pause/resume process updates.
 .B m
 Merge exe, comm and cmdline, where applicable. (This is a toggle key.)
 .TP
+.B b
+Show the backtrace of a process. (This feature requires enabling
+at the compile time, and currently htop supports this feature in Linux only.)
+.TP
 .B Ctrl-L
 Refresh: redraw screen and recalculate values.
 .TP
