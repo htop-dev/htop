@@ -223,28 +223,6 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
 /* ---------- GraphMeterMode ---------- */
 
-#if 0 /* Used in old graph meter drawing code; to be removed */
-#ifdef HAVE_LIBNCURSESW
-
-#define PIXPERROW_UTF8 4
-static const char* const GraphMeterMode_dotsUtf8[] = {
-   /*00*/" ", /*01*/"⢀", /*02*/"⢠", /*03*/"⢰", /*04*/ "⢸",
-   /*10*/"⡀", /*11*/"⣀", /*12*/"⣠", /*13*/"⣰", /*14*/ "⣸",
-   /*20*/"⡄", /*21*/"⣄", /*22*/"⣤", /*23*/"⣴", /*24*/ "⣼",
-   /*30*/"⡆", /*31*/"⣆", /*32*/"⣦", /*33*/"⣶", /*34*/ "⣾",
-   /*40*/"⡇", /*41*/"⣇", /*42*/"⣧", /*43*/"⣷", /*44*/ "⣿"
-};
-
-#endif
-
-#define PIXPERROW_ASCII 2
-static const char* const GraphMeterMode_dotsAscii[] = {
-   /*00*/" ", /*01*/".", /*02*/":",
-   /*10*/".", /*11*/".", /*12*/":",
-   /*20*/":", /*21*/":", /*22*/":"
-};
-#endif
-
 static void GraphMeterMode_reallocateGraphBuffer(Meter* this, const GraphDrawContext* context, size_t nValues) {
    GraphData* data = &this->drawData;
 
