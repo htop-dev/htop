@@ -451,9 +451,6 @@ void Meter_setMode(Meter* this, MeterModeId modeIndex) {
    }
 
    uint32_t supportedModes = Meter_supportedModes(this);
-   if (!supportedModes) {
-      supportedModes = METERMODE_DEFAULT_SUPPORTED;
-   }
    assert(supportedModes);
    assert(!(supportedModes & (1 << 0)));
 
@@ -480,9 +477,6 @@ void Meter_setMode(Meter* this, MeterModeId modeIndex) {
 
 MeterModeId Meter_nextSupportedMode(const Meter* this) {
    uint32_t supportedModes = Meter_supportedModes(this);
-   if (!supportedModes) {
-      supportedModes = METERMODE_DEFAULT_SUPPORTED;
-   }
    assert(supportedModes);
 
    assert(this->mode < UINT32_WIDTH);
