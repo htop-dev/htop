@@ -73,6 +73,7 @@ const MeterClass SwapMeter_class = {
    },
    .updateValues = SwapMeter_updateValues,
    .defaultMode = BAR_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = SWAP_METER_ITEMCOUNT,
    .total = 100.0,
    .attributes = SwapMeter_attributes,

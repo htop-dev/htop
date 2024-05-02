@@ -109,6 +109,7 @@ const MeterClass MemoryMeter_class = {
    },
    .updateValues = MemoryMeter_updateValues,
    .defaultMode = BAR_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = MEMORY_METER_ITEMCOUNT,
    .total = 100.0,
    .attributes = MemoryMeter_attributes,

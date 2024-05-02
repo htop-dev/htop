@@ -99,6 +99,7 @@ const MeterClass HugePageMeter_class = {
    },
    .updateValues = HugePageMeter_updateValues,
    .defaultMode = BAR_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = ARRAYSIZE(HugePageMeter_active_labels),
    .total = 100.0,
    .attributes = HugePageMeter_attributes,

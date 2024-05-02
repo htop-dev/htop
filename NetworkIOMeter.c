@@ -169,6 +169,7 @@ const MeterClass NetworkIOMeter_class = {
    },
    .updateValues = NetworkIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 2,
    .total = 100.0,
    .attributes = NetworkIOMeter_attributes,

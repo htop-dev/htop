@@ -91,6 +91,7 @@ const MeterClass ZfsArcMeter_class = {
    },
    .updateValues = ZfsArcMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 6,
    .total = 100.0,
    .attributes = ZfsArcMeter_attributes,

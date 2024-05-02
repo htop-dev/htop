@@ -62,6 +62,7 @@ const MeterClass BatteryMeter_class = {
    },
    .updateValues = BatteryMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 1,
    .total = 100.0,
    .attributes = BatteryMeter_attributes,
