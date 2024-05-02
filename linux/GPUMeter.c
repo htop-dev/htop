@@ -170,6 +170,7 @@ const MeterClass GPUMeter_class = {
    .done = GPUMeter_done,
    .updateValues = GPUMeter_updateValues,
    .defaultMode = BAR_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = ARRAYSIZE(GPUMeter_engineData) + 1,
    .total = 100.0,
    .attributes = GPUMeter_attributes,

@@ -72,6 +72,7 @@ const MeterClass TasksMeter_class = {
    },
    .updateValues = TasksMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 4,
    .total = 100.0,
    .attributes = TasksMeter_attributes,

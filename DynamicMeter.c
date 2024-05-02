@@ -123,6 +123,7 @@ const MeterClass DynamicMeter_class = {
    .getCaption = DynamicMeter_getCaption,
    .getUiName = DynamicMeter_getUiName,
    .defaultMode = TEXT_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 0,
    .total = 100.0,
    .attributes = DynamicMeter_attributes,

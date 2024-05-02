@@ -108,6 +108,7 @@ const MeterClass FileDescriptorMeter_class = {
    },
    .updateValues = FileDescriptorMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 2,
    .total = 65536.0,
    .attributes = FileDescriptorMeter_attributes,

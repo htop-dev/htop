@@ -75,6 +75,7 @@ const MeterClass ZramMeter_class = {
    },
    .updateValues = ZramMeter_updateValues,
    .defaultMode = BAR_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = ZRAM_METER_ITEMCOUNT,
    .total = 100.0,
    .attributes = ZramMeter_attributes,
