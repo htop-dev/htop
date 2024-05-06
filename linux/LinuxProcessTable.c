@@ -79,10 +79,10 @@ static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* m
 }
 
 static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
-   register uint64_t result = 0;
+   uint64_t result = 0;
 
    if (!maxlen)
-      --maxlen;
+      maxlen = 20; // length of maximum value of 18446744073709551615
 
    while (maxlen-- && **str >= '0' && **str <= '9') {
       result *= 10;
@@ -91,6 +91,34 @@ static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
    }
 
    return result;
+}
+
+static long long fast_strtoll_dec(char** str, int maxlen) {
+   bool neg = false;
+
+   if (**str == '-') {
+      neg = true;
+      (*str)++;
+   }
+
+   unsigned long long res = fast_strtoull_dec(str, maxlen);
+   assert(res <= LLONG_MAX);
+   long long result = (long long)res;
+
+   return neg ? -result : result;
+}
+
+static long fast_strtol_dec(char** str, int maxlen) {
+   long long result = fast_strtoll_dec(str, maxlen);
+   assert(result <= LONG_MAX);
+   assert(result >= LONG_MIN);
+   return (long)result;
+}
+
+static unsigned long fast_strtoul_dec(char** str, int maxlen) {
+   unsigned long long result = fast_strtoull_dec(str, maxlen);
+   assert(result <= ULONG_MAX);
+   return (unsigned long)result;
 }
 
 static inline uint64_t fast_strtoull_hex(char** str, int maxlen) {
@@ -306,71 +334,71 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 2;
 
    /* (4) ppid  -  %d */
-   Process_setParent(process, strtol(location, &location, 10));
+   Process_setParent(process, fast_strtol_dec(&location, 0));
    location += 1;
 
    /* (5) pgrp  -  %d */
-   process->pgrp = strtol(location, &location, 10);
+   process->pgrp = fast_strtol_dec(&location, 0);
    location += 1;
 
    /* (6) session  -  %d */
-   process->session = strtol(location, &location, 10);
+   process->session = fast_strtol_dec(&location, 0);
    location += 1;
 
    /* (7) tty_nr  -  %d */
-   process->tty_nr = strtoul(location, &location, 10);
+   process->tty_nr = fast_strtoul_dec(&location, 0);
    location += 1;
 
    /* (8) tpgid  -  %d */
-   process->tpgid = strtol(location, &location, 10);
+   process->tpgid = fast_strtol_dec(&location, 0);
    location += 1;
 
    /* (9) flags  -  %u */
-   lp->flags = strtoul(location, &location, 10);
+   lp->flags = fast_strtoul_dec(&location, 0);
    location += 1;
 
    /* (10) minflt  -  %lu */
-   process->minflt = strtoull(location, &location, 10);
+   process->minflt = fast_strtoull_dec(&location, 0);
    location += 1;
 
    /* (11) cminflt  -  %lu */
-   lp->cminflt = strtoull(location, &location, 10);
+   lp->cminflt = fast_strtoull_dec(&location, 0);
    location += 1;
 
    /* (12) majflt  -  %lu */
-   process->majflt = strtoull(location, &location, 10);
+   process->majflt = fast_strtoull_dec(&location, 0);
    location += 1;
 
    /* (13) cmajflt  -  %lu */
-   lp->cmajflt = strtoull(location, &location, 10);
+   lp->cmajflt = fast_strtoull_dec(&location, 0);
    location += 1;
 
    /* (14) utime  -  %lu */
-   lp->utime = LinuxProcessTable_adjustTime(lhost, strtoull(location, &location, 10));
+   lp->utime = LinuxProcessTable_adjustTime(lhost, fast_strtoull_dec(&location, 0));
    location += 1;
 
    /* (15) stime  -  %lu */
-   lp->stime = LinuxProcessTable_adjustTime(lhost, strtoull(location, &location, 10));
+   lp->stime = LinuxProcessTable_adjustTime(lhost, fast_strtoull_dec(&location, 0));
    location += 1;
 
    /* (16) cutime  -  %ld */
-   lp->cutime = LinuxProcessTable_adjustTime(lhost, strtoull(location, &location, 10));
+   lp->cutime = LinuxProcessTable_adjustTime(lhost, fast_strtoull_dec(&location, 0));
    location += 1;
 
    /* (17) cstime  -  %ld */
-   lp->cstime = LinuxProcessTable_adjustTime(lhost, strtoull(location, &location, 10));
+   lp->cstime = LinuxProcessTable_adjustTime(lhost, fast_strtoull_dec(&location, 0));
    location += 1;
 
    /* (18) priority  -  %ld */
-   process->priority = strtol(location, &location, 10);
+   process->priority = fast_strtol_dec(&location, 0);
    location += 1;
 
    /* (19) nice  -  %ld */
-   process->nice = strtol(location, &location, 10);
+   process->nice = fast_strtol_dec(&location, 0);
    location += 1;
 
    /* (20) num_threads  -  %ld */
-   process->nlwp = strtol(location, &location, 10);
+   process->nlwp = fast_strtol_dec(&location, 0);
    location += 1;
 
    /* Skip (21) itrealvalue  -  %ld */
@@ -378,7 +406,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
 
    /* (22) starttime  -  %llu */
    if (process->starttime_ctime == 0) {
-      process->starttime_ctime = lhost->boottime + LinuxProcessTable_adjustTime(lhost, strtoll(location, &location, 10)) / 100;
+      process->starttime_ctime = lhost->boottime + LinuxProcessTable_adjustTime(lhost, fast_strtoll_dec(&location, 0)) / 100;
    } else {
       location = strchr(location, ' ');
    }
@@ -392,7 +420,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    assert(location != NULL);
 
    /* (39) processor  -  %d */
-   process->processor = strtol(location, &location, 10);
+   process->processor = fast_strtol_dec(&location, 0);
 
    /* Ignore further fields */
 
@@ -662,7 +690,7 @@ static void LinuxProcessTable_readMaps(LinuxProcess* process, openat_arg_t procF
       if (!map_devmaj && !map_devmin)
          continue;
 
-      map_inode = fast_strtoull_dec(&readptr, 20);
+      map_inode = fast_strtoull_dec(&readptr, 0);
       if (!map_inode)
          continue;
 
