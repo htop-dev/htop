@@ -1172,6 +1172,12 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
 
       /* newline used as delimiter - when forming the mergedCommand, newline is
        * converted to space by Process_makeCommandStr */
+      if (argChar == '\n') {
+         /* Set to some other non-printable character */
+         command[i] = '\r';
+         continue;
+      }
+
       if (argChar == '\0') {
          command[i] = '\n';
 
