@@ -448,6 +448,11 @@ else
    AC_SEARCH_LIBS([keypad], [tinfo])
 fi
 
+# test for KEY_RESIZE being defined in one of the (n)curses header files
+AC_CHECK_DECLS([KEY_RESIZE], [],
+   [AC_MSG_ERROR([can not find required ncurses KEY_RESIZE definition, compile ncurses with --enable-sigwinch])],
+      [#include "ProvideCurses.h"])
+
 if test "$enable_static" = yes; then
    AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
 fi
