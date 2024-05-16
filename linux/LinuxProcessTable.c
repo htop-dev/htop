@@ -1571,6 +1571,32 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       if (!LinuxProcessTable_updateUser(host, proc, procFd, mainTask))
          goto errorReadingProcess;
 
+      /* Check if the process is inside a different PID namespace. */
+      if (proc->isRunningInContainer == TRI_INITIAL && rootPidNs != (ino_t)-1) {
+         struct stat sb;
+#if defined(HAVE_OPENAT) && defined(HAVE_FSTATAT)
+         int res = fstatat(procFd, "ns/pid", &sb, 0);
+#else
+         char path[PATH_MAX];
+         xSnprintf(path, sizeof(path), "%s/ns/pid", procFd);
+         int res = stat(path, &sb);
+#endif
+         if (res == 0) {
+            proc->isRunningInContainer = (sb.st_ino != rootPidNs) ? TRI_ON : TRI_OFF;
+         }
+      }
+
+      if (ss->flags & PROCESS_FLAG_LINUX_CTXT
+         || ((hideRunningInContainer || ss->flags & PROCESS_FLAG_LINUX_CONTAINER) && proc->isRunningInContainer == TRI_INITIAL)
+#ifdef HAVE_VSERVER
+         || ss->flags & PROCESS_FLAG_LINUX_VSERVER
+#endif
+      ) {
+         proc->isRunningInContainer = TRI_OFF;
+         if (!LinuxProcessTable_readStatusFile(proc, procFd))
+            goto errorReadingProcess;
+      }
+
       if (!preExisting) {
 
          #ifdef HAVE_OPENVZ
@@ -1602,32 +1628,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
                LinuxProcessList_readComm(proc, procFd);
             }
          }
-      }
-
-      /* Check if the process in inside a different PID namespace. */
-      if (proc->isRunningInContainer == TRI_INITIAL && rootPidNs != (ino_t)-1) {
-         struct stat sb;
-#if defined(HAVE_OPENAT) && defined(HAVE_FSTATAT)
-         int res = fstatat(procFd, "ns/pid", &sb, 0);
-#else
-         char path[4096];
-         xSnprintf(path, sizeof(path), "%s/ns/pid", procFd);
-         int res = stat(path, &sb);
-#endif
-         if (res == 0) {
-            proc->isRunningInContainer = (sb.st_ino != rootPidNs) ? TRI_ON : TRI_OFF;
-         }
-      }
-
-      if (ss->flags & PROCESS_FLAG_LINUX_CTXT
-         || ((hideRunningInContainer || ss->flags & PROCESS_FLAG_LINUX_CONTAINER) && proc->isRunningInContainer == TRI_INITIAL)
-#ifdef HAVE_VSERVER
-         || ss->flags & PROCESS_FLAG_LINUX_VSERVER
-#endif
-      ) {
-         proc->isRunningInContainer = TRI_OFF;
-         if (!LinuxProcessTable_readStatusFile(proc, procFd))
-            goto errorReadingProcess;
       }
 
       /*
@@ -1759,6 +1759,7 @@ errorReadingProcess:
              */
          } else {
             /* A really short-lived process that we don't have full info about */
+            assert(ProcessTable_findProcess(pt, Process_getPid(proc)) == NULL);
             Process_delete((Object*)proc);
          }
       }
