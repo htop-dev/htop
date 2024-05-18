@@ -273,6 +273,18 @@ AC_LINK_IFELSE([
    [AC_MSG_RESULT(no)
    AC_MSG_ERROR([can not find required macros: NAN, isgreater() and isgreaterequal()])])
 
+AC_MSG_CHECKING(for alignas support)
+AC_COMPILE_IFELSE([
+   AC_LANG_SOURCE(
+      [[
+         #include <stdalign.h>
+         alignas(128) char buffer[128];
+      ]]
+   )],
+   AC_DEFINE([HAVE_ALIGNAS], 1, [The alignas C11 feature is supported.])
+   AC_MSG_RESULT(yes),
+   AC_MSG_RESULT(no))
+
 # ----------------------------------------------------------------------
 
 

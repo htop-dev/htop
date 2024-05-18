@@ -56,6 +56,9 @@ int LibSensors_init(void) {
 
 #else
 
+   DECLARE_ELF_NOTE_DLOPEN("[{\"soname\":[\"libsensors.so\",\"libsensors.so.5\",\"libsensors.so.4\"],\"feature\":"\
+      "\"sensors\",\"description:\":\"Enables hardware sensor support\",\"priority\":\"recommended\"}]")
+
    if (!dlopenHandle) {
       /* Find the unversioned libsensors.so (symlink) and prefer that, but Debian has .so.5 and Fedora .so.4 without
          matching symlinks (unless people install the -dev packages) */

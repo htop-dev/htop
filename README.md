@@ -162,6 +162,9 @@ On most BSD systems `kvm` is a requirement to read kernel information.
 
 More information on required and optional dependencies can be found in [configure.ac](configure.ac).
 
+#### ELF Note
+The optional runtime dependencies are also embedded in the binary via the ELF note `.note.dlopen`. See the [specification](https://systemd.io/ELF_DLOPEN_METADATA/) for details.
+
 ## Usage
 See the manual page (`man htop`) or the help menu (**F1** or **h** inside `htop`) for a list of supported key commands.
 

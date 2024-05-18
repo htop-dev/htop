@@ -98,6 +98,9 @@ static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
 static int updateViaLib(bool user) {
    SystemdMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
 #ifndef BUILD_STATIC
+   DECLARE_ELF_NOTE_DLOPEN("[{\"soname\":[\"libsystemd.so.0\"],\"feature\":\"systemd\",\"description:\":"\
+      "\"Enables systemd support\",\"priority\":\"suggested\"}]")
+
    if (!dlopenHandle) {
       dlopenHandle = dlopen("libsystemd.so.0", RTLD_LAZY);
       if (!dlopenHandle)

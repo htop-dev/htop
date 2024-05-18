@@ -118,6 +118,15 @@ in the source distribution for its full text.
 #define IGNORE_WCASTQUAL_END
 #endif
 
+#if defined(__clang__)
+#define IGNORE_W11EXTENSIONS_BEGIN  _Pragma("clang diagnostic push") \
+                                    _Pragma("clang diagnostic ignored \"-Wc11-extensions\"")
+#define IGNORE_W11EXTENSIONS_END    _Pragma("clang diagnostic pop")
+#else
+#define IGNORE_W11EXTENSIONS_BEGIN
+#define IGNORE_W11EXTENSIONS_END
+#endif
+
 /* Cheaper function for checking NaNs. Unlike the standard isnan(), this may
    throw an FP exception on a "signaling NaN".
    (ISO/IEC TS 18661-1 and the C23 standard stated that isnan() throws no
@@ -142,4 +151,32 @@ static inline unsigned long long saturatingSub(unsigned long long a, unsigned lo
    return a > b ? a - b : 0;
 }
 
+#ifdef HAVE_ALIGNAS
+#include <stdalign.h>
+
+#define ELF_NOTE_DLOPEN_OWNER "FDO"
+#define ELF_NOTE_DLOPEN_TYPE  UINT32_C(0x407c0c0a)
+
+#define DECLARE_ELF_NOTE_DLOPEN(content) \
+   IGNORE_W11EXTENSIONS_BEGIN                                                                      \
+   __attribute__((used, section(".note.dlopen"))) alignas(sizeof(uint32_t)) static const struct {  \
+      struct {                                                                                     \
+         uint32_t n_namesz, n_descsz, n_type;                                                      \
+      } nhdr;                                                                                      \
+      char name[sizeof(ELF_NOTE_DLOPEN_OWNER)];                                                    \
+      alignas(sizeof(uint32_t)) char dlopen_content[sizeof(content)];                              \
+   } variable_name = {                                                                             \
+      .nhdr = {                                                                                    \
+         .n_namesz = sizeof(ELF_NOTE_DLOPEN_OWNER),                                                \
+         .n_descsz = sizeof(content),                                                              \
+         .n_type   = ELF_NOTE_DLOPEN_TYPE,                                                         \
+      },                                                                                           \
+      .name = ELF_NOTE_DLOPEN_OWNER,                                                               \
+      .dlopen_content = content,                                                                   \
+   };                                                                                              \
+   IGNORE_W11EXTENSIONS_END
+#else
+#define DECLARE_ELF_NOTE_DLOPEN()
 #endif
+
+#endif /* HEADER_Macros */
