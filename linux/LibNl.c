@@ -75,6 +75,12 @@ static void unload_libnl(void) {
 }
 
 static int load_libnl(void) {
+
+   DECLARE_ELF_NOTE_DLOPEN("[{\"soname\":[\"libnl-3.so\",\"libnl-3.so.200\"],\"feature\":\"delay-accounting\"," \
+      "\"description:\":\"Enables delay accounting support\",\"priority\":\"recommended\"},{\"soname\":[" \
+      "\"libnl-genl-3.so\",\"libnl-genl-3.so.200\"],\"feature\":\"delay-accounting\",\"description:\":"\
+      "\"Enables delay accounting support\",\"priority\":\"recommended\"}]")
+
    if (libnlHandle && libnlGenlHandle)
       return 0;
 
