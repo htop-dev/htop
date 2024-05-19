@@ -33,7 +33,7 @@ static void DateTimeMeter_updateValues(Meter* this) {
       this->total = 365;
    }
    this->values[0] = lt->tm_yday;
-   strftime(this->txtBuffer, sizeof(this->txtBuffer), "%F %H:%M:%S", lt);
+   strftime(this->txtBuffer, sizeof(this->txtBuffer), "%F %H:%M:%S %Z", lt);
 }
 
 const MeterClass DateTimeMeter_class = {
