@@ -35,11 +35,13 @@ read_merge_pct.caption = Percentage reads merged before queued
 read_merge_pct.format = percent
 
 read_await.heading = RAWAIT
-read_await.metric = disk.dev.r_await
+read_await.metric = delta(disk.dev.read_rawactive) / delta(disk.dev.read)
+read_await.caption = Average time read requests queued and serviced
 read_await.default = false
 
 read_avqsz.heading = RARQSZ
-read_avqsz.metric = disk.dev.r_avg_rqsz
+read_avqsz.metric = rescale(delta(disk.dev.read_bytes), "kbyte") / delta(disk.dev.read)
+read_avqsz.caption = Average I/O request size for reads to the device
 read_avqsz.default = false
 
 write.heading = WR/S
@@ -61,11 +63,13 @@ write_merge_pct.caption = Percentage writes merged before queued
 write_merge_pct.format = percent
 
 write_await.heading = WAWAIT
-write_await.metric = disk.dev.w_await
+write_await.metric = delta(disk.dev.write_rawactive) / delta(disk.dev.write)
+write_await.caption = Average time write requests queued and serviced
 write_await.default = false
 
 write_avqsz.heading = WARQSZ
-write_avqsz.metric = disk.dev.w_avg_rqsz
+write_avqsz.metric = rescale(delta(disk.dev.write_bytes), "kbyte") / delta(disk.dev.write)
+write_avqsz.caption = Average I/O request size for writes to the device
 write_avqsz.default = false
 
 discard.heading = DR/S
@@ -89,11 +93,13 @@ discard_merge_pct.format = percent
 discard_merge_pct.default = false
 
 discard_await.heading = DAWAIT
-discard_await.metric = disk.dev.d_await
+discard_await.metric = delta(disk.dev.discard_rawactive) / delta(disk.dev.discard)
+discard_await.caption = Average time discard requests queued and serviced
 discard_await.default = false
 
 discard_avqsz.heading = DARQSZ
-discard_avqsz.metric = disk.dev.d_avg_rqsz
+discard_avqsz.metric = rescale(delta(disk.dev.discard_bytes), "kbyte") / delta(disk.dev.discard)
+discard_avqsz.caption = Average I/O request size for discards to the device
 discard_avqsz.default = false
 
 flush.heading = F/S
@@ -102,13 +108,15 @@ flush.default = false
 flush.caption = Flushes per second
 
 flush_await.heading = FAWAIT
-flush_await.metric = disk.dev.f_await
+flush_await.metric = delta(disk.dev.flush_rawactive) / delta(disk.dev.flush)
+flush_await.caption = Average time that flush requests were queued and serviced
 flush_await.default = false
 
 qlen.heading = AQU-SZ
-qlen.metric = disk.dev.avg_qlen
+qlen.metric = rate(disk.dev.read_rawactive) + rate(disk.dev.write_rawactive)
+qlen.caption = Average read and write I/O queue length to the device
 
 util.heading = UTIL%
-util.metric = 100 * disk.dev.util
-util.caption = Perentage device utilization
+util.metric = 100 * rate(disk.dev.avactive)
+util.caption = Perentage of time device was busy processing requests
 util.format = percent
