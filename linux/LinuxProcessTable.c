@@ -1099,6 +1099,38 @@ static void LinuxProcessTable_readCwd(LinuxProcess* process, openat_arg_t procFd
 }
 
 /*
+ * Read /proc/<pid>/syscall (thread-specific data)
+ */
+#ifdef HAVE_SYSCALL
+static void LinuxProcessTable_readSyscall(LinuxProcess* process, openat_arg_t procFd) {
+   char buffer[1024];
+
+   ssize_t r = xReadfileat(procFd, "syscall", buffer, sizeof(buffer));
+   if (r <= 0) {
+      goto failed;
+   }
+
+   char* numPtr = buffer;
+   process->syscall_num = fast_strtoull_dec(&numPtr, r);
+   if (*numPtr == ' ') {
+      process->syscall_state = SYSCALL_STATE_CALLING;
+      Row_updateFieldWidth(SYSCALL, snprintf(NULL, 0, "%d", process->syscall_num));
+      return;
+   }
+
+   if (String_startsWith(buffer, "running")) {
+      process->syscall_state = SYSCALL_STATE_RUNNING;
+      Row_updateFieldWidth(SYSCALL, strlen("running"));
+      return;
+   }
+
+failed:
+   process->syscall_state = SYSCALL_STATE_NA;
+   Row_updateFieldWidth(SYSCALL, strlen("N/A"));
+}
+#endif /* HAVE_SYSCALL */
+
+/*
  * Read /proc/<pid>/exe (process-shared data)
  */
 static void LinuxProcessList_readExe(Process* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
@@ -1693,6 +1725,12 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       if (ss->flags & PROCESS_FLAG_CWD) {
          LinuxProcessTable_readCwd(lp, procFd, mainTask);
       }
+
+      #ifdef HAVE_SYSCALL
+      if (ss->flags & PROCESS_FLAG_LINUX_SYSCALL) {
+         LinuxProcessTable_readSyscall(lp, procFd);
+      }
+      #endif
 
       if ((ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP) && this->haveAutogroup) {
          LinuxProcessTable_readAutogroup(lp, procFd, mainTask);

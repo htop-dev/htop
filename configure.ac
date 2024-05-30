@@ -659,6 +659,27 @@ case "$enable_capabilities" in
 esac
 
 
+AC_ARG_ENABLE([syscall],
+   [AS_HELP_STRING([--enable-syscall],
+   [enable 'syscall' monitoring. @<:@default=check@:>@])],
+   [],
+   [enable_syscall=check]
+)
+
+if test "x$enable_syscall" = xcheck; then
+   if "$cross_compiling" != no; then
+      enable_syscall=yes
+   elif test -f /proc/self/syscall && test -s /proc/self/syscall; then
+      enable_syscall=yes
+   else
+      enable_syscall=no
+   fi
+fi
+if test "x$enable_syscall" = xyes; then
+   AC_DEFINE([HAVE_SYSCALL], [1], [Define if syscall monitoring enabled.])
+fi
+
+
 AC_ARG_ENABLE([delayacct],
               [AS_HELP_STRING([--enable-delayacct],
                               [enable Linux delay accounting support; requires pkg-config, libnl-3 and libnl-genl-3 @<:@default=check@:>@])],
@@ -859,6 +880,7 @@ AC_MSG_RESULT([
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $enable_sensors
   (Linux) capabilities:      $enable_capabilities
+  (Linux) syscall:           $enable_syscall
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   unwind:                    $enable_unwind
