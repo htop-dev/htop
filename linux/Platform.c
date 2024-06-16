@@ -21,8 +21,13 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/ptrace.h>
 #include <sys/sysmacros.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <limits.h>
 
+#include "BacktraceScreen.h"
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
 #include "Compat.h"
@@ -50,6 +55,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "Vector.h"
 #include "XUtils.h"
 #include "linux/GPUMeter.h"
 #include "linux/IOPriority.h"
@@ -67,6 +73,14 @@ in the source distribution for its full text.
 
 #ifdef HAVE_LIBCAP
 #include <sys/capability.h>
+#endif
+
+#ifdef HAVE_LIBIBERTY
+#include <libiberty/demangle.h>
+#endif
+
+#ifdef HAVE_LIBUNWIND_PTRACE
+#include <libunwind-ptrace.h>
 #endif
 
 #ifdef HAVE_SENSORS_SENSORS_H
@@ -675,6 +689,106 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    fclose(fp);
 
    return true;
+}
+
+void Platform_getBacktrace(Vector* frames, const Process* process, char** error) {
+#ifdef HAVE_LIBUNWIND_PTRACE
+   unw_addr_space_t addrSpace = unw_create_addr_space(&_UPT_accessors, 0);
+   if (!addrSpace) {
+      xAsprintf(error, "Unable to initialize libunwind.");
+      return;
+   }
+
+   const pid_t pid = Process_getPid(process);
+
+   if (pid <= 0) {
+      xAsprintf(error, "Unable to get the pid");
+      goto addr_space_error;
+   }
+
+   if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
+      int ptraceErrno = errno;
+      xAsprintf(error, "ptrace: %s (%d)", strerror(ptraceErrno), ptraceErrno);
+      goto addr_space_error;
+   }
+
+   int waitStatus = 0;
+   if (wait(&waitStatus) == -1) {
+      int waitErrno = errno;
+      xAsprintf(error, "wait: %s (%d)", strerror(waitErrno), waitErrno);
+      goto ptrace_error;
+   }
+
+   if (WIFSTOPPED(waitStatus) == 0) {
+      *error = xStrdup("The process chosen is not stopped correctly.");
+      goto ptrace_error;
+   }
+
+   struct UPT_info* context = _UPT_create(pid);
+   if (!context) {
+      xAsprintf(error, "Unable to create the context of libunwind-ptrace");
+      goto ptrace_error;
+   }
+
+   unw_cursor_t cursor;
+   int ret = unw_init_remote(&cursor, addrSpace, context);
+   if (ret < 0) {
+      xAsprintf(error, "libunwind cursor: ret=%d", ret);
+      goto context_error;
+   }
+
+   int index = 0;
+   do {
+      char procName[2048] = "?";
+      unw_word_t offset;
+      unw_word_t pc;
+
+      if (unw_get_proc_name(&cursor, procName, sizeof(procName), &offset) == 0) {
+         ret = unw_get_reg(&cursor, UNW_REG_IP, &pc);
+         if (ret < 0) {
+            xAsprintf(error, "unable to get register rip : %d", ret);
+            break;
+         }
+
+         BacktraceFrame* frame = BacktraceFrame_new();
+         frame->index = index;
+         frame->address = pc;
+         frame->offset = offset;
+         frame->isSignalFrame = unw_is_signal_frame(&cursor);
+#if defined(HAVE_LIBIBERTY)
+         char* demangledName = cplus_demangle(procName,
+                                              DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_RET_POSTFIX);
+         frame->demangleFunctionName = demangledName;
+#endif
+
+         frame->functionName = xStrdup(procName);
+
+#if defined(HAVE_LIBUNWIND_ELF_FILENAME)
+         unw_word_t offsetElfFileName;
+         char elfFileName[2048] = { 0 };
+         if (unw_get_elf_filename(&cursor, elfFileName, sizeof(elfFileName), &offsetElfFileName) == 0) {
+            frame->objectPath = xStrdup(elfFileName);
+         }
+#endif
+
+         Vector_add(frames, (Object*)frame);
+      }
+      index++;
+   } while (unw_step(&cursor) > 0);
+
+context_error:
+   _UPT_destroy(context);
+
+ptrace_error:
+   ptrace(PTRACE_DETACH, pid, 0, 0);
+
+addr_space_error:
+   unw_destroy_addr_space(addrSpace);
+#else
+   (void)frames;
+   (void)process;
+   xAsprintf(error, "The backtrace screen is not implemented");
+#endif
 }
 
 // Linux battery reading by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).
