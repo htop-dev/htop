@@ -144,6 +144,11 @@ To install on the local system run `make install`. By default `make install` ins
     - default: *no*
     - possible values:
       - unwind-ptrace: use unwind-ptrace to get the backtraces
+  * `--enable-demangling`:
+    enable the demangling support for the backtraces
+    - default: *no*
+    - possible values:
+      - libiberty: use the libierty to demangle the name
 
 
 ## Runtime dependencies:
