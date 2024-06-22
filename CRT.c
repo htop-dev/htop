@@ -1001,6 +1001,27 @@ void CRT_setMouse(bool enabled) {
 }
 #endif
 
+static bool terminalSupportsDefinedKeys(const char* termType) {
+   if (!termType) {
+      return false;
+   }
+
+   switch (termType[0]) {
+   case 'v':
+      if (String_eq(termType, "vt220")) {
+         return true;
+      }
+      break;
+   case 'x':
+      if (String_eq(termType, "xterm")) {
+         return true;
+      }
+      break;
+   }
+
+   return false;
+}
+
 void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnExit) {
    initscr();
 
@@ -1046,7 +1067,7 @@ void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnEx
       CRT_scrollHAmount = 5;
    }
 
-   if (termType && (String_startsWith(termType, "xterm") || String_eq(termType, "vt220"))) {
+   if (terminalSupportsDefinedKeys(termType)) {
 #ifdef HTOP_NETBSD
 #define define_key(s_, k_) define_key((char*)s_, k_)
 IGNORE_WCASTQUAL_BEGIN
