@@ -236,9 +236,6 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          /* Feature name IDs start at 1, adjust to start at 0 to match data indices */
          tempID--;
 
-         if (tempID > existingCPUs)
-            continue;
-
          const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
          if (!subFeature)
             continue;
@@ -283,6 +280,9 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
             if (skip)
                continue;
          }
+
+         if (tempID > existingCPUs)
+            continue;
 
          /* If already set, e.g. Ryzen reporting platform temperature for each die, use the bigger one */
          if (isNaN(data[tempID])) {
