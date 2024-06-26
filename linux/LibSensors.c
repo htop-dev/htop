@@ -154,6 +154,12 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
 }
 
 int LibSensors_countCCDs(void) {
+
+#ifndef BUILD_STATIC
+   if (!dlopenHandle)
+      return 0;
+#endif /* !BUILD_STATIC */
+
    int ccds = 0;
 
    int n = 0;
