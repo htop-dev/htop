@@ -154,6 +154,7 @@ const MeterClass DiskIOMeter_class = {
    .defaultMode = TEXT_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 1,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = DiskIOMeter_attributes,
    .name = "DiskIO",
