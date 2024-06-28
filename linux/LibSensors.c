@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +36,7 @@ in the source distribution for its full text.
 #define sym_sensors_get_features sensors_get_features
 #define sym_sensors_get_subfeature sensors_get_subfeature
 #define sym_sensors_get_value sensors_get_value
+#define sym_sensors_get_label sensors_get_label
 
 #else
 
@@ -44,6 +46,7 @@ static const sensors_chip_name* (*sym_sensors_get_detected_chips)(const sensors_
 static const sensors_feature* (*sym_sensors_get_features)(const sensors_chip_name*, int*);
 static const sensors_subfeature* (*sym_sensors_get_subfeature)(const sensors_chip_name*, const sensors_feature*, sensors_subfeature_type);
 static int (*sym_sensors_get_value)(const sensors_chip_name*, int, double*);
+static char* (*sym_sensors_get_label)(const sensors_chip_name*, const sensors_feature *feature);
 
 static void* dlopenHandle = NULL;
 
@@ -82,6 +85,7 @@ int LibSensors_init(void) {
       resolve(sensors_get_features);
       resolve(sensors_get_subfeature);
       resolve(sensors_get_value);
+      resolve(sensors_get_label);
 
       #undef resolve
    }
@@ -149,6 +153,38 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
    return -1;
 }
 
+int LibSensors_countCCDs(void) {
+
+#ifndef BUILD_STATIC
+   if (!dlopenHandle)
+      return 0;
+#endif /* !BUILD_STATIC */
+
+   int ccds = 0;
+
+   int n = 0;
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+      int m = 0;
+      for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
+         if (feature->type != SENSORS_FEATURE_TEMP)
+            continue;
+
+         if (!feature->name || !String_startsWith(feature->name, "temp"))
+            continue;
+
+         char *label = sym_sensors_get_label(chip, feature);
+         if (label) {
+            if (String_startsWith(label, "Tccd")) {
+               ccds++;
+            }
+            free(label);
+         }
+      }
+   }
+
+   return ccds;
+}
+
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
    assert(existingCPUs > 0 && existingCPUs < 16384);
 
@@ -163,6 +199,8 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
    unsigned int coreTempCount = 0;
    int topPriority = 99;
+
+   int ccdID = 0;
 
    int n = 0;
    for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
@@ -181,6 +219,8 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
       topPriority = priority;
 
+      int physicalID = -1;
+
       int m = 0;
       for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
          if (feature->type != SENSORS_FEATURE_TEMP)
@@ -196,9 +236,6 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          /* Feature name IDs start at 1, adjust to start at 0 to match data indices */
          tempID--;
 
-         if (tempID > existingCPUs)
-            continue;
-
          const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
          if (!subFeature)
             continue;
@@ -206,6 +243,45 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          double temp;
          int r = sym_sensors_get_value(chip, subFeature->number, &temp);
          if (r != 0)
+            continue;
+
+         char *label = sym_sensors_get_label(chip, feature);
+         if (label) {
+            bool skip = true;
+            /* Intel coretemp names, labels mention package and phyiscal id */
+            if (String_startsWith(label, "Package id ")) {
+               physicalID = strtoul(label + strlen("Package id "), NULL, 10);
+            } else if (String_startsWith(label, "Physical id ")) {
+               physicalID = strtoul(label + strlen("Physical id "), NULL, 10);
+            } else if (String_startsWith(label, "Core ")) {
+               int coreID = strtoul(label + strlen("Core "), NULL, 10);
+               for (size_t i = 1; i < existingCPUs + 1; i++) {
+                  if (cpus[i].physicalID == physicalID && cpus[i].coreID == coreID) {
+                     data[i] = temp;
+                     coreTempCount++;
+                  }
+               }
+            }
+
+            /* AMD k10temp/zenpower names, only CCD is known */
+            else if (String_startsWith(label, "Tccd")) {
+               for (size_t i = 1; i <= existingCPUs; i++) {
+                  if (cpus[i].ccdID == ccdID) {
+                     data[i] = temp;
+                     coreTempCount++;
+                  }
+               }
+               ccdID++;
+            } else {
+               skip = false;
+            }
+
+            free(label);
+            if (skip)
+               continue;
+         }
+
+         if (tempID > existingCPUs)
             continue;
 
          /* If already set, e.g. Ryzen reporting platform temperature for each die, use the bigger one */
