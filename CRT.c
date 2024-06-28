@@ -1007,6 +1007,24 @@ static bool terminalSupportsDefinedKeys(const char* termType) {
    }
 
    switch (termType[0]) {
+   case 'a':
+      if (String_eq(termType, "alacritty")) {
+         return true;
+      }
+      break;
+   case 's':
+      if (termType[1] == 't' && (termType[2] == '-' || !termType[2])) {
+         return true;
+      }
+      if (String_eq(termType, "screen")) {
+         return true;
+      }
+      break;
+   case 't':
+      if (String_eq(termType, "tmux")) {
+         return true;
+      }
+      break;
    case 'v':
       if (String_eq(termType, "vt220")) {
          return true;
