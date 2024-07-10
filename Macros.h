@@ -69,6 +69,16 @@ in the source distribution for its full text.
 
 #endif /* HAVE_ATTR_NONNULL */
 
+#ifdef HAVE_ATTR_RETNONNULL
+
+#define ATTR_RETNONNULL                 __attribute__((returns_nonnull))
+
+#else
+
+#define ATTR_RETNONNULL
+
+#endif /* HAVE_ATTR_RETNONNULL */
+
 #ifdef HAVE_ATTR_ALLOC_SIZE
 
 #define ATTR_ALLOC_SIZE1(a)             __attribute__((alloc_size (a)))
