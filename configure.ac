@@ -235,6 +235,21 @@ AC_COMPILE_IFELSE([
    AC_MSG_RESULT(no))
 CFLAGS="$old_CFLAGS"
 
+AC_MSG_CHECKING(for returns_nonnull)
+old_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wno-error -Werror=attributes"
+AC_COMPILE_IFELSE([
+   AC_LANG_SOURCE(
+      [[
+         /* Attribute supported in GCC 4.9 or later */
+         __attribute__((returns_nonnull)) void* foo(void);
+      ]]
+   )],
+   AC_DEFINE([HAVE_ATTR_RETNONNULL], 1, [The returns_nonnull attribute is supported.])
+   AC_MSG_RESULT(yes),
+   AC_MSG_RESULT(no))
+CFLAGS="$old_CFLAGS"
+
 AC_MSG_CHECKING(for NaN support)
 dnl Note: AC_RUN_IFELSE does not try compiling the program at all when
 dnl $cross_compiling is 'yes'.
