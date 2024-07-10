@@ -63,7 +63,7 @@ void* xCalloc(size_t nmemb, size_t size) {
 
 void* xRealloc(void* ptr, size_t size) {
    assert(size > 0);
-   void* data = size ? realloc(ptr, size) : NULL; // deepcode ignore MemoryLeakOnRealloc: this goes to fail()
+   void* data = realloc(ptr, size);
    if (!data) {
       /* free'ing ptr here causes an indirect memory leak if pointers
        * are held as part of an potential array referenced in ptr.
