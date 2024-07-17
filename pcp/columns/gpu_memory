@@ -1,0 +1,75 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[drm_memory_cpu]
+heading = DCPU
+width = 6
+metric = proc.fdinfo.drm_memory_cpu
+description = CPU memory which can be used by the GPU to store buffer objects
+
+[drm_memory_gtt]
+heading = DGTT
+width = 6
+metric = proc.fdinfo.drm_memory_gtt
+description = GTT memory which can be used by the GPU to store buffer objects
+
+[drm_memory_vram]
+heading = DVRAM
+width = 6
+metric = proc.fdinfo.drm_memory_vram
+description = VRAM memory which can be used by the GPU to store buffer objects
+
+[drm_shared_cpu]
+heading = DCPU_SHARE
+width = 6
+metric = proc.fdinfo.drm_shared_cpu
+description = CPU memory which can be used by the GPU to store buffer objects, and is shared with another file
+
+[drm_shared_gtt]
+heading = DGTT_SHARE
+width = 6
+metric = proc.fdinfo.drm_shared_gtt
+description = GTT memory which can be used by the GPU to store buffer objects, and is shared with another file
+
+[drm_shared_vram]
+heading = DVRAM_SHARE
+width = 6
+metric = proc.fdinfo.drm_shared_vram
+description = VRAM memory which can be used by the GPU to store buffer objects, and is shared with another file
+
+[amd_evicted_visible_vram]
+heading = AMD_EVVRAM
+width = 6
+metric = proc.fdinfo.amd_evicted_visible_vram
+description = Sum of evicted buffers due to CPU access
+
+[amd_evicted_vram]
+heading = AMD_EVRAM
+width = 6
+metric = proc.fdinfo.amd_evicted_vram
+description = Sum of evicted buffers, includes visible VRAM
+
+[amd_memory_visible_vram]
+heading = AMD_VVRAM
+width = 6
+metric = proc.fdinfo.amd_memory_visible_vram
+description = Current visible VRAM usage
+
+[amd_requested_gtt]
+heading = AMD_RGTT
+width = 6
+metric = proc.fdinfo.amd_requested_gtt
+description = How much GTT memory userspace asked for
+
+[amd_requested_visible_vram]
+heading = AMD_RVVRAM
+width = 6
+metric = proc.fdinfo.amd_requested_visible_vram
+description = How much visible VRAM userspace asked for
+
+[amd_requested_vram]
+heading = AMD_RVRAM
+width = 6
+metric = proc.fdinfo.amd_requested_vram
+description = How much VRAM userspace asked for, includes visible VRAM

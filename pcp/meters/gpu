@@ -1,0 +1,42 @@
+#
+# pcp-htop(1) configuration file - see pcp-htop(5)
+#
+
+[amd_gpu_load]
+caption = AMD GPU load
+description = AMD GPU load
+load.metric = amdgpu.gpu.load
+load.suffix = %
+
+[amd_gpu_average_power]
+caption = AMD GPU average power
+description = AMD GPU average power in Watts
+average_power.metric = amdgpu.gpu.average_power
+average_power.suffix = W
+
+[amd_gpu_memory]
+type = bar
+caption = AMD GPU memory
+description = Allocated frame buffer memory
+used.metric = amdgpu.memory.used
+used.color = red
+total.metric = amdgpu.memory.total
+total.color: blue
+
+[amd_gpu_clock]
+caption = AMD GPU clock
+description = The GPU clock speed in MHz
+clock.metric = amdgpu.gpu.clock
+clock.label = MHz
+
+[amd_gpu_memory_clock]
+caption = AMD GPU memory clock
+description = The GDDRx memory clock speed in MHz
+clock.metric = amdgpu.memory.clock
+clock.label = MHz
+
+[amd_gpu_temp]
+caption = AMD GPU temperature
+description = The GPU temperature in dregree Celsius
+temp.metric = amdgpu.gpu.temperature / 1000
+temp.label = °C
