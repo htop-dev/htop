@@ -81,7 +81,6 @@ const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
-   &DynamicMeter_class,
    &ClockMeter_class,
    &DateMeter_class,
    &DateTimeMeter_class,
@@ -106,7 +105,6 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs4Meter_class,
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
-   &BlankMeter_class,
    &PressureStallCPUSomeMeter_class,
    &PressureStallIOSomeMeter_class,
    &PressureStallIOFullMeter_class,
@@ -120,6 +118,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &NetworkIOMeter_class,
    &SysArchMeter_class,
    &FileDescriptorMeter_class,
+   &BlankMeter_class,
+   &DynamicMeter_class,
    NULL
 };
 
