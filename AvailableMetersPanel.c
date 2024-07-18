@@ -132,7 +132,7 @@ static void AvailableMetersPanel_addDynamicMeter(ATTR_UNUSED ht_key_t key, void*
 // Handle (&DynamicMeter_class) entries in the AvailableMetersPanel
 static void AvailableMetersPanel_addDynamicMeters(Panel* super, const Settings* settings, unsigned int offset) {
    DynamicIterator iter = { .super = super, .id = 1, .offset = offset };
-   Hashtable* dynamicMeters = settings->dynamicColumns;
+   Hashtable* dynamicMeters = settings->dynamicMeters;
    assert(dynamicMeters != NULL);
    Hashtable_foreach(dynamicMeters, AvailableMetersPanel_addDynamicMeter, &iter);
 }
