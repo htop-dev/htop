@@ -4,6 +4,7 @@
 
 [mysql_io]
 caption = MySQL I/O
+description = MySQL throughput
 recv.metric = mysql.status.bytes_received
 recv.color = green
 sent.metric = mysql.status.bytes_sent
