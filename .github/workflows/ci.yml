@@ -322,9 +322,16 @@ jobs:
               ./configure --enable-unicode --enable-werror
               gmake -k
 
-  whitespace_check:
+  lint-whitespace:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: check-whitespaces
         run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
+
+  lint-pcp-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check-pcp-style
+        run: ./check-pcp-style.sh
