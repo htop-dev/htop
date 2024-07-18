@@ -69,6 +69,7 @@ check_file() {
          split($0, pair, " = ")
 
          name = trim(pair[1])
+         value = trim(pair[2])
          group = ""
 
          known = 0
@@ -102,6 +103,28 @@ check_file() {
 
          seen[name] = 1
          groups[group] = 1
+
+         if (name ~ /(^|\.)width$/) {
+            if (!(value ~ /^-?[0-9]{1,3}$/)) {
+               print "Error: Specified width " value " for " name " in section " section " is not an integer or out of range (-999..999)."
+               exit 1
+            }
+         }
+
+         if (name ~ /(^|\.)type$/) {
+            if (!(value ~ /^(bar|text|graph|led)$/)) {
+               print "Error: Specified type " value " for " name " in section " section " is not recognized."
+               exit 1
+            }
+         }
+
+         if (name ~ /(^|\.)color$/) {
+            if (!(value ~ /^(black|blue|green|red|cyan|magenta|yellow|(dark)?gray|white)$/)) {
+               print "Error: Specified color " value " for " name " in section " section " is not recognized."
+               exit 1
+            }
+         }
+
          next
       }
 
