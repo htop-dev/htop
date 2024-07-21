@@ -273,7 +273,7 @@ void PCPDynamicMeters_init(PCPDynamicMeters* meters) {
    if (xdgConfigHome)
       path = String_cat(xdgConfigHome, "/htop/meters/");
    else if (home)
-      path = String_cat(home, "/.config/htop/meters/");
+      path = String_cat(home, CONFIGDIR "/htop/meters/");
    else
       path = NULL;
    if (path) {

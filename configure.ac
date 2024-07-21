@@ -599,6 +599,19 @@ if test -n "$with_os_release" && test ! -f "$with_os_release"; then
 fi
 AC_DEFINE_UNQUOTED([OSRELEASEFILE], ["$with_os_release"], [File with OS release details.])
 
+AC_ARG_WITH([config],
+            [AS_HELP_STRING([--with-config=DIR],
+			    [configuration path @<:@default=/.config@:>@])],
+            [],
+            [with_config="/.config"])
+dnl Performance Co-Pilot configuration location to prevent overwrite
+if test "$my_htop_platform" = pcp -a "$with_config" = /.config; then
+    with_config="/.pcp"
+elif test -z "$with_config"; then
+   AC_MSG_ERROR([bad empty value for --with-config option])
+fi
+AC_DEFINE_UNQUOTED([CONFIGDIR], ["$with_config"], [Configuration path.])
+
 # ----------------------------------------------------------------------
 
 

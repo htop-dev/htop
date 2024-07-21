@@ -619,12 +619,23 @@ The
 .B pcp-htop
 utility makes use of
 .I htoprc
-in exactly the same way.
-In addition, it supports additional configuration files allowing
-new meters and columns to be added to the display via the usual
-Setup function, which will display additional Available Meters
-and Available Column entries for each runtime configured meter
-or column.
+in a similar way.
+However,
+.B pcp-htop
+reads its configuration from a path more conventionally used by
+Performance Co-Pilot tools,
+.IR ~/.pcp/htop/htoprc ,
+in order to provide separate configuration when both
+.B htop
+and
+.B pcp-htop
+are installed and in use.
+.B pcp-htop
+supports additional configuration files below the same directory
+allowing new meters, columns and screen tabs to be added via the
+Setup screen (F2).
+This displays additional Available Meters, Available Column and
+Screen Tabs for each meter, column or screen configuration file.
 .LP
 These
 .B pcp-htop

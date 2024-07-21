@@ -307,7 +307,7 @@ void PCPDynamicScreens_init(PCPDynamicScreens* screens, PCPDynamicColumns* colum
    if (xdgConfigHome)
       path = String_cat(xdgConfigHome, "/htop/screens/");
    else if (home)
-      path = String_cat(home, "/.config/htop/screens/");
+      path = String_cat(home, CONFIGDIR "/htop/screens/");
    else
       path = NULL;
    if (path) {

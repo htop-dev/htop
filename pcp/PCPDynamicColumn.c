@@ -230,7 +230,7 @@ void PCPDynamicColumns_init(PCPDynamicColumns* columns) {
    if (xdgConfigHome)
       path = String_cat(xdgConfigHome, "/htop/columns/");
    else if (home)
-      path = String_cat(home, "/.config/htop/columns/");
+      path = String_cat(home, CONFIGDIR "/htop/columns/");
    else
       path = NULL;
    if (path) {

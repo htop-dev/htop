@@ -874,9 +874,9 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
          configDir = xStrdup(xdgConfigHome);
          htopDir = String_cat(xdgConfigHome, "/htop");
       } else {
-         this->initialFilename = String_cat(home, "/.config/htop/htoprc");
-         configDir = String_cat(home, "/.config");
-         htopDir = String_cat(home, "/.config/htop");
+         this->initialFilename = String_cat(home, CONFIGDIR "/htop/htoprc");
+         configDir = String_cat(home, CONFIGDIR);
+         htopDir = String_cat(home, CONFIGDIR "/htop");
       }
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
