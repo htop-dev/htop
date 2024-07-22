@@ -224,7 +224,11 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
       memmove(&data->values[0], &data->values[1], (nValues - 1) * sizeof(*data->values));
 
-      data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
+      data->values[nValues - 1] = 0.0;
+      if (this->curItems > 0) {
+         assert(this->values);
+         data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
+      }
    }
 
    if (w <= 0)
