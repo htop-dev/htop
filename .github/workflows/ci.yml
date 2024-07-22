@@ -241,30 +241,34 @@ jobs:
               ./configure --enable-unicode --enable-werror
               gmake -k
 
-  build-netbsd-latest-gcc:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Compile
-        uses: vmactions/netbsd-vm@v1
-        with:
-          release: '10.0'
-          usesh: true
-          prepare: |
-            PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
-            PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.0/All/"
-            export PATH PKG_PATH
-            /usr/sbin/pkg_add pkgin
-            pkgin -y install autoconf automake libtool ncurses ncursesw gmake git
-            git config --global --add safe.directory /home/runner/work/htop/htop
-          run: |
-            set -e
-            ./autogen.sh
-            CPPFLAGS="-I/usr/pkg/include" ./configure --enable-unicode --enable-werror
-            gmake -k
+# This is broken since the ncursesw merge in NetBSD, cf.
+#  https://github.com/NetBSD/pkgsrc/commit/4f72c2c3a2081165a195b2667bbd5e2030397442
+# DL240722, disabling this until somebody with NetBSD can fix the build
+#
+#  build-netbsd-latest-gcc:
+#    runs-on: ubuntu-22.04
+#    timeout-minutes: 20
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          submodules: recursive
+#      - name: Compile
+#        uses: vmactions/netbsd-vm@v1
+#        with:
+#          release: '10.0'
+#          usesh: true
+#          prepare: |
+#            PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
+#            PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.0/All/"
+#            export PATH PKG_PATH
+#            /usr/sbin/pkg_add pkgin
+#            pkgin -y install autoconf automake libtool ncurses ncursesw gmake git
+#            git config --global --add safe.directory /home/runner/work/htop/htop
+#          run: |
+#            set -e
+#            ./autogen.sh
+#            CPPFLAGS="-I/usr/pkg/include" ./configure --enable-unicode --enable-werror
+#            gmake -k
 
   build-openbsd-latest-clang:
       runs-on: ubuntu-22.04
