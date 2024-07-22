@@ -226,11 +226,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    if (w <= 0)
       return;
 
-   if ((size_t)w > nValues / 2) {
-      x += w - nValues / 2;
-      w = nValues / 2;
-   }
-
    const char* const* GraphMeterMode_dots;
    int GraphMeterMode_pixPerRow;
 #ifdef HAVE_LIBNCURSESW
@@ -244,7 +239,12 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
    }
 
+   if ((size_t)w > nValues / 2) {
+      x += w - nValues / 2;
+      w = nValues / 2;
+   }
    size_t i = nValues - (size_t)w * 2;
+
    for (int col = 0; i < nValues - 1; i += 2, col++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
       double total = MAXIMUM(this->total, 1);
