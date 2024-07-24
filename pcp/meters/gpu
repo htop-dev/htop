@@ -37,6 +37,6 @@ clock.label = MHz
 
 [amd_gpu_temp]
 caption = AMD GPU temperature
-description = The GPU temperature in dregree Celsius
+description = The GPU temperature in degrees Celsius
 temp.metric = amdgpu.gpu.temperature / 1000
 temp.label = °C
