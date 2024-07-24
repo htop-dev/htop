@@ -407,6 +407,50 @@ m4_define([HTOP_CHECK_SCRIPT],
    fi
 ])
 
+# Some meta programming for fun and profit
+
+_check_nc() {
+   tool="$1-config"
+   shift 1
+   "$tool" "$@" 2>/dev/null
+}
+
+AC_ARG_WITH([check-ncurses],
+   [AS_HELP_STRING([--with-check-ncurses={auto|pkg-config|nc-config|script-name}],
+   [Specify how to check for ncurses (default: auto)])],
+   [check_ncurses="$withval"],
+   [check_ncurses="auto"]
+)
+
+AC_MSG_CHECKING([for a way to check for ncurses])
+case "$check_ncurses" in
+   pkg-config)
+      check_nc="pkg-config"
+      AC_MSG_RESULT([pkg-config])
+      ;;
+   nc-config)
+      check_nc="_check_nc"
+      AC_MSG_RESULT([ncurses*-config helpers])
+      ;;
+   auto)
+      if command -v pkg-config >/dev/null 2>&1; then
+         check_nc="pkg-config"
+         AC_MSG_RESULT([pkg-config (auto-detected)])
+      else
+         check_nc="_check_nc"
+         AC_MSG_RESULT([ncurses*-config (auto-detected)])
+      fi
+      ;;
+   *)
+      if command -v "$check_ncurses" >/dev/null 2>&1; then
+         check_nc="$check_ncurses"
+         AC_MSG_RESULT([$check_ncurses (custom script)])
+      else
+         AC_MSG_ERROR([The specified helper script "$check_ncurses" is not an executable command])
+      fi
+      ;;
+esac
+
 # HTOP_CHECK_LIB(LIBNAME, FUNCTION, DEFINE, ELSE_PART)
 m4_define([HTOP_CHECK_LIB],
 [
@@ -422,10 +466,10 @@ AC_ARG_ENABLE([unicode],
               [],
               [enable_unicode=yes])
 if test "x$enable_unicode" = xyes; then
-   HTOP_CHECK_SCRIPT([ncursesw6], [waddwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-    HTOP_CHECK_SCRIPT([ncursesw], [waddwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-     HTOP_CHECK_SCRIPT([ncursesw], [wadd_wch], [HAVE_LIBNCURSESW], "ncursesw5-config",
-      HTOP_CHECK_SCRIPT([ncurses], [wadd_wch], [HAVE_LIBNCURSESW], "ncurses5-config",
+   HTOP_CHECK_SCRIPT([ncursesw6], [waddwstr], [HAVE_LIBNCURSESW], [$check_nc ncursesw6],
+    HTOP_CHECK_SCRIPT([ncursesw], [waddwstr], [HAVE_LIBNCURSESW], [$check_nc ncursesw6],
+     HTOP_CHECK_SCRIPT([ncursesw], [wadd_wch], [HAVE_LIBNCURSESW], [$check_nc ncursesw5],
+      HTOP_CHECK_SCRIPT([ncurses], [wadd_wch], [HAVE_LIBNCURSESW], [$check_nc ncurses5],
        HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
         HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
          HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
@@ -447,8 +491,8 @@ if test "x$enable_unicode" = xyes; then
    # (at this point we already link against a working ncurses library with wide character support)
    AC_SEARCH_LIBS([keypad], [tinfow tinfo])
 else
-   HTOP_CHECK_SCRIPT([ncurses6], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses6-config],
-    HTOP_CHECK_SCRIPT([ncurses], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses5-config],
+   HTOP_CHECK_SCRIPT([ncurses6], [wnoutrefresh], [HAVE_LIBNCURSES], [$check_nc ncurses6],
+    HTOP_CHECK_SCRIPT([ncurses], [wnoutrefresh], [HAVE_LIBNCURSES], [$check_nc ncurses5],
      HTOP_CHECK_LIB([ncurses6],  [doupdate], [HAVE_LIBNCURSES],
       HTOP_CHECK_LIB([ncurses],  [doupdate], [HAVE_LIBNCURSES],
        HTOP_CHECK_LIB([curses],  [doupdate], [HAVE_LIBNCURSES],
