@@ -74,6 +74,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    if (result == HANDLED) {
       this->settings->changed = true;
       this->settings->lastUpdate++;
+      CRT_updateDelay();
       Header* header = this->scr->header;
       Header_calculateHeight(header);
       Header_reinit(header);
