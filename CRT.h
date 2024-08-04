@@ -214,6 +214,10 @@ void CRT_disableDelay(void);
 
 void CRT_enableDelay(void);
 
+static inline void CRT_updateDelay(void) {
+   CRT_enableDelay(); // pushes new delay setting into halfdelay(3X)
+}
+
 void CRT_setColors(int colorScheme);
 
 #endif
