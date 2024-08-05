@@ -258,12 +258,12 @@ jobs:
               PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.0/All/"
               export PATH PKG_PATH
               /usr/sbin/pkg_add pkgin
-              pkgin -y install autoconf automake libtool ncurses gmake git
+              pkgin -y install autoconf automake libtool ncurses pkg-config gmake git
               git config --global --add safe.directory /home/runner/work/htop/htop
             run: |
               set -e
               ./autogen.sh
-              CPPFLAGS="-I/usr/pkg/include -I/usr/pkg/include/ncurses" LDFLAGS="-L/usr/pkg/lib" ./configure --enable-unicode --enable-werror
+              CPPFLAGS=$(pkg-config --cflags ncurses) LDFLAGS=$(pkg-config --libs ncurses) ./configure --enable-unicode --enable-werror
               gmake -k
 
   build-openbsd-latest-clang:
