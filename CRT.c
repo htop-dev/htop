@@ -92,8 +92,7 @@ bool CRT_utf8 = false;
 
 const char* const* CRT_treeStr = CRT_treeStrAscii;
 
-static const Settings* CRT_crashSettings;
-static const int* CRT_delay;
+static const Settings* CRT_settings;
 
 const char* CRT_degreeSign;
 
@@ -836,7 +835,7 @@ ATTR_NORETURN
 static void CRT_handleSIGTERM(int sgn) {
    CRT_done();
 
-   if (!CRT_crashSettings->changed)
+   if (!CRT_settings->changed)
       _exit(0);
 
    const char* signal_str = strsignal(sgn);
@@ -1055,8 +1054,7 @@ void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnEx
 
    redirectStderr();
    noecho();
-   CRT_crashSettings = settings;
-   CRT_delay = &(settings->delay);
+   CRT_settings = settings;
    CRT_colors = CRT_colorSchemes[settings->colorScheme];
    CRT_colorScheme = settings->colorScheme;
 
@@ -1065,7 +1063,7 @@ void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnEx
       CRT_colorSchemes[COLORSCHEME_BROKENGRAY][i] = color == (A_BOLD | ColorPairGrayBlack) ? ColorPair(White, Black) : color;
    }
 
-   halfdelay(*CRT_delay);
+   halfdelay(settings->delay);
    nonl();
    intrflush(stdscr, false);
    keypad(stdscr, true);
@@ -1180,7 +1178,7 @@ int CRT_readKey(void) {
    cbreak();
    nodelay(stdscr, FALSE);
    int ret = getch();
-   halfdelay(*CRT_delay);
+   halfdelay(CRT_settings->delay);
    return ret;
 }
 
@@ -1191,7 +1189,7 @@ void CRT_disableDelay(void) {
 }
 
 void CRT_enableDelay(void) {
-   halfdelay(*CRT_delay);
+   halfdelay(CRT_settings->delay);
 }
 
 void CRT_setColors(int colorScheme) {
@@ -1312,7 +1310,7 @@ void CRT_handleSIGSEGV(int signal) {
    full_write_str(STDERR_FILENO,
       "Setting information:\n"
       "--------------------\n");
-   Settings_write(CRT_crashSettings, true);
+   Settings_write(CRT_settings, true);
    full_write_str(STDERR_FILENO, "\n\n");
 
 #ifdef PRINT_BACKTRACE
