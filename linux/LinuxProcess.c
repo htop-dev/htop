@@ -112,6 +112,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 #endif
    [GPU_TIME] = { .name = "GPU_TIME", .title = "GPU_TIME ", .description = "Total GPU time", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, },
    [GPU_PERCENT] = { .name = "GPU_PERCENT", .title = " GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, },
+#ifdef HAVE_SYSCALL
+   [SYSCALL] = { .name = "SYSCALL", .title = "SYSCALL", .description = "Current syscall of the process", .flags = PROCESS_FLAG_LINUX_SYSCALL, .autoWidth = true, },
+#endif
 };
 
 Process* LinuxProcess_new(const Machine* host) {
@@ -362,6 +365,24 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
          xSnprintf(buffer, n, "N/A  ");
       }
       break;
+   #ifdef HAVE_SYSCALL
+   case SYSCALL: {
+      switch (lp->syscall_state) {
+      case SYSCALL_STATE_CALLING:
+         xSnprintf(buffer, n, "%*d ", Row_fieldWidths[SYSCALL], lp->syscall_num);
+         break;
+      case SYSCALL_STATE_RUNNING:
+         attr = CRT_colors[PROCESS_RUN_STATE];
+         xSnprintf(buffer, n, "%-*s ", Row_fieldWidths[SYSCALL], "running");
+         break;
+      default:
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "%-*s ", Row_fieldWidths[SYSCALL], "N/A");
+      }
+      RichString_appendWide(str, attr, buffer);
+      return;
+   }
+   #endif
    default:
       Process_writeField(this, str, field);
       return;
@@ -466,6 +487,15 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
    case ISCONTAINER:
       return SPACESHIP_NUMBER(v1->isRunningInContainer, v2->isRunningInContainer);
+   #ifdef HAVE_SYSCALL
+   case SYSCALL: {
+      int r = SPACESHIP_NUMBER(p1->syscall_state, p2->syscall_state);
+      if (r)
+         return r;
+
+      return SPACESHIP_NUMBER(p1->syscall_num, p2->syscall_num);
+   }
+   #endif
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }
