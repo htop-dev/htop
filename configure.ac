@@ -377,6 +377,10 @@ fi
 # Checks for cross-platform features and flags.
 # ----------------------------------------------------------------------
 
+m4_ifdef([PKG_PROG_PKG_CONFIG], [
+PKG_PROG_PKG_CONFIG
+])
+
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
 m4_define([HTOP_CHECK_SCRIPT],
 [
@@ -567,7 +571,6 @@ case "$enable_hwloc" in
       ;;
    yes)
       m4_ifdef([PKG_PROG_PKG_CONFIG], [
-         PKG_PROG_PKG_CONFIG()
          PKG_CHECK_MODULES(HWLOC, hwloc, [
                AM_CFLAGS="$AM_CFLAGS $HWLOC_CFLAGS"
                LIBS="$LIBS $HWLOC_LIBS"
