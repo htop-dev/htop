@@ -556,6 +556,109 @@ if test "x$enable_unwind" = xno; then
    AC_SEARCH_LIBS([backtrace], [execinfo])
 fi
 
+AC_ARG_ENABLE([backtrace],
+              [AS_HELP_STRING([--enable-backtrace=<unwind-ptrace>],
+              [enable printing backtraces.])],
+              [],
+              [enable_backtrace=no])
+if test "x$enable_backtrace" = xyes; then
+   case $my_htop_platform in
+      linux)
+         enable_backtrace=unwind-ptrace
+         ;;
+      *)
+         AC_MSG_ERROR([backtrace feature not implemented for the '$my_htop_platform' platform])
+         ;;
+   esac
+fi
+
+case "$enable_backtrace" in
+   no)
+      ;;
+   unwind-ptrace)
+      AC_CHECK_LIB([unwind-ptrace], [_UPT_create], [], [AC_MSG_ERROR([can not find required library libunwind-ptrace and libunwind-generic])], [-lunwind-generic])
+      AC_CHECK_LIB([unwind-generic], [_UPT_create], [], [AC_MSG_ERROR([can not find required library libunwind-generic])])
+      AC_CHECK_HEADERS([libunwind-ptrace.h], [], [
+         CPPFLAGS="$CPPFLAGS -I/usr/include/libunwind"
+         AC_CHECK_HEADERS([libunwind-ptrace.h], [], [AC_MSG_ERROR([can not find required header file libunwind-ptrace.h])])
+      ])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_backtrace' for --enable-backtrace])
+      ;;
+esac
+if test "x$enable_backtrace" != xno; then
+   AC_DEFINE([HAVE_BACKTRACE], [1], [Define if the backtrace feature is enabled])
+fi
+AM_CONDITIONAL([HAVE_BACKTRACE], [test x"$enable_backtrace" != xno])
+
+if test "x$enable_backtrace" = xunwind-ptrace; then
+   AC_MSG_CHECKING([if libunwind has unw_get_elf_filename])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[/* unw_get_elf_filename might exist as a macro */
+         #include <libunwind-ptrace.h>]],
+         [[unw_get_elf_filename((unw_cursor_t*)0, (char*)0, (size_t)0, (unw_word_t*)0);]]
+      )],
+      [AC_DEFINE([HAVE_LIBUNWIND_ELF_FILENAME], [1], [Define if libunwind has unw_get_elf_filename])
+      AC_MSG_RESULT(yes)],
+      [AC_MSG_RESULT(no)]
+   )
+fi
+
+AC_ARG_ENABLE([demangling],
+              [AS_HELP_STRING([--enable-demangling],
+                              [enable demangling support for backtraces @<:@default=check@:>@])],
+              [],
+              [enable_demangling=no])
+have_libiberty=no
+case $enable_demangling in
+   check|yes|libiberty)
+      AC_CHECK_LIB([iberty], [cplus_demangle], [
+         have_libiberty=yes
+         AC_DEFINE([HAVE_LIBIBERTY], [1], [Define to 1 if libiberty is found.])
+         LIBS="$LIBS -liberty"
+         ], [
+         if test "x$enable_demangling" = xlibiberty; then
+            AC_MSG_ERROR([--enable-demangling specified but libiberty not found])
+         fi
+      ])
+
+      if test "x$have_libiberty" = xyes; then
+         AC_CHECK_HEADERS([demangle.h], [], [
+            CPPFLAGS="$CPPFLAGS -I/usr/include/libiberty"
+            AC_CHECK_HEADERS([libiberty/demangle.h], [], [
+               have_libiberty=no
+               if test "x$enable_demangling" = xlibiberty; then
+                  AC_MSG_ERROR([--enable-demangling specified but <demangle.h> not found])
+               fi
+            ])
+         ])
+      fi
+
+      if test "x$have_libiberty" = xyes; then
+         enable_demangling=libiberty
+      fi
+      ;;
+esac
+
+
+case $enable_demangling in
+   libiberty)
+      AC_DEFINE([HAVE_DEMANGLING], [1], [Define to 1 if the demangling is supported.])
+      ;;
+   check)
+      enable_demangling=no
+      ;;
+   yes)
+      AC_MSG_ERROR([cannot find any library for the backend supported by --enable-demangling])
+      ;;
+   no)
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_demangling' for --enable-demangling])
+      ;;
+esac
 
 AC_ARG_ENABLE([hwloc],
               [AS_HELP_STRING([--enable-hwloc],
@@ -890,6 +993,8 @@ AC_MSG_RESULT([
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   unwind:                    $enable_unwind
+  backtrace:                 $enable_backtrace
+  demangling:                $enable_demangling
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static

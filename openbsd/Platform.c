@@ -342,6 +342,12 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return false;
 }
 
+void Platform_getBacktrace(Vector* frames, const Process* process, char **error) {
+   (void)frames;
+   (void)process;
+   xAsprintf(error, "The backtrace screen is not implemented");
+}
+
 static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
    for (int devn = 0;; devn++) {
       mib[2] = devn;
