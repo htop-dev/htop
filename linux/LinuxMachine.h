@@ -50,6 +50,7 @@ typedef struct CPUData_ {
    double temperature;
    #endif
 
+   unsigned short coreId;  /* Note: might be higer than core count, due to disabled ones */
    bool online;
 } CPUData;
 
@@ -73,6 +74,7 @@ typedef struct LinuxMachine_ {
    double period;
 
    CPUData* cpuData;
+   unsigned short maxCoreId;  /* Note: might be higer than core count, due to disabled ones */
 
    memory_t totalHugePageMem;
    memory_t usedHugePageMem[HTOP_HUGEPAGE_COUNT];
