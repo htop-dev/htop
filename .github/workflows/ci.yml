@@ -263,7 +263,7 @@ jobs:
             run: |
               set -e
               ./autogen.sh
-              CPPFLAGS=$(pkg-config --cflags ncurses) LDFLAGS=$(pkg-config --libs ncurses) ./configure --enable-unicode --enable-werror
+              ./configure --enable-unicode --enable-werror
               gmake -k
 
   build-openbsd-latest-clang:

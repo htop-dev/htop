@@ -377,43 +377,8 @@ fi
 # Checks for cross-platform features and flags.
 # ----------------------------------------------------------------------
 
-# HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
-m4_define([HTOP_CHECK_SCRIPT],
-[
-   if test ! -z "m4_toupper($HTOP_[$1]_CONFIG_SCRIPT)"; then
-      # to be used to set the path to ncurses*-config when cross-compiling
-      htop_config_script_libs=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --libs 2> /dev/null)
-      htop_config_script_cflags=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --cflags 2> /dev/null)
-   else
-      htop_config_script_libs=$([$4] --libs 2> /dev/null)
-      htop_config_script_cflags=$([$4] --cflags 2> /dev/null)
-   fi
-   htop_script_success=no
-   htop_save_CFLAGS="$AM_CFLAGS"
-   if test ! "x$htop_config_script_libs" = x; then
-      AM_CFLAGS="$AM_CFLAGS $htop_config_script_cflags"
-      AC_CHECK_LIB([$1], [$2], [
-         AC_DEFINE([$3], 1, [The library is present.])
-         LIBS="$htop_config_script_libs $LIBS "
-         htop_script_success=yes
-      ], [
-         AM_CFLAGS="$htop_save_CFLAGS"
-      ], [
-         $htop_config_script_libs
-      ])
-   fi
-   if test "x$htop_script_success" = xno; then
-      [$5]
-   fi
-])
-
-# HTOP_CHECK_LIB(LIBNAME, FUNCTION, DEFINE, ELSE_PART)
-m4_define([HTOP_CHECK_LIB],
-[
-   AC_CHECK_LIB([$1], [$2], [
-      AC_DEFINE([$3], [1], [The library is present.])
-      LIBS="-l[$1] $LIBS "
-   ], [$4])
+m4_ifdef([PKG_PROG_PKG_CONFIG], [
+PKG_PROG_PKG_CONFIG
 ])
 
 AC_ARG_ENABLE([unicode],
@@ -421,17 +386,192 @@ AC_ARG_ENABLE([unicode],
                               [enable Unicode support @<:@default=yes@:>@])],
               [],
               [enable_unicode=yes])
-if test "x$enable_unicode" = xyes; then
-   HTOP_CHECK_SCRIPT([ncursesw6], [waddwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-    HTOP_CHECK_SCRIPT([ncursesw], [waddwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-     HTOP_CHECK_SCRIPT([ncursesw], [wadd_wch], [HAVE_LIBNCURSESW], "ncursesw5-config",
-      HTOP_CHECK_SCRIPT([ncurses], [wadd_wch], [HAVE_LIBNCURSESW], "ncurses5-config",
-       HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
-        HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
-         HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
-          AC_MSG_ERROR([can not find required library libncursesw; you may want to use --disable-unicode])
-   )))))))
 
+AC_ARG_VAR([CURSES_CFLAGS], [C compiler flags for curses; this overrides auto detected values])
+AC_ARG_VAR([CURSES_LIBS], [linker flags for curses; this overrides auto detected values])
+
+curses_pkg_names="ncurses6 ncurses5 ncurses curses"
+
+if test "x$enable_unicode" = xyes; then
+   curses_pkg_names="ncursesw6 ncursesw5 ncursesw $curses_pkg_names"
+fi
+
+AC_ARG_WITH([curses],
+            [AS_HELP_STRING([--with-curses=NAME],
+			    [select curses package NAME; e.g. ncursesw6])], [
+   case $withval in
+   yes|no)
+      AC_MSG_ERROR([invalid value for --with-curses])
+      ;;
+   *)
+      curses_pkg_names="$withval"
+      ;;
+   esac
+
+   if test "x${CURSES_CFLAGS+y}${CURSES_LIBS+y}" = xyy; then
+      AC_MSG_WARN([ignoring --with-curses value due to override])
+   fi
+], [with_curses=check])
+
+# $1: "CFLAGS" for curses
+# $2: linker flags for curses
+htop_check_libcurses_capability () {
+   htop_save_CFLAGS=$CFLAGS
+   htop_save_LIBS=$LIBS
+   htop_libcurses_cflags=${CURSES_CFLAGS-"$1"}
+   htop_libcurses_libs=${CURSES_LIBS-"$2"}
+   CFLAGS="$AM_CFLAGS $htop_libcurses_cflags $CFLAGS"
+   LIBS="$htop_libcurses_libs $LIBS"
+
+   htop_libcurses_status=0 # 0 for success; nonzero for failure
+   htop_msg_linker_flags=$htop_libcurses_libs
+   if test "`echo x $htop_msg_linker_flags`" = x; then
+      htop_msg_linker_flags="(no linker flags)"
+   fi
+
+   # At this point we have not checked the name of curses header, so
+   # use forward declaration for the linking tests below.
+
+   # htop uses keypad() and "stdscr", but for ncurses implementation,
+   # the symbols are in "-ltinfo" and not "-lncurses".
+   # Check "-ltinfo" symbols first, as libncurses might require
+   # explicit "-ltinfo" to link (for internal dependency).
+   AC_MSG_CHECKING([for keypad in $htop_msg_linker_flags])
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+/* extern WINDOW* stdscr; */
+/* int keypad(WINDOW* win, bool enable); */
+extern void* stdscr;
+int keypad(void* win, int enable);
+      ]], [[
+keypad(stdscr, 0);
+      ]])], [
+         AC_MSG_RESULT(yes)
+      ], [
+         AC_MSG_RESULT(no)
+         htop_libcurses_status=1
+      ])
+
+   # htop calls refresh(), which might be implemented as a macro.
+   # It is more reliable to test linking with doupdate(), which
+   # refresh() would call internally.
+   if test "$htop_libcurses_status" -eq 0; then
+      AC_MSG_CHECKING([for doupdate in $htop_msg_linker_flags])
+      AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+int doupdate(void);
+         ]], [[
+doupdate();
+         ]])], [
+            AC_MSG_RESULT(yes)
+         ], [
+            AC_MSG_RESULT(no)
+            htop_libcurses_status=1
+         ])
+   fi
+
+   if test "x$htop_libcurses_status$enable_unicode" = x0yes; then
+      AC_MSG_CHECKING([for mvadd_wchnstr in $htop_msg_linker_flags])
+      AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+/* int mvadd_wchnstr(int y, int x, const cchar_t *wchstr, int n); */
+int mvadd_wchnstr(int y, int x, const void* wchstr, int n);
+      ]], [[
+mvadd_wchnstr(0, 0, (void*)0, 0);
+      ]])], [
+         AC_MSG_RESULT(yes)
+      ], [
+         AC_MSG_RESULT(no)
+         htop_libcurses_status=1
+      ])
+   fi
+
+   if test "$htop_libcurses_status" -eq 0; then
+      AM_CFLAGS="$AM_CFLAGS $htop_libcurses_cflags"
+      htop_curses_pkg_found=yes
+      if test "x$enable_unicode" = xyes; then
+         AC_DEFINE([HAVE_LIBNCURSESW], 1, [libncursesw is present])
+      else
+         # TODO: rename the preprocessor token
+         AC_DEFINE([HAVE_LIBNCURSES], 1, [libcurses is present])
+      fi
+   else
+      LIBS=$htop_save_LIBS
+   fi
+   CFLAGS=$htop_save_CFLAGS
+   return "$htop_libcurses_status"
+} # htop_check_libcurses_capability
+
+htop_curses_pkg_found=no
+
+if test "x${CURSES_CFLAGS+y}${CURSES_LIBS+y}" = xyy; then
+   curses_pkg_names=""
+   htop_check_libcurses_capability "$CURSES_CFLAGS" "$CURSES_LIBS"
+fi
+
+m4_ifdef([PKG_PROG_PKG_CONFIG], [
+# Prioritize $PKG_CONFIG over ncurses*-config, as users might need to
+# cross-compile htop.
+if test "x$PKG_CONFIG" != x; then
+   for curses_name in $curses_pkg_names; do
+      echo retrieving $curses_name configuration through $PKG_CONFIG >&AS_MESSAGE_LOG_FD
+      $PKG_CONFIG --exists --print-errors $curses_name >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD || continue
+
+      : # Resets "$?" to 0
+      htop_config_cflags=`$PKG_CONFIG --cflags $curses_name 2>/dev/null` || continue
+      : # Resets "$?" to 0
+      htop_config_libs=`$PKG_CONFIG --libs $curses_name 2>/dev/null` || continue
+
+      AC_MSG_RESULT([found $curses_name configuration through $PKG_CONFIG])
+
+      if htop_check_libcurses_capability "$htop_config_cflags" "$htop_config_libs"; then
+         break
+      fi
+   done
+fi
+])
+
+if test "$htop_curses_pkg_found" = no; then
+   for curses_name in $curses_pkg_names; do
+      echo retrieving $curses_name configuration through ${curses_name}-config >&AS_MESSAGE_LOG_FD
+
+      ${curses_name}-config --cflags >/dev/null 2>&AS_MESSAGE_LOG_FD || continue
+
+      : # Resets "$?" to 0
+      htop_config_cflags=`${curses_name}-config --cflags 2>/dev/null` || continue
+      : # Resets "$?" to 0
+      htop_config_libs=`${curses_name}-config --libs 2>/dev/null` || continue
+
+      AC_MSG_RESULT([found $curses_name configuration through ${curses_name}-config])
+
+      if htop_check_libcurses_capability "$htop_config_cflags" "$htop_config_libs"; then
+         break
+      fi
+   done
+fi
+
+if test "$htop_curses_pkg_found" = no; then
+   for curses_name in $curses_pkg_names; do
+      echo trying simple linking with "-l$curses_name" >&AS_MESSAGE_LOG_FD
+      if htop_check_libcurses_capability "" "-l$curses_name"; then
+         break
+      fi
+      # For ncurses implementation, an extra "-ltinfo" or "-ltinfow"
+      # flag might be needed to link.
+      if test "x$enable_unicode" != xyes ||
+         htop_check_libcurses_capability "" "-l$curses_name -ltinfow"; then
+         break
+      fi
+      if htop_check_libcurses_capability "" "-l$curses_name -ltinfo"; then
+         break
+      fi
+   done
+fi
+
+if test "$htop_curses_pkg_found" = no; then
+   AC_MSG_ERROR([cannot link to curses library])
+fi
+
+htop_save_CFLAGS=$CFLAGS
+CFLAGS="$AM_CFLAGS $CFLAGS"
+if test "x$enable_unicode" = xyes; then
    AC_CHECK_HEADERS([ncursesw/curses.h], [],
       [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
          [AC_CHECK_HEADERS([ncurses/curses.h], [],
@@ -442,19 +582,7 @@ if test "x$enable_unicode" = xyes; then
       [AC_CHECK_HEADERS([ncurses/term.h], [],
          [AC_CHECK_HEADERS([term.h], [],
             [AC_MSG_ERROR([can not find required term header file])])])])
-
-   # check if additional linker flags are needed for keypad(3)
-   # (at this point we already link against a working ncurses library with wide character support)
-   AC_SEARCH_LIBS([keypad], [tinfow tinfo])
 else
-   HTOP_CHECK_SCRIPT([ncurses6], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses6-config],
-    HTOP_CHECK_SCRIPT([ncurses], [wnoutrefresh], [HAVE_LIBNCURSES], [ncurses5-config],
-     HTOP_CHECK_LIB([ncurses6],  [doupdate], [HAVE_LIBNCURSES],
-      HTOP_CHECK_LIB([ncurses],  [doupdate], [HAVE_LIBNCURSES],
-       HTOP_CHECK_LIB([curses],  [doupdate], [HAVE_LIBNCURSES],
-        AC_MSG_ERROR([can not find required curses/ncurses library])
-   )))))
-
    AC_CHECK_HEADERS([curses.h], [],
       [AC_CHECK_HEADERS([ncurses/curses.h], [],
          [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
@@ -464,11 +592,8 @@ else
    AC_CHECK_HEADERS([ncurses/term.h], [],
       [AC_CHECK_HEADERS([term.h], [],
          [AC_MSG_ERROR([can not find required term header file])])])
-
-   # check if additional linker flags are needed for keypad(3)
-   # (at this point we already link against a working ncurses library)
-   AC_SEARCH_LIBS([keypad], [tinfo])
 fi
+CFLAGS=$htop_save_CFLAGS
 
 if test "$enable_static" = yes; then
    AC_SEARCH_LIBS([Gpm_GetEvent], [gpm])
@@ -567,7 +692,6 @@ case "$enable_hwloc" in
       ;;
    yes)
       m4_ifdef([PKG_PROG_PKG_CONFIG], [
-         PKG_PROG_PKG_CONFIG()
          PKG_CHECK_MODULES(HWLOC, hwloc, [
                AM_CFLAGS="$AM_CFLAGS $HWLOC_CFLAGS"
                LIBS="$LIBS $HWLOC_LIBS"
