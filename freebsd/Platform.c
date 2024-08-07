@@ -210,7 +210,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       this->curItems = 4;
       percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL] + v[CPU_METER_IRQ];
    } else {
-      v[CPU_METER_NORMAL] = cpuData->systemAllPercent;
+      v[CPU_METER_KERNEL] = cpuData->systemAllPercent;
       this->curItems = 3;
       percent = v[CPU_METER_NICE] + v[CPU_METER_NORMAL] + v[CPU_METER_KERNEL];
    }
