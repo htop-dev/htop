@@ -432,20 +432,41 @@ htop_check_libcurses_capability () {
    # At this point we have not checked the name of curses header, so
    # use forward declaration for the linking tests below.
 
-   # htop calls refresh(), which might be implemented as a macro.
-   # It is more reliable to test linking with doupdate(), which
-   # refresh() would call internally.
-   AC_MSG_CHECKING([for doupdate in $htop_msg_linker_flags])
+   # htop uses keypad() and "stdscr", but for ncurses implementation,
+   # the symbols are in "-ltinfo" and not "-lncurses".
+   # Check "-ltinfo" symbols first, as libncurses might require
+   # explicit "-ltinfo" to link (for internal dependency).
+   AC_MSG_CHECKING([for keypad in $htop_msg_linker_flags])
    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-int doupdate(void);
+/* extern WINDOW* stdscr; */
+/* int keypad(WINDOW* win, bool enable); */
+extern void* stdscr;
+int keypad(void* win, int enable);
       ]], [[
-doupdate();
+keypad(stdscr, 0);
       ]])], [
          AC_MSG_RESULT(yes)
       ], [
          AC_MSG_RESULT(no)
          htop_libcurses_status=1
       ])
+
+   # htop calls refresh(), which might be implemented as a macro.
+   # It is more reliable to test linking with doupdate(), which
+   # refresh() would call internally.
+   if test "$htop_libcurses_status" -eq 0; then
+      AC_MSG_CHECKING([for doupdate in $htop_msg_linker_flags])
+      AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+int doupdate(void);
+         ]], [[
+doupdate();
+         ]])], [
+            AC_MSG_RESULT(yes)
+         ], [
+            AC_MSG_RESULT(no)
+            htop_libcurses_status=1
+         ])
+   fi
 
    if test "x$htop_libcurses_status$enable_unicode" = x0yes; then
       AC_MSG_CHECKING([for mvadd_wchnstr in $htop_msg_linker_flags])
@@ -532,6 +553,15 @@ if test "$htop_curses_pkg_found" = no; then
       if htop_check_libcurses_capability "" "-l$curses_name"; then
          break
       fi
+      # For ncurses implementation, an extra "-ltinfo" or "-ltinfow"
+      # flag might be needed to link.
+      if test "x$enable_unicode" != xyes ||
+         htop_check_libcurses_capability "" "-l$curses_name -ltinfow"; then
+         break
+      fi
+      if htop_check_libcurses_capability "" "-l$curses_name -ltinfo"; then
+         break
+      fi
    done
 fi
 
@@ -552,10 +582,6 @@ if test "x$enable_unicode" = xyes; then
       [AC_CHECK_HEADERS([ncurses/term.h], [],
          [AC_CHECK_HEADERS([term.h], [],
             [AC_MSG_ERROR([can not find required term header file])])])])
-
-   # check if additional linker flags are needed for keypad(3)
-   # (at this point we already link against a working ncurses library with wide character support)
-   AC_SEARCH_LIBS([keypad], [tinfow tinfo])
 else
    AC_CHECK_HEADERS([curses.h], [],
       [AC_CHECK_HEADERS([ncurses/curses.h], [],
@@ -566,10 +592,6 @@ else
    AC_CHECK_HEADERS([ncurses/term.h], [],
       [AC_CHECK_HEADERS([term.h], [],
          [AC_MSG_ERROR([can not find required term header file])])])
-
-   # check if additional linker flags are needed for keypad(3)
-   # (at this point we already link against a working ncurses library)
-   AC_SEARCH_LIBS([keypad], [tinfo])
 fi
 CFLAGS=$htop_save_CFLAGS
 
