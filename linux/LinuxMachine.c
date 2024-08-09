@@ -78,7 +78,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
          continue;
 
 #ifdef HAVE_OPENAT
-      int cpuDirFd = openat(dirfd(dir), entry->d_name, O_DIRECTORY | O_PATH | O_NOFOLLOW);
+      int cpuDirFd = openat(xDirfd(dir), entry->d_name, O_DIRECTORY | O_PATH | O_NOFOLLOW);
       if (cpuDirFd < 0)
          continue;
 #else
@@ -497,11 +497,13 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
 
    this->period = (double)this->cpuData[0].totalPeriod / super->activeCPUs;
 
-   char buffer[PROC_LINE_LENGTH + 1];
-   while (fgets(buffer, sizeof(buffer), file)) {
-      if (String_startsWith(buffer, "procs_running")) {
-         this->runningTasks = strtoul(buffer + strlen("procs_running"), NULL, 10);
-         break;
+   if (!ferror(file) && !feof(file)) {
+      char buffer[PROC_LINE_LENGTH + 1];
+      while (fgets(buffer, sizeof(buffer), file)) {
+         if (String_startsWith(buffer, "procs_running")) {
+            this->runningTasks = (unsigned int) strtoul(buffer + strlen("procs_running"), NULL, 10);
+            break;
+         }
       }
    }
 
