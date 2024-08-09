@@ -307,8 +307,6 @@ void Process_init(Process* this, const struct Machine_* host);
 
 const char* Process_rowGetSortKey(Row* super);
 
-bool Process_rowSetPriority(Row* super, int priority);
-
 bool Process_rowChangePriorityBy(Row* super, Arg delta);
 
 bool Process_rowSendSignal(Row* super, Arg sgn);
@@ -328,7 +326,7 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
 const char* Process_getCommand(const Process* this);
 
 void Process_updateComm(Process* this, const char* comm);
-void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart, int basenameEnd);
+void Process_updateCmdline(Process* this, const char* cmdline, size_t basenameStart, size_t basenameEnd);
 void Process_updateExe(Process* this, const char* exe);
 
 /* This function constructs the string that is displayed by

@@ -464,7 +464,7 @@ char* Platform_getProcessEnv(pid_t pid) {
       size += bytes;
       capacity += 4096;
       env = xRealloc(env, capacity);
-   } while ((bytes = fread(env + size, 1, capacity - size, fp)) > 0);
+   } while (!ferror(fp) && !feof(fp) && (bytes = fread(env + size, 1, capacity - size, fp)) > 0);
 
    fclose(fp);
 
@@ -507,10 +507,11 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
          continue;
 
       errno = 0;
-      char* end = de->d_name;
-      int file = strtoull(de->d_name, &end, 10);
-      if (errno || *end)
+      char* end;
+      unsigned long res = strtoul(de->d_name, &end, 10);
+      if (errno || *end || res >= INT_MAX)
          continue;
+      int file = (int)res;
 
       int fd = openat(dfd, de->d_name, O_RDONLY | O_CLOEXEC);
       if (fd == -1)
@@ -580,7 +581,7 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
       return;
    }
    int total = fscanf(fp, "some avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
-   if (!some) {
+   if (total != EOF && !some) {
       total = fscanf(fp, "full avg10=%32lf avg60=%32lf avg300=%32lf total=%*f ", ten, sixty, threehundred);
    }
    (void) total;
@@ -785,7 +786,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
       const char* entryName = dirEntry->d_name;
 
 #ifdef HAVE_OPENAT
-      int entryFd = openat(dirfd(dir), entryName, O_DIRECTORY | O_PATH);
+      int entryFd = openat(xDirfd(dir), entryName, O_DIRECTORY | O_PATH);
       if (entryFd < 0)
          continue;
 #else

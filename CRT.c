@@ -1260,8 +1260,7 @@ static void print_backtrace(void) {
 #elif defined(HAVE_EXECINFO_H)
    void* backtraceArray[256];
 
-   size_t size = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
-   backtrace_symbols_fd(backtraceArray, size, STDERR_FILENO);
+   backtrace_symbols_fd(backtraceArray, backtrace(backtraceArray, ARRAYSIZE(backtraceArray)), STDERR_FILENO);
 #else
 #error No implementation for print_backtrace()!
 #endif

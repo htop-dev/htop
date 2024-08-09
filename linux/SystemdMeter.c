@@ -275,13 +275,13 @@ static void updateViaExec(bool user) {
          }
          free_and_xStrdup(&ctx->systemState, lineBuffer + strlen("SystemState="));
       } else if (String_startsWith(lineBuffer, "NFailedUnits=")) {
-         ctx->nFailedUnits = strtoul(lineBuffer + strlen("NFailedUnits="), NULL, 10);
+         ctx->nFailedUnits = (unsigned int)strtoul(lineBuffer + strlen("NFailedUnits="), NULL, 10);
       } else if (String_startsWith(lineBuffer, "NNames=")) {
-         ctx->nNames = strtoul(lineBuffer + strlen("NNames="), NULL, 10);
+         ctx->nNames = (unsigned int)strtoul(lineBuffer + strlen("NNames="), NULL, 10);
       } else if (String_startsWith(lineBuffer, "NJobs=")) {
-         ctx->nJobs = strtoul(lineBuffer + strlen("NJobs="), NULL, 10);
+         ctx->nJobs = (unsigned int)strtoul(lineBuffer + strlen("NJobs="), NULL, 10);
       } else if (String_startsWith(lineBuffer, "NInstalledJobs=")) {
-         ctx->nInstalledJobs = strtoul(lineBuffer + strlen("NInstalledJobs="), NULL, 10);
+         ctx->nInstalledJobs = (unsigned int)strtoul(lineBuffer + strlen("NInstalledJobs="), NULL, 10);
       }
    }
 

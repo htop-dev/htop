@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #error "Must have #include \"config.h\" line at the top of the file that includes these XUtils helper functions"
 #endif
 
+#include <dirent.h>
 #include <stdbool.h>
 #include <stddef.h> // IWYU pragma: keep
 #include <stdio.h>
@@ -151,5 +152,21 @@ unsigned int countTrailingZeros(unsigned int x);
 
 /* IEC unit prefixes */
 static const char unitPrefixes[] = { 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q' };
+
+static inline bool skipEndOfLine(FILE* fp) {
+   char buffer[1024];
+   while (fgets(buffer, sizeof(buffer), fp)) {
+      if (strchr(buffer, '\n')) {
+         return true;
+      }
+   }
+   return false;
+}
+
+static inline int xDirfd(DIR* dirp) {
+   int r = dirfd(dirp);
+   assert(r >= 0);
+   return r;
+}
 
 #endif
