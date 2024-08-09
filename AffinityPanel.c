@@ -311,7 +311,7 @@ static MaskItem* AffinityPanel_addObject(AffinityPanel* this, hwloc_obj_t obj, u
    }
 
    /* "[x] " + "|- " * depth + ("- ")?(if root node) + name */
-   unsigned width = 4 + 3 * depth + (2 * !depth) + strlen(buf);
+   unsigned width = 4 + 3 * depth + (2 * !depth) + (unsigned)strlen(buf);
    if (width > this->width) {
       this->width = width;
    }
@@ -389,7 +389,7 @@ Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
 
       char number[16];
       xSnprintf(number, 9, "CPU %d", Settings_cpuId(host->settings, i));
-      unsigned cpu_width = 4 + strlen(number);
+      unsigned cpu_width = 4 + (unsigned) strlen(number);
       if (cpu_width > this->width) {
          this->width = cpu_width;
       }

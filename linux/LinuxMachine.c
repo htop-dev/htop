@@ -74,7 +74,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
 
       char* endp;
       unsigned long int id = strtoul(entry->d_name + 3, &endp, 10);
-      if (id == ULONG_MAX || endp == entry->d_name + 3 || *endp != '\0')
+      if (id == UINT_MAX || endp == entry->d_name + 3 || *endp != '\0')
          continue;
 
 #ifdef HAVE_OPENAT
@@ -89,7 +89,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
       existing++;
 
       /* readdir() iterates with no specific order */
-      unsigned int max = MAXIMUM(existing, id + 1);
+      unsigned int max = MAXIMUM(existing, (unsigned int)id + 1);
       if (max > currExisting) {
          this->cpuData = xReallocArrayZero(this->cpuData, currExisting ? (currExisting + 1) : 0, max + /* aggregate */ 1, sizeof(CPUData));
          this->cpuData[0].online = true; /* average is always "online" */
@@ -500,7 +500,7 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
    char buffer[PROC_LINE_LENGTH + 1];
    while (fgets(buffer, sizeof(buffer), file)) {
       if (String_startsWith(buffer, "procs_running")) {
-         this->runningTasks = strtoul(buffer + strlen("procs_running"), NULL, 10);
+         this->runningTasks = (unsigned int) strtoul(buffer + strlen("procs_running"), NULL, 10);
          break;
       }
    }
@@ -654,7 +654,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    Machine_init(super, usersTable, userId);
 
    // Initialize page size
-   if ((this->pageSize = sysconf(_SC_PAGESIZE)) == -1)
+   if ((this->pageSize = (int) sysconf(_SC_PAGESIZE)) == -1)
       CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
    this->pageSizeKB = this->pageSize / ONE_K;
 

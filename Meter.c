@@ -54,7 +54,7 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    mvaddnstr(y, x, caption, w);
    attrset(CRT_colors[RESET_COLOR]);
 
-   int captionLen = strlen(caption);
+   int captionLen = (int)strlen(caption);
    x += captionLen;
    w -= captionLen;
    if (w <= 0)
@@ -251,7 +251,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    // Starting positions of graph data and terminal column
    if ((size_t)w > nValues / 2) {
       x += w - nValues / 2;
-      w = nValues / 2;
+      w = (int)(nValues / 2);
    }
    size_t i = nValues - (size_t)w * 2;
 
@@ -319,7 +319,9 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[LED_COLOR]);
    const char* caption = Meter_getCaption(this);
    mvaddstr(yText, x, caption);
-   int xx = x + strlen(caption);
+   size_t capLen = strlen(caption);
+   assert(capLen < 32);
+   int xx = x + (int) MINIMUM(capLen, 32);
    int len = RichString_sizeVal(out);
    for (int i = 0; i < len; i++) {
       int c = RichString_getCharVal(out, i);
