@@ -50,6 +50,7 @@ static void RichString_extendLen(RichString* this, int len) {
 }
 
 static void RichString_setLen(RichString* this, int len) {
+   len = MAXIMUM(len, 0);
    if (len < RICHSTRING_MAXLEN && this->chlen < RICHSTRING_MAXLEN) {
       RichString_setChar(this, len, 0);
       this->chlen = len;
@@ -59,7 +60,7 @@ static void RichString_setLen(RichString* this, int len) {
 }
 
 void RichString_rewind(RichString* this, int count) {
-   RichString_setLen(this, this->chlen - count);
+   RichString_setLen(this, CLAMP(this->chlen - count, 0, this->chlen));
 }
 
 #ifdef HAVE_LIBNCURSESW
@@ -99,7 +100,7 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
 
 static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
    wchar_t data[len];
-   len = mbstowcs_nonfatal(data, data_c, len);
+   len = (int)mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)
       return 0;
 
@@ -114,7 +115,7 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
 
 int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, int len, int* columns) {
    wchar_t data[len];
-   len = mbstowcs_nonfatal(data, data_c, len);
+   len = (int)mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)
       return 0;
 
@@ -243,7 +244,7 @@ void RichString_setAttr(RichString* this, int attrs) {
 }
 
 int RichString_appendWide(RichString* this, int attrs, const char* data) {
-   return RichString_writeFromWide(this, attrs, data, this->chlen, strlen(data));
+   return RichString_writeFromWide(this, attrs, data, this->chlen, (int)strlen(data));
 }
 
 int RichString_appendnWide(RichString* this, int attrs, const char* data, int len) {
@@ -251,11 +252,11 @@ int RichString_appendnWide(RichString* this, int attrs, const char* data, int le
 }
 
 int RichString_writeWide(RichString* this, int attrs, const char* data) {
-   return RichString_writeFromWide(this, attrs, data, 0, strlen(data));
+   return RichString_writeFromWide(this, attrs, data, 0, (int)strlen(data));
 }
 
 int RichString_appendAscii(RichString* this, int attrs, const char* data) {
-   return RichString_writeFromAscii(this, attrs, data, this->chlen, strlen(data));
+   return RichString_writeFromAscii(this, attrs, data, this->chlen, (int)strlen(data));
 }
 
 int RichString_appendnAscii(RichString* this, int attrs, const char* data, int len) {
@@ -263,5 +264,5 @@ int RichString_appendnAscii(RichString* this, int attrs, const char* data, int l
 }
 
 int RichString_writeAscii(RichString* this, int attrs, const char* data) {
-   return RichString_writeFromAscii(this, attrs, data, 0, strlen(data));
+   return RichString_writeFromAscii(this, attrs, data, 0, (int)strlen(data));
 }

@@ -144,7 +144,7 @@ io_priority = (cpu_nice + 20) / 5. -- From ionice(1) man page
 */
 static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
    if (IOPriority_class(this->ioPriority) == IOPRIO_CLASS_NONE) {
-      return IOPriority_tuple(IOPRIO_CLASS_BE, (this->super.nice + 20) / 5);
+      return IOPriority_tuple(IOPRIO_CLASS_BE, (int)((this->super.nice + 20) / 5));
    }
 
    return this->ioPriority;
@@ -162,7 +162,7 @@ IOPriority LinuxProcess_updateIOPriority(Process* p) {
    IOPriority ioprio = 0;
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
 #ifdef SYS_ioprio_get
-   ioprio = syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, Process_getPid(p));
+   ioprio = (int) syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, Process_getPid(p));
 #endif
    LinuxProcess* this = (LinuxProcess*) p;
    this->ioPriority = ioprio;

@@ -69,7 +69,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
       if (this->cursor < SCREEN_NAME_LEN - 1) {
          this->buffer[this->cursor] = (char)ch;
          this->cursor++;
-         super->selectedLen = strlen(this->buffer);
+         super->selectedLen = (int) strlen(this->buffer);
          Panel_setCursorToSelection(super);
       }
 
@@ -82,7 +82,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
          if (this->cursor > 0) {
             this->cursor--;
             this->buffer[this->cursor] = '\0';
-            super->selectedLen = strlen(this->buffer);
+            super->selectedLen = (int) strlen(this->buffer);
             Panel_setCursorToSelection(super);
          }
          break;
@@ -129,10 +129,10 @@ static void startRenaming(Panel* super) {
    this->saved = name;
    strncpy(this->buffer, name, SCREEN_NAME_LEN);
    this->buffer[SCREEN_NAME_LEN] = '\0';
-   this->cursor = strlen(this->buffer);
+   this->cursor = (int) strlen(this->buffer);
    item->value = this->buffer;
    Panel_setSelectionColor(super, PANEL_EDIT);
-   super->selectedLen = strlen(this->buffer);
+   super->selectedLen = (int) strlen(this->buffer);
    Panel_setCursorToSelection(super);
 }
 

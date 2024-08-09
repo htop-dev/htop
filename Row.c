@@ -181,7 +181,7 @@ RowField RowField_keyAt(const Settings* settings, int at) {
    RowField field;
    int x = 0;
    for (int i = 0; (field = fields[i]); i++) {
-      int len = strlen(RowField_alignedTitle(settings, field));
+      int len = (int)strlen(RowField_alignedTitle(settings, field));
       if (at >= x && at <= x + len) {
          return field;
       }
@@ -428,22 +428,22 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
    }
 
    unsigned long long totalSeconds = totalMicroseconds / 1000000;
-   unsigned long microseconds = totalMicroseconds % 1000000;
+   unsigned int microseconds = totalMicroseconds % 1000000;
    if (totalSeconds < 60) {
       int width = 5;
-      unsigned long fraction = microseconds / 10;
+      unsigned int fraction = microseconds / 10;
       if (totalSeconds >= 10) {
          width--;
          fraction /= 10;
       }
-      len = xSnprintf(buffer, sizeof(buffer), "%u.%0*lus ", (unsigned int)totalSeconds, width, fraction);
+      len = xSnprintf(buffer, sizeof(buffer), "%u.%0*us ", (unsigned int)totalSeconds, width, fraction);
       RichString_appendnAscii(str, baseColor, buffer, len);
       return;
    }
 
    if (totalSeconds < 600) {
-      unsigned int minutes = totalSeconds / 60;
-      unsigned int seconds = totalSeconds % 60;
+      unsigned int minutes = (unsigned int)totalSeconds / 60;
+      unsigned int seconds = (unsigned int)totalSeconds % 60;
       unsigned int milliseconds = microseconds / 1000;
       len = xSnprintf(buffer, sizeof(buffer), "%u:%02u.%03u ", minutes, seconds, milliseconds);
       RichString_appendnAscii(str, baseColor, buffer, len);
@@ -495,7 +495,8 @@ void Row_printRate(RichString* str, double rate, bool coloring) {
 
 void Row_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width) {
    int columns = width;
-   RichString_appendnWideColumns(str, attr, content, strlen(content), &columns);
+   size_t contentLen = strlen(content);
+   RichString_appendnWideColumns(str, attr, content, (int)MINIMUM(contentLen, 1000), &columns);
    RichString_appendChr(str, attr, ' ', width + 1 - columns);
 }
 

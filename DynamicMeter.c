@@ -106,6 +106,7 @@ static void DynamicMeter_getUiName(const Meter* this, char* name, size_t length)
       const char* uiName = meter->caption;
       if (uiName) {
          size_t uiNameLen = strlen(uiName);
+         assert(uiNameLen < 32);
          if (uiNameLen > 2 && uiName[uiNameLen - 2] == ':')
             uiNameLen -= 2;
 

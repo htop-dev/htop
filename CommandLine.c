@@ -12,6 +12,7 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
 #include <getopt.h>
 #include <locale.h>
 #include <stdbool.h>
@@ -204,12 +205,15 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             if (!username) {
                flags->userId = geteuid();
             } else if (!Action_setUserOnly(username, &(flags->userId))) {
-               for (const char* itr = username; *itr; ++itr)
-                  if (!isdigit((unsigned char)*itr)) {
-                     fprintf(stderr, "Error: invalid user \"%s\".\n", username);
-                     return STATUS_ERROR_EXIT;
-                  }
-               flags->userId = atol(username);
+               char *endptr;
+               errno = 0;
+               unsigned long res = strtoul(username, &endptr, 10);
+               unsigned castRes = (unsigned) res;
+               if (*endptr != '\0' || res == ULONG_MAX || errno != 0 || castRes != res) {
+                  fprintf(stderr, "Error: invalid user \"%s\".\n", username);
+                  return STATUS_ERROR_EXIT;
+               }
+               flags->userId = castRes;
             }
             break;
          }
