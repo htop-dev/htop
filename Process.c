@@ -867,12 +867,6 @@ static bool Process_setPriority(Process* this, int priority) {
    return (err == 0);
 }
 
-bool Process_rowSetPriority(Row* super, int priority) {
-   Process* this = (Process*) super;
-   assert(Object_isA((const Object*) this, (const ObjectClass*) &Process_class));
-   return Process_setPriority(this, priority);
-}
-
 bool Process_rowChangePriorityBy(Row* super, Arg delta) {
    Process* this = (Process*) super;
    assert(Object_isA((const Object*) this, (const ObjectClass*) &Process_class));
