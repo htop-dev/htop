@@ -795,12 +795,11 @@ static bool LinuxProcessTable_readSmapsFile(LinuxProcess* process, openat_arg_t 
    while (fgets(buffer, sizeof(buffer), fp)) {
       if (!strchr(buffer, '\n')) {
          // Partial line, skip to end of this line
-         while (fgets(buffer, sizeof(buffer), fp)) {
-            if (strchr(buffer, '\n')) {
-               break;
-            }
+         if (!skipEndOfLine(fp)) {
+            fclose(fp);
+            return false;
          }
-         continue;
+
       }
 
       if (String_startsWith(buffer, "Pss:")) {
@@ -840,12 +839,9 @@ static void LinuxProcessTable_readOpenVZData(LinuxProcess* process, openat_arg_t
    while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
       if (strchr(linebuf, '\n') == NULL) {
          // Partial line, skip to end of this line
-         while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
-            if (strchr(linebuf, '\n') != NULL) {
-               break;
-            }
+         if (!skipEndOfLine(file)) {
+            break;
          }
-         continue;
       }
 
       char* name_value_sep = strchr(linebuf, ':');
