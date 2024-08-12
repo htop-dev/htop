@@ -105,12 +105,13 @@ static void DynamicMeter_getUiName(const Meter* this, char* name, size_t length)
    if (meter) {
       const char* uiName = meter->caption;
       if (uiName) {
-         int len = strlen(uiName);
-         if (len > 2 && uiName[len - 2] == ':')
-            len -= 2;
-         xSnprintf(name, length, "%.*s", len, uiName);
+         size_t uiNameLen = strlen(uiName);
+         if (uiNameLen > 2 && uiName[uiNameLen - 2] == ':')
+            uiNameLen -= 2;
+
+         String_safeStrncpy(name, uiName, MINIMUM(length, uiNameLen + 1));
       } else {
-         xSnprintf(name, length, "%s", meter->name);
+         String_safeStrncpy(name, meter->name, length);
       }
    }
 }
