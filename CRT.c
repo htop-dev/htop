@@ -1261,7 +1261,13 @@ static void print_backtrace(void) {
    void* backtraceArray[256];
 
    int nptrs = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
-   backtrace_symbols_fd(backtraceArray, nptrs, STDERR_FILENO);
+   if (nptrs > 0) {
+      backtrace_symbols_fd(backtraceArray, nptrs, STDERR_FILENO);
+   } else {
+      full_write_str(STDERR_FILENO,
+         "[No backtrace information available from libc]\n"
+      );
+   }
 #else
 #error No implementation for print_backtrace()!
 #endif
