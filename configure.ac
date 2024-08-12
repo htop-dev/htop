@@ -197,6 +197,7 @@ CFLAGS="$CFLAGS -Wno-error -Werror=attributes"
 AC_COMPILE_IFELSE([
    AC_LANG_SOURCE(
       [
+         /* Attribute supported in GCC 4.3 or later */
          __attribute__((alloc_size(1))) char* my_alloc(int size) { return 0; }
       ],[]
    )],
@@ -211,6 +212,7 @@ CFLAGS="$CFLAGS -Wno-error -Werror=attributes"
 AC_COMPILE_IFELSE([
    AC_LANG_SOURCE(
       [
+         /* Attribute supported in GCC 10 or later */
          __attribute__((access(read_only, 1, 2))) extern int foo(const char* str, unsigned len);
       ],[]
    )],
