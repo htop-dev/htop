@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "DynamicMeter.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
@@ -97,6 +98,8 @@ static const char* DynamicMeter_getCaption(const Meter* this) {
 }
 
 static void DynamicMeter_getUiName(const Meter* this, char* name, size_t length) {
+   assert(length > 0);
+
    const Settings* settings = this->host->settings;
    const DynamicMeter* meter = Hashtable_get(settings->dynamicMeters, this->param);
    if (meter) {
