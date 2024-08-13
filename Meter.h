@@ -14,6 +14,7 @@ in the source distribution for its full text.
 
 #include "ListItem.h"
 #include "Machine.h"
+#include "Macros.h"
 #include "MeterMode.h"
 #include "Object.h"
 
@@ -47,13 +48,13 @@ in the source distribution for its full text.
 struct Meter_;
 typedef struct Meter_ Meter;
 
-typedef void(*Meter_Init)(Meter*);
-typedef void(*Meter_Done)(Meter*);
-typedef void(*Meter_UpdateMode)(Meter*, MeterModeId);
-typedef void(*Meter_UpdateValues)(Meter*);
-typedef void(*Meter_Draw)(Meter*, int, int, int);
-typedef const char* (*Meter_GetCaption)(const Meter*);
-typedef void(*Meter_GetUiName)(const Meter*, char*, size_t);
+typedef ATTR_NONNULL void (*Meter_Init)(Meter*);
+typedef ATTR_NONNULL void (*Meter_Done)(Meter*);
+typedef ATTR_NONNULL void (*Meter_UpdateMode)(Meter*, MeterModeId);
+typedef ATTR_NONNULL void (*Meter_UpdateValues)(Meter*);
+typedef ATTR_NONNULL void (*Meter_Draw)(Meter*, int, int, int);
+typedef ATTR_NONNULL const char* (*Meter_GetCaption)(const Meter*);
+typedef ATTR_NONNULL ATTR_ACCESS3_W(2, 3) void (*Meter_GetUiName)(const Meter*, char*, size_t);
 
 typedef struct MeterClass_ {
    const ObjectClass super;
