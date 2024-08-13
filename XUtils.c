@@ -238,6 +238,8 @@ int xAsprintf(char** strp, const char* fmt, ...) {
 }
 
 int xSnprintf(char* buf, size_t len, const char* fmt, ...) {
+   assert(len > 0);
+
    va_list vl;
    va_start(vl, fmt);
    int n = vsnprintf(buf, len, fmt, vl);
