@@ -49,16 +49,19 @@ static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
 /* ---------- TextMeterMode ---------- */
 
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
+   if (w <= 0)
+      return;
+
    const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
    mvaddnstr(y, x, caption, w);
    attrset(CRT_colors[RESET_COLOR]);
 
-   int captionLen = strlen(caption);
-   x += captionLen;
-   w -= captionLen;
-   if (w <= 0)
+   size_t captionLen = strlen(caption);
+   if ((size_t)w <= captionLen)
       return;
+   x += (int)captionLen;
+   w -= (int)captionLen;
 
    RichString_begin(out);
    Meter_displayBuffer(this, &out);
@@ -301,6 +304,10 @@ static void LEDMeterMode_drawDigit(int x, int y, int n) {
 }
 
 static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   if (w <= 0)
+      return;
+
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8)
       LEDMeterMode_digits = LEDMeterMode_digitsUtf8;
@@ -318,25 +325,25 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
       y + 2;
    attrset(CRT_colors[LED_COLOR]);
    const char* caption = Meter_getCaption(this);
-   mvaddstr(yText, x, caption);
-   int xx = x + strlen(caption);
+   mvaddnstr(yText, x, caption, w);
+   size_t xx = (size_t)x + strlen(caption);
    int len = RichString_sizeVal(out);
-   for (int i = 0; i < len; i++) {
+   for (size_t i = 0; i < (size_t)len; i++) {
       int c = RichString_getCharVal(out, i);
       if (c >= '0' && c <= '9') {
-         if (xx - x + 4 > w)
+         if (xx + 4 > (unsigned int)x + (unsigned int)w)
             break;
 
-         LEDMeterMode_drawDigit(xx, y, c - '0');
+         LEDMeterMode_drawDigit((int)xx, y, c - '0');
          xx += 4;
       } else {
-         if (xx - x + 1 > w)
+         if (xx + 1 > (unsigned int)x + (unsigned int)w)
             break;
 #ifdef HAVE_LIBNCURSESW
          const cchar_t wc = { .chars = { c, '\0' }, .attr = 0 }; /* use LED_COLOR from attrset() */
-         mvadd_wch(yText, xx, &wc);
+         mvadd_wch(yText, (int)xx, &wc);
 #else
-         mvaddch(yText, xx, c);
+         mvaddch(yText, (int)xx, c);
 #endif
          xx += 1;
       }
