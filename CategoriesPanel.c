@@ -42,13 +42,13 @@ static void CategoriesPanel_delete(Object* object) {
 }
 
 static void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
-   size_t columns = HeaderLayout_getColumns(this->scr->header->headerLayout);
+   unsigned int columns = HeaderLayout_getColumns(this->scr->header->headerLayout);
    MetersPanel** meterPanels = xMallocArray(columns, sizeof(MetersPanel*));
    Settings* settings = this->host->settings;
 
-   for (size_t i = 0; i < columns; i++) {
+   for (unsigned int i = 0; i < columns; i++) {
       char titleBuffer[32];
-      xSnprintf(titleBuffer, sizeof(titleBuffer), "Column %zu", i + 1);
+      xSnprintf(titleBuffer, sizeof(titleBuffer), "Column %u", i + 1);
       meterPanels[i] = MetersPanel_new(settings, titleBuffer, this->header->columns[i], this->scr);
 
       if (i != 0) {
