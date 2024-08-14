@@ -88,6 +88,7 @@ void Table_cleanupRow(Table* this, Row* row, int idx);
 
 static inline void Table_compact(Table* this) {
    Vector_compact(this->rows);
+   this->needsSort = true;
 }
 
 #endif
