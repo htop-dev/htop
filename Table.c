@@ -69,7 +69,7 @@ void Table_add(Table* this, Row* row) {
 // removing items.
 // Note: for processes should only be called from ProcessTable_iterate to avoid
 // breaking dying process highlighting.
-void Table_removeIndex(Table* this, const Row* row, int idx) {
+static void Table_removeIndex(Table* this, const Row* row, int idx) {
    int rowid = row->id;
 
    assert(row == (Row*)Vector_get(this->rows, idx));
