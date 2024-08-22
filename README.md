@@ -46,10 +46,13 @@ List of build-time dependencies:
 > This is also something that is reflected in the package name on Debian/Ubuntu (via the additional 'w' - 'w'ide character support).
 
 List of additional build-time dependencies (based on feature flags):
+*  `pkg-config`
 *  `sensors`
 *  `hwloc`
 *  `libcap` (v2.21 or later)
 *  `libnl-3` and `libnl-genl-3`
+
+`pkg-config` is optional but recommended. The configure script of `htop` might utilize `pkg-config` to obtain the compiler and linker flags required for a library. Some OS distributions provide `pkg-config` functionalities through an alternative implementation such as `pkgconf`. Look for both names in your package manager.
 
 Install these and other required packages for C development from your package manager.
 
