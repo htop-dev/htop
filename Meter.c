@@ -212,6 +212,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[METER_TEXT]);
    const int captionLen = 3;
    mvaddnstr(y, x, caption, captionLen);
+
+   // Prepare parameters for drawing
+   uint8_t maxItems = Meter_maxItems(this);
+   bool isPercentChart = Meter_isPercentChart(this);
    x += captionLen;
    w -= captionLen;
 
@@ -243,8 +247,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
       data->values[nValues - 1] = 0.0;
       if (this->curItems > 0) {
-         assert(this->values);
-         data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
+         data->values[nValues - 1] = Meter_computeSum(this);
+         if (isPercentChart && this->total > 0.0) {
+            data->values[nValues - 1] /= this->total;
+         }
       }
    }
 
@@ -272,10 +278,21 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    }
    size_t i = nValues - (size_t)w * 2;
 
+   // Determine the graph scale
+   double total = 1.0;
+   if (maxItems > 0 && !isPercentChart) {
+      for (size_t j = i; j < nValues; j++) {
+         if (total < data->values[j]) {
+            total = data->values[j];
+         }
+      }
+      assert(total <= DBL_MAX);
+   }
+   assert(total >= 1.0);
+
    // Draw the actual graph
    for (int col = 0; i < nValues - 1; i += 2, col++) {
       int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
-      double total = MAXIMUM(this->total, 1);
       int v1 = (int) lround(CLAMP(data->values[i] / total * pix, 1.0, pix));
       int v2 = (int) lround(CLAMP(data->values[i + 1] / total * pix, 1.0, pix));
 
