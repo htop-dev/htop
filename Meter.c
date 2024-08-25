@@ -251,6 +251,7 @@ bufferInitialized:
    data->nValues = nValues;
 }
 
+#if 0 /* Unused code */
 static size_t GraphMeterMode_valueCellIndex(unsigned int graphHeight, bool isPercentChart, int deltaExp, unsigned int y, unsigned int* scaleFactor, unsigned int* increment) {
    assert(deltaExp >= 0);
    assert(deltaExp < UINT16_WIDTH);
@@ -829,9 +830,9 @@ static void GraphMeterMode_computeColors(Meter* this, const GraphDrawContext* co
       }
    }
 }
+#endif /* End of unused code */
 
 static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* context) {
-   uint8_t maxItems = context->maxItems;
    bool isPercentChart = context->isPercentChart;
    size_t nCellsPerValue = context->nCellsPerValue;
    if (!nCellsPerValue)
@@ -851,18 +852,23 @@ static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* c
    valueStart = &valueStart[(nValues - 1) * nCellsPerValue];
 
    // Compute "sum" and "total"
-   double sum = 0.0;
-   if (this->curItems > 0) {
-      sum = Meter_computeSum(this);
-      assert(sum >= 0.0);
-      assert(sum <= DBL_MAX);
-   }
-   double total;
+   double total = 0.0;
    if (isPercentChart) {
-      total = MAXIMUM(this->total, sum);
+      assert(this->total >= 0.0);
+      total = this->total;
+      valueStart[0].scaleExp = 0;
    } else {
+      if (isPositive(this->values[0]))
+         total = this->values[0];
+
+      if (this->curItems > 1 && isgreater(this->values[1], total))
+         total = this->values[1];
+
+      if (total > DBL_MAX)
+         total = DBL_MAX;
+
       int scaleExp = 0;
-      (void)frexp(sum, &scaleExp);
+      (void)frexp(total, &scaleExp);
       if (scaleExp < 0) {
          scaleExp = 0;
       }
@@ -878,51 +884,25 @@ static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* c
 
    assert(graphHeight <= UINT16_MAX / 8);
    double maxDots = (double)(int32_t)(graphHeight * 8);
-   int numDots = 0;
-   if (total > 0.0) {
-      numDots = (int)ceil((sum / total) * maxDots);
-      assert(numDots >= 0);
-      if (sum > 0.0 && numDots <= 0) {
-         numDots = 1; // Division of (sum / total) underflows
-      }
-   }
+   for (uint8_t i = 0; i < 2; i++) {
+      double value = 0.0;
+      if (i < this->curItems && isPositive(this->values[i]))
+         value = this->values[i];
 
-   if (maxItems == 1) {
+      if (value > total)
+         value = total;
+
+      int numDots = 0;
+      if (total > 0.0) {
+         numDots = (int)ceil((value / total) * maxDots);
+         assert(numDots >= 0);
+         if (value > 0.0 && numDots <= 0) {
+            numDots = 1; // Division of (value / total) underflows
+         }
+      }
+
       assert(numDots <= UINT16_MAX);
-      valueStart[isPercentChart ? 0 : 1].numDots = (uint16_t)numDots;
-      return;
-   }
-
-   // Clear cells
-   unsigned int y = ((unsigned int)numDots + 8 - 1) / 8; // Round up
-   size_t i = GraphMeterMode_valueCellIndex(graphHeight, isPercentChart, 0, y, NULL, NULL);
-   if (i < nCellsPerValue) {
-      memset(&valueStart[i], 0, (nCellsPerValue - i) * sizeof(*valueStart));
-   }
-
-   if (sum <= 0.0)
-      return;
-
-   int deltaExp = 0;
-   double scaledTotal = total;
-   assert(scaledTotal > 0.0);
-   while (true) {
-      numDots = (int)ceil((sum / scaledTotal) * maxDots);
-      if (numDots <= 0) {
-         numDots = 1; // Division of (sum / scaledTotal) underflows
-      }
-
-      GraphMeterMode_computeColors(this, context, valueStart, deltaExp, scaledTotal, (unsigned int)numDots);
-
-      if (isPercentChart || !(scaledTotal < DBL_MAX) || (1U << deltaExp) >= graphHeight) {
-         break;
-      }
-
-      deltaExp++;
-      scaledTotal *= 2.0;
-      if (scaledTotal > DBL_MAX) {
-         scaledTotal = DBL_MAX;
-      }
+      valueStart[1 + i].numDots = (uint16_t)numDots;
    }
 }
 
@@ -942,6 +922,7 @@ static void GraphMeterMode_printScale(int exponent) {
    }
 }
 
+#if 0 /* Unused code */
 static uint8_t GraphMeterMode_scaleCellDetails(uint8_t details, unsigned int scaleFactor) {
    // Only the "top cell" of a record may need scaling like this; the cell does
    // not use the special meaning of bit 4.
@@ -969,6 +950,7 @@ static uint8_t GraphMeterMode_scaleCellDetails(uint8_t details, unsigned int sca
    }
    return 0x00;
 }
+#endif /* End of unused code */
 
 static int GraphMeterMode_lookupCell(const Meter* this, const GraphDrawContext* context, int scaleExp, size_t valueIndex, unsigned int y, uint8_t* details) {
    unsigned int graphHeight = (unsigned int)this->h;
@@ -995,50 +977,59 @@ static int GraphMeterMode_lookupCell(const Meter* this, const GraphDrawContext* 
    int deltaExp = isPercentChart ? 0 : scaleExp - valueStart[0].scaleExp;
    assert(deltaExp >= 0);
 
-   if (maxItems == 1) {
-      unsigned int numDots = valueStart[isPercentChart ? 0 : 1].numDots;
+   unsigned int numDots = valueStart[1].numDots;
+   if (numDots >= 1) {
+      if (deltaExp + 1 < UINT16_WIDTH) {
+         numDots = ((numDots - 1) >> (deltaExp + 1)) + 1;
+      } else {
+         numDots = 1;
+      }
+   }
+   unsigned int blanksAtEnd = graphHeight * 4 - numDots;
 
-      if (numDots < 1)
-         goto cellIsEmpty;
+   numDots = valueStart[2].numDots;
+   if (numDots >= 1) {
+      if (deltaExp + 1 < UINT16_WIDTH) {
+         numDots = ((numDots - 1) >> (deltaExp + 1)) + 1;
+      } else {
+         numDots = 1;
+      }
+   }
+   unsigned int blanksAtStart = graphHeight * 4 - numDots;
 
-      // Scale according to exponent difference. Round up.
-      numDots = deltaExp < UINT16_WIDTH ? ((numDots - 1) >> deltaExp) : 0;
-      numDots++;
+   if (graphHeight - 1 - y < blanksAtEnd / 8)
+      goto cellIsEmpty;
+   if (y < blanksAtStart / 8)
+      goto cellIsEmpty;
 
-      if (y > (numDots - 1) / 8)
-         goto cellIsEmpty;
+   if (y * 2 == graphHeight - 1 && !(valueStart[1].numDots || valueStart[2].numDots))
+      goto cellIsEmpty;
 
+   if (maxItems <= 1 || y * 2 > graphHeight - 1) {
       itemIndex = 0;
-      *details = 0xFF;
-      if (y == (numDots - 1) / 8) {
-         const uint8_t dotAlignment = 2;
-         unsigned int blanksAtTopCell = (8 - 1 - (numDots - 1) % 8) / dotAlignment * dotAlignment;
-         *details <<= blanksAtTopCell;
-      }
+   } else if (y * 2 < graphHeight - 1) {
+      itemIndex = 1;
    } else {
-      int deltaExpArg = deltaExp >= UINT16_WIDTH ? UINT16_WIDTH - 1 : deltaExp;
+      itemIndex = valueStart[1].numDots >= valueStart[2].numDots ? 0 : 1;
+   }
 
-      unsigned int scaleFactor;
-      size_t i = GraphMeterMode_valueCellIndex(graphHeight, isPercentChart, deltaExpArg, y, &scaleFactor, NULL);
-      if (i >= nCellsPerValue)
-         goto cellIsEmpty;
-
-      if (deltaExp >= UINT16_WIDTH) {
-         // Any "scaleFactor" value greater than 8 behaves the same as 8 for the
-         // "scaleCellDetails" function.
-         scaleFactor = 8;
+   if (y * 2 == graphHeight - 1 && valueStart[1].numDots > 8 && valueStart[2].numDots > 8) {
+      *details = valueStart[1].numDots >= valueStart[2].numDots ? 0x0F : 0xF0;
+   } else {
+      *details = 0xFF;
+      const uint8_t dotAlignment = 2;
+      if (y == blanksAtStart / 8) {
+         blanksAtStart = (blanksAtStart % 8) / dotAlignment * dotAlignment;
+         *details >>= blanksAtStart;
       }
-
-      const GraphDataCell* cell = &valueStart[i];
-      itemIndex = cell->c.itemNum - 1;
-      *details = GraphMeterMode_scaleCellDetails(cell->c.details, scaleFactor);
+      if ((graphHeight - 1 - y) == blanksAtEnd / 8) {
+         blanksAtEnd = (blanksAtEnd % 8) / dotAlignment * dotAlignment;
+         *details = (uint8_t)((*details >> blanksAtEnd) << blanksAtEnd);
+      }
    }
    /* fallthrough */
 
 cellIsEmpty:
-   if (y == 0)
-      *details |= 0xC0;
-
    if (itemIndex == (uint8_t)-1)
       return BAR_SHADOW;
 
@@ -1136,9 +1127,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    uint8_t maxItems = Meter_maxItems(this);
    bool isPercentChart = Meter_isPercentChart(this);
-   size_t nCellsPerValue = maxItems <= 1 ? maxItems : graphHeight;
-   if (!isPercentChart)
-      nCellsPerValue *= 2;
+   size_t nCellsPerValue = maxItems < 1 ? maxItems : 3;
 
    GraphDrawContext context = {
       .maxItems = maxItems,
