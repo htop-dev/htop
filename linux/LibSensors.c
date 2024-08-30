@@ -142,6 +142,7 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
       { "littlecore_thermal", 0 },
       { "bigcore0_thermal",   0 },
       { "bigcore1_thermal",   0 },
+      { "bigcore2_thermal",   0 },
       /* Low priority drivers */
       { "acpitz",             1 },
    };
@@ -233,7 +234,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                coreTempCount += 2;
                continue;
             }
-            if (String_eq(chip->prefix, "bigcore1_thermal")) {
+            if (String_eq(chip->prefix, "bigcore1_thermal") || String_eq(chip->prefix, "bigcore2_thermal")) {
                data[7] = temp;
                data[8] = temp;
                coreTempCount += 2;
