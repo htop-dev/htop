@@ -55,18 +55,21 @@ void Settings_delete(Settings* this) {
    free(this);
 }
 
-static void Settings_readMeters(Settings* this, const char* line, unsigned int column) {
+static char** Settings_splitLineToIDs(const char* line) {
    char* trim = String_trim(line);
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
+   return ids;
+}
+
+static void Settings_readMeters(Settings* this, const char* line, unsigned int column) {
    column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
-   this->hColumns[column].names = ids;
+   this->hColumns[column].names = Settings_splitLineToIDs(line);
 }
 
 static void Settings_readMeterModes(Settings* this, const char* line, unsigned int column) {
-   char* trim = String_trim(line);
-   char** ids = String_split(trim, ' ', NULL);
-   free(trim);
+   char** ids = Settings_splitLineToIDs(line);
+
    int len = 0;
    for (int i = 0; ids[i]; i++) {
       len++;
@@ -77,8 +80,9 @@ static void Settings_readMeterModes(Settings* this, const char* line, unsigned i
    for (int i = 0; i < len; i++) {
       modes[i] = (MeterModeId) atoi(ids[i]);
    }
-   String_freeArray(ids);
    this->hColumns[column].modes = modes;
+
+   String_freeArray(ids);
 }
 
 static bool Settings_validateMeters(Settings* this) {
