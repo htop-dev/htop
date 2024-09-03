@@ -54,7 +54,7 @@ static const struct {
    [HF_FOUR_25_25_25_25] = { 4, { 25, 25, 25, 25 }, "four_25_25_25_25", "4 columns - 25/25/25/25",     },
 };
 
-static inline size_t HeaderLayout_getColumns(HeaderLayout hLayout) {
+static inline unsigned int HeaderLayout_getColumns(HeaderLayout hLayout) {
    /* assert the layout is initialized */
    assert(0 <= hLayout);
    assert(hLayout < LAST_HEADER_LAYOUT);

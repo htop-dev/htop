@@ -117,11 +117,11 @@ static void Settings_readMeterModes(Settings* this, const char* line, unsigned i
 }
 
 static bool Settings_validateMeters(Settings* this) {
-   const size_t colCount = HeaderLayout_getColumns(this->hLayout);
+   const unsigned int colCount = HeaderLayout_getColumns(this->hLayout);
 
    bool anyMeter = false;
 
-   for (size_t column = 0; column < colCount; column++) {
+   for (unsigned int column = 0; column < colCount; column++) {
       char** names = this->hColumns[column].names;
       const MeterModeId* modes = this->hColumns[column].modes;
       const size_t len = this->hColumns[column].len;
@@ -154,7 +154,7 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
    }
 
    // Release any previously allocated memory
-   for (size_t i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
+   for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       String_freeArray(this->hColumns[i].names);
       free(this->hColumns[i].modes);
    }

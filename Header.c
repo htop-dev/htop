@@ -51,8 +51,8 @@ void Header_delete(Header* this) {
 }
 
 void Header_setLayout(Header* this, HeaderLayout hLayout) {
-   size_t oldColumns = HeaderLayout_getColumns(this->headerLayout);
-   size_t newColumns = HeaderLayout_getColumns(hLayout);
+   unsigned int oldColumns = HeaderLayout_getColumns(this->headerLayout);
+   unsigned int newColumns = HeaderLayout_getColumns(hLayout);
 
    this->headerLayout = hLayout;
 
@@ -61,11 +61,11 @@ void Header_setLayout(Header* this, HeaderLayout hLayout) {
 
    if (newColumns > oldColumns) {
       this->columns = xReallocArray(this->columns, newColumns, sizeof(Vector*));
-      for (size_t i = oldColumns; i < newColumns; i++)
+      for (unsigned int i = oldColumns; i < newColumns; i++)
          this->columns[i] = Vector_new(Class(Meter), true, DEFAULT_SIZE);
    } else {
       // move meters from to-be-deleted columns into last one
-      for (size_t i = newColumns; i < oldColumns; i++) {
+      for (unsigned int i = newColumns; i < oldColumns; i++) {
          for (int j = this->columns[i]->items - 1; j >= 0; j--) {
             Vector_add(this->columns[newColumns - 1], Vector_take(this->columns[i], j));
          }
@@ -198,7 +198,7 @@ void Header_draw(const Header* this) {
    for (int y = 0; y < height; y++) {
       mvhline(y, 0, ' ', COLS);
    }
-   const int numCols = HeaderLayout_getColumns(this->headerLayout);
+   const int numCols = (int)HeaderLayout_getColumns(this->headerLayout);
    const int width = COLS - 2 * pad - (numCols - 1);
    int x = pad;
    float roundingLoss = 0.0F;
@@ -254,7 +254,7 @@ void Header_updateData(Header* this) {
  * Returns the number of columns to span, i.e. if the direct neighbor is occupied 1.
  */
 static int calcColumnWidthCount(const Header* this, const Meter* curMeter, const int pad, const unsigned int curColumn, const int curHeight) {
-   for (size_t i = curColumn + 1; i < HeaderLayout_getColumns(this->headerLayout); i++) {
+   for (unsigned int i = curColumn + 1; i < HeaderLayout_getColumns(this->headerLayout); i++) {
       const Vector* meters = this->columns[i];
 
       int height = pad;
