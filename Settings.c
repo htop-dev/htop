@@ -31,48 +31,6 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-/*
-
-static char** readQuotedList(char* line) {
-   int n = 0;
-   char** list = xCalloc(sizeof(char*), 1);
-   int start = 0;
-   for (;;) {
-      while (line[start] && line[start] == ' ') {
-         start++;
-      }
-      if (line[start] != '"') {
-         break;
-      }
-      start++;
-      int close = start;
-      while (line[close] && line[close] != '"') {
-         close++;
-      }
-      int len = close - start;
-      char* item = xMalloc(len + 1);
-      strncpy(item, line + start, len);
-      item[len] = '\0';
-      list[n] = item;
-      n++;
-      list = xRealloc(list, sizeof(char*) * (n + 1));
-      start = close + 1;
-   }
-   list[n] = NULL;
-   return list;
-}
-
-static void writeQuotedList(FILE* fp, char** list) {
-   const char* sep = "";
-   for (int i = 0; list[i]; i++) {
-      fprintf(fp, "%s\"%s\"", sep, list[i]);
-      sep = " ";
-   }
-   fprintf(fp, "\n");
-}
-
-*/
-
 static void Settings_deleteColumns(Settings* this) {
    for (size_t i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       String_freeArray(this->hColumns[i].names);
