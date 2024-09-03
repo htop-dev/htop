@@ -62,22 +62,23 @@ static char** Settings_splitLineToIDs(const char* line) {
    return ids;
 }
 
-static void Settings_readMeters(Settings* this, const char* line, unsigned int column) {
+static void Settings_readMeters(Settings* this, const char* line, size_t column) {
    column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
    this->hColumns[column].names = Settings_splitLineToIDs(line);
 }
 
-static void Settings_readMeterModes(Settings* this, const char* line, unsigned int column) {
+static void Settings_readMeterModes(Settings* this, const char* line, size_t column) {
    char** ids = Settings_splitLineToIDs(line);
 
-   int len = 0;
-   for (int i = 0; ids[i]; i++) {
+   size_t len = 0;
+   for (size_t i = 0; ids[i]; i++) {
       len++;
    }
+
    column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
    this->hColumns[column].len = len;
    MeterModeId* modes = len ? xCalloc(len, sizeof(MeterModeId)) : NULL;
-   for (int i = 0; i < len; i++) {
+   for (size_t i = 0; i < len; i++) {
       modes[i] = (MeterModeId) atoi(ids[i]);
    }
    this->hColumns[column].modes = modes;
@@ -117,7 +118,7 @@ static bool Settings_validateMeters(Settings* this) {
 
 static void Settings_defaultMeters(Settings* this, const Machine* host) {
    unsigned int initialCpuCount = host->activeCPUs;
-   int sizes[] = { 3, 3 };
+   size_t sizes[] = { 3, 3 };
 
    if (initialCpuCount > 4 && initialCpuCount <= 128) {
       sizes[1]++;
