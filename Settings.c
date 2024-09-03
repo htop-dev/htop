@@ -153,7 +153,8 @@ static bool Settings_validateMeters(Settings* this) {
    return anyMeter;
 }
 
-static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount) {
+static void Settings_defaultMeters(Settings* this, const Machine* host) {
+   unsigned int initialCpuCount = host->activeCPUs;
    int sizes[] = { 3, 3 };
 
    if (initialCpuCount > 4 && initialCpuCount <= 128) {
@@ -357,7 +358,7 @@ static ScreenSettings* Settings_defaultScreens(Settings* this) {
    return this->screens[0];
 }
 
-static bool Settings_read(Settings* this, const char* fileName, unsigned int initialCpuCount, bool checkWritability) {
+static bool Settings_read(Settings* this, const char* fileName, const Machine* host, bool checkWritability) {
    int fd = -1;
    const char* fopen_mode = "r+";
    if (checkWritability) {
@@ -595,7 +596,7 @@ static bool Settings_read(Settings* this, const char* fileName, unsigned int ini
    }
    fclose(fp);
    if (!didReadMeters || !Settings_validateMeters(this))
-      Settings_defaultMeters(this, initialCpuCount);
+      Settings_defaultMeters(this, host);
    if (!this->nScreens)
       Settings_defaultScreens(this);
    return didReadAny;
@@ -814,7 +815,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    return r;
 }
 
-Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens) {
+Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->writeConfig = true;
@@ -900,9 +901,9 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
    this->changed = false;
    this->delay = DEFAULT_DELAY;
 
-   bool ok = Settings_read(this, this->filename, initialCpuCount, /*checkWritability*/true);
+   bool ok = Settings_read(this, this->filename, host, /*checkWritability*/true);
    if (!ok && legacyDotfile) {
-      ok = Settings_read(this, legacyDotfile, initialCpuCount, this->writeConfig);
+      ok = Settings_read(this, legacyDotfile, host, this->writeConfig);
       if (ok && this->writeConfig) {
          // Transition to new location and delete old configuration file
          if (Settings_write(this, false) == 0) {
@@ -914,10 +915,10 @@ Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, H
       this->screenTabs = true;
       this->changed = true;
 
-      ok = Settings_read(this, SYSCONFDIR "/htoprc", initialCpuCount, /*checkWritability*/false);
+      ok = Settings_read(this, SYSCONFDIR "/htoprc", host, /*checkWritability*/false);
    }
    if (!ok) {
-      Settings_defaultMeters(this, initialCpuCount);
+      Settings_defaultMeters(this, host);
       Settings_defaultScreens(this);
    }
 
