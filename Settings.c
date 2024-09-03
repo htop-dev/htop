@@ -73,20 +73,27 @@ static void writeQuotedList(FILE* fp, char** list) {
 
 */
 
-void Settings_delete(Settings* this) {
-   free(this->filename);
-   free(this->initialFilename);
-   for (unsigned int i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
+static void Settings_deleteColumns(Settings* this) {
+   for (size_t i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       String_freeArray(this->hColumns[i].names);
       free(this->hColumns[i].modes);
    }
    free(this->hColumns);
+}
+
+static void Settings_deleteScreens(Settings* this) {
    if (this->screens) {
-      for (unsigned int i = 0; this->screens[i]; i++) {
+      for (size_t i = 0; this->screens[i]; i++)
          ScreenSettings_delete(this->screens[i]);
-      }
       free(this->screens);
    }
+}
+
+void Settings_delete(Settings* this) {
+   free(this->filename);
+   free(this->initialFilename);
+   Settings_deleteColumns(this);
+   Settings_deleteScreens(this);
    free(this);
 }
 
@@ -154,11 +161,7 @@ static void Settings_defaultMeters(Settings* this, unsigned int initialCpuCount)
    }
 
    // Release any previously allocated memory
-   for (size_t i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
-      String_freeArray(this->hColumns[i].names);
-      free(this->hColumns[i].modes);
-   }
-   free(this->hColumns);
+   Settings_deleteColumns(this);
 
    this->hLayout = HF_TWO_50_50;
    this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
