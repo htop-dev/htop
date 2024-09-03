@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #define CONFIG_READER_MIN_VERSION 3
 
 struct DynamicScreen_;  // IWYU pragma: keep
+struct Machine_;        // IWYU pragma: keep
 struct Table_;          // IWYU pragma: keep
 
 typedef struct {
@@ -128,7 +129,7 @@ void Settings_delete(Settings* this);
 
 int Settings_write(const Settings* this, bool onCrash);
 
-Settings* Settings_new(unsigned int initialCpuCount, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens);
+Settings* Settings_new(const struct Machine_* host, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens);
 
 ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* defaults);
 

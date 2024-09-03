@@ -342,7 +342,7 @@ int CommandLine_run(int argc, char** argv) {
 
    Machine* host = Machine_new(ut, flags.userId);
    ProcessTable* pt = ProcessTable_new(host, flags.pidMatchList);
-   Settings* settings = Settings_new(host->activeCPUs, dm, dc, ds);
+   Settings* settings = Settings_new(host, dm, dc, ds);
    Machine_populateTablesFromSettings(host, settings, &pt->super);
 
    Header* header = Header_new(host, 2);
