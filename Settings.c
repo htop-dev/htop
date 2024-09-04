@@ -185,14 +185,9 @@ static const char* toFieldName(Hashtable* columns, int id, bool* enabled) {
    }
    if (id >= ROW_DYNAMIC_FIELDS) {
       const DynamicColumn* column = DynamicColumn_lookup(columns, id);
-      if (!column) {
-         if (enabled)
-            *enabled = false;
-         return NULL;
-      }
       if (enabled)
-         *enabled = column->enabled;
-      return column->name;
+         *enabled = column ? column->enabled : false;
+      return column ? column->name : NULL;
    }
    if (enabled)
       *enabled = true;
