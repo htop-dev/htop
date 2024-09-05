@@ -85,13 +85,14 @@ requesting a sort order with -s.
 \fB\-H \-\-highlight-changes=DELAY\fR
 Highlight new and old processes
 .TP
-\fB   \-\-drop-capabilities[=off|basic|strict]\fR
-Linux only; requires libcap support.
+\fB\-\-drop-capabilities[=off|basic|strict]\fR
+Linux only; this option needs to have been enabled at compile-time and
+requires libcap support at runtime.
 .br
 Drop unneeded Linux capabilities.
-In strict mode features like killing, changing process priorities, and reading
-process delay accounting information will not work, due to less capabilities
-held.
+In strict mode features like killing, changing process priorities and reading
+process delay accounting information will not work due to fewer capabilities
+being held.
 .SH "INTERACTIVE COMMANDS"
 The following commands are supported while in
 .BR htop :
