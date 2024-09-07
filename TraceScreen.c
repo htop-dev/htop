@@ -39,6 +39,7 @@ TraceScreen* TraceScreen_new(const Process* process) {
    TraceScreen* this = xCalloc(1, sizeof(TraceScreen));
    Object_setClass(this, Class(TraceScreen));
    this->tracing = true;
+   this->strace_alive = false;
    FunctionBar* fuBar = FunctionBar_new(TraceScreenFunctions, TraceScreenKeys, TraceScreenEvents);
    CRT_disableDelay();
    return (TraceScreen*) InfoScreen_init(&this->super, process, fuBar, LINES - 2, " ");
@@ -121,6 +122,8 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
 
    this->child = child;
    this->strace = fp;
+   this->strace_alive = true;
+
    return true;
 
 err:
@@ -131,19 +134,21 @@ err:
 
 static void TraceScreen_updateTrace(InfoScreen* super) {
    TraceScreen* this = (TraceScreen*) super;
-   char buffer[1025];
 
    int fd_strace = fileno(this->strace);
-   assert(fd_strace != -1);
 
    fd_set fds;
    FD_ZERO(&fds);
-// FD_SET(STDIN_FILENO, &fds);
-   FD_SET(fd_strace, &fds);
+   FD_SET(STDIN_FILENO, &fds);
+   if (this->strace_alive) {
+      assert(fd_strace != -1);
+      FD_SET(fd_strace, &fds);
+   }
 
    struct timeval tv = { .tv_sec = 0, .tv_usec = 500 };
-   int ready = select(fd_strace + 1, &fds, NULL, NULL, &tv);
+   int ready = select(MAXIMUM(STDIN_FILENO, fd_strace) + 1, &fds, NULL, NULL, &tv);
 
+   char buffer[1025];
    size_t nread = 0;
    if (ready > 0 && FD_ISSET(fd_strace, &fds))
       nread = fread(buffer, 1, sizeof(buffer) - 1, this->strace);
@@ -171,6 +176,9 @@ static void TraceScreen_updateTrace(InfoScreen* super) {
       if (this->follow) {
          Panel_setSelected(this->super.display, Panel_size(this->super.display) - 1);
       }
+   } else {
+      if (this->strace_alive && waitpid(this->child, NULL, WNOHANG) != 0)
+         this->strace_alive = false;
    }
 }
 
