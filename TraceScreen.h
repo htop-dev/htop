@@ -23,6 +23,7 @@ typedef struct TraceScreen_ {
    FILE* strace;
    bool contLine;
    bool follow;
+   bool strace_alive;
 } TraceScreen;
 
 
