@@ -280,6 +280,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    uint64_t bytesReadSum = 0;
    uint64_t bytesWriteSum = 0;
    uint64_t busyMsTimeSum = 0;
+   uint64_t numDisks = 0;
 
    for (int i = 0; i < dev_stats.dinfo->numdevs; i++) {
       const struct devstat* device = &dev_stats.dinfo->devices[dev_sel[i].position];
@@ -301,11 +302,13 @@ bool Platform_getDiskIO(DiskIOData* data) {
       bytesReadSum  += device->bytes_read;
       bytesWriteSum += device->bytes_written;
       busyMsTimeSum += (device->busy_time.tv_sec * 1000 + device->busy_time.tv_usec / 1000);
+      numDisks++;
    }
 
    data->totalBytesRead = bytesReadSum;
    data->totalBytesWritten = bytesWriteSum;
    data->totalMsTimeSpend = busyMsTimeSum;
+   data->numDisks = numDisks;
 
    free(dev_stats.dinfo);
    return true;
