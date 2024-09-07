@@ -172,6 +172,7 @@ const MeterClass GPUMeter_class = {
    .defaultMode = BAR_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = ARRAYSIZE(GPUMeter_engineData) + 1,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = GPUMeter_attributes,
    .name = "GPU",
