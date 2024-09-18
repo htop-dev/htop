@@ -379,6 +379,13 @@ fi
 # Checks for cross-platform features and flags.
 # ----------------------------------------------------------------------
 
+dnl PKG_PROG_PKG_CONFIG initializes $PKG_CONFIG and related variables.
+dnl If the macro is not called, some pkg-config checks might be skipped
+dnl and $PKG_CONFIG might be unset.
+m4_ifdef([PKG_PROG_PKG_CONFIG], [
+   PKG_PROG_PKG_CONFIG()
+])
+
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
 m4_define([HTOP_CHECK_SCRIPT],
 [
@@ -569,7 +576,6 @@ case "$enable_hwloc" in
       ;;
    yes)
       m4_ifdef([PKG_PROG_PKG_CONFIG], [
-         PKG_PROG_PKG_CONFIG()
          PKG_CHECK_MODULES(HWLOC, hwloc, [
                AM_CFLAGS="$AM_CFLAGS $HWLOC_CFLAGS"
                LIBS="$LIBS $HWLOC_LIBS"
