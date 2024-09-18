@@ -566,6 +566,53 @@ esac
 
 case ${htop_curses_capability}-$enable_unicode in
 none-*|nonwide-yes)
+   if test "x$PKG_CONFIG" = x; then (
+      # Friendly warning to advise user to install pkg-config.
+      # The local variables get discarded when done.
+      list=""
+      echo "" >conftest.c
+      if test "$cross_compiling" != yes; then
+         # "-print-multi-directory" supported in GCC 3.0 or later
+         name=""
+         if $CC $CPPFLAGS $CFLAGS -print-multi-directory -E conftest.c >/dev/null 2>&1; then
+            name=`$CC $CPPFLAGS $CFLAGS -print-multi-directory -E conftest.c 2>/dev/null |
+               sed '/^ *#/ d; s/^\.$//; q'`
+         fi
+         list="/usr/lib${name}/pkgconfig $list"
+         case $host_os in
+         darwin*)
+            list="/opt/homebrew/Library/Homebrew/os/mac/pkgconfig $list"
+            ;;
+         freebsd*)
+            list="/usr/libdata/pkgconfig $list"
+            ;;
+         netbsd*)
+            list="/usr/pkg/lib/pkgconfig $list"
+            ;;
+         esac
+      fi
+      if test "x$host_alias" != x; then
+         list="/usr/lib/${host_alias}/pkgconfig $list"
+      fi
+      # "-print-multiarch" supported in GCC 4.6 or later
+      if $CC $CPPFLAGS $CFLAGS -print-multiarch -E conftest.c >/dev/null 2>&1; then
+         name=`$CC $CPPFLAGS $CFLAGS -print-multiarch -E conftest.c 2>/dev/null |
+            sed '/^ *#/ d; q'`
+         if test "x$name" != x; then
+            list="/usr/lib/${name}/pkgconfig $list"
+         fi
+      fi
+      rm -f conftest.*
+
+      for d in $list; do
+         result=`find "$d" -name '*curses*.pc' 2>/dev/null | sed '1 q'`
+         if test "x$result" != x; then
+            AC_MSG_WARN([your system supports pkg-config; installing pkg-config is recommended before configuring htop])
+            break
+         fi
+      done
+   ) fi
+
    # OpenBSD and Solaris are known to not provide '*curses*.pc' files.
    AC_MSG_RESULT([no curses information found through '*-config' utilities; will guess the linker flags])
    for curses_name in $curses_pkg_names; do
