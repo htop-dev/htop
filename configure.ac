@@ -614,7 +614,7 @@ AC_DEFINE_UNQUOTED([OSRELEASEFILE], ["$with_os_release"], [File with OS release 
 
 AC_ARG_WITH([config],
             [AS_HELP_STRING([--with-config=DIR],
-			    [configuration path @<:@default=/.config@:>@])],
+                            [configuration path @<:@default=/.config@:>@])],
             [],
             [with_config="/.config"])
 dnl Performance Co-Pilot configuration location to prevent overwrite
