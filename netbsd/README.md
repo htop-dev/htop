@@ -13,14 +13,21 @@ NetBSD is one of the last operating systems to use and maintain its own
 implementation of Curses.
 
 htop(1) can be compiled against either ncurses or NetBSD's curses(3).
-In order for NetBSD's libcurses to be used, htop(1) must be configured with
-`--disable-unicode`. This is necessary because htop(1) with Unicode enabled
-directly accesses ncurses's cchar_t struct, which has different contents
-in NetBSD's curses.
+By default, htop(1) will use ncurses when it is found, as support for NetBSD's
+curses in htop is limited.
 
-Versions of libcurses in NetBSD 9 and prior have no mouse support
-(this is an ncurses extension). Newer versions contain no-op mouse functions
-for compatibility with ncurses.
+To use NetBSD's libcurses, htop(1) must be configured with `--disable-unicode`.
+Starting with htop 3.4.0, a new option `--with-curses=curses` may be specified
+to let `configure` skip ncurses when both libraries are installed.
+
+Technical caveats regarding NetBSD's curses support:
+
+* htop with Unicode enabled directly accesses ncurses's `cchar_t` struct, which
+  has different contents in NetBSD's curses.
+
+* Versions of libcurses in NetBSD 9 and prior have no mouse support
+  (this is an ncurses extension). Newer versions contain no-op mouse functions
+  for compatibility with ncurses.
 
 What needs improvement
 ---
