@@ -384,6 +384,11 @@ dnl If the macro is not called, some pkg-config checks might be skipped
 dnl and $PKG_CONFIG might be unset.
 m4_ifdef([PKG_PROG_PKG_CONFIG], [
    PKG_PROG_PKG_CONFIG()
+], [
+   pkg_m4_absent=1 # Makefile might grep this keyword. Don't remove.
+   m4_warn(
+      [syntax],
+      [pkg.m4 is absent or older than version 0.16; this 'configure' would have incomplete pkg-config support])
 ])
 
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
