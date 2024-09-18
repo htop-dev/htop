@@ -508,8 +508,9 @@ cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_OPENVZ
 
 dist-hook: $(top_distdir)/configure
-	@if grep 'pkg_m4_absent' '$(top_distdir)/configure'; then \
-	   echo 'ERROR: configure is generated without pkg.m4. Please supply pkg.m4 and run ./autogen.sh to rebuild the configure script.'>&2; \
+	@if test "x$$FORCE_MAKE_DIST" = x && \
+	   grep 'pkg_m4_absent' '$(top_distdir)/configure' >/dev/null; then \
+	   echo 'ERROR: This distribution would have incomplete pkg-config support. Rebuilding the configure script is advised. Set FORCE_MAKE_DIST=1 to ignore this warning.'>&2; \
 	   (exit 1); \
 	else :; \
 	fi
