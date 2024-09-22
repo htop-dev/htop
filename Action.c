@@ -634,7 +634,7 @@ static Htop_Reaction actionRedraw(ATTR_UNUSED State* st) {
 
 static Htop_Reaction actionTogglePauseUpdate(State* st) {
    st->pauseUpdate = !st->pauseUpdate;
-   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
 }
 
 static const struct {
