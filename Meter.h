@@ -112,7 +112,7 @@ struct Meter_ {
    unsigned int param;
    GraphData drawData;
    int h;
-   int columnWidthCount;      /**< only used internally by the Header */
+   size_t columnWidthCount;      /**< only used internally by the Header */
    uint8_t curItems;
    const int* curAttributes;
    char txtBuffer[METER_TXTBUFFER_LEN];

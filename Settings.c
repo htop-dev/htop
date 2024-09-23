@@ -585,9 +585,9 @@ static void writeFields(OutputFunc of, FILE* fp,
 }
 
 static void writeList(OutputFunc of, FILE* fp,
-                      char** list, int len, char separator) {
+                      char** list, size_t len, char separator) {
    const char* sep = "";
-   for (int i = 0; i < len; i++) {
+   for (size_t i = 0; i < len; i++) {
       of(fp, "%s%s", sep, list[i]);
       sep = " ";
    }
@@ -630,7 +630,7 @@ static int signal_safe_fprintf(FILE* stream, const char* fmt, ...) {
    if (n <= 0)
       return n;
 
-   return full_write_str(fileno(stream), buf);
+   return (int) full_write_str(fileno(stream), buf);
 }
 
 int Settings_write(const Settings* this, bool onCrash) {
@@ -917,14 +917,14 @@ bool Settings_isReadonly(void) {
 }
 
 void Settings_setHeaderLayout(Settings* this, HeaderLayout hLayout) {
-   unsigned int oldColumns = HeaderLayout_getColumns(this->hLayout);
-   unsigned int newColumns = HeaderLayout_getColumns(hLayout);
+   size_t oldColumns = HeaderLayout_getColumns(this->hLayout);
+   size_t newColumns = HeaderLayout_getColumns(hLayout);
 
    if (newColumns > oldColumns) {
       this->hColumns = xReallocArray(this->hColumns, newColumns, sizeof(MeterColumnSetting));
       memset(this->hColumns + oldColumns, 0, (newColumns - oldColumns) * sizeof(MeterColumnSetting));
    } else if (newColumns < oldColumns) {
-      for (unsigned int i = newColumns; i < oldColumns; i++) {
+      for (size_t i = newColumns; i < oldColumns; i++) {
          if (this->hColumns[i].names) {
             for (size_t j = 0; j < this->hColumns[i].len; j++)
                free(this->hColumns[i].names[j]);
