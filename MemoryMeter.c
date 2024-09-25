@@ -40,8 +40,7 @@ static void MemoryMeter_updateValues(Meter* this) {
    this->values[MEMORY_METER_COMPRESSED] = NAN;
    this->values[MEMORY_METER_AVAILABLE] = NAN;
    Platform_setMemoryValues(this);
-   if (this->mode == GRAPH_METERMODE && !settings->showCachedMemory)
-   {
+   if (this->mode == GRAPH_METERMODE && !settings->showCachedMemory) {
       this->values[MEMORY_METER_BUFFERS] = NAN;
       this->values[MEMORY_METER_CACHE] = NAN;
    }
