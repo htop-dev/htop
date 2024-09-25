@@ -149,6 +149,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
                                                  &(settings->showCPUTemperature)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Show temperature in degree Fahrenheit instead of Celsius", &(settings->degreeFahrenheit)));
    #endif
+   Panel_add(super, (Object*) CheckItem_newByRef("Show cached memory in graph and bar modes", &(settings->showCachedMemory)));
    #ifdef HAVE_GETMOUSE
    Panel_add(super, (Object*) CheckItem_newByRef("Enable the mouse", &(settings->enableMouse)));
    #endif
