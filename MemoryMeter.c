@@ -46,7 +46,7 @@ static void MemoryMeter_updateValues(Meter* this) {
    }
    /* Do not print available memory in bar mode */
    static_assert(MEMORY_METER_AVAILABLE + 1 == MEMORY_METER_ITEMCOUNT,
-                  "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
+      "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
    this->curItems = MEMORY_METER_AVAILABLE;
 
    /* we actually want to show "used + shared + compressed" */
