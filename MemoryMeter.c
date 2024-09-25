@@ -33,15 +33,21 @@ static void MemoryMeter_updateValues(Meter* this) {
    size_t size = sizeof(this->txtBuffer);
    int written;
 
+   Settings *settings = this->host->settings;
+
    /* shared, compressed and available memory are not supported on all platforms */
    this->values[MEMORY_METER_SHARED] = NAN;
    this->values[MEMORY_METER_COMPRESSED] = NAN;
    this->values[MEMORY_METER_AVAILABLE] = NAN;
    Platform_setMemoryValues(this);
-
+   if (this->mode == GRAPH_METERMODE && !settings->showCachedMemory)
+   {
+      this->values[MEMORY_METER_BUFFERS] = NAN;
+      this->values[MEMORY_METER_CACHE] = NAN;
+   }
    /* Do not print available memory in bar mode */
    static_assert(MEMORY_METER_AVAILABLE + 1 == MEMORY_METER_ITEMCOUNT,
-      "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
+                  "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
    this->curItems = MEMORY_METER_AVAILABLE;
 
    /* we actually want to show "used + shared + compressed" */
