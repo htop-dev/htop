@@ -62,6 +62,10 @@ void RichString_rewind(RichString* this, int count) {
    RichString_setLen(this, this->chlen - count);
 }
 
+void RichString_setAttr_preserveWithStandout(RichString* this, int attrs) {
+   RichString_setAttrn_preserveWithStandout(this, attrs, 0, this->chlen - 1);
+}
+
 #ifdef HAVE_LIBNCURSESW
 
 static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src, size_t n) {
@@ -160,6 +164,41 @@ inline void RichString_setAttrn(RichString* this, int attrs, int start, int char
    }
 }
 
+void RichString_setAttrn_preserveWithStandout(RichString* this, int attrs, int start, int finish) {
+   finish = CLAMP(finish, 0, this->chlen - 1);
+
+   // Extract the foreground and background color indexes from the passed attrs
+   short passed_color_pair_number = (short)PAIR_NUMBER(attrs);
+   short passed_fg_color = -1, passed_bg_color = -1;
+   if (passed_color_pair_number != 0) {
+      pair_content(passed_color_pair_number, &passed_fg_color, &passed_bg_color);
+   }
+
+   cchar_t* ch = this->chptr + start;
+   for (int i = start; i <= finish; i++) {
+      // Extract foreground and background color indexes from the current char
+      short currentCharPairNum = (short)PAIR_NUMBER(ch->attr);
+      short before_fg_color = -1, before_bg_color = -1;
+      if (currentCharPairNum != 0) {
+         pair_content(currentCharPairNum, &before_fg_color, &before_bg_color);
+      }
+
+      // TODO: When text color matches higlight, the resulting STANDOUT is the same as on default text,
+      //       so we at least set italics
+      chtype attrToPass = A_STANDOUT;
+      if (before_fg_color == passed_bg_color) {
+         attrToPass |= A_ITALIC;
+      }
+      // If current char is not a space and its ColorPair Index is not the default 0,
+      //    apply our own attrToPass with STANDOUT + optionally ITALICS,
+      //    instead of the passed attrs, which has the BG highlight color
+      ch->attr = (ch->chars[0] != L' ' && currentCharPairNum != 0)
+                  ? (ch->attr | attrToPass)
+                  : (unsigned int)attrs;
+      ch++;
+   }
+}
+
 void RichString_appendChr(RichString* this, int attrs, char c, int count) {
    int from = this->chlen;
    int newLen = from + count;
@@ -207,6 +246,41 @@ void RichString_setAttrn(RichString* this, int attrs, int start, int charcount) 
    int end = CLAMP(start + charcount, 0, this->chlen);
    for (int i = start; i < end; i++) {
       this->chptr[i] = (this->chptr[i] & 0xff) | attrs;
+   }
+}
+
+void RichString_setAttrn_preserveWithStandout(RichString* this, int attrs, int start, int finish) {
+   finish = CLAMP(finish, 0, this->chlen - 1);
+
+   // Extract the foreground and background color indexes from the passed attrs
+   short passed_color_pair_number = (short)PAIR_NUMBER(attrs);
+   short passed_fg_color = -1, passed_bg_color = -1;
+   if (passed_color_pair_number != 0) {
+      pair_content(passed_color_pair_number, &passed_fg_color, &passed_bg_color);
+   }
+
+   chtype* ch = this->chptr + start;
+   for (int i = start; i <= finish; i++) {
+      // Extract foreground and background color indexes from the current char
+      short currentCharPairNum = (short)PAIR_NUMBER(*ch);
+      short before_fg_color = -1, before_bg_color = -1;
+      if (currentCharPairNum != 0) {
+         pair_content(currentCharPairNum, &before_fg_color, &before_bg_color);
+      }
+
+      // TODO: When text color matches higlight, the resulting STANDOUT is the same as on default text,
+      //       so we at least set italics
+      chtype attrToPass = A_STANDOUT;
+      if (before_fg_color == passed_bg_color) {
+         attrToPass |= A_ITALIC;
+      }
+      // If current char is not a space and its ColorPair Index is not the default 0,
+      //    apply our own attrToPass with STANDOUT + optionally ITALICS,
+      //    instead of the passed attrs, which has the BG highlight color
+      *ch = ((*ch & A_CHARTEXT) != L' ' && currentCharPairNum != 0)
+            ? *ch | attrToPass
+            : (*ch & A_CHARTEXT) | (unsigned int)attrs;
+      ch++;
    }
 }
 

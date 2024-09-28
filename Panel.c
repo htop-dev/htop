@@ -289,7 +289,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          }
          if (item.highlightAttr) {
             attrset(item.highlightAttr);
-            RichString_setAttr(&item, item.highlightAttr);
+            RichString_setAttr_preserveWithStandout(&item, item.highlightAttr);
             this->selectedLen = itemLen;
          }
          mvhline(y + line, x, ' ', this->w);

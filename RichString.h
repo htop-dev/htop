@@ -52,9 +52,13 @@ void RichString_rewind(RichString* this, int count);
 
 void RichString_setAttrn(RichString* this, int attrs, int start, int charcount);
 
+void RichString_setAttrn_preserveWithStandout(RichString* this, int attrs, int start, int finish);
+
 int RichString_findChar(const RichString* this, char c, int start);
 
 void RichString_setAttr(RichString* this, int attrs);
+
+void RichString_setAttr_preserveWithStandout(RichString* this, int attrs);
 
 void RichString_appendChr(RichString* this, int attrs, char c, int count);
 
