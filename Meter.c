@@ -135,9 +135,12 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
+      const Settings* settings = this->host->settings;
       for (int j = offset; j < nextOffset; j++)
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
-            if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
+            if (settings->barLabel) {
+               RichString_setChar(&bar, startPos + j, settings->barLabel);
+            } else if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
                RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
             } else {
