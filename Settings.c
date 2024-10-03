@@ -478,6 +478,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->accountGuestInCPUMeter = atoi(option[1]);
       } else if (String_eq(option[0], "delay")) {
          this->delay = CLAMP(atoi(option[1]), 1, 255);
+      } else if (String_eq(option[0], "bar_label")) {
+         this->barLabel = option[1][0];
       } else if (String_eq(option[0], "color_scheme")) {
          this->colorScheme = atoi(option[1]);
          if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) {
