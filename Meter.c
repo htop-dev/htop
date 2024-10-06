@@ -125,13 +125,13 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
-   double barLen=0;
+   double actualBarWidth=0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
-         barLen = ((value / this->total) * w);
-         blockSizes[i] = ceil(barLen);
+         actualBarWidth = ((value / this->total) * w);
+         blockSizes[i] = ceil(actualBarWidth);
       } else {
          blockSizes[i] = 0;
       }
@@ -140,35 +140,31 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       nextOffset = CLAMP(nextOffset, 0, w);
 
       const Settings* settings = this->host->settings;
-      const char* bars[7][8] = {
-         {"|","|","|","|","|","|","|","|"},
-         {"#","#","#","#","#","#","#","#"},
-         {"⡀","⡄","⡆","⡇","⣇","⣧","⣷","⣿"},
-         {"░","░","▒","▒","▓","▓","█","█"},
-         {"▏","▎","▍","▌","▋","▊","▉","█"},
-         {"▁","▂","▃","▄","▅","▆","▇","█"},
-         {"▌","▌","▌","▌","█","█","█","█"}
+      static const wchar_t* bars[7] = {
+         L" ||||||||",
+         L" ########",
+         L" ⡀⡄⡆⡇⣇⣧⣷⣿",
+         L" ░░▒▒▓▓██",
+         L" ▏▎▍▌▋▊▉█",
+         L" ▁▂▃▄▅▆▇█",
+         L" ▌▌▌▌████"
       };
 
       for (int j = offset; j < nextOffset; j++)
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
-            if (settings->barType >= 2) {
-               wchar_t a;
-               mbstowcs(&a, bars[settings->barType][7], 1);
-               RichString_setChar(&bar, startPos + j, a);
+            if (settings->barType) {
+               RichString_setChar(&bar, startPos + j, bars[settings->barType][7]);
             } else if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
                RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
             } else {
-               // barType 1 and 2 both are ascii characters | and # hence will be handled here
-               RichString_setChar(&bar, startPos + j, bars[settings->barType][0][0] );
+               RichString_setChar(&bar, startPos + j, '|');
             }
          }
 
-      int subPixel = floor(barLen*8);
-      wchar_t a;
-      mbstowcs(&a,bars[settings->barType][subPixel%8] ,1);
-      RichString_setChar(&bar, startPos + nextOffset - 1, a);
+      int barsLen=wcslen(bars[settings->barType]);
+      int subPixel = floor(actualBarWidth*(barsLen-1));
+      RichString_setChar(&bar, startPos + nextOffset - 1, bars[settings->barType][subPixel%(barsLen-1)]);
 
       offset = nextOffset;
    }
