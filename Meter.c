@@ -140,14 +140,15 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       nextOffset = CLAMP(nextOffset, 0, w);
 
       const Settings* settings = this->host->settings;
-      static const wchar_t* bars[7] = {
+      static const wchar_t* bars[8] = {
          L" ||||||||",
          L" ########",
-         L" ⡀⡄⡆⡇⣇⣧⣷⣿",
+         L"⠀⡀⡄⡆⡇⣇⣧⣷⣿",
          L" ░░▒▒▓▓██",
          L" ▏▎▍▌▋▊▉█",
          L" ▁▂▃▄▅▆▇█",
-         L" ▌▌▌▌████"
+         L" ▌▌▌▌████",
+         L" ▔🮂🮃▀🮄🮅🮆█"
       };
 
       for (int j = offset; j < nextOffset; j++)
