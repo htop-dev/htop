@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "CRT.h"
 #include "Macros.h"
@@ -124,29 +125,51 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
+   double barLen=0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * w);
+         barLen = ((value / this->total) * w);
+         blockSizes[i] = ceil(barLen);
       } else {
          blockSizes[i] = 0;
       }
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
+
       const Settings* settings = this->host->settings;
+      const char* bars[7][8] = {
+         {"|","|","|","|","|","|","|","|"},
+         {"#","#","#","#","#","#","#","#"},
+         {"⡀","⡄","⡆","⡇","⣇","⣧","⣷","⣿"},
+         {"░","░","▒","▒","▓","▓","█","█"},
+         {"▏","▎","▍","▌","▋","▊","▉","█"},
+         {"▁","▂","▃","▄","▅","▆","▇","█"},
+         {"▌","▌","▌","▌","█","█","█","█"}
+      };
+
       for (int j = offset; j < nextOffset; j++)
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
-            if (settings->barLabel) {
-               RichString_setChar(&bar, startPos + j, settings->barLabel);
+            if (settings->barType >= 2) {
+               wchar_t a;
+               mbstowcs(&a, bars[settings->barType][7], 1);
+               RichString_setChar(&bar, startPos + j, a);
             } else if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
                RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
             } else {
-               RichString_setChar(&bar, startPos + j, '|');
+               // barType 1 and 2 both are ascii characters | and # hence will be handled here
+               RichString_setChar(&bar, startPos + j, bars[settings->barType][0][0] );
             }
          }
+
+      int subPixel = floor(barLen*8);
+      wchar_t a;
+      mbstowcs(&a,bars[settings->barType][subPixel%8] ,1);
+      RichString_setChar(&bar, startPos + nextOffset - 1, a);
+
       offset = nextOffset;
    }
 
