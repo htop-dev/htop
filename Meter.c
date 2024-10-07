@@ -151,7 +151,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
          L" ▔🮂🮃▀🮄🮅🮆█"
       };
 
-      for (int j = offset; j < nextOffset; j++)
+      for (int j = offset; j < nextOffset; j++){
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (settings->barType) {
                RichString_setChar(&bar, startPos + j, bars[settings->barType][7]);
@@ -162,6 +162,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
                RichString_setChar(&bar, startPos + j, '|');
             }
          }
+      }
 
       int barsLen=wcslen(bars[settings->barType]);
       int subPixel = floor(actualBarWidth*(barsLen-1));
