@@ -164,9 +164,10 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
          }
       }
 
-      int barsLen=wcslen(bars[settings->barType]);
-      int subPixel = floor(actualBarWidth*(barsLen-1));
-      RichString_setChar(&bar, startPos + nextOffset - 1, bars[settings->barType][subPixel%(barsLen-1)]);
+      const wchar_t *barChars = &bars[settings->barType][1];
+      int barsLen = wcslen(barChars);
+      int subPixel = floor(actualBarWidth * barsLen);
+      RichString_setChar(&bar, startPos + nextOffset - 1, barChars[subPixel % barsLen]);
 
       offset = nextOffset;
    }
