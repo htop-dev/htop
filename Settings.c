@@ -466,6 +466,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->showCPUUsage = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_frequency")) {
          this->showCPUFrequency = atoi(option[1]);
+      } else if (String_eq(option[0], "show_cached_memory")) {
+         this->showCachedMemory = atoi(option[1]);
       #ifdef BUILD_WITH_CPU_TEMP
       } else if (String_eq(option[0], "show_cpu_temperature")) {
          this->showCPUTemperature = atoi(option[1]);
@@ -801,6 +803,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->showCPUTemperature = false;
    this->degreeFahrenheit = false;
    #endif
+   this->showCachedMemory = true;
    this->updateProcessNames = false;
    this->showProgramPath = true;
    this->highlightThreads = true;
