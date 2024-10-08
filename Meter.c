@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "CRT.h"
 #include "Macros.h"
@@ -124,26 +125,50 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
+   double actualBarWidth=0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * w);
+         actualBarWidth = ((value / this->total) * w);
+         blockSizes[i] = ceil(actualBarWidth);
       } else {
          blockSizes[i] = 0;
       }
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++)
+
+      const Settings* settings = this->host->settings;
+      static const wchar_t* bars[8] = {
+         L" ||||||||",
+         L" ########",
+         L"⠀⡀⡄⡆⡇⣇⣧⣷⣿",
+         L" ░░▒▒▓▓██",
+         L" ▏▎▍▌▋▊▉█",
+         L" ▁▂▃▄▅▆▇█",
+         L" ▌▌▌▌████",
+         L" ▔🮂🮃▀🮄🮅🮆█"
+      };
+
+      for (int j = offset; j < nextOffset; j++){
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
-            if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
+            if (settings->barType) {
+               RichString_setChar(&bar, startPos + j, bars[settings->barType][7]);
+            } else if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
                RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
             } else {
                RichString_setChar(&bar, startPos + j, '|');
             }
          }
+      }
+
+      const wchar_t *barChars = &bars[settings->barType][1];
+      int barsLen = wcslen(barChars);
+      int subPixel = floor(actualBarWidth * barsLen);
+      RichString_setChar(&bar, startPos + nextOffset - 1, barChars[subPixel % barsLen]);
+
       offset = nextOffset;
    }
 
