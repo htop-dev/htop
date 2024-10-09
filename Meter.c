@@ -135,7 +135,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++)
+      for (int j = offset; j < nextOffset; j++) {
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
@@ -144,6 +144,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
                RichString_setChar(&bar, startPos + j, '|');
             }
          }
+      }
       offset = nextOffset;
    }
 
