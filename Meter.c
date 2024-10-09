@@ -120,7 +120,21 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(startPos <= w);
    assert(startPos + w <= RichString_sizeVal(bar));
 
+   const Settings* settings = this->host->settings;
+   static const wchar_t* bars[8] = {
+      L" ||||||||",
+      L" ########",
+      L"⠀⡀⡄⡆⡇⣇⣧⣷⣿",
+      L" ░░▒▒▓▓██",
+      L" ▏▎▍▌▋▊▉█",
+      L" ▁▂▃▄▅▆▇█",
+      L" ▌▌▌▌████",
+      L" ▔🮂🮃▀🮄🮅🮆█"
+   };
+   const wchar_t* barChars = &bars[settings->barType][1];
+   int barLen = wcslen(barChars);
    int blockSizes[10];
+   int wsub = w * barLen;
 
    // First draw in the bar[] buffer...
    int offset = 0;
@@ -128,23 +142,26 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       double value = this->values[i];
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * w);
+         blockSizes[i] = ceil((value / this->total) * wsub);
       } else {
          blockSizes[i] = 0;
       }
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
-      nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++) {
+      nextOffset = CLAMP(nextOffset, 0, wsub);
+      for (int j = offset; j < nextOffset/barLen; j++) {
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
                RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
+            } else if (settings->barType) {
+               RichString_setChar(&bar, startPos + j, bars[settings->barType][7]);
             } else {
                RichString_setChar(&bar, startPos + j, '|');
             }
          }
       }
+      RichString_setChar(&bar, startPos + (nextOffset / barLen), barChars[nextOffset%barLen]);
       offset = nextOffset;
    }
 
