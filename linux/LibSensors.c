@@ -143,6 +143,8 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
       { "bigcore0_thermal",   0 },
       { "bigcore1_thermal",   0 },
       { "bigcore2_thermal",   0 },
+      /* Rockchip RK3566 */
+      { "soc_thermal",        0 },
       /* Low priority drivers */
       { "acpitz",             1 },
    };
@@ -238,6 +240,18 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                data[7] = temp;
                data[8] = temp;
                coreTempCount += 2;
+               continue;
+            }
+         }
+
+         /* Rockchip RK3566 */
+         if (existingCPUs == 4) {
+            if (String_eq(chip->prefix, "soc_thermal")) {
+               data[1] = temp;
+               data[2] = temp;
+               data[3] = temp;
+               data[4] = temp;
+               coreTempCount += 4;
                continue;
             }
          }
