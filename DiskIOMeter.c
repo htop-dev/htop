@@ -31,6 +31,7 @@ static MeterRateStatus status = RATESTATUS_INIT;
 static char cached_read_diff_str[6];
 static char cached_write_diff_str[6];
 static double cached_utilisation_diff;
+static double cached_utilisation_norm;
 
 static void DiskIOMeter_updateValues(Meter* this) {
    const Machine* host = this->host;
@@ -82,12 +83,15 @@ static void DiskIOMeter_updateValues(Meter* this) {
          }
          Meter_humanUnit(cached_write_diff_str, diff, sizeof(cached_write_diff_str));
 
+         cached_utilisation_diff = 0.0;
+         cached_utilisation_norm = 0.0;
          if (data.totalMsTimeSpend > cached_msTimeSpend_total) {
             diff = data.totalMsTimeSpend - cached_msTimeSpend_total;
             cached_utilisation_diff = 100.0 * (double)diff / passedTimeInMs;
-            cached_utilisation_diff = MINIMUM(cached_utilisation_diff, 100.0);
-         } else {
-            cached_utilisation_diff = 0.0;
+            if (data.numDisks > 0) {
+               cached_utilisation_norm = (double)diff / (passedTimeInMs * data.numDisks);
+               cached_utilisation_norm = MINIMUM(cached_utilisation_norm, 1.0);
+            }
          }
       }
 
@@ -96,7 +100,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
       cached_msTimeSpend_total = data.totalMsTimeSpend;
    }
 
-   this->values[0] = cached_utilisation_diff;
+   this->values[0] = cached_utilisation_norm;
 
    if (status == RATESTATUS_NODATA) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
@@ -154,7 +158,7 @@ const MeterClass DiskIOMeter_class = {
    .defaultMode = TEXT_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 1,
-   .total = 100.0,
+   .total = 1.0,
    .attributes = DiskIOMeter_attributes,
    .name = "DiskIO",
    .uiName = "Disk IO",
