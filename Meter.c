@@ -143,6 +143,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
+      int actualWidth = 0;
 
       // ignore extremely small values
       if((value / this->total) * wsub < 0.5){
@@ -151,16 +152,17 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       }
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * wsub);
+         actualWidth = ceil((value / this->total) * wsub);
+         blockSizes[i] = ceil((value / this->total) * w);
       } else {
          blockSizes[i] = 0;
       }
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
-      nextOffset = CLAMP(nextOffset, 0, wsub);
+      nextOffset = CLAMP(nextOffset, 0, w);
 
 
-      for (int j = offset/barLen; j < nextOffset/barLen; j++){
+      for (int j = offset; j < nextOffset; j++){
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
@@ -173,7 +175,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
          }
       }
 
-      RichString_setChar(&bar, startPos + nextOffset/barLen, barChar[blockSizes[i] % barLen]);
+      RichString_setChar(&bar, startPos + nextOffset-1, barChar[actualWidth % barLen]);
 
       offset = nextOffset;
    }
@@ -182,9 +184,9 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
-      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, ceil((double)blockSizes[i]/barLen));
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(ceil((double)blockSizes[i]/barLen), w - offset));
-      offset += ceil((double)blockSizes[i]/barLen);
+      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, ceil(blockSizes[i]));
+      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(ceil(blockSizes[i]), w - offset));
+      offset += ceil((double)blockSizes[i]);
       offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
