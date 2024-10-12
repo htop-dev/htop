@@ -162,8 +162,6 @@ void Row_printRate(RichString* str, double rate, bool coloring);
 
 int Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr);
 
-void Row_display(const Object* cast, RichString* out);
-
 static inline int Row_idEqualCompare(const void* v1, const void* v2) {
    const int p1 = ((const Row*)v1)->id;
    const int p2 = ((const Row*)v2)->id;
