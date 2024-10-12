@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "CRT.h"
 #include "Macros.h"
@@ -70,6 +71,17 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
+static const wchar_t* bars[8] = {
+   L" ||||||||",
+   L" ########",
+   L"⠀⡀⡄⡆⡇⣇⣧⣷⣿",
+   L" ░░▒▒▓▓██",
+   L" ▏▎▍▌▋▊▉█",
+   L" ▁▂▃▄▅▆▇█",
+   L" ▌▌▌▌████",
+   L" ▔🮂🮃▀🮄🮅🮆█"
+};
+
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // Draw the caption
    const char* caption = Meter_getCaption(this);
@@ -120,14 +132,27 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(startPos <= w);
    assert(startPos + w <= RichString_sizeVal(bar));
 
+   const Settings* settings = this->host->settings;
    int blockSizes[10];
 
    // First draw in the bar[] buffer...
    int offset = 0;
+   const wchar_t* barChar = &bars[settings->barType][1];
+   const uint8_t barLen = wcslen(barChar);
+   const uint8_t wsub = w * barLen;
+
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
+      int actualWidth = 0;
+
+      // ignore extremely small values
+      if((value / this->total) * wsub < 0.5){
+         blockSizes[i] = 0;
+         continue;
+      }
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
+         actualWidth = ceil((value / this->total) * wsub);
          blockSizes[i] = ceil((value / this->total) * w);
       } else {
          blockSizes[i] = 0;
@@ -135,15 +160,23 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++)
+
+
+      for (int j = offset; j < nextOffset; j++){
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
                RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
+            } else if (settings->barType) {
+               RichString_setChar(&bar, startPos + j, bars[settings->barType][8]);
             } else {
                RichString_setChar(&bar, startPos + j, '|');
             }
          }
+      }
+
+      RichString_setChar(&bar, startPos + nextOffset-1, barChar[actualWidth % barLen]);
+
       offset = nextOffset;
    }
 
@@ -151,9 +184,9 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
-      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSizes[i], w - offset));
-      offset += blockSizes[i];
+      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, ceil(blockSizes[i]));
+      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(ceil(blockSizes[i]), w - offset));
+      offset += ceil((double)blockSizes[i]);
       offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
