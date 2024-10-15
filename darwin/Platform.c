@@ -405,6 +405,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
       return false;
 
    unsigned long long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
+   unsigned long long int numDisks = 0;
 
    io_registry_entry_t drive;
    while ((drive = IOIteratorNext(drive_list)) != 0) {
@@ -432,6 +433,8 @@ bool Platform_getDiskIO(DiskIOData* data) {
          IOObjectRelease(drive);
          continue;
       }
+
+      numDisks++;
 
       CFNumberRef number;
       unsigned long long int value;
@@ -471,6 +474,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    data->totalBytesRead = read_sum;
    data->totalBytesWritten = write_sum;
    data->totalMsTimeSpend = timeSpend_sum / 1e6; /* Convert from ns to ms */
+   data->numDisks = numDisks;
 
    if (drive_list)
       IOObjectRelease(drive_list);
