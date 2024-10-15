@@ -614,6 +614,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    char lastTopDisk[32] = { '\0' };
 
    unsigned long long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
+   unsigned long long int numDisks = 0;
    char lineBuffer[256];
    while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
       char diskname[32];
@@ -635,6 +636,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
          read_sum += read_tmp;
          write_sum += write_tmp;
          timeSpend_sum += timeSpend_tmp;
+         numDisks++;
       }
    }
    fclose(fp);
@@ -642,6 +644,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    data->totalBytesRead = 512 * read_sum;
    data->totalBytesWritten = 512 * write_sum;
    data->totalMsTimeSpend = timeSpend_sum;
+   data->numDisks = numDisks;
    return true;
 }
 
