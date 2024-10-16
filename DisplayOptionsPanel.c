@@ -22,7 +22,7 @@ in the source distribution for its full text.
 #include "ScreensPanel.h"
 
 
-static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "Value-", "Value+", "      ", "Done  ", NULL};
 
 static void DisplayOptionsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
