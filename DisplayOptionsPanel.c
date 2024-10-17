@@ -22,7 +22,7 @@ in the source distribution for its full text.
 #include "ScreensPanel.h"
 
 
-static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "Value-", "Value+", "      ", "Done  ", NULL};
 
 static void DisplayOptionsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
@@ -57,12 +57,14 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
                break;
          }
          break;
+      case KEY_F(7):
       case '-':
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             NumberItem_decrease((NumberItem*)selected);
             result = HANDLED;
          }
          break;
+      case KEY_F(8):
       case '+':
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             NumberItem_increase((NumberItem*)selected);
