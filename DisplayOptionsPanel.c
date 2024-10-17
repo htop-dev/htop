@@ -57,12 +57,14 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
                break;
          }
          break;
+      case KEY_F(7):
       case '-':
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             NumberItem_decrease((NumberItem*)selected);
             result = HANDLED;
          }
          break;
+      case KEY_F(8):
       case '+':
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             NumberItem_increase((NumberItem*)selected);
