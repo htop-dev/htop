@@ -24,7 +24,7 @@ typedef enum {
 
 typedef struct IncMode_ {
    char buffer[INCMODE_MAX + 1];
-   int index;
+   size_t index;
    FunctionBar* bar;
    bool isFilter;
 } IncMode;
