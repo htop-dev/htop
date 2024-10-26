@@ -412,10 +412,10 @@ AC_ARG_WITH([curses],
             [],
             [with_curses=check])
 case $with_curses in
-check)
+check|yes)
    : # No-op. Use default list.
    ;;
-yes|no)
+no)
    AC_MSG_ERROR([bad value '$with_curses' for --with-curses option])
    ;;
 *)
