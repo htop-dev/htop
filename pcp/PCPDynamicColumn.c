@@ -295,7 +295,7 @@ static void PCPDynamicColumn_setupWidth(ATTR_UNUSED ht_key_t key, void* value, A
 
    pmUnits units = desc->units;
    if (units.dimSpace && units.dimTime)
-      column->super.width = 11; // Row_printRate
+      column->super.width = 8; // Row_printRate
    else if (units.dimSpace)
       column->super.width = 5;  // Row_printBytes
    else if (units.dimCount && units.dimTime)
