@@ -416,10 +416,12 @@ AC_ARG_ENABLE([unicode],
 AC_ARG_VAR([CURSES_CFLAGS], [C compiler flags for curses; this overrides auto detected values])
 AC_ARG_VAR([CURSES_LIBS], [linker flags for curses; this overrides auto detected values])
 
-curses_pkg_names="ncurses6 ncurses5 ncurses curses"
+curses_pkg_names="ncurses6 ncurses5 ncurses ncursest6 ncursest5 \
+   ncursest curses"
 
 if test "x$enable_unicode" = xyes; then
-   curses_pkg_names="ncursesw6 ncursesw5 ncursesw $curses_pkg_names"
+   curses_pkg_names="ncursesw6 ncursesw5 ncursesw ncursestw6 ncursestw5 \
+      ncursestw $curses_pkg_names"
 fi
 
 AC_ARG_WITH([curses],
