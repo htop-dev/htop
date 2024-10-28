@@ -482,13 +482,17 @@ doupdate();
          htop_curses_status=1])
    fi
 
+   # htop calls mvadd_wchnstr(), which might be implemented as a macro.
+   # It is more reliable to test linking with wadd_wchnstr().
    if test "x$htop_curses_status$enable_unicode" = x0yes; then
-      AC_MSG_CHECKING([for mvadd_wchnstr in $htop_msg_linker_flags])
+      AC_MSG_CHECKING([for wadd_wchnstr in $htop_msg_linker_flags])
       AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-/* int mvadd_wchnstr(int y, int x, const cchar_t* wchstr, int n); */
-int mvadd_wchnstr(int y, int x, const void* wchstr, int n);
+/* int wadd_wchnstr(WINDOW* win, const cchar_t* wchstr, int n); */
+int wadd_wchnstr(void* win, const void* wchstr, int n);
          ]], [[
-mvadd_wchnstr(0, 0, (void*)0, 0);
+static char dummy1;
+static char dummy2;
+wadd_wchnstr((void*)&dummy1, (void*)&dummy2, 0);
          ]])],
          [AC_MSG_RESULT(yes)
          htop_curses_capability=wide],
