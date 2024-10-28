@@ -607,6 +607,7 @@ none-*|nonwide-yes)
       for d in $list; do
          result=`find "$d" -name '*curses*.pc' 2>/dev/null | sed '1 q'`
          if test "x$result" != x; then
+            echo detected a .pc file: "$result" >&AS_MESSAGE_LOG_FD
             AC_MSG_WARN([your system supports pkg-config; installing pkg-config is recommended before configuring htop])
             break
          fi
