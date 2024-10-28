@@ -642,12 +642,20 @@ none-*|nonwide-yes)
       if htop_check_curses_capability "" "-l$curses_name"; then
          break
       fi
-      # For ncurses implementation, an extra "-ltinfo" or "-ltinfow"
-      # flag might be needed to link.
-      if test "x$enable_unicode" = xyes &&
-         htop_check_curses_capability "" "-l$curses_name -ltinfow"; then
-         break
-      fi
+      # For ncurses implementation, an extra terminfo library might be
+      # needed. Guess the terminfo library name based on the ncurses
+      # library file name (e.g. "-ltinfow" for "-lncursesw"), before
+      # trying the "-ltinfo" name.
+      tinfo_name=`echo x$curses_name | sed 's/^xncurses/tinfo/p; d'`
+      case x$tinfo_name in
+      x|xtinfo)
+         ;;
+      *)
+         if htop_check_curses_capability "" "-l$curses_name -l$tinfo_name"; then
+            break
+         fi
+         ;;
+      esac
       if htop_check_curses_capability "" "-l$curses_name -ltinfo"; then
          break
       fi
