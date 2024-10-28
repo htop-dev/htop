@@ -666,6 +666,7 @@ esac
 
 htop_save_CFLAGS=$CFLAGS
 CFLAGS="$AM_CFLAGS $CFLAGS"
+
 if test "x$enable_unicode" = xyes; then
    AC_CHECK_HEADERS([ncursesw/curses.h], [],
       [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
@@ -688,6 +689,31 @@ else
       [AC_CHECK_HEADERS([term.h], [],
          [AC_MSG_ERROR([can not find required term header file])])])
 fi
+
+CFLAGS="-I$srcdir $CFLAGS"
+
+# Check for things that might be macros.
+# "stdscr" is a macro in ncursest (reentrant version of ncurses).
+AC_MSG_CHECKING([whether the curses header works])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include "ProvideCurses.h"
+   ]], [[
+keypad(stdscr, 0);
+
+refresh();
+
+#if defined(HAVE_LIBNCURSESW)
+{
+   static cchar_t dummy;
+   mvadd_wchnstr(0, 0, &dummy, 0);
+}
+#endif
+   ]])],
+   [AC_MSG_RESULT(yes)],
+   [AC_MSG_RESULT(no)
+   AC_MSG_FAILURE([there are problems with the curses header])]
+)
+
 CFLAGS=$htop_save_CFLAGS
 
 if test "$enable_static" = yes; then
