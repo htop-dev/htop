@@ -696,9 +696,12 @@ CFLAGS="-I$srcdir $CFLAGS"
 # "stdscr" is a macro in ncursest (reentrant version of ncurses).
 AC_MSG_CHECKING([whether the curses header works])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+/* Checks if the "bool" definition in curses is ISO C compatible */
+#include <stdbool.h>
+
 #include "ProvideCurses.h"
    ]], [[
-keypad(stdscr, 0);
+keypad(stdscr, false);
 
 refresh();
 
