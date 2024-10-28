@@ -699,6 +699,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("show_cpu_temperature", this->showCPUTemperature);
    printSettingInteger("degree_fahrenheit", this->degreeFahrenheit);
    #endif
+   printSettingInteger("show_cached_memory", this->showCachedMemory);
    printSettingInteger("update_process_names", this->updateProcessNames);
    printSettingInteger("account_guest_in_cpu_meter", this->accountGuestInCPUMeter);
    printSettingInteger("color_scheme", this->colorScheme);

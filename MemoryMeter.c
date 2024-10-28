@@ -40,9 +40,9 @@ static void MemoryMeter_updateValues(Meter* this) {
    this->values[MEMORY_METER_COMPRESSED] = NAN;
    this->values[MEMORY_METER_AVAILABLE] = NAN;
    Platform_setMemoryValues(this);
-   if (this->mode == GRAPH_METERMODE && !settings->showCachedMemory) {
-      this->values[MEMORY_METER_BUFFERS] = NAN;
-      this->values[MEMORY_METER_CACHE] = NAN;
+   if ((this->mode == GRAPH_METERMODE || this->mode == BAR_METERMODE) && !settings->showCachedMemory) {
+      this->values[MEMORY_METER_BUFFERS] = 0;
+      this->values[MEMORY_METER_CACHE] = 0;
    }
    /* Do not print available memory in bar mode */
    static_assert(MEMORY_METER_AVAILABLE + 1 == MEMORY_METER_ITEMCOUNT,
