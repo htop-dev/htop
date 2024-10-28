@@ -450,18 +450,17 @@ htop_check_curses_capability () {
    # At this point we have not checked the name of curses header, so
    # use forward declaration for the linking tests below.
 
-   # htop uses keypad() and "stdscr", but for ncurses implementation,
-   # the symbols are in "-ltinfo" and not "-lncurses".
+   # htop uses keypad(), but for ncurses implementation, the symbol is
+   # in "-ltinfo" and not "-lncurses".
    # Check "-ltinfo" symbols first, as libncurses might require
    # explicit "-ltinfo" to link (for internal dependency).
    AC_MSG_CHECKING([for keypad in $htop_msg_linker_flags])
    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-/* extern WINDOW* stdscr; */
 /* int keypad(WINDOW* win, bool enable); */
-extern void* stdscr;
 int keypad(void* win, int enable);
       ]], [[
-keypad(stdscr, 0);
+static char dummy;
+keypad((void*)&dummy, 0);
       ]])],
       [AC_MSG_RESULT(yes)],
       [AC_MSG_RESULT(no)
