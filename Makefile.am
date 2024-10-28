@@ -508,11 +508,11 @@ cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_OPENVZ
 
 dist-hook: $(top_distdir)/configure
-	@if test "x$$FORCE_MAKE_DIST" = x && \
-	   grep 'pkg_m4_absent' '$(top_distdir)/configure' >/dev/null; then \
-	   echo 'ERROR: This distribution would have incomplete pkg-config support. Rebuilding the configure script is advised. Set FORCE_MAKE_DIST=1 to ignore this warning.'>&2; \
+	@if test "x$$FORCE_MAKE_DIST" != x || \
+	   grep 'pkg_m4_included' '$(top_distdir)/configure' >/dev/null; then :; \
+	else \
+	   echo 'ERROR: The configure script has incomplete pkg-config support and regenerating it is advised. Set FORCE_MAKE_DIST=1 to ignore this warning.'>&2; \
 	   (exit 1); \
-	else :; \
 	fi
 	@if grep 'PACKAGE_VERSION.*-g' '$(top_distdir)/configure'; then \
 	  echo 'WARNING: You are building a dist from a git version. Better run make dist outside of a .git repo on a tagged release.'>&2; \

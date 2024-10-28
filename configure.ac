@@ -384,8 +384,8 @@ dnl If the macro is not called, some pkg-config checks might be skipped
 dnl and $PKG_CONFIG might be unset.
 m4_ifdef([PKG_PROG_PKG_CONFIG], [
    PKG_PROG_PKG_CONFIG()
+   pkg_m4_included=1 # Makefile might grep this keyword. Don't remove.
 ], [
-   pkg_m4_absent=1 # Makefile might grep this keyword. Don't remove.
    m4_warn(
       [syntax],
       [pkg.m4 is absent or older than version 0.16; this 'configure' would have incomplete pkg-config support])
@@ -609,6 +609,9 @@ none-*|nonwide-yes)
          if test "x$result" != x; then
             echo detected a .pc file: "$result" >&AS_MESSAGE_LOG_FD
             AC_MSG_WARN([your system supports pkg-config; installing pkg-config is recommended before configuring htop])
+            m4_ifdef([PKG_PROG_PKG_CONFIG], [], [
+               AC_MSG_WARN([this configure script would also need to be regenerated])
+            ])
             break
          fi
       done
