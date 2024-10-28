@@ -68,6 +68,22 @@ esac
 # Enable extensions, required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
+# The header of ncurses exposes wide-character interfaces only if
+# _XOPEN_SOURCE_EXTENDED is defined or _XOPEN_SOURCE defined to be
+# >= 500. In DragonFly BSD, FreeBSD and OpenBSD, defining
+# _XOPEN_SOURCE to any value *hides* interfaces that would be useful
+# for htop.
+dnl
+dnl Note: The "#undef" in AH_VERBATIM will be replaced with "#define"
+dnl when config.h is generated.
+AH_VERBATIM([_XOPEN_SOURCE_EXTENDED],
+[/* Enables XPG4v2 (SUSv1) interfaces if they are not enabled already with _XOPEN_SOURCE */
+#ifndef _XOPEN_SOURCE_EXTENDED
+#undef _XOPEN_SOURCE_EXTENDED
+#endif
+])
+AC_DEFINE([_XOPEN_SOURCE_EXTENDED], 1)
+
 # Activate some more of the missing global defines
 AC_SYS_LARGEFILE
 
