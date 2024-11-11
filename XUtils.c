@@ -374,6 +374,21 @@ double sumPositiveValues(const double* array, size_t count) {
    return sum;
 }
 
+/* Counts the number of digits needed to print "n" with a given base.
+   If "n" is zero, returns 1. This function expects small numbers to
+   appear often, hence it uses a O(log(n)) time algorithm. */
+size_t countDigits(size_t n, size_t base) {
+   assert(base > 1);
+   size_t res = 1;
+   for (size_t limit = base; n >= limit; limit *= base) {
+      res++;
+      if (base && limit > SIZE_MAX / base) {
+         break;
+      }
+   }
+   return res;
+}
+
 #if !defined(HAVE_BUILTIN_CTZ)
 // map a bit value mod 37 to its position
 static const uint8_t mod37BitPosition[] = {
