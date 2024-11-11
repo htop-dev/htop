@@ -218,8 +218,6 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
       unsigned long long int gputimeDelta;
       uint64_t monotonicTimeDelta;
 
-      Row_updateFieldWidth(GPU_TIME, ceil(log10(new_gpu_time)));
-
       gputimeDelta = saturatingSub(new_gpu_time, lp->gpu_time);
       monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
       lp->gpu_percent = 100.0F * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;

@@ -89,7 +89,7 @@ void Row_setPidColumnWidth(pid_t maxPid) {
       return;
    }
 
-   Row_pidDigits = (int)log10(maxPid) + 1;
+   Row_pidDigits = countDigits((size_t)maxPid, 10);
    assert(Row_pidDigits <= ROW_MAX_PID_DIGITS);
 }
 
@@ -99,7 +99,7 @@ void Row_setUidColumnWidth(uid_t maxUid) {
       return;
    }
 
-   Row_uidDigits = (int)log10(maxUid) + 1;
+   Row_uidDigits = countDigits((size_t)maxUid, 10);
    assert(Row_uidDigits <= ROW_MAX_UID_DIGITS);
 }
 
