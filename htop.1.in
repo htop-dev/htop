@@ -298,6 +298,9 @@ is active, the executable path (/proc/[pid]/exe) and the command name
 
 The program basename is highlighted if set in the configuration. Additional
 highlighting can be configured for stale executables (cf. EXE column below).
+
+The Command column should be the last column in each screen as can get very long
+and profits from being able to extend its length dynamically.
 .TP
 .B COMM
 The command name of the process obtained from /proc/[pid]/comm, if readable.
