@@ -37,7 +37,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [COMM] = {
       .name = "Command",
       .title = "Command ",
-      .description = "Command line",
+      .description = "Command line (insert as last column only)",
       .flags = 0,
    },
    [STATE] = {

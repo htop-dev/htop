@@ -47,7 +47,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_ENTER:
       case KEY_MOUSE:
       case KEY_RECLICK:
-         if (selected < size - 1) {
+         if (selected < size) {
             this->moving = !(this->moving);
             Panel_setSelectionColor(super, this->moving ? PANEL_SELECTION_FOLLOW : PANEL_SELECTION_FOCUS);
             ListItem* selectedItem = (ListItem*) Panel_getSelected(super);
@@ -63,7 +63,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(7):
       case '[':
       case '-':
-         if (selected < size - 1)
+         if (selected < size)
             Panel_moveSelectedUp(super);
          result = HANDLED;
          break;
@@ -74,13 +74,13 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(8):
       case ']':
       case '+':
-         if (selected < size - 2)
+         if (selected < size - 1)
             Panel_moveSelectedDown(super);
          result = HANDLED;
          break;
       case KEY_F(9):
       case KEY_DC:
-         if (selected < size - 1)
+         if (size > 1 && selected < size)
             Panel_remove(super, selected);
          result = HANDLED;
          break;
