@@ -68,6 +68,22 @@ esac
 # Enable extensions, required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
+# The header of ncurses exposes wide-character interfaces only if
+# _XOPEN_SOURCE_EXTENDED is defined or _XOPEN_SOURCE defined to be
+# >= 500. In DragonFly BSD, FreeBSD and OpenBSD, defining
+# _XOPEN_SOURCE to any value *hides* interfaces that would be useful
+# for htop.
+dnl
+dnl Note: The "#undef" in AH_VERBATIM will be replaced with "#define"
+dnl when config.h is generated.
+AH_VERBATIM([_XOPEN_SOURCE_EXTENDED],
+[/* Enables XPG4v2 (SUSv1) interfaces if they are not enabled already with _XOPEN_SOURCE */
+#ifndef _XOPEN_SOURCE_EXTENDED
+#undef _XOPEN_SOURCE_EXTENDED
+#endif
+])
+AC_DEFINE([_XOPEN_SOURCE_EXTENDED], 1)
+
 # Activate some more of the missing global defines
 AC_SYS_LARGEFILE
 
@@ -384,8 +400,8 @@ dnl If the macro is not called, some pkg-config checks might be skipped
 dnl and $PKG_CONFIG might be unset.
 m4_ifdef([PKG_PROG_PKG_CONFIG], [
    PKG_PROG_PKG_CONFIG()
+   pkg_m4_included=1 # Makefile might grep this keyword. Don't remove.
 ], [
-   pkg_m4_absent=1 # Makefile might grep this keyword. Don't remove.
    m4_warn(
       [syntax],
       [pkg.m4 is absent or older than version 0.16; this 'configure' would have incomplete pkg-config support])
@@ -400,10 +416,12 @@ AC_ARG_ENABLE([unicode],
 AC_ARG_VAR([CURSES_CFLAGS], [C compiler flags for curses; this overrides auto detected values])
 AC_ARG_VAR([CURSES_LIBS], [linker flags for curses; this overrides auto detected values])
 
-curses_pkg_names="ncurses6 ncurses5 ncurses curses"
+curses_pkg_names="ncurses6 ncurses5 ncurses ncursest6 ncursest5 \
+   ncursest curses"
 
 if test "x$enable_unicode" = xyes; then
-   curses_pkg_names="ncursesw6 ncursesw5 ncursesw $curses_pkg_names"
+   curses_pkg_names="ncursesw6 ncursesw5 ncursesw ncursestw6 ncursestw5 \
+      ncursestw $curses_pkg_names"
 fi
 
 AC_ARG_WITH([curses],
@@ -412,10 +430,10 @@ AC_ARG_WITH([curses],
             [],
             [with_curses=check])
 case $with_curses in
-check)
+check|yes)
    : # No-op. Use default list.
    ;;
-yes|no)
+no)
    AC_MSG_ERROR([bad value '$with_curses' for --with-curses option])
    ;;
 *)
@@ -450,18 +468,17 @@ htop_check_curses_capability () {
    # At this point we have not checked the name of curses header, so
    # use forward declaration for the linking tests below.
 
-   # htop uses keypad() and "stdscr", but for ncurses implementation,
-   # the symbols are in "-ltinfo" and not "-lncurses".
+   # htop uses keypad(), but for ncurses implementation, the symbol is
+   # in "-ltinfo" and not "-lncurses".
    # Check "-ltinfo" symbols first, as libncurses might require
    # explicit "-ltinfo" to link (for internal dependency).
    AC_MSG_CHECKING([for keypad in $htop_msg_linker_flags])
    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-/* extern WINDOW* stdscr; */
 /* int keypad(WINDOW* win, bool enable); */
-extern void* stdscr;
 int keypad(void* win, int enable);
       ]], [[
-keypad(stdscr, 0);
+static char dummy;
+keypad((void*)&dummy, 0);
       ]])],
       [AC_MSG_RESULT(yes)],
       [AC_MSG_RESULT(no)
@@ -483,13 +500,17 @@ doupdate();
          htop_curses_status=1])
    fi
 
+   # htop calls mvadd_wchnstr(), which might be implemented as a macro.
+   # It is more reliable to test linking with wadd_wchnstr().
    if test "x$htop_curses_status$enable_unicode" = x0yes; then
-      AC_MSG_CHECKING([for mvadd_wchnstr in $htop_msg_linker_flags])
+      AC_MSG_CHECKING([for wadd_wchnstr in $htop_msg_linker_flags])
       AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-/* int mvadd_wchnstr(int y, int x, const cchar_t* wchstr, int n); */
-int mvadd_wchnstr(int y, int x, const void* wchstr, int n);
+/* int wadd_wchnstr(WINDOW* win, const cchar_t* wchstr, int n); */
+int wadd_wchnstr(void* win, const void* wchstr, int n);
          ]], [[
-mvadd_wchnstr(0, 0, (void*)0, 0);
+static char dummy1;
+static char dummy2;
+wadd_wchnstr((void*)&dummy1, (void*)&dummy2, 0);
          ]])],
          [AC_MSG_RESULT(yes)
          htop_curses_capability=wide],
@@ -607,7 +628,11 @@ none-*|nonwide-yes)
       for d in $list; do
          result=`find "$d" -name '*curses*.pc' 2>/dev/null | sed '1 q'`
          if test "x$result" != x; then
+            echo detected a .pc file: "$result" >&AS_MESSAGE_LOG_FD
             AC_MSG_WARN([your system supports pkg-config; installing pkg-config is recommended before configuring htop])
+            m4_ifdef([PKG_PROG_PKG_CONFIG], [], [
+               AC_MSG_WARN([this configure script would also need to be regenerated])
+            ])
             break
          fi
       done
@@ -619,12 +644,20 @@ none-*|nonwide-yes)
       if htop_check_curses_capability "" "-l$curses_name"; then
          break
       fi
-      # For ncurses implementation, an extra "-ltinfo" or "-ltinfow"
-      # flag might be needed to link.
-      if test "x$enable_unicode" = xyes &&
-         htop_check_curses_capability "" "-l$curses_name -ltinfow"; then
-         break
-      fi
+      # For ncurses implementation, an extra terminfo library might be
+      # needed. Guess the terminfo library name based on the ncurses
+      # library file name (e.g. "-ltinfow" for "-lncursesw"), before
+      # trying the "-ltinfo" name.
+      tinfo_name=`echo x$curses_name | sed 's/^xncurses/tinfo/p; d'`
+      case x$tinfo_name in
+      x|xtinfo)
+         ;;
+      *)
+         if htop_check_curses_capability "" "-l$curses_name -l$tinfo_name"; then
+            break
+         fi
+         ;;
+      esac
       if htop_check_curses_capability "" "-l$curses_name -ltinfo"; then
          break
       fi
@@ -643,6 +676,7 @@ esac
 
 htop_save_CFLAGS=$CFLAGS
 CFLAGS="$AM_CFLAGS $CFLAGS"
+
 if test "x$enable_unicode" = xyes; then
    AC_CHECK_HEADERS([ncursesw/curses.h], [],
       [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
@@ -665,6 +699,34 @@ else
       [AC_CHECK_HEADERS([term.h], [],
          [AC_MSG_ERROR([can not find required term header file])])])
 fi
+
+CFLAGS="-I$srcdir $CFLAGS"
+
+# Check for things that might be macros.
+# "stdscr" is a macro in ncursest (reentrant version of ncurses).
+AC_MSG_CHECKING([whether the curses header works])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+/* Checks if the "bool" definition in curses is ISO C compatible */
+#include <stdbool.h>
+
+#include "ProvideCurses.h"
+   ]], [[
+keypad(stdscr, false);
+
+refresh();
+
+#if defined(HAVE_LIBNCURSESW)
+{
+   static cchar_t dummy;
+   mvadd_wchnstr(0, 0, &dummy, 0);
+}
+#endif
+   ]])],
+   [AC_MSG_RESULT(yes)],
+   [AC_MSG_RESULT(no)
+   AC_MSG_FAILURE([there are problems with the curses header])]
+)
+
 CFLAGS=$htop_save_CFLAGS
 
 if test "$enable_static" = yes; then

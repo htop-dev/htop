@@ -8,7 +8,11 @@ in the source distribution for its full text.
 */
 
 
+// This header is also used in tests by configure, thus conditionally
+// including "config.h".
+#if defined(HAVE_CONFIG_H)
 #include "config.h" // IWYU pragma: keep
+#endif
 
 // IWYU pragma: begin_exports
 
