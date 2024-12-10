@@ -429,6 +429,12 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
+void Platform_getBacktrace(Vector* frames, const BacktracePanel* panel, char** error) {
+   (void)frames;
+   (void)panel;
+   xAsprintf(error, "The backtrace screen is not implemented");
+}
+
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    prop_dictionary_t dict, fields, props;
    prop_object_t device, class;
