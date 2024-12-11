@@ -48,6 +48,10 @@ typedef struct CPUData_ {
 
    #ifdef HAVE_SENSORS_SENSORS_H
    double temperature;
+
+   int physicalID;		/* different for each CPU socket */
+   int coreID;			/* same for hyperthreading */
+   int ccdID;			/* same for each AMD chiplet */
    #endif
 
    bool online;
@@ -73,6 +77,11 @@ typedef struct LinuxMachine_ {
    double period;
 
    CPUData* cpuData;
+
+   #ifdef HAVE_SENSORS_SENSORS_H
+   int maxPhysicalID;
+   int maxCoreID;
+   #endif
 
    memory_t totalHugePageMem;
    memory_t usedHugePageMem[HTOP_HUGEPAGE_COUNT];
