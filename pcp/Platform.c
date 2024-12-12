@@ -127,6 +127,7 @@ static const char* Platform_metricNames[] = {
    [PCP_CONTROL_THREADS] = "proc.control.perclient.threads",
 
    [PCP_HINV_NCPU] = "hinv.ncpu",
+   [PCP_HINV_NDISK] = "hinv.ndisk",
    [PCP_HINV_CPUCLOCK] = "hinv.cpu.clock",
    [PCP_UNAME_SYSNAME] = "kernel.uname.sysname",
    [PCP_UNAME_RELEASE] = "kernel.uname.release",
@@ -385,6 +386,7 @@ bool Platform_init(void) {
    Metric_enable(PCP_PID_MAX, true);
    Metric_enable(PCP_BOOTTIME, true);
    Metric_enable(PCP_HINV_NCPU, true);
+   Metric_enable(PCP_HINV_NDISK, true);
    Metric_enable(PCP_PERCPU_SYSTEM, true);
    Metric_enable(PCP_UNAME_SYSNAME, true);
    Metric_enable(PCP_UNAME_RELEASE, true);
@@ -753,6 +755,8 @@ bool Platform_getDiskIO(DiskIOData* data) {
       data->totalBytesWritten = value.ull;
    if (Metric_values(PCP_DISK_ACTIVE, &value, 1, PM_TYPE_U64) != NULL)
       data->totalMsTimeSpend = value.ull;
+   if (Metric_values(PCP_HINV_NDISK, &value, 1, PM_TYPE_U64) != NULL)
+      data->numDisks = value.ull;
    return true;
 }
 

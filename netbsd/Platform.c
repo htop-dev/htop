@@ -384,6 +384,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    uint64_t bytesReadSum = 0;
    uint64_t bytesWriteSum = 0;
    uint64_t busyTimeSum = 0;
+   uint64_t numDisks = 0;
 
    for (size_t i = 0, count = size / sizeof(struct io_sysctl); i < count; i++) {
       /* ignore NFS activity */
@@ -393,11 +394,13 @@ bool Platform_getDiskIO(DiskIOData* data) {
       bytesReadSum += iostats[i].rbytes;
       bytesWriteSum += iostats[i].wbytes;
       busyTimeSum += iostats[i].busysum_usec;
+      numDisks++;
    }
 
    data->totalBytesRead = bytesReadSum;
    data->totalBytesWritten = bytesWriteSum;
    data->totalMsTimeSpend = busyTimeSum / 1000;
+   data->numDisks = numDisks;
 
    free(iostats);
    return true;
