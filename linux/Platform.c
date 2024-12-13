@@ -613,7 +613,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
 
    char lastTopDisk[32] = { '\0' };
 
-   unsigned long long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
+   uint64_t read_sum = 0, write_sum = 0, timeSpend_sum = 0;
    uint64_t numDisks = 0;
 
    char lineBuffer[256];

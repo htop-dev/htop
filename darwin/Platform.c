@@ -404,7 +404,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    if (IOServiceGetMatchingServices(iokit_port, IOServiceMatching("IOBlockStorageDriver"), &drive_list))
       return false;
 
-   unsigned long long int read_sum = 0, write_sum = 0, timeSpend_sum = 0;
+   uint64_t read_sum = 0, write_sum = 0, timeSpend_sum = 0;
    uint64_t numDisks = 0;
 
    io_registry_entry_t drive;
@@ -437,7 +437,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
       numDisks++;
 
       CFNumberRef number;
-      unsigned long long int value;
+      uint64_t value;
 
       /* Get bytes read */
       number = (CFNumberRef) CFDictionaryGetValue(statistics, CFSTR(kIOBlockStorageDriverStatisticsBytesReadKey));
