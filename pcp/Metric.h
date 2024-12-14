@@ -26,6 +26,7 @@ typedef enum Metric_ {
    PCP_CONTROL_THREADS,         /* proc.control.perclient.threads */
 
    PCP_HINV_NCPU,               /* hinv.ncpu */
+   PCP_HINV_NDISK,              /* hinv.ndisk */
    PCP_HINV_CPUCLOCK,           /* hinv.cpu.clock */
    PCP_UNAME_SYSNAME,           /* kernel.uname.sysname */
    PCP_UNAME_RELEASE,           /* kernel.uname.release */

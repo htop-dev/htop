@@ -312,7 +312,8 @@ bool Platform_getDiskIO(DiskIOData* data) {
 
    int count = current.dinfo->numdevs;
 
-   unsigned long long int bytesReadSum = 0, bytesWriteSum = 0, timeSpendSum = 0;
+   uint64_t bytesReadSum = 0, bytesWriteSum = 0, timeSpendSum = 0;
+   uint64_t numDisks = 0;
 
    // get data
    for (int i = 0; i < count; i++) {
@@ -330,11 +331,13 @@ bool Platform_getDiskIO(DiskIOData* data) {
       bytesReadSum += bytes_read;
       bytesWriteSum += bytes_write;
       timeSpendSum += 1000 * busy_time;
+      numDisks++;
    }
 
    data->totalBytesRead = bytesReadSum;
    data->totalBytesWritten = bytesWriteSum;
    data->totalMsTimeSpend = timeSpendSum;
+   data->numDisks = numDisks;
    return true;
 }
 
