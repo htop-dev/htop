@@ -85,8 +85,8 @@ static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdline
 
       if ((tokenLen == commLen || (tokenLen > commLen && commLen == (TASK_COMM_LEN - 1))) &&
           strncmp(tokenBase, comm, commLen) == 0) {
-         *pCommStart = tokenBase - cmdline;
-         *pCommEnd = token - cmdline;
+         *pCommStart = (int)(tokenBase - cmdline);
+         *pCommEnd = (int)(token - cmdline);
          return true;
       }
 
@@ -209,7 +209,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    /* The field separator "│" has been chosen such that it will not match any
     * valid string used for searching or filtering */
    const char* SEPARATOR = CRT_treeStr[TREE_STR_VERT];
-   const int SEPARATOR_LEN = strlen(SEPARATOR);
+   const size_t SEPARATOR_LEN = strlen(SEPARATOR);
 
    /* Accommodate the column text, two field separators and terminating NUL */
    size_t maxLen = 2 * SEPARATOR_LEN + 1;
@@ -350,7 +350,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       return;
    }
 
-   int exeLen = strlen(this->procExe);
+   int exeLen = (int)MINIMUM(strlen(this->procExe), 65536);
    int exeBasenameOffset = this->procExeBasenameOffset;
    int exeBasenameLen = exeLen - exeBasenameOffset;
 
@@ -509,7 +509,7 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
          if (!highlightDeleted)
             continue;
 
-      RichString_setAttrn(str, hl->attr, strStart + hl->offset, hl->length);
+      RichString_setAttrn(str, hl->attr, (int)(strStart + hl->offset), (int)hl->length);
    }
 }
 
@@ -575,7 +575,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
             ret = xSnprintf(buf, n, "   ");
          }
          if (ret < 0 || (size_t)ret >= n) {
-            written = n;
+            written = (int)n;
          } else {
             written = ret;
          }
@@ -870,7 +870,13 @@ static bool Process_setPriority(Process* this, int priority) {
 bool Process_rowChangePriorityBy(Row* super, Arg delta) {
    Process* this = (Process*) super;
    assert(Object_isA((const Object*) this, (const ObjectClass*) &Process_class));
-   return Process_setPriority(this, this->nice + delta.i);
+
+   long value = this->nice + delta.i;
+   int prio = (int)value;
+   if (prio != value)
+      return false;
+
+   return Process_setPriority(this, prio);
 }
 
 static bool Process_sendSignal(Process* this, Arg sgn) {
@@ -1002,12 +1008,12 @@ void Process_updateComm(Process* this, const char* comm) {
    this->mergedCommand.lastUpdate = 0;
 }
 
-static int skipPotentialPath(const char* cmdline, int end) {
+static size_t skipPotentialPath(const char* cmdline, size_t end) {
    if (cmdline[0] != '/')
       return 0;
 
-   int slash = 0;
-   for (int i = 1; i < end; i++) {
+   size_t slash = 0;
+   for (size_t i = 1; i < end; i++) {
       if (cmdline[i] == '/' && cmdline[i + 1] != '\0') {
          slash = i + 1;
          continue;
@@ -1023,17 +1029,19 @@ static int skipPotentialPath(const char* cmdline, int end) {
    return slash;
 }
 
-void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart, int basenameEnd) {
-   assert(basenameStart >= 0);
-   assert((cmdline && basenameStart < (int)strlen(cmdline)) || (!cmdline && basenameStart == 0));
+void Process_updateCmdline(Process* this, const char* cmdline, size_t basenameStart, size_t basenameEnd) {
+   assert((cmdline && basenameStart < strlen(cmdline)) || (!cmdline && basenameStart == 0));
    assert((basenameEnd > basenameStart) || (basenameEnd == 0 && basenameStart == 0));
-   assert((cmdline && basenameEnd <= (int)strlen(cmdline)) || (!cmdline && basenameEnd == 0));
+   assert((cmdline && basenameEnd <= strlen(cmdline)) || (!cmdline && basenameEnd == 0));
 
    if (!this->cmdline && !cmdline)
       return;
 
    if (this->cmdline && cmdline && String_eq(this->cmdline, cmdline))
       return;
+
+   basenameStart = MINIMUM(basenameStart, 1000000);
+   basenameEnd = MINIMUM(basenameEnd, 1000000);
 
    free(this->cmdline);
    this->cmdline = cmdline ? xStrdup(cmdline) : NULL;
@@ -1042,8 +1050,8 @@ void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart
       this->cmdlineBasenameStart = 0;
       this->cmdlineBasenameEnd = 0;
    } else {
-      this->cmdlineBasenameStart = (basenameStart || !cmdline) ? basenameStart : skipPotentialPath(cmdline, basenameEnd);
-      this->cmdlineBasenameEnd = basenameEnd;
+      this->cmdlineBasenameStart = (basenameStart || !cmdline) ? (int)basenameStart : (int)skipPotentialPath(cmdline, basenameEnd);
+      this->cmdlineBasenameEnd = (int)basenameEnd;
    }
 
    this->mergedCommand.lastUpdate = 0;
@@ -1060,7 +1068,8 @@ void Process_updateExe(Process* this, const char* exe) {
    if (exe) {
       this->procExe = xStrdup(exe);
       const char* lastSlash = strrchr(exe, '/');
-      this->procExeBasenameOffset = (lastSlash && *(lastSlash + 1) != '\0' && lastSlash != exe) ? (lastSlash - exe + 1) : 0;
+      long offset = (lastSlash && *(lastSlash + 1) != '\0' && lastSlash != exe) ? (lastSlash - exe + 1) : 0;
+      this->procExeBasenameOffset = MAXIMUM((int)offset, 0);
    } else {
       this->procExe = NULL;
       this->procExeBasenameOffset = 0;

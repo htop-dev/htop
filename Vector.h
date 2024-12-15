@@ -72,7 +72,7 @@ int Vector_size(const Vector* this);
 /* Vector_countEquals returns true if the number of non-NULL items
    in the Vector is equal to expectedCount. This is only for debugging
    and consistency checks. */
-bool Vector_countEquals(const Vector* this, unsigned int expectedCount);
+bool Vector_countEquals(const Vector* this, size_t expectedCount);
 
 #else /* NDEBUG */
 

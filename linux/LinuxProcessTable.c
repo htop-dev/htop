@@ -334,15 +334,15 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 2;
 
    /* (4) ppid  -  %d */
-   Process_setParent(process, fast_strtol_dec(&location, 0));
+   Process_setParent(process, (pid_t) fast_strtol_dec(&location, 0));
    location += 1;
 
    /* (5) pgrp  -  %d */
-   process->pgrp = fast_strtol_dec(&location, 0);
+   process->pgrp = (int) fast_strtol_dec(&location, 0);
    location += 1;
 
    /* (6) session  -  %d */
-   process->session = fast_strtol_dec(&location, 0);
+   process->session = (int) fast_strtol_dec(&location, 0);
    location += 1;
 
    /* (7) tty_nr  -  %d */
@@ -350,7 +350,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 1;
 
    /* (8) tpgid  -  %d */
-   process->tpgid = fast_strtol_dec(&location, 0);
+   process->tpgid = (int) fast_strtol_dec(&location, 0);
    location += 1;
 
    /* (9) flags  -  %u */
@@ -420,7 +420,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    assert(location != NULL);
 
    /* (39) processor  -  %d */
-   process->processor = fast_strtol_dec(&location, 0);
+   process->processor = (int) fast_strtol_dec(&location, 0);
 
    /* Ignore further fields */
 
@@ -648,7 +648,7 @@ static void LinuxProcessTable_readMaps(LinuxProcess* process, openat_arg_t procF
       bool map_execute;
       unsigned int map_devmaj;
       unsigned int map_devmin;
-      uint64_t map_inode;
+      unsigned int map_inode;
 
       // Short circuit test: Look for a slash
       if (!strchr(buffer, '/'))
@@ -678,19 +678,19 @@ static void LinuxProcessTable_readMaps(LinuxProcess* process, openat_arg_t procF
       if (' ' != *readptr++)
          continue;
 
-      map_devmaj = fast_strtoull_hex(&readptr, 4);
+      map_devmaj = (unsigned int) fast_strtoull_hex(&readptr, 4);
       if (':' != *readptr++)
          continue;
 
-      map_devmin = fast_strtoull_hex(&readptr, 4);
+      map_devmin = (unsigned int) fast_strtoull_hex(&readptr, 4);
       if (' ' != *readptr++)
          continue;
 
-      //Minor shortcut: Once we know there's no file for this region, we skip
+      // Minor shortcut: Once we know there's no file for this region, we skip
       if (!map_devmaj && !map_devmin)
          continue;
 
-      map_inode = fast_strtoull_dec(&readptr, 0);
+      map_inode = (unsigned int) fast_strtoull_dec(&readptr, 0);
       if (!map_inode)
          continue;
 
@@ -882,7 +882,7 @@ static void LinuxProcessTable_readOpenVZData(LinuxProcess* process, openat_arg_t
             break;
          case 2:
             foundVPid = true;
-            process->vpid = strtoul(name_value_sep, NULL, 0);
+            process->vpid = (pid_t)strtoul(name_value_sep, NULL, 0);
             break;
          default:
             //Sanity Check: Should never reach here, or the implementation is missing something!
@@ -1011,13 +1011,13 @@ static void LinuxProcessTable_readOomData(LinuxProcess* process, openat_arg_t pr
 
    char buffer[PROC_LINE_LENGTH + 1] = {0};
 
-   ssize_t oomRead = xReadfileat(procFd, "oom_score", buffer, sizeof(buffer));
+   int oomRead = (int) xReadfileat(procFd, "oom_score", buffer, sizeof(buffer));
    if (oomRead < 1) {
       return;
    }
 
    char* oomPtr = buffer;
-   uint64_t oom = fast_strtoull_dec(&oomPtr, oomRead);
+   unsigned long oom = fast_strtoul_dec(&oomPtr, oomRead);
    if (*oomPtr && *oomPtr != '\n' && *oomPtr != ' ') {
       return;
    }
@@ -1026,7 +1026,7 @@ static void LinuxProcessTable_readOomData(LinuxProcess* process, openat_arg_t pr
       return;
    }
 
-   process->oom = oom;
+   process->oom = (unsigned int)oom;
 }
 
 /*
@@ -1246,10 +1246,10 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
       tokenStart = -1;
       tokenEnd = -1;
 
-      size_t exeLen = process->procExe ? strlen(process->procExe) : 0;
+      int exeLen = process->procExe ? (int) strlen(process->procExe) : 0;
 
       if (process->procExe && String_startsWith(command, process->procExe) &&
-         exeLen < (size_t)lastChar && command[exeLen] <= ' ') {
+         exeLen < lastChar && command[exeLen] <= ' ') {
          tokenStart = process->procExeBasenameOffset;
          tokenEnd = exeLen;
       }
@@ -1481,9 +1481,9 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       {
          char* endptr;
          unsigned long parsedPid = strtoul(name, &endptr, 10);
-         if (parsedPid == 0 || parsedPid == ULONG_MAX || *endptr != '\0')
+         if (parsedPid == 0 || parsedPid >= INT_MAX || *endptr != '\0')
             continue;
-         pid = parsedPid;
+         pid = (int)parsedPid;
       }
 
       // Skip task directory of main thread

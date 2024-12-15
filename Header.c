@@ -77,7 +77,7 @@ void Header_setLayout(Header* this, HeaderLayout hLayout) {
    Header_calculateHeight(this);
 }
 
-static void Header_addMeterByName(Header* this, const char* name, MeterModeId mode, unsigned int column) {
+static void Header_addMeterByName(Header* this, const char* name, MeterModeId mode, size_t column) {
    assert(column < HeaderLayout_getColumns(this->headerLayout));
 
    Vector* meters = this->columns[column];
@@ -170,7 +170,7 @@ void Header_writeBackToSettings(const Header* this) {
    }
 }
 
-Meter* Header_addMeterByClass(Header* this, const MeterClass* type, unsigned int param, unsigned int column) {
+Meter* Header_addMeterByClass(Header* this, const MeterClass* type, unsigned int param, size_t column) {
    assert(column < HeaderLayout_getColumns(this->headerLayout));
 
    Vector* meters = this->columns[column];
@@ -198,8 +198,8 @@ void Header_draw(const Header* this) {
    for (int y = 0; y < height; y++) {
       mvhline(y, 0, ' ', COLS);
    }
-   const int numCols = HeaderLayout_getColumns(this->headerLayout);
-   const int width = COLS - 2 * pad - (numCols - 1);
+   const size_t numCols = HeaderLayout_getColumns(this->headerLayout);
+   const size_t width = COLS - 2 * pad - (numCols - 1);
    int x = pad;
    float roundingLoss = 0.0F;
 
@@ -221,7 +221,7 @@ void Header_draw(const Header* this) {
          /* Let meters in text mode expand to the right on empty neighbors;
             except for multi column meters. */
          if (meter->mode == TEXT_METERMODE && !Meter_isMultiColumn(meter)) {
-            for (int j = 1; j < meter->columnWidthCount; j++) {
+            for (size_t j = 1; j < meter->columnWidthCount; j++) {
                actualWidth++; /* separator column */
                actualWidth += (float)width * HeaderLayout_layouts[this->headerLayout].widths[col + j] / 100.0F;
             }
@@ -253,7 +253,7 @@ void Header_updateData(Header* this) {
  * by counting how many columns to the right are empty or contain a BlankMeter.
  * Returns the number of columns to span, i.e. if the direct neighbor is occupied 1.
  */
-static int calcColumnWidthCount(const Header* this, const Meter* curMeter, const int pad, const unsigned int curColumn, const int curHeight) {
+static size_t calcColumnWidthCount(const Header* this, const Meter* curMeter, const int pad, const size_t curColumn, const int curHeight) {
    for (size_t i = curColumn + 1; i < HeaderLayout_getColumns(this->headerLayout); i++) {
       const Vector* meters = this->columns[i];
 
