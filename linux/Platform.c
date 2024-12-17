@@ -64,6 +64,7 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
 #include "zfs/ZfsCompressedArcMeter.h"
+#include "FlexMeter.h"
 
 #ifdef HAVE_LIBCAP
 #include <sys/capability.h>
@@ -209,7 +210,7 @@ void Platform_setBindings(Htop_Action* keys) {
    keys[KEY_F(20)] = Platform_actionHigherAutogroupPriority; // Shift-F8
 }
 
-const MeterClass* const Platform_meterTypes[] = {
+const MeterClass* Platform_meterTypes[MAX_PLATFORM_METERS] = {
    &CPUMeter_class,
    &ClockMeter_class,
    &DateMeter_class,

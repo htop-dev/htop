@@ -53,6 +53,7 @@ in the source distribution for its full text.
 #include "generic/fdstat_sysctl.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsCompressedArcMeter.h"
+#include "FlexMeter.h"
 
 #ifdef HAVE_HOST_GET_CLOCK_SERVICE
 #include <mach/clock.h>
@@ -112,7 +113,7 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
-const MeterClass* const Platform_meterTypes[] = {
+const MeterClass* Platform_meterTypes[MAX_PLATFORM_METERS] = {
    &CPUMeter_class,
    &ClockMeter_class,
    &DateMeter_class,
