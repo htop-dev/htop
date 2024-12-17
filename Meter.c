@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "CRT.h"
 #include "Macros.h"
@@ -70,6 +71,17 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
+static const wchar_t* bars[8] = {
+   L" ||||||||",
+   L" ########",
+   L"⠀⡀⡄⡆⡇⣇⣧⣷⣿",
+   L" ░░▒▒▓▓██",
+   L" ▏▎▍▌▋▊▉█",
+   L" ▁▂▃▄▅▆▇█",
+   L" ▌▌▌▌████",
+   L" ▔🮂🮃▀🮄🮅🮆█"
+};
+
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // Draw the caption
    const char* caption = Meter_getCaption(this);
@@ -124,26 +136,44 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    int offset = 0;
+
+   const Settings* settings = this->host->settings;
+   const wchar_t* barChars = &bars[settings->barType][1];
+   const size_t barLen = wcslen(barChars);
+   const size_t wsub = w * barLen;
+
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
-      if (isPositive(value) && this->total > 0.0) {
+      int actualWidth = 0;
+
+      if (isPositive(value) && this->total > 0.0 && (value * wsub > 0.5 * this->total)) {
          value = MINIMUM(value, this->total);
+         actualWidth = ceil((value / this->total) * wsub);
          blockSizes[i] = ceil((value / this->total) * w);
       } else {
          blockSizes[i] = 0;
+         continue;
       }
+
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++)
+
+      for (int j = offset; j < nextOffset; j++) {
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
                RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
+            } else if (settings->barType) {
+               RichString_setChar(&bar, startPos + j, bars[settings->barType][barLen]);
             } else {
                RichString_setChar(&bar, startPos + j, '|');
             }
          }
+      }
+
+      RichString_setChar(&bar, startPos + nextOffset - 1, barChars[actualWidth % barLen]);
+
       offset = nextOffset;
    }
 
