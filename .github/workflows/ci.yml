@@ -230,7 +230,7 @@ jobs:
         - name: Compile
           uses: vmactions/freebsd-vm@v1
           with:
-            release: '14.1'
+            release: '14.2'
             usesh: true
             prepare: |
               pkg install -y gmake autoconf automake pkgconf git
@@ -251,11 +251,11 @@ jobs:
         - name: Compile
           uses: vmactions/netbsd-vm@v1
           with:
-            release: '10.0'
+            release: '10.1'
             usesh: true
             prepare: |
               PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
-              PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.0/All/"
+              PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.1/All/"
               export PATH PKG_PATH
               /usr/sbin/pkg_add pkgin
               pkgin -y install autoconf automake libtool ncurses pkg-config gmake git
@@ -276,7 +276,7 @@ jobs:
         - name: Compile
           uses: vmactions/openbsd-vm@v1
           with:
-            release: '7.4'
+            release: '7.6'
             usesh: true
             prepare: |
               pkg_add gmake git
