@@ -256,18 +256,16 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
    number = hundredths / 100;
    hundredths %= 100;
    if (number < 100) {
+      len = xSnprintf(buffer, sizeof(buffer), "%u", (unsigned int)number);
+      RichString_appendnAscii(str, color, buffer, len);
       if (number < 10) {
          // 1 digit + decimal point + 2 digits
          // "9.76G", "9.99G", "9.76T", "9.99T", etc.
-         len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number);
-         RichString_appendnAscii(str, color, buffer, len);
          len = xSnprintf(buffer, sizeof(buffer), ".%02u", (unsigned int)hundredths);
       } else {
          // 2 digits + decimal point + 1 digit
          // "97.6M", "99.9M", "10.0G", "99.9G", etc.
-         len = xSnprintf(buffer, sizeof(buffer), "%2u", (unsigned int)number);
-         RichString_appendnAscii(str, color, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), ".%1u", (unsigned int)hundredths / 10);
+         len = xSnprintf(buffer, sizeof(buffer), ".%u", (unsigned int)hundredths / 10);
       }
       RichString_appendnAscii(str, prevUnitColor, buffer, len);
       len = xSnprintf(buffer, sizeof(buffer), "%c ", unitPrefixes[i]);
@@ -280,7 +278,7 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
       // "1000M", "9999M", "1000G", "9999G", etc.
       assert(number < 10000);
 
-      len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number / 1000);
+      len = xSnprintf(buffer, sizeof(buffer), "%u", (unsigned int)number / 1000);
       RichString_appendnAscii(str, nextUnitColor, buffer, len);
       len = xSnprintf(buffer, sizeof(buffer), "%03u%c ", (unsigned int)number % 1000, unitPrefixes[i]);
    }
