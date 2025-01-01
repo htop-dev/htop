@@ -1109,7 +1109,7 @@ AC_SUBST([AM_CPPFLAGS])
 # We're done, let's go!
 # ----------------------------------------------------------------------
 
-AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2024 htop dev team."], [Copyright message.])
+AC_DEFINE_UNQUOTED([COPYRIGHT], ["(C) 2004-2019 Hisham Muhammad. (C) 2020-2025 htop dev team."], [Copyright message.])
 
 AM_CONDITIONAL([HTOP_LINUX], [test "$my_htop_platform" = linux])
 AM_CONDITIONAL([HTOP_FREEBSD], [test "$my_htop_platform" = freebsd])
