@@ -369,7 +369,7 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    unsigned long long totalDays = totalHours / 24;
    unsigned int hours = totalHours % 24;
    if (totalDays < 10) {
-      len = xSnprintf(buffer, sizeof(buffer), "%1ud", (unsigned int)totalDays);
+      len = xSnprintf(buffer, sizeof(buffer), "%ud", (unsigned int)totalDays);
       RichString_appendnAscii(str, dayColor, buffer, len);
       len = xSnprintf(buffer, sizeof(buffer), "%02uh", hours);
       RichString_appendnAscii(str, hourColor, buffer, len);
