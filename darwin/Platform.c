@@ -307,10 +307,8 @@ void Platform_setMemoryValues(Meter* mtr) {
 
    mtr->total = dhost->host_info.max_mem / 1024;
 #ifdef HAVE_STRUCT_VM_STATISTICS64
-   natural_t used = vm->active_count + vm->inactive_count +
-              vm->speculative_count + vm->wire_count +
-              vm->compressor_page_count - vm->purgeable_count - vm->external_page_count;
-   mtr->values[MEMORY_METER_USED] = (double)(used - vm->compressor_page_count) * page_K;
+   natural_t used = vm->wire_count + vm->inactive_count + vm->active_count;
+   mtr->values[MEMORY_METER_USED] = (double)(used + vm->compressor_page_count) * page_K;
 #else
    mtr->values[MEMORY_METER_USED] = (double)(vm->active_count + vm->wire_count) * page_K;
 #endif
