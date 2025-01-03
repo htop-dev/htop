@@ -650,11 +650,15 @@ int Settings_write(const Settings* this, bool onCrash) {
       xAsprintf(&tmpFilename, "%s.tmp.XXXXXX", this->filename);
       int fdtmp = mkstemp(tmpFilename);
       umask(cur_umask);
-      if (fdtmp == -1)
+      if (fdtmp == -1) {
+         free(tmpFilename);
          return -errno;
+      }
       fp = fdopen(fdtmp, "w");
-      if (!fp)
+      if (!fp) {
+         free(tmpFilename);
          return -errno;
+      }
       separator = '\n';
       of = fprintf;
    }
