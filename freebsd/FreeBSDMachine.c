@@ -340,12 +340,10 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    len = sizeof(memActive);
    sysctl(MIB_vm_stats_vm_v_active_count, 4, &(memActive), &len, NULL, 0);
    memActive *= this->pageSizeKb;
-   this->memActive = memActive;
 
    len = sizeof(memWire);
    sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(memWire), &len, NULL, 0);
    memWire *= this->pageSizeKb;
-   this->memWire = memWire;
 
    len = sizeof(buffersMem);
    sysctl(MIB_vfs_bufspace, 2, &(buffersMem), &len, NULL, 0);
@@ -361,7 +359,7 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    sysctl(MIB_vm_vmtotal, 2, &(vmtotal), &len, NULL, 0);
    super->sharedMem = vmtotal.t_rmshr * this->pageSizeKb;
 
-   super->usedMem = this->memActive + this->memWire;
+   super->usedMem = memActive + memWire;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(this->kd, swap, ARRAYSIZE(swap), 0);
