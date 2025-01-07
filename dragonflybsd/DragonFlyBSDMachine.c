@@ -240,18 +240,20 @@ static void DragonFlyBSDMachine_scanMemoryInfo(Machine* super) {
    sysctl(MIB_hw_physmem, 2, &(super->totalMem), &len, NULL, 0);
    super->totalMem /= 1024;
 
-   sysctl(MIB_vm_stats_vm_v_active_count, 4, &(this->memActive), &len, NULL, 0);
-   this->memActive *= this->pageSizeKb;
+   unsigned long long int memActive = 0;
+   sysctl(MIB_vm_stats_vm_v_active_count, 4, &memActive, &len, NULL, 0);
+   memActive *= this->pageSizeKb;
 
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(this->memWire), &len, NULL, 0);
-   this->memWire *= this->pageSizeKb;
+   unsigned long long int memWire = 0;
+   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &memWire, &len, NULL, 0);
+   memWire *= this->pageSizeKb;
 
    sysctl(MIB_vfs_bufspace, 2, &(super->buffersMem), &len, NULL, 0);
    super->buffersMem /= 1024;
 
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(super->cachedMem), &len, NULL, 0);
    super->cachedMem *= this->pageSizeKb;
-   super->usedMem = this->memActive + this->memWire;
+   super->usedMem = memActive + memWire;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(this->kd, swap, ARRAYSIZE(swap), 0);
