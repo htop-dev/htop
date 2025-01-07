@@ -313,9 +313,13 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    // @etosan:
    // memory counter relationships seem to be these:
    //  total = active + wired + inactive + cache + free
-   //  htop_used (unavail to anybody) = active + wired
-   //  htop_cache (for cache meter)   = buffers + cache
-   //  user_free (avail to procs)     = buffers + inactive + cache + free
+   //  htop_used (unavail to anybody)   = active + wired + inactive - buffer
+   //  htop_cache (for cache meter)     = buffer + cache
+   //  htop_user_free (avail to procs)  = buffer + cache + free
+   //  htop_buffers (disk write buffer) = 0 (not applicable to FreeBSD)
+   //
+   // 'buffer' contain cache used by most file systems other than ZFS, and is
+   // included in 'wired'
    //
    // with ZFS ARC situation becomes bit muddled, as ARC behaves like "user_free"
    // and belongs into cache, but is reported as wired by kernel
@@ -323,7 +327,7 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    // htop_used   = active + (wired - arc)
    // htop_cache  = buffers + cache + arc
    u_long totalMem;
-   u_int memActive, memWire, cachedMem;
+   u_int memActive, memWire, memInactive, cachedMem;
    long buffersMem;
    size_t len;
    struct vmtotal vmtotal;
@@ -345,21 +349,25 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(memWire), &len, NULL, 0);
    memWire *= this->pageSizeKb;
 
+   len = sizeof(memInactive);
+   sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &(memInactive), &len, NULL, 0);
+   memInactive *= this->pageSizeKb;
+
    len = sizeof(buffersMem);
    sysctl(MIB_vfs_bufspace, 2, &(buffersMem), &len, NULL, 0);
    buffersMem /= 1024;
-   super->buffersMem = buffersMem;
+   super->cachedMem = buffersMem;
 
    len = sizeof(cachedMem);
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(cachedMem), &len, NULL, 0);
    cachedMem *= this->pageSizeKb;
-   super->cachedMem = cachedMem;
+   super->cachedMem += cachedMem;
 
    len = sizeof(vmtotal);
    sysctl(MIB_vm_vmtotal, 2, &(vmtotal), &len, NULL, 0);
    super->sharedMem = vmtotal.t_rmshr * this->pageSizeKb;
 
-   super->usedMem = memActive + memWire;
+   super->usedMem = memActive + memWire + memInactive - buffersMem;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(this->kd, swap, ARRAYSIZE(swap), 0);
