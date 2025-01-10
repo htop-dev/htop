@@ -212,23 +212,14 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
       nextUnitColor = colors[1];
    }
 
-   if (number < 1000) {
-      // Plain number, no markings
-      len = xSnprintf(buffer, sizeof(buffer), "%5u ", (unsigned int)number);
+   if (number < ONE_K) {
+      // Below one MiB
+      len = xSnprintf(buffer, sizeof(buffer), "%4uK ", (unsigned int)number);
       RichString_appendnAscii(str, color, buffer, len);
       return;
    }
 
-   if (number < 100000) {
-      // 2 digits for M, 3 digits for K
-      len = xSnprintf(buffer, sizeof(buffer), "%2u", (unsigned int)(number / 1000));
-      RichString_appendnAscii(str, nextUnitColor, buffer, len);
-      len = xSnprintf(buffer, sizeof(buffer), "%03u ", (unsigned int)(number % 1000));
-      RichString_appendnAscii(str, color, buffer, len);
-      return;
-   }
-
-   // 100000 KiB (97.6 MiB) or greater. A unit prefix would be added.
+   // Add unit prefix.
    const size_t maxUnitIndex = (sizeof(number) * CHAR_BIT - 1) / 10 + 1;
    const bool canOverflow = maxUnitIndex >= ARRAYSIZE(unitPrefixes);
 
@@ -255,23 +246,7 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
 
    number = hundredths / 100;
    hundredths %= 100;
-   if (number < 100) {
-      if (number < 10) {
-         // 1 digit + decimal point + 2 digits
-         // "9.76G", "9.99G", "9.76T", "9.99T", etc.
-         len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number);
-         RichString_appendnAscii(str, color, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), ".%02u", (unsigned int)hundredths);
-      } else {
-         // 2 digits + decimal point + 1 digit
-         // "97.6M", "99.9M", "10.0G", "99.9G", etc.
-         len = xSnprintf(buffer, sizeof(buffer), "%2u", (unsigned int)number);
-         RichString_appendnAscii(str, color, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), ".%1u", (unsigned int)hundredths / 10);
-      }
-      RichString_appendnAscii(str, prevUnitColor, buffer, len);
-      len = xSnprintf(buffer, sizeof(buffer), "%c ", unitPrefixes[i]);
-   } else if (number < 1000) {
+   if (number < 1000) {
       // 3 digits
       // "100M", "999M", "100G", "999G", etc.
       len = xSnprintf(buffer, sizeof(buffer), "%4u%c ", (unsigned int)number, unitPrefixes[i]);
