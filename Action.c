@@ -758,7 +758,7 @@ static Htop_Reaction actionHelp(State* st) {
    addbartext(CRT_colors[SWAP_CACHE], "/", "cache");
    addbartext(CRT_colors[SWAP_FRONTSWAP], "/", "frontswap");
 #else
-   addbartext(CRT_colors[SWAP_CACHE], "      ", "");
+   addbartext(CRT_colors[BAR_SHADOW], "                ", "");
 #endif
    addbartext(CRT_colors[BAR_SHADOW], "                          ", "used");
    addbartext(CRT_colors[BAR_SHADOW], "/", "total");
