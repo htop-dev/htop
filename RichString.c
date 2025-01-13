@@ -50,7 +50,7 @@ static void RichString_extendLen(RichString* this, int len) {
 }
 
 static void RichString_setLen(RichString* this, int len) {
-   if (len < RICHSTRING_MAXLEN && this->chlen < RICHSTRING_MAXLEN) {
+   if (len <= RICHSTRING_MAXLEN && this->chlen <= RICHSTRING_MAXLEN) {
       RichString_setChar(this, len, 0);
       this->chlen = len;
    } else {
