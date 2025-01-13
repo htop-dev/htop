@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <ctype.h>
 #include <limits.h> // IWYU pragma: keep
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -22,11 +23,17 @@ in the source distribution for its full text.
 #define charBytes(n) (sizeof(CharType) * (n))
 
 static void RichString_extendLen(RichString* this, int len) {
+   // TODO: Remove the "len" type casts once all the length properties
+   // of RichString have been upgraded to size_t.
+   if ((size_t)len > (SIZE_MAX - 1) / sizeof(CharType)) {
+      fail();
+   }
+
    if (this->chptr == this->chstr) {
       // String is in internal buffer
       if (len > RICHSTRING_MAXLEN) {
          // Copy from internal buffer to allocated string
-         this->chptr = xMalloc(charBytes(len + 1));
+         this->chptr = xMalloc(charBytes((size_t)len + 1));
          memcpy(this->chptr, this->chstr, charBytes(this->chlen));
       } else {
          // Still fits in internal buffer, do nothing
@@ -36,7 +43,7 @@ static void RichString_extendLen(RichString* this, int len) {
       // String is managed externally
       if (len > RICHSTRING_MAXLEN) {
          // Just reallocate the buffer accordingly
-         this->chptr = xRealloc(this->chptr, charBytes(len + 1));
+         this->chptr = xRealloc(this->chptr, charBytes((size_t)len + 1));
       } else {
          // Move string into internal buffer and free resources
          memcpy(this->chstr, this->chptr, charBytes(len));
@@ -50,7 +57,7 @@ static void RichString_extendLen(RichString* this, int len) {
 }
 
 static void RichString_setLen(RichString* this, int len) {
-   if (len < RICHSTRING_MAXLEN && this->chlen < RICHSTRING_MAXLEN) {
+   if (len <= RICHSTRING_MAXLEN && this->chlen <= RICHSTRING_MAXLEN) {
       RichString_setChar(this, len, 0);
       this->chlen = len;
    } else {
@@ -59,7 +66,7 @@ static void RichString_setLen(RichString* this, int len) {
 }
 
 void RichString_rewind(RichString* this, int count) {
-   RichString_setLen(this, this->chlen - count);
+   RichString_setLen(this, this->chlen > count ? this->chlen - count : 0);
 }
 
 #ifdef HAVE_LIBNCURSESW
@@ -69,8 +76,8 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
    mbstate_t ps = { 0 };
    bool broken = false;
 
-   while (n > 0) {
-      size_t ret = mbrtowc(dest, src, n, &ps);
+   while (written < n) {
+      size_t ret = mbrtowc(dest, src, SIZE_MAX, &ps);
       if (ret == (size_t)-1 || ret == (size_t)-2) {
          if (!broken) {
             broken = true;
@@ -78,7 +85,6 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
             written++;
          }
          src++;
-         n--;
          continue;
       }
 
@@ -91,7 +97,6 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
       dest++;
       written++;
       src += ret;
-      n -= ret;
    }
 
    return written;
