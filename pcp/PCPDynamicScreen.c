@@ -71,13 +71,11 @@ static void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, P
 
 static PCPDynamicColumn* PCPDynamicScreen_lookupMetric(PCPDynamicScreen* screen, const char* name) {
    PCPDynamicColumn* column = NULL;
-   size_t bytes = strlen(name) + strlen(screen->super.name) + 1; /* colon */
-   if (bytes >= sizeof(column->super.name))
+   if ((strlen(name) + strlen(screen->super.name) + 1) >= sizeof(column->super.name)) /* colon */
       return NULL;
 
-   bytes += 16; /* prefix, dots and terminator */
-   char* metricName = xMalloc(bytes);
-   xSnprintf(metricName, bytes, "htop.screen.%s.%s", screen->super.name, name);
+   char* metricName = NULL;
+   xAsprintf(&metricName, "htop.screen.%s.%s", screen->super.name, name);
 
    for (size_t i = 0; i < screen->totalColumns; i++) {
       column = screen->columns[i];

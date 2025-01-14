@@ -36,9 +36,8 @@ static bool PCPDynamicColumn_addMetric(PCPDynamicColumns* columns, PCPDynamicCol
    if (!column->super.name[0])
       return false;
 
-   size_t bytes = 16 + strlen(column->super.name);
-   char* metricName = xMalloc(bytes);
-   xSnprintf(metricName, bytes, "htop.column.%s", column->super.name);
+   char* metricName = NULL;
+   xAsprintf(&metricName, "htop.column.%s", column->super.name);
 
    column->metricName = metricName;
    column->id = columns->offset + columns->cursor;
