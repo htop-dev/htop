@@ -316,7 +316,7 @@ static void PCPProcessTable_updateCmdline(Process* process, int pid, int offset,
    } else {
       ++command;
       --length;
-      if (command[length - 1] == ')')
+      if (length > 0 && command[length - 1] == ')')
          command[--length] = '\0';
       process->isKernelThread = true;
    }
