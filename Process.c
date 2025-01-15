@@ -1057,7 +1057,7 @@ void Process_updateExe(Process* this, const char* exe) {
    if (exe) {
       this->procExe = xStrdup(exe);
       const char* lastSlash = strrchr(exe, '/');
-      this->procExeBasenameOffset = (lastSlash && *(lastSlash + 1) != '\0' && lastSlash != exe) ? (size_t)(lastSlash - exe + 1) : 0;
+      this->procExeBasenameOffset = (lastSlash > exe && *(lastSlash + 1) != '\0') ? (size_t)(lastSlash - exe + 1) : 0;
    } else {
       this->procExe = NULL;
       this->procExeBasenameOffset = 0;
