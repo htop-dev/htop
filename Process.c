@@ -64,16 +64,13 @@ void Process_fillStarttimeBuffer(Process* this) {
  */
 #define TASK_COMM_LEN 16
 
-static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdlineBasenameStart, int* pCommStart, int* pCommEnd) {
+static bool findCommInCmdline(const char* comm, const char* cmdline, size_t cmdlineBasenameStart, size_t* pCommStart, size_t* pCommEnd) {
    /* Try to find procComm in tokenized cmdline - this might in rare cases
     * mis-identify a string or fail, if comm or cmdline had been unsuitably
     * modified by the process */
    const char* tokenBase;
    size_t tokenLen;
    const size_t commLen = strlen(comm);
-
-   if (cmdlineBasenameStart < 0)
-      return false;
 
    for (const char* token = cmdline + cmdlineBasenameStart; *token;) {
       for (tokenBase = token; *token && *token != '\n'; ++token) {
@@ -85,8 +82,8 @@ static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdline
 
       if ((tokenLen == commLen || (tokenLen > commLen && commLen == (TASK_COMM_LEN - 1))) &&
           strncmp(tokenBase, comm, commLen) == 0) {
-         *pCommStart = tokenBase - cmdline;
-         *pCommEnd = token - cmdline;
+         *pCommStart = (size_t)(tokenBase - cmdline);
+         *pCommEnd = (size_t)(token - cmdline);
          return true;
       }
 
@@ -99,8 +96,8 @@ static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdline
    return false;
 }
 
-static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseOffset, const char* exe, int exeBaseOffset, int exeBaseLen) {
-   int matchLen; /* matching length to be returned */
+static size_t matchCmdlinePrefixWithExeSuffix(const char* cmdline, size_t cmdlineBaseOffset, const char* exe, size_t exeBaseOffset, size_t exeBaseLen) {
+   size_t matchLen; /* matching length to be returned */
    char delim;   /* delimiter following basename */
 
    /* cmdline prefix is an absolute path: it must match whole exe. */
@@ -135,20 +132,23 @@ static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseO
           strncmp(cmdline + cmdlineBaseOffset, exe + exeBaseOffset, exeBaseLen) == 0) {
          delim = cmdline[matchLen];
          if (delim == 0 || delim == '\n' || delim == ' ') {
-            int i, j;
+            size_t i, j;
             /* reverse match the cmdline prefix and exe suffix */
             for (i = cmdlineBaseOffset - 1, j = exeBaseOffset - 1;
-                 i >= 0 && j >= 0 && cmdline[i] == exe[j]; --i, --j)
+                 i != (size_t)-1 && j != (size_t)-1 && cmdline[i] == exe[j]; --i, --j)
                ;
 
             /* full match, with exe suffix being a valid relative path */
-            if (i < 0 && j >= 0 && exe[j] == '/')
+            if (i == (size_t)-1 && j != (size_t)-1 && exe[j] == '/')
                return matchLen;
          }
       }
 
       /* Try to find the previous potential cmdlineBaseOffset - it would be
        * preceded by '/' or nothing, and delimited by ' ' or '\n' */
+      if (cmdlineBaseOffset <= 2) {
+         return 0;
+      }
       for (delimFound = false, cmdlineBaseOffset -= 2; cmdlineBaseOffset > 0; --cmdlineBaseOffset) {
          if (delimFound) {
             if (cmdline[cmdlineBaseOffset - 1] == '/') {
@@ -309,8 +309,8 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    char* strStart = mc->str;
    char* str = strStart;
 
-   int cmdlineBasenameStart = this->cmdlineBasenameStart;
-   int cmdlineBasenameEnd = this->cmdlineBasenameEnd;
+   size_t cmdlineBasenameStart = this->cmdlineBasenameStart;
+   size_t cmdlineBasenameEnd = this->cmdlineBasenameEnd;
 
    if (!cmdline) {
       cmdlineBasenameStart = 0;
@@ -318,8 +318,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       cmdline = "(zombie)";
    }
 
-   assert(cmdlineBasenameStart >= 0);
-   assert(cmdlineBasenameStart <= (int)strlen(cmdline));
+   assert(cmdlineBasenameStart <= strlen(cmdline));
 
    if (!showMergedCommand || !procExe || !procComm) { /* fall back to cmdline */
       if ((showMergedCommand || (Process_isUserlandThread(this) && showThreadNames)) && procComm && strlen(procComm)) { /* set column to or prefix it with comm */
@@ -350,12 +349,11 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       return;
    }
 
-   int exeLen = strlen(this->procExe);
-   int exeBasenameOffset = this->procExeBasenameOffset;
-   int exeBasenameLen = exeLen - exeBasenameOffset;
+   size_t exeLen = strlen(this->procExe);
+   size_t exeBasenameOffset = this->procExeBasenameOffset;
+   size_t exeBasenameLen = exeLen - exeBasenameOffset;
 
-   assert(exeBasenameOffset >= 0);
-   assert(exeBasenameOffset <= (int)strlen(procExe));
+   assert(exeBasenameOffset <= strlen(procExe));
 
    bool haveCommInExe = false;
    if (procExe && procComm && (!Process_isUserlandThread(this) || showThreadNames)) {
@@ -386,8 +384,8 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    }
 
    bool haveCommInCmdline = false;
-   int commStart = 0;
-   int commEnd = 0;
+   size_t commStart = 0;
+   size_t commEnd = 0;
 
    /* Try to match procComm with procExe's basename: This is reliable (predictable) */
    if (searchCommInCmdline) {
@@ -395,7 +393,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       haveCommInCmdline = (!Process_isUserlandThread(this) || showThreadNames) && findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commEnd);
    }
 
-   int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
+   size_t matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
 
    bool haveCommField = false;
 
@@ -445,7 +443,7 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
    const ProcessMergedCommand* mc = &this->mergedCommand;
    const char* mergedCommand = mc->str;
 
-   int strStart = RichString_size(str);
+   size_t strStart = RichString_size(str);
 
    const Settings* settings = this->super.host->settings;
    const bool highlightBaseName = settings->highlightBaseName;
@@ -453,12 +451,12 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
    const bool highlightDeleted = settings->highlightDeletedExe;
 
    if (!mergedCommand) {
-      int len = 0;
+      size_t len = 0;
       const char* cmdline = this->cmdline;
 
       if (highlightBaseName || !settings->showProgramPath) {
-         int basename = 0;
-         for (int i = 0; i < this->cmdlineBasenameEnd; i++) {
+         size_t basename = 0;
+         for (size_t i = 0; i < this->cmdlineBasenameEnd; i++) {
             if (cmdline[i] == '/') {
                basename = i + 1;
             } else if (cmdline[i] == ':') {
@@ -850,7 +848,7 @@ bool Process_rowMatchesFilter(const Row* super, const Table* table) {
 void Process_init(Process* this, const Machine* host) {
    Row_init(&this->super, host);
 
-   this->cmdlineBasenameEnd = -1;
+   this->cmdlineBasenameEnd = 0;
    this->st_uid = (uid_t)-1;
 }
 
@@ -1002,12 +1000,12 @@ void Process_updateComm(Process* this, const char* comm) {
    this->mergedCommand.lastUpdate = 0;
 }
 
-static int skipPotentialPath(const char* cmdline, int end) {
+static size_t skipPotentialPath(const char* cmdline, size_t end) {
    if (cmdline[0] != '/')
       return 0;
 
-   int slash = 0;
-   for (int i = 1; i < end; i++) {
+   size_t slash = 0;
+   for (size_t i = 1; i < end; i++) {
       if (cmdline[i] == '/' && cmdline[i + 1] != '\0') {
          slash = i + 1;
          continue;
@@ -1023,11 +1021,10 @@ static int skipPotentialPath(const char* cmdline, int end) {
    return slash;
 }
 
-void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart, int basenameEnd) {
-   assert(basenameStart >= 0);
-   assert((cmdline && basenameStart < (int)strlen(cmdline)) || (!cmdline && basenameStart == 0));
+void Process_updateCmdline(Process* this, const char* cmdline, size_t basenameStart, size_t basenameEnd) {
+   assert((cmdline && basenameStart < strlen(cmdline)) || (!cmdline && basenameStart == 0));
    assert((basenameEnd > basenameStart) || (basenameEnd == 0 && basenameStart == 0));
-   assert((cmdline && basenameEnd <= (int)strlen(cmdline)) || (!cmdline && basenameEnd == 0));
+   assert((cmdline && basenameEnd <= strlen(cmdline)) || (!cmdline && basenameEnd == 0));
 
    if (!this->cmdline && !cmdline)
       return;
@@ -1060,7 +1057,7 @@ void Process_updateExe(Process* this, const char* exe) {
    if (exe) {
       this->procExe = xStrdup(exe);
       const char* lastSlash = strrchr(exe, '/');
-      this->procExeBasenameOffset = (lastSlash && *(lastSlash + 1) != '\0' && lastSlash != exe) ? (lastSlash - exe + 1) : 0;
+      this->procExeBasenameOffset = (lastSlash > exe && *(lastSlash + 1) != '\0') ? (size_t)(lastSlash - exe + 1) : 0;
    } else {
       this->procExe = NULL;
       this->procExeBasenameOffset = 0;
