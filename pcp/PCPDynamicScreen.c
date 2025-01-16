@@ -73,9 +73,9 @@ static PCPDynamicColumn* PCPDynamicScreen_lookupMetric(PCPDynamicScreen* screen,
    PCPDynamicColumn* column = NULL;
    if ((strlen(name) + strlen(screen->super.name) + 1) >= sizeof(column->super.name)) /* colon */
       return NULL;
-    
-    char* metricName = NULL;
-    xAsprintf(&metricName, "htop.screen.%s.%s", screen->super.name, name);
+
+   char* metricName = NULL;
+   xAsprintf(&metricName, "htop.screen.%s.%s", screen->super.name, name);
 
    for (size_t i = 0; i < screen->totalColumns; i++) {
       column = screen->columns[i];
