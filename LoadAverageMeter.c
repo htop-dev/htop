@@ -66,11 +66,11 @@ static void LoadAverageMeter_display(const Object* cast, RichString* out) {
    int len;
 
    len = xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[0]);
-   RichString_appendnAscii(out, CRT_colors[LOAD_AVERAGE_ONE], buffer, len);
+   RichString_appendnAscii(out, CRT_colors[LOAD_AVERAGE_ONE], buffer, (unsigned int)len);
    len = xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[1]);
-   RichString_appendnAscii(out, CRT_colors[LOAD_AVERAGE_FIVE], buffer, len);
+   RichString_appendnAscii(out, CRT_colors[LOAD_AVERAGE_FIVE], buffer, (unsigned int)len);
    len = xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[2]);
-   RichString_appendnAscii(out, CRT_colors[LOAD_AVERAGE_FIFTEEN], buffer, len);
+   RichString_appendnAscii(out, CRT_colors[LOAD_AVERAGE_FIFTEEN], buffer, (unsigned int)len);
 }
 
 static void LoadMeter_updateValues(Meter* this) {
@@ -98,7 +98,7 @@ static void LoadMeter_display(const Object* cast, RichString* out) {
    int len;
 
    len = xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[0]);
-   RichString_appendnAscii(out, CRT_colors[LOAD], buffer, len);
+   RichString_appendnAscii(out, CRT_colors[LOAD], buffer, (unsigned int)len);
 }
 
 const MeterClass LoadAverageMeter_class = {

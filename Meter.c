@@ -96,46 +96,45 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // The text in the bar is right aligned;
    // Pad with maximal spaces and then calculate needed starting position offset
    RichString_begin(bar);
-   RichString_appendChr(&bar, 0, ' ', w);
+   RichString_appendChr(&bar, 0, ' ', (unsigned int)w);
    RichString_appendWide(&bar, 0, this->txtBuffer);
 
-   int startPos = RichString_sizeVal(bar) - w;
-   if (startPos > w) {
+   size_t startPos = RichString_sizeVal(bar) - (unsigned int)w;
+   if (startPos > (unsigned int)w) {
       // Text is too large for bar
       // Truncate meter text at a space character
-      for (int pos = 2 * w; pos > w; pos--) {
+      for (unsigned int pos = 2 * (unsigned int)w; pos > (unsigned int)w; pos--) {
          if (RichString_getCharVal(bar, pos) == ' ') {
-            while (pos > w && RichString_getCharVal(bar, pos - 1) == ' ')
+            while (pos > (unsigned int)w && RichString_getCharVal(bar, pos - 1) == ' ')
                pos--;
-            startPos = pos - w;
+            startPos = pos - (unsigned int)w;
             break;
          }
       }
 
       // If still too large, print the start not the end
-      startPos = MINIMUM(startPos, w);
+      startPos = MINIMUM(startPos, (unsigned int)w);
    }
 
-   assert(startPos >= 0);
    assert(startPos <= w);
    assert(startPos + w <= RichString_sizeVal(bar));
 
-   int blockSizes[10];
+   unsigned int blockSizes[10];
 
    // First draw in the bar[] buffer...
-   int offset = 0;
+   unsigned int offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
       double value = this->values[i];
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * w);
+         blockSizes[i] = (unsigned int)(int)ceil((value / this->total) * w);
       } else {
          blockSizes[i] = 0;
       }
-      int nextOffset = offset + blockSizes[i];
+      unsigned int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
-      nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++)
+      nextOffset = CLAMP(nextOffset, 0, (unsigned int)w);
+      for (unsigned int j = offset; j < nextOffset; j++)
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
@@ -152,13 +151,13 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    for (uint8_t i = 0; i < this->curItems; i++) {
       int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
       RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSizes[i], w - offset));
+      RichString_printoffnVal(bar, y, x + (int)offset, startPos + offset, MINIMUM((int)blockSizes[i], w - (int)offset));
       offset += blockSizes[i];
-      offset = CLAMP(offset, 0, w);
+      offset = CLAMP(offset, 0, (unsigned int)w);
    }
-   if (offset < w) {
-      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, w - offset);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, w - offset);
+   if (offset < (unsigned int)w) {
+      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, (unsigned int)w - offset);
+      RichString_printoffnVal(bar, y, x + (int)offset, startPos + offset, w - (int)offset);
    }
 
    RichString_delete(&bar);
@@ -319,9 +318,9 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[LED_COLOR]);
    const char* caption = Meter_getCaption(this);
    mvaddstr(yText, x, caption);
-   int xx = x + strlen(caption);
-   int len = RichString_sizeVal(out);
-   for (int i = 0; i < len; i++) {
+   int xx = x + (int)strlen(caption);
+   size_t len = RichString_sizeVal(out);
+   for (size_t i = 0; i < len; i++) {
       int c = RichString_getCharVal(out, i);
       if (c >= '0' && c <= '9') {
          if (xx - x + 4 > w)
