@@ -187,7 +187,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
          len = xSnprintf(cpuFrequencyBuffer, sizeof(cpuFrequencyBuffer), "N/A     ");
       }
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "freq: ");
-      RichString_appendnWide(out, CRT_colors[METER_VALUE], cpuFrequencyBuffer, len);
+      RichString_appendnAscii(out, CRT_colors[METER_VALUE], cpuFrequencyBuffer, len);
    }
 
    #ifdef BUILD_WITH_CPU_TEMP
