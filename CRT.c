@@ -825,7 +825,7 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
 
 static bool CRT_retainScreenOnExit = false;
 
-int CRT_scrollHAmount = 5;
+unsigned int CRT_scrollHAmount = 5;
 
 int CRT_scrollWheelVAmount = 10;
 

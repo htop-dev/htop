@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "CRT.h"
 #include "FunctionBar.h"
@@ -67,10 +68,10 @@ struct Panel_ {
    Vector* items;
    int selected;
    int oldSelected;
-   int selectedLen;
+   size_t selectedLen;
    void* eventHandlerState;
    int scrollV;
-   int scrollH;
+   size_t scrollH;
    bool needsRedraw;
    bool cursorOn;
    bool wasFocus;

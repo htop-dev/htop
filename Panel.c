@@ -82,8 +82,8 @@ void Panel_setCursorToSelection(Panel* this) {
    this->cursorY = this->y + this->selected - this->scrollV + 1;
 
    int offset = this->w;
-   if (this->selectedLen - this->scrollH < this->w) {
-      offset = this->selectedLen - this->scrollH;
+   if (this->selectedLen - this->scrollH < (unsigned int)this->w) {
+      offset = (int)(this->selectedLen - this->scrollH);
    }
    if ((unsigned int)offset <= INT_MAX - (unsigned int)this->x) {
       this->cursorX = this->x + offset;
@@ -232,7 +232,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    assert (this != NULL);
 
    int size = Vector_size(this->items);
-   int scrollH = this->scrollH;
+   size_t scrollH = this->scrollH;
    int y = this->y;
    int x = this->x;
    int h = this->h;
@@ -249,7 +249,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       else
          RichString_setAttr(&this->header, header_attr);
    }
-   int headerLen = RichString_sizeVal(this->header);
+   size_t headerLen = RichString_sizeVal(this->header);
    if (headerLen > 0) {
       attrset(header_attr);
       mvhline(y, x, ' ', this->w);
@@ -291,7 +291,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          const Object* itemObj = Vector_get(this->items, i);
          RichString_begin(item);
          Object_display(itemObj, &item);
-         int itemLen = RichString_sizeVal(item);
+         size_t itemLen = RichString_sizeVal(item);
          if (highlightSelected && i == this->selected) {
             item.highlightAttr = selectionColor;
          }
@@ -317,11 +317,11 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       const Object* oldObj = Vector_get(this->items, this->oldSelected);
       RichString_begin(old);
       Object_display(oldObj, &old);
-      int oldLen = RichString_sizeVal(old);
+      size_t oldLen = RichString_sizeVal(old);
       const Object* newObj = Vector_get(this->items, this->selected);
       RichString_begin(new);
       Object_display(newObj, &new);
-      int newLen = RichString_sizeVal(new);
+      size_t newLen = RichString_sizeVal(new);
       this->selectedLen = newLen;
       mvhline(y + this->oldSelected - first, x + 0, ' ', this->w);
       if (scrollH < oldLen)
@@ -386,7 +386,11 @@ bool Panel_onKey(Panel* this, int key) {
       case KEY_LEFT:
       case KEY_CTRL('B'):
          if (this->scrollH > 0) {
-            this->scrollH = MAXIMUM(this->scrollH - CRT_scrollHAmount, 0);
+            if (this->scrollH > CRT_scrollHAmount) {
+               this->scrollH = this->scrollH - CRT_scrollHAmount;
+            } else {
+               this->scrollH = 0;
+            }
             this->needsRedraw = true;
          }
          break;
@@ -429,7 +433,10 @@ bool Panel_onKey(Panel* this, int key) {
 
       case KEY_CTRL('E'):
       case '$':
-         this->scrollH = MAXIMUM(this->selectedLen - this->w, 0);
+         this->scrollH = 0;
+         if (this->selectedLen > (unsigned int)this->w) {
+            this->scrollH = this->selectedLen - (unsigned int)this->w;
+         }
          this->needsRedraw = true;
          break;
 

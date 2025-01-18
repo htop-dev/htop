@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 
 #include <ctype.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -81,7 +82,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
 
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
-      int hx = super->scrollH + x + 1;
+      size_t hx = super->scrollH + (unsigned int)x + 1;
       RowField field = RowField_keyAt(settings, hx);
       if (ss->treeView && ss->treeViewAlwaysByPID) {
          ss->treeView = false;
