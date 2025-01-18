@@ -494,7 +494,8 @@ void Row_printRate(RichString* str, double rate, bool coloring) {
 }
 
 void Row_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width) {
-   int columns = width;
+   assert(width <= INT_MAX);
+   int columns = (int)width;
    RichString_appendnWideColumns(str, attr, content, strlen(content), &columns);
    RichString_appendChr(str, attr, ' ', width + 1 - columns);
 }
