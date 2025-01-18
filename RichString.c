@@ -59,7 +59,7 @@ static void RichString_setLen(RichString* this, int len) {
 }
 
 void RichString_rewind(RichString* this, int count) {
-   RichString_setLen(this, this->chlen - count);
+   RichString_setLen(this, this->chlen > count ? this->chlen - count : 0);
 }
 
 #ifdef HAVE_LIBNCURSESW
