@@ -103,33 +103,40 @@ static PCPDynamicColumn* PCPDynamicScreen_lookupMetric(PCPDynamicScreen* screen,
 }
 
 static void PCPDynamicScreen_parseColumn(PCPDynamicScreen* screen, const char* path, unsigned int line, char* key, char* value) {
-   PCPDynamicColumn* column;
-   char* p;
-
-   if ((p = strchr(key, '.')) == NULL)
+   char* p = strchr(key, '.');
+   if (!p) {
       return;
+   }
+
    *p++ = '\0'; /* end the name, p is now the attribute, e.g. 'label' */
 
    /* lookup a dynamic column with this name, else create */
-   column = PCPDynamicScreen_lookupMetric(screen, key);
+   PCPDynamicColumn* column = PCPDynamicScreen_lookupMetric(screen, key);
+   if (!column) {
+      return;
+   }
 
    if (String_eq(p, "metric")) {
-      char* error;
+      char* error = NULL;
       if (pmRegisterDerivedMetric(column->metricName, value, &error) < 0) {
-         char* note;
-         xAsprintf(&note,
-                   "%s: failed to parse expression in %s at line %u\n%s\n",
-                   pmGetProgname(), path, line, error);
-         free(error);
+         char* note = NULL;
+         xAsprintf(
+            &note,
+            "%s: failed to parse expression in %s at line %u\n%s\n",
+            pmGetProgname(), path, line, error
+         );
+
          errno = EINVAL;
          CRT_fatalError(note);
          free(note);
+
+         free(error);
       }
 
       /* pmLookupText - add optional metric help text */
-      if (!column->super.description && !column->instances)
+      if (!column->super.description && !column->instances) {
          Metric_lookupText(value, &column->super.description);
-
+      }
    } else {
       /* this is a property of a dynamic column - the column expression */
       /* may not have been observed yet; i.e. we allow for any ordering */
@@ -145,12 +152,16 @@ static void PCPDynamicScreen_parseColumn(PCPDynamicScreen* screen, const char* p
       } else if (String_eq(p, "format")) {
          free_and_xStrdup(&column->format, value);
       } else if (String_eq(p, "instances")) {
-         if (String_eq(value, "True") || String_eq(value, "true"))
+         column->instances = false;
+         if (String_eq(value, "True") || String_eq(value, "true")) {
             column->instances = true;
+         }
          free_and_xStrdup(&column->super.description, screen->super.caption);
       } else if (String_eq(p, "default")) { /* displayed by default */
-         if (String_eq(value, "False") || String_eq(value, "false"))
+         column->defaultEnabled = column->super.enabled = true;
+         if (String_eq(value, "False") || String_eq(value, "false")) {
             column->defaultEnabled = column->super.enabled = false;
+         }
       }
    }
 }
