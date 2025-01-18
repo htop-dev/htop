@@ -116,8 +116,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       startPos = MINIMUM(startPos, (unsigned int)w);
    }
 
-   assert(startPos <= w);
-   assert(startPos + w <= RichString_sizeVal(bar));
+   assert(startPos <= (unsigned int)w);
+   assert(startPos + (unsigned int)w <= RichString_sizeVal(bar));
 
    unsigned int blockSizes[10];
 
@@ -128,12 +128,11 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
          blockSizes[i] = (unsigned int)(int)ceil((value / this->total) * w);
+         blockSizes[i] = MINIMUM(MINIMUM(INT_MAX - (unsigned int)x, (unsigned int)w) - offset, blockSizes[i]);
       } else {
          blockSizes[i] = 0;
       }
       unsigned int nextOffset = offset + blockSizes[i];
-      // (Control against invalid values)
-      nextOffset = CLAMP(nextOffset, 0, (unsigned int)w);
       for (unsigned int j = offset; j < nextOffset; j++)
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
@@ -151,9 +150,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    for (uint8_t i = 0; i < this->curItems; i++) {
       int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
       RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + (int)offset, startPos + offset, MINIMUM((int)blockSizes[i], w - (int)offset));
+      RichString_printoffnVal(bar, y, x + (int)offset, startPos + offset, (int)blockSizes[i]);
       offset += blockSizes[i];
-      offset = CLAMP(offset, 0, (unsigned int)w);
    }
    if (offset < (unsigned int)w) {
       RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, (unsigned int)w - offset);
