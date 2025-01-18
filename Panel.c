@@ -244,8 +244,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       attrset(header_attr);
       mvhline(y, x, ' ', this->w);
       if (scrollH < headerLen) {
-         RichString_printoffnVal(this->header, y, x, scrollH,
-            MINIMUM(headerLen - scrollH, this->w));
+         RichString_printoffnVal(this->header, y, x, scrollH, this->w);
       }
       attrset(CRT_colors[RESET_COLOR]);
       y++;
@@ -283,7 +282,6 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
          RichString_begin(item);
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
-         int amt = MINIMUM(itemLen - scrollH, this->w);
          if (highlightSelected && i == this->selected) {
             item.highlightAttr = selectionColor;
          }
@@ -293,8 +291,8 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
             this->selectedLen = itemLen;
          }
          mvhline(y + line, x, ' ', this->w);
-         if (amt > 0)
-            RichString_printoffnVal(item, y + line, x, scrollH, amt);
+         if (scrollH < itemLen)
+            RichString_printoffnVal(item, y + line, x, scrollH, this->w);
          if (item.highlightAttr)
             attrset(CRT_colors[RESET_COLOR]);
          RichString_delete(&item);
@@ -318,13 +316,13 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       mvhline(y + this->oldSelected - first, x + 0, ' ', this->w);
       if (scrollH < oldLen)
          RichString_printoffnVal(old, y + this->oldSelected - first, x,
-            scrollH, MINIMUM(oldLen - scrollH, this->w));
+            scrollH, this->w);
       attrset(selectionColor);
       mvhline(y + this->selected - first, x + 0, ' ', this->w);
       RichString_setAttr(&new, selectionColor);
       if (scrollH < newLen)
          RichString_printoffnVal(new, y + this->selected - first, x,
-            scrollH, MINIMUM(newLen - scrollH, this->w));
+            scrollH, this->w);
       attrset(CRT_colors[RESET_COLOR]);
       RichString_delete(&new);
       RichString_delete(&old);
