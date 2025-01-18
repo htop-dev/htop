@@ -176,12 +176,12 @@ const char* RowField_alignedTitle(const Settings* settings, RowField field) {
    return alignedTitleDynamicColumn(settings, field, titleBuffer, sizeof(titleBuffer));
 }
 
-RowField RowField_keyAt(const Settings* settings, int at) {
+RowField RowField_keyAt(const Settings* settings, size_t at) {
    const RowField* fields = (const RowField*) settings->ss->fields;
    RowField field;
-   int x = 0;
+   size_t x = 0;
    for (int i = 0; (field = fields[i]); i++) {
-      int len = strlen(RowField_alignedTitle(settings, field));
+      size_t len = strlen(RowField_alignedTitle(settings, field));
       if (at >= x && at <= x + len) {
          return field;
       }

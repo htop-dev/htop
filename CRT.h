@@ -190,7 +190,7 @@ extern const int* CRT_colors;
 
 extern int CRT_cursorX;
 
-extern int CRT_scrollHAmount;
+extern unsigned int CRT_scrollHAmount;
 
 extern int CRT_scrollWheelVAmount;
 
