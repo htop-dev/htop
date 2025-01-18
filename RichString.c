@@ -69,8 +69,8 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
    mbstate_t ps = { 0 };
    bool broken = false;
 
-   while (n > 0) {
-      size_t ret = mbrtowc(dest, src, n, &ps);
+   while (written < n) {
+      size_t ret = mbrtowc(dest, src, SIZE_MAX, &ps);
       if (ret == (size_t)-1 || ret == (size_t)-2) {
          if (!broken) {
             broken = true;
@@ -78,7 +78,6 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
             written++;
          }
          src++;
-         n--;
          continue;
       }
 
@@ -91,7 +90,6 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
       dest++;
       written++;
       src += ret;
-      n -= ret;
    }
 
    return written;
