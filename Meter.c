@@ -316,26 +316,28 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[LED_COLOR]);
    const char* caption = Meter_getCaption(this);
    mvaddstr(yText, x, caption);
-   int xx = x + (int)strlen(caption);
-   size_t len = RichString_sizeVal(out);
-   for (size_t i = 0; i < len; i++) {
-      int c = RichString_getCharVal(out, i);
-      if (c >= '0' && c <= '9') {
-         if (xx - x + 4 > w)
-            break;
+   if (strlen(caption) <= INT_MAX - (unsigned int)x) {
+      int xx = x + (int)strlen(caption);
+      size_t len = RichString_sizeVal(out);
+      for (size_t i = 0; i < len; i++) {
+         int c = RichString_getCharVal(out, i);
+         if (c >= '0' && c <= '9') {
+            if (xx - x + 4 > w)
+               break;
 
-         LEDMeterMode_drawDigit(xx, y, c - '0');
-         xx += 4;
-      } else {
-         if (xx - x + 1 > w)
-            break;
+            LEDMeterMode_drawDigit(xx, y, c - '0');
+            xx += 4;
+         } else {
+            if (xx - x + 1 > w)
+               break;
 #ifdef HAVE_LIBNCURSESW
-         const cchar_t wc = { .chars = { c, '\0' }, .attr = 0 }; /* use LED_COLOR from attrset() */
-         mvadd_wch(yText, xx, &wc);
+            const cchar_t wc = { .chars = { c, '\0' }, .attr = 0 }; /* use LED_COLOR from attrset() */
+            mvadd_wch(yText, xx, &wc);
 #else
-         mvaddch(yText, xx, c);
+            mvaddch(yText, xx, c);
 #endif
-         xx += 1;
+            xx += 1;
+         }
       }
    }
    attrset(CRT_colors[RESET_COLOR]);
