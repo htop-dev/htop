@@ -69,6 +69,8 @@ static void ProcessTable_cleanupEntries(Table* super) {
 
       // tidy up Process state after refreshing the ProcessTable table
       Process_makeCommandStr(p, settings);
+      if (p->super.host->settings->ss->flags & PROCESS_FLAG_CWD)
+         Process_updateShortCwd(p);
 
       // keep track of the highest UID for column scaling
       if (p->st_uid > host->maxUserId)
