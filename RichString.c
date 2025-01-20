@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <ctype.h>
 #include <limits.h> // IWYU pragma: keep
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -296,4 +297,46 @@ size_t RichString_appendnAscii(RichString* this, int attrs, const char* data, si
 
 size_t RichString_writeAscii(RichString* this, int attrs, const char* data) {
    return RichString_writeFromAscii(this, attrs, data, 0, strlen(data));
+}
+
+ATTR_FORMAT(printf, 5, 0) ATTR_NONNULL_N(1, 3, 5)
+static size_t RichString_appendvnFormatAscii(RichString* this, int attrs, char* buf, size_t len, const char* fmt, va_list vl) {
+   // The temporary "buf" does not need to be NUL-terminated.
+   int ret = vsnprintf(buf, len, fmt, vl);
+   if (ret < 0 || (unsigned int)ret > len) {
+      fail();
+   }
+
+   return RichString_appendnAscii(this, attrs, buf, (unsigned int)ret);
+}
+
+size_t RichString_appendnFormatAscii(RichString* this, int attrs, char* buf, size_t len, const char* fmt, ...) {
+   va_list vl;
+   va_start(vl, fmt);
+   size_t ret = RichString_appendvnFormatAscii(this, attrs, buf, len, fmt, vl);
+   va_end(vl);
+
+   return ret;
+}
+
+ATTR_FORMAT(printf, 3, 0) ATTR_NONNULL_N(1, 3)
+static size_t RichString_appendvFormatAscii(RichString* this, int attrs, const char* fmt, va_list vl) {
+   char* buf;
+   int ret = vasprintf(&buf, fmt, vl);
+   if (ret < 0 || !buf) {
+      fail();
+   }
+
+   size_t len = RichString_appendnAscii(this, attrs, buf, (unsigned int)ret);
+   free(buf);
+   return len;
+}
+
+size_t RichString_appendFormatAscii(RichString* this, int attrs, const char* fmt, ...) {
+   va_list vl;
+   va_start(vl, fmt);
+   size_t len = RichString_appendvFormatAscii(this, attrs, fmt, vl);
+   va_end(vl);
+
+   return len;
 }

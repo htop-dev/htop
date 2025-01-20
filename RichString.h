@@ -79,4 +79,10 @@ size_t RichString_appendnAscii(RichString* this, int attrs, const char* data, si
 
 size_t RichString_writeAscii(RichString* this, int attrs, const char* data);
 
+ATTR_FORMAT(printf, 5, 6) ATTR_NONNULL_N(1, 3, 5)
+size_t RichString_appendnFormatAscii(RichString* this, int attrs, char* buf, size_t len, const char* fmt, ...);
+
+ATTR_FORMAT(printf, 3, 4) ATTR_NONNULL_N(1, 3)
+size_t RichString_appendFormatAscii(RichString* this, int attrs, const char* fmt, ...);
+
 #endif
