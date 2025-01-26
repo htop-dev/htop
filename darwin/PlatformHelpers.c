@@ -103,15 +103,12 @@ double Platform_calculateNanosecondsPerMachTick(void) {
     *    the "Apple M1" chip specifically when running under Rosetta 2.
     */
 
-   char cpuBrandString[1024] = "";
-   Platform_getCPUBrandString(cpuBrandString, sizeof(cpuBrandString));
-
    bool isRunningUnderRosetta2 = Platform_isRunningTranslated();
 
    // Kernel version 20.0.0 is macOS 11.0 (Big Sur)
    bool isBuggedVersion = Platform_KernelVersionIsBetween((KernelVersion) {20, 0, 0}, (KernelVersion) {999, 999, 999});
 
-   if (isRunningUnderRosetta2 && String_eq(cpuBrandString, "Apple M1") && isBuggedVersion) {
+   if (isRunningUnderRosetta2 && isBuggedVersion) {
       // In this case `mach_timebase_info` provides the wrong value, so we hard-code the correct factor,
       // as determined from `mach_timebase_info` when the process running natively.
       info = (mach_timebase_info_data_t) { .numer = 125, .denom = 3 };
