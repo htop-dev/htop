@@ -121,7 +121,7 @@ static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseO
     * that make htop's identification of the basename in cmdline unreliable.
     * For e.g. /usr/libexec/gdm-session-worker modifies its cmdline to
     * "gdm-session-worker [pam/gdm-autologin]" and htop ends up with
-    * proccmdlineBasenameEnd at "gdm-autologin]". This issue could arise with
+    * cmdlineBasenameStart at "gdm-autologin]". This issue could arise with
     * chrome as well as it stores in cmdline its concatenated argument vector,
     * without NUL delimiter between the arguments (which may contain a '/')
     *
