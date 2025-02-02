@@ -64,7 +64,7 @@ void Process_fillStarttimeBuffer(Process* this) {
  */
 #define TASK_COMM_LEN 16
 
-static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdlineBasenameStart, int* pCommStart, int* pCommEnd) {
+static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdlineBasenameStart, int* pCommStart, int* pCommLen) {
    /* Try to find procComm in tokenized cmdline - this might in rare cases
     * mis-identify a string or fail, if comm or cmdline had been unsuitably
     * modified by the process */
@@ -86,7 +86,7 @@ static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdline
       if ((tokenLen == commLen || (tokenLen > commLen && commLen == (TASK_COMM_LEN - 1))) &&
           strncmp(tokenBase, comm, commLen) == 0) {
          *pCommStart = tokenBase - cmdline;
-         *pCommEnd = token - cmdline;
+         *pCommLen = tokenLen;
          return true;
       }
 
@@ -310,11 +310,13 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    char* str = strStart;
 
    int cmdlineBasenameStart = this->cmdlineBasenameStart;
-   int cmdlineBasenameEnd = this->cmdlineBasenameEnd;
+   int cmdlineBasenameLen = 0;
+   if (this->cmdlineBasenameEnd > this->cmdlineBasenameStart)
+      cmdlineBasenameLen = this->cmdlineBasenameEnd - this->cmdlineBasenameStart;
 
    if (!cmdline) {
       cmdlineBasenameStart = 0;
-      cmdlineBasenameEnd = 0;
+      cmdlineBasenameLen = 0;
       cmdline = "(zombie)";
    }
 
@@ -337,13 +339,13 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       if (shadowDistPathPrefix && showProgramPath)
          CHECK_AND_MARK_DIST_PATH_PREFIXES(cmdline);
 
-      if (cmdlineBasenameEnd > cmdlineBasenameStart)
-         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameEnd - cmdlineBasenameStart, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
+      if (cmdlineBasenameLen > 0)
+         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
 
       if (this->procExeDeleted)
-         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameEnd - cmdlineBasenameStart, delExeAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, delExeAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
       else if (this->usesDeletedLib)
-         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameEnd - cmdlineBasenameStart, delLibAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, delLibAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
 
       (void)stpcpyWithNewlineConversion(str, cmdline + (showProgramPath ? 0 : cmdlineBasenameStart));
 
@@ -387,12 +389,12 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
 
    bool haveCommInCmdline = false;
    int commStart = 0;
-   int commEnd = 0;
+   int commLen = 0;
 
    /* Try to match procComm with procExe's basename: This is reliable (predictable) */
    if (searchCommInCmdline) {
-      /* commStart/commEnd will be adjusted later along with cmdline */
-      haveCommInCmdline = (!Process_isUserlandThread(this) || showThreadNames) && findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commEnd);
+      /* commStart/commLen will be adjusted later along with cmdline */
+      haveCommInCmdline = (!Process_isUserlandThread(this) || showThreadNames) && findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commLen);
    }
 
    int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
@@ -412,7 +414,6 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
          cmdline += matchLen;
 
          commStart -= matchLen;
-         commEnd -= matchLen;
       } else {
          matchLen = 0;
       }
@@ -427,7 +428,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       CHECK_AND_MARK_DIST_PATH_PREFIXES(cmdline);
 
    if (!haveCommInExe && haveCommInCmdline && !haveCommField && (!Process_isUserlandThread(this) || showThreadNames))
-      WRITE_HIGHLIGHT(commStart, commEnd - commStart, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+      WRITE_HIGHLIGHT(commStart, commLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
 
    /* Display cmdline if it hasn't been consumed by procExe */
    if (*cmdline)
