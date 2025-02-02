@@ -105,7 +105,7 @@ static void NetBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_p
    }
 
    size_t len = 0;
-   for (int i = 0; arg[i] != NULL; i++) {
+   for (size_t i = 0; arg[i] != NULL; i++) {
       len += strlen(arg[i]) + 1;   /* room for arg and trailing space or NUL */
    }
 
@@ -118,14 +118,14 @@ static void NetBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_p
 
    *s = '\0';
 
-   int start = 0;
-   int end = 0;
-   for (int i = 0; arg[i] != NULL; i++) {
+   size_t start = 0;
+   size_t end = 0;
+   for (size_t i = 0; arg[i] != NULL; i++) {
       size_t n = strlcat(s, arg[i], len);
       if (i == 0) {
          end = MINIMUM(n, len - 1);
          /* check if cmdline ended earlier, e.g 'kdeinit5: Running...' */
-         for (int j = end; j > 0; j--) {
+         for (size_t j = end; j > 0; j--) {
             if (arg[0][j] == ' ' && arg[0][j - 1] != '\\') {
                end = (arg[0][j - 1] == ':') ? (j - 1) : j;
             }

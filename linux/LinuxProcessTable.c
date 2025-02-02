@@ -1273,15 +1273,15 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
    if (amtRead <= 0)
       return false;
 
-   int tokenEnd = -1;
-   int tokenStart = -1;
-   int lastChar = 0;
+   size_t tokenEnd = (size_t)-1;
+   size_t tokenStart = (size_t)-1;
+   size_t lastChar = 0;
    bool argSepNUL = false;
    bool argSepSpace = false;
 
-   for (int i = 0; i < amtRead; i++) {
+   for (size_t i = 0; i < (size_t)amtRead; i++) {
       // If this is true, there's a NUL byte in the middle of command
-      if (tokenEnd >= 0) {
+      if (tokenEnd != (size_t)-1) {
          argSepNUL = true;
       }
 
@@ -1299,7 +1299,7 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
          command[i] = '\n';
 
          // Set tokenEnd to the NUL byte
-         if (tokenEnd < 0) {
+         if (tokenEnd == (size_t)-1) {
             tokenEnd = i;
          }
 
@@ -1313,7 +1313,7 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
 
       /* Detect the last / before the end of the token as
        * the start of the basename in cmdline, see Process_writeCommand */
-      if (argChar == '/' && tokenEnd < 0) {
+      if (argChar == '/' && tokenEnd == (size_t)-1) {
          tokenStart = i + 1;
       }
 
@@ -1336,13 +1336,13 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
        * As path names may contain we try to cross-validate if the path we got that way exists.
        */
 
-      tokenStart = -1;
-      tokenEnd = -1;
+      tokenStart = (size_t)-1;
+      tokenEnd = (size_t)-1;
 
       size_t exeLen = process->procExe ? strlen(process->procExe) : 0;
 
       if (process->procExe && String_startsWith(command, process->procExe) &&
-         exeLen < (size_t)lastChar && command[exeLen] <= ' ') {
+         exeLen < lastChar && command[exeLen] <= ' ') {
          tokenStart = process->procExeBasenameOffset;
          tokenEnd = exeLen;
       }
@@ -1352,14 +1352,14 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
       else if (Compat_faccessat(AT_FDCWD, command, F_OK, AT_SYMLINK_NOFOLLOW) != 0) {
          // If we reach here the path does not exist.
          // Thus begin searching for the part of it that actually does.
-         int tokenArg0Start = -1;
+         size_t tokenArg0Start = (size_t)-1;
 
-         for (int i = 0; i <= lastChar; i++) {
+         for (size_t i = 0; i <= lastChar; i++) {
             const char cmdChar = command[i];
 
             /* Any ASCII control or space used as delimiter */
             if (cmdChar <= ' ') {
-               if (tokenEnd >= 0) {
+               if (tokenEnd != (size_t)-1) {
                   // Split on every further separator, regardless of path correctness
                   command[i] = '\n';
                   continue;
@@ -1375,39 +1375,39 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
 
                if (found)
                   tokenEnd = i;
-               if (tokenArg0Start < 0)
-                  tokenArg0Start = tokenStart < 0 ? 0 : tokenStart;
+               if (tokenArg0Start == (size_t)-1)
+                  tokenArg0Start = tokenStart == (size_t)-1 ? 0 : tokenStart;
 
                continue;
             }
 
-            if (tokenEnd >= 0) {
+            if (tokenEnd != (size_t)-1) {
                continue;
             }
 
             if (cmdChar == '/') {
                // Normal path separator
                tokenStart = i + 1;
-            } else if (cmdChar == '\\' && (tokenStart < 1 || command[tokenStart - 1] == '\\')) {
+            } else if (cmdChar == '\\' && (tokenStart == (size_t)-1 || tokenStart == 0 || command[tokenStart - 1] == '\\')) {
                // Windows Path separator (WINE)
                tokenStart = i + 1;
             } else if (cmdChar == ':' && (command[i + 1] != '/' && command[i + 1] != '\\')) {
                // Colon not part of a Windows Path
                tokenEnd = i;
-            } else if (tokenStart < 0) {
+            } else if (tokenStart == (size_t)-1) {
                // Relative path
                tokenStart = i;
             }
          }
 
-         if (tokenEnd < 0) {
+         if (tokenEnd == (size_t)-1) {
             tokenStart = tokenArg0Start;
 
             // No token delimiter found, forcibly split
-            for (int i = 0; i <= lastChar; i++) {
+            for (size_t i = 0; i <= lastChar; i++) {
                if (command[i] <= ' ') {
                   command[i] = '\n';
-                  if (tokenEnd < 0) {
+                  if (tokenEnd == (size_t)-1) {
                      tokenEnd = i;
                   }
                }
@@ -1420,16 +1420,16 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
        * Reset if start is behind end.
        */
       if (tokenStart >= tokenEnd) {
-         tokenStart = -1;
-         tokenEnd = -1;
+         tokenStart = (size_t)-1;
+         tokenEnd = (size_t)-1;
       }
    }
 
-   if (tokenStart < 0) {
+   if (tokenStart == (size_t)-1) {
       tokenStart = 0;
    }
 
-   if (tokenEnd < 0) {
+   if (tokenEnd == (size_t)-1) {
       tokenEnd = lastChar + 1;
    }
 
