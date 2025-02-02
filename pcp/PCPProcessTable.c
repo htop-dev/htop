@@ -314,10 +314,10 @@ static void PCPProcessTable_updateCmdline(Process* process, int pid, int offset,
    if (command[0] != '(') {
       process->isKernelThread = false;
    } else {
-      ++command;
-      --length;
       if (command[length - 1] == ')')
          command[--length] = '\0';
+      ++command;
+      --length;
       process->isKernelThread = true;
    }
 
