@@ -339,13 +339,14 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       if (shadowDistPathPrefix && showProgramPath)
          CHECK_AND_MARK_DIST_PATH_PREFIXES(cmdline);
 
-      if (cmdlineBasenameLen > 0)
+      if (cmdlineBasenameLen > 0) {
          WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
 
-      if (this->procExeDeleted)
-         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, delExeAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
-      else if (this->usesDeletedLib)
-         WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, delLibAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+         if (this->procExeDeleted)
+            WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, delExeAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+         else if (this->usesDeletedLib)
+            WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, delLibAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
+      }
 
       (void)stpcpyWithNewlineConversion(str, cmdline + (showProgramPath ? 0 : cmdlineBasenameStart));
 
