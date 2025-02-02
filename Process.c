@@ -101,13 +101,12 @@ static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdline
 
 static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseOffset, const char* exe, int exeBaseOffset, int exeBaseLen) {
    int matchLen; /* matching length to be returned */
-   char delim;   /* delimiter following basename */
 
    /* cmdline prefix is an absolute path: it must match whole exe. */
    if (cmdline[0] == '/') {
       matchLen = exeBaseLen + exeBaseOffset;
       if (strncmp(cmdline, exe, matchLen) == 0) {
-         delim = cmdline[matchLen];
+         char delim = cmdline[matchLen];
          if (delim == 0 || delim == '\n' || delim == ' ') {
             return matchLen;
          }
@@ -127,13 +126,13 @@ static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseO
     *
     * So if needed, we adjust cmdlineBaseOffset to the previous (if any)
     * component of the cmdline relative path, and retry the procedure. */
-   bool delimFound; /* if valid basename delimiter found */
+   bool delimFound = true; /* if valid basename delimiter found */
    do {
       /* match basename */
       matchLen = exeBaseLen + cmdlineBaseOffset;
       if (cmdlineBaseOffset < exeBaseOffset &&
           strncmp(cmdline + cmdlineBaseOffset, exe + exeBaseOffset, exeBaseLen) == 0) {
-         delim = cmdline[matchLen];
+         char delim = cmdline[matchLen];
          if (delim == 0 || delim == '\n' || delim == ' ') {
             int i, j;
             /* reverse match the cmdline prefix and exe suffix */
@@ -149,7 +148,8 @@ static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseO
 
       /* Try to find the previous potential cmdlineBaseOffset - it would be
        * preceded by '/' or nothing, and delimited by ' ' or '\n' */
-      for (delimFound = false, cmdlineBaseOffset -= 2; cmdlineBaseOffset > 0; --cmdlineBaseOffset) {
+      delimFound = false;
+      for (cmdlineBaseOffset -= 2; cmdlineBaseOffset > 0; --cmdlineBaseOffset) {
          if (delimFound) {
             if (cmdline[cmdlineBaseOffset - 1] == '/') {
                break;
