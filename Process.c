@@ -99,7 +99,7 @@ static bool findCommInCmdline(const char* comm, const char* cmdline, int cmdline
    return false;
 }
 
-static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseOffset, const char* exe, int exeBaseOffset, int exeBaseLen) {
+static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int* cmdlineBasenameStart, const char* exe, int exeBaseOffset, int exeBaseLen) {
    int matchLen; /* matching length to be returned */
 
    /* cmdline prefix is an absolute path: it must match whole exe. */
@@ -126,6 +126,7 @@ static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseO
     *
     * So if needed, we adjust cmdlineBaseOffset to the previous (if any)
     * component of the cmdline relative path, and retry the procedure. */
+   int cmdlineBaseOffset = *cmdlineBasenameStart;
    bool delimFound = true; /* if valid basename delimiter found */
    do {
       /* match basename */
@@ -141,8 +142,10 @@ static int matchCmdlinePrefixWithExeSuffix(const char* cmdline, int cmdlineBaseO
                ;
 
             /* full match, with exe suffix being a valid relative path */
-            if (i < 0 && j >= 0 && exe[j] == '/')
+            if (i < 0 && j >= 0 && exe[j] == '/') {
+               *cmdlineBasenameStart = cmdlineBaseOffset;
                return matchLen;
+            }
          }
       }
 
@@ -323,6 +326,26 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    assert(cmdlineBasenameStart >= 0);
    assert(cmdlineBasenameStart <= (int)strlen(cmdline));
 
+   int exeLen = 0;
+   int exeBasenameOffset = 0;
+   int exeBasenameLen = 0;
+   int matchLen = 0;
+   if (procExe) {
+      exeLen = strlen(procExe);
+      exeBasenameOffset = this->procExeBasenameOffset;
+      exeBasenameLen = exeLen - exeBasenameOffset;
+
+      assert(exeBasenameOffset >= 0);
+      assert(exeBasenameOffset <= (int)strlen(procExe));
+
+      if (this->cmdline) {
+         matchLen = matchCmdlinePrefixWithExeSuffix(this->cmdline, &cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
+      }
+      if (matchLen) {
+         cmdlineBasenameLen = exeBasenameLen;
+      }
+   }
+
    if (!showMergedCommand || !procExe || !procComm) { /* fall back to cmdline */
       if ((showMergedCommand || (Process_isUserlandThread(this) && showThreadNames)) && procComm && strlen(procComm)) { /* set column to or prefix it with comm */
          if (strncmp(cmdline + cmdlineBasenameStart, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
@@ -352,13 +375,6 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
 
       return;
    }
-
-   int exeLen = strlen(this->procExe);
-   int exeBasenameOffset = this->procExeBasenameOffset;
-   int exeBasenameLen = exeLen - exeBasenameOffset;
-
-   assert(exeBasenameOffset >= 0);
-   assert(exeBasenameOffset <= (int)strlen(procExe));
 
    bool haveCommInExe = false;
    if (procExe && procComm && (!Process_isUserlandThread(this) || showThreadNames)) {
@@ -397,8 +413,6 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       /* commStart/commLen will be adjusted later along with cmdline */
       haveCommInCmdline = (!Process_isUserlandThread(this) || showThreadNames) && findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commLen);
    }
-
-   int matchLen = matchCmdlinePrefixWithExeSuffix(cmdline, cmdlineBasenameStart, procExe, exeBasenameOffset, exeBasenameLen);
 
    bool haveCommField = false;
 
