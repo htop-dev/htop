@@ -376,9 +376,40 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       return;
    }
 
+   int commLen = 0;
+
    bool haveCommInExe = false;
    if (procExe && procComm && (!Process_isUserlandThread(this) || showThreadNames)) {
       haveCommInExe = strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0;
+   }
+   if (haveCommInExe) {
+      commLen = exeBasenameLen;
+   }
+
+   bool haveCommInCmdline = false;
+   int commStart = 0;
+
+   if (!haveCommInExe && this->cmdline && procComm && searchCommInCmdline && (!Process_isUserlandThread(this) || showThreadNames)) {
+      haveCommInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commLen);
+   }
+
+   if (!stripExeFromCmdline) {
+      matchLen = 0;
+   }
+   if (matchLen) {
+      /* strip the matched exe prefix */
+      cmdline += matchLen;
+
+      if (haveCommInCmdline) {
+         if (commStart == cmdlineBasenameStart) {
+            haveCommInExe = true;
+            haveCommInCmdline = false;
+            commStart = 0;
+         } else {
+            assert(commStart >= matchLen);
+            commStart -= matchLen;
+         }
+      }
    }
 
    /* Start with copying exe */
@@ -386,7 +417,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       if (shadowDistPathPrefix)
          CHECK_AND_MARK_DIST_PATH_PREFIXES(procExe);
       if (haveCommInExe)
-         WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+         WRITE_HIGHLIGHT(exeBasenameOffset, commLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
       if (this->procExeDeleted)
          WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, delExeAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
@@ -395,23 +426,13 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       str = stpcpy(str, procExe);
    } else {
       if (haveCommInExe)
-         WRITE_HIGHLIGHT(0, exeBasenameLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
+         WRITE_HIGHLIGHT(0, commLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       WRITE_HIGHLIGHT(0, exeBasenameLen, baseAttr, CMDLINE_HIGHLIGHT_FLAG_BASENAME);
       if (this->procExeDeleted)
          WRITE_HIGHLIGHT(0, exeBasenameLen, delExeAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
       else if (this->usesDeletedLib)
          WRITE_HIGHLIGHT(0, exeBasenameLen, delLibAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
       str = stpcpy(str, procExe + exeBasenameOffset);
-   }
-
-   bool haveCommInCmdline = false;
-   int commStart = 0;
-   int commLen = 0;
-
-   /* Try to match procComm with procExe's basename: This is reliable (predictable) */
-   if (searchCommInCmdline) {
-      /* commStart/commLen will be adjusted later along with cmdline */
-      haveCommInCmdline = (!Process_isUserlandThread(this) || showThreadNames) && findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commLen);
    }
 
    bool haveCommField = false;
@@ -421,17 +442,6 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       str = stpcpy(str, procComm);
       haveCommField = true;
-   }
-
-   if (matchLen) {
-      if (stripExeFromCmdline) {
-         /* strip the matched exe prefix */
-         cmdline += matchLen;
-
-         commStart -= matchLen;
-      } else {
-         matchLen = 0;
-      }
    }
 
    if (!matchLen || (haveCommField && *cmdline)) {
