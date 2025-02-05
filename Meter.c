@@ -37,6 +37,7 @@ in the source distribution for its full text.
 #define DEFAULT_GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 #define MAX_GRAPH_HEIGHT 8191 /* == (int)(UINT16_MAX / 8) */
 
+#if 0 /* Unused code */
 typedef struct GraphColorCell_ {
    /* Meter item number for the cell's color. Item numbers [1, 255] correspond
       to array indices [0, 254] respectively. 0 means no color for the cell. */
@@ -47,11 +48,11 @@ typedef struct GraphColorCell_ {
       specially. See the code of the "printCellDetails" function. */
    uint8_t details;
 } GraphColorCell;
+#endif /* End of unused code */
 
 typedef union GraphDataCell_ {
    int16_t scaleExp;
    uint16_t numDots;
-   GraphColorCell c;
 } GraphDataCell;
 
 typedef struct GraphDrawContext_ {
@@ -268,6 +269,7 @@ bufferInitialized:
    data->nValues = nValues;
 }
 
+#if 0 /* Unused code */
 static inline size_t GraphMeterMode_valueCellIndex(unsigned int h, bool isPercentChart, int deltaExp, unsigned int y, unsigned int* scaleFactor, unsigned int* increment) {
    assert(deltaExp >= 0);
    assert(deltaExp < UINT16_WIDTH);
@@ -848,9 +850,9 @@ static void GraphMeterMode_computeColors(Meter* this, const GraphDrawContext* co
       }
    }
 }
+#endif /* End of unused code */
 
 static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* context) {
-   uint8_t maxItems = context->maxItems;
    bool isPercentChart = context->isPercentChart;
    size_t nCellsPerValue = context->nCellsPerValue;
    if (!nCellsPerValue)
@@ -869,23 +871,23 @@ static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* c
    valueStart = (GraphDataCell*)data->buffer;
    valueStart = &valueStart[(nValues - 1) * nCellsPerValue];
 
-   // Sum the values of all items
-   double sum = 0.0;
-   if (this->curItems > 0) {
-      sum = Meter_computeSum(this);
-      assert(sum >= 0.0);
-      assert(sum <= DBL_MAX);
-   }
-
    // "total" refers to the value that we would draw as full in graph
-   double total = MAXIMUM(this->total, sum);
+   double total = 0.0;
+   if (isPercentChart) {
+      assert(this->total >= 0.0);
+      total = this->total;
+      valueStart[0].scaleExp = 0;
+   } else {
+      if (isPositive(this->values[0]))
+         total = this->values[0];
 
-   if (!isPercentChart) {
-      // Dynamic scale. "this->total" is ignored.
-      // Determine the scale and "total" that we need afterward. The "total" is
-      // the "sum" value rounded up to a power of 2.
+      if (this->curItems > 1 && isgreater(this->values[1], total))
+         total = this->values[1];
+
+      total = MINIMUM(DBL_MAX, total);
+
       int scaleExp = 0;
-      (void)frexp(sum, &scaleExp);
+      (void)frexp(total, &scaleExp);
       scaleExp = MAXIMUM(0, scaleExp);
 
       // It's safe to assume "scaleExp" never overflows when IEEE 754
@@ -900,57 +902,26 @@ static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* c
    // Prevent overflow from "this->total" or ldexp().
    total = MINIMUM(DBL_MAX, total);
 
-   // The total number of dots that we would draw for this record
    assert(h <= UINT16_MAX / 8);
    double maxDots = (double)(int32_t)(h * 8);
-   int numDots = 0;
-   if (total > 0.0) {
-      numDots = (int)ceil((sum / total) * maxDots);
-      assert(numDots >= 0);
-      if (sum > 0.0 && numDots <= 0) {
-         numDots = 1; // Division of (sum / total) underflows
-      }
-   }
+   for (uint8_t i = 0; i < 2; i++) {
+      double value = 0.0;
+      if (i < this->curItems && isPositive(this->values[i]))
+         value = this->values[i];
 
-   // For a one-item meter, record the number of dots in the graph data buffer
-   // and we are done.
-   if (maxItems == 1) {
+      value = MINIMUM(total, value);
+
+      int numDots = 0;
+      if (total > 0.0) {
+         numDots = (int)ceil((value / total) * maxDots);
+         assert(numDots >= 0);
+         if (value > 0.0 && numDots <= 0) {
+            numDots = 1; // Division of (value / total) underflows
+         }
+      }
+
       assert(numDots <= UINT16_MAX);
-      valueStart[isPercentChart ? 0 : 1].numDots = (uint16_t)numDots;
-      return;
-   }
-
-   // For a meter of multiple items, we will precompute the colors of each cell
-   // and store them in a record. First clear the cells, which might contain
-   // data of the previous record.
-   unsigned int y = ((unsigned int)numDots + 8 - 1) / 8; // Round up
-   size_t i = GraphMeterMode_valueCellIndex(h, isPercentChart, 0, y, NULL, NULL);
-   if (i < nCellsPerValue) {
-      memset(&valueStart[i], 0, (nCellsPerValue - i) * sizeof(*valueStart));
-   }
-
-   if (sum <= 0.0) {
-      // The record is empty. No colors needed.
-      return;
-   }
-
-   int deltaExp = 0;
-   double scaledTotal = total;
-   assert(scaledTotal > 0.0);
-   while (true) {
-      numDots = (int)ceil((sum / scaledTotal) * maxDots);
-      if (numDots <= 0) {
-         numDots = 1; // Division of (sum / scaledTotal) underflows
-      }
-
-      GraphMeterMode_computeColors(this, context, valueStart, deltaExp, scaledTotal, (unsigned int)numDots);
-
-      if (isPercentChart || !(scaledTotal < DBL_MAX) || (1U << deltaExp) >= h) {
-         break;
-      }
-
-      deltaExp++;
-      scaledTotal = MINIMUM(DBL_MAX, scaledTotal * 2.0);
+      valueStart[1 + i].numDots = (uint16_t)numDots;
    }
 }
 
@@ -970,6 +941,7 @@ static void GraphMeterMode_printScale(int exponent) {
    }
 }
 
+#if 0 /* Unused code */
 static uint8_t GraphMeterMode_scaleCellDetails(uint8_t details, unsigned int scaleFactor) {
    // This scaling routine is only used on the "top cell" of a record.
    // (The "top cell" never uses the special meaning of bit 4.)
@@ -999,6 +971,7 @@ static uint8_t GraphMeterMode_scaleCellDetails(uint8_t details, unsigned int sca
    }
    return 0x00;
 }
+#endif /* End of unused code */
 
 static int GraphMeterMode_lookupCell(const Meter* this, const GraphDrawContext* context, int scaleExp, size_t valueIndex, unsigned int y, uint8_t* details) {
    unsigned int h = (unsigned int)this->h;
@@ -1025,50 +998,59 @@ static int GraphMeterMode_lookupCell(const Meter* this, const GraphDrawContext* 
    int deltaExp = isPercentChart ? 0 : scaleExp - valueStart[0].scaleExp;
    assert(deltaExp >= 0);
 
-   if (maxItems == 1) {
-      unsigned int numDots = valueStart[isPercentChart ? 0 : 1].numDots;
+   unsigned int numDots = valueStart[1].numDots;
+   if (numDots >= 1) {
+      if (deltaExp + 1 < UINT16_WIDTH) {
+         numDots = ((numDots - 1) >> (deltaExp + 1)) + 1;
+      } else {
+         numDots = 1;
+      }
+   }
+   unsigned int blanksAtEnd = h * 4 - numDots;
 
-      if (numDots < 1)
-         goto cellIsEmpty;
+   numDots = valueStart[2].numDots;
+   if (numDots >= 1) {
+      if (deltaExp + 1 < UINT16_WIDTH) {
+         numDots = ((numDots - 1) >> (deltaExp + 1)) + 1;
+      } else {
+         numDots = 1;
+      }
+   }
+   unsigned int blanksAtStart = h * 4 - numDots;
 
-      // Scale according to exponent difference. Round up.
-      numDots = deltaExp < UINT16_WIDTH ? ((numDots - 1) >> deltaExp) : 0;
-      numDots++;
+   if (h - 1 - y < blanksAtEnd / 8)
+      goto cellIsEmpty;
+   if (y < blanksAtStart / 8)
+      goto cellIsEmpty;
 
-      if (y > (numDots - 1) / 8)
-         goto cellIsEmpty;
+   if (y * 2 == h - 1 && !(valueStart[1].numDots || valueStart[2].numDots))
+      goto cellIsEmpty;
 
+   if (maxItems <= 1 || y * 2 > h - 1) {
       itemIndex = 0;
-      *details = 0xFF;
-      if (y == (numDots - 1) / 8) {
-         const uint8_t dotAlignment = 2;
-         unsigned int blanksAtTopCell = (8 - 1 - (numDots - 1) % 8) / dotAlignment * dotAlignment;
-         *details <<= blanksAtTopCell;
-      }
+   } else if (y * 2 < h - 1) {
+      itemIndex = 1;
    } else {
-      int deltaExpArg = MINIMUM(UINT16_WIDTH - 1, deltaExp);
+      itemIndex = valueStart[1].numDots >= valueStart[2].numDots ? 0 : 1;
+   }
 
-      unsigned int scaleFactor;
-      size_t i = GraphMeterMode_valueCellIndex(h, isPercentChart, deltaExpArg, y, &scaleFactor, NULL);
-      if (i >= nCellsPerValue)
-         goto cellIsEmpty;
-
-      if (deltaExp >= UINT16_WIDTH) {
-         // Any "scaleFactor" value greater than 8 behaves the same as 8 for the
-         // "scaleCellDetails" function.
-         scaleFactor = 8;
+   if (y * 2 == h - 1 && valueStart[1].numDots > 8 && valueStart[2].numDots > 8) {
+      *details = valueStart[1].numDots >= valueStart[2].numDots ? 0x0F : 0xF0;
+   } else {
+      *details = 0xFF;
+      const uint8_t dotAlignment = 2;
+      if (y == blanksAtStart / 8) {
+         blanksAtStart = (blanksAtStart % 8) / dotAlignment * dotAlignment;
+         *details >>= blanksAtStart;
       }
-
-      const GraphDataCell* cell = &valueStart[i];
-      itemIndex = cell->c.itemNum - 1;
-      *details = GraphMeterMode_scaleCellDetails(cell->c.details, scaleFactor);
+      if ((h - 1 - y) == blanksAtEnd / 8) {
+         blanksAtEnd = (blanksAtEnd % 8) / dotAlignment * dotAlignment;
+         *details = (uint8_t)((*details >> blanksAtEnd) << blanksAtEnd);
+      }
    }
    /* fallthrough */
 
 cellIsEmpty:
-   if (y == 0)
-      *details |= 0xC0;
-
    if (itemIndex == (uint8_t)-1)
       return BAR_SHADOW;
 
