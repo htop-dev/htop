@@ -37,6 +37,10 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    HandlerResult result = IGNORED;
    OptionItem* selected = (OptionItem*) Panel_getSelected(super);
 
+   if (!selected) {
+      return result;
+   }
+
    switch (ch) {
       case '\n':
       case '\r':
