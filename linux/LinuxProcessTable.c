@@ -320,101 +320,194 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
       return false;
 
    /* (2) comm  -  (%s) */
+   if (!location[0] || !location[1])
+      return false;
+
    location += 2;
    char* end = strrchr(location, ')');
    if (!end)
       return false;
 
+   if (end < location)
+      return false;
+
    String_safeStrncpy(command, location, MINIMUM((size_t)(end - location + 1), commLen));
+
+   if (!end[0] || !end[1])
+      return false;
 
    location = end + 2;
 
    /* (3) state  -  %c */
    process->state = LinuxProcessTable_getProcessState(location[0]);
+
+   if (!location[0] || !location[1])
+      return false;
+
    location += 2;
 
    /* (4) ppid  -  %d */
    Process_setParent(process, fast_strtol_dec(&location, 0));
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (5) pgrp  -  %d */
    process->pgrp = fast_strtol_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (6) session  -  %d */
    process->session = fast_strtol_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (7) tty_nr  -  %d */
    process->tty_nr = fast_strtoul_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (8) tpgid  -  %d */
    process->tpgid = fast_strtol_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (9) flags  -  %u */
    lp->flags = fast_strtoul_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (10) minflt  -  %lu */
    process->minflt = fast_strtoull_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (11) cminflt  -  %lu */
    lp->cminflt = fast_strtoull_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (12) majflt  -  %lu */
    process->majflt = fast_strtoull_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (13) cmajflt  -  %lu */
    lp->cmajflt = fast_strtoull_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (14) utime  -  %lu */
    lp->utime = LinuxProcessTable_adjustTime(lhost, fast_strtoull_dec(&location, 0));
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (15) stime  -  %lu */
    lp->stime = LinuxProcessTable_adjustTime(lhost, fast_strtoull_dec(&location, 0));
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (16) cutime  -  %ld */
    lp->cutime = LinuxProcessTable_adjustTime(lhost, fast_strtoull_dec(&location, 0));
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (17) cstime  -  %ld */
    lp->cstime = LinuxProcessTable_adjustTime(lhost, fast_strtoull_dec(&location, 0));
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (18) priority  -  %ld */
    process->priority = fast_strtol_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (19) nice  -  %ld */
    process->nice = fast_strtol_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* (20) num_threads  -  %ld */
    process->nlwp = fast_strtol_dec(&location, 0);
+
+   if (!location[0])
+      return false;
+
    location += 1;
 
    /* Skip (21) itrealvalue  -  %ld */
-   location = strchr(location, ' ') + 1;
+   location = strchr(location, ' ');
+
+   if (!location)
+      return false;
+
+   location += 1;
 
    /* (22) starttime  -  %llu */
    if (process->starttime_ctime == 0) {
       process->starttime_ctime = lhost->boottime + LinuxProcessTable_adjustTime(lhost, fast_strtoll_dec(&location, 0)) / 100;
    } else {
       location = strchr(location, ' ');
+      if (!location)
+         return false;
    }
    location += 1;
 
    /* Skip (23) - (38) */
    for (int i = 0; i < 16; i++) {
-      location = strchr(location, ' ') + 1;
+      location = strchr(location, ' ');
+
+      if (!location)
+         return false;
+
+      location += 1;
    }
 
    assert(location != NULL);
