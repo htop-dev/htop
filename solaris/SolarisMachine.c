@@ -338,3 +338,9 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
 
    return (super->existingCPUs == 1) ? true : this->cpus[id + 1].online;
 }
+
+double Machine_updateGpuUsage(Machine* super) {
+   /* Not supported yet */
+   (void)super;
+   return -1;
+}

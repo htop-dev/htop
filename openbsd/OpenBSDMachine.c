@@ -288,3 +288,9 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
    const OpenBSDMachine* this = (const OpenBSDMachine*) super;
    return this->cpuData[id + 1].online;
 }
+
+double Machine_updateGpuUsage(Machine* super) {
+   /* Not supported yet */
+   (void)super;
+   return -1;
+}

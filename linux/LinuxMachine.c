@@ -42,6 +42,7 @@ in the source distribution for its full text.
 #define O_PATH         010000000 // declare for ancient glibc versions
 #endif
 
+
 /* Similar to get_nprocs_conf(3) / _SC_NPROCESSORS_CONF
  * https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/getsysstats.c;hb=HEAD
  */
@@ -819,4 +820,27 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
 
    assert(id < super->existingCPUs);
    return this->cpuData[id + 1].online;
+}
+
+double Machine_updateGpuUsage(Machine* super) {
+   LinuxMachine* this = (LinuxMachine*) super;
+
+   const uint64_t monotonictimeDelta = super->monotonicMs - super->prevMonotonicMs;
+
+   GPUEngineData *gpuEngineData;
+   size_t i;
+
+   super->totalGPUTimeDiff = saturatingSub(this->curGpuTime, this->prevGpuTime);
+
+   this->prevResidueTime = this->curResidueTime;
+   this->curResidueTime = this->curGpuTime;
+
+   for (gpuEngineData = this->gpuEngineData, i = 0; gpuEngineData; gpuEngineData = gpuEngineData->next, i++) {
+      // unsigned long long int timeDiff = saturatingSub(gpuEngineData->curTime, gpuEngineData->prevTime);
+
+      this->curResidueTime = saturatingSub(this->curResidueTime, gpuEngineData->curTime);
+   }
+
+   super->totalGPUUsage = 100.0 * super->totalGPUTimeDiff / (1000 * 1000) / monotonictimeDelta;
+   return super->totalGPUUsage;
 }

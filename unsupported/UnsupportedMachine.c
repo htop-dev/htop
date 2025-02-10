@@ -54,3 +54,7 @@ void Machine_scan(Machine* super) {
    super->usedSwap = 0;
    super->cachedSwap = 0;
 }
+
+double Machine_updateGpuUsage(Machine* super ATTR_UNUSED) {
+   return -1;
+ }

@@ -343,3 +343,9 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
       return true;
    return false;
 }
+
+double Machine_updateGpuUsage(Machine* super) {
+   /* Not supported yet */
+   (void)super;
+   return -1;
+}

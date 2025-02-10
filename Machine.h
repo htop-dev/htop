@@ -64,6 +64,9 @@ typedef struct Machine_ {
    unsigned int activeCPUs;
    unsigned int existingCPUs;
 
+   double totalGPUUsage;
+   unsigned long long int totalGPUTimeDiff;
+
    UsersTable* usersTable;
    uid_t htopUserId;
    uid_t maxUserId;  /* recently observed */
@@ -93,5 +96,7 @@ void Machine_setTablesPanel(Machine* this, Panel* panel);
 void Machine_scan(Machine* this);
 
 void Machine_scanTables(Machine* this);
+
+double Machine_updateGpuUsage(Machine* this);
 
 #endif

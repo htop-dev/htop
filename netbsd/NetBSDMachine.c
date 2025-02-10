@@ -283,3 +283,9 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
    // TODO: Support detecting online / offline CPUs.
    return true;
 }
+
+double Machine_updateGpuUsage(Machine* super) {
+   /* Not supported yet */
+   (void)super;
+   return -1;
+}
