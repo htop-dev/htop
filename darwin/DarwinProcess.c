@@ -496,7 +496,11 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
          continue;
       }
 
-      assert(Process_getPid(tprocess) == tid);
+      pid_t tprocessPid = Process_getPid(tprocess);
+      assert(tprocessPid >= 0);
+      assert((uint64_t)tprocessPid == tid);
+      (void)tprocessPid;
+
       Process_setParent(tprocess, pid);
       Process_setThreadGroup(tprocess, pid);
       tprocess->super.show       = true;
