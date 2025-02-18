@@ -16,7 +16,7 @@ in the source distribution for its full text.
 
 
 static size_t activeMeters;
-const int GPUMeter_attributes[] = {
+static const int GPUMeter_attributes[] = {
    GPU_ENGINE_1,
    GPU_ENGINE_2,
    GPU_ENGINE_3,
@@ -73,21 +73,20 @@ static int humanTimeUnit(char* buffer, size_t size, unsigned long long int value
 }
 
 static void GPUMeter_updateValues(Meter* this) {
+   const Machine* host = this->host;
    char* buffer = this->txtBuffer;
    size_t size = sizeof(this->txtBuffer);
 
-   double totalUsage = Machine_updateGpuUsage(this->host);
-   
-   if (!isNonnegative(totalUsage)) {
+   if (!isNonnegative(host->totalGPUUsage)) {
       this->values[0] = 0;
       int written = xSnprintf(buffer, size, "N/A");
       METER_BUFFER_CHECK(buffer, size, written);
-		return;
+      return;
    }
 
-	int written = xSnprintf(buffer, size, "%.1f", totalUsage);
-	METER_BUFFER_CHECK(buffer, size, written);
-	METER_BUFFER_APPEND_CHR(buffer, size, '%');
+   int written = xSnprintf(buffer, size, "%.1f", host->totalGPUUsage);
+   METER_BUFFER_CHECK(buffer, size, written);
+   METER_BUFFER_APPEND_CHR(buffer, size, '%');
 }
 
 static void GPUMeter_display(const Object* cast, RichString* out) {

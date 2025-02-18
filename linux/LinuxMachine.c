@@ -733,6 +733,7 @@ void Machine_scan(Machine* super) {
    LinuxMachine_scanZfsArcstats(this);
    LinuxMachine_scanZramInfo(this);
    LinuxMachine_scanCPUTime(this);
+   Machine_scanGPUUsage(super);
 
    const Settings* settings = super->settings;
    if (settings->showCPUFrequency
@@ -822,7 +823,7 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
    return this->cpuData[id + 1].online;
 }
 
-double Machine_updateGpuUsage(Machine* super) {
+void Machine_scanGPUUsage(Machine* super) {
    LinuxMachine* this = (LinuxMachine*) super;
 
    const uint64_t monotonictimeDelta = super->monotonicMs - super->prevMonotonicMs;
@@ -836,11 +837,8 @@ double Machine_updateGpuUsage(Machine* super) {
    this->curResidueTime = this->curGpuTime;
 
    for (gpuEngineData = this->gpuEngineData, i = 0; gpuEngineData; gpuEngineData = gpuEngineData->next, i++) {
-      // unsigned long long int timeDiff = saturatingSub(gpuEngineData->curTime, gpuEngineData->prevTime);
-
       this->curResidueTime = saturatingSub(this->curResidueTime, gpuEngineData->curTime);
    }
 
    super->totalGPUUsage = 100.0 * super->totalGPUTimeDiff / (1000 * 1000) / monotonictimeDelta;
-   return super->totalGPUUsage;
 }

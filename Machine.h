@@ -97,6 +97,6 @@ void Machine_scan(Machine* this);
 
 void Machine_scanTables(Machine* this);
 
-double Machine_updateGpuUsage(Machine* this);
+void Machine_scanGPUUsage(Machine* super);
 
 #endif

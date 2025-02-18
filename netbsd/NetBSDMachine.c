@@ -270,6 +270,7 @@ void Machine_scan(Machine* super) {
 
    NetBSDMachine_scanMemoryInfo(this);
    NetBSDMachine_scanCPUTime(this);
+   Machine_scanGPUUsage(super);
 
    if (super->settings->showCPUFrequency) {
       NetBSDMachine_scanCPUFrequency(this);
@@ -284,8 +285,7 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
    return true;
 }
 
-double Machine_updateGpuUsage(Machine* super) {
+void Machine_scanGPUUsage(Machine* super) {
    /* Not supported yet */
-   (void)super;
-   return -1;
+   super->totalGPUUsage = -1.0;
 }

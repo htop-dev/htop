@@ -22,6 +22,9 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    super->existingCPUs = 1;
    super->activeCPUs = 1;
 
+   super->totalGPUUsage = NAN;
+   super->totalGPUTimeDiff = (unsigned long long)-1;
+
    return super;
 }
 
@@ -54,7 +57,3 @@ void Machine_scan(Machine* super) {
    super->usedSwap = 0;
    super->cachedSwap = 0;
 }
-
-double Machine_updateGpuUsage(Machine* super ATTR_UNUSED) {
-   return -1;
- }

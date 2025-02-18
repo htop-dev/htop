@@ -340,6 +340,7 @@ void Machine_scan(Machine* super) {
    DragonFlyBSDMachine_scanMemoryInfo(super);
    DragonFlyBSDMachine_scanCPUTime(super);
    DragonFlyBSDMachine_scanJails(this);
+   Machine_scanGPUUsage(super);
 }
 
 bool Machine_isCPUonline(const Machine* host, unsigned int id) {
@@ -350,8 +351,7 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
    return true;
 }
 
-double Machine_updateGpuUsage(Machine* super) {
+void Machine_scanGPUUsage(Machine* super) {
    /* Not supported yet */
-   (void)super;
-   return -1;
+   super->totalGPUUsage = -1.0;
 }

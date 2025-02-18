@@ -7,6 +7,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <IOKit/IOKitLib.h>
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
 
@@ -25,6 +26,8 @@ typedef struct DarwinMachine_ {
 #endif
    processor_cpu_load_info_t prev_load;
    processor_cpu_load_info_t curr_load;
+
+   io_service_t GPUService;
 
    ZfsArcStats zfs;
 } DarwinMachine;

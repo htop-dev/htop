@@ -16,6 +16,8 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/sysctl.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
 
 #include "CRT.h"
 #include "Machine.h"
@@ -84,6 +86,7 @@ void Machine_scan(Machine* super) {
    DarwinMachine_allocateCPULoadInfo(&host->curr_load);
    DarwinMachine_getVMStats(host);
    openzfs_sysctl_updateArcStats(&host->zfs);
+   Machine_scanGPUUsage(super);
 }
 
 Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
@@ -105,11 +108,22 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    openzfs_sysctl_init(&this->zfs);
    openzfs_sysctl_updateArcStats(&this->zfs);
 
+   this->GPUService = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOGPU"));
+   if(!this->GPUService) {
+      CRT_debug("Cannot create macOS GPUService");
+   }
+   
+   /* Initialize GPU metric read-out */
+   super->totalGPUUsage = NAN;
+   super->totalGPUTimeDiff = (unsigned long long)-1;
+
    return super;
 }
 
 void Machine_delete(Machine* super) {
    DarwinMachine* this = (DarwinMachine*) super;
+
+   IOObjectRelease(this->GPUService);
 
    DarwinMachine_freeCPULoadInfo(&this->prev_load);
 
@@ -126,8 +140,36 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
    return true;
 }
 
-double Machine_updateGpuUsage(Machine* super) {
-   /* Not supported yet */
-   (void)super;
-   return -1;
+void Machine_scanGPUUsage(Machine* super) {
+   DarwinMachine* dhost = (DarwinMachine *)super;
+   
+   if (!dhost->GPUService) {
+      return;
+   }
+   
+   CFMutableDictionaryRef properties = NULL;
+   kern_return_t ret = IORegistryEntryCreateCFProperties(dhost->GPUService, &properties, kCFAllocatorDefault, kNilOptions);
+   if (ret != KERN_SUCCESS) {
+      return;
+   }
+   
+   CFDictionaryRef perfStats = CFDictionaryGetValue(properties, CFSTR("PerformanceStatistics"));
+   
+   if (!perfStats) {
+      goto cleanup;
+   }
+   
+   assert(CFGetTypeID(perfStats) == CFDictionaryGetTypeID());
+   
+   CFNumberRef deviceUtil = CFDictionaryGetValue(perfStats, CFSTR("Device Utilization %"));
+   if (!deviceUtil) {
+      goto cleanup;
+   }
+   
+   int device = -1;
+   CFNumberGetValue(deviceUtil, kCFNumberIntType, &device);
+   super->totalGPUUsage = (double)device;
+
+cleanup:
+   CFRelease(properties);
 }

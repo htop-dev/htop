@@ -297,6 +297,7 @@ void Machine_scan(Machine* super) {
    SolarisMachine_scanCPUTime(this);
    SolarisMachine_scanMemoryInfo(this);
    SolarisMachine_scanZfsArcstats(this);
+   Machine_scanGPUUsage(super);
 }
 
 Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
@@ -339,8 +340,7 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
    return (super->existingCPUs == 1) ? true : this->cpus[id + 1].online;
 }
 
-double Machine_updateGpuUsage(Machine* super) {
+void Machine_scanGPUUsage(Machine* super) {
    /* Not supported yet */
-   (void)super;
-   return -1;
+   super->totalGPUUsage = -1.0;
 }
