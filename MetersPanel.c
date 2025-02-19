@@ -22,8 +22,8 @@ in the source distribution for its full text.
 
 // Note: In code the meters are known to have bar/text/graph "Modes", but in UI
 // we call them "Styles".
-static const char* const MetersFunctions[] = {"Style ", "Move  ", "                                         ", "Delete", "Done  ", NULL};
-static const char* const MetersKeys[] = {"Space", "Enter", "", "Del", "F10"};
+static const char* const MetersFunctions[] = {"Style ", "Move  ", "                                       ", "Delete", "Done  ", NULL};
+static const char* const MetersKeys[] = {"Space", "Enter", "  ", "Del", "F10"};
 static const int MetersEvents[] = {' ', 13, ERR, KEY_DC, KEY_F(10)};
 
 // We avoid UTF-8 arrows ← → here as they might display full-width on Chinese
