@@ -404,22 +404,6 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
    }
 }
 
-static ProcessState stateToChar(int run_state) {
-   switch (run_state) {
-   case TH_STATE_RUNNING:
-      return RUNNING;
-   case TH_STATE_STOPPED:
-      return STOPPED;
-   case TH_STATE_WAITING:
-      return WAITING;
-   case TH_STATE_UNINTERRUPTIBLE:
-      return UNINTERRUPTIBLE_WAIT;
-   case TH_STATE_HALTED:
-      return BLOCKED;
-   }
-   return UNKNOWN;
-}
-
 /*
  * Scan threads for process state information.
  * Based on: http://stackoverflow.com/questions/6788274/ios-mac-cpu-usage-for-thread
@@ -473,7 +457,6 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
 
    const bool hideUserlandThreads = dpt->super.super.host->settings->hideUserlandThreads;
 
-   integer_t run_state = 999;
    for (mach_msg_type_number_t i = 0; i < thread_count; i++) {
 
       thread_identifier_info_data_t identifer_info;
@@ -517,15 +500,11 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
       }
 
       DarwinProcess* tdproc     = (DarwinProcess*)tprocess;
-      tdproc->super.state       = stateToChar(extended_info.pth_run_state);
       tdproc->super.percent_cpu = extended_info.pth_cpu_usage / 10.0;
       tdproc->stime             = extended_info.pth_system_time;
       tdproc->utime             = extended_info.pth_user_time;
       tdproc->super.time        = (extended_info.pth_system_time + extended_info.pth_user_time) / 10000000;
       tdproc->super.priority    = extended_info.pth_curpri;
-
-      if (extended_info.pth_run_state < run_state)
-         run_state = extended_info.pth_run_state;
 
       // TODO: depend on setting
       const char* name = extended_info.pth_name[0] != '\0' ? extended_info.pth_name : proc->procComm;
@@ -537,9 +516,6 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
 
    vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
    mach_port_deallocate(mach_task_self(), task);
-
-   if (run_state != 999)
-      proc->state = stateToChar(run_state);
 }
 
 

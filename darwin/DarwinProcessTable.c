@@ -28,6 +28,23 @@ in the source distribution for its full text.
 #include "zfs/ZfsArcStats.h"
 
 
+static ProcessState ProcessTable_mapDarwinProcessState(int kinfo_proc_state) {
+   switch(kinfo_proc_state) {
+      case SRUN:
+         return RUNNING;
+      case SSLEEP:
+         return SLEEPING;
+      case SSTOP:
+         return STOPPED;
+      case SZOMB:
+         return ZOMBIE;
+      case SIDL:
+         return IDLE;
+      default:
+         return UNKNOWN;
+   }
+}
+
 static struct kinfo_proc* ProcessTable_getKInfoProcs(size_t* count) {
    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
    struct kinfo_proc* processes = NULL;
@@ -107,6 +124,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
          proc->super.st_uid = ps[i].kp_eproc.e_ucred.cr_uid;
          proc->super.user = UsersTable_getRef(host->usersTable, proc->super.st_uid);
       }
+      proc->super.state = ProcessTable_mapDarwinProcessState(ps[i].kp_proc.p_stat);
 
       // Disabled for High Sierra due to bug in macOS High Sierra
       bool isScanThreadSupported = !Platform_KernelVersionIsBetween((KernelVersion) {17, 0, 0}, (KernelVersion) {17, 5, 0});
