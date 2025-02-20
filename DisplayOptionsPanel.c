@@ -24,10 +24,14 @@ in the source distribution for its full text.
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
+static const char* const DisplayOptionsDecIncFunctions[] = {"Dec   ", "Inc   ", "                                                      ", "Done  ", NULL};
+static const char* const DisplayOptionsDecIncKeys[] = {"- ", "+ ", "  ", "F10", NULL};
+static const int DisplayOptionsDecIncEvents[] = {'-', '+', ERR, KEY_F(10)};
+
 static void DisplayOptionsPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
-   Panel_done(super);
+   FunctionBar_delete(this->decIncBar);
+   Panel_done(&this->super);
    free(this);
 }
 
@@ -73,6 +77,28 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
             result = HANDLED;
          }
          break;
+      case KEY_UP:
+      case KEY_DOWN:
+      case KEY_NPAGE:
+      case KEY_PPAGE:
+      case KEY_HOME:
+      case KEY_END:
+         {
+            OptionItem* previous = selected;
+            Panel_onKey(super, ch);
+            selected = (OptionItem*) Panel_getSelected(super);
+            if (previous != selected) {
+               result = HANDLED;
+            }
+         }
+         /* fallthrough */
+      case EVENT_SET_SELECTED:
+         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+            super->currentBar = this->decIncBar;
+         } else {
+            Panel_setDefaultBar(super);
+         }
+         break;
    }
 
    if (result == HANDLED) {
@@ -100,10 +126,12 @@ const PanelClass DisplayOptionsPanel_class = {
 
 DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* scr) {
    DisplayOptionsPanel* this = AllocThis(DisplayOptionsPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(DisplayOptionsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(OptionItem), true, fuBar);
 
+   this->decIncBar = FunctionBar_new(DisplayOptionsDecIncFunctions, DisplayOptionsDecIncKeys, DisplayOptionsDecIncEvents);
    this->settings = settings;
    this->scr = scr;
 
@@ -164,5 +192,6 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    #ifdef HAVE_LIBHWLOC
    Panel_add(super, (Object*) CheckItem_newByRef("Show topology when selecting affinity by default", &(settings->topologyAffinity)));
    #endif
+
    return this;
 }

@@ -35,7 +35,7 @@ ObjectClass ScreenTabListItem_class = {
 
 static void ScreenNamesPanel_fill(ScreenNamesPanel* this, DynamicScreen* ds) {
    const Settings* settings = this->settings;
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
    Panel_prune(super);
 
    for (unsigned int i = 0; i < settings->nScreens; i++) {
@@ -59,10 +59,8 @@ static void ScreenNamesPanel_fill(ScreenNamesPanel* this, DynamicScreen* ds) {
 }
 
 static void ScreenTabsPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    ScreenTabsPanel* this = (ScreenTabsPanel*) object;
-
-   Panel_done(super);
+   Panel_done(&this->super);
    free(this);
 }
 
@@ -138,7 +136,8 @@ static const char* const ScreenTabsFunctions[] = {"      ", "      ", "      ", 
 
 ScreenTabsPanel* ScreenTabsPanel_new(Settings* settings) {
    ScreenTabsPanel* this = AllocThis(ScreenTabsPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(ScreenTabsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
@@ -174,8 +173,8 @@ ScreenNameListItem* ScreenNameListItem_new(const char* value, ScreenSettings* ss
 static const char* const ScreenNamesFunctions[] = {"      ", "      ", "      ", "      ", "New   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void ScreenNamesPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    ScreenNamesPanel* this = (ScreenNamesPanel*) object;
+   Panel* super = &this->super;
 
    /* do not delete screen settings still in use */
    int n = Panel_size(super);
@@ -350,7 +349,8 @@ PanelClass ScreenNamesPanel_class = {
 
 ScreenNamesPanel* ScreenNamesPanel_new(Settings* settings) {
    ScreenNamesPanel* this = AllocThis(ScreenNamesPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(ScreenNamesFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 

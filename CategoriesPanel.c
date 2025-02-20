@@ -35,9 +35,8 @@ in the source distribution for its full text.
 static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void CategoriesPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    CategoriesPanel* this = (CategoriesPanel*) object;
-   Panel_done(super);
+   Panel_done(&this->super);
    free(this);
 }
 
@@ -172,7 +171,8 @@ const PanelClass CategoriesPanel_class = {
 
 CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Header* header, Machine* host) {
    CategoriesPanel* this = AllocThis(CategoriesPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(CategoriesFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 

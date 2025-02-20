@@ -7,6 +7,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "FunctionBar.h"
 #include "Panel.h"
 #include "ScreenManager.h"
 #include "Settings.h"
@@ -17,6 +18,7 @@ typedef struct DisplayOptionsPanel_ {
 
    Settings* settings;
    ScreenManager* scr;
+   FunctionBar* decIncBar;
 } DisplayOptionsPanel;
 
 extern const PanelClass DisplayOptionsPanel_class;

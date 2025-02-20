@@ -30,10 +30,9 @@ in the source distribution for its full text.
 
 
 static void AvailableMetersPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    AvailableMetersPanel* this = (AvailableMetersPanel*) object;
-   Panel_done(super);
    free(this->meterPanels);
+   Panel_done(&this->super);
    free(this);
 }
 
@@ -145,7 +144,8 @@ static void AvailableMetersPanel_addPlatformMeter(Panel* super, const MeterClass
 
 AvailableMetersPanel* AvailableMetersPanel_new(Machine* host, Header* header, size_t columns, MetersPanel** meterPanels, ScreenManager* scr) {
    AvailableMetersPanel* this = AllocThis(AvailableMetersPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_newEnterEsc("Add   ", "Done   ");
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
