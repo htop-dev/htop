@@ -41,9 +41,8 @@ static const char* const ColorSchemeNames[] = {
 };
 
 static void ColorsPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    ColorsPanel* this = (ColorsPanel*) object;
-   Panel_done(super);
+   Panel_done(&this->super);
    free(this);
 }
 
@@ -91,7 +90,8 @@ const PanelClass ColorsPanel_class = {
 
 ColorsPanel* ColorsPanel_new(Settings* settings) {
    ColorsPanel* this = AllocThis(ColorsPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(ColorsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true, fuBar);
 

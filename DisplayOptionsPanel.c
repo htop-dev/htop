@@ -29,10 +29,9 @@ static const char* const DisplayOptionsDecIncKeys[] = {"- ", "+ ", "  ", "F10", 
 static const int DisplayOptionsDecIncEvents[] = {'-', '+', ERR, KEY_F(10)};
 
 static void DisplayOptionsPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
    FunctionBar_delete(this->decIncBar);
-   Panel_done(super);
+   Panel_done(&this->super);
    free(this);
 }
 
@@ -127,7 +126,8 @@ const PanelClass DisplayOptionsPanel_class = {
 
 DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* scr) {
    DisplayOptionsPanel* this = AllocThis(DisplayOptionsPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(DisplayOptionsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(OptionItem), true, fuBar);
 
@@ -192,5 +192,6 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    #ifdef HAVE_LIBHWLOC
    Panel_add(super, (Object*) CheckItem_newByRef("Show topology when selecting affinity by default", &(settings->topologyAffinity)));
    #endif
+
    return this;
 }

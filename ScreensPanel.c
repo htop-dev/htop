@@ -290,10 +290,12 @@ PanelClass ScreensPanel_class = {
 
 ScreensPanel* ScreensPanel_new(Settings* settings) {
    ScreensPanel* this = AllocThis(ScreensPanel);
-   Panel* super = (Panel*) this;
-   Hashtable* columns = settings->dynamicColumns;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(settings->dynamicScreens ? DynamicFunctions : ScreensFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
+
+   Hashtable* columns = settings->dynamicColumns;
 
    this->settings = settings;
    this->columns = ColumnsPanel_new(settings->screens[0], columns, &(settings->changed));

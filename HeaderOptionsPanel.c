@@ -25,9 +25,8 @@ in the source distribution for its full text.
 static const char* const HeaderOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static void HeaderOptionsPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    HeaderOptionsPanel* this = (HeaderOptionsPanel*) object;
-   Panel_done(super);
+   Panel_done(&this->super);
    free(this);
 }
 
@@ -74,7 +73,8 @@ const PanelClass HeaderOptionsPanel_class = {
 
 HeaderOptionsPanel* HeaderOptionsPanel_new(Settings* settings, ScreenManager* scr) {
    HeaderOptionsPanel* this = AllocThis(HeaderOptionsPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(HeaderOptionsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(CheckItem), true, fuBar);
 

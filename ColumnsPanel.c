@@ -28,9 +28,8 @@ in the source distribution for its full text.
 static const char* const ColumnsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 
 static void ColumnsPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    ColumnsPanel* this = (ColumnsPanel*) object;
-   Panel_done(super);
+   Panel_done(&this->super);
    free(this);
 }
 
@@ -126,7 +125,7 @@ static void ColumnsPanel_add(Panel* super, unsigned int key, Hashtable* columns)
 }
 
 void ColumnsPanel_fill(ColumnsPanel* this, ScreenSettings* ss, Hashtable* columns) {
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
    Panel_prune(super);
    for (const RowField* fields = ss->fields; *fields; fields++)
       ColumnsPanel_add(super, *fields, columns);
@@ -135,7 +134,8 @@ void ColumnsPanel_fill(ColumnsPanel* this, ScreenSettings* ss, Hashtable* column
 
 ColumnsPanel* ColumnsPanel_new(ScreenSettings* ss, Hashtable* columns, bool* changed) {
    ColumnsPanel* this = AllocThis(ColumnsPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(ColumnsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 

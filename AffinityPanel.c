@@ -136,20 +136,19 @@ typedef struct AffinityPanel_ {
 
 static void AffinityPanel_delete(Object* cast) {
    AffinityPanel* this = (AffinityPanel*) cast;
-   Panel* super = (Panel*) this;
-   Panel_done(super);
    Vector_delete(this->cpuids);
    #ifdef HAVE_LIBHWLOC
    hwloc_bitmap_free(this->workCpuset);
    MaskItem_delete((Object*) this->topoRoot);
    #endif
+   Panel_done(&this->super);
    free(this);
 }
 
 #ifdef HAVE_LIBHWLOC
 
 static void AffinityPanel_updateItem(AffinityPanel* this, MaskItem* item) {
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
 
    item->value = hwloc_bitmap_isincluded(item->cpuset, this->workCpuset) ? 2 :
                  hwloc_bitmap_intersects(item->cpuset, this->workCpuset) ? 1 : 0;
@@ -170,7 +169,7 @@ static void AffinityPanel_updateTopo(AffinityPanel* this, MaskItem* item) {
 #endif
 
 static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
 
    FunctionBar_setLabel(super->currentBar, KEY_F(3), this->topoView ? "Collapse/Expand" : "");
 
@@ -370,7 +369,8 @@ static const int AffinityPanelEvents[] = {13, 27, KEY_F(1), KEY_F(2), KEY_F(3)};
 
 Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
    AffinityPanel* this = AllocThis(AffinityPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    Panel_init(super, 1, 1, 1, 1, Class(MaskItem), false, FunctionBar_new(AffinityPanelFunctions, AffinityPanelKeys, AffinityPanelEvents));
 
    this->host = host;

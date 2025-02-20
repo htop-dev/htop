@@ -43,14 +43,13 @@ void MetersPanel_cleanup(void) {
 }
 
 static void MetersPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
    MetersPanel* this = (MetersPanel*) object;
-   Panel_done(super);
+   Panel_done(&this->super);
    free(this);
 }
 
 void MetersPanel_setMoving(MetersPanel* this, bool moving) {
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
    this->moving = moving;
    ListItem* selected = (ListItem*)Panel_getSelected(super);
    if (selected) {
@@ -66,7 +65,7 @@ void MetersPanel_setMoving(MetersPanel* this, bool moving) {
 }
 
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
    if (this->moving) {
       if (neighbor) {
          if (selected < Vector_size(this->meters)) {
@@ -185,7 +184,8 @@ const PanelClass MetersPanel_class = {
 
 MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* meters, ScreenManager* scr) {
    MetersPanel* this = AllocThis(MetersPanel);
-   Panel* super = (Panel*) this;
+   Panel* super = &this->super;
+
    FunctionBar* fuBar = FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents);
    if (!Meters_movingBar) {
       Meters_movingBar = FunctionBar_new(MetersMovingFunctions, MetersMovingKeys, MetersMovingEvents);
