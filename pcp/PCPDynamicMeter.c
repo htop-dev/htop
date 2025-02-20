@@ -415,7 +415,7 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
       nodata = 0;  /* we will use this metric so *some* data will be added */
 
       if (i > 0)
-         RichString_appendnAscii(out, CRT_colors[metric->color], " ", 1);
+         RichString_appendAscii(out, CRT_colors[metric->color], " ");
 
       if (metric->label)
          RichString_appendAscii(out, CRT_colors[METER_TEXT], metric->label);
@@ -461,7 +461,7 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
       }
 
       if (len) {
-         RichString_appendnAscii(out, CRT_colors[metric->color], buffer, len);
+         RichString_appendnAscii(out, CRT_colors[metric->color], buffer, (unsigned int)len);
          if (metric->suffix)
             RichString_appendAscii(out, CRT_colors[METER_TEXT], metric->suffix);
       }
