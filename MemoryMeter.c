@@ -67,6 +67,7 @@ static void MemoryMeter_updateValues(Meter* this) {
 static void MemoryMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
+   const Settings* settings = this->host->settings;
 
    RichString_writeAscii(out, CRT_colors[METER_TEXT], ":");
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
@@ -91,12 +92,12 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
    }
 
    Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " buffers:");
-   RichString_appendAscii(out, CRT_colors[MEMORY_BUFFERS_TEXT], buffer);
+   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " buffers:");
+   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[MEMORY_BUFFERS_TEXT] : CRT_colors[METER_SHADOW], buffer);
 
    Meter_humanUnit(buffer, this->values[MEMORY_METER_CACHE], sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " cache:");
-   RichString_appendAscii(out, CRT_colors[MEMORY_CACHE], buffer);
+   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " cache:");
+   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[MEMORY_CACHE] : CRT_colors[METER_SHADOW], buffer);
 
    /* available memory is not supported on all platforms */
    if (isNonnegative(this->values[MEMORY_METER_AVAILABLE])) {

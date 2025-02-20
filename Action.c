@@ -744,9 +744,13 @@ static Htop_Reaction actionHelp(State* st) {
    addbartext(CRT_colors[MEMORY_USED], "", "used");
    addbartext(CRT_colors[MEMORY_SHARED], "/", "shared");
    addbartext(CRT_colors[MEMORY_COMPRESSED], "/", "compressed");
-   addbartext(CRT_colors[MEMORY_BUFFERS_TEXT], "/", "buffers");
-   addbartext(CRT_colors[MEMORY_CACHE], "/", "cache");
-   addbartext(CRT_colors[BAR_SHADOW], "          ", "used");
+   if (st->host->settings->showCachedMemory) {
+      addbartext(CRT_colors[MEMORY_BUFFERS_TEXT], "/", "buffers");
+      addbartext(CRT_colors[MEMORY_CACHE], "/", "cache");
+      addbartext(CRT_colors[BAR_SHADOW], "          ", "used");
+   } else {
+      addbartext(CRT_colors[BAR_SHADOW], "                        ", "used");
+   }
    addbartext(CRT_colors[BAR_SHADOW], "/", "total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
 
@@ -758,7 +762,7 @@ static Htop_Reaction actionHelp(State* st) {
    addbartext(CRT_colors[SWAP_CACHE], "/", "cache");
    addbartext(CRT_colors[SWAP_FRONTSWAP], "/", "frontswap");
 #else
-   addbartext(CRT_colors[SWAP_CACHE], "      ", "");
+   addbartext(CRT_colors[BAR_SHADOW], "                ", "");
 #endif
    addbartext(CRT_colors[BAR_SHADOW], "                          ", "used");
    addbartext(CRT_colors[BAR_SHADOW], "/", "total");
