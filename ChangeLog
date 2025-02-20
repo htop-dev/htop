@@ -1,3 +1,57 @@
+What's new in version 3.4.0
+
+* More expressive version tag generated for development versions (htop --version, help screen)
+* Improve Darwin support for ARM-based systems
+* Fix static linking with libsystemd
+* Various build fixes for DragonFlyBSD, Darwin, NetBSD, OpenBSD & Solaris
+* Fix running task display (count)
+* Fix sort order handling in tree mode
+* Add warning when exiting with a signal (not saving .htoprc)
+* Add Disk I/O and Network I/O meter for DragonFlyBSD
+* Improve handling of invalid Unicode strings
+* Disable basename checking for kernel tasks
+* Updated documentation for pcp-htop
+* Disable FOCUS_IN/FOCUS_OUT event handling
+* Add GPU meter for Linux and PCP
+* Add colum for GPU time per process on Linux and PCP
+* Avoid glibc FILE API voodoo
+* Ignore previously unhandled signals USR1 and USR2
+* Force locating the config file to only use absolute paths
+* Prefer reading htoprc from ~/.config/htop/htoprc over legacy ~/.htoprc
+* Force writing the configuration to a regular file
+* Use distinct config files for htop and pcp-htop
+* Link libnl3 at runtime
+* Gather permitted capabilities via capget(2)
+* Avoid fetching certain process information for each thread on Linux (speed up)
+* Improved handling for invalid data in /proc/tty/drivers on Linux
+* Various changes to avoid memory allocations inside signal handlers
+* Add single column header layout
+* Fix DivByZero bug on startup on Darwin
+* Include thread information on Darwin
+* Show process state on Darwin
+* Update compat check for C23 compilers
+* Improved detail in help screen
+* Unicode support for CGROUP, CCGROUP, CONTAINER and SECATTR columns
+* Mark newline characters in the process command line display
+* Resolve nested derived metrics for PCP
+* Make supported modes/styles specific to each meter
+* Refined checks for terminals supporting to redefine keys
+* Fix handling of the NICE value on FreeBSD
+* Fix display of CPU utilization on FreeBSD
+* Honour update interval adjustments properly without restart
+* Force rebuild of display table after item removals
+* Reworked handling for various temperature sensors
+* Fix high CPU load when the strace'd process exits prematurely
+* Document --drop-capabilities to require a compile time support
+* Always call PKG_PROG_PKG_CONFIG in configure
+* Make configure warn when pkg.m4 is absent
+* Rewrite curses/terminfo detection code in configure
+* Keep following a process when resuming process updates (Z key)
+* Normalize Disk I/O usage and allow utilization above 100%
+* Plug several memory leaks and improve performance for information parsing
+* Allow to show or hide cache and buffers in memory usage meter
+* Visibility hint and UX improvements in status bar of display options panel
+
 What's new in version 3.3.0
 
 * Multiple refactorings and code improvements
