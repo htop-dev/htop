@@ -20,13 +20,13 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "CPUMeter.h"
 #include "DynamicMeter.h"
+#include "FlexMeter.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
 #include "XUtils.h"
-
 
 Header* Header_new(Machine* host, HeaderLayout hLayout) {
    Header* this = xCalloc(1, sizeof(Header));
@@ -120,6 +120,14 @@ static void Header_addMeterByName(Header* this, const char* name, MeterModeId mo
 void Header_populateFromSettings(Header* this) {
    const Settings* settings = this->host->settings;
    Header_setLayout(this, settings->hLayout);
+
+   int num = load_flex_modules();
+   int platform_size = 0;
+
+   for (platform_size = 0; Platform_meterTypes[platform_size] != NULL; platform_size++);
+   for (int i = 0; i < num; i++) Platform_meterTypes[platform_size+i]=FlexMeter_class+i;
+
+   Platform_meterTypes[platform_size+num]=NULL;
 
    Header_forEachColumn(this, col) {
       const MeterColumnSetting* colSettings = &settings->hColumns[col];
