@@ -92,6 +92,28 @@ int FunctionBar_draw(const FunctionBar* this) {
    return FunctionBar_drawExtra(this, NULL, -1, false);
 }
 
+static size_t FunctionBar_displayWidth(const char *s) {
+   size_t slen = strlen(s);
+   size_t width = 0, i = 0;
+
+   mbtowc(NULL, 0, 0);
+
+   while (i < slen) {
+      wchar_t wch;
+      int mblen = mbtowc(&wch, s + i, slen - i);
+      if (mblen <= 0) {
+         return slen;
+      }
+      i += mblen;
+      int w = wcwidth(wch);
+      if (w > 0) {
+         width += w;
+      }
+   }
+
+   return width;
+}
+
 int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr, bool setCursor) {
    int cursorX = 0;
    attrset(CRT_colors[FUNCTION_BAR]);
@@ -113,7 +135,8 @@ int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr,
          attrset(attr);
       }
       mvaddstr(LINES - 1, x, buffer);
-      x += strlen(buffer);
+      x += FunctionBar_displayWidth(buffer);
+
       cursorX = x;
    }
 
