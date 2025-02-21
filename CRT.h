@@ -184,6 +184,14 @@ extern bool CRT_utf8;
 
 #endif
 
+#if defined (HAVE_LIBNCURSESW)
+   #define CharPlus  "\xef\xbc\x8b" // FULLWIDTH PLUS SIGN
+   #define CharMinus "\xef\xbc\x8d" // FULLWIDTH HYPHEN-MINUS
+#else
+   #define CharPlus  "+ "
+   #define CharMinus "- "
+#endif
+
 extern const char* const* CRT_treeStr;
 
 extern const int* CRT_colors;

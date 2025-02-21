@@ -25,7 +25,7 @@ in the source distribution for its full text.
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static const char* const DisplayOptionsDecIncFunctions[] = {"Dec   ", "Inc   ", "                                                      ", "Done  ", NULL};
-static const char* const DisplayOptionsDecIncKeys[] = {"- ", "+ ", "  ", "F10", NULL};
+static const char* const DisplayOptionsDecIncKeys[] = {CharMinus, CharPlus, "  ", "F10", NULL};
 static const int DisplayOptionsDecIncEvents[] = {'-', '+', ERR, KEY_F(10)};
 
 static void DisplayOptionsPanel_delete(Object* object) {
