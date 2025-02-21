@@ -152,7 +152,6 @@ static double Platform_nanosecondsPerMachTick = 1.0;
 
 static double Platform_nanosecondsPerSchedulerTick = -1;
 
-static bool iokit_available = false;
 static mach_port_t iokit_port; // the mach port used to initiate communication with IOKit
 
 bool Platform_init(void) {
@@ -168,17 +167,6 @@ bool Platform_init(void) {
 
    const double nanos_per_sec = 1e9;
    Platform_nanosecondsPerSchedulerTick = nanos_per_sec / scheduler_ticks_per_sec;
-
-   // Since macOS 12.0, IOMasterPort is deprecated, and one should use IOMainPort instead
-   #if defined(HAVE_DECL_IOMAINPORT) && HAVE_DECL_IOMAINPORT
-   if (!IOMainPort(bootstrap_port, &iokit_port)) {
-      iokit_available = true;
-   }
-   #elif defined(HAVE_DECL_IOMASTERPORT) && HAVE_DECL_IOMASTERPORT
-   if (!IOMasterPort(bootstrap_port, &iokit_port)) {
-      iokit_available = true;
-   }
-   #endif
 
    return true;
 }
@@ -410,8 +398,6 @@ void Platform_getFileDescriptors(double* used, double* max) {
 }
 
 bool Platform_getDiskIO(DiskIOData* data) {
-   if (!iokit_available)
-      return false;
 
    io_iterator_t drive_list;
 
