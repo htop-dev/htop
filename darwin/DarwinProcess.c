@@ -61,6 +61,7 @@ Process* DarwinProcess_new(const Machine* host) {
    this->stime = 0;
    this->taskAccess = true;
    this->translated = false;
+   this->super.state = UNKNOWN;
 
    return (Process*)this;
 }
