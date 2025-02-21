@@ -22,6 +22,9 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    super->existingCPUs = 1;
    super->activeCPUs = 1;
 
+   super->totalGPUUsage = NAN;
+   super->totalGPUTimeDiff = (unsigned long long)-1;
+
    return super;
 }
 
