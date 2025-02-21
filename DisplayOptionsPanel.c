@@ -22,11 +22,11 @@ in the source distribution for its full text.
 #include "ScreensPanel.h"
 
 
-static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const DisplayOptionsFunctions[] =       {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
-static const char* const DisplayOptionsDecIncFunctions[] = {"Dec   ", "Inc   ", "                                                      ", "Done  ", NULL};
-static const char* const DisplayOptionsDecIncKeys[] = {"- ", "+ ", "  ", "F10", NULL};
-static const int DisplayOptionsDecIncEvents[] = {'-', '+', ERR, KEY_F(10)};
+static const char* const DisplayOptionsDecIncFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "Dec   ", "Inc   ", "      ", "Done  ", NULL};
+static const char* const DisplayOptionsDecIncKeys[] =      {"  "    , "  "    , "  "    , "  "    , "  "    , "  "    , "F7"    , "F8"    , "  "    , "F10"   , NULL};
+static const int DisplayOptionsDecIncEvents[] = {'-', KEY_F(7), '+', KEY_F(8), ERR, KEY_F(10)};
 
 static void DisplayOptionsPanel_delete(Object* object) {
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
@@ -66,12 +66,14 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
          }
          break;
       case '-':
+      case KEY_F(7):
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             NumberItem_decrease((NumberItem*)selected);
             result = HANDLED;
          }
          break;
       case '+':
+      case KEY_F(8):
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             NumberItem_increase((NumberItem*)selected);
             result = HANDLED;
