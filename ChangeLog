@@ -51,6 +51,7 @@ What's new in version 3.4.0
 * Plug several memory leaks and improve performance for information parsing
 * Allow to show or hide cache and buffers in memory usage meter
 * Visibility hint and UX improvements in status bar of display options panel
+* Remove IOKit / IOMainPort / IOMMasterPort logic for Darwin builds
 
 What's new in version 3.3.0
 
