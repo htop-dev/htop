@@ -369,7 +369,8 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable* dpt, double timeIntervalNS) {
    struct proc_taskinfo pti;
 
-   if (sizeof(pti) != proc_pidinfo(Process_getPid(&proc->super), PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
+   if (PROC_PIDTASKINFO_SIZE != proc_pidinfo(Process_getPid(&proc->super), PROC_PIDTASKINFO, 0, &pti, PROC_PIDTASKINFO_SIZE)) {
+      proc->taskAccess = false;
       return;
    }
 
@@ -390,6 +391,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
    }
    Process_updateCPUFieldWidths(proc->super.percent_cpu);
 
+   proc->super.state = pti.pti_numrunning > 0 ? RUNNING : SLEEPING;
    proc->super.time = nanosecondsToCentiseconds(total_current_time_ns);
    proc->super.nlwp = pti.pti_threadnum;
    proc->super.m_virt = pti.pti_virtual_size / ONE_K;
@@ -433,18 +435,6 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
          CRT_debug("task_for_pid(%d) failed: %s", pid, mach_error_string(ret));
       dp->taskAccess = false;
       return;
-   }
-
-   {
-      task_info_data_t tinfo;
-      mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
-      ret = task_info(task, TASK_BASIC_INFO, (task_info_t) &tinfo, &task_info_count);
-      if (ret != KERN_SUCCESS) {
-         CRT_debug("task_info(%d) failed: %s", pid, mach_error_string(ret));
-         dp->taskAccess = false;
-         mach_port_deallocate(mach_task_self(), task);
-         return;
-      }
    }
 
    thread_array_t thread_list;
