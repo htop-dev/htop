@@ -86,21 +86,17 @@ static int humanTimeUnit(char* buffer, size_t size, unsigned long long int value
 static void GPUMeter_updateValues(Meter* this) {
    const Machine* host = this->host;
    const LinuxMachine* lhost = (const LinuxMachine*) host;
-   const GPUEngineData* gpuEngineData;
-   char* buffer = this->txtBuffer;
-   size_t size = sizeof(this->txtBuffer);
-   int written;
-   unsigned int i;
-   uint64_t monotonictimeDelta;
 
    assert(ARRAYSIZE(GPUMeter_engineData) + 1 == ARRAYSIZE(GPUMeter_attributes));
 
    totalGPUTimeDiff = saturatingSub(lhost->curGpuTime, lhost->prevGpuTime);
-   monotonictimeDelta = host->monotonicMs - host->prevMonotonicMs;
+   uint64_t monotonictimeDelta = host->monotonicMs - host->prevMonotonicMs;
 
    prevResidueTime = curResidueTime;
    curResidueTime = lhost->curGpuTime;
 
+   const GPUEngineData* gpuEngineData;
+   size_t i;
    for (gpuEngineData = lhost->gpuEngineData, i = 0; gpuEngineData && i < ARRAYSIZE(GPUMeter_engineData); gpuEngineData = gpuEngineData->next, i++) {
       GPUMeter_engineData[i].key      = gpuEngineData->key;
       GPUMeter_engineData[i].timeDiff = saturatingSub(gpuEngineData->curTime, gpuEngineData->prevTime);
@@ -113,10 +109,8 @@ static void GPUMeter_updateValues(Meter* this) {
    this->values[ARRAYSIZE(GPUMeter_engineData)] = 100.0 * saturatingSub(curResidueTime, prevResidueTime) / (1000 * 1000) / monotonictimeDelta;
 
    totalUsage = 100.0 * totalGPUTimeDiff / (1000 * 1000) / monotonictimeDelta;
-   written = snprintf(buffer, size, "%.1f", totalUsage);
-   METER_BUFFER_CHECK(buffer, size, written);
 
-   METER_BUFFER_APPEND_CHR(buffer, size, '%');
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.1f%%", totalUsage);
 }
 
 static void GPUMeter_display(const Object* cast, RichString* out) {
