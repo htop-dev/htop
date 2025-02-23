@@ -367,6 +367,7 @@ darwin_platform_headers = \
 	zfs/ZfsCompressedArcMeter.h
 
 darwin_platform_sources = \
+	GPUMeter.c \
 	darwin/Platform.c \
 	darwin/PlatformHelpers.c \
 	darwin/DarwinMachine.c \
