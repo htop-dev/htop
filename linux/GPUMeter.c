@@ -9,6 +9,8 @@ in the source distribution for its full text.
 
 #include "linux/GPUMeter.h"
 
+#include <math.h>
+
 #include "CRT.h"
 #include "Platform.h"
 #include "RichString.h"
@@ -16,8 +18,8 @@ in the source distribution for its full text.
 
 
 struct GPUMeterEngineData GPUMeter_engineData[4];
-static double totalUsage;
-static unsigned long long int totalGPUTimeDiff;
+static double totalUsage = NAN;
+static unsigned long long int totalGPUTimeDiff = -1ULL;
 
 static const int GPUMeter_attributes[] = {
    GPU_ENGINE_1,
@@ -82,24 +84,36 @@ static void GPUMeter_updateValues(Meter* this) {
 
    Platform_setGPUValues(this, &totalUsage, &totalGPUTimeDiff);
 
+   if (!isNonnegative(totalUsage)) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "N/A");
+      return;
+   }
    xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.1f%%", totalUsage);
 }
 
 static void GPUMeter_display(const Object* cast, RichString* out) {
+   const Meter* this = (const Meter*)cast;
+
    char buffer[50];
    int written;
-   const Meter* this = (const Meter*)cast;
-   unsigned int i;
 
    RichString_writeAscii(out, CRT_colors[METER_TEXT], ":");
+   if (!isNonnegative(totalUsage)) {
+      RichString_appendAscii(out, CRT_colors[METER_VALUE], " N/A");
+      return;
+   }
+
    written = xSnprintf(buffer, sizeof(buffer), "%4.1f", totalUsage);
    RichString_appendnAscii(out, CRT_colors[METER_VALUE], buffer, written);
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], "%(");
-   written = humanTimeUnit(buffer, sizeof(buffer), totalGPUTimeDiff);
-   RichString_appendnAscii(out, CRT_colors[METER_VALUE], buffer, written);
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], ")");
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], "%");
+   if (totalGPUTimeDiff != -1ULL) {
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], "(");
+      written = humanTimeUnit(buffer, sizeof(buffer), totalGPUTimeDiff);
+      RichString_appendnAscii(out, CRT_colors[METER_VALUE], buffer, written);
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], ")");
+   }
 
-   for (i = 0; i < ARRAYSIZE(GPUMeter_engineData); i++) {
+   for (size_t i = 0; i < ARRAYSIZE(GPUMeter_engineData); i++) {
       if (!GPUMeter_engineData[i].key)
          break;
 
@@ -111,10 +125,13 @@ static void GPUMeter_display(const Object* cast, RichString* out) {
       else
          written = xSnprintf(buffer, sizeof(buffer), " N/A");
       RichString_appendnAscii(out, CRT_colors[METER_VALUE], buffer, written);
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], "%(");
-      written = humanTimeUnit(buffer, sizeof(buffer), GPUMeter_engineData[i].timeDiff);
-      RichString_appendnAscii(out, CRT_colors[METER_VALUE], buffer, written);
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], ")");
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], "%");
+      if (GPUMeter_engineData[i].timeDiff != -1ULL) {
+         RichString_appendAscii(out, CRT_colors[METER_TEXT], "(");
+         written = humanTimeUnit(buffer, sizeof(buffer), GPUMeter_engineData[i].timeDiff);
+         RichString_appendnAscii(out, CRT_colors[METER_VALUE], buffer, written);
+         RichString_appendAscii(out, CRT_colors[METER_TEXT], ")");
+      }
    }
 }
 
