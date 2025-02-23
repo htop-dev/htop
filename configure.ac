@@ -375,8 +375,6 @@ AC_CHECK_FUNCS([ \
    ])
 
 if test "$my_htop_platform" = darwin; then
-   AC_CHECK_FUNCS([mach_timebase_info])
-
    AC_CHECK_FUNCS([host_statistics64], [
       AC_CHECK_TYPES([struct vm_statistics64], [], [], [[#include <mach/vm_statistics.h>]])
    ], [])

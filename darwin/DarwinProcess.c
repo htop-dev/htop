@@ -378,9 +378,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
 
    uint64_t total_existing_time_ns = proc->stime + proc->utime;
 
-   uint64_t user_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_user);
-   uint64_t system_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_system);
-
+   uint64_t user_time_ns = pti.pti_total_user;
+   uint64_t system_time_ns = pti.pti_total_system;
    uint64_t total_current_time_ns = user_time_ns + system_time_ns;
 
    if (total_existing_time_ns && 1E-6 < timeIntervalNS) {
