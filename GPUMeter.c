@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "linux/GPUMeter.h"
+#include "GPUMeter.h"
 
 #include <math.h>
 
