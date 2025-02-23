@@ -11,14 +11,9 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "RichString.h"
+#include "XUtils.h"
 #include "linux/LinuxMachine.h"
 
-
-static size_t activeMeters;
-
-bool GPUMeter_active(void) {
-   return activeMeters > 0;
-}
 
 struct EngineData {
    const char* key;  /* owned by LinuxMachine */
@@ -37,6 +32,12 @@ static const int GPUMeter_attributes[] = {
    GPU_ENGINE_4,
    GPU_RESIDUE,
 };
+
+static size_t activeMeters;
+
+bool GPUMeter_active(void) {
+   return activeMeters > 0;
+}
 
 static int humanTimeUnit(char* buffer, size_t size, unsigned long long int value) {
 
