@@ -1,0 +1,4 @@
+name=template
+command=echo "`uptime`"
+type=TEXT_METERMODE
+caption="UPTIME"
