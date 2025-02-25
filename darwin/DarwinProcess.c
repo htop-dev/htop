@@ -275,13 +275,6 @@ ERROR_A:
    Process_updateCmdline(proc, k->kp_proc.p_comm, 0, strlen(k->kp_proc.p_comm));
 }
 
-// Converts nanoseconds to hundredths of a second (centiseconds) as needed by the "time" field of the Process struct.
-static long long int nanosecondsToCentiseconds(uint64_t nanoseconds) {
-   const uint64_t centiseconds_per_second = 100;
-   const uint64_t nanoseconds_per_second = 1e9;
-   return nanoseconds / nanoseconds_per_second * centiseconds_per_second;
-}
-
 static char* DarwinProcess_getDevname(dev_t dev) {
    if (dev == NODEV) {
       return NULL;
@@ -377,14 +370,12 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
    const DarwinMachine* dhost = (const DarwinMachine*) proc->super.super.host;
 
    uint64_t total_existing_time_ns = proc->stime + proc->utime;
-
-   uint64_t user_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_user);
-   uint64_t system_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_system);
-
+   uint64_t user_time_ns = pti.pti_total_user;
+   uint64_t system_time_ns = pti.pti_total_system;
    uint64_t total_current_time_ns = user_time_ns + system_time_ns;
 
-   if (total_existing_time_ns && 1E-6 < timeIntervalNS) {
-      uint64_t total_time_diff_ns = total_current_time_ns - total_existing_time_ns;
+   if (total_existing_time_ns < total_current_time_ns) {
+      const uint64_t total_time_diff_ns = total_current_time_ns - total_existing_time_ns;
       proc->super.percent_cpu = ((double)total_time_diff_ns / timeIntervalNS) * 100.0;
    } else {
       proc->super.percent_cpu = 0.0;
@@ -392,7 +383,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
    Process_updateCPUFieldWidths(proc->super.percent_cpu);
 
    proc->super.state = pti.pti_numrunning > 0 ? RUNNING : SLEEPING;
-   proc->super.time = nanosecondsToCentiseconds(total_current_time_ns);
+   proc->super.time = total_current_time_ns / 1e7;
    proc->super.nlwp = pti.pti_threadnum;
    proc->super.m_virt = pti.pti_virtual_size / ONE_K;
    proc->super.m_resident = pti.pti_resident_size / ONE_K;

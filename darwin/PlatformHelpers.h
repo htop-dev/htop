@@ -29,12 +29,8 @@ int Platform_CompareKernelVersion(KernelVersion v);
 // lowerBound <= currentVersion < upperBound
 bool Platform_KernelVersionIsBetween(KernelVersion lowerBound, KernelVersion upperBound);
 
-double Platform_calculateNanosecondsPerMachTick(void);
-
 void Platform_getCPUBrandString(char* cpuBrandString, size_t cpuBrandStringSize);
 
 bool Platform_isRunningTranslated(void);
-
-double Platform_calculateNanosecondsPerMachTick(void);
 
 #endif
