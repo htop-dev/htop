@@ -369,40 +369,43 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable* dpt, double timeIntervalNS) {
    struct proc_taskinfo pti;
 
-   if (sizeof(pti) == proc_pidinfo(Process_getPid(&proc->super), PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-      const DarwinMachine* dhost = (const DarwinMachine*) proc->super.super.host;
-
-      uint64_t total_existing_time_ns = proc->stime + proc->utime;
-
-      uint64_t user_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_user);
-      uint64_t system_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_system);
-
-      uint64_t total_current_time_ns = user_time_ns + system_time_ns;
-
-      if (total_existing_time_ns && 1E-6 < timeIntervalNS) {
-         uint64_t total_time_diff_ns = total_current_time_ns - total_existing_time_ns;
-         proc->super.percent_cpu = ((double)total_time_diff_ns / timeIntervalNS) * 100.0;
-      } else {
-         proc->super.percent_cpu = 0.0;
-      }
-      Process_updateCPUFieldWidths(proc->super.percent_cpu);
-
-      proc->super.time = nanosecondsToCentiseconds(total_current_time_ns);
-      proc->super.nlwp = pti.pti_threadnum;
-      proc->super.m_virt = pti.pti_virtual_size / ONE_K;
-      proc->super.m_resident = pti.pti_resident_size / ONE_K;
-      proc->super.majflt = pti.pti_faults;
-      proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
-                              / (double)dhost->host_info.max_mem;
-
-      proc->stime = system_time_ns;
-      proc->utime = user_time_ns;
-
-      dpt->super.kernelThreads += 0; /*pti.pti_threads_system;*/
-      dpt->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
-      dpt->super.totalTasks += pti.pti_threadnum;
-      dpt->super.runningTasks += pti.pti_numrunning;
+   if (PROC_PIDTASKINFO_SIZE != proc_pidinfo(Process_getPid(&proc->super), PROC_PIDTASKINFO, 0, &pti, PROC_PIDTASKINFO_SIZE)) {
+      proc->taskAccess = false;
+      return;
    }
+
+   const DarwinMachine* dhost = (const DarwinMachine*) proc->super.super.host;
+
+   uint64_t total_existing_time_ns = proc->stime + proc->utime;
+
+   uint64_t user_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_user);
+   uint64_t system_time_ns = Platform_machTicksToNanoseconds(pti.pti_total_system);
+
+   uint64_t total_current_time_ns = user_time_ns + system_time_ns;
+
+   if (total_existing_time_ns && 1E-6 < timeIntervalNS) {
+      uint64_t total_time_diff_ns = total_current_time_ns - total_existing_time_ns;
+      proc->super.percent_cpu = ((double)total_time_diff_ns / timeIntervalNS) * 100.0;
+   } else {
+      proc->super.percent_cpu = 0.0;
+   }
+   Process_updateCPUFieldWidths(proc->super.percent_cpu);
+
+   proc->super.state = pti.pti_numrunning > 0 ? RUNNING : SLEEPING;
+   proc->super.time = nanosecondsToCentiseconds(total_current_time_ns);
+   proc->super.nlwp = pti.pti_threadnum;
+   proc->super.m_virt = pti.pti_virtual_size / ONE_K;
+   proc->super.m_resident = pti.pti_resident_size / ONE_K;
+   proc->super.majflt = pti.pti_faults;
+   proc->super.percent_mem = (double)pti.pti_resident_size * 100.0 / (double)dhost->host_info.max_mem;
+
+   proc->stime = system_time_ns;
+   proc->utime = user_time_ns;
+
+   dpt->super.kernelThreads += 0; /*pti.pti_threads_system;*/
+   dpt->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
+   dpt->super.totalTasks += pti.pti_threadnum;
+   dpt->super.runningTasks += pti.pti_numrunning;
 }
 
 /*
@@ -432,18 +435,6 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
          CRT_debug("task_for_pid(%d) failed: %s", pid, mach_error_string(ret));
       dp->taskAccess = false;
       return;
-   }
-
-   {
-      task_info_data_t tinfo;
-      mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
-      ret = task_info(task, TASK_BASIC_INFO, (task_info_t) &tinfo, &task_info_count);
-      if (ret != KERN_SUCCESS) {
-         CRT_debug("task_info(%d) failed: %s", pid, mach_error_string(ret));
-         dp->taskAccess = false;
-         mach_port_deallocate(mach_task_self(), task);
-         return;
-      }
    }
 
    thread_array_t thread_list;
