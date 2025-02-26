@@ -383,7 +383,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
    Process_updateCPUFieldWidths(proc->super.percent_cpu);
 
    proc->super.state = pti.pti_numrunning > 0 ? RUNNING : SLEEPING;
-   proc->super.time = total_current_time_ns / 1e7;
+   // Convert from nanoseconds to hundredths of seconds
+   proc->super.time = total_current_time_ns / 10000000ULL;
    proc->super.nlwp = pti.pti_threadnum;
    proc->super.m_virt = pti.pti_virtual_size / ONE_K;
    proc->super.m_resident = pti.pti_resident_size / ONE_K;
