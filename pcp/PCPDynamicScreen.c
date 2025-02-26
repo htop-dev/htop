@@ -399,7 +399,7 @@ void PCPDynamicScreens_addAvailableColumns(Panel* availableColumns, Hashtable* s
       return;
 
    PCPDynamicScreen* dynamicScreen = Hashtable_get(screens, key);
-   if (!screen)
+   if (!dynamicScreen)
       return;
 
    for (unsigned int j = 0; j < dynamicScreen->totalColumns; j++) {
