@@ -79,6 +79,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
          break;
       case KEY_F(9):
       case KEY_DC:
+      case MAC_DEL_KEY:
          if (size > 1 && selected < size)
             Panel_remove(super, selected);
          result = HANDLED;

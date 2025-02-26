@@ -152,6 +152,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          break;
       case KEY_F(9):
       case KEY_DC:
+      case MAC_DEL_KEY:
          if (!Vector_size(this->meters))
             break;
          if (selected < Vector_size(this->meters)) {
