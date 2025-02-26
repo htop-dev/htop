@@ -175,6 +175,7 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 #define KEY_ALT(x)    (KEY_F(64 - 26) + ((x) - 'A'))
 #define KEY_FOCUS_IN  (KEY_MAX + 'I')
 #define KEY_FOCUS_OUT (KEY_MAX + 'O')
+#define KEY_DEL_MAC   127
 
 extern const char* CRT_degreeSign;
 
