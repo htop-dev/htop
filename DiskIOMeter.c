@@ -137,7 +137,7 @@ static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out)
 
    int color = cached_utilisation_diff > 40.0 ? METER_VALUE_NOTICE : METER_VALUE;
    int len = xSnprintf(buffer, sizeof(buffer), "%.1f%%", cached_utilisation_diff);
-   RichString_appendnAscii(out, CRT_colors[color], buffer, len);
+   RichString_appendnAscii(out, CRT_colors[color], buffer, (unsigned int)len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " read: ");
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_read_diff_str);
