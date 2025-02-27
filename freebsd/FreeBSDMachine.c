@@ -387,6 +387,7 @@ void Machine_scan(Machine* super) {
    openzfs_sysctl_updateArcStats(&this->zfs);
    FreeBSDMachine_scanMemoryInfo(super);
    FreeBSDMachine_scanCPU(super);
+   Machine_scanGPUUsage(super);
 }
 
 bool Machine_isCPUonline(const Machine* host, unsigned int id) {
@@ -396,4 +397,9 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
    (void) host; (void) id;
 
    return true;
+}
+
+void Machine_scanGPUUsage(Machine* super) {
+   /* Not supported yet */
+   super->totalGPUUsage = -1.0;
 }
