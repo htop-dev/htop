@@ -842,11 +842,51 @@ static void CRT_handleSIGTERM(int sgn) {
    if (!signal_str)
       signal_str = "unknown reason";
 
-   char err_buf[512];
-   snprintf(err_buf, sizeof(err_buf),
-           "A signal %d (%s) was received, exiting without persisting settings to htoprc.\n",
-           sgn, signal_str);
+   // snprintf(3) is not async signal safe.
+   char err_buf[80] = "Receives signal ";
+   size_t offset = strlen(err_buf);
+   do {
+      size_t spaces_left = sizeof(err_buf) - offset - 2;
+
+      size_t token_size = countDigits(sgn, 10);
+      if (spaces_left < token_size)
+         break;
+      spaces_left -= token_size;
+
+      for (; token_size > 0; token_size--) {
+         err_buf[offset + token_size - 1] = (sgn % 10) + '0';
+         sgn /= 10;
+      }
+      offset += token_size;
+
+      token_size = 1;
+      if (spaces_left < token_size)
+         break;
+      spaces_left -= token_size;
+
+      err_buf[offset] = '(';
+      offset += token_size;
+
+      token_size = strlen(signal_str);
+      token_size = MINIMUM(token_size, spaces_left);
+      spaces_left -= token_size;
+
+      memcpy(&err_buf[offset], signal_str, token_size);
+      offset += token_size;
+
+      token_size = 1;
+      if (spaces_left < token_size)
+         break;
+      spaces_left -= token_size;
+
+      err_buf[offset] = ')';
+      offset += token_size;
+   } while (0);
+   err_buf[offset] = '\n';
+   err_buf[offset + 1] = '\0';
+
    full_write_str(STDERR_FILENO, err_buf);
+   full_write_str(STDERR_FILENO, "Exiting without persisting settings to htoprc.\n");
    _exit(0);
 }
 
