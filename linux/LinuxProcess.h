@@ -31,6 +31,13 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_AUTOGROUP 0x00080000
 #define PROCESS_FLAG_LINUX_GPU       0x00100000
 #define PROCESS_FLAG_LINUX_CONTAINER 0x00200000
+#define PROCESS_FLAG_LINUX_SYSCALL   0x00400000
+
+typedef enum SyscallState_ {
+   SYSCALL_STATE_RUNNING,
+   SYSCALL_STATE_CALLING,
+   SYSCALL_STATE_NA,
+} SyscallState;
 
 typedef struct LinuxProcess_ {
    Process super;
@@ -118,6 +125,11 @@ typedef struct LinuxProcess_ {
    /* Autogroup scheduling (CFS) information */
    long int autogroup_id;
    int autogroup_nice;
+
+#ifdef HAVE_SYSCALL
+   SyscallState syscall_state;
+   int syscall_num;
+#endif
 } LinuxProcess;
 
 extern int pageSize;
