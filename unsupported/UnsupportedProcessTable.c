@@ -23,7 +23,7 @@ ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
    ProcessTable* super = &this->super;
    ProcessTable_init(super, Class(Process), host, pidMatchList);
 
-   return this;
+   return super;
 }
 
 void ProcessTable_delete(Object* cast) {
@@ -48,7 +48,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
    Process_updateCmdline(proc, "<unsupported architecture>", 0, 0);
    Process_updateExe(proc, "/path/to/executable");
 
-   const Settings* settings = proc->host->settings;
+   const Settings* settings = super->super.host->settings;
    if (settings->ss->flags & PROCESS_FLAG_CWD) {
       free_and_xStrdup(&proc->procCwd, "/current/working/directory");
    }

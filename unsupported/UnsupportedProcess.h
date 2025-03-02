@@ -8,6 +8,7 @@ in the source distribution for its full text.
 */
 
 #include "Machine.h"
+#include "Process.h"
 
 
 typedef struct UnsupportedProcess_ {
