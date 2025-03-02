@@ -110,6 +110,7 @@ const MeterClass FileDescriptorMeter_class = {
    .defaultMode = TEXT_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 2,
+   .isPercentChart = false,
    .total = 65536.0,
    .attributes = FileDescriptorMeter_attributes,
    .name = "FileDescriptors",
