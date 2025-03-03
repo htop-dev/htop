@@ -124,6 +124,20 @@ jobs:
     - name: Build
       run: make -k
 
+  build-unsupported-latest-gcc:
+    # build as if we were on an unsupported platform
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Dependencies
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --host=`uname -m`-none --enable-werror --enable-unicode || ( cat config.log; exit 1; )
+    - name: Build
+      run: make -k
+
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
     env:
