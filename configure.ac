@@ -1137,7 +1137,7 @@ fi
 AC_MSG_RESULT([
   ${PACKAGE_NAME} ${VERSION}
 
-  platform:                  $my_htop_platform
+  platform:                  $my_htop_platform ($host_os)
   os-release file:           $with_os_release
   (Linux) proc directory:    $with_proc
   (Linux) openvz:            $enable_openvz
