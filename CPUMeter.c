@@ -222,7 +222,7 @@ static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
          break;
       case 'R': // Second Half
          *start = (cpus + 1) / 2;
-         *count = cpus / 2;
+         *count = cpus - *start;
          break;
    }
 }
