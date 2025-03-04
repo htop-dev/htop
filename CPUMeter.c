@@ -208,8 +208,7 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
 }
 
 static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
-   const CPUMeterData* data = this->meterData;
-   unsigned int cpus = data->cpus;
+   unsigned int cpus = this->host->existingCPUs;
    switch (Meter_name(this)[0]) {
       default:
       case 'A': // All
@@ -237,16 +236,17 @@ static void AllCPUsMeter_updateValues(Meter* this) {
 }
 
 static void CPUMeterCommonInit(Meter* this) {
-   unsigned int cpus = this->host->existingCPUs;
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+
    CPUMeterData* data = this->meterData;
    if (!data) {
       data = this->meterData = xMalloc(sizeof(CPUMeterData));
-      data->cpus = cpus;
-      data->meters = xCalloc(cpus, sizeof(Meter*));
+      data->cpus = this->host->existingCPUs;
+      data->meters = count ? xCalloc(count, sizeof(Meter*)) : NULL;
    }
+
    Meter** meters = data->meters;
-   int start, count;
-   AllCPUsMeter_getRange(this, &start, &count);
    for (int i = 0; i < count; i++) {
       if (!meters[i])
          meters[i] = Meter_new(this->host, start + i + 1, (const MeterClass*) Class(CPUMeter));
