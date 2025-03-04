@@ -261,6 +261,10 @@ static void CPUMeterCommonUpdateMode(Meter* this, MeterModeId mode, int ncol) {
    this->mode = mode;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
+   if (!count) {
+      this->h = 1;
+      return;
+   }
    for (int i = 0; i < count; i++) {
       Meter_setMode(meters[i], mode);
    }
