@@ -52,6 +52,7 @@ What's new in version 3.4.0
 * Allow to show or hide cache and buffers in memory usage meter
 * Visibility hint and UX improvements in status bar of display options panel
 * Remove IOKit / IOMainPort / IOMMasterPort logic for Darwin builds
+* Replace BCC with metrics from BPF for pcp-htop
 
 What's new in version 3.3.0
 
