@@ -196,7 +196,6 @@ or
 namespace (\c
 .BR pmdaproc (1)),
 but metrics from other domains (\c
-.BR pmdabcc (1),
 .BR pmdabpf (1),
 etc) that have per-process values are equally applicable.
 .TP
@@ -223,7 +222,6 @@ the Available Columns list.
 .BR pminfo (1),
 .BR pmcd (1),
 .BR pmdaproc (1),
-.BR pmdabcc (1),
 .BR pmdabpf (1)
 and
 .BR pmRegisterDerived (3).
