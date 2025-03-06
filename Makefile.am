@@ -53,6 +53,7 @@ myhtopsources = \
 	EnvScreen.c \
 	FileDescriptorMeter.c \
 	FunctionBar.c \
+	GPUMeter.c \
 	Hashtable.c \
 	Header.c \
 	HeaderOptionsPanel.c \
@@ -119,6 +120,7 @@ myhtopheaders = \
 	EnvScreen.h \
 	FileDescriptorMeter.h \
 	FunctionBar.h \
+	GPUMeter.h \
 	Hashtable.h \
 	Header.h \
 	HeaderLayout.h \
@@ -174,7 +176,6 @@ linux_platform_headers = \
 	generic/uname.h \
 	linux/CGroupUtils.h \
 	linux/GPU.h \
-	linux/GPUMeter.h \
 	linux/HugePageMeter.h \
 	linux/IOPriority.h \
 	linux/IOPriorityPanel.h \
@@ -200,7 +201,6 @@ linux_platform_sources = \
 	generic/uname.c \
 	linux/CGroupUtils.c \
 	linux/GPU.c \
-	linux/GPUMeter.c \
 	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \
 	linux/LibSensors.c \

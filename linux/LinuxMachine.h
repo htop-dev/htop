@@ -89,6 +89,7 @@ typedef struct LinuxMachine_ {
    memory_t availableMem;
 
    unsigned long long int prevGpuTime, curGpuTime;  /* total absolute GPU time in nano seconds */
+   unsigned long long int prevResidueTime, curResidueTime;
    GPUEngineData* gpuEngineData;
 
    ZfsArcStats zfs;
