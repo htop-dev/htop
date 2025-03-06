@@ -158,7 +158,7 @@ static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* o
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 
    int len = xSnprintf(buffer, sizeof(buffer), " (%u/%u pkts/s) ", cached_rxp_diff, cached_txp_diff);
-   RichString_appendnAscii(out, CRT_colors[METER_TEXT], buffer, len);
+   RichString_appendnAscii(out, CRT_colors[METER_TEXT], buffer, (unsigned int)len);
 }
 
 const MeterClass NetworkIOMeter_class = {
