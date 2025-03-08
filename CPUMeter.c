@@ -352,6 +352,7 @@ const MeterClass CPUMeter_class = {
    .defaultMode = BAR_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = CPU_METER_ITEMCOUNT,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = CPUMeter_attributes,
    .name = "CPU",
