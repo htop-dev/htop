@@ -107,7 +107,7 @@ typedef struct MeterClass_ {
 typedef struct GraphData_ {
    struct timeval time;
    size_t nValues;
-   double* values;
+   void* buffer;
 } GraphData;
 
 struct Meter_ {
