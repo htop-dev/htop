@@ -107,7 +107,9 @@ void Machine_scanTables(Machine* this) {
       this->monotonicMs = 1;
       firstScanDone = true;
    }
-   assert(this->monotonicMs > this->prevMonotonicMs);
+   if (this->monotonicMs <= this->prevMonotonicMs) {
+      return;
+   }
 
    this->maxUserId = 0;
    Row_resetFieldWidths();
