@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #include <limits.h>
 #include <pwd.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
