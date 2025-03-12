@@ -78,17 +78,17 @@ static int load_libnl(void) {
    if (libnlHandle && libnlGenlHandle)
       return 0;
 
-   libnlHandle = dlopen("libnl-3.so", RTLD_LAZY);
+   libnlHandle = dlopen(LIBDIR_LIBNL "/libnl-3.so", RTLD_LAZY);
    if (!libnlHandle) {
-      libnlHandle = dlopen("libnl-3.so.200", RTLD_LAZY);
+      libnlHandle = dlopen(LIBDIR_LIBNL "/libnl-3.so.200", RTLD_LAZY);
       if (!libnlHandle) {
          goto dlfailure;
       }
    }
 
-   libnlGenlHandle = dlopen("libnl-genl-3.so", RTLD_LAZY);
+   libnlGenlHandle = dlopen(LIBDIR_LIBNL "/libnl-genl-3.so", RTLD_LAZY);
    if (!libnlGenlHandle) {
-      libnlGenlHandle = dlopen("libnl-genl-3.so.200", RTLD_LAZY);
+      libnlGenlHandle = dlopen(LIBDIR_LIBNL "/libnl-genl-3.so.200", RTLD_LAZY);
       if (!libnlGenlHandle) {
          goto dlfailure;
       }
