@@ -126,7 +126,7 @@ jobs:
 
   build-unsupported-latest-gcc:
     # build as if we were on an unsupported platform
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Install Dependencies
