@@ -7,7 +7,7 @@
 
 m4_define([htop_git_version],
   m4_normalize(m4_esyscmd([git describe --abbrev=7 --dirty --always --tags 2> /dev/null || echo ''])))
-m4_define([htop_release_version], [3.4.0-dev])
+m4_define([htop_release_version], [3.4.1-dev])
 
 # ----------------------------------------------------------------------
 # Autoconf initialization.
