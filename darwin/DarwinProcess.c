@@ -440,6 +440,7 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
    }
 
    const bool hideUserlandThreads = dpt->super.super.host->settings->hideUserlandThreads;
+   bool isProcessStuck = false;
 
    for (mach_msg_type_number_t i = 0; i < thread_count; i++) {
 
@@ -490,12 +491,21 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
       tdproc->super.time        = (extended_info.pth_system_time + extended_info.pth_user_time) / 10000000;
       tdproc->super.priority    = extended_info.pth_curpri;
 
+      if (extended_info.pth_run_state == TH_STATE_UNINTERRUPTIBLE) {
+         isProcessStuck |= true;
+         tdproc->super.state = UNINTERRUPTIBLE_WAIT;
+      }
+
       // TODO: depend on setting
       const char* name = extended_info.pth_name[0] != '\0' ? extended_info.pth_name : proc->procComm;
       Process_updateCmdline(tprocess, name, 0, strlen(name));
 
       if (!preExisting)
          ProcessTable_add(&dpt->super, tprocess);
+   }
+
+   if (isProcessStuck) {
+      dp->super.state = UNINTERRUPTIBLE_WAIT;
    }
 
    vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
