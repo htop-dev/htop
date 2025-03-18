@@ -14,6 +14,9 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 
+#define SCREEN_TAB_MARGIN_LEFT 2
+#define SCREEN_TAB_COLUMN_GAP  1
+
 typedef enum TreeStr_ {
    TREE_STR_VERT,
    TREE_STR_RTEE,

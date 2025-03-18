@@ -175,7 +175,7 @@ static inline bool drawTab(const int* y, int* x, int l, const char* name, bool c
       return false;
    attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
    mvaddch(*y, *x, ']');
-   *x += 2;
+   *x += 1 + SCREEN_TAB_COLUMN_GAP;
    if (*x >= l)
       return false;
    return true;
@@ -188,7 +188,7 @@ static void ScreenManager_drawScreenTabs(ScreenManager* this) {
    int l = COLS;
    Panel* panel = (Panel*) Vector_get(this->panels, 0);
    int y = panel->y - 1;
-   int x = 2;
+   int x = SCREEN_TAB_MARGIN_LEFT;
 
    if (this->name) {
       drawTab(&y, &x, l, this->name, true);
