@@ -128,12 +128,11 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
          blockSizes[i] = ceil((value / this->total) * w);
+         blockSizes[i] = MINIMUM(blockSizes[i], MINIMUM(INT_MAX - x, w) - offset);
       } else {
          blockSizes[i] = 0;
       }
       int nextOffset = offset + blockSizes[i];
-      // (Control against invalid values)
-      nextOffset = CLAMP(nextOffset, 0, w);
       for (int j = offset; j < nextOffset; j++)
          if (RichString_getCharVal(bar, startPos + (unsigned int)j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
@@ -151,9 +150,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    for (uint8_t i = 0; i < this->curItems; i++) {
       int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
       RichString_setAttrn(&bar, CRT_colors[attr], startPos + (unsigned int)offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + offset, startPos + (unsigned int)offset, MINIMUM(blockSizes[i], w - offset));
+      RichString_printoffnVal(bar, y, x + offset, startPos + (unsigned int)offset, blockSizes[i]);
       offset += blockSizes[i];
-      offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
       RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + (unsigned int)offset, (unsigned int)(w - offset));
