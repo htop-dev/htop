@@ -176,12 +176,12 @@ const char* RowField_alignedTitle(const Settings* settings, RowField field) {
    return alignedTitleDynamicColumn(settings, field, titleBuffer, sizeof(titleBuffer));
 }
 
-RowField RowField_keyAt(const Settings* settings, int at) {
+RowField RowField_keyAt(const Settings* settings, size_t at) {
    const RowField* fields = (const RowField*) settings->ss->fields;
    RowField field;
-   int x = 0;
+   size_t x = 0;
    for (int i = 0; (field = fields[i]); i++) {
-      int len = strlen(RowField_alignedTitle(settings, field));
+      size_t len = strlen(RowField_alignedTitle(settings, field));
       if (at >= x && at <= x + len) {
          return field;
       }
@@ -215,16 +215,16 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
    if (number < 1000) {
       // Plain number, no markings
       len = xSnprintf(buffer, sizeof(buffer), "%5u ", (unsigned int)number);
-      RichString_appendnAscii(str, color, buffer, len);
+      RichString_appendnAscii(str, color, buffer, (unsigned int)len);
       return;
    }
 
    if (number < 100000) {
       // 2 digits for M, 3 digits for K
       len = xSnprintf(buffer, sizeof(buffer), "%2u", (unsigned int)(number / 1000));
-      RichString_appendnAscii(str, nextUnitColor, buffer, len);
+      RichString_appendnAscii(str, nextUnitColor, buffer, (unsigned int)len);
       len = xSnprintf(buffer, sizeof(buffer), "%03u ", (unsigned int)(number % 1000));
-      RichString_appendnAscii(str, color, buffer, len);
+      RichString_appendnAscii(str, color, buffer, (unsigned int)len);
       return;
    }
 
@@ -260,16 +260,16 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
          // 1 digit + decimal point + 2 digits
          // "9.76G", "9.99G", "9.76T", "9.99T", etc.
          len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number);
-         RichString_appendnAscii(str, color, buffer, len);
+         RichString_appendnAscii(str, color, buffer, (unsigned int)len);
          len = xSnprintf(buffer, sizeof(buffer), ".%02u", (unsigned int)hundredths);
       } else {
          // 2 digits + decimal point + 1 digit
          // "97.6M", "99.9M", "10.0G", "99.9G", etc.
          len = xSnprintf(buffer, sizeof(buffer), "%2u", (unsigned int)number);
-         RichString_appendnAscii(str, color, buffer, len);
+         RichString_appendnAscii(str, color, buffer, (unsigned int)len);
          len = xSnprintf(buffer, sizeof(buffer), ".%1u", (unsigned int)hundredths / 10);
       }
-      RichString_appendnAscii(str, prevUnitColor, buffer, len);
+      RichString_appendnAscii(str, prevUnitColor, buffer, (unsigned int)len);
       len = xSnprintf(buffer, sizeof(buffer), "%c ", unitPrefixes[i]);
    } else if (number < 1000) {
       // 3 digits
@@ -281,10 +281,10 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
       assert(number < 10000);
 
       len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number / 1000);
-      RichString_appendnAscii(str, nextUnitColor, buffer, len);
+      RichString_appendnAscii(str, nextUnitColor, buffer, (unsigned int)len);
       len = xSnprintf(buffer, sizeof(buffer), "%03u%c ", (unsigned int)number % 1000, unitPrefixes[i]);
    }
-   RichString_appendnAscii(str, color, buffer, len);
+   RichString_appendnAscii(str, color, buffer, (unsigned int)len);
    return;
 
 invalidNumber:
@@ -357,14 +357,14 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    if (totalMinutes < 60) {
       unsigned int hundredths = totalHundredths % 100;
       len = xSnprintf(buffer, sizeof(buffer), "%2u:%02u.%02u ", (unsigned int)totalMinutes, seconds, hundredths);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
       return;
    }
    if (totalHours < 24) {
       len = xSnprintf(buffer, sizeof(buffer), "%2uh", (unsigned int)totalHours);
-      RichString_appendnAscii(str, hourColor, buffer, len);
+      RichString_appendnAscii(str, hourColor, buffer, (unsigned int)len);
       len = xSnprintf(buffer, sizeof(buffer), "%02u:%02u ", minutes, seconds);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
       return;
    }
 
@@ -372,18 +372,18 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    unsigned int hours = totalHours % 24;
    if (totalDays < 10) {
       len = xSnprintf(buffer, sizeof(buffer), "%1ud", (unsigned int)totalDays);
-      RichString_appendnAscii(str, dayColor, buffer, len);
+      RichString_appendnAscii(str, dayColor, buffer, (unsigned int)len);
       len = xSnprintf(buffer, sizeof(buffer), "%02uh", hours);
-      RichString_appendnAscii(str, hourColor, buffer, len);
+      RichString_appendnAscii(str, hourColor, buffer, (unsigned int)len);
       len = xSnprintf(buffer, sizeof(buffer), "%02um ", minutes);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
       return;
    }
    if (totalDays < /* Ignore leap years */365) {
       len = xSnprintf(buffer, sizeof(buffer), "%4ud", (unsigned int)totalDays);
-      RichString_appendnAscii(str, dayColor, buffer, len);
+      RichString_appendnAscii(str, dayColor, buffer, (unsigned int)len);
       len = xSnprintf(buffer, sizeof(buffer), "%02uh ", hours);
-      RichString_appendnAscii(str, hourColor, buffer, len);
+      RichString_appendnAscii(str, hourColor, buffer, (unsigned int)len);
       return;
    }
 
@@ -391,12 +391,12 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    unsigned int days = totalDays % 365;
    if (years < 1000) {
       len = xSnprintf(buffer, sizeof(buffer), "%3uy", (unsigned int)years);
-      RichString_appendnAscii(str, yearColor, buffer, len);
+      RichString_appendnAscii(str, yearColor, buffer, (unsigned int)len);
       len = xSnprintf(buffer, sizeof(buffer), "%03ud ", days);
-      RichString_appendnAscii(str, dayColor, buffer, len);
+      RichString_appendnAscii(str, dayColor, buffer, (unsigned int)len);
    } else if (years < 10000000) {
       len = xSnprintf(buffer, sizeof(buffer), "%7luy ", (unsigned long)years);
-      RichString_appendnAscii(str, yearColor, buffer, len);
+      RichString_appendnAscii(str, yearColor, buffer, (unsigned int)len);
    } else {
       RichString_appendAscii(str, yearColor, "eternity ");
    }
@@ -416,14 +416,14 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
 
    if (totalNanoseconds < 1000000) {
       len = xSnprintf(buffer, sizeof(buffer), "%6luns ", (unsigned long)totalNanoseconds);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
       return;
    }
 
    unsigned long long totalMicroseconds = totalNanoseconds / 1000;
    if (totalMicroseconds < 1000000) {
       len = xSnprintf(buffer, sizeof(buffer), ".%06lus ", (unsigned long)totalMicroseconds);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
       return;
    }
 
@@ -437,7 +437,7 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
          fraction /= 10;
       }
       len = xSnprintf(buffer, sizeof(buffer), "%u.%0*lus ", (unsigned int)totalSeconds, width, fraction);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
       return;
    }
 
@@ -446,7 +446,7 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
       unsigned int seconds = totalSeconds % 60;
       unsigned int milliseconds = microseconds / 1000;
       len = xSnprintf(buffer, sizeof(buffer), "%u:%02u.%03u ", minutes, seconds, milliseconds);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
       return;
    }
 
@@ -471,32 +471,33 @@ void Row_printRate(RichString* str, double rate, bool coloring) {
       RichString_appendAscii(str, shadowColor, "        N/A ");
    } else if (rate < 0.005) {
       int len = snprintf(buffer, sizeof(buffer), "%7.2f B/s ", rate);
-      RichString_appendnAscii(str, shadowColor, buffer, len);
+      RichString_appendnAscii(str, shadowColor, buffer, (unsigned int)len);
    } else if (rate < ONE_K) {
       int len = snprintf(buffer, sizeof(buffer), "%7.2f B/s ", rate);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
    } else if (rate < ONE_M) {
       int len = snprintf(buffer, sizeof(buffer), "%7.2f K/s ", rate / ONE_K);
-      RichString_appendnAscii(str, baseColor, buffer, len);
+      RichString_appendnAscii(str, baseColor, buffer, (unsigned int)len);
    } else if (rate < ONE_G) {
       int len = snprintf(buffer, sizeof(buffer), "%7.2f M/s ", rate / ONE_M);
-      RichString_appendnAscii(str, megabytesColor, buffer, len);
+      RichString_appendnAscii(str, megabytesColor, buffer, (unsigned int)len);
    } else if (rate < ONE_T) {
       int len = snprintf(buffer, sizeof(buffer), "%7.2f G/s ", rate / ONE_G);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
+      RichString_appendnAscii(str, largeNumberColor, buffer, (unsigned int)len);
    } else if (rate < ONE_P) {
       int len = snprintf(buffer, sizeof(buffer), "%7.2f T/s ", rate / ONE_T);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
+      RichString_appendnAscii(str, largeNumberColor, buffer, (unsigned int)len);
    } else {
       int len = snprintf(buffer, sizeof(buffer), "%7.2f P/s ", rate / ONE_P);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
+      RichString_appendnAscii(str, largeNumberColor, buffer, (unsigned int)len);
    }
 }
 
 void Row_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width) {
-   int columns = width;
+   assert(width <= INT_MAX);
+   int columns = (int)width;
    RichString_appendnWideColumns(str, attr, content, strlen(content), &columns);
-   RichString_appendChr(str, attr, ' ', width + 1 - columns);
+   RichString_appendChr(str, attr, ' ', width - (unsigned int)columns + 1);
 }
 
 int Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr) {

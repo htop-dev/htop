@@ -89,14 +89,14 @@ static void FileDescriptorMeter_display(const Object* cast, RichString* out) {
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], "used: ");
    len = xSnprintf(buffer, sizeof(buffer), "%.0lf", this->values[0]);
-   RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_USED], buffer, len);
+   RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_USED], buffer, (unsigned int)len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " max: ");
    if (FD_EFFECTIVE_UNLIMITED(this->values[1])) {
       RichString_appendAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], "unlimited");
    } else {
       len = xSnprintf(buffer, sizeof(buffer), "%.0lf", this->values[1]);
-      RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], buffer, len);
+      RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], buffer, (unsigned int)len);
    }
 }
 
