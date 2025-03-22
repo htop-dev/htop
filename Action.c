@@ -408,13 +408,14 @@ Htop_Reaction Action_setScreenTab(State* st, int x) {
          return 0;
       }
       const char* tab = settings->screens[i]->heading;
-      int len = strlen(tab);
-      if (x < s + len + 2) {
+      const char* ptr = tab;
+      int width = String_mbswidth(&ptr, SIZE_MAX, INT_MAX);
+      if (x < s + width + 2) {
          settings->ssIndex = i;
          setActiveScreen(settings, st, i);
          return HTOP_UPDATE_PANELHDR | HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
-      s += len + 2 + SCREEN_TAB_COLUMN_GAP;
+      s += width + 2 + SCREEN_TAB_COLUMN_GAP;
    }
    return 0;
 }
