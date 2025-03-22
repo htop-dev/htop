@@ -41,7 +41,10 @@ typedef struct MeterMode_ {
 static void Meter_drawCaptionFixedWidth(const Meter* this, int x, int y, int w) {
    attrset(CRT_colors[METER_TEXT]);
    const char* caption = Meter_getCaption(this);
-   mvaddnstr(y, x, caption, w);
+   const char* ptr = caption;
+   int nCols = String_mbswidth(&ptr, 256, w);
+   int len = (int)(ptr - caption);
+   mvprintw(y, x, "%-*.*s", len + w - nCols, len, caption);
 }
 
 static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
