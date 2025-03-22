@@ -36,8 +36,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: install clang repo
       run: |
+        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
+        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-18 main" -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends clang-18 libncursesw5-dev
@@ -77,8 +78,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: install clang repo
       run: |
+        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
+        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-18 main" -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends clang-18 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
@@ -126,7 +128,7 @@ jobs:
 
   build-unsupported-latest-gcc:
     # build as if we were on an unsupported platform
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Install Dependencies
@@ -146,8 +148,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: install clang repo
       run: |
+        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
+        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-18 main" -y
         sudo apt-get update -q
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends clang-18 clang-tools-18 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
@@ -172,8 +175,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: install clang repo
       run: |
+        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main' -y
+        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-18 main" -y
         sudo apt-get update -q
     - name: Install LLVM Toolchain
       run: sudo apt-get install --no-install-recommends clang-18 libclang-rt-18-dev llvm-18
