@@ -38,6 +38,12 @@ typedef struct MeterMode_ {
 
 /* Meter drawing modes */
 
+static void Meter_drawCaptionFixedWidth(const Meter* this, int x, int y, int w) {
+   attrset(CRT_colors[METER_TEXT]);
+   const char* caption = Meter_getCaption(this);
+   mvaddnstr(y, x, caption, w);
+}
+
 static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
    if (Object_displayFn(this)) {
       Object_display(this, out);
@@ -72,12 +78,10 @@ static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // Draw the caption
-   const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   int captionLen = 3;
-   mvaddnstr(y, x, caption, captionLen);
-   x += captionLen;
-   w -= captionLen;
+   const int captionWidth = 3;
+   Meter_drawCaptionFixedWidth(this, x, y, captionWidth);
+   x += captionWidth;
+   w -= captionWidth;
 
    // Draw the bar borders
    attrset(CRT_colors[BAR_BORDER]);
@@ -191,12 +195,10 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    // Draw the caption
-   const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   const int captionLen = 3;
-   mvaddnstr(y, x, caption, captionLen);
-   x += captionLen;
-   w -= captionLen;
+   const int captionWidth = 3;
+   Meter_drawCaptionFixedWidth(this, x, y, captionWidth);
+   x += captionWidth;
+   w -= captionWidth;
 
    GraphData* data = &this->drawData;
 
