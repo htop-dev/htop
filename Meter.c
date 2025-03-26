@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 
 #include <assert.h>
+#include <float.h>
 #include <limits.h> // IWYU pragma: keep
 #include <math.h>
 #include <stdlib.h>
@@ -45,6 +46,14 @@ static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
    } else {
       RichString_writeWide(out, CRT_colors[Meter_attributes(this)[0]], this->txtBuffer);
    }
+}
+
+static double Meter_computeSum(const Meter* this) {
+   assert(this->curItems > 0);
+   assert(this->values);
+   double sum = sumPositiveValues(this->values, this->curItems);
+   // Prevent rounding to infinity in IEEE 754
+   return MINIMUM(DBL_MAX, sum);
 }
 
 /* ---------- TextMeterMode ---------- */
@@ -98,6 +107,12 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       w--;
       mvaddch(y, x + w, ']');
       w--;
+   }
+
+   // Update the "total" if necessary
+   if (!Meter_isPercentChart(this) && this->curItems > 0) {
+      double sum = Meter_computeSum(this);
+      this->total = MAXIMUM(sum, this->total);
    }
 
    if (w < 1) {
