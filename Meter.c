@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 
 #include <assert.h>
+#include <limits.h> // IWYU pragma: keep
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,16 +50,22 @@ static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
 /* ---------- TextMeterMode ---------- */
 
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - MAXIMUM(0, x));
+
    const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   mvaddnstr(y, x, caption, w);
+   if (w >= 1) {
+      attrset(CRT_colors[METER_TEXT]);
+      mvaddnstr(y, x, caption, w);
+   }
    attrset(CRT_colors[RESET_COLOR]);
 
    int captionLen = strlen(caption);
-   x += captionLen;
    w -= captionLen;
-   if (w <= 0)
+   if (w < 1) {
       return;
+   }
+   x += captionLen;
 
    RichString_begin(out);
    Meter_displayBuffer(this, &out);
@@ -71,99 +78,183 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - MAXIMUM(0, x));
+
    // Draw the caption
+   const int captionWidth = 3;
    const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   int captionLen = 3;
-   mvaddnstr(y, x, caption, captionLen);
-   x += captionLen;
-   w -= captionLen;
+   if (w >= captionWidth) {
+      attrset(CRT_colors[METER_TEXT]);
+
+      const char* ptr = caption;
+      int nCols = String_mbswidth(&ptr, 256, captionWidth);
+      int len = (int)(ptr - caption);
+      mvprintw(y, x, "%-*.*s", len + captionWidth - nCols, len, caption);
+   }
+   w -= captionWidth;
 
    // Draw the bar borders
-   attrset(CRT_colors[BAR_BORDER]);
-   mvaddch(y, x, '[');
-   w--;
-   mvaddch(y, x + MAXIMUM(w, 0), ']');
-   w--;
-   attrset(CRT_colors[RESET_COLOR]);
-
-   x++;
+   if (w >= 1) {
+      x += captionWidth;
+      attrset(CRT_colors[BAR_BORDER]);
+      mvaddch(y, x, '[');
+      w--;
+      mvaddch(y, x + w, ']');
+      w--;
+   }
 
    if (w < 1) {
-      return;
+      goto end;
    }
+   x++;
 
-   // The text in the bar is right aligned;
-   // Pad with maximal spaces and then calculate needed starting position offset
-   RichString_begin(bar);
-   RichString_appendChr(&bar, 0, ' ', w);
-   RichString_appendWide(&bar, 0, this->txtBuffer);
+   // Calculate the number of terminal columns needed for the meter text.
 
-   int startPos = RichString_sizeVal(bar) - w;
-   if (startPos > w) {
-      // Text is too large for bar
-      // Truncate meter text at a space character
-      for (int pos = 2 * w; pos > w; pos--) {
-         if (RichString_getCharVal(bar, pos) == ' ') {
-            while (pos > w && RichString_getCharVal(bar, pos - 1) == ' ')
-               pos--;
-            startPos = pos - w;
-            break;
-         }
+   // The text in the bar is right aligned
+
+   MBStringDecoderState state;
+   memset(&state, 0, sizeof(state));
+   state.str = this->txtBuffer;
+   state.maxLen = sizeof(this->txtBuffer) - 1;
+
+   int nColsLeft = w; // pun intended
+   int savedCols = nColsLeft;
+   size_t len = 0;
+   size_t savedLen = 0;
+
+   while (String_decodeNextWChar(&state)) {
+      if (state.ch == 0)
+         break;
+
+      if (state.ch == ' ') {
+         savedLen = len;
+         savedCols = nColsLeft;
       }
 
-      // If still too large, print the start not the end
-      startPos = MINIMUM(startPos, w);
+#ifdef HAVE_LIBNCURSESW
+      int nCols = wcwidth((wchar_t)state.ch);
+      if (nCols < 0) {
+         assert(nCols >= 0);
+         break;
+      }
+#else
+      int nCols = 1;
+#endif
+
+      if (nCols > nColsLeft) {
+         // Text is too large for bar
+         // Truncate meter text at a space character
+         if (savedLen > 0) {
+            len = savedLen;
+            nColsLeft = savedCols;
+         }
+         break;
+      }
+
+      nColsLeft -= nCols;
+
+      if (state.ch == ' ') {
+         continue;
+      }
+
+#ifdef HAVE_LIBNCURSESW
+      // If the character takes zero columns, include the character in the
+      // substring if the working encoding is UTF-8, and ignore it otherwise.
+      if (nCols <= 0 && !CRT_utf8) {
+         continue;
+      }
+#endif
+
+      len = (size_t)(state.str - this->txtBuffer);
    }
 
-   assert(startPos >= 0);
-   assert(startPos <= w);
-   assert(startPos + w <= RichString_sizeVal(bar));
+   RichString_begin(bar);
+   RichString_appendChr(&bar, 0, ' ', nColsLeft);
+   RichString_appendnWide(&bar, 0, this->txtBuffer, len);
 
-   int blockSizes[10];
-
-   // First draw in the bar[] buffer...
+   size_t charPos = 0;
    int offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
-      double value = this->values[i];
-      if (isPositive(value) && this->total > 0.0) {
-         value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * w);
-      } else {
-         blockSizes[i] = 0;
+      if (!(this->total > 0.0)) {
+         break;
       }
-      int nextOffset = offset + blockSizes[i];
-      // (Control against invalid values)
-      nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++)
-         if (RichString_getCharVal(bar, startPos + j) == ' ') {
+      if (offset >= w) {
+         break;
+      }
+
+      double value = this->values[i];
+      if (!isPositive(value)) {
+         continue;
+      }
+      value = MINIMUM(value, this->total);
+      int blockSize = ceil((value / this->total) * w);
+      blockSize = MINIMUM(blockSize, w - offset);
+      if (blockSize < 1) {
+         continue;
+      }
+
+      int nextOffset = offset + blockSize;
+      assert(offset < nextOffset);
+
+      size_t startPos = charPos;
+      while (true) {
+         if (offset >= nextOffset) {
+#ifdef HAVE_LIBNCURSESW
+            if (!CRT_utf8) {
+               break;
+            }
+#else
+            break;
+#endif
+         }
+
+#ifdef HAVE_LIBNCURSESW
+         wchar_t ch = RichString_getCharVal(bar, charPos);
+         if (ch == 0)
+            break;
+
+         int nCols = wcwidth(ch);
+         assert(nCols >= 0);
+
+         if (offset >= nextOffset && nCols > 0) {
+            // This break condition is for UTF-8.
+            break;
+         }
+#else
+         char ch = RichString_getCharVal(bar, charPos);
+         int nCols = 1;
+
+         assert(offset < nextOffset);
+#endif
+         if (ch == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
-               RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
+               RichString_setChar(&bar, charPos, BarMeterMode_characters[i]);
             } else {
-               RichString_setChar(&bar, startPos + j, '|');
+               RichString_setChar(&bar, charPos, '|');
             }
          }
-      offset = nextOffset;
+
+         offset += nCols;
+         charPos++;
+      }
+
+      int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
+      RichString_setAttrn(&bar, CRT_colors[attr], startPos, charPos - startPos);
    }
 
-   // ...then print the buffer.
-   offset = 0;
-   for (uint8_t i = 0; i < this->curItems; i++) {
-      int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
-      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSizes[i], w - offset));
-      offset += blockSizes[i];
-      offset = CLAMP(offset, 0, w);
+   len = RichString_sizeVal(bar);
+   if (charPos < len) {
+      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], charPos, len - charPos);
    }
-   if (offset < w) {
-      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, w - offset);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, w - offset);
-   }
+   RichString_printVal(bar, y, x);
 
    RichString_delete(&bar);
 
    move(y, x + w + 1);
+
+end:
    attrset(CRT_colors[RESET_COLOR]);
 }
 
@@ -190,13 +281,21 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - MAXIMUM(0, x));
+
    // Draw the caption
+   const int captionWidth = 3;
    const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   const int captionLen = 3;
-   mvaddnstr(y, x, caption, captionLen);
-   x += captionLen;
-   w -= captionLen;
+   if (w >= captionWidth) {
+      attrset(CRT_colors[METER_TEXT]);
+
+      const char* ptr = caption;
+      int nCols = String_mbswidth(&ptr, 256, captionWidth);
+      int len = (int)(ptr - caption);
+      mvprintw(y, x, "%-*.*s", len + captionWidth - nCols, len, caption);
+   }
+   w -= captionWidth;
 
    GraphData* data = &this->drawData;
 
@@ -213,7 +312,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    const size_t nValues = data->nValues;
    if (nValues < 1)
-      return;
+      goto end;
 
    // Record new value if necessary
    const Machine* host = this->host;
@@ -231,8 +330,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       }
    }
 
-   if (w <= 0)
-      return;
+   if (w < 1) {
+      goto end;
+   }
+   x += captionWidth;
 
    // Graph drawing style (character set, etc.)
    const char* const* GraphMeterMode_dots;
@@ -272,6 +373,8 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
          colorIdx = GRAPH_2;
       }
    }
+
+end:
    attrset(CRT_colors[RESET_COLOR]);
 }
 
@@ -301,6 +404,27 @@ static void LEDMeterMode_drawDigit(int x, int y, int n) {
 }
 
 static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - MAXIMUM(0, x));
+
+   int yText =
+#ifdef HAVE_LIBNCURSESW
+      CRT_utf8 ? y + 1 :
+#endif
+      y + 2;
+   attrset(CRT_colors[LED_COLOR]);
+
+   const char* caption = Meter_getCaption(this);
+   if (w >= 1) {
+      mvaddnstr(yText, x, caption, w);
+   }
+
+   int captionLen = strlen(caption);
+   if (w <= captionLen) {
+      goto end;
+   }
+   int xx = x + captionLen;
+
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8)
       LEDMeterMode_digits = LEDMeterMode_digitsUtf8;
@@ -311,26 +435,17 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    RichString_begin(out);
    Meter_displayBuffer(this, &out);
 
-   int yText =
-#ifdef HAVE_LIBNCURSESW
-      CRT_utf8 ? y + 1 :
-#endif
-      y + 2;
-   attrset(CRT_colors[LED_COLOR]);
-   const char* caption = Meter_getCaption(this);
-   mvaddstr(yText, x, caption);
-   int xx = x + strlen(caption);
    int len = RichString_sizeVal(out);
    for (int i = 0; i < len; i++) {
       int c = RichString_getCharVal(out, i);
       if (c >= '0' && c <= '9') {
-         if (xx - x + 4 > w)
+         if (xx > x + w - 4)
             break;
 
          LEDMeterMode_drawDigit(xx, y, c - '0');
          xx += 4;
       } else {
-         if (xx - x + 1 > w)
+         if (xx > x + w - 1)
             break;
 #ifdef HAVE_LIBNCURSESW
          const cchar_t wc = { .chars = { c, '\0' }, .attr = 0 }; /* use LED_COLOR from attrset() */
@@ -341,8 +456,10 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
          xx += 1;
       }
    }
-   attrset(CRT_colors[RESET_COLOR]);
    RichString_delete(&out);
+
+end:
+   attrset(CRT_colors[RESET_COLOR]);
 }
 
 static const MeterMode Meter_modes[] = {

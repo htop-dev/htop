@@ -38,7 +38,7 @@ static void MemorySwapMeter_draw(Meter* this, int x, int y, int w) {
 
    /* Use the same width for each sub meter to align with CPU meter */
    const int colwidth = w / 2;
-   const int diff = w - colwidth * 2;
+   const int diff = w % 2;
 
    assert(data->memoryMeter->draw);
    data->memoryMeter->draw(data->memoryMeter, x, y, colwidth);
