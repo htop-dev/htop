@@ -305,8 +305,8 @@ static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
    Meter** meters = data->meters;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
-   int colwidth = (w - ncol) / ncol + 1;
-   int diff = (w - (colwidth * ncol));
+   int colwidth = w / ncol;
+   int diff = w % ncol;
    int nrows = (count + ncol - 1) / ncol;
    for (int i = 0; i < count; i++) {
       int d = (i / nrows) > diff ? diff : (i / nrows); // dynamic spacer
