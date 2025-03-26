@@ -29,7 +29,7 @@ in the source distribution for its full text.
 #define UINT32_WIDTH 32
 #endif
 
-#define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
+#define DEFAULT_GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
 typedef struct MeterMode_ {
    Meter_Draw draw;
@@ -215,6 +215,9 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    }
    w -= captionLen;
 
+   assert(this->h >= 1);
+   int h = this->h;
+
    GraphData* data = &this->drawData;
 
    // Expand the graph data buffer if necessary
@@ -276,15 +279,15 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // Draw the actual graph
    for (int col = 0; i < nValues - 1; i += 2, col++) {
-      int pix = GraphMeterMode_pixPerRow * GRAPH_HEIGHT;
+      int pix = GraphMeterMode_pixPerRow * h;
       double total = MAXIMUM(this->total, 1);
       int v1 = (int) lround(CLAMP(data->values[i] / total * pix, 1.0, pix));
       int v2 = (int) lround(CLAMP(data->values[i + 1] / total * pix, 1.0, pix));
 
       int colorIdx = GRAPH_1;
-      for (int line = 0; line < GRAPH_HEIGHT; line++) {
-         int line1 = CLAMP(v1 - (GraphMeterMode_pixPerRow * (GRAPH_HEIGHT - 1 - line)), 0, GraphMeterMode_pixPerRow);
-         int line2 = CLAMP(v2 - (GraphMeterMode_pixPerRow * (GRAPH_HEIGHT - 1 - line)), 0, GraphMeterMode_pixPerRow);
+      for (int line = 0; line < h; line++) {
+         int line1 = CLAMP(v1 - (GraphMeterMode_pixPerRow * (h - 1 - line)), 0, GraphMeterMode_pixPerRow);
+         int line2 = CLAMP(v2 - (GraphMeterMode_pixPerRow * (h - 1 - line)), 0, GraphMeterMode_pixPerRow);
 
          attrset(CRT_colors[colorIdx]);
          mvaddstr(y + line, x + col, GraphMeterMode_dots[line1 * (GraphMeterMode_pixPerRow + 1) + line2]);
@@ -398,7 +401,7 @@ static const MeterMode Meter_modes[] = {
    },
    [GRAPH_METERMODE] = {
       .uiName = "Graph",
-      .h = GRAPH_HEIGHT,
+      .h = DEFAULT_GRAPH_HEIGHT,
       .draw = GraphMeterMode_draw,
    },
    [LED_METERMODE] = {
