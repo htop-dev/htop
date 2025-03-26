@@ -82,17 +82,21 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(w <= INT_MAX - x);
 
    // Draw the caption
-   int captionLen = 3;
+   const int captionWidth = 3;
    const char* caption = Meter_getCaption(this);
-   if (w >= captionLen) {
+   if (w >= captionWidth) {
       attrset(CRT_colors[METER_TEXT]);
-      mvaddnstr(y, x, caption, captionLen);
+
+      const char* ptr = caption;
+      int nCols = String_mbswidth(&ptr, 256, captionWidth);
+      int len = (int)(ptr - caption);
+      mvprintw(y, x, "%-*.*s", len + captionWidth - nCols, len, caption);
    }
-   w -= captionLen;
+   w -= captionWidth;
 
    // Draw the bar borders
    if (w >= 1) {
-      x += captionLen;
+      x += captionWidth;
       attrset(CRT_colors[BAR_BORDER]);
       mvaddch(y, x, '[');
       w--;
@@ -206,13 +210,17 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(w <= INT_MAX - x);
 
    // Draw the caption
-   const int captionLen = 3;
+   const int captionWidth = 3;
    const char* caption = Meter_getCaption(this);
-   if (w >= captionLen) {
+   if (w >= captionWidth) {
       attrset(CRT_colors[METER_TEXT]);
-      mvaddnstr(y, x, caption, captionLen);
+
+      const char* ptr = caption;
+      int nCols = String_mbswidth(&ptr, 256, captionWidth);
+      int len = (int)(ptr - caption);
+      mvprintw(y, x, "%-*.*s", len + captionWidth - nCols, len, caption);
    }
-   w -= captionLen;
+   w -= captionWidth;
 
    GraphData* data = &this->drawData;
 
@@ -250,7 +258,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    if (w < 1) {
       goto end;
    }
-   x += captionLen;
+   x += captionWidth;
 
    // Graph drawing style (character set, etc.)
    const char* const* GraphMeterMode_dots;
