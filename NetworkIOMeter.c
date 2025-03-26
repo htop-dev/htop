@@ -171,6 +171,7 @@ const MeterClass NetworkIOMeter_class = {
    .defaultMode = TEXT_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 2,
+   .isPercentChart = false,
    .total = 100.0,
    .attributes = NetworkIOMeter_attributes,
    .name = "NetworkIO",

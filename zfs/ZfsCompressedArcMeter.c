@@ -81,6 +81,7 @@ const MeterClass ZfsCompressedArcMeter_class = {
    .defaultMode = TEXT_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 1,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = ZfsCompressedArcMeter_attributes,
    .name = "ZFSCARC",
