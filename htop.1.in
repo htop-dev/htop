@@ -64,8 +64,8 @@ Sort by this column (use \-\-sort\-key help for a column list).
 This will force a list view unless you specify -t at the same time.
 Sorting in tree mode applies to the direct children of each process.
 .TP
-\fB\-u \-\-user=USERNAME|UID\fR
-Show only the processes of a given user
+\fB\-u \-\-user[=USERNAME|UID]\fR
+Show only the processes of a given user, or self if omitted
 .TP
 \fB\-U \-\-no-unicode\fR
 Do not use unicode but ASCII characters for graph meters
