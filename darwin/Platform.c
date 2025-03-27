@@ -10,6 +10,7 @@ in the source distribution for its full text.
 
 #include "darwin/Platform.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <math.h>
 #include <stdlib.h>
@@ -38,6 +39,7 @@ in the source distribution for its full text.
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "FileDescriptorMeter.h"
+#include "GPUMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
 #include "Macros.h"
@@ -144,6 +146,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &DiskIOMeter_class,
    &NetworkIOMeter_class,
    &FileDescriptorMeter_class,
+   &GPUMeter_class,
    &BlankMeter_class,
    NULL
 };
@@ -273,6 +276,57 @@ double Platform_setCPUValues(Meter* mtr, unsigned int cpu) {
    mtr->values[CPU_METER_TEMPERATURE] = NAN;
 
    return CLAMP(total, 0.0, 100.0);
+}
+
+void Platform_setGPUValues(Meter* mtr, double* totalUsage, unsigned long long* totalGPUTimeDiff) {
+   const Machine* host = mtr->host;
+   const DarwinMachine* dhost = (const DarwinMachine *)host;
+
+   assert(*totalGPUTimeDiff == -1ULL);
+   (void)totalGPUTimeDiff;
+
+   mtr->curItems = 1;
+   mtr->values[0] = NAN;
+
+   if (!dhost->GPUService)
+      return;
+
+   static uint64_t prevMonotonicMs;
+
+   // Ensure there is a small time interval between the creation of the
+   // CF property tables. If this function is called in quick successions
+   // (e.g. for multiple meter instances), we might get "0% utilization"
+   // as a result.
+   if (host->monotonicMs <= prevMonotonicMs) {
+      mtr->values[0] = *totalUsage;
+      return;
+   }
+
+   CFMutableDictionaryRef properties = NULL;
+   kern_return_t ret = IORegistryEntryCreateCFProperties(dhost->GPUService, &properties, kCFAllocatorDefault, kNilOptions);
+   if (ret != KERN_SUCCESS || !properties)
+      return;
+
+   CFDictionaryRef perfStats = CFDictionaryGetValue(properties, CFSTR("PerformanceStatistics"));
+   if (!perfStats)
+      goto cleanup;
+
+   assert(CFGetTypeID(perfStats) == CFDictionaryGetTypeID());
+
+   CFNumberRef deviceUtil = CFDictionaryGetValue(perfStats, CFSTR("Device Utilization %"));
+   if (!deviceUtil)
+      goto cleanup;
+
+   int device = -1;
+   CFNumberGetValue(deviceUtil, kCFNumberIntType, &device);
+   *totalUsage = (double)device;
+
+   prevMonotonicMs = host->monotonicMs;
+
+cleanup:
+   CFRelease(properties);
+
+   mtr->values[0] = *totalUsage;
 }
 
 void Platform_setMemoryValues(Meter* mtr) {
