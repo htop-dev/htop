@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -305,12 +306,15 @@ static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
    Meter** meters = data->meters;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
-   int colwidth = (w - ncol) / ncol + 1;
-   int diff = (w - (colwidth * ncol));
+   int colwidth = w / ncol;
    int nrows = (count + ncol - 1) / ncol;
    for (int i = 0; i < count; i++) {
-      int d = (i / nrows) > diff ? diff : (i / nrows); // dynamic spacer
-      int xpos = x + ((i / nrows) * colwidth) + d;
+      // Spacing between meters based on the remainder of (w % ncol)
+      uint32_t v = (unsigned int)((w % ncol) * 32 / ncol);
+      v = ((v * 0x00210842U) & 0x02082082U) * (unsigned int)(i / nrows);
+      v = (uint32_t)(((v + 0x02108420U) & 0x7DE71840U) * 0x00210842ULL) >> 27;
+      int spacing = (int)v;
+      int xpos = x + ((i / nrows) * colwidth) + spacing;
       int ypos = y + ((i % nrows) * meters[0]->h);
       meters[i]->draw(meters[i], xpos, ypos, colwidth);
    }
