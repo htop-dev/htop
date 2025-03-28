@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -302,9 +303,13 @@ static void OctoColCPUsMeter_updateMode(Meter* this, MeterModeId mode) {
 
 static int xOffsetOfMeterColumn(int w, int nCol, int col) {
    int colwidth = w / nCol;
-   int diff = w % nCol;
-   int d = MINIMUM(diff, col); // dynamic spacer
-   return (col * colwidth) + d;
+
+   // Spacing between meters based on the remainder of (w % nCol)
+   uint32_t v = (unsigned int)((w % nCol) * 32 / nCol);
+   v = ((v * 0x00210842U) & 0x02082082U) * (unsigned int)col;
+   v = (uint32_t)(((v + 0x02108420U) & 0x7DE71840U) * 0x00210842ULL) >> 27;
+   int spacing = (int)v;
+   return col * colwidth + spacing;
 }
 
 static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
