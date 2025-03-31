@@ -118,5 +118,5 @@ qlen.caption = Average read and write I/O queue length to the device
 
 util.heading = UTIL%
 util.metric = 100 * rate(disk.dev.avactive)
-util.caption = Perentage of time device was busy processing requests
+util.caption = Percentage of time device was busy processing requests
 util.format = percent

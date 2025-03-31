@@ -312,7 +312,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          char *label = sym_sensors_get_label(chip, feature);
          if (label) {
             bool skip = true;
-            /* Intel coretemp names, labels mention package and phyiscal id */
+            /* Intel coretemp names, labels mention package and physical id */
             if (String_startsWith(label, "Package id ")) {
                physicalID = strtoul(label + strlen("Package id "), NULL, 10);
             } else if (String_startsWith(label, "Physical id ")) {
