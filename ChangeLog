@@ -13,7 +13,7 @@ What's new in version 3.4.0
 * Updated documentation for pcp-htop
 * Disable FOCUS_IN/FOCUS_OUT event handling
 * Add GPU meter for Linux and PCP
-* Add colum for GPU time per process on Linux and PCP
+* Add column for GPU time per process on Linux and PCP
 * Avoid glibc FILE API voodoo
 * Ignore previously unhandled signals USR1 and USR2
 * Force locating the config file to only use absolute paths
