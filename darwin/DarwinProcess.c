@@ -233,7 +233,7 @@ static void DarwinProcess_updateCmdLine(const struct kinfo_proc* k, Process* pro
    /* Save where the argv[0] string starts. */
    sp = cp;
 
-   int end = 0;
+   size_t end = 0;
    for ( np = NULL; c < nargs && cp < &procargs[size]; cp++ ) {
       if ( *cp == '\0' ) {
          c++;
@@ -244,7 +244,7 @@ static void DarwinProcess_updateCmdLine(const struct kinfo_proc* k, Process* pro
          /* Note location of current '\0'. */
          np = cp;
          if (end == 0) {
-            end = cp - sp;
+            end = (size_t)(cp - sp);
          }
       }
    }
@@ -258,7 +258,7 @@ static void DarwinProcess_updateCmdLine(const struct kinfo_proc* k, Process* pro
       goto ERROR_B;
    }
    if (end == 0) {
-      end = np - sp;
+      end = (size_t)(np - sp);
    }
 
    Process_updateCmdline(proc, sp, 0, end);

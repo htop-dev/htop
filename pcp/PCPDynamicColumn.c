@@ -368,7 +368,7 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
 
    if (atomvalue == NULL) {
       n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "N/A");
-      RichString_appendnAscii(str, CRT_colors[PROCESS_SHADOW], buffer, n);
+      RichString_appendnAscii(str, CRT_colors[PROCESS_SHADOW], buffer, (unsigned int)n);
       return;
    }
 
@@ -404,7 +404,7 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
       }
       if (dupd1)
          free(dupd1);
-      RichString_appendnAscii(str, attr, buffer, n);
+      RichString_appendnAscii(str, attr, buffer, (unsigned int)n);
       return;
    }
 
@@ -412,19 +412,19 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
    double value;
    if (PCPDynamicColumn_normalize(desc, atomvalue, &value) < 0) {
       n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "no conv");
-      RichString_appendnAscii(str, CRT_colors[METER_VALUE_ERROR], buffer, n);
+      RichString_appendnAscii(str, CRT_colors[METER_VALUE_ERROR], buffer, (unsigned int)n);
       return;
    }
 
    if (column->format) {
       if (strcmp(column->format, "percent") == 0) {
          n = Row_printPercentage(value, buffer, sizeof(buffer), width, &attr);
-         RichString_appendnAscii(str, attr, buffer, n);
+         RichString_appendnAscii(str, attr, buffer, (unsigned int)n);
          return;
       }
       if (strcmp(column->format, "process") == 0) {
          n = xSnprintf(buffer, sizeof(buffer), "%*d ", Row_pidDigits, (int)value);
-         RichString_appendnAscii(str, attr, buffer, n);
+         RichString_appendnAscii(str, attr, buffer, (unsigned int)n);
          return;
       }
    }
@@ -435,7 +435,7 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
          n = xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, value);
       else   /* display as integer */
          n = xSnprintf(buffer, sizeof(buffer), "%*llu ", width, (unsigned long long)value);
-      RichString_appendnAscii(str, CRT_colors[PROCESS], buffer, n);
+      RichString_appendnAscii(str, CRT_colors[PROCESS], buffer, (unsigned int)n);
       return;
    }
 
