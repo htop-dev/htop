@@ -371,8 +371,26 @@ AC_CHECK_FUNCS([ \
     readlinkat \
     sched_getscheduler \
     sched_setscheduler \
-    strchrnul \
    ])
+
+# strchrnul is available since macOS 15.4, but the user may specify an older
+# macOS version ('-mmacos-version-min'), so we need to ensure it is actually
+# exposed in the header.
+htop_save_CFLAGS=$CFLAGS
+CFLAGS="$CFLAGS -Werror"
+
+AC_MSG_CHECKING([for strchrnul])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <string.h>
+   ]], [[
+static char dummy;
+strchrnul(&dummy, 0);
+   ]])],
+   [AC_MSG_RESULT(yes)
+   AC_DEFINE([HAVE_STRCHRNUL], [1], [Define to 1 if you have the 'strchrnul' function.])],
+   [AC_MSG_RESULT(no)])
+
+CFLAGS=$htop_save_CFLAGS
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_FUNCS([host_statistics64], [
