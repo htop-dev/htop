@@ -41,7 +41,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
    static uint64_t cached_last_update = 0;
    uint64_t passedTimeInMs = host->realtimeMs - cached_last_update;
    bool hasNewData = false;
-   NetworkIOData data;
+   NetworkIOData data = {0};
 
    /* update only every 500ms to have a sane span for rate calculation */
    if (passedTimeInMs > 500) {

@@ -351,7 +351,6 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    if (r < 0)
       return false;
 
-   memset(data, 0, sizeof(NetworkIOData));
    for (int i = 1; i <= count; i++) {
       struct ifmibdata ifmd;
       size_t ifmdLen = sizeof(ifmd);
