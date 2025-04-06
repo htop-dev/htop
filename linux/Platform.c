@@ -654,7 +654,6 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    if (!fp)
       return false;
 
-   memset(data, 0, sizeof(NetworkIOData));
    char lineBuffer[512];
    while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
       char interfaceName[32];
