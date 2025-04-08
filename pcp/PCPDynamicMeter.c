@@ -197,7 +197,7 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
          if (ok)
             meter = PCPDynamicMeter_new(meters, key + 1);
       } else if (!ok) {
-         ;  /* skip this one, we're looking for a new header */
+         /* skip this one, we're looking for a new header */
       } else if (value && meter && String_eq(key, "caption")) {
          char* caption = String_cat(value, ": ");
          if (caption) {
