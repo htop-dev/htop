@@ -68,25 +68,6 @@ void Platform_getCPUBrandString(char* cpuBrandString, size_t cpuBrandStringSize)
    }
 }
 
-// Adapted from https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
-bool Platform_isRunningTranslated(void) {
-   int ret = 0;
-   size_t size = sizeof(ret);
-   errno = 0;
-   if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
-      if (errno == ENOENT)
-         return false;
-
-      fprintf(stderr,
-         "WARN: Could not determine if this process was running in a translation environment like Rosetta 2.\n"
-         "Assuming that we're not.\n"
-         "errno: %i, %s\n", errno, strerror(errno));
-
-      return false;
-   }
-   return ret;
-}
-
 double Platform_calculateNanosecondsPerMachTick(void) {
    // Check if we can determine the timebase used on this system.
    // If the API is unavailable assume we get our timebase in nanoseconds.
@@ -94,29 +75,7 @@ double Platform_calculateNanosecondsPerMachTick(void) {
    return 1.0;
 #else
    mach_timebase_info_data_t info;
-
-   /* WORKAROUND for `mach_timebase_info` giving incorrect values on M1 under Rosetta 2.
-    *    rdar://FB9546856 https://openradar.appspot.com/radar?id=5055988478509056
-    *
-    *    We don't know exactly what feature/attribute of the M1 chip causes this mistake under Rosetta 2.
-    *    Until we have more Apple ARM chips to compare against, the best we can do is special-case
-    *    the "Apple M1" chip specifically when running under Rosetta 2.
-    */
-
-   bool isRunningUnderRosetta2 = Platform_isRunningTranslated();
-
-   // Kernel version 20.0.0 is macOS 11.0 (Big Sur)
-   bool isBuggedVersion = Platform_KernelVersionIsBetween((KernelVersion) {20, 0, 0}, (KernelVersion) {999, 999, 999});
-
-   if (isRunningUnderRosetta2 && isBuggedVersion) {
-      // In this case `mach_timebase_info` provides the wrong value, so we hard-code the correct factor,
-      // as determined from `mach_timebase_info` when the process running natively.
-      info = (mach_timebase_info_data_t) { .numer = 125, .denom = 3 };
-   } else {
-      // No workarounds needed, use the OS-provided value.
-      mach_timebase_info(&info);
-   }
-
+   mach_timebase_info(&info);
    return (double)info.numer / (double)info.denom;
 #endif
 }
