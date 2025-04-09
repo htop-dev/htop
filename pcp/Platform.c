@@ -349,7 +349,14 @@ bool Platform_init(void) {
 
    if (opts.context == PM_CONTEXT_ARCHIVE) {
       gettimeofday(&pcp->offset, NULL);
+#if PMAPI_VERSION >= PMAPI_VERSION_3
+    {
+      struct timeval temp_tv = { opts.start.tv_sec, opts.start.tv_nsec / 1000 };
+      pmtimevalDec(&pcp->offset, &temp_tv);
+    }
+#else
       pmtimevalDec(&pcp->offset, &opts.start);
+#endif
    }
 
    for (unsigned int i = 0; i < PCP_METRIC_COUNT; i++)
