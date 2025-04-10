@@ -833,6 +833,37 @@ esac
 if test "x$enable_unwind" = xno; then
    # Fall back to backtrace(3) and add -lexecinfo if needed
    AC_SEARCH_LIBS([backtrace], [execinfo])
+
+   htop_save_CFLAGS=$CFLAGS
+   CFLAGS="$AM_CFLAGS $CFLAGS -Werror"
+
+   # Check the return type of backtrace(3)
+   # FreeBSD, NetBSD and OpenBSD use 'size_t'.
+   # Linux and macOS use 'int'.
+   # See also: Gnulib documentation of 'backtrace'
+   # (https://www.gnu.org/software/gnulib/manual/html_node/backtrace.html)
+   for backtrace_return_type in \
+      "typeof(backtrace((void**)0, 0))" \
+      "__typeof__(backtrace((void**)0, 0))" \
+      "__typeof(backtrace((void**)0, 0))" \
+      size_t \
+      int \
+   ; do
+      AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <execinfo.h>
+#include <stddef.h> /* For size_t */
+         ]],[[
+/* Many compilers now make incompatible function pointer types an error. */
+char** (*func)(void* const*, $backtrace_return_type) = backtrace_symbols;
+static void* addr;
+$backtrace_return_type nptrs = backtrace(&addr, 1);
+(void)nptrs;
+         ]])],
+         [AC_DEFINE_UNQUOTED([BACKTRACE_RETURN_TYPE], [$backtrace_return_type], [Defined to the return type of the 'backtrace' function.])
+         break])
+   done
+
+   CFLAGS=$htop_save_CFLAGS
 fi
 
 
