@@ -369,14 +369,14 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    *percent = NAN;
    if (found) {
       /* last full capacity */
-      mib[3] = 7;
+      mib[3] = SENSOR_WATTHOUR;
       mib[4] = 0;
       double last_full_capacity = 0;
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
          last_full_capacity = s.value;
       if (last_full_capacity > 0) {
          /*  remaining capacity */
-         mib[3] = 7;
+         mib[3] = SENSOR_WATTHOUR;
          mib[4] = 3;
          if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
             double charge = s.value;
@@ -392,7 +392,7 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
 
    *isOnAC = AC_ERROR;
    if (found) {
-      mib[3] = 9;
+      mib[3] = SENSOR_INDICATOR;
       mib[4] = 0;
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
          *isOnAC = s.value;
