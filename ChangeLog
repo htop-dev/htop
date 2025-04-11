@@ -1,3 +1,14 @@
+What's new in version 3.4.1
+
+* Support for PMAPI v3 for PCP
+* PCP code cleanups
+* Proper checks for strchrnul
+* Code cleanup in the NetworkIOMeter
+* Improved documentation for the --user option
+* Display stuck processes on Darwin
+* Handle issues when the monotonic clock runs backwards
+* Fix builds using native curses on NetBSD
+
 What's new in version 3.4.0
 
 * More expressive version tag generated for development versions (htop --version, help screen)
