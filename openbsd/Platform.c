@@ -395,6 +395,6 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       mib[3] = SENSOR_INDICATOR;
       mib[4] = 0;
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
-         *isOnAC = s.value;
+         *isOnAC = s.value != 0 ? AC_PRESENT : AC_ABSENT;
    }
 }
