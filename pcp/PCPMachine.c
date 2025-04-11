@@ -303,6 +303,7 @@ void Machine_scan(Machine* super) {
    host->period = (host->timestamp - sample) * 100;
 
    PCPMachine_scan(host);
+   Machine_scanGPUUsage(super);
 }
 
 Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
@@ -342,4 +343,9 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
    if (Metric_instance(PCP_PERCPU_SYSTEM, id, id, &value, PM_TYPE_U32))
       return true;
    return false;
+}
+
+void Machine_scanGPUUsage(Machine* super) {
+   /* Not supported yet */
+   super->totalGPUUsage = -1.0;
 }
