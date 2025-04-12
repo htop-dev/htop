@@ -270,7 +270,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    // Starting positions of graph data and terminal column
    if ((size_t)w > nValues / 2) {
       x += w - nValues / 2;
-      w = nValues / 2;
+      w = (int)(nValues / 2);
    }
    size_t i = nValues - (size_t)w * 2;
 

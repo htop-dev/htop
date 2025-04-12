@@ -162,7 +162,7 @@ IOPriority LinuxProcess_updateIOPriority(Process* p) {
    IOPriority ioprio = 0;
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
 #ifdef SYS_ioprio_get
-   ioprio = syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, Process_getPid(p));
+   ioprio = (int)syscall(SYS_ioprio_get, IOPRIO_WHO_PROCESS, Process_getPid(p));
 #endif
    LinuxProcess* this = (LinuxProcess*) p;
    this->ioPriority = ioprio;
