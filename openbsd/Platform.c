@@ -368,16 +368,16 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
 
    *percent = NAN;
    if (found) {
-      /* last full capacity */
-      mib[3] = 7;
-      mib[4] = 0;
+      /* See "sys/dev/acpi/acpibat.c" of OpenBSD source code for the indices
+         of the last field. */
+      mib[3] = SENSOR_WATTHOUR;
+      mib[4] = 0; /* "last full capacity" */
       double last_full_capacity = 0;
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
          last_full_capacity = s.value;
       if (last_full_capacity > 0) {
-         /*  remaining capacity */
-         mib[3] = 7;
-         mib[4] = 3;
+         mib[3] = SENSOR_WATTHOUR;
+         mib[4] = 3; /* "remaining capacity" */
          if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
             double charge = s.value;
             *percent = 100 * (charge / last_full_capacity);
@@ -392,8 +392,10 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
 
    *isOnAC = AC_ERROR;
    if (found) {
-      mib[3] = 9;
-      mib[4] = 0;
+      /* See "sys/dev/acpi/acpiac.c" of OpenBSD source code.
+         There is only one "sensor" for this device. */
+      mib[3] = SENSOR_INDICATOR;
+      mib[4] = 0; /* "power supply" (status indicator) */
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
          *isOnAC = s.value;
    }
