@@ -84,8 +84,10 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    // Draw the caption
    int captionLen = 3;
    const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   mvaddnstr(y, x, caption, captionLen);
+   if (w >= captionLen) {
+      attrset(CRT_colors[METER_TEXT]);
+      mvaddnstr(y, x, caption, captionLen);
+   }
    w -= captionLen;
 
    // Draw the bar borders
@@ -206,8 +208,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    // Draw the caption
    const int captionLen = 3;
    const char* caption = Meter_getCaption(this);
-   attrset(CRT_colors[METER_TEXT]);
-   mvaddnstr(y, x, caption, captionLen);
+   if (w >= captionLen) {
+      attrset(CRT_colors[METER_TEXT]);
+      mvaddnstr(y, x, caption, captionLen);
+   }
    w -= captionLen;
 
    GraphData* data = &this->drawData;
