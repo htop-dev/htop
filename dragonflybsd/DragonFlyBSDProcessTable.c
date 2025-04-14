@@ -106,18 +106,18 @@ static void DragonFlyBSDProcessTable_updateProcessName(kvm_t* kd, const struct k
    }
 
    size_t len = 0;
-   for (int i = 0; argv[i]; i++) {
+   for (size_t i = 0; argv[i]; i++) {
       len += strlen(argv[i]) + 1;
    }
 
    char* cmdline = xMalloc(len);
 
    char* at = cmdline;
-   int end = 0;
-   for (int i = 0; argv[i]; i++) {
+   size_t end = 0;
+   for (size_t i = 0; argv[i]; i++) {
       at = stpcpy(at, argv[i]);
       if (end == 0) {
-         end = at - cmdline;
+         end = (size_t)(at - cmdline);
       }
       *at++ = ' ';
    }

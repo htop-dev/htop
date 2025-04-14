@@ -9,6 +9,7 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <sys/types.h>
 
 #include "Platform.h"
@@ -27,7 +28,7 @@ InDomTable* InDomTable_new(Machine* host, pmInDom indom, int metricKey);
 
 void InDomTable_done(InDomTable* this);
 
-RowField RowField_keyAt(const Settings* settings, int at);
+RowField RowField_keyAt(const Settings* settings, size_t at);
 
 void InDomTable_scan(Table* super);
 

@@ -134,7 +134,7 @@ void Row_printLeftAlignedField(RichString* str, int attr, const char* content, u
 
 const char* RowField_alignedTitle(const struct Settings_* settings, RowField field);
 
-RowField RowField_keyAt(const struct Settings_* settings, int at);
+RowField RowField_keyAt(const struct Settings_* settings, size_t at);
 
 /* Sets the size of the PID column based on the passed PID */
 void Row_setPidColumnWidth(pid_t maxPid);

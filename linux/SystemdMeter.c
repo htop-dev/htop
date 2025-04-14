@@ -349,7 +349,7 @@ static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* ou
    } else {
       len = xSnprintf(buffer, sizeof(buffer), "%u", ctx->nFailedUnits);
    }
-   RichString_appendnAscii(out, zeroDigitColor(ctx->nFailedUnits), buffer, len);
+   RichString_appendnAscii(out, zeroDigitColor(ctx->nFailedUnits), buffer, (unsigned int)len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], "/");
 
@@ -360,7 +360,7 @@ static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* ou
    } else {
       len = xSnprintf(buffer, sizeof(buffer), "%u", ctx->nNames);
    }
-   RichString_appendnAscii(out, valueDigitColor(ctx->nNames), buffer, len);
+   RichString_appendnAscii(out, valueDigitColor(ctx->nNames), buffer, (unsigned int)len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " failed) (");
 
@@ -371,7 +371,7 @@ static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* ou
    } else {
       len = xSnprintf(buffer, sizeof(buffer), "%u", ctx->nJobs);
    }
-   RichString_appendnAscii(out, zeroDigitColor(ctx->nJobs), buffer, len);
+   RichString_appendnAscii(out, zeroDigitColor(ctx->nJobs), buffer, (unsigned int)len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], "/");
 
@@ -382,7 +382,7 @@ static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* ou
    } else {
       len = xSnprintf(buffer, sizeof(buffer), "%u", ctx->nInstalledJobs);
    }
-   RichString_appendnAscii(out, valueDigitColor(ctx->nInstalledJobs), buffer, len);
+   RichString_appendnAscii(out, valueDigitColor(ctx->nInstalledJobs), buffer, (unsigned int)len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " jobs)");
 }
