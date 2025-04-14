@@ -35,7 +35,7 @@ in the source distribution for its full text.
 # if defined(HAVE_DLADDR)
 #  include <dlfcn.h>
 # endif
-#elif defined(HAVE_EXECINFO_H)
+#elif defined(HAVE_EXECINFO_H) && defined(BACKTRACE_RETURN_TYPE)
 # define PRINT_BACKTRACE
 # include <execinfo.h>
 #endif
@@ -1257,10 +1257,10 @@ static void print_backtrace(void) {
       snprintf(err_buf, sizeof(err_buf), "%2u: %#14lx  %s  (%s+%#lx)  [%p]%s\n", item++, pc, fname, symbolName, offset, ptr, frame);
       full_write_str(STDERR_FILENO, err_buf);
    }
-#elif defined(HAVE_EXECINFO_H)
+#elif defined(HAVE_EXECINFO_H) && defined(BACKTRACE_RETURN_TYPE)
    void* backtraceArray[256];
 
-   int nptrs = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
+   BACKTRACE_RETURN_TYPE nptrs = backtrace(backtraceArray, ARRAYSIZE(backtraceArray));
    if (nptrs > 0) {
       backtrace_symbols_fd(backtraceArray, nptrs, STDERR_FILENO);
    } else {
