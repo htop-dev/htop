@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 
 #include <assert.h>
+#include <limits.h> // IWYU pragma: keep
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,6 +50,9 @@ static inline void Meter_displayBuffer(const Meter* this, RichString* out) {
 /* ---------- TextMeterMode ---------- */
 
 static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - x);
+
    const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
    mvaddnstr(y, x, caption, w);
@@ -71,6 +75,9 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - x);
+
    // Draw the caption
    const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
@@ -129,12 +136,11 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
          blockSizes[i] = ceil((value / this->total) * w);
+         blockSizes[i] = MINIMUM(blockSizes[i], w - offset);
       } else {
          blockSizes[i] = 0;
       }
       int nextOffset = offset + blockSizes[i];
-      // (Control against invalid values)
-      nextOffset = CLAMP(nextOffset, 0, w);
       for (int j = offset; j < nextOffset; j++)
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
@@ -152,9 +158,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    for (uint8_t i = 0; i < this->curItems; i++) {
       int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
       RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, MINIMUM(blockSizes[i], w - offset));
+      RichString_printoffnVal(bar, y, x + offset, startPos + offset, blockSizes[i]);
       offset += blockSizes[i];
-      offset = CLAMP(offset, 0, w);
    }
    if (offset < w) {
       RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, w - offset);
@@ -190,6 +195,9 @@ static const char* const GraphMeterMode_dotsAscii[] = {
 };
 
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - x);
+
    // Draw the caption
    const char* caption = Meter_getCaption(this);
    attrset(CRT_colors[METER_TEXT]);
@@ -301,6 +309,9 @@ static void LEDMeterMode_drawDigit(int x, int y, int n) {
 }
 
 static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - x);
+
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8)
       LEDMeterMode_digits = LEDMeterMode_digitsUtf8;
@@ -324,13 +335,13 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    for (int i = 0; i < len; i++) {
       int c = RichString_getCharVal(out, i);
       if (c >= '0' && c <= '9') {
-         if (xx - x + 4 > w)
+         if (xx > x + w - 4)
             break;
 
          LEDMeterMode_drawDigit(xx, y, c - '0');
          xx += 4;
       } else {
-         if (xx - x + 1 > w)
+         if (xx > x + w - 1)
             break;
 #ifdef HAVE_LIBNCURSESW
          const cchar_t wc = { .chars = { c, '\0' }, .attr = 0 }; /* use LED_COLOR from attrset() */
