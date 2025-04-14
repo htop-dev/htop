@@ -833,6 +833,53 @@ esac
 if test "x$enable_unwind" = xno; then
    # Fall back to backtrace(3) and add -lexecinfo if needed
    AC_SEARCH_LIBS([backtrace], [execinfo])
+
+   AC_MSG_CHECKING([the return type of backtrace])
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#ifndef BACKTRACE_RETURN_TYPE
+#error "BACKTRACE_RETURN_TYPE not defined"
+#endif
+      ]])],
+      [AC_MSG_RESULT([user defined])],
+      [htop_save_CFLAGS=$CFLAGS
+      CFLAGS="$AM_CFLAGS $CFLAGS -Werror"
+
+      # Use 'typeof' if supported. Otherwise guess types from larger bit width
+      # to smaller.
+      # 'size_t' is used in FreeBSD, NetBSD and OpenBSD.
+      # 'int' is used in Linux (with glibc) and macOS.
+      # See also: Gnulib documentation of 'backtrace'
+      # (https://www.gnu.org/software/gnulib/manual/html_node/backtrace.html)
+      for backtrace_return_type in \
+         "typeof(backtrace((void**)0, 0))" \
+         "__typeof__(backtrace((void**)0, 0))" \
+         "__typeof(backtrace((void**)0, 0))" \
+         size_t \
+         int \
+      ; do
+         AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <execinfo.h>
+#include <stddef.h> /* For size_t */
+         ]],[[
+#define BACKTRACE_RETURN_TYPE $backtrace_return_type
+/* Assuming the second argument of backtrace_symbols() would use the same type
+   as the return type of backtrace(). */
+static char** (*func)(void* const*, BACKTRACE_RETURN_TYPE) = backtrace_symbols;
+static void* addr;
+BACKTRACE_RETURN_TYPE nptrs = backtrace(&addr, 1);
+(void)nptrs;
+         ]])],
+         [AC_DEFINE_UNQUOTED([BACKTRACE_RETURN_TYPE], [$backtrace_return_type], [Defined to the return type of the 'backtrace' function.])
+         break],
+         [backtrace_return_type=""])
+      done
+      backtrace_return_type_msg=`echo "x$backtrace_return_type" | sed '
+         s/^x *//
+         s/^$/not available/
+         s/^\(_*typeof_*\) *( *backtrace( *( *void *\* *\* *) *0 *, *0 *) *) *$/automatic (using \1)/'`
+      AC_MSG_RESULT([$backtrace_return_type_msg])
+
+      CFLAGS=$htop_save_CFLAGS])
 fi
 
 
