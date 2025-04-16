@@ -47,9 +47,9 @@ static void DarwinMachine_freeCPULoadInfo(processor_cpu_load_info_t* p) {
    *p = NULL;
 }
 
-static unsigned DarwinMachine_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
+static size_t DarwinMachine_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
    mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
-   unsigned cpu_count;
+   natural_t cpu_count;
 
    // TODO Improving the accuracy of the load counts would help a lot.
    if (0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t*)p, &info_size)) {
