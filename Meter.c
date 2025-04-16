@@ -103,6 +103,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    if (w < 1) {
       goto end;
    }
+   attrset(CRT_colors[RESET_COLOR]); // Clear the bold attribute
    x++;
 
    // The text in the bar is right aligned;
