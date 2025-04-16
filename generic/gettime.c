@@ -20,7 +20,7 @@ void Generic_gettime_realtime(struct timeval* tvp, uint64_t* msec) {
    struct timespec ts;
    if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
       tvp->tv_sec = ts.tv_sec;
-      tvp->tv_usec = ts.tv_nsec / 1000;
+      tvp->tv_usec = (suseconds_t)(ts.tv_nsec / 1000);
       *msec = ((uint64_t)ts.tv_sec * 1000) + ((uint64_t)ts.tv_nsec / 1000000);
    } else {
       memset(tvp, 0, sizeof(struct timeval));
