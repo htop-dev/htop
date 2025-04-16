@@ -280,6 +280,7 @@ void Machine_scan(Machine* super) {
    OpenBSDMachine_updateCPUcount(this);
    OpenBSDMachine_scanMemoryInfo(this);
    OpenBSDMachine_scanCPUTime(this);
+   Machine_scanGPUUsage(super);
 }
 
 bool Machine_isCPUonline(const Machine* super, unsigned int id) {
@@ -287,4 +288,9 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
 
    const OpenBSDMachine* this = (const OpenBSDMachine*) super;
    return this->cpuData[id + 1].online;
+}
+
+void Machine_scanGPUUsage(Machine* super) {
+   /* Not supported yet */
+   super->totalGPUUsage = -1.0;
 }

@@ -11,6 +11,10 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
+struct EngineData {
+   const char* key;
+   unsigned long long int timeDiff;
+};
 
 extern const MeterClass GPUMeter_class;
 
