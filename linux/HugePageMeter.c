@@ -43,17 +43,17 @@ static void HugePageMeter_updateValues(Meter* this) {
    size_t size = sizeof(this->txtBuffer);
    int written;
    memory_t usedTotal = 0;
-   unsigned nextUsed = 0;
+   size_t nextUsed = 0;
 
    const LinuxMachine* host = (const LinuxMachine*) this->host;
    this->total = host->totalHugePageMem;
    this->values[0] = 0;
    HugePageMeter_active_labels[0] = " used:";
-   for (unsigned i = 1; i < ARRAYSIZE(HugePageMeter_active_labels); i++) {
+   for (size_t i = 1; i < ARRAYSIZE(HugePageMeter_active_labels); i++) {
       this->values[i] = NAN;
       HugePageMeter_active_labels[i] = NULL;
    }
-   for (unsigned i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
+   for (size_t i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
       memory_t value = host->usedHugePageMem[i];
       if (value != MEMORY_MAX) {
          this->values[nextUsed] = value;
@@ -81,7 +81,7 @@ static void HugePageMeter_display(const Object* cast, RichString* out) {
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
 
-   for (unsigned i = 0; i < ARRAYSIZE(HugePageMeter_active_labels); i++) {
+   for (size_t i = 0; i < ARRAYSIZE(HugePageMeter_active_labels); i++) {
       if (!HugePageMeter_active_labels[i]) {
          break;
       }
