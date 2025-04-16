@@ -220,7 +220,7 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
 
 static void LinuxMachine_scanHugePages(LinuxMachine* this) {
    this->totalHugePageMem = 0;
-   for (unsigned i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
+   for (size_t i = 0; i < HTOP_HUGEPAGE_COUNT; i++) {
       this->usedHugePageMem[i] = MEMORY_MAX;
    }
 
