@@ -23,7 +23,32 @@ in the source distribution for its full text.
 
 #include "Compat.h"
 #include "Macros.h"
+#include "ProvideCurses.h"
 
+
+typedef struct WCharEncoderState_ {
+   size_t pos;
+   size_t size;
+   void* buf;
+   mbstate_t mbState;
+} WCharEncoderState;
+
+typedef struct MBStringDecoderState_ {
+   const char* str;
+   size_t maxLen;
+#ifdef HAVE_LIBNCURSESW
+   wint_t ch;
+   mbstate_t mbState;
+#else
+   int ch;
+#endif
+} MBStringDecoderState;
+
+#ifdef HAVE_LIBNCURSESW
+typedef ATTR_NONNULL void (*EncodeWChar)(WCharEncoderState* ps, wchar_t wc);
+#else
+typedef ATTR_NONNULL void (*EncodeWChar)(WCharEncoderState* ps, int c);
+#endif
 
 ATTR_NORETURN
 void fail(void);
@@ -101,6 +126,22 @@ static inline char* String_strchrnul(const char* s, int c) {
 /* Always null-terminates dest. Caller must pass a strictly positive size. */
 ATTR_NONNULL ATTR_ACCESS3_W(1, 3) ATTR_ACCESS3_R(2, 3)
 size_t String_safeStrncpy(char* restrict dest, const char* restrict src, size_t size);
+
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char* str, size_t maxLen);
+#endif
+
+ATTR_NONNULL_N(1, 4) ATTR_ACCESS2_W(1) ATTR_ACCESS3_R(2, 3)
+void EncodePrintableString(WCharEncoderState* ps, const char* src, size_t maxLen, EncodeWChar encodeWChar);
+
+ATTR_RETNONNULL ATTR_MALLOC ATTR_ACCESS3_R(1, 2)
+char* String_makePrintable(const char* str, size_t maxLen);
+
+ATTR_NONNULL
+bool String_decodeNextWChar(MBStringDecoderState* ps);
+
+ATTR_NONNULL ATTR_ACCESS2_RW(1)
+int String_mbswidth(const char** str, size_t maxLen, int maxWidth);
 
 ATTR_FORMAT(printf, 2, 3) ATTR_NONNULL_N(1, 2)
 int xAsprintf(char** strp, const char* fmt, ...);
