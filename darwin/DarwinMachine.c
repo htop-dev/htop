@@ -105,11 +105,18 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    openzfs_sysctl_init(&this->zfs);
    openzfs_sysctl_updateArcStats(&this->zfs);
 
+   this->GPUService = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOGPU"));
+   if (!this->GPUService) {
+      CRT_debug("Cannot initialize IOGPU service");
+   }
+
    return super;
 }
 
 void Machine_delete(Machine* super) {
    DarwinMachine* this = (DarwinMachine*) super;
+
+   IOObjectRelease(this->GPUService);
 
    DarwinMachine_freeCPULoadInfo(&this->prev_load);
 
