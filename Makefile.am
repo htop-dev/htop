@@ -52,6 +52,7 @@ myhtopsources = \
 	DynamicScreen.c \
 	EnvScreen.c \
 	FileDescriptorMeter.c \
+	FlexMeter.c \
 	FunctionBar.c \
 	Hashtable.c \
 	Header.c \
@@ -93,6 +94,7 @@ myhtopsources = \
 	Vector.c \
 	XUtils.c
 
+
 myhtopheaders = \
 	Action.h \
 	Affinity.h \
@@ -118,6 +120,7 @@ myhtopheaders = \
 	DynamicScreen.h \
 	EnvScreen.h \
 	FileDescriptorMeter.h \
+	FlexMeter.h \
 	FunctionBar.h \
 	Hashtable.h \
 	Header.h \
@@ -164,6 +167,7 @@ myhtopheaders = \
 	UsersTable.h \
 	Vector.h \
 	XUtils.h
+
 
 # Linux
 # -----
