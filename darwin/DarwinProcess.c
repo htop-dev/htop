@@ -498,7 +498,7 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
 
       // TODO: depend on setting
       const char* name = extended_info.pth_name[0] != '\0' ? extended_info.pth_name : proc->procComm;
-      Process_updateCmdline(tprocess, name, 0, strlen(name));
+      Process_updateCmdline(tprocess, name, 0, name ? strlen(name) : 0);
 
       if (!preExisting)
          ProcessTable_add(&dpt->super, tprocess);
