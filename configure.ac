@@ -849,11 +849,14 @@ if test "x$enable_unwind" = xno; then
       # 'size_t' is used in FreeBSD, NetBSD and OpenBSD.
       # 'int' is used in Linux (with glibc) and macOS.
       # See also: Gnulib documentation of 'backtrace'
-      # (https://www.gnu.org/software/gnulib/manual/html_node/backtrace.html)
+      # (https://www.gnu.org/software/gnulib/manual/html_node/backtrace.html).
+      # See https://github.com/htop-dev/htop/issues/1681 and
+      # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119893 for the gcc bug
+      # why we do 1 and not 0 below.
       for backtrace_return_type in \
-         "typeof(backtrace((void**)0, 0))" \
-         "__typeof__(backtrace((void**)0, 0))" \
-         "__typeof(backtrace((void**)0, 0))" \
+         "typeof(backtrace((void**)1, 1))" \
+         "__typeof__(backtrace((void**)1, 1))" \
+         "__typeof(backtrace((void**)1, 1))" \
          size_t \
          int \
       ; do
