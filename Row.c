@@ -89,7 +89,7 @@ void Row_setPidColumnWidth(pid_t maxPid) {
       return;
    }
 
-   Row_pidDigits = countDigits((size_t)maxPid, 10);
+   Row_pidDigits = (int)countDigits((size_t)maxPid, 10);
    assert(Row_pidDigits <= ROW_MAX_PID_DIGITS);
 }
 
@@ -99,7 +99,7 @@ void Row_setUidColumnWidth(uid_t maxUid) {
       return;
    }
 
-   Row_uidDigits = countDigits((size_t)maxUid, 10);
+   Row_uidDigits = (int)countDigits((size_t)maxUid, 10);
    assert(Row_uidDigits <= ROW_MAX_UID_DIGITS);
 }
 
@@ -428,23 +428,23 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
    }
 
    unsigned long long totalSeconds = totalMicroseconds / 1000000;
-   unsigned long microseconds = totalMicroseconds % 1000000;
+   uint32_t microseconds = totalMicroseconds % 1000000;
    if (totalSeconds < 60) {
       int width = 5;
-      unsigned long fraction = microseconds / 10;
+      uint32_t fraction = microseconds / 10;
       if (totalSeconds >= 10) {
          width--;
          fraction /= 10;
       }
-      len = xSnprintf(buffer, sizeof(buffer), "%u.%0*lus ", (unsigned int)totalSeconds, width, fraction);
+      len = xSnprintf(buffer, sizeof(buffer), "%u.%0*lus ", (unsigned int)totalSeconds, width, (unsigned long)fraction);
       RichString_appendnAscii(str, baseColor, buffer, len);
       return;
    }
 
    if (totalSeconds < 600) {
-      unsigned int minutes = totalSeconds / 60;
-      unsigned int seconds = totalSeconds % 60;
-      unsigned int milliseconds = microseconds / 1000;
+      unsigned int minutes = (unsigned int)totalSeconds / 60;
+      unsigned int seconds = (unsigned int)totalSeconds % 60;
+      unsigned int milliseconds = (unsigned int)(microseconds / 1000);
       len = xSnprintf(buffer, sizeof(buffer), "%u:%02u.%03u ", minutes, seconds, milliseconds);
       RichString_appendnAscii(str, baseColor, buffer, len);
       return;
