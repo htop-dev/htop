@@ -850,13 +850,12 @@ if test "x$enable_unwind" = xno; then
       # 'int' is used in Linux (with glibc) and macOS.
       # See also: Gnulib documentation of 'backtrace'
       # (https://www.gnu.org/software/gnulib/manual/html_node/backtrace.html).
-      # See https://github.com/htop-dev/htop/issues/1681 and
-      # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119893 for the gcc bug
-      # why we do 1 and not 0 below.
+      # GCC (< 15) had a bug that warns on a non-null pointer in 'typeof'.
+      # Workaround by passing an address of 1 instead.
       for backtrace_return_type in \
-         "typeof(backtrace((void**)1, 1))" \
-         "__typeof__(backtrace((void**)1, 1))" \
-         "__typeof(backtrace((void**)1, 1))" \
+         "typeof(backtrace((void**)1, 0))" \
+         "__typeof__(backtrace((void**)1, 0))" \
+         "__typeof(backtrace((void**)1, 0))" \
          size_t \
          int \
       ; do
@@ -879,7 +878,7 @@ BACKTRACE_RETURN_TYPE nptrs = backtrace(&addr, 1);
       backtrace_return_type_msg=`echo "x$backtrace_return_type" | sed '
          s/^x *//
          s/^$/not available/
-         s/^\(_*typeof_*\) *( *backtrace( *( *void *\* *\* *) *0 *, *0 *) *) *$/automatic (using \1)/'`
+         s/^\(_*typeof_*\) *( *backtrace( *( *void *\* *\* *) *1 *, *0 *) *) *$/automatic (using \1)/'`
       AC_MSG_RESULT([$backtrace_return_type_msg])
 
       CFLAGS=$htop_save_CFLAGS])
