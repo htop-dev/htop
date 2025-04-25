@@ -400,7 +400,7 @@ Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
 
       char number[16];
       xSnprintf(number, 9, "CPU %d", Settings_cpuId(host->settings, i));
-      unsigned cpu_width = 4 + strlen(number);
+      unsigned int cpu_width = 4 + (unsigned int)strlen(number);
       if (cpu_width > this->width) {
          this->width = cpu_width;
       }

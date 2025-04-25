@@ -209,7 +209,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    /* The field separator "│" has been chosen such that it will not match any
     * valid string used for searching or filtering */
    const char* SEPARATOR = CRT_treeStr[TREE_STR_VERT];
-   const int SEPARATOR_LEN = strlen(SEPARATOR);
+   const size_t SEPARATOR_LEN = strlen(SEPARATOR);
 
    /* Accommodate the column text, two field separators and terminating NUL */
    size_t maxLen = 2 * SEPARATOR_LEN + 1;
@@ -568,19 +568,18 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       const bool lastItem = (super->indent < 0);
 
       for (uint32_t indent = (super->indent < 0 ? -super->indent : super->indent); indent > 1; indent >>= 1) {
-         int written, ret;
+         if (!n)
+            break;
+
+         int ret;
          if (indent & 1U) {
             ret = xSnprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
          } else {
             ret = xSnprintf(buf, n, "   ");
          }
-         if (ret < 0 || (size_t)ret >= n) {
-            written = n;
-         } else {
-            written = ret;
-         }
-         buf += written;
-         n -= written;
+         assert(ret > 0 && (size_t)ret < n);
+         buf += ret;
+         n -= ret;
       }
 
       const char* draw = CRT_treeStr[lastItem ? TREE_STR_BEND : TREE_STR_RTEE];

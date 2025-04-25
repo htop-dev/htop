@@ -455,7 +455,7 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
    char* buffer = this->eventHandlerState;
 
    if (0 < ch && ch < 255 && isgraph((unsigned char)ch)) {
-      int len = strlen(buffer);
+      size_t len = strlen(buffer);
       if (!len) {
          if ('/' == ch) {
             ch = '\001';
