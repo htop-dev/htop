@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <mach/mach_init.h>
 #include <sys/mman.h>
 #include <sys/sysctl.h>
 

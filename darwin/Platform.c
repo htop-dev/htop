@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include <net/if_types.h>
 #include <net/route.h>
 #include <sys/socket.h>
+#include <mach/mach_init.h>
 #include <mach/port.h>
 
 #include <CoreFoundation/CFBase.h>
