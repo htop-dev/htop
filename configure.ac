@@ -25,6 +25,7 @@ AM_INIT_AUTOMAKE([-Wall std-options subdir-objects])
 
 # ----------------------------------------------------------------------
 
+AC_DEFINE([MAX_PLATFORM_METERS], [100], [Set max meters for number])
 
 # ----------------------------------------------------------------------
 # Checks for platform.

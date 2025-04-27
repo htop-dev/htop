@@ -158,6 +158,7 @@ typedef enum ColorElements_ {
    DYNAMIC_MAGENTA,
    DYNAMIC_YELLOW,
    DYNAMIC_WHITE,
+   FLEX,
    LAST_COLORELEMENT
 } ColorElements;
 
