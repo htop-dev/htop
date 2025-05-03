@@ -20,6 +20,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "Macros.h"
+#include "NvidiaJetson.h"
 #include "Process.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
@@ -112,6 +113,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 #endif
    [GPU_TIME] = { .name = "GPU_TIME", .title = "GPU_TIME ", .description = "Total GPU time", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, },
    [GPU_PERCENT] = { .name = "GPU_PERCENT", .title = " GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, },
+#ifdef NVIDIA_JETSON
+   [GPU_MEM] = { .name = "GPU_MEM", .title = "GPU_M ", .description = "GPU memory allocated for the process", .flags = 0, .defaultSortDesc = true, },
+#endif
 };
 
 Process* LinuxProcess_new(const Machine* host) {
@@ -362,6 +366,9 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
          xSnprintf(buffer, n, "N/A  ");
       }
       break;
+#ifdef NVIDIA_JETSON
+   case GPU_MEM: Row_printKBytes(str, lp->gpu_mem, coloring); return;
+#endif
    default:
       Process_writeField(this, str, field);
       return;
@@ -466,6 +473,10 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
    case ISCONTAINER:
       return SPACESHIP_NUMBER(v1->isRunningInContainer, v2->isRunningInContainer);
+#ifdef NVIDIA_JETSON
+   case GPU_MEM:
+      return SPACESHIP_NUMBER(p1->gpu_mem, p2->gpu_mem);
+#endif
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

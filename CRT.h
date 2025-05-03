@@ -158,6 +158,9 @@ typedef enum ColorElements_ {
    DYNAMIC_MAGENTA,
    DYNAMIC_YELLOW,
    DYNAMIC_WHITE,
+#ifdef NVIDIA_JETSON
+   GPU_FILTER,
+#endif
    LAST_COLORELEMENT
 } ColorElements;
 

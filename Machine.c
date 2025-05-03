@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "NvidiaJetson.h"
 #include "Object.h"
 #include "Platform.h"
 #include "Row.h"
@@ -129,4 +130,8 @@ void Machine_scanTables(Machine* this) {
 
    Row_setUidColumnWidth(this->maxUserId);
    Row_setPidColumnWidth(this->maxProcessId);
+
+   #ifdef NVIDIA_JETSON
+   NvidiaJetson_LoadGpuProcessTable(this->activeTable->table);
+   #endif
 }

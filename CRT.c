@@ -231,6 +231,9 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [DYNAMIC_MAGENTA] = ColorPair(Magenta, Black),
       [DYNAMIC_YELLOW] = ColorPair(Yellow, Black),
       [DYNAMIC_WHITE] = ColorPair(White, Black),
+#ifdef NVIDIA_JETSON
+      [GPU_FILTER] = A_BOLD | ColorPair(Red, Cyan),
+#endif
    },
    [COLORSCHEME_MONOCHROME] = {
       [RESET_COLOR] = A_NORMAL,

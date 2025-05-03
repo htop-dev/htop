@@ -472,6 +472,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
       #ifdef BUILD_WITH_CPU_TEMP
       } else if (String_eq(option[0], "show_cpu_temperature")) {
          this->showCPUTemperature = atoi(option[1]);
+      } else if (String_eq(option[0], "show_cpu_temperature_fractional")) {
+         this->showCPUTemperatureFractional = atoi(option[1]);
       } else if (String_eq(option[0], "degree_fahrenheit")) {
          this->degreeFahrenheit = atoi(option[1]);
       #endif
@@ -703,6 +705,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("show_cpu_frequency", this->showCPUFrequency);
    #ifdef BUILD_WITH_CPU_TEMP
    printSettingInteger("show_cpu_temperature", this->showCPUTemperature);
+   printSettingInteger("show_cpu_temperature_fractional", this->showCPUTemperatureFractional);
    printSettingInteger("degree_fahrenheit", this->degreeFahrenheit);
    #endif
    printSettingInteger("show_cached_memory", this->showCachedMemory);
@@ -808,6 +811,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->showCPUFrequency = false;
    #ifdef BUILD_WITH_CPU_TEMP
    this->showCPUTemperature = false;
+   this->showCPUTemperatureFractional = false;
    this->degreeFahrenheit = false;
    #endif
    this->showCachedMemory = true;

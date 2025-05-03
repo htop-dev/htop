@@ -197,6 +197,12 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
    } else if (this->state->failedUpdate) {
       FunctionBar_append(this->state->failedUpdate, CRT_colors[FAILED_READ]);
    }
+
+#ifdef NVIDIA_JETSON
+   if (this->state->showGpuProcesses) {
+      FunctionBar_append("GPU", CRT_colors[GPU_FILTER]);
+   }
+#endif
 }
 
 static void MainPanel_printHeader(Panel* super) {
