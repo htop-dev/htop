@@ -98,15 +98,33 @@ static void CPUMeter_updateValues(Meter* this) {
       }
    }
 
+   /*
+     --enable-sensors turns on BUILD_WITH_CPU_TEMP only
+     --enable-nvidia-jetson turns on both NVIDIA_JETSON and BUILD_WITH_CPU_TEMP
+   */
    #ifdef BUILD_WITH_CPU_TEMP
    if (settings->showCPUTemperature) {
       double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
-      if (isNaN(cpuTemperature))
+      if (isNaN(cpuTemperature)) {
          xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "N/A");
-      else if (settings->degreeFahrenheit)
-         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%3d%sF", (int)(cpuTemperature * 9 / 5 + 32), CRT_degreeSign);
-      else
-         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%d%sC", (int)cpuTemperature, CRT_degreeSign);
+      } else if (settings->degreeFahrenheit) {
+         cpuTemperature = convertCelsiusToFahrenheit(cpuTemperature);
+         /* Fahrenheit scale gives almost x2 more precise value than Celsius scale => no need to show fractional part */
+         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%3d%sF", (int)cpuTemperature, CRT_degreeSign);
+      } else if (settings->showCPUTemperatureFractional) {
+            /*
+               - Modern CPUs has temperature sensors which give a precise value with 3 digits in the fractional part,
+               see hwmon files, e.g. /sys/class/hwmon/hwmon.../temp1_input, one digit in the fractional part is quite
+               enough right now.
+               - If your CPU is above 100C - you have a real problem, no need to print it pretty.
+               - The formatter "%04.1f" guarantees filling zero in the fractional part, e.g. strings like "37.0C" appears,
+               the side effect is that temperature value '5C' is shown as "05.0C"
+            */
+            xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%04.1f%sC", cpuTemperature, CRT_degreeSign);
+      } else {
+            /* if your CPU is above 100C - you have a real problem, no need to print it pretty */
+            xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%2d%sC", (int)cpuTemperature, CRT_degreeSign);
+      }
    }
    #endif
 

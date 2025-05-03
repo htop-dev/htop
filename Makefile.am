@@ -215,6 +215,11 @@ linux_platform_sources = \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 
+if NVIDIA_JETSON
+linux_platform_headers += linux/NvidiaJetson.h
+linux_platform_sources += linux/NvidiaJetson.c
+endif
+
 if HAVE_DELAYACCT
 linux_platform_headers += linux/LibNl.h
 linux_platform_sources += linux/LibNl.c
