@@ -418,6 +418,18 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
       return;
    }
 
+   if (totalNanoseconds < 10000000) {
+      // The precision is 0.1 microseconds here.
+      // We print the unit in "ms" rather than microseconds in order
+      // to save the code of choosing the Greek "mu" or Latin "u".
+      uint32_t fraction = (uint32_t)totalNanoseconds / 100;
+      unsigned int milliseconds = (unsigned int)(fraction / 10000);
+      fraction %= 10000;
+      len = xSnprintf(buffer, sizeof(buffer), "%u.%04ums ", milliseconds, (unsigned int)fraction);
+      RichString_appendnAscii(str, baseColor, buffer, len);
+      return;
+   }
+
    unsigned long long totalMicroseconds = totalNanoseconds / 1000;
    unsigned long long totalSeconds = totalMicroseconds / 1000000;
    uint32_t microseconds = totalMicroseconds % 1000000;
