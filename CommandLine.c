@@ -402,8 +402,6 @@ int CommandLine_run(int argc, char** argv) {
    Machine_scan(host);
    Machine_scanTables(host);
    CommandLine_delay(host, 75);
-   Machine_scan(host);
-   Machine_scanTables(host);
 
    if (settings->ss->allBranchesCollapsed)
       Table_collapseAllBranches(&pt->super);
