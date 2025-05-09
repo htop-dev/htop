@@ -419,22 +419,17 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
    }
 
    unsigned long long totalMicroseconds = totalNanoseconds / 1000;
-   if (totalMicroseconds < 1000000) {
-      len = xSnprintf(buffer, sizeof(buffer), ".%06lus ", (unsigned long)totalMicroseconds);
-      RichString_appendnAscii(str, baseColor, buffer, len);
-      return;
-   }
-
    unsigned long long totalSeconds = totalMicroseconds / 1000000;
    uint32_t microseconds = totalMicroseconds % 1000000;
    if (totalSeconds < 60) {
-      int width = 5;
-      uint32_t fraction = microseconds / 10;
-      if (totalSeconds >= 10) {
+      int width = 6;
+      uint32_t fraction = microseconds;
+      for (unsigned long long limit = 1; totalSeconds >= limit; limit *= 10) {
          width--;
          fraction /= 10;
       }
-      len = xSnprintf(buffer, sizeof(buffer), "%u.%0*lus ", (unsigned int)totalSeconds, width, (unsigned long)fraction);
+      // "%.u" prints no digits if (totalSeconds == 0).
+      len = xSnprintf(buffer, sizeof(buffer), "%.u.%0*lus ", (unsigned int)totalSeconds, width, (unsigned long)fraction);
       RichString_appendnAscii(str, baseColor, buffer, len);
       return;
    }
