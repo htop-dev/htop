@@ -54,6 +54,8 @@ pid_t Platform_getMaxPid(void);
 
 double Platform_setCPUValues(Meter* mtr, unsigned int cpu);
 
+void Platform_setGPUValues(Meter* mtr, double* totalUsage, unsigned long long* totalGPUTimeDiff);
+
 void Platform_setMemoryValues(Meter* mtr);
 
 void Platform_setSwapValues(Meter* mtr);

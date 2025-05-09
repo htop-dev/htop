@@ -12,6 +12,14 @@ in the source distribution for its full text.
 #include "Meter.h"
 
 
+struct GPUMeterEngineData {
+   const char* key;  /* owned by LinuxMachine */
+   unsigned long long int timeDiff;
+   double percentage;
+};
+
+extern struct GPUMeterEngineData GPUMeter_engineData[4];
+
 extern const MeterClass GPUMeter_class;
 
 bool GPUMeter_active(void);

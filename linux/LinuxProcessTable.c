@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include <sys/stat.h>
 
 #include "Compat.h"
+#include "GPUMeter.h"
 #include "Hashtable.h"
 #include "Machine.h"
 #include "Macros.h"
@@ -40,7 +41,6 @@ in the source distribution for its full text.
 #include "XUtils.h"
 #include "linux/CGroupUtils.h"
 #include "linux/GPU.h"
-#include "linux/GPUMeter.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
