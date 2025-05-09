@@ -189,14 +189,14 @@ if test "$my_htop_platform" = darwin; then
    AC_CHECK_HEADERS([mach/thread_info.h])
 
    AC_MSG_CHECKING(for thread_extended_info_data_t)
-   AC_COMPILE_IFELSE(
+   AC_COMPILE_IFELSE([
       AC_LANG_PROGRAM(
          [#include <mach/thread_info.h>],
          [
             thread_extended_info_data_t teid;
             (void)teid;
          ]
-      ),
+      )],
       [
          AC_DEFINE([HAVE_THREAD_EXTENDED_INFO_DATA_T], 1, [Define if thread_extended_info_data_t is available from <mach/thread_info.h>])
          AC_MSG_RESULT(yes)
