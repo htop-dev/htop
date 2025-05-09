@@ -1600,7 +1600,12 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       proc->isUserlandThread = Process_getPid(proc) != Process_getThreadGroup(proc);
       assert(proc->isUserlandThread == (mainTask != NULL));
 
-      LinuxProcessTable_recurseProcTree(this, procFd, lhost, "task", lp);
+      if (mainTask) {
+         // As the list of tasks/threads is presented as a flat view in procfs
+         // below each directories main entry, it makes no sense to
+         // look for further directories that will not be there.
+         LinuxProcessTable_recurseProcTree(this, procFd, lhost, "task", lp);
+      }
 
       /*
        * These conditions will not trigger on first occurrence, cause we need to
