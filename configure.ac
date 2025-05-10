@@ -1017,7 +1017,7 @@ esac
 
 AC_ARG_ENABLE([delayacct],
               [AS_HELP_STRING([--enable-delayacct],
-                              [enable Linux delay accounting support; requires pkg-config, libnl-3 and libnl-genl-3 @<:@default=check@:>@])],
+                              [enable Linux delay accounting support; requires libnl-3 and libnl-genl-3 @<:@default=check@:>@])],
               [],
               [enable_delayacct=check])
 case "$enable_delayacct" in
