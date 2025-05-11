@@ -1021,32 +1021,35 @@ AC_ARG_ENABLE([delayacct],
               [],
               [enable_delayacct=check])
 case "$enable_delayacct" in
-   no)
+   no|yes)
       ;;
    check)
       if test "$my_htop_platform" != linux; then
          enable_delayacct=no
       elif test "$enable_static" = yes; then
          enable_delayacct=no
-      else
-         old_CFLAGS="$CFLAGS"
-         CFLAGS="$CFLAGS -I/usr/include/libnl3"
-         AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [], [enable_delayacct=no])
-         CFLAGS="$old_CFLAGS"
-
-         if test "$enable_delayacct" != no; then
-            enable_delayacct=yes
-         fi
       fi
-      ;;
-   yes)
-      old_CFLAGS="$CFLAGS"
-      CFLAGS="$CFLAGS -I/usr/include/libnl3"
-      AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [], [AC_MSG_ERROR([can not find required header files netlink/attr.h, netlink/handlers.h, netlink/msg.h])])
-      CFLAGS="$old_CFLAGS"
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_delayacct' for --enable-delayacct])
+      ;;
+esac
+
+case "$enable_delayacct" in
+   check|yes)
+      old_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS -I/usr/include/libnl3"
+      AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h],
+         [],
+         [if test "$enable_delayacct" = yes; then
+            AC_MSG_ERROR([can not find required header files netlink/attr.h, netlink/handlers.h, netlink/msg.h])
+         fi
+         enable_delayacct=no])
+      CFLAGS="$old_CFLAGS"
+
+      if test "$enable_delayacct" != no; then
+         enable_delayacct=yes
+      fi
       ;;
 esac
 if test "$enable_delayacct" = yes; then
