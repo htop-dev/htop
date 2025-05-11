@@ -1031,8 +1031,12 @@ case "$enable_delayacct" in
       else
          old_CFLAGS="$CFLAGS"
          CFLAGS="$CFLAGS -I/usr/include/libnl3"
-         AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [enable_delayacct=yes], [enable_delayacct=no])
+         AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [], [enable_delayacct=no])
          CFLAGS="$old_CFLAGS"
+
+         if test "$enable_delayacct" != no; then
+            enable_delayacct=yes
+         fi
       fi
       ;;
    yes)
