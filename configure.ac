@@ -1037,8 +1037,17 @@ esac
 
 case "$enable_delayacct" in
    check|yes)
+      if test "x${LIBNL3_CFLAGS+y}" = x; then
+         m4_ifdef([PKG_PROG_PKG_CONFIG], [
+            PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [LIBNL3_CFLAGS="-I/usr/include/libnl3"])
+         ], [
+            LIBNL3_CFLAGS="-I/usr/include/libnl3"
+         ])
+      fi
+
       old_CFLAGS="$CFLAGS"
-      CFLAGS="$CFLAGS -I/usr/include/libnl3"
+      # New include path searched after what user has specified
+      CFLAGS="$CFLAGS $LIBNL3_CFLAGS"
       AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h],
          [],
          [if test "$enable_delayacct" = yes; then
@@ -1054,7 +1063,7 @@ case "$enable_delayacct" in
 esac
 if test "$enable_delayacct" = yes; then
   AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
-  AM_CFLAGS="$AM_CFLAGS -I/usr/include/libnl3"
+  AM_CFLAGS="$AM_CFLAGS $LIBNL3_CFLAGS"
 fi
 AM_CONDITIONAL([HAVE_DELAYACCT], [test "$enable_delayacct" = yes])
 
