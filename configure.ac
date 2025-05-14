@@ -1030,14 +1030,16 @@ case "$enable_delayacct" in
          enable_delayacct=no
       else
          old_CFLAGS="$CFLAGS"
-         CFLAGS="$CFLAGS -I/usr/include/libnl3"
+         htop_config_cflags=`$PKG_CONFIG --cflags libnl-3.0 2>/dev/null` || continue
+         CFLAGS="$CFLAGS $htop_config_cflags"
          AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [enable_delayacct=yes], [enable_delayacct=no])
          CFLAGS="$old_CFLAGS"
       fi
       ;;
    yes)
       old_CFLAGS="$CFLAGS"
-      CFLAGS="$CFLAGS -I/usr/include/libnl3"
+      htop_config_cflags=`$PKG_CONFIG --cflags libnl-3.0 2>/dev/null` || continue
+      CFLAGS="$CFLAGS $htop_config_cflags"
       AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [], [AC_MSG_ERROR([can not find required header files netlink/attr.h, netlink/handlers.h, netlink/msg.h])])
       CFLAGS="$old_CFLAGS"
       ;;
@@ -1047,7 +1049,10 @@ case "$enable_delayacct" in
 esac
 if test "$enable_delayacct" = yes; then
   AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
-  AM_CFLAGS="$AM_CFLAGS -I/usr/include/libnl3"
+  htop_config_cflags=`$PKG_CONFIG --cflags libnl-3.0 2>/dev/null`
+  AM_CFLAGS="$AM_CFLAGS $htop_config_cflags"
+  libdir_libnl=`$PKG_CONFIG --variable=libdir libnl-3.0 2>/dev/null`
+  AC_DEFINE_UNQUOTED([LIBDIR_LIBNL], ["$libdir_libnl"], [Path to the libnl-3 libraries])
 fi
 AM_CONDITIONAL([HAVE_DELAYACCT], [test "$enable_delayacct" = yes])
 
