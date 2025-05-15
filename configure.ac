@@ -1015,39 +1015,101 @@ case "$enable_capabilities" in
 esac
 
 
+# $1: libnl-3 search path
+htop_try_link_libnl3 () {
+   htop_save_LDFLAGS=$LDFLAGS
+   htop_save_LIBS=$LIBS
+
+   LIBS="-lnl-3 $LIBS"
+   if test "x$1" != x; then
+      # New library path searched after what user has specified
+      LDFLAGS="$LDFLAGS -L$1"
+   fi
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+/* struct nl_sock* nl_socket_alloc(void); */
+void* nl_socket_alloc(void);
+      ]], [[
+void* sock = nl_socket_alloc();
+      ]])],
+      [htop_libnl3_link_succeed=yes],
+      [htop_libnl3_link_succeed=no])
+
+   LDFLAGS=$htop_save_LDFLAGS
+   LIBS=$htop_save_LIBS
+} # htop_try_link_libnl3
+
 AC_ARG_ENABLE([delayacct],
               [AS_HELP_STRING([--enable-delayacct],
-                              [enable Linux delay accounting support; requires pkg-config, libnl-3 and libnl-genl-3 @<:@default=check@:>@])],
+                              [enable Linux delay accounting support; requires libnl-3 and libnl-genl-3 @<:@default=check@:>@])],
               [],
               [enable_delayacct=check])
 case "$enable_delayacct" in
-   no)
+   no|yes)
       ;;
    check)
       if test "$my_htop_platform" != linux; then
          enable_delayacct=no
       elif test "$enable_static" = yes; then
          enable_delayacct=no
-      else
-         old_CFLAGS="$CFLAGS"
-         CFLAGS="$CFLAGS -I/usr/include/libnl3"
-         AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [enable_delayacct=yes], [enable_delayacct=no])
-         CFLAGS="$old_CFLAGS"
       fi
-      ;;
-   yes)
-      old_CFLAGS="$CFLAGS"
-      CFLAGS="$CFLAGS -I/usr/include/libnl3"
-      AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h], [], [AC_MSG_ERROR([can not find required header files netlink/attr.h, netlink/handlers.h, netlink/msg.h])])
-      CFLAGS="$old_CFLAGS"
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_delayacct' for --enable-delayacct])
       ;;
 esac
+
+case "$enable_delayacct" in
+   check|yes)
+      if test "x${LIBNL3_CFLAGS+y}" = x; then
+         m4_ifdef([PKG_PROG_PKG_CONFIG], [
+            PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [LIBNL3_CFLAGS="-I/usr/include/libnl3"])
+         ], [
+            LIBNL3_CFLAGS="-I/usr/include/libnl3"
+         ])
+      fi
+
+      htop_save_CFLAGS=$CFLAGS
+      # New include path searched after what user has specified
+      CFLAGS="$CFLAGS $LIBNL3_CFLAGS"
+      AC_CHECK_HEADERS([netlink/attr.h netlink/handlers.h netlink/msg.h],
+         [],
+         [if test "$enable_delayacct" = yes; then
+            AC_MSG_ERROR([can not find required header files netlink/attr.h, netlink/handlers.h, netlink/msg.h])
+         fi
+         enable_delayacct=no])
+      CFLAGS=$htop_save_CFLAGS
+
+      if test "$enable_delayacct" != no; then
+         AC_MSG_CHECKING([the search path of libnl-3])
+
+         htop_libnl3_link_succeed=no
+         htop_try_link_libnl3 "$LIBNL3_LIBDIR"
+         if test "$htop_libnl3_link_succeed${LIBNL3_LIBDIR+y}" = no && test "x$PKG_CONFIG" != x; then
+            LIBNL3_LIBDIR=`$PKG_CONFIG --variable=libdir libnl-3.0 2>/dev/null`
+            if test "x$LIBNL3_LIBDIR" != x; then
+               htop_try_link_libnl3 "$LIBNL3_LIBDIR"
+            fi
+         fi
+
+         if test "x$LIBNL3_LIBDIR" = x; then
+            AC_MSG_RESULT([(default)])
+         else
+            # The path must end with a slash
+            LIBNL3_LIBDIR=`echo "x$LIBNL3_LIBDIR" | sed 's/^x//; s|/*$|/|'`
+            AC_MSG_RESULT([$LIBNL3_LIBDIR])
+         fi
+         AC_DEFINE_UNQUOTED([LIBNL3_LIBDIR], ["$LIBNL3_LIBDIR"], [libnl-3 search path; use the default search paths if empty])
+         if test "$htop_libnl3_link_succeed" = no; then
+            AC_MSG_WARN([libnl-3 binary currently not present; will be needed in htop runtime for delay accounting support])
+         fi
+
+         enable_delayacct=yes
+      fi
+      ;;
+esac
 if test "$enable_delayacct" = yes; then
   AC_DEFINE([HAVE_DELAYACCT], [1], [Define if delay accounting support should be enabled.])
-  AM_CFLAGS="$AM_CFLAGS -I/usr/include/libnl3"
+  AM_CFLAGS="$AM_CFLAGS $LIBNL3_CFLAGS"
 fi
 AM_CONDITIONAL([HAVE_DELAYACCT], [test "$enable_delayacct" = yes])
 
