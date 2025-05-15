@@ -337,6 +337,27 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    GraphMeterMode_drawGraph(this, x + captionLen, y, w, this->h, -1);
 }
 
+static void BipolarMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - x);
+
+   // Draw the caption
+   const int captionLen = 3;
+   const char* caption = Meter_getCaption(this);
+   if (w >= captionLen) {
+      attrset(CRT_colors[METER_TEXT]);
+      mvaddnstr(y, x, caption, captionLen);
+   }
+   w -= captionLen;
+
+   // Draw the top graph, half height
+   GraphMeterMode_drawGraph(this, x + captionLen, y, w, this->h / 2, 0);
+
+   // Draw the bottom graph, half height
+   y += this->h / 2;
+   GraphMeterMode_drawGraph(this, x + captionLen, y, w, this->h / 2, 1);
+}
+
 /* ---------- LEDMeterMode ---------- */
 
 static const char* const LEDMeterMode_digitsAscii[] = {
@@ -441,6 +462,11 @@ static const MeterMode Meter_modes[] = {
       .uiName = "Graph",
       .h = DEFAULT_GRAPH_HEIGHT,
       .draw = GraphMeterMode_draw,
+   },
+   [BIPOLAR_METERMODE] = {
+      .uiName = "Bipolar",
+      .h = DEFAULT_GRAPH_HEIGHT,
+      .draw = BipolarMeterMode_draw,
    },
    [LED_METERMODE] = {
       .uiName = "LED",
