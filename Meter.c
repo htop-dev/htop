@@ -185,7 +185,7 @@ end:
 #ifdef HAVE_LIBNCURSESW
 
 #define PIXPERROW_UTF8 4
-static const char* const GraphMeterMode_dotsUtf8[] = {
+static const char* const GraphMeterMode_top_dotsUtf8[] = {
    /*00*/" ", /*01*/"⢀", /*02*/"⢠", /*03*/"⢰", /*04*/ "⢸",
    /*10*/"⡀", /*11*/"⣀", /*12*/"⣠", /*13*/"⣰", /*14*/ "⣸",
    /*20*/"⡄", /*21*/"⣄", /*22*/"⣤", /*23*/"⣴", /*24*/ "⣼",
@@ -193,32 +193,45 @@ static const char* const GraphMeterMode_dotsUtf8[] = {
    /*40*/"⡇", /*41*/"⣇", /*42*/"⣧", /*43*/"⣷", /*44*/ "⣿"
 };
 
+static const char* const GraphMeterMode_bottom_dotsUtf8[] = {
+   /*00*/" ", /*01*/"⠈", /*02*/"⠘", /*03*/"⠸", /*04*/ "⢸",
+   /*10*/"⠁", /*11*/"⠉", /*12*/"⠙", /*13*/"⠹", /*14*/ "⢹",
+   /*20*/"⠃", /*21*/"⠋", /*22*/"⠛", /*23*/"⠻", /*24*/ "⢻",
+   /*30*/"⠇", /*31*/"⠏", /*32*/"⠟", /*33*/"⠿", /*34*/ "⢿",
+   /*40*/"⡇", /*41*/"⡏", /*42*/"⡟", /*43*/"⡿", /*44*/ "⣿"
+};
+
+static const char* const* const GraphMeterMode_dotsUtf8[2] = {
+   GraphMeterMode_top_dotsUtf8,
+   GraphMeterMode_bottom_dotsUtf8
+};
 #endif
 
 #define PIXPERROW_ASCII 2
-static const char* const GraphMeterMode_dotsAscii[] = {
+static const char* const GraphMeterMode_top_dotsAscii[] = {
    /*00*/" ", /*01*/".", /*02*/":",
    /*10*/".", /*11*/".", /*12*/":",
    /*20*/":", /*21*/":", /*22*/":"
 };
 
-static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+static const char* const GraphMeterMode_bottom_dotsAscii[] = {
+   /*00*/" ", /*01*/"'", /*02*/":",
+   /*10*/"'", /*11*/"'", /*12*/":",
+   /*20*/":", /*21*/":", /*22*/":"
+};
+
+static const char* const* const GraphMeterMode_dotsAscii[2] = {
+   GraphMeterMode_top_dotsAscii,
+   GraphMeterMode_bottom_dotsAscii
+};
+
+static void GraphMeterMode_drawGraph(Meter* this, int x, int y, int w, int h, int channel) {
    assert(x >= 0);
-   assert(w <= INT_MAX - x);
+   assert(y >= 0);
+   assert(w > 0 && w <= INT_MAX - x);
+   assert(h > 0 && h <= INT_MAX - y);
 
-   // Draw the caption
-   const int captionLen = 3;
-   const char* caption = Meter_getCaption(this);
-   if (w >= captionLen) {
-      attrset(CRT_colors[METER_TEXT]);
-      mvaddnstr(y, x, caption, captionLen);
-   }
-   w -= captionLen;
-
-   assert(this->h >= 1);
-   int h = this->h;
-
-   GraphData* data = &this->drawData;
+   GraphData* data = &this->drawData[channel+1];
 
    // Expand the graph data buffer if necessary
    assert(data->nValues / 2 <= INT_MAX);
@@ -247,28 +260,35 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       data->values[nValues - 1] = 0.0;
       if (this->curItems > 0) {
          assert(this->values);
-         data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
+         if (channel < 0) {
+            data->values[nValues - 1] = sumPositiveValues(this->values, this->curItems);
+         } else {
+            assert(this->curItems > channel);
+            data->values[nValues - 1] = this->values[channel];
+         }
       }
    }
 
    if (w < 1) {
       goto end;
    }
-   x += captionLen;
 
    // Graph drawing style (character set, etc.)
-   const char* const* GraphMeterMode_dots;
-   int GraphMeterMode_pixPerRow;
+   const char* const* GraphMeterMode_dots = NULL;
+   int GraphMeterMode_pixPerRow = 0;
+   int GraphMeterMode_dotSet = channel >= 0 ? channel : 0;
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8) {
-      GraphMeterMode_dots = GraphMeterMode_dotsUtf8;
+      GraphMeterMode_dots = GraphMeterMode_dotsUtf8[GraphMeterMode_dotSet];
       GraphMeterMode_pixPerRow = PIXPERROW_UTF8;
    } else
 #endif
    {
-      GraphMeterMode_dots = GraphMeterMode_dotsAscii;
+      GraphMeterMode_dots = GraphMeterMode_dotsAscii[GraphMeterMode_dotSet];
       GraphMeterMode_pixPerRow = PIXPERROW_ASCII;
    }
+   assert(GraphMeterMode_dots);
+   assert(GraphMeterMode_pixPerRow > 0);
 
    // Starting positions of graph data and terminal column
    if ((size_t)w > nValues / 2) {
@@ -290,13 +310,31 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
          int line2 = CLAMP(v2 - (GraphMeterMode_pixPerRow * (h - 1 - line)), 0, GraphMeterMode_pixPerRow);
 
          attrset(CRT_colors[colorIdx]);
-         mvaddstr(y + line, x + col, GraphMeterMode_dots[line1 * (GraphMeterMode_pixPerRow + 1) + line2]);
+         int screen_row = GraphMeterMode_dotSet == 0 ? y + line : y + h - line - 1;
+         mvaddstr(screen_row, x + col, GraphMeterMode_dots[line1 * (GraphMeterMode_pixPerRow + 1) + line2]);
          colorIdx = GRAPH_2;
       }
    }
 
 end:
    attrset(CRT_colors[RESET_COLOR]);
+}
+
+static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
+   assert(x >= 0);
+   assert(w <= INT_MAX - x);
+
+   // Draw the caption
+   const int captionLen = 3;
+   const char* caption = Meter_getCaption(this);
+   if (w >= captionLen) {
+      attrset(CRT_colors[METER_TEXT]);
+      mvaddnstr(y, x, caption, captionLen);
+   }
+   w -= captionLen;
+
+   // Draw the graph
+   GraphMeterMode_drawGraph(this, x + captionLen, y, w, this->h, -1);
 }
 
 /* ---------- LEDMeterMode ---------- */
@@ -483,7 +521,9 @@ void Meter_delete(Object* cast) {
    if (Meter_doneFn(this)) {
       Meter_done(this);
    }
-   free(this->drawData.values);
+   for (size_t i = 0; i < ARRAYSIZE(this->drawData); i++) {
+      free(this->drawData[i].values);
+   }
    free(this->caption);
    free(this->values);
    free(this);
@@ -513,9 +553,10 @@ void Meter_setMode(Meter* this, MeterModeId modeIndex) {
       this->draw = Meter_drawFn(this);
       Meter_updateMode(this, modeIndex);
    } else {
-      free(this->drawData.values);
-      this->drawData.values = NULL;
-      this->drawData.nValues = 0;
+      for (size_t i = 0; i < ARRAYSIZE(this->drawData); i++) {
+         free(this->drawData[i].values);
+         this->drawData[i] = (GraphData) { .values = NULL };
+      }
 
       const MeterMode* mode = &Meter_modes[modeIndex];
       this->draw = mode->draw;
