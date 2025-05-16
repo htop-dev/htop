@@ -143,6 +143,9 @@ typedef struct Process_ {
    /* The process/thread working directory */
    char* procCwd;
 
+   /* Shortened process/thread working directory */
+   char* procCwdShort;
+
    /* Offset in procExe of the process basename */
    int procExeBasenameOffset;
 
@@ -328,6 +331,7 @@ const char* Process_getCommand(const Process* this);
 void Process_updateComm(Process* this, const char* comm);
 void Process_updateCmdline(Process* this, const char* cmdline, int basenameStart, int basenameEnd);
 void Process_updateExe(Process* this, const char* exe);
+void Process_updateShortCwd(Process* this);
 
 /* This function constructs the string that is displayed by
  * Process_writeCommand and also returned by Process_getCommand */

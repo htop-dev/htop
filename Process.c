@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 
 #include "CRT.h"
+#include "CwdUtils.h"
 #include "Hashtable.h"
 #include "Machine.h"
 #include "Macros.h"
@@ -629,7 +630,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
          attr = CRT_colors[PROCESS_SHADOW];
          cwd = "main thread terminated";
       } else {
-         cwd = this->procCwd;
+         cwd = this->procCwdShort;
       }
       Row_printLeftAlignedField(str, attr, cwd, 25);
       return;
@@ -769,6 +770,7 @@ void Process_done(Process* this) {
    free(this->procComm);
    free(this->procExe);
    free(this->procCwd);
+   free(this->procCwdShort);
    free(this->mergedCommand.str);
    free(this->tty_name);
 }
@@ -1080,6 +1082,11 @@ void Process_updateCPUFieldWidths(float percentage) {
 
    Row_updateFieldWidth(PERCENT_CPU, width);
    Row_updateFieldWidth(PERCENT_NORM_CPU, width);
+}
+
+void Process_updateShortCwd(Process* this) {
+   free(this->procCwdShort);
+   this->procCwdShort = this->procCwd ? CwdUtils_shortenCwd(this->procCwd, 25) : NULL;
 }
 
 const ProcessClass Process_class = {
