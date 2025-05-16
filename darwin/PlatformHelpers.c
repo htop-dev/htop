@@ -86,3 +86,42 @@ bool Platform_isRunningTranslated(void) {
    }
    return ret;
 }
+
+void Platform_calculateNanosecondsPerMachTick(uint64_t* numer, uint64_t* denom) {
+   // Check if we can determine the timebase used on this system.
+   // If the API is unavailable assume we get our timebase in nanoseconds.
+#ifdef HAVE_MACH_TIMEBASE_INFO
+   mach_timebase_info_data_t info;
+   mach_timebase_info(&info);
+
+   *numer = info.numer;
+   *denom = info.denom;
+#else
+   *numer = 1;
+   *denom = 1;
+#endif
+
+   // Taken that Rosetta2 only supports x86_64 we only need to apply the
+   // workaround if we are running on that architecture.
+#ifdef __x86_64__
+   /* WORKAROUND for `mach_timebase_info` giving incorrect values on M1 under Rosetta 2.
+    *    rdar://FB9546856 http://www.openradar.appspot.com/FB9546856
+    *
+    *    We don't know exactly what feature/attribute of the M1 chip causes this mistake under Rosetta 2.
+    *    Until we have more Apple ARM chips to compare against, the best we can do is special-case
+    *    the "Apple M1" chip specifically when running under Rosetta 2.
+    */
+
+   bool isRunningUnderRosetta2 = Platform_isRunningTranslated();
+
+   // Kernel version 20.0.0 is macOS 11.0 (Big Sur)
+   bool isBuggedVersion = 0 <= Platform_CompareKernelVersion((KernelVersion) {20, 0, 0});
+
+   if (isRunningUnderRosetta2 && isBuggedVersion) {
+      // In this case `mach_timebase_info` provides the wrong value, so we hard-code the correct factor,
+      // as determined from `mach_timebase_info` as if the process was running natively.
+      *numer = 125;
+      *denom = 3;
+   }
+#endif
+}
