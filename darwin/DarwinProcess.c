@@ -9,10 +9,15 @@ in the source distribution for its full text.
 
 #include "darwin/DarwinProcess.h"
 
+#include <AvailabilityMacros.h>
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 #include <libproc.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mach/mach_init.h>
 #include <mach/mach.h>
 #include <sys/dirent.h>
 
@@ -107,6 +112,7 @@ static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, Proc
 }
 
 static void DarwinProcess_updateExe(pid_t pid, Process* proc) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
    char path[PROC_PIDPATHINFO_MAXSIZE];
 
    int r = proc_pidpath(pid, path, sizeof(path));
@@ -114,9 +120,11 @@ static void DarwinProcess_updateExe(pid_t pid, Process* proc) {
       return;
 
    Process_updateExe(proc, path);
+#endif
 }
 
 static void DarwinProcess_updateCwd(pid_t pid, Process* proc) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
    struct proc_vnodepathinfo vpi;
 
    int r = proc_pidinfo(pid, PROC_PIDVNODEPATHINFO, 0, &vpi, sizeof(vpi));
@@ -133,6 +141,7 @@ static void DarwinProcess_updateCwd(pid_t pid, Process* proc) {
    }
 
    free_and_xStrdup(&proc->procCwd, vpi.pvi_cdir.vip_path);
+#endif
 }
 
 static void DarwinProcess_updateCmdLine(const struct kinfo_proc* k, Process* proc) {
@@ -362,6 +371,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
 }
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable* dpt, double timeIntervalNS) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
    struct proc_taskinfo pti;
 
    if (PROC_PIDTASKINFO_SIZE != proc_pidinfo(Process_getPid(&proc->super), PROC_PIDTASKINFO, 0, &pti, PROC_PIDTASKINFO_SIZE)) {
@@ -400,6 +410,9 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
    dpt->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
    dpt->super.totalTasks += pti.pti_threadnum;
    dpt->super.runningTasks += pti.pti_numrunning;
+#else
+   proc->taskAccess = false;
+#endif
 }
 
 /*
@@ -408,6 +421,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
  * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
  */
 void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
    Process* proc = (Process*) dp;
    kern_return_t ret;
 
@@ -519,6 +533,7 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
 
    vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
    mach_port_deallocate(mach_task_self(), task);
+#endif
 }
 
 
