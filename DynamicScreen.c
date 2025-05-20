@@ -39,8 +39,8 @@ void DynamicScreen_done(DynamicScreen* this) {
 }
 
 typedef struct {
-   ht_key_t key;
    const char* name;
+   ht_key_t key;
    bool found;
 } DynamicIterator;
 

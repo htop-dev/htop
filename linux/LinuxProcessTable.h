@@ -27,8 +27,8 @@ typedef struct LinuxProcessTable_ {
    bool haveAutogroup;
 
    #ifdef HAVE_DELAYACCT
-   struct nl_sock* netlink_socket;
    int netlink_family;
+   struct nl_sock* netlink_socket;
    #endif
 } LinuxProcessTable;
 
