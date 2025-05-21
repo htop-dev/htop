@@ -48,7 +48,7 @@ void DynamicMeters_delete(Hashtable* dynamics) {
 }
 
 typedef struct {
-   unsigned int key;
+   ht_key_t key;
    const char* name;
    bool found;
 } DynamicIterator;
@@ -62,7 +62,7 @@ static void DynamicMeter_compare(ht_key_t key, void* value, void* data) {
    }
 }
 
-bool DynamicMeter_search(Hashtable* dynamics, const char* name, unsigned int* key) {
+bool DynamicMeter_search(Hashtable* dynamics, const char* name, ht_key_t* key) {
    DynamicIterator iter = { .key = 0, .name = name, .found = false };
    if (dynamics)
       Hashtable_foreach(dynamics, DynamicMeter_compare, &iter);
@@ -71,7 +71,7 @@ bool DynamicMeter_search(Hashtable* dynamics, const char* name, unsigned int* ke
    return iter.found;
 }
 
-const char* DynamicMeter_lookup(Hashtable* dynamics, unsigned int key) {
+const char* DynamicMeter_lookup(Hashtable* dynamics, ht_key_t key) {
    const DynamicMeter* meter = Hashtable_get(dynamics, key);
    return meter ? meter->name : NULL;
 }
