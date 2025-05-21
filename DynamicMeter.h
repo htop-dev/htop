@@ -26,9 +26,9 @@ Hashtable* DynamicMeters_new(void);
 
 void DynamicMeters_delete(Hashtable* dynamics);
 
-const char* DynamicMeter_lookup(Hashtable* dynamics, unsigned int key);
+const char* DynamicMeter_lookup(Hashtable* dynamics, ht_key_t key);
 
-bool DynamicMeter_search(Hashtable* dynamics, const char* name, unsigned int* key);
+bool DynamicMeter_search(Hashtable* dynamics, const char* name, ht_key_t* key);
 
 extern const MeterClass DynamicMeter_class;
 

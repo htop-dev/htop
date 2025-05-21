@@ -393,7 +393,7 @@ void PCPDynamicScreens_addAvailableColumns(Panel* availableColumns, Hashtable* s
    Vector_prune(availableColumns->items);
 
    bool success;
-   unsigned int key;
+   ht_key_t key;
    success = DynamicScreen_search(screens, screen, &key);
    if (!success)
       return;
