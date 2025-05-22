@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 
 typedef struct FunctionBar_ {
+   bool staticData;
    int size;
    char** functions;
    union {
@@ -18,7 +19,6 @@ typedef struct FunctionBar_ {
       const char* const* constKeys;
    } keys;
    int* events;
-   bool staticData;
 } FunctionBar;
 
 #define FUNCTIONBAR_MAXEVENTS 15
