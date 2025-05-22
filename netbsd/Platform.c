@@ -512,8 +512,7 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
          *isOnAC = isConnected ? AC_PRESENT : AC_ABSENT;
       }
    }
-
-   *percent = ((double)totalCharge / (double)totalCapacity) * 100.0;
+   *percent = totalCapacity > 0 ? ((double)totalCharge / (double)totalCapacity) * 100.0 : NAN;
 
 error:
    if (fd != -1)
