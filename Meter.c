@@ -60,12 +60,12 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    }
    attrset(CRT_colors[RESET_COLOR]);
 
-   int captionLen = strlen(caption);
-   w -= captionLen;
-   if (w < 1) {
+   int captionWidth = w > 0 ? (int)strnlen(caption, w) : 0;
+   if (w <= captionWidth) {
       return;
    }
-   x += captionLen;
+   w -= captionWidth;
+   x += captionWidth;
 
    RichString_begin(out);
    Meter_displayBuffer(this, &out);
@@ -340,11 +340,11 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
       mvaddnstr(yText, x, caption, w);
    }
 
-   int captionLen = strlen(caption);
-   if (w <= captionLen) {
+   int captionWidth = w > 0 ? (int)strnlen(caption, w) : 0;
+   if (w <= captionWidth) {
       goto end;
    }
-   int xx = x + captionLen;
+   int xx = x + captionWidth;
 
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8)
