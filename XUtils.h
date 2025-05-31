@@ -102,6 +102,10 @@ static inline char* String_strchrnul(const char* s, int c) {
 ATTR_NONNULL ATTR_ACCESS3_W(1, 3) ATTR_ACCESS3_R(2, 3)
 size_t String_safeStrncpy(char* restrict dest, const char* restrict src, size_t size);
 
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char* str, size_t maxLen);
+#endif
+
 ATTR_FORMAT(printf, 2, 3) ATTR_NONNULL_N(1, 2)
 int xAsprintf(char** strp, const char* fmt, ...);
 
