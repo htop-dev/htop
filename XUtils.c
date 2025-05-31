@@ -224,6 +224,17 @@ size_t String_safeStrncpy(char* restrict dest, const char* restrict src, size_t 
    return i;
 }
 
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char* str, size_t maxLen) {
+   for (size_t len = 0; len < maxLen; len++) {
+      if (!str[len]) {
+         return len;
+      }
+   }
+   return maxLen;
+}
+#endif
+
 int xAsprintf(char** strp, const char* fmt, ...) {
    va_list vl;
    va_start(vl, fmt);
