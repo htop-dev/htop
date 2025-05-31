@@ -177,7 +177,7 @@ const char* RowField_alignedTitle(const Settings* settings, RowField field) {
 }
 
 RowField RowField_keyAt(const Settings* settings, int at) {
-   const RowField* fields = (const RowField*) settings->ss->fields;
+   const RowField* fields = settings->ss->fields;
    RowField field;
    int x = 0;
    for (int i = 0; (field = fields[i]); i++) {
