@@ -1119,6 +1119,8 @@ static bool terminalSupportsDefinedKeys(const char* termType) {
       return false;
    }
 
+   #define IS_END_OR_DASH(ch) ((ch) == '-' || (ch) == '\0')
+
    switch (termType[0]) {
    case 'a':
       if (String_eq(termType, "alacritty")) {
@@ -1126,15 +1128,15 @@ static bool terminalSupportsDefinedKeys(const char* termType) {
       }
       break;
    case 's':
-      if (termType[1] == 't' && (termType[2] == '-' || !termType[2])) {
+      if (termType[1] == 't' && IS_END_OR_DASH(termType[2])) {
          return true;
       }
-      if (String_eq(termType, "screen")) {
+      if (String_startsWith(termType, "screen") && IS_END_OR_DASH(termType[6])) {
          return true;
       }
       break;
    case 't':
-      if (String_eq(termType, "tmux")) {
+      if (String_startsWith(termType, "tmux") && IS_END_OR_DASH(termType[4])) {
          return true;
       }
       break;
@@ -1144,7 +1146,7 @@ static bool terminalSupportsDefinedKeys(const char* termType) {
       }
       break;
    case 'x':
-      if (String_eq(termType, "xterm")) {
+      if (String_startsWith(termType, "xterm") && IS_END_OR_DASH(termType[5])) {
          return true;
       }
       break;
