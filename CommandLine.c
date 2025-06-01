@@ -249,6 +249,10 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
          }
          case 'F':
             assert(optarg);
+            if (optarg[0] == '\0' || optarg[0] == '|') {
+               fprintf(stderr, "Error: invalid filter value \"%s\".\n", optarg);
+               return STATUS_ERROR_EXIT;
+            }
             free_and_xStrdup(&flags->commFilter, optarg);
             break;
          case 'H': {
