@@ -98,6 +98,7 @@ void InfoScreen_run(InfoScreen* this) {
 
       Panel_draw(panel, false, true, true, false);
       IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
+      FunctionBar_setLabel(this->display->defaultBar, KEY_F(4), this->inc->filtering ? "FILTER " : "Filter ");
 
       int ch = Panel_getCh(panel);
 
