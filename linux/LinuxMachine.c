@@ -594,6 +594,8 @@ static void scanCPUFrequencyFromCPUinfo(LinuxMachine* this) {
          continue;
       } else if (
          (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
+         (sscanf(buffer, "CPU MHz : %lf", &frequency) == 1) || // LooooongArch: https://github.com/torvalds/linux/blob/v6.15/arch/loongarch/kernel/proc.c#L42
+         (sscanf(buffer, "cpu MHz dynamic : %lf", &frequency) == 1) || // s390: https://github.com/torvalds/linux/blob/v6.15/arch/s390/kernel/processor.c#L335
          (sscanf(buffer, "clock : %lfMHz", &frequency) == 1)
       ) {
          if (cpuid < 0 || (unsigned int)cpuid > (super->existingCPUs - 1)) {
