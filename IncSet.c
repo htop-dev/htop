@@ -181,6 +181,13 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
             }
          }
       }
+   } else if (ch == KEY_CTRL('U')) {
+      mode->index = 0;
+      mode->buffer[mode->index] = 0;
+      if (mode->isFilter) {
+         filterChanged = true;
+         this->filtering = false;
+      }
    } else if (ch == KEY_BACKSPACE || ch == 127) {
       if (mode->index > 0) {
          mode->index--;
