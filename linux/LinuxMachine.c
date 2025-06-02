@@ -590,7 +590,10 @@ static void scanCPUFrequencyFromCPUinfo(LinuxMachine* this) {
       if (fgets(buffer, PROC_LINE_LENGTH, file) == NULL)
          break;
 
-      if (sscanf(buffer, "processor : %d", &cpuid) == 1) {
+      if (
+         (sscanf(buffer, "processor : %d", &cpuid) == 1) ||
+         (sscanf(buffer, "cpu number : %d", &cpuid) == 1) // s390: https://github.com/torvalds/linux/blob/v6.15/arch/s390/kernel/processor.c#L349
+      ) {
          continue;
       } else if (
          (sscanf(buffer, "cpu MHz : %lf", &frequency) == 1) ||
