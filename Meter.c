@@ -54,7 +54,7 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(w <= INT_MAX - x);
 
    const char* caption = Meter_getCaption(this);
-   if (w >= 1) {
+   if (w > 0) {
       attrset(CRT_colors[METER_TEXT]);
       mvaddnstr(y, x, caption, w);
    }
@@ -336,7 +336,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[LED_COLOR]);
 
    const char* caption = Meter_getCaption(this);
-   if (w >= 1) {
+   if (w > 0) {
       mvaddnstr(yText, x, caption, w);
    }
 
