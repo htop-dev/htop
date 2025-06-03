@@ -402,6 +402,7 @@ static Htop_Reaction actionPrevScreen(State* st) {
 
 Htop_Reaction Action_setScreenTab(State* st, int x) {
    Settings* settings = st->host->settings;
+   const int bracketWidth = (int)strlen("[]");
    int s = SCREEN_TAB_MARGIN_LEFT;
    for (unsigned int i = 0; i < settings->nScreens; i++) {
       if (x < s) {
@@ -409,12 +410,12 @@ Htop_Reaction Action_setScreenTab(State* st, int x) {
       }
       const char* tab = settings->screens[i]->heading;
       int len = strlen(tab);
-      if (x < s + len + 2) {
+      if (x < s + len + bracketWidth) {
          settings->ssIndex = i;
          setActiveScreen(settings, st, i);
          return HTOP_UPDATE_PANELHDR | HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
-      s += len + 2 + SCREEN_TAB_COLUMN_GAP;
+      s += len + bracketWidth + SCREEN_TAB_COLUMN_GAP;
    }
    return 0;
 }
