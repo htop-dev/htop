@@ -169,11 +169,10 @@ static inline bool drawTab(const int* y, int* x, int l, const char* name, bool c
    (*x)++;
    if (*x >= l)
       return false;
-   int nameLen = strlen(name);
-   int n = MINIMUM(l - *x, nameLen);
+   int nameWidth = (int)strnlen(name, l - *x);
    attrset(CRT_colors[cur ? SCREENS_CUR_TEXT : SCREENS_OTH_TEXT]);
-   mvaddnstr(*y, *x, name, n);
-   *x += n;
+   mvaddnstr(*y, *x, name, nameWidth);
+   *x += nameWidth;
    if (*x >= l)
       return false;
    attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
