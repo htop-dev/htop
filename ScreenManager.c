@@ -161,16 +161,18 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
 }
 
 static inline bool drawTab(const int* y, int* x, int l, const char* name, bool cur) {
+   assert(*x >= 0);
+   assert(*x < l);
+
    attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
    mvaddch(*y, *x, '[');
    (*x)++;
    if (*x >= l)
       return false;
-   int nameLen = strlen(name);
-   int n = MINIMUM(l - *x, nameLen);
+   int nameWidth = (int)strnlen(name, l - *x);
    attrset(CRT_colors[cur ? SCREENS_CUR_TEXT : SCREENS_OTH_TEXT]);
-   mvaddnstr(*y, *x, name, n);
-   *x += n;
+   mvaddnstr(*y, *x, name, nameWidth);
+   *x += nameWidth;
    if (*x >= l)
       return false;
    attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
@@ -190,9 +192,12 @@ static void ScreenManager_drawScreenTabs(ScreenManager* this) {
    int y = panel->y - 1;
    int x = SCREEN_TAB_MARGIN_LEFT;
 
+   if (x >= l)
+      goto end;
+
    if (this->name) {
       drawTab(&y, &x, l, this->name, true);
-      return;
+      goto end;
    }
 
    for (int s = 0; screens[s]; s++) {
@@ -201,6 +206,8 @@ static void ScreenManager_drawScreenTabs(ScreenManager* this) {
          break;
       }
    }
+
+end:
    attrset(CRT_colors[RESET_COLOR]);
 }
 

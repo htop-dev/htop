@@ -372,6 +372,7 @@ AC_CHECK_FUNCS([ \
     readlinkat \
     sched_getscheduler \
     sched_setscheduler \
+    strnlen \
    ])
 
 # strchrnul is available in macOS since 15.4, but the user may specify an older
