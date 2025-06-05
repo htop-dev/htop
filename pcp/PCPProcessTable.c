@@ -310,22 +310,22 @@ static void PCPProcessTable_updateCmdline(Process* process, int pid, int offset,
    }
 
    char* command = value.cp;
-   int length = strlen(command);
+   size_t length = strlen(command);
    if (command[0] != '(') {
       process->isKernelThread = false;
    } else {
-      ++command;
-      --length;
       if (command[length - 1] == ')')
          command[--length] = '\0';
+      ++command;
+      --length;
       process->isKernelThread = true;
    }
 
-   int tokenEnd = 0;
-   int tokenStart = 0;
+   size_t tokenEnd = 0;
+   size_t tokenStart = 0;
    bool argSepSpace = false;
 
-   for (int i = 0; i < length; i++) {
+   for (size_t i = 0; i < length; i++) {
       /* htop considers the next character after the last / that is before
        * basenameOffset, as the start of the basename in cmdline - see
        * Process_writeCommand */
