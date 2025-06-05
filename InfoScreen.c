@@ -77,11 +77,17 @@ void InfoScreen_addLine(InfoScreen* this, const char* line) {
 }
 
 void InfoScreen_appendLine(InfoScreen* this, const char* line) {
-   ListItem* last = (ListItem*)Vector_get(this->lines, Vector_size(this->lines) - 1);
-   ListItem_append(last, line);
+   if (!Vector_size(this->lines)) {
+      InfoScreen_addLine(this, line);
+      return;
+   }
+
+   Object* last = Vector_get(this->lines, Vector_size(this->lines) - 1);
+   ListItem_append((ListItem*)last, line);
    const char* incFilter = IncSet_filter(this->inc);
-   if (incFilter && Panel_get(this->display, Panel_size(this->display) - 1) != (Object*)last && String_contains_i(line, incFilter, true)) {
-      Panel_add(this->display, (Object*)last);
+   Object* displayLast = Panel_size(this->display) ? Panel_get(this->display, Panel_size(this->display) - 1) : NULL;
+   if (incFilter && displayLast != last && String_contains_i(line, incFilter, true)) {
+      Panel_add(this->display, last);
    }
 }
 
