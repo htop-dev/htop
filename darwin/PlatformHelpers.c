@@ -68,21 +68,14 @@ void Platform_getCPUBrandString(char* cpuBrandString, size_t cpuBrandStringSize)
    }
 }
 
-// Adapted from https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
-bool Platform_isRunningTranslated(void) {
-   int ret = 0;
-   size_t size = sizeof(ret);
-   errno = 0;
-   if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
-      if (errno == ENOENT)
-         return false;
-
-      fprintf(stderr,
-         "WARN: Could not determine if this process was running in a translation environment like Rosetta 2.\n"
-         "Assuming that we're not.\n"
-         "errno: %i, %s\n", errno, strerror(errno));
-
-      return false;
-   }
-   return ret;
+double Platform_calculateNanosecondsPerMachTick(void) {
+   // Check if we can determine the timebase used on this system.
+   // If the API is unavailable assume we get our timebase in nanoseconds.
+#ifndef HAVE_MACH_TIMEBASE_INFO
+   return 1.0;
+#else
+   mach_timebase_info_data_t info;
+   mach_timebase_info(&info);
+   return (double)info.numer / (double)info.denom;
+#endif
 }
