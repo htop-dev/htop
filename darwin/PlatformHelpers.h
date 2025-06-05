@@ -8,6 +8,7 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 
@@ -28,6 +29,8 @@ int Platform_CompareKernelVersion(KernelVersion v);
 
 // lowerBound <= currentVersion < upperBound
 bool Platform_KernelVersionIsBetween(KernelVersion lowerBound, KernelVersion upperBound);
+
+void Platform_calculateNanosecondsPerMachTick(uint64_t* numer, uint64_t* denom);
 
 void Platform_getCPUBrandString(char* cpuBrandString, size_t cpuBrandStringSize);
 
