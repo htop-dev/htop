@@ -8,7 +8,7 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
-
+#include <stdint.h>
 
 typedef struct FunctionBar_ {
    uint32_t size;
