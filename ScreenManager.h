@@ -21,13 +21,13 @@ typedef struct ScreenManager_ {
    int y1;
    int x2;
    int y2;
+   bool allowFocusChange;
+   uint32_t panelCount;
    Vector* panels;
    const char* name;
-   int panelCount;
    Header* header;
    Machine* host;
    State* state;
-   bool allowFocusChange;
 } ScreenManager;
 
 ScreenManager* ScreenManager_new(Header* header, Machine* host, State* state, bool owner);

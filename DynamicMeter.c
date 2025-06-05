@@ -48,8 +48,8 @@ void DynamicMeters_delete(Hashtable* dynamics) {
 }
 
 typedef struct {
-   ht_key_t key;
    const char* name;
+   ht_key_t key;
    bool found;
 } DynamicIterator;
 

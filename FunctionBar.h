@@ -11,14 +11,14 @@ in the source distribution for its full text.
 
 
 typedef struct FunctionBar_ {
-   int size;
+   uint32_t size;
+   bool staticData;
    char** functions;
    union {
       char** keys;
       const char* const* constKeys;
    } keys;
    int* events;
-   bool staticData;
 } FunctionBar;
 
 #define FUNCTIONBAR_MAXEVENTS 15
