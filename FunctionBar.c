@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "FunctionBar.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -40,31 +41,32 @@ FunctionBar* FunctionBar_new(const char* const* functions, const char* const* ke
    if (!functions) {
       functions = FunctionBar_FLabels;
    }
-   for (int i = 0; i < FUNCTIONBAR_MAXEVENTS && functions[i]; i++) {
+   for (size_t i = 0; i < FUNCTIONBAR_MAXEVENTS && functions[i]; i++) {
       this->functions[i] = xStrdup(functions[i]);
    }
    if (keys && events) {
       this->staticData = false;
       this->keys.keys = xCalloc(FUNCTIONBAR_MAXEVENTS, sizeof(char*));
       this->events = xCalloc(FUNCTIONBAR_MAXEVENTS, sizeof(int));
-      int i = 0;
+      size_t i = 0;
       while (i < FUNCTIONBAR_MAXEVENTS && functions[i]) {
          this->keys.keys[i] = xStrdup(keys[i]);
          this->events[i] = events[i];
          i++;
       }
-      this->size = i;
+      this->size = (uint32_t)i;
    } else {
       this->staticData = true;
       this->keys.constKeys = FunctionBar_FKeys;
       this->events = FunctionBar_FEvents;
       this->size = ARRAYSIZE(FunctionBar_FEvents);
    }
+   assert(this->size <= FUNCTIONBAR_MAXEVENTS);
    return this;
 }
 
 void FunctionBar_delete(FunctionBar* this) {
-   for (int i = 0; i < FUNCTIONBAR_MAXEVENTS && this->functions[i]; i++) {
+   for (size_t i = 0; i < FUNCTIONBAR_MAXEVENTS && this->functions[i]; i++) {
       free(this->functions[i]);
    }
    free(this->functions);
