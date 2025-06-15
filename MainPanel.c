@@ -195,6 +195,11 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
    if (this->state->pauseUpdate) {
       FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
    }
+#ifdef NVIDIA_JETSON
+   if (this->state->showGpuProcesses) {
+      FunctionBar_append("GPU", CRT_colors[GPU_FILTER]);
+   }
+#endif
 }
 
 static void MainPanel_printHeader(Panel* super) {
