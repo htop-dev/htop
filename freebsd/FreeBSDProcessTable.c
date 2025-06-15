@@ -165,6 +165,13 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
    int count = 0;
    const struct kinfo_proc* kprocs = kvm_getprocs(fhost->kd, KERN_PROC_PROC, 0, &count);
 
+   int ccpu;
+   size_t size = sizeof(ccpu);
+   if (sysctlbyname("kern.ccpu", &ccpu, &size, NULL, 0) == -1) {
+      ccpu = 0;
+   }
+   const double decayfactor = log(ccpu / fhost->kernelFScale);
+
    for (int i = 0; i < count; i++) {
       const struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting = false;
@@ -234,7 +241,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
-      proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)fhost->kernelFScale);
+      proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)fhost->kernelFScale) / (1.0 - exp(kproc->ki_swtime * decayfactor));
       proc->percent_mem = 100.0 * proc->m_resident / (double)(host->totalMem);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
