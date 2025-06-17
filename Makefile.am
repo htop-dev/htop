@@ -166,9 +166,19 @@ myhtopheaders = \
 	Vector.h \
 	XUtils.h
 
+if HAVE_BACKTRACE_SCREEN
+myhtopheaders += \
+	BacktraceScreen.h \
+	generic/UnwindPtrace.h
+
+myhtopsources += \
+	BacktraceScreen.c \
+	generic/UnwindPtrace.c
+
 if HAVE_DEMANGLING
 myhtopheaders += generic/Demangle.h
 myhtopsources += generic/Demangle.c
+endif
 endif
 
 # Linux
