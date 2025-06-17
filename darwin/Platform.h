@@ -78,6 +78,8 @@ bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(NetworkIOData* data);
 
+void Platform_getBacktrace(pid_t pid, Vector* frames, char** error);
+
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 
 static inline void Platform_getHostname(char* buffer, size_t size) {

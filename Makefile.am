@@ -166,6 +166,11 @@ myhtopheaders = \
 	Vector.h \
 	XUtils.h
 
+if HAVE_BACKTRACE_SCREEN
+myhtopheaders += BacktraceScreen.h
+myhtopsources += BacktraceScreen.c
+endif
+
 # Linux
 # -----
 

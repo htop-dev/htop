@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "Action.h"
+#include "BacktraceScreen.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
 #include "Hashtable.h"
@@ -28,6 +29,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "SignalsPanel.h"
 #include "CommandLine.h"
+#include "Vector.h"
 #include "generic/gettime.h"
 #include "generic/hostname.h"
 #include "generic/uname.h"
@@ -87,6 +89,8 @@ void Platform_getFileDescriptors(double* used, double* max);
 bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(NetworkIOData* data);
+
+void Platform_getBacktrace(pid_t pid, Vector* frames, char** error);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 

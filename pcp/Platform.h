@@ -25,6 +25,7 @@ in the source distribution for its full text.
 #undef PACKAGE_BUGREPORT
 
 #include "Action.h"
+#include "BacktraceScreen.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
 #include "Hashtable.h"
@@ -108,6 +109,8 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
 bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(NetworkIOData* data);
+
+void Platform_getBacktrace(pid_t pid, Vector* frames, char** error);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 

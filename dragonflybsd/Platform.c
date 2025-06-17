@@ -340,6 +340,12 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
+void Platform_getBacktrace(pid_t pid, Vector* frames, char** error) {
+   (void)frames;
+   (void)pid;
+   xAsprintf(error, "The backtrace screen is not implemented");
+}
+
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    int life;
    size_t life_len = sizeof(life);
