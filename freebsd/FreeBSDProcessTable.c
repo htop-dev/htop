@@ -246,7 +246,14 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
       proc->majflt = kproc->ki_cow;
 
-      proc->priority = kproc->ki_pri.pri_level - PZERO;
+      proc->priority = kproc->ki_pri.pri_level -
+          /* Reference point, as used by system's top(1) and ps(1). */
+#if __FreeBSD_version >= 1500048
+          PUSER
+#else
+          PZERO
+#endif
+          ;
 
       switch (PRI_BASE(kproc->ki_pri.pri_class)) {
          /* Handling of the below is explained in the FreeBSD base system in:
