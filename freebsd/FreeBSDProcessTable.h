@@ -16,6 +16,8 @@ in the source distribution for its full text.
 
 typedef struct FreeBSDProcessTable_ {
    ProcessTable super;
+
+   int osreldate;
 } FreeBSDProcessTable;
 
 #endif
