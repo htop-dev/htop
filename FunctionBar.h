@@ -10,15 +10,16 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdint.h>
 
+
 typedef struct FunctionBar_ {
-   uint32_t size;
-   bool staticData;
    char** functions;
    union {
       char** keys;
       const char* const* constKeys;
    } keys;
    int* events;
+   uint32_t size;
+   bool staticData;
 } FunctionBar;
 
 #define FUNCTIONBAR_MAXEVENTS 15
