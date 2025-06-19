@@ -117,6 +117,7 @@ const MeterClass MemoryMeter_class = {
    .defaultMode = BAR_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = MEMORY_METER_ITEMCOUNT,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = MemoryMeter_attributes,
    .name = "Memory",
