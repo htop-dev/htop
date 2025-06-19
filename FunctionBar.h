@@ -8,7 +8,6 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
-#include <stdint.h>
 
 
 typedef struct FunctionBar_ {
@@ -18,7 +17,7 @@ typedef struct FunctionBar_ {
       const char* const* constKeys;
    } keys;
    int* events;
-   uint32_t size;
+   unsigned int size;
    bool staticData;
 } FunctionBar;
 
