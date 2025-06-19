@@ -54,7 +54,7 @@ FunctionBar* FunctionBar_new(const char* const* functions, const char* const* ke
          this->events[i] = events[i];
          i++;
       }
-      this->size = (uint32_t)i;
+      this->size = (unsigned int)i;
    } else {
       this->staticData = true;
       this->keys.constKeys = FunctionBar_FKeys;
