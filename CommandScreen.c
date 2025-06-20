@@ -12,7 +12,11 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <wchar.h>
+#include <wctype.h>
+#include <locale.h>
 
 #include "Macros.h"
 #include "Panel.h"
@@ -26,22 +30,73 @@ static void CommandScreen_scan(InfoScreen* this) {
 
    const char* p = Process_getCommand(this->process);
    char line[COLS + 1];
-   int line_offset = 0, last_spc = -1, len;
-   for (; *p != '\0'; p++, line_offset++) {
-      assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
-      line[line_offset] = *p;
-      if (*p == ' ') {
-         last_spc = line_offset;
-      }
+   int line_offset = 0, line_size = 0, last_spc_cols = 0, last_spc_offset = -1;
+   size_t i = 0, total = strlen(p);
 
-      if (line_offset == COLS) {
-         len = (last_spc == -1) ? line_offset : last_spc;
-         line[len] = '\0';
+   if (CRT_utf8) {
+      mbstate_t state;
+      memset(&state, 0, sizeof(state));
+      int line_cols = 0;
+      while (i < total) {
+         assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
+         wchar_t wc;
+         size_t bytes = mbrtowc(&wc, p + i, total - i, &state);
+         int width = wcwidth(wc);
+         if (p[i] == ' ') {
+            last_spc_offset = line_offset;
+            last_spc_cols = line_cols;
+         }
+
+         if (bytes == (size_t)-1 || bytes == (size_t)-2) {
+            wc = L'\xFFFD';
+            bytes = 1;
+         }
+
+         memcpy(line + line_offset, p + i, bytes);
+         i += bytes;
+         line_offset += bytes;
+         line_cols += width;
+         if (line_cols < COLS) {
+            continue;
+         }
+
+         if (last_spc_offset >= 0) {
+            line_size = last_spc_offset;
+            line_cols -= last_spc_cols;
+            last_spc_offset = -1;
+            last_spc_cols = 0;
+         } else if (line_cols > COLS) {
+            line_size = line_offset - (int) bytes;
+            line_cols = width;
+         } else {
+            line_size = line_offset;
+            line_cols = 0;
+         }
+
+         line[line_size] = '\0';
          InfoScreen_addLine(this, line);
+         line_offset -= line_size;
+         if (line_offset > 0) {
+            memcpy(line, p + i - line_offset, line_offset + 1);
+         }
+      }
+   } else {
+      for (; i < total; i++, line_offset++) {
+         assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
+         char c = line[line_offset] = p[i];
+         if (c == ' ') {
+            last_spc_offset = line_offset;
+         }
 
-         line_offset -= len;
-         last_spc = -1;
-         memcpy(line, p - line_offset, line_offset + 1);
+         if (line_offset == COLS) {
+            line_size = (last_spc_offset == -1) ? line_offset : last_spc_offset;
+            line[line_size] = '\0';
+            InfoScreen_addLine(this, line);
+
+            line_offset -= line_size;
+            last_spc_offset = -1;
+            memcpy(line, p + i - line_offset, line_offset + 1);
+         }
       }
    }
 
