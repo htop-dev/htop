@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include <wctype.h>
 #include <locale.h>
 
+#include "CRT.h"
 #include "Macros.h"
 #include "Panel.h"
 #include "ProvideCurses.h"
@@ -45,6 +46,8 @@ static int CommandScreen_scanAscii(InfoScreen* this, const char* p, size_t total
 
    return line_offset;
 }
+
+#ifdef HAVE_LIBNCURSESW
 
 static int CommandScreen_scanWide(InfoScreen* this, const char* p, size_t total, char* line) {
    mbstate_t state;
@@ -102,6 +105,8 @@ static int CommandScreen_scanWide(InfoScreen* this, const char* p, size_t total,
    return line_offset;
 }
 
+#endif // HAVE_LIBNCURSESW
+
 static void CommandScreen_scan(InfoScreen* this) {
    Panel* panel = this->display;
    int idx = Panel_getSelectedIndex(panel);
@@ -112,8 +117,11 @@ static void CommandScreen_scan(InfoScreen* this) {
    size_t total = strlen(p);
    char line[total + 1];
 
-   int line_offset = CRT_utf8 ? CommandScreen_scanWide(this, p, total, line)
-      : CommandScreen_scanAscii(this, p, total, line);
+   int line_offset =
+#ifdef HAVE_LIBNCURSESW
+      CRT_utf8 ? CommandScreen_scanWide(this, p, total, line) :
+#endif
+      CommandScreen_scanAscii(this, p, total, line);
 
    assert(line_offset >= 0 && (size_t)line_offset <= total);
    if (line_offset > 0) {
