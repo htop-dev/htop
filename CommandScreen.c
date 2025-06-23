@@ -49,24 +49,29 @@ static int CommandScreen_scanAscii(InfoScreen* this, const char* p, size_t total
 static int CommandScreen_scanWide(InfoScreen* this, const char* p, size_t total, char* line) {
    mbstate_t state;
    memset(&state, 0, sizeof(state));
-   int line_cols = 0;
-   int line_offset = 0, line_size = 0, last_spc_cols = 0, last_spc_offset = -1;
+   size_t bytes;
+   int line_cols = 0, line_offset = 0, line_size = 0, width = 0;
+   int last_spc_cols = -1, last_spc_offset = -1;
    for (size_t i = 0; i < total; ) {
       assert(line_offset >= 0 && (size_t)line_offset <= total);
-      wchar_t wc;
-      size_t bytes = mbrtowc(&wc, p + i, total - i, &state);
-      int width = wcwidth(wc);
-      if (p[i] == ' ') {
-         last_spc_offset = line_offset;
-         last_spc_cols = line_cols;
+      unsigned char c = (unsigned char)p[i];
+      if (c < 0x80) { // skip mbrtowc for ASCII characters
+         if (c == ' ') {
+            last_spc_offset = line_offset;
+            last_spc_cols = line_cols;
+         }
+         bytes = width = 1;
+         line[line_offset] = c;
+      } else {
+         wchar_t wc;
+         bytes = mbrtowc(&wc, p + i, total - i, &state);
+         width = wcwidth(wc);
+         if (bytes == (size_t)-1 || bytes == (size_t)-2 || width < 0) {
+            bytes = width = 1;
+         }
+         memcpy(line + line_offset, p + i, bytes);
       }
 
-      if (bytes == (size_t)-1 || bytes == (size_t)-2) {
-         wc = L'\xFFFD';
-         bytes = 1;
-      }
-
-      memcpy(line + line_offset, p + i, bytes);
       i += bytes;
       line_offset += bytes;
       line_cols += width;
@@ -74,15 +79,14 @@ static int CommandScreen_scanWide(InfoScreen* this, const char* p, size_t total,
          continue;
       }
 
-      if (last_spc_offset >= 0) {
+      if (last_spc_offset >= 0) {  // wrap by last space
          line_size = last_spc_offset;
          line_cols -= last_spc_cols;
-         last_spc_offset = -1;
-         last_spc_cols = 0;
-      } else if (line_cols > COLS) {
+         last_spc_offset = last_spc_cols = -1;
+      } else if (line_cols > COLS) {  // wrap current wide char to next line
          line_size = line_offset - (int) bytes;
          line_cols = width;
-      } else {
+      } else { // wrap by current character
          line_size = line_offset;
          line_cols = 0;
       }
