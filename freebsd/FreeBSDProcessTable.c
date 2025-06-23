@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/_iovec.h>
 #include <sys/errno.h>
 #include <sys/param.h> // needs to be included before <sys/jail.h> for MAXPATHLEN
@@ -44,6 +45,7 @@ in the source distribution for its full text.
 ProcessTable* ProcessTable_new(Machine* host, Hashtable* pidMatchList) {
    FreeBSDProcessTable* this = xCalloc(1, sizeof(FreeBSDProcessTable));
    Object_setClass(this, Class(ProcessTable));
+   this->osreldate = getosreldate();
 
    ProcessTable* super = &this->super;
    ProcessTable_init(super, Class(FreeBSDProcess), host, pidMatchList);
@@ -156,6 +158,7 @@ IGNORE_WCASTQUAL_END
 }
 
 void ProcessTable_goThroughEntries(ProcessTable* super) {
+   const FreeBSDProcessTable* this = (const FreeBSDProcessTable*)super;
    const Machine* host = super->super.host;
    const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
    const Settings* settings = host->settings;
@@ -246,7 +249,9 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
       proc->majflt = kproc->ki_cow;
 
-      proc->priority = kproc->ki_pri.pri_level - PZERO;
+      proc->priority = kproc->ki_pri.pri_level -
+          /* Reference point, as used by system's top(1) and ps(1). */
+          (this->osreldate >= 1500048 ? PUSER : PZERO);
 
       switch (PRI_BASE(kproc->ki_pri.pri_class)) {
          /* Handling of the below is explained in the FreeBSD base system in:
