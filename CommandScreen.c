@@ -26,7 +26,7 @@ in the source distribution for its full text.
 static int CommandScreen_scanAscii(InfoScreen* this, const char* p, size_t total, char* line) {
    int line_offset = 0, line_size = 0, last_spc_offset = -1;
    for (size_t i = 0; i < total; i++, line_offset++) {
-      assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
+      assert(line_offset >= 0 && (size_t)line_offset <= total);
       char c = line[line_offset] = p[i];
       if (c == ' ') {
          last_spc_offset = line_offset;
@@ -52,7 +52,7 @@ static int CommandScreen_scanWide(InfoScreen* this, const char* p, size_t total,
    int line_cols = 0;
    int line_offset = 0, line_size = 0, last_spc_cols = 0, last_spc_offset = -1;
    for (size_t i = 0; i < total; ) {
-      assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
+      assert(line_offset >= 0 && (size_t)line_offset <= total);
       wchar_t wc;
       size_t bytes = mbrtowc(&wc, p + i, total - i, &state);
       int width = wcwidth(wc);
@@ -100,22 +100,24 @@ static int CommandScreen_scanWide(InfoScreen* this, const char* p, size_t total,
 
 static void CommandScreen_scan(InfoScreen* this) {
    Panel* panel = this->display;
-   int idx = MAXIMUM(Panel_getSelectedIndex(panel), 0);
+   int idx = Panel_getSelectedIndex(panel);
    Panel_prune(panel);
 
    const char* p = Process_getCommand(this->process);
-   char line[COLS + 1];
+   assert(p != NULL);
    size_t total = strlen(p);
+   char line[total + 1];
 
    int line_offset = CRT_utf8 ? CommandScreen_scanWide(this, p, total, line)
       : CommandScreen_scanAscii(this, p, total, line);
 
+   assert(line_offset >= 0 && (size_t)line_offset <= total);
    if (line_offset > 0) {
       line[line_offset] = '\0';
       InfoScreen_addLine(this, line);
    }
 
-   Panel_setSelected(panel, idx);
+   Panel_setSelected(panel, MAXIMUM(idx, 0));
 }
 
 static void CommandScreen_draw(InfoScreen* this) {
