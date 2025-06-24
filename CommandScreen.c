@@ -52,25 +52,25 @@ static int CommandScreen_scanAscii(InfoScreen* this, const char* p, size_t total
 static int CommandScreen_scanWide(InfoScreen* this, const char* p, size_t total, char* line) {
    mbstate_t state;
    memset(&state, 0, sizeof(state));
-   size_t bytes;
-   int line_cols = 0, line_offset = 0, line_size = 0, width = 0;
+   int line_cols = 0, line_offset = 0, line_size = 0, width = 1;
    int last_spc_cols = -1, last_spc_offset = -1;
-   for (size_t i = 0; i < total; ) {
+   for (size_t i = 0, bytes = 1; i < total; bytes = 1, width = 1) {
       assert(line_offset >= 0 && (size_t)line_offset <= total);
       unsigned char c = (unsigned char)p[i];
       if (c < 0x80) { // skip mbrtowc for ASCII characters
+         line[line_offset] = c;
          if (c == ' ') {
             last_spc_offset = line_offset;
             last_spc_cols = line_cols;
          }
-         bytes = width = 1;
-         line[line_offset] = c;
       } else {
          wchar_t wc;
          bytes = mbrtowc(&wc, p + i, total - i, &state);
-         width = wcwidth(wc);
-         if (bytes == (size_t)-1 || bytes == (size_t)-2 || width < 0) {
-            bytes = width = 1;
+         if (bytes != (size_t)-1 && bytes != (size_t)-2) {
+            width = wcwidth(wc);
+            width = MAXIMUM(width, 1);
+         } else {
+            bytes = 1;
          }
          memcpy(line + line_offset, p + i, bytes);
       }
