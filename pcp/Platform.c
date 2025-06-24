@@ -853,8 +853,11 @@ void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
 
 void Platform_gettime_monotonic(uint64_t* msec) {
    if (pcp->result) {
-      struct timeval* tv = &pcp->result->timestamp;
-      *msec = ((uint64_t)tv->tv_sec * 1000) + ((uint64_t)tv->tv_usec / 1000);
+#if PMAPI_VERSION >= 3
+      *msec = ((uint64_t)pcp->result->timestamp.tv_sec * 1000) + ((uint64_t)pcp->result->timestamp.tv_nsec / 1000000);
+#else
+      *msec = ((uint64_t)pcp->result->timestamp.tv_sec * 1000) + ((uint64_t)pcp->result->timestamp.tv_usec / 1000);
+#endif
    } else {
       *msec = 0;
    }
