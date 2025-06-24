@@ -175,8 +175,13 @@ bool Metric_fetch(struct timeval* timestamp) {
                  pmErrStr(sts));
       return false;
    }
-   if (timestamp)
+   if (timestamp) {
+#if PMAPI_VERSION >= 3
+      pmtimespecTotimeval(&pcp->result->timestamp, timestamp);
+#else
       *timestamp = pcp->result->timestamp;
+#endif
+   }
    return true;
 }
 
