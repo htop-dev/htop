@@ -11,12 +11,12 @@ in the source distribution for its full text.
 #include "CommandScreen.h"
 
 #include <assert.h>
-#include <stdlib.h>
+#include <locale.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <locale.h>
 
 #include "CRT.h"
 #include "Macros.h"
