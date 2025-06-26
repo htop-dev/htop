@@ -26,7 +26,7 @@ static const char* const DisplayOptionsFunctions[] =       {"      ", "      ", 
 
 static const char* const DisplayOptionsDecIncFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "Dec   ", "Inc   ", "      ", "Done  ", NULL};
 static const char* const DisplayOptionsDecIncKeys[] =      {"  "    , "  "    , "  "    , "  "    , "  "    , "  "    , "F7"    , "F8"    , "  "    , "F10"   , NULL};
-static const int DisplayOptionsDecIncEvents[] = {'-', KEY_F(7), '+', KEY_F(8), ERR, KEY_F(10)};
+static const int DisplayOptionsDecIncEvents[] = {'-', KEY_F(7), '+', KEY_F(8), ERR, KEY_F(10), ERR, ERR, ERR, ERR};
 
 static void DisplayOptionsPanel_delete(Object* object) {
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
