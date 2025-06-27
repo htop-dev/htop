@@ -54,13 +54,10 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
       case ' ':
          switch (OptionItem_kind(selected)) {
             case OPTION_ITEM_TEXT:
+            case OPTION_ITEM_NUMBER:
                break;
             case OPTION_ITEM_CHECK:
                CheckItem_toggle((CheckItem*)selected);
-               result = HANDLED;
-               break;
-            case OPTION_ITEM_NUMBER:
-               NumberItem_toggle((NumberItem*)selected);
                result = HANDLED;
                break;
          }
