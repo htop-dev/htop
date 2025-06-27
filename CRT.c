@@ -1104,9 +1104,9 @@ void CRT_resetSignalHandlers(void) {
 void CRT_setMouse(bool enabled) {
    if (enabled) {
 #if NCURSES_MOUSE_VERSION > 1
-      mousemask(BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
+      mousemask(BUTTON1_RELEASED | BUTTON3_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
 #else
-      mousemask(BUTTON1_RELEASED, NULL);
+      mousemask(BUTTON1_RELEASED | BUTTON3_RELEASED, NULL);
 #endif
    } else {
       mousemask(0, NULL);
