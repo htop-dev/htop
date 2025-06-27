@@ -98,16 +98,29 @@ static void CPUMeter_updateValues(Meter* this) {
       }
    }
 
+   #ifdef NVIDIA_JETSON
+   if (settings->showCPUTemperature) {
+      char c = 'C';
+      double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
+      if (settings->degreeFahrenheit) {
+         c = 'F';
+         cpuTemperature = ConvCelsiusToFahrenheit(cpuTemperature);
+      }
+      /* snprintf correctly represents double NAN numbers as 'nan' */
+      xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%.1f%s%c", cpuTemperature, CRT_degreeSign, c);
+   }
+   #else
    #ifdef BUILD_WITH_CPU_TEMP
    if (settings->showCPUTemperature) {
       double cpuTemperature = this->values[CPU_METER_TEMPERATURE];
       if (isNaN(cpuTemperature))
          xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "N/A");
       else if (settings->degreeFahrenheit)
-         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%3d%sF", (int)(cpuTemperature * 9 / 5 + 32), CRT_degreeSign);
+         xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%3d%sF", (int)(ConvCelsiusToFahrenheit(cpuTemperature)), CRT_degreeSign);
       else
          xSnprintf(cpuTemperatureBuffer, sizeof(cpuTemperatureBuffer), "%d%sC", (int)cpuTemperature, CRT_degreeSign);
    }
+   #endif
    #endif
 
    xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s%s%s%s%s",

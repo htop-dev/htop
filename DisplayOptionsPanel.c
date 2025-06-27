@@ -173,10 +173,10 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Also show CPU frequency", &(settings->showCPUFrequency)));
    #ifdef BUILD_WITH_CPU_TEMP
    Panel_add(super, (Object*) CheckItem_newByRef(
-   #if defined(HTOP_LINUX)
-                                                 "Also show CPU temperature (requires libsensors)",
-   #elif defined(HTOP_FREEBSD)
+   #if defined(HTOP_FREEBSD) || defined(NVIDIA_JETSON)
                                                  "Also show CPU temperature",
+   #elif defined(HTOP_LINUX)
+                                                 "Also show CPU temperature (requires libsensors)",
    #else
    #error Unknown temperature implementation!
    #endif
