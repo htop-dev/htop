@@ -49,8 +49,6 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
       case '\n':
       case '\r':
       case KEY_ENTER:
-      case KEY_MOUSE:
-      case KEY_RECLICK:
       case ' ':
          switch (OptionItem_kind(selected)) {
             case OPTION_ITEM_TEXT:
@@ -67,8 +65,12 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
          break;
       case '-':
       case KEY_F(7):
+      case KEY_RIGHTCLICK:
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             NumberItem_decrease((NumberItem*)selected);
+            result = HANDLED;
+         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
+            CheckItem_set((CheckItem*)selected, false);
             result = HANDLED;
          }
          break;
@@ -76,6 +78,18 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(8):
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             NumberItem_increase((NumberItem*)selected);
+            result = HANDLED;
+         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
+            CheckItem_set((CheckItem*)selected, true);
+            result = HANDLED;
+         }
+         break;
+      case KEY_RECLICK:
+         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+            NumberItem_increase((NumberItem*)selected);
+            result = HANDLED;
+         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
+            CheckItem_toggle((CheckItem*)selected);
             result = HANDLED;
          }
          break;

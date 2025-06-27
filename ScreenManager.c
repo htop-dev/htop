@@ -304,6 +304,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
                      }
                   }
                }
+            } else if (mevent.bstate & BUTTON3_RELEASED) {
+               ch = KEY_RIGHTCLICK;
             #if NCURSES_MOUSE_VERSION > 1
             } else if (mevent.bstate & BUTTON4_PRESSED) {
                ch = KEY_WHEELUP;
