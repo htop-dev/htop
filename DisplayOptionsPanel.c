@@ -25,8 +25,6 @@ in the source distribution for its full text.
 static const char* const DisplayOptionsFunctions[] =       {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
 static const char* const DisplayOptionsDecIncFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "Dec   ", "Inc   ", "      ", "Done  ", NULL};
-static const char* const DisplayOptionsDecIncKeys[] =      {"  "    , "  "    , "  "    , "  "    , "  "    , "  "    , "F7"    , "F8"    , "  "    , "F10"   , NULL};
-static const int DisplayOptionsDecIncEvents[] = {ERR, ERR, ERR, ERR, ERR, ERR, KEY_F(7), KEY_F(8), ERR, KEY_F(10)};
 
 static void DisplayOptionsPanel_delete(Object* object) {
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) object;
@@ -133,7 +131,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    FunctionBar* fuBar = FunctionBar_new(DisplayOptionsFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(OptionItem), true, fuBar);
 
-   this->decIncBar = FunctionBar_new(DisplayOptionsDecIncFunctions, DisplayOptionsDecIncKeys, DisplayOptionsDecIncEvents);
+   this->decIncBar = FunctionBar_new(DisplayOptionsDecIncFunctions, NULL, NULL);
    this->settings = settings;
    this->scr = scr;
 
