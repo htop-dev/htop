@@ -151,11 +151,15 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
+static uint64_t Platform_nanosecondsPerMachTickNumer = 1;
+static uint64_t Platform_nanosecondsPerMachTickDenom = 1;
+
 static double Platform_nanosecondsPerSchedulerTick = -1;
 
 static mach_port_t iokit_port; // the mach port used to initiate communication with IOKit
 
 bool Platform_init(void) {
+   Platform_calculateNanosecondsPerMachTick(&Platform_nanosecondsPerMachTickNumer, &Platform_nanosecondsPerMachTickDenom);
 
    // Determine the number of scheduler clock ticks per second
    errno = 0;
@@ -169,6 +173,18 @@ bool Platform_init(void) {
    Platform_nanosecondsPerSchedulerTick = nanos_per_sec / scheduler_ticks_per_sec;
 
    return true;
+}
+
+// Converts ticks in the Mach "timebase" to nanoseconds.
+// See `mach_timebase_info`, as used to define the `Platform_nanosecondsPerMachTick` constant.
+uint64_t Platform_machTicksToNanoseconds(uint64_t mach_ticks) {
+   uint64_t ticks_quot = mach_ticks / Platform_nanosecondsPerMachTickDenom;
+   uint64_t ticks_rem  = mach_ticks % Platform_nanosecondsPerMachTickDenom;
+
+   uint64_t part1 = ticks_quot * Platform_nanosecondsPerMachTickNumer;
+   uint64_t part2 = (ticks_rem * Platform_nanosecondsPerMachTickNumer) / Platform_nanosecondsPerMachTickDenom;
+
+   return part1 + part2;
 }
 
 // Converts "scheduler ticks" to nanoseconds.
