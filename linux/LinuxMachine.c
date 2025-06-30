@@ -32,6 +32,7 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 #include "XUtils.h"
 
+#include "linux/NvidiaJetson.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
 #ifdef HAVE_SENSORS_SENSORS_H
@@ -741,14 +742,19 @@ void Machine_scan(Machine* super) {
    const Settings* settings = super->settings;
    if (settings->showCPUFrequency
 #ifdef HAVE_SENSORS_SENSORS_H
-       || settings->showCPUTemperature
+       || settings->showCPUTemperature /* TODO: looks like this line in the condition might be removed */
 #endif
    )
       LinuxMachine_scanCPUFrequency(this);
 
+   #ifdef NVIDIA_JETSON
+   if (settings->showCPUTemperature)
+      NvidiaJetson_getCPUTemperatures(this->cpuData, super->existingCPUs);
+   #else
    #ifdef HAVE_SENSORS_SENSORS_H
    if (settings->showCPUTemperature)
       LibSensors_getCPUTemperatures(this->cpuData, super->existingCPUs, super->activeCPUs);
+   #endif
    #endif
 }
 
@@ -791,6 +797,10 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    // Initialize CPU count
    LinuxMachine_updateCPUcount(this);
+
+   #ifdef NVIDIA_JETSON
+   NvidiaJetson_FindSensors();
+   #endif
 
    #ifdef HAVE_SENSORS_SENSORS_H
    // Fetch CPU topology
