@@ -833,29 +833,29 @@ AC_ARG_ENABLE([unwind],
               [],
               [enable_unwind=check])
 case "$enable_unwind" in
-   check)
-      enable_unwind=yes
+   no)
+      ;;
+   check|yes)
       if test "$enable_static" = yes; then
          AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
       fi
-      AC_CHECK_LIB([unwind], [backtrace], [], [enable_unwind=no])
-      AC_CHECK_HEADERS([libunwind.h], [], [
-         old_CFLAGS="$CFLAGS"
-         CFLAGS="$CFLAGS -I/usr/include/libunwind"
-         AC_CHECK_HEADERS([libunwind/libunwind.h], [], [
-            enable_unwind=no
-            CFLAGS="$old_CFLAGS"
-         ])
-      ])
-      ;;
-   no)
-      ;;
-   yes)
-      AC_CHECK_LIB([unwind], [backtrace], [], [AC_MSG_ERROR([can not find required library libunwind])])
-      AC_CHECK_HEADERS([libunwind.h], [], [
-         AM_CFLAGS="$AM_CFLAGS -I/usr/include/libunwind"
-         AC_CHECK_HEADERS([libunwind/libunwind.h], [], [AC_MSG_ERROR([can not find required header file libunwind.h])])
-      ])
+
+      AC_CHECK_LIB([unwind], [backtrace], [],
+         [if test "$enable_unwind" = yes; then
+            AC_MSG_ERROR([can not find required library libunwind])
+         fi
+         enable_unwind=no])
+
+      if test "$enable_unwind" = no; then
+         :
+      elif htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
+         AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
+         enable_unwind=yes
+      elif test "$enable_unwind" = yes; then
+         AC_MSG_ERROR([can not find required header file libunwind.h])
+      else
+         enable_unwind=no
+      fi
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
