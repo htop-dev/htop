@@ -798,6 +798,35 @@ if test "x$enable_affinity" = xyes; then
 fi
 
 
+# $1: Header file name
+# $2: List of directories to search, separated by spaces
+# $3: Additional include directives
+htop_search_header_dir () {
+   htop_header_search_status=1 # 0 for success; nonzero for failure
+
+   htop_save_CPPFLAGS=$CPPFLAGS
+
+   AC_MSG_CHECKING([the include directory of $1])
+   for htop_header_dir in "" $2 ; do
+      htop_msg_header_dir="(default directories)"
+      if test "x$htop_header_dir" != x; then
+         htop_msg_header_dir=$htop_header_dir
+         htop_header_dir=" -I$htop_header_dir"
+      fi
+      CPPFLAGS="$AM_CPPFLAGS$htop_header_dir $htop_save_CPPFLAGS"
+      AC_COMPILE_IFELSE([AC_LANG_SOURCE([[$3
+#include <$1>]])],
+         [AM_CPPFLAGS="$AM_CPPFLAGS$htop_header_dir"
+         htop_header_search_status=0
+         break],
+         [htop_msg_header_dir="(not found)"])
+   done
+   AC_MSG_RESULT([$htop_msg_header_dir])
+
+   CPPFLAGS=$htop_save_CPPFLAGS
+   return "$htop_header_search_status"
+} # htop_search_header_dir
+
 AC_ARG_ENABLE([unwind],
               [AS_HELP_STRING([--enable-unwind],
               [enable unwind support for printing backtraces; requires libunwind @<:@default=check@:>@])],
