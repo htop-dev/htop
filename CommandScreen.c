@@ -25,23 +25,33 @@ static void CommandScreen_scan(InfoScreen* this) {
    Panel_prune(panel);
 
    const char* p = Process_getCommand(this->process);
-   char line[COLS + 1];
-   int line_offset = 0, last_spc = -1;
-   for (; *p != '\0'; p++, line_offset++) {
-      assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
-      line[line_offset] = *p;
-      if (*p == ' ') {
-         last_spc = line_offset;
+
+   size_t line_maxlen = COLS < 40 ? 40 : COLS;
+   size_t line_offset = 0;
+   size_t last_space = 0;
+   char* line = xCalloc(line_maxlen + 1, sizeof(char));
+
+   for (; *p != '\0'; p++) {
+      if (line_offset >= line_maxlen) {
+         assert(line_offset <= line_maxlen);
+         assert(last_space <= line_maxlen);
+
+         size_t line_len = last_space <= 0 ? line_offset : last_space;
+         char tmp = line[line_len];
+         line[line_len] = '\0';
+         InfoScreen_addLine(this, line);
+         line[line_len] = tmp;
+
+         assert(line_len <= line_offset);
+         line_offset -= line_len;
+         memmove(line, line + line_len, line_offset);
+
+         last_space = 0;
       }
 
-      if (line_offset == COLS) {
-         int len = last_spc <= 0 ? line_offset : last_spc;
-         line[len] = '\0';
-         InfoScreen_addLine(this, line);
-
-         line_offset -= len;
-         last_spc = -1;
-         memcpy(line, p - line_offset, line_offset + 1);
+      line[line_offset++] = *p;
+      if (*p == ' ') {
+         last_space = line_offset;
       }
    }
 
@@ -49,6 +59,8 @@ static void CommandScreen_scan(InfoScreen* this) {
       line[line_offset] = '\0';
       InfoScreen_addLine(this, line);
    }
+
+   free(line);
 
    Panel_setSelected(panel, idx);
 }
