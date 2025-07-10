@@ -26,7 +26,7 @@ static void CommandScreen_scan(InfoScreen* this) {
 
    const char* p = Process_getCommand(this->process);
    char line[COLS + 1];
-   int line_offset = 0, last_spc = -1, len;
+   int line_offset = 0, last_spc = -1;
    for (; *p != '\0'; p++, line_offset++) {
       assert(line_offset >= 0 && (size_t)line_offset < sizeof(line));
       line[line_offset] = *p;
@@ -35,7 +35,7 @@ static void CommandScreen_scan(InfoScreen* this) {
       }
 
       if (line_offset == COLS) {
-         len = (last_spc == -1) ? line_offset : last_spc;
+         int len = last_spc <= 0 ? line_offset : last_spc;
          line[len] = '\0';
          InfoScreen_addLine(this, line);
 
