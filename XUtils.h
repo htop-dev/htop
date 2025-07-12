@@ -123,6 +123,13 @@ char* xStrndup(const char* str, size_t len);
 
 ATTR_NONNULL ATTR_ACCESS3_W(2, 3)
 ssize_t xReadfile(const char* pathname, void* buffer, size_t count);
+#ifdef NVIDIA_JETSON /* uncomment if you need this functionality somewhere else */
+ATTR_NONNULL ATTR_ACCESS3_W(2, 3)
+static inline double xReadNumberFromFile(const char *pathname, char *buf, const size_t len) {
+   ssize_t nread = xReadfile(pathname, buf, len);
+   return nread > 0 ? strtod(buf, NULL) : NAN;
+}
+#endif
 ATTR_NONNULL ATTR_ACCESS3_W(3, 4)
 ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
 
@@ -176,6 +183,11 @@ static inline int xDirfd(DIR* dirp) {
    int r = dirfd(dirp);
    assert(r >= 0);
    return r;
+}
+
+
+static inline double ConvCelsiusToFahrenheit(const double celsius) {
+   return celsius * 9 / 5 + 32;
 }
 
 #endif

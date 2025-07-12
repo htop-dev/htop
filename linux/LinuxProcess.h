@@ -115,6 +115,10 @@ typedef struct LinuxProcess_ {
    /* Activity of GPU: 0 if active, otherwise time of last scan in milliseconds */
    uint64_t gpu_activityMs;
 
+   #ifdef NVIDIA_JETSON
+   uint64_t gpu_mem;
+   #endif
+
    /* Autogroup scheduling (CFS) information */
    long int autogroup_id;
    int autogroup_nice;

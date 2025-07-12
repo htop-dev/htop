@@ -6,6 +6,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "NvidiaJetson.h"
 #include "config.h" // IWYU pragma: keep
 
 #include "Machine.h"
@@ -128,4 +129,8 @@ void Machine_scanTables(Machine* this) {
    }
 
    Row_setUidColumnWidth(this->maxUserId);
+
+   #ifdef NVIDIA_JETSON
+   NvidiaJetson_LoadGpuProcessTable(this->activeTable->table);
+   #endif
 }
