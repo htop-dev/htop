@@ -135,12 +135,12 @@ char* String_cat(const char* s1, const char* s2) {
 }
 
 char* String_trim(const char* in) {
-   while (in[0] == ' ' || in[0] == '\t' || in[0] == '\n') {
+   while (in[0] == ' ' || in[0] == '\t' || in[0] == '\n' || in[0] == '\r') {
       in++;
    }
 
    size_t len = strlen(in);
-   while (len > 0 && (in[len - 1] == ' ' || in[len - 1] == '\t' || in[len - 1] == '\n')) {
+   while (len > 0 && (in[len - 1] == ' ' || in[len - 1] == '\t' || in[len - 1] == '\n' || in[len - 1] == '\r')) {
       len--;
    }
 
