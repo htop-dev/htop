@@ -56,6 +56,7 @@ in the source distribution for its full text.
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
+#include "linux/NvidiaJetson.h"
 #include "linux/SELinuxMeter.h"
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
@@ -254,6 +255,9 @@ const MeterClass* const Platform_meterTypes[] = {
    &SystemdUserMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,
+#ifdef NVIDIA_JETSON
+   &JetsonGPUMeter_class,
+#endif
    NULL
 };
 
@@ -360,7 +364,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
    v[CPU_METER_FREQUENCY] = cpuData->frequency;
 
-#ifdef HAVE_SENSORS_SENSORS_H
+#ifdef BUILD_WITH_CPU_TEMP
    v[CPU_METER_TEMPERATURE] = cpuData->temperature;
 #else
    v[CPU_METER_TEMPERATURE] = NAN;
