@@ -128,4 +128,5 @@ void Machine_scanTables(Machine* this) {
    }
 
    Row_setUidColumnWidth(this->maxUserId);
+   Row_setPidColumnWidth(this->maxProcessId);
 }
