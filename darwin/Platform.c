@@ -151,11 +151,72 @@ const MeterClass* const Platform_meterTypes[] = {
    NULL
 };
 
+static uint64_t Platform_nanosecondsPerMachTickNumer = 1;
+static uint64_t Platform_nanosecondsPerMachTickDenom = 1;
+
 static double Platform_nanosecondsPerSchedulerTick = -1;
 
 static mach_port_t iokit_port; // the mach port used to initiate communication with IOKit
 
+static void Platform_calculateNanosecondsPerMachTick(uint64_t* numer, uint64_t* denom) {
+   // Check if we can determine the timebase used on this system.
+
+#ifdef __x86_64__
+   /* WORKAROUND for `mach_timebase_info` giving incorrect values on M1 under Rosetta 2.
+    *    rdar://FB9546856 http://www.openradar.appspot.com/FB9546856
+    *
+    *    We don't know exactly what feature/attribute of the M1 chip causes this mistake under Rosetta 2.
+    *    Until we have more Apple ARM chips to compare against, the best we can do is special-case
+    *    the "Apple M1" chip specifically when running under Rosetta 2.
+    *
+    *    Rosetta 2 only supports x86-64, so skip this workaround when building for other architectures.
+    */
+
+   bool isRunningUnderRosetta2 = Platform_isRunningTranslated();
+
+   // Kernel versions >= 20.0.0 (macOS 11.0 AKA Big Sur) affected
+   bool isBuggedVersion = 0 <= Platform_CompareKernelVersion((KernelVersion) {20, 0, 0});
+
+   if (isRunningUnderRosetta2 && isBuggedVersion) {
+      // In this case `mach_timebase_info` provides the wrong value, so we hard-code the correct factor,
+      // as determined from `mach_timebase_info` as if the process was running natively.
+      *numer = 125;
+      *denom = 3;
+      return;
+   }
+#endif
+
+#ifdef HAVE_MACH_TIMEBASE_INFO
+   mach_timebase_info_data_t info = { 0 };
+   if (mach_timebase_info(&info) == KERN_SUCCESS) {
+      *numer = info.numer;
+      *denom = info.denom;
+      return;
+   }
+#endif
+
+   // No info on actual timebase found; assume timebase in nanoseconds.
+   *numer = 1;
+   *denom = 1;
+}
+
+// Converts ticks in the Mach "timebase" to nanoseconds.
+// See `mach_timebase_info`, as used to define the `Platform_nanosecondsPerMachTick` constant.
+uint64_t Platform_machTicksToNanoseconds(uint64_t mach_ticks) {
+   uint64_t ticks_quot = mach_ticks / Platform_nanosecondsPerMachTickDenom;
+   uint64_t ticks_rem  = mach_ticks % Platform_nanosecondsPerMachTickDenom;
+
+   uint64_t part1 = ticks_quot * Platform_nanosecondsPerMachTickNumer;
+
+   // When Platform_nanosecondsPerMachTickDenom * Platform_nanosecondsPerMachTickNumer is less than 2^64, ticks_rem *
+   // Platform_nanosecondsPerMachTickNumer will be less than 2^64 as well, i.e. never overflows.
+   uint64_t part2 = (ticks_rem * Platform_nanosecondsPerMachTickNumer) / Platform_nanosecondsPerMachTickDenom;
+
+   return part1 + part2;
+}
+
 bool Platform_init(void) {
+   Platform_calculateNanosecondsPerMachTick(&Platform_nanosecondsPerMachTickNumer, &Platform_nanosecondsPerMachTickDenom);
 
    // Determine the number of scheduler clock ticks per second
    errno = 0;
