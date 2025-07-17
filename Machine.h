@@ -69,7 +69,7 @@ typedef struct Machine_ {
    uid_t maxUserId;  /* recently observed */
    uid_t userId;  /* selected row user ID */
 
-   pid_t maxProcessId; /* largest PID seens at runtime */
+   pid_t maxProcessId; /* largest PID seen at runtime */
 
    size_t tableCount;
    Table **tables;
