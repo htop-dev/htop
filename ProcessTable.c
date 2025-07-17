@@ -70,9 +70,13 @@ static void ProcessTable_cleanupEntries(Table* super) {
       // tidy up Process state after refreshing the ProcessTable table
       Process_makeCommandStr(p, settings);
 
-      // keep track of the highest UID for column scaling
+      // keep track of the highest UID and PID for column scaling
       if (p->st_uid > host->maxUserId)
          host->maxUserId = p->st_uid;
+
+      pid_t pid = Process_getPid(p);
+      if (pid > host->maxProcessId)
+         host->maxProcessId = pid;
 
       Table_cleanupRow(super, (Row*) p, i);
    }

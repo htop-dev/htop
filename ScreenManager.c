@@ -134,11 +134,15 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
 
    if (*rescan) {
       *oldTime = newTime;
-      int oldUidDigits = Process_uidDigits;
+
       if (!this->state->pauseUpdate && (*sortTimeout == 0 || host->settings->ss->treeView)) {
          host->activeTable->needsSort = true;
          *sortTimeout = 1;
       }
+
+      int oldUidDigits = Process_uidDigits;
+      int oldPidDigits = Process_pidDigits;
+
       // sample current values for system metrics and processes if not paused
       Machine_scan(host);
       if (!this->state->pauseUpdate)
@@ -146,17 +150,20 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
 
       // always update header, especially to avoid gaps in graph meters
       Header_updateData(this->header);
-      // force redraw if the number of UID digits was changed
-      if (Process_uidDigits != oldUidDigits) {
+
+      // force redraw if the number of UID/PID digits changed
+      if (Process_uidDigits != oldUidDigits || Process_pidDigits != oldPidDigits)
          *force_redraw = true;
-      }
+
       *redraw = true;
    }
+
    if (*redraw) {
       Table_rebuildPanel(host->activeTable);
       if (!this->state->hideMeters)
          Header_draw(this->header);
    }
+
    *rescan = false;
 }
 
