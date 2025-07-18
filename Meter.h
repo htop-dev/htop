@@ -110,7 +110,7 @@ struct Meter_ {
    char* caption;
    MeterModeId mode;
    unsigned int param;
-   GraphData drawData;
+   GraphData drawData[3];
    int h;
    int columnWidthCount;      /**< only used internally by the Header */
    uint8_t curItems;
