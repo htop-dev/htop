@@ -1072,7 +1072,11 @@ static void CRT_installSignalHandlers(void) {
    sigaction(SIGFPE, &act, &old_sig_handler[SIGFPE]);
    sigaction(SIGILL, &act, &old_sig_handler[SIGILL]);
    sigaction(SIGBUS, &act, &old_sig_handler[SIGBUS]);
+#ifndef HTOP_PCP
    sigaction(SIGPIPE, &act, &old_sig_handler[SIGPIPE]);
+#else
+   signal(SIGPIPE, SIG_IGN);
+#endif
    sigaction(SIGSYS, &act, &old_sig_handler[SIGSYS]);
    sigaction(SIGABRT, &act, &old_sig_handler[SIGABRT]);
 

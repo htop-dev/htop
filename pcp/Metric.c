@@ -166,6 +166,11 @@ bool Metric_fetch(struct timeval* timestamp) {
       pcp->result = NULL;
    }
    int sts, count = 0;
+   if (pcp->reconnect) {
+      if (pmReconnectContext(pcp->context) < 0)
+         return false;
+      pcp->reconnect = false;
+   }
    do {
       sts = pmFetch(pcp->totalMetrics, pcp->fetch, &pcp->result);
    } while (sts == PM_ERR_IPC && ++count < 3);
@@ -173,6 +178,7 @@ bool Metric_fetch(struct timeval* timestamp) {
       if (pmDebugOptions.appl0)
          fprintf(stderr, "Error: cannot fetch metric values: %s\n",
                  pmErrStr(sts));
+      pcp->reconnect = true;
       return false;
    }
    if (timestamp) {
