@@ -85,8 +85,11 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
 void Platform_getFileDescriptors(double* used, double* max);
 
 bool Platform_getDiskIO(DiskIOData* data);
-
+#ifdef IGNORE_VIRTUAL_INTF
+bool Platform_getNetworkIO(NetworkIOData* data, bool ignoreVirtual);
+#else
 bool Platform_getNetworkIO(NetworkIOData* data);
+#endif
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 
