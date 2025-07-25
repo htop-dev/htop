@@ -37,6 +37,7 @@ typedef struct State_ {
    struct MainPanel_* mainPanel;
    Header* header;
    bool pauseUpdate;
+   bool validUpdate;
    bool hideSelection;
    bool hideMeters;
 } State;

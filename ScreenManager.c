@@ -147,6 +147,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       Machine_scan(host);
       if (!this->state->pauseUpdate)
          Machine_scanTables(host);
+      this->state->validUpdate = Platform_getValidState();
 
       // always update header, especially to avoid gaps in graph meters
       Header_updateData(this->header);

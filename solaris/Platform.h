@@ -102,6 +102,10 @@ static inline void Platform_getRelease(char** string) {
    *string = Generic_uname();
 }
 
+static inline bool Platform_getValidState(void) {
+   return true;
+}
+
 #define PLATFORM_LONG_OPTIONS
 
 static inline void Platform_longOptionsUsage(ATTR_UNUSED const char* name) { }

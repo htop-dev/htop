@@ -378,6 +378,7 @@ int CommandLine_run(int argc, char** argv) {
       .mainPanel = panel,
       .header = header,
       .pauseUpdate = false,
+      .validUpdate = true,
       .hideSelection = false,
       .hideMeters = false,
    };

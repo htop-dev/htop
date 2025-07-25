@@ -794,6 +794,10 @@ void Platform_getBattery(double* level, ACPresence* isOnAC) {
    *isOnAC = AC_ERROR;
 }
 
+bool Platform_getValidState(void) {
+    return pcp->reconnect == false;
+}
+
 void Platform_longOptionsUsage(ATTR_UNUSED const char* name) {
    printf(
 "   --host=HOSTSPEC              metrics source is PMCD at HOSTSPEC [see PCPIntro(1)]\n"
