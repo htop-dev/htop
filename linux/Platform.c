@@ -209,6 +209,14 @@ void Platform_setBindings(Htop_Action* keys) {
    keys[KEY_F(20)] = Platform_actionHigherAutogroupPriority; // Shift-F8
 }
 
+#ifdef IGNORE_VIRTUAL_INTF
+static bool Platform_isVirtualNetworkInterface(const char* name) {
+   return (strncmp(name, "docker", 6) == 0 || strncmp(name, "veth", 4) == 0 ||
+           strncmp(name, "virbr", 5) == 0 || strncmp(name, "tun", 3) == 0 ||
+           strncmp(name, "tap", 3) == 0 || strncmp(name, "vboxnet", 7) == 0);
+}
+#endif
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -695,7 +703,11 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
+#ifdef IGNORE_VIRTUAL_INTF
+bool Platform_getNetworkIO(NetworkIOData* data, bool ignoreVirtual) {
+#else
 bool Platform_getNetworkIO(NetworkIOData* data) {
+#endif
    FILE* fp = fopen(PROCDIR "/net/dev", "r");
    if (!fp)
       return false;
@@ -712,7 +724,11 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
                              &packetsTransmitted) != 5)
          continue;
 
-      if (String_eq(interfaceName, "lo:"))
+      if (String_eq(interfaceName, "lo:")
+#ifdef IGNORE_VIRTUAL_INTF
+         || (ignoreVirtual == true && Platform_isVirtualNetworkInterface(interfaceName))
+#endif
+      )
          continue;
 
       data->bytesReceived += bytesReceived;
