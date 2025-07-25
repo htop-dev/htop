@@ -109,8 +109,9 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       cached_txp_total = data.packetsTransmitted;
    }
 
-   this->values[0] = cached_rxb_diff;
-   this->values[1] = cached_txb_diff;
+   this->values[0] = cached_rxb_diff + cached_txb_diff;
+   this->values[1] = cached_rxb_diff;
+   this->values[2] = cached_txb_diff;
    if (cached_rxb_diff + cached_txb_diff > this->total) {
       this->total = cached_rxb_diff + cached_txb_diff;
    }
@@ -169,8 +170,13 @@ const MeterClass NetworkIOMeter_class = {
    },
    .updateValues = NetworkIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
-   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
-   .maxItems = 2,
+   .supportedModes =
+      (1 << BAR_METERMODE) |
+      (1 << TEXT_METERMODE) |
+      (1 << GRAPH_METERMODE) |
+      (1 << LED_METERMODE) |
+      (1 << BIPOLAR_METERMODE),
+   .maxItems = 3,
    .total = 100.0,
    .attributes = NetworkIOMeter_attributes,
    .name = "NetworkIO",
