@@ -73,6 +73,9 @@ Do not use unicode but ASCII characters for graph meters
 \fB\-M \-\-no-mouse\fR
 Disable support of mouse control
 .TP
+\fB\-\-no-meters\fR
+Hide graph meters
+.TP
 \fB\-\-readonly\fR
 Disable all system and process changing features
 .TP
