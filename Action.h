@@ -36,8 +36,8 @@ typedef struct State_ {
    Machine* host;
    struct MainPanel_* mainPanel;
    Header* header;
+   const char* failedUpdate; /* function bar diagnostic or NULL if no error */
    bool pauseUpdate;
-   bool validUpdate;
    bool hideSelection;
    bool hideMeters;
 } State;

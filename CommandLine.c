@@ -377,8 +377,8 @@ int CommandLine_run(int argc, char** argv) {
       .host = host,
       .mainPanel = panel,
       .header = header,
+      .failedUpdate = NULL,
       .pauseUpdate = false,
-      .validUpdate = true,
       .hideSelection = false,
       .hideMeters = false,
    };

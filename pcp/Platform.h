@@ -115,7 +115,7 @@ void Platform_getHostname(char* buffer, size_t size);
 
 void Platform_getRelease(char** string);
 
-bool Platform_getValidState(void);
+const char* Platform_getFailedState(void);
 
 enum {
    PLATFORM_LONGOPT_HOST = 128,

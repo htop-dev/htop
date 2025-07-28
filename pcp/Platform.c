@@ -794,8 +794,8 @@ void Platform_getBattery(double* level, ACPresence* isOnAC) {
    *isOnAC = AC_ERROR;
 }
 
-bool Platform_getValidState(void) {
-    return pcp->reconnect == false;
+const char* Platform_getFailedState(void) {
+   return pcp->reconnect ? "PMCD DOWN" : NULL;
 }
 
 void Platform_longOptionsUsage(ATTR_UNUSED const char* name) {

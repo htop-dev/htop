@@ -67,8 +67,8 @@ void Platform_getHostname(char* buffer, size_t size);
 
 void Platform_getRelease(char** string);
 
-static inline bool Platform_getValidState(void) {
-   return true;
+static inline const char* Platform_getFailedState(void) {
+   return NULL;
 }
 
 #define PLATFORM_LONG_OPTIONS
