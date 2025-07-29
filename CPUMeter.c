@@ -300,17 +300,22 @@ static void OctoColCPUsMeter_updateMode(Meter* this, MeterModeId mode) {
    CPUMeterCommonUpdateMode(this, mode, 8);
 }
 
+static int xOffsetOfMeterColumn(int w, int nCol, int col) {
+   int colwidth = w / nCol;
+   int diff = w % nCol;
+   int d = MINIMUM(diff, col); // dynamic spacer
+   return (col * colwidth) + d;
+}
+
 static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
    int colwidth = w / ncol;
-   int diff = w % ncol;
    int nrows = (count + ncol - 1) / ncol;
    for (int i = 0; i < count; i++) {
-      int d = (i / nrows) > diff ? diff : (i / nrows); // dynamic spacer
-      int xpos = x + ((i / nrows) * colwidth) + d;
+      int xpos = x + xOffsetOfMeterColumn(w, ncol, i / nrows);
       int ypos = y + ((i % nrows) * meters[0]->h);
       meters[i]->draw(meters[i], xpos, ypos, colwidth);
    }
