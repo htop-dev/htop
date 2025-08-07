@@ -111,9 +111,6 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
    this->values[0] = cached_rxb_diff;
    this->values[1] = cached_txb_diff;
-   if (cached_rxb_diff + cached_txb_diff > this->total) {
-      this->total = cached_rxb_diff + cached_txb_diff;
-   }
 
    if (status == RATESTATUS_NODATA) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
@@ -172,7 +169,7 @@ const MeterClass NetworkIOMeter_class = {
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 2,
    .isPercentChart = false,
-   .total = 100.0,
+   .total = 1.0,
    .attributes = NetworkIOMeter_attributes,
    .name = "NetworkIO",
    .uiName = "Network IO",
