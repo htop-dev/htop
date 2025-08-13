@@ -1500,7 +1500,8 @@ static char* LinuxProcessTable_updateTtyDevice(TtyDriver* ttyDrivers, unsigned l
          return xStrdup(ttyDrivers[i].path);
       }
    }
-   char* out;
+
+   char* out = NULL;
    xAsprintf(&out, "/dev/%u:%u", maj, min);
    return out;
 }
