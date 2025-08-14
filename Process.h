@@ -37,7 +37,7 @@ typedef enum Tristate_ {
 
 /* Core process states (shared by platforms)
  * NOTE: The enum has an ordering that is important!
- * See processStateChar in process.c for ProcessSate -> letter mapping */
+ * See Process_stateChar in process.c for ProcessSate -> letter mapping */
 typedef enum ProcessState_ {
    UNKNOWN = 1,
    RUNNABLE,
@@ -334,6 +334,8 @@ void Process_updateExe(Process* this, const char* exe);
 void Process_makeCommandStr(Process* this, const struct Settings_ *settings);
 
 void Process_writeCommand(const Process* this, int attr, int baseAttr, RichString* str);
+
+char Process_stateChar(ProcessState state);
 
 void Process_updateCPUFieldWidths(float percentage);
 
