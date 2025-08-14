@@ -109,6 +109,7 @@ typedef struct Settings_ {
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif
+   char* stateFilter;
 
    bool changed;
    uint64_t lastUpdate;

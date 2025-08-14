@@ -54,6 +54,7 @@ static void printHelpFlag(const char* name) {
           "-C --no-color                   Use a monochrome color scheme\n"
           "-d --delay=DELAY                Set the delay between updates, in tenths of seconds\n"
           "-F --filter=FILTER              Show only the commands matching the given filter\n"
+          "-S --state=STATESCHARS          Show only the states matching the given states\n"
           "-h --help                       Print this help screen\n"
           "-H --highlight-changes[=DELAY]  Highlight new and old processes\n", name);
 #ifdef HAVE_GETMOUSE
@@ -78,6 +79,7 @@ static void printHelpFlag(const char* name) {
 typedef struct CommandLineSettings_ {
    Hashtable* pidMatchList;
    char* commFilter;
+   char* stateFilter;
    uid_t userId;
    int sortKey;
    int delay;
@@ -98,6 +100,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
    *flags = (CommandLineSettings) {
       .pidMatchList = NULL,
       .commFilter = NULL,
+      .stateFilter = NULL,
       .userId = (uid_t)-1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
@@ -128,6 +131,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       {"tree",       no_argument,         0, 't'},
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
+      {"state",      required_argument,   0, 'S'},
       {"highlight-changes", optional_argument, 0, 'H'},
       {"readonly",   no_argument,         0, 128},
       PLATFORM_LONG_OPTIONS
@@ -136,7 +140,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
 
    int opt, opti = 0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hVMCs:td:n:u::Up:F:H::", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hVMCs:td:n:u::Up:F:H::S:", long_opts, &opti))) {
       if (opt == EOF)
          break;
 
@@ -255,6 +259,33 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             }
             free_and_xStrdup(&flags->commFilter, optarg);
             break;
+
+         case 'S':
+            assert(optarg);
+            if (optarg[0] == '\0') {
+               fprintf(stderr, "Error: state filter cannot be empty.\n");
+               return STATUS_ERROR_EXIT;
+            }
+
+            for (char* c = optarg; *c != '\0'; c++) {
+               bool valid = false;
+
+               for (ProcessState s = UNKNOWN; s <= SLEEPING; s++) {
+                  if (*c == Process_stateChar(s)) {
+                     valid = true;
+                     break;
+                  }
+               }
+
+               if (!valid) {
+                  fprintf(stderr, "Error: invalid state filter value \"%s\".\n", optarg);
+                  return STATUS_ERROR_EXIT;
+               }
+            }
+
+            free_and_xStrdup(&flags->stateFilter, optarg);
+            break;
+
          case 'H': {
             const char* delay = optarg;
             if (!delay && optind < argc && argv[optind] != NULL &&
@@ -382,6 +413,9 @@ int CommandLine_run(int argc, char** argv) {
       .hideSelection = false,
       .hideMeters = false,
    };
+   if (flags.stateFilter) {
+      free_and_xStrdup(&settings->stateFilter, flags.stateFilter);
+   }
 
    MainPanel_setState(panel, &state);
    if (flags.commFilter)
