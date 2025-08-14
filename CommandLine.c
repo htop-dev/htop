@@ -267,20 +267,23 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
                return STATUS_ERROR_EXIT;
             }
 
-            for (char* c = optarg; *c != '\0'; c++) {
-               bool valid = false;
+            bool valid_states[256] = { false };
+            for (ProcessState s = UNKNOWN; s <= SLEEPING; s++) {
+               char c = Process_stateChar(s);
+               valid_states[(int)c] = true;
+            }
 
-               for (ProcessState s = UNKNOWN; s <= SLEEPING; s++) {
-                  if (*c == Process_stateChar(s)) {
-                     valid = true;
-                     break;
-                  }
-               }
+            bool valid_arg = true;
+            for (char* c = optarg; *c != '\0' && valid_arg; c++) {
+               if (*c == ',' || isspace(*c))
+                  continue;
 
-               if (!valid) {
-                  fprintf(stderr, "Error: invalid state filter value \"%s\".\n", optarg);
-                  return STATUS_ERROR_EXIT;
-               }
+               valid_arg &= valid_states[(int)*c];
+            }
+
+            if (!valid_arg) {
+               fprintf(stderr, "Error: invalid state filter value \"%s\".\n", optarg);
+               return STATUS_ERROR_EXIT;
             }
 
             free_and_xStrdup(&flags->stateFilter, optarg);
