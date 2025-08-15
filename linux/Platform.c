@@ -703,11 +703,7 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-#ifdef IGNORE_VIRTUAL_INTF
-bool Platform_getNetworkIO(NetworkIOData* data, bool ignoreVirtual) {
-#else
 bool Platform_getNetworkIO(NetworkIOData* data) {
-#endif
    FILE* fp = fopen(PROCDIR "/net/dev", "r");
    if (!fp)
       return false;
@@ -724,10 +720,8 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
                              &packetsTransmitted) != 5)
          continue;
 
-      if (String_eq(interfaceName, "lo:")
-#ifdef IGNORE_VIRTUAL_INTF
-         || (ignoreVirtual == true && Platform_isVirtualNetworkInterface(interfaceName))
-#endif
+      if (String_eq(interfaceName, "lo:") ||
+         (data->ignoreVirtualIntf == true && Platform_isVirtualNetworkInterface(interfaceName))
       )
          continue;
 
