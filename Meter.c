@@ -876,7 +876,7 @@ static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* c
 
    // Sum the values of all items
    double sum = 0.0;
-   if (this->curItems > 0) {
+   if (this->mode != GRAPH2_METERMODE && this->curItems > 0) {
       sum = Meter_computeSum(this);
       assert(sum >= 0.0);
       assert(sum <= DBL_MAX);
@@ -890,6 +890,17 @@ static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* c
       // Dynamic scale. "this->total" is ignored.
       // Determine the scale and "total" that we need afterward. The "total" is
       // rounded up to a power of 2.
+
+      if (this->mode == GRAPH2_METERMODE) {
+         // Find the greatest value in this->values array
+         for (uint8_t i = 0; i < maxItems && i < this->curItems; i++) {
+            if (isgreater(this->values[i], total)) {
+               total = this->values[i];
+            }
+         }
+         total = MINIMUM(DBL_MAX, total);
+      }
+
       int scaleExp = 0;
       (void)frexp(total, &scaleExp);
       scaleExp = MAXIMUM(0, scaleExp);
@@ -910,6 +921,27 @@ static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* c
    double maxDots = (double)(int32_t)(h * 8);
 
    // The total number of dots that we would draw for this record
+
+   if (maxItems == 1 || this->mode == GRAPH2_METERMODE) {
+      // We just need to record the number of dots in the graph data buffer.
+      for (uint8_t i = 0; i < maxItems; i++) {
+         int numDots = 0;
+         if (total > 0.0 && i < this->curItems && isPositive(this->values[i])) {
+            double value = MINIMUM(total, this->values[i]);
+
+            numDots = (int)ceil((value / total) * maxDots);
+            assert(numDots >= 0);
+            if (numDots <= 0) {
+               numDots = 1; // Division of (value / total) underflows
+            }
+         }
+
+         assert(numDots <= UINT16_MAX);
+         valueStart[(isPercentChart ? 0 : 1) + i].numDots = (uint16_t)numDots;
+      }
+      return;
+   }
+
    int numDots = 0;
    if (total > 0.0 && sum > 0.0) {
       numDots = (int)ceil((sum / total) * maxDots);
@@ -917,13 +949,6 @@ static void GraphMeterMode_recordNewValue(Meter* this, const GraphDrawContext* c
       if (numDots <= 0) {
          numDots = 1; // Division of (sum / total) underflows
       }
-   }
-
-   if (maxItems == 1) {
-      // We just need to record the number of dots in the graph data buffer.
-      assert(numDots <= UINT16_MAX);
-      valueStart[isPercentChart ? 0 : 1].numDots = (uint16_t)numDots;
-      return;
    }
 
    // For a meter of multiple items, we will precompute the colors of each cell
@@ -1033,25 +1058,71 @@ static int GraphMeterMode_lookupCell(const Meter* this, const GraphDrawContext* 
       deltaExp = scaleExp - valueStart[0].scaleExp;
    }
 
-   if (maxItems == 1) {
-      unsigned int numDots = valueStart[isPercentChart ? 0 : 1].numDots;
+   if (this->mode == GRAPH2_METERMODE || maxItems == 1) {
+      assert(maxItems <= 2);
 
-      if (numDots < 1)
+      unsigned int numBlanks[2];
+      numBlanks[1] = 0;
+
+      const GraphDataCell* itemStart = &valueStart[isPercentChart ? 0 : 1];
+
+      uint8_t i = 0;
+      do {
+         unsigned int numDots = itemStart[i].numDots;
+         if (numDots >= 1) {
+            // Scale according to exponent difference. Round up.
+            numDots = deltaExp < UINT16_WIDTH ? ((numDots - 1) >> deltaExp) : 0;
+            numDots++;
+         }
+
+         numBlanks[i] = h * 8 - numDots;
+         if (this->mode == GRAPH2_METERMODE) {
+            numBlanks[i] /= 2;
+         }
+      } while (++i < maxItems);
+
+      const uint8_t dotAlignment = 2;
+      bool canShowHalfCell = true;
+
+      unsigned int blanksAtEnd = numBlanks[0];
+      if (h - 1 - y < blanksAtEnd / 8)
          goto cellIsEmpty;
+      if (h - 1 - y == blanksAtEnd / 8) {
+         blanksAtEnd = (blanksAtEnd % 8) / dotAlignment * dotAlignment;
+         canShowHalfCell = false;
+      } else {
+         blanksAtEnd = 0;
+      }
 
-      // Scale according to exponent difference. Round up.
-      numDots = deltaExp < UINT16_WIDTH ? ((numDots - 1) >> deltaExp) : 0;
-      numDots++;
-
-      if (y > (numDots - 1) / 8)
+      unsigned int blanksAtStart = numBlanks[1];
+      if (y < blanksAtStart / 8)
          goto cellIsEmpty;
+      if (y == blanksAtStart / 8) {
+         blanksAtStart = (blanksAtStart % 8) / dotAlignment * dotAlignment;
+         if (blanksAtEnd + blanksAtStart >= 8) {
+            // Happens only if numDots of both items are 0
+            goto cellIsEmpty;
+         }
+         canShowHalfCell = false;
+      } else {
+         blanksAtStart = 0;
+      }
 
       itemIndex = 0;
-      *details = 0xFF;
-      if (y == (numDots - 1) / 8) {
-         const uint8_t dotAlignment = 2;
-         unsigned int blanksAtTopCell = (8 - 1 - (numDots - 1) % 8) / dotAlignment * dotAlignment;
-         *details <<= blanksAtTopCell;
+      if (this->mode == GRAPH2_METERMODE) {
+         if (y * 2 < h - 1) {
+            itemIndex = 1;
+         } else if (y * 2 == h - 1 && itemStart[1].numDots > itemStart[0].numDots) {
+            itemIndex = 1;
+         }
+      }
+
+      if (this->mode == GRAPH2_METERMODE && y * 2 == h - 1 && canShowHalfCell) {
+         *details = itemStart[1].numDots > itemStart[0].numDots ? 0xF0 : 0x0F;
+      } else {
+         *details = 0xFF;
+         *details >>= blanksAtStart;
+         *details = (uint8_t)((*details >> blanksAtEnd) << blanksAtEnd);
       }
    } else {
       int deltaExpArg = MINIMUM(UINT16_WIDTH - 1, deltaExp);
@@ -1074,13 +1145,14 @@ static int GraphMeterMode_lookupCell(const Meter* this, const GraphDrawContext* 
    /* fallthrough */
 
 cellIsEmpty:
-   if (y == 0)
+   if (this->mode != GRAPH2_METERMODE && y == 0)
       *details |= 0xC0;
 
    if (itemIndex == (uint8_t)-1)
       return BAR_SHADOW;
 
    assert(itemIndex < maxItems);
+   assert(itemIndex < Meter_maxItems(this));
    return Meter_attributes(this)[itemIndex];
 }
 
@@ -1183,12 +1255,20 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    uint8_t maxItems = Meter_maxItems(this);
    assert(this->curItems <= maxItems);
+   if (this->mode == GRAPH2_METERMODE) {
+      // Items other than the first two are always hidden in "Graph2" mode.
+      maxItems = 2;
+   }
 
    bool isPercentChart = Meter_isPercentChart(this);
 
-   size_t nCellsPerValue = maxItems == 1 ? maxItems : h;
-   if (!isPercentChart)
+   size_t nCellsPerValue = this->mode == GRAPH2_METERMODE || maxItems == 1 ? maxItems : h;
+   if (!isPercentChart) {
       nCellsPerValue *= 2;
+      if (this->mode == GRAPH2_METERMODE) {
+         nCellsPerValue--;
+      }
+   }
 
    GraphDrawContext context = {
       .maxItems = maxItems,
@@ -1379,6 +1459,11 @@ static const MeterMode Meter_modes[] = {
       .uiName = "LED",
       .h = 3,
       .draw = LEDMeterMode_draw,
+   },
+   [GRAPH2_METERMODE] = {
+      .uiName = "Graph2",
+      .h = DEFAULT_GRAPH_HEIGHT,
+      .draw = GraphMeterMode_draw,
    },
 };
 
