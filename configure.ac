@@ -1175,6 +1175,16 @@ if test "$enable_sensors" = yes || test "$my_htop_platform" = freebsd; then
    AC_DEFINE([BUILD_WITH_CPU_TEMP], [1], [Define if CPU temperature option should be enabled.])
 fi
 
+AC_ARG_ENABLE([ignore-virtual-intf],
+  [AS_HELP_STRING([--enable-ignore-virtual-intf],
+    [Ignore virtual network interfaces in NetworkIO meter [default=no]])],
+  [enable_ignore_virtual_intf=yes],
+  [enable_ignore_virtual_intf=no])
+
+if test "x$enable_ignore_virtual_intf" = "xyes"; then
+  AC_DEFINE([IGNORE_VIRTUAL_INTF], [1], [Ignore virtual network interfaces])
+fi
+
 # ----------------------------------------------------------------------
 
 
