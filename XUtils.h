@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include <dirent.h>
 #include <stdbool.h>
 #include <stddef.h> // IWYU pragma: keep
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> // IWYU pragma: keep
 #include <string.h> // IWYU pragma: keep
@@ -123,6 +124,13 @@ char* xStrndup(const char* str, size_t len);
 
 ATTR_NONNULL ATTR_ACCESS3_W(2, 3)
 ssize_t xReadfile(const char* pathname, void* buffer, size_t count);
+
+ATTR_NONNULL ATTR_ACCESS3_W(2, 3)
+static inline double xReadNumberFile(const char *pathname, char *buf, const size_t len) {
+   ssize_t nread = xReadfile(pathname, buf, len);
+   return nread > 0 ? strtod(buf, NULL) : NAN;
+}
+
 ATTR_NONNULL ATTR_ACCESS3_W(3, 4)
 ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
 
@@ -176,6 +184,25 @@ static inline int xDirfd(DIR* dirp) {
    int r = dirfd(dirp);
    assert(r >= 0);
    return r;
+}
+
+static inline double convertCelsiusToFahrenheit(const double celsius) {
+   return celsius * 9 / 5 + 32;
+}
+
+static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
+   uint64_t result = 0;
+
+   if (!maxlen)
+      maxlen = 20; // length of maximum value of 18446744073709551615
+
+   while (maxlen-- && **str >= '0' && **str <= '9') {
+      result *= 10;
+      result += **str - '0';
+      (*str)++;
+   }
+
+   return result;
 }
 
 #endif
