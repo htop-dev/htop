@@ -1471,18 +1471,20 @@ static char* LinuxProcessTable_updateTtyDevice(TtyDriver* ttyDrivers, unsigned l
       if (min > ttyDrivers[i].minorTo) {
          continue;
       }
+
       unsigned int idx = min - ttyDrivers[i].minorFrom;
+
       struct stat sb;
-      char* fullPath;
+
       for (;;) {
-         xAsprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
+         char* fullPath = NULL;
+         size_t fullPathLen = xAsprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
          int err = stat(fullPath, &sb);
          if (err == 0 && major(sb.st_rdev) == maj && minor(sb.st_rdev) == min) {
             return fullPath;
          }
-         free(fullPath);
 
-         xAsprintf(&fullPath, "%s%d", ttyDrivers[i].path, idx);
+         xSnprintf(fullPath, fullPathLen + 1, "%s%d", ttyDrivers[i].path, idx);
          err = stat(fullPath, &sb);
          if (err == 0 && major(sb.st_rdev) == maj && minor(sb.st_rdev) == min) {
             return fullPath;
@@ -1495,12 +1497,14 @@ static char* LinuxProcessTable_updateTtyDevice(TtyDriver* ttyDrivers, unsigned l
 
          idx = min;
       }
+
       int err = stat(ttyDrivers[i].path, &sb);
       if (err == 0 && tty_nr == sb.st_rdev) {
          return xStrdup(ttyDrivers[i].path);
       }
    }
-   char* out;
+
+   char* out = NULL;
    xAsprintf(&out, "/dev/%u:%u", maj, min);
    return out;
 }

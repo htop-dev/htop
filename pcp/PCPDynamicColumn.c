@@ -59,7 +59,7 @@ static void PCPDynamicColumn_parseMetric(PCPDynamicColumns* columns, PCPDynamicC
    /* derived metrics in all dynamic columns for simplicity */
    char* error;
    if (pmRegisterDerivedMetric(column->metricName, value, &error) < 0) {
-      char* note;
+      char* note = NULL;
       xAsprintf(&note,
                 "%s: failed to parse expression in %s at line %u\n%s\n",
                 pmGetProgname(), path, line, error);
