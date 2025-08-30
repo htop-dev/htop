@@ -35,68 +35,70 @@ static double cached_utilisation_norm;
 
 static void DiskIOUpdateCache(const Machine* host) {
    static uint64_t cached_last_update;
+
    uint64_t passedTimeInMs = host->realtimeMs - cached_last_update;
-   bool hasNewData = false;
-   DiskIOData data;
 
    /* update only every 500ms to have a sane span for rate calculation */
-   if (passedTimeInMs > 500) {
-      hasNewData = Platform_getDiskIO(&data);
-      if (!hasNewData) {
-         status = RATESTATUS_NODATA;
-      } else if (cached_last_update == 0) {
-         status = RATESTATUS_INIT;
-      } else if (passedTimeInMs > 30000) {
-         status = RATESTATUS_STALE;
+   if (passedTimeInMs <= 500)
+      return;
+
+   DiskIOData data;
+   bool hasNewData = Platform_getDiskIO(&data);
+   if (!hasNewData) {
+      status = RATESTATUS_NODATA;
+   } else if (cached_last_update == 0) {
+      status = RATESTATUS_INIT;
+   } else if (passedTimeInMs > 30000) {
+      status = RATESTATUS_STALE;
+   } else {
+      status = RATESTATUS_DATA;
+   }
+
+   cached_last_update = host->realtimeMs;
+
+   if (!hasNewData)
+      return;
+
+   static uint64_t cached_read_total;
+   static uint64_t cached_write_total;
+   static uint64_t cached_msTimeSpend_total;
+
+   if (status != RATESTATUS_INIT) {
+      uint64_t diff;
+
+      if (data.totalBytesRead > cached_read_total) {
+         diff = data.totalBytesRead - cached_read_total;
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+         diff /= ONE_K; /* convert to KiB/s */
       } else {
-         status = RATESTATUS_DATA;
+         diff = 0;
       }
+      Meter_humanUnit(cached_read_diff_str, diff, sizeof(cached_read_diff_str));
 
-      cached_last_update = host->realtimeMs;
-   }
+      if (data.totalBytesWritten > cached_write_total) {
+         diff = data.totalBytesWritten - cached_write_total;
+         diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
+         diff /= ONE_K; /* convert to KiB/s */
+      } else {
+         diff = 0;
+      }
+      Meter_humanUnit(cached_write_diff_str, diff, sizeof(cached_write_diff_str));
 
-   if (hasNewData) {
-      static uint64_t cached_read_total;
-      static uint64_t cached_write_total;
-      static uint64_t cached_msTimeSpend_total;
-
-      if (status != RATESTATUS_INIT) {
-         uint64_t diff;
-
-         if (data.totalBytesRead > cached_read_total) {
-            diff = data.totalBytesRead - cached_read_total;
-            diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
-            diff /= ONE_K; /* convert to KiB/s */
-         } else {
-            diff = 0;
-         }
-         Meter_humanUnit(cached_read_diff_str, diff, sizeof(cached_read_diff_str));
-
-         if (data.totalBytesWritten > cached_write_total) {
-            diff = data.totalBytesWritten - cached_write_total;
-            diff = (1000 * diff) / passedTimeInMs; /* convert to B/s */
-            diff /= ONE_K; /* convert to KiB/s */
-         } else {
-            diff = 0;
-         }
-         Meter_humanUnit(cached_write_diff_str, diff, sizeof(cached_write_diff_str));
-
-         cached_utilisation_diff = 0.0;
-         cached_utilisation_norm = 0.0;
-         if (data.totalMsTimeSpend > cached_msTimeSpend_total) {
-            diff = data.totalMsTimeSpend - cached_msTimeSpend_total;
-            cached_utilisation_diff = 100.0 * (double)diff / passedTimeInMs;
-            if (data.numDisks > 0) {
-               cached_utilisation_norm = (double)diff / (passedTimeInMs * data.numDisks);
-               cached_utilisation_norm = MINIMUM(cached_utilisation_norm, 1.0);
-            }
+      cached_utilisation_diff = 0.0;
+      cached_utilisation_norm = 0.0;
+      if (data.totalMsTimeSpend > cached_msTimeSpend_total) {
+         diff = data.totalMsTimeSpend - cached_msTimeSpend_total;
+         cached_utilisation_diff = 100.0 * (double)diff / passedTimeInMs;
+         if (data.numDisks > 0) {
+            cached_utilisation_norm = (double)diff / (passedTimeInMs * data.numDisks);
+            cached_utilisation_norm = MINIMUM(cached_utilisation_norm, 1.0);
          }
       }
-
-      cached_read_total = data.totalBytesRead;
-      cached_write_total = data.totalBytesWritten;
-      cached_msTimeSpend_total = data.totalMsTimeSpend;
    }
+
+   cached_read_total = data.totalBytesRead;
+   cached_write_total = data.totalBytesWritten;
+   cached_msTimeSpend_total = data.totalMsTimeSpend;
 }
 
 static void DiskIOMeter_updateValues(Meter* this) {
