@@ -27,8 +27,15 @@ static const int DiskIOMeter_attributes[] = {
    METER_VALUE_IOWRITE,
 };
 
+static const int DiskIORateMeter_attributes[] = {
+   METER_VALUE_IOREAD,
+   METER_VALUE_IOWRITE,
+};
+
 static MeterRateStatus status = RATESTATUS_INIT;
+static double cached_read_diff;
 static char cached_read_diff_str[6];
+static double cached_write_diff;
 static char cached_write_diff_str[6];
 static double cached_utilisation_diff;
 static double cached_utilisation_norm;
@@ -73,6 +80,7 @@ static void DiskIOUpdateCache(const Machine* host) {
       } else {
          diff = 0;
       }
+      cached_read_diff = diff;
       Meter_humanUnit(cached_read_diff_str, diff, sizeof(cached_read_diff_str));
 
       if (data.totalBytesWritten > cached_write_total) {
@@ -82,6 +90,7 @@ static void DiskIOUpdateCache(const Machine* host) {
       } else {
          diff = 0;
       }
+      cached_write_diff = diff;
       Meter_humanUnit(cached_write_diff_str, diff, sizeof(cached_write_diff_str));
 
       cached_utilisation_diff = 0.0;
@@ -152,6 +161,52 @@ static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out)
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 }
 
+static void DiskIORateMeter_updateValues(Meter* this) {
+   DiskIOUpdateCache(this->host);
+
+   this->values[0] = cached_read_diff;
+   this->values[1] = cached_write_diff;
+
+   if (status == RATESTATUS_NODATA) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "no data");
+      return;
+   }
+   if (status == RATESTATUS_INIT) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "init");
+      return;
+   }
+   if (status == RATESTATUS_STALE) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "stale");
+      return;
+   }
+
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%siB/s w:%siB/s", cached_read_diff_str, cached_write_diff_str);
+}
+
+static void DiskIORateMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+   switch (status) {
+      case RATESTATUS_NODATA:
+         RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
+         return;
+      case RATESTATUS_INIT:
+         RichString_writeAscii(out, CRT_colors[METER_VALUE], "initializing...");
+         return;
+      case RATESTATUS_STALE:
+         RichString_writeAscii(out, CRT_colors[METER_VALUE_WARN], "stale data");
+         return;
+      case RATESTATUS_DATA:
+         break;
+   }
+
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], "read: ");
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_read_diff_str);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
+
+   RichString_appendAscii(out, CRT_colors[METER_TEXT], " write: ");
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_write_diff_str);
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
+}
+
 const MeterClass DiskIOMeter_class = {
    .super = {
       .extends = Class(Meter),
@@ -168,4 +223,22 @@ const MeterClass DiskIOMeter_class = {
    .name = "DiskIO",
    .uiName = "Disk IO",
    .caption = "Disk IO: "
+};
+
+const MeterClass DiskIORateMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+      .display = DiskIORateMeter_display
+   },
+   .updateValues = DiskIORateMeter_updateValues,
+   .defaultMode = TEXT_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
+   .maxItems = 2,
+   .isPercentChart = false,
+   .total = 1.0,
+   .attributes = DiskIORateMeter_attributes,
+   .name = "DiskIORate",
+   .uiName = "Disk IO Rate",
+   .caption = "Dsk: "
 };
