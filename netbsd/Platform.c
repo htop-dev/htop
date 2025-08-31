@@ -181,6 +181,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs8Meter_class,
    &BlankMeter_class,
    &DiskIOMeter_class,
+   &DiskIORateMeter_class,
    &NetworkIOMeter_class,
    &FileDescriptorMeter_class,
    NULL

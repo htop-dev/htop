@@ -115,6 +115,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsCompressedArcMeter_class,
    &ZramMeter_class,
    &DiskIOMeter_class,
+   &DiskIORateMeter_class,
    &NetworkIOMeter_class,
    &SysArchMeter_class,
    &FileDescriptorMeter_class,

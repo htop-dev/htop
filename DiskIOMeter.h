@@ -21,4 +21,6 @@ typedef struct DiskIOData_ {
 
 extern const MeterClass DiskIOMeter_class;
 
+extern const MeterClass DiskIORateMeter_class;
+
 #endif /* HEADER_DiskIOMeter */
