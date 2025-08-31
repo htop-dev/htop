@@ -21,10 +21,13 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-static const int DiskIOMeter_attributes[] = {
-   METER_VALUE_NOTICE,
-   METER_VALUE_IOREAD,
-   METER_VALUE_IOWRITE,
+typedef struct DiskIOMeterData_ {
+   Meter* diskIOTimeMeter;
+   Meter* diskIORateMeter;
+} DiskIOMeterData;
+
+static const int DiskIOTimeMeter_attributes[] = {
+   METER_VALUE_NOTICE
 };
 
 static const int DiskIORateMeter_attributes[] = {
@@ -110,7 +113,7 @@ static void DiskIOUpdateCache(const Machine* host) {
    cached_msTimeSpend_total = data.totalMsTimeSpend;
 }
 
-static void DiskIOMeter_updateValues(Meter* this) {
+static void DiskIOTimeMeter_updateValues(Meter* this) {
    DiskIOUpdateCache(this->host);
 
    this->values[0] = cached_utilisation_norm;
@@ -128,10 +131,10 @@ static void DiskIOMeter_updateValues(Meter* this) {
       return;
    }
 
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%siB/s w:%siB/s %.1f%%", cached_read_diff_str, cached_write_diff_str, cached_utilisation_diff);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.1f%%", cached_utilisation_diff);
 }
 
-static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
+static void DiskIOTimeMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
    switch (status) {
       case RATESTATUS_NODATA:
          RichString_writeAscii(out, CRT_colors[METER_VALUE_ERROR], "no data");
@@ -151,14 +154,6 @@ static void DiskIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out)
    int color = cached_utilisation_diff > 40.0 ? METER_VALUE_NOTICE : METER_VALUE;
    int len = xSnprintf(buffer, sizeof(buffer), "%.1f%%", cached_utilisation_diff);
    RichString_appendnAscii(out, CRT_colors[color], buffer, len);
-
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " read: ");
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_read_diff_str);
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
-
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " write: ");
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_write_diff_str);
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 }
 
 static void DiskIORateMeter_updateValues(Meter* this) {
@@ -207,22 +202,82 @@ static void DiskIORateMeter_display(ATTR_UNUSED const Object* cast, RichString* 
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
 }
 
-const MeterClass DiskIOMeter_class = {
+static void DiskIOMeter_updateValues(Meter* this) {
+   DiskIOMeterData* data = this->meterData;
+
+   Meter_updateValues(data->diskIOTimeMeter);
+   Meter_updateValues(data->diskIORateMeter);
+}
+
+static void DiskIOMeter_draw(Meter* this, int x, int y, int w) {
+   DiskIOMeterData* data = this->meterData;
+
+   /* Use the same width for each sub meter to align with CPU meter */
+   const int colwidth = w / 2;
+   const int diff = w % 2;
+
+   assert(data->diskIOTimeMeter->draw);
+   data->diskIOTimeMeter->draw(data->diskIOTimeMeter, x, y, colwidth);
+   assert(data->diskIORateMeter->draw);
+   data->diskIORateMeter->draw(data->diskIORateMeter, x + colwidth + diff, y, colwidth);
+}
+
+static void DiskIOMeter_init(Meter* this) {
+   DiskIOMeterData* data = this->meterData;
+
+   if (!data) {
+      data = this->meterData = xCalloc(1, sizeof(DiskIOMeterData));
+   }
+
+   if (!data->diskIOTimeMeter)
+      data->diskIOTimeMeter = Meter_new(this->host, 0, (const MeterClass*) Class(DiskIOTimeMeter));
+   if (!data->diskIORateMeter)
+      data->diskIORateMeter = Meter_new(this->host, 0, (const MeterClass*) Class(DiskIORateMeter));
+
+   if (Meter_initFn(data->diskIOTimeMeter)) {
+      Meter_init(data->diskIOTimeMeter);
+   }
+   if (Meter_initFn(data->diskIORateMeter)) {
+      Meter_init(data->diskIORateMeter);
+   }
+}
+
+static void DiskIOMeter_updateMode(Meter* this, MeterModeId mode) {
+   DiskIOMeterData* data = this->meterData;
+
+   this->mode = mode;
+
+   Meter_setMode(data->diskIOTimeMeter, mode);
+   Meter_setMode(data->diskIORateMeter, mode);
+
+   this->h = MAXIMUM(data->diskIOTimeMeter->h, data->diskIORateMeter->h);
+}
+
+static void DiskIOMeter_done(Meter* this) {
+   DiskIOMeterData* data = this->meterData;
+
+   Meter_delete((Object*)data->diskIOTimeMeter);
+   Meter_delete((Object*)data->diskIORateMeter);
+
+   free(data);
+}
+
+const MeterClass DiskIOTimeMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
-      .display = DiskIOMeter_display
+      .display = DiskIOTimeMeter_display
    },
-   .updateValues = DiskIOMeter_updateValues,
+   .updateValues = DiskIOTimeMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 1,
    .isPercentChart = true,
    .total = 1.0,
-   .attributes = DiskIOMeter_attributes,
-   .name = "DiskIO",
-   .uiName = "Disk IO",
-   .caption = "Disk IO: "
+   .attributes = DiskIOTimeMeter_attributes,
+   .name = "DiskIOTime",
+   .uiName = "Disk IO Time",
+   .caption = "Dsk: "
 };
 
 const MeterClass DiskIORateMeter_class = {
@@ -241,4 +296,23 @@ const MeterClass DiskIORateMeter_class = {
    .name = "DiskIORate",
    .uiName = "Disk IO Rate",
    .caption = "Dsk: "
+};
+
+const MeterClass DiskIOMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete,
+   },
+   .updateValues = DiskIOMeter_updateValues,
+   .defaultMode = TEXT_METERMODE,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
+   .isMultiColumn = true,
+   .name = "DiskIO",
+   .uiName = "Disk IO",
+   .description = "Disk IO time & rate combined display",
+   .caption = "Dsk: ",
+   .draw = DiskIOMeter_draw,
+   .init = DiskIOMeter_init,
+   .updateMode = DiskIOMeter_updateMode,
+   .done = DiskIOMeter_done
 };
