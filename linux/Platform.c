@@ -211,9 +211,11 @@ void Platform_setBindings(Htop_Action* keys) {
 
 #ifdef IGNORE_VIRTUAL_INTF
 static bool Platform_isVirtualNetworkInterface(const char* name) {
-   return (strncmp(name, "docker", 6) == 0 || strncmp(name, "veth", 4) == 0 ||
-           strncmp(name, "virbr", 5) == 0 || strncmp(name, "tun", 3) == 0 ||
-           strncmp(name, "tap", 3) == 0 || strncmp(name, "vboxnet", 7) == 0);
+   char path[PATH_MAX];
+
+   // Since kerel 2.6.13 virtual interfaces are listed in /sys/devices/virtual/net
+   xSnprintf(path, sizeof(path), "/sys/devices/virtual/net/%s", name);
+   return access(path, F_OK) == 0;
 }
 #endif
 
@@ -721,7 +723,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
          continue;
 
       if (String_eq(interfaceName, "lo:") ||
-         (data->ignoreVirtualIntf == true && Platform_isVirtualNetworkInterface(interfaceName))
+         (data->ignoreVirtualIntf && Platform_isVirtualNetworkInterface(interfaceName))
       )
          continue;
 
