@@ -160,6 +160,9 @@ static int tempDriverPriority(const sensors_chip_name* chip) {
       { "cpu7_thermal",       0 },
       /* Amlogic S905W */
       { "scpi_sensors",       0 },
+      /* Snapdragon 410 */
+      { "cpu0_1_thermal",     0 },
+      { "cpu2_3_thermal",     0 },
       /* Low priority drivers */
       { "acpitz",             1 },
    };
@@ -307,6 +310,22 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                data[3] = temp;
                data[4] = temp;
                coreTempCount += 4;
+               continue;
+            }
+         }
+
+         /* Snapdragon 410 */
+         if (existingCPUs == 4) {
+            if (String_eq(chip->prefix, "cpu0_1_thermal")) {
+               data[1] = temp;
+               data[2] = temp;
+               coreTempCount += 2;
+               continue;
+            }
+            if (String_eq(chip->prefix, "cpu2_3_thermal")) {
+               data[3] = temp;
+               data[4] = temp;
+               coreTempCount += 2;
                continue;
             }
          }
