@@ -722,7 +722,7 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
                              &packetsTransmitted) != 5)
          continue;
 
-      if (String_eq(interfaceName, "lo:") ||
+      if (String_eq(interfaceName, "lo:") || // Loopback must be always ignored
          (data->ignoreVirtualIntf && Platform_isVirtualNetworkInterface(interfaceName))
       )
          continue;

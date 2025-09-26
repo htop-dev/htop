@@ -150,6 +150,26 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
+static bool Platform_isVirtualNetworkInterface(const struct ifmibdata* ifm) {
+    switch (ifmd->ifmd_data.ifi_type) {
+        case IFT_LOOP:    // Loopback
+        case IFT_VLAN:    // VLAN
+        case IFT_TUNNEL:  // IP tunnel
+        case IFT_GIF:     // Generic tunnel
+        case IFT_BRIDGE:  // Bridge
+        case IFT_L2VLAN:  // Layer 2 VLAN
+        case IFT_FAITH:   // IPv6-to-IPv4 translation
+        case IFT_STF:     // 6to4 tunnel
+        case IFT_PPP:     // PPP
+        case IFT_PFSYNC:  // pfsync
+        case IFT_CARP:    // CARP
+            return true;
+        default:
+            break;
+    }
+    return false;
+}
+
 int Platform_getUptime(void) {
    struct timeval bootTime, currTime;
    const int mib[2] = { CTL_KERN, KERN_BOOTTIME };
@@ -361,7 +381,8 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       if (r < 0)
          continue;
 
-      if (ifmd.ifmd_flags & IFF_LOOPBACK)
+      if ((ifmd.ifmd_flags & IFF_LOOPBACK) || // Loopback must be always ignored
+            (data->ignoreVirtualIntf && Platform_isVirtualNetworkInterface(&ifmd)))
          continue;
 
       data->bytesReceived += ifmd.ifmd_data.ifi_ibytes;
