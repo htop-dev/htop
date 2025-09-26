@@ -153,7 +153,7 @@ void Platform_setBindings(Htop_Action* keys) {
 static bool Platform_isVirtualNetworkInterface(const struct ifmibdata* ifmd) {
     switch (ifmd->ifmd_data.ifi_type) {
         case IFT_LOOP:    // Loopback
-#ifdef IFT_L2VLAN
+#ifdef IFT_VLAN
         case IFT_VLAN:    // VLAN
 #endif
         case IFT_TUNNEL:  // IP tunnel
