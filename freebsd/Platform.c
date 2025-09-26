@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include <time.h>
 #include <net/if.h>
 #include <net/if_mib.h>
-#include <sys/_types.h>
+#include <sys/if_types.h>
 #include <sys/devicestat.h>
 #include <sys/param.h>
 #include <sys/resource.h>
