@@ -73,7 +73,7 @@ static void PCPDynamicMeter_parseMetric(PCPDynamicMeters* meters, PCPDynamicMete
       /* use derived metrics in dynamic meters for simplicity */
       char* error;
       if (pmRegisterDerivedMetric(metric->name, value, &error) < 0) {
-         char* note;
+         char* note = NULL;
          xAsprintf(&note,
                    "%s: failed to parse expression in %s at line %u\n%s\n%s",
                    pmGetProgname(), path, line, error, pmGetProgname());
