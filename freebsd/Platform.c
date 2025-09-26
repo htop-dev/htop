@@ -150,7 +150,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-static bool Platform_isVirtualNetworkInterface(const struct ifmibdata* ifm) {
+static bool Platform_isVirtualNetworkInterface(const struct ifmibdata* ifmd) {
     switch (ifmd->ifmd_data.ifi_type) {
         case IFT_LOOP:    // Loopback
         case IFT_VLAN:    // VLAN
