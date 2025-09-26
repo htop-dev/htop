@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -250,6 +251,9 @@ int xAsprintf(char** strp, const char* fmt, ...) {
 
 int xSnprintf(char* buf, size_t len, const char* fmt, ...) {
    assert(len > 0);
+
+   // POSIX says snprintf() can fail if (len > INT_MAX).
+   len = MINIMUM(INT_MAX, len);
 
    va_list vl;
    va_start(vl, fmt);
