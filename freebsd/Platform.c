@@ -153,16 +153,22 @@ void Platform_setBindings(Htop_Action* keys) {
 static bool Platform_isVirtualNetworkInterface(const struct ifmibdata* ifmd) {
     switch (ifmd->ifmd_data.ifi_type) {
         case IFT_LOOP:    // Loopback
+#ifdef IFT_L2VLAN
         case IFT_VLAN:    // VLAN
+#endif
         case IFT_TUNNEL:  // IP tunnel
         case IFT_GIF:     // Generic tunnel
         case IFT_BRIDGE:  // Bridge
         case IFT_L2VLAN:  // Layer 2 VLAN
+#ifdef IFT_FAITH
         case IFT_FAITH:   // IPv6-to-IPv4 translation
+#endif
         case IFT_STF:     // 6to4 tunnel
         case IFT_PPP:     // PPP
         case IFT_PFSYNC:  // pfsync
+#ifdef IFT_CARP
         case IFT_CARP:    // CARP
+#endif
             return true;
         default:
             break;
