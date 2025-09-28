@@ -302,6 +302,16 @@ highlighting can be configured for stale executables (cf. EXE column below).
 
 The Command column should be the last column in each screen as can get very long
 and profits from being able to extend its length dynamically.
+
+Additional color highlighting:
+.RS
+.IP \[bu] 2
+Magenta: regular process command names
+.IP \[bu] 2
+Bold blue: userland thread names
+.IP \[bu] 2
+Bold gray: kernel threads or processes with no command name
+.RE
 .TP
 .B COMM
 The command name of the process obtained from /proc/[pid]/comm, if readable.
@@ -463,6 +473,16 @@ On Linux the username is highlighted if the process has elevated privileges,
 i.e. if it has been started from binaries with file capabilities set or
 retained Linux capabilities, via the ambient set, after switching from the
 root user.
+
+Additional color highlighting:
+.RS
+.IP \[bu] 2
+Magenta: elevated privilege processes
+.IP \[bu] 2
+Bold gray: processes owned by other users
+.IP \[bu] 2
+White (default): processes owned by the current user
+.RE
 .TP
 .B TIME (TIME+)
 The time, measured in clock ticks that the process has spent in user and system
