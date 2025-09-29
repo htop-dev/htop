@@ -129,6 +129,7 @@ typedef enum ColorElements_ {
    GPU_ENGINE_2,
    GPU_ENGINE_3,
    GPU_ENGINE_4,
+   GPU_FILTER,
    GPU_RESIDUE,
    PANEL_EDIT,
    SCREENS_OTH_BORDER,

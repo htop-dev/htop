@@ -27,9 +27,11 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "Macros.h"
 #include "MainPanel.h"
+#include "NvidiaJetson.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
+#include "ProcessTable.h"
 #include "ProvideCurses.h"
 #include "Row.h"
 #include "RowField.h"
@@ -646,6 +648,26 @@ static Htop_Reaction actionTogglePauseUpdate(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
 }
 
+#ifdef NVIDIA_JETSON
+static Htop_Reaction actionToggleGpuFilter(State* st) {
+   static Hashtable *stash = NULL;
+
+   Hashtable *GpuPidMatchList = NvidiaJetson_GetPidMatchList();
+   if (GpuPidMatchList) {
+      st->showGpuProcesses = !st->showGpuProcesses;
+
+      ProcessTable *pt = (ProcessTable *)st->host->activeTable;
+      if (st->showGpuProcesses) {
+         stash = pt->pidMatchList;
+         pt->pidMatchList = GpuPidMatchList;
+      } else {
+         pt->pidMatchList = stash;
+      }
+   }
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
+}
+#endif
+
 static const struct {
    const char* key;
    bool roInactive;
@@ -658,6 +680,9 @@ static const struct {
    { .key = "   F3 /: ",  .roInactive = false, .info = "incremental name search" },
    { .key = "   F4 \\: ", .roInactive = false, .info = "incremental name filtering" },
    { .key = "   F5 t: ",  .roInactive = false, .info = "tree view" },
+#ifdef NVIDIA_JETSON
+   { .key = "      g: ",  .roInactive = false, .info = "show GPU processes (root only)" },
+#endif
    { .key = "      p: ",  .roInactive = false, .info = "toggle program path" },
    { .key = "      m: ",  .roInactive = false, .info = "toggle merged command" },
    { .key = "      Z: ",  .roInactive = false, .info = "pause/resume process updates" },
@@ -933,6 +958,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['a'] = actionSetAffinity;
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
+#ifdef NVIDIA_JETSON
+   keys['g'] = actionToggleGpuFilter;
+#endif
    keys['h'] = actionHelp;
    keys['k'] = actionKill;
    keys['l'] = actionLsof;
