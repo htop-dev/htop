@@ -308,9 +308,9 @@ Additional color highlighting:
 .IP \[bu] 2
 Magenta: regular process command names
 .IP \[bu] 2
-Bold Blue: userland thread names
+Bold blue: userland thread names
 .IP \[bu] 2
-Bold Gray: kernel threads or processes with no command name
+Bold gray: kernel threads or processes with no command name
 .RE
 .TP
 .B COMM
@@ -479,7 +479,7 @@ Additional color highlighting:
 .IP \[bu] 2
 Magenta: elevated privilege processes
 .IP \[bu] 2
-Bold Gray: processes owned by other users
+Bold gray: processes owned by other users
 .IP \[bu] 2
 White (default): processes owned by the current user
 .RE
