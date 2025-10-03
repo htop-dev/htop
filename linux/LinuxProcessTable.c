@@ -1714,7 +1714,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          || ss->flags & PROCESS_FLAG_LINUX_VSERVER
 #endif
       ) {
-         proc->isRunningInContainer = TRI_OFF;
          if (!LinuxProcessTable_readStatusFile(proc, procFd))
             goto errorReadingProcess;
       }
