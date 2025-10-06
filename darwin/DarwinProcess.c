@@ -343,7 +343,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
        * field is enabled in the settings.
        */
       if (settings->ss->flags & PROCESS_FLAG_TTY) {
-         proc->tty_name = DarwinProcess_getDevname(proc->tty_nr);
+         proc->tty_name = DarwinProcess_getDevname((dev_t)proc->tty_nr);
          if (!proc->tty_name) {
             /* devname failed: prevent us from calling it again */
             proc->tty_nr = NODEV;
@@ -457,7 +457,7 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
       uint64_t tid = identifer_info.thread_id;
 
       bool preExisting;
-      Process *tprocess = ProcessTable_getProcess(&dpt->super, tid, &preExisting, DarwinProcess_new);
+      Process *tprocess = ProcessTable_getProcess(&dpt->super, (pid_t)tid, &preExisting, DarwinProcess_new);
       tprocess->super.updated = true;
       dpt->super.totalTasks++;
 
