@@ -34,7 +34,7 @@ Lines starting with the "#" character are treated as comments.
 .SH "METERS"
 The following is an example configuration for a new Redis meter:
 .LP
-.ft CW
+.ft CR
 .nf
 .in +0.5i
 [redisclient]
@@ -158,7 +158,7 @@ megabytes, etc), a suffix will be automatically appended.
 The following is an example configuration for a new column
 showing open file descriptors for each process:
 .LP
-.ft CW
+.ft CR
 .nf
 .in +0.5i
 [openfds]
