@@ -78,15 +78,15 @@ static inline unsigned long long Metric_instance_u64(int metric, int pid, int of
 
 static inline unsigned long long Metric_instance_time(int metric, int pid, int offset) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
-      return value.ull / 10;
+   if (Metric_instance_milliseconds(metric, pid, offset, &value))
+      return value.ull / 10; /* centiseconds used by callers */
    return 0;
 }
 
 static inline unsigned long long Metric_instance_ONE_K(int metric, int pid, int offset) {
    pmAtomValue value;
-   if (Metric_instance(metric, pid, offset, &value, PM_TYPE_U64))
-      return value.ull / ONE_K;
+   if (Metric_instance_kibibytes(metric, pid, offset, &value))
+      return value.ull;
    return ULLONG_MAX;
 }
 

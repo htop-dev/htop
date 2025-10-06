@@ -185,6 +185,10 @@ int Metric_instanceOffset(Metric metric, int inst);
 
 pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type);
 
+pmAtomValue* Metric_instance_kibibytes(Metric metric, int inst, int offset, pmAtomValue* atom);
+
+pmAtomValue* Metric_instance_milliseconds(Metric metric, int inst, int offset, pmAtomValue* atom);
+
 void Metric_externalName(Metric metric, int inst, char** externalName);
 
 int Metric_lookupText(const char* metric, char** desc);

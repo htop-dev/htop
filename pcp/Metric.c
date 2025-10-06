@@ -75,36 +75,95 @@ int Metric_instanceOffset(Metric metric, int inst) {
    return 0;
 }
 
-static pmAtomValue* Metric_extract(Metric metric, int inst, int offset, pmValueSet* vset, pmAtomValue* atom, int type) {
+static pmAtomValue* Metric_extract(Metric metric, int inst, int offset, pmValueSet* vset, pmAtomValue* atom, const pmDesc **desc, int type) {
 
    /* extract value (using requested type) of given metric instance */
-   const pmDesc* desc = &pcp->descs[metric];
+   const pmDesc* outdesc = &pcp->descs[metric];
    const pmValue* value = &vset->vlist[offset];
-   int sts = pmExtractValue(vset->valfmt, value, desc->type, atom, type);
+   int sts = pmExtractValue(vset->valfmt, value, outdesc->type, atom, type);
    if (sts < 0) {
       if (pmDebugOptions.appl0)
          fprintf(stderr, "Error: cannot extract %s instance %d value: %s\n",
                          pcp->names[metric], inst, pmErrStr(sts));
       memset(atom, 0, sizeof(pmAtomValue));
    }
+   *desc = outdesc;
    return atom;
 }
 
-pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type) {
-
+static const pmDesc* Metric_instanceDesc(Metric metric, int inst, int offset, pmAtomValue* atom, int type) {
    pmValueSet* vset = pcp->result->vset[metric];
    if (!vset || vset->numval <= 0)
       return NULL;
 
    /* fast-path using heuristic offset based on expected location */
-   if (offset >= 0 && offset < vset->numval && inst == vset->vlist[offset].inst)
-      return Metric_extract(metric, inst, offset, vset, atom, type);
+   const pmDesc* desc = NULL;
+   if (offset >= 0 && offset < vset->numval && inst == vset->vlist[offset].inst
+       && Metric_extract(metric, inst, offset, vset, atom, &desc, type))
+      return desc;
 
    /* slow-path using a linear search for the requested instance */
    for (int i = 0; i < vset->numval; i++) {
-      if (inst == vset->vlist[i].inst)
-         return Metric_extract(metric, inst, i, vset, atom, type);
+      if (inst == vset->vlist[i].inst
+          && Metric_extract(metric, inst, i, vset, atom, &desc, type))
+         break;
    }
+   return desc;
+}
+
+pmAtomValue* Metric_instance(Metric metric, int inst, int offset, pmAtomValue* atom, int type) {
+   if (Metric_instanceDesc(metric, inst, offset, atom, type))
+      return atom;
+   return NULL;
+}
+
+static inline pmAtomValue* kibibytes(pmAtomValue* atom, int scale) {
+   /* perform integer math, raising to the power +/-N */
+   int i, power = scale - PM_SPACE_KBYTE;
+   if (power > 0) {
+      for (i = 0; i < power; i++)
+         atom->ull *= ONE_K;
+   } else if (power < 0) {
+      for (i = 0; i > power; i--)
+         atom->ull /= ONE_K;
+   }
+   return atom;
+}
+
+pmAtomValue* Metric_instance_kibibytes(Metric metric, int inst, int offset, pmAtomValue* atom) {
+   const pmDesc *desc = Metric_instanceDesc(metric, inst, offset, atom, PM_TYPE_U64);
+   if (desc)
+      return kibibytes(atom, desc->units.scaleSpace);
+   return NULL;
+}
+
+static inline pmAtomValue* milliseconds(pmAtomValue* atom, int scale) {
+   switch (scale) {
+   case PM_TIME_NSEC:
+      atom->ull /= 1000000ULL;
+      break;
+   case PM_TIME_USEC:
+      atom->ull /= 1000ULL;
+      break;
+   case PM_TIME_MSEC:
+      break;
+   case PM_TIME_SEC:
+      atom->ull *= 1000ULL;
+      break;
+   case PM_TIME_MIN:
+      atom->ull *= 1000ULL * 60ULL;
+      break;
+   case PM_TIME_HOUR:
+      atom->ull *= 1000ULL * 60ULL * 60ULL;
+      break;
+   }
+   return atom;
+}
+
+pmAtomValue* Metric_instance_milliseconds(Metric metric, int inst, int offset, pmAtomValue* atom) {
+   const pmDesc *desc = Metric_instanceDesc(metric, inst, offset, atom, PM_TYPE_U64);
+   if (desc)
+      return milliseconds(atom, desc->units.scaleTime);
    return NULL;
 }
 
