@@ -927,14 +927,14 @@ bool Settings_isReadonly(void) {
 }
 
 void Settings_setHeaderLayout(Settings* this, HeaderLayout hLayout) {
-   unsigned int oldColumns = HeaderLayout_getColumns(this->hLayout);
-   unsigned int newColumns = HeaderLayout_getColumns(hLayout);
+   size_t oldColumns = HeaderLayout_getColumns(this->hLayout);
+   size_t newColumns = HeaderLayout_getColumns(hLayout);
 
    if (newColumns > oldColumns) {
       this->hColumns = xReallocArray(this->hColumns, newColumns, sizeof(MeterColumnSetting));
       memset(this->hColumns + oldColumns, 0, (newColumns - oldColumns) * sizeof(MeterColumnSetting));
    } else if (newColumns < oldColumns) {
-      for (unsigned int i = newColumns; i < oldColumns; i++) {
+      for (size_t i = newColumns; i < oldColumns; i++) {
          if (this->hColumns[i].names) {
             for (size_t j = 0; j < this->hColumns[i].len; j++)
                free(this->hColumns[i].names[j]);

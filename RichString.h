@@ -50,7 +50,7 @@ void RichString_delete(RichString* this);
 
 void RichString_rewind(RichString* this, int count);
 
-void RichString_setAttrn(RichString* this, int attrs, int start, int charcount);
+void RichString_setAttrn(RichString* this, int attrs, size_t start, size_t charcount);
 
 int RichString_findChar(const RichString* this, char c, int start);
 
@@ -63,17 +63,17 @@ void RichString_appendChr(RichString* this, int attrs, char c, int count);
 int RichString_appendWide(RichString* this, int attrs, const char* data);
 
 ATTR_ACCESS3_R(3, 4)
-int RichString_appendnWide(RichString* this, int attrs, const char* data, int len);
+int RichString_appendnWide(RichString* this, int attrs, const char* data, size_t len);
 
 /* columns takes the maximum number of columns to write and contains on return the number of columns written. */
-int RichString_appendnWideColumns(RichString* this, int attrs, const char* data, int len, int* columns);
+int RichString_appendnWideColumns(RichString* this, int attrs, const char* data, size_t len, int* columns);
 
 int RichString_writeWide(RichString* this, int attrs, const char* data);
 
 int RichString_appendAscii(RichString* this, int attrs, const char* data);
 
 ATTR_ACCESS3_R(3, 4)
-int RichString_appendnAscii(RichString* this, int attrs, const char* data, int len);
+int RichString_appendnAscii(RichString* this, int attrs, const char* data, size_t len);
 
 int RichString_writeAscii(RichString* this, int attrs, const char* data);
 

@@ -24,7 +24,7 @@ typedef struct ScreenNamesPanel_ {
    char buffer[SCREEN_NAME_LEN + 1];
    DynamicScreen* ds;
    char* saved;
-   int cursor;
+   size_t cursor;
    ListItem* renamingItem;
 } ScreenNamesPanel;
 
