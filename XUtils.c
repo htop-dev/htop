@@ -237,6 +237,8 @@ size_t strnlen(const char* str, size_t maxLen) {
 #endif
 
 int xAsprintf(char** strp, const char* fmt, ...) {
+   *strp = NULL;
+
    va_list vl;
    va_start(vl, fmt);
    int r = vasprintf(strp, fmt, vl);

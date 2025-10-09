@@ -155,7 +155,7 @@ void Header_writeBackToSettings(const Header* this) {
 
       for (int i = 0; i < len; i++) {
          const Meter* meter = (Meter*) Vector_get(vec, i);
-         char* name;
+         char* name = NULL;
          if (meter->param && As_Meter(meter) == &DynamicMeter_class) {
             const char* dynamic = DynamicMeter_lookup(settings->dynamicMeters, meter->param);
             xAsprintf(&name, "%s(%s)", As_Meter(meter)->name, dynamic);
