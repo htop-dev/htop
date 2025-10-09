@@ -72,6 +72,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
          } else {
             diff = 0;
          }
+         this->values[1] = diff;
          Meter_humanUnit(cached_read_diff_str, diff, sizeof(cached_read_diff_str));
 
          if (data.totalBytesWritten > cached_write_total) {
@@ -81,6 +82,7 @@ static void DiskIOMeter_updateValues(Meter* this) {
          } else {
             diff = 0;
          }
+         this->values[2] = diff;
          Meter_humanUnit(cached_write_diff_str, diff, sizeof(cached_write_diff_str));
 
          cached_utilisation_diff = 0.0;
@@ -156,8 +158,13 @@ const MeterClass DiskIOMeter_class = {
    },
    .updateValues = DiskIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
-   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
-   .maxItems = 1,
+   .supportedModes =
+      (1 << BAR_METERMODE) |
+      (1 << TEXT_METERMODE) |
+      (1 << GRAPH_METERMODE) |
+      (1 << LED_METERMODE) |
+      (1 << BIPOLAR_METERMODE),
+   .maxItems = 3,
    .total = 1.0,
    .attributes = DiskIOMeter_attributes,
    .name = "DiskIO",
