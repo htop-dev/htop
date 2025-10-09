@@ -21,7 +21,7 @@ in the source distribution for its full text.
 
 #define charBytes(n) (sizeof(CharType) * (n))
 
-static void RichString_extendLen(RichString* this, int len) {
+static void RichString_extendLen(RichString* this, size_t len) {
    if (this->chptr == this->chstr) {
       // String is in internal buffer
       if (len > RICHSTRING_MAXLEN) {
@@ -46,13 +46,13 @@ static void RichString_extendLen(RichString* this, int len) {
    }
 
    RichString_setChar(this, len, 0);
-   this->chlen = len;
+   this->chlen = (int)len;
 }
 
-static void RichString_setLen(RichString* this, int len) {
+static void RichString_setLen(RichString* this, size_t len) {
    if (len < RICHSTRING_MAXLEN && this->chlen < RICHSTRING_MAXLEN) {
       RichString_setChar(this, len, 0);
-      this->chlen = len;
+      this->chlen = (int)len;
    } else {
       RichString_extendLen(this, len);
    }
@@ -97,33 +97,33 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
    return written;
 }
 
-static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
+static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, size_t len) {
    wchar_t data[len];
    len = mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)
       return 0;
 
-   int newLen = from + len;
+   size_t newLen = from + len;
    RichString_setLen(this, newLen);
-   for (int i = from, j = 0; i < newLen; i++, j++) {
+   for (size_t i = from, j = 0; i < newLen; i++, j++) {
       this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (iswprint(data[j]) ? data[j] : L'\xFFFD') } };
    }
 
-   return len;
+   return (int)len;
 }
 
-int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, int len, int* columns) {
+int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, size_t len, int* columns) {
    wchar_t data[len];
    len = mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)
       return 0;
 
    int from = this->chlen;
-   int newLen = from + len;
+   size_t newLen = from + len;
    RichString_setLen(this, newLen);
    int columnsWritten = 0;
    int pos = from;
-   for (int j = 0; j < len; j++) {
+   for (size_t j = 0; j < len; j++) {
       wchar_t c = iswprint(data[j]) ? data[j] : L'\xFFFD';
       int cwidth = wcwidth(c);
       if (cwidth > *columns)
@@ -142,20 +142,20 @@ int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_
    return pos - from;
 }
 
-static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data, int from, int len) {
-   int newLen = from + len;
+static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data, int from, size_t len) {
+   size_t newLen = from + len;
    RichString_setLen(this, newLen);
-   for (int i = from, j = 0; i < newLen; i++, j++) {
+   for (size_t i = from, j = 0; i < newLen; i++, j++) {
       assert((unsigned char)data[j] <= SCHAR_MAX);
       this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (isprint((unsigned char)data[j]) ? data[j] : L'\xFFFD') } };
    }
 
-   return len;
+   return (int)len;
 }
 
-inline void RichString_setAttrn(RichString* this, int attrs, int start, int charcount) {
-   int end = CLAMP(start + charcount, 0, this->chlen);
-   for (int i = start; i < end; i++) {
+inline void RichString_setAttrn(RichString* this, int attrs, size_t start, size_t charcount) {
+   size_t end = CLAMP(start + charcount, 0, (size_t)this->chlen);
+   for (size_t i = start; i < end; i++) {
       this->chptr[i].attr = attrs;
    }
 }
@@ -182,10 +182,10 @@ int RichString_findChar(const RichString* this, char c, int start) {
 
 #else /* HAVE_LIBNCURSESW */
 
-static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, int len) {
-   int newLen = from + len;
+static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, size_t len) {
+   size_t newLen = from + len;
    RichString_setLen(this, newLen);
-   for (int i = from, j = 0; i < newLen; i++, j++) {
+   for (size_t i = from, j = 0; i < newLen; i++, j++) {
       this->chptr[i] = (((unsigned char)data_c[j]) >= 32 ? ((unsigned char)data_c[j]) : '?') | attrs;
    }
    this->chptr[newLen] = 0;
@@ -193,19 +193,20 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
    return len;
 }
 
-int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, int len, int* columns) {
-   int written = RichString_writeFromWide(this, attrs, data_c, this->chlen, MINIMUM(len, *columns));
+int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, size_t len, int* columns) {
+   size_t minlen = MINIMUM(len, (size_t) *columns);
+   int written = RichString_writeFromWide(this, attrs, data_c, this->chlen, minlen);
    *columns = written;
    return written;
 }
 
-static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data_c, int from, int len) {
+static inline int RichString_writeFromAscii(RichString* this, int attrs, const char* data_c, int from, size_t len) {
    return RichString_writeFromWide(this, attrs, data_c, from, len);
 }
 
-void RichString_setAttrn(RichString* this, int attrs, int start, int charcount) {
-   int end = CLAMP(start + charcount, 0, this->chlen);
-   for (int i = start; i < end; i++) {
+void RichString_setAttrn(RichString* this, int attrs, size_t start, size_t charcount) {
+   size_t end = CLAMP(start + charcount, 0, (size_t)this->chlen);
+   for (size_t i = start; i < end; i++) {
       this->chptr[i] = (this->chptr[i] & 0xff) | attrs;
    }
 }
@@ -246,7 +247,7 @@ int RichString_appendWide(RichString* this, int attrs, const char* data) {
    return RichString_writeFromWide(this, attrs, data, this->chlen, strlen(data));
 }
 
-int RichString_appendnWide(RichString* this, int attrs, const char* data, int len) {
+int RichString_appendnWide(RichString* this, int attrs, const char* data, size_t len) {
    return RichString_writeFromWide(this, attrs, data, this->chlen, len);
 }
 
@@ -258,7 +259,7 @@ int RichString_appendAscii(RichString* this, int attrs, const char* data) {
    return RichString_writeFromAscii(this, attrs, data, this->chlen, strlen(data));
 }
 
-int RichString_appendnAscii(RichString* this, int attrs, const char* data, int len) {
+int RichString_appendnAscii(RichString* this, int attrs, const char* data, size_t len) {
    return RichString_writeFromAscii(this, attrs, data, this->chlen, len);
 }
 

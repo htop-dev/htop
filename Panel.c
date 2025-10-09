@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <ctype.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,7 +80,7 @@ void Panel_done(Panel* this) {
 
 void Panel_setCursorToSelection(Panel* this) {
    this->cursorY = this->y + this->selected - this->scrollV + 1;
-   this->cursorX = this->x + this->selectedLen - this->scrollH;
+   this->cursorX = this->x + (int)this->selectedLen - this->scrollH;
 }
 
 void Panel_setSelectionColor(Panel* this, ColorElements colorId) {
@@ -421,7 +422,7 @@ bool Panel_onKey(Panel* this, int key) {
 
       case KEY_CTRL('E'):
       case '$':
-         this->scrollH = MAXIMUM(this->selectedLen - this->w, 0);
+         this->scrollH = CLAMP((int)this->selectedLen - this->w, 0, INT_MAX);
          this->needsRedraw = true;
          break;
 

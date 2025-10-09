@@ -79,10 +79,9 @@ bool Vector_countEquals(const Vector* this, unsigned int expectedCount) {
    return n == expectedCount;
 }
 
-Object* Vector_get(const Vector* this, int idx) {
-   assert(idx >= 0);
-   assert(idx < this->arraySize);
-   assert(idx < this->items);
+Object* Vector_get(const Vector* this, size_t idx) {
+   assert(idx < (size_t)this->arraySize);
+   assert(idx < (size_t)this->items);
    assert(this->array[idx]);
    assert(Object_isA(this->array[idx], this->type));
    return this->array[idx];

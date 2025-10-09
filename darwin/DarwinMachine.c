@@ -47,7 +47,7 @@ static void DarwinMachine_freeCPULoadInfo(processor_cpu_load_info_t* p) {
    *p = NULL;
 }
 
-static size_t DarwinMachine_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
+static unsigned int DarwinMachine_allocateCPULoadInfo(processor_cpu_load_info_t* p) {
    mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
    natural_t cpu_count;
 

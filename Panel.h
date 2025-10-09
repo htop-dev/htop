@@ -67,7 +67,7 @@ struct Panel_ {
    Vector* items;
    int selected;
    int oldSelected;
-   int selectedLen;
+   size_t selectedLen;
    void* eventHandlerState;
    int scrollV;
    int scrollH;

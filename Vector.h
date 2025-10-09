@@ -66,7 +66,7 @@ void Vector_set(Vector* this, int idx, void* data_);
 
 #ifndef NDEBUG
 
-Object* Vector_get(const Vector* this, int idx);
+Object* Vector_get(const Vector* this, size_t idx);
 int Vector_size(const Vector* this);
 
 /* Vector_countEquals returns true if the number of non-NULL items
@@ -76,7 +76,7 @@ bool Vector_countEquals(const Vector* this, unsigned int expectedCount);
 
 #else /* NDEBUG */
 
-static inline Object* Vector_get(const Vector* this, int idx) {
+static inline Object* Vector_get(const Vector* this, size_t idx) {
    return this->array[idx];
 }
 
