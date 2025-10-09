@@ -219,13 +219,13 @@ end:
    attrset(CRT_colors[RESET_COLOR]);
 }
 
-static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_redraw) {
+static void ScreenManager_drawPanels(ScreenManager* this, size_t focus, bool force_redraw) {
    Settings* settings = this->host->settings;
    if (settings->screenTabs) {
       ScreenManager_drawScreenTabs(this);
    }
-   const int nPanels = this->panelCount;
-   for (int i = 0; i < nPanels; i++) {
+   const size_t nPanels = this->panelCount;
+   for (size_t i = 0; i < nPanels; i++) {
       Panel* panel = (Panel*) Vector_get(this->panels, i);
       Panel_draw(panel,
                  force_redraw,
@@ -238,7 +238,7 @@ static void ScreenManager_drawPanels(ScreenManager* this, int focus, bool force_
 
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, const char* name) {
    bool quit = false;
-   int focus = 0;
+   size_t focus = 0;
 
    Panel* panelFocus = (Panel*) Vector_get(this->panels, focus);
    Settings* settings = this->host->settings;

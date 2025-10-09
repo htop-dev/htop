@@ -35,7 +35,7 @@ void Header_populateFromSettings(Header* this);
 
 void Header_writeBackToSettings(const Header* this);
 
-Meter* Header_addMeterByClass(Header* this, const MeterClass* type, unsigned int param, unsigned int column);
+Meter* Header_addMeterByClass(Header* this, const MeterClass* type, unsigned int param, size_t column);
 
 void Header_reinit(Header* this);
 

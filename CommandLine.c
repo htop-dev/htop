@@ -209,7 +209,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
                      fprintf(stderr, "Error: invalid user \"%s\".\n", username);
                      return STATUS_ERROR_EXIT;
                   }
-               flags->userId = atol(username);
+               flags->userId = (uid_t)atol(username);
             }
             break;
          }

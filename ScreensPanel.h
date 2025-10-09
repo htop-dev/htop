@@ -31,9 +31,9 @@ typedef struct ScreensPanel_ {
    ColumnsPanel* columns;
    AvailableColumnsPanel* availableColumns;
    char buffer[SCREEN_NAME_LEN + 1];
-   char* saved;
-   int cursor;
    bool moving;
+   char* saved;
+   size_t cursor;
    ListItem* renamingItem;
 } ScreensPanel;
 
