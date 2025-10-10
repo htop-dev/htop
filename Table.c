@@ -336,18 +336,22 @@ void Table_cleanupRow(Table* table, Row* row, int idx) {
    if (row->tombStampMs > 0) {
       // remove tombed process
       if (host->monotonicMs >= row->tombStampMs) {
-         Table_removeIndex(table, row, idx);
+         goto remove;
       }
-   } else if (row->updated == false) {
+   } else if (!row->updated) {
       // process no longer exists
       if (settings->highlightChanges && row->wasShown) {
          // mark tombed
          row->tombStampMs = host->monotonicMs + 1000 * settings->highlightDelaySecs;
       } else {
          // immediately remove
-         Table_removeIndex(table, row, idx);
+         goto remove;
       }
    }
+   return;
+
+remove:
+   Table_removeIndex(table, row, idx);
 }
 
 void Table_cleanupEntries(Table* this) {
