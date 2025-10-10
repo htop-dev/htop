@@ -75,6 +75,7 @@ const MeterClass SwapMeter_class = {
    .defaultMode = BAR_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = SWAP_METER_ITEMCOUNT,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = SwapMeter_attributes,
    .name = "Swap",

@@ -93,6 +93,7 @@ const MeterClass ZfsArcMeter_class = {
    .defaultMode = TEXT_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
    .maxItems = 6,
+   .isPercentChart = true,
    .total = 100.0,
    .attributes = ZfsArcMeter_attributes,
    .name = "ZFSARC",
