@@ -63,6 +63,10 @@ static void ProcessTable_cleanupEntries(Table* super) {
    Machine* host = super->host;
    const Settings* settings = host->settings;
 
+   // Lowest index of the row that is soft-removed. Used to speed up
+   // compaction.
+   int dirtyIndex = Vector_size(super->rows);
+
    // Finish process table update, culling any exit'd processes
    for (int i = Vector_size(super->rows) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(super->rows, i);
@@ -78,11 +82,13 @@ static void ProcessTable_cleanupEntries(Table* super) {
       if (pid > host->maxProcessId)
          host->maxProcessId = pid;
 
-      Table_cleanupRow(super, (Row*) p, i);
+      if (!Table_cleanupRow(super, &p->super, i)) {
+         dirtyIndex = i;
+      }
    }
 
    // compact the table in case of deletions
-   Table_compact(super);
+   Table_compact(super, dirtyIndex);
 }
 
 const TableClass ProcessTable_class = {

@@ -329,7 +329,7 @@ void Table_prepareEntries(Table* this) {
 }
 
 // tidy up Row state after refreshing the table
-void Table_cleanupRow(Table* table, Row* row, int idx) {
+Row* Table_cleanupRow(Table* table, Row* row, int idx) {
    Machine* host = table->host;
    const Settings* settings = host->settings;
 
@@ -348,21 +348,28 @@ void Table_cleanupRow(Table* table, Row* row, int idx) {
          goto remove;
       }
    }
-   return;
+   return row;
 
 remove:
    Table_removeIndex(table, row, idx);
+   return NULL;
 }
 
 void Table_cleanupEntries(Table* this) {
+   // Lowest index of the row that is soft-removed. Used to speed up
+   // compaction.
+   int dirtyIndex = Vector_size(this->rows);
+
    // Finish process table update, culling any removed rows
    for (int i = Vector_size(this->rows) - 1; i >= 0; i--) {
       Row* row = (Row*) Vector_get(this->rows, i);
-      Table_cleanupRow(this, row, i);
+      if (!Table_cleanupRow(this, row, i)) {
+         dirtyIndex = i;
+      }
    }
 
    // compact the table in case of any earlier row removals
-   Table_compact(this);
+   Table_compact(this, dirtyIndex);
 }
 
 const TableClass Table_class = {
