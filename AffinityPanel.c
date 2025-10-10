@@ -96,7 +96,7 @@ static MaskItem* MaskItem_newMask(const char* text, const char* indent, hwloc_bi
    this->ownCpuset = owner;
    this->cpuset = cpuset;
    this->sub_tree = hwloc_bitmap_weight(cpuset) > 1 ? 1 : 0;
-   this->children = Vector_new(Class(MaskItem), true, DEFAULT_SIZE);
+   this->children = Vector_new(Class(MaskItem), true, VECTOR_DEFAULT_SIZE);
    return this;
 }
 
@@ -107,7 +107,7 @@ static MaskItem* MaskItem_newSingleton(const char* text, int cpu, bool isSet) {
    this->text = xStrdup(text);
    this->indent = NULL; /* not a tree node */
    this->sub_tree = 0;
-   this->children = Vector_new(Class(MaskItem), true, DEFAULT_SIZE);
+   this->children = Vector_new(Class(MaskItem), true, VECTOR_DEFAULT_SIZE);
 
    #ifdef HAVE_LIBHWLOC
    this->ownCpuset = true;
@@ -381,7 +381,7 @@ Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
     * but this will be added by the caller */
    this->width = 14;
 
-   this->cpuids   = Vector_new(Class(MaskItem), true, DEFAULT_SIZE);
+   this->cpuids   = Vector_new(Class(MaskItem), true, VECTOR_DEFAULT_SIZE);
 
    #ifdef HAVE_LIBHWLOC
    this->topoView = host->settings->topologyAffinity;

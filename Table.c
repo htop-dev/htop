@@ -24,8 +24,8 @@ in the source distribution for its full text.
 
 
 Table* Table_init(Table* this, const ObjectClass* klass, Machine* host) {
-   this->rows = Vector_new(klass, true, DEFAULT_SIZE);
-   this->displayList = Vector_new(klass, false, DEFAULT_SIZE);
+   this->rows = Vector_new(klass, true, VECTOR_DEFAULT_SIZE);
+   this->displayList = Vector_new(klass, false, VECTOR_DEFAULT_SIZE);
    this->table = Hashtable_new(200, false);
    this->needsSort = true;
    this->following = -1;

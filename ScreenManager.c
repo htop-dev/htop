@@ -35,7 +35,7 @@ ScreenManager* ScreenManager_new(Header* header, Machine* host, State* state, bo
    this->y1 = 0;
    this->x2 = 0;
    this->y2 = -1;
-   this->panels = Vector_new(Class(Panel), owner, DEFAULT_SIZE);
+   this->panels = Vector_new(Class(Panel), owner, VECTOR_DEFAULT_SIZE);
    this->panelCount = 0;
    this->header = header;
    this->host = host;

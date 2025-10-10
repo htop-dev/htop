@@ -19,10 +19,6 @@ in the source distribution for its full text.
 Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
    Vector* this;
 
-   if (size == DEFAULT_SIZE) {
-      size = 10;
-   }
-
    assert(size > 0);
    this = xMalloc(sizeof(Vector));
    *this = (Vector) {

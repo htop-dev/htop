@@ -12,9 +12,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 
-#ifndef DEFAULT_SIZE
-#define DEFAULT_SIZE (-1)
-#endif
+#define VECTOR_DEFAULT_SIZE (10)
 
 typedef struct Vector_ {
    Object** array;
