@@ -16,6 +16,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+static Object_Compare vectorCompareFn;
+
 Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
    Vector* this;
 
@@ -95,6 +97,7 @@ void Vector_prune(Vector* this) {
 
 //static int comparisons = 0;
 
+/*
 static void swap(Object** array, int indexA, int indexB) {
    assert(indexA >= 0);
    assert(indexB >= 0);
@@ -102,31 +105,7 @@ static void swap(Object** array, int indexA, int indexB) {
    array[indexA] = array[indexB];
    array[indexB] = tmp;
 }
-
-static int partition(Object** array, int left, int right, int pivotIndex, Object_Compare compare) {
-   const Object* pivotValue = array[pivotIndex];
-   swap(array, pivotIndex, right);
-   int storeIndex = left;
-   for (int i = left; i < right; i++) {
-      //comparisons++;
-      if (compare(array[i], pivotValue) <= 0) {
-         swap(array, i, storeIndex);
-         storeIndex++;
-      }
-   }
-   swap(array, storeIndex, right);
-   return storeIndex;
-}
-
-static void quickSort(Object** array, int left, int right, Object_Compare compare) {
-   if (left >= right)
-      return;
-
-   int pivotIndex = (left + right) / 2;
-   int pivotNewIndex = partition(array, left, right, pivotIndex, compare);
-   quickSort(array, left, pivotNewIndex - 1, compare);
-   quickSort(array, pivotNewIndex + 1, right, compare);
-}
+*/
 
 // If I were to use only one sorting algorithm for both cases, it would probably be this one:
 /*
@@ -167,10 +146,15 @@ static void insertionSort(Object** array, int left, int right, Object_Compare co
    }
 }
 
+static int Vector_compareObjects(const void* v1, const void* v2) {
+   return vectorCompareFn(*(const Object* const*)v1, *(const Object* const*)v2);
+}
+
 void Vector_quickSortCustomCompare(Vector* this, Object_Compare compare) {
    assert(compare);
    assert(Vector_isConsistent(this));
-   quickSort(this->array, 0, this->items - 1, compare);
+   vectorCompareFn = compare;
+   qsort(this->array, this->items, sizeof(Object*), Vector_compareObjects);
    assert(Vector_isConsistent(this));
 }
 
