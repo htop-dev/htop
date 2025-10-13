@@ -294,7 +294,7 @@ jobs:
         - name: Compile
           uses: vmactions/openbsd-vm@v1
           with:
-            release: '7.6'
+            release: '7.7'
             usesh: true
             prepare: |
               pkg_add gmake git
