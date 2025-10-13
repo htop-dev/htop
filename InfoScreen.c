@@ -35,7 +35,7 @@ InfoScreen* InfoScreen_init(InfoScreen* this, const Process* process, FunctionBa
    }
    this->display = Panel_new(0, 1, COLS, height, Class(ListItem), false, bar);
    this->inc = IncSet_new(bar);
-   this->lines = Vector_new(Vector_type(this->display->items), true, DEFAULT_SIZE);
+   this->lines = Vector_new(Vector_type(this->display->items), true, VECTOR_DEFAULT_SIZE);
    Panel_setHeader(this->display, panelHeader);
    return this;
 }

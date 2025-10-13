@@ -12,9 +12,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 
-#ifndef DEFAULT_SIZE
-#define DEFAULT_SIZE (-1)
-#endif
+#define VECTOR_DEFAULT_SIZE (10)
 
 typedef struct Vector_ {
    Object** array;
@@ -22,12 +20,13 @@ typedef struct Vector_ {
    int arraySize;
    int growthRate;
    int items;
-   /* lowest index of a pending soft remove/delete operation,
-      used to speed up compaction */
-   int dirty_index;
-   /* count of soft deletes, required for Vector_count to work in debug mode */
-   int dirty_count;
+
+   /* If true, the items would be freed when they are removed from the
+      vector. */
    bool owner;
+   /* Whether the Vector is pending a "compact" operation. This field
+      is currently only used for debugging. */
+   bool isDirty;
 } Vector;
 
 Vector* Vector_new(const ObjectClass* type, bool owner, int size);
@@ -56,7 +55,7 @@ Object* Vector_remove(Vector* this, int idx);
 Object* Vector_softRemove(Vector* this, int idx);
 
 /* Vector_compact reclaims space free'd up by Vector_softRemove, if any. */
-void Vector_compact(Vector* this);
+void Vector_compact(Vector* this, int dirtyIndex);
 
 void Vector_moveUp(Vector* this, int idx);
 

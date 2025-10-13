@@ -35,7 +35,7 @@ Header* Header_new(Machine* host, HeaderLayout hLayout) {
    this->host = host;
 
    Header_forEachColumn(this, i) {
-      this->columns[i] = Vector_new(Class(Meter), true, DEFAULT_SIZE);
+      this->columns[i] = Vector_new(Class(Meter), true, VECTOR_DEFAULT_SIZE);
    }
 
    return this;
@@ -62,7 +62,7 @@ void Header_setLayout(Header* this, HeaderLayout hLayout) {
    if (newColumns > oldColumns) {
       this->columns = xReallocArray(this->columns, newColumns, sizeof(Vector*));
       for (size_t i = oldColumns; i < newColumns; i++)
-         this->columns[i] = Vector_new(Class(Meter), true, DEFAULT_SIZE);
+         this->columns[i] = Vector_new(Class(Meter), true, VECTOR_DEFAULT_SIZE);
    } else {
       // move meters from to-be-deleted columns into last one
       for (size_t i = newColumns; i < oldColumns; i++) {

@@ -19,10 +19,6 @@ in the source distribution for its full text.
 Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
    Vector* this;
 
-   if (size == DEFAULT_SIZE) {
-      size = 10;
-   }
-
    assert(size > 0);
    this = xMalloc(sizeof(Vector));
    *this = (Vector) {
@@ -32,8 +28,7 @@ Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
       .items = 0,
       .type = type,
       .owner = owner,
-      .dirty_index = -1,
-      .dirty_count = 0,
+      .isDirty = false,
    };
    return this;
 }
@@ -50,21 +45,11 @@ void Vector_delete(Vector* this) {
    free(this);
 }
 
-static inline bool Vector_isDirty(const Vector* this) {
-   if (this->dirty_count > 0) {
-      assert(0 <= this->dirty_index && this->dirty_index < this->items);
-      assert(this->dirty_count <= this->items);
-      return true;
-   }
-   assert(this->dirty_index == -1);
-   return false;
-}
-
 #ifndef NDEBUG
 
 static bool Vector_isConsistent(const Vector* this) {
    assert(this->items <= this->arraySize);
-   assert(!Vector_isDirty(this));
+   assert(!this->isDirty);
 
    return true;
 }
@@ -104,8 +89,7 @@ void Vector_prune(Vector* this) {
       }
    }
    this->items = 0;
-   this->dirty_index = -1;
-   this->dirty_count = 0;
+   this->isDirty = false;
    memset(this->array, '\0', this->arraySize * sizeof(Object*));
 }
 
@@ -260,10 +244,7 @@ Object* Vector_softRemove(Vector* this, int idx) {
    if (removed) {
       this->array[idx] = NULL;
 
-      this->dirty_count++;
-      if (this->dirty_index < 0 || idx < this->dirty_index) {
-         this->dirty_index = idx;
-      }
+      this->isDirty = true;
 
       if (this->owner) {
          Object_delete(removed);
@@ -274,35 +255,26 @@ Object* Vector_softRemove(Vector* this, int idx) {
    return removed;
 }
 
-void Vector_compact(Vector* this) {
-   if (!Vector_isDirty(this)) {
+void Vector_compact(Vector* this, int dirtyIndex) {
+   if (!this->isDirty)
       return;
-   }
 
-   const int size = this->items;
-   assert(0 <= this->dirty_index && this->dirty_index < size);
-   assert(this->array[this->dirty_index] == NULL);
+   assert(0 <= dirtyIndex);
+   if (dirtyIndex >= this->items)
+      return;
 
-   int idx = this->dirty_index;
+   assert(!this->array[dirtyIndex]);
 
-   // one deletion: use memmove, which should be faster
-   if (this->dirty_count == 1) {
-      memmove(&this->array[idx], &this->array[idx + 1], (this->items - idx - 1) * sizeof(this->array[0]));
-      this->array[this->items - 1] = NULL;
-   } else {
-      // multiple deletions
-      for (int i = idx + 1; i < size; i++) {
-         if (this->array[i]) {
-            this->array[idx++] = this->array[i];
-         }
+   for (int i = dirtyIndex + 1; i < this->items; i++) {
+      if (this->array[i]) {
+         this->array[dirtyIndex++] = this->array[i];
       }
-      // idx is now at the end of the vector and on the first index which should be set to NULL
-      memset(&this->array[idx], '\0', (size - idx) * sizeof(this->array[0]));
    }
+   int dirtyCount = this->items - dirtyIndex;
+   memset(&this->array[dirtyIndex], 0, dirtyCount * sizeof(this->array[0]));
 
-   this->items -= this->dirty_count;
-   this->dirty_index = -1;
-   this->dirty_count = 0;
+   this->items = dirtyIndex;
+   this->isDirty = false;
 
    assert(Vector_isConsistent(this));
 }

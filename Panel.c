@@ -55,7 +55,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
    this->cursorX = 0;
    this->cursorY = 0;
    this->eventHandlerState = NULL;
-   this->items = Vector_new(type, owner, DEFAULT_SIZE);
+   this->items = Vector_new(type, owner, VECTOR_DEFAULT_SIZE);
    this->scrollV = 0;
    this->scrollH = 0;
    this->selected = 0;
