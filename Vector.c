@@ -122,7 +122,7 @@ static void quickSort(Object** array, int left, int right, Object_Compare compar
    if (left >= right)
       return;
 
-   int pivotIndex = (left + right) / 2;
+   int pivotIndex = left + (right - left) / 2;
    int pivotNewIndex = partition(array, left, right, pivotIndex, compare);
    quickSort(array, left, pivotNewIndex - 1, compare);
    quickSort(array, pivotNewIndex + 1, right, compare);
