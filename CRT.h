@@ -182,7 +182,7 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 #define KEY_FOCUS_OUT  (KEY_MAX + 'O')
 #define KEY_DEL_MAC    127
 
-extern const char* CRT_degreeSign;
+extern char CRT_degreeSign[];
 
 #ifdef HAVE_LIBNCURSESW
 
