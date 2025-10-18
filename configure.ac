@@ -842,7 +842,7 @@ case "$enable_unwind" in
          AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
       fi
 
-      AC_CHECK_LIB([unwind], [backtrace], [],
+      AC_CHECK_LIB([unwind], [unw_init_local], [],
          [if test "$enable_unwind" = yes; then
             AC_MSG_ERROR([can not find required library libunwind])
          fi
