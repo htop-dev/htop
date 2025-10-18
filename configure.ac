@@ -1217,7 +1217,11 @@ AS_VAR_IF(CACHEVAR,yes,
 AS_VAR_POPDEF([CACHEVAR])dnl
 ])dnl AX_CHECK_COMPILE_FLAGS
 
-AX_CHECK_COMPILE_FLAG([-Wextra-semi-stmt],         [AM_CFLAGS="$AM_CFLAGS -Wextra-semi-stmt"],         , [-Werror=unknown-warning-option]) dnl the autoconf check itself generates -Wextra-semi-stmt
+dnl During the check of '-Wextra-semi-stmt' we must treat
+dnl 'extra-semi-stmt' as a non-error because the AC_LANG_PROGRAM
+dnl template will generate a warning of this (by design).
+AX_CHECK_COMPILE_FLAG([-Wextra-semi-stmt],         [AM_CFLAGS="$AM_CFLAGS -Wextra-semi-stmt"],         , [-Werror -Wno-error=extra-semi-stmt])
+
 AX_CHECK_COMPILE_FLAG([-Wimplicit-int-conversion], [AM_CFLAGS="$AM_CFLAGS -Wimplicit-int-conversion"], , [-Werror])
 AX_CHECK_COMPILE_FLAG([-Wnull-dereference],        [AM_CFLAGS="$AM_CFLAGS -Wnull-dereference"],        , [-Werror])
 
