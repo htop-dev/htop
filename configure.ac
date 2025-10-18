@@ -847,22 +847,23 @@ case "$enable_unwind" in
             AC_MSG_ERROR([can not find required library libunwind])
          fi
          enable_unwind=no])
-
-      if test "$enable_unwind" = no; then
-         :
-      elif htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
-         AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
-         enable_unwind=yes
-      elif test "$enable_unwind" = yes; then
-         AC_MSG_ERROR([can not find required header file libunwind.h])
-      else
-         enable_unwind=no
-      fi
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
       ;;
 esac
+
+if test "$enable_unwind" = no; then
+   :
+elif htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
+   AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
+   enable_unwind=yes
+elif test "$enable_unwind" = yes; then
+   AC_MSG_ERROR([can not find required header file libunwind.h])
+else
+   enable_unwind=no
+fi
+
 if test "x$enable_unwind" = xno; then
    # Fall back to backtrace(3) and add -lexecinfo if needed
    AC_SEARCH_LIBS([backtrace], [execinfo])
