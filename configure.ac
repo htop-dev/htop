@@ -856,15 +856,70 @@ esac
 if test "$enable_unwind" = no; then
    :
 elif htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
-   AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
-   enable_unwind=yes
+   htop_save_CPPFLAGS=$CPPFLAGS
+   CPPFLAGS="$AM_CPPFLAGS $CPPFLAGS"
+
+   AC_MSG_CHECKING([whether local unwinding works])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([[
+#include <libunwind.h>
+      ]], [[
+         /* If libunwind is built with remote unwinding only,
+            unw_init_local() will be a dummy function that returns
+            -UNW_EINVAL when called. */
+         unw_context_t context;
+         int ret = unw_getcontext(&context);
+         if (!ret) {
+            unw_cursor_t cursor;
+            ret = unw_init_local(&cursor, &context);
+         }
+         return (ret <= 0 && ret > -126 ? -ret : 1);
+      ]])],
+      [
+      libunwind_local_support=unknown
+      if test "$cross_compiling" = yes; then
+         AC_COMPILE_IFELSE(
+            [AC_LANG_SOURCE([[
+#include <libunwind.h>
+#ifdef UNW_REMOTE_ONLY
+#error "local unwinding not supported"
+#endif
+            ]])],
+            [AC_MSG_RESULT([assume yes (cross compiling)])],
+            [libunwind_local_support=no]
+         )
+      elif ./conftest$EXEEXT >&AS_MESSAGE_LOG_FD; then
+         libunwind_local_support=yes
+         AC_MSG_RESULT([yes])
+      else
+         libunwind_local_support=no
+      fi
+      if test "$libunwind_local_support" = no; then
+         AC_MSG_RESULT([no])
+         if test "$enable_unwind" = yes; then
+            AC_MSG_WARN([this build of libunwind might not support local unwinding])
+         else
+            enable_unwind=no
+         fi
+      fi
+      ],
+      [
+      AC_MSG_RESULT([no])
+      AC_MSG_FAILURE([there are problems with libunwind.h])
+      ]
+   )
+
+   CPPFLAGS=$htop_save_CPPFLAGS
 elif test "$enable_unwind" = yes; then
    AC_MSG_ERROR([can not find required header file libunwind.h])
 else
    enable_unwind=no
 fi
 
-if test "x$enable_unwind" = xno; then
+if test "$enable_unwind" != no; then
+   enable_unwind=yes
+   AC_DEFINE([HAVE_LOCAL_UNWIND], 1, [Define to 1 if local unwinding is enabled.])
+else
    # Fall back to backtrace(3) and add -lexecinfo if needed
    AC_SEARCH_LIBS([backtrace], [execinfo])
 
