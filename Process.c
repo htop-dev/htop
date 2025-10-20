@@ -295,6 +295,12 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
                   }                                                                           \
                }                                                                              \
                break;                                                                         \
+            case 'n':                                                                         \
+               CHECK_AND_MARK(str_, "/nix/store/");                                           \
+               break;                                                                         \
+            case 'r':                                                                         \
+               CHECK_AND_MARK(str_, "/run/current-system/");                                  \
+               break;                                                                         \
          }                                                                                    \
       } while (0)
 
