@@ -86,6 +86,18 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
 static const char BarMeterMode_characters[] = "|#*@$%&.";
 
+#ifdef HAVE_LIBNCURSESW
+const wchar_t* bars[BAR_METER_NUM_STYLES] = {
+   L"|",
+   L"#",
+   L"⣿⡀⡄⡆⡇⣇⣧⣷",
+   L"█░░▒▒▓▓█",
+   L"█▏▎▍▌▋▊▉",
+   L"█▁▂▃▄▅▆▇",
+   L"█▌▌▌▌███"
+};
+#endif
+
 static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(x >= 0);
    assert(w <= INT_MAX - x);
@@ -149,6 +161,14 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(startPos + w <= RichString_sizeVal(bar));
 
    int blockSizes[10];
+#ifdef HAVE_LIBNCURSESW
+   Settings* settings = this->host->settings;
+   assert(settings->barType < ( sizeof(bars) / sizeof(wchar_t*) ));
+   assert(settings->barType >= 0);
+   const wchar_t* currBar = bars[settings->barType];
+   int barLen = (int)wcslen(currBar);
+   int extraWidth = 0;
+#endif
 
    // First draw in the bar[] buffer...
    int offset = 0;
@@ -158,19 +178,35 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
          value = MINIMUM(value, this->total);
          blockSizes[i] = ceil((value / this->total) * w);
          blockSizes[i] = MINIMUM(blockSizes[i], w - offset);
+
+#ifdef HAVE_LIBNCURSESW
+         extraWidth = (int)ceil((value / this->total) * w * barLen) % barLen;
+#endif
       } else {
          blockSizes[i] = 0;
       }
       int nextOffset = offset + blockSizes[i];
-      for (int j = offset; j < nextOffset; j++)
+      for (int j = offset; j < nextOffset; j++) {
          if (RichString_getCharVal(bar, startPos + j) == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
                RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
-            } else {
+            }
+#ifdef HAVE_LIBNCURSESW
+            else if(CRT_utf8 && settings->barType) {
+               if(j==nextOffset-1){
+                  RichString_setChar(&bar, startPos+nextOffset-1,  currBar[extraWidth]);
+               } else {
+                  RichString_setChar(&bar, startPos + j, currBar[0]);
+               }
+            }
+#endif
+            else {
                RichString_setChar(&bar, startPos + j, '|');
             }
          }
+      }
+
       offset = nextOffset;
    }
 
