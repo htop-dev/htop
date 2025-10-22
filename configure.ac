@@ -17,6 +17,7 @@ AC_PREREQ([2.69])
 AC_INIT([htop], [m4_join([-],m4_defn([htop_release_version]),m4_defn([htop_git_version]))], [htop@groups.io], [], [https://htop.dev/])
 
 AC_CONFIG_SRCDIR([htop.c])
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([config.h])
 
@@ -1432,31 +1433,34 @@ AM_CFLAGS="$AM_CFLAGS\
  -Wunused\
  -Wwrite-strings"
 
-dnl https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
-AC_DEFUN(
+m4_ifdef(
    [AX_CHECK_COMPILE_FLAG],
    [
-      AS_VAR_PUSHDEF([CACHEVAR],[ax_cv_check_[]_AC_LANG_ABBREV[]flags_$4_$1])dnl
-      AC_CACHE_CHECK([whether _AC_LANG compiler accepts $1], CACHEVAR, [
-         ax_check_save_flags=$[]_AC_LANG_PREFIX[]FLAGS
-         _AC_LANG_PREFIX[]FLAGS="$[]_AC_LANG_PREFIX[]FLAGS $4 $1"
-         AC_COMPILE_IFELSE([m4_default([$5],[AC_LANG_PROGRAM()])],
-            [AS_VAR_SET(CACHEVAR,[yes])],
-            [AS_VAR_SET(CACHEVAR,[no])])
-         _AC_LANG_PREFIX[]FLAGS=$ax_check_save_flags
-      ])
-      AS_VAR_IF(CACHEVAR,yes,
-         [m4_default([$2], :)],
-         [m4_default([$3], :)]
+      dnl During the check of '-Wextra-semi-stmt' we must treat
+      dnl 'extra-semi-stmt' as a non-error because the AC_LANG_PROGRAM
+      dnl template will generate a warning of this (by design).
+      AX_CHECK_COMPILE_FLAG(
+         [-Wextra-semi-stmt],
+         [AM_CFLAGS="$AM_CFLAGS -Wextra-semi-stmt"],
+         [],
+         [-Wno-error=extra-semi-stmt]
       )
-      AS_VAR_POPDEF([CACHEVAR])dnl
+
+      AX_CHECK_COMPILE_FLAG(
+         [-Wimplicit-int-conversion],
+         [AM_CFLAGS="$AM_CFLAGS -Wimplicit-int-conversion"]
+      )
+      AX_CHECK_COMPILE_FLAG(
+         [-Wnull-dereference],
+         [AM_CFLAGS="$AM_CFLAGS -Wnull-dereference"]
+      )
+   ], [
+      m4_warn(
+         [syntax],
+         [module m4/ax_check_compile_flag.m4 is missing]
+      )
    ]
 )
-dnl AX_CHECK_COMPILE_FLAGS
-
-AX_CHECK_COMPILE_FLAG([-Wextra-semi-stmt],         [AM_CFLAGS="$AM_CFLAGS -Wextra-semi-stmt"],         , [-Werror=unknown-warning-option]) dnl the autoconf check itself generates -Wextra-semi-stmt
-AX_CHECK_COMPILE_FLAG([-Wimplicit-int-conversion], [AM_CFLAGS="$AM_CFLAGS -Wimplicit-int-conversion"], , [-Werror])
-AX_CHECK_COMPILE_FLAG([-Wnull-dereference],        [AM_CFLAGS="$AM_CFLAGS -Wnull-dereference"],        , [-Werror])
 
 AC_ARG_ENABLE(
    [werror],
