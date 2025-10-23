@@ -896,6 +896,25 @@ if test "x$enable_affinity" = xyes; then
 fi
 
 
+dnl HTOP_PKG_CHECK_MODULES(VARIABLE-PREFIX, MODULES [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
+dnl This macro is a wrapper of PKG_CHECK_MODULES, which checks if
+dnl MODULES exist, and then sets VARIABLE-PREFIX_CFLAGS and
+dnl VARIABLE-PREFIX_LIBS from pkg-config --cflags and --libs output
+dnl respectively, and then runs ACTION-IF-FOUND. If pkg.m4 is absent or
+dnl pkg-config MODULES don't exist, this instead runs
+dnl ACTION-IF-NOT-FOUND. ACTION-IF-NOT-FOUND defaults to printing an
+dnl error message and exiting.
+AC_DEFUN([HTOP_PKG_CHECK_MODULES],
+   [m4_ifdef(
+      [PKG_PROG_PKG_CONFIG],
+      [PKG_CHECK_MODULES([$1], [$2], [$3], [$4])],
+      [m4_default(
+         [$4],
+         [AC_MSG_ERROR([pkg.m4 required to check for pkg-config modules '$2'; please regenerate configure script])]
+      )]
+   )]
+)
+
 # $1: Header file name
 # $2: List of directories to search, separated by spaces
 # $3: Additional include directives
