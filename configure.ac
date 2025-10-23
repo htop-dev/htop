@@ -948,33 +948,32 @@ case "$enable_unwind" in
          AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
       fi
 
-      AC_CHECK_LIB(
-         [unwind],
-         [unw_init_local],
-         [],
-         [
-            if test "$enable_unwind" = yes; then
-               AC_MSG_ERROR([can not find required library libunwind])
-            fi
-            enable_unwind=no
-         ]
-      )
+      if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
+         AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
+      elif test "$enable_unwind" = yes; then
+         AC_MSG_ERROR([can not find required header file libunwind.h])
+      else
+         enable_unwind=no
+      fi
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
       ;;
 esac
 
-if test "$enable_unwind" = no; then
-   :
-elif htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
+if test "$enable_unwind" != no; then
    htop_save_CPPFLAGS=$CPPFLAGS
+   htop_save_LIBS=$LIBS
    CPPFLAGS="$AM_CPPFLAGS $CPPFLAGS"
+   LIBS="-lunwind $LIBS"
 
-   AC_MSG_CHECKING([whether local unwinding works])
+   # unw_init_local() is a macro in HP's implemention of libunwind
+   # (the most popular one, Mosberger et al.)
+   AC_MSG_CHECKING([whether -lunwind supports local unwinding])
    AC_LINK_IFELSE(
       [AC_LANG_PROGRAM(
          [[
+#define UNW_LOCAL_ONLY
 #include <libunwind.h>
          ]], [[
          /* If libunwind is built with remote unwinding only,
@@ -1013,21 +1012,23 @@ elif htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
             if test "$enable_unwind" = yes; then
                AC_MSG_WARN([this build of libunwind might not support local unwinding])
             else
+               LIBS=$htop_save_LIBS
                enable_unwind=no
             fi
          fi
       ],
       [
          AC_MSG_RESULT([no])
-         AC_MSG_FAILURE([there are problems with libunwind.h])
+         if test "$enable_unwind" = yes; then
+            AC_MSG_FAILURE([can not link with libunwind])
+         else
+            LIBS=$htop_save_LIBS
+            enable_unwind=no
+         fi
       ]
    )
 
    CPPFLAGS=$htop_save_CPPFLAGS
-elif test "$enable_unwind" = yes; then
-   AC_MSG_ERROR([can not find required header file libunwind.h])
-else
-   enable_unwind=no
 fi
 
 if test "$enable_unwind" != no; then
