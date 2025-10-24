@@ -963,9 +963,18 @@ case "$enable_unwind" in
    no)
       ;;
    check|yes)
-      if test "$enable_static" = yes; then
-         AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
-      fi
+      HTOP_PKG_CHECK_MODULES(LIBUNWIND, libunwind,
+         [],
+         [
+            if test "$enable_static" = yes; then
+               AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
+            fi
+            : "${LIBUNWIND_LIBS='-lunwind'}"
+         ]
+      )
+
+      htop_save_CFLAGS=$CFLAGS
+      CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
 
       if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
          AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
@@ -974,6 +983,8 @@ case "$enable_unwind" in
       else
          enable_unwind=no
       fi
+
+      CFLAGS=$htop_save_CFLAGS
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
@@ -982,13 +993,15 @@ esac
 
 if test "$enable_unwind" != no; then
    htop_save_CPPFLAGS=$CPPFLAGS
+   htop_save_CFLAGS=$CFLAGS
    htop_save_LIBS=$LIBS
    CPPFLAGS="$AM_CPPFLAGS $CPPFLAGS"
-   LIBS="-lunwind $LIBS"
+   CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
+   LIBS="$LIBUNWIND_LIBS $LIBS"
 
    # unw_init_local() is a macro in HP's implemention of libunwind
    # (the most popular one, Mosberger et al.)
-   AC_MSG_CHECKING([whether -lunwind supports local unwinding])
+   AC_MSG_CHECKING([whether $LIBUNWIND_LIBS supports local unwinding])
    AC_LINK_IFELSE(
       [AC_LANG_PROGRAM(
          [[
@@ -1048,9 +1061,11 @@ if test "$enable_unwind" != no; then
    )
 
    CPPFLAGS=$htop_save_CPPFLAGS
+   CFLAGS=$htop_save_CFLAGS
 fi
 
 if test "$enable_unwind" != no; then
+   AM_CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS"
    enable_unwind=yes
    AC_DEFINE([HAVE_LOCAL_UNWIND], 1, [Define to 1 if local unwinding is enabled.])
 else
