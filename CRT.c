@@ -29,7 +29,7 @@ in the source distribution for its full text.
 #include <sys/mman.h>
 #endif
 
-#if defined(HAVE_LIBUNWIND) && defined(HAVE_LOCAL_UNWIND)
+#if defined(HAVE_LIBUNWIND_H) && defined(HAVE_LOCAL_UNWIND)
 # define PRINT_BACKTRACE
 # define UNW_LOCAL_ONLY
 # include <libunwind.h>
@@ -1346,7 +1346,7 @@ void CRT_setColors(int colorScheme) {
 
 #ifdef PRINT_BACKTRACE
 static void print_backtrace(void) {
-#if defined(HAVE_LIBUNWIND) && defined(HAVE_LOCAL_UNWIND)
+#if defined(HAVE_LIBUNWIND_H) && defined(HAVE_LOCAL_UNWIND)
    unw_context_t context;
    unw_getcontext(&context);
 

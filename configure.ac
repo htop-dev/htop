@@ -896,6 +896,25 @@ if test "x$enable_affinity" = xyes; then
 fi
 
 
+dnl HTOP_PKG_CHECK_MODULES(VARIABLE-PREFIX, MODULES [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
+dnl This macro is a wrapper of PKG_CHECK_MODULES, which checks if
+dnl MODULES exist, and then sets VARIABLE-PREFIX_CFLAGS and
+dnl VARIABLE-PREFIX_LIBS from pkg-config --cflags and --libs output
+dnl respectively, and then runs ACTION-IF-FOUND. If pkg.m4 is absent or
+dnl pkg-config MODULES don't exist, this instead runs
+dnl ACTION-IF-NOT-FOUND. ACTION-IF-NOT-FOUND defaults to printing an
+dnl error message and exiting.
+AC_DEFUN([HTOP_PKG_CHECK_MODULES],
+   [m4_ifdef(
+      [PKG_PROG_PKG_CONFIG],
+      [PKG_CHECK_MODULES([$1], [$2], [$3], [$4])],
+      [m4_default(
+         [$4],
+         [AC_MSG_ERROR([pkg.m4 required to check for pkg-config modules '$2'; please regenerate configure script])]
+      )]
+   )]
+)
+
 # $1: Header file name
 # $2: List of directories to search, separated by spaces
 # $3: Additional include directives
@@ -944,37 +963,49 @@ case "$enable_unwind" in
    no)
       ;;
    check|yes)
-      if test "$enable_static" = yes; then
-         AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
-      fi
-
-      AC_CHECK_LIB(
-         [unwind],
-         [unw_init_local],
+      HTOP_PKG_CHECK_MODULES(LIBUNWIND, libunwind,
          [],
          [
-            if test "$enable_unwind" = yes; then
-               AC_MSG_ERROR([can not find required library libunwind])
+            if test "$enable_static" = yes; then
+               AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
             fi
-            enable_unwind=no
+            : "${LIBUNWIND_LIBS='-lunwind'}"
          ]
       )
+
+      htop_save_CFLAGS=$CFLAGS
+      CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
+
+      if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
+         AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
+      elif test "$enable_unwind" = yes; then
+         AC_MSG_ERROR([can not find required header file libunwind.h])
+      else
+         enable_unwind=no
+      fi
+
+      CFLAGS=$htop_save_CFLAGS
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
       ;;
 esac
 
-if test "$enable_unwind" = no; then
-   :
-elif htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
+if test "$enable_unwind" != no; then
    htop_save_CPPFLAGS=$CPPFLAGS
+   htop_save_CFLAGS=$CFLAGS
+   htop_save_LIBS=$LIBS
    CPPFLAGS="$AM_CPPFLAGS $CPPFLAGS"
+   CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
+   LIBS="$LIBUNWIND_LIBS $LIBS"
 
-   AC_MSG_CHECKING([whether local unwinding works])
+   # unw_init_local() is a macro in HP's implemention of libunwind
+   # (the most popular one, Mosberger et al.)
+   AC_MSG_CHECKING([whether $LIBUNWIND_LIBS supports local unwinding])
    AC_LINK_IFELSE(
       [AC_LANG_PROGRAM(
          [[
+#define UNW_LOCAL_ONLY
 #include <libunwind.h>
          ]], [[
          /* If libunwind is built with remote unwinding only,
@@ -1013,24 +1044,28 @@ elif htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
             if test "$enable_unwind" = yes; then
                AC_MSG_WARN([this build of libunwind might not support local unwinding])
             else
+               LIBS=$htop_save_LIBS
                enable_unwind=no
             fi
          fi
       ],
       [
          AC_MSG_RESULT([no])
-         AC_MSG_FAILURE([there are problems with libunwind.h])
+         if test "$enable_unwind" = yes; then
+            AC_MSG_FAILURE([can not link with libunwind])
+         else
+            LIBS=$htop_save_LIBS
+            enable_unwind=no
+         fi
       ]
    )
 
    CPPFLAGS=$htop_save_CPPFLAGS
-elif test "$enable_unwind" = yes; then
-   AC_MSG_ERROR([can not find required header file libunwind.h])
-else
-   enable_unwind=no
+   CFLAGS=$htop_save_CFLAGS
 fi
 
 if test "$enable_unwind" != no; then
+   AM_CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS"
    enable_unwind=yes
    AC_DEFINE([HAVE_LOCAL_UNWIND], 1, [Define to 1 if local unwinding is enabled.])
 else
@@ -1113,17 +1148,11 @@ case "$enable_hwloc" in
    no)
       ;;
    yes)
-      m4_ifdef(
-         [PKG_PROG_PKG_CONFIG],
+      HTOP_PKG_CHECK_MODULES(HWLOC, hwloc,
          [
-            PKG_CHECK_MODULES(HWLOC, hwloc, [
-               AM_CFLAGS="$AM_CFLAGS $HWLOC_CFLAGS"
-               LIBS="$LIBS $HWLOC_LIBS"
-               AC_DEFINE([HAVE_LIBHWLOC], [1], [Define to 1 if you have the 'hwloc' library (-lhwloc).])
-            ], [
-               AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
-               AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
-            ])
+            AM_CFLAGS="$AM_CFLAGS $HWLOC_CFLAGS"
+            LIBS="$LIBS $HWLOC_LIBS"
+            AC_DEFINE([HAVE_LIBHWLOC], [1], [Define to 1 if you have the 'hwloc' library (-lhwloc).])
          ], [
             AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
             AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
@@ -1318,11 +1347,7 @@ esac
 case "$enable_delayacct" in
    check|yes)
       if test "x${LIBNL3_CFLAGS+y}" = x; then
-         m4_ifdef(
-            [PKG_PROG_PKG_CONFIG],
-            [PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [LIBNL3_CFLAGS="-I/usr/include/libnl3"])],
-            [LIBNL3_CFLAGS="-I/usr/include/libnl3"]
-         )
+         HTOP_PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [LIBNL3_CFLAGS="-I/usr/include/libnl3"])
       fi
 
       htop_save_CFLAGS=$CFLAGS
