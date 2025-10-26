@@ -780,27 +780,58 @@ esac
 htop_save_CFLAGS=$CFLAGS
 CFLAGS="$AM_CFLAGS $CFLAGS"
 
+have_curses_header=no
+have_term_header=no
+
 if test "x$enable_unicode" = xyes; then
-   AC_CHECK_HEADERS([ncursesw/curses.h], [],
-      [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
-         [AC_CHECK_HEADERS([ncurses/curses.h], [],
-            [AC_CHECK_HEADERS([ncurses.h], [],
-               [AC_MSG_ERROR([can not find required ncurses header file])])])])])
-
-   AC_CHECK_HEADERS([ncursesw/term.h], [],
-      [AC_CHECK_HEADERS([ncurses/term.h], [],
-         [AC_CHECK_HEADERS([term.h], [],
-            [AC_MSG_ERROR([can not find required term header file])])])])
+   AC_CHECK_HEADERS(
+      [
+         ncursesw/curses.h
+         ncurses/ncurses.h
+         ncurses/curses.h
+         ncurses.h
+      ], [
+         have_curses_header=yes
+         break
+      ]
+   )
+   AC_CHECK_HEADERS(
+      [
+         ncursesw/term.h
+         ncurses/term.h
+         term.h
+      ], [
+         have_term_header=yes
+         break
+      ]
+   )
 else
-   AC_CHECK_HEADERS([curses.h], [],
-      [AC_CHECK_HEADERS([ncurses/curses.h], [],
-         [AC_CHECK_HEADERS([ncurses/ncurses.h], [],
-            [AC_CHECK_HEADERS([ncurses.h], [],
-               [AC_MSG_ERROR([can not find required ncurses header file])])])])])
+   AC_CHECK_HEADERS(
+      [
+         curses.h
+         ncurses/curses.h
+         ncurses/ncurses.h
+         ncurses.h
+      ], [
+         have_curses_header=yes
+         break
+      ]
+   )
+   AC_CHECK_HEADERS(
+      [
+         ncurses/term.h
+         term.h
+      ], [
+         have_term_header=yes
+         break
+      ]
+   )
+fi
 
-   AC_CHECK_HEADERS([ncurses/term.h], [],
-      [AC_CHECK_HEADERS([term.h], [],
-         [AC_MSG_ERROR([can not find required term header file])])])
+if test "$have_curses_header" = no; then
+   AC_MSG_ERROR([can not find required curses header file])
+elif test "$have_term_header" = no; then
+   AC_MSG_ERROR([can not find required term header file])
 fi
 
 CFLAGS="-I$srcdir $CFLAGS"
