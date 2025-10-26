@@ -194,7 +194,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
             }
 #ifdef HAVE_LIBNCURSESW
             else if (CRT_utf8 && settings->barType) {
-               if(j==nextOffset-1){
+               if (j == nextOffset - 1) {
                   RichString_setChar(&bar, startPos+nextOffset-1,  currBar[extraWidth]);
                } else {
                   RichString_setChar(&bar, startPos + j, currBar[0]);
