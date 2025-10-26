@@ -205,7 +205,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) NumberItem_newByRef("Hide main function bar (0 - off, 1 - on ESC until next input, 2 - permanently)", &(settings->hideFunctionBar), 0, 0, 2));
 
    #ifdef HAVE_LIBNCURSESW
-   if(CRT_utf8)
+   if (CRT_utf8)
       Panel_add(super, (Object*) NumberItem_newByRef("Bar Type (0 - default)", (int*)&(settings->barType), 0, 0, BAR_METER_NUM_STYLES-1));
    #endif
 
