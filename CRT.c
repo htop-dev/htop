@@ -1142,6 +1142,11 @@ static bool terminalSupportsDefinedKeys(const char* termType) {
          return true;
       }
       break;
+   case 'f':
+      if (String_eq(termType, "foot")) {
+         return true;
+      }
+      break;
    case 's':
       if (termType[1] == 't' && IS_END_OR_DASH(termType[2])) {
          return true;
