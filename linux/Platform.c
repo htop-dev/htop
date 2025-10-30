@@ -209,7 +209,6 @@ void Platform_setBindings(Htop_Action* keys) {
    keys[KEY_F(20)] = Platform_actionHigherAutogroupPriority; // Shift-F8
 }
 
-#ifdef IGNORE_VIRTUAL_INTF
 static bool Platform_isVirtualNetworkInterface(const char* name) {
    char path[PATH_MAX];
 
@@ -217,7 +216,6 @@ static bool Platform_isVirtualNetworkInterface(const char* name) {
    xSnprintf(path, sizeof(path), "/sys/devices/virtual/net/%s", name);
    return access(path, F_OK) == 0;
 }
-#endif
 
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
