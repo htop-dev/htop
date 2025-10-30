@@ -112,9 +112,7 @@ typedef struct Settings_ {
 
    bool changed;
    uint64_t lastUpdate;
-#ifdef IGNORE_VIRTUAL_INTF
    bool ignoreVirtualNetworkInterfaces;
-#endif
 } Settings;
 
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromOne ? (cpu)+1 : (cpu))
