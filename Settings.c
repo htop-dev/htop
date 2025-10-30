@@ -49,6 +49,7 @@ static void Settings_deleteScreens(Settings* this) {
 }
 
 void Settings_delete(Settings* this) {
+   free(this->stateFilter);
    free(this->filename);
    free(this->initialFilename);
    Settings_deleteColumns(this);
