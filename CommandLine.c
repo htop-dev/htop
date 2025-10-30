@@ -59,7 +59,8 @@ static void printHelpFlag(const char* name) {
 #ifdef HAVE_GETMOUSE
    printf("-M --no-mouse                   Disable the mouse\n");
 #endif
-   printf("-n --max-iterations=NUMBER      Exit htop after NUMBER iterations/frame updates\n"
+   printf("   --no-meters                  Hide meters\n"
+          "-n --max-iterations=NUMBER      Exit htop after NUMBER iterations/frame updates\n"
           "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
           "   --readonly                   Disable all system and process changing features\n"
           "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
@@ -91,6 +92,7 @@ typedef struct CommandLineSettings_ {
    bool highlightChanges;
    int highlightDelaySecs;
    bool readonly;
+   bool hideMeters;
 } CommandLineSettings;
 
 static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettings* flags) {
@@ -125,6 +127,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       {"no-colour",  no_argument,         0, 'C'},
       {"no-mouse",   no_argument,         0, 'M'},
       {"no-unicode", no_argument,         0, 'U'},
+      {"no-meters",  no_argument,         0, 129},
       {"tree",       no_argument,         0, 't'},
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
@@ -223,6 +226,9 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             break;
          case 'U':
             flags->allowUnicode = false;
+            break;
+         case 129:
+            flags->hideMeters = true;
             break;
          case 't':
             flags->treeView = true;
@@ -380,7 +386,7 @@ int CommandLine_run(int argc, char** argv) {
       .failedUpdate = NULL,
       .pauseUpdate = false,
       .hideSelection = false,
-      .hideMeters = false,
+      .hideMeters = flags.hideMeters,
    };
 
    MainPanel_setState(panel, &state);
