@@ -91,8 +91,8 @@ static void ProcessLocksScreen_scan(InfoScreen* this) {
       }
    }
    free(pdata);
-   Vector_sort(this->lines, NULL);
-   Vector_sort(panel->items, NULL);
+   Vector_sort(this->lines, NULL, this);
+   Vector_sort(panel->items, NULL, this);
    Panel_setSelected(panel, idx);
 }
 

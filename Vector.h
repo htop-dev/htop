@@ -35,7 +35,7 @@ void Vector_delete(Vector* this);
 
 void Vector_prune(Vector* this);
 
-void Vector_sort(Vector* this, Object_Compare compare);
+void Vector_sort(Vector* this, Object_Compare compare, void* context);
 
 void Vector_insert(Vector* this, int idx, void* data_);
 

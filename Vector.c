@@ -17,10 +17,9 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
-typedef int(*CompareWithContext)(const void*, const void*, void*);
-
 typedef struct VectorSortContext_ {
    Object_Compare compare;
+   void* compareContext;
 } VectorSortContext;
 
 Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
@@ -141,7 +140,7 @@ static void rotate(void* buffer, size_t leftSize, size_t rightSize) {
 }
 
 ATTR_NONNULL_N(1, 5)
-static void mergeRuns(void* array, size_t leftLen, size_t rightLen, size_t size, CompareWithContext compare, void* context) {
+static void mergeRuns(void* array, size_t leftLen, size_t rightLen, size_t size, Object_Compare compare, void* context) {
    assert(size > 0);
    if (leftLen == 0 || rightLen == 0 || size == 0)
       return;
@@ -182,7 +181,7 @@ static void mergeRuns(void* array, size_t leftLen, size_t rightLen, size_t size,
 }
 
 ATTR_NONNULL_N(1, 5)
-static size_t mergeSortSubarray(void* array, size_t unsortedLen, size_t limit, size_t size, CompareWithContext compare, void* context) {
+static size_t mergeSortSubarray(void* array, size_t unsortedLen, size_t limit, size_t size, Object_Compare compare, void* context) {
    assert(size > 0);
    if (size == 0)
       return 0;
@@ -248,13 +247,14 @@ ATTR_NONNULL
 static int Vector_sortCompare(const void* p1, const void* p2, void* context) {
    VectorSortContext* vc = (VectorSortContext*) context;
 
-   return vc->compare(*(const void* const*)p1, *(const void* const*)p2);
+   return vc->compare(*(const void* const*)p1, *(const void* const*)p2, vc->compareContext);
 }
 
 ATTR_NONNULL_N(1)
-void Vector_sort(Vector* this, Object_Compare compare) {
+void Vector_sort(Vector* this, Object_Compare compare, void* context) {
    VectorSortContext vc = {
       .compare = compare ? compare : this->type->compare,
+      .compareContext = context ? context : this,
    };
    assert(vc.compare);
    assert(Vector_isConsistent(this));
@@ -440,7 +440,7 @@ int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compa
    for (int i = 0; i < this->items; i++) {
       const Object* o = this->array[i];
       assert(o);
-      if (compare(search, o) == 0) {
+      if (compare(search, o, NULL) == 0) {
          return i;
       }
    }

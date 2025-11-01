@@ -300,8 +300,8 @@ static void OpenFilesScreen_scan(InfoScreen* super) {
       OpenFiles_Data_clear(&pdata->data);
    }
    free(pdata);
-   Vector_sort(super->lines, NULL);
-   Vector_sort(panel->items, NULL);
+   Vector_sort(super->lines, NULL, super);
+   Vector_sort(panel->items, NULL, super);
    Panel_setSelected(panel, idx);
 }
 
