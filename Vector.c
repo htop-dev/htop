@@ -10,11 +10,17 @@ in the source distribution for its full text.
 #include "Vector.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "XUtils.h"
 
+
+typedef struct VectorSortContext_ {
+   Object_Compare compare;
+   void* compareContext;
+} VectorSortContext;
 
 Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
    Vector* this;
@@ -93,91 +99,168 @@ void Vector_prune(Vector* this) {
    memset(this->array, '\0', this->arraySize * sizeof(Object*));
 }
 
-//static int comparisons = 0;
-
-static void swap(Object** array, int indexA, int indexB) {
-   assert(indexA >= 0);
-   assert(indexB >= 0);
-   Object* tmp = array[indexA];
-   array[indexA] = array[indexB];
-   array[indexB] = tmp;
+ATTR_NONNULL
+static void swapByte(char* p1, char* p2) {
+    char temp = *p1;
+    *p1 = *p2;
+    *p2 = temp;
 }
 
-static int partition(Object** array, int left, int right, int pivotIndex, Object_Compare compare) {
-   const Object* pivotValue = array[pivotIndex];
-   swap(array, pivotIndex, right);
-   int storeIndex = left;
-   for (int i = left; i < right; i++) {
-      //comparisons++;
-      if (compare(array[i], pivotValue) <= 0) {
-         swap(array, i, storeIndex);
-         storeIndex++;
-      }
-   }
-   swap(array, storeIndex, right);
-   return storeIndex;
-}
-
-static void quickSort(Object** array, int left, int right, Object_Compare compare) {
-   if (left >= right)
+ATTR_NONNULL
+static void rotate(void* buffer, size_t leftSize, size_t rightSize) {
+   if (rightSize == 0)
       return;
 
-   int pivotIndex = left + (right - left) / 2;
-   int pivotNewIndex = partition(array, left, right, pivotIndex, compare);
-   quickSort(array, left, pivotNewIndex - 1, compare);
-   quickSort(array, pivotNewIndex + 1, right, compare);
+   char* p1 = buffer;
+   char* p2 = p1 + leftSize;
+   char* mid = p2;
+   const char* const end = mid + rightSize;
+
+   while (true) {
+      // Ensure there is no arithmetic overflow on input.
+      assert(p1 <= mid);
+      assert(mid <= p2);
+      assert(p2 <= end);
+
+      if (p2 >= end) {
+         assert(mid < end);
+         p2 = mid;
+      }
+
+      if (p1 >= p2)
+         break;
+
+      if (p1 >= mid)
+         mid = p2;
+
+      swapByte(p1, p2);
+      p1 += 1;
+      p2 += 1;
+   }
 }
 
-// If I were to use only one sorting algorithm for both cases, it would probably be this one:
-/*
+ATTR_NONNULL_N(1, 5)
+static void mergeRuns(void* array, size_t leftLen, size_t rightLen, size_t size, Object_Compare compare, void* context) {
+   assert(size > 0);
+   if (leftLen == 0 || rightLen == 0 || size == 0)
+      return;
 
-static void combSort(Object** array, int left, int right, Object_Compare compare) {
-   int gap = right - left;
-   bool swapped = true;
-   while ((gap > 1) || swapped) {
-      if (gap > 1) {
-         gap = (int)((double)gap / 1.247330950103979);
+   assert(leftLen <= SIZE_MAX / size);
+   assert(rightLen <= SIZE_MAX / size);
+
+   char* p1 = array;
+   char* p2 = p1 + leftLen * size;
+   char* mid = p2;
+   const char* const end = mid + rightLen * size;
+
+   for (size_t limit = (leftLen + rightLen) / 2; limit > 0; limit--) {
+      // Ensure there is no arithmetic overflow on input.
+      assert(p1 <= mid);
+      assert(mid <= p2);
+      assert(p2 <= end);
+
+      if (p1 >= mid || p2 >= end)
+         break;
+
+      if (compare(p1, p2, context) <= 0) {
+         p1 += size;
+      } else {
+         p2 += size;
       }
-      swapped = false;
-      for (int i = left; gap + i <= right; i++) {
-         comparisons++;
-         if (compare(array[i], array[i+gap]) > 0) {
-            swap(array, i, i+gap);
-            swapped = true;
+   }
+
+   rotate(p1, (size_t)(mid - p1), (size_t)(p2 - mid));
+
+   leftLen = (size_t)(p1 - (char*)array) / size;
+   rightLen = (size_t)(p2 - mid) / size;
+   mergeRuns(array, leftLen, rightLen, size, compare, context);
+
+   leftLen = (size_t)(mid - p1) / size;
+   rightLen = (size_t)(end - p2) / size;
+   mergeRuns(p1 + (p2 - mid), leftLen, rightLen, size, compare, context);
+}
+
+ATTR_NONNULL_N(1, 5)
+static size_t mergeSortSubarray(void* array, size_t unsortedLen, size_t limit, size_t size, Object_Compare compare, void* context) {
+   assert(size > 0);
+   if (size == 0)
+      return 0;
+
+   // The initial level of this function call must set "limit" to 0. Subsequent
+   // levels of recursion will have "limit" no less than the previous level.
+
+   // A run is a sorted subarray. Each recursive call of this function keeps
+   // the lengths of two runs. At most O(log(n)) lengths of runs will be
+   // tracked on the call stack.
+   size_t runLen[3] = {0};
+   while (unsortedLen > 0) {
+      size_t totalLen = unsortedLen;
+      assert(totalLen <= SIZE_MAX / size);
+      while (true) {
+         --unsortedLen;
+
+         const char* p2 = (const char*)array + unsortedLen * size;
+         // Ensure there is no arithmetic overflow on input.
+         assert(p2 > (const char*)array);
+
+         if (unsortedLen < limit)
+            return 0;
+
+         if (unsortedLen == 0 || compare(p2 - 1 * size, p2, context) > 0) {
+            break;
          }
       }
-   }
-}
+      runLen[1] = totalLen - unsortedLen;
 
-*/
+      bool reachesLimit = false;
 
-static void insertionSort(Object** array, int left, int right, Object_Compare compare) {
-   for (int i = left + 1; i <= right; i++) {
-      Object* t = array[i];
-      int j = i - 1;
-      while (j >= left) {
-         //comparisons++;
-         if (compare(array[j], t) <= 0)
-            break;
+      assert(runLen[2] > 0 || runLen[0] == 0);
+      if (runLen[2] > 0) {
+         size_t nextLimit = limit;
+         if (unsortedLen > runLen[2] + limit) {
+            nextLimit = unsortedLen - runLen[2];
+         } else {
+            reachesLimit = true;
+         }
 
-         array[j + 1] = array[j];
-         j--;
+         runLen[0] = mergeSortSubarray(array, unsortedLen, nextLimit, size, compare, context);
+         unsortedLen -= runLen[0];
+
+         char* p1 = (char*)array + unsortedLen * size;
+         mergeRuns(p1, runLen[0], runLen[1], size, compare, context);
+         runLen[1] += runLen[0];
+         runLen[0] = 0;
+
+         mergeRuns(p1, runLen[1], runLen[2], size, compare, context);
       }
-      array[j + 1] = t;
+      runLen[2] += runLen[1];
+      runLen[1] = 0;
+
+      if (reachesLimit) {
+         break;
+      }
    }
+   return runLen[2];
 }
 
-void Vector_quickSortCustomCompare(Vector* this, Object_Compare compare) {
-   assert(compare);
-   assert(Vector_isConsistent(this));
-   quickSort(this->array, 0, this->items - 1, compare);
-   assert(Vector_isConsistent(this));
+ATTR_NONNULL
+static int Vector_sortCompare(const void* p1, const void* p2, void* context) {
+   VectorSortContext* vc = (VectorSortContext*) context;
+
+   return vc->compare(*(const void* const*)p1, *(const void* const*)p2, vc->compareContext);
 }
 
-void Vector_insertionSort(Vector* this) {
-   assert(this->type->compare);
+ATTR_NONNULL_N(1)
+void Vector_sort(Vector* this, Object_Compare compare, void* context) {
+   VectorSortContext vc = {
+      .compare = compare ? compare : this->type->compare,
+      .compareContext = context ? context : this,
+   };
+   assert(vc.compare);
    assert(Vector_isConsistent(this));
-   insertionSort(this->array, 0, this->items - 1, this->type->compare);
+
+   (void)mergeSortSubarray(this->array, this->items, 0, sizeof(*this->array), Vector_sortCompare, &vc);
+
    assert(Vector_isConsistent(this));
 }
 
@@ -357,7 +440,7 @@ int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compa
    for (int i = 0; i < this->items; i++) {
       const Object* o = this->array[i];
       assert(o);
-      if (compare(search, o) == 0) {
+      if (compare(search, o, NULL) == 0) {
          return i;
       }
    }
