@@ -217,6 +217,22 @@ static const char* const GraphMeterMode_dotsAscii[] = {
    /*20*/":", /*21*/":", /*22*/":"
 };
 
+static void GraphMeterMode_printScale(int exponent) {
+   if (exponent < 10) {
+      // "1" to "512"; the (exponent < 0) case is not implemented.
+      assert(exponent >= 0);
+      printw("%3u", 1U << exponent);
+   } else if (exponent > (int)ARRAYSIZE(unitPrefixes) * 10 + 6) {
+      addstr("inf");
+   } else if (exponent % 10 < 7) {
+      // "1K" to "64K", "1M" to "64M", "1G" to "64G", etc.
+      printw("%2u%c", 1U << (exponent % 10), unitPrefixes[exponent / 10 - 1]);
+   } else {
+      // "M/8" (=128K), "M/4" (=256K), "M/2" (=512K), "G/8" (=128M), etc.
+      printw("%c/%u", unitPrefixes[exponent / 10], 1U << (10 - exponent % 10));
+   }
+}
+
 static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(x >= 0);
    assert(w <= INT_MAX - x);
@@ -274,6 +290,11 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    if (w < 1) {
       goto end;
    }
+
+   bool needsScaleDisplay = h >= 2;
+   if (needsScaleDisplay) {
+      move(y + 1, x); // Cursor position for printing the scale
+   }
    x += captionLen;
 
    // Graph drawing style (character set, etc.)
@@ -297,15 +318,30 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    }
    size_t i = nValues - (size_t)w * 2;
 
-   // Determine the graph scale
+   // Determine and print the graph scale
    double total = 1.0;
+   int scaleExp = 0;
    if (!isPercentChart) {
+      total = 0.0;
       for (size_t j = i; j < nValues; j++) {
          total = MAXIMUM(data->values[j], total);
       }
       assert(total <= DBL_MAX);
+
+      (void)frexp(total, &scaleExp);
+      scaleExp = MAXIMUM(0, scaleExp);
+
+      total = ldexp(1.0, scaleExp);
+      total = MINIMUM(DBL_MAX, total);
    }
    assert(total >= 1.0);
+   if (needsScaleDisplay) {
+      if (isPercentChart) {
+         addstr("  %");
+      } else {
+         GraphMeterMode_printScale(scaleExp);
+      }
+   }
 
    // Draw the actual graph
    for (int col = 0; i < nValues - 1; i += 2, col++) {
