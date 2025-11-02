@@ -182,14 +182,14 @@ m4_version_prereq(
    [AC_HEADER_STDC]
 )
 AC_CHECK_HEADERS(
-   [
-      stdlib.h
-      string.h
-      strings.h
-      sys/param.h
-      sys/time.h
-      sys/utsname.h
-      unistd.h
+   [ \
+      stdlib.h \
+      string.h \
+      strings.h \
+      sys/param.h \
+      sys/time.h \
+      sys/utsname.h \
+      unistd.h \
    ],
    [],
    [AC_MSG_ERROR([can not find required generic header files])]
@@ -402,18 +402,18 @@ fi
 
 AC_SEARCH_LIBS([clock_gettime], [rt])
 
-AC_CHECK_FUNCS([
-   clock_gettime
-   dladdr
-   faccessat
-   fstatat
-   host_get_clock_service
-   memfd_create
-   openat
-   readlinkat
-   sched_getscheduler
-   sched_setscheduler
-   strnlen
+AC_CHECK_FUNCS([ \
+   clock_gettime \
+   dladdr \
+   faccessat \
+   fstatat \
+   host_get_clock_service \
+   memfd_create \
+   openat \
+   readlinkat \
+   sched_getscheduler \
+   sched_setscheduler \
+   strnlen \
 ])
 
 # strchrnul is available in macOS since 15.4, but the user may specify an older
@@ -785,21 +785,21 @@ have_term_header=no
 
 if test "x$enable_unicode" = xyes; then
    AC_CHECK_HEADERS(
-      [
-         ncursesw/curses.h
-         ncurses/ncurses.h
-         ncurses/curses.h
-         ncurses.h
+      [ \
+         ncursesw/curses.h \
+         ncurses/ncurses.h \
+         ncurses/curses.h \
+         ncurses.h \
       ], [
          have_curses_header=yes
          break
       ]
    )
    AC_CHECK_HEADERS(
-      [
-         ncursesw/term.h
-         ncurses/term.h
-         term.h
+      [ \
+         ncursesw/term.h \
+         ncurses/term.h \
+         term.h \
       ], [
          have_term_header=yes
          break
@@ -807,20 +807,20 @@ if test "x$enable_unicode" = xyes; then
    )
 else
    AC_CHECK_HEADERS(
-      [
-         curses.h
-         ncurses/curses.h
-         ncurses/ncurses.h
-         ncurses.h
+      [ \
+         curses.h \
+         ncurses/curses.h \
+         ncurses/ncurses.h \
+         ncurses.h \
       ], [
          have_curses_header=yes
          break
       ]
    )
    AC_CHECK_HEADERS(
-      [
-         ncurses/term.h
-         term.h
+      [ \
+         ncurses/term.h \
+         term.h \
       ], [
          have_term_header=yes
          break
