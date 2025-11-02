@@ -165,14 +165,15 @@ bool Metric_fetch(struct timeval* timestamp) {
       pmFreeResult(pcp->result);
       pcp->result = NULL;
    }
-   int sts, count = 0;
    if (pcp->reconnect) {
       if (pmReconnectContext(pcp->context) < 0)
          return false;
       pcp->reconnect = false;
    }
+   int sts, count = 0;
+   int total = (int) pcp->totalMetrics;
    do {
-      sts = pmFetch(pcp->totalMetrics, pcp->fetch, &pcp->result);
+      sts = pmFetch(total, pcp->fetch, &pcp->result);
    } while (sts == PM_ERR_IPC && ++count < 3);
    if (sts < 0) {
       if (pmDebugOptions.appl0)
@@ -206,6 +207,6 @@ int Metric_lookupText(const char* metric, char** desc) {
       return sts;
 
    if (pmLookupText(pmid, PM_TEXT_ONELINE, desc) >= 0)
-      (*desc)[0] = toupper((*desc)[0]); /* UI consistency */
+      (*desc)[0] = (char) toupper((*desc)[0]); /* UI consistency */
    return 0;
 }

@@ -53,7 +53,7 @@ static PCPDynamicMetric* PCPDynamicMeter_lookupMetric(PCPDynamicMeters* meters, 
    metric->id = meters->offset + meters->cursor;
    meters->cursor++;
 
-   Platform_addMetric(metric->id, metricName);
+   Platform_addMetric(Metric_fromId(metric->id), metricName);
 
    return metric;
 }
@@ -156,7 +156,8 @@ static bool PCPDynamicMeter_uniqueName(char* key, PCPDynamicMeters* meters) {
 static PCPDynamicMeter* PCPDynamicMeter_new(PCPDynamicMeters* meters, const char* name) {
    PCPDynamicMeter* meter = xCalloc(1, sizeof(*meter));
    String_safeStrncpy(meter->super.name, name, sizeof(meter->super.name));
-   Hashtable_put(meters->table, ++meters->count, meter);
+   ht_key_t key = (ht_key_t) ++meters->count;
+   Hashtable_put(meters->table, key, meter);
    return meter;
 }
 
@@ -311,7 +312,7 @@ void PCPDynamicMeters_done(Hashtable* table) {
 
 void PCPDynamicMeter_enable(PCPDynamicMeter* this) {
    for (size_t i = 0; i < this->totalMetrics; i++)
-      Metric_enable(this->metrics[i].id, true);
+      Metric_enable(Metric_fromId(this->metrics[i].id), true);
 }
 
 void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
@@ -324,10 +325,11 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
          buffer[bytes++] = '/';  /* separator */
 
       PCPDynamicMetric* metric = &this->metrics[i];
-      const pmDesc* desc = Metric_desc(metric->id);
+      Metric base = Metric_fromId(metric->id);
+      const pmDesc* desc = Metric_desc(base);
       pmAtomValue atom, raw;
 
-      if (!Metric_values(metric->id, &raw, 1, desc->type)) {
+      if (!Metric_values(base, &raw, 1, desc->type)) {
          bytes--; /* clear the separator */
          continue;
       }
@@ -397,11 +399,12 @@ void PCPDynamicMeter_display(PCPDynamicMeter* this, ATTR_UNUSED const Meter* met
 
    for (size_t i = 0; i < this->totalMetrics; i++) {
       PCPDynamicMetric* metric = &this->metrics[i];
-      const pmDesc* desc = Metric_desc(metric->id);
+      Metric base = Metric_fromId(metric->id);
+      const pmDesc* desc = Metric_desc(base);
       pmAtomValue atom, raw;
       char buffer[64];
 
-      if (!Metric_values(metric->id, &raw, 1, desc->type))
+      if (!Metric_values(base, &raw, 1, desc->type))
          continue;
 
       pmUnits conv = desc->units;  /* convert to canonical units */

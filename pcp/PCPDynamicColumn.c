@@ -43,7 +43,8 @@ static bool PCPDynamicColumn_addMetric(PCPDynamicColumns* columns, PCPDynamicCol
    column->id = columns->offset + columns->cursor;
    columns->cursor++;
 
-   Platform_addMetric(column->id, metricName);
+   Metric metric = Metric_fromId(column->id);
+   Platform_addMetric(metric, metricName);
    return true;
 }
 
@@ -116,7 +117,7 @@ static PCPDynamicColumn* PCPDynamicColumn_new(PCPDynamicColumns* columns, const 
    column->instances = false;
    column->defaultEnabled = true;
 
-   size_t id = columns->count + LAST_PROCESSFIELD;
+   ht_key_t id = (ht_key_t) columns->count + LAST_PROCESSFIELD;
    Hashtable_put(columns->table, id, column);
    columns->count++;
 
@@ -166,7 +167,7 @@ static void PCPDynamicColumn_parseFile(PCPDynamicColumns* columns, const char* p
       } else if (value && column && String_eq(key, "description")) {
          free_and_xStrdup(&column->super.description, value);
       } else if (value && column && String_eq(key, "width")) {
-         column->super.width = strtoul(value, NULL, 10);
+         column->super.width = atoi(value);
       } else if (value && column && String_eq(key, "format")) {
          free_and_xStrdup(&column->format, value);
       } else if (value && column && String_eq(key, "instances")) {
@@ -267,7 +268,8 @@ static void PCPDynamicColumn_setupWidth(ATTR_UNUSED ht_key_t key, void* value, A
    PCPDynamicColumn* column = (PCPDynamicColumn*) value;
 
    /* calculate column size based on config file and metric units */
-   const pmDesc* desc = Metric_desc(column->id);
+   Metric metric = Metric_fromId(column->id);
+   const pmDesc* desc = Metric_desc(metric);
 
    if (column->instances || desc->type == PM_TYPE_STRING) {
       column->super.width = column->width;
@@ -418,7 +420,7 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
 
    if (column->format) {
       if (strcmp(column->format, "percent") == 0) {
-         n = Row_printPercentage(value, buffer, sizeof(buffer), width, &attr);
+         n = Row_printPercentage(value, buffer, sizeof(buffer), (uint8_t)width, &attr);
          RichString_appendnAscii(str, attr, buffer, n);
          return;
       }
@@ -456,15 +458,17 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
 void PCPDynamicColumn_writeField(PCPDynamicColumn* this, const Process* proc, RichString* str) {
    const Settings* settings = proc->super.host->settings;
    const PCPProcess* pp = (const PCPProcess*) proc;
-   const pmDesc* desc = Metric_desc(this->id);
+
+   Metric metric = Metric_fromId(this->id);
+   const pmDesc* desc = Metric_desc(metric);
    pid_t pid = Process_getPid(proc);
 
    pmAtomValue atom;
    pmAtomValue* ap = &atom;
-   if (!Metric_instance(this->id, pid, pp->offset, ap, desc->type))
+   if (!Metric_instance(metric, pid, pp->offset, ap, desc->type))
       ap = NULL;
 
-   PCPDynamicColumn_writeAtomValue(this, str, settings, this->id, pid, desc, ap);
+   PCPDynamicColumn_writeAtomValue(this, str, settings, metric, pid, desc, ap);
 }
 
 int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, ProcessField key) {
@@ -475,7 +479,7 @@ int PCPDynamicColumn_compareByKey(const PCPProcess* p1, const PCPProcess* p2, Pr
    if (!column)
       return -1;
 
-   size_t metric = column->id;
+   Metric metric = Metric_fromId(column->id);
    unsigned int type = Metric_type(metric);
 
    pmAtomValue atom1 = {0}, atom2 = {0};

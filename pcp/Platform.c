@@ -350,7 +350,7 @@ bool Platform_init(void) {
    if (opts.context == PM_CONTEXT_ARCHIVE) {
       gettimeofday(&pcp->offset, NULL);
 #if PMAPI_VERSION >= 3
-      struct timeval start = { opts.start.tv_sec, opts.start.tv_nsec / 1000 };
+      struct timeval start = { opts.start.tv_sec, (suseconds_t)(opts.start.tv_nsec / 1000) };
       pmtimevalDec(&pcp->offset, &start);
 #else
       pmtimevalDec(&pcp->offset, &opts.start);
@@ -367,14 +367,15 @@ bool Platform_init(void) {
    PCPDynamicColumns_init(&pcp->columns);
    PCPDynamicScreens_init(&pcp->screens, &pcp->columns);
 
-   sts = pmLookupName(pcp->totalMetrics, pcp->names, pcp->pmids);
+   int total = (int) pcp->totalMetrics;
+   sts = pmLookupName(total, pcp->names, pcp->pmids);
    if (sts < 0) {
       fprintf(stderr, "Error: cannot lookup metric names: %s\n", pmErrStr(sts));
       Platform_done();
       return false;
    }
 
-   sts = pmLookupDescs(pcp->totalMetrics, pcp->pmids, pcp->descs);
+   sts = pmLookupDescs(total, pcp->pmids, pcp->descs);
    if (sts < 1) {
       if (sts < 0)
          fprintf(stderr, "Error: cannot lookup descriptors: %s\n", pmErrStr(sts));
@@ -399,12 +400,13 @@ bool Platform_init(void) {
    Metric_enable(PCP_UNAME_DISTRO, true);
 
    /* enable metrics for all dynamic columns (including those from dynamic screens) */
-   for (size_t i = pcp->columns.offset; i < pcp->columns.offset + pcp->columns.count; i++)
-      Metric_enable(i, true);
+   Metric metric = Metric_fromId(pcp->columns.offset);
+   for (; metric < pcp->columns.offset + pcp->columns.count; metric++)
+      Metric_enable(metric, true);
 
    Metric_fetch(NULL);
 
-   for (Metric metric = 0; metric < PCP_PROC_PID; metric++)
+   for (metric = 0; metric < PCP_PROC_PID; metric++)
       Metric_enable(metric, true);
    Metric_enable(PCP_PID_MAX, false); /* needed one time only */
    Metric_enable(PCP_BOOTTIME, false);
@@ -896,7 +898,8 @@ Hashtable* Platform_dynamicColumns(void) {
 const char* Platform_dynamicColumnName(unsigned int key) {
    PCPDynamicColumn* this = Hashtable_get(pcp->columns.table, key);
    if (this) {
-      Metric_enable(this->id, true);
+      Metric metric = Metric_fromId(this->id);
+      Metric_enable(metric, true);
       if (this->super.caption)
          return this->super.caption;
       if (this->super.heading)

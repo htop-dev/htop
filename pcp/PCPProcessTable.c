@@ -131,8 +131,8 @@ static inline ProcessState PCPProcessTable_getProcessState(char state) {
 }
 
 static void PCPProcessTable_updateID(Process* process, int pid, int offset) {
-   Process_setThreadGroup(process, Metric_instance_u32(PCP_PROC_TGID, pid, offset, 1));
-   Process_setParent(process, Metric_instance_u32(PCP_PROC_PPID, pid, offset, 1));
+   Process_setThreadGroup(process, (pid_t) Metric_instance_u32(PCP_PROC_TGID, pid, offset, 1));
+   Process_setParent(process, (pid_t) Metric_instance_u32(PCP_PROC_PPID, pid, offset, 1));
    process->state = PCPProcessTable_getProcessState(Metric_instance_char(PCP_PROC_STATE, pid, offset, '?'));
 }
 
@@ -145,10 +145,10 @@ static void PCPProcessTable_updateInfo(PCPProcess* pp, int pid, int offset, char
    String_safeStrncpy(command, value.cp, commLen);
    free(value.cp);
 
-   process->pgrp = Metric_instance_u32(PCP_PROC_PGRP, pid, offset, 0);
-   process->session = Metric_instance_u32(PCP_PROC_SESSION, pid, offset, 0);
+   process->pgrp = (int) Metric_instance_u32(PCP_PROC_PGRP, pid, offset, 0);
+   process->session = (int) Metric_instance_u32(PCP_PROC_SESSION, pid, offset, 0);
    process->tty_nr = Metric_instance_u32(PCP_PROC_TTY, pid, offset, 0);
-   process->tpgid = Metric_instance_u32(PCP_PROC_TTYPGRP, pid, offset, 0);
+   process->tpgid = (int) Metric_instance_u32(PCP_PROC_TTYPGRP, pid, offset, 0);
    process->minflt = Metric_instance_u32(PCP_PROC_MINFLT, pid, offset, 0);
    pp->cminflt = Metric_instance_u32(PCP_PROC_CMINFLT, pid, offset, 0);
    process->majflt = Metric_instance_u32(PCP_PROC_MAJFLT, pid, offset, 0);
@@ -161,7 +161,7 @@ static void PCPProcessTable_updateInfo(PCPProcess* pp, int pid, int offset, char
    process->nice = Metric_instance_s32(PCP_PROC_NICE, pid, offset, 0);
    process->nlwp = Metric_instance_u32(PCP_PROC_THREADS, pid, offset, 0);
    process->starttime_ctime = Metric_instance_time(PCP_PROC_STARTTIME, pid, offset);
-   process->processor = Metric_instance_u32(PCP_PROC_PROCESSOR, pid, offset, 0);
+   process->processor = (int) Metric_instance_u32(PCP_PROC_PROCESSOR, pid, offset, 0);
 
    process->time = pp->utime + pp->stime;
 }
@@ -216,12 +216,12 @@ static void PCPProcessTable_updateSmaps(PCPProcess* pp, pid_t pid, int offset) {
 }
 
 static void PCPProcessTable_readOomData(PCPProcess* pp, int pid, int offset) {
-   pp->oom = Metric_instance_u32(PCP_PROC_OOMSCORE, pid, offset, 0);
+   pp->oom = (unsigned int) Metric_instance_u32(PCP_PROC_OOMSCORE, pid, offset, 0);
 }
 
 static void PCPProcessTable_readAutogroup(PCPProcess* pp, int pid, int offset) {
    pp->autogroup_id = Metric_instance_s64(PCP_PROC_AUTOGROUP_ID, pid, offset, -1);
-   pp->autogroup_nice = Metric_instance_s32(PCP_PROC_AUTOGROUP_NICE, pid, offset, 0);
+   pp->autogroup_nice = (int) Metric_instance_s32(PCP_PROC_AUTOGROUP_NICE, pid, offset, 0);
 }
 
 static void PCPProcessTable_readCtxtData(PCPProcess* pp, int pid, int offset) {
@@ -296,7 +296,7 @@ static void PCPProcessTable_readCwd(PCPProcess* pp, int pid, int offset) {
 }
 
 static void PCPProcessTable_updateUsername(Process* process, int pid, int offset, UsersTable* users) {
-   process->st_uid = Metric_instance_u32(PCP_PROC_ID_UID, pid, offset, 0);
+   process->st_uid = (uid_t) Metric_instance_u32(PCP_PROC_ID_UID, pid, offset, 0);
    process->user = setUser(users, process->st_uid, pid, offset);
 }
 
@@ -410,7 +410,7 @@ static bool PCPProcessTable_updateProcesses(PCPProcessTable* this) {
       }
 
       char command[MAX_NAME + 1];
-      unsigned int tty_nr = proc->tty_nr;
+      unsigned long tty_nr = proc->tty_nr;
       unsigned long long int lasttimes = pp->utime + pp->stime;
 
       PCPProcessTable_updateInfo(pp, pid, offset, command, sizeof(command));

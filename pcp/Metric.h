@@ -175,6 +175,8 @@ pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type
 
 const pmDesc* Metric_desc(Metric metric);
 
+static inline Metric Metric_fromId(size_t id) { return (Metric)id; }
+
 int Metric_type(Metric metric);
 
 int Metric_instanceCount(Metric metric);

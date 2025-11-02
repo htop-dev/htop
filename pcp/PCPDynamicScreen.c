@@ -41,7 +41,7 @@ static char* formatFields(PCPDynamicScreen* screen) {
 }
 
 static void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, PCPDynamicColumns* columns) {
-   for (size_t i = 0; i < screens->count; i++) {
+   for (ht_key_t i = 0; i < screens->count; i++) {
       PCPDynamicScreen* screen = Hashtable_get(screens->table, i);
       if (!screen)
          return;
@@ -51,18 +51,19 @@ static void PCPDynamicScreens_appendDynamicColumns(PCPDynamicScreens* screens, P
          PCPDynamicColumn* column = screen->columns[j];
 
          column->id = columns->offset + columns->cursor;
+         Metric metric = Metric_fromId(column->id);
          columns->cursor++;
-         Platform_addMetric(column->id, column->metricName);
+         Platform_addMetric(metric, column->metricName);
 
-         size_t id = columns->count + LAST_PROCESSFIELD;
+         ht_key_t id = (ht_key_t) columns->count + LAST_PROCESSFIELD;
          Hashtable_put(columns->table, id, column);
          columns->count++;
 
          if (j == 0) {
-            const pmDesc* desc = Metric_desc(column->id);
+            const pmDesc* desc = Metric_desc(metric);
             assert(desc->indom != PM_INDOM_NULL);
             screen->indom = desc->indom;
-            screen->key = column->id;
+            screen->key = metric;
          }
       }
       screen->super.columnKeys = formatFields(screen);
@@ -146,7 +147,7 @@ static void PCPDynamicScreen_parseColumn(PCPDynamicScreen* screen, const char* p
       } else if (String_eq(p, "description")) {
          free_and_xStrdup(&column->super.description, value);
       } else if (String_eq(p, "width")) {
-         column->width = strtoul(value, NULL, 10);
+         column->width = atoi(value);
       } else if (String_eq(p, "format")) {
          free_and_xStrdup(&column->format, value);
       } else if (String_eq(p, "instances")) {
@@ -206,7 +207,7 @@ static PCPDynamicScreen* PCPDynamicScreen_new(PCPDynamicScreens* screens, const 
    String_safeStrncpy(screen->super.name, name, sizeof(screen->super.name));
    screen->defaultEnabled = true;
 
-   size_t id = screens->count;
+   ht_key_t id = (ht_key_t) screens->count;
    Hashtable_put(screens->table, id, screen);
    screens->count++;
 
@@ -262,7 +263,7 @@ static void PCPDynamicScreen_parseFile(PCPDynamicScreens* screens, const char* p
       } else if (String_eq(key, "sortKey")) {
          free_and_xStrdup(&screen->super.sortKey, value);
       } else if (String_eq(key, "sortDirection")) {
-         screen->super.direction = strtoul(value, NULL, 10);
+         screen->super.direction = atoi(value);
       } else if (String_eq(key, "default") || String_eq(key, "enabled")) {
          if (String_eq(value, "False") || String_eq(value, "false"))
             screen->defaultEnabled = false;
@@ -356,7 +357,7 @@ void PCPDynamicScreens_done(Hashtable* table) {
 void PCPDynamicScreen_appendTables(PCPDynamicScreens* screens, Machine* host) {
    PCPDynamicScreen* ds;
 
-   for (size_t i = 0; i < screens->count; i++) {
+   for (ht_key_t i = 0; i < screens->count; i++) {
       if ((ds = (PCPDynamicScreen*)Hashtable_get(screens->table, i)) == NULL)
          continue;
       ds->table = InDomTable_new(host, ds->indom, ds->key);
@@ -366,7 +367,7 @@ void PCPDynamicScreen_appendTables(PCPDynamicScreens* screens, Machine* host) {
 void PCPDynamicScreen_appendScreens(PCPDynamicScreens* screens, Settings* settings) {
    PCPDynamicScreen* ds;
 
-   for (size_t i = 0; i < screens->count; i++) {
+   for (ht_key_t i = 0; i < screens->count; i++) {
       if ((ds = (PCPDynamicScreen*)Hashtable_get(screens->table, i)) == NULL)
          continue;
       if (ds->defaultEnabled == false)
@@ -380,7 +381,7 @@ void PCPDynamicScreen_appendScreens(PCPDynamicScreens* screens, Settings* settin
 void PCPDynamicScreen_addDynamicScreen(PCPDynamicScreens* screens, ScreenSettings* ss) {
    PCPDynamicScreen* ds;
 
-   for (size_t i = 0; i < screens->count; i++) {
+   for (ht_key_t i = 0; i < screens->count; i++) {
       if ((ds = (PCPDynamicScreen*)Hashtable_get(screens->table, i)) == NULL)
          continue;
       if (String_eq(ss->dynamic, ds->super.name) == false)
