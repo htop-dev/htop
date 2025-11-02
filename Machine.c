@@ -79,9 +79,11 @@ void Machine_populateTablesFromSettings(Machine* this, Settings* settings, Table
 
    for (size_t i = 0; i < settings->nScreens; i++) {
       ScreenSettings* ss = settings->screens[i];
+
+      if (!ss->table)
+         ss->table = processTable;
+
       Table* table = ss->table;
-      if (!table)
-         table = ss->table = processTable;
       if (i == 0)
          this->activeTable = table;
 

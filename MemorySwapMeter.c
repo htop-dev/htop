@@ -47,11 +47,10 @@ static void MemorySwapMeter_draw(Meter* this, int x, int y, int w) {
 }
 
 static void MemorySwapMeter_init(Meter* this) {
-   MemorySwapMeterData* data = this->meterData;
+   if (!this->meterData)
+      this->meterData = xCalloc(1, sizeof(MemorySwapMeterData));
 
-   if (!data) {
-      data = this->meterData = xCalloc(1, sizeof(MemorySwapMeterData));
-   }
+   MemorySwapMeterData* data = this->meterData;
 
    if (!data->memoryMeter)
       data->memoryMeter = Meter_new(this->host, 0, (const MeterClass*) Class(MemoryMeter));
