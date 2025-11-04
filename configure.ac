@@ -403,7 +403,6 @@ fi
 AC_SEARCH_LIBS([clock_gettime], [rt])
 
 AC_CHECK_FUNCS([ \
-   clock_gettime \
    dladdr \
    faccessat \
    fstatat \
