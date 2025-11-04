@@ -215,6 +215,31 @@ jobs:
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror"
 
+  build-macos-latest-pcp:
+    runs-on: macOS-latest
+    env:
+      CC: clang
+      # '-mmacos-version-min=15.4' is a workaround for PCP 7.0.2 that
+      # accidentally broke backward compatibility.
+      # (https://github.com/performancecopilot/pcp/pull/2400)
+      CFLAGS: -O3 -g -flto -mmacos-version-min=15.4
+      LDFLAGS: -O3 -g -flto
+    steps:
+    - uses: actions/checkout@v5
+    - name: Install Dependencies
+      run: |
+        pcp_version=7.0.2-1
+        brew install automake pkg-config
+        curl -f -L -O https://github.com/performancecopilot/pcp/releases/download/$(echo ${pcp_version} | sed 's/-.*$//')/pcp-${pcp_version}.dmg
+        hdiutil attach pcp-${pcp_version}.dmg
+        sudo installer -verbose -pkg /Volumes/pcp-${pcp_version}/pcp-${pcp_version}.pkg -target /
+    - name: Bootstrap
+      run: ./autogen.sh
+    - name: Configure
+      run: ./configure --enable-werror --enable-pcp --enable-unicode || ( cat config.log; exit 1; )
+    - name: Build
+      run: make -k
+
   build-dragonflybsd-latest-gcc:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
