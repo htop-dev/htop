@@ -542,7 +542,7 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
    }
 }
 
-static inline char processStateChar(ProcessState state) {
+char Process_stateChar(ProcessState state) {
    switch (state) {
       case UNKNOWN: return '?';
       case RUNNABLE: return 'U';
@@ -722,7 +722,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    case SESSION: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->session); break;
    case STARTTIME: xSnprintf(buffer, n, "%s", this->starttime_show); break;
    case STATE:
-      xSnprintf(buffer, n, "%c ", processStateChar(this->state));
+      xSnprintf(buffer, n, "%c ", Process_stateChar(this->state));
       switch (this->state) {
       case RUNNABLE:
       case RUNNING:
@@ -865,6 +865,14 @@ static bool Process_matchesFilter(const Process* this, const Table* table) {
    assert(Object_isA((const Object*) pt, (const ObjectClass*) &ProcessTable_class));
    if (pt->pidMatchList && !Hashtable_get(pt->pidMatchList, Process_getThreadGroup(this)))
       return true;
+
+   const char* stateFilter = host->settings->stateFilter;
+   if (stateFilter) {
+      char stateChar = Process_stateChar(this->state);
+      if (!strchr(stateFilter, stateChar)) {
+         return true;
+      }
+   }
 
    return false;
 }
