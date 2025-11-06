@@ -53,6 +53,9 @@ in monochrome mode
 Filter processes by terms matching the commands. The terms are matched
 case-insensitive and as fixed strings (not regexs). You can separate multiple terms with "|".
 .TP
+\fB\-\-no-function-bar\fR
+Hide the function bar
+.TP
 \fB\-h \-\-help
 Display a help message and exit
 .TP

@@ -54,6 +54,7 @@ static void printHelpFlag(const char* name) {
           "-C --no-color                   Use a monochrome color scheme\n"
           "-d --delay=DELAY                Set the delay between updates, in tenths of seconds\n"
           "-F --filter=FILTER              Show only the commands matching the given filter\n"
+          "   --no-function-bar             Hide the function bar\n"
           "-h --help                       Print this help screen\n"
           "-H --highlight-changes[=DELAY]  Highlight new and old processes\n", name);
 #ifdef HAVE_GETMOUSE
@@ -93,6 +94,7 @@ typedef struct CommandLineSettings_ {
    int highlightDelaySecs;
    bool readonly;
    bool hideMeters;
+   bool hideFunctionBar;
 } CommandLineSettings;
 
 static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettings* flags) {
@@ -113,6 +115,8 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       .highlightChanges = false,
       .highlightDelaySecs = -1,
       .readonly = false,
+      .hideMeters = false,
+      .hideFunctionBar = false,
    };
 
    const struct option long_opts[] =
@@ -131,6 +135,8 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       {"tree",       no_argument,         0, 't'},
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
+      {"no-functionbar", no_argument,     0, 130},
+      {"no-function-bar", no_argument,    0, 130},
       {"highlight-changes", optional_argument, 0, 'H'},
       {"readonly",   no_argument,         0, 128},
       PLATFORM_LONG_OPTIONS
@@ -261,6 +267,9 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             }
             free_and_xStrdup(&flags->commFilter, optarg);
             break;
+         case 130:
+            flags->hideFunctionBar = true;
+            break;
          case 'H': {
             const char* delay = optarg;
             if (!delay && optind < argc && argv[optind] != NULL &&
@@ -370,6 +379,8 @@ int CommandLine_run(int argc, char** argv) {
       }
       ScreenSettings_setSortKey(settings->ss, flags.sortKey);
    }
+   if (flags.hideFunctionBar)
+      settings->hideFunctionBar = 2;
 
    host->iterationsRemaining = flags.iterationsRemaining;
    CRT_init(settings, flags.allowUnicode, flags.iterationsRemaining != -1);
