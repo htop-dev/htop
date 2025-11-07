@@ -33,9 +33,7 @@ static char cached_write_diff_str[6];
 static double cached_utilisation_diff;
 static double cached_utilisation_norm;
 
-static void DiskIOMeter_updateValues(Meter* this) {
-   const Machine* host = this->host;
-
+static void DiskIOUpdateCache(const Machine* host) {
    static uint64_t cached_last_update;
    uint64_t passedTimeInMs = host->realtimeMs - cached_last_update;
    bool hasNewData = false;
@@ -99,6 +97,10 @@ static void DiskIOMeter_updateValues(Meter* this) {
       cached_write_total = data.totalBytesWritten;
       cached_msTimeSpend_total = data.totalMsTimeSpend;
    }
+}
+
+static void DiskIOMeter_updateValues(Meter* this) {
+   DiskIOUpdateCache(this->host);
 
    this->values[0] = cached_utilisation_norm;
 
