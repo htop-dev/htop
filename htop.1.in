@@ -53,6 +53,9 @@ in monochrome mode
 Filter processes by terms matching the commands. The terms are matched
 case-insensitive and as fixed strings (not regexs). You can separate multiple terms with "|".
 .TP
+\fB\-\-no-function-bar\fR
+Hide the function bar
+.TP
 \fB\-h \-\-help
 Display a help message and exit
 .TP
@@ -72,6 +75,9 @@ Do not use unicode but ASCII characters for graph meters
 .TP
 \fB\-M \-\-no-mouse\fR
 Disable support of mouse control
+.TP
+\fB\-\-no-meters\fR
+Hide graph meters
 .TP
 \fB\-\-readonly\fR
 Disable all system and process changing features
