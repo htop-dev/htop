@@ -150,6 +150,24 @@ static double getpcpu(const NetBSDMachine* nhost, const struct kinfo_proc2* kp) 
    return 100.0 * (double)kp->p_pctcpu / nhost->fscale;
 }
 
+static ProcessState get_active_status(const NetBSDMachine* nhost, const struct kinfo_proc2* kproc) {
+   int nlwps = 0;
+   const struct kinfo_lwp* klwps = kvm_getlwps(nhost->kd, kproc->p_pid, kproc->p_paddr, sizeof(struct kinfo_lwp), &nlwps);
+   if (!klwps) {
+      return UNKNOWN;
+   }
+   // We only consider the first LWP that has one of the states below.
+   for (int j = 0; j < nlwps; j++) {
+      switch (klwps[j].l_stat) {
+         case LSONPROC: return RUNNING;
+         case LSRUN:    return RUNNABLE;
+         case LSSLEEP:  return SLEEPING;
+         case LSSTOP:   return STOPPED;
+      }
+   }
+   return UNKNOWN;
+}
+
 void ProcessTable_goThroughEntries(ProcessTable* super) {
    const Machine* host = super->super.host;
    const NetBSDMachine* nhost = (const NetBSDMachine*) host;
@@ -224,34 +242,11 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       proc->minflt = kproc->p_uru_minflt;
       proc->majflt = kproc->p_uru_majflt;
 
-      int nlwps = 0;
-      const struct kinfo_lwp* klwps = kvm_getlwps(nhost->kd, kproc->p_pid, kproc->p_paddr, sizeof(struct kinfo_lwp), &nlwps);
-
       /* TODO: According to the link below, SDYING should be a regarded state */
       /* Taken from: https://ftp.netbsd.org/pub/NetBSD/NetBSD-current/src/sys/sys/proc.h */
       switch (kproc->p_realstat) {
          case SIDL:     proc->state = IDLE; break;
-         case SACTIVE:
-            // We only consider the first LWP with a one of the below states.
-            for (int j = 0; j < nlwps; j++) {
-               if (klwps) {
-                  switch (klwps[j].l_stat) {
-                     case LSONPROC: proc->state = RUNNING; break;
-                     case LSRUN:    proc->state = RUNNABLE; break;
-                     case LSSLEEP:  proc->state = SLEEPING; break;
-                     case LSSTOP:   proc->state = STOPPED; break;
-                     default:       proc->state = UNKNOWN;
-                  }
-
-                  if (proc->state != UNKNOWN) {
-                     break;
-                  }
-               } else {
-                  proc->state = UNKNOWN;
-                  break;
-               }
-            }
-            break;
+         case SACTIVE:  proc->state = get_active_status(nhost, kproc); break;
          case SSTOP:    proc->state = STOPPED; break;
          case SZOMB:    proc->state = ZOMBIE; break;
          case SDEAD:    proc->state = DEFUNCT; break;
