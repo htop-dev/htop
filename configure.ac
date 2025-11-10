@@ -1202,14 +1202,32 @@ AC_ARG_WITH(
       [location of an os-release file @<:@default=/etc/os-release@:>@]
    )],
    [],
-   [with_os_release=/etc/os-release]
+   [with_os_release=yes]
 )
-if test -n "$with_os_release" && test ! -f "$with_os_release"; then
-   if test -f "/usr/lib/os-release"; then
-      with_os_release="/usr/lib/os-release"
-   fi
-fi
+case x$with_os_release in
+   x|xno)
+      with_os_release=''
+      ;;
+   xyes)
+      if test "$cross_compiling" = yes || test -f /etc/os-release; then
+         with_os_release=/etc/os-release
+      elif test -f /usr/lib/os-release; then
+         with_os_release=/usr/lib/os-release
+      else
+         with_os_release=/etc/os-release
+         AC_MSG_WARN([cannot find os-release file on this host system])
+      fi
+      ;;
+   *)
+      if test "$cross_compiling" != yes && test ! -f "$with_os_release"; then
+         AC_MSG_WARN(['$with_os_release' does not resolve to a regular file])
+      fi
+      ;;
+esac
 AC_DEFINE_UNQUOTED([OSRELEASEFILE], ["$with_os_release"], [File with OS release details.])
+if test "x$with_os_release" = x; then
+   with_os_release=no
+fi
 
 AC_ARG_WITH(
    [config],
