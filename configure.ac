@@ -112,8 +112,8 @@ AC_ARG_ENABLE(
    [static],
    [AS_HELP_STRING(
       [--enable-static],
-      [build a static htop binary @<:@default=no@:>@])
-   ],
+      [build a static htop binary @<:@default=no@:>@]
+   )],
    [],
    [enable_static=no]
 )
@@ -140,8 +140,8 @@ AC_ARG_ENABLE(
    [pcp],
    [AS_HELP_STRING(
       [--enable-pcp],
-      [build a pcp-htop binary @<:@default=no@:>@])
-   ],
+      [build a pcp-htop binary @<:@default=no@:>@]
+   )],
    [],
    [enable_pcp=no]
 )
