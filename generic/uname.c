@@ -27,10 +27,8 @@ in the source distribution for its full text.
 
 static void parseOSRelease(char* buffer, size_t bufferLen) {
    FILE* fp = fopen(OSRELEASEFILE, "r");
-   if (!fp) {
-      xSnprintf(buffer, bufferLen, "No OS Release");
+   if (!fp)
       return;
-   }
 
    char name[64] = {'\0'};
    char version[64] = {'\0'};
@@ -74,7 +72,7 @@ char* Generic_uname(void) {
       sizeof(((struct utsname*)0)->release) +
       sizeof(((struct utsname*)0)->machine) +
       16/*markup*/ +
-      128/*distro*/] = {'\0'};
+      128/*distro*/] = "(No data)";
    static bool loaded_data = false;
 
    if (!loaded_data) {
@@ -82,13 +80,15 @@ char* Generic_uname(void) {
       int uname_result = uname(&uname_info);
 
       char distro[128];
-      parseOSRelease(distro, sizeof(distro));
+      if (OSRELEASEFILE[0]) {
+         parseOSRelease(distro, sizeof(distro));
+      }
 
       if (uname_result == 0) {
          size_t written = xSnprintf(savedString, sizeof(savedString), "%s %s [%s]", uname_info.sysname, uname_info.release, uname_info.machine);
-         if (!String_contains_i(savedString, distro, false) && sizeof(savedString) > written)
+         if (distro[0] && sizeof(savedString) > written && !String_contains_i(savedString, distro, false))
             snprintf(savedString + written, sizeof(savedString) - written, " @ %s", distro);
-      } else {
+      } else if (distro[0]) {
          snprintf(savedString, sizeof(savedString), "%s", distro);
       }
 
