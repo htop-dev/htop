@@ -130,6 +130,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &BlankMeter_class,
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
+   &DiskIORateMeter_class,
+   &DiskIOTimeMeter_class,
    &DiskIOMeter_class,
    &FileDescriptorMeter_class,
    &NetworkIOMeter_class,
