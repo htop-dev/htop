@@ -1202,7 +1202,12 @@ AC_ARG_WITH(
       [location of an os-release file @<:@default=/etc/os-release@:>@]
    )],
    [],
-   [with_os_release=yes]
+   [
+      with_os_release=yes
+      if test "$my_htop_platform" = darwin; then
+         with_os_release=''
+      fi
+   ]
 )
 case x$with_os_release in
    x|xno)
