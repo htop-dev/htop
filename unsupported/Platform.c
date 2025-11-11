@@ -160,6 +160,6 @@ void Platform_getHostname(char* buffer, size_t size) {
    String_safeStrncpy(buffer, Platform_unsupported, size);
 }
 
-void Platform_getRelease(char** string) {
-   *string = xStrdup(Platform_unsupported);
+void Platform_getRelease(const char** string) {
+   *string = Platform_unsupported;
 }
