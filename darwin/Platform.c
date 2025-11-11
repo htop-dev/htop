@@ -725,3 +725,61 @@ void Platform_gettime_monotonic(uint64_t* msec) {
 #endif
 
 }
+
+#ifndef OSRELEASEFILE
+#define OSRELEASEFILE "/System/Library/CoreServices/SystemVersion.plist"
+#endif
+
+static void Platform_getOSRelease(char* buffer, size_t bufferLen) {
+   const UInt8* osfile = (const UInt8 *)OSRELEASEFILE;
+   const size_t length = sizeof(OSRELEASEFILE) - 1;
+   CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, osfile, length, false);
+   if (!url) {
+      xSnprintf(buffer, bufferLen, "No OS Release");
+      return;
+   }
+
+   CFReadStreamRef stream = CFReadStreamCreateWithFile(NULL, url);
+   CFRelease(url);
+    if (!stream || !CFReadStreamOpen(stream)) {
+      if (stream) CFRelease(stream);
+      xSnprintf(buffer, bufferLen, "Bad OS Release");
+      return;
+   }
+
+   CFMutableDataRef data = CFDataCreateMutable(NULL, 0);
+   UInt8 bytes[4096];
+   CFIndex bytesRead;
+   while ((bytesRead = CFReadStreamRead(stream, bytes, sizeof(bytes))) > 0) {
+      CFDataAppendBytes(data, bytes, bytesRead);
+   }
+   CFReadStreamClose(stream);
+   CFRelease(stream);
+   if (bytesRead < 0) {
+      xSnprintf(buffer, bufferLen, "Bad OS Release");
+      CFRelease(data);
+      return;
+   }
+
+   CFPropertyListRef plist = CFPropertyListCreateWithData(NULL, data, kCFPropertyListImmutable, NULL, NULL);
+   CFRelease(data);
+   if (!plist || CFGetTypeID(plist) != CFDictionaryGetTypeID()) {
+      xSnprintf(buffer, bufferLen, "Bad OS Release");
+      if (plist) CFRelease(plist);
+      return;
+   }
+
+   char name[256], version[256];
+   CFDictionaryRef dict = (CFDictionaryRef)plist;
+   CFStringRef productName = CFDictionaryGetValue(dict, CFSTR("ProductName"));
+   CFStringRef productVersion = CFDictionaryGetValue(dict, CFSTR("ProductVersion"));
+   if (CFStringGetCString(productName, name, sizeof(name), kCFStringEncodingUTF8) &&
+       CFStringGetCString(productVersion, version, sizeof(version), kCFStringEncodingUTF8))
+      xSnprintf(buffer, bufferLen, "%s %s", name, version);
+   else
+      xSnprintf(buffer, bufferLen, "Bad OS Release");
+}
+
+void Platform_getRelease(char** string) {
+   *string = Generic_unameRelease(Platform_getOSRelease);
+}
