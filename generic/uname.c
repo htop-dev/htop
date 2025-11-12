@@ -21,12 +21,13 @@ in the source distribution for its full text.
 #endif
 
 
-#ifndef OSRELEASEFILE
-#define OSRELEASEFILE "/etc/os-release"
-#endif
-
 static void parseOSRelease(char* buffer, size_t bufferLen) {
-   FILE* fp = fopen(OSRELEASEFILE, "r");
+   const char* osfiles[] = { "/etc/os-release", "/usr/lib/os-release" };
+   FILE* fp = NULL;
+   for (size_t i = 0; i < sizeof(osfiles)/sizeof(char*); i++) {
+      if ((fp = fopen(osfiles[i], "r")) != NULL)
+         break;
+   }
    if (!fp) {
       xSnprintf(buffer, bufferLen, "No OS Release");
       return;
@@ -67,7 +68,7 @@ static void parseOSRelease(char* buffer, size_t bufferLen) {
    snprintf(buffer, bufferLen, "%s%s%s", name[0] ? name : "", name[0] && version[0] ? " " : "", version);
 }
 
-char* Generic_uname(void) {
+char* Generic_unameRelease(Platform_FetchReleaseFunction fetchRelease) {
    static char savedString[
       /* uname structure fields - manpages recommend sizeof */
       sizeof(((struct utsname*)0)->sysname) +
@@ -82,7 +83,7 @@ char* Generic_uname(void) {
       int uname_result = uname(&uname_info);
 
       char distro[128];
-      parseOSRelease(distro, sizeof(distro));
+      fetchRelease(distro, sizeof(distro));
 
       if (uname_result == 0) {
          size_t written = xSnprintf(savedString, sizeof(savedString), "%s %s [%s]", uname_info.sysname, uname_info.release, uname_info.machine);
@@ -96,4 +97,8 @@ char* Generic_uname(void) {
    }
 
    return savedString;
+}
+
+char* Generic_uname(void) {
+   return Generic_unameRelease(parseOSRelease);
 }

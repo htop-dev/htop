@@ -73,7 +73,7 @@ static inline void Platform_getHostname(char* buffer, size_t size) {
    Generic_hostname(buffer, size);
 }
 
-static inline void Platform_getRelease(char** string) {
+static inline void Platform_getRelease(const char** string) {
    *string = Generic_uname();
 }
 
