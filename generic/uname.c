@@ -21,12 +21,13 @@ in the source distribution for its full text.
 #endif
 
 
-#ifndef OSRELEASEFILE
-#define OSRELEASEFILE "/etc/os-release"
-#endif
-
 static void parseOSRelease(char* buffer, size_t bufferLen) {
-   FILE* fp = fopen(OSRELEASEFILE, "r");
+   const char* osfiles[] = { "/etc/os-release", "/usr/lib/os-release" };
+   FILE* fp = NULL;
+   for (size_t i = 0; i < sizeof(osfiles)/sizeof(char*); i++) {
+      if ((fp = fopen(osfiles[i], "r")) != NULL)
+         break;
+   }
    if (!fp) {
       xSnprintf(buffer, bufferLen, "No OS Release");
       return;

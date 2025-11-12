@@ -1196,33 +1196,6 @@ esac
 
 
 AC_ARG_WITH(
-   [os-release],
-   [AS_HELP_STRING(
-      [--with-os-release=FILE],
-      [location of an OS release file @<:@default=check@:>@]
-   )],
-   [],
-   [with_os_release=check]
-)
-if test "$with_os_release" = check; then
-   case $host_os in
-   darwin*)
-      with_os_release=/System/Library/CoreServices/SystemVersion.plist
-      ;;
-   *)
-      if test -f /etc/os-release; then
-         with_os_release=/etc/os-release
-      elif test -f /usr/lib/os-release; then
-         with_os_release=/usr/lib/os-release
-      else
-         with_os_release=""
-      fi
-      ;;
-   esac
-fi
-AC_DEFINE_UNQUOTED([OSRELEASEFILE], ["$with_os_release"], [File with OS release details.])
-
-AC_ARG_WITH(
    [config],
    [AS_HELP_STRING(
       [--with-config=DIR],
@@ -1618,7 +1591,6 @@ AC_MSG_RESULT([
   ${PACKAGE_NAME} ${VERSION}
 
   platform:                  $my_htop_platform ($host_os)
-  OS release file:           $with_os_release
   (Linux) proc directory:    $with_proc
   (Linux) openvz:            $enable_openvz
   (Linux) vserver:           $enable_vserver

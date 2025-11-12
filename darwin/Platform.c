@@ -726,9 +726,7 @@ void Platform_gettime_monotonic(uint64_t* msec) {
 
 }
 
-#ifndef OSRELEASEFILE
 #define OSRELEASEFILE "/System/Library/CoreServices/SystemVersion.plist"
-#endif
 
 static void Platform_getOSRelease(char* buffer, size_t bufferLen) {
    const UInt8* osfile = (const UInt8 *)OSRELEASEFILE;
