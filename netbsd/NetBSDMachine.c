@@ -205,11 +205,9 @@ static void NetBSDMachine_scanCPUTime(NetBSDMachine* this) {
       CPUData* cpu = &this->cpuData[i + 1];
       kernelCPUTimesToHtop(kernelTimes, cpu);
 
-      avg[CP_USER] += cpu->userTime;
-      avg[CP_NICE] += cpu->niceTime;
-      avg[CP_SYS] += cpu->sysTime;
-      avg[CP_INTR] += cpu->intrTime;
-      avg[CP_IDLE] += cpu->idleTime;
+      for (int j = 0; j < CPUSTATES; j++) {
+         avg[j] += kernelTimes[j];
+      }
    }
 
    for (int i = 0; i < CPUSTATES; i++) {
