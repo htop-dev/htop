@@ -219,16 +219,13 @@ jobs:
     runs-on: macOS-latest
     env:
       CC: clang
-      # '-mmacos-version-min=15.4' is a workaround for PCP 7.0.2 that
-      # accidentally broke backward compatibility.
-      # (https://github.com/performancecopilot/pcp/pull/2400)
-      CFLAGS: -O3 -g -flto -mmacos-version-min=15.4
+      CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto
     steps:
     - uses: actions/checkout@v5
     - name: Install Dependencies
       run: |
-        pcp_version=7.0.2-1
+        pcp_version=7.0.3-1
         brew install automake pkg-config
         curl -f -L -O https://github.com/performancecopilot/pcp/releases/download/$(echo ${pcp_version} | sed 's/-.*$//')/pcp-${pcp_version}.dmg
         hdiutil attach pcp-${pcp_version}.dmg
