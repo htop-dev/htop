@@ -792,7 +792,7 @@ static void Platform_getOSRelease(char* buffer, size_t bufferLen) {
       return;
 
 fail:
-   xSnprintf(buffer, bufferLen, "No OS Release");
+   buffer[0] = '\0';
 }
 
 const char* Platform_getRelease(void) {
