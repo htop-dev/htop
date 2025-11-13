@@ -68,7 +68,7 @@ static void parseOSRelease(char* buffer, size_t bufferLen) {
    snprintf(buffer, bufferLen, "%s%s%s", name[0] ? name : "", name[0] && version[0] ? " " : "", version);
 }
 
-char* Generic_unameRelease(Platform_FetchReleaseFunction fetchRelease) {
+const char* Generic_unameRelease(Platform_FetchReleaseFunction fetchRelease) {
    static char savedString[
       /* uname structure fields - manpages recommend sizeof */
       sizeof(((struct utsname*)0)->sysname) +
@@ -99,6 +99,6 @@ char* Generic_unameRelease(Platform_FetchReleaseFunction fetchRelease) {
    return savedString;
 }
 
-char* Generic_uname(void) {
+const char* Generic_uname(void) {
    return Generic_unameRelease(parseOSRelease);
 }

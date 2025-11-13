@@ -780,6 +780,6 @@ static void Platform_getOSRelease(char* buffer, size_t bufferLen) {
       xSnprintf(buffer, bufferLen, "Bad OS Release");
 }
 
-void Platform_getRelease(const char** string) {
-   *string = Generic_unameRelease(Platform_getOSRelease);
+const char* Platform_getRelease(void) {
+   return Generic_unameRelease(Platform_getOSRelease);
 }

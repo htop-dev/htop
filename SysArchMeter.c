@@ -23,7 +23,7 @@ static void SysArchMeter_updateValues(Meter* this) {
    static const char* string;
 
    if (string == NULL)
-      Platform_getRelease(&string);
+      string = Platform_getRelease();
 
    String_safeStrncpy(this->txtBuffer, string, sizeof(this->txtBuffer));
 }
