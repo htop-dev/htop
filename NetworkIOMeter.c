@@ -178,5 +178,6 @@ const MeterClass NetworkIOMeter_class = {
    .attributes = NetworkIOMeter_attributes,
    .name = "NetworkIO",
    .uiName = "Network IO",
+   .description = "Network bytes & packets received/sent per second",
    .caption = "Network: "
 };
