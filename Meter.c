@@ -156,8 +156,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       double value = this->values[i];
       if (isPositive(value) && this->total > 0.0) {
          value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * w);
-         blockSizes[i] = MINIMUM(blockSizes[i], w - offset);
+         blockSizes[i] = ceil((value / this->total) * (w - startPos));
+         blockSizes[i] = MINIMUM(blockSizes[i], w - startPos - offset);
       } else {
          blockSizes[i] = 0;
       }
