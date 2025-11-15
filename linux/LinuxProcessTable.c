@@ -43,6 +43,7 @@ in the source distribution for its full text.
 #include "linux/GPU.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
+#include "linux/NvidiaJetson.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
 #ifdef HAVE_DELAYACCT
@@ -76,21 +77,6 @@ static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* m
       close(fd);
 
    return fp;
-}
-
-static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
-   uint64_t result = 0;
-
-   if (!maxlen)
-      maxlen = 20; // length of maximum value of 18446744073709551615
-
-   while (maxlen-- && **str >= '0' && **str <= '9') {
-      result *= 10;
-      result += **str - '0';
-      (*str)++;
-   }
-
-   return result;
 }
 
 static long long fast_strtoll_dec(char** str, int maxlen) {
@@ -1930,4 +1916,10 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 #endif
 
    LinuxProcessTable_recurseProcTree(this, rootFd, lhost, PROCDIR, NULL);
+
+   #ifdef NVIDIA_JETSON
+   /* Merge GPU data only to the currently active table */
+   if ((Table*)this == host->activeTable)
+      NvidiaJetson_LoadGpuProcessTable(((Table*)this)->table);
+   #endif
 }

@@ -1443,7 +1443,47 @@ case "$enable_sensors" in
       AC_MSG_ERROR([bad value '$enable_sensors' for --enable-sensors])
       ;;
 esac
-if test "$enable_sensors" = yes || test "$my_htop_platform" = freebsd; then
+
+AC_ARG_ENABLE([nvidia-jetson],
+              [AS_HELP_STRING([--enable-nvidia-jetson],
+                              [enable nvidia jetson support @<:@default=check@:>@])],
+              [],
+              [enable_nvidia_jetson=check])
+case "$enable_nvidia_jetson" in
+   no)
+      ;;
+   check)
+      if test -f "/etc/nv_tegra_release"; then
+         if grep -q "BOARD" "/etc/nv_tegra_release"; then
+            enable_nvidia_jetson=yes
+         fi
+      fi
+      ;;
+   yes)
+      if test -f "/etc/nv_tegra_release"; then
+         if grep -q "BOARD" "/etc/nv_tegra_release"; then
+            enable_nvidia_jetson=yes
+         else
+            enable_nvidia_jetson=no
+         fi
+      else
+         enable_nvidia_jetson=no
+      fi
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_nvidia_jetson' for --enable-nvidia-jetson])
+      ;;
+esac
+
+if test "$enable_nvidia_jetson" = yes; then
+   AC_DEFINE([NVIDIA_JETSON], [1], [Detected correct NVIDIA Jetson board])
+else
+   AC_MSG_NOTICE([This is not a NVIDIA Jetson board])
+fi
+
+AM_CONDITIONAL([NVIDIA_JETSON], [test "$enable_nvidia_jetson" = yes])
+
+if test "$enable_sensors" = yes || test "$my_htop_platform" = freebsd || test "$enable_nvidia_jetson" = yes; then
    AC_DEFINE([BUILD_WITH_CPU_TEMP], [1], [Define if CPU temperature option should be enabled.])
 fi
 
@@ -1598,6 +1638,7 @@ AC_MSG_RESULT([
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $enable_sensors
   (Linux) capabilities:      $enable_capabilities
+  (Linux) nvidia-jeston:     $enable_nvidia_jetson
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   unwind:                    $enable_unwind
