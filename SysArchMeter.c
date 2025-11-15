@@ -20,10 +20,7 @@ in the source distribution for its full text.
 static const int SysArchMeter_attributes[] = {HOSTNAME};
 
 static void SysArchMeter_updateValues(Meter* this) {
-   static const char* string;
-
-   if (string == NULL)
-      Platform_getRelease(&string);
+   const char* string = Platform_getRelease();
 
    String_safeStrncpy(this->txtBuffer, string, sizeof(this->txtBuffer));
 }

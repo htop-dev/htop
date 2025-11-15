@@ -728,58 +728,73 @@ void Platform_gettime_monotonic(uint64_t* msec) {
 
 }
 
-#define OSRELEASEFILE "/System/Library/CoreServices/SystemVersion.plist"
-
 static void Platform_getOSRelease(char* buffer, size_t bufferLen) {
-   const UInt8* osfile = (const UInt8 *)OSRELEASEFILE;
-   const size_t length = sizeof(OSRELEASEFILE) - 1;
-   CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, osfile, length, false);
-   if (!url) {
-      xSnprintf(buffer, bufferLen, "No OS Release");
+   static const CFStringRef osfiles[] = {
+#ifdef OSRELEASEFILE
+      CFSTR(OSRELEASEFILE) /* Custom path for testing; undefined by default */,
+#endif
+      CFSTR("/System/Library/CoreServices/SystemVersion.plist"),
+   };
+
+   if (!bufferLen)
       return;
+
+   CFPropertyListRef plist = NULL;
+   for (size_t i = 0; i < ARRAYSIZE(osfiles); i++) {
+      CFURLRef url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, osfiles[i], kCFURLPOSIXPathStyle, /*isDirectory*/false);
+      if (!url)
+         continue;
+
+      CFReadStreamRef stream = CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
+      CFRelease(url);
+
+      if (!stream)
+         continue;
+
+      bool canRead = CFReadStreamOpen(stream);
+      if (canRead) {
+         plist = CFPropertyListCreateWithStream(kCFAllocatorDefault, stream, 0, kCFPropertyListImmutable, NULL, NULL);
+         CFReadStreamClose(stream);
+      }
+      CFRelease(stream);
+
+      if (canRead)
+         break;
    }
 
-   CFReadStreamRef stream = CFReadStreamCreateWithFile(NULL, url);
-   CFRelease(url);
-    if (!stream || !CFReadStreamOpen(stream)) {
-      if (stream) CFRelease(stream);
-      xSnprintf(buffer, bufferLen, "Bad OS Release");
-      return;
-   }
+   if (!plist)
+      goto fail;
 
-   CFMutableDataRef data = CFDataCreateMutable(NULL, 0);
-   UInt8 bytes[4096];
-   CFIndex bytesRead;
-   while ((bytesRead = CFReadStreamRead(stream, bytes, sizeof(bytes))) > 0) {
-      CFDataAppendBytes(data, bytes, bytesRead);
-   }
-   CFReadStreamClose(stream);
-   CFRelease(stream);
-   if (bytesRead < 0) {
-      xSnprintf(buffer, bufferLen, "Bad OS Release");
-      CFRelease(data);
-      return;
-   }
+   CFStringRef str = NULL;
+   if (CFGetTypeID(plist) == CFDictionaryGetTypeID()) {
+      CFDictionaryRef dict = (CFDictionaryRef)plist;
 
-   CFPropertyListRef plist = CFPropertyListCreateWithData(NULL, data, kCFPropertyListImmutable, NULL, NULL);
-   CFRelease(data);
-   if (!plist || CFGetTypeID(plist) != CFDictionaryGetTypeID()) {
-      xSnprintf(buffer, bufferLen, "Bad OS Release");
-      if (plist) CFRelease(plist);
-      return;
-   }
+      CFStringRef productName = CFDictionaryGetValue(dict, CFSTR("ProductName"));
+      CFStringRef productVersion = CFDictionaryGetValue(dict, CFSTR("ProductVersion"));
+      CFStringRef separator = productName && productVersion ? CFSTR(" ") : CFSTR("");
 
-   char name[256], version[256];
-   CFDictionaryRef dict = (CFDictionaryRef)plist;
-   CFStringRef productName = CFDictionaryGetValue(dict, CFSTR("ProductName"));
-   CFStringRef productVersion = CFDictionaryGetValue(dict, CFSTR("ProductVersion"));
-   if (CFStringGetCString(productName, name, sizeof(name), kCFStringEncodingUTF8) &&
-       CFStringGetCString(productVersion, version, sizeof(version), kCFStringEncodingUTF8))
-      xSnprintf(buffer, bufferLen, "%s %s", name, version);
-   else
-      xSnprintf(buffer, bufferLen, "Bad OS Release");
+      if (!productName)
+         productName = CFSTR("");
+      if (!productVersion)
+         productVersion = CFSTR("");
+
+      str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@%@%@"), productName, separator, productVersion);
+   }
+   CFRelease(plist);
+
+   if (!str)
+      goto fail;
+
+   bool ok = CFStringGetCString(str, buffer, bufferLen, kCFStringEncodingUTF8);
+   CFRelease(str);
+
+   if (ok)
+      return;
+
+fail:
+   buffer[0] = '\0';
 }
 
-void Platform_getRelease(const char** string) {
-   *string = Generic_unameRelease(Platform_getOSRelease);
+const char* Platform_getRelease(void) {
+   return Generic_unameRelease(Platform_getOSRelease);
 }

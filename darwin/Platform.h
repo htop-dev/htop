@@ -84,7 +84,7 @@ static inline void Platform_getHostname(char* buffer, size_t size) {
    Generic_hostname(buffer, size);
 }
 
-void Platform_getRelease(const char** string);
+const char* Platform_getRelease(void);
 
 static inline const char* Platform_getFailedState(void) {
    return NULL;

@@ -714,11 +714,11 @@ static void Platform_setRelease(void) {
    free(sysname.cp);
 }
 
-void Platform_getRelease(const char** string) {
+const char* Platform_getRelease(void) {
    if (pcp->release == NULL)
       Platform_setRelease();
 
-   *string = pcp->release;
+   return pcp->release;
 }
 
 char* Platform_getProcessEnv(pid_t pid) {

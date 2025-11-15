@@ -113,7 +113,7 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC);
 
 void Platform_getHostname(char* buffer, size_t size);
 
-void Platform_getRelease(const char** string);
+const char* Platform_getRelease(void);
 
 const char* Platform_getFailedState(void);
 
