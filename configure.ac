@@ -1300,6 +1300,109 @@ esac
 AM_CONDITIONAL([HAVE_BACKTRACE_SCREEN], [test "$enable_backtrace" != no])
 
 AC_ARG_ENABLE(
+   [demangling],
+   [AS_HELP_STRING(
+      [--enable-demangling=BACKEND],
+      [enable demangling support for backtraces; available backends: libiberty @<:@default=check@:>@]
+   )],
+   [],
+   [enable_demangling=check]
+)
+
+demangling_backend_found=no
+have_libiberty=no
+case $enable_demangling in
+   check|yes|libiberty)
+      have_libiberty=check
+      ;;
+esac
+
+# Both GNU libiberty and Solaris libdemangle provide "demangle.h"
+# header and cplus_demangle() function, but the APIs are incompatible.
+demangle_header_paths=''
+
+if test "$have_libiberty" != no; then
+   AC_CHECK_LIB(
+      [iberty],
+      [cplus_demangle],
+      [
+         demangle_header_paths="/usr/include/libiberty"
+         case $host_os in
+         freebsd*)
+            demangle_header_paths="$demangle_header_paths /usr/local/include/libiberty"
+            ;;
+         esac
+      ], [
+         if test "x$enable_demangling" = xlibiberty; then
+            AC_MSG_ERROR([libiberty required for --enable-demangling])
+         fi
+         have_libiberty=no
+      ]
+   )
+fi
+
+if test "$have_libiberty" != no; then
+   if htop_search_header_dir demangle.h "$demangle_header_paths"; then
+      AC_DEFINE([HAVE_DEMANGLE_H], 1, [Define to 1 if you have the <demangle.h> header file.])
+   elif test "x$enable_demangling" = xlibiberty; then
+      AC_MSG_ERROR([can not find required header file demangle.h])
+   else
+      have_libiberty=no
+   fi
+fi
+
+if test "$have_libiberty" != no; then
+   htop_save_CPPFLAGS=$CPPFLAGS
+   htop_save_LIBS=$LIBS
+   CPPFLAGS="$AM_CPPFLAGS $CPPFLAGS"
+   LIBS="-liberty $LIBS"
+
+   AC_MSG_CHECKING([whether libiberty cplus_demangle works])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[
+#include <demangle.h>
+#include <stdlib.h>
+/* char* cplus_demangle(const char* mangled, int options); */
+         ]], [[
+            char* demangled = cplus_demangle("", DMGL_AUTO);
+            free(demangled);
+         ]]
+      )], [
+         AC_MSG_RESULT([yes])
+         have_libiberty=yes
+         demangling_backend_found=yes
+         enable_demangling=libiberty
+         AC_DEFINE([HAVE_LIBIBERTY_CPLUS_DEMANGLE], [1], [Define to 1 if libiberty supports cplus_demangle function.])
+      ], [
+         AC_MSG_RESULT([no])
+         if test "x$enable_demangling" = xlibiberty; then
+            AC_MSG_FAILURE([libiberty cplus_demangle failed])
+         fi
+         have_libiberty=no
+         LIBS=$htop_save_LIBS
+      ]
+   )
+
+   CPPFLAGS=$htop_save_CPPFLAGS
+fi
+
+case $enable_demangling in
+   no|check)
+      enable_demangling=no
+      ;;
+   yes)
+      AC_MSG_ERROR([no backend is available for --enable-demangling])
+      ;;
+   *)
+      if test "$demangling_backend_found" = no; then
+         AC_MSG_ERROR([backend '$enable_demangling' for --enable-demangling is not supported])
+      fi
+      AC_DEFINE([HAVE_DEMANGLING], [1], [Define to 1 if the demangling is supported.])
+      ;;
+esac
+
+AC_ARG_ENABLE(
    [hwloc],
    [AS_HELP_STRING(
       [--enable-hwloc],
@@ -1735,6 +1838,7 @@ AC_MSG_RESULT([
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   backtrace:                 $enable_backtrace
+  demangling:                $enable_demangling
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
