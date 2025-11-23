@@ -247,7 +247,7 @@ jobs:
         - name: Compile
           uses: vmactions/dragonflybsd-vm@v1
           with:
-            release: '6.4.0'
+            release: '6.4.2'
             usesh: true
             prepare: |
               pkg install -y gmake autoconf automake ncurses git
@@ -270,7 +270,7 @@ jobs:
         - name: Compile
           uses: vmactions/freebsd-vm@v1
           with:
-            release: '14.2'
+            release: '14.3'
             usesh: true
             prepare: |
               pkg install -y gmake autoconf automake pkgconf git
@@ -316,7 +316,7 @@ jobs:
         - name: Compile
           uses: vmactions/openbsd-vm@v1
           with:
-            release: '7.7'
+            release: '7.8'
             usesh: true
             prepare: |
               pkg_add gmake git
