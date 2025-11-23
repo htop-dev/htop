@@ -53,7 +53,7 @@ Panel* Scheduling_newPolicyPanel(int preSelectedPolicy) {
 
       Panel_add(this, (Object*) ListItem_new(policies[i].name, policies[i].id));
       if (policies[i].id == preSelectedPolicy)
-         Panel_setSelected(this, i);
+         Panel_setSelected(this, (int) i);
    }
 
    return this;
