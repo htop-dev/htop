@@ -11,7 +11,7 @@ jobs:
   build-ubuntu-latest-minimal-gcc:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev
     - name: Bootstrap
@@ -33,7 +33,7 @@ jobs:
     env:
       CC: clang-18
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
@@ -58,7 +58,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto -Wl,--as-needed
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
     - name: Bootstrap
@@ -75,7 +75,7 @@ jobs:
     env:
       CC: clang-18
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
@@ -100,7 +100,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev libsensors-dev libcap-dev
     - name: Bootstrap
@@ -116,7 +116,7 @@ jobs:
     # we want PCP v5.2.3+
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libpcp3-dev libncursesw5-dev libtinfo-dev libgpm-dev
     - name: Bootstrap
@@ -130,7 +130,7 @@ jobs:
     # build as if we were on an unsupported platform
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev
     - name: Bootstrap
@@ -145,7 +145,7 @@ jobs:
     env:
       CC: clang-18
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
@@ -172,7 +172,7 @@ jobs:
       TERM: xterm-color
       HTOPRC: .github/workflows/htoprc
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
@@ -203,7 +203,7 @@ jobs:
     env:
       CC: clang
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Dependencies
       run: brew install automake pkg-config
     - name: Bootstrap
@@ -222,7 +222,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Install Dependencies
       run: |
         pcp_version=7.0.3-1
@@ -241,7 +241,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v5
+        - uses: actions/checkout@v6
           with:
             submodules: recursive
         - name: Compile
@@ -264,7 +264,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v5
+        - uses: actions/checkout@v6
           with:
             submodules: recursive
         - name: Compile
@@ -285,7 +285,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v5
+        - uses: actions/checkout@v6
           with:
             submodules: recursive
         - name: Compile
@@ -310,7 +310,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v5
+        - uses: actions/checkout@v6
           with:
             submodules: recursive
         - name: Compile
@@ -345,7 +345,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v5
+        - uses: actions/checkout@v6
           with:
             submodules: recursive
         - name: Compile
@@ -365,13 +365,13 @@ jobs:
   lint-whitespace:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: check-whitespaces
         run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
 
   lint-pcp-config:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: check-pcp-style
         run: ./check-pcp-style.sh
