@@ -320,7 +320,7 @@ AC_LINK_IFELSE(
          AC_COMPILE_IFELSE(
             [AC_LANG_SOURCE([[
 /* __FINITE_MATH_ONLY__ is documented in Clang. */
-#ifdef __FINITE_MATH_ONLY__
+#if defined(__FINITE_MATH_ONLY__) && __FINITE_MATH_ONLY__
 #error "should not enable -ffinite-math-only"
 #endif
             ]])],
