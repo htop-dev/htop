@@ -105,7 +105,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
       CRT_fatalError("fscale sysctl call failed");
    }
 
-   if ((this->pageSize = sysconf(_SC_PAGESIZE)) == -1)
+   if ((this->pageSize = (size_t)sysconf(_SC_PAGESIZE)) == (size_t)-1)
       CRT_fatalError("pagesize sysconf call failed");
    this->pageSizeKB = this->pageSize / ONE_K;
 

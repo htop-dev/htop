@@ -45,8 +45,8 @@ typedef struct OpenBSDMachine_ {
 
    long fscale;
    int cpuSpeed;
-   int pageSize;
-   int pageSizeKB;
+   size_t pageSize;
+   size_t pageSizeKB;
 
 } OpenBSDMachine;
 
