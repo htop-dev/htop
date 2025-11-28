@@ -558,7 +558,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    return Platform_setOneCPUValues(this, settings, phost->percpu[cpu - 1]);
 }
 
-void Platform_setMemoryValues(Meter* this) {
+void Platform_setMemoryValues(Meter* this, double* usedNumber) {
    const Machine* host = this->host;
    const PCPMachine* phost = (const PCPMachine*) host;
 
@@ -584,6 +584,10 @@ void Platform_setMemoryValues(Meter* this) {
       this->values[MEMORY_METER_USED] -= phost->zswap.usedZswapComp;
       this->values[MEMORY_METER_COMPRESSED] += phost->zswap.usedZswapComp;
    }
+
+   *usedNumber = this->values[MEMORY_METER_USED];
+   *usedNumber += this->values[MEMORY_METER_SHARED];
+   *usedNumber += this->values[MEMORY_METER_COMPRESSED];
 }
 
 void Platform_setSwapValues(Meter* this) {

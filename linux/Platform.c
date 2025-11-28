@@ -417,7 +417,7 @@ void Platform_setGPUValues(Meter* this, double* totalUsage, unsigned long long* 
    this->values[residueIndex] = residuePercentage;
 }
 
-void Platform_setMemoryValues(Meter* this) {
+void Platform_setMemoryValues(Meter* this, double* usedNumber) {
    const Machine* host = this->host;
    const LinuxMachine* lhost = (const LinuxMachine*) host;
 
@@ -443,6 +443,10 @@ void Platform_setMemoryValues(Meter* this) {
       this->values[MEMORY_METER_USED] -= lhost->zswap.usedZswapComp;
       this->values[MEMORY_METER_COMPRESSED] += lhost->zswap.usedZswapComp;
    }
+
+   *usedNumber = this->values[MEMORY_METER_USED];
+   *usedNumber += this->values[MEMORY_METER_SHARED];
+   *usedNumber += this->values[MEMORY_METER_COMPRESSED];
 }
 
 void Platform_setSwapValues(Meter* this) {

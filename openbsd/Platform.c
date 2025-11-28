@@ -223,7 +223,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    return totalPercent;
 }
 
-void Platform_setMemoryValues(Meter* this) {
+void Platform_setMemoryValues(Meter* this, double* usedNumber) {
    const Machine* host = this->host;
    long int usedMem = host->usedMem;
    long int buffersMem = host->buffersMem;
@@ -236,6 +236,10 @@ void Platform_setMemoryValues(Meter* this) {
    this->values[MEMORY_METER_BUFFERS] = buffersMem;
    this->values[MEMORY_METER_CACHE] = cachedMem;
    // this->values[MEMORY_METER_AVAILABLE] = "available memory"
+
+   *usedNumber = this->values[MEMORY_METER_USED];
+   // *usedNumber += this->values[MEMORY_METER_SHARED];
+   // *usedNumber += this->values[MEMORY_METER_COMPRESSED];
 }
 
 void Platform_setSwapValues(Meter* this) {

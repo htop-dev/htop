@@ -66,7 +66,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu);
 
 void Platform_setGPUValues(Meter* this, double* totalUsage, unsigned long long* totalGPUTimeDiff);
 
-void Platform_setMemoryValues(Meter* this);
+void Platform_setMemoryValues(Meter* this, double* usedNumber);
 
 void Platform_setSwapValues(Meter* this);
 

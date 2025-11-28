@@ -39,7 +39,10 @@ static void MemoryMeter_updateValues(Meter* this) {
    this->values[MEMORY_METER_SHARED] = NAN;
    this->values[MEMORY_METER_COMPRESSED] = NAN;
    this->values[MEMORY_METER_AVAILABLE] = NAN;
-   Platform_setMemoryValues(this);
+
+   double usedNumber = 0;
+   Platform_setMemoryValues(this, &usedNumber);
+
    if ((this->mode == GRAPH_METERMODE || this->mode == BAR_METERMODE) && !settings->showCachedMemory) {
       this->values[MEMORY_METER_BUFFERS] = 0;
       this->values[MEMORY_METER_CACHE] = 0;
@@ -49,14 +52,7 @@ static void MemoryMeter_updateValues(Meter* this) {
       "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
    this->curItems = MEMORY_METER_AVAILABLE;
 
-   /* we actually want to show "used + shared + compressed" */
-   double used = this->values[MEMORY_METER_USED];
-   if (isPositive(this->values[MEMORY_METER_SHARED]))
-      used += this->values[MEMORY_METER_SHARED];
-   if (isPositive(this->values[MEMORY_METER_COMPRESSED]))
-      used += this->values[MEMORY_METER_COMPRESSED];
-
-   written = Meter_humanUnit(buffer, used, size);
+   written = Meter_humanUnit(buffer, usedNumber, size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');

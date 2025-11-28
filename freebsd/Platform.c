@@ -225,7 +225,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    return percent;
 }
 
-void Platform_setMemoryValues(Meter* this) {
+void Platform_setMemoryValues(Meter* this, double* usedNumber) {
    const Machine* host = this->host;
    const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
 
@@ -246,6 +246,10 @@ void Platform_setMemoryValues(Meter* this) {
       this->values[MEMORY_METER_CACHE] += shrinkableSize;
       // this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
    }
+
+   *usedNumber = this->values[MEMORY_METER_USED];
+   *usedNumber += this->values[MEMORY_METER_SHARED];
+   // *usedNumber += this->values[MEMORY_METER_COMPRESSED];
 }
 
 void Platform_setSwapValues(Meter* this) {

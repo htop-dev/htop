@@ -59,7 +59,7 @@ pid_t Platform_getMaxPid(void);
 
 double Platform_setCPUValues(Meter* this, int cpu);
 
-void Platform_setMemoryValues(Meter* this);
+void Platform_setMemoryValues(Meter* this, double* usedNumber);
 
 void Platform_setSwapValues(Meter* this);
 
