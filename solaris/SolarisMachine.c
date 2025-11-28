@@ -305,10 +305,11 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    Machine_init(super, usersTable, userId);
 
-   this->pageSize = sysconf(_SC_PAGESIZE);
-   if (this->pageSize == -1)
+   long pageSize = sysconf(_SC_PAGESIZE);
+   if (pageSize <= 0)
       CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
-   this->pageSizeKB = this->pageSize / 1024;
+   this->pageSize = (size_t)pageSize;
+   this->pageSizeKB = this->pageSize / ONE_K;
 
    this->kd = kstat_open();
    if (!this->kd)

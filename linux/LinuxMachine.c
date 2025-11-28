@@ -759,8 +759,10 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    Machine_init(super, usersTable, userId);
 
    // Initialize page size
-   if ((this->pageSize = sysconf(_SC_PAGESIZE)) == -1)
+   long pageSize = sysconf(_SC_PAGESIZE);
+   if (pageSize <= 0)
       CRT_fatalError("Cannot get pagesize by sysconf(_SC_PAGESIZE)");
+   this->pageSize = (size_t)pageSize;
    this->pageSizeKB = this->pageSize / ONE_K;
 
    // Initialize clock ticks

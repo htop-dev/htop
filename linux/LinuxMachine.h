@@ -8,6 +8,7 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "Machine.h"
 #include "linux/ZramStats.h"
@@ -67,8 +68,8 @@ typedef struct LinuxMachine_ {
    Machine super;
 
    long jiffies;
-   int pageSize;
-   int pageSizeKB;
+   size_t pageSize;
+   size_t pageSizeKB;
 
    /* see Linux kernel source for further detail, fs/proc/stat.c */
    unsigned int runningTasks;   /* procs_running from /proc/stat */
