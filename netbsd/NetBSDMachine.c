@@ -118,8 +118,10 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
       CRT_fatalError("fscale sysctl call failed");
    }
 
-   if ((this->pageSize = sysconf(_SC_PAGESIZE)) == -1)
+   long pageSize = sysconf(_SC_PAGESIZE);
+   if (pageSize <= 0)
       CRT_fatalError("pagesize sysconf call failed");
+   this->pageSize = (size_t)pageSize;
    this->pageSizeKB = this->pageSize / ONE_K;
 
    this->kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);

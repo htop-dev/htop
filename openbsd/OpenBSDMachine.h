@@ -10,7 +10,7 @@ in the source distribution for its full text.
 
 #include <kvm.h>
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stddef.h>
 
 #include "Machine.h"
 
