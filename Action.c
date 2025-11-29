@@ -544,7 +544,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
    Panel_setHeader(usersPanel, "Show processes of:");
    Machine* host = st->host;
    UsersTable_foreach(host->usersTable, addUserToVector, usersPanel);
-   Vector_insertionSort(usersPanel->items);
+   Vector_insertionSort(usersPanel->items, NULL, usersPanel);
    ListItem* allUsers = ListItem_new("All users", -1);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
    const ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 19, false);
