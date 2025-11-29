@@ -103,13 +103,13 @@ static void swap(Object** array, int indexA, int indexB) {
    array[indexB] = tmp;
 }
 
-static int partition(Object** array, int left, int right, int pivotIndex, Object_Compare compare) {
+static int partition(Object** array, int left, int right, int pivotIndex, Object_Compare compare, void* context) {
    const Object* pivotValue = array[pivotIndex];
    swap(array, pivotIndex, right);
    int storeIndex = left;
    for (int i = left; i < right; i++) {
       //comparisons++;
-      if (compare(array[i], pivotValue) <= 0) {
+      if (compare(array[i], pivotValue, context) <= 0) {
          swap(array, i, storeIndex);
          storeIndex++;
       }
@@ -118,20 +118,20 @@ static int partition(Object** array, int left, int right, int pivotIndex, Object
    return storeIndex;
 }
 
-static void quickSort(Object** array, int left, int right, Object_Compare compare) {
+static void quickSort(Object** array, int left, int right, Object_Compare compare, void* context) {
    if (left >= right)
       return;
 
    int pivotIndex = left + (right - left) / 2;
-   int pivotNewIndex = partition(array, left, right, pivotIndex, compare);
-   quickSort(array, left, pivotNewIndex - 1, compare);
-   quickSort(array, pivotNewIndex + 1, right, compare);
+   int pivotNewIndex = partition(array, left, right, pivotIndex, compare, context);
+   quickSort(array, left, pivotNewIndex - 1, compare, context);
+   quickSort(array, pivotNewIndex + 1, right, compare, context);
 }
 
 // If I were to use only one sorting algorithm for both cases, it would probably be this one:
 /*
 
-static void combSort(Object** array, int left, int right, Object_Compare compare) {
+static void combSort(Object** array, int left, int right, Object_Compare compare, void* context) {
    int gap = right - left;
    bool swapped = true;
    while ((gap > 1) || swapped) {
@@ -141,7 +141,7 @@ static void combSort(Object** array, int left, int right, Object_Compare compare
       swapped = false;
       for (int i = left; gap + i <= right; i++) {
          comparisons++;
-         if (compare(array[i], array[i+gap]) > 0) {
+         if (compare(array[i], array[i+gap], context) > 0) {
             swap(array, i, i+gap);
             swapped = true;
          }
@@ -151,13 +151,13 @@ static void combSort(Object** array, int left, int right, Object_Compare compare
 
 */
 
-static void insertionSort(Object** array, int left, int right, Object_Compare compare) {
+static void insertionSort(Object** array, int left, int right, Object_Compare compare, void* context) {
    for (int i = left + 1; i <= right; i++) {
       Object* t = array[i];
       int j = i - 1;
       while (j >= left) {
          //comparisons++;
-         if (compare(array[j], t) <= 0)
+         if (compare(array[j], t, context) <= 0)
             break;
 
          array[j + 1] = array[j];
@@ -167,17 +167,23 @@ static void insertionSort(Object** array, int left, int right, Object_Compare co
    }
 }
 
-void Vector_quickSortCustomCompare(Vector* this, Object_Compare compare) {
-   assert(compare);
+void Vector_quickSort(Vector* this, Object_Compare compare, void* context) {
+   if (!compare) {
+      assert(this->type->compare);
+      compare = this->type->compare;
+   }
    assert(Vector_isConsistent(this));
-   quickSort(this->array, 0, this->items - 1, compare);
+   quickSort(this->array, 0, this->items - 1, compare, context);
    assert(Vector_isConsistent(this));
 }
 
-void Vector_insertionSort(Vector* this) {
-   assert(this->type->compare);
+void Vector_insertionSort(Vector* this, Object_Compare compare, void* context) {
+   if (!compare) {
+      assert(this->type->compare);
+      compare = this->type->compare;
+   }
    assert(Vector_isConsistent(this));
-   insertionSort(this->array, 0, this->items - 1, this->type->compare);
+   insertionSort(this->array, 0, this->items - 1, compare, context);
    assert(Vector_isConsistent(this));
 }
 
@@ -357,7 +363,7 @@ int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compa
    for (int i = 0; i < this->items; i++) {
       const Object* o = this->array[i];
       assert(o);
-      if (compare(search, o) == 0) {
+      if (compare(search, o, NULL) == 0) {
          return i;
       }
    }
