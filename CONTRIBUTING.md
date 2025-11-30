@@ -1,7 +1,13 @@
 Contributing Guide
 ==================
 
-Thank you so much for taking the time to contribute in to htop!
+Thank you so much for taking the time to contribute to htop!
+
+Be Kind
+-------
+
+We strive for htop to be a welcoming and safe project for all contributors.
+Refer to our [code of conduct](CODE_OF_CONDUCT.md) for details.
 
 Bug Reports
 -----------
