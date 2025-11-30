@@ -49,3 +49,20 @@ a first orientation to go by when contributing to this repository.
 
 The details of the coding style as well as what to take care about with your
 contributions can be found in our [style guide](docs/styleguide.md).
+
+Use of AI
+---------
+
+You are welcome to use whatever tools work best for you, which includes use
+of AI tools to assist with developing htop. AI tools have proven invaluable
+as learning aids for new contributors, helped to identify problematic code,
+and have been used to fill cross-platform knowledge gaps.
+
+With great power comes great responsibility. Please ensure you review and
+understand any changes made by tools you use before opening pull requests.
+Be aware that AI tools may generate content which is an exact copy of code
+from another project - only propose code for inclusion in htop that meets
+the copyright and licensing requirements of the project.
+
+To assist the maintainers please always acknowledge any use of AI tools as
+part of your work. Use of `Co-authored-by:` clauses is highly recommended.
