@@ -91,7 +91,8 @@ myhtopsources = \
 	UptimeMeter.c \
 	UsersTable.c \
 	Vector.c \
-	XUtils.c
+	XUtils.c \
+	generic/sort.c
 
 myhtopheaders = \
 	Action.h \
@@ -164,7 +165,8 @@ myhtopheaders = \
 	UptimeMeter.h \
 	UsersTable.h \
 	Vector.h \
-	XUtils.h
+	XUtils.h \
+	generic/sort.h
 
 # Linux
 # -----
