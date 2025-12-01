@@ -185,14 +185,15 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Also show CPU frequency", &(settings->showCPUFrequency)));
    #ifdef BUILD_WITH_CPU_TEMP
    Panel_add(super, (Object*) CheckItem_newByRef(
-   #if defined(HTOP_LINUX)
-                                                 "Also show CPU temperature (requires libsensors)",
-   #elif defined(HTOP_FREEBSD)
+   #if defined(HTOP_FREEBSD) || defined(NVIDIA_JETSON)
                                                  "Also show CPU temperature",
+   #elif defined(HTOP_LINUX)
+                                                 "Also show CPU temperature (requires libsensors)",
    #else
    #error Unknown temperature implementation!
    #endif
                                                  &(settings->showCPUTemperature)));
+   Panel_add(super, (Object*) CheckItem_newByRef("- Show fractional CPU temperature for Celsius", (&settings->showCPUTemperatureFractional)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Show temperature in degree Fahrenheit instead of Celsius", &(settings->degreeFahrenheit)));
    #endif
    Panel_add(super, (Object*) CheckItem_newByRef("Show cached memory in graph and bar modes", &(settings->showCachedMemory)));

@@ -79,6 +79,7 @@ typedef struct Settings_ {
    bool showCPUFrequency;
    #ifdef BUILD_WITH_CPU_TEMP
    bool showCPUTemperature;
+   bool showCPUTemperatureFractional;
    bool degreeFahrenheit;
    #endif
    bool showProgramPath;

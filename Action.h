@@ -40,6 +40,9 @@ typedef struct State_ {
    bool pauseUpdate;
    bool hideSelection;
    bool hideMeters;
+#ifdef NVIDIA_JETSON
+   bool showGpuProcesses;
+#endif
 } State;
 
 static inline bool State_hideFunctionBar(const State* st) {

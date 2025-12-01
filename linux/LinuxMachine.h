@@ -47,9 +47,10 @@ typedef struct CPUData_ {
 
    double frequency;
 
-   #ifdef HAVE_SENSORS_SENSORS_H
+   #ifdef BUILD_WITH_CPU_TEMP
    double temperature;
-
+   #endif
+   #ifdef HAVE_SENSORS_SENSORS_H
    int physicalID;      /* different for each CPU socket */
    int coreID;          /* same for hyperthreading */
    int ccdID;           /* same for each AMD chiplet */
