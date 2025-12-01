@@ -454,6 +454,9 @@ void Platform_setMemoryValues(Meter* this, double* totalUsed) {
          this->values[MEMORY_METER_BUFFERS] = 0;
          this->values[MEMORY_METER_CACHE] = 0;
       }
+
+      // 'available' memory is never drawn
+      this->values[MEMORY_METER_AVAILABLE] = 0;
    }
 }
 

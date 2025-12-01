@@ -33,6 +33,8 @@ static void MemoryMeter_updateValues(Meter* this) {
    size_t size = sizeof(this->txtBuffer);
    int written;
 
+   this->curItems = ARRAYSIZE(MemoryMeter_attributes);
+
    /* shared, compressed and available memory are not supported on all platforms */
    this->values[MEMORY_METER_SHARED] = NAN;
    this->values[MEMORY_METER_COMPRESSED] = NAN;
@@ -40,11 +42,6 @@ static void MemoryMeter_updateValues(Meter* this) {
 
    double totalUsed = 0;
    Platform_setMemoryValues(this, &totalUsed);
-
-   /* Do not print available memory in bar mode */
-   static_assert(MEMORY_METER_AVAILABLE + 1 == MEMORY_METER_ITEMCOUNT,
-      "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
-   this->curItems = MEMORY_METER_AVAILABLE;
 
    written = Meter_humanUnit(buffer, totalUsed, size);
    METER_BUFFER_CHECK(buffer, size, written);
