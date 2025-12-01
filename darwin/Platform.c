@@ -425,6 +425,14 @@ void Platform_setMemoryValues(Meter* mtr, double* totalUsed) {
 #ifdef HAVE_STRUCT_VM_STATISTICS64
    *totalUsed += mtr->values[MEMORY_METER_COMPRESSED];
 #endif
+
+   if (mtr->mode == BAR_METERMODE || mtr->mode == GRAPH_METERMODE) {
+      Settings *settings = mtr->host->settings;
+      if (!settings->showCachedMemory) {
+         mtr->values[MEMORY_METER_BUFFERS] = 0;
+         mtr->values[MEMORY_METER_CACHE] = 0;
+      }
+   }
 }
 
 void Platform_setSwapValues(Meter* mtr) {
