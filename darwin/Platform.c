@@ -404,15 +404,26 @@ void Platform_setMemoryValues(Meter* mtr) {
    mtr->total = dhost->host_info.max_mem / 1024;
 #ifdef HAVE_STRUCT_VM_STATISTICS64
    natural_t used = vm->active_count + vm->inactive_count +
-              vm->speculative_count + vm->wire_count +
-              vm->compressor_page_count - vm->purgeable_count - vm->external_page_count;
+              vm->speculative_count + vm->wire_count - vm->purgeable_count;
+#ifdef HAVE_STRUCT_VM_STATISTICS64_EXTERNAL_PAGE_COUNT
+   used -= vm->external_page_count;
+#endif
+#ifdef HAVE_STRUCT_VM_STATISTICS64_COMPRESSOR_PAGE_COUNT
+   used += vm->compressor_page_count;
    mtr->values[MEMORY_METER_USED] = (double)(used - vm->compressor_page_count) * page_K;
+#else
+   mtr->values[MEMORY_METER_USED] = (double)used * page_K;
+#endif
 #else
    mtr->values[MEMORY_METER_USED] = (double)(vm->active_count + vm->wire_count) * page_K;
 #endif
    // mtr->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
 #ifdef HAVE_STRUCT_VM_STATISTICS64
+#ifdef HAVE_STRUCT_VM_STATISTICS64_COMPRESSOR_PAGE_COUNT
    mtr->values[MEMORY_METER_COMPRESSED] = (double)vm->compressor_page_count * page_K;
+#else
+   // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory not available"
+#endif
 #else
    // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
 #endif
