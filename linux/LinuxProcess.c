@@ -185,7 +185,7 @@ bool LinuxProcess_rowSetIOPriority(Row* super, Arg ioprio) {
 
 bool LinuxProcess_isAutogroupEnabled(void) {
    char buf[16];
-   if (xReadfile(PROCDIR "/sys/kernel/sched_autogroup_enabled", buf, sizeof(buf)) < 0)
+   if (Compat_readfile(PROCDIR "/sys/kernel/sched_autogroup_enabled", buf, sizeof(buf)) < 0)
       return false;
    return buf[0] == '1';
 }

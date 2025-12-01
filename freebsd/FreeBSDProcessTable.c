@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include <sys/priority.h>
 #include <sys/proc.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -29,7 +30,6 @@ in the source distribution for its full text.
 #include <sys/vmmeter.h>
 
 #include "CRT.h"
-#include "Compat.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Process.h"

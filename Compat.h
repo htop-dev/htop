@@ -12,6 +12,8 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <sys/stat.h> // IWYU pragma: keep
 
+#include "Macros.h"
+
 
 int Compat_faccessat(int dirfd,
                      const char* pathname,
@@ -58,5 +60,11 @@ ssize_t Compat_readlink(openat_arg_t dirfd,
                         const char* pathname,
                         char* buf,
                         size_t bufsize);
+
+ATTR_NONNULL ATTR_ACCESS3_W(2, 3)
+ssize_t Compat_readfile(const char* pathname, void* buffer, size_t count);
+
+ATTR_NONNULL ATTR_ACCESS3_W(3, 4)
+ssize_t Compat_readfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
 
 #endif /* HEADER_Compat */

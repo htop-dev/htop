@@ -293,59 +293,6 @@ char* xStrndup(const char* str, size_t len) {
    return data;
 }
 
-ATTR_ACCESS3_W(2, 3)
-static ssize_t readfd_internal(int fd, void* buffer, size_t count) {
-   if (!count) {
-      close(fd);
-      return -EINVAL;
-   }
-
-   ssize_t alreadyRead = 0;
-   count--; // reserve one for null-terminator
-
-   for (;;) {
-      ssize_t res = read(fd, buffer, count);
-      if (res == -1) {
-         if (errno == EINTR)
-            continue;
-
-         close(fd);
-         *((char*)buffer) = '\0';
-         return -errno;
-      }
-
-      if (res > 0) {
-         assert((size_t)res <= count);
-
-         buffer = ((char*)buffer) + res;
-         count -= (size_t)res;
-         alreadyRead += res;
-      }
-
-      if (count == 0 || res == 0) {
-         close(fd);
-         *((char*)buffer) = '\0';
-         return alreadyRead;
-      }
-   }
-}
-
-ssize_t xReadfile(const char* pathname, void* buffer, size_t count) {
-   int fd = open(pathname, O_RDONLY);
-   if (fd < 0)
-      return -errno;
-
-   return readfd_internal(fd, buffer, count);
-}
-
-ssize_t xReadfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count) {
-   int fd = Compat_openat(dirfd, pathname, O_RDONLY);
-   if (fd < 0)
-      return -errno;
-
-   return readfd_internal(fd, buffer, count);
-}
-
 ssize_t full_write(int fd, const void* buf, size_t count) {
    ssize_t written = 0;
 

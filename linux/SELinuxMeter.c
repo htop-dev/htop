@@ -59,7 +59,7 @@ static bool isSelinuxEnforcing(void) {
    }
 
    char buf[20];
-   ssize_t r = xReadfile("/sys/fs/selinux/enforce", buf, sizeof(buf));
+   ssize_t r = Compat_readfile("/sys/fs/selinux/enforce", buf, sizeof(buf));
    if (r < 0)
       return false;
 

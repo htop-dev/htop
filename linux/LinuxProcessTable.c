@@ -163,7 +163,7 @@ static void LinuxProcessTable_initTtyDrivers(LinuxProcessTable* this) {
    TtyDriver* ttyDrivers;
 
    char buf[16384];
-   ssize_t r = xReadfile(PROCTTYDRIVERSFILE, buf, sizeof(buf));
+   ssize_t r = Compat_readfile(PROCTTYDRIVERSFILE, buf, sizeof(buf));
    if (r < 0)
       return;
 
@@ -309,7 +309,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    if (scanMainThread) {
       xSnprintf(path, sizeof(path), "task/%"PRIi32"/stat", (int32_t)Process_getPid(process));
    }
-   ssize_t r = xReadfileat(procFd, path, buf, sizeof(buf));
+   ssize_t r = Compat_readfileat(procFd, path, buf, sizeof(buf));
    if (r < 0)
       return false;
 
@@ -639,7 +639,7 @@ static void LinuxProcessTable_readIoFile(LinuxProcess* lp, openat_arg_t procFd, 
    if (scanMainThread) {
       xSnprintf(path, sizeof(path), "task/%"PRIi32"/io", (int32_t)Process_getPid(process));
    }
-   ssize_t r = xReadfileat(procFd, path, buffer, sizeof(buffer));
+   ssize_t r = Compat_readfileat(procFd, path, buffer, sizeof(buffer));
    if (r < 0) {
       lp->io_rate_read_bps = NAN;
       lp->io_rate_write_bps = NAN;
@@ -845,7 +845,7 @@ static bool LinuxProcessTable_readStatmFile(LinuxProcess* process, openat_arg_t 
 
    char statmdata[128] = {0};
 
-   if (xReadfileat(procFd, "statm", statmdata, sizeof(statmdata)) < 1) {
+   if (Compat_readfileat(procFd, "statm", statmdata, sizeof(statmdata)) < 1) {
       return false;
    }
 
@@ -1104,7 +1104,7 @@ static void LinuxProcessTable_readOomData(LinuxProcess* process, openat_arg_t pr
 
    char buffer[PROC_LINE_LENGTH + 1] = {0};
 
-   ssize_t oomRead = xReadfileat(procFd, "oom_score", buffer, sizeof(buffer));
+   ssize_t oomRead = Compat_readfileat(procFd, "oom_score", buffer, sizeof(buffer));
    if (oomRead < 1) {
       return;
    }
@@ -1134,7 +1134,7 @@ static void LinuxProcessTable_readAutogroup(LinuxProcess* process, openat_arg_t 
    process->autogroup_id = -1;
 
    char autogroup[64]; // space for two numeric values and fixed length strings
-   ssize_t amtRead = xReadfileat(procFd, "autogroup", autogroup, sizeof(autogroup));
+   ssize_t amtRead = Compat_readfileat(procFd, "autogroup", autogroup, sizeof(autogroup));
    if (amtRead < 0)
       return;
 
@@ -1164,7 +1164,7 @@ static void LinuxProcessTable_readSecattrData(LinuxProcess* process, openat_arg_
 
    char buffer[PROC_LINE_LENGTH + 1] = {0};
 
-   ssize_t attrdata = xReadfileat(procFd, "attr/current", buffer, sizeof(buffer));
+   ssize_t attrdata = Compat_readfileat(procFd, "attr/current", buffer, sizeof(buffer));
    if (attrdata < 1) {
       free(process->secattr);
       process->secattr = NULL;
@@ -1269,7 +1269,7 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
    LinuxProcessList_readExe(process, procFd, mainTask);
 
    char command[4096 + 1]; // max cmdline length on Linux
-   ssize_t amtRead = xReadfileat(procFd, "cmdline", command, sizeof(command));
+   ssize_t amtRead = Compat_readfileat(procFd, "cmdline", command, sizeof(command));
    if (amtRead <= 0)
       return false;
 
@@ -1443,7 +1443,7 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
  */
 static void LinuxProcessList_readComm(Process* process, openat_arg_t procFd) {
    char command[4096 + 1]; // max cmdline length on Linux
-   ssize_t amtRead = xReadfileat(procFd, "comm", command, sizeof(command));
+   ssize_t amtRead = Compat_readfileat(procFd, "comm", command, sizeof(command));
    if (amtRead > 0) {
       command[amtRead - 1] = '\0';
       Process_updateComm(process, command);
