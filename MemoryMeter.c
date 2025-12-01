@@ -78,9 +78,13 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
       RichString_appendAscii(out, CRT_colors[MEMORY_COMPRESSED], buffer);
    }
 
-   Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
-   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " buffers:");
-   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[MEMORY_BUFFERS_TEXT] : CRT_colors[METER_SHADOW], buffer);
+   /* 'buffers' memory field might be hidden by a setting in some OS
+      ports (e.g. FreeBSD). */
+   if (isNonnegative(this->values[MEMORY_METER_BUFFERS])) {
+      Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
+      RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " buffers:");
+      RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[MEMORY_BUFFERS_TEXT] : CRT_colors[METER_SHADOW], buffer);
+   }
 
    Meter_humanUnit(buffer, this->values[MEMORY_METER_CACHE], sizeof(buffer));
    RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " cache:");
