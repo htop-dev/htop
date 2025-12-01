@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
 #include "Hashtable.h"
+#include "Macros.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
@@ -47,7 +48,8 @@ pid_t Platform_getMaxPid(void);
 
 double Platform_setCPUValues(Meter* this, unsigned int cpu);
 
-void Platform_setMemoryValues(Meter* this, double* usedNumber);
+ATTR_NONNULL
+void Platform_setMemoryValues(Meter* this, double* totalUsed);
 
 void Platform_setSwapValues(Meter* this);
 

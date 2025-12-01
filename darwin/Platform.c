@@ -392,7 +392,7 @@ cleanup:
    mtr->values[0] = *totalUsage;
 }
 
-void Platform_setMemoryValues(Meter* mtr, double* usedNumber) {
+void Platform_setMemoryValues(Meter* mtr, double* totalUsed) {
    const DarwinMachine* dhost = (const DarwinMachine*) mtr->host;
 #ifdef HAVE_STRUCT_VM_STATISTICS64
    const struct vm_statistics64* vm = &dhost->vm_stats;
@@ -420,10 +420,10 @@ void Platform_setMemoryValues(Meter* mtr, double* usedNumber) {
    mtr->values[MEMORY_METER_CACHE] = (double)vm->inactive_count * page_K;
    // mtr->values[MEMORY_METER_AVAILABLE] = "available memory"
 
-   *usedNumber = mtr->values[MEMORY_METER_USED];
-   // *usedNumber += mtr->values[MEMORY_METER_SHARED];
+   *totalUsed = mtr->values[MEMORY_METER_USED];
+   // *totalUsed += mtr->values[MEMORY_METER_SHARED];
 #ifdef HAVE_STRUCT_VM_STATISTICS64
-   *usedNumber += mtr->values[MEMORY_METER_COMPRESSED];
+   *totalUsed += mtr->values[MEMORY_METER_COMPRESSED];
 #endif
 }
 

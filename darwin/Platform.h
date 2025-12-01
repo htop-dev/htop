@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "DiskIOMeter.h"
 #include "Hashtable.h"
+#include "Macros.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
@@ -60,7 +61,8 @@ double Platform_setCPUValues(Meter* mtr, unsigned int cpu);
 
 void Platform_setGPUValues(Meter* mtr, double* totalUsage, unsigned long long* totalGPUTimeDiff);
 
-void Platform_setMemoryValues(Meter* mtr, double* usedNumber);
+ATTR_NONNULL
+void Platform_setMemoryValues(Meter* mtr, double* totalUsed);
 
 void Platform_setSwapValues(Meter* mtr);
 

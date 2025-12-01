@@ -118,9 +118,9 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    return 0.0;
 }
 
-void Platform_setMemoryValues(Meter* this, double* usedNumber) {
+void Platform_setMemoryValues(Meter* this, double* totalUsed) {
    (void) this;
-   (void) usedNumber;
+   *totalUsed = 0.0;
 }
 
 void Platform_setSwapValues(Meter* this) {

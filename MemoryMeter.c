@@ -40,8 +40,8 @@ static void MemoryMeter_updateValues(Meter* this) {
    this->values[MEMORY_METER_COMPRESSED] = NAN;
    this->values[MEMORY_METER_AVAILABLE] = NAN;
 
-   double usedNumber = 0;
-   Platform_setMemoryValues(this, &usedNumber);
+   double totalUsed = 0;
+   Platform_setMemoryValues(this, &totalUsed);
 
    if ((this->mode == GRAPH_METERMODE || this->mode == BAR_METERMODE) && !settings->showCachedMemory) {
       this->values[MEMORY_METER_BUFFERS] = 0;
@@ -52,7 +52,7 @@ static void MemoryMeter_updateValues(Meter* this) {
       "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
    this->curItems = MEMORY_METER_AVAILABLE;
 
-   written = Meter_humanUnit(buffer, usedNumber, size);
+   written = Meter_humanUnit(buffer, totalUsed, size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');
