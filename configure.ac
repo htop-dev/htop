@@ -1029,7 +1029,7 @@ if test "$enable_unwind" != no; then
    CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
    LIBS="$LIBUNWIND_LIBS $LIBS"
 
-   # unw_init_local() is a macro in HP's implemention of libunwind
+   # unw_init_local() is a macro in HP's implementation of libunwind
    # (the most popular one, Mosberger et al.)
    AC_MSG_CHECKING([whether $LIBUNWIND_LIBS supports local unwinding])
    AC_LINK_IFELSE(
