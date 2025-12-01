@@ -9,11 +9,11 @@ in the source distribution for its full text.
 
 #include "MemoryMeter.h"
 
-#include <assert.h>
 #include <math.h>
 #include <stddef.h>
 
 #include "CRT.h"
+#include "Debug.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"

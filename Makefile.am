@@ -111,6 +111,7 @@ myhtopheaders = \
 	Compat.h \
 	DateMeter.h \
 	DateTimeMeter.h \
+	Debug.h \
 	DiskIOMeter.h \
 	DisplayOptionsPanel.h \
 	DynamicColumn.h \
