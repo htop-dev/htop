@@ -26,7 +26,7 @@ in the source distribution for its full text.
 #include "RowField.h"
 #include "Scheduling.h"
 #include "Settings.h"
-#include "XUtils.h"
+#include "linux/Compat.h"
 #include "linux/IOPriority.h"
 #include "linux/LinuxMachine.h"
 

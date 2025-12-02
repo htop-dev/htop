@@ -23,15 +23,14 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <time.h>
 
-#include "Compat.h"
 #include "CRT.h"
 #include "Macros.h"
 #include "ProcessTable.h"
 #include "Row.h"
 #include "Settings.h"
 #include "UsersTable.h"
-#include "XUtils.h"
 
+#include "linux/Compat.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
 #ifdef HAVE_SENSORS_SENSORS_H

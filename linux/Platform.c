@@ -25,7 +25,6 @@ in the source distribution for its full text.
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
-#include "Compat.h"
 #include "CPUMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
@@ -51,7 +50,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
-#include "XUtils.h"
+#include "linux/Compat.h"
 #include "linux/IOPriority.h"
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"

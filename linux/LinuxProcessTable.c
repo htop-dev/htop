@@ -25,7 +25,6 @@ in the source distribution for its full text.
 #include <linux/capability.h> // raw syscall, no libcap  // IWYU pragma: keep // IWYU pragma: no_include <sys/capability.h>
 #include <sys/stat.h>
 
-#include "Compat.h"
 #include "GPUMeter.h"
 #include "Hashtable.h"
 #include "Machine.h"
@@ -38,8 +37,8 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "Table.h"
 #include "UsersTable.h"
-#include "XUtils.h"
 #include "linux/CGroupUtils.h"
+#include "linux/Compat.h"
 #include "linux/GPU.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"

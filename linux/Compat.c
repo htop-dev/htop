@@ -1,5 +1,5 @@
 /*
-htop - Compat.c
+htop - linux/Compat.c
 (C) 2020 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "Compat.h"
+#include "linux/Compat.h"
 
 #include <errno.h>
 #include <fcntl.h> // IWYU pragma: keep

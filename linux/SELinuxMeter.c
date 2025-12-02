@@ -19,7 +19,8 @@ in the source distribution for its full text.
 #include <sys/statvfs.h>
 
 #include "Object.h"
-#include "XUtils.h"
+
+#include "linux/Compat.h"
 
 
 static const int SELinuxMeter_attributes[] = {
