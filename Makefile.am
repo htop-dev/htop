@@ -166,6 +166,11 @@ myhtopheaders = \
 	Vector.h \
 	XUtils.h
 
+if HAVE_DEMANGLING
+myhtopheaders += generic/Demangle.h
+myhtopsources += generic/Demangle.c
+endif
+
 # Linux
 # -----
 
