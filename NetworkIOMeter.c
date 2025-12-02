@@ -171,7 +171,7 @@ const MeterClass NetworkIOMeter_class = {
    },
    .updateValues = NetworkIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
-   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED | (1 << GRAPH2_METERMODE),
    .maxItems = 2,
    .isPercentChart = false,
    .total = 1.0,
