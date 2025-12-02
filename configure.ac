@@ -980,16 +980,21 @@ $3
    return "$htop_header_search_status"
 } # htop_search_header_dir
 
-AC_ARG_ENABLE(
-   [unwind],
+AC_ARG_WITH(
+   [libunwind],
    [AS_HELP_STRING(
-      [--enable-unwind],
-      [enable unwind support for printing backtraces; requires libunwind @<:@default=check@:>@]
+      [--with-libunwind],
+      [use libunwind for printing local backtrace @<:@default=check@:>@]
    )],
    [],
-   [enable_unwind=check]
+   [
+      with_libunwind=${enable_unwind-'check'}
+      if test "x${enable_unwind+y}" = xy; then
+         AC_MSG_WARN([--enable-unwind is deprecated; use --with-libunwind instead])
+      fi
+   ]
 )
-case "$enable_unwind" in
+case $with_libunwind in
    no)
       ;;
    check|yes)
@@ -1008,20 +1013,20 @@ case "$enable_unwind" in
 
       if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
          AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
-      elif test "$enable_unwind" = yes; then
+      elif test "$with_libunwind" = yes; then
          AC_MSG_ERROR([can not find required header file libunwind.h])
       else
-         enable_unwind=no
+         with_libunwind=no
       fi
 
       CFLAGS=$htop_save_CFLAGS
       ;;
    *)
-      AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
+      AC_MSG_ERROR([bad value '$with_libunwind' for --with-libunwind])
       ;;
 esac
 
-if test "$enable_unwind" != no; then
+if test "$with_libunwind" != no; then
    htop_save_CPPFLAGS=$CPPFLAGS
    htop_save_CFLAGS=$CFLAGS
    htop_save_LIBS=$LIBS
@@ -1071,21 +1076,21 @@ if test "$enable_unwind" != no; then
          fi
          if test "$libunwind_local_support" = no; then
             AC_MSG_RESULT([no])
-            if test "$enable_unwind" = yes; then
+            if test "$with_libunwind" = yes; then
                AC_MSG_WARN([this build of libunwind might not support local unwinding])
             else
                LIBS=$htop_save_LIBS
-               enable_unwind=no
+               with_libunwind=no
             fi
          fi
       ],
       [
          AC_MSG_RESULT([no])
-         if test "$enable_unwind" = yes; then
+         if test "$with_libunwind" = yes; then
             AC_MSG_FAILURE([can not link with libunwind])
          else
             LIBS=$htop_save_LIBS
-            enable_unwind=no
+            with_libunwind=no
          fi
       ]
    )
@@ -1094,9 +1099,9 @@ if test "$enable_unwind" != no; then
    CFLAGS=$htop_save_CFLAGS
 fi
 
-if test "$enable_unwind" != no; then
+if test "$with_libunwind" != no; then
    AM_CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS"
-   enable_unwind=yes
+   with_libunwind=yes
    AC_DEFINE([HAVE_LOCAL_UNWIND], 1, [Define to 1 if local unwinding is enabled.])
 else
    # Fall back to backtrace(3) and add -lexecinfo if needed
@@ -1600,7 +1605,6 @@ AC_MSG_RESULT([
   (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
-  unwind:                    $enable_unwind
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
