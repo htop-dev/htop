@@ -416,7 +416,7 @@ void Platform_setGPUValues(Meter* this, double* totalUsage, unsigned long long* 
    this->values[residueIndex] = residuePercentage;
 }
 
-void Platform_setMemoryValues(Meter* this) {
+void Platform_setMemoryValues(Meter* this, double* totalUsed) {
    const Machine* host = this->host;
    const LinuxMachine* lhost = (const LinuxMachine*) host;
 
@@ -441,6 +441,21 @@ void Platform_setMemoryValues(Meter* this) {
    if (lhost->zswap.usedZswapOrig > 0 || lhost->zswap.usedZswapComp > 0) {
       this->values[MEMORY_METER_USED] -= lhost->zswap.usedZswapComp;
       this->values[MEMORY_METER_COMPRESSED] += lhost->zswap.usedZswapComp;
+   }
+
+   *totalUsed = this->values[MEMORY_METER_USED];
+   *totalUsed += this->values[MEMORY_METER_SHARED];
+   *totalUsed += this->values[MEMORY_METER_COMPRESSED];
+
+   if (this->mode == BAR_METERMODE || this->mode == GRAPH_METERMODE) {
+      Settings *settings = host->settings;
+      if (!settings->showCachedMemory) {
+         this->values[MEMORY_METER_BUFFERS] = 0;
+         this->values[MEMORY_METER_CACHE] = 0;
+      }
+
+      // 'available' memory is never drawn
+      this->values[MEMORY_METER_AVAILABLE] = 0;
    }
 }
 

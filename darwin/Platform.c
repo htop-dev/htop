@@ -392,7 +392,7 @@ cleanup:
    mtr->values[0] = *totalUsage;
 }
 
-void Platform_setMemoryValues(Meter* mtr) {
+void Platform_setMemoryValues(Meter* mtr, double* totalUsed) {
    const DarwinMachine* dhost = (const DarwinMachine*) mtr->host;
 #ifdef HAVE_STRUCT_VM_STATISTICS64
    const struct vm_statistics64* vm = &dhost->vm_stats;
@@ -419,6 +419,20 @@ void Platform_setMemoryValues(Meter* mtr) {
    mtr->values[MEMORY_METER_BUFFERS] = (double)vm->purgeable_count * page_K;
    mtr->values[MEMORY_METER_CACHE] = (double)vm->inactive_count * page_K;
    // mtr->values[MEMORY_METER_AVAILABLE] = "available memory"
+
+   *totalUsed = mtr->values[MEMORY_METER_USED];
+   // *totalUsed += mtr->values[MEMORY_METER_SHARED];
+#ifdef HAVE_STRUCT_VM_STATISTICS64
+   *totalUsed += mtr->values[MEMORY_METER_COMPRESSED];
+#endif
+
+   if (mtr->mode == BAR_METERMODE || mtr->mode == GRAPH_METERMODE) {
+      Settings *settings = mtr->host->settings;
+      if (!settings->showCachedMemory) {
+         mtr->values[MEMORY_METER_BUFFERS] = 0;
+         mtr->values[MEMORY_METER_CACHE] = 0;
+      }
+   }
 }
 
 void Platform_setSwapValues(Meter* mtr) {

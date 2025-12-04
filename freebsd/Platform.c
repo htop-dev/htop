@@ -225,7 +225,7 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
    return percent;
 }
 
-void Platform_setMemoryValues(Meter* this) {
+void Platform_setMemoryValues(Meter* this, double* totalUsed) {
    const Machine* host = this->host;
    const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
 
@@ -243,8 +243,25 @@ void Platform_setMemoryValues(Meter* this) {
       if (fhost->zfs.size > fhost->zfs.min)
          shrinkableSize = fhost->zfs.size - fhost->zfs.min;
       this->values[MEMORY_METER_USED] -= shrinkableSize;
-      this->values[MEMORY_METER_CACHE] += shrinkableSize;
+      this->values[MEMORY_METER_BUFFERS] += shrinkableSize;
       // this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
+   }
+
+   *totalUsed = this->values[MEMORY_METER_USED];
+   *totalUsed += this->values[MEMORY_METER_SHARED];
+   // *totalUsed += this->values[MEMORY_METER_COMPRESSED];
+   // In FreeBSD, 'buffers' memory is a subcategory of 'wired' and is
+   // not reclaimable. It can be considered as 'used' as well.
+   *totalUsed += this->values[MEMORY_METER_BUFFERS];
+
+   Settings *settings = host->settings;
+   if (!settings->showCachedMemory) {
+      this->values[MEMORY_METER_USED] += this->values[MEMORY_METER_BUFFERS];
+      this->values[MEMORY_METER_BUFFERS] = NAN;
+
+      if (this->mode == BAR_METERMODE || this->mode == GRAPH_METERMODE) {
+         this->values[MEMORY_METER_CACHE] = 0;
+      }
    }
 }
 

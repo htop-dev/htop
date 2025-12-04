@@ -558,7 +558,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    return Platform_setOneCPUValues(this, settings, phost->percpu[cpu - 1]);
 }
 
-void Platform_setMemoryValues(Meter* this) {
+void Platform_setMemoryValues(Meter* this, double* totalUsed) {
    const Machine* host = this->host;
    const PCPMachine* phost = (const PCPMachine*) host;
 
@@ -583,6 +583,21 @@ void Platform_setMemoryValues(Meter* this) {
    if (phost->zswap.usedZswapOrig > 0 || phost->zswap.usedZswapComp > 0) {
       this->values[MEMORY_METER_USED] -= phost->zswap.usedZswapComp;
       this->values[MEMORY_METER_COMPRESSED] += phost->zswap.usedZswapComp;
+   }
+
+   *totalUsed = this->values[MEMORY_METER_USED];
+   *totalUsed += this->values[MEMORY_METER_SHARED];
+   *totalUsed += this->values[MEMORY_METER_COMPRESSED];
+
+   if (this->mode == BAR_METERMODE || this->mode == GRAPH_METERMODE) {
+      Settings *settings = host->settings;
+      if (!settings->showCachedMemory) {
+         this->values[MEMORY_METER_BUFFERS] = 0;
+         this->values[MEMORY_METER_CACHE] = 0;
+      }
+
+      // 'available' memory is never drawn
+      this->values[MEMORY_METER_AVAILABLE] = 0;
    }
 }
 

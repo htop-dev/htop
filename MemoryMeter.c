@@ -33,30 +33,17 @@ static void MemoryMeter_updateValues(Meter* this) {
    size_t size = sizeof(this->txtBuffer);
    int written;
 
-   Settings *settings = this->host->settings;
+   this->curItems = ARRAYSIZE(MemoryMeter_attributes);
 
    /* shared, compressed and available memory are not supported on all platforms */
    this->values[MEMORY_METER_SHARED] = NAN;
    this->values[MEMORY_METER_COMPRESSED] = NAN;
    this->values[MEMORY_METER_AVAILABLE] = NAN;
-   Platform_setMemoryValues(this);
-   if ((this->mode == GRAPH_METERMODE || this->mode == BAR_METERMODE) && !settings->showCachedMemory) {
-      this->values[MEMORY_METER_BUFFERS] = 0;
-      this->values[MEMORY_METER_CACHE] = 0;
-   }
-   /* Do not print available memory in bar mode */
-   static_assert(MEMORY_METER_AVAILABLE + 1 == MEMORY_METER_ITEMCOUNT,
-      "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
-   this->curItems = MEMORY_METER_AVAILABLE;
 
-   /* we actually want to show "used + shared + compressed" */
-   double used = this->values[MEMORY_METER_USED];
-   if (isPositive(this->values[MEMORY_METER_SHARED]))
-      used += this->values[MEMORY_METER_SHARED];
-   if (isPositive(this->values[MEMORY_METER_COMPRESSED]))
-      used += this->values[MEMORY_METER_COMPRESSED];
+   double totalUsed = 0;
+   Platform_setMemoryValues(this, &totalUsed);
 
-   written = Meter_humanUnit(buffer, used, size);
+   written = Meter_humanUnit(buffer, totalUsed, size);
    METER_BUFFER_CHECK(buffer, size, written);
 
    METER_BUFFER_APPEND_CHR(buffer, size, '/');
@@ -91,9 +78,13 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
       RichString_appendAscii(out, CRT_colors[MEMORY_COMPRESSED], buffer);
    }
 
-   Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
-   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " buffers:");
-   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[MEMORY_BUFFERS_TEXT] : CRT_colors[METER_SHADOW], buffer);
+   /* 'buffers' memory field might be hidden by a setting in some OS
+      ports (e.g. FreeBSD). */
+   if (isNonnegative(this->values[MEMORY_METER_BUFFERS])) {
+      Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
+      RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " buffers:");
+      RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[MEMORY_BUFFERS_TEXT] : CRT_colors[METER_SHADOW], buffer);
+   }
 
    Meter_humanUnit(buffer, this->values[MEMORY_METER_CACHE], sizeof(buffer));
    RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " cache:");
