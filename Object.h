@@ -19,7 +19,7 @@ struct Object_;
 typedef struct Object_ Object;
 
 typedef void(*Object_Display)(const Object*, RichString*);
-typedef int(*Object_Compare)(const void*, const void*);
+typedef int(*Object_Compare)(const void*, const void*, void*);
 typedef void(*Object_Delete)(Object*);
 
 #define Object_getClass(obj_)         ((const Object*)(obj_))->klass
@@ -28,7 +28,7 @@ typedef void(*Object_Delete)(Object*);
 #define Object_delete(obj_)           (assert(Object_getClass(obj_)->delete), Object_getClass(obj_)->delete((Object*)(obj_)))
 #define Object_displayFn(obj_)        Object_getClass(obj_)->display
 #define Object_display(obj_, str_)    (assert(Object_getClass(obj_)->display), Object_getClass(obj_)->display((const Object*)(obj_), str_))
-#define Object_compare(obj_, other_)  (assert(Object_getClass(obj_)->compare), Object_getClass(obj_)->compare((const void*)(obj_), other_))
+#define Object_compare(obj_, other_, ctx_)  (assert(Object_getClass(obj_)->compare), Object_getClass(obj_)->compare((const void*)(obj_), other_, ctx_)
 
 #define Class(class_)                 ((const ObjectClass*)(&(class_ ## _class)))
 
