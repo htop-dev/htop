@@ -40,7 +40,6 @@ myhtopsources = \
 	ColumnsPanel.c \
 	CommandLine.c \
 	CommandScreen.c \
-	Compat.c \
 	CPUMeter.c \
 	CRT.c \
 	DateMeter.c \
@@ -108,9 +107,9 @@ myhtopheaders = \
 	ColumnsPanel.h \
 	CommandLine.h \
 	CommandScreen.h \
-	Compat.h \
 	DateMeter.h \
 	DateTimeMeter.h \
+	Debug.h \
 	DiskIOMeter.h \
 	DisplayOptionsPanel.h \
 	DynamicColumn.h \
@@ -174,6 +173,7 @@ linux_platform_headers = \
 	generic/hostname.h \
 	generic/uname.h \
 	linux/CGroupUtils.h \
+	linux/Compat.h \
 	linux/GPU.h \
 	linux/HugePageMeter.h \
 	linux/IOPriority.h \
@@ -200,6 +200,7 @@ linux_platform_sources = \
 	generic/hostname.c \
 	generic/uname.c \
 	linux/CGroupUtils.c \
+	linux/Compat.c \
 	linux/GPU.c \
 	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \

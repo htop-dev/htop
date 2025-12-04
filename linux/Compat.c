@@ -1,5 +1,5 @@
 /*
-htop - Compat.c
+htop - linux/Compat.c
 (C) 2020 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "config.h" // IWYU pragma: keep
 
-#include "Compat.h"
+#include "linux/Compat.h"
 
 #include <errno.h>
 #include <fcntl.h> // IWYU pragma: keep
@@ -153,4 +153,57 @@ ssize_t Compat_readlink(openat_arg_t dirfd,
 #endif /* HAVE_OPENAT */
 
    return readlink(linkPath, buf, bufsize);
+}
+
+ATTR_ACCESS3_W(2, 3)
+static ssize_t readfd_internal(int fd, void* buffer, size_t count) {
+   if (!count) {
+      close(fd);
+      return -EINVAL;
+   }
+
+   ssize_t alreadyRead = 0;
+   count--; // reserve one for null-terminator
+
+   for (;;) {
+      ssize_t res = read(fd, buffer, count);
+      if (res == -1) {
+         if (errno == EINTR)
+            continue;
+
+         close(fd);
+         *((char*)buffer) = '\0';
+         return -errno;
+      }
+
+      if (res > 0) {
+         assert((size_t)res <= count);
+
+         buffer = ((char*)buffer) + res;
+         count -= (size_t)res;
+         alreadyRead += res;
+      }
+
+      if (count == 0 || res == 0) {
+         close(fd);
+         *((char*)buffer) = '\0';
+         return alreadyRead;
+      }
+   }
+}
+
+ssize_t Compat_readfile(const char* pathname, void* buffer, size_t count) {
+   int fd = open(pathname, O_RDONLY);
+   if (fd < 0)
+      return -errno;
+
+   return readfd_internal(fd, buffer, count);
+}
+
+ssize_t Compat_readfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count) {
+   int fd = Compat_openat(dirfd, pathname, O_RDONLY);
+   if (fd < 0)
+      return -errno;
+
+   return readfd_internal(fd, buffer, count);
 }

@@ -15,8 +15,7 @@ in the source distribution for its full text.
 #include <errno.h>
 #include <sys/types.h>
 
-#include "XUtils.h"
-
+#include "linux/Compat.h"
 #include "linux/LinuxMachine.h"
 
 
@@ -121,9 +120,9 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
 
       char buffer[4096];
 #ifdef HAVE_OPENAT
-      ssize_t ret = xReadfileat(dirfd(fdinfoDir), ename, buffer, sizeof(buffer));
+      ssize_t ret = Compat_readfileat(dirfd(fdinfoDir), ename, buffer, sizeof(buffer));
 #else
-      ssize_t ret = xReadfileat(fdinfoPathBuf, ename, buffer, sizeof(buffer));
+      ssize_t ret = Compat_readfileat(fdinfoPathBuf, ename, buffer, sizeof(buffer));
 #endif
       /* eventfd information can be huge */
       if (ret <= 0 || (size_t)ret >= sizeof(buffer) - 1)

@@ -25,7 +25,6 @@ in the source distribution for its full text.
 
 #include "BatteryMeter.h"
 #include "ClockMeter.h"
-#include "Compat.h"
 #include "CPUMeter.h"
 #include "DateMeter.h"
 #include "DateTimeMeter.h"
@@ -51,7 +50,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
-#include "XUtils.h"
+#include "linux/Compat.h"
 #include "linux/IOPriority.h"
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
@@ -262,7 +261,7 @@ const MeterClass* const Platform_meterTypes[] = {
 int Platform_getUptime(void) {
    char uptimedata[64] = {0};
 
-   ssize_t uptimeread = xReadfile(PROCDIR "/uptime", uptimedata, sizeof(uptimedata));
+   ssize_t uptimeread = Compat_readfile(PROCDIR "/uptime", uptimedata, sizeof(uptimedata));
    if (uptimeread < 1) {
       return 0;
    }
@@ -285,7 +284,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    *five = NAN;
    *fifteen = NAN;
 
-   ssize_t loadread = xReadfile(PROCDIR "/loadavg", loaddata, sizeof(loaddata));
+   ssize_t loadread = Compat_readfile(PROCDIR "/loadavg", loaddata, sizeof(loaddata));
    if (loadread < 1)
       return;
 
@@ -304,7 +303,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 pid_t Platform_getMaxPid(void) {
    char piddata[32] = {0};
 
-   ssize_t pidread = xReadfile(PROCDIR "/sys/kernel/pid_max", piddata, sizeof(piddata));
+   ssize_t pidread = Compat_readfile(PROCDIR "/sys/kernel/pid_max", piddata, sizeof(piddata));
    if (pidread < 1)
       goto err;
 
@@ -642,7 +641,7 @@ void Platform_getFileDescriptors(double* used, double* max) {
    *used = NAN;
    *max = 65536;
 
-   ssize_t fdread = xReadfile(PROCDIR "/sys/fs/file-nr", buffer, sizeof(buffer));
+   ssize_t fdread = Compat_readfile(PROCDIR "/sys/fs/file-nr", buffer, sizeof(buffer));
    if (fdread < 1)
       return;
 
@@ -756,13 +755,13 @@ static double Platform_Battery_getProcBatInfo(void) {
       char filePath[256];
       char bufInfo[1024] = {0};
       xSnprintf(filePath, sizeof(filePath), "%s/%s/info", PROC_BATTERY_DIR, entryName);
-      ssize_t r = xReadfile(filePath, bufInfo, sizeof(bufInfo));
+      ssize_t r = Compat_readfile(filePath, bufInfo, sizeof(bufInfo));
       if (r < 0)
          continue;
 
       char bufState[1024] = {0};
       xSnprintf(filePath, sizeof(filePath), "%s/%s/state", PROC_BATTERY_DIR, entryName);
-      r = xReadfile(filePath, bufState, sizeof(bufState));
+      r = Compat_readfile(filePath, bufState, sizeof(bufState));
       if (r < 0)
          continue;
 
@@ -804,7 +803,7 @@ static double Platform_Battery_getProcBatInfo(void) {
 
 static ACPresence procAcpiCheck(void) {
    char buffer[1024] = {0};
-   ssize_t r = xReadfile(PROC_POWERSUPPLY_ACSTATE_FILE, buffer, sizeof(buffer));
+   ssize_t r = Compat_readfile(PROC_POWERSUPPLY_ACSTATE_FILE, buffer, sizeof(buffer));
    if (r < 1)
       return AC_ERROR;
 
@@ -851,7 +850,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
          type = AC;
       } else {
          char buffer[32];
-         ssize_t ret = xReadfileat(entryFd, "type", buffer, sizeof(buffer));
+         ssize_t ret = Compat_readfileat(entryFd, "type", buffer, sizeof(buffer));
          if (ret <= 0)
             goto next;
 
@@ -869,7 +868,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
 
       if (type == BAT) {
          char buffer[1024];
-         ssize_t r = xReadfileat(entryFd, "uevent", buffer, sizeof(buffer));
+         ssize_t r = Compat_readfileat(entryFd, "uevent", buffer, sizeof(buffer));
          if (r < 0)
             goto next;
 
@@ -918,7 +917,7 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
             goto next;
 
          char buffer[2];
-         ssize_t r = xReadfileat(entryFd, "online", buffer, sizeof(buffer));
+         ssize_t r = Compat_readfileat(entryFd, "online", buffer, sizeof(buffer));
          if (r < 1) {
             *isOnAC = AC_ERROR;
             goto next;

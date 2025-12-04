@@ -23,15 +23,14 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <time.h>
 
-#include "Compat.h"
 #include "CRT.h"
 #include "Macros.h"
 #include "ProcessTable.h"
 #include "Row.h"
 #include "Settings.h"
 #include "UsersTable.h"
-#include "XUtils.h"
 
+#include "linux/Compat.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
 #ifdef HAVE_SENSORS_SENSORS_H
@@ -97,7 +96,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
       }
 
       char buffer[8];
-      ssize_t res = xReadfileat(cpuDirFd, "online", buffer, sizeof(buffer));
+      ssize_t res = Compat_readfileat(cpuDirFd, "online", buffer, sizeof(buffer));
       /* If the file "online" does not exist or on failure count as active */
       if (res < 1 || buffer[0] != '0') {
          active++;
@@ -249,7 +248,7 @@ static void LinuxMachine_scanHugePages(LinuxMachine* this) {
       ssize_t r;
 
       xSnprintf(hugePagePath, sizeof(hugePagePath), "/sys/kernel/mm/hugepages/%s/nr_hugepages", name);
-      r = xReadfile(hugePagePath, content, sizeof(content));
+      r = Compat_readfile(hugePagePath, content, sizeof(content));
       if (r <= 0)
          continue;
 
@@ -258,7 +257,7 @@ static void LinuxMachine_scanHugePages(LinuxMachine* this) {
          continue;
 
       xSnprintf(hugePagePath, sizeof(hugePagePath), "/sys/kernel/mm/hugepages/%s/free_hugepages", name);
-      r = xReadfile(hugePagePath, content, sizeof(content));
+      r = Compat_readfile(hugePagePath, content, sizeof(content));
       if (r <= 0)
          continue;
 

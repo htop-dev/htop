@@ -1,17 +1,18 @@
 #ifndef HEADER_Compat
 #define HEADER_Compat
 /*
-htop - Compat.h
+htop - linux/Compat.h
 (C) 2020 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include <assert.h> // IWYU pragma: keep
 #include <fcntl.h>
 #include <stddef.h> // IWYU pragma: keep
 #include <unistd.h>
 #include <sys/stat.h> // IWYU pragma: keep
+
+#include "Macros.h"
 
 
 int Compat_faccessat(int dirfd,
@@ -60,25 +61,10 @@ ssize_t Compat_readlink(openat_arg_t dirfd,
                         char* buf,
                         size_t bufsize);
 
-/*
- * static_assert() hack for pre-C11
- * TODO: drop after moving to -std=c11 or newer
- */
+ATTR_NONNULL ATTR_ACCESS3_W(2, 3)
+ssize_t Compat_readfile(const char* pathname, void* buffer, size_t count);
 
-/* C11 guarantees _Static_assert is a keyword */
-#if (defined __STDC_VERSION__ ? __STDC_VERSION__ : 0) < 201112L
-# if !defined(_Static_assert)
-#  define _Static_assert(expr, msg)                                    \
-   extern int (*__Static_assert_function (void))                       \
-      [!!sizeof (struct { int __error_if_negative: (expr) ? 2 : -1; })]
-# endif
-#endif
-
-/* C23 guarantees static_assert is a keyword or a macro */
-#if (defined __STDC_VERSION__ ? __STDC_VERSION__ : 0) < 202311L
-# if !defined(static_assert)
-#  define static_assert(expr, msg) _Static_assert(expr, msg)
-# endif
-#endif
+ATTR_NONNULL ATTR_ACCESS3_W(3, 4)
+ssize_t Compat_readfileat(openat_arg_t dirfd, const char* pathname, void* buffer, size_t count);
 
 #endif /* HEADER_Compat */

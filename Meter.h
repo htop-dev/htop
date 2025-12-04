@@ -78,8 +78,8 @@ typedef struct MeterClass_ {
 
    /* Specifies how the meter is rendered in bar or graph mode:
       true: a percent bar or graph with 'total' representing 100% or maximum.
-      false: the meter has no definite maximum; 'total' repesents initial
-      maximum value while actual maximum is updated automatically. */
+      false: the meter has no definite maximum; 'total' represents initial
+        maximum value while actual maximum is updated automatically. */
    const bool isPercentChart;
 } MeterClass;
 

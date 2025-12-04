@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/sched.h>
+#include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
 #include <uvm/uvmexp.h>

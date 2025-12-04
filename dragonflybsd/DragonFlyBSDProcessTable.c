@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
 #include <sys/param.h>

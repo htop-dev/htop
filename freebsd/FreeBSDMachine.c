@@ -28,7 +28,6 @@ in the source distribution for its full text.
 #include <sys/vmmeter.h>
 
 #include "CRT.h"
-#include "Compat.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Scheduling.h"
