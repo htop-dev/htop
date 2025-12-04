@@ -31,17 +31,17 @@ jobs:
   build-ubuntu-latest-minimal-clang:
     runs-on: ubuntu-latest
     env:
-      CC: clang-18
+      CC: clang-21
     steps:
     - uses: actions/checkout@v6
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-18 main" -y
+        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-21 main" -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-18 libncursesw5-dev
+      run: sudo apt-get install --no-install-recommends clang-21 libncursesw5-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -73,17 +73,17 @@ jobs:
   build-ubuntu-latest-full-featured-clang:
     runs-on: ubuntu-latest
     env:
-      CC: clang-18
+      CC: clang-21
     steps:
     - uses: actions/checkout@v6
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-18 main" -y
+        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-21 main" -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-18 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-21 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -143,28 +143,28 @@ jobs:
   build-ubuntu-latest-clang-analyzer:
     runs-on: ubuntu-latest
     env:
-      CC: clang-18
+      CC: clang-21
     steps:
     - uses: actions/checkout@v6
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-18 main" -y
+        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-21 main" -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-18 clang-tools-18 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-21 clang-tools-21 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: scan-build-18 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: scan-build-21 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
     - name: Build
-      run: scan-build-18 -analyze-headers --status-bugs make -j"$(nproc)"
+      run: scan-build-21 -analyze-headers --status-bugs make -j"$(nproc)"
 
   build-ubuntu-latest-clang-sanitizer:
     runs-on: ubuntu-latest
     env:
-      CC: clang-18
+      CC: clang-21
       CFLAGS: '-O1 -g -ftrivial-auto-var-init=pattern -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=nullability -fsanitize=implicit-conversion -fsanitize=integer -fsanitize=float-divide-by-zero -fsanitize=local-bounds'
       LDFLAGS: '-ftrivial-auto-var-init=pattern -fsanitize=address -fsanitize-address-use-after-scope -fsanitize-address-use-after-return=always -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=nullability -fsanitize=implicit-conversion -fsanitize=integer -fsanitize=float-divide-by-zero -fsanitize=local-bounds'
       ASAN_OPTIONS: strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
@@ -177,10 +177,10 @@ jobs:
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-18 main" -y
+        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-21 main" -y
         sudo apt-get update -q
     - name: Install LLVM Toolchain
-      run: sudo apt-get install --no-install-recommends clang-18 libclang-rt-18-dev llvm-18
+      run: sudo apt-get install --no-install-recommends clang-21 libclang-rt-21-dev llvm-21
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
     - name: Bootstrap
