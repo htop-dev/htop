@@ -15,11 +15,11 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <net/if.h>
 #include <net/if_types.h>
 #include <net/route.h>
 #include <sys/socket.h>
 #include <mach/port.h>
+#include <net/if.h> // After `sys/socket.h` for struct `sockaddr` (for iOS6 SDK)
 
 #include <CoreFoundation/CFBase.h>
 #include <CoreFoundation/CFDictionary.h>
