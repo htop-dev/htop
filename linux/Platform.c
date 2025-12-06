@@ -141,6 +141,26 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+enum {
+   MEMORY_CLASS_USED = 0,
+   MEMORY_CLASS_SHARED,
+   MEMORY_CLASS_COMPRESSED,
+   MEMORY_CLASS_BUFFERS,
+   MEMORY_CLASS_CACHE,
+   MEMORY_CLASS_AVAILABLE,
+};
+
+const MemoryClass Platform_memoryClasses[] = {
+   { .label = "used",       .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_1 },
+   { .label = "shared",     .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_2 },
+   { .label = "compressed", .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_3 },
+   { .label = "buffers",    .countsAsUsed = false, .countsAsCache = false, .color = MEMORY_4 },
+   { .label = "cache",      .countsAsUsed = false, .countsAsCache = false, .color = MEMORY_5 },
+   { .label = "available",  .countsAsUsed = false, .countsAsCache = true,  .color = MEMORY_6 },
+}; // N.B. the chart will display categories in this order
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
 static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_PROC;
 static time_t Platform_Battery_cacheTime;
 static double Platform_Battery_cachePercent = NAN;
@@ -421,26 +441,26 @@ void Platform_setMemoryValues(Meter* this) {
    const LinuxMachine* lhost = (const LinuxMachine*) host;
 
    this->total = host->totalMem;
-   this->values[MEMORY_METER_USED] = host->usedMem;
-   this->values[MEMORY_METER_SHARED] = host->sharedMem;
-   this->values[MEMORY_METER_COMPRESSED] = 0; /* compressed */
-   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
-   this->values[MEMORY_METER_CACHE] = host->cachedMem;
-   this->values[MEMORY_METER_AVAILABLE] = host->availableMem;
+   this->values[MEMORY_CLASS_USED]       = lhost->usedMem;
+   this->values[MEMORY_CLASS_SHARED]     = lhost->sharedMem;
+   this->values[MEMORY_CLASS_COMPRESSED] = 0; /* compressed */
+   this->values[MEMORY_CLASS_BUFFERS]    = lhost->buffersMem;
+   this->values[MEMORY_CLASS_CACHE]      = lhost->cachedMem;
+   this->values[MEMORY_CLASS_AVAILABLE]  = lhost->availableMem;
 
    if (lhost->zfs.enabled != 0 && !Running_containerized) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
       if (lhost->zfs.size > lhost->zfs.min)
          shrinkableSize = lhost->zfs.size - lhost->zfs.min;
-      this->values[MEMORY_METER_USED] -= shrinkableSize;
-      this->values[MEMORY_METER_CACHE] += shrinkableSize;
-      this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
+      this->values[MEMORY_CLASS_USED] -= shrinkableSize;
+      this->values[MEMORY_CLASS_CACHE] += shrinkableSize;
+      this->values[MEMORY_CLASS_AVAILABLE] += shrinkableSize;
    }
 
    if (lhost->zswap.usedZswapOrig > 0 || lhost->zswap.usedZswapComp > 0) {
-      this->values[MEMORY_METER_USED] -= lhost->zswap.usedZswapComp;
-      this->values[MEMORY_METER_COMPRESSED] += lhost->zswap.usedZswapComp;
+      this->values[MEMORY_CLASS_USED] -= lhost->zswap.usedZswapComp;
+      this->values[MEMORY_CLASS_COMPRESSED] += lhost->zswap.usedZswapComp;
    }
 }
 
