@@ -911,7 +911,8 @@ bool Process_rowSendSignal(Row* super, Arg sgn) {
    return Process_sendSignal(this, sgn);
 }
 
-int Process_compare(const void* v1, const void* v2) {
+int Process_compare(const void* v1, const void* v2, void* context) {
+   (void)context;
    const Process* p1 = (const Process*)v1;
    const Process* p2 = (const Process*)v2;
 
@@ -928,7 +929,7 @@ int Process_compare(const void* v1, const void* v2) {
    return (ScreenSettings_getActiveDirection(ss) == 1) ? result : -result;
 }
 
-int Process_compareByParent(const Row* r1, const Row* r2) {
+int Process_compareByParent(const Row* r1, const Row* r2, void* context) {
    int result = SPACESHIP_NUMBER(
       r1->isRoot ? 0 : Row_getGroupOrParent(r1),
       r2->isRoot ? 0 : Row_getGroupOrParent(r2)
@@ -937,7 +938,7 @@ int Process_compareByParent(const Row* r1, const Row* r2) {
    if (result != 0)
       return result;
 
-   return Process_compare(r1, r2);
+   return Process_compare(r1, r2, context);
 }
 
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key) {
