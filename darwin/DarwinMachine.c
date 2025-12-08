@@ -60,19 +60,11 @@ static unsigned int DarwinMachine_allocateCPULoadInfo(processor_cpu_load_info_t*
 }
 
 static void DarwinMachine_getVMStats(DarwinMachine* this) {
-#ifdef HAVE_STRUCT_VM_STATISTICS64
    mach_msg_type_number_t info_size = HOST_VM_INFO64_COUNT;
 
    if (host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info_t)&this->vm_stats, &info_size) != 0) {
       CRT_fatalError("Unable to retrieve VM statistics64");
    }
-#else
-   mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
-
-   if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&this->vm_stats, &info_size) != 0) {
-      CRT_fatalError("Unable to retrieve VM statistics");
-   }
-#endif
 }
 
 void Machine_scan(Machine* super) {

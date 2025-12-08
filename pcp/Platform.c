@@ -79,6 +79,28 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+static const MemoryClass Linux_memoryClasses[] = {
+   { .label = "used",       .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_1 },
+   { .label = "shared",     .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_2 },
+   { .label = "compressed", .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_3 },
+   { .label = "buffers",    .countsAsUsed = false, .countsAsCache = false, .color = MEMORY_4 },
+   { .label = "cache",      .countsAsUsed = false, .countsAsCache = false, .color = MEMORY_5 },
+   { .label = "available",  .countsAsUsed = false, .countsAsCache = true,  .color = MEMORY_6 },
+};
+
+static const MemoryClass Darwin_memoryClasses[] = {
+   { .label = "wired",       .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_1 },
+   { .label = "speculative", .countsAsUsed = true,  .countsAsCache = true,  .color = MEMORY_2 },
+   { .label = "active",      .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_3 },
+   { .label = "purgeable",   .countsAsUsed = false, .countsAsCache = true,  .color = MEMORY_4 },
+   { .label = "compressed",  .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_5 },
+   { .label = "inactive",    .countsAsUsed = true,  .countsAsCache = true,  .color = MEMORY_6 },
+};
+
+MemoryClass Platform_memoryClasses[MEMORY_CLASS_LIMIT]; /* dynamically adjusted */
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -161,11 +183,18 @@ static const char* Platform_metricNames[] = {
    [PCP_PERCPU_GUESTNICE] = "kernel.percpu.cpu.guest_nice",
    [PCP_MEM_TOTAL] = "mem.physmem",
    [PCP_MEM_FREE] = "mem.util.free",
+   [PCP_MEM_ACTIVE] = "mem.util.active",
    [PCP_MEM_AVAILABLE] = "mem.util.available",
    [PCP_MEM_BUFFERS] = "mem.util.bufmem",
    [PCP_MEM_CACHED] = "mem.util.cached",
+   [PCP_MEM_COMPRESSED] = "mem.util.compressed",
+   [PCP_MEM_EXTERNAL] = "mem.util.external",
+   [PCP_MEM_INACTIVE] = "mem.util.inactive",
+   [PCP_MEM_PURGEABLE] = "mem.util.purgeable",
    [PCP_MEM_SHARED] = "mem.util.shmem",
+   [PCP_MEM_SPECULATIVE] = "mem.util.speculative",
    [PCP_MEM_SRECLAIM] = "mem.util.slabReclaimable",
+   [PCP_MEM_WIRED] = "mem.util.wired",
    [PCP_MEM_SWAPCACHED] = "mem.util.swapCached",
    [PCP_MEM_SWAPTOTAL] = "mem.util.swapTotal",
    [PCP_MEM_SWAPFREE] = "mem.util.swapFree",
@@ -558,32 +587,51 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    return Platform_setOneCPUValues(this, settings, phost->percpu[cpu - 1]);
 }
 
+static void Platform_setLinuxMemoryValues(double* v, const PCPMachine *host) {
+   v[MEMORY_CLASS_USED] = host->memValue[MEMORY_CLASS_USED];
+   v[MEMORY_CLASS_SHARED] = host->memValue[MEMORY_CLASS_SHARED];
+   v[MEMORY_CLASS_BUFFERS] = host->memValue[MEMORY_CLASS_BUFFERS];
+   v[MEMORY_CLASS_CACHE] = host->memValue[MEMORY_CLASS_CACHE];
+   v[MEMORY_CLASS_AVAILABLE] = host->memValue[MEMORY_CLASS_AVAILABLE];
+
+   if (host->zfs.enabled != 0) {
+      // ZFS does not shrink below the value of zfs_arc_min.
+      unsigned long long int shrinkableSize = 0;
+      if (host->zfs.size > host->zfs.min)
+         shrinkableSize = host->zfs.size - host->zfs.min;
+      v[MEMORY_CLASS_USED] -= shrinkableSize;
+      v[MEMORY_CLASS_CACHE] += shrinkableSize;
+      v[MEMORY_CLASS_AVAILABLE] += shrinkableSize;
+   }
+
+   if (host->zswap.usedZswapOrig > 0 || host->zswap.usedZswapComp > 0) {
+      v[MEMORY_CLASS_USED] -= host->zswap.usedZswapComp;
+      v[MEMORY_CLASS_COMPRESSED] = host->zswap.usedZswapComp;
+   } else {
+      v[MEMORY_CLASS_COMPRESSED] = 0;
+   }
+}
+
+static void Platform_setDarwinMemoryValues(double* v, const PCPMachine *host) {
+   v[MEMORY_CLASS_WIRED] = host->memValue[MEMORY_CLASS_WIRED];
+   v[MEMORY_CLASS_SPECULATIVE] = host->memValue[MEMORY_CLASS_SPECULATIVE];
+   v[MEMORY_CLASS_ACTIVE] = host->memValue[MEMORY_CLASS_ACTIVE];
+   v[MEMORY_CLASS_PURGEABLE] = host->memValue[MEMORY_CLASS_PURGEABLE];
+   v[MEMORY_CLASS_COMPRESSED] = host->memValue[MEMORY_CLASS_COMPRESSED];
+   v[MEMORY_CLASS_INACTIVE] = host->memValue[MEMORY_CLASS_INACTIVE];
+}
+
 void Platform_setMemoryValues(Meter* this) {
    const Machine* host = this->host;
    const PCPMachine* phost = (const PCPMachine*) host;
 
    this->total = host->totalMem;
-   this->values[MEMORY_METER_USED] = host->usedMem;
-   this->values[MEMORY_METER_SHARED] = host->sharedMem;
-   this->values[MEMORY_METER_COMPRESSED] = 0;
-   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
-   this->values[MEMORY_METER_CACHE] = host->cachedMem;
-   this->values[MEMORY_METER_AVAILABLE] = host->availableMem;
-
-   if (phost->zfs.enabled != 0) {
-      // ZFS does not shrink below the value of zfs_arc_min.
-      unsigned long long int shrinkableSize = 0;
-      if (phost->zfs.size > phost->zfs.min)
-         shrinkableSize = phost->zfs.size - phost->zfs.min;
-      this->values[MEMORY_METER_USED] -= shrinkableSize;
-      this->values[MEMORY_METER_CACHE] += shrinkableSize;
-      this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
-   }
-
-   if (phost->zswap.usedZswapOrig > 0 || phost->zswap.usedZswapComp > 0) {
-      this->values[MEMORY_METER_USED] -= phost->zswap.usedZswapComp;
-      this->values[MEMORY_METER_COMPRESSED] += phost->zswap.usedZswapComp;
-   }
+   if (phost->sys == SYSTEM_NAME_LINUX)
+      Platform_setLinuxMemoryValues(this->values, phost);
+   else if (phost->sys == SYSTEM_NAME_DARWIN)
+      Platform_setDarwinMemoryValues(this->values, phost);
+   else
+      memset(this->values, 0, sizeof(phost->memValue));
 }
 
 void Platform_setSwapValues(Meter* this) {
@@ -671,6 +719,12 @@ static void Platform_setRelease(void) {
    if (!Metric_values(PCP_UNAME_DISTRO, &distro, 1, PM_TYPE_STRING))
       distro.cp = NULL;
 
+   /* set global memory class model using sysname */
+   if (sysname.cp && String_eq(sysname.cp, "Darwin"))
+      memcpy(Platform_memoryClasses, Darwin_memoryClasses, sizeof(Darwin_memoryClasses));
+   else /* default to the Linux memory categories */
+      memcpy(Platform_memoryClasses, Linux_memoryClasses, sizeof(Linux_memoryClasses));
+
    size_t length = 16; /* padded for formatting characters */
    if (sysname.cp)
       length += strlen(sysname.cp);
@@ -704,6 +758,7 @@ static void Platform_setRelease(void) {
       }
       strcat(pcp->release, " ");
    }
+
 
    if (pcp->release) /* cull trailing space */
       pcp->release[strlen(pcp->release)] = '\0';
