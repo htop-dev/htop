@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -301,17 +302,26 @@ static void OctoColCPUsMeter_updateMode(Meter* this, MeterModeId mode) {
    CPUMeterCommonUpdateMode(this, mode, 8);
 }
 
+static int xOffsetOfMeterColumn(int w, int nCol, int col) {
+   int colwidth = w / nCol;
+
+   // Spacing between meters based on the remainder of (w % nCol)
+   uint32_t v = (unsigned int)((w % nCol) * 32 / nCol);
+   v = ((v * 0x00210842U) & 0x02082082U) * (unsigned int)col;
+   v = (uint32_t)(((v + 0x02108420U) & 0x7DE71840U) * 0x00210842ULL) >> 27;
+   int spacing = (int)v;
+   return col * colwidth + spacing;
+}
+
 static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, int ncol) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
    int colwidth = w / ncol;
-   int diff = w % ncol;
    int nrows = (count + ncol - 1) / ncol;
    for (int i = 0; i < count; i++) {
-      int d = (i / nrows) > diff ? diff : (i / nrows); // dynamic spacer
-      int xpos = x + ((i / nrows) * colwidth) + d;
+      int xpos = x + xOffsetOfMeterColumn(w, ncol, i / nrows);
       int ypos = y + ((i % nrows) * meters[0]->h);
       meters[i]->draw(meters[i], xpos, ypos, colwidth);
    }
