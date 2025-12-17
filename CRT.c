@@ -970,15 +970,16 @@ static void CRT_tryTermExit(void) {
 
    if (!CRT_terminateRequested) {
       return;
-}
-   CRT_terminateRequested = 0;
-   int sgn = (int)CRT_terminateSignal;
+   }
 
+   int sgn = (int)CRT_terminateSignal;
+   signal(SIGINT, SIG_DFL);
+   signal(SIGTERM, SIG_DFL);
+   signal(SIGQUIT, SIG_DFL);
    CRT_done();
 
-   if (!CRT_settings->changed) {
+   if (!CRT_settings->changed)
       _exit(0);
-}
 
    const char* signal_str = strsignal(sgn);
    if (!signal_str)
