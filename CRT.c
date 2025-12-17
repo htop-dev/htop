@@ -96,6 +96,9 @@ const char* const* CRT_treeStr = CRT_treeStrAscii;
 
 static const Settings* CRT_settings;
 
+static volatile sig_atomic_t CRT_terminateRequested = 0;
+static volatile sig_atomic_t CRT_terminateSignal = 0;
+
 #ifdef HAVE_LIBNCURSESW
 # if MB_LEN_MAX >= 3 // Minimum required to support UTF-8 BMP subset
 char CRT_degreeSign[MB_LEN_MAX * 2] = "\xc2\xb0";
@@ -957,12 +960,25 @@ int CRT_scrollWheelVAmount = 10;
 
 ColorScheme CRT_colorScheme = COLORSCHEME_DEFAULT;
 
-ATTR_NORETURN
+
 static void CRT_handleSIGTERM(int sgn) {
+   CRT_terminateSignal = (sig_atomic_t)sgn;
+   CRT_terminateRequested = 1;
+}
+
+static void CRT_tryTermExit(void) {
+
+   if (!CRT_terminateRequested) {
+      return;
+}
+   CRT_terminateRequested = 0;
+   int sgn = (int)CRT_terminateSignal;
+
    CRT_done();
 
-   if (!CRT_settings->changed)
+   if (!CRT_settings->changed) {
       _exit(0);
+}
 
    const char* signal_str = strsignal(sgn);
    if (!signal_str)
@@ -970,11 +986,12 @@ static void CRT_handleSIGTERM(int sgn) {
 
    char err_buf[512];
    snprintf(err_buf, sizeof(err_buf),
-           "A signal %d (%s) was received, exiting without persisting settings to htoprc.\n",
-           sgn, signal_str);
+         "A signal %d (%s) was received, exiting without persisting settings to htoprc.\n",
+         sgn, signal_str);
    full_write_str(STDERR_FILENO, err_buf);
    _exit(0);
 }
+
 
 #ifndef NDEBUG
 
@@ -1311,9 +1328,11 @@ void CRT_fatalError(const char* note) {
 }
 
 int CRT_readKey(void) {
+
    nocbreak();
    cbreak();
    nodelay(stdscr, FALSE);
+   CRT_tryTermExit();
    int ret = getch();
    halfdelay(CRT_settings->delay);
    return ret;
