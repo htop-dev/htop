@@ -150,6 +150,12 @@ instead of the currently highlighted one.
 .B U
 Untag all processes (remove all tags added with the Space or c keys).
 .TP
+.B r 
+Execute user script on tagged processes, or selected process if none tagged.
+Script is passed each PID, user, and command in TSV format on stdin, and should
+not be interactive. htop first searches for a file at $XDG_CONFIG_HOME/htop/run_script
+before looking in htoprc for a full path associated with script_location.
+.TP 
 .B s
 Trace process system calls: if strace(1) is installed, pressing this key
 will attach it to the currently selected process, presenting a live

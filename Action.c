@@ -33,6 +33,7 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "Row.h"
 #include "RowField.h"
+#include "RunScript.h"
 #include "Scheduling.h"
 #include "ScreenManager.h"
 #include "SignalsPanel.h"
@@ -646,6 +647,11 @@ static Htop_Reaction actionTogglePauseUpdate(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
 }
 
+static Htop_Reaction actionRunScript(State* st) {
+   RunScript(st);
+   return HTOP_OK;
+}
+
 static const struct {
    const char* key;
    bool roInactive;
@@ -700,6 +706,7 @@ static const struct {
    { .key = " F2 C S: ", .roInactive = false, .info = "setup" },
    { .key = " F1 h ?: ", .roInactive = false, .info = "show this help screen" },
    { .key = "  F10 q: ", .roInactive = false, .info = "quit" },
+   { .key = "      r: ", .roInactive = false, .info = "execute user script on tagged processes"},
    { .key = NULL, .info = NULL }
 };
 
@@ -939,6 +946,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['m'] = actionToggleMergedCommand;
    keys['p'] = actionToggleProgramPath;
    keys['q'] = actionQuit;
+   keys['r'] = actionRunScript;
    keys['s'] = actionStrace;
    keys['t'] = actionToggleTreeView;
    keys['u'] = actionFilterByUser;
