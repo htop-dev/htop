@@ -169,6 +169,15 @@ More information on required and optional dependencies can be found in [configur
 ## Usage
 See the manual page (`man htop`) or the help menu (**F1** or **h** inside `htop`) for a list of supported key commands.
 
+### Quick Start
+
+Below are a few commonly used actions to get started quickly with htop.
+
+- **Search / filter processes:** press `/`
+- **Sort by CPU or memory:** press `P` (CPU) or `M` (Memory)
+- **Toggle tree view:** press `t`
+- **Kill a process:** select a process and press `F9`
+
 ## Support
 
 If you have trouble running `htop` please consult your operating system / Linux distribution documentation for getting support and filing bugs.
