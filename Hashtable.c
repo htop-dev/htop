@@ -222,21 +222,21 @@ void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
 
    assert(Hashtable_isConsistent(this));
    assert(this->size > 0);
+   assert(this->size <= SIZE_MAX / sizeof(HashtableItem));
    assert(value);
 
    /* grow on load-factor > 0.7 */
-   if (10 * this->items > 7 * this->size) {
-      if (SIZE_MAX / 2 < this->size)
-         CRT_fatalError("Hashtable: size overflow");
+   if (sizeof(HashtableItem) < 7 && SIZE_MAX / 7 < this->size)
+      CRT_fatalError("Hashtable: size overflow");
 
+   if (this->items >= this->size * 7 / 10)
       Hashtable_setSize(this, 2 * this->size);
-   }
 
    insert(this, key, value);
 
    assert(Hashtable_isConsistent(this));
    assert(Hashtable_get(this, key) != NULL);
-   assert(this->size > this->items);
+   assert(this->size >= this->items);
 }
 
 void* Hashtable_remove(Hashtable* this, ht_key_t key) {
