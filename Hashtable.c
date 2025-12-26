@@ -230,7 +230,7 @@ void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
       CRT_fatalError("Hashtable: size overflow");
 
    if (this->items >= this->size * 7 / 10)
-      Hashtable_setSize(this, 2 * this->size);
+      Hashtable_setSize(this, this->size + 1);
 
    insert(this, key, value);
 
