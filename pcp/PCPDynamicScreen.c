@@ -221,7 +221,6 @@ static void PCPDynamicScreen_parseFile(PCPDynamicScreens* screens, const char* p
 
    PCPDynamicScreen* screen = NULL;
    unsigned int lineno = 0;
-   bool ok = true;
    for (;;) {
       char* line = String_readLine(file);
       if (!line)
@@ -245,16 +244,17 @@ static void PCPDynamicScreen_parseFile(PCPDynamicScreens* screens, const char* p
       char* key = String_trim(config[0]);
       char* value = n > 1 ? String_trim(config[1]) : NULL;
       if (key[0] == '[') {  /* new section name - i.e. new screen */
-         ok = PCPDynamicScreen_validateScreenName(key + 1, path, lineno);
+         screen = NULL;
+         bool ok = PCPDynamicScreen_validateScreenName(key + 1, path, lineno);
          if (ok)
             ok = PCPDynamicScreen_uniqueName(key + 1, screens);
          if (ok)
             screen = PCPDynamicScreen_new(screens, key + 1);
          if (pmDebugOptions.appl0)
             fprintf(stderr, "[%s] screen: %s\n", path, key + 1);
-      } else if (!ok) {
+      } else if (!screen) {
          /* skip this one, we're looking for a new header */
-      } else if (!value || !screen) {
+      } else if (!value) {
          /* skip this one as we always need value strings */
       } else if (String_eq(key, "heading")) {
          free_and_xStrdup(&screen->super.heading, value);

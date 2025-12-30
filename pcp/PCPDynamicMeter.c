@@ -168,7 +168,6 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
 
    PCPDynamicMeter* meter = NULL;
    unsigned int lineno = 0;
-   bool ok = true;
    for (;;) {
       char* line = String_readLine(file);
       if (!line)
@@ -192,14 +191,15 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
       char* key = String_trim(config[0]);
       char* value = n > 1 ? String_trim(config[1]) : NULL;
       if (key[0] == '[') {  /* new section heading - i.e. new meter */
-         ok = PCPDynamicMeter_validateMeterName(key + 1, path, lineno);
+         meter = NULL;
+         bool ok = PCPDynamicMeter_validateMeterName(key + 1, path, lineno);
          if (ok)
             ok = PCPDynamicMeter_uniqueName(key + 1, meters);
          if (ok)
             meter = PCPDynamicMeter_new(meters, key + 1);
-      } else if (!ok) {
+      } else if (!meter) {
          /* skip this one, we're looking for a new header */
-      } else if (!value || !meter) {
+      } else if (!value) {
          /* skip this one as we always need value strings */
       } else if (String_eq(key, "caption")) {
          char* caption = String_cat(value, ": ");
