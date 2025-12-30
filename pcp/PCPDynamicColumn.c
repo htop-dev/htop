@@ -131,7 +131,6 @@ static void PCPDynamicColumn_parseFile(PCPDynamicColumns* columns, const char* p
 
    PCPDynamicColumn* column = NULL;
    unsigned int lineno = 0;
-   bool ok = true;
    for (;;) {
       char* line = String_readLine(file);
       if (!line)
@@ -155,7 +154,8 @@ static void PCPDynamicColumn_parseFile(PCPDynamicColumns* columns, const char* p
       char* key = String_trim(config[0]);
       char* value = n > 1 ? String_trim(config[1]) : NULL;
       if (key[0] == '[') {  /* new section heading - i.e. new column */
-         ok = PCPDynamicColumn_validateColumnName(key + 1, path, lineno);
+         column = NULL;
+         bool ok = PCPDynamicColumn_validateColumnName(key + 1, path, lineno);
          if (ok)
             ok = PCPDynamicColumn_uniqueName(key + 1, columns);
          if (ok)
