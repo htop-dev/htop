@@ -257,7 +257,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
 
    this->name = name;
 
-   while (!quit) {
+   while (!quit && !terminate_requested) {
       if (this->header) {
          checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut, &force_redraw);
       }
