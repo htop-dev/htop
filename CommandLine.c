@@ -421,7 +421,7 @@ int CommandLine_run(int argc, char** argv) {
 
    if (terminate_requested) {
       fprintf(stderr, "\nInterrupted by signal %d, terminating.\n", terminate_signal);
-      exit(128 + sgn);
+      exit(128 + terminate_signal);
    }
 
    if (settings->changed) {
