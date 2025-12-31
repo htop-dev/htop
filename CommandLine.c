@@ -419,9 +419,8 @@ int CommandLine_run(int argc, char** argv) {
 
    CRT_done();
 
-   if (CRT_terminated()) {
-      int sgn = CRT_getSignal();
-      fprintf(stderr, "\nInterrupted by signal %d, terminating.\n", sgn);
+   if (terminate_requested) {
+      fprintf(stderr, "\nInterrupted by signal %d, terminating.\n", terminate_signal);
       exit(128 + sgn);
    }
 
