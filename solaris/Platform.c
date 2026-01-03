@@ -101,6 +101,18 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+enum {
+   MEMORY_CLASS_USED = 0,
+   MEMORY_CLASS_LOCKED,
+};
+
+const MemoryClass Platform_memoryClasses[] = {
+   { .label = "used",   .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_1 },
+   { .label = "locked", .countsAsUsed = true,  .countsAsCache = true,  .color = MEMORY_2 },
+}; // N.B. the chart will display categories in this order
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -240,21 +252,16 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    const Machine* host = this->host;
+   const SolarisMachine* shost = (const SolarisMachine*) host;
    this->total = host->totalMem;
-   this->values[MEMORY_METER_USED] = host->usedMem;
-   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
-   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
-   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
-   this->values[MEMORY_METER_CACHE] = host->cachedMem;
-   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
+   this->values[MEMORY_CLASS_USED] = shost->usedMem;
+   this->values[MEMORY_CLASS_LOCKED] = shost->lockedMem;
 }
 
 void Platform_setSwapValues(Meter* this) {
    const Machine* host = this->host;
    this->total = host->totalSwap;
    this->values[SWAP_METER_USED] = host->usedSwap;
-   // this->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
-   // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 void Platform_setZfsArcValues(Meter* this) {

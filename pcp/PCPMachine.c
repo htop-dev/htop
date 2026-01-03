@@ -50,40 +50,97 @@ static void PCPMachine_updateCPUcount(PCPMachine* this) {
    this->values = xCalloc(cpus, sizeof(pmAtomValue));
 }
 
-static void PCPMachine_updateMemoryInfo(Machine* host) {
+static void PCPMachine_updateSystemName(PCPMachine* this) {
+   pmAtomValue sysname;
+   if (!Metric_values(PCP_UNAME_SYSNAME, &sysname, 1, PM_TYPE_STRING))
+      sysname.cp = NULL;
+   else if (String_eq(sysname.cp, "Linux"))
+      this->sys = SYSTEM_NAME_LINUX;
+   else if (String_eq(sysname.cp, "Darwin"))
+      this->sys = SYSTEM_NAME_DARWIN;
+   free(sysname.cp);
+}
+
+static void PCPMachine_updateLinuxMemoryInfo(PCPMachine* this) {
+   Machine* super = &this->super;
    unsigned long long int freeMem = 0;
    unsigned long long int swapFreeMem = 0;
    unsigned long long int sreclaimableMem = 0;
-   host->totalMem = host->usedMem = host->cachedMem = 0;
-   host->usedSwap = host->totalSwap = host->sharedMem = 0;
 
    pmAtomValue value;
-   if (Metric_values(PCP_MEM_TOTAL, &value, 1, PM_TYPE_U64) != NULL)
-      host->totalMem = value.ull;
    if (Metric_values(PCP_MEM_FREE, &value, 1, PM_TYPE_U64) != NULL)
       freeMem = value.ull;
    if (Metric_values(PCP_MEM_BUFFERS, &value, 1, PM_TYPE_U64) != NULL)
-      host->buffersMem = value.ull;
+      this->memValue[MEMORY_CLASS_BUFFERS] = value.ull;
    if (Metric_values(PCP_MEM_SRECLAIM, &value, 1, PM_TYPE_U64) != NULL)
       sreclaimableMem = value.ull;
    if (Metric_values(PCP_MEM_SHARED, &value, 1, PM_TYPE_U64) != NULL)
-      host->sharedMem = value.ull;
+      this->memValue[MEMORY_CLASS_SHARED] = value.ull;
    if (Metric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL)
-      host->cachedMem = value.ull + sreclaimableMem - host->sharedMem;
-   const memory_t usedDiff = freeMem + host->cachedMem + sreclaimableMem + host->buffersMem;
-   host->usedMem = (host->totalMem >= usedDiff) ?
-           host->totalMem - usedDiff : host->totalMem - freeMem;
+      this->memValue[MEMORY_CLASS_CACHE] = value.ull + sreclaimableMem - this->memValue[MEMORY_CLASS_SHARED];
+   const memory_t usedDiff = freeMem + this->memValue[MEMORY_CLASS_CACHE] + sreclaimableMem + this->memValue[MEMORY_CLASS_BUFFERS];
+   this->memValue[MEMORY_CLASS_USED] = (super->totalMem >= usedDiff) ?
+           super->totalMem - usedDiff : super->totalMem - freeMem;
    if (Metric_values(PCP_MEM_AVAILABLE, &value, 1, PM_TYPE_U64) != NULL)
-      host->availableMem = MINIMUM(value.ull, host->totalMem);
+      this->memValue[MEMORY_CLASS_AVAILABLE] = MINIMUM(value.ull, super->totalMem);
    else
-      host->availableMem = freeMem;
+      this->memValue[MEMORY_CLASS_AVAILABLE] = freeMem;
    if (Metric_values(PCP_MEM_SWAPFREE, &value, 1, PM_TYPE_U64) != NULL)
       swapFreeMem = value.ull;
    if (Metric_values(PCP_MEM_SWAPTOTAL, &value, 1, PM_TYPE_U64) != NULL)
-      host->totalSwap = value.ull;
+      super->totalSwap = value.ull;
    if (Metric_values(PCP_MEM_SWAPCACHED, &value, 1, PM_TYPE_U64) != NULL)
-      host->cachedSwap = value.ull;
-   host->usedSwap = host->totalSwap - swapFreeMem - host->cachedSwap;
+      super->cachedSwap = value.ull;
+   super->usedSwap = super->totalSwap - swapFreeMem - super->cachedSwap;
+}
+
+static void PCPMachine_updateDarwinMemoryInfo(PCPMachine* this, Settings* settings) {
+   unsigned long long int activeMem = 0;
+   unsigned long long int externalMem = 0;
+   unsigned long long int purgeableMem = 0;
+   unsigned long long int speculativeMem = 0;
+
+   pmAtomValue value;
+   if (Metric_values(PCP_MEM_WIRED, &value, 1, PM_TYPE_U64) != NULL)
+      this->memValue[MEMORY_CLASS_WIRED] = value.ull;
+   if (Metric_values(PCP_MEM_ACTIVE, &value, 1, PM_TYPE_U64) != NULL)
+      activeMem = value.ull;
+   if (Metric_values(PCP_MEM_EXTERNAL, &value, 1, PM_TYPE_U64) != NULL)
+      externalMem = value.ull;
+   if (Metric_values(PCP_MEM_PURGEABLE, &value, 1, PM_TYPE_U64) != NULL)
+      purgeableMem = value.ull;
+   if (Metric_values(PCP_MEM_SPECULATIVE, &value, 1, PM_TYPE_U64) != NULL)
+      speculativeMem = value.ull;
+   if (settings->showCachedMemory) {
+      this->memValue[MEMORY_CLASS_SPECULATIVE] = speculativeMem;
+      this->memValue[MEMORY_CLASS_ACTIVE] = (activeMem - purgeableMem - externalMem);
+      this->memValue[MEMORY_CLASS_PURGEABLE] = purgeableMem;
+   }
+   else {
+      this->memValue[MEMORY_CLASS_SPECULATIVE] = 0;
+      this->memValue[MEMORY_CLASS_ACTIVE] = (speculativeMem + activeMem - externalMem);
+      this->memValue[MEMORY_CLASS_PURGEABLE] = 0;
+   }
+   if (Metric_values(PCP_MEM_COMPRESSED, &value, 1, PM_TYPE_U64) != NULL)
+      this->memValue[MEMORY_CLASS_COMPRESSED] = value.ull;
+   if (Metric_values(PCP_MEM_INACTIVE, &value, 1, PM_TYPE_U64) != NULL)
+      this->memValue[MEMORY_CLASS_INACTIVE] = value.ull;
+}
+
+static void PCPMachine_updateMemoryInfo(Machine* super) {
+   PCPMachine* this = (PCPMachine*) super;
+
+   pmAtomValue value;
+   if (Metric_values(PCP_MEM_TOTAL, &value, 1, PM_TYPE_U64) != NULL)
+      super->totalMem = value.ull;
+   else
+      super->totalMem = 0;
+
+   memset(this->memValue, 0, sizeof(this->memValue));
+   if (this->sys == SYSTEM_NAME_DARWIN)
+      PCPMachine_updateDarwinMemoryInfo(this, super->settings);
+   else if (this->sys == SYSTEM_NAME_LINUX)
+      PCPMachine_updateLinuxMemoryInfo(this);
 }
 
 /* make copies of previously sampled values to avoid overwrite */
@@ -314,6 +371,9 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    struct timeval timestamp;
    gettimeofday(&timestamp, NULL);
    this->timestamp = pmtimevalToReal(&timestamp);
+
+   this->sys = SYSTEM_NAME_UNKNOWN;
+   PCPMachine_updateSystemName(this);
 
    this->cpu = xCalloc(CPU_METRIC_COUNT, sizeof(pmAtomValue));
    PCPMachine_updateCPUcount(this);

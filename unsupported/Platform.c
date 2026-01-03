@@ -44,6 +44,18 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+typedef enum {
+   MEMORY_CLASS_USED = 0,
+   MEMORY_CLASS_CACHED,
+} MemoryClasses;
+
+const MemoryClass Platform_memoryClasses[] = {
+   { .label = "used",   .countsAsUsed = true,  .countsAsCache = false, .color = MEMORY_1 },
+   { .label = "cached", .countsAsUsed = false, .countsAsCache = true,  .color = MEMORY_2 },
+}; // N.B. the chart will display categories in this order
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -119,7 +131,11 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 }
 
 void Platform_setMemoryValues(Meter* this) {
-   (void) this;
+   double* v = this->values;
+   v[MEMORY_CLASS_USED] = NAN;
+   v[MEMORY_CLASS_CACHED] = NAN;
+
+   this->curItems = 2;
 }
 
 void Platform_setSwapValues(Meter* this) {
