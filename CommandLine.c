@@ -426,7 +426,7 @@ int CommandLine_run(int argc, char** argv) {
 #endif /* NDEBUG */
       int r = Settings_write(settings, false);
       if (r < 0)
-         fprintf(stderr, "Can not save configuration to %s: %s\n", settings->filename, strerror(-r));
+         fprintf(stderr, "Cannot save configuration to %s: %s\n", settings->filename, strerror(-r));
    }
 
    Header_delete(header);

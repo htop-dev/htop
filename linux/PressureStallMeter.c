@@ -48,7 +48,7 @@ static void PressureStallMeter_updateValues(Meter* this) {
 
    Platform_getPressureStall(file, some, &this->values[0], &this->values[1], &this->values[2]);
 
-   /* only print bar for ten (not sixty and threehundred), cause the sum is meaningless */
+   /* only print bar for ten (not sixty and three hundred), cause the sum is meaningless */
    this->curItems = 1;
 
    xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s %s %5.2lf%% %5.2lf%% %5.2lf%%", some ? "some" : "full", file, this->values[0], this->values[1], this->values[2]);

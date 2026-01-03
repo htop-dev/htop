@@ -233,7 +233,7 @@ static void DragonFlyBSDMachine_scanMemoryInfo(Machine* super) {
    //  user_free (avail to procs)     = buffers + inactive + cache + free
    size_t len = sizeof(super->totalMem);
 
-   //disabled for now, as it is always smaller than phycal amount of memory...
+   //disabled for now, as it is always smaller than physical amount of memory...
    //...to avoid "where is my memory?" questions
    //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(this->totalMem), &len, NULL, 0);
    //this->totalMem *= pageSizeKb;
