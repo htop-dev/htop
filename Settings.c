@@ -53,6 +53,8 @@ void Settings_delete(Settings* this) {
    free(this->initialFilename);
    Settings_deleteColumns(this);
    Settings_deleteScreens(this);
+   if (this->scriptLocation)
+      free(this->scriptLocation);
    free(this);
 }
 
@@ -552,6 +554,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
             free_and_xStrdup(&screen->dynamic, option[1]);
             Platform_addDynamicScreen(screen);
          }
+      } else if (String_eq(option[0], "script_location")) {
+         this->scriptLocation = xStrdup(option[1]);
       }
       String_freeArray(option);
    }
@@ -735,6 +739,9 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("tree_sort_direction", this->screens[0]->treeDirection);
    printSettingInteger("tree_view_always_by_pid", this->screens[0]->treeViewAlwaysByPID);
    printSettingInteger("all_branches_collapsed", this->screens[0]->allBranchesCollapsed);
+
+   if (this->scriptLocation)
+      printSettingString("script_location", this->scriptLocation);
 
    for (unsigned int i = 0; i < this->nScreens; i++) {
       ScreenSettings* ss = this->screens[i];
