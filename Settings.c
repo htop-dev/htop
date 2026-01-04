@@ -660,6 +660,7 @@ int Settings_write(const Settings* this, bool onCrash) {
       }
       fp = fdopen(fdtmp, "w");
       if (!fp) {
+         close(fdtmp);
          free(tmpFilename);
          return -errno;
       }
