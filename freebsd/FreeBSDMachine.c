@@ -331,7 +331,7 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    size_t len;
    struct vmtotal vmtotal;
 
-   //disabled for now, as it is always smaller than phycal amount of memory...
+   //disabled for now, as it is always smaller than physical amount of memory...
    //...to avoid "where is my memory?" questions
    //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(super->totalMem), &len, NULL, 0);
    //super->totalMem *= this->pageSizeKb;

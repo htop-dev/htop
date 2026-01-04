@@ -1042,19 +1042,19 @@ static int dropCapabilities(enum CapMode mode) {
 
    cap_t caps = cap_init();
    if (caps == NULL) {
-      fprintf(stderr, "Error: can not initialize capabilities: %s\n", strerror(errno));
+      fprintf(stderr, "Error: cannot initialize capabilities: %s\n", strerror(errno));
       return -1;
    }
 
    if (cap_clear(caps) < 0) {
-      fprintf(stderr, "Error: can not clear capabilities: %s\n", strerror(errno));
+      fprintf(stderr, "Error: cannot clear capabilities: %s\n", strerror(errno));
       cap_free(caps);
       return -1;
    }
 
    cap_t currCaps = cap_get_proc();
    if (currCaps == NULL) {
-      fprintf(stderr, "Error: can not get current process capabilities: %s\n", strerror(errno));
+      fprintf(stderr, "Error: cannot get current process capabilities: %s\n", strerror(errno));
       cap_free(caps);
       return -1;
    }
@@ -1065,7 +1065,7 @@ static int dropCapabilities(enum CapMode mode) {
 
       cap_flag_value_t current;
       if (cap_get_flag(currCaps, keepcaps[i], CAP_PERMITTED, &current) < 0) {
-         fprintf(stderr, "Error: can not get current value of capability %d: %s\n", keepcaps[i], strerror(errno));
+         fprintf(stderr, "Error: cannot get current value of capability %d: %s\n", keepcaps[i], strerror(errno));
          cap_free(currCaps);
          cap_free(caps);
          return -1;
@@ -1075,14 +1075,14 @@ static int dropCapabilities(enum CapMode mode) {
          continue;
 
       if (cap_set_flag(caps, CAP_PERMITTED, 1, &keepcaps[i], CAP_SET) < 0) {
-         fprintf(stderr, "Error: can not set permitted capability %d: %s\n", keepcaps[i], strerror(errno));
+         fprintf(stderr, "Error: cannot set permitted capability %d: %s\n", keepcaps[i], strerror(errno));
          cap_free(currCaps);
          cap_free(caps);
          return -1;
       }
 
       if (cap_set_flag(caps, CAP_EFFECTIVE, 1, &keepcaps[i], CAP_SET) < 0) {
-         fprintf(stderr, "Error: can not set effective capability %d: %s\n", keepcaps[i], strerror(errno));
+         fprintf(stderr, "Error: cannot set effective capability %d: %s\n", keepcaps[i], strerror(errno));
          cap_free(currCaps);
          cap_free(caps);
          return -1;
@@ -1090,7 +1090,7 @@ static int dropCapabilities(enum CapMode mode) {
    }
 
    if (cap_set_proc(caps) < 0) {
-      fprintf(stderr, "Error: can not set process capabilities: %s\n", strerror(errno));
+      fprintf(stderr, "Error: cannot set process capabilities: %s\n", strerror(errno));
       cap_free(currCaps);
       cap_free(caps);
       return -1;
