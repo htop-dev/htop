@@ -563,6 +563,43 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
    return didReadAny;
 }
 
+static int makeAncestorDirectories(char* filePath) {
+   // The caller is expected to set the umask before calling this function.
+   // In particular, if the umask contains S_IWUSR or S_IXUSR bit then the
+   // making of subdirectories within the ancestor can fail.
+
+   // 0755 is the maximum permission we can give to directories at this phase.
+   const mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+
+   bool hasDirectory = false;
+   int savedErr = errno;
+
+   char *p = filePath;
+   while (true) {
+      while (*p == '/')
+         p++;
+
+      while (*p && *p != '/')
+         p++;
+
+      if (!*p)
+         break;
+
+      *p = '\0';
+      bool ok = !mkdir(filePath, mode);
+      *p = '/';
+      if (ok) {
+         hasDirectory = true;
+         errno = savedErr;
+      } else if (hasDirectory) {
+         return -errno;
+      }
+      // Try creating directories in the lower levels. It's possible for
+      // mkdir() to succeed in a lower level while an error happens earlier.
+   }
+   return 0;
+}
+
 typedef ATTR_FORMAT(printf, 2, 3) int (*OutputFunc)(FILE*, const char*,...);
 
 static void writeFields(OutputFunc of, FILE* fp,
@@ -649,9 +686,15 @@ int Settings_write(const Settings* this, bool onCrash) {
    } else if (!this->writeConfig) {
       return 0;
    } else {
-      /* create tempfile with mode 0600 */
-      mode_t cur_umask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
+      // Prepare temp filename
       xAsprintf(&tmpFilename, "%s.tmp.XXXXXX", this->filename);
+
+      // Create ancestor directories with mode 0700
+      mode_t cur_umask = umask(S_IRWXG | S_IRWXO);
+      makeAncestorDirectories(tmpFilename);
+
+      // Create temp file with mode 0600
+      umask(S_IXUSR | S_IRWXG | S_IRWXO);
       int fdtmp = mkstemp(tmpFilename);
       umask(cur_umask);
       if (fdtmp == -1) {
@@ -851,8 +894,6 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
          configDir = String_cat(home, CONFIGDIR);
          htopDir = String_cat(home, CONFIGDIR "/htop");
       }
-      (void) mkdir(configDir, 0700);
-      (void) mkdir(htopDir, 0700);
       free(htopDir);
       free(configDir);
 
