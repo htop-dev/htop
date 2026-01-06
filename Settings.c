@@ -687,7 +687,7 @@ int Settings_write(const Settings* this, bool onCrash) {
       return 0;
    } else {
       // Prepare temp filename
-      xAsprintf(&tmpFilename, "%s.tmp.XXXXXX", this->filename);
+      tmpFilename = String_cat(this->filename, ".tmp.XXXXXX");
 
       // Create ancestor directories with mode 0700
       mode_t cur_umask = umask(S_IRWXG | S_IRWXO);
@@ -883,19 +883,14 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
          home = (pw && pw->pw_dir && pw->pw_dir[0] == '/') ? pw->pw_dir : "";
       }
       const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
-      char* configDir = NULL;
       char* htopDir = NULL;
       if (xdgConfigHome && xdgConfigHome[0] == '/') {
-         this->initialFilename = String_cat(xdgConfigHome, "/htop/htoprc");
-         configDir = xStrdup(xdgConfigHome);
          htopDir = String_cat(xdgConfigHome, "/htop");
       } else {
-         this->initialFilename = String_cat(home, CONFIGDIR "/htop/htoprc");
-         configDir = String_cat(home, CONFIGDIR);
          htopDir = String_cat(home, CONFIGDIR "/htop");
       }
+      this->initialFilename = String_cat(htopDir, "/htoprc");
       free(htopDir);
-      free(configDir);
 
       legacyDotfile = String_cat(home, "/.htoprc");
    }
