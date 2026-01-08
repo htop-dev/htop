@@ -365,9 +365,14 @@ void Platform_setGPUValues(Meter* mtr, double* totalUsage, unsigned long long* t
       return;
    }
 
-   CFDictionaryRef perfStats = IORegistryEntryCreateCFProperty(dhost->GPUService, CFSTR("PerformanceStatistics"), kCFAllocatorDefault, kNilOptions);
-   if (!perfStats)
+   CFMutableDictionaryRef properties = NULL;
+   kern_return_t ret = IORegistryEntryCreateCFProperties(dhost->GPUService, &properties, kCFAllocatorDefault, kNilOptions);
+   if (ret != KERN_SUCCESS || !properties)
       return;
+
+   CFDictionaryRef perfStats = CFDictionaryGetValue(properties, CFSTR("PerformanceStatistics"));
+   if (!perfStats)
+      goto cleanup;
 
    assert(CFGetTypeID(perfStats) == CFDictionaryGetTypeID());
 
@@ -382,7 +387,7 @@ void Platform_setGPUValues(Meter* mtr, double* totalUsage, unsigned long long* t
    prevMonotonicMs = host->monotonicMs;
 
 cleanup:
-   CFRelease(perfStats);
+   CFRelease(properties);
 
    mtr->values[0] = *totalUsage;
 }
