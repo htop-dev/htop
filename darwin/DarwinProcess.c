@@ -52,8 +52,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [TRANSLATED] = { .name = "TRANSLATED", .title = "T ", .description = "Translation info (T translated, N native)", .flags = 0, },
-   [TIME_GPU] = { .name = "TIME_GPU", .title = "GPU TIME+", .description = "Total GPU time", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
-   [PERCENT_GPU] = { .name = "PERCENT_GPU", .title = " GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
+   [TIME_GPU] = { .name = "GPU_TIME", .title = "GPU TIME+", .description = "Total GPU time", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
+   [PERCENT_GPU] = { .name = "GPU_PERCENT", .title = " GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
 };
 
 Process* DarwinProcess_new(const Machine* host) {
