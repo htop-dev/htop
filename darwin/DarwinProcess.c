@@ -52,6 +52,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [TRANSLATED] = { .name = "TRANSLATED", .title = "T ", .description = "Translation info (T translated, N native)", .flags = 0, },
+   [TIME_GPU] = { .name = "TIME_GPU", .title = "GPU TIME+", .description = "Total GPU time", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
+   [PERCENT_GPU] = { .name = "PERCENT_GPU", .title = " GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
 };
 
 Process* DarwinProcess_new(const Machine* host) {
@@ -77,7 +79,9 @@ void Process_delete(Object* cast) {
 
 static void DarwinProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const DarwinProcess* dp = (const DarwinProcess*) super;
+   const Machine* host = (const Machine*) super->host;
 
+   bool coloring = host->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
@@ -85,6 +89,8 @@ static void DarwinProcess_rowWriteField(const Row* super, RichString* str, Proce
    switch (field) {
    // add Platform-specific fields here
    case TRANSLATED: xSnprintf(buffer, n, "%c ", dp->translated ? 'T' : 'N'); break;
+   case PERCENT_GPU: Row_printPercentage(dp->gpu_percent, buffer, n, 5, &attr); break;
+   case TIME_GPU: Row_printNanoseconds(str, dp->gpu_time, coloring); return;
    default:
       Process_writeField(&dp->super, str, field);
       return;
@@ -101,6 +107,15 @@ static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, Proc
    // add Platform-specific fields here
    case TRANSLATED:
       return SPACESHIP_NUMBER(p1->translated, p2->translated);
+   case PERCENT_GPU: {
+      int r = compareRealNumbers(p1->gpu_percent, p2->gpu_percent);
+      if (r)
+         return r;
+
+      return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
+   }
+   case TIME_GPU:
+      return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }
@@ -519,6 +534,25 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
 
    vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
    mach_port_deallocate(mach_task_self(), task);
+}
+
+void DarwinProcess_setFromGPUProcesses(DarwinProcess* dp, Hashtable* gps) {
+   if (gps) {
+      unsigned long long* data = Hashtable_get(gps, (ht_key_t) dp->super.super.id);
+      unsigned long long new_gpu_time = data ? *data : 0;
+      if (new_gpu_time > 0) {
+         unsigned long long gputimeDelta = saturatingSub(new_gpu_time, dp->gpu_time);
+         const Machine* host = dp->super.super.host;
+         uint64_t monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
+         dp->gpu_percent = 100.0F * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
+      } else {
+         dp->gpu_percent = 0.0F;
+      }
+      dp->gpu_time = new_gpu_time;
+   } else {
+      dp->gpu_time = 0;
+      dp->gpu_percent = 0.0F;
+   }
 }
 
 

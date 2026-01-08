@@ -365,14 +365,9 @@ void Platform_setGPUValues(Meter* mtr, double* totalUsage, unsigned long long* t
       return;
    }
 
-   CFMutableDictionaryRef properties = NULL;
-   kern_return_t ret = IORegistryEntryCreateCFProperties(dhost->GPUService, &properties, kCFAllocatorDefault, kNilOptions);
-   if (ret != KERN_SUCCESS || !properties)
-      return;
-
-   CFDictionaryRef perfStats = CFDictionaryGetValue(properties, CFSTR("PerformanceStatistics"));
+   CFDictionaryRef perfStats = IORegistryEntryCreateCFProperty(dhost->GPUService, CFSTR("PerformanceStatistics"), kCFAllocatorDefault, kNilOptions);
    if (!perfStats)
-      goto cleanup;
+      return;
 
    assert(CFGetTypeID(perfStats) == CFDictionaryGetTypeID());
 
@@ -387,7 +382,7 @@ void Platform_setGPUValues(Meter* mtr, double* totalUsage, unsigned long long* t
    prevMonotonicMs = host->monotonicMs;
 
 cleanup:
-   CFRelease(properties);
+   CFRelease(perfStats);
 
    mtr->values[0] = *totalUsage;
 }
@@ -797,4 +792,87 @@ fail:
 
 const char* Platform_getRelease(void) {
    return Generic_unameRelease(Platform_getOSRelease);
+}
+
+Hashtable* Platform_getGPUProcesses(const Machine* host) {
+   const DarwinMachine* dhost = (const DarwinMachine*)host;
+   if (!dhost->GPUService) {
+      return NULL;
+   }
+
+   Hashtable* gps = Hashtable_new(64, true);
+
+   io_iterator_t iterator;
+   if (IORegistryEntryGetChildIterator(dhost->GPUService, kIOServicePlane, &iterator) == KERN_SUCCESS) {
+      io_registry_entry_t entry;
+      while ((entry = IOIteratorNext(iterator))) {
+         io_struct_inband_t buffer;
+         uint32_t size = sizeof(buffer);
+         if (IORegistryEntryGetProperty(entry, "IOUserClientCreator", buffer, &size) != KERN_SUCCESS)
+            goto cleanup;
+
+         pid_t pid;
+         if (sscanf(buffer, "pid %d", &pid) != 1)
+            goto cleanup;
+
+         unsigned long long gpuTime = 0;
+         unsigned long long* data = Hashtable_get(gps, (ht_key_t) pid);
+         if (data)
+            gpuTime = *data;
+
+         if (IOObjectConformsTo(entry, "IOGPUDeviceUserClient")) {
+            CFArrayRef appUsage = IORegistryEntryCreateCFProperty(entry, CFSTR("AppUsage"), kCFAllocatorDefault, kNilOptions);
+            if (!appUsage)
+               goto cleanup;
+
+            assert(CFGetTypeID(appUsage) == CFArrayGetTypeID());
+
+            // Sum up the GPU time for all command queues for this client
+            size_t count = CFArrayGetCount(appUsage);
+            for (size_t i = 0; i < count; ++i) {
+               CFDictionaryRef appUsageEntry = CFArrayGetValueAtIndex(appUsage, i);
+               assert(CFGetTypeID(appUsageEntry) == CFDictionaryGetTypeID());
+
+               CFNumberRef accumulatedGPUTimeRef = CFDictionaryGetValue(appUsageEntry, CFSTR("accumulatedGPUTime"));
+               if (!accumulatedGPUTimeRef) {
+                  CFRelease(appUsage);
+                  goto cleanup;
+               }
+
+               unsigned long long accumulatedGPUTime = 0;
+               CFNumberGetValue(accumulatedGPUTimeRef, kCFNumberLongLongType, &accumulatedGPUTime);
+
+               gpuTime += accumulatedGPUTime;
+            }
+
+            CFRelease(appUsage);
+         } else if (IOObjectConformsTo(entry, "IOAccelSubmitter2")) {
+            CFNumberRef accumulatedGPUTimeRef = IORegistryEntryCreateCFProperty(entry, CFSTR("accumulatedGPUTime"), kCFAllocatorDefault, kNilOptions);
+            if (!accumulatedGPUTimeRef)
+               goto cleanup;
+
+            unsigned long long accumulatedGPUTime = 0;
+            CFNumberGetValue(accumulatedGPUTimeRef, kCFNumberLongLongType, &accumulatedGPUTime);
+            CFRelease(accumulatedGPUTimeRef);
+
+            gpuTime += accumulatedGPUTime;
+         } else {
+            goto cleanup;
+         }
+
+         if (gpuTime > 0) {
+            if (!data) {
+               data = xCalloc(1, sizeof(gpuTime));
+               Hashtable_put(gps, (ht_key_t) pid, data);
+            }
+            *data = gpuTime;
+         }
+
+      cleanup:
+         IOObjectRelease(entry);
+      }
+      IOObjectRelease(iterator);
+   }
+
+   return gps;
 }

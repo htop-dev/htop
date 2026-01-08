@@ -72,11 +72,14 @@ void ProcessTable_delete(Object* cast) {
 void ProcessTable_goThroughEntries(ProcessTable* super) {
    const Machine* host = super->super.host;
    const DarwinMachine* dhost = (const DarwinMachine*) host;
+   const Settings* settings = host->settings;
+   const ScreenSettings* ss = settings->ss;
    DarwinProcessTable* dpt = (DarwinProcessTable*) super;
    bool preExisting = true;
    struct kinfo_proc* ps;
    size_t count;
    DarwinProcess* proc;
+   Hashtable* gps = NULL;
 
    /* Get the time difference */
    dpt->global_diff = 0;
@@ -96,6 +99,10 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
     * We attempt to fill-in additional information with libproc.
     */
    ps = ProcessTable_getKInfoProcs(&count);
+
+   if (ss->flags & PROCESS_FLAG_GPU) {
+      gps = Platform_getGPUProcesses(host);
+   }
 
    for (size_t i = 0; i < count; ++i) {
       proc = (DarwinProcess*)ProcessTable_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, DarwinProcess_new);
@@ -122,11 +129,17 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
          DarwinProcess_scanThreads(proc, dpt);
       }
 
+      DarwinProcess_setFromGPUProcesses(proc, gps);
+
       super->totalTasks += 1;
 
       if (!preExisting) {
          ProcessTable_add(super, &proc->super);
       }
+   }
+
+   if (gps) {
+      Hashtable_delete(gps);
    }
 
    free(ps);
