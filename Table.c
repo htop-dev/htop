@@ -98,7 +98,7 @@ static void Table_buildTreeBranch(Table* this, int rowid, unsigned int level, in
    int l = 0;
    int r = vsize;
    while (l < r) {
-      int c = (l + r) / 2;
+      int c = l + (r - l) / 2;
       Row* row = (Row*)Vector_get(this->rows, c);
       int parent = row->isRoot ? 0 : Row_getGroupOrParent(row);
       if (parent < rowid) {
