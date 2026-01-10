@@ -152,13 +152,13 @@ case "$enable_pcp" in
       AC_CHECK_HEADERS(
          [pcp/pmapi.h],
          [my_htop_platform=pcp],
-         [AC_MSG_ERROR([can not find PCP header file])]
+         [AC_MSG_ERROR([cannot find PCP header file])]
       )
       AC_SEARCH_LIBS(
          [pmNewContext],
          [pcp],
          [],
-         [AC_MSG_ERROR([can not find PCP library])]
+         [AC_MSG_ERROR([cannot find PCP library])]
       )
       AC_DEFINE([HTOP_PCP], [1], [Define if building pcp-htop binary.])
       AC_CONFIG_FILES([pcp-htop.5])
@@ -192,7 +192,7 @@ AC_CHECK_HEADERS(
       unistd.h \
    ],
    [],
-   [AC_MSG_ERROR([can not find required generic header files])]
+   [AC_MSG_ERROR([cannot find required generic header files])]
 )
 
 AC_HEADER_MAJOR
@@ -340,7 +340,7 @@ AC_LINK_IFELSE(
    ],
    [
       AC_MSG_RESULT(no)
-      AC_MSG_ERROR([can not find required macros: NAN, isgreater() and isgreaterequal()])
+      AC_MSG_ERROR([cannot find required macros: NAN, isgreater() and isgreaterequal()])
    ]
 )
 
@@ -362,40 +362,40 @@ AC_COMPILE_IFELSE(
 # Checks for generic library functions.
 # ----------------------------------------------------------------------
 
-AC_SEARCH_LIBS([ceil], [m], [], [AC_MSG_ERROR([can not find required function ceil()])])
+AC_SEARCH_LIBS([ceil], [m], [], [AC_MSG_ERROR([cannot find required function ceil()])])
 
 if test "$my_htop_platform" = dragonflybsd; then
-   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
-   AC_SEARCH_LIBS([getdevs], [devstat], [], [AC_MSG_ERROR([can not find required function getdevs()])])
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([cannot find required function kvm_open()])])
+   AC_SEARCH_LIBS([getdevs], [devstat], [], [AC_MSG_ERROR([cannot find required function getdevs()])])
 fi
 
 if test "$my_htop_platform" = freebsd; then
    if test "$enable_static" = yes; then
-      AC_SEARCH_LIBS([elf_version], [elf], [], [AC_MSG_ERROR([can not find required function elf_version()])])
+      AC_SEARCH_LIBS([elf_version], [elf], [], [AC_MSG_ERROR([cannot find required function elf_version()])])
    fi
-   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
-   AC_SEARCH_LIBS([devstat_checkversion], [devstat], [], [AC_MSG_ERROR([can not find required function devstat_checkversion()])])
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([cannot find required function kvm_open()])])
+   AC_SEARCH_LIBS([devstat_checkversion], [devstat], [], [AC_MSG_ERROR([cannot find required function devstat_checkversion()])])
 fi
 
 if test "$my_htop_platform" = linux; then
    if test "$enable_static" != yes; then
-      AC_SEARCH_LIBS([dlopen], [dl dld], [], [AC_MSG_ERROR([can not find required function dlopen()])])
+      AC_SEARCH_LIBS([dlopen], [dl dld], [], [AC_MSG_ERROR([cannot find required function dlopen()])])
    fi
 fi
 
 if test "$my_htop_platform" = netbsd; then
-   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
-   AC_SEARCH_LIBS([prop_dictionary_get], [prop], [], [AC_MSG_ERROR([can not find required function prop_dictionary_get()])])
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([cannot find required function kvm_open()])])
+   AC_SEARCH_LIBS([prop_dictionary_get], [prop], [], [AC_MSG_ERROR([cannot find required function prop_dictionary_get()])])
 fi
 
 if test "$my_htop_platform" = openbsd; then
-   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([can not find required function kvm_open()])])
+   AC_SEARCH_LIBS([kvm_open], [kvm], [], [AC_MSG_ERROR([cannot find required function kvm_open()])])
 fi
 
 if test "$my_htop_platform" = solaris; then
-   AC_SEARCH_LIBS([kstat_open], [kstat], [], [AC_MSG_ERROR([can not find required function kstat_open()])])
-   AC_SEARCH_LIBS([Pgrab_error], [proc], [], [AC_MSG_ERROR([can not find required function Pgrab_error()])])
-   AC_SEARCH_LIBS([free], [malloc], [], [AC_MSG_ERROR([can not find required function free()])])
+   AC_SEARCH_LIBS([kstat_open], [kstat], [], [AC_MSG_ERROR([cannot find required function kstat_open()])])
+   AC_SEARCH_LIBS([Pgrab_error], [proc], [], [AC_MSG_ERROR([cannot find required function Pgrab_error()])])
+   AC_SEARCH_LIBS([free], [malloc], [], [AC_MSG_ERROR([cannot find required function free()])])
 fi
 
 # Optional Section
@@ -828,9 +828,9 @@ else
 fi
 
 if test "$have_curses_header" = no; then
-   AC_MSG_ERROR([can not find required curses header file])
+   AC_MSG_ERROR([cannot find required curses header file])
 elif test "$have_term_header" = no; then
-   AC_MSG_ERROR([can not find required term header file])
+   AC_MSG_ERROR([cannot find required term header file])
 fi
 
 CFLAGS="-I$srcdir $CFLAGS"
@@ -872,7 +872,7 @@ if test "$enable_static" = yes; then
 fi
 if test "$my_htop_platform" = "solaris"; then
    # On OmniOS /usr/include/sys/regset.h redefines ERR to 13 - \r, breaking the Enter key.
-   # Since ncurses macros use the ERR macro, we can not use another name.
+   # Since ncurses macros use the ERR macro, we cannot use another name.
    AC_DEFINE([ERR], [(-1)], [Predefine ncurses macro.])
 fi
 AC_CHECK_FUNCS([set_escdelay])
@@ -1009,7 +1009,7 @@ case "$enable_unwind" in
       if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
          AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
       elif test "$enable_unwind" = yes; then
-         AC_MSG_ERROR([can not find required header file libunwind.h])
+         AC_MSG_ERROR([cannot find required header file libunwind.h])
       else
          enable_unwind=no
       fi
@@ -1082,7 +1082,7 @@ if test "$enable_unwind" != no; then
       [
          AC_MSG_RESULT([no])
          if test "$enable_unwind" = yes; then
-            AC_MSG_FAILURE([can not link with libunwind])
+            AC_MSG_FAILURE([cannot link with libunwind])
          else
             LIBS=$htop_save_LIBS
             enable_unwind=no
@@ -1184,8 +1184,8 @@ case "$enable_hwloc" in
             LIBS="$LIBS $HWLOC_LIBS"
             AC_DEFINE([HAVE_LIBHWLOC], [1], [Define to 1 if you have the 'hwloc' library (-lhwloc).])
          ], [
-            AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([can not find required library libhwloc])])
-            AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([can not find require header file hwloc.h])])
+            AC_CHECK_LIB([hwloc], [hwloc_get_proc_cpubind], [], [AC_MSG_ERROR([cannot find required library libhwloc])])
+            AC_CHECK_HEADERS([hwloc.h], [], [AC_MSG_ERROR([cannot find require header file hwloc.h])])
          ]
       )
       ;;
@@ -1298,8 +1298,8 @@ case "$enable_capabilities" in
       AC_CHECK_HEADERS([sys/capability.h], [], [enable_capabilities=no])
       ;;
    yes)
-      AC_CHECK_LIB([cap], [cap_init], [], [AC_MSG_ERROR([can not find required library libcap])])
-      AC_CHECK_HEADERS([sys/capability.h], [], [AC_MSG_ERROR([can not find required header file sys/capability.h])])
+      AC_CHECK_LIB([cap], [cap_init], [], [AC_MSG_ERROR([cannot find required library libcap])])
+      AC_CHECK_HEADERS([sys/capability.h], [], [AC_MSG_ERROR([cannot find required header file sys/capability.h])])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_capabilities' for --enable-capabilities])
@@ -1372,7 +1372,7 @@ case "$enable_delayacct" in
          [],
          [
             if test "$enable_delayacct" = yes; then
-               AC_MSG_ERROR([can not find required header files netlink/attr.h, netlink/handlers.h, netlink/msg.h])
+               AC_MSG_ERROR([cannot find required header files netlink/attr.h, netlink/handlers.h, netlink/msg.h])
             fi
             enable_delayacct=no
          ]
@@ -1435,9 +1435,9 @@ case "$enable_sensors" in
       ;;
    yes)
       if test "$enable_static" = yes; then
-         AC_CHECK_LIB([sensors], [sensors_init], [], [AC_MSG_ERROR([can not find required library libsensors])])
+         AC_CHECK_LIB([sensors], [sensors_init], [], [AC_MSG_ERROR([cannot find required library libsensors])])
       fi
-      AC_CHECK_HEADERS([sensors/sensors.h], [], [AC_MSG_ERROR([can not find required header file sensors/sensors.h])])
+      AC_CHECK_HEADERS([sensors/sensors.h], [], [AC_MSG_ERROR([cannot find required header file sensors/sensors.h])])
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_sensors' for --enable-sensors])
