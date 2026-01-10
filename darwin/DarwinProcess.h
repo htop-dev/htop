@@ -14,6 +14,7 @@ in the source distribution for its full text.
 
 
 #define PROCESS_FLAG_TTY 0x00000100
+#define PROCESS_FLAG_GPU 0x00000200
 
 typedef struct DarwinProcess_ {
    Process super;
@@ -22,6 +23,13 @@ typedef struct DarwinProcess_ {
    uint64_t stime;
    bool taskAccess;
    bool translated;
+
+   /* Total GPU time used in nano seconds */
+   uint64_t gpu_time;
+   /* GPU utilization in percent */
+   float gpu_percent;
+   /* Got GPU time info from last scan */
+   bool gpu_time_updated;
 } DarwinProcess;
 
 extern const ProcessClass DarwinProcess_class;
