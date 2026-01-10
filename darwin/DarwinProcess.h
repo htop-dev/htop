@@ -25,9 +25,11 @@ typedef struct DarwinProcess_ {
    bool translated;
 
    /* Total GPU time used in nano seconds */
-   unsigned long long int gpu_time;
+   uint64_t gpu_time;
    /* GPU utilization in percent */
    float gpu_percent;
+   /* Got GPU time info from last scan */
+   bool gpu_time_updated;
 } DarwinProcess;
 
 extern const ProcessClass DarwinProcess_class;
@@ -48,7 +50,5 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess* proc, DarwinProcessTable
  * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
  */
 void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt);
-
-void DarwinProcess_setFromGPUProcesses(DarwinProcess* dp, Hashtable* gps);
 
 #endif

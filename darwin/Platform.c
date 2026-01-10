@@ -799,85 +799,97 @@ const char* Platform_getRelease(void) {
    return Generic_unameRelease(Platform_getOSRelease);
 }
 
-Hashtable* Platform_getGPUProcesses(const Machine* host) {
-   const DarwinMachine* dhost = (const DarwinMachine*)host;
-   if (!dhost->GPUService) {
-      return NULL;
-   }
+void Platform_setGPUProcesses(DarwinProcessTable* dpt) {
+   const Machine* host = dpt->super.super.host;
+   const DarwinMachine* dhost = (const DarwinMachine*) host;
 
-   Hashtable* gps = Hashtable_new(64, true);
+   if (!dhost->GPUService)
+      return;
 
    io_iterator_t iterator;
-   if (IORegistryEntryGetChildIterator(dhost->GPUService, kIOServicePlane, &iterator) == KERN_SUCCESS) {
-      io_registry_entry_t entry;
-      while ((entry = IOIteratorNext(iterator))) {
-         io_struct_inband_t buffer;
-         uint32_t size = sizeof(buffer);
-         if (IORegistryEntryGetProperty(entry, "IOUserClientCreator", buffer, &size) != KERN_SUCCESS)
+   if (IORegistryEntryGetChildIterator(dhost->GPUService, kIOServicePlane, &iterator) != KERN_SUCCESS)
+      return;
+
+   io_registry_entry_t entry;
+   while ((entry = IOIteratorNext(iterator))) {
+      io_struct_inband_t buffer;
+      uint32_t size = sizeof(buffer);
+      if (IORegistryEntryGetProperty(entry, "IOUserClientCreator", buffer, &size) != KERN_SUCCESS)
+         goto cleanup;
+
+      pid_t pid;
+      if (sscanf(buffer, "pid %d", &pid) != 1)
+         goto cleanup;
+
+      uint64_t gpuTime = 0;
+      const Table* table = &dpt->super.super;
+      DarwinProcess* dp = (DarwinProcess*) Hashtable_get(table->table, pid);
+      if (!dp)
+         goto cleanup;
+
+      if (IOObjectConformsTo(entry, "IOGPUDeviceUserClient")) {
+         CFArrayRef appUsage = IORegistryEntryCreateCFProperty(entry, CFSTR("AppUsage"), kCFAllocatorDefault, kNilOptions);
+         if (!appUsage)
             goto cleanup;
 
-         pid_t pid;
-         if (sscanf(buffer, "pid %d", &pid) != 1)
-            goto cleanup;
+         assert(CFGetTypeID(appUsage) == CFArrayGetTypeID());
 
-         unsigned long long gpuTime = 0;
-         unsigned long long* data = Hashtable_get(gps, (ht_key_t) pid);
-         if (data)
-            gpuTime = *data;
+         // Sum up the GPU time for all command queues for this client
+         size_t count = CFArrayGetCount(appUsage);
+         for (size_t i = 0; i < count; ++i) {
+            CFDictionaryRef appUsageEntry = CFArrayGetValueAtIndex(appUsage, i);
+            assert(CFGetTypeID(appUsageEntry) == CFDictionaryGetTypeID());
 
-         if (IOObjectConformsTo(entry, "IOGPUDeviceUserClient")) {
-            CFArrayRef appUsage = IORegistryEntryCreateCFProperty(entry, CFSTR("AppUsage"), kCFAllocatorDefault, kNilOptions);
-            if (!appUsage)
+            CFNumberRef accumulatedGPUTimeRef = CFDictionaryGetValue(appUsageEntry, CFSTR("accumulatedGPUTime"));
+            if (!accumulatedGPUTimeRef) {
+               CFRelease(appUsage);
                goto cleanup;
-
-            assert(CFGetTypeID(appUsage) == CFArrayGetTypeID());
-
-            // Sum up the GPU time for all command queues for this client
-            size_t count = CFArrayGetCount(appUsage);
-            for (size_t i = 0; i < count; ++i) {
-               CFDictionaryRef appUsageEntry = CFArrayGetValueAtIndex(appUsage, i);
-               assert(CFGetTypeID(appUsageEntry) == CFDictionaryGetTypeID());
-
-               CFNumberRef accumulatedGPUTimeRef = CFDictionaryGetValue(appUsageEntry, CFSTR("accumulatedGPUTime"));
-               if (!accumulatedGPUTimeRef) {
-                  CFRelease(appUsage);
-                  goto cleanup;
-               }
-
-               unsigned long long accumulatedGPUTime = 0;
-               CFNumberGetValue(accumulatedGPUTimeRef, kCFNumberLongLongType, &accumulatedGPUTime);
-
-               gpuTime += accumulatedGPUTime;
             }
 
-            CFRelease(appUsage);
-         } else if (IOObjectConformsTo(entry, "IOAccelSubmitter2")) {
-            CFNumberRef accumulatedGPUTimeRef = IORegistryEntryCreateCFProperty(entry, CFSTR("accumulatedGPUTime"), kCFAllocatorDefault, kNilOptions);
-            if (!accumulatedGPUTimeRef)
-               goto cleanup;
-
-            unsigned long long accumulatedGPUTime = 0;
+            uint64_t accumulatedGPUTime = 0;
             CFNumberGetValue(accumulatedGPUTimeRef, kCFNumberLongLongType, &accumulatedGPUTime);
-            CFRelease(accumulatedGPUTimeRef);
 
             gpuTime += accumulatedGPUTime;
-         } else {
+         }
+
+         CFRelease(appUsage);
+      } else if (IOObjectConformsTo(entry, "IOAccelSubmitter2")) {
+         CFNumberRef accumulatedGPUTimeRef = IORegistryEntryCreateCFProperty(entry, CFSTR("accumulatedGPUTime"), kCFAllocatorDefault, kNilOptions);
+         if (!accumulatedGPUTimeRef)
             goto cleanup;
-         }
 
-         if (gpuTime > 0) {
-            if (!data) {
-               data = xCalloc(1, sizeof(gpuTime));
-               Hashtable_put(gps, (ht_key_t) pid, data);
-            }
-            *data = gpuTime;
-         }
+         uint64_t accumulatedGPUTime = 0;
+         CFNumberGetValue(accumulatedGPUTimeRef, kCFNumberLongLongType, &accumulatedGPUTime);
 
-      cleanup:
-         IOObjectRelease(entry);
+         gpuTime += accumulatedGPUTime;
+
+         CFRelease(accumulatedGPUTimeRef);
+      } else {
+         goto cleanup;
       }
-      IOObjectRelease(iterator);
+
+      if (gpuTime > 0) {
+         uint64_t gputimeDelta = saturatingSub(gpuTime, dp->gpu_time);
+         uint64_t monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
+         dp->gpu_percent = 100.0F * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
+         dp->gpu_time = gpuTime;
+         dp->gpu_time_updated = true;
+      }
+
+cleanup:
+      IOObjectRelease(entry);
    }
 
-   return gps;
+   // Clear GPU time and percent for processes not found in the GPU process list
+   const Vector* rows = dpt->super.super.rows;
+   int table_size = Vector_size(rows);
+   for (int i = 0; i < table_size; ++i) {
+      DarwinProcess* dp = (DarwinProcess*) Vector_get(rows, i);
+      if (!dp->gpu_time_updated) {
+         dp->gpu_time = 0;
+         dp->gpu_percent = 0.0F;
+      }
+   }
+
+   IOObjectRelease(iterator);
 }
