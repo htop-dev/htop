@@ -139,7 +139,7 @@ void Process_delete(Object* cast) {
 an io priority formally uses "none" as scheduling class, but the
 io scheduler will treat such processes as if it were in the best
 effort class. The priority within the best effort class will be
-dynamically derived  from  the  cpu  nice level of the process:
+dynamically derived from the cpu nice level of the process:
 io_priority = (cpu_nice + 20) / 5. -- From ionice(1) man page
 */
 static int LinuxProcess_effectiveIOPriority(const LinuxProcess* this) {
