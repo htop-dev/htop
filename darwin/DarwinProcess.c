@@ -52,8 +52,8 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [PROC_EXE] = { .name = "EXE", .title = "EXE             ", .description = "Basename of exe of the process from /proc/[pid]/exe", .flags = 0, },
    [CWD] = { .name = "CWD", .title = "CWD                       ", .description = "The current working directory of the process", .flags = PROCESS_FLAG_CWD, },
    [TRANSLATED] = { .name = "TRANSLATED", .title = "T ", .description = "Translation info (T translated, N native)", .flags = 0, },
-   [TIME_GPU] = { .name = "GPU_TIME", .title = "GPU TIME", .description = "Total GPU time", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
-   [PERCENT_GPU] = { .name = "GPU_PERCENT", .title = " GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
+   [GPU_TIME] = { .name = "GPU_TIME", .title = "GPU TIME", .description = "Total GPU time", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
+   [GPU_PERCENT] = { .name = "GPU_PERCENT", .title = " GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_GPU, .defaultSortDesc = true, },
 };
 
 Process* DarwinProcess_new(const Machine* host) {
@@ -89,8 +89,8 @@ static void DarwinProcess_rowWriteField(const Row* super, RichString* str, Proce
    switch (field) {
    // add Platform-specific fields here
    case TRANSLATED: xSnprintf(buffer, n, "%c ", dp->translated ? 'T' : 'N'); break;
-   case PERCENT_GPU: Row_printPercentage(dp->gpu_percent, buffer, n, 5, &attr); break;
-   case TIME_GPU: Row_printNanoseconds(str, dp->gpu_time, coloring); return;
+   case GPU_PERCENT: Row_printPercentage(dp->gpu_percent, buffer, n, 5, &attr); break;
+   case GPU_TIME: Row_printNanoseconds(str, dp->gpu_time, coloring); return;
    default:
       Process_writeField(&dp->super, str, field);
       return;
@@ -107,14 +107,14 @@ static int DarwinProcess_compareByKey(const Process* v1, const Process* v2, Proc
    // add Platform-specific fields here
    case TRANSLATED:
       return SPACESHIP_NUMBER(p1->translated, p2->translated);
-   case PERCENT_GPU: {
+   case GPU_PERCENT: {
       int r = compareRealNumbers(p1->gpu_percent, p2->gpu_percent);
       if (r)
          return r;
 
       return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
    }
-   case TIME_GPU:
+   case GPU_TIME:
       return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
    default:
       return Process_compareByKey_Base(v1, v2, key);

@@ -799,6 +799,7 @@ const char* Platform_getRelease(void) {
    return Generic_unameRelease(Platform_getOSRelease);
 }
 
+// GPU I/O registry dump: https://archive.org/download/ioreg-gpu/ioreg-gpu.log
 void Platform_setGPUProcesses(DarwinProcessTable* dpt) {
    const Machine* host = dpt->super.super.host;
    const DarwinMachine* dhost = (const DarwinMachine*) host;
@@ -817,13 +818,12 @@ void Platform_setGPUProcesses(DarwinProcessTable* dpt) {
       if (IORegistryEntryGetProperty(entry, "IOUserClientCreator", buffer, &size) != KERN_SUCCESS)
          goto cleanup;
 
-      pid_t pid;
+      int pid;
       if (sscanf(buffer, "pid %d", &pid) != 1)
          goto cleanup;
 
       uint64_t gpuTime = 0;
-      const Table* table = &dpt->super.super;
-      DarwinProcess* dp = (DarwinProcess*) Hashtable_get(table->table, pid);
+      DarwinProcess* dp = (DarwinProcess*) ProcessTable_findProcess(&dpt->super, (pid_t) pid);
       if (!dp)
          goto cleanup;
 
@@ -841,10 +841,8 @@ void Platform_setGPUProcesses(DarwinProcessTable* dpt) {
             assert(CFGetTypeID(appUsageEntry) == CFDictionaryGetTypeID());
 
             CFNumberRef accumulatedGPUTimeRef = CFDictionaryGetValue(appUsageEntry, CFSTR("accumulatedGPUTime"));
-            if (!accumulatedGPUTimeRef) {
-               CFRelease(appUsage);
-               goto cleanup;
-            }
+            if (!accumulatedGPUTimeRef)
+               continue;
 
             uint64_t accumulatedGPUTime = 0;
             CFNumberGetValue(accumulatedGPUTimeRef, kCFNumberLongLongType, &accumulatedGPUTime);
