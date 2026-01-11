@@ -124,8 +124,12 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
          DarwinProcess_scanThreads(proc, dpt);
       }
 
-      // Reset GPU time updated flag
-      proc->gpu_time_updated = false;
+      // Reset GPU time/percent
+      if (ss->flags & PROCESS_FLAG_GPU) {
+         proc->gpu_time_last = proc->gpu_time;
+         proc->gpu_time = 0;
+         proc->gpu_percent = 0.0F;
+      }
 
       super->totalTasks += 1;
 

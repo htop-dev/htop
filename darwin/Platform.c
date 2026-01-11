@@ -866,27 +866,17 @@ void Platform_setGPUProcesses(DarwinProcessTable* dpt) {
          goto cleanup;
       }
 
-      if (gpuTime > 0) {
-         uint64_t gputimeDelta = saturatingSub(gpuTime, dp->gpu_time);
+      dp->gpu_time += gpuTime;
+
+      // Only calculate GPU percent if we have a previous sample, and the GPU time has increased
+      if (dp->gpu_time > dp->gpu_time_last && dp->gpu_time_last > 0) {
+         uint64_t gputimeDelta = saturatingSub(dp->gpu_time, dp->gpu_time_last);
          uint64_t monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
          dp->gpu_percent = 100.0F * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
-         dp->gpu_time = gpuTime;
-         dp->gpu_time_updated = true;
       }
 
 cleanup:
       IOObjectRelease(entry);
-   }
-
-   // Clear GPU time and percent for processes not found in the GPU process list
-   const Vector* rows = dpt->super.super.rows;
-   int table_size = Vector_size(rows);
-   for (int i = 0; i < table_size; ++i) {
-      DarwinProcess* dp = (DarwinProcess*) Vector_get(rows, i);
-      if (!dp->gpu_time_updated) {
-         dp->gpu_time = 0;
-         dp->gpu_percent = 0.0F;
-      }
    }
 
    IOObjectRelease(iterator);

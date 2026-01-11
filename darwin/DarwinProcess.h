@@ -26,10 +26,10 @@ typedef struct DarwinProcess_ {
 
    /* Total GPU time used in nano seconds */
    uint64_t gpu_time;
+   /* Total GPU time used in nano seconds in the last scan */
+   uint64_t gpu_time_last;
    /* GPU utilization in percent */
    float gpu_percent;
-   /* Got GPU time info from last scan */
-   bool gpu_time_updated;
 } DarwinProcess;
 
 extern const ProcessClass DarwinProcess_class;
