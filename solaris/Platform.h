@@ -12,7 +12,7 @@ in the source distribution for its full text.
 #include <kstat.h>
 
 /* On OmniOS /usr/include/sys/regset.h redefines ERR to 13 - \r, breaking the Enter key.
- * Since ncruses macros use the ERR macro, we cannot use another name.
+ * Since ncurses macros use the ERR macro, we cannot use another name.
  */
 #undef ERR
 #include <libproc.h>
