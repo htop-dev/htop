@@ -1312,7 +1312,7 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
 
       /* Detect the last / before the end of the token as
        * the start of the basename in cmdline, see Process_writeCommand */
-      if (((amtRead > 1 && command[0] == '/') || (amtRead > 2 && !strncmp(command, "./", 2))) && argChar == '/' && tokenEnd == (size_t)-1) {
+      if (argChar == '/' && tokenEnd == (size_t)-1) {
          tokenStart = i + 1;
       }
 
