@@ -107,7 +107,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
          }
          /* fallthrough */
       case EVENT_SET_SELECTED:
-         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+         if (selected && OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             super->currentBar = this->decIncBar;
          } else {
             Panel_setDefaultBar(super);
