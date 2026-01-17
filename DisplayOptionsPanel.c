@@ -101,7 +101,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
             OptionItem* previous = selected;
             Panel_onKey(super, ch);
             selected = (OptionItem*) Panel_getSelected(super);
-            if (previous != selected) {
+            if (previous != selected || !selected) {
                result = HANDLED;
             }
          }
