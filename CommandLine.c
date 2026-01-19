@@ -420,8 +420,8 @@ int CommandLine_run(int argc, char** argv) {
    CRT_done();
 
    if (terminate_requested) {
-      fprintf(stderr, "\nInterrupted by signal %d, terminating.\n", terminate_signal);
-      exit(128 + terminate_signal);
+      fprintf(stderr, "\nInterrupted by signal %ld, terminating.\n", (long)terminate_signal);
+      exit(128 + (int)terminate_signal);
    }
 
    if (settings->changed) {
