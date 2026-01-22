@@ -307,9 +307,9 @@ void Process_init(Process* this, const struct Machine_* host);
 
 const char* Process_rowGetSortKey(Row* super);
 
-bool Process_rowChangePriorityBy(Row* super, Arg delta);
+int Process_rowChangePriorityBy(Row* super, Arg delta);
 
-bool Process_rowSendSignal(Row* super, Arg sgn);
+int Process_rowSendSignal(Row* super, Arg sgn);
 
 bool Process_rowIsHighlighted(const Row* super);
 

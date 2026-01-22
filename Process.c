@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <sys/resource.h>
+#include <errno.h>
 
 #include "CRT.h"
 #include "Hashtable.h"
@@ -882,30 +883,33 @@ void Process_init(Process* this, const Machine* host) {
    this->st_uid = (uid_t)-1;
 }
 
-static bool Process_setPriority(Process* this, int priority) {
+static int Process_setPriority(Process* this, int priority) {
    if (Settings_isReadonly())
-      return false;
+      return -EPERM;
 
    int old_prio = getpriority(PRIO_PROCESS, Process_getPid(this));
    int err = setpriority(PRIO_PROCESS, Process_getPid(this), priority);
 
-   if (err == 0 && old_prio != getpriority(PRIO_PROCESS, Process_getPid(this))) {
+   if (err != 0)
+      return -errno;
+   
+   if (old_prio != getpriority(PRIO_PROCESS, Process_getPid(this))) {
       this->nice = priority;
    }
-   return (err == 0);
+   return 0;
 }
 
-bool Process_rowChangePriorityBy(Row* super, Arg delta) {
+int Process_rowChangePriorityBy(Row* super, Arg delta) {
    Process* this = (Process*) super;
    assert(Object_isA((const Object*) this, (const ObjectClass*) &Process_class));
    return Process_setPriority(this, (int)this->nice + delta.i);
 }
 
-static bool Process_sendSignal(Process* this, Arg sgn) {
-   return kill(Process_getPid(this), sgn.i) == 0;
+static int Process_sendSignal(Process* this, Arg sgn) {
+   return (kill(Process_getPid(this), sgn.i) == 0) ? 0 : -errno;
 }
 
-bool Process_rowSendSignal(Row* super, Arg sgn) {
+int Process_rowSendSignal(Row* super, Arg sgn) {
    Process* this = (Process*) super;
    assert(Object_isA((const Object*) this, (const ObjectClass*) &Process_class));
    return Process_sendSignal(this, sgn);

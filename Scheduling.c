@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <stddef.h>
+#include <errno.h>
 
 #include "FunctionBar.h"
 #include "ListItem.h"
@@ -99,7 +100,7 @@ Panel* Scheduling_newPriorityPanel(int policy, int preSelectedPriority) {
    return this;
 }
 
-static bool Scheduling_setPolicy(Process* p, Arg arg) {
+static int Scheduling_setPolicy(Process* p, Arg arg) {
    const SchedulingArg* sarg = arg.v;
    int policy = sarg->policy;
 
@@ -118,10 +119,12 @@ static bool Scheduling_setPolicy(Process* p, Arg arg) {
 
    /* POSIX says on success the previous scheduling policy should be returned,
     * but Linux always returns 0. */
-   return r != -1;
+   if (r != -1)
+      return 0;
+   return -errno;
 }
 
-bool Scheduling_rowSetPolicy(Row* row, Arg arg) {
+int Scheduling_rowSetPolicy(Row* row, Arg arg) {
    Process* p = (Process*) row;
    assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
    return Scheduling_setPolicy(p, arg);

@@ -12,6 +12,7 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "Process.h"
 #include "XUtils.h"
@@ -102,22 +103,23 @@ static Affinity* Affinity_get(const Process* p, Machine* host) {
    return affinity;
 }
 
-static bool Affinity_set(Process* p, Arg arg) {
+static int Affinity_set(Process* p, Arg arg) {
    Affinity* this = arg.v;
    cpu_set_t cpuset;
    CPU_ZERO(&cpuset);
    for (unsigned int i = 0; i < this->used; i++) {
       CPU_SET(this->cpus[i], &cpuset);
    }
-   bool ok = (sched_setaffinity(Process_getPid(p), sizeof(unsigned long), &cpuset) == 0);
-   return ok;
+   if (sched_setaffinity(Process_getPid(p), sizeof(unsigned long), &cpuset) == 0)
+      return 0;
+   return -errno;
 }
 
 #endif
 
 #if defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY)
 
-bool Affinity_rowSet(Row* row, Arg arg) {
+int Affinity_rowSet(Row* row, Arg arg) {
    Process* p = (Process*) row;
    assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
    return Affinity_set(p, arg);

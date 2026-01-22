@@ -39,7 +39,7 @@ typedef struct {
    int priority;
 } SchedulingArg;
 
-bool Scheduling_rowSetPolicy(Row* proc, Arg arg);
+int Scheduling_rowSetPolicy(Row* proc, Arg arg);
 
 const char* Scheduling_formatPolicy(int policy);
 

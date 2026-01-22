@@ -160,28 +160,30 @@ int MainPanel_selectedRow(MainPanel* this) {
    return row ? row->id : -1;
 }
 
-bool MainPanel_foreachRow(MainPanel* this, MainPanel_foreachRowFn fn, Arg arg, bool* wasAnyTagged) {
+int MainPanel_foreachRow(MainPanel* this, MainPanel_foreachRowFn fn, Arg arg, bool* wasAnyTagged) {
    Panel* super = &this->super;
-   bool ok = true;
+   int rc = 0;
    bool anyTagged = false;
    for (int i = 0; i < Panel_size(super); i++) {
       Row* row = (Row*) Panel_get(super, i);
       if (row->tag) {
-         ok &= fn(row, arg);
+         rc = fn(row, arg);
          anyTagged = true;
+         if (rc != 0)
+            break;
       }
    }
    if (!anyTagged) {
       Row* row = (Row*) Panel_getSelected(super);
       if (row) {
-         ok &= fn(row, arg);
+         rc = fn(row, arg);
       }
    }
 
    if (wasAnyTagged)
       *wasAnyTagged = anyTagged;
 
-   return ok;
+   return rc;
 }
 
 static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {

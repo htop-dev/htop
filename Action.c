@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "CRT.h"
 #include "CategoriesPanel.h"
@@ -104,8 +105,8 @@ static void Action_runSetup(State* st) {
 
 static bool changePriority(MainPanel* panel, int delta) {
    bool anyTagged;
-   bool ok = MainPanel_foreachRow(panel, Process_rowChangePriorityBy, (Arg) { .i = delta }, &anyTagged);
-   if (!ok)
+   int rc = MainPanel_foreachRow(panel, Process_rowChangePriorityBy, (Arg) { .i = delta }, &anyTagged);
+   if (rc != 0)
       beep();
    return anyTagged;
 }
@@ -456,8 +457,8 @@ static Htop_Reaction actionSetAffinity(State* st) {
    const void* set = Action_pickFromVector(st, affinityPanel, width, true);
    if (set) {
       Affinity* affinity2 = AffinityPanel_getAffinity(affinityPanel, host);
-      bool ok = MainPanel_foreachRow(st->mainPanel, Affinity_rowSet, (Arg) { .v = affinity2 }, NULL);
-      if (!ok)
+      int rc = MainPanel_foreachRow(st->mainPanel, Affinity_rowSet, (Arg) { .v = affinity2 }, NULL);
+      if (rc != 0)
          beep();
       Affinity_delete(affinity2);
    }
@@ -502,8 +503,8 @@ static Htop_Reaction actionSetSchedPolicy(State* st) {
 
       SchedulingArg v = { .policy = preSelectedPolicy, .priority = preSelectedPriority };
 
-      bool ok = MainPanel_foreachRow(st->mainPanel, Scheduling_rowSetPolicy, (Arg) { .v = &v }, NULL);
-      if (!ok)
+      int rc = MainPanel_foreachRow(st->mainPanel, Scheduling_rowSetPolicy, (Arg) { .v = &v }, NULL);
+      if (rc != 0)
          beep();
    }
 
@@ -526,11 +527,20 @@ static Htop_Reaction actionKill(State* st) {
       Panel_setHeader((Panel*)st->mainPanel, "Sending...");
       Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
       refresh();
-      bool ok = MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .i = sgn->key }, NULL);
-      if (!ok) {
-         beep();
+      int rc = MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .i = sgn->key }, NULL);
+      if (rc != 0) {
+         int err = (rc < 0) ? -rc : rc;
+         if (err != ESRCH)
+            beep();
+         if (err == EPERM) {
+            Panel_setHeader((Panel*)st->mainPanel, "Permission denied (try running as root)");
+         }else {
+            Panel_setHeader((Panel*)st->mainPanel, "Failed to send signal");
+         }
+         Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
+         refresh();
       }
-      napms(500);
+      napms(1500);
    }
    Panel_delete((Object*)signalsPanel);
 

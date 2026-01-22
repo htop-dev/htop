@@ -28,7 +28,7 @@ typedef struct MainPanel_ {
    unsigned int idSearch;
 } MainPanel;
 
-typedef bool(*MainPanel_foreachRowFn)(Row*, Arg);
+typedef int(*MainPanel_foreachRowFn)(Row*, Arg);
 
 #define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
 
@@ -37,7 +37,7 @@ void MainPanel_updateLabels(MainPanel* this, bool list, bool filter);
 
 int MainPanel_selectedRow(MainPanel* this);
 
-bool MainPanel_foreachRow(MainPanel* this, MainPanel_foreachRowFn fn, Arg arg, bool* wasAnyTagged);
+int MainPanel_foreachRow(MainPanel* this, MainPanel_foreachRowFn fn, Arg arg, bool* wasAnyTagged);
 
 extern const PanelClass MainPanel_class;
 

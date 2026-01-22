@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <syscall.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "CRT.h"
 #include "Macros.h"
@@ -169,15 +170,21 @@ IOPriority LinuxProcess_updateIOPriority(Process* p) {
    return ioprio;
 }
 
-static bool LinuxProcess_setIOPriority(Process* p, Arg ioprio) {
+static int LinuxProcess_setIOPriority(Process* p, Arg ioprio) {
 // Other OSes masquerading as Linux (NetBSD?) don't have this syscall
 #ifdef SYS_ioprio_set
-   syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, Process_getPid(p), ioprio.i);
+   long rc = syscall(SYS_ioprio_set, IOPRIO_WHO_PROCESS, Process_getPid(p), ioprio.i);
+   if (rc == -1)
+      return -errno;
 #endif
-   return LinuxProcess_updateIOPriority(p) == ioprio.i;
+   // Fallback / verify
+   if (LinuxProcess_updateIOPriority(p) == ioprio.i)
+      return 0;
+   
+   return -1;
 }
 
-bool LinuxProcess_rowSetIOPriority(Row* super, Arg ioprio) {
+int LinuxProcess_rowSetIOPriority(Row* super, Arg ioprio) {
    Process* p = (Process*) super;
    assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
    return LinuxProcess_setIOPriority(p, ioprio);
@@ -190,29 +197,32 @@ bool LinuxProcess_isAutogroupEnabled(void) {
    return buf[0] == '1';
 }
 
-static bool LinuxProcess_changeAutogroupPriorityBy(Process* p, Arg delta) {
+static int LinuxProcess_changeAutogroupPriorityBy(Process* p, Arg delta) {
    char buffer[256];
    pid_t pid = Process_getPid(p);
    xSnprintf(buffer, sizeof(buffer), PROCDIR "/%d/autogroup", pid);
 
    FILE* file = fopen(buffer, "r+");
    if (!file)
-      return false;
+      return -errno;
 
    long int identity;
    int nice;
    int ok = fscanf(file, "/autogroup-%ld nice %d", &identity, &nice);
-   bool success = false;
+
+   int rc = -1;
    if (ok == 2 && fseek(file, 0L, SEEK_SET) == 0) {
       xSnprintf(buffer, sizeof(buffer), "%d", nice + delta.i);
-      success = fputs(buffer, file) > 0;
+      if (fputs(buffer, file) > 0)
+         rc = 0;
    }
 
    fclose(file);
-   return success;
+   return rc;
 }
 
-bool LinuxProcess_rowChangeAutogroupPriorityBy(Row* super, Arg delta) {
+
+int LinuxProcess_rowChangeAutogroupPriorityBy(Row* super, Arg delta) {
    Process* p = (Process*) super;
    assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
    return LinuxProcess_changeAutogroupPriorityBy(p, delta);

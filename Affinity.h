@@ -40,7 +40,7 @@ void Affinity_add(Affinity* this, unsigned int id);
 
 Affinity* Affinity_rowGet(const Row* row, Machine* host);
 
-bool Affinity_rowSet(Row* row, Arg arg);
+int Affinity_rowSet(Row* row, Arg arg);
 
 #endif /* HAVE_LIBHWLOC || HAVE_AFFINITY */
 
