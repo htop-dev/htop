@@ -105,6 +105,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &SwapMeter_class,
    &TasksMeter_class,
    &UptimeMeter_class,
+   &SecondsUptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
    &SysArchMeter_class,

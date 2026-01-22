@@ -25,6 +25,7 @@ static void UptimeMeter_updateValues(Meter* this) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "(unknown)");
       return;
    }
+
    int seconds = totalseconds % 60;
    int minutes = (totalseconds / 60) % 60;
    int hours = (totalseconds / 3600) % 24;
@@ -56,5 +57,31 @@ const MeterClass UptimeMeter_class = {
    .attributes = UptimeMeter_attributes,
    .name = "Uptime",
    .uiName = "Uptime",
+   .caption = "Uptime: "
+};
+
+
+static void SecondsUptimeMeter_updateValues(Meter* this) {
+   int totalseconds = Platform_getUptime();
+   if (totalseconds <= 0) {
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "(unknown)");
+      return;
+   }
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%d s", totalseconds);
+}
+
+const MeterClass SecondsUptimeMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete
+   },
+   .updateValues = SecondsUptimeMeter_updateValues,
+   .defaultMode = TEXT_METERMODE,
+   .supportedModes = (1 << TEXT_METERMODE) | (1 << LED_METERMODE),
+   .maxItems = 0,
+   .total = 0.0,
+   .attributes = UptimeMeter_attributes,
+   .name = "SecondsUptime",
+   .uiName = "Uptime (seconds)",
    .caption = "Uptime: "
 };

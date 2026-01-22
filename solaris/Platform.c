@@ -116,6 +116,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &HostnameMeter_class,
    &SysArchMeter_class,
    &UptimeMeter_class,
+   &SecondsUptimeMeter_class,
    &AllCPUsMeter_class,
    &AllCPUs2Meter_class,
    &AllCPUs4Meter_class,
