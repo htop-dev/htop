@@ -12,6 +12,8 @@ in the source distribution for its full text.
 
 typedef struct UnsupportedMachine_ {
    Machine super;
+   memory_t usedMem;
+   memory_t cachedMem;
 } UnsupportedMachine;
 
 #endif
