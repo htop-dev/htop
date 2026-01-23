@@ -42,6 +42,13 @@ typedef struct DragonFlyBSDMachine_ {
    int pageSizeKb;
    int kernelFScale;
 
+   memory_t totalMem;
+   memory_t wiredMem;
+   memory_t buffersMem;
+   memory_t activeMem;
+   memory_t inactiveMem;
+   memory_t cacheMem;
+
    CPUData* cpus;
 
    unsigned long* cp_time_o;

@@ -1690,7 +1690,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          float percent_cpu = saturatingSub(lp->utime + lp->stime, lasttimes) / lhost->period * 100.0;
          proc->percent_cpu = MINIMUM(percent_cpu, host->activeCPUs * 100.0F);
       }
-      proc->percent_mem = proc->m_resident / (double)(host->totalMem) * 100.0;
+      proc->percent_mem = proc->m_resident / (double)(lhost->totalMem) * 100.0;
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       if (!LinuxProcessTable_updateUser(host, proc, procFd, mainTask))

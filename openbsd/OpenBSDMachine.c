@@ -142,19 +142,21 @@ static void OpenBSDMachine_scanMemoryInfo(OpenBSDMachine* this) {
       CRT_fatalError("uvmexp sysctl call failed");
    }
 
-   super->totalMem = uvmexp.npages * this->pageSizeKB;
-   super->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * this->pageSizeKB;
-
    // Taken from OpenBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
    const int bcache_mib[] = { CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT };
    struct bcachestats bcstats;
    size_t size_bcstats = sizeof(bcstats);
-
    if (sysctl(bcache_mib, 3, &bcstats, &size_bcstats, NULL, 0) < 0) {
       CRT_fatalError("cannot get vfs.bcachestat");
    }
 
-   super->cachedMem = bcstats.numbufpages * this->pageSizeKB;
+   // NOTE: in OpenBSD the "cached" memory is a subset of the "wired" memory.
+   this->totalMem    = this->pageSizeKB * uvmexp.npages;
+   this->wiredMem    = this->pageSizeKB * (uvmexp.npages - uvmexp.free - uvmexp.active - uvmexp.paging - bcstats.numbufpages); // NB: uvmexp.wired == 0!? deduct it
+   this->cacheMem    = this->pageSizeKB * bcstats.numbufpages;
+   this->activeMem   = this->pageSizeKB * uvmexp.active;
+   this->pagingMem   = this->pageSizeKB * uvmexp.paging;
+   this->inactiveMem = this->pageSizeKB * uvmexp.inactive;
 
    /*
     * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
