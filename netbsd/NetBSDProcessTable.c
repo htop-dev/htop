@@ -230,7 +230,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       proc->m_virt = kproc->p_vm_vsize;
       proc->m_resident = kproc->p_vm_rssize;
 
-      proc->percent_mem = (proc->m_resident * nhost->pageSizeKB) / (double)(host->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * nhost->pageSizeKB) / (double)(nhost->totalMem) * 100.0;
       proc->percent_cpu = CLAMP(getpcpu(nhost, kproc), 0.0, host->activeCPUs * 100.0);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 

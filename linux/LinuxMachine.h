@@ -77,6 +77,13 @@ typedef struct LinuxMachine_ {
 
    double period;
 
+   memory_t totalMem;
+   memory_t cachedMem;
+   memory_t sharedMem;
+   memory_t usedMem;
+   memory_t buffersMem;
+   memory_t availableMem;
+
    CPUData* cpuData;
 
    #ifdef HAVE_SENSORS_SENSORS_H
@@ -86,8 +93,6 @@ typedef struct LinuxMachine_ {
 
    memory_t totalHugePageMem;
    memory_t usedHugePageMem[HTOP_HUGEPAGE_COUNT];
-
-   memory_t availableMem;
 
    unsigned long long int prevGpuTime, curGpuTime;  /* total absolute GPU time in nano seconds */
    GPUEngineData* gpuEngineData;

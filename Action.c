@@ -27,6 +27,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "Macros.h"
 #include "MainPanel.h"
+#include "MemoryMeter.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
@@ -750,16 +751,22 @@ static Htop_Reaction actionHelp(State* st) {
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(line++, 0, "Memory bar:    ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
-   addbartext(CRT_colors[MEMORY_USED], "", "used");
-   addbartext(CRT_colors[MEMORY_SHARED], "/", "shared");
-   addbartext(CRT_colors[MEMORY_COMPRESSED], "/", "compressed");
-   if (st->host->settings->showCachedMemory) {
-      addbartext(CRT_colors[MEMORY_BUFFERS_TEXT], "/", "buffers");
-      addbartext(CRT_colors[MEMORY_CACHE], "/", "cache");
-      addbartext(CRT_colors[BAR_SHADOW], "          ", "used");
-   } else {
-      addbartext(CRT_colors[BAR_SHADOW], "                        ", "used");
+   // memory classes are OS-specific and provided in their <os>/Platform.c implementation
+   // ideal length of memory bar == 56 chars. Any length < 45 requires padding to 45.
+   // [0        1         2         3         4         5      ]
+   // [12345678901234567890123456789012345678901234567890123456]
+   // [                                            ^    5      ]
+   // [class1/class2/class3/.../classN               used/total]
+   int barTxtLen = 0;
+   for (unsigned int i = 0; i < Platform_numberOfMemoryClasses; i++) {
+      if (!st->host->settings->showCachedMemory && Platform_memoryClasses[i].countsAsCache)
+         continue; // skip reclaimable cache memory classes if "show cached memory" is not ticked
+      addbartext(CRT_colors[Platform_memoryClasses[i].color], (i == 0 ? "" : "/"), Platform_memoryClasses[i].label);
+      barTxtLen += (i == 0 ? 0 : 1) + strlen (Platform_memoryClasses[i].label);
    }
+   for (int i = barTxtLen; i < 45; i++)
+      addattrstr(CRT_colors[BAR_SHADOW], " "); // pad to 45 chars if necessary
+   addbartext(CRT_colors[BAR_SHADOW], " ", "used");
    addbartext(CRT_colors[BAR_SHADOW], "/", "total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
 

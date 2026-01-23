@@ -161,6 +161,8 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
+#define NUMBER_OF_DYNAMIC_COLORS 9 // number of DYNAMIC_<ColorName> entries in ColorElements
+
 void CRT_fatalError(const char* note) ATTR_NORETURN;
 
 #ifdef NDEBUG

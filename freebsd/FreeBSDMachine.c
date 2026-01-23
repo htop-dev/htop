@@ -42,10 +42,8 @@ static int MIB_vm_stats_vm_v_page_count[4];
 
 static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_active_count[4];
-static int MIB_vm_stats_vm_v_cache_count[4];
+static int MIB_vm_stats_vm_v_laundry_count[4];
 static int MIB_vm_stats_vm_v_inactive_count[4];
-static int MIB_vm_stats_vm_v_free_count[4];
-static int MIB_vm_vmtotal[2];
 
 static int MIB_vfs_bufspace[2];
 
@@ -76,10 +74,8 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    len = 4; sysctlnametomib("vm.stats.vm.v_wire_count", MIB_vm_stats_vm_v_wire_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_active_count", MIB_vm_stats_vm_v_active_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
+   len = 4; sysctlnametomib("vm.stats.vm.v_laundry_count", MIB_vm_stats_vm_v_laundry_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
-   len = 2; sysctlnametomib("vm.vmtotal", MIB_vm_vmtotal, &len);
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
@@ -309,65 +305,75 @@ static inline void FreeBSDMachine_scanCPU(Machine* super) {
 static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    FreeBSDMachine* this = (FreeBSDMachine*) super;
 
-   // @etosan:
-   // memory counter relationships seem to be these:
-   //  total = active + wired + inactive + cache + free
-   //  htop_used (unavail to anybody)   = active + wired + inactive - buffer
-   //  htop_cache (for cache meter)     = buffer + cache
-   //  htop_user_free (avail to procs)  = buffer + cache + free
-   //  htop_buffers (disk write buffer) = 0 (not applicable to FreeBSD)
+   // comment by Pierre-Marie Baty <pm@pmbaty.com>
    //
-   // 'buffer' contain cache used by most file systems other than ZFS, and is
-   // included in 'wired'
+   // FreeBSD has the following memory classes:
+   //    active:   userland pages currently mapped to physical memory (i.e. in use)
+   //    inactive: userland pages that are no longer active, can be (re)allocated to processes
+   //    laundry:  userland pages that were just released, now being flushed, will become inactive
+   //    wired:    kernel pages currently mapped to physical memory, cannot be paged out nor swapped
+   //       buffers: subcategory of 'wired' corresponding to the filesystem caches
+   //    free:     pages that haven't been allocated yet, or have been released
    //
-   // with ZFS ARC situation becomes bit muddled, as ARC behaves like "user_free"
-   // and belongs into cache, but is reported as wired by kernel
-   //
-   // htop_used   = active + (wired - arc)
-   // htop_cache  = buffers + cache + arc
+   // With ZFS, the ARC area is NOT counted in the 'buffers' class, but is still counted in the 'wired'
+   // class. The ARC total must thus be subtracted from the 'wired' class AND added to the 'buffer' class,
+   // so that the result (ARC being shown in buffersMem) is consistent with what ZFS users would expect.
+   // This adjustment is done in Platform_setMemoryValues() in freebsd/Platform.c.
+
    u_long totalMem;
-   u_int memActive, memWire, memInactive, cachedMem;
+   u_int memActive, memWire, memInactive, memLaundry;
    long buffersMem;
    size_t len;
-   struct vmtotal vmtotal;
 
-   //disabled for now, as it is always smaller than physical amount of memory...
-   //...to avoid "where is my memory?" questions
-   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(super->totalMem), &len, NULL, 0);
-   //super->totalMem *= this->pageSizeKb;
+   // total memory
    len = sizeof(totalMem);
-   sysctl(MIB_hw_physmem, 2, &(totalMem), &len, NULL, 0);
-   totalMem /= 1024;
-   super->totalMem = totalMem;
+   if ((sysctl(MIB_hw_physmem, 2, &(totalMem), &len, NULL, 0) == 0) && (totalMem > 0))
+      super->totalMem = totalMem / 1024;
+   else
+      super->totalMem = 0;
 
+   // "active" pages
    len = sizeof(memActive);
-   sysctl(MIB_vm_stats_vm_v_active_count, 4, &(memActive), &len, NULL, 0);
-   memActive *= this->pageSizeKb;
+   if ((sysctl(MIB_vm_stats_vm_v_active_count, 4, &(memActive), &len, NULL, 0) == 0) && (memActive > 0))
+      this->activeMem = memActive * this->pageSizeKb;
+   else
+      this->activeMem = 0;
 
+   // "wired" pages
    len = sizeof(memWire);
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(memWire), &len, NULL, 0);
-   memWire *= this->pageSizeKb;
+   if ((sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(memWire), &len, NULL, 0) == 0) && (memWire > 0))
+      this->wiredMem = memWire * this->pageSizeKb;
+   else
+      this->wiredMem = 0;
 
+   // "inactive" pages
    len = sizeof(memInactive);
-   sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &(memInactive), &len, NULL, 0);
-   memInactive *= this->pageSizeKb;
+   if ((sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &(memInactive), &len, NULL, 0) == 0) && (memInactive > 0))
+      this->inactiveMem = memInactive * this->pageSizeKb;
+   else
+      this->inactiveMem = 0;
 
+   // "laundry" pages
+   len = sizeof(memLaundry);
+   if ((sysctl(MIB_vm_stats_vm_v_laundry_count, 4, &(memLaundry), &len, NULL, 0) == 0) && (memLaundry > 0))
+      this->laundryMem = memLaundry * this->pageSizeKb;
+   else
+      this->laundryMem = 0;
+
+   // "buffers" pages (separate read, should be deducted from 'wired')
    len = sizeof(buffersMem);
-   sysctl(MIB_vfs_bufspace, 2, &(buffersMem), &len, NULL, 0);
-   buffersMem /= 1024;
-   super->cachedMem = buffersMem;
+   if ((sysctl(MIB_vfs_bufspace, 2, &(buffersMem), &len, NULL, 0) == 0) && (buffersMem > 0))
+      this->buffersMem = buffersMem / 1024;
+   else
+      this->buffersMem = 0;
+   this->wiredMem -= this->buffersMem; // subtract (NB: "buffers" can't be larger than "wired")
 
-   len = sizeof(cachedMem);
-   sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(cachedMem), &len, NULL, 0);
-   cachedMem *= this->pageSizeKb;
-   super->cachedMem += cachedMem;
+   // NOTE: it is wrong in FreeBSD to represent the "shared" memory as a memory class by itself.
+   // The only page classes exposed by the kernel are "active", "inactive", "wired", "laundry" and "free".
+   // The "shared" memory can be obtained from another sysctl, but there is no simple way
+   // in FreeBSD to determine which page classe(s) this "shared" memory should be subtracted from.
 
-   len = sizeof(vmtotal);
-   sysctl(MIB_vm_vmtotal, 2, &(vmtotal), &len, NULL, 0);
-   super->sharedMem = vmtotal.t_rmshr * this->pageSizeKb;
-
-   super->usedMem = memActive + memWire + memInactive - buffersMem;
-
+   // swap
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(this->kd, swap, ARRAYSIZE(swap), 0);
    super->totalSwap = 0;

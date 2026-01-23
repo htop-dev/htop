@@ -50,12 +50,7 @@ typedef struct Machine_ {
    bool topologyOk;
    #endif
 
-   memory_t totalMem;
-   memory_t usedMem;
-   memory_t buffersMem;
-   memory_t cachedMem;
-   memory_t sharedMem;
-   memory_t availableMem;
+   /* NOTE: memory details were moved to the OS-specific machine subclass */
 
    memory_t totalSwap;
    memory_t usedSwap;

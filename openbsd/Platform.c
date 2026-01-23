@@ -100,6 +100,30 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+const MemoryClass Platform_memoryClasses[] = {
+#define MEMORY_CLASS_WIRED    0
+   { .label = "wired",    .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_RED      },
+#define MEMORY_CLASS_CACHE    1
+   { .label = "cache",    .countsAsUsed = true,  .countsAsCache = true,  .color = DYNAMIC_MAGENTA  },
+#define MEMORY_CLASS_ACTIVE   2
+   { .label = "active",   .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_GREEN    },
+#define MEMORY_CLASS_PAGING   3
+   { .label = "paging",   .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_DARKGRAY },
+#define MEMORY_CLASS_INACTIVE 4
+   { .label = "inactive", .countsAsUsed = false, .countsAsCache = true,  .color = DYNAMIC_GRAY     },
+}; // N.B. the chart will display categories in this order
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
+const int Platform_memoryMeter_attributes[] = {
+   Platform_memoryClasses[0].color,
+   Platform_memoryClasses[1].color,
+   Platform_memoryClasses[2].color,
+   Platform_memoryClasses[3].color,
+   Platform_memoryClasses[4].color
+}; // there MUST be as many entries in this attributes array as memory classes
+
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -225,17 +249,19 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    const Machine* host = this->host;
-   long int usedMem = host->usedMem;
-   long int buffersMem = host->buffersMem;
-   long int cachedMem = host->cachedMem;
-   usedMem -= buffersMem + cachedMem;
-   this->total = host->totalMem;
-   this->values[MEMORY_METER_USED] = usedMem;
-   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
-   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
-   this->values[MEMORY_METER_BUFFERS] = buffersMem;
-   this->values[MEMORY_METER_CACHE] = cachedMem;
-   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
+   const OpenBSDMachine* ohost = (const OpenBSDMachine*) host;
+   this->total = ohost->totalMem;
+   if (host->settings->showCachedMemory) {
+      this->values[MEMORY_CLASS_WIRED]    = ohost->wiredMem;
+      this->values[MEMORY_CLASS_CACHE]    = ohost->cacheMem;
+   }
+   else { // if showCachedMemory is disabled, merge cache into the wired pages
+      this->values[MEMORY_CLASS_WIRED]    = ohost->wiredMem + ohost->cacheMem;
+      this->values[MEMORY_CLASS_CACHE]    = 0;
+   }
+   this->values[MEMORY_CLASS_ACTIVE]   = ohost->activeMem;
+   this->values[MEMORY_CLASS_PAGING]   = ohost->pagingMem;
+   this->values[MEMORY_CLASS_INACTIVE] = ohost->inactiveMem;
 }
 
 void Platform_setSwapValues(Meter* this) {

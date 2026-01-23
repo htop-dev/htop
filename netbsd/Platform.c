@@ -152,6 +152,27 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+const MemoryClass Platform_memoryClasses[] = {
+#define MEMORY_CLASS_WIRED    0
+   { .label = "wired",    .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_RED      },
+#define MEMORY_CLASS_ACTIVE   1
+   { .label = "active",   .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_GREEN    },
+#define MEMORY_CLASS_PAGED    2
+   { .label = "paged",    .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_DARKGRAY },
+#define MEMORY_CLASS_INACTIVE 3
+   { .label = "inactive", .countsAsUsed = false, .countsAsCache = true,  .color = DYNAMIC_GRAY     },
+}; // N.B. the chart will display categories in this order
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
+const int Platform_memoryMeter_attributes[] = {
+   Platform_memoryClasses[0].color,
+   Platform_memoryClasses[1].color,
+   Platform_memoryClasses[2].color,
+   Platform_memoryClasses[3].color,
+}; // there MUST be as many entries in this attributes array as memory classes
+
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -274,13 +295,12 @@ double Platform_setCPUValues(Meter* this, int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    const Machine* host = this->host;
-   this->total = host->totalMem;
-   this->values[MEMORY_METER_USED] = host->usedMem;
-   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
-   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
-   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
-   this->values[MEMORY_METER_CACHE] = host->cachedMem;
-   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
+   const NetBSDMachine* nhost = (const NetBSDMachine*) host;
+   this->total = nhost->totalMem;
+   this->values[MEMORY_CLASS_WIRED]    = nhost->wiredMem;
+   this->values[MEMORY_CLASS_ACTIVE]   = nhost->activeMem;
+   this->values[MEMORY_CLASS_PAGED]    = nhost->pagedMem;
+   this->values[MEMORY_CLASS_INACTIVE] = nhost->inactiveMem;
 }
 
 void Platform_setSwapValues(Meter* this) {
