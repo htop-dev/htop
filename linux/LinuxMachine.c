@@ -203,7 +203,7 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
     *  - Shmem in part of Cached (see https://lore.kernel.org/patchwork/patch/648763/),
     *    do not show twice by subtracting from Cached and do not subtract twice from used.
     */
-   this->totalMem = totalMem;
+   host->totalMem = totalMem;
    this->cachedMem = cachedMem + sreclaimableMem - sharedMem;
    this->sharedMem = sharedMem;
    const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem;

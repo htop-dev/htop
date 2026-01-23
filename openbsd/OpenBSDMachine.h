@@ -41,7 +41,6 @@ typedef struct OpenBSDMachine_ {
    Machine super;
    kvm_t* kd;
 
-   memory_t totalMem;
    memory_t wiredMem;
    memory_t cacheMem;
    memory_t activeMem;

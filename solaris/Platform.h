@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include "CommandLine.h"
 #include "DiskIOMeter.h"
 #include "Hashtable.h"
+#include "MemoryMeter.h"
 #include "NetworkIOMeter.h"
 #include "ProcessLocksScreen.h"
 #include "SignalsPanel.h"
@@ -57,6 +58,10 @@ extern const unsigned int Platform_numberOfDefaultScreens;
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
+
+extern const MemoryClass Platform_memoryClasses[];
+
+extern const unsigned int Platform_numberOfMemoryClasses;
 
 extern const MeterClass* const Platform_meterTypes[];
 

@@ -77,7 +77,6 @@ typedef struct LinuxMachine_ {
 
    double period;
 
-   memory_t totalMem;
    memory_t cachedMem;
    memory_t sharedMem;
    memory_t usedMem;

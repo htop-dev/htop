@@ -1,6 +1,7 @@
 /*
 htop - MemoryMeter.c
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2025 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -20,8 +21,14 @@ in the source distribution for its full text.
 #include "RichString.h"
 
 
-extern const int Platform_memoryMeter_attributes[]; // OS-specific
-
+static const int MemoryMeter_attributes[] = {
+   MEMORY_1,
+   MEMORY_2,
+   MEMORY_3,
+   MEMORY_4,
+   MEMORY_5,
+   MEMORY_6
+};
 
 static void MemoryMeter_updateValues(Meter* this) {
    char* buffer = this->txtBuffer;
@@ -72,7 +79,7 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
 
-   /* print the OS-specific memory classes in the order supplied by their implementation */
+   /* print the memory classes in the order supplied (specific to each platform) */
    for (unsigned int memoryClassIdx = 0; memoryClassIdx < Platform_numberOfMemoryClasses; memoryClassIdx++) {
       if (!settings->showCachedMemory && Platform_memoryClasses[memoryClassIdx].countsAsCache)
          continue; // skip reclaimable cache memory classes if "show cached memory" is not ticked
@@ -94,10 +101,10 @@ const MeterClass MemoryMeter_class = {
    .updateValues = MemoryMeter_updateValues,
    .defaultMode = BAR_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
-   .maxItems = NUMBER_OF_DYNAMIC_COLORS, // all the range of DYNAMIC_xxxx colors are allowed
+   .maxItems = 6, // maximum of MEMORY_N settings
    .isPercentChart = true,
    .total = 100.0,
-   .attributes = Platform_memoryMeter_attributes, // OS-specific
+   .attributes = MemoryMeter_attributes,
    .name = "Memory",
    .uiName = "Memory",
    .caption = "Mem"

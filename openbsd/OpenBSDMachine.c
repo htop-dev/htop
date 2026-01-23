@@ -151,7 +151,7 @@ static void OpenBSDMachine_scanMemoryInfo(OpenBSDMachine* this) {
    }
 
    // NOTE: in OpenBSD the "cached" memory is a subset of the "wired" memory.
-   this->totalMem    = this->pageSizeKB * uvmexp.npages;
+   super->totalMem   = this->pageSizeKB * uvmexp.npages;
    this->wiredMem    = this->pageSizeKB * (uvmexp.npages - uvmexp.free - uvmexp.active - uvmexp.paging - bcstats.numbufpages); // NB: uvmexp.wired == 0!? deduct it
    this->cacheMem    = this->pageSizeKB * bcstats.numbufpages;
    this->activeMem   = this->pageSizeKB * uvmexp.active;

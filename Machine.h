@@ -50,7 +50,7 @@ typedef struct Machine_ {
    bool topologyOk;
    #endif
 
-   /* NOTE: memory details were moved to the OS-specific machine subclass */
+   memory_t totalMem;
 
    memory_t totalSwap;
    memory_t usedSwap;

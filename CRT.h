@@ -93,12 +93,12 @@ typedef enum ColorElements_ {
    BAR_SHADOW,
    GRAPH_1,
    GRAPH_2,
-   MEMORY_USED,
-   MEMORY_BUFFERS,
-   MEMORY_BUFFERS_TEXT,
-   MEMORY_CACHE,
-   MEMORY_SHARED,
-   MEMORY_COMPRESSED,
+   MEMORY_1,
+   MEMORY_2,
+   MEMORY_3,
+   MEMORY_4,
+   MEMORY_5,
+   MEMORY_6,
    HUGEPAGE_1,
    HUGEPAGE_2,
    HUGEPAGE_3,
@@ -160,8 +160,6 @@ typedef enum ColorElements_ {
    DYNAMIC_WHITE,
    LAST_COLORELEMENT
 } ColorElements;
-
-#define NUMBER_OF_DYNAMIC_COLORS 9 // number of DYNAMIC_<ColorName> entries in ColorElements
 
 void CRT_fatalError(const char* note) ATTR_NORETURN;
 
