@@ -35,8 +35,13 @@ char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
       const struct passwd* userData = getpwuid(uid);
       if (userData != NULL) {
          name = xStrdup(userData->pw_name);
-         Hashtable_put(this->users, uid, name);
+      } else {
+         name = xStrdup("");
       }
+      Hashtable_put(this->users, uid, name);
+   }
+   if (!name || !*name) {
+      return NULL;
    }
    return name;
 }
