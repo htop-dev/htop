@@ -92,29 +92,23 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
-const MemoryClass Platform_memoryClasses[] = {
-#define MEMORY_CLASS_WIRED    0
-   { .label = "wired",    .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_RED      },
-#define MEMORY_CLASS_BUFFERS  1
-   { .label = "buffers",  .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_MAGENTA  },
-#define MEMORY_CLASS_ACTIVE   2
-   { .label = "active",   .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_GREEN    },
-#define MEMORY_CLASS_CACHE    3
-   { .label = "cache",    .countsAsUsed = false, .countsAsCache = true,  .color = DYNAMIC_CYAN     },
-#define MEMORY_CLASS_INACTIVE 4
-   { .label = "inactive", .countsAsUsed = false, .countsAsCache = true,  .color = DYNAMIC_GRAY     },
+enum {
+   MEMORY_CLASS_WIRED = 0,
+   MEMORY_CLASS_BUFFERS,
+   MEMORY_CLASS_ACTIVE,
+   MEMORY_CLASS_CACHE,
+   MEMORY_CLASS_INACTIVE,
 }; // N.B. the chart will display categories in this order
 
+const MemoryClass Platform_memoryClasses[] = {
+   [MEMORY_CLASS_WIRED] = { .label = "wired", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_1 },
+   [MEMORY_CLASS_BUFFERS] = { .label = "buffers", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_2 },
+   [MEMORY_CLASS_ACTIVE] = { .label = "active", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_3 },
+   [MEMORY_CLASS_CACHE] = { .label = "cache", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_4 },
+   [MEMORY_CLASS_INACTIVE] = { .label = "inactive", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_5 },
+};
+
 const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
-
-const int Platform_memoryMeter_attributes[] = {
-   Platform_memoryClasses[0].color,
-   Platform_memoryClasses[1].color,
-   Platform_memoryClasses[2].color,
-   Platform_memoryClasses[3].color,
-   Platform_memoryClasses[4].color
-}; // there MUST be as many entries in this attributes array as memory classes
-
 
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
@@ -249,12 +243,11 @@ void Platform_setMemoryValues(Meter* this) {
    const DragonFlyBSDMachine* fhost = (const DragonFlyBSDMachine*) host;
    const Settings* settings = host->settings;
 
-   this->total = fhost->totalMem;
+   this->total = host->totalMem;
    if (settings->showCachedMemory) {
       this->values[MEMORY_CLASS_WIRED]    = fhost->wiredMem;
       this->values[MEMORY_CLASS_BUFFERS]  = fhost->buffersMem;
-   }
-   else { // if showCachedMemory is disabled, merge buffers into the wired pages
+   } else { // if showCachedMemory is disabled, merge buffers into the wired pages
       this->values[MEMORY_CLASS_WIRED]    = fhost->wiredMem + fhost->buffersMem;
       this->values[MEMORY_CLASS_BUFFERS]  = 0;
    }
@@ -267,8 +260,6 @@ void Platform_setSwapValues(Meter* this) {
    const Machine* host = this->host;
    this->total = host->totalSwap;
    this->values[SWAP_METER_USED] = host->usedSwap;
-   // mtr->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
-   // mtr->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 char* Platform_getProcessEnv(pid_t pid) {

@@ -159,12 +159,12 @@ static void NetBSDMachine_scanMemoryInfo(NetBSDMachine* this) {
    // The only page classes exposed by the kernel in the uvmexp struct are these.
    // The "cached" memory can be obtained from another sysctl, but there is no simple way
    // in NetBSD to determine which page classe(s) this "cached" memory should be substracted from.
-   this->totalMem    = this->pageSizeKB * uvmexp.npages;
-   this->wiredMem    = this->pageSizeKB * uvmexp.wired;
-   this->activeMem   = this->pageSizeKB * uvmexp.active;
-   this->pagedMem    = this->pageSizeKB * uvmexp.paging;
+   this->wiredMem = this->pageSizeKB * uvmexp.wired;
+   this->activeMem = this->pageSizeKB * uvmexp.active;
+   this->pagedMem = this->pageSizeKB * uvmexp.paging;
    this->inactiveMem = this->pageSizeKB * uvmexp.inactive;
 
+   super->totalMem  = this->pageSizeKB * uvmexp.npages;
    super->totalSwap = uvmexp.swpages * this->pageSizeKB;
    super->usedSwap = uvmexp.swpginuse * this->pageSizeKB;
 }

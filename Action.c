@@ -29,6 +29,7 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 #include "MemoryMeter.h"
 #include "OpenFilesScreen.h"
+#include "Platform.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "ProvideCurses.h"

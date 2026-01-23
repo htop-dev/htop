@@ -113,32 +113,25 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
-const MemoryClass Platform_memoryClasses[] = {
-#define MEMORY_CLASS_WIRED       0
-   { .label = "wired",       .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_RED     }, // pages wired down to physical memory (kernel)
-#define MEMORY_CLASS_SPECULATIVE 1
-   { .label = "speculative", .countsAsUsed = true,  .countsAsCache = true,  .color = DYNAMIC_MAGENTA }, // readahead optimization caches
-#define MEMORY_CLASS_ACTIVE      2
-   { .label = "active",      .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_GREEN   }, // userland pages actively being used
-#define MEMORY_CLASS_PURGEABLE   3
-   { .label = "purgeable",   .countsAsUsed = false, .countsAsCache = true,  .color = DYNAMIC_YELLOW  }, // userland pages voluntarily marked "discardable" by apps
-#define MEMORY_CLASS_COMPRESSED  4
-   { .label = "compressed",  .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_BLUE    }, // userland pages being compressed (means memory pressure++)
-#define MEMORY_CLASS_INACTIVE    5
-   { .label = "inactive",    .countsAsUsed = true,  .countsAsCache = true,  .color = DYNAMIC_GRAY    }, // pages no longer used; macOS counts them as "used" anyway...
+enum {
+   MEMORY_CLASS_WIRED = 0,
+   MEMORY_CLASS_SPECULATIVE,
+   MEMORY_CLASS_ACTIVE,
+   MEMORY_CLASS_PURGEABLE,
+   MEMORY_CLASS_COMPRESSED,
+   MEMORY_CLASS_INACTIVE,
 }; // N.B. the chart will display categories in this order
 
+const MemoryClass Platform_memoryClasses[] = {
+    [MEMORY_CLASS_WIRED] = { .label = "wired", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_1 }, // pages wired down to physical memory (kernel)
+   [MEMORY_CLASS_SPECULATIVE] = { .label = "speculative", .countsAsUsed = true, .countsAsCache = true, .color = MEMORY_2 }, // readahead optimization caches
+   [MEMORY_CLASS_ACTIVE] = { .label = "active", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_3 }, // userland pages actively being used
+   [MEMORY_CLASS_PURGEABLE] = { .label = "purgeable", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_4 }, // userland pages voluntarily marked "discardable" by apps
+   [MEMORY_CLASS_COMPRESSED] = { .label = "compressed", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_5 }, // userland pages being compressed (means memory pressure++)
+   [MEMORY_CLASS_INACTIVE] = { .label = "inactive", .countsAsUsed = true, .countsAsCache = true, .color = MEMORY_6 }, // pages no longer used; macOS counts them as "used" anyway...
+};
+
 const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
-
-const int Platform_memoryMeter_attributes[] = {
-   Platform_memoryClasses[0].color,
-   Platform_memoryClasses[1].color,
-   Platform_memoryClasses[2].color,
-   Platform_memoryClasses[3].color,
-   Platform_memoryClasses[4].color,
-   Platform_memoryClasses[5].color
-}; // there MUST be as many entries in this attributes array as memory classes
-
 
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
@@ -461,8 +454,6 @@ void Platform_setSwapValues(Meter* mtr) {
 
    mtr->total = swapused.xsu_total / 1024;
    mtr->values[SWAP_METER_USED] = swapused.xsu_used / 1024;
-   // mtr->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
-   // mtr->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 void Platform_setZfsArcValues(Meter* this) {

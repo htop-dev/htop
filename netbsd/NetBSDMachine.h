@@ -48,7 +48,6 @@ typedef struct NetBSDMachine_ {
    size_t pageSize;
    size_t pageSizeKB;
 
-   memory_t totalMem;
    memory_t wiredMem;
    memory_t activeMem;
    memory_t pagedMem;
