@@ -238,7 +238,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)fhost->kernelFScale);
-      proc->percent_mem = 100.0 * proc->m_resident / (double)(host->totalMem);
+      proc->percent_mem = 100.0 * proc->m_resident / (double)(fhost->totalMem);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
       if (kproc->ki_stat == SRUN && kproc->ki_oncpu != NOCPU) {

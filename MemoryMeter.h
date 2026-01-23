@@ -9,15 +9,15 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-typedef enum {
-   MEMORY_METER_USED = 0,
-   MEMORY_METER_SHARED = 1,
-   MEMORY_METER_COMPRESSED = 2,
-   MEMORY_METER_BUFFERS = 3,
-   MEMORY_METER_CACHE = 4,
-   MEMORY_METER_AVAILABLE = 5,
-   MEMORY_METER_ITEMCOUNT = 6, // number of entries in this enum
-} MemoryMeterValues;
+typedef struct MemoryClass_s {
+   const char *label; // e.g. "used", "shared", "compressed", etc. Should reflect the system-specific 'top' classes
+   bool countsAsUsed; // whether this memory class counts as "used" memory
+   bool countsAsCache; // whether this memory class can be reclaimed under pressure (and displayed when "show cached memory" is checked)
+   ColorElements color; // one of the DYNAMIC_xxx CRT color values
+} MemoryClass;
+
+extern const MemoryClass Platform_memoryClasses[]; // defined in the platform-specific code
+extern const unsigned int Platform_numberOfMemoryClasses; // defined in the platform-specific code
 
 extern const MeterClass MemoryMeter_class;
 

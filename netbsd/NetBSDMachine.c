@@ -155,10 +155,16 @@ static void NetBSDMachine_scanMemoryInfo(NetBSDMachine* this) {
       CRT_fatalError("uvmexp sysctl call failed");
    }
 
-   super->totalMem = uvmexp.npages * this->pageSizeKB;
-   super->buffersMem = 0;
-   super->cachedMem = (uvmexp.filepages + uvmexp.execpages) * this->pageSizeKB;
-   super->usedMem = (uvmexp.active + uvmexp.wired) * this->pageSizeKB;
+   // NOTE: it is wrong in NetBSD to represent the "cache" memory as a memory class by itself.
+   // The only page classes exposed by the kernel in the uvmexp struct are these.
+   // The "cached" memory can be obtained from another sysctl, but there is no simple way
+   // in NetBSD to determine which page classe(s) this "cached" memory should be substracted from.
+   this->totalMem    = this->pageSizeKB * uvmexp.npages;
+   this->wiredMem    = this->pageSizeKB * uvmexp.wired;
+   this->activeMem   = this->pageSizeKB * uvmexp.active;
+   this->pagedMem    = this->pageSizeKB * uvmexp.paging;
+   this->inactiveMem = this->pageSizeKB * uvmexp.inactive;
+
    super->totalSwap = uvmexp.swpages * this->pageSizeKB;
    super->usedSwap = uvmexp.swpginuse * this->pageSizeKB;
 }

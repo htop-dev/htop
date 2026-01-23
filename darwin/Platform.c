@@ -113,6 +113,33 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+const MemoryClass Platform_memoryClasses[] = {
+#define MEMORY_CLASS_WIRED       0
+   { .label = "wired",       .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_RED     }, // pages wired down to physical memory (kernel)
+#define MEMORY_CLASS_SPECULATIVE 1
+   { .label = "speculative", .countsAsUsed = true,  .countsAsCache = true,  .color = DYNAMIC_MAGENTA }, // readahead optimization caches
+#define MEMORY_CLASS_ACTIVE      2
+   { .label = "active",      .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_GREEN   }, // userland pages actively being used
+#define MEMORY_CLASS_PURGEABLE   3
+   { .label = "purgeable",   .countsAsUsed = false, .countsAsCache = true,  .color = DYNAMIC_YELLOW  }, // userland pages voluntarily marked "discardable" by apps
+#define MEMORY_CLASS_COMPRESSED  4
+   { .label = "compressed",  .countsAsUsed = true,  .countsAsCache = false, .color = DYNAMIC_BLUE    }, // userland pages being compressed (means memory pressure++)
+#define MEMORY_CLASS_INACTIVE    5
+   { .label = "inactive",    .countsAsUsed = true,  .countsAsCache = true,  .color = DYNAMIC_GRAY    }, // pages no longer used; macOS counts them as "used" anyway...
+}; // N.B. the chart will display categories in this order
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
+const int Platform_memoryMeter_attributes[] = {
+   Platform_memoryClasses[0].color,
+   Platform_memoryClasses[1].color,
+   Platform_memoryClasses[2].color,
+   Platform_memoryClasses[3].color,
+   Platform_memoryClasses[4].color,
+   Platform_memoryClasses[5].color
+}; // there MUST be as many entries in this attributes array as memory classes
+
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -389,41 +416,24 @@ cleanup:
 
 void Platform_setMemoryValues(Meter* mtr) {
    const DarwinMachine* dhost = (const DarwinMachine*) mtr->host;
-#ifdef HAVE_STRUCT_VM_STATISTICS64
+   const Settings* settings = mtr->host->settings;
    const struct vm_statistics64* vm = &dhost->vm_stats;
-#else
-   const struct vm_statistics* vm = &dhost->vm_stats;
-#endif
    double page_K = (double)vm_page_size / (double)1024;
 
    mtr->total = dhost->host_info.max_mem / 1024;
-
-#ifdef HAVE_STRUCT_VM_STATISTICS64
-   #ifdef HAVE_STRUCT_VM_STATISTICS64_EXTERNAL_PAGE_COUNT
-   const natural_t external_page_count = vm->external_page_count;
-   #else
-   const natural_t external_page_count = 0;
-   #endif
-   const natural_t used_counts_from_statistics64 = vm->inactive_count + vm->speculative_count
-                    - vm->purgeable_count - external_page_count;
-#else
-   const natural_t used_counts_from_statistics64 = 0;
-#endif // HAVE_STRUCT_VM_STATISTICS64
-   const natural_t used_count = vm->active_count + vm->wire_count + used_counts_from_statistics64;
-   mtr->values[MEMORY_METER_USED] = (double)used_count * page_K;
-   // mtr->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
-#ifdef HAVE_STRUCT_VM_STATISTICS64
-#ifdef HAVE_STRUCT_VM_STATISTICS64_COMPRESSOR_PAGE_COUNT
-   mtr->values[MEMORY_METER_COMPRESSED] = (double)vm->compressor_page_count * page_K;
-#else
-   // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory not available"
-#endif
-#else
-   // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
-#endif
-   mtr->values[MEMORY_METER_BUFFERS] = (double)vm->purgeable_count * page_K;
-   mtr->values[MEMORY_METER_CACHE] = (double)vm->inactive_count * page_K;
-   // mtr->values[MEMORY_METER_AVAILABLE] = "available memory"
+   mtr->values[MEMORY_CLASS_WIRED]       = page_K * vm->wire_count;
+   if (settings->showCachedMemory) {
+      mtr->values[MEMORY_CLASS_SPECULATIVE] = page_K * vm->speculative_count;
+      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * (vm->active_count - vm->purgeable_count - vm->external_page_count); // external pages are pages swapped out
+      mtr->values[MEMORY_CLASS_PURGEABLE]   = page_K * vm->purgeable_count; // purgeable pages are flagged in the active pages
+   }
+   else { // if showCachedMemory is disabled, merge speculative and purgeable into the active pages
+      mtr->values[MEMORY_CLASS_SPECULATIVE] = 0;
+      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * (vm->speculative_count + vm->active_count - vm->external_page_count); // external pages are pages swapped out
+      mtr->values[MEMORY_CLASS_PURGEABLE]   = 0;
+   }
+   mtr->values[MEMORY_CLASS_COMPRESSED]  = page_K * vm->compressor_page_count;
+   mtr->values[MEMORY_CLASS_INACTIVE]    = page_K * vm->inactive_count; // for some reason macOS counts inactive pages in the "used" memory...
 }
 
 void Platform_setSwapValues(Meter* mtr) {

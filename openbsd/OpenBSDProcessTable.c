@@ -194,7 +194,7 @@ static void OpenBSDProcessTable_scanProcs(OpenBSDProcessTable* this) {
       proc->m_virt = kproc->p_vm_dsize * ohost->pageSizeKB;
       proc->m_resident = kproc->p_vm_rssize * ohost->pageSizeKB;
 
-      proc->percent_mem = proc->m_resident / (float)host->totalMem * 100.0F;
+      proc->percent_mem = proc->m_resident / (float)ohost->totalMem * 100.0F;
       proc->percent_cpu = CLAMP(getpcpu(ohost, kproc), 0.0F, host->activeCPUs * 100.0F);
       Process_updateCPUFieldWidths(proc->percent_cpu);
 
