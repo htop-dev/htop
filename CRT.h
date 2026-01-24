@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
+#include "signal.h"
 
 
 #define SCREEN_TAB_MARGIN_LEFT 2
@@ -201,6 +202,10 @@ extern int CRT_scrollHAmount;
 extern int CRT_scrollWheelVAmount;
 
 extern ColorScheme CRT_colorScheme;
+
+extern volatile sig_atomic_t terminate_requested;
+
+extern volatile sig_atomic_t terminate_signal;
 
 #ifdef HAVE_GETMOUSE
 void CRT_setMouse(bool enabled);
