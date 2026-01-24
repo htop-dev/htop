@@ -1034,8 +1034,10 @@ if test "$with_libunwind" != no; then
    CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
    LIBS="$LIBUNWIND_LIBS $LIBS"
 
-   # unw_init_local() is a macro in HP's implementation of libunwind
-   # (the most popular one, Mosberger et al.)
+   # Almost all unw_*() functions are defined as macros in HP
+   # implementation of libunwind (Mosberger et al.).
+   # Define UNW_LOCAL_ONLY to avoid unnecessary dependency on
+   # "-lunwind-generic" when linking.
    AC_MSG_CHECKING([whether $LIBUNWIND_LIBS supports local unwinding])
    AC_LINK_IFELSE(
       [AC_LANG_PROGRAM(
