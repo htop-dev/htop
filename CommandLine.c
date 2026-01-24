@@ -119,6 +119,14 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       .hideFunctionBar = false,
    };
 
+   {
+      // Implement NO_COLOR env support, cf. https://no-color.org/
+      const char* no_color = getenv("NO_COLOR");
+      if (no_color && no_color[0] != '\0') {
+         flags->useColors = false;
+      }
+   }
+
    const struct option long_opts[] =
    {
       {"help",       no_argument,         0, 'h'},
