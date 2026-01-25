@@ -7,6 +7,8 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
+
 #include "Action.h"
 
 
@@ -17,5 +19,7 @@ typedef struct Node_ {
 
 
 void RunScript(State*);
+
+void root_exec(const char*, bool);
 
 #endif

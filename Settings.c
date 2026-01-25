@@ -53,8 +53,7 @@ void Settings_delete(Settings* this) {
    free(this->initialFilename);
    Settings_deleteColumns(this);
    Settings_deleteScreens(this);
-   if (this->scriptLocation)
-      free(this->scriptLocation);
+   free(this->scriptLocation);
    free(this);
 }
 
@@ -875,7 +874,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
 #endif
    this->changed = false;
    this->delay = DEFAULT_DELAY;
-
+   
    bool ok = Settings_read(this, this->filename, host, /*checkWritability*/true);
    if (!ok && legacyDotfile) {
       ok = Settings_read(this, legacyDotfile, host, this->writeConfig);

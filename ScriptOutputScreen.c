@@ -76,43 +76,41 @@ static void ScriptOutputScreen_scan(InfoScreen* super) {
          break;
       }
 
-      if (res > 0) {
-         int start = 0;
-         int num_tabs = 0;
-         for (int i = 0; i <= res; i++) {
-            num_tabs += (buffer[i] == '\t');
-            // split line when find \n or exhaust buffer
-            if (i == res || buffer[i] == '\n') {
-               buffer[i] = '\0';
-               char* str;
-               if (num_tabs > 0) {
-                  // manually replace all \t with TABSIZE spaces
-                  str = xMalloc((num_tabs * TABSIZE + i - start + 1) * sizeof(char));
-                  int index = 0;
-                  for (int j = start; j <= i; j++) {
-                     if (buffer[j] == '\t') {
-                        for (int k = 0; k < TABSIZE; k++) {
-                           str[index++] = ' ';
-                        }
-                     } else {
-                        str[index++] = buffer[j];
+      size_t start = 0;
+      int num_tabs = 0;
+      for (size_t i = 0; i <= res; i++) {
+         num_tabs += (buffer[i] == '\t');
+         // split line when find \n or exhaust buffer
+         if (i == res || buffer[i] == '\n') {
+            buffer[i] = '\0';
+            char* str;
+            if (num_tabs > 0) {
+               // manually replace all \t with TABSIZE spaces
+               str = xMalloc((num_tabs * TABSIZE + i - start + 1) * sizeof(char));
+               size_t index = 0;
+               for (size_t j = start; j <= i; j++) {
+                  if (buffer[j] == '\t') {
+                     for (int k = 0; k < TABSIZE; k++) {
+                        str[index++] = ' ';
                      }
+                  } else {
+                     str[index++] = buffer[j];
                   }
-               } else {
-                  str = buffer + start;
                }
-               InfoScreen_addLine(super, str);
-               // store line for next redraw
-               *(sos->data_tail) = xMalloc(sizeof(Node));
-               (*sos->data_tail)->line = xStrdup(str);
-               (*sos->data_tail)->next = NULL;
-               *(&sos->data_tail) = &((*sos->data_tail)->next);
-
-               if (num_tabs > 0)
-                  free(str);
-               start = i + 1;
-               num_tabs = 0;
+            } else {
+               str = buffer + start;
             }
+            InfoScreen_addLine(super, str);
+            // store line for next redraw
+            *(sos->data_tail) = xMalloc(sizeof(Node));
+            (*sos->data_tail)->line = xStrdup(str);
+            (*sos->data_tail)->next = NULL;
+            *(&sos->data_tail) = &((*sos->data_tail)->next);
+
+            if (num_tabs > 0)
+               free(str);
+            start = i + 1;
+            num_tabs = 0;
          }
       }
    }
