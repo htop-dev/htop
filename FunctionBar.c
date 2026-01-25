@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include "FunctionBar.h"
+#include "Platform.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -29,6 +30,13 @@ static const char* const FunctionBar_EnterEscKeys[] = {"Enter", "Esc", NULL};
 static const int FunctionBar_EnterEscEvents[] = {13, 27};
 
 static int currentLen = 0;
+
+static char warningBuf[256];
+static bool warningActive;
+static bool warningNeedsCleared;
+static bool warningDismissOnKeypress;
+static uint64_t warningExpiresAtMs;
+static const uint32_t warningDefaultTimeoutMs = 1500;
 
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
    const char* functions[FUNCTIONBAR_MAXEVENTS + 1] = {enter, esc, NULL};
@@ -80,6 +88,14 @@ void FunctionBar_delete(FunctionBar* this) {
    free(this);
 }
 
+void FunctionBar_clearWarning(void) {
+   warningActive = false;
+   warningBuf[0] = '\0';
+   warningDismissOnKeypress = false;
+   warningExpiresAtMs = 0;
+   warningNeedsCleared = true;
+}
+
 void FunctionBar_setLabel(FunctionBar* this, int event, const char* text) {
    for (size_t i = 0; i < this->size; i++) {
       if (this->events[i] == event) {
@@ -90,12 +106,47 @@ void FunctionBar_setLabel(FunctionBar* this, int event, const char* text) {
    }
 }
 
+void FunctionBar_setWarning(const char* msg, uint32_t timeoutMs, bool dismissOnKeypress) {
+   if (msg == NULL || msg[0] == '\0') {
+      FunctionBar_clearWarning();
+      return;
+   }
+   snprintf(warningBuf, sizeof(warningBuf), "%s", msg);
+   warningActive = true;
+   warningDismissOnKeypress = dismissOnKeypress;
+   uint64_t now = 0;
+   Platform_gettime_monotonic(&now);
+   if (timeoutMs == 0) {
+      warningExpiresAtMs = now + warningDefaultTimeoutMs;
+   }
+   else {
+      warningExpiresAtMs = now + timeoutMs;
+   }
+}
+
 int FunctionBar_draw(const FunctionBar* this) {
    return FunctionBar_drawExtra(this, NULL, -1, false);
 }
 
 int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr, bool setCursor) {
    int cursorX = 0;
+   if (warningActive) {
+      uint64_t now = 0;
+      Platform_gettime_monotonic(&now);
+      if (now >= warningExpiresAtMs) {
+         FunctionBar_clearWarning();
+      }
+   }
+   if (warningNeedsCleared && LINES > 1) {
+      attrset(CRT_colors[RESET_COLOR]);
+      mvhline(LINES - 2, 0, ' ', COLS);
+      warningNeedsCleared = false;
+   }
+   if (warningActive && LINES > 1) {
+      attrset(CRT_colors[FAILED_READ]);
+      mvhline(LINES - 2, 0, ' ', COLS);
+      mvaddstr(LINES - 2, 0, warningBuf);
+   }
    attrset(CRT_colors[FUNCTION_BAR]);
    mvhline(LINES - 1, 0, ' ', COLS);
    int x = 0;
