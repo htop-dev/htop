@@ -96,6 +96,12 @@ void FunctionBar_clearWarning(void) {
    warningNeedsCleared = true;
 }
 
+void FunctionBar_inputEvent(void) {
+   if (warningDismissOnKeypress) {
+      FunctionBar_clearWarning();
+   }
+}
+
 void FunctionBar_setLabel(FunctionBar* this, int event, const char* text) {
    for (size_t i = 0; i < this->size; i++) {
       if (this->events[i] == event) {

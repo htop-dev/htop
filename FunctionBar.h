@@ -36,6 +36,8 @@ void FunctionBar_setWarning(const char* msg, uint32_t timeoutMs, bool dismissOnK
 
 void FunctionBar_clearWarning(void);
 
+void FunctionBar_inputEvent(void);
+
 int FunctionBar_draw(const FunctionBar* this);
 
 int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr, bool setCursor);
