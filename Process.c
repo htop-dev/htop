@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <sys/resource.h>
+#include <errno.h>
 
 #include "CRT.h"
 #include "Hashtable.h"
@@ -901,14 +902,22 @@ bool Process_rowChangePriorityBy(Row* super, Arg delta) {
    return Process_setPriority(this, (int)this->nice + delta.i);
 }
 
-static bool Process_sendSignal(Process* this, Arg sgn) {
-   return kill(Process_getPid(this), sgn.i) == 0;
+static bool Process_sendSignal(Process* this, sendSignalContext* ctx) {
+   if (kill(Process_getPid(this), ctx->sgn ) != 0) {
+      int e = errno;
+      if (e != ESRCH) {
+         ctx->savedErrno = e;
+      }
+      return false;
+   }
+   return true;
 }
 
-bool Process_rowSendSignal(Row* super, Arg sgn) {
+bool Process_rowSendSignal(Row* super, Arg arg) {
    Process* this = (Process*) super;
    assert(Object_isA((const Object*) this, (const ObjectClass*) &Process_class));
-   return Process_sendSignal(this, sgn);
+   sendSignalContext* ctx = (sendSignalContext*) arg.v;
+   return Process_sendSignal(this, ctx);
 }
 
 int Process_compare(const void* v1, const void* v2) {

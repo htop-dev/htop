@@ -519,18 +519,25 @@ static Htop_Reaction actionKill(State* st) {
 
    static int preSelectedSignal = SIGNALSPANEL_INITSELECTEDSIGNAL;
 
+   sendSignalContext ctx;
+
    Panel* signalsPanel = SignalsPanel_new(preSelectedSignal);
    const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 14, true);
    if (sgn && sgn->key != 0) {
-      preSelectedSignal = sgn->key;
+      ctx.sgn = sgn->key;
+      ctx.savedErrno = 0;
       Panel_setHeader((Panel*)st->mainPanel, "Sending...");
       Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
       refresh();
-      bool ok = MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .i = sgn->key }, NULL);
-      if (!ok) {
+      bool ok = MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .v = &ctx }, NULL);
+      (void) ok;
+      if (ctx.savedErrno != 0) {
          beep();
+         FunctionBar_setWarning(strerror(ctx.savedErrno), 0, true);
       }
-      napms(500);
+      else {
+         napms(500);
+      }
    }
    Panel_delete((Object*)signalsPanel);
 
