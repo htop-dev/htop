@@ -535,7 +535,7 @@ static Htop_Reaction actionKill(State* st) {
       (void) ok;
       if (ctx.sawEperm) {
          beep();
-         Panel_setHeader((Panel*)st->mainPanel, "Permission denied (try running as root)");
+         Panel_setHeader((Panel*)st->mainPanel, "Permission denied");
          Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
          refresh();
          napms(1500);
