@@ -38,6 +38,9 @@ in the source distribution for its full text.
 #define MAX_HEX_ADDR_STR_LEN_64 (strlen("0x") + 16)
 
 static const char* const BacktraceScreenFunctions[] = {
+#if defined(HAVE_DEMANGLING)
+   "Mangle  ",
+#endif
    "Full Path",
    "Refresh",
    "Done   ",
@@ -45,6 +48,9 @@ static const char* const BacktraceScreenFunctions[] = {
 };
 
 static const char* const BacktraceScreenKeys[] = {
+#if defined(HAVE_DEMANGLING)
+   "F2",
+#endif
    "F3",
    "F5",
    "Esc",
@@ -52,13 +58,17 @@ static const char* const BacktraceScreenKeys[] = {
 };
 
 static const int BacktraceScreenEvents[] = {
+#if defined(HAVE_DEMANGLING)
+   KEY_F(2),
+#endif
    KEY_F(3),
    KEY_F(5),
    27,
 };
 
 typedef enum BacktraceScreenDisplayOptions_ {
-   SHOW_FULL_PATH_OBJECT = 1 << 0,
+   DEMANGLE_NAME_FUNCTION = 1 << 0,
+   SHOW_FULL_PATH_OBJECT = 1 << 1,
 } BacktraceScreenDisplayOptions;
 
 BacktraceFrameData* BacktraceFrameData_new(void) {
@@ -66,6 +76,7 @@ BacktraceFrameData* BacktraceFrameData_new(void) {
    this->address = 0;
    this->offset = 0;
    this->functionName = NULL;
+   this->demangleFunctionName = NULL;
    this->objectPath = NULL;
    this->index = 0;
    this->isSignalFrame = false;
@@ -75,6 +86,7 @@ BacktraceFrameData* BacktraceFrameData_new(void) {
 void BacktraceFrameData_delete(Object* object) {
    BacktraceFrameData* this = (BacktraceFrameData*)object;
    free(this->functionName);
+   free(this->demangleFunctionName);
    free(this->objectPath);
    free(this);
 }
@@ -82,6 +94,8 @@ void BacktraceFrameData_delete(Object* object) {
 static void BacktracePanel_displayHeader(BacktracePanel* this) {
    const BacktracePanelPrintingHelper* printingHelper = &this->printingHelper;
    const int displayOptions = this->displayOptions;
+
+   bool showDemangledNames = (displayOptions & DEMANGLE_NAME_FUNCTION) && printingHelper->hasDemangledNames;
 
    bool showFullPathObject = !!(displayOptions & SHOW_FULL_PATH_OBJECT);
    size_t maxObjLen = showFullPathObject ? printingHelper->maxObjPathLen : printingHelper->maxObjNameLen;
@@ -99,7 +113,7 @@ static void BacktracePanel_displayHeader(BacktracePanel* this) {
       (int)printingHelper->maxFrameNumLen, "#",
       (int)printingHelper->maxAddrLen, "ADDRESS",
       (int)maxObjLen, "PATH",
-      "NAME"
+      (showDemangledNames ? "NAME (demangled)" : "NAME")
    );
 
    Panel_setHeader((Panel*)this, line);
@@ -116,11 +130,16 @@ static void BacktracePanel_makePrintingHelper(const BacktracePanel* this, Backtr
    unsigned int maxFrameNum = 0;
    size_t longestAddress = 0;
 
+   printingHelper->hasDemangledNames = false;
+
    for (int i = 0; i < Vector_size(lines); i++) {
       const BacktracePanelRow* row = (const BacktracePanelRow*)Vector_get(lines, i);
       if (row->type != BACKTRACE_PANEL_ROW_DATA_FRAME) {
          continue;
       }
+
+      if (row->data.frame->demangleFunctionName)
+         printingHelper->hasDemangledNames = true;
 
       if (row->data.frame->objectPath) {
          const char* objectName = getBasename(row->data.frame->objectPath);
@@ -202,6 +221,18 @@ static HandlerResult BacktracePanel_eventHandler(Panel* super, int ch) {
    HandlerResult result = IGNORED;
 
    switch (ch) {
+#if defined(HAVE_DEMANGLING)
+   case KEY_F(2):
+      *displayOptions ^= DEMANGLE_NAME_FUNCTION;
+
+      bool showDemangledNames = !!(*displayOptions & DEMANGLE_NAME_FUNCTION);
+      FunctionBar_setLabel(super->defaultBar, KEY_F(2), showDemangledNames ? "Mangle  " : "Demangle");
+
+      this->super.needsRedraw = true;
+      BacktracePanel_displayHeader(this);
+      break;
+#endif
+
    case 'p':
    case KEY_F(3):
       *displayOptions ^= SHOW_FULL_PATH_OBJECT;
@@ -231,9 +262,11 @@ BacktracePanel* BacktracePanel_new(Vector* processes, const Settings* settings) 
    this->printingHelper.maxFrameNumLen = 0;
    this->printingHelper.maxObjNameLen = 0;
    this->printingHelper.maxObjPathLen = 0;
+   this->printingHelper.hasDemangledNames = false;
 
    this->settings = settings;
    this->displayOptions =
+      DEMANGLE_NAME_FUNCTION |
       (settings->showProgramPath ? SHOW_FULL_PATH_OBJECT : 0) |
       0;
 
@@ -335,7 +368,12 @@ static void BacktracePanelRow_displayFrame(const Object* super, RichString* out)
 
    const BacktraceFrameData* frame = row->data.frame;
 
-   const char* functionName = frame->functionName ? frame->functionName : "???";
+   const char* functionName = "???";
+   if ((displayOptions & DEMANGLE_NAME_FUNCTION) && frame->demangleFunctionName) {
+      functionName = frame->demangleFunctionName;
+   } else if (frame->functionName) {
+      functionName = frame->functionName;
+   }
 
    char* completeFunctionName = NULL;
    xAsprintf(&completeFunctionName, "%s+0x%zx", functionName, frame->offset);
