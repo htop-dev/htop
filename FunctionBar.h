@@ -32,7 +32,7 @@ void FunctionBar_delete(FunctionBar* this);
 
 void FunctionBar_setLabel(FunctionBar* this, int event, const char* text);
 
-void FunctionBar_setWarning(const char* msg, uint32_t timeoutMs, bool dismissOnKeypress);
+void FunctionBar_setWarning(const char* msg, uint64_t timeoutMs, bool dismissOnKeypress);
 
 void FunctionBar_clearWarning(void);
 
