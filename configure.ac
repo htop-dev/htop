@@ -1011,7 +1011,7 @@ case $with_libunwind in
       htop_save_CFLAGS=$CFLAGS
       CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
 
-      if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
+      if htop_search_header_dir libunwind.h "/usr/local/include/libunwind /usr/include/libunwind"; then
          AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
       elif test "$with_libunwind" = yes; then
          AC_MSG_ERROR([cannot find required header file libunwind.h])
