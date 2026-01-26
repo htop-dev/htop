@@ -27,6 +27,19 @@ Running `htop` requires `ncurses` libraries, typically named libncurses(w).
 
 For more information and details visit [htop.dev](https://htop.dev).
 
+## Usage
+See the manual page (`man htop`) or the help menu (**h** or **F1** inside `htop`) for a list of supported key commands.
+
+### Quick Start
+
+Some common actions to get you started with `htop`
+
+- *Search processes:* press **/**
+- *Filter processes:* press **\**
+- *Toggle tree view:* press **t**
+- *Change process sort column:* press **.**
+- *Kill a process:* select the process and press **k**
+
 ## Build instructions
 
 ### Prerequisite
@@ -165,18 +178,6 @@ To install on the local system run `make install`. By default `make install` ins
 On most BSD systems `kvm` is a requirement to read kernel information.
 
 More information on required and optional dependencies can be found in [configure.ac](configure.ac).
-
-## Usage
-See the manual page (`man htop`) or the help menu (**F1** or **h** inside `htop`) for a list of supported key commands.
-
-### Quick Start
-
-Below are a few commonly used actions to get started quickly with htop.
-
-- **Search / filter processes:** press `/`
-- **Sort by CPU or memory:** press `P` (CPU) or `M` (Memory)
-- **Toggle tree view:** press `t`
-- **Kill a process:** select a process and press `F9`
 
 ## Support
 
