@@ -28,17 +28,17 @@ Running `htop` requires `ncurses` libraries, typically named libncurses(w).
 For more information and details visit [htop.dev](https://htop.dev).
 
 ## Usage
-See the manual page (`man htop`) or the help menu (**h** or **F1** inside `htop`) for a list of supported key commands.
+See the manual page (`man htop`) or the help menu (`h` or `F1` inside `htop`) for a list of supported key commands.
 
 ### Quick Start
 
 Some common actions to get you started with `htop`
 
-- *Search processes:* press **/**
-- *Filter processes:* press **\**
-- *Toggle tree view:* press **t**
-- *Change process sort column:* press **.**
-- *Kill a process:* select the process and press **k**
+- **Search processes:** press `/`
+- **Filter processes:** press `\\`
+- **Toggle tree view:** press `t`
+- **Change process sort column:** press `.`
+- **Kill a process:** select the process and press `k`
 
 ## Build instructions
 
