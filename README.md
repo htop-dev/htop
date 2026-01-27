@@ -34,11 +34,11 @@ See the manual page (`man htop`) or the help menu (`h` or `F1` inside `htop`) fo
 
 Some common actions to get you started with `htop`
 
-- **Search processes:** press `/`
-- **Filter processes:** press `\`
-- **Toggle tree view:** press `t`
-- **Change process sort column:** press `.`
-- **Kill a process:** select the process and press `k`
+- Search processes: press `/`
+- Filter processes: press `\`
+- Toggle tree view: press `t`
+- Change process sort column: press `.`
+- Kill a process: select the process and press `k`
 
 ## Build instructions
 
