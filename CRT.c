@@ -1327,6 +1327,10 @@ void CRT_enableDelay(void) {
 }
 
 void CRT_setColors(int colorScheme) {
+   if (colorScheme >= LAST_COLORSCHEME || colorScheme < 0) {
+      colorScheme = COLORSCHEME_DEFAULT;
+   }
+
    CRT_colorScheme = colorScheme;
 
    for (short int i = 0; i < 8; i++) {
