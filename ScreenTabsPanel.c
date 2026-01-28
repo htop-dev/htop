@@ -171,6 +171,15 @@ ScreenNameListItem* ScreenNameListItem_new(const char* value, ScreenSettings* ss
 }
 
 static const char* const ScreenNamesFunctions[] = {"      ", "      ", "      ", "      ", "New   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+static const char* const ScreenNamesRenamingFunctions[] = {"Cancel", "Done  ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", NULL};
+static FunctionBar* ScreenNames_renamingBar = NULL;
+
+void ScreenTabsPanel_cleanup(void) {
+   if (ScreenNames_renamingBar) {
+      FunctionBar_delete(ScreenNames_renamingBar);
+      ScreenNames_renamingBar = NULL;
+   }
+}
 
 static void ScreenNamesPanel_delete(Object* object) {
    ScreenNamesPanel* this = (ScreenNamesPanel*) object;
@@ -228,7 +237,8 @@ static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch)
          break;
       case '\n':
       case '\r':
-      case KEY_ENTER: {
+      case KEY_ENTER:
+      case KEY_F(2): {
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (!item)
             break;
@@ -238,10 +248,12 @@ static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch)
          this->renamingItem = NULL;
          super->cursorOn = false;
          Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+         Panel_setDefaultBar(super);
          renameScreenSettings(this, item);
          break;
       }
-      case 27: { // Esc
+      case 27: // Esc
+      case KEY_F(1): {
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (!item)
             break;
@@ -250,6 +262,7 @@ static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch)
          this->renamingItem = NULL;
          super->cursorOn = false;
          Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+         Panel_setDefaultBar(super);
          break;
       }
    }
@@ -275,6 +288,7 @@ static void startRenaming(Panel* super) {
    Panel_setSelectionColor(super, PANEL_EDIT);
    super->selectedLen = strlen(this->buffer);
    Panel_setCursorToSelection(super);
+   super->currentBar = ScreenNames_renamingBar;
 }
 
 static void addNewScreen(Panel* super, DynamicScreen* ds) {
@@ -352,6 +366,9 @@ ScreenNamesPanel* ScreenNamesPanel_new(Settings* settings) {
    Panel* super = &this->super;
 
    FunctionBar* fuBar = FunctionBar_new(ScreenNamesFunctions, NULL, NULL);
+   if (!ScreenNames_renamingBar) {
+      ScreenNames_renamingBar = FunctionBar_new(ScreenNamesRenamingFunctions, NULL, NULL);
+   }
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->settings = settings;
