@@ -119,6 +119,14 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       .hideFunctionBar = false,
    };
 
+   {
+      // Implement NO_COLOR env support, cf. https://no-color.org/
+      const char* no_color = getenv("NO_COLOR");
+      if (no_color && no_color[0] != '\0') {
+         flags->useColors = false;
+      }
+   }
+
    const struct option long_opts[] =
    {
       {"help",       no_argument,         0, 'h'},
@@ -357,6 +365,8 @@ int CommandLine_run(int argc, char** argv) {
    Header* header = Header_new(host, 2);
    Header_populateFromSettings(header);
 
+   int colorSchemeFromConfig = settings->colorScheme;
+
    if (flags.delay != -1)
       settings->delay = flags.delay;
    if (!flags.useColors)
@@ -384,6 +394,12 @@ int CommandLine_run(int argc, char** argv) {
 
    host->iterationsRemaining = flags.iterationsRemaining;
    CRT_init(settings, flags.allowUnicode, flags.iterationsRemaining != -1);
+
+   // Do not save the color scheme override to 'htoprc'.
+   // 'settings' will keep the original color scheme until the user
+   // changes it in the Setup.
+   // ('CRT_colorScheme' holds the current, active color scheme.)
+   settings->colorScheme = colorSchemeFromConfig;
 
    MainPanel* panel = MainPanel_new();
    Machine_setTablesPanel(host, (Panel*) panel);

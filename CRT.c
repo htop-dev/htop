@@ -1192,8 +1192,6 @@ void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnEx
    redirectStderr();
    noecho();
    CRT_settings = settings;
-   CRT_colors = CRT_colorSchemes[settings->colorScheme];
-   CRT_colorScheme = settings->colorScheme;
 
    for (int i = 0; i < LAST_COLORELEMENT; i++) {
       unsigned int color = CRT_colorSchemes[COLORSCHEME_DEFAULT][i];
@@ -1260,9 +1258,8 @@ IGNORE_WCASTQUAL_END
    CRT_installSignalHandlers();
 
    use_default_colors();
-   if (!has_colors())
-      CRT_colorScheme = COLORSCHEME_MONOCHROME;
-   CRT_setColors(CRT_colorScheme);
+
+   CRT_setColors(has_colors() ? settings->colorScheme : COLORSCHEME_MONOCHROME);
 
 #ifdef HAVE_LIBNCURSESW
    if (allowUnicode && String_eq(nl_langinfo(CODESET), "UTF-8")) {
@@ -1330,6 +1327,10 @@ void CRT_enableDelay(void) {
 }
 
 void CRT_setColors(int colorScheme) {
+   if (colorScheme >= LAST_COLORSCHEME || colorScheme < 0) {
+      colorScheme = COLORSCHEME_DEFAULT;
+   }
+
    CRT_colorScheme = colorScheme;
 
    for (short int i = 0; i < 8; i++) {
