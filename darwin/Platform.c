@@ -15,11 +15,11 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <net/if.h>
 #include <net/if_types.h>
 #include <net/route.h>
 #include <sys/socket.h>
 #include <mach/port.h>
+#include <net/if.h> // After `sys/socket.h` for struct `sockaddr` (for iOS6 SDK)
 
 #include <CoreFoundation/CFBase.h>
 #include <CoreFoundation/CFDictionary.h>
@@ -397,17 +397,27 @@ void Platform_setMemoryValues(Meter* mtr) {
    double page_K = (double)vm_page_size / (double)1024;
 
    mtr->total = dhost->host_info.max_mem / 1024;
+
 #ifdef HAVE_STRUCT_VM_STATISTICS64
-   natural_t used = vm->active_count + vm->inactive_count +
-              vm->speculative_count + vm->wire_count +
-              vm->compressor_page_count - vm->purgeable_count - vm->external_page_count;
-   mtr->values[MEMORY_METER_USED] = (double)(used - vm->compressor_page_count) * page_K;
+   #ifdef HAVE_STRUCT_VM_STATISTICS64_EXTERNAL_PAGE_COUNT
+   const natural_t external_page_count = vm->external_page_count;
+   #else
+   const natural_t external_page_count = 0;
+   #endif
+   const natural_t used_counts_from_statistics64 = vm->inactive_count + vm->speculative_count
+                    - vm->purgeable_count - external_page_count;
 #else
-   mtr->values[MEMORY_METER_USED] = (double)(vm->active_count + vm->wire_count) * page_K;
-#endif
+   const natural_t used_counts_from_statistics64 = 0;
+#endif // HAVE_STRUCT_VM_STATISTICS64
+   const natural_t used_count = vm->active_count + vm->wire_count + used_counts_from_statistics64;
+   mtr->values[MEMORY_METER_USED] = (double)used_count * page_K;
    // mtr->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
 #ifdef HAVE_STRUCT_VM_STATISTICS64
+#ifdef HAVE_STRUCT_VM_STATISTICS64_COMPRESSOR_PAGE_COUNT
    mtr->values[MEMORY_METER_COMPRESSED] = (double)vm->compressor_page_count * page_K;
+#else
+   // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory not available"
+#endif
 #else
    // mtr->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
 #endif
