@@ -368,6 +368,17 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                   }
                }
                ccdID++;
+            }
+
+            /* AMD k10temp with only one general Tctl */
+            else if (String_eq(label, "Tctl")) {
+               for (size_t i = 0; i <= existingCPUs; i++) {
+                  if (isNaN(data[i])) {
+                     data[i] = temp;
+                     if (i > 0)
+                        coreTempCount++;
+                  }
+               }
             } else {
                skip = false;
             }
