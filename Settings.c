@@ -331,10 +331,12 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
             return false;
          }
       } else {
-         // Check if this is a regular file
+         // Write the config only if the file is:
+         // (1) a regular file (not a device file like /dev/null), and
+         // (2) owned by the effective user ID
          struct stat sb;
          int err = fstat(fd, &sb);
-         this->writeConfig = !err && S_ISREG(sb.st_mode);
+         this->writeConfig = !err && S_ISREG(sb.st_mode) && sb.st_uid == geteuid();
       }
    }
 
