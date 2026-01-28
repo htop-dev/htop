@@ -222,6 +222,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &HugePageMeter_class,
    &TasksMeter_class,
    &UptimeMeter_class,
+   &SecondsUptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,
    &AllCPUsMeter_class,
