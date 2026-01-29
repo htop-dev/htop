@@ -52,4 +52,6 @@ ScreensPanel* ScreensPanel_new(Settings* settings);
 
 void ScreensPanel_update(Panel* super);
 
+void ScreensPanel_cleanup(void);
+
 #endif

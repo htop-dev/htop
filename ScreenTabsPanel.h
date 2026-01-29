@@ -58,4 +58,6 @@ extern PanelClass ScreenNamesPanel_class;
 
 ScreenNamesPanel* ScreenNamesPanel_new(Settings* settings);
 
+void ScreenTabsPanel_cleanup(void);
+
 #endif

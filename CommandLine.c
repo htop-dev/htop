@@ -37,6 +37,8 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProcessTable.h"
 #include "ScreenManager.h"
+#include "ScreensPanel.h"
+#include "ScreenTabsPanel.h"
 #include "Settings.h"
 #include "Table.h"
 #include "UsersTable.h"
@@ -450,6 +452,8 @@ int CommandLine_run(int argc, char** argv) {
 
    ScreenManager_delete(scr);
    MetersPanel_cleanup();
+   ScreensPanel_cleanup();
+   ScreenTabsPanel_cleanup();
 
    UsersTable_delete(ut);
 
