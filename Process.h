@@ -309,6 +309,12 @@ const char* Process_rowGetSortKey(Row* super);
 
 bool Process_rowChangePriorityBy(Row* super, Arg delta);
 
+typedef struct Process_sendSignalContext_ {
+   int sgn;
+   bool sawEperm;
+   int lastRealErrno;
+} Process_sendSignalContext;
+
 bool Process_rowSendSignal(Row* super, Arg sgn);
 
 bool Process_rowIsHighlighted(const Row* super);

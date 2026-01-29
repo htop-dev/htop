@@ -519,18 +519,37 @@ static Htop_Reaction actionKill(State* st) {
 
    static int preSelectedSignal = SIGNALSPANEL_INITSELECTEDSIGNAL;
 
+   Process_sendSignalContext ctx;
+
    Panel* signalsPanel = SignalsPanel_new(preSelectedSignal);
    const ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 14, true);
    if (sgn && sgn->key != 0) {
+      ctx.sgn = sgn->key;
+      ctx.sawEperm = false;
+      ctx.lastRealErrno = 0;
       preSelectedSignal = sgn->key;
       Panel_setHeader((Panel*)st->mainPanel, "Sending...");
       Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
       refresh();
-      bool ok = MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .i = sgn->key }, NULL);
-      if (!ok) {
+      bool ok = MainPanel_foreachRow(st->mainPanel, Process_rowSendSignal, (Arg) { .v = &ctx }, NULL);
+      (void) ok;
+      if (ctx.sawEperm) {
          beep();
+         Panel_setHeader((Panel*)st->mainPanel, "Permission denied");
+         Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
+         refresh();
+         napms(1500);
       }
-      napms(500);
+      else if (ctx.lastRealErrno != 0) {
+         beep();
+         Panel_setHeader((Panel*)st->mainPanel, strerror(ctx.lastRealErrno));
+         Panel_draw((Panel*)st->mainPanel, false, true, true, State_hideFunctionBar(st));
+         refresh();
+         napms(1500);
+      }
+      else {
+         napms(500);
+      }
    }
    Panel_delete((Object*)signalsPanel);
 
