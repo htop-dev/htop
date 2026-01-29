@@ -17,9 +17,21 @@ in the source distribution for its full text.
 #include "Object.h"
 
 
+static const int DateMeter_attributes[] = {
+   DATE
+};
+
 static const int DateTimeMeter_attributes[] = {
    DATETIME
 };
+
+static void DateMeter_updateValues(Meter* this) {
+   const Machine* host = this->host;
+
+   struct tm result;
+   const struct tm* lt = localtime_r(&host->realtime.tv_sec, &result);
+   strftime(this->txtBuffer, sizeof(this->txtBuffer), "%F", lt);
+}
 
 static void DateTimeMeter_updateValues(Meter* this) {
    const Machine* host = this->host;
@@ -28,6 +40,22 @@ static void DateTimeMeter_updateValues(Meter* this) {
    const struct tm* lt = localtime_r(&host->realtime.tv_sec, &result);
    strftime(this->txtBuffer, sizeof(this->txtBuffer), "%F %H:%M:%S", lt);
 }
+
+const MeterClass DateMeter_class = {
+   .super = {
+      .extends = Class(Meter),
+      .delete = Meter_delete
+   },
+   .updateValues = DateMeter_updateValues,
+   .defaultMode = TEXT_METERMODE,
+   .supportedModes = (1 << TEXT_METERMODE) | (1 << LED_METERMODE),
+   .maxItems = 0,
+   .total = 0.0,
+   .attributes = DateMeter_attributes,
+   .name = "Date",
+   .uiName = "Date",
+   .caption = "Date: ",
+};
 
 const MeterClass DateTimeMeter_class = {
    .super = {

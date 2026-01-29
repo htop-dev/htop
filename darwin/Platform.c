@@ -36,7 +36,6 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "CPUMeter.h"
 #include "CRT.h"
-#include "DateMeter.h"
 #include "DateTimeMeter.h"
 #include "FileDescriptorMeter.h"
 #include "GPUMeter.h"

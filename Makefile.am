@@ -42,7 +42,6 @@ myhtopsources = \
 	CommandScreen.c \
 	CPUMeter.c \
 	CRT.c \
-	DateMeter.c \
 	DateTimeMeter.c \
 	DiskIOMeter.c \
 	DisplayOptionsPanel.c \
@@ -107,7 +106,6 @@ myhtopheaders = \
 	ColumnsPanel.h \
 	CommandLine.h \
 	CommandScreen.h \
-	DateMeter.h \
 	DateTimeMeter.h \
 	Debug.h \
 	DiskIOMeter.h \
