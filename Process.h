@@ -200,6 +200,11 @@ typedef struct Process_ {
    ProcessMergedCommand mergedCommand;
 } Process;
 
+typedef struct sendSignalContext_ {
+   int sgn;
+   int savedErrno;
+} sendSignalContext;
+
 typedef struct ProcessFieldData_ {
    /* Name (displayed in setup menu) */
    const char* name;
