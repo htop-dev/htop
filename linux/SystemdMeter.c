@@ -268,6 +268,7 @@ static void updateViaExec(bool user) {
 
    char lineBuffer[128];
    while (fgets(lineBuffer, sizeof(lineBuffer), commandOutput)) {
+      char* endptr;
       if (String_startsWith(lineBuffer, "SystemState=")) {
          char* newline = strchr(lineBuffer + strlen("SystemState="), '\n');
          if (newline) {
@@ -275,13 +276,21 @@ static void updateViaExec(bool user) {
          }
          free_and_xStrdup(&ctx->systemState, lineBuffer + strlen("SystemState="));
       } else if (String_startsWith(lineBuffer, "NFailedUnits=")) {
-         ctx->nFailedUnits = strtoul(lineBuffer + strlen("NFailedUnits="), NULL, 10);
+         unsigned long value = strtoul(lineBuffer + strlen("NFailedUnits="), &endptr, 10);
+         if (value <= UINT_MAX && *endptr == '\0')
+            ctx->nFailedUnits = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NNames=")) {
-         ctx->nNames = strtoul(lineBuffer + strlen("NNames="), NULL, 10);
+         unsigned long value = strtoul(lineBuffer + strlen("NNames="), &endptr, 10);
+         if (value <= UINT_MAX && *endptr == '\0')
+            ctx->nNames = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NJobs=")) {
-         ctx->nJobs = strtoul(lineBuffer + strlen("NJobs="), NULL, 10);
+         unsigned long value = strtoul(lineBuffer + strlen("NJobs="), &endptr, 10);
+         if (value <= UINT_MAX && *endptr == '\0')
+            ctx->nJobs = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NInstalledJobs=")) {
-         ctx->nInstalledJobs = strtoul(lineBuffer + strlen("NInstalledJobs="), NULL, 10);
+         unsigned long value = strtoul(lineBuffer + strlen("NInstalledJobs="), &endptr, 10);
+         if (value <= UINT_MAX && *endptr == '\0')
+            ctx->nInstalledJobs = (unsigned int) value;
       }
    }
 
