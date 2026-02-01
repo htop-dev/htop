@@ -681,7 +681,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
          xSnprintf(buffer, n, "N/A ");
          attr = CRT_colors[PROCESS_SHADOW];
       } else {
-         xSnprintf(buffer, n, "%3ld ", this->nice);
+         xSnprintf(buffer, n, "%3d ", this->nice);
          attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
             : this->nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
             : CRT_colors[PROCESS_SHADOW];
