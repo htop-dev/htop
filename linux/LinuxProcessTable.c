@@ -77,7 +77,7 @@ static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* m
    return fp;
 }
 
-static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
+static inline uint64_t fast_strtoull_dec(char** str, size_t maxlen) {
    uint64_t result = 0;
 
    if (!maxlen)
@@ -92,7 +92,7 @@ static inline uint64_t fast_strtoull_dec(char** str, int maxlen) {
    return result;
 }
 
-static long long fast_strtoll_dec(char** str, int maxlen) {
+static long long fast_strtoll_dec(char** str, size_t maxlen) {
    bool neg = false;
 
    if (**str == '-') {
@@ -107,26 +107,35 @@ static long long fast_strtoll_dec(char** str, int maxlen) {
    return neg ? -result : result;
 }
 
-static long fast_strtol_dec(char** str, int maxlen) {
+static int fast_strtoi_dec(char** str, size_t maxlen) {
+   if (!maxlen)
+      maxlen = 10; // length of maximum value of 2147483647
+   long long result = fast_strtoll_dec(str, maxlen);
+   assert(result <= INT_MAX);
+   assert(result >= INT_MIN);
+   return (int)result;
+}
+
+static long fast_strtol_dec(char** str, size_t maxlen) {
    long long result = fast_strtoll_dec(str, maxlen);
    assert(result <= LONG_MAX);
    assert(result >= LONG_MIN);
    return (long)result;
 }
 
-static unsigned long fast_strtoul_dec(char** str, int maxlen) {
+static unsigned long fast_strtoul_dec(char** str, size_t maxlen) {
    unsigned long long result = fast_strtoull_dec(str, maxlen);
    assert(result <= ULONG_MAX);
    return (unsigned long)result;
 }
 
-static inline uint64_t fast_strtoull_hex(char** str, int maxlen) {
+static inline uint64_t fast_strtoull_hex(char** str, size_t maxlen) {
    register uint64_t result = 0;
    register int nibble, letter;
    const long valid_mask = 0x03FF007E;
 
    if (!maxlen)
-      --maxlen;
+      maxlen = 18; // length of maximum value of 0xffffffffffffffff
 
    while (maxlen--) {
       nibble = (unsigned char)**str;
@@ -346,7 +355,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 2;
 
    /* (4) ppid  -  %d */
-   Process_setParent(process, fast_strtol_dec(&location, 0));
+   Process_setParent(process, fast_strtoi_dec(&location, 0));
 
    if (!location[0])
       return false;
@@ -354,7 +363,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 1;
 
    /* (5) pgrp  -  %d */
-   process->pgrp = fast_strtol_dec(&location, 0);
+   process->pgrp = fast_strtoi_dec(&location, 0);
 
    if (!location[0])
       return false;
@@ -362,7 +371,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 1;
 
    /* (6) session  -  %d */
-   process->session = fast_strtol_dec(&location, 0);
+   process->session = fast_strtoi_dec(&location, 0);
 
    if (!location[0])
       return false;
@@ -378,7 +387,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 1;
 
    /* (8) tpgid  -  %d */
-   process->tpgid = fast_strtol_dec(&location, 0);
+   process->tpgid = fast_strtoi_dec(&location, 0);
 
    if (!location[0])
       return false;
@@ -466,7 +475,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 1;
 
    /* (19) nice  -  %ld */
-   process->nice = fast_strtol_dec(&location, 0);
+   process->nice = fast_strtoi_dec(&location, 0);
 
    if (!location[0])
       return false;
@@ -512,7 +521,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    assert(location != NULL);
 
    /* (39) processor  -  %d */
-   process->processor = fast_strtol_dec(&location, 0);
+   process->processor = fast_strtoi_dec(&location, 0);
 
    /* Ignore further fields */
 
@@ -738,8 +747,8 @@ static void LinuxProcessTable_readMaps(LinuxProcess* process, openat_arg_t procF
       uint64_t map_start;
       uint64_t map_end;
       bool map_execute;
-      unsigned int map_devmaj;
-      unsigned int map_devmin;
+      uint64_t map_devmaj;
+      uint64_t map_devmin;
       uint64_t map_inode;
 
       // Short circuit test: Look for a slash
@@ -787,10 +796,10 @@ static void LinuxProcessTable_readMaps(LinuxProcess* process, openat_arg_t procF
          continue;
 
       if (calcSize) {
-         LibraryData* libdata = Hashtable_get(ht, map_inode);
+         LibraryData* libdata = Hashtable_get(ht, (ht_key_t)map_inode);
          if (!libdata) {
             libdata = xCalloc(1, sizeof(LibraryData));
-            Hashtable_put(ht, map_inode, libdata);
+            Hashtable_put(ht, (ht_key_t)map_inode, libdata);
          }
 
          libdata->size += map_end - map_start;
@@ -1118,7 +1127,7 @@ static void LinuxProcessTable_readOomData(LinuxProcess* process, openat_arg_t pr
       return;
    }
 
-   process->oom = oom;
+   process->oom = (unsigned int)oom;
 }
 
 /*
@@ -1577,9 +1586,9 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       {
          char* endptr;
          unsigned long parsedPid = strtoul(name, &endptr, 10);
-         if (parsedPid == 0 || parsedPid == ULONG_MAX || *endptr != '\0')
+         if (parsedPid == 0 || parsedPid >= INT_MAX || *endptr != '\0')
             continue;
-         pid = parsedPid;
+         pid = (int)parsedPid;
       }
 
       // Skip task directory of main thread
