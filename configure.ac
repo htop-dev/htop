@@ -984,6 +984,28 @@ $3
    return "$htop_header_search_status"
 } # htop_search_header_dir
 
+AC_ARG_ENABLE(
+   [backtrace],
+   [AS_HELP_STRING(
+      [--enable-backtrace=BACKEND],
+      [enable showing backtraces of a processes; available backends: unwind-ptrace @<:@default=no@:>@]
+   )],
+   [],
+   [enable_backtrace=no]
+)
+
+backtrace_backend_found=no
+have_libunwind_ptrace=no
+case $enable_backtrace in
+   check|yes)
+      have_libunwind_ptrace=check
+      ;;
+   unwind-ptrace|libunwind-ptrace)
+      have_libunwind_ptrace=check
+      enable_backtrace=unwind-ptrace
+      ;;
+esac
+
 AC_ARG_WITH(
    [libunwind],
    [AS_HELP_STRING(
@@ -998,19 +1020,52 @@ AC_ARG_WITH(
       fi
    ]
 )
+
+default_libunwind_libs='-lunwind'
 case $with_libunwind in
    no)
       ;;
    check|yes)
-      HTOP_PKG_CHECK_MODULES(LIBUNWIND, libunwind,
-         [],
-         [
-            if test "$enable_static" = yes; then
-               AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
-            fi
-            : "${LIBUNWIND_LIBS='-lunwind'}"
-         ]
-      )
+      libunwind_ptrace_name=''
+      if test "$have_libunwind_ptrace" != no; then
+         libunwind_ptrace_name='libunwind-ptrace '
+      fi
+
+      while :; do
+         HTOP_PKG_CHECK_MODULES(
+            [LIBUNWIND],
+            [${libunwind_ptrace_name}libunwind],
+            [
+               if test "$have_libunwind_ptrace" != no; then
+                  enable_backtrace=unwind-ptrace
+               fi
+               break
+            ], [
+               test "x$libunwind_ptrace_name" != x || break
+               libunwind_ptrace_name=''
+            ]
+         )
+      done
+
+      if test "x${LIBUNWIND_LIBS+y}" = x; then
+         if test "$enable_static" = yes; then
+            AC_CHECK_LIB(
+               [lzma],
+               [lzma_index_buffer_decode],
+               [default_libunwind_libs='-lunwind -llzma']
+            )
+         fi
+
+         if test "$have_libunwind_ptrace" != no; then
+            AC_CHECK_LIB(
+               [unwind-ptrace],
+               [_UPT_create],
+               [:],
+               [have_libunwind_ptrace=no],
+               [-lunwind-generic $default_libunwind_libs]
+            )
+         fi
+      fi
 
       htop_save_CFLAGS=$CFLAGS
       CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
@@ -1022,10 +1077,18 @@ case $with_libunwind in
       # directories in Debian. (Package name: "libunwind-dev")
       if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
          AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
+         if test "$have_libunwind_ptrace" != no; then
+            AC_CHECK_HEADER(
+               [libunwind-ptrace.h],
+               [:],
+               [have_libunwind_ptrace=no]
+            )
+         fi
       elif test "$with_libunwind" = yes; then
          AC_MSG_ERROR([cannot find required header file libunwind.h])
       else
          with_libunwind=no
+         have_libunwind_ptrace=no
       fi
 
       CFLAGS=$htop_save_CFLAGS
@@ -1036,6 +1099,13 @@ case $with_libunwind in
 esac
 
 if test "$with_libunwind" != no; then
+   if test "x${LIBUNWIND_LIBS+y}" = x; then
+      if test "$have_libunwind_ptrace" != no; then
+         default_libunwind_libs="-lunwind-ptrace -lunwind-generic $default_libunwind_libs"
+      fi
+      LIBUNWIND_LIBS=$default_libunwind_libs
+   fi
+
    htop_save_CPPFLAGS=$CPPFLAGS
    htop_save_CFLAGS=$CFLAGS
    htop_save_LIBS=$LIBS
@@ -1090,8 +1160,8 @@ if test "$with_libunwind" != no; then
             if test "$with_libunwind" = yes; then
                AC_MSG_WARN([this build of libunwind might not support local unwinding])
             else
-               LIBS=$htop_save_LIBS
                with_libunwind=no
+               have_libunwind_ptrace=no
             fi
          fi
       ],
@@ -1099,22 +1169,39 @@ if test "$with_libunwind" != no; then
          AC_MSG_RESULT([no])
          if test "$with_libunwind" = yes; then
             AC_MSG_FAILURE([cannot link with libunwind])
-         else
-            LIBS=$htop_save_LIBS
-            with_libunwind=no
          fi
+         with_libunwind=no
+         have_libunwind_ptrace=no
       ]
    )
 
+   if test "$have_libunwind_ptrace" != no && test "x$ac_cv_lib_unwind_ptrace__UPT_create" != xyes; then
+      dnl Expect LIBS to contain "-lunwind-ptrace" at this point.
+      dnl Therefore call AC_CHECK_FUNC and not AC_CHECK_LIB.
+      AC_CHECK_FUNC([_UPT_create], [], [have_libunwind_ptrace=no])
+   fi
+
    CPPFLAGS=$htop_save_CPPFLAGS
    CFLAGS=$htop_save_CFLAGS
+   LIBS=$htop_save_LIBS
 fi
 
 if test "$with_libunwind" != no; then
    AM_CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS"
+   LIBS="$LIBUNWIND_LIBS $LIBS"
    with_libunwind=yes
    AC_DEFINE([HAVE_LOCAL_UNWIND], 1, [Define to 1 if local unwinding is enabled.])
+   if test "$have_libunwind_ptrace" != no; then
+      have_libunwind_ptrace=yes
+      backtrace_backend_found=yes
+      enable_backtrace=unwind-ptrace
+      AC_DEFINE([HAVE_LIBUNWIND_PTRACE], 1, [Define to 1 if libunwind-ptrace is present])
+   fi
 else
+   if test "x$enable_backtrace" = xunwind-ptrace; then
+      AC_MSG_ERROR([requires --with-libunwind for --enable-backtrace=unwind-ptrace])
+   fi
+
    # Fall back to backtrace(3) and add -lexecinfo if needed
    AC_SEARCH_LIBS([backtrace], [execinfo])
 
@@ -1180,6 +1267,21 @@ char** (*fn)(void* const*, BACKTRACE_RETURN_TYPE) = backtrace_symbols;
    )
 fi
 
+case $enable_backtrace in
+   no|check)
+      enable_backtrace=no
+      ;;
+   yes)
+      AC_MSG_ERROR([did not find any backend for --enable-backtrace])
+      ;;
+   *)
+      if test "$backtrace_backend_found" = no; then
+         AC_MSG_ERROR([backend '$enable_backtrace' for --enable-backtrace is not supported or not found])
+      fi
+      AC_DEFINE([HAVE_BACKTRACE_SCREEN], [1], [Define if the backtrace feature is enabled])
+      ;;
+esac
+AM_CONDITIONAL([HAVE_BACKTRACE_SCREEN], [test "$enable_backtrace" != no])
 
 AC_ARG_ENABLE(
    [hwloc],
@@ -1616,6 +1718,7 @@ AC_MSG_RESULT([
   (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
+  backtrace:                 $enable_backtrace
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
