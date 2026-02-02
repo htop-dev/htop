@@ -1010,6 +1010,11 @@ case "$enable_unwind" in
       htop_save_CFLAGS=$CFLAGS
       CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
 
+      # Debian installs LLVM libunwind headers in the non-standard
+      # "/usr/include/libunwind" directory.
+      # (Package name: "libunwind-${llvm_version}-dev")
+      # libunwind (HP) headers can be found in the default include
+      # directories in Debian. (Package name: "libunwind-dev")
       if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
          AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
       elif test "$enable_unwind" = yes; then
@@ -1033,8 +1038,10 @@ if test "$enable_unwind" != no; then
    CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
    LIBS="$LIBUNWIND_LIBS $LIBS"
 
-   # unw_init_local() is a macro in HP's implementation of libunwind
-   # (the most popular one, Mosberger et al.)
+   # Almost all unw_*() functions are defined as macros in HP
+   # implementation of libunwind (Mosberger et al.).
+   # Define UNW_LOCAL_ONLY to avoid unnecessary dependency on
+   # "-lunwind-generic" when linking.
    AC_MSG_CHECKING([whether $LIBUNWIND_LIBS supports local unwinding])
    AC_LINK_IFELSE(
       [AC_LANG_PROGRAM(
