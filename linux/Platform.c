@@ -555,9 +555,10 @@ FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
 
       errno = 0;
       char* end = de->d_name;
-      int file = strtoull(de->d_name, &end, 10);
-      if (errno || *end)
+      unsigned long int fdstr = strtoul(de->d_name, &end, 10);
+      if (errno || *end || fdstr >= INT_MAX)
          continue;
+      int file = (int)fdstr;
 
       int fd = openat(dfd, de->d_name, O_RDONLY | O_CLOEXEC);
       if (fd == -1)

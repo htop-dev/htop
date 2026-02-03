@@ -158,7 +158,7 @@ static void PCPProcessTable_updateInfo(PCPProcess* pp, int pid, int offset, char
    pp->cutime = Metric_instance_time(PCP_PROC_CUTIME, pid, offset);
    pp->cstime = Metric_instance_time(PCP_PROC_CSTIME, pid, offset);
    process->priority = Metric_instance_u32(PCP_PROC_PRIORITY, pid, offset, 0);
-   process->nice = Metric_instance_s32(PCP_PROC_NICE, pid, offset, 0);
+   process->nice = (int) Metric_instance_s32(PCP_PROC_NICE, pid, offset, 0);
    process->nlwp = Metric_instance_u32(PCP_PROC_THREADS, pid, offset, 0);
    process->starttime_ctime = Metric_instance_time(PCP_PROC_STARTTIME, pid, offset);
    process->processor = (int) Metric_instance_u32(PCP_PROC_PROCESSOR, pid, offset, 0);

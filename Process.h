@@ -26,7 +26,7 @@ in the source distribution for its full text.
 #define DEFAULT_HIGHLIGHT_SECS 5
 
 /* Sentinel value for an unknown niceness in Process.nice */
-#define PROCESS_NICE_UNKNOWN (-LONG_MAX)
+#define PROCESS_NICE_UNKNOWN (-INT_MAX)
 
 typedef enum Tristate_ {
    TRI_INITIAL = 0,
@@ -165,7 +165,7 @@ typedef struct Process_ {
    long int priority;
 
    /* Nice value */
-   long int nice;
+   int nice;
 
    /* Number of threads in this process */
    long int nlwp;
