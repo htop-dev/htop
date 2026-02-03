@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <sys/sysmacros.h>
 
 #include "BatteryMeter.h"
@@ -228,58 +229,14 @@ void Platform_setBindings(Htop_Action* keys) {
    keys[KEY_F(20)] = Platform_actionHigherAutogroupPriority; // Shift-F8
 }
 
-const MeterClass* const Platform_meterTypes[] = {
-   &CPUMeter_class,
-   &ClockMeter_class,
-   &DateMeter_class,
-   &DateTimeMeter_class,
-   &LoadAverageMeter_class,
-   &LoadMeter_class,
-   &MemoryMeter_class,
-   &SwapMeter_class,
-   &MemorySwapMeter_class,
-   &SysArchMeter_class,
-   &HugePageMeter_class,
-   &TasksMeter_class,
-   &UptimeMeter_class,
-   &SecondsUptimeMeter_class,
-   &BatteryMeter_class,
-   &HostnameMeter_class,
-   &AllCPUsMeter_class,
-   &AllCPUs2Meter_class,
-   &AllCPUs4Meter_class,
-   &AllCPUs8Meter_class,
-   &LeftCPUsMeter_class,
-   &RightCPUsMeter_class,
-   &LeftCPUs2Meter_class,
-   &RightCPUs2Meter_class,
-   &LeftCPUs4Meter_class,
-   &RightCPUs4Meter_class,
-   &LeftCPUs8Meter_class,
-   &RightCPUs8Meter_class,
-   &BlankMeter_class,
-   &PressureStallCPUSomeMeter_class,
-   &PressureStallIOSomeMeter_class,
-   &PressureStallIOFullMeter_class,
-   &PressureStallIRQFullMeter_class,
-   &PressureStallMemorySomeMeter_class,
-   &PressureStallMemoryFullMeter_class,
-   &ZfsArcMeter_class,
-   &ZfsCompressedArcMeter_class,
-   &ZramMeter_class,
-   &DiskIORateMeter_class,
-   &DiskIOTimeMeter_class,
-   &DiskIOMeter_class,
-   &NetworkIOMeter_class,
-   &SELinuxMeter_class,
-   &SystemdMeter_class,
-   &SystemdUserMeter_class,
-   &OpenRCMeter_class,
-   &OpenRCUserMeter_class,
-   &FileDescriptorMeter_class,
-   &GPUMeter_class,
-   NULL
-};
+const MeterClass* Platform_meterTypes[64];
+static int Platform_meterTypes_size = 0;
+
+static void Platform_meterTypes_add(const MeterClass* mc) {
+   if (Platform_meterTypes_size < 63) {
+      Platform_meterTypes[Platform_meterTypes_size++] = mc;
+   }
+}
 
 int Platform_getUptime(void) {
    char uptimedata[64] = {0};
@@ -1137,6 +1094,65 @@ bool Platform_init(void) {
       fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
       return false;
    }
+
+   Platform_meterTypes_size = 0;
+   Platform_meterTypes_add(&CPUMeter_class);
+   Platform_meterTypes_add(&ClockMeter_class);
+   Platform_meterTypes_add(&DateMeter_class);
+   Platform_meterTypes_add(&DateTimeMeter_class);
+   Platform_meterTypes_add(&LoadAverageMeter_class);
+   Platform_meterTypes_add(&LoadMeter_class);
+   Platform_meterTypes_add(&MemoryMeter_class);
+   Platform_meterTypes_add(&SwapMeter_class);
+   Platform_meterTypes_add(&MemorySwapMeter_class);
+   Platform_meterTypes_add(&SysArchMeter_class);
+   Platform_meterTypes_add(&HugePageMeter_class);
+   Platform_meterTypes_add(&TasksMeter_class);
+   Platform_meterTypes_add(&UptimeMeter_class);
+   Platform_meterTypes_add(&SecondsUptimeMeter_class);
+   Platform_meterTypes_add(&BatteryMeter_class);
+   Platform_meterTypes_add(&HostnameMeter_class);
+   Platform_meterTypes_add(&AllCPUsMeter_class);
+   Platform_meterTypes_add(&AllCPUs2Meter_class);
+   Platform_meterTypes_add(&AllCPUs4Meter_class);
+   Platform_meterTypes_add(&AllCPUs8Meter_class);
+   Platform_meterTypes_add(&LeftCPUsMeter_class);
+   Platform_meterTypes_add(&RightCPUsMeter_class);
+   Platform_meterTypes_add(&LeftCPUs2Meter_class);
+   Platform_meterTypes_add(&RightCPUs2Meter_class);
+   Platform_meterTypes_add(&LeftCPUs4Meter_class);
+   Platform_meterTypes_add(&RightCPUs4Meter_class);
+   Platform_meterTypes_add(&LeftCPUs8Meter_class);
+   Platform_meterTypes_add(&RightCPUs8Meter_class);
+   Platform_meterTypes_add(&BlankMeter_class);
+   Platform_meterTypes_add(&PressureStallCPUSomeMeter_class);
+   Platform_meterTypes_add(&PressureStallIOSomeMeter_class);
+   Platform_meterTypes_add(&PressureStallIOFullMeter_class);
+   Platform_meterTypes_add(&PressureStallIRQFullMeter_class);
+   Platform_meterTypes_add(&PressureStallMemorySomeMeter_class);
+   Platform_meterTypes_add(&PressureStallMemoryFullMeter_class);
+   Platform_meterTypes_add(&ZfsArcMeter_class);
+   Platform_meterTypes_add(&ZfsCompressedArcMeter_class);
+   Platform_meterTypes_add(&ZramMeter_class);
+   Platform_meterTypes_add(&DiskIORateMeter_class);
+   Platform_meterTypes_add(&DiskIOTimeMeter_class);
+   Platform_meterTypes_add(&DiskIOMeter_class);
+   Platform_meterTypes_add(&NetworkIOMeter_class);
+   Platform_meterTypes_add(&SELinuxMeter_class);
+
+   struct stat st;
+   if (stat("/bin/systemctl", &st) == 0) {
+      Platform_meterTypes_add(&SystemdMeter_class);
+      Platform_meterTypes_add(&SystemdUserMeter_class);
+   }
+   if (stat("/sbin/openrc", &st) == 0) {
+      Platform_meterTypes_add(&OpenRCMeter_class);
+      Platform_meterTypes_add(&OpenRCUserMeter_class);
+   }
+
+   Platform_meterTypes_add(&FileDescriptorMeter_class);
+   Platform_meterTypes_add(&GPUMeter_class);
+   Platform_meterTypes[Platform_meterTypes_size] = NULL;
 
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_init();
