@@ -205,12 +205,12 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
     *    do not show twice by subtracting from Cached and do not subtract twice from used.
     */
    host->totalMem = totalMem;
-   host->cachedMem = cachedMem + sreclaimableMem - sharedMem;
-   host->sharedMem = sharedMem;
+   this->cachedMem = cachedMem + sreclaimableMem - sharedMem;
+   this->sharedMem = sharedMem;
    const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem;
-   host->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
-   host->buffersMem = buffersMem;
-   host->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
+   this->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
+   this->buffersMem = buffersMem;
+   this->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
    host->totalSwap = swapTotalMem;
    host->usedSwap = swapTotalMem - swapFreeMem - swapCacheMem;
    host->cachedSwap = swapCacheMem;

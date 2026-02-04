@@ -32,7 +32,6 @@ static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_active_count[4];
 static int MIB_vm_stats_vm_v_cache_count[4];
 static int MIB_vm_stats_vm_v_inactive_count[4];
-static int MIB_vm_stats_vm_v_free_count[4];
 
 static int MIB_vfs_bufspace[2];
 
@@ -65,7 +64,6 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    len = 4; sysctlnametomib("vm.stats.vm.v_active_count", MIB_vm_stats_vm_v_active_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
@@ -231,30 +229,56 @@ static void DragonFlyBSDMachine_scanMemoryInfo(Machine* super) {
    //  htop_used (unavail to anybody) = active + wired
    //  htop_cache (for cache meter)   = buffers + cache
    //  user_free (avail to procs)     = buffers + inactive + cache + free
-   size_t len = sizeof(super->totalMem);
 
-   //disabled for now, as it is always smaller than physical amount of memory...
-   //...to avoid "where is my memory?" questions
-   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(this->totalMem), &len, NULL, 0);
-   //this->totalMem *= pageSizeKb;
-   sysctl(MIB_hw_physmem, 2, &(super->totalMem), &len, NULL, 0);
-   super->totalMem /= 1024;
+   u_long totalMem;
+   unsigned long long int memActive, memWire, memInactive, memCache;
+   long long int buffersMem;
+   size_t len;
 
-   unsigned long long int memActive = 0;
-   sysctl(MIB_vm_stats_vm_v_active_count, 4, &memActive, &len, NULL, 0);
-   memActive *= this->pageSizeKb;
+   // total memory
+   len = sizeof(totalMem);
+   if ((sysctl(MIB_hw_physmem, 2, &(totalMem), &len, NULL, 0) == 0) && (totalMem > 0))
+      super->totalMem = totalMem / 1024;
+   else
+      super->totalMem = 0;
 
-   unsigned long long int memWire = 0;
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &memWire, &len, NULL, 0);
-   memWire *= this->pageSizeKb;
+   // "active" pages
+   len = sizeof(memActive);
+   if ((sysctl(MIB_vm_stats_vm_v_active_count, 4, &(memActive), &len, NULL, 0) == 0) && (memActive > 0))
+      this->activeMem = memActive * this->pageSizeKb;
+   else
+      this->activeMem = 0;
 
-   sysctl(MIB_vfs_bufspace, 2, &(super->buffersMem), &len, NULL, 0);
-   super->buffersMem /= 1024;
+   // "wired" pages
+   len = sizeof(memWire);
+   if ((sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(memWire), &len, NULL, 0) == 0) && (memWire > 0))
+      this->wiredMem = memWire * this->pageSizeKb;
+   else
+      this->wiredMem = 0;
 
-   sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(super->cachedMem), &len, NULL, 0);
-   super->cachedMem *= this->pageSizeKb;
-   super->usedMem = memActive + memWire;
+   // "inactive" pages
+   len = sizeof(memInactive);
+   if ((sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &(memInactive), &len, NULL, 0) == 0) && (memInactive > 0))
+      this->inactiveMem = memInactive * this->pageSizeKb;
+   else
+      this->inactiveMem = 0;
 
+   // "cache" pages
+   len = sizeof(memCache);
+   if ((sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(memCache), &len, NULL, 0) == 0) && (memCache > 0))
+      this->cacheMem = memCache * this->pageSizeKb;
+   else
+      this->cacheMem = 0;
+
+   // "buffers" pages (separate read, should be deducted from 'wired')
+   len = sizeof(buffersMem);
+   if ((sysctl(MIB_vfs_bufspace, 2, &(buffersMem), &len, NULL, 0) == 0) && (buffersMem > 0))
+      this->buffersMem = buffersMem / 1024;
+   else
+      this->buffersMem = 0;
+   this->wiredMem -= this->buffersMem; // subtract (NB: "buffers" can't be larger than "wired")
+
+   // swap
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(this->kd, swap, ARRAYSIZE(swap), 0);
    super->totalSwap = 0;
