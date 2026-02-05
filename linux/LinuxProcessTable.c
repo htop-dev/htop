@@ -77,6 +77,14 @@ static FILE* fopenat(openat_arg_t openatArg, const char* pathname, const char* m
    return fp;
 }
 
+static pid_t strtopid(const char* str) {
+   char* endptr;
+   unsigned long parsedPid = strtoul(str, &endptr, 10);
+   if (parsedPid == 0 || parsedPid >= INT_MAX || *endptr != '\0')
+      return 0; // indicate failure by an invalid pid
+   return (pid_t)parsedPid;
+}
+
 static inline uint64_t fast_strtoull_dec(char** str, size_t maxlen) {
    uint64_t result = 0;
 
@@ -982,8 +990,8 @@ static void LinuxProcessTable_readOpenVZData(LinuxProcess* process, openat_arg_t
                free_and_xStrdup(&process->ctid, name_value_sep);
             break;
          case 2:
-            foundVPid = true;
-            process->vpid = strtoul(name_value_sep, NULL, 0);
+            if ((process->vpid = strtopid(name_value_sep)) != 0)
+               foundVPid = true;
             break;
          default:
             //Sanity Check: Should never reach here, or the implementation is missing something!
@@ -1582,14 +1590,9 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       }
 
       // filename is a number: process directory
-      int pid;
-      {
-         char* endptr;
-         unsigned long parsedPid = strtoul(name, &endptr, 10);
-         if (parsedPid == 0 || parsedPid >= INT_MAX || *endptr != '\0')
-            continue;
-         pid = (int)parsedPid;
-      }
+      pid_t pid = strtopid(name);
+      if (pid == 0)
+         continue;
 
       // Skip task directory of main thread
       if (mainTask && pid == Process_getPid(&mainTask->super))
