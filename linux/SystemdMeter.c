@@ -338,7 +338,7 @@ static int valueDigitColor(unsigned int value) {
 }
 
 
-static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out, SystemdMeterContext_t* ctx) {
+static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out, SystemdMeterContext_t* ctx) {
    char buffer[16];
    int len;
    int color = METER_VALUE_ERROR;
@@ -396,12 +396,12 @@ static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* ou
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " jobs)");
 }
 
-static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
-   _SystemdMeter_display(cast, out, &ctx_system);
+static void SystemdMeter_display_system(ATTR_UNUSED const Object* cast, RichString* out) {
+   SystemdMeter_display(cast, out, &ctx_system);
 }
 
-static void SystemdUserMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
-   _SystemdMeter_display(cast, out, &ctx_user);
+static void SystemdMeter_display_user(ATTR_UNUSED const Object* cast, RichString* out) {
+   SystemdMeter_display(cast, out, &ctx_user);
 }
 
 static const int SystemdMeter_attributes[] = {
@@ -412,7 +412,7 @@ const MeterClass SystemdMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
-      .display = SystemdMeter_display
+      .display = SystemdMeter_display_system,
    },
    .updateValues = SystemdMeter_updateValues,
    .done = SystemdMeter_done,
@@ -431,7 +431,7 @@ const MeterClass SystemdUserMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
-      .display = SystemdUserMeter_display
+      .display = SystemdMeter_display_user,
    },
    .updateValues = SystemdMeter_updateValues,
    .done = SystemdMeter_done,
