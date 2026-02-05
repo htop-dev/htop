@@ -190,7 +190,7 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
    }
    this->chptr[newLen] = 0;
 
-   return len;
+   return (int)len;
 }
 
 int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, size_t len, int* columns) {
