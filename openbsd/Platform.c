@@ -99,6 +99,24 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+enum {
+   MEMORY_CLASS_WIRED = 0,
+   MEMORY_CLASS_CACHE,
+   MEMORY_CLASS_ACTIVE,
+   MEMORY_CLASS_PAGING,
+   MEMORY_CLASS_INACTIVE,
+}; // N.B. the chart will display categories in this order
+
+const MemoryClass Platform_memoryClasses[] = {
+   [MEMORY_CLASS_WIRED] = { .label = "wired", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_1 },
+   [MEMORY_CLASS_CACHE] = { .label = "cache", .countsAsUsed = true, .countsAsCache = true, .color = MEMORY_2 },
+   [MEMORY_CLASS_ACTIVE] = { .label = "active", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_3 },
+   [MEMORY_CLASS_PAGING] = { .label = "paging", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_4 },
+   [MEMORY_CLASS_INACTIVE] = { .label = "inactive", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_5 },
+};
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -225,25 +243,24 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
 
 void Platform_setMemoryValues(Meter* this) {
    const Machine* host = this->host;
-   long int usedMem = host->usedMem;
-   long int buffersMem = host->buffersMem;
-   long int cachedMem = host->cachedMem;
-   usedMem -= buffersMem + cachedMem;
+   const OpenBSDMachine* ohost = (const OpenBSDMachine*) host;
    this->total = host->totalMem;
-   this->values[MEMORY_METER_USED] = usedMem;
-   // this->values[MEMORY_METER_SHARED] = "shared memory, like tmpfs and shm"
-   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
-   this->values[MEMORY_METER_BUFFERS] = buffersMem;
-   this->values[MEMORY_METER_CACHE] = cachedMem;
-   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
+   if (host->settings->showCachedMemory) {
+      this->values[MEMORY_CLASS_WIRED]    = ohost->wiredMem;
+      this->values[MEMORY_CLASS_CACHE]    = ohost->cacheMem;
+   } else { // if showCachedMemory is disabled, merge cache into the wired pages
+      this->values[MEMORY_CLASS_WIRED]    = ohost->wiredMem + ohost->cacheMem;
+      this->values[MEMORY_CLASS_CACHE]    = 0;
+   }
+   this->values[MEMORY_CLASS_ACTIVE]   = ohost->activeMem;
+   this->values[MEMORY_CLASS_PAGING]   = ohost->pagingMem;
+   this->values[MEMORY_CLASS_INACTIVE] = ohost->inactiveMem;
 }
 
 void Platform_setSwapValues(Meter* this) {
    const Machine* host = this->host;
    this->total = host->totalSwap;
    this->values[SWAP_METER_USED] = host->usedSwap;
-   // this->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
-   // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 char* Platform_getProcessEnv(pid_t pid) {

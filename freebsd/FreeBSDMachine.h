@@ -36,6 +36,13 @@ typedef struct FreeBSDMachine_ {
    int pageSizeKb;
    int kernelFScale;
 
+   memory_t wiredMem;
+   memory_t buffersMem;
+   memory_t activeMem;
+   memory_t laundryMem;
+   memory_t inactiveMem;
+   memory_t arcMem;
+
    ZfsArcStats zfs;
 
    CPUData* cpus;

@@ -3,21 +3,19 @@
 /*
 htop - MemoryMeter.h
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2025 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "Meter.h"
 
-typedef enum {
-   MEMORY_METER_USED = 0,
-   MEMORY_METER_SHARED = 1,
-   MEMORY_METER_COMPRESSED = 2,
-   MEMORY_METER_BUFFERS = 3,
-   MEMORY_METER_CACHE = 4,
-   MEMORY_METER_AVAILABLE = 5,
-   MEMORY_METER_ITEMCOUNT = 6, // number of entries in this enum
-} MemoryMeterValues;
+typedef struct MemoryClass_s {
+   const char *label; // e.g. "wired", "shared", "compressed" - platform-specific memory classe names
+   bool countsAsUsed; // memory class counts as "used" memory
+   bool countsAsCache; // memory class reclaimed under pressure (displayed with "show cached memory")
+   ColorElements color; // one of the MEMORY CRT color values
+} MemoryClass;
 
 extern const MeterClass MemoryMeter_class;
 

@@ -53,11 +53,38 @@ typedef enum CPUMetric_ {
    CPU_METRIC_COUNT
 } CPUMetric;
 
+typedef enum MemoryMetric_ {
+   // Linux
+   MEMORY_CLASS_USED = 0,
+   MEMORY_CLASS_SHARED = 1,
+   MEMORY_CLASS_BUFFERS = 2,
+   MEMORY_CLASS_CACHE = 3,
+   MEMORY_CLASS_COMPRESSED = 4,
+   MEMORY_CLASS_AVAILABLE = 5,
+   // Darwin
+   MEMORY_CLASS_WIRED = 0,
+   MEMORY_CLASS_SPECULATIVE = 1,
+   MEMORY_CLASS_ACTIVE = 2,
+   MEMORY_CLASS_PURGEABLE = 3,
+   MEMORY_CLASS_INACTIVE = 5,
+   // Maximum
+   MEMORY_CLASS_LIMIT = 6
+} MemoryMetric;
+
+typedef enum SystemName_ {
+   SYSTEM_NAME_LINUX,
+   SYSTEM_NAME_DARWIN,
+   SYSTEM_NAME_UNKNOWN
+} SystemName;
+
 typedef struct PCPMachine_ {
    Machine super;
+   SystemName sys;
    int smaps_flag;
    double period;
    double timestamp;     /* previous sample timestamp */
+
+   memory_t memValue[MEMORY_CLASS_LIMIT];
 
    pmAtomValue* cpu;     /* aggregate values for each metric */
    pmAtomValue** percpu; /* per-processor values for each metric */

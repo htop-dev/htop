@@ -1,6 +1,7 @@
 /*
 htop - MemoryMeter.c
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2025 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -21,11 +22,12 @@ in the source distribution for its full text.
 
 
 static const int MemoryMeter_attributes[] = {
-   MEMORY_USED,
-   MEMORY_SHARED,
-   MEMORY_COMPRESSED,
-   MEMORY_BUFFERS,
-   MEMORY_CACHE
+   MEMORY_1,
+   MEMORY_2,
+   MEMORY_3,
+   MEMORY_4,
+   MEMORY_5,
+   MEMORY_6
 };
 
 static void MemoryMeter_updateValues(Meter* this) {
@@ -35,26 +37,30 @@ static void MemoryMeter_updateValues(Meter* this) {
 
    Settings *settings = this->host->settings;
 
-   /* shared, compressed and available memory are not supported on all platforms */
-   this->values[MEMORY_METER_SHARED] = NAN;
-   this->values[MEMORY_METER_COMPRESSED] = NAN;
-   this->values[MEMORY_METER_AVAILABLE] = NAN;
-   Platform_setMemoryValues(this);
-   if ((this->mode == GRAPH_METERMODE || this->mode == BAR_METERMODE) && !settings->showCachedMemory) {
-      this->values[MEMORY_METER_BUFFERS] = 0;
-      this->values[MEMORY_METER_CACHE] = 0;
+   /* not all memory classes are supported on all platforms */
+   for (unsigned int memoryClassIdx = 0; memoryClassIdx < Platform_numberOfMemoryClasses; memoryClassIdx++) {
+      this->values[memoryClassIdx] = NAN;
    }
-   /* Do not print available memory in bar mode */
-   static_assert(MEMORY_METER_AVAILABLE + 1 == MEMORY_METER_ITEMCOUNT,
-      "MEMORY_METER_AVAILABLE is not the last item in MemoryMeterValues");
-   this->curItems = MEMORY_METER_AVAILABLE;
 
-   /* we actually want to show "used + shared + compressed" */
-   double used = this->values[MEMORY_METER_USED];
-   if (isPositive(this->values[MEMORY_METER_SHARED]))
-      used += this->values[MEMORY_METER_SHARED];
-   if (isPositive(this->values[MEMORY_METER_COMPRESSED]))
-      used += this->values[MEMORY_METER_COMPRESSED];
+   Platform_setMemoryValues(this);
+   this->curItems = (uint8_t) Platform_numberOfMemoryClasses;
+
+   /* compute the used memory */
+   double used = 0.0;
+   for (unsigned int memoryClassIdx = 0; memoryClassIdx < Platform_numberOfMemoryClasses; memoryClassIdx++) {
+      if (Platform_memoryClasses[memoryClassIdx].countsAsUsed) {
+         used += this->values[memoryClassIdx];
+      }
+   }
+
+   /* clear the values we don't want to see */
+   if ((this->mode == GRAPH_METERMODE || this->mode == BAR_METERMODE) && !settings->showCachedMemory) {
+      for (unsigned int memoryClassIdx = 0; memoryClassIdx < Platform_numberOfMemoryClasses; memoryClassIdx++) {
+         if (Platform_memoryClasses[memoryClassIdx].countsAsCache) {
+            this->values[memoryClassIdx] = NAN;
+         }
+      }
+   }
 
    written = Meter_humanUnit(buffer, used, size);
    METER_BUFFER_CHECK(buffer, size, written);
@@ -73,37 +79,16 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
    RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
 
-   Meter_humanUnit(buffer, this->values[MEMORY_METER_USED], sizeof(buffer));
-   RichString_appendAscii(out, CRT_colors[METER_TEXT], " used:");
-   RichString_appendAscii(out, CRT_colors[MEMORY_USED], buffer);
+   /* print the memory classes in the order supplied (specific to each platform) */
+   for (unsigned int memoryClassIdx = 0; memoryClassIdx < Platform_numberOfMemoryClasses; memoryClassIdx++) {
+      if (!settings->showCachedMemory && Platform_memoryClasses[memoryClassIdx].countsAsCache)
+         continue; // skip reclaimable cache memory classes if "show cached memory" is not ticked
 
-   /* shared memory is not supported on all platforms */
-   if (isNonnegative(this->values[MEMORY_METER_SHARED])) {
-      Meter_humanUnit(buffer, this->values[MEMORY_METER_SHARED], sizeof(buffer));
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], " shared:");
-      RichString_appendAscii(out, CRT_colors[MEMORY_SHARED], buffer);
-   }
-
-   /* compressed memory is not supported on all platforms */
-   if (isNonnegative(this->values[MEMORY_METER_COMPRESSED])) {
-      Meter_humanUnit(buffer, this->values[MEMORY_METER_COMPRESSED], sizeof(buffer));
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], " compressed:");
-      RichString_appendAscii(out, CRT_colors[MEMORY_COMPRESSED], buffer);
-   }
-
-   Meter_humanUnit(buffer, this->values[MEMORY_METER_BUFFERS], sizeof(buffer));
-   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " buffers:");
-   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[MEMORY_BUFFERS_TEXT] : CRT_colors[METER_SHADOW], buffer);
-
-   Meter_humanUnit(buffer, this->values[MEMORY_METER_CACHE], sizeof(buffer));
-   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[METER_TEXT] : CRT_colors[METER_SHADOW], " cache:");
-   RichString_appendAscii(out, settings->showCachedMemory ? CRT_colors[MEMORY_CACHE] : CRT_colors[METER_SHADOW], buffer);
-
-   /* available memory is not supported on all platforms */
-   if (isNonnegative(this->values[MEMORY_METER_AVAILABLE])) {
-      Meter_humanUnit(buffer, this->values[MEMORY_METER_AVAILABLE], sizeof(buffer));
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], " available:");
-      RichString_appendAscii(out, CRT_colors[METER_VALUE], buffer);
+      Meter_humanUnit(buffer, this->values[memoryClassIdx], sizeof(buffer));
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], " ");
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], Platform_memoryClasses[memoryClassIdx].label);
+      RichString_appendAscii(out, CRT_colors[METER_TEXT], ":");
+      RichString_appendAscii(out, CRT_colors[Platform_memoryClasses[memoryClassIdx].color], buffer);
    }
 }
 
@@ -116,7 +101,7 @@ const MeterClass MemoryMeter_class = {
    .updateValues = MemoryMeter_updateValues,
    .defaultMode = BAR_METERMODE,
    .supportedModes = METERMODE_DEFAULT_SUPPORTED,
-   .maxItems = MEMORY_METER_ITEMCOUNT,
+   .maxItems = 6, // maximum of MEMORY_N settings
    .isPercentChart = true,
    .total = 100.0,
    .attributes = MemoryMeter_attributes,

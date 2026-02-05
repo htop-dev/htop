@@ -58,11 +58,18 @@ typedef enum Metric_ {
    PCP_PERCPU_GUESTNICE,        /* kernel.percpu.cpu.guest_nice */
    PCP_MEM_TOTAL,               /* mem.physmem */
    PCP_MEM_FREE,                /* mem.util.free */
+   PCP_MEM_ACTIVE,              /* mem.util.active */
+   PCP_MEM_AVAILABLE,           /* mem.util.available */
    PCP_MEM_BUFFERS,             /* mem.util.bufmem */
    PCP_MEM_CACHED,              /* mem.util.cached */
+   PCP_MEM_COMPRESSED,          /* mem.util.compressed */
+   PCP_MEM_EXTERNAL,            /* mem.util.external */
+   PCP_MEM_INACTIVE,            /* mem.util.inactive */
    PCP_MEM_SHARED,              /* mem.util.shared */
-   PCP_MEM_AVAILABLE,           /* mem.util.available */
+   PCP_MEM_PURGEABLE,           /* mem.util.purgeable */
+   PCP_MEM_SPECULATIVE,         /* mem.util.speculative */
    PCP_MEM_SRECLAIM,            /* mem.util.slabReclaimable */
+   PCP_MEM_WIRED,               /* mem.util.wired */
    PCP_MEM_SWAPCACHED,          /* mem.util.swapCached */
    PCP_MEM_SWAPTOTAL,           /* mem.util.swapTotal */
    PCP_MEM_SWAPFREE,            /* mem.util.swapFree */
