@@ -51,7 +51,7 @@ extern const MemoryClass Platform_memoryClasses[];
 
 extern const unsigned int Platform_numberOfMemoryClasses;
 
-extern const MeterClass* const Platform_meterTypes[];
+extern const MeterClass* Platform_meterTypes[];
 
 bool Platform_init(void);
 void Platform_done(void);
