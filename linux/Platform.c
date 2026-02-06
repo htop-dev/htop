@@ -54,6 +54,7 @@ in the source distribution for its full text.
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
+#include "linux/OpenRCMeter.h"
 #include "linux/SELinuxMeter.h"
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
@@ -273,6 +274,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &SELinuxMeter_class,
    &SystemdMeter_class,
    &SystemdUserMeter_class,
+   &OpenRCMeter_class,
+   &OpenRCUserMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,
    NULL
