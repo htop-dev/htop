@@ -320,8 +320,9 @@ static void BacktracePanelRow_displayInformation(const Object* super, RichString
    size_t highlightLen = 0;
    size_t highlightOffset = 0;
 
-   char *processName = process->mergedCommand.str;
-   if (processName) {
+   const char* processName = "";
+   if (process->mergedCommand.str) {
+      processName = process->mergedCommand.str;
       for (size_t i = 0; i < process->mergedCommand.highlightCount; i++) {
          const ProcessCmdlineHighlight* highlight = process->mergedCommand.highlights;
          if (highlight->flags & CMDLINE_HIGHLIGHT_FLAG_BASENAME) {
@@ -330,12 +331,10 @@ static void BacktracePanelRow_displayInformation(const Object* super, RichString
             break;
          }
       }
-
-      if (highlightLen == 0 && process->mergedCommand.str) {
-         highlightLen = strlen(process->mergedCommand.str);
-      }
-   } else {
+   } else if (process->cmdline) {
       processName = process->cmdline;
+   }
+   if (highlightLen == 0) {
       highlightLen = strlen(processName);
    }
 
