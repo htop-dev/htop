@@ -295,7 +295,7 @@ static void BacktracePanelRow_highlightBasename(const BacktracePanelRow* row, Ri
 
    size_t endBasenameIndex = objectPathStart;
    size_t lastSlashBasenameIndex = objectPathStart;
-   for (; line[endBasenameIndex] != ' '; endBasenameIndex++) {
+   for (; line[endBasenameIndex] != 0 && line[endBasenameIndex] != ' '; endBasenameIndex++) {
       if (line[endBasenameIndex] == '/') {
          lastSlashBasenameIndex = endBasenameIndex + 1;
       }
