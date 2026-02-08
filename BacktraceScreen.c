@@ -321,25 +321,31 @@ static void BacktracePanelRow_displayInformation(const Object* super, RichString
    size_t highlightLen = 0;
    size_t highlightOffset = 0;
 
-   for (size_t i = 0; i < process->mergedCommand.highlightCount; i++) {
-      const ProcessCmdlineHighlight* highlight = process->mergedCommand.highlights;
-      if (highlight->flags & CMDLINE_HIGHLIGHT_FLAG_BASENAME) {
-         highlightLen = highlight->length;
-         highlightOffset = highlight->offset;
-         break;
+   char *processName = process->mergedCommand.str;
+   if (processName) {
+      for (size_t i = 0; i < process->mergedCommand.highlightCount; i++) {
+         const ProcessCmdlineHighlight* highlight = process->mergedCommand.highlights;
+         if (highlight->flags & CMDLINE_HIGHLIGHT_FLAG_BASENAME) {
+            highlightLen = highlight->length;
+            highlightOffset = highlight->offset;
+            break;
+         }
       }
-   }
 
-   if (highlightLen == 0) {
-      highlightLen = strlen(process->mergedCommand.str);
+      if (highlightLen == 0 && process->mergedCommand.str) {
+         highlightLen = strlen(process->mergedCommand.str);
+      }
+   } else {
+      processName = process->cmdline;
+      highlightLen = strlen(processName);
    }
 
    if (Process_isThread(process)) {
       colorBasename = PROCESS_THREAD_BASENAME;
-      len = xAsprintf(&informations, "Thread %d: %n%s", Process_getPid(process), &indexProcessComm, process->mergedCommand.str);
+      len = xAsprintf(&informations, "Thread %d: %n%s", Process_getPid(process), &indexProcessComm, processName);
    } else {
       colorBasename = PROCESS_BASENAME;
-      len = xAsprintf(&informations, "Process %d: %n%s",Process_getPid(process), &indexProcessComm, process->mergedCommand.str);
+      len = xAsprintf(&informations, "Process %d: %n%s",Process_getPid(process), &indexProcessComm, processName);
    }
 
    RichString_appendnWide(out, CRT_colors[DEFAULT_COLOR] | A_BOLD, informations, len);
