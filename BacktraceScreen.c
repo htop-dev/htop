@@ -107,8 +107,7 @@ static void BacktracePanel_displayHeader(BacktracePanel* this) {
    char* line = NULL;
    xAsprintf(&line, "%*s %-*s %-*s %s",
       (int)printingHelper->maxFrameNumLen, "#",
-      (int)printingHelper->maxAddrLen,
-      (printingHelper->maxAddrLen >= strlen("ADDRESS") ? "ADDRESS" : "ADDR"),
+      (int)(printingHelper->maxAddrLen + strlen("0x")), "ADDRESS",
       (int)maxObjLen,
       (maxObjLen >= strlen("LIBRARY") ? "LIBRARY" : "LIB"),
       (showDemangledNames ? "NAME (demangled)" : "NAME")
@@ -251,7 +250,7 @@ BacktracePanel* BacktracePanel_new(Vector* processes, const Settings* settings) 
    BacktracePanel* this = AllocThis(BacktracePanel);
    this->processes = processes;
 
-   this->printingHelper.maxAddrLen = strlen("ADDR");
+   this->printingHelper.maxAddrLen = strlen("ADDRESS") - strlen("0x");
    this->printingHelper.maxFrameNumLen = strlen("#");
    this->printingHelper.maxObjNameLen = strlen("LIB");
    this->printingHelper.maxObjPathLen = strlen("LIB");
@@ -397,7 +396,7 @@ static void BacktracePanelRow_displayFrame(const Object* super, RichString* out)
    assert(maxAddrLen <= INT_MAX);
    assert(objectLength <= INT_MAX);
 
-   int len = xAsprintf(&line, "%*u %0*zx %n%-*s %s",
+   int len = xAsprintf(&line, "%*u 0x%0*zx %n%-*s %s",
       (int)printingHelper->maxFrameNumLen, frame->index,
       (int)maxAddrLen, frame->address,
       &objectPathStart,
