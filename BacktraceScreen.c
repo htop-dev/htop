@@ -109,7 +109,7 @@ static void BacktracePanel_displayHeader(BacktracePanel* this) {
       (int)printingHelper->maxFrameNumLen, "#",
       (int)(printingHelper->maxAddrLen + strlen("0x")), "ADDRESS",
       (int)maxObjLen,
-      (maxObjLen >= strlen("LIBRARY") ? "LIBRARY" : "LIB"),
+      (maxObjLen >= strlen("BINARY") ? "BINARY" : "BIN"),
       (showDemangledNames ? "NAME (demangled)" : "NAME")
    );
 
@@ -252,8 +252,8 @@ BacktracePanel* BacktracePanel_new(Vector* processes, const Settings* settings) 
 
    this->printingHelper.maxAddrLen = strlen("ADDRESS") - strlen("0x");
    this->printingHelper.maxFrameNumLen = strlen("#");
-   this->printingHelper.maxObjNameLen = strlen("LIB");
-   this->printingHelper.maxObjPathLen = strlen("LIB");
+   this->printingHelper.maxObjNameLen = strlen("BIN");
+   this->printingHelper.maxObjPathLen = strlen("BIN");
    this->printingHelper.hasDemangledNames = false;
 
    this->settings = settings;
