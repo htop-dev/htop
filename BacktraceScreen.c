@@ -101,7 +101,7 @@ static void BacktracePanel_displayHeader(BacktracePanel* this) {
     * A check is needed to prevent integer overflow.
     */
    assert(printingHelper->maxFrameNumLen <= INT_MAX);
-   assert(printingHelper->maxAddrLen <= INT_MAX);
+   assert(printingHelper->maxAddrLen <= INT_MAX - strlen("0x"));
    assert(maxObjLen <= INT_MAX);
 
    char* line = NULL;
