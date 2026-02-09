@@ -278,10 +278,12 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       : CRT_colors[PANEL_SELECTION_UNFOCUS];
 
    if (this->needsRedraw || force_redraw) {
+      RichString_begin(item);
       int line = 0;
       for (int i = first; line < h && i < upTo; i++) {
          const Object* itemObj = Vector_get(this->items, i);
-         RichString_begin(item);
+         RichString_rewind(&item, RichString_size(&item));
+         item.highlightAttr = 0;
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
          int amt = MINIMUM(itemLen - scrollH, this->w);
@@ -298,37 +300,40 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
             RichString_printoffnVal(item, y + line, x, scrollH, amt);
          if (item.highlightAttr)
             attrset(CRT_colors[RESET_COLOR]);
-         RichString_delete(&item);
          line++;
       }
+      RichString_delete(&item);
       while (line < h) {
          mvhline(y + line, x, ' ', this->w);
          line++;
       }
 
    } else {
+      RichString_begin(rs);
+
       const Object* oldObj = Vector_get(this->items, this->oldSelected);
-      RichString_begin(old);
-      Object_display(oldObj, &old);
-      int oldLen = RichString_sizeVal(old);
-      const Object* newObj = Vector_get(this->items, this->selected);
-      RichString_begin(new);
-      Object_display(newObj, &new);
-      int newLen = RichString_sizeVal(new);
-      this->selectedLen = newLen;
+      Object_display(oldObj, &rs);
+      int oldLen = RichString_sizeVal(rs);
       mvhline(y + this->oldSelected - first, x + 0, ' ', this->w);
       if (scrollH < oldLen)
-         RichString_printoffnVal(old, y + this->oldSelected - first, x,
+         RichString_printoffnVal(rs, y + this->oldSelected - first, x,
             scrollH, MINIMUM(oldLen - scrollH, this->w));
+
+      const Object* newObj = Vector_get(this->items, this->selected);
+      RichString_rewind(&rs, RichString_size(&rs));
+      rs.highlightAttr = 0;
+      Object_display(newObj, &rs);
+      int newLen = RichString_sizeVal(rs);
+      this->selectedLen = newLen;
       attrset(selectionColor);
       mvhline(y + this->selected - first, x + 0, ' ', this->w);
-      RichString_setAttr(&new, selectionColor);
+      RichString_setAttr(&rs, selectionColor);
       if (scrollH < newLen)
-         RichString_printoffnVal(new, y + this->selected - first, x,
+         RichString_printoffnVal(rs, y + this->selected - first, x,
             scrollH, MINIMUM(newLen - scrollH, this->w));
       attrset(CRT_colors[RESET_COLOR]);
-      RichString_delete(&new);
-      RichString_delete(&old);
+
+      RichString_delete(&rs);
    }
 
    if (focus && (this->needsRedraw || force_redraw || !this->wasFocus)) {
