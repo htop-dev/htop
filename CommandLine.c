@@ -12,7 +12,9 @@ in the source distribution for its full text.
 
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
 #include <getopt.h>
+#include <limits.h>
 #include <locale.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -223,12 +225,14 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             if (!username) {
                flags->userId = geteuid();
             } else if (!Action_setUserOnly(username, &(flags->userId))) {
-               for (const char* itr = username; *itr; ++itr)
-                  if (!isdigit((unsigned char)*itr)) {
-                     fprintf(stderr, "Error: invalid user \"%s\".\n", username);
-                     return STATUS_ERROR_EXIT;
-                  }
-               flags->userId = (uid_t)atol(username);
+               char* endptr;
+               errno = 0;
+               unsigned long val = strtoul(username, &endptr, 10);
+               if (errno == ERANGE || *endptr != '\0' || username == endptr || val > UINT_MAX) {
+                  fprintf(stderr, "Error: invalid user \"%s\".\n", username);
+                  return STATUS_ERROR_EXIT;
+               }
+               flags->userId = (uid_t)val;
             }
             break;
          }
