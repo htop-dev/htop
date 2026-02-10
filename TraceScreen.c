@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <spawn.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +28,9 @@ in the source distribution for its full text.
 #include "ProvideCurses.h"
 #include "XUtils.h"
 
+
+// Helper to create a mutable string for argv arrays
+#define MUTABLE_STR(s) (char[]){s}
 
 static const char* const TraceScreenFunctions[] = {"Search ", "Filter ", "AutoScroll ", "Stop Tracing   ", "Done   ", NULL};
 
@@ -78,45 +82,43 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
    if (fcntl(fdpair[1], F_SETFL, O_NONBLOCK) < 0)
       goto err;
 
-   pid_t child = fork();
-   if (child == -1)
+   pid_t child;
+   posix_spawnattr_t attr;
+   posix_spawnattr_init(&attr);
+   posix_spawn_file_actions_t fa;
+   posix_spawn_file_actions_init(&fa);
+   posix_spawn_file_actions_addclose(&fa, fdpair[0]);
+   posix_spawn_file_actions_adddup2(&fa, fdpair[1], STDOUT_FILENO);
+   posix_spawn_file_actions_adddup2(&fa, fdpair[1], STDERR_FILENO);
+   posix_spawn_file_actions_addclose(&fa, fdpair[1]);
+
+   char buffer[32] = {0};
+   xSnprintf(buffer, sizeof(buffer), "%d", Process_getPid(this->super.process));
+
+   char* const* args;
+#if defined(HTOP_FREEBSD) || defined(HTOP_OPENBSD) || defined(HTOP_NETBSD) || defined(HTOP_DRAGONFLYBSD) || defined(HTOP_SOLARIS)
+   args = (char* const[]){MUTABLE_STR("truss"), MUTABLE_STR("-s"), MUTABLE_STR("512"), MUTABLE_STR("-p"), buffer, NULL};
+#elif defined(HTOP_LINUX)
+   args = (char* const[]){MUTABLE_STR("strace"), MUTABLE_STR("-T"), MUTABLE_STR("-tt"), MUTABLE_STR("-s"), MUTABLE_STR("512"), MUTABLE_STR("-p"), buffer, NULL};
+#else
+   args = NULL;
+#endif
+
+   int spawn_ret = args ? posix_spawnp(&child, args[0], &fa, &attr, args, NULL) : -1;
+
+   posix_spawnattr_destroy(&attr);
+   posix_spawn_file_actions_destroy(&fa);
+
+   if (spawn_ret != 0) {
       goto err;
-
-   if (child == 0) {
-      close(fdpair[0]);
-
-      dup2(fdpair[1], STDOUT_FILENO);
-      dup2(fdpair[1], STDERR_FILENO);
-      close(fdpair[1]);
-
-      char buffer[32] = {0};
-      xSnprintf(buffer, sizeof(buffer), "%d", Process_getPid(this->super.process));
-
-      #if defined(HTOP_FREEBSD) || defined(HTOP_OPENBSD) || defined(HTOP_NETBSD) || defined(HTOP_DRAGONFLYBSD) || defined(HTOP_SOLARIS)
-         // Use of NULL in variadic functions must have a pointer cast.
-         // The NULL constant is not required by standard to have a pointer type.
-         execlp("truss", "truss", "-s", "512", "-p", buffer, (void*)NULL);
-
-         // Should never reach here, unless execlp fails ...
-         const char* message = "Could not execute 'truss'. Please make sure it is available in your $PATH.";
-         (void)! write(STDERR_FILENO, message, strlen(message));
-      #elif defined(HTOP_LINUX)
-         execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, (void*)NULL);
-
-         // Should never reach here, unless execlp fails ...
-         const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
-         (void)! write(STDERR_FILENO, message, strlen(message));
-      #else // HTOP_DARWIN, HTOP_PCP == HTOP_UNSUPPORTED
-         const char* message = "Tracing unavailable on not supported system.";
-         (void)! write(STDERR_FILENO, message, strlen(message));
-      #endif
-
-      exit(127);
    }
 
    FILE* fp = fdopen(fdpair[0], "r");
-   if (!fp)
+   if (!fp) {
+      kill(child, SIGTERM);
+      waitpid(child, NULL, 0);
       goto err;
+   }
 
    close(fdpair[1]);
 

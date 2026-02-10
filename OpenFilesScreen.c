@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <spawn.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +27,9 @@ in the source distribution for its full text.
 #include "Vector.h"
 #include "XUtils.h"
 
+
+// Helper to create a mutable string for argv arrays
+#define MUTABLE_STR(s) (char[]){s}
 
 // cf. getIndexForType; must be larger than the maximum value returned.
 #define LSOF_DATACOL_COUNT 8
@@ -106,32 +110,41 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       return pdata;
    }
 
-   pid_t child = fork();
-   if (child == -1) {
+   pid_t child;
+   posix_spawnattr_t attr;
+   posix_spawnattr_init(&attr);
+   posix_spawn_file_actions_t fa;
+   posix_spawn_file_actions_init(&fa);
+   posix_spawn_file_actions_addclose(&fa, fdpair[0]);
+   posix_spawn_file_actions_adddup2(&fa, fdpair[1], STDOUT_FILENO);
+   posix_spawn_file_actions_addclose(&fa, fdpair[1]);
+   posix_spawn_file_actions_addopen(&fa, STDERR_FILENO, "/dev/null", O_WRONLY | O_NOCTTY, 0);
+
+   char buffer[32] = {0};
+   xSnprintf(buffer, sizeof(buffer), "%d", pid);
+
+   char* const args[] = {
+      MUTABLE_STR("lsof"),
+      MUTABLE_STR("-P"),
+      MUTABLE_STR("-o"),
+      MUTABLE_STR("-p"),
+      buffer,
+      MUTABLE_STR("-F"),
+      NULL
+   };
+
+   int spawn_ret = posix_spawnp(&child, "lsof", &fa, &attr, args, NULL);
+
+   posix_spawnattr_destroy(&attr);
+   posix_spawn_file_actions_destroy(&fa);
+
+   if (spawn_ret != 0) {
       close(fdpair[1]);
       close(fdpair[0]);
       pdata->error = 1;
       return pdata;
    }
 
-   if (child == 0) {
-      close(fdpair[0]);
-      dup2(fdpair[1], STDOUT_FILENO);
-      close(fdpair[1]);
-      int fdnull = open("/dev/null", O_WRONLY);
-      if (fdnull < 0) {
-         exit(1);
-      }
-
-      dup2(fdnull, STDERR_FILENO);
-      close(fdnull);
-      char buffer[32] = {0};
-      xSnprintf(buffer, sizeof(buffer), "%d", pid);
-      // Use of NULL in variadic functions must have a pointer cast.
-      // The NULL constant is not required by standard to have a pointer type.
-      execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", (char*)NULL);
-      exit(127);
-   }
    close(fdpair[1]);
 
    OpenFiles_Data* item = &(pdata->data);
