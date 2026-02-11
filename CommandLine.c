@@ -225,8 +225,9 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
                flags->userId = geteuid();
             } else if (!Action_setUserOnly(username, &(flags->userId))) {
                char* endptr;
-               unsigned long val = strtoul(username, &endptr, 10);
-               if (*endptr != '\0' || username == endptr || val >= UINT_MAX) {
+               /* using strtoll as strtoul negative value handling is not what we want */
+               long long val = strtoll(username, &endptr, 10);
+               if (*endptr != '\0' || username == endptr || val < 0 || val >= UINT_MAX) {
                   fprintf(stderr, "Error: invalid user \"%s\".\n", username);
                   return STATUS_ERROR_EXIT;
                }
