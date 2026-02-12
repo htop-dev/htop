@@ -4,17 +4,17 @@
 
 [postfix]
 caption = Postfix
-incoming.metric = sum(postfix.queues.incoming)
+incoming.metric = defined(postfix.queues.incoming) ? sum(postfix.queues.incoming) : novalue()
 incoming.color = green
 incoming.label = in
-active.metric = sum(postfix.queues.active)
+active.metric = defined(postfix.queues.active) ? sum(postfix.queues.active) : novalue()
 active.color = blue
 active.label = act
-deferred.metric = sum(postfix.queues.deferred)
+deferred.metric = defined(postfix.queues.deferred) ? sum(postfix.queues.deferred) : novalue()
 deferred.color = cyan
 deferred.label = dfr
-bounce.metric = sum(postfix.queues.maildrop)
+bounce.metric = defined(postfix.queues.maildrop) ? sum(postfix.queues.maildrop) : novalue()
 bounce.color = red
 bounce.label = bnc
-hold.metric = sum(postfix.queues.hold)
+hold.metric = defined(postfix.queues.hold) ? sum(postfix.queues.hold) : novalue()
 hold.color = yellow

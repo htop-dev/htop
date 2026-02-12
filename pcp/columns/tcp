@@ -6,26 +6,26 @@
 heading = TCPS
 caption = TCP_SEND
 width = 6
-metric = bpf.proc.net.tcp.send.packets
+metric = defined(bpf.proc.net.tcp.send.packets) ? bpf.proc.net.tcp.send.packets : novalue()
 description = Count of TCP packets sent
 
 [tcp_send_bytes]
 heading = TCPSB
 caption = TCP_SEND_BYTES
 width = 6
-metric = bpf.proc.net.tcp.send.bytes
+metric = defined(bpf.proc.net.tcp.send.bytes) ? bpf.proc.net.tcp.send.bytes : novalue()
 description = Cumulative bytes sent via TCP
 
 [tcp_recv_packets]
 heading = TCPR
 caption = TCP_RECV
 width = 6
-metric = bpf.proc.net.tcp.recv.packets
+metric = defined(bpf.proc.net.tcp.recv.packets) ? bpf.proc.net.tcp.recv.packets : novalue()
 description = Count of TCP packets received
 
 [tcp_recv_bytes]
 heading = TCPRB
 caption = TCP_RECV_BYTES
 width = 6
-metric = bpf.proc.net.tcp.recv.bytes
+metric = defined(bpf.proc.net.tcp.recv.bytes) ? bpf.proc.net.tcp.recv.bytes : novalue()
 description = Cumulative bytes received via TCP

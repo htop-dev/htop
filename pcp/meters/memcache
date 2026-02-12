@@ -5,7 +5,7 @@
 [memcache]
 caption = Memcache
 description = Memcache Hits
-hit.metric = sum(memcache.hits)
+hit.metric = defined(memcache.hits) ? sum(memcache.hits) : novalue()
 hit.color = green
-miss.metric = sum(memcache.misses)
+miss.metric = defined(memcache.misses) ? sum(memcache.misses) : novalue()
 miss.color = blue

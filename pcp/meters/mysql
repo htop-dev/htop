@@ -5,68 +5,68 @@
 [mysql_io]
 caption = MySQL I/O
 description = MySQL throughput
-recv.metric = mysql.status.bytes_received
+recv.metric = defined(mysql.status.bytes_received) ? mysql.status.bytes_received : novalue()
 recv.color = green
-sent.metric = mysql.status.bytes_sent
+sent.metric = defined(mysql.status.bytes_sent) ? mysql.status.bytes_sent : novalue()
 sent.color = blue
 
 [mysql_keys]
 caption = MySQL keys
 description = MySQL key status
-key_blocks_used.metric = mysql.status.key_blocks_used
+key_blocks_used.metric = defined(mysql.status.key_blocks_used) ? mysql.status.key_blocks_used : novalue()
 key_blocks_used.color = yellow
 key_blocks_used.label = used
-key_reads.metric = mysql.status.key_reads
+key_reads.metric = defined(mysql.status.key_reads) ? mysql.status.key_reads : novalue()
 key_reads.label = read
 key_reads.color = green
-key_writes.metric = mysql.status.key_writes
+key_writes.metric = defined(mysql.status.key_writes) ? mysql.status.key_writes : novalue()
 key_writes.label = writ
 key_writes.color = blue
-key_read_requests.metric = mysql.status.key_read_requests
+key_read_requests.metric = defined(mysql.status.key_read_requests) ? mysql.status.key_read_requests : novalue()
 key_read_requests.label = rreq
 key_read_requests.color = green
-key_write_requests.metric = mysql.status.key_write_requests
+key_write_requests.metric = defined(mysql.status.key_write_requests) ? mysql.status.key_write_requests : novalue()
 key_write_requests.label = wreq
 key_write_requests.color = blue
 
 [innodb_buffer]
 caption = InnoDB pool
 description = InnoDB buffer pool
-created.metric = mysql.status.innodb_pages_created
+created.metric = defined(mysql.status.innodb_pages_created) ? mysql.status.innodb_pages_created : novalue()
 created.label = cr
 created.color = yellow
-read.metric = mysql.status.innodb_pages_read
+read.metric = defined(mysql.status.innodb_pages_read) ? mysql.status.innodb_pages_read : novalue()
 read.label = rd
 read.color = green
-written.metric = mysql.status.innodb_pages_written
+written.metric = defined(mysql.status.innodb_pages_written) ? mysql.status.innodb_pages_written : novalue()
 written.label = wr
 written.color = red
 
 [innodb_io]
 caption = InnoDB I/O
 description = InnoDB I/O operations
-read.metric = mysql.status.innodb_data_read
+read.metric = defined(mysql.status.innodb_data_read) ? mysql.status.innodb_data_read : novalue()
 read.label = rd
 read.color = green
-written.metric = mysql.status.innodb_data.writes
+written.metric = defined(mysql.status.innodb_data.writes) ? mysql.status.innodb_data.writes : novalue()
 written.label = wr
 written.color = blue
-sync.metric = mysql.status.innodb_data_fsyncs
+sync.metric = defined(mysql.status.innodb_data_fsyncs) ? mysql.status.innodb_data_fsyncs : novalue()
 sync.label = sync
 sync.color = cyan
 
 [innodb_ops]
 caption = InnoDB ops
 description = InnoDB operations
-inserted.metric = mysql.status.innodb_rows_inserted
+inserted.metric = defined(mysql.status.innodb_rows_inserted) ? mysql.status.innodb_rows_inserted : novalue()
 inserted.label = ins
 inserted.color = blue
-updated.metric = mysql.status.innodb_rows_updated
+updated.metric = defined(mysql.status.innodb_rows_updated) ? mysql.status.innodb_rows_updated : novalue()
 updated.label = upd
 updated.color = cyan
-deleted.metric = mysql.status.innodb_rows_deleted
+deleted.metric = defined(mysql.status.innodb_rows_deleted) ? mysql.status.innodb_rows_deleted : novalue()
 deleted.label = del
 deleted.color = red
-read.metric = mysql.status.innodb_rows_read
+read.metric = defined(mysql.status.innodb_rows_read) ? mysql.status.innodb_rows_read : novalue()
 read.label = rd
 read.color = green

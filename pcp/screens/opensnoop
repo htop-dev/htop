@@ -8,20 +8,20 @@ caption = BPF open(2) syscall snoop
 default = false
 
 pid.heading = PID
-pid.metric = bpf.opensnoop.pid
+pid.metric = defined(bpf.opensnoop.pid) ? bpf.opensnoop.pid : novalue()
 pid.format = process
 
 comm.heading = COMM
-comm.metric = bpf.opensnoop.comm
+comm.metric = defined(bpf.opensnoop.comm) ? bpf.opensnoop.comm : novalue()
 comm.format = command
 
 fd.heading = FD
-fd.metric = bpf.opensnoop.fd
+fd.metric = defined(bpf.opensnoop.fd) ? bpf.opensnoop.fd : novalue()
 
 err.heading = ERR
-err.metric = bpf.opensnoop.err
+err.metric = defined(bpf.opensnoop.err) ? bpf.opensnoop.err : novalue()
 
 file.heading = File name
 file.width = -32
-file.metric = bpf.opensnoop.fname
+file.metric = defined(bpf.opensnoop.fname) ? bpf.opensnoop.fname : novalue()
 file.format = path
