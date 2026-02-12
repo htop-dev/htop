@@ -9,29 +9,29 @@ default = false
 
 pid.heading = PID
 pid.caption = Process Identifier
-pid.metric = bpf.execsnoop.pid
+pid.metric = defined(bpf.execsnoop.pid) ? bpf.execsnoop.pid : novalue()
 pid.format = process
 
 ppid.heading = PPID
 ppid.caption = Parent Process
-ppid.metric = bpf.execsnoop.ppid
+ppid.metric = defined(bpf.execsnoop.ppid) ? bpf.execsnoop.ppid : novalue()
 ppid.format = process
 
 uid.heading = UID
 uid.caption = User Identifier
-uid.metric = bpf.execsnoop.uid
+uid.metric = defined(bpf.execsnoop.uid) ? bpf.execsnoop.uid : novalue()
 
 comm.heading = COMM
 comm.caption = Command
 comm.width = -16
-comm.metric = bpf.execsnoop.comm
+comm.metric = defined(bpf.execsnoop.comm) ? bpf.execsnoop.comm : novalue()
 comm.format = command
 
 ret.heading = RET
 ret.caption = Return Code
-ret.metric = bpf.execsnoop.ret
+ret.metric = defined(bpf.execsnoop.ret) ? bpf.execsnoop.ret : novalue()
 
 path.heading = Arguments
 path.caption = Arguments
 path.width = -12
-path.metric = bpf.execsnoop.args
+path.metric = defined(bpf.execsnoop.args) ? bpf.execsnoop.args : novalue()

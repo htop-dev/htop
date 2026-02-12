@@ -5,25 +5,25 @@
 [redisxact]
 caption = Redis xact
 description = Redis transactions
-tps.metric = redis.instantaneous_ops_per_sec
+tps.metric = defined(redis.instantaneous_ops_per_sec) ? redis.instantaneous_ops_per_sec : novalue()
 tps.color = green
 
 [redismem]
 caption = Redis mem
 description = Redis memory
-lua.metric = redis.used_memory_lua
+lua.metric = defined(redis.used_memory_lua) ? redis.used_memory_lua : novalue()
 lua.color = magenta
-used.metric = redis.used_memory
+used.metric = defined(redis.used_memory) ? redis.used_memory : novalue()
 used.color = blue
 
 [redisclient]
 caption = Redis clients
 description = Redis clients
 type = bar
-blocked.metric = redis.blocked_clients
+blocked.metric = defined(redis.blocked_clients) ? redis.blocked_clients : novalue()
 blocked.color = blue
 blocked.label = blk
-clients.metric = redis.connected_clients
+clients.metric = defined(redis.connected_clients) ? redis.connected_clients : novalue()
 clients.color = green
 clients.label = conn
 
@@ -31,9 +31,9 @@ clients.label = conn
 caption = Redis conn
 description = Redis connections
 type = bar
-reject.metric = redis.rejected_connections
+reject.metric = defined(redis.rejected_connections) ? redis.rejected_connections : novalue()
 reject.color = magenta
 reject.label = fail/s
-total.metric = redis.total_connections_received
+total.metric = defined(redis.total_connections_received) ? redis.total_connections_received : novalue()
 total.color = blue
 total.label = conn/s
