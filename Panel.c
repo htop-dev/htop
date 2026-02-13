@@ -66,7 +66,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
    this->wasFocus = false;
    RichString_beginAllocated(this->header);
    this->defaultBar = fuBar;
-   this->currentBar = fuBar;
+   this->currentBar = NULL;
    this->selectionColorId = PANEL_SELECTION_FOCUS;
 }
 
@@ -335,7 +335,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
       if (Panel_drawFunctionBarFn(this))
          Panel_drawFunctionBar(this, hideFunctionBar);
       else if (!hideFunctionBar)
-         FunctionBar_draw(this->currentBar);
+         FunctionBar_draw(this->currentBar ? this->currentBar : this->defaultBar);
    }
 
    this->oldSelected = this->selected;
