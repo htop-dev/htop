@@ -53,6 +53,7 @@ void Settings_delete(Settings* this) {
    free(this->initialFilename);
    Settings_deleteColumns(this);
    Settings_deleteScreens(this);
+   free(this->scriptLocation);
    free(this);
 }
 
@@ -557,6 +558,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
             free_and_xStrdup(&screen->dynamic, option[1]);
             Platform_addDynamicScreen(screen);
          }
+      } else if (String_eq(option[0], "script_location")) {
+         this->scriptLocation = xStrdup(option[1]);
       }
       String_freeArray(option);
    }
@@ -742,6 +745,9 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("tree_view_always_by_pid", this->screens[0]->treeViewAlwaysByPID);
    printSettingInteger("all_branches_collapsed", this->screens[0]->allBranchesCollapsed);
 
+   if (this->scriptLocation)
+      printSettingString("script_location", this->scriptLocation);
+
    for (unsigned int i = 0; i < this->nScreens; i++) {
       ScreenSettings* ss = this->screens[i];
       const char* sortKey = toFieldName(this->dynamicColumns, ss->sortKey, NULL);
@@ -874,7 +880,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
 #endif
    this->changed = false;
    this->delay = DEFAULT_DELAY;
-
+   
    bool ok = Settings_read(this, this->filename, host, /*checkWritability*/true);
    if (!ok && legacyDotfile) {
       ok = Settings_read(this, legacyDotfile, host, this->writeConfig);
