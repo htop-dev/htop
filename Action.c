@@ -742,10 +742,10 @@ static Htop_Reaction actionHelp(State* st) {
       addbartext(CRT_colors[CPU_STEAL], "/", "steal");
       addbartext(CRT_colors[CPU_GUEST], "/", "guest");
       addbartext(CRT_colors[CPU_IOWAIT], "/", "io-wait");
-      addbartext(CRT_colors[BAR_SHADOW], " ", "used%");
+      addbartext(CRT_colors[BAR_SHADOW], "  ", "used%");
    } else {
       addbartext(CRT_colors[CPU_GUEST], "/", "guest");
-      addbartext(CRT_colors[BAR_SHADOW], "                            ", "used%");
+      addbartext(CRT_colors[BAR_SHADOW], "                             ", "used%");
    }
    addattrstr(CRT_colors[BAR_BORDER], "]");
 
@@ -753,11 +753,11 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddstr(line++, 0, "Memory bar:    ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
    // memory classes are OS-specific and provided in their <os>/Platform.c implementation
-   // ideal length of memory bar == 56 chars. Any length < 45 requires padding to 45.
-   // [0        1         2         3         4         5      ]
-   // [12345678901234567890123456789012345678901234567890123456]
-   // [                                            ^    5      ]
-   // [class1/class2/class3/.../classN               used/total]
+   // ideal length of memory bar == 57 chars. Any length < 46 requires padding to 46.
+   // [0        1         2         3         4         5       ]
+   // [123456789012345678901234567890123456789012345678901234567]
+   // [                                             ^    5      ]
+   // [class1/class2/class3/.../classN                used/total]
    int barTxtLen = 0;
    for (unsigned int i = 0; i < Platform_numberOfMemoryClasses; i++) {
       if (!st->host->settings->showCachedMemory && Platform_memoryClasses[i].countsAsCache)
@@ -765,8 +765,8 @@ static Htop_Reaction actionHelp(State* st) {
       addbartext(CRT_colors[Platform_memoryClasses[i].color], (i == 0 ? "" : "/"), Platform_memoryClasses[i].label);
       barTxtLen += (i == 0 ? 0 : 1) + strlen (Platform_memoryClasses[i].label);
    }
-   for (int i = barTxtLen; i < 45; i++)
-      addattrstr(CRT_colors[BAR_SHADOW], " "); // pad to 45 chars if necessary
+   for (int i = barTxtLen; i < 46; i++)
+      addattrstr(CRT_colors[BAR_SHADOW], " "); // pad to 46 chars if necessary
    addbartext(CRT_colors[BAR_SHADOW], " ", "used");
    addbartext(CRT_colors[BAR_SHADOW], "/", "total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
@@ -779,9 +779,9 @@ static Htop_Reaction actionHelp(State* st) {
    addbartext(CRT_colors[SWAP_CACHE], "/", "cache");
    addbartext(CRT_colors[SWAP_FRONTSWAP], "/", "frontswap");
 #else
-   addbartext(CRT_colors[BAR_SHADOW], "                ", "");
+   addbartext(CRT_colors[BAR_SHADOW], "                 ", "");
 #endif
-   addbartext(CRT_colors[BAR_SHADOW], "                          ", "used");
+   addbartext(CRT_colors[BAR_SHADOW], "                           ", "used");
    addbartext(CRT_colors[BAR_SHADOW], "/", "total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
 
