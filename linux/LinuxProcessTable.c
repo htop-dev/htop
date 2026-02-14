@@ -1296,11 +1296,6 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
    bool argSepSpace = false;
 
    for (size_t i = 0; i < (size_t)amtRead; i++) {
-      // If this is true, there's a NUL byte in the middle of command
-      if (tokenEnd != (size_t)-1) {
-         argSepNUL = true;
-      }
-
       const char argChar = command[i];
 
       /* newline used as delimiter - when forming the mergedCommand, newline is
@@ -1320,6 +1315,11 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
          }
 
          continue;
+      }
+
+      // If this is true, there's a NUL byte in the middle of command
+      if (tokenEnd != (size_t)-1) {
+         argSepNUL = true;
       }
 
       /* Record some information for the argument parsing heuristic below. */
