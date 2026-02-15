@@ -48,7 +48,7 @@ ScreenListItem* ScreenListItem_new(const char* value, ScreenSettings* ss) {
 
 static const char* const ScreensFunctions[] = {"      ", "Rename", "      ", "      ", "New   ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 static const char* const DynamicFunctions[] = {"      ", "Rename", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
-static const char* const ScreensRenamingFunctions[] = {"Cancel", "Done  ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", NULL};
+static const char* const ScreensRenamingFunctions[] = {"      ", "Cancel", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 static FunctionBar* Screens_renamingBar = NULL;
 
 void ScreensPanel_cleanup(void) {
@@ -98,7 +98,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
       case '\n':
       case '\r':
       case KEY_ENTER:
-      case KEY_F(2): {
+      case KEY_F(10): {
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (!item)
             break;
@@ -113,7 +113,7 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
          break;
       }
       case 27: // Esc
-      case KEY_F(1): {
+      case KEY_F(2): {
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (!item)
             break;
