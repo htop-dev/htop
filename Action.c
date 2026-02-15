@@ -762,6 +762,8 @@ static Htop_Reaction actionHelp(State* st) {
    for (unsigned int i = 0; i < Platform_numberOfMemoryClasses; i++) {
       if (!st->host->settings->showCachedMemory && Platform_memoryClasses[i].countsAsCache)
          continue; // skip reclaimable cache memory classes if "show cached memory" is not ticked
+      if (!Platform_memoryClasses[i].countsAsUsed && !Platform_memoryClasses[i].countsAsCache)
+         continue; // skip available memory class (special case for the Linux platform)
       addbartext(CRT_colors[Platform_memoryClasses[i].color], (i == 0 ? "" : "/"), Platform_memoryClasses[i].label);
       barTxtLen += (i == 0 ? 0 : 1) + strlen (Platform_memoryClasses[i].label);
    }
