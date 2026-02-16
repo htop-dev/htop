@@ -54,9 +54,9 @@ static void MemoryMeter_updateValues(Meter* this) {
    }
 
    /* clear the values we don't want to see */
-   if ((this->mode == GRAPH_METERMODE || this->mode == BAR_METERMODE) && !settings->showCachedMemory) {
+   if (this->mode == GRAPH_METERMODE || this->mode == BAR_METERMODE) {
       for (unsigned int memoryClassIdx = 0; memoryClassIdx < Platform_numberOfMemoryClasses; memoryClassIdx++) {
-         if (Platform_memoryClasses[memoryClassIdx].countsAsCache) {
+         if ((Platform_memoryClasses[memoryClassIdx].countsAsCache && !settings->showCachedMemory) || !(Platform_memoryClasses[memoryClassIdx].countsAsCache || Platform_memoryClasses[memoryClassIdx].countsAsUsed)) {
             this->values[memoryClassIdx] = NAN;
          }
       }
@@ -74,6 +74,7 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
    const Settings* settings = this->host->settings;
+   ColorElements labelColor, valueColor;
 
    RichString_writeAscii(out, CRT_colors[METER_TEXT], ":");
    Meter_humanUnit(buffer, this->total, sizeof(buffer));
@@ -81,14 +82,18 @@ static void MemoryMeter_display(const Object* cast, RichString* out) {
 
    /* print the memory classes in the order supplied (specific to each platform) */
    for (unsigned int memoryClassIdx = 0; memoryClassIdx < Platform_numberOfMemoryClasses; memoryClassIdx++) {
-      if (!settings->showCachedMemory && Platform_memoryClasses[memoryClassIdx].countsAsCache)
-         continue; // skip reclaimable cache memory classes if "show cached memory" is not ticked
+      if (!settings->showCachedMemory && Platform_memoryClasses[memoryClassIdx].countsAsCache) {
+         labelColor = valueColor = CRT_colors[METER_SHADOW];
+      } else {
+         labelColor = CRT_colors[METER_TEXT];
+         valueColor = CRT_colors[Platform_memoryClasses[memoryClassIdx].color];
+      }
 
       Meter_humanUnit(buffer, this->values[memoryClassIdx], sizeof(buffer));
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], " ");
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], Platform_memoryClasses[memoryClassIdx].label);
-      RichString_appendAscii(out, CRT_colors[METER_TEXT], ":");
-      RichString_appendAscii(out, CRT_colors[Platform_memoryClasses[memoryClassIdx].color], buffer);
+      RichString_appendAscii(out, labelColor, " ");
+      RichString_appendAscii(out, labelColor, Platform_memoryClasses[memoryClassIdx].label);
+      RichString_appendAscii(out, labelColor, ":");
+      RichString_appendAscii(out, valueColor, buffer);
    }
 }
 
