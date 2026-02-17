@@ -330,7 +330,8 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
       pmAtomValue atom, raw;
 
       if (!Metric_values(base, &raw, 1, desc->type)) {
-         bytes--; /* clear the separator */
+	 if (bytes > 0)
+	     bytes--; /* clear the separator */
          continue;
       }
 
@@ -342,7 +343,8 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
       if (desc->type == PM_TYPE_STRING)
          atom = raw;
       else if (pmConvScale(desc->type, &raw, &desc->units, &atom, &conv) < 0) {
-         bytes--; /* clear the separator */
+	 if (bytes > 0)
+	     bytes--; /* clear the separator */
          continue;
       }
 
