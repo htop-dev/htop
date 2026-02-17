@@ -45,6 +45,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
+#include "DiskNetMeter.h"
 #include "Meter.h"
 #include "Settings.h"
 #include "SignalsPanel.h"
@@ -177,6 +178,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &MemorySwapMeter_class,
+   &DiskNetMeter_class,
    &TasksMeter_class,
    &UptimeMeter_class,
    &SecondsUptimeMeter_class,
