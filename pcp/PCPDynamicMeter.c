@@ -316,11 +316,14 @@ void PCPDynamicMeter_enable(PCPDynamicMeter* this) {
 }
 
 void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
-   char* buffer = meter->txtBuffer;
-   size_t size = sizeof(meter->txtBuffer);
+   char* const buffer = meter->txtBuffer;
+   const size_t size = sizeof(meter->txtBuffer);
    size_t bytes = 0;
+   size_t bytes_old;
 
    for (size_t i = 0; i < this->totalMetrics; i++) {
+      bytes_old = bytes;
+
       if (i > 0 && bytes < size - 1)
          buffer[bytes++] = '/';  /* separator */
 
@@ -330,7 +333,7 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
       pmAtomValue atom, raw;
 
       if (!Metric_values(base, &raw, 1, desc->type)) {
-         bytes--; /* clear the separator */
+         bytes = bytes_old; /* clear the separator */
          continue;
       }
 
@@ -342,7 +345,7 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
       if (desc->type == PM_TYPE_STRING)
          atom = raw;
       else if (pmConvScale(desc->type, &raw, &desc->units, &atom, &conv) < 0) {
-         bytes--; /* clear the separator */
+         bytes = bytes_old; /* clear the separator */
          continue;
       }
 
@@ -389,6 +392,8 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
       if (saved != bytes && metric->suffix)
          bytes += xSnprintf(buffer + bytes, size - bytes, "%s", metric->suffix);
    }
+
+   buffer[CLAMP(bytes, 0u, size - 1)] = '\0';
 
    if (!bytes)
       xSnprintf(buffer, size, "no data");
