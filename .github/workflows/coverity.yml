@@ -1,0 +1,45 @@
+name: "Coverity"
+on:
+  schedule:
+    - cron:  '0 1 * * *'
+
+jobs:
+  analyze:
+    name: Analyze
+    if: github.repository == 'htop-dev/htop'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Download Coverity
+      run: |
+        cd ..
+        wget -q https://scan.coverity.com/download/linux64 --post-data "token=${TOKEN}&project=htop.dev" -O coverity_tool.tgz
+        mkdir coverity
+        tar xzf coverity_tool.tgz --strip 1 -C coverity
+        echo "$(pwd)/coverity/bin" >> $GITHUB_PATH
+      env:
+        TOKEN: ${{ secrets.COVERITY_TOKEN }}
+
+    - name: Bootstrap
+      run: ./autogen.sh
+
+    - name: Configure
+      run: ./configure
+
+    - name: Build with Coverity
+      run: cov-build --dir cov-int make
+
+    - name: Submit the result to Coverity
+      run: |
+        tar czvf htop.tgz cov-int
+        curl \
+          --form token=${TOKEN} \
+          --form email=nathans@redhat.com \
+          --form file=@htop.tgz \
+          --form version=${GITHUB_SHA} \
+          https://scan.coverity.com/builds?project=htop.dev
+      env:
+        TOKEN: ${{ secrets.COVERITY_TOKEN }}
