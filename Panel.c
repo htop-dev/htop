@@ -422,7 +422,14 @@ bool Panel_onKey(Panel* this, int key) {
 
       case KEY_CTRL('E'):
       case '$':
-         this->scrollH = CLAMP((int)this->selectedLen - this->w, 0, INT_MAX);
+         assert(this->w > 0);
+         if (this->selectedLen < (size_t)this->w) {
+            this->scrollH = 0;
+         } else if (this->selectedLen - (size_t)this->w > (size_t)INT_MAX) {
+            this->scrollH = INT_MAX;
+         } else {
+            this->scrollH = (int)(this->selectedLen - (size_t)this->w);
+         }
          this->needsRedraw = true;
          break;
 
