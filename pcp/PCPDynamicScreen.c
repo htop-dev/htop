@@ -88,7 +88,7 @@ static PCPDynamicColumn* PCPDynamicScreen_lookupMetric(PCPDynamicScreen* screen,
 
    /* not an existing column in this screen - create it and add to the list */
    column = xCalloc(1, sizeof(PCPDynamicColumn));
-   xSnprintf(column->super.name, sizeof(column->super.name), "%s:%s", screen->super.name, name);
+   pmsprintf(column->super.name, sizeof(column->super.name), "%s:%s", screen->super.name, name);
    column->super.table = &screen->table->super;
    column->metricName = metricName;
    column->super.enabled = true;
@@ -409,9 +409,9 @@ void PCPDynamicScreens_addAvailableColumns(Panel* availableColumns, Hashtable* s
       const char* text = column->super.description ? column->super.description : column->super.caption;
       char description[256];
       if (text)
-         xSnprintf(description, sizeof(description), "%s - %s", title, text);
+         pmsprintf(description, sizeof(description), "%s - %s", title, text);
       else
-         xSnprintf(description, sizeof(description), "%s", title);
+         pmsprintf(description, sizeof(description), "%s", title);
       Panel_add(availableColumns, (Object*) ListItem_new(description, j));
    }
 }
