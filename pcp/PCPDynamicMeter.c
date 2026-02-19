@@ -389,7 +389,7 @@ void PCPDynamicMeter_updateValues(PCPDynamicMeter* this, Meter* meter) {
             break;
       }
 
-      if (saved != bytes && metric->suffix)
+      if (saved != bytes && metric->suffix && bytes < size)
          bytes += pmsprintf(buffer + bytes, size - bytes, "%s", metric->suffix);
    }
 
