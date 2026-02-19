@@ -91,18 +91,24 @@ size_t Hashtable_count(const Hashtable* this) {
 /* https://oeis.org/A014234 */
 static const uint64_t OEISprimes[] = {
    7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191,
-   16381, 32749, 65521, 131071, 262139, 524287, 1048573,
+   16381, 32749, 65521,
+#if SIZE_MAX > UINT16_MAX
+   131071, 262139, 524287, 1048573,
    2097143, 4194301, 8388593, 16777213, 33554393,
    67108859, 134217689, 268435399, 536870909, 1073741789,
-   2147483647, 4294967291, 8589934583, 17179869143,
-   34359738337, 68719476731, 137438953447
+   2147483647, 4294967291,
+#endif
+#if SIZE_MAX > UINT32_MAX
+   8589934583, 17179869143, 34359738337, 68719476731, 137438953447,
+#endif
 };
 
 static size_t nextPrime(size_t n) {
    /* on 32-bit make sure we do not return primes not fitting in size_t */
-   for (size_t i = 0; i < ARRAYSIZE(OEISprimes) && OEISprimes[i] < SIZE_MAX; i++) {
-      if (n <= OEISprimes[i])
+   for (size_t i = 0; i < ARRAYSIZE(OEISprimes); i++) {
+      if (n <= OEISprimes[i]) {
          return OEISprimes[i];
+      }
    }
 
    CRT_fatalError("Hashtable: no prime found");
