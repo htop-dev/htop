@@ -18,7 +18,6 @@ typedef struct FunctionBar_ {
       const char* const* constKeys;
    } keys;
    int* events;
-   uint32_t size;
    bool staticData;
 } FunctionBar;
 
