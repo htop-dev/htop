@@ -715,6 +715,28 @@ static void LinuxMachine_assignCCDs(LinuxMachine* this, int ccds) {
    }
 }
 
+static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
+   /* For SMT/Hyperthreading: compute the thread index for each CPU.
+      CPUs sharing the same physicalID and coreID are SMT siblings.
+      threadIndex is 0 for the first thread, 1 for the second, etc. */
+
+   const Machine* super = &this->super;
+   CPUData* cpus = this->cpuData;
+
+   /* CPU 0 is the average, skip it. For each CPU, count how many
+      lower-indexed CPUs share the same physicalID and coreID. */
+   for (size_t i = 1; i <= super->existingCPUs; i++) {
+      int threadIndex = 0;
+      for (size_t j = 1; j < i; j++) {
+         if (cpus[i].physicalID == cpus[j].physicalID &&
+             cpus[i].coreID == cpus[j].coreID) {
+            threadIndex++;
+         }
+      }
+      cpus[i].threadIndex = threadIndex;
+   }
+}
+
 #endif
 
 static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
@@ -799,6 +821,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    LinuxMachine_fetchCPUTopologyFromCPUinfo(this);
    int ccds = LibSensors_countCCDs();
    LinuxMachine_assignCCDs(this, ccds);
+   LinuxMachine_computeThreadIndices(this);
    #endif
 
    return super;
@@ -826,4 +849,32 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
 
    assert(id < super->existingCPUs);
    return this->cpuData[id + 1].online;
+}
+
+int Machine_getCPUPhysicalCoreID(const Machine* super, unsigned int id) {
+#ifdef HAVE_SENSORS_SENSORS_H
+   const LinuxMachine* this = (const LinuxMachine*) super;
+
+   assert(id < super->existingCPUs);
+
+   const CPUData* cpu = &this->cpuData[id + 1];
+   return cpu->physicalID * (this->maxCoreID + 1) + cpu->coreID;
+#else
+   (void) super;
+   /* Fall back to CPU id when topology unavailable */
+   return (int)id;
+#endif
+}
+
+int Machine_getCPUThreadIndex(const Machine* super, unsigned int id) {
+#ifdef HAVE_SENSORS_SENSORS_H
+   const LinuxMachine* this = (const LinuxMachine*) super;
+
+   assert(id < super->existingCPUs);
+   return this->cpuData[id + 1].threadIndex;
+#else
+   (void) super;
+   (void) id;
+   return 0;
+#endif
 }
