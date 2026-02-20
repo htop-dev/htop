@@ -1,0 +1,354 @@
+/*
+htop - BacktraceScreen.c
+(C) 2025 htop dev team
+Released under the GNU GPLv2+, see the COPYING file
+in the source distribution for its full text.
+*/
+
+#include "config.h" // IWYU pragma: keep
+
+#include "BacktraceScreen.h"
+
+#include <assert.h>
+#include <limits.h> // IWYU pragma: keep
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+
+#include "CRT.h"
+#include "FunctionBar.h"
+#include "Macros.h"
+#include "Object.h"
+#include "Panel.h"
+#include "Process.h"
+#include "ProvideCurses.h"
+#include "RichString.h"
+#include "Settings.h"
+#include "Vector.h"
+#include "XUtils.h"
+#include "generic/UnwindPtrace.h"
+
+
+#if defined(HAVE_BACKTRACE_SCREEN)
+
+static const char* const BacktraceScreenFunctions[] = {
+   "Refresh",
+   "Done   ",
+   NULL
+};
+
+static const char* const BacktraceScreenKeys[] = {
+   "F5",
+   "Esc",
+   NULL
+};
+
+static const int BacktraceScreenEvents[] = {
+   KEY_F(5),
+   27,
+};
+
+BacktraceFrameData* BacktraceFrameData_new(void) {
+   BacktraceFrameData* this = AllocThis(BacktraceFrameData);
+   this->address = 0;
+   this->offset = 0;
+   this->functionName = NULL;
+   this->index = 0;
+   this->isSignalFrame = false;
+   return this;
+}
+
+void BacktraceFrameData_delete(Object* object) {
+   BacktraceFrameData* this = (BacktraceFrameData*)object;
+   free(this->functionName);
+   free(this);
+}
+
+static void BacktracePanel_displayHeader(BacktracePanel* this) {
+   const BacktracePanelPrintingHelper* printingHelper = &this->printingHelper;
+
+   /*
+    * The parameters for printf are of type int.
+    * A check is needed to prevent integer overflow.
+    */
+   assert(printingHelper->maxFrameNumLen <= INT_MAX);
+   assert(printingHelper->maxAddrLen <= INT_MAX - strlen("0x"));
+
+   char* line = NULL;
+   xAsprintf(&line, "%*s %-*s %s",
+      (int)printingHelper->maxFrameNumLen, "#",
+      (int)(printingHelper->maxAddrLen + strlen("0x")), "ADDRESS",
+      "NAME"
+   );
+
+   Panel_setHeader((Panel*)this, line);
+   free(line);
+}
+
+static void BacktracePanel_makePrintingHelper(const BacktracePanel* this, BacktracePanelPrintingHelper* printingHelper) {
+   Vector* lines = this->super.items;
+   unsigned int maxFrameNum = 0;
+   size_t longestAddress = 0;
+
+   for (int i = 0; i < Vector_size(lines); i++) {
+      const BacktracePanelRow* row = (const BacktracePanelRow*)Vector_get(lines, i);
+      if (row->type != BACKTRACE_PANEL_ROW_DATA_FRAME) {
+         continue;
+      }
+
+      maxFrameNum = MAXIMUM(row->data.frame->index, maxFrameNum);
+
+      longestAddress = MAXIMUM(row->data.frame->address, longestAddress);
+   }
+
+   printingHelper->maxFrameNumLen = MAXIMUM(countDigits(maxFrameNum, 10), printingHelper->maxFrameNumLen);
+   printingHelper->maxAddrLen = MAXIMUM(countDigits(longestAddress, 16), printingHelper->maxAddrLen);
+}
+
+static void BacktracePanel_makeBacktrace(Vector* frames, pid_t pid, char** error) {
+#ifdef HAVE_LIBUNWIND_PTRACE
+   UnwindPtrace_makeBacktrace(frames, pid, error);
+#else
+   (void)frames;
+   (void)pid;
+   xAsprintf(error, "The backtrace screen is not implemented");
+#endif
+}
+
+static void BacktracePanel_populateFrames(BacktracePanel* this) {
+   char* error = NULL;
+
+   Vector* data = Vector_new(Class(BacktraceFrameData), false, VECTOR_DEFAULT_SIZE);
+   for (int i = 0; i < Vector_size(this->processes); i++) {
+      const Process* process = (Process*)Vector_get(this->processes, i);
+      BacktracePanel_makeBacktrace(data, Process_getPid(process), &error);
+
+      BacktracePanelRow* header = BacktracePanelRow_new(this);
+      header->process = process;
+      header->type = BACKTRACE_PANEL_ROW_PROCESS_INFORMATION;
+      Panel_add((Panel*)this, (Object*)header);
+
+      if (!error) {
+         for (int j = 0; j < Vector_size(data); j++) {
+            BacktracePanelRow* row = BacktracePanelRow_new(this);
+            row->process = process;
+            row->type = BACKTRACE_PANEL_ROW_DATA_FRAME;
+            row->data.frame = (BacktraceFrameData*)Vector_get(data, j);
+
+            Panel_add((Panel*)this, (Object*)row);
+         }
+      } else {
+         BacktracePanelRow* errorRow = BacktracePanelRow_new(this);
+         errorRow->process = process;
+         errorRow->type = BACKTRACE_PANEL_ROW_ERROR;
+         errorRow->data.error = error;
+         error = NULL;
+         Panel_add((Panel*)this, (Object*)errorRow);
+      }
+
+      Vector_prune(data);
+   }
+   Vector_delete(data);
+
+   BacktracePanelPrintingHelper* printingHelper = &this->printingHelper;
+   BacktracePanel_makePrintingHelper(this, printingHelper);
+   BacktracePanel_displayHeader(this);
+}
+
+static HandlerResult BacktracePanel_eventHandler(Panel* super, int ch) {
+   BacktracePanel* this = (BacktracePanel*)super;
+
+   HandlerResult result = IGNORED;
+
+   switch (ch) {
+   case KEY_CTRL('L'):
+   case KEY_F(5):
+      Panel_prune(super);
+      BacktracePanel_populateFrames(this);
+      break;
+   }
+
+   return result;
+}
+
+BacktracePanel* BacktracePanel_new(Vector* processes, const Settings* settings) {
+   BacktracePanel* this = AllocThis(BacktracePanel);
+   this->processes = processes;
+
+   this->printingHelper.maxAddrLen = strlen("ADDRESS") - strlen("0x");
+   this->printingHelper.maxFrameNumLen = strlen("#");
+
+   this->settings = settings;
+
+   Panel* super = (Panel*) this;
+   Panel_init(super, 1, 1, 0, 1, Class(BacktracePanelRow), true,
+      FunctionBar_new(BacktraceScreenFunctions, BacktraceScreenKeys, BacktraceScreenEvents)
+   );
+
+   BacktracePanel_populateFrames(this);
+
+   return this;
+}
+
+void BacktracePanel_delete(Object* object) {
+   BacktracePanel* this = (BacktracePanel*)object;
+   Vector_delete(this->processes);
+   Panel_delete(object);
+}
+
+static void BacktracePanelRow_displayInformation(const Object* super, RichString* out) {
+   const BacktracePanelRow* row = (const BacktracePanelRow*)super;
+   assert(row);
+   assert(row->type == BACKTRACE_PANEL_ROW_PROCESS_INFORMATION);
+
+   const Process* process = row->process;
+
+   char* informations = NULL;
+   int colorBasename = DEFAULT_COLOR;
+   int indexProcessComm = -1;
+   int len = -1;
+   size_t highlightLen = 0;
+   size_t highlightOffset = 0;
+
+   const char* processName = "";
+   if (process->mergedCommand.str) {
+      processName = process->mergedCommand.str;
+      for (size_t i = 0; i < process->mergedCommand.highlightCount; i++) {
+         const ProcessCmdlineHighlight* highlight = process->mergedCommand.highlights;
+         if (highlight->flags & CMDLINE_HIGHLIGHT_FLAG_BASENAME) {
+            highlightLen = highlight->length;
+            highlightOffset = highlight->offset;
+            break;
+         }
+      }
+   } else if (process->cmdline) {
+      processName = process->cmdline;
+   }
+   if (highlightLen == 0) {
+      highlightLen = strlen(processName);
+   }
+
+   if (Process_isThread(process)) {
+      colorBasename = PROCESS_THREAD_BASENAME;
+      len = xAsprintf(&informations, "Thread %d: %n%s", Process_getPid(process), &indexProcessComm, processName);
+   } else {
+      colorBasename = PROCESS_BASENAME;
+      len = xAsprintf(&informations, "Process %d: %n%s",Process_getPid(process), &indexProcessComm, processName);
+   }
+
+   RichString_appendnWide(out, CRT_colors[DEFAULT_COLOR] | A_BOLD, informations, len);
+   if (indexProcessComm != -1) {
+      RichString_setAttrn(out, CRT_colors[colorBasename] | A_BOLD, indexProcessComm + highlightOffset, highlightLen);
+   }
+
+   free(informations);
+}
+
+static void BacktracePanelRow_displayFrame(const Object* super, RichString* out) {
+   const BacktracePanelRow* row = (const BacktracePanelRow*)super;
+   assert(row);
+   assert(row->type == BACKTRACE_PANEL_ROW_DATA_FRAME);
+
+   const BacktracePanel* panel = row->panel;
+   const BacktracePanelPrintingHelper* printingHelper = &panel->printingHelper;
+
+   const BacktraceFrameData* frame = row->data.frame;
+
+   const char* functionName = frame->functionName ? frame->functionName : "???";
+
+   char* completeFunctionName = NULL;
+   xAsprintf(&completeFunctionName, "%s+0x%zx", functionName, frame->offset);
+
+   size_t maxAddrLen = printingHelper->maxAddrLen;
+   char* line = NULL;
+
+   /*
+    * The parameters for printf are of type int.
+    * A check is needed to prevent integer overflow.
+    */
+   assert(printingHelper->maxFrameNumLen <= INT_MAX);
+   assert(maxAddrLen <= INT_MAX);
+
+   int len = xAsprintf(&line, "%*u 0x%0*zx %s",
+      (int)printingHelper->maxFrameNumLen, frame->index,
+      (int)maxAddrLen, frame->address,
+      completeFunctionName
+   );
+
+   int colors = frame->functionName ? CRT_colors[DEFAULT_COLOR] : CRT_colors[PROCESS_SHADOW];
+
+   RichString_appendnAscii(out, colors, line, len);
+
+   free(completeFunctionName);
+   free(line);
+}
+
+static void BacktracePanelRow_displayError(const Object* super, RichString* out) {
+   const BacktracePanelRow* row = (const BacktracePanelRow*)super;
+   assert(row);
+   assert(row->type == BACKTRACE_PANEL_ROW_ERROR);
+   assert(row->data.error);
+
+   RichString_appendAscii(out, CRT_colors[DEFAULT_COLOR], row->data.error);
+}
+
+static void BacktracePanelRow_display(const Object* super, RichString* out) {
+   const BacktracePanelRow* row = (const BacktracePanelRow*)super;
+   assert(row);
+
+   switch (row->type) {
+   case BACKTRACE_PANEL_ROW_DATA_FRAME:
+      BacktracePanelRow_displayFrame(super, out);
+      break;
+
+   case BACKTRACE_PANEL_ROW_PROCESS_INFORMATION:
+      BacktracePanelRow_displayInformation(super, out);
+      break;
+
+   case BACKTRACE_PANEL_ROW_ERROR:
+      BacktracePanelRow_displayError(super, out);
+      break;
+   }
+}
+
+BacktracePanelRow* BacktracePanelRow_new(const BacktracePanel* panel) {
+   BacktracePanelRow* this = AllocThis(BacktracePanelRow);
+   this->panel = panel;
+   return this;
+}
+
+void BacktracePanelRow_delete(Object* object) {
+   BacktracePanelRow* this = (BacktracePanelRow*)object;
+   switch (this->type) {
+   case BACKTRACE_PANEL_ROW_DATA_FRAME:
+      BacktraceFrameData_delete((Object *)this->data.frame);
+      break;
+
+   case BACKTRACE_PANEL_ROW_ERROR:
+      free(this->data.error);
+      break;
+   }
+   free(this);
+}
+
+const ObjectClass BacktraceFrameData_class = {
+   .extends = Class(Object),
+   .delete = BacktraceFrameData_delete,
+};
+
+const PanelClass BacktracePanel_class = {
+   .super = {
+      .extends = Class(Panel),
+      .delete = BacktracePanel_delete,
+   },
+   .eventHandler = BacktracePanel_eventHandler,
+};
+
+const ObjectClass BacktracePanelRow_class = {
+   .extends = Class(Object),
+   .delete = BacktracePanelRow_delete,
+   .display = BacktracePanelRow_display,
+};
+#endif

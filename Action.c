@@ -28,7 +28,9 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "MainPanel.h"
 #include "MemoryMeter.h"
+#include "Object.h"
 #include "OpenFilesScreen.h"
+#include "Panel.h"
 #include "Platform.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
@@ -47,6 +49,10 @@ in the source distribution for its full text.
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
 #include "Affinity.h"
 #include "AffinityPanel.h"
+#endif
+
+#if defined(HAVE_BACKTRACE_SCREEN)
+#include "BacktraceScreen.h"
 #endif
 
 
@@ -606,6 +612,35 @@ static Htop_Reaction actionShowLocks(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+#if defined(HAVE_BACKTRACE_SCREEN)
+static Htop_Reaction actionBacktrace(State *st) {
+   Process* selectedProcess = (Process *) Panel_getSelected((Panel *)st->mainPanel);
+   const Vector* allProcesses = st->mainPanel->super.items;
+
+   Vector* processes = Vector_new(Class(Process), false, VECTOR_DEFAULT_SIZE);
+   if (!Process_isUserlandThread(selectedProcess)) {
+      for (int i = 0; i < Vector_size(allProcesses); i++) {
+         Process* process = (Process *)Vector_get(allProcesses, i);
+         if (Process_getThreadGroup(process) == Process_getThreadGroup(selectedProcess)) {
+            Vector_add(processes, process);
+         }
+      }
+   } else {
+      Vector_add(processes, selectedProcess);
+   }
+
+   BacktracePanel* panel = BacktracePanel_new(processes, st->host->settings);
+   ScreenManager* screenManager = ScreenManager_new(NULL, st->host, st, false);
+   ScreenManager_add(screenManager, (Panel *)panel, 0);
+
+   ScreenManager_run(screenManager, NULL, NULL, NULL);
+   BacktracePanel_delete((Object *)panel);
+   ScreenManager_delete(screenManager);
+
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+#endif
+
 static Htop_Reaction actionStrace(State* st) {
    if (!Action_writeableProcess(st))
       return HTOP_OK;
@@ -689,6 +724,9 @@ static const struct {
    { .key = "   F8 [: ", .roInactive = true,  .info = "lower priority (+ nice)" },
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
    { .key = "      a: ", .roInactive = true, .info = "set CPU affinity" },
+#endif
+#if defined(HAVE_BACKTRACE_SCREEN)
+   { .key = "      b: ", .roInactive = false, .info = "show process backtrace" },
 #endif
    { .key = "      e: ", .roInactive = false, .info = "show process environment" },
    { .key = "      i: ", .roInactive = true,  .info = "set IO priority" },
@@ -941,6 +979,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['\\'] = actionIncFilter;
    keys[']'] = actionHigherPriority;
    keys['a'] = actionSetAffinity;
+#if defined(HAVE_BACKTRACE_SCREEN)
+   keys['b'] = actionBacktrace;
+#endif
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
    keys['h'] = actionHelp;
