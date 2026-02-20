@@ -48,7 +48,14 @@ static void CPUMeter_init(Meter* this) {
       Meter_setCaption(this, "Avg");
    } else if (host->activeCPUs > 1) {
       char caption[10];
-      xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
+      if (host->settings->showCPUSMTLabels) {
+         int coreID = Machine_getCPUPhysicalCoreID(host, cpu - 1);
+         int threadIndex = Machine_getCPUThreadIndex(host, cpu - 1);
+         char threadLetter = 'a' + (char)(threadIndex % 26);
+         xSnprintf(caption, sizeof(caption), "%2d%c", coreID, threadLetter);
+      } else {
+         xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
+      }
       Meter_setCaption(this, caption);
    }
 }
