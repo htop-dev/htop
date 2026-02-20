@@ -19,6 +19,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+#define FUNCTIONBAR_MAXEVENTS 11 /* sufficient for all cases, includes NULL */
+
 static const char* const FunctionBar_FKeys[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", NULL};
 
 static const char* const FunctionBar_FLabels[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", NULL};
@@ -31,17 +33,18 @@ static const int FunctionBar_EnterEscEvents[] = {13, 27};
 static int currentLen = 0;
 
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
-   const char* functions[FUNCTIONBAR_MAXEVENTS + 1] = {enter, esc, NULL};
+   const char* functions[FUNCTIONBAR_MAXEVENTS] = {enter, esc, NULL};
    return FunctionBar_new(functions, FunctionBar_EnterEscKeys, FunctionBar_EnterEscEvents);
 }
 
 FunctionBar* FunctionBar_new(const char* const* functions, const char* const* keys, const int* events) {
    FunctionBar* this = xCalloc(1, sizeof(FunctionBar));
-   this->functions = xCalloc(FUNCTIONBAR_MAXEVENTS + 1, sizeof(char*));
+   this->functions = xCalloc(FUNCTIONBAR_MAXEVENTS, sizeof(char*));
    if (!functions) {
       functions = FunctionBar_FLabels;
    }
-   for (size_t i = 0; i < FUNCTIONBAR_MAXEVENTS && functions[i]; i++) {
+   for (size_t i = 0; functions[i]; i++) {
+      assert(i < FUNCTIONBAR_MAXEVENTS);
       this->functions[i] = xStrdup(functions[i]);
    }
    if (keys && events) {
@@ -49,7 +52,8 @@ FunctionBar* FunctionBar_new(const char* const* functions, const char* const* ke
       this->keys.keys = xCalloc(FUNCTIONBAR_MAXEVENTS, sizeof(char*));
       this->events = xCalloc(FUNCTIONBAR_MAXEVENTS, sizeof(int));
       size_t i = 0;
-      while (i < FUNCTIONBAR_MAXEVENTS && functions[i]) {
+      while (functions[i]) {
+         assert(i < FUNCTIONBAR_MAXEVENTS);
          this->keys.keys[i] = xStrdup(keys[i]);
          this->events[i] = events[i];
          i++;
@@ -66,7 +70,8 @@ FunctionBar* FunctionBar_new(const char* const* functions, const char* const* ke
 }
 
 void FunctionBar_delete(FunctionBar* this) {
-   for (size_t i = 0; i < FUNCTIONBAR_MAXEVENTS && this->functions[i]; i++) {
+   for (size_t i = 0; this->functions[i]; i++) {
+      assert(i < FUNCTIONBAR_MAXEVENTS);
       free(this->functions[i]);
    }
    free(this->functions);
