@@ -409,7 +409,8 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
 
    // Add an extra phantom thread for a later loop
-   bool adjCpuIdProcessed[super->existingCPUs+2];
+   assert(super->existingCPUs < UINT_MAX - 2);
+   bool adjCpuIdProcessed[super->existingCPUs + 2];
    memset(adjCpuIdProcessed, 0, sizeof(adjCpuIdProcessed));
 
    for (unsigned int i = 0; i <= super->existingCPUs; i++) {
