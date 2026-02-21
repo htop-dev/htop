@@ -408,9 +408,9 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
    if (!file)
       CRT_fatalError("Cannot open " PROCSTATFILE);
 
-   // Add an extra phantom thread for a later loop
-   assert(super->existingCPUs < UINT_MAX - 2);
-   bool adjCpuIdProcessed[super->existingCPUs + 2];
+   // One thread per CPU thread + one for the average
+   assert(super->existingCPUs < UINT_MAX - 1);
+   bool adjCpuIdProcessed[super->existingCPUs + 1];
    memset(adjCpuIdProcessed, 0, sizeof(adjCpuIdProcessed));
 
    for (unsigned int i = 0; i <= super->existingCPUs; i++) {
@@ -485,9 +485,7 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
       adjCpuIdProcessed[adjCpuId] = true;
    }
 
-   // Set the extra phantom thread as checked to make sure to mark trailing offline threads correctly in the loop
-   adjCpuIdProcessed[super->existingCPUs + 1] = true;
-   for (unsigned int i = 0; i <= super->existingCPUs + 1; i++) {
+   for (unsigned int i = 0; i <= super->existingCPUs; i++) {
       if (!adjCpuIdProcessed[i]) {
          // Skipped an ID, but /proc/stat is ordered => threads in between are offline
          memset(&this->cpuData[i], 0, sizeof(CPUData));
