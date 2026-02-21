@@ -485,15 +485,11 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
    }
 
    // Set the extra phantom thread as checked to make sure to mark trailing offline threads correctly in the loop
-   adjCpuIdProcessed[super->existingCPUs+1] = true;
-   unsigned int lastAdjCpuIdProcessed = 0;
-   for (unsigned int i = 0; i <= super->existingCPUs+1; i++) {
-      if (adjCpuIdProcessed[i]) {
-         for (unsigned int j = lastAdjCpuIdProcessed+1; j < i; j++) {
-            // Skipped an ID, but /proc/stat is ordered => threads in between are offline
-            memset(&(this->cpuData[j]), '\0', sizeof(CPUData));
-         }
-         lastAdjCpuIdProcessed = i;
+   adjCpuIdProcessed[super->existingCPUs + 1] = true;
+   for (unsigned int i = 0; i <= super->existingCPUs + 1; i++) {
+      if (!adjCpuIdProcessed[i]) {
+         // Skipped an ID, but /proc/stat is ordered => threads in between are offline
+         memset(&this->cpuData[i], 0, sizeof(CPUData));
       }
    }
 
