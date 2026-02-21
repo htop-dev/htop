@@ -1,6 +1,7 @@
 /*
 htop - LinuxProcessTable.c
 (C) 2014 Hisham H. Muhammad
+(C) 2020-2026 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -58,6 +59,9 @@ in the source distribution for its full text.
 #ifndef PF_KTHREAD
 #define PF_KTHREAD 0x00200000
 #endif
+
+/* Maximum buffer size for reading COMMAND / comm */
+#define MAX_CMDLINE_BUFFER_SIZE (2 * 1024 * 1024 + 512)
 
 /* Inode number of the PID namespace of htop */
 static ino_t rootPidNs = (ino_t)-1;
@@ -1279,14 +1283,41 @@ static void LinuxProcessList_readExe(Process* process, openat_arg_t procFd, cons
 }
 
 /*
+ * Helper function to read a file with dynamic buffer allocation.
+ * Returns the buffer and sets *amtRead to bytes read. Caller must free the buffer in the success case.
+ * Returns NULL on error.
+ */
+static char* readFileDynamic(openat_arg_t procFd, const char* filename, ssize_t* amtRead) {
+   size_t bufferSize = 512;
+   char* buffer = xMalloc(bufferSize);
+
+   *amtRead = Compat_readfileat(procFd, filename, buffer, bufferSize);
+
+   // If buffer was full, the file might be larger, so retry with a bigger buffer
+   // Limit to MAX_CMDLINE_BUFFER_SIZE to prevent excessive memory allocation
+   while (*amtRead > 0 && (size_t)*amtRead == bufferSize - 1 && bufferSize < MAX_CMDLINE_BUFFER_SIZE) {
+      bufferSize *= 2;
+      buffer = xRealloc(buffer, bufferSize);
+      *amtRead = Compat_readfileat(procFd, filename, buffer, bufferSize);
+   }
+
+   if (*amtRead <= 0) {
+      free(buffer);
+      return NULL;
+   }
+
+   return buffer;
+}
+
+/*
  * Read /proc/<pid>/cmdline (process-shared data)
  */
 static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
    LinuxProcessList_readExe(process, procFd, mainTask);
 
-   char command[4096 + 1]; // max cmdline length on Linux
-   ssize_t amtRead = Compat_readfileat(procFd, "cmdline", command, sizeof(command));
-   if (amtRead <= 0)
+   ssize_t amtRead;
+   char* command = readFileDynamic(procFd, "cmdline", &amtRead);
+   if (!command)
       return false;
 
    size_t tokenEnd = (size_t)-1;
@@ -1451,6 +1482,7 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
 
    Process_updateCmdline(process, command, tokenStart, tokenEnd);
 
+   free(command);
    return true;
 }
 
@@ -1458,11 +1490,13 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
  * Read /proc/<pid>/comm (thread-specific data)
  */
 static void LinuxProcessList_readComm(Process* process, openat_arg_t procFd) {
-   char command[4096 + 1]; // max cmdline length on Linux
-   ssize_t amtRead = Compat_readfileat(procFd, "comm", command, sizeof(command));
-   if (amtRead > 0) {
+   ssize_t amtRead;
+   char* command = readFileDynamic(procFd, "comm", &amtRead);
+
+   if (command) {
       command[amtRead - 1] = '\0';
       Process_updateComm(process, command);
+      free(command);
    } else {
       Process_updateComm(process, NULL);
    }
