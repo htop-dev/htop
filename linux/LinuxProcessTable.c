@@ -61,7 +61,7 @@ in the source distribution for its full text.
 #endif
 
 /* Maximum buffer size for reading COMMAND / comm */
-#define MAX_CMDLINE_BUFFER_SIZE (2 * 1024 * 1024 + 1)
+#define MAX_CMDLINE_BUFFER_SIZE (2 * 1024 * 1024 + 512)
 
 /* Inode number of the PID namespace of htop */
 static ino_t rootPidNs = (ino_t)-1;
@@ -1271,7 +1271,7 @@ static void LinuxProcessList_readExe(Process* process, openat_arg_t procFd, cons
  * Returns NULL on error.
  */
 static char* readFileDynamic(openat_arg_t procFd, const char* filename, ssize_t* amtRead) {
-   size_t bufferSize = 4096 + 1;
+   size_t bufferSize = 512;
    char* buffer = xMalloc(bufferSize);
 
    *amtRead = Compat_readfileat(procFd, filename, buffer, bufferSize);
