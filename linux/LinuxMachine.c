@@ -435,6 +435,8 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
       } else {
          unsigned int cpuid;
          (void) sscanf(buffer, "cpu%4u %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         if (cpuid >= super->existingCPUs)
+            break;
          adjCpuId = cpuid + 1;
       }
 
