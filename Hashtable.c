@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -93,42 +94,26 @@ size_t Hashtable_count(const Hashtable* this) {
 
 #endif /* NDEBUG */
 
-/* https://oeis.org/A014234 */
-static const uint64_t OEISprimes[] = {
-   7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191,
-   16381, 32749, 65521,
-#if SIZE_MAX > UINT16_MAX
-   131071, 262139, 524287, 1048573,
-   2097143, 4194301, 8388593, 16777213, 33554393,
-   67108859, 134217689, 268435399, 536870909, 1073741789,
-   2147483647, 4294967291,
-#if SIZE_MAX > UINT32_MAX
-   /* https://oeis.org/A013603 */
-   ((uint64_t)1 << 33) -   9, ((uint64_t)1 << 34) - 41,
-   ((uint64_t)1 << 35) -  31, ((uint64_t)1 << 36) -  5,
-   ((uint64_t)1 << 37) -  25, ((uint64_t)1 << 38) - 45,
-   ((uint64_t)1 << 39) -   7, ((uint64_t)1 << 40) - 87,
-   ((uint64_t)1 << 41) -  21, ((uint64_t)1 << 42) - 11,
-   ((uint64_t)1 << 43) -  57, ((uint64_t)1 << 44) - 17,
-   ((uint64_t)1 << 45) -  55, ((uint64_t)1 << 46) - 21,
-   ((uint64_t)1 << 47) - 115, ((uint64_t)1 << 48) - 59,
-   ((uint64_t)1 << 49) -  81, ((uint64_t)1 << 50) - 27,
-   ((uint64_t)1 << 51) - 129, ((uint64_t)1 << 52) - 47,
-   ((uint64_t)1 << 53) - 111, ((uint64_t)1 << 54) - 33,
-   ((uint64_t)1 << 55) -  55, ((uint64_t)1 << 56) -  5,
-   ((uint64_t)1 << 57) -  13, ((uint64_t)1 << 58) - 27,
-   ((uint64_t)1 << 59) -  55, ((uint64_t)1 << 60) - 93,
-   ((uint64_t)1 << 61) -   1, ((uint64_t)1 << 62) - 57,
-   ((uint64_t)1 << 63) -  25, (uint64_t)-59,
-#endif
-#endif
-};
-
 static size_t nextPrime(size_t n) {
-   /* on 32-bit make sure we do not return primes not fitting in size_t */
-   for (size_t i = 0; i < ARRAYSIZE(OEISprimes); i++) {
-      if (n <= OEISprimes[i]) {
-         return OEISprimes[i];
+   // Table of differences so that (2^m - primeDiffs[m]) is a prime.
+   // This is OEIS sequence https://oeis.org/A013603 except for
+   // entry 0 (2^0 = 1 as a non-prime special case).
+   static const uint8_t primeDiffs[] = {
+      0, 0, 1, 1, 3, 1, 3, 1, 5, 3, 3, 9, 3, 1, 3, 19,
+#if SIZE_MAX > UINT16_MAX
+      15, 1, 5, 1, 3, 9, 3, 15, 3, 39, 5, 39, 57, 3, 35, 1,
+#if SIZE_MAX > UINT32_MAX
+      5, 9, 41, 31, 5, 25, 45, 7, 87, 21, 11, 57, 17, 55, 21, 115,
+      59, 81, 27, 129, 47, 111, 33, 55, 5, 13, 27, 55, 93, 1, 57, 25,
+#endif
+#endif
+   };
+
+   assert(sizeof(n) * CHAR_BIT <= ARRAYSIZE(primeDiffs));
+   for (uint8_t shift = 3; shift < sizeof(n) * CHAR_BIT; shift++) {
+      size_t prime = ((size_t)1 << shift) - primeDiffs[shift];
+      if (n <= prime) {
+         return prime;
       }
    }
 
