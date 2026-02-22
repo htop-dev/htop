@@ -73,6 +73,11 @@ static bool Hashtable_isConsistent(const Hashtable* this) {
    bool res = items == this->items;
    if (!res)
       Hashtable_dump(this);
+
+   assert(this->size > 0);
+   assert(this->size <= SIZE_MAX / sizeof(HashtableItem));
+   assert(this->size >= this->items);
+
    return res;
 }
 
@@ -208,21 +213,18 @@ static void insert(Hashtable* this, ht_key_t key, void* value) {
    }
 }
 
-void Hashtable_setSize(Hashtable* this, size_t size) {
-
+static void Hashtable_setSize(Hashtable* this, size_t size) {
    assert(Hashtable_isConsistent(this));
+   assert(size >= this->items);
 
-   if (size <= this->items)
-      return;
-
-   size_t newSize = nextPrime(size);
-   if (newSize == this->size)
+   size = nextPrime(size);
+   if (size == this->size)
       return;
 
    HashtableItem* oldBuckets = this->buckets;
    size_t oldSize = this->size;
 
-   this->size = newSize;
+   this->size = size;
    this->buckets = (HashtableItem*) xCalloc(this->size, sizeof(HashtableItem));
    this->items = 0;
 
@@ -240,24 +242,20 @@ void Hashtable_setSize(Hashtable* this, size_t size) {
 }
 
 void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
-
    assert(Hashtable_isConsistent(this));
-   assert(this->size > 0);
    assert(value);
 
    /* grow on load-factor > 0.7 */
-   if (10 * this->items > 7 * this->size) {
-      if (SIZE_MAX / 2 < this->size)
-         CRT_fatalError("Hashtable: size overflow");
+   if (sizeof(HashtableItem) < 7 && SIZE_MAX / 7 < this->size)
+      CRT_fatalError("Hashtable: size overflow");
 
-      Hashtable_setSize(this, 2 * this->size);
-   }
+   if (this->items >= this->size * 7 / 10)
+      Hashtable_setSize(this, this->size + 1);
 
    insert(this, key, value);
 
    assert(Hashtable_isConsistent(this));
    assert(Hashtable_get(this, key) != NULL);
-   assert(this->size > this->items);
 }
 
 void* Hashtable_remove(Hashtable* this, ht_key_t key) {
@@ -309,8 +307,12 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
    assert(Hashtable_get(this, key) == NULL);
 
    /* shrink on load-factor < 0.125 */
-   if (8 * this->items < this->size)
-      Hashtable_setSize(this, this->size / 3); /* account for nextPrime rounding up */
+   if (sizeof(HashtableItem) < 3 && SIZE_MAX / 3 < this->size)
+      CRT_fatalError("Hashtable: size overflow");
+
+   if (this->items < this->size / 8) {
+      Hashtable_setSize(this, this->size * 3 / 8); /* account for nextPrime rounding up */
+   }
 
    return res;
 }
