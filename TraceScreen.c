@@ -77,8 +77,6 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
 #else
    TraceScreen_programLauncher.lastErrno = ENOSYS;
 #endif
-   if (TraceScreen_programLauncher.lastErrno != 0)
-      return false;
 
    int fdpair[2] = {0, 0};
 
@@ -114,9 +112,14 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
             buffer,
             NULL
          };
-         ProgramLauncher_execv_const(&TraceScreen_programLauncher, argv);
+         if (TraceScreen_programLauncher.lastErrno == 0) {
+            ProgramLauncher_execv_const(&TraceScreen_programLauncher, argv);
+         } else {
+            errno = TraceScreen_programLauncher.lastErrno;
+         }
 
          // Should never reach here, unless execlp fails ...
+         fprintf(stderr, "Could not execute 'truss': %s\n", strerror(errno));
          const char* message = "Could not execute 'truss'. Please make sure it is available in your $PATH.";
          (void)! write(STDERR_FILENO, message, strlen(message));
       #elif defined(HTOP_LINUX)
@@ -130,9 +133,14 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
             buffer,
             NULL
          };
-         ProgramLauncher_execv_const(&TraceScreen_programLauncher, argv);
+         if (TraceScreen_programLauncher.lastErrno == 0) {
+            ProgramLauncher_execv_const(&TraceScreen_programLauncher, argv);
+         } else {
+            errno = TraceScreen_programLauncher.lastErrno;
+         }
 
          // Should never reach here, unless execlp fails ...
+         fprintf(stderr, "Could not execute 'strace': %s\n", strerror(errno));
          const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
          (void)! write(STDERR_FILENO, message, strlen(message));
       #else // HTOP_DARWIN, HTOP_PCP == HTOP_UNSUPPORTED
