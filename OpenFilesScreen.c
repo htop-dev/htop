@@ -22,6 +22,7 @@ in the source distribution for its full text.
 
 #include "Macros.h"
 #include "Panel.h"
+#include "ProgramLauncher.h"
 #include "ProvideCurses.h"
 #include "Vector.h"
 #include "XUtils.h"
@@ -45,6 +46,8 @@ typedef struct OpenFiles_FileData_ {
    OpenFiles_Data data;
    struct OpenFiles_FileData_* next;
 } OpenFiles_FileData;
+
+static ProgramLauncher OpenFiles_ProgramLauncher;
 
 static size_t getIndexForType(char type) {
    switch (type) {
@@ -100,6 +103,12 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    pdata->cols[getIndexForType('o')] = 8;
    pdata->cols[getIndexForType('i')] = 8;
 
+   ProgramLauncher_setPath(&OpenFiles_ProgramLauncher, "lsof");
+   if (OpenFiles_ProgramLauncher.lastErrno != 0) {
+      pdata->error = 1;
+      return pdata;
+   }
+
    int fdpair[2] = {0, 0};
    if (pipe(fdpair) == -1) {
       pdata->error = 1;
@@ -127,9 +136,18 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       close(fdnull);
       char buffer[32] = {0};
       xSnprintf(buffer, sizeof(buffer), "%d", pid);
-      // Use of NULL in variadic functions must have a pointer cast.
-      // The NULL constant is not required by standard to have a pointer type.
-      execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", (char*)NULL);
+
+      const char* argv[] = {
+         "lsof",
+         "-P",
+         "-o",
+         "-p",
+         buffer,
+         "-F",
+         NULL
+      };
+      ProgramLauncher_execv_const(&OpenFiles_ProgramLauncher, argv);
+
       exit(127);
    }
    close(fdpair[1]);
