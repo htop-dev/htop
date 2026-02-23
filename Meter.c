@@ -90,18 +90,25 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(x >= 0);
    assert(w <= INT_MAX - x);
 
+   const char* ptr;
+   int nCols;
+
    // Draw the caption
-   int captionLen = 3;
+   const int captionWidth = 3;
    const char* caption = Meter_getCaption(this);
-   if (w >= captionLen) {
+   if (w >= captionWidth) {
       attrset(CRT_colors[METER_TEXT]);
-      mvaddnstr(y, x, caption, captionLen);
+
+      ptr = caption;
+      nCols = String_mbswidth(&ptr, 256, captionWidth);
+      int captionLen = (int)(ptr - caption);
+      mvprintw(y, x, "%-*.*s", captionLen + captionWidth - nCols, captionLen, caption);
    }
-   w -= captionLen;
+   w -= captionWidth;
 
    // Draw the bar borders
    if (w >= 1) {
-      x += captionLen;
+      x += captionWidth;
       attrset(CRT_colors[BAR_BORDER]);
       mvaddch(y, x, '[');
       w--;
@@ -121,71 +128,90 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[RESET_COLOR]); // Clear the bold attribute
    x++;
 
-   // The text in the bar is right aligned;
-   // Pad with maximal spaces and then calculate needed starting position offset
+   // Calculate the number of terminal columns needed for the meter text.
+
+   // The text in the bar is right aligned
+
+   ptr = this->txtBuffer;
+   nCols = String_lineBreakWidth(&ptr, sizeof(this->txtBuffer) - 1, w, ' ');
+   size_t len = (size_t)(ptr - this->txtBuffer);
+
    RichString_begin(bar);
-   RichString_appendChr(&bar, 0, ' ', w);
-   RichString_appendWide(&bar, 0, this->txtBuffer);
+   RichString_appendChr(&bar, 0, ' ', w - nCols);
+   RichString_appendnWide(&bar, 0, this->txtBuffer, len);
 
-   int startPos = RichString_sizeVal(bar) - w;
-   if (startPos > w) {
-      // Text is too large for bar
-      // Truncate meter text at a space character
-      for (int pos = 2 * w; pos > w; pos--) {
-         if (RichString_getCharVal(bar, pos) == ' ') {
-            while (pos > w && RichString_getCharVal(bar, pos - 1) == ' ')
-               pos--;
-            startPos = pos - w;
-            break;
-         }
-      }
-
-      // If still too large, print the start not the end
-      startPos = MINIMUM(startPos, w);
-   }
-
-   assert(startPos >= 0);
-   assert(startPos <= w);
-   assert(startPos + w <= RichString_sizeVal(bar));
-
-   int blockSizes[10];
-
-   // First draw in the bar[] buffer...
+   size_t charPos = 0;
    int offset = 0;
    for (uint8_t i = 0; i < this->curItems; i++) {
+      if (!(this->total > 0.0))
+         break;
+      if (offset >= w)
+         break;
+
       double value = this->values[i];
-      if (isPositive(value) && this->total > 0.0) {
-         value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * w);
-         blockSizes[i] = MINIMUM(blockSizes[i], w - offset);
-      } else {
-         blockSizes[i] = 0;
-      }
-      int nextOffset = offset + blockSizes[i];
-      for (int j = offset; j < nextOffset; j++)
-         if (RichString_getCharVal(bar, startPos + j) == ' ') {
+      if (!isPositive(value))
+         continue;
+      value = MINIMUM(value, this->total);
+      int blockSize = ceil((value / this->total) * w);
+      blockSize = MINIMUM(blockSize, w - offset);
+      if (blockSize < 1)
+         continue;
+
+      int nextOffset = offset + blockSize;
+      assert(offset < nextOffset);
+
+      size_t startPos = charPos;
+      while (true) {
+#ifdef HAVE_LIBNCURSESW
+         if (offset >= nextOffset && !CRT_utf8) {
+            break;
+         }
+#else
+         if (offset >= nextOffset) {
+            break;
+         }
+#endif
+
+#ifdef HAVE_LIBNCURSESW
+         wchar_t ch = RichString_getCharVal(bar, charPos);
+         if (ch == 0)
+            break;
+
+         nCols = wcwidth(ch);
+         assert(nCols >= 0);
+
+         if (offset >= nextOffset && nCols > 0) {
+            // This break condition is for UTF-8.
+            break;
+         }
+#else
+         char ch = RichString_getCharVal(bar, charPos);
+         nCols = 1;
+
+         assert(offset < nextOffset);
+#endif
+         if (ch == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
-               RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
+               RichString_setChar(&bar, charPos, BarMeterMode_characters[i]);
             } else {
-               RichString_setChar(&bar, startPos + j, '|');
+               RichString_setChar(&bar, charPos, '|');
             }
          }
-      offset = nextOffset;
+
+         offset += nCols;
+         charPos++;
+      }
+
+      int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
+      RichString_setAttrn(&bar, CRT_colors[attr], startPos, charPos - startPos);
    }
 
-   // ...then print the buffer.
-   offset = 0;
-   for (uint8_t i = 0; i < this->curItems; i++) {
-      int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
-      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, blockSizes[i]);
-      offset += blockSizes[i];
+   len = RichString_sizeVal(bar);
+   if (charPos < len) {
+      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], charPos, len - charPos);
    }
-   if (offset < w) {
-      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, w - offset);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, w - offset);
-   }
+   RichString_printVal(bar, y, x);
 
    RichString_delete(&bar);
 
@@ -222,13 +248,17 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(w <= INT_MAX - x);
 
    // Draw the caption
-   const int captionLen = 3;
+   const int captionWidth = 3;
    const char* caption = Meter_getCaption(this);
-   if (w >= captionLen) {
+   if (w >= captionWidth) {
       attrset(CRT_colors[METER_TEXT]);
-      mvaddnstr(y, x, caption, captionLen);
+
+      const char* ptr = caption;
+      int nCols = String_mbswidth(&ptr, 256, captionWidth);
+      int len = (int)(ptr - caption);
+      mvprintw(y, x, "%-*.*s", len + captionWidth - nCols, len, caption);
    }
-   w -= captionLen;
+   w -= captionWidth;
 
    // Prepare parameters for drawing
    assert(this->h >= 1);
@@ -274,7 +304,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    if (w < 1) {
       goto end;
    }
-   x += captionLen;
+   x += captionWidth;
 
    // Graph drawing style (character set, etc.)
    const char* const* GraphMeterMode_dots;
