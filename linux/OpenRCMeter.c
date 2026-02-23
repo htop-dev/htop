@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
+#include "ProgramLauncher.h"
 #include "RichString.h"
 #include "Settings.h"
 #include "XUtils.h"
@@ -35,6 +36,8 @@ typedef struct OpenRCMeterContext {
 static OpenRCMeterContext_t ctx_system;
 static OpenRCMeterContext_t ctx_user;
 
+static ProgramLauncher OpenRCMeter_programLauncher;
+
 static void OpenRCMeter_done(ATTR_UNUSED Meter* this) {
    OpenRCMeterContext_t* ctx = String_eq(Meter_name(this), "OpenRCUser") ? &ctx_user : &ctx_system;
 
@@ -46,6 +49,10 @@ static void updateViaExec(bool user) {
    OpenRCMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
 
    if (Settings_isReadonly())
+      return;
+
+   ProgramLauncher_setPath(&OpenRCMeter_programLauncher, "rc-status");
+   if (OpenRCMeter_programLauncher.lastErrno != 0)
       return;
 
    int fdpair[2];
@@ -68,11 +75,15 @@ static void updateViaExec(bool user) {
          exit(1);
       dup2(fdnull, STDERR_FILENO);
       close(fdnull);
-      if (user) {
-         execlp("rc-status", "rc-status", "--user", "-a", (char*)NULL);
-      } else {
-         execlp("rc-status", "rc-status", "-a", (char*)NULL);
-      }
+
+      const char* argv[] = {
+         "rc-status",
+         "-a",
+         (user ? "--user" : NULL),
+         NULL
+      };
+      ProgramLauncher_execv_const(&OpenRCMeter_programLauncher, argv);
+
       exit(127);
    }
    close(fdpair[1]);
