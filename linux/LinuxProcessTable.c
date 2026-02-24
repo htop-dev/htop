@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1040,14 +1041,14 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
    char output[PROC_LINE_LENGTH + 1];
    output[0] = '\0';
    char* at = output;
-   int left = PROC_LINE_LENGTH;
+   size_t left = PROC_LINE_LENGTH;
    while (!feof(file) && left > 0) {
       char buffer[PROC_LINE_LENGTH + 1];
       const char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
       if (!ok)
          break;
 
-      char* group = buffer;
+      const char* group = buffer;
       for (size_t i = 0; i < 2; i++) {
          group = String_strchrnul(group, ':');
          if (!*group)
@@ -1055,16 +1056,24 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
          group++;
       }
 
-      char* eol = String_strchrnul(group, '\n');
-      *eol = '\0';
+      const char* eol = String_strchrnul(group, '\n');
+      char* eol_w = &buffer[eol - buffer];
+      *eol_w = '\0';
 
       if (at != output) {
          *at = ';';
          at++;
          left--;
       }
+
       int wrote = snprintf(at, left, "%s", group);
-      left -= wrote;
+      if (wrote < 0 || (size_t)wrote >= left) {
+         // Output was truncated, we are done
+         break;
+      }
+
+      at += (size_t)wrote;
+      left -= (size_t)wrote;
    }
    fclose(file);
 
