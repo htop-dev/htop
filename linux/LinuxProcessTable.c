@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include <limits.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1040,7 +1041,7 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
    char output[PROC_LINE_LENGTH + 1];
    output[0] = '\0';
    char* at = output;
-   int left = PROC_LINE_LENGTH;
+   size_t left = PROC_LINE_LENGTH;
    while (!feof(file) && left > 0) {
       char buffer[PROC_LINE_LENGTH + 1];
       const char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
@@ -1064,8 +1065,14 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
          at++;
          left--;
       }
+
       int wrote = snprintf(at, left, "%s", group);
-      left -= wrote;
+      if (wrote < 0 || (size_t)wrote >= left) {
+         // Output was truncated, we are done
+         break;
+      }
+
+      left -= (size_t)wrote;
    }
    fclose(file);
 
