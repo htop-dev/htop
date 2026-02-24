@@ -1072,6 +1072,7 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
          break;
       }
 
+      at += (size_t)wrote;
       left -= (size_t)wrote;
    }
    fclose(file);
