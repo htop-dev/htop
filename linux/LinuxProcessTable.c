@@ -1047,7 +1047,7 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
       if (!ok)
          break;
 
-      char* group = buffer;
+      const char* group = buffer;
       for (size_t i = 0; i < 2; i++) {
          group = String_strchrnul(group, ':');
          if (!*group)
@@ -1055,8 +1055,9 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
          group++;
       }
 
-      char* eol = String_strchrnul(group, '\n');
-      *eol = '\0';
+      const char* eol = String_strchrnul(group, '\n');
+      char* eol_w = &buffer[eol - buffer];
+      *eol_w = '\0';
 
       if (at != output) {
          *at = ';';
