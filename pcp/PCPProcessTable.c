@@ -175,7 +175,8 @@ static void PCPProcessTable_updateIO(PCPProcess* pp, int pid, int offset, unsign
    pp->io_syscw = Metric_instance_u64(PCP_PROC_IO_SYSCW, pid, offset, ULLONG_MAX);
    pp->io_cancelled_write_bytes = Metric_instance_ONE_K(PCP_PROC_IO_CANCELLED, pid, offset);
 
-   if (Metric_instance(PCP_PROC_IO_READB, pid, offset, &value, PM_TYPE_U64)) {
+   if (Metric_instance(PCP_PROC_IO_READB, pid, offset, &value, PM_TYPE_U64) &&
+         (now - pp->io_last_scan_time != 0)) {
       unsigned long long last_read = pp->io_read_bytes;
       pp->io_read_bytes = value.ull / ONE_K;
       pp->io_rate_read_bps = ONE_K * (pp->io_read_bytes - last_read) /
@@ -185,7 +186,8 @@ static void PCPProcessTable_updateIO(PCPProcess* pp, int pid, int offset, unsign
       pp->io_rate_read_bps = NAN;
    }
 
-   if (Metric_instance(PCP_PROC_IO_WRITEB, pid, offset, &value, PM_TYPE_U64)) {
+   if (Metric_instance(PCP_PROC_IO_WRITEB, pid, offset, &value, PM_TYPE_U64) &&
+         (now - pp->io_last_scan_time != 0)) {
       unsigned long long last_write = pp->io_write_bytes;
       pp->io_write_bytes = value.ull;
       pp->io_rate_write_bps = ONE_K * (pp->io_write_bytes - last_write) /
