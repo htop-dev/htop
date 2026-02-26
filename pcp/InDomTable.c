@@ -70,7 +70,7 @@ static void InDomTable_goThroughEntries(InDomTable* this) {
 
    /* for every instance ... */
    int instid = -1, offset = -1;
-   while (Metric_iterate(this->metricKey, &instid, &offset)) {
+   while (Metric_iterate(this->metricKey, &instid, &offset, sizeof(Instance))) {
       bool preExisting;
       Instance* inst = InDomTable_getInstance(this, instid, &preExisting);
       inst->offset = offset >= 0 ? offset : 0;

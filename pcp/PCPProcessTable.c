@@ -366,7 +366,7 @@ static bool PCPProcessTable_updateProcesses(PCPProcessTable* this) {
    int pid = -1, offset = -1;
 
    /* for every process ... */
-   while (Metric_iterate(PCP_PROC_PID, &pid, &offset)) {
+   while (Metric_iterate(PCP_PROC_PID, &pid, &offset, sizeof(PCPProcess))) {
 
       bool preExisting;
       Process* proc = ProcessTable_getProcess(pt, pid, &preExisting, PCPProcess_new);
