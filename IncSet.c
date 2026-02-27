@@ -72,8 +72,8 @@ IncSet* IncSet_new(FunctionBar* bar) {
 }
 
 void IncSet_delete(IncSet* this) {
-   IncMode_done(&(this->modes[0]));
-   IncMode_done(&(this->modes[1]));
+   IncMode_done(&(this->modes[INC_SEARCH]));
+   IncMode_done(&(this->modes[INC_FILTER]));
    free(this);
 }
 
