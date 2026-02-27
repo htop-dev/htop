@@ -62,6 +62,20 @@ void ScreensPanel_cleanup(void) {
 
 static void ScreensPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
+   ScreensPanel* const this = (ScreensPanel*) super;
+
+   /* cancel any pending edit action */
+   if (this->renamingItem) {
+      ListItem* item = (ListItem*) Panel_getSelected(super);
+      assert(item == this->renamingItem);
+
+      if (item)
+         item->value = this->saved;
+      this->renamingItem = NULL;
+      super->cursorOn = false;
+
+      Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+   }
 
    /* do not delete screen settings still in use */
    int n = Panel_size(super);
