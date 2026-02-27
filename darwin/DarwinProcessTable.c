@@ -7,8 +7,12 @@ in the source distribution for its full text.
 
 #include "darwin/DarwinProcessTable.h"
 
-#include <errno.h>
+#include <AvailabilityMacros.h>
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 #include <libproc.h>
+#endif
+
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
