@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "FunctionBar.h"
 #include "Panel.h"
+#include "ProgramLauncher.h"
 #include "ProvideCurses.h"
 #include "XUtils.h"
 
@@ -33,6 +34,8 @@ static const char* const TraceScreenFunctions[] = {"Search ", "Filter ", "AutoSc
 static const char* const TraceScreenKeys[] = {"F3", "F4", "F8", "F9", "Esc"};
 
 static const int TraceScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(8), KEY_F(9), 27};
+
+static ProgramLauncher TraceScreen_programLauncher;
 
 TraceScreen* TraceScreen_new(const Process* process) {
    // This initializes all TraceScreen variables to "false" so only default = true ones need to be set below
@@ -67,6 +70,14 @@ static void TraceScreen_draw(InfoScreen* this) {
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
+#if defined(HTOP_FREEBSD) || defined(HTOP_OPENBSD) || defined(HTOP_NETBSD) || defined(HTOP_DRAGONFLYBSD) || defined(HTOP_SOLARIS)
+   ProgramLauncher_setPath(&TraceScreen_programLauncher, "truss");
+#elif defined(HTOP_LINUX)
+   ProgramLauncher_setPath(&TraceScreen_programLauncher, "strace");
+#else
+   TraceScreen_programLauncher.lastErrno = ENOSYS;
+#endif
+
    int fdpair[2] = {0, 0};
 
    if (pipe(fdpair) == -1)
@@ -93,17 +104,43 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       xSnprintf(buffer, sizeof(buffer), "%d", Process_getPid(this->super.process));
 
       #if defined(HTOP_FREEBSD) || defined(HTOP_OPENBSD) || defined(HTOP_NETBSD) || defined(HTOP_DRAGONFLYBSD) || defined(HTOP_SOLARIS)
-         // Use of NULL in variadic functions must have a pointer cast.
-         // The NULL constant is not required by standard to have a pointer type.
-         execlp("truss", "truss", "-s", "512", "-p", buffer, (void*)NULL);
+         const char* argv[] = {
+            "truss",
+            "-s",
+            "512",
+            "-p",
+            buffer,
+            NULL
+         };
+         if (TraceScreen_programLauncher.lastErrno == 0) {
+            ProgramLauncher_execv_const(&TraceScreen_programLauncher, argv);
+         } else {
+            errno = TraceScreen_programLauncher.lastErrno;
+         }
 
          // Should never reach here, unless execlp fails ...
+         fprintf(stderr, "Could not execute 'truss': %s\n", strerror(errno));
          const char* message = "Could not execute 'truss'. Please make sure it is available in your $PATH.";
          (void)! write(STDERR_FILENO, message, strlen(message));
       #elif defined(HTOP_LINUX)
-         execlp("strace", "strace", "-T", "-tt", "-s", "512", "-p", buffer, (void*)NULL);
+         const char* argv[] = {
+            "strace",
+            "-T",
+            "-tt",
+            "-s",
+            "512",
+            "-p",
+            buffer,
+            NULL
+         };
+         if (TraceScreen_programLauncher.lastErrno == 0) {
+            ProgramLauncher_execv_const(&TraceScreen_programLauncher, argv);
+         } else {
+            errno = TraceScreen_programLauncher.lastErrno;
+         }
 
          // Should never reach here, unless execlp fails ...
+         fprintf(stderr, "Could not execute 'strace': %s\n", strerror(errno));
          const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
          (void)! write(STDERR_FILENO, message, strlen(message));
       #else // HTOP_DARWIN, HTOP_PCP == HTOP_UNSUPPORTED
