@@ -1,3 +1,17 @@
+<div align="center" markdown="1">
+   <sup>Special thanks to:</sup>
+   <br>
+   <br>
+   <a href="https://www.warp.dev/htop">
+      <img alt="Warp sponsorship" width="400" src="https://github.com/user-attachments/assets/c21102f7-bab9-4344-a731-0cf6b341cab2">
+   </a>
+
+### [Warp, the intelligent terminal for developers](https://www.warp.dev/htop)
+[Available for MacOS, Linux, & Windows](https://www.warp.dev/htop)<br>
+
+</div>
+<hr>
+
 # [![htop logo](htop.png)](https://htop.dev)
 
 [![CI](https://github.com/htop-dev/htop/workflows/CI/badge.svg)](https://github.com/htop-dev/htop/actions)
