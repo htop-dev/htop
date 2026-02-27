@@ -5,6 +5,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "MeterMode.h"
 #include "config.h" // IWYU pragma: keep
 
 #include "Settings.h"
@@ -521,6 +522,13 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          didReadMeters = true;
       } else if (String_eq(option[0], "hide_function_bar")) {
          this->hideFunctionBar = atoi(option[1]);
+      #ifdef HAVE_LIBNCURSESW
+      } else if (String_eq(option[0], "bar_type")) {
+         long value = strtol(option[1], NULL, 10);
+         if (value < 0 || value > BAR_METER_NUM_STYLES)
+            value = 0;
+         this->barType = (unsigned int)value;
+      #endif
       #ifdef HAVE_LIBHWLOC
       } else if (String_eq(option[0], "topology_affinity")) {
          this->topologyAffinity = !!atoi(option[1]);
@@ -720,6 +728,9 @@ int Settings_write(const Settings* this, bool onCrash) {
    #endif
    printSettingInteger("delay", (int) this->delay);
    printSettingInteger("hide_function_bar", (int) this->hideFunctionBar);
+   #ifdef HAVE_LIBNCURSESW
+   printSettingInteger("bar_type", (int) this->barType);
+   #endif
    #ifdef HAVE_LIBHWLOC
    printSettingInteger("topology_affinity", this->topologyAffinity);
    #endif
@@ -827,6 +838,11 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->showMergedCommand = false;
    this->hideFunctionBar = 0;
    this->headerMargin = true;
+
+   #ifdef HAVE_LIBNCURSESW
+   this->barType = 0;
+   #endif
+
    #ifdef HAVE_LIBHWLOC
    this->topologyAffinity = false;
    #endif

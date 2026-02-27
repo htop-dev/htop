@@ -26,4 +26,5 @@ typedef unsigned int MeterModeId;
    (1 << LED_METERMODE) |             \
    0) // Avoids edits when updating
 
+#define BAR_METER_NUM_STYLES 7
 #endif
