@@ -161,7 +161,8 @@ myhtopheaders = \
 	UptimeMeter.h \
 	UsersTable.h \
 	Vector.h \
-	XUtils.h
+	XUtils.h \
+	generic/ProvideDemangle.h
 
 if HAVE_BACKTRACE_SCREEN
 myhtopheaders += \

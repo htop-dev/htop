@@ -1305,6 +1305,139 @@ esac
 AM_CONDITIONAL([HAVE_BACKTRACE_SCREEN], [test "$enable_backtrace" != no])
 
 AC_ARG_ENABLE(
+   [demangling],
+   [AS_HELP_STRING(
+      [--enable-demangling=BACKEND],
+      [enable demangling support for backtraces; available backends: libiberty libdemangle @<:@default=check@:>@]
+   )],
+   [],
+   [enable_demangling=check]
+)
+
+demangling_backend_found=no
+have_libiberty=no
+have_libdemangle=no
+case $enable_demangling in
+   check|yes)
+      have_libiberty=check
+      have_libdemangle=check
+      ;;
+   libiberty|iberty|liberty)
+      have_libiberty=check
+      enable_demangling=libiberty
+      ;;
+   libdemangle)
+      have_libdemangle=check
+      ;;
+esac
+
+demangle_header_paths=''
+
+if test "$have_libiberty" != no; then
+   AC_CHECK_LIB(
+      [iberty],
+      [cplus_demangle],
+      [demangle_header_paths="/usr/local/include/libiberty /usr/include/libiberty"],
+      [have_libiberty=no]
+   )
+fi
+if test "$have_libdemangle" != no; then
+   AC_CHECK_LIB([demangle], [cplus_demangle], [:], [have_libdemangle=no])
+fi
+
+if test "$have_libiberty$have_libdemangle" != nono; then
+   if htop_search_header_dir demangle.h "$demangle_header_paths"; then
+      AC_DEFINE([HAVE_DEMANGLE_H], 1, [Define to 1 if you have the <demangle.h> header file.])
+   else
+      have_libdemangle=no
+      if test "$have_libiberty" != no; then
+         AC_CHECK_HEADERS([libiberty/demangle.h], [], [have_libiberty=no])
+      fi
+   fi
+fi
+
+htop_save_CPPFLAGS=$CPPFLAGS
+htop_save_LIBS=$LIBS
+CPPFLAGS="$AM_CPPFLAGS -I$srcdir $CPPFLAGS"
+
+if test "$demangling_backend_found" = no && test "$have_libiberty" != no; then
+   LIBS="-liberty $htop_save_LIBS"
+
+   AC_MSG_CHECKING([whether libiberty cplus_demangle works])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[
+#include <stdlib.h>
+#include "generic/ProvideDemangle.h"
+/* char* cplus_demangle(const char* mangled, int options); */
+         ]], [[
+            char* demangled = cplus_demangle("", DMGL_AUTO);
+            free(demangled);
+         ]]
+      )], [
+         AC_MSG_RESULT([yes])
+         have_libiberty=yes
+         demangling_backend_found=yes
+         enable_demangling=libiberty
+         AC_DEFINE([HAVE_LIBIBERTY_CPLUS_DEMANGLE], [1], [Define to 1 if libiberty supports cplus_demangle function.])
+      ], [
+         AC_MSG_RESULT([no])
+         have_libiberty=no
+         LIBS=$htop_save_LIBS
+      ]
+   )
+fi
+
+if test "$demangling_backend_found" = no && test "$have_libdemangle" != no; then
+   LIBS="-ldemangle $htop_save_LIBS"
+
+   AC_MSG_CHECKING([whether libdemangle cplus_demangle works])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[
+#include "generic/ProvideDemangle.h"
+/* int cplus_demangle(const char* symbol, char* interpretation, size_t size); */
+         ]], [[
+            static char demangled[1];
+            int ret = cplus_demangle("", demangled, sizeof(demangled));
+            if (ret == DEMANGLE_ENAME) {
+               ret = 0;
+            }
+            return (ret <= 0 && ret > -126 ? ret : 1);
+         ]]
+      )], [
+         AC_MSG_RESULT([yes])
+         have_libdemangle=yes
+         demangling_backend_found=yes
+         enable_demangling=libdemangle
+         AC_DEFINE([HAVE_LIBDEMANGLE_CPLUS_DEMANGLE], [1], [Define to 1 if libdemangle supports cplus_demangle function.])
+      ], [
+         AC_MSG_RESULT([no])
+         have_libdemangle=no
+         LIBS=$htop_save_LIBS
+      ]
+   )
+fi
+
+CPPFLAGS=$htop_save_CPPFLAGS
+
+case $enable_demangling in
+   no|check)
+      enable_demangling=no
+      ;;
+   yes)
+      AC_MSG_ERROR([did not find any backend for --enable-demangling])
+      ;;
+   *)
+      if test "$demangling_backend_found" = no; then
+         AC_MSG_ERROR([backend '$enable_demangling' for --enable-demangling is not supported or not found])
+      fi
+      AC_DEFINE([HAVE_DEMANGLING], [1], [Define to 1 if the demangling is supported.])
+      ;;
+esac
+AM_CONDITIONAL([HAVE_DEMANGLING], [test "$have_demangling" != no])
+
+AC_ARG_ENABLE(
    [hwloc],
    [AS_HELP_STRING(
       [--enable-hwloc],
@@ -1740,6 +1873,7 @@ AC_MSG_RESULT([
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
   backtrace:                 $enable_backtrace
+  demangling:                $enable_demangling
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static
