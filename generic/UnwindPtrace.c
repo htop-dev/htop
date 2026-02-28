@@ -23,6 +23,10 @@ in the source distribution for its full text.
 #include <libunwind.h>
 #endif
 
+#ifdef HAVE_DEMANGLING
+#include "generic/Demangle.h"
+#endif
+
 
 #ifdef HAVE_LIBUNWIND_PTRACE
 static int ptraceAttach(pid_t pid) {
@@ -120,6 +124,11 @@ void UnwindPtrace_makeBacktrace(Vector* frames, pid_t pid, char** error) {
       if (unw_get_proc_name(&cursor, buffer, sizeof(buffer), &offset) == 0) {
          frame->offset = offset;
          frame->functionName = xStrndup(buffer, sizeof(buffer));
+
+# if defined(HAVE_DEMANGLING)
+         char* demangledName = Demangle_demangle(frame->functionName);
+         frame->demangleFunctionName = demangledName;
+# endif
       }
       Vector_add(frames, (Object *)frame);
       index++;
