@@ -48,7 +48,21 @@ static void CPUMeter_init(Meter* this) {
       Meter_setCaption(this, "Avg");
    } else if (host->activeCPUs > 1) {
       char caption[10];
-      xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
+      if (host->settings->showCPUSMTLabels) {
+         int coreID = Machine_getCPUPhysicalCoreID(host, cpu - 1);
+         int threadIndex = Machine_getCPUThreadIndex(host, cpu - 1);
+         char threadLetter = 'a' + (char)(threadIndex % 26);
+         // if we have more than 26 threads per core, then add the capital
+         // letters into the mix. If we have more than 52 threads per core, then
+         // some letters will still be repeated, but they'll be far apart from
+         // each other.
+         if ((threadIndex % 52) > 26) {
+             threadLetter -= ('a' - 'A');
+         }
+         xSnprintf(caption, sizeof(caption), "%2d%c", coreID, threadLetter);
+      } else {
+         xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
+      }
       Meter_setCaption(this, caption);
    }
 }

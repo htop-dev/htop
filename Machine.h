@@ -83,6 +83,10 @@ void Machine_done(Machine* this);
 
 bool Machine_isCPUonline(const Machine* this, unsigned int id);
 
+int Machine_getCPUPhysicalCoreID(const Machine* this, unsigned int id);
+
+int Machine_getCPUThreadIndex(const Machine* this, unsigned int id);
+
 void Machine_populateTablesFromSettings(Machine* this, Settings* settings, Table* processTable);
 
 void Machine_setTablesPanel(Machine* this, Panel* panel);
