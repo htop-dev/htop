@@ -821,3 +821,86 @@ fail:
 const char* Platform_getRelease(void) {
    return Generic_unameRelease(Platform_getOSRelease);
 }
+
+// GPU I/O registry dump: https://archive.org/download/ioreg-gpu/ioreg-gpu.log
+void Platform_setGPUProcesses(DarwinProcessTable* dpt) {
+   const Machine* host = dpt->super.super.host;
+   const DarwinMachine* dhost = (const DarwinMachine*) host;
+
+   if (!dhost->GPUService)
+      return;
+
+   io_iterator_t iterator;
+   if (IORegistryEntryGetChildIterator(dhost->GPUService, kIOServicePlane, &iterator) != KERN_SUCCESS)
+      return;
+
+   io_registry_entry_t entry;
+   while ((entry = IOIteratorNext(iterator))) {
+      io_struct_inband_t buffer;
+      uint32_t size = sizeof(buffer);
+      if (IORegistryEntryGetProperty(entry, "IOUserClientCreator", buffer, &size) != KERN_SUCCESS)
+         goto cleanup;
+
+      int pid;
+      if (sscanf(buffer, "pid %d", &pid) != 1)
+         goto cleanup;
+
+      uint64_t gpuTime = 0;
+      DarwinProcess* dp = (DarwinProcess*) ProcessTable_findProcess(&dpt->super, (pid_t) pid);
+      if (!dp)
+         goto cleanup;
+
+      if (IOObjectConformsTo(entry, "IOGPUDeviceUserClient")) {
+         CFArrayRef appUsage = IORegistryEntryCreateCFProperty(entry, CFSTR("AppUsage"), kCFAllocatorDefault, kNilOptions);
+         if (!appUsage)
+            goto cleanup;
+
+         assert(CFGetTypeID(appUsage) == CFArrayGetTypeID());
+
+         // Sum up the GPU time for all command queues for this client
+         size_t count = CFArrayGetCount(appUsage);
+         for (size_t i = 0; i < count; ++i) {
+            CFDictionaryRef appUsageEntry = CFArrayGetValueAtIndex(appUsage, i);
+            assert(CFGetTypeID(appUsageEntry) == CFDictionaryGetTypeID());
+
+            CFNumberRef accumulatedGPUTimeRef = CFDictionaryGetValue(appUsageEntry, CFSTR("accumulatedGPUTime"));
+            if (!accumulatedGPUTimeRef)
+               continue;
+
+            uint64_t accumulatedGPUTime = 0;
+            CFNumberGetValue(accumulatedGPUTimeRef, kCFNumberLongLongType, &accumulatedGPUTime);
+
+            gpuTime += accumulatedGPUTime;
+         }
+
+         CFRelease(appUsage);
+      } else if (IOObjectConformsTo(entry, "IOAccelSubmitter2")) {
+         CFNumberRef accumulatedGPUTimeRef = IORegistryEntryCreateCFProperty(entry, CFSTR("accumulatedGPUTime"), kCFAllocatorDefault, kNilOptions);
+         if (!accumulatedGPUTimeRef)
+            goto cleanup;
+
+         uint64_t accumulatedGPUTime = 0;
+         CFNumberGetValue(accumulatedGPUTimeRef, kCFNumberLongLongType, &accumulatedGPUTime);
+
+         gpuTime += accumulatedGPUTime;
+
+         CFRelease(accumulatedGPUTimeRef);
+      } else {
+         goto cleanup;
+      }
+
+      dp->gpu_time += gpuTime;
+
+      // Only calculate GPU percent if we have a previous sample, and the GPU time has increased
+      if (dp->gpu_time > dp->gpu_time_last && dp->gpu_time_last > 0) {
+         uint64_t gputimeDelta = saturatingSub(dp->gpu_time, dp->gpu_time_last);
+         uint64_t monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
+         dp->gpu_percent = 100.0F * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
+      }
+
+cleanup:
+      IOObjectRelease(entry);
+   }
+
+   IOObjectRelease(iterator);
+}
