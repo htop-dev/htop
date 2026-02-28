@@ -23,6 +23,7 @@ typedef struct BacktraceFrameData_ {
    size_t address;
    size_t offset;
    char* functionName;
+   char* objectPath;
    unsigned int index;
    bool isSignalFrame;
 } BacktraceFrameData;
@@ -30,6 +31,8 @@ typedef struct BacktraceFrameData_ {
 typedef struct BacktracePanelPrintingHelper_ {
    size_t maxAddrLen;
    size_t maxFrameNumLen;
+   size_t maxObjPathLen;
+   size_t maxObjNameLen;
 } BacktracePanelPrintingHelper;
 
 typedef struct BacktracePanel_ {
@@ -38,6 +41,7 @@ typedef struct BacktracePanel_ {
    Vector* processes;
    BacktracePanelPrintingHelper printingHelper;
    const Settings* settings;
+   int displayOptions;
 } BacktracePanel;
 
 typedef enum BacktracePanelRowType_ {
