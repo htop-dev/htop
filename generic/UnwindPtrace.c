@@ -110,6 +110,12 @@ void UnwindPtrace_makeBacktrace(Vector* frames, pid_t pid, char** error) {
 
       frame->isSignalFrame = unw_is_signal_frame(&cursor) > 0;
 
+# if defined(HAVE_LIBUNWIND_ELF_FILENAME)
+      unw_word_t offsetElfFileName;
+      if (unw_get_elf_filename(&cursor, buffer, sizeof(buffer), &offsetElfFileName) == 0)
+         frame->objectPath = xStrndup(buffer, sizeof(buffer));
+# endif
+
       unw_word_t offset;
       if (unw_get_proc_name(&cursor, buffer, sizeof(buffer), &offset) == 0) {
          frame->offset = offset;

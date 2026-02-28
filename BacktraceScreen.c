@@ -34,27 +34,35 @@ in the source distribution for its full text.
 #if defined(HAVE_BACKTRACE_SCREEN)
 
 static const char* const BacktraceScreenFunctions[] = {
+   "Full Path",
    "Refresh",
    "Done   ",
    NULL
 };
 
 static const char* const BacktraceScreenKeys[] = {
+   "F3",
    "F5",
    "Esc",
    NULL
 };
 
 static const int BacktraceScreenEvents[] = {
+   KEY_F(3),
    KEY_F(5),
    27,
 };
+
+typedef enum BacktraceScreenDisplayOptions_ {
+   SHOW_FULL_PATH_OBJECT = 1 << 0,
+} BacktraceScreenDisplayOptions;
 
 BacktraceFrameData* BacktraceFrameData_new(void) {
    BacktraceFrameData* this = AllocThis(BacktraceFrameData);
    this->address = 0;
    this->offset = 0;
    this->functionName = NULL;
+   this->objectPath = NULL;
    this->index = 0;
    this->isSignalFrame = false;
    return this;
@@ -63,11 +71,16 @@ BacktraceFrameData* BacktraceFrameData_new(void) {
 void BacktraceFrameData_delete(Object* object) {
    BacktraceFrameData* this = (BacktraceFrameData*)object;
    free(this->functionName);
+   free(this->objectPath);
    free(this);
 }
 
 static void BacktracePanel_displayHeader(BacktracePanel* this) {
    const BacktracePanelPrintingHelper* printingHelper = &this->printingHelper;
+   const int displayOptions = this->displayOptions;
+
+   bool showFullPathObject = !!(displayOptions & SHOW_FULL_PATH_OBJECT);
+   size_t maxObjLen = showFullPathObject ? printingHelper->maxObjPathLen : printingHelper->maxObjNameLen;
 
    /*
     * The parameters for printf are of type int.
@@ -75,16 +88,23 @@ static void BacktracePanel_displayHeader(BacktracePanel* this) {
     */
    assert(printingHelper->maxFrameNumLen <= INT_MAX);
    assert(printingHelper->maxAddrLen <= INT_MAX - strlen("0x"));
+   assert(maxObjLen <= INT_MAX);
 
    char* line = NULL;
-   xAsprintf(&line, "%*s %-*s %s",
+   xAsprintf(&line, "%*s %-*s %-*s %s",
       (int)printingHelper->maxFrameNumLen, "#",
       (int)(printingHelper->maxAddrLen + strlen("0x")), "ADDRESS",
+      (int)maxObjLen, "FILE",
       "NAME"
    );
 
    Panel_setHeader((Panel*)this, line);
    free(line);
+}
+
+static const char* getBasename(const char* path) {
+   char *lastSlash = strrchr(path, '/');
+   return lastSlash ? lastSlash + 1 : path;
 }
 
 static void BacktracePanel_makePrintingHelper(const BacktracePanel* this, BacktracePanelPrintingHelper* printingHelper) {
@@ -96,6 +116,15 @@ static void BacktracePanel_makePrintingHelper(const BacktracePanel* this, Backtr
       const BacktracePanelRow* row = (const BacktracePanelRow*)Vector_get(lines, i);
       if (row->type != BACKTRACE_PANEL_ROW_DATA_FRAME) {
          continue;
+      }
+
+      if (row->data.frame->objectPath) {
+         const char* objectName = getBasename(row->data.frame->objectPath);
+         size_t objectNameLength = strlen(objectName);
+         size_t objectPathLength = (size_t)(objectName - row->data.frame->objectPath) + objectNameLength;
+
+         printingHelper->maxObjNameLen = MAXIMUM(objectNameLength, printingHelper->maxObjNameLen);
+         printingHelper->maxObjPathLen = MAXIMUM(objectPathLength, printingHelper->maxObjPathLen);
       }
 
       maxFrameNum = MAXIMUM(row->data.frame->index, maxFrameNum);
@@ -159,10 +188,22 @@ static void BacktracePanel_populateFrames(BacktracePanel* this) {
 
 static HandlerResult BacktracePanel_eventHandler(Panel* super, int ch) {
    BacktracePanel* this = (BacktracePanel*)super;
+   int* const displayOptions = &this->displayOptions;
 
    HandlerResult result = IGNORED;
 
    switch (ch) {
+   case 'p':
+   case KEY_F(3):
+      *displayOptions ^= SHOW_FULL_PATH_OBJECT;
+
+      bool showFullPathObject = !!(*displayOptions & SHOW_FULL_PATH_OBJECT);
+      FunctionBar_setLabel(super->defaultBar, KEY_F(3), showFullPathObject ? "Basename " : "Full Path");
+
+      this->super.needsRedraw = true;
+      BacktracePanel_displayHeader(this);
+      break;
+
    case KEY_CTRL('L'):
    case KEY_F(5):
       Panel_prune(super);
@@ -179,13 +220,21 @@ BacktracePanel* BacktracePanel_new(Vector* processes, const Settings* settings) 
 
    this->printingHelper.maxAddrLen = strlen("ADDRESS") - strlen("0x");
    this->printingHelper.maxFrameNumLen = strlen("#");
+   this->printingHelper.maxObjNameLen = strlen("FILE");
+   this->printingHelper.maxObjPathLen = strlen("FILE");
 
    this->settings = settings;
+   this->displayOptions =
+      (settings->showProgramPath ? SHOW_FULL_PATH_OBJECT : 0) |
+      0;
 
    Panel* super = (Panel*) this;
    Panel_init(super, 1, 1, 0, 1, Class(BacktracePanelRow), true,
       FunctionBar_new(BacktraceScreenFunctions, BacktraceScreenKeys, BacktraceScreenEvents)
    );
+
+   bool showFullPathObject = !!(this->displayOptions & SHOW_FULL_PATH_OBJECT);
+   FunctionBar_setLabel(super->defaultBar, KEY_F(3), showFullPathObject ? "Basename " : "Full Path");
 
    BacktracePanel_populateFrames(this);
 
@@ -196,6 +245,31 @@ void BacktracePanel_delete(Object* object) {
    BacktracePanel* this = (BacktracePanel*)object;
    Vector_delete(this->processes);
    Panel_delete(object);
+}
+
+static void BacktracePanelRow_highlightBasename(const BacktracePanelRow* row, RichString* out, char* line, int objectPathStart) {
+   assert(row);
+   assert(row->type == BACKTRACE_PANEL_ROW_DATA_FRAME);
+   assert(objectPathStart >= 0);
+
+   const Process* process = row->process;
+
+   char* procExe = process->procExe ? process->procExe + process->procExeBasenameOffset : NULL;
+   if (!procExe)
+      return;
+
+   size_t endBasenameIndex = objectPathStart;
+   size_t lastSlashBasenameIndex = objectPathStart;
+   for (; line[endBasenameIndex] != 0 && line[endBasenameIndex] != ' '; endBasenameIndex++) {
+      if (line[endBasenameIndex] == '/') {
+         lastSlashBasenameIndex = endBasenameIndex + 1;
+      }
+   }
+
+   size_t sizeBasename = endBasenameIndex - lastSlashBasenameIndex;
+   if (strncmp(line + lastSlashBasenameIndex, procExe, sizeBasename) == 0) {
+      RichString_setAttrn(out, CRT_colors[PROCESS_BASENAME], lastSlashBasenameIndex, sizeBasename);
+   }
 }
 
 static void BacktracePanelRow_displayInformation(const Object* super, RichString* out) {
@@ -253,6 +327,7 @@ static void BacktracePanelRow_displayFrame(const Object* super, RichString* out)
 
    const BacktracePanel* panel = row->panel;
    const BacktracePanelPrintingHelper* printingHelper = &panel->printingHelper;
+   const int displayOptions = panel->displayOptions;
 
    const BacktraceFrameData* frame = row->data.frame;
 
@@ -261,8 +336,17 @@ static void BacktracePanelRow_displayFrame(const Object* super, RichString* out)
    char* completeFunctionName = NULL;
    xAsprintf(&completeFunctionName, "%s+0x%zx", functionName, frame->offset);
 
+   size_t objectLength = printingHelper->maxObjPathLen;
+   const char* objectDisplayed = frame->objectPath;
+   if (!(displayOptions & SHOW_FULL_PATH_OBJECT)) {
+      objectLength = printingHelper->maxObjNameLen;
+      if (frame->objectPath)
+         objectDisplayed = getBasename(frame->objectPath);
+   }
+
    size_t maxAddrLen = printingHelper->maxAddrLen;
    char* line = NULL;
+   int objectPathStart = -1;
 
    /*
     * The parameters for printf are of type int.
@@ -270,16 +354,22 @@ static void BacktracePanelRow_displayFrame(const Object* super, RichString* out)
     */
    assert(printingHelper->maxFrameNumLen <= INT_MAX);
    assert(maxAddrLen <= INT_MAX);
+   assert(objectLength <= INT_MAX);
 
-   int len = xAsprintf(&line, "%*u 0x%0*zx %s",
+   int len = xAsprintf(&line, "%*u 0x%0*zx %n%-*s %s",
       (int)printingHelper->maxFrameNumLen, frame->index,
       (int)maxAddrLen, frame->address,
+      &objectPathStart,
+      (int)objectLength, objectDisplayed ? objectDisplayed : "-",
       completeFunctionName
    );
 
    int colors = frame->functionName ? CRT_colors[DEFAULT_COLOR] : CRT_colors[PROCESS_SHADOW];
 
    RichString_appendnAscii(out, colors, line, len);
+
+   if (panel->settings->highlightBaseName)
+      BacktracePanelRow_highlightBasename(row, out, line, objectPathStart);
 
    free(completeFunctionName);
    free(line);
