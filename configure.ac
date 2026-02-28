@@ -985,47 +985,127 @@ $3
 } # htop_search_header_dir
 
 AC_ARG_ENABLE(
-   [unwind],
+   [backtrace],
    [AS_HELP_STRING(
-      [--enable-unwind],
-      [enable unwind support for printing backtraces; requires libunwind @<:@default=check@:>@]
+      [--enable-backtrace=BACKEND],
+      [enable showing backtraces of a processes; available backends: unwind-ptrace @<:@default=no@:>@]
    )],
    [],
-   [enable_unwind=check]
+   [enable_backtrace=no]
 )
-case "$enable_unwind" in
+
+backtrace_backend_found=no
+have_libunwind_ptrace=no
+case $enable_backtrace in
+   check|yes)
+      have_libunwind_ptrace=check
+      ;;
+   unwind-ptrace|libunwind-ptrace)
+      have_libunwind_ptrace=check
+      enable_backtrace=unwind-ptrace
+      ;;
+esac
+
+AC_ARG_WITH(
+   [libunwind],
+   [AS_HELP_STRING(
+      [--with-libunwind],
+      [use libunwind for printing local backtrace @<:@default=check@:>@]
+   )],
+   [],
+   [
+      with_libunwind=${enable_unwind-'check'}
+      if test "x${enable_unwind+y}" = xy; then
+         AC_MSG_WARN([--enable-unwind is deprecated; use --with-libunwind instead])
+      fi
+   ]
+)
+
+default_libunwind_libs='-lunwind'
+case $with_libunwind in
    no)
       ;;
    check|yes)
-      HTOP_PKG_CHECK_MODULES(LIBUNWIND, libunwind,
-         [],
-         [
-            if test "$enable_static" = yes; then
-               AC_CHECK_LIB([lzma], [lzma_index_buffer_decode])
-            fi
-            : "${LIBUNWIND_LIBS='-lunwind'}"
-         ]
-      )
+      libunwind_ptrace_name=''
+      if test "$have_libunwind_ptrace" != no; then
+         libunwind_ptrace_name='libunwind-ptrace '
+      fi
+
+      while :; do
+         HTOP_PKG_CHECK_MODULES(
+            [LIBUNWIND],
+            [${libunwind_ptrace_name}libunwind],
+            [
+               if test "$have_libunwind_ptrace" != no; then
+                  enable_backtrace=unwind-ptrace
+               fi
+               break
+            ], [
+               test "x$libunwind_ptrace_name" != x || break
+               libunwind_ptrace_name=''
+            ]
+         )
+      done
+
+      if test "x${LIBUNWIND_LIBS+y}" = x; then
+         if test "$enable_static" = yes; then
+            AC_CHECK_LIB(
+               [lzma],
+               [lzma_index_buffer_decode],
+               [default_libunwind_libs='-lunwind -llzma']
+            )
+         fi
+
+         if test "$have_libunwind_ptrace" != no; then
+            AC_CHECK_LIB(
+               [unwind-ptrace],
+               [_UPT_create],
+               [:],
+               [have_libunwind_ptrace=no],
+               [-lunwind-generic $default_libunwind_libs]
+            )
+         fi
+      fi
 
       htop_save_CFLAGS=$CFLAGS
       CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
 
+      # Debian installs LLVM libunwind headers in the non-standard
+      # "/usr/include/libunwind" directory.
+      # (Package name: "libunwind-${llvm_version}-dev")
+      # libunwind (HP) headers can be found in the default include
+      # directories in Debian. (Package name: "libunwind-dev")
       if htop_search_header_dir libunwind.h "/usr/include/libunwind"; then
          AC_DEFINE([HAVE_LIBUNWIND_H], 1, [Define to 1 if you have the <libunwind.h> header file.])
-      elif test "$enable_unwind" = yes; then
+         if test "$have_libunwind_ptrace" != no; then
+            AC_CHECK_HEADER(
+               [libunwind-ptrace.h],
+               [:],
+               [have_libunwind_ptrace=no]
+            )
+         fi
+      elif test "$with_libunwind" = yes; then
          AC_MSG_ERROR([cannot find required header file libunwind.h])
       else
-         enable_unwind=no
+         with_libunwind=no
+         have_libunwind_ptrace=no
       fi
 
       CFLAGS=$htop_save_CFLAGS
       ;;
    *)
-      AC_MSG_ERROR([bad value '$enable_unwind' for --enable-unwind])
+      AC_MSG_ERROR([bad value '$with_libunwind' for --with-libunwind])
       ;;
 esac
 
-if test "$enable_unwind" != no; then
+if test "$with_libunwind" != no; then
+   if test "x${LIBUNWIND_LIBS+y}" = x; then
+      if test "$have_libunwind_ptrace" != no; then
+         default_libunwind_libs="-lunwind-ptrace -lunwind-generic $default_libunwind_libs"
+      fi
+      LIBUNWIND_LIBS=$default_libunwind_libs
+   fi
+
    htop_save_CPPFLAGS=$CPPFLAGS
    htop_save_CFLAGS=$CFLAGS
    htop_save_LIBS=$LIBS
@@ -1033,8 +1113,10 @@ if test "$enable_unwind" != no; then
    CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS $CFLAGS"
    LIBS="$LIBUNWIND_LIBS $LIBS"
 
-   # unw_init_local() is a macro in HP's implementation of libunwind
-   # (the most popular one, Mosberger et al.)
+   # Almost all unw_*() functions are defined as macros in HP
+   # implementation of libunwind (Mosberger et al.).
+   # Define UNW_LOCAL_ONLY to avoid unnecessary dependency on
+   # "-lunwind-generic" when linking.
    AC_MSG_CHECKING([whether $LIBUNWIND_LIBS supports local unwinding])
    AC_LINK_IFELSE(
       [AC_LANG_PROGRAM(
@@ -1075,34 +1157,72 @@ if test "$enable_unwind" != no; then
          fi
          if test "$libunwind_local_support" = no; then
             AC_MSG_RESULT([no])
-            if test "$enable_unwind" = yes; then
+            if test "$with_libunwind" = yes; then
                AC_MSG_WARN([this build of libunwind might not support local unwinding])
             else
-               LIBS=$htop_save_LIBS
-               enable_unwind=no
+               with_libunwind=no
+               have_libunwind_ptrace=no
             fi
          fi
       ],
       [
          AC_MSG_RESULT([no])
-         if test "$enable_unwind" = yes; then
+         if test "$with_libunwind" = yes; then
             AC_MSG_FAILURE([cannot link with libunwind])
-         else
-            LIBS=$htop_save_LIBS
-            enable_unwind=no
          fi
+         with_libunwind=no
+         have_libunwind_ptrace=no
       ]
    )
 
+   AC_MSG_CHECKING([for unw_get_elf_filename in $LIBUNWIND_LIBS])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+         ]], [[
+            static unw_cursor_t cursor;
+            /* Requires libunwind (HP implementation) 1.8 or later.
+               First argument must be non-null. */
+            unw_get_elf_filename(&cursor, (char*)0, (size_t)0, (unw_word_t*)0);
+         ]]
+      )], [
+         AC_DEFINE([HAVE_LIBUNWIND_ELF_FILENAME], [1], [Define if libunwind has unw_get_elf_filename])
+         AC_MSG_RESULT(yes)
+      ], [
+         AC_MSG_RESULT(no)
+         AC_MSG_WARN([showing filenames in backtrace screen requires libunwind 1.8 or later])
+      ]
+   )
+
+   if test "$have_libunwind_ptrace" != no && test "x$ac_cv_lib_unwind_ptrace__UPT_create" != xyes; then
+      dnl Expect LIBS to contain "-lunwind-ptrace" at this point.
+      dnl Therefore call AC_CHECK_FUNC and not AC_CHECK_LIB.
+      AC_CHECK_FUNC([_UPT_create], [], [have_libunwind_ptrace=no])
+   fi
+
    CPPFLAGS=$htop_save_CPPFLAGS
    CFLAGS=$htop_save_CFLAGS
+   LIBS=$htop_save_LIBS
 fi
 
-if test "$enable_unwind" != no; then
+if test "$with_libunwind" != no; then
    AM_CFLAGS="$AM_CFLAGS $LIBUNWIND_CFLAGS"
-   enable_unwind=yes
+   LIBS="$LIBUNWIND_LIBS $LIBS"
+   with_libunwind=yes
    AC_DEFINE([HAVE_LOCAL_UNWIND], 1, [Define to 1 if local unwinding is enabled.])
+   if test "$have_libunwind_ptrace" != no; then
+      have_libunwind_ptrace=yes
+      backtrace_backend_found=yes
+      enable_backtrace=unwind-ptrace
+      AC_DEFINE([HAVE_LIBUNWIND_PTRACE], 1, [Define to 1 if libunwind-ptrace is present])
+   fi
 else
+   if test "x$enable_backtrace" = xunwind-ptrace; then
+      AC_MSG_ERROR([requires --with-libunwind for --enable-backtrace=unwind-ptrace])
+   fi
+
    # Fall back to backtrace(3) and add -lexecinfo if needed
    AC_SEARCH_LIBS([backtrace], [execinfo])
 
@@ -1168,6 +1288,154 @@ char** (*fn)(void* const*, BACKTRACE_RETURN_TYPE) = backtrace_symbols;
    )
 fi
 
+case $enable_backtrace in
+   no|check)
+      enable_backtrace=no
+      ;;
+   yes)
+      AC_MSG_ERROR([did not find any backend for --enable-backtrace])
+      ;;
+   *)
+      if test "$backtrace_backend_found" = no; then
+         AC_MSG_ERROR([backend '$enable_backtrace' for --enable-backtrace is not supported or not found])
+      fi
+      AC_DEFINE([HAVE_BACKTRACE_SCREEN], [1], [Define if the backtrace feature is enabled])
+      ;;
+esac
+AM_CONDITIONAL([HAVE_BACKTRACE_SCREEN], [test "$enable_backtrace" != no])
+
+AC_ARG_ENABLE(
+   [demangling],
+   [AS_HELP_STRING(
+      [--enable-demangling=BACKEND],
+      [enable demangling support for backtraces; available backends: libiberty libdemangle @<:@default=check@:>@]
+   )],
+   [],
+   [enable_demangling=check]
+)
+
+demangling_backend_found=no
+have_libiberty=no
+have_libdemangle=no
+case $enable_demangling in
+   check|yes)
+      have_libiberty=check
+      have_libdemangle=check
+      ;;
+   libiberty|iberty|liberty)
+      have_libiberty=check
+      enable_demangling=libiberty
+      ;;
+   libdemangle)
+      have_libdemangle=check
+      ;;
+esac
+
+demangle_header_paths=''
+
+if test "$have_libiberty" != no; then
+   AC_CHECK_LIB(
+      [iberty],
+      [cplus_demangle],
+      [demangle_header_paths="/usr/local/include/libiberty /usr/include/libiberty"],
+      [have_libiberty=no]
+   )
+fi
+if test "$have_libdemangle" != no; then
+   AC_CHECK_LIB([demangle], [cplus_demangle], [:], [have_libdemangle=no])
+fi
+
+if test "$have_libiberty$have_libdemangle" != nono; then
+   if htop_search_header_dir demangle.h "$demangle_header_paths"; then
+      AC_DEFINE([HAVE_DEMANGLE_H], 1, [Define to 1 if you have the <demangle.h> header file.])
+   else
+      have_libdemangle=no
+      if test "$have_libiberty" != no; then
+         AC_CHECK_HEADERS([libiberty/demangle.h], [], [have_libiberty=no])
+      fi
+   fi
+fi
+
+htop_save_CPPFLAGS=$CPPFLAGS
+htop_save_LIBS=$LIBS
+CPPFLAGS="$AM_CPPFLAGS -I$srcdir $CPPFLAGS"
+
+if test "$demangling_backend_found" = no && test "$have_libiberty" != no; then
+   LIBS="-liberty $htop_save_LIBS"
+
+   AC_MSG_CHECKING([whether libiberty cplus_demangle works])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[
+#include <stdlib.h>
+#include "generic/ProvideDemangle.h"
+/* char* cplus_demangle(const char* mangled, int options); */
+         ]], [[
+            char* demangled = cplus_demangle("", DMGL_AUTO);
+            free(demangled);
+         ]]
+      )], [
+         AC_MSG_RESULT([yes])
+         have_libiberty=yes
+         demangling_backend_found=yes
+         enable_demangling=libiberty
+         AC_DEFINE([HAVE_LIBIBERTY_CPLUS_DEMANGLE], [1], [Define to 1 if libiberty supports cplus_demangle function.])
+      ], [
+         AC_MSG_RESULT([no])
+         have_libiberty=no
+         LIBS=$htop_save_LIBS
+      ]
+   )
+fi
+
+if test "$demangling_backend_found" = no && test "$have_libdemangle" != no; then
+   LIBS="-ldemangle $htop_save_LIBS"
+
+   AC_MSG_CHECKING([whether libdemangle cplus_demangle works])
+   AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[
+#include "generic/ProvideDemangle.h"
+/* int cplus_demangle(const char* symbol, char* interpretation, size_t size); */
+         ]], [[
+            static char demangled[1];
+            int ret = cplus_demangle("", demangled, sizeof(demangled));
+            if (ret == DEMANGLE_ENAME) {
+               ret = 0;
+            }
+            return (ret <= 0 && ret > -126 ? ret : 1);
+         ]]
+      )], [
+         AC_MSG_RESULT([yes])
+         have_libdemangle=yes
+         demangling_backend_found=yes
+         enable_demangling=libdemangle
+         AC_DEFINE([HAVE_LIBDEMANGLE_CPLUS_DEMANGLE], [1], [Define to 1 if libdemangle supports cplus_demangle function.])
+      ], [
+         AC_MSG_RESULT([no])
+         have_libdemangle=no
+         LIBS=$htop_save_LIBS
+      ]
+   )
+fi
+
+CPPFLAGS=$htop_save_CPPFLAGS
+
+case $enable_demangling in
+   no|check)
+      enable_demangling=no
+      ;;
+   yes)
+      AC_MSG_ERROR([did not find any backend for --enable-demangling])
+      ;;
+   *)
+      if test "$demangling_backend_found" = no; then
+         AC_MSG_ERROR([backend '$enable_demangling' for --enable-demangling is not supported or not found])
+      fi
+      AC_DEFINE([HAVE_DEMANGLING], [1], [Define to 1 if the demangling is supported.])
+      ;;
+esac
+AM_CONDITIONAL([HAVE_DEMANGLING], [test "$have_demangling" != no])
 
 AC_ARG_ENABLE(
    [hwloc],
@@ -1604,7 +1872,8 @@ AC_MSG_RESULT([
   (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
-  unwind:                    $enable_unwind
+  backtrace:                 $enable_backtrace
+  demangling:                $enable_demangling
   hwloc:                     $enable_hwloc
   debug:                     $enable_debug
   static:                    $enable_static

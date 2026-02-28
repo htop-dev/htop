@@ -115,6 +115,17 @@ To install on the local system run `make install`. By default `make install` ins
     enable hwloc support for CPU affinity; disables affinity support
     - dependency: *libhwloc*
     - default: *no*
+  * `--enable-backtrace`:
+    enable showing backtraces of a process
+    - default: *no*
+    - possible values:
+      - unwind-ptrace: use **libunwind-ptrace** to get backtraces
+  * `--enable-demangling`:
+    enable demangling support for backtraces
+    - default: *check*
+    - possible values:
+      - libiberty: use **libiberty** (GNU) to demangle function names
+      - libdemangle: use **libdemangle** (Solaris) to demangle function names
   * `--enable-static`:
     build a static htop binary; hwloc and delay accounting are not supported
     - default: *no*
