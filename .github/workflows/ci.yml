@@ -60,15 +60,15 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace'
 
   build-ubuntu-latest-full-featured-clang:
     runs-on: ubuntu-latest
@@ -83,15 +83,15 @@ jobs:
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-22 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-22 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Distcheck
-      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities'
+      run: make distcheck DISTCHECK_CONFIGURE_FLAGS='--enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace'
 
   build-ubuntu-latest-gcc-static:
     runs-on: ubuntu-latest
@@ -153,11 +153,11 @@ jobs:
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
         sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-22 clang-tools-22 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends clang-22 clang-tools-22 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: scan-build-22 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: scan-build-22 -analyze-headers --status-bugs ./configure --enable-debug --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace || ( cat config.log; exit 1; )
     - name: Build
       run: scan-build-22 -analyze-headers --status-bugs make -j"$(nproc)"
 
@@ -182,11 +182,11 @@ jobs:
     - name: Install LLVM Toolchain
       run: sudo apt-get install --no-install-recommends clang-22 libclang-rt-22-dev llvm-22
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev
+      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities || ( cat config.log; exit 1; )
+      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities --enable-backtrace || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
     - name: Run sanitized htop (1)
@@ -273,12 +273,12 @@ jobs:
             release: '15.0'
             usesh: true
             prepare: |
-              pkg install -y gmake autoconf automake pkgconf git
+              pkg install -y gmake autoconf automake pkgconf git libunwind
               git config --global --add safe.directory /home/runner/work/htop/htop
             run: |
               set -e
               ./autogen.sh
-              ./configure --enable-unicode --enable-werror
+              ./configure --enable-unicode --enable-werror --enable-backtrace
               gmake -k
 
   build-netbsd-latest-gcc:
