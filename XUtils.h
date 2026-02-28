@@ -15,13 +15,25 @@ in the source distribution for its full text.
 #endif
 
 #include <dirent.h>
+#include <limits.h> // IWYU pragma: keep
 #include <stdbool.h>
 #include <stddef.h> // IWYU pragma: keep
+#include <stdint.h> // IWYU pragma: keep
 #include <stdio.h>
 #include <stdlib.h> // IWYU pragma: keep
 #include <string.h> // IWYU pragma: keep
 
 #include "Macros.h"
+
+#ifdef HAVE_STDBIT_H
+#include <stdbit.h>
+#endif
+
+#if defined(HAVE_ARM_NEON_H) && defined(__ARM_NEON)
+// ARM C Language Extensions (ACLE) recommends us to check __ARM_NEON before
+// including <arm_neon.h>
+#include <arm_neon.h>
+#endif
 
 
 ATTR_NORETURN
@@ -152,6 +164,46 @@ static inline unsigned int countTrailingZeros(unsigned int x) {
 #else
 unsigned int countTrailingZeros(unsigned int x);
 #endif
+
+/* Returns the nearest power of two that is not greater than x.
+   If x is 0, returns 0. */
+#if defined(HAVE_BUILTIN_CLZ)
+static inline unsigned int powerOf2Floor(unsigned int x) {
+   return !x ? 0 : 1U << ((int)sizeof(x) * CHAR_BIT - 1 - __builtin_clz(x));
+}
+#elif defined(HAVE_STDC_BIT_FLOOR)
+static inline unsigned int powerOf2Floor(unsigned int x) {
+   return stdc_bit_floor_ui(x);
+}
+#else
+unsigned int powerOf2Floor(unsigned int x);
+#endif
+
+static inline unsigned int popCount8(uint8_t x) {
+#if defined(HAVE_ARM_NEON_H) && defined(__ARM_NEON)
+   // This is the smallest code possible for 8-bit bit count using ARM NEON.
+   // Might be smaller than __builtin_popcount.
+   //
+   // Initialize the vector register. Set all lanes at once so that the
+   // compiler will not emit instruction to zero-initialize other lanes.
+   uint8x8_t v = vdup_n_u8(x);
+   // Count the number of set bits for each lane (8-bit) in the vector.
+   v = vcnt_u8(v);
+   // Get lane 0 and discard lanes 1 to 7. (Return type was uint8_t)
+   return vget_lane_u8(v, 0);
+#elif defined(HAVE_BUILTIN_POPCOUNT) && defined(__POPCNT__)
+   // x86 POPCNT instruction. __builtin_popcount translates to it when it is
+   // enabled ("-mpopcnt"). (Return type was int)
+   return (unsigned int)__builtin_popcount(x);
+#else
+   // This code is optimized for uint8_t input and 32- or 64-bit processors.
+   // Might be smaller than __builtin_popcount (which is tuned for unsigned int
+   // input type and not uint8_t).
+   uint32_t n = (uint32_t)(x * 0x08040201ULL);
+   n = (uint32_t)(((n >> 3) & 0x11111111U) * 0x11111111ULL) >> 28;
+   return n;
+#endif
+}
 
 /* IEC unit prefixes */
 static const char unitPrefixes[] = { 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q' };
