@@ -256,18 +256,16 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
    number = hundredths / 100;
    hundredths %= 100;
    if (number < 100) {
+      len = xSnprintf(buffer, sizeof(buffer), "%u", (unsigned int)number);
+      RichString_appendnAscii(str, color, buffer, len);
       if (number < 10) {
          // 1 digit + decimal point + 2 digits
          // "9.76G", "9.99G", "9.76T", "9.99T", etc.
-         len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number);
-         RichString_appendnAscii(str, color, buffer, len);
          len = xSnprintf(buffer, sizeof(buffer), ".%02u", (unsigned int)hundredths);
       } else {
          // 2 digits + decimal point + 1 digit
          // "97.6M", "99.9M", "10.0G", "99.9G", etc.
-         len = xSnprintf(buffer, sizeof(buffer), "%2u", (unsigned int)number);
-         RichString_appendnAscii(str, color, buffer, len);
-         len = xSnprintf(buffer, sizeof(buffer), ".%1u", (unsigned int)hundredths / 10);
+         len = xSnprintf(buffer, sizeof(buffer), ".%u", (unsigned int)hundredths / 10);
       }
       RichString_appendnAscii(str, prevUnitColor, buffer, len);
       len = xSnprintf(buffer, sizeof(buffer), "%c ", unitPrefixes[i]);
@@ -280,7 +278,7 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
       // "1000M", "9999M", "1000G", "9999G", etc.
       assert(number < 10000);
 
-      len = xSnprintf(buffer, sizeof(buffer), "%1u", (unsigned int)number / 1000);
+      len = xSnprintf(buffer, sizeof(buffer), "%u", (unsigned int)number / 1000);
       RichString_appendnAscii(str, nextUnitColor, buffer, len);
       len = xSnprintf(buffer, sizeof(buffer), "%03u%c ", (unsigned int)number % 1000, unitPrefixes[i]);
    }
@@ -371,7 +369,7 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
    unsigned long long totalDays = totalHours / 24;
    unsigned int hours = totalHours % 24;
    if (totalDays < 10) {
-      len = xSnprintf(buffer, sizeof(buffer), "%1ud", (unsigned int)totalDays);
+      len = xSnprintf(buffer, sizeof(buffer), "%ud", (unsigned int)totalDays);
       RichString_appendnAscii(str, dayColor, buffer, len);
       len = xSnprintf(buffer, sizeof(buffer), "%02uh", hours);
       RichString_appendnAscii(str, hourColor, buffer, len);
@@ -420,23 +418,30 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
       return;
    }
 
-   unsigned long long totalMicroseconds = totalNanoseconds / 1000;
-   if (totalMicroseconds < 1000000) {
-      len = xSnprintf(buffer, sizeof(buffer), ".%06lus ", (unsigned long)totalMicroseconds);
+   if (totalNanoseconds < 10000000) {
+      // The precision is 0.1 microseconds here.
+      // We print the unit in "ms" rather than microseconds in order
+      // to save the code of choosing the Greek "mu" or Latin "u".
+      uint32_t fraction = (uint32_t)totalNanoseconds / 100;
+      unsigned int milliseconds = (unsigned int)(fraction / 10000);
+      fraction %= 10000;
+      len = xSnprintf(buffer, sizeof(buffer), "%u.%04ums ", milliseconds, (unsigned int)fraction);
       RichString_appendnAscii(str, baseColor, buffer, len);
       return;
    }
 
+   unsigned long long totalMicroseconds = totalNanoseconds / 1000;
    unsigned long long totalSeconds = totalMicroseconds / 1000000;
    uint32_t microseconds = totalMicroseconds % 1000000;
    if (totalSeconds < 60) {
-      int width = 5;
-      uint32_t fraction = microseconds / 10;
-      if (totalSeconds >= 10) {
+      int width = 6;
+      uint32_t fraction = microseconds;
+      for (unsigned long long limit = 1; totalSeconds >= limit; limit *= 10) {
          width--;
          fraction /= 10;
       }
-      len = xSnprintf(buffer, sizeof(buffer), "%u.%0*lus ", (unsigned int)totalSeconds, width, (unsigned long)fraction);
+      // "%.u" prints no digits if (totalSeconds == 0).
+      len = xSnprintf(buffer, sizeof(buffer), "%.u.%0*lus ", (unsigned int)totalSeconds, width, (unsigned long)fraction);
       RichString_appendnAscii(str, baseColor, buffer, len);
       return;
    }
