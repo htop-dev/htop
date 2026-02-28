@@ -82,9 +82,9 @@ typedef bool (*Row_IsHighlighted)(const Row*);
 typedef bool (*Row_IsVisible)(const Row*, const struct Table_*);
 typedef bool (*Row_MatchesFilter)(const Row*, const struct Table_*);
 typedef const char* (*Row_SortKeyString)(Row*);
-typedef int (*Row_CompareByParent)(const Row*, const Row*);
+typedef int (*Row_CompareByParent)(const Row*, const Row*, void*);
 
-int Row_compare(const void* v1, const void* v2);
+int Row_compare(const void* v1, const void* v2, void* context);
 
 typedef struct RowClass_ {
    const ObjectClass super;
@@ -102,7 +102,7 @@ typedef struct RowClass_ {
 #define Row_isVisible(r_, t_)  (As_Row(r_)->isVisible ? (As_Row(r_)->isVisible(r_, t_)) : true)
 #define Row_matchesFilter(r_, t_)  (As_Row(r_)->matchesFilter ? (As_Row(r_)->matchesFilter(r_, t_)) : false)
 #define Row_sortKeyString(r_)  (As_Row(r_)->sortKeyString ? (As_Row(r_)->sortKeyString(r_)) : "")
-#define Row_compareByParent(r1_, r2_)  (As_Row(r1_)->compareByParent ? (As_Row(r1_)->compareByParent(r1_, r2_)) : Row_compareByParent_Base(r1_, r2_))
+#define Row_compareByParent(r1_, r2_, ctx_)  (As_Row(r1_)->compareByParent ? (As_Row(r1_)->compareByParent(r1_, r2_, ctx_)) : Row_compareByParent_Base(r1_, r2_, ctx_))
 
 #define ONE_K 1024UL
 #define ONE_M (ONE_K * ONE_K)
@@ -162,7 +162,8 @@ void Row_printRate(RichString* str, double rate, bool coloring);
 
 int Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr);
 
-static inline int Row_idEqualCompare(const void* v1, const void* v2) {
+static inline int Row_idEqualCompare(const void* v1, const void* v2, void* context) {
+   (void)context;
    const int p1 = ((const Row*)v1)->id;
    const int p2 = ((const Row*)v2)->id;
    return p1 != p2; /* return zero when equal */
@@ -177,6 +178,6 @@ static inline bool Row_isChildOf(const Row* this, int id) {
    return id == Row_getGroupOrParent(this);
 }
 
-int Row_compareByParent_Base(const void* v1, const void* v2);
+int Row_compareByParent_Base(const void* v1, const void* v2, void* context);
 
 #endif

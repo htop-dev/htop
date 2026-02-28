@@ -530,14 +530,15 @@ void Row_toggleTag(Row* this) {
    this->tag = !this->tag;
 }
 
-int Row_compare(const void* v1, const void* v2) {
+int Row_compare(const void* v1, const void* v2, void* context) {
+   (void)context;
    const Row* r1 = (const Row*)v1;
    const Row* r2 = (const Row*)v2;
 
    return SPACESHIP_NUMBER(r1->id, r2->id);
 }
 
-int Row_compareByParent_Base(const void* v1, const void* v2) {
+int Row_compareByParent_Base(const void* v1, const void* v2, void* context) {
    const Row* r1 = (const Row*)v1;
    const Row* r2 = (const Row*)v2;
 
@@ -549,7 +550,7 @@ int Row_compareByParent_Base(const void* v1, const void* v2) {
    if (result != 0)
       return result;
 
-   return Row_compare(v1, v2);
+   return Row_compare(v1, v2, context);
 }
 
 const RowClass Row_class = {
