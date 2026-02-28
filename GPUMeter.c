@@ -35,48 +35,64 @@ bool GPUMeter_active(void) {
    return activeMeters > 0;
 }
 
-static int humanTimeUnit(char* buffer, size_t size, unsigned long long int value) {
+static int humanTimeUnit(char* buffer, size_t size, unsigned long long totalNanoseconds) {
+   if (totalNanoseconds < 10000)
+      return xSnprintf(buffer, size, "%4uns", (unsigned int)totalNanoseconds);
+
+   unsigned long long value = totalNanoseconds / 100;
 
    if (value < 1000)
-      return xSnprintf(buffer, size, "%3lluns", value);
+      return xSnprintf(buffer, size, "%u.%uus", (unsigned int)(value / 10), (unsigned int)(value % 10));
+
+   value /= 10; // microseconds
 
    if (value < 10000)
-      return xSnprintf(buffer, size, "%1llu.%1lluus", value / 1000, (value % 1000) / 100);
+      return xSnprintf(buffer, size, "%4uus", (unsigned int)value);
 
-   value /= 1000;
+   value /= 100;
 
-   if (value < 1000)
-      return xSnprintf(buffer, size, "%3lluus", value);
+   unsigned long long totalSeconds = value / 10000;
+   if (totalSeconds < 60) {
+      int width = 4;
+      unsigned int seconds = (unsigned int)totalSeconds;
+      unsigned int fraction = (unsigned int)(value % 10000);
+      for (unsigned int limit = 1; seconds >= limit; limit *= 10) {
+         width--;
+         fraction /= 10;
+      }
+      // "%.u" prints no digits if (seconds == 0).
+      return xSnprintf(buffer, size, "%.u.%0*us", seconds, width, fraction);
+   }
 
-   if (value < 10000)
-      return xSnprintf(buffer, size, "%1llu.%1llums", value / 1000, (value % 1000) / 100);
+   value = totalSeconds;
 
-   value /= 1000;
+   if (value < 3600)
+      return xSnprintf(buffer, size, "%2um%02us", (unsigned int)value / 60, (unsigned int)value % 60);
 
-   if (value < 1000)
-      return xSnprintf(buffer, size, "%3llums", value);
+   value /= 60; // minutes
 
-   if (value < 10000)
-      return xSnprintf(buffer, size, "%1llu.%1llus", value / 1000, (value % 1000) / 100);
+   if (value < 1440)
+      return xSnprintf(buffer, size, "%2uh%02um", (unsigned int)value / 60, (unsigned int)value % 60);
 
-   value /= 1000;
+   value /= 60; // hours
 
-   if (value < 600)
-      return xSnprintf(buffer, size, "%3llus", value);
+   if (value < 2400)
+      return xSnprintf(buffer, size, "%2ud%02uh", (unsigned int)value / 24, (unsigned int)value % 24);
 
-   value /= 60;
+   value /= 24; // days
 
-   if (value < 600)
-      return xSnprintf(buffer, size, "%3llum", value);
+   if (value < 365)
+      return xSnprintf(buffer, size, "%5ud", (unsigned int)value);
 
-   value /= 60;
+   if (value < 3650)
+      return xSnprintf(buffer, size, "%uy%03ud", (unsigned int)(value / 365), (unsigned int)(value % 365));
 
-   if (value < 96)
-      return xSnprintf(buffer, size, "%3lluh", value);
+   value /= 365; // years (ignore leap years)
 
-   value /= 24;
+   if (value < 100000)
+      return xSnprintf(buffer, size, "%5luy", (unsigned long)value);
 
-   return xSnprintf(buffer, size, "%3llud", value);
+   return xSnprintf(buffer, size, "  inf.");
 }
 
 static void GPUMeter_updateValues(Meter* this) {
