@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include <time.h>
 #include <net/if.h>
 #include <net/if_mib.h>
-#include <sys/_types.h>
+#include <net/if_types.h>
 #include <sys/devicestat.h>
 #include <sys/param.h>
 #include <sys/resource.h>
@@ -170,6 +170,32 @@ void Platform_done(void) {
 void Platform_setBindings(Htop_Action* keys) {
    /* no platform-specific key bindings */
    (void) keys;
+}
+
+static bool Platform_isVirtualNetworkInterface(const struct ifmibdata* ifmd) {
+    switch (ifmd->ifmd_data.ifi_type) {
+        case IFT_LOOP:    // Loopback
+#ifdef IFT_VLAN
+        case IFT_VLAN:    // VLAN
+#endif
+        case IFT_TUNNEL:  // IP tunnel
+        case IFT_GIF:     // Generic tunnel
+        case IFT_BRIDGE:  // Bridge
+        case IFT_L2VLAN:  // Layer 2 VLAN
+#ifdef IFT_FAITH
+        case IFT_FAITH:   // IPv6-to-IPv4 translation
+#endif
+        case IFT_STF:     // 6to4 tunnel
+        case IFT_PPP:     // PPP
+        case IFT_PFSYNC:  // pfsync
+#ifdef IFT_CARP
+        case IFT_CARP:    // CARP
+#endif
+            return true;
+        default:
+            break;
+    }
+    return false;
 }
 
 int Platform_getUptime(void) {
@@ -385,7 +411,8 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       if (r < 0)
          continue;
 
-      if (ifmd.ifmd_flags & IFF_LOOPBACK)
+      if ((ifmd.ifmd_flags & IFF_LOOPBACK) || // Loopback must be always ignored
+            (data->ignoreVirtualIntf && Platform_isVirtualNetworkInterface(&ifmd)))
          continue;
 
       data->bytesReceived += ifmd.ifmd_data.ifi_ibytes;
