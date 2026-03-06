@@ -61,10 +61,9 @@ static void SolarisMachine_updateCPUcount(SolarisMachine* this) {
    }
 
    if (change) {
-      kstat_close(this->kd);
-      this->kd = kstat_open();
-      if (!this->kd)
-         CRT_fatalError("Cannot open kstat handle");
+      kid_t update_kid = kstat_chain_update(this->kd);
+      if (update_kid < 0)
+         CRT_fatalError("Cannot update kstat chain");
    }
 }
 
@@ -165,7 +164,7 @@ static void SolarisMachine_scanCPUTime(SolarisMachine* this) {
 
 static void SolarisMachine_scanMemoryInfo(SolarisMachine* this) {
    Machine*            super = &this->super;
-   static kstat_t*     meminfo = NULL;
+   kstat_t*            meminfo = NULL;
    struct swaptable*   sl = NULL;
    struct swapent*     swapdev = NULL;
    uint64_t            totalswap = 0;
@@ -176,8 +175,10 @@ static void SolarisMachine_scanMemoryInfo(SolarisMachine* this) {
    char*               spathbase = NULL;
 
    // Part 1 - physical memory
-   if (this->kd != NULL && meminfo == NULL) {
-      // Look up the kstat chain just once, it never changes
+   if (this->kd != NULL) {
+      // The ptr `meminfo` is invalidated when the kstat chain is updated by
+      // `kstat_chain_update` (in `SolarisMachine_updateCPUcount`). So it needs
+      // to be re-read on every memory update.
       meminfo = kstat_lookup_wrapper(this->kd, "unix", 0, "system_pages");
    }
    if (meminfo != NULL) {
