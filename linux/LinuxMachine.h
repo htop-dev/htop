@@ -53,6 +53,7 @@ typedef struct CPUData_ {
    int physicalID;      /* different for each CPU socket */
    int coreID;          /* same for hyperthreading */
    int ccdID;           /* same for each AMD chiplet */
+   int threadIndex;     /* SMT thread index: 0 for first thread, 1 for second, etc. */
    #endif
 
    bool online;
