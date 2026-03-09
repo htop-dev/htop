@@ -1110,6 +1110,9 @@ static int GraphMeterMode_lookupCell(const Meter* this, const GraphDrawContext* 
          *details = 0xFF;
          *details >>= blanksAtStart;
          *details = (uint8_t)((*details >> blanksAtEnd) << blanksAtEnd);
+         if (*details == 0x3C) {
+            *details = 0x24;
+         }
       }
    } else {
       int deltaExpArg = MINIMUM(UINT16_WIDTH - 1, deltaExp);
@@ -1157,7 +1160,7 @@ static void GraphMeterMode_printCellDetails(uint8_t details) {
       // byte contains specific bit patterns, it indicates that only half cell
       // should be displayed in the ASCII display mode. The bits are supposed
       // to be filled in the Unicode display mode.
-      if ((details & 0x9C) == 0x14 || (details & 0x39) == 0x28) {
+      if ((details & 0x9C) == 0x14 || (details & 0x39) == 0x28 || details == 0x24) {
          if (details == 0x14 || details == 0x28) { // Special case
             details = 0x18;
          } else {
@@ -1197,6 +1200,8 @@ static void GraphMeterMode_printCellDetails(uint8_t details) {
       c = upperHalf;
    } else if ((details & 0x39) == 0x28) {
       c = lowerHalf;
+   } else if (details == 0x24) {
+      c = fullCell;
       // End of special cases
    } else if (popCount8(details) > 4) {
       c = fullCell;
