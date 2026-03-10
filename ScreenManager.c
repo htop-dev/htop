@@ -339,6 +339,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
          continue;
       }
 
+      FunctionBar_inputEvent();
+
       switch (ch) {
          case KEY_ALT('H'): ch = KEY_LEFT; break;
          case KEY_ALT('J'): ch = KEY_DOWN; break;
