@@ -744,8 +744,8 @@ static Htop_Reaction actionHelp(State* st) {
       addbartext(CRT_colors[CPU_IOWAIT], "/", "io-wait");
       addbartext(CRT_colors[BAR_SHADOW], " ", "used%");
    } else {
-      addbartext(CRT_colors[CPU_GUEST], "/", "guest");
-      addbartext(CRT_colors[BAR_SHADOW], "                            ", "used%");
+      addbartext(CRT_colors[CPU_GUEST], "/", "virt");
+      addbartext(CRT_colors[BAR_SHADOW], "                             ", "used%");
    }
    addattrstr(CRT_colors[BAR_BORDER], "]");
 
