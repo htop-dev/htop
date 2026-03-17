@@ -67,7 +67,7 @@ static void TraceScreen_draw(InfoScreen* this) {
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
-   int fdpair[2] = {0, 0};
+   int fdpair[2] = {-1, -1};
 
    if (pipe(fdpair) == -1)
       return false;
