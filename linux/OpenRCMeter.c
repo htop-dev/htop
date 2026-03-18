@@ -48,7 +48,7 @@ static void updateViaExec(bool user) {
    if (Settings_isReadonly())
       return;
 
-   int fdpair[2];
+   int fdpair[2] = {-1, -1};
    if (pipe(fdpair) < 0)
       return;
 
