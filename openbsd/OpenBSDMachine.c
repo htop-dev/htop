@@ -292,3 +292,15 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
    const OpenBSDMachine* this = (const OpenBSDMachine*) super;
    return this->cpuData[id + 1].online;
 }
+
+int Machine_getCPUPhysicalCoreID(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host;
+   return (int)id;
+}
+
+int Machine_getCPUThreadIndex(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host; (void) id;
+   return 0;
+}

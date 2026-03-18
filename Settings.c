@@ -468,6 +468,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
       } else if (String_eq(option[0], "cpu_count_from_zero")) {
          // old (inverted) naming also supported for backwards compatibility
          this->countCPUsFromOne = !atoi(option[1]);
+      } else if (String_eq(option[0], "show_cpu_smt_labels")) {
+         this->showCPUSMTLabels = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_usage")) {
          this->showCPUUsage = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_frequency")) {
@@ -705,6 +707,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("screen_tabs", this->screenTabs);
    printSettingInteger("detailed_cpu_time", this->detailedCPUTime);
    printSettingInteger("cpu_count_from_one", this->countCPUsFromOne);
+   printSettingInteger("show_cpu_smt_labels", this->showCPUSMTLabels);
    printSettingInteger("show_cpu_usage", this->showCPUUsage);
    printSettingInteger("show_cpu_frequency", this->showCPUFrequency);
    #ifdef BUILD_WITH_CPU_TEMP
@@ -810,6 +813,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->highlightMegabytes = true;
    this->detailedCPUTime = false;
    this->countCPUsFromOne = false;
+   this->showCPUSMTLabels = false;
    this->showCPUUsage = true;
    this->showCPUFrequency = false;
    #ifdef BUILD_WITH_CPU_TEMP
