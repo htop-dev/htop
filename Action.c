@@ -413,7 +413,8 @@ Htop_Reaction Action_setScreenTab(State* st, int x) {
    int rem = x - SCREEN_TAB_MARGIN_LEFT;
    for (unsigned int i = 0; i < settings->nScreens; i++) {
       const char* tab = settings->screens[i]->heading;
-      int width = rem >= bracketWidth ? (int)strnlen(tab, rem - bracketWidth + 1) : 0;
+      const char* ptr = tab;
+      int width = rem >= bracketWidth ? String_mbswidth(&ptr, SIZE_MAX, rem - bracketWidth + 1) : 0;
       if (width >= rem - bracketWidth + 1) {
          settings->ssIndex = i;
          setActiveScreen(settings, st, i);
