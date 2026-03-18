@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 #include "Object.h"
+#include "ProgramLauncher.h"
 #include "RichString.h"
 #include "Settings.h"
 #include "XUtils.h"
@@ -67,6 +68,8 @@ typedef struct SystemdMeterContext {
 
 static SystemdMeterContext_t ctx_system;
 static SystemdMeterContext_t ctx_user;
+
+static ProgramLauncher SystemdMeter_programLauncher;
 
 static void SystemdMeter_done(ATTR_UNUSED Meter* this) {
    SystemdMeterContext_t* ctx = String_eq(Meter_name(this), "SystemdUser") ? &ctx_user : &ctx_system;
@@ -217,6 +220,10 @@ static void updateViaExec(bool user) {
    if (Settings_isReadonly())
       return;
 
+   ProgramLauncher_setPath(&SystemdMeter_programLauncher, "systemctl");
+   if (SystemdMeter_programLauncher.lastErrno != 0)
+      return;
+
    int fdpair[2];
    if (pipe(fdpair) < 0)
       return;
@@ -237,19 +244,20 @@ static void updateViaExec(bool user) {
          exit(1);
       dup2(fdnull, STDERR_FILENO);
       close(fdnull);
-      // Use of NULL in variadic functions must have a pointer cast.
-      // The NULL constant is not required by standard to have a pointer type.
-      execlp(
-         "systemctl",
+
+      const char *argv[] = {
          "systemctl",
          "show",
-         user ? "--user" : "--system",
+         (user ? "--user" : "--system"),
          "--property=SystemState",
          "--property=NFailedUnits",
          "--property=NNames",
          "--property=NJobs",
          "--property=NInstalledJobs",
-         (char*)NULL);
+         NULL
+      };
+      ProgramLauncher_execv_const(&SystemdMeter_programLauncher, argv);
+
       exit(127);
    }
    close(fdpair[1]);

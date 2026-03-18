@@ -409,7 +409,9 @@ AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_CHECK_FUNCS([ \
    dladdr \
    faccessat \
+   fexecve \
    fstatat \
+   group_member \
    host_get_clock_service \
    memfd_create \
    openat \
