@@ -373,9 +373,11 @@ double Platform_setCPUValues(Meter* this, unsigned int cpu) {
       v[CPU_METER_KERNEL] = cpuData->systemAllPeriod / total * 100.0;
       this->curItems = 3;
 
-      v[CPU_METER_IRQ] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
+      v[CPU_METER_IRQ] = 0.0; // Accounted in 'kernel'
+      v[CPU_METER_SOFTIRQ] = 0.0; // Accounted in 'kernel'
+      v[CPU_METER_STEAL] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
       if (settings->accountGuestInCPUMeter) {
-         this->curItems = 4;
+         this->curItems = 6;
       }
    }
 
