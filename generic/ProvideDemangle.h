@@ -18,7 +18,7 @@ in the source distribution for its full text.
 // refuse fix their headers and export an unwanted interface to us.
 // htop doesn't use basename(3) API: The POSIX version is flawed by
 // design; libiberty ships with the GNU version of basename(3) that
-// is incompatible with the interface specified by POSIX).
+// is incompatible with the interface specified by POSIX.
 //
 // <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=122729>
 #define HAVE_DECL_BASENAME 1
