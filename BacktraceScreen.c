@@ -312,7 +312,7 @@ static void BacktracePanelRow_displayInformation(const Object* super, RichString
 
    const Process* process = row->process;
 
-   char* informations = NULL;
+   char* information = NULL;
    int colorBasename = DEFAULT_COLOR;
    int indexProcessComm = -1;
    int len = -1;
@@ -339,18 +339,18 @@ static void BacktracePanelRow_displayInformation(const Object* super, RichString
 
    if (Process_isThread(process)) {
       colorBasename = PROCESS_THREAD_BASENAME;
-      len = xAsprintf(&informations, "Thread %d: %n%s", Process_getPid(process), &indexProcessComm, processName);
+      len = xAsprintf(&information, "Thread %d: %n%s", Process_getPid(process), &indexProcessComm, processName);
    } else {
       colorBasename = PROCESS_BASENAME;
-      len = xAsprintf(&informations, "Process %d: %n%s",Process_getPid(process), &indexProcessComm, processName);
+      len = xAsprintf(&information, "Process %d: %n%s",Process_getPid(process), &indexProcessComm, processName);
    }
 
-   RichString_appendnWide(out, CRT_colors[DEFAULT_COLOR] | A_BOLD, informations, len);
+   RichString_appendnWide(out, CRT_colors[DEFAULT_COLOR] | A_BOLD, information, len);
    if (indexProcessComm != -1) {
       RichString_setAttrn(out, CRT_colors[colorBasename] | A_BOLD, indexProcessComm + highlightOffset, highlightLen);
    }
 
-   free(informations);
+   free(information);
 }
 
 static void BacktracePanelRow_displayFrame(const Object* super, RichString* out) {
