@@ -172,6 +172,11 @@ myhtopheaders += \
 myhtopsources += \
 	BacktraceScreen.c \
 	generic/UnwindPtrace.c
+
+if HAVE_DEMANGLING
+myhtopheaders += generic/Demangle.h
+myhtopsources += generic/Demangle.c
+endif
 endif
 
 # Linux

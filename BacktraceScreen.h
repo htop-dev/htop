@@ -23,6 +23,7 @@ typedef struct BacktraceFrameData_ {
    size_t address;
    size_t offset;
    char* functionName;
+   char* demangleFunctionName;
    char* objectPath;
    unsigned int index;
    bool isSignalFrame;
@@ -33,6 +34,7 @@ typedef struct BacktracePanelPrintingHelper_ {
    size_t maxFrameNumLen;
    size_t maxObjPathLen;
    size_t maxObjNameLen;
+   bool hasDemangledNames;
 } BacktracePanelPrintingHelper;
 
 typedef struct BacktracePanel_ {
