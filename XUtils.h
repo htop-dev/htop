@@ -80,6 +80,9 @@ char* String_trim(const char* in);
 ATTR_NONNULL_N(1) ATTR_RETNONNULL
 char** String_split(const char* s, char sep, size_t* n);
 
+ATTR_NONNULL_N(1) ATTR_RETNONNULL
+char** String_splitFirst(const char* s, char sep, size_t* n);
+
 void String_freeArray(char** s);
 
 ATTR_NONNULL ATTR_MALLOC

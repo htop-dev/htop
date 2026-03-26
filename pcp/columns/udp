@@ -6,26 +6,26 @@
 heading = UDPS
 caption = UDP_SEND
 width = 6
-metric = defined(bpf.proc.net.udp.send.packets) ? bpf.proc.net.udp.send.packets : novalue()
+metric = bpf.proc.net.udp.send.packets
 description = Count of UDP packets sent
 
 [udp_send_bytes]
 heading = UDPSB
 caption = UDP_SEND_BYTES
 width = 6
-metric = defined(bpf.proc.net.udp.send.bytes) ? bpf.proc.net.udp.send.bytes : novalue()
+metric = bpf.proc.net.udp.send.bytes
 description = Cumulative bytes sent via UDP
 
 [udp_recv_packets]
 heading = UDPR
 caption = UDP_RECV
 width = 6
-metric = defined(bpf.proc.net.udp.recv.packets) ? bpf.proc.net.udp.recv.packets : novalue()
+metric = bpf.proc.net.udp.recv.packets
 description = Count of UDP packets received
 
 [udp_recv_bytes]
 heading = UDPRB
 caption = UDP_RECV_BYTES
 width = 6
-metric = defined(bpf.proc.net.udp.recv.bytes) ? bpf.proc.net.udp.recv.bytes : novalue()
+metric = bpf.proc.net.udp.recv.bytes
 description = Cumulative bytes received via UDP

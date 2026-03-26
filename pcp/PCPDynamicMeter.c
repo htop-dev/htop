@@ -183,7 +183,7 @@ static void PCPDynamicMeter_parseFile(PCPDynamicMeters* meters, const char* path
       }
 
       size_t n;
-      char** config = String_split(trimmed, '=', &n);
+      char** config = String_splitFirst(trimmed, '=', &n);
       free(trimmed);
       if (config == NULL)
          continue;
