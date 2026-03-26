@@ -91,7 +91,8 @@ myhtopsources = \
 	UptimeMeter.c \
 	UsersTable.c \
 	Vector.c \
-	XUtils.c
+	XUtils.c \
+	generic/Sort.c
 
 myhtopheaders = \
 	Action.h \
@@ -166,7 +167,8 @@ myhtopheaders = \
 	UsersTable.h \
 	Vector.h \
 	XUtils.h \
-	generic/ProvideDemangle.h
+	generic/ProvideDemangle.h \
+	generic/Sort.h
 
 if HAVE_BACKTRACE_SCREEN
 myhtopheaders += \
