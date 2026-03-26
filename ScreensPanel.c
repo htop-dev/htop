@@ -60,6 +60,17 @@ void ScreensPanel_cleanup(void) {
    }
 }
 
+static void ScreensPanel_cancelMoving(ScreensPanel* this) {
+   Panel* super = &this->super;
+   for (int i = 0; i < Panel_size(super); i++) {
+      ListItem* item = (ListItem*) Panel_get(super, i);
+      if (item)
+         item->moving = false;
+   }
+   this->moving = false;
+   Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+}
+
 static void ScreensPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
 
@@ -88,6 +99,14 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
    }
 
    switch (ch) {
+      case EVENT_SET_SELECTED: {
+         ListItem* item = (ListItem*) Panel_getSelected(super);
+         if (item != this->renamingItem)
+            goto renameFinish;
+         break;
+      }
+      case EVENT_PANEL_LOST_FOCUS:
+         goto renameFinish;
       case 127:
       case KEY_BACKSPACE:
          if (this->cursor > 0) {
@@ -105,8 +124,11 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
          if (!item)
             break;
          assert(item == this->renamingItem);
+renameFinish:
+         if (!this->renamingItem)
+            break;
          free(this->saved);
-         item->value = xStrdup(this->buffer);
+         this->renamingItem->value = xStrdup(this->buffer);
          this->renamingItem = NULL;
          this->renamingNewItem = false;
          super->cursorOn = false;
@@ -210,17 +232,39 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       case '\n':
       case '\r':
       case KEY_ENTER:
-      case KEY_MOUSE:
-      case KEY_RECLICK: {
-         this->moving = !this->moving;
-         Panel_setSelectionColor(super, this->moving ? PANEL_SELECTION_FOLLOW : PANEL_SELECTION_FOCUS);
-         ListItem* item = (ListItem*) Panel_getSelected(super);
-         if (item)
-            item->moving = this->moving;
+         if (this->moving) {
+            ScreensPanel_cancelMoving(this);
+         } else {
+            this->moving = true;
+            Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
+            ListItem* item = (ListItem*) Panel_getSelected(super);
+            if (item)
+               item->moving = true;
+         }
          result = HANDLED;
          break;
-      }
+      case KEY_MOUSE:
+         if (this->moving) {
+            /* Single click while in move mode: cancel move mode */
+            ScreensPanel_cancelMoving(this);
+            result = HANDLED;
+         }
+         /* else: just select the item, do not enter move mode */
+         break;
+      case KEY_RECLICK:
+         /* Double click: start renaming */
+         this->renamingNewItem = false;
+         startRenaming(super);
+         result = HANDLED;
+         break;
       case EVENT_SET_SELECTED:
+         if (this->moving)
+            ScreensPanel_cancelMoving(this);
+         result = HANDLED;
+         break;
+      case EVENT_PANEL_LOST_FOCUS:
+         if (this->moving)
+            ScreensPanel_cancelMoving(this);
          result = HANDLED;
          break;
       case KEY_NPAGE:
@@ -272,7 +316,8 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
          result = HANDLED;
          break;
       case KEY_F(9):
-      //case KEY_DC:
+      case KEY_DC:
+      case KEY_DEL_MAC:
          if (Panel_size(super) > 1)
             Panel_remove(super, selected);
          shouldRebuildArray = true;

@@ -1,6 +1,7 @@
 /*
 htop - MetersPanel.c
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2020-2026 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -51,17 +52,24 @@ static void MetersPanel_delete(Object* object) {
 void MetersPanel_setMoving(MetersPanel* this, bool moving) {
    Panel* super = &this->super;
    this->moving = moving;
-   ListItem* selected = (ListItem*)Panel_getSelected(super);
-   if (selected) {
-      selected->moving = moving;
-   }
    if (!moving) {
+      /* Reset all items' moving flags when canceling move mode */
+      for (int i = 0; i < Panel_size(super); i++) {
+         ListItem* item = (ListItem*) Panel_get(super, i);
+         if (item)
+            item->moving = false;
+      }
       Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
       Panel_setDefaultBar(super);
    } else {
+      ListItem* selected = (ListItem*)Panel_getSelected(super);
+      if (selected) {
+         selected->moving = true;
+      }
       Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
       super->currentBar = Meters_movingBar;
    }
+   super->needsRedraw = true;
 }
 
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
@@ -96,10 +104,19 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
+      case KEY_RECLICK:
          if (!Vector_size(this->meters))
             break;
          MetersPanel_setMoving(this, !(this->moving));
          result = HANDLED;
+         break;
+      case KEY_MOUSE:
+         if (this->moving) {
+            /* Single click while in move mode: cancel move mode */
+            MetersPanel_setMoving(this, false);
+            result = HANDLED;
+         }
+         /* else: just select the item, do not enter move mode */
          break;
       case ' ':
       case KEY_F(4):
@@ -160,6 +177,11 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
             Panel_remove(super, selected);
          }
          MetersPanel_setMoving(this, false);
+         result = HANDLED;
+         break;
+      case EVENT_PANEL_LOST_FOCUS:
+         if (this->moving)
+            MetersPanel_setMoving(this, false);
          result = HANDLED;
          break;
    }

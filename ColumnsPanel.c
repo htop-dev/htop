@@ -1,6 +1,7 @@
 /*
 htop - ColumnsPanel.c
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2020-2026 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -33,6 +34,17 @@ static void ColumnsPanel_delete(Object* object) {
    free(this);
 }
 
+static void ColumnsPanel_cancelMoving(ColumnsPanel* this) {
+   Panel* super = &this->super;
+   for (int i = 0; i < Panel_size(super); i++) {
+      ListItem* item = (ListItem*) Panel_get(super, i);
+      if (item)
+         item->moving = false;
+   }
+   this->moving = false;
+   Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+}
+
 static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
    ColumnsPanel* const this = (ColumnsPanel*) super;
 
@@ -44,16 +56,27 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
-      case KEY_MOUSE:
       case KEY_RECLICK:
          if (selected < size) {
-            this->moving = !(this->moving);
-            Panel_setSelectionColor(super, this->moving ? PANEL_SELECTION_FOLLOW : PANEL_SELECTION_FOCUS);
-            ListItem* selectedItem = (ListItem*) Panel_getSelected(super);
-            if (selectedItem)
-               selectedItem->moving = this->moving;
+            if (this->moving) {
+               ColumnsPanel_cancelMoving(this);
+            } else {
+               this->moving = true;
+               Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
+               ListItem* selectedItem = (ListItem*) Panel_getSelected(super);
+               if (selectedItem)
+                  selectedItem->moving = true;
+            }
             result = HANDLED;
          }
+         break;
+      case KEY_MOUSE:
+         if (this->moving) {
+            /* Single click while in move mode: cancel move mode */
+            ColumnsPanel_cancelMoving(this);
+            result = HANDLED;
+         }
+         /* else: just select the item, do not enter move mode */
          break;
       case KEY_UP:
          if (!this->moving)
@@ -82,6 +105,11 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_DEL_MAC:
          if (size > 1 && selected < size)
             Panel_remove(super, selected);
+         result = HANDLED;
+         break;
+      case EVENT_PANEL_LOST_FOCUS:
+         if (this->moving)
+            ColumnsPanel_cancelMoving(this);
          result = HANDLED;
          break;
       default:
