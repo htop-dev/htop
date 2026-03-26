@@ -9,40 +9,40 @@ default = false
 
 pid.heading = PID
 pid.caption = Process Identifier
-pid.metric = defined(bpf.exitsnoop.pid) ? bpf.exitsnoop.pid : novalue()
+pid.metric = bpf.exitsnoop.pid
 pid.format = process
 
 ppid.heading = PPID
 ppid.caption = Parent Process
-ppid.metric = defined(bpf.exitsnoop.ppid) ? bpf.exitsnoop.ppid : novalue()
+ppid.metric = bpf.exitsnoop.ppid
 ppid.format = process
 
 tid.heading = TID
 tid.caption = Task Identifier
-tid.metric = defined(bpf.exitsnoop.tid) ? bpf.exitsnoop.tid : novalue()
+tid.metric = bpf.exitsnoop.tid
 tid.format = process
 tid.default = false
 
 signal.heading = SIG
 signal.caption = Signal number
-signal.metric = defined(bpf.exitsnoop.sig) ? bpf.exitsnoop.sig : novalue()
+signal.metric = bpf.exitsnoop.sig
 
 exit.heading = EXIT
 exit.caption = Exit Code
-exit.metric = defined(bpf.exitsnoop.exit_code) ? bpf.exitsnoop.exit_code : novalue()
+exit.metric = bpf.exitsnoop.exit_code
 
 core.heading = CORE
 core.caption = Dumped core
-core.metric = defined(bpf.exitsnoop.coredump) ? bpf.exitsnoop.coredump : novalue()
+core.metric = bpf.exitsnoop.coredump
 core.default = false
 
 age.heading = AGE
 age.caption = Process age
-age.metric = defined(bpf.exitsnoop.age) ? bpf.exitsnoop.age : novalue()
+age.metric = bpf.exitsnoop.age
 age.default = false
 
 comm.heading = Command
 comm.caption = COMM
 comm.width = -16
-comm.metric = defined(bpf.exitsnoop.comm) ? bpf.exitsnoop.comm : novalue()
+comm.metric = bpf.exitsnoop.comm
 comm.format = command

@@ -9,33 +9,33 @@ default = false
 
 pid.heading = PID
 pid.caption = Process identifier
-pid.metric = defined(bpf.biosnoop.pid) ? bpf.biosnoop.pid : novalue()
+pid.metric = bpf.biosnoop.pid
 pid.format = process
 
 disk.heading = DISK
 disk.caption = Device name
 disk.width = -7
-disk.metric = defined(bpf.biosnoop.disk) ? bpf.biosnoop.disk : novalue()
+disk.metric = bpf.biosnoop.disk
 
 rwbs.heading = TYPE
 rwbs.caption = I/O type string
 rwbs.width = -4
-rwbs.metric = defined(bpf.biosnoop.rwbs) ? bpf.biosnoop.rwbs : novalue()
+rwbs.metric = bpf.biosnoop.rwbs
 
 bytes.heading = BYTES
 bytes.caption = I/O size in bytes
-bytes.metric = defined(bpf.biosnoop.bytes) ? bpf.biosnoop.bytes : novalue()
+bytes.metric = bpf.biosnoop.bytes
 
 lat.heading = LAT
 lat.caption = I/O latency
-lat.metric = defined(bpf.biosnoop.lat) ? bpf.biosnoop.lat : novalue()
+lat.metric = bpf.biosnoop.lat
 
 sector.heading = SECTOR
 sector.caption = Device sector
-sector.metric = defined(bpf.biosnoop.sector) ? bpf.biosnoop.sector : novalue()
+sector.metric = bpf.biosnoop.sector
 
 comm.heading = Command
 comm.caption = Process command name
 comm.width = -16
-comm.metric = defined(bpf.biosnoop.comm) ? bpf.biosnoop.comm : novalue()
+comm.metric = bpf.biosnoop.comm
 comm.format = process
