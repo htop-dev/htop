@@ -98,6 +98,9 @@ static size_t mbstowcs_nonfatal(wchar_t* restrict dest, const char* restrict src
 }
 
 static inline int RichString_writeFromWide(RichString* this, int attrs, const char* data_c, int from, size_t len) {
+   if (len < 1)
+      return 0;
+
    wchar_t data[len];
    len = mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)

@@ -369,7 +369,7 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
    }
 
    if (atomvalue == NULL) {
-      n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "N/A");
+      n = pmsprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "N/A");
       RichString_appendnAscii(str, CRT_colors[PROCESS_SHADOW], buffer, n);
       return;
    }
@@ -396,13 +396,13 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
             value += 5;
          else if (strcmp(column->format, "cgroup") == 0 && (dupd2 = CGroup_filterName(value)))
             value = dupd2;
-         n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, value);
+         n = pmsprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, value);
          if (dupd2)
             free(dupd2);
       } else if (value) {
-         n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, value);
+         n = pmsprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, value);
       } else {
-         n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "N/A");
+         n = pmsprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "N/A");
       }
       if (dupd1)
          free(dupd1);
@@ -413,7 +413,7 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
    /* deal with any numeric value - first, normalize units to bytes/seconds */
    double value;
    if (PCPDynamicColumn_normalize(desc, atomvalue, &value) < 0) {
-      n = xSnprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "no conv");
+      n = pmsprintf(buffer, sizeof(buffer), "%*.*s ", width, abswidth, "no conv");
       RichString_appendnAscii(str, CRT_colors[METER_VALUE_ERROR], buffer, n);
       return;
    }
@@ -425,7 +425,7 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
          return;
       }
       if (strcmp(column->format, "process") == 0) {
-         n = xSnprintf(buffer, sizeof(buffer), "%*d ", Row_pidDigits, (int)value);
+         n = pmsprintf(buffer, sizeof(buffer), "%*d ", Row_pidDigits, (int)value);
          RichString_appendnAscii(str, attr, buffer, n);
          return;
       }
@@ -434,9 +434,9 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
    /* width overrides unit suffix and coloring; too complex for a corner case */
    if (column->width) {
       if (value - (unsigned long long)value > 0)  /* display floating point */
-         n = xSnprintf(buffer, sizeof(buffer), "%*.2f ", width, value);
+         n = pmsprintf(buffer, sizeof(buffer), "%*.2f ", width, value);
       else   /* display as integer */
-         n = xSnprintf(buffer, sizeof(buffer), "%*llu ", width, (unsigned long long)value);
+         n = pmsprintf(buffer, sizeof(buffer), "%*llu ", width, (unsigned long long)value);
       RichString_appendnAscii(str, CRT_colors[PROCESS], buffer, n);
       return;
    }

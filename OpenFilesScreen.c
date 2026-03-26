@@ -100,14 +100,14 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    pdata->cols[getIndexForType('o')] = 8;
    pdata->cols[getIndexForType('i')] = 8;
 
-   int fdpair[2] = {0, 0};
-   if (pipe(fdpair) == -1) {
+   int fdpair[2] = {-1, -1};
+   if (pipe(fdpair) < 0) {
       pdata->error = 1;
       return pdata;
    }
 
    pid_t child = fork();
-   if (child == -1) {
+   if (child < 0) {
       close(fdpair[1]);
       close(fdpair[0]);
       pdata->error = 1;
