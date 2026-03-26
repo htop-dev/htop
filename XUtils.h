@@ -81,7 +81,7 @@ ATTR_NONNULL_N(1) ATTR_RETNONNULL
 char** String_split(const char* s, char sep, size_t* n);
 
 ATTR_NONNULL_N(1) ATTR_RETNONNULL
-char** String_split_one(const char* s, char sep, size_t* n);
+char** String_split_first(const char* s, char sep, size_t* n);
 
 void String_freeArray(char** s);
 

@@ -236,7 +236,7 @@ static void PCPDynamicScreen_parseFile(PCPDynamicScreens* screens, const char* p
       }
 
       size_t n;
-      char** config = String_split_one(trimmed, '=', &n);
+      char** config = String_split_first(trimmed, '=', &n);
       free(trimmed);
       if (config == NULL)
          continue;

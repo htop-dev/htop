@@ -178,7 +178,7 @@ char** String_split(const char* s, char sep, size_t* n) {
 }
 
 /* same as String_split() but only split on first occurrence of sep */
-char** String_split_one(const char* s, char sep, size_t* n) {
+char** String_split_first(const char* s, char sep, size_t* n) {
    char** out = xCalloc(3, sizeof(char*));
    size_t ctr = 0;
    const char* where;
