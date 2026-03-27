@@ -32,6 +32,7 @@ typedef enum HandlerResult_ {
 } HandlerResult;
 
 #define EVENT_SET_SELECTED (-1)
+#define EVENT_PANEL_LOST_FOCUS (-2)
 
 #define EVENT_HEADER_CLICK(x_) (-10000 + (x_))
 #define EVENT_IS_HEADER_CLICK(ev_) ((ev_) >= -10000 && (ev_) <= -9000)
