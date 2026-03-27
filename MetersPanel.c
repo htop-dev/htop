@@ -1,6 +1,7 @@
 /*
 htop - MetersPanel.c
 (C) 2004-2011 Hisham H. Muhammad
+(C) 2020-2026 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -22,17 +23,16 @@ in the source distribution for its full text.
 
 // Note: In code the meters are known to have bar/text/graph "Modes", but in UI
 // we call them "Styles".
-static const char* const MetersFunctions[] = {"Style ", "Move  ", "                                       ", "Delete", "Done  ", NULL};
-static const char* const MetersKeys[] = {"Space", "Enter", "  ", "Del", "F10"};
-static const int MetersEvents[] = {' ', 13, ERR, KEY_DC, KEY_F(10)};
+// Standard F-key layout matching the Screens panel:
+// F4=Style  F7=MoveUp  F8=MoveDn  F9=Delete  F10=Done
+static const char* const MetersFunctions[] = {"      ", "      ", "      ", "Style ", "      ", "      ", "MoveUp", "MoveDn", "Delete", "Done  ", NULL};
 
 // We avoid UTF-8 arrows ← → here as they might display full-width on Chinese
 // terminals, breaking our aligning.
 // In <http://unicode.org/reports/tr11/>, arrows (U+2019..U+2199) are
 // considered "Ambiguous characters".
-static const char* const MetersMovingFunctions[] = {"Style ", "Lock  ", "Up    ", "Down  ", "Left  ", "Right ", "       ", "Delete", "Done  ", NULL};
-static const char* const MetersMovingKeys[] = {"Space", "Enter", "Up", "Dn", "<-", "->", "  ", "Del", "F10"};
-static const int MetersMovingEvents[] = {' ', 13, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ERR, KEY_DC, KEY_F(10)};
+// Moving bar: F4=Style  F5=MoveLt  F6=MoveRt  F7=MoveUp  F8=MoveDn  F9=Delete  F10=Done
+static const char* const MetersMovingFunctions[] = {"      ", "      ", "      ", "Style ", "MoveLt", "MoveRt", "MoveUp", "MoveDn", "Delete", "Done  ", NULL};
 static FunctionBar* Meters_movingBar = NULL;
 
 void MetersPanel_cleanup(void) {
@@ -51,17 +51,24 @@ static void MetersPanel_delete(Object* object) {
 void MetersPanel_setMoving(MetersPanel* this, bool moving) {
    Panel* super = &this->super;
    this->moving = moving;
-   ListItem* selected = (ListItem*)Panel_getSelected(super);
-   if (selected) {
-      selected->moving = moving;
-   }
    if (!moving) {
+      /* Reset all items' moving flags when canceling move mode */
+      for (int i = 0; i < Panel_size(super); i++) {
+         ListItem* item = (ListItem*) Panel_get(super, i);
+         if (item)
+            item->moving = false;
+      }
       Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
       Panel_setDefaultBar(super);
    } else {
+      ListItem* selected = (ListItem*)Panel_getSelected(super);
+      if (selected) {
+         selected->moving = true;
+      }
       Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
       super->currentBar = Meters_movingBar;
    }
+   super->needsRedraw = true;
 }
 
 static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int selected) {
@@ -96,10 +103,19 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
+      case KEY_RECLICK:
          if (!Vector_size(this->meters))
             break;
          MetersPanel_setMoving(this, !(this->moving));
          result = HANDLED;
+         break;
+      case KEY_MOUSE:
+         if (this->moving) {
+            /* Single click while in move mode: cancel move mode */
+            MetersPanel_setMoving(this, false);
+            result = HANDLED;
+         }
+         /* else: just select the item, do not enter move mode */
          break;
       case ' ':
       case KEY_F(4):
@@ -135,6 +151,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          Panel_moveSelectedDown(super);
          result = HANDLED;
          break;
+      case KEY_F(6):
       case KEY_RIGHT:
          sideMove = moveToNeighbor(this, this->rightNeighbor, selected);
          if (this->moving && !sideMove) {
@@ -144,6 +161,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          // if user is free, don't set HANDLED;
          // let ScreenManager handle focus.
          break;
+      case KEY_F(5):
       case KEY_LEFT:
          sideMove = moveToNeighbor(this, this->leftNeighbor, selected);
          if (this->moving && !sideMove) {
@@ -160,6 +178,11 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
             Panel_remove(super, selected);
          }
          MetersPanel_setMoving(this, false);
+         result = HANDLED;
+         break;
+      case EVENT_PANEL_LOST_FOCUS:
+         if (this->moving)
+            MetersPanel_setMoving(this, false);
          result = HANDLED;
          break;
    }
@@ -187,9 +210,9 @@ MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* met
    MetersPanel* this = AllocThis(MetersPanel);
    Panel* super = &this->super;
 
-   FunctionBar* fuBar = FunctionBar_new(MetersFunctions, MetersKeys, MetersEvents);
+   FunctionBar* fuBar = FunctionBar_new(MetersFunctions, NULL, NULL);
    if (!Meters_movingBar) {
-      Meters_movingBar = FunctionBar_new(MetersMovingFunctions, MetersMovingKeys, MetersMovingEvents);
+      Meters_movingBar = FunctionBar_new(MetersMovingFunctions, NULL, NULL);
    }
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 

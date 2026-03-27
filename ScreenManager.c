@@ -299,6 +299,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
                         } else if (mevent.y > panel->y && mevent.y <= panel->y + panel->h) {
                            ch = KEY_MOUSE;
                            if (panel == panelFocus || this->allowFocusChange) {
+                              if (i != focus && Panel_eventHandlerFn(panelFocus)) {
+                                 Panel_eventHandler(panelFocus, EVENT_PANEL_LOST_FOCUS);
+                              }
                               focus = i;
                               panelFocus = panel;
                               const Object* oldSelection = Panel_getSelected(panel);
@@ -393,6 +396,10 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
             break;
          }
 
+         if (focus > 0 && Panel_eventHandlerFn(panelFocus)) {
+            Panel_eventHandler(panelFocus, EVENT_PANEL_LOST_FOCUS);
+         }
+
 tryLeft:
          if (focus > 0) {
             focus--;
@@ -412,6 +419,10 @@ tryLeft:
          }
          if (!this->allowFocusChange) {
             break;
+         }
+
+         if ((size_t)focus < this->panelCount - 1 && Panel_eventHandlerFn(panelFocus)) {
+            Panel_eventHandler(panelFocus, EVENT_PANEL_LOST_FOCUS);
          }
 
 tryRight:

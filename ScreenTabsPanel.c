@@ -226,6 +226,14 @@ static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch)
    }
 
    switch (ch) {
+      case EVENT_SET_SELECTED: {
+         ListItem* item = (ListItem*) Panel_getSelected(super);
+         if (item != this->renamingItem)
+            goto renameFinish;
+         break;
+      }
+      case EVENT_PANEL_LOST_FOCUS:
+         goto renameFinish;
       case 127:
       case KEY_BACKSPACE:
          if (this->cursor > 0) {
@@ -243,13 +251,16 @@ static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch)
          if (!item)
             break;
          assert(item == this->renamingItem);
+renameFinish:
+         if (!this->renamingItem)
+            break;
          free(this->saved);
-         item->value = xStrdup(this->buffer);
-         this->renamingItem = NULL;
+         this->renamingItem->value = xStrdup(this->buffer);
          super->cursorOn = false;
          Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
          Panel_setDefaultBar(super);
-         renameScreenSettings(this, item);
+         renameScreenSettings(this, (ListItem*) this->renamingItem);
+         this->renamingItem = NULL;
          break;
       }
       case 27: // Esc

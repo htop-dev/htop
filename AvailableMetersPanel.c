@@ -40,7 +40,6 @@ static inline void AvailableMetersPanel_addMeter(Header* header, MetersPanel* pa
    const Meter* meter = Header_addMeterByClass(header, type, param, column);
    Panel_add((Panel*)panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected((Panel*)panel, Panel_size((Panel*)panel) - 1);
-   MetersPanel_setMoving(panel, true);
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
