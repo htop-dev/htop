@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
    /*
     * set OPTION_NOVALUE to map undefined metric operands to novalue()
     */
-    pmSetDerivedControl(PCP_DERIVED_OPTION_NOVALUE, 1);
+    (void)pmSetDerivedControl(PCP_DERIVED_OPTION_NOVALUE, 1);
 #endif
 
    /* extract environment variables */
