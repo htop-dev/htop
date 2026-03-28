@@ -55,8 +55,10 @@ myhtopsources = \
 	Header.c \
 	HeaderOptionsPanel.c \
 	HostnameMeter.c \
+	History.c \
 	IncSet.c \
 	InfoScreen.c \
+	LineEditor.c \
 	ListItem.c \
 	LoadAverageMeter.c \
 	Machine.c \
@@ -122,8 +124,10 @@ myhtopheaders = \
 	HeaderLayout.h \
 	HeaderOptionsPanel.h \
 	HostnameMeter.h \
+	History.h \
 	IncSet.h \
 	InfoScreen.h \
+	LineEditor.h \
 	ListItem.h \
 	LoadAverageMeter.h \
 	Machine.h \

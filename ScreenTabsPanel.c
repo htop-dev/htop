@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "FunctionBar.h"
 #include "Hashtable.h"
+#include "LineEditor.h"
 #include "Macros.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
@@ -192,7 +193,7 @@ static void ScreenNamesPanel_delete(Object* object) {
       item->ss = NULL;
    }
 
-   /* during renaming the ListItem's value points to our static buffer */
+   /* during renaming the ListItem's value points to the editor buffer */
    if (this->renamingItem)
       this->renamingItem->value = this->saved;
 
@@ -214,17 +215,6 @@ static void renameScreenSettings(ScreenNamesPanel* this, const ListItem* item) {
 static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch) {
    ScreenNamesPanel* const this = (ScreenNamesPanel*) super;
 
-   if (ch >= 32 && ch < 127 && ch != '=') {
-      if (this->cursor < SCREEN_NAME_LEN - 1) {
-         this->buffer[this->cursor] = (char)ch;
-         this->cursor++;
-         super->selectedLen = strlen(this->buffer);
-         Panel_setCursorToSelection(super);
-      }
-
-      return HANDLED;
-   }
-
    switch (ch) {
       case EVENT_SET_SELECTED: {
          ListItem* item = (ListItem*) Panel_getSelected(super);
@@ -234,15 +224,6 @@ static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch)
       }
       case EVENT_PANEL_LOST_FOCUS:
          goto renameFinish;
-      case 127:
-      case KEY_BACKSPACE:
-         if (this->cursor > 0) {
-            this->cursor--;
-            this->buffer[this->cursor] = '\0';
-            super->selectedLen = strlen(this->buffer);
-            Panel_setCursorToSelection(super);
-         }
-         break;
       case '\n':
       case '\r':
       case KEY_ENTER:
@@ -255,7 +236,7 @@ renameFinish:
          if (!this->renamingItem)
             break;
          free(this->saved);
-         this->renamingItem->value = xStrdup(this->buffer);
+         this->renamingItem->value = xStrdup(LineEditor_getText(&this->editor));
          super->cursorOn = false;
          Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
          Panel_setDefaultBar(super);
@@ -276,6 +257,17 @@ renameFinish:
          Panel_setDefaultBar(super);
          break;
       }
+      default: {
+         /* Delegate editing keys to LineEditor. Exclude '=' which has special meaning. */
+         if (ch == '=')
+            break;
+         LineEditor_handleKey(&this->editor, ch);
+         super->selectedLen = LineEditor_getCursor(&this->editor);
+         Panel_setCursorToSelection(super);
+         if (this->renamingItem)
+            this->renamingItem->value = LineEditor_getText(&this->editor);
+         break;
+      }
    }
 
    return HANDLED;
@@ -292,12 +284,11 @@ static void startRenaming(Panel* super) {
    super->cursorOn = true;
    char* name = item->value;
    this->saved = name;
-   strncpy(this->buffer, name, SCREEN_NAME_LEN);
-   this->buffer[SCREEN_NAME_LEN] = '\0';
-   this->cursor = strlen(this->buffer);
-   item->value = this->buffer;
+   LineEditor_initWithMax(&this->editor, SCREEN_NAME_LEN - 1);
+   LineEditor_setText(&this->editor, name);
+   item->value = LineEditor_getText(&this->editor);
    Panel_setSelectionColor(super, PANEL_EDIT);
-   super->selectedLen = strlen(this->buffer);
+   super->selectedLen = LineEditor_getCursor(&this->editor);
    Panel_setCursorToSelection(super);
    super->currentBar = ScreenNames_renamingBar;
 }
@@ -384,10 +375,9 @@ ScreenNamesPanel* ScreenNamesPanel_new(Settings* settings) {
 
    this->settings = settings;
    this->renamingItem = NULL;
-   memset(this->buffer, 0, sizeof(this->buffer));
+   LineEditor_initWithMax(&this->editor, SCREEN_NAME_LEN - 1);
    this->ds = NULL;
    this->saved = NULL;
-   this->cursor = 0;
    super->cursorOn = false;
    Panel_setHeader(super, "Screens");
 

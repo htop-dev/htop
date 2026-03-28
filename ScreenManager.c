@@ -286,6 +286,12 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
             if (mevent.bstate & BUTTON1_RELEASED) {
                if (mevent.y == LINES - 1) {
                   ch = FunctionBar_synthesizeEvent(panelFocus->currentBar, mevent.x);
+                  /* When the panel is in cursor-input mode and the click landed past
+                     the function keys (in the text input area), signal a bar click. */
+                  if (ch == ERR && panelFocus->cursorOn) {
+                     panelFocus->lastMouseBarClickX = mevent.x;
+                     ch = KEY_MOUSE_BAR_CLICK;
+                  }
                } else {
                   for (size_t i = 0; i < this->panelCount; i++) {
                      Panel* panel = (Panel*) Vector_get(this->panels, i);

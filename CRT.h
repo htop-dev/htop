@@ -181,12 +181,15 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 #define KEY_FOCUS_IN   (KEY_MAX + 'I')
 #define KEY_FOCUS_OUT  (KEY_MAX + 'O')
 #define KEY_DEL_MAC    127
+#define KEY_CTRL_LEFT  KEY_SLEFT   // we treat them the same
+#define KEY_CTRL_RIGHT KEY_SRIGHT  // we treat them, yup, the same
+
 #ifndef PADPLUS
-# define KEY_PADPLUS    583
-# define KEY_PADMINUS   588
+# define KEY_PADPLUS   583
+# define KEY_PADMINUS  588
 #else
-# define KEY_PADPLUS    PADPLUS
-# define KEY_PADMINUS   PADMINUS
+# define KEY_PADPLUS   PADPLUS
+# define KEY_PADMINUS  PADMINUS
 #endif
 
 extern char CRT_degreeSign[];

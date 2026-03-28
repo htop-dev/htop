@@ -96,7 +96,6 @@ int FunctionBar_draw(const FunctionBar* this) {
 }
 
 int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr, bool setCursor) {
-   int cursorX = 0;
    attrset(CRT_colors[FUNCTION_BAR]);
    mvhline(LINES - 1, 0, ' ', COLS);
    int x = 0;
@@ -109,6 +108,9 @@ int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr,
       mvaddstr(LINES - 1, x, this->functions[i]);
       x += strlen(this->functions[i]);
    }
+
+   /* cursorX: position after function keys (= start of input field) */
+   int cursorX = x;
 
    if (buffer) {
       if (attr == -1) {
@@ -144,6 +146,16 @@ void FunctionBar_append(const char* buffer, int attr) {
    attrset(CRT_colors[RESET_COLOR]);
 
    currentLen += strlen(buffer) + 1;
+}
+
+int FunctionBar_getWidth(const FunctionBar* this) {
+   int x = 0;
+   for (size_t i = 0; this->functions[i]; i++) {
+      assert(i < FUNCTIONBAR_MAXEVENTS);
+      x += strlen(this->keys.constKeys[i]);
+      x += strlen(this->functions[i]);
+   }
+   return x;
 }
 
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos) {
