@@ -623,7 +623,6 @@ static void scanCPUFrequencyFromCPUinfo(LinuxMachine* this) {
    }
 }
 
-#ifdef HAVE_SENSORS_SENSORS_H
 static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
    const Machine* super = &this->super;
 
@@ -737,8 +736,6 @@ static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
    }
 }
 
-#endif
-
 static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
    const Machine* super = &this->super;
 
@@ -816,13 +813,14 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    // Initialize CPU count
    LinuxMachine_updateCPUcount(this);
 
-   #ifdef HAVE_SENSORS_SENSORS_H
    // Fetch CPU topology
+   int ccds = 0;
    LinuxMachine_fetchCPUTopologyFromCPUinfo(this);
-   int ccds = LibSensors_countCCDs();
+   #ifdef HAVE_SENSORS_SENSORS_H
+   ccds = LibSensors_countCCDs();
+   #endif
    LinuxMachine_assignCCDs(this, ccds);
    LinuxMachine_computeThreadIndices(this);
-   #endif
 
    return super;
 }
@@ -852,29 +850,17 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
 }
 
 int Machine_getCPUPhysicalCoreID(const Machine* super, unsigned int id) {
-#ifdef HAVE_SENSORS_SENSORS_H
    const LinuxMachine* this = (const LinuxMachine*) super;
 
    assert(id < super->existingCPUs);
 
    const CPUData* cpu = &this->cpuData[id + 1];
    return cpu->physicalID * (this->maxCoreID + 1) + cpu->coreID;
-#else
-   (void) super;
-   /* Fall back to CPU id when topology unavailable */
-   return (int)id;
-#endif
 }
 
 int Machine_getCPUThreadIndex(const Machine* super, unsigned int id) {
-#ifdef HAVE_SENSORS_SENSORS_H
    const LinuxMachine* this = (const LinuxMachine*) super;
 
    assert(id < super->existingCPUs);
    return this->cpuData[id + 1].threadIndex;
-#else
-   (void) super;
-   (void) id;
-   return 0;
-#endif
 }
