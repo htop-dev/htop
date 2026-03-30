@@ -63,13 +63,11 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
          }
          break;
       case KEY_BACKSPACE:
-      case 127:
-         if (numItem && numItem->editing) {
-            NumberItem_deleteChar(numItem);
-            SET_EDIT_CURSOR();
-            return HANDLED;
-         } else if (numItem) {
-            NumberItem_startEditingFromValue(numItem);
+      case KEY_DEL_MAC:
+         if (numItem) {
+            if (!numItem->editing) {
+               NumberItem_startEditingFromValue(numItem);
+            }
             NumberItem_deleteChar(numItem);
             SET_EDIT_CURSOR();
             return HANDLED;
