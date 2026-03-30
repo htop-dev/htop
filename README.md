@@ -79,6 +79,11 @@ sudo apt install libncursesw5-dev autotools-dev autoconf automake build-essentia
 sudo dnf install ncurses-devel automake autoconf gcc
 ~~~
 
+**OpenSUSE/SLES**
+~~~ shell
+sudo zypper install ncurses-devel ncurses-devel-static automake autoconf gcc make glibc-devel glibc-devel-static
+~~~
+
 **Archlinux/Manjaro**
 ~~~ shell
 sudo pacman -S ncurses automake autoconf gcc
