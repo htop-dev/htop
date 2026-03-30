@@ -57,7 +57,7 @@ static void printHelpFlag(const char* name) {
           "-C --no-color                   Use a monochrome color scheme\n"
           "-d --delay=DELAY                Set the delay between updates, in tenths of seconds\n"
           "-F --filter=FILTER              Show only the commands matching the given filter\n"
-          "   --no-function-bar             Hide the function bar\n"
+          "   --no-function-bar            Hide the function bar\n"
           "-h --help                       Print this help screen\n"
           "-H --highlight-changes[=DELAY]  Highlight new and old processes\n", name);
 #ifdef HAVE_GETMOUSE
