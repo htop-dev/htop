@@ -86,7 +86,7 @@ sudo zypper install ncurses-devel ncurses-devel-static automake autoconf gcc mak
 
 **Archlinux/Manjaro**
 ~~~ shell
-sudo pacman -S ncurses automake autoconf gcc
+sudo pacman -S --needed base-devel ncurses
 ~~~
 
 **macOS**
