@@ -291,3 +291,15 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
    // TODO: Support detecting online / offline CPUs.
    return true;
 }
+
+int Machine_getCPUPhysicalCoreID(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host;
+   return (int)id;
+}
+
+int Machine_getCPUThreadIndex(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host; (void) id;
+   return 0;
+}
