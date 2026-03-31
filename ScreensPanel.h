@@ -36,7 +36,6 @@ typedef struct ScreensPanel_ {
    size_t cursor;
    ListItem* renamingItem;
    bool renamingNewItem;
-   struct ScreenListItem_* prevSelected;
 } ScreensPanel;
 
 typedef struct ScreenListItem_ {

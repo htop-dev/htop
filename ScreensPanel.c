@@ -238,7 +238,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
    int selected = Panel_getSelectedIndex(super);
-   ScreenListItem* oldFocus = this->prevSelected;
+   ScreenListItem* oldFocus = (ScreenListItem*) super->prevSelected;
    bool shouldRebuildArray = false;
    HandlerResult result = IGNORED;
 
@@ -353,7 +353,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       result = HANDLED;
    }
 
-   this->prevSelected = newFocus;
+   super->prevSelected = (Object*) newFocus;
 
    if (shouldRebuildArray)
       rebuildSettingsArray(super, selected);
@@ -401,7 +401,6 @@ ScreensPanel* ScreensPanel_new(Settings* settings) {
    this->renamingNewItem = false;
    super->cursorOn = false;
    this->cursor = 0;
-   this->prevSelected = NULL;
    Panel_setHeader(super, "Screens");
 
    for (unsigned int i = 0; i < settings->nScreens; i++) {
@@ -409,7 +408,7 @@ ScreensPanel* ScreensPanel_new(Settings* settings) {
       char* name = ss->heading;
       Panel_add(super, (Object*) ScreenListItem_new(name, ss));
    }
-   this->prevSelected = (ScreenListItem*) Panel_getSelected(super);
+   super->prevSelected = Panel_getSelected(super);
    return this;
 }
 
