@@ -13,7 +13,6 @@ in the source distribution for its full text.
 
 #define NUMBERITEM_EDIT_MAX 10
 
-
 enum OptionItemType {
    OPTION_ITEM_TEXT,
    OPTION_ITEM_CHECK,

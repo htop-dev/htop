@@ -85,7 +85,7 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
             break;
          }
          /* When not editing, fall through to space/toggle */
-         /* FALLTHROUGH */
+         /* fallthrough */
       case ' ':
          if (numItem && numItem->editing) {
             /* Space while editing: apply pending edit, then toggle */
@@ -94,19 +94,14 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
             }
             super->cursorOn = false;
          }
-         switch (OptionItem_kind(selected)) {
-            case OPTION_ITEM_TEXT:
-               break;
-            case OPTION_ITEM_CHECK:
-               CheckItem_toggle((CheckItem*)selected);
-               result = HANDLED;
-               settingsChanged = true;
-               break;
-            case OPTION_ITEM_NUMBER:
-               NumberItem_toggle((NumberItem*)selected);
-               result = HANDLED;
-               settingsChanged = true;
-               break;
+         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+            NumberItem_toggle((NumberItem*)selected);
+            result = HANDLED;
+            settingsChanged = true;
+         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
+            CheckItem_toggle((CheckItem*)selected);
+            result = HANDLED;
+            settingsChanged = true;
          }
          break;
       case '-':
