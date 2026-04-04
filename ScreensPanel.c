@@ -237,7 +237,6 @@ static void addNewScreen(Panel* super) {
 static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
-   int selected = Panel_getSelectedIndex(super);
    ScreenListItem* oldFocus = (ScreenListItem*) super->prevSelected;
    bool shouldRebuildArray = false;
    HandlerResult result = IGNORED;
@@ -333,7 +332,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       case KEY_DC:
       case KEY_DEL_MAC:
          if (Panel_size(super) > 1)
-            Panel_remove(super, selected);
+            Panel_remove(super, super->selected);
          shouldRebuildArray = true;
          result = HANDLED;
          break;
@@ -356,7 +355,8 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    super->prevSelected = (Object*) newFocus;
 
    if (shouldRebuildArray)
-      rebuildSettingsArray(super, selected);
+      rebuildSettingsArray(super, super->selected);
+
    if (result == HANDLED)
       ScreensPanel_update(super);
 
