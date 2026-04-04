@@ -34,8 +34,7 @@ const PanelClass Panel_class = {
 };
 
 Panel* Panel_new(int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar) {
-   Panel* this;
-   this = xMalloc(sizeof(Panel));
+   Panel* this = xMalloc(sizeof(Panel));
    Object_setClass(this, Class(Panel));
    Panel_init(this, x, y, w, h, type, owner, fuBar);
    return this;
@@ -523,8 +522,10 @@ int Panel_getCh(Panel* this) {
    } else {
       curs_set(0);
    }
+
 #ifdef HAVE_SET_ESCDELAY
    set_escdelay(25);
 #endif
+
    return getch();
 }
