@@ -60,7 +60,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type
    this->scrollH = 0;
    this->selected = 0;
    this->oldSelected = 0;
-   this->prevSelected = NULL;
+   this->prevSelected = -1;
    this->selectedLen = 0;
    this->needsRedraw = true;
    this->cursorOn = false;
@@ -113,6 +113,7 @@ void Panel_prune(Panel* this) {
    assert (this != NULL);
 
    Vector_prune(this->items);
+   this->prevSelected = -1;
    this->scrollV = 0;
    this->selected = 0;
    this->oldSelected = 0;
@@ -123,6 +124,7 @@ void Panel_add(Panel* this, Object* o) {
    assert (this != NULL);
 
    Vector_add(this->items, o);
+   this->prevSelected = -1;
    this->needsRedraw = true;
 }
 
@@ -130,6 +132,7 @@ void Panel_insert(Panel* this, int i, Object* o) {
    assert (this != NULL);
 
    Vector_insert(this->items, i, o);
+   this->prevSelected = -1;
    this->needsRedraw = true;
 }
 
@@ -150,6 +153,7 @@ Object* Panel_remove(Panel* this, int i) {
 
    this->needsRedraw = true;
    Object* removed = Vector_remove(this->items, i);
+   this->prevSelected = -1;
    if (this->selected > 0 && this->selected >= Vector_size(this->items)) {
       this->selected--;
    }
@@ -170,6 +174,7 @@ void Panel_moveSelectedUp(Panel* this) {
    assert (this != NULL);
 
    Vector_moveUp(this->items, this->selected);
+   this->prevSelected = -1;
    if (this->selected > 0) {
       this->selected--;
    }
@@ -179,6 +184,7 @@ void Panel_moveSelectedDown(Panel* this) {
    assert (this != NULL);
 
    Vector_moveDown(this->items, this->selected);
+   this->prevSelected = -1;
    if (this->selected + 1 < Vector_size(this->items)) {
       this->selected++;
    }
@@ -217,6 +223,7 @@ void Panel_splice(Panel* this, Vector* from) {
    assert (from != NULL);
 
    Vector_splice(this->items, from);
+   this->prevSelected = -1;
    this->needsRedraw = true;
 }
 
