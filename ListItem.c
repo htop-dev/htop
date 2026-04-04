@@ -26,7 +26,7 @@ void ListItem_delete(Object* cast) {
 
 void ListItem_display(const Object* cast, RichString* out) {
    const ListItem* const this = (const ListItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    if (this->moving) {
       RichString_writeWide(out, CRT_colors[DEFAULT_COLOR],

@@ -21,7 +21,7 @@ in the source distribution for its full text.
 
 static void OptionItem_delete(Object* cast) {
    OptionItem* this = (OptionItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    free(this->text);
    free(this);
@@ -29,14 +29,14 @@ static void OptionItem_delete(Object* cast) {
 
 static void TextItem_display(const Object* cast, RichString* out) {
    const TextItem* this = (const TextItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    RichString_appendWide(out, CRT_colors[HELP_BOLD], this->super.text);
 }
 
 static void CheckItem_display(const Object* cast, RichString* out) {
    const CheckItem* this = (const CheckItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
    if (CheckItem_get(this)) {
@@ -50,7 +50,7 @@ static void CheckItem_display(const Object* cast, RichString* out) {
 
 static void NumberItem_display(const Object* cast, RichString* out) {
    const NumberItem* this = (const NumberItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    char buffer[12];
    RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
