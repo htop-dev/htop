@@ -731,6 +731,23 @@ static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
       }
       cpus[i].threadIndex = threadIndex;
    }
+
+   /* Now compute a normalized physical core index for each CPU.
+      On many systems, this index will match the following:
+        physicalID*(maxPhysicalID+1)+coreID
+      But there are some systems where this is not true, either
+      because CoreIDs are not contiguous or because cpus are
+      enumerated in an alternative order, or both. */
+   for (size_t i = 1; i <= super->existingCPUs; i++) {
+      int coreIndex = 0;
+      for (size_t j = 1; j < i; j++) {
+         if (cpus[i].threadIndex == cpus[j].threadIndex) {
+            coreIndex++;
+         }
+      }
+      cpus[i].coreIndex = coreIndex;
+   }
+
 }
 
 static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
@@ -850,9 +867,7 @@ int Machine_getCPUPhysicalCoreID(const Machine* super, unsigned int id) {
    const LinuxMachine* this = (const LinuxMachine*) super;
 
    assert(id < super->existingCPUs);
-
-   const CPUData* cpu = &this->cpuData[id + 1];
-   return cpu->physicalID * (this->maxCoreID + 1) + cpu->coreID;
+   return this->cpuData[id + 1].coreIndex;
 }
 
 int Machine_getCPUThreadIndex(const Machine* super, unsigned int id) {
