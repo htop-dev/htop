@@ -58,21 +58,12 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    bool update = false;
 
    switch (ch) {
-      case KEY_F(5):
-      case 'l':
-      case 'L':
-         AvailableMetersPanel_addMeter(header, this->meterPanels[0], Platform_meterTypes[type], param, 0);
-         result = HANDLED;
-         update = true;
-         break;
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
-      case KEY_F(6):
-      case 'r':
-      case 'R':
+      case KEY_F(5):
          AvailableMetersPanel_addMeter(header, this->meterPanels[this->columns - 1], Platform_meterTypes[type], param, this->columns - 1);
-         result = (KEY_LEFT << 16) | SYNTH_KEY;
+         result = HANDLED;
          update = true;
          break;
    }
