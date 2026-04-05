@@ -182,6 +182,8 @@ static void startRenaming(Panel* super) {
    ListItem* item = (ListItem*) Panel_getSelected(super);
    if (item == NULL)
       return;
+   if (this->moving)
+      ScreensPanel_cancelMoving(this);
    this->renamingItem = item;
    super->cursorOn = true;
    char* name = item->value;

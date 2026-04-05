@@ -27,6 +27,7 @@ static void IncMode_reset(IncMode* mode) {
 
 void IncSet_reset(IncSet* this, IncType type) {
    IncMode_reset(&this->modes[type]);
+   this->found = false;
 }
 
 void IncSet_setFilter(IncSet* this, const char* filter) {
@@ -254,6 +255,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
          this->filtering = false;
          IncMode_reset(mode);
       } else {
+         this->found = false;
          IncMode_reset(mode);
       }
       IncSet_deactivate(this, panel);
@@ -262,10 +264,14 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       /* Try line editor first */
       bool textChanged = LineEditor_handleKey(&mode->editor, ch);
       if (textChanged) {
+         const char* buf = LineEditor_getText(&mode->editor);
          if (mode->isFilter) {
             filterChanged = true;
-            const char* buf = LineEditor_getText(&mode->editor);
             this->filtering = (buf[0] != '\0');
+         } else if (buf[0] == '\0') {
+            /* Buffer emptied in search mode: clear stale found state */
+            this->found = false;
+            doSearch = false;
          }
       } else {
          /* Key was a movement key (no text change) or unrecognized */
@@ -295,7 +301,7 @@ const char* IncSet_getListItemValue(Panel* panel, int i) {
 
 void IncSet_drawBar(const IncSet* this, int attr) {
    if (this->active) {
-      if (!this->active->isFilter && !this->found)
+      if (!this->active->isFilter && !this->found && this->active->editor.len > 0)
          attr = CRT_colors[FAILED_SEARCH];
 
       /* Draw the function keys and get the start of the input field */
