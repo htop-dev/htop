@@ -301,7 +301,7 @@ const char* IncSet_getListItemValue(Panel* panel, int i) {
 
 void IncSet_drawBar(const IncSet* this, int attr) {
    if (this->active) {
-      if (!this->active->isFilter && !this->found)
+      if (!this->active->isFilter && !this->found && this->active->editor.len > 0)
          attr = CRT_colors[FAILED_SEARCH];
 
       /* Draw the function keys and get the start of the input field */

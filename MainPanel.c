@@ -104,7 +104,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
          host->activeTable->incFilter = IncSet_filter(this->inc);
          reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
-      if (this->inc->found) {
+      if (this->inc->found && this->inc->active && !this->inc->active->isFilter) {
          reaction |= Action_follow(this->state);
          reaction |= HTOP_KEEP_FOLLOWING;
       }
