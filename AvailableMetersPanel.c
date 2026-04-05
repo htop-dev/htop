@@ -61,6 +61,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
+      case KEY_RECLICK:
       case KEY_F(5):
          AvailableMetersPanel_addMeter(header, this->meterPanels[this->columns - 1], Platform_meterTypes[type], param, this->columns - 1);
          result = HANDLED;
