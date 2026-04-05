@@ -1239,6 +1239,11 @@ IGNORE_WCASTQUAL_BEGIN
       define_key("\033[14;2~", KEY_F(15));
       define_key("\033[17;2~", KEY_F(18));
       define_key("\033[Z", KEY_SHIFT_TAB);
+
+      /* These are a bit of a gamble: */
+      define_key("\033[1;5D", KEY_CTRL_LEFT);
+      define_key("\033[1;5C", KEY_CTRL_RIGHT);
+
       char sequence[3] = "\033a";
       for (char c = 'a'; c <= 'z'; c++) {
          sequence[1] = c;

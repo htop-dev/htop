@@ -9,11 +9,12 @@ in the source distribution for its full text.
 
 #include "IncSet.h"
 
-#include <ctype.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "CRT.h"
+#include "History.h"
+#include "LineEditor.h"
 #include "ListItem.h"
 #include "Object.h"
 #include "ProvideCurses.h"
@@ -21,8 +22,7 @@ in the source distribution for its full text.
 
 
 static void IncMode_reset(IncMode* mode) {
-   mode->index = 0;
-   mode->buffer[0] = 0;
+   LineEditor_reset(&mode->editor);
 }
 
 void IncSet_reset(IncSet* this, IncType type) {
@@ -31,9 +31,8 @@ void IncSet_reset(IncSet* this, IncType type) {
 
 void IncSet_setFilter(IncSet* this, const char* filter) {
    IncMode* mode = &this->modes[INC_FILTER];
-   size_t len = String_safeStrncpy(mode->buffer, filter, sizeof(mode->buffer));
-   mode->index = len;
-   this->filtering = true;
+   LineEditor_setText(&mode->editor, filter);
+   this->filtering = (filter && filter[0] != '\0');
 }
 
 static const char* const searchFunctions[] = {"Next  ", "Prev   ", "Cancel ", " Search: ", NULL};
@@ -44,6 +43,7 @@ static inline void IncMode_initSearch(IncMode* search) {
    memset(search, 0, sizeof(IncMode));
    search->bar = FunctionBar_new(searchFunctions, searchKeys, searchEvents);
    search->isFilter = false;
+   LineEditor_init(&search->editor);
 }
 
 static const char* const filterFunctions[] = {"Done  ", "Clear ", " Filter: ", NULL};
@@ -54,6 +54,7 @@ static inline void IncMode_initFilter(IncMode* filter) {
    memset(filter, 0, sizeof(IncMode));
    filter->bar = FunctionBar_new(filterFunctions, filterKeys, filterEvents);
    filter->isFilter = true;
+   LineEditor_init(&filter->editor);
 }
 
 static inline void IncMode_done(IncMode* mode) {
@@ -68,21 +69,35 @@ IncSet* IncSet_new(FunctionBar* bar) {
    this->defaultBar = bar;
    this->filtering = false;
    this->found = false;
+   this->history = NULL;
    return this;
 }
 
 void IncSet_delete(IncSet* this) {
    IncMode_done(&(this->modes[0]));
    IncMode_done(&(this->modes[1]));
+   if (this->history)
+      History_delete(this->history);
    free(this);
 }
 
-static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
+void IncSet_setHistoryFile(IncSet* this, const char* filename) {
+   if (this->history)
+      History_delete(this->history);
+   this->history = History_new(filename);
+}
+
+void IncSet_saveHistory(const IncSet* this) {
+   if (this->history)
+      History_save(this->history);
+}
+
+static void updateWeakPanel(IncSet* this, Panel* panel, Vector* lines) {
    const Object* selected = Panel_getSelected(panel);
    Panel_prune(panel);
    if (this->filtering) {
       int n = 0;
-      const char* incFilter = this->modes[INC_FILTER].buffer;
+      const char* incFilter = LineEditor_getText(&this->modes[INC_FILTER].editor);
       for (int i = 0; i < Vector_size(lines); i++) {
          ListItem* line = (ListItem*)Vector_get(lines, i);
          if (String_contains_i(line->value, incFilter, true)) {
@@ -105,10 +120,10 @@ static void updateWeakPanel(const IncSet* this, Panel* panel, Vector* lines) {
    }
 }
 
-static bool search(const IncSet* this, Panel* panel, IncMode_GetPanelValue getPanelValue) {
+static bool search(IncSet* this, Panel* panel, IncMode_GetPanelValue getPanelValue) {
    int size = Panel_size(panel);
    for (int i = 0; i < size; i++) {
-      if (String_contains_i(getPanelValue(panel, i), this->active->buffer, true)) {
+      if (String_contains_i(getPanelValue(panel, i), LineEditor_getText(&this->active->editor), true)) {
          Panel_setSelected(panel, i);
          return true;
       }
@@ -122,6 +137,9 @@ void IncSet_activate(IncSet* this, IncType type, Panel* panel) {
    panel->currentBar = this->active->bar;
    panel->cursorOn = true;
    this->panel = panel;
+   /* Reset history browse position when starting a new search/filter */
+   if (this->history)
+      History_resetPosition(this->history);
    IncSet_drawBar(this, CRT_colors[FUNCTION_BAR]);
 }
 
@@ -132,7 +150,7 @@ static void IncSet_deactivate(IncSet* this, Panel* panel) {
    FunctionBar_draw(this->defaultBar);
 }
 
-static bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
+static bool IncMode_find(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
    int size = Panel_size(panel);
    int here = Panel_getSelectedIndex(panel);
    int i = here;
@@ -148,7 +166,7 @@ static bool IncMode_find(const IncMode* mode, Panel* panel, IncMode_GetPanelValu
          return false;
       }
 
-      if (String_contains_i(getPanelValue(panel, i), mode->buffer, true)) {
+      if (String_contains_i(getPanelValue(panel, i), LineEditor_getText(&mode->editor), true)) {
          Panel_setSelected(panel, i);
          return true;
       }
@@ -163,68 +181,110 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
    int size = Panel_size(panel);
    bool filterChanged = false;
    bool doSearch = true;
+
+   /* Mouse click in the function bar input field: place cursor */
+   if (ch == KEY_MOUSE_BAR_CLICK) {
+      int fieldStartX = FunctionBar_getWidth(mode->bar);
+      LineEditor_click(&mode->editor, panel->lastMouseBarClickX, fieldStartX);
+      IncSet_drawBar(this, CRT_colors[FUNCTION_BAR]);
+      return false;
+   }
+
    if (ch == KEY_F(3) || ch == KEY_F(15)) {
       if (size == 0)
          return true;
 
       IncMode_find(mode, panel, getPanelValue, ch == KEY_F(3) ? 1 : -1);
       doSearch = false;
-   } else if (0 < ch && ch < 255 && isprint((unsigned char)ch)) {
-      if (mode->index < INCMODE_MAX) {
-         mode->buffer[mode->index] = (char) ch;
-         mode->index++;
-         mode->buffer[mode->index] = 0;
-         if (mode->isFilter) {
-            filterChanged = true;
-            if (mode->index == 1) {
-               this->filtering = true;
+   } else if (ch == KEY_UP) {
+      /* History navigation: older entry */
+      if (this->history) {
+         const char* entry = History_navigate(this->history, &mode->editor, true);
+         if (entry) {
+            LineEditor_setText(&mode->editor, entry);
+            if (mode->isFilter) {
+               filterChanged = true;
+               this->filtering = (LineEditor_getText(&mode->editor)[0] != '\0');
             }
          }
+         doSearch = !mode->isFilter;
+      } else {
+         doSearch = false;
       }
-   } else if (ch == KEY_CTRL('U')) {
-      mode->index = 0;
-      mode->buffer[mode->index] = 0;
-      if (mode->isFilter) {
-         filterChanged = true;
-         this->filtering = false;
-      }
-   } else if (ch == KEY_BACKSPACE || ch == 127) {
-      if (mode->index > 0) {
-         mode->index--;
-         mode->buffer[mode->index] = 0;
-         if (mode->isFilter) {
-            filterChanged = true;
-            if (mode->index == 0) {
-               this->filtering = false;
-               IncMode_reset(mode);
+   } else if (ch == KEY_DOWN) {
+      /* History navigation: newer entry */
+      if (this->history) {
+         const char* entry = History_navigate(this->history, &mode->editor, false);
+         if (entry) {
+            LineEditor_setText(&mode->editor, entry);
+            if (mode->isFilter) {
+               filterChanged = true;
+               this->filtering = (LineEditor_getText(&mode->editor)[0] != '\0');
             }
          }
+         doSearch = !mode->isFilter;
       } else {
          doSearch = false;
       }
    } else if (ch == KEY_RESIZE) {
-      doSearch = (mode->index > 0);
-   } else {
-      if (mode->isFilter) {
-         filterChanged = true;
-         if (ch == 27) {
-            this->filtering = false;
-            IncMode_reset(mode);
+      doSearch = (LineEditor_getText(&mode->editor)[0] != '\0');
+   } else if (ch == 13 || ch == '\r' || ch == KEY_ENTER) {
+      /* Enter confirms: add to history and deactivate */
+      if (this->history) {
+         const char* text = LineEditor_getText(&mode->editor);
+         if (text[0] != '\0') {
+            History_add(this->history, text);
+            History_save(this->history);
          }
-      } else {
-         if (ch == 27) {
-            IncMode_reset(mode);
-         }
+         History_resetPosition(this->history);
+      }
+      if (!mode->isFilter) {
+         /* For search: reset buffer on Enter */
+         IncMode_reset(mode);
       }
       IncSet_deactivate(this, panel);
       doSearch = false;
+      filterChanged = mode->isFilter;
+   } else if (ch == 27) {
+      /* Esc aborts */
+      if (this->history)
+         History_resetPosition(this->history);
+      if (mode->isFilter) {
+         filterChanged = true;
+         this->filtering = false;
+         IncMode_reset(mode);
+      } else {
+         IncMode_reset(mode);
+      }
+      IncSet_deactivate(this, panel);
+      doSearch = false;
+   } else {
+      /* Try line editor first */
+      bool textChanged = LineEditor_handleKey(&mode->editor, ch);
+      if (textChanged) {
+         if (mode->isFilter) {
+            filterChanged = true;
+            const char* buf = LineEditor_getText(&mode->editor);
+            this->filtering = (buf[0] != '\0');
+         }
+      } else {
+         /* Key was a movement key (no text change) or unrecognized */
+         doSearch = false;
+      }
    }
-   if (doSearch) {
+
+   if (doSearch && LineEditor_getText(&mode->editor)[0] != '\0') {
       this->found = search(this, panel, getPanelValue);
    }
    if (filterChanged && lines) {
       updateWeakPanel(this, panel, lines);
    }
+
+   /* Redraw the bar to reflect cursor / scroll position changes */
+   if (this->active) {
+      IncSet_drawBar(this, CRT_colors[FUNCTION_BAR]);
+   }
+
    return filterChanged;
 }
 
@@ -237,7 +297,20 @@ void IncSet_drawBar(const IncSet* this, int attr) {
    if (this->active) {
       if (!this->active->isFilter && !this->found)
          attr = CRT_colors[FAILED_SEARCH];
-      int cursorX = FunctionBar_drawExtra(this->active->bar, this->active->buffer, attr, true);
+
+      /* Draw the function keys and get the start of the input field */
+      int fieldStartX = FunctionBar_drawExtra(this->active->bar, NULL, -1, false);
+
+      /* Update scroll so the cursor remains visible */
+      int fieldWidth = COLS - fieldStartX;
+      if (fieldWidth < 1) fieldWidth = 1;
+      LineEditor_updateScroll(&this->active->editor, fieldWidth);
+
+      /* Draw the visible portion of the input text */
+      int cursorX = LineEditor_draw(&this->active->editor, fieldStartX, fieldWidth, attr);
+
+      curs_set(1);
+
       this->panel->cursorY = LINES - 1;
       this->panel->cursorX = cursorX;
    } else {
@@ -247,7 +320,13 @@ void IncSet_drawBar(const IncSet* this, int attr) {
 
 int IncSet_synthesizeEvent(IncSet* this, int x) {
    if (this->active) {
-      return FunctionBar_synthesizeEvent(this->active->bar, x);
+      int ev = FunctionBar_synthesizeEvent(this->active->bar, x);
+      /* Click in the input area: synthesize a bar-click event */
+      if (ev == ERR && x >= FunctionBar_getWidth(this->active->bar)) {
+         this->panel->lastMouseBarClickX = x;
+         return KEY_MOUSE_BAR_CLICK;
+      }
+      return ev;
    } else {
       return FunctionBar_synthesizeEvent(this->defaultBar, x);
    }

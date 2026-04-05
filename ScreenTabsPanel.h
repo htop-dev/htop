@@ -8,6 +8,7 @@ in the source distribution for its full text.
 */
 
 #include "DynamicScreen.h"
+#include "LineEditor.h"
 #include "ListItem.h"
 #include "Object.h"
 #include "Panel.h"
@@ -21,10 +22,9 @@ typedef struct ScreenNamesPanel_ {
 
    ScreenManager* scr;
    Settings* settings;
-   char buffer[SCREEN_NAME_LEN + 1];
+   LineEditor editor;   /* line editor used during renaming */
    DynamicScreen* ds;
    char* saved;
-   size_t cursor;
    ListItem* renamingItem;
 } ScreenNamesPanel;
 

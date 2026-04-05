@@ -35,6 +35,8 @@ int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr,
 
 void FunctionBar_append(const char* buffer, int attr);
 
+int FunctionBar_getWidth(const FunctionBar* this);
+
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos);
 
 #endif

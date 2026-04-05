@@ -76,6 +76,7 @@ struct Panel_ {
    bool needsRedraw;
    bool cursorOn;
    bool wasFocus;
+   int lastMouseBarClickX; /* X position of last mouse click on function bar (LINES-1) */
    FunctionBar* currentBar;
    FunctionBar* defaultBar;
    RichString header;
@@ -85,6 +86,10 @@ struct Panel_ {
 #define Panel_setDefaultBar(this_) do { (this_)->currentBar = (this_)->defaultBar; } while (0)
 
 #define KEY_CTRL(l) ((l)-'A'+1)
+
+/* Synthetic event: mouse click in the function-bar input field.
+   When set, Panel.lastMouseBarClickX holds the screen X of the click. */
+#define KEY_MOUSE_BAR_CLICK  (KEY_MAX + 50)
 
 extern const PanelClass Panel_class;
 

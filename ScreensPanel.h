@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include "AvailableColumnsPanel.h"
 #include "ColumnsPanel.h"
 #include "DynamicScreen.h"
+#include "LineEditor.h"
 #include "ListItem.h"
 #include "Object.h"
 #include "Panel.h"
@@ -30,10 +31,10 @@ typedef struct ScreensPanel_ {
    Settings* settings;
    ColumnsPanel* columns;
    AvailableColumnsPanel* availableColumns;
-   char buffer[SCREEN_NAME_LEN + 1];
+   LineEditor editor;    /* line editor used during renaming */
+   char buffer[SCREEN_NAME_LEN + 1]; /* backing buffer (editor.buffer copied here) */
    bool moving;
-   char* saved;
-   size_t cursor;
+   char* saved;          /* saved original item->value pointer */
    ListItem* renamingItem;
    bool renamingNewItem;
 } ScreensPanel;
