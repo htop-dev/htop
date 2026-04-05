@@ -739,13 +739,13 @@ static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
       because CoreIDs are not contiguous or because cpus are
       enumerated in an alternative order, or both. */
    for (size_t i = 1; i <= super->existingCPUs; i++) {
-      int coreIndex = 0;
-      for (size_t j = 1; j < i; j++) {
+      cpus[i].coreIndex = 0;
+      for (size_t j = i - 1; j >= 1; j--) {
          if (cpus[i].threadIndex == cpus[j].threadIndex) {
-            coreIndex++;
+            cpus[i].coreIndex = cpus[j].coreIndex + 1;
+            break;
          }
       }
-      cpus[i].coreIndex = coreIndex;
    }
 
    /* Set core & thread indices to zero for cpu0 (average) */
