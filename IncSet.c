@@ -27,6 +27,7 @@ static void IncMode_reset(IncMode* mode) {
 
 void IncSet_reset(IncSet* this, IncType type) {
    IncMode_reset(&this->modes[type]);
+   this->found = false;
 }
 
 void IncSet_setFilter(IncSet* this, const char* filter) {
@@ -254,6 +255,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
          this->filtering = false;
          IncMode_reset(mode);
       } else {
+         this->found = false;
          IncMode_reset(mode);
       }
       IncSet_deactivate(this, panel);
@@ -262,10 +264,14 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       /* Try line editor first */
       bool textChanged = LineEditor_handleKey(&mode->editor, ch);
       if (textChanged) {
+         const char* buf = LineEditor_getText(&mode->editor);
          if (mode->isFilter) {
             filterChanged = true;
-            const char* buf = LineEditor_getText(&mode->editor);
             this->filtering = (buf[0] != '\0');
+         } else if (buf[0] == '\0') {
+            /* Buffer emptied in search mode: clear stale found state */
+            this->found = false;
+            doSearch = false;
          }
       } else {
          /* Key was a movement key (no text change) or unrecognized */
