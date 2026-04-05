@@ -29,6 +29,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+static const char* const AvailableMetersFunctions[] = {"      ", "      ", "      ", "      ", "Add   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
+
 static void AvailableMetersPanel_delete(Object* object) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) object;
    free(this->meterPanels);
@@ -145,7 +147,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Machine* host, Header* header, si
    AvailableMetersPanel* this = AllocThis(AvailableMetersPanel);
    Panel* super = &this->super;
 
-   FunctionBar* fuBar = FunctionBar_newEnterEsc("Add   ", "Done   ");
+   FunctionBar* fuBar = FunctionBar_new(AvailableMetersFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->host = host;
