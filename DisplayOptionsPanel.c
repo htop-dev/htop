@@ -37,58 +37,127 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    DisplayOptionsPanel* this = (DisplayOptionsPanel*) super;
 
    HandlerResult result = IGNORED;
+   bool settingsChanged = false;
    OptionItem* selected = (OptionItem*) Panel_getSelected(super);
 
    if (!selected) {
       return result;
    }
 
+   NumberItem* numItem = (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) ? (NumberItem*)selected : NULL;
+
+   /* Helper: position the hardware cursor right after the edit buffer.
+    * +1 on Y for the panel header row; +1 on X for the leading '[' bracket. */
+   #define SET_EDIT_CURSOR() do { \
+      super->cursorY = super->y + 1 + (super->selected - super->scrollV); \
+      super->cursorX = super->x + 1 + numItem->editLen; \
+      super->cursorOn = true; \
+   } while (0)
+
    switch (ch) {
+      case 27: /* Escape: cancel editing */
+         if (numItem && numItem->editing) {
+            NumberItem_cancelEditing(numItem);
+            super->cursorOn = false;
+            return HANDLED;
+         }
+         break;
+      case KEY_BACKSPACE:
+      case KEY_DEL_MAC:
+         if (numItem) {
+            if (!numItem->editing) {
+               NumberItem_startEditingFromValue(numItem);
+            }
+            NumberItem_deleteChar(numItem);
+            SET_EDIT_CURSOR();
+            return HANDLED;
+         }
+         break;
       case '\n':
       case '\r':
       case KEY_ENTER:
+         if (numItem && numItem->editing) {
+            if (NumberItem_applyEditing(numItem)) {
+               settingsChanged = true;
+            }
+            super->cursorOn = false;
+            result = HANDLED;
+            break;
+         }
+         /* When not editing, fall through to space/toggle */
+         /* fallthrough */
       case ' ':
-         switch (OptionItem_kind(selected)) {
-            case OPTION_ITEM_TEXT:
-               break;
-            case OPTION_ITEM_CHECK:
-               CheckItem_toggle((CheckItem*)selected);
-               result = HANDLED;
-               break;
-            case OPTION_ITEM_NUMBER:
-               NumberItem_toggle((NumberItem*)selected);
-               result = HANDLED;
-               break;
+         if (numItem && numItem->editing) {
+            /* Space while editing: apply pending edit, then toggle */
+            if (NumberItem_applyEditing(numItem)) {
+               settingsChanged = true;
+            }
+            super->cursorOn = false;
          }
-         break;
-      case '-':
-      case KEY_F(7):
-      case KEY_RIGHTCLICK:
          if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
-            NumberItem_decrease((NumberItem*)selected);
+            NumberItem_toggle((NumberItem*)selected);
             result = HANDLED;
-         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
-            CheckItem_set((CheckItem*)selected, false);
-            result = HANDLED;
-         }
-         break;
-      case '+':
-      case KEY_F(8):
-         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
-            NumberItem_increase((NumberItem*)selected);
-            result = HANDLED;
-         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
-            CheckItem_set((CheckItem*)selected, true);
-            result = HANDLED;
-         }
-         break;
-      case KEY_RECLICK:
-         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
-            NumberItem_increase((NumberItem*)selected);
-            result = HANDLED;
+            settingsChanged = true;
          } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
             CheckItem_toggle((CheckItem*)selected);
             result = HANDLED;
+            settingsChanged = true;
+         }
+         break;
+      case '-':
+      case KEY_PADMINUS:
+      case KEY_F(7):
+      case KEY_RIGHTCLICK:
+         if (numItem && numItem->editing) {
+            if (NumberItem_applyEditing(numItem)) {
+               settingsChanged = true;
+            }
+            super->cursorOn = false;
+         }
+         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+            NumberItem_decrease((NumberItem*)selected);
+            result = HANDLED;
+            settingsChanged = true;
+         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
+            CheckItem_set((CheckItem*)selected, false);
+            result = HANDLED;
+            settingsChanged = true;
+         }
+         break;
+      case '+':
+      case KEY_PADPLUS:
+      case KEY_F(8):
+         if (numItem && numItem->editing) {
+            if (NumberItem_applyEditing(numItem)) {
+               settingsChanged = true;
+            }
+            super->cursorOn = false;
+         }
+         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+            NumberItem_increase((NumberItem*)selected);
+            result = HANDLED;
+            settingsChanged = true;
+         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
+            CheckItem_set((CheckItem*)selected, true);
+            result = HANDLED;
+            settingsChanged = true;
+         }
+         break;
+      case KEY_RECLICK:
+         if (numItem && numItem->editing) {
+            if (NumberItem_applyEditing(numItem)) {
+               settingsChanged = true;
+            }
+            super->cursorOn = false;
+         }
+         if (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
+            NumberItem_increase((NumberItem*)selected);
+            result = HANDLED;
+            settingsChanged = true;
+         } else if (OptionItem_kind(selected) == OPTION_ITEM_CHECK) {
+            CheckItem_toggle((CheckItem*)selected);
+            result = HANDLED;
+            settingsChanged = true;
          }
          break;
       case KEY_UP:
@@ -97,25 +166,66 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
       case KEY_PPAGE:
       case KEY_HOME:
       case KEY_END:
+         if (numItem && numItem->editing) {
+            if (NumberItem_applyEditing(numItem)) {
+               settingsChanged = true;
+            }
+            super->cursorOn = false;
+         }
          {
             OptionItem* previous = selected;
             Panel_onKey(super, ch);
             selected = (OptionItem*) Panel_getSelected(super);
             if (previous != selected) {
                result = HANDLED;
+               settingsChanged = true;
             }
          }
-         /* fallthrough */
+         /* FALLTHROUGH */
       case EVENT_SET_SELECTED:
+         super->cursorOn = false;
          if (selected && OptionItem_kind(selected) == OPTION_ITEM_NUMBER) {
             super->currentBar = this->decIncBar;
          } else {
             Panel_setDefaultBar(super);
          }
          break;
+      case EVENT_PANEL_LOST_FOCUS:
+         if (numItem && numItem->editing) {
+            if (NumberItem_applyEditing(numItem)) {
+               settingsChanged = true;
+            }
+         }
+         super->cursorOn = false;
+         Panel_setDefaultBar(super);
+         break;
+      default:
+         if (numItem && numItem->editing) {
+            if ((ch >= '0' && ch <= '9') || ch == '.' || ch == ',') {
+               NumberItem_addChar(numItem, (char)ch);
+               SET_EDIT_CURSOR();
+               return HANDLED;
+            }
+            /* For navigation, inc/dec, and other keys: apply pending edit first */
+            if (NumberItem_applyEditing(numItem)) {
+               settingsChanged = true;
+            }
+            super->cursorOn = false;
+         } else if (numItem) {
+            /* Start editing when a digit or decimal separator is typed */
+            if ((ch >= '0' && ch <= '9') || ch == '.' || ch == ',') {
+               NumberItem_startEditing(numItem);
+               NumberItem_addChar(numItem, (char)ch);
+               SET_EDIT_CURSOR();
+               return HANDLED;
+            }
+         }
+         break;
    }
 
-   if (result == HANDLED) {
+   #undef SET_EDIT_CURSOR
+
+   if (settingsChanged) {
       this->settings->changed = true;
       this->settings->lastUpdate++;
       CRT_updateDelay();
