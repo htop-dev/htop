@@ -748,6 +748,9 @@ static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
       cpus[i].coreIndex = coreIndex;
    }
 
+   /* Set core & thread indices to zero for cpu0 (average) */
+   cpus[0].coreIndex = 0;
+   cpus[0].threadIndex = 0;
 }
 
 static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
