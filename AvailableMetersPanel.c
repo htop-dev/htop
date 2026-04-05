@@ -71,6 +71,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(6):
       case 'r':
       case 'R':
+      case KEY_RECLICK:
          AvailableMetersPanel_addMeter(header, this->meterPanels[this->columns - 1], Platform_meterTypes[type], param, this->columns - 1);
          result = (KEY_LEFT << 16) | SYNTH_KEY;
          update = true;
