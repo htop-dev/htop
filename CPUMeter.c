@@ -66,7 +66,7 @@ static void CPUMeter_init(Meter* this) {
          if ((threadIndex % 52) > 26) {
              threadLetter -= ('a' - 'A');
          }
-         xSnprintf(caption, sizeof(caption), "%2d%c", coreID, threadLetter);
+         xSnprintf(caption, sizeof(caption), "%2d%c", Settings_cpuId(host->settings, coreID), threadLetter);
       } else {
          xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
       }
