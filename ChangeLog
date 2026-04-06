@@ -1,3 +1,111 @@
+What's new in version 3.5.0
+
+* Implement line editor for Search, Filter and (re)naming Screens
+* Add digits editing for numeric options
+* Backtrace screen feature (using libunwind-ptrace)
+* Add CPU SMT label option
+* MemoryMeter: rework to allow full platform-specific control
+* Fix CPU virtualization bar color and help text in non-detailed mode
+* Add --no-meters option to hide meters
+* Implement explicit NO_COLOR env support
+* fix: support *-256color in $TERM key detection
+* Add COLORSCHEME_NORD: Nordic inspired theme
+* Add Tctl temperature reading
+* Add SecondsUptimeMeter
+* Adjust GPUMeter text display
+* Make Ctrl-U clear the current Filter or Search string while editing it
+* Make empty --filter= command line arguments invalid
+* Make Infoscreen also show uppercase FILTER when filtering (F4) is active
+* Graph meter dynamic scaling and percent graph drawing
+* Update "total" value for non-percent bar meters
+* Fix logic bug while iterating processes
+* Change NetworkIOMeter "packets per second" display
+* Add NetworkIOMeter description
+* Rework DiskIOMeter into a combined display of 2 sub-meters
+* Introduce DiskIORateMeter and DiskIOTimeMeter
+* DiskIOMeter: Adjust code indent and formatting
+* DiskIOMeter: Move cache update code to a new function
+* Add --no-function-bar option to hide functionbar
+* Fix function bar labels in Screens panel rename mode
+* Make Meters function bar consistent with the Screens one
+* Display a FAILED message in the FunctionBar on host scan failure
+* Cancel pending renaming action for a screen in dtor of ScreensPanel
+* Move prevSelected from ScreensPanel to Panel
+* Only issue KEY_RECLICK when the focussed item has not changed
+* Track oldFocus correctly in ScreensPanel
+* Add lost focus event, make mouse actions consistent, handle rename and move explicitly across screens / meters / columns
+* Make Cancel (F2, Esc) remove a newly added screen tab and not only abort the implicit rename
+* Use default key list for DisplayOptions "Dec/Inc" function bar
+* Make first click select option line but not toggle it, toggle with next click, handle right click
+* Make the Panel items actually match what receives a mouse click
+* No need for "phantom" CPU threads
+* Simplify offline CPU marking
+* Make the physicalID default to 0 because old Intel processors only have that
+* Don't draw Meter caption if width is not enough (bar & graph)
+* CPUMeter: Fix negative "x" positions of sub-meters
+* Add sensors logic for Snapdragon 410
+* Add sensors logic for Amlogic S905W support
+* Add foot terminal to terminalSupportsDefinedKeys
+* No longer write to htoprc file if it's not owned by EUID
+* Remove initial enforced delay to reduce startup latency
+* Improve bootup time by caching all getpwuid result
+* Fix a small file descriptor leak in Settings_write()
+* Keep track of the biggest PID and scale the column accordingly
+* Allocate COMMAND (cmdline) and comm buffers dynamically
+* Improve "comm" string highlighting in Process_makeCommandStr()
+* Improve process cmdline basename matching with procExe path
+* Don't make highlights of zero-length cmdline basename
+* Shadow path prefixes used by NixOS
+* Improve Generic_unameRelease() related code
+* Linux: Check for CPU number on s390
+* Linux: Handle special cases for CPU frequency data in /proc/cpuinfo
+* Linux: Added support for OpenRC init system and metrics
+* Linux: fix detection of NUL argument separator
+* Linux: Skip loopback and MD (multi-device) driver entries in /proc/diskstats
+* Darwin: Add GPUMeter code for macOS
+* Darwin: Rewrite & improve Platform_getOSRelease() code
+* Darwin: implement macOS version reporting in SysArchMeter
+* Darwin: Handle legacy references to kIOMainPortDefault
+* Darwin: Bring back conversion of process CPU time on macOS (#1638)
+* PCP: Automatically reconnect PCP metrics contexts on disconnect
+* PCP: Fixes to use units-based scaling in pcp-htop on macOS
+* PCP: Fix PCPDynamicColumn parsing after a bad section name
+* FreeBSD: Update the internal priority reference point
+* NetBSD: Improve process state retrieval code
+* OpenBSD: Check on AC power value being nonzero
+* OpenBSD: Document sysctl indices for ACPI battery & AC code
+* Solaris: Update memory info on every refresh
+* Add v1.0 of the AI-Assisted Contributions Policy
+* Add a Code of Conduct document for the project
+* README: Add Quick Start section
+* README: update instructions for those who use Arch
+* Add Japanese support in htop.desktop
+* Add Armenian support in htop.desktop
+* docs: fix COLORS bullet list formatting and capitalization in man page
+* CI: Add Github Action workflow for Coverity checking
+* CI: Add libiberty and demangling support to backtrace screen build
+* CI: Update LLVM/Clang versions to 22
+* CI: Update FreeBSD to 15.0
+* CI: Update to use OpenBSD 7.7
+* build: Add packages for OpenSUSE/SLES
+* build: Fix Autoconf 2.69 compatibility regressions
+* build: Simplify curses header checking code
+* build: remove the --with-os-release configure option
+* build: Fix redundant newlines in configure help strings
+* build: Allow custom search path for libnl; try pkg-config when needed
+* build: Use HTOP_PKG_CHECK_MODULES in hwloc and libnl checking
+* build: Introduce HTOP_PKG_CHECK_MODULES wrapper macro
+* build: Introduce 'htop_search_header_dir' configure function
+* build: Add configure check on whether local unwinding works
+* build: Automatically detect backtrace(3) return type
+* build: Use pkg-config to detect libnl3 header path
+* build: Also check libunwind through pkg-config
+* build: Simplify configure netlink/*.h detection code
+* build: Fix netlink/*.h detection logic in configure
+* build: Fix '-ffinite-math-only' configure warning
+* build: Fix configure '--enable-delayacct' help text
+* build: Fix a macOS AC_COMPILE_IFELSE misquoting
+
 What's new in version 3.4.1
 
 * Support for PMAPI v3 for PCP
