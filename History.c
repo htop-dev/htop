@@ -69,7 +69,7 @@ void History_save(const History* this) {
    if (!this->filename)
       return;
    /* Settings_write writes things via a temp file & rename, we do it less robust but faster here: */
-   int fd = open(this->filename, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+   int fd = open(this->filename, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW, 0600);
    if (fd == -1)
       return;
    FILE* fp = fdopen(fd, "w");
