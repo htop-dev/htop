@@ -79,7 +79,7 @@ static void CPUMeter_getUiName(const Meter* this, char* buffer, size_t length) {
    assert(length > 0);
 
    if (this->param > 0)
-      xSnprintf(buffer, length, "%s %u", Meter_uiName(this), this->param);
+      xSnprintf(buffer, length, "%s %u", Meter_uiName(this), Settings_cpuId(this->host->settings, this->param - 1));
    else
       xSnprintf(buffer, length, "%s", Meter_uiName(this));
 }
