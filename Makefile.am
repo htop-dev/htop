@@ -75,6 +75,7 @@ myhtopsources = \
 	Process.c \
 	ProcessLocksScreen.c \
 	ProcessTable.c \
+	ProgramLauncher.c \
 	Row.c \
 	RichString.c \
 	Scheduling.c \
@@ -146,6 +147,7 @@ myhtopheaders = \
 	Process.h \
 	ProcessLocksScreen.h \
 	ProcessTable.h \
+	ProgramLauncher.h \
 	ProvideCurses.h \
 	ProvideTerm.h \
 	RichString.h \
