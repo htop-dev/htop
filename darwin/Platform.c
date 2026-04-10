@@ -432,14 +432,21 @@ void Platform_setMemoryValues(Meter* mtr) {
 
    mtr->total = dhost->host_info.max_mem / 1024;
    mtr->values[MEMORY_CLASS_WIRED]       = page_K * vm->wire_count;
+
+   /*
+    * Use saturatingSub() to prevent unsigned underflow: on macOS,
+    * external_page_count (file-backed pages) can exceed active_count,
+    * causing the result to wrap around to ~4 billion pages (~64 TB on
+    * 16K-page ARM64 systems).
+    */
    if (settings->showCachedMemory) {
       mtr->values[MEMORY_CLASS_SPECULATIVE] = page_K * vm->speculative_count;
-      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * (vm->active_count - vm->purgeable_count - external_page_count); // external pages are pages swapped out
-      mtr->values[MEMORY_CLASS_PURGEABLE]   = page_K * vm->purgeable_count; // purgeable pages are flagged in the active pages
+      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * saturatingSub(vm->active_count, (unsigned long long)vm->purgeable_count + external_page_count);
+      mtr->values[MEMORY_CLASS_PURGEABLE]   = page_K * vm->purgeable_count;
    }
-   else { // if showCachedMemory is disabled, merge speculative and purgeable into the active pages
+   else {
       mtr->values[MEMORY_CLASS_SPECULATIVE] = 0;
-      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * (vm->speculative_count + vm->active_count - external_page_count); // external pages are pages swapped out
+      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * saturatingSub((unsigned long long)vm->speculative_count + vm->active_count, external_page_count);
       mtr->values[MEMORY_CLASS_PURGEABLE]   = 0;
    }
    mtr->values[MEMORY_CLASS_COMPRESSED]  = page_K * compressor_page_count;
