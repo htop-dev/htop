@@ -270,6 +270,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Tree view", &(settings->ss->treeView)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is always sorted by PID (htop 2 behavior)", &(settings->ss->treeViewAlwaysByPID)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Tree view is collapsed by default", &(settings->ss->allBranchesCollapsed)));
+   Panel_add(super, (Object*) NumberItem_newByRef("- Tree view is kept visually stable (0 - off, 1 - soft, 2 - hard)", &(settings->ss->stableTreeView), 0, 0, 2));
    Panel_add(super, (Object*) TextItem_new("Global options:"));
    Panel_add(super, (Object*) CheckItem_newByRef("Show tabs for screens", &(settings->screenTabs)));
    Panel_add(super, (Object*) CheckItem_newByRef("Shadow other users' processes", &(settings->shadowOtherUsers)));

@@ -279,6 +279,7 @@ ScreenSettings* Settings_newScreen(Settings* this, const ScreenDefaults* default
       .treeView = false,
       .treeViewAlwaysByPID = false,
       .allBranchesCollapsed = false,
+      .stableTreeView = 0,
    };
    return Settings_initScreenSettings(ss, this, defaults->columns);
 }
@@ -554,6 +555,9 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
       } else if (String_eq(option[0], ".all_branches_collapsed")) {
          if (screen)
             screen->allBranchesCollapsed = atoi(option[1]);
+      } else if (String_eq(option[0], ".stable_tree_view")) {
+         if (screen)
+            screen->stableTreeView = atoi(option[1]);
       } else if (String_eq(option[0], ".dynamic")) {
          if (screen) {
             free_and_xStrdup(&screen->dynamic, option[1]);
@@ -767,6 +771,7 @@ int Settings_write(const Settings* this, bool onCrash) {
       printSettingInteger(".sort_direction", ss->direction);
       printSettingInteger(".tree_sort_direction", ss->treeDirection);
       printSettingInteger(".all_branches_collapsed", ss->allBranchesCollapsed);
+      printSettingInteger(".stable_tree_view", ss->stableTreeView);
    }
 
    #undef printSettingString

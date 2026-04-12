@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "Machine.h"
 #include "Macros.h"
 #include "Panel.h"
+#include "Row.h"
 #include "RowField.h"
 #include "Vector.h"
 
@@ -29,6 +30,8 @@ Table* Table_init(Table* this, const ObjectClass* klass, Machine* host) {
    this->table = Hashtable_new(200, false);
    this->needsSort = true;
    this->following = -1;
+   this->stableId = -1;
+   this->stableLastIdx = 0;
    this->host = host;
    return this;
 }
@@ -71,6 +74,7 @@ void Table_add(Table* this, Row* row) {
 // breaking dying process highlighting.
 static void Table_removeIndex(Table* this, const Row* row, int idx) {
    int rowid = row->id;
+   int rowparent = Row_getGroupOrParent(row);  /* save before row is freed */
 
    assert(row == (Row*)Vector_get(this->rows, idx));
    assert(Hashtable_get(this->table, rowid) != NULL);
@@ -81,6 +85,16 @@ static void Table_removeIndex(Table* this, const Row* row, int idx) {
    if (this->following != -1 && this->following == rowid) {
       this->following = -1;
       Panel_setSelectionColor(this->panel, PANEL_SELECTION_FOCUS);
+   }
+
+   /* When the stable-tree-view anchor exits, walk up to its parent */
+   if (this->stableId != -1 && this->stableId == rowid) {
+      if (rowparent != 0 && rowparent != rowid &&
+          Hashtable_get(this->table, rowparent) != NULL) {
+         this->stableId = rowparent;
+      } else {
+         this->stableId = -1;
+      }
    }
 
    assert(Hashtable_get(this->table, rowid) == NULL);
@@ -232,9 +246,22 @@ void Table_collapseAllBranches(Table* this) {
 void Table_rebuildPanel(Table* this) {
    Table_updateDisplayList(this);
 
+   const Settings* settings = this->host->settings;
+   const ScreenSettings* ss = settings->ss;
+   const bool stableMode = ss->treeView && ss->stableTreeView > 0;
+   const bool hardMode = ss->treeView && ss->stableTreeView == 2;
+
    const int currPos = Panel_getSelectedIndex(this->panel);
    const int currScrollV = this->panel->scrollV;
    const int currSize = Panel_size(this->panel);
+
+   /* Stable tree view: the anchor is active when stableId is set, following
+    * is not in use, and the cursor has not moved since the last rebuild. */
+   const int stableOffset = currPos - currScrollV;
+   const bool stableActive = stableMode
+      && (this->following == -1)
+      && (this->stableId != -1)
+      && (currPos == this->stableLastIdx);
 
    Panel_prune(this->panel);
 
@@ -250,6 +277,7 @@ void Table_rebuildPanel(Table* this) {
 
    const int rowCount = Vector_size(this->displayList);
    bool foundFollowed = false;
+   int stableFoundIdx = -1;
    int idx = 0;
 
    for (int i = 0; i < rowCount; i++) {
@@ -263,9 +291,25 @@ void Table_rebuildPanel(Table* this) {
       if (this->following != -1 && row->id == this->following) {
          foundFollowed = true;
          Panel_setSelected(this->panel, idx);
-         /* Keep scroll position relative to followed row */
-         this->panel->scrollV = idx - (currPos - currScrollV);
+         /* Keep scroll position relative to followed row.
+            Allow negative scrollV in hard mode so that blank lines
+            above row 0 can appear (keeping the followed row at its
+            visual offset), but clip to 0 in soft mode or when the
+            followed row is at index 0 (nothing above it to scroll
+            off). */
+         int newScrollV = idx - (currPos - currScrollV);
+         if (!hardMode || idx == 0) {
+            if (newScrollV < 0)
+               newScrollV = 0;
+         }
+         this->panel->scrollV = newScrollV;
+         this->panel->allowExcessScrollV = true;
       }
+
+      if (stableActive && row->id == this->stableId) {
+         stableFoundIdx = idx;
+      }
+
       idx++;
    }
 
@@ -276,13 +320,48 @@ void Table_rebuildPanel(Table* this) {
    }
 
    if (this->following == -1) {
-      /* If the last item was selected, keep the new last item selected */
-      if (currPos > 0 && currPos == currSize - 1)
-         Panel_setSelected(this->panel, Panel_size(this->panel) - 1);
-      else
-         Panel_setSelected(this->panel, currPos);
+      if (stableActive && stableFoundIdx != -1) {
+         /* Stable tree view: keep the anchor row at the same screen line.
+            In hard mode, scrollV may go negative to render empty lines above row 0,
+            but only when the root is not selected (reset to 0 when root is at the top).
+            In soft mode, scrollV is clamped to 0 so no empty space appears above.
+            In both modes, scrollV may exceed size-h (empty lines below the last row)
+            so that processes above the anchor can be scrolled off the top of the
+            viewport rather than pushing the anchor down. */
+         Panel_setSelected(this->panel, stableFoundIdx);
+         int newScrollV = stableFoundIdx - stableOffset;
+         if (!hardMode || stableFoundIdx == 0) {
+            /* soft mode: no empty lines above row 0;
+             * hard mode + root selected: reset to top of panel */
+            if (newScrollV < 0)
+               newScrollV = 0;
+         }
+         this->panel->scrollV = newScrollV;
+         this->panel->allowExcessScrollV = true;
+         this->stableLastIdx = stableFoundIdx;
+      } else {
+         /* Normal behavior: restore position by index */
+         if (currPos > 0 && currPos == currSize - 1)
+            Panel_setSelected(this->panel, Panel_size(this->panel) - 1);
+         else
+            Panel_setSelected(this->panel, currPos);
 
-      this->panel->scrollV = currScrollV;
+         this->panel->scrollV = currScrollV;
+         this->panel->allowExcessScrollV = false;
+      }
+
+      /* Update stable anchor from the newly selected row */
+      if (stableMode) {
+         const Row* sel = (const Row*) Panel_getSelected(this->panel);
+         if (sel) {
+            this->stableId = sel->id;
+            this->stableLastIdx = Panel_getSelectedIndex(this->panel);
+         } else {
+            this->stableId = -1;
+         }
+      } else {
+         this->stableId = -1;
+      }
    }
 }
 
