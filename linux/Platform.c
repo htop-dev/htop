@@ -90,7 +90,7 @@ bool Running_containerized = false;
 const ScreenDefaults Platform_defaultScreens[] = {
    {
       .name = "Main",
-      .columns = "PID USER PRIORITY NICE M_VIRT M_RESIDENT M_SHARE STATE PERCENT_CPU PERCENT_MEM TIME Command",
+      .columns = "PID USER PRIORITY NICE M_VIRT M_RESIDENT M_PRIV STATE PERCENT_CPU PERCENT_MEM TIME Command",
       .sortKey = "PERCENT_CPU",
    },
    {
