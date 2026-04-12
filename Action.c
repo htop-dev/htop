@@ -373,18 +373,27 @@ static Htop_Reaction actionExpandCollapseOrSortColumn(State* st) {
    return st->host->settings->ss->treeView ? actionExpandOrCollapse(st) : actionSetSortColumn(st);
 }
 
-static inline void setActiveScreen(Settings* settings, State* st, unsigned int ssIdx) {
+static inline bool setActiveScreen(Settings* settings, State* st, unsigned int ssIdx) {
    assert(settings->ssIndex == ssIdx);
    Machine* host = st->host;
+
+   // Save following state from current table before switching screens
+   int following = host->activeTable->following;
 
    settings->ss = settings->screens[ssIdx];
    if (!settings->ss->table)
       settings->ss->table = host->processTable;
    host->activeTable = settings->ss->table;
 
+   // Transfer following state to new table if it doesn't already have one
+   if (following != -1 && host->activeTable->following == -1)
+      host->activeTable->following = following;
+
    // set correct functionBar - readonly if requested, and/or with non-process screens
    bool readonly = Settings_isReadonly() || (host->activeTable != host->processTable);
    MainPanel_setFunctionBar(st->mainPanel, readonly);
+
+   return host->activeTable->following != -1;
 }
 
 static Htop_Reaction actionNextScreen(State* st) {
@@ -393,8 +402,10 @@ static Htop_Reaction actionNextScreen(State* st) {
    if (settings->ssIndex == settings->nScreens) {
       settings->ssIndex = 0;
    }
-   setActiveScreen(settings, st, settings->ssIndex);
-   return HTOP_UPDATE_PANELHDR | HTOP_REFRESH | HTOP_REDRAW_BAR;
+   Htop_Reaction reaction = HTOP_UPDATE_PANELHDR | HTOP_REFRESH | HTOP_REDRAW_BAR;
+   if (setActiveScreen(settings, st, settings->ssIndex))
+      reaction |= HTOP_KEEP_FOLLOWING;
+   return reaction;
 }
 
 static Htop_Reaction actionPrevScreen(State* st) {
@@ -404,8 +415,10 @@ static Htop_Reaction actionPrevScreen(State* st) {
    } else {
       settings->ssIndex--;
    }
-   setActiveScreen(settings, st, settings->ssIndex);
-   return HTOP_UPDATE_PANELHDR | HTOP_REFRESH | HTOP_REDRAW_BAR;
+   Htop_Reaction reaction = HTOP_UPDATE_PANELHDR | HTOP_REFRESH | HTOP_REDRAW_BAR;
+   if (setActiveScreen(settings, st, settings->ssIndex))
+      reaction |= HTOP_KEEP_FOLLOWING;
+   return reaction;
 }
 
 Htop_Reaction Action_setScreenTab(State* st, int x) {
@@ -422,8 +435,10 @@ Htop_Reaction Action_setScreenTab(State* st, int x) {
       int width = rem >= bracketWidth ? (int)strnlen(tab, rem - bracketWidth + 1) : 0;
       if (width >= rem - bracketWidth + 1) {
          settings->ssIndex = i;
-         setActiveScreen(settings, st, i);
-         return HTOP_UPDATE_PANELHDR | HTOP_REFRESH | HTOP_REDRAW_BAR;
+         Htop_Reaction reaction = HTOP_UPDATE_PANELHDR | HTOP_REFRESH | HTOP_REDRAW_BAR;
+         if (setActiveScreen(settings, st, i))
+            reaction |= HTOP_KEEP_FOLLOWING;
+         return reaction;
       }
 
       rem -= bracketWidth + width;
@@ -566,7 +581,14 @@ static Htop_Reaction actionFilterByUser(State* st) {
 }
 
 Htop_Reaction Action_follow(State* st) {
-   st->host->activeTable->following = MainPanel_selectedRow(st->mainPanel);
+   int selectedRow = MainPanel_selectedRow(st->mainPanel);
+   if (st->host->activeTable->following == selectedRow) {
+      /* Toggle: unfollow when F is pressed on the already-followed process */
+      st->host->activeTable->following = -1;
+      Panel_setSelectionColor((Panel*)st->mainPanel, PANEL_SELECTION_FOCUS);
+      return HTOP_OK;
+   }
+   st->host->activeTable->following = selectedRow;
    Panel_setSelectionColor((Panel*)st->mainPanel, PANEL_SELECTION_FOLLOW);
    return HTOP_KEEP_FOLLOWING;
 }
