@@ -434,6 +434,10 @@ process's used physical memory).
 .B M_SHARE (SHR)
 The size of the process's shared pages.
 .TP
+.B M_PRIV (PRIV)
+The private memory size of the process (i.e. the resident set size minus the
+shared memory size).
+.TP
 .B M_TRS (CODE)
 The text resident set size of the process (i.e. the size of the process's
 executable instructions).
