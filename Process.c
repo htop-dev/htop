@@ -174,6 +174,24 @@ static inline char* stpcpyWithNewlineConversion(char* dstStr, const char* srcStr
    return dstStr;
 }
 
+static size_t findDistPrefixLength(const char* str) {
+   static const char* const builtinPrefixes =
+      "/bin/:/sbin/:/lib/:/lib32/:/lib64/:/libx32/:"
+      "/usr/bin/:/usr/sbin/:/usr/lib/:/usr/lib32/:/usr/lib64/:/usr/libx32/:"
+      "/usr/libexec/:/usr/local/bin/:/usr/local/lib/:/usr/local/sbin/:"
+      "/nix/store/:/run/current-system/";
+
+   const char* token = builtinPrefixes;
+   while (*token) {
+      const char* end = String_strchrnul(token, ':');
+      size_t len = end - token;
+      if (strncmp(str, token, len) == 0)
+         return len;
+      token = *end ? end + 1 : end;
+   }
+   return 0;
+}
+
 /*
  * This function makes the merged Command string. It also stores the offsets of the
  * basename, comm w.r.t the merged Command string - these offsets will be used by
@@ -256,51 +274,10 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
 
    #define CHECK_AND_MARK_DIST_PATH_PREFIXES(str_)                                            \
       do {                                                                                    \
-         if ((str_)[0] != '/') {                                                              \
-            break;                                                                            \
-         }                                                                                    \
-         switch ((str_)[1]) {                                                                 \
-            case 'b':                                                                         \
-               CHECK_AND_MARK(str_, "/bin/");                                                 \
-               break;                                                                         \
-            case 'l':                                                                         \
-               CHECK_AND_MARK(str_, "/lib/");                                                 \
-               CHECK_AND_MARK(str_, "/lib32/");                                               \
-               CHECK_AND_MARK(str_, "/lib64/");                                               \
-               CHECK_AND_MARK(str_, "/libx32/");                                              \
-               break;                                                                         \
-            case 's':                                                                         \
-               CHECK_AND_MARK(str_, "/sbin/");                                                \
-               break;                                                                         \
-            case 'u':                                                                         \
-               if (String_startsWith(str_, "/usr/")) {                                        \
-                  switch ((str_)[5]) {                                                        \
-                     case 'b':                                                                \
-                        CHECK_AND_MARK(str_, "/usr/bin/");                                    \
-                        break;                                                                \
-                     case 'l':                                                                \
-                        CHECK_AND_MARK(str_, "/usr/libexec/");                                \
-                        CHECK_AND_MARK(str_, "/usr/lib/");                                    \
-                        CHECK_AND_MARK(str_, "/usr/lib32/");                                  \
-                        CHECK_AND_MARK(str_, "/usr/lib64/");                                  \
-                        CHECK_AND_MARK(str_, "/usr/libx32/");                                 \
-                                                                                              \
-                        CHECK_AND_MARK(str_, "/usr/local/bin/");                              \
-                        CHECK_AND_MARK(str_, "/usr/local/lib/");                              \
-                        CHECK_AND_MARK(str_, "/usr/local/sbin/");                             \
-                        break;                                                                \
-                     case 's':                                                                \
-                        CHECK_AND_MARK(str_, "/usr/sbin/");                                   \
-                        break;                                                                \
-                  }                                                                           \
-               }                                                                              \
-               break;                                                                         \
-            case 'n':                                                                         \
-               CHECK_AND_MARK(str_, "/nix/store/");                                           \
-               break;                                                                         \
-            case 'r':                                                                         \
-               CHECK_AND_MARK(str_, "/run/current-system/");                                  \
-               break;                                                                         \
+         size_t plen = findDistPrefixLength(str_);                                    \
+         if (plen > 0) {                                                                     \
+            WRITE_HIGHLIGHT(0, plen, CRT_colors[PROCESS_SHADOW],                             \
+                           CMDLINE_HIGHLIGHT_FLAG_PREFIXDIR);                                 \
          }                                                                                    \
       } while (0)
 
