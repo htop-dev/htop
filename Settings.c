@@ -51,6 +51,7 @@ static void Settings_deleteScreens(Settings* this) {
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->initialFilename);
+   free(this->distPathPrefixes);
    Settings_deleteColumns(this);
    Settings_deleteScreens(this);
    free(this);
@@ -440,6 +441,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->highlightDeletedExe = atoi(option[1]);
       } else if (String_eq(option[0], "shadow_distribution_path_prefix")) {
          this->shadowDistPathPrefix = atoi(option[1]);
+      } else if (String_eq(option[0], "dist_path_prefixes")) {
+         free_and_xStrdup(&this->distPathPrefixes, option[1]);
       } else if (String_eq(option[0], "highlight_megabytes")) {
          this->highlightMegabytes = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_threads")) {
@@ -696,6 +699,8 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("highlight_base_name", this->highlightBaseName);
    printSettingInteger("highlight_deleted_exe", this->highlightDeletedExe);
    printSettingInteger("shadow_distribution_path_prefix", this->shadowDistPathPrefix);
+   if (this->distPathPrefixes && this->distPathPrefixes[0] != '\0')
+      printSettingString("dist_path_prefixes", this->distPathPrefixes);
    printSettingInteger("highlight_megabytes", this->highlightMegabytes);
    printSettingInteger("highlight_threads", this->highlightThreads);
    printSettingInteger("highlight_changes", this->highlightChanges);

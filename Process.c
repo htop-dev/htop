@@ -174,14 +174,18 @@ static inline char* stpcpyWithNewlineConversion(char* dstStr, const char* srcStr
    return dstStr;
 }
 
-static size_t findDistPrefixLength(const char* str) {
+static size_t findDistPrefixLength(const char* str, const Settings* settings) {
    static const char* const builtinPrefixes =
       "/bin/:/sbin/:/lib/:/lib32/:/lib64/:/libx32/:"
       "/usr/bin/:/usr/sbin/:/usr/lib/:/usr/lib32/:/usr/lib64/:/usr/libx32/:"
       "/usr/libexec/:/usr/local/bin/:/usr/local/lib/:/usr/local/sbin/:"
       "/nix/store/:/run/current-system/";
 
-   const char* token = builtinPrefixes;
+   const char* list = (settings->distPathPrefixes && settings->distPathPrefixes[0] != '\0')
+                      ? settings->distPathPrefixes
+                      : builtinPrefixes;
+
+   const char* token = list;
    while (*token) {
       const char* end = String_strchrnul(token, ':');
       size_t len = end - token;
@@ -274,7 +278,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
 
    #define CHECK_AND_MARK_DIST_PATH_PREFIXES(str_)                                            \
       do {                                                                                    \
-         size_t plen = findDistPrefixLength(str_);                                    \
+         size_t plen = findDistPrefixLength(str_, settings);                                    \
          if (plen > 0) {                                                                     \
             WRITE_HIGHLIGHT(0, plen, CRT_colors[PROCESS_SHADOW],                             \
                            CMDLINE_HIGHLIGHT_FLAG_PREFIXDIR);                                 \

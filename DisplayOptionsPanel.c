@@ -45,12 +45,19 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
    }
 
    NumberItem* numItem = (OptionItem_kind(selected) == OPTION_ITEM_NUMBER) ? (NumberItem*)selected : NULL;
+   StringItem* strItem = (OptionItem_kind(selected) == OPTION_ITEM_STRING) ? (StringItem*)selected : NULL;
 
    /* Helper: position the hardware cursor right after the edit buffer.
     * +1 on Y for the panel header row; +1 on X for the leading '[' bracket. */
    #define SET_EDIT_CURSOR() do { \
       super->cursorY = super->y + 1 + (super->selected - super->scrollV); \
       super->cursorX = super->x + 1 + numItem->editLen; \
+      super->cursorOn = true; \
+   } while (0)
+
+   #define SET_STR_CURSOR() do { \
+      super->cursorY = super->y + 1 + (super->selected - super->scrollV); \
+      super->cursorX = super->x + 1 + (int)LineEditor_getCursor(&strItem->editor); \
       super->cursorOn = true; \
    } while (0)
 
@@ -61,9 +68,19 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
             super->cursorOn = false;
             return HANDLED;
          }
+         if (numItem && numItem->editing) {
+            NumberItem_cancelEditing(numItem);
+            super->cursorOn = false;
+            return HANDLED;
+         }
          break;
       case KEY_BACKSPACE:
       case KEY_DEL_MAC:
+         if (strItem && strItem->editing) {
+            LineEditor_handleKey(&strItem->editor, KEY_BACKSPACE);
+            SET_STR_CURSOR();
+            return HANDLED;
+         }
          if (numItem) {
             if (!numItem->editing) {
                NumberItem_startEditingFromValue(numItem);
@@ -76,6 +93,19 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
       case '\n':
       case '\r':
       case KEY_ENTER:
+         if (strItem && strItem->editing) {
+            StringItem_applyEditing(strItem);
+            super->cursorOn = false;
+            settingsChanged = true;
+            result = HANDLED;
+            break;
+         }
+         if (strItem && !strItem->editing) {
+            StringItem_startEditing(strItem);
+            SET_STR_CURSOR();
+            result = HANDLED;
+            break;
+         }
          if (numItem && numItem->editing) {
             if (NumberItem_applyEditing(numItem)) {
                settingsChanged = true;
@@ -219,6 +249,12 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch) {
                SET_EDIT_CURSOR();
                return HANDLED;
             }
+         } else if (strItem) {
+            if (strItem->editing) {
+               LineEditor_handleKey(&strItem->editor, ch);
+               SET_STR_CURSOR();
+               return HANDLED;
+            }
          }
          break;
    }
@@ -282,6 +318,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Highlight program \"basename\"", &(settings->highlightBaseName)));
    Panel_add(super, (Object*) CheckItem_newByRef("Highlight out-dated/removed programs (red) / libraries (yellow)", &(settings->highlightDeletedExe)));
    Panel_add(super, (Object*) CheckItem_newByRef("Shadow distribution path prefixes", &(settings->shadowDistPathPrefix)));
+   Panel_add(super, (Object*) StringItem_newByRef("- Custom path prefixes (colon-separated)", &(settings->distPathPrefixes), NULL));
    Panel_add(super, (Object*) CheckItem_newByRef("Merge exe, comm and cmdline in Command", &(settings->showMergedCommand)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Try to find comm in cmdline (when Command is merged)", &(settings->findCommInCmdline)));
    Panel_add(super, (Object*) CheckItem_newByRef("- Try to strip exe from cmdline (when Command is merged)", &(settings->stripExeFromCmdline)));
