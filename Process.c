@@ -166,8 +166,8 @@ static size_t matchCmdlinePrefixWithExeSuffix(const char* cmdline, size_t* cmdli
 }
 
 /* stpcpy, but also converts newlines to spaces */
-static inline char* stpcpyWithNewlineConversion(char* dstStr, const char* srcStr) {
-   for (; *srcStr; ++srcStr) {
+static inline char* stpncpyWithNewlineConversion(char* dstStr, const char* srcStr, size_t n) {
+   for (; *srcStr && n > 1; ++srcStr, --n) {
       *dstStr++ = (*srcStr == '\n') ? ' ' : *srcStr;
    }
    *dstStr = 0;
@@ -245,7 +245,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       do {                                                                                    \
          WRITE_HIGHLIGHT(0, 1, CRT_colors[FAILED_READ], CMDLINE_HIGHLIGHT_FLAG_SEPARATOR);    \
          mbMismatch += SEPARATOR_LEN - 1;                                                     \
-         str = stpcpy(str, SEPARATOR);                                                        \
+         str += xSnprintf(str, maxLen - (str - strStart), "%s", SEPARATOR);                    \
       } while (0)
 
    #define CHECK_AND_MARK(str_, prefix_)                                                      \
@@ -353,7 +353,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       if ((showMergedCommand || (Process_isUserlandThread(this) && showThreadNames)) && procComm && strlen(procComm)) { /* set column to or prefix it with comm */
          if (strncmp(cmdline + cmdlineBasenameStart, procComm, MINIMUM(TASK_COMM_LEN - 1, strlen(procComm))) != 0) {
             WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
-            str = stpcpy(str, procComm);
+            str += xSnprintf(str, maxLen - (str - strStart), "%s", procComm);
 
             if (!showMergedCommand)
                return;
@@ -374,7 +374,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
             WRITE_HIGHLIGHT(showProgramPath ? cmdlineBasenameStart : 0, cmdlineBasenameLen, delLibAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
       }
 
-      (void)stpcpyWithNewlineConversion(str, cmdline + (showProgramPath ? 0 : cmdlineBasenameStart));
+      (void)stpncpyWithNewlineConversion(str, cmdline + (showProgramPath ? 0 : cmdlineBasenameStart), maxLen - (str - strStart));
 
       return;
    }
@@ -426,7 +426,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
          WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, delExeAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
       else if (this->usesDeletedLib)
          WRITE_HIGHLIGHT(exeBasenameOffset, exeBasenameLen, delLibAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
-      str = stpcpy(str, procExe);
+      str += xSnprintf(str, maxLen - (str - strStart), "%s", procExe);
    } else {
       if (haveCommInExe)
          WRITE_HIGHLIGHT(0, commLen, commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
@@ -435,7 +435,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
          WRITE_HIGHLIGHT(0, exeBasenameLen, delExeAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
       else if (this->usesDeletedLib)
          WRITE_HIGHLIGHT(0, exeBasenameLen, delLibAttr, CMDLINE_HIGHLIGHT_FLAG_DELETED);
-      str = stpcpy(str, procExe + exeBasenameOffset);
+      str += xSnprintf(str, maxLen - (str - strStart), "%s", procExe + exeBasenameOffset);
    }
 
    bool haveCommField = false;
@@ -443,7 +443,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    if (!haveCommInExe && !haveCommInCmdline && procComm && (!Process_isUserlandThread(this) || showThreadNames)) {
       WRITE_SEPARATOR;
       WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
-      str = stpcpy(str, procComm);
+      str += xSnprintf(str, maxLen - (str - strStart), "%s", procComm);
       haveCommField = true;
    }
 
@@ -460,7 +460,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
 
    /* Display cmdline if it hasn't been consumed by procExe */
    if (*cmdline)
-      (void)stpcpyWithNewlineConversion(str, cmdline);
+      (void)stpncpyWithNewlineConversion(str, cmdline, maxLen - (str - strStart));
 
    #undef CHECK_AND_MARK_DIST_PATH_PREFIXES
    #undef CHECK_AND_MARK
